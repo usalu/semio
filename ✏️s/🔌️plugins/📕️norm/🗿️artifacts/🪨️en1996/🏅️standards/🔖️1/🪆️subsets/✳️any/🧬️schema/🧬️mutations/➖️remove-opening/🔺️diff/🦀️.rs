@@ -6,5 +6,5 @@ pub fn diff(payload: &RemoveOpening, base: &En1996Snapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid opening remove."), Vec::<String>::new());
     }
     let wall = &base.walls[payload.wall_index];
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { openings: En1996OpeningDelta::removal(&wall.openings[payload.index].id), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { openings: En1996OpeningDelta::removal(&wall.openings, payload.index), ..Default::default() }), ..Default::default() })
 }

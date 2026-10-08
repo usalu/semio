@@ -6,10 +6,10 @@ use crate::diff::ProgramSustainabilityDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteSustainabilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.sustainability.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.sustainability.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No sustainability requirement exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { sustainability: Some(ProgramSustainabilityDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { sustainability: Some(ProgramSustainabilityDelta::removal(&base.sustainability, position)), ..Default::default() })
 }

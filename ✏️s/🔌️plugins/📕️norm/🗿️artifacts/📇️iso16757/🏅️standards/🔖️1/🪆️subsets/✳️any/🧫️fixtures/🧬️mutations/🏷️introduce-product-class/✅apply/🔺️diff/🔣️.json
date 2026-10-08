@@ -3,30 +3,34 @@
   "manufacturerName": null,
   "productGroups": null,
   "productClasses": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "class-towel-radiator",
-        "groupId": "group.radiators",
-        "parentId": "class.panel-radiator",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Towel radiator"
+        "index": 1,
+        "row": {
+          "id": "class-towel-radiator",
+          "groupId": "group.radiators",
+          "parentId": "class.panel-radiator",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Towel radiator"
+            },
+            "shortName": null,
+            "alternatives": [
+              {
+                "locale": "de",
+                "text": "Badheizkörper"
+              }
+            ]
           },
-          "shortName": null,
-          "alternatives": [
-            {
-              "locale": "de",
-              "text": "Badheizkörper"
-            }
-          ]
-        },
-        "requiredPropertyIds": [],
-        "optionalPropertyIds": []
+          "requiredPropertyIds": [],
+          "optionalPropertyIds": []
+        }
       }
     ],
-    "removed": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "productSeries": null,
   "products": null,

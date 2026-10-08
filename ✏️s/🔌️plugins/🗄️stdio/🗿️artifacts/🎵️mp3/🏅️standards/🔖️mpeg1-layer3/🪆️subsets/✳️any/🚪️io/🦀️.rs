@@ -64,112 +64,21 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Sniff
-use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
+use crate::apply_mutation;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Content, Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
 
 /// 🔍 Real magic sniff: an ID3v2 header at the front, OR a valid MPEG frame sync anywhere in the
 /// buffer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
-    detect_id3v2_header(bytes).is_some() || find_frame_sync(bytes).is_some()
+    bytes.starts_with(b"ID3") || find_frame_sync(bytes).is_some()
 }
 //#endregion 🔖️Sniff
 
 //#region 🔖️Syncsafe
-/// 📐️ Decodes a 4-byte ID3v2 synchsafe integer (7 significant bits per byte).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_syncsafe(bytes: &[u8; 4]) -> u32 {
-    bytes.iter().fold(0u32, |acc, &b| (acc << 7) | (b as u32 & 0x7F))
-}
-/// 📐️ Encodes a `u32` (must be `< 2^28`) as a 4-byte ID3v2 synchsafe integer.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_syncsafe(mut value: u32) -> [u8; 4] {
-    let mut out = [0u8; 4];
-    for slot in out.iter_mut().rev() {
-        *slot = (value & 0x7F) as u8;
-        value >>= 7;
-    }
-    out
-}
-//#endregion 🔖️Syncsafe
-
-//#region 🔖️Id3v2
-struct Id3v2HeaderRaw {
-    major_version: u8,
-    minor_version: u8,
-    flags: u8,
-    size: u32,
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn detect_id3v2_header(bytes: &[u8]) -> Option<Id3v2HeaderRaw> {
-    if bytes.len() < 10 || &bytes[0..3] != b"ID3" {
-        return None;
-    }
-    let size_bytes: [u8; 4] = bytes[6..10].try_into().ok()?;
-    Some(Id3v2HeaderRaw { major_version: bytes[3], minor_version: bytes[4], flags: bytes[5], size: decode_syncsafe(&size_bytes) })
-}
-
-/// 🏷️ Parses the ID3v2 tag (10-byte header + `size` bytes of frames, stopping at padding — a
-/// frame id of all-zero bytes). ID3v2.3 frame sizes are a plain big-endian `u32`; ID3v2.4 frame
-/// sizes are themselves synchsafe (spec difference honored here).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
-    let header = detect_id3v2_header(bytes)?;
-    let body_start = 10usize;
-    let body_end = body_start + header.size as usize;
-    if body_end > bytes.len() {
-        return None;
-    }
-    let mut pos = body_start;
-    let mut frames = Vec::new();
-    while pos + 10 <= body_end {
-        let id_bytes = &bytes[pos..pos + 4];
-        if id_bytes.iter().all(|&b| b == 0) {
-            break; // 🧮️ padding
-        }
-        let id = String::from_utf8_lossy(id_bytes).into_owned();
-        let size_bytes: [u8; 4] = bytes[pos + 4..pos + 8].try_into().ok()?;
-        let size = if header.major_version >= 4 { decode_syncsafe(&size_bytes) } else { u32::from_be_bytes(size_bytes) } as usize;
-        let flags = u16::from_be_bytes([bytes[pos + 8], bytes[pos + 9]]);
-        let data_start = pos + 10;
-        let data_end = data_start + size;
-        if data_end > body_end {
-            break; // 🛡️ malformed/truncated trailing frame — stop rather than panic
-        }
-        frames.push(Id3Frame { id, flags, data: bytes[data_start..data_end].to_vec() });
-        pos = data_end;
-    }
-    Some((Id3v2Tag { major_version: header.major_version, minor_version: header.minor_version, flags: header.flags, frames }, body_end))
-}
-
-/// 🏷️ Re-encodes an `Id3v2Tag` to real bytes: `ID3` + version + flags + synchsafe size, then
-/// every frame's id/size/flags/data verbatim (size recomputed from `data.len()`, never carried
-/// stale).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_id3v2(tag: &Id3v2Tag) -> Vec<u8> {
-    let mut frames_bytes = Vec::new();
-    for frame in &tag.frames {
-        let mut id = frame.id.clone().into_bytes();
-        id.resize(4, 0);
-        frames_bytes.extend_from_slice(&id[0..4]);
-        let size = frame.data.len() as u32;
-        if tag.major_version >= 4 {
-            frames_bytes.extend_from_slice(&encode_syncsafe(size));
-        } else {
-            frames_bytes.extend_from_slice(&size.to_be_bytes());
-        }
-        frames_bytes.extend_from_slice(&frame.flags.to_be_bytes());
-        frames_bytes.extend_from_slice(&frame.data);
-    }
-    let mut out = Vec::with_capacity(10 + frames_bytes.len());
-    out.extend_from_slice(b"ID3");
-    out.push(tag.major_version);
-    out.push(tag.minor_version);
-    out.push(tag.flags);
-    out.extend_from_slice(&encode_syncsafe(frames_bytes.len() as u32));
-    out.extend_from_slice(&frames_bytes);
-    out
-}
-//#endregion 🔖️Id3v2
+#[path = "🏷️metadata/🦀️.rs"]
+pub mod metadata;
+use metadata::{encode_syncsafe,encode_id3v2,encode_id3v1,decode_id3v1,id3_frame_body_len,id3_frame_body_slice};
 
 //#region 🔖️FrameHeader
 /// 🔍 Real 11-bit MPEG sync-word scan: `0xFFE` in the top 11 bits, plus a sanity check that the
@@ -276,16 +185,13 @@ fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
     let mut pos = 0usize;
-    let id3v2 = match parse_id3v2(bytes) {
-        Some((tag, consumed)) => {
-            pos = consumed;
-            Some(tag)
-        }
-        None => None,
-    };
+    let id3v2 = if bytes.starts_with(b"ID3") {let(tag,consumed)=metadata::decode_id3v2(bytes)?;pos=consumed;Some(tag)} else {None};
 
     let mut frames = Vec::new();
-    while let Some(offset) = find_frame_sync(&bytes[pos..]) {
+    while pos < bytes.len() {
+        if bytes.len()-pos==128&&bytes[pos..].starts_with(b"TAG"){break;}
+        let Some(offset)=find_frame_sync(&bytes[pos..])else{break;};
+        if offset!=0{return Err("mp3.unadmitted-prefix".into());}
         let frame_pos = pos + offset;
         let Some((header, frame_size)) = parse_frame_header(bytes, frame_pos) else { break };
         let payload = bytes[frame_pos + 4..frame_pos + frame_size].to_vec();
@@ -294,13 +200,13 @@ pub fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
     }
 
     let id3v1 = if bytes.len() - pos == 128 && &bytes[pos..pos + 3] == b"TAG" {
-        let raw = bytes[pos..pos + 128].to_vec();
+        let tag = decode_id3v1(&bytes[pos..pos + 128])?;
         pos += 128;
-        Some(Id3v1Tag { raw })
+        Some(tag)
     } else {
         None
     };
-    let _ = pos;
+    if pos!=bytes.len(){return Err("mp3.unadmitted-tail".into());}
 
     Ok(Mp3Snapshot { schema: STDIO_MP3_DOCUMENT_SCHEMA.into(), id3v2, frames, id3v1 })
 }
@@ -310,19 +216,19 @@ pub fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
 /// snapshot decoded from a real file, this reproduces the original bytes exactly (see
 /// `codec_retention_law` below).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_mp3(snapshot: &Mp3Snapshot) -> Vec<u8> {
+pub fn encode_mp3(snapshot: &Mp3Snapshot) -> Result<Vec<u8>,String> {
     let mut out = Vec::new();
     if let Some(tag) = &snapshot.id3v2 {
-        out.extend_from_slice(&encode_id3v2(tag));
+        out.extend_from_slice(&encode_id3v2(tag)?);
     }
     for frame in &snapshot.frames {
         out.extend_from_slice(&encode_frame_header(&frame.header));
         out.extend_from_slice(&frame.payload);
     }
     if let Some(tag) = &snapshot.id3v1 {
-        out.extend_from_slice(&tag.raw);
+        out.extend_from_slice(&encode_id3v1(tag)?);
     }
-    out
+    Ok(out)
 }
 
 /// 🧵️ One bounded advance of the native MP3 serializer.
@@ -373,8 +279,8 @@ impl Mp3EncodeCursor {
                 Mp3EncodePhase::MeasureId3v2 => {
                     let tag = snapshot.id3v2.as_ref().ok_or("mp3.encode.id3v2-owner-missing")?;
                     if let Some(frame) = tag.frames.get(self.index) {
-                        u32::try_from(frame.data.len()).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
-                        self.id3v2_body_bytes = self.id3v2_body_bytes.checked_add(10).and_then(|bytes| bytes.checked_add(frame.data.len())).ok_or("mp3.encode.id3v2-size-overflow")?;
+                        u32::try_from(id3_frame_body_len(frame)?).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
+                        self.id3v2_body_bytes = self.id3v2_body_bytes.checked_add(10).and_then(|bytes| bytes.checked_add(id3_frame_body_len(frame)?)).ok_or("mp3.encode.id3v2-size-overflow")?;
                         self.index += 1;
                         return Ok(Mp3EncodeAdvance::Progress);
                     }
@@ -389,7 +295,7 @@ impl Mp3EncodeCursor {
                 Mp3EncodePhase::Id3v2Header => {
                     let tag = snapshot.id3v2.as_ref().ok_or("mp3.encode.id3v2-owner-missing")?;
                     let size = encode_syncsafe(self.id3v2_body_bytes as u32);
-                    let bytes = [b'I', b'D', b'3', tag.major_version, tag.minor_version, tag.flags, size[0], size[1], size[2], size[3]];
+                    let bytes = [b'I', b'D', b'3', 4, 0, 0, size[0], size[1], size[2], size[3]];
                     let chunk = self.take_slice(&bytes, maximum_bytes);
                     if self.offset == bytes.len() {
                         self.phase = if tag.frames.is_empty() { self.phase_after_id3v2(snapshot) } else { Mp3EncodePhase::Id3v2FrameHeader };
@@ -404,21 +310,23 @@ impl Mp3EncodeCursor {
                     let id = frame.id.as_bytes();
                     let id_bytes = id.len().min(4);
                     bytes[..id_bytes].copy_from_slice(&id[..id_bytes]);
-                    let size = u32::try_from(frame.data.len()).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
-                    let encoded_size = if tag.major_version >= 4 { encode_syncsafe(size) } else { size.to_be_bytes() };
+                    let size = u32::try_from(id3_frame_body_len(frame)?).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
+                    let encoded_size = encode_syncsafe(size);
                     bytes[4..8].copy_from_slice(&encoded_size);
-                    bytes[8..10].copy_from_slice(&frame.flags.to_be_bytes());
+                    bytes[8..10].copy_from_slice(&[0,0]);
                     let chunk = self.take_slice(&bytes, maximum_bytes);
                     if self.offset == bytes.len() {
-                        self.phase = if frame.data.is_empty() { self.advance_id3v2_frame(snapshot) } else { Mp3EncodePhase::Id3v2FrameData };
+                        self.phase = if id3_frame_body_len(frame)? == 0 { self.advance_id3v2_frame(snapshot) } else { Mp3EncodePhase::Id3v2FrameData };
                         self.offset = 0;
                     }
                     return Ok(Mp3EncodeAdvance::Chunk(chunk));
                 }
                 Mp3EncodePhase::Id3v2FrameData => {
                     let frame = snapshot.id3v2.as_ref().and_then(|tag| tag.frames.get(self.index)).ok_or("mp3.encode.id3v2-frame-missing")?;
-                    let chunk = self.take_slice(&frame.data, maximum_bytes);
-                    if self.offset == frame.data.len() {
+                    let chunk = id3_frame_body_slice(frame,self.offset,maximum_bytes)?;
+                    self.offset += chunk.len();
+                    self.emitted_bytes += chunk.len() as u64;
+                    if self.offset == id3_frame_body_len(frame)? {
                         self.phase = self.advance_id3v2_frame(snapshot);
                         self.offset = 0;
                     }
@@ -448,8 +356,9 @@ impl Mp3EncodeCursor {
                         self.phase = Mp3EncodePhase::Complete;
                         continue;
                     };
-                    let chunk = self.take_slice(&tag.raw, maximum_bytes);
-                    if self.offset == tag.raw.len() {
+                    let body = encode_id3v1(tag)?;
+                    let chunk = self.take_slice(&body, maximum_bytes);
+                    if self.offset == 128 {
                         self.phase = Mp3EncodePhase::Complete;
                         self.offset = 0;
                     }
@@ -764,9 +673,10 @@ pub mod playback {
         schema: Option<Vec<u8>>,
         id3_frames: Vec<super::Id3Frame>,
         audio_frames: Vec<super::Mp3Frame>,
-        id3v1: Option<Vec<u8>>,
+        metadata_fixed: [Option<Vec<u8>>; 5],
+        metadata_values: Vec<String>,
+        metadata_values_debt: usize,
         pending: Option<Vec<u8>>,
-        deferred: Option<Vec<u8>>,
         pending_debt: usize,
         outer_debt: usize,
     }
@@ -780,9 +690,10 @@ pub mod playback {
                 schema: Some(snapshot.schema.into_bytes()),
                 id3_frames,
                 audio_frames,
-                id3v1: snapshot.id3v1.map(|tag| tag.raw),
+                metadata_fixed: snapshot.id3v1.map_or_else(||[None,None,None,None,None], |tag| [Some(tag.title.into_bytes()),Some(tag.artist.into_bytes()),Some(tag.album.into_bytes()),Some(tag.year.into_bytes()),Some(tag.comment.into_bytes())]),
+                metadata_values: Vec::new(),
+                metadata_values_debt: 0,
                 pending: None,
-                deferred: None,
                 pending_debt: 0,
                 outer_debt,
             }
@@ -798,25 +709,41 @@ pub mod playback {
                 }
                 return PluginCloseStep::Pending { released_items: 0, released_bytes };
             }
-            if let Some(bytes) = self.deferred.take() {
-                self.set_pending(bytes);
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
             if let Some(bytes) = self.schema.take() {
                 self.set_pending(bytes);
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
+            if let Some(value) = self.metadata_values.pop() {
+                self.set_pending(value.into_bytes());
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if self.metadata_values_debt != 0 || self.metadata_values.capacity() != 0 {
+                let released_bytes = maximum_bytes.min(self.metadata_values_debt);
+                self.metadata_values_debt -= released_bytes;
+                let released_items = usize::from(self.metadata_values_debt == 0);
+                if released_items != 0 { self.metadata_values = Vec::new(); }
+                return PluginCloseStep::Pending { released_items, released_bytes };
+            }
+            if let Some(bytes) = self.metadata_fixed.iter_mut().find_map(Option::take) {
+                self.set_pending(bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
             if let Some(frame) = self.id3_frames.pop() {
-                self.deferred = Some(frame.data);
+                match frame.content {
+                    super::Id3Content::Text{values} => self.metadata_values=values,
+                    super::Id3Content::UserText{description,values} => {self.metadata_fixed[0]=Some(description.into_bytes());self.metadata_values=values;},
+                    super::Id3Content::Comment{language,description,text}|super::Id3Content::Lyrics{language,description,text} => {self.metadata_fixed[0]=Some(language.into_bytes());self.metadata_fixed[1]=Some(description.into_bytes());self.metadata_fixed[2]=Some(text.into_bytes());},
+                    super::Id3Content::Url{url} => self.metadata_fixed[0]=Some(url.into_bytes()),
+                    super::Id3Content::UserUrl{description,url} => {self.metadata_fixed[0]=Some(description.into_bytes());self.metadata_fixed[1]=Some(url.into_bytes());},
+                    super::Id3Content::Picture{mime,description,payload,..} => {self.metadata_fixed[0]=Some(mime.into_bytes());self.metadata_fixed[1]=Some(description.into_bytes());self.metadata_fixed[2]=Some(payload);},
+                    super::Id3Content::Opaque{bytes} => self.metadata_fixed[0]=Some(bytes),
+                }
+                self.metadata_values_debt=self.metadata_values.capacity().saturating_mul(std::mem::size_of::<String>());
                 self.set_pending(frame.id.into_bytes());
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             if let Some(frame) = self.audio_frames.pop() {
                 self.set_pending(frame.payload);
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if let Some(bytes) = self.id3v1.take() {
-                self.set_pending(bytes);
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             if self.outer_debt != 0 {
@@ -838,7 +765,7 @@ pub mod playback {
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.schema.is_none() && self.id3_frames.capacity() == 0 && self.audio_frames.capacity() == 0 && self.id3v1.is_none() && self.pending.is_none() && self.deferred.is_none() && self.pending_debt == 0 && self.outer_debt == 0
+            self.schema.is_none() && self.id3_frames.capacity() == 0 && self.audio_frames.capacity() == 0 && self.metadata_fixed.iter().all(Option::is_none) && self.metadata_values.capacity()==0 && self.metadata_values_debt==0 && self.pending.is_none() && self.pending_debt == 0 && self.outer_debt == 0
         }
     }
 }
@@ -874,7 +801,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
-    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation,Mp3Mutation};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{Mp3Mutation};
 
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -901,7 +828,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<Mp3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_mp3_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

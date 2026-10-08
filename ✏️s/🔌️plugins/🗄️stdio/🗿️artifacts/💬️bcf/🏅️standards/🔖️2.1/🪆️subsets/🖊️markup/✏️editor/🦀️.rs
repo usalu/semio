@@ -425,8 +425,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BcfAnyE
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v2_1::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::bcf::edit_rules::EDIT_RULES
     }
 }
 //#endregion 🔖️Editor

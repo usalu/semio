@@ -29,42 +29,24 @@
   },
   "baseTransient": { "generationJson": "", "duplicateWidgetProgressJson": "" },
   "configMutations": [
-    {
-      "windowId": "flow-main-left",
-      "windowKindId": "flow-main",
-      "mutation": {
-        "kind": "snapshot",
-        "config": {
-          "previewOffNodeIds": ["node-a"],
-          "camera": { "x": 12, "y": -8, "zoom": 2 },
-          "lodMode": "detail",
-          "proximityDistance": 32,
-          "gridVisible": false,
-          "gridSnapEnabled": true,
-          "gridFactor": 8,
-          "catalogueSectionsJson": "[{\"id\":\"left\"}]",
-          "automationEnabledJson": "{\"extension.left\":true}"
-        }
-      }
-    },
-    {
-      "windowId": "flow-main-right",
-      "windowKindId": "flow-main",
-      "mutation": {
-        "kind": "snapshot",
-        "config": {
-          "previewOffNodeIds": ["node-b"],
-          "camera": { "x": -21, "y": 5, "zoom": 0.75 },
-          "lodMode": "overview",
-          "proximityDistance": 80,
-          "gridVisible": true,
-          "gridSnapEnabled": false,
-          "gridFactor": 20,
-          "catalogueSectionsJson": "[{\"id\":\"right\"}]",
-          "automationEnabledJson": "{\"extension.right\":true}"
-        }
-      }
-    }
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-preview-off-node-ids", "value": ["node-a"]}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-camera", "value": {"x": 12, "y": -8, "zoom": 2}}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-lod-mode", "value": "detail"}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-proximity-distance", "value": 32}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-grid-visible", "value": false}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-grid-snap-enabled", "value": true}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-grid-factor", "value": 8}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-catalogue-sections-json", "value": "[{\"id\":\"left\"}]"}},
+    {"windowId": "flow-main-left", "windowKindId": "flow-main", "mutation": {"kind": "set-automation-enabled-json", "value": "{\"extension.left\":true}"}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-preview-off-node-ids", "value": ["node-b"]}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-camera", "value": {"x": -21, "y": 5, "zoom": 0.75}}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-lod-mode", "value": "overview"}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-proximity-distance", "value": 80}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-grid-visible", "value": true}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-grid-snap-enabled", "value": false}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-grid-factor", "value": 20}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-catalogue-sections-json", "value": "[{\"id\":\"right\"}]"}},
+    {"windowId": "flow-main-right", "windowKindId": "flow-main", "mutation": {"kind": "set-automation-enabled-json", "value": "{\"extension.right\":true}"}}
   ],
   "transientMutations": [
     {

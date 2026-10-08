@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/splice-text/schema.json",
+  "title": "SpliceTextMutation",
+  "description": "Canonical payload schema for splice-text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "splices"
+  ],
+  "properties": {
+    "splices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offset",
+          "delete",
+          "insert"
+        ],
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "label": {
+                "en": "Offset",
+                "de": "Versatz"
+              },
+              "description": {
+                "en": "Unicode scalar offset in the text as the file joins it, counted from 0.",
+                "de": "Unicode-Skalar-Versatz im Text, wie ihn die Datei zusammensetzt, ab 0 gezählt."
+              },
+              "step": 1,
+              "precision": 0,
+              "group": "target",
+              "order": 10
+            }
+          },
+          "delete": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "label": {
+                "en": "Deleted scalars",
+                "de": "Gelöschte Skalare"
+              },
+              "description": {
+                "en": "How many scalars from the offset the splice removes.",
+                "de": "Wie viele Skalare ab dem Versatz die Änderung entfernt."
+              },
+              "step": 1,
+              "precision": 0,
+              "group": "target",
+              "order": 20
+            }
+          },
+          "insert": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "label": {
+                "en": "Inserted text",
+                "de": "Eingefügter Text"
+              },
+              "description": {
+                "en": "The text that takes the place of the deleted scalars.",
+                "de": "Der Text, der an die Stelle der gelöschten Skalare tritt."
+              },
+              "role": "value",
+              "group": "value",
+              "order": 30
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Splices",
+          "de": "Änderungen"
+        },
+        "description": {
+          "en": "The ranges of one edit, ascending and disjoint, in the coordinates of the text they were taken from.",
+          "de": "Die Bereiche einer Bearbeitung, aufsteigend und disjunkt, in den Koordinaten des Textes, dem sie entnommen wurden."
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

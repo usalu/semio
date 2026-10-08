@@ -1979,18 +1979,22 @@
 \cs_new_protected:cpn {semio_viz_layout_table_bundling:nnn} #1#2#3 {
   \semio_viz_hierarchy_table:nnnn {cluster} {#1} {chart-layout-bundle-nodes} {#3}
   \seq_clear:N \l_semio_viz_layout_output_seq
-  \clist_set:Nn \l_semio_viz_layout_output_cols_clist {detail,points,x,y,x2,y2}
+  \clist_set:Nn \l_semio_viz_layout_output_cols_clist {detail,order,x,y}
   \int_zero:N \l_semio_viz_layout_detail_int
   \semio_viz_hierarchy_map_nodes:nn {chart-layout-hierarchy} {
     \int_set:Nn \l_tmpa_int {\semio_viz_hierarchy_get:nnn {chart-layout-hierarchy} {pi} {\l_semio_viz_hierarchy_node_index_int}}
     \int_compare:nNnT {\l_tmpa_int} > {0} {
       \prop_clear:N \l_semio_viz_layout_row_prop
+      \semio_viz_layout_set:nn {detail} {\int_use:N \l_semio_viz_layout_detail_int}
+      \semio_viz_layout_set:nn {order} {0}
+      \semio_viz_layout_set:nn {x} {\fp_use:N \l_semio_viz_hierarchy_node_x_fp}
+      \semio_viz_layout_set:nn {y} {\fp_use:N \l_semio_viz_hierarchy_node_y_fp}
+      \semio_viz_layout_put:
+      \prop_clear:N \l_semio_viz_layout_row_prop
+      \semio_viz_layout_set:nn {detail} {\int_use:N \l_semio_viz_layout_detail_int}
+      \semio_viz_layout_set:nn {order} {1}
       \semio_viz_layout_set:nn {x} {\semio_viz_hierarchy_get:nnn {chart-layout-hierarchy} {x} {\l_tmpa_int}}
       \semio_viz_layout_set:nn {y} {\semio_viz_hierarchy_get:nnn {chart-layout-hierarchy} {y} {\l_tmpa_int}}
-      \semio_viz_layout_set:nn {x2} {\fp_use:N \l_semio_viz_hierarchy_node_x_fp}
-      \semio_viz_layout_set:nn {y2} {\fp_use:N \l_semio_viz_hierarchy_node_y_fp}
-      \semio_viz_layout_set:nn {detail} {\int_use:N \l_semio_viz_layout_detail_int}
-      \semio_viz_layout_set:nn {points} {[[\fp_use:N \l_semio_viz_hierarchy_node_x_fp,\fp_use:N \l_semio_viz_hierarchy_node_y_fp],[\semio_viz_layout_cell:n {x},\semio_viz_layout_cell:n {y}]]}
       \semio_viz_layout_put:
       \int_incr:N \l_semio_viz_layout_detail_int
     }

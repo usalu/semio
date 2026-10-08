@@ -1,4 +1,5 @@
-use super::super::{apply_txt_mutation, InsertLineMutation, TxtMutation};
+use crate::apply_mutation;
+use super::super::{InsertLineMutation, TxtMutation};
 use super::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
@@ -32,12 +33,12 @@ fn one_line_to_empty_round_trips_through_production_inverse_and_codecs() {
     let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![TxtMutation::InsertLine(InsertLineMutation { index: 0, text: "a".into() })]);
     let mut after = base.clone();
-    assert!(apply_txt_mutation(&mut after, &mutation).messages().is_empty());
+    assert!(apply_mutation(&mut after, &mutation).messages().is_empty());
     assert_eq!(TxtSnapshot::from_body(&after.to_body()), after);
     for step in inverse {
         assert_eq!(TxtMutation::parse_op(&step.print_op()).unwrap(), step);
         assert_eq!(TxtMutation::decode_op(&step.encode_op().unwrap()).unwrap(), step);
-        assert!(apply_txt_mutation(&mut after, &step).messages().is_empty());
+        assert!(apply_mutation(&mut after, &step).messages().is_empty());
     }
     assert_eq!(TxtSnapshot::from_body(&after.to_body()), after);
     assert_eq!(after, base);

@@ -4,36 +4,39 @@
   "domain": null,
   "meta": null,
   "objects": {
-    "added": [
+    "inserted": [
       {
-        "anchor": "fixed",
-        "hidden": false,
-        "id": "object-c",
-        "locked": false,
-        "objectKind": "object-kind-c",
-        "origin": [
-          8.0,
-          0.0,
-          0.0
-        ],
-        "vortices": [
-          {
-            "hidden": false,
-            "id": "vortex-3",
-            "locked": false,
-            "position": [
-              0.0,
-              0.0,
-              1.0
-            ],
-            "vortexKind": "vortex-kind-a"
-          }
-        ]
+        "index": 2,
+        "row": {
+          "anchor": "fixed",
+          "hidden": false,
+          "id": "object-c",
+          "locked": false,
+          "objectKind": "object-kind-c",
+          "origin": [
+            8.0,
+            0.0,
+            0.0
+          ],
+          "vortices": [
+            {
+              "hidden": false,
+              "id": "vortex-3",
+              "locked": false,
+              "position": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "vortexKind": "vortex-kind-a"
+            }
+          ]
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   },
   "references": null,
   "schema": null,

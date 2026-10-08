@@ -41,9 +41,10 @@
   "risks": null,
   "conflicts": null,
   "requirements": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "requirement-a",
         "patch": {
@@ -77,8 +78,7 @@
           "supersededBy": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "priorities": null,
   "scenarios": null,

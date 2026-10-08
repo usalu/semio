@@ -351,11 +351,13 @@ struct ComponentSurfaceCloseOwner {
     gpu_present: bool,
     phase: ComponentSurfaceClosePhase,
     faulted: bool,
+    world_fault: Option<infinite_world::world::WorldDynamicFault>,
+    world_progress: Option<semio_framework_value::RetainedCloneStep>,
 }
 
 impl ComponentSurfaceCloseOwner {
     fn new(request: ComponentSurfaceCloseRequest) -> Self {
-        Self { request, operation: semio_framework_trace::allocate_operation_id(), sequence: 0, cpu_present: false, gpu_present: false, phase: ComponentSurfaceClosePhase::Asset, faulted: false }
+        Self { request, operation: semio_framework_trace::allocate_operation_id(), sequence: 0, cpu_present: false, gpu_present: false, phase: ComponentSurfaceClosePhase::Asset, faulted: false, world_fault:None, world_progress:None }
     }
 
     fn close_asset_world_step(&mut self, runtime: &RuntimeMailbox) {
@@ -368,10 +370,21 @@ impl ComponentSurfaceCloseOwner {
                     self.phase = ComponentSurfaceClosePhase::World;
                 }
             }
-            ComponentSurfaceClosePhase::World => match runtime.close_component_world_step(&self.request.owner, self.operation, &mut self.sequence) {
-                Ok(true) => self.phase = if self.request.engine_token.is_some() { ComponentSurfaceClosePhase::Inspect } else { ComponentSurfaceClosePhase::Terminal },
-                Ok(false) => {}
-                Err(()) => self.faulted = true,
+            ComponentSurfaceClosePhase::World => {
+                let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+                let Some(budget)=semio_framework_job::default_now_us().and_then(|now|semio_framework_job::StepBudget::from_duration(1,now,semio_framework_job::MAINTENANCE_LANE_WALL_US)) else {
+                    self.world_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::WorkLimit));
+                    self.faulted=true;return;
+                };
+                let mut context=semio_framework_job::StepContext::new(self.operation,semio_framework_job::Generation(1),budget,semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut self.sequence);
+                match runtime.close_component_world_step(&self.request.owner,grant,&mut context) {
+                    Ok(step) if step.progress().fits(grant)=>{
+                        self.world_progress=Some(step);
+                        if matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)) {self.phase=if self.request.engine_token.is_some(){ComponentSurfaceClosePhase::Inspect}else{ComponentSurfaceClosePhase::Terminal};}
+                    },
+                    Ok(_)=>{self.world_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));self.faulted=true;},
+                    Err(fault)=>{self.world_fault=Some(fault);self.faulted=true;},
+                }
             },
             _ => {}
         }

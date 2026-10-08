@@ -1,0 +1,21 @@
+{
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "source": {
+    "text": "雪🌊",
+    "capacityBytes": 8192
+  },
+  "expected": {
+    "utf8Bytes": 7,
+    "sourceIdentity": "samePointer",
+    "zeroItems": "inert",
+    "shortDepth": "inert",
+    "shortCapacity": "inert",
+    "shortRelease": "inert",
+    "terminalBox": "separateAdmittedTurn",
+    "physical": "originalPlusAdmittedScaffolds"
+  }
+}

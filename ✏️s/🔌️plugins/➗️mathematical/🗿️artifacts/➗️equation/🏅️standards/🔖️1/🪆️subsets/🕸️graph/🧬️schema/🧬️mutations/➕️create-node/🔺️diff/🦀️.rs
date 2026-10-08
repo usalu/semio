@@ -10,13 +10,9 @@ pub fn diff(payload: &super::CreateNode, base: &EquationSnapshot) -> protocol::M
     if nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    let reordered = payload.index.filter(|index| *index < nodes.len()).map(|index| {
-        let mut order: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
-        order.insert(index, payload.id.clone());
-        order
-    });
+    let at = payload.index.map_or(nodes.len(), |index| index.min(nodes.len()));
     let node = EquationNode { id: payload.id.clone(), label: payload.label.clone(), x: payload.x, y: payload.y };
-    let diff = EquationDiff { nodes: Some(EquationNodesDelta { added: vec![node], reordered, ..Default::default() }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base))
+    let diff = EquationDiff { nodes: Some(EquationNodesDelta::insertion(at, node)), ..Default::default() };
+    protocol::MutationOutcome::new(diff)
 }
 //#endregion 🔖️Diff

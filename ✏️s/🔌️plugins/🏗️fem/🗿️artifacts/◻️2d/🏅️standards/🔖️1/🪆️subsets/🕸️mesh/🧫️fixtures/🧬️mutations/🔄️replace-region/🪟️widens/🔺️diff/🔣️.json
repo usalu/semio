@@ -2,12 +2,13 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "wall1",
-        "item": {
+        "patch": {
           "id": "wall1",
           "name": "Infill Wall Panel",
           "outline": [
@@ -53,8 +54,7 @@
           "meshSize": 0.4
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "materials": null,
   "sections": null,

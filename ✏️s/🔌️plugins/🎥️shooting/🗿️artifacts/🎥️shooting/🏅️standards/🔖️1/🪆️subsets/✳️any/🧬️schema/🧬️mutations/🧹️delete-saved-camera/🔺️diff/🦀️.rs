@@ -5,8 +5,8 @@ use crate::diff::{ShootingDiff, ShootingEdit};
 use crate::ShootingSnapshot;
 
 pub fn diff(payload: &DeleteSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
-    if !base.saved_cameras.iter().any(|entry| entry.id == payload.id) {
+    let Some(index) = base.saved_cameras.iter().position(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Saved camera \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(ShootingDiff::camera_edit(ShootingEdit::Remove { id: payload.id.clone() }))
+    };
+    protocol::MutationOutcome::new(ShootingDiff::camera_edit(ShootingEdit::Remove { id: payload.id.clone(), index }))
 }

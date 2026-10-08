@@ -1,57 +1,268 @@
 # 🧬️ Iso16757 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
 type Iso16757ProductGroupsPatch {
-  id: String!
   name: String
+}
+
+type Iso16757ProductGroupsRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757ProductGroupsInserted {
+  index: Int!
+  row: ProductGroup!
+}
+
+type Iso16757ProductGroupsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757ProductGroupsModified {
+  id: String!
+  patch: Iso16757ProductGroupsPatch!
 }
 
 type Iso16757ProductGroupsRows {
-  added: [ProductGroup!]!
-  removed: [String!]!
-  modified: [Iso16757ProductGroupsPatch!]!
-  order: [String!]
+  removed: [Iso16757ProductGroupsRemoved!]!
+  inserted: [Iso16757ProductGroupsInserted!]!
+  moved: [Iso16757ProductGroupsMoved!]!
+  modified: [Iso16757ProductGroupsModified!]!
+}
+
+type Iso16757ProductClassesPatchParentIdValue {
+  value: String
+}
+
+type Iso16757ProductClassesPatch {
+  groupId: String
+  parentId: Iso16757ProductClassesPatchParentIdValue
+  names: Names
+  requiredPropertyIds: [String!]
+  optionalPropertyIds: [String!]
+}
+
+type Iso16757ProductClassesRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757ProductClassesInserted {
+  index: Int!
+  row: ProductClass!
+}
+
+type Iso16757ProductClassesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757ProductClassesModified {
+  id: String!
+  patch: Iso16757ProductClassesPatch!
 }
 
 type Iso16757ProductClassesRows {
-  added: [ProductClass!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [Iso16757ProductClassesRemoved!]!
+  inserted: [Iso16757ProductClassesInserted!]!
+  moved: [Iso16757ProductClassesMoved!]!
+  modified: [Iso16757ProductClassesModified!]!
+}
+
+type Iso16757ProductSeriesPatchGeometryIdValue {
+  value: String
+}
+
+type Iso16757ProductSeriesPatch {
+  classId: String
+  names: Names
+  sharedPropertyValues: JSON
+  geometryId: Iso16757ProductSeriesPatchGeometryIdValue
+}
+
+type Iso16757ProductSeriesRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757ProductSeriesInserted {
+  index: Int!
+  row: ProductSeries!
+}
+
+type Iso16757ProductSeriesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757ProductSeriesModified {
+  id: String!
+  patch: Iso16757ProductSeriesPatch!
 }
 
 type Iso16757ProductSeriesRows {
-  added: [ProductSeries!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [Iso16757ProductSeriesRemoved!]!
+  inserted: [Iso16757ProductSeriesInserted!]!
+  moved: [Iso16757ProductSeriesMoved!]!
+  modified: [Iso16757ProductSeriesModified!]!
 }
 
 type Iso16757ProductsPatch {
-  id: String!
   name: String
 }
 
+type Iso16757ProductsRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757ProductsInserted {
+  index: Int!
+  row: Product!
+}
+
+type Iso16757ProductsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757ProductsModified {
+  id: String!
+  patch: Iso16757ProductsPatch!
+}
+
 type Iso16757ProductsRows {
-  added: [Product!]!
-  removed: [String!]!
-  modified: [Iso16757ProductsPatch!]!
-  order: [String!]
+  removed: [Iso16757ProductsRemoved!]!
+  inserted: [Iso16757ProductsInserted!]!
+  moved: [Iso16757ProductsMoved!]!
+  modified: [Iso16757ProductsModified!]!
+}
+
+type Iso16757ProductIndexesPatchVariantIdValue {
+  value: String
+}
+
+type Iso16757ProductIndexesPatch {
+  productId: String
+  variantId: Iso16757ProductIndexesPatchVariantIdValue
+  searchTags: [String!]
+}
+
+type Iso16757ProductIndexesRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757ProductIndexesInserted {
+  index: Int!
+  row: ProductIndex!
+}
+
+type Iso16757ProductIndexesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757ProductIndexesModified {
+  id: String!
+  patch: Iso16757ProductIndexesPatch!
 }
 
 type Iso16757ProductIndexesRows {
-  added: [ProductIndex!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [Iso16757ProductIndexesRemoved!]!
+  inserted: [Iso16757ProductIndexesInserted!]!
+  moved: [Iso16757ProductIndexesMoved!]!
+  modified: [Iso16757ProductIndexesModified!]!
+}
+
+type Iso16757PropertyDefinitionsPatchUnitValue {
+  value: CatalogueUnit
+}
+
+type Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue {
+  value: String
+}
+
+type Iso16757PropertyDefinitionsPatch {
+  names: Names
+  dataType: String
+  unit: Iso16757PropertyDefinitionsPatchUnitValue
+  cardinality: Cardinality
+  kind: PropertyKind
+  dictionaryPropertyId: Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue
+}
+
+type Iso16757PropertyDefinitionsRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757PropertyDefinitionsInserted {
+  index: Int!
+  row: PropertyDefinition!
+}
+
+type Iso16757PropertyDefinitionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757PropertyDefinitionsModified {
+  id: String!
+  patch: Iso16757PropertyDefinitionsPatch!
 }
 
 type Iso16757PropertyDefinitionsRows {
-  added: [PropertyDefinition!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [Iso16757PropertyDefinitionsRemoved!]!
+  inserted: [Iso16757PropertyDefinitionsInserted!]!
+  moved: [Iso16757PropertyDefinitionsMoved!]!
+  modified: [Iso16757PropertyDefinitionsModified!]!
+}
+
+type Iso16757SubjectsPatchParentIdValue {
+  value: String
+}
+
+type Iso16757SubjectsPatch {
+  kind: SubjectKind
+  names: Names
+  definition: LocalizedText
+  parentId: Iso16757SubjectsPatchParentIdValue
+}
+
+type Iso16757SubjectsRemoved {
+  id: String!
+  index: Int!
+}
+
+type Iso16757SubjectsInserted {
+  index: Int!
+  row: Subject!
+}
+
+type Iso16757SubjectsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Iso16757SubjectsModified {
+  id: String!
+  patch: Iso16757SubjectsPatch!
 }
 
 type Iso16757SubjectsRows {
-  added: [Subject!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [Iso16757SubjectsRemoved!]!
+  inserted: [Iso16757SubjectsInserted!]!
+  moved: [Iso16757SubjectsMoved!]!
+  modified: [Iso16757SubjectsModified!]!
 }
 
 type Iso16757GeometryObjectsEntry {

@@ -1,3 +1,5 @@
+import { parsePixelLayerSelectionV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
+import type {RasterSelectionSpan} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 /** 🧬️ RasterConfig */
 export interface RasterCamera {
   /** @state config */
@@ -20,7 +22,7 @@ export interface RasterPixelSelection {
   target:"pixels"|"mask";
   width:number;
   height:number;
-  spans:string;
+  spans:RasterSelectionSpan[];
 }
 
 export interface RasterConfig {
@@ -93,7 +95,7 @@ export const rasterRasterConfigGuardConstant = <T extends string | number | bool
 
 export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
   const row = rasterRasterConfigGuardObject(value, at);
-  const pixelSelection=row.pixelSelection===undefined?undefined:parseRasterPixelSelection(row.pixelSelection,`${at}.pixelSelection`);
+  const pixelSelection=row.pixelSelection===undefined?undefined:parsePixelLayerSelectionV1(row.pixelSelection,`${at}.pixelSelection`);
   if(pixelSelection&&pixelSelection.target!==row.paintTarget)rasterRasterConfigGuardReject(`${at}.pixelSelection.target`,"selection target differs from paint target");
   return {
     ...(pixelSelection===undefined?{}:{pixelSelection}),
@@ -124,28 +126,4 @@ export function parseRasterConfigViewportSize(value: unknown, at = "$"): RasterC
     width: rasterRasterConfigGuardNumber(row["width"], `${at}.width`),
     height: rasterRasterConfigGuardNumber(row["height"], `${at}.height`),
   };
-}
-
-/** 🎯️ Admits bounded completed coverage without allocating an image-sized mask. */
-export function parseRasterPixelSelection(value:unknown,at="$"):RasterPixelSelection{
-  const row=rasterRasterConfigGuardObject(value,at);
-  const layerId=rasterRasterConfigGuardString(row.layerId,`${at}.layerId`,{minLength:1,maxLength:256});
-  const target=rasterRasterConfigGuardMember(row.target,`${at}.target`,["pixels","mask"]);
-  const width=rasterRasterConfigGuardInteger(row.width,`${at}.width`,{minimum:1,maximum:16384});
-  const height=rasterRasterConfigGuardInteger(row.height,`${at}.height`,{minimum:1,maximum:16384});
-  const count=width*height;
-  if(count>16777216)rasterRasterConfigGuardReject(at,"selection exceeds pixel budget");
-  const spans=rasterRasterConfigGuardString(row.spans,`${at}.spans`,{maxLength:40000});
-  if(new TextEncoder().encode(spans).length>40000)rasterRasterConfigGuardReject(`${at}.spans`,"selection exceeds transport budget");
-  let decoded:unknown;
-  try{decoded=JSON.parse(spans);}catch{rasterRasterConfigGuardReject(`${at}.spans`,"invalid selection JSON");}
-  let previous=0;
-  for(const span of rasterRasterConfigGuardArray(decoded,`${at}.spans`)){
-    const values=rasterRasterConfigGuardArray(span,`${at}.spans`,{minItems:3,maxItems:3});
-    const start=rasterRasterConfigGuardInteger(values[0],`${at}.spans.start`,{minimum:previous,maximum:count});
-    const length=rasterRasterConfigGuardInteger(values[1],`${at}.spans.length`,{minimum:1,maximum:count-start});
-    rasterRasterConfigGuardInteger(values[2],`${at}.spans.coverage`,{minimum:0,maximum:255});
-    previous=start+length;
-  }
-  return {layerId,target,width,height,spans};
 }

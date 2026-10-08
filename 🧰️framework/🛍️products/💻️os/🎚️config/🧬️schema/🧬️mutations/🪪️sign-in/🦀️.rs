@@ -71,10 +71,6 @@ impl protocol::DiffAlgebra<IdentitySetting> for IdentityDiff {
         Self { session: self.session.as_ref().map(|_| SettingEdit::new(base.0.clone())) }
     }
 
-    fn between(base: &IdentitySetting, other: &IdentitySetting) -> Self {
-        Self { session: (base != other).then(|| SettingEdit::new(other.0.clone())) }
-    }
-
     fn is_empty(&self) -> bool {
         self.session.is_none()
     }
@@ -153,21 +149,11 @@ pub fn inverse_identity_config_mutation(snapshot: &IdentitySetting, mutation: &I
     })
 }
 
-/// 📥️ Decodes the internally tagged identity mutation JSON projection.
-pub fn decode_identity_config_mutation_json(text: &str) -> Result<IdentityConfigMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
 
-/// 📤️ Encodes the identity setting to its canonical camel-case JSON projection — a bare
-/// session object, or the bare literal `null` when signed out.
-pub fn encode_identity_setting_json(snapshot: &IdentitySetting) -> String {
-    serde_json::to_string(snapshot).expect("IdentitySetting serialization is infallible")
-}
 
-/// 📥️ Decodes the canonical identity setting JSON projection.
-pub fn decode_identity_setting_json(text: &str) -> Result<IdentitySetting, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
+
+
+
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
 pub fn inverse_identity_config_mutation_steps(mutation: &IdentityConfigMutation, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {

@@ -105,9 +105,9 @@
       "blendMode": "normal",
       "visible": true,
       "image": {
-        "src": "data:image/png;base64,AA==",
         "width": 2,
-        "height": 3
+        "height": 3,
+        "assetId": "image"
       }
     },
     "bounds": [

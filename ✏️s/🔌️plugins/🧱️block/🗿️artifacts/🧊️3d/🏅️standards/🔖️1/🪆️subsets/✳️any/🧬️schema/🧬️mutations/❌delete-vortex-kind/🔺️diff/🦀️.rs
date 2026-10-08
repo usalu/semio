@@ -8,6 +8,6 @@ pub fn diff(payload: &super::DeleteVortexKind, base: &Block3dSnapshot) -> protoc
     if !crate::vortex_kinds_of(base).iter().any(|item| item.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex-kind", payload.id), vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block3dDiff { vortex_kinds: Some(Block3dVortexKindsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { vortex_kinds: Block3dVortexKindsDelta::removal(&crate::vortex_kinds_of(base), crate::vortex_kinds_of(base).iter().position(|item| item.id == payload.id).unwrap_or(usize::MAX)), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -24,13 +24,16 @@ message ModelRelationDiff {
 }
 
 message SpatialModified { string key = 1; SpatialNodeDiff diff = 2; }
-message SpatialTripleDiff { repeated string removed = 1; repeated SpatialModified modified = 2; repeated bytes added = 3; }
+message SpatialTripleDiff { repeated string removed = 1; repeated SpatialModified modified = 2; repeated SpatialAdded added = 3; }
+message SpatialAdded { uint64 index = 1; bytes item = 2; }
 
 message ElementModified { string key = 1; SemioModelElementDiff diff = 2; }
-message ElementsTripleDiff { repeated string removed = 1; repeated ElementModified modified = 2; repeated bytes added = 3; }
+message ElementsTripleDiff { repeated string removed = 1; repeated ElementModified modified = 2; repeated ElementsAdded added = 3; }
+message ElementsAdded { uint64 index = 1; bytes item = 2; }
 
 message RelationModified { string key = 1; ModelRelationDiff diff = 2; }
-message RelationsTripleDiff { repeated string removed = 1; repeated RelationModified modified = 2; repeated bytes added = 3; }
+message RelationsTripleDiff { repeated string removed = 1; repeated RelationModified modified = 2; repeated RelationsAdded added = 3; }
+message RelationsAdded { uint64 index = 1; bytes item = 2; }
 
 message SemioModelDiff {
   optional SpatialTripleDiff spatial = 1;

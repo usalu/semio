@@ -54,7 +54,7 @@ fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<semio_framework_ui_c
     props.row_actions.iter().map(|action| target.binding(&action.verb).expect("credited row binding")).collect()
 }
 
-fn rows(windows: &TreeWindows<'_>, rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn rows(windows: &TreeWindows<'_>, rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_rows(rows, table, actions, windows)
 }
 
@@ -64,24 +64,24 @@ fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> 
     value.as_str().to_owned()
 }
 
-fn one_local_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: semio_framework_artifact_space_space::SpaceKind::Atelier, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, members: "1".into(), updated_ms: None, origin: "local", data_class: "persistedLocalOnly", role: None }
+fn one_local_row() -> semio_s_space_core::HomeSpaceRow {
+    semio_s_space_core::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: semio_framework_artifact_space_space::SpaceKind::Atelier, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, members: "1".into(), updated_ms: None, origin: "local", data_class: "persistedLocalOnly", role: None }
 }
 
-fn one_ephemeral_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-draft".into(), name: "Temp Studio".into(), kind: semio_framework_artifact_space_space::SpaceKind::Atelier, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, members: "1".into(), updated_ms: None, origin: "local", data_class: "ephemeralLocalOnly", role: None }
+fn one_ephemeral_row() -> semio_s_space_core::HomeSpaceRow {
+    semio_s_space_core::HomeSpaceRow { id: "sp-draft".into(), name: "Temp Studio".into(), kind: semio_framework_artifact_space_space::SpaceKind::Atelier, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, members: "1".into(), updated_ms: None, origin: "local", data_class: "ephemeralLocalOnly", role: None }
 }
 
-fn one_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: semio_framework_artifact_space_space::SpaceKind::Studio, visibility: semio_framework_artifact_space_space::SpaceVisibility::Public, members: "2".into(), updated_ms: Some(1_790_370_316_130), origin: "hub", data_class: "persistedShared", role: Some(crate::DirectorySpaceRole::Author) }
+fn one_hub_row() -> semio_s_space_core::HomeSpaceRow {
+    semio_s_space_core::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: semio_framework_artifact_space_space::SpaceKind::Studio, visibility: semio_framework_artifact_space_space::SpaceVisibility::Public, members: "2".into(), updated_ms: Some(1_790_370_316_130), origin: "hub", data_class: "persistedShared", role: Some(semio_s_space_core::DirectorySpaceRole::Author) }
 }
 
-fn spectator_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { role: Some(crate::DirectorySpaceRole::Spectator), ..one_hub_row() }
+fn spectator_hub_row() -> semio_s_space_core::HomeSpaceRow {
+    semio_s_space_core::HomeSpaceRow { role: Some(semio_s_space_core::DirectorySpaceRole::Spectator), ..one_hub_row() }
 }
 
-fn unbound_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { role: None, ..one_hub_row() }
+fn unbound_hub_row() -> semio_s_space_core::HomeSpaceRow {
+    semio_s_space_core::HomeSpaceRow { role: None, ..one_hub_row() }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -150,11 +150,11 @@ async fn a_local_row_carries_open_and_remove_from_home() {
 #[semio_framework_async_macros::async_test]
 async fn seeded_local_studio_renders_a_table_row() {
     let cfg = HomeConfig::default();
-    // 🌱️ `crate::catalog_port()` lazily seeds a demo space on first access (plugin root's own
+    // 🌱️ `semio_s_space_core::catalog_port()` lazily seeds a demo space on first access (plugin root's own
     // `catalog_port_concrete`), so the local catalog is never truly empty once touched — this test
     // exercises the REAL end-to-end `render` (not `render_rows`), deliberately not asserting on
     // emptiness (see `empty_rows_render_the_empty_message_not_a_zero_row_table` for that, isolated).
-    let _ = crate::list_all_space_catalog_entries().await;
+    let _ = semio_s_space_core::list_all_space_catalog_entries().await;
     let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_framework_ui_locale::Locale::En)).expect("seeded Home rows");
     let json = project(node);
     assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
@@ -239,9 +239,9 @@ async fn the_signed_in_window_body_survives_the_component_tree_producer() {
     assert!(json.contains("Fabrication") && json.contains("Fixture Studio"), "the populated body publishes both rows: {json}");
 }
 
-/// 🧪️ `render`'s own composition, isolated from `crate::list_all_space_catalog_entries()`'s
+/// 🧪️ `render`'s own composition, isolated from `semio_s_space_core::list_all_space_catalog_entries()`'s
 /// process-global singleton — mirrors `render_rows`'s own isolation rationale above.
-async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+async fn render_rows_wrapped_for_test(rows: &[semio_s_space_core::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN, &TreeWindows::unhosted())
 }
 

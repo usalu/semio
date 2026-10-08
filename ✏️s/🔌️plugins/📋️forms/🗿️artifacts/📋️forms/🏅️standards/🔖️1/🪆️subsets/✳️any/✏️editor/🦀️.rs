@@ -650,27 +650,27 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
                 let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
                 let (output, config) = reset_try::handle_window(payload, input.operation, &lease)?;
                 emit = output.emit;
-                emit.window_config_mutations.push(try_window::config::addressed(view, config)?);
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), config)?);
                 transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
             }
             FormsCommand::PreviousStep(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
                 let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let next = previous_step::handle_window(payload, &try_window::config::from_snapshot(context.window_config.as_ref()))?;
-                emit.window_config_mutations.push(try_window::config::addressed(view, next)?);
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), next)?);
             }
             FormsCommand::NextStep(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
                 let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let next = next_step::handle_window(payload, input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()))?;
-                emit.window_config_mutations.push(try_window::config::addressed(view, next)?);
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), next)?);
             }
             FormsCommand::Submit(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
                 let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let (output, config) = submit::handle_window(input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()), input.operation.canonical_base_revision_hex())?;
                 emit = output;
-                emit.window_config_mutations.push(try_window::config::addressed(view, config)?);
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), config)?);
             }
             _ => emit = input.command.dispatch(&doc, &cfg)?,
         }
@@ -843,7 +843,13 @@ where
         admit_forms_store_mutation::<P, M>(mutation)
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<FormsStorePreparation<P,M>>(),depth:1})
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M>)> {
+        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
+        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
         let retained_bytes = forms_store_mutation_retained_bytes(&request.mutation).unwrap_or(FORMS_STORE_MUTATION_MAXIMUM_BYTES.saturating_add(1));
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
@@ -852,9 +858,9 @@ where
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preparation rejected original publication authority"),request));
         }
-        Ok(Box::new(FormsStorePreparation {
+        Ok((Box::new(FormsStorePreparation {
             prefix: self.prefix,
             base: Some(request.base),
             mutation: Some(request.mutation),
@@ -864,7 +870,7 @@ where
             retained_bytes,
             cancelled: false,
             closing: false,
-        }))
+        }),progress))
     }
 }
 
@@ -1168,7 +1174,7 @@ impl ArtifactEditor for FormsPlayApp {
             (FormsCommand::PreviousStep(payload), Some(view)) => {
                 forms_try_view(view, &payload.window_id, &payload.window_kind_id)?;
                 let mut emit = Emit::default();
-                emit.window_config_mutations.push(try_window::config::addressed(view, previous_step::handle_window(payload, &try_window::config::current(cfg))?)?);
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::current(cfg), previous_step::handle_window(payload, &try_window::config::current(cfg))?)?);
                 Ok(emit)
             }
             (FormsCommand::NextStep(_), _)

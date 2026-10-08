@@ -5,9 +5,13 @@
   "notes": null,
   "status": null,
   "tags": {
-    "added": [
-      "urgent"
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": "urgent"
+      }
     ],
-    "removed": []
+    "moved": []
   }
 }

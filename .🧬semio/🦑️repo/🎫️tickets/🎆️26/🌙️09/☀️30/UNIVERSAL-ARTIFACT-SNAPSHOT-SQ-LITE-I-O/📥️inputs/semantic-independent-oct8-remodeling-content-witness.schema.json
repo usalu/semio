@@ -1,0 +1,845 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sparse",
+    "mesh"
+  ],
+  "properties": {
+    "sparse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contentId",
+        "kind",
+        "mime",
+        "width",
+        "height",
+        "chunks",
+        "reference"
+      ],
+      "properties": {
+        "contentId": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "sparse"
+        },
+        "mime": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "samples"
+                  },
+                  "fieldTag": {
+                    "const": null
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "storage",
+            "contentId",
+            "chunkCount"
+          ],
+          "properties": {
+            "storage": {
+              "const": "content"
+            },
+            "contentId": {
+              "type": "string"
+            },
+            "chunkCount": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contentId",
+        "kind",
+        "mime",
+        "width",
+        "height",
+        "chunks",
+        "reference"
+      ],
+      "properties": {
+        "contentId": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "mesh"
+        },
+        "mime": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "positions"
+                  },
+                  "fieldTag": {
+                    "const": 0
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "normals"
+                  },
+                  "fieldTag": {
+                    "const": 1
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "colors"
+                  },
+                  "fieldTag": {
+                    "const": 2
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "indices"
+                  },
+                  "fieldTag": {
+                    "const": 3
+                  },
+                  "elementType": {
+                    "const": "u32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "floatBits": {
+                    "type": "null"
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "uvs"
+                  },
+                  "fieldTag": {
+                    "const": 4
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "face_ids"
+                  },
+                  "fieldTag": {
+                    "const": 5
+                  },
+                  "elementType": {
+                    "const": "u32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "floatBits": {
+                    "type": "null"
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "vertex_ids"
+                  },
+                  "fieldTag": {
+                    "const": 6
+                  },
+                  "elementType": {
+                    "const": "u32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "floatBits": {
+                    "type": "null"
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "edge_positions"
+                  },
+                  "fieldTag": {
+                    "const": 7
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "edge_ids"
+                  },
+                  "fieldTag": {
+                    "const": 8
+                  },
+                  "elementType": {
+                    "const": "u32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "floatBits": {
+                    "type": "null"
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "edge_uvs"
+                  },
+                  "fieldTag": {
+                    "const": 9
+                  },
+                  "elementType": {
+                    "const": "f32"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "floatBits": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
+                    }
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "edge_is_seam"
+                  },
+                  "fieldTag": {
+                    "const": 10
+                  },
+                  "elementType": {
+                    "const": "u8"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  },
+                  "floatBits": {
+                    "type": "null"
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordinal",
+                  "field",
+                  "fieldTag",
+                  "elementType",
+                  "elementCount",
+                  "values",
+                  "floatBits",
+                  "sourceOctets"
+                ],
+                "properties": {
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "field": {
+                    "const": "paint_texture_base64"
+                  },
+                  "fieldTag": {
+                    "const": 11
+                  },
+                  "elementType": {
+                    "const": "text"
+                  },
+                  "elementCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "values": {
+                    "type": "string"
+                  },
+                  "floatBits": {
+                    "type": "null"
+                  },
+                  "sourceOctets": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "childId",
+            "artifactId",
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "childId": {
+              "type": "string"
+            },
+            "artifactId": {
+              "type": "string",
+              "pattern": "^remodeling-mesh-content:[0-9]+$"
+            },
+            "artifactKind": {
+              "const": "s.stdio.semio"
+            },
+            "standard": {
+              "const": "v1"
+            },
+            "subset": {
+              "const": "mesh"
+            }
+          }
+        }
+      }
+    },
+    "scope": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Independent Remodeling Structured Content Positive Witness"
+}

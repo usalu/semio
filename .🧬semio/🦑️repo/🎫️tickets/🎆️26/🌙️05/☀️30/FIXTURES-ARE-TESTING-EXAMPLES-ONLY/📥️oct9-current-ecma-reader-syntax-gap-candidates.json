@@ -1,0 +1,51 @@
+{
+  "authorship": false,
+  "source": {
+    "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+    "sha256": "b8505d4abc25451995f65717108622ca4223997807d0a2b1188387a4c8771b37"
+  },
+  "cases": [
+    {
+      "id": "async-test-callback",
+      "source": "test(\"law\",async()=>{const schema=await Bun.file(new URL(\"./schema.json\",import.meta.url)).json();new Ajv().compile(schema)(law);});",
+      "currentSourceObservation": "async modifier not recognized for arrow expression; conservative null",
+      "needed": "Plugin lifecycle and scene handoff actual test callbacks"
+    },
+    {
+      "id": "postfix-as-cast",
+      "source": "const rows=JSON.parse(read(\"./examples.json\")) as {cases:unknown[]};new Ajv().compile(schema)(rows);",
+      "currentSourceObservation": "no as/satisfies expression branch; null",
+      "needed": "current real reader annotations/typed arrays"
+    },
+    {
+      "id": "parenthesized-typed-arrow",
+      "source": "const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),\"utf8\"));",
+      "currentSourceObservation": "pattern accepts colon annotation; helper closure needs binder not merely syntax",
+      "needed": "actual helper alias"
+    },
+    {
+      "id": "selected-local-ref",
+      "source": "new Ajv().addSchema(schema).compile({$ref:`${schema.$id}#/$defs/Grant`})(fixture.grant);",
+      "currentSourceObservation": "template parses nested expression but binder must join constant suffix plus known schema id",
+      "needed": "genuine selected Grant not whole corpus"
+    },
+    {
+      "id": "escaped-template-binding",
+      "source": "const read=load;const ref=`${\\u0072ead(\"x\")}`;",
+      "currentSourceObservation": "nested template parser uses raw ecmaTokens without semantic mapping; name can remain escaped spelling unlike top-level read",
+      "needed": "semantic identity consistency"
+    },
+    {
+      "id": "bun-await-chain",
+      "source": "const schema=await Bun.file(new URL(\"./schema.json\",import.meta.url)).json();",
+      "currentSourceObservation": "await+newURL+member/call chains represented by supported branches",
+      "needed": "do not mark Bun.file JSON intrinsically unsupported"
+    },
+    {
+      "id": "namespace-new",
+      "source": "new oracle.Ajv().compile(schema)(law);",
+      "currentSourceObservation": "new callee primary rejects member constructor; null",
+      "needed": "namespace import constructor if supported"
+    }
+  ]
+}

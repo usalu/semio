@@ -73,16 +73,16 @@ fn sorted_entries<P>(entries: impl IntoIterator<Item = (String, P)>) -> Vec<Shoo
 //#endregion 🔖️Builders
 
 //#region 🔖️ListDelta
-/// 🧩 One ordered structural edit of an identified list; `index` is the destination position in the list as it stands when the edit runs.
+/// 🧩 One ordered positional edit of an identified list; every index is a position in the list as it stands when the edit runs, so a row is its own inverse recipe: `add` names where the item lands, `remove` where it stood, `move` where it came from and where it goes.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "edit", rename_all = "camelCase")]
 pub enum ShootingEdit<T> {
     #[value(rename = "add", rename_all = "camelCase")]
     Add { index: usize, item: T },
     #[value(rename = "remove", rename_all = "camelCase")]
-    Remove { id: String },
+    Remove { id: String, index: usize },
     #[value(rename = "move", rename_all = "camelCase")]
-    Move { id: String, index: usize },
+    Move { id: String, from: usize, to: usize },
 }
 
 /// 🩹 One keyed field patch.
@@ -114,60 +114,64 @@ pub type ShootingShotsDelta = ShootingListDelta<ShootingShot, ShootingShotPatch>
 /// 🧩 Identified-collection delta for `savedCameras`.
 pub type ShootingSavedCamerasDelta = ShootingListDelta<ShootingSavedCamera, ShootingSavedCameraPatch>;
 
-/// ➕️ Field-wise composition of two patches of the same row: the later value of a field wins.
-pub trait ShootingPatchAlgebra: Sized {
-    /// ➕️ Composes `later` over `self`.
+/// ➕️ Field algebra of one row patch over its row type: composition and the slot-wise restore read from the row it patches.
+pub trait ShootingPatchAlgebra<T>: Sized {
+    /// ➕️ Composes `later` over `self`: the later value of a field wins.
     fn merge(&mut self, later: Self);
+    /// 🔁️ The patch that restores `row`'s value for exactly the fields `self` names.
+    fn restoring(&self, row: &T) -> Self;
 }
 
-impl ShootingPatchAlgebra for ShootingAssetPatch {
+macro_rules! take_later {
+    ($self:ident, $later:ident, $($field:ident),+) => {
+        $(if $later.$field.is_some() {
+            $self.$field = $later.$field;
+        })+
+    };
+}
+
+impl ShootingPatchAlgebra<ShootingAsset> for ShootingAssetPatch {
     fn merge(&mut self, later: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if later.$field.is_some() {
-                    self.$field = later.$field;
-                }
-            };
+        take_later!(self, later, name, url, format, origin, orientation, scale);
+    }
+
+    fn restoring(&self, row: &ShootingAsset) -> Self {
+        Self {
+            name: self.name.as_ref().map(|_| row.name.clone()),
+            url: self.url.as_ref().map(|_| row.url.clone()),
+            format: self.format.as_ref().map(|_| row.format.clone()),
+            origin: self.origin.map(|_| row.origin),
+            orientation: self.orientation.as_ref().map(|_| ShootingAssigned::new(row.orientation)),
+            scale: self.scale.as_ref().map(|_| ShootingAssigned::new(row.scale)),
         }
-        take!(name);
-        take!(url);
-        take!(format);
-        take!(origin);
-        take!(orientation);
-        take!(scale);
     }
 }
 
-impl ShootingPatchAlgebra for ShootingShotPatch {
+impl ShootingPatchAlgebra<ShootingShot> for ShootingShotPatch {
     fn merge(&mut self, later: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if later.$field.is_some() {
-                    self.$field = later.$field;
-                }
-            };
+        take_later!(self, later, label, width, height, format, shape, background, camera_id);
+    }
+
+    fn restoring(&self, row: &ShootingShot) -> Self {
+        Self {
+            label: self.label.as_ref().map(|_| row.label.clone()),
+            width: self.width.map(|_| row.width),
+            height: self.height.map(|_| row.height),
+            format: self.format.as_ref().map(|_| row.format.clone()),
+            shape: self.shape.as_ref().map(|_| row.shape.clone()),
+            background: self.background.as_ref().map(|_| ShootingAssigned::new(row.background.clone())),
+            camera_id: self.camera_id.as_ref().map(|_| ShootingAssigned::new(row.camera_id.clone())),
         }
-        take!(label);
-        take!(width);
-        take!(height);
-        take!(format);
-        take!(shape);
-        take!(background);
-        take!(camera_id);
     }
 }
 
-impl ShootingPatchAlgebra for ShootingSavedCameraPatch {
+impl ShootingPatchAlgebra<ShootingSavedCamera> for ShootingSavedCameraPatch {
     fn merge(&mut self, later: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if later.$field.is_some() {
-                    self.$field = later.$field;
-                }
-            };
-        }
-        take!(label);
-        take!(camera);
+        take_later!(self, later, label, camera);
+    }
+
+    fn restoring(&self, row: &ShootingSavedCamera) -> Self {
+        Self { label: self.label.as_ref().map(|_| row.label.clone()), camera: self.camera.as_ref().map(|_| row.camera.clone()) }
     }
 }
 
@@ -178,38 +182,47 @@ fn position_of<T: Identified<String>>(items: &[T], id: &str) -> Option<usize> {
 impl<T, P> ShootingListDelta<T, P>
 where
     T: Clone + Identified<String> + Patchable<P>,
-    P: Clone + ShootingPatchAlgebra,
+    P: Clone + ShootingPatchAlgebra<T>,
 {
     /// 🧬️ Runs the edits then the patches over `items`; private so that only [`MutationDiff::apply`] (the central applier's entry) reaches it.
-    fn write_into(&self, items: &[T]) -> MutationApplyResult<Vec<T>> {
+    fn apply_rows(&self, items: &[T]) -> MutationApplyResult<Vec<T>> {
         let mut next = items.to_vec();
         for (row, edit) in self.edits.iter().enumerate() {
             let at = |field: &str| ["edits".to_string(), row.to_string(), field.to_string()];
             match edit {
                 ShootingEdit::Add { index, item } => {
                     if position_of(&next, item.id()).is_some() {
-                        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(at("item")));
+                        return Err(MutationApplyError::new("mutation.apply.duplicate-id", "added item identity already exists").at(at("item")));
                     }
                     if *index > next.len() {
-                        return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("insertion index {index} exceeds length {}", next.len())).at(at("index")));
+                        return Err(MutationApplyError::new("mutation.apply.invalid-add-index", format!("insertion index {index} exceeds length {}", next.len())).at(at("index")));
                     }
                     next.insert(*index, item.clone());
                 }
-                ShootingEdit::Remove { id } => {
+                ShootingEdit::Remove { id, index } => {
                     let position = position_of(&next, id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(at("id")))?;
+                    if position != *index {
+                        return Err(MutationApplyError::new("mutation.apply.order-mismatch", format!("removed item stands at {position}, not at {index}")).at(at("index")));
+                    }
                     next.remove(position);
                 }
-                ShootingEdit::Move { id, index } => {
+                ShootingEdit::Move { id, from, to } => {
                     let position = position_of(&next, id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "moved item does not exist").at(at("id")))?;
+                    if position != *from {
+                        return Err(MutationApplyError::new("mutation.apply.order-mismatch", format!("moved item stands at {position}, not at {from}")).at(at("from")));
+                    }
                     let item = next.remove(position);
-                    next.insert((*index).min(next.len()), item);
+                    if *to > next.len() {
+                        return Err(MutationApplyError::new("mutation.apply.invalid-add-index", format!("move destination {to} exceeds length {}", next.len())).at(at("to")));
+                    }
+                    next.insert(*to, item);
                 }
             }
         }
         let mut seen = std::collections::HashSet::new();
         for entry in &self.patched {
             if !seen.insert(entry.id.as_str()) {
-                return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", entry.id.as_str()]));
+                return Err(MutationApplyError::new("mutation.apply.duplicate-id", "item is patched more than once").at(["patched", entry.id.as_str()]));
             }
             let position = position_of(&next, &entry.id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", entry.id.as_str()]))?;
             next[position].apply_patch(&entry.patch);
@@ -217,21 +230,32 @@ where
         Ok(next)
     }
 
-    /// ➕️ Sequentially composes `later` after `self`: adjacent edits of one row coalesce (add∘remove cancels, move∘move keeps the last, move∘remove keeps the remove) and keyed patches merge per id.
+    /// ➕️ Sequentially composes `later` after `self`: adjacent edits of one row coalesce (add∘remove cancels, move∘move is one move from the first source to the last destination and vanishes when they meet, move∘remove removes from the first source) and keyed patches merge per id.
     pub fn absorb(&mut self, later: Self) {
-        let removed: Vec<String> = later.edits.iter().filter_map(|edit| if let ShootingEdit::Remove { id } = edit { Some(id.clone()) } else { None }).collect();
+        let removed: Vec<String> = later.edits.iter().filter_map(|edit| if let ShootingEdit::Remove { id, .. } = edit { Some(id.clone()) } else { None }).collect();
         self.patched.retain(|entry| !removed.contains(&entry.id));
         for edit in later.edits {
             loop {
                 match (self.edits.last(), &edit) {
-                    (Some(ShootingEdit::Add { item, .. }), ShootingEdit::Remove { id }) if item.id() == id => {
+                    (Some(ShootingEdit::Add { item, .. }), ShootingEdit::Remove { id, .. }) if item.id() == id => {
                         let id = id.clone();
                         self.edits.pop();
                         self.patched.retain(|entry| entry.id != id);
                         break;
                     }
-                    (Some(ShootingEdit::Move { id: prior, .. }), ShootingEdit::Move { id, .. } | ShootingEdit::Remove { id }) if prior == id => {
+                    (Some(ShootingEdit::Move { id: prior, from, .. }), ShootingEdit::Move { id, to, .. }) if prior == id => {
+                        let (id, from, to) = (id.clone(), *from, *to);
                         self.edits.pop();
+                        if from != to {
+                            self.edits.push(ShootingEdit::Move { id, from, to });
+                        }
+                        break;
+                    }
+                    (Some(ShootingEdit::Move { id: prior, from, .. }), ShootingEdit::Remove { id, .. }) if prior == id => {
+                        let (id, index) = (id.clone(), *from);
+                        self.edits.pop();
+                        self.edits.push(ShootingEdit::Remove { id, index });
+                        break;
                     }
                     _ => {
                         self.edits.push(edit);
@@ -253,81 +277,26 @@ where
 impl<T, P> ShootingListDelta<T, P>
 where
     T: Clone + Identified<String> + Patchable<P>,
-    P: Clone + PartialEq,
+    P: Clone + ShootingPatchAlgebra<T>,
 {
-    /// 🔁️ The negative delta against `base`: reversed structural edits that put every row back where it was, then patches restoring the pre-patch field values.
-    pub fn negative(&self, base: &[T]) -> Self {
-        let mut current = base.to_vec();
-        let mut added: Vec<String> = Vec::new();
-        let mut undo = Vec::new();
-        for edit in &self.edits {
-            match edit {
-                ShootingEdit::Add { index, item } => {
-                    undo.push(ShootingEdit::Remove { id: item.id().clone() });
-                    added.push(item.id().clone());
-                    current.insert((*index).min(current.len()), item.clone());
-                }
-                ShootingEdit::Remove { id } => {
-                    if let Some(position) = position_of(&current, id) {
-                        undo.push(ShootingEdit::Add { index: position, item: current.remove(position) });
-                    }
-                }
-                ShootingEdit::Move { id, index } => {
-                    if let Some(position) = position_of(&current, id) {
-                        undo.push(ShootingEdit::Move { id: id.clone(), index: position });
-                        let item = current.remove(position);
-                        current.insert((*index).min(current.len()), item);
-                    }
-                }
-            }
-        }
-        undo.reverse();
+    /// 🔁️ The negative delta, read row by row: every positional edit is undone by its mirror (an `add` removes at its index, a `remove` re-adds the base row at its index, a `move` swaps its ends), in reverse order, and every keyed patch is restored from the base row it patches.
+    pub fn inverse_rows(&self, base: &[T]) -> Self {
+        let mut edits: Vec<ShootingEdit<T>> = self
+            .edits
+            .iter()
+            .filter_map(|edit| match edit {
+                ShootingEdit::Add { index, item } => Some(ShootingEdit::Remove { id: item.id().clone(), index: *index }),
+                ShootingEdit::Remove { id, index } => base.iter().find(|item| item.id() == id).map(|item| ShootingEdit::Add { index: *index, item: item.clone() }),
+                ShootingEdit::Move { id, from, to } => Some(ShootingEdit::Move { id: id.clone(), from: *to, to: *from }),
+            })
+            .collect();
+        edits.reverse();
+        let added: Vec<&String> = self.edits.iter().filter_map(|edit| if let ShootingEdit::Add { item, .. } = edit { Some(item.id()) } else { None }).collect();
         let mut patched: Vec<ShootingPatchEntry<P>> = self
             .patched
             .iter()
-            .filter(|entry| !added.contains(&entry.id))
-            .filter_map(|entry| {
-                let before = current.iter().find(|item| item.id() == &entry.id)?;
-                let mut after = before.clone();
-                after.apply_patch(&entry.patch);
-                after.diff_patch(before).map(|patch| ShootingPatchEntry { id: entry.id.clone(), patch })
-            })
-            .collect();
-        patched.sort_by(|a, b| a.id.cmp(&b.id));
-        Self { edits: undo, patched }
-    }
-
-    /// 🧭️ The delta from `base` to `other` for sync and import: removals, then the inserts and moves that reach `other`'s order, then keyed patches.
-    pub fn between(base: &[T], other: &[T]) -> Self {
-        let mut edits = Vec::new();
-        for item in base {
-            if position_of(other, item.id()).is_none() {
-                edits.push(ShootingEdit::Remove { id: item.id().clone() });
-            }
-        }
-        let mut order: Vec<String> = base.iter().filter(|item| position_of(other, item.id()).is_some()).map(|item| item.id().clone()).collect();
-        for (index, target) in other.iter().enumerate() {
-            if order.get(index) == Some(target.id()) {
-                continue;
-            }
-            match order.iter().position(|id| id == target.id()) {
-                Some(position) => {
-                    let id = order.remove(position);
-                    order.insert(index, id.clone());
-                    edits.push(ShootingEdit::Move { id, index });
-                }
-                None => {
-                    order.insert(index, target.id().clone());
-                    edits.push(ShootingEdit::Add { index, item: target.clone() });
-                }
-            }
-        }
-        let mut patched: Vec<ShootingPatchEntry<P>> = base
-            .iter()
-            .filter_map(|item| {
-                let counterpart = other.iter().find(|candidate| candidate.id() == item.id())?;
-                item.diff_patch(counterpart).map(|patch| ShootingPatchEntry { id: item.id().clone(), patch })
-            })
+            .filter(|entry| !added.contains(&&entry.id))
+            .filter_map(|entry| base.iter().find(|item| item.id() == &entry.id).map(|row| ShootingPatchEntry { id: entry.id.clone(), patch: entry.patch.restoring(row) }))
             .collect();
         patched.sort_by(|a, b| a.id.cmp(&b.id));
         Self { edits, patched }
@@ -343,7 +312,7 @@ where
 fn absorb_list<T, P>(target: &mut Option<ShootingListDelta<T, P>>, later: Option<ShootingListDelta<T, P>>)
 where
     T: Clone + Identified<String> + Patchable<P>,
-    P: Clone + ShootingPatchAlgebra,
+    P: Clone + ShootingPatchAlgebra<T>,
 {
     match (target.as_mut(), later) {
         (Some(prior), Some(later)) => prior.absorb(later),
@@ -353,30 +322,21 @@ where
 }
 
 /// 🔁️ Negates an optional list delta against its base list.
-fn negative_list<T, P>(delta: &Option<ShootingListDelta<T, P>>, base: &[T]) -> Option<ShootingListDelta<T, P>>
+fn inverse_list<T, P>(delta: &Option<ShootingListDelta<T, P>>, base: &[T]) -> Option<ShootingListDelta<T, P>>
 where
     T: Clone + Identified<String> + Patchable<P>,
-    P: Clone + PartialEq,
+    P: Clone + ShootingPatchAlgebra<T>,
 {
-    delta.as_ref().map(|delta| delta.negative(base))
+    delta.as_ref().map(|delta| delta.inverse_rows(base))
 }
 
-/// 🧭️ The optional list delta between two lists, absent when they are equal.
-fn between_list<T, P>(base: &[T], other: &[T]) -> Option<ShootingListDelta<T, P>>
-where
-    T: Clone + Identified<String> + Patchable<P>,
-    P: Clone + PartialEq,
-{
-    let delta = ShootingListDelta::between(base, other);
-    (!delta.is_empty()).then_some(delta)
-}
 //#endregion 🔖️ListDelta
 
 //#region 🔖️SceneAlgebra
 macro_rules! scene_patch_algebra {
     ($($field:ident => $($path:ident).+),+ $(,)?) => {
         impl ShootingScenePatch {
-            fn write_into(&self, scene: &mut crate::ShootingSceneLighting) {
+            fn apply_rows(&self, scene: &mut crate::ShootingSceneLighting) {
                 $(if let Some(value) = &self.$field {
                     scene.$($path).+ = value.clone();
                 })+
@@ -385,11 +345,6 @@ macro_rules! scene_patch_algebra {
             /// 🔁️ The patch that restores `base` for exactly the fields this patch names.
             pub fn restoring(&self, base: &crate::ShootingSceneLighting) -> Self {
                 Self { $($field: self.$field.as_ref().map(|_| base.$($path).+.clone()),)+ }
-            }
-
-            /// 🧭️ The patch from `from` to `to`, naming only differing fields.
-            pub fn between(from: &crate::ShootingSceneLighting, to: &crate::ShootingSceneLighting) -> Self {
-                Self { $($field: (from.$($path).+ != to.$($path).+).then(|| to.$($path).+.clone()),)+ }
             }
 
             /// ➕️ Composes `later` over this patch: the later value of a field wins.
@@ -436,16 +391,16 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
             next.schema = schema.clone();
         }
         if let Some(delta) = &self.assets {
-            next.assets = delta.write_into(&base.assets).map_err(|error| error.under(["assets"]))?;
+            next.assets = delta.apply_rows(&base.assets).map_err(|error| error.under(["assets"]))?;
         }
         if let Some(delta) = &self.saved_cameras {
-            next.saved_cameras = delta.write_into(&base.saved_cameras).map_err(|error| error.under(["savedCameras"]))?;
+            next.saved_cameras = delta.apply_rows(&base.saved_cameras).map_err(|error| error.under(["savedCameras"]))?;
         }
         if let Some(patch) = &self.scene {
-            patch.write_into(&mut next.scene);
+            patch.apply_rows(&mut next.scene);
         }
         if let Some(delta) = &self.shots {
-            next.shots = delta.write_into(&base.shots).map_err(|error| error.under(["shots"]))?;
+            next.shots = delta.apply_rows(&base.shots).map_err(|error| error.under(["shots"]))?;
         }
         if let Some(id) = &self.active_shot_id {
             next.active_shot_id = id.clone();
@@ -486,27 +441,13 @@ impl DiffAlgebra<ShootingSnapshot> for ShootingDiff {
     fn inverse(&self, base: &ShootingSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
-            assets: negative_list(&self.assets, &base.assets),
-            saved_cameras: negative_list(&self.saved_cameras, &base.saved_cameras),
+            assets: inverse_list(&self.assets, &base.assets),
+            saved_cameras: inverse_list(&self.saved_cameras, &base.saved_cameras),
             scene: self.scene.as_ref().map(|patch| patch.restoring(&base.scene)),
-            shots: negative_list(&self.shots, &base.shots),
+            shots: inverse_list(&self.shots, &base.shots),
             active_shot_id: self.active_shot_id.as_ref().map(|_| base.active_shot_id.clone()),
             active_asset_id: self.active_asset_id.as_ref().map(|_| base.active_asset_id.clone()),
             emblem: self.emblem.as_ref().map(|_| ShootingAssigned::new(base.emblem.clone())),
-        }
-    }
-
-    fn between(base: &ShootingSnapshot, other: &ShootingSnapshot) -> Self {
-        let scene = ShootingScenePatch::between(&base.scene, &other.scene);
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            assets: between_list(&base.assets, &other.assets),
-            saved_cameras: between_list(&base.saved_cameras, &other.saved_cameras),
-            scene: (!scene.is_empty()).then_some(scene),
-            shots: between_list(&base.shots, &other.shots),
-            active_shot_id: (base.active_shot_id != other.active_shot_id).then(|| other.active_shot_id.clone()),
-            active_asset_id: (base.active_asset_id != other.active_asset_id).then(|| other.active_asset_id.clone()),
-            emblem: (base.emblem != other.emblem).then(|| ShootingAssigned::new(other.emblem.clone())),
         }
     }
 

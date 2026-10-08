@@ -93,15 +93,10 @@ def apply_add_tag(snapshot, payload):
     that position (this is how `remove-tag`'s inverse restores the captured BASE position); absent or past the end appends."""
     after = copy.deepcopy(snapshot)
     tags = after.get("tags", [])
-    inside = "index" in payload and payload["index"] < len(tags)
-    if inside:
-        tags.insert(payload["index"], payload["tag"])
-    else:
-        tags.append(payload["tag"])
+    at = min(payload["index"], len(tags)) if "index" in payload else len(tags)
+    tags.insert(at, payload["tag"])
     after["tags"] = tags
-    delta = {"added": [payload["tag"]], "removed": []}
-    if inside:
-        delta["reordered"] = list(tags)
+    delta = {"removed": [], "inserted": [{"index": at, "row": payload["tag"]}], "moved": []}
     diff = dict(NULL_DIFF, tags=delta)
     return after, diff, {"status": "applied"}
 
@@ -109,8 +104,9 @@ def apply_add_tag(snapshot, payload):
 def apply_remove_tag(snapshot, payload):
     """🗑️ Detaches by VALUE, preserving the relative order of the remaining members."""
     after = copy.deepcopy(snapshot)
-    after["tags"] = [tag for tag in after.get("tags", []) if tag != payload["tag"]]
-    diff = dict(NULL_DIFF, tags={"added": [], "removed": [payload["tag"]]})
+    before = after.get("tags", [])
+    after["tags"] = [tag for tag in before if tag != payload["tag"]]
+    diff = dict(NULL_DIFF, tags={"removed": [{"id": payload["tag"], "index": before.index(payload["tag"])}], "inserted": [], "moved": []})
     return after, diff, {"status": "applied"}
 
 

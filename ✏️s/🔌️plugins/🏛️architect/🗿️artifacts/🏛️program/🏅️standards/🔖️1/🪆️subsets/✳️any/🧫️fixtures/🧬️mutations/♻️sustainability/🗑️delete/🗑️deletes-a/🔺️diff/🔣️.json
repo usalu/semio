@@ -35,12 +35,15 @@
   "flexibility": null,
   "growth": null,
   "sustainability": {
-    "added": [],
     "removed": [
-      "sustainability-requirement-a"
+      {
+        "id": "sustainability-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "resilience": null,
   "costs": null,

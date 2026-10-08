@@ -2,12 +2,15 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "panel_spare"
+      {
+        "id": "panel_spare",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "materials": null,
   "sections": null,

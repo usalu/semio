@@ -1,50 +1,50 @@
 {
   "name": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document",
   "targets": {
-    "🏭️generator": {
+    "\ud83c\udfed\ufe0fgenerator": {
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate",
         "forwardAllArgs": true
       },
       "outputs": []
     },
-    "🏭️generator-manifests": {
+    "\ud83c\udfed\ufe0fgenerator-manifests": {
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts manifests",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts manifests",
         "forwardAllArgs": true
       },
       "outputs": []
     },
-    "🏭️generator-libjpeg": {
+    "\ud83c\udfed\ufe0fgenerator-markers": {
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts libjpeg",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts markers",
         "forwardAllArgs": true
       },
       "outputs": []
     },
-    "🏭️generator-libjpeg-manifests": {
+    "\ud83c\udfed\ufe0fgenerator-markers-manifests": {
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts libjpeg-manifests",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts markers-manifests",
         "forwardAllArgs": true
       },
       "outputs": []
     },
-    "🏭️generator-markers": {
-      "cache": true,
+    "\ud83e\uddea\ufe0ftest": {
+      "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts markers",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
     },
-    "🏭️generator-markers-manifests": {
-      "cache": true,
+    "\ud83e\uddea\ufe0fwitness": {
+      "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts markers-manifests",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts witness",
         "forwardAllArgs": true
       },
       "outputs": []

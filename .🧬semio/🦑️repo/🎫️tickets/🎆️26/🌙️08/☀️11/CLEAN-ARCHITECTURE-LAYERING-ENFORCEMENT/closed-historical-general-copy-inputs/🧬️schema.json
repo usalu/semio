@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "maximumBytes",
+    "maximumFiles",
+    "maximumWork",
+    "budgetMs",
+    "preserved"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          3,
+          4
+        ]
+      }
+    },
+    "maximumBytes": {
+      "const": 4294967296
+    },
+    "maximumFiles": {
+      "const": 32768
+    },
+    "maximumWork": {
+      "const": 500000
+    },
+    "budgetMs": {
+      "const": 300000
+    },
+    "preserved": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "receiver/lease-owner/data/local-hub-owner.json",
+          "receiver/lease-owner/.🧬semio/🌐hub/dev-hub-leases/port-8877.json"
+        ]
+      }
+    }
+  }
+}

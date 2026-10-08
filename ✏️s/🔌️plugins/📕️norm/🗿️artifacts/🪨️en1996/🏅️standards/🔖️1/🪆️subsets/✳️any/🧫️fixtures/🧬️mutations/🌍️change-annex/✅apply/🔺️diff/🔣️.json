@@ -5,7 +5,8 @@
   "storeys": null,
   "walls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

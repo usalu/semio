@@ -16,16 +16,20 @@ type CadBlockDiff {
 }
 
 type CadLayerModified { key: String! diff: CadLayerDiff! }
-type CadLayersDiff { removed: [String!]! modified: [CadLayerModified!]! added: [CadLayer!]! }
+type CadLayersDiff { removed: [String!]! modified: [CadLayerModified!]! added: [CadLayerAdded!]! }
 
 type CadBlockModified { key: String! diff: CadBlockDiff! }
-type CadBlocksDiff { removed: [String!]! modified: [CadBlockModified!]! added: [CadBlock!]! }
+type CadBlocksDiff { removed: [String!]! modified: [CadBlockModified!]! added: [CadBlockAdded!]! }
 
 type CadEntityRecordModified { key: String! diff: CadEntityRecordDiff! }
-type CadEntitiesDiff { removed: [String!]! modified: [CadEntityRecordModified!]! added: [CadEntityRecord!]! }
+type CadEntitiesDiff { removed: [String!]! modified: [CadEntityRecordModified!]! added: [CadEntityRecordAdded!]! }
 
 type SemioCadDiff {
   layers: CadLayersDiff
   blocks: CadBlocksDiff
   entities: CadEntitiesDiff
 }
+
+type CadLayerAdded { index: Int! item: CadLayer! }
+type CadBlockAdded { index: Int! item: CadBlock! }
+type CadEntityRecordAdded { index: Int! item: CadEntityRecord! }

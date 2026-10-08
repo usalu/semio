@@ -54,6 +54,7 @@ const KINDS: &[&str] = &[
     "delete-generation",
     "rename-generation",
     "change-generation-value",
+    "select-generation",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Generation2dDiff` mirrors `Generation2dSnapshot`'s two fields name for name, so the table is empty; the sibling `🀄️wfc` subset, whose diff splits every collection into a `<name>Removed`/`<name>Upserted` pair, carries real rows here.

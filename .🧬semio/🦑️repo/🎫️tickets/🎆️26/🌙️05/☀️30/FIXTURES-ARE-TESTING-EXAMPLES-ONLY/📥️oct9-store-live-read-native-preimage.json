@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "sha256": "ff15ce86922ca1f621cf616538a69f7bcbb0f22b2062ff17ee2584baf1cae028",
+  "tail": "ased)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,0,1)).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step,RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..Default::default() }));assert!(publication.terminal_is_empty());\n        eprintln!(\"[DEBUG] ephemeral original member preparation frame extent={N} caller={caller} actual release={expected}; denied pointer retained and child/frame/phase terminal distinct\");\n    }\n    let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json\")).unwrap();\n    for row in fixture[\"cases\"].as_array().unwrap(){match row[\"physicalBytes\"].as_u64().unwrap(){1=>check::<1>(row),16384=>check::<16384>(row),65536=>check::<65536>(row),262144=>check::<262144>(row),_=>panic!(\"authored neutral original frame extent\")}}\n}\n"
+}

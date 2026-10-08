@@ -51,52 +51,58 @@
   "artifacts": null,
   "assumptions": null,
   "constraints": {
-    "added": [
+    "removed": [
       {
         "id": "constraint-record-a",
-        "name": "Constraint Record A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "constraintType": "Replaced Constraint Record A",
-        "summary": {
-          "text": ""
-        },
-        "severity": "negligible",
-        "affectedEntityIds": [],
-        "source": null,
-        "regulatoryBasis": [],
-        "mitigationOptions": [],
-        "ownerId": null,
-        "effectiveDate": null,
-        "expiryDate": null,
-        "waiverStatus": null,
-        "waiverApprover": null,
-        "impactAssessment": null,
-        "resolutionPlan": [],
-        "relatedRequirementIds": [],
-        "relatedDecisionIds": [],
-        "monitoringFrequency": null,
-        "complianceStatus": "pending",
-        "exceptions": [],
-        "traceLinks": [],
-        "escalationContactId": null
+        "index": 0
       }
     ],
-    "removed": [
-      "constraint-record-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "constraint-record-a",
+          "name": "Constraint Record A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "constraintType": "Replaced Constraint Record A",
+          "summary": {
+            "text": ""
+          },
+          "severity": "negligible",
+          "affectedEntityIds": [],
+          "source": null,
+          "regulatoryBasis": [],
+          "mitigationOptions": [],
+          "ownerId": null,
+          "effectiveDate": null,
+          "expiryDate": null,
+          "waiverStatus": null,
+          "waiverApprover": null,
+          "impactAssessment": null,
+          "resolutionPlan": [],
+          "relatedRequirementIds": [],
+          "relatedDecisionIds": [],
+          "monitoringFrequency": null,
+          "complianceStatus": "pending",
+          "exceptions": [],
+          "traceLinks": [],
+          "escalationContactId": null
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "complianceRecords": null,
   "approvals": null,

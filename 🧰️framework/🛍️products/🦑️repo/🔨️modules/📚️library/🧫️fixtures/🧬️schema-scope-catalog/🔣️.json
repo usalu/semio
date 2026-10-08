@@ -7856,6 +7856,659 @@
       "schemaGrammar": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
       }
+    },
+    {
+      "id": "fixture-domain-empty-properties-map",
+      "reason": "Ordinary domain data with an empty properties map has no schema authority; actual pure or explicitly typed schemas still do.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "schema": "probe.building@1",
+          "project": {
+            "name": "Rooms"
+          },
+          "materials": {},
+          "properties": {}
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaCompile": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": false
+      }
+    },
+    {
+      "id": "fixture-pure-empty-properties-schema",
+      "reason": "Ordinary domain data with an empty properties map has no schema authority; actual pure or explicitly typed schemas still do.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "properties": {}
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaCompile": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": true
+      }
+    },
+    {
+      "id": "fixture-typed-empty-properties-schema-with-domain-annotation",
+      "reason": "Ordinary domain data with an empty properties map has no schema authority; actual pure or explicitly typed schemas still do.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "type": "object",
+          "properties": {},
+          "project": {
+            "name": "Rooms"
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaCompile": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": false
+      }
+    },
+    {
+      "id": "immutable-refusal-and-after-verification-is-a-testing-law",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "owner": {
+                  "type": "string"
+                },
+                "constructorRefusals": {
+                  "const": [
+                    "items",
+                    "capacity",
+                    "depth"
+                  ]
+                },
+                "afterRejected": {
+                  "const": {
+                    "originalRetained": true,
+                    "allocatedBytes": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "immutable-copy-schedule-and-expected-order-is-a-testing-law",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "expectedOrder": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "copyGrants": {
+                  "const": [
+                    1,
+                    3,
+                    64
+                  ]
+                },
+                "cancelAt": {
+                  "const": [
+                    0,
+                    2,
+                    9
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "anonymous-fixed-copy-matrix-and-move-verification-is-a-testing-law",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "samples": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "copyBytes": {
+                  "const": [
+                    1,
+                    3,
+                    64
+                  ]
+                },
+                "aliases": {
+                  "const": [
+                    1,
+                    3
+                  ]
+                },
+                "cancelAt": {
+                  "const": [
+                    0,
+                    2,
+                    9
+                  ]
+                },
+                "constructorRefusals": {
+                  "const": [
+                    "items",
+                    "capacity",
+                    "depth"
+                  ]
+                },
+                "ownershipMoves": {
+                  "const": {
+                    "items": 1,
+                    "copyBytes": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "produced-progress-with-protocol-constants-remains-authority",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "ReleaseProgressV1": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "releaseGrants": {
+                  "const": [
+                    1,
+                    3,
+                    64
+                  ]
+                },
+                "sourceSurvives": {
+                  "const": true
+                },
+                "releasedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct ReleaseProgressV1;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ReleaseProgressV1": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "runtime-request-with-refusal-protocol-constants-remains-authority",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "AdmissionRequestV1": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "refusals": {
+                  "const": [
+                    "items",
+                    "capacity",
+                    "depth"
+                  ]
+                },
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct AdmissionRequestV1;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "AdmissionRequestV1": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-after-admission-outcome-remains-authority",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "AdmissionOutcomeV1": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "refusals": {
+                  "const": [
+                    "items",
+                    "capacity",
+                    "depth"
+                  ]
+                },
+                "afterAdmission": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "retained": {
+                      "type": "boolean"
+                    },
+                    "allocatedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct AdmissionOutcomeV1;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "AdmissionOutcomeV1": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "fixed-schedule-without-verification-remains-authority",
+      "reason": "Immutable trial controls and immutable verification are test semantics; runtime requests, variable outcomes, and produced progress remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CopyPolicyV1": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "copyGrants": {
+                  "const": [
+                    1,
+                    3,
+                    64
+                  ]
+                },
+                "order": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CopyPolicyV1;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CopyPolicyV1": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
     }
   ]
 }

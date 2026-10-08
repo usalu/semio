@@ -231,11 +231,14 @@
       "colorSpace": {
         "kind": "iccBased",
         "components": 3,
-        "profile": [
-          73,
-          67,
-          67
-        ],
+        "profile": {
+          "artifactId": "fixture:icc",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        },
         "alternate": {
           "kind": "deviceRgb"
         },
@@ -250,7 +253,7 @@
           "kind": "deviceRgb"
         },
         "hival": 1,
-        "lookup": [
+        "palette": [
           0,
           0,
           0,
@@ -741,15 +744,13 @@
               1
             ],
             "interpolate": true,
-            "filters": [
-              {
-                "kind": "asciiHex"
-              }
-            ],
-            "data": [
-              127
-            ],
-            "extra": []
+            "extra": [],
+            "body": {
+              "kind": "samples",
+              "values": [
+                127
+              ]
+            }
           }
         },
         {
@@ -3571,14 +3572,14 @@
         },
         "program": {
           "kind": "type1",
-          "data": [
-            0,
-            1,
-            2
-          ],
-          "length1": 1,
-          "length2": 1,
-          "length3": 1
+          "reference": {
+            "artifactId": "fixture:type1:ae4b3280e56e2faf83f414a6e3dabe9d5fbe18976544c05fed121accb85b53fc",
+            "dialect": {
+              "artifactKind": "s.stdio.binary",
+              "standard": "raw",
+              "subset": "*"
+            }
+          }
         }
       },
       "toUnicode": {
@@ -3621,10 +3622,14 @@
         "descriptor": null,
         "program": {
           "kind": "trueType",
-          "data": [
-            4,
-            5
-          ]
+          "reference": {
+            "artifactId": "fixture:trueType:2fa1b377bf67309f65e5e7bc9d924345ca648dec4e601a398a9cb497dcba3765",
+            "dialect": {
+              "artifactKind": "s.stdio.binary",
+              "standard": "raw",
+              "subset": "*"
+            }
+          }
         }
       },
       "extra": []
@@ -3840,20 +3845,21 @@
           ],
           "cidToGid": {
             "kind": "map",
-            "data": [
-              0,
+            "glyphs": [
               1,
-              0,
               2
             ]
           },
           "program": {
             "kind": "cidCff",
-            "data": [
-              1,
-              2,
-              3
-            ]
+            "reference": {
+              "artifactId": "fixture:cidCff:039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81",
+              "dialect": {
+                "artifactKind": "s.stdio.binary",
+                "standard": "raw",
+                "subset": "*"
+              }
+            }
           },
           "extra": [
             {
@@ -3915,9 +3921,14 @@
         "descriptor": null,
         "program": {
           "kind": "cff",
-          "data": [
-            6
-          ]
+          "reference": {
+            "artifactId": "fixture:cff:67586e98fad27da0b9968bc039a1ef34c939b9b8e523a8bef89d478608c5ecf6",
+            "dialect": {
+              "artifactKind": "s.stdio.binary",
+              "standard": "raw",
+              "subset": "*"
+            }
+          }
         }
       },
       "extra": []
@@ -3945,10 +3956,14 @@
         "descriptor": null,
         "program": {
           "kind": "openType",
-          "data": [
-            7,
-            8
-          ]
+          "reference": {
+            "artifactId": "fixture:openType:bd7c250566c6e99f47c174b589b7551f8b0e930ed056511d1e8f653bc71d3c4a",
+            "dialect": {
+              "artifactKind": "s.stdio.binary",
+              "standard": "raw",
+              "subset": "*"
+            }
+          }
         }
       },
       "extra": []
@@ -3969,13 +3984,6 @@
         1
       ],
       "interpolate": true,
-      "codec": {
-        "kind": "raw"
-      },
-      "data": [
-        0,
-        255
-      ],
       "softMask": "MaskImage",
       "softMaskInData": 2,
       "mask": {
@@ -3994,7 +4002,14 @@
             "value": "Extension"
           }
         }
-      ]
+      ],
+      "body": {
+        "kind": "samples",
+        "values": [
+          0,
+          255
+        ]
+      }
     },
     {
       "id": "Image1",
@@ -4010,14 +4025,6 @@
         1
       ],
       "interpolate": true,
-      "codec": {
-        "kind": "dct",
-        "colorTransform": 1
-      },
-      "data": [
-        0,
-        255
-      ],
       "softMask": "MaskImage",
       "softMaskInData": 2,
       "mask": {
@@ -4039,7 +4046,18 @@
             "value": "Extension"
           }
         }
-      ]
+      ],
+      "body": {
+        "kind": "artifact",
+        "reference": {
+          "artifactId": "fixture:dct:06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        }
+      }
     },
     {
       "id": "Image2",
@@ -4055,13 +4073,6 @@
         1
       ],
       "interpolate": true,
-      "codec": {
-        "kind": "jpx"
-      },
-      "data": [
-        0,
-        255
-      ],
       "softMask": "MaskImage",
       "softMaskInData": 2,
       "mask": {
@@ -4080,7 +4091,18 @@
             "value": "Extension"
           }
         }
-      ]
+      ],
+      "body": {
+        "kind": "artifact",
+        "reference": {
+          "artifactId": "fixture:jpx:06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        }
+      }
     },
     {
       "id": "Image3",
@@ -4096,23 +4118,6 @@
         1
       ],
       "interpolate": true,
-      "codec": {
-        "kind": "ccitt",
-        "parameters": {
-          "k": -1,
-          "columns": 1,
-          "rows": 2,
-          "blackIs1": true,
-          "encodedByteAlign": false,
-          "endOfLine": true,
-          "endOfBlock": false,
-          "damagedRowsBeforeError": 3
-        }
-      },
-      "data": [
-        0,
-        255
-      ],
       "softMask": "MaskImage",
       "softMaskInData": 2,
       "mask": {
@@ -4134,7 +4139,18 @@
             "value": "Extension"
           }
         }
-      ]
+      ],
+      "body": {
+        "kind": "artifact",
+        "reference": {
+          "artifactId": "fixture:ccitt:06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        }
+      }
     },
     {
       "id": "Image4",
@@ -4150,14 +4166,6 @@
         1
       ],
       "interpolate": true,
-      "codec": {
-        "kind": "jbig2",
-        "globals": []
-      },
-      "data": [
-        0,
-        255
-      ],
       "softMask": "MaskImage",
       "softMaskInData": 2,
       "mask": {
@@ -4176,7 +4184,18 @@
             "value": "Extension"
           }
         }
-      ]
+      ],
+      "body": {
+        "kind": "artifact",
+        "reference": {
+          "artifactId": "fixture:jbig2:06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        }
+      }
     }
   ],
   "forms": [
@@ -4469,11 +4488,14 @@
           ],
           "n": 2
         },
-        "data": [
-          0,
-          1,
-          255
-        ]
+        "reference": {
+          "artifactId": "fixture:mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        }
       },
       "extra": [
         {
@@ -5096,7 +5118,14 @@
       "condition": "condition",
       "registryName": "https://example.invalid",
       "info": "profile",
-      "profile": []
+      "profile": {
+        "artifactId": "fixture:icc",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
     }
   ],
   "namedDestinations": [
@@ -5473,5 +5502,6 @@
         }
       ]
     }
-  ]
+  ],
+  "admittedStreamRoles": []
 }

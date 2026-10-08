@@ -2,17 +2,66 @@
   "name": "@semio-tech/s-dev-composition",
   "root": "✏️s/🧑‍💻dev",
   "projectType": "library",
-  "tags": ["lang:typescript", "role:tool"],
+  "tags": [
+    "lang:typescript",
+    "role:tool"
+  ],
   "targets": {
     "composition-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": {"command": "bun ./📜️script.ts composition-check", "cwd": "✏️s/🧑‍💻dev", "forwardAllArgs": true}
+      "options": {
+        "command": "bun ./📜️script.ts composition-check",
+        "cwd": "✏️s/🧑‍💻dev",
+        "forwardAllArgs": true
+      }
     },
     "source-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": {"command": "bun ./📜️script.ts source-check", "cwd": "✏️s/🧑‍💻dev", "forwardAllArgs": true}
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev",
+        "forwardAllArgs": true
+      }
+    },
+    "catalog-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts catalog-check",
+        "cwd": "✏️s/🧑‍💻dev",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-playground-session": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts playground-session"
+      }
+    },
+    "check-playground-session": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts playground-session check"
+      }
+    },
+    "preview-playground-session": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts playground-session preview"
+      }
     }
   }
 }

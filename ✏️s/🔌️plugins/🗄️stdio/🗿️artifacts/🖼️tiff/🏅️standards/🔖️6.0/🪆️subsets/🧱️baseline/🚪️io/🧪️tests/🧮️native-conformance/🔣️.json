@@ -1,0 +1,94 @@
+{
+  "base": {
+    "ifdCount": 1,
+    "raster": true,
+    "compression": [
+      1
+    ],
+    "photometric": [
+      2
+    ],
+    "bitsPerSample": [
+      8,
+      8,
+      8
+    ],
+    "tileWidth": null,
+    "tileLength": null,
+    "stripOffsets": [
+      8
+    ]
+  },
+  "cases": [
+    {
+      "id": "baseline",
+      "patch": {},
+      "codes": []
+    },
+    {
+      "id": "no-raster",
+      "patch": {
+        "raster": false
+      },
+      "codes": [
+        "degenerate-raster"
+      ]
+    },
+    {
+      "id": "lzw",
+      "patch": {
+        "compression": [
+          5
+        ]
+      },
+      "codes": [
+        "unsupported-compression"
+      ]
+    },
+    {
+      "id": "ycbcr",
+      "patch": {
+        "photometric": [
+          6
+        ]
+      },
+      "codes": [
+        "unsupported-photometric"
+      ]
+    },
+    {
+      "id": "sixteen-bit",
+      "patch": {
+        "bitsPerSample": [
+          16
+        ]
+      },
+      "codes": [
+        "unsupported-bits-per-sample"
+      ]
+    },
+    {
+      "id": "tiles",
+      "patch": {
+        "tileWidth": [
+          16
+        ],
+        "tileLength": [
+          16
+        ]
+      },
+      "codes": [
+        "tiled-not-baseline"
+      ]
+    },
+    {
+      "id": "no-offsets",
+      "patch": {
+        "stripOffsets": null
+      },
+      "codes": [
+        "missing-strip-offsets"
+      ]
+    }
+  ]
+}

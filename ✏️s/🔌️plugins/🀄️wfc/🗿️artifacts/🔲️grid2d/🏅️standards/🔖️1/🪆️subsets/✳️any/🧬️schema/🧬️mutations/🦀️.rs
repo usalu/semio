@@ -95,13 +95,6 @@ pub use super::unpin_cell::unpin_cell;
 pub type Grid2dEnvelope = store::ArtifactEnvelope<Grid2dSnapshot, Grid2dMutation>;
 pub type Grid2dStore = store::ArtifactStore<Grid2dSnapshot, Grid2dMutation>;
 
-/// 🧬️ Applies a mutation to a projection — generic over every variant.
-pub fn apply_grid2d_mutation(projection: &mut Grid2dSnapshot, mutation: &Grid2dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-    *projection = next;
-    Ok(())
-}
-
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
 pub fn inverse_grid2d_mutation(projection: &Grid2dSnapshot, mutation: &Grid2dMutation) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
     Ok({

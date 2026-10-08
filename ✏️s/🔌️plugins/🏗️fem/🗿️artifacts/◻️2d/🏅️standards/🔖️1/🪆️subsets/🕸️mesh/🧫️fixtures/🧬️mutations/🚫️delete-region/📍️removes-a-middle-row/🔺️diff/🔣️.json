@@ -2,12 +2,15 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "slab"
+      {
+        "id": "slab",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "materials": null,
   "sections": null,

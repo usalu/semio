@@ -1,0 +1,114 @@
+[
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "#abc"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "#a"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "🔴"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "#112233"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeColor",
+      "value": "#123456"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeColor",
+      "value": "red"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "8 4"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": ""
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "0 0"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": ".5 2.5 1"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "8 -4"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "NaN"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "8,4"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "1e3"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "."
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 "
+    },
+    "accepted": false
+  }
+]

@@ -7,7 +7,7 @@
         "target": "pixels",
         "width": 3,
         "height": 2,
-        "spans": "[]"
+        "spans": []
       },
       "coverage": [
         0,
@@ -25,7 +25,23 @@
         "target": "pixels",
         "width": 3,
         "height": 2,
-        "spans": "[[0,2,255],[3,1,128],[5,1,64]]"
+        "spans": [
+          {
+            "start": 0,
+            "length": 2,
+            "coverage": 255
+          },
+          {
+            "start": 3,
+            "length": 1,
+            "coverage": 128
+          },
+          {
+            "start": 5,
+            "length": 1,
+            "coverage": 64
+          }
+        ]
       },
       "coverage": [
         255,
@@ -43,7 +59,13 @@
         "target": "mask",
         "width": 2,
         "height": 2,
-        "spans": "[[1,2,255]]"
+        "spans": [
+          {
+            "start": 1,
+            "length": 2,
+            "coverage": 255
+          }
+        ]
       },
       "coverage": [
         0,
@@ -71,34 +93,88 @@
       "height": 16384
     },
     {
-      "spans": "[[0,0,255]]"
+      "spans": [
+        {
+          "start": 0,
+          "length": 0,
+          "coverage": 255
+        }
+      ]
     },
     {
-      "spans": "[[0,2,255],[1,1,255]]"
+      "spans": [
+        {
+          "start": 0,
+          "length": 2,
+          "coverage": 255
+        },
+        {
+          "start": 1,
+          "length": 1,
+          "coverage": 255
+        }
+      ]
     },
     {
-      "spans": "[[5,2,255]]"
+      "spans": [
+        {
+          "start": 5,
+          "length": 2,
+          "coverage": 255
+        }
+      ]
     },
     {
-      "spans": "[[0,1,256]]"
+      "spans": [
+        {
+          "start": 0,
+          "length": 1,
+          "coverage": 256
+        }
+      ]
     },
     {
-      "spans": "[[0,1,-1]]"
+      "spans": [
+        {
+          "start": 0,
+          "length": 1,
+          "coverage": -1
+        }
+      ]
     },
     {
-      "spans": "[[0.5,1,255]]"
+      "spans": [
+        {
+          "start": 0.5,
+          "length": 1,
+          "coverage": 255
+        }
+      ]
     },
     {
-      "spans": "[[0,1.5,255]]"
+      "spans": [
+        {
+          "start": 0,
+          "length": 1.5,
+          "coverage": 255
+        }
+      ]
     },
     {
-      "spans": "[[0,1,255,1]]"
+      "spans": [
+        {
+          "start": 0,
+          "length": 1,
+          "coverage": 255,
+          "unexpected": 1
+        }
+      ]
     },
     {
-      "spans": "{}"
+      "spans": {}
     },
     {
-      "spans": "["
+      "spans": "invalid"
     }
   ]
 }

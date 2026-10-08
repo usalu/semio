@@ -1,0 +1,291 @@
+{
+  "scene": {
+    "steps": [
+      {
+        "id": "basics",
+        "title": "Basics",
+        "target": {
+          "granularity": "section",
+          "id": "step:basics"
+        },
+        "blocks": [
+          {
+            "id": "load",
+            "label": "Load",
+            "kind": "load",
+            "target": {
+              "granularity": "field",
+              "id": "load"
+            }
+          }
+        ]
+      },
+      {
+        "id": "schedule",
+        "title": "Schedule",
+        "target": {
+          "granularity": "section",
+          "id": "step:schedule"
+        },
+        "blocks": []
+      }
+    ],
+    "palette": [
+      {
+        "blockKind": "filter",
+        "label": "Filter",
+        "iconId": "funnel"
+      }
+    ],
+    "domainId": "fields",
+    "selectedId": "load"
+  },
+  "targetCases": [
+    {
+      "name": "selected-step",
+      "steps": "fixture",
+      "selectedId": "schedule",
+      "expectedStepId": "schedule"
+    },
+    {
+      "name": "selected-block-parent",
+      "steps": "fixture",
+      "selectedId": "load",
+      "expectedStepId": "basics"
+    },
+    {
+      "name": "stale-selection",
+      "steps": "fixture",
+      "selectedId": "retired",
+      "expectedStepId": "basics"
+    },
+    {
+      "name": "no-selection",
+      "steps": "fixture",
+      "selectedId": null,
+      "expectedStepId": "basics"
+    },
+    {
+      "name": "empty-list",
+      "steps": "empty",
+      "selectedId": null,
+      "expectedStepId": null
+    }
+  ],
+  "refusals": [
+    {
+      "name": "serialized-steps",
+      "value": {
+        "steps": "[]",
+        "palette": []
+      }
+    },
+    {
+      "name": "serialized-palette",
+      "value": {
+        "steps": [],
+        "palette": "[]"
+      }
+    },
+    {
+      "name": "obsolete-fields",
+      "value": {
+        "steps": [],
+        "palette": [],
+        "stepsJson": "[]"
+      }
+    },
+    {
+      "name": "empty-target",
+      "value": {
+        "steps": [
+          {
+            "id": "s",
+            "title": "S",
+            "blocks": [],
+            "target": {
+              "granularity": "section",
+              "id": ""
+            }
+          }
+        ],
+        "palette": []
+      }
+    },
+    {
+      "name": "physical-key-with-typed-data",
+      "value": {
+        "steps": [
+          {
+            "id": "basics",
+            "title": "Basics",
+            "target": {
+              "granularity": "section",
+              "id": "step:basics"
+            },
+            "blocks": [
+              {
+                "id": "load",
+                "label": "Load",
+                "kind": "load",
+                "target": {
+                  "granularity": "field",
+                  "id": "load"
+                }
+              }
+            ]
+          },
+          {
+            "id": "schedule",
+            "title": "Schedule",
+            "target": {
+              "granularity": "section",
+              "id": "step:schedule"
+            },
+            "blocks": []
+          }
+        ],
+        "palette": [
+          {
+            "blockKind": "filter",
+            "label": "Filter",
+            "iconId": "funnel"
+          }
+        ],
+        "domainId": "fields",
+        "selectedId": "load",
+        "stepsJson": "[]"
+      }
+    },
+    {
+      "name": "explicit-null-description",
+      "value": {
+        "steps": [
+          {
+            "id": "basics",
+            "title": "Basics",
+            "target": {
+              "granularity": "section",
+              "id": "step:basics"
+            },
+            "blocks": [
+              {
+                "id": "load",
+                "label": "Load",
+                "kind": "load",
+                "target": {
+                  "granularity": "field",
+                  "id": "load"
+                }
+              }
+            ],
+            "description": null
+          },
+          {
+            "id": "schedule",
+            "title": "Schedule",
+            "target": {
+              "granularity": "section",
+              "id": "step:schedule"
+            },
+            "blocks": []
+          }
+        ],
+        "palette": [
+          {
+            "blockKind": "filter",
+            "label": "Filter",
+            "iconId": "funnel"
+          }
+        ],
+        "domainId": "fields",
+        "selectedId": "load"
+      }
+    },
+    {
+      "name": "explicit-null-target",
+      "value": {
+        "steps": [
+          {
+            "id": "basics",
+            "title": "Basics",
+            "target": {
+              "granularity": "section",
+              "id": "step:basics"
+            },
+            "blocks": [
+              {
+                "id": "load",
+                "label": "Load",
+                "kind": "load",
+                "target": null
+              }
+            ]
+          },
+          {
+            "id": "schedule",
+            "title": "Schedule",
+            "target": {
+              "granularity": "section",
+              "id": "step:schedule"
+            },
+            "blocks": []
+          }
+        ],
+        "palette": [
+          {
+            "blockKind": "filter",
+            "label": "Filter",
+            "iconId": "funnel"
+          }
+        ],
+        "domainId": "fields",
+        "selectedId": "load"
+      }
+    },
+    {
+      "name": "explicit-null-domainId",
+      "value": {
+        "steps": [
+          {
+            "id": "basics",
+            "title": "Basics",
+            "target": {
+              "granularity": "section",
+              "id": "step:basics"
+            },
+            "blocks": [
+              {
+                "id": "load",
+                "label": "Load",
+                "kind": "load",
+                "target": {
+                  "granularity": "field",
+                  "id": "load"
+                }
+              }
+            ]
+          },
+          {
+            "id": "schedule",
+            "title": "Schedule",
+            "target": {
+              "granularity": "section",
+              "id": "step:schedule"
+            },
+            "blocks": []
+          }
+        ],
+        "palette": [
+          {
+            "blockKind": "filter",
+            "label": "Filter",
+            "iconId": "funnel"
+          }
+        ],
+        "domainId": null,
+        "selectedId": "load"
+      }
+    }
+  ]
+}

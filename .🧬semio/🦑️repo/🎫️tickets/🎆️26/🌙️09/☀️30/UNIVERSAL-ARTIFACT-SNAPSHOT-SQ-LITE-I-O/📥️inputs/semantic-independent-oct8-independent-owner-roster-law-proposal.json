@@ -1,0 +1,1110 @@
+{
+  "qualification": "Proposal only: selected60 independently held tuples are not complete returned Runtime/tree binding roster; Stdio89 authored rows have no independently authored concrete owner TypeId mapping in existing census. No executions performed.",
+  "requiredRowFields": [
+    "composition",
+    "publicationChannel",
+    "assemblyKind",
+    "ownerIdentity",
+    "concreteRustTypeAuthority",
+    "kind",
+    "standard",
+    "subset",
+    "schema",
+    "sqlSchemaAuthority",
+    "positiveWitness",
+    "negativeWitnesses",
+    "physicalRows",
+    "sourceLaw",
+    "nativeLaw",
+    "receipt"
+  ],
+  "complementarySelectedEditorOwners": [
+    {
+      "ownerIdentity": "WriterSnapshot",
+      "kind": "s.writer.writer",
+      "standard": "1",
+      "subset": "*",
+      "schema": "writer.document",
+      "definingEditor": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "EquationSnapshot",
+      "kind": "s.mathematical.equation",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.equation/v1",
+      "definingEditor": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Wfc2dSnapshot",
+      "kind": "s.wfc.wfc2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.wfc2d",
+      "definingEditor": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Grid2dSnapshot",
+      "kind": "s.wfc.grid2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.grid2d",
+      "definingEditor": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "BitmapSnapshot",
+      "kind": "s.wfc.bitmap",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.bitmap",
+      "definingEditor": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Wfc3dSnapshot",
+      "kind": "s.wfc.wfc3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.wfc3d",
+      "definingEditor": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Grid3dSnapshot",
+      "kind": "s.wfc.grid3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.grid3d",
+      "definingEditor": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Generation2dSnapshot",
+      "kind": "s.procedural.generation2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "generation.2d",
+      "definingEditor": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Generation3dSnapshot",
+      "kind": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "generation.3d",
+      "definingEditor": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "FlowSnapshot",
+      "kind": "s.flow.flow",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.flow.flow",
+      "definingEditor": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "GisTerrainSnapshot",
+      "kind": "s.gis.gisterrain",
+      "standard": "1",
+      "subset": "*",
+      "schema": "gis.terrain",
+      "definingEditor": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "GisMapSnapshot",
+      "kind": "s.gis.gismap",
+      "standard": "1",
+      "subset": "*",
+      "schema": "gis.map",
+      "definingEditor": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "VcsSnapshot",
+      "kind": "s.vcs.vcs",
+      "standard": "1",
+      "subset": "*",
+      "schema": "vcs.vcs",
+      "definingEditor": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "PresentationSnapshot",
+      "kind": "s.animate.presentation",
+      "standard": "1",
+      "subset": "*",
+      "schema": "animate.presentation",
+      "definingEditor": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "ShootingSnapshot",
+      "kind": "s.shooting.shooting",
+      "standard": "1",
+      "subset": "*",
+      "schema": "shooting.shooting",
+      "definingEditor": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "PlaygroundSnapshot",
+      "kind": "s.demonstrator.playground",
+      "standard": "1",
+      "subset": "*",
+      "schema": "playground.playground",
+      "definingEditor": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "SequenceSnapshot",
+      "kind": "s.sequence.sequence",
+      "standard": "1",
+      "subset": "*",
+      "schema": "sequence.sequence",
+      "definingEditor": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Fem2dSnapshot",
+      "kind": "s.fem.fem2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "fem.2d",
+      "definingEditor": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Fem3dSnapshot",
+      "kind": "s.fem.fem3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "fem.3d",
+      "definingEditor": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "ProgramSnapshot",
+      "kind": "s.architect.program",
+      "standard": "1",
+      "subset": "*",
+      "schema": "architect.program",
+      "definingEditor": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Process3dSnapshot",
+      "kind": "s.process.process3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "process.3d",
+      "definingEditor": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "LowpolySnapshot",
+      "kind": "s.lowpoly.lowpoly",
+      "standard": "1",
+      "subset": "*",
+      "schema": "lowpoly.document",
+      "definingEditor": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "WiresSnapshot",
+      "kind": "s.reasoning.wires",
+      "standard": "1",
+      "subset": "*",
+      "schema": "reasoning.wires.identity.snapshot",
+      "definingEditor": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "FormsSnapshot",
+      "kind": "s.forms.forms",
+      "standard": "1",
+      "subset": "*",
+      "schema": "forms.form",
+      "definingEditor": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "LayoutSnapshot",
+      "kind": "s.layout.layout",
+      "standard": "1",
+      "subset": "*",
+      "schema": "layout.layout",
+      "definingEditor": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "CadSnapshot",
+      "kind": "s.cad.cad",
+      "standard": "1",
+      "subset": "*",
+      "schema": "cad.scene",
+      "definingEditor": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1990Snapshot",
+      "kind": "s.norm.en1990",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1990/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Din18599Snapshot",
+      "kind": "s.norm.din18599",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.din18599/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1997Snapshot",
+      "kind": "s.norm.en1997",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1997/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Din16798Snapshot",
+      "kind": "s.norm.din16798",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.din16798/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1991Snapshot",
+      "kind": "s.norm.en1991",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1991/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1992Snapshot",
+      "kind": "s.norm.en1992",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1992/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Vdi3805Snapshot",
+      "kind": "s.norm.vdi3805",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.vdi3805/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Iso16757Snapshot",
+      "kind": "s.norm.iso16757",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.iso16757/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1993Snapshot",
+      "kind": "s.norm.en1993",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1993/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1994Snapshot",
+      "kind": "s.norm.en1994",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1994/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Din4108Snapshot",
+      "kind": "s.norm.din4108",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.din4108/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1996Snapshot",
+      "kind": "s.norm.en1996",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1996/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1995Snapshot",
+      "kind": "s.norm.en1995",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1995/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1999Snapshot",
+      "kind": "s.norm.en1999",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1999/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "En1998Snapshot",
+      "kind": "s.norm.en1998",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1998/v1",
+      "definingEditor": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "PlaybookSnapshot",
+      "kind": "s.playbook.playbook",
+      "standard": "1",
+      "subset": "*",
+      "schema": "playbook.program",
+      "definingEditor": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "ProcedureSnapshot",
+      "kind": "s.imperative.procedure",
+      "standard": "1",
+      "subset": "*",
+      "schema": "procedure.document/v1",
+      "definingEditor": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "RemodelingSnapshot",
+      "kind": "s.remodel.remodeling",
+      "standard": "1",
+      "subset": "*",
+      "schema": "remodeling.scene",
+      "definingEditor": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "EnergyModelSnapshot",
+      "kind": "s.energy.model",
+      "standard": "1",
+      "subset": "*",
+      "schema": "energy.model",
+      "definingEditor": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "RewritingSnapshot",
+      "kind": "s.trinity.rewriting",
+      "standard": "1",
+      "subset": "*",
+      "schema": "trinity.rewrite.rule",
+      "definingEditor": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "JackSnapshot",
+      "kind": "s.trinity.jack",
+      "standard": "1",
+      "subset": "*",
+      "schema": "trinity.jackgraphwindowcfg",
+      "definingEditor": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "DagSnapshot",
+      "kind": "s.dag.dag",
+      "standard": "1",
+      "subset": "*",
+      "schema": "dag.dag",
+      "definingEditor": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "DrawingSnapshot",
+      "kind": "s.draw.drawing",
+      "standard": "1",
+      "subset": "*",
+      "schema": "drawing.document",
+      "definingEditor": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "RasterSnapshot",
+      "kind": "s.raster.raster",
+      "standard": "1",
+      "subset": "*",
+      "schema": "raster.document",
+      "definingEditor": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "NoteSnapshot",
+      "kind": "s.note.note",
+      "standard": "1",
+      "subset": "*",
+      "schema": "note.document",
+      "definingEditor": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Puzzle2dSnapshot",
+      "kind": "s.puzzle.puzzle2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "board.ports.directed.v1",
+      "definingEditor": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Puzzle5dSnapshot",
+      "kind": "s.puzzle.puzzle5d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "puzzle.5d",
+      "definingEditor": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Puzzle3dSnapshot",
+      "kind": "s.puzzle.puzzle3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "puzzle.3d",
+      "definingEditor": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Block2dSnapshot",
+      "kind": "s.block.block2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "block.2d",
+      "definingEditor": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Block5dSnapshot",
+      "kind": "s.block.block5d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "block.5d",
+      "definingEditor": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "Block3dSnapshot",
+      "kind": "s.block.block3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "block.3d",
+      "definingEditor": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "SHomeSnapshot",
+      "kind": "s.space.home",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.home",
+      "definingEditor": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "SSpaceSnapshot",
+      "kind": "s.space.space",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.space",
+      "definingEditor": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    },
+    {
+      "ownerIdentity": "CurationSnapshot",
+      "kind": "s.sourcing.curation",
+      "standard": "1",
+      "subset": "*",
+      "schema": "sourcing.curation/v1",
+      "definingEditor": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "status": "Resolve actual returned flat/tree codec and all additional subsets before final closed roster"
+    }
+  ],
+  "stdioAuthoredBindingRows": [
+    {
+      "kind": "s.stdio.avi",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.avi"
+    },
+    {
+      "kind": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "*",
+      "schema": "stdio.bcf"
+    },
+    {
+      "kind": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "*",
+      "schema": "stdio.binary"
+    },
+    {
+      "kind": "s.stdio.bmp",
+      "standard": "v3",
+      "subset": "*",
+      "schema": "stdio.bmp"
+    },
+    {
+      "kind": "s.stdio.csv",
+      "standard": "rfc4180",
+      "subset": "*",
+      "schema": "stdio.csv"
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "*",
+      "schema": "stdio.deflate"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.docx"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.docx"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.docx"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1018",
+      "subset": "*",
+      "schema": "stdio.dwg"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1024",
+      "subset": "*",
+      "schema": "stdio.dwg"
+    },
+    {
+      "kind": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "*",
+      "schema": "stdio.dxf"
+    },
+    {
+      "kind": "s.stdio.epw",
+      "standard": "energyplus",
+      "subset": "*",
+      "schema": "stdio.epw"
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "87a",
+      "subset": "*",
+      "schema": "stdio.gif"
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "*",
+      "schema": "stdio.gif.89a"
+    },
+    {
+      "kind": "s.stdio.gltf",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.gltf"
+    },
+    {
+      "kind": "s.stdio.html",
+      "standard": "5",
+      "subset": "*",
+      "schema": "stdio.html"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "*",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cobie",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cv20",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "sav",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "*",
+      "schema": "stdio.ifc"
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "*",
+      "schema": "stdio.jpg"
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "baseline",
+      "schema": "stdio.jpg"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "*",
+      "schema": "stdio.json"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "geojson",
+      "schema": "stdio.json"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "i-json",
+      "schema": "stdio.json"
+    },
+    {
+      "kind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.las"
+    },
+    {
+      "kind": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "*",
+      "schema": "stdio.md"
+    },
+    {
+      "kind": "s.stdio.mp3",
+      "standard": "mpeg1-layer3",
+      "subset": "*",
+      "schema": "stdio.mp3"
+    },
+    {
+      "kind": "s.stdio.mp4",
+      "standard": "isobmff",
+      "subset": "*",
+      "schema": "stdio.mp4"
+    },
+    {
+      "kind": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "*",
+      "schema": "stdio.obj"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "*",
+      "schema": "stdio.pdf"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "a",
+      "schema": "stdio.pdf"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "x",
+      "schema": "stdio.pdf"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "*",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "a",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "e",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "h",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "ua",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "vt",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "x",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.ply"
+    },
+    {
+      "kind": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "*",
+      "schema": "stdio.png"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.pptx"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.pptx"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.pptx"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "*",
+      "schema": "stdio.semio"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "animation",
+      "schema": "s.stdio.semio.animation"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "audio",
+      "schema": "stdio.semio.audio"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "brep",
+      "schema": "stdio.semio.brep"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "cad",
+      "schema": "stdio.semio.cad"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "document",
+      "schema": "s.stdio.semio.document"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "drawing",
+      "schema": "stdio.semio.drawing"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow",
+      "schema": "stdio.semio.flow"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph",
+      "schema": "s.stdio.semio.graph"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "image",
+      "schema": "s.stdio.semio.image"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "kit",
+      "schema": "stdio.semio.kit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "mesh",
+      "schema": "stdio.semio.mesh"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model",
+      "schema": "stdio.semio.model"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object",
+      "schema": "stdio.semio.object"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "presentation",
+      "schema": "s.stdio.semio.presentation"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "table",
+      "schema": "s.stdio.semio.table"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "schema": "s.stdio.semio.text"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "value",
+      "schema": "stdio.semio.value"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "video",
+      "schema": "stdio.semio.video"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "*",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc1",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc2",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc3",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc4",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc5",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.stl",
+      "standard": "ascii",
+      "subset": "*",
+      "schema": "stdio.stl"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "*",
+      "schema": "stdio.svg"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "basic",
+      "schema": "stdio.svg"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "tiny",
+      "schema": "stdio.svg"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "*",
+      "schema": "stdio.tiff"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "baseline",
+      "schema": "stdio.tiff"
+    },
+    {
+      "kind": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "*",
+      "schema": "stdio.tsv"
+    },
+    {
+      "kind": "s.stdio.txt",
+      "standard": "utf-8",
+      "subset": "*",
+      "schema": "stdio.txt"
+    },
+    {
+      "kind": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "*",
+      "schema": "stdio.wav"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.xlsx"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.xlsx"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.xlsx"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.xml"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "valid",
+      "schema": "stdio.xml"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.zip"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320",
+      "schema": "stdio.zip"
+    }
+  ],
+  "stdioOwnerMappingStatus": "Unresolved independently authored owner map: existing provider Some(TypeId) and declaration-installed identical_to only establish internal agreement",
+  "frameworkAndChartStatus": "Seven factory/Store authorities and separate Print Chart require individual concrete source mapping; no primary Runtime membership is invented",
+  "lawProposal": [
+    "Reject duplicate expected rows before set projection; compare complete declaration membership plus publicationChannel and assemblyKind.",
+    "For each ownerIdentity use handcrafted first-party typed branch comparing TypeId::of::<ConcreteSnapshot>(), ConcreteSnapshot::SQLITE_SCHEMA and ArtifactCodec::bare::<ConcreteSnapshot,ConcreteMutation>(schema).snapshot_sqlite hooks to actual returned codec. Never deserialize Rust TypeId.",
+    "Walk every actually returned flat document_codec_bindings and every tree artifact.standard.subset.io.native.codec paired with actual subset.dialect. Do not use editor/viewer list counts.",
+    "Install ordinary owning composition; compare installed identical_to, native SQL schema, preflight registration and exact one-hop bidirectional public IO.",
+    "Export authored domain-complete positive witness via public IO. Bun SQLite reader independently checks integrity, foreign keys, metadata, schema table/column types, full semantic entity rows and relation rows against authored fixture.",
+    "Independently edit a typed domain cell or relation through third-party SQLite, import via public IO, compare authored complete expected concrete Snapshot; reject orphan/conflicting rows and non-domain hidden blobs/JSON.",
+    "Run existing Source law plus Native owning selector after shared source changes; report each owner/tuple receipt separately."
+  ]
+}

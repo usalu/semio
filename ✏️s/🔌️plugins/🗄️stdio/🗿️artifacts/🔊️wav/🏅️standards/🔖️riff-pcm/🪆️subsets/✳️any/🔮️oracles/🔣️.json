@@ -39,7 +39,8 @@
         "set-fmt",
         "set-data",
         "patch-data",
-        "set-other-chunks"
+        "set-other-chunks",
+        "set-pad-bytes"
       ]
     }
   ],
@@ -124,6 +125,26 @@
             "operation": "set-other-chunks",
             "bridgeVersion": 1,
             "variant": "SetOtherChunks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-pad-bytes",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-pad-bytes",
+            "bridgeVersion": 1,
+            "variant": "SetPadBytes"
           },
           "oracleRequirements": [
             {

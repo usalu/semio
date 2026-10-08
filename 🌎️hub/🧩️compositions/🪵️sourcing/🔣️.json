@@ -3227,15 +3227,15 @@
             }
           },
           {
-            "id": "setDocument",
+            "id": "loadDocumentJson",
             "label": {
               "native": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
+                "en": "Load Document JSON",
+                "de": "Dokument-JSON laden"
               },
               "reuse": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
+                "en": "Load Document JSON",
+                "de": "Dokument-JSON laden"
               }
             },
             "kind": "mutation",
@@ -3270,12 +3270,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Replaces the whole curation with one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.",
-                  "de": "Ersetzt die gesamte Kuratierung durch eine aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."
+                  "en": "Loads the whole curation, outside history, from one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.",
+                  "de": "Lädt die gesamte Kuratierung außerhalb des Verlaufs aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."
                 },
                 "reuse": {
-                  "en": "Replaces the whole curation with one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.",
-                  "de": "Ersetzt die gesamte Kuratierung durch eine aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."
+                  "en": "Loads the whole curation, outside history, from one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.",
+                  "de": "Lädt die gesamte Kuratierung außerhalb des Verlaufs aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."
                 }
               }
             }

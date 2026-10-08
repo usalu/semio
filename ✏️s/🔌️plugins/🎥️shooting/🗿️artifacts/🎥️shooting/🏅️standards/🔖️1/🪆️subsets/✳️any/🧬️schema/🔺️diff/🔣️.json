@@ -6,105 +6,22 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "schema": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assets": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "#/$defs/ShootingAssetsDelta"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "savedCameras": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "#/$defs/ShootingSavedCamerasDelta"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "scene": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "#/$defs/ShootingScenePatch"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "shots": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "#/$defs/ShootingShotsDelta"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "activeShotId": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "activeAssetId": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
+    "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "assets": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ShootingAssetsDelta" }], "x-semio-state": "artifact" },
+    "savedCameras": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ShootingSavedCamerasDelta" }], "x-semio-state": "artifact" },
+    "scene": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ShootingScenePatch" }], "x-semio-state": "artifact" },
+    "shots": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ShootingShotsDelta" }], "x-semio-state": "artifact" },
+    "activeShotId": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "activeAssetId": { "type": ["string", "null"], "x-semio-state": "artifact" },
     "emblem": {
       "anyOf": [
-        {
-          "type": "null"
-        },
+        { "type": "null" },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "value"
-          ],
+          "required": ["value"],
           "properties": {
-            "value": {
-              "anyOf": [
-                {
-                  "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
+            "value": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }] }
           },
           "x-semio-child-kind": "s.stdio.semio.image"
         }
@@ -119,113 +36,29 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "name": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "url": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "format": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "origin": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "number",
-                "format": "double"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            }
-          ]
-        },
+        "name": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] },
+        "format": { "type": ["string", "null"] },
+        "origin": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "number", "format": "double" }, "minItems": 3, "maxItems": 3 }] },
         "orientation": {
           "anyOf": [
-            {
-              "type": "null"
-            },
+            { "type": "null" },
             {
               "type": "object",
               "additionalProperties": false,
-              "required": [
-                "value"
-              ],
-              "properties": {
-                "value": {
-                  "anyOf": [
-                    {
-                      "type": "array",
-                      "items": {
-                        "type": "number",
-                        "format": "double"
-                      },
-                      "minItems": 4,
-                      "maxItems": 4
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              }
+              "required": ["value"],
+              "properties": { "value": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "number", "format": "double" }, "minItems": 4, "maxItems": 4 }] } }
             }
           ]
         },
         "scale": {
           "anyOf": [
-            {
-              "type": "null"
-            },
+            { "type": "null" },
             {
               "type": "object",
               "additionalProperties": false,
-              "required": [
-                "value"
-              ],
-              "properties": {
-                "value": {
-                  "anyOf": [
-                    {
-                      "type": "array",
-                      "items": {
-                        "type": "number",
-                        "format": "double"
-                      },
-                      "minItems": 3,
-                      "maxItems": 3
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              }
+              "required": ["value"],
+              "properties": { "value": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "number", "format": "double" }, "minItems": 3, "maxItems": 3 }] } }
             }
           ]
         }
@@ -237,112 +70,21 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "label": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "width": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0,
-              "maximum": 4294967295
-            }
-          ]
-        },
-        "height": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0,
-              "maximum": 4294967295
-            }
-          ]
-        },
-        "format": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "shape": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
+        "label": { "type": ["string", "null"] },
+        "width": { "type": ["integer", "null"], "format": "uint32", "minimum": 0, "maximum": 4294967295 },
+        "height": { "type": ["integer", "null"], "format": "uint32", "minimum": 0, "maximum": 4294967295 },
+        "format": { "type": ["string", "null"] },
+        "shape": { "type": ["string", "null"] },
         "background": {
           "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "value"
-              ],
-              "properties": {
-                "value": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              }
-            }
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["value"], "properties": { "value": { "type": ["string", "null"] } } }
           ]
         },
         "cameraId": {
           "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "value"
-              ],
-              "properties": {
-                "value": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              }
-            }
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["value"], "properties": { "value": { "type": ["string", "null"] } } }
           ]
         }
       }
@@ -353,26 +95,8 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "label": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "camera": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
-            }
-          ]
-        }
+        "label": { "type": ["string", "null"] },
+        "camera": { "anyOf": [{ "type": "null" }, { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera" }] }
       }
     },
     "ShootingScenePatch": {
@@ -381,185 +105,23 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "background": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "sunEnabled": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "boolean"
-            }
-          ]
-        },
-        "sunAzimuth": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "sunElevation": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "sunIntensity": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "sunColor": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "ambientIntensity": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "ambientColor": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "shadowEnabled": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "boolean"
-            }
-          ]
-        },
-        "shadowOpacity": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "shadowSoftness": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "materialColor": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "materialMetalness": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "materialRoughness": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "materialEmissive": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "materialEmissiveIntensity": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "number",
-              "format": "double"
-            }
-          ]
-        },
-        "materialStroke": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        }
+        "background": { "type": ["string", "null"] },
+        "sunEnabled": { "type": ["boolean", "null"] },
+        "sunAzimuth": { "type": ["number", "null"], "format": "double" },
+        "sunElevation": { "type": ["number", "null"], "format": "double" },
+        "sunIntensity": { "type": ["number", "null"], "format": "double" },
+        "sunColor": { "type": ["string", "null"] },
+        "ambientIntensity": { "type": ["number", "null"], "format": "double" },
+        "ambientColor": { "type": ["string", "null"] },
+        "shadowEnabled": { "type": ["boolean", "null"] },
+        "shadowOpacity": { "type": ["number", "null"], "format": "double" },
+        "shadowSoftness": { "type": ["number", "null"], "format": "double" },
+        "materialColor": { "type": ["string", "null"] },
+        "materialMetalness": { "type": ["number", "null"], "format": "double" },
+        "materialRoughness": { "type": ["number", "null"], "format": "double" },
+        "materialEmissive": { "type": ["string", "null"] },
+        "materialEmissiveIntensity": { "type": ["number", "null"], "format": "double" },
+        "materialStroke": { "type": ["string", "null"] }
       }
     },
     "ShootingAssetEdit": {
@@ -568,61 +130,15 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "edit",
-            "index",
-            "item"
-          ],
+          "required": ["edit", "index", "item"],
           "properties": {
-            "edit": {
-              "const": "add"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "item": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingAsset"
-            }
+            "edit": { "const": "add" },
+            "index": { "type": "integer", "minimum": 0 },
+            "item": { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingAsset" }
           }
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "edit",
-            "id"
-          ],
-          "properties": {
-            "edit": {
-              "const": "remove"
-            },
-            "id": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "edit",
-            "id",
-            "index"
-          ],
-          "properties": {
-            "edit": {
-              "const": "move"
-            },
-            "id": {
-              "type": "string"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        }
+        { "type": "object", "additionalProperties": false, "required": ["edit", "id", "index"], "properties": { "edit": { "const": "remove" }, "id": { "type": "string" }, "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["edit", "id", "from", "to"], "properties": { "edit": { "const": "move" }, "id": { "type": "string" }, "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 } } }
       ]
     },
     "ShootingShotEdit": {
@@ -631,61 +147,15 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "edit",
-            "index",
-            "item"
-          ],
+          "required": ["edit", "index", "item"],
           "properties": {
-            "edit": {
-              "const": "add"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "item": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingShot"
-            }
+            "edit": { "const": "add" },
+            "index": { "type": "integer", "minimum": 0 },
+            "item": { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingShot" }
           }
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "edit",
-            "id"
-          ],
-          "properties": {
-            "edit": {
-              "const": "remove"
-            },
-            "id": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "edit",
-            "id",
-            "index"
-          ],
-          "properties": {
-            "edit": {
-              "const": "move"
-            },
-            "id": {
-              "type": "string"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        }
+        { "type": "object", "additionalProperties": false, "required": ["edit", "id", "index"], "properties": { "edit": { "const": "remove" }, "id": { "type": "string" }, "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["edit", "id", "from", "to"], "properties": { "edit": { "const": "move" }, "id": { "type": "string" }, "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 } } }
       ]
     },
     "ShootingSavedCameraEdit": {
@@ -694,182 +164,58 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "edit",
-            "index",
-            "item"
-          ],
+          "required": ["edit", "index", "item"],
           "properties": {
-            "edit": {
-              "const": "add"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "item": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingSavedCamera"
-            }
+            "edit": { "const": "add" },
+            "index": { "type": "integer", "minimum": 0 },
+            "item": { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingSavedCamera" }
           }
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "edit",
-            "id"
-          ],
-          "properties": {
-            "edit": {
-              "const": "remove"
-            },
-            "id": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "edit",
-            "id",
-            "index"
-          ],
-          "properties": {
-            "edit": {
-              "const": "move"
-            },
-            "id": {
-              "type": "string"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        }
+        { "type": "object", "additionalProperties": false, "required": ["edit", "id", "index"], "properties": { "edit": { "const": "remove" }, "id": { "type": "string" }, "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["edit", "id", "from", "to"], "properties": { "edit": { "const": "move" }, "id": { "type": "string" }, "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 } } }
       ]
     },
     "ShootingAssetPatchEntry": {
       "title": "ShootingAssetPatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/ShootingAssetPatch"
-        }
-      }
+      "required": ["id", "patch"],
+      "properties": { "id": { "type": "string" }, "patch": { "$ref": "#/$defs/ShootingAssetPatch" } }
     },
     "ShootingShotPatchEntry": {
       "title": "ShootingShotPatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/ShootingShotPatch"
-        }
-      }
+      "required": ["id", "patch"],
+      "properties": { "id": { "type": "string" }, "patch": { "$ref": "#/$defs/ShootingShotPatch" } }
     },
     "ShootingSavedCameraPatchEntry": {
       "title": "ShootingSavedCameraPatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/ShootingSavedCameraPatch"
-        }
-      }
+      "required": ["id", "patch"],
+      "properties": { "id": { "type": "string" }, "patch": { "$ref": "#/$defs/ShootingSavedCameraPatch" } }
     },
     "ShootingAssetsDelta": {
       "title": "ShootingAssetsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "edits",
-        "patched"
-      ],
-      "properties": {
-        "edits": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ShootingAssetEdit"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ShootingAssetPatchEntry"
-          }
-        }
-      }
+      "required": ["edits", "patched"],
+      "properties": { "edits": { "type": "array", "items": { "$ref": "#/$defs/ShootingAssetEdit" } }, "patched": { "type": "array", "items": { "$ref": "#/$defs/ShootingAssetPatchEntry" } } }
     },
     "ShootingShotsDelta": {
       "title": "ShootingShotsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "edits",
-        "patched"
-      ],
-      "properties": {
-        "edits": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ShootingShotEdit"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ShootingShotPatchEntry"
-          }
-        }
-      }
+      "required": ["edits", "patched"],
+      "properties": { "edits": { "type": "array", "items": { "$ref": "#/$defs/ShootingShotEdit" } }, "patched": { "type": "array", "items": { "$ref": "#/$defs/ShootingShotPatchEntry" } } }
     },
     "ShootingSavedCamerasDelta": {
       "title": "ShootingSavedCamerasDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "edits",
-        "patched"
-      ],
-      "properties": {
-        "edits": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ShootingSavedCameraEdit"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ShootingSavedCameraPatchEntry"
-          }
-        }
-      }
+      "required": ["edits", "patched"],
+      "properties": { "edits": { "type": "array", "items": { "$ref": "#/$defs/ShootingSavedCameraEdit" } }, "patched": { "type": "array", "items": { "$ref": "#/$defs/ShootingSavedCameraPatchEntry" } } }
     }
   }
 }

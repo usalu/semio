@@ -56,49 +56,10 @@ pub enum TsvMutation {
 pub const KINDS: &[&str] = &["set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
-/// d.apply(snapshot); d` — the diff is the single semantics source.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> protocol::MutationOutcome<TsvDiff> {
-    let outcome = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion 🔖️Apply
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the trailing-newline flag and the line ending if they moved, then every row
-/// in place (one `set-cell` per differing cell; a row whose column count changed is removed and inserted anew) and the diverging
-/// tail (surplus rows removed last first, missing rows inserted).
-pub fn net_mutations(base: &TsvSnapshot, next: &TsvSnapshot) -> Vec<TsvMutation> {
-    let mut leaves = Vec::new();
-    if base.trailing_newline != next.trailing_newline {
-        leaves.push(TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: next.trailing_newline }));
-    }
-    if base.line_ending != next.line_ending {
-        leaves.push(TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: next.line_ending }));
-    }
-    let paired = base.records.len().min(next.records.len());
-    for (row_index, (before, after)) in base.records.iter().zip(&next.records).enumerate().filter(|(_, (before, after))| before != after) {
-        if before.len() == after.len() {
-            leaves.extend(before.iter().zip(after).enumerate().filter(|(_, (old, new))| old != new).map(|(field_index, (_, new))| TsvMutation::SetCell(set_cell::SetCell { row_index, field_index, value: new.clone() })));
-        } else {
-            leaves.push(TsvMutation::RemoveRow(remove_row::RemoveRow { index: row_index }));
-            leaves.push(TsvMutation::InsertRow(insert_row::InsertRow { index: row_index, row: after.clone() }));
-        }
-    }
-    leaves.extend((paired..base.records.len()).rev().map(|index| TsvMutation::RemoveRow(remove_row::RemoveRow { index })));
-    leaves.extend(next.records.iter().enumerate().skip(paired).map(|(index, row)| TsvMutation::InsertRow(insert_row::InsertRow { index, row: row.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#endregion 🔖️MutationTrait
 

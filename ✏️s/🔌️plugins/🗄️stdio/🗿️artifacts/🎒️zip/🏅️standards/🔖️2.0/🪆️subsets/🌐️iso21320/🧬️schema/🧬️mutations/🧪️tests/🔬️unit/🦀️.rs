@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use protocol::Mutation as _;
 
@@ -48,9 +49,9 @@ fn every_declared_kind_is_invertible_against_the_real_base() {
         let base = base_snapshot();
         let mut snapshot = base.clone();
         let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-        apply_zip_iso21320_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_zip_iso21320_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         let mut restored = snapshot.entries.clone();
         let mut original = base.entries.clone();
@@ -64,7 +65,7 @@ fn every_declared_kind_is_invertible_against_the_real_base() {
 #[test]
 fn adding_a_member_that_already_exists_is_rejected() {
     let mut snapshot = base_snapshot();
-    let outcome = apply_zip_iso21320_mutation(&mut snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: entry("bild.jpg", b"other"), before: None }));
+    let outcome = apply_mutation(&mut snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: entry("bild.jpg", b"other"), before: None }));
     assert!(!outcome.messages().is_empty(), "a duplicate member name must be rejected");
     assert_eq!(snapshot, base_snapshot(), "the archive must be untouched");
 }

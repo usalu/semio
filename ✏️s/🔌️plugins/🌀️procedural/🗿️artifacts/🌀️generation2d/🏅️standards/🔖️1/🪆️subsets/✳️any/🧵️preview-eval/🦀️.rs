@@ -215,7 +215,7 @@ pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession) {
         session.note_extension_evaluate_fault(semio_framework_os_flow::ExtensionEvaluateFault { extension_id: payload.extension_id.clone(), capability: "evaluate".to_string(), code: payload.fault_code.clone(), message: payload.fault_message.clone() });
     }
     let given_up = match &outcome {
-        semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => session.seed_node_cache(payload.node_hash, output_json).is_err(),
+        semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => semio_framework_os_flow::host::io::evaluation_response::decode_flow_node_output_json(output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
         semio_framework_os_flow::PreviewEvalOutcome::Cancelled => true,
         semio_framework_os_flow::PreviewEvalOutcome::Working => false,
     };

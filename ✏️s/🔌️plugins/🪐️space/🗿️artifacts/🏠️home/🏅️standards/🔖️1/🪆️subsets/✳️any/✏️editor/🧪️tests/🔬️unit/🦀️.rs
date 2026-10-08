@@ -115,7 +115,7 @@ async fn space_document_persists_through_backbone_port() {
 
 /// 🧪️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the pre-ticket version of
 /// these two tests asserted on the VFS scene's ALWAYS-present `emptyMessage` field, which happened
-/// to make them incidentally immune to `crate::list_all_space_catalog_entries()`'s process-global
+/// to make them incidentally immune to `semio_s_space_core::list_all_space_catalog_entries()`'s process-global
 /// catalog singleton being polluted by other tests in this same test binary. The new table render
 /// has no such structural field (`TableView` carries no message), so these are rewritten to fold a
 /// KNOWN directory event (deterministic, independent of the global catalog) and assert on the
@@ -250,7 +250,7 @@ fn studio_dsl(name: &str) -> String {
 }
 
 fn catalog_entries_named(name: &str) -> usize {
-    ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).iter().filter(|entry| entry.name == name).count()
+    ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).iter().filter(|entry| entry.name == name).count()
 }
 
 fn refused_as(result: Result<ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault>, code: &str) -> bool {
@@ -336,8 +336,8 @@ fn the_host_file_open_import_decodes_one_chunk_and_refuses_more() {
 #[semio_framework_async_macros::async_test]
 async fn a_studio_dsl_export_imports_back_under_its_name() {
     let name = "SH2 round trip law";
-    let space_id = crate::create_and_register_ephemeral_studio(name, "u1", "Ada").await;
-    let document = crate::resolve_studio_document(&space_id).await.expect("the fresh studio resolves");
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio(name, "u1", "Ada").await;
+    let document = semio_s_space_core::resolve_studio_document(&space_id).await.expect("the fresh studio resolves");
     let exported = semio_framework_os::host::export_os_space_dsl(&document).expect("studio dsl export");
     let snapshot = catalog_home();
     let history = empty_history();
@@ -359,7 +359,7 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     let bind = |space_id: &str, file_path: &str| HomeCommand::BindSpaceFile(bind_space_file::BindSpaceFile { space_id: space_id.into(), file_path: file_path.into() });
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind("sh1-no-such-studio", "/tmp/sh1.os"), &doc), "s.home.bind-space-file.unknown-studio"));
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind("", "/tmp/sh1.os"), &doc), "s.home.bind-space-file.studio-invalid"));
-    let space_id = crate::create_and_register_ephemeral_studio("SH1 bind law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH1 bind law", "u1", "Ada").await;
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind(&space_id, " "), &doc), "s.home.bind-space-file.path-invalid"));
     let stem = format!("sh1-bind-law-{space_id}");
     let file_path = std::env::temp_dir().join(format!("{stem}.os")).to_string_lossy().into_owned();
@@ -374,7 +374,7 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     let bound = read_back().expect("commit writes the studio's document to its file backbone");
     assert_eq!(semio_framework_os::materialize_backbone_snapshot(&bound, &[]).expect("the bound studio materializes").name, "SH1 bind law", "a fresh file backbone reads the studio back");
-    let listed = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id).expect("the bound studio stays listed");
+    let listed = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id).expect("the bound studio stays listed");
     assert!(!listed.backbone_uri.is_empty(), "the bound studio is a persisted catalog studio, no longer an ephemeral draft");
     assert_eq!(listed.name, "SH1 bind law", "the bound studio keeps its name");
     for entry in std::fs::read_dir(std::env::temp_dir()).into_iter().flatten().flatten() {
@@ -393,7 +393,7 @@ async fn the_persist_job_validates_then_keeps_the_studio_in_its_folder_once() {
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
     let persist = |space_id: &str, folder_path: Option<&str>| HomeCommand::PersistLocally(persist_locally::PersistLocally { space_id: space_id.into(), folder_path: folder_path.map(str::to_owned) });
-    let space_id = crate::create_and_register_ephemeral_studio("SH2 persist law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 persist law", "u1", "Ada").await;
     let Ok(ArtifactCommandWorkStep::Complete(dialog)) = HomeCatalogWork::new("persistLocally").advance(&persist(&space_id, None), &doc) else { panic!("a folder-less persist opens the dialog") };
     assert!(dialog.artifact_mutations.is_empty() && matches!(dialog.effects.as_slice(), [semio_framework_plugin::Effect::OpenDialog { dialog_id, .. }] if dialog_id == "persistLocally"));
     let folder = std::env::temp_dir().join(format!("sh2-persist-law-{space_id}"));
@@ -404,7 +404,7 @@ async fn the_persist_job_validates_then_keeps_the_studio_in_its_folder_once() {
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&persist(&space_id, Some(&folder_path)), &doc) else { panic!("the persist job commits") };
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     assert!(folder.exists(), "commit writes the studio into its folder");
-    let listed: Vec<_> = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == space_id).collect();
+    let listed: Vec<_> = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == space_id).collect();
     assert_eq!(listed.len(), 1, "the persisted studio is listed once");
     assert!(!listed[0].backbone_uri.is_empty() && listed[0].name == "SH2 persist law", "listed as a persisted catalog studio under its own name");
     assert!(refused_as(work.advance(&persist(&space_id, Some(&folder_path)), &doc), "space-home-catalog-work-repeated"), "a committed job never writes twice");
@@ -431,7 +431,7 @@ fn a_folder_studio_without_a_folder_is_refused_by_name() {
 #[semio_framework_async_macros::async_test]
 async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
     use protocol::Mutation as _;
-    let space_id = crate::create_and_register_ephemeral_studio("SH1 tombstone law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH1 tombstone law", "u1", "Ada").await;
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -445,13 +445,13 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
     assert_eq!(emit.config_mutations, vec![HomeConfigMutation::RetireLocalStudio { space_id: space_id.clone() }]);
     let retired = emit.config_mutations[0].diff(&config).diff().clone();
     assert!(retired.is_local_studio_retired(&space_id));
-    assert!(::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).iter().any(|entry| entry.id == space_id), "the tombstone never erases the studio");
-    let listed = |tombstones: &[String]| ::semio_framework_async::poll::resolve_ready(crate::home_space_rows(transient.directory().spaces(), "u1", tombstones)).iter().any(|row| row.id == space_id);
+    assert!(::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).iter().any(|entry| entry.id == space_id), "the tombstone never erases the studio");
+    let listed = |tombstones: &[String]| ::semio_framework_async::poll::resolve_ready(semio_s_space_core::home_space_rows(transient.directory().spaces(), "u1", tombstones)).iter().any(|row| row.id == space_id);
     assert!(listed(&config.retired_local_studio_ids));
     assert!(matches!(delete_virtual_file_system_node::handle(&remove(format!("studio:{space_id}")), &doc, &cfg), Err(fault) if fault.code.0.as_str() == "s.home.delete-vfs-node.requires-retained-job"), "the direct lane cannot tell a hub space from a local studio");
     assert!(!listed(&retired.retired_local_studio_ids), "Home stops listing a retired studio");
     let inverse = emit.config_mutations[0].inverse(&config).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse, vec![HomeConfigMutation::RestoreLocalStudio { space_id: space_id.clone() }]);
+    assert_eq!(inverse, vec![HomeConfigMutation::ListLocalStudio { space_id: space_id.clone() }]);
     assert_eq!(inverse[0].diff(&retired).diff(), &config, "the exact inverse lists the studio again");
     let retired_cfg = ConfigView { snapshot: &retired, window: None };
     for (node_id, code, view) in [
@@ -467,7 +467,7 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
 
 //#region 🗃️LocalCatalogLane
 fn kept_pair(space_id: &str) -> (String, String) {
-    let document = ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(space_id)).expect("the studio resolves");
+    let document = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(space_id)).expect("the studio resolves");
     let files = semio_framework_os::export_backbone_pack(&document).expect("the studio exports its pair");
     (protocol::base64_standard_encode(&files.pack), protocol::base64_standard_encode(&files.spr))
 }
@@ -484,14 +484,14 @@ async fn the_host_rehydration_lists_the_kept_studio_once_under_its_name() {
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
-    let space_id = crate::create_and_register_ephemeral_studio("SH2 kept law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 kept law", "u1", "Ada").await;
     let (pack, spr) = kept_pair(&space_id);
     let mut work = HomeCatalogWork::new("applyLocalCatalogDocument");
     assert!(matches!(work.advance(&rehydrate(&space_id, &pack, &spr), &doc), Ok(ArtifactCommandWorkStep::Progress { .. })));
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&rehydrate(&space_id, &pack, &spr), &doc) else { panic!("the re-hydration commits") };
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     assert!(emit.effects.is_empty(), "a re-hydration never asks the host to keep the studio again");
-    let listed = |id: &str| ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == id).collect::<Vec<_>>();
+    let listed = |id: &str| ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == id).collect::<Vec<_>>();
     let rows = listed(&space_id);
     assert_eq!(rows.len(), 1, "the kept studio is listed once");
     assert!(!rows[0].backbone_uri.is_empty() && rows[0].name == "SH2 kept law", "listed as a persisted studio under its own name");
@@ -512,7 +512,7 @@ async fn the_host_rehydration_refuses_a_malformed_or_foreign_pair_by_name() {
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
-    let space_id = crate::create_and_register_ephemeral_studio("SH2 kept refusal", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 kept refusal", "u1", "Ada").await;
     let (pack, spr) = kept_pair(&space_id);
     assert!(refused_as(HomeCatalogWork::new("applyLocalCatalogDocument").advance(&rehydrate(&space_id, "not base64!", &spr), &doc), "s.home.apply-local-catalog-document.encoding-invalid"));
     assert!(refused_as(HomeCatalogWork::new("applyLocalCatalogDocument").advance(&rehydrate("sh2-some-other-studio", &pack, &spr), &doc), "s.home.apply-local-catalog-document.mismatch"));
@@ -535,7 +535,7 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
     let [semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = emit.effects.as_slice() else { panic!("exactly one keep request: {:?}", emit.effects) };
     assert_eq!(action_id, "os.local-catalog.admit");
     let field = |key: &str| args.get(key).and_then(DslValue::as_str).map(str::to_owned).unwrap_or_default();
-    let imported = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.name == name).expect("the import is listed");
+    let imported = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().find(|entry| entry.name == name).expect("the import is listed");
     assert_eq!((field("documentId"), field("schema"), field("name"), field("storage"), field("target")), (imported.id.clone(), S_SPACE_SCHEMA.to_owned(), name.to_owned(), "folder".to_owned(), String::new()));
     let pack = protocol::base64_standard_decode(field("pack")).expect("the pack is base64");
     let spr = protocol::base64_standard_decode(field("spr")).expect("the spr is base64");

@@ -9,12 +9,24 @@ type VcsDiff {
   tags: VcsTagsDelta @state(class: ARTIFACT)
 }
 
-type VcsStringList {
-  values: [String!]!
+type VcsTagsDelta {
+  removed: [VcsTagRemoval!]!
+  inserted: [VcsTagInsertion!]!
+  moved: [VcsTagRelocation!]!
 }
 
-type VcsTagsDelta {
-  added: [String!]!
-  removed: [String!]!
-  reordered: [String!]
+type VcsTagRemoval {
+  id: String!
+  index: Int!
+}
+
+type VcsTagInsertion {
+  index: Int!
+  row: String!
+}
+
+type VcsTagRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }

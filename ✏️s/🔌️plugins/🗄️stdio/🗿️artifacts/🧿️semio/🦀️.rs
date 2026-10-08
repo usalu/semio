@@ -489,17 +489,17 @@ impl RetireOwned for audio_mutation::SemioAudioMutation {
 impl RetireOwned for cad_mutation::SemioCadMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::AddLayer(cad_mutation::add_layer::AddLayer { layer }) => layer.retirement(),
+            Self::AddLayer(cad_mutation::add_layer::AddLayer { layer, .. }) => layer.retirement(),
             Self::RemoveLayer(cad_mutation::remove_layer::RemoveLayer { name }) => name.retirement(),
             Self::SetLayer(cad_mutation::set_layer::SetLayer { name, color_index, line_type, visible }) => seq![name, color_index, line_type, visible],
-            Self::AddBlock(cad_mutation::add_block::AddBlock { block }) => block.retirement(),
+            Self::AddBlock(cad_mutation::add_block::AddBlock { block, .. }) => block.retirement(),
             Self::RemoveBlock(cad_mutation::remove_block::RemoveBlock { name }) => name.retirement(),
             Self::SetBlockBasePoint(cad_mutation::set_block_base_point::SetBlockBasePoint { name, base_point }) => seq![name, base_point],
-            Self::AddEntity(cad_mutation::add_entity::AddEntity { entity }) => entity.retirement(),
+            Self::AddEntity(cad_mutation::add_entity::AddEntity { entity, .. }) => entity.retirement(),
             Self::RemoveEntity(cad_mutation::remove_entity::RemoveEntity { handle }) => handle.retirement(),
             Self::SetEntityLayer(cad_mutation::set_entity_layer::SetEntityLayer { handle, layer }) => seq![handle, layer],
             Self::SetEntityGeometry(cad_mutation::set_entity_geometry::SetEntityGeometry { handle, entity }) => seq![handle, entity],
-            Self::AddBlockEntity(cad_mutation::add_block_entity::AddBlockEntity { block_name, entity }) => seq![block_name, entity],
+            Self::AddBlockEntity(cad_mutation::add_block_entity::AddBlockEntity { block_name, entity, .. }) => seq![block_name, entity],
             Self::RemoveBlockEntity(cad_mutation::remove_block_entity::RemoveBlockEntity { block_name, handle }) => seq![block_name, handle],
             Self::SetBlockEntityLayer(cad_mutation::set_block_entity_layer::SetBlockEntityLayer { block_name, handle, layer }) => seq![block_name, handle, layer],
             Self::SetBlockEntityGeometry(cad_mutation::set_block_entity_geometry::SetBlockEntityGeometry { block_name, handle, entity }) => seq![block_name, handle, entity],
@@ -519,11 +519,11 @@ impl RetireOwned for document_mutation::SemioDocumentMutation {
             Self::SetRunText(document_mutation::set_run_text::SetRunText { path, run_index, text }) => seq![path, run_index, text],
             Self::SetRunStyle(document_mutation::set_run_style::SetRunStyle { path, run_index, style }) => seq![path, run_index, style],
             Self::SetImageBlock(document_mutation::set_image_block::SetImageBlock { path, image_id, alt, width, height }) => seq![path, image_id, alt, width, height],
-            Self::InsertStyle(document_mutation::insert_style::InsertStyle { style }) => style.retirement(),
+            Self::InsertStyle(document_mutation::insert_style::InsertStyle { style, .. }) => style.retirement(),
             Self::RemoveStyle(document_mutation::remove_style::RemoveStyle { id }) => id.retirement(),
             Self::SetStyleName(document_mutation::set_style_name::SetStyleName { id, name }) => seq![id, name],
             Self::SetStyleBasedOn(document_mutation::set_style_based_on::SetStyleBasedOn { id, based_on }) => seq![id, based_on],
-            Self::InsertImage(document_mutation::insert_image::InsertImage { image }) => image.retirement(),
+            Self::InsertImage(document_mutation::insert_image::InsertImage { image, .. }) => image.retirement(),
             Self::RemoveImage(document_mutation::remove_image::RemoveImage { id }) => id.retirement(),
             Self::SetImageBytes(document_mutation::set_image_bytes::SetImageBytes { id, mime, bytes }) => seq![id, mime, bytes],
         }
@@ -533,14 +533,14 @@ impl RetireOwned for document_mutation::SemioDocumentMutation {
 impl RetireOwned for flow_mutation::SemioFlowMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::InsertNode(flow_mutation::insert_node::InsertNode { node }) => node.retirement(),
+            Self::InsertNode(flow_mutation::insert_node::InsertNode { node, .. }) => node.retirement(),
             Self::RemoveNode(flow_mutation::remove_node::RemoveNode { id }) => id.retirement(),
             Self::SetNodeKind(flow_mutation::set_node_kind::SetNodeKind { id, kind }) => seq![id, kind],
             Self::SetNodeLabel(flow_mutation::set_node_label::SetNodeLabel { id, label }) => seq![id, label],
             Self::SetNodePosition(flow_mutation::set_node_position::SetNodePosition { id, position }) => seq![id, position],
-            Self::SetNodeParam(flow_mutation::set_node_param::SetNodeParam { id, key, value }) => seq![id, key, value],
+            Self::SetNodeParam(flow_mutation::set_node_param::SetNodeParam { id, key, value, .. }) => seq![id, key, value],
             Self::RemoveNodeParam(flow_mutation::remove_node_param::RemoveNodeParam { id, key }) => seq![id, key],
-            Self::InsertEdge(flow_mutation::insert_edge::InsertEdge { edge }) => edge.retirement(),
+            Self::InsertEdge(flow_mutation::insert_edge::InsertEdge { edge, .. }) => edge.retirement(),
             Self::RemoveEdge(flow_mutation::remove_edge::RemoveEdge { id }) => id.retirement(),
             Self::SetEdgeEndpoints(flow_mutation::set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => seq![id, from, to],
             Self::SetEdgeKind(flow_mutation::set_edge_kind::SetEdgeKind { id, kind }) => seq![id, kind],
@@ -561,7 +561,7 @@ impl RetireOwned for image_mutation::SemioImageMutation {
             Self::MoveFrame(image_mutation::move_frame::MoveFrame { from, to }) => seq![from, to],
             Self::SetFrameDelay(image_mutation::set_frame_delay::SetFrameDelay { index, delay_ms }) => seq![index, delay_ms],
             Self::SetFramePixels(image_mutation::set_frame_pixels::SetFramePixels { index, rgba8 }) => seq![index, rgba8],
-            Self::SetMetadataEntry(image_mutation::set_metadata_entry::SetMetadataEntry { key, value }) => seq![key, value],
+            Self::SetMetadataEntry(image_mutation::set_metadata_entry::SetMetadataEntry { key, value, .. }) => seq![key, value],
             Self::RemoveMetadataEntry(image_mutation::remove_metadata_entry::RemoveMetadataEntry { key }) => key.retirement(),
         }
     }
@@ -570,13 +570,13 @@ impl RetireOwned for image_mutation::SemioImageMutation {
 impl RetireOwned for model_mutation::SemioModelMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(node)]),
+            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node, .. }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(node)]),
             Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
             Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id), semio_framework_value::retirement::deferred(kind), semio_framework_value::retirement::deferred(name), semio_framework_value::retirement::deferred(parent_id), semio_framework_value::retirement::deferred(placement)]),
-            Self::InsertElement(model_mutation::insert_element::InsertElement { element }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(element)]),
+            Self::InsertElement(model_mutation::insert_element::InsertElement { element, .. }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(element)]),
             Self::RemoveElement(model_mutation::remove_element::RemoveElement { id }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
             Self::SetElement(model_mutation::set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id), semio_framework_value::retirement::deferred(class), semio_framework_value::retirement::deferred(placement), semio_framework_value::retirement::deferred(geometry), semio_framework_value::retirement::deferred(spatial_id), semio_framework_value::retirement::deferred(psets)]),
-            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(relation)]),
+            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation, .. }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(relation)]),
             Self::RemoveRelation(model_mutation::remove_relation::RemoveRelation { id }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
             Self::SetRelation(model_mutation::set_relation::SetRelation { id, kind, from, to }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id), semio_framework_value::retirement::deferred(kind), semio_framework_value::retirement::deferred(from), semio_framework_value::retirement::deferred(to)]),
             Self::DragElements(model_mutation::drag_elements::DragElements { targets, offset }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(targets), semio_framework_value::retirement::deferred(offset)]),
@@ -586,13 +586,13 @@ impl RetireOwned for model_mutation::SemioModelMutation {
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         match self {
-            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(node)]),
+            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node, .. }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(node)]),
             Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
             Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id), semio_framework_value::retirement::deferred_birth_bytes_for(kind), semio_framework_value::retirement::deferred_birth_bytes_for(name), semio_framework_value::retirement::deferred_birth_bytes_for(parent_id), semio_framework_value::retirement::deferred_birth_bytes_for(placement)]),
-            Self::InsertElement(model_mutation::insert_element::InsertElement { element }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(element)]),
+            Self::InsertElement(model_mutation::insert_element::InsertElement { element, .. }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(element)]),
             Self::RemoveElement(model_mutation::remove_element::RemoveElement { id }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
             Self::SetElement(model_mutation::set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id), semio_framework_value::retirement::deferred_birth_bytes_for(class), semio_framework_value::retirement::deferred_birth_bytes_for(placement), semio_framework_value::retirement::deferred_birth_bytes_for(geometry), semio_framework_value::retirement::deferred_birth_bytes_for(spatial_id), semio_framework_value::retirement::deferred_birth_bytes_for(psets)]),
-            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(relation)]),
+            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation, .. }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(relation)]),
             Self::RemoveRelation(model_mutation::remove_relation::RemoveRelation { id }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
             Self::SetRelation(model_mutation::set_relation::SetRelation { id, kind, from, to }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id), semio_framework_value::retirement::deferred_birth_bytes_for(kind), semio_framework_value::retirement::deferred_birth_bytes_for(from), semio_framework_value::retirement::deferred_birth_bytes_for(to)]),
             Self::DragElements(model_mutation::drag_elements::DragElements { targets, offset }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(targets), semio_framework_value::retirement::deferred_birth_bytes_for(offset)]),
@@ -614,9 +614,9 @@ impl RetireOwned for presentation_mutation::SemioPresentationMutation {
             Self::RemoveShape(presentation_mutation::remove_shape::RemoveShape { slide_index, shape_index }) => seq![slide_index, shape_index],
             Self::SetShapeFrame(presentation_mutation::set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => seq![slide_index, shape_index, frame],
             Self::SetTextBoxBlocks(presentation_mutation::set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => seq![slide_index, shape_index, blocks],
-            Self::InsertMaster(presentation_mutation::insert_master::InsertMaster { master }) => master.retirement(),
+            Self::InsertMaster(presentation_mutation::insert_master::InsertMaster { master, .. }) => master.retirement(),
             Self::RemoveMaster(presentation_mutation::remove_master::RemoveMaster { id }) => id.retirement(),
-            Self::InsertLayout(presentation_mutation::insert_layout::InsertLayout { layout }) => layout.retirement(),
+            Self::InsertLayout(presentation_mutation::insert_layout::InsertLayout { layout, .. }) => layout.retirement(),
             Self::RemoveLayout(presentation_mutation::remove_layout::RemoveLayout { id }) => id.retirement(),
             Self::SetLayoutMaster(presentation_mutation::set_layout_master::SetLayoutMaster { id, master_id }) => seq![id, master_id],
         }
@@ -627,11 +627,11 @@ impl RetireOwned for value_mutation::SemioValueMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetValue(value_mutation::set_value::SetValue { path, value }) => seq![path, value],
-            Self::SetMapEntry(value_mutation::set_map_entry::SetMapEntry { path, key, value }) => seq![path, key, value],
+            Self::SetMapEntry(value_mutation::set_map_entry::SetMapEntry { path, key, value, .. }) => seq![path, key, value],
             Self::RemoveMapEntry(value_mutation::remove_map_entry::RemoveMapEntry { path, key }) => seq![path, key],
             Self::InsertListItem(value_mutation::insert_list_item::InsertListItem { path, index, value }) => seq![path, index, value],
             Self::RemoveListItem(value_mutation::remove_list_item::RemoveListItem { path, index }) => seq![path, index],
-            Self::SetNode(value_mutation::set_node::SetNode { id, value }) => seq![id, value],
+            Self::SetNode(value_mutation::set_node::SetNode { id, value, .. }) => seq![id, value],
             Self::RemoveNode(value_mutation::remove_node::RemoveNode { id }) => id.retirement(),
         }
     }
@@ -820,7 +820,7 @@ impl RetireOwned for text_mutation::SemioTextMutation {
         match self {
             Self::InsertRun(value) => seq![value.index, value.run],
             Self::RemoveRun(value) => value.index.retirement(),
-            Self::EditRun(value) => seq![value.index, value.new_content],
+            Self::EditRun(value) => seq![value.index, value.new_text],
             Self::ChangeRunLanguage(value) => seq![value.index, value.new_language],
             Self::ReorderRuns(value) => seq![value.from, value.to],
             Self::AddMark(value) => seq![value.run_index, value.index, value.mark],
@@ -849,46 +849,6 @@ impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioMutati
     }
 }
 
-/// 🧭️ Close-cursor phases in the order the disposer walks them. `ReturnedLeases` comes FIRST, as
-/// it does in the kernel's own `ArtifactStoreCursorDisposer`: the lease registry keeps its own
-/// `Arc` alias of every snapshot it ever handed out, so a snapshot a later commit evicts into the
-/// displaced-owner queue stays SHARED until its returned lease is retired. Draining displaced
-/// owners first meets that alias as a `Blocked` shared retirement and never reaches the phase that
-/// would release it.
-#[derive(Debug)]
-enum SemioStoreClosePhase {
-    ReturnedLeases,
-    DisplacedOwners,
-    HistoryMutations { edit_index: Option<usize> },
-    HistoryEdits,
-    HistoryMetadata { lane: u8 },
-    MessageLedgers { lane: u8 },
-    Conflicts,
-    PendingReport,
-    RuntimeStrings { lane: u8 },
-    EnvelopeMetadata,
-    PrefixSnapshots,
-    TailSnapshot,
-    CurrentSnapshot,
-    Backbone,
-    CausalIndex,
-    StructuralOwners,
-    FinalEnvelope,
-    Complete,
-}
-
-struct SemioStoreOwnedDisposer<P, Mutation> {
-    phase: SemioStoreClosePhase,
-    started: bool,
-    active: std::mem::ManuallyDrop<Option<Box<dyn dsl::ErasedSnapshotRetirement>>>,
-    marker: PhantomData<fn() -> (P, Mutation)>,
-}
-
-impl<P, Mutation> SemioStoreOwnedDisposer<P, Mutation> {
-    fn new() -> Self {
-        Self { phase: SemioStoreClosePhase::ReturnedLeases, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
-    }
-}
 macro_rules! member_owners {
     ($($name:ident => $module:ident, $snapshot:ident, $mutation:ident);* $(;)?) => {$ (
         impl dsl::SnapshotRetirementFactory<subsets::$module::schema::snapshot::$snapshot>
@@ -906,303 +866,13 @@ macro_rules! member_owners {
             }
         }
 
-        impl dsl::ArtifactStoreOwnedDisposer<
-            subsets::$module::schema::snapshot::$snapshot,
-            subsets::$module::schema::mutations::$mutation,
-        > for SemioStoreOwnedDisposer<
-            subsets::$module::schema::snapshot::$snapshot,
-            subsets::$module::schema::mutations::$mutation,
-        > {
-            fn close_step(
-                &mut self,
-                store: &mut dsl::ArtifactStoreCloseView<'_,
-                    subsets::$module::schema::snapshot::$snapshot,
-                    subsets::$module::schema::mutations::$mutation,
-                >,
-                maximum_items: usize,
-                maximum_bytes: usize,
-            ) -> Result<dsl::SnapshotRetirementStep, semio_framework_value::ValueError> {
-                self.started = true;
-                if maximum_items == 0 {
-                    return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if let Some(active) = self.active.as_mut() {
-                    if active.terminal_is_empty() {
-                        let bytes = std::mem::size_of_val(active.as_ref());
-                        if bytes > maximum_bytes { return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-                        drop(self.active.take());
-                        return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-                    }
-                    return match active.close_step(maximum_items, maximum_bytes)? {
-                        dsl::SnapshotRetirementStep::Pending { released_items, released_bytes }
-                            if released_items <= maximum_items && released_bytes <= maximum_bytes =>
-                        {
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items, released_bytes })
-                        }
-                        dsl::SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store nested retirement exceeded its exact item or byte grant")),
-                        dsl::SnapshotRetirementStep::Blocked => Ok(dsl::SnapshotRetirementStep::Blocked),
-                        dsl::SnapshotRetirementStep::Complete => {
-                            if !active.terminal_is_empty() {
-                                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store nested retirement reported Complete without its terminal-empty witness"));
-                            }
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    };
-                }
-                match &mut self.phase {
-                    SemioStoreClosePhase::ReturnedLeases => match store.take_returned_snapshot_read_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None if !store.snapshot_read_leases_terminal_is_empty() => Ok(dsl::SnapshotRetirementStep::Blocked),
-                        None => {
-                            self.phase = SemioStoreClosePhase::DisplacedOwners;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::DisplacedOwners => match store.maintenance_retirements_step(maximum_items, maximum_bytes)? {
-                        dsl::SnapshotRetirementStep::Complete => {
-                            if !store.maintenance_retirements_terminal_is_empty() {
-                                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store displaced retirement reported Complete without its terminal-empty witness"));
-                            }
-                            self.phase = SemioStoreClosePhase::HistoryMutations { edit_index: store.history_edit_count().checked_sub(1) };
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        step => Ok(step),
-                    },
-                    SemioStoreClosePhase::HistoryMutations { edit_index } => {
-                        let Some(index) = *edit_index else {
-                            self.phase = SemioStoreClosePhase::HistoryEdits;
-                            return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                        };
-                        match store.take_history_mutation_at(index).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
-                            Some(retirement) => {
-                                *self.active = Some(retirement);
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                            None => {
-                                *edit_index = index.checked_sub(1);
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                        }
-                    }
-                    SemioStoreClosePhase::HistoryEdits => match store.take_last_history_edit_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::HistoryMetadata { lane: 0 };
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::HistoryMetadata { lane } => {
-                        let authority = match *lane {
-                            0 => dsl::ArtifactStoreHistoryMetadataLane::Changes,
-                            1 => dsl::ArtifactStoreHistoryMetadataLane::Checkpoints,
-                            2 => dsl::ArtifactStoreHistoryMetadataLane::Alternatives,
-                            _ => {
-                                self.phase = SemioStoreClosePhase::MessageLedgers { lane: 0 };
-                                return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                            }
-                        };
-                        match store.take_history_metadata_retirement(authority) {
-                            Some(retirement) => {
-                                *self.active = Some(retirement);
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                            None => {
-                                *lane += 1;
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                        }
-                    }
-                    SemioStoreClosePhase::MessageLedgers { lane } => {
-                        let authority = match *lane {
-                            0 => dsl::ArtifactStoreMessageLedgerLane::Durable,
-                            _ => {
-                                self.phase = SemioStoreClosePhase::Conflicts;
-                                return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                            }
-                        };
-                        match store.take_message_ledger_retirement(authority) {
-                            Some(retirement) => {
-                                *self.active = Some(retirement);
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                            None => {
-                                *lane += 1;
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                        }
-                    }
-                    SemioStoreClosePhase::Conflicts => match store.take_conflict_retirement() {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::PendingReport;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::PendingReport => match store.take_pending_report_retirement() {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::RuntimeStrings { lane: 0 };
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::RuntimeStrings { lane } => {
-                        let authority = match *lane {
-                            0 => dsl::ArtifactStoreCloseStringLane::AppliedEditIds,
-                            1 => dsl::ArtifactStoreCloseStringLane::RedoEditIds,
-                            2 => dsl::ArtifactStoreCloseStringLane::AppliedRevisionIds,
-                            3 => dsl::ArtifactStoreCloseStringLane::RedoRevisionIds,
-                            4 => dsl::ArtifactStoreCloseStringLane::CurrentCheckpointId,
-                            5 => dsl::ArtifactStoreCloseStringLane::LocalActorId,
-                            6 => dsl::ArtifactStoreCloseStringLane::TailUndoEditId,
-                            7 => dsl::ArtifactStoreCloseStringLane::Supersessions,
-                            _ => {
-                                self.phase = SemioStoreClosePhase::EnvelopeMetadata;
-                                return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                            }
-                        };
-                        match store.take_runtime_string_retirement(authority) {
-                            Some(retirement) => {
-                                *self.active = Some(retirement);
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                            None => {
-                                *lane += 1;
-                                Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                            }
-                        }
-                    }
-                    SemioStoreClosePhase::EnvelopeMetadata => match store.take_envelope_metadata_string_retirement() {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::PrefixSnapshots;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::PrefixSnapshots => match store.take_prefix_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::TailSnapshot;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::TailSnapshot => match store.take_tail_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
-                        dsl::ArtifactStoreSnapshotRootClose::Empty => {
-                            self.phase = SemioStoreClosePhase::CurrentSnapshot;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        dsl::ArtifactStoreSnapshotRootClose::ReleasedShared => {
-                            self.phase = SemioStoreClosePhase::CurrentSnapshot;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                        }
-                        dsl::ArtifactStoreSnapshotRootClose::Retirement(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::CurrentSnapshot => match store.take_current_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::Backbone;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::Backbone => match store.take_backbone_retirement() {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::CausalIndex;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::CausalIndex => match store.take_causal_owner_retirement() {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::StructuralOwners;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                    },
-                    SemioStoreClosePhase::StructuralOwners if store.structural_owners_terminal_is_empty() => {
-                        self.phase = SemioStoreClosePhase::FinalEnvelope;
-                        Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                    }
-                    SemioStoreClosePhase::StructuralOwners => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio member store structural close reached an owner outside its exact phase cursor")),
-                    SemioStoreClosePhase::FinalEnvelope => match store.take_final_envelope_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
-                        Some(retirement) => {
-                            *self.active = Some(retirement);
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        None => {
-                            self.phase = SemioStoreClosePhase::Complete;
-                            Ok(dsl::SnapshotRetirementStep::Complete)
-                        }
-                    },
-                    SemioStoreClosePhase::Complete => Ok(dsl::SnapshotRetirementStep::Complete),
-                }
-            }
-
-            fn next_close_byte_demand(&self, store: &dsl::ArtifactStore<subsets::$module::schema::snapshot::$snapshot, subsets::$module::schema::mutations::$mutation>) -> usize {
-                self.active.as_ref().map_or_else(|| if matches!(self.phase, SemioStoreClosePhase::DisplacedOwners) { store.maintenance_retirements_next_close_byte_demand() } else { usize::from(!matches!(self.phase, SemioStoreClosePhase::Complete)) }, |active| if active.terminal_is_empty() { std::mem::size_of_val(active.as_ref()) } else { active.next_close_byte_demand() })
-            }
-
-            fn terminal_is_empty(
-                &self,
-                store: &dsl::ArtifactStore<
-                    subsets::$module::schema::snapshot::$snapshot,
-                    subsets::$module::schema::mutations::$mutation,
-                >,
-            ) -> bool {
-                matches!(self.phase, SemioStoreClosePhase::Complete) && self.active.is_none() && store.owned_roots_terminal_is_empty()
-            }
-
-            fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<dsl::SnapshotRetirementStep, semio_framework_value::ValueError> {
-                if self.started || self.active.is_some() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"installed semio disposer cannot retire as uninstalled")); }
-                if maximum_items == 0 { return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-                self.phase = SemioStoreClosePhase::Complete;
-                Ok(dsl::SnapshotRetirementStep::Complete)
-            }
-
-            fn uninstalled_terminal_is_empty(&self) -> bool {
-                !self.started && matches!(self.phase, SemioStoreClosePhase::Complete) && self.active.is_none()
-            }
-
-            fn close_phase_witness(&self) -> String {
-                format!("semio/{:?}/started={}/active={}", self.phase, self.started, self.active.is_some())
-            }
-        }
-
         impl dsl::MemberStoreOwner<subsets::$module::schema::mutations::$mutation>
             for subsets::$module::schema::snapshot::$snapshot
         {
             semio_snapshot_open!($module, subsets::$module::schema::snapshot::$snapshot);
 
             fn member_store_owners_birth_bytes() -> usize {
-                dsl::document_store_owners_constructor_birth_bytes::<SemioStoreOwnedDisposer<Self, subsets::$module::schema::mutations::$mutation>>([
+                dsl::document_store_owners_constructor_birth_bytes::<dsl::ArtifactStoreCursorDisposer<Self, subsets::$module::schema::mutations::$mutation>>([
                     semio_framework_value::factory_constructor_birth_bytes::<SemioSnapshotRetirementFactory<Self>>(0),
                     semio_framework_value::factory_constructor_birth_bytes::<SemioOwnedValueRetirementFactory<Self>>(0),
                     semio_framework_value::factory_constructor_birth_bytes::<SemioMutationRetirementFactory<subsets::$module::schema::mutations::$mutation>>(0),
@@ -1217,7 +887,7 @@ macro_rules! member_owners {
                     SemioSnapshotRetirementFactory::<Self>(PhantomData),
                 ), Arc::new(SemioOwnedValueRetirementFactory::<Self>(PhantomData)), Arc::new(
                     SemioMutationRetirementFactory::<subsets::$module::schema::mutations::$mutation>(PhantomData),
-                ), Box::new(SemioStoreOwnedDisposer::<Self, subsets::$module::schema::mutations::$mutation>::new()))
+                ), Box::new(dsl::ArtifactStoreCursorDisposer::<Self, subsets::$module::schema::mutations::$mutation>::new()))
             }
         }
     )*};

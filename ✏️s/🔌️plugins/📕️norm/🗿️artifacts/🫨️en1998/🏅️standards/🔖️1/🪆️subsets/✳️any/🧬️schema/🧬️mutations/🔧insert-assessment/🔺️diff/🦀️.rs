@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertAssessment, base: &En1998Snapshot) -> protocol::Muta
     if base.assessments.iter().any(|existing| existing.id == payload.assessment.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Assessment id {} already exists.", payload.assessment.id), [payload.assessment.id.clone()]);
     }
-    let index = payload.index.min(base.assessments.len());
-    protocol::MutationOutcome::new(En1998Diff { assessments: En1998AssessmentDelta::insertion(&base.assessments, index, payload.assessment.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.assessments.len());
+    protocol::MutationOutcome::new(En1998Diff { assessments: En1998AssessmentDelta::insertion(index, payload.assessment.clone()), ..Default::default() })
 }

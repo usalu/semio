@@ -61,7 +61,8 @@ test("Lowpoly public mesh JSON publishes canonical intrinsic words and optional 
 
  test("Lowpoly managed mesh patches preserve untouched clear and full state through closed public domains",async()=>{
  const diff=(await import("../../../../../🧬️schema/🔺️diff/🔣️.json")).default,artifact=artifactSchema,intrinsic=intrinsicSchema,managed=meshSchema,child=childSchema,io=ioSchema,value=valueSchema;
- const ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema).addSchema(artifact).addSchema(intrinsic).addSchema(managed).addSchema(child).addSchema(io).addSchema(value).addSchema(diff),validate=ajv.compile({$ref:diff.$id+"#/$defs/LowpolyObjectPatch"}),base={name:null,smoothShading:null,transform:null,mesh:null,meshContent:null};
+ const ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema).addSchema(artifact).addSchema(intrinsic).addSchema(managed).addSchema(child).addSchema(io).addSchema(value).addSchema(diff),validate=ajv.compile({$ref:diff.$id+"#/$defs/LowpolyObjectPatch"}),base={name:null,smoothShading:null,position:null,rotation:null,scale:null,mesh:null,meshContent:null};
+ expect(validate({...base,meshState:null,transform:null})).toBe(false);
  for(const meshState of [null,{state:null},{state:fixture.mesh}])expect(validate({...base,meshState})).toBe(true);
  for(const meshState of [{},{state:null,extra:true},{state:{...fixture.mesh,extra:true}}])expect(validate({...base,meshState})).toBe(false);
  const {parseLowpolyObjectPatch}=await import("../../../../../🧬️schema/🔺️diff/🟦️.ts");

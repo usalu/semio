@@ -72,8 +72,11 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
+    use semio_framework_plugin_host::config_io::text::mutations::{decode_local_folders_config_mutation_json};
+    use semio_framework_plugin_host::config_io::text::snapshot::{decode_local_folder_bindings_json, encode_local_folder_bindings_json};
+
     use semio_framework_plugin_host::opening_config::mutations::{
-        apply_local_folders_config_mutation_reporting, decode_local_folders_config_mutation_json, decode_local_folder_bindings_json, encode_local_folder_bindings_json, inverse_local_folders_config_mutation_steps, LocalFolderBindings, LocalFoldersConfigMutation,
+        apply_local_folders_config_mutation_reporting, inverse_local_folders_config_mutation_steps, LocalFolderBindings, LocalFoldersConfigMutation,
         LocalFolderRef,
     };
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};

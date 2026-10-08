@@ -7,7 +7,9 @@ diff        : '{' member (',' member)* '}' | '{' '}' ;
 member      : HEADERVARS ':' namedDiff
             | TABLES ':' tablesDiff
             | BLOCKS ':' indexedDiff
-            | ENTITIES ':' indexedDiff ;
+            | ENTITIES ':' indexedDiff
+            | OTHERTABLES ':' otherTables ;
+otherTables: '[' .*? ']' ;   // replacement DxfOtherTable[]
 tablesDiff  : '{' tmember (',' tmember)* '}' | '{' '}' ;
 tmember     : LAYERS ':' namedDiff | STYLES ':' namedDiff | LINETYPES ':' namedDiff ;
 namedDiff   : '{' .*? '}' ;   // removed: string[], modified: {name,diff}[], added: {index,<item>}[]
@@ -17,6 +19,7 @@ HEADERVARS  : '"headerVars"' ;
 TABLES      : '"tables"' ;
 BLOCKS      : '"blocks"' ;
 ENTITIES    : '"entities"' ;
+OTHERTABLES : '"otherTables"' ;
 LAYERS      : '"layers"' ;
 STYLES      : '"styles"' ;
 LINETYPES   : '"linetypes"' ;

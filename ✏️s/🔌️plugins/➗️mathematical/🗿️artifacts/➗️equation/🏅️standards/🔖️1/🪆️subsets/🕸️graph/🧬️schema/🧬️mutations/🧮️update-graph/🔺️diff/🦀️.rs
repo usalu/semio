@@ -12,6 +12,6 @@ pub fn diff(payload: &super::UpdateGraphAlgorithm, base: &EquationSnapshot) -> p
         algorithm_seed: (base.graph.algorithm_seed != payload.new_algorithm_seed).then(|| EquationOptionalSeed { value: payload.new_algorithm_seed.clone() }),
         ..Default::default()
     };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base))
+    protocol::MutationOutcome::new(diff)
 }
 //#endregion 🔖️Diff

@@ -1,6 +1,6 @@
 //! 🔄️ Replace Config in the WFC 3D config facet — the whole-record swap a host restore performs.
 
-use super::{Wfc3dConfig, Wfc3dConfigDiff, Wfc3dConfigMutation};
+use super::{ChangeActiveTile, ChangeCamera, Wfc3dConfig, Wfc3dConfigDiff, Wfc3dConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -14,11 +14,20 @@ pub struct ReplaceConfig {
 impl protocol::MutationKind<Wfc3dConfig, Wfc3dConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &Wfc3dConfig) -> protocol::MutationOutcome<Wfc3dConfigDiff> {
-        protocol::MutationOutcome::new(<Wfc3dConfigDiff as protocol::DiffAlgebra<Wfc3dConfig>>::between(base, &self.config))
+        let config = &self.config;
+        protocol::MutationOutcome::new(Wfc3dConfigDiff {
+            camera_x: (base.camera_x != config.camera_x).then_some(config.camera_x),
+            camera_y: (base.camera_y != config.camera_y).then_some(config.camera_y),
+            camera_zoom: (base.camera_zoom != config.camera_zoom).then_some(config.camera_zoom),
+            active_tile_id: (base.active_tile_id != config.active_tile_id).then(|| config.active_tile_id.clone()),
+        })
     }
     fn inverse(&self, base: &Wfc3dConfig) -> Result<Vec<Wfc3dConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![Wfc3dConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+        vec![
+            Wfc3dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: base.active_tile_id.clone() }),
+            Wfc3dConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }),
+        ]
     
     })())
 }

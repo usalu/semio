@@ -66,29 +66,37 @@
   "assumedSiloWallFriction": null,
   "floors": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "selfWeightElements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "roofs": {
     "removed": [
-      "roof-main"
+      {
+        "id": "roof-main",
+        "index": 0
+      }
     ],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "windFaces": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "accidentalCases": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

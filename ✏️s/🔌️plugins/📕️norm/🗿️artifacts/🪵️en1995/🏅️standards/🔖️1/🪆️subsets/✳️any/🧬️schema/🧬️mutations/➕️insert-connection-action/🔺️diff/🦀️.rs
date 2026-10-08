@@ -10,5 +10,5 @@ pub fn diff(payload: &InsertConnectionAction, base: &En1995Snapshot) -> protocol
     if connection.actions.iter().any(|existing| existing.id == payload.action.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.action.id), [payload.action.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { actions: En1995ConnectionActionDelta::insertion(&connection.actions, at, payload.action.clone()), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { actions: En1995ConnectionActionDelta::insertion(at, payload.action.clone()), ..Default::default() }), ..Default::default() })
 }

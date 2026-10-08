@@ -8,35 +8,14 @@
 //! reach it through the `dsl` extern-crate alias `🦀️.rs` already declares, not the proc-macro
 //! crate name directly) — never hand-written.
 //!
-//! `catalog.index` is persisted state that mirrors `catalog.products` one-to-one
-//! (`CatalogIndex::from_catalog`'s per-product mapping) — every product mutation (`register`/
-//! `rename`/`reconfigure`/`deregister`) keeps it in lockstep via the `🔖️IndexSync` helpers
-//! below, rather than letting it silently drift out of sync with the catalog it indexes.
+//! `catalog.index` is derived state that mirrors `catalog.products` (`CatalogIndex::from_catalog`): no product leaf names an index entry,
+//! `Vdi3805Diff::apply` re-derives it whenever the products change.
 //!
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (this lane's
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
 //! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
-use crate::{CatalogIndexEntry, CatalogueProduct, SheetAttributes, Vdi3805Diff, Vdi3805Snapshot};
-
-//#region 🔖️IndexSync
-/// 🧮️ Mirrors `CatalogIndex::from_catalog`'s per-product mapping — kept here so every product
-/// mutation (`register`/`rename`/`reconfigure`) can update the persisted `index` field
-/// directly from the payload instead of rebuilding the whole index from the whole catalog.
-pub fn catalog_index_entry_for(product: &CatalogueProduct) -> CatalogIndexEntry {
-    CatalogIndexEntry {
-        product_id: product.identity.article_number.clone(),
-        sheet: product.sheet,
-        tags: product.title.iter().map(|t| t.text.clone()).collect(),
-        dn: product.configuration.attributes.dn(),
-    }
-}
-
-/// 🔢️ Extracts DN from typed sheet attributes for index sync.
-pub fn extract_dn(attributes: &SheetAttributes) -> Option<u16> {
-    attributes.dn()
-}
-//#endregion 🔖️IndexSync
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
@@ -120,57 +99,6 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️FromSnapshot
-impl Vdi3805Mutation {
-    /// 📤️ Decomposes a whole-document replacement into the closed semantic vocabulary — the
-    /// replacement for the banned whole-document-replace variant, used by `import_media`'s
-    /// `"model:in"` port and the `set-snapshot` app command. `catalog.index` needs no explicit
-    /// mutation of its own: `add-product`/`remove-product` already keep it in lockstep (see
-    /// `🔖️IndexSync` above), so recreating every product from `target` rebuilds it for free. `base`
-    /// is required because `products`/`geometry`/`curves` are real id-keyed collections needing full
-    /// remove/re-insert, and `edition_profile` is a real map needing a key-diff.
-    pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
-        let mut mutations = vec![
-            Vdi3805Mutation::ChangeManufacturerFile(change_manufacturer_file::ChangeManufacturerFile { new_manufacturer_file: target.catalog.file.clone() }),
-            Vdi3805Mutation::ChangeLimits(change_limits::ChangeLimits { new_limits: target.limits }),
-            Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of }),
-            Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode }),
-        ];
-
-        for sheet in base.edition_profile.keys() {
-            if !target.edition_profile.contains_key(sheet) {
-                mutations.push(Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: sheet.clone() }));
-            }
-        }
-        for (sheet, choice) in target.edition_profile.iter() {
-            mutations.push(Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: sheet.clone(), new_choice: *choice }));
-        }
-
-        for product in base.catalog.products.iter() {
-            mutations.push(Vdi3805Mutation::RemoveProduct(remove_product::RemoveProduct { id: product.identity.article_number.clone() }));
-        }
-        for (index, product) in target.catalog.products.iter().enumerate() {
-            mutations.push(Vdi3805Mutation::AddProduct(add_product::AddProduct { product: product.clone(), index: Some(index) }));
-        }
-
-        for id in base.geometry.keys() {
-            mutations.push(Vdi3805Mutation::RemoveGeometry(remove_geometry::RemoveGeometry { id: id.clone() }));
-        }
-        for geometry in target.geometry.values() {
-            mutations.push(Vdi3805Mutation::AddGeometry(add_geometry::AddGeometry { geometry: geometry.clone() }));
-        }
-
-        for id in base.curves.keys() {
-            mutations.push(Vdi3805Mutation::RemoveCurve(remove_curve::RemoveCurve { id: id.clone() }));
-        }
-        for curve in target.curves.values() {
-            mutations.push(Vdi3805Mutation::AddCurve(add_curve::AddCurve { curve: curve.clone() }));
-        }
-
-        mutations
-    }
-}
-//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -186,33 +114,6 @@ mod tests;
 // straight off this `🧬️mutations/` directory (ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION,
 // contract D1).
 //#endregion 🧪️FixtureTests
-
-//#region 🌉️ExternalCodecBridge
-
-
-/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
-/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
-/// crosses this boundary. Built on the SYNC `Mutation::diff`/`protocol::apply_diff` pair this
-/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation) -> Result<(Vdi3805Snapshot, Vec<String>), String> {
-    let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-
-/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
-/// `🏭️mutate-vdi3805-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
-/// reach without naming `protocol::Mutation`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)?
-
-    })
-}
-//#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️KindsCatalog
 #[cfg(test)]

@@ -7,7 +7,7 @@
 //! the mutation it claims to encode.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::{apply_grid3d_mutation, inverse_grid3d_mutation, Grid3dMutation};
+use crate::mutations::{inverse_grid3d_mutation, Grid3dMutation};
 use crate::schema::snapshot::Grid3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/⬅️before/🔣️.json");
@@ -30,7 +30,7 @@ fn mutation() -> Grid3dMutation {
 #[test]
 fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_grid3d_mutation(&mut snapshot, &mutation()).expect("create-rule applies to its committed before-snapshot");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("create-rule applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "create-rule/🚦️allows-air-above-air: applied state differs from the committed after-snapshot");
 }
 
@@ -41,9 +41,9 @@ fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
-    apply_grid3d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     for step in &inverse {
-        apply_grid3d_mutation(&mut snapshot, step).expect("inverse step applies");
+        vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "create-rule/🚦️allows-air-above-air: the inverse did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
         .collect();
     assert_eq!(produced, declared, "create-rule/🚦️allows-air-above-air: raised diagnostics differ from the committed 🎯️outcome messages");
     let mut snapshot = before();
-    let applied = apply_grid3d_mutation(&mut snapshot, &mutation()).is_ok();
+    let applied = vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).is_ok();
     match status {
         "applied" => {
             assert!(applied, "create-rule/🚦️allows-air-above-air: declared applied but the mutation was rejected");

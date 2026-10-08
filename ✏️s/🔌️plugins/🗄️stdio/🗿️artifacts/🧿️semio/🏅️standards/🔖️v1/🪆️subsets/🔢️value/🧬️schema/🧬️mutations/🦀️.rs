@@ -10,7 +10,7 @@
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 
 
-use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
+use crate::standards::v1::subsets::value::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 
 
 

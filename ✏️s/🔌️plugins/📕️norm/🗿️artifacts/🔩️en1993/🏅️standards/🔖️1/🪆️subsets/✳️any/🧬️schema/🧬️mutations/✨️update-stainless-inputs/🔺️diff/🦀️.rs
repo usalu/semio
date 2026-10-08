@@ -8,11 +8,11 @@ pub fn diff(payload: &UpdateStainlessInputs, base: &En1993Snapshot) -> protocol:
     let delta = match base.materials.iter().position(|row| row.id == payload.material.id) {
         Some(index) if base.materials[index] == payload.material => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
         Some(index) => {
-            let mut replacement = En1993MaterialDelta::removal(&payload.material.id);
-            replacement.absorb(En1993MaterialDelta::insertion(&base.materials, index, payload.material.clone()));
+            let mut replacement = En1993MaterialDelta::removal(&base.materials, index);
+            replacement.absorb(En1993MaterialDelta::insertion(index, payload.material.clone()));
             replacement
         }
-        None => En1993MaterialDelta::insertion(&base.materials, base.materials.len(), payload.material.clone()),
+        None => En1993MaterialDelta::insertion(base.materials.len(), payload.material.clone()),
     };
     protocol::MutationOutcome::new(En1993Diff { materials: delta, ..Default::default() })
 }

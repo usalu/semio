@@ -14,18 +14,30 @@ type En1998Diff {
 }
 
 type En1998SystemDelta {
-  removed: [String!]!
-  added: [En1998SystemAddition!]!
+  removed: [En1998SystemRemoval!]!
+  inserted: [En1998SystemInsertion!]!
+  moved: [En1998SystemRelocation!]!
   modified: [En1998SystemModification!]!
 }
 
-type En1998SystemAddition {
-  after: String
+type En1998SystemRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998SystemInsertion {
+  index: Int!
   row: En1998System!
 }
 
+type En1998SystemRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998SystemModification {
-  key: String!
+  id: String!
   patch: En1998SystemPatch!
 }
 
@@ -41,18 +53,30 @@ type En1998SystemPatch {
 }
 
 type En1998StoreyDelta {
-  removed: [String!]!
-  added: [En1998StoreyAddition!]!
+  removed: [En1998StoreyRemoval!]!
+  inserted: [En1998StoreyInsertion!]!
+  moved: [En1998StoreyRelocation!]!
   modified: [En1998StoreyModification!]!
 }
 
-type En1998StoreyAddition {
-  after: String
+type En1998StoreyRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998StoreyInsertion {
+  index: Int!
   row: En1998Storey!
 }
 
+type En1998StoreyRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998StoreyModification {
-  key: String!
+  id: String!
   patch: En1998StoreyPatch!
 }
 
@@ -73,18 +97,30 @@ type En1998StoreyPatch {
 }
 
 type En1998MemberDelta {
-  removed: [String!]!
-  added: [En1998MemberAddition!]!
+  removed: [En1998MemberRemoval!]!
+  inserted: [En1998MemberInsertion!]!
+  moved: [En1998MemberRelocation!]!
   modified: [En1998MemberModification!]!
 }
 
-type En1998MemberAddition {
-  after: String
+type En1998MemberRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998MemberInsertion {
+  index: Int!
   row: En1998Member!
 }
 
+type En1998MemberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998MemberModification {
-  key: String!
+  id: String!
   patch: En1998MemberPatch!
 }
 
@@ -100,18 +136,30 @@ type En1998MemberPatch {
 }
 
 type En1998BuildingDelta {
-  removed: [String!]!
-  added: [En1998BuildingAddition!]!
+  removed: [En1998BuildingRemoval!]!
+  inserted: [En1998BuildingInsertion!]!
+  moved: [En1998BuildingRelocation!]!
   modified: [En1998BuildingModification!]!
 }
 
-type En1998BuildingAddition {
-  after: String
+type En1998BuildingRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998BuildingInsertion {
+  index: Int!
   row: En1998Building!
 }
 
+type En1998BuildingRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998BuildingModification {
-  key: String!
+  id: String!
   patch: En1998BuildingPatch!
 }
 
@@ -136,18 +184,30 @@ type En1998BuildingPatch {
 }
 
 type En1998BridgeDelta {
-  removed: [String!]!
-  added: [En1998BridgeAddition!]!
+  removed: [En1998BridgeRemoval!]!
+  inserted: [En1998BridgeInsertion!]!
+  moved: [En1998BridgeRelocation!]!
   modified: [En1998BridgeModification!]!
 }
 
-type En1998BridgeAddition {
-  after: String
+type En1998BridgeRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998BridgeInsertion {
+  index: Int!
   row: En1998Bridge!
 }
 
+type En1998BridgeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998BridgeModification {
-  key: String!
+  id: String!
   patch: En1998BridgePatch!
 }
 
@@ -162,18 +222,30 @@ type En1998BridgePatch {
 }
 
 type En1998AssessmentDelta {
-  removed: [String!]!
-  added: [En1998AssessmentAddition!]!
+  removed: [En1998AssessmentRemoval!]!
+  inserted: [En1998AssessmentInsertion!]!
+  moved: [En1998AssessmentRelocation!]!
   modified: [En1998AssessmentModification!]!
 }
 
-type En1998AssessmentAddition {
-  after: String
+type En1998AssessmentRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998AssessmentInsertion {
+  index: Int!
   row: En1998Assessment!
 }
 
+type En1998AssessmentRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998AssessmentModification {
-  key: String!
+  id: String!
   patch: En1998AssessmentPatch!
 }
 
@@ -186,18 +258,30 @@ type En1998AssessmentPatch {
 }
 
 type En1998SiloDelta {
-  removed: [String!]!
-  added: [En1998SiloAddition!]!
+  removed: [En1998SiloRemoval!]!
+  inserted: [En1998SiloInsertion!]!
+  moved: [En1998SiloRelocation!]!
   modified: [En1998SiloModification!]!
 }
 
-type En1998SiloAddition {
-  after: String
+type En1998SiloRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998SiloInsertion {
+  index: Int!
   row: En1998Silo!
 }
 
+type En1998SiloRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998SiloModification {
-  key: String!
+  id: String!
   patch: En1998SiloPatch!
 }
 
@@ -214,18 +298,30 @@ type En1998SiloPatch {
 }
 
 type En1998TankDelta {
-  removed: [String!]!
-  added: [En1998TankAddition!]!
+  removed: [En1998TankRemoval!]!
+  inserted: [En1998TankInsertion!]!
+  moved: [En1998TankRelocation!]!
   modified: [En1998TankModification!]!
 }
 
-type En1998TankAddition {
-  after: String
+type En1998TankRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998TankInsertion {
+  index: Int!
   row: En1998Tank!
 }
 
+type En1998TankRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998TankModification {
-  key: String!
+  id: String!
   patch: En1998TankPatch!
 }
 
@@ -240,18 +336,30 @@ type En1998TankPatch {
 }
 
 type En1998FoundationDelta {
-  removed: [String!]!
-  added: [En1998FoundationAddition!]!
+  removed: [En1998FoundationRemoval!]!
+  inserted: [En1998FoundationInsertion!]!
+  moved: [En1998FoundationRelocation!]!
   modified: [En1998FoundationModification!]!
 }
 
-type En1998FoundationAddition {
-  after: String
+type En1998FoundationRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998FoundationInsertion {
+  index: Int!
   row: En1998Foundation!
 }
 
+type En1998FoundationRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998FoundationModification {
-  key: String!
+  id: String!
   patch: En1998FoundationPatch!
 }
 
@@ -265,18 +373,30 @@ type En1998FoundationPatch {
 }
 
 type En1998RetainingWallDelta {
-  removed: [String!]!
-  added: [En1998RetainingWallAddition!]!
+  removed: [En1998RetainingWallRemoval!]!
+  inserted: [En1998RetainingWallInsertion!]!
+  moved: [En1998RetainingWallRelocation!]!
   modified: [En1998RetainingWallModification!]!
 }
 
-type En1998RetainingWallAddition {
-  after: String
+type En1998RetainingWallRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998RetainingWallInsertion {
+  index: Int!
   row: En1998RetainingWall!
 }
 
+type En1998RetainingWallRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998RetainingWallModification {
-  key: String!
+  id: String!
   patch: En1998RetainingWallPatch!
 }
 
@@ -289,18 +409,30 @@ type En1998RetainingWallPatch {
 }
 
 type En1998TowerDelta {
-  removed: [String!]!
-  added: [En1998TowerAddition!]!
+  removed: [En1998TowerRemoval!]!
+  inserted: [En1998TowerInsertion!]!
+  moved: [En1998TowerRelocation!]!
   modified: [En1998TowerModification!]!
 }
 
-type En1998TowerAddition {
-  after: String
+type En1998TowerRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1998TowerInsertion {
+  index: Int!
   row: En1998Tower!
 }
 
+type En1998TowerRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1998TowerModification {
-  key: String!
+  id: String!
   patch: En1998TowerPatch!
 }
 

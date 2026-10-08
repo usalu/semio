@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/write-pixel-region/schema.json",
+  "title": "WritePixelRegion",
+  "description": "One rectangle of RGBA8 samples written into the image a layer's pixels or mask show, at (x, y) of that image. A rectangle that already holds the samples is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer or a layer without pixels is `mutation.target-mismatch`, a rectangle outside the image or a wrong sample count is `mutation.invariant`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "layerId",
+    "target",
+    "x",
+    "y",
+    "width",
+    "height",
+    "samples"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "writePixelRegion"
+    },
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer whose image is written.",
+          "de": "Die Ebene, deren Bild geschrieben wird."
+        },
+        "ref": {
+          "kind": "layer"
+        }
+      }
+    },
+    "target": {
+      "enum": [
+        "pixels",
+        "mask"
+      ]
+    },
+    "x": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "y": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "description": "width x height RGBA8 samples, row-major."
+    }
+  }
+}

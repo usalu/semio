@@ -37,16 +37,6 @@ pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "chan
 //#region 🌉️ExternalCodecBridge
 
 
-/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
-/// pairs, so the committed `🎯️outcome/🔣️.json`'s claim is checkable from outside this
-/// crate rather than only inside its own leaf tests.
-pub fn apply_sourcing_mutation_reporting(snapshot: &mut CurationSnapshot, mutation: &SourcingMutation) -> Vec<(String, String)> {
-    let outcome = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
-        *snapshot = next;
-    }
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
 
 /// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
 /// apply for the metamorphic law to mean anything.

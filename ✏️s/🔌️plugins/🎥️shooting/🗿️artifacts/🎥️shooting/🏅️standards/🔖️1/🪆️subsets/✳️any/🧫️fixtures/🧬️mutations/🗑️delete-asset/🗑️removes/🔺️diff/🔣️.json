@@ -4,7 +4,8 @@
     "edits": [
       {
         "edit": "remove",
-        "id": "asset-prop"
+        "id": "asset-prop",
+        "index": 1
       }
     ],
     "patched": []

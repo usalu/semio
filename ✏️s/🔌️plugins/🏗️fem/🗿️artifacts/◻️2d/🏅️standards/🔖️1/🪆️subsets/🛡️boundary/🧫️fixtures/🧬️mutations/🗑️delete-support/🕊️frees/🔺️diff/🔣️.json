@@ -5,12 +5,15 @@
   "materials": null,
   "sections": null,
   "supports": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "sup_tie"
+      {
+        "id": "sup_tie",
+        "index": 2
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "loadCases": null,
   "combinations": null,

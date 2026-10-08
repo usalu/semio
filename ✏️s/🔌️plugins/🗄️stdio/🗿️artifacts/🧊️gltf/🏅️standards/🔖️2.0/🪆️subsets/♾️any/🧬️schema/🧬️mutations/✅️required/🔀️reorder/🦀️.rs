@@ -27,7 +27,7 @@ pub fn validate(payload: &GltfReorderRequiredExtensionsPayload, base: &GltfSnaps
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfReorderRequiredExtensionsPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    Ok(GltfDiff { extensions_required: Some(p.order.clone()), ..Default::default() })
+    Ok(GltfDiff { extensions_required: Some(GltfStringsDelta::rows(Vec::new(), Vec::new(), moves_to_keys(&base.document.extensions_required, &p.order))), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfReorderRequiredExtensionsPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

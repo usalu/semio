@@ -216,3 +216,17 @@ describe("text editor explicit drafts", () => {
     expect(settleTextEditorExplicitDraft(retry, started.pending!, applied, lifecycle.source, lifecycle.normalized, lifecycle.ownRevision)).toBe(retry);
   });
 });
+
+describe("text editor explicit drafts that publish their change set", () => {
+  test("a window declaring the splices argument receives the ranges the editor made, in the coordinates of the starting text", () => {
+    const settings = parseTextEditorExplicitDraftSettings(JSON.stringify({ ...fixture.cases[0]!.settings, editArgument: "splices" }));
+    expect(settings).not.toBeNull();
+    let state = createTextEditorExplicitDraft("surface", "hello world", "1");
+    state = changeTextEditorExplicitDraft(state, "surface", "hello world", "hello brave world", "1");
+    state = changeTextEditorExplicitDraft(state, "surface", "hello world", "hello brave new world", "1");
+    state = changeTextEditorExplicitDraft(state, "surface", "hello world", "hello brave new w", "1");
+    expect(state.changes).toEqual([{ offset: 6, delete: 0, insert: "brave new " }, { offset: 7, delete: 4, insert: "" }]);
+    expect(textEditorExplicitDraftAction(settings!, state.draft, state.changes).args?.splices).toBe(JSON.stringify(state.changes));
+    expect(textEditorExplicitDraftAction(settings!, state.draft, state.changes).args).not.toHaveProperty("text");
+  });
+});

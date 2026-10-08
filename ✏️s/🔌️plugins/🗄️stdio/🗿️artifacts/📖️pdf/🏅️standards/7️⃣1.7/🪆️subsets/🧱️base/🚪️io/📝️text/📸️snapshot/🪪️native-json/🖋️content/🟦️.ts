@@ -1,3 +1,4 @@
+import {pdfImageBodyFromNativeJson} from "../🖼️resource/🟦️.ts";
 /** 🖋️ Explicit native content JSON admission into the canonical owned PDF operator model. */
 import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage, Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { record, array, text, boolean, integer, integers, real, reals, pdfDictionaryFromNativeJson, pdfCosFromNativeJson, pdfColorFromNativeJson, filters } from "../🟦️.ts";
@@ -11,7 +12,7 @@ export function pdfTextItemFromNativeJson(input: unknown): PdfTextArrayItem { co
 /** 🏷️ Admit named or inline property-list ownership explicitly. */
 export function pdfPropertyFromNativeJson(input: unknown): PdfPropertyList { const row=record(input);const kind=text(row.kind);switch(kind){case "named":return {kind,name:text(row.name)};case "inline":return {kind,entries:pdfDictionaryFromNativeJson(row.entries)};default:throw new Error("Unknown PDF property list");} }
 /** 🖼️ Admit all intrinsic inline image fields and exact finite decode words. */
-export function pdfInlineFromNativeJson(input: unknown): PdfInlineImage { const row=record(input);return {width:integer(row.width),height:integer(row.height),bitsPerComponent:integer(row.bitsPerComponent??0),colorSpace:row.colorSpace==null?null:pdfColorFromNativeJson(row.colorSpace),imageMask:boolean(row.imageMask??false),decode:reals(row.decode??[]),interpolate:boolean(row.interpolate??false),filters:filters(row.filters??[]),data:integers(row.data),extra:pdfDictionaryFromNativeJson(row.extra??[])}; }
+export function pdfInlineFromNativeJson(input: unknown): PdfInlineImage { const row=record(input);return {width:integer(row.width),height:integer(row.height),bitsPerComponent:integer(row.bitsPerComponent??0),colorSpace:row.colorSpace==null?null:pdfColorFromNativeJson(row.colorSpace),imageMask:boolean(row.imageMask??false),decode:reals(row.decode??[]),interpolate:boolean(row.interpolate??false),body:pdfImageBodyFromNativeJson(row.body),extra:pdfDictionaryFromNativeJson(row.extra??[])}; }
 /** 🖋️ Admit each concrete native operator without a second reflected snapshot model. */
 export function pdfOperationFromNativeJson(input: unknown): PdfOp {
   const row=record(input);const op=text(row.op);

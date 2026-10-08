@@ -1,130 +1,249 @@
-# 🧬️ Block3d diff schema — sparse field delta.
+# 🧬️ Block3d diff schema — field-sparse, id-keyed delta.
 
 type Block3dDiff {
-  artifact: Block3dArtifact @state(class: ARTIFACT)
-  schema: String @state(class: ARTIFACT)
-  objectKind: BlockKindIdentity @state(class: ARTIFACT)
-  representations: Block3dRepresentationsDelta @state(class: ARTIFACT)
-  vortexKinds: Block3dVortexKindsDelta @state(class: ARTIFACT)
-  vortices: Block3dVorticesDelta @state(class: ARTIFACT)
-  compatibility: Block3dCompatibilityDelta @state(class: ARTIFACT)
-  attributes: Block3dAttributesDelta @state(class: ARTIFACT)
-  authors: Block3dAuthorList @state(class: ARTIFACT)
-  camera3d: BlockCamera3d @state(class: ARTIFACT)
-  meta: BlockMeta @state(class: ARTIFACT)
+  schema: String
+  objectKind: BlockKindIdentityPatch
+  representations: BlockRepresentationsDelta
+  vortexKinds: Block3dVortexKindsDelta
+  vortices: Block3dVorticesDelta
+  compatibility: BlockCompatibilityDelta
+  attributes: BlockAttributesDelta
+  authors: BlockAuthorsDelta
+  camera3d: BlockCamera3dPatch
+  meta: BlockMetaPatch
 }
 
-type BlockKindIdentity { _placeholder: Boolean }
-
-type BlockRepresentation { _placeholder: Boolean }
-
-type Block3dVortexKind { _placeholder: Boolean }
-
-type Block3dVortexTemplate { _placeholder: Boolean }
-
-type BlockCompatibilityRule { _placeholder: Boolean }
-
-type BlockAttribute { _placeholder: Boolean }
-
-type BlockAuthor { _placeholder: Boolean }
-
-type BlockCamera3d { _placeholder: Boolean }
-
-type BlockMeta { _placeholder: Boolean }
-
-type Block3dWindowView { _placeholder: Boolean }
-
-
-type Block3dStringList {
-  values: [String!]!
+type BlockOptionalText {
+  value: String
 }
 
-type Block3dAuthorList {
-  values: [BlockAuthor!]!
+type BlockKindIdentityPatch {
+  id: String
+  name: String
+  label: String
+  description: String
+  variant: BlockOptionalText
+  icon: BlockOptionalText
+  unit: BlockOptionalText
 }
 
-type Block3dRepresentationsDelta {
-  added: [BlockRepresentation!]!
-  removed: [String!]!
-  patched: [Block3dRepresentationsPatchEntry!]!
-  reordered: [String!]
+type BlockRepresentationPatch {
+  name: String
+  meshUrl: BlockOptionalText
+  lod: BlockOptionalText
+  description: String
+  tagsRemoved: [String!]!
+  tagsAdded: [String!]!
+  attributesRemoved: [String!]!
+  attributesAdded: [BlockAttribute!]!
 }
 
-type Block3dRepresentationsPatchEntry {
+type Block3dVortexKindPatch {
+  name: String
+  label: String
+  color: String
+  defaultCableKind: String
+}
+
+type Block3dVortexTemplatePatch {
+  vortexKind: String
+  position: [Float!]
+  direction: [Float!]
+  radius: Float
+  label: BlockOptionalText
+}
+
+type BlockCompatibilityRulePatch {
+  source: String
+  target: String
+  bidirectional: Boolean
+}
+
+type BlockAttributePatch {
+  value: String
+  definition: BlockOptionalText
+}
+
+type BlockAuthorPatch {
+  name: String
+  email: BlockOptionalText
+}
+
+type BlockCamera3dPatch {
+  position: [Float!]
+  target: [Float!]
+  zoom: Float
+}
+
+type BlockMetaPatch {
+  description: String
+}
+
+type BlockRepresentationsPatchEntry {
   id: String!
-  patch: Block3dRepresentationsPatch!
+  patch: BlockRepresentationPatch!
 }
 
-type Block3dRepresentationsPatch {
-  replacement: BlockRepresentation
+type BlockRepresentationsRemoval {
+  id: String!
+  index: Int!
 }
 
-type Block3dVortexKindsDelta {
-  added: [Block3dVortexKind!]!
-  removed: [String!]!
-  patched: [Block3dVortexKindsPatchEntry!]!
-  reordered: [String!]
+type BlockRepresentationsInsertion {
+  index: Int!
+  row: BlockRepresentation!
+}
+
+type BlockRepresentationsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockRepresentationsDelta {
+  removed: [BlockRepresentationsRemoval!]!
+  inserted: [BlockRepresentationsInsertion!]!
+  moved: [BlockRepresentationsRelocation!]!
+  modified: [BlockRepresentationsPatchEntry!]!
 }
 
 type Block3dVortexKindsPatchEntry {
   id: String!
-  patch: Block3dVortexKindsPatch!
+  patch: Block3dVortexKindPatch!
 }
 
-type Block3dVortexKindsPatch {
-  replacement: Block3dVortexKind
+type Block3dVortexKindsRemoval {
+  id: String!
+  index: Int!
 }
 
-type Block3dVorticesDelta {
-  added: [Block3dVortexTemplate!]!
-  removed: [String!]!
-  patched: [Block3dVorticesPatchEntry!]!
-  reordered: [String!]
+type Block3dVortexKindsInsertion {
+  index: Int!
+  row: Block3dVortexKind!
+}
+
+type Block3dVortexKindsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Block3dVortexKindsDelta {
+  removed: [Block3dVortexKindsRemoval!]!
+  inserted: [Block3dVortexKindsInsertion!]!
+  moved: [Block3dVortexKindsRelocation!]!
+  modified: [Block3dVortexKindsPatchEntry!]!
 }
 
 type Block3dVorticesPatchEntry {
   id: String!
-  patch: Block3dVorticesPatch!
+  patch: Block3dVortexTemplatePatch!
 }
 
-type Block3dVorticesPatch {
-  replacement: Block3dVortexTemplate
-}
-
-type Block3dCompatibilityDelta {
-  added: [BlockCompatibilityRule!]!
-  removed: [String!]!
-  patched: [Block3dCompatibilityPatchEntry!]!
-  reordered: [String!]
-}
-
-type Block3dCompatibilityPatchEntry {
+type Block3dVorticesRemoval {
   id: String!
-  patch: Block3dCompatibilityPatch!
+  index: Int!
 }
 
-type Block3dCompatibilityPatch {
-  replacement: BlockCompatibilityRule
+type Block3dVorticesInsertion {
+  index: Int!
+  row: Block3dVortexTemplate!
 }
 
-type Block3dAttributesDelta {
-  added: [BlockAttribute!]!
-  removed: [String!]!
-  patched: [Block3dAttributesPatchEntry!]!
-  reordered: [String!]
-}
-
-type Block3dAttributesPatchEntry {
+type Block3dVorticesRelocation {
   id: String!
-  patch: Block3dAttributesPatch!
+  from: Int!
+  to: Int!
 }
 
-type Block3dAttributesPatch {
-  replacement: BlockAttribute
+type Block3dVorticesDelta {
+  removed: [Block3dVorticesRemoval!]!
+  inserted: [Block3dVorticesInsertion!]!
+  moved: [Block3dVorticesRelocation!]!
+  modified: [Block3dVorticesPatchEntry!]!
 }
 
-type Block3dWindowsList {
-  values: [Block3dWindowView!]!
+type BlockCompatibilityPatchEntry {
+  id: String!
+  patch: BlockCompatibilityRulePatch!
 }
 
-type Block3dArtifact { schema: String! }
+type BlockCompatibilityRemoval {
+  id: String!
+  index: Int!
+}
+
+type BlockCompatibilityInsertion {
+  index: Int!
+  row: BlockCompatibilityRule!
+}
+
+type BlockCompatibilityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockCompatibilityDelta {
+  removed: [BlockCompatibilityRemoval!]!
+  inserted: [BlockCompatibilityInsertion!]!
+  moved: [BlockCompatibilityRelocation!]!
+  modified: [BlockCompatibilityPatchEntry!]!
+}
+
+type BlockAttributesPatchEntry {
+  id: String!
+  patch: BlockAttributePatch!
+}
+
+type BlockAttributesRemoval {
+  id: String!
+  index: Int!
+}
+
+type BlockAttributesInsertion {
+  index: Int!
+  row: BlockAttribute!
+}
+
+type BlockAttributesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockAttributesDelta {
+  removed: [BlockAttributesRemoval!]!
+  inserted: [BlockAttributesInsertion!]!
+  moved: [BlockAttributesRelocation!]!
+  modified: [BlockAttributesPatchEntry!]!
+}
+
+type BlockAuthorsPatchEntry {
+  id: String!
+  patch: BlockAuthorPatch!
+}
+
+type BlockAuthorsRemoval {
+  id: String!
+  index: Int!
+}
+
+type BlockAuthorsInsertion {
+  index: Int!
+  row: BlockAuthor!
+}
+
+type BlockAuthorsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockAuthorsDelta {
+  removed: [BlockAuthorsRemoval!]!
+  inserted: [BlockAuthorsInsertion!]!
+  moved: [BlockAuthorsRelocation!]!
+  modified: [BlockAuthorsPatchEntry!]!
+}
+

@@ -2,6 +2,7 @@
 //! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
 //! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
 //! 📤️export/🧵️serializers.
+use crate::apply_mutation;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
@@ -108,7 +109,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::v5::subsets::any::schema::diff::HtmlDiff;
-    use crate::standards::v5::subsets::any::schema::mutations::{apply_html_mutation,HtmlMutation};
+    use crate::standards::v5::subsets::any::schema::mutations::{HtmlMutation};
 
     use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -135,7 +136,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<HtmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_html_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

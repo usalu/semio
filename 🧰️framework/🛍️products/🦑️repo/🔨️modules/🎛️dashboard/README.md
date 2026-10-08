@@ -140,6 +140,13 @@ error that prints the usage and exits with status 2.
 Agents and editors start servers with `bun run dashboard run <id> --detach --wait-ready`, read the printed
 address and attach browser previews to it; find ids with `bun run dashboard commands <words> --json`.
 
+### 🧩 VSCode Launch Projection
+
+Dashboard ticket declarations also own their VSCode controls. Run the normal Nx target
+`bun nx run @semio-tech/repo-dashboard-rs:launch -- generate YY/MM/DD/TICKET`, or use `check` to refuse a stale projection and `test` to run the independent projection oracle. Generation reads the ticket's current `🎮️commands.json`, emits English and German controls grouped by verb, and replaces only that ticket's projected entries. Other debug configurations and inputs stay in place.
+
+Each control runs its safe registry identity through the same dashboard run route. Text and choice inputs enter dedicated environment variables and then native argument arrays; their contents never enter a shell command. Native registry admission still controls parameter choices, readiness, dependencies and cancellation. The projection does not read the retired launch seed and has no artifact-codec receipt dependency.
+
 ### 🚀 The Launcher
 
 The launcher is a pure state machine over the registry. Commands are filed by verb, then by owner; typing

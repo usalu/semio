@@ -1,4 +1,4 @@
-//! 🧱️ Playbook play app command — `add-block`: appends a blank block of a kind to a step (one absolute `blocksJson` set on the
+//! 🧱️ Playbook play app command — `add-block`: appends a blank block of a kind to a step (one concrete `set-node-param` row on the
 //! `flow` child).
 
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};

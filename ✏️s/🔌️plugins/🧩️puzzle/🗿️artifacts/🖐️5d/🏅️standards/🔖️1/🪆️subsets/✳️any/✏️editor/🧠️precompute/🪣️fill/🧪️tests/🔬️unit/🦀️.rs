@@ -10,7 +10,7 @@ use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
 use crate::editor::puzzle5d::unit_tests::context::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
 use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_job::{CancelToken, Generation, InteractiveStage, OperationId, StepBudget};
 use semio_framework_plugin::{ActionMeta, ArtifactApp, ArtifactInstanceOperationOwnerHandle, PluginApp, ToolRunJobPort, ToolRunJobPurpose, ToolRunTraceKeys};
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunStep, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID};
@@ -87,7 +87,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         definition: &definition,
         purpose,
         identity: identity(),
-        snapshot: Arc::new(Puzzle5dPlaySnapshot::new(serde_json::to_value(document).expect("document serializes"))),
+        snapshot: Arc::new(Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::puzzle5d_snapshot_from_document(document).expect("typed host document admits"))),
         config: Arc::new(Puzzle5dConfig { fill_count: requested, ..Puzzle5dConfig::default() }),
         window_id: None,
         window_config: None,

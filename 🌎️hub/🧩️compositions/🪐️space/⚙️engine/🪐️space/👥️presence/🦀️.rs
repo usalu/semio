@@ -25,13 +25,16 @@ pub struct SpacePresence {
 }
 
 
-impl protocol::MutationDiff<SpacePresence> for SpacePresence {
-    fn apply(&self, _base: &SpacePresence) -> protocol::MutationApplyResult<SpacePresence> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
+store::sparse_record_diff! {
+    record: SpacePresence,
+    diff: SpacePresenceDiff,
+    fields: {
+        active_node_id: Option<String>,
+        focused_node_id: Option<String>,
+        collapsed_node_ids: Vec<String>,
+        preview_off_node_ids: Vec<String>,
+    },
+    keyed: { camera: SpaceWindowCamera },
 }
 
 impl store::ArtifactDsl for SpacePresence {
@@ -81,37 +84,103 @@ impl ArtifactPack for SpacePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
+/// 👥️ `SpacePresence`'s operation enum — one variant per settled interaction, each setting only the slots (or keyed camera rows) of the fields it owns, with the same
+/// variant carrying the base values as its inverse. There is no whole-presence variant.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-#[value(rename_all = "camelCase")]
 pub enum SpacePresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "active-node")]
+    SetActiveNode { node_id: Option<String> },
+    #[dsl(key = "focused-node")]
+    SetFocusedNode { node_id: Option<String> },
+    #[dsl(key = "collapsed")]
+    SetCollapsed { node_ids: Vec<String> },
+    #[dsl(key = "preview-off")]
+    SetPreviewOff { node_ids: Vec<String> },
+    #[dsl(key = "camera")]
+    SetCamera {
+        window_id: String,
         #[dsl(block)]
-        presence: SpacePresence,
+        camera: SpaceWindowCamera,
     },
+    #[dsl(key = "remove-camera")]
+    RemoveCamera { window_id: String },
+}
+
+/// 🧷️ The leaf descriptor of one presence operation.
+const fn descriptor(owner: &'static str, kind: &'static str, display_name: &'static str, variant: &'static str) -> protocol::MutationLeafDescriptor {
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner,
+        semantic_kind: kind,
+        display_name,
+        emoji: "👥️",
+        aggregate_variant: variant,
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }
 }
 
 impl Mutation<SpacePresence> for SpacePresenceMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/👥️presence/👥️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "👥️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        descriptor("🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/👥️set-active-node", "set-active-node", "Set Active Node", "SetActiveNode"),
+        descriptor("🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/👥️set-focused-node", "set-focused-node", "Set Focused Node", "SetFocusedNode"),
+        descriptor("🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/👥️set-collapsed", "set-collapsed", "Set Collapsed", "SetCollapsed"),
+        descriptor("🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/👥️set-preview-off", "set-preview-off", "Set Preview Off", "SetPreviewOff"),
+        descriptor("🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/👥️set-camera", "set-camera", "Set Camera", "SetCamera"),
+        descriptor("🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/👥️remove-camera", "remove-camera", "Remove Camera", "RemoveCamera"),
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            SpacePresenceMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetActiveNode { .. } => &Self::DESCRIPTORS[0],
+            Self::SetFocusedNode { .. } => &Self::DESCRIPTORS[1],
+            Self::SetCollapsed { .. } => &Self::DESCRIPTORS[2],
+            Self::SetPreviewOff { .. } => &Self::DESCRIPTORS[3],
+            Self::SetCamera { .. } => &Self::DESCRIPTORS[4],
+            Self::RemoveCamera { .. } => &Self::DESCRIPTORS[5],
         }
     }
 
-    type Diff = SpacePresence;
+    type Diff = SpacePresenceDiff;
 
-    fn diff(&self, _base: &SpacePresence) -> protocol::MutationOutcome<SpacePresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
-        }
+    fn diff(&self, base: &SpacePresence) -> protocol::MutationOutcome<SpacePresenceDiff> {
+        protocol::MutationOutcome::new(match self {
+            Self::SetActiveNode { node_id } => SpacePresenceDiff { active_node_id: (base.active_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
+            Self::SetFocusedNode { node_id } => SpacePresenceDiff { focused_node_id: (base.focused_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
+            Self::SetCollapsed { node_ids } => SpacePresenceDiff { collapsed_node_ids: (base.collapsed_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            Self::SetPreviewOff { node_ids } => SpacePresenceDiff { preview_off_node_ids: (base.preview_off_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            Self::SetCamera { window_id, camera } => match base.camera.get(window_id) {
+                Some(prior) if prior == camera => SpacePresenceDiff::default(),
+                Some(_) => SpacePresenceDiff { camera: [(window_id.clone(), protocol::KeyedRow::Replace(*camera))].into(), ..Default::default() },
+                None => SpacePresenceDiff { camera: [(window_id.clone(), protocol::KeyedRow::Insert(*camera))].into(), ..Default::default() },
+            },
+            Self::RemoveCamera { window_id } => {
+                if !base.camera.contains_key(window_id) {
+                    return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMissing, "the window has no camera row", ["camera", window_id.as_str()]);
+                }
+                SpacePresenceDiff { camera: [(window_id.clone(), protocol::KeyedRow::Remove)].into(), ..Default::default() }
+            }
+        })
     }
 
     fn inverse(&self, base: &SpacePresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::Snapshot { presence: base.clone() }])
+        Ok(vec![match self {
+            Self::SetActiveNode { .. } => Self::SetActiveNode { node_id: base.active_node_id.clone() },
+            Self::SetFocusedNode { .. } => Self::SetFocusedNode { node_id: base.focused_node_id.clone() },
+            Self::SetCollapsed { .. } => Self::SetCollapsed { node_ids: base.collapsed_node_ids.clone() },
+            Self::SetPreviewOff { .. } => Self::SetPreviewOff { node_ids: base.preview_off_node_ids.clone() },
+            Self::SetCamera { window_id, .. } | Self::RemoveCamera { window_id } => match base.camera.get(window_id) {
+                Some(camera) => Self::SetCamera { window_id: window_id.clone(), camera: *camera },
+                None if matches!(self, Self::RemoveCamera { .. }) => return Ok(Vec::new()),
+                None => Self::RemoveCamera { window_id: window_id.clone() },
+            },
+        }])
     }
 }
 
@@ -150,3 +219,7 @@ impl protocol::OpBinary for SpacePresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

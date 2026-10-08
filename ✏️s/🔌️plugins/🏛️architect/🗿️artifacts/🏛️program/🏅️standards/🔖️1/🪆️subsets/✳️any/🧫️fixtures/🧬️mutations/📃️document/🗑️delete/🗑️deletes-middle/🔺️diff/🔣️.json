@@ -49,12 +49,15 @@
   "performance": null,
   "quality": null,
   "artifacts": {
-    "added": [],
     "removed": [
-      "document-a"
+      {
+        "id": "document-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "assumptions": null,
   "constraints": null,

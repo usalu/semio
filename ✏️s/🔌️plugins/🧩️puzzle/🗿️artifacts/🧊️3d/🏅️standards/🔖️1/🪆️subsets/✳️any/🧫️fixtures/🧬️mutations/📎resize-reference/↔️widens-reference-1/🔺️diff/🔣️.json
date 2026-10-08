@@ -5,8 +5,8 @@
   "meta": null,
   "objects": null,
   "references": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "reference-1",
         "patch": {
@@ -14,8 +14,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetVolumes": null

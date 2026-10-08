@@ -40,10 +40,6 @@ impl protocol::DiffAlgebra<MergePolicySetting> for MergePolicyDiff {
         Self { policy: self.policy.map(|_| base.policy) }
     }
 
-    fn between(base: &MergePolicySetting, other: &MergePolicySetting) -> Self {
-        Self { policy: (base.policy != other.policy).then_some(other.policy) }
-    }
-
     fn is_empty(&self) -> bool {
         self.policy.is_none()
     }
@@ -98,20 +94,11 @@ pub fn inverse_merge_policy_config_mutation(snapshot: &MergePolicySetting, mutat
     })
 }
 
-/// 📥️ Decodes the internally tagged merge-policy mutation JSON projection.
-pub fn decode_merge_policy_config_mutation_json(text: &str) -> Result<MergePolicyConfigMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📤️ Encodes the merge-policy setting to its canonical camel-case JSON projection.
-pub fn encode_merge_policy_setting_json(snapshot: &MergePolicySetting) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Decodes the canonical merge-policy setting JSON projection.
-pub fn decode_merge_policy_setting_json(text: &str) -> Result<MergePolicySetting, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
+
+
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
 pub fn inverse_merge_policy_config_mutation_steps(mutation: &MergePolicyConfigMutation, base: &MergePolicySetting) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {

@@ -133,15 +133,15 @@ pub fn fixture_vectors() -> Vec<(&'static str, &'static str, crate::Grid3dMutati
 /// generated quintets encode, asserted here so a regenerated fixture tree can never be silently wrong.
 #[test]
 fn every_committed_vector_applies_to_the_base_and_inverts_back() {
-    use crate::mutations::{apply_grid3d_mutation, inverse_grid3d_mutation};
+    use crate::mutations::inverse_grid3d_mutation;
     let base = fixture_base();
     for (kind, case, mutation) in fixture_vectors() {
         let mut snapshot = base.clone();
         let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
-        apply_grid3d_mutation(&mut snapshot, &mutation).unwrap_or_else(|error| panic!("{kind}/{case}: the vector must apply to the base ({error})"));
+        vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case}: the vector must apply to the base ({error})"));
         assert_ne!(snapshot, base, "{kind}/{case}: an `applied` vector must change the document");
         for step in &inverse {
-            apply_grid3d_mutation(&mut snapshot, step).unwrap_or_else(|error| panic!("{kind}/{case}: the inverse must apply ({error})"));
+            vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case}: the inverse must apply ({error})"));
         }
         assert_eq!(snapshot, base, "{kind}/{case}: the inverse did not restore the base");
     }
@@ -152,8 +152,7 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
 #[test]
 #[ignore]
 fn debug_emit_mutation_fixtures() {
-    use crate::mutations::apply_grid3d_mutation;
-    use protocol::Mutation;
+        use protocol::Mutation;
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
     let base = fixture_base();
     for (kind, case, mutation) in fixture_vectors() {
@@ -164,7 +163,7 @@ fn debug_emit_mutation_fixtures() {
         std::fs::create_dir_all(directory.join("🎯️outcome")).expect("fixture directory");
         std::fs::create_dir_all(directory.join("🔺️diff")).expect("fixture directory");
         let mut after = base.clone();
-        apply_grid3d_mutation(&mut after, &mutation).expect("the vector applies");
+        vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).expect("the vector applies");
         let outcome = <crate::Grid3dMutation as Mutation<crate::Grid3dSnapshot>>::diff(&mutation, &base);
         std::fs::write(directory.join("📸️snapshot/⬅️before/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&base))).expect("write before");
         std::fs::write(directory.join("📸️snapshot/➡️after/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&after))).expect("write after");

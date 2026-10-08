@@ -89,7 +89,7 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     doc.layers.push(text);
     // 🖼️ A 2×2 RGBA PNG with one transparent pixel.
     let png = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 0, 0, 0, 0] }).expect("png encodes");
-    doc.assets.insert(semio_framework_value::paged::PagedUtf8::from("pic"), DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&png).into(), width: None, height: None });
+    doc.assets.insert(semio_framework_value::paged::PagedUtf8::from("pic"), crate::standards::v1::subsets::any::io::image::drawing_image_from_png(&png));
     let mut image = create_drawing_image_layer("Picture", "pic");
     if let DrawingLayerNode::Image(body) = &mut image {
         body.width = 40.0;

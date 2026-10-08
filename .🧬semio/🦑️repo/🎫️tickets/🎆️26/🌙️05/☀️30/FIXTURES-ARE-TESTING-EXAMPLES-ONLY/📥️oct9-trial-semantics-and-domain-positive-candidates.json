@@ -1,0 +1,159 @@
+{
+  "authorship": false,
+  "observations": [
+    {
+      "name": "plugin lifecycle",
+      "role": "schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "578f903b7acf0f91de17623a1e3235e354117e7fbc7eea36a4086f95ac05e25f"
+    },
+    {
+      "name": "plugin lifecycle",
+      "role": "example",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🎟️lifecycle-grant/🔣️.json",
+      "exists": true,
+      "sha256": "657999c71d634ff088d3711b0be86cb80c6405bf49c71a420fae037e624523ec"
+    },
+    {
+      "name": "scene bounds",
+      "role": "schema",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "exists": true,
+      "sha256": "ee984d6e0bb78b2c7a8ad4dc8b35ba1bda2d68c39fd644ecb0a47b12aa967049"
+    },
+    {
+      "name": "scene bounds",
+      "role": "example",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧫️fixtures/📐️bounds/🔣️.json",
+      "exists": true,
+      "sha256": "e061d288eb47a3aa4c40486488d52c23e092db5f194bd5645059b74d130f9321"
+    },
+    {
+      "name": "path handoff",
+      "role": "schema",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "exists": true,
+      "sha256": "df600f4952c95d2a2f871a3ce76c004650d4c81481a41f2ebe04c6c7a3e7c8f3"
+    },
+    {
+      "name": "path handoff",
+      "role": "example",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️path/🔣️.json",
+      "exists": true,
+      "sha256": "3b3220b8deb90cf08ef74566a8d52ddf958b3eeea40c391256653c0ebed1c49e"
+    },
+    {
+      "name": "image handoff",
+      "role": "schema",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "exists": true,
+      "sha256": "f42acab51d798bc7696eca83b0c935aded1e0a623333cb482d5043256d3606fa"
+    },
+    {
+      "name": "image handoff",
+      "role": "example",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️image/🔣️.json",
+      "exists": true,
+      "sha256": "12fc1c37a39f24f2f72d53004003c404118c5a0c28df354630a65ea46df42303"
+    },
+    {
+      "name": "pack ordering",
+      "role": "schema",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "exists": true,
+      "sha256": "6a2aa01eb1befa6f75e6767663df97b642d337c3b71aa0a85f1b85c4010aeac1"
+    },
+    {
+      "name": "pack ordering",
+      "role": "example",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔃️ordering/🔣️.json",
+      "exists": true,
+      "sha256": "71b412d7d09498fec1153693c8d4323ea2bb20955a47853b529a4c4a383fdb8a"
+    },
+    {
+      "name": "IO ownership",
+      "role": "schema",
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "7064816b538d7af3dab3e31a48d06c1e0c6f35c496e6c6f960c0ea08422534cf"
+    },
+    {
+      "name": "IO ownership",
+      "role": "example",
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "1029bcda3dfe4586c68d9d6c017b05c94c1ab50c5e7c737099eb25749eefaea0"
+    },
+    {
+      "name": "terrain ownership",
+      "role": "schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "5958112bcfc25d87dff7fd0ba2da96ef96255b4139fc55d25878890f8476786c"
+    },
+    {
+      "name": "terrain ownership",
+      "role": "example",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "c8c5bb4cf55ecddfe4f9e249d0b49fcea0d633da6809d03f6bb2da864d8d5d5a"
+    },
+    {
+      "name": "draft wire",
+      "role": "schema",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "10810a4899994a391fc24e27293de68fd3e8138f63d74c403b7a70aafcfff91c"
+    },
+    {
+      "name": "draft wire",
+      "role": "example",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "8196dacc3142b353f7e2dc2bc9bf8db9d23700d6b9d59f0355ab212e0767b148"
+    }
+  ],
+  "cases": [
+    {
+      "id": "fixed-expected-bounds-envelope",
+      "source": "import trial from \"./examples.json\";import trialSchema from \"./trial.json\";const admit=new Ajv().compile(trialSchema);admit(trial);for(const row of trial){const actual=computeBounds(row.record);expect(actual).toEqual(row.bounds);}",
+      "classification": "whole trial when trialSchema admits name+record+expected bounds and no actual domain contract"
+    },
+    {
+      "id": "actual-produced-bounds-report",
+      "source": "import reportSchema from \"./report.json\";export function validateReport(value){return new Ajv().compile(reportSchema)(value)};const result={name:job.id,record:job.record,bounds:job.bounds};validateReport(result);",
+      "classification": "genuine produced Report even same-shaped; domain owner plus actual production caller join"
+    },
+    {
+      "id": "handoff-count-trial",
+      "source": "import vectors from \"./examples.json\";new Ajv().compile(schema)(vectors);for(const row of vectors){const actual=run(row.source);expect(actual.parents).toBe(row.parents)}",
+      "classification": "whole trial; source selects another original example, parents is expected result"
+    },
+    {
+      "id": "dependency-parent-report",
+      "source": "export const admitDependencyParents=new Ajv().compile(schema);const rows=collectActualDependencies();admitDependencyParents(rows);",
+      "classification": "genuine runtime dependency report despite source/parents cardinality shape"
+    },
+    {
+      "id": "fixture-row-selector",
+      "source": "new Ajv().compile({$defs:schema.$defs,$ref:\"#/$defs/Grant\"})(fixture.grant);",
+      "classification": "genuine individual Grant projection; enclosing law properties irrelevant to selected contract"
+    },
+    {
+      "id": "law-root-selector",
+      "source": "new Ajv().compile(schema)(fixture);",
+      "classification": "whole trial only after selected root includes fixed grant/refusal/expected outcome schedules"
+    },
+    {
+      "id": "runtime-request-whole",
+      "source": "export const admit=new Ajv().compile(requestSchema);admit(fixture);",
+      "classification": "whole validation of genuine request remains domain positive; fixtures merely supply sample"
+    },
+    {
+      "id": "negative-parser-specimen",
+      "source": "for(const row of examples){const actual=new Ajv().compile(row.inputSchema)(row.value);expect(actual).toBe(row.expected)}",
+      "classification": "schema is explicit parser input specimen; do not make its input grammar a corpus contract"
+    }
+  ]
+}

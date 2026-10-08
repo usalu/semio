@@ -27,10 +27,10 @@ library state the answer:
   probed with a member it does not declare, so an accepted payload proves the validator ran rather
   than that the schema was permissive.
 * ``jsonpatch``, corroborated by ``deepdiff`` — the committed ``🔺️diff`` is a TYPED ``Puzzle2dDiff``
-  (per-collection ``added``/``removed``/``patched``), not RFC 6902. So an RFC 6902 patch is derived
+  (per-collection positional ``removed``/``inserted``/``moved``/``modified`` rows), not RFC 6902. So an RFC 6902 patch is derived
   from ``(before, after)`` by ``jsonpatch.make_patch``, round-tripped through ``apply`` to reproduce
   the after-snapshot exactly, and its op PATHS are then held against the typed diff's own
-  added/removed/patched sets. Two libraries with unrelated algorithms must agree on whether the
+  removed/inserted/modified sets. Two libraries with unrelated algorithms must agree on whether the
   document moved at all.
 
 **Vectors are discovered, never listed.** The committed scenario set under
@@ -645,16 +645,28 @@ def apply_record_patch(record, patch):
 
 
 def apply_keyed_delta(items, delta):
-    """🧩 Applies one id-keyed collection delta in the order the typed diff declares: removals, additions, patches, then the explicit order."""
-    items = [item for item in items if item["id"] not in set(delta.get("removed", []))]
-    items = items + json.loads(json.dumps(delta.get("added", [])))
-    patches = {entry["id"]: entry["patch"] for entry in delta.get("patched", [])}
-    items = [apply_record_patch(item, patches[item["id"]]) if item["id"] in patches else item for item in items]
-    order = delta.get("reordered")
-    if order is not None:
-        by_id = {item["id"]: item for item in items}
-        items = [by_id[identity] for identity in order]
-    return items
+    """🧩 Applies one positional list delta: every removed id is checked at its BASE index, inserted rows take their AFTER slots,
+    moved rows go from their base index to their after slot, every other base row fills the remaining slots in base order, then
+    the patches write."""
+    removed = delta.get("removed", [])
+    moved = delta.get("moved", [])
+    inserted = delta.get("inserted", [])
+    gone = set()
+    for entry in removed:
+        assert items[entry["index"]]["id"] == entry["id"], "removed row is not at its base index"
+        gone.add(entry["index"])
+    for entry in moved:
+        assert items[entry["from"]]["id"] == entry["id"], "moved row is not at its base index"
+        gone.add(entry["from"])
+    slots = [None] * (len(items) - len(removed) + len(inserted))
+    for entry in inserted:
+        slots[entry["index"]] = json.loads(json.dumps(entry["row"]))
+    for entry in moved:
+        slots[entry["to"]] = items[entry["from"]]
+    survivors = iter(item for position, item in enumerate(items) if position not in gone)
+    slots = [slot if slot is not None else next(survivors) for slot in slots]
+    patches = {entry["id"]: entry["patch"] for entry in delta.get("modified", [])}
+    return [apply_record_patch(item, patches[item["id"]]) if item["id"] in patches else item for item in slots]
 
 
 def diff_reproduction(ctx):
@@ -693,15 +705,22 @@ def diff_reproduction(ctx):
             before_ids = collection_ids(vector["before"], member)
             after_ids = collection_ids(vector["after"], member)
             checks += 3
-            if sorted(delta.get("removed", [])) != sorted(set(before_ids) - set(after_ids)):
-                failures.append("%s: the typed diff removes %r from %s, the two snapshots differ by %r" % (vector["id"], sorted(delta.get("removed", [])), member, sorted(set(before_ids) - set(after_ids))))
-            if sorted(record["id"] for record in delta.get("added", [])) != sorted(set(after_ids) - set(before_ids)):
-                failures.append("%s: the typed diff adds %r to %s, the two snapshots differ by %r" % (vector["id"], sorted(record["id"] for record in delta.get("added", [])), member, sorted(set(after_ids) - set(before_ids))))
-            declared_patched = {entry["id"] for entry in delta.get("patched", [])}
+            removed_ids = [entry["id"] for entry in delta.get("removed", [])]
+            inserted_ids = [entry["row"]["id"] for entry in delta.get("inserted", [])]
+            if sorted(removed_ids) != sorted(set(before_ids) - set(after_ids)):
+                failures.append("%s: the typed diff removes %r from %s, the two snapshots differ by %r" % (vector["id"], sorted(removed_ids), member, sorted(set(before_ids) - set(after_ids))))
+            if sorted(inserted_ids) != sorted(set(after_ids) - set(before_ids)):
+                failures.append("%s: the typed diff inserts %r into %s, the two snapshots differ by %r" % (vector["id"], sorted(inserted_ids), member, sorted(set(after_ids) - set(before_ids))))
+            checks += 2
+            if any(before_ids[entry["index"]] != entry["id"] for entry in delta.get("removed", [])):
+                failures.append("%s: a removed row of %s does not sit at its declared BASE index" % (vector["id"], member))
+            if any(after_ids[entry["index"]] != entry["row"]["id"] for entry in delta.get("inserted", [])):
+                failures.append("%s: an inserted row of %s does not sit at its declared AFTER index" % (vector["id"], member))
+            declared_patched = {entry["id"] for entry in delta.get("modified", [])}
             reached = patched_ids(vector["before"], vector["after"], member)
             if declared_patched != reached:
                 failures.append("%s: the typed diff patches %r in %s, jsonpatch needs operations for %r" % (vector["id"], sorted(declared_patched), member, sorted(reached)))
-            for entry in delta.get("patched", []):
+            for entry in delta.get("modified", []):
                 before_record = next((record for record in vector["before"].get(member, []) if record["id"] == entry["id"]), None)
                 after_record = next((record for record in vector["after"].get(member, []) if record["id"] == entry["id"]), None)
                 checks += 1

@@ -101,23 +101,6 @@ fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: i
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            let d = between_item(&base[i], &other[i]);
-            if !item_is_empty(&d) {
-                modified.push(IndexedModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
-    IndexedDiff { removed, modified, added }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
@@ -141,12 +124,10 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
 /// (identical algorithm, adapted from gif 89a's `absorb_indexed_collection`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
-    let mut removed1_sorted = d1.removed.clone();
-    removed1_sorted.sort_unstable();
+    let removed1_sorted = semio_s_artifact_stdio_contract::ordered(&d1.removed);
     let mut added1_index_sorted: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = d2.removed.clone();
-    removed2_sorted.sort_unstable();
+    let removed2_sorted = semio_s_artifact_stdio_contract::ordered(&d2.removed);
     let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     added2_index_sorted.sort_unstable();
 
@@ -219,9 +200,7 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 /// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -397,7 +376,7 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
             (None, b) => b,
             (a, None) => a,
             (Some(mut a), Some(b)) => {
-                absorb_indexed(&mut a, b, absorb_topic_diff_mut, apply_topic);
+                absorb_indexed(&mut a, b, absorb_topic_rows_mut, apply_topic);
                 Some(a)
             }
         };
@@ -405,7 +384,7 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
             (None, b) => b,
             (a, None) => a,
             (Some(mut a), Some(b)) => {
-                absorb_indexed(&mut a, b, absorb_part_diff_mut, apply_part);
+                absorb_indexed(&mut a, b, absorb_part_rows_mut, apply_part);
                 Some(a)
             }
         };
@@ -537,14 +516,6 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
         }
     }
 
-    fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
-        BcfDiff {
-            version: if base.version != other.version { Some(other.version.clone()) } else { None },
-            topics: Some(between_indexed(&base.topics, &other.topics, |a, b| between_topic(a, b).unwrap_or_default(), |d| *d == BcfTopicDiff::default())).filter(|d| !d.is_empty()),
-            parts: Some(between_indexed(&base.parts, &other.parts, |a, b| between_part(a, b).unwrap_or_default(), |d| *d == BcfPartDiff::default())).filter(|d| !d.is_empty()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.version.is_none() && self.topics.is_none() && self.parts.is_none()
     }
@@ -586,59 +557,7 @@ fn inverse_part(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfPartDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
-    let title = if base.title != other.title { Some(other.title.clone()) } else { None };
-    let description = if base.description != other.description { Some(other.description.clone()) } else { None };
-    let status = if base.status != other.status { Some(other.status.clone()) } else { None };
-    let priority = if base.priority != other.priority { Some(other.priority.clone()) } else { None };
-    let labels = if base.labels != other.labels { Some(other.labels.clone()) } else { None };
-    let creation_date = if base.creation_date != other.creation_date { Some(other.creation_date.clone()) } else { None };
-    let creation_author = if base.creation_author != other.creation_author { Some(other.creation_author.clone()) } else { None };
-    let comments = Some(between_indexed(&base.comments, &other.comments, |a, b| between_comment(a, b).unwrap_or_default(), |d| *d == BcfCommentDiff::default())).filter(|d| !d.is_empty());
-    let viewpoints = Some(between_indexed(&base.viewpoints, &other.viewpoints, |a, b| between_viewpoint(a, b).unwrap_or_default(), |d| *d == BcfViewpointDiff::default())).filter(|d| !d.is_empty());
-    if title.is_none() && description.is_none() && status.is_none() && priority.is_none() && labels.is_none() && creation_date.is_none() && creation_author.is_none() && comments.is_none() && viewpoints.is_none() {
-        None
-    } else {
-        Some(BcfTopicDiff { title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCommentDiff> {
-    let date = if base.date != other.date { Some(other.date.clone()) } else { None };
-    let author = if base.author != other.author { Some(other.author.clone()) } else { None };
-    let text = if base.text != other.text { Some(other.text.clone()) } else { None };
-    let viewpoint_ref = if base.viewpoint_ref != other.viewpoint_ref { Some(other.viewpoint_ref.clone()) } else { None };
-    if date.is_none() && author.is_none() && text.is_none() && viewpoint_ref.is_none() {
-        None
-    } else {
-        Some(BcfCommentDiff { date, author, text, viewpoint_ref })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfViewpointDiff> {
-    let camera = if base.camera != other.camera { Some(other.camera.clone()) } else { None };
-    let components = if base.components != other.components { Some(other.components.clone()) } else { None };
-    let snapshot = if base.snapshot != other.snapshot { Some(other.snapshot.clone()) } else { None };
-    if camera.is_none() && components.is_none() && snapshot.is_none() {
-        None
-    } else {
-        Some(BcfViewpointDiff { camera, components, snapshot })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
-    if base.data != other.data {
-        Some(BcfPartDiff { data: Some(other.data.clone()) })
-    } else {
-        None
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
+fn absorb_topic_rows(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
     if b.title.is_some() {
         a.title = b.title;
     }
@@ -664,7 +583,7 @@ fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
         (None, x) => x,
         (x, None) => x,
         (Some(mut x), Some(y)) => {
-            absorb_indexed(&mut x, y, absorb_comment_diff_mut, apply_comment);
+            absorb_indexed(&mut x, y, absorb_comment_rows_mut, apply_comment);
             Some(x)
         }
     };
@@ -672,31 +591,31 @@ fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
         (None, x) => x,
         (x, None) => x,
         (Some(mut x), Some(y)) => {
-            absorb_indexed(&mut x, y, absorb_viewpoint_diff_mut, apply_viewpoint);
+            absorb_indexed(&mut x, y, absorb_viewpoint_rows_mut, apply_viewpoint);
             Some(x)
         }
     };
     a
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_topic_diff_mut(a: &mut BcfTopicDiff, b: BcfTopicDiff) {
-    *a = absorb_topic_diff(std::mem::take(a), b);
+fn absorb_topic_rows_mut(a: &mut BcfTopicDiff, b: BcfTopicDiff) {
+    *a = absorb_topic_rows(std::mem::take(a), b);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_comment_diff_mut(a: &mut BcfCommentDiff, b: BcfCommentDiff) {
-    *a = absorb_comment_diff(std::mem::take(a), b);
+fn absorb_comment_rows_mut(a: &mut BcfCommentDiff, b: BcfCommentDiff) {
+    *a = absorb_comment_rows(std::mem::take(a), b);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_viewpoint_diff_mut(a: &mut BcfViewpointDiff, b: BcfViewpointDiff) {
-    *a = absorb_viewpoint_diff(std::mem::take(a), b);
+fn absorb_viewpoint_rows_mut(a: &mut BcfViewpointDiff, b: BcfViewpointDiff) {
+    *a = absorb_viewpoint_rows(std::mem::take(a), b);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_part_diff_mut(a: &mut BcfPartDiff, b: BcfPartDiff) {
-    *a = absorb_part_diff(std::mem::take(a), b);
+fn absorb_part_rows_mut(a: &mut BcfPartDiff, b: BcfPartDiff) {
+    *a = absorb_part_rows(std::mem::take(a), b);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
+fn absorb_comment_rows(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
     if b.date.is_some() {
         a.date = b.date;
     }
@@ -713,7 +632,7 @@ fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
+fn absorb_viewpoint_rows(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
     if b.camera.is_some() {
         a.camera = b.camera;
     }
@@ -727,7 +646,7 @@ fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfVie
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
+fn absorb_part_rows(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
     if b.data.is_some() {
         a.data = b.data;
     }
@@ -1012,14 +931,16 @@ pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
     }
 }
 
-/// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
-/// directions, and the trivially-empty self-diff).
+/// 🧪️ The demo cases proper, built declaratively: `default()` (empty diff), a version change with a modified topic row, and a topic removal.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
-    let a = demo_snapshot_a();
-    let b = demo_snapshot_b();
-    vec![BcfDiff::default(), BcfDiff::between(&a, &b), BcfDiff::between(&b, &a), BcfDiff::between(&a, &a)]
+    let topic = BcfTopicDiff { title: Some("changed".into()), status: Some("Closed".into()), labels: Some(vec!["a".into(), "b".into()]), ..Default::default() };
+    vec![
+        BcfDiff::default(),
+        BcfDiff { version: Some("3.0".into()), topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![IndexedModified { index: 0, diff: topic }], added: Vec::new() }), parts: None },
+        BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: vec![1], modified: Vec::new(), added: Vec::new() }), parts: None },
+    ]
 }
 //#endregion 🔖️DemoCases
 //#endregion 🔖️HandcraftedDiffCodec

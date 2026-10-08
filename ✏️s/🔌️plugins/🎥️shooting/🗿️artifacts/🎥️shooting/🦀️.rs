@@ -645,18 +645,6 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
             self.scale = scale.value;
         }
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<ShootingAssetPatch> {
-        let patch = ShootingAssetPatch {
-            name: (self.name != other.name).then(|| other.name.clone()),
-            url: (self.url != other.url).then(|| other.url.clone()),
-            format: (self.format != other.format).then(|| other.format.clone()),
-            origin: (self.origin != other.origin).then_some(other.origin),
-            orientation: (self.orientation != other.orientation).then(|| ShootingAssigned::new(other.orientation)),
-            scale: (self.scale != other.scale).then(|| ShootingAssigned::new(other.scale)),
-        };
-        (patch != ShootingAssetPatch::default()).then_some(patch)
-    }
 }
 
 /// 🩹 Sparse shot field patch.
@@ -698,19 +686,6 @@ impl Patchable<ShootingShotPatch> for ShootingShot {
             self.camera_id = camera_id.value.clone();
         }
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<ShootingShotPatch> {
-        let patch = ShootingShotPatch {
-            label: (self.label != other.label).then(|| other.label.clone()),
-            width: (self.width != other.width).then_some(other.width),
-            height: (self.height != other.height).then_some(other.height),
-            format: (self.format != other.format).then(|| other.format.clone()),
-            shape: (self.shape != other.shape).then(|| other.shape.clone()),
-            background: (self.background != other.background).then(|| ShootingAssigned::new(other.background.clone())),
-            camera_id: (self.camera_id != other.camera_id).then(|| ShootingAssigned::new(other.camera_id.clone())),
-        };
-        (patch != ShootingShotPatch::default()).then_some(patch)
-    }
 }
 
 /// 🩹 Sparse saved-camera field patch.
@@ -731,11 +706,6 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
         if let Some(camera) = &patch.camera {
             self.camera = camera.clone();
         }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<ShootingSavedCameraPatch> {
-        let patch = ShootingSavedCameraPatch { label: (self.label != other.label).then(|| other.label.clone()), camera: (self.camera != other.camera).then(|| other.camera.clone()) };
-        (patch != ShootingSavedCameraPatch::default()).then_some(patch)
     }
 }
 

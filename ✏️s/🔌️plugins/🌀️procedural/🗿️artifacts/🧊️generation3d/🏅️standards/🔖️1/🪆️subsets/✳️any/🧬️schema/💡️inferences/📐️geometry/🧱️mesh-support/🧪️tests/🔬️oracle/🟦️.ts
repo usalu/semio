@@ -14,7 +14,7 @@ type Fixture = { tolerance: number; cases: Case[] };
 type Measures = { vertices: number; faces: number; edges: number; boundaryEdges: number; euler: number; area: number; volume: number; bbox: [V3, V3]; closed: boolean; oriented: boolean };
 
 const folders = ["🥽️mesh-primitive", "🔀️mesh-convert", "↔️mesh-transform", "🎚️mesh-component", "✏️mesh-edit", "🩹️mesh-repair", "🔎️mesh-inspect", "📼️mesh-interchange", "🌗️mesh-shading", "🗺️mesh-uv"];
-const fixtures = new Map<string, Fixture>(folders.map((folder) => [folder, JSON.parse(readFileSync(new URL(`../../../${folder}/🧫️fixtures/🔣️.json`, import.meta.url), "utf8")) as Fixture]));
+const fixtures = new Map<string, Fixture>(folders.map((folder) => [folder, JSON.parse(readFileSync(new URL(folder==="📼️mesh-interchange"?"../../../../../../🚪️io/📐️geometry/📼️mesh-interchange/🧫️fixtures/🔣️.json":`../../../${folder}/🧫️fixtures/🔣️.json`, import.meta.url), "utf8")) as Fixture]));
 const wasm = await loadManifold();
 wasm.setup();
 const { Manifold, Mesh: ManifoldMesh } = wasm;

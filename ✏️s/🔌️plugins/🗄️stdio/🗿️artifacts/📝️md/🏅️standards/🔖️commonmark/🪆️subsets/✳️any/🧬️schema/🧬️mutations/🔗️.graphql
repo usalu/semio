@@ -3,6 +3,7 @@ enum MdMutationKind {
   REMOVE_BLOCK
   REPLACE_BLOCK
   SET_INLINES
+  SPLICE_SOURCE
 }
 
 """ 🧬️ MdMutation union, tagged-union flattened. Every `path`-carrying variant addresses the
@@ -14,4 +15,12 @@ type MdMutation {
   index: Int
   block: MdBlock
   inlines: [MdInline!]
+  splices: [MdSourceSplice!]
+}
+
+"""✂️ One range of the edited document source: `delete` scalars at `offset` replaced by `insert`. """
+type MdSourceSplice {
+  offset: Int!
+  delete: Int!
+  insert: String!
 }

@@ -20,22 +20,26 @@
   "periodicZ": null,
   "tiles": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "pinned": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "masked": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

@@ -35,7 +35,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RotateEl
         let Some(delta) = self.delta() else {
             return protocol::MutationOutcome::fatal("mutation.invariant", "axis-nonzero: a turn needs a finite angle about a finite axis of non-zero length", self.targets.clone());
         };
-        relative_placement_diff(&self.targets, self.angle == 0.0, base, |placement| placement.rotation = quaternion_product(delta, placement.rotation))
+        relative_placement_diff(&self.targets, self.angle == 0.0, base, |placement| SemioTransform { rotation: quaternion_product(delta, placement.rotation), ..placement })
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.angle == 0.0 || self.delta().is_none(), base))

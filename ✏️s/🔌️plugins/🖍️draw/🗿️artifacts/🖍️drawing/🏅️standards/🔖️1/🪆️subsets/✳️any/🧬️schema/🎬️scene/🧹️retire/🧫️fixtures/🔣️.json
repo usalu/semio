@@ -1,56 +1,56 @@
 [
- {
-  "name": "empty",
-  "source": null,
-  "owners": 3,
-  "work": 3
- },
- {
-  "name": "path paint",
-  "source": "rectangle",
-  "owners": 11,
-  "work": 12
- },
- {
-  "name": "shared image source",
-  "source": "shared asset geometry",
-  "owners": 21,
-  "work": 24
- },
- {
-  "name": "semantic Unicode text",
-  "source": "text stays explicit",
-  "owners": 11,
-  "work": 12
- },
- {
-  "name": "group scopes and references",
-  "source": "group full affine",
-  "owners": 22,
-  "work": 26
- },
- {
-  "name": "gradient stops and stroke dashes",
-  "source": "linearGradient",
-  "owners": 14,
-  "work": 15
- },
- {
-  "name": "retained Boolean operands",
-  "source": "boolean preserves operands",
-  "owners": 21,
-  "work": 24
- },
- {
-  "name": "retained trace source",
-  "source": "trace stays explicit",
-  "owners": 15,
-  "work": 17
- },
- {
-  "name": "unused Unicode source",
-  "source": "unused unicode source bytes",
-  "owners": 7,
-  "work": 8
- }
+  {
+    "name": "empty",
+    "source": null,
+    "owners": 3,
+    "work": 3
+  },
+  {
+    "name": "path paint",
+    "source": "rectangle",
+    "owners": 11,
+    "work": 12
+  },
+  {
+    "name": "shared image source",
+    "source": "shared asset geometry",
+    "owners": 20,
+    "work": 23
+  },
+  {
+    "name": "semantic Unicode text",
+    "source": "text stays explicit",
+    "owners": 11,
+    "work": 12
+  },
+  {
+    "name": "group scopes and references",
+    "source": "group full affine",
+    "owners": 22,
+    "work": 26
+  },
+  {
+    "name": "gradient stops and stroke dashes",
+    "source": "linearGradient",
+    "owners": 14,
+    "work": 15
+  },
+  {
+    "name": "retained Boolean operands",
+    "source": "boolean preserves operands",
+    "owners": 21,
+    "work": 24
+  },
+  {
+    "name": "retained trace source",
+    "source": "trace stays explicit",
+    "owners": 14,
+    "work": 16
+  },
+  {
+    "name": "unused Unicode source",
+    "source": "unused unicode source bytes",
+    "owners": 6,
+    "work": 7
+  }
 ]

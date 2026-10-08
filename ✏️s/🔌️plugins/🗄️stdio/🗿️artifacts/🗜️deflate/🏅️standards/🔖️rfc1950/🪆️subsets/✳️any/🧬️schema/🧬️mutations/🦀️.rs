@@ -46,20 +46,7 @@ pub enum DeflateMutation {
 pub const KINDS: &[&str] = &["set-compression-params", "set-preset-dictionary", "set-payload"];
 //#endregion 🔖️Kinds
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`; the diff is the single semantics source (never
-/// apply-and-capture).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
-    let outcome = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 //#region OpCodecs

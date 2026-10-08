@@ -1,0 +1,13 @@
+{
+  "schema": "stdio.bmp.retained-publication.v1",
+  "retirement": {
+    "copyBytes": 3,
+    "capacityBytes": 0,
+    "physicalBytes": 65536,
+    "depth": 1,
+    "refusedSourceUnchanged": true,
+    "terminalChildReceipt": "Progress",
+    "terminalOwnerReceipt": "Complete",
+    "scratchEmptyRetainsCapacity": true
+  }
+}

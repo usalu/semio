@@ -1,0 +1,119 @@
+{
+  "bytes": 5460756,
+  "sha256": "429f7934089c6b078f8654bfe2ecb0532db6034eaa3cd34209a893a9a9941e02",
+  "validRows": 12375,
+  "counts": {
+    "schema-module-id-missing": 274,
+    "schema-owner-ineligible": 533,
+    "schema-dialect-not-draft-07": 84,
+    "schema-mutation-leaf-id": 75,
+    "schema-export-incomplete": 9386,
+    "schema-export-id-invalid": 255,
+    "schema-ref-unresolved": 811,
+    "schema-mutation-aggregate-id": 6,
+    "schema-document-id-unaddressable": 136,
+    "schema-document-id-duplicate": 366,
+    "schema-module-id-inconsistent": 10,
+    "schema-export-id-duplicate": 284,
+    "schema-fixture-defines-schema": 4,
+    "schema-scope-ambiguous": 147,
+    "schema-placement-forbidden-filename": 4
+  },
+  "catalogSHA": "c17c97b4bef2ca6968f95230b7b6e8867e78af996ed9721577d07d0cee38a665",
+  "bindings": [
+    {
+      "scopeId": "hub.bootstrap",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "repo.discovery.runtime",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "os.plugin.browser-bundle",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "os.dev.distribution",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "os.dev.verification.publication",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "repo.library.workspaces.cargo.preparation.custody",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "s.dev.entry",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "os.plugin.registry.descriptor-verification",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "os.plugin.registry",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": []
+    },
+    {
+      "scopeId": "os.dev.playground-session",
+      "path": true,
+      "exports": true,
+      "actualAllFormats": true,
+      "expectedDrift": [
+        "🔣️.json"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🧩️fragments/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "detail": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    }
+  ]
+}

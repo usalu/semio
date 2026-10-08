@@ -13,7 +13,7 @@ use semio_repo_test_host::law::vector::Vector;
 /// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎚️config/🧫️fixtures`.
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
-        "replace-config" => Vector {
+        "set-config" => Vector {
             before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/🦠️mutation/🔣️.json"),
             after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/➡️after/🔣️.json"),
@@ -28,7 +28,7 @@ fn vector(kind: &str) -> Result<Vector, String> {
 /// 🟰️ The committed no-op vector of one kind: its before-snapshot already holds the value the mutation sets.
 fn kept(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
-        "replace-config" => Vector {
+        "set-config" => Vector {
             before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/🦠️mutation/🔣️.json"),
             after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/📸️snapshot/➡️after/🔣️.json"),

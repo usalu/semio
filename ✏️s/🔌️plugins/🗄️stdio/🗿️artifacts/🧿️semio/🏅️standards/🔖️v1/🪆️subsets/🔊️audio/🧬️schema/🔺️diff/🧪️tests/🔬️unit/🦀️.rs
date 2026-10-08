@@ -55,103 +55,11 @@ async fn absorb_insert_then_set_field_patches_into_added() {
     assert_eq!(d1.added[0].index, 1);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn absorb_law_holds_over_curated_ops() {
-    let base = base_snapshot();
-    let mid = {
-        let mut s = base.clone();
-        s.channels.insert(1, channel(9.0, 4));
-        s.channels.remove(0);
-        s.tags.push(SemioAudioTag { key: "artist".into(), value: "a".into() });
-        s
-    };
-    let after = {
-        let mut s = mid.clone();
-        s.channels[0].samples = vec![5.0, 5.0, 5.0, 5.0];
-        s.channels.push(channel(5.0, 4));
-        s.tags[0].value = "changed".into();
-        s
-    };
-    let mut d1 = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&base, &mid);
-    let d2 = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&mid, &after);
-    d1.absorb(d2);
-    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), after);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = base_snapshot();
-    let mut b = base_snapshot();
-    b.sample_rate = 48_000;
-    b.channels.push(channel(3.0, 4));
-    let ab = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&ab, &a).expect("apply must succeed for a well-formed fixture"), b);
-    let ba = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&ba, &b).expect("apply must succeed for a well-formed fixture"), a);
-    assert!(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &a).is_empty());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn inverse_law() {
-    let base = base_snapshot();
-    let next = {
-        let mut s = base.clone();
-        s.channels[0].samples = vec![7.0, 7.0, 7.0, 7.0];
-        s.channels.remove(1);
-        s.channels.push(channel(6.0, 4));
-        s.sample_rate = 22_050;
-        s.tags.clear();
-        s
-    };
-    let d = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&base, &next);
-    let mutated = protocol::apply_diff(&d, &base).expect("apply must succeed for a well-formed fixture");
-    let inv = d.inverse(&base);
-    assert_eq!(protocol::apply_diff(&inv, &mutated).expect("apply must succeed for a well-formed fixture"), base);
-}
-
-/// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
-/// field, with asymmetric collection lengths so both `removed` and `added` get exercised
-/// (split across both directions, matching the recipe's own guidance).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_covers_every_mutable_field() {
-    let sweep_a =
-        SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(0.0, 4), channel(1.0, 4)], tags: vec![SemioAudioTag { key: "title".into(), value: "first".into() }], ..SemioAudioSnapshot::default() };
-    let sweep_b = SemioAudioSnapshot { sample_rate: 96_000, format: SemioAudioFormat::Float64, channels: vec![channel(9.0, 4), channel(1.0, 4), channel(2.0, 4)], tags: vec![], ..SemioAudioSnapshot::default() };
-
-    let ab = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_a, &sweep_b);
-    assert_eq!(protocol::apply_diff(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
-    assert!(ab.sample_rate.is_some());
-    assert!(ab.format.is_some());
-    let channels_ab = ab.channels.as_ref().expect("channels must differ");
-    assert!(!channels_ab.modified.is_empty(), "sweep must exercise a modified channel");
-    assert!(!channels_ab.added.is_empty(), "sweep must exercise an added channel (b is longer)");
-    let tags_ab = ab.tags.as_ref().expect("tags must differ");
-    assert!(!tags_ab.removed.is_empty(), "sweep must exercise a removed tag (b has none)");
-
-    let ba = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_b, &sweep_a);
-    assert_eq!(protocol::apply_diff(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
-    let channels_ba = ba.channels.as_ref().expect("channels must differ");
-    assert!(!channels_ba.removed.is_empty(), "reverse direction must exercise a removed channel (a is shorter)");
-    let tags_ba = ba.tags.as_ref().expect("tags must differ");
-    assert!(!tags_ba.added.is_empty(), "reverse direction must exercise an added tag");
-
-    assert!(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
-}
-
 /// 🧪️ `DiffCodec` text/binary round-trip law — exercises scalars and both collection triples
 /// (`removed`/`modified`/`added`) simultaneously via a real `between()` result.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = base_snapshot();
-    let mut b = base_snapshot();
-    b.sample_rate = 48_000;
-    b.format = SemioAudioFormat::Float32;
-    b.channels[0].samples = vec![9.9, 8.8];
-    b.channels.remove(1);
-    b.channels.push(channel(4.0, 3));
-    b.tags.push(SemioAudioTag { key: "artist".into(), value: "someone".into() });
-
-    let cases = vec![SemioAudioDiff::default(), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

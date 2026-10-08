@@ -1,7 +1,8 @@
 //! 🧪️ Exact original edge ordering and optional flag restoration.
 
 use crate::{Puzzle2dNode, Puzzle2dSnapshot, Puzzle2dEdge};
-use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{Puzzle2dMutation,delete_node,disconnect_handles,remove_node_handle,apply_puzzle2d_mutation,inverse_puzzle2d_mutation}};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{Puzzle2dMutation,delete_node,disconnect_handles,remove_node_handle,inverse_puzzle2d_mutation}};
 use serde_json::{Value,json};
 
 #[test]
@@ -29,7 +30,7 @@ fn history_edit_puzzle2d_edge_restoration_preserves_original_ordinals_and_option
             let inverse = inverse_puzzle2d_mutation(&base,&mutation).expect("native captured inverse");
             let mut after = base.clone();
             apply_puzzle2d_mutation(&mut after,&mutation).expect("native forward applies");
-            for step in &inverse {
+            for step in inverse.iter().rev() {
                 let binary = protocol::OpBinary::encode_op(step).expect("native inverse binary");
                 let decoded = <Puzzle2dMutation as protocol::OpBinary>::decode_op(&binary).expect("native inverse binary decodes");
                 assert_eq!(&decoded,step,"literal native inverse binary roundtrip");

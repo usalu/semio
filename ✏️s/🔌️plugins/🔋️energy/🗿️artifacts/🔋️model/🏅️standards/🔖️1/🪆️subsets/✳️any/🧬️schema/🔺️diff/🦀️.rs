@@ -82,7 +82,7 @@ impl EnergyModelDiff {
 impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
     fn apply(&self, base: &EnergyModelSnapshot, _capability: ApplyCapability) -> MutationApplyResult<EnergyModelSnapshot> {
         let mut next = base.clone();
-        self.model.apply(&mut next.model)?;
+        self.model.commit_onto(&mut next.model)?;
         if let Some(delta) = &self.referenced_model {
             next.referenced_model = delta.link();
         }
@@ -109,14 +109,6 @@ impl DiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
             model: self.model.inverse(&base.model),
             referenced_model: self.referenced_model.as_ref().map(|_| EnergyLinkSlotDelta::leaving(&base.referenced_model)),
             weather_link: self.weather_link.as_ref().map(|_| EnergyLinkSlotDelta::leaving(&base.weather_link)),
-        }
-    }
-
-    fn between(base: &EnergyModelSnapshot, other: &EnergyModelSnapshot) -> Self {
-        Self {
-            model: ModelPatch::between(&base.model, &other.model),
-            referenced_model: (base.referenced_model != other.referenced_model).then(|| EnergyLinkSlotDelta::leaving(&other.referenced_model)),
-            weather_link: (base.weather_link != other.weather_link).then(|| EnergyLinkSlotDelta::leaving(&other.weather_link)),
         }
     }
 

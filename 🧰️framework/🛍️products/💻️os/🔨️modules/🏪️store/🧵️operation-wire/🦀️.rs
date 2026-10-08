@@ -139,11 +139,20 @@ impl ArtifactPreparedOperationCursor {
         if self.source_identity.is_some_and(|identity|identity.5==3) && self.header_offset==self.pack_header_length { self.pack.next_minimum_copy_bytes() } else { 1 }
     }
 
+    /// 📏️ Prices only the retained codec frontier, keeping payload encoding separate.
+    pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.closed { return Ok(Default::default()); }
+        let mut demand = self.pack.retirement_demands()?;
+        demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "operation codec retirement depth overflow"))?;
+        Ok(demand)
+    }
+
     /// 🍂️ Retires exact funded symbol scaffolds; the original operation stays in its publication.
     pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
         if self.closed { return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
-        if grant.maximum_items == 0 { return Ok(ArtifactPreparedOperationProgress::default()); }
-        let step=self.pack.close(grant)?;
+        let demand = self.retirement_demands()?;
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(ArtifactPreparedOperationProgress::default()); }
+        let step=self.pack.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
         if step.complete { self.source_identity=None;self.closed=true; }
         Ok(ArtifactPreparedOperationProgress {processed_items:step.progress.copied_items,retained_capacity_bytes:step.progress.retained_capacity_bytes,released_bytes:step.progress.released_bytes,copied_bytes:step.progress.copied_bytes,complete:step.complete,..Default::default()})
     }
@@ -153,6 +162,13 @@ impl ArtifactPreparedOperationCursor {
 /// 🌐️ Prices the exact wire wrapper and its original semantic factory constructor tree.
 pub fn operation_wire_preparation_factory_birth_bytes<P: 'static, M: 'static>(inner_birth: usize) -> usize {
     semio_framework_value::factory_constructor_birth_bytes::<OperationWirePreparationFactory<P, M>>(inner_birth)
+}
+
+/// 🌳️ Quotes only the original wire and semantic factory Arcs before source construction.
+pub fn operation_wire_preparation_factory_source_birth_demand<P: 'static, M: 'static>(inner: semio_framework_value::retained_clone::RetainedCloneBirthDemand) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    let capacity_bytes = semio_framework_value::factory_arc_birth_bytes::<OperationWirePreparationFactory<P, M>>().checked_add(inner.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "wire source capacity overflow"))?;
+    let depth = inner.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "wire source depth overflow"))?;
+    Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth })
 }
 
 /// 🧵️ Constructs the funded wire authority around the original semantic preparation factory.
@@ -172,7 +188,8 @@ impl<P: 'static, M: 'static> super::ArtifactStoreOneItemPreparationFactory<P, M>
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
     fn operation_schema_parts<'a>(&'a self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
     fn preflight(&self, mutation: &M, lane: super::HistoryLane) -> Result<super::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
-    fn begin(&self, request: super::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn super::ArtifactStoreOneItemPreparation<P, M>>, super::ArtifactStoreOneItemPreparationRequest<P, M>> { self.factory.begin(request) }
+    fn begin_demand(&self, mutation: &M, lane: super::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> { self.factory.begin_demand(mutation, lane) }
+    fn begin(&self, request: super::ArtifactStoreOneItemPreparationRequest<P, M>, grant: super::ArtifactStoreOneItemGrant) -> Result<(Box<dyn super::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, super::ArtifactStoreOneItemPreparationRequest<P, M>)> { self.factory.begin(request, grant) }
     fn stamped_clock(&self) -> Option<super::HybridLogicalTimestamp> { self.factory.stamped_clock() }
     fn stamped_mutation_id(&self) -> Option<&super::MutationId> { self.factory.stamped_mutation_id() }
 }

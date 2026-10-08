@@ -1,0 +1,43 @@
+{
+  "time": "2026-10-08T22:03:08.328654+00:00",
+  "kind": "whole-endpoint-observers-not-authored-attribution",
+  "session": 75638,
+  "arguments": [
+    "member",
+    "--",
+    "--nocapture"
+  ],
+  "sourceEditsBetweenRuns": false,
+  "observations": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "9476ca8dbd6cdc4b9085cb510fba129afc6ef16443e4be69612e36a518351daa",
+      "matchesFirst": false
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "cc9bcb59178ba87c3582deda4ac0b600fe2378dcaacbf4cb44d3df5cddecb0ed",
+      "matchesFirst": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "f7ea5bf8bc96bd9448a629afdc3396de768f3f445a876cf245c0967ca7e1912b",
+      "matchesFirst": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "201cda290aabbf1f4e4aa6347d9323f811dd808cb9e0789c2ffc404e39d13a30",
+      "matchesFirst": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8080c67b41531e7b03a5e63abebd08fef5f8e15083b1ae9469f84e07a9c2c08f",
+      "matchesFirst": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "360ad9f7c0b223a59fb6e806196ad033a06a83cc2e2e61af559647e26a43c782",
+      "matchesFirst": false
+    }
+  ]
+}

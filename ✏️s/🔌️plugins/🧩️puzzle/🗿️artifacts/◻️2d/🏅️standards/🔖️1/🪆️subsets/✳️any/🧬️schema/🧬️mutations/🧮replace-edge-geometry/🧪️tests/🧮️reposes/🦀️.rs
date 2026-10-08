@@ -7,7 +7,8 @@
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -45,7 +46,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "replace-edge-geometry/reposes-a-capsule-door-edge: inverse did not restore the before-snapshot");
@@ -86,9 +87,9 @@ fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-edge-geometry/reposes-a-capsule-door-edge: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed["nodes"].is_null(), "replace-edge-geometry/reposes-a-capsule-door-edge: this mutation must never touch the nodes delta");
-    assert_eq!(committed["edges"]["patched"][0]["id"].as_str(), Some("13c6ff51-664b-46a2-a291-9cf044bef338"), "replace-edge-geometry/reposes-a-capsule-door-edge: the diff must patch exactly the addressed edge");
-    assert!(committed["edges"]["patched"][0]["patch"].is_object(), "replace-edge-geometry/reposes-a-capsule-door-edge: a patch entry carries only the changed fields");
-    assert!(committed["edges"]["reordered"].is_null(), "replace-edge-geometry/reposes-a-capsule-door-edge: a null index must leave reordered unset");
+    assert_eq!(committed["edges"]["modified"][0]["id"].as_str(), Some("13c6ff51-664b-46a2-a291-9cf044bef338"), "replace-edge-geometry/reposes-a-capsule-door-edge: the diff must patch exactly the addressed edge");
+    assert!(committed["edges"]["modified"][0]["patch"].is_object(), "replace-edge-geometry/reposes-a-capsule-door-edge: a patch entry carries only the changed fields");
+    assert!(committed["edges"]["moved"].as_array().is_some_and(Vec::is_empty), "replace-edge-geometry/reposes-a-capsule-door-edge: this diff moves no row");
     assert!(committed["meta"].is_null(), "replace-edge-geometry/reposes-a-capsule-door-edge: this mutation must never touch the document meta");
 }
 

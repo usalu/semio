@@ -1,3 +1,4 @@
+import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 // #region 🧲️Header
 /** 🧊️ `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust program UI trees. */
@@ -17,6 +18,7 @@ import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️
  * `surfaceSessionFactories` is React-only by construction (a JS `AppSurfaceSessionFactory` closure
  * cannot cross into the renderer wasm); the wgpu twin of that seam is the plugin bridge. */
 export type FrameworkOsWgpuBootOptions = {
+  readonly catalog: PluginCatalogRowsV1;
   readonly rootId?: string;
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -43,18 +45,18 @@ export type FrameworkOsWgpuBootExecution = {
 const DEFAULT_RENDERER_MODULE_URL = "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js";
 
 /** 🪆️ Boots one independently rooted frame Worker and retires only that mount. */
-export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}, execution: FrameworkOsWgpuBootExecution = {}): Promise<WgpuBrowserMount> {
+export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions, execution: FrameworkOsWgpuBootExecution = {}): Promise<WgpuBrowserMount> {
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
   if (!root) throw new Error("missing #" + rootId);
   const { plugins, descriptor, pluginRegistrySelection } = resolveEmbeddedWgpuBoot({
-    modules: options.plugins ?? [], baseUrl: window.location.href, hash: window.location.hash,
+    modules: options.plugins ?? options.catalog.targets.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), baseUrl: window.location.href, hash: window.location.hash,
     overrides: { plugin: options.plugin, appId: options.appId, appRole: options.appRole, appMode: options.appMode, appExample: options.appExample, brandId: options.brand, locks: options.locks, defaults: options.defaults, hub: options.hub },
   });
   const moduleUrl = new URL(options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL, window.location.href).href;
   const wasmUrl = execution.rendererWasmUrl ?? moduleUrl.replace(/\.js(?=[?#]|$)/u, "_bg.wasm");
   const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
-  return mountWgpuBrowserHost(root, { descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection, frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
+  return mountWgpuBrowserHost(root, { catalog: options.catalog, descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection, frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
 }
 
 export type { WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";

@@ -1,4 +1,5 @@
 import "../🪆️record-owner/🟦️.ts";
+import "../♻️cold-properties/🟦️.ts";
 import "../../🛂️manifest/🧪️tests/🏷️type/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";

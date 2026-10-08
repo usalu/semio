@@ -387,9 +387,6 @@ impl protocol::DiffAlgebra<Puzzle3dWindowConfig> for Puzzle3dWindowConfigDiff {
     fn inverse(&self, base: &Puzzle3dWindowConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle3dWindowConfig, other: &Puzzle3dWindowConfig) -> Self {
-        Self { lod_automatic: (base.lod_automatic != other.lod_automatic).then(|| other.lod_automatic), lod_depth_variable: (base.lod_depth_variable != other.lod_depth_variable).then(|| other.lod_depth_variable), grid_visible: (base.grid_visible != other.grid_visible).then(|| other.grid_visible), lod_manual: (base.lod_manual != other.lod_manual).then(|| other.lod_manual), grid_snap_enabled: (base.grid_snap_enabled != other.grid_snap_enabled).then(|| other.grid_snap_enabled), grid_spacing: (base.grid_spacing != other.grid_spacing).then(|| other.grid_spacing), selectable_kinds: (base.selectable_kinds != other.selectable_kinds).then(|| other.selectable_kinds.clone()), proximity_radius: (base.proximity_radius != other.proximity_radius).then(|| other.proximity_radius), chunk_size: (base.chunk_size != other.chunk_size).then(|| other.chunk_size), voxel_dims: (base.voxel_dims != other.voxel_dims).then(|| other.voxel_dims), transform_move: (base.transform_move != other.transform_move).then(|| other.transform_move), transform_rotate: (base.transform_rotate != other.transform_rotate).then(|| other.transform_rotate), vortex_show: (base.vortex_show != other.vortex_show).then(|| other.vortex_show.clone()), vortex_direction: (base.vortex_direction != other.vortex_direction).then(|| other.vortex_direction.clone()), selection_method: (base.selection_method != other.selection_method).then(|| other.selection_method.clone()), sun: (base.sun != other.sun).then(|| other.sun.clone()), camera: (base.camera != other.camera).then(|| other.camera.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.lod_automatic.is_none() && self.lod_depth_variable.is_none() && self.grid_visible.is_none() && self.lod_manual.is_none() && self.grid_snap_enabled.is_none() && self.grid_spacing.is_none() && self.selectable_kinds.is_none() && self.proximity_radius.is_none() && self.chunk_size.is_none() && self.voxel_dims.is_none() && self.transform_move.is_none() && self.transform_rotate.is_none() && self.vortex_show.is_none() && self.vortex_direction.is_none() && self.selection_method.is_none() && self.sun.is_none() && self.camera.is_none()
     }
@@ -469,9 +466,6 @@ impl protocol::MutationDiff<Puzzle3dWindowTransient> for Puzzle3dWindowTransient
 impl protocol::DiffAlgebra<Puzzle3dWindowTransient> for Puzzle3dWindowTransientDiff {
     fn inverse(&self, base: &Puzzle3dWindowTransient) -> Self {
         self.restoring(base)
-    }
-    fn between(base: &Puzzle3dWindowTransient, other: &Puzzle3dWindowTransient) -> Self {
-        Self { suggestion_menu: (base.suggestion_menu != other.suggestion_menu).then(|| other.suggestion_menu.clone()), engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), brush_candidate_index: (base.brush_candidate_index != other.brush_candidate_index).then(|| other.brush_candidate_index), activation: (base.activation != other.activation).then(|| other.activation.clone()) }
     }
     fn is_empty(&self) -> bool {
         self.suggestion_menu.is_none() && self.engagement_input.is_none() && self.brush_candidate_index.is_none() && self.activation.is_none()

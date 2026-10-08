@@ -87,16 +87,6 @@ impl protocol::DiffAlgebra<WriterSnapshot> for WriterDiff {
             document: self.document.as_ref().map(|_| base.document.clone()),
         }
     }
-    fn between(base: &WriterSnapshot, other: &WriterSnapshot) -> Self {
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            id: (base.id != other.id).then(|| other.id.clone()),
-            language_id: (base.language_id != other.language_id).then(|| other.language_id.clone()),
-            uri: (base.uri != other.uri).then(|| other.uri.clone()),
-            text: (base.text != other.text).then(|| other.text.clone()),
-            document: (base.document != other.document).then(|| other.document.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.id.is_none() && self.language_id.is_none() && self.uri.is_none() && self.text.is_none() && self.document.is_none()
     }

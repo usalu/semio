@@ -1,0 +1,61 @@
+{
+  "contract": "framework.ui.prepared-close",
+  "retained": {
+    "input": true,
+    "commands": false,
+    "receiver": true
+  },
+  "grants": [
+    {
+      "name": "zero",
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0,
+      "depth": 0,
+      "expectedItems": 0,
+      "commandsRetained": false
+    },
+    {
+      "name": "capacity-only",
+      "items": 1,
+      "copy": 0,
+      "capacity": 4096,
+      "release": 0,
+      "depth": 1,
+      "expectedItems": 0,
+      "commandsRetained": false
+    },
+    {
+      "name": "separate-axes",
+      "items": 1,
+      "copy": 4096,
+      "capacity": 4096,
+      "release": 4096,
+      "depth": 64,
+      "expectedItems": 0,
+      "commandsRetained": false
+    }
+  ],
+  "expectedTerminal": {
+    "result": "complete",
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "expectedRetained": {
+    "result": "pending",
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "atlas": {
+    "width": 4,
+    "height": 2,
+    "channels": 4,
+    "byteLength": 32,
+    "physicalPageBytes": 16384
+  }
+}

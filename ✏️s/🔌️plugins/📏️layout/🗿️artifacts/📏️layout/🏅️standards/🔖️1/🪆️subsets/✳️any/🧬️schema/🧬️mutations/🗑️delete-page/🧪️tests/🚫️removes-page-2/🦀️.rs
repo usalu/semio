@@ -85,20 +85,20 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "delete-page/removes-page-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().pages.as_ref().expect("delete-page fills the pages delta");
-    assert_eq!(delta.removed, vec!["page-2".to_string()], "delete-page's diff carries the id in `removed`");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "delete-page touches only the `removed` arm of the pages delta");
+    assert_eq!(delta.removed, vec![crate::diff::LayoutPageRemoval { id: "page-2".to_string(), index: 1 }], "delete-page's diff carries the id and base index in `removed`");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-page touches only the `removed` arm of the pages delta");
 }
 
 /// 🔺️ The sparse delta `delete-page` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here only `pages.removed` is populated, and it carries the bare id — the removed record itself lives in the INVERSE, never in the forward diff.
+/// end state matches. Here only `pages.removed` is populated, and it carries the id and base index — the removed record itself lives in the INVERSE, never in the forward diff.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-page/removes-page-2: delete-page must emit a pages delta whose only populated arm is `removed`, carrying the bare id");
+    assert_eq!(produced, committed, "delete-page/removes-page-2: delete-page must emit a pages delta whose only populated arm is `removed`, carrying the id and base index");
 }
 
 /// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has

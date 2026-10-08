@@ -7,8 +7,8 @@
   "required": [
     "schema",
     "seed",
-    "inputOps",
-    "paletteOps",
+    "input",
+    "palette",
     "output",
     "model",
     "pinned"
@@ -35,203 +35,164 @@
         }
       ]
     },
-    "inputOps": {
-      "type": "array",
-      "items": {
-        "title": "BitmapInputOp",
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "op",
-              "width",
-              "height"
-            ],
-            "properties": {
-              "op": {
-                "const": "resize"
-              },
-              "width": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "height": {
-                "type": "integer",
-                "minimum": 0
+    "input": {
+      "title": "BitmapInputPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size",
+        "writes"
+      ],
+      "properties": {
+        "size": {
+          "anyOf": [
+            {
+              "title": "BitmapSize",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "width",
+                "height"
+              ],
+              "properties": {
+                "width": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 0
+                }
               }
+            },
+            {
+              "type": "null"
             }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "op",
-              "region"
-            ],
-            "properties": {
-              "op": {
-                "const": "region"
-              },
-              "region": {
-                "title": "BitmapPixelRegion",
+          ]
+        },
+        "writes": {
+          "type": "array",
+          "items": {
+            "title": "BitmapInputWrite",
+            "oneOf": [
+              {
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "x",
-                  "y",
-                  "width",
-                  "height",
-                  "pixels"
+                  "op",
+                  "region"
                 ],
                 "properties": {
-                  "x": {
-                    "type": "integer",
-                    "minimum": 0
+                  "op": {
+                    "const": "region"
                   },
-                  "y": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "width": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "height": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "pixels": {
-                    "type": "string"
+                  "region": {
+                    "title": "BitmapPixelRegion",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "x",
+                      "y",
+                      "width",
+                      "height",
+                      "pixels"
+                    ],
+                    "properties": {
+                      "x": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "y": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "width": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "height": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "pixels": {
+                        "type": "string"
+                      }
+                    }
                   }
                 }
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "op",
-              "cells"
-            ],
-            "properties": {
-              "op": {
-                "const": "cells"
               },
-              "cells": {
-                "type": "array",
-                "items": {
-                  "title": "BitmapPixelCell",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "x",
-                    "y",
-                    "value"
-                  ],
-                  "properties": {
-                    "x": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "y": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "value": {
-                      "type": "integer",
-                      "minimum": 0
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "op",
+                  "cells"
+                ],
+                "properties": {
+                  "op": {
+                    "const": "cells"
+                  },
+                  "cells": {
+                    "type": "array",
+                    "items": {
+                      "title": "BitmapPixelCell",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "x",
+                        "y",
+                        "value"
+                      ],
+                      "properties": {
+                        "x": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "y": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "value": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
                     }
                   }
                 }
               }
-            }
+            ]
           }
-        ]
+        }
       }
     },
-    "paletteOps": {
-      "type": "array",
-      "items": {
-        "title": "BitmapPaletteOp",
-        "oneOf": [
-          {
+    "palette": {
+      "title": "BitmapPaletteDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "recolored"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "op",
               "index",
               "color"
             ],
             "properties": {
-              "op": {
-                "const": "insert"
-              },
-              "index": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "color": {
-                "title": "BitmapColor",
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "r",
-                  "g",
-                  "b",
-                  "a"
-                ],
-                "properties": {
-                  "r": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "g": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "b": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "a": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                }
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "op",
-              "index"
-            ],
-            "properties": {
-              "op": {
-                "const": "remove"
-              },
-              "index": {
-                "type": "integer",
-                "minimum": 0
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "op",
-              "index",
-              "color"
-            ],
-            "properties": {
-              "op": {
-                "const": "recolor"
-              },
               "index": {
                 "type": "integer",
                 "minimum": 0
@@ -267,7 +228,53 @@
               }
             }
           }
-        ]
+        },
+        "recolored": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "color"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "color": {
+                "title": "BitmapColor",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "r",
+                  "g",
+                  "b",
+                  "a"
+                ],
+                "properties": {
+                  "r": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "g": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "b": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "a": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "output": {
@@ -348,26 +355,84 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "title": "PinnedRemoval",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "title": "BitmapPinnedPixel",
-            "type": "object"
+            "title": "PinnedInsertion",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "title": "BitmapPinnedPixel",
+                "type": "object"
+              }
+            }
           }
         },
-        "patched": {
+        "moved": {
           "type": "array",
           "items": {
+            "title": "PinnedRelocation",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "title": "PinnedModification",
             "type": "object",
             "additionalProperties": false,
             "required": [

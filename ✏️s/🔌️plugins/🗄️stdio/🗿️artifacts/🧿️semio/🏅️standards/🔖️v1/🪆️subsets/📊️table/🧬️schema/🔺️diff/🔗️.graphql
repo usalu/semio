@@ -1,11 +1,14 @@
-# 🔺️ SemioTableDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
-type SemioTableColumnListDiff {
-  values: [SemioTableColumn!]!
-}
-type SemioTableRowListDiff {
-  values: [SemioTableRow!]!
-}
-type SemioTableDiff {
-  columns: SemioTableColumnListDiff @state(class: ARTIFACT)
-  rows: SemioTableRowListDiff @state(class: ARTIFACT)
-}
+# 🔺️ SemioTableDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
+type ReplaceSemioValue { value: SemioValue! }
+type IndexModifiedReplaceSemioValue { index: Int! diff: ReplaceSemioValue! }
+type IndexAddedSemioValue { index: Int! item: SemioValue! }
+type IndexedTripleReplaceSemioValueSemioValue { removed: [Int!] modified: [IndexModifiedReplaceSemioValue!] added: [IndexAddedSemioValue!] }
+type IndexModifiedSemioTableColumnDiff { index: Int! diff: SemioTableColumnDiff! }
+type IndexAddedSemioTableColumn { index: Int! item: SemioTableColumn! }
+type IndexedTripleSemioTableColumnDiffSemioTableColumn { removed: [Int!] modified: [IndexModifiedSemioTableColumnDiff!] added: [IndexAddedSemioTableColumn!] }
+type IndexModifiedSemioTableRowDiff { index: Int! diff: SemioTableRowDiff! }
+type IndexAddedSemioTableRow { index: Int! item: SemioTableRow! }
+type IndexedTripleSemioTableRowDiffSemioTableRow { removed: [Int!] modified: [IndexModifiedSemioTableRowDiff!] added: [IndexAddedSemioTableRow!] }
+type SemioTableColumnDiff { name: String kind: SemioTableCellKind }
+type SemioTableRowDiff { cells: IndexedTripleReplaceSemioValueSemioValue }
+type SemioTableDiff { columns: IndexedTripleSemioTableColumnDiffSemioTableColumn rows: IndexedTripleSemioTableRowDiffSemioTableRow }

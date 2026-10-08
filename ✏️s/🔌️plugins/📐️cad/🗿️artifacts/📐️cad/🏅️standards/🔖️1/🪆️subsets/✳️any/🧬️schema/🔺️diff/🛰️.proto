@@ -15,8 +15,20 @@ message CadDiff {
   optional CadNodesDelta nodes = 10;
 }
 message CadModelSlot { optional semio.os.store.ArtifactChild child = 1; }
-message CadDrawingsDelta { repeated semio.os.store.ArtifactChild added = 1; repeated string removed = 2; repeated string reordered = 3; }
-message CadBrepsDelta { repeated semio.os.store.ArtifactChild added = 1; repeated string removed = 2; repeated string reordered = 3; }
+message CadNodeRemoval { string id = 1; uint64 index = 2; }
+message CadNodeRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message CadReferenceRemoval { string id = 1; uint64 index = 2; }
+message CadReferenceRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message CadDrawingRemoval { string id = 1; uint64 index = 2; }
+message CadDrawingRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message CadBrepRemoval { string id = 1; uint64 index = 2; }
+message CadBrepRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message CadDrawingInsertion { uint64 index = 1; semio.os.store.ArtifactChild row = 2; }
+message CadBrepInsertion { uint64 index = 1; semio.os.store.ArtifactChild row = 2; }
+message CadReferenceInsertion { uint64 index = 1; semio.s.cad.cad.artifact.CadReference row = 2; }
+message CadNodeInsertion { uint64 index = 1; semio.s.cad.cad.artifact.CadNode row = 2; }
+message CadDrawingsDelta { repeated CadDrawingRemoval removed = 1; repeated CadDrawingInsertion inserted = 2; repeated CadDrawingRelocation moved = 3; }
+message CadBrepsDelta { repeated CadBrepRemoval removed = 1; repeated CadBrepInsertion inserted = 2; repeated CadBrepRelocation moved = 3; }
 message CadOrientationSet { repeated double value = 1; }
 message CadScaleSet { optional double value = 1; }
 message CadOpacitySet { optional double value = 1; }
@@ -31,18 +43,18 @@ message CadReferencePatch {
   optional bool locked = 8;
   optional CadOpacitySet opacity = 9;
 }
-message CadReferencePatchEntry { string id = 1; CadReferencePatch patch = 2; }
+message CadReferenceModification { string id = 1; CadReferencePatch patch = 2; }
 message CadReferencesDelta {
-  repeated semio.s.cad.cad.artifact.CadReference added = 1;
-  repeated string removed = 2;
-  repeated CadReferencePatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated CadReferenceRemoval removed = 1;
+  repeated CadReferenceInsertion inserted = 2;
+  repeated CadReferenceRelocation moved = 3;
+  repeated CadReferenceModification modified = 4;
 }
 message CadNodePatch { optional string label = 1; }
-message CadNodePatchEntry { string id = 1; CadNodePatch patch = 2; }
+message CadNodeModification { string id = 1; CadNodePatch patch = 2; }
 message CadNodesDelta {
-  repeated semio.s.cad.cad.artifact.CadNode added = 1;
-  repeated string removed = 2;
-  repeated CadNodePatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated CadNodeRemoval removed = 1;
+  repeated CadNodeInsertion inserted = 2;
+  repeated CadNodeRelocation moved = 3;
+  repeated CadNodeModification modified = 4;
 }

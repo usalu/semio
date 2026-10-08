@@ -56,9 +56,6 @@ pub mod results_window_config {
 #[path = "🖥️app-surface/🦀️.rs"]
 pub mod app_surface;
 
-#[path = "🪡️list-delta/🦀️.rs"]
-pub mod list_delta;
-
 #[path = "🧾️definition/🦀️.rs"]
 pub mod definition;
 

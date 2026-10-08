@@ -14,7 +14,7 @@ pub fn diff(payload: &RenameProductGroup, base: &Iso16757Snapshot) -> protocol::
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Product group \"{}\" already has that name.", payload.id));
     }
     protocol::MutationOutcome::new(Iso16757Diff {
-        product_groups: Some(Iso16757ProductGroupsRows { modified: vec![Iso16757ProductGroupsPatch { id: payload.id.clone(), name: Some(payload.new_name.clone()) }], ..Default::default() }),
+        product_groups: Some(Iso16757ProductGroupsRows::modification(&payload.id, Iso16757ProductGroupsPatch { name: Some(payload.new_name.clone()), ..Default::default() })),
         ..Default::default()
     })
 }

@@ -8,7 +8,7 @@ import customization from "./⚙️.json";
 
 type Check = {readonly module:string;readonly name:string;readonly subject:()=>unknown;readonly oracle:()=>unknown;readonly tolerance:number};
 type Row = Record<string,string|number|null>;
-const columns:Record<string,string[]> = {pie:["startAngle","endAngle","padAngle","x","y","radius"],stack:["y0","y1"],bin:["x0","x1","count"],hexbin:["x","y","count"],beeswarm:["x","y"],jitter:["x","y"],arc:["x","y"],chord:["startAngle","endAngle","targetStartAngle","targetEndAngle","value"],sankey:["x","y","x2","y2","width"],alluvial:["x","y","x2","y2","width"],treemap:["x0","y0","x1","y1"],partition:["x0","y0","x1","y1"],pack:["x","y","radius"],force:["x","y"],tree:["x","y"],cluster:["x","y"],dag:["x","y"],bundling:["x","y","x2","y2"],voronoi:["x","y"],delaunay:["x","y"],hull:["x","y"],contour:["x","y","value"],density:["x","y","value"],projection:["x","y"]};
+const columns:Record<string,string[]> = {pie:["startAngle","endAngle","padAngle","x","y","radius"],stack:["y0","y1"],bin:["x0","x1","count"],hexbin:["x","y","count"],beeswarm:["x","y"],jitter:["x","y"],arc:["x","y"],chord:["startAngle","endAngle","targetStartAngle","targetEndAngle","value"],sankey:["x","y","x2","y2","width"],alluvial:["x","y","x2","y2","width"],treemap:["x0","y0","x1","y1"],partition:["x0","y0","x1","y1"],pack:["x","y","radius"],force:["x","y"],tree:["x","y"],cluster:["x","y"],dag:["x","y"],bundling:["detail","order","x","y"],voronoi:["x","y"],delaunay:["x","y"],hull:["x","y"],contour:["x","y","value"],density:["x","y","value"],projection:["x","y"]};
 const polygonKinds = new Set(["voronoi","delaunay","hull","contour","density"]);
 
 function source():string {
@@ -69,7 +69,7 @@ async function reference():Promise<Record<string,readonly number[]>> {
       else if(name==="tree")hierarchy.tree<Row>().size([width,height]).separation((a,b)=>a.parent===b.parent?Number(opt.separation??1):Number(opt.cousinSeparation??2))(root);
       else hierarchy.cluster<Row>().size([width,height]).separation((a,b)=>a.parent===b.parent?Number(opt.separation??1):Number(opt.cousinSeparation??2))(root);
       const nodes=(opt.leaves===true?root.leaves():root.descendants()) as unknown as Record<string,unknown>[];
-      if(name==="bundling")put(name,root.links().map(link=>({x:(link.source as any).x,y:(link.source as any).y,x2:(link.target as any).x,y2:(link.target as any).y})));
+      if(name==="bundling")put(name,root.links().flatMap(({source,target},detail)=>target.path(source).map((node,order)=>({detail,order,x:(node as any).x,y:(node as any).y}))));
       else put(name,nodes.map(node=>({...node,radius:node.r})));
     }
     else if(["force","arc","dag"].includes(name)){

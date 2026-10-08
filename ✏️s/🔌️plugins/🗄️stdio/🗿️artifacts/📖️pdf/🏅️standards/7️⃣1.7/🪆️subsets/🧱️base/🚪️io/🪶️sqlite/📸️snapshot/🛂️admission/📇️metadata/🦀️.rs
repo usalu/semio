@@ -14,7 +14,7 @@ pub(super) fn file(c:&mut Census<'_,'_>,value:&D)->Result<(),ValueError>{
  c.row("pdf_embedded_file",&[Text(text(field(value,"id")?)?),Text(text(field(value,"fileName")?)?),optional_text(field(value,"description")?)?,optional_text(field(value,"mimeType")?)?,bytes,if matches!(creation,D::Null){Null}else{Int},if matches!(modification,D::Null){Null}else{Int},optional_text(field(value,"relationship")?)?,Int])
 }
 pub(super) fn intent(c:&mut Census<'_,'_>,value:&D)->Result<(),ValueError>{
- let bytes=c.blob(field(value,"profile")?)?;
+ let bytes=optional(c,field(value,"profile")?,artifact_reference)?;
  c.row("pdf_output_intent",&[Text(text(field(value,"subtype")?)?),Text(text(field(value,"conditionIdentifier")?)?),optional_text(field(value,"condition")?)?,optional_text(field(value,"registryName")?)?,optional_text(field(value,"info")?)?,bytes])
 }
 pub(super) fn encryption(c:&mut Census<'_,'_>,value:&D)->Result<(),ValueError>{

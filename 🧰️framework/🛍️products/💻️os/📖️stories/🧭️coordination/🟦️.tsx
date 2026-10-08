@@ -1,3 +1,4 @@
+import { composeSpecificOsCatalogV1 } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 // #region 🧲️Header
 // 💻️ 🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx
 // Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one plugin from the generated registry.
@@ -49,6 +50,7 @@ function resolveTargetPlugin(pluginId: string): PluginBuildTarget | undefined {
  * "filters for starting apps" refers to. Keyed by `plugin` so switching the Storybook `plugin` control
  * fully remounts the shell (plugin runtimes are module-singletons and must not be reused across boots). */
 export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
+  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const target = resolveTargetPlugin(plugin);
   const moduleUrl = target ? pluginModuleUrl(target.pluginId) : undefined;
   const available = usePluginArtifactAvailable(moduleUrl ?? "");
@@ -81,7 +83,7 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
   }
   return (
     <div key={`${target.pluginId}:${appId ?? ""}`} className="h-full w-full">
-      <FrameworkOsShell pluginFilter={target.pluginId} plugins={[{ pluginId: target.pluginId, moduleUrl: moduleUrl! }]} appId={appId} locks={resolvedLocks} />
+      <FrameworkOsShell catalog={catalog} pluginFilter={target.pluginId} plugins={[{ pluginId: target.pluginId, moduleUrl: moduleUrl! }]} appId={appId} locks={resolvedLocks} />
     </div>
   );
 }
@@ -120,6 +122,7 @@ function navigatorGpuUnavailableReason(): string | undefined {
  * with a graceful fallback when WebGPU itself is unavailable (headless CI Chromium without `--enable-unsafe-webgpu`,
  * Safari/Firefox, …) and when the plugin has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
 export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
+  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const target = resolveTargetPlugin(plugin);
   const gpuUnavailableReason = navigatorGpuUnavailableReason();
   const [state, setState] = useState<WgpuBootState>({ kind: "booting" });

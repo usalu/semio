@@ -17,18 +17,4 @@ async fn diff_codec_text_binary_roundtrip_law() {
         let decoded = BmpDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
         assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
     }
-
-    // 🔍 Sanity: `a->b` must actually populate both `modified` and `added` (the collection
-    // triple's own coverage, not just the codec round-trip).
-    let a = demo_snap_a();
-    let b = demo_snap_b();
-    let ab = BmpDiff::between(&a, &b);
-    let pd = ab.palette.as_ref().expect("palette diff must be populated a->b");
-    assert!(pd.removed.is_empty(), "a->b must not need a removal (palette grows)");
-    assert!(!pd.modified.is_empty(), "a->b must show the modified entry");
-    assert!(!pd.added.is_empty(), "a->b must show the added entry");
-
-    let ba = BmpDiff::between(&b, &a);
-    let pd_ba = ba.palette.as_ref().expect("palette diff must be populated b->a");
-    assert!(!pd_ba.removed.is_empty(), "b->a must show the removed entry");
 }

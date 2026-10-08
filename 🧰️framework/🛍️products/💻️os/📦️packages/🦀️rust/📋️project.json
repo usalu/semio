@@ -764,6 +764,42 @@
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
+    },
+    "test-directory-checkpoint-pair-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-directory-checkpoint-pair-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-directory-checkpoint-pair-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-directory-checkpoint-pair-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-directory-descriptor-digest-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-directory-descriptor-digest-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-directory-descriptor-digest-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-directory-descriptor-digest-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
     }
   },
   "namedInputs": {

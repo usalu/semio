@@ -36,3 +36,10 @@ fn declared_outcome_holds() {
 fn committed_json_is_canonical() {
     laws::canonical(BEFORE, AFTER, MUTATION, Some(DIFF));
 }
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let (before, mutation) = laws::decode_case(BEFORE, MUTATION);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+}

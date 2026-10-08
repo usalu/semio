@@ -2,11 +2,14 @@
   "positions": null,
   "routes": null,
   "regions": {
-    "added": [],
     "removed": [
-      "region-old-town"
+      {
+        "id": "region-old-town",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

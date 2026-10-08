@@ -6,6 +6,7 @@
 //! (contract D1); the board is the synthetic selection board shared by every selection-transform vector.
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::Puzzle2dSnapshot;

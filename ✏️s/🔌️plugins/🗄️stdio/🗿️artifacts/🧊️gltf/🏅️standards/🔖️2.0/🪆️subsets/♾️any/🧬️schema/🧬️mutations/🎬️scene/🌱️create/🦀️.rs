@@ -3,7 +3,7 @@
 use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::snapshot::*;
-use crate::schema::modules::mutation_support::create_scene::{insert_empty_scene, insertion_position, GltfCreateSceneRejection};
+use crate::schema::modules::mutation_support::create_scene::{insertion_position, GltfCreateSceneRejection};
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::GltfSnapshot;
 

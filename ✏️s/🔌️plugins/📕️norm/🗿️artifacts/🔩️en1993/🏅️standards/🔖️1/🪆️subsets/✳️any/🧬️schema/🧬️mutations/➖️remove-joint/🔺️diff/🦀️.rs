@@ -1,12 +1,12 @@
-//! ➖️ `remove-joint` diff — removes the row at the index, guarded by the row's own id.
+//! ➖️ `remove-joint` diff — removes the row at the index.
 
 use super::RemoveJoint;
 use crate::diff::{En1993Diff, En1993JointDelta};
 use crate::En1993Snapshot;
 
 pub fn diff(payload: &RemoveJoint, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    let Some(row) = base.joints.get(payload.index) else {
+    if payload.index >= base.joints.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("joint index {} out of range.", payload.index), Vec::<String>::new());
-    };
-    protocol::MutationOutcome::new(En1993Diff { joints: En1993JointDelta::removal(&row.id), ..Default::default() })
+    }
+    protocol::MutationOutcome::new(En1993Diff { joints: En1993JointDelta::removal(&base.joints, payload.index), ..Default::default() })
 }

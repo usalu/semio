@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "beforeSha256": "603a6303a42ff2aaa0829267046ee18470c8926793758285396f50b0ce4a3c55",
+      "afterSha256": "dea97dcacebbcbd157e5652e77a9e75ea5d36e11536351d5529caaa09f873c1e",
+      "action": "updated",
+      "qualification": "only lower ECMA defining syntax import, removal of duplicated lexer, parser span propagation and runtime literal decoder"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "beforeSha256": "1d32831aa393dcb79d4c5b2209e85a6fa085da4784da3c8045ea42289974369b",
+      "afterSha256": "34d182dd98d851f91cf72562bc902b4b48c72b899e11f42284dce5d261fa97da",
+      "action": "updated",
+      "qualification": "only lower ECMA defining syntax import, removal of duplicated lexer, parser span propagation and runtime literal decoder"
+    }
+  ]
+}

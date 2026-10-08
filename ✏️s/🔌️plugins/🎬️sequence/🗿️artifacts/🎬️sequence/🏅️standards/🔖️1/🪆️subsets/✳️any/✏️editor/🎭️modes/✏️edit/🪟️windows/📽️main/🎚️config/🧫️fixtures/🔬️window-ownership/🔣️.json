@@ -12,8 +12,10 @@
   "baseConfig": { "orientation": "leftRight", "camera": { "x": 0, "y": 0, "zoom": 1 } },
   "baseTransient": { "lastRunJson": "" },
   "configMutations": [
-    { "windowId": "sequence-main-left", "windowKindId": "sequence-main", "mutation": { "kind": "snapshot", "config": { "orientation": "topBottom", "camera": { "x": 13, "y": -5, "zoom": 2 } } } },
-    { "windowId": "sequence-main-right", "windowKindId": "sequence-main", "mutation": { "kind": "snapshot", "config": { "orientation": "leftRight", "camera": { "x": -8, "y": 21, "zoom": 0.5 } } } }
+    { "windowId": "sequence-main-left", "windowKindId": "sequence-main", "mutation": { "kind": "set-orientation", "value": "topBottom" } },
+    { "windowId": "sequence-main-left", "windowKindId": "sequence-main", "mutation": { "kind": "set-camera", "value": { "x": 13, "y": -5, "zoom": 2 } } },
+    { "windowId": "sequence-main-right", "windowKindId": "sequence-main", "mutation": { "kind": "set-orientation", "value": "leftRight" } },
+    { "windowId": "sequence-main-right", "windowKindId": "sequence-main", "mutation": { "kind": "set-camera", "value": { "x": -8, "y": 21, "zoom": 0.5 } } }
   ],
   "transientMutations": [
     { "windowId": "sequence-script-left", "windowKindId": "sequence-script", "mutation": { "kind": "snapshot", "transient": { "lastRunJson": "{\"window\":\"left\"}" } } },

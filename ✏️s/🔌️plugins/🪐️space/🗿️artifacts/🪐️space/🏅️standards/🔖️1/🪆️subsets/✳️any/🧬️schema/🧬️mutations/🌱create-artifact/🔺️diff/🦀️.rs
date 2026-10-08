@@ -8,14 +8,7 @@ pub fn diff(payload: &super::CreateArtifact, base: &SSpaceSnapshot) -> protocol:
     if base.artifacts.iter().any(|row| row.id == payload.artifact.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An artifact with id \"{}\" already exists.", payload.artifact.id), [payload.artifact.id.clone()]);
     }
-    protocol::MutationOutcome::new(SSpaceDiff { artifacts: Some(SSpaceArtifactsDelta {
-            added: vec![payload.artifact.clone()],
-            reordered: payload.index.filter(|index| (*index as usize) < base.artifacts.len()).map(|index| {
-                let mut order: Vec<String> = base.artifacts.iter().map(|row| row.id.clone()).collect();
-                order.insert(index as usize, payload.artifact.id.clone());
-                order
-            }),
-            ..Default::default()
-        }), ..Default::default() })
+    let at = payload.index.map_or(base.artifacts.len(), |index| (index as usize).min(base.artifacts.len()));
+    protocol::MutationOutcome::new(SSpaceDiff { artifacts: Some(SSpaceArtifactsDelta::insertion(at, payload.artifact.clone())), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,166 +1,253 @@
 syntax = "proto3";
 package semio.s.block.block3d.diff;
 
-// 🧬️ Block3d diff schema — sparse field delta.
+// 🧬️ Block3d diff schema — field-sparse, id-keyed delta.
 
 message Block3dDiff {
-  // @state artifact
-  optional Block3dArtifact artifact = 1;
-  // @state artifact
-  optional string schema = 2;
-  // @state artifact
-  optional BlockKindIdentity object_kind = 3;
-  // @state artifact
-  optional Block3dRepresentationsDelta representations = 4;
-  // @state artifact
-  optional Block3dVortexKindsDelta vortex_kinds = 5;
-  // @state artifact
-  optional Block3dVorticesDelta vortices = 6;
-  // @state artifact
-  optional Block3dCompatibilityDelta compatibility = 7;
-  // @state artifact
-  optional Block3dAttributesDelta attributes = 8;
-  // @state artifact
-  optional Block3dAuthorList authors = 9;
-  // @state artifact
-  optional BlockCamera3d camera3d = 10;
-  // @state artifact
-  optional BlockMeta meta = 11;
-  // @state config
+  optional string schema = 1;
+  optional BlockKindIdentityPatch object_kind = 2;
+  optional BlockRepresentationsDelta representations = 3;
+  optional Block3dVortexKindsDelta vortex_kinds = 4;
+  optional Block3dVorticesDelta vortices = 5;
+  optional BlockCompatibilityDelta compatibility = 6;
+  optional BlockAttributesDelta attributes = 7;
+  optional BlockAuthorsDelta authors = 8;
+  optional BlockCamera3dPatch camera3d = 9;
+  optional BlockMetaPatch meta = 10;
 }
 
-message BlockKindIdentity {
-  bool _placeholder = 1;
+message BlockOptionalText {
+  string value = 1;
+  bool cleared = 2;
 }
 
-message BlockRepresentation {
-  bool _placeholder = 1;
+message BlockKindIdentityPatch {
+  optional string id = 1;
+  optional string name = 2;
+  optional string label = 3;
+  optional string description = 4;
+  optional BlockOptionalText variant = 5;
+  optional BlockOptionalText icon = 6;
+  optional BlockOptionalText unit = 7;
 }
 
-message Block3dVortexKind {
-  bool _placeholder = 1;
+message BlockRepresentationPatch {
+  optional string name = 1;
+  optional BlockOptionalText mesh_url = 2;
+  optional BlockOptionalText lod = 3;
+  optional string description = 4;
+  repeated string tags_removed = 5;
+  repeated string tags_added = 6;
+  repeated string attributes_removed = 7;
+  repeated BlockAttribute attributes_added = 8;
 }
 
-message Block3dVortexTemplate {
-  bool _placeholder = 1;
+message Block3dVortexKindPatch {
+  optional string name = 1;
+  optional string label = 2;
+  optional string color = 3;
+  optional string default_cable_kind = 4;
 }
 
-message BlockCompatibilityRule {
-  bool _placeholder = 1;
+message Block3dVortexTemplatePatch {
+  optional string vortex_kind = 1;
+  repeated double position = 2;
+  repeated double direction = 3;
+  optional double radius = 4;
+  optional BlockOptionalText label = 5;
 }
 
-message BlockAttribute {
-  bool _placeholder = 1;
+message BlockCompatibilityRulePatch {
+  optional string source = 1;
+  optional string target = 2;
+  optional bool bidirectional = 3;
 }
 
-message BlockAuthor {
-  bool _placeholder = 1;
+message BlockAttributePatch {
+  optional string value = 1;
+  optional BlockOptionalText definition = 2;
 }
 
-message BlockCamera3d {
-  bool _placeholder = 1;
+message BlockAuthorPatch {
+  optional string name = 1;
+  optional BlockOptionalText email = 2;
 }
 
-message BlockMeta {
-  bool _placeholder = 1;
+message BlockCamera3dPatch {
+  repeated double position = 1;
+  repeated double target = 2;
+  optional double zoom = 3;
 }
 
-message Block3dWindowView {
-  bool _placeholder = 1;
+message BlockMetaPatch {
+  optional string description = 1;
 }
 
-message Block3dStringList {
-  repeated string values = 1;
-}
-
-message Block3dAuthorList {
-  repeated BlockAuthor values = 1;
-}
-
-message Block3dRepresentationsDelta {
-  repeated BlockRepresentation added = 1;
-  repeated string removed = 2;
-  repeated Block3dRepresentationsPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Block3dRepresentationsPatchEntry {
+message BlockRepresentationsPatchEntry {
   string id = 1;
-  Block3dRepresentationsPatch patch = 2;
+  BlockRepresentationPatch patch = 2;
 }
 
-message Block3dRepresentationsPatch {
-  optional BlockRepresentation replacement = 1;
+message BlockRepresentationsRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message Block3dVortexKindsDelta {
-  repeated Block3dVortexKind added = 1;
-  repeated string removed = 2;
-  repeated Block3dVortexKindsPatchEntry patched = 3;
-  repeated string reordered = 4;
+message BlockRepresentationsInsertion {
+  uint32 index = 1;
+  BlockRepresentation row = 2;
+}
+
+message BlockRepresentationsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockRepresentationsDelta {
+  repeated BlockRepresentationsRemoval removed = 1;
+  repeated BlockRepresentationsInsertion inserted = 2;
+  repeated BlockRepresentationsRelocation moved = 3;
+  repeated BlockRepresentationsPatchEntry modified = 4;
 }
 
 message Block3dVortexKindsPatchEntry {
   string id = 1;
-  Block3dVortexKindsPatch patch = 2;
+  Block3dVortexKindPatch patch = 2;
 }
 
-message Block3dVortexKindsPatch {
-  optional Block3dVortexKind replacement = 1;
+message Block3dVortexKindsRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message Block3dVorticesDelta {
-  repeated Block3dVortexTemplate added = 1;
-  repeated string removed = 2;
-  repeated Block3dVorticesPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Block3dVortexKindsInsertion {
+  uint32 index = 1;
+  Block3dVortexKind row = 2;
+}
+
+message Block3dVortexKindsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Block3dVortexKindsDelta {
+  repeated Block3dVortexKindsRemoval removed = 1;
+  repeated Block3dVortexKindsInsertion inserted = 2;
+  repeated Block3dVortexKindsRelocation moved = 3;
+  repeated Block3dVortexKindsPatchEntry modified = 4;
 }
 
 message Block3dVorticesPatchEntry {
   string id = 1;
-  Block3dVorticesPatch patch = 2;
+  Block3dVortexTemplatePatch patch = 2;
 }
 
-message Block3dVorticesPatch {
-  optional Block3dVortexTemplate replacement = 1;
-}
-
-message Block3dCompatibilityDelta {
-  repeated BlockCompatibilityRule added = 1;
-  repeated string removed = 2;
-  repeated Block3dCompatibilityPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Block3dCompatibilityPatchEntry {
+message Block3dVorticesRemoval {
   string id = 1;
-  Block3dCompatibilityPatch patch = 2;
+  uint32 index = 2;
 }
 
-message Block3dCompatibilityPatch {
-  optional BlockCompatibilityRule replacement = 1;
+message Block3dVorticesInsertion {
+  uint32 index = 1;
+  Block3dVortexTemplate row = 2;
 }
 
-message Block3dAttributesDelta {
-  repeated BlockAttribute added = 1;
-  repeated string removed = 2;
-  repeated Block3dAttributesPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Block3dAttributesPatchEntry {
+message Block3dVorticesRelocation {
   string id = 1;
-  Block3dAttributesPatch patch = 2;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
-message Block3dAttributesPatch {
-  optional BlockAttribute replacement = 1;
+message Block3dVorticesDelta {
+  repeated Block3dVorticesRemoval removed = 1;
+  repeated Block3dVorticesInsertion inserted = 2;
+  repeated Block3dVorticesRelocation moved = 3;
+  repeated Block3dVorticesPatchEntry modified = 4;
 }
 
-message Block3dWindowsList {
-  repeated Block3dWindowView values = 1;
+message BlockCompatibilityPatchEntry {
+  string id = 1;
+  BlockCompatibilityRulePatch patch = 2;
 }
 
-message Block3dArtifact {
-  string schema = 1;
+message BlockCompatibilityRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
+
+message BlockCompatibilityInsertion {
+  uint32 index = 1;
+  BlockCompatibilityRule row = 2;
+}
+
+message BlockCompatibilityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockCompatibilityDelta {
+  repeated BlockCompatibilityRemoval removed = 1;
+  repeated BlockCompatibilityInsertion inserted = 2;
+  repeated BlockCompatibilityRelocation moved = 3;
+  repeated BlockCompatibilityPatchEntry modified = 4;
+}
+
+message BlockAttributesPatchEntry {
+  string id = 1;
+  BlockAttributePatch patch = 2;
+}
+
+message BlockAttributesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message BlockAttributesInsertion {
+  uint32 index = 1;
+  BlockAttribute row = 2;
+}
+
+message BlockAttributesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockAttributesDelta {
+  repeated BlockAttributesRemoval removed = 1;
+  repeated BlockAttributesInsertion inserted = 2;
+  repeated BlockAttributesRelocation moved = 3;
+  repeated BlockAttributesPatchEntry modified = 4;
+}
+
+message BlockAuthorsPatchEntry {
+  string id = 1;
+  BlockAuthorPatch patch = 2;
+}
+
+message BlockAuthorsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message BlockAuthorsInsertion {
+  uint32 index = 1;
+  BlockAuthor row = 2;
+}
+
+message BlockAuthorsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockAuthorsDelta {
+  repeated BlockAuthorsRemoval removed = 1;
+  repeated BlockAuthorsInsertion inserted = 2;
+  repeated BlockAuthorsRelocation moved = 3;
+  repeated BlockAuthorsPatchEntry modified = 4;
+}
+

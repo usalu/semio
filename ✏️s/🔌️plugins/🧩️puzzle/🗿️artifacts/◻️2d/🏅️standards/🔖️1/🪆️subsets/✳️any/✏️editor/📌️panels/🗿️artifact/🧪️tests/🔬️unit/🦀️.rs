@@ -54,10 +54,10 @@ fn labels() -> &'static Puzzle2dLabels {
 /// 🏗️ A synthetic snapshot of `nodes` nodes and `edges` edges — the shape Nakagin has (180/179),
 /// without depending on that asset's contents.
 fn scaled_scene(nodes: usize, edges: usize) -> Puzzle2dScene {
-    let node_values: Vec<Value> = (0..nodes).map(|index| serde_json::json!({ "id": format!("node-{index}"), "text": format!("Node {index}"), "nodeKind": "capsule", "x": index as f64, "y": 0.0 })).collect();
-    let edge_values: Vec<Value> = (0..edges).map(|index| serde_json::json!({ "id": format!("edge-{index}"), "source": format!("node-{index}"), "target": format!("node-{}", index + 1), "edgeKind": "link" })).collect();
+    let node_values: Vec<Value> = (0..nodes).map(|index| semio_framework_pack_json::json!({ "id": format!("node-{index}"), "text": format!("Node {index}"), "nodeKind": "capsule", "x": index as f64, "y": 0.0 })).collect();
+    let edge_values: Vec<Value> = (0..edges).map(|index| semio_framework_pack_json::json!({ "id": format!("edge-{index}"), "source": format!("node-{index}"), "target": format!("node-{}", index + 1), "edgeKind": "link" })).collect();
     Puzzle2dScene {
-        board_snapshot: serde_json::json!({ "schema": crate::editor::puzzle2d::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": node_values, "edges": edge_values }),
+        board_snapshot: semio_framework_pack_json::json!({ "schema": crate::editor::puzzle2d::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": node_values, "edges": edge_values }),
         runtime: crate::editor::puzzle2d::config::Puzzle2dPlayRuntime::default(),
         active_utility: String::new(),
         interaction: crate::editor::puzzle2d::Puzzle2dInteractionSnapshot::default(),
@@ -257,8 +257,8 @@ fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
 
 fn flagged_scene(hidden: bool, locked: bool) -> Puzzle2dScene {
     let mut scene = scaled_scene(1, 0);
-    scene.board_snapshot["nodes"][0]["visible"] = serde_json::json!(!hidden);
-    scene.board_snapshot["nodes"][0]["locked"] = serde_json::json!(locked);
+    scene.board_snapshot["nodes"][0]["visible"] = semio_framework_pack_json::json!(!hidden);
+    scene.board_snapshot["nodes"][0]["locked"] = semio_framework_pack_json::json!(locked);
     scene
 }
 

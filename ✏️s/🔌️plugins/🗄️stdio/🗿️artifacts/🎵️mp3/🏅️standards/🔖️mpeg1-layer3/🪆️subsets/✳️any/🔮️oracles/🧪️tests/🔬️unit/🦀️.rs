@@ -58,8 +58,7 @@ fn the_reference_reads_the_text_frames_a_real_encoder_wrote() {
     let input = fixture();
     let projection = project_mp3(&input).unwrap();
     let v2 = projection.get("id3v2").unwrap();
-    assert_eq!(v2.get("majorVersion").unwrap().clone(), Json::Number(3.0));
-    let frame = |id: &str, text: &str| object(vec![("id", Json::String(id.to_string())), ("text", Json::String(text.to_string()))]);
+    let frame = |id: &str, text: &str| object(vec![("id", Json::String(id.to_string())), ("content",object(vec![("kind",Json::String("text".into())),("values",Json::Array(vec![Json::String(text.into())]))]))]);
     assert_eq!(v2.array("frames"), vec![frame("TSSE", "LAME 64bits version 3.100 (http://lame.sf.net)"), frame("TIT2", "Bauen mit Bestand (Ausschnitt)"), frame("TPE1", "semio"), frame("TLEN", "12000"),]);
     assert_eq!(projection.get("id3v1").unwrap().clone(), Json::Null);
 }
@@ -99,7 +98,7 @@ fn the_round_trip_preserves_the_projection_without_handing_the_input_back() {
 #[test]
 fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
     assert!(oracle_apply_mutation(&fixture(), &spec("set-bitrate", Json::Object(vec![]))).is_err());
-    assert!(oracle_apply_mutation(&fixture(), &spec("set-id3v1", object(vec![("id3v1", object(vec![("raw", Json::Array(vec![Json::Number(84.0)]))]))]))).unwrap_err().contains("128 bytes"));
+    assert!(oracle_apply_mutation(&fixture(), &spec("set-id3v1", object(vec![("id3v1", object(vec![("raw", Json::Array(vec![Json::Number(84.0)]))]))]))).unwrap_err().contains("missing track"));
 }
 
 /// 🏷️ `KINDS` must equal the committed catalog AND the committed production vocabulary. The

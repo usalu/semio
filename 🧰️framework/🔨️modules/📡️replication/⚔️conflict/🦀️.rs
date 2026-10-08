@@ -7,6 +7,10 @@
 //! §C5. `📡️spr/🎮️command` owns `MutationMessage`/`MutationOutcome`/`worst_level`; `📡️spr/🧾️wire`
 //! owns `MergePolicy`; this module is the third leg — what an authority DOES once it has both.
 
+#[path = "♻️retirement/🦀️.rs"]
+mod ownership_retirement;
+pub use ownership_retirement::ProtocolConflictRetirement;
+
 //#region 🔖️ConflictId
 /// 🆔️ Content-addressed conflict identity: two authorities independently detecting the
 /// identical conflict (same kind, same artifact, same mutation-id set, same HLC) converge on the

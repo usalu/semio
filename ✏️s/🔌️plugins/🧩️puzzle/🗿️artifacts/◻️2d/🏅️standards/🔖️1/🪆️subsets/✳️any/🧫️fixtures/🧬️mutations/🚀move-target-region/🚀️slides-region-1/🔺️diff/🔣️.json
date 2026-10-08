@@ -6,8 +6,8 @@
   "nodes": null,
   "schema": null,
   "targetRegions": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "region-1",
         "patch": {
@@ -16,7 +16,7 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   }
 }

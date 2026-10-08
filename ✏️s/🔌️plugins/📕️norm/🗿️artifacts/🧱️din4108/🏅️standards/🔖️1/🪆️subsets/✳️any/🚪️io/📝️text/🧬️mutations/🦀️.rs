@@ -79,7 +79,7 @@ pub(crate) enum Din4108MutationDsl {
         new_bb2_details_conform: bool,
     },
     InsertZone {
-        index: usize,
+        index: Option<usize>,
         #[dsl(block)]
         zone: crate::ThermalZone,
     },
@@ -100,7 +100,7 @@ pub(crate) enum Din4108MutationDsl {
     },
     InsertZoneWindow {
         zone_id: String,
-        index: usize,
+        index: Option<usize>,
         #[dsl(block)]
         window: crate::ZoneWindow,
     },
@@ -124,7 +124,7 @@ pub(crate) enum Din4108MutationDsl {
         new_shading_fc: f64,
     },
     InsertElement {
-        index: usize,
+        index: Option<usize>,
         #[dsl(block)]
         element: crate::EnvelopeElement,
     },
@@ -145,7 +145,7 @@ pub(crate) enum Din4108MutationDsl {
     },
     InsertLayer {
         element_id: String,
-        index: usize,
+        index: Option<usize>,
         #[dsl(block)]
         layer: crate::LayerDocument,
     },
@@ -179,7 +179,7 @@ pub(crate) enum Din4108MutationDsl {
         new_material_id: String,
     },
     InsertThermalBridge {
-        index: usize,
+        index: Option<usize>,
         #[dsl(block)]
         bridge: crate::ThermalBridge,
     },

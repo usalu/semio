@@ -12,8 +12,6 @@
       "maxPixels": 64,
       "nodes": [],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -103,8 +101,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -194,8 +190,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -347,8 +341,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -512,8 +504,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -739,8 +729,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -841,8 +829,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1000,8 +986,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1091,8 +1075,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1182,8 +1164,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1273,8 +1253,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1364,8 +1342,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1455,8 +1431,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1546,8 +1520,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1699,8 +1671,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1858,8 +1828,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1925,8 +1893,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -1982,8 +1948,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [
@@ -2147,8 +2111,6 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": []
     },
     "expected": [

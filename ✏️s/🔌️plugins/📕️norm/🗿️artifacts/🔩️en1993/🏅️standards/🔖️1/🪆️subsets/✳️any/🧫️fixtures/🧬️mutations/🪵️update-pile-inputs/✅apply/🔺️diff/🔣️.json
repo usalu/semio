@@ -2,81 +2,98 @@
   "annex": null,
   "materials": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "sections": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "loadCases": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "memberActions": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "joints": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "fatigueDetails": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "fireExposures": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "coldFormedMembers": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "platedPanels": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "siloShells": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "tensionComponents": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridgeFatigue": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "towerLegs": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "piles": {
     "removed": [
-      "pile-1"
-    ],
-    "added": [
       {
-        "after": null,
+        "id": "pile-1",
+        "index": 0
+      }
+    ],
+    "inserted": [
+      {
+        "index": 0,
         "row": {
           "id": "pile-1",
           "sectionId": "sec-heb240",
@@ -94,11 +111,13 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "craneRunways": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

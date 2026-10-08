@@ -42,12 +42,15 @@
   "conflicts": null,
   "requirements": null,
   "priorities": {
-    "added": [],
     "removed": [
-      "priority-record-a"
+      {
+        "id": "priority-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "scenarios": null,
   "options": null,

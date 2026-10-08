@@ -6,10 +6,10 @@ use crate::diff::ProgramPrivacyDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeletePrivacyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.privacy.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.privacy.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No privacy requirement exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { privacy: Some(ProgramPrivacyDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { privacy: Some(ProgramPrivacyDelta::removal(&base.privacy, position)), ..Default::default() })
 }

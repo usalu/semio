@@ -58,7 +58,7 @@ fn scene_layers_at<'d>(document:&'d DrawingSnapshot,path:&[usize])->Result<&'d P
 struct Frame{locked_ancestors:u32,path:Vec<usize>,at:usize,matrix:[f64;6],visible:bool,groups:Vec<DrawingSceneGroup>}
 /// 🧱️ Retains source positions and copies each character or geometry entry under a grant.
 struct DocumentSceneCursor{
- limits:DocumentSceneLimits,asset_key:Option<String>,asset_active:bool,asset_text:String,asset_char:usize,asset_chunk:usize,asset_chunk_offset:usize,
+ limits:DocumentSceneLimits,asset_key:Option<String>,asset_active:bool,asset_samples:Vec<u8>,asset_char:usize,
  frames:Vec<Frame>,current:Option<Vec<usize>>,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,ids:BTreeMap<String,usize>,asset_ids:BTreeSet<String>,
  phase:&'static str,layers:usize,assets:usize,segments:usize,references:usize,source_bytes:usize,work:u64,at:usize,stroke_at:usize,text_at:usize,text_chars:usize,text_chunk:usize,text_chunk_offset:usize,
  validate_at:usize,ref_at:usize,cycle_at:usize,graph:Vec<(usize,usize)>,visited:BTreeSet<usize>,visiting:BTreeSet<usize>,cancelled:bool,failure:Option<DocumentSceneError>,cleanup_slot:u8,
@@ -66,7 +66,7 @@ struct DocumentSceneCursor{
 impl DocumentSceneCursor{
  pub fn new(document:&DrawingSnapshot,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{
   if !(1..=1024).contains(&limits.max_nodes)||!(1..=32).contains(&limits.max_depth)||!(1..=65536).contains(&limits.max_segments)||!(1..=32768).contains(&limits.max_references)||!(1..=268439552).contains(&limits.max_source_bytes)||document.layers.len()>limits.max_nodes||document.assets.len()>1024{return Err(invalid("Invalid scene preparation limits or document"));}
-  Ok(Self{limits,asset_key:None,asset_active:false,asset_text:String::new(),asset_char:0,asset_chunk:0,asset_chunk_offset:0,frames:vec![Frame{locked_ancestors:0,path:Vec::new(),at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,groups:Vec::new()}],current:None,node:None,plan:DocumentScenePlan::default(),ids:BTreeMap::new(),asset_ids:BTreeSet::new(),phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk:0,text_chunk_offset:0,validate_at:0,ref_at:0,cycle_at:0,graph:Vec::new(),visited:BTreeSet::new(),visiting:BTreeSet::new(),cancelled:false,failure:None,cleanup_slot:0})
+  Ok(Self{limits,asset_key:None,asset_active:false,asset_samples:Vec::new(),asset_char:0,frames:vec![Frame{locked_ancestors:0,path:Vec::new(),at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,groups:Vec::new()}],current:None,node:None,plan:DocumentScenePlan::default(),ids:BTreeMap::new(),asset_ids:BTreeSet::new(),phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk:0,text_chunk_offset:0,validate_at:0,ref_at:0,cycle_at:0,graph:Vec::new(),visited:BTreeSet::new(),visiting:BTreeSet::new(),cancelled:false,failure:None,cleanup_slot:0})
  }
  fn start(&mut self,layer:&DrawingLayerNode,path:Vec<usize>,parent:[f64;6],visible:bool,groups:Vec<DrawingSceneGroup>,locks:u32)->Result<(),DocumentSceneError>{
   if path.is_empty()||path.len()>self.limits.max_depth{return Err(invalid("Scene source path exceeds depth limit"));}
@@ -114,11 +114,11 @@ impl DocumentSceneCursor{
    "assets"=>{
     if self.asset_active{
      let key=self.asset_key.as_ref().unwrap();let asset=document.assets.get(key).ok_or_else(||invalid("Captured scene asset disappeared"))?;
-     if self.asset_char==asset.data.len(){self.plan.assets.push(RasterSceneAsset{id:key.clone(),mime:asset.mime.to_string_owner(),data:Arc::new(std::mem::take(&mut self.asset_text))});self.asset_ids.insert(key.clone());self.asset_active=false;self.assets+=1;return Ok(());}
-     let Some(ch)=text_scalar(&asset.data,&mut self.asset_chunk,&mut self.asset_chunk_offset)? else{return Ok(());};self.asset_text.try_reserve(ch.len_utf8()).map_err(|_|invalid("Scene source allocation failed"))?;self.asset_text.push(ch);self.asset_char+=ch.len_utf8();self.source_bytes+=ch.len_utf8();return Ok(());
+     if self.asset_char==asset.samples.len(){self.plan.assets.push(RasterSceneAsset{id:key.clone(),image:Arc::new(semio_framework_pixels::RasterImage{width:asset.width,height:asset.height,pixels:std::mem::take(&mut self.asset_samples)})});self.asset_ids.insert(key.clone());self.asset_active=false;self.assets+=1;return Ok(());}
+     let sample=asset.samples.get(self.asset_char).ok_or_else(||invalid("Captured scene image sample changed"))?;self.asset_samples.try_reserve(4).map_err(|_|invalid("Scene sample allocation failed"))?;self.asset_samples.extend_from_slice(sample);self.asset_char+=1;self.source_bytes+=4;return Ok(());
     }
     let next=document.assets.retained_entries().get(self.assets).map(|(key,asset)|(key,asset));
-    if let Some((key,asset))=next{id(key)?;if asset.mime.is_empty()||asset.mime.len()>128||asset.data.is_empty()||asset.data.len()>self.limits.max_source_bytes.saturating_sub(self.source_bytes){return Err(invalid("Invalid source asset catalog or source byte limit"));}self.asset_key=Some(key.to_string_owner());self.asset_active=true;self.asset_char=0;self.asset_chunk=0;self.asset_chunk_offset=0;}else{self.phase="layers";}
+    if let Some((key,asset))=next{id(key)?;let count=(asset.width as usize).checked_mul(asset.height as usize).ok_or_else(||invalid("Scene image extent overflow"))?;if count==0||count>16_777_216||asset.samples.len()!=count||count.checked_mul(4).is_none_or(|bytes|bytes>self.limits.max_source_bytes.saturating_sub(self.source_bytes)){return Err(invalid("Invalid intrinsic image extent or sample byte limit"));}self.asset_key=Some(key.to_string_owner());self.asset_active=true;self.asset_char=0;}else{self.phase="layers";}
    }
    "layers"=>{let Some(f)=self.frames.last_mut()else{self.phase="validation";return Ok(());};let layers=scene_layers_at(document,&f.path)?;if f.at==layers.len(){if f.groups.pop().is_none(){self.frames.pop();}return Ok(());}let layer=layers.get(f.at).ok_or_else(||invalid("Captured scene layer disappeared"))?;let mut path=f.path.clone();path.push(f.at);f.at+=1;let(parent,visible,groups,locks)=(f.matrix,f.visible,f.groups.clone(),f.locked_ancestors);self.start(layer,path,parent,visible,groups,locks)?;}
    "paint"=>self.paint(document)?,
@@ -135,9 +135,9 @@ impl DocumentSceneCursor{
   }Ok(())
  }
  pub fn advance(&mut self,document:&DrawingSnapshot,budget:usize)->Result<DocumentSceneProgress,DocumentSceneError>{if budget==0||budget as u128>9_007_199_254_740_991{return Err(invalid("Invalid scene preparation work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}for _ in 0..budget{if self.phase=="complete"{break;}if let Err(error)=self.step(document){self.failure=Some(error.clone());return Err(error);}self.work+=1;}Ok(DocumentSceneProgress{phase:self.phase,layers:self.layers,assets:self.assets,segments:self.segments,references:self.references,source_bytes:self.source_bytes,work:self.work,done:self.phase=="complete"})}
- fn cleanup(&mut self)->bool{let complete=match self.cleanup_slot{0=>self.ids.pop_first().is_none(),1=>self.asset_ids.pop_first().is_none(),2=>self.visited.pop_first().is_none(),3=>self.visiting.pop_first().is_none(),4=>{self.graph=Vec::new();true},5=>{self.asset_key=None;true},6=>{self.asset_text=String::new();true},_=>unreachable!()};if complete{self.cleanup_slot+=1;}self.cleanup_slot==7}
+ fn cleanup(&mut self)->bool{let complete=match self.cleanup_slot{0=>self.ids.pop_first().is_none(),1=>self.asset_ids.pop_first().is_none(),2=>self.visited.pop_first().is_none(),3=>self.visiting.pop_first().is_none(),4=>{self.graph=Vec::new();true},5=>{self.asset_key=None;true},6=>{self.asset_samples=Vec::new();true},_=>unreachable!()};if complete{self.cleanup_slot+=1;}self.cleanup_slot==7}
  fn into_retirement(mut self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.plan))}else{None};let draft=if output.is_some(){None}else{Some(ScenePlanCloseJob::new(std::mem::take(&mut self.plan)))};let node=self.node.take().map(|node|ScenePlanCloseJob::new(DocumentScenePlan{assets:Vec::new(),nodes:vec![node]}));self.cancelled=true;(DocumentSceneRetirement{cursor:Some(self),draft,node,slot:0,counter:Default::default()},output)}
- fn clear(&mut self){self.asset_key=None;self.asset_active=false;self.asset_text=String::new();self.frames.clear();self.current=None;self.node=None;self.plan=DocumentScenePlan::default();self.ids.clear();self.asset_ids.clear();self.graph.clear();self.visited.clear();self.visiting.clear();}
+ fn clear(&mut self){self.asset_key=None;self.asset_active=false;self.asset_samples=Vec::new();self.frames.clear();self.current=None;self.node=None;self.plan=DocumentScenePlan::default();self.ids.clear();self.asset_ids.clear();self.graph.clear();self.visited.clear();self.visiting.clear();}
  pub fn cancel(&mut self){self.cancelled=true;self.clear();}
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!="complete"{return Err(DocumentSceneError::Incomplete);}Ok(std::mem::take(&mut self.plan))}
 }
@@ -150,7 +150,7 @@ impl DocumentSceneRetirement{
   1=>if let Some(close)=&mut self.node{if !close.advance(1).expect("positive node cleanup grant").done{return false;}self.node=None;},
   2=>{if let Some(frame)=cursor.frames.last_mut(){if frame.groups.pop().is_none(){cursor.frames.pop();}return false;}cursor.frames=Vec::new();},
   3=>if cursor.ids.pop_first().is_some(){return false;},4=>if cursor.asset_ids.pop_first().is_some(){return false;},5=>if cursor.visited.pop_first().is_some(){return false;},6=>if cursor.visiting.pop_first().is_some(){return false;},
-  7=>cursor.graph=Vec::new(),8=>cursor.current=None,9=>cursor.asset_key=None,10=>cursor.asset_text=String::new(),11=>cursor.plan=DocumentScenePlan::default(),_=>unreachable!()
+  7=>cursor.graph=Vec::new(),8=>cursor.current=None,9=>cursor.asset_key=None,10=>cursor.asset_samples=Vec::new(),11=>cursor.plan=DocumentScenePlan::default(),_=>unreachable!()
  }self.slot+=1;if self.slot==12{self.cursor=None;}self.terminal_is_empty()}
  pub fn advance(&mut self,grant:usize)->Result<DocumentSceneRetirementProgress,DocumentSceneError>{let mut counter=self.counter;let result=counter.advance(grant,||self.step());self.counter=counter;result.map_err(invalid)}
 }
@@ -172,8 +172,8 @@ pub fn resolved_scene_input(plan:DocumentScenePlan,viewport:DocumentSceneViewpor
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 #[derive(Clone,Debug)]
-pub struct DocumentSceneViewport{pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize,pub max_bytes:usize,pub max_chunks:usize}
-impl DocumentSceneViewport{fn input(&self,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>)->RasterSceneInput{RasterSceneInput{width:self.width,height:self.height,origin:self.origin,tolerance:self.tolerance,max_pixels:self.max_pixels,max_source_bytes:self.max_source_bytes,max_bytes:self.max_bytes,max_chunks:self.max_chunks,assets,nodes}}}
+pub struct DocumentSceneViewport{pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize}
+impl DocumentSceneViewport{fn input(&self,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>)->RasterSceneInput{RasterSceneInput{width:self.width,height:self.height,origin:self.origin,tolerance:self.tolerance,max_pixels:self.max_pixels,max_source_bytes:self.max_source_bytes,assets,nodes}}}
 #[derive(Clone,Debug)]
 pub struct DocumentRasterProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub raster:Option<crate::schema::scene_raster::RasterSceneProgress>,pub nodes:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Copy,Debug)]

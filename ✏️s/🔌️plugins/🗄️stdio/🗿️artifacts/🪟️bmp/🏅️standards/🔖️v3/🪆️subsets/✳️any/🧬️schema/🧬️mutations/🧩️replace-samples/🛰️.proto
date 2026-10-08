@@ -1,0 +1,23 @@
+syntax = "proto3";
+package semio.s_stdio_bmp.mutations.replace_samples;
+
+message BmpRegion {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+}
+
+message BmpNativeSample {
+  uint32 red = 1;
+  uint32 green = 2;
+  uint32 blue = 3;
+  uint32 alpha = 4;
+  uint32 reserved = 5;
+}
+
+message ReplaceSamples {
+  BmpRegion region = 1;
+  bytes indices = 2;
+  repeated BmpNativeSample samples = 3;
+}

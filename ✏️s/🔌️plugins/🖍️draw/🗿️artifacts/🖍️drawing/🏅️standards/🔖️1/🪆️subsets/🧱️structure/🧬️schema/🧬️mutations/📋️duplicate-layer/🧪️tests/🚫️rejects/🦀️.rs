@@ -12,7 +12,8 @@
 //! same class of forbidden hand-reimplementation the recipe bans for the binary codecs. The
 //! `target-missing` branch reaches no hash at all, so it is the branch this fixture pins.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::find_drawing_layer;
 use crate::{DrawingDiff, DrawingSnapshot};
 

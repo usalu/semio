@@ -14,12 +14,18 @@
   "betaComputed": null,
   "permanents": {
     "removed": [
-      "G-sup",
-      "G-inf"
-    ],
-    "added": [
       {
-        "after": null,
+        "id": "G-sup",
+        "index": 0
+      },
+      {
+        "id": "G-inf",
+        "index": 1
+      }
+    ],
+    "inserted": [
+      {
+        "index": 0,
         "row": {
           "id": "G-sup",
           "kind": "g_sup",
@@ -27,7 +33,7 @@
         }
       },
       {
-        "after": "G-sup",
+        "index": 1,
         "row": {
           "id": "G-inf",
           "kind": "g_inf",
@@ -35,31 +41,37 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "variables": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "accidentals": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "seismics": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridgeSls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "effects": []

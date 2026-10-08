@@ -6,9 +6,9 @@ use crate::standards::v1::subsets::any::schema::mutations::delete_generation::De
 use crate::Generation3dSnapshot;
 
 pub fn diff(payload: &DeleteGeneration, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-    if !base.generation.generations.iter().any(|entry| entry.id == payload.id) {
+    let Some(index) = base.generation.generations.iter().position(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Generation \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
+    };
     let selection = (base.generation.selected_generation_id.as_deref() == Some(payload.id.as_str())).then(|| Generation3dSelectionChange { id: base.generation.generations.iter().find(|entry| entry.id != payload.id).map(|entry| entry.id.clone()) });
-    protocol::MutationOutcome::new(Generation3dDiff { generations: Some(Generation3dGenerationsDelta { removed: vec![payload.id.clone()], ..Default::default() }), selected_generation: selection, ..Default::default() })
+    protocol::MutationOutcome::new(Generation3dDiff { generations: Some(Generation3dGenerationsDelta::removal(&base.generation.generations, index)), selected_generation: selection, ..Default::default() })
 }

@@ -46,48 +46,54 @@
   "options": null,
   "decisions": null,
   "validations": {
-    "added": [
+    "removed": [
       {
         "id": "validation-record-a",
-        "name": "Validation Record A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "subjectId": "",
-        "subjectKind": "Replaced Validation Record A",
-        "validationType": "",
-        "method": null,
-        "criteria": [],
-        "result": "pending",
-        "evidence": [],
-        "validatorIds": [],
-        "validationDate": null,
-        "nextReviewDate": null,
-        "findings": [],
-        "nonConformities": [],
-        "correctiveActions": [],
-        "waivers": [],
-        "standards": [],
-        "traceLinks": [],
-        "reportId": null,
-        "confidenceLevel": null,
-        "validationNotes": []
+        "index": 0
       }
     ],
-    "removed": [
-      "validation-record-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "validation-record-a",
+          "name": "Validation Record A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "subjectId": "",
+          "subjectKind": "Replaced Validation Record A",
+          "validationType": "",
+          "method": null,
+          "criteria": [],
+          "result": "pending",
+          "evidence": [],
+          "validatorIds": [],
+          "validationDate": null,
+          "nextReviewDate": null,
+          "findings": [],
+          "nonConformities": [],
+          "correctiveActions": [],
+          "waivers": [],
+          "standards": [],
+          "traceLinks": [],
+          "reportId": null,
+          "confidenceLevel": null,
+          "validationNotes": []
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "performance": null,
   "quality": null,

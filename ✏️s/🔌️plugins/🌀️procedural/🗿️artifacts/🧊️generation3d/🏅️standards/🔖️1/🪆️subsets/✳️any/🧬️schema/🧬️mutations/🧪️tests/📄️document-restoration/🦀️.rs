@@ -1,11 +1,12 @@
 //! 📄️ Original semantic mutation authority for imported generation selection and preview restoration.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,inverse_generation3d_mutation,Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation, Generation3dMutation};
 
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::editor::generation3d::Generation3dPlayApp;
 use semio_framework_plugin::ArtifactEditor;
 use protocol::{Mutation, OpBinary, OpText};
+use crate::central_apply::{apply_generation3d_mutation};
 
 #[test]
 fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracle() {
@@ -27,8 +28,8 @@ fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracl
         if let Some(value) = binary { value.retire_cold(); }
         if let Some(value) = text { value.retire_cold(); }
         let (delta, messages) = mutation.diff(&base).into_parts();
-        let sparse = delta.artifact.is_none() && delta.host_snapshot.is_none();
-        let no_op = case["status"] != "no-op" || delta.generation.is_none();
+        let sparse = delta.schema.is_none() && delta.camera.is_none() && delta.widgets.is_none() && delta.synapses.is_none() && delta.layout.is_none() && delta.generations.is_none();
+        let no_op = case["status"] != "no-op" || (delta.selected_generation.is_none() && delta.preview_text.is_none());
         delta.retire_cold();
         let inverse = inverse_generation3d_mutation(&base, &mutation).unwrap();
         let mut current = Generation3dSnapshotRead::new((*base).clone());

@@ -21,49 +21,55 @@
   "humanFactors": null,
   "accessibility": null,
   "privacy": {
-    "added": [
+    "removed": [
       {
         "id": "privacy-requirement-a",
-        "name": "Privacy Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "privacyKind": "public",
-        "privacyType": "Replaced Privacy Requirement A",
-        "level": null,
-        "subjectIds": [],
-        "elementIds": [],
-        "visualPrivacy": [],
-        "acousticPrivacy": [],
-        "dataPrivacy": [],
-        "screeningRequired": false,
-        "enclosureRequired": false,
-        "accessRestrictions": [],
-        "observationRisk": null,
-        "regulatoryBasis": [],
-        "culturalConsiderations": [],
-        "technologyControls": [],
-        "signage": [],
-        "monitoringRestrictions": [],
-        "retentionPolicy": null,
-        "breachResponse": [],
-        "ownerId": null
+        "index": 0
       }
     ],
-    "removed": [
-      "privacy-requirement-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "privacy-requirement-a",
+          "name": "Privacy Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "privacyKind": "public",
+          "privacyType": "Replaced Privacy Requirement A",
+          "level": null,
+          "subjectIds": [],
+          "elementIds": [],
+          "visualPrivacy": [],
+          "acousticPrivacy": [],
+          "dataPrivacy": [],
+          "screeningRequired": false,
+          "enclosureRequired": false,
+          "accessRestrictions": [],
+          "observationRisk": null,
+          "regulatoryBasis": [],
+          "culturalConsiderations": [],
+          "technologyControls": [],
+          "signage": [],
+          "monitoringRestrictions": [],
+          "retentionPolicy": null,
+          "breachResponse": [],
+          "ownerId": null
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "safety": null,
   "security": null,

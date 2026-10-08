@@ -5,25 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": { "$ref": "#/$defs/FlowArtifact", "x-semio-state": "artifact" },
-    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "content": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio",
       "x-semio-child-standard": "v1",
       "x-semio-child-subset": "flow"
-    }
-  },
-  "$defs": {
-    "FlowArtifact": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "content"],
-      "properties": {
-        "schema": { "type": "string" },
-        "content": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }
-      }
     }
   }
 }

@@ -9,6 +9,17 @@ import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️pr
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
 
+/** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
+class InstalledServiceSourceScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw new Error("installed-service-source accepts no arguments");
+    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts");
+    const receivers=["🌉️component-cold-map-patch","💡️inference-control","📇️native-codecs"].map(name=>join(this.repoRoot,`🌎️hub/🧩️compositions/🌍️gis/🧪️tests/${name}/🟦️.ts`));
+    await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,...receivers],this.repoRoot,"installed-service-strict",TEST_LEVEL_BUDGET_MS.long);
+    await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"installed-service-source",TEST_LEVEL_BUDGET_MS.long);
+  }
+}
+
 /** ⚖️ Verifies bounded installed service dispatch, transport and contribution removal. */
 class InstalledServiceCheckScript extends BundleScript {
   async run(): Promise<void> {
@@ -207,6 +218,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-channel-oracles", ChannelOraclesTestScript)
   .register("typecheck", TypecheckScript)
   .register("mutation-verb-vocabulary-check", MutationVerbVocabularyCheckScript)
+  .register("installed-service-source", InstalledServiceSourceScript)
   .register("installed-service-check", InstalledServiceCheckScript)
   .register("generate-wgpu", GenerateWgpuScript)
   .register("check-wgpu", CheckWgpuScript)

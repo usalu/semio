@@ -1,26 +1,138 @@
 syntax = "proto3";
-package semio.s.wfc.grid2d;
+package semio.s.wfc.grid2d.diff;
 
-import "snapshot.proto";
+// 🔺️ grid2d diff — scalars are optional absolutes; every list is a positional list delta (`protocol::list_delta`): removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
 
-message Grid2dTileRow {
-  uint64 index = 1;
-  WfcTile2d tile = 2;
+message Grid2dTilePatch {
+  optional double weight = 1;
+  optional WfcTileMedia2d media = 2;
+  optional string label = 3; // set or clear
 }
 
-message Grid2dRuleRow {
-  uint64 index = 1;
-  WfcAdjacencyRule2d rule = 2;
+message Grid2dTilesRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message Grid2dPinnedRow {
-  uint64 index = 1;
-  WfcPinnedCell2d cell = 2;
+message Grid2dTilesInsertion {
+  uint32 index = 1;
+  WfcTile2d row = 2;
 }
 
-message Grid2dMaskedRow {
-  uint64 index = 1;
-  WfcCell2d cell = 2;
+message Grid2dTilesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid2dTilesModification {
+  string id = 1;
+  Grid2dTilePatch patch = 2;
+}
+
+message Grid2dTilesDelta {
+  repeated Grid2dTilesRemoval removed = 1;
+  repeated Grid2dTilesInsertion inserted = 2;
+  repeated Grid2dTilesRelocation moved = 3;
+  repeated Grid2dTilesModification modified = 4;
+}
+
+message Grid2dRulePatch {
+  optional string tile_a_id = 1;
+  optional string tile_b_id = 2;
+  optional WfcDirection2d direction = 3;
+  optional bool allowed = 4;
+}
+
+message Grid2dRulesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid2dRulesInsertion {
+  uint32 index = 1;
+  WfcAdjacencyRule2d row = 2;
+}
+
+message Grid2dRulesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid2dRulesModification {
+  string id = 1;
+  Grid2dRulePatch patch = 2;
+}
+
+message Grid2dRulesDelta {
+  repeated Grid2dRulesRemoval removed = 1;
+  repeated Grid2dRulesInsertion inserted = 2;
+  repeated Grid2dRulesRelocation moved = 3;
+  repeated Grid2dRulesModification modified = 4;
+}
+
+message Grid2dPinnedPatch {
+  optional string tile_id = 1;
+}
+
+message Grid2dPinnedRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid2dPinnedInsertion {
+  uint32 index = 1;
+  WfcPinnedCell2d row = 2;
+}
+
+message Grid2dPinnedRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid2dPinnedModification {
+  string id = 1;
+  Grid2dPinnedPatch patch = 2;
+}
+
+message Grid2dPinnedDelta {
+  repeated Grid2dPinnedRemoval removed = 1;
+  repeated Grid2dPinnedInsertion inserted = 2;
+  repeated Grid2dPinnedRelocation moved = 3;
+  repeated Grid2dPinnedModification modified = 4;
+}
+
+message Grid2dMaskedPatch {
+}
+
+message Grid2dMaskedRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid2dMaskedInsertion {
+  uint32 index = 1;
+  WfcCell2d row = 2;
+}
+
+message Grid2dMaskedRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid2dMaskedModification {
+  string id = 1;
+  Grid2dMaskedPatch patch = 2;
+}
+
+message Grid2dMaskedDelta {
+  repeated Grid2dMaskedRemoval removed = 1;
+  repeated Grid2dMaskedInsertion inserted = 2;
+  repeated Grid2dMaskedRelocation moved = 3;
+  repeated Grid2dMaskedModification modified = 4;
 }
 
 message Grid2dDiff {
@@ -32,12 +144,8 @@ message Grid2dDiff {
   optional double cell_height = 6;
   optional bool periodic_x = 7;
   optional bool periodic_y = 8;
-  repeated string tiles_removed = 9;
-  repeated Grid2dTileRow tiles_upserted = 10;
-  repeated string rules_removed = 11;
-  repeated Grid2dRuleRow rules_upserted = 12;
-  repeated string pinned_removed = 13;
-  repeated Grid2dPinnedRow pinned_upserted = 14;
-  repeated string masked_removed = 15;
-  repeated Grid2dMaskedRow masked_upserted = 16;
+  Grid2dTilesDelta tiles = 9;
+  Grid2dRulesDelta rules = 10;
+  Grid2dPinnedDelta pinned = 11;
+  Grid2dMaskedDelta masked = 12;
 }

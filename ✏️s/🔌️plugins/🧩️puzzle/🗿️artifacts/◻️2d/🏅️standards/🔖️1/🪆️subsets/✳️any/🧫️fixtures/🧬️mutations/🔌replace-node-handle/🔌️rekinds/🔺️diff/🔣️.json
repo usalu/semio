@@ -4,14 +4,14 @@
   "edges": null,
   "meta": null,
   "nodes": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
         "patch": {
           "handles": {
-            "added": [],
-            "patched": [
+            "inserted": [],
+            "modified": [
               {
                 "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d1",
                 "patch": {
@@ -19,14 +19,14 @@
                 }
               }
             ],
-            "removed": [],
-            "reordered": null
+            "moved": [],
+            "removed": []
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetRegions": null

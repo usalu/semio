@@ -21,7 +21,7 @@ impl Serializer<DrawingSnapshot> for DrawingIntoPng {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoPng: {message}")));
-        let bytes = encode_drawing(&drawing_document_to_semio_drawing(from), SemioDrawingFormat::Png).map_err(error)?;
+        let bytes = encode_drawing(&drawing_document_to_semio_drawing(from).map_err(error)?, SemioDrawingFormat::Png).map_err(error)?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
 }

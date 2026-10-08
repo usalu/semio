@@ -1,5 +1,5 @@
 {
-  "byteOrder": "littleEndian",
+  "schema": "stdio.tiff",
   "ifds": [
     {
       "entries": [
@@ -34,15 +34,6 @@
           }
         },
         {
-          "tag": 259,
-          "values": {
-            "kind": "short",
-            "value": [
-              1
-            ]
-          }
-        },
-        {
           "tag": 262,
           "values": {
             "kind": "short",
@@ -52,52 +43,108 @@
           }
         },
         {
+          "tag": 277,
+          "values": {
+            "kind": "short",
+            "value": [
+              4
+            ]
+          }
+        },
+        {
           "tag": 305,
           "values": {
             "kind": "ascii",
             "value": [
-              68,
-              105,
-              114,
-              101,
-              99,
-              116,
-              32,
-              79,
-              119,
-              110,
-              101,
-              114
+              "Direct Owner"
+            ]
+          }
+        },
+        {
+          "tag": 338,
+          "values": {
+            "kind": "short",
+            "value": [
+              2
             ]
           }
         }
       ],
-      "storage": {
-        "kind": "strips",
-        "offsetsKind": "long",
-        "byteCountsKind": "long",
-        "chunks": [
-          [
-            255,
-            0,
-            0,
-            255,
-            0,
-            255,
-            0,
-            255,
-            0,
-            0,
-            255,
-            255,
-            255,
-            255,
-            255,
-            255
+      "blocks": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 2,
+          "height": 2,
+          "channels": 4,
+          "samples": [
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            },
+            {
+              "lo": 255,
+              "hi": 0
+            }
           ]
-        ]
-      }
+        }
+      ]
     }
-  ],
-  "schema": "stdio.tiff"
+  ]
 }

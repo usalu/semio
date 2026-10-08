@@ -1,8 +1,9 @@
 //! 📸️ Resolves native first-ID deletion targets before copying and retiring paged candidate owners.
 
+use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::{Puzzle2dCloseAxis,close_child_demand,close_demand_methods};
 use super::{DeleteNode, Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep, Puzzle2dSnapshot};
 use crate::{Puzzle2dEdge, Puzzle2dNode};
-use semio_framework_value::{SnapshotRetirementStep, ValueError, ValueRefusalKind, list::{PagedList, PagedListEditCursor}, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdProgress, BoundedOrdStep}}};
+use semio_framework_value::{ValueError, ValueRefusalKind, list::{PagedList, PagedListEditCursor}, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdProgress, BoundedOrdStep}}};
 use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::Puzzle2dPreparationChild;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
@@ -50,20 +51,20 @@ impl Default for Puzzle2dDeleteNodeCandidateCursor {
 impl Puzzle2dDeleteNodeCandidateCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 23 { return Err(refusal("delete candidate is closing or spent")); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         mutation.bind(&mut self.mutation)?;
         match self.phase {
             0 => {
                 if let Some(step)=self.preparation.ensure(grant)? {return Ok(step);}
-                let step = self.preparation.owner_mut().advance(source, mutation, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes })?;
+                let step = self.preparation.owner_mut().advance(source, mutation, grant)?;
                 let progress = match step {
                     Puzzle2dDeleteNodePreparationStep::Pending(progress) => progress,
                     Puzzle2dDeleteNodePreparationStep::Node { index, progress } => { self.node = index;self.disposition = if index.is_some() { Puzzle2dDeleteNodeDisposition::Changed } else { Puzzle2dDeleteNodeDisposition::Missing };progress }
                     Puzzle2dDeleteNodePreparationStep::Edge { index, progress } => { self.event = index;self.search = 0;self.phase = 2;progress }
                     Puzzle2dDeleteNodePreparationStep::Complete(progress) => { self.preparation.begin_close();self.phase = 8;progress }
                 };
-                Ok(comparison_progress(progress))
+                Ok(RetainedCloneStep::Progress(progress))
             }
             2 => {
                 let (search, event) = (self.search, self.event);
@@ -76,8 +77,8 @@ impl Puzzle2dDeleteNodeCandidateCursor {
                 }
             }
             3 => {
-                let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-                if step == SnapshotRetirementStep::Complete { self.comparison = Default::default();if self.matched { self.position = 0;self.phase = 4; } else { self.search += 1;self.phase = 2; } }
+                let step = self.comparison.close_step(grant)?;
+                if self.comparison.terminal_is_empty() { self.comparison = Default::default();if self.matched { self.position = 0;self.phase = 4; } else { self.search += 1;self.phase = 2; } }
                 Ok(close_progress(step))
             }
             4 => {
@@ -121,7 +122,7 @@ impl Puzzle2dDeleteNodeCandidateCursor {
                 self.candidate = Some(self.snapshot_clone.take().ok_or_else(|| refusal("delete snapshot clone completed without an owner"))?);self.snapshot_clone.begin_close();self.phase = 12;
                 Ok(payload_progress(size_of::<Puzzle2dSnapshot>()))
             }
-            12 => { let step = self.snapshot_clone.close_granted(grant)?;if self.snapshot_clone.terminal_is_empty() { self.phase = 13; }Ok(RetainedCloneStep::Progress(step.progress())) }
+            12 => { let step = self.snapshot_clone.close_step(grant)?;if self.snapshot_clone.terminal_is_empty() { self.phase = 13; }Ok(RetainedCloneStep::Progress(step.progress())) }
             13 => {
                 if grant.maximum_copy_bytes < size_of::<PagedListEditCursor>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 let index = self.node.ok_or_else(|| refusal("delete candidate lost its first node ordinal"))?;
@@ -175,12 +176,31 @@ impl Puzzle2dDeleteNodeCandidateCursor {
     pub fn take(&mut self) -> Option<Puzzle2dDeleteNodeCandidate> { if self.closing || self.phase != 22 { return None; }self.phase = 23;Some(Puzzle2dDeleteNodeCandidate { disposition: self.disposition, snapshot: self.candidate.take() }) }
     pub fn begin_close(&mut self) { self.closing = true;self.preparation.begin_close();self.comparison.begin_close();self.snapshot_clone.begin_close(); }
 
+    fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
+        if !self.preparation.terminal_is_empty(){return close_child_demand!(axis,self.preparation)}
+        if !self.comparison.terminal_is_empty(){return match axis{Puzzle2dCloseAxis::Copy=>self.comparison.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.comparison.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.comparison.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>BoundedOrdCursor::next_close_depth_demand(&self.comparison)}}
+        if !self.snapshot_clone.terminal_is_empty(){return axis.retained::<Puzzle2dSnapshot,_>(&self.snapshot_clone)}
+        if let Some(owner)=self.node_close.as_ref(){return axis.retirement(owner)}
+        if self.pending_node.is_some(){return axis.inline::<Puzzle2dNode>()}
+        if let Some(owner)=self.edge_close.as_ref(){return axis.retirement(owner)}
+        if self.pending_edge.is_some(){return axis.inline::<Puzzle2dEdge>()}
+        if let Some(owner)=self.candidate_close.as_ref(){return axis.retirement(owner)}
+        if self.candidate.is_some(){return axis.inline::<Puzzle2dSnapshot>()}
+        if let Some(owner)=self.removal_close.as_ref(){return axis.retirement(owner)}
+        if self.removals.is_some(){return axis.inline::<PagedList<usize,{usize::MAX}>>()}
+        if self.edit.is_some(){return axis.inline::<Option<PagedListEditCursor>>()}
+        if self.pending_index.is_some(){return axis.inline::<Option<usize>>()}
+        axis.binding(if self.source.is_some(){&self.source}else{&self.mutation})
+    }
+
+    close_demand_methods!(next_close_copy_byte_demand,next_close_capacity_byte_demand,next_close_release_byte_demand,next_close_depth_demand);
+
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(refusal("delete candidate closure was not started")); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return self.preparation.close_granted(grant); }
-        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(1, grant.maximum_release_bytes).map(close_progress); }
-        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(grant).map(close_progress); }
+        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.node_close.as_mut() { let step = owner.step(grant)?;if owner.terminal_is_empty() { self.node_close = None; }return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.pending_node.is_some() {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dNode>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -201,10 +221,10 @@ impl Puzzle2dDeleteNodeCandidateCursor {
             if grant.maximum_copy_bytes < size_of::<PagedList<usize, {usize::MAX}>>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
             match ControlledRetirement::new(self.removals.take().unwrap()) { Ok(owner) => self.removal_close = Some(owner), Err((error, owner)) => { self.removals = Some(owner);return Err(error); } }return Ok(payload_progress(size_of::<PagedList<usize, {usize::MAX}>>()));
         }
-        if self.edit.take().is_some() || self.pending_index.take().is_some() { return Ok(release_progress(0)); }
-        let step = RetainedCloneBinding::close_one(&mut self.source, 1)?;if step != SnapshotRetirementStep::Complete { return Ok(close_progress(step)); }
-        let step = RetainedCloneBinding::close_one(&mut self.mutation, 1)?;
-        Ok(if step == SnapshotRetirementStep::Complete { RetainedCloneStep::Complete(Default::default()) } else { close_progress(step) })
+        if self.edit.is_some() {let bytes=size_of::<Option<PagedListEditCursor>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.edit=None;return Ok(payload_progress(bytes));}
+        if self.pending_index.is_some() {let bytes=size_of::<Option<usize>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.pending_index=None;return Ok(payload_progress(bytes));}
+        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant)?;
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { close_progress(step) })
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.preparation.terminal_is_empty() && self.comparison.terminal_is_empty() && self.snapshot_clone.terminal_is_empty() && self.removals.is_none() && self.removal_close.is_none() && self.candidate.is_none() && self.candidate_close.is_none() && self.pending_node.is_none() && self.node_close.is_none() && self.pending_edge.is_none() && self.edge_close.is_none() && self.edit.is_none() && self.pending_index.is_none() && self.source.is_none() && self.mutation.is_none() }
@@ -214,12 +234,10 @@ impl Drop for Puzzle2dDeleteNodeCandidateCursor { fn drop(&mut self) { let empty
 
 fn payload_progress(bytes: usize) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0, released_bytes: 0 }) }
 fn comparison_progress(progress: BoundedOrdProgress) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, retained_capacity_bytes: 0, released_bytes: 0 }) }
-fn close_progress(step: SnapshotRetirementStep) -> RetainedCloneStep { RetainedCloneStep::Progress(match step { SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes }, _ => Default::default() }) }
+fn close_progress(step: RetainedCloneStep) -> RetainedCloneStep { RetainedCloneStep::Progress(step.progress()) }
 fn edit_progress(step: semio_framework_value::list::PagedListEditStep) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: step.moved_items, copied_bytes: step.progress.placed_bytes, retained_capacity_bytes: step.progress.allocated_bytes, released_bytes: step.progress.released_allocation_bytes }) }
 fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-
-fn release_progress(bytes: usize) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }) }

@@ -1,0 +1,21 @@
+{
+  "role": "observed, not authored",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧬️schema/🔣️.json",
+      "sha256": "393adc926a6b87c02d344035293db539316ff4619e34d0eef553120dd3a37741"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🟦️.ts",
+      "sha256": "186411d3154c8bcfba55e6bc30ac5b585abd712b5bb25fffac2d0c60f3ea4d2b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧬️schema/🧹️retirement/🔣️.json",
+      "sha256": "27561879a42977b3424c8c70c2f1da75af6bbcff56ec9926ed1f6a1e8e8efed9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🟦️.ts",
+      "sha256": "61279c3271cd828669727e837cd26e1275e2d88f142cdb60a0699f7d2a0452fe"
+    }
+  ]
+}

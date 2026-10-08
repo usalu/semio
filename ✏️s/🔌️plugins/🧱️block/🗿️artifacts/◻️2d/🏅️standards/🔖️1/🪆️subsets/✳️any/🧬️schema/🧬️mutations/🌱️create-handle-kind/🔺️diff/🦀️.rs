@@ -8,6 +8,6 @@ pub fn diff(payload: &super::CreateHandleKind, base: &Block2dSnapshot) -> protoc
     if base.handle_kinds.iter().any(|item| item.id == payload.handle_kind.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "handle-kind", payload.handle_kind.id), vec![payload.handle_kind.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block2dDiff { handle_kinds: Some(Block2dHandleKindsDelta { added: vec![payload.handle_kind.clone()], reordered: semio_s_plugin_block::block_insert_order(base.handle_kinds.iter().map(|item| item.id.as_str()), &payload.handle_kind.id, payload.index), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { handle_kinds: Block2dHandleKindsDelta::insertion(semio_s_plugin_block::block_insert_index(base.handle_kinds.len(), payload.index), payload.handle_kind.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

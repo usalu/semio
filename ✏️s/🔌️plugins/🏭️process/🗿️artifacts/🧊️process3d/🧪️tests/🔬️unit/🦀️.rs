@@ -127,21 +127,14 @@ async fn default_workshop_has_the_three_generic_machines() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn workshop_machine_patch_apply_and_diff_round_trip() {
+async fn workshop_machine_patch_apply_only_changes_the_named_fields() {
     let mut machine = WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![sample_capability()] };
     let original = machine.clone();
     let patch = WorkshopMachinePatch { label: Some("Big Saw".into()), icon_id: None, capabilities: None };
     machine.apply_patch(&patch);
     assert_eq!(machine.label, "Big Saw");
     assert_eq!(machine.capabilities, original.capabilities);
-    let diff = original.diff_patch(&machine).expect("diff");
-    assert_eq!(diff, patch);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn workshop_machine_patch_diff_is_none_for_identical_machines() {
-    let machine = WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
-    assert!(machine.diff_patch(&machine).is_none());
+    assert_eq!(machine.icon_id, original.icon_id);
 }
 //#endregion 🔖️WorkshopTests
 

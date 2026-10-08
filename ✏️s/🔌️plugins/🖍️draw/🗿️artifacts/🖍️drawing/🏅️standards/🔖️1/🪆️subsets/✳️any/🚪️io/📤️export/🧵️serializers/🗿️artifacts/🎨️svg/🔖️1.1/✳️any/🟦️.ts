@@ -1,5 +1,7 @@
+import {drawingImageDataUri} from "../../../../../../🖼️image/🟦️.ts";
+import type {DrawingImageAsset} from "../../../../../../../🧬️schema/🟦️.ts";
 /** 🎨️ SVG scene serializer twin preserving paint, text and affine geometry. */
-import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathGeometrySegment, type FillStyle, type StrokeStyle } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathSegment, type FillStyle, type StrokeStyle } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
 
 import {PreparedFill} from "../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🟦️.ts";
 
@@ -7,7 +9,7 @@ export interface DrawingSvgNode {
   readonly id: string;
   readonly groups?: readonly {readonly id:string;readonly opacity:number;readonly blendMode:string}[];
   readonly transform: readonly number[];
-  readonly segments: readonly PathGeometrySegment[];
+  readonly segments: readonly PathSegment[];
   readonly fill?: FillStyle;
   readonly stroke?: StrokeStyle;
   readonly opacity: number;
@@ -15,7 +17,7 @@ export interface DrawingSvgNode {
   readonly visible: boolean;
   readonly fillRule?: string;
   readonly text?: { readonly content: string; readonly size: number };
-  readonly image?: { readonly src: string; readonly width: number; readonly height: number };
+  readonly image?: { readonly assetId: string; readonly width: number; readonly height: number };
 }
 
 const escape = (value: string | number): string => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -25,7 +27,7 @@ const finiteNumbers = (value: unknown): boolean => typeof value === "number" ? N
 const rgb = (color: readonly number[]): string => `rgb(${color.slice(0,3).map(value => value * 255).join(",")})`;
 const blendModes: Readonly<Record<string,string>> = {normal:"normal",multiply:"multiply",screen:"screen",overlay:"overlay",darken:"darken",lighten:"lighten",colorDodge:"color-dodge",colorBurn:"color-burn",hardLight:"hard-light",softLight:"soft-light",difference:"difference",exclusion:"exclusion",hue:"hue",saturation:"saturation",color:"color",luminosity:"luminosity"};
 
-export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: readonly [number,number,number,number]): string {
+export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: readonly [number,number,number,number],assets:Readonly<Record<string,DrawingImageAsset>>): string {
   if (!viewBox.every(Number.isFinite) || viewBox[2] <= 0 || viewBox[3] <= 0) throw new Error("SVG view box must have finite coordinates and positive dimensions");
   const defs: string[] = [], children: string[] = [];
   let active:NonNullable<DrawingSvgNode["groups"]>=[];
@@ -49,7 +51,7 @@ export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: rea
     const paint: Record<string,string | number> = {fill:"none",stroke:"none","fill-rule":node.fillRule ?? "evenodd"};
     const constant=node.fill ? new PreparedFill(node.fill).constantColor() : null;
     if (constant) { paint.fill=rgb(constant);paint["fill-opacity"]=constant[3]; }
-    else if (node.fill) {
+    else if (node.fill&&node.fill.kind!=="solid") {
       const fill = node.fill, id = `draw-gradient-${index}`;
       const stops = [...fill.stops].sort((a,b) => a.offset - b.offset).map(stop => element("stop",{offset:Math.min(1,Math.max(0,stop.offset)),"stop-color":rgb(stop.color),"stop-opacity":stop.color[3]})).join("");
       const attrs: Record<string,string | number> = fill.kind === "linearGradient" ? {x1:fill.x1,y1:fill.y1,x2:fill.x2,y2:fill.y2} : {cx:fill.cx,cy:fill.cy,r:fill.r,fx:fill.cx,fy:fill.cy};
@@ -67,7 +69,8 @@ export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: rea
       const lines = [...drawingTextLines(text.content)].map((line,index) => line ? element("tspan",{x:0,y:text.size + index * text.size * DRAWING_TEXT_LINE_HEIGHT},escape(line)) : "").join("");
       leaf = element("text",{...paint,"font-size":text.size,"font-family":"ui-sans-serif, system-ui, sans-serif","xml:space":"preserve"},lines);
     } else if (node.image) {
-      leaf = element("image",{x:0,y:0,width:node.image.width,height:node.image.height,preserveAspectRatio:"none",href:node.image.src,"xlink:href":node.image.src});
+      const asset=assets[node.image.assetId];if(!asset)throw Error("Missing authored image identity");const src=drawingImageDataUri(asset);
+      leaf = element("image",{x:0,y:0,width:node.image.width,height:node.image.height,preserveAspectRatio:"none",href:src,"xlink:href":src});
     } else leaf = element("path",{...paint,d:pathSegmentsToSvgD(node.segments)});
     const wrapper: Record<string,string | number> = {transform:`matrix(${node.transform.join(" ")})`,opacity:node.opacity,"data-layer-id":node.id};
     if (node.blendMode !== "normal") wrapper.style = `mix-blend-mode:${blendModes[node.blendMode] ?? "normal"}`;

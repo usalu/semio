@@ -28,8 +28,8 @@ pub fn validate(payload: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let value = with_inserted(&base.document.meshes[p.mesh].primitives[p.primitive].attributes, base.document.meshes[p.mesh].primitives[p.primitive].attributes.len(), (p.semantic.clone(), p.accessor));
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: (value != base.document.meshes[p.mesh].primitives[p.primitive].attributes).then(|| GltfMorphTarget(value)), ..Default::default() }), ..Default::default() })
+    let rows = GltfAttributesDelta::insertion(base.document.meshes[p.mesh].primitives[p.primitive].attributes.len(), GltfAttribute { semantic: p.semantic.clone(), accessor: p.accessor });
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

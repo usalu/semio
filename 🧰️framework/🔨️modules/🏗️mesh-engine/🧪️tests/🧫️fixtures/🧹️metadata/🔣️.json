@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "copyBytes": 8,
+  "releaseProbeBytes": 8,
+  "repeatedRefusals": 3,
+  "mesh": {
+    "positions": [
+      0,
+      0,
+      0
+    ],
+    "normals": [
+      0,
+      0,
+      1
+    ],
+    "colors": [],
+    "indices": [],
+    "attributes": {
+      "authored": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "constant",
+        "values": [
+          {
+            "label": "original-attribute"
+          }
+        ]
+      }
+    },
+    "materials": {
+      "paint": {
+        "name": "original-material"
+      }
+    },
+    "textures": {
+      "ink": {
+        "mime": "image/png",
+        "bytes": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    }
+  }
+}

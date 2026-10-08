@@ -11,3 +11,8 @@ pub mod diff;
 
 #[path = "💡️inferences/🦀️.rs"]
 pub mod inferences;
+
+#[path="🎨️color/🦀️.rs"]
+pub mod color;
+#[path="🖊️dash/🦀️.rs"]
+pub mod dash;

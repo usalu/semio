@@ -1,0 +1,8 @@
+{
+  "owner": "original captured root",
+  "ownerCapacity": 64,
+  "birth": { "items": 1, "depth": 1 },
+  "refusals": ["items", "capacity", "depth"],
+  "afterSourceClose": { "returned": 1, "rootInOriginalRegistry": true, "ownerCopied": false },
+  "maximumTurns": 512
+}

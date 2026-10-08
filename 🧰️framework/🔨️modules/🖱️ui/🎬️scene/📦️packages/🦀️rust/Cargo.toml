@@ -17,6 +17,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-mesh-engine = { path = "../../../../🏗️mesh-engine/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 # 🚧️ `protocol` (not `os-kernel`) deliberately: this crate's own "wasm-safe, minimal deps" boundary
@@ -37,4 +38,5 @@ package = "semio-framework-geometry"
 path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust"
 
 [dev-dependencies]
+fnv = "1.0.7"
 serde_json = { version = "1.0.140" }

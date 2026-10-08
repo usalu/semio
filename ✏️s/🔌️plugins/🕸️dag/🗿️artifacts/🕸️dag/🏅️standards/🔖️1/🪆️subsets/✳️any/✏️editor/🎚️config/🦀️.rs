@@ -135,13 +135,6 @@ impl protocol::DiffAlgebra<DagConfig> for DagConfigDiff {
             camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom.clone()),
         }
     }
-    fn between(base: &DagConfig, other: &DagConfig) -> Self {
-        Self {
-            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
-            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
-            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none()
     }

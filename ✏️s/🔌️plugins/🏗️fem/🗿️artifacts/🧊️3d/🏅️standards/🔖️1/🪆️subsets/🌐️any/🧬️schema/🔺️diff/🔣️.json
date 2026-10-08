@@ -44,39 +44,192 @@
     }
   },
   "$defs": {
+    "Fem3dNodeRemoval": {
+      "title": "Fem3dNodeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dNodeInsertion": {
+      "title": "Fem3dNodeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dNodeRelocation": {
+      "title": "Fem3dNodeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dNodesModification": {
+      "title": "Fem3dNodesModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
+        }
+      }
+    },
     "Fem3dNodesDelta": {
       "title": "Fem3dNodesDelta",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dNodeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dNodeInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dNodeRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dNodesModification"
+          }
+        }
+      }
+    },
+    "Fem3dElementRemoval": {
+      "title": "Fem3dElementRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dElementInsertion": {
+      "title": "Fem3dElementInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dElementRelocation": {
+      "title": "Fem3dElementRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dElementsModification": {
+      "title": "Fem3dElementsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
         }
       }
     },
@@ -85,34 +238,111 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dElementRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dElementInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dElementRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dElementsModification"
+          }
+        }
+      }
+    },
+    "Fem3dMaterialRemoval": {
+      "title": "Fem3dMaterialRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dMaterialInsertion": {
+      "title": "Fem3dMaterialInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dMaterialRelocation": {
+      "title": "Fem3dMaterialRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dMaterialsModification": {
+      "title": "Fem3dMaterialsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
         }
       }
     },
@@ -121,34 +351,111 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dMaterialRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dMaterialInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dMaterialRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dMaterialsModification"
+          }
+        }
+      }
+    },
+    "Fem3dSectionRemoval": {
+      "title": "Fem3dSectionRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dSectionInsertion": {
+      "title": "Fem3dSectionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dSectionRelocation": {
+      "title": "Fem3dSectionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dSectionsModification": {
+      "title": "Fem3dSectionsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
         }
       }
     },
@@ -157,34 +464,111 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dSectionRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dSectionInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dSectionRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dSectionsModification"
+          }
+        }
+      }
+    },
+    "Fem3dSolidRemoval": {
+      "title": "Fem3dSolidRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dSolidInsertion": {
+      "title": "Fem3dSolidInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dSolidRelocation": {
+      "title": "Fem3dSolidRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dSolidsModification": {
+      "title": "Fem3dSolidsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
         }
       }
     },
@@ -193,34 +577,111 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dSolidRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dSolidInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dSolidRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dSolidsModification"
+          }
+        }
+      }
+    },
+    "Fem3dSupportRemoval": {
+      "title": "Fem3dSupportRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dSupportInsertion": {
+      "title": "Fem3dSupportInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dSupportRelocation": {
+      "title": "Fem3dSupportRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dSupportsModification": {
+      "title": "Fem3dSupportsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
         }
       }
     },
@@ -229,34 +690,111 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dSupportRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dSupportInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dSupportRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dSupportsModification"
+          }
+        }
+      }
+    },
+    "Fem3dLoadCaseRemoval": {
+      "title": "Fem3dLoadCaseRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dLoadCaseInsertion": {
+      "title": "Fem3dLoadCaseInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dLoadCaseRelocation": {
+      "title": "Fem3dLoadCaseRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dLoadCasesModification": {
+      "title": "Fem3dLoadCasesModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Fem3dLoadCasePatch"
         }
       }
     },
@@ -265,34 +803,111 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dLoadCaseRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dLoadCaseInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dLoadCaseRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dLoadCasesModification"
+          }
+        }
+      }
+    },
+    "Fem3dCombinationRemoval": {
+      "title": "Fem3dCombinationRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dCombinationInsertion": {
+      "title": "Fem3dCombinationInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dCombinationRelocation": {
+      "title": "Fem3dCombinationRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dCombinationsModification": {
+      "title": "Fem3dCombinationsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
         }
       }
     },
@@ -301,33 +916,34 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dCombinationRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dCombinationInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dCombinationRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dCombinationsModification"
           }
         }
       }
@@ -348,38 +964,115 @@
         }
       }
     },
+    "Fem3dLoadRemoval": {
+      "title": "Fem3dLoadRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dLoadInsertion": {
+      "title": "Fem3dLoadInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Fem3dLoadRelocation": {
+      "title": "Fem3dLoadRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fem3dLoadsModification": {
+      "title": "Fem3dLoadsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object"
+        }
+      }
+    },
     "Fem3dLoadsDelta": {
       "title": "Fem3dLoadsDelta",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dLoadRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Fem3dLoadInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Fem3dLoadRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fem3dLoadsModification"
           }
         }
       }

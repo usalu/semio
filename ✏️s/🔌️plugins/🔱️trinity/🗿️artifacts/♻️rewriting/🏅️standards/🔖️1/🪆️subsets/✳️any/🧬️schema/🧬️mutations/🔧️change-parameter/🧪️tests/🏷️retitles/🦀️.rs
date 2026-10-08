@@ -62,7 +62,7 @@ async fn inverse_restores_before() {
     assert_eq!(Some(&undo.new_value), base.parameter_bindings.get("caption"), "the inverse restores exactly the value BASE held under that key");
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_rewrite_rule_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-parameter-binding/retitles-the-caption-binding: inverse did not restore the before-snapshot");

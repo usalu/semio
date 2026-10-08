@@ -1,0 +1,30 @@
+{
+  "observedAt": "2026-10-08T22:49:07.384902+00:00",
+  "inputs": [
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧪️tests/🟦️.ts",
+      "sha256": "9d3bb0a5bf8c5b2d50b2b4fa3c024a5d9ae5f6b05eb9860105b39489c9b24ae9",
+      "role": "source observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧫️fixtures/🔣️.json",
+      "sha256": "5035ba0d9d29cfd3dd43cee3a8686722427412edac65706129faaee0eb336727",
+      "role": "source observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧪️tests/📏️ownership/🟦️.ts",
+      "sha256": "f4acd3125a8a7d40d01e596c5fad0592261a184bfa5dfdeee18c7d6a82b7f7b5",
+      "role": "source observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️presented-media-slots/🟦️.ts",
+      "sha256": "d1faca63aef746c35b8caf6b41622d614730cce455eacf55b86d68b573a05bc3",
+      "role": "source observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🔮️oracle/🟦️.ts",
+      "sha256": "e9a6e9610fc0fc510a61a19d8f368424e9d491c027a16990afce2ccc2f856b4c",
+      "role": "source observation, not authorship"
+    }
+  ]
+}

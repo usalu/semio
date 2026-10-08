@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/mesh/surface/component.json",
+  "title": "RegionVolumeSurfaceV1",
+  "$ref": "#/$defs/RegionVolumeSurfaceBatchV1",
+  "$defs": {
+    "RegionSurfaceInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "regionId": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "domain": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "outer": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "maxItems": 128
+            },
+            "holes": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "maxItems": 128
+              },
+              "maxItems": 32
+            }
+          },
+          "required": [
+            "outer",
+            "holes"
+          ]
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxEdge": {
+              "type": "number"
+            },
+            "minAngleDeg": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "maxEdge",
+            "minAngleDeg"
+          ]
+        }
+      },
+      "required": [
+        "regionId",
+        "domain",
+        "thickness",
+        "options"
+      ]
+    },
+    "RegionVolumeSurfaceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "regionId": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "maxItems": 65536
+        },
+        "tetrahedra": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "maxItems": 65536
+        },
+        "triangles": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "maxItems": 65536
+        }
+      },
+      "required": [
+        "regionId",
+        "points",
+        "tetrahedra",
+        "triangles"
+      ]
+    },
+    "RegionVolumeSurfaceBatchV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RegionVolumeSurfaceV1"
+          },
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "regions"
+      ]
+    }
+  },
+  "x-semio-numeric-policy": {
+    "positions": "binary64",
+    "indices": "u32",
+    "faceOrder": "unspecified",
+    "faceComparison": "cyclic-oriented-multiset",
+    "failedTriangulation": "document-owner-omits-region",
+    "barsAndBeams": "document-owner-contributes-no-region"
+  },
+  "x-semio-operation-contract": {
+    "mandatory": "explicit-caller-authority",
+    "ownership": "semio_framework_value::retained_clone::RetainedCloneGrant",
+    "progress": "semio_framework_value::retained_clone::RetainedCloneProgress",
+    "partialResult": "semio_framework_value::retained_clone::RetainedCloneStep",
+    "scheduling": "semio_framework_job::StepContext",
+    "phases": [
+      "admission",
+      "triangulation",
+      "extrusion",
+      "tetrahedralization",
+      "boundary",
+      "encoding",
+      "retirement"
+    ],
+    "refusal": "no-default-or-demand-derived-grant"
+  }
+}

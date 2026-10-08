@@ -8,11 +8,11 @@ pub fn diff(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> protocol::Mu
     let delta = match base.plated_panels.iter().position(|row| row.id == payload.plated_panel.id) {
         Some(index) if base.plated_panels[index] == payload.plated_panel => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
         Some(index) => {
-            let mut replacement = En1993PlatedPanelDelta::removal(&payload.plated_panel.id);
-            replacement.absorb(En1993PlatedPanelDelta::insertion(&base.plated_panels, index, payload.plated_panel.clone()));
+            let mut replacement = En1993PlatedPanelDelta::removal(&base.plated_panels, index);
+            replacement.absorb(En1993PlatedPanelDelta::insertion(index, payload.plated_panel.clone()));
             replacement
         }
-        None => En1993PlatedPanelDelta::insertion(&base.plated_panels, base.plated_panels.len(), payload.plated_panel.clone()),
+        None => En1993PlatedPanelDelta::insertion(base.plated_panels.len(), payload.plated_panel.clone()),
     };
     protocol::MutationOutcome::new(En1993Diff { plated_panels: delta, ..Default::default() })
 }

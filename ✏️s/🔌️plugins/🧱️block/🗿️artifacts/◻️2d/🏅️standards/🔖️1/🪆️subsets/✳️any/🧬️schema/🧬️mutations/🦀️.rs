@@ -19,9 +19,8 @@ pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 /// change), the rim presentation as one cohesive `update` facet, id-keyed handle-kind/handle
 /// create/delete/rename/change/move, set-like compatibility-rule/attribute/author add/remove, the
 /// board camera's pan/zoom, and the session meta description. The old whole-document-replace and
-/// no-op sentinel variants are gone — whole-document loads (examples, DSL text edit) now decompose
-/// into this vocabulary (see the editor's `🎮️commands/🎬️set-active-example/🦀️.rs`'s
-/// `replace_document_operations`).
+/// no-op sentinel variants are gone — whole-document loads (examples, JSON text edit) are the
+/// `LoadDocument` effect, never mutations (see the editor's `🎮️commands/🎬️set-active-example/🦀️.rs`).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -118,14 +117,6 @@ pub use super::rename_handle_kind::{rename_handle_kind, RenameHandleKind};
 pub use super::rename_node_kind::{rename_node_kind, RenameNodeKind};
 pub use super::scale_camera2d::{scale_camera2d, ScaleCamera2d};
 pub use super::update_presentation::{update_presentation, UpdatePresentation};
-
-/// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-
-    *projection = next;
-    Ok(())
-}
 
 pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
     Ok({

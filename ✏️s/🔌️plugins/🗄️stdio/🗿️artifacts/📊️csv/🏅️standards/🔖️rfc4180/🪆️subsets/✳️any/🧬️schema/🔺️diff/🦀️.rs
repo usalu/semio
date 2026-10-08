@@ -34,13 +34,8 @@ impl CsvFieldDiff {
     }
     /// ▶️ Applies this patch to a field.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn apply(&self, base: &CsvField) -> CsvField {
+    pub fn apply_patch(&self, base: &CsvField) -> CsvField {
         CsvField { value: self.value.clone().unwrap_or_else(|| base.value.clone()), quoted: self.quoted.unwrap_or(base.quoted) }
-    }
-    /// 🧭️ State delta between two fields.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &CsvField, other: &CsvField) -> Self {
-        Self { value: (base.value != other.value).then(|| other.value.clone()), quoted: (base.quoted != other.quoted).then_some(other.quoted) }
     }
     /// ↩️ The patch restoring exactly the sub-fields this patch sets back to their `base` values.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -62,7 +57,7 @@ impl CsvFieldDiff {
 
 //#region 🔖️RecordDiff
 /// 🔺️ Sparse diff for a single [`CsvRecord`] — positional per-field patch list, `None` at a
-/// position means that field is unchanged. Length only needs to cover the highest patched
+/// position means that field is unchanged. Length only needs to cover the highest apply_patch
 /// index; positions beyond `base.fields.len()` are graceful no-ops on apply.
 ///
 /// 🧪️ F6: `#[derive(dsl::DslRecord)]`/`#[derive(dsl::)]` CANNOT be used anywhere in
@@ -94,7 +89,7 @@ impl CsvRecordDiff {
     }
     /// ▶️ Applies this patch to a record.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn apply(&self, base: &CsvRecord) -> CsvRecord {
+    pub fn apply_patch(&self, base: &CsvRecord) -> CsvRecord {
         match &self.fields {
             None => base.clone(),
             Some(patches) => {
@@ -102,7 +97,7 @@ impl CsvRecordDiff {
                 for (i, patch) in patches.iter().enumerate() {
                     if let Some(p) = patch {
                         if let Some(f) = fields.get_mut(i) {
-                            *f = p.apply(f);
+                            *f = p.apply_patch(f);
                         }
                     }
                 }
@@ -114,29 +109,6 @@ impl CsvRecordDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &CsvRecord) -> Self {
         Self { fields: self.fields.as_ref().map(|patches| patches.iter().enumerate().map(|(index, patch)| patch.as_ref().and_then(|patch| base.fields.get(index).map(|field| patch.inverse(field)))).collect()) }
-    }
-    /// 🧭️ State delta between two records with the SAME field count (positional patch).
-    /// Callers with differing field counts must instead express the change as a
-    /// remove-then-add pair at the `records` collection level (see `CsvDiff::between`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &CsvRecord, other: &CsvRecord) -> Self {
-        debug_assert_eq!(base.fields.len(), other.fields.len());
-        let mut any = false;
-        let patches: Vec<Option<CsvFieldDiff>> = base
-            .fields
-            .iter()
-            .zip(other.fields.iter())
-            .map(|(b, o)| {
-                let d = CsvFieldDiff::between(b, o);
-                if d.is_empty() {
-                    None
-                } else {
-                    any = true;
-                    Some(d)
-                }
-            })
-            .collect();
-        Self { fields: if any { Some(patches) } else { None } }
     }
     /// ➕️ Structural per-position absorb: `other`'s populated positions win; the patch
     /// vector grows to cover whichever side patches further out.
@@ -164,7 +136,7 @@ impl CsvRecordDiff {
 //#endregion 🔖️RecordDiff
 
 //#region 🔖️RecordsDiff
-/// 🧩 One record patched-in-place at a BASE index.
+/// 🧩 One record apply_patch-in-place at a BASE index.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecordModified {
@@ -221,9 +193,7 @@ enum Slot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
-    let mut removed_desc = removed.to_vec();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&removed);
     for r in removed_desc {
         if r < slots.len() {
             slots.remove(r);
@@ -341,14 +311,12 @@ fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnapshot {
         // 🥇 modified refers to BASE indices — apply before any removal shifts them.
         for m in &rdiff.modified {
             if let Some(rec) = next.records.get_mut(m.index) {
-                *rec = m.diff.apply(rec);
+                *rec = m.diff.apply_patch(rec);
             }
         }
         // 🥈 removed refers to BASE indices — process descending so earlier removals
         // never shift the position of a later (larger) one still to be removed.
-        let mut removed_desc = rdiff.removed.clone();
-        removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-        removed_desc.dedup();
+        let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&rdiff.removed);
         for idx in removed_desc {
             if idx < next.records.len() {
                 next.records.remove(idx);
@@ -376,9 +344,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     // with no removed/modified at all, d2 = `RemoveRecord` at a position past it) — widen
     // `base_len` so the simulated mid array is long enough to answer those queries too.
     let removed_count = {
-        let mut r = d1.removed.clone();
-        r.sort_unstable();
-        r.dedup();
+        let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
@@ -414,7 +380,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
             }
             Some(Slot::Added(ai)) => {
                 if let Some(added) = added_alive[*ai].as_mut() {
-                    added.record = m2.diff.apply(&added.record);
+                    added.record = m2.diff.apply_patch(&added.record);
                 }
             }
             None => {} // 🕳️ out-of-range: graceful no-op
@@ -480,9 +446,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
 /// Every list comes back ascending, the normal form [`absorb_records`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_records(diff: &CsvRecordsDiff, base: &[CsvRecord]) -> CsvRecordsDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -500,42 +464,6 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
         Self { has_header: self.has_header.map(|_| base.has_header), records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()) }
     }
 
-    fn between(base: &CsvSnapshot, other: &CsvSnapshot) -> Self {
-        let has_header = (base.has_header != other.has_header).then_some(other.has_header);
-
-        let mut removed = Vec::new();
-        let mut modified = Vec::new();
-        let mut added = Vec::new();
-        let min_len = base.records.len().min(other.records.len());
-        for i in 0..min_len {
-            let b = &base.records[i];
-            let o = &other.records[i];
-            if b == o {
-                continue;
-            }
-            if b.fields.len() == o.fields.len() {
-                let d = CsvRecordDiff::between(b, o);
-                if !d.is_empty() {
-                    modified.push(CsvRecordModified { index: i, diff: d });
-                }
-            } else {
-                // 🔀 Field count changed: not expressible as a positional patch — replace
-                // the whole record via a same-index remove+add pair instead.
-                removed.push(i);
-                added.push(CsvRecordAdded { index: i, record: o.clone() });
-            }
-        }
-        for i in min_len..base.records.len() {
-            removed.push(i);
-        }
-        for i in min_len..other.records.len() {
-            added.push(CsvRecordAdded { index: i, record: other.records[i].clone() });
-        }
-
-        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(CsvRecordsDiff { removed, modified, added }) };
-        Self { has_header, records }
-    }
-
     fn is_empty(&self) -> bool {
         self.has_header.is_none() && self.records.as_ref().is_none_or(CsvRecordsDiff::is_empty)
     }
@@ -544,6 +472,18 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
 //#endregion 🔖️Diff
 
 //#region 🧪️Tests
+/// 🧪️ Representative `CsvDiff` cases built declaratively (empty diff, the header flag and a removed and a modified record row) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
+/// conformance-law tests.
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<CsvDiff> {
+    let first = CsvRecordDiff { fields: Some(vec![Some(CsvFieldDiff { value: Some("new-a".into()), quoted: Some(true) }), None]) };
+    vec![
+        CsvDiff::default(),
+        CsvDiff { has_header: Some(false), records: Some(CsvRecordsDiff { removed: vec![1], modified: vec![CsvRecordModified { index: 0, diff: first }], added: Vec::new() }) },
+    ]
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;

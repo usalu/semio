@@ -146,3 +146,17 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
 //#endregion 🪟️KitVerbLaws
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", XmlValidEditor, || semio_framework_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_subset_closed_kind() {
+    use crate::schema::snapshot::XmlNode;
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let mut base = XmlSnapshot::default();
+    base.doc.root = Some(XmlNode::Element { name: "r".into(), attrs: vec![], children: vec![XmlNode::Text { text: "hi".into() }] });
+    let emit = |event: SnapshotEditEvent| <XmlValidEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let text = emit(SnapshotEditEvent::SetValue { path: "/doc/root/children/0/text".into(), value: semio_framework_value::DslValue::String("bye".into()) }).expect("a text edit resolves");
+    assert!(matches!(text.artifact_mutations.as_slice(), [XmlValidMutation::SetText(_)]));
+    let renamed = emit(SnapshotEditEvent::SetValue { path: "/doc/root/name".into(), value: semio_framework_value::DslValue::String("q".into()) }).expect("a document element rename resolves");
+    assert!(matches!(renamed.artifact_mutations.as_slice(), [XmlValidMutation::RenameDocumentElement(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

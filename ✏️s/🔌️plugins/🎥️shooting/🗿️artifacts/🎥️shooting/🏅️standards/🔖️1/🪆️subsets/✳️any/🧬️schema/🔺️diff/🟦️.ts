@@ -1,7 +1,7 @@
 /** 🧬️ Shooting diff schema — sparse typed delta over the artifact: ordered structural edits plus keyed field patches per list, a scene field patch and assignable scalars. */
 
 import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseShootingCamera } from "../🟦️.ts";
+import { parseShootingAsset, parseShootingCamera, parseShootingSavedCamera, parseShootingShot } from "../🟦️.ts";
 
 export interface ShootingDiff {
   /** @state artifact */
@@ -27,7 +27,7 @@ export interface ShootingAssigned<T> {
   value: T;
 }
 
-export type ShootingEdit<T> = { edit: "add"; index: number; item: T } | { edit: "remove"; id: string } | { edit: "move"; id: string; index: number };
+export type ShootingEdit<T> = { edit: "add"; index: number; item: T } | { edit: "remove"; id: string; index: number } | { edit: "move"; id: string; from: number; to: number };
 
 export interface ShootingAssetsDelta {
   edits: ShootingEdit<ShootingAsset>[];
@@ -241,63 +241,63 @@ export function parseShootingEdit<T>(value: unknown, at: string, parseItem: (ite
   const row = shootingShootingDiffGuardObject(value, at);
   const edit = shootingShootingDiffGuardMember(row["edit"], `${at}.edit`, ["add", "remove", "move"] as const);
   if (edit === "add") return { edit, index: shootingShootingDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}), item: parseItem(row["item"], `${at}.item`) };
-  if (edit === "remove") return { edit, id: shootingShootingDiffGuardString(row["id"], `${at}.id`) };
-  return { edit, id: shootingShootingDiffGuardString(row["id"], `${at}.id`), index: shootingShootingDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}) };
+  if (edit === "remove") return { edit, id: shootingShootingDiffGuardString(row["id"], `${at}.id`), index: shootingShootingDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}) };
+  return { edit, id: shootingShootingDiffGuardString(row["id"], `${at}.id`), from: shootingShootingDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}), to: shootingShootingDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}) };
 }
 
 export function parseShootingAssetPatch(value: unknown, at = "$"): ShootingAssetPatch {
   const row = shootingShootingDiffGuardObject(value, at);
   return {
-    name: row["name"] === undefined ? undefined : shootingShootingDiffGuardString(row["name"], `${at}.name`),
-    url: row["url"] === undefined ? undefined : shootingShootingDiffGuardString(row["url"], `${at}.url`),
-    format: row["format"] === undefined ? undefined : shootingShootingDiffGuardString(row["format"], `${at}.format`),
-    origin: row["origin"] === undefined ? undefined : shootingShootingDiffGuardArray(row["origin"], `${at}.origin`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingDiffGuardNumber(item, `${at}.origin[${index}]`)),
-    orientation: row["orientation"] === undefined ? undefined : parseShootingAssigned(row["orientation"], `${at}.orientation`, (item, where) => item === null ? null : shootingShootingDiffGuardArray(item, where, {"minItems": 4, "maxItems": 4}).map((member, index) => shootingShootingDiffGuardNumber(member, `${where}[${index}]`)) as [number, number, number, number]),
-    scale: row["scale"] === undefined ? undefined : parseShootingAssigned(row["scale"], `${at}.scale`, (item, where) => item === null ? null : shootingShootingDiffGuardArray(item, where, {"minItems": 3, "maxItems": 3}).map((member, index) => shootingShootingDiffGuardNumber(member, `${where}[${index}]`)) as [number, number, number]),
+    name: row["name"] == null ? undefined : shootingShootingDiffGuardString(row["name"], `${at}.name`),
+    url: row["url"] == null ? undefined : shootingShootingDiffGuardString(row["url"], `${at}.url`),
+    format: row["format"] == null ? undefined : shootingShootingDiffGuardString(row["format"], `${at}.format`),
+    origin: row["origin"] == null ? undefined : shootingShootingDiffGuardArray(row["origin"], `${at}.origin`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingDiffGuardNumber(item, `${at}.origin[${index}]`)) as [number, number, number],
+    orientation: row["orientation"] == null ? undefined : parseShootingAssigned(row["orientation"], `${at}.orientation`, (item, where) => item === null ? null : shootingShootingDiffGuardArray(item, where, {"minItems": 4, "maxItems": 4}).map((member, index) => shootingShootingDiffGuardNumber(member, `${where}[${index}]`)) as [number, number, number, number]),
+    scale: row["scale"] == null ? undefined : parseShootingAssigned(row["scale"], `${at}.scale`, (item, where) => item === null ? null : shootingShootingDiffGuardArray(item, where, {"minItems": 3, "maxItems": 3}).map((member, index) => shootingShootingDiffGuardNumber(member, `${where}[${index}]`)) as [number, number, number]),
   };
 }
 
 export function parseShootingShotPatch(value: unknown, at = "$"): ShootingShotPatch {
   const row = shootingShootingDiffGuardObject(value, at);
   return {
-    label: row["label"] === undefined ? undefined : shootingShootingDiffGuardString(row["label"], `${at}.label`),
-    width: row["width"] === undefined ? undefined : shootingShootingDiffGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
-    height: row["height"] === undefined ? undefined : shootingShootingDiffGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),
-    format: row["format"] === undefined ? undefined : shootingShootingDiffGuardString(row["format"], `${at}.format`),
-    shape: row["shape"] === undefined ? undefined : shootingShootingDiffGuardString(row["shape"], `${at}.shape`),
-    background: row["background"] === undefined ? undefined : parseShootingAssigned(row["background"], `${at}.background`, (item, where) => item === null ? null : shootingShootingDiffGuardString(item, where)),
-    cameraId: row["cameraId"] === undefined ? undefined : parseShootingAssigned(row["cameraId"], `${at}.cameraId`, (item, where) => item === null ? null : shootingShootingDiffGuardString(item, where)),
+    label: row["label"] == null ? undefined : shootingShootingDiffGuardString(row["label"], `${at}.label`),
+    width: row["width"] == null ? undefined : shootingShootingDiffGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
+    height: row["height"] == null ? undefined : shootingShootingDiffGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),
+    format: row["format"] == null ? undefined : shootingShootingDiffGuardString(row["format"], `${at}.format`),
+    shape: row["shape"] == null ? undefined : shootingShootingDiffGuardString(row["shape"], `${at}.shape`),
+    background: row["background"] == null ? undefined : parseShootingAssigned(row["background"], `${at}.background`, (item, where) => item === null ? null : shootingShootingDiffGuardString(item, where)),
+    cameraId: row["cameraId"] == null ? undefined : parseShootingAssigned(row["cameraId"], `${at}.cameraId`, (item, where) => item === null ? null : shootingShootingDiffGuardString(item, where)),
   };
 }
 
 export function parseShootingSavedCameraPatch(value: unknown, at = "$"): ShootingSavedCameraPatch {
   const row = shootingShootingDiffGuardObject(value, at);
   return {
-    label: row["label"] === undefined ? undefined : shootingShootingDiffGuardString(row["label"], `${at}.label`),
-    camera: row["camera"] === undefined ? undefined : parseShootingCamera(row["camera"], `${at}.camera`),
+    label: row["label"] == null ? undefined : shootingShootingDiffGuardString(row["label"], `${at}.label`),
+    camera: row["camera"] == null ? undefined : parseShootingCamera(row["camera"], `${at}.camera`),
   };
 }
 
 export function parseShootingScenePatch(value: unknown, at = "$"): ShootingScenePatch {
   const row = shootingShootingDiffGuardObject(value, at);
   return {
-    background: row["background"] === undefined ? undefined : shootingShootingDiffGuardString(row["background"], `${at}.background`),
-    sunEnabled: row["sunEnabled"] === undefined ? undefined : shootingShootingDiffGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
-    sunAzimuth: row["sunAzimuth"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),
-    sunElevation: row["sunElevation"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["sunElevation"], `${at}.sunElevation`),
-    sunIntensity: row["sunIntensity"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
-    sunColor: row["sunColor"] === undefined ? undefined : shootingShootingDiffGuardString(row["sunColor"], `${at}.sunColor`),
-    ambientIntensity: row["ambientIntensity"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["ambientIntensity"], `${at}.ambientIntensity`),
-    ambientColor: row["ambientColor"] === undefined ? undefined : shootingShootingDiffGuardString(row["ambientColor"], `${at}.ambientColor`),
-    shadowEnabled: row["shadowEnabled"] === undefined ? undefined : shootingShootingDiffGuardBoolean(row["shadowEnabled"], `${at}.shadowEnabled`),
-    shadowOpacity: row["shadowOpacity"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["shadowOpacity"], `${at}.shadowOpacity`),
-    shadowSoftness: row["shadowSoftness"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["shadowSoftness"], `${at}.shadowSoftness`),
-    materialColor: row["materialColor"] === undefined ? undefined : shootingShootingDiffGuardString(row["materialColor"], `${at}.materialColor`),
-    materialMetalness: row["materialMetalness"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["materialMetalness"], `${at}.materialMetalness`),
-    materialRoughness: row["materialRoughness"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["materialRoughness"], `${at}.materialRoughness`),
-    materialEmissive: row["materialEmissive"] === undefined ? undefined : shootingShootingDiffGuardString(row["materialEmissive"], `${at}.materialEmissive`),
-    materialEmissiveIntensity: row["materialEmissiveIntensity"] === undefined ? undefined : shootingShootingDiffGuardNumber(row["materialEmissiveIntensity"], `${at}.materialEmissiveIntensity`),
-    materialStroke: row["materialStroke"] === undefined ? undefined : shootingShootingDiffGuardString(row["materialStroke"], `${at}.materialStroke`),
+    background: row["background"] == null ? undefined : shootingShootingDiffGuardString(row["background"], `${at}.background`),
+    sunEnabled: row["sunEnabled"] == null ? undefined : shootingShootingDiffGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
+    sunAzimuth: row["sunAzimuth"] == null ? undefined : shootingShootingDiffGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),
+    sunElevation: row["sunElevation"] == null ? undefined : shootingShootingDiffGuardNumber(row["sunElevation"], `${at}.sunElevation`),
+    sunIntensity: row["sunIntensity"] == null ? undefined : shootingShootingDiffGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
+    sunColor: row["sunColor"] == null ? undefined : shootingShootingDiffGuardString(row["sunColor"], `${at}.sunColor`),
+    ambientIntensity: row["ambientIntensity"] == null ? undefined : shootingShootingDiffGuardNumber(row["ambientIntensity"], `${at}.ambientIntensity`),
+    ambientColor: row["ambientColor"] == null ? undefined : shootingShootingDiffGuardString(row["ambientColor"], `${at}.ambientColor`),
+    shadowEnabled: row["shadowEnabled"] == null ? undefined : shootingShootingDiffGuardBoolean(row["shadowEnabled"], `${at}.shadowEnabled`),
+    shadowOpacity: row["shadowOpacity"] == null ? undefined : shootingShootingDiffGuardNumber(row["shadowOpacity"], `${at}.shadowOpacity`),
+    shadowSoftness: row["shadowSoftness"] == null ? undefined : shootingShootingDiffGuardNumber(row["shadowSoftness"], `${at}.shadowSoftness`),
+    materialColor: row["materialColor"] == null ? undefined : shootingShootingDiffGuardString(row["materialColor"], `${at}.materialColor`),
+    materialMetalness: row["materialMetalness"] == null ? undefined : shootingShootingDiffGuardNumber(row["materialMetalness"], `${at}.materialMetalness`),
+    materialRoughness: row["materialRoughness"] == null ? undefined : shootingShootingDiffGuardNumber(row["materialRoughness"], `${at}.materialRoughness`),
+    materialEmissive: row["materialEmissive"] == null ? undefined : shootingShootingDiffGuardString(row["materialEmissive"], `${at}.materialEmissive`),
+    materialEmissiveIntensity: row["materialEmissiveIntensity"] == null ? undefined : shootingShootingDiffGuardNumber(row["materialEmissiveIntensity"], `${at}.materialEmissiveIntensity`),
+    materialStroke: row["materialStroke"] == null ? undefined : shootingShootingDiffGuardString(row["materialStroke"], `${at}.materialStroke`),
   };
 }
 
@@ -323,4 +323,28 @@ export function parseShootingSavedCameraPatchEntry(value: unknown, at = "$"): Sh
     id: shootingShootingDiffGuardString(row["id"], `${at}.id`),
     patch: parseShootingSavedCameraPatch(row["patch"], `${at}.patch`),
   };
+}
+
+function parseShootingDelta<T, E extends { id: string; patch: unknown }>(value: unknown, at: string, parseItem: (item: unknown, where: string) => T, parseEntry: (item: unknown, where: string) => E): { edits: ShootingEdit<T>[]; patched: E[] } {
+  const row = shootingShootingDiffGuardObject(value, at);
+  return {
+    edits: shootingShootingDiffGuardArray(row["edits"], `${at}.edits`).map((item, index) => parseShootingEdit(item, `${at}.edits[${index}]`, parseItem)),
+    patched: shootingShootingDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseEntry(item, `${at}.patched[${index}]`)),
+  };
+}
+
+export function parseShootingDiff(value: unknown, at = "$"): ShootingDiff {
+  const row = shootingShootingDiffGuardObject(value, at);
+  const optional = <T,>(key: string, parse: (item: unknown, where: string) => T): T | undefined => (row[key] == null ? undefined : parse(row[key], `${at}.${key}`));
+  const diff: ShootingDiff = {
+    schema: optional("schema", (item, where) => shootingShootingDiffGuardString(item, where)),
+    assets: optional("assets", (item, where) => parseShootingDelta(item, where, parseShootingAsset, parseShootingAssetPatchEntry)),
+    savedCameras: optional("savedCameras", (item, where) => parseShootingDelta(item, where, parseShootingSavedCamera, parseShootingSavedCameraPatchEntry)),
+    scene: optional("scene", parseShootingScenePatch),
+    shots: optional("shots", (item, where) => parseShootingDelta(item, where, parseShootingShot, parseShootingShotPatchEntry)),
+    activeShotId: optional("activeShotId", (item, where) => shootingShootingDiffGuardString(item, where)),
+    activeAssetId: optional("activeAssetId", (item, where) => shootingShootingDiffGuardString(item, where)),
+    emblem: optional("emblem", (item, where) => parseShootingAssigned(item, where, (child) => child as ArtifactChild | null)),
+  };
+  return diff;
 }

@@ -1,6 +1,12 @@
 {
   "title": "Ticket Oversized Artifact Purge",
-  "status": "closed",
-  "summary": "Enforced ticket-folder artifact limits (files >5 MiB, folders >10 MiB): automatic purge on ticket_close via FinishTicket, new ticket purge-artifacts CLI for bulk cleanup, and one-time purge of 3463 ticket folders (9295 oversized files down to 0).",
-  "client": "cursor-chat"
+  "status": "open",
+  "summary": "Enforced ticket-folder artifact limits (files \u003e5 MiB, folders \u003e10 MiB): automatic purge on ticket_close via FinishTicket, new ticket purge-artifacts CLI for bulk cleanup, and one-time purge of 3463 ticket folders (9295 oversized files down to 0).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2770"
+  },
+  "goal": "🎯repoticketmechanism",
+  "sessions": [
+    "⚪cf1bd7525fb14d488447b7fe3f71610f"
+  ]
 }

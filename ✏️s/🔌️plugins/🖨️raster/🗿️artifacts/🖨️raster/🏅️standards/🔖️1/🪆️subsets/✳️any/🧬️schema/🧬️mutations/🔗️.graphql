@@ -109,6 +109,7 @@ union RasterMutation =
   | ApplyFilter
   | TransformImage
   | FillSelection
+  | WritePixelRegion
 
 type ChangeLayerTransform {layerId: String! expected: RasterTransform! transform: RasterTransform!}
 
@@ -120,4 +121,5 @@ type RasterSeed { x: Int!, y: Int! }
 type FillRegion { layerId: String!, target: String!, seed: RasterSeed!, tolerance: Int!, color: [Float!]!, selection: [RasterSelectionSpan!] }
 type ApplyFilter { layerId: String!, filter: String!, amount: Float!, selection: [RasterSelectionSpan!] }
 type TransformImage { layerId: String!, operation: String!, x: Int!, y: Int!, width: Int!, height: Int!, bilinear: Boolean! }
+type WritePixelRegion { layerId: String!, target: String!, x: Int!, y: Int!, width: Int!, height: Int!, samples: [Int!]! }
 type FillSelection { layerId: String!, target: String!, color: [Float!]!, selection: [RasterSelectionSpan!] }

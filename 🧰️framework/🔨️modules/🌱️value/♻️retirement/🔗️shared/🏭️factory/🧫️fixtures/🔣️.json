@@ -1,0 +1,31 @@
+{
+  "schema": "framework.value.factory-shared-ownership",
+  "texts": [
+    "",
+    "factory λ🙂",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "copyBytes": [
+    1,
+    3,
+    64
+  ],
+  "aliases": [
+    1,
+    3
+  ],
+  "cancelAt": [
+    0,
+    2,
+    9
+  ],
+  "ownershipMoves": {
+    "items": 1,
+    "copyBytes": 0
+  },
+  "constructorRefusals": [
+    "items",
+    "capacity",
+    "depth"
+  ]
+}

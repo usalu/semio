@@ -5,5 +5,5 @@ use crate::mutations::remove_permanent::RemovePermanent;
 use crate::{En1990Mutation, En1990Snapshot};
 
 pub fn inverse(payload: &InsertPermanent, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok(vec![En1990Mutation::RemovePermanent(RemovePermanent { index: payload.index.min(base.permanents.len()) })])
+    Ok(vec![En1990Mutation::RemovePermanent(RemovePermanent { index: payload.index.unwrap_or(usize::MAX).min(base.permanents.len()) })])
 }

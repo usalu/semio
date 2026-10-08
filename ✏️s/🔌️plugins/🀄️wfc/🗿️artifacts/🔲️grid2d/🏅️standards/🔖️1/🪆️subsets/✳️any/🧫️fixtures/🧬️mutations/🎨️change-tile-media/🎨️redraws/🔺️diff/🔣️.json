@@ -7,41 +7,56 @@
   "cellHeight": null,
   "periodicX": null,
   "periodicY": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      0,
+  "tiles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "empty",
-        "label": "Empty",
-        "weight": 2.0,
-        "media": {
-          "kind": "bitmap",
-          "width": 2,
-          "height": 2,
-          "palette": [
-            {
-              "r": 15,
-              "g": 23,
-              "b": 42,
-              "a": 255
-            },
-            {
-              "r": 148,
-              "g": 163,
-              "b": 184,
-              "a": 255
-            }
-          ],
-          "pixels": "AAEBAA=="
+        "patch": {
+          "weight": null,
+          "media": {
+            "kind": "bitmap",
+            "width": 2,
+            "height": 2,
+            "palette": [
+              {
+                "r": 15,
+                "g": 23,
+                "b": 42,
+                "a": 255
+              },
+              {
+                "r": 148,
+                "g": 163,
+                "b": 184,
+                "a": 255
+              }
+            ],
+            "pixels": "AAEBAA=="
+          },
+          "label": null
         }
       }
     ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+  },
+  "rules": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "pinned": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "masked": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

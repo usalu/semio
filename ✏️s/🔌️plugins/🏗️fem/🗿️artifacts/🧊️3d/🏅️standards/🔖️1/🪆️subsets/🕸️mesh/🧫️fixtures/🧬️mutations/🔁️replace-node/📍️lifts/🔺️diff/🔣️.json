@@ -1,19 +1,19 @@
 {
   "nodes": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "n3",
-        "item": {
+        "patch": {
           "id": "n3",
           "x": 0.0,
           "y": 0.0,
           "z": 4.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "elements": null,
   "materials": null,

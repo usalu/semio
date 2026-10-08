@@ -13,53 +13,37 @@
 use crate::brep::engine::Aabb;
 use crate::brep::queries::bounding_volume::face_aabb;
 use crate::brep::queries::mass_properties;
-use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId, VertexId};
+use crate::brep::representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, VertexId};
 use crate::brep::representation::curve::curve_ops;
 use crate::brep::representation::error::ValidationIssue;
 use crate::brep::representation::surface::Surface;
 use crate::brep::representation::topology::{Body, ReachSet};
 use crate::brep::representation::vector::Pnt3;
 
+#[cfg(test)]
+std::thread_local! { static LOOP_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+#[cfg(test)]
+std::thread_local! { static PCURVE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+#[cfg(test)]
+std::thread_local! { static TOLERANCE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+#[cfg(test)]
+std::thread_local! { static SAME_PARAMETER_SAMPLES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+
 // #region 🔖️Topology
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    for (loop_id, lp) in body.loops.iter() {
-        let coedges = body.loop_coedges(loop_id);
-        if coedges.is_empty() {
-            issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "empty-loop", message: "loop has no coedges".to_string() });
-            continue;
-        }
-        if coedges[0] != lp.first {
-            issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "broken-ring", message: "walking next from Loop::first did not return to itself — the ring is broken or too long".to_string() });
-            continue;
-        }
-        let n = coedges.len();
-        for i in 0..n {
-            let Some((_, end_a)) = body.coedge_endpoints(coedges[i]) else { continue };
-            let Some((start_b, _)) = body.coedge_endpoints(coedges[(i + 1) % n]) else { continue };
-            if end_a != start_b {
-                issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "loop-not-closed", message: format!("coedge {i} ends at a different vertex than coedge {} starts at", (i + 1) % n) });
-            }
-            let coedge_a = body.coedges.get(coedges[i]).unwrap();
-            let coedge_b = body.coedges.get(coedges[(i + 1) % n]).unwrap();
-            if coedge_a.next != coedges[(i + 1) % n] || coedge_b.prev != coedges[i] {
-                issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "next-prev-mismatch", message: format!("coedge {i}'s next/prev pointers are not symmetric with its ring neighbor") });
-            }
-        }
+fn check_loop_pair(body: &Body, loop_id: LoopId, ring: &[CoedgeId], index: usize, issues: &mut Vec<ValidationIssue>) {
+    #[cfg(test)]
+    LOOP_PROBES.with(|probes| probes.set(probes.get() + 1));
+    let next = (index + 1) % ring.len();
+    let Some((_, end_a)) = body.coedge_endpoints(ring[index]) else { return; };
+    let Some((start_b, _)) = body.coedge_endpoints(ring[next]) else { return; };
+    if end_a != start_b {
+        issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "loop-not-closed", message: format!("coedge {index} ends at a different vertex than coedge {next} starts at") });
     }
-}
-
-/// 🩺️ Flags edges used by more than 2 coedges — valid for future non-manifold support but worth
-/// surfacing explicitly (the boolean/sewing pipeline in later phases assumes 2-manifold input
-/// unless a caller has opted into non-manifold handling).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    for (edge_id, _) in body.edges.iter() {
-        let valence = body.edge_coedges(edge_id).len();
-        if valence > 2 {
-            issues.push(ValidationIssue { entity: format!("edge-{}", edge_id.raw_index()), code: "non-manifold-edge", message: format!("edge is used by {valence} coedges (2-manifold shapes use at most 2)") });
-        }
+    let coedge_a = body.coedges.get(ring[index]).unwrap();
+    let coedge_b = body.coedges.get(ring[next]).unwrap();
+    if coedge_a.next != ring[next] || coedge_b.prev != ring[index] {
+        issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "next-prev-mismatch", message: format!("coedge {index}'s next/prev pointers are not symmetric with its ring neighbor") });
     }
 }
 
@@ -67,26 +51,11 @@ fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
 
 // #region 🔖️Geometry
 
-/// 🩺️ Every vertex's tolerance must fit inside every incident edge's tolerance, and every edge's
-/// inside every face whose loop uses it — the containment hierarchy from the plan's tolerance model.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    for (edge_id, edge) in body.edges.iter() {
-        for v in [edge.v0, edge.v1] {
-            let Some(vertex) = body.vertices.get(v) else { continue };
-            if let Some((finer, coarser)) = crate::brep::representation::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
-                issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
-            }
-        }
-    }
-    for (face_id, face) in body.faces.iter() {
-        for coedge_id in body.face_coedges(face_id) {
-            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
-            let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            if let Some((finer, coarser)) = crate::brep::representation::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol) {
-                issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
-            }
-        }
+fn check_tolerance_pair(finer: String, finer_tol: crate::brep::representation::tolerance::Tol, coarser: String, coarser_tol: crate::brep::representation::tolerance::Tol, issues: &mut Vec<ValidationIssue>) {
+    #[cfg(test)]
+    TOLERANCE_PROBES.with(|probes| probes.set(probes.get() + 1));
+    if let Some((finer, coarser)) = crate::brep::representation::tolerance::check_containment(&finer, finer_tol, &coarser, coarser_tol) {
+        issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
     }
 }
 
@@ -94,41 +63,11 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
 /// not verify a coedge without one, so a missing p-curve is an ERROR here, not a skip (audit
 /// §6.12: "missing p-curves are skipped rather than rejected or repaired").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_missing_pcurves(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    for (coedge_id, coedge) in body.coedges.iter() {
-        if coedge.pcurve.is_none() {
-            issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "missing-pcurve", message: "coedge has no p-curve — every coedge must carry one for trim/same-parameter validation".to_string() });
-        }
-    }
-}
-
-/// 🩺️ Same-parameter check: samples a coedge's p-curve against its 3D edge curve at corresponding
-/// parameters (mapped linearly from the p-curve's `prange` onto the edge's `range`) and confirms
-/// the face's surface, evaluated at the p-curve point, agrees with the 3D curve within the edge's
-/// tolerance. Starts at 16 base samples and adaptively bisects any interval whose deviation grows
-/// sharply relative to its neighbor, up to 3 refinement passes, so a localized divergence between
-/// two coarse samples can't hide (audit §6.12: "same-parameter sampling is sparse").
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
-    const BASE_SAMPLES: usize = 16;
-    for (face_id, face) in body.faces.iter() {
-        let Some(surface) = body.surfaces.get(face.surface) else { continue };
-        for coedge_id in body.face_coedges(face_id) {
-            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
-            let Some(pcurve_id) = coedge.pcurve else { continue };
-            let Some(pcurve) = body.curves2.get(pcurve_id) else { continue };
-            let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            let Some(curve3) = body.curves3.get(edge.curve) else { continue };
-            let samples = same_parameter_deviations(surface, pcurve, curve3, coedge.prange, edge.range, BASE_SAMPLES);
-            let Some(&(worst_s, worst_dev)) = samples.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)) else { continue };
-            if worst_dev > edge.tol.value() {
-                issues.push(ValidationIssue {
-                    entity: format!("coedge-{}", coedge_id.raw_index()),
-                    code: "same-parameter-violated",
-                    message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {}; face-{} edge-{} prange {:?} range {:?})", edge.tol.value(), face_id.raw_index(), coedge.edge.raw_index(), coedge.prange, edge.range),
-                });
-            }
-        }
+fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &crate::brep::representation::topology::Coedge, issues: &mut Vec<ValidationIssue>) {
+    #[cfg(test)]
+    PCURVE_PROBES.with(|probes| probes.set(probes.get() + 1));
+    if coedge.pcurve.is_none() {
+        issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "missing-pcurve", message: "coedge has no p-curve — every coedge must carry one for trim/same-parameter validation".to_string() });
     }
 }
 
@@ -141,42 +80,14 @@ fn same_parameter_deviation_at(
     range: (f64, f64),
     s: f64,
 ) -> f64 {
+    #[cfg(test)]
+    SAME_PARAMETER_SAMPLES.with(|samples| samples.set(samples.get() + 1));
     let p = prange.0 + (prange.1 - prange.0) * s;
     let t = range.0 + (range.1 - range.0) * s;
     let uv = pcurve.eval(p);
     let via_surface = surface.eval(uv.x, uv.y);
     let via_curve = curve3.eval(t);
     via_surface.distance(via_curve)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn same_parameter_deviations(
-    surface: &Surface,
-    pcurve: &crate::brep::representation::curve::Curve2,
-    curve3: &crate::brep::representation::curve::Curve3,
-    prange: (f64, f64),
-    range: (f64, f64),
-    base_samples: usize,
-) -> Vec<(f64, f64)> {
-    let mut samples: Vec<(f64, f64)> = (0..=base_samples).map(|i| i as f64 / base_samples as f64).map(|s| (s, same_parameter_deviation_at(surface, pcurve, curve3, prange, range, s))).collect();
-    for _ in 0..3 {
-        let mut midpoints = Vec::new();
-        for w in samples.windows(2) {
-            let (s0, d0) = w[0];
-            let (s1, d1) = w[1];
-            if (d1 - d0).abs() > d0.max(d1).max(1e-12) * 0.5 {
-                midpoints.push(0.5 * (s0 + s1));
-            }
-        }
-        if midpoints.is_empty() {
-            break;
-        }
-        for s in midpoints {
-            samples.push((s, same_parameter_deviation_at(surface, pcurve, curve3, prange, range, s)));
-        }
-        samples.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-    }
-    samples
 }
 
 /// 🩺️ Every edge within one shell must be used by exactly 2 coedges with OPPOSITE `forward` sense
@@ -430,8 +341,10 @@ pub fn issue_reaches(reach: &ReachSet, label: &str) -> bool {
 /// reproduce [`validate_body`]'s historical check order exactly; `Complete` is terminal.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BodyValidationPhase {
-    /// 🔗 Every loop's coedge ring, in one whole-body unit (measured in microseconds).
+    /// 🎟️ One original arena slot or shell member per granted turn.
     #[default]
+    CollectingTopology,
+    /// 🔗 One original ring slot/member or neighboring coedge probe per unit.
     LoopRings,
     /// 🪢 Edge valence, one whole-body unit.
     EdgeValence,
@@ -462,6 +375,7 @@ impl BodyValidationPhase {
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn tag(self) -> &'static str {
         match self {
+            Self::CollectingTopology => "collectingTopology",
             Self::LoopRings => "loopRings",
             Self::EdgeValence => "edgeValence",
             Self::ToleranceContainment => "toleranceContainment",
@@ -478,8 +392,7 @@ impl BodyValidationPhase {
     }
 }
 
-/// 📈 Monotone progress of one resumable validation. `units_total` is fixed at construction, so
-/// the ratio a surface paints never moves backwards.
+/// 📈 Original funded work completed; remaining work grows as cold topology is discovered.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct BodyValidationProgress {
     pub units_done: usize,
@@ -498,15 +411,52 @@ struct ShellVolumeUnit {
     total: Option<f64>,
 }
 
+#[derive(Default)]
+struct FaceCoedgeCursor {
+    face_slot: usize,
+    face: Option<FaceId>,
+    loop_slot: usize,
+    start: Option<CoedgeId>,
+    next: Option<CoedgeId>,
+    visited: usize,
+}
+enum FaceCoedgeTurn { Pending, Coedge(FaceId, CoedgeId), Complete }
+impl FaceCoedgeCursor {
+    fn step(&mut self, body: &Body, live_coedges: usize) -> FaceCoedgeTurn {
+        if let Some(coedge) = self.next {
+            self.next = body.coedges.get(coedge).map(|value| value.next);
+            self.visited += 1;
+            if self.next == self.start || self.visited > live_coedges { self.next = None; }
+            return FaceCoedgeTurn::Coedge(self.face.expect("original face ring admitted"), coedge);
+        }
+        if self.start.take().is_some() { return FaceCoedgeTurn::Pending; }
+        if let Some(id) = self.face {
+            let Some(face) = body.faces.get(id) else { self.face = None; return FaceCoedgeTurn::Pending; };
+            if self.loop_slot > face.inners.len() { self.face = None; return FaceCoedgeTurn::Pending; }
+            let loop_id = if self.loop_slot == 0 { face.outer } else { face.inners.get(self.loop_slot - 1).copied() };
+            self.loop_slot += 1;
+            self.start = loop_id.and_then(|id| body.loops.get(id)).map(|value| value.first);
+            self.next = self.start;
+            self.visited = 0;
+            return FaceCoedgeTurn::Pending;
+        }
+        if self.face_slot >= body.faces.slot_count() { return FaceCoedgeTurn::Complete; }
+        self.face = body.faces.slot_at(self.face_slot).map(|(id, _)| id);
+        self.face_slot += 1;
+        self.loop_slot = 0;
+        FaceCoedgeTurn::Pending
+    }
+}
+
 /// ⏱️ [`validate_body`] split into budgetable units so a host can run it inside an interactive
 /// step ceiling across many turns, report progress, and never block a worker's event loop long
 /// enough for a liveness watchdog to read the silence as death.
 ///
-/// The unit is one whole cheap check, or ONE face / ONE edge inside the two checks that dominate
-/// the cost (`solidOrientation`'s per-face volume integral and `degenerateFaces`' per-face area).
-/// A pathological single face still costs one whole unit — the same bound
-/// `TessellationJob`'s own doc states, for the same reason: abandoning a face mid-quadrature would
-/// throw its work away.
+/// Cold planning, loop validation, edge valence, tolerance and pcurve presence borrow one original slot, member or coedge pair per unit.
+/// Same-parameter validation evaluates at most one original geometry sample per unit; arbitrary
+/// curve/surface evaluators still own their internal work and allocation costs.
+/// Remaining geometric phases still invoke whole checks or whole-face quadrature; their units
+/// describe scheduling progress and do not establish a strict interactive work ceiling.
 pub struct BodyValidationJob {
     phase: BodyValidationPhase,
     issues: Vec<ValidationIssue>,
@@ -517,35 +467,229 @@ pub struct BodyValidationJob {
     edge_cursor: usize,
     faces: Vec<FaceId>,
     face_cursor: usize,
-    cheap_done: usize,
+    units_done: usize,
     units_total: usize,
+    planning_stage: u8,
+    planning_slot: usize,
+    planning_solid: Option<crate::brep::representation::arena::SolidId>,
+    planning_shell: usize,
+    planning_face: Option<usize>,
+    live_coedges: usize,
+    loop_slot: usize,
+    loop_id: Option<LoopId>,
+    ring: Vec<CoedgeId>,
+    ring_next: Option<CoedgeId>,
+    ring_probe: usize,
+    valence_edge_slot: usize,
+    valence_edge: Option<EdgeId>,
+    valence_coedge_slot: usize,
+    valence_uses: usize,
+    pcurve_slot: usize,
+    tolerance_stage: u8,
+    tolerance_edge_cursor: usize,
+    tolerance_vertex: usize,
+    tolerance_faces: FaceCoedgeCursor,
+    same_faces: FaceCoedgeCursor,
+    same_pair: Option<(FaceId, CoedgeId)>,
+    same_stage: u8,
+    same_cursor: usize,
+    same_pass: usize,
+    same_samples: Vec<(f64, f64)>,
+    same_midpoints: Vec<f64>,
 }
 
 impl BodyValidationJob {
-    /// 🧪 Plans one validation of `body`. The plan (which shells, edges and faces exist) is read
-    /// ONCE here, so `units_total` is fixed and the caller may re-present the same body on every
-    /// step without the total moving.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    pub fn new(body: &Body) -> Self {
-        let mut shells = Vec::new();
-        for (solid_id, solid) in body.solids.iter() {
-            shells.push(ShellVolumeUnit { solid: solid_id, shell: solid.outer, outer: true, faces: body.shell_faces(solid.outer), total: Some(0.0) });
-            for &void_shell in &solid.inners {
-                shells.push(ShellVolumeUnit { solid: solid_id, shell: void_shell, outer: false, faces: body.shell_faces(void_shell), total: Some(0.0) });
-            }
-        }
-        let edges: Vec<EdgeId> = body.edges.iter().map(|(id, _)| id).collect();
-        let faces: Vec<FaceId> = body.faces.iter().map(|(id, _)| id).collect();
-        let shell_faces: usize = shells.iter().map(|unit| unit.faces.len()).sum();
-        let units_total = CHEAP_CHECK_UNITS + shell_faces + edges.len() + faces.len();
-        Self { phase: BodyValidationPhase::LoopRings, issues: Vec::new(), shells, shell_cursor: 0, shell_face_cursor: 0, edges, edge_cursor: 0, faces, face_cursor: 0, cheap_done: 0, units_total }
+    /// 🧊 Admits an empty original frontier; topology is borrowed only inside funded steps.
+    pub fn new(_body: &Body) -> Self {
+        Self { phase: BodyValidationPhase::CollectingTopology, issues: Vec::new(), shells: Vec::new(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_face: None, live_coedges: 0, loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_samples: Vec::new(), same_midpoints: Vec::new() }
     }
 
-    /// 📈 This job's progress right now — safe to read between steps and after termination.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    /// 📈 Constant-time funded work progress, including cold planning turns.
     pub fn progress(&self) -> BodyValidationProgress {
-        let shell_faces_done: usize = self.shells.iter().take(self.shell_cursor).map(|unit| unit.faces.len()).sum::<usize>() + self.shell_face_cursor;
-        BodyValidationProgress { units_done: (self.cheap_done + shell_faces_done + self.edge_cursor + self.face_cursor).min(self.units_total), units_total: self.units_total, phase: self.phase }
+        BodyValidationProgress { units_done: self.units_done, units_total: self.units_total, phase: self.phase }
+    }
+
+    fn probe_valence(&mut self, body: &Body) {
+        let Some(edge) = self.valence_edge else {
+            if self.valence_edge_slot >= body.edges.slot_count() { self.phase = BodyValidationPhase::ToleranceContainment; return; }
+            self.valence_edge = body.edges.slot_at(self.valence_edge_slot).map(|(id, _)| id);
+            self.valence_edge_slot += 1;
+            self.valence_coedge_slot = 0;
+            self.valence_uses = 0;
+            return;
+        };
+        if self.valence_coedge_slot < body.coedges.slot_count() {
+            if let Some((_, coedge)) = body.coedges.slot_at(self.valence_coedge_slot) {
+                self.valence_uses += usize::from(crate::brep::representation::topology::coedge_uses_edge(coedge, edge));
+            }
+            self.valence_coedge_slot += 1;
+        } else {
+            let valence = self.valence_uses;
+            if valence > 2 { self.issues.push(ValidationIssue { entity: format!("edge-{}", edge.raw_index()), code: "non-manifold-edge", message: format!("edge is used by {valence} coedges (2-manifold shapes use at most 2)") }); }
+            self.valence_edge = None;
+        }
+    }
+
+    fn probe_pcurve_presence(&mut self, body: &Body) {
+        if self.pcurve_slot >= body.coedges.slot_count() { self.phase = BodyValidationPhase::SameParameter; return; }
+        if let Some((id, coedge)) = body.coedges.slot_at(self.pcurve_slot) { check_missing_pcurve(id, coedge, &mut self.issues); }
+        self.pcurve_slot += 1;
+    }
+
+    /// 🩺️ Original sixteen-interval sampler and three adaptive refinements, one probe per turn.
+    fn probe_same_parameter(&mut self, body: &Body) {
+        let Some((face_id, coedge_id)) = self.same_pair else {
+            match self.same_faces.step(body, self.live_coedges) {
+                FaceCoedgeTurn::Pending => {},
+                FaceCoedgeTurn::Complete => self.phase = BodyValidationPhase::ShellClosure,
+                FaceCoedgeTurn::Coedge(face, coedge) => {
+                    self.same_pair = Some((face, coedge));
+                    self.same_stage = 0;
+                    self.same_cursor = 0;
+                    self.same_pass = 0;
+                    self.same_samples.clear();
+                    self.same_midpoints.clear();
+                }
+            }
+            return;
+        };
+        let refs = body.faces.get(face_id).and_then(|face| body.surfaces.get(face.surface)).zip(body.coedges.get(coedge_id)).and_then(|(surface, coedge)| {
+            let pcurve = body.curves2.get(coedge.pcurve?)?;
+            let edge = body.edges.get(coedge.edge)?;
+            let curve = body.curves3.get(edge.curve)?;
+            Some((surface, coedge, pcurve, edge, curve))
+        });
+        let Some((surface, coedge, pcurve, edge, curve)) = refs else { self.same_pair = None; return; };
+        match self.same_stage {
+            0 => {
+                if self.same_cursor > 16 { self.same_stage = 1; self.same_cursor = 0; return; }
+                let s = self.same_cursor as f64 / 16.0;
+                self.same_samples.push((s, same_parameter_deviation_at(surface, pcurve, curve, coedge.prange, edge.range, s)));
+                self.same_cursor += 1;
+            }
+            1 => {
+                if self.same_cursor + 1 >= self.same_samples.len() {
+                    self.same_stage = if self.same_midpoints.is_empty() { 3 } else { 2 };
+                    self.same_cursor = 0;
+                    return;
+                }
+                let (s0, d0) = self.same_samples[self.same_cursor];
+                let (s1, d1) = self.same_samples[self.same_cursor + 1];
+                if (d1 - d0).abs() > d0.max(d1).max(1e-12) * 0.5 { self.same_midpoints.push(0.5 * (s0 + s1)); }
+                self.same_cursor += 1;
+            }
+            2 => {
+                if let Some(&s) = self.same_midpoints.get(self.same_cursor) {
+                    self.same_samples.push((s, same_parameter_deviation_at(surface, pcurve, curve, coedge.prange, edge.range, s)));
+                    self.same_cursor += 1;
+                } else {
+                    self.same_samples.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+                    self.same_midpoints.clear();
+                    self.same_pass += 1;
+                    self.same_stage = if self.same_pass == 3 { 3 } else { 1 };
+                    self.same_cursor = 0;
+                }
+            }
+            _ => {
+                if let Some(&(worst_s, worst_dev)) = self.same_samples.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)) {
+                    if worst_dev > edge.tol.value() {
+                        self.issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "same-parameter-violated", message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {}; face-{} edge-{} prange {:?} range {:?})", edge.tol.value(), face_id.raw_index(), coedge.edge.raw_index(), coedge.prange, edge.range) });
+                    }
+                }
+                self.same_pair = None;
+            }
+        }
+    }
+
+    fn probe_tolerance(&mut self, body: &Body) {
+        if self.tolerance_stage == 0 {
+            let Some(&edge_id) = self.edges.get(self.tolerance_edge_cursor) else { self.tolerance_stage = 1; return; };
+            if self.tolerance_vertex >= 2 { self.tolerance_edge_cursor += 1; self.tolerance_vertex = 0; return; }
+            let endpoint = self.tolerance_vertex;
+            self.tolerance_vertex += 1;
+            let Some(edge) = body.edges.get(edge_id) else { return; };
+            let vertex_id = [edge.v0, edge.v1][endpoint];
+            if let Some(vertex) = body.vertices.get(vertex_id) { check_tolerance_pair(format!("vertex-{}", vertex_id.raw_index()), vertex.tol, format!("edge-{}", edge_id.raw_index()), edge.tol, &mut self.issues); }
+            return;
+        }
+        match self.tolerance_faces.step(body, self.live_coedges) {
+            FaceCoedgeTurn::Pending => {},
+            FaceCoedgeTurn::Complete => self.phase = BodyValidationPhase::MissingPcurves,
+            FaceCoedgeTurn::Coedge(face_id, coedge_id) => {
+                let Some(face) = body.faces.get(face_id) else { return; };
+                let Some(coedge) = body.coedges.get(coedge_id) else { return; };
+                let Some(edge) = body.edges.get(coedge.edge) else { return; };
+                check_tolerance_pair(format!("edge-{}", coedge.edge.raw_index()), edge.tol, format!("face-{}", face_id.raw_index()), face.tol, &mut self.issues);
+            }
+        }
+    }
+
+    fn collect_topology(&mut self, body: &Body) {
+        match self.planning_stage {
+            0 => {
+                if let Some(solid_id) = self.planning_solid {
+                    let Some(solid) = body.solids.get(solid_id) else { self.planning_solid = None; self.planning_slot += 1; return; };
+                    let shell_id = if self.planning_shell == 0 { Some(solid.outer) } else { solid.inners.get(self.planning_shell - 1).copied() };
+                    let Some(shell_id) = shell_id else { self.planning_solid = None; self.planning_slot += 1; return; };
+                    if let Some(index) = self.planning_face {
+                        if let Some(face) = body.shells.get(shell_id).and_then(|shell| shell.faces.get(index)).copied() {
+                            self.shells.last_mut().expect("original shell admitted").faces.push(face);
+                            self.planning_face = Some(index + 1);
+                        } else { self.planning_face = None; self.planning_shell += 1; }
+                    } else {
+                        self.shells.push(ShellVolumeUnit { solid: solid_id, shell: shell_id, outer: self.planning_shell == 0, faces: Vec::new(), total: Some(0.0) });
+                        self.planning_face = Some(0);
+                    }
+                } else if self.planning_slot < body.solids.slot_count() {
+                    self.planning_solid = body.solids.slot_at(self.planning_slot).map(|(id, _)| id);
+                    self.planning_shell = 0;
+                    if self.planning_solid.is_none() { self.planning_slot += 1; }
+                } else { self.planning_stage = 1; self.planning_slot = 0; }
+            }
+            1 => {
+                if self.planning_slot < body.edges.slot_count() {
+                    if let Some((id, _)) = body.edges.slot_at(self.planning_slot) { self.edges.push(id); }
+                    self.planning_slot += 1;
+                } else { self.planning_stage = 2; self.planning_slot = 0; }
+            }
+            2 => {
+                if self.planning_slot < body.faces.slot_count() {
+                    if let Some((id, _)) = body.faces.slot_at(self.planning_slot) { self.faces.push(id); }
+                    self.planning_slot += 1;
+                } else { self.planning_stage = 3; self.planning_slot = 0; }
+            }
+            3 => {
+                if self.planning_slot < body.coedges.slot_count() {
+                    self.live_coedges += usize::from(body.coedges.slot_at(self.planning_slot).is_some());
+                    self.planning_slot += 1;
+                } else { self.phase = BodyValidationPhase::LoopRings; }
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn probe_loop(&mut self, body: &Body) {
+        let Some(loop_id) = self.loop_id else {
+            if self.loop_slot >= body.loops.slot_count() { self.phase = BodyValidationPhase::EdgeValence; return; }
+            if let Some((id, lp)) = body.loops.slot_at(self.loop_slot) {
+                self.loop_id = Some(id);
+                self.ring_next = Some(lp.first);
+                self.ring_probe = 0;
+            }
+            self.loop_slot += 1;
+            return;
+        };
+        if let Some(current) = self.ring_next.take() {
+            self.ring.push(current);
+            if let Some(coedge) = body.coedges.get(current) {
+                if self.ring.len() <= self.live_coedges && self.ring.first().copied() != Some(coedge.next) { self.ring_next = Some(coedge.next); }
+            }
+            return;
+        }
+        if self.ring_probe < self.ring.len() {
+            check_loop_pair(body, loop_id, &self.ring, self.ring_probe, &mut self.issues);
+            self.ring_probe += 1;
+        } else { self.ring.clear(); self.loop_id = None; }
     }
 
     /// ✅ True once every unit has run and [`Self::into_issues`] is final.
@@ -576,11 +720,12 @@ impl BodyValidationJob {
         let mut spent = 0usize;
         while spent < budget && !self.is_complete() {
             match self.phase {
-                BodyValidationPhase::LoopRings => self.cheap(body, check_loop_rings, BodyValidationPhase::EdgeValence),
-                BodyValidationPhase::EdgeValence => self.cheap(body, check_edge_valence, BodyValidationPhase::ToleranceContainment),
-                BodyValidationPhase::ToleranceContainment => self.cheap(body, check_tolerance_containment, BodyValidationPhase::MissingPcurves),
-                BodyValidationPhase::MissingPcurves => self.cheap(body, check_missing_pcurves, BodyValidationPhase::SameParameter),
-                BodyValidationPhase::SameParameter => self.cheap(body, check_same_parameter, BodyValidationPhase::ShellClosure),
+                BodyValidationPhase::CollectingTopology => self.collect_topology(body),
+                BodyValidationPhase::LoopRings => self.probe_loop(body),
+                BodyValidationPhase::EdgeValence => self.probe_valence(body),
+                BodyValidationPhase::ToleranceContainment => self.probe_tolerance(body),
+                BodyValidationPhase::MissingPcurves => self.probe_pcurve_presence(body),
+                BodyValidationPhase::SameParameter => self.probe_same_parameter(body),
                 BodyValidationPhase::ShellClosure => self.cheap(body, check_shell_closure_and_orientation, BodyValidationPhase::FaceLoopWinding),
                 BodyValidationPhase::FaceLoopWinding => self.cheap(body, check_face_loop_winding, BodyValidationPhase::SolidOrientation),
                 BodyValidationPhase::SolidOrientation => {
@@ -633,6 +778,8 @@ impl BodyValidationJob {
                 BodyValidationPhase::Complete => break,
             }
             spent += 1;
+            self.units_done += 1;
+            self.units_total = if self.is_complete() { self.units_done } else { self.units_total.max(self.units_done.saturating_add(1)) };
         }
         self.progress()
     }
@@ -640,7 +787,6 @@ impl BodyValidationJob {
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn cheap(&mut self, body: &Body, check: fn(&Body, &mut Vec<ValidationIssue>), next: BodyValidationPhase) {
         check(body, &mut self.issues);
-        self.cheap_done += 1;
         self.phase = next;
     }
 
@@ -676,9 +822,6 @@ impl BodyValidationJob {
     }
 }
 
-/// 🔢 How many whole-body units the cheap checks contribute to `units_total` — the phases that
-/// measured in microseconds and are therefore not worth a per-entity cursor.
-const CHEAP_CHECK_UNITS: usize = 8;
 
 // #endregion ⏱️ResumableValidation
 

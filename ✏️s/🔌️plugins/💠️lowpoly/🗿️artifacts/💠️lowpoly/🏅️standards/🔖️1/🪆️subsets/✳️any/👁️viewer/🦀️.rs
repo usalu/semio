@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::schema::default_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use crate::viewer::lowpoly::modes::view;
 use crate::viewer::lowpoly::modes::view::windows::model;
 use crate::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUMENT_SCHEMA};

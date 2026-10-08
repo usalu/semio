@@ -1,0 +1,217 @@
+{
+  "observedAt": "2026-10-08T18:09:23.518957+00:00",
+  "role": "Read-only current physical nine policy format and original selected/controlled-consumer settlement observations; excludes pending Neural/test corpus actions and gives no production currentness credit",
+  "checks": [
+    {
+      "scopeId": "hub.bootstrap",
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "33c6f93b3db0d917c0c5c4453ce9cc86c43ce50ca87752f3b5c288906037b557",
+      "expectedSha256": "33c6f93b3db0d917c0c5c4453ce9cc86c43ce50ca87752f3b5c288906037b557"
+    },
+    {
+      "scopeId": "repo.discovery.runtime",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "3690533367c57d80211db7b8541a7b48a15911313b7180d64a92fda34a166806",
+      "expectedSha256": "3690533367c57d80211db7b8541a7b48a15911313b7180d64a92fda34a166806"
+    },
+    {
+      "scopeId": "os.plugin.browser-bundle",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "c32c7b89824f61ad80940311cc1c37be25ee3c7e5127dc9a01af4e2aa26d5aa0",
+      "expectedSha256": "c32c7b89824f61ad80940311cc1c37be25ee3c7e5127dc9a01af4e2aa26d5aa0"
+    },
+    {
+      "scopeId": "os.dev.distribution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "3ec59278818573a28e996993870ea63c65d78bf9be6e70c8cbd950a493646b40",
+      "expectedSha256": "3ec59278818573a28e996993870ea63c65d78bf9be6e70c8cbd950a493646b40"
+    },
+    {
+      "scopeId": "os.dev.verification.publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "efd12568470ab21f04ff4550066578a651eb5f8b7284041290c61dd2ef901573",
+      "expectedSha256": "efd12568470ab21f04ff4550066578a651eb5f8b7284041290c61dd2ef901573"
+    },
+    {
+      "scopeId": "repo.library.workspaces.cargo.preparation.custody",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "6ed52b410e06b30849578a7d6dd110df5285c4f7cbc7bf9d95aa3aa9458a6574",
+      "expectedSha256": "6ed52b410e06b30849578a7d6dd110df5285c4f7cbc7bf9d95aa3aa9458a6574"
+    },
+    {
+      "scopeId": "s.dev.entry",
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "5da6b929d68c6513de152605011222ff1c4c7b4f33961012b1aff1bf3cebd70d",
+      "expectedSha256": "5da6b929d68c6513de152605011222ff1c4c7b4f33961012b1aff1bf3cebd70d"
+    },
+    {
+      "scopeId": "os.plugin.registry.descriptor-verification",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "e25829a763f79829b00b51ded56c0892494c02a8f39391d5c943346fbdb842fe",
+      "expectedSha256": "e25829a763f79829b00b51ded56c0892494c02a8f39391d5c943346fbdb842fe"
+    },
+    {
+      "scopeId": "os.plugin.registry",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "2657c8dd983a7ee42b3ff49b6f1203d9bbefaf4b3cd8f758dd29efaa1c4e9e73",
+      "expectedSha256": "2657c8dd983a7ee42b3ff49b6f1203d9bbefaf4b3cd8f758dd29efaa1c4e9e73"
+    },
+    {
+      "scopeId": "os.plugin.registry",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts",
+      "matches": true,
+      "currentSha256": "d009df574b9e399e5699981663a65e31c41b67eb3c03fc35155c2e14b179c4a7",
+      "expectedSha256": "d009df574b9e399e5699981663a65e31c41b67eb3c03fc35155c2e14b179c4a7"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "matches": true,
+      "currentSha256": "5caf8e9883671200445f84443972de14e0dbad19720ce0f51eb810bf2fda3115",
+      "expectedSha256": "5caf8e9883671200445f84443972de14e0dbad19720ce0f51eb810bf2fda3115"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "matches": true,
+      "currentSha256": "c021ee239bb89a688366759482664043038c1870afda8737f263b22412c1723d",
+      "expectedSha256": "c021ee239bb89a688366759482664043038c1870afda8737f263b22412c1723d"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "matches": true,
+      "currentSha256": "0051f5fb82a2c435fdea086ad0d0cda35156711f0057468d1a1d8927981427d3",
+      "expectedSha256": "0051f5fb82a2c435fdea086ad0d0cda35156711f0057468d1a1d8927981427d3"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+      "matches": true,
+      "currentSha256": "6ed52b410e06b30849578a7d6dd110df5285c4f7cbc7bf9d95aa3aa9458a6574",
+      "expectedSha256": "6ed52b410e06b30849578a7d6dd110df5285c4f7cbc7bf9d95aa3aa9458a6574"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+      "matches": true,
+      "currentSha256": "6c55980229f7d109c5e10601485a3c6540f5753b30c64fafd1b7591d528850f2",
+      "expectedSha256": "6c55980229f7d109c5e10601485a3c6540f5753b30c64fafd1b7591d528850f2"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+      "matches": true,
+      "currentSha256": "de6986b88dedb5eaf334325fb99a6766e5558c5131f3e71e4567823f66099274",
+      "expectedSha256": "de6986b88dedb5eaf334325fb99a6766e5558c5131f3e71e4567823f66099274"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "matches": true,
+      "currentSha256": "b39961ab5f9c9a247c7e933ef083b39edcfcb61df58e2e570756948f3627f58e",
+      "expectedSha256": "b39961ab5f9c9a247c7e933ef083b39edcfcb61df58e2e570756948f3627f58e"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "matches": true,
+      "currentSha256": "f1c2ee7b31e627963c8291601c1eb30359080bdedeafa4e68722244d26a703f5",
+      "expectedSha256": "f1c2ee7b31e627963c8291601c1eb30359080bdedeafa4e68722244d26a703f5"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "matches": true,
+      "currentSha256": "ec37e216f82b1e40cfbeede7a92ea8fa0eea0db0bad9ca805dff48e62136d904",
+      "expectedSha256": "ec37e216f82b1e40cfbeede7a92ea8fa0eea0db0bad9ca805dff48e62136d904"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "matches": true,
+      "currentSha256": "2918b3af75ce65a54de5a6bc0daa98f69348b4954aaf2f6d63ddb2d59c87778d",
+      "expectedSha256": "2918b3af75ce65a54de5a6bc0daa98f69348b4954aaf2f6d63ddb2d59c87778d"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+      "matches": true,
+      "currentSha256": "d585bdade032c1d1b57d64cbbde7204660e578233bd862880dfe3ee6b025b335",
+      "expectedSha256": "d585bdade032c1d1b57d64cbbde7204660e578233bd862880dfe3ee6b025b335"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧰️runtime/🟦️.ts",
+      "matches": true,
+      "currentSha256": "8609214e3916ab40f2c8c4f31ec2d73b708a443b86000dbadddbb14e91ccece5",
+      "expectedSha256": "8609214e3916ab40f2c8c4f31ec2d73b708a443b86000dbadddbb14e91ccece5"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts",
+      "matches": true,
+      "currentSha256": "3c5091823c57092a0213e680930fe0896ac21e96ea8dea639880d0e5fae8e006",
+      "expectedSha256": "3c5091823c57092a0213e680930fe0896ac21e96ea8dea639880d0e5fae8e006"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",
+      "matches": true,
+      "currentSha256": "b171b33c66ef5d82f166bf20a0ae02930694a9776b969fe581f892c69422c877",
+      "expectedSha256": "b171b33c66ef5d82f166bf20a0ae02930694a9776b969fe581f892c69422c877"
+    },
+    {
+      "scopeId": "📥️oct8-selected-consumption-authored-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🕰️queued-preparation/🔣️.json",
+      "matches": true,
+      "currentSha256": "95e52ad19babdfdb4e52d1bc7e71aaabff6148f9c19a4ecab24019bef3d7dbe7",
+      "expectedSha256": "95e52ad19babdfdb4e52d1bc7e71aaabff6148f9c19a4ecab24019bef3d7dbe7"
+    },
+    {
+      "scopeId": "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+      "matches": true,
+      "currentSha256": "1e25a821f2dd4eef25306149bb414fc224c626dea29042dd6d767ec73f950dcc",
+      "expectedSha256": "1e25a821f2dd4eef25306149bb414fc224c626dea29042dd6d767ec73f950dcc"
+    },
+    {
+      "scopeId": "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+      "matches": true,
+      "currentSha256": "35e1518bf94b9c921e8ed4c1cee7cec03d678059f4c16f642e3c870e14985ba7",
+      "expectedSha256": "35e1518bf94b9c921e8ed4c1cee7cec03d678059f4c16f642e3c870e14985ba7"
+    },
+    {
+      "scopeId": "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "matches": true,
+      "currentSha256": "72819ef11f00bd4a410f578e22d10f9ff30d4b373c23f6c99286abb825c31baf",
+      "expectedSha256": "72819ef11f00bd4a410f578e22d10f9ff30d4b373c23f6c99286abb825c31baf"
+    },
+    {
+      "scopeId": "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+      "matches": true,
+      "currentSha256": "cc7968981d220eda0bac78d99d40d044b93b6125cb4ebcd10ce90917bc13142f",
+      "expectedSha256": "cc7968981d220eda0bac78d99d40d044b93b6125cb4ebcd10ce90917bc13142f"
+    },
+    {
+      "scopeId": "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json",
+      "matches": true,
+      "currentSha256": "86525d76d9792dadde9bd74c0a63577b11cd58aa6012b8334dd567240b20dffe",
+      "expectedSha256": "86525d76d9792dadde9bd74c0a63577b11cd58aa6012b8334dd567240b20dffe"
+    }
+  ],
+  "mismatches": []
+}

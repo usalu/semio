@@ -34,7 +34,7 @@ async fn render_joins_lines_with_the_line_ending() {
     assert_eq!(scene.buffer, "a\nb");
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("editable draft settings")).expect("settings JSON");
     assert_eq!(settings["editAction"], "textEdit");
-    assert_eq!(settings["editArgument"], "text");
+    assert_eq!(settings["editArgument"], "splices");
     assert_eq!(settings["editArguments"]["revision"], "revision");
     assert_eq!(settings["commit"], "explicit");
 }

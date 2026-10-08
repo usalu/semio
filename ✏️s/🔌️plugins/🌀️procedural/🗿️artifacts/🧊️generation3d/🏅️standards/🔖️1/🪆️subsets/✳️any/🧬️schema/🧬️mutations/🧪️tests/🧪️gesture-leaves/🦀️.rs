@@ -152,6 +152,7 @@ fn payload_invariants_are_fatal() {
 fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
     use semio_framework_diagnostic::Severity::Error;
 use semio_framework_diagnostic::Severity::Warning;
+use crate::central_apply::{apply_generation3d_mutation};
     let base = base([0.0; 3]);
     for (value, range) in [(7.5, (0.0, 10.0)), (42.0, (0.0, 50.0))] {
         let applied = applied_and_restored(&change_slider_value("height", value), &base);

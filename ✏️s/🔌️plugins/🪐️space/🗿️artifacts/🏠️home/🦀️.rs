@@ -8,8 +8,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-#[cfg(feature = "component-app-assembly")]
-pub(crate) use semio_s_artifact_space_space::space_core::*;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 

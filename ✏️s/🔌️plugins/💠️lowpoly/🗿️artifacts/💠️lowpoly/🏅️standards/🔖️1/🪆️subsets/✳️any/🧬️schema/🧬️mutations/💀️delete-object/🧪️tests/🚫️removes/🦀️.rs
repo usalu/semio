@@ -1,6 +1,6 @@
 //! 🧪️ `delete-object` fixture — `🚫️removes`.
 //!
-//! `delete-object` routes through `diff_objects_remove`, the one objects-delta constructor that leaves `reordered` as `None` — removal alone re-derives the order, so no permutation is published.
+//! `delete-object` routes through `diff_objects_remove`, which names the removed object by its id and base index — no permutation is published.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

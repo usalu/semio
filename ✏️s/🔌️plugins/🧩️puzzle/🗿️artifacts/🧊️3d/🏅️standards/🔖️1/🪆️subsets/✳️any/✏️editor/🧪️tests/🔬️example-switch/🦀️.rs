@@ -22,7 +22,7 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
     assert!(seeded > 0, "a fresh session boots on a real example document");
     let object_ids = |scene_snapshot: &Puzzle3dSceneSnapshot| scene_snapshot.objects.iter().map(|object| object.id.clone()).collect::<Vec<_>>();
     assert_eq!(
-        object_ids(&puzzle3d_scene_snapshot_from_projection(&projection_of(&app))),
+        object_ids(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed())),
         object_ids(&default_scene_snapshot()),
         "the document a fresh session boots with must BE the example the config names"
     );
@@ -35,7 +35,7 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
 #[test]
 fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -158,7 +158,7 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
 #[test]
 fn set_active_example_history_is_one_set_active_example_row() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();

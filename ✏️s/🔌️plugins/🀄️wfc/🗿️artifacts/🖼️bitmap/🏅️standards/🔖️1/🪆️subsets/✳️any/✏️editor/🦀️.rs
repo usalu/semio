@@ -16,7 +16,7 @@
 //! hold it. The fill tool publishes partial pixels on each tick; `commit-fill-solve` writes
 //! `SetSolve` only when the run commits. Abort leaves the transient untouched.
 //!
-//! **`SetActiveExample` replaces the document without a phantom edit.** It is the verb the shell's
+//! **`SetActiveExample` loads a document without a phantom edit (a `LoadDocument` effect, host-only).** It is the verb the shell's
 //! navbar picker AND its automatic boot announcement dispatch, so an app that does not declare it has
 //! a dead picker and a boot-time `undeclared-action` refusal in every session.
 //!
@@ -343,12 +343,10 @@ const BITMAP_RETAINED_COMMAND_SCHEMA: &str = "s.wfc.bitmap/v1.tool-command.v1";
 /// 🎒️ Wire ceiling for one bitmap tool dispatch. The largest payload is a `set-input-pixels` region
 /// covering a whole 512-edge sample's row band; a full 128 × 128 repaint is 22 KiB of base64.
 const BITMAP_RETAINED_RAW_BYTES: usize = 65_536;
-/// 📬️ Admission envelope for one published document edit — `setActiveExample` publishes the widest
+/// 📬️ Admission envelope for one published document edit — `set-input-pixels` publishes the widest
 /// one, a whole re-laid-out sample buffer.
 const BITMAP_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 262_144;
-/// 🧮️ Durable items one dispatch may fold. Every ordinary verb folds ONE; `setActiveExample` folds a
-/// whole declared-state diff (pins released, palette grown, buffer rewritten, palette shrunk, output,
-/// model, seed, pins restored), so the ceiling is the example roster's widest replay, not one row.
+/// 🧮️ Durable items one dispatch may fold: every verb folds ONE row, the example picker none (it is a `LoadDocument`).
 const BITMAP_RETAINED_WORK_ITEMS: usize = 4_096;
 
 /// 🚦️ Per-tool publication lanes, read straight off each command's own emit.
@@ -367,7 +365,7 @@ const BITMAP_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     brush_route("paint-stroke"),
     ArtifactToolPublicationContract { tool_id: "solve", lanes: &[ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "commit-fill-solve", lanes: &[ArtifactToolPublicationLane::Transient] },
-    artifact_route("setActiveExample"),
+    host_only_route("setActiveExample"),
     artifact_route("pin-solution"),
     brush_route("canvasPointerDown"),
     brush_route("canvasPointerMove"),

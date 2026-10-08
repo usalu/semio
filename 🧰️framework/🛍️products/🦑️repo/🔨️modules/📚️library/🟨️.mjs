@@ -19,6 +19,7 @@ const COMPONENT_DEPLOYMENT_MODULE = "📇️catalog/🚚️deployment/🟨️.mj
 const INSTALLATION_IDENTITY_MODULE = "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs";
 const INSTALLATION_IDENTITY_SCHEMA = "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
 const BROWSER_SESSION_MODULE = "../../../💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs";
+const PLAYGROUND_COMPOSITION_MODULE = "../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟨️.mjs";
 const SOURCE_INPUT_MODULE = "🕸️dependencies/🟦️typescript/🟨️.mjs";
 const COMMAND_INPUT_MODULE = "⚡️caching/📥️inference/🟨️.mjs";
 
@@ -51,6 +52,7 @@ let commandSourceImports = (path, source) => currentCommandInputs(loadedCommandI
 let moduleSourceImports = (path, source) => currentCommandInputs(loadedCommandInputs).moduleSourceImports(path, source);
 
 let declaredBrowserSessionEnginesV1;
+let playgroundCompositionPathV1;
 let admitPlaygroundNativeHostV1;
 let nativeHostSourceFactsV1;
 let runtimeComponentClosure;
@@ -81,6 +83,8 @@ const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? 
   componentDeploymentDirectoryV1 = metadata => deployment.componentDeploymentDirectoryV1(metadata, admit);
   const browser = await importRevision(new URL(BROWSER_SESSION_MODULE, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, BROWSER_SESSION_MODULE))).digest("hex"));
   declaredBrowserSessionEnginesV1 = browser.declaredBrowserSessionEnginesV1;
+  const composition = await importRevision(new URL(PLAYGROUND_COMPOSITION_MODULE, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, PLAYGROUND_COMPOSITION_MODULE))).digest("hex"));
+  playgroundCompositionPathV1 = composition.playgroundCompositionPathV1;
 });
 
 const POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json")).toString("utf8"));
@@ -872,13 +876,6 @@ function withLeveledTestTargets(targets) {
   return leveled;
 }
 
-/** 📬️ Explicit repository consumer bodies prepare at Cargo consumption; arbitrary owners retain eager preparation. */
-export function nativeOwnerExecutionRoute(target) {
-  const preparation=target.metadata?.semio?.nativePreparation;
-  if(preparation===undefined)return "owner-command";
-  if(preparation!=="cargo-consumer" || !/^bun\s+(?:"[^"\n]+"|'[^'\n]+'|[^\s]+)\s+test(?:\s+(?:quick|long|exhaustive))?$/u.test(target.options?.command??""))throw Error("Invalid repository Cargo-consumer test body declaration");
-  return "repository-test-body";
-}
 
 /**
  * @param {Record<string, any>} json
@@ -927,7 +924,8 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
       const driver=nxPath(relative(workspaceRoot,join(LIBRARY_ROOT,"⚡️caching/🦀️cargo/📜️script.ts")));
       const ownerCwd=target.options?.cwd??root;
       const boundCommand=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(nxPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
-      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} native ${nativeOwnerExecutionRoute(policy)} --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      policy.executor="@semio-tech/repo-lib:owner-command";
+      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
       const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
       if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
       else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);
@@ -935,11 +933,12 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
       if(config.startsWith("../"))throw Error(`Cargo test policy escapes workspace: ${nativeRoot}`);
       policy.cargoTestPolicyInputs=[`{workspaceRoot}/${config}`];
     }
-    if (!/ native (?:owner-command|repository-test-body) /u.test(policy.options?.command??"") && targetScriptClosure(policy, workspaceRoot, scripts)?.some(path=>path.includes("/🏃️process/🧪️testing/🧪️vitest/")||path.includes("/🏃️process/📋️context/"))) {
+    if (!/ native owner-command /u.test(policy.options?.command??"") && targetScriptClosure(policy, workspaceRoot, scripts)?.some(path=>path.includes("/🏃️process/🧪️testing/🧪️vitest/")||path.includes("/🏃️process/📋️context/"))) {
       const command=policy.options?.command,ownerCwd=target.options?.cwd??root;
       if(typeof command!=="string"||!command.startsWith("bun "))throw Error(`Process owner requires one Bun script command: ${json.name}:${name}`);
       const driver=nxPath(relative(workspaceRoot,join(LIBRARY_ROOT,"📦️packages/🟦️typescript/📜️script.ts")));
       const bound=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(nxPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
+      policy.executor="@semio-tech/repo-lib:owner-command";
       policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} owner-command --cwd ${JSON.stringify(ownerCwd)} -- ${bound}`};
     }
     if (nativeTarget) {
@@ -1161,8 +1160,11 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const nativeHostView={kind:(path)=>{try{const stat=lstatSync(join(workspaceRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if(error.code==="ENOENT")return null;throw error;}},readText:(path)=>readFileSync(join(workspaceRoot,path),"utf8")};
   const result = {};
   for (const playground of playgrounds) {
+    if (typeof playground.variant !== "string" || playground.variant.length > 256 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\s\S])/u.test(playground.variant)) throw Error("Invalid playground variant");
+    const composition = playground.compositionConfigPath === undefined ? undefined : playgroundCompositionPathV1(playground.compositionConfigPath), wgpuPort = playground.ports?.wgpu;
+    if (!Number.isSafeInteger(wgpuPort) || wgpuPort < 1 || wgpuPort > 65535) throw Error("Invalid declared WGPU listener port");
     const componentRows = [...components].map(([pluginId,row])=>({...row,pluginId,dependsOn:[...(row.extends?[row.extends]:[]),...(row["depends-on"]??[])]}));
-    const sources=[...(playground.engines??[]).map(path=>nxPath(relative(workspaceRoot,resolve(workspaceRoot,path,PROJECT_BASENAME)))),...[playground.nativeHost,playground.mcpHost].filter(Boolean).flatMap(host=>[`${host.cratePath}/Cargo.toml`,`${host.cratePath}/${PROJECT_BASENAME}`]),...(playground.devContribution?[playground.devContribution]:[])];
+    const sources=[...(playground.engines??[]).map(path=>nxPath(relative(workspaceRoot,resolve(workspaceRoot,path,PROJECT_BASENAME)))),...[playground.nativeHost,playground.mcpHost].filter(Boolean).flatMap(host=>[`${host.cratePath}/Cargo.toml`,`${host.cratePath}/${PROJECT_BASENAME}`]),...(playground.devContribution?[playground.devContribution]:[]),...(composition===undefined?[]:[composition])];
     const request={component:playground.pluginId,appScoped:playground.app!==undefined,sources};
     let admission=runtimeInputAdmissionV1(componentRows,[{id:request.component,appScoped:request.appScoped}],sources,path=>existsSync(join(workspaceRoot,path)));
     if(admission.status==="admitted")for(const id of admission.selected){try{nativeDependencyRoots(components.get(id).cratePath,workspaceRoot,false,nativeFiles,nativeClosures);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;const missing=nxPath(relative(workspaceRoot,error.manifest));sources.push(missing);admission={schemaVersion:1,status:"refused",missing:{kind:"source",value:missing}};break;}}
@@ -1220,7 +1222,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, ...engines, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
-      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile}` } };
+      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } };
       result[`activate-${playground.variant}-wgpu-${profile}`] = {
       cache: false,
       outputs: [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`],
@@ -1582,7 +1584,7 @@ async function createDependenciesImplementation(_options, context) {
 /** ♻️ Reloads authored graph code and policy while retaining Nx's daemon and task cache. */
 function implementationRevision() {
   const hash = createHash("sha256").update(readPhysicalSource(fileURLToPath(import.meta.url)));
-  for (const path of ["⚡️caching/🔣️policy.json", "🔣️taxonomy.json", COMMAND_INPUT_MODULE, RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(readPhysicalSource(join(LIBRARY_ROOT, path)));
+  for (const path of ["⚡️caching/🔣️policy.json", "🔣️taxonomy.json", COMMAND_INPUT_MODULE, RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(readPhysicalSource(join(LIBRARY_ROOT, path)));
   return hash.digest("hex");
 }
 

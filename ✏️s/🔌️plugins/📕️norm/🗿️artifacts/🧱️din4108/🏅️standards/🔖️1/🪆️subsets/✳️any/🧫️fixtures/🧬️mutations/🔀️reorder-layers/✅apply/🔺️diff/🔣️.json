@@ -8,15 +8,17 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "elements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "wall-north",
+        "id": "wall-north",
         "patch": {
           "kind": null,
           "zoneId": null,
@@ -28,26 +30,13 @@
           "deltaUF": null,
           "deltaUR": null,
           "layers": {
-            "removed": [
-              "plaster-int"
-            ],
-            "added": [
+            "removed": [],
+            "inserted": [],
+            "moved": [
               {
-                "after": "masonry",
-                "row": {
-                  "id": "plaster-int",
-                  "materialId": "gypsum_plaster",
-                  "thicknessM": 0.015,
-                  "lambda": 0.7,
-                  "mu": 10.0,
-                  "density": 1400.0,
-                  "applicationType": "",
-                  "compressiveClass": "",
-                  "waterClass": "",
-                  "tensileClass": "",
-                  "acousticClass": "",
-                  "segments": []
-                }
+                "id": "plaster-int",
+                "from": 0,
+                "to": 1
               }
             ],
             "modified": []
@@ -58,7 +47,8 @@
   },
   "thermalBridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

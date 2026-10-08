@@ -3,40 +3,9 @@
 //! this is a container-level codec, not a full audio decoder), and an optional typed ID3v1
 //! trailer. Real byte-accurate codec (see `⚙️engine`), not a container placeholder.
 
-/// 📦️ Owned by `mp3`: one ID3v2 text/binary frame, typed-raw (`id`/`flags` decoded, `data`
-/// retained verbatim — this codec does not interpret ID3 text-encoding bytes).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct Id3Frame {
-    pub id: String,
-    pub flags: u16,
-    #[value(default)]
-    #[dsl(base64)]
-    pub data: Vec<u8>,
-}
-
-/// 📦️ Owned by `mp3`: the ID3v2 tag header (version/flags, as two named fields — not a bare
-/// tuple, per the recipe's own ban) + its frames.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct Id3v2Tag {
-    pub major_version: u8,
-    pub minor_version: u8,
-    pub flags: u8,
-    #[value(default)]
-    pub frames: Vec<Id3Frame>,
-}
-
-/// 📦️ Owned by `mp3`: the 128-byte ID3v1 trailer, retained verbatim as a NAMED struct (not a
-/// bare `[u8;128]`, per the recipe's tuple/array-gap guidance) — this codec does not decode
-/// ID3v1's fixed-width title/artist/album/year/comment/genre sub-fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct Id3v1Tag {
-    #[value(default)]
-    #[dsl(base64)]
-    pub raw: Vec<u8>,
-}
+#[path = "🏷️metadata/🦀️.rs"]
+pub mod metadata;
+pub use metadata::{Id3Content, Id3Frame, Id3v1Tag, Id3v2Tag, id3_content_kind, validate_id3_frame, validate_id3v1_tag};
 
 /// 📦️ Owned by `mp3`: one MPEG audio frame header, every field of the real 4-byte header typed
 /// individually (raw bit-field values, matching the spec's own encoding — e.g.

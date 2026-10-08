@@ -432,7 +432,7 @@ def apply_mutation(document, mutation):
             resolve_load(result, load)
             if find(case["loads"], load["id"]) is not None:
                 warn(NO_OP, 'Load "%s" already exists in case "%s".' % (load["id"], case["id"]))
-            case["loads"].append(load)
+            case["loads"].insert(len(case["loads"]) if mutation.get("index") is None else mutation["index"], load)
         elif kind == "remove-load":
             at = find(case["loads"], mutation["loadId"])
             if at is None:
@@ -467,7 +467,7 @@ def apply_mutation(document, mutation):
             if find(items, record["id"]) is not None:
                 fatal(DUPLICATE_ID, [record["id"]], 'A %s with id "%s" already exists.' % (noun, record["id"]))
             check_record(result, noun, record)
-            items.append(record)
+            items.insert(len(items) if mutation.get("index") is None else mutation["index"], record)
         elif kind.startswith("delete-"):
             at = find(items, mutation["id"])
             if at is None:
@@ -492,9 +492,8 @@ def apply_mutation(document, mutation):
 def inverse_mutation(document, mutation):
     """↩️ The mutation that undoes one application, computed against the model it applies to.
 
-    Note what the vocabulary can and cannot express: no `create-` verb carries an index, so the
-    inverse of a delete is exact only for a TRAILING record — the feature's rows are chosen
-    accordingly and say so.
+    Every `create-`/`add-load` verb carries an optional index, so the inverse of a delete restores the
+    record at its original position, whatever that is.
     """
     kind = kind_of(mutation)
     if kind == "update-analysis-settings":
@@ -506,7 +505,7 @@ def inverse_mutation(document, mutation):
         at = find(case["loads"], mutation["loadId"])
         if at is None:
             raise AssertionError("inverse of %s: case %r carries no load %r" % (kind, case["id"], mutation["loadId"]))
-        return {"mutation": TAGS["add-load"], "caseId": mutation["caseId"], "load": copy.deepcopy(case["loads"][at])}
+        return {"mutation": TAGS["add-load"], "caseId": mutation["caseId"], "load": copy.deepcopy(case["loads"][at]), "index": at}
     if kind == "replace-load":
         case = case_of(document, mutation["caseId"])
         at = find(case["loads"], mutation["loadId"])
@@ -526,7 +525,7 @@ def inverse_mutation(document, mutation):
         raise AssertionError("inverse of %s: %r is not in %s" % (kind, mutation["id"], collection))
     held = copy.deepcopy(document[collection][at])
     if kind.startswith("delete-"):
-        return {"mutation": TAGS["create-%s" % noun], create_argument: held}
+        return {"mutation": TAGS["create-%s" % noun], create_argument: held, "index": at}
     return {"mutation": TAGS[kind], "id": mutation["id"], replace_argument: held}
 
 

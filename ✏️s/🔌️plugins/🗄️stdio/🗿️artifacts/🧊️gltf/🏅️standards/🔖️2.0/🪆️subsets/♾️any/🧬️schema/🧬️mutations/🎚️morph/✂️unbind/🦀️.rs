@@ -31,8 +31,8 @@ pub fn plan(p: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> R
     let Some(index) = base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().position(|(semantic, _)| semantic == &p.semantic) else {
         return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/targets", "semantic is not bound"));
     };
-    let value = with_replaced(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, GltfMorphTarget(without(&base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0, index)));
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+    let rows = target_replacement(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, target_without_pair(&base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target], index));
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

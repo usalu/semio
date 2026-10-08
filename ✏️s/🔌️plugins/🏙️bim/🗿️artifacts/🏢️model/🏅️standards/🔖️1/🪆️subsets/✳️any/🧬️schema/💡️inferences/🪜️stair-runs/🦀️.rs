@@ -207,10 +207,7 @@ pub fn dependency(stair: &Stair) -> semio_framework_value::DslValue {
 //#endregion 🔖️Geometry
 
 //#region 🔖️Projection
-/// 🧾️ The table the third-party oracle reproduces: the whole run of every stair.
-pub fn table_json(runs: &BTreeMap<String, StairRun>) -> String {
-    semio_framework_pack_json::to_json_string(runs)
-}
+
 
 /// 🪜️ The run of every stair (the `StairRun` nodes of the model graph).
 pub fn compute_stair_runs(snapshot: &ModelSnapshot) -> BTreeMap<String, StairRun> {

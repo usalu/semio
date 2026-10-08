@@ -1,5 +1,5 @@
 use super::*;
-use protocol::os_spr::protocol_laws::{assert_diff_algebra_between_law, assert_diff_algebra_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 
 type Delta = KeyedDelta<Storey, StoreyPatch>;
@@ -22,9 +22,8 @@ fn delta(entry: E) -> Delta {
 }
 
 fn absorbed(earlier: E, later: E) -> Option<E> {
-    let mut first = delta(earlier);
-    first.absorb(delta(later));
-    first.0.remove("st")
+    let mut composed = delta(earlier).then(delta(later));
+    composed.0.remove("st")
 }
 
 fn base() -> ModelSnapshot {
@@ -79,12 +78,8 @@ async fn absorb_is_associative_on_valid_three_chains() {
         [E::Patched(heightened(4.0)), E::Deleted, E::Created(b.clone())],
     ];
     for [x, y, z] in chains {
-        let (mut left, mut right) = (delta(x.clone()), delta(y.clone()));
-        left.absorb(delta(y.clone()));
-        left.absorb(delta(z.clone()));
-        right.absorb(delta(z.clone()));
-        let mut grouped = delta(x.clone());
-        grouped.absorb(right);
+        let left = delta(x.clone()).then(delta(y.clone())).then(delta(z.clone()));
+        let grouped = delta(x.clone()).then(delta(y.clone()).then(delta(z.clone())));
         assert_eq!(left, grouped, "{x:?} then {y:?} then {z:?}");
     }
 }
@@ -128,14 +123,6 @@ async fn property_patches_set_replace_and_remove_and_invert() {
     assert_diff_algebra_inverse_law::<ModelSnapshot, ModelDiff>(&base, &diff).await;
 }
 
-#[semio_framework_async_macros::async_test]
-async fn between_carries_one_snapshot_to_another() {
-    let (from, mut to) = (base(), base());
-    to.storeys.remove("up");
-    to.storeys.get_mut("st").expect("ground").height = 3.3;
-    to.storeys.insert("new".into(), storey("New", 2, 2.7));
-    assert_diff_algebra_between_law::<ModelSnapshot, ModelDiff>(&from, &to).await;
-}
 //#endregion 🔖️InverseLaw
 
 //#region 🔖️Apply
@@ -143,7 +130,7 @@ async fn between_carries_one_snapshot_to_another() {
 async fn apply_refuses_with_a_code_and_the_collection_and_id_as_target() {
     let base = base();
     let duplicate = protocol::apply_diff(&ModelDiff::storeys("st", Entry::Created(storey("Again", 9, 3.0))), &base).expect_err("created id exists");
-    assert_eq!((duplicate.code.as_str(), duplicate.target), ("mutation.apply.duplicate-target", vec!["storeys".to_string(), "st".to_string()]));
+    assert_eq!((duplicate.code.as_str(), duplicate.target), ("mutation.apply.duplicate-id", vec!["storeys".to_string(), "st".to_string()]));
     for entry in [E::Deleted, E::Replaced(storey("X", 1, 1.0)), E::Patched(heightened(3.0))] {
         let missing = protocol::apply_diff(&ModelDiff::storeys("ghost", entry), &base).expect_err("changed id is absent");
         assert_eq!((missing.code.as_str(), missing.target), ("mutation.apply.missing-target", vec!["storeys".to_string(), "ghost".to_string()]));

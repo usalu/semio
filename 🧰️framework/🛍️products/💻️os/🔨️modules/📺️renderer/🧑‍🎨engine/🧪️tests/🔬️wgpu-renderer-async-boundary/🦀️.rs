@@ -484,7 +484,7 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
         indices.push(value);
     }
     let world_frame = |values: &[f32]| -> Vec<f32> { values.chunks_exact(3).flat_map(|axis| [axis[0], -axis[2], axis[1]]).collect() };
-    let legacy = semio_framework::mesh_from_glb(&valid).expect("legacy glTF oracle");
+    let legacy = semio_framework::mesh_io::binary::mesh_from_glb(&valid).expect("legacy glTF oracle");
     assert_eq!(positions, world_frame(&legacy.positions));
     assert_eq!(normals, world_frame(&legacy.normals));
     assert_eq!(indices, legacy.indices);
@@ -794,7 +794,7 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     assert_eq!(recovered.owner().owner().token(), token);
     assert_eq!(recovered.observed_bytes, observed);
     job.begin_close();
-    assert_eq!(job.close_step(1, 1), semio_framework_job::InteractiveJobCloseStep::Complete);
+    assert_eq!(job.close_step(semio_framework_job::RetainedCloneGrant::default()), semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(job.terminal_is_empty());
     let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     assert!(outcome.terminal_is_empty());
@@ -2243,7 +2243,11 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
             semio_framework_job::default_now_us,
             &mut sequence,
         );
-        if step_world3d_dynamic_retirement(&mut state, &mut context) {
+        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,&mut context);
+        assert!(terrain.ownership.fits(terrain_grant));
+        assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
+        if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, &mut context) {
             break;
         }
     }
@@ -2312,7 +2316,11 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
             semio_framework_job::default_now_us,
             &mut sequence,
         );
-        if step_world3d_dynamic_retirement(&mut state, &mut context) {
+        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,&mut context);
+        assert!(terrain.ownership.fits(terrain_grant));
+        assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
+        if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, &mut context) {
             break;
         }
     }
@@ -2473,4 +2481,41 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
     let signature = &stall[stall.find("(cursor.phase").expect("the stall signature tuple") + 1..];
     let terms: Vec<&str> = signature.split(", ").map(|term| term.trim_end_matches([')', ',', '\n', ' '])).collect();
     assert!(["upload_progress", "cursor.raster_keep_steps", "cursor.input_progress"].iter().all(|term| terms.contains(term)), "upload, raster-ownership, and bounded input progress are independent signature terms: {terms:?}");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn original_decoder_close_hands_back_same_response_under_exact_independent_grant() {
+    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let row = &law["decoderClose"];
+    let (authority, probe) = owned_decoder_fixture();
+    let token = probe.owner().owner().token();
+    let observed = probe.owner().owner().received_bytes();
+    let mut job = RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false)));
+    let handback = job.handback.clone();
+    job.begin_close();
+    let grant = RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: job.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: job.next_close_capacity_byte_demand(0).unwrap(), maximum_release_bytes: job.next_close_release_byte_demand().unwrap(), maximum_depth: job.next_close_depth_demand().unwrap() };
+    assert_eq!(grant.maximum_copy_bytes, row["maximumCopyBytes"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_capacity_bytes, row["maximumCapacityBytes"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_release_bytes, row["maximumReleaseBytes"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_depth, row["maximumDepth"].as_u64().unwrap() as usize);
+    let empty = RetainedCloneProgress::default();
+    assert_eq!(job.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }), InteractiveJobCloseStep::Pending { progress: empty });
+    assert_eq!(job.close_step(RetainedCloneGrant { maximum_depth: 0, ..grant }), InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit));
+    assert_eq!(job.probe.borrow().as_ref().unwrap().owner().owner().token(), token);
+    let lock = handback.lock().unwrap();
+    assert_eq!(job.close_step(grant), InteractiveJobCloseStep::Blocked);
+    drop(lock);
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.close_step(grant));
+    let expected = RetainedCloneProgress { copied_items: row["handbackCopiedItems"].as_u64().unwrap() as usize, released_bytes: row["handbackReleasedBytes"].as_u64().unwrap() as usize, ..empty };
+    assert_eq!(step, InteractiveJobCloseStep::Pending { progress: expected });
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (expected.retained_capacity_bytes, expected.released_bytes));
+    assert!(job.terminal_is_empty());
+    assert_eq!(job.close_step(grant), InteractiveJobCloseStep::Complete { progress: empty });
+    let recovered = handback.lock().unwrap().take().unwrap();
+    assert_eq!(recovered.owner().owner().token(), token);
+    assert_eq!(recovered.owner().owner().received_bytes(), observed);
+    close_owned_decoder_fixture(authority, recovered);
+    eprintln!("[DEBUG] original decoder close same response, zero physical handback, exact item receipt");
 }

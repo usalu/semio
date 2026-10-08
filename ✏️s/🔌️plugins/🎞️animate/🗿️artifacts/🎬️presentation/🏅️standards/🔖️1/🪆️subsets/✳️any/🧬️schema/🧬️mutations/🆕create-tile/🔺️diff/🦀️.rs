@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `create-tile`.
 use super::CreateTile;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -13,7 +13,6 @@ pub fn diff(payload: &CreateTile, base: &PresentationSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A tile with id \"{}\" already exists.", payload.tile.id), ["tiles".to_string(), payload.tile.id.clone()]);
     }
     let at = payload.index.min(base.tiles.len());
-    let reordered = (at < base.tiles.len()).then(|| base.tiles[..at].iter().map(|tile| tile.id.clone()).chain([payload.tile.id.clone()]).chain(base.tiles[at..].iter().map(|tile| tile.id.clone())).collect());
-    protocol::MutationOutcome::new(diff_set_presentation(base, None, Some(PresentationTilesDelta { added: vec![payload.tile.clone()], reordered, ..Default::default() })))
+    protocol::MutationOutcome::new(PresentationDiff { tiles: Some(PresentationTilesDelta::insertion(at, payload.tile.clone())), ..Default::default() })
 }
 //#endregion 🔹Diff

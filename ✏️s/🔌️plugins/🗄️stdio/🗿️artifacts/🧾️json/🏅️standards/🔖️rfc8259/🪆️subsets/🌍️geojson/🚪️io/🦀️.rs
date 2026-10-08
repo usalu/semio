@@ -115,7 +115,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = crate::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
+            let outcome = crate::apply_mutation(&mut self.snapshot, &mutation);
             (self, outcome)
         }
 

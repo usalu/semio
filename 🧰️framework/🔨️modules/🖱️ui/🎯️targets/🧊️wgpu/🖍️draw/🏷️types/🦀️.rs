@@ -556,6 +556,43 @@ impl DrawList {
     /// ♻️ One bounded retirement slice of a retained draw list. `pub`, not `pub(crate)`: the wgpu
     /// renderer owns the previous frame's `DrawList` across a frame boundary and drives this ladder
     /// itself — the same contract `prepared.rs`'s `retire_step` already exposes.
+    pub fn next_retirement_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
+        fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(std::mem::size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"draw backing extent overflow"))}
+        fn text(value:&String)->usize{if value.is_empty(){value.capacity()}else{0}}
+        if let Some(pass)=self.scene_passes.last(){
+            if let Some(draw)=pass.textured_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.texture_key))}return if draw.instances.capacity()!=0{bytes(&draw.instances)}else{Ok(0)}}
+            if let Some(draw)=pass.material_draws.last(){
+                if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}
+                use crate::wgpu::kernel_3d_scene::SceneMaterialKind3d;
+                let key=match &draw.material{SceneMaterialKind3d::Painted{texture_key}=>Some(texture_key),SceneMaterialKind3d::Authored(material)=>[&material.base_color_texture,&material.metallic_roughness_texture,&material.normal_texture,&material.occlusion_texture,&material.emissive_texture].into_iter().flatten().find(|key|!key.is_empty()||key.capacity()!=0),_=>None};
+                if let Some(key)=key{if !key.is_empty()||key.capacity()!=0{return Ok(text(key))}}
+                return Ok(text(&draw.mesh_key))
+            }
+            if let Some(draw)=pass.translucent_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
+            if let Some(draw)=pass.line_draws.last(){return if !draw.vertices.is_empty(){Ok(0)}else{bytes(&draw.vertices)}}
+            if let Some(draw)=pass.draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
+            if let Some(draw)=pass.shadow_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
+            if pass.textured_draws.capacity()!=0{return bytes(&pass.textured_draws)}if pass.material_draws.capacity()!=0{return bytes(&pass.material_draws)}if pass.translucent_draws.capacity()!=0{return bytes(&pass.translucent_draws)}if pass.line_draws.capacity()!=0{return bytes(&pass.line_draws)}if pass.draws.capacity()!=0{return bytes(&pass.draws)}if pass.shadow_draws.capacity()!=0{return bytes(&pass.shadow_draws)}return Ok(0)
+        }
+        if let Some(layer)=self.layers.last(){
+            if let Some(clip)=layer.clip.as_ref(){return if !clip.scissors.is_empty(){Ok(0)}else{bytes(&clip.scissors)}}
+            if let Some((key,_))=layer.raster_instances.last(){return Ok(text(key))}if let Some((key,_))=layer.overlay_raster_instances.last(){return Ok(text(key))}
+            if !layer.overlay_vector_vertices.is_empty()||!layer.overlay_ui_instances.is_empty()||!layer.vector_vertices.is_empty()||!layer.ui_instances.is_empty(){return Ok(0)}
+            if layer.overlay_vector_vertices.capacity()!=0{return bytes(&layer.overlay_vector_vertices)}if layer.overlay_ui_instances.capacity()!=0{return bytes(&layer.overlay_ui_instances)}if layer.overlay_raster_instances.capacity()!=0{return bytes(&layer.overlay_raster_instances)}if layer.vector_vertices.capacity()!=0{return bytes(&layer.vector_vertices)}if layer.ui_instances.capacity()!=0{return bytes(&layer.ui_instances)}if layer.raster_instances.capacity()!=0{return bytes(&layer.raster_instances)}return Ok(0)
+        }
+        if !self.glass_regions.is_empty()||!self.scissor_stack.is_empty()||!self.glass_content_stack.is_empty(){return Ok(0)}
+        if let Some(clip)=self.clip_stack.last(){return if !clip.scissors.is_empty(){Ok(0)}else{bytes(&clip.scissors)}}
+        if self.scene_passes.capacity()!=0{return bytes(&self.scene_passes)}if self.layers.capacity()!=0{return bytes(&self.layers)}if self.glass_regions.capacity()!=0{return bytes(&self.glass_regions)}if self.scissor_stack.capacity()!=0{return bytes(&self.scissor_stack)}if self.clip_stack.capacity()!=0{return bytes(&self.clip_stack)}if self.glass_content_stack.capacity()!=0{return bytes(&self.glass_content_stack)}Ok(0)
+    }
+    pub fn retire_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+        let empty=RetainedCloneProgress::default();if self.retirement_is_empty(){return Step::Complete{progress:empty}}if grant.maximum_items==0{return Step::Pending{progress:empty}}
+        let bytes=match self.next_retirement_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused(error.kind)};
+        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        let complete=self.retire_step();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes};
+        if complete{Step::Complete{progress}}else{Step::Pending{progress}}
+    }
+
     pub fn retire_step(&mut self) -> bool {
         if let Some(pass) = self.scene_passes.last_mut() {
             if let Some(draw) = pass.textured_draws.last_mut() {

@@ -1,0 +1,88 @@
+{
+  "name": "@semio-tech/hub-renderer-wgpu",
+  "projectType": "library",
+  "root": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
+  "sourceRoot": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
+  "targets": {
+    "journey-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts journey-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": []
+    },
+    "creation-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts creation-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": []
+    },
+    "collaboration-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts collaboration-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": []
+    },
+    "collaboration-acceptance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
+        "command": "bun ./📜️script.ts collaboration-acceptance",
+        "forwardAllArgs": true
+      },
+      "configurations": {
+        "wasm32": {
+          "args": "--journey wasm32"
+        },
+        "wasm32-react": {
+          "args": "--journey wasm32-react"
+        },
+        "wasm32-native": {
+          "args": "--journey wasm32-native"
+        },
+        "native-react": {
+          "args": "--journey native-react"
+        },
+        "native-react-cursors": {
+          "args": "--journey native-react-cursors"
+        },
+        "cursors": {
+          "args": "--journey cursors"
+        },
+        "agent-pixels": {
+          "args": "--journey agent-pixels"
+        }
+      }
+    },
+    "native-guest-journey-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts native-guest-journey-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      }
+    }
+  },
+  "tags": [
+    "scope:hub",
+    "type:test"
+  ]
+}

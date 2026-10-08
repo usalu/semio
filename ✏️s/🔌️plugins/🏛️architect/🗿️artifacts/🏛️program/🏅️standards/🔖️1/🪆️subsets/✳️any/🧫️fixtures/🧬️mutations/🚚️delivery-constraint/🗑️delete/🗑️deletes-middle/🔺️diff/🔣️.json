@@ -38,12 +38,15 @@
   "resilience": null,
   "costs": null,
   "delivery": {
-    "added": [],
     "removed": [
-      "delivery-constraint-a"
+      {
+        "id": "delivery-constraint-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "risks": null,
   "conflicts": null,

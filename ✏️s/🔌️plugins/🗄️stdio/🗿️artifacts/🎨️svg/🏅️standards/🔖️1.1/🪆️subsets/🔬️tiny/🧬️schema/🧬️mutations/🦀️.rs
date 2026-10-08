@@ -9,7 +9,7 @@
 //! profile-closed — it either preserves Tiny conformance or is rejected with a real diagnostic —
 //! and two operations exist that Full 1.1 has no use for at all: [`SvgTinyMutation::StampBaseProfile`],
 //! the profile declaration itself, and [`SvgTinyMutation::StripNonTiny`], the Full→Tiny
-//! down-conversion, whose inverse is [`SvgTinyMutation::RestoreNonTiny`].
+//! down-conversion, whose inverse is [`SvgTinyMutation::ReinstateNonTiny`].
 //!
 //! The excluded-vocabulary lists are restated here, beside the vocabulary they gate, because the
 //! subset's own `check_svg_tiny_conformance` answers a different question — it judges a whole
@@ -32,6 +32,8 @@ use protocol::Mutation;
 use crate::schema::snapshot::{SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "➕insert-tiny-element/🦀️.rs"]
 pub mod insert_tiny_element;
 #[path = "➖remove-element/🦀️.rs"]
@@ -83,7 +85,7 @@ pub enum SvgTinyMutation {
     /// presentation attribute anywhere in the document.
     StripNonTiny(strip_non_tiny::StripNonTiny),
     /// ♻️ The inverse of the down-conversion: puts the stripped elements and attributes back at their exact positions.
-    RestoreNonTiny(restore_non_tiny::RestoreNonTiny),
+    ReinstateNonTiny(restore_non_tiny::ReinstateNonTiny),
 }
 
 /// 📇️ Kebab-case spelling of every `SvgTinyMutation` variant, in declaration order — the exact
@@ -106,7 +108,7 @@ pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {
         SvgTinyMutation::SetViewBox(_) => "set-view-box",
         SvgTinyMutation::SetTransform(_) => "set-transform",
         SvgTinyMutation::StripNonTiny(_) => "strip-non-tiny",
-        SvgTinyMutation::RestoreNonTiny(_) => "restore-non-tiny",
+        SvgTinyMutation::ReinstateNonTiny(_) => "restore-non-tiny",
     }
 }
 //#endregion 🔖️Mutations
@@ -158,40 +160,11 @@ pub fn subtree_profile_violation(node: &SvgNode) -> Option<String> {
 //#region 🔖️AttributeHelper
 //#endregion 🔖️AttributeHelper
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`, or `None` when `next` differs in a part no leaf of this vocabulary addresses
-/// (prolog, epilog, declaration, doctype, the root's presence or name). The root's attributes keep their order and the children past the
-/// longest equal prefix are removed and reinserted.
-pub fn net_mutations(base: &SvgSnapshot, next: &SvgSnapshot) -> Option<Vec<SvgTinyMutation>> {
-    if base.doc.prolog != next.doc.prolog || base.doc.epilog != next.doc.epilog || base.doc.declaration != next.doc.declaration || base.doc.doctype != next.doc.doctype {
-        return None;
-    }
-    match (&base.doc.root, &next.doc.root) {
-        (None, None) => Some(Vec::new()),
-        (Some(SvgNode::Element { name: base_name, attrs: base_attrs, children: base_children }), Some(SvgNode::Element { name, attrs, children })) if base_name == name => {
-            let set = |name: &str, value, index| SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: Vec::new(), name: name.to_string(), value, index });
-            let kept_in_order = base_attrs.iter().filter(|attribute| attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| &attribute.name).eq(attrs.iter().filter(|attribute| base_attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| &attribute.name));
-            let mut leaves: Vec<SvgTinyMutation> = base_attrs.iter().filter(|attribute| !kept_in_order || !attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| set(&attribute.name, None, None)).collect();
-            for (index, attribute) in attrs.iter().enumerate() {
-                match base_attrs.iter().find(|other| other.name == attribute.name).filter(|_| kept_in_order) {
-                    Some(current) if current.value == attribute.value => {}
-                    Some(_) => leaves.push(set(&attribute.name, Some(attribute.value.clone()), None)),
-                    None => leaves.push(set(&attribute.name, Some(attribute.value.clone()), Some(index))),
-                }
-            }
-            let common = base_children.iter().zip(children).take_while(|(left, right)| left == right).count();
-            leaves.extend((common..base_children.len()).rev().map(|index| SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index })));
-            leaves.extend(children.iter().enumerate().skip(common).map(|(index, node)| SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: Vec::new(), index, node: node.clone() })));
-            Some(leaves)
-        }
-        _ => None,
-    }
-}
-//#endregion 🔖️Net
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source, never a separate
 /// imperative apply path.
+#[cfg(test)]
 pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

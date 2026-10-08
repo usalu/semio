@@ -1,0 +1,249 @@
+{
+  "scope": "Curated input paths for Root current binding union; expected action images are not current whole-file authority where peer drift exists; five settled controlled Hub consumption endpoints added (two overlap routing), fresh Root bindings must observe all25distinct physical sources; no additional schema scope is claimed by plain cases; ten exact frozen identity/corpus endpoints included, one retired path retained as authored absence and ticket facet kept retained-input role; Native core and WGPU3 remain Root-owned separate inputs",
+  "descriptorScope": {
+    "id": "os.plugin.registry.descriptor-verification",
+    "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification",
+    "exports": [
+      "PackageDescriptorV1",
+      "RegistryPackageId",
+      "RegistryPluginId"
+    ]
+  },
+  "descriptorEndpointPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-publication/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🧫️fixtures/🔣️.json"
+  ],
+  "routingEndpointPaths": [
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+  ],
+  "distinctInputPaths": [
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧾️schema.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧾️schema.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🧩️fragments/🔣️.json",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+    "✏️s/🧑‍💻dev/📜️script.ts",
+    "✏️s/🧑‍💻dev/🚀️entry/🧪️tests/🟦️.ts",
+    "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+    "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🔄️lifecycle/🟦️.ts",
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+    "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-publication/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts"
+  ],
+  "nativeCoreOwnership": "Separate Native source/custody ledger must be unioned by Root; not adopted into this15-path ownership set",
+  "hubControlledConsumptionEndpointPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json"
+  ],
+  "leaseCorpusInjectedIdentityEndpointPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧪️tests/🟦️.ts",
+    "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🔄️lifecycle/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts",
+    "✏️s/🧑‍💻dev/🚀️entry/🧪️tests/🟦️.ts"
+  ],
+  "leaseCorpusInjectedIdentityEvidence": [
+    "📥️oct8-lease-corpus-and-injected-identity-before.json",
+    "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+    "📓️oct8-lease-corpus-injected-identity-settlement.md"
+  ],
+  "currentIdentityScopes": [
+    {
+      "id": "os.plugin.registry",
+      "schemaId": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema",
+      "exports": 7,
+      "jsonSha256": "2657c8dd983a7ee42b3ff49b6f1203d9bbefaf4b3cd8f758dd29efaa1c4e9e73",
+      "typeScriptSha256": "d009df574b9e399e5699981663a65e31c41b67eb3c03fc35155c2e14b179c4a7"
+    },
+    {
+      "id": "s.dev.entry",
+      "schemaId": "https://json.schemas.assets.semio-tech.com/s/dev/entry/component.json",
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧬️schema",
+      "exports": 1,
+      "jsonSha256": "5da6b929d68c6513de152605011222ff1c4c7b4f33961012b1aff1bf3cebd70d"
+    }
+  ],
+  "physicalHashbangHeaderEndpointPaths": [
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts"
+  ],
+  "physicalHashbangHeaderActionLedger": "📥️oct8-hub-physical-hashbang-syntax-owned-action.json",
+  "wgpuThirdCorpusEndpointPaths": [
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts"
+  ],
+  "wgpuThirdCorpusActionLedger": "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+  "mountedRuntimeAdapterEndpointPaths": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc"
+  ],
+  "mountedRuntimeAdapterActionLedger": "📥️oct8-mounted-adapter-owned-endpoints.json",
+  "postCorpusThreeEndpointPaths": [
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc"
+  ],
+  "postCorpusThreeActionLedger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+  "sessionOwnerExtractionEndpointPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+    "✏️s/🧑‍💻dev/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+    "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc"
+  ],
+  "sessionOwnerExtractionActionLedger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+  "sessionOriginalPolicyObservation": {
+    "schemaId": "https://json.schemas.assets.semio-tech.com/os/dev/playground-session/component.json",
+    "export": "PlaygroundSessionPublicationRequestV1",
+    "json": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+      "beforeSha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "afterSha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    "typeScript": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+      "beforeSha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+      "afterSha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    "role": "Original production policy observation only, not authored action",
+    "limits": {
+      "maxBytes": 2097152,
+      "maxRows": 128,
+      "maxDurationMs": 30000
+    }
+  },
+  "postSessionFourCorpusEndpointPaths": [
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧬️schema/🔣️.json",
+    "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧾️schema.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧾️schema.json"
+  ],
+  "postSessionFourCorpusActionLedger": "📥️oct8-post-session-four-corpora-owned-endpoints.json",
+  "remodelRelocatedCorpusEndpointPaths": [
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🧩️fragments/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🔣️.json",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts"
+  ],
+  "remodelRelocatedCorpusActionLedger": "📥️oct8-remodel-relocated-production-corpus-owned-endpoints.json",
+  "sessionPeerProgressPolicyObservation": {
+    "input": "📥️oct8-session-progress-peer-domain-observation.json",
+    "historicalPolicySha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+    "currentPolicySha256": "93811333c424d9221936d169125778ccd8d46f30de3659aecaaaf7b64e3abb37",
+    "authored": false,
+    "requestValidationProjectionUnchanged": true,
+    "historicalTestEpochs": [
+      52566,
+      24570
+    ],
+    "currentRenewalSessions": [
+      35149,
+      67091
+    ]
+  }
+}

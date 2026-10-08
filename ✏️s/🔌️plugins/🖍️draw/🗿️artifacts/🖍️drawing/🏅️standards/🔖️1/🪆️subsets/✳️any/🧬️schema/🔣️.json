@@ -167,27 +167,36 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "mime",
-        "data"
+        "width",
+        "height",
+        "samples"
       ],
       "properties": {
-        "mime": {
-          "type": "string"
-        },
-        "data": {
-          "type": "string"
-        },
         "width": {
           "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "height": {
           "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
         }
-      }
+      },
+      "description": "Ordered logical RGBA samples; admitted sample count equals width multiplied by height."
     },
     "DrawingArtboard": {
       "title": "DrawingArtboard",

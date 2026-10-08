@@ -81,5 +81,6 @@ pub use board::HandleRole;
 
 //#region 🔖️DirectedDagSurface
 pub use semio_framework_artifact_infinite_dag::DagExpandedPaths;
-pub use board::ports::directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagHost, DagLayoutOptions, DagLayoutOrientation};
+pub use board::schema::layout::{DagLayoutOptions,DagLayoutOrientation};
+pub use board::ports::directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagHost};
 //#endregion 🔖️DirectedDagSurface

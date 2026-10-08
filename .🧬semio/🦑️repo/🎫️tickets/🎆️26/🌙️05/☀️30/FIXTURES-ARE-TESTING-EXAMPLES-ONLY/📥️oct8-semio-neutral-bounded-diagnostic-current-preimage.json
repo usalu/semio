@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+  "sha256": "04d4d49a2f6ef460a176ddec7759f9234e988c5e24e4547ec35a788d675751f7",
+  "before": "  expect(semio).not.toContain(\"SemioStoreOwnedDisposer\");\n  expect(semio).not.toContain(\"enum SemioStoreClosePhase\");",
+  "after": "  expect(semio.includes(\"SemioStoreOwnedDisposer\")).toBe(false);\n  expect(semio.includes(\"enum SemioStoreClosePhase\")).toBe(false);"
+}

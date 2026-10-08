@@ -64,7 +64,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
         match self.phase {
             WriterStoreInitializationPhase::BindGenesis => {
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 self.phase = WriterStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -105,7 +105,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 let envelope = self.envelope.as_ref().expect("Writer envelope remains retained during initial clone");
-                let value = Self::initial_field(envelope.vcs.genesis.snapshot(), field);
+                let value = Self::initial_field(envelope.vcs.genesis.facts().snapshot(), field);
                 // ✂️ One PAGE of one field per step. `WriterSnapshot::text` is the document's authored body
                 // and has no length ceiling, so a fixed per-field ceiling would refuse every writer
                 // document over one page (`writer-store.initializer-initial-field-too-large`) instead of

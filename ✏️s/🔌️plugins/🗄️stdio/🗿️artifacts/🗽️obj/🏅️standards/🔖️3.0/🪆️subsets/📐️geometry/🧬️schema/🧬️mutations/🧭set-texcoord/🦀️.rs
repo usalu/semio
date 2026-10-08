@@ -25,7 +25,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
         let Self { index, texcoord } = self;
         protocol::MutationOutcome::new({
             let old = base.texcoords.get(*index).cloned().unwrap_or_default();
-            diff_set_texcoord(*index, texcoord_diff_between(&old, texcoord))
+            diff_set_texcoord(*index, texcoord_field_changes(&old, texcoord))
         })
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {

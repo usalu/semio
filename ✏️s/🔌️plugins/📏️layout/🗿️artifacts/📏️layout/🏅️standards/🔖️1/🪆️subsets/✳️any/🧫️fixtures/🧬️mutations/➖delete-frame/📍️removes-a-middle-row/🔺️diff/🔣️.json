@@ -9,9 +9,10 @@
   "parentPages": null,
   "spreads": null,
   "pages": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "page-1",
         "patch": {
@@ -24,21 +25,33 @@
           "margin_left": null,
           "columns_count": null,
           "columns_gutter": null,
-          "frame_added": null,
-          "frame_removed": "frame-text",
-          "frames_patched": [],
-          "frame_layer": null,
-          "frame_order": null,
+          "parent_page_id": null,
           "guides": null,
-          "layer_added": null,
-          "layer_patched": null,
-          "layer_removed": null,
-          "overrides": null,
-          "parent_page_id": null
+          "overrides": {
+            "removed": [],
+            "inserted": [],
+            "moved": []
+          },
+          "frames": {
+            "removed": [
+              {
+                "id": "frame-text",
+                "index": 2
+              }
+            ],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "layers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "printTarget": null,
   "backgroundDrawing": null,

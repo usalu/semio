@@ -103,50 +103,9 @@ pub fn declared_method(mutation: &ZipIso21320Mutation) -> Option<ZipIso21320Meth
 }
 //#endregion 🔖️Model
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source, never a separate
-/// imperative apply path.
-pub fn apply_zip_iso21320_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipIso21320Mutation) -> protocol::MutationOutcome<ZipDiff> {
-    let outcome = <ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the archive comment, then the members that vanished, then — in `next` order —
-/// every changed payload and every new member inserted before the next member that already exists. The snapshot `schema` is a
-/// constant of the artifact and never differs; a move or a metadata change is no leaf and is refused by the exact net.
-pub fn net_mutations(base: &ZipSnapshot, next: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
-    let mut leaves = Vec::new();
-    if (&base.comment, base.comment_utf8) != (&next.comment, next.comment_utf8) {
-        leaves.push(ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: next.comment.clone(), comment_utf8: next.comment_utf8 }));
-    }
-    leaves.extend(base.entries.iter().filter(|entry| !next.entries.iter().any(|kept| kept.name == entry.name)).map(|entry| ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })));
-    let mut present: Vec<&str> = base.entries.iter().filter(|entry| next.entries.iter().any(|kept| kept.name == entry.name)).map(|entry| entry.name.as_str()).collect();
-    for (index, entry) in next.entries.iter().enumerate() {
-        match base.entries.iter().find(|existing| existing.name == entry.name) {
-            Some(existing) if existing.data != entry.data => leaves.push(ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name: entry.name.clone(), data: entry.data.clone() })),
-            Some(_) => {}
-            None => {
-                let before = next.entries[index + 1..].iter().map(|following| following.name.clone()).find(|name| present.contains(&name.as_str()));
-                leaves.push(if entry.metadata.compression_method == ZipIso21320Method::Stored.wire_code() {
-                    ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: entry.clone(), before })
-                } else {
-                    ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry.clone(), before })
-                });
-                present.push(entry.name.as_str());
-            }
-        }
-    }
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region 🔖️AddEntry
 /// ➕️ The diff both authoring kinds share: the member lands under the compression method the kind declares, refused when its name
@@ -158,8 +117,7 @@ fn added_entry_diff(base: &ZipSnapshot, entry: &ZipEntry, before: Option<&str>, 
     if before.is_some_and(|name| !base.entries.iter().any(|entry| entry.name == name)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "ZIP insertion anchor no longer exists", ["entries"]);
     }
-    let mut entry = entry.clone();
-    entry.metadata.compression_method = method.wire_code();
+    let entry = ZipEntry { metadata: crate::schema::snapshot::ZipEntryMetadata { compression_method: method.wire_code(), ..entry.metadata.clone() }, ..entry.clone() };
     protocol::MutationOutcome::new(diff::diff_add_entry(base, entry, before))
 }
 //#endregion 🔖️AddEntry

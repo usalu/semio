@@ -4,7 +4,8 @@ use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::*;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use crate::os_spr::format::retained::RetainedSprLimits;
-use crate::os_store::{MemberOpenRequest, OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, VcsError};
+use crate::os_store::{MemberOpenRequest, OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef};
+use crate::VcsError;
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
 
@@ -112,7 +113,7 @@ macro_rules! factory {
         impl MemberFactory for $name {
             const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration] = &$rows;
             type Open = crate::os_store::UnsupportedMemberFactoryOpen<Self>;
-            fn open_birth_bytes(request: &crate::os_store::MemberOpenRequest) -> Result<usize, crate::os_store::MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
+            fn open_birth_demand(request: &crate::os_store::MemberOpenRequest) -> Result<crate::os_store::RetainedCloneBirthDemand, crate::os_store::MemberOpenDiagnostic> { request.admitted_expected().map(|_| crate::os_store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
             fn member_frame_bytes(&self) -> usize { match *self {} }
             fn begin_open(request: &mut Option<crate::os_store::MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, crate::os_store::MemberOpenDiagnostic> {
                 crate::os_store::UnsupportedMemberFactoryOpen::begin(request, grant)
@@ -211,7 +212,7 @@ impl<M: MemberFactory> RequestRetirementCensus for SelectedVerifiedMemberHistory
 }
 
 fn retire(owner: &mut dyn RequestRetirementCensus, grant: usize) -> usize {
-    assert!(matches!(owner.close_step(0, grant).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+    assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: grant, ..Default::default() }).unwrap(), RetainedCloneStep::Progress(Default::default()));
     super::super::tests::retire(owner, grant)
 }
 

@@ -9,6 +9,12 @@ import { build } from "esbuild";
 /** 🏷 Checks current defining owners and independently bundles the neutral installed-inventory entries. */
 export async function sDevCompositionOwnershipV1(repoRoot: string): Promise<void> {
   const neutral = "✏️s/🧑‍💻dev", specific = `${neutral}/🎭️variants/🌍️gis`;
+  const schemaPath = `${neutral}/🚀️entry/🧬️schema`, discovery = await import(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"));
+  const inventory = discovery.inventorySchemaScopes(repoRoot), scope = inventory.catalog.scopes["s.dev.entry"];
+  assert.equal(scope?.path, schemaPath);
+  assert(scope.exports.SDevBrowserInventoryV1);
+  assert.deepEqual(inventory.diagnostics.filter(row => row.path === schemaPath || row.path.startsWith(`${schemaPath}/`)), []);
+  console.log("[DEBUG] actual s.dev.entry schema discovery admitted SDevBrowserInventoryV1 with zero scope diagnostics");
   const entries = [`${neutral}/🚀️entry/🟦️.ts`, `${neutral}/🧩️service-composition/👷️worker/🟦️.ts`];
   for (const path of entries) {
     const source = ts.createSourceFile(path, readFileSync(join(repoRoot, path), "utf8"), ts.ScriptTarget.Latest, true);
@@ -24,7 +30,7 @@ export async function sDevCompositionOwnershipV1(repoRoot: string): Promise<void
     let calls = 0, retired = 0;
     const operation = { signal: controller.signal, progress: () => {} };
     if (path === entries[0]) {
-      const empty = { plugins: [], documentServices: [], surfaceSessionFactories: [] };
+      const empty = { catalog: { version: 1 as const, targets: [], hosts: [], playgrounds: [] }, plugins: [], documentServices: [], surfaceSessionFactories: [] };
       const mount = await executable.bootSDevV1(empty, { mount: async (received: unknown) => { assert.equal(received, empty); calls++; return { dispose: () => { retired++; } }; } }, operation);
       controller.abort();
       mount.dispose();

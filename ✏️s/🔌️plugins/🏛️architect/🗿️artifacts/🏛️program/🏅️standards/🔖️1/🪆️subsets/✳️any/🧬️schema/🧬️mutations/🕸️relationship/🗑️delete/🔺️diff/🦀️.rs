@@ -6,10 +6,10 @@ use crate::diff::ProgramRelationshipsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteRelationship, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.relationships.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.relationships.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No relationship exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { relationships: Some(ProgramRelationshipsDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { relationships: Some(ProgramRelationshipsDelta::removal(&base.relationships, position)), ..Default::default() })
 }

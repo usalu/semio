@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, boundedServicePayloadV1, documentServiceRequestV1, parseDocumentServiceDeclarationV1, parseInstalledServiceOperationV1, type InstalledServiceDriverV1 } from "../🟦️.ts";
-import { compileDocumentJsonSchemaV1 } from "../../../📇️directory/🔌️client/🌐️document-http/🟦️.ts";
+import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, boundedServicePayloadV1, admitDocumentServiceDeclarationV1, parseInstalledServiceOperationV1, type InstalledServiceDriverV1 } from "../🟦️.ts";
+import {compileDocumentSchemaV1} from "../../../📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts";
+import {documentServiceRequestV1} from "../🚪️io/🟦️.ts";
 
 /** ⚖️ Language-neutral service laws with independent Ajv admission and exact JSON observations. */
 export function verifyInstalledServiceLawsV1(): Readonly<Record<string, number>> {
@@ -26,18 +27,18 @@ export function verifyInstalledServiceLawsV1(): Readonly<Record<string, number>>
     else if (!registry.dispatch({ owner, serviceId: `${owner}.service`, action: "run", operationEpoch: 1, payload: fixture.request })) counts.absentDispatches++;
   }
   assert.deepEqual(counts, fixture.expected);
-  const source = (owner: string, direction: string): string => JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", $id: `${owner}:${direction}`, type: "object", additionalProperties: false, required: ["value"], properties: { value: { type: "integer", minimum: 0, maximum: 16 } } });
-  const declaration = parseDocumentServiceDeclarationV1("neutral", { schema: DOCUMENT_SERVICE_TOPIC_V1, owner: "neutral", serviceId: "neutral.service", operations: [{ action: "run", method: "POST", route: ["contributed", "neutral", "run"], sendBody: true, cursorField: null, requestMaxBytes: 1024, responseMaxBytes: 1024, inputSchema: source("neutral", "request"), outputSchema: source("neutral", "reply") }] });
+  const source = (owner: string, direction: string) => ({ $schema: "http://json-schema.org/draft-07/schema#", $id: `${owner}:${direction}`, type: "object", additionalProperties: false, required: ["value"], properties: { value: { type: "integer", minimum: 0, maximum: 16 } } });
+  const declaration = admitDocumentServiceDeclarationV1("neutral", { schema: DOCUMENT_SERVICE_TOPIC_V1, owner: "neutral", serviceId: "neutral.service", operations: [{ action: "run", method: "POST", route: ["contributed", "neutral", "run"], sendBody: true, cursorField: null, requestMaxBytes: 1024, responseMaxBytes: 1024, inputSchema: source("neutral", "request"), outputSchema: source("neutral", "reply") }] });
   assert.equal(documentServiceRequestV1(declaration, fixture.scope, "run", fixture.request).path, fixture.path);
   assert.throws(() => documentServiceRequestV1(declaration, fixture.scope, "foreign", fixture.request));
   assert.throws(() => documentServiceRequestV1(declaration, fixture.scope, "run", { value: 17 }));
-  assert.throws(() => parseDocumentServiceDeclarationV1("secondary", declaration));
+  assert.throws(() => admitDocumentServiceDeclarationV1("secondary", declaration));
   assert.throws(() => boundedServicePayloadV1({ value: NaN }));
   assert.throws(() => boundedServicePayloadV1({ value: "x".repeat(16 * 1024) }));
   assert.throws(() => boundedServicePayloadV1(new Date()));
-  const validate = compileDocumentJsonSchemaV1(declaration.operations[0]!.inputSchema), ajv = new Ajv({ strict: true }).compile(JSON.parse(declaration.operations[0]!.inputSchema));
+  const validate = compileDocumentSchemaV1(declaration.operations[0]!.inputSchema), ajv = new Ajv({ strict: true }).compile(declaration.operations[0]!.inputSchema);
   for (const value of [fixture.request, { value: -1 }, { value: 17 }, { value: 1.5 }, { value: 7, authority: "forged" }, {}]) assert.equal(validate(value), ajv(value));
-  assert.throws(() => compileDocumentJsonSchemaV1('{"type":"string","format":"unknown"}'));
-  assert.throws(() => compileDocumentJsonSchemaV1('{"$ref":"#/missing"}'));
+  assert.throws(() => compileDocumentSchemaV1({type:'string',format:'unknown'}));
+  assert.throws(() => compileDocumentSchemaV1({$ref:'#/missing'}));
   return { envelopeVectors: fixture.operations.length, lifecycleEvents: fixture.lifecycle.length, jsonOracleVectors: 6, transportHostiles: 8 };
 }

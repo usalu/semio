@@ -8,14 +8,14 @@
 //! so the asymmetry is recorded here rather than silently removed. `node_referrers` in
 //! `🌐️any/🧬️schema/🧬️mutations/🦀️.rs` is the scan a future cascade would use.
 use super::DeleteNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta, Fem3dNodeRemoval};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteNode, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
-    if !base.nodes.iter().any(|node| node.id == payload.id) {
+    let Some(at) = base.nodes.iter().position(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(Fem3dDiff { nodes: Some(Fem3dNodesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(Fem3dDiff { nodes: Some(Fem3dNodesDelta { removed: vec![Fem3dNodeRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

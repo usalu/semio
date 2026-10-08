@@ -52,11 +52,6 @@ export interface ReorderTiles {
   toIndex: number;
 }
 
-/** 🔁️ `replace-tiles` payload — replaces `tiles` with `newTiles` wholesale. */
-export interface ReplaceTiles {
-  newTiles: FigureTileDraft[];
-}
-
 export type PresentationMutation =
   | { ResizeSourceFrame: ResizeSourceFrame }
   | { ReplaceSource: ReplaceSource }
@@ -65,5 +60,4 @@ export type PresentationMutation =
   | { DeleteTiles: DeleteTiles }
   | { RenameTile: RenameTile }
   | { ResizeTileCrop: ResizeTileCrop }
-  | { ReorderTiles: ReorderTiles }
-  | { ReplaceTiles: ReplaceTiles };
+  | { ReorderTiles: ReorderTiles };

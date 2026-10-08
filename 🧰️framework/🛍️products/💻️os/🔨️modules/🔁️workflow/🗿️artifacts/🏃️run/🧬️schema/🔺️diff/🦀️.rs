@@ -133,17 +133,60 @@ fn step_into(next: &mut RunArtifact, step: &RunStep) -> protocol::MutationApplyR
     Ok(())
 }
 
-impl RunStep {
-    fn negation(&self, state: &RunArtifact) -> Vec<RunStep> {
-        match self {
-            RunStep::Header(_) => vec![RunStep::Header(RunHeaderEdit::of(state))],
-            RunStep::Node { node_id, .. } => vec![RunStep::Node { node_id: node_id.clone(), record: state.node_records.iter().find(|entry| entry.node_id == *node_id).cloned() }],
-            RunStep::LogAppend(_) => vec![RunStep::LogRetract { count: 1 }],
-            RunStep::LogRetract { count } => {
-                let kept = state.logs.len().saturating_sub(usize::try_from(*count).unwrap_or(usize::MAX));
-                state.logs[kept..].iter().cloned().map(RunStep::LogAppend).collect()
+/// ↩️ The prior value of every slot a run step edits, read row by row: a slot not yet edited by an earlier step of the same
+/// diff is read from `base`, an edited one from that step's own row. Nothing is applied and no document is copied.
+struct RunRows<'a> {
+    base: &'a RunArtifact,
+    header: Option<&'a RunHeaderEdit>,
+    status: RunStatus,
+    started_at: &'a str,
+    sealed: bool,
+    finished_at: Option<&'a str>,
+    nodes: std::collections::BTreeMap<&'a str, Option<&'a RunNodeRecord>>,
+    appended: Vec<&'a RunLogLine>,
+    kept: usize,
+}
+
+impl<'a> RunRows<'a> {
+    fn new(base: &'a RunArtifact) -> Self {
+        Self { base, header: None, status: base.status, started_at: &base.started_at, sealed: base.sealed, finished_at: base.finished_at.as_deref(), nodes: std::collections::BTreeMap::new(), appended: Vec::new(), kept: base.logs.len() }
+    }
+
+    fn prior_rows(&mut self, step: &'a RunStep) -> Vec<RunStep> {
+        match step {
+            RunStep::Header(header) => {
+                let core = self.header.cloned().unwrap_or_else(|| RunHeaderEdit::of(self.base));
+                let negation = RunHeaderEdit { status: self.status, started_at: self.started_at.to_owned(), ..core };
+                self.header = Some(header);
+                self.status = header.status;
+                self.started_at = &header.started_at;
+                vec![RunStep::Header(negation)]
             }
-            RunStep::Seal(_) => vec![RunStep::Seal(RunSealEdit::of(state))],
+            RunStep::Node { node_id, record } => {
+                let prior = self.nodes.get(node_id.as_str()).copied().unwrap_or_else(|| self.base.node_records.iter().find(|entry| entry.node_id == *node_id));
+                self.nodes.insert(node_id.as_str(), record.as_ref());
+                vec![RunStep::Node { node_id: node_id.clone(), record: prior.cloned() }]
+            }
+            RunStep::LogAppend(line) => {
+                self.appended.push(line);
+                vec![RunStep::LogRetract { count: 1 }]
+            }
+            RunStep::LogRetract { count } => {
+                let count = usize::try_from(*count).unwrap_or(usize::MAX);
+                let length = self.kept + self.appended.len();
+                let negation = (length.saturating_sub(count)..length).map(|at| RunStep::LogAppend(if at < self.kept { self.base.logs[at].clone() } else { self.appended[at - self.kept].clone() })).collect();
+                let from_appended = count.min(self.appended.len());
+                self.appended.truncate(self.appended.len() - from_appended);
+                self.kept = self.kept.saturating_sub(count - from_appended);
+                negation
+            }
+            RunStep::Seal(seal) => {
+                let negation = RunSealEdit { sealed: self.sealed, status: self.status, finished_at: self.finished_at.map(str::to_owned) };
+                self.sealed = seal.sealed;
+                self.status = seal.status;
+                self.finished_at = seal.finished_at.as_deref();
+                vec![RunStep::Seal(negation)]
+            }
         }
     }
 }
@@ -164,41 +207,9 @@ impl protocol::MutationDiff<RunArtifact> for RunDiff {
 
 impl protocol::DiffAlgebra<RunArtifact> for RunDiff {
     fn inverse(&self, base: &RunArtifact) -> Self {
-        let mut state = base.clone();
-        let mut negations = Vec::with_capacity(self.steps.len());
-        for step in &self.steps {
-            negations.push(step.negation(&state));
-            if step_into(&mut state, step).is_err() {
-                return Self::default();
-            }
-        }
-        Self { steps: negations.into_iter().rev().flatten().collect() }
-    }
-
-    fn between(base: &RunArtifact, other: &RunArtifact) -> Self {
-        let mut steps = Vec::new();
-        if base.sealed {
-            steps.push(RunStep::Seal(RunSealEdit { sealed: false, status: base.status, finished_at: base.finished_at.clone() }));
-        }
-        let header = RunHeaderEdit::of(other);
-        if header.differs_from(base) {
-            if header.status != RunStatus::Pending {
-                steps.push(RunStep::Header(RunHeaderEdit { status: RunStatus::Pending, started_at: String::new(), ..header.clone() }));
-            }
-            steps.push(RunStep::Header(header));
-        }
-        let shared = base.node_records.iter().zip(&other.node_records).take_while(|(left, right)| left == right).count();
-        steps.extend(base.node_records[shared..].iter().map(|record| RunStep::Node { node_id: record.node_id.clone(), record: None }));
-        steps.extend(other.node_records[shared..].iter().map(|record| RunStep::Node { node_id: record.node_id.clone(), record: Some(record.clone()) }));
-        let kept = base.logs.iter().zip(&other.logs).take_while(|(left, right)| left == right).count();
-        if kept < base.logs.len() {
-            steps.push(RunStep::LogRetract { count: (base.logs.len() - kept) as u64 });
-        }
-        steps.extend(other.logs[kept..].iter().cloned().map(RunStep::LogAppend));
-        if other.sealed || base.sealed || base.finished_at != other.finished_at {
-            steps.push(RunStep::Seal(RunSealEdit::of(other)));
-        }
-        Self { steps }
+        let mut rows = RunRows::new(base);
+        let undo: Vec<Vec<RunStep>> = self.steps.iter().map(|step| rows.prior_rows(step)).collect();
+        Self { steps: undo.into_iter().rev().flatten().collect() }
     }
 
     fn is_empty(&self) -> bool {

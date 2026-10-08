@@ -1,8 +1,27 @@
 //! 🧩️ Portable value and retained-owner laws run with product packages physically absent.
-use semio_framework_value::{DslValue, FromValue, ToValue, RetainedClone, RetireOwned, SnapshotRetirementStep};
+use semio_framework_value::{DslValue, FromValue, ToValue, RetainedClone, RetireOwned};
 use semio_framework_value::retained_clone::{RetainedClone as RetainedCloneTrait, RetainedCloneBorrowAuthority, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+fn close_turn<T: RetainedCloneTrait>(cursor: &mut impl RetainedCloneCursor<T>, work: usize) -> RetainedCloneStep {
+    let release = cursor.next_close_release_byte_demand().unwrap();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: work, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(work).unwrap(), maximum_release_bytes: release, maximum_depth: 64 };
+    let step = cursor.close_step(grant).unwrap();
+    assert!(step.progress().fits(grant));
+    step
+}
+
+fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T, work: usize) {
+    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).map_err(|(error, _)| error).unwrap();
+    for _ in 0..100000 {
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: work, maximum_capacity_bytes: owner.next_capacity_byte_demand(work).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
+        let step = owner.step(grant).unwrap();
+        assert!(step.progress().fits(grant));
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+    }
+    assert!(owner.terminal_is_empty());
+}
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, FromValue, ToValue, RetainedClone, RetireOwned)]
 #[serde(deny_unknown_fields)]
@@ -48,7 +67,7 @@ fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     let mut tree = PagedTree::Leaf;
     for _ in 0..depth { tree = PagedTree::Branch(PagedBranch { label: "Grundstück🧬".into(), children: [tree].into_iter().collect() }); }
     let oracle = serde_json::to_value(&tree).unwrap();
-    let source = RetainedCloneSource::from_authority(Arc::new(tree), ());
+    let source = RetainedCloneSource::fixture_from_authority(Arc::new(tree), ());
     let mut cursor = PagedTree::retained_clone_cursor();
     for turn in 0..100000 {
         let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) };
@@ -60,11 +79,9 @@ fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     let output = cursor.take().unwrap();
     assert_eq!(serde_json::to_value(&output).unwrap(), oracle);
     cursor.begin_close();
-    while cursor.close_step(1, 4096).unwrap() != SnapshotRetirementStep::Complete {}
+    while !matches!(close_turn(&mut cursor, 4096), RetainedCloneStep::Complete(_)) {}
     assert!(cursor.terminal_is_empty());
-    let mut owner = semio_framework_value::retirement::owned_retirement(output);
-    while owner.close_step(1, 4096).unwrap() != SnapshotRetirementStep::Complete {}
-    assert!(owner.terminal_is_empty());
+    retire(output, 4096);
     eprintln!("[DEBUG] paged native recursive tree depth={depth} lazy cursor grant4096 and terminal closure verified");
 }
 
@@ -92,12 +109,10 @@ fn paged_native_record_derives_preserve_neutral_serde_and_dsl_shapes() {
     let cloned = cursor.take().unwrap();
     assert_eq!(serde_json::to_value(&cloned).unwrap(), input);
     cursor.begin_close();
-    while cursor.close_step(1, 4096).unwrap() != SnapshotRetirementStep::Complete {}
+    while !matches!(close_turn(&mut cursor, 4096), RetainedCloneStep::Complete(_)) {}
     assert!(cursor.terminal_is_empty());
     for value in [source, copied, cloned] {
-        let mut owner = semio_framework_value::retirement::owned_retirement(value);
-        while owner.close_step(1, 4096).unwrap() != SnapshotRetirementStep::Complete {}
-        assert!(owner.terminal_is_empty());
+        retire(value, 4096);
     }
     eprintln!("[DEBUG] paged native record derive serde/DSL/clone/terminal law verified");
 }
@@ -114,7 +129,7 @@ fn neutral_record_vectors_match_independent_serde() {
         if let (Ok(actual), Ok(oracle)) = (actual, oracle) {
             assert_eq!(actual, oracle);
             assert_eq!(serde_json::Value::from(actual.to_value()), serde_json::to_value(&oracle).unwrap());
-            let source = RetainedCloneSource::from_authority(Arc::new(actual), ());
+            let source = RetainedCloneSource::fixture_from_authority(Arc::new(actual), ());
             let turn = &corpus["grant"];
             let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
             let mut cursor = Record::retained_clone_cursor();
@@ -129,14 +144,10 @@ fn neutral_record_vectors_match_independent_serde() {
             assert_eq!(serde_json::to_value(&copied).unwrap(), serde_json::to_value(&oracle).unwrap());
             assert!(cursor.begin_close());
             for _ in 0..10000 {
-                if cursor.close_step(1, 1024).unwrap() == SnapshotRetirementStep::Complete { break; }
+                if matches!(close_turn(&mut cursor, 1024), RetainedCloneStep::Complete(_)) { break; }
             }
             assert!(cursor.terminal_is_empty());
-            let mut retirement = semio_framework_value::retirement::owned_retirement(copied);
-            for _ in 0..10000 {
-                if retirement.close_step(1, 1024).unwrap() == SnapshotRetirementStep::Complete { break; }
-            }
-            assert!(retirement.terminal_is_empty());
+            retire(copied, 1024);
         }
     }
 }
@@ -155,15 +166,14 @@ fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
         assert_eq!(serde_json::to_value(&copied).unwrap(), row["input"]);
         assert_eq!(serde_json::to_value(&source).unwrap() == row["input"], corpus["borrowAuthority"]["sourceUnchanged"].as_bool().unwrap());
         cursor.begin_close();
-        while cursor.close_step(1, 1024).unwrap() != SnapshotRetirementStep::Complete {}
+        while !matches!(close_turn(&mut cursor, 1024), RetainedCloneStep::Complete(_)) {}
         assert!(cursor.terminal_is_empty());
-        let mut retirement = semio_framework_value::retirement::owned_retirement(copied);
-        while retirement.close_step(1, 1024).unwrap() != SnapshotRetirementStep::Complete {}
+        retire(copied, 1024);
         for cancelled_at in corpus["borrowAuthority"]["cancelAt"].as_array().unwrap() {
             let mut cancelled = Record::retained_clone_cursor();
             for _ in 0..cancelled_at.as_u64().unwrap() { cancelled.advance(authority.borrow(&source), grant).unwrap(); }
             cancelled.begin_close();
-            while cancelled.close_step(1, 1024).unwrap() != SnapshotRetirementStep::Complete {}
+            while !matches!(close_turn(&mut cancelled, 1024), RetainedCloneStep::Complete(_)) {}
             assert!(cancelled.terminal_is_empty());
             assert_eq!(serde_json::to_value(&source).unwrap(), row["input"]);
         }
@@ -172,7 +182,7 @@ fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
         cursor.advance(authority.borrow(&source), grant).unwrap();
         assert_eq!(cursor.advance(authority.borrow(&changed), grant).is_ok(), corpus["borrowAuthority"]["changedSourceAccepted"].as_bool().unwrap());
         cursor.begin_close();
-        while cursor.close_step(1, 1024).unwrap() != SnapshotRetirementStep::Complete {}
+        while !matches!(close_turn(&mut cursor, 1024), RetainedCloneStep::Complete(_)) {}
         assert!(cursor.terminal_is_empty());
     }
     eprintln!("[DEBUG] borrowed record neutral serde/source-address/cancel/terminal laws verified");

@@ -1,0 +1,33 @@
+{
+  "baselineSession": 72405,
+  "definingSourceUnchanged": true,
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "sha256": "915d635a631187b9459ee8bd48905345cab53cf42294f6ddf1955ed705ff2440"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs",
+      "sha256": "14f670da33eee7c222143929b2675fe9ae82ea35d07934af4eb94f75c18a87cc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/🎮️typed-owners/🔣️.json",
+      "sha256": "51fa5d7974d6acc4db184d164e42fb61a3bf00e4a077b39a779aac83d729c1e6"
+    }
+  ],
+  "errors": [
+    "error: test failed, to rerun pass `-p semio-framework-os-kernel-neural-engine --lib`",
+    "error: cargo test --manifest-path /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/Cargo.toml -p semio-framework-os-kernel-neural-engine --offline --lib original_neural_value_frontier_stages_without_hidden_birth -- --nocapture exited with status 101",
+    "error: native:owner-command failed (1)",
+    "error: script \"nx\" exited with code 1"
+  ],
+  "baseline": {
+    "result": "actual RED0/1/78filtered",
+    "nativeSeconds": 0.0,
+    "nxSeconds": 251,
+    "sourceStringCapacity": 257,
+    "retainedOriginalPointer": true,
+    "observedUnadmittedBirth": 2168,
+    "observedFree": 0
+  }
+}

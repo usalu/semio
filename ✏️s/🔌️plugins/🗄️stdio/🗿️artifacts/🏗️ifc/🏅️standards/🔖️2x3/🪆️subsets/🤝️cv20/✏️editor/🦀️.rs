@@ -43,7 +43,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v2x3::subsets::base::schema::mutations::net_mutations;
+use crate::standards::v2x3::subsets::base::schema::mutations::edit_rules;
 
 //#region 🔖️Dialect
 pub const IFC2X3_CV20_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cv20") };
@@ -191,6 +191,11 @@ impl ArtifactEditor for Ifc2x3Cv20Editor {
     const DIALECT: Dialect = IFC2X3_CV20_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_CV20_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<Ifc2x3Cv20Editor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/✏️editor/🦀️.rs",
@@ -288,10 +293,11 @@ impl editing::SnapshotEditingEditor for Ifc2x3Cv20Editor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { Ifc2x3Cv20EditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
-        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("ifc2x3: the edit changes the document schema or the EDM preamble, which no mutation leaf addresses"))?;
-        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

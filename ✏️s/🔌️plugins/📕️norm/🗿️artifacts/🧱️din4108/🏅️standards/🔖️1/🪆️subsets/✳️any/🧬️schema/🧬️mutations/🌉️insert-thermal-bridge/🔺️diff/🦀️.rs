@@ -9,10 +9,10 @@ pub fn diff(payload: &InsertThermalBridge, base: &Din4108Snapshot) -> protocol::
     if base.thermal_bridges.iter().any(|existing| existing.id == payload.bridge.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A thermal bridge with id '{}' already exists.", payload.bridge.id), [payload.bridge.id.clone()]);
     }
-    let index = payload.index.min(base.thermal_bridges.len());
-    let outcome = protocol::MutationOutcome::new(Din4108Diff { thermal_bridges: Din4108ThermalBridgeDelta::insertion(&base.thermal_bridges, index, payload.bridge.clone()), ..Default::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.thermal_bridges.len());
+    let outcome = protocol::MutationOutcome::new(Din4108Diff { thermal_bridges: Din4108ThermalBridgeDelta::insertion(index, payload.bridge.clone()), ..Default::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the thermal bridge list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the thermal bridge list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

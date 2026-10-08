@@ -5,7 +5,7 @@
 //! `snapshot: Option<SemioTableSnapshot>` full-replace slot anywhere — whole-document replace is `ArtifactStore::reset`,
 //! outside history.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, between_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
 use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
@@ -40,9 +40,6 @@ impl IndexedRow<SemioTableColumn> for SemioTableColumnDiff {
     fn row_is_empty(&self) -> bool {
         self.name.is_none() && self.kind.is_none()
     }
-    fn between_row(base: &SemioTableColumn, other: &SemioTableColumn) -> Self {
-        Self { name: (base.name != other.name).then(|| other.name.clone()), kind: (base.kind != other.kind).then_some(other.kind) }
-    }
 }
 //#endregion 🔖️ColumnDiff
 
@@ -67,10 +64,6 @@ impl IndexedRow<SemioTableRow> for SemioTableRowDiff {
     }
     fn row_is_empty(&self) -> bool {
         self.cells.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
-    }
-    fn between_row(base: &SemioTableRow, other: &SemioTableRow) -> Self {
-        let cells = between_indexed_rows(&base.cells, &other.cells);
-        Self { cells: (!cells.is_unchanged()).then_some(cells) }
     }
 }
 //#endregion 🔖️RowDiff
@@ -123,11 +116,6 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
 /// 🧮️ `table`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
 /// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
-    fn between(base: &SemioTableSnapshot, other: &SemioTableSnapshot) -> Self {
-        let columns = between_indexed_rows(&base.columns, &other.columns);
-        let rows = between_indexed_rows(&base.rows, &other.rows);
-        SemioTableDiff { columns: (!columns.is_unchanged()).then_some(columns), rows: (!rows.is_unchanged()).then_some(rows) }
-    }
     fn inverse(&self, base: &SemioTableSnapshot) -> Self {
         SemioTableDiff { columns: self.columns.as_ref().map(|columns| inverse_indexed_rows(columns, &base.columns)), rows: self.rows.as_ref().map(|rows| inverse_indexed_rows(rows, &base.rows)) }
     }

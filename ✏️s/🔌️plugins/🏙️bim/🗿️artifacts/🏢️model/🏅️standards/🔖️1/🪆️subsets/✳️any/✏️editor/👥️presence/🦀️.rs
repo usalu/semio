@@ -60,13 +60,6 @@ impl protocol::DiffAlgebra<BimPresence> for BimPresenceDiff {
     fn inverse(&self, base: &BimPresence) -> Self {
         Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), storey: self.storey.as_ref().map(|_| base.storey.clone()), camera: self.camera.map(|_| base.camera) }
     }
-    fn between(base: &BimPresence, other: &BimPresence) -> Self {
-        Self {
-            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
-            storey: (base.storey != other.storey).then(|| other.storey.clone()),
-            camera: (base.camera != other.camera).then_some(other.camera),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none() && self.storey.is_none() && self.camera.is_none()
     }

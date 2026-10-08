@@ -1,3 +1,4 @@
+use protocol::command::DiffAlgebra;
 use super::*;
 
 #[test]

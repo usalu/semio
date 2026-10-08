@@ -94,13 +94,6 @@ impl protocol::DiffAlgebra<WriterMainWindowTransient> for WriterMainWindowTransi
             engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
         }
     }
-    fn between(base: &WriterMainWindowTransient, other: &WriterMainWindowTransient) -> Self {
-        Self {
-            editor_selection: (base.editor_selection != other.editor_selection).then(|| WriterOptionalSelection { value: other.editor_selection.clone() }),
-            lint_generation: (base.lint_generation != other.lint_generation).then(|| other.lint_generation.clone()),
-            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.editor_selection.is_none() && self.lint_generation.is_none() && self.engagement_input.is_none()
     }

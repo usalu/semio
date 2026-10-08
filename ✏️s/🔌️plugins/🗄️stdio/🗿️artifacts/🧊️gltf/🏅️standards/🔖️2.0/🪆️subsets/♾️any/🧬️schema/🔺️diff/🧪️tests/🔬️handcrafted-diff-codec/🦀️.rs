@@ -134,18 +134,7 @@ fn tristate_snapshot_b() -> GltfSnapshot {
 /// slice this law test commits to (documented here, not literally all 42 occurrences).
 #[test]
 fn diff_codec_text_binary_roundtrip_law() {
-    let sweep_a = tests::sweep_a();
-    let sweep_b = tests::sweep_b();
-    let tri_a = tristate_snapshot_a();
-    let tri_b = tristate_snapshot_b();
-
-    let cases = vec![
-        GltfDiff::default(),
-        <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_b),
-        <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_b, &sweep_a),
-        <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&tri_a, &tri_b),
-        <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&tri_b, &tri_a),
-    ];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

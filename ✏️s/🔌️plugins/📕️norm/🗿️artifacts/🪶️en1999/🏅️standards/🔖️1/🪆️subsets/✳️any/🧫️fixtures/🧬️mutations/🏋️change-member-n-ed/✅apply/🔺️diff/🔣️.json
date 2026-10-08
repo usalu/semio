@@ -3,27 +3,34 @@
   "materials": null,
   "sections": null,
   "members": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "purlin-1",
-        "bucklingLengthY": null,
-        "bucklingLengthZ": null,
-        "bucklingLengthT": null,
-        "ltbLength": null,
-        "actions": {
-          "modified": [
-            {
-              "id": "G",
-              "nK": 2500.0,
-              "mYK": null
-            }
-          ]
+        "patch": {
+          "bucklingLengthY": null,
+          "bucklingLengthZ": null,
+          "bucklingLengthT": null,
+          "ltbLength": null,
+          "actions": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "G",
+                "patch": {
+                  "nK": 2500.0,
+                  "mYK": null
+                }
+              }
+            ]
+          }
         }
       }
-    ],
-    "order": null
+    ]
   },
   "connections": null,
   "fireScenarios": null,

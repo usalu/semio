@@ -1,7 +1,7 @@
 //! 🗣️ S Home launcher app — locale × terminology label set (constitutional: ui/Terminology).
 //!
 //! 🔁️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the table-column/origin/
-//! empty-message strings the main window renders moved to the plugin-root `crate::HomeTableLabels`
+//! empty-message strings the main window renders moved to the plugin-root `semio_s_space_core::HomeTableLabels`
 //! (shared with the read-only viewer, which can never import through `::editor::`). This file keeps
 //! only editor-exclusive strings: the window title and the actions-summary words (the viewer never
 //! renders row actions, contract §2.2).

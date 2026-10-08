@@ -2,17 +2,7 @@
 use crate::schema::{diff::BmpDiff, mutations::BmpMutation};
 use crate::BmpSnapshot;
 
-//#region Operations
-pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
-    let outcome = <BmpMutation as protocol::Mutation<BmpSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion Operations
 
@@ -65,7 +55,7 @@ pub fn bmp_rgba8_preview(snapshot: &BmpSnapshot) -> Result<Vec<u8>, String> {
     Ok(pixels)
 }
 
-pub fn paint_indexed_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, palette_index: u8, progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
+pub fn paint_indexed_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, palette_index: u8, mut progress: impl FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
     snapshot.validate()?; require_revision(snapshot, revision)?; checked_region(&snapshot.image, region)?;
     if !snapshot.image.profile.is_indexed() || palette_index as usize >= snapshot.image.palette.len() { return Err("bmp: indexed paint needs an owned palette index".into()); }
     let total = region.height as usize;
@@ -76,7 +66,7 @@ pub fn paint_indexed_region_controlled(snapshot: &BmpSnapshot, revision: &str, r
     Ok(next)
 }
 
-pub fn paint_direct_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, color: BmpColor, progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
+pub fn paint_direct_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, color: BmpColor, mut progress: impl FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
     snapshot.validate()?; require_revision(snapshot, revision)?; checked_region(&snapshot.image, region)?;
     if !snapshot.image.profile.is_direct() { return Err("bmp: direct paint needs direct owned samples".into()); }
     let total = region.height as usize;
@@ -87,6 +77,42 @@ pub fn paint_direct_region_controlled(snapshot: &BmpSnapshot, revision: &str, re
     let BmpPixels::Direct { samples } = &mut next.image.pixels else { unreachable!() };
     for row in 0..total { let offset = (region.y as usize + row) * next.image.width as usize + region.x as usize; for sample in &mut samples[offset..offset + region.width as usize] { sample.red = components[0]; sample.green = components[1]; sample.blue = components[2]; sample.alpha = components[3]; } if !progress(row + 1, total) { return Err("bmp: paint cancelled".into()); } }
     Ok(next)
+}
+
+/// 🎨 The sparse rectangle an indexed paint writes — `None` when the region already holds the palette index — computed from the payload and the base pixels in that region only.
+pub fn paint_indexed_rect(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, palette_index: u8) -> Result<Option<crate::schema::snapshot::BmpSampleRect>, String> {
+    snapshot.validate()?;
+    require_revision(snapshot, revision)?;
+    checked_region(&snapshot.image, region)?;
+    if !snapshot.image.profile.is_indexed() || palette_index as usize >= snapshot.image.palette.len() {
+        return Err("bmp: indexed paint needs an owned palette index".into());
+    }
+    Ok(indexed_rect(snapshot, region, palette_index))
+}
+
+/// 🎨 The rectangle holding `palette_index` over `region`, `None` when the base already holds exactly that (the region must have passed [`checked_region`]).
+pub fn indexed_rect(snapshot: &BmpSnapshot, region: BmpRegion, palette_index: u8) -> Option<crate::schema::snapshot::BmpSampleRect> {
+    let rect = crate::schema::snapshot::BmpSampleRect { region, indices: vec![palette_index; region.width as usize * region.height as usize], samples: Vec::new() };
+    (snapshot.image.region_rect(region).as_ref() != Some(&rect)).then_some(rect)
+}
+
+/// 🖌️ The sparse rectangle a direct-color paint writes — `None` when the region already holds the color — computed from the payload and the base samples in that region only.
+pub fn paint_direct_rect(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, color: BmpColor) -> Result<Option<crate::schema::snapshot::BmpSampleRect>, String> {
+    snapshot.validate()?;
+    require_revision(snapshot, revision)?;
+    checked_region(&snapshot.image, region)?;
+    if !snapshot.image.profile.is_direct() {
+        return Err("bmp: direct paint needs direct owned samples".into());
+    }
+    Ok(direct_rect(snapshot, region, color))
+}
+
+/// 🖌️ The rectangle holding `color` over `region` (each pixel keeps its own reserved bits), `None` when the base already holds exactly that.
+pub fn direct_rect(snapshot: &BmpSnapshot, region: BmpRegion, color: BmpColor) -> Option<crate::schema::snapshot::BmpSampleRect> {
+    let current = snapshot.image.region_rect(region)?;
+    let components: Vec<u32> = [color.red, color.green, color.blue, color.alpha].into_iter().zip(snapshot.image.masks).map(|(value, mask)| native_color(value, mask)).collect();
+    let samples = current.samples.iter().map(|sample| crate::schema::snapshot::BmpNativeSample { red: components[0], green: components[1], blue: components[2], alpha: components[3], reserved: sample.reserved }).collect::<Vec<_>>();
+    (samples != current.samples).then_some(crate::schema::snapshot::BmpSampleRect { region, indices: Vec::new(), samples })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

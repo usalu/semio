@@ -29,9 +29,6 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-layout/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/replace-flow-host-snapshot/schema.json"
     }
   ]
 }

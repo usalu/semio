@@ -2,59 +2,78 @@
 
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
-use semio_s_artifact_norm_contract::{norm_list_delta, norm_row_patch};
 
 use crate::Din4108Snapshot;
 
 //#region 🔖️Rows
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ZoneWindow`.
     pub Din4108WindowPatch of crate::ZoneWindow { set { orientation: String, inclination_deg: f64, area_m2: f64, g_value: f64, shading_fc: f64 } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ZoneWindow` list.
-    pub Din4108WindowDelta { addition: Din4108WindowAddition, modification: Din4108WindowModification, row: crate::ZoneWindow, patch: Din4108WindowPatch, key: id }
+    pub Din4108WindowDelta { removal: Din4108WindowRemoval, insertion: Din4108WindowInsertion, relocation: Din4108WindowRelocation, modification: Din4108WindowModification, row: crate::ZoneWindow, patch: Din4108WindowPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `LayerDocument`.
     pub Din4108LayerPatch of crate::LayerDocument { set { material_id: String, thickness_m: f64, lambda: f64, mu: f64, density: f64, application_type: String, compressive_class: String, water_class: String, tensile_class: String, acoustic_class: String, segments: Vec<crate::LayerSegment> } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `LayerDocument` list.
-    pub Din4108LayerDelta { addition: Din4108LayerAddition, modification: Din4108LayerModification, row: crate::LayerDocument, patch: Din4108LayerPatch, key: id }
+    pub Din4108LayerDelta { removal: Din4108LayerRemoval, insertion: Din4108LayerInsertion, relocation: Din4108LayerRelocation, modification: Din4108LayerModification, row: crate::LayerDocument, patch: Din4108LayerPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ThermalZone`.
     pub Din4108ZonePatch of crate::ThermalZone { set { floor_area_m2: f64, heaviness: String, night_ventilation: String } nest { windows: Din4108WindowDelta } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ThermalZone` list.
-    pub Din4108ZoneDelta { addition: Din4108ZoneAddition, modification: Din4108ZoneModification, row: crate::ThermalZone, patch: Din4108ZonePatch, key: id }
+    pub Din4108ZoneDelta { removal: Din4108ZoneRemoval, insertion: Din4108ZoneInsertion, relocation: Din4108ZoneRelocation, modification: Din4108ZoneModification, row: crate::ThermalZone, patch: Din4108ZonePatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `EnvelopeElement`.
     pub Din4108ElementPatch of crate::EnvelopeElement { set { kind: String, zone_id: String, orientation_deg: f64, inclination_deg: f64, adjacent: String, area_m2: f64, delta_u_g: f64, delta_u_f: f64, delta_u_r: f64 } nest { layers: Din4108LayerDelta } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `EnvelopeElement` list.
-    pub Din4108ElementDelta { addition: Din4108ElementAddition, modification: Din4108ElementModification, row: crate::EnvelopeElement, patch: Din4108ElementPatch, key: id }
+    pub Din4108ElementDelta { removal: Din4108ElementRemoval, insertion: Din4108ElementInsertion, relocation: Din4108ElementRelocation, modification: Din4108ElementModification, row: crate::EnvelopeElement, patch: Din4108ElementPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ThermalBridge`.
     pub Din4108ThermalBridgePatch of crate::ThermalBridge { set { psi: f64, length_m: f64, bb2_type: String } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ThermalBridge` list.
-    pub Din4108ThermalBridgeDelta { addition: Din4108ThermalBridgeAddition, modification: Din4108ThermalBridgeModification, row: crate::ThermalBridge, patch: Din4108ThermalBridgePatch, key: id }
+    pub Din4108ThermalBridgeDelta { removal: Din4108ThermalBridgeRemoval, insertion: Din4108ThermalBridgeInsertion, relocation: Din4108ThermalBridgeRelocation, modification: Din4108ThermalBridgeModification, row: crate::ThermalBridge, patch: Din4108ThermalBridgePatch, key: id }
 }
 //#endregion 🔖️Rows
 
@@ -90,7 +109,7 @@ pub struct Din4108Diff {
 //#endregion 🔖️Diff
 
 impl MutationDiff<Din4108Snapshot> for Din4108Diff {
-    fn apply(&self, base: &Din4108Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din4108Snapshot> {
+    fn apply(&self, base: &Din4108Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din4108Snapshot> {
         let mut next = base.clone();
         if let Some(value) = self.climate_zone {
             next.climate_zone = value;
@@ -113,9 +132,9 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
         if let Some(value) = self.bb2_details_conform {
             next.bb2_details_conform = value;
         }
-        next.zones = self.zones.commit_onto(&base.zones).map_err(|error| error.under(["zones"]))?;
-        next.elements = self.elements.commit_onto(&base.elements).map_err(|error| error.under(["elements"]))?;
-        next.thermal_bridges = self.thermal_bridges.commit_onto(&base.thermal_bridges).map_err(|error| error.under(["thermalBridges"]))?;
+        next.zones = self.zones.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
+        next.elements = self.elements.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
+        next.thermal_bridges = self.thermal_bridges.commit_onto(&base.thermal_bridges, capability).map_err(|error| error.under(["thermalBridges"]))?;
         Ok(next)
     }
 
@@ -160,21 +179,6 @@ impl DiffAlgebra<Din4108Snapshot> for Din4108Diff {
             zones: self.zones.inverse(&base.zones),
             elements: self.elements.inverse(&base.elements),
             thermal_bridges: self.thermal_bridges.inverse(&base.thermal_bridges),
-        }
-    }
-
-    fn between(base: &Din4108Snapshot, other: &Din4108Snapshot) -> Self {
-        Self {
-            climate_zone: (base.climate_zone != other.climate_zone).then_some(other.climate_zone),
-            usage: (base.usage != other.usage).then(|| other.usage.clone()),
-            t_int_c: (base.t_int_c != other.t_int_c).then_some(other.t_int_c),
-            rh_int: (base.rh_int != other.rh_int).then_some(other.rh_int),
-            has_mechanical_ventilation: (base.has_mechanical_ventilation != other.has_mechanical_ventilation).then_some(other.has_mechanical_ventilation),
-            airtightness_n50: (base.airtightness_n50 != other.airtightness_n50).then_some(other.airtightness_n50),
-            bb2_details_conform: (base.bb2_details_conform != other.bb2_details_conform).then_some(other.bb2_details_conform),
-            zones: Din4108ZoneDelta::between(&base.zones, &other.zones),
-            elements: Din4108ElementDelta::between(&base.elements, &other.elements),
-            thermal_bridges: Din4108ThermalBridgeDelta::between(&base.thermal_bridges, &other.thermal_bridges),
         }
     }
 

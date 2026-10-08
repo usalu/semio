@@ -1,0 +1,3255 @@
+{
+  "at": "2026-10-08T19:08:46.184818+00:00",
+  "role": "Proposed membership from explicit own endpoints and retained own ticket inputs/reports only; final6022 roster unchanged",
+  "priorCount": 6022,
+  "candidateCount": 236,
+  "candidates": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4497,
+        "sha256": "c021ee239bb89a688366759482664043038c1870afda8737f263b22412c1723d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7056,
+        "sha256": "b39961ab5f9c9a247c7e933ef083b39edcfcb61df58e2e570756948f3627f58e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1097,
+        "sha256": "ec37e216f82b1e40cfbeede7a92ea8fa0eea0db0bad9ca805dff48e62136d904",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2642,
+        "sha256": "2918b3af75ce65a54de5a6bc0daa98f69348b4954aaf2f6d63ddb2d59c87778d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧰️runtime/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1757,
+        "sha256": "8609214e3916ab40f2c8c4f31ec2d73b708a443b86000dbadddbb14e91ccece5",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3474,
+        "sha256": "3c5091823c57092a0213e680930fe0896ac21e96ea8dea639880d0e5fae8e006",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 497,
+        "sha256": "b171b33c66ef5d82f166bf20a0ae02930694a9776b969fe581f892c69422c877",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🕰️queued-preparation/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-selected-consumption-authored-endpoints.json",
+        "📥️oct8-selected-consumption-authored-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 207,
+        "sha256": "95e52ad19babdfdb4e52d1bc7e71aaabff6148f9c19a4ecab24019bef3d7dbe7",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5380,
+        "sha256": "66be91bc0a6c45cd8b35dbefa00906f77e10d605292cf915edaa0e01edeb65b1",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3397,
+        "sha256": "37f89ecd42d34baab0bbfc00a79045ecd11c385f0a4073ef1a7442ac71e99e16",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5061,
+        "sha256": "705250cbf07db3458c6c79690dc1d4d6d62cbe3a55ef6715b2973c6dd1c85fcc",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3197,
+        "sha256": "b0c1d66f2477d115016ea0e092eadbf5012b62a7622c146a15cd96717ff373c5",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 905,
+        "sha256": "050d3338b8587ae3e8dabb8b0c393428069d4dfa116c8dcfca8e689d62ee550b",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 45419,
+        "sha256": "b5e706cf92fe74e1ab7a36ae292c6a67ab6d6de5cc7bd945ae32ea023c15cfc2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 16763,
+        "sha256": "693b155ed3c6c3d69044bbba85a7d25089d41b203186efa36a05ff7745c0b4e8",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3380,
+        "sha256": "a2a662f30a7434a467eddc9a1d290d84246dad6e95abdd341b136eab122739d4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🧫️fixtures/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 12047,
+        "sha256": "706add6c14b762846d63fc2df4c37a96fa5de88ba63a86892961e2fc00e19874",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8600,
+        "sha256": "e25829a763f79829b00b51ded56c0892494c02a8f39391d5c943346fbdb842fe",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9539,
+        "sha256": "2027cb52899aae62200bef69bc590f601a1ba013d826328a0c8d5913e8e87e25",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 16702,
+        "sha256": "6a4f023a0542f8037ef28ae31761fc81ac58915cca4be01b0918029e4a1d85c6",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7494,
+        "sha256": "eebb931337601334c67d60c05ca31a0d61f28c7dcaf43121d4c5a5231490e47d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4235,
+        "sha256": "060a9d9502f755f96a3ed4978013117e2c2677a2fc1707ae92d9b20422db8324",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7743,
+        "sha256": "cc7968981d220eda0bac78d99d40d044b93b6125cb4ebcd10ce90917bc13142f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3129,
+        "sha256": "d2897bb4e5d94db46ed7a99e2ecc3b00e1093d8829e965eac0ca0f4aa3c7b14c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 6212,
+        "sha256": "656c8f3fb5e7d4dd0a2139d99251f58a55b49299783cf06c494fa0c6cf245b4b",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json",
+        "📥️oct8-publication-current-binding-union-inputs.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 122394,
+        "sha256": "d5c3e41d708f356e02dead4f2eea632d42910da335c319e9cdc34117a1b6d2d8",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-hub-wgpu-corpus-retirement-ledger.json"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-hub-wgpu-corpus-retirement-ledger.json",
+        "📥️oct8-current-hub-wgpu-consumer-regression-ledger.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3747,
+        "sha256": "83e1c3cc83503647af3a4232c7d77fa48b329305b2cc25d4138b81d360d0d08d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-hub-wgpu-corpus-retirement-ledger.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 15847,
+        "sha256": "735ecdacbbc06761a60ba0a18f25e722aa60165e2e7b6c0430f58ba81dd58220",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧫️fixtures/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-current-hub-wgpu-consumer-regression-ledger.json"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-native-and-mounted-output-handoff.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 11879,
+        "sha256": "d5ef6977e4891be2b99616a6726748d9bdf6fa502ae5010c53d334e5e6505519",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-preparation-authored-endpoints.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3264,
+        "sha256": "809f5e13a9c7a12ea6099320d428381f4fd1aa60ca180358cb1ad7c5cacaab8e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-first-seven-scope-independent-checkpoint-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2147,
+        "sha256": "92bc655b4e966964c72f4a7786db7670c92b396de8a559ad9475e747da65d489",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-selected-native-pre-release-ownership.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3045,
+        "sha256": "5d62836b74b7a5856358d5f5ac2202de021bb3e10d2fdfd6e09c21e4df7ba2b2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-hub-controlled-preparation-final-audit-frontier.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1966,
+        "sha256": "97c041ac9e0e5351eb98d0d452791591d8499d14fa0263d5a8a0447c83354dbc",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-protected-owner-chain-current-source-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9640,
+        "sha256": "38dae571ceec8df55543d20dbc838d85cbc8abcc470202b5589bdba072a79976",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 183245,
+        "sha256": "fe98031fa7301a1745f69fab7129078b03ea1e9e105745f6fde01a25925b02f8",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-value-api-readonly-observation.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1345,
+        "sha256": "92b48f9476cbcefcab47b9e42e2bbe93b589dcaf58cdae1bbf386acd153344fe",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-seven-scope-concurrent-catalog-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3622,
+        "sha256": "eaea5b5dc2b53e69b8367d0f95e2bbbb7142cfd8b34951056e92308d0e9572d2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-second-seven-scope-independent-checkpoint-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1401,
+        "sha256": "684fcc1d91a0abf52af5aa6cb48bb57f69c6a36c8269f8d0b194d5d1b4780833",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-hub-fresh-consumption-lease-order-observation.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2698,
+        "sha256": "6dba9336bc32a9531afe490169ad33f20a235cb5ff375f20867a81744a6574be",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-controlled-consumption-final-freeze-independent-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5010,
+        "sha256": "98516d7388def9873dac64e592e63192b1da50c4112dd47a99e80ec99df5f5ab",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-trunk-consuming-order-independent-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2876,
+        "sha256": "aec5f8a5ce83b445197424b8d09ea94479844e16786df69e366d52771ce470af",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-post-identity-actual-neutral-renewal.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5289,
+        "sha256": "57a43d4f8623141506a432ee8c96cb55a4afe3337d607748d2eaa359f7c07a12",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-lease-and-injected-identity-independent-freeze-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3004,
+        "sha256": "e69deac19bba752a8e7692498626b8327deacf2af731968fca379aacb51d3b5e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-protected-locked-test-oracle-before.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 16935,
+        "sha256": "862b65c6dd3c79522dba63f0c6743b5870779dd9f0ec0392bb9be427017e9eed",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 90855,
+        "sha256": "cfd97b83accaf63e60269fd5a381e13fd3ea7948a08004c1b5b130ea4e904fea",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-actual-selected-wgpu-preflight-refusal.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5017,
+        "sha256": "6ca7acebdbb4a3e46b8a483aff2c15841fa581ae4e94025ae2e09ac748872660",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-seven-scope-immediate-current-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3528,
+        "sha256": "c038430a62e7930489ecfccba9c90b569870cabfc4381383ac65e648bbd09c67",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-s-browser-inventory-corpus-authority-endpoints.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2489,
+        "sha256": "641919d9ac0b26157365fe617fa8760934b1d2ec6468bacdcc7650aaf6c5847c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-consumption-selected-native-whole-route-design.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4367,
+        "sha256": "b321046af918d6d986c8339b07ffc9ebbd7203325ffdcf4db748320fc28ad7b3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-nine-scope-current-checkpoint-binding-input.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7104,
+        "sha256": "e4023280746e15c97e2b87000abfdd7e99eac3f0a78a5114133610173f8ada36",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-wgpu-retirement-reintroduced-authority-preimage.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3581,
+        "sha256": "81e5712b8122c6b6c5e5d912a4659fb17abf1b2c8fa3311794a8f6be87248377",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-publication-post-routing-serial-execution-handoff.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 12776,
+        "sha256": "20fffc9003389dbccda753f72808ba0396c50b606e01fde801a870ce3efdc507",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-wgpu-corpus-retirement-ledger.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1760,
+        "sha256": "b16db3d46d9a8a51d2dc78c0a5162154032e3ea98fc03884a584980de5b29b54",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-custody-selection-admission-observation.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2202,
+        "sha256": "4d1d4ae1ebd1e94354ec2bdd2ddfbc86518cc82c80e03308239a04b2c00ac48b",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-fresh-system-plain-case-preimage.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3530,
+        "sha256": "d7fb1611f7b84b83c1d79f0f21a7517e3a17dc600292a89bd533fa058d80df11",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-s-browser-inventory-corpus-authority-before.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 20341,
+        "sha256": "ad709fa21ac40984d447d4f16370fa44b294a1ea0c77332baeaba1c50ddad47e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-fresh-consumption-and-adapter-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 99260,
+        "sha256": "aa0b64e2257b35382c47b89459ebcd67f91d64eba6363087a7e8779f4ce610dc",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-hub-fresh-consumption-repair.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8150,
+        "sha256": "8f4d7498323f99183b33097caecf53a1cc11a94344e1fffeac8ced93434b199d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-hub-wgpu-corpus-independent-retirement-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1800,
+        "sha256": "985663adcde7373d5356a24c381eda39a9ffcc8717c99a6dfef661f54417775c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-pre-release-fieldwise-currentness.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2175,
+        "sha256": "f9a3133e461b14f4191bd76711a646186a9a6475fd3aa6148497020bd8e7c923",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-neural-current-value-retirement-api-independent-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7046,
+        "sha256": "2a6c2b6bec5649d263ea5c4fc78774923a2e449044a3b4a6bdc61a0f6ca061e4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-wgpu-new-composition-corpus-readonly-classification.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2791,
+        "sha256": "b254bec2829c7cd0e884ab8766398b57b462fcceafc8f7eabc46d160c4bd45f8",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-native-route-owned-settled-endpoints.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 18020269,
+        "sha256": "7a2d351385953963bf18b34198671703632e7a7188162b1f335a71563d406079",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-nine-scope-refreshed-current-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4719,
+        "sha256": "3ae7f87ddfca3e7f45da04e247797fff717ceb2cff1620eee4857ff4f7c4780e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-wgpu-peer-regression-current-independent-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1366,
+        "sha256": "a05bd72cc5fd04274cb6cb44a4be198cd820fb4be73220f583d37e8a1e71aa39",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-nine-scope-current-full-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4560,
+        "sha256": "ca9fa19606da0af0dbdc500ca29cb9ddd1a069dc4038e8e7bf4f76a5beced10e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-protected-six-actor-receipt-handoff.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4130,
+        "sha256": "d1ec1138d0c7d0142b44c2b9070f7198f916cb5beab97519872e54834146bca7",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-original-production-command-vector-independent-freeze.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5881,
+        "sha256": "63ac8adb1dc4b884f7087b01ecd6305c1b0305eda8750989600957d05e95978e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-native-synchronize-route-registration-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8621235,
+        "sha256": "1363c36b9a355831b0d6f2e2248046659bacb05dcf5998b76a9438777beacb26",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-immediate-seven-scope-independent-checkpoint-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1692,
+        "sha256": "bcdd7f4667298d1aa232d37e1f8521c735c023b49c9e124fad5d45487941031e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-hub-wgpu-corpus-retirement.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4071,
+        "sha256": "5cde43a5677d11beab4bde63be3c8e4d0f37f31bd58c8c40ff0d5c22de5de4db",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-publication-current-binding-union-inputs.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 18458,
+        "sha256": "8a004e5883bc4cfb6e2482e93b009567e231fa7ee3f3db234ff857b8f02c6f92",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-publication-curated-master-identity-actions-reconciliation.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5139,
+        "sha256": "343826489a71efecad6eb4ef6686ea907e0038e3391386c14471b0c304b2cbeb",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-semantic-source-authored-union-before.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 937751,
+        "sha256": "fb1322d70211d6026f1631fc227fb9df3a098f1b9961bb373a1702c57f5b5bda",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-descriptor-domain-contract-repair.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 6770,
+        "sha256": "310b03f9ec2a30bf104a649da8af4d4fcb7f7bc8f566b56f6faaf4cfba9cdb01",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-lease-corpus-injected-identity-settlement.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 6392,
+        "sha256": "ec701ad6a96b29233512f19d8c58b667fac3d32c797859d62a5b0b5b8ea3d8e6",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-wgpu-new-composition-corpus-observed-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 109049,
+        "sha256": "e8e9037a2fe43d26de7ef507fe8964cb68103f247850a8253d0f54e02c9fa4f8",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-hub-wgpu-consumer-regression-preimage.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3401,
+        "sha256": "6d55323ecc40e3e170cf778c655cc502740cd2234187ede8ec570f8ae450d898",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-physical-hashbang-syntax-owned-action.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2587136,
+        "sha256": "4a9296e2dfcb18d0abce2bd302453bc83d5063e372e66f8568f55a57d1032b49",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-descriptor-domain-owned-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 104776,
+        "sha256": "797a51bc4624fc71c71f5512a3d16d1d63265c23e0c9402404281c51a95372cb",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-seven-scope-normal-gate-and-native-release.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1623,
+        "sha256": "6a2aeb2c6c4dec1bd0dd9b43dec03fa9dac513c8268cfd5decf23c81a8588182",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-canonical-process-preview-settled-source-inputs.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3849,
+        "sha256": "494a68668e070204b2d7f3d313473924e8e4172014a1794c2e667b649f9c1727",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-semantic-source-authored-union-role-input.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1383051,
+        "sha256": "570e51537a2c86ecb04268ad9da7506a61ec3306cf4463f0dd0f87842a40bfc2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-wgpu-production-execution.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 6051,
+        "sha256": "d4107c92947e080ac8d9de389e5e6b64c234d648b6bfd249f8572a425852851e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-publication-serial-dispatch-ready.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4481,
+        "sha256": "f825f15efca4ceca656bd136a97b0bc62b510451aabab4d626c415f981e83dc6",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-nine-scope-pre-refresh-catalog-observation.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3931241,
+        "sha256": "61a2b92f939e6b033eb0057f54e69342cde0e727a39595d2fd1de646f2ed7ee6",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-actual-selected-wgpu-dev-execution.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2608,
+        "sha256": "8507c43869f38f641923afb437dc65c9c6a545b770689c02b39ecd1961b1ed16",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-preparation-traversal-scaling-source-diagnosis.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3941,
+        "sha256": "586cc18b9629623b504e361027d9748f5a4624a42e3f20174d5e90472632cb18",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-canonical-process-preview-source-input.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9325187,
+        "sha256": "4c0634a50be6b8ebf2a64ab8ea44c64ec48094e9972693df8d787eb06e7502df",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-refreshed-nine-scope-independent-checkpoint-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3144,
+        "sha256": "dd340e58d86aeb673de5cd20582f463c777c7150a023e7e2df3d26a7f03d50e4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-first-eight-scope-full-independent-findings.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2215,
+        "sha256": "61707301fefaa08854664f535642b3bd479041dc4ee952a98778992e65a88acb",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-post-identity-readiness-mapping.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7218,
+        "sha256": "cd30ef1e4cf3f20d6008a2c62ed99e8a717b9f85d2ddcfd166e2c6396d78ad21",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-selected-wgpu-declared-preparation-census.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3707,
+        "sha256": "c552859c8d655d92edc90d46e9db862849260467a356b45c0ad7696f9a623ca4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-wgpu-composition-relocated-corpus-authority-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2428,
+        "sha256": "4e0b9d2154912f9bfceaef7da1aafc8b8a6dfdbbf369ca4197ce6e25215bb403",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-lease-corpus-and-injected-identity-before.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 43081,
+        "sha256": "0f6b3bb2a9f80f7db03b064993fadfd6f79708079335973c8aa17df7cdefe608",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-hub-wgpu-relocated-corpus-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4864,
+        "sha256": "fa9041ab688729fe53d67574c7ebeb9a49cda820c1f0a3f89fd9b33ae2c8ab06",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-outer-native-preparation-owner-boundary-diagnosis.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3203,
+        "sha256": "bd7368d67cd2cf67d9009ceff15d7f91c561b1013ebc45da93d605afcab8c8f5",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-native-dependency-caller-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 181009,
+        "sha256": "2d0fa1f9361da9a9397fed8291a8b491ced2fc2eb6c3afa0fbd7cda2e9581bae",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-actual-selected-wgpu-preflight-refusal.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2034,
+        "sha256": "ea75d19061521687757d7f9f2b4738b0297c90c08f00b3ca04f04e0b71095c2f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-selected-core-in-progress-independent-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4074,
+        "sha256": "e29f75b7e1c1f9d5c247434ac8359d80bab2259a31057e2336e8e5946bc8e37a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-physical-hashbang-syntax-before.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1293559,
+        "sha256": "802cadb647736198bf3942374bf9c59c1f4c4ad21a5c085b6687ecb266039227",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-and-descriptor-current-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 23534,
+        "sha256": "dc94dc1fdc6292f8e5cf1cbb4f3fadde556a56c3a00130f4ab9b8fca3471c872",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-active-preparation-registry-repair-boundary.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4623,
+        "sha256": "9f7be7f4db0f4e06222c1a56e8f699a7b858ba80d83d34c4315cbde4f0c12dda",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-authored-union-pre-production.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1420,
+        "sha256": "88f5422d0b8eb7c1d63f88785ed3ae9a1c1b4db7c59135d879cddfe9361ff5ac",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-wgpu-corpus-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 30103,
+        "sha256": "6cc7eedb5dda0c4a41d451682550de3ca78fdb7375f4452384d0fad7f7b67446",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-eight-scope-current-checkpoint-binding-input.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5320,
+        "sha256": "312adbbb220a7dc254a85deedf204ffa2b1bf16005dc85c1ecebd27967da15a4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-selected-cargo-consumption-repair-plan.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2809,
+        "sha256": "b8655a5284e821bc5072b9d6bd624b2cf8ba8f354d7a7d816e8fa7ae36025f34",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-descriptor-production-contract-census.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2700,
+        "sha256": "997aec8602340f90e2f4e05786a5ea11c5c7bbaa05b6e89331449b6fcf29e6e5",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-retirement-current-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 244384,
+        "sha256": "df34d4ed25fa7069ecde84ea04d47aab87874e26ea1c0d5833cdf86c75a629f4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-actual-cargo-consumption-site-map.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3269,
+        "sha256": "4c117f0a4c318dd050c9be17a0820de5b6e88a95f4614ff0ff58c78e007afb0a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-protected-pending-wait-before.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 30267,
+        "sha256": "56db36cb7294c9f4ec8d73514760154d293fd9cdd921b89e6003cb22057b55dd",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-eight-scope-current-full-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5405,
+        "sha256": "53b471ede635245a4681dcb16164201e6334dd2bcf5d0cdbf139a736c7bf6c3e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-gate-and-dev-launch-independent-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1919,
+        "sha256": "fcd0ec6bffd5bc51ef362e73328b470fffe83d42f12ba7f4d7441a0fd5693a48",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-native-private-route-selection-preimage.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 40842,
+        "sha256": "9ec7427e112480f97a3aca44cc4b5a181f77152ec3c843fdfb0bcc76e1128478",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-native-inference-route-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8724127,
+        "sha256": "3a47413819ffb416646a373bede0c842a16556a9e25fee384a607f1e458d6bc3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-native-test-metadata-retirement-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 55520,
+        "sha256": "305c269d6d71c2234887a7dc56c6a5223df20cf37324cf3c4686e8610ad3feda",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-hub-wgpu-consumer-regression-ledger.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4603,
+        "sha256": "1f002e8e29bf7973e31d4a9921548a9686e6875b9043904fe29d4e181c686639",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-neural-retirement-current-consumer-repair.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7524,
+        "sha256": "33e7c728356ff64494ff1b9677bbae2c0179f227b07544315deeaa01a91ccecd",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-resumed-corpus-and-domain-authority-source-input.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 10338618,
+        "sha256": "802ade8b8fa5ea6937ca656adadddbbf8fda1976d594fbc9f735af3fddd39db7",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-routing-piece-independent-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3964,
+        "sha256": "a96e7f5a265205abb893daa5e01612b9f1b6f1c2cc5519c8cf2ffae09c0ddb3f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-normal-route-inference-and-routing-piece.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 6352,
+        "sha256": "0d5bfc3455576f99a9a469c576568f61fd63c3838f43e8f8fc0ddd163546d8e0",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-selected-consumption-settlement.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8065,
+        "sha256": "dbb92a53410fe25c4f6d9878c26669de69aeb4885f24daeb062bde9af4e85f71",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-union-additions-independent-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1982,
+        "sha256": "a463f9c3ededa5e7b98127b06d3402708e88094fbae71cd15b547ac63320ab76",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-native-gate-wrapper-inspection.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8126,
+        "sha256": "b9650e2a29cbea59d094c269e08b7a90ef954e595ded76bce0acf93d68f01b9d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-hub-wgpu-consumer-regression-repair.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4452,
+        "sha256": "a1d4a1460579406beb9fbf836518538d246e3d19a9b3ffeb8864f460fc760b44",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-selected-consumption-authored-endpoints.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4783,
+        "sha256": "9a67a7e5e99dd7154bb2176ddda48e4355a527221307ed8ae8149e3451bbdf0e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-sync-workspace-order-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2737,
+        "sha256": "d7ebc5d4740feaaded28b03b0d1e85ed4b7ab06dd3375b732a22f37945f52f99",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-private-mcp-attestation-readiness-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1913,
+        "sha256": "c8ec784da9d67848250ab9861aa4c039a9c29bed12fcc1a40a77062425ef89de",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-production-command-and-default-boundary-readonly-handoff.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 22626,
+        "sha256": "ff0cb22a15d74c153abd62ee747e49a47539fe977e5f580b0df40814cd1fd571",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-seven-scope-current-derived-and-full-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4679,
+        "sha256": "97c59a718b73e43ceb25c511dc18f9c15a3da326fb44a3f3ad9b5c977978bd03",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-prepared-pair-preimage-native-vectors.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7414,
+        "sha256": "b3980bb38a313efd23855c580f22a1a7d9cbc8bd2904ef5af76e9aa77eb9d509",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-normal-publication-serial-dispatch-inputs.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 40969,
+        "sha256": "8c294c2e05cec87183d42e51056798edade3c22277c6eab8df90fd1792d1edb8",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-hub-wgpu-corpus-consumer-preimages.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 19815,
+        "sha256": "10935d0ead668f9b58bc033ee87b5937744b3c9a467b6477875fdf774a17fb56",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-resumed-corpus-and-domain-settled-inputs.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4755,
+        "sha256": "2e7c989734503411f4072f8fc53fa52c32325569b08fc9e406705731843dd79f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-current-drift-bounded-neutral-renewal.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7969,
+        "sha256": "6272e4d08739ab3c01e95a19773a3e9ea6719e2d89644d55378071d5426c15fd",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-authored-union-historical-output-membership-input.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket top-level retained authored report/input; embedded observers are not source authorship",
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 984342,
+        "sha256": "e5d04633c2a4cd73c76baa79000d04dfe55fb54966dac3c1b4025d4c3abe460d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 31647,
+        "sha256": "915d635a631187b9459ee8bd48905345cab53cf42294f6ddf1955ed705ff2440",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 29724,
+        "sha256": "3baafd3b6193cbe28333fb4036885a421998eea3c912ac179457789a721a1d6f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📏️owned-demand/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 618,
+        "sha256": "d0103d63d6bb674e75cfa604ad62df1b68c123f525b0fcaa10fbf7e576fc4183",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 67012,
+        "sha256": "025cebb9d67ffb9304f4026851148ce167310325ee425c0b89690f7e32a8e07f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9565,
+        "sha256": "aad630e83bb835de6f6d1a950230a7501d32b699040f69c180f1e8d758ace3a3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧪️tests/📔️registry/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 15737,
+        "sha256": "5b38dc98eddb150b13c9d9d99c1e1e3f428c4111a549d6199d851f405461321e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧫️fixtures/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1540,
+        "sha256": "e391d7689a70c1fdd1cac325e1816e6355fcc918d60f8d5fbd21b460f976c62a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 138501,
+        "sha256": "f4523daaf0f4bc1542a7015a054bcc9b87bfdf5c69e8af2d2ce9551ea766a84a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧊️cold/🦀️.rs",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json#ownedEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4266,
+        "sha256": "276addda4a675fefc3c582efd5c3a8c14771a73b972d5ca1c14baada3f325b0d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-root-four-corpus-owned-endpoints.json#sources"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-root-four-corpus-owned-endpoints.json#sources"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-root-four-corpus-owned-endpoints.json#sources",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-root-four-corpus-owned-endpoints.json#sources"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-root-four-corpus-owned-endpoints.json#sources"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3344,
+        "sha256": "9d397c826ad28f2cabb3f31e9adb3bc28b943ae0fd198cd7e2de7458f7376be3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-root-four-corpus-owned-endpoints.json#sources",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1211,
+        "sha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "bytes": null,
+        "sha256": null,
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 10531,
+        "sha256": "c5fefdd8b4df2de61f736a76ce5447603b14d23bbe3cdf4156b70601003404fc",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2406,
+        "sha256": "19ae2d57ff1fd23ab11728bdefee2182d91a8f17e14e9b2a732fbfb9b4a5065a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2327,
+        "sha256": "4ccf757cc56d7eb94ebaba3a8a5c21c583f1a09344512783485ce0cc956cf7ae",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📜️script.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2943,
+        "sha256": "59199d41571b3ab12bdbe89c11c4e0a351f52b0167c27354b06ce486d160b786",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 188,
+        "sha256": "829cce29b8fa21b2633a70c87d4cd4ec2c980156f74aabf42d770a16a1ba78f9",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 248,
+        "sha256": "8cfdd3467930ba22b17f78fc9619cbfb089bf92fef16a7ee007ac24f78784c81",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 6825,
+        "sha256": "b25573fadb52138bcbb5a83c0add09d207c25d2398b82698ae07e791deb77547",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-and-root-four-final-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3945,
+        "sha256": "134cd8fe5b00587ac1227aa33982df7b8b342e905a0c3d63e7a877b7b888fe36",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-current-domain-demand-mutation-preimages.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 287005,
+        "sha256": "98eabd03c6a4cae5ee79c319c32a51b6a9172477e2d135c3007071159e77fb42",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-extraction-owned-endpoints.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8164,
+        "sha256": "caeee85404816cc0453eade06f2bd7565b2b86af7523bcc907a81a19de87e14e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-root-four-corpus-retirement.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1505,
+        "sha256": "45bcbf517417a3f8a3b4d0c1c62f41fff7a7c7978309a5814fa10dcfd9f937df",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-three-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 166043,
+        "sha256": "2ff498c1e39d5e2e637452fad85d5196a409c68e833367e3d5f4a3e6f4180ea1",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-session-four-corpora-research.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1425,
+        "sha256": "623f7e4d2d40853deafc1576431cb9b27a9095265c4e10f08423e6a43abf94b4",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-session-eight-authorities-independent-audit.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2196,
+        "sha256": "4ced3fa438e1c328e4f68e09842bbcba762b000d19a2b40730e7af4a5a80f0d5",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-third-corpus-derived-readonly-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2569,
+        "sha256": "0fcfc025f702842d51a87f389b8810c5f3a4816574733350501967f4571a14d1",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-corpus-three-authorities-independent-audit.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2295,
+        "sha256": "b51aace0843c1126ae50c3f13663e9690ee61c46d24b826a91b8e78951c9cbca",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-ten-scope-post-session-checkpoint-binding-input.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7849,
+        "sha256": "5d3fe96ce4dc3464089f4fd0b210a01e222a0346e2b01a9f16032615e2957ee5",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-semantic-preservation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4719,
+        "sha256": "0a409d4ee155125cb6638302fa496662853408ab13854b1c3da0aa1f8ef30ff3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-registry-demand-current-preimages.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 27709,
+        "sha256": "03d4113d1096dfcf04d7ca8abae5fc3b3bc45b4ed62a06796d7b9fbfbb8997d2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-root-four-corpus-selected-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 696,
+        "sha256": "c911e76eb0d26752a24313d13dc99fe4526c778712c787c690d16090f2a3c903",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-wgpu-third-corpus-before-edit.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 125934,
+        "sha256": "0ae4b8b9db5e189fdc53f9c188c2605bb275d68770bac14c8fd7f8afce19a11c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-current-copy-result-delta-preimages.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 60499,
+        "sha256": "a901a2cd4784acb6844e2ece1e639e0c392397ce06bf032d5e09f1f5998ef14b",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-mounted-and-three-corpus-independent-settlement-review.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1336,
+        "sha256": "6ff073be65c4d2f9c2d8d571a4c69535be1f4d4ee108873d22591a01bf8931b3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-owned-roster-candidate-reconciliation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 75557,
+        "sha256": "2422384a587900eb3ea6a2de5b6e5918b9378906040143daf7055e65cd81d437",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-inline-draft-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3783,
+        "sha256": "ebe64f822b551e2319314568ea6e72b0fe80556615b19fd72443628f90e27820",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-session-four-corpora-relocated-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 49919,
+        "sha256": "309fb530dc71c0c3a494896e33a0fbd96039ba08c2880a2b6f6e3927e16043ca",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-adapter-owned-endpoints.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1877,
+        "sha256": "0dac1b1740e6bd1573c8597e0cdd8263dc4a60fe11cf4b4eca2c2f477be14452",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-and-three-corpus-independent-currentness.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3012,
+        "sha256": "496319d8f83fca7141add405b76ac79ef97c504058dc18c900561e76ff211548",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-three-owned-endpoints.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9313,
+        "sha256": "2a2addcba56e532d26d9ffdd64275d817b52186f9c953ac9f4dd5cf6db8dd12e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-third-corpus-derived-independent-audit.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1003,
+        "sha256": "4d9e4273696f95695dc339740c092055868c943216e9643266ac9a97717f6cb7",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-session-complete-current-checkpoint-refusal.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4262,
+        "sha256": "da963e62ed3b977b10d57dfc203d258970da093b57a8422a2f455397bc9e54e9",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-neural-and-root-four-final-independent-audit.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1581,
+        "sha256": "b50df8e773fc47ca52d20b307fcc83423a60991b09945c8ff1eeec147dfeda87",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-session-taxonomy-readonly-preimage.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 7067,
+        "sha256": "fc07db868d289ca556158242253fb005ff6faf4a01d6e5c0221842e550f4de0a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-three-routing-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9237649,
+        "sha256": "66db5e606443fa963acdc19406ad708b90103fd63fd42d278baee4f29f1b3e7d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-mounted-runtime-composition-adapter.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3288,
+        "sha256": "f4ffe3e9b4be970593bfd73e94966ce693e764eec1e52fda104b001f14cd013d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-plan-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 988,
+        "sha256": "3b0105c36e31ed6f533b07a55b8413d706423217d0f388124cbd102c9118b22f",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-latest-union-candidate-independent-review.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1172,
+        "sha256": "70149208b4d1165cd56bba29e8a1ae432c20ef1654f57b28086653aa14890cc9",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-session-four-corpora-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9527874,
+        "sha256": "a3b8a45f6604db1d3ac3e91c22c6a9232a24250eff1362ec1f74448322afa821",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 31024,
+        "sha256": "bba5ad6d6479f3bb55c60021192a56931a6642004010539e67327b6046ee7845",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-finite-demand-mutation-preimages.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 56668,
+        "sha256": "ddb76734eca0e660b8cb43fd145935f5905be595d9fa780279f12dc3bca07f3e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-retirement-current-owned-endpoints.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 10422,
+        "sha256": "cd154197c6cbd26759738c5b3e84b250c26bc2e6eca904ae80384b0f164525ec",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-neural-current-domain-demand-runtime-repair.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4676,
+        "sha256": "cdfc305940b02a0f364ce441a8547ab27fa6bd5cbb0a1d61a31c7124af37a9fd",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-session-owner-extraction-plan-independent-review.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4066,
+        "sha256": "0df767743b6032c1091e16f3dd6e07600fd5b16d3ffbf3facd9e335cc0c0a266",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-existing-policy-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1005,
+        "sha256": "b3debde949753872759fcc47c664b279547bcf44db5d6f59de8b4748365b25b1",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-owned-roster-candidate-reconciliation.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 889,
+        "sha256": "213340f8972f10ebec214ba0091d10bff3d6bda0b645c61314199d41733721ed",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-union-post-control-reconciliation-frontier.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3896,
+        "sha256": "024ba5faa99f1513301cdc00af94732d47828d8f968121d035ca42eb59da5ab1",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-adapter-launch-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9170405,
+        "sha256": "7f3612155386fd7c7759715d361ffd0bb2631db94ffb5e29ea264d11ec8b09f1",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-eight-endpoint-pre-domain-ledger.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 4787,
+        "sha256": "89948009d3c1d659d5d3def692d5dc89ce0eab8086f95c0bab091b0e1827d544",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-root-four-corpus-fresh-preimages.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9464557,
+        "sha256": "a1ba02bbe0b03566e962f34030b49d2ee8b87061b1a37b208d69dcfe35572bd3",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-context-source-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1812,
+        "sha256": "23dc493435d8963638bb456e6ae9fdeee8308160d595f4212a4322d6d42ed086",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-root-four-corpus-owned-endpoints.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8897,
+        "sha256": "f8369b0fd984c858984899c4e3d72977f6e4dc474cce6d1c5ff2520bdfe957ec",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 49035,
+        "sha256": "05f7a2982dc36b169c7dfba59cd2a7a602a02ef1d3a24dd50ad3a0b473d9dba6",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-extraction-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 10593665,
+        "sha256": "9a618a28db2e3dd6cac90be8cf8e00ff65ec7d21d11e9f78921ffe81641edf0e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-pre-neural-source-checkpoint-boundary-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 13451,
+        "sha256": "d02c4a869a215fbb88e4dcaafc47d3b235c14138423a1deb9273c10c19fccc3a",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-wgpu-third-corpus-retirement.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5330,
+        "sha256": "a4b2f5d4bc581afe2265e29d98b98cc913eb7695407481fab9d73ed4747407db",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-corpus-complete-current-checkpoint-refusal.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2721,
+        "sha256": "5da9d45b8fd9104c1862973687b32d7df38702a01463642d5d3a2780b2c2fc58",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-full-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2784,
+        "sha256": "f3f67bdcf8368da345aa2ba9bf328b9e03421c80222ec17c23c635564e6ed549",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-session-owner-extraction-settlement.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3955,
+        "sha256": "eec9875658ccd5afe9c5f8092ee602bc361483a08114a5d5034b1d83effc411e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-adapter-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 40879,
+        "sha256": "e6a392e17601112ac81e5886e6a44609b0ddc7878357bd9c4ad398b7557ea86c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-owned-roster-candidate-independent-review.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2148,
+        "sha256": "c170b9df17073566200e6fdbad97da0e851fae9649b5f3ed07446acee5377728",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-final-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1850,
+        "sha256": "12c7c4437fe01f9e933d13db24f5e40ed5d6d768ac47b98f044f0cc833a86b09",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-session-publication-readiness.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3303,
+        "sha256": "e995b791c0ba97ece06787f25d4c68a7a55e62887947998a11f6c44fe44aa809",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-private-mcp-pre-production-attestation-input.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 5086,
+        "sha256": "96e6b5fb4391a8a80ff3e2fffac1ddf81feb16e065b260845364c0080416089c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-document-http-canonical-value-edge-before.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8999,
+        "sha256": "18c452eac97d2da4579abfe5507236650d43b689e7c056bb0140641221a44731",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-fresh-before-edit.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 1274721,
+        "sha256": "4b024b129997b2197a9df0bb4034c2e166cf8da87012dac8f7e575365305f914",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-latest-union-candidate-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 19910,
+        "sha256": "b61268280096072c7c504343579b2bfd8f19989c3cb0d3e1015e17770796935e",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-corpus-three-retirement.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 3985,
+        "sha256": "e80d01acc190a448620541554a5bece4699a938d9655beab0569dc32d8f46d9d",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-private-mcp-pre-production-attestation.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 898,
+        "sha256": "48078ba48e961ec068fb87fd94191967505b1d47e99670c4b587acc83cb6f7f2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-mounted-context-source-audit.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2815,
+        "sha256": "ca1d5299fa8fd19afe82dfc254e76171ff0fc2ea1ba560bb9ba1e108f21e1cf2",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-session-taxonomy-production-relevance-audit.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 2687,
+        "sha256": "75a96c2928c473ed4f6101804f17ce9f7f1e79f8b52ff304f64021dd29c8ec13",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-root-four-corpus-fresh-launch-preimages.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 9386206,
+        "sha256": "8274df0597a6019d6a7756ca492581ef3699aa3dba740df902229ae3a812ee64",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-pre-neural-source-checkpoint-boundary-observation.md",
+      "role": "retained-report",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 513,
+        "sha256": "a35f4255fdc36333e1ae2ea2fb25ef648a345da8da0e03dd74d7bdc747400f33",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-session-full-independent-observation.json",
+      "role": "retained-input",
+      "evidence": [
+        "Explicit current top-level ticket report/input; contents are not source authorship"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "bytes": 8746,
+        "sha256": "f1b2eb2136dca34a0718f2d6288e2f19786cc53352321cc1e781351d2eb2f00c",
+        "role": "Read-only physical currentness, not authorship/freeze"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "sha256": null,
+        "role": "Observer only"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧾️schema.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "sha256": null,
+        "role": "Observer only"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "sha256": null,
+        "role": "Observer only"
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧾️schema.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "sha256": null,
+        "role": "Observer only"
+      }
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "sha256": "5f647912eb15875537be4fd4139b7da41715120a2466ccf2fb6c2306422e892c",
+        "role": "Observer only"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": true,
+        "sha256": "1b5a48839ac4b23f64ab2a1ba34b1c95b25746dd26e942bd564ffad124334bfe",
+        "role": "Observer only"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-plugin-all-owned-authored-endpoints.json#authoredEndpoints"
+      ],
+      "currentObservation": {
+        "exists": false,
+        "sha256": null,
+        "role": "Observer only"
+      }
+    }
+  ],
+  "ledgerSourceInputs": [
+    [
+      "📥️oct8-selected-consumption-authored-endpoints.json",
+      "ownedEndpoints"
+    ],
+    [
+      "📥️oct8-neural-retirement-current-owned-endpoints.json",
+      "ownedEndpoints"
+    ],
+    [
+      "📥️oct8-resumed-corpus-and-domain-settled-inputs.json",
+      "authoredEndpoints"
+    ],
+    [
+      "📥️oct8-root-four-corpus-owned-endpoints.json",
+      "sources"
+    ],
+    [
+      "📥️oct8-canonical-process-preview-settled-source-inputs.json",
+      "sources"
+    ]
+  ],
+  "masterAuthoredCount": 1436,
+  "masterRetainedInputs": 4,
+  "excluded": "Embedded observer paths, unchanged plainfixture/policy observations, generated compiler/logs/caches, foreign shared edits and historical path-correction metadata",
+  "pending": "Final retained runtime/evidence reports and current final source reconciliation; base6022 unchanged",
+  "latestExactSourceLedger": "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+}

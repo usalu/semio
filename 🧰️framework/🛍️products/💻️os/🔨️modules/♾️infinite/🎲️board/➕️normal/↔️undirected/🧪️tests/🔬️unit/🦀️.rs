@@ -1,3 +1,4 @@
+macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(500_000_000,&mut progress);semio_framework_os_infinite::board::io::text::layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
 
 use super::*;
 
@@ -33,7 +34,7 @@ fn force_graph_without_gravity_stays_near_initial_centroid() {
         "centerY": 0.0,
         "randomSeed": 7
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = physical_layout!(force_snapshot_json,&fixture.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
@@ -61,7 +62,7 @@ fn force_graph_node_id_edges_apply_spring_forces() {
         "gravity": 0.0,
         "randomSeed": 7
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = physical_layout!(force_snapshot_json,&fixture.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();

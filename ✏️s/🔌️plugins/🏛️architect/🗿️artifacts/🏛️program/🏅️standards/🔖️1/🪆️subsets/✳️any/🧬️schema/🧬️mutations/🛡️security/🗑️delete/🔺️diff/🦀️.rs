@@ -6,10 +6,10 @@ use crate::diff::ProgramSecurityDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteSecurityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.security.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.security.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No security requirement exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { security: Some(ProgramSecurityDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { security: Some(ProgramSecurityDelta::removal(&base.security, position)), ..Default::default() })
 }

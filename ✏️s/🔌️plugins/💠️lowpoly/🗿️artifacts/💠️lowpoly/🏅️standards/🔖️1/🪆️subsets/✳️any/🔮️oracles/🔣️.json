@@ -404,6 +404,17 @@
               "directoryName": "🫓️flat"
             }
           ]
+        },
+        {
+          "mutationId": "set-vertex-positions",
+          "sourceMutationDirectoryName": "📍️set-vertex-positions",
+          "mutationDirectoryName": "📍️set-vertex-positions",
+          "scenarios": [
+            {
+              "id": "writes-two-vertices",
+              "directoryName": "📍️sets"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -427,7 +438,8 @@
         "apply-paint-stroke",
         "move-selection",
         "rotate-selection",
-        "scale-selection"
+        "scale-selection",
+        "set-vertex-positions"
       ]
     }
   ],
@@ -868,6 +880,27 @@
             "operation": "scale-selection",
             "bridgeVersion": 1,
             "variant": "ScaleSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-vertex-positions",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-vertex-positions",
+            "bridgeVersion": 1,
+            "variant": "SetVertexPositions"
           },
           "oracleRequirements": [
             {

@@ -11,9 +11,9 @@ class SourceScript extends BundleScript { async run(): Promise<void> { sessionLa
 class CheckScript extends BundleScript { async run(args: string[]): Promise<void> { await runCargo(["check", "-p", "semio-s-spatial-kernel-semio-session", ...args], this.repoRoot); } }
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const componentRetirement=args[0]==="component-retirement";
-    const groups=sessionLaws().filter((group:any)=>!componentRetirement || group.laws.includes("retired_analytic_mesh_metadata_obeys_exact_byte_grants"));
-    await runRepositoryExactCargoLaws({ cwd:this.repoRoot, cargoArgs:componentRetirement?args.slice(1):args, buildBudgetMs:buildBudgetMs(), lawBudgetMs:600_000, groups });
+    const selected=args[0]==="component-retirement" ? "retired_analytic_mesh_metadata_obeys_exact_byte_grants" : args[0]==="physical-custody" ? "original_session_capture_keeps_same_allocation_until_full_typed_grants" : undefined;
+    const groups=sessionLaws().flatMap((group:any)=>selected ? group.laws.includes(selected) ? [{...group,laws:[selected]}] : [] : [group]);
+    await runRepositoryExactCargoLaws({cwd:this.repoRoot,cargoArgs:selected?args.slice(1):args,buildBudgetMs:buildBudgetMs(),lawBudgetMs:600_000,groups});
   }
 }
 async function buildSessionWasm(rsDir: string): Promise<void> {

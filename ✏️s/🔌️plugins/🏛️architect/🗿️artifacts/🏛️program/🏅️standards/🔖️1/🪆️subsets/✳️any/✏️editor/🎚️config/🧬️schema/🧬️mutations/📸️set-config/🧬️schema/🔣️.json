@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/architect/architect/config/mutation/set-config/schema.json",
+  "title": "SetConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "searchQuery": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Search Query",
+          "de": "Suchanfrage"
+        },
+        "group": "search",
+        "order": 10
+      }
+    },
+    "searchHistoryJson": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Search History (JSON)",
+          "de": "Suchverlauf (JSON)"
+        },
+        "description": {
+          "en": "Machine-written cache; not edited by hand.",
+          "de": "Maschinell geschriebener Zwischenspeicher; wird nicht von Hand bearbeitet."
+        },
+        "group": "search",
+        "order": 20
+      }
+    },
+    "lastResultJson": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Last Result (JSON)",
+          "de": "Letztes Ergebnis (JSON)"
+        },
+        "description": {
+          "en": "Machine-written cache; not edited by hand.",
+          "de": "Maschinell geschriebener Zwischenspeicher; wird nicht von Hand bearbeitet."
+        },
+        "group": "results",
+        "order": 30
+      }
+    },
+    "lastAnalysisJson": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Last Analysis (JSON)",
+          "de": "Letzte Analyse (JSON)"
+        },
+        "description": {
+          "en": "Machine-written cache; not edited by hand.",
+          "de": "Maschinell geschriebener Zwischenspeicher; wird nicht von Hand bearbeitet."
+        },
+        "group": "results",
+        "order": 40
+      }
+    }
+  }
+}

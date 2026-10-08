@@ -43,6 +43,8 @@ pub struct Wire {
     pub closed: bool,
 }
 
+semio_framework_value::artifact_retire_struct!(Wire {members,vertices,closed});
+
 // #endregion 🔖️Wire
 
 // #region 🔖️Helpers

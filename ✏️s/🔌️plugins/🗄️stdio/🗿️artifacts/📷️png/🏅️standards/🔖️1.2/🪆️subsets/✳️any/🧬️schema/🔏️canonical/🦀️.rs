@@ -31,6 +31,8 @@ impl store::ArtifactCanonicalJson for PngMutation {
             Self::ChangeGamma(v)=>("change-gamma",object([("revision",text(&v.revision)),("gama",optional(v.gama.as_ref(),|v|number(*v)))])),
             Self::PatchPixels(v)=>("patch-pixels",object([("revision",text(&v.revision)),("x",number(v.x)),("y",number(v.y)),("width",number(v.width)),("height",number(v.height)),("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("alpha",number(v.alpha))])),
             Self::PaintNativeSamples(v)=>("paint-native-samples",object([("revision",text(&v.revision)),("region",region(&v.region)),("paint",paint(&v.paint))])),
+            Self::SetGamma(v)=>("set-gamma",object([("gama",optional(v.gama.as_ref(),|v|number(*v)))])),
+            Self::ReplaceSamples(v)=>("replace-samples",object([("region",region(&v.region)),("samples",array(&v.samples,|v|number(*v)))])),
         };Ok(Some(object([("mutation",text(kind)),("payload",payload)])))
     }
 }
@@ -38,7 +40,14 @@ impl store::ArtifactCanonicalJson for PngSnapshot {
     fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(snapshot(self)))}
 }
 impl store::ArtifactCanonicalJson for PngDiff {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(V::Object(O::new(self.image.as_ref().map(|value|("image",image(value))).into_iter()))))}
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{
+        let fields=[
+            self.gamma.as_ref().map(|value|("gamma",object([("gama",optional(value.gama.as_ref(),|v|number(*v)))]))),
+            self.image.as_ref().map(|value|("image",image(value))),
+            (!self.rects.is_empty()).then(||("rects",array(&self.rects,|rect|object([("region",region(&rect.region)),("samples",array(&rect.samples,|v|number(*v)))])))),
+        ];
+        Ok(Some(V::Object(O::new(fields.into_iter().flatten()))))
+    }
 }
 
 #[cfg(test)]

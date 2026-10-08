@@ -1,7 +1,7 @@
 //! 🖌️ `set-brush-kind-weights` command.
 
 use crate::editor::puzzle2d::{puzzle2d_kind_ids, puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json,Value,Object};
 use std::collections::BTreeMap;
 
 pub fn puzzle2d_uniform_kind_weights(ids: &[String]) -> BTreeMap<String, f64> {
@@ -69,8 +69,8 @@ pub fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Val
     puzzle2d_ensure_catalog_kind_weights(&mut ctx.scene.runtime.node_kind_weights, &node_ids);
     puzzle2d_ensure_catalog_kind_weights(&mut ctx.scene.runtime.handle_kind_weights, &handle_ids);
     if let Some(weights) = args.and_then(|value| value.get("weights")) {
-        ctx.scene.runtime.node_kind_weights = weights.get("nodeWeights").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-        ctx.scene.runtime.handle_kind_weights = weights.get("handleWeights").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+        ctx.scene.runtime.node_kind_weights = weights.get("nodeWeights").and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&value.clone())).ok()).unwrap_or_default();
+        ctx.scene.runtime.handle_kind_weights = weights.get("handleWeights").and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&value.clone())).ok()).unwrap_or_default();
     } else if let Some(kind_id) = args.and_then(|value| value.get("kindId")).and_then(|value| value.as_str()) {
         let weight = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(0.0).clamp(0.0, 1.0);
         let slice = args.and_then(|value| value.get("catalogSlice")).and_then(|value| value.as_str()).unwrap_or("nodes");
@@ -80,10 +80,10 @@ pub fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Val
             ctx.scene.runtime.node_kind_weights = puzzle2d_normalize_kind_weight_group(&ctx.scene.runtime.node_kind_weights, &node_ids, kind_id, weight);
         }
     }
-    if let Ok(weights_json) = serde_json::to_string(&json!({
+    let weights_json = semio_framework_pack_json::to_json_string(&json!({
         "nodeWeights": ctx.scene.runtime.node_kind_weights,
         "handleWeights": ctx.scene.runtime.handle_kind_weights,
-    })) {
+    })); {
         ctx.host.borrow_mut().set_brush_kind_weights(&weights_json);
     }
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();

@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::{puzzle2d_gesture_phase, puzzle2d_selection_pivot, Puzzle2dActionCtx, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
 use semio_framework_tool_machine::GesturePhase;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 📏️ Scales the selected nodes' positions and target regions about their joint centroid by `factor` through the
 /// select tool (node sizes stay — a node kind's footprint is the kind's, not the layout's; a region scales its

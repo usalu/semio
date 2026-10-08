@@ -8,20 +8,22 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "zone-living",
+        "id": "zone-living",
         "patch": {
           "floorAreaM2": null,
           "heaviness": null,
           "nightVentilation": null,
           "windows": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": [
               {
-                "key": "win-south",
+                "id": "win-south",
                 "patch": {
                   "orientation": "W",
                   "inclinationDeg": null,
@@ -38,12 +40,14 @@
   },
   "elements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "thermalBridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

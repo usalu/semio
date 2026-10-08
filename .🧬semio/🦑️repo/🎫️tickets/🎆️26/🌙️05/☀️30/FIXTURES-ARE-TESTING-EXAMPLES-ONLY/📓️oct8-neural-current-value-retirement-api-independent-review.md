@@ -1,0 +1,35 @@
+# Neural Current Value Retirement API Independent Review
+
+Read-only observation of Native's in-progress consumer repair; no source edits/tests/producers. Exact observed paths/hashes are in `📥️oct8-neural-value-api-readonly-observation.json`, separate from authored work and final freeze. Native's current repair report/preimages remain the implementing authority.
+
+Canonical producer is Value retirement contract/controlled owner. ErasedSnapshotRetirement exposes full RetainedCloneGrant close_step, terminal witness, separate copy/capacity/release/depth demands. `admit_owned_retirement` returns either admitted erased frame plus birth receipt or `(ValueError, original T)` on refusal. Admission requires supported owner, nonzero items/depth and complete frame capacity before ownership transfer. Capacity and release are physical allocation authorities; copy is payload work. Zero/undersized grants must not silently move/drop the original.
+
+Controlled owner reserves paged cursor capacity, births root/child cursor only under complete capacity grant, advances using exact copy-or-release body grant and current depth, validates receipt fits/full birth, releases terminal cursor scaffolds separately, then releases empty pages. Its Drop asserts terminal-empty; the outer boxed retained frame is still a final separate physical release. Neural's current draft explicitly demands that erased frame size after terminal-empty and charges it before dropping, preserving ownership across shorter grants.
+
+Current Neural draft now forwards one full grant/current depth and preserves original owner on admission refusal. Pending DslValue cancellation restores pending exactly on refusal; iterator cancellation restores the popped frame's entries and remaining fields. Cancellation marks cleanup rather than abandoning owned frontiers. Existing linked-list structural storage is unchanged, so this review makes no new capacity-accounting claim for that domain container.
+
+One concrete interaction sent Native: capacity demand accepts `maximum_body_bytes`; Neural currently queries capacity with0, then closes with a larger shared byte grant. A constructor demand may depend on the actual body grant. Existing neutral demand tests must ensure this lower-bound planning cannot repeatedly yield zero progress when the actual birth exceeds the chosen bytes; no infinite-progress claim follows from compilation alone.
+
+Production schema is Value `♻️retirement/🧬️contract/🧬️schema/🔣️.json` (Full Grant Shared and Owned Retirement), linked to ordered retirement Grant and explicit Demand copy/capacity/release/depth. Existing controlled TypeScript laws independently cover full grants, paged ownership, UTF8 append births/releases, typed child/scaffold demands, scalar/UTF8 work, native paged close frontier and cold shared backing. Neural already has neutral owned-demand/evaluation-owner fixtures and Rust/source-contract laws. Those current existing oracles should validate refusal identity, finite closure, terminal frame release and cancellation, rather than weakening Value producer API or adding unbounded fallback cleanup.
+
+No repair or production pass is claimed until Native's exact settled source/runtime/compiler receipts arrive. This Value producer observation does not change fixture/runtime boundary findings or authorize broader source refactoring.
+
+## Pending Entry Storage Change
+
+Fresh read-only source still exposes `entries.into_iter()` and `.next()`; proposed VecDeque repair is not settled. Birth of a retained cursor and conversion of existing Vec entries are separate capacity obligations: avoid an uncharged allocation/copy while taking the pending Object. Admission refusal must restore exact original pending value/frame; pop-front order must preserve input order. Terminal deque capacity must receive release admission. Native received this bounded risk; no source change, test or compiler credit from this lane.
+
+## Proposed Inline Erased Slot Review
+
+The latest actual source read still has LinkedList `Owner::Owned` and IntoIter; the proposed inline optional erased slot has no source verification yet. Required bounded lifecycle joins: both domain-list and erased-slot state participate in terminal/Drop checks; occupied-slot OwnershipLimit refusal precedes Value admission and returns original candidate; terminal erased frame release is admitted before taking/dropping the slot; cancellation drains the current slot before moving pending/frame ownership; slot insertion adds no allocation beyond granted Value birth. Native received these concrete review conditions. No readiness or compilation claim.
+
+## Current Inline Draft Observed
+
+Latest actual source now has ManuallyDrop optional erased slot. Occupied-slot OwnershipLimit occurs before admission; terminal emptiness joins list and slot; exact terminal frame demand is checked before taking/dropping it. Body-dependent capacity uses matching minimum copy-or-release body and falls back to that body when larger-page capacity does not fit. Cancellation restores original pending candidate or popped frame on refusal. `allocated_bytes()` still measures domain list only and omits live erased slot frame/backing; Native was asked to qualify its measurement scope. Active15784 results and pointer/capacity/allocator law remain pending; no pass credit.
+
+## Five-Endpoint Draft Freeze Read
+
+Independent actual hashes match all five current authored draft endpoints. All separately observed producer/schema current hashes match ledger observations; canonical Value retained-clone producer changed from initial snapshot and remains explicitly foreign observation, never promoted to Neural authorship. VecDeque conversion/pop-front has an authored allocator plus original pointer/capacity/order law; it has not been independently executed by this lane. Cold dictionary cleanup now borrows exact current release demand. Allocated-bytes measurement is used only by six existing domain-backing unit assertions and already omitted old typed backing: no production custody assertion is based on it. Native qualifications accepted. Actual Rust15784/source57830 remain pending, so this is source review rather than runtime freeze success.
+
+## Actual Eight-Failure Follow-Up
+
+Actual45948 selected runtime footer70passed/8failed is retained failure, not producer-transition-only status. Source now cache demand delegates current ValueRetirement; cold cache asks current demand, fixed4096 remains only logical preferred page. Error demand propagates/explicitly fails; no silent zero fallback observed. New physical allocation tests must preserve plain UTF8 payload expectedBytes equality separately: actual worker total18173 versus payload18005 demonstrates metadata release is a distinct measure. Cache root Arc transfer and BTreeMap pop-first currently report released_bytes0; total cache physical closure claims must account separately for those structural allocations or remain explicitly nested-Value scope. Native notified. No source/test/runtime job here.

@@ -58,6 +58,15 @@
         "command": "bun ./📜️script.ts prepare --manifest Cargo.toml"
       }
     },
+    "synchronize": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts synchronize",
+        "forwardAllArgs": true
+      }
+    },
     "runtime-contract-check": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -86,6 +86,22 @@ const ROWS: &[&str] = &[
     "insert-tower-leg-dupe",
     "insert-pile-dupe",
     "insert-crane-runway-dupe",
+    "remove-bridge-fatigue-middle-row",
+    "remove-cold-formed-member-middle-row",
+    "remove-crane-runway-middle-row",
+    "remove-fatigue-detail-middle-row",
+    "remove-fire-exposure-middle-row",
+    "remove-joint-middle-row",
+    "remove-load-case-middle-row",
+    "remove-material-middle-row",
+    "remove-member-middle-row",
+    "remove-member-action-middle-row",
+    "remove-pile-middle-row",
+    "remove-plated-panel-middle-row",
+    "remove-section-middle-row",
+    "remove-silo-shell-middle-row",
+    "remove-tension-component-middle-row",
+    "remove-tower-leg-middle-row",
 ];
 
 /// 🗣️ The real committed EN 1993 document, read where the domain already keeps it.

@@ -647,11 +647,16 @@ mod imp {
         encode(&snap)
     }
 
+    /// 🧩️ `value` after `step` edited it in place — the one owned-value seam of the oracle's undo, so the undo itself holds no mutable borrow.
+    fn applied<T>(mut value: T, step: impl FnOnce(&mut T) -> Result<(), String>) -> Result<T, String> {
+        step(&mut value)?;
+        Ok(value)
+    }
+
     pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
         let original = decode(original_input)?;
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        let mut snap = decode(mutated)?;
-        restore(&original, &spec.str("kind"), &params, &mut snap)?;
+        let snap = applied(decode(mutated)?, |snap| restore(&original, &spec.str("kind"), &params, snap))?;
         encode(&snap)
     }
 

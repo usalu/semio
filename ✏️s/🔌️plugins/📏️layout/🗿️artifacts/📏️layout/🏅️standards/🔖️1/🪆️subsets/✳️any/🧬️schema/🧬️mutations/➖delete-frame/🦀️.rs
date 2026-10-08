@@ -2,8 +2,8 @@
 //! referencing it); inverse recreates it via `create-frame`.
 
 use crate::mutations::{create_frame, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -43,11 +43,11 @@ pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protoc
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
     };
-    if !page.frames.iter().any(|frame| frame.id() == payload.frame_id) {
+    let Some(at) = page.frames.iter().position(|frame| frame.id() == payload.frame_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
-    }
+    };
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { frame_removed: Some(payload.frame_id.clone()), ..Default::default() } }], ..Default::default() }),
+        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::removal_by_id(payload.frame_id.clone(), at), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

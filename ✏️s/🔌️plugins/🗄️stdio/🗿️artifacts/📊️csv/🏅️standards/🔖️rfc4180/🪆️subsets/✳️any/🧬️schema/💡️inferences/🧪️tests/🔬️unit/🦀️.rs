@@ -61,7 +61,7 @@ mod conformance_laws {
 
         // Diff binary facet.
         let mut before = snap.clone();
-        let diff = crate::schema::mutations::apply_csv_mutation(&mut before, &mutation);
+        let diff = crate::apply_mutation(&mut before, &mutation);
         let diff_bytes = <CsvDiff as DiffBinary>::encode_diff(diff.diff()).expect("encode_diff");
         let diff_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_rfc4180::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         let trace = semio_framework_dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");

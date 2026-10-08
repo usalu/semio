@@ -47,9 +47,10 @@
   "decisions": null,
   "validations": null,
   "performance": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "performance-criterion-a",
         "patch": {
@@ -82,8 +83,7 @@
           "incentiveThreshold": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "quality": null,
   "artifacts": null,

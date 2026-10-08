@@ -9,10 +9,10 @@ pub fn diff(payload: &InsertVentSystem, base: &Din16798Snapshot) -> protocol::Mu
     if base.vent_systems.iter().any(|existing| existing.id == payload.vent.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A ventilation system with id '{}' already exists.", payload.vent.id), [payload.vent.id.clone()]);
     }
-    let index = payload.index.min(base.vent_systems.len());
-    let outcome = protocol::MutationOutcome::new(Din16798Diff { vent_systems: Din16798VentSystemDelta::insertion(&base.vent_systems, index, payload.vent.clone()), ..Default::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.vent_systems.len());
+    let outcome = protocol::MutationOutcome::new(Din16798Diff { vent_systems: Din16798VentSystemDelta::insertion(index, payload.vent.clone()), ..Default::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the ventilation system list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the ventilation system list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

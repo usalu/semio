@@ -13,6 +13,6 @@ pub fn diff(payload: &super::ChangeGripGripKind, base: &Block5dSnapshot) -> prot
         return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     let patch = Block5dGripTemplatePatch { grip_kind: Some(payload.new_grip_kind.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(Block5dDiff { grips: Some(Block5dGripsDelta { patched: vec![Block5dGripsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff { grips: Block5dGripsDelta { modified: vec![Block5dGripsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -149,8 +149,8 @@ def partial(missing):
     return [{"level": "warning", "code": "mutation.partial"}] if missing else []
 
 
-def mutate(document, mutation):
-    """🔺️ The whole dispatch: `(diff, messages)` for one externally tagged mutation."""
+def legacy_mutate(document, mutation):
+    """🔺️ The dispatch in the keyed-rows vocabulary (removed ids, added rows, patches): `(diff, messages)` for one externally tagged mutation."""
     [(variant, payload)] = mutation.items()
     if variant == "DragSlots":
         targets = payload["targets"]
@@ -289,23 +289,50 @@ def mutate(document, mutation):
     raise AssertionError(f"unknown wfc2d mutation variant {variant!r}")
 
 
+def positional(document, legacy):
+    """📍 The keyed-rows diff as positional list deltas: removals at their base index, insertions at their canonical after index."""
+    out = dict(legacy)
+    for member in COLLECTIONS:
+        base, rows_ = document[member], legacy[member]
+        removed = [{"id": identifier, "index": next(at for at, row in enumerate(base) if row["id"] == identifier)} for identifier in rows_["removed"] if any(row["id"] == identifier for row in base)]
+        gone = {entry["id"] for entry in removed}
+        running = [row for row in base if row["id"] not in gone]
+        for row in rows_["added"]:
+            running.insert(ordered_index(running, row["id"]), row)
+        inserted = [{"index": next(at for at, existing in enumerate(running) if existing["id"] == row["id"]), "row": row} for row in rows_["added"]]
+        out[member] = {"removed": removed, "inserted": inserted, "moved": [], "modified": rows_["patched"]}
+    return out
+
+
+def mutate(document, mutation):
+    """🔺️ The whole dispatch: `(diff, messages)` for one externally tagged mutation, rows as positional list deltas."""
+    legacy, messages = legacy_mutate(document, mutation)
+    return positional(document, legacy), messages
+
+
 def apply_collection(base, delta, collection):
-    """📂 Removals first, then canonical-position insertions, then field patches; unknown targets are refused."""
-    result = list(base)
-    for identifier in delta["removed"]:
-        at = next((position for position, row in enumerate(result) if row["id"] == identifier), -1)
-        if at == -1:
-            raise AssertionError(f"removed {identifier!r} does not exist")
-        del result[at]
-    for row in delta["added"]:
-        if any(existing["id"] == row["id"] for existing in result):
-            raise AssertionError(f"added {row['id']!r} already exists")
-        result.insert(ordered_index(result, row["id"]), row)
+    """📂 The positional list-delta apply: removed and moved ids are checked at their base index, inserted and moved rows take their after slots, survivors fill the rest in base order, then the patches write."""
+    taken = set()
+    for entry in delta["removed"] + [{"id": move["id"], "index": move["from"]} for move in delta["moved"]]:
+        if entry["index"] >= len(base) or base[entry["index"]]["id"] != entry["id"] or entry["index"] in taken:
+            raise AssertionError(f"{entry['id']!r} is not at base index {entry['index']}")
+        taken.add(entry["index"])
+    slots = [None] * (len(base) - len(delta["removed"]) + len(delta["inserted"]))
+    for entry in delta["inserted"]:
+        if entry["index"] >= len(slots) or slots[entry["index"]] is not None:
+            raise AssertionError(f"inserted {entry['row']['id']!r} has no free after slot {entry['index']}")
+        slots[entry["index"]] = entry["row"]
+    for move in delta["moved"]:
+        slots[move["to"]] = base[move["from"]]
+    survivors = iter([row for at, row in enumerate(base) if at not in taken])
+    result = [slot if slot is not None else next(survivors) for slot in slots]
+    if len({row["id"] for row in result}) != len(result):
+        raise AssertionError("two rows of the after list carry the same id")
     optional = {name for name, wrapped in PATCH_FIELDS[collection] if wrapped}
-    for entry in delta["patched"]:
+    for entry in delta["modified"]:
         at = next((position for position, row in enumerate(result) if row["id"] == entry["id"]), -1)
         if at == -1:
-            raise AssertionError(f"patched {entry['id']!r} does not exist")
+            raise AssertionError(f"modified {entry['id']!r} does not exist")
         row = dict(result[at])
         for name, value in entry["patch"].items():
             if value is None:
@@ -502,7 +529,7 @@ def replay():
             produced_after = apply_diff(before, committed_diff)
             if produced_after != after:
                 problems.append(f"{label}: the committed diff did not carry before to after")
-            restored = apply_diff(apply_diff(before, produced_diff), diff_of())
+            restored = apply_diff(before, produced_diff)
             for step in inverse(before, mutation):
                 step_diff, _ = mutate(restored, step)
                 restored = apply_diff(restored, step_diff)

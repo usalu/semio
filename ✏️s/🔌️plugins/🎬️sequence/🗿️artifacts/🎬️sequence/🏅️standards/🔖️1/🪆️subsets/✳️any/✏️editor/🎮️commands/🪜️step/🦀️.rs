@@ -2,9 +2,9 @@
 //! current selection.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::sequence::sequence_child_emit_from_host_mutation;
+use crate::editor::sequence::{edit_rules, sequence_edit_emit, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
-use crate::{SequenceSnapshot, SlotRef};
+use crate::{SequenceSnapshot, SlotRef, StepParams};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -24,9 +24,9 @@ pub mod add_step {
     /// step is no longer reachable from this dispatch — selection is framework-owned now, written
     /// only through the injected `interactionSelect` verb.
     pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let _ = host.add_step(&payload.kind, payload.x, payload.y);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.add_step(&payload.kind, payload.x, payload.y, None);
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 
@@ -47,9 +47,9 @@ pub mod add_step_to_slot {
     /// step is no longer reachable from this dispatch — selection is framework-owned now, written
     /// only through the injected `interactionSelect` verb.
     pub fn handle(payload: &AddStepToSlot, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let _ = host.add_step_in_slot(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.add_step(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 
@@ -69,9 +69,9 @@ pub mod add_step_dropped {
     /// step is no longer reachable from this dispatch — selection is framework-owned now, written
     /// only through the injected `interactionSelect` verb.
     pub fn handle(payload: &AddStepDropped, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let _ = host.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️AddStep
@@ -90,9 +90,10 @@ pub mod remove_step {
     /// out of a config selection field — the framework auto-prunes a deleted step's id out of the
     /// "steps" domain's live selection via `interaction_topology` after this dispatch lands.
     pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            host.remove_step(&payload.id);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        let ids = edit_rules::removal_closure(&edit.scene, [payload.id.clone()]);
+        edit.remove_steps(&ids);
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 
@@ -105,11 +106,10 @@ pub mod delete_selection {
     pub struct DeleteSelection {}
 
     fn delete_selected(doc: &ArtifactView<'_, SequenceSnapshot>, selected: &[String]) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            for step_id in selected {
-                host.remove_step(step_id);
-            }
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        let ids = edit_rules::removal_closure(&edit.scene, selected.iter().cloned());
+        edit.remove_steps(&ids);
+        Ok(sequence_edit_emit(doc, edit))
     }
 
     /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg).await` is framework-fixed at this exact 3-arg
@@ -138,15 +138,15 @@ pub mod move_step {
         pub y: f64,
     }
 
+    /// 🧭️ Moving one step to an absolute position is the ONE concrete relative `drag-nodes` leaf by the offset between the step's published position and the requested one;
+    /// an absent step or an unchanged position publishes nothing.
     pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let mut next = host.snapshot.clone();
-            if let Some(step) = next.steps.iter_mut().find(|step| step.id == payload.node_id) {
-                step.x = payload.x;
-                step.y = payload.y;
-            }
-            let _ = host.replace_snapshot(next);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        if let Some(step) = edit.scene.steps.iter().find(|step| step.id == payload.node_id) {
+            let (dx, dy) = (payload.x - step.x, payload.y - step.y);
+            edit.drag(std::slice::from_ref(&payload.node_id), dx, dy);
+        }
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️MoveStep
@@ -163,9 +163,11 @@ pub mod set_step_params {
     }
 
     pub fn handle(payload: &SetStepParams, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let _ = host.set_step_params_json(&payload.id, &payload.params_json);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        if let Ok(params) = semio_framework_pack_json::from_json_str::<StepParams>(&payload.params_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+            let _ = edit.set_params(&payload.id, params);
+        }
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️SetStepParams
@@ -181,10 +183,9 @@ pub mod set_step_collapsed {
     }
 
     pub fn handle(payload: &SetStepCollapsed, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let collapsed = host.snapshot.steps.iter().find(|step| step.id == payload.id).is_none_or(|step| !step.collapsed);
-            host.set_step_collapsed(&payload.id, collapsed);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.toggle_collapsed(&payload.id);
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️SetStepCollapsed

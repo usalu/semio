@@ -33,7 +33,7 @@ mod analysis_measure;
 mod analysis_check;
 
 #[path = "../⏱️phased-job/🦀️.rs"]
-mod phased_job;
+pub(crate) mod phased_job;
 #[path = "../🧵️brep-sources/🦀️.rs"]
 mod brep_sources;
 #[path = "../🛠️brep-feature/🦀️.rs"]
@@ -46,10 +46,8 @@ mod brep_intersect;
 mod brep_evaluate;
 #[path = "../🐚️brep-topology/🦀️.rs"]
 mod brep_topology;
-#[path = "../💾️brep-interchange/🦀️.rs"]
-mod brep_interchange;
 #[path = "../🧱️mesh-support/🦀️.rs"]
-mod mesh_support;
+pub(crate) mod mesh_support;
 #[path = "../🥽️mesh-primitive/🦀️.rs"]
 mod mesh_primitive;
 #[path = "../🔀️mesh-convert/🦀️.rs"]
@@ -64,15 +62,13 @@ mod mesh_edit;
 mod mesh_repair;
 #[path = "../🔎️mesh-inspect/🦀️.rs"]
 mod mesh_inspect;
-#[path = "../📼️mesh-interchange/🦀️.rs"]
-mod mesh_interchange;
 #[path = "../🌗️mesh-shading/🦀️.rs"]
 mod mesh_shading;
 #[path = "../🗺️mesh-uv/🦀️.rs"]
 mod mesh_uv;
 
 /// 📚️ Every category table, in registration order.
-pub const TABLES: &[&[ComputeEntry]] = &[math_values::COMPUTES, brep_primitive::COMPUTES, brep_curve::COMPUTES, brep_surface::COMPUTES, brep_solid::COMPUTES, brep_boolean::COMPUTES, math_arithmetic::COMPUTES, math_vector::COMPUTES, math_list::COMPUTES, analysis_measure::COMPUTES, analysis_check::COMPUTES, brep_feature::COMPUTES, brep_transform::COMPUTES, brep_intersect::COMPUTES, brep_evaluate::COMPUTES, brep_topology::COMPUTES, brep_interchange::COMPUTES, mesh_primitive::COMPUTES, mesh_convert::COMPUTES, mesh_transform::COMPUTES, mesh_component::COMPUTES, mesh_edit::COMPUTES, mesh_repair::COMPUTES, mesh_inspect::COMPUTES, mesh_interchange::COMPUTES, mesh_shading::COMPUTES, mesh_uv::COMPUTES];
+pub const TABLES: &[&[ComputeEntry]] = &[math_values::COMPUTES, brep_primitive::COMPUTES, brep_curve::COMPUTES, brep_surface::COMPUTES, brep_solid::COMPUTES, brep_boolean::COMPUTES, math_arithmetic::COMPUTES, math_vector::COMPUTES, math_list::COMPUTES, analysis_measure::COMPUTES, analysis_check::COMPUTES, brep_feature::COMPUTES, brep_transform::COMPUTES, brep_intersect::COMPUTES, brep_evaluate::COMPUTES, brep_topology::COMPUTES, mesh_primitive::COMPUTES, mesh_convert::COMPUTES, mesh_transform::COMPUTES, mesh_component::COMPUTES, mesh_edit::COMPUTES, mesh_repair::COMPUTES, mesh_inspect::COMPUTES, mesh_shading::COMPUTES, mesh_uv::COMPUTES];
 
 /// 🗺️ The tables merged by kind id; the first registration of an id wins and a test refuses duplicates.
 pub fn index() -> &'static BTreeMap<&'static str, StartFn> {

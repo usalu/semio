@@ -51,9 +51,10 @@
   "artifacts": null,
   "assumptions": null,
   "constraints": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "constraint-record-a",
         "patch": {
@@ -88,8 +89,7 @@
           "escalationContactId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "complianceRecords": null,
   "approvals": null,

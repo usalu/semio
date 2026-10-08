@@ -183,7 +183,7 @@ fn paint_node(writer: &mut PdfWriter, content: &mut PdfContent, doc: &DrawingSna
     }
     if let Some(image) = &node.image {
         if image.width > 0.0 && image.height > 0.0 {
-            if let Some(name) = writer.image(doc, &image.src)? {
+            if let Some(name) = writer.image(doc, &image.asset_id)? {
                 resources.insert(name.clone());
                 // 🖼️ The unit square's top row is v = 1: under the flipped page a `-h` scale with a
                 // `+h` offset keeps the image upright at the node origin.
@@ -619,21 +619,8 @@ fn zlib(data: &[u8]) -> Result<Vec<u8>, String> {
     semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(data).map_err(|error| format!("flate: {error}"))
 }
 
-/// 🖼️ A scene image `src` is the asset's `data:` URI (or its bare base64 body); decode it to RGBA
-/// through the same PNG path the trace layer uses, honouring the asset's declared size.
-fn decode_image_source(doc: &DrawingSnapshot, src: &str) -> Option<semio_framework_pixels::RasterImage> {
-    let body = match src.strip_prefix("data:") {
-        Some(rest) => rest.split_once(',').map_or(rest, |(_, data)| data),
-        None => src,
-    };
-    let bytes = base64_codec::base64_standard_decode(body).ok()?;
-    let decoded = semio_framework_pixels::decode_png(&bytes).ok()?;
-    let declared = doc.assets.values().find(|asset| asset.data.eq_str(src) || src.len().checked_sub(asset.data.len()).and_then(|offset| src.get(offset..)).is_some_and(|suffix| asset.data.eq_str(suffix))).and_then(|asset| asset.width.zip(asset.height));
-    Some(match declared {
-        Some((width, height)) if width > 0 && height > 0 && (width, height) != (decoded.width, decoded.height) => semio_framework_pixels::resize_bilinear(&decoded, width, height),
-        _ => decoded,
-    })
-}
+/// 🖼️ Resolve admitted sample ownership by semantic identity without decoding source framing.
+fn decode_image_source(doc:&DrawingSnapshot,asset_id:&str)->Option<semio_framework_pixels::RasterImage>{crate::schema::drawing_image_samples(doc.assets.get(asset_id)?)}
 //#endregion 🔖️Writer
 
 //#region 🔖️Lexical

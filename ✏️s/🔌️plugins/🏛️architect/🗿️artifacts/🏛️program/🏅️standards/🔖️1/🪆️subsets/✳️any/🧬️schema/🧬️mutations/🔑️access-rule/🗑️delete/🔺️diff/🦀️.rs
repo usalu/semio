@@ -6,10 +6,10 @@ use crate::diff::ProgramAccessRulesDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteAccessRule, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.access_rules.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.access_rules.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No access rule exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { access_rules: Some(ProgramAccessRulesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { access_rules: Some(ProgramAccessRulesDelta::removal(&base.access_rules, position)), ..Default::default() })
 }

@@ -1,0 +1,17 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️entry/🟦️.ts",
+    "source": "import { bootFrameworkOsDev } from \"../🟦️.ts\";\nimport { admitPluginCatalogV1 } from \"../../🔌️plugin/📇️registry/🟦️.ts\";\nconst rows = admitPluginCatalogV1({ version: 1, targets: [], hosts: [], playgrounds: [] }, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });\nawait bootFrameworkOsDev({ catalogRows: rows, variant: \"\", brands: [] });\n",
+    "sha256": "88b04e8c7c75af2aaa81af7b3a48c70b09d173cbd3ed4354ca711d097dbe86eb"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🚀️entry/🟦️.ts",
+    "source": "import { composeSpecificOsCatalogV1 } from \"../../../🧩️catalog/🟦️.ts\";\nimport { bootFrameworkOsDev } from \"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts\";\nimport { PUZZLE_BOARD_SESSION_FACTORIES } from \"@semio-tech/puzzle-2d\";\nawait bootFrameworkOsDev({ catalogRows: composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).rows, brands: [], surfaceSessionFactories: PUZZLE_BOARD_SESSION_FACTORIES });\n",
+    "sha256": "dacb09e9a19629eb584af8ed6f8dee2e24d8064e06a553ebb885d4ac92f2500a"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🟦️.ts",
+    "source": "import { composeSpecificOsCatalogV1 } from \"../../../🧩️catalog/🟦️.ts\";\nimport { GIS_INFERENCE_PRESENTATION_V1 } from \"../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🪟️presentation/🟦️.tsx\";\nimport { bootFrameworkOsDev } from \"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts\";\nimport { PUZZLE_BOARD_SESSION_FACTORIES } from \"@semio-tech/puzzle-2d\";\nconst mounted = await bootFrameworkOsDev({ catalogRows: composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).rows, brands: [], documentServices: [GIS_INFERENCE_PRESENTATION_V1], backboneWorkerFactory: () => new Worker(new URL(\"../🧩️service-composition/👷️worker/🟦️.ts\", import.meta.url), { type: \"module\" }), surfaceSessionFactories: PUZZLE_BOARD_SESSION_FACTORIES });\n\nif (import.meta.hot) import.meta.hot.dispose(() => mounted.dispose());\n",
+    "sha256": "9b73cd4268c025b9b590d0680d6eac4fb153863c157a42c65e52a611ac3a3b8f"
+  }
+]

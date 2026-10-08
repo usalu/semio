@@ -18,8 +18,10 @@ export interface BimPlanWindowConfig {
   framed: boolean;
   viewport: Viewport2d;
 }
-/** 🧬️ The one `snapshot` mutation of BimPlanWindowConfig: the whole configuration replaces the previous one. */
-export type BimPlanWindowConfigMutation = { kind: "snapshot"; config: BimPlanWindowConfig };
+/** 🧬️ The one `replace` mutation of BimPlanWindowConfig: its payload is the window's whole configuration; its diff names only the fields that differ from the base. */
+export type BimPlanWindowConfigMutation = { kind: "replace"; config: BimPlanWindowConfig };
+/** 🔺️ Sparse diff of BimPlanWindowConfig: exactly the fields a mutation changes. */
+export type BimPlanWindowConfigDiff = Partial<BimPlanWindowConfig>;
 /** 🚪️ Parses one exact BimPlanWindowConfig. */
 export function parseBimPlanWindowConfig(value: unknown): BimPlanWindowConfig {
   const row = exact(value, "$", ["storey", "cutHeight", "framed", "viewport"]);
@@ -30,7 +32,14 @@ export function parseBimPlanWindowConfig(value: unknown): BimPlanWindowConfig {
     viewport: parseViewport2d(row.viewport),
   };
 }
-/** 🔁️ Applies one exact BimPlanWindowConfig mutation. */
-export function applyBimPlanWindowConfigMutation(_base: BimPlanWindowConfig, mutation: BimPlanWindowConfigMutation): BimPlanWindowConfig {
-  return parseBimPlanWindowConfig(mutation.config);
+/** 🔺️ The sparse diff one exact BimPlanWindowConfig mutation produces over `base`. */
+export function diffBimPlanWindowConfigMutation(base: BimPlanWindowConfig, mutation: BimPlanWindowConfigMutation): BimPlanWindowConfigDiff {
+  const next = parseBimPlanWindowConfig(mutation.config);
+  const diff: Record<string, unknown> = {};
+  for (const key of Object.keys(next) as (keyof BimPlanWindowConfig)[]) if (JSON.stringify(next[key]) !== JSON.stringify(base[key])) diff[key] = next[key];
+  return diff as BimPlanWindowConfigDiff;
+}
+/** 🔁️ Applies one exact BimPlanWindowConfig mutation through its sparse diff. */
+export function applyBimPlanWindowConfigMutation(base: BimPlanWindowConfig, mutation: BimPlanWindowConfigMutation): BimPlanWindowConfig {
+  return { ...base, ...diffBimPlanWindowConfigMutation(base, mutation) };
 }

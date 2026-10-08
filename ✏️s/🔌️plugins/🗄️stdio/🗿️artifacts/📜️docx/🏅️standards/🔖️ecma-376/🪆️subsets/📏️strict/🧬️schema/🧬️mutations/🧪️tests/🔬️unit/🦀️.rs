@@ -25,10 +25,10 @@ fn kinds_match_enum_and_catalog() {
         DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
         DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default() }),
+        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default(), index: None, override_index: None }),
         DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: String::new() }),
-        DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: String::new() }),
-        DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: String::new() }),
+        DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: String::new(), node: None, index: None }),
+        DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: String::new(), index: None }),
     ];
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every DocxStrictMutation variant, in declaration order");
@@ -66,7 +66,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️mutations/✒️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
     let path = fixture["path"].as_str().unwrap().to_string();
     let document: XmlDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mutation = DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone() });
+    let mutation = DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None, override_index: None });
     assert_eq!(DocxStrictMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     let encoded = mutation.encode_op().unwrap();
     assert_ne!(encoded, mutation.print_op().into_bytes());
@@ -93,9 +93,36 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(element_names, ["xml", "v:shape"]);
     let carrier: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     assert_eq!(carrier, fixture["document"]);
-    let removal = DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path });
+    let removal = DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() });
     let inverse = removal.inverse(&inserted).unwrap();
-    assert_eq!(inverse, vec![mutation]);
+    let (index, override_index) = crate::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(&inserted, &path).unwrap();
+    assert_eq!(inverse, vec![DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(index), override_index })]);
     let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
+}
+
+/// ⚖️ Every strict kind satisfies the inverse sum law on a document, including VML and alternate content at a middle position.
+#[semio_framework_async_macros::async_test]
+async fn every_strict_kind_satisfies_the_inverse_sum_law() {
+    use semio_framework_plugin::ArtifactBuilder;
+    let base = crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
+    let laws = protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
+    for mutation in stamp_conformance_class_mutations(false) {
+        laws(&mutation, &base).await;
+    }
+    let document: XmlDocument = semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(r#"<xml xmlns:v="urn:schemas-microsoft-com:vml"><v:shape/></xml>"#).expect("valid XML");
+    let middle = base.xml_parts.len().saturating_sub(1);
+    let insert = DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: "word/aaa.vml".into(), document, index: Some(middle), override_index: Some(0) });
+    laws(&insert, &base).await;
+    let mut with_part = base.clone();
+    apply_docx_strict_mutation(&mut with_part, &insert);
+    laws(&DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: "word/aaa.vml".into() }), &with_part).await;
+    let main = main_part_path(&base).expect("main part");
+    let add = DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: main.clone(), node: None, index: Some(0) });
+    laws(&add, &base).await;
+    let mut with_fallback = base.clone();
+    apply_docx_strict_mutation(&mut with_fallback, &add);
+    apply_docx_strict_mutation(&mut with_fallback, &DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: main.clone(), node: None, index: None }));
+    laws(&DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: main.clone(), index: None }), &with_fallback).await;
+    laws(&DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: main, index: Some(0) }), &with_fallback).await;
 }

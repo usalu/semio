@@ -1,0 +1,5 @@
+# Latest Union Candidate Independent Review
+
+6022 base and139 preliminary candidates remain untouched. Publication curated master now1427authored+4retained ticket inputs; exact latest source groups are Session10, thirdWGPU3, threecorpus9, mounted3, Neural current explicit ownedEndpoints (observer group excluded), and existing header narrow action. Independent recipe found 18 new explicit endpoint candidates beyond base/preliminary and 4 other publication master candidates; 78 further top-level Oct8 retained Markdown/JSON candidates. Exact candidate role evidence retained in `📥️oct8-latest-union-candidate-independent-observation.json`.
+
+Keep absent authored schemas as action endpoints. Keep unchanged fixture vectors excluded. Peer production moves/API/Value-body/schema observers and shared launch fullhash drift never establish authorship. Ticket audit/preimage/input files are retained evidence, not runtime source; generated outputs remain cleanup-frontier material, never authored union. Final candidate reconciliation must use latest explicit actions and source roles, then final runtime/cleanup evidence; no final union mutation or closure claim here.

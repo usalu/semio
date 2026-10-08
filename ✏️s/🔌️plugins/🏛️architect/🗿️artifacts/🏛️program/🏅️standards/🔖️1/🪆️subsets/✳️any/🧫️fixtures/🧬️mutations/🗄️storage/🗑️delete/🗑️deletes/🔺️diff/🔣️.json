@@ -17,12 +17,15 @@
   "equipment": null,
   "resources": null,
   "storage": {
-    "added": [],
     "removed": [
-      "storage-requirement-a"
+      {
+        "id": "storage-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "environmental": null,
   "humanFactors": null,

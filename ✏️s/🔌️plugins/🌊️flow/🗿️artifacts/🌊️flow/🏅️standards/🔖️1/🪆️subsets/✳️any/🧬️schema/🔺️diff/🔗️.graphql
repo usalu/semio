@@ -1,9 +1,7 @@
 # 🔺️ Sparse Flow document delta.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type FlowDiff {
-  artifact: FlowArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   # @child kind=s.stdio.semio standard=v1 subset=flow
   content: ArtifactChild @state(class: ARTIFACT)
 }
-type FlowArtifact { schema: String! content: ArtifactChild! }

@@ -11,10 +11,10 @@ pub fn diff(payload: &InsertVariable, base: &En1990Snapshot) -> MutationOutcome<
         let key = payload.item.id.clone();
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The variable action '{key}' already exists."), [key]);
     }
-    let index = payload.index.min(base.variables.len());
-    let outcome = MutationOutcome::new(En1990Diff { variables: En1990VariableDelta::insertion(&base.variables, index, payload.item.clone()), ..En1990Diff::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.variables.len());
+    let outcome = MutationOutcome::new(En1990Diff { variables: En1990VariableDelta::insertion(index, payload.item.clone()), ..En1990Diff::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the variable action list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the variable action list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

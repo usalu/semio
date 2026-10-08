@@ -1,0 +1,5 @@
+# Reverse Import Follow-Up
+
+This non-atomic TypeScript text census retained full candidate source bodies and records 43 matching lines in 14 files. A path segment called Hub under General is not alone a dependency on the Specific Hub tree; resolution is required. Confirmed Specific imports remain in Repo physical-codec integration, runtime selection integration, OS coordination story, multi-shell integration and renderer plugin-specific controls. These cases require test/story ownership separation with every original control retained. Whole-framework deletion acceptance remains incomplete.
+
+The next Root slice moves the actual Hub-only WGPU collaboration harness to the Specific owner already declaring its commands. The full program is retained; only owned relative imports and documentation links are rebound. A canonical composition policy and portable ownership vectors must validate under first-party SchemaSubset and Ajv. Required admission roles must reject absent policy instead of treating null/null as proof.

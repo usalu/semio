@@ -1,37 +1,40 @@
 {
   "objects": {
-    "added": [],
-    "patched": [
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "obj-fin",
-        "paintLayers": null,
         "patch": {
-          "mesh": {
-            "childId": "mesh-fin-01",
-            "target": {
-              "artifactId": "obj-fin-mesh",
-              "dialect": {
-                "artifactKind": "s.stdio.semio",
-                "standard": "v1",
-                "subset": "mesh"
+          "paintLayers": null,
+          "patch": {
+            "mesh": {
+              "childId": "mesh-fin-01",
+              "target": {
+                "artifactId": "obj-fin-mesh",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "mesh"
+                }
               }
-            }
+            },
+            "meshContent": "{\"vertices\":[],\"faces\":[]}",
+            "name": null,
+            "smoothShading": null,
+            "meshState": {
+              "state": null
+            },
+            "position": null,
+            "rotation": null,
+            "scale": null
           },
-          "meshContent": "{\"vertices\":[],\"faces\":[]}",
-          "name": null,
-          "smoothShading": null,
-          "meshState": {
-            "state": null
-          },
-          "position": null,
-          "rotation": null,
-          "scale": null
-        },
-        "meshMotions": []
+          "meshVertices": [],
+          "meshAttributes": []
+        }
       }
-    ],
-    "removed": [],
-    "reordered": null
+    ]
   },
   "schema": null
 }

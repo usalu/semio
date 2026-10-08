@@ -2777,7 +2777,7 @@ impl GlbMaterializeCursor {
                 };
                 let pool = infinite_world::world::world_scene_raster_pool();
                 let raster_owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
-                let lease = match pool.begin(descriptor, raster_owner, SceneRasterWriteMode::Moved) {
+                let lease = match pool.begin(descriptor, raster_owner, SceneRasterWriteMode::Moved { capacity_bytes: decoded.pixels.capacity() }) {
                     SceneRasterBegin::Reused(lease) => lease,
                     SceneRasterBegin::Writer(writer) => {
                         let DecodedReferenceImage { width, height, source_digest, pixels } = decoded;
@@ -3744,23 +3744,29 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
         self.result = None;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep;
         self.begin_close();
-        if self.probe.get_mut().is_none() {
-            return InteractiveJobCloseStep::Complete;
-        }
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        let Ok(mut handback) = self.handback.try_lock() else {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        let empty = semio_framework_job::RetainedCloneProgress::default();
+        if self.probe.get_mut().is_none() { return InteractiveJobCloseStep::Complete { progress: empty }; }
+        if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: empty }; }
+        if grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit); }
+        let mut handback = match self.handback.try_lock() {
+            Ok(handback) => handback,
+            Err(std::sync::TryLockError::WouldBlock) => return InteractiveJobCloseStep::Blocked,
+            Err(std::sync::TryLockError::Poisoned(_)) => return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::InvariantViolated),
         };
-        if handback.is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
+        if handback.is_some() { return InteractiveJobCloseStep::Blocked; }
         *handback = self.probe.get_mut().take();
-        InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, ..empty } }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        let probe = self.probe.try_borrow().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "decoder original response is borrowed"))?;
+        Ok(usize::from(probe.is_some() || !self.closing))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3860,7 +3866,9 @@ impl RendererAssetDecodeSession {
             }
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let grant = match rejected.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(_) => { self.fault = Some("original rejected job close demand refused"); return false; } };
+            let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)) { self.fault = Some("original rejected job close receipt refused"); return false; }
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -3941,7 +3949,9 @@ impl RendererAssetDecodeSession {
                 }
             }
             WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => {
-                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let grant = match session.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false, Err(_) => { self.fault = Some("original worker job close demand refused"); return false; } };
+            let step = session.close_step(grant);
+            if !step.progress().fits(grant) || matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)) { self.fault = Some("original worker job close receipt refused"); return false; }
                 if session.terminal_is_empty() {
                     self.session = None;
                 }
@@ -12630,7 +12640,7 @@ impl NativeReferenceDecodeJob {
                 } else if let Some(decoded) = decoded {
                     let descriptor = SceneRasterDescriptor { width: decoded.width, height: decoded.height, source_digest: decoded.source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
                     let owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
-                    match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved) {
+                    match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved { capacity_bytes: decoded.pixels.capacity() }) {
                         SceneRasterBegin::Reused(lease) => {
                             retained_decoded = Some(decoded);
                             NativeReferenceDecodeOutput::Ready(lease)
@@ -13244,6 +13254,7 @@ impl RuntimeMailbox {
             return false;
         }
         if interaction.shell.advance_world3d_retirement_step() {
+            if let Some(fault)=interaction.shell.world3d_retirement_fault() {self.record_frame_fault(&format!("retired terrain owner refused: {fault:?}"));}
             return false;
         }
         let Ok(mut cursor) = self.0.world3d_close_cursor.try_lock() else {
@@ -13278,16 +13289,25 @@ impl RuntimeMailbox {
             semio_framework_job::default_now_us,
             &mut sequence,
         );
+
+        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
+        if !terrain.ownership.fits(terrain_grant) {self.record_frame_fault("world3d terrain retirement receipt exceeded caller grant");return false;}
+        match terrain.step {
+            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
+            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return false,
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{self.record_frame_fault(&format!("world3d terrain retirement refused: {fault:?}"));return false;}
+        }
         if step_world3d_dynamic_retirement(state, &mut context) && world3d_dynamic_retirement_terminal_is_empty(state) {
             *cursor += 1;
         }
         false
     }
 
-    pub(crate) fn close_component_world_step(&self, target: &crate::interpreter::ScenePointerTarget, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> Result<bool, ()> {
-        let Ok(mut runtime) = self.try_lock() else { return Ok(false) };
-        let Some(interaction) = runtime.interaction.as_mut() else { return Ok(true) };
-        interaction.shell.close_component_world_step(target, operation, sequence)
+    pub(crate) fn close_component_world_step(&self, target: &crate::interpreter::ScenePointerTarget, grant: semio_framework_value::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+        let Ok(mut runtime)=self.try_lock() else {return Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress::default()));};
+        let Some(interaction)=runtime.interaction.as_mut() else {return Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress::default()));};
+        interaction.shell.close_component_world_step(target,grant,context)
     }
 
     pub(crate) fn begin_engine_surface_close(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
@@ -15415,6 +15435,18 @@ enum FrameBuildBoundaryStep {
     Fault(&'static str),
 }
 
+/// 🧾️ Validates the original recovered frame owner's full close receipt before advancing.
+fn frame_prepared_abandonment_complete(grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: semio_framework_job::InteractiveJobCloseStep) -> Result<bool, &'static str> {
+    use semio_framework_job::InteractiveJobCloseStep;
+    match step {
+        InteractiveJobCloseStep::Complete { progress } if progress.fits(grant) => Ok(true),
+        InteractiveJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(false),
+        InteractiveJobCloseStep::Blocked => Ok(false),
+        InteractiveJobCloseStep::Refused(_) => Err("prepared abandonment ownership refused"),
+        _ => Err("prepared abandonment receipt exceeded its grant"),
+    }
+}
+
 enum FrameFinishBoundaryStep {
     Pending,
     Complete(AppFrameBuild),
@@ -15962,6 +15994,17 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 };
                 world3d_ingest_trace(&surface_id, state, "phase-entry");
+                let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+                let terrain=infinite_world::world::step_world3d_terrain(state,terrain_grant,context);
+                if !terrain.ownership.fits(terrain_grant) {
+                    runtime.record_frame_fault("world3d terrain ownership receipt exceeded caller grants");
+                    self.phase=AppFrameTransactionPhase::Terminal;return AppFrameTransactionStep::Fault;
+                }
+                if let infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=terrain.step {
+                    runtime.record_frame_fault(&format!("world3d terrain ownership faulted: {fault:?}"));
+                    self.phase=AppFrameTransactionPhase::Terminal;return AppFrameTransactionStep::Fault;
+                }
+
                 if retire_cancelled_world3d_asset_step(state) {
                     context.consume_fuel(1);
                     return AppFrameTransactionStep::Pending;
@@ -16364,7 +16407,9 @@ impl AppFramePreparation {
             return semio_framework_job::StepOutcome::Yield;
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let grant = match rejected.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(_) => { self.fault = Some("original rejected job close demand refused"); return semio_framework_job::StepOutcome::Yield; } };
+            let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)) { self.fault = Some("original rejected job close receipt refused"); return semio_framework_job::StepOutcome::Yield; }
             if rejected.terminal_is_empty() {
                 self.rejected = None;
                 self.terminal = true;
@@ -16441,14 +16486,21 @@ impl AppFramePreparation {
         }
         if let Some(job) = self.job.as_mut() {
             semio_framework_job::InteractiveJob::begin_close(job);
-            match semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::InteractiveJobCloseStep::Complete if semio_framework_job::InteractiveJob::terminal_is_empty(job) => self.job = None,
+            use semio_framework_job::InteractiveJob;
+            let demand = (|| Ok::<_, semio_framework_value::ValueError>(semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: job.next_close_copy_byte_demand()?, maximum_capacity_bytes: job.next_close_capacity_byte_demand(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?, maximum_release_bytes: job.next_close_release_byte_demand()?, maximum_depth: job.next_close_depth_demand()? }))();
+            let grant = match demand { Ok(grant) => grant, Err(_) => { self.fault = Some("prepared render job close demand refused"); return false; } };
+            let step = job.close_step(grant).admit(grant, job.terminal_is_empty());
+            match step {
+                semio_framework_job::InteractiveJobCloseStep::Complete { .. } => self.job = None,
+                semio_framework_job::InteractiveJobCloseStep::Refused(_) => { self.fault = Some("prepared render job close receipt refused"); return false; },
                 _ => return false,
             }
             return false;
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let grant = match rejected.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(_) => { self.fault = Some("original rejected job close demand refused"); return false; } };
+            let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)) { self.fault = Some("original rejected job close receipt refused"); return false; }
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -16459,7 +16511,9 @@ impl AppFramePreparation {
                 session.begin_close();
                 return false;
             }
-            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let grant = match session.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false, Err(_) => { self.fault = Some("original worker job close demand refused"); return false; } };
+            let step = session.close_step(grant);
+            if !step.progress().fits(grant) || matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)) { self.fault = Some("original worker job close receipt refused"); return false; }
             if session.terminal_is_empty() {
                 self.session = None;
             }
@@ -17897,10 +17951,12 @@ impl AppRuntime {
     fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
-                if !ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step() {
-                    return FrameBuildBoundaryStep::Pending;
+                let grant = match ui_wgpu::wgpu::PreparedAtlasPages::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault("prepared abandonment demand refused") };
+                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step(grant)) {
+                    Ok(true) => cursor.phase = FrameBuildPhase::PreparedGpuAbandonment,
+                    Ok(false) => return FrameBuildBoundaryStep::Pending,
+                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                 }
-                cursor.phase = FrameBuildPhase::PreparedGpuAbandonment;
             }
             FrameBuildPhase::PreparedGpuAbandonment => {
                 if !ui_wgpu::wgpu::PreparedGpuPresentCursor::close_abandoned_step() {
@@ -17909,28 +17965,36 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::PreparedInputAbandonment;
             }
             FrameBuildPhase::PreparedInputAbandonment => {
-                if !ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step() {
-                    return FrameBuildBoundaryStep::Pending;
+                let grant = match ui_wgpu::wgpu::PreparedRenderInput::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault("prepared abandonment demand refused") };
+                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step(grant)) {
+                    Ok(true) => cursor.phase = FrameBuildPhase::PreparedJobAbandonment,
+                    Ok(false) => return FrameBuildBoundaryStep::Pending,
+                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                 }
-                cursor.phase = FrameBuildPhase::PreparedJobAbandonment;
             }
             FrameBuildPhase::PreparedJobAbandonment => {
-                if !ui_wgpu::wgpu::PreparedRenderJob::close_abandoned_step() {
-                    return FrameBuildBoundaryStep::Pending;
+                let grant = match ui_wgpu::wgpu::PreparedRenderJob::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault("prepared abandonment demand refused") };
+                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderJob::close_abandoned_step(grant)) {
+                    Ok(true) => cursor.phase = FrameBuildPhase::PreparedAbandonment,
+                    Ok(false) => return FrameBuildBoundaryStep::Pending,
+                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                 }
-                cursor.phase = FrameBuildPhase::PreparedAbandonment;
             }
             FrameBuildPhase::PreparedAbandonment => {
-                if !ui_wgpu::wgpu::PreparedRenderReceiver::close_abandoned_step() {
-                    return FrameBuildBoundaryStep::Pending;
+                let grant = match ui_wgpu::wgpu::PreparedRenderReceiver::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault("prepared abandonment demand refused") };
+                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderReceiver::close_abandoned_step(grant)) {
+                    Ok(true) => cursor.phase = FrameBuildPhase::PacketAbandonment,
+                    Ok(false) => return FrameBuildBoundaryStep::Pending,
+                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                 }
-                cursor.phase = FrameBuildPhase::PacketAbandonment;
             }
             FrameBuildPhase::PacketAbandonment => {
-                if !ui_wgpu::wgpu::PreparedRenderPacket::close_abandoned_step() {
-                    return FrameBuildBoundaryStep::Pending;
+                let grant = match ui_wgpu::wgpu::PreparedRenderPacket::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault("prepared abandonment demand refused") };
+                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderPacket::close_abandoned_step(grant)) {
+                    Ok(true) => cursor.phase = FrameBuildPhase::Text,
+                    Ok(false) => return FrameBuildBoundaryStep::Pending,
+                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                 }
-                cursor.phase = FrameBuildPhase::Text;
             }
             FrameBuildPhase::Text => {
                 self.drive_text_operation();
@@ -19185,10 +19249,6 @@ struct NativeSocketProbeDiff(String);
 impl store::os_spr::command::DiffAlgebra<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
     fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Self {
         NativeSocketProbeDiff(base.0.clone())
-    }
-
-    fn between(_base: &NativeSocketProbeSnapshot, other: &NativeSocketProbeSnapshot) -> Self {
-        NativeSocketProbeDiff(other.0.clone())
     }
 
     fn is_empty(&self) -> bool {

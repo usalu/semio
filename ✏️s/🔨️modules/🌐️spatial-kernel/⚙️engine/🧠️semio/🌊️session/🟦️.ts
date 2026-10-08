@@ -2,14 +2,18 @@
 export interface BrowserGeometrySession {
   brep_invoke(method: string, argumentsJson: string): string;
   begin_close(): void;
-  close_step(maximumItems: number, maximumBytes: number): string;
+  close_step(maximumItems:number,maximumCopyBytes:number,maximumCapacityBytes:number,maximumReleaseBytes:number,maximumDepth:number):string;
+  next_close_copy_byte_demand():number;
+  next_close_capacity_byte_demand(copyBytes:number):number;
+  next_close_release_byte_demand():number;
+  next_close_depth_demand():number;
   cancel_close(): void;
   resume_close(): void;
   terminal_is_empty(): boolean;
   free(): void;
 }
-export interface GeometryCloseReceipt { phase:"blocked" | "pending" | "complete"; items:number; bytes:number; }
-export interface GeometryCloseOptions { maximumItems?:number; maximumBytes?:number; cancelled?:() => boolean; onProgress?:(receipt:GeometryCloseReceipt) => void; }
+export interface GeometryCloseReceipt { phase:"blocked" | "pending" | "complete"; items:number; copyBytes:number; capacityBytes:number; releaseBytes:number; }
+export interface GeometryCloseOptions { maximumItems?:number; maximumCopyBytes?:number; maximumCapacityBytes?:number; maximumReleaseBytes?:number; maximumDepth?:number; cancelled?:() => boolean; onProgress?:(receipt:GeometryCloseReceipt) => void; }
 async function initializeBindings() {
   const bindings = await import("./📦️packages/🦀️rust/🕸️bindings/semio_session.js");
   const source = new URL("./📦️packages/🦀️rust/🕸️bindings/semio_session_bg.wasm", import.meta.url);
@@ -37,20 +41,26 @@ export class SemioGeometrySession {
     if (this.lifecycle.terminal) return Promise.resolve();
     if (this.lifecycle.closing) return this.lifecycle.closing;
     const maximumItems = options.maximumItems ?? 1;
-    const maximumBytes = options.maximumBytes ?? 4096;
-    if (![maximumItems,maximumBytes].every(value => Number.isSafeInteger(value) && value > 0 && value <= 0xffff_ffff)) return Promise.reject(new Error("geometry.close-positive-grants-required"));
+    const explicit=[options.maximumCopyBytes,options.maximumCapacityBytes,options.maximumReleaseBytes,options.maximumDepth].filter((value):value is number=>value!==undefined);
+    if (!Number.isSafeInteger(maximumItems) || maximumItems<1 || maximumItems>0xffff_ffff || !explicit.every(value=>Number.isSafeInteger(value) && value>=0 && value<=0xffff_ffff)) return Promise.reject(new Error("geometry.close-positive-grants-required"));
     this.lifecycle.closed = true;
-    const operation = this.retire(maximumItems,maximumBytes,options);
+    const operation = this.retire(maximumItems,options);
     this.lifecycle.closing = operation;
     void operation.then(() => { this.lifecycle.closing = null; },() => { this.lifecycle.closing = null; });
     return operation;
   }
-  private async retire(maximumItems:number,maximumBytes:number,options:GeometryCloseOptions): Promise<void> {
+  private async retire(maximumItems:number,options:GeometryCloseOptions): Promise<void> {
     const session = await this.session;
     session.begin_close(); session.resume_close();
     for (;;) {
       if (options.cancelled?.()) { session.cancel_close(); throw new Error("geometry.close-cancelled"); }
-      const receipt = JSON.parse(session.close_step(maximumItems,maximumBytes)) as GeometryCloseReceipt & { error?:string };
+      const copyDemand=session.next_close_copy_byte_demand();
+      const capacityDemand=session.next_close_capacity_byte_demand(copyDemand);
+      const releaseDemand=session.next_close_release_byte_demand();
+      const depthDemand=session.next_close_depth_demand();
+      const copy=options.maximumCopyBytes ?? copyDemand,capacity=options.maximumCapacityBytes ?? capacityDemand,release=options.maximumReleaseBytes ?? releaseDemand,depth=options.maximumDepth ?? depthDemand;
+      if (copy<copyDemand || capacity<capacityDemand || release<releaseDemand || depth<depthDemand) throw new Error("geometry.close-grant-refused");
+      const receipt = JSON.parse(session.close_step(maximumItems,copy,capacity,release,depth)) as GeometryCloseReceipt & { error?:string };
       if (receipt.error) throw new Error(receipt.error);
       options.onProgress?.(receipt);
       if (receipt.phase === "complete") {

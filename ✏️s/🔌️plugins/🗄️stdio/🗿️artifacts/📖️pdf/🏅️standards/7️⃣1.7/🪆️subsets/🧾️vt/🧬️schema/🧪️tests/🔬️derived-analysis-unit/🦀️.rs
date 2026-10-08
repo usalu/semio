@@ -8,11 +8,12 @@ mod tests {
         let entry=|key:&str,value|PdfDictEntry::new(key,value);
         let object=|num,entries|PdfIndirectObject{id:reference(num),value:PdfObject::Dict(entries)};
         let profile=include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🖼️assets/🌈️icc/🌈️sRGB2014.icc")).to_vec();
+        let profile_reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",PdfObject::Stream{dict:vec![entry("N",PdfObject::Int(3))],data:profile.clone(),filters:Vec::new()}).unwrap();
         let mut page=PdfPage::new(100.0,100.0);
         page.trim_box=Some(page.media_box);
         PdfSnapshot{
             pages:vec![page],
-            output_intents:vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(profile.clone())}],
+            output_intents:vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(profile_reference)}],
             catalog_extra:vec![entry("DPartRoot",PdfObject::Ref(reference(10)))],
             trailer:vec![entry("Root",PdfObject::Ref(reference(1)))],
             objects:vec![

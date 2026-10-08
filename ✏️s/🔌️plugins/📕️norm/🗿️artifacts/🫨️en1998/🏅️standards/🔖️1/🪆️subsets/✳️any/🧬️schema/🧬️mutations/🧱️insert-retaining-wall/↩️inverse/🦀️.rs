@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_retaining_wall
 
 pub fn inverse(payload: &InsertRetainingWall, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![En1998Mutation::RemoveRetainingWall(remove_retaining_wall::RemoveRetainingWall { index: payload.index.min(base.retaining_walls.len()) })]
+    vec![En1998Mutation::RemoveRetainingWall(remove_retaining_wall::RemoveRetainingWall { index: payload.index.unwrap_or(usize::MAX).min(base.retaining_walls.len()) })]
 
     })())
 }

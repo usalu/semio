@@ -24,18 +24,30 @@ type En1990Diff {
 }
 
 type En1990PermanentDelta {
-  removed: [String!]!
-  added: [En1990PermanentAddition!]!
+  removed: [En1990PermanentRemoval!]!
+  inserted: [En1990PermanentInsertion!]!
+  moved: [En1990PermanentRelocation!]!
   modified: [En1990PermanentModification!]!
 }
 
-type En1990PermanentAddition {
-  after: String
+type En1990PermanentRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1990PermanentInsertion {
+  index: Int!
   row: En1990PermanentAction!
 }
 
+type En1990PermanentRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1990PermanentModification {
-  key: String!
+  id: String!
   patch: En1990PermanentPatch!
 }
 
@@ -45,18 +57,30 @@ type En1990PermanentPatch {
 }
 
 type En1990VariableDelta {
-  removed: [String!]!
-  added: [En1990VariableAddition!]!
+  removed: [En1990VariableRemoval!]!
+  inserted: [En1990VariableInsertion!]!
+  moved: [En1990VariableRelocation!]!
   modified: [En1990VariableModification!]!
 }
 
-type En1990VariableAddition {
-  after: String
+type En1990VariableRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1990VariableInsertion {
+  index: Int!
   row: En1990VariableAction!
 }
 
+type En1990VariableRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1990VariableModification {
-  key: String!
+  id: String!
   patch: En1990VariablePatch!
 }
 
@@ -66,18 +90,30 @@ type En1990VariablePatch {
 }
 
 type En1990AccidentalDelta {
-  removed: [String!]!
-  added: [En1990AccidentalAddition!]!
+  removed: [En1990AccidentalRemoval!]!
+  inserted: [En1990AccidentalInsertion!]!
+  moved: [En1990AccidentalRelocation!]!
   modified: [En1990AccidentalModification!]!
 }
 
-type En1990AccidentalAddition {
-  after: String
+type En1990AccidentalRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1990AccidentalInsertion {
+  index: Int!
   row: En1990AccidentalAction!
 }
 
+type En1990AccidentalRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1990AccidentalModification {
-  key: String!
+  id: String!
   patch: En1990AccidentalPatch!
 }
 
@@ -86,18 +122,30 @@ type En1990AccidentalPatch {
 }
 
 type En1990SeismicDelta {
-  removed: [String!]!
-  added: [En1990SeismicAddition!]!
+  removed: [En1990SeismicRemoval!]!
+  inserted: [En1990SeismicInsertion!]!
+  moved: [En1990SeismicRelocation!]!
   modified: [En1990SeismicModification!]!
 }
 
-type En1990SeismicAddition {
-  after: String
+type En1990SeismicRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1990SeismicInsertion {
+  index: Int!
   row: En1990SeismicAction!
 }
 
+type En1990SeismicRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1990SeismicModification {
-  key: String!
+  id: String!
   patch: En1990SeismicPatch!
 }
 
@@ -107,18 +155,30 @@ type En1990SeismicPatch {
 }
 
 type En1990MemberDelta {
-  removed: [String!]!
-  added: [En1990MemberAddition!]!
+  removed: [En1990MemberRemoval!]!
+  inserted: [En1990MemberInsertion!]!
+  moved: [En1990MemberRelocation!]!
   modified: [En1990MemberModification!]!
 }
 
-type En1990MemberAddition {
-  after: String
+type En1990MemberRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1990MemberInsertion {
+  index: Int!
   row: En1990Member!
 }
 
+type En1990MemberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1990MemberModification {
-  key: String!
+  id: String!
   patch: En1990MemberPatch!
 }
 
@@ -138,18 +198,30 @@ type En1990MemberPatch {
 }
 
 type En1990BridgeSlsDelta {
-  removed: [String!]!
-  added: [En1990BridgeSlsAddition!]!
+  removed: [En1990BridgeSlsRemoval!]!
+  inserted: [En1990BridgeSlsInsertion!]!
+  moved: [En1990BridgeSlsRelocation!]!
   modified: [En1990BridgeSlsModification!]!
 }
 
-type En1990BridgeSlsAddition {
-  after: String
+type En1990BridgeSlsRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1990BridgeSlsInsertion {
+  index: Int!
   row: En1990BridgeSls!
 }
 
+type En1990BridgeSlsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1990BridgeSlsModification {
-  key: String!
+  id: String!
   patch: En1990BridgeSlsPatch!
 }
 

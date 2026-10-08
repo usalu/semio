@@ -5,7 +5,8 @@ fn sqlite_snapshot_ply_declaration_count_patch_retains_unsigned_metadata(){
     use store::{MutationDiff,DiffBinary,DiffCodec,DiffText};
     use dsl::DiffAlgebra;
     let base=fixture();let mut target=base.clone();target.elements[0].count=u64::MAX;
-    let delta=crate::schema::diff::PlyDiff::between(&base,&target);
+    let element=target.elements[0].name.clone();
+    let delta=crate::schema::diff::PlyDiff {elements:Some(crate::schema::diff::PlyElementsDiff {modified:vec![crate::schema::diff::PlyElementModified {name:element,diff:crate::schema::diff::PlyElementDiff {count:Some(u64::MAX),..Default::default()}}],..Default::default()}),..Default::default()};
     assert_eq!(protocol::apply_diff(&delta, &base).unwrap(),target);
     for roundtrip in [crate::schema::diff::PlyDiff::parse_diff(&delta.print_diff()).unwrap(),crate::schema::diff::PlyDiff::decode_diff(&delta.encode_diff().unwrap()).unwrap()]{assert_eq!(protocol::apply_diff(&roundtrip, &base).unwrap(),target);}
 }

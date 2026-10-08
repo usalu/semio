@@ -28,7 +28,7 @@ mod tests;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block5d_mutation,inverse_block5d_mutation,Block5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_block5d_mutation, Block5dMutation};
 
 impl protocol::OpBinary for Block5dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

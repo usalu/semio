@@ -252,16 +252,6 @@ pub enum GltfMutation {
     RemoveUsedExtension(RemoveUsedExtensionMutation),
 }
 
-/// 🎯️ One mutation applied through the central applier: the next snapshot, or the refusal's code and detail.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_gltf_mutation(base: &GltfSnapshot, mutation: &GltfMutation) -> Result<GltfSnapshot, String> {
-    let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, base);
-    if let Some(message) = outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error) {
-        return Err(format!("{} {}", message.code.0, message.message));
-    }
-    protocol::apply_diff(outcome.diff(), base).map_err(|error| error.to_string())
-}
-
 //#region 🌉️TestBridge
 
 
@@ -270,11 +260,6 @@ pub fn apply_gltf_mutation(base: &GltfSnapshot, mutation: &GltfMutation) -> Resu
 
 /// 🌉️ Writes a snapshot back in the form it was read from, through the production codec.
 
-
-/// 🌉️ Applies one mutation through the central applier; a refusal (error or fatal message) is an error.
-pub(crate) fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, base: &GltfSnapshot) -> Result<GltfSnapshot, String> {
-    apply_gltf_mutation(base, mutation).map_err(|refusal| format!("{kind}: the {step} was refused — {refusal}"))
-}
 
 /// 🌉️ One glTF document (`.glb` or `.gltf`) after the row's mutation, applied by the production codec and written back
 /// in its own form — the subject half of a mutation case's forward rows. Its signature names only bytes and `str`, so

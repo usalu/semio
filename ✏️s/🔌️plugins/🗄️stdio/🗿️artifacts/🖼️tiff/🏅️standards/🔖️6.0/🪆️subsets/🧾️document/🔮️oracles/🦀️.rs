@@ -8,7 +8,7 @@
 //! confirmed by reading the vendored crate source: `TiffEncoder::write_image` always emits exactly
 //! one IFD with auto-computed baseline tags, and `TiffDecoder::new` reads only the first IFD). It
 //! has no public surface for multi-IFD chains or arbitrary tag get/set — the exact structural
-//! vocabulary `InsertIfd`/`RemoveIfd`/`SetTag`/`RemoveTag`/`SetByteOrder` need. Same shape as the
+//! vocabulary `InsertIfd`/`RemoveIfd`/`ReplaceTag`/`RemoveTag`/`PaintRegion`/`ReplaceSamples` need. Same shape as the
 //! `obj`/`tobj` precedent (`✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/🦀️.rs`: "OBJ has no
 //! reference WRITER... so the oracle writes the grammar directly"): this module hand-writes the IFD
 //! chain directly, independent of (and never importing) this subset's own `🚪️io::{decode_tiff,
@@ -61,6 +61,9 @@ fn wire_value(values: &Json) -> Result<OracleValue, String> {
     let code = FIELD_TYPE_NAMES.iter().position(|name| *name == field_kind).ok_or_else(|| format!("tiff oracle: {field_kind:?} is no TIFF 6.0 field type"))? as u16 + 1;
     OracleValue::from_json(code, values.get("value").ok_or("tiff oracle: tag values carry no `value`")?)
 }
+fn wire_u32(value:&Json)->Result<u32,String>{match value{Json::Number(number)if number.fract()==0.0&&(0.0..=u32::MAX as f64).contains(number)=>Ok(*number as u32),_=>Err("tiff oracle: expected exact unsigned32 word".into())}}
+fn wire_word(value:&Json)->Result<u64,String>{Ok(u64::from(wire_u32(value.get("lo").ok_or("tiff oracle: word needs lo")?)?)|(u64::from(wire_u32(value.get("hi").ok_or("tiff oracle: word needs hi")?)?)<<32))}
+fn native_policy_tag(tag:u16)->bool{matches!(tag,259|266|273|278|279|284|317|322|323|324|325|292|293|347|512|513|514|515|517|518|519|520|521|530)}
 //#endregion 🔖️JsonHelpers
 
 //#region 🔖️IndependentCodec
@@ -102,7 +105,7 @@ fn write_u32(out: &mut Vec<u8>, v: u32, little: bool) {
 #[derive(Clone, Debug, PartialEq)]
 enum OracleValue {
     Byte(Vec<u8>),
-    Ascii(String),
+    Ascii(Vec<String>),
     Short(Vec<u16>),
     Long(Vec<u32>),
     Rational(Vec<(u32, u32)>),
@@ -111,8 +114,8 @@ enum OracleValue {
     SShort(Vec<i16>),
     SLong(Vec<i32>),
     SRational(Vec<(i32, i32)>),
-    Float(Vec<f32>),
-    Double(Vec<f64>),
+    Float(Vec<u32>),
+    Double(Vec<u64>),
 }
 impl OracleValue {
     fn type_code(&self) -> u16 {
@@ -143,7 +146,7 @@ impl OracleValue {
     fn count(&self) -> u32 {
         match self {
             Self::Byte(v) | Self::Undefined(v) => v.len() as u32,
-            Self::Ascii(s) => s.len() as u32 + 1,
+            Self::Ascii(texts) => texts.iter().map(|text|text.len()as u32+1).sum(),
             Self::Short(v) => v.len() as u32,
             Self::Long(v) => v.len() as u32,
             Self::Rational(v) => v.len() as u32,
@@ -167,10 +170,7 @@ impl OracleValue {
         let mut out = Vec::new();
         match self {
             Self::Byte(v) | Self::Undefined(v) => out.extend_from_slice(v),
-            Self::Ascii(s) => {
-                out.extend_from_slice(s.as_bytes());
-                out.push(0);
-            }
+            Self::Ascii(texts) => for text in texts {out.extend_from_slice(text.as_bytes());out.push(0);},
             Self::Short(v) => v.iter().for_each(|&x| write_u16(&mut out, x, little)),
             Self::Long(v) => v.iter().for_each(|&x| write_u32(&mut out, x, little)),
             Self::Rational(v) => v.iter().for_each(|&(n, d)| {
@@ -184,8 +184,8 @@ impl OracleValue {
                 write_u32(&mut out, n as u32, little);
                 write_u32(&mut out, d as u32, little);
             }),
-            Self::Float(v) => v.iter().for_each(|&x| write_u32(&mut out, x.to_bits(), little)),
-            Self::Double(v) => v.iter().for_each(|&x| out.extend_from_slice(&if little { x.to_bits().to_le_bytes() } else { x.to_bits().to_be_bytes() })),
+            Self::Float(v) => v.iter().for_each(|&bits| write_u32(&mut out, bits, little)),
+            Self::Double(v) => v.iter().for_each(|&x| out.extend_from_slice(&if little { x.to_le_bytes() } else { x.to_be_bytes() })),
         }
         out
     }
@@ -194,7 +194,7 @@ impl OracleValue {
     fn to_json(&self) -> Json {
         match self {
             Self::Byte(v) => Json::Array(v.iter().map(|&b| Json::Number(b as f64)).collect()),
-            Self::Ascii(s) => Json::Array(vec![Json::String(s.clone())]),
+            Self::Ascii(texts) => Json::Array(texts.iter().cloned().map(Json::String).collect()),
             Self::Short(v) => Json::Array(v.iter().map(|&x| Json::Number(x as f64)).collect()),
             Self::Long(v) => Json::Array(v.iter().map(|&x| Json::Number(x as f64)).collect()),
             Self::Rational(v) => Json::Array(v.iter().map(|&(n, d)| Json::Array(vec![Json::Number(n as f64), Json::Number(d as f64)])).collect()),
@@ -203,8 +203,8 @@ impl OracleValue {
             Self::SShort(v) => Json::Array(v.iter().map(|&x| Json::Number(x as f64)).collect()),
             Self::SLong(v) => Json::Array(v.iter().map(|&x| Json::Number(x as f64)).collect()),
             Self::SRational(v) => Json::Array(v.iter().map(|&(n, d)| Json::Array(vec![Json::Number(n as f64), Json::Number(d as f64)])).collect()),
-            Self::Float(v) => Json::Array(v.iter().map(|&x| Json::Number(x as f64)).collect()),
-            Self::Double(v) => Json::Array(v.iter().map(|&x| Json::Number(x as f64)).collect()),
+            Self::Float(v) => Json::Array(v.iter().map(|&bits| Json::Object(vec![("bits".into(),Json::Number(f64::from(bits)))])).collect()),
+            Self::Double(v) => Json::Array(v.iter().map(|&word|Json::Object(vec![("lo".into(),Json::Number((word as u32)as f64)),("hi".into(),Json::Number((word>>32)as f64))])).collect()),
         }
     }
     /// 🔁️ Inverse of [`to_json`] given the field's type code — parses a mutation spec's
@@ -214,7 +214,7 @@ impl OracleValue {
         let nums = || -> Result<Vec<f64>, String> { items.iter().map(|v| j_num(v).ok_or_else(|| "tiff oracle: expected a number in tag values".to_string())).collect() };
         Ok(match type_code {
             1 => OracleValue::Byte(nums()?.into_iter().map(|n| n as u8).collect()),
-            2 => OracleValue::Ascii(String::from_utf8_lossy(&wire_bytes(values)?).trim_end_matches('\u{0}').to_string()),
+            2 => OracleValue::Ascii(items.iter().map(|item|j_str(item).filter(|text|text.is_ascii()&&!text.contains('\0')).map(str::to_owned).ok_or_else(||"tiff oracle: ASCII values require owned strings".into())).collect::<Result<_,String>>()?),
             3 => OracleValue::Short(nums()?.into_iter().map(|n| n as u16).collect()),
             4 => OracleValue::Long(nums()?.into_iter().map(|n| n as u32).collect()),
             5 => OracleValue::Rational(
@@ -239,8 +239,8 @@ impl OracleValue {
                     })
                     .collect::<Result<Vec<_>, String>>()?,
             ),
-            11 => OracleValue::Float(nums()?.into_iter().map(|n| n as f32).collect()),
-            12 => OracleValue::Double(nums()?),
+            11 => OracleValue::Float(items.iter().map(|item|wire_u32(item.get("bits").ok_or("tiff oracle: IEEE32 needs bits")?)).collect::<Result<_,_>>()?),
+            12 => OracleValue::Double(items.iter().map(wire_word).collect::<Result<_,_>>()?),
             other => return Err(format!("tiff oracle: unrecognized field type code {other} (TIFF 6.0 core table is 1-12)")),
         })
     }
@@ -304,7 +304,7 @@ fn read_tag_value(data: &[u8], type_code: u16, count: u32, value_field: &[u8; 4]
     };
     Ok(match type_code {
         1 => OracleValue::Byte(src.to_vec()),
-        2 => OracleValue::Ascii(String::from_utf8_lossy(src).trim_end_matches('\u{0}').to_string()),
+        2 => OracleValue::Ascii(if src.is_empty(){vec![]}else{let text=std::str::from_utf8(src).map_err(|_|"tiff oracle: non-ASCII tag")?;if !text.is_ascii()||!text.ends_with('\0'){return Err("tiff oracle: invalid native ASCII terminator".into())}text[..text.len()-1].split('\0').map(str::to_owned).collect()}),
         3 => OracleValue::Short((0..n).map(|i| e.u16(&src[i * 2..i * 2 + 2])).collect()),
         4 => OracleValue::Long((0..n).map(|i| e.u32(&src[i * 4..i * 4 + 4])).collect()),
         5 => OracleValue::Rational((0..n).map(|i| (e.u32(&src[i * 8..i * 8 + 4]), e.u32(&src[i * 8 + 4..i * 8 + 8]))).collect()),
@@ -313,8 +313,8 @@ fn read_tag_value(data: &[u8], type_code: u16, count: u32, value_field: &[u8; 4]
         8 => OracleValue::SShort((0..n).map(|i| e.u16(&src[i * 2..i * 2 + 2]) as i16).collect()),
         9 => OracleValue::SLong((0..n).map(|i| e.u32(&src[i * 4..i * 4 + 4]) as i32).collect()),
         10 => OracleValue::SRational((0..n).map(|i| (e.u32(&src[i * 8..i * 8 + 4]) as i32, e.u32(&src[i * 8 + 4..i * 8 + 8]) as i32)).collect()),
-        11 => OracleValue::Float((0..n).map(|i| f32::from_bits(e.u32(&src[i * 4..i * 4 + 4]))).collect()),
-        12 => OracleValue::Double((0..n).map(|i| f64::from_bits(u64::from_le_bytes(src[i * 8..i * 8 + 8].try_into().unwrap()))).collect()),
+        11 => OracleValue::Float((0..n).map(|i|e.u32(&src[i*4..i*4+4])).collect()),
+        12 => OracleValue::Double((0..n).map(|i|if e==Endian::Little{u64::from_le_bytes(src[i*8..i*8+8].try_into().unwrap())}else{u64::from_be_bytes(src[i*8..i*8+8].try_into().unwrap())}).collect()),
         other => return Err(format!("tiff oracle: unrecognized field type code {other}")),
     })
 }
@@ -364,7 +364,8 @@ fn read_tiff(data: &[u8]) -> Result<OracleDoc, String> {
         } else {
             None
         };
-        let entries: Vec<OracleTag> = entries.into_iter().filter(|(t, _)| *t != TAG_STRIP_OFFSETS && *t != TAG_STRIP_BYTE_COUNTS).map(|(tag, value)| OracleTag { tag, value }).collect();
+        if strip.is_some()&&entries.iter().any(|(tag,value)|matches!(*tag,TAG_COMPRESSION|284)&&value.first_u32()!=Some(1)){return Err("tiff oracle: native reference scope requires uncompressed interleaved samples".into())}
+        let mut entries:Vec<OracleTag>=entries.into_iter().filter(|(tag,_)|!native_policy_tag(*tag)).map(|(tag,value)|OracleTag{tag,value}).collect();entries.sort_by_key(|entry|entry.tag);
         ifds.push(OracleIfd { entries, strip });
         off = next;
     }
@@ -497,7 +498,7 @@ fn decode_raster(ifd: &OracleIfd) -> Result<(u32, u32, Vec<u8>), String> {
     let width = ifd.get(TAG_IMAGE_WIDTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: missing ImageWidth")?;
     let height = ifd.get(TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: missing ImageLength")?;
     let bits = ifd.get(TAG_BITS_PER_SAMPLE).and_then(|t| t.value.first_u32()).unwrap_or(8);
-    if bits != 8 {
+    if bits != 8 || ifd.get(TAG_BITS_PER_SAMPLE).is_some_and(|entry|matches!(&entry.value,OracleValue::Short(depths)if depths.iter().any(|depth|*depth!=8))) || ifd.get(339).is_some_and(|entry|entry.value.first_u32()!=Some(1)) {
         return Err(format!("tiff oracle: unsupported BitsPerSample {bits} (only 8 is implemented)"));
     }
     let spp = ifd.get(TAG_SAMPLES_PER_PIXEL).and_then(|t| t.value.first_u32()).unwrap_or(1);
@@ -506,6 +507,7 @@ fn decode_raster(ifd: &OracleIfd) -> Result<(u32, u32, Vec<u8>), String> {
         return Err(format!("tiff oracle: unsupported compression {compression} (only uncompressed is implemented)"));
     }
     let photometric = ifd.get(TAG_PHOTOMETRIC).and_then(|t| t.value.first_u32()).unwrap_or(1);
+    if !matches!(photometric,0|1|2){return Err("tiff oracle: reference raster requires grayscale or RGB interpretation".into())}
     let strip = ifd.strip.as_ref().ok_or("tiff oracle: IFD carries no strip payload")?;
     let row_bytes = width as usize * spp as usize;
     if strip.len() < row_bytes * height as usize {
@@ -533,7 +535,7 @@ fn decode_raster(ifd: &OracleIfd) -> Result<(u32, u32, Vec<u8>), String> {
 
 /// 🔁️ The projection every mutate/inverse/round-trip scenario is compared through. Reports the
 /// byte-order mark, every IFD's full typed tag list (proving `InsertIfd`/`RemoveIfd`/`SetTag`/
-/// `RemoveTag` structurally), and IFD 0's independently decoded raster (proving `SetPixels` and the
+/// `RemoveTag` structurally), and IFD 0's independently decoded raster (proving owned paint/sample edits and the
 /// pixel-affecting geometry tags). Key names deliberately avoid `semantic-raster-v1`'s own
 /// `ignoreKeys` (`filter`, `interlace`, `compression`, `chunkOrder`, `ancillaryChunks`, `gamma`,
 /// `software`, `encoderVersion`, `byteLength`, `fileSize`, `rowStride`, `paletteOrder`) so nothing
@@ -563,7 +565,6 @@ fn project_doc(doc: &OracleDoc) -> Json {
         .collect();
     let mut fields = vec![
         ("format".to_string(), Json::String("tiff".to_string())),
-        ("byteOrder".to_string(), Json::String(if doc.little_endian { "little-endian" } else { "big-endian" }.to_string())),
         ("ifdCount".to_string(), Json::Number(doc.ifds.len() as f64)),
         ("ifds".to_string(), Json::Array(ifds)),
     ];
@@ -595,30 +596,26 @@ pub fn project_tiff(input: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️RasterProjection
 
 //#region 🔖️MutationParams
-/// 🧩️ Parses one `TiffIfd` wire value (`{"entries": [{tag, values}…], "storage": {kind, chunks…}}`) into an
-/// [`OracleIfd`] — the shape `insert-ifd`'s `ifd` carries. Strip and tile offsets and byte
-/// counts are never accepted from a caller (they are layout-computed at [`write_tiff`] time); strip storage becomes this
-/// model's one combined strip, an IFD without storage carries none, and tiled storage is refused, because this
-/// strip-only IFD-chain model does not write tiles.
-fn parse_ifd_json(v: &Json) -> Result<OracleIfd, String> {
-    let entries = j_get(v, "entries").and_then(j_arr).ok_or("tiff oracle: ifd needs an `entries` array")?;
-    let mut entries = entries
-        .iter()
-        .filter(|e| !matches!(j_get(e, "tag").and_then(j_num).map(|tag| tag as u16), Some(TAG_STRIP_OFFSETS | TAG_STRIP_BYTE_COUNTS)))
-        .map(|e| Ok(OracleTag { tag: j_get(e, "tag").and_then(j_num).ok_or("tiff oracle: entry needs `tag`")? as u16, value: wire_value(j_get(e, "values").ok_or("tiff oracle: entry needs `values`")?)? }))
-        .collect::<Result<Vec<_>, String>>()?;
-    entries.sort_by_key(|t| t.tag);
-    let storage = j_get(v, "storage");
-    let strip = match storage.map(|storage| storage.str("kind")).as_deref() {
-        None | Some("none") => None,
-        Some("strips") => {
-            let chunks = storage.and_then(|storage| j_get(storage, "chunks")).and_then(j_arr).ok_or("tiff oracle: strip storage needs `chunks`")?;
-            Some(chunks.iter().map(wire_bytes).collect::<Result<Vec<_>, String>>()?.concat()).filter(|bytes| !bytes.is_empty())
-        }
-        Some(other) => return Err(format!("tiff oracle: {other:?} storage is not written by this strip-only model")),
-    };
-    Ok(OracleIfd { entries, strip })
+/// 🧩️ Admits authored entries and exact word blocks into the independent uncompressed eight-bit reference scope.
+fn parse_ifd_json(value:&Json)->Result<OracleIfd,String>{
+ if let Json::Object(fields)=value{if fields.iter().any(|(key,_)|!matches!(key.as_str(),"entries"|"blocks")){return Err("tiff oracle: IFD only owns entries and blocks".into())}}else{return Err("tiff oracle: IFD must be an object".into())}
+ let tags=value.get("entries").and_then(j_arr).ok_or("tiff oracle: IFD needs entries")?;
+ let mut entries=tags.iter().map(|entry|{let tag=u16::try_from(wire_u32(entry.get("tag").ok_or("tiff oracle: tag needs identity")?)?).map_err(|_|"tiff oracle: tag exceeds unsigned16")?;if native_policy_tag(tag){return Err("tiff oracle: native storage policy is not authored tag content".into())}Ok(OracleTag{tag,value:wire_value(entry.get("values").ok_or("tiff oracle: tag needs values")?)?})}).collect::<Result<Vec<_>,String>>()?;
+ entries.sort_by_key(|entry|entry.tag);if entries.windows(2).any(|pair|pair[0].tag==pair[1].tag){return Err("tiff oracle: duplicate tag identity".into())}
+ let blocks=value.get("blocks").and_then(j_arr).ok_or("tiff oracle: IFD needs owned blocks")?;let mut ifd=OracleIfd{entries,strip:None};if blocks.is_empty(){return Ok(ifd)}
+ let scalar=|tag|ifd.get(tag).and_then(|entry|entry.value.first_u32()).ok_or_else(||format!("tiff oracle: owned raster missing tag {tag}"));let width=scalar(TAG_IMAGE_WIDTH)?;let height=scalar(TAG_IMAGE_LENGTH)?;let channels=scalar(TAG_SAMPLES_PER_PIXEL)?;
+ if !matches!(channels,1|3|4)||ifd.get(TAG_BITS_PER_SAMPLE).is_some_and(|entry|match &entry.value{OracleValue::Short(bits)=>bits.iter().any(|bit|*bit!=8),_=>true}){return Err("tiff oracle: owned reference raster requires eight-bit channels".into())}
+ let count=(width as usize).checked_mul(height as usize).and_then(|count|count.checked_mul(channels as usize)).ok_or("tiff oracle: owned raster extent overflow")?;let mut raster=vec![0u8;count];let mut covered=vec![false;count];
+ for block in blocks{let scalar=|key|wire_u32(block.get(key).ok_or("tiff oracle: sample block missing extent")?);let x=scalar("x")?;let y=scalar("y")?;let bw=scalar("width")?;let bh=scalar("height")?;if bw==0||bh==0||scalar("channels")?!=channels||x.checked_add(bw).is_none_or(|end|end>width)||y.checked_add(bh).is_none_or(|end|end>height){return Err("tiff oracle: sample block leaves page extent".into())}let words=block.get("samples").and_then(j_arr).ok_or("tiff oracle: sample block needs words")?;if words.len()!=bw as usize*bh as usize*channels as usize{return Err("tiff oracle: sample count differs from owned extent".into())}for(row,words)in words.chunks(bw as usize*channels as usize).enumerate(){let at=((y as usize+row)*width as usize+x as usize)*channels as usize;for(lane,word)in words.iter().enumerate(){if covered[at+lane]{return Err("tiff oracle: overlapping owned sample blocks".into())}raster[at+lane]=u8::try_from(wire_word(word)?).map_err(|_|"tiff oracle: sample exceeds eight-bit reference scope")?;covered[at+lane]=true;}}}
+ if covered.iter().any(|covered|!*covered){return Err("tiff oracle: owned sample coverage incomplete".into())}ifd.strip=Some(raster);Ok(ifd)
 }
+fn param_u32(params:Option<&Json>,key:&str)->Result<u32,String>{wire_u32(params.and_then(|value|value.get(key)).ok_or_else(||format!("tiff oracle: missing {key}"))?)}
+fn oracle_revision(doc:&OracleDoc)->Result<String,String>{
+ struct Fingerprint(u64);impl Fingerprint{fn bytes(&mut self,bytes:&[u8]){for byte in bytes{self.0=(self.0^u64::from(*byte)).wrapping_mul(0x100000001b3)}}fn count(&mut self,count:usize){self.bytes(&(count as u64).to_le_bytes());}}
+ let mut hash=Fingerprint(0xcbf29ce484222325);hash.count(10);hash.bytes(b"stdio.tiff");hash.count(doc.ifds.len());
+ for ifd in &doc.ifds{hash.count(ifd.entries.len());for tag in &ifd.entries{hash.bytes(&tag.tag.to_le_bytes());hash.bytes(&[(tag.value.type_code()-1)as u8]);match &tag.value{OracleValue::Ascii(texts)=>{hash.count(texts.len());for text in texts{hash.count(text.len());hash.bytes(text.as_bytes());}},value=>{hash.count(value.count()as usize);hash.bytes(&value.bytes(true));}}}if let Some(samples)=&ifd.strip{let(width,height,_)=decode_raster(ifd)?;let channels=ifd.get(TAG_SAMPLES_PER_PIXEL).and_then(|entry|entry.value.first_u32()).unwrap_or(1);hash.count(1);for value in[0,0,width,height,channels]{hash.bytes(&value.to_le_bytes());}hash.count(samples.len());for sample in samples{hash.bytes(&u32::from(*sample).to_le_bytes());hash.bytes(&0u32.to_le_bytes());}}else{hash.count(0)}}Ok(format!("{:016x}",hash.0))
+}
+fn region_span(ifd:&OracleIfd,params:Option<&Json>)->Result<(usize,usize,usize,usize,usize),String>{let(width,height,_)=decode_raster(ifd)?;let channels=ifd.get(TAG_SAMPLES_PER_PIXEL).and_then(|entry|entry.value.first_u32()).unwrap_or(1)as usize;let x=param_u32(params,"x")?;let y=param_u32(params,"y")?;let w=param_u32(params,"width")?;let h=param_u32(params,"height")?;if w==0||h==0||h>65_536||x.checked_add(w).is_none_or(|end|end>width)||y.checked_add(h).is_none_or(|end|end>height){return Err("tiff oracle: region exceeds owned extent".into())}Ok((x as usize,y as usize,w as usize,h as usize,channels))}
 //#endregion 🔖️MutationParams
 
 //#region 🔖️Dispatch
@@ -631,19 +628,11 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let kind = spec.str("kind");
     let params = spec.get("params");
     let p_num = |key: &str| -> Option<f64> { params.and_then(|p| j_get(p, key)).and_then(j_num) };
-    let p_str = |key: &str| -> Option<&str> { params.and_then(|p| j_get(p, key)).and_then(j_str) };
 
 
 
     let mut doc = read_tiff(input)?;
     match kind.as_str() {
-        "change-byte-order" => {
-            doc.little_endian = match p_str("byteOrder") {
-                Some("littleEndian") => true,
-                Some("bigEndian") => false,
-                other => return Err(format!("tiff oracle: {other:?} is no byte order")),
-            };
-        }
         "insert-ifd" => {
             let index = (p_num("index").ok_or("tiff oracle: insert-ifd needs `index`")? as usize).min(doc.ifds.len());
             let ifd_json = params.and_then(|p| j_get(p, "ifd")).ok_or("tiff oracle: insert-ifd needs `ifd`")?;
@@ -670,19 +659,11 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 ifd.entries.retain(|t| t.tag != tag);
             }
         }
+        "replace-samples"=>{let index=param_u32(params,"ifdIndex")?as usize;if param_u32(params,"block")?!=0{return Err("tiff oracle: native owner has one canonical block".into())}let offset=param_u32(params,"offset")?as usize;let words=params.and_then(|params|params.get("samples")).and_then(j_arr).ok_or("tiff oracle: replacement needs exact words")?;let bytes=words.iter().map(|word|u8::try_from(wire_word(word)?).map_err(|_|"tiff oracle: replacement exceeds eight-bit reference scope".to_string())).collect::<Result<Vec<_>,_>>()?;let strip=doc.ifds.get_mut(index).and_then(|ifd|ifd.strip.as_mut()).ok_or("tiff oracle: sample target missing")?;let end=offset.checked_add(bytes.len()).ok_or("tiff oracle: sample span overflow")?;strip.get_mut(offset..end).ok_or("tiff oracle: sample span leaves owned block")?.copy_from_slice(&bytes);}
+        "paint-region"=>{let revision=params.and_then(|params|params.get("revision")).and_then(j_str).ok_or("tiff oracle: paint needs owned revision")?;if revision!=oracle_revision(&doc)?{return Err("tiff oracle: stale owned revision".into())}let index=param_u32(params,"ifdIndex")?as usize;let ifd=doc.ifds.get_mut(index).ok_or("tiff oracle: paint target missing")?;let(x,y,w,h,channels)=region_span(ifd,params)?;let width=ifd.get(TAG_IMAGE_WIDTH).and_then(|entry|entry.value.first_u32()).unwrap()as usize;let rgba=["red","green","blue","alpha"].map(|key|u8::try_from(param_u32(params,key)?).map_err(|_|"tiff oracle: paint channel exceeds unsigned8".to_string()));let rgba=rgba.into_iter().collect::<Result<Vec<_>,_>>()?;let photo=ifd.get(TAG_PHOTOMETRIC).and_then(|entry|entry.value.first_u32()).unwrap_or(1);let color=match(photo,channels){(0|1,1)if rgba[0]==rgba[1]&&rgba[1]==rgba[2]&&rgba[3]==255=>vec![if photo==0{255-rgba[0]}else{rgba[0]}],(2,3)if rgba[3]==255=>rgba[..3].to_vec(),(2,4)=>rgba,_=>return Err("tiff oracle: paint color differs from owned channel interpretation".into())};let strip=ifd.strip.as_mut().unwrap();for row in y..y+h{for col in x..x+w{let at=(row*width+col)*channels;strip[at..at+channels].copy_from_slice(&color);}}}
         other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
     Ok(write_tiff(&doc))
-}
-
-/// 🔀️ A `TiffByteOrder` wire value — `littleEndian` or `bigEndian` — as this model's flag.
-#[cfg(feature = "oracles")]
-fn byte_order(value: Option<&Json>) -> Result<bool, String> {
-    match value.and_then(j_str) {
-        Some("littleEndian") => Ok(true),
-        Some("bigEndian") => Ok(false),
-        other => Err(format!("tiff oracle: {other:?} is no byte order")),
-    }
 }
 
 /// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`, so that
@@ -703,7 +684,6 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
 
     let mut doc = read_tiff(mutated)?;
     match kind.as_str() {
-        "change-byte-order" => doc.little_endian = original.little_endian,
         "insert-ifd" => {
             let index = (p_num("index").ok_or("tiff oracle: insert-ifd needs `index`")? as usize).min(original.ifds.len());
             if index < doc.ifds.len() {
@@ -728,6 +708,8 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
                 }
             }
         }
+        "replace-samples"=>{let index=param_u32(params,"ifdIndex")?as usize;let offset=param_u32(params,"offset")?as usize;let count=params.and_then(|params|params.get("samples")).and_then(j_arr).ok_or("tiff oracle: inverse needs sample span")?.len();let end=offset.checked_add(count).ok_or("tiff oracle: sample inverse overflow")?;let source=original.ifds.get(index).and_then(|ifd|ifd.strip.as_ref()).and_then(|strip|strip.get(offset..end)).ok_or("tiff oracle: original sample span missing")?;doc.ifds.get_mut(index).and_then(|ifd|ifd.strip.as_mut()).and_then(|strip|strip.get_mut(offset..end)).ok_or("tiff oracle: inverse sample target missing")?.copy_from_slice(source);}
+        "paint-region"=>{let index=param_u32(params,"ifdIndex")?as usize;let source=original.ifds.get(index).ok_or("tiff oracle: original paint page missing")?;let(x,y,w,h,channels)=region_span(source,params)?;let width=source.get(TAG_IMAGE_WIDTH).and_then(|entry|entry.value.first_u32()).unwrap()as usize;let original=source.strip.as_ref().ok_or("tiff oracle: original paint samples missing")?;let target=doc.ifds.get_mut(index).and_then(|ifd|ifd.strip.as_mut()).ok_or("tiff oracle: inverse paint target missing")?;for row in y..y+h{let at=(row*width+x)*channels;let end=at+w*channels;target.get_mut(at..end).ok_or("tiff oracle: inverse paint span missing")?.copy_from_slice(&original[at..end]);}}
         other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
     }
     Ok(write_tiff(&doc))
@@ -772,3 +754,7 @@ pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { Ok(
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
 //#endregion RoundTrip
+
+#[cfg(all(test,feature="oracles"))]
+#[path="🧪️tests/🧬️owned-params/🦀️.rs"]
+mod oracle_owned_tests;

@@ -1,7 +1,7 @@
-//! 📝 `edit-story` — replaces a story's authored `content` body.
+//! 📝 `edit-story` — splices a story's authored `content` body: `delete` characters from `offset` are replaced by `insert`.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoryPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoriesModification};
 use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,7 +14,22 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[value(rename_all = "camelCase")]
 pub struct EditStory {
     pub id: String,
-    pub new_content: String,
+    /// 📍 Character offset the splice starts at.
+    pub offset: usize,
+    /// ✂️ Characters removed from `offset`.
+    pub delete: usize,
+    /// ✍️ Text put in their place.
+    pub insert: String,
+}
+
+/// ✂️ The characters of `content` a splice replaces, or `None` when the range leaves the text.
+fn spliced_range(content: &str, offset: usize, delete: usize) -> Option<(usize, usize)> {
+    let length = content.chars().count();
+    (offset.checked_add(delete)? <= length).then(|| {
+        let start = content.char_indices().nth(offset).map_or(content.len(), |(at, _)| at);
+        let end = content.char_indices().nth(offset + delete).map_or(content.len(), |(at, _)| at);
+        (start, end)
+    })
 }
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
@@ -42,11 +57,15 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if story.content == payload.new_content {
+    let Some((start, end)) = spliced_range(&story.content, payload.offset, payload.delete) else {
+        return protocol::MutationOutcome::error("mutation.target-mismatch", format!("The splice leaves story \"{}\".", payload.id), [payload.id.clone()]);
+    };
+    if story.content[start..end] == payload.insert {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Story \"{}\" content is unchanged.", payload.id));
     }
+    let content = format!("{}{}{}", &story.content[..start], payload.insert, &story.content[end..]);
     protocol::MutationOutcome::new(LayoutDiff {
-        stories: Some(LayoutStoriesDelta { patched: vec![LayoutStoryPatchEntry { id: payload.id.clone(), patch: TextStoryPatch { content: Some(payload.new_content.clone()), style_runs: None } }], ..Default::default() }),
+        stories: Some(LayoutStoriesDelta { modified: vec![LayoutStoriesModification { id: payload.id.clone(), patch: TextStoryPatch { content: Some(content), style_runs: None } }], ..Default::default() }),
         ..Default::default()
     })
 }
@@ -55,10 +74,9 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
 //#region 📝EditStory
 pub fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.stories.iter().find(|story| story.id == payload.id) {
-        Some(story) => vec![LayoutMutation::EditStory(EditStory { id: payload.id.clone(), new_content: story.content.clone() })],
-        None => Vec::new(),
-    }
+    let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else { return Vec::new() };
+    let Some((start, end)) = spliced_range(&story.content, payload.offset, payload.delete) else { return Vec::new() };
+    vec![LayoutMutation::EditStory(EditStory { id: payload.id.clone(), offset: payload.offset, delete: payload.insert.chars().count(), insert: story.content[start..end].to_string() })]
 
     })())
 }

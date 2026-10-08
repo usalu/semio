@@ -200,20 +200,6 @@ impl protocol::DiffAlgebra<RasterConfig> for RasterConfigDiff {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
     }
-    fn between(base: &RasterConfig, other: &RasterConfig) -> Self {
-        Self {
-            brush_size: (base.brush_size != other.brush_size).then_some(other.brush_size),
-            brush_opacity: (base.brush_opacity != other.brush_opacity).then_some(other.brush_opacity),
-            brush_color: (base.brush_color != other.brush_color).then(|| other.brush_color.clone()),
-            brush_hardness: (base.brush_hardness != other.brush_hardness).then_some(other.brush_hardness),
-            paint_target: (base.paint_target != other.paint_target).then(|| other.paint_target.clone()),
-            mask_value: (base.mask_value != other.mask_value).then_some(other.mask_value),
-            fill_tolerance: (base.fill_tolerance != other.fill_tolerance).then_some(other.fill_tolerance),
-            pixel_selection: (base.pixel_selection != other.pixel_selection).then(|| RasterPixelSelectionSet { value: other.pixel_selection.clone() }),
-            composite_viewport: (base.composite_viewport != other.composite_viewport).then(|| RasterViewportSet { value: other.composite_viewport.clone() }),
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

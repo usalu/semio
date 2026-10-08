@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "installedTargetIds",
+    "installedVariants",
+    "hostFixturePath",
+    "hostVariant",
+    "missingVariant",
+    "sourceCensus"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "installedTargetIds": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "installedVariants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "hostFixturePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "hostVariant": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "missingVariant": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "sourceCensus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "componentKinds",
+        "deploymentField",
+        "maxFiles",
+        "maxBytes",
+        "maxMs",
+        "maxWork"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "🧰️framework",
+              "🌎️hub",
+              "✏️s"
+            ]
+          }
+        },
+        "componentKinds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "plugin",
+              "extension"
+            ]
+          }
+        },
+        "deploymentField": {
+          "const": "deployment-directory"
+        },
+        "maxFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "maxMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000
+        },
+        "maxWork": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        }
+      }
+    }
+  }
+}

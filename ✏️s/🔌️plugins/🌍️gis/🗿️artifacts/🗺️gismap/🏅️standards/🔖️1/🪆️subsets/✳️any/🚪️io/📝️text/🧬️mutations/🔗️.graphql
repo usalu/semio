@@ -1,4 +1,4 @@
-# gis.gismap mutations — one input type per semantic mutation slug (tags 1..12 match protocol.semio order).
+# gis.gismap mutations — one input type per semantic mutation slug (tags 1..18 match protocol.semio order).
 scalar Bytes
 
 input CreatePosition { index: Float! }
@@ -13,5 +13,11 @@ input CreateRegion { index: Float! }
 input DeleteRegion { id: String! }
 input ReplaceRegionData { id: String! newData: Bytes! }
 input ReorderRegions { id: String! toIndex: Float! }
+input SetPositionProperty { feature: String! key: String! value: Bytes! before: String }
+input RemovePositionProperty { feature: String! key: String! }
+input SetRouteProperty { feature: String! key: String! value: Bytes! before: String }
+input RemoveRouteProperty { feature: String! key: String! }
+input SetRegionProperty { feature: String! key: String! value: Bytes! before: String }
+input RemoveRegionProperty { feature: String! key: String! }
 
-union GismapMutation = CreatePosition | DeletePosition | ReplacePositionData | ReorderPositions | CreateRoute | DeleteRoute | ReplaceRouteData | ReorderRoutes | CreateRegion | DeleteRegion | ReplaceRegionData | ReorderRegions
+union GismapMutation = CreatePosition | DeletePosition | ReplacePositionData | ReorderPositions | CreateRoute | DeleteRoute | ReplaceRouteData | ReorderRoutes | CreateRegion | DeleteRegion | ReplaceRegionData | ReorderRegions | SetPositionProperty | RemovePositionProperty | SetRouteProperty | RemoveRouteProperty | SetRegionProperty | RemoveRegionProperty

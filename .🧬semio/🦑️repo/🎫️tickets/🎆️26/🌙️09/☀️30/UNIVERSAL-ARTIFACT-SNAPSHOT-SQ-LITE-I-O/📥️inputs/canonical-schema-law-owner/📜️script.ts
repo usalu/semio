@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync, rmSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 let root = resolve(process.cwd());
 while (!existsSync(join(root, ".git"))) {
@@ -26,7 +26,10 @@ const stage = (path:string, update:(text:string)=>string) => {
   if (after !== before) changes.push({path, before, after});
 };
 const phase = process.argv[2];
-if (phase === "vcs-transitive-xlsx-current-clean-io-owner") {
+if (phase === "vcs-source-current-io-authority") {
+ const held=JSON.parse(read(join(ticket,"📥️inputs/physical-oct08-vcs-source-current-io-authority-held.json"))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of held){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Current VCS Source IO authority guard changed: "+pair.path);changes.push(pair);}
+} else if (phase === "vcs-transitive-xlsx-current-clean-io-owner") {
  const held=JSON.parse(read(join(ticket,"📥️inputs/physical-vcs-transitive-xlsx-current-clean-io-owner-held-guards.json"))) as {path:string;before:string|null;after:string|null}[];
  for(const pair of held){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Current XLSX owning guard changed: "+pair.path);changes.push(pair);}
 } else if (phase === "demand") {
@@ -2714,6 +2717,33 @@ fn extent(limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimit
  const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-bcf-current-thirty-three-owner-prerequisite-pairs.json")));if(pairs.length!==3)throw Error("BCF current roster differs");for(const pair of pairs)stage(pair.path,current=>{if(current!==pair.before)throw Error("BCF current source differs: "+pair.path);return pair.after;});
 } else if (phase === "md-current-independent-schema-and-owned-binder") {
  const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-md-current-independent-schema-owned-binder-pairs.json")));if(pairs.length!==2)throw Error("MD current roster differs");for(const pair of pairs)stage(pair.path,current=>{if(current!==pair.before)throw Error("MD current source differs: "+pair.path);return pair.after;});
+} else if (phase === "stdio-independent-authored-membership-and-direct-routes") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-stdio-independent-membership-pairs.json")));for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Current authored membership guard changed: "+pair.path);changes.push(pair);}
+} else if (phase === "stdio-eighty-nine-independent-typed-provider-owners") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-stdio-eighty-nine-independent-provider-pairs.json")));for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Current independent typed owner guard changed: "+pair.path);changes.push(pair);}
+} else if (phase === "remodeling-structured-content-neutral-demand") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-remodeling-structured-content-demand-pairs.json")));for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Current Remodeling semantic demand guard changed: "+pair.path);changes.push(pair);}
+} else if (phase === "remodeling-structured-content-source-provider") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-remodeling-structured-content-source-provider-pairs.json"))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Root Remodeling Source provider authority changed: "+pair.path);changes.push(pair);}
+} else if (phase === "remodeling-total-fragment-schema-law") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-remodeling-total-fragment-schema-law-pairs.json"))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Root Remodeling total fragment authority changed: "+pair.path);changes.push(pair);}
+} else if (phase === "remodeling-relational-constraint-domain-ownership") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-remodeling-domain-ownership-constraint-pairs.json"))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Root Remodeling relational domain ownership changed: "+pair.path);changes.push(pair);}
+} else if (phase === "canonical-erased-read-lease-provider") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-canonical-erased-read-lease-provider-pairs.json"))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Canonical erased read lease authority changed: "+pair.path);changes.push(pair);}
+} else if (phase === "canonical-erased-read-sourcepin-neutral-demand") {
+ const pairs=JSON.parse(read(join(ticket,"📥️inputs/root-oct8-canonical-erased-read-sourcepin-neutral-demand-pairs.json"))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of pairs){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Erased read source pin neutral authority changed: "+pair.path);changes.push(pair);}
+} else if (phase === "root-owned-stale-nx-cleanup") {
+ for(const name of ["nx-root-bcf-deflate-before-data","nx-root-bcf-deflate-before-cache"]){const path=join(ticket,"🗑️generated",name);if(existsSync(path)){rmSync(path,{recursive:true,force:false});console.log("[DEBUG] Removed unused root-owned generated Nx cache "+name);}}
+} else if (phase === "bim-sqlite-owned-demand" || phase === "bim-sqlite-source-provider" || phase === "bim-sqlite-static-constraints") {
+ const input=phase === "bim-sqlite-owned-demand" ? "root-oct8-bim-sqlite-owned-demand-pairs.json" : phase === "bim-sqlite-static-constraints" ? "root-oct8-bim-sqlite-static-constraints-pairs.json" : "root-oct8-bim-sqlite-source-provider-pairs.json";
+ const held=JSON.parse(read(join(ticket,"📥️inputs",input))) as {path:string;before:string|null;after:string|null}[];
+ for(const pair of held){const current=existsSync(pair.path)?read(pair.path):null;if(current===pair.after)continue;if(current!==pair.before)throw Error("Current BIM owning guard changed: "+pair.path);changes.push(pair);}
 } else if (phase === "controlled-source-validated-schema-reuse") {
  const base=join(root,"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot");
  stage(join(base,"🟦️.ts"),text=>{

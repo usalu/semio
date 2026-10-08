@@ -311,16 +311,6 @@ impl protocol::DiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
             interactive: self.interactive.as_ref().map(|_| base.interactive.clone()),
         }
     }
-    fn between(base: &ModuleRenderPayload, other: &ModuleRenderPayload) -> Self {
-        Self {
-            example_id: (base.example_id != other.example_id).then(|| other.example_id.clone()),
-            params: (base.params != other.params).then(|| other.params.clone()),
-            question_id: (base.question_id != other.question_id).then(|| other.question_id.clone()),
-            controller_id: (base.controller_id != other.controller_id).then(|| other.controller_id.clone()),
-            surface: (base.surface != other.surface).then(|| other.surface.clone()),
-            interactive: (base.interactive != other.interactive).then(|| other.interactive.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.example_id.is_none() && self.params.is_none() && self.question_id.is_none() && self.controller_id.is_none() && self.surface.is_none() && self.interactive.is_none()
     }

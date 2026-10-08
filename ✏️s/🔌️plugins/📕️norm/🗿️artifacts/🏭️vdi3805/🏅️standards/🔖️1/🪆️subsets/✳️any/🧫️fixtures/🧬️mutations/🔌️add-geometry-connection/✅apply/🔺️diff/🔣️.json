@@ -5,7 +5,6 @@
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "indexEntries": null,
   "geometry": {
     "added": [],
     "removed": [],
@@ -15,25 +14,29 @@
         "bbox": null,
         "parameters": null,
         "connections": {
-          "added": [
+          "removed": [],
+          "inserted": [
             {
-              "id": "drain",
-              "medium": "water",
-              "position": [
-                0.125,
-                0.0,
-                0.0625
-              ],
-              "direction": [
-                0.0,
-                -1.0,
-                0.0
-              ],
-              "diameterMm": 12.5
+              "index": 2,
+              "row": {
+                "id": "drain",
+                "medium": "water",
+                "position": [
+                  0.125,
+                  0.0,
+                  0.0625
+                ],
+                "direction": [
+                  0.0,
+                  -1.0,
+                  0.0
+                ],
+                "diameterMm": 12.5
+              }
             }
           ],
-          "removed": [],
-          "order": null
+          "moved": [],
+          "modified": []
         }
       }
     ]

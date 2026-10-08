@@ -28,7 +28,6 @@ type SemioMutationObject { mutation: String!, payload: SemioObjectMutation! } # 
 type SemioMutationKit { mutation: String!, payload: SemioKitMutation! } # defined in 🧰️kit's own mutations mirror
 
 union SemioMutation =
-  | SemioMutationSetSnapshot
   | SemioMutationBrep
   | SemioMutationMesh
   | SemioMutationModel

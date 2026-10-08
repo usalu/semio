@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"semio.mesh.component-reference-table/v1","type":"object","additionalProperties":false,"properties":{"face":{"type":"array","maxItems":600000,"items":{"type":"string"}},"edge":{"type":"array","maxItems":600000,"items":{"type":"string"}},"vertex":{"type":"array","maxItems":600000,"items":{"type":"string"}}}}

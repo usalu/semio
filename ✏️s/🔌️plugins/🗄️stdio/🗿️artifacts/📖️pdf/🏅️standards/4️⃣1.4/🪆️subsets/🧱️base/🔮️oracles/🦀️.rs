@@ -102,14 +102,20 @@ fn mutate_pages(pages: &mut Vec<OraclePage>, mutation: &Json) -> Result<(), Stri
     }
     Ok(())
 }
+
+/// 🧪️ The independent pages after `mutation`, leaving `pages` untouched.
+fn pages_after(pages: &[OraclePage], mutation: &Json) -> Result<Vec<OraclePage>, String> {
+    let mut next = pages.to_vec();
+    mutate_pages(&mut next, mutation)?;
+    Ok(next)
+}
 //#endregion 🔖️Spec
 
 //#region 🔖️Dispatch
 /// ▶️ Mutates independently decoded pages and rebuilds them using lopdf.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], mutation: &Json) -> Result<Vec<u8>, String> {
-    let mut pages = independent_pages(input)?;
-    mutate_pages(&mut pages, mutation)?;
+    let pages = pages_after(&independent_pages(input)?, mutation)?;
     build_document(&pages)
 }
 
@@ -122,7 +128,7 @@ pub fn oracle_apply_mutation(_input: &[u8], _mutation: &Json) -> Result<Vec<u8>,
 #[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
     let pages = independent_pages(base)?;
-    mutate_pages(&mut pages.clone(), forward)?;
+    pages_after(&pages, forward)?;
     let params = forward.get("params").ok_or("Missing mutation parameters")?;
     let at = |key| index(params, key);
     Ok(match forward.str("kind").as_str() {

@@ -1,0 +1,11 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "beforeSha256": "77e484375641132601ef9970af014d52b362f01f773cda6649b993572a6de640",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "fresh recreated whole fixture schema"
+    }
+  ]
+}

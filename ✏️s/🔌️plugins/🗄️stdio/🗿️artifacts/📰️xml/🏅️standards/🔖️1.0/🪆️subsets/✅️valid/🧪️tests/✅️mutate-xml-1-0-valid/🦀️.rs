@@ -7,12 +7,13 @@
 //! (`../../🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🦀️.rs`), whose DOCTYPE grammar and
 //! §2.8/§2.9 verdicts are written from the W3C text rather than from this repository's
 //! `check_valid_conformance`; `subject` drives this repository's own
-//! `XmlSnapshot::import_utf8`/`export_utf8` and `apply_xml_valid_mutation` over the full 8-kind
+//! `XmlSnapshot::import_utf8`/`export_utf8` and `apply_mutation` over the full 8-kind
 //! `XmlValidMutation` vocabulary. Both results are read back by the SAME independent
 //! `project_xml_valid` before the `semantic-xml-valid-1-0-v1` profile compares them. The subject
 //! half is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
 //! local implementation.
 
+use semio_s_artifact_stdio_xml::apply_mutation;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::valid::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_xml_valid};
 
@@ -120,7 +121,7 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, projection_divergence};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, XmlValidMutation};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::{XmlValidMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_xml::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_xml::XmlSnapshot;
@@ -154,7 +155,7 @@ mod subject {
         let kind = spec.str("kind");
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
-        apply_xml_valid_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         let (bytes, projection) = rendered(&snapshot)?;
         if projection_divergence(&projection, &rendered(&base)?.1).is_none() {
             return Err(format!("{kind:?} left the semantic projection exactly as it found it -- either the vocabulary refused it or the parameters address nothing in the real document"));
@@ -170,9 +171,9 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base.clone();
-        apply_xml_valid_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_xml_valid_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         let (bytes, projection) = rendered(&snapshot)?;
         if let Some(divergence) = projection_divergence(&projection, &rendered(&base)?.1) {

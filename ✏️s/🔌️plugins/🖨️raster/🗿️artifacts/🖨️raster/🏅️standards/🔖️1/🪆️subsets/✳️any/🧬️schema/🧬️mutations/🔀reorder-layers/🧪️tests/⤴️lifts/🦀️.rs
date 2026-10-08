@@ -6,9 +6,10 @@
 //!
 //! 🔀 `reorder-layers` is a LIST reposition, never a spatial one (the spatial verb is
 //! `move-layer`). This case crosses a tree BOUNDARY — out of the `frame` group and to the document
-//! root — which is exactly what `RasterLayersDelta.moved`'s `(parentId, index)` address exists for.
+//! root — which is exactly what `RasterLayersDelta.moved`'s `from`/`to` addresses exists for.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_transform, locate_layer};
 use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
@@ -96,8 +97,9 @@ async fn produces_committed_diff() {
     let delta = produced.diff().layers.as_ref().expect("reorder-layers writes a layers delta");
     assert_eq!(delta.moved.len(), 1, "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: exactly one layer is moved");
     assert_eq!(delta.moved[0].id, "caption", "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the move must address the layer, not its former parent");
-    assert_eq!((delta.moved[0].parent_id.as_deref(), delta.moved[0].index), (None, 0), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: `parentId: null` is the document root");
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: a reposition is never expressed as an add/remove pair");
+    assert_eq!((delta.moved[0].from.parent_id.as_deref(), delta.moved[0].from.index), (Some("frame"), 0), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: `from` is the layer's BASE address");
+    assert_eq!((delta.moved[0].to.parent_id.as_deref(), delta.moved[0].to.index), (None, 0), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: an absent `parentId` is the document root");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.modified.is_empty(), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: a reposition is never expressed as an add/remove pair");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -121,5 +123,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

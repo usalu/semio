@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::io::Mp4AnalyzerAnalysis;
 use super::*;
 
@@ -111,7 +112,7 @@ async fn codec_retention_law_round_trips_the_real_fixture_snapshot_exactly() {
 async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use crate::standards::isobmff::subsets::any::schema::{
         diff::Mp4Diff,
-        mutations::{apply_mp4_mutation, Mp4Mutation},
+        mutations::{Mp4Mutation},
     };
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
@@ -136,7 +137,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     let composition = Mp4ComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("compose MP4 pack");
     assert_eq!(encode_mp4(&composition.snapshot), bytes);
 
-    let self_diff = Mp4Diff::between(&snapshot, &snapshot);
+    let self_diff = Mp4Diff::default();
     let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).expect("parse MP4 diff text");
     assert_eq!(encode_mp4(&protocol::apply_diff(&text_diff, &snapshot).unwrap()), bytes);
     let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).expect("decode MP4 diff");
@@ -144,7 +145,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
 
     let mut no_op = snapshot.clone();
     let no_op_mutation = Mp4Mutation::SetMovie(crate::standards::isobmff::subsets::any::schema::mutations::set_movie::SetMovie { movie: no_op.movie.clone() });
-    apply_mp4_mutation(&mut no_op, &no_op_mutation);
+    apply_mutation(&mut no_op, &no_op_mutation);
     assert_eq!(encode_mp4(&no_op), bytes);
 
     let set_movie = Mp4Mutation::SetMovie(crate::standards::isobmff::subsets::any::schema::mutations::set_movie::SetMovie { movie: snapshot.movie.clone() });
@@ -153,17 +154,17 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
 
     let mut changed = snapshot.clone();
     let mutation = Mp4Mutation::SetTrackDimensions(crate::standards::isobmff::subsets::any::schema::mutations::set_track_dimensions::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height });
-    apply_mp4_mutation(&mut changed, &mutation);
+    apply_mutation(&mut changed, &mutation);
     let changed_bytes = encode_mp4(&changed);
     assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
 
-    let diff = Mp4Diff::between(&snapshot, &changed);
+    let diff = protocol::Mutation::diff(&mutation, &snapshot).into_parts().0;
     let after = protocol::apply_diff(&diff, &snapshot).unwrap();
     let restored = protocol::apply_diff(&diff.inverse(&snapshot), &after).unwrap();
     assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");
     assert_eq!(encode_mp4(&restored), bytes, "restored logical state must materialize the imported MP4 exactly");
-    for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture") {
-        apply_mp4_mutation(&mut changed, &inverse);
+    for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        apply_mutation(&mut changed, &inverse);
     }
     assert_eq!(encode_mp4(&changed), bytes);
 }

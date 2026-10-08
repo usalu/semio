@@ -1,21 +1,23 @@
 {
   "schema": null,
   "artifacts": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "artifact-1",
-        "name": null,
-        "kindId": null,
-        "schema": null,
-        "dialect": null,
-        "createdAtMs": null,
-        "createdBy": null,
-        "updatedAtMs": 4200,
-        "updatedBy": "user:linus"
+        "patch": {
+          "name": null,
+          "kindId": null,
+          "schema": null,
+          "dialect": null,
+          "createdAtMs": null,
+          "createdBy": null,
+          "updatedAtMs": 4200,
+          "updatedBy": "user:linus"
+        }
       }
-    ],
-    "reordered": null
+    ]
   }
 }

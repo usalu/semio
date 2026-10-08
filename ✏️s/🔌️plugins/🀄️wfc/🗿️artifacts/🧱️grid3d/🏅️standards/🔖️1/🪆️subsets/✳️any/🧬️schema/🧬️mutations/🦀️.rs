@@ -85,13 +85,6 @@ pub fn ordered_index<T>(items: &[T], key: &str, item_key: impl Fn(&T) -> String)
 pub type Grid3dEnvelope = store::ArtifactEnvelope<Grid3dSnapshot, Grid3dMutation>;
 pub type Grid3dStore = store::ArtifactStore<Grid3dSnapshot, Grid3dMutation>;
 
-/// 🧬️ Applies a mutation to a projection — generic over every variant.
-pub fn apply_grid3d_mutation(projection: &mut Grid3dSnapshot, mutation: &Grid3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-    *projection = next;
-    Ok(())
-}
-
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
 pub fn inverse_grid3d_mutation(projection: &Grid3dSnapshot, mutation: &Grid3dMutation) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
     Ok({

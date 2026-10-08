@@ -1,0 +1,5 @@
+# Current Scene Owning Green 10
+
+The exact registered original full owning route physically closed Nx/Bun0/Cargo0. All 519 expanded full source bodies and producer stayed exact. Mesh44 and Scene202 owning laws all passed, without ignored or filtered tests. All four Scene8 failures now pass with unchanged geometry, ray-hit, source, pointer and stable-ID assertions. Constructors use an independent finite 65,536-byte caller allowance in the ordinary test caller. Dedicated exact admission/refusal and System birth/free laws keep their original oracle-derived boundary witnesses.
+
+Temporary Busy stays distinct from semantic Closing. Public ray and UV queries return typed refusals; finite caller attempts, real deadline and cancellation preserve refusal, while Closing is never retried. The actual World UV receiving boundary retains Pending and its original cursor on Busy. Original borrowed and incremental wire laws also pass. Full stdout/stderr/source/producer/terminal custody remains under native-scene-retirement-10. This scoped full owning acceptance does not prove EngineCanvas typed publication, full Flow, or whole OS runtime.

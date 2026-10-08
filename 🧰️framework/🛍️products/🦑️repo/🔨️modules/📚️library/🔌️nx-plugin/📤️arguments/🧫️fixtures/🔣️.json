@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "id": "nextest-exact",
+      "arguments": [
+        "long",
+        "-E",
+        "test(=native_name)",
+        "--",
+        "--nocapture"
+      ]
+    },
+    {
+      "id": "nextest-union",
+      "arguments": [
+        "long",
+        "-E",
+        "test(/alpha|beta/)",
+        "--status-level",
+        "pass"
+      ]
+    },
+    {
+      "id": "raw-values",
+      "arguments": [
+        "",
+        "raw \"quote\"",
+        "single 'quote'",
+        "$(echo SHOULD_NOT_RUN)",
+        "`literal`",
+        "%PATH%",
+        "!VAR!",
+        "a&b|c",
+        "C:\\Windows path\\ending\\",
+        "Grüße 🧩\nnext",
+        "a=b",
+        "--key=a=b"
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "version": 0,
+      "arguments": []
+    },
+    {
+      "version": 1,
+      "arguments": [
+        "\u0000"
+      ]
+    },
+    {
+      "version": 1,
+      "arguments": [],
+      "extra": true
+    },
+    {
+      "version": 1,
+      "arguments": [
+        1
+      ]
+    }
+  ]
+}

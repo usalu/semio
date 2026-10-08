@@ -61,6 +61,36 @@
         "🔗️.graphql",
         "🛰️.proto"
       ]
+    },
+    {
+      "kind": "set-gamma",
+      "variant": "SetGamma",
+      "directory": "🎚️set-gamma",
+      "textOpcode": "set-gamma",
+      "binaryTag": 21,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
+    },
+    {
+      "kind": "replace-samples",
+      "variant": "ReplaceSamples",
+      "directory": "🧩️replace-samples",
+      "textOpcode": "replace-samples",
+      "binaryTag": 22,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
     }
   ]
 }

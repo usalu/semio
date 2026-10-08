@@ -13,7 +13,8 @@
 //! ➕️ EN 1990 expression 6.10a over the dead and snow cases. Every term is validated against the load cases AND the existing combinations, so a nested combination is legal.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -110,8 +111,8 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     let delta = outcome.diff().combinations.as_ref().expect("combinations delta");
-    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (1, 0, 0), "create-combination/appends-the-6-10a-eefe01: the delta must be exactly one added entry");
-    assert!(delta.reordered.is_none(), "create-combination/appends-the-6-10a-eefe01: no verb in this vocabulary re-orders a collection");
+    assert_eq!((delta.inserted.len(), delta.removed.len(), delta.modified.len()), (1, 0, 0), "create-combination/appends-the-6-10a-eefe01: the delta must be exactly one added entry");
+    assert!(delta.moved.is_empty(), "create-combination/appends-the-6-10a-eefe01: no verb in this vocabulary re-orders a collection");
     assert!(outcome.diff().nodes.is_none(), "create-combination/appends-the-6-10a-eefe01: no nodes delta may be opened by this verb");
     assert!(outcome.diff().elements.is_none(), "create-combination/appends-the-6-10a-eefe01: no elements delta may be opened by this verb");
     assert!(outcome.diff().regions.is_none(), "create-combination/appends-the-6-10a-eefe01: no regions delta may be opened by this verb");

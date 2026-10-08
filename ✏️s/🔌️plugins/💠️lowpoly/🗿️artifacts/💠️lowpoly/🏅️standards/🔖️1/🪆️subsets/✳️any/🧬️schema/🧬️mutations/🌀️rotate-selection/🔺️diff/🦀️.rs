@@ -1,6 +1,6 @@
 //! 🔺️ `rotate-selection` — sparse diff construction: Fatal `invariant` for the payload's own breach (a vertex named twice, a non-finite pivot, axis or angle, or the zero axis (`x-semio-invariant` `axis-nonzero`)),
-//! then the shared selection motion (`crate::mutations::lowpoly_selection_motion_diff`) re-encodes the object's mesh
-//! content and the handle it hashes to: Error `target-missing`, Warning `partial` and Warning `no-op` come from there.
+//! then the shared selection motion (`crate::mutations::lowpoly_selection_motion_diff`) reads the BASE vertex positions and states
+//! one absolute position row per vertex it moves: Error `target-missing`, Warning `partial` and Warning `no-op` come from there.
 
 use super::RotateSelection;
 use crate::{LowpolyDiff, LowpolySnapshot};

@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/set-vertex-positions/schema.json",
+  "title": "SetVertexPositions",
+  "description": "Writes absolute positions onto the named vertices of an object's managed mesh: the exact undo of a selection motion and the concrete kind of a kernel edit that only repositions vertices. Its hard bounds (a vertex named once, finite positions, Normal channels named once) state the payload-intrinsic breach the diff refuses as `mutation.invariant`; refusals that depend on the base (an absent object, mesh or vertex) belong to the diff alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "objectId",
+    "positions",
+    "channels"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object whose mesh receives the positions.",
+          "de": "Das Objekt, dessen Netz die Positionen erhält."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "title": "LowpolyVertexPosition",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "position",
+          "vertex"
+        ],
+        "properties": {
+          "vertex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Positions",
+          "de": "Positionen"
+        },
+        "description": {
+          "en": "The vertices and the absolute position each one is written to.",
+          "de": "Die Eckpunkte und die absolute Position, auf die jeder gesetzt wird."
+        },
+        "group": "motion",
+        "order": 20
+      }
+    },
+    "channels": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mesh/schema.json#/properties/attributes/items"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Normal channels",
+          "de": "Normalenkanäle"
+        },
+        "description": {
+          "en": "The absolute content of the Normal attribute channels the same motion rewrote.",
+          "de": "Der absolute Inhalt der Normalen-Attributkanäle, die dieselbe Bewegung umschrieb."
+        },
+        "group": "motion",
+        "order": 30
+      }
+    }
+  }
+}

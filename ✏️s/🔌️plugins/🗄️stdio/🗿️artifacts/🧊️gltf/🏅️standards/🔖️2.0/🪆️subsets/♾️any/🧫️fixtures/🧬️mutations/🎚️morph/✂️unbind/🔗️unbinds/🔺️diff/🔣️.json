@@ -4,18 +4,32 @@
       {
         "index": 0,
         "diff": {
-          "primitives": [
-            {
-              "attributes": {
-                "POSITION": 0
-              },
-              "targets": [
-                {
-                  "POSITION": 1
+          "primitives": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "targets": {
+                    "removed": [
+                      {
+                        "id": "GltfMorphTarget([(\"POSITION\", 1), (\"NORMAL\", 2)])",
+                        "index": 0
+                      }
+                    ],
+                    "inserted": [
+                      {
+                        "index": 0,
+                        "row": {
+                          "POSITION": 1
+                        }
+                      }
+                    ],
+                    "moved": []
+                  }
                 }
-              ]
-            }
-          ]
+              }
+            ]
+          }
         }
       }
     ]

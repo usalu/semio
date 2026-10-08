@@ -1,13 +1,46 @@
 //! 📬️ Strictly admitted canonical DOCX XML publication.
 
 use super::*;
-use crate::schema::mutations::{apply_addressed_xml_mutation_in_place, replace_xml_node};
+use crate::schema::mutations::xml_address::{resolve_docx_xml_address, validate_replacement_identity};
+use crate::schema::mutations::{prepare_addressed_xml_mutation, replace_xml_node, DocxXmlAddress, PreparedDocxXmlMutation};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_plugin::plugin_app_close_prelude::store as app_store;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use std::{mem::ManuallyDrop, sync::Arc};
+
+/// 🧭️ The element at `path` below `node`, reopened for the one in-place replacement of the retained-execution seam.
+fn node_at_path_mut<'a>(node: &'a mut XmlNode, path: &[usize]) -> Option<&'a mut XmlNode> {
+    let Some((&index, rest)) = path.split_first() else { return Some(node) };
+    let XmlNode::Element { children, .. } = node else { return None };
+    node_at_path_mut(children.get_mut(index)?, rest)
+}
+
+/// ✍️ Writes `replacement` over the addressed element of an OWNED snapshot, moving the part's document through the edit instead of cloning the package.
+fn replace_addressed_node(snapshot: &mut DocxSnapshot, address: &DocxXmlAddress, replacement: XmlNode) -> Result<(), ValueError> {
+    let resolved = resolve_docx_xml_address(snapshot, address)?;
+    validate_replacement_identity(&resolved, &replacement)?;
+    let part_index = resolved.part_index;
+    let mut document = snapshot.xml_parts[part_index].materialize_document_exact()?;
+    let root = document.root.as_mut().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, format!("DOCX XML part {} has no root", address.part_path)))?;
+    let node = node_at_path_mut(root, &address.node_path).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "DOCX XML address became stale during apply".to_string()))?;
+    *node = replacement;
+    semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&document).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
+    snapshot.xml_parts[part_index].replace_document(document)?;
+    snapshot.validate_authority().map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)
+}
+
+/// ▶️ Applies one revision-bound canonical XML edit in place on an OWNED snapshot -- the bounded retained-execution seam that moves the document's parts into the
+/// edit instead of cloning them; every other caller goes through the central diff apply.
+fn apply_addressed_xml_mutation_in_place(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, ValueError> {
+    let prepared = prepare_addressed_xml_mutation(snapshot, mutation)?;
+    if prepared.changed {
+        replace_addressed_node(snapshot, &prepared.address, prepared.replacement.clone())?;
+    }
+    Ok(prepared)
+}
 
 const PREFIX: &str = "stdio-docx-base-set-page";
 /// 📏️ The one-item store preparation copies the whole document in one step, so an owner (the document, or one mutation)
@@ -375,12 +408,15 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
                 Ok(self.progress(TURN_BYTES))
             }
             5 => {
+                if app_store::ArtifactStoreOneItemSealer::<DocxSnapshot, DocxMutation>::constructor_demand().admit(grant.retained_grant()).is_err() {
+                    return Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked);
+                }
                 let mutation = self.mutation.take().ok_or_else(|| format!("{PREFIX}.mutation-owner"))?;
                 let inverse = self.inverse.take().ok_or_else(|| format!("{PREFIX}.inverse-owner"))?;
                 let post = self.post.take().ok_or_else(|| format!("{PREFIX}.post-owner"))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{PREFIX}.authority-owner"))?;
                 let edit = authority.next_edit(mutation, vec![inverse]);
-                self.sealer = Some(authority.begin_one_item_seal(edit, post, Arc::new(DocxMutationRetirementFactory), Arc::new(DocxSnapshotRetirementFactory)));
+                self.sealer = Some(Arc::clone(authority).begin_one_item_seal(edit, post, Arc::new(DocxMutationRetirementFactory), Arc::new(DocxSnapshotRetirementFactory), grant.retained_grant()).unwrap_or_else(|_| unreachable!("pre-admitted exact Docx sealer birth")).0);
                 self.seal_base = Some(self.checkpoint);
                 self.phase = 6;
                 Ok(self.progress(1))

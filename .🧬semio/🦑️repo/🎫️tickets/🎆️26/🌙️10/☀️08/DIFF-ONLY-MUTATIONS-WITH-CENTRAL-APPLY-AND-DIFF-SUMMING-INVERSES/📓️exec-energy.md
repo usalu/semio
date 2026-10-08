@@ -416,3 +416,49 @@ Config/window kinds (4): `change-simulation-settings`, `change-result-field`, ed
 - The TS sqlite round-trip test (`ANY/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts`) was rewritten to build a sparse diff; not run.
 - Likely first-run fixes: unit tests in `✏️editor/🧪️tests/🔬️unit` that depended on `model_edit` side effects; `Unused import` warnings in leaf diffs if the workspace lints deny them.
 
+
+## Wave 3 (verification round) — BLOCKED ON FOUNDATION
+
+Status 2026-10-08 18:37: `🗑️generated/coord/foundation.status` stayed `RED` from 17:35 to 18:36 (the full 60-minute wait the build rule allows;
+errors in `semio-framework-replication` `🔗️causal/🔀️transition/🔁️fold`: missing `semio_framework_value::retirement::owned_retirement`,
+`RetainedCloneGrant`/`RetainedCloneProgress` — the peer's `🌱️value` change). I therefore ran no further cargo call after 17:30.
+
+Done in this round (all syntax-checked with `rustfmt`, none compiled):
+- **First wasm check against the healed framework** (`cd ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model && cargo check -p semio-s-artifact-energy-model --target wasm32-wasip2 --keep-going`,
+  run through the gate as label `energy`, 16:43–16:49): the only errors in the whole dependency closure were 3 × E0432 in `ANY/🚪️io/🦀️.rs`
+  (`semio_framework_plugin::{Analysis, AnalyzeSource, ComposeError, ComposeSource, ComposedArtifact, ComposerEntry, Composition, ErasedComposeSource, IoPayload}`
+  are no longer re-exported at the plugin root). Fixed by importing them from `semio_framework_plugin::io::*` (9 names, 3 `use` lines). That means
+  **zero errors in the diff modules, 293 converted leaves, editor, config/window kinds** at that point (143 warnings, not yet triaged; they
+  include unused imports in converted leaves and must be cleaned once the check is green). The re-check after the io fix was queued in the gate
+  but never ran because the foundation turned RED again.
+- **R15 (per-leaf sum-law test)**: every one of the 297 artifact leaves now has, in its own `🧪️tests/<applied case>/🦀️.rs` (298 files; refused `⛔️` cases excluded),
+  `inverse_diffs_sum_to_the_negative_diff`, which calls `protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await` on the committed
+  vector via the new helper `fixtures::committed(&case())` (`ANY/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/🦀️.rs`).
+
+Still to run when the foundation is GREEN (exact commands, from `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model`, each through
+`"$T/🚦️gate.sh" energy -- …`, one cargo at a time):
+1. `cargo check -p semio-s-artifact-energy-model --target wasm32-wasip2 --message-format=short` → fix.
+2. `cargo test -p semio-s-artifact-energy-model --lib` (incl. `middle_row_law_tests`, the diff unit tests, splice property tests).
+3. `SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test -p semio-s-artifact-energy-model --lib writes_the_committed_vector_when_requested` (regenerates ≈ 600 `🔺️diff/🔣️.json`;
+   expected count = 2 vectors × 297 kinds); verify `git diff --stat` touches only `🔺️diff` files, hand-check a sample (modify, insert, remove, nested list, cascade), rerun step 2 green.
+4. Regenerate the schema catalog (`📚️library/🔣️schema-catalog.json`) with the repo's catalog command.
+Counts (passed/failed tests, fixture files rewritten) are therefore NOT available yet.
+
+## Wave 5 (gate burn-down 6 → 0, no cargo)
+
+Gate: `cd /Users/ueli/Documents/semio && bun ./📜️script.ts verify mutation-outcome-law` (log `🗑️generated/energy-exec/gate.log`, run after the edits):
+**0 breaches mention energy** (53 remain, all other plugins). The 6 R9 breaches of `gate-run-5.log` were `.apply(` call sites inside the diff modules.
+
+- R9: the diff modules' internal writers are no longer called `apply`. `FieldPatch::apply` → `FieldPatch::commit_onto`, `Splice::apply` → `Splice::commit_onto`
+  (patch/entities/splice + their tests); the only `apply` left in the energy diff tree is `MutationDiff::apply(&self, base, ApplyCapability)` of `EnergyModelDiff`,
+  which forwards to `self.model.commit_onto(..)`. `apply_diff` in the energy tree appears only in tests/fixtures helpers and the io text report (io is allowed).
+- `between`: the peer's removal had already stripped every `between` impl from the diff modules, but left a broken remnant (`N], other: &[T; N]) -> Self {…}` in `Slots`) and
+  the dead `longest_increasing` helper; both deleted, `rustfmt` parses all five diff-module files again. The unit test `between_carries_a_snapshot…` became
+  `the_negative_diff_reads_the_base_row_by_row_and_restores_it` (`assert_diff_algebra_inverse_law` over a modify+insert+remove diff).
+  `Splice::replacing`/`ListEdit::replacing`/`Slots::replacing` stay: they build the positional edit of a `replace-*`/reorder payload (cuts/puts of the differing positions), not a snapshot difference.
+- AMB-1 (positional rows): met. Diffs carry `removed: [{index, key}]` (BASE index), `inserted: [{index, row}]` (AFTER index) and keyed `modified` patches; a move is a cut/put pair at
+  base/after coordinates (`ListEdit::moving`); no whole `order` id list exists anywhere (the former whole `layer_material_ids`/`rules` lists are `ListEdit`s). Same coordinate semantics as norm-a's positional API; `absorb` is base-free index arithmetic (`nth_surviving`/`landing`).
+- AMB-2 (derived data central): the diff mints nothing. The two composed children (`structure`/`zones` handles) are constants of the snapshot and no longer re-minted by the diff.
+- AMB-3 (negative diffs read base): every `inverse` reads base values row by row (`Rows::inverse` looks each patched/removed key up in `base`; `Splice::inverse` copies `base[index]`); nothing simulates or applies.
+- No compatibility re-exports were added; the io imports moved to `semio_framework_plugin::io::*` at their callers.
+- Foundation is still RED (last `foundation.status` line: `RED 23:16:26`, unresolved import in `🏪️store/🧾️document/📜️history/💧️hydration`), so no cargo ran; the Wave 3 verification list (wasm check, `cargo test`, `SEMIO_ENERGY_WRITE_FIXTURES=1` fixture regeneration, schema catalog) is still open and unchanged.

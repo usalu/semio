@@ -1,0 +1,25 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "logicalActions": [
+    {
+      "before": "/// 🧹️ Drives a test store's owned close to its terminal-empty witness.\n",
+      "after": "fn physical_test_close_grant() -> RetainedCloneGrant {\n    let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json\")).expect(\"plain physical close policy\");\n    let policy=&fixture[\"physicalCloseGrant\"];\n    RetainedCloneGrant { maximum_items:policy[\"maximumItems\"].as_u64().unwrap() as usize,maximum_copy_bytes:policy[\"maximumCopyBytes\"].as_u64().unwrap() as usize,maximum_capacity_bytes:policy[\"maximumCapacityBytes\"].as_u64().unwrap() as usize,maximum_release_bytes:policy[\"maximumReleaseBytes\"].as_u64().unwrap() as usize,maximum_depth:policy[\"maximumDepth\"].as_u64().unwrap() as usize }\n}\n\n/// 🧹️ Drives a test store's owned close to its terminal-empty witness.\n"
+    },
+    {
+      "before": "    let mut last = RetainedCloneStep::Progress(Default::default());\n    for _ in 0..1 << 24 {",
+      "after": "    let grant = physical_test_close_grant();\n    let mut last = RetainedCloneStep::Progress(Default::default());\n    for _ in 0..1 << 24 {"
+    },
+    {
+      "before": "        let demand = store.close_owned_demands(4_096).expect(\"current independent Store close demands\");\n        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };\n        last = store.close_owned_step(grant)",
+      "after": "        store.close_owned_demands(grant.maximum_copy_bytes).expect(\"current independent Store close frontier\");\n        last = store.close_owned_step(grant)"
+    },
+    {
+      "before": "    let mut original = Some(retirement);\n    for _ in 0..10_000 {",
+      "after": "    let grant = physical_test_close_grant();\n    let mut original = Some(retirement);\n    for _ in 0..10_000 {"
+    },
+    {
+      "before": "        let demand = artifact_retirement_box_demands(owner, 7).expect(\"current original boxed owner demand\");\n        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 7, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };\n        let step = artifact_retirement_box_close_step",
+      "after": "        artifact_retirement_box_demands(owner, grant.maximum_copy_bytes).expect(\"current original boxed owner frontier\");\n        let step = artifact_retirement_box_close_step"
+    }
+  ]
+}

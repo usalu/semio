@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeCellSizes` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::{Grid3dAxisPatch, Grid3dDiff};
+use crate::diff::{Grid3dAxisPatch, Grid3dAxisSize, Grid3dDiff};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::ChangeCellSizes, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -15,7 +15,9 @@ pub fn diff(payload: &super::ChangeCellSizes, base: &Grid3dSnapshot) -> protocol
     if payload.axis.sizes(base) == &payload.sizes {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Axis {} already carries these cell sizes.", payload.axis.label()));
     }
-    let patch = Some(Grid3dAxisPatch::between(payload.axis.sizes(base), &payload.sizes));
+    let current = payload.axis.sizes(base);
+    let sizes = payload.sizes.iter().enumerate().filter(|(index, size)| current.get(*index) != Some(*size)).map(|(index, size)| Grid3dAxisSize { index: index as u32, size: *size }).collect();
+    let patch = Some(Grid3dAxisPatch { length: None, sizes });
     protocol::MutationOutcome::new(match payload.axis {
         Grid3dAxis::X => Grid3dDiff { cell_sizes_x: patch, ..Default::default() },
         Grid3dAxis::Y => Grid3dDiff { cell_sizes_y: patch, ..Default::default() },

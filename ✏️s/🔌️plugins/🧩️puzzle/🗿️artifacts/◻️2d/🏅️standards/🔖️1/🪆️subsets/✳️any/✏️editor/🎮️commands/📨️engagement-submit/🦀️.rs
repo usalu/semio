@@ -3,7 +3,7 @@
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::{puzzle2d_selection_pivot, Puzzle2dActionCtx, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
 use semio_framework_plugin::kernel::Effect;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🤝️ Parses one typed engagement line: `select` / `brush` (utility switch), `fill [<n>]` (activate
 /// the fill tool, optionally retargeting its count), `clear` (empty the live selection), the
@@ -34,7 +34,7 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
             if source.is_empty() || target.is_empty() {
                 false
             } else {
-                crate::editor::puzzle2d::commands::create_edge::create_edge(ctx, Some(&serde_json::json!({ "source": source, "target": target })));
+                crate::editor::puzzle2d::commands::create_edge::create_edge(ctx, Some(&semio_framework_pack_json::json!({ "source": source, "target": target })));
                 true
             }
         }

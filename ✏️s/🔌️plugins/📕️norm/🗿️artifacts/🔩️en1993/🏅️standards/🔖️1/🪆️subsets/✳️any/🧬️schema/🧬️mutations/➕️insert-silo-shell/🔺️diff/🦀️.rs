@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertSiloShell, base: &En1993Snapshot) -> protocol::Mutat
     if base.silo_shells.iter().any(|existing| existing.id == payload.silo_shell.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Silo shell id {} already exists.", payload.silo_shell.id), [payload.silo_shell.id.clone()]);
     }
-    let index = payload.index.min(base.silo_shells.len());
-    protocol::MutationOutcome::new(En1993Diff { silo_shells: En1993SiloShellDelta::insertion(&base.silo_shells, index, payload.silo_shell.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.silo_shells.len());
+    protocol::MutationOutcome::new(En1993Diff { silo_shells: En1993SiloShellDelta::insertion(index, payload.silo_shell.clone()), ..Default::default() })
 }

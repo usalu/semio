@@ -30,6 +30,7 @@ storyGlobs = ["../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐�
 
 [[package.metadata.semio.playground]]
 variant = "cad"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.cad.cad@1/*#editor"
 ports = { react = 6020, wgpu = 6120 }
 

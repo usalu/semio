@@ -52,12 +52,15 @@
   "assumptions": null,
   "constraints": null,
   "complianceRecords": {
-    "added": [],
     "removed": [
-      "compliance-record-a"
+      {
+        "id": "compliance-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "approvals": null,
   "meetings": null,

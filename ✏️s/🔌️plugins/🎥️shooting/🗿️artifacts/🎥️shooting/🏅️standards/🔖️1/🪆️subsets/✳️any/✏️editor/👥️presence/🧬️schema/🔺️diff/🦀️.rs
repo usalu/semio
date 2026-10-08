@@ -39,10 +39,6 @@ impl DiffAlgebra<ShootingPresence> for ShootingPresenceDiff {
         Self { selected_shot_ids: self.selected_shot_ids.as_ref().map(|_| base.selected_shot_ids.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 
-    fn between(base: &ShootingPresence, other: &ShootingPresence) -> Self {
-        Self { selected_shot_ids: (base.selected_shot_ids != other.selected_shot_ids).then(|| other.selected_shot_ids.clone()), camera: (base.camera != other.camera).then(|| other.camera.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }

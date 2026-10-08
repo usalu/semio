@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
@@ -66,19 +67,20 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index: 0, index: 0, keyframe: false }),
         AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index: 1, item: RiffChunk { fourcc: "MORE".into(), data: vec![1] } }),
         AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index: 0 }),
+        AviMutation::SetHdrlExtra(set_hdrl_extra::SetHdrlExtra { chunks: vec![RiffChunk { fourcc: "JUNK".into(), data: vec![0; 4] }] }),
     ];
     for m in variants {
         let mut snap = base.clone();
         let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&m, &snap);
         let expected = protocol::apply_diff(diff.diff(), &snap).unwrap();
-        let returned = apply_avi_mutation(&mut snap, &m);
-        assert_eq!(returned, diff, "apply_avi_mutation must return the SAME diff as Mutation::diff for {m:?}");
+        let returned = apply_mutation(&mut snap, &m);
+        assert_eq!(returned, diff, "apply_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
         let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
         let mut round = snap.clone();
-        apply_avi_mutation(&mut round, &inv[0]);
+        apply_mutation(&mut round, &inv[0]);
         assert_eq!(round, base, "inverse_law failed for {m:?}");
     }
 }
@@ -89,11 +91,11 @@ async fn remove_stream_then_insert_stream_round_trips() {
     base.streams.push(AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![], strl_extra: vec![] });
     let m = AviMutation::RemoveStream(remove_stream::RemoveStream { index: 0 });
     let mut snap = base.clone();
-    apply_avi_mutation(&mut snap, &m);
+    apply_mutation(&mut snap, &m);
     assert_eq!(snap.streams.len(), 1);
     let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
-    apply_avi_mutation(&mut round, &inv[0]);
+    apply_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
 }
 
@@ -162,6 +164,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
             AviMutation::SetChunkKeyframe(_) => "set-chunk-keyframe",
             AviMutation::AddUnknownChunk(_) => "add-unknown-chunk",
             AviMutation::RemoveUnknownChunk(_) => "remove-unknown-chunk",
+            AviMutation::SetHdrlExtra(_) => "set-hdrl-extra",
         }
     }
     let base = base_snapshot();
@@ -177,6 +180,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
         AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index: 0, index: 0, keyframe: false }),
         AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index: 0, item: base.unknown_chunks[0].clone() }),
         AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index: 0 }),
+        AviMutation::SetHdrlExtra(set_hdrl_extra::SetHdrlExtra { chunks: base.hdrl_extra.clone() }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

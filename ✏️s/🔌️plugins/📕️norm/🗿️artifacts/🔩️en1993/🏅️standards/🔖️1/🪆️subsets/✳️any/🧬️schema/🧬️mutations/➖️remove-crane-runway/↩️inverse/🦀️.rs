@@ -4,7 +4,7 @@ use crate::En1993Snapshot;
 pub fn inverse(payload: &RemoveCraneRunway, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
     if payload.index >= base.crane_runways.len() { return Vec::new(); }
-    vec![En1993Mutation::InsertCraneRunway(insert_crane_runway::InsertCraneRunway { index: payload.index, crane_runway: base.crane_runways[payload.index].clone() })]
+    vec![En1993Mutation::InsertCraneRunway(insert_crane_runway::InsertCraneRunway { index: Some(payload.index), crane_runway: base.crane_runways[payload.index].clone() })]
 
     })())
 }

@@ -34,7 +34,9 @@ use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
-pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+#[cfg(test)]
+pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation};
+pub use crate::standards::v2x3::subsets::base::schema::mutations::{Ifc2x3Mutation};
 
 //#region 🔖️Vocabulary
 /// 📐️ `IfcRoot.Name` is attribute 3 of every rooted entity (index 2) — COBie's key column.
@@ -132,6 +134,7 @@ impl Ifc2x3CobieMutation {
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff computed against the PRE-mutation state.
 /// A mutation whose target does not exist, or names a sheet the id does not carry, is reported as an
 /// error message with an empty diff — never applied partially and never silently skipped.
+#[cfg(test)]
 pub fn apply_ifc2x3_cobie_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3CobieMutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let outcome = <Ifc2x3CobieMutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

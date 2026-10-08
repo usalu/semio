@@ -3,18 +3,18 @@
 //! Guards, in the order they run: `mutation.target-missing` (Error), then
 //! `mutation.target-referenced` (Error) while any OTHER combination nests this one as a term.
 use super::DeleteCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff, Fem2dCombinationRemoval};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteCombination, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
-    if !base.combinations.iter().any(|combination| combination.id == payload.id) {
+    let Some(at) = base.combinations.iter().position(|combination| combination.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Combination \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
+    };
     if let Some(rejection) = guards::referenced("Combination", "combination term", &payload.id, guards::combination_referrers(base, &payload.id)) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { removed: vec![Fem2dCombinationRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

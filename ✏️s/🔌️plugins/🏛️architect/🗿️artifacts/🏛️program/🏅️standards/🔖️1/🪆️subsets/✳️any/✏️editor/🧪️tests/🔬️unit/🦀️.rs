@@ -124,7 +124,8 @@ pub(crate) mod context {
         use protocol::Mutation;
         let mut next = base.clone();
         for operation in &emit.config_mutations {
-            next = operation.diff(&next).into_parts().0;
+            let diff = operation.diff(&next).into_parts().0;
+            next = protocol::apply_diff(&diff, &next).expect("config mutation diff");
         }
         next
     }

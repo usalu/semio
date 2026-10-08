@@ -1,4 +1,5 @@
-import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "../🧬️schema/🪪️session-authority-v1/🟦️.ts";
+import { parseDirectorySessionAuthorityJsonV1 } from "../🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
+import { type DirectorySessionAuthorityV1 } from "../🧬️schema/🪪️session-authority-v1/🟦️.ts";
 
 export const DIRECTORY_SESSION_REFRESH_INTERVAL_MS = 5_000;
 /** ⏱️ The first retry delay after a TRANSIENT revalidation failure, doubling per consecutive failure up

@@ -47,7 +47,7 @@ export function testDrawingCanvasWindowOwnershipOracle(): void {
   for (const row of fixture.configMutations) {
     target(fixture.windowInstances, row.windowId, row.windowKindId);
     configs[row.windowId] = applyDrawingCanvasWindowConfigMutation(configs[row.windowId] ?? fixture.baseConfig, row.mutation);
-    configOracle[row.windowId] = applyPatch(structuredClone(configOracle[row.windowId] ?? fixture.baseConfig), [{ op: "replace", path: "", value: row.mutation.config }], false, false).newDocument;
+    configOracle[row.windowId] = applyPatch(structuredClone(configOracle[row.windowId] ?? fixture.baseConfig), [{op:"replace",path:"/viewport",value:row.mutation.viewport},{op:"replace",path:"/framed",value:row.mutation.framed}], false, false).newDocument;
   }
   assert.deepEqual(configs, configOracle);
   assert.notDeepEqual(configs["drawing-left"].viewport, configs["drawing-right"].viewport);

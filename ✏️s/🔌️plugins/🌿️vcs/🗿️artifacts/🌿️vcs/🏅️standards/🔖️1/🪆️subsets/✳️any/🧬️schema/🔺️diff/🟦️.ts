@@ -15,14 +15,26 @@ export interface VcsDiff {
   tags?: VcsTagsDelta;
 }
 
-export interface VcsStringList {
-  values: string[];
+export interface VcsTagRemoval {
+  id: string;
+  index: number;
+}
+
+export interface VcsTagInsertion {
+  index: number;
+  row: string;
+}
+
+export interface VcsTagRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface VcsTagsDelta {
-  added: string[];
-  removed: string[];
-  reordered?: string[];
+  removed: VcsTagRemoval[];
+  inserted: VcsTagInsertion[];
+  moved: VcsTagRelocation[];
 }
 
 
@@ -85,18 +97,25 @@ export function parseVcsDiff(value: unknown, at = "$"): VcsDiff {
   };
 }
 
-export function parseVcsStringList(value: unknown, at = "$"): VcsStringList {
-  const row = vcsVcsDiffGuardObject(value, at);
-  return {
-    values: vcsVcsDiffGuardArray(row["values"], `${at}.values`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.values[${index}]`)),
-  };
+function vcsVcsDiffGuardCount(value: unknown, at: string): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 4294967295) throw new vcsVcsDiffGuardRefusal(at, "uint32 required");
+  return value;
 }
 
 export function parseVcsTagsDelta(value: unknown, at = "$"): VcsTagsDelta {
   const row = vcsVcsDiffGuardObject(value, at);
   return {
-    added: vcsVcsDiffGuardArray(row["added"], `${at}.added`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.added[${index}]`)),
-    removed: vcsVcsDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.removed[${index}]`)),
-    reordered: row["reordered"] === undefined ? undefined : vcsVcsDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: vcsVcsDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => {
+      const entry = vcsVcsDiffGuardObject(item, `${at}.removed[${index}]`);
+      return { id: vcsVcsDiffGuardString(entry["id"], `${at}.removed[${index}].id`), index: vcsVcsDiffGuardCount(entry["index"], `${at}.removed[${index}].index`) };
+    }),
+    inserted: vcsVcsDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => {
+      const entry = vcsVcsDiffGuardObject(item, `${at}.inserted[${index}]`);
+      return { index: vcsVcsDiffGuardCount(entry["index"], `${at}.inserted[${index}].index`), row: vcsVcsDiffGuardString(entry["row"], `${at}.inserted[${index}].row`) };
+    }),
+    moved: vcsVcsDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => {
+      const entry = vcsVcsDiffGuardObject(item, `${at}.moved[${index}]`);
+      return { id: vcsVcsDiffGuardString(entry["id"], `${at}.moved[${index}].id`), from: vcsVcsDiffGuardCount(entry["from"], `${at}.moved[${index}].from`), to: vcsVcsDiffGuardCount(entry["to"], `${at}.moved[${index}].to`) };
+    }),
   };
 }

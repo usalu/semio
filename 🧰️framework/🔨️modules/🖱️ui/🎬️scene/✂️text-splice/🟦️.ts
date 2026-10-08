@@ -382,3 +382,106 @@ export function createTextEditorTypingRunV1(send: (verb: string, reason: TextEdi
   };
 }
 //#endregion ⏱️TextEditorTypingRun
+
+//#region ✂️DraftChangeSet
+/** ✂️ One range of an explicit draft's change set: in the coordinates of the text the draft STARTED from (ascending, never
+ * overlapping), `delete` scalars at `offset` were replaced by `insert`. Offsets and lengths count Unicode scalar values. A change set
+ * is what an explicit-draft host publishes on Apply when the window declares {@link DRAFT_SPLICES_ARGUMENT} as its edit argument:
+ * the editor applies the ranges verbatim instead of comparing the finished draft with its document. */
+export type DraftChangeV1 = { readonly offset: number; readonly delete: number; readonly insert: string };
+
+/** ✂️ The edit argument a window declares to receive the draft's change set (JSON list of {@link DraftChangeV1}) instead of its text. */
+export const DRAFT_SPLICES_ARGUMENT = "splices";
+
+type DraftPieceV1 = { readonly keep: true; readonly base: number; readonly length: number } | { readonly keep: false; readonly base: number; readonly remove: number; readonly insert: readonly string[] };
+
+/** ⌨️ The change set after one more editor step `previous → next` (a typed run, a paste, an undo, a redo — whatever the editor did
+ * to its draft): the step is the editor's own change (the scalars both texts share at either end bound it), folded into the
+ * ranges so far; every range stays in the coordinates of the starting text. */
+export function composeDraftStepV1(changes: readonly DraftChangeV1[], previous: string, next: string): DraftChangeV1[] {
+  const step = textSpliceFromEditV1(previous, next, 0);
+  if (step === null) return changes.map((change) => ({ ...change }));
+  const currentLength = scalars(previous).length;
+  const start = step.start, end = step.start + scalars(step.deleted).length, inserted = scalars(step.insert);
+  const pieces: DraftPieceV1[] = [];
+  let basePosition = 0, covered = 0;
+  for (const change of changes) {
+    if (change.offset > basePosition) {
+      pieces.push({ keep: true, base: basePosition, length: change.offset - basePosition });
+      covered += change.offset - basePosition;
+    }
+    const insert = scalars(change.insert);
+    pieces.push({ keep: false, base: change.offset, remove: change.delete, insert });
+    covered += insert.length;
+    basePosition = change.offset + change.delete;
+  }
+  if (currentLength > covered) pieces.push({ keep: true, base: basePosition, length: currentLength - covered });
+  const out: DraftPieceV1[] = [];
+  let baseNow = 0, placed = false, at = 0;
+  const push = (piece: DraftPieceV1) => {
+    out.push(piece);
+    baseNow = piece.base + (piece.keep ? piece.length : piece.remove);
+  };
+  const place = () => {
+    out.push({ keep: false, base: baseNow, remove: 0, insert: inserted });
+    placed = true;
+  };
+  for (const piece of pieces) {
+    const length = piece.keep ? piece.length : piece.insert.length;
+    const from = at, to = at + length;
+    at = to;
+    if (piece.keep) {
+      const leftEnd = Math.max(from, Math.min(to, start));
+      if (leftEnd > from) push({ keep: true, base: piece.base, length: leftEnd - from });
+      if (!placed && start >= from && start <= to) place();
+      const middleFrom = Math.max(from, start), middleTo = Math.min(to, end);
+      if (middleTo > middleFrom) push({ keep: false, base: piece.base + (middleFrom - from), remove: middleTo - middleFrom, insert: [] });
+      const rightFrom = Math.max(from, end);
+      if (to > rightFrom) push({ keep: true, base: piece.base + (rightFrom - from), length: to - rightFrom });
+    } else {
+      const leftLength = Math.max(0, Math.min(length, start - from)), rightFrom = Math.max(0, Math.min(length, end - from));
+      if (!placed && start >= from && start <= to) {
+        push({ keep: false, base: piece.base, remove: piece.remove, insert: piece.insert.slice(0, leftLength) });
+        place();
+        if (rightFrom < length) push({ keep: false, base: piece.base + piece.remove, remove: 0, insert: piece.insert.slice(rightFrom) });
+      } else {
+        push({ keep: false, base: piece.base, remove: piece.remove, insert: [...piece.insert.slice(0, leftLength), ...piece.insert.slice(rightFrom)] });
+      }
+    }
+  }
+  if (!placed) place();
+  const merged: { base: number; remove: number; insert: string[] }[] = [];
+  let open: { base: number; remove: number; insert: string[] } | null = null;
+  for (const piece of out) {
+    if (piece.keep) {
+      open = null;
+    } else if (open !== null) {
+      open.remove += piece.remove;
+      open.insert.push(...piece.insert);
+    } else {
+      open = { base: piece.base, remove: piece.remove, insert: [...piece.insert] };
+      merged.push(open);
+    }
+  }
+  return merged.filter((change) => change.remove > 0 || change.insert.length > 0).map((change) => ({ offset: change.base, delete: change.remove, insert: change.insert.join("") }));
+}
+
+/** 📦️ The text of a change set on the wire: the JSON list of ranges. */
+export function draftChangesJsonV1(changes: readonly DraftChangeV1[]): string {
+  return JSON.stringify(changes.map((change) => ({ offset: change.offset, delete: change.delete, insert: change.insert })));
+}
+
+/** ✂️ Applies a change set (ranges in the coordinates of `text`) to `text`; `null` when a range leaves the text or overlaps the previous one. */
+export function applyDraftChangesV1(text: string, changes: readonly DraftChangeV1[]): string | null {
+  const hay = scalars(text);
+  const parts: string[] = [];
+  let position = 0;
+  for (const change of changes) {
+    if (change.offset < position || change.offset + change.delete > hay.length) return null;
+    parts.push(hay.slice(position, change.offset).join(""), change.insert);
+    position = change.offset + change.delete;
+  }
+  parts.push(hay.slice(position).join(""));
+  return parts.join("");
+}
+//#endregion ✂️DraftChangeSet

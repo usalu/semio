@@ -2,20 +2,32 @@
 syntax = "proto3";
 package semio.s.norm.din4108.diff;
 
-message Din4108WindowAddition {
-  optional string after = 1;
+message Din4108WindowRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din4108WindowInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din4108WindowRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din4108WindowModification {
-  string key = 1;
+  string id = 1;
   Din4108WindowPatch patch = 2;
 }
 
 message Din4108WindowDelta {
-  repeated string removed = 1;
-  repeated Din4108WindowAddition added = 2;
-  repeated Din4108WindowModification modified = 3;
+  repeated Din4108WindowRemoval removed = 1;
+  repeated Din4108WindowInsertion inserted = 2;
+  repeated Din4108WindowRelocation moved = 3;
+  repeated Din4108WindowModification modified = 4;
 }
 
 message Din4108WindowPatch {
@@ -26,20 +38,32 @@ message Din4108WindowPatch {
   optional double shading_fc = 5;
 }
 
-message Din4108LayerAddition {
-  optional string after = 1;
+message Din4108LayerRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din4108LayerInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din4108LayerRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din4108LayerModification {
-  string key = 1;
+  string id = 1;
   Din4108LayerPatch patch = 2;
 }
 
 message Din4108LayerDelta {
-  repeated string removed = 1;
-  repeated Din4108LayerAddition added = 2;
-  repeated Din4108LayerModification modified = 3;
+  repeated Din4108LayerRemoval removed = 1;
+  repeated Din4108LayerInsertion inserted = 2;
+  repeated Din4108LayerRelocation moved = 3;
+  repeated Din4108LayerModification modified = 4;
 }
 
 message Din4108LayerPatch {
@@ -56,20 +80,32 @@ message Din4108LayerPatch {
   optional bytes segments = 11;
 }
 
-message Din4108ZoneAddition {
-  optional string after = 1;
+message Din4108ZoneRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din4108ZoneInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din4108ZoneRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din4108ZoneModification {
-  string key = 1;
+  string id = 1;
   Din4108ZonePatch patch = 2;
 }
 
 message Din4108ZoneDelta {
-  repeated string removed = 1;
-  repeated Din4108ZoneAddition added = 2;
-  repeated Din4108ZoneModification modified = 3;
+  repeated Din4108ZoneRemoval removed = 1;
+  repeated Din4108ZoneInsertion inserted = 2;
+  repeated Din4108ZoneRelocation moved = 3;
+  repeated Din4108ZoneModification modified = 4;
 }
 
 message Din4108ZonePatch {
@@ -79,20 +115,32 @@ message Din4108ZonePatch {
   Din4108WindowDelta windows = 4;
 }
 
-message Din4108ElementAddition {
-  optional string after = 1;
+message Din4108ElementRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din4108ElementInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din4108ElementRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din4108ElementModification {
-  string key = 1;
+  string id = 1;
   Din4108ElementPatch patch = 2;
 }
 
 message Din4108ElementDelta {
-  repeated string removed = 1;
-  repeated Din4108ElementAddition added = 2;
-  repeated Din4108ElementModification modified = 3;
+  repeated Din4108ElementRemoval removed = 1;
+  repeated Din4108ElementInsertion inserted = 2;
+  repeated Din4108ElementRelocation moved = 3;
+  repeated Din4108ElementModification modified = 4;
 }
 
 message Din4108ElementPatch {
@@ -108,20 +156,32 @@ message Din4108ElementPatch {
   Din4108LayerDelta layers = 10;
 }
 
-message Din4108ThermalBridgeAddition {
-  optional string after = 1;
+message Din4108ThermalBridgeRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din4108ThermalBridgeInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din4108ThermalBridgeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din4108ThermalBridgeModification {
-  string key = 1;
+  string id = 1;
   Din4108ThermalBridgePatch patch = 2;
 }
 
 message Din4108ThermalBridgeDelta {
-  repeated string removed = 1;
-  repeated Din4108ThermalBridgeAddition added = 2;
-  repeated Din4108ThermalBridgeModification modified = 3;
+  repeated Din4108ThermalBridgeRemoval removed = 1;
+  repeated Din4108ThermalBridgeInsertion inserted = 2;
+  repeated Din4108ThermalBridgeRelocation moved = 3;
+  repeated Din4108ThermalBridgeModification modified = 4;
 }
 
 message Din4108ThermalBridgePatch {

@@ -52,27 +52,51 @@ pub struct DrawingStringList {
     pub values: Vec<String>,
 }
 
-/// 🧩 Identified-collection delta for `layers`.
+/// 🧩 Positional delta for the layer TREE (the shape of the framework's `protocol::list_delta`, addressed per container): `removed`
+/// rows carry their BASE address, `inserted` rows their AFTER address, `moved` rows both (a move may cross containers); no order
+/// list and no anchor is ever carried. Every index is a coordinate of the base or of the after child list of its parent.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct DrawingLayersDelta {
-    pub added: Vec<DrawingLayerAddition>,
-    pub removed: Vec<String>,
-    pub patched: Vec<DrawingLayerPatchEntry>,
-    pub reordered: Option<Vec<String>>,
+    pub removed: Vec<DrawingLayerRemoval>,
+    pub inserted: Vec<DrawingLayerInsertion>,
+    pub moved: Vec<DrawingLayerRelocation>,
+    pub modified: Vec<DrawingLayerModification>,
 }
 
-/// ➕️ One inserted layer with its real target location (parent-aware — a bare `Vec<DrawingLayerNode>`
-/// can only ever describe a root-level append, which silently dropped nested `create`/`reorder`
-/// targets into group children; `create-layer`/`reorder-layer`'s handcrafted diffs need the real
-/// address to stay sparse instead of falling back to a whole-snapshot capture).
+/// 📍️ A position in the layer tree: the child list of `parent_id` (the root list when absent) at `index`.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingLayerAddress {
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub parent_id: Option<String>,
+    pub index: usize,
+}
+
+/// ➖️ One removed layer subtree and the BASE address the inverse reinserts it at.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct DrawingLayerAddition {
+pub struct DrawingLayerRemoval {
+    pub id: String,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub parent_id: Option<String>,
+    pub index: usize,
+}
+
+/// ➕️ One inserted layer subtree and its AFTER address.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingLayerInsertion {
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub parent_id: Option<String>,
@@ -80,12 +104,23 @@ pub struct DrawingLayerAddition {
     pub layer: DrawingLayerNode,
 }
 
-/// 🩹 One patched layer entry.
+/// ↕️ One repositioned layer subtree: its BASE address and its AFTER address — the layer itself is never carried.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct DrawingLayerPatchEntry {
+pub struct DrawingLayerRelocation {
+    pub id: String,
+    pub from: DrawingLayerAddress,
+    pub to: DrawingLayerAddress,
+}
+
+/// 🩹 One modified layer entry.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingLayerModification {
     pub id: String,
     pub patch: DrawingLayerPatch,
 }
@@ -130,61 +165,106 @@ pub struct DrawingLayerPatch {
 //#endregion 🔖️DeltaHelpers
 
 //#region 🔖️Apply
-/// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
+/// 🧩 Applies a positional layer delta to a layer tree: leaving rows (removed and moved) are checked at their base address and
+/// lifted out, then every container with entering rows (inserted and moved) is rebuilt slot by slot — entering rows take their
+/// after index, surviving siblings fill the remaining slots in order — and the patches write last.
 pub fn apply_layers_delta(layers: &PagedList<DrawingLayerNode, {usize::MAX}>, delta: &DrawingLayersDelta) -> protocol::MutationApplyResult<PagedList<DrawingLayerNode, {usize::MAX}>> {
-    for (index, id) in delta.removed.iter().enumerate() {
-        if !contains_layer(layers, id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist").at(["removed".to_string(), index.to_string()]));
+    let at_base = |parent: &Option<String>, index: usize, id: &str| container_of(layers, parent.as_deref()).and_then(|children| children.iter().nth(index)).is_some_and(|node| layer_id(node).eq_text(id));
+    let mut leaving: Vec<&str> = Vec::new();
+    for (index, row) in delta.removed.iter().enumerate() {
+        if !at_base(&row.parent_id, row.index, &row.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer is not at its base address").at(["removed".to_string(), index.to_string()]));
         }
-        if delta.removed[..index].contains(id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed more than once").at(["removed".to_string(), index.to_string()]));
+        if leaving.contains(&row.id.as_str()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed or moved more than once").at(["removed".to_string(), index.to_string()]));
         }
+        leaving.push(&row.id);
     }
-    for (index, entry) in delta.patched.iter().enumerate() {
+    for (index, row) in delta.moved.iter().enumerate() {
+        if !at_base(&row.from.parent_id, row.from.index, &row.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer is not at its base address").at(["moved".to_string(), index.to_string()]));
+        }
+        if leaving.contains(&row.id.as_str()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed or moved more than once").at(["moved".to_string(), index.to_string()]));
+        }
+        leaving.push(&row.id);
+    }
+    for (index, entry) in delta.modified.iter().enumerate() {
         if !contains_layer(layers, &entry.id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist").at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "modified layer does not exist").at(["modified".to_string(), index.to_string()]));
         }
-        if delta.removed.contains(&entry.id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
+        if delta.removed.iter().any(|row| row.id == entry.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and modified").at(["modified".to_string(), index.to_string()]));
         }
-        if delta.patched[..index].iter().any(|prior| prior.id == entry.id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is patched more than once").at(["patched".to_string(), index.to_string()]));
+        if delta.modified[..index].iter().any(|prior| prior.id == entry.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is modified more than once").at(["modified".to_string(), index.to_string()]));
         }
     }
     let mut next = layers.clone();
-    for id in &delta.removed {
-        remove_layer_from_tree(&mut next, id);
+    let mut carried: BTreeMap<String, DrawingLayerNode> = BTreeMap::new();
+    for row in &delta.removed {
+        remove_layer_from_tree(&mut next, &row.id);
     }
-    for (position, item) in delta.added.iter().enumerate() {
-        if contains_layer(&next, crate::schema::layer_id(&item.layer)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added layer identity already exists").at(["added".to_string(), position.to_string()]));
-        }
-        let container_len = layer_container_len(&next, item.parent_id.as_deref())
-            .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "added layer parent group does not exist").at(["added".to_string(), position.to_string(), "parentId".to_string()]))?;
-        if item.index > container_len {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("layer insertion index {} exceeds length {container_len}", item.index)).at(["added".to_string(), position.to_string(), "index".to_string()]));
-        }
-        insert_layer(&mut next, item.parent_id.as_deref(), item.index, item.layer.clone());
+    for (index, row) in delta.moved.iter().enumerate() {
+        let node = take_layer(&mut next, &row.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer was removed with an ancestor").at(["moved".to_string(), index.to_string()]))?;
+        carried.insert(row.id.clone(), node);
     }
-    for (index, entry) in delta.patched.iter().enumerate() {
-        apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+    let mut pending: Vec<(Option<String>, Vec<(usize, DrawingLayerNode)>)> = Vec::new();
+    let mut enter = |parent: &Option<String>, index: usize, node: DrawingLayerNode| match pending.iter_mut().find(|(container, _)| container == parent) {
+        Some((_, rows)) => rows.push((index, node)),
+        None => pending.push((parent.clone(), vec![(index, node)])),
+    };
+    for row in &delta.inserted {
+        enter(&row.parent_id, row.index, row.layer.clone());
     }
-    if let Some(order) = &delta.reordered {
-        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|layer| crate::schema::layer_id(layer) == id)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "root layer reorder must be a complete unique permutation").at(["reordered"]));
+    for row in &delta.moved {
+        if let Some(node) = carried.remove(&row.id) {
+            enter(&row.to.parent_id, row.to.index, node);
         }
-        let mut by_id = PagedMap::<DrawingLayerNode, {usize::MAX}>::default();
-        for layer in next {
-            by_id.insert(crate::schema::layer_id(&layer).clone(), layer);
+    }
+    while !pending.is_empty() {
+        let before = pending.len();
+        let mut waiting = Vec::new();
+        for (parent, rows) in std::mem::take(&mut pending) {
+            match container_mut(&mut next, parent.as_deref()) {
+                Some(children) => fill_slots(children, rows)?,
+                None => waiting.push((parent, rows)),
+            }
         }
-        let mut ordered = PagedList::default();
-        for id in order {
-            ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered root layer does not exist").at(["reordered".to_string(), id.clone()]))?);
+        if waiting.len() == before {
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "an entering layer's parent group does not exist").at(["inserted"]));
         }
-        next = ordered;
+        pending = waiting;
+    }
+    for (index, entry) in delta.modified.iter().enumerate() {
+        apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["modified".to_string(), index.to_string()]))?;
     }
     validate_unique_layer_ids(&next)?;
     Ok(next)
+}
+
+/// 🧩 Rebuilds one child list: the entering rows take their after index, the surviving rows fill the free slots in order.
+fn fill_slots(children: &mut PagedList<DrawingLayerNode, {usize::MAX}>, entering: Vec<(usize, DrawingLayerNode)>) -> protocol::MutationApplyResult<()> {
+    let survivors = std::mem::take(children);
+    let after_len = survivors.len() + entering.len();
+    let mut slots: Vec<Option<DrawingLayerNode>> = (0..after_len).map(|_| None).collect();
+    for (index, (at, node)) in entering.into_iter().enumerate() {
+        match slots.get_mut(at) {
+            None => return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "entering layer lies past the end of the after list").at(["inserted".to_string(), index.to_string()])),
+            Some(slot) if slot.is_some() => return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "two layers take the same after index").at(["inserted".to_string(), index.to_string()])),
+            Some(slot) => *slot = Some(node),
+        }
+    }
+    let mut rest = survivors.into_iter();
+    for slot in slots.iter_mut().filter(|slot| slot.is_none()) {
+        *slot = rest.next();
+    }
+    let mut rebuilt = PagedList::default();
+    for node in slots.into_iter().flatten() {
+        rebuilt.push(node);
+    }
+    *children = rebuilt;
+    Ok(())
 }
 
 fn contains_layer(layers: &PagedList<DrawingLayerNode, {usize::MAX}>, id: &(impl Utf8Text + ?Sized)) -> bool {
@@ -211,30 +291,74 @@ fn validate_unique_layer_ids(layers: &PagedList<DrawingLayerNode, {usize::MAX}>)
     Ok(())
 }
 
-fn layer_container_len(layers: &PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>) -> Option<usize> {
+fn container_of<'a>(layers: &'a PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>) -> Option<&'a PagedList<DrawingLayerNode, {usize::MAX}>> {
     match parent_id {
-        None => Some(layers.len()),
+        None => Some(layers),
         Some(parent_id) => layers.iter().find_map(|layer| match layer {
-            DrawingLayerNode::Group(group) if group.base.id == parent_id => Some(group.children.len()),
-            DrawingLayerNode::Group(group) => layer_container_len(&group.children, Some(parent_id)),
+            DrawingLayerNode::Group(group) if group.base.id == parent_id => Some(&group.children),
+            DrawingLayerNode::Group(group) => container_of(&group.children, Some(parent_id)),
             _ => None,
         }),
     }
 }
 
-fn apply_layer_patch_entry(layers: &mut PagedList<DrawingLayerNode, {usize::MAX}>, entry: &DrawingLayerPatchEntry) -> protocol::MutationApplyResult<()> {
+fn container_mut<'a>(layers: &'a mut PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>) -> Option<&'a mut PagedList<DrawingLayerNode, {usize::MAX}>> {
+    let Some(parent_id) = parent_id else { return Some(layers) };
+    for layer in layers.iter_mut() {
+        if let DrawingLayerNode::Group(group) = layer {
+            if group.base.id == parent_id {
+                return Some(&mut group.children);
+            }
+            if let Some(found) = container_mut(&mut group.children, Some(parent_id)) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// 🧩 Lifts the layer `id` (with its subtree) out of the tree.
+fn take_layer(layers: &mut PagedList<DrawingLayerNode, {usize::MAX}>, id: &str) -> Option<DrawingLayerNode> {
+    if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(id)) {
+        return Some(layers.remove(index));
+    }
+    layers.iter_mut().find_map(|layer| match layer {
+        DrawingLayerNode::Group(group) => take_layer(&mut group.children, id),
+        _ => None,
+    })
+}
+
+/// 🧭️ The `(parent id, index)` address of the layer `id`.
+fn address_of(layers: &PagedList<DrawingLayerNode, {usize::MAX}>, id: &str) -> Option<(Option<String>, usize)> {
+    fn walk(list: &PagedList<DrawingLayerNode, {usize::MAX}>, parent: Option<&str>, id: &str) -> Option<(Option<String>, usize)> {
+        for (index, node) in list.iter().enumerate() {
+            if layer_id(node).eq_text(id) {
+                return Some((parent.map(str::to_owned), index));
+            }
+            if let DrawingLayerNode::Group(group) = node {
+                if let Some(found) = walk(&group.children, Some(&layer_id(node).to_string_owner()), id) {
+                    return Some(found);
+                }
+            }
+        }
+        None
+    }
+    walk(layers, None, id)
+}
+
+fn apply_layer_patch_entry(layers: &mut PagedList<DrawingLayerNode, {usize::MAX}>, entry: &DrawingLayerModification) -> protocol::MutationApplyResult<()> {
     let mut result = Ok(());
     if !update_layer_in_tree(layers, &entry.id, &mut |layer| {
         result = apply_layer_patch(layer, &entry.patch);
     }) {
-        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist after structural edits").at([&entry.id]));
+        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "modified layer does not exist after structural edits").at([&entry.id]));
     }
     result
 }
 
 fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) -> protocol::MutationApplyResult<()> {
-    if let Some(patched) = &patch.layer {
-        let replacement = patched.clone();
+    if let Some(modified) = &patch.layer {
+        let replacement = modified.clone();
         if crate::schema::layer_id(&replacement) != crate::schema::layer_id(layer) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layer"]));
         }
@@ -421,293 +545,270 @@ impl DrawingLayerPatch {
 
 type Layers = PagedList<DrawingLayerNode, {usize::MAX}>;
 
-struct Placed<'a> {
+fn ids_of(node: &DrawingLayerNode) -> BTreeSet<String> {
+    let nested: BTreeSet<String> = match node {
+        DrawingLayerNode::Group(group) => group.children.iter().flat_map(ids_of).collect(),
+        _ => BTreeSet::new(),
+    };
+    nested.into_iter().chain(std::iter::once(layer_id(node).to_string_owner())).collect()
+}
+
+/// 🔑️ One row of a per-container list during `absorb`: an inserted subtree, or the arrival of a layer that moved in.
+#[derive(Clone, Debug, PartialEq)]
+struct Slot {
     id: String,
-    parent: Option<String>,
-    index: usize,
-    node: &'a DrawingLayerNode,
+    node: Option<DrawingLayerNode>,
 }
 
-fn flatten<'a>(layers: &'a Layers, parent: Option<&str>, into: &mut Vec<Placed<'a>>) {
-    for (index, node) in layers.iter().enumerate() {
-        let id = layer_id(node).to_string_owner();
-        into.push(Placed { id: id.clone(), parent: parent.map(str::to_owned), index, node });
-        if let DrawingLayerNode::Group(group) = node {
-            flatten(&group.children, Some(&id), into);
-        }
+impl protocol::list_delta::Keyed for Slot {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
     }
 }
 
-fn collect_ids(node: &DrawingLayerNode, into: &mut BTreeSet<String>) {
-    into.insert(layer_id(node).to_string_owner());
-    if let DrawingLayerNode::Group(group) = node {
-        for child in &group.children {
-            collect_ids(child, into);
-        }
-    }
-}
+type ContainerParts = protocol::list_delta::Parts<Slot, protocol::list_delta::NoPatch>;
 
-fn remove_nested(node: &mut DrawingLayerNode, id: &str) -> Option<BTreeSet<String>> {
-    let DrawingLayerNode::Group(group) = node else { return None };
-    if let Some(position) = group.children.iter().position(|child| layer_id(child).eq_text(id)) {
-        let removed = group.children.remove(position);
-        let mut gone = BTreeSet::new();
-        collect_ids(&removed, &mut gone);
-        return Some(gone);
-    }
-    group.children.iter_mut().find_map(|child| remove_nested(child, id))
-}
-
-fn shallow(node: &DrawingLayerNode) -> DrawingLayerNode {
-    let mut copy = node.clone();
-    if let DrawingLayerNode::Group(group) = &mut copy {
-        group.children = PagedList::default();
-    }
-    copy
-}
-
-enum LayerChange {
-    Same,
-    Patch(DrawingLayerPatch),
-    Replace,
-}
-
-fn compare_layers(base: &DrawingLayerNode, other: &DrawingLayerNode) -> LayerChange {
-    let (source, target) = (layer_base(base), layer_base(other));
-    let mut patch = DrawingLayerPatch::default();
-    if source.visible != target.visible {
-        patch.visible = Some(target.visible);
-    }
-    if source.locked != target.locked {
-        patch.locked = Some(target.locked);
-    }
-    if source.name != target.name {
-        patch.name = Some(target.name.to_string_owner());
-    }
-    if source.opacity != target.opacity {
-        patch.opacity = Some(target.opacity);
-    }
-    if source.blend_mode != target.blend_mode {
-        patch.blend_mode = Some(target.blend_mode.to_string_owner());
-    }
-    if source.attributes.fill_rule != target.attributes.fill_rule {
-        patch.fill_rule = Some(target.attributes.fill_rule);
-    }
-    if source.transform != target.transform {
-        patch.transform = Some(target.transform.clone());
-    }
-    if source.attributes.fill != target.attributes.fill {
-        patch.fill = Some(DrawingFillPatch { value: target.attributes.fill.clone() });
-    }
-    if source.attributes.stroke != target.attributes.stroke {
-        patch.stroke = Some(DrawingStrokePatch { value: target.attributes.stroke.clone() });
-    }
-    match (base, other) {
-        (DrawingLayerNode::Group(left), DrawingLayerNode::Group(right)) if left.isolation != right.isolation => patch.isolation = Some(right.isolation),
-        (DrawingLayerNode::Boolean(left), DrawingLayerNode::Boolean(right)) if left.operation != right.operation => patch.boolean_operation = Some(right.operation.to_string_owner()),
-        (DrawingLayerNode::Trace(left), DrawingLayerNode::Trace(right)) if left.params != right.params => patch.trace_params = Some(right.params.clone()),
-        (DrawingLayerNode::Path(left), DrawingLayerNode::Path(right)) if !left.segments.iter().eq(right.segments.iter()) => patch.path_segments = Some(right.segments.clone()),
-        (DrawingLayerNode::Text(left), DrawingLayerNode::Text(right)) => {
-            if left.content != right.content {
-                patch.text_content = Some(right.content.to_string_owner());
+/// 🧹 Drops the move rows that leave their layer exactly where the surviving siblings already put it: a move inside one container
+/// whose base index minus the other leaving rows before it equals its after index minus the other entering rows before it.
+fn without_identity_moves(moved: Vec<DrawingLayerRelocation>, removed: &[DrawingLayerRemoval], inserted: &[DrawingLayerInsertion]) -> Vec<DrawingLayerRelocation> {
+    let mut kept = moved;
+    loop {
+        let identity = kept.iter().position(|row| {
+            if row.from.parent_id != row.to.parent_id {
+                return false;
             }
-            if left.size != right.size {
-                patch.text_size = Some(right.size);
+            let container = &row.from.parent_id;
+            let others = kept.iter().filter(|other| other.id != row.id);
+            let leaving = removed.iter().filter(|gone| gone.parent_id == *container && gone.index < row.from.index).count() + others.clone().filter(|other| other.from.parent_id == *container && other.from.index < row.from.index).count();
+            let entering = inserted.iter().filter(|born| born.parent_id == *container && born.index < row.to.index).count() + others.filter(|other| other.to.parent_id == *container && other.to.index < row.to.index).count();
+            row.from.index + entering == row.to.index + leaving
+        });
+        match identity {
+            Some(at) => {
+                kept.remove(at);
+            }
+            None => return kept,
+        }
+    }
+}
+
+/// 🔎️ Finds the group `id` inside a set of inserted subtrees, mutably.
+fn group_children_mut<'a>(inserted: &'a mut [DrawingLayerInsertion], id: &str) -> Option<&'a mut Layers> {
+    inserted.iter_mut().find_map(|row| match &mut row.layer {
+        DrawingLayerNode::Group(group) => {
+            if group.base.id == id {
+                Some(&mut group.children)
+            } else {
+                container_mut(&mut group.children, Some(id))
             }
         }
-        _ => {}
+        _ => None,
+    })
+}
+
+/// 🩹 Applies `patch` to the layer `id` somewhere inside `node`'s subtree.
+fn patch_inside(node: &mut DrawingLayerNode, entry: &DrawingLayerModification) -> bool {
+    if layer_id(node).eq_text(&entry.id) {
+        return apply_layer_patch(node, &entry.patch).is_ok();
     }
-    let mut check = shallow(base);
-    if apply_layer_patch(&mut check, &patch).is_err() || check != shallow(other) {
-        return LayerChange::Replace;
-    }
-    if patch.is_empty() {
-        LayerChange::Same
-    } else {
-        LayerChange::Patch(patch)
+    match node {
+        DrawingLayerNode::Group(group) => group.children.iter_mut().any(|child| patch_inside(child, entry)),
+        _ => false,
     }
 }
 
 impl DrawingLayersDelta {
     /// 🕳️ Whether the delta changes nothing.
     pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.patched.iter().all(|entry| entry.patch.is_empty()) && self.reordered.is_none()
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| entry.patch.is_empty())
     }
 
     fn normalize(&mut self) {
-        self.removed.sort();
-        self.removed.dedup();
-        self.patched.sort_by(|left, right| left.id.cmp(&right.id));
+        self.modified.sort_by(|left, right| left.id.cmp(&right.id));
     }
 
-    fn drop_subtree(&mut self, gone: &mut BTreeSet<String>) {
-        while let Some(nested) = self.added.iter().position(|entry| entry.parent_id.as_ref().is_some_and(|parent| gone.contains(parent))) {
-            let entry = self.added.remove(nested);
-            collect_ids(&entry.layer, gone);
+    /// 🧱️ The per-container lists of the delta: a leaving row (removed or moved out) is a `removed` entry of its container; an
+    /// entering row (inserted or moved in) an `inserted` entry of its container.
+    fn container_parts(&self) -> BTreeMap<Option<String>, ContainerParts> {
+        let mut parts: BTreeMap<Option<String>, ContainerParts> = BTreeMap::new();
+        for row in &self.removed {
+            parts.entry(row.parent_id.clone()).or_default().removed.push((row.id.clone(), row.index));
         }
-        self.patched.retain(|entry| !gone.contains(&entry.id));
+        for row in &self.moved {
+            parts.entry(row.from.parent_id.clone()).or_default().removed.push((row.id.clone(), row.from.index));
+            parts.entry(row.to.parent_id.clone()).or_default().inserted.push((row.to.index, Slot { id: row.id.clone(), node: None }));
+        }
+        for row in &self.inserted {
+            parts.entry(row.parent_id.clone()).or_default().inserted.push((row.index, Slot { id: layer_id(&row.layer).to_string_owner(), node: Some(row.layer.clone()) }));
+        }
+        parts
     }
 
-    fn cancel_added(&mut self, id: &str) -> bool {
-        if let Some(at) = self.added.iter().position(|entry| layer_id(&entry.layer).eq_text(id)) {
-            let entry = self.added.remove(at);
-            for later in self.added[at..].iter_mut().filter(|later| later.parent_id == entry.parent_id && later.index > entry.index) {
-                later.index -= 1;
+    /// 🧩 Folds the edits of `later` that reach INTO subtrees this delta inserts straight into those subtrees: a mid-state container
+    /// that does not exist in the base cannot carry a base coordinate. The leaving rows are lifted out of their containers first
+    /// (every index is a mid coordinate, so one container's rows go from the highest index down), then the entering rows take their
+    /// after slots. A layer that moves from the base INTO a subtree inserted here cannot be expressed and stays a move row, which
+    /// then refuses at apply.
+    fn fold_into_inserted(&mut self, later: &mut Self) {
+        let territory: BTreeSet<String> = self.inserted.iter().flat_map(|row| ids_of(&row.layer)).collect();
+        let inside = |parent: &Option<String>| parent.as_deref().is_some_and(|parent| territory.contains(parent));
+        let mut leaving: BTreeMap<String, Vec<(usize, String, bool)>> = BTreeMap::new();
+        for row in std::mem::take(&mut later.removed) {
+            if inside(&row.parent_id) {
+                leaving.entry(row.parent_id.clone().unwrap_or_default()).or_default().push((row.index, row.id, true));
+            } else {
+                later.removed.push(row);
             }
-            let mut gone = BTreeSet::new();
-            collect_ids(&entry.layer, &mut gone);
-            self.drop_subtree(&mut gone);
-            return true;
         }
-        let Some(mut gone) = self.added.iter_mut().find_map(|entry| remove_nested(&mut entry.layer, id)) else { return false };
-        self.drop_subtree(&mut gone);
-        true
+        let mut leaving_moves = Vec::new();
+        for row in std::mem::take(&mut later.moved) {
+            if inside(&row.from.parent_id) {
+                leaving.entry(row.from.parent_id.clone().unwrap_or_default()).or_default().push((row.from.index, row.id.clone(), false));
+                leaving_moves.push(row);
+            } else {
+                later.moved.push(row);
+            }
+        }
+        let mut lifted: BTreeMap<String, DrawingLayerNode> = BTreeMap::new();
+        for (container, mut rows) in leaving {
+            rows.sort_by(|left, right| right.0.cmp(&left.0));
+            let Some(children) = group_children_mut(&mut self.inserted, &container) else { continue };
+            for (index, id, removed) in rows {
+                if children.iter().nth(index).is_some_and(|node| layer_id(node).eq_text(&id)) {
+                    let node = children.remove(index);
+                    if !removed {
+                        lifted.insert(id, node);
+                    }
+                }
+            }
+        }
+        let mut entering: BTreeMap<String, Vec<(usize, DrawingLayerNode)>> = BTreeMap::new();
+        for row in leaving_moves {
+            match lifted.remove(&row.id) {
+                Some(node) if inside(&row.to.parent_id) => entering.entry(row.to.parent_id.clone().unwrap_or_default()).or_default().push((row.to.index, node)),
+                Some(node) => later.inserted.push(DrawingLayerInsertion { parent_id: row.to.parent_id, index: row.to.index, layer: node }),
+                None => later.moved.push(row),
+            }
+        }
+        for insertion in std::mem::take(&mut later.inserted) {
+            if inside(&insertion.parent_id) {
+                entering.entry(insertion.parent_id.clone().unwrap_or_default()).or_default().push((insertion.index, insertion.layer));
+            } else {
+                later.inserted.push(insertion);
+            }
+        }
+        for (container, rows) in entering {
+            if let Some(children) = group_children_mut(&mut self.inserted, &container) {
+                let _ = fill_slots(children, rows);
+            }
+        }
     }
 
-    /// ➕️ Composes `self` (base→mid) with `other` (mid→after): create∘delete cancels, patch∘delete drops the patch,
-    /// delete∘create keeps both, patch∘patch merges per layer, and a later root reorder supersedes an earlier one.
-    fn absorb(&mut self, other: Self) {
-        for id in other.removed {
-            if self.cancel_added(&id) {
+    /// ➕️ Composes `self` (base→mid) with `later` (mid→after): per container the framework's positional algebra coalesces the
+    /// rows (insert∘remove cancels, insert∘move lands at its final slot, move∘move is one move, move∘remove removes at the base
+    /// address, remove∘insert of one id is a replacement); a layer that left one container and entered another stays one move row.
+    fn absorb(&mut self, mut later: Self) {
+        self.fold_into_inserted(&mut later);
+        let carried: BTreeMap<String, DrawingLayerNode> = self.inserted.iter().map(|row| (layer_id(&row.layer).to_string_owner(), row.layer.clone())).collect();
+        let mut right = later.container_parts();
+        let mut combined: BTreeMap<Option<String>, ContainerParts> = BTreeMap::new();
+        let mut left = self.container_parts();
+        let containers: BTreeSet<Option<String>> = left.keys().chain(right.keys()).cloned().collect();
+        for container in containers {
+            let mut parts = left.remove(&container).unwrap_or_default();
+            parts.absorb(right.remove(&container).unwrap_or_default());
+            combined.insert(container, parts);
+        }
+        let mut leaving: Vec<(Option<String>, String, usize)> = Vec::new();
+        let mut entering: Vec<(Option<String>, usize, Slot)> = Vec::new();
+        for (container, parts) in combined {
+            leaving.extend(parts.removed.into_iter().map(|(id, index)| (container.clone(), id, index)));
+            entering.extend(parts.inserted.into_iter().map(|(index, slot)| (container.clone(), index, slot)));
+        }
+        let mut inserted = Vec::new();
+        let mut moved = Vec::new();
+        for (container, index, slot) in entering {
+            match slot.node {
+                Some(layer) => inserted.push(DrawingLayerInsertion { parent_id: container, index, layer }),
+                None => {
+                    if let Some(at) = leaving.iter().position(|(_, id, _)| *id == slot.id) {
+                        let (from_parent, id, from_index) = leaving.remove(at);
+                        moved.push(DrawingLayerRelocation { id, from: DrawingLayerAddress { parent_id: from_parent, index: from_index }, to: DrawingLayerAddress { parent_id: container, index } });
+                    } else if let Some(layer) = carried.get(&slot.id) {
+                        inserted.push(DrawingLayerInsertion { parent_id: container, index, layer: layer.clone() });
+                    }
+                }
+            }
+        }
+        let removed: Vec<DrawingLayerRemoval> = leaving.into_iter().map(|(parent_id, id, index)| DrawingLayerRemoval { id, parent_id, index }).collect();
+        let moved = without_identity_moves(moved, &removed, &inserted);
+        let born: BTreeSet<String> = carried.keys().cloned().chain(inserted.iter().flat_map(|row| ids_of(&row.layer))).collect();
+        let gone: BTreeSet<&str> = removed.iter().map(|row| row.id.as_str()).filter(|id| !inserted.iter().any(|row| layer_id(&row.layer).eq_text(*id))).collect();
+        let mut modified = std::mem::take(&mut self.modified);
+        modified.retain(|entry| !gone.contains(entry.id.as_str()));
+        for entry in later.modified {
+            if gone.contains(entry.id.as_str()) {
                 continue;
             }
-            self.patched.retain(|entry| entry.id != id);
-            if !self.removed.contains(&id) {
-                self.removed.push(id);
+            if born.contains(&entry.id) {
+                inserted.iter_mut().any(|row| patch_inside(&mut row.layer, &entry));
+                continue;
+            }
+            match modified.iter_mut().find(|existing| existing.id == entry.id) {
+                Some(existing) => existing.patch.absorb(entry.patch),
+                None => modified.push(entry),
             }
         }
-        self.added.extend(other.added);
-        for incoming in other.patched {
-            match self.patched.iter_mut().find(|entry| entry.id == incoming.id) {
-                Some(existing) => existing.patch.absorb(incoming.patch),
-                None => self.patched.push(incoming),
-            }
-        }
-        if other.reordered.is_some() {
-            self.reordered = other.reordered;
-        }
+        *self = Self { removed, inserted, moved, modified };
         self.normalize();
     }
 
-    /// 🔁️ The negative delta read from the BASE layer tree: added roots are removed, removed roots are re-inserted at
-    /// their base address in ascending order, patches restore the base fields, a root reorder restores the base order.
+    /// 🔁️ The negative delta, read row by row from the BASE tree: inserted rows are removed at their after address, removed rows
+    /// are reinserted at their base address with the subtree the base holds there, moves run backwards, patches restore the base
+    /// fields. Nothing is applied or simulated.
     fn inverse(&self, base: &Layers) -> Self {
-        let mut placed = Vec::new();
-        flatten(base, None, &mut placed);
-        let by_id: BTreeMap<&str, &Placed> = placed.iter().map(|entry| (entry.id.as_str(), entry)).collect();
-        let mut added_ids = BTreeSet::new();
-        for entry in &self.added {
-            collect_ids(&entry.layer, &mut added_ids);
-        }
-        let removed = self.added.iter().filter(|entry| entry.parent_id.as_ref().is_none_or(|parent| !added_ids.contains(parent))).map(|entry| layer_id(&entry.layer).to_string_owner()).collect();
-        let covered = |entry: &&Placed| {
-            let mut parent = entry.parent.as_deref();
-            while let Some(id) = parent {
-                if self.removed.iter().any(|removed| removed == id) {
-                    return false;
-                }
-                parent = by_id.get(id).and_then(|ancestor| ancestor.parent.as_deref());
-            }
-            true
-        };
-        let mut restored: Vec<&Placed> = self.removed.iter().filter_map(|id| by_id.get(id.as_str()).copied()).filter(covered).collect();
-        restored.sort_by(|left, right| (&left.parent, left.index).cmp(&(&right.parent, right.index)));
-        let added = restored.into_iter().map(|entry| DrawingLayerAddition { parent_id: entry.parent.clone(), index: entry.index, layer: entry.node.clone() }).collect();
-        let patched = self.patched.iter().filter(|entry| !added_ids.contains(&entry.id)).filter_map(|entry| by_id.get(entry.id.as_str()).map(|source| DrawingLayerPatchEntry { id: entry.id.clone(), patch: entry.patch.inverse(source.node) })).collect();
-        let reordered = self.reordered.as_ref().map(|_| base.iter().map(|layer| layer_id(layer).to_string_owner()).collect());
-        let mut inverse = Self { added, removed, patched, reordered };
+        let inserted_ids: BTreeSet<String> = self.inserted.iter().flat_map(|row| ids_of(&row.layer)).collect();
+        let removed = self
+            .inserted
+            .iter()
+            .filter(|row| row.parent_id.as_ref().is_none_or(|parent| !inserted_ids.contains(parent)))
+            .map(|row| DrawingLayerRemoval { id: layer_id(&row.layer).to_string_owner(), parent_id: row.parent_id.clone(), index: row.index })
+            .collect();
+        let inserted = self
+            .removed
+            .iter()
+            .filter_map(|row| container_of(base, row.parent_id.as_deref()).and_then(|children| children.iter().nth(row.index)).map(|node| DrawingLayerInsertion { parent_id: row.parent_id.clone(), index: row.index, layer: node.clone() }))
+            .collect();
+        let moved = self.moved.iter().map(|row| DrawingLayerRelocation { id: row.id.clone(), from: row.to.clone(), to: row.from.clone() }).collect();
+        let modified = self
+            .modified
+            .iter()
+            .filter(|entry| !inserted_ids.contains(&entry.id))
+            .filter_map(|entry| find_node(base, &entry.id).map(|source| DrawingLayerModification { id: entry.id.clone(), patch: entry.patch.inverse(source) }))
+            .collect();
+        let mut inverse = Self { removed, inserted, moved, modified };
         inverse.normalize();
         inverse
     }
+}
 
-    /// 🧭️ The delta from `base` to `other`: absent ids are removed, new ids added, moved or kind-changed layers
-    /// removed and re-added, the rest patched field by field; a changed root order is a full root reorder.
-    fn between(base: &Layers, other: &Layers) -> Self {
-        let (mut base_placed, mut other_placed) = (Vec::new(), Vec::new());
-        flatten(base, None, &mut base_placed);
-        flatten(other, None, &mut other_placed);
-        let base_by: BTreeMap<&str, &Placed> = base_placed.iter().map(|entry| (entry.id.as_str(), entry)).collect();
-        let other_by: BTreeMap<&str, &Placed> = other_placed.iter().map(|entry| (entry.id.as_str(), entry)).collect();
-        let mut moved = BTreeSet::new();
-        let mut changes = BTreeMap::new();
-        for entry in &other_placed {
-            let Some(source) = base_by.get(entry.id.as_str()) else { continue };
-            if source.parent != entry.parent || std::mem::discriminant(source.node) != std::mem::discriminant(entry.node) {
-                moved.insert(entry.id.clone());
-                continue;
-            }
-            match compare_layers(source.node, entry.node) {
-                LayerChange::Replace if matches!(entry.node, DrawingLayerNode::Group(_)) => {
-                    moved.insert(entry.id.clone());
-                }
-                change => {
-                    changes.insert(entry.id.clone(), change);
-                }
-            }
+fn find_node<'a>(layers: &'a Layers, id: &str) -> Option<&'a DrawingLayerNode> {
+    layers.iter().find_map(|node| {
+        if layer_id(node).eq_text(id) {
+            return Some(node);
         }
-        let parents: BTreeSet<&Option<String>> = other_placed.iter().map(|entry| &entry.parent).collect();
-        let mut reorder_root = false;
-        for parent in parents {
-            let stable = |entries: &[Placed], counterpart: &BTreeMap<&str, &Placed>| -> Vec<String> {
-                entries.iter().filter(|entry| &entry.parent == parent && !moved.contains(&entry.id) && counterpart.get(entry.id.as_str()).is_some_and(|other| &other.parent == parent)).map(|entry| entry.id.clone()).collect()
-            };
-            let (before, after) = (stable(&base_placed, &other_by), stable(&other_placed, &base_by));
-            if before != after {
-                match parent {
-                    None => reorder_root = true,
-                    Some(_) => moved.extend(after),
-                }
-            }
+        match node {
+            DrawingLayerNode::Group(group) => find_node(&group.children, id),
+            _ => None,
         }
-        let mut delta = Self::default();
-        fn walk_removed(list: &Layers, other_by: &BTreeMap<&str, &Placed>, moved: &BTreeSet<String>, into: &mut Vec<String>) {
-            for node in list {
-                let id = layer_id(node).to_string_owner();
-                if !other_by.contains_key(id.as_str()) || moved.contains(&id) {
-                    into.push(id);
-                } else if let DrawingLayerNode::Group(group) = node {
-                    walk_removed(&group.children, other_by, moved, into);
-                }
-            }
-        }
-        walk_removed(base, &other_by, &moved, &mut delta.removed);
-        fn walk_other(list: &Layers, parent: Option<&str>, base_by: &BTreeMap<&str, &Placed>, moved: &BTreeSet<String>, changes: &mut BTreeMap<String, LayerChange>, into: &mut DrawingLayersDelta) {
-            for (index, node) in list.iter().enumerate() {
-                let id = layer_id(node).to_string_owner();
-                if moved.contains(&id) || !base_by.contains_key(id.as_str()) {
-                    into.added.push(DrawingLayerAddition { parent_id: parent.map(str::to_owned), index, layer: node.clone() });
-                    continue;
-                }
-                match changes.remove(&id) {
-                    Some(LayerChange::Patch(patch)) => into.patched.push(DrawingLayerPatchEntry { id: id.clone(), patch }),
-                    Some(LayerChange::Replace) => into.patched.push(DrawingLayerPatchEntry { id: id.clone(), patch: DrawingLayerPatch { layer: Some(node.clone()), ..Default::default() } }),
-                    _ => {}
-                }
-                if let DrawingLayerNode::Group(group) = node {
-                    walk_other(&group.children, Some(&id), base_by, moved, changes, into);
-                }
-            }
-        }
-        walk_other(other, None, &base_by, &moved, &mut changes, &mut delta);
-        delta.added.sort_by(|left, right| (&left.parent_id, left.index).cmp(&(&right.parent_id, right.index)));
-        if reorder_root {
-            delta.reordered = Some(other.iter().map(|layer| layer_id(layer).to_string_owner()).collect());
-        }
-        delta.normalize();
-        delta
-    }
+    })
 }
 
 impl DrawingAssetsDelta {
     /// 🔁️ The entries that restore the BASE value of every key this delta touches.
     fn inverse(&self, base: &PagedMap<DrawingImageAsset, {usize::MAX}>) -> Self {
         Self { entries: self.entries.keys().map(|key| (key.clone(), base.get(key).cloned())).collect() }
-    }
-
-    /// 🧭️ The entries that turn `base` into `other`.
-    fn between(base: &PagedMap<DrawingImageAsset, {usize::MAX}>, other: &PagedMap<DrawingImageAsset, {usize::MAX}>) -> Self {
-        let keys: BTreeSet<String> = base.keys().chain(other.keys()).map(|key| key.to_string_owner()).collect();
-        Self { entries: keys.into_iter().filter(|key| base.get(key) != other.get(key)).map(|key| (key.clone(), other.get(&key).cloned())).collect() }
     }
 }
 
@@ -778,19 +879,6 @@ impl protocol::DiffAlgebra<DrawingSnapshot> for DrawingDiff {
         }
     }
 
-    fn between(base: &DrawingSnapshot, other: &DrawingSnapshot) -> Self {
-        let layers = DrawingLayersDelta::between(&base.layers, &other.layers);
-        let assets = DrawingAssetsDelta::between(&base.assets, &other.assets);
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.to_string_owner()),
-            id: (base.id != other.id).then(|| other.id.to_string_owner()),
-            title: (base.title != other.title).then(|| other.title.as_ref().map(|title| title.to_string_owner())),
-            layers: (!layers.is_empty()).then_some(layers),
-            assets: (!assets.entries.is_empty()).then_some(assets),
-            artboard: (base.artboard != other.artboard).then(|| other.artboard.clone()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.id.is_none() && self.title.is_none() && self.artboard.is_none() && self.layers.as_ref().is_none_or(DrawingLayersDelta::is_empty) && self.assets.as_ref().is_none_or(|assets| assets.entries.is_empty())
     }
@@ -829,8 +917,8 @@ pub fn diff_set_layer_blend_mode(layer_id: &(impl std::fmt::Display + ?Sized), b
 
 /// ✏️ Several paths' geometry patches in one sparse delta, in the given order.
 pub fn diff_set_path_geometries<S: IntoIterator<Item = crate::PathSegment>>(entries: impl IntoIterator<Item = (String, S)>) -> DrawingDiff {
-    let patched = entries.into_iter().map(|(id, segments)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { path_segments: Some(segments.into_iter().collect()), ..Default::default() } }).collect();
-    DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
+    let modified = entries.into_iter().map(|(id, segments)| DrawingLayerModification { id, patch: DrawingLayerPatch { path_segments: Some(segments.into_iter().collect()), ..Default::default() } }).collect();
+    DrawingDiff { layers: Some(DrawingLayersDelta { modified, ..Default::default() }), ..Default::default() }
 }
 
 
@@ -844,27 +932,36 @@ pub fn diff_set_boolean_operation(layer_id: &(impl std::fmt::Display + ?Sized), 
 
 
 
-/// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.
-pub fn diff_create_layer(parent_id: Option<&PagedUtf8<{usize::MAX}>>, index: usize, layer: DrawingLayerNode) -> DrawingDiff {
-    DrawingDiff { layers: Some(DrawingLayersDelta { added: vec![DrawingLayerAddition { parent_id: parent_id.map(PagedUtf8::to_string_owner), index, layer }], ..Default::default() }), ..Default::default() }
+/// 🌱️ Layer insertion into `parent_id` (root when `None`) at the after index `index` (clamped to the end of the child list).
+pub fn diff_create_layer(base: &PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&PagedUtf8<{usize::MAX}>>, index: usize, layer: DrawingLayerNode) -> DrawingDiff {
+    let parent = parent_id.map(PagedUtf8::to_string_owner);
+    let length = container_of(base, parent.as_deref()).map_or(0, |children| children.len());
+    DrawingDiff { layers: Some(DrawingLayersDelta { inserted: vec![DrawingLayerInsertion { parent_id: parent, index: index.min(length), layer }], ..Default::default() }), ..Default::default() }
 }
 
-/// 🔃 Move an existing layer to a new (parent, index) address — remove-then-insert, both sparse.
-pub fn diff_reorder_layer(layer_id: &(impl std::fmt::Display + ?Sized), parent_id: Option<&PagedUtf8<{usize::MAX}>>, index: usize, layer: DrawingLayerNode) -> DrawingDiff {
-    DrawingDiff { layers: Some(DrawingLayersDelta { removed: vec![layer_id.to_string()], added: vec![DrawingLayerAddition { parent_id: parent_id.map(PagedUtf8::to_string_owner), index, layer }], ..Default::default() }), ..Default::default() }
+/// 🔃 Move the layer `layer_id` to the after index `index` of `parent_id`'s child list — one tree-aware move row from its base
+/// address, never the layer itself. Empty when the layer is not in `base`.
+pub fn diff_reorder_layer(base: &PagedList<DrawingLayerNode, {usize::MAX}>, layer_id: &(impl std::fmt::Display + ?Sized), parent_id: Option<&PagedUtf8<{usize::MAX}>>, index: usize) -> DrawingDiff {
+    let id = layer_id.to_string();
+    let Some((from_parent, from_index)) = address_of(base, &id) else { return DrawingDiff::default() };
+    let parent = parent_id.map(PagedUtf8::to_string_owner);
+    let length = container_of(base, parent.as_deref()).map_or(0, |children| children.len());
+    let room = if parent == from_parent { length.saturating_sub(1) } else { length };
+    DrawingDiff {
+        layers: Some(DrawingLayersDelta {
+            moved: vec![DrawingLayerRelocation { id, from: DrawingLayerAddress { parent_id: from_parent, index: from_index }, to: DrawingLayerAddress { parent_id: parent, index: index.min(room) } }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
 }
 
-/// ➖️ Layer remove.
-pub fn diff_remove_layer(layer_id: &(impl std::fmt::Display + ?Sized)) -> DrawingDiff {
-    DrawingDiff { layers: Some(DrawingLayersDelta { removed: vec![layer_id.to_string()], ..Default::default() }), ..Default::default() }
+/// ➖️ Layer remove: one removal row at the layer's base address. Empty when the layer is not in `base`.
+pub fn diff_remove_layer(base: &PagedList<DrawingLayerNode, {usize::MAX}>, layer_id: &(impl std::fmt::Display + ?Sized)) -> DrawingDiff {
+    let id = layer_id.to_string();
+    let Some((parent_id, index)) = address_of(base, &id) else { return DrawingDiff::default() };
+    DrawingDiff { layers: Some(DrawingLayersDelta { removed: vec![DrawingLayerRemoval { id, parent_id, index }], ..Default::default() }), ..Default::default() }
 }
-
-/// 🔃 Root reorder by id list.
-pub fn diff_reorder_layers(order: Vec<String>) -> DrawingDiff {
-    DrawingDiff { layers: Some(DrawingLayersDelta { reordered: Some(order), ..Default::default() }), ..Default::default() }
-}
-
-
 
 /// 🗂️ Assets delta helper.
 pub fn diff_assets(entries: DrawingAssetsDelta) -> DrawingDiff {
@@ -894,8 +991,8 @@ pub fn diff_set_layer_transform(layer_id: &(impl std::fmt::Display + ?Sized), tr
 
 /// ↔️ Several layers' transform patches in one sparse delta, in the given order.
 pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, crate::DrawingTransform)>) -> DrawingDiff {
-    let patched = entries.into_iter().map(|(id, transform)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { transform: Some(transform), ..Default::default() } }).collect();
-    DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
+    let modified = entries.into_iter().map(|(id, transform)| DrawingLayerModification { id, patch: DrawingLayerPatch { transform: Some(transform), ..Default::default() } }).collect();
+    DrawingDiff { layers: Some(DrawingLayersDelta { modified, ..Default::default() }), ..Default::default() }
 }
 
 /// 🎨 Layer fill patch.
@@ -914,5 +1011,9 @@ pub fn diff_set_trace_params(layer_id: &(impl std::fmt::Display + ?Sized), param
 }
 
 pub(crate) fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
-    DrawingDiff { layers: Some(DrawingLayersDelta { patched: vec![DrawingLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
+    DrawingDiff { layers: Some(DrawingLayersDelta { modified: vec![DrawingLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

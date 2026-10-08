@@ -144,7 +144,7 @@ fn a_missing_target_is_refused_and_changes_nothing() {
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.target-missing"), "a missing slot must be named");
     assert_eq!(outcome.diff(), &Wfc3dDiff::default(), "a refusal authors no delta");
     let mut projection = base.clone();
-    apply_wfc3d_mutation(&mut projection, &delete_slot("ghost".into())).expect("an empty delta still applies");
+    vcs::apply_mutation(&projection, &delete_slot("ghost".into())).map(|(applied_state, _)| { projection = applied_state; }).expect("an empty delta still applies");
     assert_eq!(projection, base, "a refused mutation must leave the document untouched");
 }
 

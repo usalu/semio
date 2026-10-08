@@ -111,7 +111,7 @@ mod subject {
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_stl::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation,StlMutation};
+    use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::mutations::{StlMutation};
 
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
 
@@ -128,7 +128,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(ctx)?;
         let spec = ctx.doc_json()?;
-        apply_stl_mutation(&mut snapshot, &mutation_of(&spec)?);
+        apply_mutation(&mut snapshot, &mutation_of(&spec)?);
         let bytes = encode_stl_ascii(&snapshot).into_bytes();
         let projection = project(&bytes)?;
         moved_the_document(&spec.str("kind"), &projection, &project(&mutable_input(ctx)?)?)?;
@@ -140,9 +140,9 @@ mod subject {
         let mut snapshot = decode(ctx)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
         let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_stl_mutation(&mut snapshot, &forward);
+        apply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
-            apply_stl_mutation(&mut snapshot, mutation);
+            apply_mutation(&mut snapshot, mutation);
         }
         let bytes = encode_stl_ascii(&snapshot).into_bytes();
         let projection = project(&bytes)?;

@@ -176,7 +176,7 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
         self.root = match (self.root.take(), other.root) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_node_rows(a, b)),
         };
     }
 }
@@ -314,9 +314,7 @@ fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<Ht
             slots[m.index] = Some(patched);
         }
     }
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique_descending(&diff.removed);
     for idx in removed_sorted {
         if idx < slots.len() {
             slots.remove(idx);
@@ -337,10 +335,6 @@ fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<Ht
 impl DiffAlgebra<HtmlSnapshot> for HtmlDiff {
     fn inverse(&self, base: &HtmlSnapshot) -> Self {
         HtmlDiff { doctype: self.doctype.as_ref().map(|_| base.doctype.clone()), root: self.root.as_ref().map(|d| inverse_node_diff(&base.root, d)) }
-    }
-
-    fn between(base: &HtmlSnapshot, other: &HtmlSnapshot) -> Self {
-        HtmlDiff { doctype: if base.doctype != other.doctype { Some(other.doctype.clone()) } else { None }, root: node_diff_between(&base.root, &other.root) }
     }
 
     fn is_empty(&self) -> bool {
@@ -415,80 +409,11 @@ fn inverse_children_diff(base_children: &[HtmlNode], diff: &HtmlChildrenDiff) ->
     HtmlChildrenDiff { removed, modified, added }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn node_diff_between(base: &HtmlNode, other: &HtmlNode) -> Option<HtmlNodeDiff> {
-    if base == other {
-        return None;
-    }
-    match (base, other) {
-        (HtmlNode::Text { .. }, HtmlNode::Text { text: ot }) => Some(HtmlNodeDiff::Text { text: Some(ot.clone()) }),
-        (HtmlNode::Comment { .. }, HtmlNode::Comment { text: ot }) => Some(HtmlNodeDiff::Comment { text: Some(ot.clone()) }),
-        (HtmlNode::RawText { parent_kind: bk, text: bt }, HtmlNode::RawText { parent_kind: ok, text: ot }) => Some(HtmlNodeDiff::RawText { parent_kind: if bk != ok { Some(*ok) } else { None }, text: if bt != ot { Some(ot.clone()) } else { None } }),
-        (HtmlNode::Element { name: bn, attributes: ba, children: bc }, HtmlNode::Element { name: on, attributes: oa, children: oc }) => {
-            let name = if bn != on { Some(on.clone()) } else { None };
-            let attributes = attrs_diff_between(ba, oa);
-            let children = children_diff_between(bc, oc);
-            if name.is_none() && attributes.is_none() && children.is_none() {
-                None
-            } else {
-                Some(HtmlNodeDiff::Element(HtmlElementDiff { name, attributes, children }))
-            }
-        }
-        _ => Some(HtmlNodeDiff::Replace { node: other.clone() }),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attrs_diff_between(base: &[HtmlAttr], other: &[HtmlAttr]) -> Option<HtmlAttributesDiff> {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        match other.iter().find(|o| o.name == b.name) {
-            Some(o) if o.value != b.value => modified.push(HtmlAttrModified { name: b.name.clone(), value: o.value.clone() }),
-            Some(_) => {}
-            None => removed.push(b.name.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, o) in other.iter().enumerate() {
-        if !base.iter().any(|b| b.name == o.name) {
-            added.push(HtmlAttrAdded { index: i, name: o.name.clone(), value: o.value.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(HtmlAttributesDiff { removed, modified, added })
-    }
-}
-
-/// 🧮️ Naive positional child diff per the recipe's "between matching" rule for index-keyed
-/// collections: pairwise-compare `0..min(base.len(), other.len())` as `modified`, the base tail
-/// as `removed`, the other tail as `added`. Not an LCS-based diff (no move/reorder detection).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn children_diff_between(base: &[HtmlNode], other: &[HtmlNode]) -> Option<HtmlChildrenDiff> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = node_diff_between(&base[i], &other[i]) {
-                modified.push(HtmlChildModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<HtmlChildAdded> = (min_len..other.len()).map(|i| HtmlChildAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(HtmlChildrenDiff { removed, modified, added })
-    }
-}
 //#endregion 🔖️DiffAlgebra
 
 //#region 🔖️Absorb
 /// 🧮️ Sequential-coalesce absorb per the recipe's normative algorithm (base-free index-transport
-/// over `d1`'s removed/added), ported from `SvgDiff`'s own `absorb_children_diff`/`transform_index`
+/// over `d1`'s removed/added), ported from `SvgDiff`'s own `absorb_children_rows`/`transform_index`
 /// (identical algorithm, own types).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn transform_index(idx: usize, removed: &[usize], added: &[HtmlChildAdded]) -> usize {
@@ -508,7 +433,7 @@ fn transform_index(idx: usize, removed: &[usize], added: &[HtmlChildAdded]) -> u
 }
 
 /// 🏷️ Which base position (survivor) or which `d1.added` slot a mid-array position originated
-/// from — built by `simulate_mid_origins` so `absorb_children_diff` can classify `d2`'s indices.
+/// from — built by `simulate_mid_origins` so `absorb_children_rows` can classify `d2`'s indices.
 enum ChildOrigin {
     Base(usize),
     Added(usize),
@@ -530,32 +455,32 @@ fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[HtmlChildAd
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_node_diff(a: HtmlNodeDiff, b: HtmlNodeDiff) -> HtmlNodeDiff {
+fn absorb_node_rows(a: HtmlNodeDiff, b: HtmlNodeDiff) -> HtmlNodeDiff {
     match (a, b) {
         (_, HtmlNodeDiff::Replace { node }) => HtmlNodeDiff::Replace { node },
         (HtmlNodeDiff::Replace { node }, b) => HtmlNodeDiff::Replace { node: apply_node_diff(&node, &b) },
         (HtmlNodeDiff::Text { text: ta }, HtmlNodeDiff::Text { text: tb }) => HtmlNodeDiff::Text { text: tb.or(ta) },
         (HtmlNodeDiff::Comment { text: ta }, HtmlNodeDiff::Comment { text: tb }) => HtmlNodeDiff::Comment { text: tb.or(ta) },
         (HtmlNodeDiff::RawText { parent_kind: ka, text: ta }, HtmlNodeDiff::RawText { parent_kind: kb, text: tb }) => HtmlNodeDiff::RawText { parent_kind: kb.or(ka), text: tb.or(ta) },
-        (HtmlNodeDiff::Element(ea), HtmlNodeDiff::Element(eb)) => HtmlNodeDiff::Element(absorb_element_diff(ea, eb)),
+        (HtmlNodeDiff::Element(ea), HtmlNodeDiff::Element(eb)) => HtmlNodeDiff::Element(absorb_element_rows(ea, eb)),
         (_, b) => b,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_element_diff(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElementDiff {
+fn absorb_element_rows(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElementDiff {
     if b.name.is_some() {
         a.name = b.name;
     }
     a.attributes = match (a.attributes.take(), b.attributes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, &bd)),
+        (Some(ad), Some(bd)) => Some(absorb_attrs_rows(ad, &bd)),
     };
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, &bd)),
+        (Some(ad), Some(bd)) => Some(absorb_children_rows(ad, &bd)),
     };
     a
 }
@@ -564,7 +489,7 @@ fn absorb_element_diff(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElemen
 /// `added.index` needs any position bookkeeping, approximated (not fully index-transported like
 /// children) since attribute order carries no spec-mandated meaning, only round-trip fidelity.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_attrs_diff(mut a: HtmlAttributesDiff, b: &HtmlAttributesDiff) -> HtmlAttributesDiff {
+fn absorb_attrs_rows(mut a: HtmlAttributesDiff, b: &HtmlAttributesDiff) -> HtmlAttributesDiff {
     let a_added_names: std::collections::HashSet<String> = a.added.iter().map(|x| x.name.clone()).collect();
     let mut removed = a.removed.clone();
     let mut annihilated: Vec<String> = Vec::new();
@@ -605,7 +530,7 @@ fn absorb_attrs_diff(mut a: HtmlAttributesDiff, b: &HtmlAttributesDiff) -> HtmlA
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_children_diff(d1: HtmlChildrenDiff, d2: &HtmlChildrenDiff) -> HtmlChildrenDiff {
+fn absorb_children_rows(d1: HtmlChildrenDiff, d2: &HtmlChildrenDiff) -> HtmlChildrenDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -646,7 +571,7 @@ fn absorb_children_diff(d1: HtmlChildrenDiff, d2: &HtmlChildrenDiff) -> HtmlChil
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_node_diff(existing.diff.clone(), m2.diff.clone()),
+                    Some(existing) => existing.diff = absorb_node_rows(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(HtmlChildModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -724,6 +649,28 @@ fn absorb_children_diff(d1: HtmlChildrenDiff, d2: &HtmlChildrenDiff) -> HtmlChil
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🧪️Tests
+/// 🧪️ Representative `HtmlDiff` cases built declaratively (empty diff, the recursive element tree with attribute and child rows, a doctype clear and a wholesale root replace) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
+/// conformance-law tests.
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<HtmlDiff> {
+    let element = HtmlElementDiff {
+        name: Some("main".into()),
+        attributes: Some(HtmlAttributesDiff {
+            removed: vec!["lang".into()],
+            modified: vec![HtmlAttrModified { name: "id".into(), value: Some("y".into()) }],
+            added: vec![HtmlAttrAdded { index: 0, name: "disabled".into(), value: None }],
+        }),
+        children: Some(HtmlChildrenDiff { removed: vec![0], modified: Vec::new(), added: vec![HtmlChildAdded { index: 0, item: HtmlNode::Text { text: "hi".into() } }] }),
+    };
+    vec![
+        HtmlDiff::default(),
+        HtmlDiff { doctype: Some(None), root: Some(HtmlNodeDiff::Element(element)) },
+        HtmlDiff { doctype: Some(Some("DOCTYPE html".into())), root: Some(HtmlNodeDiff::Replace { node: HtmlNode::Text { text: "root-replaced".into() } }) },
+        HtmlDiff { root: Some(HtmlNodeDiff::RawText { parent_kind: Some(RawTextKind::Script), text: Some("1+1;".into()) }), ..Default::default() },
+    ]
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;

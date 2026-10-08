@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `PinSlot` — one id-keyed replacement at the slot's OWN index.
 
-use crate::diff::{Wfc3dDiff, Wfc3dOptionalText, Wfc3dRowPatch, Wfc3dRows, Wfc3dSlotPatch};
+use crate::diff::{Wfc3dDiff, Wfc3dOptionalText, Wfc3dSlotPatch, Wfc3dSlotsDelta, Wfc3dSlotsModification};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -14,5 +14,5 @@ pub fn diff(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> protocol::Mutatio
     if slot.pinned_tile_id.as_deref() == Some(payload.tile_id.as_str()) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" is already pinned to \"{}\".", payload.id, payload.tile_id));
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dRows { patched: vec![Wfc3dRowPatch { id: slot.id.clone(), patch: Wfc3dSlotPatch { pinned_tile_id: Some(Wfc3dOptionalText { value: Some(payload.tile_id.clone()) }), ..Default::default() } }], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dSlotsDelta { modified: vec![Wfc3dSlotsModification { id: slot.id.clone(), patch: Wfc3dSlotPatch { pinned_tile_id: Some(Wfc3dOptionalText { value: Some(payload.tile_id.clone()) }), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

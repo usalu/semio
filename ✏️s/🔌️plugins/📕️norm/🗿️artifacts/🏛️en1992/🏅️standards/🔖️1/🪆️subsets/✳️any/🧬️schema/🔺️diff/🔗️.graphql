@@ -1,58 +1,171 @@
 # 🧬️ En1992 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
 type En1992ConcreteGradesPatch {
-  id: String!
   fCk: Float
 }
 
+type En1992ConcreteGradesRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992ConcreteGradesInserted {
+  index: Int!
+  row: ConcreteGrade!
+}
+
+type En1992ConcreteGradesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992ConcreteGradesModified {
+  id: String!
+  patch: En1992ConcreteGradesPatch!
+}
+
 type En1992ConcreteGradesRows {
-  added: [ConcreteGrade!]!
-  removed: [String!]!
-  modified: [En1992ConcreteGradesPatch!]!
-  order: [String!]
+  removed: [En1992ConcreteGradesRemoved!]!
+  inserted: [En1992ConcreteGradesInserted!]!
+  moved: [En1992ConcreteGradesMoved!]!
+  modified: [En1992ConcreteGradesModified!]!
 }
 
 type En1992ReinforcementGradesPatch {
-  id: String!
   fYk: Float
 }
 
+type En1992ReinforcementGradesRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992ReinforcementGradesInserted {
+  index: Int!
+  row: ReinforcementGrade!
+}
+
+type En1992ReinforcementGradesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992ReinforcementGradesModified {
+  id: String!
+  patch: En1992ReinforcementGradesPatch!
+}
+
 type En1992ReinforcementGradesRows {
-  added: [ReinforcementGrade!]!
-  removed: [String!]!
-  modified: [En1992ReinforcementGradesPatch!]!
-  order: [String!]
+  removed: [En1992ReinforcementGradesRemoved!]!
+  inserted: [En1992ReinforcementGradesInserted!]!
+  moved: [En1992ReinforcementGradesMoved!]!
+  modified: [En1992ReinforcementGradesModified!]!
+}
+
+type En1992PrestressSteelsPatch {
+  name: String
+  fPk: Float
+  fP01k: Float
+}
+
+type En1992PrestressSteelsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992PrestressSteelsInserted {
+  index: Int!
+  row: PrestressSteel!
+}
+
+type En1992PrestressSteelsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992PrestressSteelsModified {
+  id: String!
+  patch: En1992PrestressSteelsPatch!
 }
 
 type En1992PrestressSteelsRows {
-  added: [PrestressSteel!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [En1992PrestressSteelsRemoved!]!
+  inserted: [En1992PrestressSteelsInserted!]!
+  moved: [En1992PrestressSteelsMoved!]!
+  modified: [En1992PrestressSteelsModified!]!
 }
 
 type En1992MembersLongitudinalPatch {
-  id: String!
   diameter: Float
   count: Int
 }
 
+type En1992MembersLongitudinalRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992MembersLongitudinalInserted {
+  index: Int!
+  row: BarLayer!
+}
+
+type En1992MembersLongitudinalMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992MembersLongitudinalModified {
+  id: String!
+  patch: En1992MembersLongitudinalPatch!
+}
+
 type En1992MembersLongitudinalRows {
-  modified: [En1992MembersLongitudinalPatch!]!
+  removed: [En1992MembersLongitudinalRemoved!]!
+  inserted: [En1992MembersLongitudinalInserted!]!
+  moved: [En1992MembersLongitudinalMoved!]!
+  modified: [En1992MembersLongitudinalModified!]!
 }
 
 type En1992MembersActionsPatch {
-  id: String!
   mK: Float
   nK: Float
   vK: Float
 }
 
+type En1992MembersActionsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992MembersActionsInserted {
+  index: Int!
+  row: LoadCaseActions!
+}
+
+type En1992MembersActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992MembersActionsModified {
+  id: String!
+  patch: En1992MembersActionsPatch!
+}
+
 type En1992MembersActionsRows {
-  modified: [En1992MembersActionsPatch!]!
+  removed: [En1992MembersActionsRemoved!]!
+  inserted: [En1992MembersActionsInserted!]!
+  moved: [En1992MembersActionsMoved!]!
+  modified: [En1992MembersActionsModified!]!
 }
 
 type En1992MembersPatch {
-  id: String!
   exposure: ExposureClass
   width: Float
   height: Float
@@ -66,24 +179,65 @@ type En1992MembersPatch {
   actions: En1992MembersActionsRows
 }
 
+type En1992MembersRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992MembersInserted {
+  index: Int!
+  row: RcMember!
+}
+
+type En1992MembersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992MembersModified {
+  id: String!
+  patch: En1992MembersPatch!
+}
+
 type En1992MembersRows {
-  added: [RcMember!]!
-  removed: [String!]!
-  modified: [En1992MembersPatch!]!
-  order: [String!]
+  removed: [En1992MembersRemoved!]!
+  inserted: [En1992MembersInserted!]!
+  moved: [En1992MembersMoved!]!
+  modified: [En1992MembersModified!]!
 }
 
 type En1992AnchorsPatch {
-  id: String!
   hEf: Float
   aS: Float
 }
 
+type En1992AnchorsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1992AnchorsInserted {
+  index: Int!
+  row: Anchor!
+}
+
+type En1992AnchorsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1992AnchorsModified {
+  id: String!
+  patch: En1992AnchorsPatch!
+}
+
 type En1992AnchorsRows {
-  added: [Anchor!]!
-  removed: [String!]!
-  modified: [En1992AnchorsPatch!]!
-  order: [String!]
+  removed: [En1992AnchorsRemoved!]!
+  inserted: [En1992AnchorsInserted!]!
+  moved: [En1992AnchorsMoved!]!
+  modified: [En1992AnchorsModified!]!
 }
 
 type En1992Diff {

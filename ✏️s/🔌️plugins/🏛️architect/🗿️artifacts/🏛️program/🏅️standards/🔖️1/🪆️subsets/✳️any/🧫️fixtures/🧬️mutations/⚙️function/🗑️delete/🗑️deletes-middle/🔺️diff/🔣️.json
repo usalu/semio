@@ -6,12 +6,15 @@
   "users": null,
   "activities": null,
   "functions": {
-    "added": [],
     "removed": [
-      "function-a"
+      {
+        "id": "function-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "elements": null,
   "quantities": null,

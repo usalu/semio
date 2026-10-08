@@ -67,7 +67,7 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
         InteractiveJob::begin_close(&mut job);
         let mut released = 0;
         for _ in 0..1024 {
-            let (complete, items, bytes) = job.close_step(4096);
+            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(4096));
             holds &= items <= 1 && bytes <= 4096;
             released += bytes;
             if complete { break; }
@@ -112,7 +112,7 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
             let before = (job.stage, witness(&job));
             for (fuel, deadline, cancel) in [(0, u64::MAX, false), (1, 0, false), (1, u64::MAX, true)] {
                 let token = root_cancel_token();
-                if cancel { semio_framework_async::block_on(token.cancel()); }
+                if cancel { token.cancel_now(); }
                 let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline), token, || Some(0), &mut sequence);
                 let outcome = job.step(&mut context);
                 holds &= outcome == if cancel { StepOutcome::Cancelled } else { StepOutcome::Yield };
@@ -151,11 +151,11 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
         }
         InteractiveJob::begin_close(&mut job);
         let before = witness(&job);
-        holds &= InteractiveJob::close_step(&mut job, 0, 4096) == semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        holds &= InteractiveJob::close_step(&mut job, RetainedCloneGrant { maximum_items: 0, ..mesh_release_grant(4096) }) == semio_framework_job::InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         holds &= witness(&job) == before;
         let mut released = 0;
         for _ in 0..4096 {
-            let (complete, items, bytes) = job.close_step(close_grant);
+            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(close_grant));
             holds &= items <= 1 && bytes <= 4096;
             released += bytes;
             if complete { break; }
@@ -192,20 +192,20 @@ fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() 
         assert_eq!(job.step(&mut context), StepOutcome::Cancelled);
         assert_eq!(context.fuel_remaining(), 1);
         InteractiveJob::begin_close(&mut job);
-        assert_eq!(InteractiveJob::close_step(&mut job, 0, 4096), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(InteractiveJob::close_step(&mut job, RetainedCloneGrant { maximum_items: 0, ..mesh_release_grant(4096) }), semio_framework_job::InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         let mut released = 0;
         for _ in 0..128 {
-            let (complete, items, bytes) = job.close_step(0);
+            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(0));
             assert_eq!(bytes, 0);
             if complete || items == 0 { break; }
         }
         if let Some(bytes) = allocations.into_iter().find(|bytes| *bytes != 0) {
-            assert_eq!(job.close_step(bytes - 1), (false, 0, 0));
-            assert_eq!(job.close_step(bytes), (false, 1, bytes));
+            assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes - 1)), (false, 0, 0));
+            assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes)), (false, 1, bytes));
             released += bytes;
         }
         for _ in 0..128 {
-            let (complete, items, bytes) = job.close_step(4096);
+            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(4096));
             assert!(items <= 1 && bytes <= 4096);
             released += bytes;
             if complete { break; }
@@ -258,17 +258,18 @@ fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
         assert_eq!((job.indexed_constraint_edges.as_ptr(), job.indexed_constraint_edges.len(), job.indexed_constraint_edges.capacity()), before);
         job.close_lane = 9;
         for _ in 0..before.1 {
-            assert_eq!(job.close_step(0), (false, 1, 0));
+            assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(0)), (false, 1, 0));
         }
         let bytes = before.2 * size_of::<IndexedConstraintEdge>();
-        assert_eq!(job.close_step(bytes - 1), (false, 0, 0));
+        assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes - 1)), (false, 0, 0));
         assert_eq!(job.indexed_constraint_edges.as_ptr(), before.0);
-        assert_eq!(job.close_step(bytes), (false, 1, bytes));
-        assert!(job.close_step(0).0);
+        assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes)), (false, 1, bytes));
+        assert_eq!(job.indexed_constraint_edges.capacity(), 0);
+        assert_eq!(job.close_step(mesh_release_grant(0)), semio_framework_job::InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated));
         job.close_lane = 0;
         let mut closed = false;
         for _ in 0..256 {
-            if job.close_step(16_384).0 { closed = true; break; }
+            if observe_mesh_close(&mut job, mesh_release_grant(16_384)).0 { closed = true; break; }
         }
         assert!(closed, "all remaining mesh owners retire");
         assert!(InteractiveJob::terminal_is_empty(&job));
@@ -749,7 +750,7 @@ fn bounded_mesh_plus_one_fault_retains_the_exact_domain_for_cursor_close() {
     }
     assert!(faulted);
     assert_eq!(job.domain.outer().len(), 65, "fault retains every rejected point owner");
-    let (terminal, items, _) = job.close_step(4_096);
+    let (terminal, items, _) = observe_mesh_close(&mut job, mesh_release_grant(4_096));
     assert!(!terminal);
     assert_eq!(items, 1);
     assert_eq!(job.domain.outer().len(), 64, "one close grant releases one point owner");
@@ -800,7 +801,7 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
         assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
 
         let token = root_cancel_token();
-        semio_framework_async::block_on(token.cancel());
+        token.cancel_now();
         let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
         assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
         assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
@@ -834,7 +835,7 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
     let mut close_turns = 0;
     loop {
         close_turns += 1;
-        let (terminal, released_items, _) = job.close_step(usize::MAX);
+        let (terminal, released_items, _) = observe_mesh_close(&mut job, mesh_release_grant(usize::MAX));
         assert!(released_items <= 1);
         if terminal {
             break;
@@ -918,7 +919,7 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
                 assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
                 assert_eq!(snapshot(&job), before);
                 let token = root_cancel_token();
-                semio_framework_async::block_on(token.cancel());
+                token.cancel_now();
                 let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
                 assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
                 assert_eq!(snapshot(&job), before);
@@ -1003,13 +1004,25 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
     }
     assert!(interrupted.publication_writer.is_some());
     InteractiveJob::begin_close(&mut interrupted);
-    assert_eq!(InteractiveJob::close_step(&mut interrupted, 1, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(InteractiveJob::close_step(&mut interrupted, mesh_release_grant(0)), semio_framework_job::InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
     for _ in 0..100_000 {
-        match InteractiveJob::close_step(&mut interrupted, 1, usize::MAX) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-            semio_framework_job::InteractiveJobCloseStep::Complete => break,
+        match InteractiveJob::close_step(&mut interrupted, mesh_release_grant(usize::MAX)) {
+            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => assert!(progress.copied_items <= 1),
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
             semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("mounted mesh close cannot block"),
+            semio_framework_job::InteractiveJobCloseStep::Refused(kind) => panic!("mounted mesh close refused: {kind:?}"),
         }
     }
     assert!(InteractiveJob::terminal_is_empty(&interrupted));
+}
+
+fn mesh_release_grant(release_bytes: usize) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 256, maximum_capacity_bytes: 0, maximum_release_bytes: release_bytes, maximum_depth: 2 }
+}
+
+fn observe_mesh_close(job: &mut MeshJob, grant: RetainedCloneGrant) -> (bool, usize, usize) {
+    let step = job.close_step(grant);
+    assert!(step.progress().fits(grant));
+    assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_) | semio_framework_job::InteractiveJobCloseStep::Blocked));
+    (matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }), step.progress().copied_items, step.progress().released_bytes)
 }

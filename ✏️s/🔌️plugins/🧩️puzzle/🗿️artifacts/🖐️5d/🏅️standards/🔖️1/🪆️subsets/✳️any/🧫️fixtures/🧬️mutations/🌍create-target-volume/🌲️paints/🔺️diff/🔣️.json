@@ -7,31 +7,34 @@
   "parts": null,
   "schema": null,
   "targetVolumes": {
-    "added": [
+    "inserted": [
       {
-        "hidden": false,
-        "id": "seed-bay",
-        "locked": false,
-        "orientation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "origin": [
-          5.4,
-          2.338269,
-          1.5
-        ],
-        "scale": [
-          8.1,
-          4.676537,
-          3.0
-        ]
+        "index": 0,
+        "row": {
+          "hidden": false,
+          "id": "seed-bay",
+          "locked": false,
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "origin": [
+            5.4,
+            2.338269,
+            1.5
+          ],
+          "scale": [
+            8.1,
+            4.676537,
+            3.0
+          ]
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   }
 }

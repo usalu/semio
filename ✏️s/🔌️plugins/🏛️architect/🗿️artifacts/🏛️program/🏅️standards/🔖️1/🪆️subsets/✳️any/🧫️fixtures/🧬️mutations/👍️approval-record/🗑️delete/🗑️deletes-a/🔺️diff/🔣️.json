@@ -53,12 +53,15 @@
   "constraints": null,
   "complianceRecords": null,
   "approvals": {
-    "added": [],
     "removed": [
-      "approval-record-a"
+      {
+        "id": "approval-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "meetings": null,
   "changes": null,

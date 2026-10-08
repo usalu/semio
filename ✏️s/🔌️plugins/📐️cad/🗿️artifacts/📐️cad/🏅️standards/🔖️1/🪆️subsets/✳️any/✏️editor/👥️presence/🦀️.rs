@@ -90,16 +90,6 @@ impl protocol::DiffAlgebra<CadPresence> for CadPresenceDiff {
             engagement_pane: self.engagement_pane.as_ref().map(|_| crate::editor::cad::config::CadTextSet { value: base.engagement_pane.clone() }),
         }
     }
-    fn between(base: &CadPresence, other: &CadPresence) -> Self {
-        Self {
-            camera_position: (base.camera_position != other.camera_position).then_some(other.camera_position),
-            camera_target: (base.camera_target != other.camera_target).then_some(other.camera_target),
-            camera_zoom: (base.camera_zoom != other.camera_zoom).then_some(other.camera_zoom),
-            camera_fov: (base.camera_fov != other.camera_fov).then_some(other.camera_fov),
-            engagement_step: (base.engagement_step != other.engagement_step).then(|| other.engagement_step.clone()),
-            engagement_pane: (base.engagement_pane != other.engagement_pane).then(|| crate::editor::cad::config::CadTextSet { value: other.engagement_pane.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

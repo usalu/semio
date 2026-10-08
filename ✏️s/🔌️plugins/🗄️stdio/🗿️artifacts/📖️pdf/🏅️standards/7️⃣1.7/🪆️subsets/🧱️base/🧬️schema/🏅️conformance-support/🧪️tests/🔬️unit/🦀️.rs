@@ -30,9 +30,9 @@ fn owned_objects_stop_at_anything_another_object_still_references() {
 #[test]
 fn removing_a_catalog_entry_takes_what_it_exclusively_installed_with_it() {
     let catalog = document_of(vec![catalog_object()]);
-    let base = after_rows(&catalog, output_intent_rows(&catalog, "GTS_PDFA1", "sRGB", true, &[], None));
+    let base = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&catalog, output_intent_rows(&catalog, "GTS_PDFA1", "sRGB", true, &[], None));
     assert_eq!(base.objects.len(), 3);
-    let next = after_rows(&base, remove_catalog_entry_owned_rows(&base, "OutputIntents"));
+    let next = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, remove_catalog_entry_owned_rows(&base, "OutputIntents"));
     assert_eq!(next, catalog, "the intent, its profile stream and the entry leave together");
     assert_eq!(remove_catalog_entry_owned_rows(&catalog, "OutputIntents"), PdfDiff::default(), "an absent entry removes nothing");
 }
@@ -40,7 +40,7 @@ fn removing_a_catalog_entry_takes_what_it_exclusively_installed_with_it() {
 #[test]
 fn embedding_a_font_program_leaves_exactly_one_program_key() {
     let base = document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile", reference(1))])]);
-    let next = after_rows(&base, embed_font_file_rows(&base, id(2), "FontFile2", id(1), None));
+    let next = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, embed_font_file_rows(&base, id(2), "FontFile2", id(1), None));
     assert_eq!(font_program(&next, id(2)), Some(("FontFile2".to_string(), id(1))));
     assert!(object(&next, id(2)).and_then(|value| value.dict_get("FontFile")).is_none(), "the previous program key is dropped");
     assert_eq!(embed_font_file_rows(&next, id(2), "FontFile2", id(1), None), PdfDiff::default(), "embedding what is already there is no change");
@@ -65,21 +65,21 @@ fn placements_name_the_current_position_or_nothing() {
 #[test]
 fn an_entry_lands_at_the_position_it_is_given_and_reports_its_position() {
     let base = document_of(vec![dict(vec![("A", PdfObject::Int(1)), ("C", PdfObject::Int(3))])]);
-    let next = after_rows(&base, set_entry_rows(&base, id(1), "B", PdfObject::Int(2), Some(1)));
+    let next = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, set_entry_rows(&base, id(1), "B", PdfObject::Int(2), Some(1)));
     assert_eq!(entry_position(&next, id(1), "B"), Some(1));
     assert_eq!(entry_position(&next, id(1), "C"), Some(2));
     assert_eq!(entry_position(&next, id(1), "Z"), None);
-    let appended = after_rows(&base, set_entry_rows(&base, id(1), "B", PdfObject::Int(2), None));
+    let appended = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, set_entry_rows(&base, id(1), "B", PdfObject::Int(2), None));
     assert_eq!(entry_position(&appended, id(1), "B"), Some(2));
 }
 
 #[test]
 fn creation_ids_follow_the_order_their_builders_create_in() {
     let catalog = document_of(vec![catalog_object()]);
-    let intent = after_rows(&catalog, output_intent_rows(&catalog, "GTS_PDFA1", "sRGB", true, &[], None));
+    let intent = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&catalog, output_intent_rows(&catalog, "GTS_PDFA1", "sRGB", true, &[], None));
     assert_eq!(output_intent_creation_ids(&intent), vec![id(2), id(3)], "profile stream first, intent second");
-    let spec = after_rows(&catalog, insert_file_spec_rows(&catalog, "a.csv", &[]));
+    let spec = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&catalog, insert_file_spec_rows(&catalog, "a.csv", &[]));
     assert_eq!(file_spec_creation_ids(&spec, id(3)), vec![id(2), id(3)], "attached stream first, spec second");
-    let root = after_rows(&catalog, dpart_root_rows(&catalog, "job", &[], None));
+    let root = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&catalog, dpart_root_rows(&catalog, "job", &[], None));
     assert_eq!(dpart_root_creation_ids(&root), vec![id(2), id(3)], "node first, root second");
 }

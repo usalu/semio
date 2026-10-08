@@ -4,7 +4,7 @@
 //! and `impl protocol::SemanticMutation<DrawingSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
 
-use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
+use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 
 //#region 🔖️Mutations
@@ -43,8 +43,11 @@ pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mu
 //#region 🔖️FieldPatch
 
 
+fn field_color(value:&semio_framework_value::DslValue)->Option<[f64;4]>{let parts=value.as_array()?;if parts.len()!=4{return None;}let mut output=[0.0;4];for(index,part)in parts.iter().enumerate(){let number=part.as_f64()?;if !number.is_finite()||!(0.0..=1.0).contains(&number){return None;}output[index]=number;}Some(output)}
+fn field_dash(value:&semio_framework_value::DslValue)->Option<Option<Vec<f64>>>{if matches!(value,semio_framework_value::DslValue::Null){return Some(None);}let samples=value.as_array()?;if samples.len()>64{return None;}let mut output=Vec::with_capacity(samples.len());for sample in samples{let number=sample.as_f64()?;if !number.is_finite()||number<0.0{return None;}output.push(number);}Some(output.iter().any(|value|*value>0.0).then_some(output))}
+
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
-/// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
+/// owned `field` name + typed `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
 pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), field: &str, value: &semio_framework_value::DslValue) -> Option<DrawingMutation> {
     let layer = find_drawing_layer(doc, layer_id)?;
@@ -59,15 +62,13 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
         "strokeWidth" | "traceSimplify" => { if finite()? < 0.0 { return None; } }
         "transformX" | "transformY" | "transformRotation" | "transformShear" | "rotationDegrees" => { finite()?; }
         "transformScaleX" | "transformScaleY" => { finite()?; }
-        "fillColor" | "strokeColor" => {
-            let color = value.as_str()?.strip_prefix('#')?;
-            if !matches!(color.len(), 3 | 6) || !color.bytes().all(|byte| byte.is_ascii_hexdigit()) { return None; }
-        }
+        "fillColor" | "strokeColor" => { field_color(value)?; }
+
         "isolation" => {if !matches!(layer,DrawingLayerNode::Group(_)){return None;}value.as_bool()?;}
         "fillRule" => { crate::FillRule::parse(value.as_str()?).ok()?; }
         "strokeCap" => { crate::StrokeCap::parse(value.as_str()?).ok()?; }
         "strokeJoin" => { crate::StrokeJoin::parse(value.as_str()?).ok()?; }
-        "strokeDash" => { crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?; }
+        "strokeDash" => { field_dash(value)?; }
         "blendMode" => { if !crate::DRAWING_BLEND_MODES.contains(&value.as_str()?) { return None; } }
         "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !matches!(value.as_str()?, "union" | "intersect" | "subtract" | "exclude") { return None; } }
         _ => return None,
@@ -101,7 +102,7 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
                 FillStyle::Solid { color } => color[3],
                 FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
             });
-            replace_layer_fill(layer_id.clone(), Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }))
+            replace_layer_fill(layer_id.clone(), Some(FillStyle::Solid { color: {let mut color=field_color(value)?;color[3]=alpha;color} }))
         }
         "isolation" => set_group_isolation(layer_id.clone(),value.as_bool()?),
         "fillRule" => set_layer_fill_rule(layer_id.clone(),crate::FillRule::parse(value.as_str()?).ok()?),
@@ -111,10 +112,10 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
             let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None });
             match field {
                 "strokeWidth" => stroke.width = finite()?,
-                "strokeColor" => stroke.color = hex_to_rgba(value.as_str()?, stroke.color[3]),
+                "strokeColor" => stroke.color = {let mut color=field_color(value)?;color[3]=stroke.color[3];color},
                 "strokeCap" => stroke.cap = crate::StrokeCap::parse(value.as_str()?).ok()?,
                 "strokeJoin" => stroke.join = crate::StrokeJoin::parse(value.as_str()?).ok()?,
-                _ => stroke.dash = crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?.map(Into::into),
+                _ => stroke.dash = field_dash(value)?.map(Into::into),
             }
             replace_layer_stroke(layer_id.clone(), Some(stroke))
         }
@@ -135,15 +136,6 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
     Some(operation)
 }
 
-/// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
-/// value itself (`drawing_op_for_layer_field` is the undoable/command-facing entry point).
-pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> protocol::MutationApplyResult<DrawingSnapshot> {
-    use protocol::Mutation;
-    match drawing_op_for_layer_field(doc, layer_id, field, value) {
-        Some(operation) => protocol::apply_diff(operation.diff(doc).diff(), doc).map_err(|error| error.under(["layers", layer_id])),
-        None => Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "layer field cannot be patched").at(["layers", layer_id, field])),
-    }
-}
 //#endregion 🔖️FieldPatch
 
 // 🪆️ These fourteen leaves now live under their own semantic subset (`structure`/`style`/
@@ -165,15 +157,6 @@ pub use crate::standards::v1::subsets::transform::schema::mutations::update_laye
 pub use crate::standards::v1::subsets::transform::schema::mutations::update_layer_transform::mutation::{update_layer_transform, UpdateLayerTransform};
 
 //#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot` through its own diff — the artifact's single apply entry
-/// point (mirrors dag's `apply_dag_mutation`/puzzle5d's `apply_puzzle5d_mutation`). A rejecting
-/// diff carries an empty `DrawingDiff`, so the snapshot is left untouched and `Ok(())` is still
-/// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
-pub fn apply_drawing_mutation(snapshot: &mut DrawingSnapshot, mutation: &DrawingMutation) -> protocol::MutationApplyResult<()> {
-    *snapshot = protocol::apply_diff(<DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
-    Ok(())
-}
-
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
 pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
     <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::inverse(mutation, snapshot)
@@ -187,21 +170,6 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-
-
-/// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
-/// no-op kind is a RESULT this bridge reports, never an error it swallows.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingSnapshot, Vec<String>), String> {
-    use protocol::Mutation;
-    let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, snapshot);
-    let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => Ok((next, messages)),
-        Err(error) => Err(format!("{error:?}")),
-    }
-}
-
 
 
 //#endregion 🌉️ExternalCodecBridge

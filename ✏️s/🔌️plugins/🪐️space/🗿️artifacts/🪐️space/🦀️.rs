@@ -14,8 +14,8 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 #[cfg(feature = "component-app-assembly")]
-#[path = "../../🫀️core/🦀️.rs"]
-pub mod space_core;
+#[path = "🫀️index/🦀️.rs"]
+pub mod index;
 
 pub use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;

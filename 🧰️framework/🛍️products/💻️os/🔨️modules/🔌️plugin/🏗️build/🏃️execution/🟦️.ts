@@ -11,11 +11,11 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
+import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
 
 import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
-import { isHostPlaygroundFilter } from "../../📇️registry/🟦️.ts";
+
 
 import { DEFAULT_PLAYGROUND_VARIANT } from "../../📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
@@ -122,7 +122,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   syncBuiltExtensionsToInstallRoot(targets);
   assertExtensionOutputsFresh(undefined, targets);
-  if (filterPlugin && !isHostPlaygroundFilter(filterPlugin)) {
+  if (filterPlugin && !projectedHostPluginFilter(readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")), filterPlugin)) {
     console.log(`program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
     console.log(`program build scope: all (${targets.length} plugin crates)`);

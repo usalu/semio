@@ -12,24 +12,31 @@
   "periodicZ": null,
   "tiles": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [
-      "r-top-floor-wall"
+      {
+        "id": "r-top-floor-wall",
+        "index": 2
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "pinned": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "masked": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

@@ -148,7 +148,7 @@ pub(crate) fn program_export_tables(snapshot: &crate::ProgramSnapshot) -> Result
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::ProgramAnalyzer;
     use crate::ProgramSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.architect.program", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
@@ -223,7 +223,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::ProgramBuilder as ProgramAnyBuilder;
     use crate::standards::v1::subsets::any::io::ProgramComposer as ProgramAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -382,7 +382,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::ProgramSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct ProgramParts {
@@ -440,3 +440,26 @@ semio_framework_plugin::derive_artifact_facets!(
 
 #[path = "📊️tables/🦀️.rs"]
 pub(crate) mod tables;
+
+//#region 🔖️MutationBridge
+/// 🌉️ The conformance-host seam that applies a program mutation: io code is infrastructure and may call the central applier.
+pub mod mutation_bridge {
+    /// 🧮️ Applies `mutation` to `snapshot` through the central applier and hands back the next snapshot together with the whole
+    /// `protocol::MutationOutcome`, the diagnostics included — the shape an external conformance host needs, since a committed
+    /// `🎯️outcome` vector declares a status AND its diagnostic codes. A diff the central applier rejects becomes a fatal message on an
+    /// empty outcome and leaves the snapshot unchanged.
+    // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+    pub fn apply_program_mutation_outcome(snapshot: &crate::ProgramSnapshot, mutation: &crate::ProgramMutation) -> (crate::ProgramSnapshot, protocol::MutationOutcome<crate::ProgramDiff>) {
+        let outcome = <crate::ProgramMutation as protocol::Mutation<crate::ProgramSnapshot>>::diff(mutation, snapshot);
+        match protocol::apply_diff(outcome.diff(), snapshot) {
+            Ok(next) => (next, outcome),
+            Err(error) => {
+                let (_, mut messages) = outcome.into_parts();
+                messages.push(protocol::MutationMessage::fatal(error.code, error.message).at(error.target));
+                (snapshot.clone(), protocol::MutationOutcome::empty().absorb_messages(messages))
+            }
+        }
+    }
+}
+pub use mutation_bridge::apply_program_mutation_outcome;
+//#endregion 🔖️MutationBridge

@@ -3,6 +3,6 @@
 import type { CreateCuratedItem } from "../🟦️.ts";
 import type { CurationCuratedDelta } from "../../../🔺️diff/🟦️.ts";
 
-export function diff(payload: CreateCuratedItem): { curated: CurationCuratedDelta } {
-  return { curated: { added: [payload.item] } };
+export function diff(payload: CreateCuratedItem, base: { curated: { objectId: string }[] }): { curated: CurationCuratedDelta } {
+  return { curated: { inserted: [{ index: Math.min(payload.index ?? base.curated.length, base.curated.length), row: payload.item }] } };
 }

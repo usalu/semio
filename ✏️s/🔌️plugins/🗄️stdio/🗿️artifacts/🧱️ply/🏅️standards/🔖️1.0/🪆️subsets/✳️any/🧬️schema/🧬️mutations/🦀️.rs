@@ -93,68 +93,12 @@ pub enum PlyMutation {
 pub const KINDS: &[&str] = &["set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source
-/// (`let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
-    let outcome = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 
 //#endregion 🔖️MutationTrait
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the format if it moved, the comments (a changed comment is removed and
-/// inserted anew, surplus comments removed last first, missing ones inserted), then every element in place by position (an element
-/// of another name or declaration is removed and added anew; the same element re-sets differing cells, removes surplus rows last
-/// first and inserts missing ones). An element whose `count` moved without its rows is left unaddressed.
-pub fn net_mutations(base: &PlySnapshot, next: &PlySnapshot) -> Vec<PlyMutation> {
-    let mut leaves = Vec::new();
-    if base.format != next.format {
-        leaves.push(PlyMutation::SetFormat(set_format::SetFormat { format: next.format }));
-    }
-    let comments_paired = base.comments.len().min(next.comments.len());
-    for (index, (before, after)) in base.comments.iter().zip(&next.comments).enumerate().filter(|(_, (before, after))| before != after) {
-        let _ = before;
-        leaves.push(PlyMutation::RemoveComment(remove_comment::RemoveComment { index }));
-        leaves.push(PlyMutation::InsertComment(insert_comment::InsertComment { index, comment: after.clone() }));
-    }
-    leaves.extend((comments_paired..base.comments.len()).rev().map(|index| PlyMutation::RemoveComment(remove_comment::RemoveComment { index })));
-    leaves.extend(next.comments.iter().enumerate().skip(comments_paired).map(|(index, comment)| PlyMutation::InsertComment(insert_comment::InsertComment { index, comment: comment.clone() })));
-    let elements_paired = base.elements.len().min(next.elements.len());
-    for (index, (before, after)) in base.elements.iter().zip(&next.elements).enumerate().filter(|(_, (before, after))| before != after) {
-        if before.name != after.name || before.properties != after.properties {
-            leaves.push(PlyMutation::RemoveElement(remove_element::RemoveElement { name: before.name.clone() }));
-            leaves.push(PlyMutation::AddElement(add_element::AddElement { index, element: after.clone() }));
-            continue;
-        }
-        let rows_paired = before.rows.len().min(after.rows.len());
-        for (row_index, (old, new)) in before.rows.iter().zip(&after.rows).enumerate().filter(|(_, (old, new))| old != new) {
-            for (cell, property) in before.properties.iter().enumerate() {
-                if let (Some(old_value), Some(new_value)) = (old.values.get(cell), new.values.get(cell)) {
-                    if old_value != new_value {
-                        leaves.push(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: before.name.clone(), row_index, property_name: property.name().to_string(), value: new_value.clone() }));
-                    }
-                }
-            }
-        }
-        leaves.extend((rows_paired..before.rows.len()).rev().map(|row_index| PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: before.name.clone(), index: row_index })));
-        leaves.extend(after.rows.iter().enumerate().skip(rows_paired).map(|(row_index, row)| PlyMutation::InsertRow(insert_row::InsertRow { element_name: before.name.clone(), index: row_index, row: row.clone() })));
-    }
-    leaves.extend(base.elements[elements_paired..].iter().rev().map(|element| PlyMutation::RemoveElement(remove_element::RemoveElement { name: element.name.clone() })));
-    leaves.extend(next.elements.iter().enumerate().skip(elements_paired).map(|(index, element)| PlyMutation::AddElement(add_element::AddElement { index, element: element.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region OpCodecs
 

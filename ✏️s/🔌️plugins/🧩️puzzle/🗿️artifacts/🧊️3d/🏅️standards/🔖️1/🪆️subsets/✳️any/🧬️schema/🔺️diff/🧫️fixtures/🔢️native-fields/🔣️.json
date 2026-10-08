@@ -1,0 +1,21 @@
+{
+  "schema": "semio.puzzle.puzzle3d.native-diff-fields.v1",
+  "cases": [
+    {
+      "name": "zeros-infinity",
+      "words": [
+        "0",
+        "9223372036854775808",
+        "9218868437227405312"
+      ]
+    },
+    {
+      "name": "nan-payload-full-word",
+      "words": [
+        "9221120237041090602",
+        "18446744073709551615",
+        "1"
+      ]
+    }
+  ]
+}

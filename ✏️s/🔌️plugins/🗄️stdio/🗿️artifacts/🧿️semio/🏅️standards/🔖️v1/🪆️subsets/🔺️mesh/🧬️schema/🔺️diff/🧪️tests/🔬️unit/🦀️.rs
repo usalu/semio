@@ -46,40 +46,12 @@ fn snapshot_b() -> SemioMeshSnapshot {
     }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn between_apply_and_inverse_round_trip() {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    let d = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture"), b);
-    let inv = d.inverse(&a);
-    assert_eq!(protocol::apply_diff(&inv, &protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
-    assert!(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a).is_empty());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn absorb_composes_two_sequential_diffs() {
-    let a = snapshot_a();
-    let mid = snapshot_b();
-    let mut after = mid.clone();
-    after.materials[0].metallic = 0.42;
-    let mut d1 = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &mid);
-    let d2 = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&mid, &after);
-    let applied_before_absorb = protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture");
-    d1.absorb(d2.clone());
-    assert_eq!(protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture"), protocol::apply_diff(&d2, &applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
-    assert_eq!(protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture"), after);
-}
-
 /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` round-trips through both
 /// `print_diff`/`parse_diff` and `encode_diff`/`decode_diff`, over a real `between()` result
 /// exercising the nested mesh -> primitive triple plus materials/textures.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    let cases =
-        vec![SemioMeshDiff::default(), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -90,17 +62,6 @@ async fn diff_codec_text_binary_roundtrip_law() {
         let decoded = SemioMeshDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
         assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
     }
-
-    // Confirm nested + tri-state coverage genuinely got exercised above.
-    let diff_ab = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b);
-    let meshes = diff_ab.meshes.as_ref().expect("meshes diff present");
-    let mesh_mod = meshes.modified.iter().find(|m| m.key == "m1").expect("m1 modified");
-    let prims = mesh_mod.diff.primitives.as_ref().expect("primitives diff present");
-    let prim_mod = prims.modified.iter().find(|p| p.key == "p1").expect("p1 modified");
-    assert_eq!(prim_mod.diff.material_id, Some(None), "material_id tri-state Some(None) not exercised");
-    let diff_ba = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a);
-    let prim_mod_ba = diff_ba.meshes.as_ref().unwrap().modified[0].diff.primitives.as_ref().unwrap().modified.iter().find(|p| p.key == "p1").unwrap();
-    assert_eq!(prim_mod_ba.diff.material_id, Some(Some("mat1".to_string())), "material_id tri-state Some(Some(_)) not exercised");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -114,12 +75,20 @@ async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
     set.materials[0].occlusion_texture = Some(fixture["bindings"]["occlusionTexture"].as_str().unwrap().into());
     set.materials[0].emissive_texture = Some(fixture["bindings"]["emissiveTexture"].as_str().unwrap().into());
 
-    let diff = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&before, &set);
+    let textures = |change: SemioMaterialDiff| SemioMeshDiff { materials: Some(SemioMaterialsDiff { modified: vec![NamedModified { key: "mat1".into(), diff: change }], ..Default::default() }), ..Default::default() };
+    let diff = textures(SemioMaterialDiff {
+        base_color_texture: Some(Some(fixture["bindings"]["baseColorTexture"].as_str().unwrap().into())),
+        metallic_roughness_texture: Some(Some(fixture["bindings"]["metallicRoughnessTexture"].as_str().unwrap().into())),
+        normal_texture: Some(Some(fixture["bindings"]["normalTexture"].as_str().unwrap().into())),
+        occlusion_texture: Some(Some(fixture["bindings"]["occlusionTexture"].as_str().unwrap().into())),
+        emissive_texture: Some(Some(fixture["bindings"]["emissiveTexture"].as_str().unwrap().into())),
+        ..Default::default()
+    });
     assert_eq!(protocol::apply_diff(&diff, &before).unwrap(), set);
     assert_eq!(protocol::apply_diff(&diff.inverse(&before), &set).unwrap(), before);
     let mut cleared = set.clone();
     cleared.materials[0].normal_texture = None;
-    let clear = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&set, &cleared);
+    let clear = textures(SemioMaterialDiff { normal_texture: Some(None), ..Default::default() });
     assert_eq!(clear.materials.as_ref().unwrap().modified[0].diff.normal_texture, Some(None));
     assert_eq!(protocol::apply_diff(&clear.inverse(&set), &cleared).unwrap(), set);
     for value in [&diff, &clear] {

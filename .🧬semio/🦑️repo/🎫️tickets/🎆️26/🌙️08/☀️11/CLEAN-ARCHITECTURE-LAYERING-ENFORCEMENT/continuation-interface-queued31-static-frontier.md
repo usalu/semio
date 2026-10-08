@@ -1,0 +1,5 @@
+# Interface Queued Preparation Static Frontier
+
+Read-only source observation before successor32 execution: original queued fixture preserveswait31250ms, expectedPublication owned-input, machine prepared:true and exact expectedWait `[cargo-preparation] waiting for Cargo.toml`. Its complete test preserves45000ms control. Copied normalization owner policy preserves discovery/retirement8388608units/67108864bytes/depth64/progress1000ms and introduces no time-budget expansion.
+
+Current candidate system lease adapter emits `Waiting for exclusive access to ...` plus invocation-lease-wait progress. There may be a further textual progress receiver mismatch after the mandatory copied policy dependency is closed. This is a static observation, not an executed additional refusal or passing case. The frozen32 fixture/control/assertions remain unchanged; wait for the actual complete registered diagnosis and repair the receiver only if its actual terminal proves the frontier. No source mutation for this observation.

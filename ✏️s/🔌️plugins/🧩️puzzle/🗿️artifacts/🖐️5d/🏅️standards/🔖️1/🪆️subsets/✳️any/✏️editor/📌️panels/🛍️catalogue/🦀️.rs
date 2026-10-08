@@ -23,7 +23,7 @@ use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiValue;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json, Value};
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.kinds";
@@ -93,8 +93,8 @@ fn kind_catalog_item(section_id: &str, entry: &(usize, &Value), add_action: Opti
             let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
             // 🌉️ `tree_item_with_action_draggable` (framework-owned, out of this ticket's
             // scope) is typed against `semio_framework_pack_json::Value`; bridges this panel's own
-            // `serde_json::Value` drag payload through `DslValue` at this one call.
-            let drag_data = semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(&drag_data));
+            // `semio_framework_pack_json::Value` drag payload through `DslValue` at this one call.
+            let drag_data = drag_data;
             tree_item_with_action_draggable(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), actions.action(action, Some(add_part_args(kind_id)?))?, &drag_data)
         }
         None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into())),

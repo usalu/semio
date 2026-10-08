@@ -96,6 +96,7 @@ pub(crate) fn print_bcf_mutation(m: &BcfMutation) -> String {
         BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid, guid, snapshot }) => {
             format!("set-viewpoint-snapshot topic-guid={} guid={} snapshot={}", enc_str(topic_guid), enc_str(guid), encode_option(snapshot, |b: &Vec<u8>| enc_bytes(b)))
         }
+        BcfMutation::SetParts(set_parts::SetParts { parts }) => format!("set-parts parts={}", enc_list(parts, enc_part)),
     }
 }
 
@@ -135,6 +136,7 @@ pub(crate) fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
             Ok(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, components: decode_option(arg("components")?, dec_components)? }))
         }
         "set-viewpoint-snapshot" => Ok(BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, snapshot: decode_option(arg("snapshot")?, dec_bytes)? })),
+        "set-parts" => Ok(BcfMutation::SetParts(set_parts::SetParts { parts: dec_list(arg("parts")?, dec_part)? })),
         other => Err(format!("bcf mutation: unknown keyword {other:?}")),
     }
 }

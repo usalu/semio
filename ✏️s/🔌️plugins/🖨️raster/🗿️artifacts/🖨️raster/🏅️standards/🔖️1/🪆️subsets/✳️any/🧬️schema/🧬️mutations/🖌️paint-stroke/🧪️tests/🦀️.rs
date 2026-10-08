@@ -3,7 +3,8 @@
 //! re-derives its pixels — and its downstream — from its base; the store folds it exactly like the leaf.
 
 use super::*;
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation};
+use crate::mutations::{inverse_raster_mutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::{RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use protocol::Mutation;
 

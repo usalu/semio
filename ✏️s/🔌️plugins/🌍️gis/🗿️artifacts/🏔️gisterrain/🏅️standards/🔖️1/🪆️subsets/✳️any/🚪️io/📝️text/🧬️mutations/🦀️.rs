@@ -69,14 +69,15 @@ pub fn gis_terrain_mutation_report_json(base_json: &str, mutation_json: &str, af
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: GisTerrainMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let forward = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(&mutation, &base);
+    let applied = protocol::apply_diff(forward.diff(), &base).map_err(|error| error.to_string())?;
     let inverse = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    for step in &inverse {
-        let outcome = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+    for step in inverse.iter().rev() {
+        let outcome = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(step, &undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
+        undone = protocol::apply_diff(outcome.diff(), &undone).map_err(|error| error.to_string())?;
     }
     let report = semio_framework_pack_json::object([
         ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),

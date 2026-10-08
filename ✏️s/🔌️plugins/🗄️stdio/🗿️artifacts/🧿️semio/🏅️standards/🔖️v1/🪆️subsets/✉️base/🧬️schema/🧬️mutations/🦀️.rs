@@ -267,6 +267,60 @@ mod tests;
 #[cfg(test)]
 #[path = "🖼️apply-image/🧪️tests/🚫️refuses/🦀️.rs"]
 mod apply_image_refuses_a_value_envelope;
+#[cfg(test)]
+#[path = "🌐apply-graph/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_graph_inverts;
+#[cfg(test)]
+#[path = "🎞️apply-animation/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_animation_inverts;
+#[cfg(test)]
+#[path = "🎬apply-video/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_video_inverts;
+#[cfg(test)]
+#[path = "🏛️apply-model/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_model_inverts;
+#[cfg(test)]
+#[path = "📃apply-document/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_document_inverts;
+#[cfg(test)]
+#[path = "📐apply-cad/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_cad_inverts;
+#[cfg(test)]
+#[path = "📦apply-object/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_object_inverts;
+#[cfg(test)]
+#[path = "📽️apply-presentation/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_presentation_inverts;
+#[cfg(test)]
+#[path = "🔀apply-flow/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_flow_inverts;
+#[cfg(test)]
+#[path = "🔊apply-audio/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_audio_inverts;
+#[cfg(test)]
+#[path = "🔢apply-value/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_value_inverts;
+#[cfg(test)]
+#[path = "🔤apply-text/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_text_inverts;
+#[cfg(test)]
+#[path = "🕸️apply-mesh/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_mesh_inverts;
+#[cfg(test)]
+#[path = "🖊️apply-drawing/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_drawing_inverts;
+#[cfg(test)]
+#[path = "🗂️apply-table/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_table_inverts;
+#[cfg(test)]
+#[path = "🧰apply-kit/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_kit_inverts;
+#[cfg(test)]
+#[path = "🧱apply-brep/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_brep_inverts;
+#[cfg(test)]
+#[path = "🖼️apply-image/🧪️tests/↩️inverts/🦀️.rs"]
+mod apply_image_inverts;
 //#endregion 🧪️FixtureCases
 
 #[cfg(test)]

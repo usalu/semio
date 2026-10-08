@@ -13,6 +13,6 @@ pub fn diff(payload: &super::RemoveRepresentationAttribute, base: &Block3dSnapsh
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("representation attribute \"{}\" is not present", payload.key));
     }
     let patch = BlockRepresentationPatch { attributes_removed: vec![payload.key.clone()], ..Default::default() };
-    protocol::MutationOutcome::new(Block3dDiff { representations: Some(BlockRepresentationsDelta { patched: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { representations: BlockRepresentationsDelta { modified: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -443,14 +443,27 @@
     ],
     "assets": {
       "": {
-        "mime": "private/mime",
-        "data": "intrinsic string\u0000not base64",
         "width": 4294967295,
-        "height": 0
+        "height": 0,
+        "samples": []
       },
       "!@/": {
-        "mime": "",
-        "data": ""
+        "width": 2,
+        "height": 1,
+        "samples": [
+          [
+            0,
+            1,
+            255,
+            128
+          ],
+          [
+            17,
+            23,
+            42,
+            0
+          ]
+        ]
       }
     },
     "artboard": {
@@ -458,9 +471,11 @@
       "height": 9
     }
   },
-  "assetKeyOrder": ["", "😀"],
+  "assetKeyOrder": [
+    "",
+    "😀"
+  ],
   "depth": 256,
-  "intrinsicBytes": 100000,
   "cancelAfter": 65536,
   "ieeeWords": [
     "0000000000000000",
@@ -471,5 +486,6 @@
     "7ff8000000000001",
     "fff8000000000001",
     "0000000000000001"
-  ]
+  ],
+  "intrinsicSamples": 100000
 }

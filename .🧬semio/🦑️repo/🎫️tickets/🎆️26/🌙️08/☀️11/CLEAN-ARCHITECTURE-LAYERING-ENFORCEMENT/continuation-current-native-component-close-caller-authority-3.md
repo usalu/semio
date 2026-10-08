@@ -1,0 +1,11 @@
+# Native Component World Close Caller Authority 3
+
+The actual component close path now requires OsHost caller RetainedCloneGrant and StepContext, forwards both through RuntimeMailbox and Shell, and returns RetainedCloneStep with the exact terrain physical receipt or original WorldDynamicFault. OsHost validates each receipt against the same grant and retains it. Missing finite clock authority refuses WorkLimit. No internal query enlarges the caller allowance.
+
+The original admitted surface owner transfers inline under one caller item; no Box birth occurs. Unfunded, canceled, yielded, or zero-depth attempts retain the original owner. The old Shell operation/sequence-only API is removed directly. Original World/status/window/watch owners are retained; their old remove/drop operations and uncontrolled dynamic-begin are no longer executed as though terrain grants admitted their physical release.
+
+When the terrain stage is empty, the current residual World/component family refuses UnsupportedOwner while retaining the exact original owner and map values. This is an enforced temporary receiving frontier, not final component acceptance. Complete is currently reachable only for an absent/non-World owner; no Boolean residual operation is presented as a zero physical receipt. The subsequent canonical residual owner port must finish this path, and all original native assertions remain in place to expose that missing closure. No original tests were weakened or filtered.
+
+Schema and portable contract authored before the production signature/caller ports: native-world-component-close-schema-full-pairs-3.json. Complete current source bodies: native-world-component-caller-authority-full-pairs-3.json. This new source interval has not yet been run; World2 remains the preserved prior dependency red. PortableTerrain3 and new native gates require current exact admission. Regular retirement/aggregate OSHost bool families remain outstanding.
+
+Registered PortableTerrain3 physically closed Nx/Bun 0: 4 laws and 50 assertions, all 1,692 full selected bodies exact. Strict AJV and independent RFC6902 outputs qualify the current receiving contract; this does not establish native runtime or residual owner acceptance.

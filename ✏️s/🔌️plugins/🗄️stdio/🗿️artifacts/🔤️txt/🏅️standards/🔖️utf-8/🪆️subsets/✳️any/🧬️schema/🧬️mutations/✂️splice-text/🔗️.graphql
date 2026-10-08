@@ -1,0 +1,3 @@
+# 🧬 canonical splice-text/SpliceText
+input TextSpliceInput { offset: TxtMutationUInt32V1! delete: TxtMutationUInt32V1! insert: String! }
+input SpliceTextPayload { splices: [TextSpliceInput!]! }

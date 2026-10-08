@@ -1,4 +1,4 @@
-//! ↩️ `scale-selection` — undo restores the object's prior mesh handle and content as ONE `create-mesh`
+//! ↩️ `scale-selection` — undo writes the base position of every vertex the motion moves back as ONE `set-vertex-positions`
 //! (`crate::mutations::lowpoly_selection_motion_inverse`, read off `base` and the payload); a refused motion or one that moves
 //! nothing inverts to nothing.
 

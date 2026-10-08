@@ -6,15 +6,17 @@
   "cementType": null,
   "concreteGrades": null,
   "reinforcementGrades": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "b500",
-        "fYk": 550000000.0
+        "patch": {
+          "fYk": 550000000.0
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "prestressSteels": null,
   "members": null,

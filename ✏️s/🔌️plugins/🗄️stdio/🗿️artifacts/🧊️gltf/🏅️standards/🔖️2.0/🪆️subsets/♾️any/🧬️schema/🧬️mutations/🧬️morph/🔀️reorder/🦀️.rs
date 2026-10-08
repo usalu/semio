@@ -31,8 +31,8 @@ pub fn validate(payload: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let value = permuted(&base.document.meshes[p.mesh].primitives[p.primitive].targets, &p.order);
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+    let rows = GltfTargetsDelta::rows(Vec::new(), Vec::new(), moves_to_order(&base.document.meshes[p.mesh].primitives[p.primitive].targets, &p.order));
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

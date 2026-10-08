@@ -1,54 +1,57 @@
 {
   "objects": {
-    "added": [],
-    "patched": [
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "obj-hull",
-        "paintLayers": {
-          "edits": [
-            {
-              "op": "stroke",
-              "index": 0,
-              "runs": [
-                {
-                  "bytes": "////fw==",
-                  "offset": 80
-                },
-                {
-                  "bytes": "////f////3////9/",
-                  "offset": 108
-                },
-                {
-                  "bytes": "////f////3////9/////f////38=",
-                  "offset": 136
-                },
-                {
-                  "bytes": "////f////3////9/",
-                  "offset": 172
-                },
-                {
-                  "bytes": "////fw==",
-                  "offset": 208
-                }
-              ]
-            }
-          ]
-        },
         "patch": {
-          "mesh": null,
-          "meshContent": null,
-          "name": null,
-          "smoothShading": null,
-          "meshState": null,
-          "position": null,
-          "rotation": null,
-          "scale": null
-        },
-        "meshMotions": []
+          "paintLayers": {
+            "edits": [
+              {
+                "op": "stroke",
+                "index": 0,
+                "runs": [
+                  {
+                    "bytes": "////fw==",
+                    "offset": 80
+                  },
+                  {
+                    "bytes": "////f////3////9/",
+                    "offset": 108
+                  },
+                  {
+                    "bytes": "////f////3////9/////f////38=",
+                    "offset": 136
+                  },
+                  {
+                    "bytes": "////f////3////9/",
+                    "offset": 172
+                  },
+                  {
+                    "bytes": "////fw==",
+                    "offset": 208
+                  }
+                ]
+              }
+            ]
+          },
+          "patch": {
+            "mesh": null,
+            "meshContent": null,
+            "name": null,
+            "smoothShading": null,
+            "meshState": null,
+            "position": null,
+            "rotation": null,
+            "scale": null
+          },
+          "meshVertices": [],
+          "meshAttributes": []
+        }
       }
-    ],
-    "removed": [],
-    "reordered": null
+    ]
   },
   "schema": null
 }

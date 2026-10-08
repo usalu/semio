@@ -1,0 +1,5 @@
+# Native Flow Owning Red 7
+
+The exact registered Flow7 literal row physically closed outer Nx/Bun1, umbrella1, underlying Cargo101. The full original offline locked all-target owning gate selected both semio-framework-os-flow and semio-framework-artifact-flow-flow under original 600000ms and compiler controls. All 1910 expanded captured bodies include full GeneralUI and all declared receiving roots; exactSelectedSources=false, exactProducer=true. Full peer captured/terminal/current bodies are preserved in native-flow-7-live-peer-source-full-pairs.json.
+
+The actual OS kernel stopped before runtime with 749 compiler errors (750 diagnostic blocks including terminal summary). The old SnapshotRetirementStep imports, one-byte/scalar close-demand implementations, two-argument retirement receivers and partial namespace/caller ports remain incoherent against the canonical full grant contract. Per-file diagnostic counts and full raw compiler output are retained in the gate generated directory. No owning Flow law or whole OS acceptance is claimed. Full typed physical receiving closure remains necessary; original vectors and controls are preserved.

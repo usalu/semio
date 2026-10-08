@@ -1,0 +1,7 @@
+# Actual Full Shared Retirement Control
+
+The defining variable full SharedCustody schema preceded the native law. The law reuses every original shared-physical fixture capacity and original work grant, with independent Serde/String wire identity and allocator observation. Registered complete General Value19 genuinely refused missing RetireOwned for original Arc<String> before assertions; all238 selected bodies and producer were exact.
+
+A defining SharedControlledRetirement now retains the original Arc payload inline, waits for all strong aliases and weak backing leases, admits the actual Arc layout physical release, then delegates every nested work/birth/release/depth authority to the existing ControlledRetirement. Zero and one-short grants retain the exact original owner and perform no allocator event. No cursor/frame Vec bridge or guessed enlarged work/release grant is introduced. The type is directly supported by RetireOwned for Arc<T>.
+
+Actual complete registered General Value20 closed Nx0/Cargo0 with all189 tests passed, zero failed/ignored/filtered. Every239 selected bodies, producer and Root lock remained exact. The original188 tests remain, plus the actual shared alias/weak allocation law. All fixture cases at work1/3/5/4096 conserve original payload-plus-Arc bytes plus every admitted scaffold, with per-step actual allocator equality and exact original UTF8 copied bytes. The original legacy erased Snapshot factories are still not inferred ported from this defining capability and remain active full receiving work.

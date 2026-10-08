@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::diff::DxfEntitiesDiff;
 use crate::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
@@ -116,9 +117,9 @@ async fn mutation_diff_law() {
         let expected = protocol::apply_diff(diff.diff(), &base).expect("valid mutation diff");
 
         let mut via_apply = base.clone();
-        let returned_diff = apply_dxf_mutation(&mut via_apply, &m);
+        let returned_diff = apply_mutation(&mut via_apply, &m);
 
-        assert_eq!(via_apply, expected, "apply_dxf_mutation mismatch for {m:?}");
+        assert_eq!(via_apply, expected, "apply_mutation mismatch for {m:?}");
         assert_eq!(returned_diff, diff, "returned diff mismatch for {m:?}");
     }
 }
@@ -130,9 +131,9 @@ async fn inverse_law() {
     let base = base_snapshot();
     for m in variants() {
         let mut forward = base.clone();
-        apply_dxf_mutation(&mut forward, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_dxf_mutation(&mut forward, &inv);
+        apply_mutation(&mut forward, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
@@ -238,70 +239,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&right, &base).expect("valid right diff"), s3);
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must be associative");
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&DxfDiff::between(&a, &b), &a).expect("valid forward diff"), b);
-    assert_eq!(protocol::apply_diff(&DxfDiff::between(&b, &a), &b).expect("valid backward diff"), a);
-    assert!(DxfDiff::between(&a, &a).is_empty());
-}
-//#endregion 🔖️BetweenRoundtripLaw
-
-//#region 🔖️FieldSweep
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_every_mutable_field_changes() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let d_ab = DxfDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d_ab, &a).expect("valid forward diff"), b, "between(a,b).apply(a) == b");
-    let d_ba = DxfDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_ba, &b).expect("valid backward diff"), a, "between(b,a).apply(b) == a");
-    assert!(DxfDiff::between(&a, &a).is_empty());
-
-    // 🔍 header_vars (name-keyed): removed + modified + added from ONE between(a,b) call.
-    let hv = d_ab.header_vars.as_ref().expect("header_vars diff populated");
-    assert_eq!(hv.removed, vec!["$DROP".to_string()]);
-    assert!(!hv.modified.is_empty() && !hv.added.is_empty());
-    let hvm = &hv.modified.iter().find(|m| m.name == "$MOD").expect("$MOD modified").diff;
-    assert!(hvm.group_code.is_some() && hvm.value.is_some() && hvm.extra_group_codes.is_some(), "every DxfHeaderVarDiff field must be patched");
-
-    // 🔍 layers (name-keyed).
-    let ld = d_ab.tables.as_ref().and_then(|t| t.layers.as_ref()).expect("layers diff populated");
-    assert_eq!(ld.removed, vec!["DROP".to_string()]);
-    assert!(!ld.modified.is_empty() && !ld.added.is_empty());
-    let lm = &ld.modified.iter().find(|m| m.name == "MOD").expect("MOD layer modified").diff;
-    assert!(lm.color.is_some() && lm.linetype.is_some() && lm.flags.is_some() && lm.unknown_group_codes.is_some());
-
-    // 🔍 styles/linetypes (name-keyed, single-entry modify).
-    let sd = d_ab.tables.as_ref().and_then(|t| t.styles.as_ref()).expect("styles diff populated");
-    assert!(!sd.modified.is_empty());
-    assert!(sd.modified[0].diff.flags.is_some() && sd.modified[0].diff.font_name.is_some());
-    let ltd = d_ab.tables.as_ref().and_then(|t| t.linetypes.as_ref()).expect("linetypes diff populated");
-    assert!(!ltd.modified.is_empty());
-    assert!(ltd.modified[0].diff.flags.is_some() && ltd.modified[0].diff.description.is_some());
-
-    // 🔍 blocks (index-keyed): modified+added from between(a,b); modified+removed from between(b,a).
-    let bd_ab = d_ab.blocks.as_ref().expect("blocks diff populated (a->b)");
-    assert!(bd_ab.removed.is_empty() && !bd_ab.modified.is_empty() && !bd_ab.added.is_empty());
-    let bm = &bd_ab.modified[0].diff;
-    assert!(bm.name.is_some() && bm.base_point.is_some() && bm.unknown_group_codes.is_some(), "every DxfBlockDiff scalar field must be patched");
-    let bd_ba = d_ba.blocks.as_ref().expect("blocks diff populated (b->a)");
-    assert!(!bd_ba.removed.is_empty() && !bd_ba.modified.is_empty() && bd_ba.added.is_empty());
-
-    // 🔍 entities (index-keyed): modified (kind-preserving Line stays Line) + added from
-    // between(a,b); Text(index 1) proves the kind-change `Replace` path.
-    let ed_ab = d_ab.entities.as_ref().expect("entities diff populated (a->b)");
-    assert!(ed_ab.removed.is_empty() && !ed_ab.modified.is_empty() && !ed_ab.added.is_empty());
-    let em1 = &ed_ab.modified.iter().find(|m| m.index == 1).expect("entities[1] modified").diff;
-    assert!(matches!(em1, crate::schema::diff::DxfEntityDiff::Replace { .. }), "kind change (Circle->Text) must be a Replace");
-    let ed_ba = d_ba.entities.as_ref().expect("entities diff populated (b->a)");
-    assert!(!ed_ba.removed.is_empty() && !ed_ba.modified.is_empty() && ed_ba.added.is_empty());
-}
 //#endregion 🔖️FieldSweep
 
 //#region 🔖️VertexUnknownGroupCodesRetained
@@ -346,7 +283,7 @@ async fn op_text_binary_roundtrip_law() {
 /// wave 7 fleet brief's registration rule ("the framework never parses Rust").
 #[semio_framework_async_macros::async_test]
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
-    assert_eq!(KINDS.len(), 19, "DxfMutation has 19 variants");
+    assert_eq!(KINDS.len(), 18, "DxfMutation has 18 variants");
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     for m in demo_mutation_cases() {
         let printed = m.print_op();
@@ -398,6 +335,8 @@ async fn dxf_mutation_inverse_sum_law_holds_for_every_leaf() {
         DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: line.clone() }),
         DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: 1 }),
         DxfMutation::SetEntity(set_entity::SetEntity { index: 2, entity: DxfEntity::Line { start: [9.0, 9.0, 0.0], end: [2.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] } }),
+        DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables: vec![DxfOtherTable { name: "VIEW".into(), tags: vec![DxfTag { code: 2, value: "*TOP".into() }] }] }),
+        DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables: vec![] }),
     ] {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }

@@ -5,6 +5,8 @@
 
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use std::collections::{BTreeMap, HashMap};
+use semio_framework_job::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
 
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
@@ -216,7 +218,7 @@ pub struct TriMesh2 {
 }
 
 /// ⚙️ Refinement targets for [`triangulate`] — either left at `0.0` to disable that constraint.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MeshOpts {
     pub max_edge: f64,
     pub min_angle_deg: f64,
@@ -1394,7 +1396,7 @@ impl MeshJob {
     }
 
     /// 🧹️ Retires one exact mesh/domain owner per governed close opportunity.
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    fn retire_owner_turn(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if let Some(writer) = self.publication_writer.as_mut() {
             return match writer.close_step(1, maximum_bytes) {
                 semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => (false, released_items, released_bytes),
@@ -2319,20 +2321,26 @@ impl InteractiveJob for MeshJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        let (complete, released_items, released_bytes) = MeshJob::close_step(self, maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
-        }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        MeshJob::close_step(self, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.publication_writer.is_none() && self.close_lane > 9
+            && self.preparation.is_none() && self.prepared_input.is_none() && self.triangulation.is_none()
+            && self.constraints.capacity() == 0 && self.mesh.points.capacity() == 0 && self.mesh.tris.capacity() == 0
+            && self.point_index.capacity() == 0 && self.indexed_constraint_edges.capacity() == 0
+            && match &self.domain {
+                MeshDomainOwner::Dynamic(domain) => domain.outer.capacity() == 0 && domain.holes.capacity() == 0,
+                MeshDomainOwner::Mounted(domain) => domain.outer.len == 0 && domain.outer.admitted == 0
+                    && domain.hole_count == 0 && domain.admitted_holes == 0
+                    && domain.holes.iter().all(|hole| hole.len == 0 && hole.admitted == 0),
+            }
     }
 }
 // #endregion 🧵️IncrementalMeshJob
@@ -2687,3 +2695,99 @@ pub fn volume_mesh_quality(mesh: &VolumeMesh) -> QualityReport {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 // #endregion 🔖️Tests
+
+fn vector_retirement_demand<T>(owner: &Vec<T>, depth: usize) -> Result<Option<RetirementDemand>, ValueError> {
+    if !owner.is_empty() {
+        return Ok(Some(RetirementDemand { copy_bytes: size_of::<T>(), depth, ..RetirementDemand::default() }));
+    }
+    let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "mesh vector backing extent overflow"))?;
+    Ok((bytes != 0).then_some(RetirementDemand { release_bytes: bytes, depth, ..RetirementDemand::default() }))
+}
+
+fn logical_retirement_demand() -> RetirementDemand {
+    RetirementDemand { depth: 1, ..RetirementDemand::default() }
+}
+
+impl MeshJob {
+    fn retirement_demand(&self) -> Result<RetirementDemand, ValueError> {
+        if let Some(writer) = self.publication_writer.as_ref() {
+            return Ok(RetirementDemand { release_bytes: writer.next_close_byte_demand(), depth: 1, ..RetirementDemand::default() });
+        }
+        for lane in self.close_lane..=9 {
+            match lane {
+                0 => match &self.domain {
+                    MeshDomainOwner::Dynamic(domain) => if let Some(demand) = vector_retirement_demand(&domain.outer, 1)? { return Ok(demand); },
+                    MeshDomainOwner::Mounted(domain) => {
+                        if domain.close_hole < domain.hole_count {
+                            let polygon = &domain.holes[domain.close_hole];
+                            return Ok(RetirementDemand { copy_bytes: if polygon.len != 0 { size_of::<[f64; 2]>() } else { 0 }, depth: 2, ..RetirementDemand::default() });
+                        }
+                        if domain.hole_count != 0 || domain.admitted_holes != 0 || domain.outer.len != 0 || domain.outer.admitted != 0 {
+                            return Ok(RetirementDemand { copy_bytes: if domain.hole_count == 0 && domain.admitted_holes == 0 && domain.outer.len != 0 { size_of::<[f64; 2]>() } else { 0 }, depth: 1, ..RetirementDemand::default() });
+                        }
+                    }
+                },
+                1 => if let MeshDomainOwner::Dynamic(domain) = &self.domain {
+                    if let Some(hole) = domain.holes.last() {
+                        return Ok(vector_retirement_demand(hole, 2)?.unwrap_or(RetirementDemand { copy_bytes: size_of::<Vec<[f64; 2]>>(), depth: 1, ..RetirementDemand::default() }));
+                    }
+                    if let Some(demand) = vector_retirement_demand(&domain.holes, 1)? { return Ok(demand); }
+                },
+                2 => if let Some(owner) = self.preparation.as_ref() {
+                    if let Some(demand) = vector_retirement_demand(&owner.points, 1)? { return Ok(demand); }
+                    if let Some(demand) = vector_retirement_demand(&owner.constraints, 1)? { return Ok(demand); }
+                    if let Some(demand) = vector_retirement_demand(&owner.point_indices, 1)? { return Ok(demand); }
+                    return Ok(logical_retirement_demand());
+                },
+                3 => if let Some((points, edges)) = self.prepared_input.as_ref() {
+                    if let Some(demand) = vector_retirement_demand(points, 1)? { return Ok(demand); }
+                    if let Some(demand) = vector_retirement_demand(edges, 1)? { return Ok(demand); }
+                    return Ok(logical_retirement_demand());
+                },
+                4 => if let Some(owner) = self.triangulation.as_ref() {
+                    if let Some(insertion) = owner.insertion.as_ref() {
+                        if let Some(demand) = vector_retirement_demand(&insertion.bad, 1)? { return Ok(demand); }
+                        if let Some(demand) = vector_retirement_demand(&insertion.boundary, 1)? { return Ok(demand); }
+                        if let Some(demand) = vector_retirement_demand(&insertion.retained, 1)? { return Ok(demand); }
+                        return Ok(logical_retirement_demand());
+                    }
+                    if let Some(demand) = vector_retirement_demand(&owner.points, 1)? { return Ok(demand); }
+                    if let Some(demand) = vector_retirement_demand(&owner.triangles, 1)? { return Ok(demand); }
+                    if let Some(demand) = vector_retirement_demand(&owner.insertion_order, 1)? { return Ok(demand); }
+                    return Ok(logical_retirement_demand());
+                },
+                5 => if let Some(demand) = vector_retirement_demand(&self.constraints, 1)? { return Ok(demand); },
+                6 => if let Some(demand) = vector_retirement_demand(&self.mesh.points, 1)? { return Ok(demand); },
+                7 => if let Some(demand) = vector_retirement_demand(&self.mesh.tris, 1)? { return Ok(demand); },
+                8 => if let Some(demand) = vector_retirement_demand(&self.point_index, 1)? { return Ok(demand); },
+                9 => if let Some(demand) = vector_retirement_demand(&self.indexed_constraint_edges, 1)? { return Ok(demand); },
+                _ => {}
+            }
+        }
+        Ok(RetirementDemand::default())
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        let demand = match self.retirement_demand() {
+            Ok(demand) => demand,
+            Err(error) => return InteractiveJobCloseStep::Refused(error.kind),
+        };
+        if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
+        if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused(ValueRefusalKind::DepthLimit); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        let (complete, items, bytes) = self.retire_owner_turn(grant.maximum_release_bytes);
+        let progress = RetainedCloneProgress { copied_items: items, copied_bytes: if items != 0 { demand.copy_bytes } else { 0 }, released_bytes: bytes, ..RetainedCloneProgress::default() };
+        let step = if complete { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } };
+        step.admit(grant, self.terminal_is_empty())
+    }
+}
+
+#[path = "📐️surface/🧬️schema/🦀️.rs"]
+pub mod surface_schema;
+
+#[cfg(test)]
+#[path = "📐️surface/🧪️tests/🦀️.rs"]
+mod surface_tests;

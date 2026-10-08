@@ -3,7 +3,8 @@
 use super::{puzzle2d_proximity_connect, puzzle2d_proximity_pairs};
 use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::editor::puzzle2d::{board_snapshot_edges, PUZZLE2D_PROXIMITY_GESTURE_MAX};
-use serde_json::{json, Value};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use semio_framework_pack_json::{json, Value};
 
 /// 🧱️ Two circle nodes whose `v0` handles face each other: the left node's rim handle sits at
 /// `(x + 24, y)` (east-zero angle 0) and the right node's at `(gap - 24, y)` (angle π), so the two
@@ -23,21 +24,22 @@ fn facing_pair(gap: f64) -> Value {
 /// 🧲️ Inside the radius the drop connects; outside it does not.
 #[test]
 fn proximity_connects_inside_the_radius_and_never_outside() {
-    let mut near = facing_pair(52.0);
+    let mut near = recorder_of(facing_pair(52.0));
     assert_eq!(puzzle2d_proximity_connect(&mut near, &["right".to_string()], 12.0), 1, "handles 4 units apart connect under a 12-unit radius");
-    let edge = &board_snapshot_edges(&near)[0];
+    let edge = &board_snapshot_edges(near.value())[0];
     assert_eq!(edge.get("source").and_then(Value::as_str), Some("left:v0"), "the stationary peer stays the edge source");
     assert_eq!(edge.get("target").and_then(Value::as_str), Some("right:v0"), "the moved node's handle is the edge target");
+    assert!(matches!(near.rows(), [Puzzle2dMutation::ConnectHandles(row)] if row.tolerance == Some(12.0)), "one connect-handles states the radius it was recorded under: {:?}", near.rows());
 
-    let mut far = facing_pair(120.0);
+    let mut far = recorder_of(facing_pair(120.0));
     assert_eq!(puzzle2d_proximity_connect(&mut far, &["right".to_string()], 12.0), 0, "handles 72 units apart never connect under a 12-unit radius");
-    assert!(board_snapshot_edges(&far).is_empty(), "an out-of-range drop splices no edge");
+    assert!(board_snapshot_edges(far.value()).is_empty() && far.rows().is_empty(), "an out-of-range drop records no edge");
 }
 
 /// 🚫️ A zero radius disarms the whole feature, and an incompatible pair is refused whatever the distance.
 #[test]
 fn proximity_respects_the_radius_gate_and_the_compatibility_table() {
-    let mut zero = facing_pair(52.0);
+    let mut zero = recorder_of(facing_pair(52.0));
     assert_eq!(puzzle2d_proximity_connect(&mut zero, &["right".to_string()], 0.0), 0, "a zero radius disarms the auto-connect");
 
     let mut incompatible = facing_pair(52.0);
@@ -67,7 +69,7 @@ fn proximity_never_exceeds_the_gesture_budget() {
         nodes.push(json!({ "id": format!("left{index}"), "shape": "circle", "x": 0.0, "y": y, "radius": 24.0, "handles": [{ "id": format!("left{index}:v0"), "handleKind": "a", "angle": 0.0 }] }));
         nodes.push(json!({ "id": format!("right{index}"), "shape": "circle", "x": 52.0, "y": y, "radius": 24.0, "handles": [{ "id": format!("right{index}:v0"), "handleKind": "a", "angle": std::f64::consts::PI }] }));
     }
-    let mut snapshot = json!({ "schema": "board.ports.directed.v1", "meta": { "kindCompatibility": [{ "source": "a", "target": "a", "bidirectional": true, "important": false, "specificity": "handle" }] }, "nodes": nodes, "edges": [] });
+    let mut snapshot = recorder_of(json!({ "schema": "board.ports.directed.v1", "meta": { "kindCompatibility": [{ "source": "a", "target": "a", "bidirectional": true, "important": false, "specificity": "handle" }] }, "nodes": nodes, "edges": [] }));
     let moved: Vec<String> = (0..(PUZZLE2D_PROXIMITY_GESTURE_MAX + 8)).map(|index| format!("right{index}")).collect();
     assert_eq!(puzzle2d_proximity_connect(&mut snapshot, &moved, 12.0), PUZZLE2D_PROXIMITY_GESTURE_MAX, "one gesture spends at most its fixed edge budget");
 }
@@ -78,7 +80,7 @@ fn proximity_never_exceeds_the_gesture_budget() {
 fn node_drop_auto_connects_as_one_history_edit() {
     let mut app = app_with_registry();
     let seed = facing_pair(1_000.0);
-    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": seed })), None).expect("seed the board");
+    seed_board(&mut app, &seed);
     let before = fixture_of(&app);
     assert!(board_snapshot_edges(&before).is_empty(), "the seeded board starts unconnected: {before}");
     let events = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": ["right"], "dx": -948.0, "dy": 0.0, "proximity": [] } }]).to_string();

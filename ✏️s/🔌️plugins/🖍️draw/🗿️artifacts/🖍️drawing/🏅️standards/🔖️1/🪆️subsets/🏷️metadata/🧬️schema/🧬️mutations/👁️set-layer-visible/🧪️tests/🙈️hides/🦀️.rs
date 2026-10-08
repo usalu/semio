@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
@@ -87,14 +88,14 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "set-layer-visible/hides-shape-a: the flag really flips, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("set-layer-visible's diff pins a layers delta");
-    assert_eq!(delta.patched.len(), 1, "set-layer-visible patches exactly one layer");
-    assert_eq!(delta.patched[0].id, "shape-a", "the patch is addressed to the payload's layer_id");
-    assert_eq!(delta.patched[0].patch.visible, Some(false), "the patch pins the visible field");
-    assert_eq!(delta.patched[0].patch.layer, None, "a visibility flip must never fall back to a whole-layer JSON replacement");
-    assert!(delta.added.is_empty() && delta.removed.is_empty(), "set-layer-visible is structurally inert");
+    assert_eq!(delta.modified.len(), 1, "set-layer-visible patches exactly one layer");
+    assert_eq!(delta.modified[0].id, "shape-a", "the patch is addressed to the payload's layer_id");
+    assert_eq!(delta.modified[0].patch.visible, Some(false), "the patch pins the visible field");
+    assert_eq!(delta.modified[0].patch.layer, None, "a visibility flip must never fall back to a whole-layer JSON replacement");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "set-layer-visible is structurally inert");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: a single `patched` entry whose `DrawingLayerPatch`
+/// 🔺️ The produced diff is EXACTLY the committed one: a single `modified` entry whose `DrawingLayerPatch`
 /// sets `visible` and leaves its other ten fields `null`. `DrawingLayerPatch` has no
 /// `skip_serializing_if`, so those nulls are committed explicitly — that is what proves a hide never
 /// degrades into a whole-layer `layer` replacement.
@@ -105,7 +106,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-layer-visible/hides-shape-a: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("set-layer-visible pins a layers delta");
-    let patch = &delta.patched[0].patch;
+    let patch = &delta.modified[0].patch;
     assert_eq!(patch.visible, Some(false), "the visible lane carries the new flag");
     assert!(patch.locked.is_none() && patch.opacity.is_none() && patch.blend_mode.is_none(), "the sibling base-field lanes stay empty");
     assert!(patch.layer.is_none(), "a visibility flip must never fall back to a whole-layer replacement");

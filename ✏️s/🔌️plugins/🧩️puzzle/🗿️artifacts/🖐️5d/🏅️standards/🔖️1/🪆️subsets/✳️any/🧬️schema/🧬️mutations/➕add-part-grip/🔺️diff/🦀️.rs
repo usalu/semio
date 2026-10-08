@@ -11,12 +11,8 @@ pub fn diff(payload: &super::AddPartGrip, base: &Puzzle5dSnapshot) -> protocol::
     if part.grips.iter().any(|grip| grip.id == payload.grip.id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Grip \"{}\" already exists on part \"{}\".", payload.grip.id, payload.part_id));
     }
-    let reordered = payload.index.filter(|index| *index < part.grips.len()).map(|index| {
-        let mut order: Vec<String> = part.grips.iter().map(|grip| grip.id.clone()).collect();
-        order.insert(index, payload.grip.id.clone());
-        order
-    });
-    let patch = Puzzle5dPartPatch { grips: Some(Puzzle5dGripsDelta::adding(payload.grip.clone(), reordered)), ..Default::default() };
-    protocol::MutationOutcome::new(Puzzle5dDiff { parts: Some(Puzzle5dPartsDelta::patching(payload.part_id.clone(), patch)), ..Default::default() })
+    let index = payload.index.map_or(part.grips.len(), |index| index.min(part.grips.len()));
+    let patch = Puzzle5dPartPatch { grips: Some(Puzzle5dGripsDelta::insertion(index, payload.grip.clone())), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle5dDiff { parts: Some(Puzzle5dPartsDelta::modification(payload.part_id.clone(), patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

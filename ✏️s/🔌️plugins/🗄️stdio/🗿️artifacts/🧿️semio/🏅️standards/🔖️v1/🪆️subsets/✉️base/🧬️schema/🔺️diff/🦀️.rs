@@ -171,38 +171,6 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
 }
 
 impl DiffAlgebra<SemioSnapshot> for SemioDiff {
-    fn between(base: &SemioSnapshot, other: &SemioSnapshot) -> Self {
-        use SemioSubsetSnapshot as S;
-        match (&base.subset, &other.subset) {
-            (S::Brep(b), S::Brep(o)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(b, o)),
-            (S::Mesh(b), S::Mesh(o)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(b, o)),
-            (S::Model(b), S::Model(o)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(b, o)),
-            (S::Value(b), S::Value(o)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::between(b, o)),
-            (S::Document(b), S::Document(o)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(b, o)),
-            (S::Cad(b), S::Cad(o)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(b, o)),
-            (S::Drawing(b), S::Drawing(o)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(b, o)),
-            (S::Image(b), S::Image(o)) => SemioDiff::Image(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(b, o)),
-            (S::Video(b), S::Video(o)) => SemioDiff::Video(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(b, o)),
-            (S::Audio(b), S::Audio(o)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(b, o)),
-            (S::Animation(b), S::Animation(o)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(b, o)),
-            (S::Presentation(b), S::Presentation(o)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(b, o)),
-            (S::Flow(b), S::Flow(o)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(b, o)),
-            (S::Text(b), S::Text(o)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::between(b, o)),
-            (S::Table(b), S::Table(o)) => SemioDiff::Table(<SemioTableDiff as DiffAlgebra<SemioTableSnapshot>>::between(b, o)),
-            (S::Graph(b), S::Graph(o)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::between(b, o)),
-            (S::Object(b), S::Object(o)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::between(b, o)),
-            (S::Kit(b), S::Kit(o)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::between(b, o)),
-            // 🧭 Different kinds have no sparse representation: a subset-kind change is a document load, never a diff.
-            _ => {
-                if base == other {
-                    SemioDiff::NoChange
-                } else {
-                    SemioDiff::Rejected(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset kinds differ; a subset-kind change is a document load, not a diff").at(["subset"]))
-                }
-            }
-        }
-    }
-
     fn inverse(&self, base: &SemioSnapshot) -> Self {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
@@ -277,39 +245,33 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Demo
-/// 🌱 Representative `SemioDiff` cases for this facet's conformance-law tests: `NoChange`, all 13
-/// same-kind (empty-but-real-tagged) nested diffs, and one `Replace`. Single source of truth for
-/// both this file's own round-trip test and `🎹️composer/🦀️.rs`'s `diff_grammar_
-/// conformance_law`/`protocol_walk_law`.
+/// 🌱 Representative `SemioDiff` cases for this facet's conformance-law tests: `NoChange` and one empty-but-real-tagged nested diff per
+/// subset. Single source of truth for both this file's own round-trip test and `🎹️composer/🦀️.rs`'s `diff_grammar_conformance_law`/
+/// `protocol_walk_law`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
-    let subsets: Vec<SemioSubsetSnapshot> = vec![
-        SemioSubsetSnapshot::Brep(Default::default()),
-        SemioSubsetSnapshot::Mesh(Default::default()),
-        SemioSubsetSnapshot::Model(Default::default()),
-        SemioSubsetSnapshot::Value(Default::default()),
-        SemioSubsetSnapshot::Document(Default::default()),
-        SemioSubsetSnapshot::Cad(Default::default()),
-        SemioSubsetSnapshot::Drawing(Default::default()),
-        SemioSubsetSnapshot::Image(Default::default()),
-        SemioSubsetSnapshot::Video(Default::default()),
-        SemioSubsetSnapshot::Audio(Default::default()),
-        SemioSubsetSnapshot::Animation(Default::default()),
-        SemioSubsetSnapshot::Presentation(Default::default()),
-        SemioSubsetSnapshot::Flow(Default::default()),
-        SemioSubsetSnapshot::Text(Default::default()),
-        SemioSubsetSnapshot::Table(Default::default()),
-        SemioSubsetSnapshot::Graph(Default::default()),
-        SemioSubsetSnapshot::Object(Default::default()),
-        SemioSubsetSnapshot::Kit(Default::default()),
-    ];
-    let mut cases = vec![SemioDiff::NoChange];
-    for subset in subsets {
-        let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };
-        cases.push(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&snap, &snap));
-    }
-    cases
+    vec![
+        SemioDiff::NoChange,
+        SemioDiff::Brep(Default::default()),
+        SemioDiff::Mesh(Default::default()),
+        SemioDiff::Model(Default::default()),
+        SemioDiff::Value(Default::default()),
+        SemioDiff::Document(Default::default()),
+        SemioDiff::Cad(Default::default()),
+        SemioDiff::Drawing(Default::default()),
+        SemioDiff::Image(Default::default()),
+        SemioDiff::Video(Default::default()),
+        SemioDiff::Audio(Default::default()),
+        SemioDiff::Animation(Default::default()),
+        SemioDiff::Presentation(Default::default()),
+        SemioDiff::Flow(Default::default()),
+        SemioDiff::Text(Default::default()),
+        SemioDiff::Table(Default::default()),
+        SemioDiff::Graph(Default::default()),
+        SemioDiff::Object(Default::default()),
+        SemioDiff::Kit(Default::default()),
+    ]
 }
 //#endregion 🔖️Demo
 

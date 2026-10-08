@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+  "sha256": "ca04839d4f39ded001c8b2dbea2389db2c27140140b729ebfefab46e32616bb5",
+  "before": "  console.log(\"[DEBUG] installed Store/SpaceMember source contract uses genuine full grant and fallible Demand; independent Demand oracle above, native custody proof pending\");",
+  "after": "  const semio = readFileSync(join(root, \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs\"), \"utf8\");\n  expect(semio).not.toContain(\"SemioStoreOwnedDisposer\");\n  expect(semio).not.toContain(\"enum SemioStoreClosePhase\");\n  expect(semio).toContain(\"dsl::ArtifactStoreCursorDisposer::<Self, subsets::$module::schema::mutations::$mutation>::new()\");\n  console.log(\"[DEBUG] installed Store/SpaceMember and exact Stdio Semio catalog source contract; independent Demand oracle above, native custody proof pending\");"
+}

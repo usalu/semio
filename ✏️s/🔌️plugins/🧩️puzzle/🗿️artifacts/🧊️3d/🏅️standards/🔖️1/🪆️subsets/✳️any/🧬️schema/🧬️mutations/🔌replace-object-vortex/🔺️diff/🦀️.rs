@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplaceObjectVortex` — patches the presentation fields of one vortex inside
 //! the owner object. An absent object or an absent vortex is `mutation.target-missing`; a replacement that
 //! keeps every field is the `mutation.no-op` warning. A replacement keeps the addressed vortex's id.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta, Puzzle3dVortexPatch, Puzzle3dVorticesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta, Puzzle3dVortexPatch, Puzzle3dVorticesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
@@ -28,7 +29,7 @@ pub fn diff(payload: &super::mutation::ReplaceObjectVortex, base: &Puzzle3dSnaps
     if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.object_id.clone()])]);
     }
-    let object_patch = Puzzle3dObjectPatch { vortices: Some(Puzzle3dVorticesDelta::patching(payload.vortex_id.clone(), patch)), ..Default::default() };
-    protocol::MutationOutcome::new(Puzzle3dDiff { objects: Some(Puzzle3dObjectsDelta::patching(payload.object_id.clone(), object_patch)), ..Default::default() })
+    let object_patch = Puzzle3dObjectPatch { vortices: Some(Puzzle3dVorticesDelta::modification(payload.vortex_id.clone(), patch)), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle3dDiff { objects: Some(Puzzle3dObjectsDelta::modification(payload.object_id.clone(), object_patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

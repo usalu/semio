@@ -74,9 +74,6 @@ impl protocol::DiffAlgebra<Block2dConfig> for Block2dConfigDiff {
     fn inverse(&self, _base: &Block2dConfig) -> Self {
         Self {}
     }
-    fn between(_base: &Block2dConfig, _other: &Block2dConfig) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

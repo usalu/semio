@@ -7,7 +7,7 @@ use super::fill_tool_transactions::{blank_layer, document_rows, retire};
 use super::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixture};
 use super::*;
 use crate::editor::raster::commands::paint_stroke::{paint_stroke_leaf, PaintStroke, RASTER_PAINT_TOOL_ID};
-use crate::mutations::apply_raster_mutation;
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use semio_framework_plugin::PluginApp;
 
 fn press(layer: &str, phase: Option<&str>, gesture: &str, xs: &[f64], ys: &[f64]) -> RasterCommand {

@@ -29,11 +29,8 @@ export {
   DOCUMENT_CHECK_IN_MAX_BYTES,
   DOCUMENT_CHECK_IN_SCHEMA_V1,
   DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
-  documentCheckInCanonicalJson,
   isEditedArtifactFrontierV1,
   isTerminalDocumentCheckInPhaseV1,
-  parseDocumentCheckInStatusV1,
-  parseDocumentCheckInV1,
 } from "./📌️document-check-in-v1/🟦️.ts";
 export type {
   DocumentCheckInPhaseV1,
@@ -208,16 +205,7 @@ export const USER_PREFERENCE_MUTATION_MAX_BYTES = 4096;
 
 /** 🛡️ A preference vocabulary id (`os.config.ui-preferences.v1`) and one JSON object text within its bound — the Rust
  * twin's `valid_user_preference_record_v1`. The hub never reads the object; the vocabulary's own clients do. */
-export function validUserPreferenceRecordV1(schema: unknown, mutation: unknown): boolean {
-  if (typeof schema !== "string" || schema.length === 0 || new TextEncoder().encode(schema).length > USER_PREFERENCE_SCHEMA_ID_MAX_BYTES || !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/u.test(schema)) return false;
-  if (typeof mutation !== "string" || mutation.length < 2 || new TextEncoder().encode(mutation).length > USER_PREFERENCE_MUTATION_MAX_BYTES) return false;
-  try {
-    const value: unknown = JSON.parse(mutation);
-    return value !== null && typeof value === "object" && !Array.isArray(value);
-  } catch {
-    return false;
-  }
-}
+
 
 export type DirectoryEventBody =
   | DirectoryEventUserPreferenceRecorded
@@ -263,7 +251,7 @@ export interface DirectoryEventPageV1 {
   receiptSha256: string;
 }
 
-function directoryEventPageObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
+export function directoryEventPageObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("directory-event-page.invalid-object");
   const object = value as Record<string, unknown>;
   const accepted = new Set([...required, ...optional]);
@@ -271,23 +259,23 @@ function directoryEventPageObject(value: unknown, required: readonly string[], o
   return object;
 }
 
-function directoryEventPageHasControl(value: unknown): boolean {
+export function directoryEventPageHasControl(value: unknown): boolean {
   if (typeof value === "string") return /\p{Cc}/u.test(value);
   if (Array.isArray(value)) return value.some(directoryEventPageHasControl);
   return value !== null && typeof value === "object" && Object.entries(value).some(([key, child]) => /\p{Cc}/u.test(key) || directoryEventPageHasControl(child));
 }
 
-function directoryEventPageInteger(value: unknown, positive = false): number {
+export function directoryEventPageInteger(value: unknown, positive = false): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < (positive ? 1 : 0)) throw new Error("directory-event-page.invalid-integer");
   return value;
 }
 
-function directoryEventPageHash(value: unknown, nonzero: boolean): string {
+export function directoryEventPageHash(value: unknown, nonzero: boolean): string {
   if (typeof value !== "string" || !/^[0-9a-f]{64}$/u.test(value) || (nonzero && /^0{64}$/u.test(value))) throw new Error("directory-event-page.invalid-hash");
   return value;
 }
 
-function directoryEventPageNestedShapes(body: Record<string, unknown>): void {
+export function directoryEventPageNestedShapes(body: Record<string, unknown>): void {
   const exact = (value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> => directoryEventPageObject(value, required, optional);
   const texts = (object: Record<string, unknown>, fields: readonly string[]): void => {
     if (fields.some((field) => typeof object[field] !== "string")) throw new Error("directory-event-page.invalid-text");
@@ -349,108 +337,14 @@ function directoryEventPageNestedShapes(body: Record<string, unknown>): void {
 }
 
 /** 📇️ Validates one directory event outside a page (the space index lane's events), by the page's own event rules. */
-export function parseDirectoryEventV1(value: unknown): DirectoryEvent {
-  return directoryEventPageEvent(value);
-}
 
-function directoryEventPageEvent(value: unknown): DirectoryEvent {
-  const event = directoryEventPageObject(value, ["seq", "id", "hlc", "actor", "body", "recordedAtMs"], ["spaceId", "userId"]);
-  directoryEventPageInteger(event.seq, true);
-  if (
-    typeof event.id !== "string" ||
-    typeof event.recordedAtMs !== "number" ||
-    !Number.isSafeInteger(event.recordedAtMs) ||
-    (event.spaceId !== undefined && typeof event.spaceId !== "string") ||
-    (event.userId !== undefined && typeof event.userId !== "string")
-  )
-    throw new Error("directory-event-page.invalid-event");
-  directoryEventPageInteger(directoryEventPageObject(event.hlc, ["physicalMs", "logical"]).logical);
-  const physicalMs = (event.hlc as Record<string, unknown>).physicalMs;
-  if (typeof physicalMs !== "number" || !Number.isSafeInteger(physicalMs)) throw new Error("directory-event-page.invalid-time");
-  const actor = directoryEventPageObject(event.actor, ["kind", "id"]);
-  if ((actor.kind !== "user" && actor.kind !== "admin" && actor.kind !== "system") || typeof actor.id !== "string") throw new Error("directory-event-page.invalid-actor");
-  if (event.body === null || typeof event.body !== "object" || Array.isArray(event.body)) throw new Error("directory-event-page.invalid-event-body");
-  const body = event.body as Record<string, unknown>;
-  const bodyFields: Record<string, readonly string[]> = {
-    "user.created": ["kind", "userId", "email", "displayName"],
-    "space.created": ["kind", "spaceId", "name", "spaceKind", "visibility", "ownerUserId"],
-    "space.renamed": ["kind", "spaceId", "name"],
-    "space.visibility-changed": ["kind", "spaceId", "visibility"],
-    "space.archived": ["kind", "spaceId"],
-    "space.deleted": ["kind", "spaceId"],
-    "member.upserted": ["kind", "spaceId", "userId", "role"],
-    "member.removed": ["kind", "spaceId", "userId"],
-    "invite.redeemed": ["kind", "spaceId", "userId", "inviteId", "role"],
-    "document.announced": ["kind", "descriptor"],
-    "document.indexed": ["kind", "scope", "descriptorDigestV1", "entry"],
-    "artifact.checkpoint-published": ["kind", "checkpoint"],
-    "artifact.retention-advanced": ["kind", "retention"],
-    "user.preference-recorded": ["kind", "userId", "schema", "mutation"],
-  };
-  const fields = typeof body.kind === "string" ? bodyFields[body.kind] : undefined;
-  if (!fields) throw new Error("directory-event-page.invalid-event-kind");
-  directoryEventPageObject(body, fields);
-  const textFields: Record<string, readonly string[]> = {
-    "user.created": ["userId", "email", "displayName"],
-    "space.created": ["spaceId", "name", "ownerUserId"],
-    "space.renamed": ["spaceId", "name"],
-    "space.visibility-changed": ["spaceId"],
-    "space.archived": ["spaceId"],
-    "space.deleted": ["spaceId"],
-    "member.upserted": ["spaceId", "userId"],
-    "member.removed": ["spaceId", "userId"],
-    "invite.redeemed": ["spaceId", "userId", "inviteId"],
-    "user.preference-recorded": ["userId", "schema", "mutation"],
-  };
-  if ((textFields[body.kind as string] ?? []).some((field) => typeof body[field] !== "string")) throw new Error("directory-event-page.invalid-event-text");
-  if (body.kind === "user.preference-recorded" && (!validUserPreferenceRecordV1(body.schema, body.mutation) || event.spaceId !== undefined || event.userId !== body.userId || (body.userId as string).length === 0)) throw new Error("directory-event-page.invalid-user-preference");
-  if (
-    (body.kind === "space.created" && body.spaceKind !== "atelier" && body.spaceKind !== "studio" && body.spaceKind !== "archive") ||
-    ((body.kind === "space.created" || body.kind === "space.visibility-changed") && body.visibility !== "private" && body.visibility !== "public") ||
-    ((body.kind === "member.upserted" || body.kind === "invite.redeemed") && body.role !== "author" && body.role !== "spectator")
-  )
-    throw new Error("directory-event-page.invalid-event-vocabulary");
-  directoryEventPageNestedShapes(body);
-  if (body.kind === "document.indexed" && (event.spaceId !== (body.scope as DocumentScope).spaceId || typeof event.userId !== "string" || event.userId.length === 0 || new TextEncoder().encode(event.userId).length > 256)) throw new Error("directory-event-page.invalid-index-author");
-  if (directoryEventPageHasControl(event)) throw new Error("directory-event-page.control-character");
-  if (new TextEncoder().encode(JSON.stringify(event)).length > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES) throw new Error("directory-event-page.event-too-large");
-  return event as unknown as DirectoryEvent;
-}
 
-async function directoryEventPageSha256(text: string): Promise<string> {
-  const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
-  return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+
+
+
 
 /** 📥️ Parses one canonical page and verifies exact fields, ranges, size, and SHA-256 receipt. */
-export async function parseDirectoryEventPageV1(source: string): Promise<DirectoryEventPageV1> {
-  if (new TextEncoder().encode(source).length > DIRECTORY_EVENT_PAGE_MAX_BYTES) throw new Error("directory-event-page.too-large");
-  const object = directoryEventPageObject(JSON.parse(source), ["schema", "sessionBindingSha256", "authorizationGeneration", "afterSeqExclusive", "throughSeqInclusive", "hasMore", "events", "receiptSha256"]);
-  if (object.schema !== "semio.directory.event-page.v1" || typeof object.hasMore !== "boolean" || !Array.isArray(object.events) || object.events.length > DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS) throw new Error("directory-event-page.invalid-envelope");
-  const afterSeqExclusive = directoryEventPageInteger(object.afterSeqExclusive);
-  const throughSeqInclusive = directoryEventPageInteger(object.throughSeqInclusive);
-  if (afterSeqExclusive > throughSeqInclusive) throw new Error("directory-event-page.invalid-range");
-  const events = object.events.map(directoryEventPageEvent);
-  let previous = afterSeqExclusive;
-  for (const event of events) {
-    if (event.seq <= previous || event.seq > throughSeqInclusive) throw new Error("directory-event-page.invalid-event-range");
-    previous = event.seq;
-  }
-  const page: DirectoryEventPageV1 = {
-    schema: object.schema,
-    sessionBindingSha256: directoryEventPageHash(object.sessionBindingSha256, true),
-    authorizationGeneration: directoryEventPageInteger(object.authorizationGeneration, true),
-    afterSeqExclusive,
-    throughSeqInclusive,
-    hasMore: object.hasMore,
-    events,
-    receiptSha256: directoryEventPageHash(object.receiptSha256, false),
-  };
-  if (JSON.stringify(page) !== source) throw new Error("directory-event-page.noncanonical");
-  const { receiptSha256, ...unsigned } = page;
-  if ((await directoryEventPageSha256(JSON.stringify(unsigned))) !== receiptSha256) throw new Error("directory-event-page.receipt-mismatch");
-  return page;
-}
+
 //#endregion 🔖️Event
 
 //#region 🔖️Command
@@ -540,7 +434,7 @@ export function directoryCommandErrorFromStatus(status: number): DirectoryComman
   return "invalid";
 }
 
-const DIRECTORY_COMMAND_FIELDS: Record<string, readonly string[]> = {
+export const DIRECTORY_COMMAND_FIELDS: Record<string, readonly string[]> = {
   "create-space": ["kind", "name", "spaceKind", "visibility"],
   "rename-space": ["kind", "spaceId", "name"],
   "set-visibility": ["kind", "spaceId", "visibility"],
@@ -554,86 +448,18 @@ const DIRECTORY_COMMAND_FIELDS: Record<string, readonly string[]> = {
   "record-user-preference": ["kind", "schema", "mutation"],
 };
 
-function directoryCommandRequestId(value: unknown): string {
+export function directoryCommandRequestId(value: unknown): string {
   if (typeof value !== "string" || value.length !== DIRECTORY_COMMAND_REQUEST_ID_LEN || !/^[0-9a-f]+$/u.test(value) || /^0+$/u.test(value)) throw new Error("directory-command.invalid-request-id");
   return value;
 }
 
 /** 🧭 Reconstructs one closed command in declaration order after an order-independent carrier. */
-export function canonicalDirectoryCommandV1(value: unknown): DirectoryCommand {
-  const command = directoryEventPageObject(value, ["kind"], Object.values(DIRECTORY_COMMAND_FIELDS).flat());
-  const fields = typeof command.kind === "string" ? DIRECTORY_COMMAND_FIELDS[command.kind] : undefined;
-  if (!fields) throw new Error("directory-command.invalid-kind");
-  directoryEventPageObject(command, fields);
-  const canonical: Record<string, unknown> = {};
-  for (const field of fields) canonical[field] = command[field];
-  if (directoryEventPageHasControl(command)) throw new Error("directory-command.control-character");
-  const text = (field: string): string => {
-    const value = command[field];
-    if (typeof value !== "string") throw new Error(`directory-command.invalid-${field}`);
-    return value;
-  };
-  const role = (value: unknown): DirectorySpaceRole => {
-    if (value !== "author" && value !== "spectator") throw new Error("directory-command.invalid-role");
-    return value;
-  };
-  const visibility = (value: unknown): DirectorySpaceVisibility => {
-    if (value !== "private" && value !== "public") throw new Error("directory-command.invalid-visibility");
-    return value;
-  };
-  switch (command.kind) {
-    case "create-space":
-      text("name");
-      if (command.spaceKind !== "atelier" && command.spaceKind !== "studio" && command.spaceKind !== "archive") throw new Error("directory-command.invalid-space-kind");
-      visibility(command.visibility);
-      break;
-    case "rename-space": text("spaceId"); text("name"); break;
-    case "set-visibility": text("spaceId"); visibility(command.visibility); break;
-    case "archive-space":
-    case "delete-space": text("spaceId"); break;
-    case "upsert-member": text("spaceId"); text("email"); role(command.role); break;
-    case "remove-member": text("spaceId"); text("userId"); break;
-    case "create-invite": text("spaceId"); role(command.role); directoryEventPageInteger(command.ttlSecs, true); break;
-    case "revoke-invite": text("spaceId"); text("inviteId"); break;
-    case "record-user-preference": if (!validUserPreferenceRecordV1(command.schema, command.mutation)) throw new Error("directory-command.invalid-user-preference"); break;
-    case "announce-document": {
-      directoryEventPageNestedShapes({ kind: "document.announced", descriptor: command.descriptor });
-      const descriptor = command.descriptor as Record<string, unknown>;
-      const owner = descriptor.owner as Record<string, unknown>;
-      const frontier = descriptor.bootstrapFrontier as Record<string, unknown>;
-      for (const [field, candidate] of [
-        ["spaceId", descriptor.spaceId], ["documentId", descriptor.documentId], ["artifactKind", descriptor.artifactKind], ["artifactSchema", descriptor.artifactSchema],
-        ["owner.pluginId", owner.pluginId], ["owner.packageId", owner.packageId], ["owner.version", owner.version],
-      ] as const) if (typeof candidate !== "string" || candidate.trim().length === 0) throw new Error(`directory-command.invalid-${field}`);
-      for (const [field, candidate] of [["owner.packageHash", owner.packageHash], ["packSchemaHash", descriptor.packSchemaHash], ["bootstrapSnapshotHash", descriptor.bootstrapSnapshotHash]] as const) {
-        if (typeof candidate !== "string" || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(candidate)) throw new Error(`directory-command.invalid-${field}`);
-      }
-      if ((frontier.commitSeq as number) > (frontier.headSeq as number)) throw new Error("directory-command.invalid-bootstrap-frontier");
-      canonical.descriptor = {
-        spaceId: descriptor.spaceId,
-        documentId: descriptor.documentId,
-        artifactKind: descriptor.artifactKind,
-        artifactSchema: descriptor.artifactSchema,
-        owner: { pluginId: owner.pluginId, packageId: owner.packageId, version: owner.version, packageHash: owner.packageHash },
-        packSchemaHash: descriptor.packSchemaHash,
-        bootstrapVersion: descriptor.bootstrapVersion,
-        bootstrapFrontier: { headSeq: frontier.headSeq, commitSeq: frontier.commitSeq, epoch: frontier.epoch },
-        bootstrapSnapshotHash: descriptor.bootstrapSnapshotHash,
-      };
-      break;
-    }
-  }
-  return canonical as unknown as DirectoryCommand;
-}
+
 
 /** 🛡️ Decodes one declaration-ordered canonical command and validates every scalar. */
-export function parseDirectoryCommandV1(value: unknown): DirectoryCommand {
-  const canonical = canonicalDirectoryCommandV1(value);
-  if (JSON.stringify(canonical) !== JSON.stringify(value)) throw new Error("directory-command.noncanonical-command");
-  return canonical;
-}
 
-function directoryCommandCanonicalResult(value: unknown): DirectoryCommandResultV1 {
+
+export function directoryCommandCanonicalResult(value: unknown): DirectoryCommandResultV1 {
   const result = directoryEventPageObject(value, ["kind"], ["inviteToken"]);
   if (result.kind === "none") {
     directoryEventPageObject(result, ["kind"]);
@@ -647,73 +473,23 @@ function directoryCommandCanonicalResult(value: unknown): DirectoryCommandResult
 }
 
 /** 🔐️ The one canonical command digest both the hub and every client derive independently. */
-export async function directoryCommandSha256(command: DirectoryCommand): Promise<string> {
-  return directoryEventPageSha256(JSON.stringify(command));
-}
+
 
 /** 🆕️ Seals one request around an already-minted correlation id. */
-export function sealDirectoryCommandRequestV1(requestId: string, command: DirectoryCommand): DirectoryCommandRequestV1 {
-  return { schema: "semio.directory.command-request.v1", requestId: directoryCommandRequestId(requestId), command: parseDirectoryCommandV1(command) };
-}
+
 
 /** 🧾️ Returns the canonical UTF-8 JSON both peers hash and count bytes over. */
-export function directoryCommandRequestJson(request: DirectoryCommandRequestV1): string {
-  const canonical: DirectoryCommandRequestV1 = { schema: request.schema, requestId: request.requestId, command: request.command };
-  const json = JSON.stringify(canonical);
-  if (new TextEncoder().encode(json).length > DIRECTORY_COMMAND_REQUEST_MAX_BYTES) throw new Error("directory-command.request-too-large");
-  return json;
-}
+
 
 /** 📥️ Parses exactly one canonical request, rejecting padding, unknown fields, and oversize bodies. */
-export function parseDirectoryCommandRequestV1(source: string): DirectoryCommandRequestV1 {
-  if (new TextEncoder().encode(source).length > DIRECTORY_COMMAND_REQUEST_MAX_BYTES) throw new Error("directory-command.request-too-large");
-  const object = directoryEventPageObject(JSON.parse(source), ["schema", "requestId", "command"]);
-  if (object.schema !== "semio.directory.command-request.v1") throw new Error("directory-command.invalid-envelope");
-  const request: DirectoryCommandRequestV1 = { schema: object.schema, requestId: directoryCommandRequestId(object.requestId), command: parseDirectoryCommandV1(object.command) };
-  if (JSON.stringify(request) !== source) throw new Error("directory-command.noncanonical");
-  return request;
-}
+
 
 /** 🔐️ Seals one completion by hashing its declaration-ordered unsigned canonical JSON — the exact
  * twin of the Rust `DirectoryCommandReceiptV1::seal`. */
-export async function sealDirectoryCommandReceiptV1(requestId: string, commandSha256: string, outcome: DirectoryCommandOutcomeV1, events: readonly DirectoryEvent[], result: DirectoryCommandResultV1): Promise<DirectoryCommandReceiptV1> {
-  const unsigned = { schema: "semio.directory.command-receipt.v1" as const, requestId: directoryCommandRequestId(requestId), commandSha256: directoryEventPageHash(commandSha256, false), outcome, events: [...events], result };
-  return { ...unsigned, receiptSha256: await directoryEventPageSha256(JSON.stringify(unsigned)) };
-}
+
 
 /** 📥️ Parses exactly one canonical receipt bound to the request that asked for it. */
-export async function parseDirectoryCommandReceiptV1(source: string, request: DirectoryCommandRequestV1): Promise<DirectoryCommandReceiptV1> {
-  if (new TextEncoder().encode(source).length > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES) throw new Error("directory-command.receipt-too-large");
-  const object = directoryEventPageObject(JSON.parse(source), ["schema", "requestId", "commandSha256", "outcome", "events", "result", "receiptSha256"]);
-  if (
-    object.schema !== "semio.directory.command-receipt.v1" ||
-    (object.outcome !== "accepted" && object.outcome !== "previously-accepted" && object.outcome !== "secret-undeliverable") ||
-    !Array.isArray(object.events) ||
-    object.events.length > DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS
-  )
-    throw new Error("directory-command.invalid-envelope");
-  const events = object.events.map(directoryEventPageEvent);
-  let previous = 0;
-  for (const event of events) {
-    if (event.seq <= previous) throw new Error("directory-command.invalid-event-range");
-    previous = event.seq;
-  }
-  const receipt: DirectoryCommandReceiptV1 = {
-    schema: object.schema,
-    requestId: directoryCommandRequestId(object.requestId),
-    commandSha256: directoryEventPageHash(object.commandSha256, false),
-    outcome: object.outcome,
-    events,
-    result: directoryCommandCanonicalResult(object.result),
-    receiptSha256: directoryEventPageHash(object.receiptSha256, false),
-  };
-  if (receipt.outcome !== "accepted" && (receipt.result.kind !== "none" || receipt.events.length > 0)) throw new Error("directory-command.redaction-violated");
-  if (receipt.requestId !== request.requestId || receipt.commandSha256 !== (await directoryCommandSha256(request.command))) throw new Error("directory-command.request-mismatch");
-  if (JSON.stringify(receipt) !== source) throw new Error("directory-command.noncanonical");
-  const { receiptSha256, ...unsigned } = receipt;
-  if ((await directoryEventPageSha256(JSON.stringify(unsigned))) !== receiptSha256) throw new Error("directory-command.receipt-mismatch");
-  return receipt;
-}
+
 //#endregion 🔖️CommandReceipt
 
 //#region 🔖️Admin
@@ -947,10 +723,9 @@ export type DirectorySpaceAdministrationPageV1 =
     };
 
 /** 🛂️ Binds an administration command to its verified page and declared capability, before sealing. */
-export function directoryAdministrationCommandAllowedV1(page: DirectorySpaceAdministrationPageV1 | null, spaceId: string, command: unknown): boolean {
+export function directoryAdministrationCapabilityAllowsV1(page: DirectorySpaceAdministrationPageV1 | null, spaceId: string, command: DirectoryCommand): boolean {
   if (page?.access !== "author" || page.spaceId !== spaceId || page.space.id !== spaceId) return false;
-  let canonical: DirectoryCommand;
-  try { canonical = parseDirectoryCommandV1(command); } catch { return false; }
+  const canonical = command;
   if (!("spaceId" in canonical) || canonical.spaceId !== spaceId) return false;
   switch (canonical.kind) {
     case "rename-space": return page.capabilities.renameSpace === true;
@@ -964,7 +739,7 @@ export function directoryAdministrationCommandAllowedV1(page: DirectorySpaceAdmi
   }
 }
 
-function administrationObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
+export function administrationObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("space-administration-page.invalid-object");
   const object = value as Record<string, unknown>;
   const accepted = new Set([...required, ...optional]);
@@ -972,12 +747,12 @@ function administrationObject(value: unknown, required: readonly string[], optio
   return object;
 }
 
-function administrationText(value: unknown, maximum = DOCUMENT_OPEN_ID_MAX_BYTES, allowEmpty = false): string {
+export function administrationText(value: unknown, maximum = DOCUMENT_OPEN_ID_MAX_BYTES, allowEmpty = false): string {
   if (typeof value !== "string" || (!allowEmpty && value.length === 0) || new TextEncoder().encode(value).length > maximum || /\p{Cc}/u.test(value)) throw new Error("space-administration-page.invalid-text");
   return value;
 }
 
-function administrationTime(value: unknown): number {
+export function administrationTime(value: unknown): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new Error("space-administration-page.invalid-time");
   return value;
 }
@@ -999,7 +774,7 @@ function administrationCursor(object: Record<string, unknown>): string | undefin
   return cursor;
 }
 
-function administrationWindow<Row>(value: unknown, row: (value: unknown) => Row): DirectorySpaceAdministrationWindowV1<Row> {
+export function administrationWindow<Row>(value: unknown, row: (value: unknown) => Row): DirectorySpaceAdministrationWindowV1<Row> {
   const object = administrationObject(value, ["rows"], ["nextCursor"]);
   if (!Array.isArray(object.rows) || object.rows.length > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS) throw new Error("space-administration-page.invalid-window");
   const rows = object.rows.map(row);
@@ -1007,7 +782,7 @@ function administrationWindow<Row>(value: unknown, row: (value: unknown) => Row)
   return nextCursor === undefined ? { rows } : { rows, nextCursor };
 }
 
-function administrationMemberRow(value: unknown): DirectorySpaceAdministrationMemberRowV1 {
+export function administrationMemberRow(value: unknown): DirectorySpaceAdministrationMemberRowV1 {
   const object = administrationObject(value, ["userId", "email", "displayName", "role", "owner"]);
   return {
     userId: administrationText(object.userId),
@@ -1018,7 +793,7 @@ function administrationMemberRow(value: unknown): DirectorySpaceAdministrationMe
   };
 }
 
-function administrationInviteRow(value: unknown): DirectorySpaceAdministrationInviteRowV1 {
+export function administrationInviteRow(value: unknown): DirectorySpaceAdministrationInviteRowV1 {
   const object = administrationObject(value, ["inviteId", "role", "createdAtMs", "expiresAtMs", "revoked", "accepted"]);
   return {
     inviteId: administrationText(object.inviteId),
@@ -1030,7 +805,7 @@ function administrationInviteRow(value: unknown): DirectorySpaceAdministrationIn
   };
 }
 
-function administrationCapabilities(value: unknown): DirectorySpaceAdministrationCapabilitiesV1 {
+export function administrationCapabilities(value: unknown): DirectorySpaceAdministrationCapabilitiesV1 {
   const object = administrationObject(value, ["renameSpace", "setVisibility", "deleteSpace", "upsertMember", "removeMember", "createInvite", "revokeInvite"]);
   return {
     renameSpace: administrationBoolean(object.renameSpace),
@@ -1043,71 +818,10 @@ function administrationCapabilities(value: unknown): DirectorySpaceAdministratio
   };
 }
 
-async function administrationSha256(text: string): Promise<string> {
-  const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
-  return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+
 
 /** 📥️ Parses one canonical administration page and verifies fields, ordering, size, and receipt. */
-export async function parseDirectorySpaceAdministrationPageV1(source: string): Promise<DirectorySpaceAdministrationPageV1> {
-  if (new TextEncoder().encode(source).length > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES) throw new Error("space-administration-page.too-large");
-  const parsed = JSON.parse(source);
-  const access = (parsed as Record<string, unknown> | null)?.access;
-  const common = ["access", "schema", "sessionBindingSha256", "authorizationGeneration", "spaceId", "space"];
-  const shape =
-    access === "public"
-      ? [...common, "documents", "receiptSha256"]
-      : access === "member"
-        ? [...common, "members", "documents", "receiptSha256"]
-        : access === "author"
-          ? [...common, "members", "documents", "invites", "capabilities", "receiptSha256"]
-          : undefined;
-  if (shape === undefined) throw new Error("space-administration-page.invalid-access");
-  const object = administrationObject(parsed, shape);
-  if (object.schema !== DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA) throw new Error("space-administration-page.invalid-schema");
-  const sessionBindingSha256 = administrationText(object.sessionBindingSha256);
-  if (!/^[0-9a-f]{64}$/u.test(sessionBindingSha256)) throw new Error("space-administration-page.invalid-binding");
-  const authorizationGeneration = administrationTime(object.authorizationGeneration);
-  const spaceId = administrationText(object.spaceId);
-  const receiptSha256 = administrationText(object.receiptSha256);
-  if (!/^[0-9a-f]{64}$/u.test(receiptSha256)) throw new Error("space-administration-page.invalid-receipt");
-  const anonymous = authorizationGeneration === 0 && /^0{64}$/u.test(sessionBindingSha256);
-  const bound = authorizationGeneration >= 1 && !/^0{64}$/u.test(sessionBindingSha256);
-  if (!(anonymous || bound) || (access !== "public" && !bound)) throw new Error("space-administration-page.invalid-binding");
-  const space = object.space as Record<string, unknown> | null;
-  if (space === null || typeof space !== "object" || space.id !== spaceId) throw new Error("space-administration-page.space-mismatch");
-  if (access === "public" && space.visibility !== "public") throw new Error("space-administration-page.space-mismatch");
-  if (access === "member" && space.role !== "spectator") throw new Error("space-administration-page.space-mismatch");
-  if (access === "author" && space.role !== "author") throw new Error("space-administration-page.space-mismatch");
-  const documents = administrationWindow<unknown>(object.documents, (row) => row);
-  const members = access === "public" ? undefined : administrationWindow(object.members, administrationMemberRow);
-  if (members !== undefined) {
-    let previous: string | undefined;
-    for (const row of members.rows) {
-      if (previous !== undefined && previous >= row.userId) throw new Error("space-administration-page.member-order");
-      previous = row.userId;
-    }
-  }
-  const invites = access === "author" ? administrationWindow(object.invites, administrationInviteRow) : undefined;
-  if (invites !== undefined) {
-    let previous: readonly [number, string] | undefined;
-    for (const row of invites.rows) {
-      if (previous !== undefined && !(previous[0] > row.createdAtMs || (previous[0] === row.createdAtMs && previous[1] > row.inviteId))) throw new Error("space-administration-page.invite-order");
-      previous = [row.createdAtMs, row.inviteId];
-    }
-  }
-  const capabilities = access === "author" ? administrationCapabilities(object.capabilities) : undefined;
-  const base = { access, schema: object.schema, sessionBindingSha256, authorizationGeneration, spaceId, space: object.space };
-  const page = (access === "public"
-    ? { ...base, documents, receiptSha256 }
-    : access === "member"
-      ? { ...base, members, documents, receiptSha256 }
-      : { ...base, members, documents, invites, capabilities, receiptSha256 }) as unknown as DirectorySpaceAdministrationPageV1;
-  if (JSON.stringify(page) !== source) throw new Error("space-administration-page.noncanonical");
-  const { receiptSha256: _receipt, ...unsigned } = page as Record<string, unknown> & { receiptSha256: string };
-  if ((await administrationSha256(JSON.stringify(unsigned))) !== receiptSha256) throw new Error("space-administration-page.receipt-mismatch");
-  return page;
-}
+
 
 export interface MemberView {
   userId: string;
@@ -1854,69 +1568,24 @@ export interface ArtifactRetention {
   checkpointLineageHead: CheckpointId;
 }
 
-export const DESCRIPTOR_DIGEST_V1_DOMAIN = "semio.document-descriptor.digest.v1\0";
-
-function descriptorDigestInteger(value: number, width: 4 | 8, field: string): Uint8Array {
-  if (!Number.isSafeInteger(value) || value < 0 || (width === 4 && value > 0xffff_ffff)) throw new Error(`descriptor.invalid-${field}`);
-  const output = new Uint8Array(width);
-  let remaining = BigInt(value);
-  for (let index = width - 1; index >= 0; index--) {
-    output[index] = Number(remaining & 0xffn);
-    remaining >>= 8n;
-  }
-  return output;
-}
-
-function descriptorDigestHash(value: string, field: string): Uint8Array {
-  if (!/^[0-9a-f]{64}$/.test(value) || /^0{64}$/.test(value)) throw new Error(`descriptor.invalid-${field}`);
-  return Uint8Array.from({ length: 32 }, (_, index) => Number.parseInt(value.slice(index * 2, index * 2 + 2), 16));
-}
-
-function descriptorDigestText(value: string, field: string): Uint8Array {
-  if (value.length === 0) throw new Error(`descriptor.empty-${field}`);
-  return new TextEncoder().encode(value);
-}
-
-/** 🧬️ Domain plus declaration-ordered descriptor leaves, each encoded as
- * `u64_be(payload byte length) || payload`; text is UTF-8, integers are unsigned big-endian fixed-
- * width payloads, and hash text is decoded to 32 bytes. JSON serialization never participates. */
-export function descriptorDigestEncodingV1(descriptor: DocumentDescriptor): Uint8Array<ArrayBuffer> {
+/** 🪪️ Validates immutable descriptor metadata without physical encoding or hashing. */
+export function validateDocumentDescriptorV1(descriptor: DocumentDescriptor): void {
   if (descriptor.bootstrapVersion === 0) throw new Error("descriptor.invalid-bootstrap-version");
   if (descriptor.bootstrapFrontier.commitSeq > descriptor.bootstrapFrontier.headSeq) throw new Error("descriptor.invalid-bootstrap-frontier");
-  const fields = [
-    descriptorDigestText(descriptor.spaceId, "space-id"),
-    descriptorDigestText(descriptor.documentId, "document-id"),
-    descriptorDigestText(descriptor.artifactKind, "artifact-kind"),
-    descriptorDigestText(descriptor.artifactSchema, "artifact-schema"),
-    descriptorDigestText(descriptor.owner.pluginId, "owner-plugin-id"),
-    descriptorDigestText(descriptor.owner.packageId, "owner-package-id"),
-    descriptorDigestText(descriptor.owner.version, "owner-version"),
-    descriptorDigestHash(descriptor.owner.packageHash, "owner-package-hash"),
-    descriptorDigestHash(descriptor.packSchemaHash, "pack-schema-hash"),
-    descriptorDigestInteger(descriptor.bootstrapVersion, 4, "bootstrap-version"),
-    descriptorDigestInteger(descriptor.bootstrapFrontier.headSeq, 8, "bootstrap-head-seq"),
-    descriptorDigestInteger(descriptor.bootstrapFrontier.commitSeq, 8, "bootstrap-commit-seq"),
-    descriptorDigestInteger(descriptor.bootstrapFrontier.epoch, 8, "bootstrap-epoch"),
-    descriptorDigestHash(descriptor.bootstrapSnapshotHash, "bootstrap-snapshot-hash"),
-  ];
-  const domain = new TextEncoder().encode(DESCRIPTOR_DIGEST_V1_DOMAIN);
-  const total = fields.reduce((length, field) => length + 8 + field.length, domain.length);
-  if (!Number.isSafeInteger(total)) throw new Error("descriptor.length-overflow");
-  const output = new Uint8Array(total);
-  output.set(domain);
-  let offset = domain.length;
-  for (const field of fields) {
-    output.set(descriptorDigestInteger(field.length, 8, "field-length"), offset);
-    offset += 8;
-    output.set(field, offset);
-    offset += field.length;
-  }
-  return output;
-}
-
-/** 🔐️ Host-Web-Crypto SHA-256 over {@link descriptorDigestEncodingV1}. */
-export async function descriptorDigestV1(descriptor: DocumentDescriptor): Promise<Uint8Array<ArrayBuffer>> {
-  return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", descriptorDigestEncodingV1(descriptor)));
+  for (const [field, value] of [
+    ["space-id", descriptor.spaceId], ["document-id", descriptor.documentId],
+    ["artifact-kind", descriptor.artifactKind], ["artifact-schema", descriptor.artifactSchema],
+    ["owner-plugin-id", descriptor.owner.pluginId], ["owner-package-id", descriptor.owner.packageId], ["owner-version", descriptor.owner.version],
+  ] as const) if (value.length === 0) throw new Error(`descriptor.empty-${field}`);
+  for (const [field, value] of [
+    ["owner-package-hash", descriptor.owner.packageHash], ["pack-schema-hash", descriptor.packSchemaHash], ["bootstrap-snapshot-hash", descriptor.bootstrapSnapshotHash],
+  ] as const) if (!/^[0-9a-f]{64}$/.test(value) || /^0{64}$/.test(value)) throw new Error(`descriptor.invalid-${field}`);
+  for (const [field, value, maximum] of [
+    ["bootstrap-version", descriptor.bootstrapVersion, 0xffff_ffff],
+    ["bootstrap-head-seq", descriptor.bootstrapFrontier.headSeq, Number.MAX_SAFE_INTEGER],
+    ["bootstrap-commit-seq", descriptor.bootstrapFrontier.commitSeq, Number.MAX_SAFE_INTEGER],
+    ["bootstrap-epoch", descriptor.bootstrapFrontier.epoch, Number.MAX_SAFE_INTEGER],
+  ] as const) if (!Number.isSafeInteger(value) || value < 0 || value > maximum) throw new Error(`descriptor.invalid-${field}`);
 }
 
 export interface DocumentView {
@@ -1937,24 +1606,6 @@ export interface InviteView {
 //#endregion 🔖️Views
 
 //#region 🪢️CanonicalCheckpointPair
-/** 🪢️ The hub's canonical-checkpoint-pair media type — the ONE transport that hands a cold client
- * the published pack+SPR pair of a document's active checkpoint (`GET
- * /spaces/{spaceId}/documents/{documentId}/active-checkpoint/pair`). The socket's `Welcome` never
- * carries a pair: its bootstrap plan is computed by the database replay, whose only outcomes are
- * `None`, `Tail` and the database-private `Snapshot` an artifact client refuses by contract. */
-export const CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1 = "application/vnd.semio.canonical-checkpoint-pair.v1";
-export const CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES = 16 * 1024;
-export const CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES = 4 * 1024;
-export const CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS = 16_384;
-export const CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES = 64 * 1024 * 1024;
-const CANONICAL_CHECKPOINT_PAIR_FORMAT_VERSION = 1;
-const CANONICAL_CHECKPOINT_PAIR_HEADER = 1;
-const CANONICAL_CHECKPOINT_PAIR_DATA = 2;
-const CANONICAL_CHECKPOINT_PAIR_TERMINAL = 3;
-const CANONICAL_CHECKPOINT_PAIR_PART_PACK = 1;
-const CANONICAL_CHECKPOINT_PAIR_PART_SPR = 2;
-const CANONICAL_CHECKPOINT_PAIR_TERMINAL_COMPLETE = 0;
-
 /** 🪢️ One decoded, length-and-shape-checked canonical pair: its selection identity and its bytes.
  * The bytes are NOT yet proven against the selection's digests — `verifyCanonicalCheckpointPairV1`
  * does that, because hashing needs `crypto.subtle` and this decoder stays synchronous. */
@@ -1970,159 +1621,40 @@ export interface CanonicalCheckpointPairV1 {
   sprBytes: Uint8Array;
 }
 
-class CanonicalPairCursor {
-  private readonly bytes: Uint8Array;
-  offset: number;
-  constructor(bytes: Uint8Array, offset = 0) {
-    this.bytes = bytes;
-    this.offset = offset;
-  }
-
-  get exhausted(): boolean {
-    return this.offset === this.bytes.length;
-  }
-
-  take(length: number): Uint8Array {
-    const end = this.offset + length;
-    if (!Number.isSafeInteger(end) || end > this.bytes.length) throw new Error("canonical-checkpoint-pair.truncated");
-    const value = this.bytes.subarray(this.offset, end);
-    this.offset = end;
-    return value;
-  }
-
-  byte(): number {
-    return this.take(1)[0] as number;
-  }
-
-  u32(): number {
-    const slice = this.take(4);
-    return (((slice[0] as number) << 24) >>> 0) + ((slice[1] as number) << 16) + ((slice[2] as number) << 8) + (slice[3] as number);
-  }
-
-  u64(): number {
-    const slice = this.take(8);
-    let value = 0n;
-    for (const byte of slice) value = (value << 8n) | BigInt(byte);
-    if (value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("canonical-checkpoint-pair.capacity");
-    return Number(value);
-  }
-
-  hash(): ArtifactHash {
-    return Array.from(this.take(32));
-  }
-
-  /** #️⃣ A hash the hub refuses to publish as all-zero: an unset digest must never read as a match. */
-  digest(): ArtifactHash {
-    const hash = this.hash();
-    if (hash.every((byte) => byte === 0)) throw new Error("canonical-checkpoint-pair.zero-digest");
-    return hash;
-  }
-
-  text(maximum: number): string {
-    const length = this.u32();
-    if (length > maximum) throw new Error("canonical-checkpoint-pair.oversized-text");
-    return new TextDecoder("utf-8", { fatal: true }).decode(this.take(length));
-  }
-
-  frame(maximum: number): CanonicalPairCursor {
-    const length = this.u32();
-    if (length === 0 || length > maximum) throw new Error("canonical-checkpoint-pair.frame-length");
-    return new CanonicalPairCursor(this.take(length));
-  }
+/** 🎫️ Native-admitted checkpoint metadata for pure typed identity decisions. */
+export interface AdmittedCheckpointSelectionV1 {
+  checkpointId: ArtifactHash;
+  descriptorDigestV1: ArtifactHash;
+  baselineFrontier: ArtifactFrontier;
+  aggregateSha256: ArtifactHash;
 }
 
-/** 🧮️ Exact record count the hub emits for a pair of these two lengths — pack records first, then
- * SPR records, each `CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES` except the last of each part. */
-function canonicalCheckpointPairRecordCountV1(packLength: number, sprLength: number): number {
-  return Math.ceil(packLength / CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES) + Math.ceil(sprLength / CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES);
-}
-
-/** 🪢️ Decodes the hub's canonical-checkpoint-pair body, the exact inverse of the hub's
- * `append_canonical_pair_{header,data,terminal}`: a stream of `u32be length | payload` frames whose
- * first payload is the selection header, whose middle payloads carry strictly ordered pack-then-SPR
- * data records at contiguous offsets, and whose last payload is the `Complete` terminal. Every
- * refusal is named; a partial, reordered, over-long or unterminated body is never half-accepted. */
-export function decodeCanonicalCheckpointPairV1(input: Uint8Array): CanonicalCheckpointPairV1 {
-  const maximumWire = CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES + CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES + CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS * 22 + 6;
-  if (input.length > maximumWire) throw new Error("canonical-checkpoint-pair.oversized");
-  const stream = new CanonicalPairCursor(input);
-  const header = stream.frame(CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES);
-  if (header.byte() !== CANONICAL_CHECKPOINT_PAIR_HEADER || header.u32() !== CANONICAL_CHECKPOINT_PAIR_FORMAT_VERSION) throw new Error("canonical-checkpoint-pair.header");
-  const scope: DocumentScope = { spaceId: header.text(DOCUMENT_OPEN_ID_MAX_BYTES), documentId: header.text(DOCUMENT_OPEN_ID_MAX_BYTES) };
-  const descriptorDigestV1 = header.digest();
-  const activeCheckpointId = header.digest();
-  const baselineFrontier: ArtifactFrontier = {
-    documentId: header.text(DOCUMENT_OPEN_ID_MAX_BYTES),
-    headEditOrdinal: header.u64(),
-    headEditId: header.text(DOCUMENT_OPEN_ID_MAX_BYTES),
-    lastCommitSeq: header.u64(),
-    chainHash: header.hash(),
-  };
-  const pack: PublishedArtifactBlob = { sha256: header.digest(), byteLength: header.u64() };
-  const spr: PublishedArtifactBlob = { sha256: header.digest(), byteLength: header.u64() };
-  const aggregateSha256 = header.digest();
-  if (!header.exhausted) throw new Error("canonical-checkpoint-pair.header-trailing-bytes");
-  if (!artifactFrontierIsGenesisForV1(scope, baselineFrontier) && !artifactFrontierIsEditedForV1(scope, baselineFrontier)) throw new Error("canonical-checkpoint-pair.baseline-frontier");
-  if (pack.byteLength + spr.byteLength > CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES || pack.byteLength === 0 || spr.byteLength === 0) throw new Error("canonical-checkpoint-pair.pair-length");
-  const records = canonicalCheckpointPairRecordCountV1(pack.byteLength, spr.byteLength);
-  if (records > CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS) throw new Error("canonical-checkpoint-pair.record-count");
-  const packBytes = new Uint8Array(pack.byteLength);
-  const sprBytes = new Uint8Array(spr.byteLength);
-  let packFilled = 0;
-  let sprFilled = 0;
-  for (let ordinal = 0; ordinal < records; ordinal += 1) {
-    const record = stream.frame(CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES + 18);
-    if (record.byte() !== CANONICAL_CHECKPOINT_PAIR_DATA) throw new Error("canonical-checkpoint-pair.record-tag");
-    const part = record.byte();
-    if (record.u32() !== ordinal) throw new Error("canonical-checkpoint-pair.record-ordinal");
-    const offset = record.u64();
-    const length = record.u32();
-    if (length === 0 || length > CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES) throw new Error("canonical-checkpoint-pair.record-length");
-    const bytes = record.take(length);
-    if (!record.exhausted) throw new Error("canonical-checkpoint-pair.record-trailing-bytes");
-    if (part === CANONICAL_CHECKPOINT_PAIR_PART_PACK && packFilled < pack.byteLength) {
-      if (offset !== packFilled || packFilled + length > pack.byteLength) throw new Error("canonical-checkpoint-pair.record-offset");
-      packBytes.set(bytes, packFilled);
-      packFilled += length;
-    } else if (part === CANONICAL_CHECKPOINT_PAIR_PART_SPR && packFilled === pack.byteLength) {
-      if (offset !== sprFilled || sprFilled + length > spr.byteLength) throw new Error("canonical-checkpoint-pair.record-offset");
-      sprBytes.set(bytes, sprFilled);
-      sprFilled += length;
-    } else throw new Error("canonical-checkpoint-pair.record-part");
-  }
-  const terminal = stream.frame(2);
-  if (terminal.byte() !== CANONICAL_CHECKPOINT_PAIR_TERMINAL || terminal.byte() !== CANONICAL_CHECKPOINT_PAIR_TERMINAL_COMPLETE) throw new Error("canonical-checkpoint-pair.terminal");
-  if (!stream.exhausted || packFilled !== pack.byteLength || sprFilled !== spr.byteLength) throw new Error("canonical-checkpoint-pair.incomplete");
-  return { scope, descriptorDigestV1, activeCheckpointId, baselineFrontier, pack, spr, aggregateSha256, packBytes, sprBytes };
-}
-
-/** 🔡️ Canonical lowercase hexadecimal of one 32-byte hash. */
-function canonicalCheckpointPairHexV1(hash: ArtifactHash): string {
-  return hash.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+function sameArtifactHashV1(left: ArtifactHash, right: ArtifactHash): boolean {
+  return left.length === right.length && left.every((byte, index) => byte === right[index]);
 }
 
 /** 🎫️ Admits a decoded pair only as exactly the checkpoint the hub authorized for this open (the execution-target
  * lease's or the open plan's `checkpoint`): a checkpoint that moved, a changed descriptor or a foreign scope is
  * refused by name, never mounted — the twin of the kernel's `CanonicalCheckpointPairV1::admit`. */
-export function admitCanonicalCheckpointPairV1(pair: CanonicalCheckpointPairV1, scope: DocumentScope, expected: DocumentOpenCheckpointV1): void {
+export function admitCanonicalCheckpointPairV1(pair: CanonicalCheckpointPairV1, scope: DocumentScope, expected: AdmittedCheckpointSelectionV1): void {
   if (pair.scope.spaceId !== scope.spaceId || pair.scope.documentId !== scope.documentId) throw new Error("canonical-checkpoint-pair.scope");
-  if (canonicalCheckpointPairHexV1(pair.activeCheckpointId) !== expected.checkpointId) throw new Error("canonical-checkpoint-pair.checkpoint");
-  if (canonicalCheckpointPairHexV1(pair.descriptorDigestV1) !== expected.descriptorDigestV1) throw new Error("canonical-checkpoint-pair.descriptor");
+  if (!sameArtifactHashV1(pair.activeCheckpointId, expected.checkpointId)) throw new Error("canonical-checkpoint-pair.checkpoint");
+  if (!sameArtifactHashV1(pair.descriptorDigestV1, expected.descriptorDigestV1)) throw new Error("canonical-checkpoint-pair.descriptor");
   const baseline = expected.baselineFrontier;
   const frontier = pair.baselineFrontier;
-  if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || canonicalCheckpointPairHexV1(frontier.chainHash) !== canonicalCheckpointPairHexV1(baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
-  if (canonicalCheckpointPairHexV1(pair.aggregateSha256) !== expected.aggregateSha256) throw new Error("canonical-checkpoint-pair.aggregate");
+  if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || !sameArtifactHashV1(frontier.chainHash, baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
+  if (!sameArtifactHashV1(pair.aggregateSha256, expected.aggregateSha256)) throw new Error("canonical-checkpoint-pair.aggregate");
 }
 
 /** 🛟️ Admits a decoded pair only as exactly the checkpoint a hub `RebootstrapRequired` control names — the twin of the kernel's
  * `CanonicalCheckpointPairV1::admit_rebootstrap` (the control carries no aggregate; the digests prove the bytes). */
 export function admitCanonicalCheckpointPairForRebootstrapV1(pair: CanonicalCheckpointPairV1, control: { readonly scope: DocumentScope; readonly checkpointId: ArtifactHash; readonly descriptorDigestV1: ArtifactHash; readonly baselineFrontier: ArtifactFrontier }): void {
   if (pair.scope.spaceId !== control.scope.spaceId || pair.scope.documentId !== control.scope.documentId) throw new Error("canonical-checkpoint-pair.scope");
-  if (canonicalCheckpointPairHexV1(pair.activeCheckpointId) !== canonicalCheckpointPairHexV1(control.checkpointId)) throw new Error("canonical-checkpoint-pair.checkpoint");
-  if (canonicalCheckpointPairHexV1(pair.descriptorDigestV1) !== canonicalCheckpointPairHexV1(control.descriptorDigestV1)) throw new Error("canonical-checkpoint-pair.descriptor");
+  if (!sameArtifactHashV1(pair.activeCheckpointId, control.checkpointId)) throw new Error("canonical-checkpoint-pair.checkpoint");
+  if (!sameArtifactHashV1(pair.descriptorDigestV1, control.descriptorDigestV1)) throw new Error("canonical-checkpoint-pair.descriptor");
   const frontier = pair.baselineFrontier;
   const baseline = control.baselineFrontier;
-  if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || canonicalCheckpointPairHexV1(frontier.chainHash) !== canonicalCheckpointPairHexV1(baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
+  if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || !sameArtifactHashV1(frontier.chainHash, baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
 }
 //#endregion 🪢️CanonicalCheckpointPair
 

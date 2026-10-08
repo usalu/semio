@@ -221,7 +221,8 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::mutations::{apply_vdi3805_mutation,inverse_vdi3805_mutation,Vdi3805Mutation};
+    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::mutations::{Vdi3805Mutation};
+    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::{apply_vdi3805_mutation,inverse_vdi3805_mutation};
 
     use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::text::mutations::{decode_vdi3805_mutation_json};
     use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::snapshot::{Vdi3805Snapshot};

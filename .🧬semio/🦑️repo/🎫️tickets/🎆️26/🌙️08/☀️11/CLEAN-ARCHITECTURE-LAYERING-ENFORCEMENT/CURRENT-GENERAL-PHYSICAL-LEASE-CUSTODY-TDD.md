@@ -1,0 +1,27 @@
+# Actual Lease Receiver Custody Correction
+
+Audit14 finding2 identifies the unbounded pre/post semantic read in the receiving publication helper. Existing claim/schema tests remain intact. Five new portable input laws are authored before production correction, with closed Ajv corpus admission and independent Node/Noble/WebCrypto byte outputs: cancelled and one-short authority must perform zero liveness queries, nonregular file refusal must retain its typed identity, semantic A/B/A replacement must not return claims for a foreign owner, and the current valid two-file live owner must remain accepted with exact claimed bytes. The current original helper is unchanged for the genuine red and ongoing peer Interface25 whole interval.
+
+## Genuine Actual Receiving Red
+
+Registered lease1 actual outer Nx/Bun1 / receiver1 executes all five new cases and retains all21selectedsource bodies and producer exactly. Four intended failures are present: cancellation/one-short performs two liveness queries before admission; nonregular refuses with the wrong untyped identity; the semantic A/B/A swap actually returns accepted with a claim whose bytes differ from the returned owner. The original same-owner case remains accepted with Node/Noble/WebCrypto byte joins. No original assertion or control was filtered or changed. Production correction follows this actual red; Interface25 captured predecessor remains qualified separately.
+
+## Actual Receiving Green and Permanent Enforcement
+
+Lease2 actual outer Nx/Bun0 executes all five portable cases plus first-party pure parser/Ajv schema equivalence and Node/Noble/WebCrypto physical byte joins; all22selectedfullbodies and producer exact. Cancellation, one-short and nonregular inputs perform zero liveness queries. Actual A/B/A replacement refuses rather than returning the intermediate foreign byte claim. The same-owner path preserves four liveness checks and both exact claims.
+
+The defining General tests now own full authored copies of the same portable laws/fixtures/schema under publication/🧪️tests/🔐lease and the original complete publication function executes them. Original ticket TDD inputs remain retained as historical authored inputs. The parser owns a closed first-party DevHubLease byte schema at local-hub/🏃️execution/🔐lease/🧬️schema. Actual publication uses readPhysicalFileV1, wipes owned retained bytes, validates owner/liveness from those bytes, and reobserves both exact claims before the final liveness check. The existing live/read lease functions outside this publication path retain their current synchronous behavior; no whole local-Hub boundedness is claimed. Full integration2 and updated copied proof4 remain pending.
+
+## Complete Original Receiving and Copied Execution
+
+Integration2 actual Nx/Bun0 executes the complete unchanged Hub provenance law function and complete original General OS publication function, plus the five new permanent portable lease laws; all25 selected full bodies and full producer remain exact. Original semantic refusals, cancellation/retirement, schema discovery and wrapper imports remain executed.
+
+Fresh proof4 actual Nx/Bun0 copies13005 full authored General/product/root-manifest bodies and 740543774 bytes. S/Hub/root Cargo are physically absent. Actual copied General lease receiver executes the original three live-owner cases and all five new permanent cancellation/one-short/nonregular/A-B-A/same-owner laws, using the actual copied parser/schema/fixtures/tests. Full copied-after bytes and producer/companion custody are exact. Current source-after advances are 4 paths: `🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts`, `🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-layout-grammar/🟦️.ts`, `🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy.sty`, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚪️io/🏛️architecture/🟦️.ts`. Copied acceptance refers only to complete retained bodies; current whole-General/all-platform/native acceptance remain false. No current sources were restored.
+
+## Defining Executable Publication
+
+The complete publication function is exported plain async code, and inspection finds no current General script directly invoking it. The permanent OS dev 📜️script.ts therefore adds publication-check/publication-worker: complete law execution runs in an owned child with progress/cancellation and first-party explicit process context; artifact storage remains inside its declared store. Nx test-publication and package test-publication call the defining 📜️script.ts through Nx. Registration249/current124 actual Nx/Bun0 adds both defining reviewed routes and fresh target1/2 wrappers, retaining4129/5244 peer rows. This additional defining target remains uninvoked at authoring; previous complete integration/copy results do not claim it.
+
+## Actual Permanent Defining Target Acceptance
+
+Publication-target1 actual outer Nx/Bun0 and actual current-repository @semio-tech/framework-os-dev:test-publication0 run the complete General publication suite plus all five permanent portable lease laws, with zero cache hits and visible owned-command progress. All28 selected defining/receiving/schema/fixture/package bodies and full producer remain exact. Both declaring script worker/check commands and package Nx route are published and reviewable; Root fixed-Nx launch wrappers supply explicit first-party owner context through the Generic executor. No broader native/whole-General/all-platform acceptance is inferred. No Root live handle remains.

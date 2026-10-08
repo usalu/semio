@@ -1,6 +1,6 @@
 //! ⚡️ Block2d artifact — OpText/OpBinary codecs + grammar for `Block2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block2d_mutation,inverse_block2d_mutation,Block2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_block2d_mutation, Block2dMutation};
 
 
 //#region 📖️SemioGrammar

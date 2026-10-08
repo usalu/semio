@@ -146,6 +146,78 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/reorder-regions/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPositionProperty"
+      ],
+      "properties": {
+        "SetPositionProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/set-position-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePositionProperty"
+      ],
+      "properties": {
+        "RemovePositionProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/remove-position-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetRouteProperty"
+      ],
+      "properties": {
+        "SetRouteProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/set-route-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveRouteProperty"
+      ],
+      "properties": {
+        "RemoveRouteProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/remove-route-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetRegionProperty"
+      ],
+      "properties": {
+        "SetRegionProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/set-region-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveRegionProperty"
+      ],
+      "properties": {
+        "RemoveRegionProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/remove-region-property/schema.json"
+        }
+      }
     }
   ]
 }

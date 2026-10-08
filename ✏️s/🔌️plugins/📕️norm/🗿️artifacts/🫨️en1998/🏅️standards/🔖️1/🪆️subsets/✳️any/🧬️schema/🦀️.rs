@@ -67,9 +67,6 @@ impl En1998Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: crate::En1998Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 
 impl Default for En1998Artifact {

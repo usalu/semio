@@ -617,16 +617,9 @@ fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     out
 }
 
-/// 📐️ The SOF0 component list this encoder writes: the decoded frame's OWN ids and sampling
-/// factors when the snapshot carries a frame, so a 4:4:4 document stays 4:4:4 across a
-/// decode/re-encode, and the historical `1:2x2, 2:1x1, 3:1x1` default when it does not.
-///
-/// The quantization-table selector is NOT carried through: this encoder always emits exactly two
-/// fresh Annex K DQT tables (0 luma, 1 chroma), so the first component is bound to 0 and every
-/// other to 1 — the same canonicalization `encode_jpg`'s own doc comment already declares for the
-/// DQT/DHT tables themselves. A sampling factor outside T.81 §B.2.2's 1..=4, or one that does not
-/// divide the frame's maximum, is refused rather than silently rounded: both would make the MCU
-/// geometry unrepresentable.
+/// 📐️ Resolves explicit native export component identities and sampling factors.
+/// Empty options select the encoder's 4:2:0 default. Table selectors are allocated for the
+/// encoder's luma/chroma tables; native sampling must divide the maximum component extent.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn frame_components_of(options: &JpgEncodeOptions) -> Result<Vec<JpgFrameComponent>, JpgError> {
     let declared = options.components.iter().map(|component|JpgFrameComponent{id:component.id,h_sampling:component.h_sampling,v_sampling:component.v_sampling,quant_table_id:0}).collect::<Vec<_>>();
@@ -638,7 +631,7 @@ fn frame_components_of(options: &JpgEncodeOptions) -> Result<Vec<JpgFrameCompone
         ]);
     }
     if declared.len() != 1 && declared.len() != 3 {
-        return Err(JpgError::Unsupported(format!("this encoder writes a single-component grayscale frame or a three-component Y/Cb/Cr frame; the snapshot declares {}", declared.len())));
+        return Err(JpgError::Unsupported(format!("this encoder writes a single-component grayscale frame or a three-component Y/Cb/Cr frame; the export request declares {}", declared.len())));
     }
     for component in &declared {
         if !(1..=4).contains(&component.h_sampling) || !(1..=4).contains(&component.v_sampling) {
@@ -655,26 +648,9 @@ fn frame_components_of(options: &JpgEncodeOptions) -> Result<Vec<JpgFrameCompone
     Ok(declared.into_iter().enumerate().map(|(index, component)| JpgFrameComponent { quant_table_id: if index == 0 { 0 } else { 1 }, ..component }).collect())
 }
 
-/// 🖨️ Encodes an RGBA raster as baseline sequential JPEG (Y/Cb/Cr, ids 1/2/3, or a single Y
-/// component for a grayscale frame), Annex K example tables scaled by `snap.re_encode_quality`
-/// (IJG convention, default 90) — chosen so the round trip through our own decoder stays well
-/// under a visually-lossless error budget. Edges are replicated (not zero-padded) up to the next
-/// MCU boundary to avoid ringing. Writes a real JFIF APP0 from `snap.jfif_*` and re-emits
-/// `snap.image.other_segments` verbatim right after it — always canonicalizes to fresh Annex K DQT/DHT
-/// tables at the chosen quality (documented normal form, matches png's pixel-canonicalization
-/// precedent: `quant_tables`/`huffman_tables` are typed RETENTION of a decoded file's actual
-/// tables, not necessarily what a subsequent re-encode emits) — `restart_interval` is retained but
-/// this encoder never emits `DRI`/restart markers (documented deviation, `## deviations`).
-///
-/// 📐️ The SOF0 SAMPLING FACTORS come from `snap.frame`, not from a fixed 4:2:0 choice. T.81 §B.2.2
-/// makes `H`/`V` per-component frame parameters in 1..=4, and the 🧱️baseline subset's
-/// `check_baseline_conformance` reads them as one of its five class axes — so an encoder that
-/// stamped every frame 4:2:0 was silently resampling the chroma of every 4:4:4 document it
-/// re-serialized and moving a conformance axis while doing it. Each component's plane is box-
-/// filtered by `(hmax / h, vmax / v)` and emitted as `h * v` blocks per MCU, which reduces to the
-/// previous behaviour exactly when the frame really is `1:2x2, 2:1x1, 3:1x1`. A frame with no
-/// components at all (a snapshot that was never decoded from a real file) keeps that 4:2:0 default,
-/// since there is nothing to honour.
+/// 🖨️ Encodes owned RGBA pixels and JFIF/APP/COM metadata as baseline JPEG.
+/// Explicit IO options select physical quality and component sampling. Fresh DQT/DHT and SOF0
+/// records are derived from those options; entropy observations never enter authored content.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u8>, JpgError> {
     if snap.image.width == 0 || snap.image.height == 0 {
@@ -1419,7 +1395,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_jpg_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

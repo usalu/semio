@@ -5,12 +5,15 @@
   "meta": null,
   "objects": null,
   "references": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "reference-1"
-    ],
-    "reordered": null
+      {
+        "id": "reference-1",
+        "index": 0
+      }
+    ]
   },
   "schema": null,
   "targetVolumes": null

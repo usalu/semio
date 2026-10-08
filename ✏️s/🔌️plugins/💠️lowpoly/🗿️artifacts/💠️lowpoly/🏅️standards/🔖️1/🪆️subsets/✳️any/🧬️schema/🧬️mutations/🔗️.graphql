@@ -1,4 +1,4 @@
-# import LowpolyMeshState,LowpolyMeshStateInput from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
+# import LowpolyMeshState,LowpolyMeshStateInput,LowpolyMeshAttribute,LowpolyMeshAttributeInput from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
 # 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
 # `LowpolyMutation` enum (`dsl::Mutations`-derived, seventeen variants: nine object-lane verbs, a
 # create/delete pair for the `mesh` CHILD slot, and six paint-layer verbs plus one pixel edit).
@@ -182,6 +182,17 @@ input ScaleSelectionInput {
   factor: [Float!]!
 }
 
+input LowpolyVertexPositionInput {
+  vertex: Int!
+  position: [Float!]!
+}
+
+input SetVertexPositionsInput {
+  objectId: String!
+  positions: [LowpolyVertexPositionInput!]!
+  channels: [LowpolyMeshAttributeInput!]!
+}
+
 "Kebab-case spelling of every LowpolyMutation variant — mirrors the Rust `KINDS` catalog."
 enum LowpolyMutationKind {
   CREATE_OBJECT
@@ -205,6 +216,7 @@ enum LowpolyMutationKind {
   MOVE_SELECTION
   ROTATE_SELECTION
   SCALE_SELECTION
+  SET_VERTEX_POSITIONS
 }
 
 "Dispatch envelope input — exactly one payload field is set, selected by `kind`."
@@ -231,6 +243,7 @@ input LowpolyMutationInput {
   moveSelection: MoveSelectionInput
   rotateSelection: RotateSelectionInput
   scaleSelection: ScaleSelectionInput
+  setVertexPositions: SetVertexPositionsInput
 }
 
 "Output-side dispatch union — one member type per LowpolyMutation variant."
@@ -256,6 +269,7 @@ union LowpolyMutation =
   | MoveSelectionMutation
   | RotateSelectionMutation
   | ScaleSelectionMutation
+  | SetVertexPositionsMutation
 
 type CreateObjectMutation {
   mutation: LowpolyMutationKind!
@@ -463,4 +477,19 @@ type ScaleSelectionPayload {
   vertexIds: [Int!]!
   pivot: [Float!]!
   factor: [Float!]!
+}
+
+type LowpolyVertexPositionPayload {
+  vertex: Int!
+  position: [Float!]!
+}
+
+type SetVertexPositionsMutation {
+  mutation: LowpolyMutationKind!
+  payload: SetVertexPositionsPayload!
+}
+type SetVertexPositionsPayload {
+  objectId: String!
+  positions: [LowpolyVertexPositionPayload!]!
+  channels: [LowpolyMeshAttribute!]!
 }

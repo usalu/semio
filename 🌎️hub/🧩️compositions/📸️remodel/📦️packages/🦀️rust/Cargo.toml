@@ -19,6 +19,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "remodel"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.remodel.remodeling@1/*#editor"
 ports = { react = 6063, wgpu = 6163 }
 

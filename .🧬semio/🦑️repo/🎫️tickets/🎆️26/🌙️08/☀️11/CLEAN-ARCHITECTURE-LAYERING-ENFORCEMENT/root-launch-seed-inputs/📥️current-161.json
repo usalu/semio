@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "✏️S 🧑‍💻Dev 🧩️Catalog 🧪️Integration",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/s-dev-composition:catalog-check --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache",
+        "SEMIO_SESSION_OUTPUT_TEST_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-session-staging"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8
+      }
+    },
+    {
+      "name": "✏️S 🧑‍💻Dev 🎮️Playground Session Generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/s-dev-composition:generate-playground-session --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8000999999999
+      }
+    },
+    {
+      "name": "✏️S 🧑‍💻Dev 🎮️Playground Session Check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/s-dev-composition:check-playground-session --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8001999999999
+      }
+    },
+    {
+      "name": "✏️S 🧑‍💻Dev 🎮️Playground Session Preview",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/s-dev-composition:preview-playground-session --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8003
+      }
+    },
+    {
+      "name": "🧰️Framework 🛍️OS 🧑‍💻Dev 🎮️Playground Session Generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/framework-os-dev:generate-playground-session --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8004
+      }
+    },
+    {
+      "name": "🧰️Framework 🛍️OS 🧑‍💻Dev 🎮️Playground Session Check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/framework-os-dev:check-playground-session --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8004999999999
+      }
+    },
+    {
+      "name": "🧰️Framework 🛍️OS 🧑‍💻Dev 🎮️Playground Session Preview",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/framework-os-dev:preview-playground-session --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-composition-nx/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8005999999999
+      }
+    }
+  ],
+  "retireNames": []
+}

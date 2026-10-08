@@ -38,11 +38,12 @@ async fn keyed_rows_apply_in_place_and_invert_exactly() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn between_carries_a_snapshot_to_another_and_empty_to_itself() {
+async fn the_negative_diff_reads_the_base_row_by_row_and_restores_it() {
     let base = snapshot(vec![zone(1, "A"), zone(2, "B"), zone(3, "C")]);
-    let other = snapshot(vec![zone(3, "C"), zone(1, "A2"), zone(7, "G")]);
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<EnergyModelSnapshot, EnergyModelDiff>(&base, &other).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law(&base, &EnergyModelDiff::between(&base, &other)).await;
+    let mut diff = rename(1, "A2");
+    diff.absorb(zones_of(Rows::inserting(3, zone(7, "G"))));
+    diff.absorb(zones_of(Rows::removing(&base.model.zones, &EntityId(2))));
+    protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law(&base, &diff).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -84,7 +85,7 @@ async fn list_edits_and_slots_compose_to_their_net_effect() {
     assert!(edit.unchanged(), "removing and re-inserting the same value at the same place is nothing");
     let mut moved = ListEdit::moving(&base, 0, 2);
     let mut after = base.clone();
-    moved.apply(&mut after).expect("moves");
+    moved.commit_onto(&mut after).expect("moves");
     assert_eq!(after, [20, 30, 10]);
     moved.absorb(moved.inverse(&base));
     assert!(moved.unchanged());
@@ -92,9 +93,9 @@ async fn list_edits_and_slots_compose_to_their_net_effect() {
     slots.absorb(Slots::assigning(1, 6.0));
     slots.absorb(Slots::assigning(0, 1.0));
     let mut array = [0.0; 3];
-    slots.apply(&mut array).expect("assigns");
+    slots.commit_onto(&mut array).expect("assigns");
     assert_eq!(array, [1.0, 6.0, 0.0]);
-    assert!(Slots::<f64, 3>::assigning(3, 1.0).apply(&mut array).is_err());
+    assert!(Slots::<f64, 3>::assigning(3, 1.0).commit_onto(&mut array).is_err());
 }
 
 #[semio_framework_async_macros::async_test]

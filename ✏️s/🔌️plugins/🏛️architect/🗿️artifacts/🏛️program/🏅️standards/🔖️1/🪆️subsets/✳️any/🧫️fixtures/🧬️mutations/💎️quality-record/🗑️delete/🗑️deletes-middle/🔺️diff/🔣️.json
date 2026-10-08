@@ -48,12 +48,15 @@
   "validations": null,
   "performance": null,
   "quality": {
-    "added": [],
     "removed": [
-      "quality-record-a"
+      {
+        "id": "quality-record-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "artifacts": null,
   "assumptions": null,

@@ -28,6 +28,7 @@ mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-
      / apply-filter
      / transform-image
      / fill-selection
+     / write-pixel-region
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -88,4 +89,6 @@ apply-filter = "apply-filter" SP "id=" id SP text SP number SP ("selection=" TEX
 transform-image = "transform-image" SP "id=" id SP text SP number SP number SP number SP number SP bool
 # One fill over the selection: the target, the four unit colour channels, the optional selection runs.
 fill-selection = "fill-selection" SP "id=" id SP text SP numbers SP ("selection=" TEXT)?
+# One rectangle of pixel samples (lowercase hex of the RGBA8 bytes) written into a layer's image.
+write-pixel-region = "write-pixel-region" SP "id=" id SP text SP number SP number SP number SP number SP text
 numbers = "[" (number ("," number)*)? "]"

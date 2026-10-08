@@ -103,18 +103,36 @@ export interface Puzzle3dMetaPatch {
   kindCatalogs?: Puzzle3dKindCatalogs | null;
   kindCompatibility?: Puzzle3dKindCompatibilityDelta;
 }
-export interface Puzzle3dVorticesDelta { added: Puzzle3dVortex[]; removed: string[]; patched: Puzzle3dVortexPatchEntry[]; reordered?: string[]; }
-export interface Puzzle3dVortexPatchEntry { id: string; patch: Puzzle3dVortexPatch; }
-export interface Puzzle3dObjectsDelta { added: Puzzle3dObject[]; removed: string[]; patched: Puzzle3dObjectPatchEntry[]; reordered?: string[]; }
-export interface Puzzle3dObjectPatchEntry { id: string; patch: Puzzle3dObjectPatch; }
-export interface Puzzle3dAttractionsDelta { added: Puzzle3dAttraction[]; removed: string[]; patched: Puzzle3dAttractionPatchEntry[]; reordered?: string[]; }
-export interface Puzzle3dAttractionPatchEntry { id: string; patch: Puzzle3dAttractionPatch; }
-export interface Puzzle3dTargetVolumesDelta { added: Puzzle3dTargetVolume[]; removed: string[]; patched: Puzzle3dTargetVolumePatchEntry[]; reordered?: string[]; }
-export interface Puzzle3dTargetVolumePatchEntry { id: string; patch: Puzzle3dTargetVolumePatch; }
-export interface Puzzle3dReferencesDelta { added: Puzzle3dReference[]; removed: string[]; patched: Puzzle3dReferencePatchEntry[]; reordered?: string[]; }
-export interface Puzzle3dReferencePatchEntry { id: string; patch: Puzzle3dReferencePatch; }
-export interface Puzzle3dKindCompatibilityDelta { added: Puzzle3dKindCompatibility[]; removed: Puzzle3dKindCompatibilityKey[]; patched: Puzzle3dKindCompatibilityPatchEntry[]; reordered?: Puzzle3dKindCompatibilityKey[]; }
-export interface Puzzle3dKindCompatibilityPatchEntry { id: Puzzle3dKindCompatibilityKey; patch: Puzzle3dKindCompatibilityPatch; }
+export interface Puzzle3dVorticesDelta { removed: Puzzle3dVortexRemoval[]; inserted: Puzzle3dVortexInsertion[]; moved: Puzzle3dVortexRelocation[]; modified: Puzzle3dVortexModification[]; }
+export interface Puzzle3dVortexRemoval { id: string; index: number; }
+export interface Puzzle3dVortexInsertion { index: number; row: Puzzle3dVortex; }
+export interface Puzzle3dVortexRelocation { id: string; from: number; to: number; }
+export interface Puzzle3dVortexModification { id: string; patch: Puzzle3dVortexPatch; }
+export interface Puzzle3dObjectsDelta { removed: Puzzle3dObjectRemoval[]; inserted: Puzzle3dObjectInsertion[]; moved: Puzzle3dObjectRelocation[]; modified: Puzzle3dObjectModification[]; }
+export interface Puzzle3dObjectRemoval { id: string; index: number; }
+export interface Puzzle3dObjectInsertion { index: number; row: Puzzle3dObject; }
+export interface Puzzle3dObjectRelocation { id: string; from: number; to: number; }
+export interface Puzzle3dObjectModification { id: string; patch: Puzzle3dObjectPatch; }
+export interface Puzzle3dAttractionsDelta { removed: Puzzle3dAttractionRemoval[]; inserted: Puzzle3dAttractionInsertion[]; moved: Puzzle3dAttractionRelocation[]; modified: Puzzle3dAttractionModification[]; }
+export interface Puzzle3dAttractionRemoval { id: string; index: number; }
+export interface Puzzle3dAttractionInsertion { index: number; row: Puzzle3dAttraction; }
+export interface Puzzle3dAttractionRelocation { id: string; from: number; to: number; }
+export interface Puzzle3dAttractionModification { id: string; patch: Puzzle3dAttractionPatch; }
+export interface Puzzle3dTargetVolumesDelta { removed: Puzzle3dTargetVolumeRemoval[]; inserted: Puzzle3dTargetVolumeInsertion[]; moved: Puzzle3dTargetVolumeRelocation[]; modified: Puzzle3dTargetVolumeModification[]; }
+export interface Puzzle3dTargetVolumeRemoval { id: string; index: number; }
+export interface Puzzle3dTargetVolumeInsertion { index: number; row: Puzzle3dTargetVolume; }
+export interface Puzzle3dTargetVolumeRelocation { id: string; from: number; to: number; }
+export interface Puzzle3dTargetVolumeModification { id: string; patch: Puzzle3dTargetVolumePatch; }
+export interface Puzzle3dReferencesDelta { removed: Puzzle3dReferenceRemoval[]; inserted: Puzzle3dReferenceInsertion[]; moved: Puzzle3dReferenceRelocation[]; modified: Puzzle3dReferenceModification[]; }
+export interface Puzzle3dReferenceRemoval { id: string; index: number; }
+export interface Puzzle3dReferenceInsertion { index: number; row: Puzzle3dReference; }
+export interface Puzzle3dReferenceRelocation { id: string; from: number; to: number; }
+export interface Puzzle3dReferenceModification { id: string; patch: Puzzle3dReferencePatch; }
+export interface Puzzle3dKindCompatibilityDelta { removed: Puzzle3dKindCompatibilityRemoval[]; inserted: Puzzle3dKindCompatibilityInsertion[]; moved: Puzzle3dKindCompatibilityRelocation[]; modified: Puzzle3dKindCompatibilityModification[]; }
+export interface Puzzle3dKindCompatibilityRemoval { id: Puzzle3dKindCompatibilityKey; index: number; }
+export interface Puzzle3dKindCompatibilityInsertion { index: number; row: Puzzle3dKindCompatibility; }
+export interface Puzzle3dKindCompatibilityRelocation { id: Puzzle3dKindCompatibilityKey; from: number; to: number; }
+export interface Puzzle3dKindCompatibilityModification { id: Puzzle3dKindCompatibilityKey; patch: Puzzle3dKindCompatibilityPatch; }
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -132,8 +150,11 @@ type puzzlePuzzle3dDiffGuardTextBounds = { readonly minLength?: number; readonly
 type puzzlePuzzle3dDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type puzzlePuzzle3dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const puzzlePuzzle3dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle3dDiffGuardReject(at, "value is not an object");
+export const puzzlePuzzle3dDiffGuardObject = (value: unknown, at: string, keys?: readonly string[]): Readonly<Record<string, unknown>> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return puzzlePuzzle3dDiffGuardReject(at, "value is not an object");
+  if (keys && Object.keys(value).some((key) => !keys.includes(key))) return puzzlePuzzle3dDiffGuardReject(at, "unknown field");
+  return value as Record<string, unknown>;
+};
 export const puzzlePuzzle3dDiffGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle3dDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle3dDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle3dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -149,14 +170,11 @@ export const puzzlePuzzle3dDiffGuardString = (value: unknown, at: string, bounds
   return value;
 };
 export const puzzlePuzzle3dDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : puzzlePuzzle3dDiffGuardReject(at, "value is not a boolean"));
-export const puzzlePuzzle3dDiffGuardNumber = (value: unknown, at: string, bounds: puzzlePuzzle3dDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return puzzlePuzzle3dDiffGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) puzzlePuzzle3dDiffGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) puzzlePuzzle3dDiffGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
+export const puzzlePuzzle3dDiffGuardBinary64 = (value: unknown, at: string): Binary64 => {
+  try { return parseBinary64(value); } catch { return puzzlePuzzle3dDiffGuardReject(at, "invalid binary64 word"); }
 };
-export const puzzlePuzzle3dDiffGuardInteger = (value: unknown, at: string, bounds: puzzlePuzzle3dDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? puzzlePuzzle3dDiffGuardNumber(value, at, bounds) : puzzlePuzzle3dDiffGuardReject(at, "value is not an integer");
+export const puzzlePuzzle3dDiffGuardInteger = (value: unknown, at: string): number =>
+  typeof value === "number" && Number.isSafeInteger(value) ? value : puzzlePuzzle3dDiffGuardReject(at, "value is not an integer");
 export const puzzlePuzzle3dDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
   members.includes(value as T) ? (value as T) : puzzlePuzzle3dDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
 export const puzzlePuzzle3dDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
@@ -176,8 +194,8 @@ export function parsePuzzle3dVortexPatch(value: unknown, at = "$"): Puzzle3dVort
   return {
     vortexKind: row["vortexKind"] === undefined ? undefined : row["vortexKind"] === null ? null : puzzlePuzzle3dDiffGuardString(row["vortexKind"], `${at}.vortexKind`),
     label: row["label"] === undefined ? undefined : row["label"] === null ? null : puzzlePuzzle3dDiffGuardString(row["label"], `${at}.label`),
-    position: row["position"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["position"], `${at}.position`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.position[${index}]`)),
-    direction: row["direction"] === undefined ? undefined : row["direction"] === null ? null : puzzlePuzzle3dDiffGuardArray(row["direction"], `${at}.direction`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.direction[${index}]`)),
+    position: row["position"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["position"], `${at}.position`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.position}[${index}]`)),
+    direction: row["direction"] === undefined ? undefined : row["direction"] === null ? null : puzzlePuzzle3dDiffGuardArray(row["direction"], `${at}.direction`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.direction}[${index}]`)),
     radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle3dDiffGuardNumber(row["radius"], `${at}.radius`),
     hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle3dDiffGuardBoolean(row["hidden"], `${at}.hidden`),
     locked: row["locked"] === undefined ? undefined : puzzlePuzzle3dDiffGuardBoolean(row["locked"], `${at}.locked`),
@@ -190,8 +208,8 @@ export function parsePuzzle3dObjectPatch(value: unknown, at = "$"): Puzzle3dObje
     label: row["label"] === undefined ? undefined : row["label"] === null ? null : puzzlePuzzle3dDiffGuardString(row["label"], `${at}.label`),
     objectKind: row["objectKind"] === undefined ? undefined : row["objectKind"] === null ? null : puzzlePuzzle3dDiffGuardString(row["objectKind"], `${at}.objectKind`),
     anchor: row["anchor"] === undefined ? undefined : parsePuzzle3dObjectAnchor(row["anchor"], `${at}.anchor`),
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.origin[${index}]`)),
-    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle3dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.orientation[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
+    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle3dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.orientation}[${index}]`)),
     scale: row["scale"] === undefined ? undefined : row["scale"] === null ? null : parsePuzzle3dScale(row["scale"], `${at}.scale`),
     meshUrl: row["meshUrl"] === undefined ? undefined : row["meshUrl"] === null ? null : puzzlePuzzle3dDiffGuardString(row["meshUrl"], `${at}.meshUrl`),
     vortices: row["vortices"] === undefined ? undefined : parsePuzzle3dVorticesDelta(row["vortices"], `${at}.vortices`),
@@ -219,8 +237,8 @@ export function parsePuzzle3dAttractionPatch(value: unknown, at = "$"): Puzzle3d
 export function parsePuzzle3dTargetVolumePatch(value: unknown, at = "$"): Puzzle3dTargetVolumePatch {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.origin[${index}]`)),
-    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle3dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.orientation[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
+    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle3dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.orientation}[${index}]`)),
     scale: row["scale"] === undefined ? undefined : row["scale"] === null ? null : parsePuzzle3dScale(row["scale"], `${at}.scale`),
     hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle3dDiffGuardBoolean(row["hidden"], `${at}.hidden`),
     locked: row["locked"] === undefined ? undefined : puzzlePuzzle3dDiffGuardBoolean(row["locked"], `${at}.locked`),
@@ -231,7 +249,7 @@ export function parsePuzzle3dReferencePatch(value: unknown, at = "$"): Puzzle3dR
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     source: row["source"] === undefined ? undefined : parsePuzzle3dReferenceSource(row["source"], `${at}.source`),
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${at}.origin[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle3dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
     widthWorld: row["widthWorld"] === undefined ? undefined : puzzlePuzzle3dDiffGuardNumber(row["widthWorld"], `${at}.widthWorld`),
     locked: row["locked"] === undefined ? undefined : puzzlePuzzle3dDiffGuardBoolean(row["locked"], `${at}.locked`),
     hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle3dDiffGuardBoolean(row["hidden"], `${at}.hidden`),
@@ -255,7 +273,32 @@ export function parsePuzzle3dMetaPatch(value: unknown, at = "$"): Puzzle3dMetaPa
   };
 }
 
-export function parsePuzzle3dVortexPatchEntry(value: unknown, at = "$"): Puzzle3dVortexPatchEntry {
+export function parsePuzzle3dVortexRemoval(value: unknown, at = "$"): Puzzle3dVortexRemoval {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle3dVortexInsertion(value: unknown, at = "$"): Puzzle3dVortexInsertion {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle3dVortex(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle3dVortexRelocation(value: unknown, at = "$"): Puzzle3dVortexRelocation {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle3dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle3dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle3dVortexModification(value: unknown, at = "$"): Puzzle3dVortexModification {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
@@ -266,14 +309,39 @@ export function parsePuzzle3dVortexPatchEntry(value: unknown, at = "$"): Puzzle3
 export function parsePuzzle3dVorticesDelta(value: unknown, at = "$"): Puzzle3dVorticesDelta {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle3dVortex(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle3dVortexPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dVortexRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle3dVortexInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle3dVortexRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle3dVortexModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle3dObjectPatchEntry(value: unknown, at = "$"): Puzzle3dObjectPatchEntry {
+export function parsePuzzle3dObjectRemoval(value: unknown, at = "$"): Puzzle3dObjectRemoval {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle3dObjectInsertion(value: unknown, at = "$"): Puzzle3dObjectInsertion {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle3dObject(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle3dObjectRelocation(value: unknown, at = "$"): Puzzle3dObjectRelocation {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle3dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle3dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle3dObjectModification(value: unknown, at = "$"): Puzzle3dObjectModification {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
@@ -284,14 +352,39 @@ export function parsePuzzle3dObjectPatchEntry(value: unknown, at = "$"): Puzzle3
 export function parsePuzzle3dObjectsDelta(value: unknown, at = "$"): Puzzle3dObjectsDelta {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle3dObject(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle3dObjectPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dObjectRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle3dObjectInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle3dObjectRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle3dObjectModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle3dAttractionPatchEntry(value: unknown, at = "$"): Puzzle3dAttractionPatchEntry {
+export function parsePuzzle3dAttractionRemoval(value: unknown, at = "$"): Puzzle3dAttractionRemoval {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle3dAttractionInsertion(value: unknown, at = "$"): Puzzle3dAttractionInsertion {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle3dAttraction(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle3dAttractionRelocation(value: unknown, at = "$"): Puzzle3dAttractionRelocation {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle3dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle3dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle3dAttractionModification(value: unknown, at = "$"): Puzzle3dAttractionModification {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
@@ -302,14 +395,39 @@ export function parsePuzzle3dAttractionPatchEntry(value: unknown, at = "$"): Puz
 export function parsePuzzle3dAttractionsDelta(value: unknown, at = "$"): Puzzle3dAttractionsDelta {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle3dAttraction(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle3dAttractionPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dAttractionRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle3dAttractionInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle3dAttractionRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle3dAttractionModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle3dTargetVolumePatchEntry(value: unknown, at = "$"): Puzzle3dTargetVolumePatchEntry {
+export function parsePuzzle3dTargetVolumeRemoval(value: unknown, at = "$"): Puzzle3dTargetVolumeRemoval {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle3dTargetVolumeInsertion(value: unknown, at = "$"): Puzzle3dTargetVolumeInsertion {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle3dTargetVolume(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle3dTargetVolumeRelocation(value: unknown, at = "$"): Puzzle3dTargetVolumeRelocation {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle3dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle3dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle3dTargetVolumeModification(value: unknown, at = "$"): Puzzle3dTargetVolumeModification {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
@@ -320,14 +438,39 @@ export function parsePuzzle3dTargetVolumePatchEntry(value: unknown, at = "$"): P
 export function parsePuzzle3dTargetVolumesDelta(value: unknown, at = "$"): Puzzle3dTargetVolumesDelta {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle3dTargetVolume(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle3dTargetVolumePatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dTargetVolumeRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle3dTargetVolumeInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle3dTargetVolumeRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle3dTargetVolumeModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle3dReferencePatchEntry(value: unknown, at = "$"): Puzzle3dReferencePatchEntry {
+export function parsePuzzle3dReferenceRemoval(value: unknown, at = "$"): Puzzle3dReferenceRemoval {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle3dReferenceInsertion(value: unknown, at = "$"): Puzzle3dReferenceInsertion {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle3dReference(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle3dReferenceRelocation(value: unknown, at = "$"): Puzzle3dReferenceRelocation {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle3dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle3dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle3dReferenceModification(value: unknown, at = "$"): Puzzle3dReferenceModification {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
@@ -338,14 +481,39 @@ export function parsePuzzle3dReferencePatchEntry(value: unknown, at = "$"): Puzz
 export function parsePuzzle3dReferencesDelta(value: unknown, at = "$"): Puzzle3dReferencesDelta {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle3dReference(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle3dReferencePatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle3dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dReferenceRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle3dReferenceInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle3dReferenceRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle3dReferenceModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle3dKindCompatibilityPatchEntry(value: unknown, at = "$"): Puzzle3dKindCompatibilityPatchEntry {
+export function parsePuzzle3dKindCompatibilityRemoval(value: unknown, at = "$"): Puzzle3dKindCompatibilityRemoval {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: parsePuzzle3dKindCompatibilityKey(row["id"], `${at}.id`),
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle3dKindCompatibilityInsertion(value: unknown, at = "$"): Puzzle3dKindCompatibilityInsertion {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle3dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle3dKindCompatibility(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle3dKindCompatibilityRelocation(value: unknown, at = "$"): Puzzle3dKindCompatibilityRelocation {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    id: parsePuzzle3dKindCompatibilityKey(row["id"], `${at}.id`),
+    from: puzzlePuzzle3dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle3dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle3dKindCompatibilityModification(value: unknown, at = "$"): Puzzle3dKindCompatibilityModification {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
     id: parsePuzzle3dKindCompatibilityKey(row["id"], `${at}.id`),
@@ -356,9 +524,9 @@ export function parsePuzzle3dKindCompatibilityPatchEntry(value: unknown, at = "$
 export function parsePuzzle3dKindCompatibilityDelta(value: unknown, at = "$"): Puzzle3dKindCompatibilityDelta {
   const row = puzzlePuzzle3dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle3dKindCompatibility(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dKindCompatibilityKey(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle3dKindCompatibilityPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => parsePuzzle3dKindCompatibilityKey(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle3dKindCompatibilityRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle3dKindCompatibilityInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle3dKindCompatibilityRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle3dKindCompatibilityModification(item, `${at}.modified[${index}]`)),
   };
 }

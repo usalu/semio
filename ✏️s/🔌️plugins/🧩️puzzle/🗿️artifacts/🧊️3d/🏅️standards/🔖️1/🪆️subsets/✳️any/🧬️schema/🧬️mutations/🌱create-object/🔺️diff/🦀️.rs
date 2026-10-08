@@ -8,12 +8,8 @@ pub fn diff(payload: &super::mutation::CreateObject, base: &Puzzle3dSnapshot) ->
     if base.objects.iter().any(|entry| entry.id == payload.object.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "object"), vec![payload.object.id.clone()]);
     }
-    let reordered = payload.index.filter(|index| *index < base.objects.len()).map(|index| {
-        let mut order: Vec<String> = base.objects.iter().map(|entry| entry.id.clone()).collect();
-        order.insert(index, payload.object.id.clone());
-        order
-    });
-    let delta = Puzzle3dObjectsDelta::adding(payload.object.clone(), reordered);
+    let index = payload.index.map_or(base.objects.len(), |index| index.min(base.objects.len()));
+    let delta = Puzzle3dObjectsDelta::insertion(index, payload.object.clone());
     protocol::MutationOutcome::new(Puzzle3dDiff { objects: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

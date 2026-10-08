@@ -81,7 +81,13 @@
       "value": {
         "plugins": [],
         "documentServices": [],
-        "surfaceSessionFactories": []
+        "surfaceSessionFactories": [],
+        "catalog": {
+          "version": 1,
+          "targets": [],
+          "hosts": [],
+          "playgrounds": []
+        }
       },
       "accepted": true
     },
@@ -91,15 +97,44 @@
         "plugins": [
           {
             "pluginId": "alpha",
-            "moduleUrl": "/alpha.mjs"
+            "moduleUrl": "https://example.test/alpha.mjs"
           },
           {
             "pluginId": "beta",
-            "moduleUrl": "/beta.mjs"
+            "moduleUrl": "https://example.test/beta.mjs"
           }
         ],
         "documentServices": [],
-        "surfaceSessionFactories": []
+        "surfaceSessionFactories": [],
+        "catalog": {
+          "version": 1,
+          "targets": [
+            {
+              "pluginId": "alpha",
+              "moduleUrl": "https://example.test/alpha.mjs",
+              "wasmOut": "alpha.wasm",
+              "role": "plugin",
+              "dependsOn": [],
+              "contributes": [],
+              "consumes": [],
+              "activationEvents": [],
+              "capabilities": []
+            },
+            {
+              "pluginId": "beta",
+              "moduleUrl": "https://example.test/beta.mjs",
+              "wasmOut": "beta.wasm",
+              "role": "plugin",
+              "dependsOn": [],
+              "contributes": [],
+              "consumes": [],
+              "activationEvents": [],
+              "capabilities": []
+            }
+          ],
+          "hosts": [],
+          "playgrounds": []
+        }
       },
       "accepted": true
     },
@@ -122,6 +157,15 @@
         "plugins": [],
         "documentServices": [],
         "surfaceSessionFactories": {}
+      },
+      "accepted": false
+    },
+    {
+      "name": "Missing Admitted Catalog",
+      "value": {
+        "plugins": [],
+        "documentServices": [],
+        "surfaceSessionFactories": []
       },
       "accepted": false
     }

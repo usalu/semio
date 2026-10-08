@@ -1,0 +1,32 @@
+{
+  "time": "2026-10-08T22:22:04.308145+00:00",
+  "kind": "whole-compiler-input-observers-not-peer-attribution",
+  "ownedSourceHeld": true,
+  "observers": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "38ff80293b9ba6025a557697f0f5ecd1921ecb57ddf4f4a70d0149ef784cdddc"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "cc9bcb59178ba87c3582deda4ac0b600fe2378dcaacbf4cb44d3df5cddecb0ed"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "f7ea5bf8bc96bd9448a629afdc3396de768f3f445a876cf245c0967ca7e1912b"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "201cda290aabbf1f4e4aa6347d9323f811dd808cb9e0789c2ffc404e39d13a30"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8080c67b41531e7b03a5e63abebd08fef5f8e15083b1ae9469f84e07a9c2c08f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "9ff721052cba0b3bba565a1717eacbe9ba4462fe6f55df9fdc195e2ade94be22"
+    }
+  ],
+  "servicesLedger": "📥️oct9-services-full-currency-current-endpoints.json"
+}

@@ -16,6 +16,7 @@ message AviMutation {
     SetChunkKeyframe set_chunk_keyframe = 11;
     AddUnknownChunk add_unknown_chunk = 12;
     uint32 remove_unknown_chunk = 13;
+    SetHdrlExtra set_hdrl_extra = 14;
   }
 }
 message InsertStream { uint32 index = 1; semio.stdio_avi.snapshot.AviStream stream = 2; }
@@ -24,4 +25,5 @@ message SetStreamFormat { uint32 stream_index = 1; semio.stdio_avi.snapshot.AviS
 message InsertChunk { uint32 stream_index = 1; uint32 index = 2; semio.stdio_avi.snapshot.AviChunk chunk = 3; }
 message RemoveChunk { uint32 stream_index = 1; uint32 index = 2; }
 message SetChunkKeyframe { uint32 stream_index = 1; uint32 index = 2; bool keyframe = 3; }
+message SetHdrlExtra { repeated semio.stdio_avi.snapshot.RiffChunk chunks = 1; }
 message AddUnknownChunk { uint32 index = 1; semio.stdio_avi.snapshot.RiffChunk item = 2; }

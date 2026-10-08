@@ -22,11 +22,7 @@ pub fn diff(payload: &super::ConnectGrips, base: &Puzzle5dSnapshot) -> protocol:
         x: payload.x,
         y: payload.y,
     };
-    let reordered = payload.index.filter(|index| *index < base.fasteners.len()).map(|index| {
-        let mut order: Vec<String> = base.fasteners.iter().map(|entry| entry.id.clone()).collect();
-        order.insert(index, payload.id.clone());
-        order
-    });
-    protocol::MutationOutcome::new(Puzzle5dDiff { fasteners: Some(Puzzle5dFastenersDelta::adding(fastener, reordered)), ..Default::default() })
+    let index = payload.index.map_or(base.fasteners.len(), |index| index.min(base.fasteners.len()));
+    protocol::MutationOutcome::new(Puzzle5dDiff { fasteners: Some(Puzzle5dFastenersDelta::insertion(index, fastener)), ..Default::default() })
 }
 //#endregion 🔖️Diff

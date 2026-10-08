@@ -3,7 +3,8 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
         "index": 1,
         "layer": {
@@ -34,9 +35,8 @@
         }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "assets": null,
   "artboard": null

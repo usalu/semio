@@ -42,6 +42,7 @@ export function decodeValue(value:unknown,spec:ValueSpec,path:string):unknown {
  case "map":{if(!isPlainObject(value))return fail(path,"expected a map");const out:Record<string,unknown>={};for(const key of Object.keys(value).sort())Object.defineProperty(out,key,{value:decodeValue(value[key],spec.of,path+"."+key),enumerable:true,writable:true,configurable:true});return out}
  case "rec":return decodeRecord(value,spec.of(),path);
  case "opt":return value===null||value===undefined?null:decodeValue(value,spec.of,path);
+ case "tagged":{if(!isPlainObject(value))return fail(path,"expected a tagged object");const variant=spec.variants.find(candidate=>candidate.name===value[spec.tag]);if(variant===undefined)return fail(path+"."+spec.tag,"unknown variant");const fields={...value};delete fields[spec.tag];return{[spec.tag]:variant.name,...decodeRecord(fields,variant.spec(),path)}}
  }
 }
 
@@ -129,6 +130,13 @@ export function writeValueJson(value: unknown, spec: ValueSpec, depth: number): 
       return writeRecordJson(value as Record<string, unknown>, spec.of(), depth);
     case "opt":
       return value === null || value === undefined ? "null" : writeValueJson(value, spec.of, depth);
+    case "tagged": {
+      const object = value as Record<string, unknown>;
+      const variant = spec.variants.find((candidate) => candidate.name === object[spec.tag]);
+      if (variant === undefined) throw new RemodelingCodecError("", `unknown ${spec.tag} variant ${String(object[spec.tag])}`);
+      const record = variant.spec();
+      return writeRecordJson(object, { ...record, fields: [{ name: spec.tag, spec: { k: "text" }, dflt: () => variant.name }, ...record.fields] }, depth);
+    }
   }
 }
 

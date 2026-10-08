@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "cancel-before-read",
+      "expected": "refused",
+      "code": "cancelled",
+      "livenessQueries": 0
+    },
+    {
+      "id": "byte-one-short",
+      "expected": "refused",
+      "code": "byte-capacity",
+      "livenessQueries": 0
+    },
+    {
+      "id": "nonregular",
+      "expected": "refused",
+      "code": "not-regular",
+      "livenessQueries": 0
+    },
+    {
+      "id": "semantic-claim-swap",
+      "expected": "refused",
+      "code": null,
+      "livenessQueries": 0
+    },
+    {
+      "id": "same-owner",
+      "expected": "accepted",
+      "code": null,
+      "livenessQueries": 4
+    }
+  ]
+}

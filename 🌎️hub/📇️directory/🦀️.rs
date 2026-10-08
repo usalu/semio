@@ -676,10 +676,8 @@ pub mod model {
 
 use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
 pub use crate::artifact_authority::creation::{ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
-use directory::os_directory::{
-    ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent,
-    DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint, descriptor_digest_v1,
-};
+use directory::os_directory::{ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint};
+use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use directory::os_identity::time_ordered_id;
 use error::{DirectoryError, DirectoryResult};
 use model::*;
@@ -1811,7 +1809,7 @@ pub(crate) fn validate_published_checkpoint_lineage(descriptor: &DocumentDescrip
             && candidate.parent_checkpoint_id.is_none()
             && candidate.baseline_frontier.is_genesis_for(&candidate.scope)
             && descriptor.bootstrap_frontier == (::directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 })
-            && descriptor.bootstrap_snapshot_hash == candidate.pack.sha256.hex() =>
+            && descriptor.bootstrap_snapshot_hash == directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&candidate.pack.sha256) =>
         {
             Ok(())
         }
@@ -1832,7 +1830,7 @@ pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOp
     let Some(prepared) = operation.prepared.as_ref() else {
         return Err(DirectoryError::Conflict("genesis creation has no durable prepared pair".into()));
     };
-    prepared.validate(&operation.intent)?;
+    crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &operation.intent)?;
     if operation.intent != append.intent
         || operation.phase != ::directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Preparing
         || operation.revision != 2
@@ -1919,7 +1917,7 @@ pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &
     let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1: digest, entry } = &event.body else {
         return Err(DirectoryError::Conflict("document index event required".into()));
     };
-    ::directory::os_directory::validate_directory_event_page_event(event).map_err(|_| DirectoryError::Conflict("document index event is invalid".into()))?;
+    ::directory::os_directory::io::text::validate_directory_event_page_event(event).map_err(|_| DirectoryError::Conflict("document index event is invalid".into()))?;
     if descriptor.space_id != scope.space_id || descriptor.document_id != scope.document_id || descriptor_digest_v1(descriptor).ok().as_ref() != Some(digest) {
         return Err(DirectoryError::Conflict("document index descriptor binding differs".into()));
     }
@@ -2235,7 +2233,7 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
             Ok(Decision { events: Vec::new(), result: None })
         }
         DirectoryCommand::RecordUserPreference { schema, mutation } => {
-            if !::directory::os_directory::valid_user_preference_record_v1(&schema, &mutation) {
+            if !::directory::os_directory::io::text::valid_user_preference_record_v1(&schema, &mutation) {
                 return Err(DirectoryError::Conflict("user preference record is invalid".into()));
             }
             let user_id = actor_user_id(actor)?.to_string();
@@ -2548,7 +2546,7 @@ impl DirectoryService {
             DocumentGenesisCommitV1::Indeterminate => {
                 let reconciled = async {
                     let facts = self.dir.read_artifact_creation(&append.intent.actor.user_id, &append.intent.request.request_id).await?;
-                    let operation = ArtifactCreationOperationV1::fold(&facts)?;
+                    let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
                     if operation.intent != append.intent {
                         return Err(DirectoryError::Conflict("genesis uncertain receipt belongs to another intent".into()));
                     }
@@ -2556,7 +2554,7 @@ impl DirectoryService {
                         return Err(DirectoryError::Backend("genesis commit acknowledgement is indeterminate; no durable receipt is readable".into()));
                     };
                     let events = self.dir.events_since(receipt.event_seq_first - 1, 3).await?;
-                    let prepared = ArtifactCreationOperationV1::fold(&facts[..2])?;
+                    let prepared = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts[..2])?;
                     let completion = document_genesis_completion_v1(&prepared, &append, &events)?;
                     if facts.last() != Some(&completion) {
                         return Err(DirectoryError::Conflict("genesis uncertain public triple differs from its exact stored receipt".into()));

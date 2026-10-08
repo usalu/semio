@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
@@ -86,10 +87,10 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "set-layer-opacity/dims-shape-a-to-half: 0.5 is finite and differs from 1.0, so neither the invariant nor the no-op guard may fire, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("set-layer-opacity's diff pins a layers delta");
-    assert_eq!(delta.patched[0].patch.opacity, Some(0.5), "the patch pins the opacity field");
+    assert_eq!(delta.modified[0].patch.opacity, Some(0.5), "the patch pins the opacity field");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: one `patched` entry setting `opacity`. The
+/// 🔺️ The produced diff is EXACTLY the committed one: one `modified` entry setting `opacity`. The
 /// committed `"fill": null` is what pins layer opacity as a lane of its own — a diff that
 /// re-serialized the fill to fold the alpha in would be caught here and nowhere else.
 #[semio_framework_async_macros::async_test]
@@ -99,7 +100,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-layer-opacity/dims-shape-a-to-half: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("set-layer-opacity pins a layers delta");
-    let patch = &delta.patched[0].patch;
+    let patch = &delta.modified[0].patch;
     assert_eq!(patch.opacity, Some(0.5), "the opacity lane carries the new scalar");
     assert!(patch.fill.is_none(), "dimming a layer must not rewrite its fill to fold the alpha in");
     assert!(patch.visible.is_none(), "a half-opaque layer is not a hidden one");

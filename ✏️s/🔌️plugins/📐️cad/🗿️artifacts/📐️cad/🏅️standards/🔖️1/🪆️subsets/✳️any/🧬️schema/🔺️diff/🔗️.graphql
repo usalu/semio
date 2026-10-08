@@ -15,15 +15,27 @@ type CadDiff {
   nodes: CadNodesDelta @state(class: ARTIFACT)
 }
 type CadModelSlot { child: ArtifactChild }
-type CadDrawingsDelta { added: [ArtifactChild!]! removed: [String!]! reordered: [String!] }
-type CadBrepsDelta { added: [ArtifactChild!]! removed: [String!]! reordered: [String!] }
+type CadNodeRemoval { id: String! index: Int! }
+type CadNodeRelocation { id: String! from: Int! to: Int! }
+type CadReferenceRemoval { id: String! index: Int! }
+type CadReferenceRelocation { id: String! from: Int! to: Int! }
+type CadDrawingRemoval { id: String! index: Int! }
+type CadDrawingRelocation { id: String! from: Int! to: Int! }
+type CadBrepRemoval { id: String! index: Int! }
+type CadBrepRelocation { id: String! from: Int! to: Int! }
+type CadDrawingInsertion { index: Int! row: ArtifactChild! }
+type CadBrepInsertion { index: Int! row: ArtifactChild! }
+type CadReferenceInsertion { index: Int! row: CadReference! }
+type CadNodeInsertion { index: Int! row: CadNode! }
+type CadDrawingsDelta { removed: [CadDrawingRemoval!]! inserted: [CadDrawingInsertion!]! moved: [CadDrawingRelocation!]! }
+type CadBrepsDelta { removed: [CadBrepRemoval!]! inserted: [CadBrepInsertion!]! moved: [CadBrepRelocation!]! }
 type CadOrientationSet { value: [Float!] }
 type CadScaleSet { value: Float }
 type CadOpacitySet { value: Float }
 type CadReferencePatch { sourceUrl: String mediaKind: String origin: [Float!] orientation: CadOrientationSet scale: CadScaleSet widthWorld: Float hidden: Boolean locked: Boolean opacity: CadOpacitySet }
-type CadReferencePatchEntry { id: String! patch: CadReferencePatch! }
-type CadReferencesDelta { added: [CadReference!]! removed: [String!]! patched: [CadReferencePatchEntry!]! reordered: [String!] }
+type CadReferenceModification { id: String! patch: CadReferencePatch! }
+type CadReferencesDelta { removed: [CadReferenceRemoval!]! inserted: [CadReferenceInsertion!]! moved: [CadReferenceRelocation!]! modified: [CadReferenceModification!]! }
 type CadReferencesDeltaEntry { key: String! value: CadReferencesDelta! }
 type CadNodePatch { label: String }
-type CadNodePatchEntry { id: String! patch: CadNodePatch! }
-type CadNodesDelta { added: [CadNode!]! removed: [String!]! patched: [CadNodePatchEntry!]! reordered: [String!] }
+type CadNodeModification { id: String! patch: CadNodePatch! }
+type CadNodesDelta { removed: [CadNodeRemoval!]! inserted: [CadNodeInsertion!]! moved: [CadNodeRelocation!]! modified: [CadNodeModification!]! }

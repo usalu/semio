@@ -1,0 +1,75 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧭️tree/🧬️schema/🔣️.json",
+      "beforeSha256": "5bf3dea296b982391c1b541c6f75fa5b66d7623b037296d4873b616fcfd516fd",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧬️schema/🔣️.json",
+      "beforeSha256": "22043e03432f5213a9bb4fd8cca7867b4611c07d16704eeb94a33a405057a9a9",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧭️tree/🧪️tests/🟦️.ts",
+      "beforeSha256": "7d6f65a350072eff26c38005012ed531d1529bc8491e96e2db2a8c0d429fce17",
+      "afterSha256": "787fecc871e9450f66a3c9243713e33e40e0764a31d763deeda404f5ceca19e3",
+      "action": "updated",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧪️tests/🟦️.ts",
+      "beforeSha256": "071fe3edd3a265ed65d158dfcaf31b55db49c7a7cb0e50accf7fc3cedcd650c5",
+      "afterSha256": "96db2f4af8c1b06bea4a36ed85f698bb85ed70a858c9ff2aa6bb9870730383e9",
+      "action": "updated",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+      "beforeSha256": "96bda6bc2ce7168177db385154529b95d537acef5eaa95eeac78264596fa2f62",
+      "afterSha256": "1c9039b1a1bcccbec76e0f79a05b6400c859b6682ce8efd356ff452a7c51773c",
+      "action": "updated",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha256": "de69c53a4278f04271ac7711e0fc56e231204acb4882049a2195b117db1c78f1",
+      "afterSha256": "a55e704f53202aeaf755567a09139b1b86f98a17eed71719ac85417967e4394c",
+      "action": "updated",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "e85fc153602fd1eb53cd680f5cd420bf8ec81b00abd5427420239b4d86e2b91c",
+      "afterSha256": "969b2b6dc92c305dfa50655dbf8c418fe25bcb2f15b2d66bdcb849df655dcaf3",
+      "action": "updated",
+      "qualification": "Root current-corpus facet only"
+    }
+  ],
+  "plainObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧭️tree/🧫️fixtures/🔣️.json",
+      "sha256": "48ed7c25d6ed460b0f33f0615be2e3fa9cf240582cd5cfcd8b3fa2b95a8d730e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧫️fixtures/🔣️.json",
+      "sha256": "dc6dfae17bfcdb42f47ab3c418445866db2e60d5db30c3f3e4db9cd0b6196754"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/🔣️.json",
+      "sha256": "5219e4bf8a207cbf91db26d99eabaa7fd10971f17b97a4e6125cfd08499f484b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧫️fixtures/🔣️.json",
+      "sha256": "4e9c4f12d5316770fe12bf3c55a61d9a65049bc7ec092787915d598987912618"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🚪️ownership/🔣️.json",
+      "sha256": "cc39f16ca08c67a4f073feb82182d3090f87301b41ca10014e60bcf211008bdb"
+    }
+  ]
+}

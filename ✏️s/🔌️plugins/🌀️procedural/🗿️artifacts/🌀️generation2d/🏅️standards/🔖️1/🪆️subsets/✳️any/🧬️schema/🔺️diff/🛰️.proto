@@ -24,13 +24,26 @@ message Generation2dDiff {
   optional Generation2dPreviewChange preview_text = 8;
 }
 
-message Generation2dWidgetsDelta {
-  repeated Widget added = 1;
-  repeated string removed = 2;
-  repeated Generation2dWidgetPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Generation2dWidgetRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
-message Generation2dWidgetPatchEntry {
+message Generation2dWidgetInsertion {
+  uint32 index = 1;
+  Widget row = 2;
+}
+message Generation2dWidgetRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message Generation2dWidgetsDelta {
+  repeated Generation2dWidgetRemoval removed = 1;
+  repeated Generation2dWidgetInsertion inserted = 2;
+  repeated Generation2dWidgetRelocation moved = 3;
+  repeated Generation2dWidgetModification modified = 4;
+}
+message Generation2dWidgetModification {
   string id = 1;
   Generation2dWidgetPatch patch = 2;
 }
@@ -46,15 +59,28 @@ message Generation2dWidgetSlider {
   double max = 3;
   double step = 4;
 }
-message Generation2dSynapsesDelta {
-  repeated SynapseSpec added = 1;
-  repeated string removed = 2;
-  repeated Generation2dSynapsePatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-message Generation2dSynapsePatchEntry {
+message Generation2dSynapseRemoval {
   string id = 1;
-  SynapseSpec item = 2;
+  uint32 index = 2;
+}
+message Generation2dSynapseInsertion {
+  uint32 index = 1;
+  SynapseSpec row = 2;
+}
+message Generation2dSynapseRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message Generation2dSynapsesDelta {
+  repeated Generation2dSynapseRemoval removed = 1;
+  repeated Generation2dSynapseInsertion inserted = 2;
+  repeated Generation2dSynapseRelocation moved = 3;
+  repeated Generation2dSynapseModification modified = 4;
+}
+message Generation2dSynapseModification {
+  string id = 1;
+  SynapseSpec patch = 2;
 }
 message Generation2dLayoutRow {
   string id = 1;
@@ -65,13 +91,26 @@ message Generation2dLayoutDelta {
   repeated string removed = 2;
   repeated Generation2dLayoutRow patched = 3;
 }
-message Generation2dGenerationsDelta {
-  repeated FormGeneration added = 1;
-  repeated string removed = 2;
-  repeated Generation2dGenerationPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Generation2dGenerationRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
-message Generation2dGenerationPatchEntry {
+message Generation2dGenerationInsertion {
+  uint32 index = 1;
+  FormGeneration row = 2;
+}
+message Generation2dGenerationRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message Generation2dGenerationsDelta {
+  repeated Generation2dGenerationRemoval removed = 1;
+  repeated Generation2dGenerationInsertion inserted = 2;
+  repeated Generation2dGenerationRelocation moved = 3;
+  repeated Generation2dGenerationModification modified = 4;
+}
+message Generation2dGenerationModification {
   string id = 1;
   Generation2dGenerationPatch patch = 2;
 }

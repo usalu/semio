@@ -10,6 +10,7 @@ message MdMutation {
     MdRemoveBlock remove_block = 4;
     MdReplaceBlock replace_block = 5;
     MdSetInlines set_inlines = 6;
+    MdSpliceSource splice_source = 7;
   }
 }
 
@@ -17,3 +18,5 @@ message MdInsertBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint
 message MdRemoveBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; }
 message MdReplaceBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; semio.s_stdio_md.snapshot.MdBlock block = 3; }
 message MdSetInlines { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; repeated semio.s_stdio_md.snapshot.MdInline inlines = 3; }
+message MdSourceSplice { uint32 offset = 1; uint32 delete = 2; string insert = 3; }
+message MdSpliceSource { repeated MdSourceSplice splices = 1; }

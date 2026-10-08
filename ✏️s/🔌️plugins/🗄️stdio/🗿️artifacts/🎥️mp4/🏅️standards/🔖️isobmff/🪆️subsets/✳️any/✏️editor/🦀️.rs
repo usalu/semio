@@ -125,84 +125,6 @@ fn mp4Editor_retained_reduce(
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
-fn mp4Editor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
-}
-fn mp4Editor_index(segment: &str, len: usize, insertion: bool) -> Result<usize, Fault> {
-    if insertion && segment == "-" {
-        return Ok(len);
-    }
-    if segment.is_empty() || (segment.len() > 1 && segment.starts_with('0')) || !segment.bytes().all(|byte| byte.is_ascii_digit()) {
-        return Err(mp4Editor_edit_fault("stdio.mp4.invalid-index", format!("'{segment}' is not a canonical array index")));
-    }
-    let index = segment.parse::<usize>().map_err(|error| mp4Editor_edit_fault("stdio.mp4.invalid-index", error.to_string()))?;
-    if index > len || (!insertion && index == len) {
-        return Err(mp4Editor_edit_fault("stdio.mp4.index-out-of-range", format!("index {index} is outside 0..{len}")));
-    }
-    Ok(index)
-}
-fn mp4Editor_track_path(path: &str) -> Option<(&str, Option<&str>)> {
-    let rest = path.strip_prefix("/tracks/")?;
-    Some(rest.split_once('/').map_or((rest, None), |(index, suffix)| (index, Some(suffix))))
-}
-fn mp4Editor_sample_path(path: &str) -> Option<(&str, &str, Option<&str>)> {
-    let (track, suffix) = mp4Editor_track_path(path)?;
-    let rest = suffix?.strip_prefix("samples/")?;
-    Some(rest.split_once('/').map_or((track, rest, None), |(sample, suffix)| (track, sample, Some(suffix))))
-}
-fn mp4Editor_direct_structural_mutation(event: &editing::SnapshotEditEvent, snapshot: &Mp4Snapshot) -> Result<Option<Mp4Mutation>, Fault> {
-    match event {
-        editing::SnapshotEditEvent::InsertValue { path, value } => {
-            if let Some((track, None)) = mp4Editor_track_path(path) {
-                let index = mp4Editor_index(track, snapshot.tracks.len(), true)?;
-                let track = <Mp4Track as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| mp4Editor_edit_fault("stdio.mp4.invalid-track", error.to_string()))?;
-                return Ok(Some(Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, track })));
-            }
-            if let Some((track, sample, None)) = mp4Editor_sample_path(path) {
-                let track_index = mp4Editor_index(track, snapshot.tracks.len(), false)?;
-                let index = mp4Editor_index(sample, snapshot.tracks[track_index].samples.len(), true)?;
-                let sample = <Mp4Sample as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| mp4Editor_edit_fault("stdio.mp4.invalid-sample", error.to_string()))?;
-                return Ok(Some(Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample })));
-            }
-        }
-        editing::SnapshotEditEvent::RemoveValue { path } => {
-            if let Some((track, None)) = mp4Editor_track_path(path) {
-                let index = mp4Editor_index(track, snapshot.tracks.len(), false)?;
-                return Ok(Some(Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index })));
-            }
-            if let Some((track, sample, None)) = mp4Editor_sample_path(path) {
-                let track_index = mp4Editor_index(track, snapshot.tracks.len(), false)?;
-                let index = mp4Editor_index(sample, snapshot.tracks[track_index].samples.len(), false)?;
-                return Ok(Some(Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index })));
-            }
-        }
-        _ => {}
-    }
-    Ok(None)
-}
-fn mp4Editor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &Mp4Snapshot) -> Result<Mp4Snapshot, Fault> {
-    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| mp4Editor_edit_fault(error.code, error.to_string()))?;
-    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA).map_err(|error| mp4Editor_edit_fault(error.code, error.to_string()))
-}
-/// 🎯️ The domain leaf exactly as granular as a set of one whole record or field — the whole `ftyp`, one track's whole codec, one
-/// sample's sync flag — else `None`, and the edit publishes as a path-scoped patch (a whole-record leaf for one field would mask an
-/// earlier edit of a sibling field when history is edited, design §19.3).
-fn mp4Editor_compact_mutation(event: &editing::SnapshotEditEvent, next: &Mp4Snapshot, base: &Mp4Snapshot) -> Option<Mp4Mutation> {
-    let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
-    if path == "/ftyp" {
-        return Some(Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: next.ftyp.clone() }));
-    }
-    if let Some((track, Some("codec"))) = mp4Editor_track_path(path) {
-        let track_index = mp4Editor_index(track, base.tracks.len(), false).ok()?;
-        return Some(Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index, codec: next.tracks.get(track_index)?.codec.clone() }));
-    }
-    if let Some((track, sample, Some("sync"))) = mp4Editor_sample_path(path) {
-        let track_index = mp4Editor_index(track, base.tracks.len(), false).ok()?;
-        let index = mp4Editor_index(sample, base.tracks[track_index].samples.len(), false).ok()?;
-        return Some(Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index, index, sync: next.tracks.get(track_index)?.samples.get(index)?.sync }));
-    }
-    None
-}
 struct Mp4EditorExampleFactory {
     keys: Vec<ToolFactoryKey>,
 }
@@ -422,15 +344,25 @@ impl editing::SnapshotEditingEditor for Mp4Editor {
             _ => None,
         }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        if let Some(mutation) = mp4Editor_direct_structural_mutation(event, snapshot)? {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::mp4::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        let path = match event {
+            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::MoveValue { path, .. } | editing::SnapshotEditEvent::RenameKey { path, .. } => path,
+            editing::SnapshotEditEvent::ReplaceSource { .. } => return Ok(None),
+        };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let ["tracks", track, "samples", sample, field, ..] = segments.as_slice() else { return Ok(None) };
+        if *field == "sync" {
+            return Ok(None);
         }
-        let next = mp4Editor_bounded_edit(event, snapshot)?;
-        if let Some(mutation) = mp4Editor_compact_mutation(event, &next, snapshot) {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
-        }
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::isobmff::subsets::any::schema::mutations::net_mutations)
+        let fail = |message: String| Fault::from(message);
+        let (track_index, index) = (track.parse::<usize>().map_err(|e| fail(e.to_string()))?, sample.parse::<usize>().map_err(|e| fail(e.to_string()))?);
+        let current = snapshot.tracks.get(track_index).and_then(|track| track.samples.get(index)).ok_or_else(|| fail(format!("sample {index} of track {track_index} does not exist")))?;
+        let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/tracks/{track_index}/samples/{index}"), event).map_err(|error| fail(error.to_string()))?;
+        let sample = <Mp4Sample as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+        Ok(Some(vec![Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index }), Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample })]))
     }
 }
 

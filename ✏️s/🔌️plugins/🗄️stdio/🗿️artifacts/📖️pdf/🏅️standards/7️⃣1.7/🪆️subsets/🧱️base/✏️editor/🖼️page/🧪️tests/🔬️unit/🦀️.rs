@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::mutations::apply_pdf_mutation;
+use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotationKind, PdfImage, PdfOp, PdfPage, PdfPageLayout, PdfPageMode, PdfTextString};
 
 fn apply(snapshot: &mut PdfSnapshot, edit: PdfPageEdit) {
@@ -132,11 +132,11 @@ fn set_image_replaces_samples_and_keeps_the_placement() {
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
     let edit = edit_from_action(
         "set-image",
-        Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(image.id)), ("width", semio_framework_value::DslValue::float(2.0)), ("height", semio_framework_value::DslValue::float(2.0)), ("text", semio_framework_value::DslValue::String("ff000000ff000000ffff0000".into()))])),
+        Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(image.id)), ("width", semio_framework_value::DslValue::float(2.0)), ("height", semio_framework_value::DslValue::float(2.0)), ("text", semio_framework_value::DslValue::String("255,0,0,0,255,0,0,0,255,255,0,0".into()))])),
     )
     .expect("edit");
     apply(&mut snapshot, edit);
-    assert_eq!(snapshot.images[0].data, vec![255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0]);
+    assert_eq!(snapshot.images[0].body,crate::standards::v1_7::subsets::base::schema::snapshot::PdfImageBody::Samples {values:vec![255,0,0,0,255,0,0,0,255,255,0,0]});
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
     assert!((image.x - 60.0).abs() < 0.01 && (image.y - 70.0).abs() < 0.01);
 }
@@ -248,12 +248,12 @@ fn mesh_move_shifts_the_decode_range() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfShading, PdfShadingKind};
     let mut snapshot = sample();
     snapshot.pages[0].content.push(PdfOp::PaintShading { name: "ShM".into() });
-    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 10.0, 0.0, 10.0], function: None, data: vec![0] }, background: None, bbox: Some([0.0, 0.0, 10.0, 10.0]), anti_alias: false, extra: Vec::new() });
+    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 10.0, 0.0, 10.0], function: None, reference: semio_framework_artifact_reference::ArtifactRef { artifact_id: "fixture:mesh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into() } } }, background: None, bbox: Some([0.0, 0.0, 10.0, 10.0]), anti_alias: false, extra: Vec::new() });
     let shading = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Shading).expect("mesh");
     apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(shading.id)), ("x", semio_framework_value::DslValue::float(2.0)), ("y", semio_framework_value::DslValue::float(3.0))]))).unwrap());
-    let PdfShadingKind::Mesh { decode, data, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
+    let PdfShadingKind::Mesh { decode, reference, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
     assert_eq!(decode, &vec![2.0, 12.0, 3.0, 13.0]);
-    assert_eq!(data, &vec![0]);
+    assert_eq!(reference.artifact_id, "fixture:mesh");
     assert_eq!(snapshot.shadings[0].bbox, Some([2.0, 3.0, 12.0, 13.0]));
 }
 
@@ -274,10 +274,10 @@ fn conformance_form_identity_and_font_program_publish() {
     assert!(matches!(action.kind, crate::standards::v1_7::subsets::base::schema::snapshot::PdfActionKind::Uri { ref uri, .. } if uri == "https://semio.example"));
     apply(&mut snapshot, edit_from_action("set-document-id", Some(&args(vec![("text", semio_framework_value::DslValue::String("abc".into())), ("extra", semio_framework_value::DslValue::String("def".into()))]))).unwrap());
     assert_eq!(snapshot.document_id.as_ref().expect("id"), &[b"abc".to_vec(), b"def".to_vec()]);
-    apply(&mut snapshot, edit_from_action("set-font-program", Some(&args(vec![("object", semio_framework_value::DslValue::String("F1".into())), ("text", semio_framework_value::DslValue::String("truetype".into())), ("extra", semio_framework_value::DslValue::String("0001".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-font-reference", Some(&args(vec![("object", semio_framework_value::DslValue::String("F1".into())), ("text", semio_framework_value::DslValue::String("truetype".into())), ("extra", semio_framework_value::DslValue::String("0001".into()))]))).unwrap());
     let PdfFontKind::TrueType { program, .. } = &snapshot.fonts[0].kind else { panic!("truetype font") };
-    let Some(PdfFontProgram::TrueType { data }) = program else { panic!("program") };
-    assert_eq!(data, &vec![0, 1]);
+    let Some(PdfFontProgram::TrueType { reference }) = program else { panic!("program") };
+    assert_eq!(reference.artifact_id,"0001");
 }
 
 #[test]
@@ -341,10 +341,10 @@ fn appearances_glyphs_objects_and_mesh_bytes_publish() {
     apply(&mut snapshot, edit_from_action("set-indirect-object", Some(&args(vec![("x", semio_framework_value::DslValue::float(7.0)), ("y", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("Hello".into()))]))).unwrap());
     assert!(matches!(&snapshot.objects[0].value, PdfObject::Name(name) if name == "Hello"));
     assert_eq!(snapshot.objects[0].id.num, 7);
-    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 1.0, 0.0, 1.0], function: None, data: vec![0] }, background: None, bbox: None, anti_alias: false, extra: Vec::new() });
-    apply(&mut snapshot, edit_from_action("set-mesh-data", Some(&args(vec![("object", semio_framework_value::DslValue::String("ShM".into())), ("text", semio_framework_value::DslValue::String("0,10,0,10".into())), ("extra", semio_framework_value::DslValue::String("00ff".into()))]))).unwrap());
-    let PdfShadingKind::Mesh { data, decode, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
-    assert_eq!(data, &vec![0, 255]);
+    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 1.0, 0.0, 1.0], function: None, reference: semio_framework_artifact_reference::ArtifactRef { artifact_id: "fixture:mesh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into() } } }, background: None, bbox: None, anti_alias: false, extra: Vec::new() });
+    apply(&mut snapshot, edit_from_action("set-mesh-reference", Some(&args(vec![("object", semio_framework_value::DslValue::String("ShM".into())), ("text", semio_framework_value::DslValue::String("0,10,0,10".into())), ("extra", semio_framework_value::DslValue::String("fixture:mesh:replacement".into()))]))).unwrap());
+    let PdfShadingKind::Mesh { reference, decode, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
+    assert_eq!(reference.artifact_id, "fixture:mesh:replacement");
     assert_eq!(decode, &vec![0.0, 10.0, 0.0, 10.0]);
 }
 

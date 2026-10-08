@@ -1,0 +1,13 @@
+{
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "blocks": [
+    {
+      "before": "publication.fault.clone().unwrap_or_else(|| \"presence publication faulted\".into())",
+      "after": "publication.fault.as_ref().cloned().unwrap_or_else(|| \"presence publication faulted\".into())"
+    },
+    {
+      "before": "publication.fault.clone().unwrap_or_else(|| \"transient publication faulted\".into())",
+      "after": "publication.fault.as_ref().cloned().unwrap_or_else(|| \"transient publication faulted\".into())"
+    }
+  ]
+}

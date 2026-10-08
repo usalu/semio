@@ -8,7 +8,8 @@
 //! Loads have no collection of their own: adding one re-emits the *whole* owning case as a single patch entry.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -85,12 +86,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be one `loadCases.patched` entry whose item carries both loads — never a nested load delta.
+/// 🔺️ The delta must be one `loadCases.modified` entry whose item carries both loads — never a nested load delta.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "add-load/appends-a-member-udl-to-the-dead-case: the owning case must be patched exactly once");
+    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "add-load/appends-a-member-udl-to-the-dead-case: the owning case must be patched exactly once");
     assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").added.is_empty(), "add-load/appends-a-member-udl-to-the-dead-case: attaching a load must never add a case");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -106,7 +107,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "add-load/appends-a-member-udl-to-the-dead-case: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the two-load case.
+/// 🩹 Replaying the committed `loadCases.modified` entry on `before` must yield the two-load case.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

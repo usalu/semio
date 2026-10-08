@@ -1,0 +1,14 @@
+{
+ "profile":"debug",
+ "sessions":[
+  {"path":"debug/incremental/closed-a/s-one-old","time":1000,"bytes":3},
+  {"path":"debug/incremental/closed-a/s-two-new","time":2000,"bytes":5},
+  {"path":"debug/incremental/open-b/s-one-old","time":1000,"bytes":7},
+  {"path":"debug/incremental/open-b/s-two-new","time":2000,"bytes":9},
+  {"path":"debug/incremental/open-b/s-three-working","time":3000,"bytes":11},
+  {"path":"release/incremental/other-c/s-one-old","time":1000,"bytes":13},
+  {"path":"release/incremental/other-c/s-two-new","time":2000,"bytes":15}
+ ],
+ "removed":["debug/incremental/closed-a/s-one-old"],
+ "retained":["debug/incremental/closed-a/s-two-new","debug/incremental/open-b/s-one-old","debug/incremental/open-b/s-two-new","debug/incremental/open-b/s-three-working","release/incremental/other-c/s-one-old","release/incremental/other-c/s-two-new"]
+}

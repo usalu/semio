@@ -6,12 +6,15 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "wind"
+      {
+        "id": "wind",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "combinations": null,
   "analysis": null

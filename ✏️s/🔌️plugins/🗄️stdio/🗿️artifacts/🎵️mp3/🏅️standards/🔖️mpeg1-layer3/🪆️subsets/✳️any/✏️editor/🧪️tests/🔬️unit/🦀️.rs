@@ -132,3 +132,12 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     artifact_app_laws::close_registered_fixture_app(&mut reopened);
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
+    let base = Mp3Snapshot::default();
+    let emit = |event: editing::SnapshotEditEvent| <Mp3Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let unchanged = emit(editing::SnapshotEditEvent::SetValue { path: "/frames".into(), value: semio_framework_value::DslValue::Array(Vec::new()) }).expect("an unchanged frame list resolves");
+    assert!(unchanged.artifact_mutations.is_empty(), "an edit that changes nothing publishes nothing");
+    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

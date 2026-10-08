@@ -5,15 +5,17 @@
   "productClasses": null,
   "productSeries": null,
   "products": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "product.pr600",
-        "name": "PR-600 Compact"
+        "patch": {
+          "name": "PR-600 Compact"
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "productIndexes": null,
   "propertyDefinitions": null,

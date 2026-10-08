@@ -5,6 +5,7 @@ use crate::{En1993Diff, En1993Snapshot};
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
 pub use edit_rules::EDIT_RULES;
+pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1993_mutation, inverse_en1993_mutation};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -167,168 +168,12 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️FromSnapshot
-impl En1993Mutation {
-    /// 📤️ Emits semantic mutations that carry `base` to `target` (list replace + annex).
-    pub fn from_snapshot(base: &En1993Snapshot, target: &En1993Snapshot) -> Vec<En1993Mutation> {
-        let mut mutations = Vec::new();
-        if base.annex != target.annex {
-            mutations.push(En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex }));
-        }
-        if base.materials != target.materials {
-            for index in (0..base.materials.len()).rev() {
-                mutations.push(En1993Mutation::RemoveMaterial(remove_material::RemoveMaterial { index }));
-            }
-            for (index, item) in target.materials.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertMaterial(insert_material::InsertMaterial { index, material: item.clone() }));
-            }
-        }
-        if base.sections != target.sections {
-            for index in (0..base.sections.len()).rev() {
-                mutations.push(En1993Mutation::RemoveSection(remove_section::RemoveSection { index }));
-            }
-            for (index, item) in target.sections.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertSection(insert_section::InsertSection { index, section: item.clone() }));
-            }
-        }
-        if base.members != target.members {
-            for index in (0..base.members.len()).rev() {
-                mutations.push(En1993Mutation::RemoveMember(remove_member::RemoveMember { index }));
-            }
-            for (index, item) in target.members.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertMember(insert_member::InsertMember { index, member: item.clone() }));
-            }
-        }
-        if base.load_cases != target.load_cases {
-            for index in (0..base.load_cases.len()).rev() {
-                mutations.push(En1993Mutation::RemoveLoadCase(remove_load_case::RemoveLoadCase { index  }));
-            }
-            for (index, item) in target.load_cases.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertLoadCase(insert_load_case::InsertLoadCase { index, load_case: item.clone()  }));
-            }
-        }
-        if base.member_actions != target.member_actions {
-            for index in (0..base.member_actions.len()).rev() {
-                mutations.push(En1993Mutation::RemoveMemberAction(remove_member_action::RemoveMemberAction { index }));
-            }
-            for (index, item) in target.member_actions.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertMemberAction(insert_member_action::InsertMemberAction { index, member_action: item.clone() }));
-            }
-        }
-        if base.joints != target.joints {
-            for index in (0..base.joints.len()).rev() {
-                mutations.push(En1993Mutation::RemoveJoint(remove_joint::RemoveJoint { index }));
-            }
-            for (index, item) in target.joints.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertJoint(insert_joint::InsertJoint { index, joint: item.clone() }));
-            }
-        }
-        if base.fatigue_details != target.fatigue_details {
-            for index in (0..base.fatigue_details.len()).rev() {
-                mutations.push(En1993Mutation::RemoveFatigueDetail(remove_fatigue_detail::RemoveFatigueDetail { index }));
-            }
-            for (index, item) in target.fatigue_details.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertFatigueDetail(insert_fatigue_detail::InsertFatigueDetail { index, fatigue_detail: item.clone() }));
-            }
-        }
-        if base.fire_exposures != target.fire_exposures {
-            for index in (0..base.fire_exposures.len()).rev() {
-                mutations.push(En1993Mutation::RemoveFireExposure(remove_fire_exposure::RemoveFireExposure { index }));
-            }
-            for (index, item) in target.fire_exposures.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertFireExposure(insert_fire_exposure::InsertFireExposure { index, fire_exposure: item.clone() }));
-            }
-        }
-        if base.cold_formed_members != target.cold_formed_members {
-            for index in (0..base.cold_formed_members.len()).rev() {
-                mutations.push(En1993Mutation::RemoveColdFormedMember(remove_cold_formed_member::RemoveColdFormedMember { index }));
-            }
-            for (index, item) in target.cold_formed_members.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertColdFormedMember(insert_cold_formed_member::InsertColdFormedMember { index, cold_formed_member: item.clone() }));
-            }
-        }
-        if base.plated_panels != target.plated_panels {
-            for index in (0..base.plated_panels.len()).rev() {
-                mutations.push(En1993Mutation::RemovePlatedPanel(remove_plated_panel::RemovePlatedPanel { index }));
-            }
-            for (index, item) in target.plated_panels.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertPlatedPanel(insert_plated_panel::InsertPlatedPanel { index, plated_panel: item.clone() }));
-            }
-        }
-        if base.silo_shells != target.silo_shells {
-            for index in (0..base.silo_shells.len()).rev() {
-                mutations.push(En1993Mutation::RemoveSiloShell(remove_silo_shell::RemoveSiloShell { index }));
-            }
-            for (index, item) in target.silo_shells.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertSiloShell(insert_silo_shell::InsertSiloShell { index, silo_shell: item.clone() }));
-            }
-        }
-        if base.tension_components != target.tension_components {
-            for index in (0..base.tension_components.len()).rev() {
-                mutations.push(En1993Mutation::RemoveTensionComponent(remove_tension_component::RemoveTensionComponent { index }));
-            }
-            for (index, item) in target.tension_components.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertTensionComponent(insert_tension_component::InsertTensionComponent { index, tension_component: item.clone() }));
-            }
-        }
-        if base.bridge_fatigue != target.bridge_fatigue {
-            for index in (0..base.bridge_fatigue.len()).rev() {
-                mutations.push(En1993Mutation::RemoveBridgeFatigue(remove_bridge_fatigue::RemoveBridgeFatigue { index }));
-            }
-            for (index, item) in target.bridge_fatigue.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertBridgeFatigue(insert_bridge_fatigue::InsertBridgeFatigue { index, bridge_fatigue_item: item.clone() }));
-            }
-        }
-        if base.tower_legs != target.tower_legs {
-            for index in (0..base.tower_legs.len()).rev() {
-                mutations.push(En1993Mutation::RemoveTowerLeg(remove_tower_leg::RemoveTowerLeg { index }));
-            }
-            for (index, item) in target.tower_legs.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertTowerLeg(insert_tower_leg::InsertTowerLeg { index, tower_leg: item.clone() }));
-            }
-        }
-        if base.piles != target.piles {
-            for index in (0..base.piles.len()).rev() {
-                mutations.push(En1993Mutation::RemovePile(remove_pile::RemovePile { index }));
-            }
-            for (index, item) in target.piles.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertPile(insert_pile::InsertPile { index, pile: item.clone() }));
-            }
-        }
-        if base.crane_runways != target.crane_runways {
-            for index in (0..base.crane_runways.len()).rev() {
-                mutations.push(En1993Mutation::RemoveCraneRunway(remove_crane_runway::RemoveCraneRunway { index }));
-            }
-            for (index, item) in target.crane_runways.iter().enumerate() {
-                mutations.push(En1993Mutation::InsertCraneRunway(insert_crane_runway::InsertCraneRunway { index, crane_runway: item.clone() }));
-            }
-        }
-        mutations
-    }
-}
-//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-//#region 🌉️ExternalCodecBridge
-
-pub fn apply_en1993_mutation(base: &En1993Snapshot, mutation: &En1993Mutation) -> Result<(En1993Snapshot, Vec<String>), String> {
-    let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-pub fn inverse_en1993_mutation(mutation: &En1993Mutation, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <En1993Mutation as protocol::Mutation<En1993Snapshot>>::inverse(mutation, base)?
-
-    })
-}
-//#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️KindsCatalog
 #[cfg(test)]
@@ -342,3 +187,7 @@ mod kinds_catalog;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

@@ -2,92 +2,341 @@ syntax = "proto3";
 package semio.s.norm.en1999.diff;
 
 message En1999MaterialsPatch {
+  optional string designation = 1;
+}
+
+message En1999MaterialsRemoved {
   string id = 1;
-  optional string designation = 2;
+  uint64 index = 2;
+}
+
+message En1999MaterialsInserted {
+  uint64 index = 1;
+}
+
+message En1999MaterialsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999MaterialsModified {
+  string id = 1;
+  En1999MaterialsPatch patch = 2;
 }
 
 message En1999MaterialsRows {
-  repeated string removed = 1;
-  repeated En1999MaterialsPatch modified = 2;
-  repeated string order = 3;
+  repeated En1999MaterialsRemoved removed = 1;
+  repeated En1999MaterialsInserted inserted = 2;
+  repeated En1999MaterialsMoved moved = 3;
+  repeated En1999MaterialsModified modified = 4;
 }
 
 message En1999SectionsElementsPatch {
+  optional double thickness = 1;
+}
+
+message En1999SectionsElementsRemoved {
   string id = 1;
-  optional double thickness = 2;
+  uint64 index = 2;
+}
+
+message En1999SectionsElementsInserted {
+  uint64 index = 1;
+}
+
+message En1999SectionsElementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999SectionsElementsModified {
+  string id = 1;
+  En1999SectionsElementsPatch patch = 2;
 }
 
 message En1999SectionsElementsRows {
-  repeated En1999SectionsElementsPatch modified = 1;
+  repeated En1999SectionsElementsRemoved removed = 1;
+  repeated En1999SectionsElementsInserted inserted = 2;
+  repeated En1999SectionsElementsMoved moved = 3;
+  repeated En1999SectionsElementsModified modified = 4;
 }
 
 message En1999SectionsPatch {
+  optional string kind = 1;
+  optional double height = 2;
+  optional double width = 3;
+  optional double flange_thickness = 4;
+  optional double web_thickness = 5;
+  optional double outer_diameter = 6;
+  optional En1999SectionsElementsRows elements = 7;
+}
+
+message En1999SectionsRemoved {
   string id = 1;
-  optional En1999SectionsElementsRows elements = 2;
+  uint64 index = 2;
+}
+
+message En1999SectionsInserted {
+  uint64 index = 1;
+}
+
+message En1999SectionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999SectionsModified {
+  string id = 1;
+  En1999SectionsPatch patch = 2;
 }
 
 message En1999SectionsRows {
-  repeated string removed = 1;
-  repeated En1999SectionsPatch modified = 2;
-  repeated string order = 3;
+  repeated En1999SectionsRemoved removed = 1;
+  repeated En1999SectionsInserted inserted = 2;
+  repeated En1999SectionsMoved moved = 3;
+  repeated En1999SectionsModified modified = 4;
 }
 
 message En1999MembersActionsPatch {
+  optional double n_k = 1;
+  optional double m_y_k = 2;
+}
+
+message En1999MembersActionsRemoved {
   string id = 1;
-  optional double n_k = 2;
-  optional double m_y_k = 3;
+  uint64 index = 2;
+}
+
+message En1999MembersActionsInserted {
+  uint64 index = 1;
+}
+
+message En1999MembersActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999MembersActionsModified {
+  string id = 1;
+  En1999MembersActionsPatch patch = 2;
 }
 
 message En1999MembersActionsRows {
-  repeated En1999MembersActionsPatch modified = 1;
+  repeated En1999MembersActionsRemoved removed = 1;
+  repeated En1999MembersActionsInserted inserted = 2;
+  repeated En1999MembersActionsMoved moved = 3;
+  repeated En1999MembersActionsModified modified = 4;
 }
 
 message En1999MembersPatch {
+  optional double buckling_length_y = 1;
+  optional double buckling_length_z = 2;
+  optional double buckling_length_t = 3;
+  optional double ltb_length = 4;
+  optional En1999MembersActionsRows actions = 5;
+}
+
+message En1999MembersRemoved {
   string id = 1;
-  optional double buckling_length_y = 2;
-  optional double buckling_length_z = 3;
-  optional double buckling_length_t = 4;
-  optional double ltb_length = 5;
-  optional En1999MembersActionsRows actions = 6;
+  uint64 index = 2;
+}
+
+message En1999MembersInserted {
+  uint64 index = 1;
+}
+
+message En1999MembersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999MembersModified {
+  string id = 1;
+  En1999MembersPatch patch = 2;
 }
 
 message En1999MembersRows {
-  repeated string removed = 1;
-  repeated En1999MembersPatch modified = 2;
-  repeated string order = 3;
+  repeated En1999MembersRemoved removed = 1;
+  repeated En1999MembersInserted inserted = 2;
+  repeated En1999MembersMoved moved = 3;
+  repeated En1999MembersModified modified = 4;
 }
 
 message En1999ConnectionsPatch {
+  optional double welds_throat = 1;
+  optional uint32 bolts_rows = 2;
+  optional uint32 bolts_bolts_per_row = 3;
+}
+
+message En1999ConnectionsRemoved {
   string id = 1;
-  optional double welds_throat = 2;
-  optional uint32 bolts_rows = 3;
-  optional uint32 bolts_bolts_per_row = 4;
+  uint64 index = 2;
+}
+
+message En1999ConnectionsInserted {
+  uint64 index = 1;
+}
+
+message En1999ConnectionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999ConnectionsModified {
+  string id = 1;
+  En1999ConnectionsPatch patch = 2;
 }
 
 message En1999ConnectionsRows {
-  repeated string removed = 1;
-  repeated En1999ConnectionsPatch modified = 2;
-  repeated string order = 3;
+  repeated En1999ConnectionsRemoved removed = 1;
+  repeated En1999ConnectionsInserted inserted = 2;
+  repeated En1999ConnectionsMoved moved = 3;
+  repeated En1999ConnectionsModified modified = 4;
+}
+
+message En1999FireScenariosPatch {
+  optional string member_id = 1;
+  optional double theta_a = 2;
+  optional double duration_s = 3;
+}
+
+message En1999FireScenariosRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message En1999FireScenariosInserted {
+  uint64 index = 1;
+}
+
+message En1999FireScenariosMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999FireScenariosModified {
+  string id = 1;
+  En1999FireScenariosPatch patch = 2;
 }
 
 message En1999FireScenariosRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated En1999FireScenariosRemoved removed = 1;
+  repeated En1999FireScenariosInserted inserted = 2;
+  repeated En1999FireScenariosMoved moved = 3;
+  repeated En1999FireScenariosModified modified = 4;
+}
+
+message En1999FatigueDetailsPatch {
+  optional string member_id = 1;
+  optional string detail_category = 2;
+  optional double delta_sigma_c = 3;
+  optional double delta_sigma_ed = 4;
+  optional double n_cycles = 5;
+  optional double m1 = 6;
+  optional double m2 = 7;
+}
+
+message En1999FatigueDetailsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message En1999FatigueDetailsInserted {
+  uint64 index = 1;
+}
+
+message En1999FatigueDetailsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999FatigueDetailsModified {
+  string id = 1;
+  En1999FatigueDetailsPatch patch = 2;
 }
 
 message En1999FatigueDetailsRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated En1999FatigueDetailsRemoved removed = 1;
+  repeated En1999FatigueDetailsInserted inserted = 2;
+  repeated En1999FatigueDetailsMoved moved = 3;
+  repeated En1999FatigueDetailsModified modified = 4;
+}
+
+message En1999ColdFormedPatch {
+  optional string material_id = 1;
+  optional double thickness = 2;
+  optional double width = 3;
+  optional double span = 4;
+  optional bool welded = 5;
+}
+
+message En1999ColdFormedRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message En1999ColdFormedInserted {
+  uint64 index = 1;
+}
+
+message En1999ColdFormedMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999ColdFormedModified {
+  string id = 1;
+  En1999ColdFormedPatch patch = 2;
 }
 
 message En1999ColdFormedRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated En1999ColdFormedRemoved removed = 1;
+  repeated En1999ColdFormedInserted inserted = 2;
+  repeated En1999ColdFormedMoved moved = 3;
+  repeated En1999ColdFormedModified modified = 4;
+}
+
+message En1999ShellsPatch {
+  optional string material_id = 1;
+  optional double radius = 2;
+  optional double thickness = 3;
+  optional double length = 4;
+}
+
+message En1999ShellsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message En1999ShellsInserted {
+  uint64 index = 1;
+}
+
+message En1999ShellsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1999ShellsModified {
+  string id = 1;
+  En1999ShellsPatch patch = 2;
 }
 
 message En1999ShellsRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated En1999ShellsRemoved removed = 1;
+  repeated En1999ShellsInserted inserted = 2;
+  repeated En1999ShellsMoved moved = 3;
+  repeated En1999ShellsModified modified = 4;
 }
 
 message En1999Diff {

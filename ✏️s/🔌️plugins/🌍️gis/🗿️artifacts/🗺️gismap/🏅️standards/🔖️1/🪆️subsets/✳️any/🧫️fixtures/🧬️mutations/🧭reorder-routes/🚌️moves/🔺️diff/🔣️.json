@@ -1,14 +1,16 @@
 {
   "positions": null,
   "routes": {
-    "added": [],
     "removed": [],
-    "patched": [],
-    "reordered": [
-      "route-bus",
-      "route-ferry",
-      "route-tram"
-    ]
+    "inserted": [],
+    "moved": [
+      {
+        "id": "route-bus",
+        "from": 2,
+        "to": 0
+      }
+    ],
+    "modified": []
   },
   "regions": null
 }

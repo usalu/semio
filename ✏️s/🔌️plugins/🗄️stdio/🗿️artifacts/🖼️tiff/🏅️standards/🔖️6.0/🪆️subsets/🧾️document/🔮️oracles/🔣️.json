@@ -60,45 +60,10 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/image-rs/image-tiff",
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce (registered above as `image-tiff-6-0-mutate`, `cross-semio-implementation`). That entry does not discharge anything on its own, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture (`../🧫️fixtures/`). `tiff` 0.11.3 then parses the whole IFD chain on BOTH sides — via its own `Decoder::{more_images,next_image,tag_iter,byte_order}` — and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.\n\n🔎️ `package`/`version` name the crate this session's own investigation determined actually carries the structural visibility this catalog needs: `image` 0.25's public TIFF surface (`image::codecs::tiff::{TiffEncoder,TiffDecoder}`, confirmed by reading the vendored crate source) is single-IFD-only with no tag/byte-order accessors — it cannot witness `insert-ifd`/`remove-ifd`/`replace-tag`/`remove-tag` at all. `tiff` 0.11.3 is the lower-level crate `image` itself uses for TIFF (same composition shape this repository's own `avi`/`bcf` oracles already use — a lower, more generic crate composed for real structural visibility), and its `Decoder`/`TiffEncoder` give full multi-IFD chain navigation, whole-IFD tag enumeration (including an `unknown(u16)` tag variant for non-baseline tags) and the file byte-order mark directly. `image` is therefore not a dependency of this oracle's codec at all — see `../🏭️generator/🔁️codec/🦀️.rs`'s own header for the full investigation trail.\n\n⚠️ `change-byte-order` is EXCLUDED from this oracle's witnessed set for a different, sharper reason than the other kinds' generic reader-visibility question: `tiff` 0.11.3's ENCODER hardcodes the byte-order mark to the compiling target's native endianness at compile time (`#[cfg(target_endian=\"little\"|\"big\")]` in its own `src/encoder/writer.rs`), never runtime-selectable. Every platform this entry is registered for above is little-endian, so this library cannot WRITE a big-endian `after.tiff` fixture on any of them — not a reader-visibility gap but a writer-side platform lock discovered by trying. See `../🔣️oracle.json`'s own `mutationManifests` entry for `change-byte-order` (capability renamed `tiff-6-0-mutate-uncarried`) and this ticket's own `📓️tiff-6-0-document-reader-oracle-retrofit.md` for the full reasoning and the refused build's own captured stderr.\n\n🧭️ `productionReachable: false` here is a DELIBERATE narrower claim than the sibling `image-tiff-6-0-mutate` entry's own `productionReachable: true` above (with its `productionDebt` block naming two real call sites). Both can be true at once: grepping every non-test, non-oracle `Cargo.toml` that declares `image` as a real dependency (`✏️s/🔌️plugins/🎞️animate`, `✏️s/🔌️plugins/🖍️draw`, `🧰️framework/🔨️modules/🗺️surface`, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite`, `.../📺️renderer/…/🎯️targets/🧊️wgpu`) shows every one of them enables only `[\"png\", \"jpeg\", \"webp\", \"gif\"]`-shaped feature sets — none enables `image`'s `tiff` feature, and none imports `image::codecs::tiff` or decodes TIFF bytes anywhere in their own source (confirmed by reading `✏️s/🔌️plugins/🎞️animate/…/🎥️video/🦀️.rs` and `🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs` directly — both use `image` only for PNG/RGBA buffers). So `image` the crate is production-reachable for OTHER formats, but `image`'s TIFF support specifically is not — and this entry depends on `tiff` directly, not `image`, which is not production-reachable from anywhere in this repository at all.",
+      "rationale": "Independent tiff 0.11.3 reads the committed native before/after fixtures through Decoder tag enumeration, page navigation and decoded samples. Six authored mutations are InsertIfd, RemoveIfd, ReplaceTag, RemoveTag, PaintRegion and ReplaceSamples. Native byte order and storage are IO observations, excluded from authored semantic comparisons. The standalone encoder generates each expected image independently; production mutations never author these expected bytes.",
       "comparisonProfiles": [
         "semantic-raster-v1"
       ]
-    },
-    {
-      "id": "tiff-6-0-byte-order-reader",
-      "kind": "third-party-library",
-      "ecosystem": "rust",
-      "package": "tiff",
-      "version": "0.11",
-      "source": {
-        "repository": "https://github.com/image-rs/image-tiff",
-        "license": "MIT"
-      },
-      "engine": {
-        "family": "tiff",
-        "implementation": "tiff 0.11 Decoder::byte_order",
-        "version": "0.11.3"
-      },
-      "capabilities": [
-        "tiff-6-0-mutate-byte-order"
-      ],
-      "comparisonProfiles": [
-        "semantic-tiff-byte-order-v1"
-      ],
-      "license": "MIT",
-      "testOnly": true,
-      "productionReachable": false,
-      "networkDuringExecution": false,
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x64",
-        "linux-x64",
-        "linux-arm64",
-        "win32-x64"
-      ],
-      "homepage": "https://docs.rs/tiff",
-      "rationale": "📖️ The declared BYTE ORDER, which no pixel-level projection can see — the crate says so itself: `byte_order()` is documented as \"only relevant to interpreting raw bytes read from tags\", because \"the image decoding methods will correct to the host byte order automatically\". This subset's other reader projects decoded pixels, so `change-byte-order` was invisible to it.\n\nThis ticket recorded the kind as writer-blocked TWICE, on two real but narrow measurements: `tiff` 0.11's encoder rejects a non-native order with `UsageError::ByteOrderMismatch`, and Pillow's `im.save(..., format='TIFF')` emits `II` regardless of any prefix hint. Both hold. What neither covered is Pillow's own IFD SERIALISER: `ImageFileDirectory_v2(ifh=b'MM\\x00\\x2a...')` encodes every tag in the requested endianness, so the library does the field layout and the generator only lays out the 8-byte header and concatenates the strip. Nothing hand-encodes a TIFF field.\n\nThe projection carries the pixel CHECKSUM beside the order, and the generator refuses a pair whose checksums differ: a `change-byte-order` fixture must differ in the order and in nothing else, and one that also moved the image would pass a bare order comparison while proving less than it appears to. Measured: both files decode to checksum 2464."
     }
   ],
   "noOracleDecisions": [],
@@ -234,130 +199,6 @@
           }
         ]
       }
-    },
-    {
-      "id": "tiff-byte-order-project",
-      "kind": "external-process",
-      "ecosystem": "rust",
-      "package": "tiff",
-      "version": "0.11",
-      "engine": {
-        "family": "tiff",
-        "implementation": "tiff 0.11 Decoder::byte_order",
-        "version": "0.11.3"
-      },
-      "capabilities": [
-        "tiff.byteorder.project"
-      ],
-      "outputSchema": "semio.repository-test.probe-report/v2",
-      "deterministic": true,
-      "license": "MIT",
-      "testOnly": true,
-      "productionReachable": false,
-      "networkDuringExecution": false,
-      "command": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📖️reader/📦️packages/🦀️rust/target/release/reader",
-        "project"
-      ],
-      "qualification": {
-        "status": "qualified",
-        "evidence": "Validated BOTH ways: (before,before) -> equal:true; (before,after) -> equal:false, on LittleEndian -> BigEndian. Both files decode to an identical pixel checksum (2464), so the pair differs in the declared order and in nothing else — enforced at generation time, not merely observed. Both files also load in Pillow, so the fixture is a valid TIFF by a second reader.",
-        "checkedAt": "2026-08-28",
-        "criteria": [
-          {
-            "id": "accepts-a-known-good-pair",
-            "met": true,
-            "detail": "identical (before,before) compares equal:true"
-          },
-          {
-            "id": "rejects-a-known-bad-pair",
-            "met": true,
-            "detail": "the kind's own (before,after) compares equal:false on byteOrder"
-          },
-          {
-            "id": "witnesses-what-a-pixel-projection-cannot",
-            "met": true,
-            "detail": "the crate's own docs state image decoding corrects to host order; only Decoder::byte_order() retains it"
-          },
-          {
-            "id": "the-pair-differs-in-nothing-else",
-            "met": true,
-            "detail": "identical pixel checksum on both sides, refused at generation if they diverge"
-          },
-          {
-            "id": "fixture-is-valid-by-a-second-reader",
-            "met": true,
-            "detail": "both files load in Pillow as 8x8 mode L"
-          },
-          {
-            "id": "offline",
-            "met": true,
-            "detail": "tiff 0.11.3 is vendored in the cargo registry cache; Pillow is installed locally"
-          }
-        ]
-      }
-    },
-    {
-      "id": "tiff-byte-order-compare",
-      "kind": "external-process",
-      "ecosystem": "rust",
-      "package": "tiff",
-      "version": "0.11",
-      "engine": {
-        "family": "tiff",
-        "implementation": "tiff 0.11 Decoder::byte_order",
-        "version": "0.11.3"
-      },
-      "capabilities": [
-        "tiff.byteorder.compare"
-      ],
-      "outputSchema": "semio.repository-test.probe-report/v2",
-      "deterministic": true,
-      "license": "MIT",
-      "testOnly": true,
-      "productionReachable": false,
-      "networkDuringExecution": false,
-      "command": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📖️reader/📦️packages/🦀️rust/target/release/reader",
-        "compare"
-      ],
-      "qualification": {
-        "status": "qualified",
-        "evidence": "Validated BOTH ways: (before,before) -> equal:true; (before,after) -> equal:false, on LittleEndian -> BigEndian. Both files decode to an identical pixel checksum (2464), so the pair differs in the declared order and in nothing else — enforced at generation time, not merely observed. Both files also load in Pillow, so the fixture is a valid TIFF by a second reader.",
-        "checkedAt": "2026-08-28",
-        "criteria": [
-          {
-            "id": "accepts-a-known-good-pair",
-            "met": true,
-            "detail": "identical (before,before) compares equal:true"
-          },
-          {
-            "id": "rejects-a-known-bad-pair",
-            "met": true,
-            "detail": "the kind's own (before,after) compares equal:false on byteOrder"
-          },
-          {
-            "id": "witnesses-what-a-pixel-projection-cannot",
-            "met": true,
-            "detail": "the crate's own docs state image decoding corrects to host order; only Decoder::byte_order() retains it"
-          },
-          {
-            "id": "the-pair-differs-in-nothing-else",
-            "met": true,
-            "detail": "identical pixel checksum on both sides, refused at generation if they diverge"
-          },
-          {
-            "id": "fixture-is-valid-by-a-second-reader",
-            "met": true,
-            "detail": "both files load in Pillow as 8x8 mode L"
-          },
-          {
-            "id": "offline",
-            "met": true,
-            "detail": "tiff 0.11.3 is vendored in the cargo registry cache; Pillow is installed locally"
-          }
-        ]
-      }
     }
   ],
   "comparisonPipelines": [
@@ -388,34 +229,6 @@
           }
         }
       ]
-    },
-    {
-      "id": "tiff-6-0-byte-order-compare-v1",
-      "description": "Byte-order equality through tiff 0.11's Decoder. GATING for the kind a pixel-level projection corrects away.",
-      "stages": [
-        {
-          "probe": "tiff-byte-order-project",
-          "description": "An independent reader accepts both files and reports the order each declares.",
-          "inputs": [
-            "expected-before-tiff",
-            "expected-after-tiff"
-          ],
-          "assertions": {
-            "bothImport": true
-          }
-        },
-        {
-          "probe": "tiff-byte-order-compare",
-          "description": "Equality over order and pixel checksum — the operative equality.",
-          "inputs": [
-            "expected-before-tiff",
-            "expected-after-tiff"
-          ],
-          "assertions": {
-            "equal": true
-          }
-        }
-      ]
     }
   ],
   "mutationCatalogs": [
@@ -425,17 +238,6 @@
       "standardDirectoryName": "🔖️6.0",
       "subsetDirectoryName": "🧾️document",
       "vectors": [
-        {
-          "mutationId": "change-byte-order",
-          "sourceMutationDirectoryName": "🧭️change-byte-order",
-          "mutationDirectoryName": "🧭️change-byte-order",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
         {
           "mutationId": "insert-ifd",
           "sourceMutationDirectoryName": "📥️insert-ifd",
@@ -500,26 +302,6 @@
       "standardDirectoryName": "🔖️6.0",
       "subsetDirectoryName": "🧾️document",
       "mutations": [
-        {
-          "id": "change-byte-order",
-          "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-byte-order",
-            "bridgeVersion": 1,
-            "variant": "ChangeByteOrder"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "tiff-6-0-mutate-byte-order",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tiff-6-0-byte-order-reader"
-            }
-          ]
-        },
         {
           "id": "insert-ifd",
           "capability": "tiff-6-0-mutate",
@@ -692,13 +474,12 @@
         "source": "generated",
         "license": "MIT OR Apache-2.0 (tiff)",
         "attribution": "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory",
-        "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-raster-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "A second, smaller IFD is appended after the first — ifdCount 1 -> 2."
+      "notes": "A second smaller image page is appended."
     },
     {
       "id": "remove-ifd-applied",
@@ -742,13 +523,12 @@
         "source": "generated",
         "license": "MIT OR Apache-2.0 (tiff)",
         "attribution": "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory",
-        "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-raster-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "The second IFD of a two-IFD document is dropped — ifdCount 2 -> 1."
+      "notes": "The second image page is removed."
     },
     {
       "id": "replace-tag-applied",
@@ -792,13 +572,12 @@
         "source": "generated",
         "license": "MIT OR Apache-2.0 (tiff)",
         "attribution": "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory",
-        "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-raster-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "IFD 0's ImageDescription tag value changes; every other tag and the raster are untouched."
+      "notes": "ImageDescription changes while raster samples stay identical."
     },
     {
       "id": "remove-tag-applied",
@@ -842,22 +621,23 @@
         "source": "generated",
         "license": "MIT OR Apache-2.0 (tiff)",
         "attribution": "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory",
-        "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-raster-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "IFD 0's ImageDescription tag is omitted entirely on encode."
+      "notes": "ImageDescription is omitted while raster samples stay identical."
     },
     {
-      "id": "replace-pixels-applied",
+      "id": "paint-region-applied",
       "class": "third-party-generated",
       "target": {
         "artifact": "s.stdio.tiff",
         "standard": "6.0",
         "subset": "document"
       },
+      "mutation": "paint-region",
+      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -865,16 +645,16 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/🔲️replace-pixels-applied/⬅️before.tiff",
+          "path": "../🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:6813847fe31b9887006a1d8de00108e14e53095e3ef75d9e7eda03421061af27",
           "bytes": 258
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/🔲️replace-pixels-applied/➡️after.tiff",
+          "path": "../🧫️fixtures/🎨️paint-region-applied/➡️after.tiff",
           "mediaType": "image/tiff",
-          "sha256": "sha256:5e6bace9cbbc9747b78a6a3feae6142183bacf485b5ea92cd374b4331b7bb11d",
+          "sha256": "sha256:94b2cde185be1da3e99b96c61c84b4b7815e715c7d3c1742054eb4cc63f1e1a1",
           "bytes": 258
         }
       ],
@@ -883,27 +663,70 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only paint-region-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
         "source": "generated",
         "license": "MIT OR Apache-2.0 (tiff)",
         "attribution": "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory",
-        "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-raster-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "IFD 0 keeps its dimensions/tags; the raster bytes are wholly different."
-    }
-  ],
-  "comparisonProfiles": [
+      "notes": "Only pixel 1,1 changes to RGB 9,8,7."
+    },
     {
-      "id": "semantic-tiff-byte-order-v1",
-      "description": "The declared byte order, plus dimensions, colour type, sample count and a pixel checksum — the last so that a pair claiming to change only the order can be shown to change only the order."
+      "id": "replace-samples-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "document"
+      },
+      "mutation": "replace-samples",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-tiff",
+          "path": "../🧫️fixtures/🧮️replace-samples-applied/⬅️before.tiff",
+          "mediaType": "image/tiff",
+          "sha256": "sha256:6813847fe31b9887006a1d8de00108e14e53095e3ef75d9e7eda03421061af27",
+          "bytes": 258
+        },
+        {
+          "role": "expected-after-tiff",
+          "path": "../🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff",
+          "mediaType": "image/tiff",
+          "sha256": "sha256:4f1507783a38aaf8233d8a440f4c6f3e0fb5e56a5cdf2f5aef870cd9aa6305fc",
+          "bytes": 258
+        }
+      ],
+      "generator": {
+        "oracle": "image-tiff-6-0-mutate-reader",
+        "packageVersion": "0.11.3",
+        "engineFamily": "tiff",
+        "engineVersion": "0.11.3",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-samples-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (tiff)",
+        "attribution": "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-raster-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Only the first three owned sample words change to 24,96,192."
     }
   ],
+  "comparisonProfiles": [],
   "oracleHostPackages": []
 }

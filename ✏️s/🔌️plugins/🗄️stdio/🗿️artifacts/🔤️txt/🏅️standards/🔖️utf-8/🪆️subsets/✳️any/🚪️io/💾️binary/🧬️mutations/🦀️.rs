@@ -17,6 +17,7 @@ const BINARY_CODECS: &[BinaryCodec] = &[
     BinaryCodec { tag: insert_line::BINARY_TAG, try_encode: insert_line::try_encode, decode: insert_line::decode_mutation },
     BinaryCodec { tag: remove_line::BINARY_TAG, try_encode: remove_line::try_encode, decode: remove_line::decode_mutation },
     BinaryCodec { tag: set_line::BINARY_TAG, try_encode: set_line::try_encode, decode: set_line::decode_mutation },
+    BinaryCodec { tag: splice_text::BINARY_TAG, try_encode: splice_text::try_encode, decode: splice_text::decode_mutation },
 ];
 pub const BINARY_TAGS: &[(&str, u32)] = &[
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::set_trailing_newline::TEXT_OPCODE, set_trailing_newline::BINARY_TAG),
@@ -24,6 +25,7 @@ pub const BINARY_TAGS: &[(&str, u32)] = &[
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::insert_line::TEXT_OPCODE, insert_line::BINARY_TAG),
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::remove_line::TEXT_OPCODE, remove_line::BINARY_TAG),
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::set_line::TEXT_OPCODE, set_line::BINARY_TAG),
+    (crate::standards::v_utf_8::subsets::any::io::text::mutations::splice_text::TEXT_OPCODE, splice_text::BINARY_TAG),
 ];
 //#endregion 🔖️Registry
 
@@ -70,3 +72,6 @@ pub mod remove_line;
 
 #[path = "↩️set-trailing-newline/🦀️.rs"]
 pub mod set_trailing_newline;
+
+#[path = "✂️splice-text/🦀️.rs"]
+pub mod splice_text;

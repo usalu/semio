@@ -8,7 +8,8 @@
 //! Rx/Ry/Rz are dropped from the DOF list, turning the fixed base into a spherical hinge — the list is swapped, never merged.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use crate::central_apply::apply_fem3d_mutation;
 
 use crate::Fem3dSnapshot;
 
@@ -92,12 +93,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be a single `supports.patched` entry keyed by `s1`.
+/// 🔺️ The delta must be a single `supports.modified` entry keyed by `s1`.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().supports.as_ref().expect("supports delta").patched.len(), 1, "replace-support/frees-the-three-7783c9: exactly one support may be patched");
+    assert_eq!(outcome.diff().supports.as_ref().expect("supports delta").modified.len(), 1, "replace-support/frees-the-three-7783c9: exactly one support may be patched");
     assert!(outcome.diff().supports.as_ref().expect("supports delta").added.is_empty(), "replace-support/frees-the-three-7783c9: a replacement is never an addition");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -113,7 +114,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "replace-support/frees-the-three-7783c9: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `supports.patched` entry on `before` must hinge the base without moving the pin.
+/// 🩹 Replaying the committed `supports.modified` entry on `before` must hinge the base without moving the pin.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

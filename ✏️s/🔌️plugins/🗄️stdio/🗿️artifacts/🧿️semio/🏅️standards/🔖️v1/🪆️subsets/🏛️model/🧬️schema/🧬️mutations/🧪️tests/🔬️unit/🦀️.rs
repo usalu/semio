@@ -151,3 +151,29 @@ async fn removals_invert_at_every_position() {
     }
 }
 
+//#region ↩️LeafInverseLaws
+#[path = "../../✂️remove-relation/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_relation;
+#[path = "../../✋️drag-elements/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_drag_elements;
+#[path = "../../🎛️set-element/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_element;
+#[path = "../../🏗️insert-spatial-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_spatial_node;
+#[path = "../../🔄️rotate-elements/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_rotate_elements;
+#[path = "../../🔍️scale-elements/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_scale_elements;
+#[path = "../../🔧️set-relation/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_relation;
+#[path = "../../🔨remove-element/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_element;
+#[path = "../../🕳️remove-spatial-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_spatial_node;
+#[path = "../../🧭set-spatial-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_spatial_node;
+#[path = "../../🧱insert-element/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_element;
+#[path = "../../🪢insert-relation/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_relation;
+//#endregion ↩️LeafInverseLaws

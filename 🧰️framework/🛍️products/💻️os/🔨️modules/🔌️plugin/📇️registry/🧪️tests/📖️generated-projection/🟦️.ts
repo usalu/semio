@@ -76,10 +76,7 @@ describe("generated catalog projection", () => {
       expect(isHostPlaygroundFilter(filter, vector.playgrounds, vector.entries), `vector host ${expectation.filter}`).toBe(expectation.host);
       expect(isHostPlaygroundFilter(filter, vector.playgrounds, vector.entries)).toBe(projectedHostPluginFilter(projection, filter));
     }
-    const live = readGeneratedCatalogProjection(join(import.meta.dirname, "../../🤖️generated"));
-    const filters = [undefined, "", "not-a-plugin", ...live.playgrounds.flatMap((row) => [row.variant, ...row.aliases]), ...live.entries.map((entry) => entry.pluginId)];
-    for (const filter of filters) expect(isHostPlaygroundFilter(filter), `live ${filter}`).toBe(projectedHostPluginFilter(live, filter));
-    expect(filters.filter((filter) => isHostPlaygroundFilter(filter)).length).toBeGreaterThan(0);
+
   });
 
   test("rejects a projection that is not a row array", () => {

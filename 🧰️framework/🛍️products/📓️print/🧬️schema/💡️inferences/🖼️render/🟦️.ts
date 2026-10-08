@@ -18,6 +18,13 @@ import { measurePrintSans, printFontFamily } from "../../../🔨️modules/🔤p
 /** 🖼️ Resolved geometry uses millimetres; text sizes use TeX points. */
 type VizRenderStyle = { readonly nativeStyle?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly dash?: readonly number[]; readonly rotation?: number; readonly clip?: VizExtent; readonly cap?: "butt" | "round" | "square"; readonly join?: "miter" | "round" | "bevel" };
 
+/** 🎨️ Compares resolved owned style values without a textual representation. */
+function sameRenderStyle(a: VizRenderStyle, b: VizRenderStyle): boolean {
+  return a.nativeStyle === b.nativeStyle && a.fill === b.fill && a.stroke === b.stroke && a.strokeWidth === b.strokeWidth && a.opacity === b.opacity && a.rotation === b.rotation && a.cap === b.cap && a.join === b.join
+    && (a.dash === b.dash || a.dash !== undefined && b.dash !== undefined && a.dash.length === b.dash.length && a.dash.every((value, index) => value === b.dash![index]))
+    && (a.clip === b.clip || a.clip !== undefined && b.clip !== undefined && a.clip.x0 === b.clip.x0 && a.clip.y0 === b.clip.y0 && a.clip.x1 === b.clip.x1 && a.clip.y1 === b.clip.y1);
+}
+
 export type VizRenderItem = VizRenderStyle & (
   | { readonly kind: "rect"; readonly x: number; readonly y: number; readonly width: number; readonly height: number; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number }
   | { readonly kind: "circle"; readonly cx: number; readonly cy: number; readonly r: number; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number }
@@ -217,7 +224,7 @@ export function planVizChart(spec: VizChartSpecification, control: VizRenderCont
         for(const group of seriesOf(rows,layer,scales)){if(group.length===0)continue;const points=group.map((r)=>point(layer,r)),area=layer.mark==="area"||layer.mark==="band",bottom=group.map((r)=>point(layer,r,"x2","y2",numberChannel(scales,layer,"x",r,0),frame.y1)),defined=(_r:VizRow,i:number):boolean=>finite(points[i]!)&&(!area||finite(bottom[i]!));
           if(layer.mark==="polygon"){const valid=points.filter(finite);if(valid.length>0)items.push({kind:"polygon",points:valid,...style(group[0]!)});continue;}
           const styles = group.map((row) => style(row,!area));
-          const varied = styles.some((s) => JSON.stringify(s) !== JSON.stringify(styles[0]));
+           const varied = styles.some((s) => !sameRenderStyle(s, styles[0]!));
           if(varied || layer.mark === "trail") {
             for(let i=1;i<group.length;i++) {
               if(!defined(group[i-1]!,i-1)||!defined(group[i]!,i))continue;
@@ -373,4 +380,3 @@ export function renderVizScenePlan(plan: VizRenderPlan): DrawingScene {
   return { width: plan.width, height: plan.height, nodes: plan.items.map(sceneNode) };
 }
 //#endregion 🔖️SceneGraph
-

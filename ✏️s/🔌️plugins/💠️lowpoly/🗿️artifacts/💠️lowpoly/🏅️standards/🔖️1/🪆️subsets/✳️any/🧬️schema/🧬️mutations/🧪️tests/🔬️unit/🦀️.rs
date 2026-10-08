@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_snapshot};
 use super::*;
 use crate::{schema::default_snapshot, LowpolyObject, LowpolySnapshot};
 use protocol::Mutation;

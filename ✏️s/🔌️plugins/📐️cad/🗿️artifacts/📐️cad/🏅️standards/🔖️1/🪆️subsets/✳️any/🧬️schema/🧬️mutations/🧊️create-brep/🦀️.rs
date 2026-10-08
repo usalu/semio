@@ -22,12 +22,7 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateBrep {
         if self.index as usize > base.breps.len() || base.breps.iter().any(|child| child.child_id == self.child_id) {
             return protocol::MutationOutcome::fatal("mutation.invariant", "topology sibling index or identity is invalid", [self.child_id.clone()]);
         }
-        let reordered = (self.index as usize != base.breps.len()).then(|| {
-            let mut order: Vec<String> = base.breps.iter().map(|sibling| sibling.child_id.clone()).collect();
-            order.insert(self.index as usize, self.child_id.clone());
-            order
-        });
-        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta { added: vec![child], reordered, ..Default::default() }), ..Default::default() })
+        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta::insertion(self.index as usize, child)), ..Default::default() })
     }
     fn inverse(&self, _base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
         Ok(vec![CadMutation::DeleteBrep(super::delete_brep::DeleteBrep { child_id: self.child_id.clone() })])

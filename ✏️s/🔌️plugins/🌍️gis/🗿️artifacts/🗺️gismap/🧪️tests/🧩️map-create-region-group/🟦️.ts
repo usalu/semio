@@ -2,11 +2,12 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { runRepositoryExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { compileGisScopeExport } from "../../🧬️schema/🟦️.ts";
+import { compileGisScopeExport } from "../🧰️schema/🟦️.ts";
 
 const GIS_MAP_ARTIFACT_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 const GIS_MAP_CONTROL_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🧩️map-create-region-group/🔣️.json";
 const GIS_MAP_SCHEMA_DEPENDENCIES = [
+  "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
   "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
   "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",

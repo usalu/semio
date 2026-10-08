@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-header/schema.json",
+  "title": "SetHeader",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "header"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setHeader",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "header": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgHeaderVariables",
+      "x-semio-ui": {
+        "label": {
+          "en": "Header variables",
+          "de": "Kopfvariablen"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

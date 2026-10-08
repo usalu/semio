@@ -32,7 +32,7 @@ test("PDF intrinsic font programs and ordered encoding differences are independe
   const input = await source();
   for (const value of input.programs) {
     const encoded = await project(out => writePdfFontProgram(out, value)); const sql = Database.deserialize(await exportSqliteDatabase(encoded.database));
-    expect(sql.query("SELECT kind,hex(data) AS octets FROM pdf_font_program").get()).toEqual({ kind: value.kind, octets: value.data.map(byte => byte.toString(16).padStart(2,"0")).join("").toUpperCase() });
+    expect(sql.query("SELECT kind,artifact_id FROM pdf_font_program JOIN pdf_artifact_reference ON pdf_font_program.artifact_reference_id=pdf_artifact_reference.id").get()).toEqual({kind:value.kind,artifact_id:value.reference.artifactId});
     const reader = await PdfReader.create(await importSqliteDatabase(sql.serialize()), PDF17_SQLITE_SCHEMA, {}, pdfFontNumberColumns); expect(await readPdfFontProgram(reader, encoded.root)).toEqual(value); await reader.finish(); sql.close();
   }
   for (const value of input.encodings) { const encoded = await project(out => writePdfEncoding(out, value)); const reader = await PdfReader.create(encoded.database, PDF17_SQLITE_SCHEMA, {}, pdfFontNumberColumns); expect(await readPdfEncoding(reader, encoded.root)).toEqual(value); await reader.finish(); }
@@ -69,11 +69,12 @@ test("PDF Unicode and CID mappings preserve exact u32 coordinates and ordered du
 
 test("PDF CID font ownership preserves every metric, optional paired words and all glyph mappings", async () => {
   const input = await source();
-  const mappings: (PdfCidToGid | null)[] = [null, { kind: "identity" }, { kind: "map", data: [0,255,128] }];
+  const mappings: (PdfCidToGid | null)[] = [null, { kind: "identity" }, {kind:"map",glyphs:[0,255,32769,65535]}];
   for (const [index, cidToGid] of mappings.entries()) {
     const value: PdfCidFont = { trueType: index % 2 === 0, baseFont: "CID Ω", systemInfo: { registry: "Authored", ordering: "Ω", supplement: 4294967295 }, descriptor: input.descriptor, defaultWidth: { bits: 0x7ff0000000000042n }, widths: [{ startCid: 4294967295, widths: [{ bits: 0x8000000000000000n }, { bits: 1n }] }, { startCid: 0, widths: [] }], defaultVertical: index === 0 ? null : [{ bits: 0xfff0000000000000n }, { bits: 0x7ff0000000000042n }], verticalMetrics: [{ startCid: 2, metrics: [[{ bits: 1n }, { bits: 0x8000000000000000n }, { bits: 0xfff8000000000055n }]] }], cidToGid, program: index === 0 ? null : input.programs[index]!, extra: [] };
     const encoded = await project(out => writePdfCidFont(out, value)); const bytes = await exportSqliteDatabase(encoded.database); const sql = Database.deserialize(bytes);
     expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    if(cidToGid?.kind==="map")expect(sql.query("SELECT glyph FROM pdf_cid_glyph ORDER BY ordinal").all()).toEqual(cidToGid.glyphs.map(glyph=>({glyph})));
     expect(sql.query("SELECT CAST(start_cid AS TEXT) AS cid FROM pdf_cid_width_run ORDER BY ordinal").all()).toEqual([{cid:"4294967295"},{cid:"0"}]);
     const reader = await PdfReader.create(await importSqliteDatabase(bytes), PDF17_SQLITE_SCHEMA, {}, pdfFontNumberColumns); expect(await readPdfCidFont(reader, encoded.root)).toEqual(value); await reader.finish();
     sql.close();

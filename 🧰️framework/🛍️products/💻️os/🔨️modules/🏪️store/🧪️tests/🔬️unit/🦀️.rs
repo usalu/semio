@@ -1,5 +1,20 @@
 use super::*;
 
+#[test]
+fn artifact_store_one_item_grant_preserves_neutral_independent_currencies() {
+    let fixture: serde_json::Value = serde_json::from_str(ONE_ITEM_PUBLICATION_FIXTURE).unwrap();
+    for row in fixture["independentGrants"].as_array().unwrap() {
+        let mut payload = row.clone();
+        let permits = payload.as_object_mut().unwrap().remove("permitsOne").unwrap().as_bool().unwrap();
+        let grant = ArtifactStoreOneItemGrant::from_value(payload.clone().into()).unwrap();
+        assert_eq!(serde_json::Value::from(grant.to_value()), payload);
+        assert_eq!(grant.permits_one(), permits);
+        let actual = grant.retained_grant();
+        assert_eq!([actual.maximum_items, actual.maximum_copy_bytes, actual.maximum_capacity_bytes, actual.maximum_release_bytes, actual.maximum_depth], [row["maximumItems"].as_u64().unwrap() as usize, row["maximumCopyBytes"].as_u64().unwrap() as usize, row["maximumCapacityBytes"].as_u64().unwrap() as usize, row["maximumReleaseBytes"].as_u64().unwrap() as usize, row["maximumDepth"].as_u64().unwrap() as usize]);
+    }
+    eprintln!("[DEBUG] original Store one-item schema preserves independent items/copy/capacity/whole-release/depth through actual neutral grant and serde_json oracle");
+}
+
 /// 🪪️ Reads the complete neutral error corpus's authored kind without message classification.
 fn command_canonical_refusal_kind(value:&str)->semio_framework_value::ValueRefusalKind{
  use semio_framework_value::ValueRefusalKind as K;
@@ -92,11 +107,11 @@ mod viewer_head_tests;
 mod replay_retirement_tests;
 
 use super::fixture_mutations::{
-    demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
+    demo::{AddN, DeleteN, DemoMutation, AssignN, SetN},
     lossy::{LossyMutation, SetN as LossySetN},
     severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation},
     timestamped::{SetN as TimestampedSetN, TimestampedMutation},
-    validated::{RestoreN as ValidatedRestoreN, SetN as ValidatedSetN, ValidatedMutation},
+    validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation},
 };
 use super::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep, RetainedClonePreparationFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
@@ -129,7 +144,7 @@ where
         assert!(Op::from_value(invalid.into()).is_err());
         let mut missing = serde_json::Value::from(mutation.to_value());
         missing.as_object_mut().unwrap().remove(key);
-        assert_eq!(Op::from_value(missing.into()).is_ok(), row["operation"] == "restoreN" && key == "n");
+        assert_eq!(Op::from_value(missing.into()).is_ok(), row["operation"] == "assignN" && key == "n");
     }
     let before = DemoSnapshot { n: serde_json::from_value(row["before"].clone()).unwrap() };
     let outcome = mutation.diff(&before);
@@ -178,16 +193,16 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
     assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<TimestampedMutation>(include_str!("../../🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<TimestampedMutation>(include_str!("../../🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<TimestampedMutation>(include_str!("../../🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<ValidatedMutation>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<ValidatedMutation>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<ValidatedMutation>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<LossyMutation>(include_str!("../../🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SpaceHistoryMutation>(include_str!("../../🧫️fixtures/🧬️mutations/📌️commit-space-checkpoint/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SpaceHistoryMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🌿️create-space-alternative/🧾️wire-witness/🦠️mutation/🔣️.json"));
@@ -213,7 +228,7 @@ fn direct_store_fixture_absence_inverse_boundary() {
     });
     assert_fixture_text_codecs(&fixture, "validated", |row| match row["variant"].as_str().unwrap() {
         "SetN" => ValidatedMutation::SetN(ValidatedSetN { n: row["payload"]["n"].as_i64().unwrap() as i32 }),
-        "RestoreN" => ValidatedMutation::RestoreN(ValidatedRestoreN { n: Some(row["payload"]["n"].as_i64().unwrap() as i32) }),
+        "AssignN" => ValidatedMutation::AssignN(ValidatedAssignN { n: Some(row["payload"]["n"].as_i64().unwrap() as i32) }),
         variant => panic!("unexpected validated text codec variant {variant}"),
     });
     for json in ["{}", "{\"n\":null}"] {
@@ -246,7 +261,7 @@ fn direct_store_fixture_structural_diff_composition() {
         assert_eq!(crate::os_spr::apply_diff(&combined, &before).unwrap(), expected);
         let round_trip = serde_json::from_value::<DemoDiff>(serde_json::to_value(&combined).unwrap()).unwrap();
         assert_eq!(crate::os_spr::apply_diff(&round_trip, &before).unwrap(), expected);
-        let restore = DemoMutation::RestoreN(RestoreN { n: before.n });
+        let restore = DemoMutation::AssignN(AssignN { n: before.n });
         assert_eq!(crate::os_spr::apply_diff(restore.diff(&actual).diff(), &actual).unwrap(), before);
     }
 }
@@ -536,32 +551,39 @@ fn snapshot_read_lease_contention_returns_the_exact_untouched_owner() {
 
 #[test]
 fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep_strings() {
-    let edit = Edit::<DemoMutation> {
-        line: None,
-        id: "edit-owner".repeat(128),
-        actor: Some("actor-owner".repeat(128)),
-        forwards: Vec::new(),
-        inverse: Vec::new().into(),
-        mutation_meta: Vec::new(),
-        verb: None,
-        sequence_number: 1,
-        started_at: "started".repeat(128),
-        finished_at: Some("finished".repeat(128)),
-    };
-    let mut retirement = ArtifactStoreEditRetirement::new(edit).expect("empty mutation vectors are admitted");
-    let mut turns = 0;
-    while !retirement.terminal_is_empty() {
-        let step = retirement.close_step(1, 7).expect("bounded close step");
-        match step {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= 7);
-            }
-            SnapshotRetirementStep::Complete => assert!(retirement.terminal_is_empty()),
-            SnapshotRetirementStep::Blocked => panic!("owned edit retirement has no external wait"),
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let law = &fixture["editRetirement"];
+    let strings = law["strings"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize)).collect::<Vec<_>>();
+    let mut inverse = semio_framework_value::list::PagedList::new(); inverse.try_push(DemoMutation::SetN(SetN { n: 7 })).unwrap(); drop(inverse.pop());
+    assert!(!inverse.terminal_is_empty());
+    let forwards = Vec::with_capacity(law["forwardBackingSlots"].as_u64().unwrap() as usize); let forward_pointer = forwards.as_ptr();
+    let edit = Edit::<DemoMutation> { line: None, id: strings[0].clone(), actor: Some(strings[1].clone()), forwards, inverse, mutation_meta: Vec::with_capacity(law["metadataBackingSlots"].as_u64().unwrap() as usize), verb: None, sequence_number: 1, started_at: strings[2].clone(), finished_at: Some(strings[3].clone()) };
+    let payload_bytes = strings.iter().map(String::len).sum::<usize>();
+    let (result, allocated, released) = crate::test_allocation::observe_backing(|| ArtifactStoreEditRetirement::new(edit));
+    let mut retirement = result.unwrap_or_else(|_| panic!("empty original mutation lanes admitted"));
+    assert_eq!((allocated, released), (0, law["constructorDropBytes"].as_u64().unwrap() as usize));
+    assert_eq!(retirement.forwards.as_ref().unwrap().as_ptr(), forward_pointer);
+    let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize; let mut physical_release = 0;
+    for _ in 0..10_000 {
+        if retirement.terminal_is_empty() {
+            assert!(physical_release >= payload_bytes);
+            let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(retirement));
+            assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
+            eprintln!("[DEBUG] original edit retains forward/inverse/metadata backings at birth; bounded copy and exact whole physical releases match System through terminal-empty"); return;
         }
-        turns += 1;
-        assert!(turns < 10_000, "edit retirement must make finite progress across interruptions");
+        let demand = retirement.demands(copy).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+        assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default()); assert_eq!(retirement.demands(copy).unwrap(), demand);
+        if demand.release_bytes != 0 {
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).unwrap());
+            assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default()); assert_eq!(retirement.demands(copy).unwrap(), demand);
+        }
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| retirement.close_step(grant).unwrap());
+        assert!(step.progress().fits(grant)); assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); physical_release += released;
     }
+    panic!("original edit retirement must make finite progress across interruptions");
 }
 
 #[test]
@@ -775,7 +797,7 @@ fn displaced_owner_reservations_preserve_capacity_generation_and_interrupted_clo
 }
 
 fn completed_record_owner(id: &str) -> Box<dyn ArtifactEnvelopeCompletedRecord<(), ()>> {
-    Box::new(ArtifactEnvelopeCompletedRecordOwner::new(create_document_envelope_from_genesis("test.completed-record/v1", id, ArtifactGenesis::from_decoded_pack((), vec![0]), None), Arc::new(UnitOwnedRetirementFactory), Arc::new(UnitOwnedRetirementFactory)))
+    Box::new(ArtifactEnvelopeCompletedRecordOwner::new(create_document_envelope_from_genesis("test.completed-record/v1", id, AdmittedArtifactGenesis::from_decoded_pack((), vec![0]), None), Arc::new(UnitOwnedRetirementFactory), Arc::new(UnitOwnedRetirementFactory)))
 }
 
 fn drain_completed_record(mut owner: Box<dyn ArtifactEnvelopeCompletedRecord<(), ()>>) {
@@ -1484,7 +1506,7 @@ where
     where P: MemberStoreOwner<Mutation>,
     {
         let mut store = super::ArtifactStore::new(envelope, actor).await.expect("test fixture history is valid");
-        store.install_document_store_owners_exact(P::member_store_owners());
+        store.install_document_store_owners_exact(complete_test_catalog(P::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         Self(store, Some(close_test_store::<P, Mutation>))
     }
 
@@ -1530,22 +1552,41 @@ where
     }
 }
 
+fn complete_test_catalog<P, M>(admitted: Result<(DocumentStoreOwners<P, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, M>>) -> DocumentStoreOwners<P, M>
+where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + super::Mutation<P>,
+{
+    let grant=physical_test_close_grant();
+    let (mut owners,progress)=admitted.unwrap_or_else(|error|panic!("test catalog ingress refused while retaining original custody: {}",error.error));
+    assert!(progress.fits(grant));
+    for _ in 0..8 {
+        if owners.constructor_is_complete() { return owners; }
+        owners.constructor_demands().expect("test catalog has genuine pending ticket demand");
+        let progress=owners.admit_constructor(grant).unwrap_or_else(|(error,_)|panic!("test catalog ticket admission refused: {error}"));
+        assert!(progress.fits(grant));assert!(progress.copied_items<=1);
+    }
+    panic!("test catalog retained incomplete original factory tickets");
+}
+
+fn physical_test_close_grant() -> RetainedCloneGrant {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).expect("plain physical close policy");
+    let policy=&fixture["physicalCloseGrant"];
+    RetainedCloneGrant { maximum_items:policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap() as usize }
+}
+
 /// 🧹️ Drives a test store's owned close to its terminal-empty witness.
 fn close_test_store<P, Mutation>(store: &mut super::ArtifactStore<P, Mutation>)
 where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    drop(store.detach_backbone().expect("a closing test store releases its backbone"));
-    let mut last = SnapshotRetirementStep::Complete;
+    let grant = physical_test_close_grant();
+    let mut last = RetainedCloneStep::Progress(Default::default());
     for _ in 0..1 << 24 {
-        if store.close_owned_terminal_is_empty() {
-            return;
-        }
-        last = store.close_owned_step(1, 4_096).expect("test store closes under its bounded owner grant");
-        if last == SnapshotRetirementStep::Complete {
-            return;
-        }
+        if store.close_owned_terminal_is_empty() { return; }
+        store.close_owned_demands(grant.maximum_copy_bytes).expect("current independent Store close frontier");
+        last = store.close_owned_step(grant).expect("test store closes under its exact owner grant");
+        assert!(last.progress().fits(grant));
+        if matches!(last, RetainedCloneStep::Complete(_)) { assert!(store.close_owned_terminal_is_empty()); return; }
     }
     panic!("test store did not reach its exact terminal-empty witness; last step {last:?}");
 }
@@ -1613,10 +1654,10 @@ where
     fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<(u64, [u8; 32], ErasedSnapshotRead), String> {
         SpaceMember::snapshot_read_erased_for_publication(&self.0, publication, visibility, grant)
     }
-    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, SnapshotRetirementRejected> {
+    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> {
         SpaceMember::return_prepared_snapshot_read_erased(&self.0, publication, visibility, snapshot, grant)
     }
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)
     }
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String> {
@@ -1625,23 +1666,23 @@ where
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
         SpaceMember::snapshot_read_erased(&self.0).await
     }
-    fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {
-        SpaceMember::retire_snapshot_read_erased(&mut self.0, snapshot)
+    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+        SpaceMember::retire_snapshot_read_erased(&mut self.0, snapshot, grant)
     }
-    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {
-        SpaceMember::take_returned_snapshot_read_retirement(&mut self.0)
+    fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+        SpaceMember::take_returned_snapshot_read_retirement(&mut self.0, grant)
     }
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
         SpaceMember::snapshot_read_leases_terminal_is_empty(&self.0)
     }
-    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        SpaceMember::close_owned_step(&mut self.0, maximum_items, maximum_bytes)
+    fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        SpaceMember::close_owned_step(&mut self.0, grant)
     }
     fn close_owned_terminal_is_empty(&self) -> bool {
         SpaceMember::close_owned_terminal_is_empty(&self.0)
     }
-    fn close_owned_byte_demand(&self) -> usize {
-        SpaceMember::close_owned_byte_demand(&self.0)
+    fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        SpaceMember::close_owned_demands(&self.0, maximum_body_bytes)
     }
     fn content_revision_now(&self) -> [u8; 32] {
         SpaceMember::content_revision_now(&self.0)
@@ -1888,84 +1929,87 @@ impl ArtifactPack for DemoSnapshot {
 }
 //#endregion 🔖️ArtifactCodec
 
-struct DemoSnapshotRetirement(Option<Arc<DemoSnapshot>>);
-
-impl ErasedSnapshotRetirement for DemoSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.0.take().is_some() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-}
-
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DemoSnapshotRetirementFactory;
 
 impl SnapshotRetirementFactory<DemoSnapshot> for DemoSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<DemoSnapshot>) -> usize { std::mem::size_of::<DemoSnapshotRetirement>() }
-
-    fn retire(&self, snapshot: Arc<DemoSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(DemoSnapshotRetirement(Some(snapshot)))
+    fn retirement_birth_bytes(&self, snapshot: &Arc<DemoSnapshot>) -> usize {
+        semio_framework_value::retirement::SharedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(snapshot)
+    }
+    fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
+        semio_framework_value::retirement::SharedValueRetirementFactory::<DemoSnapshot>::default().retire(snapshot, grant)
     }
 }
 
 struct ExactDemoSnapshotRetirement {
-    owner: Option<Arc<DemoSnapshot>>,
-    value: Option<DemoSnapshot>,
-    completed: Arc<std::sync::atomic::AtomicUsize>,
+    owner: std::mem::ManuallyDrop<Option<Arc<DemoSnapshot>>>,
+    value: std::mem::ManuallyDrop<Option<DemoSnapshot>>,
+    child: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    completed: std::mem::ManuallyDrop<Option<Arc<std::sync::atomic::AtomicUsize>>>,
+    completion_recorded: bool,
+}
+
+impl ExactDemoSnapshotRetirement {
+    fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::RetirementDemand;
+        if let Some(owner) = self.owner.as_ref() { return Ok(RetirementDemand { release_bytes: semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<DemoSnapshot>(),depth: 1,..Default::default() }); }
+        if let Some(value) = self.value.as_ref() { return Ok(RetirementDemand { capacity_bytes: DemoInitialSnapshotRetirementFactory.retirement_birth_bytes(value),depth: 2,..Default::default() }); }
+        if let Some(child) = self.child.as_ref() { let mut demand=artifact_retirement_box_demands(child,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"counted original child depth overflow"))?;return Ok(demand); }
+        if !self.completion_recorded { return Ok(RetirementDemand { depth: 1,..Default::default() }); }
+        Ok(self.completed.as_ref().map_or(Default::default(),|counter|RetirementDemand { release_bytes: if Arc::strong_count(counter)==1 { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicUsize>() } else { 0 },depth: 1,..Default::default() }))
+    }
 }
 
 impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand=self.demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"counted original close requires supplied depth")); }
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        if let Some(owner)=self.owner.as_ref() {
+            if Arc::strong_count(owner)!=1||Arc::weak_count(owner)!=0 { return Ok(RetainedCloneStep::Progress(empty)); }
+            match Arc::try_unwrap(self.owner.take().unwrap()) {
+                Ok(value)=>{*self.value=Some(value);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1,released_bytes: demand.release_bytes,..empty }));},
+                Err(original)=>{*self.owner=Some(original);return Ok(RetainedCloneStep::Progress(empty));}
+            }
         }
-        if let Some(owner) = self.owner.take() {
-            return match Arc::try_unwrap(owner) {
-                Ok(value) => {
-                    self.value = Some(value);
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                Err(owner) => {
-                    self.owner = Some(owner);
-                    Ok(SnapshotRetirementStep::Blocked)
-                }
-            };
+        let child_grant=RetainedCloneGrant { maximum_items: 1,maximum_depth: grant.maximum_depth-1,..grant };
+        if let Some(value)=self.value.take() {
+            match DemoInitialSnapshotRetirementFactory.retire_owned(value,child_grant) {
+                Ok((owner,progress))=>{*self.child=Some(owner);return Ok(RetainedCloneStep::Progress(progress));},
+                Err((error,original))=>{*self.value=Some(original);return Err(error);}
+            }
         }
-        if self.value.take().is_some() {
-            self.completed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        if self.child.is_some() { return artifact_retirement_box_close_step(&mut self.child,child_grant).map(|step|RetainedCloneStep::Progress(step.progress())); }
+        if !self.completion_recorded { self.completed.as_ref().unwrap().fetch_add(1,std::sync::atomic::Ordering::SeqCst);self.completion_recorded=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1,..empty })); }
+        let counter=self.completed.as_ref().unwrap();
+        if Arc::weak_count(counter)!=0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if Arc::strong_count(counter)!=1 { self.completed.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..empty })); }
+        match Arc::try_unwrap(self.completed.take().unwrap()) {
+            Ok(counter)=>{drop(counter);Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,released_bytes: demand.release_bytes,..empty }))},
+            Err(original)=>{*self.completed=Some(original);Ok(RetainedCloneStep::Progress(empty))}
         }
-        Ok(SnapshotRetirementStep::Complete)
     }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owner.is_none() && self.value.is_none()
-    }
+    fn terminal_is_empty(&self) -> bool { self.owner.is_none()&&self.value.is_none()&&self.child.is_none()&&self.completed.is_none()&&self.completion_recorded }
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+    fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.capacity_bytes)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 
 impl Drop for ExactDemoSnapshotRetirement {
-    fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "exact demo snapshot retirement reached Drop with a retained root");
-    }
+    fn drop(&mut self) { assert!(std::thread::panicking()||self.terminal_is_empty(),"counted original snapshot retains every payload and counter until funded terminal"); }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ExactDemoSnapshotRetirementFactory(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
 
 impl SnapshotRetirementFactory<DemoSnapshot> for ExactDemoSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<DemoSnapshot>) -> usize { std::mem::size_of::<ExactDemoSnapshotRetirement>() }
-
-    fn retire(&self, snapshot: Arc<DemoSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(ExactDemoSnapshotRetirement { owner: Some(snapshot), value: None, completed: Arc::clone(&self.0) })
+    fn retirement_birth_bytes(&self, _: &Arc<DemoSnapshot>) -> usize { std::mem::size_of::<ExactDemoSnapshotRetirement>() }
+    fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
+        admit_artifact_retirement(snapshot,grant,|original|ExactDemoSnapshotRetirement { owner: std::mem::ManuallyDrop::new(Some(original)),value: std::mem::ManuallyDrop::new(None),child: std::mem::ManuallyDrop::new(None),completed: std::mem::ManuallyDrop::new(Some(Arc::clone(&self.0))),completion_recorded: false })
     }
 }
 
@@ -1973,26 +2017,9 @@ impl SnapshotRetirementFactory<DemoSnapshot> for ExactDemoSnapshotRetirementFact
 struct ExactDemoInitialSnapshotRetirementFactory(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
 
 impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for ExactDemoInitialSnapshotRetirementFactory {
-    fn retire_owned(&self, value: DemoSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(ExactDemoSnapshotRetirement { owner: Some(Arc::new(value)), value: None, completed: Arc::clone(&self.0) })
-    }
-}
-
-struct DemoInitialSnapshotRetirement(Option<DemoSnapshot>);
-
-impl ErasedSnapshotRetirement for DemoInitialSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.0.take().is_some() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
+    fn retirement_birth_bytes(&self, _: &DemoSnapshot) -> usize { std::mem::size_of::<ExactDemoSnapshotRetirement>() }
+    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
+        admit_artifact_retirement(value,grant,|original|ExactDemoSnapshotRetirement { owner: std::mem::ManuallyDrop::new(None),value: std::mem::ManuallyDrop::new(Some(original)),child: std::mem::ManuallyDrop::new(None),completed: std::mem::ManuallyDrop::new(Some(Arc::clone(&self.0))),completion_recorded: false })
     }
 }
 
@@ -2000,35 +2027,23 @@ impl ErasedSnapshotRetirement for DemoInitialSnapshotRetirement {
 struct DemoInitialSnapshotRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRetirementFactory {
-    fn retire_owned(&self, value: DemoSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(DemoInitialSnapshotRetirement(Some(value)))
+    fn retirement_birth_bytes(&self, value: &DemoSnapshot) -> usize {
+        semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(value)
     }
-}
-
-struct DemoMutationRetirement<Mutation>(Option<Mutation>);
-
-impl<Mutation: Send> ErasedSnapshotRetirement for DemoMutationRetirement<Mutation> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.0.take().is_some() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
+    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
+        semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default().retire_owned(value, grant)
     }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DemoMutationRetirementFactory;
 
-impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Mutation> for DemoMutationRetirementFactory {
-    fn retire_owned(&self, value: Mutation) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(DemoMutationRetirement(Some(value)))
+impl<Mutation: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<Mutation> for DemoMutationRetirementFactory {
+    fn retirement_birth_bytes(&self, value: &Mutation) -> usize {
+        semio_framework_value::retirement::OwnedValueRetirementFactory::<Mutation>::default().retirement_birth_bytes(value)
+    }
+    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Mutation)> {
+        semio_framework_value::retirement::OwnedValueRetirementFactory::<Mutation>::default().retire_owned(value, grant)
     }
 }
 
@@ -2037,61 +2052,70 @@ fn retire_demo_envelope<Mutation: Send + 'static>(envelope: ArtifactEnvelope<Dem
     drive_retirement_terminal(retire_document_envelope(envelope, Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory)));
 }
 
-fn drive_retirement_terminal(mut retirement: Box<dyn ErasedSnapshotRetirement>) {
-    let mut turns = 0;
-    loop {
-        match retirement.close_step(1, 7).expect("retained owner closes within its exact grant") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 7),
-            SnapshotRetirementStep::Blocked => panic!("fixture owner has no external wait"),
-            SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                break;
-            }
-        }
-        turns += 1;
-        assert!(turns < 10_000, "retained owner must reach terminal empty across interruptions");
+/// 🎟️ The demo fixture admits an original alias frame with independent zero-copy constructor authority.
+fn admit_demo_alias_retirement(store:&ArtifactStore<DemoSnapshot,DemoMutation>,alias:Arc<DemoSnapshot>)->Box<dyn ErasedSnapshotRetirement>{
+    let mut original=Some(alias);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:ArtifactStore::<DemoSnapshot,DemoMutation>::snapshot_alias_retirement_birth_bytes(),maximum_release_bytes:0,maximum_depth:1};
+    let (owner,progress)=store.retire_snapshot_alias(&mut original,grant).expect("exact original demo alias issuer").expect("original alias is present");assert!(progress.fits(grant));assert!(original.is_none());owner
+}
+
+fn drive_retirement_terminal(retirement: Box<dyn ErasedSnapshotRetirement>) {
+    let grant = physical_test_close_grant();
+    let mut original = Some(retirement);
+    for _ in 0..10_000 {
+        let Some(owner) = original.as_ref() else { return; };
+        artifact_retirement_box_demands(owner, grant.maximum_copy_bytes).expect("current original boxed owner frontier");
+        let step = artifact_retirement_box_close_step(&mut original, grant).expect("original owner and Box close in distinct granted turns");
+        assert!(step.progress().fits(grant));
     }
+    panic!("retained original owner must reach terminal empty across interruptions");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_close_order() {
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None);
     let mut store = super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
-    store.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    store.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     *store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
-
-    let tail_id = store.close_take_runtime_string_retirement(ArtifactStoreCloseStringLane::TailUndoEditId).expect("tail id retires before its snapshot");
-    drive_retirement_terminal(tail_id);
-    assert!(matches!(store.close_take_tail_snapshot_retirement().expect("shared tail root classification"), ArtifactStoreSnapshotRootClose::ReleasedShared));
-
-    let current = store.close_take_current_snapshot_retirement().expect("current root transfer").expect("current root exists exactly once");
-    drive_retirement_terminal(current);
-    assert!(store.close_take_current_snapshot_retirement().expect("detached current probe").is_none());
-
-    while let Some(retirement) = store.close_take_envelope_metadata_string_retirement() {
-        drive_retirement_terminal(retirement);
+    let original = store.tail_undo_cache.as_ref().unwrap().0.as_ptr();
+    let phase = ArtifactStoreCursorDisposerPhase::RuntimeOwners(5);
+    let demand = store.close_cursor_demands(phase, 7).unwrap();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 7, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 0, maximum_depth: 1 };
+    let (denied, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(phase, RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }));
+    assert!(denied.is_err());
+    assert_eq!((requested, released), (0, 0));
+    assert_eq!(store.tail_undo_cache.as_ref().unwrap().0.as_ptr(), original);
+    let (admitted, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(phase, grant));
+    let (tail_id, receipt) = admitted.unwrap();
+    assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
+    assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
+    drive_retirement_terminal(tail_id.expect("original tail id retires before snapshot"));
+    assert_eq!(store.tail_undo_cache.as_ref().unwrap().0.capacity(), 0);
+    let (tail, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(ArtifactStoreCursorDisposerPhase::TailSnapshot, grant));
+    assert!(tail.unwrap().0.is_none());
+    assert_eq!((requested, released), (0, 0));
+    for phase in [ArtifactStoreCursorDisposerPhase::CurrentSnapshot, ArtifactStoreCursorDisposerPhase::Envelope] {
+        let demand = store.close_cursor_demands(phase, 7).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 7, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 0, maximum_depth: 1 };
+        let (admitted, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(phase, grant));
+        let (owner, receipt) = admitted.unwrap();
+        assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
+        assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
+        drive_retirement_terminal(owner.expect("current and whole envelope transfer exactly once"));
+        assert!(store.close_cursor_admit(phase, grant).unwrap().0.is_none());
     }
-    assert!(store.close_structural_owners_terminal_is_empty(), "empty history has no unresolved structural owner");
-    let initial = store.close_take_final_envelope_retirement().expect("final envelope transfer").expect("initial snapshot owner exists exactly once");
-    drive_retirement_terminal(initial);
-    assert!(store.close_take_final_envelope_retirement().expect("detached envelope probe").is_none());
-    assert!(store.owned_roots_terminal_is_empty());
+    assert!(store.current_detached && store.envelope_detached);
     close_test_store(&mut store);
 }
 
 impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, DemoMutation>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, DemoMutation>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, DemoMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, DemoMutation> {
-        demo_closable_store_owners()
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, DemoMutation>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, DemoMutation>::new()))
     }
 }
 
@@ -2119,9 +2143,6 @@ impl crate::os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
     fn inverse(&self, base: &DemoSnapshot) -> Self {
         Self { n: self.n.as_ref().map(|_| DemoFieldChange { value: base.n }) }
     }
-    fn between(base: &DemoSnapshot, other: &DemoSnapshot) -> Self {
-        Self { n: (base.n != other.n).then_some(DemoFieldChange { value: other.n }) }
-    }
     fn is_empty(&self) -> bool {
         self.n.is_none()
     }
@@ -2144,9 +2165,6 @@ pub(crate) struct LossyDiff {}
 
 impl crate::os_spr::DiffAlgebra<DemoSnapshot> for LossyDiff {
     fn inverse(&self, _base: &DemoSnapshot) -> Self {
-        Self {}
-    }
-    fn between(_base: &DemoSnapshot, _other: &DemoSnapshot) -> Self {
         Self {}
     }
     fn is_empty(&self) -> bool {
@@ -2392,7 +2410,7 @@ async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_rev
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
     let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "owned-batch", DemoSnapshot { n: Some(0) }, None)).await;
-    member.install_document_store_owners_exact(retained_demo_member_owners());
+    member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
     let make_request = |mutations| MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(715), expected_generation: member.generation_now(), expected_revision: member.content_revision_now(), actor: fixture["metadata"]["actor"].as_str().unwrap().into(), group_id: Some(fixture["metadata"]["groupId"].as_str().unwrap().into()), transaction: None, mutations };
     let wrong: Vec<i32> = serde_json::from_value(fixture["wrongType"].clone()).unwrap();
@@ -2460,7 +2478,7 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
         let preflights = Arc::new(AtomicUsize::new(0));
         let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "bounded-source", DemoSnapshot { n: Some(0) }, None)).await;
         let owners = demo_closable_store_owners().with_one_item_preparation(Arc::new(CountingOwnedPreparationFactory { inner: DemoOneItemPreparationFactory::admissible(), preflights: Arc::clone(&preflights) }));
-        member.install_document_store_owners_exact(owners);
+        member.install_document_store_owners_exact(owners).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let values = (0..count).map(|index| DemoMutation::SetN(SetN { n: fixture["values"][index % 3].as_i64().unwrap() as i32 })).collect::<Vec<_>>();
         let backing = values.capacity() * std::mem::size_of::<DemoMutation>();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
@@ -2510,47 +2528,52 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
 #[test]
 fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
     use std::sync::atomic::{AtomicUsize, Ordering};
-    struct Observed {
-        inner: Option<Box<dyn ErasedSnapshotRetirement>>,
+    struct Observed<T: semio_framework_value::retirement::RetireOwned> {
+        inner: semio_framework_value::retirement::controlled::ControlledRetirement<T>,
         count: Arc<AtomicUsize>,
         counted: bool,
     }
-    impl ErasedSnapshotRetirement for Observed {
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-            let step = artifact_retirement_box_close_step(&mut self.inner, items, bytes)?;
-            if matches!(step, SnapshotRetirementStep::Complete) && !self.counted {
-                assert!(self.inner.is_none());
-                self.count.fetch_add(1, Ordering::SeqCst);
-                self.counted = true;
-            }
+    impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for Observed<T> {
+        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+            let depth = self.next_depth_demand()?;
+            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "observed original owner depth is not funded")); }
+            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - usize::from(!self.counted), ..grant };
+            let step = self.inner.step(child)?;
+            if self.inner.terminal_is_empty() && !self.counted { self.count.fetch_add(1, Ordering::SeqCst); self.counted = true; }
             Ok(step)
         }
-        fn terminal_is_empty(&self) -> bool {
-            self.counted && self.inner.is_none()
-        }
-        fn next_close_byte_demand(&self) -> usize {
-            self.inner.as_ref().map_or(0, artifact_retirement_box_byte_demand)
-        }
+        fn terminal_is_empty(&self) -> bool { self.counted && self.inner.terminal_is_empty() }
+        fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_copy_byte_demand() }
+        fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.inner.next_capacity_byte_demand(body) }
+        fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_release_byte_demand() }
+        fn next_depth_demand(&self) -> Result<usize, ValueError> { self.inner.next_depth_demand()?.checked_add(usize::from(!self.counted)).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "observed original owner depth overflow")) }
     }
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct SnapshotFactory(#[factory_child] Arc<AtomicUsize>);
     impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for SnapshotFactory {
-        fn retire_owned(&self, value: DemoSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
-            Box::new(Observed { inner: Some(DemoInitialSnapshotRetirementFactory.retire_owned(value)), count: self.0.clone(), counted: false })
+        fn retirement_birth_bytes(&self, _: &DemoSnapshot) -> usize { std::mem::size_of::<Observed<DemoSnapshot>>() }
+        fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
+            if !<DemoSnapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original observed typed owner has no controlled authority"), value)); }
+            admit_artifact_retirement(value, grant, |value| Observed { inner: semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("pure supported original observed owner")), count: self.0.clone(), counted: false })
         }
     }
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct MutationFactory(#[factory_child] Arc<AtomicUsize>);
     impl ArtifactOwnedValueRetirementFactory<DemoMutation> for MutationFactory {
-        fn retire_owned(&self, value: DemoMutation) -> Box<dyn ErasedSnapshotRetirement> {
-            Box::new(Observed { inner: Some(DemoMutationRetirementFactory.retire_owned(value)), count: self.0.clone(), counted: false })
+        fn retirement_birth_bytes(&self, _: &DemoMutation) -> usize { std::mem::size_of::<Observed<DemoMutation>>() }
+        fn retire_owned(&self, value: DemoMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoMutation)> {
+            if !<DemoMutation as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original observed typed owner has no controlled authority"), value)); }
+            admit_artifact_retirement(value, grant, |value| Observed { inner: semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("pure supported original observed owner")), count: self.0.clone(), counted: false })
         }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🚪️open/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["retention"].as_array().unwrap() {
         let snapshots = Arc::new(AtomicUsize::new(0));
         let mutations = Arc::new(AtomicUsize::new(0));
-        let owners = DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(SnapshotFactory(snapshots.clone())), Arc::new(MutationFactory(mutations.clone())), Box::new(ArtifactStoreCursorDisposer::new()));
+        let source_bytes = DocumentStoreOwners::<DemoSnapshot, DemoMutation>::source_birth_bytes::<DemoSnapshotRetirementFactory, SnapshotFactory, MutationFactory, ArtifactStoreCursorDisposer<DemoSnapshot, DemoMutation>>().unwrap();
+        let (owners, progress) = DocumentStoreOwners::admit_source_constructor(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: source_bytes, maximum_depth: 1, ..Default::default() }, || (DemoSnapshotRetirementFactory, SnapshotFactory(snapshots.clone()), MutationFactory(mutations.clone()), ArtifactStoreCursorDisposer::new())).unwrap_or_else(|_| panic!("funded original observed catalog source"));
+        assert_eq!(progress.retained_capacity_bytes, source_bytes);
         let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).unwrap();
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(&[1, 97, 83]).unwrap()).unwrap();
         pages.seal().unwrap();
@@ -2629,7 +2652,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         }
         assert_eq!(retained.retained_input_bytes(), 3);
         assert_eq!(retained.retained_typed_owners(), before);
-        assert!(matches!(retained.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(retained.close_step(RetainedCloneGrant::default()).unwrap().progress(), RetainedCloneProgress::default());
         assert_eq!(retained.retained_typed_owners(), before);
         assert_eq!((snapshots.load(Ordering::SeqCst), mutations.load(Ordering::SeqCst)), (0, 0));
         let demand_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
@@ -2638,23 +2661,18 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         let mut released = 0;
         let mut demands = std::collections::BTreeSet::new();
         while !retained.terminal_is_empty() {
-            let demand = retained.next_close_byte_demand();
-            assert_eq!(retained.next_close_byte_demand(), demand, "inquiry must retain the current phase");
-            let grant = demand.max(7);
-            assert!(grant <= admission, "member-open physical demand exceeds the existing admission ceiling");
-            demands.insert(demand);
-            if demand > 7 {
-                assert_eq!(retained.close_step(0, demand).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                assert_eq!(retained.next_close_byte_demand(), demand);
-            }
-            match retained.close_step(1, grant).unwrap() {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1 && released_bytes <= grant);
-                    released += released_bytes;
-                }
-                SnapshotRetirementStep::Complete => assert!(retained.terminal_is_empty()),
-                SnapshotRetirementStep::Blocked => panic!("member-open queried physical demand must progress for {}: demand={demand}", row["id"]),
-            }
+            let copy_bytes = retained.next_copy_byte_demand().unwrap();
+            let demand = semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: retained.next_capacity_byte_demand(copy_bytes).unwrap(), release_bytes: retained.next_release_byte_demand().unwrap(), depth: retained.next_depth_demand().unwrap() };
+            assert_eq!(retained.next_release_byte_demand().unwrap(), demand.release_bytes, "inquiry must retain the current phase");
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_capacity_bytes <= admission && grant.maximum_release_bytes <= admission, "member-open actual currency exceeds existing admission ceiling");
+            demands.insert((demand.copy_bytes, demand.capacity_bytes, demand.release_bytes, demand.depth));
+            assert_eq!(retained.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress(), RetainedCloneProgress::default());
+            assert_eq!(retained.next_release_byte_demand().unwrap(), demand.release_bytes);
+            let step = retained.close_step(grant).unwrap();
+            assert!(step.progress().fits(grant));
+            released += step.progress().released_bytes;
+            if matches!(step, RetainedCloneStep::Complete(_)) { assert!(retained.terminal_is_empty()); }
             turns += 1;
             assert!(turns < 10_000, "member-open exact caller grants must converge for {}: demands={demands:?}", row["id"]);
         }
@@ -2849,8 +2867,8 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
     let mut first = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None)).await;
     let mut second = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: Some(0) }, None)).await;
-    first.install_document_store_owners_exact(retained_demo_member_owners());
-    second.install_document_store_owners_exact(retained_demo_member_owners());
+    first.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    second.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut members = [RetainedTestMembers::First(Box::new(first.into_inner())), RetainedTestMembers::Second(Box::new(second.into_inner()))];
     let mut observed = Vec::new();
     for (sequence, row) in fixture["orderedMembers"].as_array().unwrap().iter().enumerate() {
@@ -2920,8 +2938,8 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
     let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
     let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
-    member.install_document_store_owners_exact(retained_demo_member_owners());
-    wrong.install_document_store_owners_exact(demo_closable_store_owners());
+    member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    wrong.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     member.closes_on_drop();
     wrong.closes_on_drop();
     let request = |generation, revision| MemberStoreOneItemWireRequest {
@@ -2972,7 +2990,7 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
         ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None)).await,
     ];
     for member in &mut members {
-        member.install_document_store_owners_exact(retained_demo_member_owners());
+        member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         member.closes_on_drop();
     }
     let roots = [members[0].snapshot_root(), members[1].snapshot_root()];
@@ -3056,7 +3074,7 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                 ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-existing", DemoSnapshot { n: Some(100) }, None)).await,
             ];
             for (lane, member) in members.iter_mut().enumerate() {
-                member.install_document_store_owners_exact(retained_demo_member_owners());
+                member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
                 for entry in 1..=history {
                     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: [0, 10, 100][lane] + entry as i32 })], transaction: None }).await.unwrap();
                 }
@@ -3647,9 +3665,9 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
 async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operation_or_history_fold() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪆️derived-read/🔣️.json")).expect("closed language-neutral origin corpus");
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-source", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut foreign = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-foreign", DemoSnapshot { n: Some(0) }, None)).await;
-    foreign.install_document_store_owners_exact(demo_closable_store_owners());
+    foreign.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let base = store.derived_snapshot_head();
     assert!(Arc::ptr_eq(base.snapshot_owner(), &store.snapshot_owner()));
     let operation = DemoMutation::SetN(SetN { n: 9 });
@@ -3668,9 +3686,9 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     drop(read);
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 6 })], transaction: None }).await.expect("actual event publication");
     assert!(store.snapshot_read_derived(&derived).is_err(), "a prior derived source cannot be relabelled with the new frontier");
-    drive_retirement_terminal(store.retire_snapshot_alias(derived.into_snapshot_owner()).expect("derived alias retirement"));
-    drive_retirement_terminal(store.retire_snapshot_alias(base.into_snapshot_owner()).expect("base alias retirement"));
-    let mut replay = Some(store.begin_derived_report_replay(BTreeMap::new(), None).expect("genuine history replay"));
+    drive_retirement_terminal(admit_demo_alias_retirement(&store,derived.into_snapshot_owner()));
+    drive_retirement_terminal(admit_demo_alias_retirement(&store,base.into_snapshot_owner()));
+    let mut replay = Some(store.begin_derived_report_replay(protocol::HistoryInputDrafts::new(), None).expect("genuine history replay"));
     let owner = replay.as_ref().expect("retained replay") as *const _;
     let plan = replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _;
     let registry = Arc::as_ptr(&replay.as_ref().unwrap().registry);
@@ -3678,7 +3696,11 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert_eq!(owner, replay.as_ref().expect("unfinished replay retained") as *const _);
     assert_eq!(plan, replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _);
     assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
-    while matches!(store.step_derived_report_replay(replay.as_mut().expect("retained replay"), &mut || false).expect("own actual ledger"), ReplayStep::Pending(_)) {}
+    loop {
+        let demand=replay.as_ref().unwrap().planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).unwrap();
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+        if matches!(store.step_derived_report_replay(replay.as_mut().expect("retained replay"), grant, &mut || false).expect("own actual ledger"),ReplayStep::Finished(_)) {break;}
+    }
     assert!(foreign.finish_derived_report_replay(&mut replay).is_err(), "foreign finishing cannot consume the source owner");
     assert_eq!(owner, replay.as_ref().expect("foreign-refused replay retained") as *const _);
     assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
@@ -3693,8 +3715,8 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert!(Arc::ptr_eq(head.snapshot_owner(), result.state().expect("same replay result")));
     assert!(foreign.snapshot_read_derived(&head).is_err());
     drop(result);
-    drive_retirement_terminal(store.retire_snapshot_alias(head.into_snapshot_owner()).expect("replay alias retirement"));
-    let mut stale = Some(store.begin_derived_report_replay(BTreeMap::new(), None).expect("second actual replay"));
+    drive_retirement_terminal(admit_demo_alias_retirement(&store,head.into_snapshot_owner()));
+    let mut stale = Some(store.begin_derived_report_replay(protocol::HistoryInputDrafts::new(), None).expect("second actual replay"));
     let owner = stale.as_ref().expect("retained stale replay") as *const _;
     let plan = stale.as_ref().unwrap().plan.as_ref().unwrap() as *const _;
     let registry = Arc::as_ptr(&stale.as_ref().unwrap().registry);
@@ -3715,12 +3737,7 @@ async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_ow
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(DocumentStoreOwners::new(
-        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
-        Arc::new(ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis))),
-        Arc::new(DemoMutationRetirementFactory),
-        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),
-    ));
+    store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     store.dispatch(ArtifactCommand::Redo).await.expect("redo");
@@ -3733,7 +3750,7 @@ async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_ow
 #[semio_framework_async_macros::async_test]
 async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_owner() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply");
     let read = store.snapshot_read().expect("exact live snapshot read");
     let mut blocked = false;
@@ -3754,20 +3771,24 @@ async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_ow
 
 #[test]
 fn returned_snapshot_read_releases_an_alias_before_the_displaced_root_and_retires_a_unique_fallback() {
+    let grant=physical_test_close_grant();
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let canonical = Arc::new(DemoSnapshot { n: Some(1) });
-    let mut displaced = ExactDemoSnapshotRetirement { owner: Some(Arc::clone(&canonical)), value: None, completed: Arc::clone(&completed) };
-    assert_eq!(displaced.close_step(1, 512).expect("displaced root observes the returned alias"), SnapshotRetirementStep::Blocked);
+    let factory=ExactDemoSnapshotRetirementFactory(Arc::clone(&completed));
+    let(mut displaced,progress)=factory.retire(Arc::clone(&canonical),grant).expect("counted original cursor birth is funded");
+    assert_eq!(progress.retained_capacity_bytes,std::mem::size_of::<ExactDemoSnapshotRetirement>());
+    assert_eq!(displaced.close_step(grant).expect("displaced root retains original external alias").progress(),RetainedCloneProgress::default());
     let mut returned = ReturnedSnapshotReadRetirement::new(canonical, Arc::new(DemoInitialSnapshotRetirementFactory));
-    assert_eq!(returned.close_step(1, 512).expect("returned read releases only its alias"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-    assert!(returned.terminal_is_empty());
-    drop(returned);
-    drive_retirement_terminal(Box::new(displaced));
+    let first=returned.close_step(grant).expect("returned read releases only its original alias");
+    assert_eq!(first.progress(),RetainedCloneProgress { copied_items: 1,..Default::default() });
+    assert!(!returned.terminal_is_empty(),"original factory capability remains separately owned");
+    for _ in 0..32 {if returned.terminal_is_empty(){break;}let(step,allocated,released)=crate::test_allocation::observe_backing(||returned.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+    assert!(returned.terminal_is_empty());drop(returned);
+    drive_retirement_terminal(displaced);
     assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 1);
-
-    let mut unique = ReturnedSnapshotReadRetirement::new(Arc::new(DemoSnapshot { n: Some(2) }), Arc::new(DemoInitialSnapshotRetirementFactory));
-    assert_eq!(unique.close_step(1, 512).expect("last returned read transfers its unique value"), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-    drive_retirement_terminal(Box::new(unique));
+    let(unique,progress)=ReturnedSnapshotReadRetirement::admit(Arc::new(DemoSnapshot { n: Some(2) }),Arc::new(DemoInitialSnapshotRetirementFactory),grant).unwrap_or_else(|(error,_,_)|panic!("unique original shared cursor birth refused: {error}"));
+    assert_eq!(progress.retained_capacity_bytes,ReturnedSnapshotReadRetirement::<DemoSnapshot>::constructor_capacity_bytes());
+    drive_retirement_terminal(unique);
 }
 
 /// 🔁️ Settles every physical replay owner before exposing a report to the fixture.
@@ -3789,12 +3810,7 @@ async fn store_close_releases_a_returned_read_before_its_displaced_root() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(DocumentStoreOwners::new(
-        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
-        Arc::new(ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis))),
-        Arc::new(DemoMutationRetirementFactory),
-        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),
-    ));
+    store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let read = store.snapshot_read().expect("read captures the pre-edit root");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply displaces the captured root");
     drop(read);
@@ -3808,12 +3824,7 @@ async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None)).await;
-    store.install_document_store_owners_exact(DocumentStoreOwners::new(
-        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),
-        Arc::new(ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis))),
-        Arc::new(DemoMutationRetirementFactory),
-        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),
-    ));
+    store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let read = SpaceMember::snapshot_read_erased_now(&store).expect("erased member read");
     let mut retirement = SpaceMember::retire_snapshot_read_erased(&mut store, read).unwrap_or_else(|rejected| panic!("{}", rejected.reason));
     assert_eq!(retirement.close_step(1, 512).expect("erased read releases its alias"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -3834,7 +3845,7 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
         let snapshots = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", case["name"].as_str().unwrap(), DemoSnapshot { n: Some(0) }, None)).await;
-        store.install_document_store_owners_exact(DocumentStoreOwners::new(Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots))), Arc::new(ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis))), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())));
+        store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         for command in case["commands"].as_array().unwrap() {
             let command = match command.as_str().unwrap() { "apply" => ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, "applyNext" => ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 8 })], transaction: None }, "undo" => ArtifactCommand::Undo, "redo" => ArtifactCommand::Redo, other => panic!("unknown neutral command {other}") };
             store.dispatch(command).await.expect("neutral command executes");
@@ -3866,7 +3877,7 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
 }
 
 pub(super) fn demo_closable_store_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutation> {
-    DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))
+    complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3901,8 +3912,11 @@ impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
         Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 65_536 })
     }
 
-    fn begin(&self) -> Self::Cursor {
-        DemoRetainedCloneEditCursor { mode: self.mode, phase: 0, inverse: None, active_retirement: None, cancelled: false, closing: false }
+    fn begin_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 } }
+    fn snapshot_cursor_birth_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 } }
+    fn begin(&self, grant: RetainedCloneGrant) -> Result<(Self::Cursor, RetainedCloneProgress), ValueError> {
+        let progress=self.begin_demand().admit(grant)?;
+        Ok((DemoRetainedCloneEditCursor { mode: self.mode, phase: 0, inverse: None, active_retirement: None, cancelled: false, closing: false },progress))
     }
 }
 
@@ -4066,9 +4080,9 @@ impl ArtifactCanonicalJson for DemoMutation {
             DemoMutation::AddN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
                 [("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("addN"))), ("delta", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(value.delta))))].into_iter(),
             )),
-            DemoMutation::RestoreN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
+            DemoMutation::AssignN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
                 [
-                    ("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("restoreN"))),
+                    ("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("assignN"))),
                     ("n", value.n.map_or(ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::Null), |n| ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(n))))),
                 ]
                 .into_iter(),
@@ -4111,9 +4125,6 @@ struct RetainedTextDiff {
 impl crate::os_spr::DiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
     fn inverse(&self, base: &RetainedTextSnapshot) -> Self {
         Self { text: self.text.as_ref().map(|_| base.text.clone()) }
-    }
-    fn between(base: &RetainedTextSnapshot, other: &RetainedTextSnapshot) -> Self {
-        Self { text: (base.text != other.text).then(|| other.text.clone()) }
     }
     fn is_empty(&self) -> bool {
         self.text.is_none()
@@ -4215,8 +4226,11 @@ impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedT
         Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 16_384 })
     }
 
-    fn begin(&self) -> Self::Cursor {
-        RetainedTextEditCursor { closing: false }
+    fn begin_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 } }
+    fn snapshot_cursor_birth_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 } }
+    fn begin(&self, grant: RetainedCloneGrant) -> Result<(Self::Cursor, RetainedCloneProgress), ValueError> {
+        let progress=self.begin_demand().admit(grant)?;
+        Ok((RetainedTextEditCursor { closing: false },progress))
     }
 }
 
@@ -4279,7 +4293,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
             _ => DemoRetainedCloneEditMode::Apply,
         };
         let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["id"].as_str().expect("case id"), DemoSnapshot { n: Some(initial) }, None)).await;
-        store.install_document_store_owners_exact(demo_closable_store_owners());
+        store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let generation = store.generation_now();
         let revision = store.content_revision_now();
         let factory = retained_clone_preparation_factory(mode);
@@ -4403,7 +4417,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
         Arc::new(ProbedRetainedClonePreparationFactory { inner: retained_clone_preparation_factory(DemoRetainedCloneEditMode::Apply), dropped: Arc::clone(&dropped) });
     let initial = DemoSnapshot { n: Some(31) };
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-driver-loss", initial.clone(), None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut publication = Some(
         store
             .begin_apply_batch(
@@ -4453,12 +4467,7 @@ async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_
     let expected_code = fixture["largeCapacity"]["expectedCode"].as_str().expect("large capacity refusal code");
     let initial = RetainedTextSnapshot { text: "x".repeat(text_bytes) };
     let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None)).await;
-    store.install_document_store_owners_exact(DocumentStoreOwners::new(
-        Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
-        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default()),
-        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
-        Box::new(ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new()),
-    ));
+    store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<RetainedTextSnapshot, RetainedTextMutation>> = Arc::new(
         RetainedClonePreparationFactory::new(
             Arc::new(RetainedTextEdit),
@@ -4526,7 +4535,7 @@ fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublica
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let factory = Arc::new(DemoOneItemPreparationFactory::admissible());
@@ -4597,7 +4606,7 @@ async fn artifact_store_reset_preserves_capacity_for_retained_batch_publication(
         let after = row["after"].as_i64().unwrap() as i32;
         let fresh = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "reset-publication", DemoSnapshot { n: Some(initial) }, None);
         let mut store = ArtifactStore::bare(fresh()).await;
-        store.install_document_store_owners_exact(demo_closable_store_owners());
+        store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         store.reset(fresh()).await.expect("empty-history reset");
         let (mut publication, receipt) = publish_demo_batch(&mut store, 41, vec![DemoMutation::SetN(SetN { n: after })]).await;
         assert!(publication.acknowledge() || receipt.is_err());
@@ -4623,7 +4632,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     const { assert!(ITEMS > crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY, "the fixture must exceed the fixed edit ledger capacity to prove the ceiling is gone") };
     let mutations = (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-gesture", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let (mut publication, receipt) = publish_demo_batch(&mut store, 1, mutations.clone()).await;
     let receipt = receipt.expect("a two-hundred item gesture publishes once");
@@ -4640,7 +4649,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     close_durable_publication(&mut publication);
 
     let mut oracle = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-oracle", DemoSnapshot { n: Some(0) }, None)).await;
-    oracle.install_document_store_owners_exact(demo_closable_store_owners());
+    oracle.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     oracle.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.expect("the batched command oracle applies the same list");
     let expected = oracle.envelope.vcs.edits.last().expect("oracle edit");
     assert_eq!(staged.forwards, expected.forwards, "a staged gesture records the same forwards ArtifactCommand::Apply does");
@@ -4674,14 +4683,14 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_case() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-single", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let (mut publication, receipt) = publish_demo_batch(&mut store, 2, vec![DemoMutation::SetN(SetN { n: 7 })]).await;
     receipt.expect("a single-item gesture publishes");
     assert_eq!(publication.admitted_items(), 1);
     assert_eq!(store.snapshot_ref().n, Some(7));
     let staged = store.envelope.vcs.edits.last().expect("staged edit");
     assert_eq!(staged.forwards, vec![DemoMutation::SetN(SetN { n: 7 })]);
-    assert_eq!(staged.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
+    assert_eq!(staged.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
     assert_eq!(staged.mutation_meta[0].mutation_id, Some(MutationId(staged.id.clone())), "a one-mutation gesture names its mutation after its edit on the batched route as on every other");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
@@ -4708,7 +4717,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     assert_eq!(ArtifactStoreOneItemFootprint::for_ephemeral_item(512), ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 });
 
     let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
-    under.install_document_store_owners_exact(demo_closable_store_owners());
+    under.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 7, vec![DemoMutation::SetN(SetN { n: 9 })], DemoOneItemPreparationFactory::under_declared()).await;
     assert_eq!(receipt.expect_err("a one-work-item declaration cannot carry a point-invertible item"), VcsError::TooLarge { rows: 2, capacity: 1 });
@@ -4720,7 +4729,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     close_demo_artifact_store(&mut under);
 
     let mut exact = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-invertible", DemoSnapshot { n: Some(0) }, None)).await;
-    exact.install_document_store_owners_exact(demo_closable_store_owners());
+    exact.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 8, vec![DemoMutation::SetN(SetN { n: 9 })], DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same item");
     assert_eq!(exact.snapshot_ref().n, Some(9));
@@ -4747,7 +4756,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     assert_eq!(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }.merged(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }).work_items, 2, "a merged declaration sums the items' rows");
 
     let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
-    under.install_document_store_owners_exact(demo_closable_store_owners());
+    under.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 9, mutations(), DemoOneItemPreparationFactory::under_declared()).await;
     assert_eq!(
@@ -4764,7 +4773,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     close_demo_artifact_store(&mut under);
 
     let mut exact = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-invertible", DemoSnapshot { n: Some(0) }, None)).await;
-    exact.install_document_store_owners_exact(demo_closable_store_owners());
+    exact.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 10, mutations(), DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same gesture");
     assert_eq!(exact.snapshot_ref().n, Some(ITEMS as i32));
@@ -4783,7 +4792,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_still_retires_exactly() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-rejection", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
@@ -4807,7 +4816,7 @@ async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_sti
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_without_publishing() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-cancel", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let root = store.snapshot_root();
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
@@ -4832,7 +4841,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
 async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 13 })], transaction: None }).await.unwrap();
     assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
@@ -4857,7 +4866,7 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-digest-authority", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
@@ -4890,7 +4899,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-rejections", DemoSnapshot { n: Some(3) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let root = store.snapshot_root();
@@ -4922,7 +4931,7 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_behind() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-clock", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
     let stamp = HybridLogicalTimestamp { actor: 7, physical_ms: store.clock.physical_ms + 1_000, logical: 0 };
@@ -4977,7 +4986,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behind_its_construction_seed() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-genesis-clock", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };
     assert!(store.clock.physical_ms > stamp.physical_ms, "the construction seed is a wall-clock tick far ahead of the minted stamp");
@@ -5016,7 +5025,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_carries_its_committed_identity_into_the_published_edit() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
 
@@ -5248,7 +5257,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
 #[should_panic(expected = "terminal-empty witness")]
 async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
     let store = Box::leak(Box::new(ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None)).await));
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let publication = store
         .begin_apply_batch(
             semio_framework_job::OperationId(10),
@@ -5313,14 +5322,14 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
     ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema: "group-read/v1".into(),
         id: "group-reader".into(),
-        vcs: ArtifactVcs { genesis: ArtifactGenesis::from_decoded_pack(snapshot, vec![0]), edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
+        vcs: ArtifactVcs { genesis: AdmittedArtifactGenesis::from_decoded_pack(snapshot, vec![0]), edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
         backbone: None,
         active_alternative_id: None,
         cursor: Some(ArtifactCursor::new(vec!["initial".into()], Vec::new(), None)),
         dialect: None,
         migrated_from: None,
         owner: None,
-        lanes: BTreeMap::new(),
+        lanes: protocol::HistoryFoldIndex::new(),
         viewer_checkpoint_id: None,
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
@@ -5543,18 +5552,18 @@ async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_b
 #[semio_framework_async_macros::async_test]
 async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     let mut original = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None)).await;
-    original.install_document_store_owners_exact(demo_closable_store_owners());
+    original.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     for n in [1, 2, 3] {
         original.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("seed revision edit");
     }
     let original_revision = original.content_revision().await;
     let mut changed = owned_test_envelope(&original).await;
     changed.vcs.edits[1].forwards = vec![DemoMutation::SetN(SetN { n: 99 })];
-    changed.vcs.edits[1].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(1) })].into();
-    changed.vcs.edits[2].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(99) })].into();
+    changed.vcs.edits[1].inverse = vec![DemoMutation::AssignN(AssignN { n: Some(1) })].into();
+    changed.vcs.edits[2].inverse = vec![DemoMutation::AssignN(AssignN { n: Some(99) })].into();
 
     let mut loaded = ArtifactStore::bare(changed).await;
-    loaded.install_document_store_owners_exact(demo_closable_store_owners());
+    loaded.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     assert_eq!(original.snapshot().expect("original snapshot").n, loaded.snapshot().expect("loaded snapshot").n, "interior ABA keeps the same materialized endpoint");
     assert_ne!(original_revision, loaded.content_revision().await, "canonical identity must cover the changed interior edit, not only cursor endpoints");
 
@@ -6230,7 +6239,7 @@ async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation(
     assert_ne!(rederived.id, original_checkpoint_id);
     assert_eq!(rederived.composition_pins.len(), 1);
     let mut revalidated = super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(owned_test_envelope(&store).await, store.local_actor_id().clone()).await.expect("a persisted pinned checkpoint must validate its rederived identity");
-    revalidated.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    revalidated.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     close_test_store(&mut revalidated);
     retire_demo_envelope(before);
 }
@@ -6489,7 +6498,7 @@ async fn apply_computes_backwards_from_pre_state() {
     let mut store = ArtifactStore::new(envelope).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let edit = &store.envelope().vcs.edits[0];
-    assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
+    assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6712,27 +6721,30 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
     let mut retirement = ArtifactStoreBackboneRetirement::new(Backbones::Memory(local));
     let mut observed_blocked = false;
     for _ in 0..32 {
-        match retirement.close_step(1, 17).expect("bounded pre-peer close") {
-            SnapshotRetirementStep::Blocked => {
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 17, maximum_capacity_bytes: 0, maximum_release_bytes: retirement.next_release_byte_demand().expect("original backing release demand"), maximum_depth: retirement.next_depth_demand().expect("original backing depth demand") };
+        match retirement.close_step(grant).expect("bounded pre-peer close") {
+            semio_framework_value::retained_clone::RetainedCloneStep::Blocked => {
                 observed_blocked = true;
                 break;
             }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 17),
-            SnapshotRetirementStep::Complete => panic!("a live peer still retains both exact queue authorities"),
+            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
+            semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => panic!("a live peer still retains both exact queue authorities"),
         }
     }
     assert!(observed_blocked);
     drop(peer);
     let mut turns = 0;
     while !retirement.terminal_is_empty() {
-        match retirement.close_step(1, 17).expect("bounded post-peer close") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 17),
-            SnapshotRetirementStep::Blocked => panic!("no external queue owner remains after peer close"),
-            SnapshotRetirementStep::Complete => assert!(retirement.terminal_is_empty()),
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 17, maximum_capacity_bytes: 0, maximum_release_bytes: retirement.next_release_byte_demand().expect("original backing release demand"), maximum_depth: retirement.next_depth_demand().expect("original backing depth demand") };
+        match retirement.close_step(grant).expect("bounded post-peer close") {
+            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
+            semio_framework_value::retained_clone::RetainedCloneStep::Blocked => panic!("no external queue owner remains after peer close"),
+            semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); },
         }
         turns += 1;
         assert!(turns < 100_000, "backbone queue and payload retirement terminates across interruptions");
     }
+    eprintln!("[DEBUG] backbone live peer blocked then original shared queues and payload closed turns={turns}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -7238,7 +7250,7 @@ async fn edit_mutations_exposes_the_latest_edit() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
     assert_eq!(forwards, &[DemoMutation::SetN(SetN { n: 5 })]);
-    assert_eq!(inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })], "inverse restores the pre-state");
+    assert_eq!(inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })], "inverse restores the pre-state");
     assert_eq!(meta.len(), 1);
 }
 
@@ -7722,8 +7734,8 @@ async fn demo_fixture_inverse_diffs_sum_to_the_negative_diff() {
     law(&DemoMutation::AddN(AddN { delta: 4 }), &base).await;
     law(&DemoMutation::SetN(SetN { n: 9 }), &base).await;
     law(&DemoMutation::DeleteN(DeleteN {}), &base).await;
-    law(&DemoMutation::RestoreN(RestoreN { n: None }), &base).await;
-    law(&DemoMutation::RestoreN(RestoreN { n: Some(8) }), &DemoSnapshot { n: None }).await;
+    law(&DemoMutation::AssignN(AssignN { n: None }), &base).await;
+    law(&DemoMutation::AssignN(AssignN { n: Some(8) }), &DemoSnapshot { n: None }).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -7819,16 +7831,12 @@ impl OpBinary for SeverityMutation {
 impl MemberStoreOwner<SeverityMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, SeverityMutation>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, SeverityMutation>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, SeverityMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, SeverityMutation> {
-        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, SeverityMutation>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, SeverityMutation>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, SeverityMutation>::new()))
     }
 }
 
@@ -9070,32 +9078,24 @@ impl OpBinary for ValidatedMutation {
 impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, ValidatedMutation>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, ValidatedMutation>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, ValidatedMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, ValidatedMutation> {
-        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, ValidatedMutation>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, ValidatedMutation>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, ValidatedMutation>::new()))
     }
 }
 
 impl MemberStoreOwner<TimestampedMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, TimestampedMutation>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, TimestampedMutation>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, TimestampedMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, TimestampedMutation> {
-        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, TimestampedMutation>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, TimestampedMutation>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, TimestampedMutation>::new()))
     }
 }
 
@@ -9246,7 +9246,7 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
     let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
     assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.kind == semio_framework_value::ValueRefusalKind::InvariantViolated && reason.message.contains("no owner-supplied bounded disposer")));
 
-    missing.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    missing.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     missing.closes_on_drop();
     assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= 4_096));
     assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
@@ -9392,30 +9392,29 @@ async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus(
     }
 }
 
-/// 🧹️ One logical edge turn funds whole owned-root allocations separately from paged link identifiers.
+/// 🌲️ Original forest and linked owners require exact physical closure under independent common grants.
 #[semio_framework_async_macros::async_test]
-async fn composition_graph_retires_under_a_one_byte_grant() {
-    let mut graph = CompositionGraph::new().await;
-    graph.insert_owns("s.flow.flow@1/parent", "slot", "s.flow.flow@1/child").await.expect("owns edge");
-    graph.insert_link("s.flow.flow@1/parent", "s.flow.flow@1/linked").await.expect("link edge");
-    let identifier_bytes = ["s.flow.flow@1/child", "s.flow.flow@1/parent", "slot", "s.flow.flow@1/linked", "s.flow.flow@1/parent"].iter().map(|value| value.len()).sum::<usize>();
-    let root_backing=graph.owns.capacity()*std::mem::size_of::<(String,(String,String))>();
-    let (mut released_bytes, mut idle) = (0usize, 0usize);
-    for _ in 0..1_000 {
-        let demand=graph.next_close_byte_demand().max(1);
-        match graph.close_step(1, demand) {
-            SnapshotRetirementStep::Pending { released_items, released_bytes: bytes } => {
-                assert!(released_items <= 1 && bytes <= demand);
-                released_bytes += bytes;
-                idle += usize::from(released_items == 0 && bytes == 0);
-            }
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Blocked => panic!("an unshared graph never blocks its own retirement"),
-        }
+async fn composition_graph_retires_with_exact_independent_frontier_grants() {
+    let (mut graph, original_bytes, released) = crate::test_allocation::observe_backing(|| {
+        let mut graph = CompositionGraph::default();
+        graph.owns.insert("s.flow.flow@1/child".into(), ("s.flow.flow@1/parent".into(), "slot".into()));
+        graph.links.insert("s.flow.flow@1/parent".into(), ["s.flow.flow@1/linked".into()].into_iter().collect());
+        graph
+    });
+    assert_eq!(released, 0);
+    let mut released_bytes = 0;
+    for _ in 0..10000 {
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: graph.next_close_copy_byte_demand().expect("linked graph requires genuine controlled owner"), maximum_capacity_bytes: graph.next_close_capacity_byte_demand(4096).expect("original graph capacity"), maximum_release_bytes: graph.next_close_release_byte_demand().expect("original graph release"), maximum_depth: graph.next_close_depth_demand().expect("original graph depth") };
+        assert!(grant.maximum_copy_bytes <= 4096);
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_step(grant));
+        let step = step.expect("every original graph owner closes without fallback");
+        assert_eq!(allocated, 0); assert!(step.progress().fits(grant)); assert_eq!(released, step.progress().released_bytes);
+        released_bytes += released;
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
-    assert!(graph.terminal_is_empty());
-    assert_eq!(released_bytes, identifier_bytes + root_backing);
-    assert_eq!(idle, 0, "every funded one-item turn makes progress");
+    assert!(graph.terminal_is_empty()); assert_eq!(released_bytes, original_bytes);
+    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(graph)); assert_eq!((allocated, released), (0, 0));
+    println!("[DEBUG] original linked graph backing={original_bytes} release={released_bytes} terminalDrop0; every common demand independently admitted");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -9499,7 +9498,7 @@ async fn member_factory_closed_dialect_graph_sync_preserves_prior_state_on_rejec
             expected.retain(|_, (owner, _)| owner != parent);
             expected.insert(child.into(), (parent.into(), slot.into()));
             assert_eq!(graph.owns, expected, "{id}");
-            assert!(!graph.links.contains_key(parent));
+            assert!(graph.links.get(parent).is_none());
         } else {
             assert_eq!(graph.owns, prior_owns, "{id}");
             assert_eq!(graph.links, prior_links, "{id}");
@@ -10228,7 +10227,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 #[semio_framework_async_macros::async_test]
 async fn a_refused_reload_returns_its_error_and_retires_the_candidate_it_consumed() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(3) }, None)).await;
-    store.install_document_store_owners_exact(demo_closable_store_owners());
+    store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut rejected = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(9) }, None);
     let orphan = vec![crate::os_spr::EditMessages { edit_id: "edit-that-never-existed".to_string(), messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "orphan")] }];
     rejected.edit_messages = ArtifactEditMessageLedger::try_from_entries(orphan).unwrap_or_else(|_| panic!("one exact orphan message entry is admitted by the fixed ledger"));
@@ -10372,7 +10371,7 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
     for _ in 0..fixture["replicas"].as_u64().expect("replica count") {
         let genesis = DemoSnapshot { n: Some(fixture["genesisN"].as_i64().expect("genesis n") as i32) };
         let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["artifactSchema"].as_str().expect("schema"), fixture["documentId"].as_str().expect("document"), genesis, None)).await;
-        store.install_document_store_owners_exact(demo_closable_store_owners());
+        store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         for gesture in fixture["gestures"].as_array().expect("gestures") {
             let mutations = gesture["ops"]
                 .as_array()
@@ -10446,29 +10445,29 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
         fn decode_genesis_pack(pack: &[u8]) -> Result<Self, ValueError> { DECODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); let value: serde_json::Value = serde_json::from_slice(pack).unwrap(); Ok(Self { n: value["n"].as_i64().unwrap() }) }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
-    let born = ArtifactGenesis::born(GenesisLawSnapshot { n: 0 }).unwrap();
+    let born = AdmittedArtifactGenesis::born(GenesisLawSnapshot { n: 0 }).unwrap();
     assert_eq!(ENCODED.load(std::sync::atomic::Ordering::SeqCst), 1);
     let mut digests = Vec::new();
     for row in fixture["packs"].as_array().unwrap() {
         let raw = row["hex"].as_str().unwrap();
         let bytes: Vec<u8> = raw.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
-        let stored = ArtifactGenesis::<GenesisLawSnapshot>::from_stored_pack(bytes.clone()).unwrap();
-        assert_eq!(stored.snapshot().n, row["decoded"]["n"].as_i64().unwrap());
+        let stored = AdmittedArtifactGenesis::<GenesisLawSnapshot>::from_stored_pack(bytes.clone()).unwrap();
+        assert_eq!(stored.facts().snapshot().n, row["decoded"]["n"].as_i64().unwrap());
         assert_eq!(stored.pack(), bytes);
         assert_eq!(stored.to_value(), DslValue::String(raw.into()));
-        assert_eq!(stored.digest(), *semio_framework_hash::hash(&bytes).as_bytes());
-        let alias = stored.share_snapshot();
+        assert_eq!(stored.facts().digest(), *semio_framework_hash::hash(&bytes).as_bytes());
+        let alias = stored.facts().share_snapshot();
         let cloned = stored.clone();
-        assert!(Arc::ptr_eq(&alias, &cloned.share_snapshot()));
+        assert!(Arc::ptr_eq(&alias, &cloned.facts().share_snapshot()));
         assert!(Arc::ptr_eq(&stored.share_pack(), &cloned.share_pack()));
-        assert_eq!(stored.digest(), cloned.digest());
-        digests.push(stored.digest());
+        assert_eq!(stored.facts().digest(), cloned.facts().digest());
+        digests.push(stored.facts().digest());
     }
     assert_eq!(ENCODED.load(std::sync::atomic::Ordering::SeqCst), 1);
     assert_eq!(DECODED.load(std::sync::atomic::Ordering::SeqCst), 2);
-    assert_eq!(born.digest(), digests[0]);
+    assert_eq!(born.facts().digest(), digests[0]);
     assert_ne!(digests[0], digests[1]);
-    assert!(ArtifactGenesis::<GenesisLawSnapshot>::from_value(DslValue::String("7B".into())).is_err());
+    assert!(AdmittedArtifactGenesis::<GenesisLawSnapshot>::from_value(DslValue::String("7B".into())).is_err());
     eprintln!("[DEBUG] Immutable genesis law preserves exact stored bytes, cached identity and shared decoded owners; birth1 encode, reload2 decodes0 encode");
 }
 
@@ -10479,8 +10478,8 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     let actor = ActorId(actors["opened"].as_str().unwrap().into());
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None);
     let mut real = super::ArtifactStore::new(envelope, actor.clone()).await.unwrap();
-    real.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
-    assert!(Arc::ptr_eq(&*real.current, &real.envelope().vcs.genesis.share_snapshot()));
+    real.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    assert!(Arc::ptr_eq(&*real.current, &real.envelope().vcs.genesis.facts().share_snapshot()));
     let mut live = ArtifactStore(real, Some(close_test_store::<DemoSnapshot, DemoMutation>));
     live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.unwrap();
     let first = live.envelope().vcs.edits.iter().next().unwrap();
@@ -10496,7 +10495,7 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     let files = print_document_pack(live.envelope()).await.unwrap();
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.unwrap();
     let mut reopened = super::ArtifactStore::new(parsed.into_envelope(), actor.clone()).await.unwrap();
-    reopened.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    reopened.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     assert_eq!(reopened.local_actor_id().0, actors["reopened"].as_str().unwrap());
     close_test_store(&mut reopened);
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.unwrap();
@@ -10567,7 +10566,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             let actor = ActorId(fixture["actors"]["opened"].as_str().unwrap().into());
             let mut rejected = false;
             if config {
-                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(), 0, 65536, actor);
+                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(physical_test_close_grant())), 0, 65536, actor);
                 for _ in 0..10000 { match hydration.advance(1, 65536) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(diagnostic) => { eprintln!("[DEBUG] Retained config author admission refused: {diagnostic:?}"); rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
                 eprintln!("[DEBUG] Retained admission cleanup config={config}, rejected={rejected}");
                 let mut closed = false;
@@ -10576,7 +10575,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             } else {
                 let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: live.envelope().id.clone(), dialect: live.envelope().dialect.clone().unwrap() };
                 let (operation, generation) = (semio_framework_job::OperationId(801), semio_framework_job::Generation(1));
-                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.digest(), history, expected, None, "demo/v1".into(), <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
+                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, expected, None, "demo/v1".into(), complete_test_catalog(<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
                 let mut sequence = 0;
                 for _ in 0..10000 {
                     let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);
@@ -10852,42 +10851,53 @@ fn displaced_store_owner_preserves_terminal_physical_grants(){
 async fn installed_store_disposer_preserves_terminal_physical_grant() {
     struct TerminalDisposer<const N: usize>([u8; N]);
     impl<const N: usize> ArtifactStoreOwnedDisposer<DemoSnapshot, DemoMutation> for TerminalDisposer<N> {
-        fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, _: usize, _: usize) -> Result<SnapshotRetirementStep, ValueError> { Ok(SnapshotRetirementStep::Complete) }
+        fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn terminal_is_empty(&self, _: &super::ArtifactStore<DemoSnapshot, DemoMutation>) -> bool { true }
-        fn next_close_byte_demand(&self, _: &super::ArtifactStore<DemoSnapshot, DemoMutation>) -> usize { 0 }
-        fn close_uninstalled_step(&mut self, _: usize) -> Result<SnapshotRetirementStep, ValueError> { Ok(SnapshotRetirementStep::Complete) }
+        fn demands(&self, _: &super::ArtifactStore<DemoSnapshot, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
+        fn close_uninstalled_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+        fn uninstalled_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
         fn uninstalled_terminal_is_empty(&self) -> bool { true }
     }
     impl<const N: usize> ErasedSnapshotRetirement for TerminalDisposer<N> {
-        fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, ValueError> { Ok(SnapshotRetirementStep::Complete) }
+        fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn terminal_is_empty(&self) -> bool { true }
-        fn next_close_byte_demand(&self) -> usize { 0 }
+        fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+        fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
+        fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+        fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     }
     async fn check<const N: usize>(row: &serde_json::Value, admission: usize, failures: &mut Vec<(usize, usize, usize, usize)>) {
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "terminal-disposer", DemoSnapshot { n: Some(0) }, None);
         let mut store = super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
-        store.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+        store.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         close_test_store(&mut store);
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let mut cursor = ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new();
         cursor.phase = ArtifactStoreCursorDisposerPhase::Complete;
         *cursor.active = Some(Box::new(TerminalDisposer::<N>([0; N])));
-        let nested_demand = cursor.next_close_byte_demand(&store);
-        let (nested_step, _, nested_actual) = crate::test_allocation::observe_backing(|| cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, 1, caller).unwrap());
-        let nested_report = match nested_step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => usize::MAX };
-        for _ in 0..8 { if cursor.active.is_none() { break; } cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, 1, admission).unwrap(); }
+        let nested_demand = cursor.demands(&store, 0).unwrap().release_bytes;
+        let original = cursor.active.as_ref().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const ();
+        let grant_for = |maximum_items, maximum_release_bytes| RetainedCloneGrant { maximum_items, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes, maximum_depth: 1 };
+        let (step, requested, released) = crate::test_allocation::observe_backing(|| cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, grant_for(0, N)).unwrap());
+        assert_eq!(step.progress(), RetainedCloneProgress::default());
+        assert_eq!((requested, released), (0, 0));
+        assert_eq!(cursor.active.as_ref().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const (), original);
+        let (nested_step, _, nested_actual) = crate::test_allocation::observe_backing(|| cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, grant_for(1, caller)).unwrap());
+        let nested_report = nested_step.progress().released_bytes;
+        if expected == 0 { assert_eq!(cursor.active.as_ref().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const (), original); }
+        for _ in 0..8 { if cursor.active.is_none() { break; } cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, grant_for(1, admission)).unwrap(); }
         assert!(cursor.active.is_none());
         eprintln!("[DEBUG] Store nested cursor extent={N} demand={nested_demand} caller={caller} actual={nested_actual} reported={nested_report}");
         if nested_demand != N || nested_actual != expected || nested_report != nested_actual { failures.push((N, nested_demand, nested_actual, nested_report)); }
         *store.owned_disposer = Some(Box::new(TerminalDisposer::<N>([0; N])));
         store.owned_disposer_terminal = false;
-        let demand = store.next_close_byte_demand();
+        let demand = store.close_owned_demands(0).unwrap().release_bytes;
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (step, _, actual) = crate::test_allocation::observe_backing(|| store.close_owned_step(1, caller).unwrap());
-        let reported = match step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => usize::MAX };
+        let (step, _, actual) = crate::test_allocation::observe_backing(|| store.close_owned_step(grant_for(1, caller)).unwrap());
+        let reported = step.progress().released_bytes;
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
-        for _ in 0..8 { if store.close_owned_terminal_is_empty() { break; } store.close_owned_step(1, admission).unwrap(); }
+        for _ in 0..8 { if store.close_owned_terminal_is_empty() { break; } store.close_owned_step(grant_for(1, admission)).unwrap(); }
         assert!(store.close_owned_terminal_is_empty());
         eprintln!("[DEBUG] Store terminal disposer extent={N} demand={demand} caller={caller} actual={actual} reported={reported}");
         if demand != N || actual != expected || reported != actual { failures.push((N, demand, actual, reported)); }
@@ -10908,7 +10918,7 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
         member.envelope.active_alternative_id = row["line"].as_str().map(str::to_owned);
         let mut factory = DemoOneItemPreparationFactory::admissible();
         factory.stamped_mutation_id = row["stampedId"].as_str().map(|id| MutationId(id.into()));
-        member.install_document_store_owners_exact(demo_closable_store_owners().with_one_item_preparation(Arc::new(factory)));
+        member.install_document_store_owners_exact(demo_closable_store_owners().with_one_item_preparation(Arc::new(factory))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         let values = vec![DemoMutation::SetN(SetN { n: 8 }), DemoMutation::SetN(SetN { n: 9 })];
         let pointer = values.as_ptr();
@@ -10957,12 +10967,14 @@ fn member_open_constructor_requires_borrowed_birth_before_moving_original_reques
         let mut request = Some(request);
         let identity = |value: &MemberOpenRequest| { let expected = value.expected(); (expected.artifact_id.as_ptr(), expected.dialect.artifact_kind.as_ptr(), expected.dialect.standard.as_ptr(), expected.dialect.subset.as_ptr(), value.actor().0.as_ptr()) };
         let pointers = identity(request.as_ref().unwrap());
-        let (required, query_events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::open_birth_bytes(request.as_ref().unwrap()).unwrap());
+        let (birth, query_events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::open_birth_demand(request.as_ref().unwrap()).unwrap());
         assert_eq!((query_events.requested_bytes, query_events.released_bytes), (0, 0));
         assert_eq!(identity(request.as_ref().unwrap()), pointers);
+        let required = birth.capacity_bytes;
+        assert!(birth.depth > 0);
         assert!(required >= 4096 && required <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-        for (items, capacity) in [(0, required), (1, 0), (1, required - 1)] {
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: 64, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: 64 };
+        for (items, capacity, depth) in [(0, required, birth.depth), (1, 0, birth.depth), (1, required - 1, birth.depth), (1, required, birth.depth - 1)] {
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: 64, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: depth };
             let (open, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::begin_open(&mut request, grant).unwrap());
             assert!(open.is_none());
             denied_births += events.requested_bytes;
@@ -10970,16 +10982,19 @@ fn member_open_constructor_requires_borrowed_birth_before_moving_original_reques
             assert_eq!(identity(request.as_ref().unwrap()), pointers);
             assert_eq!(request.as_ref().unwrap().retained_input_bytes(), 3);
         }
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: required, maximum_release_bytes: 0, maximum_depth: 64 };
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: required, maximum_release_bytes: 0, maximum_depth: birth.depth };
         let (open, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::begin_open(&mut request, grant).unwrap().expect("exact whole constructor birth is funded"));
         assert!(request.is_none());
         assert_eq!((events.requested_bytes, events.released_bytes), (required, 0));
         let mut open = open;
         paid_births += events.requested_bytes;
         for _ in 0..100_000 {
-            let bytes = MemberOpenOperation::next_close_byte_demand(&open).max(7);
-            assert!(bytes <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-            if MemberOpenOperation::close_step(&mut open, 1, bytes).unwrap() == SnapshotRetirementStep::Complete { break; }
+            let copy_bytes = MemberOpenOperation::next_copy_byte_demand(&open).unwrap();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes, maximum_capacity_bytes: MemberOpenOperation::next_capacity_byte_demand(&open, copy_bytes).unwrap(), maximum_release_bytes: MemberOpenOperation::next_release_byte_demand(&open).unwrap(), maximum_depth: MemberOpenOperation::next_depth_demand(&open).unwrap() };
+            assert!(copy_bytes <= 4096 && grant.maximum_capacity_bytes <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize && grant.maximum_release_bytes <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
+            let step = MemberOpenOperation::close_step(&mut open, grant).unwrap();
+            assert!(step.progress().fits(grant));
+            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert!(MemberOpenOperation::terminal_is_empty(&open));
         drop(open);
@@ -10990,3 +11005,355 @@ fn member_open_constructor_requires_borrowed_birth_before_moving_original_reques
 }
 
 include!("../../🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs");
+
+#[test]
+fn current_box_retirement_preserves_denied_owner_and_exact_physical_shell() {
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+    let original = String::with_capacity(4096);
+    let pointer = original.as_ptr();
+    let birth = std::mem::size_of::<ArtifactStoreStringRetirement>();
+    let denied = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, maximum_capacity_bytes: birth - 1, ..Default::default() };
+    let (refusal, requested, released) = crate::test_allocation::observe_backing(|| admit_artifact_retirement(original, denied, ArtifactStoreStringRetirement::new));
+    let (error, original) = refusal.err().unwrap();
+    assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
+    assert_eq!(original.as_ptr(), pointer);
+    assert_eq!((requested, released), (0, 0));
+    let (admission, requested, released) = crate::test_allocation::observe_backing(|| admit_artifact_retirement(original, RetainedCloneGrant { maximum_capacity_bytes: birth, ..denied }, ArtifactStoreStringRetirement::new));
+    let (owner, receipt) = admission.unwrap_or_else(|(error, _)| panic!("{error}"));
+    assert_eq!(requested, birth);
+    assert_eq!(released, 0);
+    assert_eq!(receipt.retained_capacity_bytes, birth);
+    let address = owner.as_ref() as *const dyn ErasedSnapshotRetirement as *const ();
+    let mut slot = Some(owner);
+    let current_depth = artifact_retirement_box_demands(slot.as_ref().unwrap(), 1).unwrap().depth;
+    for depth in [0, 1, current_depth - 1] {
+        let (result, requested, released) = crate::test_allocation::observe_backing(|| artifact_retirement_box_close_step(&mut slot, RetainedCloneGrant { maximum_items: 1, maximum_depth: depth, maximum_release_bytes: 4096, ..Default::default() }));
+        assert_eq!(result.unwrap_err().kind, semio_framework_value::ValueRefusalKind::DepthLimit);
+        assert_eq!((requested, released), (0, 0));
+        assert_eq!(slot.as_ref().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const (), address);
+    }
+    let (step, requested, released) = crate::test_allocation::observe_backing(|| artifact_retirement_box_close_step(&mut slot, RetainedCloneGrant::default()).unwrap());
+    assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+    assert_eq!((requested, released), (0, 0));
+    let mut freed = 0;
+    let mut born = 4096 + birth;
+    for _ in 0..128 {
+        let Some(owner) = slot.as_ref() else { break; };
+        let demand = artifact_retirement_box_demands(owner, 1).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let terminal_before = owner.terminal_is_empty();
+        let shell = std::mem::size_of_val(owner.as_ref());
+        let (step, requested, released) = crate::test_allocation::observe_backing(|| artifact_retirement_box_close_step(&mut slot, grant).unwrap());
+        assert!(step.progress().fits(grant));
+        assert_eq!(step.progress().retained_capacity_bytes, requested);
+        assert_eq!(step.progress().released_bytes, released);
+        if terminal_before { assert_eq!(released, shell); assert!(slot.is_none()); }
+        else { assert!(slot.is_some()); }
+        freed += released;
+        born += requested;
+    }
+    assert!(slot.is_none());
+    assert_eq!(freed, born);
+    eprintln!("[DEBUG] genuine Value erased String retains original identity under constructor/depth/item refusal; actual allocator agrees with all helper turns and separate Box shell");
+}
+
+#[test]
+fn artifact_store_group_visibility_retires_original_noncopy_atomic_with_exact_frame_receipt() {
+    use semio_framework_value::retirement::{RetireOwned, RetirementStep};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["visibilityRetirement"].as_array().unwrap() {
+        let mut publisher = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        if row["committed"].as_bool().unwrap() { assert!(publisher.commit()); }
+        let view = publisher.view();
+        drop(publisher);
+        let value = match Arc::try_unwrap(view) { Ok(value) => value, Err(_) => panic!("original publisher and view are uniquely closed") };
+        assert_eq!(serde_json::Value::Bool(value.committed()), row["committed"]);
+        assert_eq!(serde_json::Value::Bool(value.pending()), row["pending"]);
+        let extent = value.retirement_birth_bytes().unwrap();
+        let (mut cursor, allocated, released) = crate::test_allocation::observe_backing(|| value.retirement());
+        assert_eq!((allocated, released), (extent, 0));
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: cursor.next_depth_demand().unwrap() };
+        for denial in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }] {
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(denial));
+            assert!(matches!(step, RetirementStep::BudgetExhausted));
+            assert_eq!((allocated, released), (0, 0));
+            assert!(!cursor.terminal_is_empty());
+        }
+        let mut copied = 0;
+        for _ in 0..8 {
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(grant));
+            assert_eq!((allocated, released), (0, 0));
+            match step { RetirementStep::ProcessedBytes(bytes) => { assert!(bytes <= 1); copied += bytes; }, RetirementStep::Complete => break, _ => panic!("atomic-only owner has no hidden heap work") }
+        }
+        assert_eq!(copied, std::mem::size_of::<crate::os_vcs::ArtifactGroupVisibility>());
+        assert!(cursor.terminal_is_empty());
+        assert_eq!(cursor.terminal_release_bytes(), Some(extent));
+        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(cursor));
+        assert_eq!((allocated, released), (0, extent));
+        eprintln!("[DEBUG] original group atomic state={} bounded copy={copied} actual terminal frame={extent} no Copy projection", row["committed"]);
+    }
+}
+
+#[test]
+fn current_typed_option_birth_retains_exact_original_and_paid_shell() {
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    let original = String::with_capacity(4096);
+    let pointer = original.as_ptr();
+    let mut pending = Some(original);
+    let mut active = None;
+    let demand = artifact_retirement_owned_birth_demands(&pending).unwrap();
+    let paid = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 0, maximum_depth: demand.depth };
+    for denied in [
+        RetainedCloneGrant { maximum_items: 0, ..paid },
+        RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..paid },
+        RetainedCloneGrant { maximum_depth: demand.depth - 1, ..paid },
+    ] {
+        let (result, born, freed) = crate::test_allocation::observe_backing(|| artifact_retirement_admit_owned(&mut pending, &mut active, denied));
+        if let Ok(step) = result { assert_eq!(step.progress(), Default::default()); }
+        assert_eq!((born, freed), (0, 0));
+        assert_eq!(pending.as_ref().unwrap().as_ptr(), pointer);
+        assert_eq!(pending.as_ref().unwrap().capacity(), 4096);
+        assert!(active.is_none());
+    }
+    let (step, born, freed) = crate::test_allocation::observe_backing(|| artifact_retirement_admit_owned(&mut pending, &mut active, paid).unwrap());
+    assert_eq!(step.progress().retained_capacity_bytes, born);
+    assert_eq!(born, demand.capacity_bytes);
+    assert_eq!(freed, 0);
+    assert!(pending.is_none());
+    let mut total_freed = 0;
+    let mut total_born = born;
+    for _ in 0..128 {
+        let Some(owner) = active.as_ref() else { break; };
+        let copy = owner.next_copy_byte_demand().unwrap();
+        let demand = artifact_retirement_box_demands(owner, copy).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let (step, turn_born, turn_freed) = crate::test_allocation::observe_backing(|| artifact_retirement_box_close_step(&mut active, grant).unwrap());
+        assert_eq!(step.progress().retained_capacity_bytes, turn_born);
+        assert_eq!(step.progress().released_bytes, turn_freed);
+        assert!(matches!(step, RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));
+        total_freed += turn_freed;
+        total_born += turn_born;
+    }
+    assert!(active.is_none());
+    assert_eq!(total_freed, 4096 + total_born);
+}
+
+#[test]
+fn current_message_ledger_retirement_pays_seven_original_arrays() {
+    let (ledger, born, freed) = crate::test_allocation::observe_backing(ArtifactEditMessageLedger::new);
+    assert_eq!(freed, 0);
+    let expected = std::mem::size_of_val(ledger.slots.as_ref()) + std::mem::size_of_val(ledger.generations.as_ref()) + std::mem::size_of_val(ledger.occupied.as_ref()) + std::mem::size_of_val(ledger.next.as_ref()) + std::mem::size_of_val(ledger.previous.as_ref()) + std::mem::size_of_val(ledger.buckets.as_ref()) + std::mem::size_of_val(ledger.free.as_ref());
+    assert_eq!(born, expected);
+    let mut owner = ArtifactEditMessageLedgerRetirement::new(ledger);
+    let mut total_freed = 0;
+    for turn in 0..7 {
+        let pointers = [owner.original.slots.as_ptr() as usize, owner.original.generations.as_ptr() as usize, owner.original.occupied.as_ptr() as usize, owner.original.next.as_ptr() as usize, owner.original.previous.as_ptr() as usize, owner.original.buckets.as_ptr() as usize, owner.original.free.as_ptr() as usize];
+        let demand = owner.demands(0).unwrap();
+        assert!(demand.release_bytes > 0);
+        let paid = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        for denied in [RetainedCloneGrant { maximum_items: 0, ..paid }, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..paid }, RetainedCloneGrant { maximum_depth: 0, ..paid }] {
+            let (result, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
+            if let Ok(step) = result { assert_eq!(step.progress(), Default::default()); }
+            assert_eq!((allocated, released), (0, 0));
+            assert_eq!([owner.original.slots.as_ptr() as usize, owner.original.generations.as_ptr() as usize, owner.original.occupied.as_ptr() as usize, owner.original.next.as_ptr() as usize, owner.original.previous.as_ptr() as usize, owner.original.buckets.as_ptr() as usize, owner.original.free.as_ptr() as usize], pointers);
+        }
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(paid).unwrap());
+        assert_eq!(allocated, 0);
+        assert_eq!(released, demand.release_bytes);
+        assert_eq!(step.progress().released_bytes, released);
+        total_freed += released;
+        assert_eq!(owner.terminal_is_empty(), turn == 6);
+    }
+    assert_eq!(total_freed, expected);
+    assert!(owner.original.backing_is_empty());
+    eprintln!("[DEBUG] original message ledger: seven exact array frees, refusal retains every pointer, allocator release={total_freed}");
+}
+
+#[test]
+fn current_catalog_sources_admit_original_allocations_then_fund_each_ticket() {
+    type Owners = DocumentStoreOwners<DemoSnapshot, DemoMutation>;
+    type Disposer = ArtifactStoreCursorDisposer<DemoSnapshot, DemoMutation>;
+    let capacity = Owners::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, Disposer>().unwrap();
+    let mut originals = Some((DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, Disposer::new()));
+    let paid = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: 1 };
+    for denied in [RetainedCloneGrant { maximum_items: 0, ..paid }, RetainedCloneGrant { maximum_depth: 0, ..paid }, RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..paid }] {
+        let (snapshots, initial, mutations, disposer) = originals.take().unwrap();
+        let (refused, allocated, released) = crate::test_allocation::observe_backing(|| Owners::admit_sources(snapshots, initial, mutations, disposer, denied));
+        assert_eq!((allocated, released), (0, 0));
+        let Err((_, snapshots, initial, mutations, disposer)) = refused else { panic!("underfunded catalog changed its original source custody"); };
+        assert!(!disposer.started);
+        assert!(disposer.active.is_none());
+        originals = Some((snapshots, initial, mutations, disposer));
+    }
+    let (snapshots, initial, mutations, disposer) = originals.take().unwrap();
+    let (admitted, allocated, released) = crate::test_allocation::observe_backing(|| Owners::admit_sources(snapshots, initial, mutations, disposer, paid));
+    let (mut owners, progress) = admitted.ok().expect("funded original catalog source ingress");
+    assert_eq!(allocated, capacity);
+    assert_eq!(released, 0);
+    assert_eq!(progress.retained_capacity_bytes, allocated);
+    assert_eq!(progress.copied_items, 1);
+    assert!(!owners.constructor_is_complete());
+    for turn in 0..3 {
+        let demand = owners.constructor_demands().unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let (admitted, allocated, released) = crate::test_allocation::observe_backing(|| owners.admit_constructor(grant).unwrap());
+        assert_eq!(admitted.copied_items, 1);
+        assert_eq!(admitted.retained_capacity_bytes, allocated);
+        assert_eq!(released, 0);
+        assert_eq!(owners.constructor_is_complete(), turn == 2);
+    }
+    for _ in 0..128 {
+        if owners.uninstalled_owners_terminal_is_empty() { break; }
+        let copy = owners.uninstalled_owners_demands(0).unwrap().copy_bytes;
+        let demand = owners.uninstalled_owners_demands(copy).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owners.close_uninstalled_owners_step(grant).unwrap());
+        assert_eq!(step.progress().retained_capacity_bytes, allocated);
+        assert_eq!(step.progress().released_bytes, released);
+    }
+    assert!(owners.uninstalled_owners_terminal_is_empty());
+    eprintln!("[DEBUG] catalog original sources allocated={capacity}; three separately granted tickets complete and close within exact physical receipts");
+}
+
+/// 🏗️ Verifies actual source construction is absent on denial and every later ticket/free is physically paid.
+#[test]
+fn current_member_source_constructor_is_not_invoked_under_denied_axes() {
+    type Owners = DocumentStoreOwners<DemoSnapshot, DemoMutation>;
+    type Disposer = ArtifactStoreCursorDisposer<DemoSnapshot, DemoMutation>;
+    let capacity = Owners::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, Disposer>().unwrap();
+    let paid = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: 1 };
+    let calls = std::cell::Cell::new(0usize);
+    let construct = || {
+        calls.set(calls.get() + 1);
+        (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, Disposer::new())
+    };
+    for denied in [
+        RetainedCloneGrant { maximum_items: 0, ..paid },
+        RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..paid },
+        RetainedCloneGrant { maximum_depth: 0, ..paid },
+    ] {
+        let (refused, allocated, released) = crate::test_allocation::observe_backing(|| Owners::admit_source_constructor(denied, construct));
+        let refusal = refused.err().expect("underfunded source constructor is refused");
+        assert!(refusal.owners.is_none());
+        assert_eq!(refusal.progress, RetainedCloneProgress::default());
+        assert_eq!(calls.get(), 0);
+        assert_eq!(allocated, 0);
+        assert_eq!(released, 0);
+    }
+    let (admitted, allocated, released) = crate::test_allocation::observe_backing(|| Owners::admit_source_constructor(paid, construct));
+    let (mut owners, ingress) = admitted.ok().expect("funded source constructor");
+    assert_eq!(calls.get(), 1);
+    assert_eq!(allocated, capacity);
+    assert_eq!(released, 0);
+    assert_eq!(ingress.retained_capacity_bytes, allocated);
+    assert_eq!(ingress.copied_items, 1);
+    assert!(!owners.constructor_is_complete());
+    let mut total_born = allocated;
+    let mut total_released = 0usize;
+    for _ in 0..128 {
+        if owners.uninstalled_owners_terminal_is_empty() { break; }
+        let body = owners.uninstalled_owners_demands(0).unwrap().copy_bytes;
+        let demand = owners.uninstalled_owners_demands(body).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owners.close_uninstalled_owners_step(grant).unwrap());
+        assert!(step.progress().fits(grant));
+        assert_eq!(step.progress().retained_capacity_bytes, allocated);
+        assert_eq!(step.progress().released_bytes, released);
+        total_born += allocated;
+        total_released += released;
+    }
+    assert!(owners.uninstalled_owners_terminal_is_empty());
+    assert_eq!(total_born, total_released);
+    eprintln!("[DEBUG] member source constructor: denied calls=0 funded calls=1 original ingress={capacity}; ticket births and final physical frees exactly match System allocator");
+}
+
+
+#[test]
+fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() {
+    struct TerminalPreparation<const N: usize>([u8; N]);
+    impl<const N: usize> ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for TerminalPreparation<N> {
+        fn advance(&mut self, _: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> { Ok(ArtifactStoreOneItemPreparationStep::Blocked) }
+        fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint { Default::default() }
+        fn prepared(&self) -> Option<&ArtifactEphemeralOneItemPrepared<DemoSnapshot>> { None }
+        fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>> { None }
+        fn cancel(&mut self) {}
+        fn begin_close(&mut self) {}
+        fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+        fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+        fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+        fn terminal_is_empty(&self) -> bool { true }
+    }
+    fn check<const N: usize>(row: &serde_json::Value) {
+        use std::mem::ManuallyDrop as Held;
+        let mut publication = ArtifactEphemeralOneItemPublication::<DemoSnapshot, DemoMutation> {
+            operation: semio_framework_job::OperationId(1), expected_generation: 0,
+            footprint: ArtifactStoreOneItemFootprint::for_ephemeral_item(0),
+            preparation: Held::new(Some(Box::new(TerminalPreparation::<N>([0; N])))),
+            displaced_root_retirement: Held::new(None),root_retirement_factory: Held::new(None),
+            returned_read_registry: Held::new(None),returned_read_retirement: Held::new(None),
+            owned_retirement_factory: Held::new(None),receipt: Held::new(None),
+            retained_checkpoint: Default::default(),factory_retirement: [None,None],
+            attempts: 0,published: false,cancel_requested: false,close_started: true,
+            fault: Held::new(None),phase: ArtifactStoreOneItemPublicationPhase::Closing,
+        };
+        let pointer = publication.preparation.as_ref().unwrap().as_ref() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const ();
+        let authority = |items,release,depth| ArtifactStoreOneItemGrant { maximum_items: items,maximum_copy_bytes: 0,maximum_capacity_bytes: 0,maximum_release_bytes: release,maximum_depth: depth };
+        assert_eq!(publication.retirement_demands(0).unwrap(), semio_framework_value::RetirementDemand { release_bytes: N,depth: 1,..Default::default() });
+        for denied in [authority(0,N,1),authority(1,N-1,1),authority(1,N,0)] {
+            let (step,allocated,released) = crate::test_allocation::observe_backing(||publication.close_step(denied));
+            assert_eq!((allocated,released),(0,0));
+            if denied.maximum_depth==0 { assert_eq!(step.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit); }
+            else { assert_eq!(step.unwrap().progress(),RetainedCloneProgress::default()); }
+            assert_eq!(publication.preparation.as_ref().unwrap().as_ref() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
+        }
+        let caller=row["callerBytes"].as_u64().unwrap() as usize;let expected=row["releasedBytes"].as_u64().unwrap() as usize;
+        let(step,allocated,released)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,caller,1)).unwrap());
+        assert_eq!((allocated,released),(0,expected));assert_eq!(step.progress(),RetainedCloneProgress { copied_items: usize::from(expected!=0),released_bytes: expected,..Default::default() });
+        if expected==0 {
+            assert_eq!(publication.preparation.as_ref().unwrap().as_ref() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
+            let(step,allocated,released)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,N,1)).unwrap());assert_eq!((allocated,released),(0,N));assert_eq!(step.progress().released_bytes,N);
+        }
+        assert!(publication.preparation.is_none());assert!(!publication.terminal_is_empty());
+        let(step,allocated,released)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,0,1)).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step,RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..Default::default() }));assert!(publication.terminal_is_empty());
+        eprintln!("[DEBUG] ephemeral original member preparation frame extent={N} caller={caller} actual release={expected}; denied pointer retained and child/frame/phase terminal distinct");
+    }
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap(){match row["physicalBytes"].as_u64().unwrap(){1=>check::<1>(row),16384=>check::<16384>(row),65536=>check::<65536>(row),262144=>check::<262144>(row),_=>panic!("authored neutral original frame extent")}}
+}
+
+
+#[test]
+fn live_read_factory_admission_preserves_exact_registry_generation_on_refusal() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+    let policy = &fixture["grant"];
+    let grant = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };
+    let mut registry = Some(Arc::new(SnapshotReadLeaseRegistry::new()));
+    let original = Arc::new(17i32);
+    let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<i32>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<i32>::default());
+    let lease = registry.as_ref().unwrap().try_issue(Arc::clone(&original)).unwrap();
+    let index = lease.index;let generation = lease.generation;
+    let mut read = ErasedSnapshotRead::new(Arc::clone(&original),lease);
+    let pointer = read.get::<i32>().unwrap() as *const i32;
+    let birth = ReturnedSnapshotReadRetirement::<i32>::constructor_capacity_bytes();
+    assert!(birth<=grant.maximum_capacity_bytes);
+    for denied in [RetainedCloneGrant { maximum_items: 0,..grant },RetainedCloneGrant { maximum_capacity_bytes: birth-1,..grant },RetainedCloneGrant { maximum_depth: 0,..grant }] {
+        let (result,allocated,released) = crate::test_allocation::observe_backing(||read.admit_retirement::<i32>(registry.as_ref().unwrap(),&factory,denied));
+        assert!(result.is_err());assert_eq!((allocated,released),(0,0));
+        assert_eq!(read.get::<i32>().unwrap() as *const i32,pointer);
+        assert!(registry.as_ref().unwrap().contains(index,generation));
+        assert_eq!(registry.as_ref().unwrap().occupied_count(),1);
+    }
+    let (result,allocated,released) = crate::test_allocation::observe_backing(||read.admit_retirement::<i32>(registry.as_ref().unwrap(),&factory,grant));
+    let(owner,progress)=result.unwrap();assert_eq!((allocated,released),(birth,0));assert_eq!(progress,RetainedCloneProgress { copied_items: 1,retained_capacity_bytes: birth,..Default::default() });
+    assert!(read.owner.is_none()&&read.lease.is_none());assert!(!registry.as_ref().unwrap().contains(index,generation));assert_eq!(registry.as_ref().unwrap().occupied_count(),0);assert_eq!(Arc::as_ptr(&original),pointer);
+    let mut owner=Some(owner);
+    for _ in 0..32 {if owner.is_none(){break;}let(step,allocated,released)=crate::test_allocation::observe_backing(||artifact_retirement_box_close_step(&mut owner,grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+    assert!(owner.is_none());
+    let cleanup = RetainedCloneGrant { maximum_release_bytes: fixture["census"]["maximumCloseBytes"].as_u64().unwrap() as usize,..grant };
+    for _ in 0..32 {if registry.is_none(){break;}snapshot_registry_alias_close_step(&mut registry,cleanup).unwrap();}
+    assert!(registry.is_none());
+    eprintln!("[DEBUG] live read admission preserves original pointer/index/generation on three denied axes; actual admitted Box birth and separate terminal shell agree with allocator");
+}

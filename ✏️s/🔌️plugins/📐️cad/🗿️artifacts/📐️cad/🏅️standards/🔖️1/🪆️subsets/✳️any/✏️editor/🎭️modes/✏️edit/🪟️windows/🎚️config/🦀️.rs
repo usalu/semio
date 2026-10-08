@@ -93,9 +93,6 @@ impl protocol::DiffAlgebra<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
     fn inverse(&self, base: &CadWorldWindowConfig) -> Self {
         Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), sun: self.sun.as_ref().map(|_| base.sun.clone()), dislocate_options: self.dislocate_options.map(|_| base.dislocate_options) }
     }
-    fn between(base: &CadWorldWindowConfig, other: &CadWorldWindowConfig) -> Self {
-        Self { camera: (base.camera != other.camera).then(|| other.camera.clone()), sun: (base.sun != other.sun).then(|| other.sun.clone()), dislocate_options: (base.dislocate_options != other.dislocate_options).then_some(other.dislocate_options) }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

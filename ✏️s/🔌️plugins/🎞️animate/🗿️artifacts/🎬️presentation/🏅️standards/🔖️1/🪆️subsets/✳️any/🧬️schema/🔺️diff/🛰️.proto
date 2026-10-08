@@ -6,7 +6,6 @@ message PresentationDiff {
   optional string schema = 1;
   optional PresentationSourcePatch source = 2;
   optional PresentationTilesDelta tiles = 3;
-  optional semio.os.store.ArtifactChild presentation = 4;
 }
 message PresentationSourcePatch {
   optional string src = 1;
@@ -17,14 +16,30 @@ message PresentationSourcePatch {
 }
 message PresentationOptionalAspect { optional double value = 1; }
 message PresentationOptionalPage { optional uint32 value = 1; }
+message PresentationTilesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message PresentationTilesInsertion {
+  uint32 index = 1;
+  semio.s.animate.presentation.FigureTileDraft row = 2;
+}
+message PresentationTilesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message PresentationTilesDelta {
-  repeated semio.s.animate.presentation.FigureTileDraft added = 1;
-  repeated string removed = 2;
-  repeated PresentationTilePatch patched = 3;
-  repeated string reordered = 4;
+  repeated PresentationTilesRemoval removed = 1;
+  repeated PresentationTilesInsertion inserted = 2;
+  repeated PresentationTilesRelocation moved = 3;
+  repeated PresentationTilesModification modified = 4;
+}
+message PresentationTilesModification {
+  string id = 1;
+  PresentationTilePatch patch = 2;
 }
 message PresentationTilePatch {
-  string id = 1;
-  optional string name = 2;
-  optional semio.s.animate.presentation.FigureTileFrame crop = 3;
+  optional string name = 1;
+  optional semio.s.animate.presentation.FigureTileFrame crop = 2;
 }

@@ -4,21 +4,20 @@
 
 import "./🎨️.css";
 
-export type { PluginBuildTarget } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-export { PLAYGROUND_SESSION } from "virtual:semio-playground-session";
 
 import type { AppRole } from "@semio-tech/framework";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️.ts";
-import { PLAYGROUND_SESSION } from "virtual:semio-playground-session";
+import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogRowsV1, type PluginCatalogAdmissionV1 } from "../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "./🏷️brand/🟦️.ts";
 import { resolveBootQueryAppRole, resolveBootQueryExampleId } from "./🔗️boot-query/🟦️.ts";
 
 /** 🚀️ Boots the selected playground with its owner's browser contributions. */
-export async function bootFrameworkOsDev(options: { readonly backboneWorkerFactory?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["backboneWorkerFactory"]; readonly documentServices?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["documentServices"]; readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
+export async function bootFrameworkOsDev(options: { readonly catalogRows: PluginCatalogRowsV1; readonly variant: string; readonly admission: PluginCatalogAdmissionV1; readonly backboneWorkerFactory?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["backboneWorkerFactory"]; readonly documentServices?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["documentServices"]; readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
-const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
+const rows = admitPluginCatalogV1(options.catalogRows, options.admission), catalog = pluginCatalogV1(rows);
+const variant = options.variant;
+const boot = resolvePlaygroundBoot(catalog, variant);
+if (variant && boot.plugins.length === 0) throw new Error(`plugin-catalog-invalid: selected variant ${variant} is absent`);
 const pluginFilter = boot.variant;
 /** 📌️ Pinned app: the serve passes `VITE_SEMIO_APP_ID` as `""` when the playground row declares no
  * `app`, and ShellHost treats any defined `appId` as a pin it must find in the primary manifest — so an
@@ -55,15 +54,18 @@ const defaults = {
   exampleId: typeof window === "undefined" ? import.meta.env.VITE_SEMIO_DEFAULT_EXAMPLE || undefined : resolveBootQueryExampleId(window.location.search, import.meta.env.VITE_SEMIO_DEFAULT_EXAMPLE || undefined),
 };
 
-if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
+if (typeof document !== "undefined" && document.getElementById("root") != null ) {
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    return bootFrameworkOs({ plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices }).catch((error) => {
+    return bootFrameworkOs({ catalog: rows, plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices }).catch((error) => {
       console.error("[TRACE] os-dev react boot failed", error);
       throw error;
     });
   }
+  const { bootFrameworkOsWgpu } = await import("@semio-tech/framework-renderer-wgpu");
+  const mounted = await bootFrameworkOsWgpu({ catalog: rows, plugin: pluginFilter || undefined, plugins, appId, appRole, locks, defaults, brand: brand?.id });
+  return { dispose: () => { void mounted(); } };
 }
 return { dispose() {} };
 

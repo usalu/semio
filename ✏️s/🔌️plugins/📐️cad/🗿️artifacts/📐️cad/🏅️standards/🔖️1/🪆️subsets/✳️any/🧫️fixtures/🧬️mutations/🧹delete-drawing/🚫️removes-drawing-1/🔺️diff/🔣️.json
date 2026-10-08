@@ -6,11 +6,14 @@
   "energyModel": null,
   "structureClassicModel": null,
   "drawings": {
-    "added": [],
     "removed": [
-      "cad-drawing-1"
+      {
+        "id": "cad-drawing-1",
+        "index": 0
+      }
     ],
-    "reordered": null
+    "inserted": [],
+    "moved": []
   },
   "breps": null,
   "referencesByModelDefinitionId": null,

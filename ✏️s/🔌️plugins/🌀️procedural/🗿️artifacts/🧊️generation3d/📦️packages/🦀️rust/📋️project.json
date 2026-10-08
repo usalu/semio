@@ -48,7 +48,14 @@
         "command": "bun ./📜️script.ts verify generation3d-widget-inputs",
         "forwardAllArgs": true
       },
-      "metadata": {"semio": {"workspaceCommand": ["verify", "generation3d-widget-inputs"]}}
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "generation3d-widget-inputs"
+          ]
+        }
+      }
     },
     "verify-document-restoration-oracle": {
       "executor": "nx:run-commands",
@@ -177,6 +184,28 @@
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
+      }
+    },
+    "verify-geometry-context": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify geometry-context",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "geometry-context"
+          ]
+        }
       }
     }
   }

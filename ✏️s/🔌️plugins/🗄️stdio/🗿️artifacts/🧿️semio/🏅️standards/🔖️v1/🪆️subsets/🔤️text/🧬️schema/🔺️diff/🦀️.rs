@@ -5,7 +5,7 @@
 //! rebuilt list. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_rows, absorb_indexed_slot, apply_indexed_rows, between_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_rows, absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -52,10 +52,6 @@ impl IndexedRow<SemioTextRun> for SemioTextRunDiff {
     fn row_is_empty(&self) -> bool {
         self.language.is_none() && self.content.is_none() && self.marks.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
     }
-    fn between_row(base: &SemioTextRun, other: &SemioTextRun) -> Self {
-        let marks = between_indexed_rows(&base.marks, &other.marks);
-        Self { language: (base.language != other.language).then(|| other.language.clone()), content: (base.content != other.content).then(|| other.content.clone()), marks: (!marks.is_unchanged()).then_some(marks) }
-    }
 }
 //#endregion 🔖️RunDiff
 
@@ -100,10 +96,6 @@ impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
 /// 🧮️ `text`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
 /// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
-    fn between(base: &SemioTextSnapshot, other: &SemioTextSnapshot) -> Self {
-        let runs = between_indexed_rows(&base.runs, &other.runs);
-        SemioTextDiff { runs: (!runs.is_unchanged()).then_some(runs) }
-    }
     fn inverse(&self, base: &SemioTextSnapshot) -> Self {
         SemioTextDiff { runs: self.runs.as_ref().map(|runs| inverse_indexed_rows(runs, &base.runs)) }
     }

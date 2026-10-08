@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeMemberWidth, base: &En1992Snapshot) -> protocol::Mut
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        members: Some(En1992MembersRows { modified: vec![En1992MembersPatch { id: payload.member_id.clone(), width: Some(payload.new_value), ..Default::default() }], ..Default::default() }),
+        members: Some(En1992MembersRows::modification(&payload.member_id, En1992MembersPatch { width: Some(payload.new_value), ..Default::default() })),
         ..Default::default()
     })
 }

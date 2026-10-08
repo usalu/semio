@@ -53,8 +53,8 @@
 
 
 
-use crate::schema::diff::{comment_index, topic_index, viewpoint_index, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff, IndexedAdded};
-use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
+use crate::schema::diff::{comment_index, topic_index, viewpoint_index, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfPartsDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff, IndexedAdded};
+use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfRawPart, BcfTopic, BcfViewpoint};
 use crate::BcfSnapshot;
 use protocol::Mutation;
 
@@ -75,6 +75,8 @@ pub mod insert_comment;
 pub mod insert_topic;
 #[path = "👁️insert-viewpoint/🦀️.rs"]
 pub mod insert_viewpoint;
+#[path = "📎set-parts/🦀️.rs"]
+pub mod set_parts;
 #[path = "🧹remove-comment/🦀️.rs"]
 pub mod remove_comment;
 #[path = "🗑️remove-topic/🦀️.rs"]
@@ -125,6 +127,7 @@ pub enum BcfMutation {
     SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera),
     SetViewpointComponents(set_viewpoint_components::SetViewpointComponents),
     SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot),
+    SetParts(set_parts::SetParts),
 }
 
 /// 📇️ Kebab-case spelling of every `BcfMutation` variant, in declaration order -- the exhaustive
@@ -145,23 +148,11 @@ pub const KINDS: &[&str] = &[
     "set-viewpoint-camera",
     "set-viewpoint-components",
     "set-viewpoint-snapshot",
+    "set-parts",
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. Single semantics source: the returned diff IS what gets
-/// applied.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> protocol::MutationOutcome<BcfDiff> {
-    let outcome = <BcfMutation as Mutation<BcfSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 
@@ -181,80 +172,6 @@ fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Op
 }
 //#endregion 🔖️MutationTrait
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the version if it moved, then every topic in place by position (a topic of
-/// another guid is removed and inserted anew at its index; the same topic re-sets its markup and walks its comments and
-/// viewpoints the same way) and the diverging tails. The unmodeled `parts` have no leaf, so a change to them is left unaddressed.
-pub fn net_mutations(base: &BcfSnapshot, next: &BcfSnapshot) -> Vec<BcfMutation> {
-    let mut leaves = Vec::new();
-    if base.version != next.version {
-        leaves.push(BcfMutation::SetVersion(set_version::SetVersion { version: next.version.clone() }));
-    }
-    let paired = base.topics.len().min(next.topics.len());
-    for (index, (before, after)) in base.topics.iter().zip(&next.topics).enumerate().filter(|(_, (before, after))| before != after) {
-        if before.guid != after.guid {
-            leaves.push(BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: before.guid.clone() }));
-            leaves.push(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: after.clone(), index: Some(index) }));
-            continue;
-        }
-        let guid = &before.guid;
-        let moved = |old: &String, new: &String| (old != new).then(|| new.clone());
-        let markup = set_topic_markup::SetTopicMarkup {
-            guid: guid.clone(),
-            title: moved(&before.title, &after.title),
-            description: moved(&before.description, &after.description),
-            status: moved(&before.status, &after.status),
-            priority: moved(&before.priority, &after.priority),
-            labels: (before.labels != after.labels).then(|| after.labels.clone()),
-            creation_date: moved(&before.creation_date, &after.creation_date),
-            creation_author: moved(&before.creation_author, &after.creation_author),
-        };
-        if (&markup.title, &markup.description, &markup.status, &markup.priority, &markup.labels, &markup.creation_date, &markup.creation_author) != (&None, &None, &None, &None, &None, &None, &None) {
-            leaves.push(BcfMutation::SetTopicMarkup(markup));
-        }
-        let comments_paired = before.comments.len().min(after.comments.len());
-        for (comment_index, (old, new)) in before.comments.iter().zip(&after.comments).enumerate().filter(|(_, (old, new))| old != new) {
-            if old.guid != new.guid {
-                leaves.push(BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: guid.clone(), guid: old.guid.clone() }));
-                leaves.push(BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: guid.clone(), comment: new.clone(), index: Some(comment_index) }));
-            } else {
-                leaves.push(BcfMutation::SetComment(set_comment::SetComment {
-                    topic_guid: guid.clone(),
-                    guid: old.guid.clone(),
-                    date: moved(&old.date, &new.date),
-                    author: moved(&old.author, &new.author),
-                    text: moved(&old.text, &new.text),
-                    viewpoint_ref: (old.viewpoint_ref != new.viewpoint_ref).then(|| new.viewpoint_ref.clone()),
-                }));
-            }
-        }
-        leaves.extend(before.comments[comments_paired..].iter().rev().map(|old| BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: guid.clone(), guid: old.guid.clone() })));
-        leaves.extend(after.comments.iter().enumerate().skip(comments_paired).map(|(comment_index, new)| BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: guid.clone(), comment: new.clone(), index: Some(comment_index) })));
-        let viewpoints_paired = before.viewpoints.len().min(after.viewpoints.len());
-        for (viewpoint_index, (old, new)) in before.viewpoints.iter().zip(&after.viewpoints).enumerate().filter(|(_, (old, new))| old != new) {
-            if old.guid != new.guid {
-                leaves.push(BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: guid.clone(), guid: old.guid.clone() }));
-                leaves.push(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: guid.clone(), viewpoint: new.clone(), index: Some(viewpoint_index) }));
-                continue;
-            }
-            if old.camera != new.camera {
-                leaves.push(BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: guid.clone(), guid: old.guid.clone(), camera: new.camera.clone() }));
-            }
-            if old.components != new.components {
-                leaves.push(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: guid.clone(), guid: old.guid.clone(), components: new.components.clone() }));
-            }
-            if old.snapshot != new.snapshot {
-                leaves.push(BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: guid.clone(), guid: old.guid.clone(), snapshot: new.snapshot.clone() }));
-            }
-        }
-        leaves.extend(before.viewpoints[viewpoints_paired..].iter().rev().map(|old| BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: guid.clone(), guid: old.guid.clone() })));
-        leaves.extend(after.viewpoints.iter().enumerate().skip(viewpoints_paired).map(|(viewpoint_index, new)| BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: guid.clone(), viewpoint: new.clone(), index: Some(viewpoint_index) })));
-    }
-    leaves.extend(base.topics[paired..].iter().rev().map(|old| BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: old.guid.clone() })));
-    leaves.extend(next.topics.iter().enumerate().skip(paired).map(|(index, topic)| BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: topic.clone(), index: Some(index) })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region OpCodecs
 

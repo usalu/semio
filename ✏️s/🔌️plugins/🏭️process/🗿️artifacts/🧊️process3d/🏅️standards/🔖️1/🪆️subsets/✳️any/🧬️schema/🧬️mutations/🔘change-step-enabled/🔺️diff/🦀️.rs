@@ -1,11 +1,9 @@
-//! 🔺️ `change-step-enabled` sparse diff construction — sets an id-keyed [`ProcessStep`]'s
-//! `enabled` flag in the durable `step_payloads` timeline and re-mints `steps`/`tool_solids` via
-//! [`process3d_step_timeline_diff`](crate::process3d_step_timeline_diff).
-//! Error `target-missing` when the step is absent, Warning `no-op` when the flag is unchanged.
+//! 🔺️ `change-step-enabled` sparse diff construction — sets an id-keyed [`ProcessStep`]'s `enabled` flag in the durable
+//! `step_payloads` timeline. Error `target-missing` when the step is absent, Warning `no-op` when the flag is unchanged.
 
 use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
 use crate::diff::Process3dDiff;
-use crate::{process3d_step_timeline_diff, Process3dSnapshot};
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeStepEnabled, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
@@ -16,6 +14,6 @@ pub fn diff(payload: &super::ChangeStepEnabled, base: &Process3dSnapshot) -> pro
         let state = if payload.new_enabled { "enabled" } else { "disabled" };
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already {state}.", payload.id));
     }
-    protocol::MutationOutcome::new(process3d_step_timeline_diff(base, Process3dStepsDelta { patched: vec![Process3dStepPatch { id: payload.id.clone(), enabled: Some(payload.new_enabled), ..Default::default() }], ..Default::default() }))
+    protocol::MutationOutcome::new(Process3dDiff { step_payloads: Some(Process3dStepsDelta::modification(payload.id.clone(), Process3dStepPatch { enabled: Some(payload.new_enabled), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔖️Diff

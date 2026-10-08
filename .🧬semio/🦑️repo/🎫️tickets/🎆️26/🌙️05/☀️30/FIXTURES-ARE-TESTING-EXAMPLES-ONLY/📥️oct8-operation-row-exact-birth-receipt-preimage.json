@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "content": "Ok((owner, progress)) => { *self.active = Some(owner); admit_retained_clone_progress(child, progress, \"operation row retirement birth\")?; Ok(RetainedCloneStep::Progress(progress)) }",
+  "sha256": "3920a4382dd8087306b56ad21a14c93ab75b9c19e83c409ce3e8cee1a6e1ce51"
+}

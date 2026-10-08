@@ -36,11 +36,11 @@ fn editor_page_selection_config_round_trips_and_has_an_exact_inverse() {
     let mutation = TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 1 };
     assert_eq!(TiffEditorConfigMutation::parse_op(&mutation.print_op()).expect("text config mutation"), mutation);
     assert_eq!(TiffEditorConfigMutation::decode_op(&mutation.encode_op().expect("binary config mutation")).expect("decoded config mutation"), mutation);
-    let after = protocol::apply_diff(&mutation.diff(&before).diff(), &before).expect("page selection applies");
+    let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).expect("page selection applies");
     assert_eq!(after.selected_ifd, 1);
     let inverse = mutation.inverse(&before).expect("page selection inverse");
     assert_eq!(inverse.len(), 1);
-    let restored = protocol::apply_diff(&inverse[0].diff(&after).diff(), &after).expect("page selection inverse applies");
+    let restored = protocol::apply_diff(inverse[0].diff(&after).diff(), &after).expect("page selection inverse applies");
     assert_eq!(restored, before);
 }
 
@@ -138,11 +138,11 @@ fn retained_tiled_paint_captures_revision_round_trips_and_has_exact_inverse() {
     assert_eq!(payload.revision, crate::standards::v6_0::subsets::document::schema::mutations::paint_region::samples::tiff_revision(&before));
     assert_eq!(TiffMutation::parse_op(&mutations[0].print_op()).expect("text paint round trip"), mutations[0]);
     assert_eq!(TiffMutation::decode_op(&mutations[0].encode_op().expect("binary paint encode")).expect("binary paint decode"), mutations[0]);
-    let after = protocol::apply_diff(&mutations[0].diff(&before).diff(), &before).expect("apply TIFF paint");
+    let after = protocol::apply_diff(mutations[0].diff(&before).diff(), &before).expect("apply TIFF paint");
     assert_eq!(&after.ifds[0].blocks[0].samples[765..768], &[crate::schema::snapshot::TiffWord64::from_word(9),crate::schema::snapshot::TiffWord64::from_word(8),crate::schema::snapshot::TiffWord64::from_word(7)]);
     assert_eq!(after.ifds[0].entries, before.ifds[0].entries);
     let inverse = mutations[0].inverse(&before).expect("paint inverse");
-    let restored = inverse.into_iter().fold(after, |current, mutation| protocol::apply_diff(&mutation.diff(&current).diff(), &current).expect("apply TIFF paint inverse"));
+    let restored = inverse.into_iter().fold(after, |current, mutation| protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("apply TIFF paint inverse"));
     assert_eq!(restored, before);
 }
 
@@ -156,10 +156,10 @@ fn retained_tiled_paint_targets_the_selected_ifd_and_survives_artifact_undo() {
     let [mutation] = drive_paint(&paint_command(), &before, &config).try_into().expect("one selected-page paint mutation");
     let TiffMutation::PaintRegion(payload) = &mutation else { panic!("selected-page paint mutation") };
     assert_eq!(payload.ifd_index, 1);
-    let after = protocol::apply_diff(&mutation.diff(&before).diff(), &before).expect("selected page paint applies");
+    let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).expect("selected page paint applies");
     assert_eq!(after.ifds[0].blocks, first_before);
     assert_eq!(&after.ifds[1].blocks[0].samples[765..768], &[crate::schema::snapshot::TiffWord64::from_word(9),crate::schema::snapshot::TiffWord64::from_word(8),crate::schema::snapshot::TiffWord64::from_word(7)]);
-    let restored = mutation.inverse(&before).expect("selected page inverse").into_iter().fold(after, |current, inverse| protocol::apply_diff(&inverse.diff(&current).diff(), &current).expect("selected page inverse applies"));
+    let restored = mutation.inverse(&before).expect("selected page inverse").into_iter().fold(after, |current, inverse| protocol::apply_diff(inverse.diff(&current).diff(), &current).expect("selected page inverse applies"));
     assert_eq!(restored, before);
     assert_eq!(config.selected_ifd, 1, "artifact history never rewrites local page selection");
 }

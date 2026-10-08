@@ -103,18 +103,6 @@ impl DiffAlgebra<JackSnapshot> for JackDiff {
             query: self.query.as_ref().map(|_| base.query.clone()),
         }
     }
-    fn between(base: &JackSnapshot, other: &JackSnapshot) -> Self {
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            manifest_id: (base.manifest_id != other.manifest_id).then(|| other.manifest_id.clone()),
-            manifest: (base.manifest != other.manifest).then(|| other.manifest.clone()),
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-            content: (base.content != other.content).then(|| other.content.clone()),
-            root_node_id: (base.root_node_id != other.root_node_id).then(|| other.root_node_id.clone()),
-            query: (base.query != other.query).then(|| other.query.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.name.is_none() && self.manifest_id.is_none() && self.manifest.is_none() && self.camera.is_none() && self.content.is_none() && self.root_node_id.is_none() && self.query.is_none()
     }

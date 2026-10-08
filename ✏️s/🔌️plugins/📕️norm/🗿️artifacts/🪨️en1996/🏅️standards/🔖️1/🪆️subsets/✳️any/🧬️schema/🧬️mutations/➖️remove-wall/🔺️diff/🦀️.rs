@@ -5,5 +5,5 @@ pub fn diff(payload: &RemoveWall, base: &En1996Snapshot) -> protocol::MutationOu
     if payload.index >= base.walls.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid remove index."), Vec::<String>::new());
     }
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::removal(&base.walls[payload.index].id), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::removal(&base.walls, payload.index), ..Default::default() })
 }

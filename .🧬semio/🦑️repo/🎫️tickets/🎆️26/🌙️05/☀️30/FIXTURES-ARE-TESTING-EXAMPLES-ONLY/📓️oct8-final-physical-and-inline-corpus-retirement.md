@@ -1,0 +1,5 @@
+# Physical and Inline Corpus Retirement
+
+Two separate physical whole-law wrappers and five copied inline whole-corpus schemas validate selected testing envelopes. Joined readers identify the actual values; these are neither genuine per-domain values nor negative parser inputs. Preserve all plain corpora, independent SQLite/minimatch/RFC6902/UTF8 and native/source assertions. The existing physical corpus facet now checks both absent physical wrappers and actual TypeScript AST literal compilers in the five known whole-law readers. No genuine domain or inert parser schemas are removed.
+
+Actual physical RED then actual inline AST RED precede removal. First mutation attempt refused before any write because Backbone also contains a second copied constructor-case array schema; current exact source confirms it validates law.constructors with expected accepted booleans. Both of those mirrors and four other whole-corpus compilers are removed; SQLite admission/order/release behavior remains unchanged. Seven plain inputs are unchanged. Collective neutral verification and full inventory remain pending.

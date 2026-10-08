@@ -47,7 +47,7 @@ fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_objects
     let index = fixture["mutation"]["params"]["index"].as_u64().unwrap() as usize;
     let rotation = fixture["mutation"]["params"]["rotation"].as_u64().unwrap() as u16;
     let mutation = PdfMutation::SetPageRotation(crate::schema::mutations::SetPageRotation { index, rotation });
-    crate::schema::mutations::apply_pdf_mutation(&mut snapshot, &mutation);
+    crate::io::mutation_bridge::apply_pdf_mutation(&mut snapshot, &mutation);
     let bytes = <Pdf17Editor as ArtifactEditor>::encode_natural_file(&snapshot).expect("natural PDF saves");
     let reference_spec = semio_repo_test_host::parse_json(&fixture["mutation"].to_string()).unwrap();
     let reference = oracle::oracle_apply_mutation(input, &reference_spec).expect("lopdf independently edits the input");

@@ -807,7 +807,9 @@
               ],
               "properties": {
                 "value": {
-                  "type": "integer"
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647
                 }
               }
             }
@@ -1329,7 +1331,9 @@
           "type": "number"
         },
         "panes": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "material": {
           "type": "string"
@@ -1455,7 +1459,9 @@
           "type": "string"
         },
         "level": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
         },
         "height": {
           "type": "number"

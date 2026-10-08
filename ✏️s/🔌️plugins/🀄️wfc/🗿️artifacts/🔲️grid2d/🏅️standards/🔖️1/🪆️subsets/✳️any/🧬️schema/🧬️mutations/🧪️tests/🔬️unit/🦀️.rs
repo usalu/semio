@@ -76,12 +76,12 @@ fn every_mutation_round_trips_through_its_text_and_binary_op_form() {
 fn deleting_a_tile_cascades_every_rule_and_pin_that_named_it() {
     let base = scene();
     let mut applied = base.clone();
-    apply_grid2d_mutation(&mut applied, &delete_tile("c".into())).expect("delete applies");
+    vcs::apply_mutation(&applied, &delete_tile("c".into())).map(|(applied_state, _)| { applied = applied_state; }).expect("delete applies");
     assert!(applied.tiles.iter().all(|tile| tile.id != "c"));
     assert!(applied.rules.is_empty(), "the rule naming the tile must be gone");
     assert!(applied.pinned.is_empty(), "the pin naming the tile must be gone");
     for step in inverse_grid2d_mutation(&base, &delete_tile("c".into())).expect("valid retained mutation inverse fixture") {
-        apply_grid2d_mutation(&mut applied, &step).expect("inverse step applies");
+        vcs::apply_mutation(&applied, &step).map(|(applied_state, _)| { applied = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(applied, base, "the cascade's inverse must restore value AND position");
 }
@@ -91,10 +91,10 @@ fn masking_a_pinned_cell_cascades_its_pin_and_the_inverse_restores_it() {
     let base = scene();
     let mutation = mask_cell(0, 0);
     let mut applied = base.clone();
-    apply_grid2d_mutation(&mut applied, &mutation).expect("mask applies");
+    vcs::apply_mutation(&applied, &mutation).map(|(applied_state, _)| { applied = applied_state; }).expect("mask applies");
     assert!(applied.pinned.is_empty());
     for step in inverse_grid2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture") {
-        apply_grid2d_mutation(&mut applied, &step).expect("inverse step applies");
+        vcs::apply_mutation(&applied, &step).map(|(applied_state, _)| { applied = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(applied, base);
 }

@@ -1,0 +1,42 @@
+{
+  "artifact": null,
+  "attractions": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "attraction-4",
+        "index": 1
+      }
+    ]
+  },
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "object-a",
+        "patch": {
+          "vortices": {
+            "inserted": [],
+            "modified": [],
+            "moved": [],
+            "removed": [
+              {
+                "id": "vortex-spare",
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
+}

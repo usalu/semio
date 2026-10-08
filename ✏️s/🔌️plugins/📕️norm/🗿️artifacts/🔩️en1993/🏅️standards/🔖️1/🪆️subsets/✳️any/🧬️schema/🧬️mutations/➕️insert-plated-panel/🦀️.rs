@@ -5,7 +5,7 @@ use crate::{PlatedPanel, En1993Mutation, En1993Snapshot};
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct InsertPlatedPanel { pub index: usize, pub plated_panel: PlatedPanel }
+pub struct InsertPlatedPanel { pub index: Option<usize>, pub plated_panel: PlatedPanel }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertPlatedPanel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "plated-panel", kind: "insert-plated-panel", record: "InsertedPlatedPanel" };
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> { super::diff::diff(self, base) }

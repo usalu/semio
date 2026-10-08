@@ -24,12 +24,15 @@
   "safety": null,
   "security": null,
   "regulatory": {
-    "added": [],
     "removed": [
-      "regulatory-requirement-a"
+      {
+        "id": "regulatory-requirement-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "siteContext": null,
   "organizational": null,

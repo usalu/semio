@@ -12,18 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub type JsonValue = serde_json::Value;
-
-mod json_value_bridge {
-    pub fn to_value(value: &super::JsonValue) -> semio_framework_value::DslValue {
-        semio_framework_value::DslValue::from(value.clone())
-    }
-
-    #[expect(clippy::unnecessary_wraps, reason = "The value derive custom codec interface requires a fallible decoder signature.")]
-    pub fn from_value(value: semio_framework_value::DslValue) -> Result<super::JsonValue, semio_framework_value::ValueError> {
-        Ok(super::JsonValue::from(value))
-    }
-}
+use semio_framework_value::DslValue;
 
 //#region 🔖️Schema
 /// 🎚️ One user-pinned default: `dialect × role -> app`.
@@ -71,44 +60,37 @@ pub enum UiLocale {
 }
 
 /// 🚗️ User-defined UI driver.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UiDriver {
     pub driver_id: String,
     pub label: String,
-    #[value(with = "json_value_bridge")]
-    pub config: JsonValue,
+    pub config: DslValue,
 }
 
 /// 🎨️ User-defined UI theme.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UiTheme {
     pub theme_id: String,
     pub label: String,
-    #[value(with = "json_value_bridge")]
-    pub config: JsonValue,
+    pub config: DslValue,
 }
 
 /// 🗂️ One window layout the user saved — its label and the arrangement it restores; the layout id is its key in
-/// [`UiPreferences::named_layouts`]. The arrangement stays the schema's `WindowLayout` JSON here: the renderer that
-/// restores it owns the typed form.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+/// [`UiPreferences::named_layouts`]. The arrangement owns a semantic value; the renderer that
+/// restores it admits its typed WindowLayout directly.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UserNamedLayout {
     pub label: String,
-    #[value(with = "json_value_bridge")]
-    pub layout: JsonValue,
+    pub layout: DslValue,
 }
 
 /// ⚙️ Persisted local-only OS UI preferences. Optional selections preserve the absence of a
 /// preferred language or presentation choice until the host supplies one.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UiPreferences {
     pub appearance: Option<UiAppearance>,
     pub layout: Option<UiChromeLayout>,
@@ -192,22 +174,6 @@ impl protocol::DiffAlgebra<OpeningPreferences> for OpeningDiff {
         }
     }
 
-    fn between(base: &OpeningPreferences, other: &OpeningPreferences) -> Self {
-        let mut pins = Vec::new();
-        for entry in &base.defaults {
-            match other.defaults.iter().find(|candidate| candidate.dialect == entry.dialect && candidate.role == entry.role) {
-                Some(next) if next.app == entry.app => {}
-                next => pins.push(DefaultAppPin { dialect: entry.dialect.clone(), role: entry.role, app: next.map(|next| next.app.clone()) }),
-            }
-        }
-        for entry in &other.defaults {
-            if !base.defaults.iter().any(|candidate| candidate.dialect == entry.dialect && candidate.role == entry.role) {
-                pins.push(DefaultAppPin { dialect: entry.dialect.clone(), role: entry.role, app: Some(entry.app.clone()) });
-            }
-        }
-        Self { pins }
-    }
-
     fn is_empty(&self) -> bool {
         self.pins.is_empty()
     }
@@ -280,17 +246,6 @@ fn write_keyed_rows<T: Clone>(map: &mut HashMap<String, T>, rows: &[KeyedEdit<T>
 
 fn keyed_rows_inverse<T: Clone>(rows: &[KeyedEdit<T>], base: &HashMap<String, T>) -> Vec<KeyedEdit<T>> {
     rows.iter().map(|row| KeyedEdit::new(row.key.clone(), base.get(&row.key).cloned())).collect()
-}
-
-fn keyed_rows_between<T: Clone + PartialEq>(base: &HashMap<String, T>, other: &HashMap<String, T>) -> Vec<KeyedEdit<T>> {
-    let mut keys: Vec<&String> = base.keys().chain(other.keys()).collect();
-    keys.sort();
-    keys.dedup();
-    keys.into_iter().filter(|key| base.get(*key) != other.get(*key)).map(|key| KeyedEdit::new(key.clone(), other.get(key).cloned())).collect()
-}
-
-fn setting_between<T: Clone + PartialEq>(base: &Option<T>, other: &Option<T>) -> Option<SettingEdit<T>> {
-    (base != other).then(|| SettingEdit::new(other.clone()))
 }
 
 /// 🔺️ Sparse diff of [`UiPreferences`]: one absolute edit per touched scalar preference and one absolute row per touched keyed entry.
@@ -411,39 +366,6 @@ impl protocol::DiffAlgebra<UiPreferences> for UiPreferencesDiff {
         }
     }
 
-    fn between(base: &UiPreferences, other: &UiPreferences) -> Self {
-        let mut named_layouts = Vec::new();
-        let mut apps: Vec<&String> = base.named_layouts.keys().chain(other.named_layouts.keys()).collect();
-        apps.sort();
-        apps.dedup();
-        for app_id in apps {
-            let held = base.named_layouts.get(app_id);
-            let next = other.named_layouts.get(app_id);
-            let mut ids: Vec<&String> = held.into_iter().flat_map(HashMap::keys).chain(next.into_iter().flat_map(HashMap::keys)).collect();
-            ids.sort();
-            ids.dedup();
-            for layout_id in ids {
-                let before = held.and_then(|layouts| layouts.get(layout_id));
-                let after = next.and_then(|layouts| layouts.get(layout_id));
-                if before != after {
-                    named_layouts.push(NamedLayoutEdit { app_id: app_id.clone(), layout_id: layout_id.clone(), value: after.cloned() });
-                }
-            }
-        }
-        Self {
-            appearance: setting_between(&base.appearance, &other.appearance),
-            layout: setting_between(&base.layout, &other.layout),
-            driver_id: setting_between(&base.driver_id, &other.driver_id),
-            custom_drivers: keyed_rows_between(&base.custom_drivers, &other.custom_drivers),
-            locale: setting_between(&base.locale, &other.locale),
-            terminology: setting_between(&base.terminology, &other.terminology),
-            theme_id: setting_between(&base.theme_id, &other.theme_id),
-            custom_themes: keyed_rows_between(&base.custom_themes, &other.custom_themes),
-            keybinding_overrides: keyed_rows_between(&base.keybinding_overrides, &other.keybinding_overrides),
-            named_layouts,
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }
@@ -467,20 +389,11 @@ pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: 
     })
 }
 
-/// 📥️ Decodes the internally tagged opening-config JSON projection.
-pub fn decode_opening_config_mutation_json(text: &str) -> Result<super::mutations::OpeningConfigMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📤️ Encodes opening preferences to their canonical camel-case JSON projection.
-pub fn encode_opening_preferences_json(snapshot: &OpeningPreferences) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Decodes the canonical opening-preferences JSON projection.
-pub fn decode_opening_preferences_json(text: &str) -> Result<OpeningPreferences, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
+
+
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
 pub fn apply_opening_config_mutation_reporting(snapshot: &mut OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> Vec<(String, String)> {
@@ -517,20 +430,11 @@ pub fn inverse_ui_preferences_config_mutation(snapshot: &UiPreferences, mutation
     })
 }
 
-/// 📥️ Decodes the internally tagged UI-preferences mutation JSON projection.
-pub fn decode_ui_preferences_config_mutation_json(text: &str) -> Result<super::mutations::UiPreferencesConfigMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📤️ Encodes OS UI preferences to their canonical camel-case JSON projection.
-pub fn encode_ui_preferences_json(snapshot: &UiPreferences) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Decodes the canonical OS UI-preferences JSON projection.
-pub fn decode_ui_preferences_json(text: &str) -> Result<UiPreferences, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
+
+
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
 pub fn apply_ui_preferences_config_mutation_reporting(snapshot: &mut UiPreferences, mutation: &super::mutations::UiPreferencesConfigMutation) -> Vec<(String, String)> {
@@ -625,3 +529,7 @@ pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut super::mutat
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🎨️ui-preferences/🧪️tests/🌱️owned-customization/🦀️.rs"]
+mod owned_customization_tests;

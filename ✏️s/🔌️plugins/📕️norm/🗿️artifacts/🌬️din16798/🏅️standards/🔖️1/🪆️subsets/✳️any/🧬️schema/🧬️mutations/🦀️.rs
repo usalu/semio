@@ -4,7 +4,8 @@ use crate::{Din16798Diff, Din16798Snapshot};
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_din16798_mutation, inverse_din16798_mutation};
 
 use super::change_annex;
 use super::change_theta_rm;
@@ -139,39 +140,6 @@ pub const KINDS: &[&str] = &[
     "change-vent-design-airflow",
 ];
 
-impl Din16798Mutation {
-    pub fn from_snapshot(base: &Din16798Snapshot, target: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-        let mut out = Vec::new();
-        if base.annex != target.annex { out.push(Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex })); }
-        if (base.theta_rm_c - target.theta_rm_c).abs() > f64::EPSILON { out.push(Din16798Mutation::ChangeThetaRm(change_theta_rm::ChangeThetaRm { new_theta_rm_c: target.theta_rm_c })); }
-        if (base.outdoor_co2_ppm - target.outdoor_co2_ppm).abs() > f64::EPSILON { out.push(Din16798Mutation::ChangeOutdoorCo2(change_outdoor_co2::ChangeOutdoorCo2 { new_outdoor_co2_ppm: target.outdoor_co2_ppm })); }
-        if base.zones != target.zones {
-            // whole-list rebuild via remove+insert is sufficient for from_snapshot consumers
-            for z in &base.zones { out.push(Din16798Mutation::RemoveZone(remove_zone::RemoveZone { zone_id: z.id.clone() })); }
-            for (i, z) in target.zones.iter().enumerate() { out.push(Din16798Mutation::InsertZone(insert_zone::InsertZone { index: i, zone: z.clone() })); }
-        }
-        if base.vent_systems != target.vent_systems {
-            for v in &base.vent_systems { out.push(Din16798Mutation::RemoveVentSystem(remove_vent_system::RemoveVentSystem { vent_id: v.id.clone() })); }
-            for (i, v) in target.vent_systems.iter().enumerate() { out.push(Din16798Mutation::InsertVentSystem(insert_vent_system::InsertVentSystem { index: i, vent: v.clone() })); }
-        }
-        out
-    }
-}
-
-
-pub fn apply_din16798_mutation(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Result<(Din16798Snapshot, Vec<String>), String> {
-    let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|m| format!("{:?}:{}", m.level, m.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|e| format!("{e:?}"))?;
-    Ok((applied, messages))
-}
-pub fn inverse_din16798_mutation(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Result<Vec<Din16798Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(mutation, base)?
-
-    })
-}
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
@@ -179,3 +147,7 @@ mod kinds_catalog;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

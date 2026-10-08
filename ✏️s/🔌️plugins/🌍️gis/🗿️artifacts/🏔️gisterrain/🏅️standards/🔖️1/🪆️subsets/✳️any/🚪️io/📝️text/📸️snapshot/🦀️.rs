@@ -233,3 +233,9 @@ impl ImportedMap {
  pub fn to_json(&self)->Result<String,String>{self.validate()?;let mut pending:Vec<&DslValue>=self.positions.iter().chain(&self.routes).chain(&self.regions).chain(self.properties.iter().map(|m|&m.value)).collect();while let Some(value)=pending.pop(){match value{DslValue::Bytes(_)=>return Err("map JSON cannot represent octets".into()),DslValue::Number(Number::Float(v))if !v.is_finite()=>return Err("map JSON cannot represent nonfinite IEEE words".into()),DslValue::Number(Number::Int(v))if *v>=0=>return Err("map JSON cannot represent signed positive integer tagging".into()),DslValue::Array(items)=>pending.extend(items),DslValue::Object(members)=>{let mut names=std::collections::HashSet::new();for(name,value)in members{if !names.insert(name){return Err("map JSON cannot represent duplicate object members".into())}pending.push(value)}},_=>()}}let mut members=vec![("positions".into(),DslValue::Array(self.positions.clone())),("routes".into(),DslValue::Array(self.routes.clone())),("regions".into(),DslValue::Array(self.regions.clone()))];let mut names=std::collections::HashSet::new();for property in &self.properties{if !names.insert(&property.name){return Err("map JSON cannot represent duplicate root properties".into())}members.push((property.name.clone(),property.value.clone()));}Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&DslValue::Object(members))))}
 }
 }
+
+/// 🗺️ Admits bundled scenery before the semantic descriptor projection.
+pub fn fixture_descriptor(document:&crate::GisTerrainSnapshot)->crate::schema::TerrainDescriptorJson {
+ let map=crate::schema::ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
+ crate::standards::v1::subsets::any::schema::inferences::parse_descriptor(document,&map)
+}

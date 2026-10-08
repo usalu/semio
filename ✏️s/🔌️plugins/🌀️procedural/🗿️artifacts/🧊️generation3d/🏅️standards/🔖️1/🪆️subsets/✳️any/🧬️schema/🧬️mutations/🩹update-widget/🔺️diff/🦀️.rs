@@ -1,7 +1,7 @@
 //! 🔺️ `update-widget` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dSynapsePatchEntry, Generation3dSynapsesDelta, Generation3dWidgetPatch, Generation3dWidgetPatchEntry, Generation3dWidgetsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dSynapseModification, Generation3dSynapsesDelta, Generation3dWidgetPatch, Generation3dWidgetModification, Generation3dWidgetsDelta, Generation3dSynapsePatch};
 use crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::{widget_id, Generation3dSnapshot};
@@ -24,8 +24,8 @@ pub fn diff(payload: &UpdateWidget, base: &Generation3dSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Widget \"{id}\" is already in the requested state."));
     }
     let synapses = Generation3dSynapsesDelta {
-        patched: crate::standards::v1::subsets::any::schema::mutations::update_widget::variable_synapses(&base.host_snapshot.widgets[index], &payload.widget, &base.host_snapshot.synapses).into_iter().map(|(_, synapse)| Generation3dSynapsePatchEntry { id: synapse.id.clone(), item: synapse }).collect(),
+        modified: crate::standards::v1::subsets::any::schema::mutations::update_widget::variable_synapses(&base.host_snapshot.widgets[index], &payload.widget, &base.host_snapshot.synapses).into_iter().map(|(_, synapse)| Generation3dSynapseModification { id: synapse.id.clone(), patch: Generation3dSynapsePatch(synapse) }).collect(),
         ..Default::default()
     };
-    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { patched: vec![Generation3dWidgetPatchEntry { id: id.to_string(), patch: Generation3dWidgetPatch::Replace { widget: payload.widget.clone() } }], ..Default::default() }), synapses: Some(synapses).filter(|delta| !delta.patched.is_empty()), ..Default::default() })
+    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { modified: vec![Generation3dWidgetModification { id: id.to_string(), patch: Generation3dWidgetPatch::Replace { widget: payload.widget.clone() } }], ..Default::default() }), synapses: Some(synapses).filter(|delta| !delta.modified.is_empty()), ..Default::default() })
 }

@@ -8,7 +8,8 @@
 //! round-trips through `f32` exactly and the canonical-JSON assertions below are not quietly
 //! testing a float-formatting accident.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_opacity, layer_visible};
 use crate::{RasterDiff, RasterSnapshot};
 
@@ -91,9 +92,9 @@ async fn produces_committed_diff() {
     let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("change-layer-opacity writes a layers delta");
-    assert_eq!(delta.patched.len(), 1, "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: exactly one layer is patched");
-    assert_eq!(delta.patched[0].patch.opacity, Some(0.25), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: the patch must carry the new opacity");
-    assert_eq!(delta.patched[0].patch.visible, None, "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: the patch must leave `visible` to change-layer-visible");
+    assert_eq!(delta.modified.len(), 1, "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: exactly one layer is patched");
+    assert_eq!(delta.modified[0].patch.opacity, Some(0.25), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: the patch must carry the new opacity");
+    assert_eq!(delta.modified[0].patch.visible, None, "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: the patch must leave `visible` to change-layer-visible");
     assert!(encoded.get("brushOpacity").is_none(), "change-layer-opacity/fades-the-highlight-layer-to-a-quarter: LAYER opacity and the config-class BRUSH opacity are different fields entirely");
 }
 
@@ -118,5 +119,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

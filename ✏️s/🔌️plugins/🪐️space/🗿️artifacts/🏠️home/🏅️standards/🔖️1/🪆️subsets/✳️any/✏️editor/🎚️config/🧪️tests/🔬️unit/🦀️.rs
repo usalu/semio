@@ -10,7 +10,7 @@ async fn home_config_dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn home_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() });
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() });
+    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::ListLocalStudio { space_id: "studio-a".into() });
 }
 
 /// 🫧️ The config carries the human's own Home choices only: its default holds no tombstone, and its op vocabulary has no
@@ -19,7 +19,7 @@ async fn home_config_op_text_round_trips_every_variant() {
 fn home_config_holds_no_directory_projection() {
     assert_eq!(HomeConfig::default(), HomeConfig { retired_local_studio_ids: Vec::new() });
     let kinds: Vec<&str> = <HomeConfigMutation as Mutation<HomeConfig>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).collect();
-    assert_eq!(kinds, ["retire-local-studio", "restore-local-studio"]);
+    assert_eq!(kinds, ["retire-local-studio", "list-local-studio"]);
 }
 
 //#region 🧪️RetainedConfigPreparation
@@ -68,13 +68,13 @@ async fn local_studio_tombstones_are_exact_point_invertible_events() {
     assert_eq!(retired.retired_local_studio_ids, vec!["studio-a".to_string(), "studio-b".to_string()]);
     assert!(retired.is_local_studio_retired("studio-a") && !base.is_local_studio_retired("studio-a"));
     let inverse = retire.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse, vec![HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }]);
+    assert_eq!(inverse, vec![HomeConfigMutation::ListLocalStudio { space_id: "studio-a".into() }]);
     assert_eq!(protocol::apply_diff(inverse[0].diff(&retired).diff(), &retired).expect("the restoration applies"), base);
     let again = retire.diff(&retired);
     assert!(protocol::DiffAlgebra::<HomeConfig>::is_empty(again.diff()));
     assert!(again.messages().iter().any(|message| format!("{message:?}").contains("mutation.no-op")));
     assert_eq!(retire.inverse(&retired).expect("valid retained mutation inverse fixture"), vec![retire.clone()], "the inverse of a no-op retirement changes nothing");
-    for mutation in [retire, HomeConfigMutation::RestoreLocalStudio { space_id: "studio-b".into() }] {
+    for mutation in [retire, HomeConfigMutation::ListLocalStudio { space_id: "studio-b".into() }] {
         let bytes = protocol::OpBinary::encode_op(&mutation).expect("op binary encodes");
         assert_eq!(<HomeConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("op binary decodes"), mutation);
     }
@@ -93,7 +93,7 @@ fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
     }
     let factory = HomeConfigPreparationFactory;
     assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() }, store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }, store::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&HomeConfigMutation::ListLocalStudio { space_id: "studio-a".into() }, store::HistoryLane::Document).is_ok());
     assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: String::new() }, store::HistoryLane::Document).is_err());
     assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "x".repeat(HOME_RETIRED_LOCAL_STUDIO_ID_BYTES + 1) }, store::HistoryLane::Document).is_err());
 }

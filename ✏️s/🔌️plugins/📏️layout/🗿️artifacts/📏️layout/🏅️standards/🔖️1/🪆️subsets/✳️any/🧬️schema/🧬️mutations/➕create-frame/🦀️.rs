@@ -2,8 +2,8 @@
 //! significant), optionally registering it on one of the page's layers.
 
 use crate::mutations::{delete_frame, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{Frame, LayoutDiff, LayoutSnapshot, PageFrameAdded, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{Frame, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -48,11 +48,16 @@ pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protoc
     if page.frames.iter().any(|frame| frame.id() == payload.frame.id()) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A frame with id \"{}\" already exists on page \"{}\".", payload.frame.id(), payload.page_id), [payload.frame.id().to_string()]);
     }
+    if payload.index.is_some_and(|at| at > page.frames.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), page.frames.len()), [payload.frame.id().to_string()]);
+    }
+    let frame = match &payload.layer_id {
+        Some(layer_id) => crate::frame_in_layer(&payload.frame, layer_id),
+        None => payload.frame.clone(),
+    };
+    let at = payload.index.unwrap_or(page.frames.len());
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { frame_added: Some(PageFrameAdded { frame: payload.frame.clone(), index: payload.index, layer_id: payload.layer_id.clone() }), ..Default::default() } }],
-            ..Default::default()
-        }),
+        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::insertion(at, frame), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

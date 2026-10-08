@@ -75,51 +75,60 @@
     "energyModel": null,
     "structureClassicModel": null,
     "drawings": {
-      "added": [
+      "removed": [],
+      "inserted": [
         {
-          "childId": "cad-drawing-2",
-          "target": {
-            "artifactId": "cad-drawing-2",
-            "dialect": {
-              "artifactKind": "s.stdio.semio",
-              "standard": "v1",
-              "subset": "drawing"
+          "index": 1,
+          "row": {
+            "childId": "cad-drawing-2",
+            "target": {
+              "artifactId": "cad-drawing-2",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "drawing"
+              }
             }
           }
         }
       ],
-      "removed": [],
-      "reordered": null
+      "moved": []
     },
     "referencesByModelDefinitionId": null,
     "nodes": {
-      "added": [
+      "removed": [],
+      "inserted": [
         {
-          "id": "node-2",
-          "label": "Body",
-          "kind": "solid"
+          "index": 1,
+          "row": {
+            "id": "node-2",
+            "label": "Body",
+            "kind": "solid"
+          }
         }
       ],
-      "removed": [],
-      "patched": [],
-      "reordered": null
+      "moved": [],
+      "modified": []
     },
     "breps": {
-      "added": [
+      "removed": [],
+      "inserted": [
         {
-          "childId": "brep-middle",
-          "target": {
-            "artifactId": "topology-middle",
-            "dialect": {
-              "artifactKind": "s.stdio.semio",
-              "standard": "v1",
-              "subset": "brep"
+          "index": 0,
+          "row": {
+            "childId": "brep-middle",
+            "target": {
+              "artifactId": "topology-middle",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "brep"
+              }
             }
           }
         }
       ],
-      "removed": [],
-      "reordered": null
+      "moved": []
     }
   },
   "invalidDocuments": [
@@ -152,7 +161,7 @@
       "objects": {
         "added": [],
         "removed": [],
-        "patched": []
+        "modified": []
       }
     },
     {

@@ -8,7 +8,8 @@
 //! The pin at `n1` is joined by a single-DOF roller at `n2`, completing a statically determinate beam.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

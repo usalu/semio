@@ -1,0 +1,150 @@
+{
+  "ticket": "26/09/30/HISTORY",
+  "tools": [
+    {
+      "id": "test-text",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{workspace}/📜️script.ts",
+        "{value}"
+      ],
+      "parameters": [
+        {
+          "id": "value",
+          "kind": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "test-choice",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{mode}"
+      ],
+      "parameters": [
+        {
+          "id": "mode",
+          "kind": "choice",
+          "values": [
+            {
+              "id": "en"
+            },
+            {
+              "id": "de"
+            }
+          ],
+          "default": "de"
+        }
+      ]
+    }
+  ],
+  "unrelated": {
+    "name": "Peer debugger",
+    "type": "node",
+    "request": "launch",
+    "program": "${workspaceFolder}/peer.ts"
+  },
+  "unsafeIds": [
+    "ticket:26/09/30/HISTORY/test;touch",
+    "ticket:26/09/30/HISTORY/test space",
+    "ticket:26/09/30/HISTORY/test\nwhoami"
+  ],
+  "values": [
+    "quotes\" and $()",
+    "nul\u0000unicode🧩",
+    "C:\\folder with spaces\\file"
+  ],
+  "expectedConfigurations": [
+    {
+      "name": "Test · ticket:26/09/30/HISTORY/test-choice [EN]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-choice",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_DASHBOARD_INPUT_6d_6f_64_65": "${input:semio-dashboard-26-09-30-HISTORY-test-choice-mode-en}"
+      },
+      "presentation": {
+        "group": "semio.dashboard.26/09/30/HISTORY.1_en.test",
+        "order": 0
+      }
+    },
+    {
+      "name": "Test · ticket:26/09/30/HISTORY/test-text [EN]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-text",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_DASHBOARD_INPUT_76_61_6c_75_65": "${input:semio-dashboard-26-09-30-HISTORY-test-text-value-en}"
+      },
+      "presentation": {
+        "group": "semio.dashboard.26/09/30/HISTORY.1_en.test",
+        "order": 1
+      }
+    },
+    {
+      "name": "Prüfen · ticket:26/09/30/HISTORY/test-choice [DE]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-choice",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_DASHBOARD_INPUT_6d_6f_64_65": "${input:semio-dashboard-26-09-30-HISTORY-test-choice-mode-de}"
+      },
+      "presentation": {
+        "group": "semio.dashboard.26/09/30/HISTORY.2_de.test",
+        "order": 0
+      }
+    },
+    {
+      "name": "Prüfen · ticket:26/09/30/HISTORY/test-text [DE]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-text",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_DASHBOARD_INPUT_76_61_6c_75_65": "${input:semio-dashboard-26-09-30-HISTORY-test-text-value-de}"
+      },
+      "presentation": {
+        "group": "semio.dashboard.26/09/30/HISTORY.2_de.test",
+        "order": 1
+      }
+    }
+  ],
+  "expectedInputs": [
+    {
+      "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+      "type": "pickString",
+      "description": "mode [EN]",
+      "options": [
+        "en",
+        "de"
+      ],
+      "default": "de"
+    },
+    {
+      "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-en",
+      "type": "promptString",
+      "description": "value [EN]"
+    },
+    {
+      "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-de",
+      "type": "pickString",
+      "description": "mode [DE]",
+      "options": [
+        "en",
+        "de"
+      ],
+      "default": "de"
+    },
+    {
+      "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-de",
+      "type": "promptString",
+      "description": "value [DE]"
+    }
+  ]
+}

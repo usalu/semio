@@ -1,5 +1,5 @@
-/** 🔺️ wfc3d field-sparse structural delta. Every list carries removed identities, added rows (landing at their canonical
- * position) and per-row field patches — never a whole row or list copy. */
+/** 🔺️ wfc3d field-sparse structural delta. Every list is a positional `protocol::list_delta`: removed ids at their base index, inserted rows at their after index, moved ids
+ * and per-row field patches — never a whole row or list copy. */
 import type { GraphRule, Slot3d, SlotEdge, Tile } from "../📸️snapshot/🟦️";
 
 /** 🎚️ An optional field set to a value or cleared — the wire shape `{ "value": … }`. */
@@ -13,11 +13,12 @@ export interface Wfc3dRowPatch<P> {
   patch: P;
 }
 
-/** 📂 Id-keyed row delta. */
+/** 📂 Positional row delta: removed ids at their base index, inserted rows at their after index, moved ids, and id-keyed patches. */
 export interface Wfc3dRows<T, P> {
-  removed: string[];
-  added: T[];
-  patched: Wfc3dRowPatch<P>[];
+  removed: { id: string; index: number }[];
+  inserted: { index: number; row: T }[];
+  moved: { id: string; from: number; to: number }[];
+  modified: Wfc3dRowPatch<P>[];
 }
 
 /** 🩹 Field patch over a slot: `null` leaves a field alone. */

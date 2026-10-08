@@ -8,19 +8,25 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "elements": {
     "removed": [
-      "wall-north"
+      {
+        "id": "wall-north",
+        "index": 0
+      }
     ],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "thermalBridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

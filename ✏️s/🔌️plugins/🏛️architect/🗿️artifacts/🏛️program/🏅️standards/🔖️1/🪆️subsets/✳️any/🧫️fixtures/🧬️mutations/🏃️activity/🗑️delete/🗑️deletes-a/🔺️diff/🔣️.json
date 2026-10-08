@@ -5,12 +5,15 @@
   "stakeholders": null,
   "users": null,
   "activities": {
-    "added": [],
     "removed": [
-      "activity-a"
+      {
+        "id": "activity-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "functions": null,
   "elements": null,

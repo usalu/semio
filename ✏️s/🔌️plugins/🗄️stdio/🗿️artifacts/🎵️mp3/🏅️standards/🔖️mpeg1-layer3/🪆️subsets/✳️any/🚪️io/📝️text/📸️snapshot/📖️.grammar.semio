@@ -6,11 +6,22 @@ start document
 document = schema id3v2? audio-frames id3v1?
 schema = "schema" "=" text
 id3v2 = "id3v2" "=" id3v2-tag
-id3v2-tag = "major-version" "=" INT "minor-version" "=" INT "flags" "=" INT "frames" "=" "[" id3-frame* "]"
-id3-frame = "{" "id" "=" text "flags" "=" INT "data" "=" STRING "}"
+id3v2-tag = "frames" "=" "[" id3-frame* "]"
+id3-frame = "{" "id" "=" text id3-content "}"
+id3-content = id3-text / id3-user-text / id3-comment / id3-lyrics / id3-url / id3-user-url / id3-picture / id3-opaque
+id3-values = "values" "=" "[" text+ "]"
+id3-text = "text" id3-values
+id3-user-text = "user-text" "description" "=" text id3-values
+id3-comment = "comment" "language" "=" text "description" "=" text "text" "=" text
+id3-lyrics = "lyrics" "language" "=" text "description" "=" text "text" "=" text
+id3-url = "url" "url" "=" text
+id3-user-url = "user-url" "description" "=" text "url" "=" text
+id3-picture = "picture" "mime" "=" text "picture-type" "=" INT "description" "=" text "payload" "=" STRING
+id3-opaque = "opaque" "bytes" "=" STRING
 audio-frames = "frames" "=" "[" audio-frame* "]"
 audio-frame = "{" "payload" "=" STRING "header" "=" audio-header "}"
 audio-header = "mpeg-version-id" "=" INT "layer" "=" INT "protection-bit" "=" boolean "bitrate-index" "=" INT "sample-rate-index" "=" INT "padding" "=" boolean "private-bit" "=" boolean "channel-mode" "=" INT "mode-extension" "=" INT "copyright" "=" boolean "original" "=" boolean "emphasis" "=" INT
-id3v1 = "id3v1" "=" "raw" "=" STRING
+id3v1 = "id3v1" "=" id3v1-tag
+id3v1-tag = "title" "=" text "artist" "=" text "album" "=" text "year" "=" text "comment" "=" text ("track" "=" INT)? ("genre" "=" INT)?
 boolean = "true" / "false"
 text = STRING / IDENT / INT / FLOAT

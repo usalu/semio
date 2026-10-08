@@ -6,8 +6,8 @@ use crate::diff::ProgramAccessibilityDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
-/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns, in place:
+/// `removed = [{id, index}]` and `inserted = [{index, payload row}]` at the same coordinate, so the new row keeps its position.
 pub fn diff(payload: &ReplaceAccessibilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = &payload.accessibility_requirement.header.id;
     let Some(position) = base.accessibility.iter().position(|row| row.header.id == *id) else {
@@ -16,6 +16,7 @@ pub fn diff(payload: &ReplaceAccessibilityRequirement, base: &ProgramSnapshot) -
     if base.accessibility[position] == payload.accessibility_requirement {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This accessibility requirement already matches the requested value.").at([id.0.clone()])]);
     }
-    let reordered = (position + 1 != base.accessibility.len()).then(|| base.accessibility.iter().map(|row| row.header.id.0.clone()).collect());
-    protocol::MutationOutcome::new(ProgramDiff { accessibility: Some(ProgramAccessibilityDelta { removed: vec![id.0.clone()], added: vec![payload.accessibility_requirement.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let mut delta = ProgramAccessibilityDelta::removal(&base.accessibility, position);
+    delta.absorb(ProgramAccessibilityDelta::insertion(position, payload.accessibility_requirement.clone()));
+    protocol::MutationOutcome::new(ProgramDiff { accessibility: Some(delta), ..Default::default() })
 }

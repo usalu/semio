@@ -5,18 +5,21 @@
   "synapses": null,
   "layout": null,
   "generations": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "gen-2",
-        "name": "Taller",
-        "values": {
-          "storeys": 5
+        "index": 1,
+        "row": {
+          "id": "gen-2",
+          "name": "Taller",
+          "values": {
+            "storeys": 5
+          }
         }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "selectedGeneration": {
     "id": "gen-2"

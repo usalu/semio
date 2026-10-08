@@ -42,7 +42,7 @@ async fn inverse_restores_before() {
     assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::SetRuleLayoutPoints(_)]), "drag-rule-nodes undoes with one SetRuleLayoutPoints row, got {inverse:?}");
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation()).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_rewrite_rule_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "drag-rule-nodes/🫳️moves: the inverse did not restore the before-snapshot");

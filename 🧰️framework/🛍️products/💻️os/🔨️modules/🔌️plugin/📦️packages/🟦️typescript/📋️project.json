@@ -38,6 +38,27 @@
       "dependsOn": [
         "semio-framework-os-infinite:fonts"
       ]
+    },
+    "test-catalog-composition": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test catalog-composition"
+      }
+    },
+    "test-catalog-receivers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test catalog-receivers"
+      }
+    },
+    "test-mounted-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test mounted-owner"
+      }
     }
   },
   "namedInputs": {

@@ -13,9 +13,10 @@
   "processes": null,
   "flows": null,
   "accessRules": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "access-rule-a",
         "patch": {
@@ -49,8 +50,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "operations": null,
   "equipment": null,

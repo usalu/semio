@@ -1,0 +1,11 @@
+# ECMA Syntax Tree Extraction
+
+The genuine compiler syntax owner now declares binding patterns, imports, declarations, expressions and statements in canonical JSON/TypeScript before extraction. Thirteen plain source examples compare actual call ranges and escaped binding identity against independent TypeScript syntax, and admit produced statements against the real compiler syntax contract. The new parser/identity APIs are staged before implementation; no result is claimed yet. Route policy remains the higher Discovery concern.
+
+The normal feature RED returned Nx1/838ms with one actual module-load error because the new defining APIs were absent. The existing syntax parser has now moved into the genuine lower compiler owner, gained original ranges, decoded imported binding/module identities and closed function/export nodes. Discovery retains its command routing policy and imports the first-party syntax model. Behavioral and type verification remain pending; unsupported syntax returns unresolved instead of a partial program.
+
+The first implemented normal attempt returned Nx1/712ms:3pass/1fail467assertions. It exposed the old parser default-import predicate rejecting import Ajv from a module before constructing the first portable tree. The independent tree law now checks exact numeric offsets and no TypeScript parse diagnostics, and a strict TypeScript compile law is staged before fixing that defining predicate.
+
+The strict independent TypeScript law actually passed in the refined normal attempt (4pass/1fail469assertions, Nx1/2.5seconds); the existing default import predicate still refused the first tree. Six further source-derived boundary examples are now staged before fixes: malformed names/parameters, throw-newline refusal, return-newline ownership, original spread offsets and ignored semicolon starts. Typecheck source paths use the cross-platform builtin fileURLToPath.
+
+The staged boundary RED returned Nx1/1.6seconds with the default import and malformed binding laws failing. Root corrected the actual default-import predicate, refused malformed variable/parameter names, preserved original spread starts and return/throw line-terminator boundaries, skipped empty statement markers before recording starts, and forwarded cancellation through raw token traversals. The subsequent normal result remains pending.

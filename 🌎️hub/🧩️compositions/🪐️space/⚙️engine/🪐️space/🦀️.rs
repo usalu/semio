@@ -569,7 +569,7 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
         }
         SpaceConfigMutation::SetCamera { window_id, camera } => {
             post.camera.insert(window_id.clone(), *camera);
-            base.camera.get(window_id).map_or_else(|| SpaceConfigMutation::Snapshot { config: base.clone() }, |camera| SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera })
+            base.camera.get(window_id).map_or_else(|| SpaceConfigMutation::RemoveCamera { window_id: window_id.clone() }, |camera| SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera })
         }
         SpaceConfigMutation::SetWorkflowEngagementInput { value } => {
             post.workflow_engagement_input = value.clone();

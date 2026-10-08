@@ -29,6 +29,7 @@ storyGlobs = ["../../../✏️s/🔌️plugins/🎞️animate/📖️stories/**/
 
 [[package.metadata.semio.playground]]
 variant = "animate"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6051, wgpu = 6151 }
 
 [lib]

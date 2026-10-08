@@ -14,7 +14,7 @@ pub use crate::standards::v2_0::subsets::base::schema::*;
 /// over the glob import, which is exactly the intent.
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub use mutations::{apply_zip_iso21320_mutation, ZipIso21320Method, ZipIso21320Mutation, KINDS as ISO21320_MUTATION_KINDS};
+pub use mutations::{ZipIso21320Method, ZipIso21320Mutation, KINDS as ISO21320_MUTATION_KINDS};
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 

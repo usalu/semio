@@ -240,11 +240,5 @@ pub fn utility_params_value(config: &LowpolyConfig) -> serde_json::Value {
     semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&config.utility_params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| (&value).into()).unwrap_or_default()
 }
 
-pub fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
-    let to_rad = std::f32::consts::PI / 180.0;
-    let (sx, cx) = (rotation[0] * to_rad * 0.5).sin_cos();
-    let (sy, cy) = (rotation[1] * to_rad * 0.5).sin_cos();
-    let (sz, cz) = (rotation[2] * to_rad * 0.5).sin_cos();
-    [(sx * cy * cz + cx * sy * sz) as f64, (cx * sy * cz - sx * cy * sz) as f64, (cx * cy * sz + sx * sy * cz) as f64, (cx * cy * cz - sx * sy * sz) as f64]
-}
+
 //#endregion 🔖️Utility

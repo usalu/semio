@@ -8,7 +8,8 @@
 //! One boolean flips off, yet the diff still carries the whole case — the nodal load must come back through the patch unchanged.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use crate::central_apply::apply_fem3d_mutation;
 
 use crate::Fem3dSnapshot;
 
@@ -92,12 +93,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be one `loadCases.patched` entry differing from `before` in the `selfWeight` flag alone.
+/// 🔺️ The delta must be one `loadCases.modified` entry differing from `before` in the `selfWeight` flag alone.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "change-load-case-self-weight/switches-self-7e0cda: exactly the named case may be patched");
+    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "change-load-case-self-weight/switches-self-7e0cda: exactly the named case may be patched");
     assert!(outcome.diff().analysis.is_none(), "change-load-case-self-weight/switches-self-7e0cda: self-weight is a load-case flag, not an analysis setting");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -113,7 +114,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-7e0cda: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `loadCases.patched` entry on `before` must clear the flag and nothing else.
+/// 🩹 Replaying the committed `loadCases.modified` entry on `before` must clear the flag and nothing else.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

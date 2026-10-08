@@ -13,7 +13,8 @@
 //! 🪪️ A node id IS the topology: the cantilever beam, its support and every nodal load resolve through it, so a `replace-node` that changes it would orphan them all silently. Moving the node is fine; renaming it is not.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

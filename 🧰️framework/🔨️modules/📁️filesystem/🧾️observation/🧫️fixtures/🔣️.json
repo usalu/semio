@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {"id":"empty","text":"","repeat":1,"chunkBytes":1,"maxBytes":0,"maxWork":5,"cancelAt":null,"expire":false,"mutation":null,"expected":{"byteLength":0,"work":5,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}},
+    {"id":"one-byte-chunks","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":false,"mutation":null,"expected":{"byteLength":3,"work":8,"sha256":"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"}},
+    {"id":"unicode","text":"Grüße 🌍️","repeat":1,"chunkBytes":3,"maxBytes":64,"maxWork":64,"cancelAt":null,"expire":false,"mutation":null,"expected":{"byteLength":15,"work":10,"sha256":"988e3ee0e5fc985d40a2416d97d6e23075de37587d825ca17e796114211b51b3"}},
+    {"id":"chunk-boundary","text":"abcd","repeat":17,"chunkBytes":64,"maxBytes":68,"maxWork":7,"cancelAt":null,"expire":false,"mutation":null,"expected":{"byteLength":68,"work":7,"sha256":"c7381db051fc91857b223789df32fd146c627cae18c10b2daa91959d711f9e04"}},
+    {"id":"byte-one-short","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":2,"maxWork":8,"cancelAt":null,"expire":false,"mutation":null,"expected":{"refusal":"byte-capacity"}},
+    {"id":"work-one-short","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":7,"cancelAt":null,"expire":false,"mutation":null,"expected":{"refusal":"work-capacity"}},
+    {"id":"cancel-before-read","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":"before","expire":false,"mutation":null,"expected":{"refusal":"cancelled"}},
+    {"id":"cancel-between-chunks","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":"read","expire":false,"mutation":null,"expected":{"refusal":"cancelled"}},
+    {"id":"deadline","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":true,"mutation":null,"expected":{"refusal":"deadline"}},
+    {"id":"path-replaced","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":false,"mutation":"replace","expected":{"refusal":"changed"}},
+    {"id":"descriptor-rewritten","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":false,"mutation":"rewrite","expected":{"refusal":"changed"}},
+    {"id":"symlink","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":false,"mutation":"symlink","expected":{"refusal":"not-regular"}},
+    {"id":"directory","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":false,"mutation":"directory","expected":{"refusal":"not-regular"}}
+  ]
+}

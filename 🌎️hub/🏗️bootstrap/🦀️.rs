@@ -11,6 +11,9 @@
 //! contract). "Space" is a namespacing convention this crate applies on top of `db`'s flat document
 //! catalog (`{space_id}:{document_id}`), not hub-internal state.
 
+use directory::os_directory::io::text::access_policy::directory_access_permits;
+use directory::os_directory::io::text::directory_command_sha256;
+use directory::os_directory::io::text::validate_directory_event_page_event;
 #[cfg(test)]
 extern crate directory as semio_framework_os_kernel;
 
@@ -24,18 +27,8 @@ use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 #[cfg(any(test, feature = "native-artifact-execution"))]
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES};
-use directory::os_directory::{
-    self, descriptor_digest_v1, directory_command_sha256, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
-    AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, ConnectionView, DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_MAX_BYTES, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
-    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1,
-    DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1,
-    DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor,
-    DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
-    DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1,
-    MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView,
-    DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA,
-    DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
-};
+use directory::os_directory::{self, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, ConnectionView, DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_MAX_BYTES, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS};
+use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
 use futures::stream::{SplitSink, SplitStream};
@@ -73,7 +66,7 @@ use semio_hub::artifact_authority::{
 };
 use semio_hub::auth::rate_limit::{HubRateLimiterV1, HubStreamLimiterV1, RateLimitClassV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1, StreamLimitClassV1, StreamPermitV1};
 use semio_hub::auth::password::PasswordCredentialV1;
-use directory::os_directory::access_policy::{directory_access_permits, DirectoryAccessActionV1, DirectoryAccessRoleV1};
+use directory::os_directory::access_policy::{DirectoryAccessActionV1, DirectoryAccessRoleV1};
 use semio_hub::auth::agent::{
     decide_agent_session, AgentDelegationListV1, AgentDelegationReceiptV1, AgentDelegationSummaryV1, AgentErrorCodeV1, AgentErrorV1, AgentSessionDecisionV1, AgentSessionMintResponseV1, AgentSessionRequestV1,
     CreateAgentDelegationRequestV1,
@@ -1814,7 +1807,7 @@ impl DocumentOpenPlanAuthorityV1 {
             .validate(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
             .map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
         let descriptor_digest = descriptor_digest_v1(&self.descriptor).map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
-        let descriptor_digest = os_directory::hex_lower(&descriptor_digest.0);
+        let descriptor_digest = os_directory::io::binary::artifact_hash::hex_lower(&descriptor_digest.0);
         let descriptor_matches = self.descriptor.space_id == self.scope.space_id
             && self.descriptor.document_id == self.scope.document_id
             && descriptor_digest == self.descriptor_digest_v1
@@ -3432,7 +3425,7 @@ fn socket_actor_id(material: &[u8; 32], stable_session: bool) -> String {
     digest.update(b"semio/hub/socket/actor/v1\0");
     digest.update(if stable_session { b"session".as_slice() } else { b"share".as_slice() });
     digest.update(material);
-    format!("hub.v1.{}", os_directory::hex_lower(&digest.finalize()))
+    format!("hub.v1.{}", os_directory::io::binary::artifact_hash::hex_lower(&digest.finalize()))
 }
 
 fn socket_text_bounded(value: &str) -> bool {
@@ -3556,10 +3549,10 @@ fn document_open_plan_exchange_error(code: DocumentOpenPlanErrorCodeV1) -> Docum
 
 fn document_open_checkpoint(checkpoint: PublishedArtifactCheckpoint) -> DocumentOpenCheckpointV1 {
     DocumentOpenCheckpointV1 {
-        checkpoint_id: os_directory::hex_lower(&checkpoint.checkpoint_id.0),
-        descriptor_digest_v1: os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0),
+        checkpoint_id: os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.checkpoint_id.0),
+        descriptor_digest_v1: os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.descriptor_digest_v1.0),
         baseline_frontier: checkpoint.baseline_frontier,
-        aggregate_sha256: os_directory::hex_lower(&checkpoint.aggregate_sha256.0),
+        aggregate_sha256: os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.aggregate_sha256.0),
     }
 }
 
@@ -3594,14 +3587,14 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     }
     let descriptor =
         state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    let descriptor_digest_v1 = os_directory::hex_lower(&descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let descriptor_digest_v1 = os_directory::io::binary::artifact_hash::hex_lower(&descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
     let checkpoint = state
         .directory
         .get_active_artifact_checkpoint(&scope)
         .await
         .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?
         .ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    if checkpoint.scope != scope || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1 || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope)) {
+    if checkpoint.scope != scope || os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1 || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope)) {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     let checkpoint = document_open_checkpoint(checkpoint);
@@ -3796,14 +3789,14 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
     }
     let descriptor =
         state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    let descriptor_digest_v1 = os_directory::hex_lower(&descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let descriptor_digest_v1 = os_directory::io::binary::artifact_hash::hex_lower(&descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
     let checkpoint = state
         .directory
         .get_active_artifact_checkpoint(&scope)
         .await
         .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?
         .ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    if checkpoint.scope != scope || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1 || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope)) {
+    if checkpoint.scope != scope || os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1 || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope)) {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     let checkpoint = document_open_checkpoint(checkpoint);
@@ -4438,7 +4431,7 @@ impl GisMapApprovalCheckpointPublisherV1Impl {
     fn matches_published(request: &GisMapApprovalCheckpointRequestV1, checkpoint: &PublishedArtifactCheckpoint) -> bool {
         let Some(frontier) = ledger_artifact_frontier(&request.scope, &request.actor_snapshot) else { return false };
         checkpoint.scope == request.scope
-            && checkpoint.descriptor_digest_v1.hex() == request.descriptor_digest
+            && directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint.descriptor_digest_v1) == request.descriptor_digest
             && checkpoint.baseline_frontier == frontier
             && checkpoint.pack.sha256 == ArtifactHash(Sha256::digest(&request.pair.pack))
             && checkpoint.pack.byte_length == request.pair.pack.len() as u64
@@ -4470,7 +4463,7 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
             let _document_write = document_write;
             let descriptor = self.directory.get_document_descriptor(&request.scope).await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?.ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
             let descriptor_digest = descriptor_digest_v1(&descriptor).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
-            if descriptor_digest.hex() != request.descriptor_digest {
+            if directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&descriptor_digest) != request.descriptor_digest {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             }
             let current = self.directory.get_active_artifact_checkpoint(&request.scope).await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
@@ -4689,11 +4682,11 @@ async fn start_policy_check_in(state: &HubState, subject: SocketSubjectV1, scope
         return None;
     }
     let snapshot = handle.checkpoint_publication_snapshot().await.ok()?;
-    let head = EditedArtifactFrontierV1::of_artifact_frontier(&ledger_artifact_frontier(scope, &snapshot)?)?;
-    let request_id = os_directory::hex_lower(&Sha256::digest(format!("checkpoint-policy\0{}\0{}\0{}", scope.space_id, scope.document_id, head.head_edit_ordinal).as_bytes()))[..32].to_string();
+    let head = directory::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&ledger_artifact_frontier(scope, &snapshot)?)?;
+    let request_id = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(format!("checkpoint-policy\0{}\0{}\0{}", scope.space_id, scope.document_id, head.head_edit_ordinal).as_bytes()))[..32].to_string();
     let request = DocumentCheckInV1 { schema: os_directory::DOCUMENT_CHECK_IN_SCHEMA_V1.into(), request_id: request_id.clone(), head };
     let source = request.canonical_json()?;
-    let command_sha256 = os_directory::hex_lower(&Sha256::digest(source.as_bytes()));
+    let command_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(source.as_bytes()));
     let key = DocumentCheckInKey { user_id: user_id.clone(), space_id: scope.space_id.clone(), document_id: scope.document_id.clone(), request_id: request_id.clone() };
     let DocumentCheckInAdmission::Owner(job) = state.check_ins.admit(key.clone(), &command_sha256) else { return None };
     let claim = NewCheckpointPublicationClaimV1 { actor_user_id: user_id.clone(), correlation_id: request_id.clone(), command_sha256: command_sha256.clone(), claimed_at: now_ms() };
@@ -4800,7 +4793,7 @@ async fn materialize_and_publish_check_in(
     let context = OperationContext::stall_bounded(DOCUMENT_CHECK_IN_STALL_BOUND_MS, AuthorityLimits::maximum(), job.as_ref()).map_err(refuse)?;
     job.advance(DocumentCheckInPhaseV1::Materializing, 0);
     let Some(authority) = state.artifact_authority.as_ref() else { return Err(Some(DocumentCheckInRefusalV1::Unavailable).into()) };
-    let head = request.head.artifact_frontier().ok_or(Some(DocumentCheckInRefusalV1::UnknownHead))?;
+    let head = directory::os_directory::io::binary::artifact_hash::decode_edited_artifact_frontier_v1(&request.head).ok_or(Some(DocumentCheckInRefusalV1::UnknownHead))?;
     let descriptor = match state.directory.get_document_descriptor(scope).await {
         Ok(Some(descriptor)) => descriptor,
         Ok(None) => return Err(Some(DocumentCheckInRefusalV1::AuthorityChanged).into()),
@@ -4921,7 +4914,7 @@ async fn post_document_check_in(Path((space_id, document_id)): Path<(String, Str
     if state.artifact_authority.is_none() {
         return StatusCode::SERVICE_UNAVAILABLE.into_response();
     }
-    let command_sha256 = os_directory::hex_lower(&Sha256::digest(source.as_bytes()));
+    let command_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(source.as_bytes()));
     let key = DocumentCheckInKey { user_id: user_id.clone(), space_id: scope.space_id.clone(), document_id: scope.document_id.clone(), request_id: request.request_id.clone() };
     let job = match state.check_ins.admit(key.clone(), &command_sha256) {
         DocumentCheckInAdmission::Owner(job) => job,
@@ -4937,7 +4930,7 @@ async fn post_document_check_in(Path((space_id, document_id)): Path<(String, Str
                 Some(checkpoint_id) => state.directory.get_artifact_checkpoint(&scope, checkpoint_id).await.ok().flatten(),
                 None => None,
             };
-            match completed.and_then(|checkpoint| Some((checkpoint.checkpoint_id, checkpoint.parent_checkpoint_id?, EditedArtifactFrontierV1::of_artifact_frontier(&checkpoint.baseline_frontier)?))) {
+            match completed.and_then(|checkpoint| Some((checkpoint.checkpoint_id, checkpoint.parent_checkpoint_id?, directory::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&checkpoint.baseline_frontier)?))) {
                 Some((checkpoint_id, parent, baseline)) if baseline == request.head => job.finish_ready(checkpoint_id, parent, baseline),
                 _ => {
                     state.check_ins.forget(&key);
@@ -7490,7 +7483,7 @@ fn space_administration_cursor_mac(key: &[u8; 32], caller: Option<&AuthedUser>, 
 }
 
 fn space_administration_cursor_encode(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, section: DirectorySpaceAdministrationSectionV1, payload: &[u8]) -> Result<String, StatusCode> {
-    let cursor = format!("{}.{}.{}", section.as_str(), os_directory::hex_lower(payload), os_directory::hex_lower(&space_administration_cursor_mac(key, caller, space_id, section, payload)));
+    let cursor = format!("{}.{}.{}", section.as_str(), os_directory::io::binary::artifact_hash::hex_lower(payload), os_directory::io::binary::artifact_hash::hex_lower(&space_administration_cursor_mac(key, caller, space_id, section, payload)));
     if cursor.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES {
         return Err(StatusCode::PAYLOAD_TOO_LARGE);
     }
@@ -7596,7 +7589,7 @@ fn seal_space_administration_page_v1(
     } else {
         None
     };
-    let binding_hex = os_directory::hex_lower(&binding);
+    let binding_hex = os_directory::io::binary::artifact_hash::hex_lower(&binding);
     let mut page = match access {
         DirectorySpaceAccessDecisionV1::Hidden => return Err(StatusCode::NOT_FOUND),
         DirectorySpaceAccessDecisionV1::Public => DirectorySpaceAdministrationPageV1::Public {
@@ -7668,7 +7661,7 @@ fn seal_space_administration_page_v1(
             }
         }
     };
-    let receipt = os_directory::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
+    let receipt = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
     match &mut page {
         DirectorySpaceAdministrationPageV1::Public { receipt_sha256, .. } | DirectorySpaceAdministrationPageV1::Member { receipt_sha256, .. } | DirectorySpaceAdministrationPageV1::Author { receipt_sha256, .. } => *receipt_sha256 = receipt,
     }
@@ -7963,7 +7956,7 @@ fn directory_event_page_bytes_bound(envelope_bytes: usize, event_bytes: usize, e
 fn seal_directory_event_page_v1(binding: [u8; 32], generation: u64, after: u64, through: u64, has_more: bool, events: Vec<DirectoryEvent>) -> Result<DirectoryEventPageV1, DirectoryEventPageErrorV1> {
     let mut page = DirectoryEventPageV1 {
         schema: "semio.directory.event-page.v1".into(),
-        session_binding_sha256: os_directory::hex_lower(&binding),
+        session_binding_sha256: os_directory::io::binary::artifact_hash::hex_lower(&binding),
         authorization_generation: generation,
         after_seq_exclusive: after,
         through_seq_inclusive: through,
@@ -7971,7 +7964,7 @@ fn seal_directory_event_page_v1(binding: [u8; 32], generation: u64, after: u64, 
         events,
         receipt_sha256: String::new(),
     };
-    page.receipt_sha256 = os_directory::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
+    page.receipt_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
     if semio_framework_pack_json::to_json_string(&page).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
         return Err(DirectoryEventPageErrorV1::TooLarge);
     }
@@ -7998,7 +7991,7 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
     control.checkpoint()?;
     let envelope = DirectoryEventPageV1 {
         schema: "semio.directory.event-page.v1".into(),
-        session_binding_sha256: os_directory::hex_lower(&binding),
+        session_binding_sha256: os_directory::io::binary::artifact_hash::hex_lower(&binding),
         authorization_generation: caller.authorization_generation,
         after_seq_exclusive: after,
         through_seq_inclusive: u64::MAX,
@@ -8684,7 +8677,7 @@ async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Re
     let caller = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     let response = DirectorySessionAuthorityV1 {
         schema: "semio.directory.session-authority.v1".into(),
-        session_binding_sha256: os_directory::hex_lower(&directory_event_page_session_binding_v1(&caller)?),
+        session_binding_sha256: os_directory::io::binary::artifact_hash::hex_lower(&directory_event_page_session_binding_v1(&caller)?),
         authorization_generation: caller.authorization_generation,
         user_id: user.id,
         email: user.email,
@@ -9618,7 +9611,7 @@ fn admin_cursor_encode_scoped(key: &[u8; 32], principal: &AdminPrincipalV1, rout
     let mut raw = [0u8; 42];
     raw[..10].copy_from_slice(&payload);
     raw[10..].copy_from_slice(&admin_cursor_mac(key, principal, &payload, scope));
-    Ok(os_directory::hex_lower(&raw))
+    Ok(os_directory::io::binary::artifact_hash::hex_lower(&raw))
 }
 
 fn admin_cursor_encode(key: &[u8; 32], principal: &AdminPrincipalV1, route: u8, offset: usize) -> Result<String, StatusCode> {
@@ -9702,7 +9695,7 @@ fn admin_create_space_id(request_id: &str) -> String {
     hash.update(b"semio/hub/admin-create-space/v1\0");
     hash.update(&(request_id.len() as u32).to_be_bytes());
     hash.update(request_id.as_bytes());
-    format!("admin-space:{}", os_directory::hex_lower(&hash.finalize()))
+    format!("admin-space:{}", os_directory::io::binary::artifact_hash::hex_lower(&hash.finalize()))
 }
 
 fn admin_intent_metadata(intent: &AdminIntentV1) -> AdminIntentMetadata {
@@ -9793,7 +9786,7 @@ fn admin_intent_digest(intent: &AdminIntentV1) -> String {
     hash.update(b"semio/hub/admin-intent/v1\0");
     hash.update(&(encoded.len() as u32).to_be_bytes());
     hash.update(encoded.as_bytes());
-    os_directory::hex_lower(&hash.finalize())
+    os_directory::io::binary::artifact_hash::hex_lower(&hash.finalize())
 }
 
 fn new_admin_audit_fact(principal: &AdminPrincipalV1, request_id: &str, intent_digest: &str, operation_id: &str, metadata: &AdminIntentMetadata, phase: &str, event_range: Option<(u64, u64)>, outcome_code: &str) -> NewAdminOperationAuditRecord {

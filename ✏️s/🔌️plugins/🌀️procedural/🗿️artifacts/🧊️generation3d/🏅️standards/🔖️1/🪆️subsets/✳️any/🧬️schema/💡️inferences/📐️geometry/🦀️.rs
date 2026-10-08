@@ -108,7 +108,7 @@ pub struct GeometryWire {
     pub to_port: String,
 }
 
-/// 🔑️ Everything a widget's evaluation reads besides its parents' values: the widget variant and kind, the catalogue's own content hash of the kind, the stored literals and the incoming wiring.
+/// 🔑️ Everything a widget's evaluation reads besides its parents' values: the widget variant, admitted kind definition, stored literals and incoming wiring.
 #[derive(Clone, Debug, PartialEq, ToValue)]
 #[value(rename_all = "camelCase")]
 pub struct GeometryDependency {
@@ -176,7 +176,7 @@ fn begin(snapshot: &GeometryInput<'_>, key: &str, parents: &[Arc<WidgetEvaluatio
         return faulted("kind-unknown", format!("The widget kind \u{201c}{neuron_kind}\u{201d} is not in the catalogue."), format!("Der Widget-Typ \u{201c}{neuron_kind}\u{201d} ist nicht im Katalog."), quality);
     };
     match resolve_inputs(kind, key, params, &wires, &parent) {
-        Ok(inputs) => Started::Job(registry::start(kind, inputs), kind.id.clone()),
+        Ok(inputs) => Started::Job(snapshot.computes.start(kind, inputs), kind.id.clone()),
         Err(fault) => Started::Ready(WidgetEvaluation::faulted(fault, kind.quality)),
     }
 }
@@ -243,11 +243,12 @@ pub struct Generation3dGeometry;
 pub struct GeometryInput<'a> {
     pub snapshot: &'a Generation3dSnapshot,
     pub catalogue: Arc<Catalogue>,
+    pub computes: Arc<dyn compute::GeometryComputeContext>,
 }
 
 impl<'a> GeometryInput<'a> {
     /// 🏗️ Binds a snapshot to an explicitly admitted immutable catalogue.
-    pub fn new(snapshot: &'a Generation3dSnapshot, catalogue: Arc<Catalogue>) -> Self { Self { snapshot, catalogue } }
+    pub fn new(snapshot: &'a Generation3dSnapshot, catalogue: Arc<Catalogue>, computes:Arc<dyn compute::GeometryComputeContext>) -> Self { Self { snapshot, catalogue, computes } }
 }
 
 impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {

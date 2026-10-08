@@ -687,7 +687,7 @@ fn lowering_the_requested_count_discards_the_planned_tail_and_raising_continues(
 }
 
 //#region ⏯️FillRunJob
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dPlaySnapshot;
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
 
@@ -1137,7 +1137,7 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let number = |key: &str| law[key].as_u64().unwrap_or_else(|| panic!("interactive law {key}"));
     let (budget, ceiling, append_ceiling, minimum_turns, seed) = (number("budgetWork"), number("stepWorkCeiling"), number("appendOpsCeiling") as usize, number("turns") as usize, number("seed"));
     let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
-    let mut overlay = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
+    let mut overlay = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).expect("typed fixture admits"));
     let mut job = fill_run_job(roots, lane, seed, number("requested") as usize);
     let operation = job.operation();
     let (mut sequence, mut verdict) = (0, None);

@@ -1247,7 +1247,7 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authori
             failures.extend(::semio_framework_os_kernel::mutation_label_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_kernel::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_kernel::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
-            let (footprint_failures, cases) = ::semio_framework_os_kernel::mutation_inverse_rows_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
+            let (footprint_failures, cases) = ::semio_framework_os_kernel::os_spr::fold::mutation_inverse_rows_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
             failures.extend(footprint_failures);
             assert!(failures.is_empty(), "{} breaches of the editable-payload and fold-footprint laws over {} {} operations and {} fixture cases: {:#?}", failures.len(), count, ::core::stringify!(#name), cases, failures);
         }
@@ -1336,10 +1336,10 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
         impl ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
             const SEMANTICS: ::semio_framework_os_kernel::SemanticDescriptor = <#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
             fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
-                ::semio_framework_os_kernel::fold_plan_diff(self, base)
+                ::semio_framework_os_kernel::os_spr::fold::fold_plan_diff(self, base)
             }
             fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<#op_ty>, ::semio_framework_value::ValueError> {
-                ::semio_framework_os_kernel::fold_plan_inverse(self, base)
+                ::semio_framework_os_kernel::os_spr::fold::fold_plan_inverse(self, base)
             }
             fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
                 ::semio_framework_os_kernel::CompositeMutationKind::label(self)

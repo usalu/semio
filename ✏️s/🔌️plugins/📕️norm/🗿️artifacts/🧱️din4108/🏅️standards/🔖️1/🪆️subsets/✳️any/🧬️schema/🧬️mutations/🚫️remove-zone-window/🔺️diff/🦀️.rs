@@ -8,9 +8,9 @@ pub fn diff(payload: &RemoveZoneWindow, base: &Din4108Snapshot) -> protocol::Mut
     let Some(zone) = base.zones.iter().find(|zone| zone.id == payload.zone_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "zone not found", Vec::<String>::new());
     };
-    let Some(window) = zone.windows.get(payload.index) else {
+    if payload.index >= zone.windows.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "window index out of range", Vec::<String>::new());
-    };
-    let nested = Din4108WindowDelta::removal(&window.id);
+    }
+    let nested = Din4108WindowDelta::removal(&zone.windows, payload.index);
     protocol::MutationOutcome::new(Din4108Diff { zones: Din4108ZoneDelta::modification(&zone.id, Din4108ZonePatch { windows: nested, ..Default::default() }), ..Default::default() })
 }

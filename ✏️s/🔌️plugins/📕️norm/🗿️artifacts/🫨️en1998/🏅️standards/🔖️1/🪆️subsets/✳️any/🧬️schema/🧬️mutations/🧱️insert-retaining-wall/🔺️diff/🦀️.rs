@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertRetainingWall, base: &En1998Snapshot) -> protocol::M
     if base.retaining_walls.iter().any(|existing| existing.id == payload.wall.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Wall id {} already exists.", payload.wall.id), [payload.wall.id.clone()]);
     }
-    let index = payload.index.min(base.retaining_walls.len());
-    protocol::MutationOutcome::new(En1998Diff { retaining_walls: En1998RetainingWallDelta::insertion(&base.retaining_walls, index, payload.wall.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.retaining_walls.len());
+    protocol::MutationOutcome::new(En1998Diff { retaining_walls: En1998RetainingWallDelta::insertion(index, payload.wall.clone()), ..Default::default() })
 }

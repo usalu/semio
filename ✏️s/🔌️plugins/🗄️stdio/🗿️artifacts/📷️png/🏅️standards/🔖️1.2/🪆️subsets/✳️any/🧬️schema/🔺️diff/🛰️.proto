@@ -2,4 +2,7 @@ syntax = "proto3";
 package semio.s_stdio_png.diff;
 import "s_stdio_png/snapshot.proto";
 
-message PngDiff { semio.s_stdio_png.snapshot.PngImage image = 1; }
+message PngRegion { uint32 x = 1; uint32 y = 2; uint32 width = 3; uint32 height = 4; }
+message PngSampleRect { PngRegion region = 1; repeated uint32 samples = 2; }
+message PngGammaValue { optional uint32 gama = 1; }
+message PngDiff { semio.s_stdio_png.snapshot.PngImage image = 1; PngGammaValue gamma = 2; repeated PngSampleRect rects = 3; }

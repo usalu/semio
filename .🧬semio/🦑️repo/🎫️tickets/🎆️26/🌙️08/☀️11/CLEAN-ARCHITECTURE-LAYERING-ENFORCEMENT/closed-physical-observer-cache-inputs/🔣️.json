@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "cases": [
+    "physical-observation/target-1/nx/cache",
+    "physical-observation/target-1/nx/workspace-data",
+    "physical-observation/target-2/nx/workspace-data",
+    "physical-observation/target-3/nx/cache",
+    "physical-observation/target-3/nx/workspace-data",
+    "physical-observation/publication-target-1/nx/cache",
+    "physical-observation/publication-target-1/nx/workspace-data"
+  ],
+  "maximumBytes": 4294967296,
+  "maximumWork": 200000,
+  "budgetMs": 300000
+}

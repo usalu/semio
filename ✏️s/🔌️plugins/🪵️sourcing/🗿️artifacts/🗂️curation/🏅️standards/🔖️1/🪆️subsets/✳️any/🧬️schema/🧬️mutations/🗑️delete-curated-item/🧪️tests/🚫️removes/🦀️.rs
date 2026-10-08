@@ -80,8 +80,8 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "delete-curated-item/removes-the-clt-panel-from-the-curation: an accepted removal emits no diagnostics");
 }
 
-/// 🔺️ The committed diff pins the sparseness: `curated.removed` carries the one id, `added` and
-/// `patched` stay empty, and the surviving glulam row is NOT restated anywhere in the diff.
+/// 🔺️ The committed diff pins the sparseness: `curated.removed` carries the one id at its base index, `inserted`,
+/// `moved` and `modified` stay empty, and the surviving glulam row is NOT restated anywhere in the diff.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(built_outcome().diff())).expect("produced delete-curated-item diff encodes");
@@ -94,8 +94,8 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-curated-item diff decodes");
     let delta = decoded.curated.as_ref().expect("the committed delete diff carries a curated delta");
-    assert_eq!(delta.removed, vec!["panel-clt-3000".to_string()], "delete-curated-item/removes-the-clt-panel-from-the-curation: the committed diff must remove exactly the addressed id");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "delete-curated-item/removes-the-clt-panel-from-the-curation: a removal must not smuggle additions or patches alongside");
+    assert_eq!(delta.removed.iter().map(|row| (row.id.as_str(), row.index)).collect::<Vec<_>>(), vec![("panel-clt-3000", 1)], "delete-curated-item/removes-the-clt-panel-from-the-curation: the committed diff must remove exactly the addressed id");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-curated-item/removes-the-clt-panel-from-the-curation: a removal must not smuggle additions or patches alongside");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-curated-item/removes-the-clt-panel-from-the-curation: committed diff JSON is not canonical");

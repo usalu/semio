@@ -31,6 +31,6 @@ pub fn diff(payload: &super::MovePoints, base: &EquationSnapshot) -> protocol::M
     }
     let edits = moved.into_iter().map(|(index, point)| EquationPointEdit::Set { at: index as u32, point }).collect();
     let diff = EquationDiff { points: Some(EquationPointsDelta { edits: canonical_point_edits(edits) }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base)).absorb_messages(partial)
+    protocol::MutationOutcome::new(diff).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

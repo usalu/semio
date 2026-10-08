@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-08",
+  "authority": "original-raster-pool-and-Value-owner-gate",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖼️raster-ownership/🦀️.rs",
+      "sha256": "33748b4d2b371e63467d2ce72988e783e58bcf2abe4ae8c8684a1f76b10e57c3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-raster-ownership-unit/🦀️.rs",
+      "sha256": "a5a99c140a3c575e23dc9b65f80cd45f3b253a7c1b5511df5923d2a535370af3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json",
+      "sha256": "d7706f73aacea232ad8aff7ca74f6fb745fd5ca3d8ac2e205b4ae561fc6d6869"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧬️schema/🔣️.json",
+      "sha256": "b594d49777895c031c4062369183e536fbfb380c329520c084f8f534645c168b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "29685c7eba363d307d189743f04c0db8733932ebf65fb769eaaaefbc35fab1ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs",
+      "sha256": "19d7bd84860b7ac5d71477db5ad3f0b6d66ee1940acdacf24ef849be60fe3e8a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs",
+      "sha256": "70efcc1abafbc9e37b7574c8354819c531e1c1b6f3727310fbb1ed839cc5a91d"
+    }
+  ],
+  "fullGrantMethods": [
+    "close_step",
+    "next_close_copy_byte_demand",
+    "next_close_capacity_byte_demand",
+    "next_close_release_byte_demand",
+    "next_close_depth_demand",
+    "terminal_is_empty"
+  ],
+  "gate": [
+    "try_lock",
+    "get_mut",
+    "into_inner"
+  ],
+  "nativeFinalPool": {
+    "result": "actual GREEN1/793skip",
+    "nativeSeconds": 0.039,
+    "nxSeconds": 317,
+    "cases": 8,
+    "turnsPerCase": 270,
+    "capacityScaffoldBirths": 4576,
+    "smallOriginalBytes": 98792,
+    "smallActualReleased": 103368,
+    "largeOriginalBytes": 164296,
+    "largeActualReleased": 168872,
+    "refusedFrontiersPerCase": 10,
+    "finalOrdinaryDropFree": 0,
+    "log": "🗑️generated/sol-2026-10-08/native-raster-close-1.log"
+  },
+  "sceneAll197": "actual GREEN197/197",
+  "GPU9": "actual GREEN1/792skip, original actualDevice=true, four genuine sources; removed zero vertex guard concurrent, no Root repair attribution",
+  "wholeNamespace": {
+    "session": 31511,
+    "exitCode": 0,
+    "result": "GREEN",
+    "summary": "Summary [   0.120s] 11 tests run: 11 passed, 783 skipped",
+    "nxDuration": "4m21s",
+    "nativeDurationSeconds": 0.12,
+    "restoredInput": "original physical-job-close schema authority restored by Doc",
+    "physicalReceipts": [
+      "[DEBUG] original raster final lease pixels=16 capacity=32 copy=0 births=4576 released=103368 source=98792 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=16 capacity=32 copy=1 births=4576 released=103368 source=98792 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=16 capacity=32 copy=8 births=4576 released=103368 source=98792 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=16 capacity=32 copy=4096 births=4576 released=103368 source=98792 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=65536 capacity=65536 copy=0 births=4576 released=168872 source=164296 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=65536 capacity=65536 copy=1 births=4576 released=168872 source=164296 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=65536 capacity=65536 copy=8 births=4576 released=168872 source=164296 refused=10 turns=270 terminalDropFree=0",
+      "[DEBUG] original raster final lease pixels=65536 capacity=65536 copy=4096 births=4576 released=168872 source=164296 refused=10 turns=270 terminalDropFree=0"
+    ]
+  }
+}

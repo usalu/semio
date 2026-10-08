@@ -5,7 +5,7 @@
 //! the Full→Tiny down-conversion by DROPPING every excluded element subtree and forbidden
 //! presentation attribute, so `SEMANTICS.verb` is `"remove"`.
 
-use super::restore_non_tiny::{RestoredAttribute, RestoredElement};
+use super::restore_non_tiny::{ReinstatedAttribute, ReinstatedElement};
 use super::*;
 use crate::schema::diff::{SvgAttributesDiff, SvgChildModified};
 
@@ -36,22 +36,24 @@ fn strip_node_diff(node: &SvgNode) -> Option<SvgNodeDiff> {
     }))
 }
 
-/// ♻️ The rows that put back what stripping removes below `node`, addressed in the stripped tree.
-fn stripped_rows(node: &SvgNode, path: &mut NodePath, elements: &mut Vec<RestoredElement>, attributes: &mut Vec<RestoredAttribute>) {
-    let SvgNode::Element { attrs, children, .. } = node else { return };
-    attributes.extend(attrs.iter().enumerate().filter(|(_, attribute)| is_blocked_attribute(&attribute.name)).map(|(index, attribute)| RestoredAttribute { path: path.clone(), index, name: attribute.name.clone(), value: attribute.value.clone() }));
+/// ♻️ The rows that put back what stripping removes below `node` (which sits at `path` in the stripped tree).
+fn stripped_rows(node: &SvgNode, path: &NodePath) -> (Vec<ReinstatedElement>, Vec<ReinstatedAttribute>) {
+    let SvgNode::Element { attrs, children, .. } = node else { return (Vec::new(), Vec::new()) };
+    let mut attributes: Vec<ReinstatedAttribute> = attrs.iter().enumerate().filter(|(_, attribute)| is_blocked_attribute(&attribute.name)).map(|(index, attribute)| ReinstatedAttribute { path: path.clone(), index, name: attribute.name.clone(), value: attribute.value.clone() }).collect();
+    let mut elements = Vec::new();
     let mut kept = 0;
     for (index, child) in children.iter().enumerate() {
         match child {
-            SvgNode::Element { name, .. } if is_blocked_element(name) => elements.push(RestoredElement { parent: path.clone(), index, node: child.clone() }),
+            SvgNode::Element { name, .. } if is_blocked_element(name) => elements.push(ReinstatedElement { parent: path.clone(), index, node: child.clone() }),
             _ => {
-                path.push(kept);
-                stripped_rows(child, path, elements, attributes);
-                path.pop();
+                let (below_elements, below_attributes) = stripped_rows(child, &[path.as_slice(), &[kept]].concat());
+                elements.extend(below_elements);
+                attributes.extend(below_attributes);
                 kept += 1;
             }
         }
     }
+    (elements, attributes)
 }
 
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StripNonTiny {
@@ -61,11 +63,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StripNonTiny {
         protocol::MutationOutcome::new(SvgDiff { root: base.doc.root.as_ref().and_then(strip_node_diff), ..Default::default() })
     }
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
-        let (mut elements, mut attributes) = (Vec::new(), Vec::new());
-        if let Some(root) = &base.doc.root {
-            stripped_rows(root, &mut Vec::new(), &mut elements, &mut attributes);
-        }
-        Ok(if elements.is_empty() && attributes.is_empty() { Vec::new() } else { vec![SvgTinyMutation::RestoreNonTiny(restore_non_tiny::RestoreNonTiny { elements, attributes })] })
+        let (elements, attributes) = base.doc.root.as_ref().map_or_else(|| (Vec::new(), Vec::new()), |root| stripped_rows(root, &Vec::new()));
+        Ok(if elements.is_empty() && attributes.is_empty() { Vec::new() } else { vec![SvgTinyMutation::ReinstateNonTiny(restore_non_tiny::ReinstateNonTiny { elements, attributes })] })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Strip non-Tiny content", "Nicht-Tiny-Inhalte entfernen")

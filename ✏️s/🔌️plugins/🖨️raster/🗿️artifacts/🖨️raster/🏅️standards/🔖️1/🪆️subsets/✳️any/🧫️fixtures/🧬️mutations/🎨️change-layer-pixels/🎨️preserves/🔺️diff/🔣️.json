@@ -3,9 +3,10 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "paint",
         "patch": {
@@ -26,8 +27,7 @@
           "locked": null
         }
       }
-    ],
-    "moved": []
+    ]
   },
   "assets": null
 }

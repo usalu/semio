@@ -1,0 +1,29 @@
+{
+  "authorship": false,
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
+      "sha256": "ac7db6c3a55588b52646980f95563e96c62ac3c930c015b1939e51f179f21241"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "sha256": "1d7b9feea66e989a065c8c6e227a63202dd88bd716bf87f71d42073b40422ff4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "sha256": "5a96ac5d3b5fe0e32491d0ecadc187113bd3b9273220b4f14a805e60baf92b05"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
+      "sha256": "cbc3deedf867e5f33cc0d889af5ff013a4a87af856ab60f0bc68dd428eb4c900"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "sha256": "d1960bdbbba3d4dc51cb33b6c9cc50cbaee6ea6a739a438d2cb8c80339c5eea3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "fcb58e212315c9f23a59a381d4bc021de578ff07dcb5f582171fc5fffa7f4033"
+    }
+  ]
+}

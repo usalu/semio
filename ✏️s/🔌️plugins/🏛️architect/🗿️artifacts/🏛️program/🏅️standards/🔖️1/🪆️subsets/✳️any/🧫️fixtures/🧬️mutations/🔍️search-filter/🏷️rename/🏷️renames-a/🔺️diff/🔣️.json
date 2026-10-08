@@ -59,9 +59,10 @@
   "analyses": null,
   "reports": null,
   "searchFilters": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "search-filter-a",
         "patch": {
@@ -94,8 +95,7 @@
           "pinned": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "statusRecords": null,
   "workshops": null,

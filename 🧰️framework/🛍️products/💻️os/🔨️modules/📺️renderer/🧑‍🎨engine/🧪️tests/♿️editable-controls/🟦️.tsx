@@ -521,7 +521,7 @@ import widgetEdits from "../../../../../../../../✏️s/🔌️plugins/🌀️p
 import inspectorTerminology from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json";
 import Ajv from "ajv";
 import widgetInputSchema from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧬️schema/🔣️.json";
-import { editInputValue, editCollectionValue } from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🟦️.ts";
+import { editInputValue, editCollectionValue, editWidgetFacet } from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🟦️.ts";
  
 for (const locale of ["en", "de"] as const) for (const gesture of inspectorControls.reactCommits.gestures) it(`retains inspector scalar and selected BRep labels and commands in ${locale} on ${gesture}`, () => {
   const law = inspectorControls.reactCommits;
@@ -598,4 +598,62 @@ for (const locale of ["en", "de"] as const) it(`retains ordered inspector collec
     view.unmount();
   }
   console.log(`[DEBUG] inspector collections ${locale}: cases=${cases.length} actualUiNodeView=true independentAjvJson=true`);
+});
+
+
+for (const locale of ["en", "de"] as const) it(`retains inspector metadata actions and read-only status diagnostics in ${locale}`, () => {
+  const law = inspectorControls.reactMetadata;
+  const term = (key: string) => (inspectorTerminology.labels as Record<string, { nativeEn: string; nativeDe: string }>)[key]![locale === "en" ? "nativeEn" : "nativeDe"];
+  const validate = new Ajv({ strict: false }).compile(widgetInputSchema);
+  for (const control of law.facets) {
+    const entry = widgetEdits.facets.find(entry => entry.id === control.case)!;
+    const args = { widgetId: entry.widget.id, facet: entry.command.facet, channel: entry.command.channel };
+    const label = term(control.label);
+    const value = entry.widget.kind === "variable" ? entry.widget.name : entry.widget.format;
+    const select = entry.widget.kind === "outputExport";
+    const component = select ? { type: "select", value, items: law.exportFormats.map(format => ({ value: format.value, label: format[locale] })) } : { type: "input", kind: "text", value, commit: "blur" };
+    const record = { id: 1, key: entry.id, component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label }, bindings: [{ trigger: select ? "change" : "commit", action: { scope: inspectorControls.reactCommits.scope, name: inspectorControls.reactCommits.action, version: 1 }, args }] };
+    const store = new UiDocumentStore("inspector-metadata");
+    store.loadSnapshot({ surface: "inspector-metadata", revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
+    const intents: any[] = [];
+    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+    const input = view.getByRole(select ? "combobox" : "textbox", { name: label });
+    expect(computeAccessibleName(input)).toBe(label);
+    if (select) {
+      fireEvent.keyDown(input, { key: "ArrowDown", code: "ArrowDown" });
+      const option = view.getByRole("option", { name: law.exportFormats.find(format => format.value === entry.command.value)![locale] });
+      expect(computeAccessibleName(option)).toBe(law.exportFormats.find(format => format.value === entry.command.value)![locale]);
+      fireEvent.click(option);
+    } else {
+      fireEvent.change(input, { target: { value: entry.command.value } });
+      fireEvent.blur(input);
+    }
+    expect(intents).toHaveLength(1);
+    expect(intents[0].args).toEqual(args);
+    expect(intents[0].action).toEqual({ scope: inspectorControls.reactCommits.scope, name: inspectorControls.reactCommits.action, version: 1 });
+    const command = { ...intents[0].args, value: String(intents[0].input) };
+    expect(validate(command), JSON.stringify(validate.errors)).toBe(true);
+    expect(editWidgetFacet(entry.widget as never, command, ["number", "text", "boolean", "point", "vector"], ["stl", "obj", "ply", "gltf", "las", "dwg", "txt"], [])).toEqual(entry.expected);
+    fireEvent.blur(input);
+    expect(intents).toHaveLength(1);
+    view.unmount();
+  }
+  for (const status of law.statuses) {
+    const label = term(status.label), description = term(status.description);
+    const store = new UiDocumentStore("inspector-status");
+    store.loadSnapshot({ surface: "inspector-status", revision: 1, root: 1, layoutEpoch: 0n, nodes: [{ id: 1, key: status.state, component: { type: "text", value: label }, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label, description, live: law.live }, bindings: [] }] } as any);
+    const intents: unknown[] = [];
+    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+    const output = view.container.querySelector(`[data-ui-node-key="${status.state}"]`)!;
+    expect(computeAccessibleName(output)).toBe(label);
+    expect(output.getAttribute("aria-label")).toBe(label);
+    expect(computeAccessibleDescription(output)).toBe(description);
+    expect(output.getAttribute("aria-live")).toBe(law.live);
+    expect(output.textContent).toContain(label);
+    fireEvent.click(output);
+    fireEvent.keyDown(output, { key: "Enter" });
+    expect(intents).toHaveLength(law.readOnlyActionCount);
+    view.unmount();
+  }
+  console.log(`[DEBUG] inspector metadata ${locale}: actualUiNodeView=true facets=${law.facets.length} statusDiagnostics=${law.statuses.length} independentAccessibleNamesAjv=true`);
 });

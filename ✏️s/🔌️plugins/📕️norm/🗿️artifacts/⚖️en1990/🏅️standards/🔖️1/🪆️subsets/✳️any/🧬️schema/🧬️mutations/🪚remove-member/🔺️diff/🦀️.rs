@@ -9,5 +9,5 @@ pub fn diff(payload: &RemoveMember, base: &En1990Snapshot) -> MutationOutcome<En
     if payload.index >= base.members.len() {
         return MutationOutcome::error("mutation.target-missing", "members index out of range", [payload.index.to_string()]);
     }
-    MutationOutcome::new(En1990Diff { members: En1990MemberDelta::removal(&base.members[payload.index].id), ..En1990Diff::default() })
+    MutationOutcome::new(En1990Diff { members: En1990MemberDelta::removal(&base.members, payload.index), ..En1990Diff::default() })
 }

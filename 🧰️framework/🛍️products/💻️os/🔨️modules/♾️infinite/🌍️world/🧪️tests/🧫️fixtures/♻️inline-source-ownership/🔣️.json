@@ -1,0 +1,8 @@
+{
+  "schema": "framework.world3d.inline-source-ownership/v1",
+  "cases": [
+    {"id":"triangle","positions":[0,0,0,2,0,0,0,1,0],"indices":[0,1,2],"edgePositions":[],"edgeIds":[],"bounds":[[0,0,0],[2,1,0]],"surfaceArea":1},
+    {"id":"edgeOnly","positions":[],"indices":[],"edgePositions":[-2,0,1,3,0,1],"edgeIds":[17],"bounds":[[-2,0,1],[3,0,1]],"surfaceArea":0}
+  ],
+  "ownership": {"zeroItemsPreservesSource":true,"inlineMovePreservesIdentity":true,"inlineMoveCapacityBytes":0,"shortCapacityPreservesOwner":true,"allReceiptsFit":true,"terminalEmpty":true}
+}

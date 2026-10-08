@@ -31,19 +31,24 @@ type SemioTextureDiff {
 }
 
 type SemioMeshModified { key: String! diff: SemioMeshItemDiff! }
-type SemioMeshesDiff { removed: [String!]! modified: [SemioMeshModified!]! added: [SemioMesh!]! }
+type SemioMeshesDiff { removed: [String!]! modified: [SemioMeshModified!]! added: [SemioMeshAdded!]! }
 
 type SemioPrimitiveModified { key: String! diff: SemioPrimitiveDiff! }
-type SemioPrimitivesDiff { removed: [String!]! modified: [SemioPrimitiveModified!]! added: [SemioPrimitive!]! }
+type SemioPrimitivesDiff { removed: [String!]! modified: [SemioPrimitiveModified!]! added: [SemioPrimitiveAdded!]! }
 
 type SemioMaterialModified { key: String! diff: SemioMaterialDiff! }
-type SemioMaterialsDiff { removed: [String!]! modified: [SemioMaterialModified!]! added: [SemioMaterial!]! }
+type SemioMaterialsDiff { removed: [String!]! modified: [SemioMaterialModified!]! added: [SemioMaterialAdded!]! }
 
 type SemioTextureModified { key: String! diff: SemioTextureDiff! }
-type SemioTexturesDiff { removed: [String!]! modified: [SemioTextureModified!]! added: [SemioTexture!]! }
+type SemioTexturesDiff { removed: [String!]! modified: [SemioTextureModified!]! added: [SemioTextureAdded!]! }
 
 type SemioMeshDiff {
   meshes: SemioMeshesDiff
   materials: SemioMaterialsDiff
   textures: SemioTexturesDiff
 }
+
+type SemioMeshAdded { index: Int! item: SemioMesh! }
+type SemioPrimitiveAdded { index: Int! item: SemioPrimitive! }
+type SemioMaterialAdded { index: Int! item: SemioMaterial! }
+type SemioTextureAdded { index: Int! item: SemioTexture! }

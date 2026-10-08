@@ -330,25 +330,6 @@ async fn absorb_law() {
         assert_eq!(apply_valid(&right, &base), sequential, "absorb associativity (right) failed");
     }
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(apply_valid(&<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &b), &a), b);
-    assert_eq!(apply_valid(&<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&b, &a), &b), a);
-
-    let sample = fixture();
-    assert_eq!(apply_valid(&<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&sample, &sample), &sample), sample);
-
-    let mut mutated = sample.clone();
-    mutated = crate::applied(&mutated, &SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(0), run_index: 0, text: "Chapter Two".into() })).0;
-    assert_ne!(sample, mutated);
-    assert_eq!(apply_valid(&<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&sample, &mutated), &sample), mutated);
-    assert_eq!(apply_valid(&<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&mutated, &sample), &mutated), sample);
-}
 //#endregion 🔖️BetweenRoundtripLaw
 
 //#region 🔖️CodecRetentionLaw
@@ -358,58 +339,6 @@ async fn codec_retention_law() {
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
-}
-//#endregion 🔖️CodecRetentionLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
-/// fixtures' doc comment for exactly how each collection flavor -- removed/modified/added --
-/// is exercised).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &b);
-    assert_eq!(apply_valid(&diff_ab, &a), b);
-    let diff_ba = <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&b, &a);
-    assert_eq!(apply_valid(&diff_ba, &b), a);
-    assert!(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &a).is_empty());
-
-    let styles_diff = diff_ab.styles.as_ref().expect("styles diff present");
-    assert!(!styles_diff.removed.is_empty(), "styles: removed not exercised");
-    assert!(!styles_diff.added.is_empty(), "styles: added not exercised");
-    let style_mod = styles_diff.modified.iter().find(|m| m.key == "toModify").expect("toModify style modified");
-    assert!(style_mod.diff.name.is_some());
-    assert_eq!(style_mod.diff.based_on, Some(Some("keep".to_string())), "style based_on tri-state Some(Some(_)) not exercised");
-
-    let images_diff = diff_ab.images.as_ref().expect("images diff present");
-    assert!(!images_diff.removed.is_empty(), "images: removed not exercised");
-    assert!(!images_diff.added.is_empty(), "images: added not exercised");
-    let image_mod = images_diff.modified.iter().find(|m| m.key == "toModify").expect("toModify image modified");
-    assert!(image_mod.diff.mime.is_some() && image_mod.diff.bytes.is_some());
-
-    let body_diff = diff_ab.blocks.as_ref().expect("blocks diff present");
-    assert!(!body_diff.removed.is_empty(), "blocks: removed not exercised");
-    assert_eq!(body_diff.modified.len(), 1);
-    let TestDocBlockDiff::Paragraph(p_diff) = &body_diff.modified[0].diff else { panic!("expected paragraph diff") };
-    let runs_diff = p_diff.runs.as_ref().expect("modified paragraph: runs not exercised");
-    assert_eq!(p_diff.style_id, Some(Some("keep".to_string())), "modified paragraph: style_id tri-state Some(Some(_)) not exercised");
-    assert!(!runs_diff.modified.is_empty(), "modified paragraph: runs.modified not exercised");
-    let run_diff = &runs_diff.modified[0].diff;
-    assert!(run_diff.text.is_some(), "modified run: text not exercised");
-    let style_diff = run_diff.style.as_ref().expect("modified run: style not exercised");
-    assert!(style_diff.bold.is_some(), "modified run style: bold not exercised");
-    assert!(!runs_diff.added.is_empty(), "modified paragraph: runs.added (nested) not exercised");
-
-    let body_diff_ba = diff_ba.blocks.as_ref().expect("blocks diff (b->a) present");
-    assert!(!body_diff_ba.added.is_empty(), "blocks (b->a): added not exercised");
-    let DocBlock::Table { rows } = &body_diff_ba.added[0].item else { panic!("expected added table") };
-    assert!(!rows.is_empty());
-
-    // Some(None) tri-state coverage: style based_on cleared going the OTHER direction.
-    let style_mod_ba = diff_ba.styles.as_ref().unwrap().modified.iter().find(|m| m.key == "toModify").expect("toModify present in b->a");
-    assert_eq!(style_mod_ba.diff.based_on, Some(None), "style based_on tri-state Some(None) not exercised");
 }
 //#endregion 🔖️FieldSweep
 
@@ -470,3 +399,37 @@ async fn removals_invert_at_every_position() {
     }
 }
 
+//#region ↩️LeafInverseLaws
+#[path = "../../🎨set-run-style/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_run_style;
+#[path = "../../🏷️set-style-name/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_style_name;
+#[path = "../../📀️set-image-bytes/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_image_bytes;
+#[path = "../../📐set-heading-level/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_heading_level;
+#[path = "../../📦set-block-content/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_block_content;
+#[path = "../../📷set-image-block/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_image_block;
+#[path = "../../🔢set-list-ordered/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_list_ordered;
+#[path = "../../🖼️insert-image/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_image;
+#[path = "../../🧬️set-style-based-on/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_style_based_on;
+#[path = "../../🧱insert-block/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_block;
+#[path = "../../🧵set-run-text/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_run_text;
+#[path = "../../🧶insert-style/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_style;
+#[path = "../../🧽️remove-style/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_style;
+#[path = "../../🪓remove-block/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_block;
+#[path = "../../🪦remove-image/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_image;
+#[path = "../../🪶set-paragraph-style/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_paragraph_style;
+//#endregion ↩️LeafInverseLaws

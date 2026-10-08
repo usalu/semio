@@ -2,12 +2,15 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "feba8972-394f-4ecc-923c-9f1701881fd0"
-    ],
-    "reordered": null
+      {
+        "id": "feba8972-394f-4ecc-923c-9f1701881fd0",
+        "index": 9
+      }
+    ]
   },
   "meta": null,
   "nodes": null,

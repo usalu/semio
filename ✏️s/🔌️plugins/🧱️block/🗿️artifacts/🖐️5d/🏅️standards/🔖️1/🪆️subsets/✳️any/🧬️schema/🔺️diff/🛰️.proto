@@ -1,176 +1,292 @@
 syntax = "proto3";
 package semio.s.block.block5d.diff;
 
-// 🧬️ Block5d diff schema — sparse field delta.
+// 🧬️ Block5d diff schema — field-sparse, id-keyed delta.
 
 message Block5dDiff {
-  // @state artifact
-  optional Block5dArtifact artifact = 1;
-  // @state artifact
-  optional string schema = 2;
-  // @state artifact
-  optional BlockKindIdentity part_kind = 3;
-  // @state artifact
-  optional Block5dPart2d part2d = 4;
-  // @state artifact
-  optional Block5dPart3d part3d = 5;
-  // @state artifact
-  optional Block5dRepresentationsDelta representations = 6;
-  // @state artifact
-  optional Block5dGripKindsDelta grip_kinds = 7;
-  // @state artifact
-  optional Block5dGripsDelta grips = 8;
-  // @state artifact
-  optional Block5dCompatibilityDelta compatibility = 9;
-  // @state artifact
-  optional Block5dAttributesDelta attributes = 10;
-  // @state artifact
-  optional Block5dAuthorList authors = 11;
-  // @state artifact
-  optional BlockCamera2d camera2d = 12;
-  // @state artifact
-  optional BlockCamera3d camera3d = 13;
-  // @state artifact
-  optional BlockMeta meta = 14;
-  // @state config
+  optional string schema = 1;
+  optional BlockKindIdentityPatch part_kind = 2;
+  optional Block5dPart2dPatch part2d = 3;
+  optional Block5dPart3dPatch part3d = 4;
+  optional BlockRepresentationsDelta representations = 5;
+  optional Block5dGripKindsDelta grip_kinds = 6;
+  optional Block5dGripsDelta grips = 7;
+  optional BlockCompatibilityDelta compatibility = 8;
+  optional BlockAttributesDelta attributes = 9;
+  optional BlockAuthorsDelta authors = 10;
+  optional BlockCamera2dPatch camera2d = 11;
+  optional BlockCamera3dPatch camera3d = 12;
+  optional BlockMetaPatch meta = 13;
 }
 
-message BlockKindIdentity {
-  bool _placeholder = 1;
+message BlockOptionalText {
+  string value = 1;
+  bool cleared = 2;
 }
 
-message Block5dPart2d {
-  bool _placeholder = 1;
+message BlockOptionalNumber {
+  double value = 1;
+  bool cleared = 2;
 }
 
-message Block5dPart3d {
-  bool _placeholder = 1;
+message BlockOptionalOrientation {
+  repeated double value = 1;
+  bool cleared = 2;
 }
 
-message BlockRepresentation {
-  bool _placeholder = 1;
+message BlockOptionalScale {
+  repeated double value = 1;
+  bool cleared = 2;
 }
 
-message Block5dGripKind {
-  bool _placeholder = 1;
+message BlockKindIdentityPatch {
+  optional string id = 1;
+  optional string name = 2;
+  optional string label = 3;
+  optional string description = 4;
+  optional BlockOptionalText variant = 5;
+  optional BlockOptionalText icon = 6;
+  optional BlockOptionalText unit = 7;
 }
 
-message Block5dGripTemplate {
-  bool _placeholder = 1;
+message Block5dPart2dPatch {
+  optional BlockOptionalText shape = 1;
+  optional BlockOptionalNumber radius = 2;
+  optional BlockOptionalNumber width = 3;
+  optional BlockOptionalNumber height = 4;
+  optional BlockOptionalText color = 5;
+  optional BlockOptionalText icon_kind = 6;
 }
 
-message BlockCompatibilityRule {
-  bool _placeholder = 1;
+message Block5dPart3dPatch {
+  optional BlockOptionalOrientation orientation = 1;
+  optional BlockOptionalScale scale = 2;
 }
 
-message BlockAttribute {
-  bool _placeholder = 1;
+message BlockRepresentationPatch {
+  optional string name = 1;
+  optional BlockOptionalText mesh_url = 2;
+  optional BlockOptionalText lod = 3;
+  optional string description = 4;
+  repeated string tags_removed = 5;
+  repeated string tags_added = 6;
+  repeated string attributes_removed = 7;
+  repeated BlockAttribute attributes_added = 8;
 }
 
-message BlockAuthor {
-  bool _placeholder = 1;
+message Block5dGripKindPatch {
+  optional string name = 1;
+  optional string label = 2;
+  optional string color = 3;
+  optional string default_rope_kind = 4;
 }
 
-message BlockCamera2d {
-  bool _placeholder = 1;
+message Block5dGripTemplatePatch {
+  optional string grip_kind = 1;
+  optional double angle = 2;
+  optional double radius2d = 3;
+  repeated double position = 4;
+  repeated double direction = 5;
+  optional double radius3d = 6;
 }
 
-message BlockCamera3d {
-  bool _placeholder = 1;
+message BlockCompatibilityRulePatch {
+  optional string source = 1;
+  optional string target = 2;
+  optional bool bidirectional = 3;
 }
 
-message BlockMeta {
-  bool _placeholder = 1;
+message BlockAttributePatch {
+  optional string value = 1;
+  optional BlockOptionalText definition = 2;
 }
 
-message Block5dStringList {
-  repeated string values = 1;
+message BlockAuthorPatch {
+  optional string name = 1;
+  optional BlockOptionalText email = 2;
 }
 
-message Block5dAuthorList {
-  repeated BlockAuthor values = 1;
+message BlockCamera2dPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double zoom = 3;
 }
 
-message Block5dRepresentationsDelta {
-  repeated BlockRepresentation added = 1;
-  repeated string removed = 2;
-  repeated Block5dRepresentationsPatchEntry patched = 3;
-  repeated string reordered = 4;
+message BlockCamera3dPatch {
+  repeated double position = 1;
+  repeated double target = 2;
+  optional double zoom = 3;
 }
 
-message Block5dRepresentationsPatchEntry {
+message BlockMetaPatch {
+  optional string description = 1;
+}
+
+message BlockRepresentationsPatchEntry {
   string id = 1;
-  Block5dRepresentationsPatch patch = 2;
+  BlockRepresentationPatch patch = 2;
 }
 
-message Block5dRepresentationsPatch {
-  optional BlockRepresentation replacement = 1;
+message BlockRepresentationsRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message Block5dGripKindsDelta {
-  repeated Block5dGripKind added = 1;
-  repeated string removed = 2;
-  repeated Block5dGripKindsPatchEntry patched = 3;
-  repeated string reordered = 4;
+message BlockRepresentationsInsertion {
+  uint32 index = 1;
+  BlockRepresentation row = 2;
+}
+
+message BlockRepresentationsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockRepresentationsDelta {
+  repeated BlockRepresentationsRemoval removed = 1;
+  repeated BlockRepresentationsInsertion inserted = 2;
+  repeated BlockRepresentationsRelocation moved = 3;
+  repeated BlockRepresentationsPatchEntry modified = 4;
 }
 
 message Block5dGripKindsPatchEntry {
   string id = 1;
-  Block5dGripKindsPatch patch = 2;
+  Block5dGripKindPatch patch = 2;
 }
 
-message Block5dGripKindsPatch {
-  optional Block5dGripKind replacement = 1;
+message Block5dGripKindsRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message Block5dGripsDelta {
-  repeated Block5dGripTemplate added = 1;
-  repeated string removed = 2;
-  repeated Block5dGripsPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Block5dGripKindsInsertion {
+  uint32 index = 1;
+  Block5dGripKind row = 2;
+}
+
+message Block5dGripKindsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Block5dGripKindsDelta {
+  repeated Block5dGripKindsRemoval removed = 1;
+  repeated Block5dGripKindsInsertion inserted = 2;
+  repeated Block5dGripKindsRelocation moved = 3;
+  repeated Block5dGripKindsPatchEntry modified = 4;
 }
 
 message Block5dGripsPatchEntry {
   string id = 1;
-  Block5dGripsPatch patch = 2;
+  Block5dGripTemplatePatch patch = 2;
 }
 
-message Block5dGripsPatch {
-  optional Block5dGripTemplate replacement = 1;
-}
-
-message Block5dCompatibilityDelta {
-  repeated BlockCompatibilityRule added = 1;
-  repeated string removed = 2;
-  repeated Block5dCompatibilityPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Block5dCompatibilityPatchEntry {
+message Block5dGripsRemoval {
   string id = 1;
-  Block5dCompatibilityPatch patch = 2;
+  uint32 index = 2;
 }
 
-message Block5dCompatibilityPatch {
-  optional BlockCompatibilityRule replacement = 1;
+message Block5dGripsInsertion {
+  uint32 index = 1;
+  Block5dGripTemplate row = 2;
 }
 
-message Block5dAttributesDelta {
-  repeated BlockAttribute added = 1;
-  repeated string removed = 2;
-  repeated Block5dAttributesPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Block5dAttributesPatchEntry {
+message Block5dGripsRelocation {
   string id = 1;
-  Block5dAttributesPatch patch = 2;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
-message Block5dAttributesPatch {
-  optional BlockAttribute replacement = 1;
+message Block5dGripsDelta {
+  repeated Block5dGripsRemoval removed = 1;
+  repeated Block5dGripsInsertion inserted = 2;
+  repeated Block5dGripsRelocation moved = 3;
+  repeated Block5dGripsPatchEntry modified = 4;
 }
 
-message Block5dArtifact {
-  string schema = 1;
+message BlockCompatibilityPatchEntry {
+  string id = 1;
+  BlockCompatibilityRulePatch patch = 2;
 }
+
+message BlockCompatibilityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message BlockCompatibilityInsertion {
+  uint32 index = 1;
+  BlockCompatibilityRule row = 2;
+}
+
+message BlockCompatibilityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockCompatibilityDelta {
+  repeated BlockCompatibilityRemoval removed = 1;
+  repeated BlockCompatibilityInsertion inserted = 2;
+  repeated BlockCompatibilityRelocation moved = 3;
+  repeated BlockCompatibilityPatchEntry modified = 4;
+}
+
+message BlockAttributesPatchEntry {
+  string id = 1;
+  BlockAttributePatch patch = 2;
+}
+
+message BlockAttributesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message BlockAttributesInsertion {
+  uint32 index = 1;
+  BlockAttribute row = 2;
+}
+
+message BlockAttributesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockAttributesDelta {
+  repeated BlockAttributesRemoval removed = 1;
+  repeated BlockAttributesInsertion inserted = 2;
+  repeated BlockAttributesRelocation moved = 3;
+  repeated BlockAttributesPatchEntry modified = 4;
+}
+
+message BlockAuthorsPatchEntry {
+  string id = 1;
+  BlockAuthorPatch patch = 2;
+}
+
+message BlockAuthorsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message BlockAuthorsInsertion {
+  uint32 index = 1;
+  BlockAuthor row = 2;
+}
+
+message BlockAuthorsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message BlockAuthorsDelta {
+  repeated BlockAuthorsRemoval removed = 1;
+  repeated BlockAuthorsInsertion inserted = 2;
+  repeated BlockAuthorsRelocation moved = 3;
+  repeated BlockAuthorsPatchEntry modified = 4;
+}
+

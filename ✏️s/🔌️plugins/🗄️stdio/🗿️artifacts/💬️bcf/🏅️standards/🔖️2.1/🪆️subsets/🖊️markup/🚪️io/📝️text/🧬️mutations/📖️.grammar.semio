@@ -15,7 +15,7 @@ comment none
 # `enc_str`/`enc_bytes` (hex-encoded UTF-8 string / raw byte) field. `[0]`/`[1,x]` is
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4); `viewpoint-ref`'s
 # `Option<Option<String>>` nests it twice (`opt-opt-hex`).
-document = set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot
+document = set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot | set-parts
 
 set-version = "set-version" "version" "=" hex
 insert-topic = "insert-topic" "topic" "=" topic "index" "=" opt-int
@@ -29,6 +29,7 @@ remove-viewpoint = "remove-viewpoint" "topic-guid" "=" hex "guid" "=" hex
 set-viewpoint-camera = "set-viewpoint-camera" "topic-guid" "=" hex "guid" "=" hex "camera" "=" opt-camera
 set-viewpoint-components = "set-viewpoint-components" "topic-guid" "=" hex "guid" "=" hex "components" "=" opt-components
 set-viewpoint-snapshot = "set-viewpoint-snapshot" "topic-guid" "=" hex "guid" "=" hex "snapshot" "=" opt-hex
+set-parts = "set-parts" "parts" "=" parts-list
 
 # ── Tri-state wrappers (`encode_option`, `📖️grammar-recipe.md` §1.4) ─────────────────────────────
 opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
@@ -85,5 +86,7 @@ coloring = "[" hex "," label-list "]"
 
 # `BcfRawPart` -- `[name,data]`.
 part = "[" hex "," hex "]"
+parts-list = "[" part-item* "]"
+part-item = part ","?
 
 opt-int = "[" "0" "]" | "[" "1" "," INT "]"

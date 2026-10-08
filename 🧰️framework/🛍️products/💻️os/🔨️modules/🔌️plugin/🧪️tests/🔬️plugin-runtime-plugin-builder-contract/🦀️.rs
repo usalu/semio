@@ -4605,21 +4605,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
         type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
-        fn member_store_owners_birth_bytes() -> usize {
-            store::document_store_owners_constructor_birth_bytes::<store::ArtifactStoreCursorDisposer<Self, TestMutation>>([
-                semio_framework_value::factory_constructor_birth_bytes::<TestSnapshotRetirementFactory>(0),
-                semio_framework_value::factory_constructor_birth_bytes::<TestOwnedValueRetirementFactory<Self>>(0),
-                semio_framework_value::factory_constructor_birth_bytes::<TestOwnedValueRetirementFactory<TestMutation>>(0),
-            ]) + store::operation_wire_preparation_factory_birth_bytes::<Self, TestMutation>(crate::app::bounded_config_store_one_item_preparation_factory_birth_bytes::<Self, TestMutation>())
+        fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+            let base = store::DocumentStoreOwners::<Self, TestMutation>::source_birth_bytes::<TestSnapshotRetirementFactory, TestOwnedValueRetirementFactory<Self>, TestOwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<Self, TestMutation>>()?;
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<Self, TestMutation>())?;
+            let capacity_bytes = base.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
+            Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: preparation.depth.max(1) })
         }
 
-        fn member_store_owners() -> store::DocumentStoreOwners<Self, TestMutation> {
-            store::DocumentStoreOwners::new(
-                std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),
-                std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestSnapshot>(std::marker::PhantomData)),
-                std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
-                Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),
-            ).with_one_item_preparation(test_document_preparation_factory())
+        fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, TestMutation>> {
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<Self, TestMutation>()).map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
+            store::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
+                TestSnapshotRetirementFactory { lie_about_terminal: false },
+                TestOwnedValueRetirementFactory::<Self>(std::marker::PhantomData),
+                TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData),
+                store::ArtifactStoreCursorDisposer::<Self, TestMutation>::new(),
+                test_document_preparation_factory(),
+            ))
         }
     }
 

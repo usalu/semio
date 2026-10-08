@@ -10,6 +10,6 @@ pub fn diff(payload: &super::AddAttribute, base: &Block2dSnapshot) -> protocol::
         return protocol::MutationOutcome::new(Block2dDiff::default())
             .absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("{} \"{}\" already present", "attribute", payload.attribute.key)).at(vec![payload.attribute.key.clone()])]);
     }
-    protocol::MutationOutcome::new(Block2dDiff { attributes: Some(BlockAttributesDelta { added: vec![payload.attribute.clone()], reordered: semio_s_plugin_block::block_insert_order(base.attributes.iter().map(|item| item.key.as_str()), &payload.attribute.key, payload.index), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { attributes: BlockAttributesDelta::insertion(semio_s_plugin_block::block_insert_index(base.attributes.len(), payload.index), payload.attribute.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

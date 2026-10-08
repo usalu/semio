@@ -37,7 +37,7 @@ message FlowParamModified {
 message FlowParamsDiff {
   repeated string removed = 1;
   repeated FlowParamModified modified = 2;
-  repeated FlowParam added = 3;
+  repeated FlowParamAdded added = 3;
 }
 message FlowNodeDiff {
   optional string kind = 1;
@@ -52,7 +52,7 @@ message FlowNodeModified {
 message FlowNodesDiff {
   repeated string removed = 1;
   repeated FlowNodeModified modified = 2;
-  repeated FlowNode added = 3;
+  repeated FlowNodeAdded added = 3;
 }
 message FlowEdgeDiff {
   PortRef from = 1;
@@ -66,9 +66,13 @@ message FlowEdgeModified {
 message FlowEdgesDiff {
   repeated string removed = 1;
   repeated FlowEdgeModified modified = 2;
-  repeated FlowEdge added = 3;
+  repeated FlowEdgeAdded added = 3;
 }
 message SemioFlowDiff {
   FlowNodesDiff nodes = 1;
   FlowEdgesDiff edges = 2;
 }
+
+message FlowParamAdded { uint64 index = 1; FlowParam item = 2; }
+message FlowNodeAdded { uint64 index = 1; FlowNode item = 2; }
+message FlowEdgeAdded { uint64 index = 1; FlowEdge item = 2; }

@@ -6,5 +6,5 @@ pub fn diff(payload: &RemoveLayer, base: &En1997Snapshot) -> protocol::MutationO
     if payload.index >= base.layers.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("layer #{} missing", payload.index), vec![payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1997Diff { layers: Some(En1997LayersRows { removed: vec![base.layers[payload.index].id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { layers: Some(En1997LayersRows::removal(&base.layers, payload.index)), ..Default::default() })
 }

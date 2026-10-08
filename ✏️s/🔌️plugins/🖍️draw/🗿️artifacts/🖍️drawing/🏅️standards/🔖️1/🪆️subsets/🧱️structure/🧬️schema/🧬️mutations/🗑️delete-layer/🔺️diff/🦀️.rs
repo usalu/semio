@@ -8,6 +8,6 @@ pub fn diff(payload: &super::mutation::DeleteLayer, base: &DrawingSnapshot) -> p
     if find_drawing_layer(base, &payload.layer_id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.to_string_owner()]);
     }
-    protocol::MutationOutcome::new(diff_remove_layer(&payload.layer_id))
+    protocol::MutationOutcome::new(diff_remove_layer(&base.layers, &payload.layer_id))
 }
 //#endregion 🔖️Diff

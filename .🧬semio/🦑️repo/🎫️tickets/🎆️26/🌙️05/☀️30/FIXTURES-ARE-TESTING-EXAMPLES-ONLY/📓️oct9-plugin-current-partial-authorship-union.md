@@ -1,0 +1,3 @@
+# Current Partial Authorship Union
+
+The master had 1440 authored endpoints plus four retained inputs before this narrow append. Current exact owned-action ledgers add 20 distinct source paths, giving 1460 authored endpoints plus four retained inputs. Mounted ledger has 13 current paths; Services has seven; private member propagation has three (shared neutral test and mounted owner overlap). These are partial actual source actions with preimages, not a source freeze or passing native claim. Only their owned logical sections are attributed; concurrent sections and Native helper/constructor edits remain observations. No broad hash refresh was performed outside this union.

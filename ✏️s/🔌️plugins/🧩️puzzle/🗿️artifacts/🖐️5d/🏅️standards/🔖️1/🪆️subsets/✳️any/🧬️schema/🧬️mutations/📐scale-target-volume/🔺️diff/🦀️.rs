@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ScaleTargetVolume` — patches the one addressed target-volume in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::ScaleTargetVolume, base: &Puzzle5dSnapshot) -> prot
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
-        target_volumes: Some(Puzzle5dTargetVolumesDelta::patching(payload.id.clone(), patch)),
+        target_volumes: Some(Puzzle5dTargetVolumesDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

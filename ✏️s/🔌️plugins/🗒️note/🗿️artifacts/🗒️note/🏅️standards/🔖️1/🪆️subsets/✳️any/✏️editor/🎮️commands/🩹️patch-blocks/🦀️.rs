@@ -18,12 +18,9 @@ pub struct PatchBlocks {
     pub value: String,
 }
 
-/// 🩹️ Routes the inspector's typed field/value pair to the one narrow semantic mutation that
-/// owns it — one mutation per (id, field) pair, batched into a single `Emit` so a multi-select
-/// patch is still one undo step. Replaces the old `note_engine::patch_block_field`
-/// whole-document-clone + whole-collection re-dump. A request that cannot move the document is refused by name —
-/// no ids, an unknown field, a value the field cannot read (`app.command.invalid-args`), an id the note does not
-/// hold (`mutation.target-missing`) — instead of an empty emit a caller would read as an accepted edit.
+/// 🩹️ Routes each inspector field to its typed semantic mutation and batches multi-selection
+/// into one undo step. Missing ids, unknown fields, malformed values and absent blocks return
+/// their named command or mutation refusal.
 pub fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if payload.block_ids.is_empty() {

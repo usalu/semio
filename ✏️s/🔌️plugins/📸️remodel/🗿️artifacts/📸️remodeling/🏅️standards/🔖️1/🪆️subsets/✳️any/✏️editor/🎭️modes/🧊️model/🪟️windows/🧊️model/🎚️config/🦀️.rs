@@ -39,7 +39,8 @@ impl Default for RemodelingModelWindowConfig {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum RemodelingModelWindowConfigMutation {
-    Snapshot { config: RemodelingModelWindowConfig },
+    SetCamera { camera: store::Viewport3dOrbit },
+    SetLayers { layers: RemodelingLayerVisibility },
 }
 
 impl protocol::Mutation<RemodelingModelWindowConfig> for RemodelingModelWindowConfigMutation {
@@ -47,10 +48,25 @@ impl protocol::Mutation<RemodelingModelWindowConfig> for RemodelingModelWindowCo
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config",
-        semantic_kind: "set-window-config",
-        display_name: "Set Remodeling Model Window Configuration",
+        semantic_kind: "set-camera",
+        display_name: "Set Remodeling Model Window Camera",
         emoji: "🎚️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetCamera",
+        payload_schema: "remodeling.modelwindowconfig",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }, protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config",
+        semantic_kind: "set-layers",
+        display_name: "Set Remodeling Model Window Layers",
+        emoji: "🎚️",
+        aggregate_variant: "SetLayers",
         payload_schema: "remodeling.modelwindowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -60,24 +76,28 @@ impl protocol::Mutation<RemodelingModelWindowConfig> for RemodelingModelWindowCo
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &RemodelingModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { config } => {
-                let diff = RemodelingModelWindowConfigDiff {
-            camera: (base.camera != config.camera).then(|| config.camera.clone()),
-            layers: (base.layers != config.layers).then(|| config.layers.clone()),
-                };
-                match protocol::DiffAlgebra::<RemodelingModelWindowConfig>::is_empty(&diff) {
-                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
-                    false => protocol::MutationOutcome::new(diff),
-                }
-            }
+            Self::SetCamera { .. } => &Self::DESCRIPTORS[0],
+            Self::SetLayers { .. } => &Self::DESCRIPTORS[1],
+        }
+    }
+    fn diff(&self, base: &RemodelingModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        let diff = match self {
+            Self::SetCamera { camera } => RemodelingModelWindowConfigDiff { camera: (&base.camera != camera).then(|| camera.clone()), ..Default::default() },
+            Self::SetLayers { layers } => RemodelingModelWindowConfigDiff { layers: (&base.layers != layers).then(|| layers.clone()), ..Default::default() },
+        };
+        match protocol::DiffAlgebra::<RemodelingModelWindowConfig>::is_empty(&diff) {
+            true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
+            false => protocol::MutationOutcome::new(diff),
         }
     }
     fn inverse(&self, base: &RemodelingModelWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok(vec![Self::Snapshot { config: base.clone() }])
-}
+        Ok(vec![match self {
+            Self::SetCamera { .. } => Self::SetCamera { camera: base.camera.clone() },
+            Self::SetLayers { .. } => Self::SetLayers { layers: base.layers.clone() },
+        }])
+    }
 }
 
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
@@ -149,11 +169,17 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingModelWindowConfigOw
 
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> RemodelingModelWindowConfig { view.window::<RemodelingModelWindowConfigOwner>().cloned().unwrap_or_default() }
 pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> RemodelingModelWindowConfig { snapshot.and_then(|snapshot| snapshot.get::<RemodelingModelWindowConfigOwner>()).cloned().unwrap_or_default() }
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingModelWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed_camera(view: &semio_framework_plugin::ViewModel, camera: store::Viewport3dOrbit) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-model-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?;
     if kind != super::REMODELING_PLAY_WINDOW_MAIN { return Err(semio_framework_plugin::Fault::from("remodeling-model-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingModelWindowConfigOwner>(id, RemodelingModelWindowConfigMutation::Snapshot { config }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingModelWindowConfigOwner>(id, RemodelingModelWindowConfigMutation::SetCamera { camera }))
+}
+pub fn addressed_layers(view: &semio_framework_plugin::ViewModel, layers: RemodelingLayerVisibility) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-model-window-required"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?;
+    if kind != super::REMODELING_PLAY_WINDOW_MAIN { return Err(semio_framework_plugin::Fault::from("remodeling-model-window-kind-required")); }
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingModelWindowConfigOwner>(id, RemodelingModelWindowConfigMutation::SetLayers { layers }))
 }
 
 #[cfg(test)]
@@ -196,13 +222,6 @@ impl protocol::DiffAlgebra<RemodelingModelWindowConfig> for RemodelingModelWindo
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
             layers: self.layers.as_ref().map(|_| base.layers.clone()),
-        }
-    }
-
-    fn between(base: &RemodelingModelWindowConfig, other: &RemodelingModelWindowConfig) -> Self {
-        Self {
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-            layers: (base.layers != other.layers).then(|| other.layers.clone()),
         }
     }
 

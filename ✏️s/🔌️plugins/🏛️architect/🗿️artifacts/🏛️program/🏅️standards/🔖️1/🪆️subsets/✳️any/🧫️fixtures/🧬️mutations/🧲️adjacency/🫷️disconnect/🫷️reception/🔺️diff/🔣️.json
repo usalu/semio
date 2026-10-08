@@ -10,12 +10,15 @@
   "quantities": null,
   "relationships": null,
   "adjacencies": {
-    "added": [],
     "removed": [
-      "adjacency-a"
+      {
+        "id": "adjacency-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "processes": null,
   "flows": null,

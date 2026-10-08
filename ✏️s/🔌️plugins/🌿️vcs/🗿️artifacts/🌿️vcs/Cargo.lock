@@ -550,7 +550,6 @@ dependencies = [
 name = "semio-framework-dsl"
 version = "0.1.0"
 dependencies = [
- "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-value",
 ]
@@ -919,6 +918,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-ui-contract",

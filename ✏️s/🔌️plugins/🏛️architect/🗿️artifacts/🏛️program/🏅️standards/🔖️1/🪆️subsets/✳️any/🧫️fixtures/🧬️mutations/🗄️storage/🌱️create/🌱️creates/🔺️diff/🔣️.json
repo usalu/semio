@@ -17,49 +17,52 @@
   "equipment": null,
   "resources": null,
   "storage": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "storage-requirement-a",
-        "name": "Storage Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "storedItem": "",
-        "storageClass": "general",
-        "quantity": {
-          "unit": ""
-        },
-        "volumeM3": null,
-        "weightKg": null,
-        "temperatureRange": null,
-        "humidityRange": null,
-        "securityLevel": "public",
-        "hazardClass": null,
-        "retentionPeriod": null,
-        "accessFrequency": null,
-        "elementIds": [],
-        "equipmentIds": [],
-        "handlingEquipment": [],
-        "fireProtection": [],
-        "ventilation": null,
-        "organizationSystem": null,
-        "growthAllowance": null,
-        "regulatoryRefs": [],
-        "ownerId": null
+        "index": 0,
+        "row": {
+          "id": "storage-requirement-a",
+          "name": "Storage Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "storedItem": "",
+          "storageClass": "general",
+          "quantity": {
+            "unit": ""
+          },
+          "volumeM3": null,
+          "weightKg": null,
+          "temperatureRange": null,
+          "humidityRange": null,
+          "securityLevel": "public",
+          "hazardClass": null,
+          "retentionPeriod": null,
+          "accessFrequency": null,
+          "elementIds": [],
+          "equipmentIds": [],
+          "handlingEquipment": [],
+          "fireProtection": [],
+          "ventilation": null,
+          "organizationSystem": null,
+          "growthAllowance": null,
+          "regulatoryRefs": [],
+          "ownerId": null
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "environmental": null,
   "humanFactors": null,

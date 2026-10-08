@@ -1,0 +1,98 @@
+{
+  "schema": "semio.puzzle.2d.typed-mutation.v2",
+  "cases": [
+    {
+      "name": "move-create-delete",
+      "before": {
+        "schema": "board.ports.directed.v1",
+        "nodes": [
+          {
+            "id": "a",
+            "anchor": "fixed",
+            "x": 0.0,
+            "y": 0.0,
+            "handles": []
+          },
+          {
+            "id": "b",
+            "anchor": "fixed",
+            "x": 1.0,
+            "y": 0.0,
+            "handles": []
+          }
+        ],
+        "edges": []
+      },
+      "operations": [
+        {
+          "mutation": "deleteNode",
+          "id": "a"
+        },
+        {
+          "mutation": "moveNode",
+          "id": "b",
+          "newX": 9.0,
+          "newY": 0.0
+        },
+        {
+          "mutation": "createNode",
+          "node": {
+            "id": "c",
+            "anchor": "fixed",
+            "x": 2.0,
+            "y": 0.0,
+            "handles": []
+          },
+          "index": null
+        }
+      ],
+      "after": {
+        "schema": "board.ports.directed.v1",
+        "nodes": [
+          {
+            "id": "b",
+            "anchor": "fixed",
+            "x": 9.0,
+            "y": 0.0,
+            "handles": []
+          },
+          {
+            "id": "c",
+            "anchor": "fixed",
+            "x": 2.0,
+            "y": 0.0,
+            "handles": []
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "name": "unchanged",
+      "before": {
+        "schema": "board.ports.directed.v1",
+        "nodes": [],
+        "edges": []
+      },
+      "operations": [],
+      "after": {
+        "schema": "board.ports.directed.v1",
+        "nodes": [],
+        "edges": []
+      }
+    }
+  ],
+  "invalid": [
+    null,
+    {
+      "schema": "board.ports.directed.v1",
+      "nodes": [
+        {
+          "id": "invalid",
+          "anchor": "unknown",
+          "x": false
+        }
+      ]
+    }
+  ]
+}

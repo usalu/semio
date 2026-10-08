@@ -1,8 +1,9 @@
 //! 🧪️ Neutral genesis transaction cuts run against real SQLite writers and independent row reads.
 
+use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
 use super::*;
 use crate::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, FsArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
-use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
+use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
 use crate::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, ImmutableArtifactBlobStore, OperationContext, checkpoint_id_encoding_v1};
 use crate::directory::{DirectoryService, HubDirectories, published_artifact_checkpoint};
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
@@ -91,7 +92,7 @@ impl GenesisFixture {
     }
 
     async fn operation(&self) -> ArtifactCreationOperationV1 {
-        ArtifactCreationOperationV1::fold(&self.sqlite().read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
+        crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&self.sqlite().read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
     }
 
     async fn accepted() -> (SqliteDirectory, ArtifactCreationIntentV1, ArtifactCreationPreparedV1) {
@@ -124,10 +125,10 @@ impl GenesisFixture {
         intent.command_sha256 = artifact_creation_command_digest_v1(&intent.scope.space_id, &intent.request).unwrap();
         prepared.descriptor.space_id = intent.scope.space_id.clone();
         prepared.checkpoint.scope = intent.scope.clone();
-        prepared.checkpoint.descriptor_digest_v1 = directory::os_directory::descriptor_digest_v1(&prepared.descriptor).unwrap();
+        prepared.checkpoint.descriptor_digest_v1 = directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&prepared.descriptor).unwrap();
         prepared.checkpoint.published_at_ms = intent.accepted_at_ms;
         prepared.checkpoint.checkpoint_id = ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&prepared.checkpoint).unwrap()));
-        prepared.validate(&intent).unwrap();
+        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).unwrap();
         assert!(matches!(sqlite.claim_artifact_creation(&intent).await.unwrap(), ArtifactCreationClaimV1::Accepted(_)));
         assert!(matches!(sqlite.claim_artifact_creation(&intent).await.unwrap(), ArtifactCreationClaimV1::Existing(_)));
         (sqlite, intent, prepared)
@@ -215,7 +216,7 @@ async fn genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt() {
         }
         assert_eq!(sqlite.artifact_cas_ledger_generation().await.unwrap(), generation, "{stage}");
         let facts = sqlite.read_artifact_creation(&intent.actor.user_id, &intent.request.request_id).await.unwrap();
-        assert_eq!(ArtifactCreationOperationV1::fold(&facts).unwrap(), operation, "{stage}");
+        assert_eq!(crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).unwrap(), operation, "{stage}");
         assert_eq!(sqlite.head_seq().await.unwrap(), head + 3, "{stage}");
         let events = sqlite.events_since(head, 3).await.unwrap();
         assert_eq!(events.iter().map(|event| event.id.clone()).collect::<Vec<_>>(), receipt.event_ids, "{stage}");
@@ -434,7 +435,7 @@ mod long {
             let result = sqlite.artifact_creation_terminate_uncommitted(&intent, now_ms() as u64).await;
             assert_eq!(result.is_err(), kind == "live", "{kind}");
             let facts = sqlite.read_artifact_creation(&intent.actor.user_id, &intent.request.request_id).await.unwrap();
-            let operation = ArtifactCreationOperationV1::fold(&facts).unwrap();
+            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).unwrap();
             assert_eq!(facts.len() as u64, row["facts"].as_u64().unwrap(), "{kind}");
             assert_eq!(format!("{:?}", operation.phase).to_lowercase(), row["terminal"].as_str().unwrap(), "{kind}");
             assert!(operation.prepared.is_none() && operation.receipt.is_none());

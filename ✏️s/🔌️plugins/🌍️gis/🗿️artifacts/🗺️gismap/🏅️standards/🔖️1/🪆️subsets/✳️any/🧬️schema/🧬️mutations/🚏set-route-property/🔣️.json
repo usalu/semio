@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚏set-route-property",
+  "semanticKind": "set-route-property",
+  "displayName": "Set Route Property",
+  "emoji": "🚏",
+  "aggregateVariant": "SetRouteProperty",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-route-property",
+  "binaryTag": 14,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

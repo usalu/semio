@@ -3,7 +3,14 @@ use super::*;
 use semio_framework_value::{FromValue,retained_clone::RetainedCloneSource};
 use semio_framework_value::retirement::SharedValueRetirementFactory;
 use crate::schema::mutations::{PaintIndexedRegion,PaintDirectRegion};
-fn close(cursor:&mut BmpPublicationCursor) {cursor.begin_close();for _ in 0..10000 {if cursor.close_step(1,4096).unwrap()==SnapshotRetirementStep::Complete {assert!(cursor.terminal_is_empty());return;}}panic!("BMP retained publication did not close");}
+fn close(cursor:&mut BmpPublicationCursor){
+ cursor.begin_close();
+ for _ in 0..100000{
+  let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};
+  let step=cursor.close_step(grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());return;}
+ }panic!("original image publication close did not terminate");
+}
+
 #[test]
 fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
@@ -14,7 +21,12 @@ fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples(
         let source=RetainedCloneSource::from_authority(Arc::new(base.clone()),());let mutation=RetainedCloneSource::from_authority(Arc::new(mutation),());let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut cursor=BmpPublicationCursor::new();let mut post=base.clone();let mut turns=0;
         loop {turns+=1;assert!(turns<10000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         match &post.image.pixels {BmpPixels::Indexed{indices}=>assert_eq!(serde_json::json!(indices),row["expectedIndices"]),BmpPixels::Direct{samples}=>assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(samples)).unwrap(),row["expectedSamples"])}
-        let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![BmpMutation::ReplaceImage(ReplaceImage{image:base.image.clone()})]);close(&mut cursor);
+        let inverse=cursor.take_inverse().unwrap();let before=base.image.region_rect(region).unwrap();let after=post.image.region_rect(region).unwrap();assert_eq!(inverse,if before!=after{vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:before.indices.clone(),samples:before.samples.clone()})]}else{Vec::new()});close(&mut cursor);
+        if let Some(BmpMutation::ReplaceSamples(restore))=inverse.first(){
+            let undo=RetainedCloneSource::from_authority(Arc::new(BmpMutation::ReplaceSamples(restore.clone())),());let current=RetainedCloneSource::from_authority(Arc::new(post.clone()),());let mut undone=post.clone();let mut undo_cursor=BmpPublicationCursor::new();let mut undo_turns=0;
+            loop{undo_turns+=1;assert!(undo_turns<10000);let step=undo_cursor.advance(current.borrow(),&mut undone,undo.borrow(),grant).unwrap();if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
+            assert_eq!(undone.image,base.image);assert_eq!(undo_cursor.take_inverse().unwrap(),vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:after.indices.clone(),samples:after.samples.clone()})]);close(&mut undo_cursor);
+        }
         if post.image.profile==crate::schema::snapshot::BmpProfile::DirectRgb32 {let bytes=crate::standards::v_v3::subsets::any::io::encode_bmp(&post).unwrap();let (width,height,visual)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&bytes).unwrap();assert_eq!((width,height),(post.image.width,post.image.height));assert_eq!(visual,crate::schema::operations::bmp_rgba8_preview(&post).unwrap());}
         let mut retirement=semio_framework_value::retirement::owned_retirement(inverse);while retirement.close_step(1,4096).unwrap()!=SnapshotRetirementStep::Complete {}assert!(retirement.terminal_is_empty());
         eprintln!("[DEBUG] retained BMP publication case={} turns={turns} preciseSamples={}",row["name"],post.image.width*post.image.height);
@@ -55,7 +67,7 @@ fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         for image in [None,Some(snapshot.image)] {
-            let diff=Arc::new(BmpDiff{image});let lifetime=Arc::downgrade(&diff);
+            let diff=Arc::new(BmpDiff{image,rects:Vec::new()});let lifetime=Arc::downgrade(&diff);
             let expected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(diff.as_ref())).unwrap();
             let mut reader=store::ArtifactCanonicalJsonReader::new(diff,Arc::new(SharedValueRetirementFactory::<BmpDiff>::default()));
             let mut encoded=Vec::new();let mut chunk=[0;17];let mut turns=0;

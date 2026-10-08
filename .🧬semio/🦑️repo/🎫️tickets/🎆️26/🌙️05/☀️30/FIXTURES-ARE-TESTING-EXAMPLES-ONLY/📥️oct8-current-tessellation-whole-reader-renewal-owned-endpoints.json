@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "880e2a538ccf28fd356f4644a468d79158990a4de6df07d11a9eb3332ca2a48b",
+      "afterSha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+      "action": "updated",
+      "qualification": "wholefixture reader only or private Root current-corpus guard"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "6b7a1eada8ee564079b9011f16bac791df0fb3e92cc9d8f50f01aa6d8c007491",
+      "afterSha256": "767b9943448fd9637351e590b367fa6d383366eff79ffad1944406f873064c13",
+      "action": "updated",
+      "qualification": "wholefixture reader only or private Root current-corpus guard"
+    }
+  ]
+}

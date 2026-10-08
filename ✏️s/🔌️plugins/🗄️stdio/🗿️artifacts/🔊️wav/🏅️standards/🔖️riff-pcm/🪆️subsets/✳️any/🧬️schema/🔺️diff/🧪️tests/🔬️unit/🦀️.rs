@@ -24,42 +24,6 @@ fn sweep_b() -> WavSnapshot {
     }
 }
 
-//#region field_sweep
-/// 🧪️ `field_sweep`: `sweep_a`/`sweep_b` differ in EVERY mutable field.
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_between_covers_every_field() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let ab = WavDiff::between(&a, &b);
-    assert!(ab.fmt.is_some());
-    assert!(ab.data.is_some());
-    assert!(ab.fmt_pad_byte.is_some());
-    assert!(ab.data_pad_byte.is_some());
-    assert!(ab.other_chunks.is_some());
-    assert!(ab.chunk_order.is_some());
-    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b);
-
-    let ba = WavDiff::between(&b, &a);
-    assert!(ba.fmt.is_some());
-    assert!(ba.data.is_some());
-    assert!(ba.fmt_pad_byte.is_some());
-    assert!(ba.data_pad_byte.is_some());
-    assert!(ba.other_chunks.is_some());
-    assert!(ba.chunk_order.is_some());
-    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a);
-
-    assert!(WavDiff::between(&a, &a).is_empty());
-}
-//#endregion field_sweep
-
-//#region between_roundtrip_law
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&WavDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&WavDiff::between(&b, &a), &b).unwrap(), a);
-}
 //#endregion between_roundtrip_law
 
 //#region absorb_law
@@ -95,17 +59,6 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     assert_eq!(left, right);
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&dc, &protocol::apply_diff(&db, &protocol::apply_diff(&da, &base).unwrap()).unwrap()).unwrap());
 }
-//#endregion absorb_law
-
-//#region inverse_law
-#[semio_framework_async_macros::async_test]
-async fn inverse_law_diff_level() {
-    let base = sweep_a();
-    let d = WavDiff::between(&base, &sweep_b());
-    let applied = protocol::apply_diff(&d, &base).unwrap();
-    let undone = protocol::apply_diff(&d.inverse(&base), &applied).unwrap();
-    assert_eq!(undone, base);
-}
 //#endregion inverse_law
 
 //#region diff_codec_text_binary_roundtrip_law
@@ -114,17 +67,7 @@ async fn inverse_law_diff_level() {
 /// `other_chunks`, plus the empty diff.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let cases = vec![
-        WavDiff::default(),
-        WavDiff::between(&a, &b),
-        WavDiff::between(&b, &a),
-        diff_set_data(WavData::Pcm16(vec![])),
-        diff_set_data(WavData::Pcm8(vec![1, 2, 3])),
-        diff_set_data(WavData::Float32(vec![1.5, -2.5])),
-        diff_set_other_chunks(&WavSnapshot::default(), vec![RiffChunk { fourcc: "fact".into(), data: vec![], pad_byte: 0 }, RiffChunk { fourcc: "LIST".into(), data: vec![0xDE, 0xAD], pad_byte: 0 }]),
-    ];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

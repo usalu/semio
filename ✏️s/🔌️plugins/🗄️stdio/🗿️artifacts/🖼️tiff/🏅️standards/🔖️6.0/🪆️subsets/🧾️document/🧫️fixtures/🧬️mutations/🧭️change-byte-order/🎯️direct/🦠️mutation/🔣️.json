@@ -1,6 +1,0 @@
-{
-  "mutation": "change-byte-order",
-  "payload": {
-    "byteOrder": "bigEndian"
-  }
-}

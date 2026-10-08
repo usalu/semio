@@ -2,12 +2,15 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "edge-1"
-    ],
-    "reordered": null
+      {
+        "id": "edge-1",
+        "index": 0
+      }
+    ]
   },
   "meta": null,
   "nodes": null,

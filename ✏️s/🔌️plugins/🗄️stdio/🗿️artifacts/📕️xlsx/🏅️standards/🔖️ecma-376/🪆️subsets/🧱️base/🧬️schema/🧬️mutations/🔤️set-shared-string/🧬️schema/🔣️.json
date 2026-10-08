@@ -49,6 +49,22 @@
         "group": "value",
         "order": 20
       }
+    },
+    "node": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Verbatim element",
+          "de": "Unveränderter Knoten"
+        },
+        "description": {
+          "en": "The shared string entry written verbatim instead of the text replaced in place.",
+          "de": "Der Eintrag der gemeinsamen Zeichenfolge, der unverändert geschrieben wird statt des an Ort und Stelle ersetzten Texts."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

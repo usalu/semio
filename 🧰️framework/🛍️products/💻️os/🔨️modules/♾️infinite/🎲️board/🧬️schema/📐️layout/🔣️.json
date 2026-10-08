@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "board.layout.options",
+  "$ref": "#/$defs/RedrawLayoutOptions",
+  "$defs": {
+    "ForceGraphLayoutOptions": {
+      "type": "object",
+      "properties": {
+        "iterations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "idealEdgeLength": {
+          "type": "number"
+        },
+        "repulsionStrength": {
+          "type": "number"
+        },
+        "springStrength": {
+          "type": "number"
+        },
+        "gravity": {
+          "type": "number"
+        },
+        "centerX": {
+          "type": "number"
+        },
+        "centerY": {
+          "type": "number"
+        },
+        "timeStep": {
+          "type": "number"
+        },
+        "velocityDamping": {
+          "type": "number"
+        },
+        "maxSpeed": {
+          "type": "number"
+        },
+        "randomSeed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "barnesHutTheta": {
+          "type": "number"
+        },
+        "pairwiseRepulsionMaxBodies": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "lockedNodeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "HierarchicalTreeLayoutOptions": {
+      "type": "object",
+      "properties": {
+        "layerSpacing": {
+          "type": "number"
+        },
+        "siblingGap": {
+          "type": "number"
+        },
+        "direction": {
+          "type": "string"
+        },
+        "centerX": {
+          "type": "number"
+        },
+        "centerY": {
+          "type": "number"
+        },
+        "lockedNodeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "RedrawLayoutOptions": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "centerX": {
+          "type": "number"
+        },
+        "centerY": {
+          "type": "number"
+        },
+        "randomSeed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "redrawHandlesAfter": {
+          "type": "boolean"
+        },
+        "lockedNodeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forceGraph": {
+          "$ref": "#/$defs/ForceGraphLayoutOptions"
+        },
+        "hierarchicalTree": {
+          "$ref": "#/$defs/HierarchicalTreeLayoutOptions"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ]
+    },
+    "DagLayoutOptions": {
+      "type": "object",
+      "properties": {
+        "layerSpacing": {
+          "type": "number"
+        },
+        "siblingGap": {
+          "type": "number"
+        },
+        "orientation": {
+          "enum": [
+            "leftRight",
+            "topBottom"
+          ]
+        },
+        "centerX": {
+          "type": "number"
+        },
+        "centerY": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    }
+  }
+}

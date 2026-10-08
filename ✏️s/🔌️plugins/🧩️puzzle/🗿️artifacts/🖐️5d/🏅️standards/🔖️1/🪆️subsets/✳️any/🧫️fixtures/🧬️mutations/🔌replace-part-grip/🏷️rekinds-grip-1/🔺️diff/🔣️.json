@@ -5,14 +5,14 @@
   "kindCompatibility": null,
   "meta": null,
   "parts": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "part-a",
         "patch": {
           "grips": {
-            "added": [],
-            "patched": [
+            "inserted": [],
+            "modified": [
               {
                 "id": "grip-1",
                 "patch": {
@@ -20,14 +20,14 @@
                 }
               }
             ],
-            "removed": [],
-            "reordered": null
+            "moved": [],
+            "removed": []
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetVolumes": null

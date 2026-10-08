@@ -306,6 +306,66 @@
     },
     "graphEdit": {
       "type": "boolean"
+    },
+    "admittedStreamRoles": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "value": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAdmittedStreamRole"
+                  }
+                },
+                "required": [
+                  "index",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "added": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "value": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAdmittedStreamRole"
+                  }
+                },
+                "required": [
+                  "index",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "$defs": {

@@ -1,9 +1,9 @@
 {
   "layers": {
-    "added": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
-    "patched": [
+    "modified": [
       {
         "id": "tone",
         "patch": {

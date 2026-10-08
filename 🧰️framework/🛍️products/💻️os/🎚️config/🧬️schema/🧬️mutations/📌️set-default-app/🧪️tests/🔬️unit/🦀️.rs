@@ -1,4 +1,5 @@
 use super::*;
+use super::super::super::DefaultApp;
 
 #[test]
 fn semantic_reference_targets_preserve_independent_identity_components(){

@@ -3,7 +3,7 @@
 //! Event-sourced, never a CRUD delete: the command emits exactly one config event,
 //! [`HomeConfigMutation::RetireLocalStudio`] — a tombstone in the Home config ledger — and performs no catalog IO. The
 //! studio's catalog document and its whole history stay intact; Home simply stops listing it, and the event's exact
-//! inverse ([`HomeConfigMutation::RestoreLocalStudio`]) lists it again in this session. A persisted studio is also unlisted
+//! inverse ([`HomeConfigMutation::ListLocalStudio`]) lists it again in this session. A persisted studio is also unlisted
 //! from the host's local document catalog (`os.local-catalog.retire`: its files stay on disk), so a reload does not hand it
 //! back; undoing the removal lists it again only until the next reload. Hub spaces are never addressed here: the hub
 //! directory owns their deletion (`deleteSpace` → `os.directory.delete-space`).
@@ -42,7 +42,7 @@ pub fn handle_with_row(payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactVie
     if cfg.snapshot.is_local_studio_retired(space_id) {
         return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.already-retired", format!("local studio {space_id} is already retired from Home")));
     }
-    let Some(entry) = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id) else {
+    let Some(entry) = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id) else {
         return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.unknown-local-studio", format!("no local studio {space_id} is listed in Home")));
     };
     let unkeep = (!entry.backbone_uri.is_empty()).then(|| Effect::ReplayShellCommand { action_id: "os.local-catalog.retire".into(), args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "documentId": space_id }))) });

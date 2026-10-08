@@ -27,7 +27,8 @@ use crate::examples::bachelor_thesis::{source, DOCUMENT_BYTES};
 use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
 use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::inferences::Pdf17Inference;
-use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, AppendPageContent, PdfMutation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
+use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
+use crate::standards::v1_7::subsets::base::schema::mutations::{AppendPageContent, PdfMutation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfSnapshot, PdfTextString};
 use crate::standards::v1_7::subsets::base::io::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::DiffAlgebra;
@@ -124,9 +125,9 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     assert_eq!(encode_pdf(&from_pack).expect("pack-restored logical export"), canonical);
     timing("Pack verification");
 
-    let empty = PdfDiff::between(&original, &original);
+    let empty = PdfDiff::default();
     assert!(empty.is_empty());
-    assert_eq!(encode_pdf(protocol::apply_diff(&empty, &original).unwrap()).expect("self-diff logical export"), canonical);
+    assert_eq!(encode_pdf(&protocol::apply_diff(&empty, &original).unwrap()).expect("self-diff logical export"), canonical);
     timing("self diff");
 
     let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text("dirty") }] });
@@ -200,14 +201,14 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     let original = decode_pdf(DOCUMENT_BYTES).expect("decode");
 
     let mut builder = PdfBuilder::empty();
-    let resources = original.fonts.iter().map(|font| PdfMutation::SetFont(SetFont { font: font.clone() }))
-        .chain(original.images.iter().map(|image| PdfMutation::SetImage(SetImage { image: image.clone() })))
-        .chain(original.forms.iter().map(|form| PdfMutation::SetForm(SetForm { form: form.clone() })))
-        .chain(original.ext_g_states.iter().map(|state| PdfMutation::SetExtGState(SetExtGState { state: state.clone() })))
-        .chain(original.shadings.iter().map(|shading| PdfMutation::SetShading(SetShading { shading: shading.clone() })))
-        .chain(original.patterns.iter().map(|pattern| PdfMutation::SetPattern(SetPattern { pattern: pattern.clone() })))
-        .chain(original.color_spaces.iter().map(|color_space| PdfMutation::SetColorSpace(SetColorSpace { color_space: color_space.clone() })))
-        .chain(original.properties.iter().map(|properties| PdfMutation::SetProperties(SetProperties { properties: properties.clone() })));
+    let resources = original.fonts.iter().map(|font| PdfMutation::SetFont(SetFont { font: font.clone(), index: None }))
+        .chain(original.images.iter().map(|image| PdfMutation::SetImage(SetImage { image: image.clone(), index: None })))
+        .chain(original.forms.iter().map(|form| PdfMutation::SetForm(SetForm { form: form.clone(), index: None })))
+        .chain(original.ext_g_states.iter().map(|state| PdfMutation::SetExtGState(SetExtGState { state: state.clone(), index: None })))
+        .chain(original.shadings.iter().map(|shading| PdfMutation::SetShading(SetShading { shading: shading.clone(), index: None })))
+        .chain(original.patterns.iter().map(|pattern| PdfMutation::SetPattern(SetPattern { pattern: pattern.clone(), index: None })))
+        .chain(original.color_spaces.iter().map(|color_space| PdfMutation::SetColorSpace(SetColorSpace { color_space: color_space.clone(), index: None })))
+        .chain(original.properties.iter().map(|properties| PdfMutation::SetProperties(SetProperties { properties: properties.clone(), index: None })));
     for mutation in resources.collect::<Vec<_>>() {
         builder = builder.mutate(mutation).0;
     }

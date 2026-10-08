@@ -1,6 +1,6 @@
 use crate::{GisMapMutation, MapFeature};
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
+use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_document};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_gis_map_snapshot};
 use crate::GIS_MAP_SCHEMA;
@@ -47,3 +47,15 @@ async fn gis_map_default_document_is_non_empty() {
     assert!(!default_document().positions.is_empty());
 }
 
+#[semio_framework_async_macros::async_test]
+async fn gis_map_property_op_lines_round_trip() {
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::RemovePositionProperty(remove_position_property::RemovePositionProperty { feature: "f1".into(), key: "label".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::RemoveRouteProperty(remove_route_property::RemoveRouteProperty { feature: "f1".into(), key: "label".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::RemoveRegionProperty(remove_region_property::RemoveRegionProperty { feature: "f1".into(), key: "label".into() }));
+}

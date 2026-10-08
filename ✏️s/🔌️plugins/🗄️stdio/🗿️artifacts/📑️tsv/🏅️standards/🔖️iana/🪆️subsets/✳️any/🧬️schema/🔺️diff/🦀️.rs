@@ -1,7 +1,7 @@
 //! 🔺️ TsvDiff — handcrafted sparse structural diff. `records` is an index-keyed
 //! removed/modified/added triple (TSV rows have no stable identity beyond position, same as
 //! csv's own records); each modified row's own columns get a sparse positional patch via
-//! [`TsvRowDiff`] (there is no insert-column/remove-column mutation — a patched position only
+//! [`TsvRowDiff`] (there is no insert-column/remove-column mutation — a apply_patch position only
 //! ever replaces an EXISTING cell — so a row's column count never resizes except via a whole-row
 //! add/remove at the `records` collection level, matching csv's own `CsvRecordDiff` convention).
 
@@ -33,7 +33,7 @@ impl TsvRowDiff {
     }
     /// ▶️ Applies this patch to a row.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn apply(&self, base: &[String]) -> Vec<String> {
+    pub fn apply_patch(&self, base: &[String]) -> Vec<String> {
         match &self.fields {
             None => base.to_vec(),
             Some(patches) => {
@@ -53,27 +53,6 @@ impl TsvRowDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &[String]) -> Self {
         Self { fields: self.fields.as_ref().map(|patches| patches.iter().enumerate().map(|(index, patch)| patch.as_ref().and_then(|_| base.get(index).cloned())).collect()) }
-    }
-    /// 🧭️ State delta between two rows with the SAME column count (positional patch). Callers
-    /// with differing column counts must instead express the change as a remove-then-add pair
-    /// at the `records` collection level (see `TsvDiff::between`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[String], other: &[String]) -> Self {
-        debug_assert_eq!(base.len(), other.len());
-        let mut any = false;
-        let patches: Vec<Option<String>> = base
-            .iter()
-            .zip(other.iter())
-            .map(|(b, o)| {
-                if b == o {
-                    None
-                } else {
-                    any = true;
-                    Some(o.clone())
-                }
-            })
-            .collect();
-        Self { fields: if any { Some(patches) } else { None } }
     }
     /// ➕️ Structural per-position absorb: `other`'s populated positions win.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -97,7 +76,7 @@ impl TsvRowDiff {
 //#endregion 🔖️RowDiff
 
 //#region 🔖️RecordsDiff
-/// 🧩 One row patched-in-place at a BASE index.
+/// 🧩 One row apply_patch-in-place at a BASE index.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TsvRowModified {
@@ -145,9 +124,7 @@ enum Slot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
-    let mut removed_desc = removed.to_vec();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&removed);
     for r in removed_desc {
         if r < slots.len() {
             slots.remove(r);
@@ -267,12 +244,10 @@ fn apply_tsv_diff_unchecked(diff: &TsvDiff, base: &TsvSnapshot) -> TsvSnapshot {
     if let Some(rdiff) = &diff.records {
         for m in &rdiff.modified {
             if let Some(row) = next.records.get_mut(m.index) {
-                *row = m.diff.apply(row);
+                *row = m.diff.apply_patch(row);
             }
         }
-        let mut removed_desc = rdiff.removed.clone();
-        removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-        removed_desc.dedup();
+        let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&rdiff.removed);
         for idx in removed_desc {
             if idx < next.records.len() {
                 next.records.remove(idx);
@@ -293,9 +268,7 @@ fn apply_tsv_diff_unchecked(diff: &TsvDiff, base: &TsvSnapshot) -> TsvSnapshot {
 fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
-        let mut r = d1.removed.clone();
-        r.sort_unstable();
-        r.dedup();
+        let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
@@ -325,7 +298,7 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
             }
             Some(Slot::Added(ai)) => {
                 if let Some(added) = added_alive[*ai].as_mut() {
-                    added.row = m2.diff.apply(&added.row);
+                    added.row = m2.diff.apply_patch(&added.row);
                 }
             }
             None => {}
@@ -380,9 +353,7 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
 /// comes back ascending, the normal form [`absorb_records`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_rows(diff: &TsvRowsDiff, base: &[Vec<String>]) -> TsvRowsDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -402,41 +373,6 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
             line_ending: self.line_ending.map(|_| base.line_ending),
             records: self.records.as_ref().map(|records| inverse_rows(records, &base.records)).filter(|records| !records.is_empty()),
         }
-    }
-
-    fn between(base: &TsvSnapshot, other: &TsvSnapshot) -> Self {
-        let trailing_newline = (base.trailing_newline != other.trailing_newline).then_some(other.trailing_newline);
-        let line_ending = (base.line_ending != other.line_ending).then_some(other.line_ending);
-
-        let mut removed = Vec::new();
-        let mut modified = Vec::new();
-        let mut added = Vec::new();
-        let min_len = base.records.len().min(other.records.len());
-        for i in 0..min_len {
-            let b = &base.records[i];
-            let o = &other.records[i];
-            if b == o {
-                continue;
-            }
-            if b.len() == o.len() {
-                let d = TsvRowDiff::between(b, o);
-                if !d.is_empty() {
-                    modified.push(TsvRowModified { index: i, diff: d });
-                }
-            } else {
-                removed.push(i);
-                added.push(TsvRowAdded { index: i, row: o.clone() });
-            }
-        }
-        for i in min_len..base.records.len() {
-            removed.push(i);
-        }
-        for i in min_len..other.records.len() {
-            added.push(TsvRowAdded { index: i, row: other.records[i].clone() });
-        }
-
-        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(TsvRowsDiff { removed, modified, added }) };
-        Self { trailing_newline, line_ending, records }
     }
 
     fn is_empty(&self) -> bool {
@@ -490,6 +426,19 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🧪️Tests
+/// 🧪️ Representative `TsvDiff` cases built declaratively (empty diff, the trailing-newline flag and a removed, a modified and an added row) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
+/// conformance-law tests.
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<TsvDiff> {
+    let rows = TsvRowsDiff {
+        removed: vec![2],
+        modified: vec![TsvRowModified { index: 1, diff: TsvRowDiff { fields: Some(vec![None, Some("Oak, tricky [value]".into())]) } }],
+        added: vec![TsvRowAdded { index: 2, row: vec!["3".into(), "new".into()] }],
+    };
+    vec![TsvDiff::default(), TsvDiff { trailing_newline: Some(false), line_ending: None, records: Some(rows) }]
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;

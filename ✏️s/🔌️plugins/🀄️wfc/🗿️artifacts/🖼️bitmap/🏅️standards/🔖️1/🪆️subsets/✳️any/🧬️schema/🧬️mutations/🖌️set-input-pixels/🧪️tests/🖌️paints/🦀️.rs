@@ -6,7 +6,7 @@
 //! root's own `emit_committed_fixtures` generator — a hand-edited fixture is a bug by construction.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::{apply_bitmap_mutation, inverse_bitmap_mutation, BitmapMutation};
+use crate::mutations::{inverse_bitmap_mutation, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-input-pixels/🖌️paints/📸️snapshot/⬅️before/🔣️.json");
@@ -29,7 +29,7 @@ fn mutation() -> BitmapMutation {
 #[test]
 fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_bitmap_mutation(&mut snapshot, &mutation()).expect("set-input-pixels applies to its committed before-snapshot");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("set-input-pixels applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "set-input-pixels/🖌️paints: applied state differs from the committed after-snapshot");
 }
 
@@ -40,9 +40,9 @@ fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = inverse_bitmap_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
-    apply_bitmap_mutation(&mut snapshot, &mutation).expect("forward applies");
+    vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     for step in &inverse {
-        apply_bitmap_mutation(&mut snapshot, step).expect("inverse step applies");
+        vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "set-input-pixels/🖌️paints: inverse did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
         .collect();
     assert_eq!(produced, declared, "set-input-pixels/🖌️paints: raised diagnostics differ from the committed 🎯️outcome messages");
     let mut snapshot = before();
-    let applied = apply_bitmap_mutation(&mut snapshot, &mutation()).is_ok();
+    let applied = vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).is_ok();
     match status {
         "applied" => {
             assert!(applied, "set-input-pixels/🖌️paints: declared applied but the mutation was rejected");

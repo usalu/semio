@@ -83,53 +83,44 @@ fn intern_semio_style(styles: &mut Vec<SemioDrawStyle>, node: &DrawingSceneNode)
     Some(name)
 }
 
-/// 🖼️ Decodes one `data:<mime>;base64,<data>` URI (as built by
-/// [flatten_drawing_document_to_scene_nodes] for image scene nodes) into real mime + bytes.
-fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
-    let rest = uri.strip_prefix("data:")?;
-    let (meta, data) = rest.split_once(',')?;
-    let mime = meta.split(';').next().unwrap_or("application/octet-stream").to_string();
-    let bytes = base64_codec::base64_standard_decode(data).ok()?;
-    Some((mime, bytes))
-}
-
 /// 🖍️ One [DrawingSceneNode] → semio's recursive [SemioDrawNode]: each becomes its own `Group`
 /// carrying the node's baked world transform, wrapping exactly one Path/Text/Image leaf (mirrors
 /// the pre-migration SVG renderer's own `<g transform="matrix(...)"><path/></g>` shape).
-fn semio_drawing_node_from_scene_node(node: &DrawingSceneNode, styles: &mut Vec<SemioDrawStyle>) -> Option<SemioDrawNode> {
+fn semio_drawing_node_from_scene_node(doc:&DrawingSnapshot,node: &DrawingSceneNode, styles: &mut Vec<SemioDrawStyle>) -> Result<Option<SemioDrawNode>,String> {
     let style = intern_semio_style(styles, node);
     if let Some(text) = &node.text {
         let children = semio_framework_2d::text::drawing_text_lines(&text.content).enumerate().filter(|(_, line)| !line.is_empty()).map(|(index, line)| {
             SemioDrawNode::Text { value: line.to_owned(), at: SemioPoint2 { x: 0.0, y: text.size + index as f64 * text.size * semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT }, style: style.clone() }
         }).collect();
-        return Some(SemioDrawNode::Group { transform: matrix_to_semio_transform(node.transform), children });
+        return Ok(Some(SemioDrawNode::Group { transform: matrix_to_semio_transform(node.transform), children }));
     }
     let leaf = if let Some(image) = &node.image {
-        let (mime, bytes) = decode_data_uri_bytes(&image.src).unwrap_or_default();
+        let asset=doc.assets.get(&image.asset_id).ok_or_else(||format!("Missing scene image asset: {}",image.asset_id))?;
+        let mime="image/png".into();let bytes=image::drawing_image_png(asset)?;
         SemioDrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: image.width, height: image.height, mime, bytes }
     } else {
         let segments: Vec<SemioPathSegment> = node.segments.iter().map(to_semio_path_segment).collect();
         if segments.is_empty() {
-            return None;
+            return Ok(None);
         }
         SemioDrawNode::Path { segments, style }
     };
-    Some(SemioDrawNode::Group { transform: matrix_to_semio_transform(node.transform), children: vec![leaf] })
+    Ok(Some(SemioDrawNode::Group { transform: matrix_to_semio_transform(node.transform), children: vec![leaf] }))
 }
 
 /// 🌉️ Builds a real [SemioDrawingSnapshot] from this plugin's own domain document — the semio hub
 /// side of drawing's domain↔semio bridge. [flatten_drawing_document_to_scene_nodes] has already resolved
 /// booleans/traces/curve-flattening, so every scene node here is a concrete leaf.
-pub fn drawing_document_to_semio_drawing(doc: &DrawingSnapshot) -> SemioDrawingSnapshot {
+pub fn drawing_document_to_semio_drawing(doc: &DrawingSnapshot) -> Result<SemioDrawingSnapshot,String> {
     let (width, height) = resolve_drawing_document_artboard(doc);
     let mut styles = Vec::new();
-    let children: Vec<SemioDrawNode> = flatten_drawing_document_to_scene_nodes(doc).iter().filter_map(|node| semio_drawing_node_from_scene_node(node, &mut styles)).collect();
-    SemioDrawingSnapshot {
+    let mut children=Vec::new();for node in &flatten_drawing_document_to_scene_nodes(doc){if let Some(child)=semio_drawing_node_from_scene_node(doc,node,&mut styles)?{children.push(child);}}
+    Ok(SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: SemioDrawCanvas { width: width as f64, height: height as f64, background: None },
         styles,
         layers: vec![SemioDrawLayer { id: "root".into(), name: doc.title.as_ref().map(|title| title.to_string_owner()).unwrap_or_else(|| "root".into()), visible: true, root: SemioDrawNode::Group { transform: SemioTransform::identity(), children } }],
-    }
+    })
 }
 
 /// 🎨️ Exports the authored scene through the typed SVG serializer.
@@ -204,3 +195,6 @@ pub mod text;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
+
+#[path="🖼️image/🦀️.rs"]
+pub mod image;

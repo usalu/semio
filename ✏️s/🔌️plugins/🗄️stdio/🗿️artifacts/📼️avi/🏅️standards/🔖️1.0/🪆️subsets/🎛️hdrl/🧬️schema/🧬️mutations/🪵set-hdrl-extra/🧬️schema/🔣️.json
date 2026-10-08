@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/mutation/set-hdrl-extra/schema.json",
+  "title": "SetHdrlExtra",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "chunks"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setHdrlExtra",
+      "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "chunks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RiffChunk"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Auxiliary hdrl chunks",
+          "de": "Zusätzliche hdrl-Chunks"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "RiffChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fourcc"
+      ],
+      "properties": {
+        "fourcc": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "FourCC",
+              "de": "FourCC"
+            }
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Chunk data",
+              "de": "Chunk-Daten"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertPile, base: &En1993Snapshot) -> protocol::MutationOu
     if base.piles.iter().any(|existing| existing.id == payload.pile.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Pile id {} already exists.", payload.pile.id), [payload.pile.id.clone()]);
     }
-    let index = payload.index.min(base.piles.len());
-    protocol::MutationOutcome::new(En1993Diff { piles: En1993PileDelta::insertion(&base.piles, index, payload.pile.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.piles.len());
+    protocol::MutationOutcome::new(En1993Diff { piles: En1993PileDelta::insertion(index, payload.pile.clone()), ..Default::default() })
 }

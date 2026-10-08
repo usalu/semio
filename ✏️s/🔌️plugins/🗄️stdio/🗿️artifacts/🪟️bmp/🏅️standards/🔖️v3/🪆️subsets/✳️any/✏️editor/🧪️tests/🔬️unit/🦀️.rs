@@ -81,8 +81,6 @@ fn natural_file_route_preserves_bmp_v3_bytes_and_opens_a_fresh_snapshot_event() 
     let independent = semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_identity_round_trip(&exported).expect("image crate reopens BMP export");
     let independent = crate::standards::v_v3::subsets::any::io::decode_bmp(&independent).expect("independent BMP output reopens");
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&independent).unwrap(), crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&imported).unwrap());
-    let Some(BmpMutation::ReplaceImage(set)) = <BmpEditor as ArtifactEditor>::whole_document_operation(imported.clone()) else { panic!("natural BMP opens through one event-sourced snapshot mutation") };
-    assert_eq!(set.image, imported.image);
     assert_eq!(current, <BmpEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
 }
 

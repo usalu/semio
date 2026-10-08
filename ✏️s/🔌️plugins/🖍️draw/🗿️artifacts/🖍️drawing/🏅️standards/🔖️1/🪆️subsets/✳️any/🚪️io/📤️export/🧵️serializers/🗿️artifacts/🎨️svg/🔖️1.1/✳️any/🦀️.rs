@@ -115,7 +115,7 @@ fn close_group(stack:&mut Vec<(&crate::schema::DrawingSceneGroup,Vec<SvgElement>
 }
 
 /// 🖼️ Serializes scene-space nodes using the first-party SVG/XML vocabulary and writer.
-pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Result<String,String> {
+pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4],assets:&semio_framework_value::paged::PagedMap<crate::DrawingImageAsset,{usize::MAX}>) -> Result<String,String> {
     let [x,y,width,height] = view_box;
     if !view_box.iter().all(|value| value.is_finite()) || width <= 0.0 || height <= 0.0 { return Err("SVG view box must have finite coordinates and positive dimensions".into()); }
     let mut defs = Vec::new();
@@ -143,7 +143,8 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Re
             }).collect();
             SvgElement::Text { common,x:None,y:None,children:lines }
         } else if let Some(image) = &node.image {
-            SvgElement::Unknown { name:"image".into(), attrs:vec![attr("x",0),attr("y",0),attr("width",image.width),attr("height",image.height),attr("preserveAspectRatio","none"),attr("href",&image.src),attr("xlink:href",&image.src)], children:Vec::new() }
+            let src=crate::standards::v1::subsets::any::io::image::drawing_image_data_uri(assets.get(&image.asset_id).ok_or_else(||format!("Missing scene image asset: {}",image.asset_id))?)?;
+            SvgElement::Unknown { name:"image".into(), attrs:vec![attr("x",0),attr("y",0),attr("width",image.width),attr("height",image.height),attr("preserveAspectRatio","none"),attr("href",&src),attr("xlink:href",&src)], children:Vec::new() }
         } else { SvgElement::Path { common,d:node.segments.iter().map(path_command).collect() } };
         let [a,b,c,d,e,f] = node.transform;
         let mut wrapper = CommonAttrs::default().with_transform(vec![TransformOp::Matrix { a,b,c,d,e,f }]).with_opacity(node.opacity.to_string());
@@ -165,7 +166,7 @@ pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String,u32,u32)
         let [x1,y1,x2,y2] = crate::schema::geometry::framing::drawing_scene_bounds(None,&nodes);
         [x1,y1,(x2-x1).max(1.0),(y2-y1).max(1.0)]
     };
-    let svg = drawing_scene_to_svg(&nodes,view_box)?;
+    let svg = drawing_scene_to_svg(&nodes,view_box,&doc.assets)?;
     Ok((svg,view_box[2].ceil() as u32,view_box[3].ceil() as u32))
 }
 

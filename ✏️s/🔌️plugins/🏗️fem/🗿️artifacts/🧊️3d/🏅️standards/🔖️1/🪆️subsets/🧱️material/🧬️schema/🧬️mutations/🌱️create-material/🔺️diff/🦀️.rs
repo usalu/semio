@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateMaterial`.
 use super::CreateMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, insertion_order};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialInsertion, Fem3dMaterialsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::{invariant,material_breach};
 
 use crate::Fem3dSnapshot;
@@ -13,6 +13,9 @@ pub fn diff(payload: &CreateMaterial, base: &Fem3dSnapshot) -> protocol::Mutatio
     if let Some(breach) = material_breach(&payload.material) {
         return invariant(breach, vec![payload.material.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { materials: Some(Fem3dMaterialsDelta { added: vec![payload.material.clone()], reordered: insertion_order(base.materials.iter().map(|item| item.id.as_str()), &payload.material.id, payload.index), ..Default::default() }), ..Default::default() })
+    if payload.index.is_some_and(|at| at > base.materials.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.materials.len()), [&payload.material.id.to_string()]);
+    }
+    protocol::MutationOutcome::new(Fem3dDiff { materials: Some(Fem3dMaterialsDelta { inserted: vec![Fem3dMaterialInsertion { index: payload.index.unwrap_or(base.materials.len()), row: payload.material.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

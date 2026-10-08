@@ -28,5 +28,5 @@ fn another_storey_asks_for_a_fresh_fit() {
 async fn the_plan_configuration_obeys_the_window_configuration_laws() {
     let base = BimViewerPlanWindowConfig::default();
     let next = base.with_storey("level-2").with_viewport(store::Viewport2d { x: 18.0, y: -9.0, zoom: 12.5 });
-    assert_window_config_laws(&base, &BimViewerPlanWindowConfigMutation::Snapshot { config: next }).await;
+    assert_window_config_laws(&base, &BimViewerPlanWindowConfigMutation::Replace { config: next }).await;
 }

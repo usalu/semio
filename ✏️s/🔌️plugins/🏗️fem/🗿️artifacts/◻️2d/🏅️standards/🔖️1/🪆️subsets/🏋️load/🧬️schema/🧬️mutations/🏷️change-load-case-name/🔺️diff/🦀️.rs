@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeLoadCaseName`.
 use super::ChangeLoadCaseName;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesModification};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLoadCaseName, base: &Fem2dSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load case \"{}\" is already named \"{}\".", payload.case_id, payload.new_name));
     }
     let patch = Fem2dLoadCasePatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { modified: vec![Fem2dLoadCasesModification { id: payload.case_id.clone(), patch }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

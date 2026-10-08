@@ -1,0 +1,10 @@
+{
+  "schema": "framework.plugin.lifecycle-grant",
+  "grant": {"maximumItems": 1, "maximumCopyBytes": 32768, "maximumCapacityBytes": 262144, "maximumReleaseBytes": 1048576, "maximumDepth": 4096},
+  "demand": {"copyBytes": 23, "capacityBytes": 8192, "releaseBytes": 65536, "depth": 7},
+  "refusalAxes": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+  "progressAxes": ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"],
+  "forwardOriginalGrant": true,
+  "terminalWitnessRequired": true,
+  "childCompletionKeepsParent": true
+}

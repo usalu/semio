@@ -230,7 +230,7 @@ pub fn cad_tool_yields(models: &CadPaneModels, entries: &[CadToolEntry]) -> Vec<
                 })
                 .collect(),
             CadToolEntry::Transform(_) => Vec::new(),
-            CadToolEntry::Create { pane, element } => vec![(format!("create:{index}"), *pane, SemioModelMutation::InsertElement(InsertElement { element: element.clone() }))],
+            CadToolEntry::Create { pane, element } => vec![(format!("create:{index}"), *pane, SemioModelMutation::InsertElement(InsertElement { element: element.clone(), at: None }))],
         };
         for (key, pane, leaf) in leaves {
             let Some((_, state)) = states.iter_mut().find(|(candidate, _)| *candidate == pane) else { continue };
@@ -272,7 +272,7 @@ pub fn cad_transform_tool_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, 
 
 /// 🧊️ Publishes actual topology and its model reference in the same exact tool transaction.
 pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPaneId, verb: &str, mut imported: crate::standards::v1::subsets::any::io::CadImportedObject) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::{schema::{snapshot::SemioBrepSnapshot, mutations::{SemioBrepMutation, set_snapshot::SetSnapshot}}};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::{schema::{snapshot::SemioBrepSnapshot, mutations::SemioBrepMutation}};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef;
     let refused = |message| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.import-object-refused"), message);
     let operation = doc.operation_optional().filter(|operation| !operation.authoring_seed.is_empty()).ok_or_else(|| refused("geometry import requires exact operation authoring authority"))?;
@@ -287,9 +287,9 @@ pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPane
         return Err(refused("geometry import requires an available composed model"));
     }
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
-    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&SemioBrepSnapshot::default())};
+    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&imported.geometry)};
     emit.artifact_mutations.push(CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
-    emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, vec![SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot: imported.geometry })]));
+    emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, Vec::new()));
     Ok(emit)
 }
 //#endregion 🛠️TransformTool

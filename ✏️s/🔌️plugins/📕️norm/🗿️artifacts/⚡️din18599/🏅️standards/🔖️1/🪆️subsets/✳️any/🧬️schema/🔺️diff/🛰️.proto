@@ -2,41 +2,81 @@ syntax = "proto3";
 package semio.s.norm.din18599.diff;
 
 message Din18599ZonesPatch {
+  optional string label_en = 1;
+  optional string label_de = 2;
+  optional double area_m2 = 3;
+  optional double volume_m3 = 4;
+  optional double theta_i_heat_c = 5;
+  optional double theta_i_cool_c = 6;
+  optional uint32 occupants = 7;
+  optional double internal_gains_w_m2 = 8;
+  optional double lighting_power_w_m2 = 9;
+}
+
+message Din18599ZonesRemoved {
   string id = 1;
-  optional string label_en = 2;
-  optional string label_de = 3;
-  optional double area_m2 = 4;
-  optional double volume_m3 = 5;
-  optional double theta_i_heat_c = 6;
-  optional double theta_i_cool_c = 7;
-  optional uint32 occupants = 8;
-  optional double internal_gains_w_m2 = 9;
-  optional double lighting_power_w_m2 = 10;
+  uint64 index = 2;
+}
+
+message Din18599ZonesInserted {
+  uint64 index = 1;
+}
+
+message Din18599ZonesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Din18599ZonesModified {
+  string id = 1;
+  Din18599ZonesPatch patch = 2;
 }
 
 message Din18599ZonesRows {
-  repeated string removed = 1;
-  repeated Din18599ZonesPatch modified = 2;
-  repeated string order = 3;
+  repeated Din18599ZonesRemoved removed = 1;
+  repeated Din18599ZonesInserted inserted = 2;
+  repeated Din18599ZonesMoved moved = 3;
+  repeated Din18599ZonesModified modified = 4;
 }
 
 message Din18599ElementsPatch {
+  optional string label_en = 1;
+  optional string label_de = 2;
+  optional string zone_id = 3;
+  optional double area_m2 = 4;
+  optional double u_value_w_m2k = 5;
+  optional double orientation_deg = 6;
+  optional double tilt_deg = 7;
+  optional double g_value = 8;
+  optional double fc = 9;
+}
+
+message Din18599ElementsRemoved {
   string id = 1;
-  optional string label_en = 2;
-  optional string label_de = 3;
-  optional string zone_id = 4;
-  optional double area_m2 = 5;
-  optional double u_value_w_m2k = 6;
-  optional double orientation_deg = 7;
-  optional double tilt_deg = 8;
-  optional double g_value = 9;
-  optional double fc = 10;
+  uint64 index = 2;
+}
+
+message Din18599ElementsInserted {
+  uint64 index = 1;
+}
+
+message Din18599ElementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Din18599ElementsModified {
+  string id = 1;
+  Din18599ElementsPatch patch = 2;
 }
 
 message Din18599ElementsRows {
-  repeated string removed = 1;
-  repeated Din18599ElementsPatch modified = 2;
-  repeated string order = 3;
+  repeated Din18599ElementsRemoved removed = 1;
+  repeated Din18599ElementsInserted inserted = 2;
+  repeated Din18599ElementsMoved moved = 3;
+  repeated Din18599ElementsModified modified = 4;
 }
 
 message Din18599HeatingPatch {

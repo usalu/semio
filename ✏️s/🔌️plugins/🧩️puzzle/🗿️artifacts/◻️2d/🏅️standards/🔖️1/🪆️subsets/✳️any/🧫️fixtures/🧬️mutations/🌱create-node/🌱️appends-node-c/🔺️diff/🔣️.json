@@ -4,28 +4,31 @@
   "edges": null,
   "meta": null,
   "nodes": {
-    "added": [
+    "inserted": [
       {
-        "anchor": "fixed",
-        "handles": [
-          {
-            "angle": 0.0,
-            "handleKind": "handle-kind-a",
-            "id": "handle-3"
-          }
-        ],
-        "id": "node-c",
-        "nodeKind": "node-kind-c",
-        "radius": 6.0,
-        "shape": "circle",
-        "text": "Gamma",
-        "x": 80.0,
-        "y": 0.0
+        "index": 2,
+        "row": {
+          "anchor": "fixed",
+          "handles": [
+            {
+              "angle": 0.0,
+              "handleKind": "handle-kind-a",
+              "id": "handle-3"
+            }
+          ],
+          "id": "node-c",
+          "nodeKind": "node-kind-c",
+          "radius": 6.0,
+          "shape": "circle",
+          "text": "Gamma",
+          "x": 80.0,
+          "y": 0.0
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetRegions": null

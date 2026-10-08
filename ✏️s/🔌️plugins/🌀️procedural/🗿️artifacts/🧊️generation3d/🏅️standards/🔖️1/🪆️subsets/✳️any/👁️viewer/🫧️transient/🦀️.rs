@@ -116,11 +116,6 @@ impl protocol::DiffAlgebra<Generation3dViewTransient> for Generation3dViewTransi
             preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalChange { text: base.preview_eval_text.clone() }),
         }
     }
-    fn between(base: &Generation3dViewTransient, other: &Generation3dViewTransient) -> Self {
-        Self {
-            preview_eval_text: (base.preview_eval_text != other.preview_eval_text).then(|| Generation3dPreviewEvalChange { text: other.preview_eval_text.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.preview_eval_text.is_none()
     }

@@ -6,6 +6,8 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[path = "🌉️apply/🦀️.rs"]
+pub mod central_apply;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
@@ -767,7 +769,7 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_form_edit_mutation,inverse_form_mutation,FormMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{inverse_form_mutation, FormMutation};
 
 }
 

@@ -1,4 +1,4 @@
-//! 🗂️ Generation3d geometry widget catalogue — the typed loader of the schema-first kind declarations in this folder.
+//! 🗂️ Generation3d geometry widget catalogue — admitted typed schema-first kind declarations.
 //!
 //! The category files beside this module are the single source for the palette, inspector controls, history labels,
 //! accessible names and validation of every geometry widget; the meta-schema in `🔣️.json` describes their shape.
@@ -633,4 +633,3 @@ impl Catalogue {
     }
 }
 //#endregion 🔖️Findings
-

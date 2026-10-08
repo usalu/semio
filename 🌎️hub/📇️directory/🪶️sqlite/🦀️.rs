@@ -11,11 +11,11 @@
 //! calls: queries are short, the mutex guard is never held across an `.await`, so nothing here
 //! blocks the executor for longer than a real query takes.
 
+use crate::artifact_authority::creation::io::{decide_artifact_creation_fact_append_v1};
+use directory::os_directory::io::text::validate_directory_event_page_event;
 use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
 use crate::artifact_authority::creation::{
-    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1,
-    decide_artifact_creation_fact_append_v1,
-};
+    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
@@ -27,8 +27,7 @@ use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, Direct
 };
 use directory::os_directory::{
     ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner,
-    Hlc, PublishedArtifactCheckpoint, validate_directory_event_page_event,
-};
+    Hlc, PublishedArtifactCheckpoint, };
 use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
 use rusqlite::{Connection, OptionalExtension, Transaction};
@@ -1099,7 +1098,7 @@ impl SqliteDirectory {
 
 impl HubDirectory for SqliteDirectory {
     async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
@@ -1109,7 +1108,7 @@ impl HubDirectory for SqliteDirectory {
         Self::creation_authority(&tx, &intent.actor, &intent.scope.space_id, observed_now)?;
         let facts = Self::creation_facts(&tx, &intent.actor.user_id, &intent.request.request_id)?;
         if !facts.is_empty() {
-            let operation = ArtifactCreationOperationV1::fold(&facts)?;
+            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
             if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
                 return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
             }
@@ -1132,7 +1131,7 @@ impl HubDirectory for SqliteDirectory {
             recorded_at_ms: intent.accepted_at_ms,
             body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
         };
-        let operation = ArtifactCreationOperationV1::fold(std::slice::from_ref(&fact))?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
         Self::insert_creation_fact(&tx, intent, &fact)?;
         tx.commit().map_err(backend)?;
         Ok(ArtifactCreationClaimV1::Accepted(operation))
@@ -1158,7 +1157,7 @@ impl HubDirectory for SqliteDirectory {
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
         Self::creation_authority(&tx, &append.actor, &append.space_id, observed_now)?;
         let mut facts = Self::creation_facts(&tx, &append.actor.user_id, &append.request_id)?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -1166,13 +1165,13 @@ impl HubDirectory for SqliteDirectory {
             Self::insert_creation_fact(&tx, &operation.intent, &next)?;
             facts.push(next);
         }
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         tx.commit().map_err(backend)?;
         Ok(operation)
     }
 
     async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
@@ -1180,7 +1179,7 @@ impl HubDirectory for SqliteDirectory {
             return Err(DirectoryError::Conflict("artifact creation supervisor clock is in the future".into()));
         }
         let mut facts = Self::creation_facts(&tx, &intent.actor.user_id, &intent.request.request_id)?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != *intent {
             return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
         }
@@ -1196,7 +1195,7 @@ impl HubDirectory for SqliteDirectory {
         }
         let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
         facts.push(next.clone());
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         Self::insert_creation_fact(&tx, intent, &next)?;
         tx.commit().map_err(backend)?;
         Ok(operation)
@@ -1214,7 +1213,7 @@ impl HubDirectory for SqliteDirectory {
             let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                 return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
             };
-            intent.validate()?;
+            crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
             Ok(intent)
         })
         .collect()
@@ -1231,7 +1230,7 @@ impl HubDirectory for SqliteDirectory {
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
         Self::creation_authority(&tx, &append.intent.actor, &append.intent.scope.space_id, observed_now)?;
         let mut facts = Self::creation_facts(&tx, &append.intent.actor.user_id, &append.intent.request.request_id)?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != append.intent {
             return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
         }
@@ -1307,7 +1306,7 @@ impl HubDirectory for SqliteDirectory {
         let completion = crate::directory::document_genesis_completion_v1(&operation, append, &events)?;
         Self::insert_creation_fact(&tx, &append.intent, &completion)?;
         facts.push(completion);
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if tx.commit().is_err() {
             return Ok(DocumentGenesisCommitV1::Indeterminate);
         }

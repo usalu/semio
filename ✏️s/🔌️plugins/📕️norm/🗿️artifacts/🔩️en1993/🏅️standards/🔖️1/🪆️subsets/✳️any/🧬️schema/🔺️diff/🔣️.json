@@ -153,13 +153,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993MaterialRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993MaterialAddition"
+            "$ref": "#/$defs/En1993MaterialInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MaterialRelocation"
           }
         },
         "modified": {
@@ -170,26 +176,63 @@
         }
       }
     },
-    "En1993MaterialAddition": {
+    "En1993MaterialRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993MaterialInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMaterial"
+        }
+      }
+    },
+    "En1993MaterialRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -197,11 +240,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -292,13 +335,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993SectionRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993SectionAddition"
+            "$ref": "#/$defs/En1993SectionInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993SectionRelocation"
           }
         },
         "modified": {
@@ -309,26 +358,63 @@
         }
       }
     },
-    "En1993SectionAddition": {
+    "En1993SectionRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993SectionInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelSection"
+        }
+      }
+    },
+    "En1993SectionRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -336,11 +422,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -551,13 +637,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993MemberRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993MemberAddition"
+            "$ref": "#/$defs/En1993MemberInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MemberRelocation"
           }
         },
         "modified": {
@@ -568,26 +660,63 @@
         }
       }
     },
-    "En1993MemberAddition": {
+    "En1993MemberRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993MemberInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMember"
+        }
+      }
+    },
+    "En1993MemberRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -595,11 +724,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -760,13 +889,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993LoadCaseRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993LoadCaseAddition"
+            "$ref": "#/$defs/En1993LoadCaseInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993LoadCaseRelocation"
           }
         },
         "modified": {
@@ -777,26 +912,63 @@
         }
       }
     },
-    "En1993LoadCaseAddition": {
+    "En1993LoadCaseRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993LoadCaseInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/LoadCase"
+        }
+      }
+    },
+    "En1993LoadCaseRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -804,11 +976,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -859,13 +1031,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993MemberActionRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993MemberActionAddition"
+            "$ref": "#/$defs/En1993MemberActionInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MemberActionRelocation"
           }
         },
         "modified": {
@@ -876,26 +1054,63 @@
         }
       }
     },
-    "En1993MemberActionAddition": {
+    "En1993MemberActionRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993MemberActionInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/MemberAction"
+        }
+      }
+    },
+    "En1993MemberActionRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -903,11 +1118,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -958,13 +1173,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993JointRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993JointAddition"
+            "$ref": "#/$defs/En1993JointInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993JointRelocation"
           }
         },
         "modified": {
@@ -975,26 +1196,63 @@
         }
       }
     },
-    "En1993JointAddition": {
+    "En1993JointRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993JointInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelJoint"
+        }
+      }
+    },
+    "En1993JointRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1002,11 +1260,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1268,13 +1526,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993FatigueDetailRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993FatigueDetailAddition"
+            "$ref": "#/$defs/En1993FatigueDetailInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993FatigueDetailRelocation"
           }
         },
         "modified": {
@@ -1285,26 +1549,63 @@
         }
       }
     },
-    "En1993FatigueDetailAddition": {
+    "En1993FatigueDetailRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993FatigueDetailInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueDetail"
+        }
+      }
+    },
+    "En1993FatigueDetailRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1312,11 +1613,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1382,13 +1683,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993FireExposureRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993FireExposureAddition"
+            "$ref": "#/$defs/En1993FireExposureInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993FireExposureRelocation"
           }
         },
         "modified": {
@@ -1399,26 +1706,63 @@
         }
       }
     },
-    "En1993FireExposureAddition": {
+    "En1993FireExposureRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993FireExposureInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FireExposure"
+        }
+      }
+    },
+    "En1993FireExposureRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1426,11 +1770,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1541,13 +1885,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993ColdFormedMemberRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993ColdFormedMemberAddition"
+            "$ref": "#/$defs/En1993ColdFormedMemberInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993ColdFormedMemberRelocation"
           }
         },
         "modified": {
@@ -1558,26 +1908,63 @@
         }
       }
     },
-    "En1993ColdFormedMemberAddition": {
+    "En1993ColdFormedMemberRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993ColdFormedMemberInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ColdFormedMember"
+        }
+      }
+    },
+    "En1993ColdFormedMemberRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1585,11 +1972,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1683,13 +2070,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993PlatedPanelRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993PlatedPanelAddition"
+            "$ref": "#/$defs/En1993PlatedPanelInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993PlatedPanelRelocation"
           }
         },
         "modified": {
@@ -1700,26 +2093,63 @@
         }
       }
     },
-    "En1993PlatedPanelAddition": {
+    "En1993PlatedPanelRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993PlatedPanelInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/PlatedPanel"
+        }
+      }
+    },
+    "En1993PlatedPanelRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1727,11 +2157,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1815,13 +2245,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993SiloShellRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993SiloShellAddition"
+            "$ref": "#/$defs/En1993SiloShellInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993SiloShellRelocation"
           }
         },
         "modified": {
@@ -1832,26 +2268,63 @@
         }
       }
     },
-    "En1993SiloShellAddition": {
+    "En1993SiloShellRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993SiloShellInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SiloShell"
+        }
+      }
+    },
+    "En1993SiloShellRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1859,11 +2332,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1944,13 +2417,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993TensionComponentRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993TensionComponentAddition"
+            "$ref": "#/$defs/En1993TensionComponentInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993TensionComponentRelocation"
           }
         },
         "modified": {
@@ -1961,26 +2440,63 @@
         }
       }
     },
-    "En1993TensionComponentAddition": {
+    "En1993TensionComponentRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993TensionComponentInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TensionComponent"
+        }
+      }
+    },
+    "En1993TensionComponentRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1988,11 +2504,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -2046,13 +2562,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993BridgeFatigueRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993BridgeFatigueAddition"
+            "$ref": "#/$defs/En1993BridgeFatigueInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993BridgeFatigueRelocation"
           }
         },
         "modified": {
@@ -2063,26 +2585,63 @@
         }
       }
     },
-    "En1993BridgeFatigueAddition": {
+    "En1993BridgeFatigueRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993BridgeFatigueInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/BridgeFatigue"
+        }
+      }
+    },
+    "En1993BridgeFatigueRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -2090,11 +2649,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -2177,13 +2736,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993TowerLegRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993TowerLegAddition"
+            "$ref": "#/$defs/En1993TowerLegInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993TowerLegRelocation"
           }
         },
         "modified": {
@@ -2194,26 +2759,63 @@
         }
       }
     },
-    "En1993TowerLegAddition": {
+    "En1993TowerLegRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993TowerLegInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TowerLeg"
+        }
+      }
+    },
+    "En1993TowerLegRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -2221,11 +2823,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -2289,13 +2891,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993PileRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993PileAddition"
+            "$ref": "#/$defs/En1993PileInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993PileRelocation"
           }
         },
         "modified": {
@@ -2306,26 +2914,63 @@
         }
       }
     },
-    "En1993PileAddition": {
+    "En1993PileRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993PileInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelPile"
+        }
+      }
+    },
+    "En1993PileRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -2333,11 +2978,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -2421,13 +3066,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1993CraneRunwayRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1993CraneRunwayAddition"
+            "$ref": "#/$defs/En1993CraneRunwayInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993CraneRunwayRelocation"
           }
         },
         "modified": {
@@ -2438,26 +3089,63 @@
         }
       }
     },
-    "En1993CraneRunwayAddition": {
+    "En1993CraneRunwayRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "En1993CraneRunwayInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/CraneRunway"
+        }
+      }
+    },
+    "En1993CraneRunwayRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -2465,11 +3153,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {

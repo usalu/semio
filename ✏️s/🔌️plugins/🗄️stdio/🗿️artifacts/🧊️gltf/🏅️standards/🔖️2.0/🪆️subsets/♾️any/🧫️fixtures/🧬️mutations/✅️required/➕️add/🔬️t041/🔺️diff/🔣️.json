@@ -1,6 +1,12 @@
 {
-  "extensionsRequired": [
-    "KHR_materials_unlit",
-    "KHR_texture_transform"
-  ]
+  "extensionsRequired": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": "KHR_materials_unlit"
+      }
+    ],
+    "moved": []
+  }
 }

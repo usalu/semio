@@ -1,7 +1,33 @@
 //! 🧊️ `delete-selection` command.
 
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use crate::editor::puzzle3d::{puzzle3d_vortex_full_id, Puzzle3dActionCtx};
+use crate::standards::v1::subsets::any::schema::mutations::{delete_object, delete_reference, delete_target_volume, disconnect_vortices, remove_object_vortex, Puzzle3dMutation};
+use crate::{Puzzle3dAttraction, Puzzle3dSnapshot};
 use std::collections::HashSet;
+
+/// 🗑️ The concrete kinds one delete gesture consists of, in base order: the explicitly selected attractions no
+/// cascade severs (`disconnect-vortices`), the selected vortices of surviving objects (`remove-object-vortex`), the
+/// selected objects (`delete-object`, which severs its own attractions), target volumes and references. Ids the base
+/// does not hold name nothing and produce no row.
+pub fn delete_selection_mutations(base: &Puzzle3dSnapshot, object_ids: &[String], vortex_ids: &HashSet<String>, attraction_ids: &[String], target_volume_ids: &[String], reference_ids: &[String]) -> Vec<Puzzle3dMutation> {
+    let deleted: Vec<&str> = base.objects.iter().map(|object| object.id.as_str()).filter(|id| object_ids.iter().any(|selected| selected == id)).collect();
+    let removed_vortices: Vec<(&str, &str)> = base
+        .objects
+        .iter()
+        .filter(|object| !deleted.contains(&object.id.as_str()))
+        .flat_map(|object| object.vortices.iter().filter(move |vortex| vortex_ids.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id))).map(move |vortex| (object.id.as_str(), vortex.id.as_str())))
+        .collect();
+    let removed_full_ids: Vec<String> = removed_vortices.iter().map(|(object, vortex)| puzzle3d_vortex_full_id(object, vortex)).collect();
+    let severed = |attraction: &Puzzle3dAttraction| {
+        [attraction.attracting.as_str(), attraction.attracted.as_str()].into_iter().any(|end| removed_full_ids.iter().any(|removed| removed == end) || deleted.iter().any(|object| end.strip_prefix(object).is_some_and(|rest| rest.starts_with(':'))))
+    };
+    let disconnects = base.attractions.iter().filter(|attraction| attraction_ids.contains(&attraction.id) && !severed(*attraction)).map(|attraction| disconnect_vortices(attraction.id.clone()));
+    let vortices = removed_vortices.iter().map(|(object, vortex)| remove_object_vortex((*object).to_string(), (*vortex).to_string()));
+    let objects = deleted.iter().map(|id| delete_object((*id).to_string()));
+    let volumes = base.target_volumes.iter().filter(|volume| target_volume_ids.contains(&volume.id)).map(|volume| delete_target_volume(volume.id.clone()));
+    let references = base.references.iter().filter(|reference| reference_ids.contains(&reference.id)).map(|reference| delete_reference(reference.id.clone()));
+    disconnects.chain(vortices).chain(objects).chain(volumes).chain(references).collect()
+}
 
 /// 🗑️ Removes every selected entity from the document AND retires the ids it just destroyed from the
 /// framework-owned `vortex` selection through the one sanctioned reducer channel
@@ -34,14 +60,7 @@ pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     if locked && ctx.refuse_when_locked() {
         return;
     }
-    ctx.scene.scene_snapshot.objects.retain(|object| !object_ids.contains(&object.id));
-    if !vortex_ids.is_empty() {
-        for object in ctx.scene.scene_snapshot.objects.iter_mut() {
-            object.vortices.retain(|vortex| !vortex_ids.contains(&crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id)));
-        }
-    }
-    ctx.scene.scene_snapshot.attractions.retain(|attraction| !attraction_ids.contains(&attraction.id) && !object_ids.iter().any(|id| attraction.attracting.starts_with(&format!("{id}:")) || attraction.attracted.starts_with(&format!("{id}:"))));
-    ctx.scene.scene_snapshot.target_volumes.retain(|volume| !target_volume_ids.contains(&volume.id));
-    ctx.scene.scene_snapshot.references.retain(|reference| !reference_ids.contains(&reference.id));
+    let mutations = delete_selection_mutations(&**ctx.base, &object_ids, &vortex_ids, &attraction_ids, &target_volume_ids, &reference_ids);
+    ctx.artifact_mutations.extend(mutations);
     ctx.clear_selection();
 }

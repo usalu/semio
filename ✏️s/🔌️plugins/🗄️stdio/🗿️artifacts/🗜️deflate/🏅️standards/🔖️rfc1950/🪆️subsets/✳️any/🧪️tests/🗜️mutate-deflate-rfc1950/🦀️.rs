@@ -5,11 +5,12 @@
 //! leaf's own wire payload. `oracle` drives the registered `flate2` reference implementation through
 //! this subset's own oracle module, which reads that wire by field name; `subject` decodes it
 //! generically through `Mutation::from_payload_value` and drives this repository's own
-//! `apply_deflate_mutation`/`decode_deflate_snapshot`/`encode_deflate_snapshot`, undoing it with the
+//! `apply_mutation`/`decode_deflate_snapshot`/`encode_deflate_snapshot`, undoing it with the
 //! vocabulary's own `Mutation::inverse`. Both results are read back by the INDEPENDENT `flate2`
 //! projection before the `ordered-json-v1` profile compares them. The subject half is gated behind
 //! the generated host's `sut` feature so the oracle-only run never compiles the local implementation.
 
+use semio_s_artifact_stdio_deflate::apply_mutation;
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_artifact_stdio_deflate_test_oracle::standards::v_rfc1950::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_deflate};
 use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
@@ -69,7 +70,7 @@ mod subject {
     use super::{mutable_input, IDENTITY_INPUT, MUTATE_INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
-    use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::mutations::apply_deflate_mutation;
+    
     use semio_s_artifact_stdio_deflate::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, DeflateMutation, DeflateSnapshot};
     use semio_s_artifact_stdio_deflate_test_oracle::standards::v_rfc1950::subsets::any::project_deflate;
     use semio_repo_test_host::law::wire_operation;
@@ -90,7 +91,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx, MUTATE_INPUT, "input.zz")?;
         let mut snapshot = decode(&input)?;
-        apply_deflate_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_deflate_snapshot(&snapshot);
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -107,12 +108,12 @@ mod subject {
         let original = decode(&input)?;
         let mutation = mutation_from_spec(&spec)?;
         let mut restored = original.clone();
-        apply_deflate_mutation(&mut restored, &mutation);
+        apply_mutation(&mut restored, &mutation);
         if encode_deflate_snapshot(&restored) == input {
             return Err("byte pass-through: mutated output is bit-identical to the input".to_string());
         }
-        for step in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
-            apply_deflate_mutation(&mut restored, &step);
+        for step in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut restored, &step);
         }
         let restored_bytes = encode_deflate_snapshot(&restored);
         let projection = project_deflate(&restored_bytes)?;

@@ -181,8 +181,8 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let documents = documents.rows;
     let view = documents[0].clone();
     let scope = DocumentScope::new("space-a", "shared-doc");
-    let digest = semio_framework_os_kernel::os_directory::descriptor_digest_v1(&view.descriptor).unwrap();
-    let document = remote::AuthorizedDocumentView { scope: scope.clone(), descriptor_digest_v1: semio_framework_os_kernel::os_directory::hex_lower(digest.as_bytes()), view };
+    let digest = semio_framework_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&view.descriptor).unwrap();
+    let document = remote::AuthorizedDocumentView { scope: scope.clone(), descriptor_digest_v1: semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower(digest.as_bytes()), view };
     let snapshot = AuthorizedDescriptorSnapshot { authenticated_user_id: "user-a".to_string(), session_expires_at_ms: i64::MAX, space, membership: members[0].clone(), observed_event_seq: 8, documents: HashMap::from([(scope, document)]) };
     let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
     binding.install_snapshot_for_test(snapshot);

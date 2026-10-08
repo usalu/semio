@@ -14,7 +14,7 @@ it judges and transliterates none of it.
 ⚠️ Honest boundary. `steps` is a content-addressed CHILD HANDLE, and this subset mints a NEW
 `childId` for it — and for each entry of `toolSolids` — whenever `stepPayloads` changes, through a
 digest algorithm this subset's own schemas do not publish (the feature file names it only as
-`process3d_step_timeline_diff`/`process_working_scene_to_snapshot`'s own minting, no formula). The
+`Process3dDiff::apply`/`process_working_scene_to_snapshot`'s own minting, no formula). The
 seven STEP-scoped kinds (`create-step`, `delete-step`, `rename-step`, `change-step-enabled`,
 `change-step-origin`, `replace-step-measure`, `reorder-steps`) therefore verify `stepPayloads` itself
 — the real, computed content — but do NOT claim to reproduce `steps.childId` or any `toolSolids[]`

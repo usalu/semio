@@ -7,7 +7,7 @@
 
 use crate::schema::{TerrainDescriptorJson};
 use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
-use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
+use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
 use crate::GisTerrainSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;
@@ -80,7 +80,7 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 /// camera), the same real overlay pins/terrain descriptor the editor renders, no selection overlay.
 /// The scene binds this window to the "features"/"pin" interaction domain and carries the terrain payload.
 pub fn render(document: &GisTerrainSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let descriptor = parse_descriptor(document);
+    let descriptor = fixture_descriptor(document);
     let mut scene = World3dScene::base(GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(), "[]".into(), instances_json(&descriptor), world3d_selection_json("rectangle", &[], None));
     scene.domain_id = Some("features".into());
     scene.domain_granularity_id = Some("pin".into());

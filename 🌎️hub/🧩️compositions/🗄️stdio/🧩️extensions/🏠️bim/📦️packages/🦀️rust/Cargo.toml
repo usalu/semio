@@ -26,36 +26,42 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-ifc-2x3"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.ifc@2x3/*#editor"
 aliases = ["stdio ifc 2x3"]
 ports = { react = 6245, wgpu = 6345 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-ifc-2x3-cobie"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.ifc@2x3/cobie#editor"
 aliases = ["stdio ifc cobie"]
 ports = { react = 6246, wgpu = 6346 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-ifc-2x3-cv20"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.ifc@2x3/cv20#editor"
 aliases = ["stdio ifc coordination view"]
 ports = { react = 6247, wgpu = 6347 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-ifc-2x3-sav"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.ifc@2x3/sav#editor"
 aliases = ["stdio ifc structural analysis view"]
 ports = { react = 6248, wgpu = 6348 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-ifc-4"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.ifc@4/*#editor"
 aliases = ["stdio ifc 4"]
 ports = { react = 6249, wgpu = 6349 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-bcf"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.bcf@2.1/*#editor"
 aliases = ["stdio bcf"]
 ports = { react = 6250, wgpu = 6350 }

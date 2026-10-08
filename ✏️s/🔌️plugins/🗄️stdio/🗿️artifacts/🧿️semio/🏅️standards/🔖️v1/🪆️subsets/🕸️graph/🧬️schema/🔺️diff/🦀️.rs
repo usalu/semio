@@ -5,7 +5,7 @@
 //! Option<SemioGraphSnapshot>` full-replace slot anywhere — whole-document replace is `ArtifactStore::reset`, outside history.
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, between_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
 use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};
 use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 use framework_schema::ArtifactSchema;
@@ -34,9 +34,6 @@ impl IndexedRow<SemioValueEntry> for SemioGraphEntryDiff {
     }
     fn row_is_empty(&self) -> bool {
         self.value.is_none()
-    }
-    fn between_row(base: &SemioValueEntry, other: &SemioValueEntry) -> Self {
-        Self { value: (base.value != other.value).then(|| other.value.clone()) }
     }
 }
 
@@ -132,20 +129,6 @@ impl IndexedRow<SemioGraphNode> for SemioGraphNodeDiff {
             && self.ports.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
             && self.properties.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
     }
-    fn between_row(base: &SemioGraphNode, other: &SemioGraphNode) -> Self {
-        let ports = between_indexed_rows(&base.ports, &other.ports);
-        let properties = between_indexed_rows(&base.properties, &other.properties);
-        Self {
-            id: (base.id != other.id).then(|| other.id.clone()),
-            kind: (base.kind != other.kind).then(|| other.kind.clone()),
-            label: (base.label != other.label).then(|| other.label.clone()),
-            position: (base.position != other.position).then_some(other.position),
-            width: (base.width != other.width).then_some(other.width),
-            height: (base.height != other.height).then_some(other.height),
-            ports: (!ports.is_unchanged()).then_some(ports),
-            properties: (!properties.is_unchanged()).then_some(properties),
-        }
-    }
 }
 //#endregion 🔖️NodeDiff
 
@@ -224,18 +207,6 @@ impl IndexedRow<SemioGraphEdge> for SemioGraphEdgeDiff {
             && self.target_port.is_none()
             && self.properties.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
     }
-    fn between_row(base: &SemioGraphEdge, other: &SemioGraphEdge) -> Self {
-        let properties = between_indexed_rows(&base.properties, &other.properties);
-        Self {
-            source: (base.source != other.source).then(|| other.source.clone()),
-            target: (base.target != other.target).then(|| other.target.clone()),
-            kind: (base.kind != other.kind).then(|| other.kind.clone()),
-            label: (base.label != other.label).then(|| other.label.clone()),
-            source_port: (base.source_port != other.source_port).then(|| other.source_port.clone()),
-            target_port: (base.target_port != other.target_port).then(|| other.target_port.clone()),
-            properties: (!properties.is_unchanged()).then_some(properties),
-        }
-    }
 }
 //#endregion 🔖️EdgeDiff
 
@@ -293,11 +264,6 @@ impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
 /// 🧮️ `graph`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
 /// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
-    fn between(base: &SemioGraphSnapshot, other: &SemioGraphSnapshot) -> Self {
-        let nodes = between_indexed_rows(&base.nodes, &other.nodes);
-        let edges = between_indexed_rows(&base.edges, &other.edges);
-        SemioGraphDiff { nodes: (!nodes.is_unchanged()).then_some(nodes), edges: (!edges.is_unchanged()).then_some(edges) }
-    }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Self {
         SemioGraphDiff { nodes: self.nodes.as_ref().map(|nodes| inverse_indexed_rows(nodes, &base.nodes)), edges: self.edges.as_ref().map(|edges| inverse_indexed_rows(edges, &base.edges)) }
     }

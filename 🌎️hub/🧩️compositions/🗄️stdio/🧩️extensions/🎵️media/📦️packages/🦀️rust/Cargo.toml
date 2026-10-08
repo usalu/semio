@@ -26,24 +26,28 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-mp4"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.mp4@isobmff/*#editor"
 aliases = ["stdio mp4"]
 ports = { react = 6231, wgpu = 6331 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-avi"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.avi@1.0/*#editor"
 aliases = ["stdio avi"]
 ports = { react = 6234, wgpu = 6334 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-mp3"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.mp3@mpeg1-layer3/*#editor"
 aliases = ["stdio mp3"]
 ports = { react = 6232, wgpu = 6332 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-wav"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.wav@riff-pcm/*#editor"
 aliases = ["stdio wave"]
 ports = { react = 6233, wgpu = 6333 }

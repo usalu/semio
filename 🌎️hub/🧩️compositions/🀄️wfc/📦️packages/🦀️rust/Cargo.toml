@@ -19,30 +19,35 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "bitmap"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.wfc.bitmap@1/*#editor"
 aliases = ["wfc bitmap"]
 ports = { react = 6041, wgpu = 6141 }
 
 [[package.metadata.semio.playground]]
 variant = "grid2d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.wfc.grid2d@1/*#editor"
 aliases = ["wfc 2d grid"]
 ports = { react = 6042, wgpu = 6142 }
 
 [[package.metadata.semio.playground]]
 variant = "wfc2d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.wfc.wfc2d@1/*#editor"
 aliases = ["wfc 2d"]
 ports = { react = 6043, wgpu = 6143 }
 
 [[package.metadata.semio.playground]]
 variant = "grid3d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.wfc.grid3d@1/*#editor"
 aliases = ["wfc 3d grid"]
 ports = { react = 6044, wgpu = 6144 }
 
 [[package.metadata.semio.playground]]
 variant = "wfc3d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.wfc.wfc3d@1/*#editor"
 aliases = ["wfc 3d"]
 ports = { react = 6045, wgpu = 6145 }

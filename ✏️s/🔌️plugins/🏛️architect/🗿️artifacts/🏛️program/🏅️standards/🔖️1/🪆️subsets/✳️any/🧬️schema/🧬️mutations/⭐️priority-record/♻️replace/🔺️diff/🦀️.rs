@@ -6,8 +6,8 @@ use crate::diff::ProgramPrioritiesDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
-/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns, in place:
+/// `removed = [{id, index}]` and `inserted = [{index, payload row}]` at the same coordinate, so the new row keeps its position.
 pub fn diff(payload: &ReplacePriorityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = &payload.priority_record.header.id;
     let Some(position) = base.priorities.iter().position(|row| row.header.id == *id) else {
@@ -16,6 +16,7 @@ pub fn diff(payload: &ReplacePriorityRecord, base: &ProgramSnapshot) -> protocol
     if base.priorities[position] == payload.priority_record {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This priority record already matches the requested value.").at([id.0.clone()])]);
     }
-    let reordered = (position + 1 != base.priorities.len()).then(|| base.priorities.iter().map(|row| row.header.id.0.clone()).collect());
-    protocol::MutationOutcome::new(ProgramDiff { priorities: Some(ProgramPrioritiesDelta { removed: vec![id.0.clone()], added: vec![payload.priority_record.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let mut delta = ProgramPrioritiesDelta::removal(&base.priorities, position);
+    delta.absorb(ProgramPrioritiesDelta::insertion(position, payload.priority_record.clone()));
+    protocol::MutationOutcome::new(ProgramDiff { priorities: Some(delta), ..Default::default() })
 }

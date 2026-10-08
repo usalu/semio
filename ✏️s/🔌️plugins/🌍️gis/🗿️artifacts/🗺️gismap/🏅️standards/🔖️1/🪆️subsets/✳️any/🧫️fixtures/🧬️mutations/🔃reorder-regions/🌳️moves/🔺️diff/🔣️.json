@@ -2,13 +2,15 @@
   "positions": null,
   "routes": null,
   "regions": {
-    "added": [],
     "removed": [],
-    "patched": [],
-    "reordered": [
-      "region-harbor-district",
-      "region-park",
-      "region-old-town"
-    ]
+    "inserted": [],
+    "moved": [
+      {
+        "id": "region-old-town",
+        "from": 1,
+        "to": 2
+      }
+    ],
+    "modified": []
   }
 }

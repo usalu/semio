@@ -4,14 +4,9 @@
       {
         "index": 0,
         "diff": {
-          "primitives": [
-            {
-              "attributes": {
-                "NORMAL": 1,
-                "POSITION": 0
-              }
-            }
-          ]
+          "primitives": {
+            "modified": []
+          }
         }
       }
     ]

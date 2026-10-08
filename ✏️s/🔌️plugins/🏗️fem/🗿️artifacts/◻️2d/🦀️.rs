@@ -5,6 +5,8 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
+#[path = "🌉️apply/🦀️.rs"]
+pub mod central_apply;
 
 #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/➕️algebra/🦀️.rs"]
 pub mod algebra;
@@ -30,14 +32,14 @@ pub(crate) mod engine_test_vectors;
 pub mod sparse;
 #[path = "."]
 pub mod fem2d_engine {
-    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻️2d/🦀️.rs"]
+    #[path = "⚙️engine/◻️2d/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻️2d/🗺️mesh-preview/🦀️.rs"]
+    #[path = "⚙️engine/◻️2d/🗺️mesh-preview/🦀️.rs"]
     pub mod mesh_preview;
-    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻️2d/🕸️meshing/🦀️.rs"]
+    #[path = "⚙️engine/◻️2d/🕸️meshing/🦀️.rs"]
     pub mod meshing;
-    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻️2d/🎵️modal-buckling/🦀️.rs"]
+    #[path = "⚙️engine/◻️2d/🎵️modal-buckling/🦀️.rs"]
     pub mod modal_buckling;
 }
 
@@ -1278,6 +1280,8 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod export {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📤️export/🧩️geometry/🦀️.rs"]
+                        pub(crate) mod geometry;
                         #[path = "."]
                         pub mod serializers {
                             #[path = "."]

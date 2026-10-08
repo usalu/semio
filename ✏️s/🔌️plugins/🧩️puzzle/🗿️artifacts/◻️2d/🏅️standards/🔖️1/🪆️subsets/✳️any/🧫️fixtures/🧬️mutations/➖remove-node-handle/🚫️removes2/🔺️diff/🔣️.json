@@ -2,33 +2,39 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "edge-1"
-    ],
-    "reordered": null
+      {
+        "id": "edge-1",
+        "index": 0
+      }
+    ]
   },
   "meta": null,
   "nodes": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "node-b",
         "patch": {
           "handles": {
-            "added": [],
-            "patched": [],
+            "inserted": [],
+            "modified": [],
+            "moved": [],
             "removed": [
-              "handle-2"
-            ],
-            "reordered": null
+              {
+                "id": "handle-2",
+                "index": 0
+              }
+            ]
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetRegions": null

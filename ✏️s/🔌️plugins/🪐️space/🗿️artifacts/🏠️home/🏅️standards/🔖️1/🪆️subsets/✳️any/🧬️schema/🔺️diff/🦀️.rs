@@ -46,9 +46,6 @@ impl protocol::DiffAlgebra<SHomeSnapshot> for SHomeDiff {
     fn inverse(&self, base: &SHomeSnapshot) -> Self {
         Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), catalog_generation: self.catalog_generation.map(|_| base.catalog_generation) }
     }
-    fn between(base: &SHomeSnapshot, other: &SHomeSnapshot) -> Self {
-        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()), catalog_generation: (base.catalog_generation != other.catalog_generation).then_some(other.catalog_generation) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.catalog_generation.is_none()
     }

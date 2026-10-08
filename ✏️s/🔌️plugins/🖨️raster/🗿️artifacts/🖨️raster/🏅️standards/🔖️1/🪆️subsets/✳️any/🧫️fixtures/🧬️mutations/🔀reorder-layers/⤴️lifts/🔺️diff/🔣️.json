@@ -3,16 +3,21 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [],
     "removed": [],
-    "patched": [],
+    "inserted": [],
     "moved": [
       {
         "id": "caption",
-        "parentId": null,
-        "index": 0
+        "from": {
+          "parentId": "frame",
+          "index": 0
+        },
+        "to": {
+          "index": 0
+        }
       }
-    ]
+    ],
+    "modified": []
   },
   "assets": null
 }

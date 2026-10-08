@@ -1,6 +1,7 @@
 //! ⚡️ Fem2d artifact — OpText/OpBinary codecs + grammar for `Fem2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation,Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation,Fem2dMutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 
 //#region 📖️SemioGrammar
@@ -102,7 +103,7 @@ pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
     let inverse = <Fem2dMutation as Mutation<Fem2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         let (next, outcome) = store::apply_outcome(&undone, <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(step, &undone));
         undone = next;
         inverse_messages.extend(outcome.messages().iter().cloned());

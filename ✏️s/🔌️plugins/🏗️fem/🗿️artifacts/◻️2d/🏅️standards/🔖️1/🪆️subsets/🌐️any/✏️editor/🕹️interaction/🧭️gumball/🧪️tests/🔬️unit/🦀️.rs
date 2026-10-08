@@ -33,7 +33,7 @@ fn a_tick_is_the_relative_leaf_over_the_selected_geometry() {
     let tick = fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 2.0 }).expect("a node selection moves geometry");
     assert_eq!((tick.node_ids.clone(), tick.region_ids.clone(), tick.pivot_x, tick.pivot_y, tick.dx, tick.dy), (vec!["n1".to_string()], Vec::new(), n1.x, n1.y, 1.0, 2.0));
     let mut moved = doc.clone();
-    crate::standards::v1::subsets::any::schema::mutations::apply_fem2d_mutation(&mut moved, &Fem2dMutation::MoveSelection(tick)).expect("the tick applies");
+    crate::central_apply::apply_fem2d_mutation(&mut moved, &Fem2dMutation::MoveSelection(tick)).expect("the tick applies");
     let after = moved.nodes.iter().find(|node| node.id == "n1").expect("n1");
     assert_eq!((after.x, after.y), (n1.x + 1.0, n1.y + 2.0));
     assert!(fem2d_gumball_tick(&doc, &[], Fem2dGumballMotion::Rotate { angle: 0.5 }).is_none(), "an empty selection moves nothing");
@@ -145,7 +145,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let fold = |mutations: &[Fem2dMutation]| {
         let mut snapshot = base.clone();
         for mutation in mutations {
-            crate::standards::v1::subsets::any::schema::mutations::apply_fem2d_mutation(&mut snapshot, mutation).expect("the log folds");
+            crate::central_apply::apply_fem2d_mutation(&mut snapshot, mutation).expect("the log folds");
         }
         snapshot
     };

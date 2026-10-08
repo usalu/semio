@@ -10,7 +10,9 @@
 
 //#region 🏅️ConformanceSupport
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDictAdded, PdfDictDiff, PdfDictModified, PdfDiff, PdfObjectAdded, PdfObjectsDiff};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot};
+#[cfg(test)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfIndirectObject;
 
 //#region 🔖️Objects
 /// 🆕️ The lowest object number no retained object uses — where a fresh indirect object lands.
@@ -311,6 +313,13 @@ impl Insertion {
         Self { next: next_object_id(base).num, end: base.objects.len(), placements: placements.to_vec(), added: Vec::new() }
     }
 
+    /// ➖️ The same insertion when `count` objects of the base leave in the same edit, so the end of the list is `count` earlier.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn dropping(mut self, count: usize) -> Self {
+        self.end = self.end.saturating_sub(count);
+        self
+    }
+
     /// ➕️ Adds `value` and returns the reference it landed at.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn push(&mut self, value: PdfObject) -> ObjRef {
@@ -453,6 +462,15 @@ pub fn remove_catalog_entry_owned_rows(base: &PdfSnapshot, key: &str) -> PdfDiff
 //#endregion 🔖️GraphRows
 
 //#region 🔖️CompositeRows
+/// ➖️ The rows dropping what the catalog entry `key` exclusively owns, and how many objects that is — the part of replacing an
+/// installed entry that makes the old install leave the document instead of lingering orphaned.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn drop_owned_rows(base: &PdfSnapshot, key: &str) -> (PdfDiff, usize) {
+    let owned = catalog_entry(base, key).map(|entry| owned_objects(base, entry)).unwrap_or_default();
+    let count = owned.len();
+    (owned.into_iter().fold(PdfDiff::default(), |rows, id| diff::sequence(rows, diff::diff_remove_object(id))), count)
+}
+
 /// ✍️ The rows rewriting `/Root/AcroForm` around `fields`, dropping the key entirely when nothing is left — so inserting the
 /// only field and removing it again lands back on a document with no AcroForm.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -486,14 +504,15 @@ pub fn remove_signature_field_rows(base: &PdfSnapshot, title: &str) -> PdfDiff {
 /// a real ICC destination-profile stream ISO 15930-7 requires alongside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn output_intent_rows(base: &PdfSnapshot, subtype: &str, identifier: &str, dest_profile: bool, placements: &[ObjectPlacement], entry_index: Option<usize>) -> PdfDiff {
-    let mut insertion = Insertion::after(base, placements);
+    let (dropped, count) = drop_owned_rows(base, "OutputIntents");
+    let mut insertion = Insertion::after(base, placements).dropping(count);
     let mut entries = vec![("Type", PdfObject::Name("OutputIntent".to_string())), ("S", PdfObject::Name(subtype.to_string())), ("OutputConditionIdentifier", literal(identifier)), ("Info", literal(identifier))];
     if dest_profile {
         let stream = PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".to_string(), value: PdfObject::Int(3) }], data: format!("ICC destination output profile for {identifier}").into_bytes(), filters: Vec::new() };
         entries.push(("DestOutputProfile", PdfObject::Ref(insertion.push(stream))));
     }
     let intent = insertion.push(dict(entries));
-    diff::sequence(insertion.rows(), set_catalog_entry_rows(base, "OutputIntents", PdfObject::Array(vec![PdfObject::Ref(intent)]), entry_index))
+    diff::sequence(diff::sequence(dropped, insertion.rows()), set_catalog_entry_rows(base, "OutputIntents", PdfObject::Array(vec![PdfObject::Ref(intent)]), entry_index))
 }
 
 /// 📎️ The rows adding a `/Type /Filespec` with a real `/EF` attached-file stream and NO `/AFRelationship` — the exact shape
@@ -518,14 +537,15 @@ pub fn remove_file_spec_rows(base: &PdfSnapshot, id: ObjRef) -> PdfDiff {
 /// ISO 16612-2's variable-data partitioning in its minimal legitimate form.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dpart_root_rows(base: &PdfSnapshot, job: &str, placements: &[ObjectPlacement], entry_index: Option<usize>) -> PdfDiff {
-    let mut insertion = Insertion::after(base, placements);
+    let (dropped, count) = drop_owned_rows(base, "DPartRoot");
+    let mut insertion = Insertion::after(base, placements).dropping(count);
     let mut node = vec![("Type", PdfObject::Name("DPart".to_string()))];
     if !job.is_empty() {
         node.push(("DPM", single_entry_dict("Job", literal(job))));
     }
     let node_id = insertion.push(dict(node));
     let root = insertion.push(dict(vec![("Type", PdfObject::Name("DPartRoot".to_string())), ("DPartRootNode", PdfObject::Ref(node_id))]));
-    diff::sequence(insertion.rows(), set_catalog_entry_rows(base, "DPartRoot", PdfObject::Ref(root), entry_index))
+    diff::sequence(diff::sequence(dropped, insertion.rows()), set_catalog_entry_rows(base, "DPartRoot", PdfObject::Ref(root), entry_index))
 }
 
 /// 🗂️ The rows rewriting the root `/DPart` node's `/DPM`, or dropping it when `job` is `None`.
@@ -547,7 +567,7 @@ pub fn embed_font_file_rows(base: &PdfSnapshot, descriptor: ObjRef, key: &str, p
     let stale: Vec<String> = FONT_PROGRAM_KEYS.iter().filter(|candidate| **candidate != key && entries.iter().any(|entry| entry.key == **candidate)).map(|candidate| (*candidate).to_string()).collect();
     let reference = PdfObject::Ref(program);
     let leaf = match entries.iter().find(|entry| entry.key == key) {
-        Some(existing) => PdfDictDiff { removed: stale, modified: diff::value_diff_between(&existing.value, &reference).map(|change| PdfDictModified { key: key.to_string(), diff: change }).into_iter().collect(), added: Vec::new() },
+        Some(existing) => PdfDictDiff { removed: stale, modified: (existing.value != reference).then(|| PdfDictModified { key: key.to_string(), diff: diff::PdfValueDiff::Replace { value: reference.clone() } }).into_iter().collect(), added: Vec::new() },
         None => PdfDictDiff { added: vec![PdfDictAdded { index: entry_index.map_or(entries.len() - stale.len(), |at| at.min(entries.len() - stale.len())), key: key.to_string(), item: reference }], removed: stale, modified: Vec::new() },
     };
     if leaf == PdfDictDiff::default() {
@@ -559,9 +579,10 @@ pub fn embed_font_file_rows(base: &PdfSnapshot, descriptor: ObjRef, key: &str, p
 /// 🌲️ The rows installing `/Root/StructTreeRoot` over one empty structure tree root.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn struct_tree_root_rows(base: &PdfSnapshot, placements: &[ObjectPlacement], entry_index: Option<usize>) -> PdfDiff {
-    let mut insertion = Insertion::after(base, placements);
+    let (dropped, count) = drop_owned_rows(base, "StructTreeRoot");
+    let mut insertion = Insertion::after(base, placements).dropping(count);
     let root = insertion.push(struct_tree_root_object());
-    diff::sequence(insertion.rows(), set_catalog_entry_rows(base, "StructTreeRoot", PdfObject::Ref(root), entry_index))
+    diff::sequence(diff::sequence(dropped, insertion.rows()), set_catalog_entry_rows(base, "StructTreeRoot", PdfObject::Ref(root), entry_index))
 }
 
 /// 📎️ The objects `insert_file_spec_rows` creates for the file spec `spec`, in creation order: its attached-file stream, then
@@ -642,20 +663,14 @@ pub fn catalog_object() -> PdfObject {
     dict(vec![("Type", PdfObject::Name("Catalog".to_string()))])
 }
 
-/// 🧪️ `base` after the `rows` of one edit, applied through the central applier.
-#[cfg(test)]
-pub fn after_rows(base: &PdfSnapshot, rows: PdfDiff) -> PdfSnapshot {
-    protocol::apply_diff(&diff::graph_edit(rows), base).expect("the fixture rows apply")
-}
-
 /// 🧪️ `base` with one `/Type /Tail` object appended and, when the document has a catalog, one `/Tail` catalog entry appended —
 /// the rows that make everything created before them a MIDDLE row.
 #[cfg(test)]
 pub fn with_tail(base: &PdfSnapshot) -> PdfSnapshot {
     let (_, rows) = insert_object_rows(base, dict(vec![("Type", PdfObject::Name("Tail".to_string()))]), &[]);
-    let base = after_rows(base, rows);
+    let base = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(base, rows);
     match catalog_id(&base) {
-        Some(_) => after_rows(&base, set_catalog_entry_rows(&base, "Tail", PdfObject::Int(1), None)),
+        Some(_) => crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, set_catalog_entry_rows(&base, "Tail", PdfObject::Int(1), None)),
         None => base,
     }
 }
@@ -663,19 +678,13 @@ pub fn with_tail(base: &PdfSnapshot) -> PdfSnapshot {
 /// 🧪️ `base` with a `/Tail` entry appended to object `id`'s own dictionary, so every entry before it becomes a MIDDLE entry.
 #[cfg(test)]
 pub fn with_trailing_entry(base: &PdfSnapshot, id: ObjRef) -> PdfSnapshot {
-    after_rows(base, set_entry_rows(base, id, "Tail", PdfObject::Int(1), None))
+    crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(base, set_entry_rows(base, id, "Tail", PdfObject::Int(1), None))
 }
 
 /// 🧪️ The placement of object number `num` at list position `index`.
 #[cfg(test)]
 pub fn placed(num: u32, index: usize) -> ObjectPlacement {
     ObjectPlacement { id: ObjRef { num, gen: 0 }, index }
-}
-
-/// 🧪️ `base` after `mutation`, applied through the central applier.
-#[cfg(test)]
-pub fn applied<M: protocol::Mutation<PdfSnapshot, Diff = PdfDiff>>(base: &PdfSnapshot, mutation: &M) -> PdfSnapshot {
-    protocol::apply_diff(mutation.diff(base).diff(), base).expect("the fixture mutation applies")
 }
 //#endregion 🧪️Fixtures
 //#region 🧪️Tests

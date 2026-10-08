@@ -3,26 +3,36 @@
   "seed": null,
   "slots": {
     "removed": [
-      "slot-a"
+      {
+        "id": "slot-a",
+        "index": 0
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "edges": {
     "removed": [
-      "edge-ab"
+      {
+        "id": "edge-ab",
+        "index": 0
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "tiles": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

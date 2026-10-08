@@ -1251,7 +1251,7 @@ impl DrawingPointQuery {
 pub(crate) fn drawing_rebound_points(base: &DrawingSnapshot, leaf: &DrawingMutation) -> Result<Vec<String>, Fault> {
     let DrawingMutation::DragPathPoints(drag) = leaf else { return Ok(Vec::new()) };
     let mut moved = base.clone();
-    crate::mutations::apply_drawing_mutation(&mut moved, leaf).map_err(|error| Fault::from(error.to_string()))?;
+    crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut moved, leaf).map_err(|error| Fault::from(error.to_string()))?;
     let mut rebound = Vec::with_capacity(drag.targets.len());
     for target in &drag.targets {
         let Some(DrawingLayerNode::Path(path)) = crate::schema::find_drawing_layer(&moved, &target.layer_id) else { continue };

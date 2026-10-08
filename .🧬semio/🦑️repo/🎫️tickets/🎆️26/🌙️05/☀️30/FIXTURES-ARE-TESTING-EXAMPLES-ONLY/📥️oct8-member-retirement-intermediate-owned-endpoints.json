@@ -1,0 +1,76 @@
+{
+  "status": "intermediate integration, not frozen/native positive",
+  "at": "2026-10-08T19:56:44.148Z",
+  "endpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "observedSha256": "260b9a60cfe7213e5eb3feb9ea9f1aab525b6bb86441968e5e7f679c07b060ae",
+      "attribution": "logical blocks only; concurrent peer bodies preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "observedSha256": "0745ac4825f1e056342dc5f4738bf6cae012e7450293185686fcac953cb522b4",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🦀️.rs",
+      "observedSha256": "1c3887adfd4e6f2752f1bb8467a7cb74f8744321b7aa8bc837da2f5f19da4da2",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🦀️.rs",
+      "observedSha256": "caa8cdf3de9f37839ee7f676464e0897e4472bf1019cc7b8c58ef28e0d6d9100",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🦀️.rs",
+      "observedSha256": "d3ea4f77f5727f762b131d574ba3ec203876b09727922827f05e4d480e633553",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/📇️index/🦀️.rs",
+      "observedSha256": "85a3eafd03fa4fec26f62c63194462b81b32b64a5717f594cd6b21ba500f87f4",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/📇️index/🧪️tests/🔬️unit/🦀️.rs",
+      "observedSha256": "75516391db4c8357d9729487d5a039684a48c323793c43cae9de29789c8ee0e0",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "observedSha256": "9b7914a8f845387b06e229f578b5692a085dd3fd3746c20a09bc317297f850e2",
+      "attribution": "logical blocks only; concurrent peer bodies preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "observedSha256": "6d74d45e162585d0a9bc65c839512a4c0364a540a45ed6c2812b74f4bc4b1afa",
+      "attribution": "narrow owned edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+      "observedSha256": "141c9311af2fd5b134bc4ffbacc5b85d782299db825147b0f96dbab9ae839d73",
+      "attribution": "narrow owned edits"
+    }
+  ],
+  "blocks": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "role": "generic box+inline helper+allocation-free cursor admission",
+      "sha256": "cc12a338430f5a452a3e65832bd6df143fd38086f8606aec72d07bfaef624143",
+      "bytes": 5397
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "role": "four genuine Edit/metadata retirement factories",
+      "sha256": "e91990dbcd68d459dedee808132c547fa172ebf88be74bee92faad152ea921a4",
+      "bytes": 2764
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "role": "new current genuine-Value allocator/pointer law only",
+      "sha256": "b861b4ec22974c239a2c69b3c2bfdabe6ceff57384da4b54a20539b7be3c66b2",
+      "bytes": 3704
+    }
+  ]
+}

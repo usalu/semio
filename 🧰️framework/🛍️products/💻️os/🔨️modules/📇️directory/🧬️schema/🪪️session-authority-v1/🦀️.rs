@@ -54,21 +54,7 @@ impl DirectorySessionAuthorityV1 {
             && (1..=9_007_199_254_740_991).contains(&self.expires_at)
     }
 
-    /// 📤️ Serializes only an exact bounded response.
-    pub fn canonical_json(&self) -> Option<String> {
-        if !self.validate() {
-            return None;
-        }
-        let source = semio_framework_pack_json::to_json_string(self);
-        (source.len() <= DIRECTORY_SESSION_AUTHORITY_MAX_BYTES).then_some(source)
-    }
+    
 
-    /// 📥️ Rejects unknown fields, reordering, padding and oversized responses.
-    pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > DIRECTORY_SESSION_AUTHORITY_MAX_BYTES {
-            return None;
-        }
-        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
-    }
+    
 }

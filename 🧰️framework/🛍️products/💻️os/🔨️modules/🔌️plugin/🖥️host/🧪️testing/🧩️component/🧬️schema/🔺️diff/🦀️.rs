@@ -6,7 +6,6 @@ use semio_framework_value_derive::{ToValue,FromValue};
 pub struct Diff {}
 impl protocol::DiffAlgebra<Snapshot> for Diff {
     fn inverse(&self,_base:&Snapshot)->Self{Self{}}
-    fn between(_base:&Snapshot,_other:&Snapshot)->Self{Self{}}
     fn is_empty(&self)->bool{true}
 }
 impl protocol::MutationDiff<Snapshot> for Diff {

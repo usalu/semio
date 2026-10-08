@@ -250,7 +250,7 @@ impl MutationDiff<MdSnapshot> for MdDiff {
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_blocks_diff(a, &b)),
+            (Some(a), Some(b)) => Some(absorb_blocks_rows(a, &b)),
         };
     }
 }
@@ -331,9 +331,7 @@ fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
             slots[m.index] = Some(patched);
         }
     }
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique_descending(&diff.removed);
     for idx in removed_sorted {
         if idx < slots.len() {
             slots.remove(idx);
@@ -403,9 +401,7 @@ fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<
             slots[m.index] = Some(patched);
         }
     }
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique_descending(&diff.removed);
     for idx in removed_sorted {
         if idx < slots.len() {
             slots.remove(idx);
@@ -426,10 +422,6 @@ fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<
 impl DiffAlgebra<MdSnapshot> for MdDiff {
     fn inverse(&self, base: &MdSnapshot) -> Self {
         MdDiff { blocks: self.blocks.as_ref().map(|d| inverse_blocks_diff(&base.blocks, d)) }
-    }
-
-    fn between(base: &MdSnapshot, other: &MdSnapshot) -> Self {
-        MdDiff { blocks: between_blocks(&base.blocks, &other.blocks) }
     }
 
     fn is_empty(&self) -> bool {
@@ -522,88 +514,6 @@ fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) 
     MdListItemsDiff { removed, modified, added }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = between_block(&base[i], &other[i]) {
-                modified.push(MdBlockModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<MdBlockAdded> = (min_len..other.len()).map(|i| MdBlockAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(MdBlocksDiff { removed, modified, added })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
-    if base == other {
-        return None;
-    }
-    match (base, other) {
-        (MdBlock::Heading { level: bl, inlines: bi }, MdBlock::Heading { level: ol, inlines: oi }) => Some(MdBlockDiff::Heading { level: if bl != ol { Some(*ol) } else { None }, inlines: if bi != oi { Some(oi.clone()) } else { None } }),
-        (MdBlock::Paragraph { inlines: bi }, MdBlock::Paragraph { inlines: oi }) => {
-            if bi == oi {
-                None
-            } else {
-                Some(MdBlockDiff::Paragraph { inlines: Some(oi.clone()) })
-            }
-        }
-        (MdBlock::CodeBlock { info: bin, literal: bl }, MdBlock::CodeBlock { info: oin, literal: ol }) => {
-            Some(MdBlockDiff::CodeBlock { info: if bin != oin { Some(oin.clone()) } else { None }, literal: if bl != ol { Some(ol.clone()) } else { None } })
-        }
-        (MdBlock::HtmlBlock { raw: br }, MdBlock::HtmlBlock { raw: or }) => {
-            if br == or {
-                None
-            } else {
-                Some(MdBlockDiff::HtmlBlock { raw: Some(or.clone()) })
-            }
-        }
-        (MdBlock::ThematicBreak, MdBlock::ThematicBreak) => None,
-        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => between_blocks(bb, ob).map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) }),
-        (MdBlock::List { ordered: bo, start: bs, tight: bt, items: bi }, MdBlock::List { ordered: oo, start: os, tight: ot, items: oi }) => {
-            let ordered = if bo != oo { Some(*oo) } else { None };
-            let start = if bs != os { Some(*os) } else { None };
-            let tight = if bt != ot { Some(*ot) } else { None };
-            let items = between_list_items(bi, oi);
-            if ordered.is_none() && start.is_none() && tight.is_none() && items.is_none() {
-                None
-            } else {
-                Some(MdBlockDiff::List { ordered, start, tight, items })
-            }
-        }
-        _ => Some(MdBlockDiff::Replace { block: other.clone() }),
-    }
-}
-
-/// 🧮️ Naive positional item diff, same recipe-specified rule as `between_blocks`/xml's
-/// `between_children`: pairwise `0..min(len)`, base tail removed, other tail added.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<MdListItemsDiff> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = between_blocks(&base[i], &other[i]) {
-                modified.push(MdListItemModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<MdListItemAdded> = (min_len..other.len()).map(|i| MdListItemAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(MdListItemsDiff { removed, modified, added })
-    }
-}
 //#endregion 🔖️DiffAlgebra
 
 //#region 🔖️Absorb
@@ -646,7 +556,7 @@ fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &[MdBlo
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
+fn absorb_block_rows(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
     match (a, b) {
         (_, MdBlockDiff::Replace { block }) => MdBlockDiff::Replace { block },
         (MdBlockDiff::Replace { block }, b) => MdBlockDiff::Replace { block: apply_block_diff(&block, &b) },
@@ -659,7 +569,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             blocks: match (ba, bb) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(absorb_blocks_diff(x, &y)),
+                (Some(x), Some(y)) => Some(absorb_blocks_rows(x, &y)),
             },
         },
         (MdBlockDiff::List { ordered: oa, start: sa, tight: ta, items: ia }, MdBlockDiff::List { ordered: ob, start: sb, tight: tb, items: ib }) => MdBlockDiff::List {
@@ -669,7 +579,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             items: match (ia, ib) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(absorb_list_items_diff(x, &y)),
+                (Some(x), Some(y)) => Some(absorb_list_items_rows(x, &y)),
             },
         },
         // 🛡️ Kind-mismatched arms (should not arise outside a prior `Replace`, handled above) --
@@ -679,7 +589,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_blocks_diff(d1: MdBlocksDiff, d2: &MdBlocksDiff) -> MdBlocksDiff {
+fn absorb_blocks_rows(d1: MdBlocksDiff, d2: &MdBlocksDiff) -> MdBlocksDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -720,7 +630,7 @@ fn absorb_blocks_diff(d1: MdBlocksDiff, d2: &MdBlocksDiff) -> MdBlocksDiff {
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_block_diff(existing.diff.clone(), m2.diff.clone()),
+                    Some(existing) => existing.diff = absorb_block_rows(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(MdBlockModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -787,7 +697,7 @@ fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdList
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_list_items_diff(d1: MdListItemsDiff, d2: &MdListItemsDiff) -> MdListItemsDiff {
+fn absorb_list_items_rows(d1: MdListItemsDiff, d2: &MdListItemsDiff) -> MdListItemsDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -828,7 +738,7 @@ fn absorb_list_items_diff(d1: MdListItemsDiff, d2: &MdListItemsDiff) -> MdListIt
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_blocks_diff(existing.diff.clone(), &m2.diff),
+                    Some(existing) => existing.diff = absorb_blocks_rows(existing.diff.clone(), &m2.diff),
                     None => modified.push(MdListItemModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -1010,22 +920,28 @@ fn md_b() -> Vec<MdBlock> {
 }
 
 /// 🧪️ P2-FG1: representative `MdDiff` values — exercises the recursive `MdBlockDiff` enum (7 of
-/// its 8 variants reachable via `between`, `Replace` incl.), every `MdInline` variant (via
+/// its 8 variants, `Replace` incl.), every `MdInline` variant (via
 /// `all_inline_kinds`), both tri-states (`List.start`, `CodeBlock.info`), and both
 /// `MdBlocksDiff`/`MdListItemsDiff` triples at multiple nesting depths (top-level,
-/// `BlockQuote.blocks`, `List.items`). `MdBlockDiff::ThematicBreak` is UNREACHABLE via `between`
-/// (two `ThematicBreak`s are always structurally equal, per that variant's own doc comment) so it
-/// gets one manually-constructed case here instead.
+/// `BlockQuote.blocks`, `List.items`), all declared by hand.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
-    let a = demo_snapshot(md_a());
-    let b = demo_snapshot(md_b());
-    let empty = demo_snapshot(Vec::new());
-
-    let mut cases = vec![MdDiff::default(), MdDiff::between(&a, &b), MdDiff::between(&b, &a), MdDiff::between(&a, &empty), MdDiff::between(&empty, &a)];
-    // 🍃 Manual case: `ThematicBreak` diff (never produced by `between`) + `Replace` at a nested
-    // `BlockQuote` depth, proving the codec handles both even off the `between` path.
+    let mut cases = vec![
+        MdDiff::default(),
+        MdDiff {
+            blocks: Some(MdBlocksDiff {
+                removed: vec![1],
+                modified: vec![
+                    MdBlockModified { index: 0, diff: MdBlockDiff::Heading { level: Some(2), inlines: Some(all_inline_kinds()) } },
+                    MdBlockModified { index: 2, diff: MdBlockDiff::List { ordered: Some(true), start: Some(Some(3)), tight: Some(false), items: None } },
+                    MdBlockModified { index: 3, diff: MdBlockDiff::CodeBlock { info: Some(None), literal: Some("x".into()) } },
+                ],
+                added: vec![MdBlockAdded { index: 1, item: MdBlock::HtmlBlock { raw: "<p/>".into() } }],
+            }),
+        },
+    ];
+    // 🍃 Manual case: `ThematicBreak` diff + `Replace` at a nested `BlockQuote` depth, proving the codec handles both.
     cases.push(MdDiff {
         blocks: Some(MdBlocksDiff {
             removed: Vec::new(),

@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::standards::v6_0::subsets::baseline::schema::{check_tiff_baseline_conformance, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_PHOTOMETRIC};
 use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffIfd, TiffSampleBlock, TiffTag, TiffWord64};
@@ -45,11 +46,11 @@ fn each_kind_moves_exactly_the_axis_its_diagnostic_reports() {
     assert!(codes(&conforming()).is_empty(), "the fixture must start conforming, got {:?}", codes(&conforming()));
 
     let mut snapshot = conforming();
-    apply_tiff_baseline_mutation(&mut snapshot, &TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 6 }));
+    apply_mutation(&mut snapshot, &TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 6 }));
     assert_eq!(codes(&snapshot), vec![CODE_UNSUPPORTED_PHOTOMETRIC.to_string()]);
 
     let mut snapshot = conforming();
-    apply_tiff_baseline_mutation(&mut snapshot, &TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: vec![16, 16, 16] }));
+    apply_mutation(&mut snapshot, &TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: vec![16, 16, 16] }));
     assert_eq!(codes(&snapshot), vec![CODE_UNSUPPORTED_BITS_PER_SAMPLE.to_string()]);
 }
 

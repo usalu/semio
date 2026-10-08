@@ -21,8 +21,6 @@ pub use move_synapse::MoveSynapse;
 pub use change_synapse::ChangeSynapse;
 #[path = "📐️change-layout/🦀️.rs"] mod change_layout;
 pub use change_layout::ChangeLayout;
-#[path = "♻️replace-flow-host-snapshot/🦀️.rs"] mod replace_flow_host_snapshot;
-pub use replace_flow_host_snapshot::ReplaceFlowHostSnapshot;
 //#endregion 🧩️Leaves
 
 //#region 🧬️Aggregate
@@ -40,16 +38,14 @@ pub enum FlowMutation {
     MoveSynapse(MoveSynapse),
     ChangeSynapse(ChangeSynapse),
     ChangeLayout(ChangeLayout),
-    ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot),
 }
 
-/// 🧊️ Cold-retires one flow host operation — the generated `Mutation::retire_cold`. A widget or a whole host snapshot owns
+/// 🧊️ Cold-retires one flow host operation — the generated `Mutation::retire_cold`. A widget owns
 /// fail-closed roots (`Dictionary`, `OrderedSet`, `OrderedMap`, `Tree`) that refuse a bare drop; every other payload is plain data.
 pub fn retire_flow_mutation(mutation: FlowMutation) {
     match mutation {
         FlowMutation::AddWidget(add) => add.widget.retire_cold(),
         FlowMutation::ChangeWidget(change) => change.widget.retire_cold(),
-        FlowMutation::ReplaceFlowHostSnapshot(replace) => replace.host_snapshot.retire_cold(),
         _ => {}
     }
 }

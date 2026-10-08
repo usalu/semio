@@ -8,7 +8,7 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct InsertElement {
-    pub index: usize,
+    pub index: Option<usize>,
     pub element: crate::EnvelopeElement,
 }
 

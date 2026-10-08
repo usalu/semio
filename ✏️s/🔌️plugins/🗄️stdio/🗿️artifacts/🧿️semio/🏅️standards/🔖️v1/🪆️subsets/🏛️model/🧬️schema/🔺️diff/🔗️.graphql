@@ -27,9 +27,13 @@ type SemioModelDiff {
   relations: RelationsTripleDiff
 }
 
-type SpatialTripleDiff { removed: [String!]! modified: [SpatialModified!]! added: [SpatialNode!]! }
+type SpatialTripleDiff { removed: [String!]! modified: [SpatialModified!]! added: [SpatialNodeAdded!]! }
 type SpatialModified { key: String! diff: SpatialNodeDiff! }
-type ElementsTripleDiff { removed: [String!]! modified: [ElementModified!]! added: [SemioModelElement!]! }
+type ElementsTripleDiff { removed: [String!]! modified: [ElementModified!]! added: [SemioModelElementAdded!]! }
 type ElementModified { key: String! diff: SemioModelElementDiff! }
-type RelationsTripleDiff { removed: [String!]! modified: [RelationModified!]! added: [ModelRelation!]! }
+type RelationsTripleDiff { removed: [String!]! modified: [RelationModified!]! added: [ModelRelationAdded!]! }
 type RelationModified { key: String! diff: ModelRelationDiff! }
+
+type SpatialNodeAdded { index: Int! item: SpatialNode! }
+type SemioModelElementAdded { index: Int! item: SemioModelElement! }
+type ModelRelationAdded { index: Int! item: ModelRelation! }

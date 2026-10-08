@@ -109,18 +109,20 @@ impl InteractiveJob for ShortGrantCloseJob {
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if maximum_items == 0 || maximum_bytes < self.next_close_byte_demand() {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
+        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
+        if maximum_items==0||maximum_bytes<self.next_close_release_byte_demand().unwrap()||grant.maximum_depth==0 {
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}};
         }
         if self.backing.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: size_of::<u8>() };
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:size_of::<u8>(),..RetainedCloneProgress::default()}};
         }
-        InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
     }
-    fn next_close_byte_demand(&self) -> usize {
-        if self.backing.is_some() { size_of::<u8>() } else { 0 }
-    }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.backing.is_some(){size_of::<u8>()}else{0})}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.backing.is_some()))}
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.backing.is_none()
     }
@@ -148,15 +150,16 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
             break;
         }
         turns += 1;
-        let release_grant = mounted.next_close_byte_demand().expect("exclusive mounted fixture close query");
-        match mounted.close_step(1, release_grant) {
-            WorkerJobCloseStep::Pending { released_items, released_bytes } => {
+        let release_grant = mounted.next_close_demands(0).map(|demand|demand.maximum_release_bytes).expect("exclusive mounted fixture close query");
+        match mounted.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:release_grant,maximum_depth:64,..RetainedCloneGrant::default()}) {
+            WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes,..}} => {
                 assert!(released_items <= 1, "a one-item grant releases at most one owner: {released_items}");
                 assert!(released_bytes <= release_grant, "a close turn never spends more than its explicit physical release grant: {released_bytes}");
                 charged += released_bytes;
             }
-            WorkerJobCloseStep::Complete => {}
+            WorkerJobCloseStep::Complete {progress} => {}
             WorkerJobCloseStep::Blocked => panic!("a mounted close on a positive grant is never blocked"),
+            WorkerJobCloseStep::Refused(kind)=>panic!("original close grant refused: {kind:?}"),
         }
     }
     assert!(mounted.terminal_is_empty(), "every named phase completes under its exact queried physical release authority");
@@ -315,16 +318,17 @@ impl InteractiveJob for StructuredChildJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
+        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
         self.begin_close();
         if self.backing.is_some() {
             if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}};
             }
             self.backing = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}};
         }
-        InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -350,9 +354,9 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     let mut rejected_child = rejected.into_child();
     assert_eq!(rejected_child.backing.as_deref().expect("returned structured child backing") as *const u8, plus_one_pointer);
     rejected_child.begin_close();
-    assert_eq!(rejected_child.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(rejected_child.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
     while !rejected_child.terminal_is_empty() {
-        let _ = rejected_child.close_step(1, 0);
+        let _ = rejected_child.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     assert_eq!(scope.assert_completable(), Err(JobChildCompletionFault::LiveChildren));
     let token = guards[0].as_ref().expect("first child").token();
@@ -361,10 +365,10 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     let stale = JobChildToken { generation: token.generation + 1, ..token };
     assert_eq!(scope.complete_child(stale), Err(JobChildCompletionFault::Stale));
     drop(guards);
-    assert_eq!(scope.pump_child_close(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!(scope.pump_child_close(1, JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }, "child begin-close transfers control without claiming an owner release");
+    assert_eq!(scope.pump_child_close(RetainedCloneGrant::one_release_turn(0,64)), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    assert_eq!(scope.pump_child_close(RetainedCloneGrant::one_release_turn(JOB_PAYLOAD_PAGE_BYTES,64)), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}}, "child begin-close transfers control without claiming an owner release");
     while !scope.terminal_is_empty() {
-        let _ = scope.pump_child_close(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = scope.pump_child_close(RetainedCloneGrant::one_release_turn(JOB_PAYLOAD_PAGE_BYTES,64));
     }
     assert!(scope.assert_completable().is_ok());
     for slot in &scope.slots {
@@ -380,9 +384,9 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     assert_eq!(rejected.fault, JobChildAdmissionFault::Exhausted);
     assert_eq!(rejected.child().backing.as_deref().expect("exhausted rejected backing") as *const u8, rejected_backing_pointer);
     rejected.begin_close();
-    assert_eq!(rejected.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(rejected.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
     while !rejected.terminal_is_empty() {
-        let _ = rejected.close_step(1, 0);
+        let _ = rejected.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     scope.begin_close();
     assert!(scope.terminal_is_empty());
@@ -412,18 +416,19 @@ impl InteractiveJob for HostileJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
+        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
         self.begin_close();
         if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}};
         }
         if self.backing.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}};
         }
         if self.steps.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}};
         }
-        InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -468,7 +473,7 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     assert_eq!(terminal_identity, admitted_identity, "the caller-run interactive step keeps the same heap authority as the pooled one");
     mounted.begin_close();
     while !mounted.terminal_is_empty() {
-        let _ = mounted.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = mounted.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     let _ = pool.shutdown();
 }
@@ -516,7 +521,7 @@ fn worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_e
     assert_eq!(second.generation, generation);
     terminal.begin_close();
     while !session.terminal_is_empty() {
-        let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     assert_eq!(steps.load(AtomicOrdering::Acquire), 2);
     pool.shutdown();
@@ -538,7 +543,7 @@ fn worker_pool_rejection_returns_exact_job_before_resume() {
     assert_eq!(session.poll(), WorkerJobPoll::Idle);
     session.begin_close();
     while !session.terminal_is_empty() {
-        let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
 }
 
@@ -571,7 +576,7 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
     assert_eq!(returned_fault_pointer, preadmitted_fault_pointer);
     terminal.begin_close();
     while !session.terminal_is_empty() {
-        let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     pool.shutdown();
 }
@@ -587,7 +592,7 @@ fn worker_quiet_wake_sequence_exhaustion_is_permanent_and_typed() {
     assert_eq!(session.register_wake(Waker::noop()), Err(WorkerJobContention::WakeExhausted(Generation(15))));
     session.begin_close();
     while !session.terminal_is_empty() {
-        let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
 }
 
@@ -602,9 +607,9 @@ fn batch_session_advances_exactly_one_external_opportunity() {
     batch.resume().expect("caller explicitly resumes after first opportunity");
     assert_eq!(steps.load(AtomicOrdering::Acquire), 1, "batch adapter never drains itself to terminal");
     batch.begin_close();
-    assert_eq!(batch.close_step(0, 0), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(batch.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
     while !batch.terminal_is_empty() {
-        let _ = batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
 }
 
@@ -614,10 +619,10 @@ fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() {
         .unwrap_or_else(|_| panic!("batch session authority"));
     assert_eq!(batch.step(), Ok(WorkerJobPoll::Outcome));
     assert!(batch.checkout_outcome());
-    assert_eq!(batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!(batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()}), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    assert_eq!(batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()}), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
     while !batch.terminal_is_empty() {
-        let _ = batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
 }
 
@@ -628,7 +633,7 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
         if !worker_job_retirements_are_parked() {
             break;
         }
-        let _ = pump_worker_job_retirements(WORKER_JOB_SESSION_SLOTS, 1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = pump_worker_job_retirements(WORKER_JOB_SESSION_SLOTS,RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     assert!(!worker_job_retirements_are_parked(), "earlier tests' dropped sessions retire before this test owns every slot");
     let mut sessions = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
@@ -646,15 +651,15 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
     assert_eq!(rejected.params.as_ref().expect("session max plus one parameters").operation, OperationId(92_000));
     assert_eq!(rejected.params.as_ref().expect("session max plus one parameters").generation, Generation(500));
     rejected.begin_close();
-    assert_eq!(rejected.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(rejected.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
     while !rejected.terminal_is_empty() {
-        let _ = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = rejected.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     let dropped = sessions.pop().expect("last fixed session");
     drop(dropped);
     assert!(take_worker_job_retirement_wake());
     for _ in 0..8 {
-        let _ = pump_worker_job_retirements(1, 1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = pump_worker_job_retirements(1,RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     let replacement = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(17)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(92_001), Generation(501), root_cancel_token()))
         .unwrap_or_else(|_| panic!("retirement pump returns exact fixed session slot"));
@@ -662,7 +667,7 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
     for session in sessions {
         let _ = session.begin_close();
         while !session.terminal_is_empty() {
-            let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+            let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
         }
     }
 }

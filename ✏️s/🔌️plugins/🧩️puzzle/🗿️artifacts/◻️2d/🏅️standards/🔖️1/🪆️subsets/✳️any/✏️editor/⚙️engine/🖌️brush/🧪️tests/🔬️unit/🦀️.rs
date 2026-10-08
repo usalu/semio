@@ -1,10 +1,10 @@
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::unit_tests::context::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
-    use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescJson, NodeDescJson, SceneDescriptorJson};
+    use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescriptor, NodeDescriptor, SceneDescriptor};
     use crate::editor::puzzle2d::engine::{BoardFillCaptureStep, BoardFillJob};
     use semio_framework_job::{BatchDriveConfig, BatchJobParams, InteractiveStage, Operation, StepOutcome, WorkerJobPoll};
-    use serde_json::json;
+    use semio_framework_pack_json::json;
 
     const FILL_TEST_PUMP_LIMIT: usize = 4_000_000;
 
@@ -284,7 +284,7 @@ mod tests {
         host.set_suggestion_offset(40.0);
         host.set_brush_node_size(40.0);
         host.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -321,8 +321,8 @@ mod tests {
             }]
         });
         h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
-        let desc = SceneDescriptorJson {
-            nodes: vec![NodeDescJson {
+        let desc = SceneDescriptor {
+            nodes: vec![NodeDescriptor {
                 id: "a".into(),
                 x: 0.0,
                 y: 0.0,
@@ -342,7 +342,7 @@ mod tests {
                 height: None,
                 scale: None,
             }].into(),
-            handles: vec![HandleDescJson {
+            handles: vec![HandleDescriptor {
                 id: "a:h0".into(),
                 node_id: "a".into(),
                 angle: 0.0,
@@ -409,7 +409,7 @@ mod tests {
             ],
             "edges": [{ "id": "e0", "edgeKind": "link", "source": "a:h0", "target": "b:h0" }]
         });
-        assert!(h.load_board_snapshot_json(&snapshot.to_string()), "the two-node snapshot must parse");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)}, "the two-node snapshot must parse");
         let _ = h.drain_events_json();
 
         h.brush_open_slot("a:h0");
@@ -441,8 +441,8 @@ mod tests {
             }]
         });
         h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
-        let desc = SceneDescriptorJson {
-            nodes: vec![NodeDescJson {
+        let desc = SceneDescriptor {
+            nodes: vec![NodeDescriptor {
                 id: "a".into(),
                 x: 0.0,
                 y: 0.0,
@@ -462,7 +462,7 @@ mod tests {
                 height: None,
                 scale: None,
             }].into(),
-            handles: vec![HandleDescJson {
+            handles: vec![HandleDescriptor {
                 id: "a:h0".into(),
                 node_id: "a".into(),
                 angle: 0.0,
@@ -509,7 +509,7 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -543,7 +543,7 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -574,7 +574,7 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -613,7 +613,7 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -664,7 +664,7 @@ mod tests {
         h.set_size(800, 600, 1.0);
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(&serde_json::json!({ "handleKinds": [{ "id": "child", "name": "Child", "color": "#888888" }], "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "child", "angle": 0.0 }] }] }).to_string()).unwrap();
+        h.set_board_kind_catalogs_from_json(&semio_framework_pack_json::json!({ "handleKinds": [{ "id": "child", "name": "Child", "color": "#888888" }], "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "child", "angle": 0.0 }] }] }).to_string()).unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(9), semio_framework_job::Generation(2), 9);
         let checkpoint = first_fill_checkpoint(BoardFillJob::with_operation(capture_fill_snapshot(&h), 4, operation));
@@ -920,7 +920,7 @@ mod tests {
         let remaining_capacity = crate::editor::puzzle2d::engine::BOARD_FILL_NODE_CAPACITY - descriptor.nodes.len();
         for index in 0..remaining_capacity {
             let node_id = format!("stress.{index}");
-            descriptor.nodes.push(NodeDescJson {
+            descriptor.nodes.push(NodeDescriptor {
                 id: node_id.clone(),
                 x: (index % 64) as f64 * 1_000.0 + 10_000.0,
                 y: (index / 64) as f64 * 1_000.0 + 10_000.0,
@@ -940,7 +940,7 @@ mod tests {
                 height: None,
                 scale: None,
             });
-            descriptor.handles.push(HandleDescJson {
+            descriptor.handles.push(HandleDescriptor {
                 id: format!("{node_id}:h0"),
                 node_id,
                 angle: 0.0,
@@ -1092,7 +1092,7 @@ mod tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.05);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "nodeKinds": [{
                     "id": "capsule_J",
                     "name": "Capsule J",
@@ -1120,7 +1120,7 @@ mod tests {
         h.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [{"id": "parent", "name": "Parent", "color": "#888888"}],
                 "nodeKinds": [{
                     "id": "brush.kind",
@@ -1133,7 +1133,7 @@ mod tests {
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let _ = h.drain_events_json();
-        let session = serde_json::json!({
+        let session = semio_framework_pack_json::json!({
             "sourceHandleId": "a:h0",
             "candidates": ["brush.kind"],
             "index": 0,
@@ -1165,7 +1165,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -1195,7 +1195,7 @@ mod tests {
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
         let ev = h.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
-        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let v: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&ev, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let candidates =
             v.as_array().and_then(|rows| rows.iter().find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates")).and_then(|row| row.get("payload")).and_then(|p| p.get("candidates")).and_then(|c| c.as_array()).cloned());
         assert_eq!(candidates.as_ref().map(|rows| rows.len()), Some(3));
@@ -1213,7 +1213,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -1235,7 +1235,7 @@ mod tests {
         let inside = h.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
         let ev = h.drain_events_json();
-        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let v: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&ev, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let candidates = v
             .as_array()
             .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates")).and_then(|row| row.get("payload")).and_then(|p| p.get("candidates")).and_then(|c| c.as_array()).cloned())
@@ -1255,12 +1255,12 @@ mod tests {
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
 
-        let snapshot: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
         let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
-        let desc = SceneDescriptorJson {
-            nodes: vec![NodeDescJson {
+        let desc = SceneDescriptor {
+            nodes: vec![NodeDescriptor {
                 id: "base".into(),
                 x: 0.0,
                 y: 0.0,
@@ -1281,7 +1281,7 @@ mod tests {
                 scale: None,
             }].into(),
             handles: vec![
-                HandleDescJson {
+                HandleDescriptor {
                     id: "base:c0".into(),
                     node_id: "base".into(),
                     angle: -2.3561944901923453,
@@ -1296,7 +1296,7 @@ mod tests {
                     icon_kind: None,
                     user_data: None,
                 },
-                HandleDescJson {
+                HandleDescriptor {
                     id: "base:c1".into(),
                     node_id: "base".into(),
                     angle: -0.7853981633974483,
@@ -1337,13 +1337,13 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
 
-        let snapshot: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
         let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = snapshot.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(
             || "{}".to_string(),
             |kc| {
-                serde_json::json!({
+                semio_framework_pack_json::json!({
                     "handleKinds": kc.get("handles"),
                     "nodeKinds": kc.get("nodes"),
                 })
@@ -1351,8 +1351,8 @@ mod tests {
             },
         );
         h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
-        let desc = SceneDescriptorJson {
-            nodes: vec![NodeDescJson {
+        let desc = SceneDescriptor {
+            nodes: vec![NodeDescriptor {
                 id: "tambour".into(),
                 x: 0.0,
                 y: 0.0,
@@ -1372,7 +1372,7 @@ mod tests {
                 height: None,
                 scale: None,
             }].into(),
-            handles: vec![HandleDescJson {
+            handles: vec![HandleDescriptor {
                 id: "tambour:h0".into(),
                 node_id: "tambour".into(),
                 angle: 0.0,
@@ -1400,7 +1400,7 @@ mod tests {
         h.pointer_move_screen(slot_screen.x, slot_screen.y, false, false, false);
         let ev = h.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
-        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let v: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&ev, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let candidates = v
             .as_array()
             .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates")).and_then(|row| row.get("payload")).and_then(|p| p.get("candidates")).cloned())
@@ -1419,7 +1419,7 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -1452,7 +1452,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
                     {"id": "child", "name": "Child", "color": "#888888"}
@@ -1533,13 +1533,13 @@ mod tests {
         let anchor = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let probe = host.world_to_screen(anchor + (anchor - Point::new(0.0, 0.0)));
         host.pointer_move_screen(probe.x, probe.y, false, false, false);
-        let events: serde_json::Value = serde_json::from_str(&host.drain_events_json()).expect("board events json");
+        let events: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&host.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("board events json");
         events
             .as_array()
-            .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(serde_json::Value::as_str) == Some("brushCandidates")))
+            .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(semio_framework_pack_json::Value::as_str) == Some("brushCandidates")))
             .and_then(|row| row.get("payload"))
             .and_then(|payload| payload.get("candidates"))
-            .and_then(serde_json::Value::as_array)
+            .and_then(semio_framework_pack_json::Value::as_array)
             .map_or(0, Vec::len)
     }
 
@@ -1551,10 +1551,10 @@ mod tests {
     fn manifest_only_documents_resolve_engine_kind_catalogs() {
         let snapshot = json!({ "meta": { "manifestId": "nakagin" } });
         let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("nakagin manifest catalogs");
-        let parsed: serde_json::Value = serde_json::from_str(&catalogs).expect("catalog json");
+        let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&catalogs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog json");
         let node_kinds = parsed["nodeKinds"].as_array().expect("nodeKinds slice");
         assert!(!node_kinds.is_empty(), "the nakagin manifest must contribute node kinds");
-        assert!(node_kinds.iter().any(|row| row.get("handles").and_then(serde_json::Value::as_array).is_some_and(|handles| !handles.is_empty())), "manifest node kinds must carry handle templates, else brush_compatible_candidates skips every kind");
+        assert!(node_kinds.iter().any(|row| row.get("handles").and_then(semio_framework_pack_json::Value::as_array).is_some_and(|handles| !handles.is_empty())), "manifest node kinds must carry handle templates, else brush_compatible_candidates skips every kind");
         BoardHost::new().set_board_kind_catalogs_from_json(&catalogs).expect("manifest catalogs must satisfy the engine contract");
     }
 
@@ -1614,9 +1614,9 @@ mod tests {
 
     /// 🎲️ One circle node carrying a single free `port` handle at angle 0 — the minimal scene a brush
     /// slot can open on.
-    fn brush_single_free_handle_scene() -> SceneDescriptorJson {
-        SceneDescriptorJson {
-            nodes: vec![NodeDescJson {
+    fn brush_single_free_handle_scene() -> SceneDescriptor {
+        SceneDescriptor {
+            nodes: vec![NodeDescriptor {
                 id: "a".into(),
                 x: 0.0,
                 y: 0.0,
@@ -1636,7 +1636,7 @@ mod tests {
                 height: None,
                 scale: None,
             }].into(),
-            handles: vec![HandleDescJson {
+            handles: vec![HandleDescriptor {
                 id: "a:h0".into(),
                 node_id: "a".into(),
                 angle: 0.0,

@@ -1,0 +1,259 @@
+{
+  "scope": "bounded post-session four corpus retirements plus two genuinely current relocated authorities, no Root-four source actions",
+  "capturedAt": "2026-10-08T19:06:22.023515+00:00",
+  "sources": [
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧬️schema/🔣️.json",
+      "beforeSha256": "70628ab6736c4604ddbb4ec0ec037b1177015752e0c00c1c1e98cda436cd2919",
+      "afterSha256": null,
+      "action": "retire-corpus-authority",
+      "role": "authored-retirement",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧬️schema/🔣️.json",
+      "beforeSha256": "aa9a78bf76e2157c8ef92d35c91710bc12343756bbec0be72c6f55750653bc22",
+      "afterSha256": null,
+      "action": "retire-corpus-authority",
+      "role": "authored-retirement",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+      "beforeSha256": "f8ad79ed79e5dd1048845726071a9a76ba21f34a92c8711d3185330b009b9b83",
+      "afterSha256": null,
+      "action": "retire-corpus-authority",
+      "role": "authored-retirement",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧬️schema/🔣️.json",
+      "beforeSha256": "1d1df59a3463a56cb195d3152f0e35566793b8f6d64c35775e277c665e911d45",
+      "afterSha256": null,
+      "action": "retire-corpus-authority",
+      "role": "authored-retirement",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha256": "28c54079d7cd8813da1a6d5076449dd621fc13a73ce7a07bff6029779498cc98",
+      "afterSha256": "e598194576b3afecc65b6235764324d1432b2eefb1f9354bb45993bb080dc503",
+      "action": "remove-only-corpus-schema-assertions",
+      "role": "authored-test-or-routing",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+      "beforeSha256": "2cbec9a6cf5d97d81fac1783098ac47425e808f6b225cc9bb0d97eb2efdf9664",
+      "afterSha256": "5f647912eb15875537be4fd4139b7da41715120a2466ccf2fb6c2306422e892c",
+      "action": "remove-only-corpus-schema-assertions",
+      "role": "authored-test-or-routing",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
+      "beforeSha256": "ff27dbe7eb031ec54b6e1637f3d42543d85a50da918ab3ec27bd808b1f67530c",
+      "afterSha256": "1b5a48839ac4b23f64ab2a1ba34b1c95b25746dd26e942bd564ffad124334bfe",
+      "action": "remove-only-corpus-schema-assertions",
+      "role": "authored-test-or-routing",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "bf14d82f0e7036349cb06f889352863910297f83e794532920be4de52b28a0d4",
+      "afterSha256": "012470cd4623faeb50586ca799a39785b18beca1555f7995fedbd2359fa9b9c5",
+      "action": "register-bounded-existing-private-facet",
+      "role": "authored-test-or-routing",
+      "ownershipQualification": "exact own removal/source section only; concurrent launch/private source portions remain peer-owned"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "60b367ce99a48b8b150692b2574b8f4d0bfeb3c30b121e432de0c54bf915812d",
+      "afterSha256": "b47ca0f47bc6975dc5c27ab5e7d71675222c7b50f398d8a2e310c4e05e5174c6",
+      "action": "register-bounded-existing-private-facet",
+      "role": "authored-test-or-routing",
+      "ownershipQualification": "exact own removal/source section only; concurrent launch/private source portions remain peer-owned"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "2f30913b6c652b6edb94b7f95263ee6e92de909fb5578e8c476a33b8db291159",
+      "afterSha256": "14286cb2fcc138536e18c4762b60c36ebe452db7dada6afd9497770c5944c685",
+      "action": "register-bounded-existing-private-facet",
+      "role": "authored-test-or-routing",
+      "ownershipQualification": "exact own removal/source section only; concurrent launch/private source portions remain peer-owned"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧾️schema.json",
+      "beforeSha256": "55f3853c061881bc26c4e2b5bd5e030b8d57affa6ec652cb324aeb50d35ab780",
+      "afterSha256": null,
+      "action": "retire-concurrently-relocated-corpus-authority",
+      "role": "authored-retirement",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧾️schema.json",
+      "beforeSha256": "aa9a78bf76e2157c8ef92d35c91710bc12343756bbec0be72c6f55750653bc22",
+      "afterSha256": null,
+      "action": "retire-concurrently-relocated-corpus-authority",
+      "role": "authored-retirement",
+      "ownershipQualification": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    }
+  ],
+  "preservedObservations": [
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️cells/🦀️.rs",
+      "sha256": "e3bcb4f52b63199777f62ac03118dbad75aecf2ff1d42106dcd658ab7dfd6528",
+      "observedCurrentSha256": "e3bcb4f52b63199777f62ac03118dbad75aecf2ff1d42106dcd658ab7dfd6528",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "sha256": "15e0e0aa0f4ab3bc0d710197ee94e41773f247c257a32efd377d43c12641187b",
+      "observedCurrentSha256": "15e0e0aa0f4ab3bc0d710197ee94e41773f247c257a32efd377d43c12641187b",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️schema/🟦️.ts",
+      "sha256": "fe847fe8f51a9f80c4ab5a0668dcbb94dfa33993582325c21dc8f321587a3277",
+      "observedCurrentSha256": "fe847fe8f51a9f80c4ab5a0668dcbb94dfa33993582325c21dc8f321587a3277",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+      "sha256": "81efa79fbf0f6b535a9555c7484e73e3cfe07605c8b46c5c67b22b101d6129a2",
+      "observedCurrentSha256": "81efa79fbf0f6b535a9555c7484e73e3cfe07605c8b46c5c67b22b101d6129a2",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "sha256": "20ca1473426040ea9421ec70762e9680e32fd330b4617137a91319acca797c42",
+      "observedCurrentSha256": "20ca1473426040ea9421ec70762e9680e32fd330b4617137a91319acca797c42",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "c394e188c384c569cf6d8a7895d068d56fdb6b6db7a52e0c8a646ab72e93b59a",
+      "observedCurrentSha256": "c394e188c384c569cf6d8a7895d068d56fdb6b6db7a52e0c8a646ab72e93b59a",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️owned/🦀️.rs",
+      "sha256": "db47a2cc0caeae88708eccacb919bd4fbe280ae0c91813f78887602177aed0fe",
+      "observedCurrentSha256": "30b55d0058266995ed5a2b6e47150abff10a1ea5e9b57bfd19c80ac2f65151dd",
+      "matches": false,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json",
+      "sha256": "ed75869835360273c23af5fe87f74c3a5e9ebb7f7a31cb9043b7cb0505373499",
+      "observedCurrentSha256": "14e9f059c09c25b47eb052d5d0a6f396ea8e894f06b4287ae7e9a9fcf1d02d33",
+      "matches": false,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🔣️.json",
+      "sha256": "92f2f41d0d6efb4cef14ee9d2898612c2681a0dd9230b19d31a622c9e5233913",
+      "observedCurrentSha256": "92f2f41d0d6efb4cef14ee9d2898612c2681a0dd9230b19d31a622c9e5233913",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🔣️.json",
+      "sha256": "13670cd5e549c74e03f47b26ad636fa039adc4e55c9682ce2e8ed15e2e42c78a",
+      "observedCurrentSha256": "13670cd5e549c74e03f47b26ad636fa039adc4e55c9682ce2e8ed15e2e42c78a",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🔍️membership/🔣️.json",
+      "sha256": "b3c91f407cb31335649d66b4c17a6778bf44fccebbeb56f067cdcdab0d9a0c40",
+      "observedCurrentSha256": "b3c91f407cb31335649d66b4c17a6778bf44fccebbeb56f067cdcdab0d9a0c40",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🔣️.json",
+      "sha256": "13915172cc70515cd75c36b35318ddd6c97288e5a72aed93a3098d2fcddff0a3",
+      "observedCurrentSha256": "13915172cc70515cd75c36b35318ddd6c97288e5a72aed93a3098d2fcddff0a3",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json",
+      "sha256": "48ba81fffffa834d05b975ba636023186db42a7bdf822a91c4acf7f856c2ba87",
+      "observedCurrentSha256": "48ba81fffffa834d05b975ba636023186db42a7bdf822a91c4acf7f856c2ba87",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧩️dependencies/🔣️.json",
+      "sha256": "bba9ab9fd2e9afef1a1e61a258dea1fa9e2c6fbff4606ecde7558066890fa710",
+      "observedCurrentSha256": "bba9ab9fd2e9afef1a1e61a258dea1fa9e2c6fbff4606ecde7558066890fa710",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📜️script.ts",
+      "sha256": "b589edc665b2441e59fb1488b529251330b56f8178241aa1b401012730f6fa22",
+      "observedCurrentSha256": "b589edc665b2441e59fb1488b529251330b56f8178241aa1b401012730f6fa22",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧫️fixtures/🔣️.json",
+      "sha256": "d679950c8e7c81c4e6658dad0d8dc48908fa677b1c139b37cc91c4e297af373e",
+      "observedCurrentSha256": "d679950c8e7c81c4e6658dad0d8dc48908fa677b1c139b37cc91c4e297af373e",
+      "matches": true,
+      "authored": false
+    }
+  ],
+  "preimages": [
+    "📥️oct8-post-session-four-corpora-before.json",
+    "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+    "📥️oct8-post-session-four-corpora-relocated-before.json"
+  ],
+  "red": {
+    "fullSession": 52672,
+    "boundedExitCode": 1,
+    "duration": "98ms",
+    "fixtureFindings": 4,
+    "log": "🗑️generated/oct8-post-session-four-red.log"
+  },
+  "qualifiedAttempts": [
+    {
+      "exitCode": 1,
+      "duration": "2.1s",
+      "passed": 34,
+      "failed": 2,
+      "assertions": 792,
+      "cause": "retained expected projections erase IEEE negative-zero sign; independently reopened SQLite correctly preserves sign; root approved actual-bit oracle repair"
+    },
+    {
+      "exitCode": 1,
+      "duration": "93ms",
+      "cause": "new concurrent two relocated whole-corpus schemas before tests; generic physical guard rejects relocation"
+    },
+    {
+      "exitCode": 1,
+      "cause": "repeat refused same two after fresh semantic-equality capture guard stopped without deleting changed peer grammar"
+    }
+  ],
+  "green": {
+    "session": 48513,
+    "exitCode": 0,
+    "duration": "2.5s",
+    "tests": 36,
+    "assertions": 1032,
+    "log": "🗑️generated/oct8-post-session-four-source-frozen-green.log",
+    "selectedPlacementModules": 0,
+    "selectedPlacementDiagnostics": 0,
+    "productionProducers": 0
+  },
+  "peerObservations": "base Remodel fixture and owned Rust test changed concurrently; all exact relevant content/fragments/Hub/command plain witness bytes match original capture; no own fixture edits or native source authorship"
+}

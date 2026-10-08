@@ -5,7 +5,7 @@
 //! about, and no independent reader exists either (there is no grammar to parse). So this module is
 //! not a reference-library adapter — it is the specification made executable, an independently
 //! written byte-range replacement/append/truncate implementation that never touches this subset's own
-//! `BinaryDiff`/`ByteSplice`/`apply_binary_mutation` (`../🧬️schema/🧬️mutations/🦀️.rs`,
+//! `BinaryDiff`/`ByteSplice`/`apply_mutation` (`../🧬️schema/🧬️mutations/🦀️.rs`,
 //! `../🧬️schema/🔺️diff/🦀️.rs`) — comparing this repository's implementation against
 //! itself is the exact failure mode the whole test platform exists to prevent. Bounds validation
 //! mirrors the vocabulary's own documented contract (an out-of-range `offset`/`remove_len` is

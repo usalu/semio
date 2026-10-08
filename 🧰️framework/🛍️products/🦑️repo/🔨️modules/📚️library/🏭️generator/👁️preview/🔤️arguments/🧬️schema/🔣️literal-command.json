@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/generator/preview/arguments/literal-command.json",
+  "title": "GeneratorPreviewLiteralCommandV1",
+  "type": "string",
+  "minLength": 1,
+  "maxLength": 65536,
+  "pattern": "^[^\\u0000-\\u001f\\u007f$`%!&|;<>\\\\'()*?\\[\\]{}~#]+$",
+  "x-semio-admission": {
+    "maxTokens": 64,
+    "maxTokenCharacters": 4096
+  }
+}

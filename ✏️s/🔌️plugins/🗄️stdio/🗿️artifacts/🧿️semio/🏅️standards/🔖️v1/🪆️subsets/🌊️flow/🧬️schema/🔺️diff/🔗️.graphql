@@ -21,7 +21,7 @@ type FlowParamModified {
 type FlowParamsDiff {
   removed: [String!]!
   modified: [FlowParamModified!]!
-  added: [FlowParam!]!
+  added: [FlowParamAdded!]!
 }
 type FlowNode {
   id: String!
@@ -43,7 +43,7 @@ type FlowNodeModified {
 type FlowNodesDiff {
   removed: [String!]!
   modified: [FlowNodeModified!]!
-  added: [FlowNode!]!
+  added: [FlowNodeAdded!]!
 }
 type FlowEdge {
   id: String!
@@ -63,9 +63,13 @@ type FlowEdgeModified {
 type FlowEdgesDiff {
   removed: [String!]!
   modified: [FlowEdgeModified!]!
-  added: [FlowEdge!]!
+  added: [FlowEdgeAdded!]!
 }
 type SemioFlowDiff {
   nodes: FlowNodesDiff @state(class: ARTIFACT)
   edges: FlowEdgesDiff @state(class: ARTIFACT)
 }
+
+type FlowParamAdded { index: Int! item: FlowParam! }
+type FlowNodeAdded { index: Int! item: FlowNode! }
+type FlowEdgeAdded { index: Int! item: FlowEdge! }

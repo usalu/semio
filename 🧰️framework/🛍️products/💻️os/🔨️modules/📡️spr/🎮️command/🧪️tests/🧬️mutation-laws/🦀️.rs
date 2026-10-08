@@ -24,7 +24,6 @@ impl CounterDiff {
 
 impl crate::os_spr::DiffAlgebra<Counter> for CounterDiff {
     fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
-    fn between(base: &Counter, other: &Counter) -> Self { Self::from_wide(i128::from(*other) - i128::from(*base)) }
     fn is_empty(&self) -> bool { self.deltas.iter().all(|delta| *delta == 0) }
 }
 
@@ -68,7 +67,8 @@ fn assert_counter_leaf_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &s
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::{fold_plan_diff, fold_plan_inverse, Mutation, OpBinary, OpText};
+    use crate::os_spr::fold::{fold_plan_diff, fold_plan_inverse};
+    use crate::os_spr::{Mutation, OpBinary, OpText};
 
     fn cases() -> serde_json::Value {
         serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).unwrap()
@@ -81,22 +81,6 @@ mod tests {
         include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
-
-    #[test]
-    fn counter_fixture_current_algebra_matches_neutral_i64_extents() {
-        use crate::os_spr::DiffAlgebra;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️testing/🧬️mutation-laws/🔣️.json")).unwrap();
-        for row in fixture["between"].as_array().unwrap() {
-            let base = row["base"].as_str().unwrap().parse::<i64>().unwrap();
-            let other = row["other"].as_str().unwrap().parse::<i64>().unwrap();
-            let delta = CounterDiff::between(&base, &other);
-            assert_eq!(crate::os_spr::apply_diff(&delta, &base), Ok(other));
-            assert_eq!(crate::os_spr::apply_diff(&delta.inverse(&base), &other), Ok(base));
-            assert_eq!(delta.is_empty(), base == other);
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&delta)).unwrap(), serde_json::to_value(&delta).unwrap());
-        }
-        println!("[DEBUG] canonical counter fixture algebra covers neutral i64 MIN/MAX/equal/extents with original checked sequential apply and independent serde wire");
-    }
 
     #[test]
     fn counter_fixture_codecs_and_descriptors() {

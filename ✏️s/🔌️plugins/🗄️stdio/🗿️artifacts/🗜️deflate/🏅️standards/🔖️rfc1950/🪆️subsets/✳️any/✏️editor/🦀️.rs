@@ -190,13 +190,6 @@ fn deflate_header_mutations(base: &DeflateSnapshot, method: u8, window_bits: u8,
     params.into_iter().chain(dictionary).collect()
 }
 
-/// 🧩️ The net leaves of one document-details edit: the header leaves it changed, then `set-payload` when the payload changed.
-/// The snapshot `schema` is a constant of the artifact and never differs.
-fn deflate_net_mutations(base: &DeflateSnapshot, next: &DeflateSnapshot) -> Vec<DeflateMutation> {
-    let payload = (base.payload != next.payload).then(|| DeflateMutation::SetPayload(set_payload::SetPayload { payload: next.payload.clone() }));
-    deflate_header_mutations(base, next.compression_method, next.window_bits, next.compression_level_hint, next.dict_id).into_iter().chain(payload).collect()
-}
-
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn deflate_text_reduce(
@@ -401,8 +394,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Deflate
         }
     }
 
-    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, deflate_net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::deflate::edit_rules::EDIT_RULES
     }
 }
 //#endregion 🔖️Editor

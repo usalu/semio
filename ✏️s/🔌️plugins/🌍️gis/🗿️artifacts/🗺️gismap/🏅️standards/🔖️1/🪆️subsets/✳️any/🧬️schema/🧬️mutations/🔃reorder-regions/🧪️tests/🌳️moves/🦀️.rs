@@ -12,7 +12,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔃reorder-regions/🌳️moves/📸️snapshot/⬅️before/🔣️.json");
@@ -118,7 +119,7 @@ async fn committed_diff_applies_to_after() {
 }
 
 /// 🔃 `reorder-regions` moves one region to an INTERIOR index, so the first id stays put while the last two
-/// swap — the delta is still the COMPLETE permutation, including the id that did not move. Region order is
+/// swap — the delta is ONE positional move row; the id that did not move is not carried. Region order is
 /// draw order for a map, which is why this verb exists at all.
 #[semio_framework_async_macros::async_test]
 async fn permutes_the_whole_region_order_including_the_id_that_stayed_put() {
@@ -126,17 +127,8 @@ async fn permutes_the_whole_region_order_including_the_id_that_stayed_put() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "reorder-regions/moves-park-region-between-2-districts: a genuine move must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().regions.as_ref().expect("reorder-regions writes a regions delta");
-    assert_eq!(
-        delta.reordered.as_deref(),
-        Some(["region-harbor-district".to_string(), "region-park".to_string(), "region-old-town".to_string()].as_slice()),
-        "reorder-regions/moves-park-region-between-2-districts: the delta is the full recomputed id order"
-    );
-    assert_eq!(
-        delta.reordered.as_ref().map(|order| order[0].as_str()),
-        Some("region-harbor-district"),
-        "reorder-regions/moves-park-region-between-2-districts: the unmoved leading id is still carried — the delta is a whole permutation, not a move instruction"
-    );
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-regions/moves-park-region-between-2-districts: a reorder must not add, remove or patch anything, got {delta:?}");
+    assert_eq!(delta.moved.iter().map(|moved| (moved.id.as_str(), moved.from, moved.to)).collect::<Vec<_>>(), vec![("region-park", 2, 1)], "reorder-regions/moves-park-region-between-2-districts: the delta is one positional move row");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.modified.is_empty(), "reorder-regions/moves-park-region-between-2-districts: a reorder must not add, remove or patch anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "reorder-regions/moves-park-region-between-2-districts: reorder-regions must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "reorder-regions/moves-park-region-between-2-districts: a reorder undoes with exactly one step, got {inverse:?}");

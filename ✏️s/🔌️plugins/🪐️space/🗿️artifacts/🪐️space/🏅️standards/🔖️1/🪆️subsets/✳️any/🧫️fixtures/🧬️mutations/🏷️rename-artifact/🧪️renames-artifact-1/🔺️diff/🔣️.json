@@ -1,21 +1,23 @@
 {
   "schema": null,
   "artifacts": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "artifact-1",
-        "name": "Site Plan Rev B",
-        "kindId": null,
-        "schema": null,
-        "dialect": null,
-        "createdAtMs": null,
-        "createdBy": null,
-        "updatedAtMs": null,
-        "updatedBy": null
+        "patch": {
+          "name": "Site Plan Rev B",
+          "kindId": null,
+          "schema": null,
+          "dialect": null,
+          "createdAtMs": null,
+          "createdBy": null,
+          "updatedAtMs": null,
+          "updatedBy": null
+        }
       }
-    ],
-    "reordered": null
+    ]
   }
 }

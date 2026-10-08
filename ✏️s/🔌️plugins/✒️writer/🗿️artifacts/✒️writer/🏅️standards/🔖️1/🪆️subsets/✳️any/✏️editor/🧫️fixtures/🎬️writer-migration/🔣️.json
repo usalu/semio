@@ -49,15 +49,6 @@
       ]
     },
     {
-      "action": "setSnapshot",
-      "variants": [
-        "set-snapshot"
-      ],
-      "publication": [
-        "HostOnly"
-      ]
-    },
-    {
       "action": "openDocument",
       "variants": [
         "open-document"
@@ -67,18 +58,9 @@
       ]
     },
     {
-      "action": "setSnapshotJson",
-      "variants": [
-        "document-json"
-      ],
-      "publication": [
-        "HostOnly"
-      ]
-    },
-    {
       "action": "loadDocumentJson",
       "variants": [
-        "document-json"
+        "load-document-json"
       ],
       "publication": [
         "HostOnly"

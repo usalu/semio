@@ -1,4 +1,4 @@
-//! 🧪️ Positional-diff algebra of En1994: index translation through absorb, coalescing, the negative diff and the state delta.
+//! 🧪️ Positional-diff algebra of En1994: index translation through absorb, coalescing, and the negative diff.
 
 use super::En1994Diff;
 use crate::mutations::change_beam_action_q_area_pa::ChangeBeamActionQAreaPa;
@@ -87,7 +87,7 @@ async fn action_patches_coalesce_by_position() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn inverse_and_between_follow_the_state() {
+async fn inverse_follows_the_state() {
     let base = base();
     let inserted = diff_of(&En1994Mutation::InsertBeam(InsertBeam { index: 0, beam: fresh(&base) }), &base);
     let after = protocol::apply_diff(&inserted, &base).expect("insert");
@@ -95,9 +95,4 @@ async fn inverse_and_between_follow_the_state() {
     let removed = diff_of(&En1994Mutation::RemoveBeam(RemoveBeam { index: 0 }), &base);
     let after = protocol::apply_diff(&removed, &base).expect("remove");
     assert_eq!(protocol::apply_diff(&removed.inverse(&base), &after).expect("inverse"), base);
-    let mut other = base.clone();
-    for mutation in [En1994Mutation::InsertBeam(InsertBeam { index: 1, beam: fresh(&base) }), span(0, 29.0)] {
-        other = protocol::apply_diff(&diff_of(&mutation, &other), &other).expect("apply");
-    }
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<En1994Snapshot, En1994Diff>(&base, &other).await;
 }

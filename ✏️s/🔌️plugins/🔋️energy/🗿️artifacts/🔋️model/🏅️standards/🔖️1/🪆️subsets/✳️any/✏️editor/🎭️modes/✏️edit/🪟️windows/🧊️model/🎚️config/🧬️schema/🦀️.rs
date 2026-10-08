@@ -76,9 +76,6 @@ impl protocol::DiffAlgebra<EnergyModelWindowConfig> for EnergyModelWindowConfigD
     fn inverse(&self, base: &EnergyModelWindowConfig) -> Self {
         Self { camera: self.camera.map(|_| base.camera) }
     }
-    fn between(base: &EnergyModelWindowConfig, other: &EnergyModelWindowConfig) -> Self {
-        Self { camera: (base.camera != other.camera).then_some(other.camera) }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none()
     }

@@ -1,7 +1,10 @@
+import type { PluginCatalogRowsV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+const emptyCatalogRows: PluginCatalogRowsV1 = { version: 1, targets: [], hosts: [], playgrounds: [] };
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
 import bootLifecycle from "../../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 
+import reactHostSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
 import reactShellSource from "../../🧱️elements/🐚️Shell/🟦️.tsx?raw";
 import ts from "typescript";
 import introductionFixture from "../../🧫️fixtures/🎓️host-introduction/🔣️.json";
@@ -20,7 +23,7 @@ import wgpuBootSource from "../../🎯️targets/🧊️wgpu/🎬️renderer-boo
 import bootExecutionFixture from "../../🧫️fixtures/🎬️boot-execution/🔣️.json";
 import serviceStatusFixture from "../../🧫️fixtures/⏳️owned-service-status/🔣️.json";
 import serviceStatusSchema from "../../🧬️schema/⏳️owned-service-status/🔣️.json";
-import { initialShellState, shellReducer } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { bootFrameworkOs, initialShellState, shellReducer } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { parseInstalledServiceStatusV1 } from "@semio-tech/framework-os";
 import { parse as parseJsonc } from "jsonc-parser";
 
@@ -36,6 +39,9 @@ class MountWorker {
   onerror: ((event: ErrorEvent) => void) | null = null;
   messages: any[] = [];
   terminated = false;
+  private readonly events = new EventTarget();
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject): void { this.events.addEventListener(type, listener); }
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject): void { this.events.removeEventListener(type, listener); }
 
   constructor(readonly url: string, readonly options: WorkerOptions) {
     MountWorker.owners.push(this);
@@ -119,7 +125,7 @@ describe("boot execution capabilities", () => {
       const before = MountWorker.owners.length;
       const events: string[] = [];
       const abort = new AbortController();
-      const pending = bootFrameworkOsWgpu({ rootId: root.id }, { rendererWasmUrl: "https://example.test/custom.wasm", frameWorkerUrl: "https://example.test/frame.js", suppressAutoIntroduction: true, signal: abort.signal, onProgress: event => events.push(event.stage) });
+      const pending = bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: root.id }, { rendererWasmUrl: "https://example.test/custom.wasm", frameWorkerUrl: "https://example.test/frame.js", suppressAutoIntroduction: true, signal: abort.signal, onProgress: event => events.push(event.stage) });
       if (row.expected === null) {
         await expect(pending).rejects.toThrow("locale");
         expect(MountWorker.owners).toHaveLength(before);
@@ -194,7 +200,7 @@ describe("embedded WGPU mount lifecycle", () => {
     const disposers: (() => Promise<void>)[] = [];
     for (const row of fixture.roots) {
       const dispose = await bootFrameworkOsWgpu({
-        rootId: row.id, plugin: row.variant, locks: { locale: row.locale },
+        catalog: emptyCatalogRows, rootId: row.id, plugin: row.variant, locks: { locale: row.locale },
         rendererModuleUrl: "data:text/javascript,export default async function(){};export function semioWgpuWorkerBootstrap(){}",
       });
       disposers.push(dispose);
@@ -218,7 +224,7 @@ describe("embedded WGPU mount lifecycle", () => {
   it("retires descendant shards and refuses late shard creation after its owner closes", async () => {
     installBrowserRuntime();
     mountRoots();
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id });
     cleanups.push(dispose);
     const frame = MountWorker.owners[0]!;
     frame.onmessage?.({ data: { kind: "shard-spawn", shardIndex: 0, url: "https://example.test/shard.js" } } as MessageEvent);
@@ -234,8 +240,8 @@ describe("embedded WGPU mount lifecycle", () => {
   it("exposes accepted introspection through its own mount and refuses retired owners", async () => {
     installBrowserRuntime();
     mountRoots();
-    const first = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id, plugin: fixture.roots[0]!.variant });
-    const second = await bootFrameworkOsWgpu({ rootId: fixture.roots[1]!.id, plugin: fixture.roots[1]!.variant });
+    const first = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id, plugin: fixture.roots[0]!.variant });
+    const second = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[1]!.id, plugin: fixture.roots[1]!.variant });
     cleanups.push(first, second);
     expect(JSON.parse(await first.introspection.dumpChrome()).owner).toBe(fixture.roots[0]!.variant);
     expect(JSON.parse(await second.introspection.dumpChrome()).owner).toBe(fixture.roots[1]!.variant);
@@ -247,7 +253,7 @@ describe("embedded WGPU mount lifecycle", () => {
   it("makes every disposal caller wait for the same Worker retirement", async () => {
     installBrowserRuntime();
     mountRoots();
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id });
     cleanups.push(dispose);
     MountWorker.holdClose = true;
     let firstDone = false;
@@ -266,9 +272,9 @@ describe("embedded WGPU mount lifecycle", () => {
   it("retires the previous root owner before installing its replacement", async () => {
     installBrowserRuntime();
     const roots = mountRoots();
-    const first = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id });
+    const first = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id });
     cleanups.push(first);
-    const second = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id, plugin: fixture.roots[1]!.variant });
+    const second = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id, plugin: fixture.roots[1]!.variant });
     cleanups.push(second);
     expect(MountWorker.owners[0]!.terminated).toBe(fixture.expected.replacementRetiresPrevious);
     expect(MountWorker.owners[1]!.terminated).toBe(false);
@@ -280,7 +286,7 @@ describe("embedded WGPU mount lifecycle", () => {
   it.each(["error", "unreachable-close"] as const)("settles retirement when the Worker is %s", async failure => {
     installBrowserRuntime();
     mountRoots();
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id });
     cleanups.push(dispose);
     const owner = MountWorker.owners[0]!;
     if (failure === "error") {
@@ -310,18 +316,20 @@ describe("embedded WGPU introduction policy", () => {
 
   
   it("matches the neutral first-frame policy against the authored React predicate", () => {
-    const source = reactShellSource;
-    const tree = ts.createSourceFile("Shell.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-    const declaration = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "shouldAutoStartIntroduction")!;
-    const module = ts.transpileModule(declaration.getText(tree), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
-    const oracle = new Function("exports", module + "; return exports.shouldAutoStartIntroduction;")({});
-    for (const row of introductionFixture.cases) expect(oracle({ ...row, suppressed: row.iframe || row.suppressed, dismissedAppIds: new Set() }), row.id).toBe(row.expectedAutoStart);
+    const tree = ts.createSourceFile("ShellHost.tsx", reactHostSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    let call: ts.CallExpression | undefined;
+    const visit = (node: ts.Node) => { if (ts.isCallExpression(node) && node.expression.getText(tree) === "shouldStartIntroduction") call = node; ts.forEachChild(node, visit); };
+    visit(tree);
+    expect(call).toBeDefined();
+    const compiled = ts.transpileModule("const input = " + call!.arguments[0]!.getText(tree) + "; return shouldStartIntroduction(input);", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+    const oracle = new Function("shouldStartIntroduction", "session", "activeIntroduction", "shellState", "suppressAutoIntroduction", "replayIntroductionOnLoad", "readStoredIntroductionSeen", "scope", "introductionSeenKey", "dismissedIntroductionAppIdsRef", compiled);
+    for (const row of introductionFixture.cases) expect(oracle(shouldStartIntroduction, { app: { id: row.appId } }, row.hasIntroduction ? {} : null, { tutorial: { activeTutorialId: row.tutorialActive ? "tutorial" : null } }, row.iframe || row.suppressed, row.replayOnLoad, () => row.seenOnDevice, { storage: {} }, row.appId, { current: new Set() }), row.id).toBe(row.expectedAutoStart);
   });
 it("carries initial and live suppression to only its owning frame Worker", async () => {
     installBrowserRuntime();
     mountRoots();
-    const first = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }, { suppressAutoIntroduction: true });
-    const second = await bootFrameworkOsWgpu({ rootId: fixture.roots[1]!.id }, { suppressAutoIntroduction: false });
+    const first = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }, { suppressAutoIntroduction: true });
+    const second = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[1]!.id }, { suppressAutoIntroduction: false });
     cleanups.push(first, second);
     expect(MountWorker.owners.map(owner => owner.messages.find(message => message.kind === "boot").introductionSuppressed)).toEqual([true, false]);
     (first as any).setIntroductionSuppressed(false);
@@ -343,7 +351,7 @@ describe("explicit embedded plugin registry", () => {
     installBrowserRuntime();
     mountRoots();
     const plugins = pluginModulesFixture.valid;
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id, plugin: "custom.host", plugins });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id, plugin: "custom.host", plugins });
     cleanups.push(dispose);
     const boot = MountWorker.owners[0]!.messages.find(message => message.kind === "boot");
     expect(boot.plugins).toEqual(plugins.map(row => ({ ...row, moduleUrl: new URL(row.moduleUrl, window.location.href).href })));
@@ -392,9 +400,9 @@ describe("explicit embedded plugin registry admission", () => {
       const missing = react.some(module => (module.dependencies ?? []).some(edge => !react.some(other => other.pluginId === edge.pluginId)));
       const oracleRefused = react.length === 0 || missing || !graphlib.alg.isAcyclic(graph);
       expect(oracleRefused).toBe("refused" in row && row.refused);
-      if (oracleRefused) expect(() => assertWgpuPluginPlan(plan, prepared)).toThrow();
+      if (oracleRefused) expect(() => assertWgpuPluginPlan(plan, prepared, "variant")).toThrow();
       else {
-        assertWgpuPluginPlan(plan, prepared);
+        assertWgpuPluginPlan(plan, prepared, "variant");
         expect(plan.plugins.map(module => module.pluginId)).toEqual(row.expected);
         expect(graphlib.alg.topsort(graph)).toEqual(row.expected);
         expect(orderPluginRegistryEntries(react).order.map(module => module.pluginId)).toEqual(row.expected);
@@ -417,7 +425,7 @@ describe("explicit embedded plugin registry admission", () => {
       else expect((await admission).packages.get(row.requested)?.manifest.pluginId).toBe(row.requested);
     }
     const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, id === "custom.host" ? [{ pluginId: "custom.core", version: "=2.0.0" }] : []) });
-    expect(() => assertWgpuPluginPlan(new PlaygroundBootPlanner(prepared.catalog, "custom.host").finish(), prepared)).toThrow("descriptor dependency graph");
+    expect(() => assertWgpuPluginPlan(new PlaygroundBootPlanner(prepared.catalog, "custom.host").finish(), prepared, "variant")).toThrow("descriptor dependency graph");
     await expect(prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, [{ pluginId: "custom.core", version: "^1" }]) })).rejects.toThrow("dependency version");
     await expect(prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, [{ pluginId: "custom.core" }, { pluginId: "custom.core" }]) })).rejects.toThrow("dependency identity");
   });
@@ -432,10 +440,10 @@ describe("explicit embedded plugin registry admission", () => {
   it("refuses an invalid replacement registry before retiring its existing owner", async () => {
     installBrowserRuntime();
     mountRoots();
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id });
     cleanups.push(dispose);
     const worker = MountWorker.owners[0]!;
-    await expect(bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id, plugins: pluginModulesFixture.semanticInvalid[0] })).rejects.toThrow();
+    await expect(bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id, plugins: pluginModulesFixture.semanticInvalid[0] })).rejects.toThrow();
     expect(MountWorker.owners).toHaveLength(1);
     expect(worker.messages.some(message => message.kind === "close")).toBe(false);
   });
@@ -446,7 +454,7 @@ it("matches neutral public React registry omission and unfiltered primary select
   installBrowserRuntime();
   mountRoots();
   for (const row of pluginModulesFixture.libraryDefaults) {
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id, plugin: "plugin" in row ? row.plugin : undefined, plugins: row.supplied ? pluginModulesFixture.valid : undefined });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id, plugin: "plugin" in row ? row.plugin : undefined, plugins: row.supplied ? pluginModulesFixture.valid : undefined });
     cleanups.push(dispose);
     const boot = MountWorker.owners.at(-1)!.messages.find(message => message.kind === "boot");
     expect(boot.plugins).toHaveLength(row.expectedCount);
@@ -468,7 +476,7 @@ describe("public WGPU boot progress and cancellation", () => {
     root.textContent = "existing owned DOM";
     const abort = new AbortController();
     abort.abort();
-    const outcome = await bootFrameworkOsWgpu({ rootId: root.id }, { signal: abort.signal }).then(dispose => { cleanups.push(dispose); return undefined; }, error => error);
+    const outcome = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: root.id }, { signal: abort.signal }).then(dispose => { cleanups.push(dispose); return undefined; }, error => error);
     expect(outcome?.name).toBe("AbortError");
     expect(MountWorker.owners).toHaveLength(bootLifecycle.cancellation[0]!.expectedWorkers);
     expect(root.textContent).toBe("existing owned DOM");
@@ -478,7 +486,7 @@ describe("public WGPU boot progress and cancellation", () => {
     installBrowserRuntime();
     mountRoots();
     const events: { stage: string; progress: number }[] = [];
-    const dispose = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }, { onProgress: event => { events.push({ stage: event.stage, progress: event.progress }); if (event.stage === "plugin-graph") throw new Error("observer fault"); } });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }, { onProgress: event => { events.push({ stage: event.stage, progress: event.progress }); if (event.stage === "plugin-graph") throw new Error("observer fault"); } });
     cleanups.push(dispose);
     expect(events).toEqual(bootLifecycle.progress);
     await dispose();
@@ -492,7 +500,7 @@ describe("public WGPU boot progress and cancellation", () => {
     mountRoots();
     MountWorker.holdBoot = true;
     const events: { stage: string; progress: number }[] = [];
-    const pending = bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }, { onProgress: event => events.push(event) });
+    const pending = bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }, { onProgress: event => events.push(event) });
     await browserTurn();
     const worker = MountWorker.owners[0]!;
     try {
@@ -514,7 +522,7 @@ describe("public WGPU boot progress and cancellation", () => {
     MountWorker.holdClose = true;
     const abort = new AbortController();
     let settled = false;
-    const pending = bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }, { signal: abort.signal }).then(dispose => { cleanups.push(dispose); settled = true; return undefined; }, error => { settled = true; return error; });
+    const pending = bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }, { signal: abort.signal }).then(dispose => { cleanups.push(dispose); settled = true; return undefined; }, error => { settled = true; return error; });
     await browserTurn();
     const worker = MountWorker.owners[0]!;
     try {
@@ -541,7 +549,7 @@ describe("public WGPU boot progress and cancellation", () => {
     MountWorker.holdClose = true;
     let settled = false;
     let outcome: unknown;
-    const pending = bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }).then(dispose => { cleanups.push(dispose); settled = true; }, error => { outcome = error; settled = true; });
+    const pending = bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }).then(dispose => { cleanups.push(dispose); settled = true; }, error => { outcome = error; settled = true; });
     await browserTurn();
     const worker = MountWorker.owners[0]!;
     try {
@@ -567,11 +575,11 @@ describe("public WGPU boot progress and cancellation", () => {
     mountRoots();
     MountWorker.holdBoot = true;
     MountWorker.holdClose = true;
-    const first = bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }).then(dispose => { cleanups.push(dispose); return undefined; }, error => error);
+    const first = bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }).then(dispose => { cleanups.push(dispose); return undefined; }, error => error);
     await browserTurn();
     const worker = MountWorker.owners[0]!;
     const abort = new AbortController();
-    const second = bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }, { signal: abort.signal }).then(dispose => { cleanups.push(dispose); return undefined; }, error => error);
+    const second = bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: fixture.roots[0]!.id }, { signal: abort.signal }).then(dispose => { cleanups.push(dispose); return undefined; }, error => error);
     try {
       await browserTurn();
       expect(worker.messages.some(message => message.kind === "close")).toBe(true);
@@ -600,11 +608,56 @@ describe("public WGPU boot progress and cancellation", () => {
     oracle.unmount();
     expect(root.childElementCount).toBe(0);
     const abort = new AbortController();
-    const dispose = await bootFrameworkOsWgpu({ rootId: root.id }, { signal: abort.signal });
+    const dispose = await bootFrameworkOsWgpu({ catalog: emptyCatalogRows, rootId: root.id }, { signal: abort.signal });
     cleanups.push(dispose);
     abort.abort();
     await browserTurn();
     expect(MountWorker.owners[0]!.terminated).toBe(true);
     expect(root.childElementCount).toBe(0);
+  });
+});
+
+
+describe("admitted General empty React mounts", () => {
+  it("renders two idle real ShellHosts and retires only the selected root", async () => {
+    installBrowserRuntime();
+    const roots = mountRoots();
+    const mounts = [];
+    for (const [index, root] of roots.entries()) {
+      const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: index === 0 ? "en" : "de" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker });
+      mounts.push(mounted);
+      cleanups.push(() => mounted.dispose());
+    }
+    await vi.waitFor(() => expect(roots.every(root => root.querySelector("[data-shell-ready]"))).toBe(true));
+    mounts[0]!.dispose();
+    expect(roots[0]!.childElementCount).toBe(0);
+    expect(roots[1]!.querySelector("[data-shell-ready]")).not.toBeNull();
+    console.log("[DEBUG] real General React idle ShellHost two roots independently ready and owner-only retirement");
+  });
+});
+
+
+describe("actual admitted General Dev receiving", () => {
+  it("boots an explicit empty variant without generated session authority", async () => {
+    const { default: rows } = await import("../../../../🔌️plugin/📇️registry/🧫️fixtures/🧩️composition/🔣️.json");
+    const input = rows.cases.find(row => row.id === rows.devBoot.case)!.input;
+    const operation = new AbortController(), events: { completed: number; total: number; work: number }[] = [], admission = { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: (event: { completed: number; total: number; work: number }) => events.push(event) };
+    installBrowserRuntime();
+    const root = mountRoots()[0]!; root.id = rows.devBoot.rootId;
+    vi.stubEnv("VITE_SEMIO_RENDERER", "wgpu");
+    try {
+      const { bootFrameworkOsDev } = await import("../../../../🧑‍💻dev/🟦️.ts");
+      const mounted = await bootFrameworkOsDev({ catalogRows: input as PluginCatalogRowsV1, admission, variant: rows.devBoot.variant, brands: [] });
+      cleanups.push(() => mounted.dispose());
+      expect(events.some(event => event.total === 0)).toBe(true);
+      expect(MountWorker.owners).toHaveLength(rows.devBoot.expectedWorkers);
+      expect(root.querySelector("canvas")).not.toBeNull();
+      expect(MountWorker.owners[0]!.messages.find(message => message.kind === "boot").catalog).toEqual(input);
+      await expect(bootFrameworkOsDev({ catalogRows: input as PluginCatalogRowsV1, admission, variant: rows.devBoot.missingVariant, brands: [] })).rejects.toThrow("absent");
+      mounted.dispose();
+      await vi.waitFor(() => expect(MountWorker.owners[0]!.terminated).toBe(true));
+      expect(root.childElementCount).toBe(0);
+      console.log("[DEBUG] actual General Dev explicit empty book reaches real WGPU boot and missing selection refuses");
+    } finally { vi.unstubAllEnvs(); }
   });
 });

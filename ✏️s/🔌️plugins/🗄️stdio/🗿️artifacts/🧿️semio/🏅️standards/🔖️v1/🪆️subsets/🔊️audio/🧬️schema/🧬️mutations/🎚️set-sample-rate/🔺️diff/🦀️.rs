@@ -5,6 +5,9 @@ use super::super::*;
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::SetSampleRate, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
+    if base.sample_rate == payload.sample_rate {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The sample rate is already that value.");
+    }
     let super::SetSampleRate { sample_rate } = payload;
     protocol::MutationOutcome::new(SemioAudioDiff { sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate), ..Default::default() })
 }

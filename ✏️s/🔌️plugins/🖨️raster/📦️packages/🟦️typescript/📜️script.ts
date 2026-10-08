@@ -2,7 +2,7 @@
 /** 🖨️ Raster TypeScript package — runs every bun test this plugin owns (examples + io parity twins). */
 
 import { resolve } from "node:path";
-import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -27,13 +27,13 @@ const CASES = [
 ];
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    const rendererCases = ["✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🎯️pixel-selection/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧪️tests/🎭️mask-selection-oracle/🟦️.ts"];
-    if (segments[0] === "renderer-contract") {
-      runCmd(process.execPath, ["test", ...rendererCases.map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
-      return;
-    }
-    runCmd(process.execPath, ["test", ...[...CASES, ...rendererCases].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+  async run(segments: string[]): Promise<void> {
+    const rendererCases = ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🎯️pixel-selection/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧪️tests/🎭️mask-selection-oracle/🟦️.ts"];
+    const cases = segments[0] === "renderer-contract" ? rendererCases : [...CASES, ...rendererCases];
+    const operation = new AbortController(), retire = () => operation.abort();
+    process.once("SIGINT", retire); process.once("SIGTERM", retire);
+    try { await runOwnedCommand(process.execPath, ["test", ...cases.map(path => resolve(this.repoRoot, path))], this.repoRoot, "raster-owning-tests", 300000, { signal: operation.signal, onProgress: line => console.log(`[DEBUG] ${line}`) }); }
+    finally { process.off("SIGINT", retire); process.off("SIGTERM", retire); }
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

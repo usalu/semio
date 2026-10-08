@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -299,7 +300,7 @@ fn blank_csv_can_build_edit_and_remove_a_table_through_structural_mutations() {
         let emitted = csv_emit(&command, snapshot).expect("structural edit");
         assert!(!emitted.artifact_mutations.is_empty());
         for mutation in &emitted.artifact_mutations {
-            crate::schema::mutations::apply_csv_mutation(snapshot, mutation);
+            crate::apply_mutation(snapshot, mutation);
         }
     }
     let mut snapshot = CsvSnapshot::default();
@@ -338,3 +339,26 @@ fn natural_file_route_exports_edited_csv_bytes_and_reopens_them() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_cell() {
+    
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let record = |a: &str, b: &str| CsvRecord { fields: vec![CsvField { value: a.into(), quoted: false }, CsvField { value: b.into(), quoted: false }] };
+    let base = CsvSnapshot { records: vec![record("a", "b"), record("c", "d")], ..CsvSnapshot::default() };
+    let emit = |event: SnapshotEditEvent| <CsvEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let cell = emit(SnapshotEditEvent::SetValue { path: "/records/1/fields/0/value".into(), value: semio_framework_value::DslValue::String("z".into()) }).expect("a field edit resolves");
+    let [mutation @ CsvMutation::SetField(_)] = cell.artifact_mutations.as_slice() else { panic!("a field edit raises set-field") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.records[1].fields[0].value, "z");
+    let widened = emit(SnapshotEditEvent::InsertValue { path: "/records/0/fields/2".into(), value: semio_framework_value::ToValue::to_value(&CsvField { value: "x".into(), quoted: false }) }).expect("a field insertion resolves");
+    let mut state = base.clone();
+    widened.artifact_mutations.iter().for_each(|mutation| {
+        apply_mutation(&mut state, mutation);
+    });
+    assert_eq!(state.records[0].fields.len(), 3);
+    let dropped = emit(SnapshotEditEvent::RemoveValue { path: "/records/0".into() }).expect("a record removal resolves");
+    assert!(matches!(dropped.artifact_mutations.as_slice(), [CsvMutation::RemoveRecord(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

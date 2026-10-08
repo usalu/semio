@@ -63,12 +63,12 @@ pub fn encode_inference_projection_json(snapshot: &ModelSnapshot, slug: &str) ->
         "storey-levels" => Some(semio_framework_pack_json::to_json_string(&inferred.storey_levels)),
         "wall-layout" => Some(semio_framework_pack_json::to_json_string(&inferred.wall_layout)),
         "opening-frames" => Some(semio_framework_pack_json::to_json_string(&inferred.opening_frames)),
-        "stair-runs" => Some(crate::standards::v1::subsets::any::schema::inferences::stair_runs::table_json(&inferred.stair_runs)),
-        "spaces" => Some(crate::standards::v1::subsets::any::schema::inferences::spaces::table_json(&inferred.spaces)),
-        "quantities" => Some(crate::standards::v1::subsets::any::schema::inferences::quantities::table_json(snapshot, &inferred.quantities)),
-        "frame-solids" => Some(crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::planar_projection_json(snapshot, &inferred.element_solids)),
-        "plan-metrics" => Some(crate::standards::v1::subsets::any::schema::inferences::plan_linework::metrics_json(&inferred.plan_linework)),
-        "diagnostics" => Some(crate::standards::v1::subsets::any::schema::inferences::diagnostics::table_json(&inferred.diagnostics)),
+        "stair-runs" => Some(crate::standards::v1::subsets::any::io::text::inferences::stair_runs::table_json(&inferred.stair_runs)),
+        "spaces" => Some(crate::standards::v1::subsets::any::io::text::inferences::spaces::table_json(&inferred.spaces)),
+        "quantities" => Some(crate::standards::v1::subsets::any::io::text::inferences::quantities::table_json(snapshot, &inferred.quantities)),
+        "frame-solids" => Some(crate::standards::v1::subsets::any::io::text::inferences::element_solids::planar_projection_json(snapshot, &inferred.element_solids)),
+        "plan-metrics" => Some(crate::standards::v1::subsets::any::io::text::inferences::plan_linework::metrics_json(&inferred.plan_linework)),
+        "diagnostics" => Some(crate::standards::v1::subsets::any::io::text::inferences::diagnostics::table_json(&inferred.diagnostics)),
         "wall-solids" => {
             let rows: Vec<String> = snapshot.walls.iter().filter(|(_, wall)| matches!(wall.axis, crate::Axis::Line { .. })).filter_map(|(id, _)| inferred.wall_layout.get(id).map(|layout| format!("{}:{{\"base_z\":{},\"top_z\":{},\"volume\":{}}}", semio_framework_pack_json::to_json_string(id), layout.base_z, layout.top_z, layout.volume))).collect();
             Some(format!("{{{}}}", rows.join(",")))

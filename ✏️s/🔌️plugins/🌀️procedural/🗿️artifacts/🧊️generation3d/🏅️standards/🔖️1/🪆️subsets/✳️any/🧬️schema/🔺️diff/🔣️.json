@@ -44,35 +44,94 @@
       "title": "Generation3dWidgetsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Generation3dWidgetRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dWidgetInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dWidgetRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "type": "object"
           }
+        }
+      },
+      "required": []
+    },
+    "Generation3dWidgetRemoval": {
+      "title": "Generation3dWidgetRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Generation3dWidgetInsertion": {
+      "title": "Generation3dWidgetInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Generation3dWidgetRelocation": {
+      "title": "Generation3dWidgetRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -80,35 +139,94 @@
       "title": "Generation3dSynapsesDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Generation3dSynapseRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dSynapseInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dSynapseRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "type": "object"
           }
+        }
+      },
+      "required": []
+    },
+    "Generation3dSynapseRemoval": {
+      "title": "Generation3dSynapseRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Generation3dSynapseInsertion": {
+      "title": "Generation3dSynapseInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Generation3dSynapseRelocation": {
+      "title": "Generation3dSynapseRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -146,35 +264,94 @@
       "title": "Generation3dGenerationsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Generation3dGenerationRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dGenerationInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dGenerationRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "type": "object"
           }
+        }
+      },
+      "required": []
+    },
+    "Generation3dGenerationRemoval": {
+      "title": "Generation3dGenerationRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Generation3dGenerationInsertion": {
+      "title": "Generation3dGenerationInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Generation3dGenerationRelocation": {
+      "title": "Generation3dGenerationRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },

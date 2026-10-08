@@ -1,9 +1,10 @@
 //! 🧪️ Real Neo4j genesis acknowledgement, lock-time authority, and recovery ownership laws.
 
+use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
 use super::tests::{Neo4jFixture, test_directory};
 use super::*;
 use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
-use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
+use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
 use crate::artifact_authority::{ArtifactPair, checkpoint_id_encoding_v1};
 use crate::directory::published_artifact_checkpoint;
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
@@ -57,7 +58,7 @@ impl GenesisFixture {
     }
 
     async fn operation(&self) -> ArtifactCreationOperationV1 {
-        ArtifactCreationOperationV1::fold(&self.directory.read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
+        crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&self.directory.read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
     }
 
     async fn create() -> Self {
@@ -86,10 +87,10 @@ impl GenesisFixture {
         intent.command_sha256 = artifact_creation_command_digest_v1(&intent.scope.space_id, &intent.request).unwrap();
         prepared.descriptor.space_id = intent.scope.space_id.clone();
         prepared.checkpoint.scope = intent.scope.clone();
-        prepared.checkpoint.descriptor_digest_v1 = directory::os_directory::descriptor_digest_v1(&prepared.descriptor).unwrap();
+        prepared.checkpoint.descriptor_digest_v1 = directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&prepared.descriptor).unwrap();
         prepared.checkpoint.published_at_ms = intent.accepted_at_ms;
         prepared.checkpoint.checkpoint_id = ArtifactHash(semio_framework_hash::Sha256::digest(&checkpoint_id_encoding_v1(&prepared.checkpoint).unwrap()));
-        prepared.validate(&intent).unwrap();
+        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).unwrap();
         assert!(matches!(directory.claim_artifact_creation(&intent).await.unwrap(), ArtifactCreationClaimV1::Accepted(_)));
         directory
             .append_artifact_creation_fact(&ArtifactCreationFactAppendV1 {

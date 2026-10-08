@@ -5,11 +5,12 @@
 //! leaf states its inputs at their declared precision.
 
 use super::*;
+use crate::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles,DragSelection};
 
 use protocol::Mutation as _;
 use semio_framework_tool_machine::{drive_chart_gesture, ChartGesture, GestureDrive, GestureState, GestureTool, ToolAbortReason, ToolRefusal};
-use serde_json::json;
+use semio_framework_pack_json::json;
 
 /// 🧱️ Two facing circle nodes 1000 apart whose `v0` handles are compatible, a locked node, and one free region.
 fn board() -> Puzzle2dSnapshot {
@@ -24,7 +25,7 @@ fn board() -> Puzzle2dSnapshot {
         "edges": [],
         "targetRegions": [{ "id": "region-1", "x": 10.0, "y": 10.0, "width": 20.0, "height": 20.0, "hidden": false, "locked": false }]
     });
-    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&snapshot)).expect("typed board")
+    semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(&snapshot))).expect("typed board")
 }
 
 fn ids(values: &[&str]) -> Vec<String> {

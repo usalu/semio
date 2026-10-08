@@ -1,0 +1,22 @@
+[
+  {
+    "path": "✏️s/🧑‍💻dev/📜️script.ts",
+    "sha256": "e65293041b1a4c98cda9a923389cde703667d76fa7950a60f863972644136c09",
+    "role": "observed not authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+    "sha256": "20a8912b5468a909f170a513069ea77c14f3cd4524dc95db96f91a4db4c88489",
+    "role": "observed not authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+    "sha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+    "role": "observed not authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+    "sha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+    "role": "observed not authored"
+  }
+]

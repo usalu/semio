@@ -119,9 +119,6 @@ impl protocol::DiffAlgebra<ComposedParentSnapshot> for ComposedParentDiff {
     fn inverse(&self, base: &ComposedParentSnapshot) -> Self {
         Self { revision: self.revision.map(|_| base.revision) }
     }
-    fn between(base: &ComposedParentSnapshot, other: &ComposedParentSnapshot) -> Self {
-        Self { revision: (base.revision != other.revision).then_some(other.revision) }
-    }
     fn is_empty(&self) -> bool {
         self.revision.is_none()
     }
@@ -628,9 +625,6 @@ impl protocol::DiffAlgebra<RecursiveBranchSnapshot> for RecursiveBranchDiff {
     fn inverse(&self, base: &RecursiveBranchSnapshot) -> Self {
         Self { count: self.count.map(|_| base.count) }
     }
-    fn between(base: &RecursiveBranchSnapshot, other: &RecursiveBranchSnapshot) -> Self {
-        Self { count: (base.count != other.count).then_some(other.count) }
-    }
     fn is_empty(&self) -> bool {
         self.count.is_none()
     }
@@ -871,9 +865,15 @@ macro_rules! recursive_fixture_snapshot {
 
         impl store::MemberStoreOwner<RecursiveFixtureMutation> for $snapshot {
             type SnapshotOpen = RecursiveBranchSnapshotOpen;
-            fn member_store_owners_birth_bytes() -> usize { crate::app::bounded_document_store_owners_birth_bytes::<Self, RecursiveFixtureMutation>() + crate::app::bounded_config_store_one_item_preparation_factory_birth_bytes::<Self, RecursiveFixtureMutation>() }
-            fn member_store_owners() -> store::DocumentStoreOwners<Self, RecursiveFixtureMutation> {
-                bounded_document_store_owners().with_one_item_preparation(bounded_config_store_one_item_preparation_factory("recursive-member", 4096))
+            fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+                let base = store::bounded_artifact_store_owners_birth_demand::<Self, RecursiveFixtureMutation>()?;
+                let preparation = crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<Self, RecursiveFixtureMutation>();
+                let capacity_bytes = base.capacity_bytes.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
+                Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: base.depth.max(preparation.depth) })
+            }
+            fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, RecursiveFixtureMutation>> {
+                let preparation = crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<Self, RecursiveFixtureMutation>();
+                store::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || bounded_config_store_one_item_preparation_factory::<Self, RecursiveFixtureMutation>("recursive-member", 4096))
             }
         }
     };
@@ -1039,8 +1039,8 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
         };
         match self.phase {
             ReadyComposedParentInitializationPhase::Begin => {
-                let initial = envelope.vcs.genesis.share_snapshot();
-                let initial_digest = envelope.vcs.genesis.digest();
+                let initial = envelope.vcs.genesis.facts().share_snapshot();
+                let initial_digest = envelope.vcs.genesis.facts().digest();
                 self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest, self.actor.clone()));
                 self.phase = ReadyComposedParentInitializationPhase::Seed;
             }
@@ -1332,11 +1332,15 @@ fn close_recursive_parent_fixture(store: &mut store::ArtifactStore<ComposedParen
 
 fn close_recursive_replacement_app(app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>) {
     for _ in 0..100_000 {
-        match app.close_step(1, 4096).expect("recursive fixture app closes under its exact grant") {
-            PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
-            PluginCloseStep::AwaitingInput { reason } => panic!("recursive fixture app close awaited input: {reason}"),
-            PluginCloseStep::Blocked { reason } => panic!("recursive fixture app has no external owner: {reason}"),
-            PluginCloseStep::Complete => {
+        let demand = app.close_retirement_demands(4096).expect("original fixture close demand");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_release_bytes <= 4096, "original fixture body and physical grant limits remain unchanged");
+            match app.close_step(grant).expect("recursive fixture app closes under its exact grant") {
+            crate::app::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
+            crate::app::PluginLifecycleStep::AwaitingInput { reason } => panic!("recursive fixture app close awaited input: {reason}"),
+            crate::app::PluginLifecycleStep::Blocked { reason } => panic!("recursive fixture app has no external owner: {reason}"),
+            crate::app::PluginLifecycleStep::Complete(progress) => {
+                assert!(progress.fits(grant));
                 assert!(app.close_terminal_is_empty());
                 return;
             }
@@ -2241,7 +2245,11 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         if poll == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("envelope decode maintenance");
+        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        let step = app.maintenance_step(grant).expect("envelope decode maintenance");
+        if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
         let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         poll = app.poll_artifact_envelope_decode(handle);
         if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
@@ -2299,7 +2307,11 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
     assert!(!PluginApp::has_runnable_typed_operations(&app), "a retired decode is no longer runnable reactor-turn work");
     app.cancel_artifact_envelope_load(handle).expect("cancel envelope law decode before fixture close");
     for _ in 0..10_000 {
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("envelope law decode cancellation maintenance");
+        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        let step = app.maintenance_step(grant).expect("envelope law decode cancellation maintenance");
+        if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
         let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     }
     close_member_admission_app(&mut app);

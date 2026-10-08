@@ -205,8 +205,8 @@ fn native_smoke_without_a_selected_application_returns_failure() {
     let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());
     let contract:serde_json::Value=serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json")).expect("smoke contract");
     let fixture=&contract["emptySmoke"];
-    let registry:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugin/📇️registry/🧬️schema/🔣️.json")).expect("current descriptor contract");
-    assert_eq!(fixture["descriptor"]["executionProtocol"]["appChannelVersion"],registry["$defs"]["CatalogDescriptorV1"]["properties"]["executionProtocol"]["properties"]["appChannelVersion"]["const"],"the smoke input uses the current host channel");
+    let registry:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json")).expect("current descriptor contract");
+    assert_eq!(fixture["descriptor"]["executionProtocol"]["appChannelVersion"],registry["$defs"]["PackageDescriptorV1"]["properties"]["executionProtocol"]["properties"]["appChannelVersion"]["const"],"the smoke input uses the current host channel");
     let descriptor:semio_framework::manifest::PackageDescriptor=serde_json::from_value(fixture["descriptor"].clone()).expect("independent descriptor oracle");
     assert!(descriptor.manifest.apps.is_empty());
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir).join(format!("empty-native-smoke-{}",std::process::id()));

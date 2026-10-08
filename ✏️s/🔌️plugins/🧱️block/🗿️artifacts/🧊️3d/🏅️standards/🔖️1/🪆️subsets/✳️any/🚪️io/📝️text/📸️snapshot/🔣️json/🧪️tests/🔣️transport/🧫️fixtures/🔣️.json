@@ -1,0 +1,64 @@
+{
+  "block": {
+    "schema": "block.3d",
+    "objectKind": {
+      "id": "kind",
+      "name": "kind",
+      "label": "Kind",
+      "variant": null,
+      "description": "",
+      "icon": null,
+      "unit": null
+    },
+    "representations": [],
+    "catalog": {
+      "childId": "catalog",
+      "target": {
+        "artifactId": "catalog",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        }
+      }
+    },
+    "vortexKindExtra": [],
+    "vortices": [
+      {
+        "id": "port",
+        "vortexKind": "unresolved",
+        "position": [
+          0,
+          0,
+          1.5
+        ],
+        "direction": [
+          0,
+          0,
+          1
+        ],
+        "radius": 1.5,
+        "label": null
+      }
+    ],
+    "compatibility": [],
+    "attributes": [],
+    "authors": [],
+    "camera3d": {
+      "position": [
+        0,
+        0,
+        1
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "zoom": 1.5
+    },
+    "meta": {
+      "description": ""
+    }
+  }
+}

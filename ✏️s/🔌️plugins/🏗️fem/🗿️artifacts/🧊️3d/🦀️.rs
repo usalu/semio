@@ -5,6 +5,8 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
+#[path = "🌉️apply/🦀️.rs"]
+pub mod central_apply;
 
 #[cfg(feature = "component-app-assembly")]
 pub use semio_s_artifact_fem_2d::app_surface;

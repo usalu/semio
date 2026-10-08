@@ -9,12 +9,15 @@
   "layers": null,
   "footings": null,
   "piles": {
-    "added": [],
     "removed": [
-      "pile-P1-m1"
+      {
+        "id": "pile-P1-m1",
+        "index": 1
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "retainingWalls": null,
   "slopes": null,

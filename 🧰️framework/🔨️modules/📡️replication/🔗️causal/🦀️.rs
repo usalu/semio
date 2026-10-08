@@ -256,6 +256,10 @@ impl<'a, T> Iterator for MutationDagFixedSlotsIter<'a, T> {
 }
 
 impl<T> MutationDagFixedSlots<T> {
+    fn empty() -> Self {
+        Self { slots: Vec::new().into_boxed_slice(), close_page: 0, generations: Vec::new().into_boxed_slice(), occupied: Vec::new().into_boxed_slice(), next: Vec::new().into_boxed_slice(), previous: Vec::new().into_boxed_slice(), free: Vec::new().into_boxed_slice(), free_len: 0, head: MUTATION_DAG_SLOT_NONE, tail: MUTATION_DAG_SLOT_NONE, len: 0 }
+    }
+
     fn new() -> Self {
         let free = (0..MUTATION_DAG_CAPACITY).rev().map(|slot| slot as u16).collect::<Vec<_>>().into_boxed_slice();
         Self {
@@ -529,6 +533,11 @@ pub enum MutationDagAppliedStep {
 }
 
 impl MutationDag {
+    /// 🪹️ An allocation-free terminal shell for granted transfer of the original causal owner.
+    pub fn empty() -> Self {
+        Self { envelopes: MutationDagFixedSlots::empty(), applied: MutationDagFixedSlots::empty(), drained: 0, pending: MutationDagFixedSlots::empty() }
+    }
+
     pub fn new() -> Self {
         Self::default()
     }

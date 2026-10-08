@@ -63,39 +63,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dVortex"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dVortexRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dVortexPatchEntry"
+            "$ref": "#/$defs/Puzzle3dVortexInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dVortexRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dVortexModification"
           }
         }
       }
     },
-    "Puzzle3dVortexPatchEntry": {
-      "title": "Puzzle3dVortexPatchEntry",
+    "Puzzle3dVortexRemoval": {
+      "title": "Puzzle3dVortexRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dVortexInsertion": {
+      "title": "Puzzle3dVortexInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dVortex"
+        }
+      }
+    },
+    "Puzzle3dVortexRelocation": {
+      "title": "Puzzle3dVortexRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dVortexModification": {
+      "title": "Puzzle3dVortexModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -173,39 +233,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dObjectRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dObjectPatchEntry"
+            "$ref": "#/$defs/Puzzle3dObjectInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dObjectRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dObjectModification"
           }
         }
       }
     },
-    "Puzzle3dObjectPatchEntry": {
-      "title": "Puzzle3dObjectPatchEntry",
+    "Puzzle3dObjectRemoval": {
+      "title": "Puzzle3dObjectRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dObjectInsertion": {
+      "title": "Puzzle3dObjectInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
+        }
+      }
+    },
+    "Puzzle3dObjectRelocation": {
+      "title": "Puzzle3dObjectRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dObjectModification": {
+      "title": "Puzzle3dObjectModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -302,39 +422,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dAttractionRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dAttractionPatchEntry"
+            "$ref": "#/$defs/Puzzle3dAttractionInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dAttractionRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dAttractionModification"
           }
         }
       }
     },
-    "Puzzle3dAttractionPatchEntry": {
-      "title": "Puzzle3dAttractionPatchEntry",
+    "Puzzle3dAttractionRemoval": {
+      "title": "Puzzle3dAttractionRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dAttractionInsertion": {
+      "title": "Puzzle3dAttractionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
+        }
+      }
+    },
+    "Puzzle3dAttractionRelocation": {
+      "title": "Puzzle3dAttractionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dAttractionModification": {
+      "title": "Puzzle3dAttractionModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -393,39 +573,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dTargetVolumeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dTargetVolumePatchEntry"
+            "$ref": "#/$defs/Puzzle3dTargetVolumeInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dTargetVolumeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dTargetVolumeModification"
           }
         }
       }
     },
-    "Puzzle3dTargetVolumePatchEntry": {
-      "title": "Puzzle3dTargetVolumePatchEntry",
+    "Puzzle3dTargetVolumeRemoval": {
+      "title": "Puzzle3dTargetVolumeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dTargetVolumeInsertion": {
+      "title": "Puzzle3dTargetVolumeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
+        }
+      }
+    },
+    "Puzzle3dTargetVolumeRelocation": {
+      "title": "Puzzle3dTargetVolumeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dTargetVolumeModification": {
+      "title": "Puzzle3dTargetVolumeModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -483,39 +723,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dReferenceRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dReferencePatchEntry"
+            "$ref": "#/$defs/Puzzle3dReferenceInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle3dReferenceRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dReferenceModification"
           }
         }
       }
     },
-    "Puzzle3dReferencePatchEntry": {
-      "title": "Puzzle3dReferencePatchEntry",
+    "Puzzle3dReferenceRemoval": {
+      "title": "Puzzle3dReferenceRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dReferenceInsertion": {
+      "title": "Puzzle3dReferenceInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
+        }
+      }
+    },
+    "Puzzle3dReferenceRelocation": {
+      "title": "Puzzle3dReferenceRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dReferenceModification": {
+      "title": "Puzzle3dReferenceModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -559,39 +859,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dKindCompatibility"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dKindCompatibilityPatchEntry"
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityModification"
           }
         }
       }
     },
-    "Puzzle3dKindCompatibilityPatchEntry": {
-      "title": "Puzzle3dKindCompatibilityPatchEntry",
+    "Puzzle3dKindCompatibilityRemoval": {
+      "title": "Puzzle3dKindCompatibilityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dKindCompatibilityInsertion": {
+      "title": "Puzzle3dKindCompatibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dKindCompatibility"
+        }
+      }
+    },
+    "Puzzle3dKindCompatibilityRelocation": {
+      "title": "Puzzle3dKindCompatibilityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle3dKindCompatibilityModification": {
+      "title": "Puzzle3dKindCompatibilityModification",
       "type": "object",
       "additionalProperties": false,
       "required": [

@@ -4,6 +4,7 @@ use crate::mutations::{change_form_title, change_step_description, create_block,
 use crate::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::SemanticMutation;
+use crate::central_apply::{apply_form_edit_mutation};
 
 fn sample_step(id: &str) -> FormStep {
     FormStep { id: id.into(), title: format!("Step {id}"), description: None, blocks: Vec::new() }
@@ -239,7 +240,9 @@ async fn change_block_field_sets_one_field_and_round_trips() {
         let after = applied(&base, &mutation);
         let question = &steps_of(&after)[1].blocks[0];
         assert_eq!(change.read(question), change, "the question holds exactly the set value");
-        assert_eq!(&change.applied(&steps_of(&base)[1].blocks[0]), question, "nothing but the field moved");
+        let mut moved = steps_of(&base)[1].blocks[0].clone();
+        change.set_on(&mut moved);
+        assert_eq!(&moved, question, "nothing but the field moved");
         let mut state = after;
         for step in &mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
             state = applied(&state, step);

@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 pub fn inverse(payload: &super::EditRun, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.runs.get(payload.index) {
-        Some(run) => vec![SemioTextMutation::EditRun(super::EditRun { index: payload.index, new_content: run.content.clone() })],
+        Some(run) => vec![SemioTextMutation::EditRun(super::EditRun { index: payload.index, new_text: run.content.clone() })],
         None => Vec::new(),
     }
 

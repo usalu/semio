@@ -93,11 +93,6 @@ impl protocol::DiffAlgebra<Generation3dTransient> for Generation3dTransientPatch
             generation_preview_text: self.generation_preview_text.as_ref().map(|_| Generation3dPreviewTextChange { text: base.generation_preview_text.clone() }),
         }
     }
-    fn between(base: &Generation3dTransient, other: &Generation3dTransient) -> Self {
-        Self {
-            generation_preview_text: (base.generation_preview_text != other.generation_preview_text).then(|| Generation3dPreviewTextChange { text: other.generation_preview_text.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.generation_preview_text.is_none()
     }

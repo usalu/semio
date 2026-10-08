@@ -1,0 +1,278 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "board.snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "schema": {
+      "enum": [
+        "board.ports.directed.v1",
+        "board.normal.undirected.v1",
+        "trinity.graph",
+        "reasoning.wires.identity.snapshot"
+      ]
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraDescriptor"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BoardNodeSnapshot"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BoardEdgeSnapshot"
+      }
+    },
+    "targetRegions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BoardRegionSnapshot"
+      }
+    },
+    "meta": {}
+  },
+  "$defs": {
+    "BoardHandleSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "angle": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "handleKind": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "iconKind": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "style": {
+          "type": "string"
+        },
+        "userData": {},
+        "hidden": {
+          "type": "boolean"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BoardNodeSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "shape": {
+          "enum": [
+            "circle",
+            "rectangle"
+          ]
+        },
+        "radius": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "iconKind": {
+          "type": "string"
+        },
+        "nodeKind": {
+          "type": "string"
+        },
+        "draggable": {
+          "type": "boolean"
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "style": {
+          "type": "string"
+        },
+        "userData": {},
+        "root": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "handles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BoardHandleSnapshot"
+          }
+        }
+      }
+    },
+    "BoardEdgeSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "edgeKind": {
+          "type": "string"
+        },
+        "sourceTip": {
+          "type": "string"
+        },
+        "targetTip": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "style": {
+          "type": "string"
+        },
+        "userData": {},
+        "hidden": {
+          "type": "boolean"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BoardRegionSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "selected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CameraDescriptor": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

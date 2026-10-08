@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+protocol = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -23,6 +24,7 @@ pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "s
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+protocol = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust", features = ["history-index-serde"] }
 # 🔬️ `MeshData` now has its own first-party `ToValue`/`FromValue` codec (ticket 26/09/01/
 # RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) — `serde`'s `Serialize`/`Deserialize`
 # derive on `MeshData` is `#[cfg(test)]`-gated to a differential oracle only, never a production

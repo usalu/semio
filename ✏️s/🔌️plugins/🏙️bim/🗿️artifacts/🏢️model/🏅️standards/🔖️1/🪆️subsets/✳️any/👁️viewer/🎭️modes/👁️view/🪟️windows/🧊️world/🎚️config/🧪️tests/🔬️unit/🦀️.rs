@@ -65,5 +65,5 @@ fn an_unknown_projection_field_or_parameter_is_refused() {
 async fn the_world_configuration_obeys_the_window_configuration_laws() {
     let base = BimViewerWorldWindowConfig::default();
     let next = base.with_orbit(store::Viewport3dOrbit { position: [9.0, -9.0, 6.0], target: [2.0, 2.0, 1.0], zoom: 1.5, up: Some([0.0, 0.0, 1.0]) }).with_storey_visible("level-1", false);
-    assert_window_config_laws(&base, &BimViewerWorldWindowConfigMutation::Snapshot { config: next }).await;
+    assert_window_config_laws(&base, &BimViewerWorldWindowConfigMutation::Replace { config: next }).await;
 }

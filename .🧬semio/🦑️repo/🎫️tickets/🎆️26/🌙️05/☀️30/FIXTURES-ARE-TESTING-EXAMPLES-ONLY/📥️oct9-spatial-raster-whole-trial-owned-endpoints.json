@@ -1,0 +1,91 @@
+{
+  "authorship": "Root actual defining changes only",
+  "actions": [
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧹️retirement/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "8bcba8c4c3c540b5c0b106403eb7a6063fe9886e7afa0cd261e17207b287284d",
+      "afterSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️retirement/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "387788727641efbd7ac9bb77afc155ae84641e6d02136b9bb9a7735c7a7a0de9",
+      "afterSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️flatten/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "c7b32a1f689e0076708290b5648a0d995fe715297f83a67f13e2697ccc5781a8",
+      "afterSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️stroke/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "ea2b573aba98832659a91e4578b84822afc40b97c9f5c060d664b26df19efc96",
+      "afterSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️coverage/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "15ea9f4c88da09a500f65bd2978b62badacf9697ade67fd8570cc14bd1c5fb1d",
+      "afterSha256": null
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🏷️ownership/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "4ca56402740ba0beadc010eb6c7c2b85c642982d322bbc820c7d31b4afecf442",
+      "afterSha256": "f543e45fdfedc952a6f5ebe9d8ba23abf5c717c84b72c881e013a506d3d918a0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b342f7eac6d81dc4ee697336f3f922b62a946b24ed85c2ff60986a3461fd0ae9",
+      "afterSha256": "44d2ff6162cf5085b6c41626756a3cc2f6315e7040bfb66df1f7cc8edca9f81c"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "3333d5621a4e61beaeeb5e5c03f24dd7ef97df404b001fcac3157154e7d06b15",
+      "afterSha256": "c5af948a9257c6aab3fe63773a91fc96fb95e28ac2fca5843267d15144e9b446"
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧹️retirement/🔣️.json",
+      "sha256": "8d4497f9b3cdb1801e4ac9719cee17093211d7261c5306cd2640b5d9280c85b6",
+      "bytes": 2843,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧬️schema/🔣️.json",
+      "sha256": "506793b97f51219c32d391986b505425e4d54a09efc7c4f1cfc3d1d29a024ed0",
+      "bytes": 5650,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️retirement/🔣️.json",
+      "sha256": "0df52aca92b02fdd736e81240f320e2b98603291cb98d80248cf5c05e2977671",
+      "bytes": 2357,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️flatten/🔣️.json",
+      "sha256": "ec4368d49e05d34016674126d54c744dc01b69d84906cfa432b27154489390c7",
+      "bytes": 268,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️stroke/🔣️.json",
+      "sha256": "c64ea60d8c198eb2b003accf8ef6a8a6b9c8a9e6e1639f5715552ac2727e5adc",
+      "bytes": 427,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️coverage/🔣️.json",
+      "sha256": "850059cc8bc10a48b356e76b26f75b38a14dbe6583a7b77a298c79a93ca44b0d",
+      "bytes": 333,
+      "role": "read-only observation"
+    }
+  ]
+}

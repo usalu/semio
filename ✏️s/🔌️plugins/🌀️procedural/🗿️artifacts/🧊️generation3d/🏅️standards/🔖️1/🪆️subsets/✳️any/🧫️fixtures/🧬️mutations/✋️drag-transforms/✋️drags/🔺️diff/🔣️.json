@@ -2,9 +2,10 @@
   "schema": null,
   "camera": null,
   "widgets": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "extrude__gumball_translate",
         "patch": {
@@ -27,8 +28,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "synapses": null,
   "layout": null,

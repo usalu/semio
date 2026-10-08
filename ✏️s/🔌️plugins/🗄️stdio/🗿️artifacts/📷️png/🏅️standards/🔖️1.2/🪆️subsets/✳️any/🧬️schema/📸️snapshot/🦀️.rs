@@ -201,6 +201,21 @@ impl PngNativePaint {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PngAncillaryChunk { pub kind: [u8; 4], pub data: Vec<u8>, pub after_raster: bool }
 
+/// 🌗️ The gamma chunk value a diff sets: `None` removes the chunk.
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PngGammaValue {
+    pub gama: Option<u32>,
+}
+
+/// 🧩 One rectangle of native samples, row-major, `samples_per_pixel` values per pixel: the sparse row a paint writes and its undo restores.
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PngSampleRect {
+    pub region: PngRegion,
+    pub samples: Vec<u16>,
+}
+
 #[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PngImage {
@@ -229,6 +244,54 @@ impl Default for PngImage {
 }
 
 impl PngImage {
+    /// 🧭 Start offset of `region`'s first sample row, or `None` when the region is empty or leaves the image.
+    pub fn region_start(&self, region: PngRegion) -> Option<usize> {
+        let inside = region.width != 0 && region.height != 0 && region.x.checked_add(region.width).is_some_and(|end| end <= self.width) && region.y.checked_add(region.height).is_some_and(|end| end <= self.height);
+        inside.then(|| (region.y as usize * self.width as usize + region.x as usize) * self.color_type.samples_per_pixel())
+    }
+
+    /// 📋 The samples `region` currently holds, row-major (`None` when the region is outside the image).
+    pub fn region_samples(&self, region: PngRegion) -> Option<Vec<u16>> {
+        let start = self.region_start(region)?;
+        let spp = self.color_type.samples_per_pixel();
+        let row = region.width as usize * spp;
+        let stride = self.width as usize * spp;
+        Some((0..region.height as usize).flat_map(|line| self.samples.get(start + line * stride..start + line * stride + row).unwrap_or_default().iter().copied()).collect())
+    }
+
+    /// ✍️ Writes `rect` into the image rows it addresses and nothing else.
+    pub fn write_rect(&mut self, rect: &PngSampleRect) -> Result<(), String> {
+        let start = self.region_start(rect.region).ok_or("png: sample rectangle exceeds the owned image or is empty")?;
+        let spp = self.color_type.samples_per_pixel();
+        let row = rect.region.width as usize * spp;
+        let stride = self.width as usize * spp;
+        if rect.samples.len() != row * rect.region.height as usize {
+            return Err("png: sample rectangle cardinality differs from its region".into());
+        }
+        rect.samples.chunks_exact(row).enumerate().for_each(|(line, values)| self.samples[start + line * stride..start + line * stride + row].copy_from_slice(values));
+        Ok(())
+    }
+
+    /// 🔎 Refuses a rectangle that is out of bounds, mis-sized, over the sample precision or past the palette.
+    pub fn validate_rect(&self, rect: &PngSampleRect) -> Result<(), String> {
+        self.validate_region_samples(rect.region, &rect.samples)
+    }
+
+    /// 🔎 [`PngImage::validate_rect`] over borrowed samples.
+    pub fn validate_region_samples(&self, region: PngRegion, samples: &[u16]) -> Result<(), String> {
+        self.validate_header()?;
+        self.region_start(region).ok_or("png: sample rectangle exceeds the owned image or is empty")?;
+        if samples.len() != region.width as usize * region.height as usize * self.color_type.samples_per_pixel() {
+            return Err("png: sample rectangle cardinality differs from its region".into());
+        }
+        let maximum = if self.bit_depth == 16 { u16::MAX } else { (1u16 << self.bit_depth) - 1 };
+        let palette = self.palette.as_ref().map_or(0, Vec::len);
+        if samples.iter().any(|sample| *sample > maximum || self.color_type == PngColorType::Palette && usize::from(*sample) >= palette) {
+            return Err("png: sample rectangle exceeds the sample precision or palette".into());
+        }
+        Ok(())
+    }
+
     pub fn same_metadata(&self,other:&Self)->bool {self.width==other.width&&self.height==other.height&&self.bit_depth==other.bit_depth&&self.color_type==other.color_type&&self.interlace==other.interlace&&self.palette==other.palette&&self.transparency==other.transparency&&self.gamma==other.gamma&&self.chromaticities==other.chromaticities&&self.srgb==other.srgb&&self.physical_dims==other.physical_dims&&self.timestamp==other.timestamp&&self.background==other.background&&self.text_chunks==other.text_chunks&&self.ancillary_chunks==other.ancillary_chunks}
 
     pub fn validate_header(&self) -> Result<(), String> {

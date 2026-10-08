@@ -16,21 +16,7 @@ fn snapshot(doctype: Option<&str>, root: HtmlNode) -> HtmlSnapshot {
 /// nested attribute/child add/remove/modify.
 #[test]
 fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot(Some("DOCTYPE html"), elem("html", vec![("lang", Some("en"))], vec![elem("p", vec![("id", Some("x")), ("disabled", None)], vec![])]));
-    let b = snapshot(
-        None,
-        elem(
-            "html",
-            vec![("lang", Some("de")), ("data-x", None)],
-            vec![
-                elem("div", vec![], vec![HtmlNode::Text { text: "hi".into() }, HtmlNode::Comment { text: " c ".into() }]),
-                HtmlNode::Element { name: "script".into(), attributes: vec![], children: vec![HtmlNode::RawText { parent_kind: RawTextKind::Script, text: "1+1;".into() }] },
-            ],
-        ),
-    );
-    let c = snapshot(None, HtmlNode::Text { text: "root-replaced".into() });
-
-    let cases = vec![HtmlDiff::default(), HtmlDiff::between(&a, &b), HtmlDiff::between(&b, &a), HtmlDiff::between(&a, &c), HtmlDiff::between(&c, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

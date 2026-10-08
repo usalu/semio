@@ -1,7 +1,7 @@
 //! 🕹️ `set-transform-gumball-flag` command.
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🕹️ Composes which selection-gumball handles the board's select utility offers. `move` is the
 /// native node drag, `rotate` the ring around the selection centroid; a scale handle is deliberately

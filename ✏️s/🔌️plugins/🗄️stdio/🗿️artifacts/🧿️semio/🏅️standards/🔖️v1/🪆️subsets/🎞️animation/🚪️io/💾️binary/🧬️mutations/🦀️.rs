@@ -14,8 +14,7 @@ use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, An
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
-/// 🔧️ `MutationDiff` added — the `#[cfg(test)] mod tests` block below calls `diff.apply(&base)`
-/// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (W2b closer fix).
+/// 🔧️ `MutationDiff` in scope for the `#[cfg(test)] mod tests` block below.
 #[cfg(test)]
 use protocol::MutationDiff;
 use protocol::{OpBinary, OpText};

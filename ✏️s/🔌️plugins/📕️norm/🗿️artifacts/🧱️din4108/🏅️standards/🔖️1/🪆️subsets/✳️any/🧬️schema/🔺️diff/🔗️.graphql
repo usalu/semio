@@ -14,18 +14,30 @@ type Din4108Diff {
 }
 
 type Din4108WindowDelta {
-  removed: [String!]!
-  added: [Din4108WindowAddition!]!
+  removed: [Din4108WindowRemoval!]!
+  inserted: [Din4108WindowInsertion!]!
+  moved: [Din4108WindowRelocation!]!
   modified: [Din4108WindowModification!]!
 }
 
-type Din4108WindowAddition {
-  after: String
+type Din4108WindowRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din4108WindowInsertion {
+  index: Int!
   row: Din4108ZoneWindow!
 }
 
+type Din4108WindowRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din4108WindowModification {
-  key: String!
+  id: String!
   patch: Din4108WindowPatch!
 }
 
@@ -38,18 +50,30 @@ type Din4108WindowPatch {
 }
 
 type Din4108LayerDelta {
-  removed: [String!]!
-  added: [Din4108LayerAddition!]!
+  removed: [Din4108LayerRemoval!]!
+  inserted: [Din4108LayerInsertion!]!
+  moved: [Din4108LayerRelocation!]!
   modified: [Din4108LayerModification!]!
 }
 
-type Din4108LayerAddition {
-  after: String
+type Din4108LayerRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din4108LayerInsertion {
+  index: Int!
   row: Din4108LayerDocument!
 }
 
+type Din4108LayerRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din4108LayerModification {
-  key: String!
+  id: String!
   patch: Din4108LayerPatch!
 }
 
@@ -68,18 +92,30 @@ type Din4108LayerPatch {
 }
 
 type Din4108ZoneDelta {
-  removed: [String!]!
-  added: [Din4108ZoneAddition!]!
+  removed: [Din4108ZoneRemoval!]!
+  inserted: [Din4108ZoneInsertion!]!
+  moved: [Din4108ZoneRelocation!]!
   modified: [Din4108ZoneModification!]!
 }
 
-type Din4108ZoneAddition {
-  after: String
+type Din4108ZoneRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din4108ZoneInsertion {
+  index: Int!
   row: Din4108ThermalZone!
 }
 
+type Din4108ZoneRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din4108ZoneModification {
-  key: String!
+  id: String!
   patch: Din4108ZonePatch!
 }
 
@@ -91,18 +127,30 @@ type Din4108ZonePatch {
 }
 
 type Din4108ElementDelta {
-  removed: [String!]!
-  added: [Din4108ElementAddition!]!
+  removed: [Din4108ElementRemoval!]!
+  inserted: [Din4108ElementInsertion!]!
+  moved: [Din4108ElementRelocation!]!
   modified: [Din4108ElementModification!]!
 }
 
-type Din4108ElementAddition {
-  after: String
+type Din4108ElementRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din4108ElementInsertion {
+  index: Int!
   row: Din4108EnvelopeElement!
 }
 
+type Din4108ElementRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din4108ElementModification {
-  key: String!
+  id: String!
   patch: Din4108ElementPatch!
 }
 
@@ -120,18 +168,30 @@ type Din4108ElementPatch {
 }
 
 type Din4108ThermalBridgeDelta {
-  removed: [String!]!
-  added: [Din4108ThermalBridgeAddition!]!
+  removed: [Din4108ThermalBridgeRemoval!]!
+  inserted: [Din4108ThermalBridgeInsertion!]!
+  moved: [Din4108ThermalBridgeRelocation!]!
   modified: [Din4108ThermalBridgeModification!]!
 }
 
-type Din4108ThermalBridgeAddition {
-  after: String
+type Din4108ThermalBridgeRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din4108ThermalBridgeInsertion {
+  index: Int!
   row: Din4108ThermalBridge!
 }
 
+type Din4108ThermalBridgeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din4108ThermalBridgeModification {
-  key: String!
+  id: String!
   patch: Din4108ThermalBridgePatch!
 }
 

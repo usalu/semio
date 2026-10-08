@@ -4,7 +4,7 @@
 import { BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioPoint3 } from "../📸️snapshot/🟦️.ts";
 
 export interface NamedModified<K, D> { key: K; diff: D; }
-export interface NamedTripleDiff<D, T> { removed: string[]; modified: NamedModified<string, D>[]; added: T[]; }
+export interface NamedTripleDiff<D, T> { removed: string[]; modified: NamedModified<string, D>[]; added: NamedAdded<T>[]; }
 
 export interface BrepVertexDiff { point?: SemioPoint3; tol?: BrepVertex["tol"]; }
 export interface BrepEdgeDiff { startVertex?: string; endVertex?: string; curve?: BrepCurve; tol?: BrepVertex["tol"]; }
@@ -21,3 +21,6 @@ export interface SemioBrepDiff {
   shells?: NamedTripleDiff<BrepShellDiff, BrepShell>;
   solids?: NamedTripleDiff<BrepSolidDiff, BrepSolid>;
 }
+
+/** 🧩 One positional add: the row and the final index it lands at. */
+export interface NamedAdded<T> { index: number; item: T }

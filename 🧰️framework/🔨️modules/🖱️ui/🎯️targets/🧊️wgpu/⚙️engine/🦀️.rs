@@ -1472,7 +1472,7 @@ impl Ui {
             }
             UiSurfaceClosePhase::LayoutRejected => {
                 if let Some(rejected) = window.layout_rejected.as_mut() {
-                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    let _ = rejected.next_close_demands(0).map(|grant|rejected.close_step(grant));
                     if rejected.terminal_is_empty() {
                         window.layout_rejected = None;
                     }
@@ -1483,7 +1483,7 @@ impl Ui {
             UiSurfaceClosePhase::LayoutSession => {
                 if let Some(session) = window.layout_session.as_mut() {
                     session.begin_close();
-                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    let _ = session.next_close_demands(0).map(|grant|session.close_step(grant));
                     if session.terminal_is_empty() {
                         window.layout_session = None;
                     }
@@ -2139,7 +2139,7 @@ impl Ui {
             return UiLayoutStep::Cancelled { window_id, lane };
         }
         if let Some(rejected) = window.layout_rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = rejected.next_close_demands(0).map(|grant|rejected.close_step(grant));
             if rejected.terminal_is_empty() {
                 window.layout_rejected = None;
             }
@@ -2152,7 +2152,7 @@ impl Ui {
                 window.layout_closing = true;
             }
             if window.layout_closing {
-                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let _ = session.next_close_demands(0).map(|grant|session.close_step(grant));
                 if session.terminal_is_empty() {
                     window.layout_session = None;
                     window.layout_closing = false;

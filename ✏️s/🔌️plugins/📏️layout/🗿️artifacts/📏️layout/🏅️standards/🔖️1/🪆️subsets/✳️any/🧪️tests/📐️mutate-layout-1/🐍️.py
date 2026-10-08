@@ -42,7 +42,7 @@ registered as an oracle.
 🚧 Scope, stated rather than concealed: this reference reproduces the (before, mutation, after)
 document transformation for all 25 kinds — the substantive mutation-semantics claim this subset's own
 no-oracle decision names as the debt — and does NOT reproduce the separate, considerably richer
-`🔺️diff` sparse-patch algebra (`pages.added/removed/patched[].patch.frame_added/frame_removed/
+`🔺️diff` sparse-patch algebra (`pages.inserted/removed/moved/patched[].patch.frame_added/frame_removed/
 frames_patched…`) that this subset's committed `🔺️diff` leaves also carry; that diff shape is a
 distinct claim this reference does not make and is not asked to by
 `nativeSecondImplementationBreaches`' fixture-coverage check, which reads vector count and covered
@@ -239,7 +239,8 @@ def apply_delete_story(doc, p):
 def apply_edit_story(doc, p):
     after = copy.deepcopy(doc)
     _, story = _find(after["stories"], p["id"])
-    story["content"] = p["newContent"]
+    chars = list(story["content"])
+    story["content"] = "".join(chars[:p["offset"]]) + p["insert"] + "".join(chars[p["offset"] + p["delete"]:])
     return after
 
 
@@ -463,7 +464,8 @@ def inverse_mutation(kind, before, payload):
         return "CreateStory", {"story": story, "index": idx}
     if kind == "edit-story":
         _, story = _find(before["stories"], payload["id"])
-        return "EditStory", {"id": payload["id"], "newContent": story["content"]}
+        chars = list(story["content"])
+        return "EditStory", {"id": payload["id"], "offset": payload["offset"], "delete": len(payload["insert"]), "insert": "".join(chars[payload["offset"]:payload["offset"] + payload["delete"]])}
     if kind == "create-link":
         return "DeleteLink", {"id": payload["link"]["id"]}
     if kind == "delete-link":

@@ -1,3 +1,4 @@
+import { parsePixelLayerSelectionV1 } from "../../../../../../../../🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
 /** 🧰️ Accessible pixel tools over the authoritative paint scene and command channel. */
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent, type RefObject } from "react";
 import { GestureRecognizer } from "@semio-tech/framework";
@@ -107,10 +108,8 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const source=useMemo(()=>{
     if(!pixelSelectionJson||!active)return null;
     try{
-      if(pixelSelectionJson.length>42000)throw new Error("Selection exceeds the transport budget");
-      const value=JSON.parse(pixelSelectionJson);
-      if(!value||typeof value!=="object"||typeof value.spans!=="string")throw new Error("Invalid selection state");
-      return value.layerId===active.id&&value.target===target&&value.width===active.width&&value.height===active.height?{spans:value.spans as string}:null;
+      const value=parsePixelLayerSelectionV1(JSON.parse(pixelSelectionJson));
+      return value.layerId===active.id&&value.target===target&&value.width===active.width&&value.height===active.height?{spans:value.spans}:null;
     }catch(cause){return {error:cause instanceof Error?cause.message:String(cause)};}
   },[selectionKey]);
   const mask=source&&"spans" in source&&coverage?.key===selectionKey?coverage.mask:undefined;
@@ -235,7 +234,6 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     if(!active||active.locked||!mask)return;
     const selection=await selectionSpans(mask,{signal,onProgress:p=>setProgress(p.completed/p.total)});
     const payload={layerId:active.id,expectedImageKey:active.imageKey,selection};
-    if(JSON.stringify(payload).length>60000)throw new Error("The selection exceeds the command budget");
     if(signal.aborted)return;
     await dispatchEdit("maskFromSelection",payload);
   });};

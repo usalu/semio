@@ -1,14 +1,12 @@
 //! ✏️ Txt editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.txt@utf-8/*` (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
-//! (`TextWindowKit`): an explicit Apply is ONE edit of the net line leaves that carry the document to the applied text
-//! (`txt_net_mutations`: the lines unchanged at either end stay untouched), and only a change of line ending or terminator is
-//! the whole-buffer lowering through the direct line, line-ending, and trailing-newline mutations (`txt_replacement_mutations`:
-//! every intermediate document stays a native shape).
+//! (`TextWindowKit`): an explicit Apply publishes the change set the editor made (`splices`: ranges of Unicode scalars in the
+//! body as the line ending joins it), and the editor emits ONE `splice-text` mutation that carries them verbatim; its sparse diff
+//! rewrites only the lines the ranges touch, and its inverse restores the deleted scalars.
 
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
-use crate::schema::mutation_support::{native_snapshot_error, txt_usize_to_u32};
-use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation};
+use crate::schema::mutations::{SpliceTextMutation, TextSplice};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -54,12 +52,12 @@ pub const TXT_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", 
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
-/// action (`replace-text`, contract §2.6) can trigger.
+/// action (`textEdit` by `splices`, contract §2.6) can trigger.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TxtEditorCommand {
-    ReplaceText {
+    SpliceText {
         revision: String,
-        text: String,
+        splices: String,
     },
     EditSnapshot {
         event: SnapshotEditEvent,
@@ -70,7 +68,7 @@ pub enum TxtEditorCommand {
     },
 }
 
-/// 🔤️ Hand-rolled hex codec — `OpText::print_op` must be one line, and `ReplaceText` carries
+/// 🔤️ Hand-rolled hex codec — `OpText::print_op` must be one line, and `SpliceText` carries
 /// arbitrary multi-line/UTF-8 text, so every byte is hex-escaped rather than attempting a
 /// space/newline escaping scheme.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -97,7 +95,7 @@ fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
 impl protocol::OpText for TxtEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            TxtEditorCommand::ReplaceText { revision, text } => format!("replace-text revision={} text={}", hex_encode(revision.as_bytes()), hex_encode(text.as_bytes())),
+            TxtEditorCommand::SpliceText { revision, splices } => format!("splice-text revision={} splices={}", hex_encode(revision.as_bytes()), hex_encode(splices.as_bytes())),
             TxtEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
             TxtEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
@@ -118,27 +116,27 @@ impl protocol::OpText for TxtEditorCommand {
             return Ok(TxtEditorCommand::EditSnapshot { event });
         }
         let rest = line
-            .strip_prefix("replace-text revision=")
+            .strip_prefix("splice-text revision=")
             .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: unknown line {line:?}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        let (revision, text) =
-            rest.split_once(" text=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "txt editor command: missing text", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        let (revision, splices) =
+            rest.split_once(" splices=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "txt editor command: missing splices", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         let revision = String::from_utf8(
             hex_decode(revision)
                 .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad revision hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
         )
         .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad revision utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        let text = String::from_utf8(
-            hex_decode(text).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad text hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
+        let splices = String::from_utf8(
+            hex_decode(splices).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad splices hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
         )
-        .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad text utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        Ok(TxtEditorCommand::ReplaceText { revision, text })
+        .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad splices utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        Ok(TxtEditorCommand::SpliceText { revision, splices })
     }
 }
 
 impl protocol::OpBinary for TxtEditorCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TextWindowKit`
-    /// mints `replace-text`, but only this editor can reduce it into its own mutation, so it is an
+    /// mints `textEdit`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = TXT_COMMAND_TOOL_IDS;
 
@@ -155,11 +153,11 @@ impl protocol::OpBinary for TxtEditorCommand {
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
 const TXT_KIT_ACTION_ID: &str = "textEdit";
-/// 🧵️ The app-owned retained routes this editor declares: the example switch and `replace-text`.
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `textEdit`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
 /// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
-/// ids. Without the kit verb's row the reactor refused every `replace-text` with
+/// ids. Without the kit verb's row the reactor refused every `textEdit` with
 /// `interactive-job.missing-factory`.
 const TXT_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, TXT_KIT_ACTION_ID];
 const TXT_COMMAND_TOOL_IDS: &[&str] = &[
@@ -173,11 +171,11 @@ const TXT_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
 ];
 const TXT_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.txt.tool-command.v1";
-/// 📏️ `replace-text` carries the whole buffer, so the wire bound is the largest document this route
+/// 📏️ `textEdit` carries the draft's change set, whose inserted text is bounded by the largest document this route
 /// admits — kept under the guest's 64 KiB contiguous-request ceiling.
 const TXT_RETAINED_RAW_BYTES: usize = 16 * 1_024 * 1_024;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `replace-text` publishes the artifact
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `textEdit` publishes the artifact
 /// mutation it reduces into, so its only lane is `Artifact`.
 const TXT_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -212,9 +210,9 @@ fn txt_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TxtEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         TXT_KIT_ACTION_ID => {
-            Ok(TxtEditorCommand::ReplaceText { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? })
+            Ok(TxtEditorCommand::SpliceText { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, splices: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "splices")? })
         }
-        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"))),
+        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, textEdit)"))),
     }
 }
 
@@ -222,7 +220,7 @@ fn txt_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn txt_command_id(command: &TxtEditorCommand) -> &'static str {
     match command {
-        TxtEditorCommand::ReplaceText { .. } => TXT_KIT_ACTION_ID,
+        TxtEditorCommand::SpliceText { .. } => TXT_KIT_ACTION_ID,
         TxtEditorCommand::EditSnapshot { event } => event.action_id(),
         TxtEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
@@ -234,128 +232,31 @@ fn txt_retained_extent(_command: &TxtEditorCommand, _snapshot: &TxtSnapshot, _in
 }
 
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
-/// its document, `replace-text` becomes this artifact's own mutation.
+/// its document, `textEdit` by `splices` becomes ONE `splice-text` mutation carrying the editor's ranges verbatim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let (revision, text) = match command {
+    let (revision, splices) = match command {
         TxtEditorCommand::SetActiveExample { example_id } => return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&txt_example_snapshot(example_id), STDIO_TXT_DOCUMENT_SCHEMA)], ..Default::default() }),
-        TxtEditorCommand::ReplaceText { revision, text } => (revision, text),
+        TxtEditorCommand::SpliceText { revision, splices } => (revision, splices),
         TxtEditorCommand::EditSnapshot { .. } => return Err(Fault::from("stdio-txt-snapshot-edit-routed-to-native-reducer")),
     };
     let current_revision = canonical_revision.map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), semio_s_artifact_stdio_contract::window_kit_canonical_revision);
     if revision != &current_revision {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.stale-text-edit"), "the text document changed while this draft was open"));
     }
-    let mut next = TxtSnapshot::from_body(text);
-    next.schema.clone_from(&snapshot.schema);
-    if &next == snapshot {
+    let ranges = semio_s_artifact_stdio_contract::draft_splices_from_json(splices)?;
+    if ranges.is_empty() {
         return Ok(Emit::default());
     }
-    if let Some(reason) = native_snapshot_error(&next) {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.replace-text-unrepresentable"), reason));
+    let range_fault = |_| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.splice-out-of-range"), "a range of the change set exceeds the supported text size");
+    let mutation = TxtMutation::SpliceText(SpliceTextMutation {
+        splices: ranges.iter().map(|range| Ok(TextSplice { offset: u32::try_from(range.offset)?, delete: u32::try_from(range.delete)?, insert: range.insert.clone() })).collect::<Result<Vec<_>, std::num::TryFromIntError>>().map_err(range_fault)?,
+    });
+    let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(&mutation, snapshot);
+    if let Some(message) = outcome.messages().first() {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.splice-unrepresentable"), message.message.to_string()));
     }
-    let artifact_mutations = match txt_net_mutations(snapshot, &next) {
-        Some(leaves) => leaves,
-        None => txt_replacement_mutations(snapshot, &next)?,
-    };
-    Ok(Emit::mutations(artifact_mutations))
-}
-
-/// 🧮️ The net line leaves of one applied text that keeps its line ending and terminator: the lines unchanged at either end stay
-/// untouched, the paired lines between them that changed are re-set, surplus lines are removed (last first) or inserted, so
-/// history edits the lines an author changed. `None` when the shape changes, or when a step on the way would leave the native
-/// shape or say anything at all — then the whole-buffer lowering ([`txt_replacement_mutations`]) carries the Apply.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_net_mutations(snapshot: &TxtSnapshot, next: &TxtSnapshot) -> Option<Vec<TxtMutation>> {
-    if (snapshot.line_ending, snapshot.trailing_newline) != (next.line_ending, next.trailing_newline) {
-        return None;
-    }
-    let (old, new) = (&snapshot.lines, &next.lines);
-    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
-    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
-    let (old_middle, new_middle) = (&old[prefix..old.len() - suffix], &new[prefix..new.len() - suffix]);
-    let paired = old_middle.len().min(new_middle.len());
-    let mut leaves = Vec::new();
-    for (offset, (_, after)) in old_middle.iter().zip(new_middle).enumerate().filter(|(_, (before, after))| before != after) {
-        leaves.push(TxtMutation::SetLine(SetLineMutation { index: txt_usize_to_u32(prefix + offset).ok()?, text: after.clone() }));
-    }
-    for offset in (paired..old_middle.len()).rev() {
-        leaves.push(TxtMutation::RemoveLine(RemoveLineMutation { index: txt_usize_to_u32(prefix + offset).ok()? }));
-    }
-    for (offset, line) in new_middle.iter().enumerate().skip(paired) {
-        leaves.push(TxtMutation::InsertLine(InsertLineMutation { index: txt_usize_to_u32(prefix + offset).ok()?, text: line.clone() }));
-    }
-    let mut running = snapshot.clone();
-    for leaf in &leaves {
-        let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(leaf, &running);
-        if !outcome.messages().is_empty() {
-            return None;
-        }
-        running = protocol::apply_diff(outcome.diff(), &running).ok()?;
-    }
-    (running == *next).then_some(leaves)
-}
-
-/// 🪜️ The placeholder an unterminated edge line carries while the document is terminated: non-empty, free of CR and LF, so
-/// it is a native line under both line endings whether or not a separator follows it.
-const REPLACEMENT_PLACEHOLDER_LINE: &str = " ";
-
-/// 🪜️ Lowers a whole-buffer replacement of a native `snapshot` by a native `next` into line mutations whose EVERY intermediate
-/// document is a native shape, so no leaf ever refuses mid-edit: collapse to the neutral pivot `[""]` + terminator (valid for LF
-/// and CRLF), switch the line ending there, then build `next`, carrying an unterminated edge line as the placeholder until the
-/// terminator state matches. Emits `O(old + new)` mutations and never a no-op.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_replacement_mutations(snapshot: &TxtSnapshot, next: &TxtSnapshot) -> Result<Vec<TxtMutation>, Fault> {
-    let index = |line: usize| txt_usize_to_u32(line).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail));
-    let mut mutations = Vec::new();
-    let mut first = snapshot.lines.first().cloned().unwrap_or_default();
-    if snapshot.lines.is_empty() {
-        mutations.push(TxtMutation::InsertLine(InsertLineMutation { index: 0, text: REPLACEMENT_PLACEHOLDER_LINE.into() }));
-        first = REPLACEMENT_PLACEHOLDER_LINE.into();
-    } else if !snapshot.trailing_newline {
-        let last = snapshot.lines.len() - 1;
-        if snapshot.lines[last] != REPLACEMENT_PLACEHOLDER_LINE {
-            mutations.push(TxtMutation::SetLine(SetLineMutation { index: index(last)?, text: REPLACEMENT_PLACEHOLDER_LINE.into() }));
-        }
-        if last == 0 {
-            first = REPLACEMENT_PLACEHOLDER_LINE.into();
-        }
-    }
-    if !snapshot.trailing_newline {
-        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true }));
-    }
-    for line in (1..snapshot.lines.len()).rev() {
-        mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index: index(line)? }));
-    }
-    if next.line_ending != snapshot.line_ending {
-        if !first.is_empty() {
-            mutations.push(TxtMutation::SetLine(SetLineMutation { index: 0, text: String::new() }));
-            first.clear();
-        }
-        mutations.push(TxtMutation::SetLineEnding(SetLineEndingMutation { value: next.line_ending }));
-    }
-    let Some(last) = next.lines.len().checked_sub(1) else {
-        if first != REPLACEMENT_PLACEHOLDER_LINE {
-            mutations.push(TxtMutation::SetLine(SetLineMutation { index: 0, text: REPLACEMENT_PLACEHOLDER_LINE.into() }));
-        }
-        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
-        mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }));
-        return Ok(mutations);
-    };
-    let staged = |line: usize| if line == last && !next.trailing_newline { REPLACEMENT_PLACEHOLDER_LINE } else { next.lines[line].as_str() };
-    if first != staged(0) {
-        mutations.push(TxtMutation::SetLine(SetLineMutation { index: 0, text: staged(0).into() }));
-    }
-    for line in 1..next.lines.len() {
-        mutations.push(TxtMutation::InsertLine(InsertLineMutation { index: index(line)?, text: staged(line).into() }));
-    }
-    if !next.trailing_newline {
-        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
-        if next.lines[last] != REPLACEMENT_PLACEHOLDER_LINE {
-            mutations.push(TxtMutation::SetLine(SetLineMutation { index: index(last)?, text: next.lines[last].clone() }));
-        }
-    }
-    Ok(mutations)
+    Ok(if outcome.diff() == &crate::schema::diff::TxtDiff::default() { Emit::default() } else { Emit::mutations(vec![mutation]) })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -637,12 +538,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TxtEdit
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(error.code), error.to_string()))?;
-        if next.schema != snapshot.schema {
-            return Err(Fault::from("stdio-txt-schema-is-immutable"));
-        }
-        txt_emit(&TxtEditorCommand::ReplaceText { revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), text: next.to_body() }, snapshot, None)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::txt::edit_rules::EDIT_RULES
     }
 }
 //#endregion 🔖️Editor

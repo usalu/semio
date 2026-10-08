@@ -166,7 +166,7 @@ fn paged_native_drawing_snapshot_asset_cursor_preserves_actual_ordinal_and_zero_
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let long = format!("{}\0",law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize));
     let keys = law["assetKeyOrder"].as_array().unwrap().iter().map(|key| if key == "long" { long.clone() } else { key.as_str().unwrap().to_owned() }).collect::<Vec<_>>();
-    let assets = PagedMap::<_, {usize::MAX}>::try_from_entries(keys.iter().map(|key| (PagedUtf8::try_from_str(key).unwrap(), DrawingImageAsset { mime: "image/png".into(), data: Default::default(), width: None, height: None }))).unwrap();
+    let assets = PagedMap::<_, {usize::MAX}>::try_from_entries(keys.iter().map(|key| (PagedUtf8::try_from_str(key).unwrap(), DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() }))).unwrap();
     let foreign = PagedMap::<DrawingImageAsset, {usize::MAX}>::default();
     assert!(size_of::<DrawingAssetBoundsCursor>() <= size_of::<usize>() * 3);
     let (mut cursor, allocation) = observe(DrawingAssetBoundsCursor::new);
@@ -827,7 +827,7 @@ fn nested_snapshot() -> DrawingSnapshot {
     }
     snapshot.layers.push(group);
     snapshot.layers.iter_mut().for_each(admit_layer_string_destinations);
-    snapshot.assets.insert("asset-a".into(), DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
+    snapshot.assets.insert("asset-a".into(), DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() });
     snapshot
 }
 

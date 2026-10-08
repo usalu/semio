@@ -1,6 +1,7 @@
 //! ⚡️ Puzzle3d artifact — OpText/OpBinary codecs + grammar for `Puzzle3dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation,puzzle3d_document_delta_operations,Puzzle3dMutation,Puzzle3dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation,Puzzle3dMutation};
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 
 
 //#region 📖️SemioGrammar
@@ -138,12 +139,12 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_selection::muta
 use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
 impl Serialize for Puzzle3dPlaySnapshot {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.value().serialize(serializer)
+        self.typed().serialize(serializer)
     }
 }
 impl<'de> Deserialize<'de> for Puzzle3dPlaySnapshot {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Value::deserialize(deserializer).map(Self::new)
+        crate::Puzzle3dSnapshot::deserialize(deserializer).map(Self::new)
     }
 }
 }

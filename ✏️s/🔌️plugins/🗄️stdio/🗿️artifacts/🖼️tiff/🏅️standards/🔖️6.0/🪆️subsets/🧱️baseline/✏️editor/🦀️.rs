@@ -5,7 +5,7 @@
 
 use crate::editor::tiff_baseline::modes::edit;
 use crate::editor::tiff_baseline::modes::edit::windows::main;
-use crate::standards::v6_0::subsets::baseline::schema::mutations::{net_mutations, TiffBaselineMutation};
+use crate::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
 use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -210,12 +210,38 @@ impl ArtifactEditor for TiffBaselineEditor {
 //#endregion 🔖️Editor
 
 
+fn tiffBaselineEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+}
+
 impl editing::SnapshotEditingEditor for TiffBaselineEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { TiffBaselineEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::tiff_baseline::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v6_0::subsets::baseline::schema::mutations::{set_bits_per_sample::SetBitsPerSample, set_photometric_interpretation::SetPhotometricInterpretation};
+        use crate::schema::snapshot::{TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_PHOTOMETRIC};
+        let path = match event {
+            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } => path,
+            _ => return Ok(None),
+        };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let ["ifds", "0", "entries", entry, ..] = segments.as_slice() else { return Ok(None) };
+        let Some(row) = entry.parse::<usize>().ok().and_then(|index| snapshot.ifds.first().and_then(|page| page.entries.get(index))) else { return Ok(None) };
+        if row.tag != TAG_PHOTOMETRIC && row.tag != TAG_BITS_PER_SAMPLE {
+            return Ok(None);
+        }
+        let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(row), &format!("/ifds/0/entries/{entry}"), event).map_err(|error| tiffBaselineEditor_edit_fault(error.code, error.to_string()))?;
+        let edited = <TiffTag as semio_framework_value::FromValue>::from_value(edited).map_err(|error| tiffBaselineEditor_edit_fault("stdio.tiff.invalid-tag", error.to_string()))?;
+        let TiffValues::Short(words) = edited.values else { return Err(tiffBaselineEditor_edit_fault("stdio.tiff.baseline-short-words", "the baseline interpretation tags hold SHORT words")) };
+        Ok(Some(vec![match (row.tag, words.as_slice()) {
+            (TAG_PHOTOMETRIC, [photometric]) => TiffBaselineMutation::SetPhotometricInterpretation(SetPhotometricInterpretation { photometric: *photometric }),
+            (TAG_BITS_PER_SAMPLE, _) => TiffBaselineMutation::SetBitsPerSample(SetBitsPerSample { bits: words }),
+            _ => return Err(tiffBaselineEditor_edit_fault("stdio.tiff.baseline-photometric-single", "the photometric interpretation holds exactly one SHORT word")),
+        }]))
     }
 }
 

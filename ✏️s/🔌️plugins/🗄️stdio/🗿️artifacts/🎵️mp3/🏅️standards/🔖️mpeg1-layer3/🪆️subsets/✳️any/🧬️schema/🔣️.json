@@ -59,66 +59,919 @@
       "type": "object",
       "required": [
         "id",
-        "flags"
+        "content"
       ],
       "additionalProperties": false,
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[A-Z0-9]{4}$",
+          "not": {
+            "enum": [
+              "CHAP",
+              "CTOC",
+              "AENC",
+              "ASPI",
+              "COMR",
+              "ENCR",
+              "EQU2",
+              "EQUA",
+              "ETCO",
+              "GEOB",
+              "GRID",
+              "IPLS",
+              "LINK",
+              "MCDI",
+              "MLLT",
+              "OWNE",
+              "PCNT",
+              "POPM",
+              "POSS",
+              "PRIV",
+              "RBUF",
+              "RVAD",
+              "RVA2",
+              "RVRB",
+              "SEEK",
+              "SIGN",
+              "SYLT",
+              "SYTC",
+              "UFID",
+              "USER"
+            ]
+          }
         },
-        "flags": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
-        },
-        "data": {
-          "$ref": "#/definitions/Octets",
-          "default": []
+        "content": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "values"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "text"
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^\\u0000]*$"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "description",
+                "values"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "userText"
+                },
+                "description": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^\\u0000]*$"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "language",
+                "description",
+                "text"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "comment"
+                },
+                "language": {
+                  "type": "string",
+                  "pattern": "^[a-z]{3}$"
+                },
+                "description": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "language",
+                "description",
+                "text"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "lyrics"
+                },
+                "language": {
+                  "type": "string",
+                  "pattern": "^[a-z]{3}$"
+                },
+                "description": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "url"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "url"
+                },
+                "url": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "description",
+                "url"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "userUrl"
+                },
+                "description": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                },
+                "url": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "mime",
+                "pictureType",
+                "description",
+                "payload"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "picture"
+                },
+                "mime": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                },
+                "pictureType": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "description": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                },
+                "payload": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "bytes"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "opaque"
+                },
+                "bytes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            }
+          ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^T(?!XXX)[A-Z0-9]{3}$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "text"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^W(?!XXX)[A-Z0-9]{3}$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "url"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^TXXX$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "userText"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^COMM$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "comment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^USLT$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "lyrics"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^WXXX$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "userUrl"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^APIC$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "picture"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "pattern": "^(?!T|W|COMM$|USLT$|APIC$|CHAP$|CTOC$|AENC$|ASPI$|COMR$|ENCR$|EQU2$|EQUA$|ETCO$|GEOB$|GRID$|IPLS$|LINK$|MCDI$|MLLT$|OWNE$|PCNT$|POPM$|POSS$|PRIV$|RBUF$|RVAD$|RVA2$|RVRB$|SEEK$|SIGN$|SYLT$|SYTC$|UFID$|USER$)[A-Z0-9]{4}$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "properties": {
+                  "kind": {
+                    "const": "opaque"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "Id3v2Tag": {
       "type": "object",
       "required": [
-        "majorVersion",
-        "minorVersion",
-        "flags"
+        "frames"
       ],
       "additionalProperties": false,
       "properties": {
-        "majorVersion": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        },
-        "minorVersion": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        },
-        "flags": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        },
         "frames": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Id3Frame"
-          },
-          "default": []
+            "type": "object",
+            "required": [
+              "id",
+              "content"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Z0-9]{4}$",
+                "not": {
+                  "enum": [
+                    "CHAP",
+                    "CTOC",
+                    "AENC",
+                    "ASPI",
+                    "COMR",
+                    "ENCR",
+                    "EQU2",
+                    "EQUA",
+                    "ETCO",
+                    "GEOB",
+                    "GRID",
+                    "IPLS",
+                    "LINK",
+                    "MCDI",
+                    "MLLT",
+                    "OWNE",
+                    "PCNT",
+                    "POPM",
+                    "POSS",
+                    "PRIV",
+                    "RBUF",
+                    "RVAD",
+                    "RVA2",
+                    "RVRB",
+                    "SEEK",
+                    "SIGN",
+                    "SYLT",
+                    "SYTC",
+                    "UFID",
+                    "USER"
+                  ]
+                }
+              },
+              "content": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "values"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "text"
+                      },
+                      "values": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[^\\u0000]*$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "description",
+                      "values"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "userText"
+                      },
+                      "description": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "values": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[^\\u0000]*$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "language",
+                      "description",
+                      "text"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "comment"
+                      },
+                      "language": {
+                        "type": "string",
+                        "pattern": "^[a-z]{3}$"
+                      },
+                      "description": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "text": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "language",
+                      "description",
+                      "text"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "lyrics"
+                      },
+                      "language": {
+                        "type": "string",
+                        "pattern": "^[a-z]{3}$"
+                      },
+                      "description": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "text": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "url"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "url"
+                      },
+                      "url": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "description",
+                      "url"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "userUrl"
+                      },
+                      "description": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "url": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "mime",
+                      "pictureType",
+                      "description",
+                      "payload"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "picture"
+                      },
+                      "mime": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "pictureType": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "description": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "payload": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "bytes"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "opaque"
+                      },
+                      "bytes": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^T(?!XXX)[A-Z0-9]{3}$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "text"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^W(?!XXX)[A-Z0-9]{3}$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "url"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^TXXX$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "userText"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^COMM$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "comment"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^USLT$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "lyrics"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^WXXX$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "userUrl"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^APIC$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "picture"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "pattern": "^(?!T|W|COMM$|USLT$|APIC$|CHAP$|CTOC$|AENC$|ASPI$|COMR$|ENCR$|EQU2$|EQUA$|ETCO$|GEOB$|GRID$|IPLS$|LINK$|MCDI$|MLLT$|OWNE$|PCNT$|POPM$|POSS$|PRIV$|RBUF$|RVAD$|RVA2$|RVRB$|SEEK$|SIGN$|SYLT$|SYTC$|UFID$|USER$)[A-Z0-9]{4}$"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "kind": {
+                          "const": "opaque"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
         }
       }
     },
     "Id3v1Tag": {
       "type": "object",
+      "required": [
+        "title",
+        "artist",
+        "album",
+        "year",
+        "comment",
+        "track",
+        "genre"
+      ],
       "additionalProperties": false,
       "properties": {
-        "raw": {
-          "$ref": "#/definitions/Octets",
-          "default": []
+        "title": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "artist": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "album": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "year": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 4
+        },
+        "comment": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "track": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            }
+          ]
+        },
+        "genre": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 254
+            }
+          ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "track": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "comment": {
+                "maxLength": 28
+              }
+            }
+          }
+        }
+      ]
     },
     "Mp3FrameHeader": {
       "type": "object",

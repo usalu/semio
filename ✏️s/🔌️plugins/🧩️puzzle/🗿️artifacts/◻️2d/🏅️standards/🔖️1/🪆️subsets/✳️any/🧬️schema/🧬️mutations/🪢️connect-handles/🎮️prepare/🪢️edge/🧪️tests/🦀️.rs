@@ -1,7 +1,7 @@
 //! 🧪️ Native edge assembly preserves exact words, optional ownership and interior cancellation.
 
 use super::*;
-use semio_framework_value::retained_clone::RetainedCloneBorrowAuthority;
+use crate::test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
@@ -16,7 +16,26 @@ fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<Retained
 }
 fn close(cursor: &mut Puzzle2dConnectEdgeCursor) {
     cursor.begin_close();
-    for turn in 0..1_000_000 { if cursor.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || cursor.close_step(permit)); }
+    for _ in 0..1_000_000 {
+        if cursor.terminal_is_empty() { return; }
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();
+        let release=cursor.next_close_release_byte_demand().unwrap();
+        let depth=cursor.next_close_depth_demand().unwrap();
+        assert!(copy+capacity+release<=4096);
+        let permit=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
+        assert_eq!(observed(Default::default(),||cursor.close_step(Default::default())).progress(),RetainedCloneProgress::default());
+        for axis in 0..4 {
+            let mut below=permit;
+            let demand=match axis {0=>&mut below.maximum_copy_bytes,1=>&mut below.maximum_capacity_bytes,2=>&mut below.maximum_release_bytes,_=>&mut below.maximum_depth};
+            if *demand==0 {continue;}*demand-=1;
+            let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(below));
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);
+            match result{Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(error)=>assert!(axis==3&&error.kind==semio_framework_value::ValueRefusalKind::DepthLimit)}
+            assert_eq!((cursor.next_close_copy_byte_demand().unwrap(),cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap()),(copy,capacity,release,depth));
+        }
+        observed(permit, || cursor.close_step(permit));
+    }
     panic!("edge assembly retained native ownership after closure");
 }
 fn retire(edge: Puzzle2dEdge) {
@@ -38,7 +57,7 @@ fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exa
         let input = &case["mutation"];
         let word = |index: usize| u64::from_str_radix(input["scalarBits"][index].as_str().unwrap(), 16).unwrap();
         let payload = ConnectHandles { id: text(&input["id"]), source: text(&input["source"]), target: text(&input["target"]), edge_kind: optional(&input["edgeKind"]), source_tip: optional(&input["sourceTip"]), target_tip: optional(&input["targetTip"]), gap: f64::from_bits(word(0)), shift: f64::from_bits(word(1)), rise: f64::from_bits(word(2)), rotation: f64::from_bits(word(3)), turn: f64::from_bits(word(4)), tilt: f64::from_bits(word(5)), x: f64::from_bits(word(6)), y: f64::from_bits(word(7)), tolerance: Some(f64::from_bits(u64::from_str_radix(input["toleranceBits"].as_str().unwrap(), 16).unwrap())), index: Some(usize::MAX) };
-        let authority = RetainedCloneBorrowAuthority::new("original native connection edge fields");
+        let mut authority = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dConnectEdgeCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observed(Default::default(), || cursor.advance(authority.borrow(&payload), Default::default())).progress(), RetainedCloneProgress::default());
@@ -80,6 +99,7 @@ fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exa
             assert!(actual_capacity > 0 && copied_body >= 128);
             close(&mut cancelled);
         }
+        test_source_custody::close(&mut authority);
         count += 1;
         eprintln!("[DEBUG] Puzzle2d ConnectHandles native edge {} preserves exact scalar words, optional empty text, zero-birth ownership and every granted copy/capacity/release cancellation turn", case["name"].as_str().unwrap());
     }

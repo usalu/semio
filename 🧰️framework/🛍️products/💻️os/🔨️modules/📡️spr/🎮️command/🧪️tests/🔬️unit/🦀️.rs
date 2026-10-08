@@ -1,5 +1,6 @@
 use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation};
 use super::*;
+use crate::os_spr::fold::{fold_plan_diff, fold_plan_inverse};
 use crate::os_spr::io::text::OpText;
 
 fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
@@ -38,14 +39,6 @@ impl Identified<String> for Item {
 impl Patchable<i64> for Item {
     fn apply_patch(&mut self, patch: &i64) {
         self.value += patch;
-    }
-    fn diff_patch(&self, other: &Self) -> Option<i64> {
-        let delta = other.value - self.value;
-        if delta == 0 {
-            None
-        } else {
-            Some(delta)
-        }
     }
 }
 //#endregion 🧸️Fixtures

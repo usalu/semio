@@ -17,7 +17,13 @@ line = create position
      | create region
      | delete region
      | replace region data
-     | reorder regions ;
+     | reorder regions
+     | set position property
+     | remove position property
+     | set route property
+     | remove route property
+     | set region property
+     | remove region property ;
 create position = 'create-position', space, number ;
 delete position = 'delete-position', space, id ;
 replace position data = 'replace-position-data', space, id, space, block ;
@@ -30,6 +36,12 @@ create region = 'create-region', space, number ;
 delete region = 'delete-region', space, id ;
 replace region data = 'replace-region-data', space, id, space, block ;
 reorder regions = 'reorder-regions', space, id, space, number ;
+set position property = 'set-position-property', space, id, space, id, space, block, [ space, id ] ;
+remove position property = 'remove-position-property', space, id, space, id ;
+set route property = 'set-route-property', space, id, space, id, space, block, [ space, id ] ;
+remove route property = 'remove-route-property', space, id, space, id ;
+set region property = 'set-region-property', space, id, space, id, space, block, [ space, id ] ;
+remove region property = 'remove-region-property', space, id, space, id ;
 id = octet, { octet } ;
 number = octet, { octet } ;
 text = octet, { octet } ;

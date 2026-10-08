@@ -2,7 +2,15 @@
   "name": "@semio-tech/framework-replication",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/**/*", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧫️fixtures/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/**/*",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {
@@ -11,6 +19,17 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-index-entry": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-index-entry",
         "forwardAllArgs": true
       }
     }

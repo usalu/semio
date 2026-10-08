@@ -17,10 +17,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveVmlPart 
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(match base.xml_part(self.path.trim_start_matches('/')) {
-            Some(part) => vec![DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: self.path.clone(), document: part.materialize_document_exact()? })],
-            None => Vec::new(),
-        })
+        remove_vml_part_inverse(base, &self.path)
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

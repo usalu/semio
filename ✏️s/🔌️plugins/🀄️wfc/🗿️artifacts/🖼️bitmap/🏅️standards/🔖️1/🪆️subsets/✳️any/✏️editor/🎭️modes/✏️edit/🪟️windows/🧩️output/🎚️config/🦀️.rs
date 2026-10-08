@@ -34,12 +34,6 @@ impl protocol::DiffAlgebra<BitmapOutputWindowConfig> for BitmapOutputWindowConfi
             zoom: self.zoom.as_ref().map(|_| base.zoom.clone()),
         }
     }
-    fn between(base: &BitmapOutputWindowConfig, other: &BitmapOutputWindowConfig) -> Self {
-        Self {
-            show_pins: (base.show_pins != other.show_pins).then(|| other.show_pins.clone()),
-            zoom: (base.zoom != other.zoom).then(|| other.zoom.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.show_pins.is_none() && self.zoom.is_none()
     }

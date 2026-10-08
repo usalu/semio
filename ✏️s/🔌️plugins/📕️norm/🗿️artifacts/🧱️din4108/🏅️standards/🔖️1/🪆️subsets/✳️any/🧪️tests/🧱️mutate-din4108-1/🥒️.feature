@@ -78,11 +78,13 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | insert-zone-dupe                       | ➕️insert-zone                       | ⛔dupe   |
       | insert-zone-clamp                      | ➕️insert-zone                       | 📏clamp  |
       | remove-zone                            | ➖️remove-zone                       | ✅apply  |
+      | remove-zone-middle-row                 | ➖️remove-zone                       | 🔬️middle-row |
       | change-zone-floor-area                 | 📐️change-zone-floor-area            | ✅apply  |
       | change-zone-heaviness                  | 🧱change-zone-heaviness              | ✅apply  |
       | change-zone-night-ventilation          | 🌙change-zone-night-ventilation      | ✅apply  |
       | insert-zone-window                     | 🪟insert-zone-window                 | ✅apply  |
       | remove-zone-window                     | 🚫️remove-zone-window                | ✅apply  |
+      | remove-zone-window-middle-row          | 🚫️remove-zone-window                | 🔬️middle-row |
       | change-zone-window-area                | 📏change-zone-window-area            | ✅apply  |
       | change-zone-window-g-value             | ☀️change-zone-window-g-value        | ✅apply  |
       | change-zone-window-shading-fc          | ⛱️change-zone-window-shading-fc     | ✅apply  |
@@ -90,12 +92,15 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | insert-element-dupe                    | 🏠️insert-element                    | ⛔dupe   |
       | insert-element-clamp                   | 🏠️insert-element                    | 📏clamp  |
       | remove-element                         | 🚫️remove-element                    | ✅apply  |
+      | remove-element-middle-row              | 🚫️remove-element                    | 🔬️middle-row |
       | change-element-area                    | 📐️change-element-area               | ✅apply  |
       | change-element-adjacent                | ↔️change-element-adjacent           | ✅apply  |
       | change-element-kind                    | 🏷️change-element-kind               | ✅apply  |
       | insert-layer                           | ➕️insert-layer                      | ✅apply  |
       | remove-layer                           | ➖️remove-layer                      | ✅apply  |
+      | remove-layer-middle-row                | ➖️remove-layer                      | 🔬️middle-row |
       | reorder-layers                         | 🔀️reorder-layers                    | ✅apply  |
+      | reorder-layers-middle-row              | 🔀️reorder-layers                    | 🔬️middle-row |
       | change-layer-thickness                 | 📏️change-layer-thickness            | ✅apply  |
       | change-layer-lambda                    | 🌡️change-layer-lambda                | ✅apply  |
       | change-layer-mu                        | 💧change-layer-mu                    | ✅apply  |
@@ -104,6 +109,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | insert-thermal-bridge-dupe             | 🌉️insert-thermal-bridge             | ⛔dupe   |
       | insert-thermal-bridge-clamp            | 🌉️insert-thermal-bridge             | 📏clamp  |
       | remove-thermal-bridge                  | 🧊remove-thermal-bridge              | ✅apply  |
+      | remove-thermal-bridge-middle-row       | 🧊remove-thermal-bridge              | 🔬️middle-row |
       | change-thermal-bridge-psi              | 🔘change-thermal-bridge-psi          | ✅apply  |
       | change-thermal-bridge-length           | ↔️change-thermal-bridge-length      | ✅apply  |
       | change-element-orientation-deg         | 🧭change-element-orientation-deg     | ✅apply  |

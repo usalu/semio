@@ -10,11 +10,11 @@
         "test"
       ],
       "expected": [
-        "prepare:1",
         "owned",
         "prepare:2",
         "cargo:2"
-      ]
+      ],
+      "consume": true
     },
     {
       "id": "repository-consumer",
@@ -27,10 +27,9 @@
         "--lib"
       ],
       "expected": [
-        "owned",
-        "prepare:2",
-        "cargo:2"
-      ]
+        "refused"
+      ],
+      "consume": false
     },
     {
       "id": "unknown-command-refused",
@@ -42,7 +41,8 @@
       ],
       "expected": [
         "refused"
-      ]
+      ],
+      "consume": false
     },
     {
       "id": "custom-script-refused",
@@ -54,7 +54,8 @@
       ],
       "expected": [
         "refused"
-      ]
+      ],
+      "consume": false
     },
     {
       "id": "other-command-refused",
@@ -66,6 +67,50 @@
       ],
       "expected": [
         "refused"
+      ],
+      "consume": false
+    },
+    {
+      "id": "current-owned-test-consumer",
+      "route": "owner-command",
+      "command": "bun",
+      "args": [
+        "./📜️script.ts",
+        "test",
+        "long",
+        "--lib"
+      ],
+      "consume": true,
+      "expected": [
+        "owned",
+        "prepare:2",
+        "cargo:2"
+      ]
+    },
+    {
+      "id": "generic-process-body",
+      "route": "owner-command",
+      "command": "node",
+      "args": [
+        "--eval",
+        "1"
+      ],
+      "consume": false,
+      "expected": [
+        "owned"
+      ]
+    },
+    {
+      "id": "arbitrary-owned-bun-body",
+      "route": "owner-command",
+      "command": "bun",
+      "args": [
+        "./foreign.ts",
+        "build"
+      ],
+      "consume": false,
+      "expected": [
+        "owned"
       ]
     }
   ],
@@ -82,58 +127,205 @@
     {
       "id": "explicit-body",
       "target": {
-        "metadata": {
-          "semio": {
-            "nativePreparation": "cargo-consumer"
-          }
-        },
         "options": {
           "command": "bun ./📜️script.ts test"
         }
       },
-      "expected": "repository-test-body"
+      "expected": "owner-command"
     },
     {
       "id": "level-sibling",
       "target": {
-        "metadata": {
-          "semio": {
-            "nativePreparation": "cargo-consumer"
-          }
-        },
         "options": {
           "command": "bun \"./📜️script.ts\" test long"
         }
       },
-      "expected": "repository-test-body"
+      "expected": "owner-command"
     },
     {
       "id": "unknown-declaration",
       "target": {
-        "metadata": {
-          "semio": {
-            "nativePreparation": "reuse"
-          }
-        },
         "options": {
           "command": "bun ./📜️script.ts test"
         }
       },
-      "expected": "refused"
+      "expected": "owner-command"
     },
     {
       "id": "build-body-refused",
       "target": {
-        "metadata": {
-          "semio": {
-            "nativePreparation": "cargo-consumer"
-          }
-        },
         "options": {
           "command": "bun ./📜️script.ts build"
         }
       },
-      "expected": "refused"
+      "expected": "owner-command"
+    }
+  ],
+  "testOwners": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust"
+  ],
+  "callerTargets": [
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "target": "check-wasm",
+      "command": "bun ./📜️script.ts check-wasm",
+      "dependencies": [
+        "@semio-tech/ui-rs:generate",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/framework-graph:generate"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "target": "wasm",
+      "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build dev",
+      "dependencies": [
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "target": "wasm-release",
+      "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build release",
+      "dependencies": [
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "target": "test-runtime-fixture-graph",
+      "command": "bun ./📜️script.ts test runtime-fixture-graph",
+      "dependencies": [
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ]
+    }
+  ],
+  "consumingAdapters": [
+    {
+      "id": "artifact-selected-packages",
+      "owner": "artifact",
+      "args": [
+        "check",
+        "--manifest-path",
+        "/repo/owner/Cargo.toml",
+        "-p",
+        "selected",
+        "--locked",
+        "--offline"
+      ],
+      "env": {
+        "CARGO_HOME": "/owned/cargo-home",
+        "CARGO_TARGET_DIR": "/owned/target",
+        "CARGO_BUILD_BUILD_DIR": "/owned/build"
+      }
+    },
+    {
+      "id": "streaming-explicit-storage",
+      "owner": "streaming",
+      "args": [
+        "build",
+        "-p",
+        "selected",
+        "--locked"
+      ],
+      "env": {
+        "CARGO_HOME": "/owned/cargo-home",
+        "CARGO_TARGET_DIR": "/owned/target",
+        "CARGO_BUILD_BUILD_DIR": "/owned/build"
+      }
+    },
+    {
+      "id": "command-explicit-storage",
+      "owner": "command",
+      "args": [
+        "build",
+        "-p",
+        "selected",
+        "--locked"
+      ],
+      "env": {
+        "CARGO_HOME": "/owned/cargo-home",
+        "CARGO_TARGET_DIR": "/owned/target",
+        "CARGO_BUILD_BUILD_DIR": "/owned/build"
+      }
+    }
+  ],
+  "freshCargoConsumers": [
+    {
+      "id": "rustc-selected-component",
+      "command": "cargo",
+      "args": [
+        "rustc",
+        "--manifest-path",
+        "/repo/owner/Cargo.toml",
+        "-p",
+        "selected",
+        "--target",
+        "wasm32-wasip2",
+        "--lib",
+        "--",
+        "-C",
+        "link-arg=--export-table"
+      ],
+      "expected": [
+        "plan",
+        "prepare",
+        "lease",
+        "capture",
+        "release"
+      ]
+    },
+    {
+      "id": "describe-emitter",
+      "command": "cargo",
+      "args": [
+        "build",
+        "--manifest-path",
+        "/repo/owner/Cargo.toml",
+        "-p",
+        "emitter"
+      ],
+      "expected": [
+        "plan",
+        "prepare",
+        "lease",
+        "capture",
+        "release"
+      ]
+    },
+    {
+      "id": "preparation-refused",
+      "command": "cargo",
+      "args": [
+        "build",
+        "-p",
+        "selected"
+      ],
+      "refused": true,
+      "expected": [
+        "plan",
+        "prepare"
+      ]
+    },
+    {
+      "id": "neutral-transpiler",
+      "command": "node",
+      "args": [
+        "jco",
+        "transpile",
+        "component.wasm"
+      ],
+      "expected": [
+        "capture"
+      ]
     }
   ]
 }

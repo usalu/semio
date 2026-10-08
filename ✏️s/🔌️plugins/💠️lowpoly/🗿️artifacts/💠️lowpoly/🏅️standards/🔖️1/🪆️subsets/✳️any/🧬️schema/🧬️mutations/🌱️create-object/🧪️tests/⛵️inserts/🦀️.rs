@@ -1,6 +1,6 @@
 //! 🧪️ `create-object` fixture — `⛵️inserts`.
 //!
-//! `create-object` routes through `diff_objects_add`, which does NOT carry an insertion index on the added entry: it appends to `added` and additionally publishes a FULL `reordered` id permutation that places the new object at the payload index.
+//! `create-object` routes through `diff_objects_add`, which publishes one `inserted` row `{index, row}` placing the new object at the (clamped) payload index of the after list.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

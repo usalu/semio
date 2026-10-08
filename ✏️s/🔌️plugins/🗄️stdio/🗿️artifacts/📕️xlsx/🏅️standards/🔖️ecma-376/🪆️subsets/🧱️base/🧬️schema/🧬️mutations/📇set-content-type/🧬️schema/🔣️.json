@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/mutation/set-content-type/schema.json",
+  "title": "SetContentType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mutation", "name", "contentType"],
+  "properties": {
+    "mutation": {
+      "const": "setContentType",
+      "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
+    },
+    "isOverride": {
+      "type": "boolean",
+      "default": false,
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": { "en": "Override", "de": "Überschreibung" },
+        "description": { "en": "True for a part-name override, false for an extension default.", "de": "Wahr für eine Teilnamen-Überschreibung, falsch für einen Erweiterungs-Standard." },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Name", "de": "Name" },
+        "description": { "en": "File extension of a default, or absolute part name of an override.", "de": "Dateiendung eines Standards oder absoluter Teilname einer Überschreibung." },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "contentType": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Content type", "de": "Inhaltstyp" },
+        "description": { "en": "MIME type the entry assigns.", "de": "MIME-Typ, den der Eintrag zuweist." },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": { "en": "Position", "de": "Position" },
+        "description": { "en": "Position a new entry takes among its kind; the last position when absent.", "de": "Position, die ein neuer Eintrag unter seiner Art einnimmt; ohne Angabe die letzte." },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 40
+      }
+    }
+  }
+}

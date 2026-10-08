@@ -10,13 +10,7 @@
 use super::*;
 use semio_framework_os_kernel::HistoryPageStack;
 use semio_framework::kernel::{HistoryMutationEntry, HistoryMutationMessage, HistoryReprojection, HistoryReprojectionKind, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, RequestId};
-use semio_framework::{
-    input_label_glossary, mutation_input_defs, mutation_input_instance, reference_id_text, registered_input_schema_document, ActionArgControl, ActionArgOption, ArgPresentation, ArgSchema, InputSchemaError, OptionSource, SnapSource,
-    DIALOG_CHOICE_ARG, HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ACTION_IDS, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_NAME, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE,
-    HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BACK_ACTION_ID, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID,
-    HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_FINALIZE_DIALOG_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID,
-    HISTORY_EDIT_WITHDRAW_ACTION_ID,
-};
+use semio_framework::{input_label_glossary, mutation_input_defs, mutation_input_instance, reference_id_text, registered_input_schema_document, ActionArgControl, ActionArgOption, ArgPresentation, ArgSchema, InputSchemaError, OptionSource, SnapSource, DIALOG_CHOICE_ARG, HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ACTION_IDS, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_NAME, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BACK_ACTION_ID, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_FINALIZE_DIALOG_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
 use semio_framework_time_travel::{
     is_time_travel_alternative_name, TimeTravelBase, TimeTravelChoice, TimeTravelEffect, TimeTravelEvent, TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelSession, TimeTravelStage, TimeTravelTarget, TIME_TRAVEL_BUSY_CODE,
     TIME_TRAVEL_COMMIT_FAILED_CODE, TIME_TRAVEL_EDITOR_CLOSED_CODE, TIME_TRAVEL_INVALID_INPUT_CODE, TIME_TRAVEL_MEMBER_GONE_CODE, TIME_TRAVEL_NAME_INVALID_CODE, TIME_TRAVEL_NAME_REQUIRED_CODE, TIME_TRAVEL_NOT_EDITABLE_CODE, TIME_TRAVEL_NOT_WITHDRAWABLE_CODE, TIME_TRAVEL_NO_SELECTION_CODE,
@@ -24,6 +18,9 @@ use semio_framework_time_travel::{
 };
 use std::collections::VecDeque;
 use std::sync::Arc;
+use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+#[path="♻️retirement/🦀️.rs"]
+mod original_retirement;
 
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one replay slice per reactor turn.
@@ -54,6 +51,14 @@ pub const TIME_TRAVEL_ENTITY_NAME_VISITS: usize = 262_144;
 pub const TIME_TRAVEL_SHORT_ID_CHARS: usize = 12;
 /// 🗳️ The request id the finalize prompt opens under; nothing awaits a dialog.
 const TIME_TRAVEL_FINALIZE_REQUEST: RequestId = RequestId(0x7417_0001);
+
+fn history_planning_retirement_grant(demand:semio_framework_value::RetirementDemand)->semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+}
+
+fn history_retirement_frame_grant(bytes:usize)->semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1}
+}
 //#endregion 🔖️Limits
 
 /// ⏪️ Whether `action` is one of the reserved, host-driven history-edit verbs.
@@ -385,7 +390,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     }
 
     /// ✍️ The accepted drafts keyed by target, the shape every store read takes.
-    fn accepted_drafts(&self) -> BTreeMap<MutationId, protocol::InputReplacement> {
+    fn accepted_drafts(&self) -> protocol::HistoryInputDrafts {
         self.session.accepted.iter().map(|draft| (draft.target.mutation.clone(), draft.replacement.clone())).collect()
     }
 
@@ -395,48 +400,34 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
     /// 🧹️ One bounded retirement unit of the first typed owner set still retiring; `None` when nothing retires. A member
     /// owner set the session already left is dropped once it is terminal-empty.
-    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-        if let Some(step) = self.document.retire_step(maximum_items, maximum_bytes)? {
-            return Ok(Some(step));
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        let demand=self.document.retirement_demands(body)?;
+        if demand!=RetirementDemand::default(){return Ok(demand);}
+        if let Some(owners)=self.member.as_ref().and_then(|member|member.owners.as_ref()){let demand=owners.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}}
+        if let Some(owners)=self.retiring.last(){return if owners.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of_val(owners.as_ref()),depth:1,..Default::default()})}else{owners.retirement_demands(body)};}
+        if self.retiring.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retiring.capacity()*std::mem::size_of::<Box<dyn TimeTravelOwners>>(),depth:1,..Default::default()});}
+        Ok(Default::default())
+    }
+    fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> {
+        if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        if let Some(step)=self.document.retire_step(grant)?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
+        if let Some(owners)=self.member.as_mut().and_then(|member|member.owners.as_mut()){if let Some(step)=owners.retire_step(grant)?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}}
+        if let Some(owners)=self.retiring.last_mut(){
+            if !owners.terminal_is_empty(){return owners.retire_step(grant).map(|step|step.map(|step|RetainedCloneStep::Progress(step.progress())));}
+            let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
+            if grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+            drop(self.retiring.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})));
         }
-        if let Some(owners) = self.member.as_mut().and_then(|member| member.owners.as_mut()) {
-            if let Some(step) = owners.retire_step(maximum_items, maximum_bytes)? {
-                return Ok(Some(step));
-            }
-        }
-        while let Some(owners) = self.retiring.last_mut() {
-            if let Some(step) = owners.retire_step(maximum_items, maximum_bytes)? {
-                return Ok(Some(step));
-            }
-            if !owners.terminal_is_empty() {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("timeTravel.member-owners"), "a composed member's history-edit owners stopped retiring before they were terminal-empty"));
-            }
-            drop(self.retiring.pop());
-        }
+        if self.retiring.capacity()!=0{let bytes=self.retiring.capacity()*std::mem::size_of::<Box<dyn TimeTravelOwners>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}drop(std::mem::take(&mut self.retiring));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})));}
         Ok(None)
     }
 
     /// 🚪️ Document close, instance retirement or reload: the session vanishes with every draft (ephemeral state). The
     /// typed owners settle at the runtime's close step, which reaches their stores.
-    pub fn begin_close(&mut self) {
-        if self.closing {
-            return;
-        }
-        self.closing = true;
-        self.session = TimeTravelSession::new(self.session.base);
-        self.replace_editor(None);
-        self.ui_dirty = false;
-        self.document_dirty = false;
-        self.patch_due = false;
-        self.patch = None;
-        self.reprojection_paused = false;
-        self.reprojection_fault = None;
-        self.deferred_history_row = None;
-        self.authoring = None;
-    }
+    pub fn begin_close(&mut self) { self.closing = true; }
 
     pub fn terminal_is_empty(&self) -> bool {
-        !self.is_active() && self.editor.is_none() && self.member.is_none() && self.authoring.is_none() && self.owners().all(TimeTravelOwners::terminal_is_empty)
+        !self.is_active() && self.session.accepted.capacity()==0 && self.session.pending.is_none() && self.session.report.is_none() && self.session.fault.is_none() && self.editor.is_none() && self.member.is_none() && self.authoring.is_none() && self.patch.is_none() && self.reprojection_fault.is_none() && self.deferred_history_row.is_none() && self.retiring.capacity()==0 && self.owners().all(TimeTravelOwners::terminal_is_empty)
     }
 
     /// 👉️ The first mutation, in replay order, whose outcome blocks finalizing (`MergePolicy::Normal`, the floor
@@ -549,7 +540,8 @@ pub(crate) trait TimeTravelOwners: Send {
     fn processed(&self) -> Option<u32>;
     fn has_pending_work(&self) -> bool;
     fn terminal_is_empty(&self) -> bool;
-    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault>;
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault>;
     fn as_any(&self) -> &dyn std::any::Any;
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
@@ -570,6 +562,10 @@ pub(crate) struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
     head: Option<store::ArtifactDerivedSnapshot<P>>,
     retirements: VecDeque<Box<dyn store::ErasedSnapshotRetirement>>,
     discarded: Vec<Mu>,
+    discarded_pending: Option<Mu>,
+    discarded_active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    discarded_factory: Option<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>>,
+    discarded_factory_close: Option<semio_framework_value::FactoryAuthority>,
 }
 
 /// ⏭️ What one replay slice did: progress, a completed report (the head is swapped in), or a fault.
@@ -600,12 +596,12 @@ pub(crate) enum TimeTravelStoreCommand {
     Open { target: MutationId, current: Option<protocol::InputReplacement>, withdraw: bool },
     Adopt(bool),
     Rebuild(DslValue),
-    Preview { target: MutationId, replacement: protocol::InputReplacement, drafts: BTreeMap<MutationId, protocol::InputReplacement>, deadline_us: u64, clock: fn() -> Option<u64> },
+    Preview { target: MutationId, replacement: protocol::InputReplacement, drafts: protocol::HistoryInputDrafts, deadline_us: u64, clock: fn() -> Option<u64> },
     StepPreview { deadline_us: u64, clock: fn() -> Option<u64> },
-    StartReplay { drafts: BTreeMap<MutationId, protocol::InputReplacement>, from: MutationId },
+    StartReplay { drafts: protocol::HistoryInputDrafts, from: MutationId },
     CancelReplay,
     StepReplay { deadline_us: u64, clock: fn() -> Option<u64> },
-    Commit { drafts: BTreeMap<MutationId, protocol::InputReplacement>, finalization: store::HistoryFinalization, actor: Option<String> },
+    Commit { drafts: protocol::HistoryInputDrafts, finalization: store::HistoryFinalization, actor: Option<String> },
     Read(TimeTravelStage),
 }
 
@@ -642,7 +638,7 @@ where
 {
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub(crate) fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
-        Self { label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, retirements: VecDeque::new(), discarded: Vec::new() }
+        Self { label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
@@ -665,18 +661,21 @@ where
     }
 
     fn cancel_preview(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
-        if let Some(retirement) = store.retire_derived_history_preview(&mut self.preview_job).map_err(|error| error.into_fault())? { self.retirements.push_back(retirement); }
+        let grant=history_retirement_frame_grant(ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes());
+        if let Some((retirement,progress)) = store.retire_derived_history_preview(&mut self.preview_job,grant).map_err(|error|Fault::from(error.into_message()))? { assert!(progress.fits(grant));self.retirements.push_back(retirement); }
         self.preview_input = None;
         Ok(())
     }
 
     fn cancel_replay(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
-        if let Some(retirement) = store.retire_derived_report_replay(&mut self.replay).map_err(|error| error.into_fault())? { self.retirements.push_back(retirement); }
+        let grant=history_retirement_frame_grant(ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes());
+        if let Some((retirement,progress)) = store.retire_derived_report_replay(&mut self.replay,grant).map_err(|error|Fault::from(error.into_message()))? { assert!(progress.fits(grant));self.retirements.push_back(retirement); }
         Ok(())
     }
 
     fn cancel_finished(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
-        if let Some(retirement) = store.retire_finished_history_replay(&mut self.finished).map_err(|error| error.into_fault())? { self.retirements.push_back(retirement); }
+        let grant=history_retirement_frame_grant(ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes());
+        if let Some((retirement,progress)) = store.retire_finished_history_replay(&mut self.finished,grant).map_err(|error|Fault::from(error.into_message()))? { assert!(progress.fits(grant));self.retirements.push_back(retirement); }
         Ok(())
     }
 
@@ -865,11 +864,13 @@ where
         let Some(job) = self.preview_job.as_mut() else { return Ok(TimeTravelPreviewStep::Pending) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
         loop {
-            if matches!(store.step_derived_history_preview(job, &mut deadline).map_err(|error| error.into_fault())?, store::ReplayStep::Finished(_)) { break; }
+            let grant=history_planning_retirement_grant(job.planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).map_err(|error|Fault::from(error.into_message()))?);
+            if matches!(store.step_derived_history_preview(job, grant, &mut deadline).map_err(|error| error.into_fault())?, store::ReplayStep::Finished(_)) { break; }
             if deadline() { return Ok(TimeTravelPreviewStep::Pending); }
         }
         let base = store.finish_derived_history_preview(&mut self.preview_job).map_err(|error| error.into_fault())?;
         let replacement = self.preview_input.take().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-input-absent"), "history preview lost its selected input"))?;
+        self.cancel_preview(store)?;
         let (preview, outcome) = match replacement {
             protocol::InputReplacement::Withdrawn => (base, Vec::new()),
             protocol::InputReplacement::Input { payload, .. } => {
@@ -892,7 +893,8 @@ where
     fn step_replay(&mut self, store: &ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>) -> Result<TimeTravelReplayStep, Fault> {
         let Some(replay) = self.replay.as_mut() else { return Ok(TimeTravelReplayStep::Faulted) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-        Ok(match store.step_derived_report_replay(replay, &mut deadline) {
+        let grant=history_planning_retirement_grant(replay.planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).map_err(|error|Fault::from(error.into_message()))?);
+        Ok(match store.step_derived_report_replay(replay, grant, &mut deadline) {
             Ok(store::ReplayStep::Pending(progress)) => TimeTravelReplayStep::Pending { done: progress.done, total: progress.total },
             Ok(store::ReplayStep::Finished(_)) => {
                 match store.finish_derived_report_replay(&mut self.replay).and_then(|(result, head)| store.replay_report(&result).map(|report| (result, head, report))) {
@@ -932,34 +934,15 @@ where
     }
 
     fn has_pending_work(&self) -> bool {
-        self.preview_job.is_some() || !self.retirements.is_empty() || !self.discarded.is_empty()
+        self.preview_job.is_some() || self.retirements.capacity()!=0 || self.discarded.capacity()!=0 || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.is_empty() && self.discarded.is_empty()
+        self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.capacity()==0 && self.discarded.capacity()==0 && self.discarded_pending.is_none() && self.discarded_active.is_none() && self.discarded_factory.is_none() && self.discarded_factory_close.is_none()
     }
 
-    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-        if let Some(retirement) = self.retirements.front_mut() {
-            return match retirement.close_step(maximum_items.max(1), maximum_bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.snapshot-retirement"), error.into_message()))? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.retirements.pop_front());
-                    Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }))
-                }
-                store::SnapshotRetirementStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("timeTravel.snapshot-close"), "time travel snapshot retirement closed without its terminal-empty witness")),
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(Some(PluginCloseStep::Pending { released_items, released_bytes })),
-                store::SnapshotRetirementStep::Blocked => Ok(Some(PluginCloseStep::Blocked { reason: "time travel snapshot retirement is blocked" })),
-            };
-        }
-        if !self.discarded.is_empty() {
-            let count = self.discarded.len().min(maximum_items.max(1)).min(TIME_TRAVEL_DISCARD_OPS_PER_TURN);
-            for op in self.discarded.drain(self.discarded.len() - count..) {
-                op.retire_cold();
-            }
-            return Ok(Some(PluginCloseStep::Pending { released_items: count, released_bytes: 0 }));
-        }
-        Ok(None)
-    }
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.original_retirement_demands(body) }
+    fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> { self.original_retirement_step(grant).map_err(|error|Fault::from(error.into_message())) }
 
     fn as_any(&self) -> &dyn std::any::Any {
         self
@@ -2315,14 +2298,26 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🧹️ One bounded close unit of the history-edit ledger: the session vanishes, every typed owner settles against its
     /// store, then one owner retires.
-    pub(crate) fn time_travel_close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if let Some(authoring) = self.time_travel.authoring.take() {
-            let mut replay = Some(authoring.replay);
-            if let Some(retirement) = self.store.retire_derived_report_replay(&mut replay).map_err(|error| error.into_fault())? { self.time_travel.document.retirements.push_back(retirement); }
+    pub(crate) fn time_travel_retirement_demands(&self, body: usize) -> Result<RetirementDemand,ValueError> {
+        if self.time_travel.document.discarded_factory.is_none()&&(!self.time_travel.document.discarded.is_empty()||self.time_travel.document.discarded_pending.is_some()){self.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
+        let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
+        if self.time_travel.closing&&!self.time_travel.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"time travel close retains an undeclared original session editor preview or authoring frontier"));}
+        Ok(Default::default())
+    }
+    pub(crate) fn time_travel_retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>,Fault> {
+        if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        if self.time_travel.document.discarded_factory.is_none()&&(!self.time_travel.document.discarded.is_empty()||self.time_travel.document.discarded_pending.is_some()){
+            if grant.maximum_depth==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+            let factory=self.store.owned_mutation_retirement_factory().map_err(|error|Fault::from(error.into_message()))?;self.time_travel.document.discarded_factory=Some(Arc::clone(factory));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})));
         }
+        self.time_travel.retire_step(grant)
+    }
+    pub(crate) fn time_travel_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,Fault> {
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         self.time_travel.begin_close();
-        self.settle_time_travel_owners()?;
-        Ok(self.time_travel.retire_step(maximum_items, maximum_bytes)?.unwrap_or(PluginCloseStep::Complete))
+        if let Some(step)=self.time_travel_retire_step(grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+        self.time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
+        Ok(if self.time_travel.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})
     }
 
     /// 📖️ The mutation rows the history body's windows show past each row's projection (gap N1): for every row whose
@@ -2838,7 +2833,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// faults the replay instead.
     async fn start_time_travel_replay(&mut self, drafts: Vec<protocol::SupersededInput>, from: &MutationId) -> Result<Vec<TimeTravelEffect>, Fault> {
         self.time_travel.refreshed_done = 0;
-        let drafts: BTreeMap<MutationId, protocol::InputReplacement> = drafts.into_iter().map(|draft| (draft.target, draft.replacement)).collect();
+        let drafts: protocol::HistoryInputDrafts = drafts.into_iter().map(|draft| (draft.target, draft.replacement)).collect();
         let generation = self.time_travel.session.generation;
         Ok(match self.time_travel_run(TimeTravelStoreCommand::StartReplay { drafts, from: from.clone() }).await? {
             TimeTravelStoreOutput::ReplayStarted(true) => Vec::new(),
@@ -2872,7 +2867,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             self.publish_time_travel_member(authored).await?;
         }
         if let Some(meta) = meta.filter(|_| self.time_travel.session.stage == TimeTravelStage::Inactive) {
-            self.revalidate_interaction_state_after_document_change(meta).await?;
+            self.revalidate_interaction_on_document_change(meta).await?;
         }
         Ok(effects)
     }
@@ -3131,8 +3126,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         self.prepare_time_travel_patch().await?;
         self.flush_time_travel_ui_dirty();
-        if let Some(step) = self.time_travel.retire_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)? {
-            if !matches!(step, PluginCloseStep::Blocked { .. }) {
+        let retirement_grant=history_planning_retirement_grant(self.time_travel_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).map_err(|error|Fault::from(error.into_message()))?);
+        if let Some(step) = self.time_travel_retire_step(retirement_grant)? {
+            if step.progress()!=RetainedCloneProgress::default() {
                 #[cfg(debug_assertions)]
                 if self.store.reprojection_progress().is_some() {
                     static TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
@@ -3557,7 +3553,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if self.time_travel.authoring.is_some() {
             return Ok(SupersedeAuthored::Busy);
         }
-        let drafts: BTreeMap<MutationId, protocol::InputReplacement> = inputs.into_iter().map(|input| (input.target, input.replacement)).collect();
+        let drafts: protocol::HistoryInputDrafts = inputs.into_iter().map(|input| (input.target, input.replacement)).collect();
         let finalization = match scope {
             Some(alternative_id) => store::HistoryFinalization::Scope { alternative_id },
             None => store::HistoryFinalization::Overwrite,
@@ -3578,15 +3574,21 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             let clock = time_travel.turn_clock;
             let Some(authoring) = time_travel.authoring.as_mut() else { return Ok(SupersedeAuthored::Refused) };
             let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-            store.step_derived_report_replay(&mut authoring.replay, &mut deadline)
+            let grant=history_planning_retirement_grant(authoring.replay.planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).map_err(|error|Fault::from(error.into_message()))?);
+            store.step_derived_report_replay(&mut authoring.replay, grant, &mut deadline)
         };
         match stepped {
             Ok(store::ReplayStep::Pending(_)) => return Ok(SupersedeAuthored::Pending),
             Ok(store::ReplayStep::Finished(_)) => {}
             Err(_) => {
                 if let Some(authoring) = self.time_travel.authoring.take() {
-                    let mut replay = Some(authoring.replay);
-                    if let Some(retirement) = self.store.retire_derived_report_replay(&mut replay).map_err(|error| error.into_fault())? { self.time_travel.document.retirements.push_back(retirement); }
+                    let SupersedeAuthoring {replay,finalization}=authoring;let mut replay=Some(replay);
+                    let grant=history_retirement_frame_grant(ArtifactStore::<A::Snapshot,A::Mutation>::history_read_retirement_birth_bytes());
+                    match self.store.retire_derived_report_replay(&mut replay,grant) {
+                        Ok(Some((retirement,progress)))=>{assert!(progress.fits(grant));self.time_travel.document.retirements.push_back(retirement);}
+                        Ok(None)=>unreachable!("retained supersede authoring is present"),
+                        Err(error)=>{self.time_travel.authoring=Some(SupersedeAuthoring {replay:replay.take().unwrap(),finalization});return Err(Fault::from(error.into_message()));}
+                    }
                 }
                 return Ok(SupersedeAuthored::Refused);
             }

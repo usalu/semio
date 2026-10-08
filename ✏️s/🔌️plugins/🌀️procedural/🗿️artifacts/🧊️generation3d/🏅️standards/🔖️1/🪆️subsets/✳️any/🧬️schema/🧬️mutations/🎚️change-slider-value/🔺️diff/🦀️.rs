@@ -1,7 +1,7 @@
 //! 🔺️ `change-slider-value` sparse diff — replaces the ONE addressed slider widget with its value set (and, for a
 //! value outside its range, its range widened exactly like the canvas knob).
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dWidgetPatch, Generation3dWidgetPatchEntry, Generation3dWidgetsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dWidgetPatch, Generation3dWidgetModification, Generation3dWidgetsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::ChangeSliderValue;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
@@ -25,13 +25,9 @@ pub fn diff(payload: &ChangeSliderValue, base: &Generation3dSnapshot) -> protoco
     let Widget::InputSlider { value, min, max, step, .. } = &base.host_snapshot.widgets[index] else {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Widget \"{}\" is not an input slider.", payload.id), [payload.id.clone()]);
     };
-    let mut landing = Widget::InputSlider { id: String::new(), label: String::new(), value: *value, min: *min, max: *max, step: *step };
-    if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut landing, payload.value) {
+    let Some((value, min, max, step)) = crate::central_apply::generation3d_slider_landing(*value, *min, *max, *step, payload.value) else {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Slider \"{}\" has no range that holds {}.", payload.id, payload.value), [payload.id.clone()]);
-    }
-    let Widget::InputSlider { value, min, max, step, .. } = landing else {
-        return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Widget \"{}\" is not an input slider.", payload.id), [payload.id.clone()]);
     };
     let patch = Generation3dWidgetPatch::Slider { value, min, max, step };
-    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { patched: vec![Generation3dWidgetPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { modified: vec![Generation3dWidgetModification { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

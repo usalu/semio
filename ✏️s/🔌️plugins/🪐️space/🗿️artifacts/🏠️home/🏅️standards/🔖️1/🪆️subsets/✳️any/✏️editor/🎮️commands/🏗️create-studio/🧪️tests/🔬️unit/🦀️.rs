@@ -65,9 +65,9 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
     let emit = handle_with_identity(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg, &identity).expect("handle");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");
-    let persistent = list_os_space_catalog_entries(&crate::catalog_port().await).expect("list");
+    let persistent = list_os_space_catalog_entries(&semio_s_space_core::catalog_port().await).expect("list");
     assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
-    let ephemeral_catalog = list_os_space_catalog_entries(&crate::temp_catalog_port().await).unwrap_or_default();
+    let ephemeral_catalog = list_os_space_catalog_entries(&semio_s_space_core::temp_catalog_port().await).unwrap_or_default();
     assert!(!ephemeral_catalog.iter().any(|entry| entry.name == "Temp Studio"));
     let uri = emit
         .effects
@@ -78,8 +78,8 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
         })
         .expect("navigate");
     let space_id = uri.trim_start_matches("/spaces/");
-    let document = crate::resolve_studio_document(space_id).await.expect("ephemeral studio");
+    let document = semio_s_space_core::resolve_studio_document(space_id).await.expect("ephemeral studio");
     assert_eq!(document.name, "Temp Studio");
     assert!(document.backbone.is_none());
-    assert!(document.vcs.genesis.snapshot().collections.is_empty());
+    assert!(document.vcs.genesis.facts().snapshot().collections.is_empty());
 }

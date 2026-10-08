@@ -1,6 +1,8 @@
 export type SequenceCamera = { x: number; y: number; zoom: number };
 export type SequenceMainWindowConfig = { orientation: "leftRight" | "topBottom"; camera: SequenceCamera };
-export type SequenceMainWindowConfigMutation = { kind: "snapshot"; config: SequenceMainWindowConfig };
+export type SequenceMainWindowConfigMutation =
+  | { kind: "set-orientation"; value: SequenceMainWindowConfig["orientation"] }
+  | { kind: "set-camera"; value: SequenceCamera };
 
 export function parseSequenceMainWindowConfig(value: unknown): SequenceMainWindowConfig {
   if (!value || typeof value !== "object") throw new Error("sequence-main-window-config-object-required");
@@ -12,7 +14,8 @@ export function parseSequenceMainWindowConfig(value: unknown): SequenceMainWindo
   return value as SequenceMainWindowConfig;
 }
 
-export function applySequenceMainWindowConfigMutation(_base: SequenceMainWindowConfig, mutation: SequenceMainWindowConfigMutation): SequenceMainWindowConfig {
-  if (mutation.kind !== "snapshot") throw new Error("sequence-main-window-config-mutation-invalid");
-  return parseSequenceMainWindowConfig(mutation.config);
+export function applySequenceMainWindowConfigMutation(base: SequenceMainWindowConfig, mutation: SequenceMainWindowConfigMutation): SequenceMainWindowConfig {
+  if (mutation.kind === "set-orientation") return parseSequenceMainWindowConfig({ ...base, orientation: mutation.value });
+  if (mutation.kind === "set-camera") return parseSequenceMainWindowConfig({ ...base, camera: mutation.value });
+  throw new Error("sequence-main-window-config-mutation-invalid");
 }

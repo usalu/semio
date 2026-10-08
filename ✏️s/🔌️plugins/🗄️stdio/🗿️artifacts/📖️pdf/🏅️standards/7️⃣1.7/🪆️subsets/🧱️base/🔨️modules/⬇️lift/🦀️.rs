@@ -14,6 +14,9 @@ use super::lexer::{dict_f64, dict_get, dict_i64, dict_name};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap, HashSet};
+use super::lexer::{PResult,PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort};
+use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
 
 //#region 🔖️Lifter
@@ -36,6 +39,7 @@ pub enum Category {
 pub struct Lifter<'s> {
     source: &'s mut dyn ObjectSource,
     pub snapshot: PdfSnapshot,
+    pub admitted_stream_roles: Vec<PdfAdmittedStreamRole>,
     pub ids: HashMap<(Category, ObjRef), String>,
     used: HashMap<Category, HashSet<String>>,
     inline_ids: HashMap<(Category, usize, String), String>,
@@ -44,6 +48,8 @@ pub struct Lifter<'s> {
     pub annotation_refs: HashMap<ObjRef, (u32, u32)>,
     font_codecs: HashMap<String, FontCodec>,
     scope: usize,
+    pub admission_error:Option<PdfEngineError>,
+    artifacts:NativePdfArtifactResources<'static>,
 }
 
 struct MappedFonts<'a> {
@@ -60,7 +66,7 @@ impl FontTable for MappedFonts<'_> {
 impl<'s> Lifter<'s> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(source: &'s mut dyn ObjectSource) -> Self {
-        Self { source, snapshot: PdfSnapshot::default(), ids: HashMap::new(), used: HashMap::new(), inline_ids: HashMap::new(), in_progress: HashSet::new(), page_refs: Vec::new(), annotation_refs: HashMap::new(), font_codecs: HashMap::new(), scope: 0 }
+        Self { source, snapshot: PdfSnapshot::default(), admitted_stream_roles: Vec::new(), ids: HashMap::new(), used: HashMap::new(), inline_ids: HashMap::new(), in_progress: HashSet::new(), page_refs: Vec::new(), annotation_refs: HashMap::new(), font_codecs: HashMap::new(), scope: 0, admission_error:None, artifacts:NativePdfArtifactResources::default() }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -124,8 +130,8 @@ impl<'s> Lifter<'s> {
 //#region 🔖️Document
 /// ⬇️ Lifts a whole document from its trailer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lift_document(trailer: &[PdfDictEntry], declared_version: &str, source: &mut dyn ObjectSource) -> PdfSnapshot {
-    lift_document_with(trailer, declared_version, source).snapshot
+pub fn lift_document(trailer: &[PdfDictEntry], declared_version: &str, source: &mut dyn ObjectSource) -> PResult<PdfSnapshot> {
+    let lifter=lift_document_with(trailer, declared_version, source);if let Some(error)=lifter.admission_error {return Err(error)}Ok(lifter.snapshot)
 }
 
 /// ⬇️ Lifts a whole document and hands back the lifter (its reference → id maps included).
@@ -160,6 +166,9 @@ pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, 
     }
     lifter.snapshot.pages = pages;
     lifter.lift_catalog(&catalog);
+    lifter.snapshot.admitted_stream_roles = lifter.source.admitted_roles().to_vec();
+    lifter.snapshot.admitted_stream_roles.extend(lifter.admitted_stream_roles.clone());
+    lifter.snapshot.objects=lifter.artifacts.into_objects();
     lifter
 }
 
@@ -265,14 +274,30 @@ impl Lifter<'_> {
                 }
             }
         }
-        page.content = self.parse_and_rename(&content, &map);
+        let operators = match parse_content(&content, &MappedFonts {map:&map.fonts,codecs:&self.font_codecs},&mut self.artifacts){Ok(ops)=>ops,Err(error)=>{self.admission_error=Some(error);Vec::new()}};
+        page.content = rename_content(operators.clone(), &map);
+        if dict_get(&dict, "Contents").is_some() {
+            let identity = PdfGraphIdentity { owner: page_ref, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] };
+            let mut dependencies = self.source.role_dependencies(&identity);
+            if let Some(mut font_context) = self.source.identity_of(&resources) {
+                font_context.path.push(PdfGraphPath::Entry { key: "Font".into() });
+                if resources.dict_get("Font").is_some() { dependencies.extend(self.source.role_dependencies(&font_context)); }
+            }
+            for ((category, object), _) in &self.ids {
+                if *category == Category::Font { dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner: *object, path: Vec::new() })); }
+            }
+            let mut unique = Vec::new();
+            for dependency in dependencies { if !unique.contains(&dependency) { unique.push(dependency); } }
+            let dependencies = unique;
+            self.admitted_stream_roles.push(PdfAdmittedStreamRole { identity, dependencies, value: PdfStreamRoleValue::Operators { content: operators } });
+        }
         page.group = dict_get(&dict, "Group").map(|g| self.source.deref(g)).and_then(|g| g.as_dict().map(|g| self.lift_group(g)));
         page.thumbnail = dict_get(&dict, "Thumb").cloned().map(|thumb| self.lift_x_object("Thumb", &thumb)).filter(|id| !id.is_empty());
         page.struct_parents = dict_i64(&dict, "StructParents").map(|v| v as u32);
         page.transition = dict_get(&dict, "Trans").map(|t| self.source.deref(t)).and_then(|t| t.as_dict().map(<[PdfDictEntry]>::to_vec));
         page.duration = dict_f64(&dict, "Dur");
         page.metadata = dict_get(&dict, "Metadata").map(|m| self.source.deref(m)).and_then(|m| match m {
-            PdfObject::Stream { data, .. } => Some(String::from_utf8_lossy(&data).into_owned()),
+            PdfObject::Stream { data, .. } => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(&dict, "Metadata") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
             _ => None,
         });
         page.additional_actions = dict_get(&dict, "AA").map(|aa| self.source.deref(aa)).and_then(|aa| aa.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
@@ -304,8 +329,12 @@ impl Lifter<'_> {
 
     /// 🖋️ Parses a content stream against `map` and rewrites its resource names to ids.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn parse_and_rename(&mut self, content: &[u8], map: &ResourceMap) -> Vec<PdfOp> {
-        let ops = parse_content(content, &MappedFonts { map: &map.fonts, codecs: &self.font_codecs });
+    fn parse_and_rename(&mut self, owner: &PdfObject, content: &[u8], map: &ResourceMap) -> Vec<PdfOp> {
+        let ops = match parse_content(content, &MappedFonts {map:&map.fonts,codecs:&self.font_codecs},&mut self.artifacts){Ok(ops)=>ops,Err(error)=>{self.admission_error=Some(error);Vec::new()}};
+        self.source.record_role(owner, PdfStreamRoleValue::Operators { content: ops.clone() });
+        let mut dependencies = Vec::new();
+        for ((category, object), _) in &self.ids { if *category == Category::Font { dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner: *object, path: Vec::new() })); } }
+        self.source.record_role_dependencies(owner, crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleKind::Operators, &dependencies);
         rename_content(ops, map)
     }
 }
@@ -431,7 +460,7 @@ impl Lifter<'_> {
                 let saved_scope = self.scope;
                 self.scope = value.as_ref().map_or(self.scope.wrapping_mul(31).wrapping_add(7), |r| r.num as usize);
                 let map = self.lift_resources(&resources);
-                let content = self.parse_and_rename(data, &map);
+                let content = self.parse_and_rename(value, data, &map);
                 self.scope = saved_scope;
                 PdfPatternKind::Tiling { paint_type: dict_i64(&dict, "PaintType").unwrap_or(1) as u32, tiling_type: dict_i64(&dict, "TilingType").unwrap_or(1) as u32, bbox: rect_of(dict_get(&dict, "BBox")).unwrap_or([0.0, 0.0, 1.0, 1.0]), x_step: dict_f64(&dict, "XStep").unwrap_or(1.0), y_step: dict_f64(&dict, "YStep").unwrap_or(1.0), content }
             }
@@ -485,7 +514,8 @@ impl Lifter<'_> {
                 let oc_ids = self.ids.clone();
                 let mut id_of = |reference: &PdfObject| -> Option<String> { mask_ids.get(&reference.as_ref()?.num).cloned() };
                 let mut oc_id_of = |reference: &PdfObject| -> Option<String> { oc_ids.get(&(Category::OptionalContent, reference.as_ref()?)).cloned() };
-                let image = lift_image(&id, dict, data, filters, self.source, &mut id_of, &mut oc_id_of);
+                let image = match lift_image(&id, dict, data, filters, self.source, &mut id_of, &mut oc_id_of) {Ok(image)=>image,Err(error)=>{self.admission_error=Some(error);return String::new();}};
+                self.source.record_role(value, PdfStreamRoleValue::Image { image: image.clone() });
                 self.snapshot.images.push(image);
                 for (mask_id, mask) in pending_masks {
                     self.lift_x_object_claimed(&mask_id, &mask);
@@ -496,7 +526,7 @@ impl Lifter<'_> {
                 let saved_scope = self.scope;
                 self.scope = value.as_ref().map_or(self.scope.wrapping_mul(31).wrapping_add(11), |r| r.num as usize);
                 let map = self.lift_resources(&resources);
-                let content = self.parse_and_rename(data, &map);
+                let content = self.parse_and_rename(value, data, &map);
                 self.scope = saved_scope;
                 let group = dict_get(dict, "Group").map(|g| self.source.deref(g)).and_then(|g| g.as_dict().map(|g| self.lift_group(g)));
                 let optional_content = dict_get(dict, "OC").and_then(|oc| self.existing_id(Category::OptionalContent, oc));
@@ -549,7 +579,7 @@ impl Lifter<'_> {
         let subtype = dict_name(&dict, "Subtype").unwrap_or("Type1").to_string();
         let base_font = dict_name(&dict, "BaseFont").unwrap_or("").to_string();
         let to_unicode = dict_get(&dict, "ToUnicode").map(|t| self.source.deref(t)).and_then(|t| match t {
-            PdfObject::Stream { data, .. } => Some(cmap::parse_to_unicode(&data)),
+            PdfObject::Stream { data, .. } => { let mapping = cmap::parse_to_unicode(&data); if let Some(value) = dict_get(&dict, "ToUnicode") { self.source.record_role(value, PdfStreamRoleValue::UnicodeMap { mapping: mapping.clone() }); } Some(mapping) },
             _ => None,
         });
         let descriptor = dict_get(&dict, "FontDescriptor").map(|d| self.source.deref(d)).and_then(|d| d.as_dict().map(|d| self.lift_descriptor(d)));
@@ -569,6 +599,7 @@ impl Lifter<'_> {
                         if let Some(PdfObject::Name(parent)) = dict_get(&cmap_dict, "UseCMap") {
                             parsed.use_cmap = Some(parent.clone());
                         }
+                        if let Some(value) = dict_get(&dict, "Encoding") { self.source.record_role(value, PdfStreamRoleValue::CharacterMap { cmap: parsed.clone() }); }
                         PdfCMap::Embedded { cmap: parsed }
                     }
                     _ => PdfCMap::identity_h(),
@@ -586,7 +617,7 @@ impl Lifter<'_> {
                 let mut char_procs = Vec::new();
                 for entry in procs {
                     if let PdfObject::Stream { data, .. } = self.source.deref(&entry.value) {
-                        let content = self.parse_and_rename(&data, &map);
+                        let content = self.parse_and_rename(&entry.value, &data, &map);
                         char_procs.push(PdfCharProc { name: entry.key, content });
                     }
                 }
@@ -596,7 +627,7 @@ impl Lifter<'_> {
             _ => PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program },
         };
         let font = PdfFont { id: id.clone(), kind, to_unicode, extra: extra_entries(&dict, &["Type", "Subtype", "BaseFont", "Name", "FirstChar", "LastChar", "Widths", "FontDescriptor", "Encoding", "ToUnicode", "DescendantFonts", "FontMatrix", "FontBBox", "CharProcs", "Resources"]) };
-        self.font_codecs.insert(id.clone(), FontCodec::new(&font));
+        match FontCodec::new(&font,&self.artifacts) {Ok(codec)=>{self.font_codecs.insert(id.clone(),codec);},Err(error)=>self.admission_error=Some(error)};
         self.snapshot.fonts.push(font);
         id
     }
@@ -633,16 +664,12 @@ impl Lifter<'_> {
     fn lift_descriptor(&mut self, dict: &[PdfDictEntry]) -> (PdfFontDescriptor, Option<PdfFontProgram>) {
         let program = ["FontFile", "FontFile2", "FontFile3"].iter().find_map(|key| {
             let stream = self.source.deref(dict_get(dict, key)?);
-            let PdfObject::Stream { dict: stream_dict, data, .. } = stream else { return None };
-            Some(match *key {
-                "FontFile" => PdfFontProgram::Type1 { data, length1: dict_i64(&stream_dict, "Length1").unwrap_or(0) as u32, length2: dict_i64(&stream_dict, "Length2").unwrap_or(0) as u32, length3: dict_i64(&stream_dict, "Length3").unwrap_or(0) as u32 },
-                "FontFile2" => PdfFontProgram::TrueType { data },
-                _ => match dict_name(&stream_dict, "Subtype") {
-                    Some("CIDFontType0C") => PdfFontProgram::CidCff { data },
-                    Some("OpenType") => PdfFontProgram::OpenType { data },
-                    _ => PdfFontProgram::Cff { data },
-                },
-            })
+            let PdfObject::Stream { dict:stream_dict,.. }=&stream else {return None};
+            let kind=match *key {"FontFile"=>"type1","FontFile2"=>"truetype",_=>match dict_name(stream_dict,"Subtype") {Some("CIDFontType0C")=>"cid-cff",Some("OpenType")=>"opentype",_=>"cff"}};
+            let reference=match self.artifacts.admit(&format!("s.stdio.font.{kind}"),stream) {Ok(reference)=>reference,Err(error)=>{self.admission_error=Some(error);return None;}};
+            let program=match kind {"type1"=>PdfFontProgram::Type1 {reference},"truetype"=>PdfFontProgram::TrueType {reference},"cid-cff"=>PdfFontProgram::CidCff {reference},"opentype"=>PdfFontProgram::OpenType {reference},_=>PdfFontProgram::Cff {reference}};
+            self.source.record_role(dict_get(dict, key)?, PdfStreamRoleValue::FontProgram { program: program.clone() });
+            Some(program)
         });
         let descriptor = PdfFontDescriptor {
             font_name: dict_name(dict, "FontName").unwrap_or("").to_string(),
@@ -674,10 +701,10 @@ impl Lifter<'_> {
         let system_info = dict_get(dict, "CIDSystemInfo").map(|s| self.source.deref(s)).and_then(|s| s.as_dict().map(<[PdfDictEntry]>::to_vec)).map(|s| PdfCidSystemInfo { registry: self.text(dict_get(&s, "Registry")).unwrap_or_else(|| "Adobe".into()), ordering: self.text(dict_get(&s, "Ordering")).unwrap_or_else(|| "Identity".into()), supplement: dict_i64(&s, "Supplement").unwrap_or(0).max(0) as u32 }).unwrap_or_default();
         let widths = dict_get(dict, "W").map(|w| self.source.deref(w)).and_then(|w| w.as_array().map(<[PdfObject]>::to_vec)).map(|items| self.lift_cid_widths(&items)).unwrap_or_default();
         let vertical_metrics = dict_get(dict, "W2").map(|w| self.source.deref(w)).and_then(|w| w.as_array().map(<[PdfObject]>::to_vec)).map(|items| self.lift_cid_vertical(&items)).unwrap_or_default();
-        let cid_to_gid = match dict_get(dict, "CIDToGIDMap").map(|m| self.source.deref(m)) {
-            Some(PdfObject::Name(name)) if name == "Identity" => Some(PdfCidToGid::Identity),
-            Some(PdfObject::Stream { data, .. }) => Some(PdfCidToGid::Map { data }),
-            _ => None,
+        let cid_to_gid = match dict_get(dict,"CIDToGIDMap").map(|m|self.source.deref(m)) {
+            Some(PdfObject::Name(name)) if name=="Identity"=>Some(PdfCidToGid::Identity),
+            Some(PdfObject::Stream {data,..})=>{if data.len()%2!=0 {self.admission_error=Some(PdfEngineError::Malformed("CIDToGIDMap must contain complete glyph ids".into()));None}else{let glyphs=data.chunks_exact(2).map(|pair|u16::from_be_bytes([pair[0],pair[1]])).collect::<Vec<_>>();if let Some(value)=dict_get(dict,"CIDToGIDMap"){self.source.record_role(value,PdfStreamRoleValue::GlyphIds {glyphs:glyphs.clone()});}Some(PdfCidToGid::Map {glyphs})}},
+            _=>None,
         };
         PdfCidFont {
             true_type: dict_name(dict, "Subtype") == Some("CIDFontType2"),
@@ -830,6 +857,7 @@ impl Lifter<'_> {
             return Some(id);
         }
         let PdfObject::Stream { dict: stream_dict, data, .. } = self.source.deref(&stream_ref) else { return None };
+        self.source.record_role(&stream_ref, PdfStreamRoleValue::AttachmentBytes { bytes: data.clone() });
         let params = dict_get(&stream_dict, "Params").map(|p| self.source.deref(p)).and_then(|p| p.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
         let file_name = self.text(dict_get(&dict, "UF")).or_else(|| self.text(dict_get(&dict, "F"))).unwrap_or_else(|| name.to_string());
         let file = PdfEmbeddedFile {
@@ -887,7 +915,7 @@ impl Lifter<'_> {
             "JavaScript" => PdfActionKind::JavaScript { script: match dict_get(&dict, "JS").map(|js| self.source.deref(js)) {
                 Some(PdfObject::Text(text)) => text,
                 Some(PdfObject::Str(bytes)) => decode_text_string(&bytes),
-                Some(PdfObject::Stream { data, .. }) => String::from_utf8_lossy(&data).into_owned(),
+                Some(PdfObject::Stream { data, .. }) => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(&dict, "JS") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } text },
                 _ => String::new(),
             } },
             "SetOCGState" => PdfActionKind::SetOptionalContentState { states: extra_entries(&dict, &["Type", "S", "Next"]), preserve_radio_buttons: dict_get(&dict, "PreserveRB").and_then(PdfObject::as_bool).unwrap_or(true) },
@@ -1222,7 +1250,7 @@ impl Lifter<'_> {
                 let registry_name = self.text(dict_get(&dict, "RegistryName"));
                 let info = self.text(dict_get(&dict, "Info"));
                 let profile = dict_get(&dict, "DestOutputProfile").map(|p| self.source.deref(p)).and_then(|p| match p {
-                    PdfObject::Stream { data, .. } => Some(data),
+                    stream @ PdfObject::Stream { .. } => { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort; let reference = crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default().admit("s.stdio.icc", stream).ok()?; if let Some(value) = dict_get(&dict, "DestOutputProfile") { self.source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() }); } Some(reference) },
                     _ => None,
                 });
                 self.snapshot.output_intents.push(PdfOutputIntent { subtype: dict_name(&dict, "S").unwrap_or("GTS_PDFA1").to_string(), condition_identifier, condition, registry_name, info, profile });
@@ -1278,7 +1306,7 @@ impl Lifter<'_> {
             self.snapshot.mark_info = Some(PdfMarkInfo { marked: flag("Marked"), user_properties: flag("UserProperties"), suspects: flag("Suspects") });
         }
         self.snapshot.metadata = dict_get(catalog, "Metadata").map(|m| self.source.deref(m)).and_then(|m| match m {
-            PdfObject::Stream { data, .. } => Some(String::from_utf8_lossy(&data).into_owned()),
+            PdfObject::Stream { data, .. } => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(catalog, "Metadata") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
             _ => None,
         });
         self.snapshot.catalog_extra = extra_entries(catalog, &["Type", "Version", "Pages", "Outlines", "Names", "Dests", "PageLabels", "OutputIntents", "AcroForm", "PageLayout", "PageMode", "ViewerPreferences", "OpenAction", "Lang", "MarkInfo", "Metadata", "OCProperties"]);
@@ -1318,7 +1346,7 @@ impl Lifter<'_> {
                 Some(PdfObject::Text(text)) => Some(text),
                 Some(PdfObject::Str(bytes)) => Some(decode_text_string(&bytes)),
                 Some(PdfObject::Name(name)) => Some(name),
-                Some(PdfObject::Stream { data, .. }) => Some(String::from_utf8_lossy(&data).into_owned()),
+                Some(PdfObject::Stream { data, .. }) => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(&dict, key) { lifter.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
                 _ => None,
             }
         };

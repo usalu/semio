@@ -1,7 +1,7 @@
 //! 🧪️ Literal CreateNode inverse IDs retain unconditional native ownership and cancellation.
 
 use super::*;
-use semio_framework_value::retained_clone::RetainedCloneBorrowAuthority;
+use crate::test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 
@@ -18,9 +18,24 @@ fn observed(grant: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedC
 
 fn close(cursor: &mut Puzzle2dCreateNodeInverseCursor) {
     cursor.begin_close();
-    for turn in 0..1_000_000 {
+    for _ in 0..1_000_000 {
         if cursor.terminal_is_empty() { return; }
-        let permit = grant(turn);
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();
+        let release=cursor.next_close_release_byte_demand().unwrap();
+        let depth=cursor.next_close_depth_demand().unwrap();
+        assert!(copy+capacity+release<=4096);
+        let permit=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
+        assert_eq!(observed(Default::default(),||cursor.close_step(Default::default())).progress(),RetainedCloneProgress::default());
+        for axis in 0..4 {
+            let mut below=permit;
+            let demand=match axis {0=>&mut below.maximum_copy_bytes,1=>&mut below.maximum_capacity_bytes,2=>&mut below.maximum_release_bytes,_=>&mut below.maximum_depth};
+            if *demand==0 {continue;}*demand-=1;
+            let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(below));
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);
+            match result{Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(error)=>assert!(axis==3&&error.kind==semio_framework_value::ValueRefusalKind::DepthLimit)}
+            assert_eq!((cursor.next_close_copy_byte_demand().unwrap(),cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap()),(copy,capacity,release,depth));
+        }
         observed(permit, || cursor.close_step(permit));
     }
     panic!("create inverse retained an owner or source alias after closure");
@@ -47,7 +62,7 @@ fn history_edit_puzzle2d_owned_create_inverse_preserves_unconditional_literal_in
     for case in corpus["cases"].as_array().unwrap() {
         let payload = CreateNode { node: crate::Puzzle2dNode { id: text(&case["mutation"]["node"]["id"]), text: Some(PagedUtf8::from("irrelevant immutable payload".repeat(6000))), ..Default::default() }, index: case["mutation"]["index"].as_u64().map(|value| value as usize) };
         let original = serde_json::to_value(&payload).unwrap();
-        let mutation = RetainedCloneBorrowAuthority::new("create inverse original native leaf");
+        let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dCreateNodeInverseCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observed(RetainedCloneGrant::default(), || cursor.advance(mutation.borrow(&payload), RetainedCloneGrant::default())).progress(), RetainedCloneProgress::default());
@@ -84,6 +99,7 @@ fn history_edit_puzzle2d_owned_create_inverse_preserves_unconditional_literal_in
             close(&mut cancelled);
             assert!(cancelled.take().is_none());
         }
+        test_source_custody::close(&mut mutation);
         count += 1;
         eprintln!("[DEBUG] Puzzle2d CreateNode inverse {} retained its unconditional DeleteNode intent with ID-only ownership, zero-heap construction and granted cancellation", case["id"].as_str().unwrap());
     }

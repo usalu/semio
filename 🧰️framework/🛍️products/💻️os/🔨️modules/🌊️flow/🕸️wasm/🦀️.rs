@@ -1605,6 +1605,19 @@ impl FlowActionState for FlowAction2514 {
     }
 }
 
+fn dag_input_decode<T>(budget:AbiWorkBudget,operation:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>)->Result<T,FlowFailure>{
+    let mut observe=|progress:semio_framework_value::NativeDecodeProgress|!budget.cancelled&&!budget.interrupted&&budget.deadline_ms.is_none_or(|deadline|budget.now_ms<deadline)&&progress.owned_bytes<=budget.byte_credit;
+    operation(&mut semio_framework_value::NativeDecodeControl::new(budget.byte_credit,&mut observe)).map_err(dag_input_failure)
+}
+fn dag_input_encode<T>(budget:AbiWorkBudget,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,semio_framework_value::ValueError>)->Result<T,FlowFailure>{
+    let mut observe=|progress:semio_framework_value::NativeEncodeProgress|!budget.cancelled&&!budget.interrupted&&budget.deadline_ms.is_none_or(|deadline|budget.now_ms<deadline)&&progress.owned_bytes<=budget.byte_credit;
+    operation(&mut semio_framework_value::NativeEncodeControl::new(budget.byte_credit,&mut observe)).map_err(dag_input_failure)
+}
+fn dag_input_failure(error:semio_framework_value::ValueError)->FlowFailure{
+    let code=match error.kind{semio_framework_value::ValueRefusalKind::Canceled=>AbiErrorCode::Cancelled,semio_framework_value::ValueRefusalKind::OwnershipLimit=>AbiErrorCode::NoCredit,_=>AbiErrorCode::MalformedTag};
+    FlowFailure::new(code,error.to_string())
+}
+
 struct FlowAction2515 {
     program: FlowProgramState,
 }
@@ -1635,7 +1648,8 @@ impl FlowActionState for FlowAction2515 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        domain.host.set_node_statuses_from_json(text(args, "json")?);
+                        let statuses=dag_input_decode(budget,|control|crate::infinite::board::io::text::dag_input::decode_dag_node_statuses_json(text(args,"json").map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?,control))?;
+                        domain.host.set_node_statuses(&statuses);
                         ok()
                     }
                 };
@@ -1864,7 +1878,7 @@ impl FlowActionState for FlowAction2520 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_520),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(domain.host.selection_domains_json().into_bytes()) };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(dag_input_encode(budget,|control|crate::infinite::board::io::text::dag_input::encode_dag_selection_json(&domain.host.selection_domains(),control))?.into_bytes()) };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),
@@ -1981,7 +1995,7 @@ impl FlowActionState for FlowAction2523 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_523),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(domain.host.selected_channels_json().into_bytes()) };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(dag_input_encode(budget,|control|crate::infinite::board::io::text::dag_input::encode_dag_channels_json(&domain.host.selected_channels(),control))?.into_bytes()) };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),
@@ -2073,7 +2087,8 @@ impl FlowActionState for FlowAction2525 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        domain.host.set_selection_json(text(args, "json")?);
+                        let selection=dag_input_decode(budget,|control|crate::infinite::board::io::text::dag_input::decode_dag_selection_json(text(args,"json").map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?,control))?;
+                        domain.host.set_selection_domains(&selection);
                         ok()
                     }
                 };
@@ -2205,7 +2220,8 @@ impl FlowActionState for FlowAction2528 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        domain.host.set_selected_channels_json(text(args, "json")?);
+                        let channels=dag_input_decode(budget,|control|crate::infinite::board::io::text::dag_input::decode_dag_channels_json(text(args,"json").map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?,control))?;
+                        domain.host.set_selected_channels(&channels);
                         ok()
                     }
                 };
@@ -2533,6 +2549,7 @@ impl FlowActionState for FlowAction2536 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.set_slider_value(text(args, "widgetId")?, number(args, "value")?);
+                        domain.host.history_outcome().map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -2616,6 +2633,7 @@ impl FlowActionState for FlowAction2538 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.set_note_text(text(args, "widgetId")?, text(args, "text")?);
+                        domain.host.history_outcome().map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -2880,6 +2898,7 @@ impl FlowActionState for FlowAction2544 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.note_commit_edit();
+                        domain.host.history_outcome().map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -2968,6 +2987,7 @@ impl FlowActionState for FlowAction2546 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.set_image_src(text(args, "widgetId")?, text(args, "src")?);
+                        domain.host.history_outcome().map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -3051,6 +3071,7 @@ impl FlowActionState for FlowAction2548 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.set_variable_name(text(args, "widgetId")?, text(args, "name")?);
+                        domain.host.history_outcome().map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -3095,6 +3116,7 @@ impl FlowActionState for FlowAction2549 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.set_variable_schema(text(args, "widgetId")?, text(args, "schema")?);
+                        domain.host.history_outcome().map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -4358,7 +4380,7 @@ impl FlowActionState for FlowAction2580 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_580),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.reorganize(text(args, "json")?).map(|_| Vec::new()).map_err(domain_error) };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { {let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(text(args,"json")?,&mut decode).map_err(domain_error)?;let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);domain.host.reorganize(&options,&mut control).map(|_|Vec::new()).map_err(domain_error)} };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),
@@ -4647,6 +4669,7 @@ impl FlowActionState for FlowAction2587 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         domain.host.pointer_up_screen(number(args, "sx")?, number(args, "sy")?, boolean(args, "shift")?, boolean(args, "ctrlOrMeta")?, boolean(args, "alt")?);
+                        domain.host.history_outcome().map_err(domain_error)?;
                         Ok(domain.host.take_graph_edits_json().into_bytes())
                     }
                 };

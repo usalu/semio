@@ -18,9 +18,10 @@
   "resources": null,
   "storage": null,
   "environmental": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "environmental-requirement-a",
         "patch": {
@@ -55,8 +56,7 @@
           "verificationPlan": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "humanFactors": null,
   "accessibility": null,

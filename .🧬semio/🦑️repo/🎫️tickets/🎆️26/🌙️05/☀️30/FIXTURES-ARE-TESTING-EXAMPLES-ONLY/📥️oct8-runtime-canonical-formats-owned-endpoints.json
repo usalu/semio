@@ -1,0 +1,101 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
+      "beforeSha256": "3690533367c57d80211db7b8541a7b48a15911313b7180d64a92fda34a166806",
+      "afterSha256": "d64f2bfb9f9f3677aaee39eef4987f711efb09f20cee18129e2adcce56f13314",
+      "action": "updated",
+      "qualification": "canonical domain formats and direct first-party consumers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts",
+      "beforeSha256": "c2fdb2f41d72d62d3bf39882ad0478cfbda41a280dc9ba069e08dd869ef9c139",
+      "afterSha256": "fe72738d2053485b965ab7464eaeb850c33404f09f84aa92083702126cd33fd9",
+      "action": "updated",
+      "qualification": "canonical domain formats and direct first-party consumers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "beforeSha256": "e2fe15b0f0d87e6640df55fde9561f86f376383999e38fbeb26b1c922dfc5ee6",
+      "afterSha256": "1d32831aa393dcb79d4c5b2209e85a6fa085da4784da3c8045ea42289974369b",
+      "action": "updated",
+      "qualification": "canonical domain formats and direct first-party consumers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "beforeSha256": "8cb8e8516e70376545849cc25d9f379bc6610b4c2f7d41dbee89acb2d9315e8b",
+      "afterSha256": "df44a11aa15b40338f5bd00ab603660f0f4965dc27a45a54dde3bb37ef85bc7e",
+      "action": "updated",
+      "qualification": "canonical domain formats and direct first-party consumers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+      "beforeSha256": "6bd3223dfae2b185411fe8167ca3cc5533ed45890dfabf7d9e0bc5bd930808f1",
+      "afterSha256": "b20060d18773df8e7f9d0af0adced279af9f7ef378492a59a53e1fba2c5afe86",
+      "action": "updated",
+      "qualification": "canonical domain formats and direct first-party consumers"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "14712b159dbafabb861671d63cfee384842fa436425357cb2a37fd2a0c40088d",
+      "afterSha256": "e85fc153602fd1eb53cd680f5cd420bf8ec81b00abd5427420239b4d86e2b91c",
+      "action": "updated",
+      "qualification": "Root narrow test branch only in shared private script"
+    }
+  ],
+  "originalDefinitionsPreserved": [
+    "RuntimeGraphEdgeV1",
+    "RuntimeGraphFindingV1",
+    "RuntimeGraphEvidenceV1",
+    "RuntimeDynamicImportOwnerV1",
+    "RuntimeCargoInputDigestV1",
+    "RuntimeCargoBuildScriptV1",
+    "RuntimeBuildResourceObservationV1",
+    "RuntimeCargoBuildResourceSnapshotV1",
+    "RuntimeCargoBuildResourcesV1",
+    "RuntimeCargoInvocationInputV1",
+    "RuntimeCargoDepInfoV1",
+    "RuntimeBrowserArtifactV1",
+    "RuntimeTrunkCompilationV1",
+    "RuntimeTrunkObservationV1",
+    "RuntimeCompilerChecksumV1",
+    "RuntimeCompilerResourceEntryV1",
+    "RuntimeCompilerResourceReadV1",
+    "RuntimeCompilerResourceDirectoryV1",
+    "RuntimeCompilerResourceObservationV1",
+    "RuntimeCompilerResourceOperationV1",
+    "RuntimeResourceReadInputV1",
+    "RuntimeResourceReadOwnerV1",
+    "RuntimeActorCargoSelectionV1"
+  ],
+  "canonicalExports": [
+    "RuntimeGraphEdgeV1",
+    "RuntimeGraphFindingV1",
+    "RuntimeGraphEvidenceV1",
+    "RuntimeDynamicImportOwnerV1",
+    "RuntimeCargoInputDigestV1",
+    "RuntimeCargoBuildScriptV1",
+    "RuntimeBuildResourceObservationV1",
+    "RuntimeCargoBuildResourceSnapshotV1",
+    "RuntimeCargoBuildResourcesV1",
+    "RuntimeCargoInvocationInputV1",
+    "RuntimeCargoDepInfoV1",
+    "RuntimeBrowserArtifactV1",
+    "RuntimeTrunkCompilationV1",
+    "RuntimeTrunkObservationV1",
+    "RuntimeCompilerChecksumV1",
+    "RuntimeCompilerResourceEntryV1",
+    "RuntimeCompilerResourceReadV1",
+    "RuntimeCompilerResourceDirectoryV1",
+    "RuntimeCompilerResourceObservationV1",
+    "RuntimeCompilerResourceOperationV1",
+    "RuntimeResourceReadInputV1",
+    "RuntimeResourceReadOwnerV1",
+    "RuntimeActorCargoSelectionV1",
+    "RuntimeCompilerInputV1",
+    "RuntimeCargoUnitV1",
+    "RuntimeCargoObservationV1",
+    "RuntimeCompilerResourceV1",
+    "RuntimeCargoCompilerResourcesV1"
+  ]
+}

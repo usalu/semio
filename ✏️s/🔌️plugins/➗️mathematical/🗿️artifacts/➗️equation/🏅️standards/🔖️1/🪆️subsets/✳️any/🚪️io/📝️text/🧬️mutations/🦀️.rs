@@ -12,13 +12,12 @@ use crate::schema::mutations::EquationMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient::ChangeCoefficient,
-    geometry::schema::mutations::{insert_point::InsertPoint, move_points::MovePoints, remove_point::RemovePoint, replace_points::ReplacePoints, set_point_positions::{EquationPointPosition, SetPointPositions}},
+    geometry::schema::mutations::{insert_point::InsertPoint, move_points::MovePoints, remove_point::RemovePoint, set_point_positions::{EquationPointPosition, SetPointPositions}},
     graph::schema::mutations::{
         change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode, delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode,
-        move_nodes::MoveNodes, replace_graph::ReplaceGraph, set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
+        move_nodes::MoveNodes, set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
     },
 };
-use crate::{EquationGraph, EquationPoint};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -91,22 +90,6 @@ fn dec_bool(s: &str) -> Result<bool, String> {
         other => Err(format!("bad bool {other:?}")),
     }
 }
-fn enc_points(points: &[EquationPoint]) -> String {
-    format!("[{}]", points.iter().map(|p| format!("{},{}", p.x, p.y)).collect::<Vec<_>>().join(";"))
-}
-fn dec_points(s: &str) -> Result<Vec<EquationPoint>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected bracketed point list, got {s:?}"))?;
-    if inner.is_empty() {
-        return Ok(Vec::new());
-    }
-    inner
-        .split(';')
-        .map(|pair| {
-            let (x, y) = pair.split_once(',').ok_or_else(|| format!("bad point pair {pair:?}"))?;
-            Ok(EquationPoint { x: dec_f64(x)?, y: dec_f64(y)? })
-        })
-        .collect()
-}
 //#endregion 🔖️ScalarCodec
 
 //#region 🔖️Tokenizer
@@ -147,25 +130,13 @@ fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, 
 }
 //#endregion 🔖️Tokenizer
 
-//#region 🔖️GraphCodec
-/// 🕸️ Whole-`EquationGraph` text form (used by `replace-graph`) — a quoted first-party JSON
-/// string (`pack::json::to_json_string`/`from_json_str`, over `EquationGraph`'s own
-/// `ToValue`/`FromValue`) rather than a second handcrafted graph grammar; `enc_str`/`dec_str`'s
-/// backslash/quote escaping round-trips it byte-for-byte.
-pub(crate) fn enc_graph(graph: &EquationGraph) -> String {
-    enc_str(&semio_framework_pack_json::to_json_string(graph))
-}
-pub(crate) fn dec_graph(s: &str) -> Result<EquationGraph, String> {
-    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
-}
-//#endregion 🔖️GraphCodec
+
 
 //#region 🔖️OpText
 fn print_equation_mutation(mutation: &EquationMutation) -> String {
     match mutation {
         EquationMutation::ChangeGraphDirected(p) => format!("change-graph-directed new-directed={}", enc_bool(p.new_directed)),
         EquationMutation::UpdateGraphAlgorithm(p) => format!("update-graph-algorithm new-algorithm={} new-algorithm-seed={}", enc_str(&p.new_algorithm), enc_opt_str(&p.new_algorithm_seed)),
-        EquationMutation::ReplaceGraph(p) => format!("replace-graph graph={}", enc_graph(&p.graph)),
         EquationMutation::CreateNode(p) => format!("create-node id={} label={} x={} y={}{}", enc_str(&p.id), enc_str(&p.label), enc_f64(p.x), enc_f64(p.y), enc_index(p.index)),
         EquationMutation::DeleteNode(p) => format!("delete-node id={}", enc_str(&p.id)),
         EquationMutation::DeleteNodes(p) => format!("delete-nodes ids={}", enc_str(&p.ids.join(","))),
@@ -173,7 +144,6 @@ fn print_equation_mutation(mutation: &EquationMutation) -> String {
         EquationMutation::MoveNode(p) => format!("move-node id={} x={} y={}", enc_str(&p.id), enc_f64(p.x), enc_f64(p.y)),
         EquationMutation::ConnectNodes(p) => format!("connect-nodes id={} source={} target={}{}", enc_str(&p.id), enc_str(&p.source), enc_str(&p.target), enc_index(p.index)),
         EquationMutation::DisconnectNodes(p) => format!("disconnect-nodes id={}", enc_str(&p.id)),
-        EquationMutation::ReplacePoints(p) => format!("replace-points points={}", enc_points(&p.points)),
         EquationMutation::InsertPoint(p) => format!("insert-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
         EquationMutation::RemovePoint(p) => format!("remove-point index={}", enc_usize(p.index)),
         EquationMutation::MovePoints(p) => format!("move-points indices={} dx={} dy={}", enc_str(&semio_framework_pack_json::to_json_string(&p.indices)), enc_f64(p.dx), enc_f64(p.dy)),
@@ -191,7 +161,6 @@ fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
     match keyword {
         "change-graph-directed" => Ok(EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: dec_bool(&arg("new-directed")?)? })),
         "update-graph-algorithm" => Ok(EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: dec_str(&arg("new-algorithm")?)?, new_algorithm_seed: dec_opt_str(&arg("new-algorithm-seed")?)? })),
-        "replace-graph" => Ok(EquationMutation::ReplaceGraph(ReplaceGraph { graph: dec_graph(&arg("graph")?)? })),
         "create-node" => Ok(EquationMutation::CreateNode(CreateNode { id: dec_str(&arg("id")?)?, label: dec_str(&arg("label")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)?, index: args.get("index").map(|value| dec_usize(value)).transpose()? })),
         "delete-node" => Ok(EquationMutation::DeleteNode(DeleteNode { id: dec_str(&arg("id")?)? })),
         "delete-nodes" => Ok(EquationMutation::DeleteNodes(DeleteNodes { ids: dec_str(&arg("ids")?)?.split(',').filter(|s| !s.is_empty()).map(str::to_string).collect() })),
@@ -199,7 +168,6 @@ fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
         "move-node" => Ok(EquationMutation::MoveNode(MoveNode { id: dec_str(&arg("id")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "connect-nodes" => Ok(EquationMutation::ConnectNodes(ConnectNodes { id: dec_str(&arg("id")?)?, source: dec_str(&arg("source")?)?, target: dec_str(&arg("target")?)?, index: args.get("index").map(|value| dec_usize(value)).transpose()? })),
         "disconnect-nodes" => Ok(EquationMutation::DisconnectNodes(DisconnectNodes { id: dec_str(&arg("id")?)? })),
-        "replace-points" => Ok(EquationMutation::ReplacePoints(ReplacePoints { points: dec_points(&arg("points")?)? })),
         "insert-point" => Ok(EquationMutation::InsertPoint(InsertPoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "remove-point" => Ok(EquationMutation::RemovePoint(RemovePoint { index: dec_usize(&arg("index")?)? })),
         "move-points" => Ok(EquationMutation::MovePoints(MovePoints { indices: semio_framework_pack_json::from_json_str(&dec_str(&arg("indices")?)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())?, dx: dec_f64(&arg("dx")?)?, dy: dec_f64(&arg("dy")?)? })),
@@ -239,7 +207,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<EquationMutation> {
     vec![
         EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false }),
         EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "bfs".into(), new_algorithm_seed: Some("a b".into()) }),
-        EquationMutation::ReplaceGraph(ReplaceGraph { graph: EquationGraph::default() }),
         EquationMutation::CreateNode(CreateNode { id: "z".into(), label: "Node Z".into(), x: 1.5, y: -2.5, index: None }),
         EquationMutation::CreateNode(CreateNode { id: "y".into(), label: "Node Y".into(), x: 0.5, y: 2.0, index: Some(1) }),
         EquationMutation::DeleteNode(DeleteNode { id: "a".into() }),
@@ -249,7 +216,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<EquationMutation> {
         EquationMutation::ConnectNodes(ConnectNodes { id: "e9".into(), source: "a".into(), target: "d".into(), index: None }),
         EquationMutation::ConnectNodes(ConnectNodes { id: "e8".into(), source: "b".into(), target: "c".into(), index: Some(0) }),
         EquationMutation::DisconnectNodes(DisconnectNodes { id: "e1".into() }),
-        EquationMutation::ReplacePoints(ReplacePoints { points: vec![EquationPoint { x: 1.0, y: 2.0 }] }),
         EquationMutation::InsertPoint(InsertPoint { index: 0, x: 3.0, y: 4.0 }),
         EquationMutation::RemovePoint(RemovePoint { index: 0 }),
         EquationMutation::MovePoints(MovePoints { indices: vec![0, 2], dx: 7.0, dy: -8.5 }),
@@ -276,8 +242,8 @@ use semio_framework_value::ToValue;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient,
-    geometry::schema::mutations::{insert_point, move_points, remove_point, replace_points, set_point_positions},
-    graph::schema::mutations::{change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes, move_node, move_nodes, replace_graph, set_node_positions, update_graph_algorithm},
+    geometry::schema::mutations::{insert_point, move_points, remove_point, set_point_positions},
+    graph::schema::mutations::{change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes, move_node, move_nodes, set_node_positions, update_graph_algorithm},
 };
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.

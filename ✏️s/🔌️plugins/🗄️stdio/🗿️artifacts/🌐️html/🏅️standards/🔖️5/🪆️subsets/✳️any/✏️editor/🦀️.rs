@@ -1,15 +1,15 @@
 //! ✏️ `html` editor (any) — `ArtifactEditor` surface built on the frozen
 //! `TextWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! Emits the frozen `replace-text` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`); the
-//! window is an explicit draft, so one Apply is ONE edit of the net node leaves the applied text means (design §13.2 of ticket
-//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), never a whole-document replace per delivery.
+//! Reduces the frozen `textEdit` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`), a
+//! dump of the whole snapshot rather than a source buffer, so an Apply is a document load (`Effect::LoadDocument`), never a
+//! mutation: a draft-versus-document diff is not an edit (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::html::modes::edit;
 use crate::editor::html::modes::edit::windows::main;
-use crate::standards::v5::subsets::any::schema::mutations::{insert_node,remove_node,set_attribute,set_comment,set_doctype,set_element_name,set_raw_text,set_text,HtmlMutation};
+use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
 
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot};
+use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -49,7 +49,7 @@ use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum HtmlEditCommand {
-    ReplaceText {
+    LoadText {
         text: String,
     },
     EditSnapshot {
@@ -64,7 +64,7 @@ pub enum HtmlEditCommand {
 impl protocol::OpBinary for HtmlEditCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TextWindowKit`
-    /// mints `replace-text`, but only this editor can reduce it into its own mutation, so it is an
+    /// mints `textEdit`, but only this editor can reduce it into its own document load, so it is an
     /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = HTML_COMMAND_TOOL_IDS;
 
@@ -81,11 +81,11 @@ impl protocol::OpBinary for HtmlEditCommand {
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
 const HTML_KIT_ACTION_ID: &str = "textEdit";
-/// 🧵️ The app-owned retained routes this editor declares: the example switch and `replace-text`.
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `textEdit`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
 /// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
-/// ids. Without the kit verb's row the reactor refused every `replace-text` with
+/// ids. Without the kit verb's row the reactor refused every `textEdit` with
 /// `interactive-job.missing-factory`.
 const HTML_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, HTML_KIT_ACTION_ID];
 const HTML_COMMAND_TOOL_IDS: &[&str] = &[
@@ -99,15 +99,14 @@ const HTML_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
 ];
 const HTML_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.html.tool-command.v1";
-/// 📏️ `replace-text` carries the whole buffer, so the wire bound is the largest document this route
+/// 📏️ `textEdit` carries the whole buffer, so the wire bound is the largest document this route
 /// admits — kept under the guest's 64 KiB contiguous-request ceiling.
 const HTML_RETAINED_RAW_BYTES: usize = 16 * 1_024 * 1_024;
-/// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `replace-text` publishes the artifact
-/// mutation it reduces into, so its only lane is `Artifact`.
+/// 🚦️ The example switch and `textEdit` publish into NO document lane: each hands the host one
+/// `Effect::LoadDocument`, so their only lane is `HostOnly`.
 const HTML_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: HTML_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: HTML_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -137,9 +136,9 @@ fn html_command_from_action(action: &str, args: Option<&semio_framework_value::D
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(HtmlEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        HTML_KIT_ACTION_ID => Ok(HtmlEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
+        HTML_KIT_ACTION_ID => Ok(HtmlEditCommand::LoadText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
         other => {
-            Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)")))
+            Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, textEdit)")))
         }
     }
 }
@@ -148,7 +147,7 @@ fn html_command_from_action(action: &str, args: Option<&semio_framework_value::D
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_command_id(command: &HtmlEditCommand) -> &'static str {
     match command {
-        HtmlEditCommand::ReplaceText { .. } => HTML_KIT_ACTION_ID,
+        HtmlEditCommand::LoadText { .. } => HTML_KIT_ACTION_ID,
         HtmlEditCommand::EditSnapshot { event } => event.action_id(),
         HtmlEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
@@ -160,13 +159,12 @@ fn html_retained_extent(_command: &HtmlEditCommand, _snapshot: &HtmlSnapshot, _i
 }
 
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
-/// its document, `replace-text` (the explicit Apply of the text window's draft) becomes the net node leaves that carry the
-/// committed document to the applied text ([`html_net_mutations`]).
+/// its document, `textEdit` (the explicit Apply of the text window's DSL envelope) hands it the parsed document the same way.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn html_emit(command: &HtmlEditCommand, snapshot: &HtmlSnapshot) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn html_emit(command: &HtmlEditCommand) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        HtmlEditCommand::ReplaceText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-            Ok(next) => Ok(Emit::mutations(semio_s_artifact_stdio_contract::editing::net_leaves_exact(snapshot, &next, html_net_mutations)?)),
+        HtmlEditCommand::LoadText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+            Ok(next) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&next, STDIO_HTML_DOCUMENT_SCHEMA)], ..Default::default() }),
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.invalid-text"), error.to_string())),
         },
         HtmlEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-html-snapshot-edit-routed-to-native-reducer")),
@@ -178,7 +176,7 @@ fn html_emit(command: &HtmlEditCommand, snapshot: &HtmlSnapshot) -> Result<Emit<
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_retained_reduce(
     command: &HtmlEditCommand,
-    snapshot: &HtmlSnapshot,
+    _snapshot: &HtmlSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -186,7 +184,7 @@ fn html_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HtmlEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    html_emit(command, snapshot)
+    html_emit(command)
 }
 
 struct HtmlRetainedCommandJobFactory {
@@ -240,107 +238,6 @@ impl ArtifactOwnedToolJobFactory for HtmlRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = HTML_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedRoutes
-
-//#region 🧮️NetLeaves
-/// 🧮️ The net leaves of one applied text: the node edits that carry `base` to exactly `next`, in application order — a changed
-/// doctype, then a depth-first walk of the tree. A node of the same kind keeps its identity: an element re-names itself, sets
-/// or removes the attributes that changed and walks its children; a text, comment or raw-text node re-sets its text. Children
-/// unchanged at either end of a list stay untouched, surplus children are removed (last first) or inserted, and a child that
-/// changed kind (or whose attribute order the attribute leaves cannot reproduce) is removed and inserted anew. History
-/// therefore edits the node an author changed. Another document schema, or a root the node leaves cannot reach (another node
-/// kind, or a root attribute order the attribute leaves cannot reproduce), answers no leaves and is refused by the exact replay.
-/// The main window's Apply and the document-details editor both commit through here.
-fn html_net_mutations(base: &HtmlSnapshot, next: &HtmlSnapshot) -> Vec<HtmlMutation> {
-    let mut leaves = Vec::new();
-    if base.doctype != next.doctype {
-        leaves.push(HtmlMutation::SetDoctype(set_doctype::SetDoctype { doctype: next.doctype.clone() }));
-    }
-    match base.schema == next.schema && html_net_node(&[], &base.root, &next.root, &mut leaves) {
-        true => leaves,
-        false => Vec::new(),
-    }
-}
-
-/// 🌳️ Pushes the leaves that carry `before` to `after` at `path`; `false` (nothing pushed) when the node must be replaced whole.
-fn html_net_node(path: &[usize], before: &HtmlNode, after: &HtmlNode, leaves: &mut Vec<HtmlMutation>) -> bool {
-    match (before, after) {
-        _ if before == after => true,
-        (HtmlNode::Element { name, attributes, children }, HtmlNode::Element { name: next_name, attributes: next_attributes, children: next_children }) => {
-            let Some(attribute_leaves) = html_net_attributes(path, attributes, next_attributes) else { return false };
-            if name != next_name {
-                leaves.push(HtmlMutation::SetElementName(set_element_name::SetElementName { path: path.to_vec(), name: next_name.clone() }));
-            }
-            leaves.extend(attribute_leaves);
-            html_net_children(path, children, next_children, leaves);
-            true
-        }
-        (HtmlNode::Text { .. }, HtmlNode::Text { text }) => {
-            leaves.push(HtmlMutation::SetText(set_text::SetText { path: path.to_vec(), text: text.clone() }));
-            true
-        }
-        (HtmlNode::Comment { .. }, HtmlNode::Comment { text }) => {
-            leaves.push(HtmlMutation::SetComment(set_comment::SetComment { path: path.to_vec(), text: text.clone() }));
-            true
-        }
-        (HtmlNode::RawText { parent_kind, .. }, HtmlNode::RawText { parent_kind: next_kind, text }) if parent_kind == next_kind => {
-            leaves.push(HtmlMutation::SetRawText(set_raw_text::SetRawText { path: path.to_vec(), text: text.clone() }));
-            true
-        }
-        _ => false,
-    }
-}
-
-/// 🏷️ The `set-attribute` leaves that carry `old` to `new` (removals, then changes and additions in `new` order), or `None` when
-/// applying them in that order would not reproduce `new`'s attribute order.
-fn html_net_attributes(path: &[usize], old: &[HtmlAttr], new: &[HtmlAttr]) -> Option<Vec<HtmlMutation>> {
-    let set = |name: &str, value: Option<Option<String>>| HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: path.to_vec(), name: name.to_string(), value });
-    let mut leaves = Vec::new();
-    let mut reached: Vec<HtmlAttr> = Vec::with_capacity(new.len());
-    for attribute in old {
-        match new.iter().any(|next| next.name == attribute.name) {
-            true => reached.push(attribute.clone()),
-            false => leaves.push(set(&attribute.name, None)),
-        }
-    }
-    for attribute in new {
-        match reached.iter_mut().find(|existing| existing.name == attribute.name) {
-            Some(existing) if existing.value == attribute.value => {}
-            Some(existing) => {
-                leaves.push(set(&attribute.name, Some(attribute.value.clone())));
-                existing.value = attribute.value.clone();
-            }
-            None => {
-                leaves.push(set(&attribute.name, Some(attribute.value.clone())));
-                reached.push(attribute.clone());
-            }
-        }
-    }
-    (reached == new).then_some(leaves)
-}
-
-/// 👪️ The child-list leaves of the element at `path`: unchanged ends kept, paired children walked (or removed and inserted anew
-/// when they changed kind), surplus children removed last first, missing ones inserted.
-fn html_net_children(path: &[usize], old: &[HtmlNode], new: &[HtmlNode], leaves: &mut Vec<HtmlMutation>) {
-    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
-    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
-    let (old_middle, new_middle) = (&old[prefix..old.len() - suffix], &new[prefix..new.len() - suffix]);
-    let paired = old_middle.len().min(new_middle.len());
-    for (offset, (before, after)) in old_middle.iter().zip(new_middle).enumerate() {
-        let index = prefix + offset;
-        let child: Vec<usize> = path.iter().copied().chain(std::iter::once(index)).collect();
-        if !html_net_node(&child, before, after, leaves) {
-            leaves.push(HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: path.to_vec(), index }));
-            leaves.push(HtmlMutation::InsertNode(insert_node::InsertNode { parent: path.to_vec(), index, node: after.clone() }));
-        }
-    }
-    for offset in (paired..old_middle.len()).rev() {
-        leaves.push(HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: path.to_vec(), index: prefix + offset }));
-    }
-    for (offset, node) in new_middle.iter().enumerate().skip(paired) {
-        leaves.push(HtmlMutation::InsertNode(insert_node::InsertNode { parent: path.to_vec(), index: prefix + offset, node: node.clone() }));
-    }
-}
-//#endregion 🧮️NetLeaves
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -522,7 +419,7 @@ impl ArtifactEditor for HtmlEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             HtmlEditCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            _ => html_emit(command, doc.snapshot),
+            _ => html_emit(command),
         }
     }
 
@@ -552,8 +449,11 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for HtmlEdi
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, html_net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::html::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        crate::editor::html::edit_rules::resolve(snapshot, event)
     }
 }
 //#endregion 🔖️Editor

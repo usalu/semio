@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Protocol Cause Retirement Authority",
+  "type": "object",
+  "required": [
+    "maximumItems",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "maximumItems": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "copyBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "capacityBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "releaseBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "depth": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,3 +1,14 @@
-enum DwgMutationKind { SET_VERSION_INFO }
+enum DwgMutationKind { SET_VERSION_INFO SET_DRAWING SET_HEADER SET_CLASSES SET_DEPENDENCIES SET_SUMMARY SET_APPLICATION SET_TEMPLATE SET_AUXILIARY_HEADER SET_REVISION_HISTORY SET_PREVIEW SET_APPLICATION_HISTORY }
 type DwgSetVersionInfoMutation { kind: DwgMutationKind!, version: String!, maintenanceVersion: Int!, codepage: Int! }
-union DwgMutation = DwgSetVersionInfoMutation
+type DwgSetDrawingMutation { kind: DwgMutationKind!, drawing: DwgLogicalDrawing! }
+type DwgSetHeaderMutation { kind: DwgMutationKind!, header: DwgHeaderVariables! }
+type DwgSetClassesMutation { kind: DwgMutationKind!, classes: [DwgClass!]! }
+type DwgSetDependenciesMutation { kind: DwgMutationKind!, dependencies: [DwgDependency!]! }
+type DwgSetSummaryMutation { kind: DwgMutationKind!, summary: DwgSummaryInfo! }
+type DwgSetApplicationMutation { kind: DwgMutationKind!, application: DwgApplicationInfo! }
+type DwgSetTemplateMutation { kind: DwgMutationKind!, template: DwgTemplate! }
+type DwgSetAuxiliaryHeaderMutation { kind: DwgMutationKind!, auxiliaryHeader: DwgAuxiliaryHeader! }
+type DwgSetRevisionHistoryMutation { kind: DwgMutationKind!, revisionHistory: DwgRevisionHistory! }
+type DwgSetPreviewMutation { kind: DwgMutationKind!, preview: DwgIndexedPreview! }
+type DwgSetApplicationHistoryMutation { kind: DwgMutationKind!, applicationHistory: DwgApplicationHistory! }
+union DwgMutation = DwgSetVersionInfoMutation | DwgSetDrawingMutation | DwgSetHeaderMutation | DwgSetClassesMutation | DwgSetDependenciesMutation | DwgSetSummaryMutation | DwgSetApplicationMutation | DwgSetTemplateMutation | DwgSetAuxiliaryHeaderMutation | DwgSetRevisionHistoryMutation | DwgSetPreviewMutation | DwgSetApplicationHistoryMutation

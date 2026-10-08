@@ -989,6 +989,409 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       }
+    },
+    "RuntimeCompilerInputV1": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "reason",
+        "package_id",
+        "features",
+        "target",
+        "profile",
+        "filenames"
+      ],
+      "properties": {
+        "reason": {
+          "const": "compiler-artifact"
+        },
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "manifest_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "name",
+            "src_path",
+            "kind"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "src_path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "test"
+          ],
+          "properties": {
+            "test": {
+              "type": "boolean"
+            }
+          }
+        },
+        "filenames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runtimeTarget": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtimeWorkspace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RuntimeCargoUnitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "observedAtMs",
+        "depInfo",
+        "inputs",
+        "artifacts"
+      ],
+      "properties": {
+        "message": {
+          "$ref": "#/$defs/RuntimeCompilerInputV1"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depInfo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoDepInfoV1"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoInputDigestV1"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "stagedPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stagedSha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeCargoObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "manifest",
+        "cwd",
+        "command",
+        "args",
+        "builtAtMs",
+        "observedAtMs",
+        "status",
+        "cancelled",
+        "units",
+        "buildScripts",
+        "compilerResourceRoot",
+        "compilerResources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "invocationInputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoInvocationInputV1"
+          }
+        },
+        "buildDirectory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "const": "cargo"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "builtAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "const": 0
+        },
+        "cancelled": {
+          "const": false
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoUnitV1"
+          }
+        },
+        "buildScripts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoBuildScriptV1"
+          }
+        },
+        "buildResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoBuildResourcesV1"
+          }
+        },
+        "compilerResourceRoot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "compilerResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoCompilerResourcesV1"
+          }
+        }
+      },
+      "description": "Completed Cargo invocation with verifiable compiler input and artifact custody. Raw ambiguous or missing-digest observations are refused."
+    },
+    "RuntimeCompilerResourceV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RuntimeCompilerResourceReadV1"
+        },
+        {
+          "$ref": "#/$defs/RuntimeCompilerResourceDirectoryV1"
+        }
+      ]
+    },
+    "RuntimeCargoCompilerResourcesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "text",
+        "sha256",
+        "observedAtMs",
+        "producerUnit",
+        "callerUnit",
+        "resources"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "manifest",
+                "source"
+              ],
+              "properties": {
+                "manifest": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caller": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "manifest",
+                "crate",
+                "source"
+              ],
+              "properties": {
+                "manifest": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "crate": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "producerUnit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuntimeCompilerInputV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "callerUnit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuntimeCompilerInputV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "input",
+              "sha256",
+              "outputSha256"
+            ],
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/RuntimeCompilerResourceV1"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "outputSha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "observedEntries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

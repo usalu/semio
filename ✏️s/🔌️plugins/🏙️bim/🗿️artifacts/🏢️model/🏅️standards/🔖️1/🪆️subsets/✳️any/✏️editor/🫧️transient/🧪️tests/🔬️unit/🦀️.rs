@@ -1,5 +1,6 @@
 use super::*;
-use protocol::{OpBinary, OpText};
+use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
+use protocol::{Mutation, OpBinary, OpText};
 use store::{ArtifactDsl, ArtifactPack};
 
 fn busy() -> BimWindowTransient {
@@ -24,3 +25,11 @@ async fn the_mutation_round_trips_through_the_op_codecs() {
     assert_eq!(BimWindowTransientMutation::parse_op(&mutation.print_op()).expect("op text"), mutation);
     assert_eq!(BimWindowTransientMutation::decode_op(&mutation.encode_op().expect("encode")).expect("op binary"), mutation);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn the_diff_names_only_the_fields_that_differ() {
+    let base = BimWindowTransient { engagement_input: "Living".into(), ..BimWindowTransient::default() };
+    let outcome = BimWindowTransientMutation::Snapshot { transient: BimWindowTransient { pointer_generation: 1, ..base.clone() } }.diff(&base);
+    assert_eq!(outcome.diff(), &BimWindowTransientDiff { pointer_generation: Some(1), ..BimWindowTransientDiff::default() });
+}
+

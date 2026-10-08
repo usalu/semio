@@ -5,53 +5,56 @@
   "stakeholders": null,
   "users": null,
   "activities": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "activity-a",
-        "name": "Activity A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "code": "",
-        "category": "",
-        "frequency": null,
-        "duration": null,
-        "intensity": null,
-        "participants": {
-          "unit": ""
-        },
-        "equipmentIds": [],
-        "spaceRequirements": [],
-        "environmentalNeeds": [],
-        "privacyNeeds": [],
-        "accessibilityNeeds": [],
-        "adjacentActivities": [],
-        "sequencing": [],
-        "peakPeriods": [],
-        "workflowSteps": [],
-        "inputs": [],
-        "outputs": [],
-        "userProfileIds": [],
-        "functionIds": [],
-        "performanceIndicators": [],
-        "activityType": "",
-        "locationContext": null,
-        "temporalPattern": null,
-        "supervisionLevel": null
+        "index": 0,
+        "row": {
+          "id": "activity-a",
+          "name": "Activity A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "code": "",
+          "category": "",
+          "frequency": null,
+          "duration": null,
+          "intensity": null,
+          "participants": {
+            "unit": ""
+          },
+          "equipmentIds": [],
+          "spaceRequirements": [],
+          "environmentalNeeds": [],
+          "privacyNeeds": [],
+          "accessibilityNeeds": [],
+          "adjacentActivities": [],
+          "sequencing": [],
+          "peakPeriods": [],
+          "workflowSteps": [],
+          "inputs": [],
+          "outputs": [],
+          "userProfileIds": [],
+          "functionIds": [],
+          "performanceIndicators": [],
+          "activityType": "",
+          "locationContext": null,
+          "temporalPattern": null,
+          "supervisionLevel": null
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "functions": null,
   "elements": null,

@@ -100,9 +100,23 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
+/// 🌉️ Applies one vt conformance mutation through its leaf-owned diff and the base bridge.
+pub mod mutation_bridge {
+    use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+    use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
+
+    /// ▶️ Applies the authoritative leaf diff.
+    pub fn apply_vt_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfVtMutation) -> protocol::MutationOutcome<PdfDiff> {
+        use protocol::Mutation;
+        let outcome = mutation.diff(snapshot);
+        crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_outcome(outcome, snapshot)
+    }
+}
+
 pub mod derived_construction {
     use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-    use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
+    use crate::standards::v1_7::subsets::base::schema::mutations::{InsertPage, PdfMutation, SetInfo};
     use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfOutputIntent, PdfPage, PdfSnapshot};
     use crate::standards::v1_7::subsets::vt::io::check_vt_conformance;
     use semio_framework_diagnostic::Diagnostic;
@@ -126,7 +140,7 @@ use semio_framework_diagnostic::Severity;
             PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![
                 PdfDictEntry { key: "Type".into(), value: PdfObject::Name("OutputIntent".into()) },
                 PdfDictEntry { key: "S".into(), value: PdfObject::Name("GTS_PDFX".into()) },
-                PdfDictEntry { key: "OutputConditionIdentifier".into(), value: PdfObject::Str(output_condition.into_bytes()) },
+                PdfDictEntry { key: "OutputConditionIdentifier".into(), value: PdfObject::Text(output_condition) },
                 PdfDictEntry { key: "DestOutputProfile".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },
             ]) },
             PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".into(), value: PdfObject::Int(3) }], data: profile.clone(), filters: Vec::new() } },
@@ -134,7 +148,9 @@ use semio_framework_diagnostic::Severity;
             PdfIndirectObject { id: ObjRef { num: 10, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry::new("Type",PdfObject::name("DPartRoot")),PdfDictEntry::new("DPartRootNode",PdfObject::Ref(ObjRef { num: 11, gen: 0 }))]) },
             PdfIndirectObject { id: ObjRef { num: 11, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry::new("Type",PdfObject::name("DPart")),PdfDictEntry::new("Parent",PdfObject::Ref(ObjRef { num: 10, gen: 0 })),PdfDictEntry::new("DPM",PdfObject::Dict(Vec::new()))]) },
         ];
+        let profile = { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort}; NativePdfArtifactResources::default().admit("s.stdio.icc",objects[2].value.clone()).expect("seeded native ICC stream") };
         PdfSnapshot {
+            admitted_stream_roles: vec![crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole { identity: crate::standards::v1_7::subsets::base::schema::stream_roles::PdfGraphIdentity { owner: ObjRef {num:3,gen:0}, path: Vec::new() }, dependencies: vec![crate::standards::v1_7::subsets::base::schema::stream_roles::PdfGraphIdentity { owner: ObjRef {num:3,gen:0}, path: Vec::new() }], value: crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleValue::ReferenceBody {reference:profile.clone()} }],
             output_intents: vec![PdfOutputIntent { subtype: "GTS_PDFX".into(), condition_identifier, condition: None, registry_name: None, info: None, profile: Some(profile) }],
             catalog_extra: vec![PdfDictEntry::new("DPartRoot",PdfObject::Ref(ObjRef { num: 10, gen: 0 }))],
             trailer: vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(ObjRef { num: 1, gen: 0 }) }],

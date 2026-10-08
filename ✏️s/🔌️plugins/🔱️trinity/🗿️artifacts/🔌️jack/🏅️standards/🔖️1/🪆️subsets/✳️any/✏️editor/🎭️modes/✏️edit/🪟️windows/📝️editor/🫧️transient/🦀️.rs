@@ -96,9 +96,6 @@ impl protocol::DiffAlgebra<JackEditorWindowTransient> for JackEditorWindowTransi
     fn inverse(&self, base: &JackEditorWindowTransient) -> Self {
         Self { selection: self.selection.as_ref().map(|_| base.selection.clone()) }
     }
-    fn between(base: &JackEditorWindowTransient, other: &JackEditorWindowTransient) -> Self {
-        Self { selection: (base.selection != other.selection).then(|| other.selection.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.selection.is_none()
     }

@@ -7,7 +7,8 @@
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -45,7 +46,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: inverse did not restore the before-snapshot");
@@ -86,9 +87,9 @@ fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed["nodes"].is_null(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: this mutation must never touch the nodes delta");
-    assert_eq!(committed["edges"]["patched"][0]["id"].as_str(), Some("015032e9-67ed-4736-adab-a6e10351079b"), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: the diff must patch exactly the addressed edge");
-    assert!(committed["edges"]["patched"][0]["patch"].is_object(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: a patch entry carries only the changed fields");
-    assert!(committed["edges"]["reordered"].is_null(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: a null index must leave reordered unset");
+    assert_eq!(committed["edges"]["modified"][0]["id"].as_str(), Some("015032e9-67ed-4736-adab-a6e10351079b"), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: the diff must patch exactly the addressed edge");
+    assert!(committed["edges"]["modified"][0]["patch"].is_object(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: a patch entry carries only the changed fields");
+    assert!(committed["edges"]["moved"].as_array().is_some_and(Vec::is_empty), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: this diff moves no row");
     assert!(committed["meta"].is_null(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: this mutation must never touch the document meta");
 }
 

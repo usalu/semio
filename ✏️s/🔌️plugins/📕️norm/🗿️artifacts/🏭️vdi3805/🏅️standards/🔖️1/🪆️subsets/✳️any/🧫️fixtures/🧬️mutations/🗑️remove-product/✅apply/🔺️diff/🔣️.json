@@ -1,25 +1,20 @@
 {
   "manufacturerFile": null,
   "products": {
-    "added": [],
     "removed": [
-      "VLV-50-001"
+      {
+        "id": "VLV-50-001",
+        "index": 0
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "indexEntries": {
-    "added": [],
-    "removed": [
-      "VLV-50-001"
-    ],
-    "modified": [],
-    "order": null
-  },
   "geometry": null,
   "curves": null,
   "limits": null

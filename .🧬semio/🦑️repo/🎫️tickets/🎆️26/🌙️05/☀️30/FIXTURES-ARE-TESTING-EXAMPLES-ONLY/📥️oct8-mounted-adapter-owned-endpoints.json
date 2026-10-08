@@ -1,0 +1,44 @@
+{
+  "scope": "Three exact adapter/private verification/live-seed actions; production domains unchanged",
+  "observedAt": "2026-10-08T18:27:49.410968+00:00",
+  "sources": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "50397a0c247cdb9841ad481ca5d7050c61510e0637480aca3725d2f005567bfb",
+      "action": "forward-genuine-composition-and-reuse-registered-neutral-facet",
+      "afterSha256": "bec7b5ec2240d1e02a19bc002c029f4374754e5206de80d8de91ab9f348cce59"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "8448ce1be5e908f6eb6af81f03656f41f78828405a1d72b5bd0a94a8599e70ed",
+      "action": "register-existing-private-route-mounted-only-facet",
+      "afterSha256": "28c85eead1f1e85eb19809ad097cb706898a6e8b5414e8e3c3aeb651abbf47ec"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "ebc51c00e455cb814b089a93cb5b9e21071c9aca45f1c19600bce1c757392733",
+      "action": "register-existing-private-route-mounted-only-facet",
+      "afterSha256": "ab1b8f4af27f5628c1eba16f07616ccc3a74c3864084b42824e7653431be9dd2"
+    }
+  ],
+  "red": {
+    "nx": 1,
+    "duration": "352ms",
+    "log": "🗑️generated/oct8-mounted-adapter/red.log",
+    "reason": "actual mounted options omit required WGPU config; canonical Ajv refusal"
+  },
+  "qualifiedAttempt": {
+    "session": 64367,
+    "nx": 1,
+    "log": "🗑️generated/oct8-mounted-adapter/green.log",
+    "reason": "mounted four-vector laws passed; unrelated current taxonomy refused old preview test import"
+  },
+  "green": {
+    "session": 43136,
+    "nx": 0,
+    "duration": "733ms",
+    "log": "🗑️generated/oct8-mounted-adapter/green-mounted-only.log"
+  },
+  "actualMountInputPresent": false,
+  "productionCredit": false
+}

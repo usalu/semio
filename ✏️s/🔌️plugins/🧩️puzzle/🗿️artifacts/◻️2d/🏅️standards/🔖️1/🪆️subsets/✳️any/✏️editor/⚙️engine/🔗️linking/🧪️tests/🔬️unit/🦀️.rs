@@ -3,9 +3,9 @@ mod tests {
 
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::{
-        distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction, NodeDescJson, NodeShape, SceneDescriptorJson,
+        distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardHost, EdgeDescriptor, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescriptor, Interaction, NodeDescriptor, NodeShape, SceneDescriptor,
     };
-    use serde_json::json;
+    use semio_framework_pack_json::json;
 
     #[test]
     fn board_host_node_drag_proximity_connect_overlapping_compatible_handles() {
@@ -21,7 +21,7 @@ mod tests {
         h.pointer_move_screen(overlap.x, overlap.y, false, false, false);
         assert!(matches!(h.interaction, Interaction::DragNodes { proximity_pair: Some(_), .. }), "expected proximity preview wire while overlapping compatible nodes");
         h.pointer_up_screen(overlap.x, overlap.y, false, false, false);
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&h.drain_events_json()).expect("release rows");
+        let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
         assert!(!rows.iter().any(|row| row["name"] == "edgeCreate"), "the drop's link rides the gesture record, never a separate edge row: {rows:?}");
         let record = rows.iter().find(|row| row["name"] == "gesture").expect("the release is one gesture record");
         assert_eq!(record["payload"]["proximity"], json!([{ "source": "a:h0", "target": "b:h0" }]), "the record carries the previewed proximity pair: {record}");
@@ -41,7 +41,7 @@ mod tests {
         h.pointer_move_screen(overlap.x, overlap.y, false, false, false);
         assert!(matches!(h.interaction, Interaction::DragNodes { proximity_pair: None, .. }), "connected moving node must not preview node-drag proximity");
         h.pointer_up_screen(overlap.x, overlap.y, false, false, false);
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&h.drain_events_json()).expect("release rows");
+        let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
         let record = rows.iter().find(|row| row["name"] == "gesture").expect("the release is one gesture record");
         assert_eq!(record["payload"]["proximity"], json!([]), "a connected node records no proximity pair: {record}");
     }
@@ -77,7 +77,7 @@ mod tests {
         h.set_size(800, 600, 1.0);
         set_micro_lod(&mut h);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id":"core.rect.bottom","name":"B","color":"#112233","defaultWireKind":"link.w"},
                     {"id":"core.rect.top","name":"T","color":"#112233","defaultWireKind":"link.w"}
@@ -88,9 +88,9 @@ mod tests {
         )
         .unwrap();
         h.set_handle_link_compat_from_json(r#"[{"source":"core.rect.bottom","target":"core.rect.top","specificity":"handle"}]"#).unwrap();
-        let desc = SceneDescriptorJson {
+        let desc = SceneDescriptor {
             nodes: vec![
-                NodeDescJson {
+                NodeDescriptor {
                     id: "a".into(),
                     x: 0.0,
                     y: 100.0,
@@ -110,7 +110,7 @@ mod tests {
                     height: Some(56.0),
                     scale: None,
                 },
-                NodeDescJson {
+                NodeDescriptor {
                     id: "b".into(),
                     x: 0.0,
                     y: 20.0,
@@ -132,7 +132,7 @@ mod tests {
                 },
             ].into(),
             handles: vec![
-                HandleDescJson {
+                HandleDescriptor {
                     id: "a:h0".into(),
                     node_id: "a".into(),
                     angle: std::f64::consts::PI,
@@ -147,7 +147,7 @@ mod tests {
                     locked: None,
                     scale: None,
                 },
-                HandleDescJson {
+                HandleDescriptor {
                     id: "b:h0".into(),
                     node_id: "b".into(),
                     angle: 0.0,
@@ -225,7 +225,7 @@ mod tests {
                 { "id": "e1", "source": "a", "target": "b", "edgeKind": "wires.owns" }
             ]
         });
-        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
         assert_eq!(h.port_mode, GraphPortMode::Normal);
         assert!(h.handles.is_empty());
         assert_eq!(h.edges.len(), 1);
@@ -240,7 +240,7 @@ mod tests {
     fn board_host_ingests_edge_and_node_kind_catalog_visual_fields() {
         let mut h = BoardHost::new_normal();
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "edgeKinds": [
                     {"id":"wires.owns","name":"Owns","color":"#ff0000","stroke":"3","pattern":"dashed","targetTip":"filled-diamond","directed":false},
                     {"id":"wires.is","name":"Is","color":"#00ff00","pattern":"dotted","targetTip":"filled-arrow","directed":false}
@@ -273,9 +273,9 @@ mod tests {
     #[test]
     fn board_host_sync_descriptor_normal_graph_node_id_edges() {
         let mut h = BoardHost::new_normal();
-        let desc = SceneDescriptorJson {
+        let desc = SceneDescriptor {
             nodes: vec![
-                NodeDescJson {
+                NodeDescriptor {
                     id: "a".into(),
                     x: 0.0,
                     y: 0.0,
@@ -295,7 +295,7 @@ mod tests {
                     height: Some(48.0),
                     scale: None,
                 },
-                NodeDescJson {
+                NodeDescriptor {
                     id: "b".into(),
                     x: 120.0,
                     y: 0.0,
@@ -317,7 +317,7 @@ mod tests {
                 },
             ].into(),
             handles: vec![].into(),
-            edges: vec![EdgeDescJson { id: "e1".into(), source: "a".into(), target: "b".into(), edge_kind: Some("wires.owns".into()), source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }].into(),
+            edges: vec![EdgeDescriptor { id: "e1".into(), source: "a".into(), target: "b".into(), edge_kind: Some("wires.owns".into()), source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }].into(),
             wires: vec![].into(),
             regions: vec![],
             selection_exit_highlight_ids: vec![],
@@ -357,7 +357,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
         let _ = h.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -401,7 +401,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
         let _ = h.drain_events_json();
         h.set_selection_ids(&["a".into()]);
         let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
@@ -454,7 +454,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
         let _ = h.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -725,7 +725,7 @@ mod tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [{"id":"slot-a","name":"Slot A","color":"#112233","scale":2.0}],
                 "nodeKinds": [{"id":"kind-a","name":"Kind A","scale":1.5}],
             })
@@ -749,7 +749,7 @@ mod tests {
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [{"id":"parent","name":"P","color":"#112233","defaultWireKind":"flow.wire"}],
                 "wireKinds": [{"id":"flow.wire","name":"W","defaultEdgeKind":"flow.edge"}],
             })
@@ -778,7 +778,7 @@ mod tests {
     fn board_host_kind_catalog_accepts_modern_hsl_handle_colors() {
         let mut h = BoardHost::new();
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id":"space","name":"S","color":"hsl(206 52% 48%)"},
                     {"id":"comma","name":"C","color":"hsl(206, 52%, 48%)"},
@@ -798,7 +798,7 @@ mod tests {
     #[test]
     fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
         let mut h = BoardHost::new();
-        let err = h.set_board_kind_catalogs_from_json(&serde_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
+        let err = h.set_board_kind_catalogs_from_json(&semio_framework_pack_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
         assert!(err.to_string().contains("legacy label"));
     }
 
@@ -808,7 +808,7 @@ mod tests {
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         h.set_board_kind_catalogs_from_json(
-            &serde_json::json!({
+            &semio_framework_pack_json::json!({
                 "handleKinds": [{"id":"parent","name":"P","color":"#112233","defaultWireKind":"flow.wire"}],
                 "wireKinds": [{"id":"flow.wire","name":"W"}],
             })

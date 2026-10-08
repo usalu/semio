@@ -35,9 +35,16 @@ fn portable_coordinates_match_original_production_descriptor_oracle() {
 
 #[test]
 fn child_refuses_sibling_coordinate_and_retains_progress_cancellation() {
-    let mut args = vec!["list-mutations".into(),"s.unowned.sibling".into(),"1".into(),"any".into(),"--maximum-units".into(),"10000000".into(),"--maximum-owned-bytes".into(),"1048576".into(),"--budget-ms".into(),"60000".into()];
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let siblings = fixture["refusedArtifacts"].as_array().unwrap();
+    assert_eq!(siblings.len(), 4);
+    let mut args = vec!["list-mutations".into(),siblings[0].as_str().unwrap().into(),"1".into(),"any".into(),"--maximum-units".into(),"10000000".into(),"--maximum-owned-bytes".into(),"1048576".into(),"--budget-ms".into(),"60000".into()];
     let mut observe = |_| Ok(());
-    assert_eq!(inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &args, &mut observe).unwrap_err(), MutationInventoryError::Coordinate);
+    for sibling in siblings {
+        args[1] = sibling.as_str().unwrap().into();
+        assert_eq!(inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &args, &mut observe).unwrap_err(), MutationInventoryError::Coordinate);
+        println!("[DEBUG] child={} refusedSibling={}", CONTRIBUTIONS[0].coordinate.artifact, args[1]);
+    }
     args[1] = CONTRIBUTIONS[0].coordinate.artifact.into();
     let mut callbacks = 0;
     let mut observe = |_| { callbacks += 1; Err(MutationInventoryError::Cancelled) };

@@ -50,6 +50,32 @@
           "minimum": 0
         }
       }
+    },
+    "Transfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reservedSlot",
+        "items",
+        "depth",
+        "accepted"
+      ],
+      "properties": {
+        "reservedSlot": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

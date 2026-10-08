@@ -73,9 +73,6 @@ impl protocol::DiffAlgebra<Block5dPresence> for Block5dPresenceDiff {
     fn inverse(&self, _base: &Block5dPresence) -> Self {
         Self {}
     }
-    fn between(_base: &Block5dPresence, _other: &Block5dPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

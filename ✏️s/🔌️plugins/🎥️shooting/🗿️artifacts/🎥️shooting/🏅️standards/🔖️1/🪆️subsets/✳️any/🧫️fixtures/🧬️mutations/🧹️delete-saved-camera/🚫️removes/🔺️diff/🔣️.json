@@ -5,7 +5,8 @@
     "edits": [
       {
         "edit": "remove",
-        "id": "cam-close"
+        "id": "cam-close",
+        "index": 1
       }
     ],
     "patched": []

@@ -67,7 +67,7 @@ export function testFlowWindowOwnershipOracle(): void {
   for (const entry of fixture.configMutations) {
     target(fixture.windowInstances, entry.windowId, entry.windowKindId);
     configs[entry.windowId] = applyFlowMainWindowConfigMutation(configs[entry.windowId] ?? fixture.baseConfig, entry.mutation);
-    configOracle[entry.windowId] = applyPatch(structuredClone(configOracle[entry.windowId] ?? fixture.baseConfig), [{ op: "replace", path: "", value: entry.mutation.config }], false, false).newDocument;
+    configOracle[entry.windowId] = applyPatch(structuredClone(configOracle[entry.windowId] ?? fixture.baseConfig), [{ op: "replace", path: `/${entry.mutation.kind.slice(4).replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())}`, value: entry.mutation.value }], false, false).newDocument;
   }
   assert.deepEqual(configs, fixture.expectedConfig);
   assert.deepEqual(configs, configOracle);

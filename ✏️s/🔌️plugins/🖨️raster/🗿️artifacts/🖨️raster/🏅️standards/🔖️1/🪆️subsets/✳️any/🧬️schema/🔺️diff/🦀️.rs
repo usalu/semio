@@ -20,6 +20,9 @@ pub struct RasterDiff {
     pub layers: Option<RasterLayersDelta>,
     #[state(artifact)]
     pub assets: Option<RasterAssetsDelta>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub pixels: Vec<RasterPixelRegion>,
 }
 //#endregion 🔖️Diff
 
@@ -31,42 +34,76 @@ pub struct RasterAssetsDelta {
     pub entries: BTreeMap<String, Option<SemioImageSnapshot>>,
 }
 
-/// 🧩 Identified-collection delta for `layers` — every entry is tree-aware (`parent_id: None` means
-/// the document root) so `create-layer`/`reorder-layers` never fall back to whole-snapshot capture,
-/// even when the target lives inside a nested `Group`.
+/// 🖌️ One rectangle of pixel samples written into the image a layer (or its mask) shows: `width × height` RGBA8 samples,
+/// row-major, at `(x, y)` of the target image. Applying it files the rewritten image as a new content-addressed asset and
+/// repoints the layer — the handle is derived by the applier from the applied pixels, never carried by the diff.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct RasterPixelRegion {
+    pub layer_id: String,
+    pub target: String,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub samples: Vec<u8>,
+}
+
+/// 🧩 Positional delta for the layer TREE (the shape of `protocol::list_delta`, addressed per container): `removed` rows carry
+/// their BASE address, `inserted` rows their AFTER address, `moved` rows both (a move may cross containers); `parent_id: None`
+/// means the document root. No order list and no anchor is ever carried; every index is a coordinate of the base or of the after
+/// child list of its parent.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct RasterLayersDelta {
-    pub added: Vec<RasterLayerInsertion>,
-    pub removed: Vec<String>,
-    pub patched: Vec<RasterLayerPatchEntry>,
-    pub moved: Vec<RasterLayerMove>,
+    pub removed: Vec<RasterLayerRemoval>,
+    pub inserted: Vec<RasterLayerInsertion>,
+    pub moved: Vec<RasterLayerRelocation>,
+    pub modified: Vec<RasterLayerModification>,
 }
 
-/// ➕ One inserted layer (`create-layer`) — carries its own tree address so insertion into a nested
-/// `Group` is expressible sparsely.
+/// 📍️ A position in the layer tree: the child list of `parent_id` (the root list when absent) at `index`.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct RasterLayerAddress {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    pub index: usize,
+}
+
+/// ➖️ One removed layer subtree and the BASE address the inverse reinserts it at.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct RasterLayerRemoval {
+    pub id: String,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    pub index: usize,
+}
+
+/// ➕ One inserted layer subtree (`create-layer`) and its AFTER address.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct RasterLayerInsertion {
+    #[value(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub index: usize,
     pub layer: RasterLayerNode,
 }
 
-/// 🔀 One repositioned layer (`reorder-layers`) — remove-then-insert at a tree address, never a
-/// flat top-level-only reorder.
+/// ↕️ One repositioned layer subtree (`reorder-layers`): its BASE address and its AFTER address — the layer itself is never carried.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct RasterLayerMove {
+pub struct RasterLayerRelocation {
     pub id: String,
-    pub parent_id: Option<String>,
-    pub index: usize,
+    pub from: RasterLayerAddress,
+    pub to: RasterLayerAddress,
 }
 
-/// 🩹 One patched layer entry.
+/// 🩹 One modified layer entry.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct RasterLayerPatchEntry {
+pub struct RasterLayerModification {
     pub id: String,
     pub patch: RasterLayerPatch,
 }
@@ -90,67 +127,6 @@ pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str
         }
     }
     None
-}
-
-/// 🔀 The MOVE phase's insert: the node was just lifted out of the tree, so the valid positions are
-/// `0..=len` of the container it lands in, and a request past the end means "last". A move's index
-/// was validated against the tree ITS diff was built from; once `absorb` coalesces that move with a
-/// later removal of a sibling, the same relative position is simply one slot shorter, and refusing it
-/// as `mutation.apply.invalid-index` broke `absorb(d1, d2).apply(base) == d2.apply(d1.apply(base))`
-/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). An UNKNOWN parent is still refused — only
-/// the index saturates, never the address.
-pub fn reposition_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
-    match parent_id {
-        None => {
-            let position = index.min(layers.len());
-            layers.insert(position, layer);
-            true
-        }
-        Some(parent_id) => {
-            for node in layers.iter_mut() {
-                if let RasterLayerNode::Group { id, children, .. } = node {
-                    if id == parent_id {
-                        let position = index.min(children.len());
-                        children.insert(position, layer);
-                        return true;
-                    }
-                    if reposition_layer(children, Some(parent_id), index, layer.clone()) {
-                        return true;
-                    }
-                }
-            }
-            false
-        }
-    }
-}
-
-pub fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
-    match parent_id {
-        None => {
-            if index > layers.len() {
-                return false;
-            }
-            layers.insert(index, layer);
-            true
-        }
-        Some(parent_id) => {
-            for node in layers.iter_mut() {
-                if let RasterLayerNode::Group { id, children, .. } = node {
-                    if id == parent_id {
-                        if index > children.len() {
-                            return false;
-                        }
-                        children.insert(index, layer);
-                        return true;
-                    }
-                    if insert_layer(children, Some(parent_id), index, layer.clone()) {
-                        return true;
-                    }
-                }
-            }
-            false
-        }
-    }
 }
 
 fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
@@ -310,78 +286,185 @@ pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patc
     None
 }
 
+/// 📍️ The child list of `parent_id` (the root list when absent).
+fn container_of<'a>(layers: &'a [RasterLayerNode], parent_id: Option<&str>) -> Option<&'a [RasterLayerNode]> {
+    let Some(parent_id) = parent_id else { return Some(layers) };
+    layers.iter().find_map(|layer| match layer {
+        RasterLayerNode::Group { id, children, .. } if id.as_str() == parent_id => Some(children.as_slice()),
+        RasterLayerNode::Group { children, .. } => container_of(children, Some(parent_id)),
+        _ => None,
+    })
+}
+
+fn container_mut<'a>(layers: &'a mut Vec<RasterLayerNode>, parent_id: Option<&str>) -> Option<&'a mut Vec<RasterLayerNode>> {
+    let Some(parent_id) = parent_id else { return Some(layers) };
+    for layer in layers.iter_mut() {
+        if let RasterLayerNode::Group { id, children, .. } = layer {
+            if id.as_str() == parent_id {
+                return Some(children);
+            }
+            if let Some(found) = container_mut(children, Some(parent_id)) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// 🧮️ Checks that `entering` rows fit the after list of a child list that keeps `survivors` rows: every after index lies inside it,
+/// no two rows take one slot.
+fn check_slots(survivors: usize, entering: &[(usize, RasterLayerNode)]) -> protocol::MutationApplyResult<()> {
+    let after = survivors + entering.len();
+    for (index, (at, _)) in entering.iter().enumerate() {
+        if *at >= after {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "entering layer lies past the end of the after list").at(["inserted".to_string(), index.to_string()]));
+        }
+        if entering[..index].iter().any(|(prior, _)| prior == at) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "two layers take the same after index").at(["inserted".to_string(), index.to_string()]));
+        }
+    }
+    Ok(())
+}
+
+/// 🧩 Rebuilds one child list: the entering rows take their after index, the surviving rows fill the free slots in order. The
+/// rows were validated by [`check_slots`].
+fn place_entering(children: &mut Vec<RasterLayerNode>, entering: Vec<(usize, RasterLayerNode)>) {
+    let survivors = std::mem::take(children);
+    let mut slots: Vec<Option<RasterLayerNode>> = (0..survivors.len() + entering.len()).map(|_| None).collect();
+    for (at, node) in entering {
+        slots[at] = Some(node);
+    }
+    let mut rest = survivors.into_iter();
+    for slot in slots.iter_mut().filter(|slot| slot.is_none()) {
+        *slot = rest.next();
+    }
+    *children = slots.into_iter().flatten().collect();
+}
+
+/// 🧩 Applies a positional layer delta to a layer tree: leaving rows (removed and moved) are checked at their base address and
+/// lifted out, then every container with entering rows (inserted and moved) is rebuilt slot by slot — entering rows take their
+/// after index, surviving siblings fill the remaining slots in order — and the patches write last.
 pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta) -> protocol::MutationApplyResult<Vec<RasterLayerNode>> {
-    let mut removed = std::collections::BTreeSet::new();
-    for (index, id) in delta.removed.iter().enumerate() {
-        if !removed.insert(id.as_str()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed more than once").at(["removed".to_string(), index.to_string()]));
+    let at_base = |parent: &Option<String>, index: usize, id: &str| container_of(layers, parent.as_deref()).and_then(|children| children.get(index)).is_some_and(|node| layer_node_id(node) == id);
+    let mut leaving: Vec<&str> = Vec::new();
+    for (index, row) in delta.removed.iter().enumerate() {
+        if !at_base(&row.parent_id, row.index, &row.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer is not at its base address").at(["removed".to_string(), index.to_string()]));
         }
-        if find_layer(layers, id).is_none() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist").at(["removed".to_string(), index.to_string()]));
+        if leaving.contains(&row.id.as_str()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed or moved more than once").at(["removed".to_string(), index.to_string()]));
+        }
+        leaving.push(&row.id);
+    }
+    for (index, row) in delta.moved.iter().enumerate() {
+        if !at_base(&row.from.parent_id, row.from.index, &row.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer is not at its base address").at(["moved".to_string(), index.to_string()]));
+        }
+        if leaving.contains(&row.id.as_str()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed or moved more than once").at(["moved".to_string(), index.to_string()]));
+        }
+        leaving.push(&row.id);
+        let node = find_layer(layers, &row.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer does not exist").at(["moved".to_string(), index.to_string()]))?;
+        if row.to.parent_id.as_deref().is_some_and(|parent_id| contains_layer(node, parent_id)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer cannot be moved beneath itself").at(["moved".to_string(), index.to_string(), "to".to_string()]));
         }
     }
-    let mut patched = std::collections::BTreeSet::new();
-    for (index, entry) in delta.patched.iter().enumerate() {
-        if !patched.insert(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is patched more than once").at(["patched".to_string(), index.to_string()]));
+    let mut modified = std::collections::BTreeSet::new();
+    for (index, entry) in delta.modified.iter().enumerate() {
+        if !modified.insert(entry.id.as_str()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is modified more than once").at(["modified".to_string(), index.to_string()]));
         }
-        if removed.contains(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
+        if delta.removed.iter().any(|row| row.id == entry.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and modified").at(["modified".to_string(), index.to_string()]));
         }
-        let node = find_layer(layers, &entry.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist").at(["patched".to_string(), index.to_string()]))?;
-        validate_layer_patch(node, &entry.patch).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+        let node = find_layer(layers, &entry.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "modified layer does not exist").at(["modified".to_string(), index.to_string()]))?;
+        validate_layer_patch(node, &entry.patch).map_err(|error| error.under(["modified".to_string(), index.to_string()]))?;
     }
-    let mut moved = std::collections::BTreeSet::new();
-    for (index, entry) in delta.moved.iter().enumerate() {
-        if !moved.insert(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is moved more than once").at(["moved".to_string(), index.to_string()]));
-        }
-        if removed.contains(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and moved").at(["moved".to_string(), index.to_string()]));
-        }
-        let node = find_layer(layers, &entry.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer does not exist").at(["moved".to_string(), index.to_string()]))?;
-        if entry.parent_id.as_deref().is_some_and(|parent_id| contains_layer(node, parent_id)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer cannot be moved beneath itself").at(["moved".to_string(), index.to_string(), "parentId".to_string()]));
+    let mut identities: std::collections::BTreeSet<String> = flatten_raster_layers(layers).into_iter().map(|node| layer_node_id(node).to_string()).collect();
+    for row in &delta.removed {
+        for id in find_layer(layers, &row.id).map(subtree_ids_of).unwrap_or_default() {
+            identities.remove(&id);
         }
     }
-    let mut identities: std::collections::BTreeSet<String> = crate::standards::v1::subsets::any::schema::flatten_raster_layers(layers).into_iter().map(|node| layer_node_id(node).to_string()).collect();
-    for id in &delta.removed {
-        identities.remove(id);
-    }
-    for (index, insertion) in delta.added.iter().enumerate() {
-        let id = layer_node_id(&insertion.layer);
-        if !identities.insert(id.to_string()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added layer identity already exists").at(["added".to_string(), index.to_string()]));
+    for (index, insertion) in delta.inserted.iter().enumerate() {
+        if !identities.insert(layer_node_id(&insertion.layer).to_string()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "inserted layer identity already exists").at(["inserted".to_string(), index.to_string()]));
         }
     }
     let mut next = layers.to_vec();
-    for id in &delta.removed {
-        let removed = remove_layer_from_tree(&mut next, id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist after structural edits").at(["removed", id.as_str()]))?;
-        crate::retire_raster_layer(removed);
-    }
-    for (index, entry) in delta.patched.iter().enumerate() {
-        apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
-    }
-    for (index, mv) in delta.moved.iter().enumerate() {
-        let node = remove_layer_from_tree(&mut next, &mv.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer does not exist after structural edits").at(["moved".to_string(), index.to_string()]))?;
-        if !reposition_layer(&mut next, mv.parent_id.as_deref(), mv.index, node) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "moved layer parent or index is invalid").at(["moved".to_string(), index.to_string()]));
+    for row in &delta.removed {
+        if let Some(removed) = remove_layer_from_tree(&mut next, &row.id) {
+            crate::retire_raster_layer(removed);
         }
     }
-    for (index, insertion) in delta.added.iter().enumerate() {
-        if !insert_layer(&mut next, insertion.parent_id.as_deref(), insertion.index, insertion.layer.clone()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "added layer parent or index is invalid").at(["added".to_string(), index.to_string()]));
+    let mut pending: Vec<(Option<String>, Vec<(usize, RasterLayerNode)>)> = Vec::new();
+    for (index, row) in delta.moved.iter().enumerate() {
+        let Some(node) = remove_layer_from_tree(&mut next, &row.id) else {
+            retire_pending(pending, next);
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer was removed with an ancestor").at(["moved".to_string(), index.to_string()]));
+        };
+        enter(&mut pending, &row.to.parent_id, row.to.index, node);
+    }
+    for insertion in &delta.inserted {
+        enter(&mut pending, &insertion.parent_id, insertion.index, insertion.layer.clone());
+    }
+    while !pending.is_empty() {
+        let before = pending.len();
+        let mut waiting = Vec::new();
+        let mut batch = std::mem::take(&mut pending).into_iter();
+        while let Some((parent, rows)) = batch.next() {
+            match container_mut(&mut next, parent.as_deref()) {
+                Some(children) => match check_slots(children.len(), &rows) {
+                    Ok(()) => place_entering(children, rows),
+                    Err(error) => {
+                        crate::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect());
+                        retire_pending(batch.collect(), Vec::new());
+                        retire_pending(waiting, next);
+                        return Err(error);
+                    }
+                },
+                None => waiting.push((parent, rows)),
+            }
+        }
+        if waiting.len() == before {
+            retire_pending(waiting, next);
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "an entering layer's parent group does not exist").at(["inserted"]));
+        }
+        pending = waiting;
+    }
+    for (index, entry) in delta.modified.iter().enumerate() {
+        if let Err(error) = apply_layer_patch_entry(&mut next, entry) {
+            crate::retire_raster_layers(next);
+            return Err(error.under(["modified".to_string(), index.to_string()]));
         }
     }
-    let next_ids: Vec<_> = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&next).into_iter().map(layer_node_id).collect();
+    let next_ids: Vec<_> = flatten_raster_layers(&next).into_iter().map(layer_node_id).collect();
     if next_ids.iter().enumerate().any(|(index, id)| next_ids[..index].contains(id)) {
+        drop(next_ids);
+        crate::retire_raster_layers(next);
         return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting layer tree contains duplicate identities").at(["identities"]));
     }
     Ok(next)
 }
 
-fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerPatchEntry) -> protocol::MutationApplyResult<()> {
-    patch_layer_in_tree(layers, &entry.id, &entry.patch).map(|_| ()).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist"))
+/// ➡️ Files `node` as an entering row of the container `parent`.
+fn enter(pending: &mut Vec<(Option<String>, Vec<(usize, RasterLayerNode)>)>, parent: &Option<String>, index: usize, node: RasterLayerNode) {
+    match pending.iter_mut().find(|(container, _)| container == parent) {
+        Some((_, rows)) => rows.push((index, node)),
+        None => pending.push((parent.clone(), vec![(index, node)])),
+    }
+}
+
+/// 🫧 Closes the owners a refused apply still holds.
+fn retire_pending(pending: Vec<(Option<String>, Vec<(usize, RasterLayerNode)>)>, tree: Vec<RasterLayerNode>) {
+    for (_, rows) in pending {
+        crate::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect());
+    }
+    crate::retire_raster_layers(tree);
+}
+
+fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerModification) -> protocol::MutationApplyResult<()> {
+    patch_layer_in_tree(layers, &entry.id, &entry.patch).map(|_| ()).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "modified layer does not exist"))
 }
 
 fn validate_assets_delta<T>(assets: &crate::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
@@ -405,7 +488,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
     /// document (🖨️raster's redo clause, measured 2026-09-20). Asset REMOVAL is not retained either:
     /// the map hands back its exact `(key, child)` pair and the emptied page backing is released
     /// explicitly, so the history arithmetic can undo and redo `remove-layer-asset` like any verb.
-    fn apply(&self, snapshot: &RasterSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterSnapshot> {
+    fn apply(&self, snapshot: &RasterSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterSnapshot> {
         Ok({
             if let Some(assets) = &self.assets {
                 validate_assets_delta(&snapshot.assets, assets).map_err(|error| error.under(["assets"]))?;
@@ -457,6 +540,19 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                     page.release();
                 }
             }
+            for region in &self.pixels {
+                let displaced = next;
+                match apply_pixel_region(&displaced, region, capability) {
+                    Ok(applied) => {
+                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(displaced);
+                        next = applied;
+                    }
+                    Err(error) => {
+                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(displaced);
+                        return Err(error.under(["pixels"]));
+                    }
+                }
+            }
             next
         })
     }
@@ -483,12 +579,13 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             (None, Some(src)) => self.assets = Some(src),
             _ => {}
         }
+        self.pixels.extend(other.pixels);
     }
 
     fn retire_cold(self) {
-        let RasterDiff { schema: _, id: _, title: _, layers, assets: _ } = self;
+        let RasterDiff { schema: _, id: _, title: _, layers, assets: _, pixels: _ } = self;
         if let Some(layers) = layers {
-            for insertion in layers.added {
+            for insertion in layers.inserted {
                 crate::retire_raster_layer(insertion.layer);
             }
         }
@@ -498,6 +595,45 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
         crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(projection);
     }
 }
+
+//#region 🔖️PixelRegions
+/// 🖌️ Applies one pixel region: the target image is rewritten in that rectangle, filed as a new content-addressed asset and
+/// the layer (or its mask) repointed — the derived handle is minted here, from the applied pixels.
+fn apply_pixel_region(snapshot: &RasterSnapshot, region: &RasterPixelRegion, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterSnapshot> {
+    use crate::mutations::paint_stroke::{canvas, painted, painted_diff, Refusal};
+    let refuse = |refusal: Refusal| match refusal {
+        Refusal::Error(code, message) | Refusal::Fatal(code, message) => protocol::MutationApplyError::new(code, message),
+    };
+    let target = canvas(&region.layer_id, &region.target, snapshot).map_err(refuse)?;
+    let (width, height) = (target.source.width, target.source.height);
+    let Some(frame) = target.source.frames.first() else {
+        return Err(protocol::MutationApplyError::new("mutation.apply.image-invalid", "The target image has no frame."));
+    };
+    let fits = region.width > 0
+        && region.height > 0
+        && region.x.checked_add(region.width).is_some_and(|end| end <= width)
+        && region.y.checked_add(region.height).is_some_and(|end| end <= height)
+        && region.samples.len() == (region.width as usize) * (region.height as usize) * 4;
+    if !fits {
+        return Err(protocol::MutationApplyError::new("mutation.apply.invalid-region", "The pixel region lies outside the image or carries the wrong sample count."));
+    }
+    let mut pixels = frame.rgba8.clone();
+    let row_bytes = (region.width as usize) * 4;
+    for row in 0..region.height as usize {
+        let at = ((region.y as usize + row) * width as usize + region.x as usize) * 4;
+        pixels[at..at + row_bytes].copy_from_slice(&region.samples[row * row_bytes..(row + 1) * row_bytes]);
+    }
+    let filed = painted(target, pixels, &region.layer_id);
+    let (diff, messages) = painted_diff(filed, snapshot, &region.layer_id, &region.target, None).into_parts();
+    if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
+        MutationDiff::<RasterSnapshot>::retire_cold(diff);
+        return Err(protocol::MutationApplyError::new("mutation.apply.capacity", "The rewritten image cannot be filed in the asset pool."));
+    }
+    let applied = MutationDiff::apply(&diff, snapshot, capability);
+    MutationDiff::<RasterSnapshot>::retire_cold(diff);
+    applied
+}
+//#endregion 🔖️PixelRegions
 
 //#region 🔖️Algebra
 struct IdNode {
@@ -521,34 +657,7 @@ fn id_address(forest: &[IdNode], target: &str, parent: Option<&str>) -> Option<(
     None
 }
 
-fn id_take(forest: &mut Vec<IdNode>, target: &str) -> Option<IdNode> {
-    if let Some(index) = forest.iter().position(|node| node.id == target) {
-        return Some(forest.remove(index));
-    }
-    forest.iter_mut().find_map(|node| id_take(&mut node.children, target))
-}
 
-fn id_put(forest: &mut Vec<IdNode>, parent: Option<&str>, index: usize, node: IdNode) {
-    match parent {
-        None => forest.insert(index.min(forest.len()), node),
-        Some(parent) => {
-            fn find<'a>(forest: &'a mut Vec<IdNode>, parent: &str) -> Option<&'a mut Vec<IdNode>> {
-                for candidate in forest.iter_mut() {
-                    if candidate.id == parent {
-                        return Some(&mut candidate.children);
-                    }
-                    if let Some(found) = find(&mut candidate.children, parent) {
-                        return Some(found);
-                    }
-                }
-                None
-            }
-            if let Some(children) = find(forest, parent) {
-                children.insert(index.min(children.len()), node);
-            }
-        }
-    }
-}
 
 fn id_ancestors(forest: &[IdNode], target: &str) -> Vec<String> {
     let mut chain = Vec::new();
@@ -558,15 +667,6 @@ fn id_ancestors(forest: &[IdNode], target: &str) -> Vec<String> {
         cursor = parent;
     }
     chain
-}
-
-fn subtree_ids(layer: &RasterLayerNode, into: &mut std::collections::BTreeSet<String>) {
-    into.insert(layer_node_id(layer).to_string());
-    if let RasterLayerNode::Group { children, .. } = layer {
-        for child in children {
-            subtree_ids(child, into);
-        }
-    }
 }
 
 /// 🔁️ The patch that restores exactly the fields `patch` writes, read from the BASE `node` without mutating it — the same
@@ -624,151 +724,41 @@ fn inverse_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> Rast
     inverse
 }
 
-fn inverse_layers(delta: &RasterLayersDelta, base: &[RasterLayerNode]) -> RasterLayersDelta {
-    let mut forest = id_forest(base);
-    let mut restored: Vec<(Option<String>, usize, String)> = Vec::new();
-    for id in &delta.removed {
-        let Some((parent, index)) = id_address(&forest, id, None) else { continue };
-        if id_ancestors(&forest, id).iter().any(|ancestor| delta.removed.contains(ancestor)) {
-            continue;
-        }
-        restored.push((parent, index, id.clone()));
-    }
-    restored.sort_by(|left, right| (&left.0, left.1).cmp(&(&right.0, right.1)));
-    let added = restored.into_iter().filter_map(|(parent_id, index, id)| find_layer(base, &id).map(|layer| RasterLayerInsertion { parent_id, index, layer: layer.clone() })).collect();
-    for id in &delta.removed {
-        id_take(&mut forest, id);
-    }
-    let mut undo = Vec::new();
-    for movement in &delta.moved {
-        let Some((parent_id, index)) = id_address(&forest, &movement.id, None) else { continue };
-        undo.push(RasterLayerMove { id: movement.id.clone(), parent_id, index });
-        if let Some(node) = id_take(&mut forest, &movement.id) {
-            id_put(&mut forest, movement.parent_id.as_deref(), movement.index, node);
-        }
-    }
-    undo.reverse();
-    let mut inserted = std::collections::BTreeSet::new();
-    for insertion in &delta.added {
-        subtree_ids(&insertion.layer, &mut inserted);
-    }
-    let removed = delta.added.iter().filter(|insertion| insertion.parent_id.as_ref().is_none_or(|parent| !inserted.contains(parent))).map(|insertion| layer_node_id(&insertion.layer).to_string()).collect();
-    let patched = delta.patched.iter().filter_map(|entry| find_layer(base, &entry.id).map(|node| RasterLayerPatchEntry { id: entry.id.clone(), patch: inverse_layer_patch(node, &entry.patch) })).collect();
-    RasterLayersDelta { added, removed, patched, moved: undo }
-}
-
-fn layer_patch_between(base: &RasterLayerNode, other: &RasterLayerNode) -> Option<RasterLayerPatch> {
-    let mut patch = RasterLayerPatch::default();
-    match (base, other) {
-        (
-            RasterLayerNode::Pixel { name: base_name, visible: base_visible, locked: base_locked, opacity: base_opacity, blend_mode: base_blend, transform: base_transform, mask: base_mask, width: base_width, height: base_height, image_key: base_image, .. },
-            RasterLayerNode::Pixel { name, visible, locked, opacity, blend_mode, transform, mask, width, height, image_key, .. },
-        ) => {
-            patch.name = (base_name != name).then(|| name.clone());
-            patch.visible = (base_visible != visible).then_some(*visible);
-            patch.locked = (base_locked != locked).then_some(*locked);
-            patch.opacity = (base_opacity != opacity).then_some(*opacity);
-            patch.blend_mode = (base_blend != blend_mode).then(|| blend_mode.clone());
-            patch.transform = (base_transform != transform).then(|| transform.clone());
-            patch.mask_content = (base_mask != mask).then(|| crate::RasterMaskContent { mask: mask.clone() });
-            patch.pixel_content = (base_width != width || base_height != height || base_image != image_key).then(|| crate::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
-        }
-        (
-            RasterLayerNode::Group { name: base_name, visible: base_visible, locked: base_locked, opacity: base_opacity, blend_mode: base_blend, transform: base_transform, mask: base_mask, .. },
-            RasterLayerNode::Group { name, visible, locked, opacity, blend_mode, transform, mask, .. },
-        ) => {
-            patch.name = (base_name != name).then(|| name.clone());
-            patch.visible = (base_visible != visible).then_some(*visible);
-            patch.locked = (base_locked != locked).then_some(*locked);
-            patch.opacity = (base_opacity != opacity).then_some(*opacity);
-            patch.blend_mode = (base_blend != blend_mode).then(|| blend_mode.clone());
-            patch.transform = (base_transform != transform).then(|| transform.clone());
-            patch.mask_content = (base_mask != mask).then(|| crate::RasterMaskContent { mask: mask.clone() });
-        }
-        (
-            RasterLayerNode::Adjustment { name: base_name, visible: base_visible, locked: base_locked, opacity: base_opacity, blend_mode: base_blend, transform: base_transform, adjustment_kind: base_kind, params: base_params, .. },
-            RasterLayerNode::Adjustment { name, visible, locked, opacity, blend_mode, transform, adjustment_kind, params, .. },
-        ) => {
-            if base_transform != transform || base_params != params {
-                return None;
-            }
-            patch.name = (base_name != name).then(|| name.clone());
-            patch.visible = (base_visible != visible).then_some(*visible);
-            patch.locked = (base_locked != locked).then_some(*locked);
-            patch.opacity = (base_opacity != opacity).then_some(*opacity);
-            patch.blend_mode = (base_blend != blend_mode).then(|| blend_mode.clone());
-            patch.adjustment_kind = (base_kind != adjustment_kind).then(|| adjustment_kind.clone());
-        }
-        _ => return None,
-    }
-    Some(patch)
-}
-
-fn layers_between(base: &[RasterLayerNode], other: &[RasterLayerNode]) -> RasterLayersDelta {
-    let (base_flat, other_flat) = (flatten_raster_layers(base), flatten_raster_layers(other));
-    let base_forest = id_forest(base);
-    let other_forest = id_forest(other);
-    let base_ids: std::collections::BTreeSet<&str> = base_flat.iter().map(|node| layer_node_id(node)).collect();
-    let other_ids: std::collections::BTreeSet<&str> = other_flat.iter().map(|node| layer_node_id(node)).collect();
-    let coarse = || RasterLayersDelta {
-        removed: base.iter().map(|layer| layer_node_id(layer).to_string()).collect(),
-        added: other.iter().enumerate().map(|(index, layer)| RasterLayerInsertion { parent_id: None, index, layer: layer.clone() }).collect(),
-        ..Default::default()
+fn subtree_ids_of(layer: &RasterLayerNode) -> std::collections::BTreeSet<String> {
+    let nested: std::collections::BTreeSet<String> = match layer {
+        RasterLayerNode::Group { children, .. } => children.iter().flat_map(subtree_ids_of).collect(),
+        _ => std::collections::BTreeSet::new(),
     };
-    let removed_roots: Vec<&str> = base_ids.iter().copied().filter(|id| !other_ids.contains(id) && !id_ancestors(&base_forest, id).iter().any(|ancestor| !other_ids.contains(ancestor.as_str()))).collect();
-    let added_roots: Vec<&str> = other_ids.iter().copied().filter(|id| !base_ids.contains(id) && !id_ancestors(&other_forest, id).iter().any(|ancestor| !base_ids.contains(ancestor.as_str()))).collect();
-    let mut delta = RasterLayersDelta::default();
-    for node in &other_flat {
-        let id = layer_node_id(node);
-        let Some(source) = find_layer(base, id) else { continue };
-        if id_ancestors(&base_forest, id).iter().any(|ancestor| !other_ids.contains(ancestor.as_str())) || id_ancestors(&other_forest, id).iter().any(|ancestor| !base_ids.contains(ancestor.as_str())) {
-            return coarse();
-        }
-        let Some(patch) = layer_patch_between(source, node) else { return coarse() };
-        if patch != RasterLayerPatch::default() {
-            delta.patched.push(RasterLayerPatchEntry { id: id.to_string(), patch });
-        }
-    }
-    delta.removed = removed_roots.iter().map(|id| id.to_string()).collect();
-    let mut working = id_forest(base);
-    for id in &delta.removed {
-        id_take(&mut working, id);
-    }
-    fn containers<'a>(forest: &'a [IdNode], parent: Option<&'a str>, into: &mut Vec<(Option<&'a str>, &'a [IdNode])>) {
-        into.push((parent, forest));
-        for node in forest {
-            containers(&node.children, Some(&node.id), into);
-        }
-    }
-    let mut targets = Vec::new();
-    containers(&other_forest, None, &mut targets);
-    for (parent, wanted) in targets {
-        let persistent: Vec<&str> = wanted.iter().map(|node| node.id.as_str()).filter(|id| base_ids.contains(id)).collect();
-        for (position, id) in persistent.iter().enumerate() {
-            let current = id_address(&working, id, None);
-            if current.as_ref().map(|(p, i)| (p.as_deref(), *i)) == Some((parent, position)) {
-                continue;
-            }
-            delta.moved.push(RasterLayerMove { id: id.to_string(), parent_id: parent.map(str::to_string), index: position });
-            if let Some(node) = id_take(&mut working, id) {
-                id_put(&mut working, parent, position, node);
-            }
-        }
-    }
-    for id in &added_roots {
-        let Some((parent_id, index)) = id_address(&other_forest, id, None) else { continue };
-        if let Some(layer) = find_layer(other, id) {
-            delta.added.push(RasterLayerInsertion { parent_id, index, layer: layer.clone() });
-        }
-    }
-    delta.added.sort_by(|left, right| (&left.parent_id, left.index).cmp(&(&right.parent_id, right.index)));
-    delta
+    nested.into_iter().chain(std::iter::once(layer_node_id(layer).to_string())).collect()
+}
+
+/// 🔁️ The negative layers delta, read row by row from the BASE tree: an inserted subtree is removed at its after address, a
+/// removed subtree comes back at its base address (cloned from the base), a move runs backwards, patches restore the base fields.
+/// Nothing is applied or simulated.
+fn inverse_layers(delta: &RasterLayersDelta, base: &[RasterLayerNode]) -> RasterLayersDelta {
+    let forest = id_forest(base);
+    let born: std::collections::BTreeSet<String> = delta.inserted.iter().flat_map(|insertion| subtree_ids_of(&insertion.layer)).collect();
+    let removed = delta
+        .inserted
+        .iter()
+        .filter(|insertion| insertion.parent_id.as_ref().is_none_or(|parent| !born.contains(parent)))
+        .map(|insertion| RasterLayerRemoval { id: layer_node_id(&insertion.layer).to_string(), parent_id: insertion.parent_id.clone(), index: insertion.index })
+        .collect();
+    let inserted = delta
+        .removed
+        .iter()
+        .filter(|row| !id_ancestors(&forest, &row.id).iter().any(|ancestor| delta.removed.iter().any(|other| &other.id == ancestor)))
+        .filter_map(|row| container_of(base, row.parent_id.as_deref()).and_then(|children| children.get(row.index)).map(|node| RasterLayerInsertion { parent_id: row.parent_id.clone(), index: row.index, layer: node.clone() }))
+        .collect();
+    let moved = delta.moved.iter().map(|row| RasterLayerRelocation { id: row.id.clone(), from: row.to.clone(), to: row.from.clone() }).collect();
+    let modified = delta.modified.iter().filter_map(|entry| find_layer(base, &entry.id).map(|node| RasterLayerModification { id: entry.id.clone(), patch: inverse_layer_patch(node, &entry.patch) })).collect();
+    RasterLayersDelta { removed, inserted, moved, modified }
 }
 
 impl RasterLayersDelta {
     /// 🕳️ Whether the delta changes nothing.
     pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.moved.is_empty() && self.patched.iter().all(|entry| entry.patch == RasterLayerPatch::default())
+        self.inserted.is_empty() && self.removed.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| entry.patch == RasterLayerPatch::default())
     }
 }
 
@@ -784,34 +774,12 @@ impl protocol::DiffAlgebra<RasterSnapshot> for RasterDiff {
                 (_, true) => crate::raster_image(&base.assets, key).map(|asset| (key.clone(), Some(asset))),
                 (None, false) => None,
             }).collect() }),
-        }
-    }
-
-    fn between(base: &RasterSnapshot, other: &RasterSnapshot) -> Self {
-        let layers = layers_between(&base.layers, &other.layers);
-        let mut entries = BTreeMap::new();
-        for key in other.assets.keys() {
-            let (before, after) = (crate::raster_image(&base.assets, key), crate::raster_image(&other.assets, key));
-            if !base.assets.contains_key(key) || before != after {
-                entries.insert(key.to_string(), after);
-            }
-        }
-        for key in base.assets.keys() {
-            if !other.assets.contains_key(key) {
-                entries.insert(key.to_string(), None);
-            }
-        }
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            id: (base.id != other.id).then(|| other.id.clone()),
-            title: (base.title != other.title).then(|| other.title.clone()),
-            layers: (!layers.is_empty()).then_some(layers),
-            assets: (!entries.is_empty()).then_some(RasterAssetsDelta { entries }),
+            pixels: self.pixels.iter().rev().filter_map(|region| crate::mutations::paint_stroke::inverse_pixel_region(region, base)).collect(),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.id.is_none() && self.title.is_none() && self.layers.as_ref().is_none_or(RasterLayersDelta::is_empty) && self.assets.as_ref().is_none_or(|assets| assets.entries.is_empty())
+        self.schema.is_none() && self.id.is_none() && self.title.is_none() && self.layers.as_ref().is_none_or(RasterLayersDelta::is_empty) && self.assets.as_ref().is_none_or(|assets| assets.entries.is_empty()) && self.pixels.is_empty()
     }
 }
 //#endregion 🔖️Algebra
@@ -852,76 +820,233 @@ fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
     take!(pixel_content);
 }
 
-/// 🧩️ Sequential coalesce of two layer deltas. `apply` runs the phases `removed → patched → moved →
-/// added` ONCE, so a naive concatenation produces a delta that applies differently from the two
-/// deltas in sequence: two patches of one layer became two `patched` entries (refused as
-/// `mutation.apply.duplicate-target`) and two moves of one layer became two `moved` entries. Each
-/// identity therefore carries at most one entry per phase here, and an edit that lands on a layer
-/// THIS delta inserts folds into the insertion itself — the insertion happens after the patch/move
-/// phases, so a separate entry could never find its target.
-fn absorb_layers_delta(dst: &mut RasterLayersDelta, src: RasterLayersDelta) {
-    for id in src.removed {
-        if let Some(position) = dst.added.iter().position(|insertion| layer_node_id(&insertion.layer) == id) {
-            // 🫧 Inserted by this delta and removed by the next: the layer never reaches the document.
-            let insertion = dst.added.remove(position);
-            crate::retire_raster_layer(insertion.layer);
-        } else if !dst.removed.contains(&id) {
-            dst.removed.push(id.clone());
-        }
-        dst.patched.retain(|entry| entry.id != id);
-        dst.moved.retain(|entry| entry.id != id);
+/// 🔑️ One row of a per-container list during `absorb`: the id of an inserted subtree (`fresh`), or the arrival of a layer that moved in.
+#[derive(Clone, Debug, PartialEq)]
+struct Slot {
+    id: String,
+    fresh: bool,
+}
+
+impl protocol::list_delta::Keyed for Slot {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
     }
-    for entry in src.patched {
-        if let Some(insertion) = dst.added.iter_mut().find(|insertion| layer_node_id(&insertion.layer) == entry.id) {
-            patch_layer_in_tree(std::slice::from_mut(&mut insertion.layer), &entry.id, &entry.patch);
-            continue;
-        }
-        match dst.patched.iter_mut().find(|existing| existing.id == entry.id) {
-            Some(existing) => absorb_layer_patch(&mut existing.patch, entry.patch),
-            None => dst.patched.push(entry),
-        }
+}
+
+type ContainerParts = protocol::list_delta::Parts<Slot, protocol::list_delta::NoPatch>;
+
+/// 🧱️ The per-container lists of one delta: a leaving row (removed or moved out) is a `removed` entry of its container, an
+/// entering row (inserted or moved in) an `inserted` entry of its container.
+fn container_parts(removed: &[RasterLayerRemoval], moved: &[RasterLayerRelocation], inserted: Vec<(Option<String>, usize, String)>) -> std::collections::BTreeMap<Option<String>, ContainerParts> {
+    let mut parts: std::collections::BTreeMap<Option<String>, ContainerParts> = std::collections::BTreeMap::new();
+    for row in removed {
+        parts.entry(row.parent_id.clone()).or_default().removed.push((row.id.clone(), row.index));
     }
-    for moved in src.moved {
-        if let Some(insertion) = dst.added.iter_mut().find(|insertion| layer_node_id(&insertion.layer) == moved.id) {
-            insertion.parent_id = moved.parent_id;
-            insertion.index = moved.index;
-            continue;
-        }
-        match dst.moved.iter_mut().find(|existing| existing.id == moved.id) {
-            Some(existing) => *existing = moved,
-            None => dst.moved.push(moved),
-        }
+    for row in moved {
+        parts.entry(row.from.parent_id.clone()).or_default().removed.push((row.id.clone(), row.from.index));
+        parts.entry(row.to.parent_id.clone()).or_default().inserted.push((row.to.index, Slot { id: row.id.clone(), fresh: false }));
     }
-    for insertion in src.added {
-        let id = layer_node_id(&insertion.layer).to_string();
-        match dst.added.iter().position(|existing| layer_node_id(&existing.layer) == id) {
-            Some(position) => {
-                let displaced = std::mem::replace(&mut dst.added[position], insertion);
-                crate::retire_raster_layer(displaced.layer);
+    for (parent_id, index, id) in inserted {
+        parts.entry(parent_id).or_default().inserted.push((index, Slot { id, fresh: true }));
+    }
+    parts
+}
+
+/// 🔎️ The child list of the group `id` inside a set of inserted subtrees.
+fn born_children_mut<'a>(rows: &'a mut [RasterLayerInsertion], id: &str) -> Option<&'a mut Vec<RasterLayerNode>> {
+    for row in rows.iter_mut() {
+        if let RasterLayerNode::Group { id: group_id, children, .. } = &mut row.layer {
+            if group_id.as_str() == id {
+                return Some(children);
             }
-            None => dst.added.push(insertion),
+            if let Some(found) = container_mut(children, Some(id)) {
+                return Some(found);
+            }
         }
     }
+    None
+}
+
+/// 🧩 Folds the edits of `later` that reach INTO subtrees this delta inserts straight into those subtrees: a mid-state container
+/// that does not exist in the base cannot carry a base coordinate. The leaving rows are lifted out of their containers first (every
+/// index is a mid coordinate), then the entering rows take their after slots. A layer that moves from the base INTO a subtree
+/// inserted here cannot be expressed and stays a move row, which then refuses at apply.
+fn fold_into_born(born: &mut Vec<RasterLayerInsertion>, later: &mut RasterLayersDelta) {
+    let territory: std::collections::BTreeSet<String> = born.iter().flat_map(|row| subtree_ids_of(&row.layer)).collect();
+    let inside = |parent: &Option<String>| parent.as_deref().is_some_and(|parent| territory.contains(parent));
+    let mut leaving: std::collections::BTreeMap<String, Vec<(usize, String, bool)>> = std::collections::BTreeMap::new();
+    for row in std::mem::take(&mut later.removed) {
+        match &row.parent_id {
+            parent if inside(parent) => leaving.entry(row.parent_id.clone().unwrap_or_default()).or_default().push((row.index, row.id, true)),
+            _ => later.removed.push(row),
+        }
+    }
+    let mut leaving_moves = Vec::new();
+    for row in std::mem::take(&mut later.moved) {
+        if inside(&row.from.parent_id) {
+            leaving.entry(row.from.parent_id.clone().unwrap_or_default()).or_default().push((row.from.index, row.id.clone(), false));
+            leaving_moves.push(row);
+        } else {
+            later.moved.push(row);
+        }
+    }
+    let mut lifted: std::collections::BTreeMap<String, RasterLayerNode> = std::collections::BTreeMap::new();
+    for (container, mut rows) in leaving {
+        rows.sort_by(|left, right| right.0.cmp(&left.0));
+        let Some(children) = born_children_mut(born, &container) else { continue };
+        for (index, id, removed) in rows {
+            if children.get(index).is_some_and(|node| layer_node_id(node) == id) {
+                let node = children.remove(index);
+                if removed {
+                    crate::retire_raster_layer(node);
+                } else {
+                    lifted.insert(id, node);
+                }
+            }
+        }
+    }
+    let mut entering: std::collections::BTreeMap<String, Vec<(usize, RasterLayerNode)>> = std::collections::BTreeMap::new();
+    for row in leaving_moves {
+        match lifted.remove(&row.id) {
+            Some(node) if inside(&row.to.parent_id) => entering.entry(row.to.parent_id.clone().unwrap_or_default()).or_default().push((row.to.index, node)),
+            Some(node) => later.inserted.push(RasterLayerInsertion { parent_id: row.to.parent_id, index: row.to.index, layer: node }),
+            None => later.moved.push(row),
+        }
+    }
+    for insertion in std::mem::take(&mut later.inserted) {
+        if inside(&insertion.parent_id) {
+            entering.entry(insertion.parent_id.clone().unwrap_or_default()).or_default().push((insertion.index, insertion.layer));
+        } else {
+            later.inserted.push(insertion);
+        }
+    }
+    for (container, rows) in entering {
+        match born_children_mut(born, &container) {
+            Some(children) if check_slots(children.len(), &rows).is_ok() => place_entering(children, rows),
+            _ => crate::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect()),
+        }
+    }
+    crate::retire_raster_layers(lifted.into_values().collect());
+}
+
+/// 🧹 Drops the move rows that leave their layer exactly where the surviving siblings already put it: a move inside one container
+/// whose base index minus the other leaving rows before it equals its after index minus the other entering rows before it.
+fn without_identity_moves(moved: Vec<RasterLayerRelocation>, removed: &[RasterLayerRemoval], inserted: &[RasterLayerInsertion]) -> Vec<RasterLayerRelocation> {
+    let mut kept = moved;
+    loop {
+        let identity = kept.iter().position(|row| {
+            if row.from.parent_id != row.to.parent_id {
+                return false;
+            }
+            let container = &row.from.parent_id;
+            let others = kept.iter().filter(|other| other.id != row.id);
+            let leaving = removed.iter().filter(|gone| gone.parent_id == *container && gone.index < row.from.index).count() + others.clone().filter(|other| other.from.parent_id == *container && other.from.index < row.from.index).count();
+            let entering = inserted.iter().filter(|born| born.parent_id == *container && born.index < row.to.index).count() + others.filter(|other| other.to.parent_id == *container && other.to.index < row.to.index).count();
+            row.from.index + entering == row.to.index + leaving
+        });
+        match identity {
+            Some(at) => {
+                kept.remove(at);
+            }
+            None => return kept,
+        }
+    }
+}
+
+/// ➕️ Composes `dst` (base→mid) with `src` (mid→after) in place. Per container the framework's positional algebra coalesces the rows
+/// (insert∘remove cancels, insert∘move lands at its final slot, move∘move is one move, move∘remove removes at the base address,
+/// remove∘insert of one id is a replacement); a layer that left one container and entered another stays one move row. An edit that
+/// lands on a layer THIS delta inserts folds into the inserted subtree itself.
+fn absorb_layers_delta(dst: &mut RasterLayersDelta, mut src: RasterLayersDelta) {
+    let mut born_rows = std::mem::take(&mut dst.inserted);
+    fold_into_born(&mut born_rows, &mut src);
+    let inserted_of = |rows: &[RasterLayerInsertion]| rows.iter().map(|row| (row.parent_id.clone(), row.index, layer_node_id(&row.layer).to_string())).collect::<Vec<_>>();
+    let mut left = container_parts(&dst.removed, &dst.moved, inserted_of(&born_rows));
+    let mut right = container_parts(&src.removed, &src.moved, inserted_of(&src.inserted));
+    let mut nodes: std::collections::BTreeMap<String, RasterLayerNode> = std::collections::BTreeMap::new();
+    for row in born_rows.into_iter().chain(std::mem::take(&mut src.inserted)) {
+        if let Some(displaced) = nodes.insert(layer_node_id(&row.layer).to_string(), row.layer) {
+            crate::retire_raster_layer(displaced);
+        }
+    }
+    let born: std::collections::BTreeSet<String> = nodes.values().flat_map(subtree_ids_of).collect();
+    let containers: std::collections::BTreeSet<Option<String>> = left.keys().chain(right.keys()).cloned().collect();
+    let mut leaving: Vec<(Option<String>, String, usize)> = Vec::new();
+    let mut entering: Vec<(Option<String>, usize, Slot)> = Vec::new();
+    for container in containers {
+        let mut parts = left.remove(&container).unwrap_or_default();
+        parts.absorb(right.remove(&container).unwrap_or_default());
+        leaving.extend(parts.removed.into_iter().map(|(id, index)| (container.clone(), id, index)));
+        entering.extend(parts.inserted.into_iter().map(|(index, slot)| (container.clone(), index, slot)));
+    }
+    let mut inserted = Vec::new();
+    let mut moved = Vec::new();
+    for (container, index, slot) in entering {
+        if !slot.fresh {
+            if let Some(at) = leaving.iter().position(|(_, id, _)| *id == slot.id) {
+                let (from_parent, id, from_index) = leaving.remove(at);
+                moved.push(RasterLayerRelocation { id, from: RasterLayerAddress { parent_id: from_parent, index: from_index }, to: RasterLayerAddress { parent_id: container, index } });
+                continue;
+            }
+        }
+        if let Some(layer) = nodes.remove(&slot.id) {
+            inserted.push(RasterLayerInsertion { parent_id: container, index, layer });
+        }
+    }
+    crate::retire_raster_layers(nodes.into_values().collect());
+    let removed: Vec<RasterLayerRemoval> = leaving.into_iter().map(|(parent_id, id, index)| RasterLayerRemoval { id, parent_id, index }).collect();
+    let moved = without_identity_moves(moved, &removed, &inserted);
+    let gone: std::collections::BTreeSet<&str> = removed.iter().map(|row| row.id.as_str()).filter(|id| !inserted.iter().any(|row| layer_node_id(&row.layer) == *id)).collect();
+    let mut modified = std::mem::take(&mut dst.modified);
+    modified.retain(|entry| !gone.contains(entry.id.as_str()));
+    for entry in src.modified {
+        if gone.contains(entry.id.as_str()) {
+            continue;
+        }
+        if born.contains(&entry.id) {
+            inserted.iter_mut().any(|row| patch_layer_in_tree(std::slice::from_mut(&mut row.layer), &entry.id, &entry.patch).is_some());
+            continue;
+        }
+        match modified.iter_mut().find(|existing| existing.id == entry.id) {
+            Some(existing) => absorb_layer_patch(&mut existing.patch, entry.patch),
+            None => modified.push(entry),
+        }
+    }
+    modified.sort_by(|left, right| left.id.cmp(&right.id));
+    *dst = RasterLayersDelta { removed, inserted, moved, modified };
 }
 
 /// ➕ Sparse insertion diff — tree-aware (`parent_id: None` = document root), so `create-layer` never
 /// needs to fall back to whole-snapshot capture even when inserting into a nested `Group`.
 pub fn diff_add_layer(parent_id: Option<String>, index: usize, layer: RasterLayerNode) -> RasterDiff {
-    RasterDiff { layers: Some(RasterLayersDelta { added: vec![RasterLayerInsertion { parent_id, index, layer }], ..Default::default() }), ..Default::default() }
+    RasterDiff { layers: Some(RasterLayersDelta { inserted: vec![RasterLayerInsertion { parent_id, index, layer }], ..Default::default() }), ..Default::default() }
 }
 
-pub fn diff_remove_layer(layer_id: &str) -> RasterDiff {
-    RasterDiff { layers: Some(RasterLayersDelta { removed: vec![layer_id.to_string()], ..Default::default() }), ..Default::default() }
+/// ➖️ Sparse removal diff: one removal row at the layer's base address. Empty when the layer is not in `base`.
+pub fn diff_remove_layer(base: &[RasterLayerNode], layer_id: &str) -> RasterDiff {
+    let Some((parent_id, index)) = crate::standards::v1::subsets::any::schema::locate_layer(base, layer_id) else { return RasterDiff::default() };
+    RasterDiff { layers: Some(RasterLayersDelta { removed: vec![RasterLayerRemoval { id: layer_id.to_string(), parent_id, index }], ..Default::default() }), ..Default::default() }
 }
 
 pub fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
-    RasterDiff { layers: Some(RasterLayersDelta { patched: vec![RasterLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
+    RasterDiff { layers: Some(RasterLayersDelta { modified: vec![RasterLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 
-/// 🔀 Sparse reposition diff (`reorder-layers`) — remove-then-insert at a tree address, built
-/// directly from the payload; never clones/mutates/re-diffs the whole snapshot.
-pub fn diff_move_layer(layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
-    RasterDiff { layers: Some(RasterLayersDelta { moved: vec![RasterLayerMove { id: layer_id.to_string(), parent_id, index }], ..Default::default() }), ..Default::default() }
+/// 🔀 Sparse reposition diff (`reorder-layers`): one tree-aware move row from the layer's base address to the after address
+/// `(parent_id, index)` — never the layer itself. The index saturates at the end of the destination list. Empty when the layer is
+/// not in `base`.
+pub fn diff_move_layer(base: &[RasterLayerNode], layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
+    let Some((from_parent, from_index)) = crate::standards::v1::subsets::any::schema::locate_layer(base, layer_id) else { return RasterDiff::default() };
+    let length = container_of(base, parent_id.as_deref()).map_or(0, <[RasterLayerNode]>::len);
+    let room = if parent_id == from_parent { length.saturating_sub(1) } else { length };
+    RasterDiff {
+        layers: Some(RasterLayersDelta {
+            moved: vec![RasterLayerRelocation { id: layer_id.to_string(), from: RasterLayerAddress { parent_id: from_parent, index: from_index }, to: RasterLayerAddress { parent_id, index: index.min(room) } }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
 }
 
 /// 🖇️ Sparse asset-map insertion diff (`add-layer-asset`).
@@ -941,3 +1066,7 @@ pub fn diff_remove_asset(asset_id: &str) -> RasterDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️asset-capacity-vectors/🦀️.rs"]
 mod asset_capacity_vectors;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️layer-tree-delta/🦀️.rs"]
+mod layer_tree_delta;

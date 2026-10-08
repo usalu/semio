@@ -103,23 +103,9 @@ impl SpaceArtifactCreationCatalogV1 {
             && self.kinds.windows(2).all(|pair| pair[0].kind_id < pair[1].kind_id)
     }
 
-    /// 📤️ Emits only a canonical bounded response.
-    pub fn canonical_json(&self) -> Option<String> {
-        if !self.validate() {
-            return None;
-        }
-        let source = semio_framework_pack_json::to_json_string(self);
-        (source.len() <= SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES).then_some(source)
-    }
+    
 
-    /// 🧾️ Rejects reordering, unknown fields, padding and oversized presentation rows.
-    pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES {
-            return None;
-        }
-        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
-    }
+    
 }
 
 /// 📥️ A client chooses only a trusted kind and display name; scope and author come from the route.
@@ -147,14 +133,7 @@ impl SpaceArtifactCreateV1 {
             && !self.name.chars().any(char::is_control)
     }
 
-    /// 📦️ Rejects duplicate fields, unknown authority inputs, padding, and noncanonical JSON.
-    pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES {
-            return None;
-        }
-        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
-    }
+    
 }
 
 /// 🚦️ Durable creation progress never implies readiness before both publication and indexing.
@@ -274,12 +253,5 @@ impl SpaceArtifactCreationStatusV1 {
             && self.progress.as_ref().is_none_or(|progress| running && progress.validate())
     }
 
-    /// 🧾️ Reads one exact receipt, withholding malformed or authority-overposted results.
-    pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES {
-            return None;
-        }
-        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
-    }
+    
 }

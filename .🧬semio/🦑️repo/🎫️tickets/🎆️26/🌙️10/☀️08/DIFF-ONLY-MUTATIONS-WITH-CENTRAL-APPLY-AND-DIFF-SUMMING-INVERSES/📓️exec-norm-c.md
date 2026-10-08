@@ -33,7 +33,7 @@ inverse = the same kind with the base entity value (accepted by the wave-2 rulin
 
 ## NOT done / open
 1. **Rust verification**: nothing compiled or run (see status). First thing to run in each artifact workspace (`cd ✏️s/🔌️plugins/📕️norm/🗿️artifacts/<art>`): `gate cargo check --target wasm32-wasip2 --message-format=short`, then (when test builds are allowed) `cargo test --lib diff mutations`. Expect first-compile fixes in: `DslRecord`/`ToValue` derives on the generated structs (`usize`, `Option<Vec<String>>`, `[f64;12]`), `ArtifactSchema` on the root diff, crate-root re-exports used by the generated type paths (`crate::snapshot::*` for en1999, `crate::part_N::*` for iso16757), `semio_framework_async_macros::async_test` in new tests.
-2. `set-snapshot` command / `from_snapshot` / `import_media` `model:in` decomposition are **still present** in all seven artifacts: removing them needs a contract change (`import_media(wrap)`, `commit_snapshot_fields`, `set-active-example`, editor unit tests that seed documents through `ReplaceSnapshot`) owned by norm-a. `from_snapshot` emits concrete kinds (no diff, no `between`), so it is not a diff violation — decision needed.
+2. (resolved in Wave 3 below) `set-snapshot` / `set-active-example` / `from_snapshot` removed.
 3. The shared `🪡️list-delta` module was not reused (the families were designed before it landed; shapes are equivalent: keyed added/removed/modified + coalescing absorb + randomized law test). Candidate follow-up: port the id-keyed rows onto `Parts<R,Q>`.
 4. Python independent engine (`🧪️tests/<id>/🐍️.py` via shared `🐍️` vocabulary) was not re-run; it does not model diffs, but it must accept the new optional `index` on the two kinds above.
 5. `between` is partial for iso16757/vdi3805 (see above); no framework caller uses it for artifacts.
@@ -204,3 +204,61 @@ inverse = the same kind with the base entity value (accepted by the wave-2 rulin
 - generator + oracle + harness (scratch): `T/🗑️generated/norm-c/gen/*` (`model.py`, `rust_emit.py`, `schema_emit.py`, `sidecars.py`, `oracle.py`, `leaf_*.py`, `edit_rules.py`, `middle_fixtures.py`, `middle_tests.py`, `harness.py`, `laws_*.rs`, `twins.ts`, `wire-twins-mine.test.ts`); pre-change tree: `T/🗑️generated/norm-c/orig-norm-c.tgz`.
 - per artifact: `🧬️schema/🔺️diff/{🦀️.rs,🔣️.json,🟦️.ts,🔗️.graphql,🛰️.proto}`, `🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs`, every `🧬️mutations/*/🔺️diff/🦀️.rs` (non-scalar), `🧪️tests/✅apply/🦀️.rs` (apply_diff + law), `🧬️mutations/🦀️.rs` (bridge, edit-rules mod, middle-row mod), `🧬️mutations/🧭️edit-rules`, `🧬️mutations/🧪️tests/🔬️middle-row`, `🚪️io/🦀️.rs`, `✏️editor/🎮️commands/{set-field,insert-item,remove-item,apply-remedy}`, `🧫️fixtures/**/🔺️diff/🔣️.json` (all `✅apply`) + `🧭️middle` scenarios.
 - no `🪟️results` change (its only kind is norm-a's `change-selected-check-index`).
+
+## Wave 3 — whole-document mutations removed (coordinator decision), Python engine, verification state
+
+Done in all seven artifacts (generator `T/🗑️generated/norm-c/gen/wave3.py`, following norm-a's landed contract, en1996 as template):
+- editor commands `📤️set-snapshot` (`ReplaceSnapshot`) and `🎨️set-active-example` (`SetActiveExample`) deleted with their crate-root `pub mod` rows, `app_commands!` rows, `tools:` list entries, manifest `action_with/destructive/interactive_job/describe` blocks, unit tests (`every_command`, ids/keywords lists, the din18599 `setSnapshot` argument law); `import_media` is now `crate::app_surface::import_media(port, media)`.
+- `XMutation::from_snapshot` deleted (`impl` + region) in all seven; the tests that exercised it removed (en1997 `from_snapshot_round_trips…`, en1999 bulk-replace x3 incl. a binary-codec smoke replaced by an encode/decode round trip, din18599 `from_snapshot_emits_diffs_only`). `Artifact::set_snapshot` helper removed where it had no caller.
+- editor undo/redo + host-backed-report tests no longer seed through `ReplaceSnapshot`: undo/redo dispatches a concrete `SetField` (path per artifact: `title`, `structureKind`, `designApproach`, `materials[0].designation`, `netFloorAreaM2`, `strictMode`, `selection.classId`), the report test dispatches `Evaluate`.
+- Python vocabulary engine (`🔮️oracles/🏃️execution/🐍️.py`, driver `gen/py_engine_check.py`, uses the repo host module `semio_repo_test`): **24/24 green** — all 22 `🧭️middle` scenarios (apply == committed after-snapshot AND the engine's own inverse restores the row at its original position) plus the `✅apply` vectors of `add-selection-constraint` and `add-geometry-connection` carrying the new optional `index` (`null`). The vdi3805 middle fixture titles/tags were made distinct per cloned product so the engine can discover the derived `index` mirror. No engine change was needed (its `add`/`introduce` verbs already honour `index`, its `remove` inverse already passes `index: position`).
+- Re-run `bun test` of the wire-twins copy after the fixture changes: **758 pass / 0 fail**.
+
+Verification state (honest): after the framework went green, a gated `cargo check --target wasm32-wasip2` in `🗿️artifacts/🏛️en1992` was queued behind the 2-slot gate for >30 min at the time of writing (log `T/🗑️generated/norm-c/out/check-en1992.txt`, empty until the slot opens); **no norm crate has compiled yet and no cargo test has run**. Next, in order: `check` en1992 -> the other six, then `cargo test --lib` filters `diff`, `middle_row`, `editor`, `mutations` per artifact.
+
+Wave 3 check result (17:33): the gated `cargo check` finally ran and stopped at `semio-framework-replication` with 14 errors in `📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs` (`owned_retirement` unresolved, `ErasedSnapshotRetirement` trait mismatch `next_close_byte_demand`/`close_step`, `RetainedCloneStep` vs `SnapshotRetirementStep`) — a peer's mid-change in `🌱️value/retirement`, not a norm crate. Norm crates still not reached; re-run `cd 🗿️artifacts/<art> && gate cargo check --target wasm32-wasip2 --message-format=short` once replication is green.
+
+## Frozen outcome codes burn-down (18:00)
+
+- Apply-error codes: all five non-frozen `diff.*` codes in the seven generated schema diffs are now `mutation.apply.*`
+  (`diff.target-missing` to `mutation.apply.missing-target`, `diff.duplicate-id` to `mutation.apply.duplicate-id`,
+  `diff.order-mismatch` to `mutation.apply.order-mismatch`, `diff.index-out-of-range` to `mutation.apply.invalid-add-index`,
+  `diff.index-order` to `mutation.apply.invalid-index-order`). Counts replaced match the gate: 62 order-mismatch, 36 duplicate-id,
+  7 each for target-missing, index-out-of-range, index-order (119). Zero `"diff.` outcome codes remain under the seven artifacts.
+- Outcome messages: the 10 insert leaves that clamped (iso16757 `introduce-subject`, `introduce-product`, `introduce-product-class`,
+  `introduce-product-index`, `introduce-product-series`, `introduce-product-group`, `introduce-property-definition`,
+  `add-selection-constraint`; vdi3805 `add-product`, `add-geometry-connection`) now return `mutation.target-missing`
+  (error, no diff) for an explicit insert index past the end; absent index still appends. No `mutation.clamped` remains in my crates.
+  Every remaining outcome code is one of the frozen 11 (`no-op`, `target-missing`, `duplicate-id`, `invariant`).
+- din18599 R15: `update-climate` had only a `rule` vector. Added `🧫️fixtures/🧬️mutations/🌦️update-climate/✅apply/` (before, after,
+  mutation, diff, outcome; the derived `climateTable` child id was reproduced independently as `sha256` of the canonical climate JSON,
+  validated against the committed Potsdam id `din18599-climate-e44b9e389c197214`) plus the leaf test
+  `🌦️update-climate/🧪️tests/✅apply/🦀️.rs` (incl. `assert_mutation_inverse_sum_law`), mounted in `🧪️tests/🔬️fixture/🦀️.rs`.
+- `📇️registry/🧬️contract/🪡️list-delta` (norm-a) emits only `mutation.apply.missing-target` and `mutation.apply.duplicate-target`;
+  no `diff.*` there, nothing to route.
+- Scratch: `🗑️generated/norm-c/gen/rust_emit.py` carries the new codes; `patch_clamp.py` is the one-shot post-pass for the clamp leaves
+  (the per-leaf generators `leaf_iso16757.py`/`leaf_vdi3805.py` still contain the old clamp template and must not be re-run).
+- Verification: NOT run. `foundation.status` stayed RED (17:46 and 17:56, `semio-framework-replication` fold.rs / `owned_retirement`,
+  not my files), so no gated cargo check. Syntax-only `rustfmt --check` over all touched files passes.
+
+## Wave 5 (23:45) — positional list-delta rows, no `between`, derived data central, bridge in io
+
+Still no cargo: `foundation.status` RED at 23:29 (`store/🧾️document/📜️history/💧️hydration` unresolved import, not my crates). Verified without cargo:
+`bun ./📜️script.ts verify mutation-outcome-law` (log `T/🗑️generated/norm-c/gate-run.txt`) reports **0 breaches under `📕️norm`** (the 32 left belong to wfc, fem, stdio-pdf, layout);
+seven standalone `rustc --test` harnesses (`gen/harness.py <art>`: the emitted diff file + the real `🪡️list-delta/🦀️.rs` module, 4000 random multi-step histories each: inverse restores, `absorb` equals sequential
+application, inverse of the sum, derived data rederived) all pass; wire twins `bun test` 762/762; Python vocabulary engine 24/24 on every `🧭️middle` scenario (plus the two index scenarios).
+
+- **AMB-1 positional rows.** Every id-keyed list (all K1 collections incl. nested `members.actions`, `sections.elements`, `geometry.connections`) is now norm-a's `{removed:[{id,index}], inserted:[{index,row}], moved:[{id,from,to}], modified:[{id,patch}]}` via
+  `semio_s_artifact_norm_contract::norm_list_delta!` (`<Coll>Rows` plus `Removed/Inserted/Moved/Modified`) with a hand-emitted `RowPatch` impl (dotted/optional paths cannot use `norm_row_patch!`). No `order` anywhere. The one nested key
+  (`vdi3805` products, `identity.article_number`) cannot use the macro (`key: $key:ident`), so its delta is the macro expansion emitted verbatim; **a one-line macro generalisation to a dotted key path in `list-delta` (norm-a) would remove that copy.**
+  Patch structs lost their `id`/`key` member (the id sits in `Modified`); a row type with no modelled patch fields now gets a full per-field patch (every non-key, non-child field). Index-keyed (K2: en1994, iso `selection.constraints`) and map (K3) collections were already positional/keyed and are unchanged.
+- **Leaves.** Inserts: `Rows::insertion(index, row)`; removes: `Rows::removal(&base.list, position)`; reorder: `Rows::relocation(&base.members, from, to)`; modifies: `Rows::modification(&id, Patch{..})`; nested child patches the same. **Behaviour change:** an explicit insert index past the end is `mutation.target-missing`
+  in every insert leaf (en1992, en1997, en1999 `add-member`, iso `introduce-*`, vdi `add-product`/`add-geometry-connection`); before, some clamped silently or with `mutation.clamped`. Whole-list setters (en1999 `change-*` lists, din18599 `replace-zones/elements`)
+  call `Rows::setting(&base.list, &payload.list)`: every base row leaves at its base index and every payload row enters at its payload index (no comparison, no `moved`), so those diffs are dense by construction.
+- **AMB-2 derived data.** `din18599` `climateTable` and `vdi3805` `catalog.index` are no longer in the diffs (spec nodes, schemas, TS twins, fixtures, `update-climate` leaf, vdi product leaves). `Din18599Diff::apply` re-mints `climate_table` from the applied climate whenever `climate` is present;
+  `Vdi3805Diff::apply` rebuilds `index` with `CatalogIndex::from_catalog` whenever `products` is present. `catalog_index_entry_for`/`extract_dn` are deleted. Requires every `before` snapshot to hold a derived-consistent index/handle (the harness asserts it per step; fixtures were produced by the engines that maintain it).
+- **`between` deleted** (design ruling): no `DiffAlgebra::between`, no `Rows::between`, no `RowPatch::between`/`between_rows`/section between in any of the seven diff files; the `assert_diff_algebra_between_law` calls are gone from the seven diff unit tests (they now cover absorb + inverse only).
+- **AMB-3.** Every `inverse` (`Rows::inverse`, `Patch::inverse`, K2 `inverse_rows`, K3 `inverse_rows`) reads the base row by row; none applies or simulates the diff.
+- **R9 bridge.** `apply_<art>_mutation`/`inverse_<art>_mutation` left `🧬️mutations/🦀️.rs` for `🚪️io/🦀️.rs` `mutation_bridge` (re-exported `…::any::io::{apply_<art>_mutation, inverse_<art>_mutation}`), no re-export at the old path; the seven oracle adapters (`🧪️tests/<mutate-…>/🦀️.rs`), the en1992/din18599/iso16757 unit tests and the din18599 fixture test import them from io. en1999 had no region markers (hand-removed).
+- **Fixtures.** All `✅apply` and `🧭️middle` diff fixtures regenerated by the independent JSON oracle (`gen/oracle.py`, positional rows); `en1999/🧱change-materials/✅apply` carried a payload with the same `id` twice (invalid under the duplicate-id rule): mutation and after now hold one row. New `din18599/🌦️update-climate/✅apply` bundle (R15). Python engine cannot derive the climate handle, so that kind stays `🚫rule` in the engine adapter.
+- **Not verified:** cargo (RED foundation), the real `norm_list_delta!` macro expansion (the harness uses `expanded_list_delta`, a verbatim Python copy of it), serde/value derives on the new wire types, and the leaf bodies (only syntax-checked with `rustfmt`; the new list-delta calls type-check in the harness through the same signatures).

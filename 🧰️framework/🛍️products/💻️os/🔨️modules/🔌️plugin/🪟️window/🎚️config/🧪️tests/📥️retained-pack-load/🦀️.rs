@@ -110,9 +110,6 @@ impl protocol::DiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraConfi
     fn inverse(&self, base: &RetainedLoadCameraConfig) -> Self {
         Self { viewport: self.viewport.map(|_| base.viewport), eye: self.eye.map(|_| base.eye) }
     }
-    fn between(base: &RetainedLoadCameraConfig, other: &RetainedLoadCameraConfig) -> Self {
-        Self { viewport: (base.viewport != other.viewport).then_some(other.viewport), eye: (base.eye != other.eye).then_some(other.eye) }
-    }
     fn is_empty(&self) -> bool {
         self.viewport.is_none() && self.eye.is_none()
     }

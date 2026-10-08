@@ -2,19 +2,16 @@
 //!
 //! `apply` is the only snapshot writer and is reachable solely through `protocol::apply_diff`, which mints the `ApplyCapability`.
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
-//! diff. `DiffAlgebra::between` covers the modelled vocabulary only and exists for sync tooling, never for mutation leaves.
+//! diff, read row by row from the base.
 
-fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new("diff.target-missing", format!("{what} does not exist"))
-}
+use protocol::list_delta::Keyed as _;
 
-/// 🩹️ Sparse patch of the `zones` row addressed by `id`.
+/// 🩹️ Sparse patch of the `zones` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599ZonesPatch {
-    pub id: String,
     pub label_en: Option<String>,
     pub label_de: Option<String>,
     pub usage_profile: Option<crate::UsageProfile>,
@@ -27,8 +24,8 @@ pub struct Din18599ZonesPatch {
     pub lighting_power_w_m2: Option<f64>,
 }
 
-impl Din18599ZonesPatch {
-    fn apply_to_row(&self, row: &mut crate::ThermalZone) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<crate::ThermalZone> for Din18599ZonesPatch {
+    fn commit_into(&self, row: &mut crate::ThermalZone, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.label_en {
             row.label_en = value.clone();
         }
@@ -62,42 +59,41 @@ impl Din18599ZonesPatch {
         Ok(())
     }
 
-    fn merge(&mut self, other: Self) {
-        if other.label_en.is_some() {
-            self.label_en = other.label_en;
+    fn absorb(&mut self, later: Self) {
+        if later.label_en.is_some() {
+            self.label_en = later.label_en;
         }
-        if other.label_de.is_some() {
-            self.label_de = other.label_de;
+        if later.label_de.is_some() {
+            self.label_de = later.label_de;
         }
-        if other.usage_profile.is_some() {
-            self.usage_profile = other.usage_profile;
+        if later.usage_profile.is_some() {
+            self.usage_profile = later.usage_profile;
         }
-        if other.area_m2.is_some() {
-            self.area_m2 = other.area_m2;
+        if later.area_m2.is_some() {
+            self.area_m2 = later.area_m2;
         }
-        if other.volume_m3.is_some() {
-            self.volume_m3 = other.volume_m3;
+        if later.volume_m3.is_some() {
+            self.volume_m3 = later.volume_m3;
         }
-        if other.theta_i_heat_c.is_some() {
-            self.theta_i_heat_c = other.theta_i_heat_c;
+        if later.theta_i_heat_c.is_some() {
+            self.theta_i_heat_c = later.theta_i_heat_c;
         }
-        if other.theta_i_cool_c.is_some() {
-            self.theta_i_cool_c = other.theta_i_cool_c;
+        if later.theta_i_cool_c.is_some() {
+            self.theta_i_cool_c = later.theta_i_cool_c;
         }
-        if other.occupants.is_some() {
-            self.occupants = other.occupants;
+        if later.occupants.is_some() {
+            self.occupants = later.occupants;
         }
-        if other.internal_gains_w_m2.is_some() {
-            self.internal_gains_w_m2 = other.internal_gains_w_m2;
+        if later.internal_gains_w_m2.is_some() {
+            self.internal_gains_w_m2 = later.internal_gains_w_m2;
         }
-        if other.lighting_power_w_m2.is_some() {
-            self.lighting_power_w_m2 = other.lighting_power_w_m2;
+        if later.lighting_power_w_m2.is_some() {
+            self.lighting_power_w_m2 = later.lighting_power_w_m2;
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::ThermalZone) -> Self {
+    fn inverse(&self, row: &crate::ThermalZone) -> Self {
         Self {
-            id: self.id.clone(),
             label_en: self.label_en.as_ref().map(|_| row.label_en.clone()),
             label_de: self.label_de.as_ref().map(|_| row.label_de.clone()),
             usage_profile: self.usage_profile.as_ref().map(|_| row.usage_profile.clone()),
@@ -110,140 +106,37 @@ impl Din18599ZonesPatch {
             lighting_power_w_m2: self.lighting_power_w_m2.as_ref().map(|_| row.lighting_power_w_m2.clone()),
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.label_en.is_none() && self.label_de.is_none() && self.usage_profile.is_none() && self.area_m2.is_none() && self.volume_m3.is_none() && self.theta_i_heat_c.is_none() && self.theta_i_cool_c.is_none() && self.occupants.is_none() && self.internal_gains_w_m2.is_none() && self.lighting_power_w_m2.is_none()
+    }
 }
 
-/// 🔺️ Keyed diff of `zones` rows (by `id`): added rows, removed ids, modified row patches and the resulting id order when it deviates from base order minus removed plus added.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct Din18599ZonesRows {
-    pub added: Vec<crate::ThermalZone>,
-    pub removed: Vec<String>,
-    pub modified: Vec<Din18599ZonesPatch>,
-    pub order: Option<Vec<String>>,
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `zones` list (rows keyed by `id`).
+    pub Din18599ZonesRows { removal: Din18599ZonesRemoved, insertion: Din18599ZonesInserted, relocation: Din18599ZonesMoved, modification: Din18599ZonesModified, row: crate::ThermalZone, patch: Din18599ZonesPatch, key: id }
 }
 
 impl Din18599ZonesRows {
-    fn key(row: &crate::ThermalZone) -> &str {
-        row.id.as_str()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.order.is_none() && self.modified.is_empty()
-    }
-
-    fn ids(rows: &[crate::ThermalZone]) -> Vec<String> {
-        rows.iter().map(|row| Self::key(row).to_string()).collect()
-    }
-
-    fn apply_rows(&self, base: &[crate::ThermalZone]) -> Result<Vec<crate::ThermalZone>, protocol::MutationApplyError> {
-        let mut rows = base.to_vec();
-        for id in &self.removed {
-            let at = rows.iter().position(|row| Self::key(row) == id).ok_or_else(|| missing_target(format!("removed row \"{id}\"")).at([id.clone()]))?;
-            rows.remove(at);
-        }
-        for patch in &self.modified {
-            let row = rows.iter_mut().find(|row| Self::key(row) == patch.id).ok_or_else(|| missing_target(format!("modified row \"{}\"", patch.id)).at([patch.id.clone()]))?;
-            patch.apply_to_row(row)?;
-        }
-        for row in &self.added {
-            if rows.iter().any(|existing| Self::key(existing) == Self::key(row)) {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("row \"{}\" already exists", Self::key(row))).at([Self::key(row).to_string()]));
-            }
-            rows.push(row.clone());
-        }
-        if let Some(order) = &self.order {
-            if order.len() != rows.len() {
-                return Err(protocol::MutationApplyError::new("diff.order-mismatch", "order must list every row exactly once"));
-            }
-            let mut pool = rows;
-            let mut ordered = Vec::with_capacity(pool.len());
-            for id in order {
-                let at = pool.iter().position(|row| Self::key(row) == id).ok_or_else(|| protocol::MutationApplyError::new("diff.order-mismatch", format!("order names unknown row \"{id}\"")).at([id.clone()]))?;
-                ordered.push(pool.remove(at));
-            }
-            rows = ordered;
-        }
-        Ok(rows)
-    }
-
-    fn absorb_rows(&mut self, other: Self) {
-        let other_removed = other.removed.clone();
-        let other_added_ids: Vec<String> = other.added.iter().map(|row| Self::key(row).to_string()).collect();
-        for id in other.removed {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == id) {
-                self.added.remove(at);
-            } else {
-                self.modified.retain(|patch| patch.id != id);
-                if !self.removed.contains(&id) {
-                    self.removed.push(id);
-                }
+        /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
+        pub fn setting(base: &[crate::ThermalZone], new: &[crate::ThermalZone]) -> Self {
+            Self {
+                removed: base.iter().enumerate().map(|(index, row)| Din18599ZonesRemoved { id: row.key().to_string(), index }).collect(),
+                inserted: new.iter().enumerate().map(|(index, row)| Din18599ZonesInserted { index, row: row.clone() }).collect(),
+                moved: Vec::new(),
+                modified: Vec::new(),
             }
         }
-        self.added.extend(other.added);
-        for patch in other.modified {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == patch.id) {
-                if patch.apply_to_row(&mut self.added[at]).is_err() {
-                    self.modified.push(patch);
-                }
-            } else if let Some(existing) = self.modified.iter_mut().find(|existing| existing.id == patch.id) {
-                existing.merge(patch);
-            } else {
-                self.modified.push(patch);
-            }
-        }
-        self.order = match (other.order, self.order.take()) {
-            (Some(order), _) => Some(order),
-            (None, Some(mut order)) => {
-                order.retain(|id| !other_removed.contains(id));
-                order.extend(other_added_ids);
-                Some(order)
-            }
-            (None, None) => None,
-        };
     }
 
-    fn inverse_rows(&self, base: &[crate::ThermalZone]) -> Self {
-        let mut inverse = Self::default();
-        inverse.removed = self.added.iter().map(|row| Self::key(row).to_string()).collect();
-        inverse.added = base.iter().filter(|row| self.removed.iter().any(|id| id == Self::key(row))).cloned().collect();
-        inverse.modified = self.modified.iter().filter_map(|patch| base.iter().find(|row| Self::key(row) == patch.id).map(|row| patch.inverse_from_row(row))).collect();
-        let base_ids = Self::ids(base);
-        let mut after_ids: Vec<String> = base_ids.iter().filter(|id| !self.removed.contains(id)).cloned().collect();
-        after_ids.extend(self.added.iter().map(|row| Self::key(row).to_string()));
-        if let Some(order) = &self.order {
-            after_ids = order.clone();
-        }
-        let mut natural: Vec<String> = after_ids.into_iter().filter(|id| !inverse.removed.contains(id)).collect();
-        natural.extend(inverse.added.iter().map(|row| Self::key(row).to_string()));
-        if natural != base_ids {
-            inverse.order = Some(base_ids);
-        }
-        inverse
-    }
-
-    fn between_rows(base: &[crate::ThermalZone], other: &[crate::ThermalZone]) -> Self {
-        let mut diff = Self::default();
-        diff.removed = base.iter().filter(|row| other.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).map(|row| Self::key(row).to_string()).collect();
-        diff.added = other.iter().filter(|row| base.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).cloned().collect();
-        let mut natural: Vec<String> = Self::ids(base).into_iter().filter(|id| !diff.removed.contains(id)).collect();
-        natural.extend(diff.added.iter().map(|row| Self::key(row).to_string()));
-        let wanted = Self::ids(other);
-        if natural != wanted {
-            diff.order = Some(wanted);
-        }
-        diff
-    }
-}
-
-/// 🩹️ Sparse patch of the `elements` row addressed by `id`.
+    /// 🩹️ Sparse patch of the `elements` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599ElementsPatch {
-    pub id: String,
     pub label_en: Option<String>,
     pub label_de: Option<String>,
     pub kind: Option<crate::ElementKind>,
@@ -257,8 +150,8 @@ pub struct Din18599ElementsPatch {
     pub adjacency: Option<crate::Adjacency>,
 }
 
-impl Din18599ElementsPatch {
-    fn apply_to_row(&self, row: &mut crate::EnvelopeElement) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<crate::EnvelopeElement> for Din18599ElementsPatch {
+    fn commit_into(&self, row: &mut crate::EnvelopeElement, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.label_en {
             row.label_en = value.clone();
         }
@@ -295,45 +188,44 @@ impl Din18599ElementsPatch {
         Ok(())
     }
 
-    fn merge(&mut self, other: Self) {
-        if other.label_en.is_some() {
-            self.label_en = other.label_en;
+    fn absorb(&mut self, later: Self) {
+        if later.label_en.is_some() {
+            self.label_en = later.label_en;
         }
-        if other.label_de.is_some() {
-            self.label_de = other.label_de;
+        if later.label_de.is_some() {
+            self.label_de = later.label_de;
         }
-        if other.kind.is_some() {
-            self.kind = other.kind;
+        if later.kind.is_some() {
+            self.kind = later.kind;
         }
-        if other.zone_id.is_some() {
-            self.zone_id = other.zone_id;
+        if later.zone_id.is_some() {
+            self.zone_id = later.zone_id;
         }
-        if other.area_m2.is_some() {
-            self.area_m2 = other.area_m2;
+        if later.area_m2.is_some() {
+            self.area_m2 = later.area_m2;
         }
-        if other.u_value_w_m2k.is_some() {
-            self.u_value_w_m2k = other.u_value_w_m2k;
+        if later.u_value_w_m2k.is_some() {
+            self.u_value_w_m2k = later.u_value_w_m2k;
         }
-        if other.orientation_deg.is_some() {
-            self.orientation_deg = other.orientation_deg;
+        if later.orientation_deg.is_some() {
+            self.orientation_deg = later.orientation_deg;
         }
-        if other.tilt_deg.is_some() {
-            self.tilt_deg = other.tilt_deg;
+        if later.tilt_deg.is_some() {
+            self.tilt_deg = later.tilt_deg;
         }
-        if other.g_value.is_some() {
-            self.g_value = other.g_value;
+        if later.g_value.is_some() {
+            self.g_value = later.g_value;
         }
-        if other.fc.is_some() {
-            self.fc = other.fc;
+        if later.fc.is_some() {
+            self.fc = later.fc;
         }
-        if other.adjacency.is_some() {
-            self.adjacency = other.adjacency;
+        if later.adjacency.is_some() {
+            self.adjacency = later.adjacency;
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::EnvelopeElement) -> Self {
+    fn inverse(&self, row: &crate::EnvelopeElement) -> Self {
         Self {
-            id: self.id.clone(),
             label_en: self.label_en.as_ref().map(|_| row.label_en.clone()),
             label_de: self.label_de.as_ref().map(|_| row.label_de.clone()),
             kind: self.kind.as_ref().map(|_| row.kind.clone()),
@@ -347,134 +239,32 @@ impl Din18599ElementsPatch {
             adjacency: self.adjacency.as_ref().map(|_| row.adjacency.clone()),
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.label_en.is_none() && self.label_de.is_none() && self.kind.is_none() && self.zone_id.is_none() && self.area_m2.is_none() && self.u_value_w_m2k.is_none() && self.orientation_deg.is_none() && self.tilt_deg.is_none() && self.g_value.is_none() && self.fc.is_none() && self.adjacency.is_none()
+    }
 }
 
-/// 🔺️ Keyed diff of `elements` rows (by `id`): added rows, removed ids, modified row patches and the resulting id order when it deviates from base order minus removed plus added.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct Din18599ElementsRows {
-    pub added: Vec<crate::EnvelopeElement>,
-    pub removed: Vec<String>,
-    pub modified: Vec<Din18599ElementsPatch>,
-    pub order: Option<Vec<String>>,
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `elements` list (rows keyed by `id`).
+    pub Din18599ElementsRows { removal: Din18599ElementsRemoved, insertion: Din18599ElementsInserted, relocation: Din18599ElementsMoved, modification: Din18599ElementsModified, row: crate::EnvelopeElement, patch: Din18599ElementsPatch, key: id }
 }
 
 impl Din18599ElementsRows {
-    fn key(row: &crate::EnvelopeElement) -> &str {
-        row.id.as_str()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.order.is_none() && self.modified.is_empty()
-    }
-
-    fn ids(rows: &[crate::EnvelopeElement]) -> Vec<String> {
-        rows.iter().map(|row| Self::key(row).to_string()).collect()
-    }
-
-    fn apply_rows(&self, base: &[crate::EnvelopeElement]) -> Result<Vec<crate::EnvelopeElement>, protocol::MutationApplyError> {
-        let mut rows = base.to_vec();
-        for id in &self.removed {
-            let at = rows.iter().position(|row| Self::key(row) == id).ok_or_else(|| missing_target(format!("removed row \"{id}\"")).at([id.clone()]))?;
-            rows.remove(at);
-        }
-        for patch in &self.modified {
-            let row = rows.iter_mut().find(|row| Self::key(row) == patch.id).ok_or_else(|| missing_target(format!("modified row \"{}\"", patch.id)).at([patch.id.clone()]))?;
-            patch.apply_to_row(row)?;
-        }
-        for row in &self.added {
-            if rows.iter().any(|existing| Self::key(existing) == Self::key(row)) {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("row \"{}\" already exists", Self::key(row))).at([Self::key(row).to_string()]));
-            }
-            rows.push(row.clone());
-        }
-        if let Some(order) = &self.order {
-            if order.len() != rows.len() {
-                return Err(protocol::MutationApplyError::new("diff.order-mismatch", "order must list every row exactly once"));
-            }
-            let mut pool = rows;
-            let mut ordered = Vec::with_capacity(pool.len());
-            for id in order {
-                let at = pool.iter().position(|row| Self::key(row) == id).ok_or_else(|| protocol::MutationApplyError::new("diff.order-mismatch", format!("order names unknown row \"{id}\"")).at([id.clone()]))?;
-                ordered.push(pool.remove(at));
-            }
-            rows = ordered;
-        }
-        Ok(rows)
-    }
-
-    fn absorb_rows(&mut self, other: Self) {
-        let other_removed = other.removed.clone();
-        let other_added_ids: Vec<String> = other.added.iter().map(|row| Self::key(row).to_string()).collect();
-        for id in other.removed {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == id) {
-                self.added.remove(at);
-            } else {
-                self.modified.retain(|patch| patch.id != id);
-                if !self.removed.contains(&id) {
-                    self.removed.push(id);
-                }
+        /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
+        pub fn setting(base: &[crate::EnvelopeElement], new: &[crate::EnvelopeElement]) -> Self {
+            Self {
+                removed: base.iter().enumerate().map(|(index, row)| Din18599ElementsRemoved { id: row.key().to_string(), index }).collect(),
+                inserted: new.iter().enumerate().map(|(index, row)| Din18599ElementsInserted { index, row: row.clone() }).collect(),
+                moved: Vec::new(),
+                modified: Vec::new(),
             }
         }
-        self.added.extend(other.added);
-        for patch in other.modified {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == patch.id) {
-                if patch.apply_to_row(&mut self.added[at]).is_err() {
-                    self.modified.push(patch);
-                }
-            } else if let Some(existing) = self.modified.iter_mut().find(|existing| existing.id == patch.id) {
-                existing.merge(patch);
-            } else {
-                self.modified.push(patch);
-            }
-        }
-        self.order = match (other.order, self.order.take()) {
-            (Some(order), _) => Some(order),
-            (None, Some(mut order)) => {
-                order.retain(|id| !other_removed.contains(id));
-                order.extend(other_added_ids);
-                Some(order)
-            }
-            (None, None) => None,
-        };
     }
 
-    fn inverse_rows(&self, base: &[crate::EnvelopeElement]) -> Self {
-        let mut inverse = Self::default();
-        inverse.removed = self.added.iter().map(|row| Self::key(row).to_string()).collect();
-        inverse.added = base.iter().filter(|row| self.removed.iter().any(|id| id == Self::key(row))).cloned().collect();
-        inverse.modified = self.modified.iter().filter_map(|patch| base.iter().find(|row| Self::key(row) == patch.id).map(|row| patch.inverse_from_row(row))).collect();
-        let base_ids = Self::ids(base);
-        let mut after_ids: Vec<String> = base_ids.iter().filter(|id| !self.removed.contains(id)).cloned().collect();
-        after_ids.extend(self.added.iter().map(|row| Self::key(row).to_string()));
-        if let Some(order) = &self.order {
-            after_ids = order.clone();
-        }
-        let mut natural: Vec<String> = after_ids.into_iter().filter(|id| !inverse.removed.contains(id)).collect();
-        natural.extend(inverse.added.iter().map(|row| Self::key(row).to_string()));
-        if natural != base_ids {
-            inverse.order = Some(base_ids);
-        }
-        inverse
-    }
-
-    fn between_rows(base: &[crate::EnvelopeElement], other: &[crate::EnvelopeElement]) -> Self {
-        let mut diff = Self::default();
-        diff.removed = base.iter().filter(|row| other.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).map(|row| Self::key(row).to_string()).collect();
-        diff.added = other.iter().filter(|row| base.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).cloned().collect();
-        let mut natural: Vec<String> = Self::ids(base).into_iter().filter(|id| !diff.removed.contains(id)).collect();
-        natural.extend(diff.added.iter().map(|row| Self::key(row).to_string()));
-        let wanted = Self::ids(other);
-        if natural != wanted {
-            diff.order = Some(wanted);
-        }
-        diff
-    }
-}
-
-/// 🩹️ Sparse per-field patch of the `heating` section.
+    /// 🩹️ Sparse per-field patch of the `heating` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -832,12 +622,10 @@ pub struct Din18599Diff {
     pub renewables: Option<Din18599RenewablesPatch>,
     #[state(artifact)]
     pub climate: Option<Din18599ClimatePatch>,
-    #[state(artifact)]
-    pub climate_table: Option<crate::Din18599ClimateChild>,
 }
 
 impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
-    fn apply(&self, base: &Din18599Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din18599Snapshot> {
+    fn apply(&self, base: &Din18599Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din18599Snapshot> {
         let mut next = base.clone();
         if let Some(value) = &self.building_category {
             next.building_category = value.clone();
@@ -867,10 +655,10 @@ impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
             next.automation_class = value.clone();
         }
         if let Some(rows) = &self.zones {
-            next.zones = rows.apply_rows(&base.zones).map_err(|error| error.under(["zones"]))?;
+            next.zones = rows.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
         }
         if let Some(rows) = &self.elements {
-            next.elements = rows.apply_rows(&base.elements).map_err(|error| error.under(["elements"]))?;
+            next.elements = rows.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
         }
         if let Some(patch) = &self.heating {
             patch.apply_to_row(&mut next.heating).map_err(|error| error.under(["heating"]))?;
@@ -893,8 +681,8 @@ impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
         if let Some(patch) = &self.climate {
             patch.apply_to_row(&mut next.climate).map_err(|error| error.under(["climate"]))?;
         }
-        if let Some(value) = &self.climate_table {
-            next.climate_table = value.clone();
+        if self.climate.is_some() {
+            next.climate_table = crate::din18599_climate_table_child(&next.climate);
         }
         Ok(next)
     }
@@ -929,14 +717,14 @@ impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
         }
         if let Some(theirs) = other.zones {
             match self.zones.as_mut() {
-                Some(mine) => mine.absorb_rows(theirs),
+                Some(mine) => mine.absorb(theirs),
                 None => self.zones = Some(theirs),
             }
             self.zones = self.zones.take().filter(|rows| !rows.is_empty());
         }
         if let Some(theirs) = other.elements {
             match self.elements.as_mut() {
-                Some(mine) => mine.absorb_rows(theirs),
+                Some(mine) => mine.absorb(theirs),
                 None => self.elements = Some(theirs),
             }
             self.elements = self.elements.take().filter(|rows| !rows.is_empty());
@@ -983,9 +771,6 @@ impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
                 None => self.climate = Some(theirs),
             }
         }
-        if other.climate_table.is_some() {
-            self.climate_table = other.climate_table;
-        }
     }
 }
 
@@ -1001,8 +786,8 @@ impl protocol::DiffAlgebra<Din18599Snapshot> for Din18599Diff {
             geg_qp_factor: self.geg_qp_factor.as_ref().map(|_| base.geg_qp_factor.clone()),
             delta_u_wb_w_m2k: self.delta_u_wb_w_m2k.as_ref().map(|_| base.delta_u_wb_w_m2k.clone()),
             automation_class: self.automation_class.as_ref().map(|_| base.automation_class.clone()),
-            zones: self.zones.as_ref().map(|rows| rows.inverse_rows(&base.zones)).filter(|rows| !rows.is_empty()),
-            elements: self.elements.as_ref().map(|rows| rows.inverse_rows(&base.elements)).filter(|rows| !rows.is_empty()),
+            zones: self.zones.as_ref().map(|rows| rows.inverse(&base.zones)).filter(|rows| !rows.is_empty()),
+            elements: self.elements.as_ref().map(|rows| rows.inverse(&base.elements)).filter(|rows| !rows.is_empty()),
             heating: self.heating.as_ref().map(|patch| patch.inverse_from_row(&base.heating)),
             dhw: self.dhw.as_ref().map(|patch| patch.inverse_from_row(&base.dhw)),
             ventilation: self.ventilation.as_ref().map(|patch| patch.inverse_from_row(&base.ventilation)),
@@ -1010,62 +795,11 @@ impl protocol::DiffAlgebra<Din18599Snapshot> for Din18599Diff {
             lighting: self.lighting.as_ref().map(|patch| patch.inverse_from_row(&base.lighting)),
             renewables: self.renewables.as_ref().map(|patch| patch.inverse_from_row(&base.renewables)),
             climate: self.climate.as_ref().map(|patch| patch.inverse_from_row(&base.climate)),
-            climate_table: self.climate_table.as_ref().map(|_| base.climate_table.clone()),
-        }
-    }
-
-    fn between(base: &Din18599Snapshot, other: &Din18599Snapshot) -> Self {
-        Self {
-            building_category: (base.building_category != other.building_category).then(|| other.building_category.clone()),
-            attachment: (base.attachment != other.attachment).then(|| other.attachment.clone()),
-            use_class: (base.use_class != other.use_class).then(|| other.use_class.clone()),
-            method: (base.method != other.method).then(|| other.method.clone()),
-            net_floor_area_m2: (base.net_floor_area_m2 != other.net_floor_area_m2).then(|| other.net_floor_area_m2.clone()),
-            heated_volume_m3: (base.heated_volume_m3 != other.heated_volume_m3).then(|| other.heated_volume_m3.clone()),
-            geg_qp_factor: (base.geg_qp_factor != other.geg_qp_factor).then(|| other.geg_qp_factor.clone()),
-            delta_u_wb_w_m2k: (base.delta_u_wb_w_m2k != other.delta_u_wb_w_m2k).then(|| other.delta_u_wb_w_m2k.clone()),
-            automation_class: (base.automation_class != other.automation_class).then(|| other.automation_class.clone()),
-            zones: Some(Din18599ZonesRows::between_rows(&base.zones, &other.zones)).filter(|rows| !rows.is_empty()),
-            elements: Some(Din18599ElementsRows::between_rows(&base.elements, &other.elements)).filter(|rows| !rows.is_empty()),
-            heating: Some(Din18599HeatingPatch {
-                generation_efficiency: (base.heating.generation_efficiency != other.heating.generation_efficiency).then(|| other.heating.generation_efficiency.clone()),
-                distribution_efficiency: (base.heating.distribution_efficiency != other.heating.distribution_efficiency).then(|| other.heating.distribution_efficiency.clone()),
-                storage_efficiency: (base.heating.storage_efficiency != other.heating.storage_efficiency).then(|| other.heating.storage_efficiency.clone()),
-                transfer_efficiency: (base.heating.transfer_efficiency != other.heating.transfer_efficiency).then(|| other.heating.transfer_efficiency.clone()),
-                energy_carrier: (base.heating.energy_carrier != other.heating.energy_carrier).then(|| other.heating.energy_carrier.clone()),
-            }).filter(|patch| *patch != Din18599HeatingPatch::default()),
-            dhw: Some(Din18599DhwPatch {
-                specific_demand_kwh_person_a: (base.dhw.specific_demand_kwh_person_a != other.dhw.specific_demand_kwh_person_a).then(|| other.dhw.specific_demand_kwh_person_a.clone()),
-                storage_loss_kwh_a: (base.dhw.storage_loss_kwh_a != other.dhw.storage_loss_kwh_a).then(|| other.dhw.storage_loss_kwh_a.clone()),
-                distribution_loss_kwh_a: (base.dhw.distribution_loss_kwh_a != other.dhw.distribution_loss_kwh_a).then(|| other.dhw.distribution_loss_kwh_a.clone()),
-                energy_carrier: (base.dhw.energy_carrier != other.dhw.energy_carrier).then(|| other.dhw.energy_carrier.clone()),
-            }).filter(|patch| *patch != Din18599DhwPatch::default()),
-            ventilation: Some(Din18599VentilationPatch {
-                airflow_m3_h: (base.ventilation.airflow_m3_h != other.ventilation.airflow_m3_h).then(|| other.ventilation.airflow_m3_h.clone()),
-                heat_recovery_eta: (base.ventilation.heat_recovery_eta != other.ventilation.heat_recovery_eta).then(|| other.ventilation.heat_recovery_eta.clone()),
-                fan_power_w: (base.ventilation.fan_power_w != other.ventilation.fan_power_w).then(|| other.ventilation.fan_power_w.clone()),
-            }).filter(|patch| *patch != Din18599VentilationPatch::default()),
-            cooling: Some(Din18599CoolingPatch {
-                plant: (base.cooling.plant != other.cooling.plant).then(|| Din18599CoolingPatchPlantValue { value: other.cooling.plant.clone() }),
-            }).filter(|patch| *patch != Din18599CoolingPatch::default()),
-            lighting: Some(Din18599LightingPatch {
-                control_factor: (base.lighting.control_factor != other.lighting.control_factor).then(|| other.lighting.control_factor.clone()),
-            }).filter(|patch| *patch != Din18599LightingPatch::default()),
-            renewables: Some(Din18599RenewablesPatch {
-                pv_area_m2: (base.renewables.pv_area_m2 != other.renewables.pv_area_m2).then(|| other.renewables.pv_area_m2.clone()),
-                pv_efficiency: (base.renewables.pv_efficiency != other.renewables.pv_efficiency).then(|| other.renewables.pv_efficiency.clone()),
-                solar_thermal_kwh_a: (base.renewables.solar_thermal_kwh_a != other.renewables.solar_thermal_kwh_a).then(|| other.renewables.solar_thermal_kwh_a.clone()),
-            }).filter(|patch| *patch != Din18599RenewablesPatch::default()),
-            climate: Some(Din18599ClimatePatch {
-                theta_e_c: (base.climate.theta_e_c != other.climate.theta_e_c).then(|| other.climate.theta_e_c.clone()),
-                g_h_w_m2: (base.climate.g_h_w_m2 != other.climate.g_h_w_m2).then(|| other.climate.g_h_w_m2.clone()),
-            }).filter(|patch| *patch != Din18599ClimatePatch::default()),
-            climate_table: (base.climate_table != other.climate_table).then(|| other.climate_table.clone()),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.building_category.is_none() && self.attachment.is_none() && self.use_class.is_none() && self.method.is_none() && self.net_floor_area_m2.is_none() && self.heated_volume_m3.is_none() && self.geg_qp_factor.is_none() && self.delta_u_wb_w_m2k.is_none() && self.automation_class.is_none() && self.zones.as_ref().map_or(true, |rows| rows.is_empty()) && self.elements.as_ref().map_or(true, |rows| rows.is_empty()) && self.heating.is_none() && self.dhw.is_none() && self.ventilation.is_none() && self.cooling.is_none() && self.lighting.is_none() && self.renewables.is_none() && self.climate.is_none() && self.climate_table.is_none()
+        self.building_category.is_none() && self.attachment.is_none() && self.use_class.is_none() && self.method.is_none() && self.net_floor_area_m2.is_none() && self.heated_volume_m3.is_none() && self.geg_qp_factor.is_none() && self.delta_u_wb_w_m2k.is_none() && self.automation_class.is_none() && self.zones.as_ref().map_or(true, |rows| rows.is_empty()) && self.elements.as_ref().map_or(true, |rows| rows.is_empty()) && self.heating.is_none() && self.dhw.is_none() && self.ventilation.is_none() && self.cooling.is_none() && self.lighting.is_none() && self.renewables.is_none() && self.climate.is_none()
     }
 }
 

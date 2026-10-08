@@ -9,7 +9,8 @@
 use crate::editor::puzzle2d::engine::{
     BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
 };
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{};
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
 
@@ -17,7 +18,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{connect_handles,crea
 
 use semio_framework_job::{Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -298,7 +299,7 @@ fn fill_kind_rows(document: &Value) -> Vec<Value> {
     if let Some(rows) = crate::editor::puzzle2d::kind_catalog_entries(document, "nodes").filter(|rows| !rows.is_empty()) {
         return rows.to_vec();
     }
-    let manifest_rows = crate::editor::puzzle2d::board_kind_catalogs_json(document).and_then(|json| serde_json::from_str::<Value>(&json).ok()).and_then(|catalogs| catalogs.get("nodeKinds").and_then(Value::as_array).cloned()).unwrap_or_default();
+    let manifest_rows = crate::editor::puzzle2d::board_kind_catalogs_json(document).and_then(|json| semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|catalogs| catalogs.get("nodeKinds").and_then(Value::as_array).cloned()).unwrap_or_default();
     if manifest_rows.iter().any(|row| row.get("handles").and_then(Value::as_array).is_some_and(|templates| !templates.is_empty())) {
         return manifest_rows;
     }

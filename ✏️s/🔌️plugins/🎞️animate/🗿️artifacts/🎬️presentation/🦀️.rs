@@ -309,10 +309,6 @@ impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
             self.crop = crop.clone();
         }
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
-        Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
-    }
 }
 //#endregion 🔖️CollectionSupport
 
@@ -539,19 +535,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_tile_is_already_at_that_index;
-                        }
-                        #[path = "."]
-                        pub mod replace_tiles {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_collection_is_already_empty;
                         }
                     }
                 }

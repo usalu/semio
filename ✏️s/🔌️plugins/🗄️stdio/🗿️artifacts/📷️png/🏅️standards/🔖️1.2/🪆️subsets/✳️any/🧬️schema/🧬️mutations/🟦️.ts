@@ -3,9 +3,13 @@ export interface ChangeGammaMutation { readonly revision: string; readonly gama?
 export interface PatchPixelsMutation { readonly revision: string; readonly x: number; readonly y: number; readonly width: number; readonly height: number; readonly red: number; readonly green: number; readonly blue: number; readonly alpha: number; }
 export type PngNativeProfile = 'indexed' | 'grayscale' | 'grayscale-alpha' | 'rgb' | 'rgba';
 export interface PaintNativeSamplesMutation { readonly revision: string; readonly region: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }; readonly paint: { readonly profile: PngNativeProfile; readonly first: number; readonly second: number; readonly third: number; readonly fourth: number }; }
+export interface SetGamma { readonly gama?: number | null; }
+export interface ReplaceSamples { readonly region: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }; readonly samples: readonly number[]; }
 export interface ReplaceImage { readonly image: PngImage; }
 export type PngMutation =
   | { mutation: 'replace-image'; payload: ReplaceImage }
   | { mutation: 'change-gamma'; payload: ChangeGammaMutation }
   | { mutation: 'patch-pixels'; payload: PatchPixelsMutation }
-  | { mutation: 'paint-native-samples'; payload: PaintNativeSamplesMutation };
+  | { mutation: 'paint-native-samples'; payload: PaintNativeSamplesMutation }
+  | { mutation: 'set-gamma'; payload: SetGamma }
+  | { mutation: 'replace-samples'; payload: ReplaceSamples };

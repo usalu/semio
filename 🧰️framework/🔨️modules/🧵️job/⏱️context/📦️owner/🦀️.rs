@@ -1,5 +1,5 @@
 //! ⏱️ One admitted operation ledger remains owned across bounded step contexts.
-use super::{JobPayloadOperationLedger, StepContext, StepBudget, CancelToken, ClockStride, OperationId, Generation, InteractiveJobCloseStep};
+use super::{JobPayloadOperationLedger, StepContext, StepBudget, CancelToken, ClockStride, OperationId, Generation, InteractiveJobCloseStep,RetainedCloneGrant,RetainedCloneProgress,ValueError};
 use std::{mem::ManuallyDrop, sync::Arc};
 
 pub struct StepContextOwner {
@@ -23,19 +23,20 @@ impl StepContextOwner {
         Some(StepContext::with_payload_ledger(ledger.operation, ledger.generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::clone(ledger)))
     }
 
-    pub fn next_close_byte_demand(&self) -> usize {
-        if self.ledger.is_some() { Self::birth_bytes() } else { 0 }
-    }
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+    pub fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError>{Ok(0)}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.ledger.is_some(){Self::birth_bytes()}else{0})}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.ledger.is_some()))}
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        let Some(ledger) = self.ledger.as_ref() else { return InteractiveJobCloseStep::Complete; };
-        if maximum_items == 0 || maximum_bytes < Self::birth_bytes() { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+    pub fn close_step(&mut self, grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let Some(ledger) = self.ledger.as_ref() else { return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}; };
+        if grant.maximum_items==0||grant.maximum_release_bytes<Self::birth_bytes()||grant.maximum_depth==0 { return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}; }
         self.closing = true;
         if !ledger.terminal_is_empty() { return InteractiveJobCloseStep::Blocked; }
         match Arc::try_unwrap(self.ledger.take().unwrap()) {
             Ok(ledger) => {
                 debug_assert!(ledger.terminal_is_empty());
-                InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: Self::birth_bytes() }
+                InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,released_bytes:Self::birth_bytes(),..RetainedCloneProgress::default()}}
             }
             Err(ledger) => {
                 *self.ledger = Some(ledger);

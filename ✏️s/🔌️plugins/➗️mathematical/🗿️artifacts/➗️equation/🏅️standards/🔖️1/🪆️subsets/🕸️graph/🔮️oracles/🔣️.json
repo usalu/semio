@@ -187,17 +187,6 @@
           ]
         },
         {
-          "mutationId": "replace-graph",
-          "sourceMutationDirectoryName": "🔁️replace-graph",
-          "mutationDirectoryName": "🔁️replace-graph",
-          "scenarios": [
-            {
-              "id": "replays-the-identical-empty-graph",
-              "directoryName": "🧪️replays"
-            }
-          ]
-        },
-        {
           "mutationId": "update-graph-algorithm",
           "sourceMutationDirectoryName": "🧮️update-graph",
           "mutationDirectoryName": "🧮️update-graph",
@@ -212,7 +201,6 @@
       "kinds": [
         "change-graph-directed",
         "update-graph-algorithm",
-        "replace-graph",
         "create-node",
         "delete-node",
         "delete-nodes",
@@ -449,34 +437,6 @@
             "operation": "update-graph-algorithm",
             "bridgeVersion": 1,
             "variant": "UpdateGraphAlgorithm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "equation-1-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
-            }
-          ],
-          "invariants": {
-            "local": [
-              "not-encoded-by-any-exported-carrier"
-            ],
-            "enclosing": [
-              "node-identity-preserved-across-untouched-rows"
-            ]
-          }
-        },
-        {
-          "id": "replace-graph",
-          "capability": "equation-1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "replace-graph",
-            "bridgeVersion": 1,
-            "variant": "ReplaceGraph"
           },
           "oracleRequirements": [
             {

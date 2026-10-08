@@ -17,6 +17,8 @@ pub fn reject(code: impl Into<String>, path: impl Into<String>, detail: impl Int
 pub(crate) fn rejection_outcome_code(code: &str) -> protocol::OutcomeCode {
     match code.strip_prefix("gltf.mutation.").unwrap_or(code) {
         "no-observable-change" => protocol::OutcomeCode::NoOp,
+        "gltf.reference.in-use" => protocol::OutcomeCode::TargetReferenced,
+        "gltf.reference.invalid-default-scene" => protocol::OutcomeCode::TargetMismatch,
         "duplicate-id" | "duplicate-extension" | "duplicate-scene-root" => protocol::OutcomeCode::DuplicateId,
         "index-out-of-range" | "insert-out-of-range" | "position-out-of-range" | "reference-out-of-range" | "relation-absent" | "extension-absent" | "missing" | "missing-mesh" | "not-found" | "invalid-reference" => protocol::OutcomeCode::TargetMissing,
         "stale-diff" | "stale-inverse" | "node-cycle" | "invalid-permutation" | "invalid-child-link" | "invalid-index-accessor" | "morph-target-arity" | "morph-weight-arity" | "collection-overflow" | "reference-overflow" | "buffer-alignment" | "extension-required" | "required-extension-not-used" => protocol::OutcomeCode::TargetMismatch,

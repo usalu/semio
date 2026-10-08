@@ -19,7 +19,8 @@
     "generate-wgpu": "bun nx run @semio-tech/framework-os:generate-wgpu",
     "check-wgpu": "bun nx run @semio-tech/framework-os:check-wgpu",
     "preview-generated": "bun nx run @semio-tech/framework-os:preview-generated",
-    "test": "bun nx run @semio-tech/framework-os:test"
+    "test": "bun nx run @semio-tech/framework-os:test",
+    "installed-service-source": "nx run @semio-tech/framework-os:installed-service-source"
   },
   "devDependencies": {
     "dom-accessibility-api": "0.5.16",

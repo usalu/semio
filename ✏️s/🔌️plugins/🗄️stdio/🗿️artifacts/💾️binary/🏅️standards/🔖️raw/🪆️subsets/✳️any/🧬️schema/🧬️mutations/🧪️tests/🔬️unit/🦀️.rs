@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -12,7 +13,7 @@ async fn mutation_diff_law() {
     let b = base();
     for m in demo_mutation_cases() {
         let mut via_apply = b.clone();
-        let returned = apply_binary_mutation(&mut via_apply, &m);
+        let returned = apply_mutation(&mut via_apply, &m);
         let expected_diff = m.diff(&b);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
         assert_eq!(via_apply, protocol::apply_diff(expected_diff.diff(), &b).unwrap(), "apply mismatch for {m:?}");
@@ -24,9 +25,9 @@ async fn inverse_law() {
     let b = base();
     for m in demo_mutation_cases() {
         let mut mutated = b.clone();
-        apply_binary_mutation(&mut mutated, &m);
-        for undo in m.inverse(&b).expect("valid retained mutation inverse fixture") {
-            apply_binary_mutation(&mut mutated, &undo);
+        apply_mutation(&mut mutated, &m);
+        for undo in m.inverse(&b).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut mutated, &undo);
         }
         assert_eq!(mutated, b, "mutation-level inverse round-trip failed for {m:?}");
     }

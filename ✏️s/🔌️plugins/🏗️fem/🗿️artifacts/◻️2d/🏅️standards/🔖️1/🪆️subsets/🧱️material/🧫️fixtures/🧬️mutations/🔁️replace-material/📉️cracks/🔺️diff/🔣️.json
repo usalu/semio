@@ -3,12 +3,13 @@
   "elements": null,
   "regions": null,
   "materials": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "concrete_c30",
-        "item": {
+        "patch": {
           "id": "concrete_c30",
           "name": "Concrete C30/37 (cracked)",
           "e": 16500000000.0,
@@ -16,8 +17,7 @@
           "rho": 2500.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "sections": null,
   "supports": null,

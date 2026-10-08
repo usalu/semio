@@ -7,10 +7,16 @@ import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framewo
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
+import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "physical-codecs") {
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
+      return;
+    }
+
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const snapshot = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
       await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")], this.repoRoot, "architect-snapshot-sqlite-public-types");
@@ -75,3 +81,5 @@ class SnapshotSourceProfileScript extends BundleScript {
 }
 
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript, "test-snapshot-sqlite-source-profile":SnapshotSourceProfileScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+
+

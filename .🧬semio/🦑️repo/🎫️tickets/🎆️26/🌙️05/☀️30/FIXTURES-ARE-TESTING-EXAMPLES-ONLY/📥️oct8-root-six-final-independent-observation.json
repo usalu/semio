@@ -1,0 +1,68 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody/🧬️schema/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🧬️schema.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🧬️schema.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🧫️fixtures/⏱️cold-preview/🧬️schema.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🧬️schema/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🔬️unit/🟦️.ts",
+      "match": true
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "match": true
+    }
+  ],
+  "plain": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody/🔣️.json",
+      "match": true,
+      "role": "unchanged observed example not authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🔣️.json",
+      "match": true,
+      "role": "unchanged observed example not authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🔣️.json",
+      "match": true,
+      "role": "unchanged observed example not authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🧫️fixtures/⏱️cold-preview/🔣️.json",
+      "match": true,
+      "role": "unchanged observed example not authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🔣️.json",
+      "match": true,
+      "role": "unchanged observed example not authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🔣️.json",
+      "match": true,
+      "role": "unchanged observed example not authored"
+    }
+  ]
+}

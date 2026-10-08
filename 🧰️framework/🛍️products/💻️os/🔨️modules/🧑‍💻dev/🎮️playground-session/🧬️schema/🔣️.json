@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/dev/playground-session/component.json",
+  "title": "PlaygroundSessionPublicationRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "variant",
+    "catalogPath",
+    "outputRoot"
+  ],
+  "properties": {
+    "contractId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "variant": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*)?$"
+    },
+    "catalogPath": {
+      "type": "string",
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[/:\\\\]$)[^:\\\\\\u0000-\\u001f]*$"
+    },
+    "outputRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[/:\\\\]$)[^:\\\\\\u0000-\\u001f]*$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "catalogPath": {
+            "const": ""
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "variant": {
+            "const": ""
+          }
+        }
+      }
+    }
+  ],
+  "x-semio-admission": {
+    "maxBytes": 2097152,
+    "maxRows": 128,
+    "maxDurationMs": 30000
+  },
+  "x-semio-preview-progress": {
+    "protocol": "physical-file-progress-v1",
+    "maxEventBytes": 256,
+    "maxBytes": 8192,
+    "maxEvents": 64,
+    "maxWork": 65536,
+    "maxDurationMs": 30000,
+    "maxSourceBytes": 2097152,
+    "maxSources": 128
+  }
+}

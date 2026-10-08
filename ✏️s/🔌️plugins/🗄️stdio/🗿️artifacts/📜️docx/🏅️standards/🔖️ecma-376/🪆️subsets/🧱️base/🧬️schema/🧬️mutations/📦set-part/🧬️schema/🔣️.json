@@ -114,6 +114,25 @@
         "group": "value",
         "order": 40
       }
+    },
+    "override_index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Override position",
+          "de": "Position des Inhaltstyp-Eintrags"
+        },
+        "description": {
+          "en": "Position of the part's explicit content-type override among the overrides; written even when the content type already resolves, and the last position when only the index is absent.",
+          "de": "Position des expliziten Inhaltstyp-Eintrags des Paketteils unter den Einträgen; wird auch geschrieben, wenn der Inhaltstyp bereits aufgelöst wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

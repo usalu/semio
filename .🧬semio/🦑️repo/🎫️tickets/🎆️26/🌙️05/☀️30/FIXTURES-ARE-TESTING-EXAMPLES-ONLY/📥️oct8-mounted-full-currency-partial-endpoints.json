@@ -1,0 +1,75 @@
+{
+  "status": "partial-source-not-frozen",
+  "capturedAt": "2026-10-08T21:52:48.829952+00:00",
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+      "observedCurrentSha256": "492e98d1e098ca6e707014c25659a1b953dfb1b3de97833316a45f54676f238a",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "observedCurrentSha256": "c25961562278866ef67b9a0c8a4279882bd7b42e322fb04f477d25214d6a7a23",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "observedCurrentSha256": "c575868b624217a29624621647e05b92129848ecea42737275e209c0e3b7ae33",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs",
+      "observedCurrentSha256": "7e319e2d8f8177b7473ace63cca5ea27ba01bb63997de7f276dfa66242b28a38",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs",
+      "observedCurrentSha256": "0e26e2b77a65f55e3d48b7a5bbf55a98406a3e6317f10a03fd10aba6ea985450",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🦀️.rs",
+      "observedCurrentSha256": "4d6ed4056b21dd7f6a30200844325f332f6e019d1d497f349a3185e6208bf572",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📚️members/🦀️.rs",
+      "observedCurrentSha256": "0abcc59a0bc3bd5e2024884e769a7fbe1784be54671d51b1e48ed375dcade0e1",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+      "observedCurrentSha256": "bb008f799bba698d2f08913f5bc0e885e7c23803487bf02d600418b1fff9de5b",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🦀️.rs",
+      "observedCurrentSha256": "0f44cd02bc93924af1a128f5839f704ff2276c34745fbe0007ccb637c4162813",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "observedCurrentSha256": "3d16ee57b3a6a44a0d198b12a0b86e2b95e2e8d6a33e173a2d3660191a74aa5a",
+      "role": "authored-source",
+      "attribution": "Narrow exact current close/demand/law blocks only; whole-file hash is observer currentness, not whole-file authorship."
+    }
+  ],
+  "nativeProof": "NOT RUN",
+  "normalProduction": "HELD",
+  "preimages": [
+    "📥️oct8-mounted-owner-neutral-law-current-preimage.json",
+    "📥️oct8-mounted-close-production-query-preimages.json",
+    "📥️oct8-mounted-full-currency-receipt-current-preimages.json",
+    "📥️oct8-mounted-registry-full-grant-current-block-preimages.json",
+    "📥️oct8-mounted-full-grant-native-original-law-preimage.json"
+  ]
+}

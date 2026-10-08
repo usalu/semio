@@ -67,6 +67,30 @@
       "comparisonProfiles": [
         "semantic-pptx-mutate-v1"
       ]
+    },
+    {
+      "id": "jszip-pptx-ecma-376-opc-plumbing-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "jszip",
+        "implementation": "jszip + fast-xml-parser reader",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "capabilities": [
+        "pptx-ecma-376-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-pptx.readthedocs.io",
+      "rationale": "📖️ A third-party implementation of the OPC package layer: jszip opens the container and fast-xml-parser reads and writes `[Content_Types].xml` and every `*.rels` part. The `before`/`after` pairs of the plumbing kinds are authored from the artifact's committed real package by this pairing -- each pair states its effect once as an XML edit and once as a model-level expectation and is refused unless both agree -- so nothing in this repository predicts the answer the pairs are judged against.",
+      "comparisonProfiles": [
+        "semantic-pptx-mutate-v1"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -84,7 +108,11 @@
         "remove-shape",
         "set-shape-text",
         "set-shape-position",
-        "replace-xml-node"
+        "replace-xml-node",
+        "set-relationship",
+        "remove-relationship",
+        "set-content-type",
+        "remove-content-type"
       ]
     }
   ],
@@ -270,6 +298,89 @@
               "capability": "pptx-ecma-376-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-relationship",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-relationship",
+            "bridgeVersion": 1,
+            "variant": "SetRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-relationship",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-relationship",
+            "bridgeVersion": 1,
+            "variant": "RemoveRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-content-type",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-content-type",
+            "bridgeVersion": 1,
+            "variant": "SetContentType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-content-type",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-content-type",
+            "bridgeVersion": 1,
+            "variant": "RemoveContentType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader"
             }
           ]
         }
@@ -626,6 +737,635 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The shape's text-frame content replaced, Hello -> World."
+    },
+    {
+      "id": "set-relationship-inserts-an-external-hyperlink-first",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:ae2ffe731c3ac8079c3d6864fd5a3b4968e21b0fed0ccc6cf7f768efad8dfcd9",
+          "bytes": 112570
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-inserts-an-external-hyperlink-first",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new external relationship is inserted at position 0 of the package root's relationships."
+    },
+    {
+      "id": "set-relationship-appends-an-external-hyperlink",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:32b881bce14f7ebbd001a4b47034ebe80d5a91015ed47d276b90ec09e692698c",
+          "bytes": 112569
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-appends-an-external-hyperlink",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new external relationship without a position is appended after the last relationship of the package root."
+    },
+    {
+      "id": "set-relationship-retypes-the-last-root-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:bd7849ee304ff34b9fff04563d380c0fb40588a57dca2f5efcbf36723ba0e01f",
+          "bytes": 112536
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-retypes-the-last-root-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An existing id is changed in place: the last root relationship keeps its id, target and position and takes another type."
+    },
+    {
+      "id": "set-relationship-no-op-identical-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:f5fab0f257c9860da5cac613f6109c950d351de98b37be1d063d7d171a34a3bd",
+          "bytes": 112521
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-no-op-identical-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Writing a relationship identical to the stored one changes nothing."
+    },
+    {
+      "id": "remove-relationship-drops-the-last-root-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a3ebc1a7f8c997f0fac4d710171219995868e30eebb7ae07ad90d13d0b797d54",
+          "bytes": 112506
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-drops-the-last-root-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The last relationship of the package root is removed; the others keep their order."
+    },
+    {
+      "id": "remove-relationship-drops-an-added-hyperlink",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:ae2ffe731c3ac8079c3d6864fd5a3b4968e21b0fed0ccc6cf7f768efad8dfcd9",
+          "bytes": 112570
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:f5fab0f257c9860da5cac613f6109c950d351de98b37be1d063d7d171a34a3bd",
+          "bytes": 112521
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-drops-an-added-hyperlink",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The relationship added at position 0 is removed again; the package root is back to its original relationships."
+    },
+    {
+      "id": "remove-relationship-rejected-missing-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-rejected-missing-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The package root owns no relationship rIdNothing. Before-only."
+    },
+    {
+      "id": "set-content-type-inserts-a-default-first",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:894ef80440227538c578191b29f0f02e65c489654af35e9942c0ca509f0765ea",
+          "bytes": 112537
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-inserts-a-default-first",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new extension default is inserted at position 0 of the content-types defaults."
+    },
+    {
+      "id": "set-content-type-retypes-an-existing-default",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:766256fa3d0203c82649753b8a502fe6c1fb27a1a28488895373201c6793d2ef",
+          "bytes": 112535
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-retypes-an-existing-default",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An existing default keeps its position and takes another content type."
+    },
+    {
+      "id": "set-content-type-no-op-identical-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a7b6ed6e2db3826762bd2bb8008697958883a2b020433ba0c2b4cdb70e5ee6a3",
+          "bytes": 112524
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-no-op-identical-entry",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Writing the stored content type again changes nothing."
+    },
+    {
+      "id": "set-content-type-rejected-default-in-another-case",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:894ef80440227538c578191b29f0f02e65c489654af35e9942c0ca509f0765ea",
+          "bytes": 112537
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-rejected-default-in-another-case",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The extension default zzoracle exists in lower case; ZZORACLE would be a second default in another letter case. Before-only."
+    },
+    {
+      "id": "remove-content-type-drops-an-added-default",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:894ef80440227538c578191b29f0f02e65c489654af35e9942c0ca509f0765ea",
+          "bytes": 112537
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a7b6ed6e2db3826762bd2bb8008697958883a2b020433ba0c2b4cdb70e5ee6a3",
+          "bytes": 112524
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-content-type-drops-an-added-default",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The default added at position 0 is removed again."
+    },
+    {
+      "id": "remove-content-type-rejected-missing-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-content-type",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
+          "bytes": 112526
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-pptx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-content-type-rejected-missing-entry",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-pptx-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The content types hold no default for the extension nothing. Before-only."
     }
   ],
   "oracleHostPackages": []

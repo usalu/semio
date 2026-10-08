@@ -111,9 +111,6 @@ impl protocol::DiffAlgebra<FemResultsWindowTransient> for FemResultsWindowTransi
     fn inverse(&self, base: &FemResultsWindowTransient) -> Self {
         Self { clock: self.clock.map(|_| FemPlaybackClockChange { clock: base.clock }) }
     }
-    fn between(base: &FemResultsWindowTransient, other: &FemResultsWindowTransient) -> Self {
-        Self { clock: (base.clock != other.clock).then_some(FemPlaybackClockChange { clock: other.clock }) }
-    }
     fn is_empty(&self) -> bool {
         self.clock.is_none()
     }

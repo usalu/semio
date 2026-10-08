@@ -186,6 +186,12 @@
       "key": "trailer",
       "shape": "Value",
       "optional": false
+    },
+    {
+      "id": 32,
+      "key": "admittedStreamRoles",
+      "shape": "Value",
+      "optional": false
     }
   ],
   "maximumBytes": 65536,

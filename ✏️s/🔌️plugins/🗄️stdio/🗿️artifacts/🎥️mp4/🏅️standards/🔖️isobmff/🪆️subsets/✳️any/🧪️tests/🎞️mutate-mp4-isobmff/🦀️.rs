@@ -5,7 +5,7 @@
 //! the committed fixture is never written to. `oracle` drives the registered `mp4` 0.14 reference
 //! implementation (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`); `subject` drives this repository's own `decode_mp4`/`encode_mp4`/
-//! `apply_mp4_mutation` over the full 9-kind `Mp4Mutation` vocabulary. Both results are read back by
+//! `apply_mutation` over the full 9-kind `Mp4Mutation` vocabulary. Both results are read back by
 //! the SAME independent `project_mp4_mutation` (`mp4`) before the `semantic-mp4-mutate-v1` profile
 //! compares them. The subject half is gated behind the generated host's `sut` feature so the
 //! oracle-only run never compiles the local implementation.
@@ -78,7 +78,7 @@ mod subject {
     use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp4::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation,Mp4Mutation};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{Mp4Mutation};
 
     use semio_s_artifact_stdio_mp4_test_oracle::standards::v_isobmff::subsets::any::project_mp4_mutation;
     use semio_repo_test_host::law;
@@ -97,7 +97,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode_mp4(&input).map_err(|error| format!("decode_mp4 failed: {error}"))?;
-        apply_mp4_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_mp4(&snapshot);
         let projection = project_mp4_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -111,9 +111,9 @@ mod subject {
         let original = decode_mp4(&input).map_err(|error| format!("decode_mp4 failed: {error}"))?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
-        apply_mp4_mutation(&mut snapshot, &mutation);
-        for undo in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
-            apply_mp4_mutation(&mut snapshot, &undo);
+        apply_mutation(&mut snapshot, &mutation);
+        for undo in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_mp4(&snapshot);
         let projection = project_mp4_mutation(&bytes)?;

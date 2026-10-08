@@ -6,10 +6,10 @@ use crate::diff::ProgramChangesDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteChangeRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.changes.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.changes.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No change record exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { changes: Some(ProgramChangesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { changes: Some(ProgramChangesDelta::removal(&base.changes, position)), ..Default::default() })
 }

@@ -152,3 +152,69 @@ fn a_referenced_shared_string_is_refused_and_the_arranged_entry_is_removable() {
     let removed = oracle_apply_mutation(&arranged, &forward).unwrap();
     assert_eq!(shared_strings::read_pool(&removed).unwrap(), shared_strings::read_pool(&input).unwrap());
 }
+
+fn object(entries: Vec<(&str, Json)>) -> Json {
+    Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+}
+
+fn text(value: &str) -> Json {
+    Json::String(value.to_string())
+}
+
+/// 🧱️ The two members of an ordered plumbing pair.
+fn pair(row: &Json) -> (String, String) {
+    match row {
+        Json::Array(items) => match items.as_slice() {
+            [Json::String(left), Json::String(right)] => (left.clone(), right.clone()),
+            other => panic!("a plumbing pair carries two strings, got {other:?}"),
+        },
+        other => panic!("a plumbing pair is an array, got {other:?}"),
+    }
+}
+
+/// 🧱️ The ids of one owner's ordered relationship rows in a plumbing projection.
+fn owner_rows(plumbing: &Json, owner: &str) -> Vec<String> {
+    plumbing.get("relationships").map(|owners| owners.array(owner).iter().map(|row| row.str("id")).collect()).unwrap_or_default()
+}
+
+/// 🪢️ The four plumbing kinds on the real workbook: each moves the plumbing, lands where its position says, and its own computed inverse restores the plumbing exactly
+/// -- positions included. The grid projection does not reach `[Content_Types].xml` or the `*.rels` parts, so this law is its own.
+#[test]
+fn every_plumbing_kind_is_observable_places_its_row_and_its_inverse_restores_the_package() {
+    let input = real_fixture_bytes();
+    let base = project_xlsx_plumbing(&input).expect("the independent reader projects the real workbook's plumbing");
+    let first_root = owner_rows(&base, "").first().cloned().expect("the package root owns a relationship");
+    let (first_override, _) = pair(&base.array("overrides")[0]);
+    let hyperlink = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
+    let cases = [
+        spec("set-relationship", object(vec![("owner", text("")), ("id", text("rIdOracleLink")), ("relType", text(hyperlink)), ("target", text("https://example.invalid/oracle")), ("external", Json::Bool(true)), ("index", Json::Number(0.0))])),
+        spec("set-relationship", object(vec![("owner", text("")), ("id", text("rIdOracleLink")), ("relType", text(hyperlink)), ("target", text("https://example.invalid/oracle")), ("external", Json::Bool(true))])),
+        spec("remove-relationship", object(vec![("owner", text("")), ("id", text(&first_root))])),
+        spec("set-content-type", object(vec![("isOverride", Json::Bool(false)), ("name", text("zzoracle")), ("contentType", text("application/x-oracle")), ("index", Json::Number(0.0))])),
+        spec("set-content-type", object(vec![("isOverride", Json::Bool(true)), ("name", text(&first_override)), ("contentType", text("application/x-oracle"))])),
+        spec("remove-content-type", object(vec![("isOverride", Json::Bool(true)), ("name", text(&first_override))])),
+    ];
+    for forward in &cases {
+        let kind = forward.str("kind");
+        let mutated = oracle_apply_mutation(&input, forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
+        assert_ne!(project_xlsx_plumbing(&mutated).unwrap(), base, "{kind} left the compared plumbing untouched");
+        let restored = oracle_apply_inverse(&input, &mutated, forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
+        assert_eq!(project_xlsx_plumbing(&restored).unwrap(), base, "{kind}: the inverse must restore the plumbing, positions included");
+    }
+    let placed = project_xlsx_plumbing(&oracle_apply_mutation(&input, &cases[0]).unwrap()).unwrap();
+    assert_eq!(owner_rows(&placed, "").first().map(String::as_str), Some("rIdOracleLink"), "index 0 puts the relationship first");
+    let appended = project_xlsx_plumbing(&oracle_apply_mutation(&input, &cases[1]).unwrap()).unwrap();
+    assert_eq!(owner_rows(&appended, "").last().map(String::as_str), Some("rIdOracleLink"), "no index appends the relationship");
+}
+
+/// 🚫️ A plumbing kind that targets nothing is an error, never a silent no-op.
+#[test]
+fn plumbing_kinds_refuse_a_missing_target() {
+    let input = real_fixture_bytes();
+    let missing_relationship = spec("remove-relationship", object(vec![("owner", text("")), ("id", text("rIdNothing"))]));
+    let missing_owner = spec("remove-relationship", object(vec![("owner", text("xl/nothing.xml")), ("id", text("rId1"))]));
+    let missing_entry = spec("remove-content-type", object(vec![("isOverride", Json::Bool(false)), ("name", text("nothing"))]));
+    for forward in [missing_relationship, missing_owner, missing_entry] {
+        assert!(oracle_apply_mutation(&input, &forward).is_err(), "{} must refuse", forward.str("kind"));
+    }
+}

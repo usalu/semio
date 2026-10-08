@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, type ScriptCommand } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
-/** 🧪️ The artifact's own TypeScript suites, relative to the artifact root: `check` type-checks them and `test` also runs
- * them with `bun test`, so a suite is registered here once instead of being discovered by a filename convention. */
+/** 🧪️ Declares artifact-owned suites and commands; suite paths resolve beneath the artifact root. */
 export interface ArtifactTypeScriptPackageOptions {
   readonly suites?: readonly string[];
+  readonly commands?: Readonly<Record<string, ScriptCommand>>;
 }
 
 /** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
@@ -102,6 +102,7 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
     }
   }
   const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
+  for (const [name, Command] of Object.entries(options.commands ?? {})) router.register(name, Command);
   const segments = process.argv.slice(2);
   await router.run(segments.length ? segments : ["test"]);
 }

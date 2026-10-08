@@ -56,12 +56,12 @@
       "paintTarget": "pixels",
       "maskValue": 255,
       "fillTolerance": 24,
-      "pixelSelectionJson": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":\"[[0,2,255],[3,1,128]]\"}"
+      "pixelSelectionJson": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":[{\"start\":0,\"length\":2,\"coverage\":255},{\"start\":3,\"length\":1,\"coverage\":128}]}"
     },
     "laneTexts": {
       "framework.scene.paint2d.documentSync": "{\"revision\":3,\"layers\":[{\"id\":\"base\",\"kind\":\"raster\"}]}",
       "framework.scene.paint2d.assets": "[{\"id\":\"photo\",\"url\":\"data:image/png;base64,iVBORw0KGgo=\"}]",
-      "framework.scene.paint2d.pixelSelection": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":\"[[0,2,255],[3,1,128]]\"}"
+      "framework.scene.paint2d.pixelSelection": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":[{\"start\":0,\"length\":2,\"coverage\":255},{\"start\":3,\"length\":1,\"coverage\":128}]}"
     },
     "spine": {
       "documentSyncJson": "",
@@ -85,8 +85,8 @@
         },
         {
           "lane": "pixelSelection",
-          "bytes": 89,
-          "hash": "46fa0925ac0347e0"
+          "bytes": 143,
+          "hash": "0910fe856d5c887c"
         }
       ],
       "brushColor": "#e07020",

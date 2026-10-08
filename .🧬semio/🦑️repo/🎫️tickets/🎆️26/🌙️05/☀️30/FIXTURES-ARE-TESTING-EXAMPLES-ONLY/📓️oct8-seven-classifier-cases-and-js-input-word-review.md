@@ -1,0 +1,7 @@
+# Seven Classifier Cases and JS Input Word Review
+
+Current language-neutral schema-scope-catalog input has 120 cases, including seven new immutable-trial/real-contract distinctions. The fixed-trial source now guards producedRecord, then distinguishes fixed refusal schedules plus boolean after-verification, fixed grant schedules plus expectations, and anonymous scalar schedule matrices plus ownership move verification. Genuine runtime request constants and variable after-outcomes remain admitted by these added branches. No fixed path rule was added.
+
+Boundaries remain explicit: numeric-only immutable after outcomes do not satisfy boolean verification; producedRecord uses export naming and therefore is not independent proof of production provenance. Do not broaden either without concrete authority evidence and positive runtime-contract counterexamples. This review did not run the existing inventory/Ajv grammar harness.
+
+Root's actual input probe establishes that selected authored NaN payloads canonicalize in the typed JavaScript Number before the owner call. Comparing stored/restored words against that measured inputWord is the honest JS IO boundary, provided every non-NaN inputWord still equals the authored word and authored raw fixtures/native laws remain unchanged. This does not prove transport of original NaN payload words through JS. Preserve exact input/stored/restored word assertions and the explicit limitation.

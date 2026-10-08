@@ -60,6 +60,14 @@ pub fn failed(fault: WidgetFault, quality: Quality) -> Box<dyn WidgetJob> {
 /// 🚀️ Starts the job of one widget from its kind and resolved inputs.
 pub type StartFn = fn(&Kind, WidgetInputs) -> Box<dyn WidgetJob>;
 
+/// 🧩️ Explicit compute capabilities admitted by the host of an inference run.
+pub trait GeometryComputeContext: Send+Sync {
+    fn lookup(&self,kind_id:&str)->Option<StartFn>;
+    fn start(&self,kind:&Kind,inputs:WidgetInputs)->Box<dyn WidgetJob> {
+        match self.lookup(&kind.id) {Some(start)=>start(kind,inputs),None=>failed(WidgetFault::new("generation3d.geometry.compute-missing",format!("The widget kind {} has no admitted compute.",kind.label.en),format!("Der Widget-Typ {} hat keine zugelassene Berechnung.",kind.label.de)),kind.quality)}
+    }
+}
+
 /// 🗃️ One registration: a catalogue kind id and the compute that starts its job.
 #[derive(Clone, Copy)]
 pub struct ComputeEntry {

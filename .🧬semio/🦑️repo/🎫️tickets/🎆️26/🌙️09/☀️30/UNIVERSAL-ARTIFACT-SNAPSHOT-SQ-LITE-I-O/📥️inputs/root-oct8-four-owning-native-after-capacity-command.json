@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-08T18:17:34.005Z",
+  "qualification": "original owning four unchanged selectors and controls; actual38485 ENOSPC pre-runtime",
+  "launch": "🪶️ SQLite · STEP IFC BCF MD Original Current Native After",
+  "args": [
+    "nx",
+    "run-many",
+    "--projects=@semio-tech/stdio-bcf-rs,@semio-tech/stdio-md-rs,@semio-tech/stdio-step-rs,@semio-tech/stdio-ifc-rs",
+    "--targets=test-snapshot-sqlite-native",
+    "--parallel=1",
+    "--skip-nx-cache",
+    "--outputStyle=static"
+  ],
+  "env": {
+    "SEMIO_TEST_LEVEL": "quick",
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "true",
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-data",
+    "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-cache",
+    "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current",
+    "RUST_BACKTRACE": "1",
+    "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "SEMIO_TEST_RETAIN_ARTIFACTS": "true",
+    "NEXTEST_SUCCESS_OUTPUT": "immediate"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-oct8-four-owning-native-after-capacity-recovery.log"
+}

@@ -1,7 +1,7 @@
 //! 🔺️ `rename-generation` sparse diff construction. `FormGeneration.name` is a plain display
 //! label, not a key (`id` is the only key), so no name-collision Fatal check applies here.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dGenerationPatch, Generation3dGenerationPatchEntry, Generation3dGenerationsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dGenerationPatch, Generation3dGenerationModification, Generation3dGenerationsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
 use crate::Generation3dSnapshot;
 
@@ -12,5 +12,5 @@ pub fn diff(payload: &RenameGeneration, base: &Generation3dSnapshot) -> protocol
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Generation \"{}\" is already named \"{}\".", payload.id, payload.new_name));
     }
-    protocol::MutationOutcome::new(Generation3dDiff { generations: Some(Generation3dGenerationsDelta { patched: vec![Generation3dGenerationPatchEntry { id: payload.id.clone(), patch: Generation3dGenerationPatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Generation3dDiff { generations: Some(Generation3dGenerationsDelta { modified: vec![Generation3dGenerationModification { id: payload.id.clone(), patch: Generation3dGenerationPatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }

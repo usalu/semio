@@ -13,6 +13,7 @@
 //! independently against the registered `png` reference crate. The subject side fully parses the
 //! real document into the typed `PngSnapshot` and re-serializes from it — never splices bytes.
 
+use semio_s_artifact_stdio_png::apply_mutation;
 use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_png_mutation};
@@ -122,7 +123,7 @@ mod subject {
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_png::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
-    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation,PngMutation};
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{PngMutation};
 
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 
@@ -147,12 +148,12 @@ mod subject {
             law::round_trip_preserves(&project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?, original)?;
             let expected = painted_vector(&row)?;
             let mutation = mutation_from_spec(&vector_paint_spec(&row, revision, expected.clone())?)?;
-            let outcome = apply_png_mutation(&mut snapshot, &mutation);
+            let outcome = apply_mutation(&mut snapshot, &mutation);
             if !outcome.is_applicable(Default::default()) { return Err(format!("neutral PNG paint refused: {:?}", outcome.messages())); }
             let observation = project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?;
             law::round_trip_preserves(&observation, &expected)?;
-            for inverse in mutation_inverse(&mutation, &base).map_err(|error| error.to_string())? {
-                let outcome = apply_png_mutation(&mut snapshot, &inverse);
+            for inverse in mutation_inverse(&mutation, &base).map_err(|error| error.to_string())?.into_iter().rev() {
+                let outcome = apply_mutation(&mut snapshot, &inverse);
                 if !outcome.is_applicable(Default::default()) { return Err(format!("neutral PNG inverse refused: {:?}", outcome.messages())); }
             }
             law::inverse_restores("neutral native paint", &project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?, original)?;
@@ -167,7 +168,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
-        let outcome = apply_png_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
+        let outcome = apply_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
         if !outcome.is_applicable(Default::default()) { return Err(format!("PNG mutation refused: {:?}", outcome.messages())); }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
         let projection = project_png_mutation(&bytes)?;
@@ -182,10 +183,10 @@ mod subject {
         let base = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
-        let outcome = apply_png_mutation(&mut snapshot, &mutation);
+        let outcome = apply_mutation(&mut snapshot, &mutation);
         if !outcome.is_applicable(Default::default()) { return Err(format!("PNG forward mutation refused: {:?}", outcome.messages())); }
-        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            let outcome = apply_png_mutation(&mut snapshot, &inverse);
+        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            let outcome = apply_mutation(&mut snapshot, &inverse);
             if !outcome.is_applicable(Default::default()) { return Err(format!("PNG inverse mutation refused: {:?}", outcome.messages())); }
         }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;

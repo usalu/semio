@@ -1,6 +1,9 @@
-//! 🧬️ Layout diff schema — sparse keyed delta over the artifact.
+//! 🧬️ Layout diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
-use crate::{CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, LayoutRect, Page, PageOverride, PagePatch, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch, TextStyleRun};
+use crate::{CharacterStyle, Frame, FramePatch, GridSettings, ImageLink, ImageLinkPatch, Layer, LayoutDrawingChild, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch, TextStyleRun};
+use crate::LayoutSnapshot;
+use protocol::list_delta::RowPatch;
+use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -82,39 +85,12 @@ pub struct LayoutDataFieldsDelta {
     pub entries: Option<LayoutDataEntriesDelta>,
 }
 
-/// 🧩 Question-keyed rows of the data-field dictionary.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutDataEntriesDelta {
-    pub added: Vec<crate::FormDictionaryEntry>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutDataEntryPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched dictionary entry (whole-entry replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutDataEntryPatchEntry {
-    pub id: String,
-    pub item: crate::FormDictionaryEntry,
-}
-
 /// ✏️ One text edit of the imported plan: the text at `index` now reads `text`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LayoutDrawingTextRow {
     pub index: u32,
     pub text: String,
-}
-
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutStringList {
-    pub values: Vec<String>,
 }
 
 /// 📍️ Positional rows of the style runs of one story: the final length (when it changes) and every position whose run differs from the base.
@@ -157,166 +133,344 @@ pub struct PageGuideRow {
     pub guide: LayoutRect,
 }
 
-/// 🧩 Object-keyed rows of the page overrides.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct PageOverridesDelta {
-    pub added: Vec<PageOverride>,
-    pub removed: Vec<String>,
-    pub patched: Vec<PageOverridePatchEntry>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `pages` list.
+    pub LayoutPagesDelta {
+        removal: LayoutPageRemoval,
+        insertion: LayoutPageInsertion,
+        relocation: LayoutPageRelocation,
+        modification: LayoutPagesModification,
+        row: Page,
+        patch: PagePatch,
+        key: id
+    }
 }
 
-/// 🩹 One patched page override (whole-override replacement).
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `stories` list.
+    pub LayoutStoriesDelta {
+        removal: LayoutStoryRemoval,
+        insertion: LayoutStoryInsertion,
+        relocation: LayoutStoryRelocation,
+        modification: LayoutStoriesModification,
+        row: TextStory,
+        patch: TextStoryPatch,
+        key: id
+    }
+}
+
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `links` list.
+    pub LayoutLinksDelta {
+        removal: LayoutLinkRemoval,
+        insertion: LayoutLinkInsertion,
+        relocation: LayoutLinkRelocation,
+        modification: LayoutLinksModification,
+        row: ImageLink,
+        patch: ImageLinkPatch,
+        key: id
+    }
+}
+
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `paragraphStyles` list.
+    pub LayoutParagraphStylesDelta {
+        removal: LayoutParagraphStyleRemoval,
+        insertion: LayoutParagraphStyleInsertion,
+        relocation: LayoutParagraphStyleRelocation,
+        modification: LayoutParagraphStylesModification,
+        row: ParagraphStyle,
+        patch: ParagraphStylePatch,
+        key: id
+    }
+}
+
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `characterStyles` list.
+    pub LayoutCharacterStylesDelta {
+        removal: LayoutCharacterStyleRemoval,
+        insertion: LayoutCharacterStyleInsertion,
+        relocation: LayoutCharacterStyleRelocation,
+        modification: LayoutCharacterStylesModification,
+        row: CharacterStyle,
+        patch: CharacterStylePatch,
+        key: id
+    }
+}
+
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `parentPages` list.
+    pub LayoutParentPagesDelta {
+        removal: LayoutParentPageRemoval,
+        insertion: LayoutParentPageInsertion,
+        relocation: LayoutParentPageRelocation,
+        modification: LayoutParentPagesModification,
+        row: ParentPage,
+        patch: ParentPagePatch,
+        key: id
+    }
+}
+
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `spreads` list.
+    pub LayoutSpreadsDelta {
+        removal: LayoutSpreadRemoval,
+        insertion: LayoutSpreadInsertion,
+        relocation: LayoutSpreadRelocation,
+        modification: LayoutSpreadsModification,
+        row: Spread,
+        patch: SpreadPatch,
+        key: id
+    }
+}
+
+protocol::plain_list_delta! {
+    /// 🧩 Positional keyed rows of the `overrides` list.
+    pub PageOverridesDelta {
+        removal: PageOverrideRemoval,
+        insertion: PageOverrideInsertion,
+        relocation: PageOverrideRelocation,
+        row: PageOverride,
+        key: object_id
+    }
+}
+
+/// 🧾️ One dictionary row keyed by its question; the forms crate owns the entry type, so the delta keys it through this wrapper.
+#[derive(Clone, Debug, PartialEq)]
+struct LayoutDataEntryRow(crate::FormDictionaryEntry);
+
+impl protocol::list_delta::Keyed for LayoutDataEntryRow {
+    type Key = String;
+    fn key(&self) -> String {
+        self.0.question_id.clone()
+    }
+}
+
+/// ➖️ One `entries` row removed, with the base index the inverse reinserts it at.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct PageOverridePatchEntry {
+#[value(rename_all = "camelCase")]
+pub struct LayoutDataEntryRemoval {
     pub id: String,
-    pub item: PageOverride,
+    pub index: usize,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutPagesDelta {
-    pub added: Vec<Page>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutPagePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
+/// ➕️ One `entries` row inserted at its index in the resulting list.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutPagePatchEntry {
-    pub id: String,
-    pub patch: PagePatch,
+#[value(rename_all = "camelCase")]
+pub struct LayoutDataEntryInsertion {
+    pub index: usize,
+    pub row: crate::FormDictionaryEntry,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutStoriesDelta {
-    pub added: Vec<TextStory>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutStoryPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
+/// ↕️ One `entries` row moved from its base index to its index in the resulting list.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutStoryPatchEntry {
+#[value(rename_all = "camelCase")]
+pub struct LayoutDataEntryRelocation {
     pub id: String,
-    pub patch: TextStoryPatch,
+    pub from: usize,
+    pub to: usize,
 }
 
+/// 🧩 Positional keyed rows of the `entries` list.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutLinksDelta {
-    pub added: Vec<ImageLink>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutLinkPatchEntry>,
-    pub reordered: Option<Vec<String>>,
+#[value(rename_all = "camelCase", default)]
+pub struct LayoutDataEntriesDelta {
+    pub removed: Vec<LayoutDataEntryRemoval>,
+    pub inserted: Vec<LayoutDataEntryInsertion>,
+    pub moved: Vec<LayoutDataEntryRelocation>,
 }
 
+type LayoutDataEntriesDeltaParts = protocol::list_delta::Parts<LayoutDataEntryRow, protocol::list_delta::NoPatch>;
+
+impl LayoutDataEntriesDelta {
+    fn into_parts(self) -> LayoutDataEntriesDeltaParts {
+        protocol::list_delta::Parts {
+            removed: self.removed.into_iter().map(|entry| (entry.id, entry.index)).collect(),
+            inserted: self.inserted.into_iter().map(|entry| (entry.index, LayoutDataEntryRow(entry.row))).collect(),
+            moved: self.moved.into_iter().map(|entry| (entry.id, entry.from, entry.to)).collect(),
+            modified: Vec::new(),
+        }
+    }
+
+    fn from_parts(parts: LayoutDataEntriesDeltaParts) -> Self {
+        Self {
+            removed: parts.removed.into_iter().map(|(id, index)| LayoutDataEntryRemoval { id, index }).collect(),
+            inserted: parts.inserted.into_iter().map(|(index, row)| LayoutDataEntryInsertion { index, row: row.0 }).collect(),
+            moved: parts.moved.into_iter().map(|(id, from, to)| LayoutDataEntryRelocation { id, from, to }).collect(),
+        }
+    }
+
+    /// ➕️ The delta that inserts `row` at `index` of the after list.
+    pub fn insertion(index: usize, row: crate::FormDictionaryEntry) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::insertion(index, LayoutDataEntryRow(row)))
+    }
+
+    /// ➖️ The delta that removes the row `id` found at `index` of the base list.
+    pub fn removal_by_id(id: impl Into<String>, index: usize) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::removal_by_id(id.into(), index))
+    }
+
+    /// ↕️ The delta that moves the row `id` from `from` of the base list to `to` of the after list.
+    pub fn relocation_by_id(id: impl Into<String>, from: usize, to: usize) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::relocation_by_id(id.into(), from, to))
+    }
+
+    /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
+    pub fn commit_onto(&self, base: &[crate::FormDictionaryEntry], capability: protocol::ApplyCapability) -> Result<Vec<crate::FormDictionaryEntry>, protocol::list_delta::ApplyError> {
+        let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
+        Ok(self.clone().into_parts().commit_onto(&rows, capability)?.into_iter().map(|row| row.0).collect())
+    }
+
+    /// 🔁️ The negative delta over `base`, read row by row.
+    pub fn inverse(&self, base: &[crate::FormDictionaryEntry]) -> Self {
+        let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
+        Self::from_parts(self.clone().into_parts().inverse(&rows))
+    }
+
+    /// ➕️ Composes `self` with the delta `later` applied after it.
+    pub fn absorb(&mut self, later: Self) {
+        let mut parts = std::mem::take(self).into_parts();
+        parts.absorb(later.into_parts());
+        *self = Self::from_parts(parts);
+    }
+
+    /// 🕳️ Whether the delta changes nothing.
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty()
+    }
+}
+
+protocol::row_patch! {
+    /// 🗂️ Owned-field patch of one layer: its name and the two flags.
+    pub LayerPatch of Layer { set { name: String, visible: bool, locked: bool } }
+}
+
+protocol::list_delta! {
+    /// 🧩 Positional keyed rows of the `layers` list.
+    pub PageLayersDelta {
+        removal: PageLayerRemoval,
+        insertion: PageLayerInsertion,
+        relocation: PageLayerRelocation,
+        modification: PageLayersModification,
+        row: Layer,
+        patch: LayerPatch,
+        key: id
+    }
+}
+
+impl protocol::list_delta::Keyed for Frame {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id().to_string()
+    }
+}
+
+/// ➖️ One `frames` row removed, with the base index the inverse reinserts it at.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutLinkPatchEntry {
+#[value(rename_all = "camelCase")]
+pub struct PageFrameRemoval {
     pub id: String,
-    pub patch: ImageLinkPatch,
+    pub index: usize,
 }
 
+/// ➕️ One `frames` row inserted at its index in the resulting list.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct PageFrameInsertion {
+    pub index: usize,
+    #[dsl(statements)]
+    pub row: Frame,
+}
+
+/// ↕️ One `frames` row moved from its base index to its index in the resulting list.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct PageFrameRelocation {
+    pub id: String,
+    pub from: usize,
+    pub to: usize,
+}
+
+/// 🩹 One modified `frames` row.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct PageFramesModification {
+    pub id: String,
+    pub patch: FramePatch,
+}
+
+/// 🧩 Positional keyed rows of the `frames` list.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutParagraphStylesDelta {
-    pub added: Vec<ParagraphStyle>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutParagraphStylePatchEntry>,
-    pub reordered: Option<Vec<String>>,
+#[value(rename_all = "camelCase", default)]
+pub struct PageFramesDelta {
+    pub removed: Vec<PageFrameRemoval>,
+    pub inserted: Vec<PageFrameInsertion>,
+    pub moved: Vec<PageFrameRelocation>,
+    pub modified: Vec<PageFramesModification>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutParagraphStylePatchEntry {
-    pub id: String,
-    pub patch: ParagraphStylePatch,
-}
+type PageFramesDeltaParts = protocol::list_delta::Parts<Frame, FramePatch>;
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutCharacterStylesDelta {
-    pub added: Vec<CharacterStyle>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutCharacterStylePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
+impl PageFramesDelta {
+    fn into_parts(self) -> PageFramesDeltaParts {
+        protocol::list_delta::Parts {
+            removed: self.removed.into_iter().map(|entry| (entry.id, entry.index)).collect(),
+            inserted: self.inserted.into_iter().map(|entry| (entry.index, entry.row)).collect(),
+            moved: self.moved.into_iter().map(|entry| (entry.id, entry.from, entry.to)).collect(),
+            modified: self.modified.into_iter().map(|entry| (entry.id, entry.patch)).collect(),
+        }
+    }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutCharacterStylePatchEntry {
-    pub id: String,
-    pub patch: CharacterStylePatch,
-}
+    fn from_parts(parts: PageFramesDeltaParts) -> Self {
+        Self {
+            removed: parts.removed.into_iter().map(|(id, index)| PageFrameRemoval { id, index }).collect(),
+            inserted: parts.inserted.into_iter().map(|(index, row)| PageFrameInsertion { index, row: row }).collect(),
+            moved: parts.moved.into_iter().map(|(id, from, to)| PageFrameRelocation { id, from, to }).collect(),
+            modified: parts.modified.into_iter().map(|(id, patch)| PageFramesModification { id, patch }).collect(),
+        }
+    }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutParentPagesDelta {
-    pub added: Vec<ParentPage>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutParentPagePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
+    /// ➕️ The delta that inserts `row` at `index` of the after list.
+    pub fn insertion(index: usize, row: Frame) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::insertion(index, row))
+    }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutParentPagePatchEntry {
-    pub id: String,
-    pub patch: ParentPagePatch,
-}
+    /// ➖️ The delta that removes the row `id` found at `index` of the base list.
+    pub fn removal_by_id(id: impl Into<String>, index: usize) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::removal_by_id(id.into(), index))
+    }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-pub struct LayoutSpreadsDelta {
-    pub added: Vec<Spread>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LayoutSpreadPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
+    /// ↕️ The delta that moves the row `id` from `from` of the base list to `to` of the after list.
+    pub fn relocation_by_id(id: impl Into<String>, from: usize, to: usize) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::relocation_by_id(id.into(), from, to))
+    }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct LayoutSpreadPatchEntry {
-    pub id: String,
-    pub patch: SpreadPatch,
+    /// 🩹 The delta that patches the row `id`.
+    pub fn modification(id: impl Into<String>, patch: FramePatch) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::modification(id.into(), patch))
+    }
+
+    /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
+    pub fn commit_onto(&self, base: &Vec<Frame>, capability: protocol::ApplyCapability) -> Result<Vec<Frame>, protocol::list_delta::ApplyError> {
+        self.clone().into_parts().commit_onto(base, capability)
+    }
+
+    /// 🔁️ The negative delta over `base`, read row by row.
+    pub fn inverse(&self, base: &Vec<Frame>) -> Self {
+        Self::from_parts(self.clone().into_parts().inverse(base))
+    }
+
+    /// ➕️ Composes `self` with the delta `later` applied after it.
+    pub fn absorb(&mut self, later: Self) {
+        let mut parts = std::mem::take(self).into_parts();
+        parts.absorb(later.into_parts());
+        *self = Self::from_parts(parts);
+    }
+
+    /// 🕳️ Whether the delta changes nothing.
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| protocol::list_delta::RowPatch::<Frame>::is_empty(&entry.patch))
+    }
 }
 
 /// 🩹 Sparse patch for a {@link ParagraphStyle}.
@@ -368,84 +522,45 @@ pub struct ParentPagePatch {
 pub struct SpreadPatch {
     pub name: Option<String>,
 }
+/// 📄️ Owned-field patch of one page: its dimensions, margins, columns and parent, the positional guides, and the keyed overrides, frames and layers.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(default, deny_unknown_fields)]
+pub struct PagePatch {
+    pub name: Option<String>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    pub margin_top: Option<f64>,
+    pub margin_right: Option<f64>,
+    pub margin_bottom: Option<f64>,
+    pub margin_left: Option<f64>,
+    pub columns_count: Option<u32>,
+    pub columns_gutter: Option<f64>,
+    pub parent_page_id: Option<Option<String>>,
+    pub guides: Option<PageGuidesDelta>,
+    pub overrides: PageOverridesDelta,
+    pub frames: PageFramesDelta,
+    pub layers: PageLayersDelta,
+}
 //#endregion 🔖️DeltaHelpers
 
-use crate::LayoutSnapshot;
-use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
-
-//#region 🔖️Insertion
-/// 📍 Complete id order that places `id` at `index` among `ids`; `None` when it lands last, because appending is already the natural order of an added row.
-pub fn insertion_order<'a>(ids: impl IntoIterator<Item = &'a str>, id: &str, index: Option<usize>) -> Option<Vec<String>> {
-    let at = index?;
-    let mut order: Vec<String> = ids.into_iter().map(str::to_owned).collect();
-    (at < order.len()).then(|| {
-        order.insert(at, id.to_owned());
-        order
-    })
-}
-//#endregion 🔖️Insertion
-
-//#region 🔖️RowAlgebra
-pub(crate) trait HasId {
-    fn id(&self) -> &str;
-}
-
-macro_rules! impl_has_id {
-    ($($item:ty => $field:ident),* $(,)?) => {
-        $(impl HasId for $item {
-            fn id(&self) -> &str {
-                &self.$field
+//#region 🔖️RowPatches
+macro_rules! field_row_patch {
+    ($patch:ty, $row:ty, |$patch_id:ident, $base_id:ident| $inverse:expr) => {
+        impl RowPatch<$row> for $patch {
+            fn commit_into(&self, row: &mut $row, _capability: ApplyCapability) -> Result<(), MutationApplyError> {
+                row.apply_patch(self);
+                Ok(())
             }
-        })*
-    };
-}
-
-impl_has_id!(Page => id, TextStory => id, ImageLink => id, ParagraphStyle => id, CharacterStyle => id, ParentPage => id, Spread => id, PageOverride => object_id, crate::FormDictionaryEntry => question_id);
-
-/// 🩹 How one patch row edits one item: applied, inverted against a base item into the sequence that undoes it, merged with a later row when that stays exact, and rebuilt between two items.
-pub(crate) trait RowPatch<T>: Clone + PartialEq + Sized {
-    fn applied(&self, item: &T) -> MutationApplyResult<T>;
-    fn inverse_against(&self, base: &T) -> Vec<Self>;
-    fn merged(self, later: Self) -> Result<Self, (Self, Self)>;
-    fn between(base: &T, other: &T) -> Vec<Self>;
-}
-
-impl<T: Clone + PartialEq> RowPatch<T> for T {
-    fn applied(&self, _item: &T) -> MutationApplyResult<T> {
-        Ok(self.clone())
-    }
-    fn inverse_against(&self, base: &T) -> Vec<Self> {
-        vec![base.clone()]
-    }
-    fn merged(self, later: Self) -> Result<Self, (Self, Self)> {
-        Ok(later)
-    }
-    fn between(base: &T, other: &T) -> Vec<Self> {
-        if base == other {
-            Vec::new()
-        } else {
-            vec![other.clone()]
-        }
-    }
-}
-
-macro_rules! impl_field_patch {
-    ($patch:ty, $item:ty, $inverse:expr) => {
-        impl RowPatch<$item> for $patch {
-            fn applied(&self, item: &$item) -> MutationApplyResult<$item> {
-                let mut next = item.clone();
-                next.apply_patch(self);
-                Ok(next)
+            fn absorb(&mut self, later: Self) {
+                let first = std::mem::take(self);
+                *self = later.or(first);
             }
-            fn inverse_against(&self, base: &$item) -> Vec<Self> {
-                let inverse: fn(&$patch, &$item) -> $patch = $inverse;
-                vec![inverse(self, base)]
+            fn inverse(&self, row: &$row) -> Self {
+                let ($patch_id, $base_id) = (self, row);
+                $inverse
             }
-            fn merged(self, later: Self) -> Result<Self, (Self, Self)> {
-                Ok(later.or(self))
-            }
-            fn between(base: &$item, other: &$item) -> Vec<Self> {
-                base.diff_patch(other).into_iter().collect()
+            fn is_empty(&self) -> bool {
+                *self == Self::default()
             }
         }
     };
@@ -497,7 +612,7 @@ impl ImageLinkPatch {
     }
 }
 
-impl_field_patch!(ParagraphStylePatch, ParagraphStyle, |patch, base| ParagraphStylePatch {
+field_row_patch!(ParagraphStylePatch, ParagraphStyle, |patch, base| ParagraphStylePatch {
     name: patch.name.as_ref().map(|_| base.name.clone()),
     font_family: patch.font_family.as_ref().map(|_| base.font_family.clone()),
     font_size: patch.font_size.map(|_| base.font_size),
@@ -507,7 +622,7 @@ impl_field_patch!(ParagraphStylePatch, ParagraphStyle, |patch, base| ParagraphSt
     alignment: patch.alignment.as_ref().map(|_| base.alignment.clone()),
 });
 
-impl_field_patch!(CharacterStylePatch, CharacterStyle, |patch, base| CharacterStylePatch {
+field_row_patch!(CharacterStylePatch, CharacterStyle, |patch, base| CharacterStylePatch {
     name: patch.name.as_ref().map(|_| base.name.clone()),
     font_family: patch.font_family.as_ref().map(|_| base.font_family.clone()),
     font_size: patch.font_size.map(|_| base.font_size),
@@ -517,11 +632,11 @@ impl_field_patch!(CharacterStylePatch, CharacterStyle, |patch, base| CharacterSt
     tracking: patch.tracking.map(|_| base.tracking),
 });
 
-impl_field_patch!(ParentPagePatch, ParentPage, |patch, base| ParentPagePatch { name: patch.name.as_ref().map(|_| base.name.clone()), width: patch.width.map(|_| base.width), height: patch.height.map(|_| base.height) });
+field_row_patch!(ParentPagePatch, ParentPage, |patch, base| ParentPagePatch { name: patch.name.as_ref().map(|_| base.name.clone()), width: patch.width.map(|_| base.width), height: patch.height.map(|_| base.height) });
 
-impl_field_patch!(SpreadPatch, Spread, |patch, base| SpreadPatch { name: patch.name.as_ref().map(|_| base.name.clone()) });
+field_row_patch!(SpreadPatch, Spread, |patch, base| SpreadPatch { name: patch.name.as_ref().map(|_| base.name.clone()) });
 
-impl_field_patch!(ImageLinkPatch, ImageLink, |patch, base| ImageLinkPatch {
+field_row_patch!(ImageLinkPatch, ImageLink, |patch, base| ImageLinkPatch {
     path: patch.path.as_ref().map(|_| base.path.clone()),
     width: patch.width.map(|_| base.width),
     height: patch.height.map(|_| base.height),
@@ -530,31 +645,200 @@ impl_field_patch!(ImageLinkPatch, ImageLink, |patch, base| ImageLinkPatch {
 });
 
 impl RowPatch<TextStory> for TextStoryPatch {
-    fn applied(&self, item: &TextStory) -> MutationApplyResult<TextStory> {
-        let style_runs = match &self.style_runs {
-            Some(delta) => apply_positional(&item.style_runs, delta).map_err(|error| error.under(["styleRuns"]))?,
-            None => item.style_runs.clone(),
-        };
-        Ok(TextStory { id: item.id.clone(), content: self.content.clone().unwrap_or_else(|| item.content.clone()), style_runs })
+    fn commit_into(&self, row: &mut TextStory, _capability: ApplyCapability) -> Result<(), MutationApplyError> {
+        if let Some(content) = &self.content {
+            row.content = content.clone();
+        }
+        if let Some(delta) = &self.style_runs {
+            row.style_runs = apply_positional(&row.style_runs, delta).map_err(|error| error.under(["styleRuns"]))?;
+        }
+        Ok(())
     }
-    fn inverse_against(&self, base: &TextStory) -> Vec<Self> {
-        vec![Self { content: self.content.as_ref().map(|_| base.content.clone()), style_runs: self.style_runs.as_ref().map(|delta| inverse_positional(delta, &base.style_runs)) }]
-    }
-    fn merged(self, later: Self) -> Result<Self, (Self, Self)> {
-        let style_runs = match (self.style_runs, later.style_runs) {
+    fn absorb(&mut self, later: Self) {
+        self.content = later.content.or_else(|| self.content.take());
+        self.style_runs = match (self.style_runs.take(), later.style_runs) {
             (Some(first), Some(second)) => Some(absorb_positional(first, second)),
             (first, None) => first,
             (None, second) => second,
         };
-        Ok(Self { content: later.content.or(self.content), style_runs })
     }
-    fn between(base: &TextStory, other: &TextStory) -> Vec<Self> {
-        let patch = Self { content: (base.content != other.content).then(|| other.content.clone()), style_runs: between_positional(&base.style_runs, &other.style_runs) };
-        if patch == Self::default() {
-            Vec::new()
-        } else {
-            vec![patch]
+    fn inverse(&self, row: &TextStory) -> Self {
+        Self { content: self.content.as_ref().map(|_| row.content.clone()), style_runs: self.style_runs.as_ref().map(|delta| inverse_positional(delta, &row.style_runs)) }
+    }
+    fn is_empty(&self) -> bool {
+        self.content.is_none() && self.style_runs.as_ref().is_none_or(is_empty_positional)
+    }
+}
+
+impl crate::FramePatch {
+    fn or(self, earlier: Self) -> Self {
+        Self {
+            x: self.x.or(earlier.x),
+            y: self.y.or(earlier.y),
+            width: self.width.or(earlier.width),
+            height: self.height.or(earlier.height),
+            rotation: self.rotation.or(earlier.rotation),
+            fill: self.fill.or(earlier.fill),
+            stroke: self.stroke.or(earlier.stroke),
+            wrap_mode: self.wrap_mode.or(earlier.wrap_mode),
+            columns: self.columns.or(earlier.columns),
+            locked: self.locked.or(earlier.locked),
+            visible: self.visible.or(earlier.visible),
+            story_id: self.story_id.or(earlier.story_id),
+            thread_next: self.thread_next.or(earlier.thread_next),
+            inset_x: self.inset_x.or(earlier.inset_x),
+            inset_y: self.inset_y.or(earlier.inset_y),
+            inset_width: self.inset_width.or(earlier.inset_width),
+            inset_height: self.inset_height.or(earlier.inset_height),
+            layer_id: self.layer_id.or(earlier.layer_id),
         }
+    }
+
+    /// ↩️ The absolute setters restoring the fields this patch sets to the values `frame` holds.
+    fn restoring(&self, frame: &crate::Frame) -> Self {
+        let bounds = frame.bounds();
+        let (fill, stroke) = match frame {
+            crate::Frame::Rect { fill, stroke, .. } => (Some(*fill), Some(*stroke)),
+            _ => (None, None),
+        };
+        let text = match frame {
+            crate::Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. } => Some((wrap_mode, *columns, story_id, thread_next, inset)),
+            _ => None,
+        };
+        Self {
+            x: self.x.map(|_| bounds.x),
+            y: self.y.map(|_| bounds.y),
+            width: self.width.map(|_| bounds.width),
+            height: self.height.map(|_| bounds.height),
+            rotation: self.rotation.map(|_| bounds.rotation),
+            fill: self.fill.and(fill),
+            stroke: self.stroke.and(stroke),
+            wrap_mode: self.wrap_mode.as_ref().and(text.map(|text| text.0.clone())),
+            columns: self.columns.and(text.map(|text| text.1)),
+            locked: self.locked.map(|_| frame.locked()),
+            visible: self.visible.map(|_| frame.visible()),
+            story_id: self.story_id.as_ref().and(text.map(|text| text.2.clone())),
+            thread_next: self.thread_next.as_ref().and(text.map(|text| text.3.clone())),
+            inset_x: self.inset_x.and(text.map(|text| text.4.x)),
+            inset_y: self.inset_y.and(text.map(|text| text.4.y)),
+            inset_width: self.inset_width.and(text.map(|text| text.4.width)),
+            inset_height: self.inset_height.and(text.map(|text| text.4.height)),
+            layer_id: self.layer_id.as_ref().map(|_| frame.layer_id().to_string()),
+        }
+    }
+}
+
+impl RowPatch<Frame> for FramePatch {
+    fn commit_into(&self, row: &mut Frame, _capability: ApplyCapability) -> Result<(), MutationApplyError> {
+        crate::apply_frame_field_patch(row, self);
+        Ok(())
+    }
+    fn absorb(&mut self, later: Self) {
+        let first = std::mem::take(self);
+        *self = later.or(first);
+    }
+    fn inverse(&self, row: &Frame) -> Self {
+        self.restoring(row)
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+impl RowPatch<Page> for PagePatch {
+    fn commit_into(&self, row: &mut Page, capability: ApplyCapability) -> Result<(), MutationApplyError> {
+        if let Some(name) = &self.name {
+            row.name = name.clone();
+        }
+        if let Some(value) = self.width {
+            row.width = value;
+        }
+        if let Some(value) = self.height {
+            row.height = value;
+        }
+        if let Some(value) = self.margin_top {
+            row.margins.top = value;
+        }
+        if let Some(value) = self.margin_right {
+            row.margins.right = value;
+        }
+        if let Some(value) = self.margin_bottom {
+            row.margins.bottom = value;
+        }
+        if let Some(value) = self.margin_left {
+            row.margins.left = value;
+        }
+        if let Some(value) = self.columns_count {
+            row.columns.count = value;
+        }
+        if let Some(value) = self.columns_gutter {
+            row.columns.gutter = value;
+        }
+        if let Some(parent) = &self.parent_page_id {
+            row.parent_page_id = parent.clone();
+        }
+        if let Some(delta) = &self.guides {
+            row.guides = apply_positional(&row.guides, delta).map_err(|error| error.under(["guides"]))?;
+        }
+        row.overrides = self.overrides.commit_onto(&row.overrides, capability).map_err(|error| error.under(["overrides"]))?;
+        row.frames = self.frames.commit_onto(&row.frames, capability).map_err(|error| error.under(["frames"]))?;
+        row.layers = self.layers.commit_onto(&row.layers, capability).map_err(|error| error.under(["layers"]))?;
+        crate::derive_page_layers(row);
+        Ok(())
+    }
+    fn absorb(&mut self, later: Self) {
+        self.name = later.name.or_else(|| self.name.take());
+        self.width = later.width.or(self.width);
+        self.height = later.height.or(self.height);
+        self.margin_top = later.margin_top.or(self.margin_top);
+        self.margin_right = later.margin_right.or(self.margin_right);
+        self.margin_bottom = later.margin_bottom.or(self.margin_bottom);
+        self.margin_left = later.margin_left.or(self.margin_left);
+        self.columns_count = later.columns_count.or(self.columns_count);
+        self.columns_gutter = later.columns_gutter.or(self.columns_gutter);
+        self.parent_page_id = later.parent_page_id.or_else(|| self.parent_page_id.take());
+        self.guides = match (self.guides.take(), later.guides) {
+            (Some(first), Some(second)) => Some(absorb_positional(first, second)),
+            (first, None) => first,
+            (None, second) => second,
+        };
+        self.overrides.absorb(later.overrides);
+        self.frames.absorb(later.frames);
+        self.layers.absorb(later.layers);
+    }
+    fn inverse(&self, row: &Page) -> Self {
+        Self {
+            name: self.name.as_ref().map(|_| row.name.clone()),
+            width: self.width.map(|_| row.width),
+            height: self.height.map(|_| row.height),
+            margin_top: self.margin_top.map(|_| row.margins.top),
+            margin_right: self.margin_right.map(|_| row.margins.right),
+            margin_bottom: self.margin_bottom.map(|_| row.margins.bottom),
+            margin_left: self.margin_left.map(|_| row.margins.left),
+            columns_count: self.columns_count.map(|_| row.columns.count),
+            columns_gutter: self.columns_gutter.map(|_| row.columns.gutter),
+            parent_page_id: self.parent_page_id.as_ref().map(|_| row.parent_page_id.clone()),
+            guides: self.guides.as_ref().map(|delta| inverse_positional(delta, &row.guides)),
+            overrides: self.overrides.inverse(&row.overrides),
+            frames: self.frames.inverse(&row.frames),
+            layers: self.layers.inverse(&row.layers),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.name.is_none()
+            && self.width.is_none()
+            && self.height.is_none()
+            && self.margin_top.is_none()
+            && self.margin_right.is_none()
+            && self.margin_bottom.is_none()
+            && self.margin_left.is_none()
+            && self.columns_count.is_none()
+            && self.columns_gutter.is_none()
+            && self.parent_page_id.is_none()
+            && self.guides.as_ref().is_none_or(is_empty_positional)
+            && self.overrides.is_empty()
+            && self.frames.is_empty()
+            && self.layers.is_empty()
     }
 }
 
@@ -574,290 +858,8 @@ impl GridPatch {
         self.baseline_offset = later.baseline_offset.or(self.baseline_offset);
         self.snap_to_baseline = later.snap_to_baseline.or(self.snap_to_baseline);
     }
-    fn between(base: &GridSettings, other: &GridSettings) -> Option<Self> {
-        let patch = Self {
-            baseline_grid: (base.baseline_grid != other.baseline_grid).then_some(other.baseline_grid),
-            baseline_offset: (base.baseline_offset != other.baseline_offset).then_some(other.baseline_offset),
-            snap_to_baseline: (base.snap_to_baseline != other.snap_to_baseline).then_some(other.snap_to_baseline),
-        };
-        (patch != Self::default()).then_some(patch)
-    }
 }
-
-/// 🧩 The shared shape of every id-keyed collection delta; repeated patch entries of one id apply in order.
-pub(crate) trait Delta: Default + Clone {
-    type Item: HasId + Clone;
-    type Patch: RowPatch<Self::Item>;
-    fn added(&self) -> &[Self::Item];
-    fn removed(&self) -> &[String];
-    fn patched(&self) -> Vec<(&str, &Self::Patch)>;
-    fn reordered(&self) -> Option<&[String]>;
-    fn from_parts(added: Vec<Self::Item>, removed: Vec<String>, patched: Vec<(String, Self::Patch)>, reordered: Option<Vec<String>>) -> Self;
-}
-
-macro_rules! impl_delta {
-    ($delta:ty, $item:ty, $patch:ty, $entry:ident, $field:ident) => {
-        impl Delta for $delta {
-            type Item = $item;
-            type Patch = $patch;
-            fn added(&self) -> &[$item] {
-                &self.added
-            }
-            fn removed(&self) -> &[String] {
-                &self.removed
-            }
-            fn patched(&self) -> Vec<(&str, &$patch)> {
-                self.patched.iter().map(|entry| (entry.id.as_str(), &entry.$field)).collect()
-            }
-            fn reordered(&self) -> Option<&[String]> {
-                self.reordered.as_deref()
-            }
-            fn from_parts(added: Vec<$item>, removed: Vec<String>, patched: Vec<(String, $patch)>, reordered: Option<Vec<String>>) -> Self {
-                Self { added, removed, patched: patched.into_iter().map(|(id, $field)| $entry { id, $field }).collect(), reordered }
-            }
-        }
-    };
-}
-
-impl_delta!(LayoutPagesDelta, Page, PagePatch, LayoutPagePatchEntry, patch);
-impl_delta!(LayoutStoriesDelta, TextStory, TextStoryPatch, LayoutStoryPatchEntry, patch);
-impl_delta!(LayoutLinksDelta, ImageLink, ImageLinkPatch, LayoutLinkPatchEntry, patch);
-impl_delta!(LayoutParagraphStylesDelta, ParagraphStyle, ParagraphStylePatch, LayoutParagraphStylePatchEntry, patch);
-impl_delta!(LayoutCharacterStylesDelta, CharacterStyle, CharacterStylePatch, LayoutCharacterStylePatchEntry, patch);
-impl_delta!(LayoutParentPagesDelta, ParentPage, ParentPagePatch, LayoutParentPagePatchEntry, patch);
-impl_delta!(LayoutSpreadsDelta, Spread, SpreadPatch, LayoutSpreadPatchEntry, patch);
-impl_delta!(PageOverridesDelta, PageOverride, PageOverride, PageOverridePatchEntry, item);
-impl_delta!(LayoutDataEntriesDelta, crate::FormDictionaryEntry, crate::FormDictionaryEntry, LayoutDataEntryPatchEntry, item);
-//#endregion 🔖️RowAlgebra
-
-//#region 🔖️DeltaAlgebra
-fn rejection(code: &str, message: &str, at: [String; 2]) -> MutationApplyError {
-    MutationApplyError::new(code, message).at(at)
-}
-
-pub(crate) fn apply_delta<D: Delta>(items: &[D::Item], delta: &D) -> MutationApplyResult<Vec<D::Item>> {
-    for (index, id) in delta.removed().iter().enumerate() {
-        if !items.iter().any(|item| item.id() == id) {
-            return Err(rejection("mutation.apply.missing-target", "removed item does not exist", ["removed".into(), index.to_string()]));
-        }
-        if delta.removed()[..index].contains(id) {
-            return Err(rejection("mutation.apply.duplicate-target", "item is removed more than once", ["removed".into(), index.to_string()]));
-        }
-    }
-    for (index, item) in delta.added().iter().enumerate() {
-        let survives = items.iter().any(|existing| existing.id() == item.id()) && !delta.removed().iter().any(|id| id == item.id());
-        if survives || delta.added()[..index].iter().any(|existing| existing.id() == item.id()) {
-            return Err(rejection("mutation.apply.duplicate-target", "added item identity already exists", ["added".into(), index.to_string()]));
-        }
-    }
-    let patched = delta.patched();
-    for (index, (id, _)) in patched.iter().enumerate() {
-        if !items.iter().any(|existing| existing.id() == *id) {
-            return Err(rejection("mutation.apply.missing-target", "patched item does not exist", ["patched".into(), index.to_string()]));
-        }
-        if delta.removed().iter().any(|removed| removed == id) {
-            return Err(rejection("mutation.apply.conflicting-target", "item cannot be removed and patched", ["patched".into(), index.to_string()]));
-        }
-    }
-    let mut next: Vec<D::Item> = items.iter().filter(|item| !delta.removed().iter().any(|id| id == item.id())).cloned().collect();
-    next.extend(delta.added().iter().cloned());
-    for (id, patch) in patched {
-        if let Some(position) = next.iter().position(|existing| existing.id() == id) {
-            next[position] = patch.applied(&next[position]).map_err(|error| error.under(["patched", id]))?;
-        }
-    }
-    if let Some(order) = delta.reordered() {
-        if order.len() != next.len() {
-            return Err(MutationApplyError::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len())).at(["reordered"]));
-        }
-        let mut by_id: std::collections::BTreeMap<String, D::Item> = std::collections::BTreeMap::new();
-        for item in next {
-            if by_id.insert(item.id().to_string(), item).is_some() {
-                return Err(MutationApplyError::new("mutation.apply.duplicate-target", "resulting collection contains duplicate identities").at(["identities"]));
-            }
-        }
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            ordered.push(by_id.remove(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist or appears twice").at(["reordered".to_string(), id.clone()]))?);
-        }
-        next = ordered;
-    }
-    Ok(next)
-}
-
-fn is_empty_delta<D: Delta>(delta: &D) -> bool {
-    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().is_empty() && delta.reordered().is_none()
-}
-
-enum Net<T, P> {
-    Patch(Vec<P>),
-    Remove,
-    Add(T),
-    Replace(T),
-}
-
-fn push_patch<P: Clone + PartialEq, T>(sequence: &mut Vec<P>, patch: P)
-where
-    P: RowPatch<T>,
-{
-    match sequence.pop() {
-        Some(last) => match last.merged(patch) {
-            Ok(merged) => sequence.push(merged),
-            Err((earlier, later)) => {
-                sequence.push(earlier);
-                sequence.push(later);
-            }
-        },
-        None => sequence.push(patch),
-    }
-}
-
-/// ➕️ Composes `first` then `second` per id (patch∘patch → one patch when exact, add∘remove → nothing, remove∘add → replace) in a canonical row order.
-pub(crate) fn absorb_delta<D: Delta>(first: D, second: D) -> D {
-    let mut nets: std::collections::BTreeMap<String, Net<D::Item, D::Patch>> = std::collections::BTreeMap::new();
-    let mut appended: Vec<String> = Vec::new();
-    let second_removed: Vec<String> = second.removed().to_vec();
-    let second_added: Vec<String> = second.added().iter().map(|item| item.id().to_string()).collect();
-    let first_order = first.reordered().map(<[String]>::to_vec);
-    let second_order = second.reordered().map(<[String]>::to_vec);
-    for delta in [first, second] {
-        let added = delta.added().to_vec();
-        let removed = delta.removed().to_vec();
-        let patched: Vec<(String, D::Patch)> = delta.patched().into_iter().map(|(id, patch)| (id.to_string(), patch.clone())).collect();
-        for id in removed {
-            match nets.remove(&id) {
-                Some(Net::Add(_)) => appended.retain(|existing| existing != &id),
-                Some(Net::Replace(_)) => {
-                    appended.retain(|existing| existing != &id);
-                    nets.insert(id, Net::Remove);
-                }
-                _ => {
-                    nets.insert(id, Net::Remove);
-                }
-            }
-        }
-        for item in added {
-            let id = item.id().to_string();
-            let net = match nets.remove(&id) {
-                Some(Net::Remove) => Net::Replace(item),
-                _ => Net::Add(item),
-            };
-            appended.retain(|existing| existing != &id);
-            appended.push(id.clone());
-            nets.insert(id, net);
-        }
-        for (id, patch) in patched {
-            let net = match nets.remove(&id) {
-                None => Net::Patch(vec![patch]),
-                Some(Net::Remove) => Net::Remove,
-                Some(Net::Patch(mut sequence)) => {
-                    push_patch::<D::Patch, D::Item>(&mut sequence, patch);
-                    Net::Patch(sequence)
-                }
-                Some(Net::Add(item)) => Net::Add(patch.applied(&item).unwrap_or(item)),
-                Some(Net::Replace(item)) => Net::Replace(patch.applied(&item).unwrap_or(item)),
-            };
-            nets.insert(id, net);
-        }
-    }
-    let reordered = match (second_order, first_order) {
-        (Some(order), _) => Some(order),
-        (None, Some(order)) => Some(order.into_iter().filter(|id| !second_removed.contains(id)).chain(second_added.into_iter().filter(|id| nets.contains_key(id))).collect()),
-        (None, None) => None,
-    };
-    let mut removed = Vec::new();
-    let mut patched = Vec::new();
-    let mut adds: std::collections::BTreeMap<String, D::Item> = std::collections::BTreeMap::new();
-    for (id, net) in nets {
-        match net {
-            Net::Patch(sequence) => patched.extend(sequence.into_iter().map(|patch| (id.clone(), patch))),
-            Net::Remove => removed.push(id),
-            Net::Add(item) => {
-                adds.insert(id, item);
-            }
-            Net::Replace(item) => {
-                removed.push(id.clone());
-                adds.insert(id, item);
-            }
-        }
-    }
-    let mut added: Vec<D::Item> = Vec::with_capacity(adds.len());
-    if reordered.is_some() {
-        added.extend(adds.into_values());
-    } else {
-        for id in &appended {
-            if let Some(item) = adds.remove(id) {
-                added.push(item);
-            }
-        }
-    }
-    D::from_parts(added, removed, patched, reordered)
-}
-
-fn absorb_optional<D: Delta>(first: &mut Option<D>, second: Option<D>) {
-    let Some(second) = second else { return };
-    let merged = absorb_delta(first.take().unwrap_or_default(), second);
-    *first = (!is_empty_delta(&merged)).then_some(merged);
-}
-
-fn forward_order<D: Delta>(base_ids: &[String], delta: &D) -> Vec<String> {
-    let mut ids: Vec<String> = base_ids.iter().filter(|id| !delta.removed().contains(id)).cloned().collect();
-    ids.extend(delta.added().iter().map(|item| item.id().to_string()));
-    match delta.reordered() {
-        Some(order) => order.to_vec(),
-        None => ids,
-    }
-}
-
-/// 🔁️ The negative delta against `base`: patch sequences are undone in reverse order against the item as it stood before each step.
-pub(crate) fn inverse_delta<D: Delta>(delta: &D, base: &[D::Item]) -> D {
-    let find = |id: &str| base.iter().find(|item| item.id() == id);
-    let removed: Vec<String> = delta.added().iter().map(|item| item.id().to_string()).collect();
-    let added: Vec<D::Item> = delta.removed().iter().filter_map(|id| find(id).cloned()).collect();
-    let mut groups: Vec<(String, Vec<&D::Patch>)> = Vec::new();
-    for (id, patch) in delta.patched() {
-        match groups.iter_mut().find(|(known, _)| known == id) {
-            Some((_, sequence)) => sequence.push(patch),
-            None => groups.push((id.to_string(), vec![patch])),
-        }
-    }
-    let mut patched: Vec<(String, D::Patch)> = Vec::new();
-    for (id, sequence) in groups {
-        let Some(item) = find(&id) else { continue };
-        let mut state = item.clone();
-        let mut undo: Vec<Vec<D::Patch>> = Vec::new();
-        for patch in sequence {
-            undo.push(patch.inverse_against(&state));
-            state = patch.applied(&state).unwrap_or(state);
-        }
-        patched.extend(undo.into_iter().rev().flatten().map(|patch| (id.clone(), patch)));
-    }
-    let base_ids: Vec<String> = base.iter().map(|item| item.id().to_string()).collect();
-    let mut simulated: Vec<String> = forward_order(&base_ids, delta).into_iter().filter(|id| !removed.contains(id)).collect();
-    simulated.extend(added.iter().map(|item| item.id().to_string()));
-    let reordered = (simulated != base_ids).then_some(base_ids);
-    D::from_parts(added, removed, patched, reordered)
-}
-
-fn inverse_optional<D: Delta>(delta: &Option<D>, base: &[D::Item]) -> Option<D> {
-    delta.as_ref().map(|delta| inverse_delta(delta, base))
-}
-
-pub(crate) fn between_delta<D: Delta>(base: &[D::Item], other: &[D::Item]) -> Option<D> {
-    let removed: Vec<String> = base.iter().filter(|item| !other.iter().any(|candidate| candidate.id() == item.id())).map(|item| item.id().to_string()).collect();
-    let added: Vec<D::Item> = other.iter().filter(|item| !base.iter().any(|candidate| candidate.id() == item.id())).cloned().collect();
-    let patched: Vec<(String, D::Patch)> = base
-        .iter()
-        .filter_map(|item| other.iter().find(|candidate| candidate.id() == item.id()).map(|candidate| <D::Patch as RowPatch<D::Item>>::between(item, candidate).into_iter().map(|patch| (item.id().to_string(), patch)).collect::<Vec<_>>()))
-        .flatten()
-        .collect();
-    let mut natural: Vec<String> = base.iter().filter(|item| !removed.iter().any(|id| id == item.id())).map(|item| item.id().to_string()).collect();
-    natural.extend(added.iter().map(|item| item.id().to_string()));
-    let target: Vec<String> = other.iter().map(|item| item.id().to_string()).collect();
-    let reordered = (natural != target).then_some(target);
-    (!(removed.is_empty() && added.is_empty() && patched.is_empty() && reordered.is_none())).then(|| D::from_parts(added, removed, patched, reordered))
-}
-//#endregion 🔖️DeltaAlgebra
+//#endregion 🔖️RowPatches
 
 //#region 🔖️PositionalAlgebra
 /// 📍️ The shared shape of every positional list delta: the final length when it changes plus the rows whose value differs from the base.
@@ -918,25 +920,9 @@ pub(crate) fn inverse_positional<D: Positional>(delta: &D, base: &[D::Item]) -> 
     D::from_parts((target != base.len()).then_some(base.len()), indices.into_iter().map(|index| (index, base[index].clone())).collect())
 }
 
-pub(crate) fn between_positional<D: Positional>(base: &[D::Item], other: &[D::Item]) -> Option<D> {
-    let rows: Vec<(usize, D::Item)> = other.iter().enumerate().filter(|(index, value)| base.get(*index) != Some(*value)).map(|(index, value)| (index, value.clone())).collect();
-    let len = (base.len() != other.len()).then_some(other.len());
-    (!(rows.is_empty() && len.is_none())).then(|| D::from_parts(len, rows))
-}
-
 /// 📍️ Whether a positional delta changes nothing.
 fn is_empty_positional<D: Positional>(delta: &D) -> bool {
     delta.len().is_none() && delta.rows().is_empty()
-}
-
-/// 📍️ The guides of `page` after `delta` — the fallible half of [`Patchable`] for [`PagePatch`].
-pub fn apply_page_guides(guides: &[LayoutRect], delta: &PageGuidesDelta) -> MutationApplyResult<Vec<LayoutRect>> {
-    apply_positional(guides, delta)
-}
-
-/// 🧩 The overrides of a page after `delta` — the fallible half of [`Patchable`] for [`PagePatch`].
-pub fn apply_page_overrides(overrides: &[PageOverride], delta: &PageOverridesDelta) -> MutationApplyResult<Vec<PageOverride>> {
-    apply_delta(overrides, delta)
 }
 
 /// 📍️ The style runs of a story after `delta` — the fallible half of [`Patchable`] for [`TextStoryPatch`].
@@ -945,329 +931,69 @@ pub fn apply_story_runs(runs: &[TextStyleRun], delta: &TextStyleRunsDelta) -> Mu
 }
 //#endregion 🔖️PositionalAlgebra
 
-//#region 🔖️PageAlgebra
-impl RowPatch<Page> for PagePatch {
-    fn applied(&self, item: &Page) -> MutationApplyResult<Page> {
-        if let Some(delta) = &self.guides {
-            apply_positional(&item.guides, delta).map_err(|error| error.under(["guides"]))?;
+//#region 🔖️PayloadRows
+/// 🎯️ The keyed rows that turn the held list into a whole-list payload: absent rows leave at their base index, new and changed rows enter at their payload index, and the unchanged rows outside the longest already-ordered run are relocated.
+fn payload_parts<R: protocol::list_delta::Keyed<Key = String> + Clone + PartialEq>(held: &[R], payload: &[R]) -> protocol::list_delta::Parts<R, protocol::list_delta::NoPatch> {
+    use protocol::list_delta::Keyed;
+    let unchanged = |row: &R| payload.iter().any(|next| next.key() == row.key() && next == row);
+    let removed: Vec<(String, usize)> = held.iter().enumerate().filter(|(_, row)| !unchanged(row)).map(|(at, row)| (row.key(), at)).collect();
+    let inserted: Vec<(usize, R)> = payload.iter().enumerate().filter(|(_, next)| !held.iter().any(|row| row.key() == next.key() && row == *next)).map(|(at, next)| (at, next.clone())).collect();
+    let survivors: Vec<(usize, usize)> = held.iter().enumerate().filter(|(_, row)| unchanged(row)).filter_map(|(from, row)| payload.iter().position(|next| next.key() == row.key()).map(|to| (from, to))).collect();
+    let mut tails: Vec<usize> = Vec::new();
+    let mut link: Vec<Option<usize>> = vec![None; survivors.len()];
+    for (at, (_, to)) in survivors.iter().enumerate() {
+        let slot = tails.partition_point(|tail| survivors[*tail].1 < *to);
+        link[at] = slot.checked_sub(1).map(|before| tails[before]);
+        if slot == tails.len() {
+            tails.push(at);
+        } else {
+            tails[slot] = at;
         }
-        if let Some(delta) = &self.overrides {
-            apply_delta(&item.overrides, delta).map_err(|error| error.under(["overrides"]))?;
-        }
-        let mut next = item.clone();
-        next.apply_patch(self);
-        Ok(next)
     }
-    fn inverse_against(&self, base: &Page) -> Vec<Self> {
-        self.undo_steps(base)
+    let mut kept = vec![false; survivors.len()];
+    let mut cursor = tails.last().copied();
+    while let Some(at) = cursor {
+        kept[at] = true;
+        cursor = link[at];
     }
-    fn merged(self, later: Self) -> Result<Self, (Self, Self)> {
-        if self.is_structural() || later.is_structural() {
-            return Err((self, later));
-        }
-        Ok(self.merge_plain(later))
-    }
-    fn between(base: &Page, other: &Page) -> Vec<Self> {
-        base.page_changes(other)
-    }
+    let moved: Vec<(String, usize, usize)> = survivors.iter().zip(&kept).filter(|(_, kept)| !**kept).map(|((from, to), _)| (held[*from].key(), *from, *to)).collect();
+    protocol::list_delta::Parts { removed, inserted, moved, modified: Vec::new() }
 }
 
-impl crate::FramePatch {
-    fn or(self, earlier: Self) -> Self {
-        Self {
-            x: self.x.or(earlier.x),
-            y: self.y.or(earlier.y),
-            width: self.width.or(earlier.width),
-            height: self.height.or(earlier.height),
-            rotation: self.rotation.or(earlier.rotation),
-            fill: self.fill.or(earlier.fill),
-            stroke: self.stroke.or(earlier.stroke),
-            wrap_mode: self.wrap_mode.or(earlier.wrap_mode),
-            columns: self.columns.or(earlier.columns),
-            locked: self.locked.or(earlier.locked),
-            visible: self.visible.or(earlier.visible),
-            story_id: self.story_id.or(earlier.story_id),
-            thread_next: self.thread_next.or(earlier.thread_next),
-            inset_x: self.inset_x.or(earlier.inset_x),
-            inset_y: self.inset_y.or(earlier.inset_y),
-            inset_width: self.inset_width.or(earlier.inset_width),
-            inset_height: self.inset_height.or(earlier.inset_height),
-        }
-    }
-
-    /// ↩️ The absolute setters restoring the fields this patch sets to the values `frame` holds.
-    fn restoring(&self, frame: &crate::Frame) -> Self {
-        let bounds = frame.bounds();
-        let (fill, stroke) = match frame {
-            crate::Frame::Rect { fill, stroke, .. } => (Some(*fill), Some(*stroke)),
-            _ => (None, None),
-        };
-        let text = match frame {
-            crate::Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. } => Some((wrap_mode, *columns, story_id, thread_next, inset)),
-            _ => None,
-        };
-        Self {
-            x: self.x.map(|_| bounds.x),
-            y: self.y.map(|_| bounds.y),
-            width: self.width.map(|_| bounds.width),
-            height: self.height.map(|_| bounds.height),
-            rotation: self.rotation.map(|_| bounds.rotation),
-            fill: self.fill.and(fill),
-            stroke: self.stroke.and(stroke),
-            wrap_mode: self.wrap_mode.as_ref().and(text.map(|text| text.0.clone())),
-            columns: self.columns.and(text.map(|text| text.1)),
-            locked: self.locked.map(|_| frame.locked()),
-            visible: self.visible.map(|_| frame.visible()),
-            story_id: self.story_id.as_ref().and(text.map(|text| text.2.clone())),
-            thread_next: self.thread_next.as_ref().and(text.map(|text| text.3.clone())),
-            inset_x: self.inset_x.and(text.map(|text| text.4.x)),
-            inset_y: self.inset_y.and(text.map(|text| text.4.y)),
-            inset_width: self.inset_width.and(text.map(|text| text.4.width)),
-            inset_height: self.inset_height.and(text.map(|text| text.4.height)),
-        }
-    }
-
-    /// 🔎️ The fields in which `other` differs from `frame`, or `None` when they agree.
-    fn between(frame: &crate::Frame, other: &crate::Frame) -> Option<Self> {
-        let (held, next) = (frame.bounds(), other.bounds());
-        let mut patch = Self {
-            x: (held.x != next.x).then_some(next.x),
-            y: (held.y != next.y).then_some(next.y),
-            width: (held.width != next.width).then_some(next.width),
-            height: (held.height != next.height).then_some(next.height),
-            rotation: (held.rotation != next.rotation).then_some(next.rotation),
-            locked: (frame.locked() != other.locked()).then_some(other.locked()),
-            visible: (frame.visible() != other.visible()).then_some(other.visible()),
-            ..Default::default()
-        };
-        match (frame, other) {
-            (crate::Frame::Rect { fill: held_fill, stroke: held_stroke, .. }, crate::Frame::Rect { fill, stroke, .. }) => {
-                patch.fill = (held_fill != fill).then_some(*fill);
-                patch.stroke = (held_stroke != stroke).then_some(*stroke);
-            }
-            (
-                crate::Frame::Text { wrap_mode: held_wrap, columns: held_columns, story_id: held_story, thread_next: held_thread, inset: held_inset, .. },
-                crate::Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. },
-            ) => {
-                patch.wrap_mode = (held_wrap != wrap_mode).then(|| wrap_mode.clone());
-                patch.columns = (held_columns != columns).then_some(*columns);
-                patch.story_id = (held_story != story_id).then(|| story_id.clone());
-                patch.thread_next = (held_thread != thread_next).then(|| thread_next.clone());
-                patch.inset_x = (held_inset.x != inset.x).then_some(inset.x);
-                patch.inset_y = (held_inset.y != inset.y).then_some(inset.y);
-                patch.inset_width = (held_inset.width != inset.width).then_some(inset.width);
-                patch.inset_height = (held_inset.height != inset.height).then_some(inset.height);
-            }
-            _ => {}
-        }
-        (patch != Self::default()).then_some(patch)
-    }
+/// 🎯️ The override rows that turn a page's held overrides into the payload overrides.
+pub fn page_override_rows(held: &[PageOverride], payload: &[PageOverride]) -> PageOverridesDelta {
+    PageOverridesDelta::from_parts(payload_parts(held, payload))
 }
 
-impl PagePatch {
-    fn is_structural(&self) -> bool {
-        self.frame_added.is_some() || self.frame_removed.is_some() || self.layer_added.is_some() || self.layer_removed.is_some() || self.frame_order.is_some() || self.frame_layer.is_some() || self.layer_patched.is_some()
-    }
-
-    /// 🔀️ Two non-structural patches folded into one: scalars and the parent last-wins, frame patches per frame, guide and override deltas composed.
-    fn merge_plain(self, later: Self) -> Self {
-        let mut frames_patched = self.frames_patched;
-        for entry in later.frames_patched {
-            match frames_patched.iter_mut().find(|known| known.frame_id == entry.frame_id) {
-                Some(known) => known.patch = entry.patch.or(std::mem::take(&mut known.patch)),
-                None => frames_patched.push(entry),
-            }
-        }
-        let guides = match (self.guides, later.guides) {
-            (Some(first), Some(second)) => Some(absorb_positional(first, second)),
-            (first, None) => first,
-            (None, second) => second,
-        };
-        let overrides = match (self.overrides, later.overrides) {
-            (Some(first), Some(second)) => Some(absorb_delta(first, second)),
-            (first, None) => first,
-            (None, second) => second,
-        };
-        Self {
-            name: later.name.or(self.name),
-            width: later.width.or(self.width),
-            height: later.height.or(self.height),
-            margin_top: later.margin_top.or(self.margin_top),
-            margin_right: later.margin_right.or(self.margin_right),
-            margin_bottom: later.margin_bottom.or(self.margin_bottom),
-            margin_left: later.margin_left.or(self.margin_left),
-            columns_count: later.columns_count.or(self.columns_count),
-            columns_gutter: later.columns_gutter.or(self.columns_gutter),
-            frames_patched,
-            parent_page_id: later.parent_page_id.or(self.parent_page_id),
-            guides,
-            overrides,
-            ..Default::default()
-        }
-    }
-
-    /// ↩️ The patch sequence undoing this patch against `base`, in reverse application order, each step an absolute setter of the base value.
-    fn undo_steps(&self, base: &Page) -> Vec<Self> {
-        let mut steps: Vec<Self> = Vec::new();
-        if let Some(change) = &self.layer_patched {
-            if let Some(layer) = base.layers.iter().find(|layer| layer.id == change.layer_id) {
-                steps.push(Self {
-                    layer_patched: Some(crate::PageLayerPatched { layer_id: layer.id.clone(), name: change.name.as_ref().map(|_| layer.name.clone()), visible: change.visible.map(|_| layer.visible), locked: change.locked.map(|_| layer.locked) }),
-                    ..Default::default()
-                });
-            }
-        }
-        if let Some(change) = &self.frame_layer {
-            if let Some(frame) = base.frames.iter().find(|frame| frame.id() == change.frame_id) {
-                steps.push(Self { frame_layer: Some(crate::PageFrameLayer { frame_id: change.frame_id.clone(), layer_id: frame.layer_id().to_string() }), ..Default::default() });
-            }
-        }
-        if self.frame_order.is_some() {
-            steps.push(Self { frame_order: Some(base.frames.iter().map(|frame| frame.id().to_string()).collect()), ..Default::default() });
-        }
-        if let Some(id) = &self.layer_removed {
-            if let Some(at) = base.layers.iter().position(|layer| layer.id == *id) {
-                steps.push(Self { layer_added: Some(crate::PageLayerAdded { layer: base.layers[at].clone(), index: Some(at) }), ..Default::default() });
-            }
-        }
-        if let Some(added) = &self.layer_added {
-            steps.push(Self { layer_removed: Some(added.layer.id.clone()), ..Default::default() });
-        }
-        steps.push(Self {
-            overrides: self.overrides.as_ref().map(|delta| inverse_delta(delta, &base.overrides)),
-            guides: self.guides.as_ref().map(|delta| inverse_positional(delta, &base.guides)),
-            parent_page_id: self.parent_page_id.as_ref().map(|_| base.parent_page_id.clone()),
-            frames_patched: self
-                .frames_patched
-                .iter()
-                .filter_map(|entry| base.frames.iter().find(|frame| frame.id() == entry.frame_id).map(|frame| crate::PageFramePatched { frame_id: entry.frame_id.clone(), patch: entry.patch.restoring(frame) }))
-                .collect(),
-            ..Default::default()
-        });
-        if let Some(id) = &self.frame_removed {
-            if let Some(index) = base.frames.iter().position(|frame| frame.id() == id) {
-                let layer_id = base.layers.iter().find(|layer| layer.object_ids.iter().any(|object| object == id)).map(|layer| layer.id.clone());
-                steps.push(Self { frame_added: Some(crate::PageFrameAdded { frame: base.frames[index].clone(), index: Some(index), layer_id }), ..Default::default() });
-            }
-        }
-        if let Some(added) = &self.frame_added {
-            steps.push(Self { frame_removed: Some(added.frame.id().to_string()), ..Default::default() });
-        }
-        steps.push(Self {
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            width: self.width.map(|_| base.width),
-            height: self.height.map(|_| base.height),
-            margin_top: self.margin_top.map(|_| base.margins.top),
-            margin_right: self.margin_right.map(|_| base.margins.right),
-            margin_bottom: self.margin_bottom.map(|_| base.margins.bottom),
-            margin_left: self.margin_left.map(|_| base.margins.left),
-            columns_count: self.columns_count.map(|_| base.columns.count),
-            columns_gutter: self.columns_gutter.map(|_| base.columns.gutter),
-            ..Default::default()
-        });
-        let mut compact: Vec<Self> = Vec::new();
-        for step in steps.into_iter().filter(|step| step != &Self::default()) {
-            match compact.pop() {
-                Some(last) => match last.merged(step) {
-                    Ok(merged) => compact.push(merged),
-                    Err((earlier, later)) => {
-                        compact.push(earlier);
-                        compact.push(later);
-                    }
-                },
-                None => compact.push(step),
-            }
-        }
-        compact
-    }
+/// 🎯️ The dictionary rows that turn the held entries into the payload entries.
+pub fn data_entry_rows(held: &[crate::FormDictionaryEntry], payload: &[crate::FormDictionaryEntry]) -> LayoutDataEntriesDelta {
+    let wrap = |rows: &[crate::FormDictionaryEntry]| rows.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<_>>();
+    LayoutDataEntriesDelta::from_parts(payload_parts(&wrap(held), &wrap(payload)))
 }
-
-impl Page {
-    /// 🧭️ The patch sequence carrying this page to `other`: plain fields and keyed deltas first, then removed, added and patched frames, layers, and a final frame order.
-    fn page_changes(&self, other: &Page) -> Vec<PagePatch> {
-        let mut steps: Vec<PagePatch> = Vec::new();
-        let plain = PagePatch {
-            name: (self.name != other.name).then(|| other.name.clone()),
-            width: (self.width != other.width).then_some(other.width),
-            height: (self.height != other.height).then_some(other.height),
-            margin_top: (self.margins.top != other.margins.top).then_some(other.margins.top),
-            margin_right: (self.margins.right != other.margins.right).then_some(other.margins.right),
-            margin_bottom: (self.margins.bottom != other.margins.bottom).then_some(other.margins.bottom),
-            margin_left: (self.margins.left != other.margins.left).then_some(other.margins.left),
-            columns_count: (self.columns.count != other.columns.count).then_some(other.columns.count),
-            columns_gutter: (self.columns.gutter != other.columns.gutter).then_some(other.columns.gutter),
-            parent_page_id: (self.parent_page_id != other.parent_page_id).then(|| other.parent_page_id.clone()),
-            guides: between_positional(&self.guides, &other.guides),
-            overrides: between_delta::<PageOverridesDelta>(&self.overrides, &other.overrides),
-            ..Default::default()
-        };
-        if plain != PagePatch::default() {
-            steps.push(plain);
-        }
-        let layer_of = |page: &Page, id: &str| page.layers.iter().find(|layer| layer.object_ids.iter().any(|object| object == id)).map(|layer| layer.id.clone());
-        for frame in &self.frames {
-            let kept = other.frames.iter().find(|candidate| candidate.id() == frame.id()).is_some_and(|candidate| candidate.kind_str() == frame.kind_str());
-            if !kept {
-                steps.push(PagePatch { frame_removed: Some(frame.id().to_string()), ..Default::default() });
-            }
-        }
-        for (index, frame) in other.frames.iter().enumerate() {
-            match self.frames.iter().find(|candidate| candidate.id() == frame.id()).filter(|held| held.kind_str() == frame.kind_str()) {
-                None => steps.push(PagePatch { frame_added: Some(crate::PageFrameAdded { frame: frame.clone(), index: Some(index), layer_id: layer_of(other, frame.id()) }), ..Default::default() }),
-                Some(held) => {
-                    if let Some(patch) = crate::FramePatch::between(held, frame) {
-                        steps.push(PagePatch { frames_patched: vec![crate::PageFramePatched { frame_id: frame.id().to_string(), patch }], ..Default::default() });
-                    }
-                    if layer_of(self, frame.id()) != layer_of(other, frame.id()) {
-                        if let Some(layer_id) = layer_of(other, frame.id()) {
-                            steps.push(PagePatch { frame_layer: Some(crate::PageFrameLayer { frame_id: frame.id().to_string(), layer_id }), ..Default::default() });
-                        }
-                    }
-                }
-            }
-        }
-        for layer in &self.layers {
-            if other.layers.iter().all(|candidate| candidate.id != layer.id) {
-                steps.push(PagePatch { layer_removed: Some(layer.id.clone()), ..Default::default() });
-            }
-        }
-        for (index, layer) in other.layers.iter().enumerate() {
-            match self.layers.iter().find(|candidate| candidate.id == layer.id) {
-                None => steps.push(PagePatch { layer_added: Some(crate::PageLayerAdded { layer: layer.clone(), index: Some(index) }), ..Default::default() }),
-                Some(held) if held.name != layer.name || held.visible != layer.visible || held.locked != layer.locked => {
-                    steps.push(PagePatch {
-                        layer_patched: Some(crate::PageLayerPatched { layer_id: layer.id.clone(), name: (held.name != layer.name).then(|| layer.name.clone()), visible: (held.visible != layer.visible).then_some(layer.visible), locked: (held.locked != layer.locked).then_some(layer.locked) }),
-                        ..Default::default()
-                    });
-                }
-                Some(_) => {}
-            }
-        }
-        let mut state = self.clone();
-        for step in &steps {
-            state.apply_patch(step);
-        }
-        let reached: Vec<&str> = state.frames.iter().map(crate::Frame::id).collect();
-        let target: Vec<&str> = other.frames.iter().map(crate::Frame::id).collect();
-        if reached != target {
-            steps.push(PagePatch { frame_order: Some(target.into_iter().map(str::to_string).collect()), ..Default::default() });
-        }
-        steps
-    }
-}
-//#endregion 🔖️PageAlgebra
+//#endregion 🔖️PayloadRows
 
 //#region 🔖️Apply
+macro_rules! absorb_lists {
+    ($first:ident, $second:ident, $($field:ident),+ $(,)?) => {$(
+        if let Some(later) = $second.$field {
+            let mut merged = $first.$field.take().unwrap_or_default();
+            merged.absorb(later);
+            $first.$field = (!merged.is_empty()).then_some(merged);
+        }
+    )+};
+}
+
 impl LayoutDiff {
-    fn apply_data_fields(&self, base: &Option<crate::FormDictionary>) -> MutationApplyResult<Option<crate::FormDictionary>> {
+    fn apply_data_fields(&self, base: &Option<crate::FormDictionary>, capability: ApplyCapability) -> MutationApplyResult<Option<crate::FormDictionary>> {
         let Some(delta) = &self.data_fields else { return Ok(base.clone()) };
         let entries = delta.entries.clone().unwrap_or_default();
+        let commit = |held: &[crate::FormDictionaryEntry]| entries.commit_onto(held, capability).map_err(|error| error.under(["dataFields", "entries"]));
         Ok(match (base, delta.presence) {
             (_, Some(DataFieldsPresence::Deleted)) => None,
-            (None, Some(DataFieldsPresence::Created)) | (Some(_), Some(DataFieldsPresence::Replaced)) | (None, Some(DataFieldsPresence::Replaced)) => Some(crate::FormDictionary { entries: apply_delta(&[], &entries).map_err(|error| error.under(["dataFields", "entries"]))? }),
-            (Some(dictionary), _) => Some(crate::FormDictionary { entries: apply_delta(&dictionary.entries, &entries).map_err(|error| error.under(["dataFields", "entries"]))? }),
+            (None, Some(DataFieldsPresence::Created)) | (Some(_), Some(DataFieldsPresence::Replaced)) | (None, Some(DataFieldsPresence::Replaced)) => Some(crate::FormDictionary { entries: commit(&[])? }),
+            (Some(dictionary), _) => Some(crate::FormDictionary { entries: commit(&dictionary.entries)? }),
             (None, None) => {
-                if is_empty_delta(&entries) {
+                if entries.is_empty() {
                     None
                 } else {
                     return Err(MutationApplyError::new("mutation.apply.missing-target", "data-field rows need an existing dictionary").at(["dataFields"]));
@@ -1278,7 +1004,7 @@ impl LayoutDiff {
 }
 
 impl MutationDiff<LayoutSnapshot> for LayoutDiff {
-    fn apply(&self, snapshot: &LayoutSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<LayoutSnapshot> {
+    fn apply(&self, snapshot: &LayoutSnapshot, capability: ApplyCapability) -> MutationApplyResult<LayoutSnapshot> {
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -1290,30 +1016,30 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             next.grid = patch.applied(&next.grid);
         }
         if let Some(delta) = &self.paragraph_styles {
-            next.paragraph_styles = apply_delta(&next.paragraph_styles, delta).map_err(|error| error.under(["paragraphStyles"]))?;
+            next.paragraph_styles = delta.commit_onto(&next.paragraph_styles, capability).map_err(|error| error.under(["paragraphStyles"]))?;
         }
         if let Some(delta) = &self.character_styles {
-            next.character_styles = apply_delta(&next.character_styles, delta).map_err(|error| error.under(["characterStyles"]))?;
+            next.character_styles = delta.commit_onto(&next.character_styles, capability).map_err(|error| error.under(["characterStyles"]))?;
         }
         if let Some(delta) = &self.parent_pages {
-            next.parent_pages = apply_delta(&next.parent_pages, delta).map_err(|error| error.under(["parentPages"]))?;
+            next.parent_pages = delta.commit_onto(&next.parent_pages, capability).map_err(|error| error.under(["parentPages"]))?;
         }
         if let Some(delta) = &self.spreads {
-            next.spreads = apply_delta(&next.spreads, delta).map_err(|error| error.under(["spreads"]))?;
+            next.spreads = delta.commit_onto(&next.spreads, capability).map_err(|error| error.under(["spreads"]))?;
         }
         if let Some(delta) = &self.pages {
-            next.pages = apply_delta(&next.pages, delta).map_err(|error| error.under(["pages"]))?;
+            next.pages = delta.commit_onto(&next.pages, capability).map_err(|error| error.under(["pages"]))?;
         }
         if let Some(delta) = &self.stories {
-            next.stories = apply_delta(&next.stories, delta).map_err(|error| error.under(["stories"]))?;
+            next.stories = delta.commit_onto(&next.stories, capability).map_err(|error| error.under(["stories"]))?;
         }
         if let Some(delta) = &self.links {
-            next.links = apply_delta(&next.links, delta).map_err(|error| error.under(["links"]))?;
+            next.links = delta.commit_onto(&next.links, capability).map_err(|error| error.under(["links"]))?;
         }
         if let Some(change) = &self.print_target {
             next.print_target = change.target.clone();
         }
-        next.data_fields = self.apply_data_fields(&next.data_fields)?;
+        next.data_fields = self.apply_data_fields(&next.data_fields, capability)?;
         if let Some(value) = &self.background_drawing {
             next.background_drawing = value.clone();
         }
@@ -1345,13 +1071,7 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
                 None => self.grid = Some(later),
             }
         }
-        absorb_optional(&mut self.paragraph_styles, other.paragraph_styles);
-        absorb_optional(&mut self.character_styles, other.character_styles);
-        absorb_optional(&mut self.parent_pages, other.parent_pages);
-        absorb_optional(&mut self.spreads, other.spreads);
-        absorb_optional(&mut self.pages, other.pages);
-        absorb_optional(&mut self.stories, other.stories);
-        absorb_optional(&mut self.links, other.links);
+        absorb_lists!(self, other, paragraph_styles, character_styles, parent_pages, spreads, pages, stories, links);
         if other.print_target.is_some() {
             self.print_target = other.print_target;
         }
@@ -1376,9 +1096,9 @@ fn absorb_data_fields(first: Option<LayoutDataFieldsDelta>, second: LayoutDataFi
     use DataFieldsPresence::{Created, Deleted, Replaced};
     let first = first.unwrap_or_default();
     let entries = |first: Option<LayoutDataEntriesDelta>, second: Option<LayoutDataEntriesDelta>| match (first, second) {
-        (Some(first), Some(second)) => {
-            let merged = absorb_delta(first, second);
-            (!is_empty_delta(&merged)).then_some(merged)
+        (Some(mut first), Some(second)) => {
+            first.absorb(second);
+            (!first.is_empty()).then_some(first)
         }
         (first, None) => first,
         (None, second) => second,
@@ -1398,11 +1118,12 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
     fn inverse(&self, base: &LayoutSnapshot) -> Self {
         let data_fields = self.data_fields.as_ref().map(|delta| {
             let base_entries = base.data_fields.as_ref().map(|dictionary| dictionary.entries.as_slice()).unwrap_or_default();
+            let all_base_rows = || LayoutDataEntriesDelta { inserted: base_entries.iter().cloned().enumerate().map(|(index, row)| LayoutDataEntryInsertion { index, row }).collect(), ..Default::default() };
             match delta.presence {
                 Some(DataFieldsPresence::Created) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Deleted), entries: None },
-                Some(DataFieldsPresence::Deleted) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Created), entries: Some(LayoutDataEntriesDelta { added: base_entries.to_vec(), ..Default::default() }) },
-                Some(DataFieldsPresence::Replaced) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Replaced), entries: Some(LayoutDataEntriesDelta { added: base_entries.to_vec(), ..Default::default() }) },
-                None => LayoutDataFieldsDelta { presence: None, entries: delta.entries.as_ref().map(|entries| inverse_delta(entries, base_entries)) },
+                Some(DataFieldsPresence::Deleted) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Created), entries: Some(all_base_rows()) },
+                Some(DataFieldsPresence::Replaced) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Replaced), entries: Some(all_base_rows()) },
+                None => LayoutDataFieldsDelta { presence: None, entries: delta.entries.as_ref().map(|entries| entries.inverse(base_entries)) },
             }
         });
         let labels = crate::mutations::set_drawing_text::drawing_labels(base);
@@ -1410,13 +1131,13 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             name: self.name.as_ref().map(|_| base.name.clone()),
             grid: self.grid.as_ref().map(|patch| patch.inverse_against(&base.grid)),
-            paragraph_styles: inverse_optional(&self.paragraph_styles, &base.paragraph_styles),
-            character_styles: inverse_optional(&self.character_styles, &base.character_styles),
-            stories: inverse_optional(&self.stories, &base.stories),
-            links: inverse_optional(&self.links, &base.links),
-            parent_pages: inverse_optional(&self.parent_pages, &base.parent_pages),
-            spreads: inverse_optional(&self.spreads, &base.spreads),
-            pages: inverse_optional(&self.pages, &base.pages),
+            paragraph_styles: self.paragraph_styles.as_ref().map(|delta| delta.inverse(&base.paragraph_styles)),
+            character_styles: self.character_styles.as_ref().map(|delta| delta.inverse(&base.character_styles)),
+            stories: self.stories.as_ref().map(|delta| delta.inverse(&base.stories)),
+            links: self.links.as_ref().map(|delta| delta.inverse(&base.links)),
+            parent_pages: self.parent_pages.as_ref().map(|delta| delta.inverse(&base.parent_pages)),
+            spreads: self.spreads.as_ref().map(|delta| delta.inverse(&base.spreads)),
+            pages: self.pages.as_ref().map(|delta| delta.inverse(&base.pages)),
             print_target: self.print_target.as_ref().map(|_| PrintTargetChange { target: base.print_target.clone() }),
             data_fields,
             background_drawing: self.background_drawing.as_ref().map(|_| base.background_drawing.clone()),
@@ -1424,42 +1145,17 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
             referenced_model: self.referenced_model.as_ref().map(|_| base.referenced_model.clone()),
         }
     }
-    fn between(base: &LayoutSnapshot, other: &LayoutSnapshot) -> Self {
-        let data_fields = match (&base.data_fields, &other.data_fields) {
-            (None, None) => None,
-            (None, Some(next)) => Some(LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Created), entries: Some(LayoutDataEntriesDelta { added: next.entries.clone(), ..Default::default() }) }),
-            (Some(_), None) => Some(LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Deleted), entries: None }),
-            (Some(held), Some(next)) => between_delta::<LayoutDataEntriesDelta>(&held.entries, &next.entries).map(|entries| LayoutDataFieldsDelta { presence: None, entries: Some(entries) }),
-        };
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            grid: GridPatch::between(&base.grid, &other.grid),
-            paragraph_styles: between_delta(&base.paragraph_styles, &other.paragraph_styles),
-            character_styles: between_delta(&base.character_styles, &other.character_styles),
-            stories: between_delta(&base.stories, &other.stories),
-            links: between_delta(&base.links, &other.links),
-            parent_pages: between_delta(&base.parent_pages, &other.parent_pages),
-            spreads: between_delta(&base.spreads, &other.spreads),
-            pages: between_delta(&base.pages, &other.pages),
-            print_target: (base.print_target != other.print_target).then(|| PrintTargetChange { target: other.print_target.clone() }),
-            data_fields,
-            background_drawing: (base.background_drawing != other.background_drawing).then(|| other.background_drawing.clone()),
-            drawing_texts: Vec::new(),
-            referenced_model: (base.referenced_model != other.referenced_model).then(|| other.referenced_model.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none()
             && self.name.is_none()
             && self.grid.as_ref().is_none_or(|patch| patch == &GridPatch::default())
-            && self.paragraph_styles.as_ref().is_none_or(is_empty_delta)
-            && self.character_styles.as_ref().is_none_or(is_empty_delta)
-            && self.stories.as_ref().is_none_or(is_empty_delta)
-            && self.links.as_ref().is_none_or(is_empty_delta)
-            && self.parent_pages.as_ref().is_none_or(is_empty_delta)
-            && self.spreads.as_ref().is_none_or(is_empty_delta)
-            && self.pages.as_ref().is_none_or(is_empty_delta)
+            && self.paragraph_styles.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.character_styles.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.stories.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.links.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.parent_pages.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.spreads.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.pages.as_ref().is_none_or(|delta| delta.is_empty())
             && self.print_target.is_none()
             && self.data_fields.as_ref().is_none_or(|delta| delta == &LayoutDataFieldsDelta::default())
             && self.background_drawing.is_none()

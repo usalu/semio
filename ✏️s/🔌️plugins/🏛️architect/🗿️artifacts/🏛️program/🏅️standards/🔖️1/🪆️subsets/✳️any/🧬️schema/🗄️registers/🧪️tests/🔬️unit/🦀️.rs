@@ -1,5 +1,24 @@
 use super::*;
 
+/// 🧪️ Commits `$patch` onto `$item` the only way a patch is ever committed: as a `modification` of a one-row program through the central applier.
+macro_rules! patch_through_table {
+    ($item:ident, $patch:expr, $payload:ident, $field:ident, $delta:ty) => {{
+        let mut program = crate::empty_plugin();
+        program.$payload.push($item.clone());
+        let diff = crate::ProgramDiff { $field: Some(<$delta>::modification($item.header.id.0.clone(), $patch.clone())), ..Default::default() };
+        $item = protocol::apply_diff(&diff, &program).expect("the patch commits through the central applier").$payload.remove(0);
+    }};
+}
+
+macro_rules! patch_through_program {
+    ($item:ident, $patch:expr, $field:ident, $delta:ty, $id:expr) => {{
+        let mut program = crate::empty_plugin();
+        program.$field.push($item.clone());
+        let diff = crate::ProgramDiff { $field: Some(<$delta>::modification($id, $patch.clone())), ..Default::default() };
+        $item = protocol::apply_diff(&diff, &program).expect("the patch commits through the central applier").$field.remove(0);
+    }};
+}
+
 #[semio_framework_async_macros::async_test]
 async fn stakeholder_patch_round_trips() {
     let mut item = Stakeholder {
@@ -64,11 +83,11 @@ async fn stakeholder_patch_round_trips() {
         communication_channels: Some(vec!["patched-0".to_string()]),
         success_metrics: Some(vec!["patched-0".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, stakeholders, crate::diff::ProgramStakeholdersDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Stakeholder");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, stakeholders, crate::diff::ProgramStakeholdersDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -136,11 +155,11 @@ async fn user_profile_patch_round_trips() {
         validated: Some(true),
         stakeholder_ids: Some(vec![EntityId::new_serial("new1", "new1")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, users, crate::diff::ProgramUsersDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched UserProfile");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, users, crate::diff::ProgramUsersDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -208,11 +227,11 @@ async fn activity_patch_round_trips() {
         temporal_pattern: Some("patched-2".to_string()),
         supervision_level: Some("patched-2".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, activities, crate::diff::ProgramActivitiesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Activity");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, activities, crate::diff::ProgramActivitiesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -276,11 +295,11 @@ async fn function_patch_round_trips() {
         hierarchy_parent_id: Some(EntityId::new_serial("new3", "new3")),
         conflict_ids: Some(vec![EntityId::new_serial("new3", "new3")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, functions, crate::diff::ProgramFunctionsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Function");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, functions, crate::diff::ProgramFunctionsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -350,11 +369,11 @@ async fn program_element_patch_round_trips() {
         adjacency_preferences: Some(vec![EntityId::new_serial("new4", "new4")]),
         environmental_zone: Some("patched-4".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, elements, crate::diff::ProgramElementsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ProgramElement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, elements, crate::diff::ProgramElementsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -414,11 +433,11 @@ async fn quantity_requirement_patch_round_trips() {
         last_verified: Some("patched-5".to_string()),
         variance_notes: Some(vec![TaggedNote { tag: "new5".into(), text: "new-note5".into() }]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, quantities, crate::diff::ProgramQuantitiesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched QuantityRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, quantities, crate::diff::ProgramQuantitiesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -486,11 +505,11 @@ async fn relationship_patch_round_trips() {
         incompatibility_requirement: Some(TextField::plain("patched-6")),
         separation_requirements: Some(vec![SeparationKind::Visual]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, relationships, crate::diff::ProgramRelationshipsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Relationship");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, relationships, crate::diff::ProgramRelationshipsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -550,11 +569,11 @@ async fn adjacency_patch_round_trips() {
         source_relationship_id: Some(EntityId::new_serial("new7", "new7")),
         internal_external_access: Some("patched-7".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, adjacencies, crate::diff::ProgramAdjacenciesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Adjacency");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, adjacencies, crate::diff::ProgramAdjacenciesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -620,11 +639,11 @@ async fn process_patch_round_trips() {
         handoff_points: Some(vec!["patched-8".to_string()]),
         quality_gates: Some(vec!["patched-8".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, processes, crate::diff::ProgramProcessesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Process");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, processes, crate::diff::ProgramProcessesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -686,11 +705,11 @@ async fn flow_requirement_patch_round_trips() {
         conflict_ids: Some(vec![EntityId::new_serial("new9", "new9")]),
         verification_method: Some("patched-9".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, flows, crate::diff::ProgramFlowsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched FlowRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, flows, crate::diff::ProgramFlowsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -750,11 +769,11 @@ async fn access_rule_patch_round_trips() {
         training_required: Some(true),
         owner_id: Some(EntityId::new_serial("new10", "new10")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, access_rules, crate::diff::ProgramAccessRulesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched AccessRule");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, access_rules, crate::diff::ProgramAccessRulesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -822,11 +841,11 @@ async fn operational_requirement_patch_round_trips() {
         sla_target: Some("patched-11".to_string()),
         escalation_contact_id: Some(EntityId::new_serial("new11", "new11")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, operations, crate::diff::ProgramOperationsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched OperationalRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, operations, crate::diff::ProgramOperationsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -894,11 +913,11 @@ async fn equipment_patch_round_trips() {
         commissioning_notes: Some(vec!["patched-12".to_string()]),
         spare_parts: Some(vec!["patched-12".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, equipment, crate::diff::ProgramEquipmentDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Equipment");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, equipment, crate::diff::ProgramEquipmentDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -964,11 +983,11 @@ async fn resource_patch_round_trips() {
         ergonomics_rating: Some("patched-13".to_string()),
         sharing_ratio: Some(42.0),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, resources, crate::diff::ProgramResourcesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Resource");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, resources, crate::diff::ProgramResourcesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1028,11 +1047,11 @@ async fn storage_requirement_patch_round_trips() {
         regulatory_refs: Some(vec!["patched-14".to_string()]),
         owner_id: Some(EntityId::new_serial("new14", "new14")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, storage, crate::diff::ProgramStorageDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched StorageRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, storage, crate::diff::ProgramStorageDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1094,11 +1113,11 @@ async fn environmental_requirement_patch_round_trips() {
         iaq_target: Some("patched-15".to_string()),
         verification_plan: Some("patched-15".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, environmental, crate::diff::ProgramEnvironmentalDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched EnvironmentalRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, environmental, crate::diff::ProgramEnvironmentalDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1160,11 +1179,11 @@ async fn human_factor_requirement_patch_round_trips() {
         element_ids: Some(vec![EntityId::new_serial("new16", "new16")]),
         verification_method: Some("patched-16".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, human_factors, crate::diff::ProgramHumanFactorsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched HumanFactorRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, human_factors, crate::diff::ProgramHumanFactorsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1228,11 +1247,11 @@ async fn accessibility_requirement_patch_round_trips() {
         wcag_conformance: Some("patched-17".to_string()),
         universal_design_principles: Some(vec!["patched-17".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, accessibility, crate::diff::ProgramAccessibilityDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched AccessibilityRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, accessibility, crate::diff::ProgramAccessibilityDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1292,11 +1311,11 @@ async fn privacy_requirement_patch_round_trips() {
         breach_response: Some(vec!["patched-18".to_string()]),
         owner_id: Some(EntityId::new_serial("new18", "new18")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, privacy, crate::diff::ProgramPrivacyDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched PrivacyRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, privacy, crate::diff::ProgramPrivacyDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1356,11 +1375,11 @@ async fn safety_requirement_patch_round_trips() {
         incident_reporting: Some(vec!["patched-19".to_string()]),
         residual_risk: Some("patched-19".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, safety, crate::diff::ProgramSafetyDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched SafetyRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, safety, crate::diff::ProgramSafetyDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1420,11 +1439,11 @@ async fn security_requirement_patch_round_trips() {
         redundancy: Some(vec!["patched-20".to_string()]),
         audit_requirements: Some(vec!["patched-20".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, security, crate::diff::ProgramSecurityDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched SecurityRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, security, crate::diff::ProgramSecurityDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1482,11 +1501,11 @@ async fn regulatory_requirement_patch_round_trips() {
         consultant_refs: Some(vec![EntityId::new_serial("new21", "new21")]),
         update_source: Some("patched-21".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, regulatory, crate::diff::ProgramRegulatoryDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched RegulatoryRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, regulatory, crate::diff::ProgramRegulatoryDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1546,11 +1565,11 @@ async fn site_context_patch_round_trips() {
         max_height_m: Some(42.0),
         max_coverage: Some(42.0),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, site_context, crate::diff::ProgramSiteContextDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched SiteContext");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, site_context, crate::diff::ProgramSiteContextDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1608,11 +1627,11 @@ async fn organizational_requirement_patch_round_trips() {
         diversity_goals: Some(vec!["patched-23".to_string()]),
         owner_id: Some(EntityId::new_serial("new23", "new23")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, organizational, crate::diff::ProgramOrganizationalDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched OrganizationalRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, organizational, crate::diff::ProgramOrganizationalDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1670,11 +1689,11 @@ async fn service_requirement_patch_round_trips() {
         backup_service: Some(vec!["patched-24".to_string()]),
         feedback_channels: Some(vec!["patched-24".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, services, crate::diff::ProgramServicesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ServiceRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, services, crate::diff::ProgramServicesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1732,11 +1751,11 @@ async fn infrastructure_requirement_patch_round_trips() {
         lifecycle_cost: Some(42.0),
         owner_id: Some(EntityId::new_serial("new25", "new25")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, infrastructure, crate::diff::ProgramInfrastructureDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched InfrastructureRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, infrastructure, crate::diff::ProgramInfrastructureDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1794,11 +1813,11 @@ async fn information_requirement_patch_round_trips() {
         standards: Some(vec!["patched-26".to_string()]),
         owner_id: Some(EntityId::new_serial("new26", "new26")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, information, crate::diff::ProgramInformationDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched InformationRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, information, crate::diff::ProgramInformationDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1856,11 +1875,11 @@ async fn communication_requirement_patch_round_trips() {
         owner_id: Some(EntityId::new_serial("new27", "new27")),
         templates: Some(vec![EntityId::new_serial("new27", "new27")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, communication, crate::diff::ProgramCommunicationDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched CommunicationRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, communication, crate::diff::ProgramCommunicationDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1918,11 +1937,11 @@ async fn wayfinding_requirement_patch_round_trips() {
         staff_journey: Some(vec!["patched-28".to_string()]),
         brand_integration: Some(vec!["patched-28".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, wayfinding, crate::diff::ProgramWayfindingDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched WayfindingRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, wayfinding, crate::diff::ProgramWayfindingDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -1982,11 +2001,11 @@ async fn schedule_requirement_patch_round_trips() {
         reporting_cadence: Some("patched-29".to_string()),
         owner_id: Some(EntityId::new_serial("new29", "new29")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, schedules, crate::diff::ProgramSchedulesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ScheduleRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, schedules, crate::diff::ProgramSchedulesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2042,11 +2061,11 @@ async fn flexibility_requirement_patch_round_trips() {
         lease_implications: Some(vec!["patched-30".to_string()]),
         owner_id: Some(EntityId::new_serial("new30", "new30")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, flexibility, crate::diff::ProgramFlexibilityDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched FlexibilityRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, flexibility, crate::diff::ProgramFlexibilityDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2104,11 +2123,11 @@ async fn growth_plan_patch_round_trips() {
         regulatory_considerations: Some(vec!["patched-31".to_string()]),
         owner_id: Some(EntityId::new_serial("new31", "new31")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, growth, crate::diff::ProgramGrowthDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched GrowthPlan");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, growth, crate::diff::ProgramGrowthDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2168,11 +2187,11 @@ async fn sustainability_requirement_patch_round_trips() {
         verification_plan: Some("patched-32".to_string()),
         owner_id: Some(EntityId::new_serial("new32", "new32")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, sustainability, crate::diff::ProgramSustainabilityDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched SustainabilityRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, sustainability, crate::diff::ProgramSustainabilityDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2230,11 +2249,11 @@ async fn resilience_requirement_patch_round_trips() {
         owner_id: Some(EntityId::new_serial("new33", "new33")),
         verification_plan: Some("patched-33".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, resilience, crate::diff::ProgramResilienceDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ResilienceRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, resilience, crate::diff::ProgramResilienceDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2292,11 +2311,11 @@ async fn cost_requirement_patch_round_trips() {
         assumptions: Some(vec!["patched-34".to_string()]),
         sensitivity_factors: Some(vec!["patched-34".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, costs, crate::diff::ProgramCostsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched CostRequirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, costs, crate::diff::ProgramCostsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2356,11 +2375,11 @@ async fn delivery_constraint_patch_round_trips() {
         risk_ids: Some(vec![EntityId::new_serial("new35", "new35")]),
         constraint_status: Some(LifecycleStatus::Proposed),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, delivery, crate::diff::ProgramDeliveryDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched DeliveryConstraint");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, delivery, crate::diff::ProgramDeliveryDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2418,11 +2437,11 @@ async fn risk_patch_round_trips() {
         escalation_path: Some(vec!["patched-36".to_string()]),
         monitoring_plan: Some("patched-36".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, risks, crate::diff::ProgramRisksDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Risk");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, risks, crate::diff::ProgramRisksDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2480,11 +2499,11 @@ async fn conflict_patch_round_trips() {
         escalation_level: Some("patched-37".to_string()),
         related_risk_ids: Some(vec![EntityId::new_serial("new37", "new37")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, conflicts, crate::diff::ProgramConflictsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Conflict");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, conflicts, crate::diff::ProgramConflictsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2544,11 +2563,11 @@ async fn requirement_patch_round_trips() {
         trace_links: Some(vec![TraceLink::new(EntityId::new_serial("tfrom38n", "tfrom38n"), EntityId::new_serial("tto38n", "tto38n"), TraceKind::FullAuditTrail)]),
         superseded_by: Some(EntityId::new_serial("new38", "new38")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, requirements, crate::diff::ProgramRequirementsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Requirement");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, requirements, crate::diff::ProgramRequirementsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2606,11 +2625,11 @@ async fn priority_record_patch_round_trips() {
         approval_date: Some("patched-39".to_string()),
         ranking_notes: Some(vec![TaggedNote { tag: "new39".into(), text: "new-note39".into() }]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, priorities, crate::diff::ProgramPrioritiesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched PriorityRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, priorities, crate::diff::ProgramPrioritiesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2668,11 +2687,11 @@ async fn scenario_patch_round_trips() {
         analysis_ids: Some(vec![EntityId::new_serial("new40", "new40")]),
         owner_id: Some(EntityId::new_serial("new40", "new40")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, scenarios, crate::diff::ProgramScenariosDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Scenario");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, scenarios, crate::diff::ProgramScenariosDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2730,11 +2749,11 @@ async fn option_evaluation_patch_round_trips() {
         evaluator_ids: Some(vec![EntityId::new_serial("new41", "new41")]),
         evaluation_date: Some("patched-41".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, options, crate::diff::ProgramOptionsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched OptionEvaluation");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, options, crate::diff::ProgramOptionsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2792,11 +2811,11 @@ async fn decision_patch_round_trips() {
         meeting_ref: Some(EntityId::new_serial("new42", "new42")),
         artifact_refs: Some(vec![EntityId::new_serial("new42", "new42")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, decisions, crate::diff::ProgramDecisionsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Decision");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, decisions, crate::diff::ProgramDecisionsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2854,11 +2873,11 @@ async fn validation_record_patch_round_trips() {
         confidence_level: Some("patched-43".to_string()),
         validation_notes: Some(vec![TaggedNote { tag: "new43".into(), text: "new-note43".into() }]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, validations, crate::diff::ProgramValidationsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ValidationRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, validations, crate::diff::ProgramValidationsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2916,11 +2935,11 @@ async fn performance_criterion_patch_round_trips() {
         penalty_threshold: Some(42.0),
         incentive_threshold: Some(42.0),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, performance, crate::diff::ProgramPerformanceDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched PerformanceCriterion");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, performance, crate::diff::ProgramPerformanceDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -2978,11 +2997,11 @@ async fn quality_record_patch_round_trips() {
         certification_targets: Some(vec!["patched-45".to_string()]),
         continuous_improvement: Some(vec!["patched-45".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, quality, crate::diff::ProgramQualityDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched QualityRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, quality, crate::diff::ProgramQualityDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3040,11 +3059,11 @@ async fn document_record_patch_round_trips() {
         checksum: Some("patched-46".to_string()),
         source_system: Some("patched-46".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, artifacts, crate::diff::ProgramArtifactsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ArtifactRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, artifacts, crate::diff::ProgramArtifactsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3102,11 +3121,11 @@ async fn change_record_patch_round_trips() {
         version_to: Some("patched-47".to_string()),
         audit_event_ids: Some(vec![EntityId::new_serial("new47", "new47")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, changes, crate::diff::ProgramChangesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ChangeRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, changes, crate::diff::ProgramChangesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3162,11 +3181,11 @@ async fn collaboration_record_patch_round_trips() {
         workshop_id: Some(EntityId::new_serial("new48", "new48")),
         survey_id: Some(EntityId::new_serial("new48", "new48")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, collaboration, crate::diff::ProgramCollaborationDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched CollaborationRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, collaboration, crate::diff::ProgramCollaborationDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3222,11 +3241,11 @@ async fn analysis_record_patch_round_trips() {
         recommendations: Some(vec!["patched-49".to_string()]),
         raw_result_ref: Some("patched-49".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, analyses, crate::diff::ProgramAnalysesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched AnalysisRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, analyses, crate::diff::ProgramAnalysesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3282,11 +3301,11 @@ async fn report_record_patch_round_trips() {
         expiry_date: Some("patched-50".to_string()),
         related_decision_ids: Some(vec![EntityId::new_serial("new50", "new50")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, reports, crate::diff::ProgramReportsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ReportRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, reports, crate::diff::ProgramReportsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3344,11 +3363,11 @@ async fn search_filter_patch_round_trips() {
         use_count: Some(7),
         pinned: Some(true),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, search_filters, crate::diff::ProgramSearchFiltersDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched SearchFilter");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, search_filters, crate::diff::ProgramSearchFiltersDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3404,11 +3423,11 @@ async fn status_record_patch_round_trips() {
         reporting_period: Some("patched-52".to_string()),
         status_notes: Some(vec![TaggedNote { tag: "new52".into(), text: "new-note52".into() }]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, status_records, crate::diff::ProgramStatusRecordsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched StatusRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, status_records, crate::diff::ProgramStatusRecordsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3466,11 +3485,11 @@ async fn workshop_patch_round_trips() {
         workshop_status: Some(LifecycleStatus::Proposed),
         survey_ids: Some(vec![EntityId::new_serial("new53", "new53")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, workshops, crate::diff::ProgramWorkshopsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Workshop");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, workshops, crate::diff::ProgramWorkshopsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3528,11 +3547,11 @@ async fn survey_patch_round_trips() {
         owner_id: Some(EntityId::new_serial("new54", "new54")),
         survey_status: Some(LifecycleStatus::Proposed),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, surveys, crate::diff::ProgramSurveysDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Survey");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, surveys, crate::diff::ProgramSurveysDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3590,11 +3609,11 @@ async fn issue_patch_round_trips() {
         attachments: Some(vec![EntityId::new_serial("new55", "new55")]),
         escalation_level: Some("patched-55".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, issues, crate::diff::ProgramIssuesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Issue");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, issues, crate::diff::ProgramIssuesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3650,11 +3669,11 @@ async fn audit_event_patch_round_trips() {
         compliance_tags: Some(vec!["patched-56".to_string()]),
         retention_until: Some("patched-56".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, audit_events, crate::diff::ProgramAuditEventsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched AuditEvent");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, audit_events, crate::diff::ProgramAuditEventsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3712,11 +3731,11 @@ async fn template_record_patch_round_trips() {
         license: Some("patched-57".to_string()),
         source_organization: Some("patched-57".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, templates, crate::diff::ProgramTemplatesDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched TemplateRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, templates, crate::diff::ProgramTemplatesDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3772,11 +3791,11 @@ async fn knowledge_record_patch_round_trips() {
         citations: Some(vec!["patched-58".to_string()]),
         usage_count: Some(7),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_table!(item, patch, knowledge_payload, knowledge, crate::diff::ProgramKnowledgeDelta);
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched KnowledgeRecord");
-    item.apply_patch(&inverse);
+    patch_through_table!(item, inverse, knowledge_payload, knowledge, crate::diff::ProgramKnowledgeDelta);
     assert_eq!(item, original);
 }
 
@@ -3834,11 +3853,11 @@ async fn benchmark_record_patch_round_trips() {
         knowledge_id: Some(EntityId::new_serial("new59", "new59")),
         last_verified: Some("patched-59".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_table!(item, patch, benchmarks_payload, benchmarks, crate::diff::ProgramBenchmarksDelta);
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched BenchmarkRecord");
-    item.apply_patch(&inverse);
+    patch_through_table!(item, inverse, benchmarks_payload, benchmarks, crate::diff::ProgramBenchmarksDelta);
     assert_eq!(item, original);
 }
 
@@ -3896,11 +3915,11 @@ async fn assumption_patch_round_trips() {
         status_notes: Some(vec![TaggedNote { tag: "new60".into(), text: "new-note60".into() }]),
         artifact_refs: Some(vec!["patched-60".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, assumptions, crate::diff::ProgramAssumptionsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched Assumption");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, assumptions, crate::diff::ProgramAssumptionsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -3962,11 +3981,11 @@ async fn constraint_record_patch_round_trips() {
         trace_links: Some(vec![TraceLink::new(EntityId::new_serial("tfrom61n", "tfrom61n"), EntityId::new_serial("tto61n", "tto61n"), TraceKind::FullAuditTrail)]),
         escalation_contact_id: Some(EntityId::new_serial("new61", "new61")),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, constraints, crate::diff::ProgramConstraintsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ConstraintRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, constraints, crate::diff::ProgramConstraintsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -4028,11 +4047,11 @@ async fn compliance_record_patch_round_trips() {
         corrective_actions: Some(vec!["patched-62".to_string()]),
         artifact_refs: Some(vec!["patched-62".to_string()]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, compliance_records, crate::diff::ProgramComplianceRecordsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ComplianceRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, compliance_records, crate::diff::ProgramComplianceRecordsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -4090,11 +4109,11 @@ async fn approval_record_patch_round_trips() {
         version: Some("patched-63".to_string()),
         audit_trail_ref: Some("patched-63".to_string()),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, approvals, crate::diff::ProgramApprovalsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched ApprovalRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, approvals, crate::diff::ProgramApprovalsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }
 
@@ -4154,10 +4173,10 @@ async fn meeting_record_patch_round_trips() {
         issue_ids: Some(vec![EntityId::new_serial("new64", "new64")]),
         approval_ids: Some(vec![EntityId::new_serial("new64", "new64")]),
     };
-    item.apply_patch(&patch);
-    let inverse = item.diff_patch(&original).expect("diff_patch always produces a snapshot patch");
+    patch_through_program!(item, patch, meetings, crate::diff::ProgramMeetingsDelta, item.header.id.0.clone());
+    let inverse = patch.inverse(&original);
     assert_ne!(item, original);
     assert_eq!(item.header.name, "Patched MeetingRecord");
-    item.apply_patch(&inverse);
+    patch_through_program!(item, inverse, meetings, crate::diff::ProgramMeetingsDelta, item.header.id.0.clone());
     assert_eq!(item, original);
 }

@@ -1,3 +1,4 @@
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
 /** 🤖️ The hub's agent-audience ceiling, live: an AI agent acting under a delegation holds at most its delegation's audience,
  * only in the delegation's one space, never a space's administration and never the admin console — whatever its delegating
  * human may do (`HubDirectory::principal_ceiling`, policy roles `agent-reader` / `agent-editor`).
@@ -16,7 +17,7 @@ import { randomBytes } from "node:crypto";
 import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenPlan, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 import { decodeServerFrame, encodeClientFrame } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { parseDocumentSocketGrantReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1, type DirectoryCommand } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { type DirectoryCommand } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 
 /** 🧾️ One observed boundary: what the hub answered and whether that is what the ceiling demands. */
 export type AgentCeilingRowV1 = { readonly check: string; readonly expected: string; readonly observed: string; readonly pass: boolean };
@@ -76,7 +77,7 @@ async function submitEdit(hub: string, token: string, spaceId: string, documentI
       const frame: any = decodeServerFrame(new Uint8Array(event.data)).frame;
       if ("Error" in frame) return finish(`error ${JSON.stringify(frame.Error).slice(0, 160)}`);
       if ("Welcome" in frame) {
-        socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [{ mutation_id: `agent-ceiling-${randomBytes(8).toString("hex")}`, document_id: documentId, actor: granted.actorId, dependencies: [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode("agent-ceiling")) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null, verb: null }] } }, "command"));
+        socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [{ mutation_id: `agent-ceiling-${randomBytes(8).toString("hex")}`, document_id: documentId, actor: granted.actorId, dependencies: [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode("agent-ceiling")) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null, verb: null, line: null }] } }, "command"));
         return;
       }
       if ("Ack" in frame && frame.Ack.batch_id === 1) finish(JSON.stringify(frame.Ack.stages).includes("Accepted") ? "accepted" : `ack ${JSON.stringify(frame.Ack.stages).slice(0, 160)}`);

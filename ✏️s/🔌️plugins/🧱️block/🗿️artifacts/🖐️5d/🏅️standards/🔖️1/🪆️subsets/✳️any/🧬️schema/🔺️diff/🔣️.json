@@ -6,135 +6,786 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "Block5dArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "partKind": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockKindIdentity",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockKindIdentityPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "part2d": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/Block5dPart2d",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Block5dPart2dPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "part3d": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/Block5dPart3d",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Block5dPart3dPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "representations": {
-      "$ref": "#/$defs/Block5dRepresentationsDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockRepresentationsDelta"
     },
     "gripKinds": {
-      "$ref": "#/$defs/Block5dGripKindsDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/Block5dGripKindsDelta"
     },
     "grips": {
-      "$ref": "#/$defs/Block5dGripsDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/Block5dGripsDelta"
     },
     "compatibility": {
-      "$ref": "#/$defs/Block5dCompatibilityDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockCompatibilityDelta"
     },
     "attributes": {
-      "$ref": "#/$defs/Block5dAttributesDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockAttributesDelta"
     },
     "authors": {
-      "$ref": "#/$defs/Block5dAuthorList",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockAuthorsDelta"
     },
     "camera2d": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockCamera2d",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockCamera2dPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "camera3d": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockCamera3d",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockCamera3dPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "meta": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockMeta",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockMetaPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "$defs": {
-    "Block5dStringList": {
-      "title": "Block5dStringList",
+    "BlockOptionalText": {
+      "title": "BlockOptionalText",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "value"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
-    "Block5dAuthorList": {
-      "title": "Block5dAuthorList",
+    "BlockOptionalNumber": {
+      "title": "BlockOptionalNumber",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "value"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockAuthor"
-          }
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
-    "Block5dRepresentationsDelta": {
-      "title": "Block5dRepresentationsDelta",
+    "BlockOptionalOrientation": {
+      "title": "BlockOptionalOrientation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "value"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockRepresentation"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Block5dRepresentationsPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "value": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
-    "Block5dRepresentationsPatchEntry": {
-      "title": "Block5dRepresentationsPatchEntry",
+    "BlockOptionalScale": {
+      "title": "BlockOptionalScale",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockKindIdentityPatch": {
+      "title": "BlockKindIdentityPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block5dPart2dPatch": {
+      "title": "Block5dPart2dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "shape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iconKind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block5dPart3dPatch": {
+      "title": "Block5dPart3dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalOrientation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockRepresentationPatch": {
+      "title": "BlockRepresentationPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meshUrl": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lod": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tagsRemoved": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tagsAdded": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attributesRemoved": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attributesAdded": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockAttribute"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block5dGripKindPatch": {
+      "title": "Block5dGripKindPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defaultRopeKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block5dGripTemplatePatch": {
+      "title": "Block5dGripTemplatePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "gripKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "angle": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius2d": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius3d": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockCompatibilityRulePatch": {
+      "title": "BlockCompatibilityRulePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bidirectional": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockAttributePatch": {
+      "title": "BlockAttributePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockAuthorPatch": {
+      "title": "BlockAuthorPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "email": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockCamera2dPatch": {
+      "title": "BlockCamera2dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "y": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zoom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockCamera3dPatch": {
+      "title": "BlockCamera3dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "position": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zoom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockMetaPatch": {
+      "title": "BlockMetaPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockRepresentationsPatchEntry": {
+      "title": "BlockRepresentationsPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -146,53 +797,102 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block5dRepresentationsPatch"
+          "$ref": "#/$defs/BlockRepresentationPatch"
         }
       }
     },
-    "Block5dRepresentationsPatch": {
-      "title": "Block5dRepresentationsPatch",
+    "BlockRepresentationsRemoval": {
+      "title": "BlockRepresentationsRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockRepresentationsInsertion": {
+      "title": "BlockRepresentationsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockRepresentation"
         }
       }
     },
-    "Block5dGripKindsDelta": {
-      "title": "Block5dGripKindsDelta",
+    "BlockRepresentationsRelocation": {
+      "title": "BlockRepresentationsRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/Block5dGripKind"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockRepresentationsDelta": {
+      "title": "BlockRepresentationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/BlockRepresentationsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block5dGripKindsPatchEntry"
+            "$ref": "#/$defs/BlockRepresentationsInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/BlockRepresentationsRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockRepresentationsPatchEntry"
           }
         }
       }
@@ -210,53 +910,102 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block5dGripKindsPatch"
+          "$ref": "#/$defs/Block5dGripKindPatch"
         }
       }
     },
-    "Block5dGripKindsPatch": {
-      "title": "Block5dGripKindsPatch",
+    "Block5dGripKindsRemoval": {
+      "title": "Block5dGripKindsRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block5dGripKindsInsertion": {
+      "title": "Block5dGripKindsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/Block5dGripKind"
         }
       }
     },
-    "Block5dGripsDelta": {
-      "title": "Block5dGripsDelta",
+    "Block5dGripKindsRelocation": {
+      "title": "Block5dGripKindsRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/Block5dGripTemplate"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block5dGripKindsDelta": {
+      "title": "Block5dGripKindsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block5dGripKindsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block5dGripsPatchEntry"
+            "$ref": "#/$defs/Block5dGripKindsInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block5dGripKindsRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dGripKindsPatchEntry"
           }
         }
       }
@@ -274,59 +1023,108 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block5dGripsPatch"
+          "$ref": "#/$defs/Block5dGripTemplatePatch"
         }
       }
     },
-    "Block5dGripsPatch": {
-      "title": "Block5dGripsPatch",
+    "Block5dGripsRemoval": {
+      "title": "Block5dGripsRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block5dGripsInsertion": {
+      "title": "Block5dGripsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/Block5dGripTemplate"
         }
       }
     },
-    "Block5dCompatibilityDelta": {
-      "title": "Block5dCompatibilityDelta",
+    "Block5dGripsRelocation": {
+      "title": "Block5dGripsRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockCompatibilityRule"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block5dGripsDelta": {
+      "title": "Block5dGripsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block5dGripsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block5dCompatibilityPatchEntry"
+            "$ref": "#/$defs/Block5dGripsInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block5dGripsRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dGripsPatchEntry"
           }
         }
       }
     },
-    "Block5dCompatibilityPatchEntry": {
-      "title": "Block5dCompatibilityPatchEntry",
+    "BlockCompatibilityPatchEntry": {
+      "title": "BlockCompatibilityPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -338,59 +1136,108 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block5dCompatibilityPatch"
+          "$ref": "#/$defs/BlockCompatibilityRulePatch"
         }
       }
     },
-    "Block5dCompatibilityPatch": {
-      "title": "Block5dCompatibilityPatch",
+    "BlockCompatibilityRemoval": {
+      "title": "BlockCompatibilityRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockCompatibilityInsertion": {
+      "title": "BlockCompatibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockCompatibilityRule"
         }
       }
     },
-    "Block5dAttributesDelta": {
-      "title": "Block5dAttributesDelta",
+    "BlockCompatibilityRelocation": {
+      "title": "BlockCompatibilityRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockAttribute"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockCompatibilityDelta": {
+      "title": "BlockCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/BlockCompatibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block5dAttributesPatchEntry"
+            "$ref": "#/$defs/BlockCompatibilityInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/BlockCompatibilityRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockCompatibilityPatchEntry"
           }
         }
       }
     },
-    "Block5dAttributesPatchEntry": {
-      "title": "Block5dAttributesPatchEntry",
+    "BlockAttributesPatchEntry": {
+      "title": "BlockAttributesPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -402,18 +1249,216 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block5dAttributesPatch"
+          "$ref": "#/$defs/BlockAttributePatch"
         }
       }
     },
-    "Block5dAttributesPatch": {
-      "title": "Block5dAttributesPatch",
+    "BlockAttributesRemoval": {
+      "title": "BlockAttributesRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAttributesInsertion": {
+      "title": "BlockAttributesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockAttribute"
+        }
+      }
+    },
+    "BlockAttributesRelocation": {
+      "title": "BlockAttributesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAttributesDelta": {
+      "title": "BlockAttributesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesPatchEntry"
+          }
+        }
+      }
+    },
+    "BlockAuthorsPatchEntry": {
+      "title": "BlockAuthorsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/BlockAuthorPatch"
+        }
+      }
+    },
+    "BlockAuthorsRemoval": {
+      "title": "BlockAuthorsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAuthorsInsertion": {
+      "title": "BlockAuthorsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json#/$defs/BlockAuthor"
+        }
+      }
+    },
+    "BlockAuthorsRelocation": {
+      "title": "BlockAuthorsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAuthorsDelta": {
+      "title": "BlockAuthorsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsPatchEntry"
+          }
         }
       }
     }

@@ -39,9 +39,10 @@
   "costs": null,
   "delivery": null,
   "risks": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "risk-a",
         "patch": {
@@ -74,8 +75,7 @@
           "monitoringPlan": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "conflicts": null,
   "requirements": null,

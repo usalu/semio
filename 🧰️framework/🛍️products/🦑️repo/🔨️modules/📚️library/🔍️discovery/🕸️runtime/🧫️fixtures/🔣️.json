@@ -1704,16 +1704,702 @@
     "package": "neutral-actor",
     "manifest": "hub/actor/Cargo.toml"
   },
-  "developmentActorReads": [
+  "compilerCustody": [
     {
-      "name": "missing-current",
-      "cancelled": false,
-      "expected": "current.json"
+      "name": "RuntimeCompilerInputV1",
+      "value": {
+        "reason": "compiler-artifact",
+        "package_id": "owner",
+        "features": [],
+        "target": {
+          "name": "owner",
+          "src_path": "/workspace/lib.rs",
+          "kind": [
+            "lib"
+          ],
+          "edition": "2024"
+        },
+        "profile": {
+          "test": false,
+          "opt_level": "0"
+        },
+        "filenames": [
+          "/build/lib.rlib"
+        ],
+        "fresh": false
+      },
+      "accepted": true
     },
     {
-      "name": "caller-cancelled",
-      "cancelled": true,
-      "expected": "Neutral actor read cancelled"
+      "name": "RuntimeCompilerInputV1",
+      "value": {
+        "package_id": "owner",
+        "features": [],
+        "target": {
+          "name": "owner",
+          "src_path": "/workspace/lib.rs",
+          "kind": [
+            "lib"
+          ],
+          "edition": "2024"
+        },
+        "profile": {
+          "test": false,
+          "opt_level": "0"
+        },
+        "filenames": [
+          "/build/lib.rlib"
+        ],
+        "fresh": false
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoUnitV1",
+      "value": {
+        "message": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "observedAtMs": 2,
+        "depInfo": [
+          {
+            "path": "/build/lib.d",
+            "text": "lib.rlib: /workspace/lib.rs",
+            "baseDirectory": "/workspace"
+          }
+        ],
+        "inputs": [
+          {
+            "path": "/workspace/lib.rs",
+            "kind": "file",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "artifacts": [
+          {
+            "path": "/build/lib.rlib",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "RuntimeCargoUnitV1",
+      "value": {
+        "observedAtMs": 2,
+        "depInfo": [
+          {
+            "path": "/build/lib.d",
+            "text": "lib.rlib: /workspace/lib.rs",
+            "baseDirectory": "/workspace"
+          }
+        ],
+        "inputs": [
+          {
+            "path": "/workspace/lib.rs",
+            "kind": "file",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "artifacts": [
+          {
+            "path": "/build/lib.rlib",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoObservationV1",
+      "value": {
+        "version": 1,
+        "manifest": "/workspace/Cargo.toml",
+        "cwd": "/workspace",
+        "command": "cargo",
+        "args": [
+          "build"
+        ],
+        "builtAtMs": 1,
+        "observedAtMs": 2,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "owner",
+              "features": [],
+              "target": {
+                "name": "owner",
+                "src_path": "/workspace/lib.rs",
+                "kind": [
+                  "lib"
+                ],
+                "edition": "2024"
+              },
+              "profile": {
+                "test": false,
+                "opt_level": "0"
+              },
+              "filenames": [
+                "/build/lib.rlib"
+              ],
+              "fresh": false
+            },
+            "observedAtMs": 2,
+            "depInfo": [
+              {
+                "path": "/build/lib.d",
+                "text": "lib.rlib: /workspace/lib.rs",
+                "baseDirectory": "/workspace"
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/workspace/lib.rs",
+                "kind": "file",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "artifacts": [
+              {
+                "path": "/build/lib.rlib",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          }
+        ],
+        "buildScripts": [],
+        "compilerResourceRoot": null,
+        "compilerResources": []
+      },
+      "accepted": true
+    },
+    {
+      "name": "RuntimeCargoObservationV1",
+      "value": {
+        "manifest": "/workspace/Cargo.toml",
+        "cwd": "/workspace",
+        "command": "cargo",
+        "args": [
+          "build"
+        ],
+        "builtAtMs": 1,
+        "observedAtMs": 2,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "owner",
+              "features": [],
+              "target": {
+                "name": "owner",
+                "src_path": "/workspace/lib.rs",
+                "kind": [
+                  "lib"
+                ],
+                "edition": "2024"
+              },
+              "profile": {
+                "test": false,
+                "opt_level": "0"
+              },
+              "filenames": [
+                "/build/lib.rlib"
+              ],
+              "fresh": false
+            },
+            "observedAtMs": 2,
+            "depInfo": [
+              {
+                "path": "/build/lib.d",
+                "text": "lib.rlib: /workspace/lib.rs",
+                "baseDirectory": "/workspace"
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/workspace/lib.rs",
+                "kind": "file",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "artifacts": [
+              {
+                "path": "/build/lib.rlib",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          }
+        ],
+        "buildScripts": [],
+        "compilerResourceRoot": null,
+        "compilerResources": []
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCompilerResourceV1",
+      "value": {
+        "kind": "read",
+        "path": "/workspace/asset",
+        "output": "/build/asset",
+        "operation": {
+          "source": "/workspace/macro.rs",
+          "line": 1,
+          "name": "read"
+        },
+        "snapshotOperation": {
+          "source": "/workspace/macro.rs",
+          "line": 1,
+          "name": "read"
+        },
+        "callsite": {
+          "source": "/workspace/lib.rs",
+          "line": 1
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "RuntimeCompilerResourceV1",
+      "value": {
+        "path": "/workspace/asset",
+        "output": "/build/asset",
+        "operation": {
+          "source": "/workspace/macro.rs",
+          "line": 1,
+          "name": "read"
+        },
+        "snapshotOperation": {
+          "source": "/workspace/macro.rs",
+          "line": 1,
+          "name": "read"
+        },
+        "callsite": {
+          "source": "/workspace/lib.rs",
+          "line": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoCompilerResourcesV1",
+      "value": {
+        "path": "/build/observation.json",
+        "text": "{}",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observedAtMs": 2,
+        "producerUnit": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "callerUnit": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "producer": {
+          "manifest": "/workspace/Cargo.toml",
+          "source": "/workspace/macro.rs"
+        },
+        "caller": {
+          "manifest": "/workspace/Cargo.toml",
+          "source": "/workspace/lib.rs",
+          "crate": "owner"
+        },
+        "resources": [
+          {
+            "input": {
+              "kind": "read",
+              "path": "/workspace/asset",
+              "output": "/build/asset",
+              "operation": {
+                "source": "/workspace/macro.rs",
+                "line": 1,
+                "name": "read"
+              },
+              "snapshotOperation": {
+                "source": "/workspace/macro.rs",
+                "line": 1,
+                "name": "read"
+              },
+              "callsite": {
+                "source": "/workspace/lib.rs",
+                "line": 1
+              }
+            },
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "outputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "RuntimeCargoCompilerResourcesV1",
+      "value": {
+        "text": "{}",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observedAtMs": 2,
+        "producerUnit": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "callerUnit": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "producer": {
+          "manifest": "/workspace/Cargo.toml",
+          "source": "/workspace/macro.rs"
+        },
+        "caller": {
+          "manifest": "/workspace/Cargo.toml",
+          "source": "/workspace/lib.rs",
+          "crate": "owner"
+        },
+        "resources": [
+          {
+            "input": {
+              "kind": "read",
+              "path": "/workspace/asset",
+              "output": "/build/asset",
+              "operation": {
+                "source": "/workspace/macro.rs",
+                "line": 1,
+                "name": "read"
+              },
+              "snapshotOperation": {
+                "source": "/workspace/macro.rs",
+                "line": 1,
+                "name": "read"
+              },
+              "callsite": {
+                "source": "/workspace/lib.rs",
+                "line": 1
+              }
+            },
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "outputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoUnitV1",
+      "value": {
+        "message": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "observedAtMs": 2,
+        "depInfo": [
+          {
+            "path": "/build/lib.d",
+            "text": "lib.rlib: /workspace/lib.rs",
+            "baseDirectory": null
+          }
+        ],
+        "inputs": [
+          {
+            "path": "/workspace/lib.rs",
+            "kind": "file",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "artifacts": [
+          {
+            "path": "/build/lib.rlib",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoUnitV1",
+      "value": {
+        "message": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "observedAtMs": 2,
+        "depInfo": [
+          {
+            "path": "/build/lib.d",
+            "text": "lib.rlib: /workspace/lib.rs",
+            "baseDirectory": "/workspace"
+          }
+        ],
+        "inputs": [
+          {
+            "path": "/workspace/lib.rs",
+            "kind": "file",
+            "sha256": null
+          }
+        ],
+        "artifacts": [
+          {
+            "path": "/build/lib.rlib",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoUnitV1",
+      "value": {
+        "message": {
+          "reason": "compiler-artifact",
+          "package_id": "owner",
+          "features": [],
+          "target": {
+            "name": "owner",
+            "src_path": "/workspace/lib.rs",
+            "kind": [
+              "lib"
+            ],
+            "edition": "2024"
+          },
+          "profile": {
+            "test": false,
+            "opt_level": "0"
+          },
+          "filenames": [
+            "/build/lib.rlib"
+          ],
+          "fresh": false
+        },
+        "observedAtMs": 2,
+        "depInfo": [
+          {
+            "path": "/build/lib.d",
+            "text": "lib.rlib: /workspace/lib.rs",
+            "baseDirectory": "/workspace"
+          }
+        ],
+        "inputs": [
+          {
+            "path": "/workspace/lib.rs",
+            "kind": "file",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "artifacts": [
+          {
+            "path": "/build/lib.rlib",
+            "sha256": null
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "RuntimeCargoObservationV1",
+      "value": {
+        "version": 1,
+        "manifest": "/workspace/Cargo.toml",
+        "cwd": "/workspace",
+        "command": "cargo",
+        "args": [
+          "build"
+        ],
+        "builtAtMs": 1,
+        "observedAtMs": 2,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "owner",
+              "features": [],
+              "target": {
+                "name": "owner",
+                "src_path": "/workspace/lib.rs",
+                "kind": [
+                  "lib"
+                ],
+                "edition": "2024"
+              },
+              "profile": {
+                "test": false,
+                "opt_level": "0"
+              },
+              "filenames": [
+                "/build/lib.rlib"
+              ],
+              "fresh": false
+            },
+            "observedAtMs": 2,
+            "depInfo": [
+              {
+                "path": "/build/lib.d",
+                "text": "lib.rlib: /workspace/lib.rs",
+                "baseDirectory": "/workspace"
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/workspace/lib.rs",
+                "kind": "file",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "artifacts": [
+              {
+                "path": "/build/lib.rlib",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          }
+        ],
+        "buildScripts": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "fixtureAuthority": "test"
+      },
+      "accepted": false
+    }
+  ],
+  "malformedEcmaSources": [
+    {
+      "id": "trailing-radix",
+      "source": "import './live.ts'; const value = 0x;"
+    },
+    {
+      "id": "trailing-escape",
+      "source": "import './live.ts'; const \\u00G0 = 1;"
+    },
+    {
+      "id": "trailing-comment",
+      "source": "import './live.ts'; /* unclosed"
     }
   ]
 }

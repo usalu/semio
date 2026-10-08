@@ -255,3 +255,60 @@ Before codes come from `T/🔍️audit-block-wfc.md`: V1G = V1-GENERIC-DIFF (who
 | wfc 🧱️grid3d | `resize-grid` | V1G, V2R | sparse per-field / per-row patch, concrete inverse |
 | wfc 🧱️grid3d | `unmask-cell` | clean | sparse per-field / per-row patch, concrete inverse |
 | wfc 🧱️grid3d | `unpin-cell` | clean | sparse per-field / per-row patch, concrete inverse |
+
+## Wave 3
+
+- **Inverse order**: matches the wave-3 ruling (replay last-to-first). The 10 multi-step wfc inverses and their fixture loops were already converted (see open issue 4).
+- **Block diff mirrors regenerated** (no compile needed): `🧬️schema/🔺️diff/{🟦️.ts,🔣️.json,🛰️.proto,🔗️.graphql}` for block 2d/3d/5d are rewritten from the sparse Rust types (patch objects with optional `Option` wrappers, row deltas with `added/removed/patched/reordered`). Generator: `T/🗑️generated/block-wfc/gen/block_mirrors.py`; the three JSON schemas parse as JSON. The old parser helpers in the stale TS had no external users and are gone (types only).
+- **cargo check, block-2d** (`"$T/🚦️gate.sh" block-wfc -- cargo check -p semio-s-artifact-block-2d --target wasm32-wasip2 --message-format=short`, run from the artifact dir, output `T/🗑️generated/block-wfc/out/w3-block-2d.txt`): waited about 45 minutes in the gate queue (43 waiters), then **failed before any scope crate** with 14 errors in `semio-framework-replication` (`🔗️causal/🔀️transition/🔁️fold/🦀️.rs`: unresolved `semio_framework_value::retirement::owned_retirement`, `ErasedSnapshotRetirement` missing `next_close_byte_demand`, `RetainedCloneStep` vs `SnapshotRetirementStep`). These are a different set than the earlier `Grant` errors, i.e. a peer is still changing `semio_framework_value` retirement. No error mentions block or wfc code.
+- **Not done in wave 3** (blocked on a compiling framework): cargo check for the other 7 crates, `cargo test`, fixture regeneration for block/grid2d/bitmap (`fixture_hook.py`). Counts: 0 crates green, 0 tests run.
+
+### Gate burn-down R10 (leaf-between), 7 -> 0 (by source scan, not compiled)
+
+`T/🗑️generated/coord/gate-run-2.log` listed 7 `diff-only-mutation/leaf-between` hits in this scope; all are replaced by declarative diffs built from payload and base reads:
+- wfc2d / wfc3d `replace-config`: per-field `(base.f != config.f).then(..)` instead of `DiffAlgebra::between`.
+- wfc grid3d `change-cell-sizes`: axis rows built inline from payload sizes versus the base axis (length unchanged by validation).
+- wfc grid3d `resize-grid` (3 axes): new `Grid3dAxisPatch::resizing(base, extent)` (length plus appended cells), replacing `between(base, resized_axis(..))`.
+- block3d config `window_edit`: the patched window row now carries the edit's own `Block3dWindowViewPatch` rather than a recomputed `between(row, next)`.
+Remaining `between` occurrences are only `DiffAlgebra::between` implementations on diff types. rustfmt syntax check passes; type-check still blocked on the framework (see Wave 3).
+
+## Wave 4 (translators T6, T8, T9) — written, not built
+
+Foundation status at the time: `RED 19:09:19 native=101 wasm=101` (`T/🗑️generated/coord/foundation.status`), so nothing below was compiled or run. rustfmt syntax check passes on every touched file.
+
+- **All seven `replace_document_operations` copies are deleted** (block 2d/3d/5d `🎨️edit` and `🎬️set-active-example`, and wfc bitmap `🎬️set-active-example`); `rg replace_document_operations` over `🧱️block` and `🀄️wfc` returns 0.
+- **`set-active-example` = load.** Each handler now returns `Emit::effect(Effect::LoadDocument { pack, spr })` (packed snapshot plus `store::empty_document_spr`; the runtime re-stamps the identity) when the named example differs from the open document, and `Emit::default()` for an unknown id or the already-open example. No mutation rows, no diff, no history row. Block: one `load_document_effect(&BlockNdSnapshot)` per dimension in `set-active-example`; bitmap: `load_document_effect(&BitmapSnapshot)` in its own `set-active-example`.
+- **`edit` (block)**: its payload is the whole next document as JSON text, so there is no addressed change to map onto concrete kinds; per the wave-4 rule "JSON load = load" it now calls the same `load_document_effect` (only when the parsed document differs from the open one; unparsable text stays a no-op). If a per-field edit gesture is wanted later, it needs a new payload carrying the addressed field, which the concrete kinds already cover.
+- **Publication lanes**: block `setActiveExample` and `edit`, and bitmap `setActiveExample`, are `HostOnly` (like wfc2d's picker) instead of `Artifact`.
+- **Tests updated**: block editor unit tests gained `context::load_example` (runs the handler and lands its `LoadDocument` through `artifact_app_laws::load_document`), the former `dispatch(SetActiveExample ..)` calls (10) use it, the 2d lane assertion expects `HostOnly` for the two loads, and each dimension has `example_switch_and_json_edit_load_a_document_instead_of_editing_one`. Bitmap's replay-order tests are replaced by three load laws (re-select answers nothing, switch is one `LoadDocument` and no mutation, unknown id is a no-op).
+- **`block_rows_between` is NOT retired**: `DiffAlgebra::between` stays in the trait for sync/import (design.md), and the three block diff types plus `Block3dConfigDiff` implement it with `block_rows_between`; it is no longer reachable from any command or leaf.
+- **Not verified**: whether the in-process dispatch lane stamps `LoadDocument` as the helper assumes, and whether the bitmap crate resolves `store`/`semio_framework::kernel` (it already uses `semio_framework_plugin`); first build will show.
+
+## Wave 5 (gate-run-5: wfc 12 + block 4 breaches) — written, not built (foundation RED, no cargo)
+
+Confirmation command: `bun ./📜️script.ts verify mutation-outcome-law` (outputs `T/🗑️generated/block-wfc/out/w5gate-before.txt` = 16 breaches in scope, `w5gate-after2.txt` and `w5gate-after3.txt` = scope lines counted below). After the first pass of fixes the gate listed **0** block/wfc lines; the list-delta migration below was re-checked in `w5gate-after3.txt`.
+
+### Breaches fixed (16 -> 0)
+- **R8 `&mut` in `🧬️mutations/🦀️.rs` (8: block 2d/3d/5d, wfc 2d/3d/grid2d/grid3d/bitmap)** and the "No compatibility re-exports" ruling: the `apply_<artifact>_mutation(&mut snapshot, &mutation)` helper is deleted in all eight crates. 751 call sites in 205 files (fixture tests, oracle adapters, unit tests) became `vcs::apply_mutation(&v, m).map(|(applied_state, _)| { v = applied_state; })`, an expression of the same `Result<(), MutationApplyError>` type, so `.expect/.is_ok/.is_err/.unwrap_or_else` call forms are unchanged; the `use ...::{apply_.., inverse_..}` lists lost the `apply_` name. `inverse_<artifact>_mutation` stays (read only, no `&mut`). Codemod: `T/🗑️generated/block-wfc/gen/w5_apply_helper.py`.
+- **R9 `.apply(` in the block shared crate**: the `BlockRows::apply` seam is gone (see list-delta below).
+- **R12 base clone (grid3d, bitmap)**: `Grid3dAxisPatch::patched` builds the axis from an index range (no `to_vec` into a `let mut`).
+- **R8/R12 bitmap diff (4)**: the simulating op-log inverse is replaced by declarative state: `BitmapDiff { input: BitmapInputPatch { size, writes }, palette: BitmapPaletteDelta { removed (base idx), inserted {index (after idx), color}, recolored (base idx) } , ... }`. `inverse` reads the base buffer region by region and the base palette colour by colour; `absorb` is pure index arithmetic (`composed_input`: later resize wins, earlier writes clipped, a regrown area zero-filled; `BitmapPaletteDelta::composed` with `rank`/`nth_free`). Leaves (`add/remove/change-palette-color`, `resize-input`, `set-input-pixels`, `paint-input-stroke`), unit tests (palette coalescing, resize compose with zero fill, middle palette entries, writes layering), the TS twin (`applyBitmapDiff`), the JSON schema and the Python `declared_lanes` follow the new shape.
+- **R14 `replace-config` (wfc2d, wfc3d)**: the inverse is now the concrete setters `[ChangeActiveTile(base), ChangeCamera(base)]` instead of `ReplaceConfig`.
+
+### AMB-1 positional rows / "One positional list delta" (block)
+- The local `block_rows!` / `BlockRows` / `BlockRowParts` / `reordered` (and `block_insert_order`) are **deleted**. Every block row list is a `protocol::list_delta!` delta: wire `removed [{id,index}]`, `inserted [{index,row}]`, `moved [{id,from,to}]`, `modified [{id,patch}]` (modification types keep the `…PatchEntry` names). Shared crate: attributes, authors, compatibility, representations; artifacts: handle kinds/handles (2d), vortex kinds/vortices (3d), grip kinds/grips (5d), per-window views (3d config). The shared crate now depends on `semio-framework-os-kernel` (`🧱️block/Cargo.toml` workspace dependency + package dependency).
+- `block_patch!` also implements `protocol::list_delta::RowPatch` (hand impl for `BlockRepresentationPatch`); `block_apply_error` lifts a patch rejection; `block_insert_index(len, Option<u32>)` is the only local helper (slot of a new row).
+- Diff types hold the plain delta (`Block2dDiff.handles: Block2dHandlesDelta`, not `Option`); `apply` uses `commit_onto(&base.rows, capability)`, `absorb`/`inverse(&base.rows)`/`is_empty` are the framework's. Leaves build rows from payload + base reads: 17 inserts `Delta::insertion(block_insert_index(len, payload.index), row)`, 17 removals `Delta::removal(&list, position)`.
+- AMB-3: every `inverse` reads the base row by row (framework `Parts::inverse`, `BitmapPaletteDelta::inverse`, `inverse_input_patch`, `set_inverse`); no simulation, no apply on a copy.
+- wfc keyed rows (`{P}Rows{removed,added,patched}` with canonical-position insertion, five copies) are **not** positional and still local; migrating them to `protocol::list_delta` changes their wire shape (added -> inserted with index) and is the remaining AMB-1 work in wfc (open issue below).
+- No `between`: no non-impl callers remain in block/wfc (the four test callers were removed).
+
+### Fixtures and mirrors
+- Bitmap: 12 fixture diffs regenerated by `T/🗑️generated/block-wfc/gen/w5_bitmap_fixtures.py`, which also replays each diff with an independent Python apply and asserts equality with the committed `after`; `bun test ./…/🧩️suite/🟦️.ts` in the bitmap artifact: **20 pass, 0 fail**.
+- Block diff mirrors (`🔺️diff/{🟦️.ts,🔣️.json,🛰️.proto,🔗️.graphql}`) regenerated for the positional/`modified` shapes (`block_mirrors.py`); the three JSON schemas parse. Block and grid2d diff fixture JSON (`🧫️fixtures/…/🔺️diff/🔣️.json`) are **still the old shapes**: regenerating them needs a Rust test run.
+
+### Open (needs a compiling foundation)
+1. cargo check of the 8 crates and every Rust test written in waves 1-5 (nothing compiled).
+2. Block and grid2d diff fixtures (above).
+3. wfc keyed rows -> `protocol::list_delta` (five artifacts' `{P}Rows`, ~100 leaf diffs, fixtures, Python oracles, TS twins).
+4. Block create/add kinds that carry `index` still describe the same payload; the `rows` mirrors are required (non-null) fields now.

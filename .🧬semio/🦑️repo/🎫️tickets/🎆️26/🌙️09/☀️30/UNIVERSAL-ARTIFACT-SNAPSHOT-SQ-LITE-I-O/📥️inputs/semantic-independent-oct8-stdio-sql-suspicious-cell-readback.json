@@ -1,0 +1,1275 @@
+{
+  "qualification": "Candidate cells only; semantic producer/reader inspection required, binary/media scalar data may be legitimate",
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE mp4_avc_sps(id INTEGER PRIMARY KEY,codec_id INTEGER NOT NULL REFERENCES mp4_codec(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE mp4_avc_pps(id INTEGER PRIMARY KEY,codec_id INTEGER NOT NULL REFERENCES mp4_codec(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE mp4_avc_sps_extension(id INTEGER PRIMARY KEY,extension_id INTEGER NOT NULL REFERENCES mp4_avc_extension(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 14,
+      "text": "CREATE TABLE mp4_hevc_nal(id INTEGER PRIMARY KEY,array_id INTEGER NOT NULL REFERENCES mp4_hevc_array(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 23,
+      "text": "CREATE TABLE mp4_sample(id INTEGER PRIMARY KEY,track_id INTEGER NOT NULL REFERENCES mp4_track(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),data BLOB NOT NULL,duration INTEGER NOT NULL CHECK(duration BETWEEN 0 AND 4294967295),cts_offset INTEGER NOT NULL CHECK(cts_offset BETWEEN -2147483648 AND 2147483647),sync INTEGER NOT NULL CHECK(sync IN(0,1)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE mp3_audio_payload_octet(id INTEGER PRIMARY KEY,frame_id INTEGER NOT NULL REFERENCES mp3_audio_frame(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),octet INTEGER NOT NULL CHECK(octet BETWEEN 0 AND 255));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 14,
+      "text": "CREATE TABLE bcf_snapshot_image(id INTEGER PRIMARY KEY REFERENCES bcf_viewpoint(id), image_bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 15,
+      "text": "CREATE TABLE bcf_raw_part(id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES bcf_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), name TEXT NOT NULL, part_bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE binary_document ("
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE binary_byte ("
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "document_id INTEGER NOT NULL REFERENCES binary_document(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE xlsx_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, package_id INTEGER NOT NULL REFERENCES xlsx_package(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE xlsx_package (id INTEGER PRIMARY KEY, comment TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE xlsx_binary_part (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES xlsx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), path TEXT NOT NULL, content_type TEXT NOT NULL, data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE xlsx_default_content_type (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES xlsx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), extension TEXT NOT NULL, content_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE xlsx_override_content_type (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES xlsx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), part_name TEXT NOT NULL, content_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE xlsx_relationship_owner (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES xlsx_package(id), owner_path TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE xlsx_xml_part (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES xlsx_document(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), content_type TEXT NOT NULL, xml_document_id INTEGER NOT NULL REFERENCES xlsx_xml_document(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE xlsx_xml_document (id INTEGER PRIMARY KEY, path TEXT NOT NULL, root_node_id INTEGER REFERENCES xlsx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE xlsx_xml_node (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('element','text','cdata','comment','processing_instruction')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE xlsx_xml_element (node_id INTEGER PRIMARY KEY REFERENCES xlsx_xml_node(id), name TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE xlsx_xml_text (node_id INTEGER PRIMARY KEY REFERENCES xlsx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 13,
+      "text": "CREATE TABLE xlsx_xml_cdata (node_id INTEGER PRIMARY KEY REFERENCES xlsx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 14,
+      "text": "CREATE TABLE xlsx_xml_comment (node_id INTEGER PRIMARY KEY REFERENCES xlsx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 15,
+      "text": "CREATE TABLE xlsx_xml_processing_instruction (node_id INTEGER PRIMARY KEY REFERENCES xlsx_xml_node(id), target TEXT NOT NULL, data TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 16,
+      "text": "CREATE TABLE xlsx_xml_attribute (id INTEGER PRIMARY KEY, element_node_id INTEGER NOT NULL REFERENCES xlsx_xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 17,
+      "text": "CREATE TABLE xlsx_xml_child (id INTEGER PRIMARY KEY, parent_element_node_id INTEGER NOT NULL REFERENCES xlsx_xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), child_node_id INTEGER NOT NULL REFERENCES xlsx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 18,
+      "text": "CREATE TABLE xlsx_xml_document_misc (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES xlsx_xml_document(id), position TEXT NOT NULL CHECK(position IN ('prolog','epilog')), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), node_id INTEGER NOT NULL REFERENCES xlsx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 19,
+      "text": "CREATE TABLE xlsx_xml_declaration (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES xlsx_xml_document(id), version TEXT NOT NULL, encoding TEXT, standalone INTEGER CHECK(standalone IN (0,1)), quote TEXT NOT NULL CHECK(quote IN ('double','single')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 20,
+      "text": "CREATE TABLE xlsx_xml_doctype (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES xlsx_xml_document(id), prolog_position_decimal TEXT NOT NULL, name TEXT NOT NULL, external_kind TEXT CHECK(external_kind IN ('system','public')), public_id TEXT, system_id TEXT, CHECK((external_kind IS NULL AND public_id IS NULL AND system_id IS NULL) OR (external_kind = 'system' AND public_id IS NULL AND system_id IS NOT NULL) OR (external_kind = 'public' AND public_id IS NOT NULL AND system_id IS NOT NULL)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 21,
+      "text": "CREATE TABLE xlsx_xml_entity (id INTEGER PRIMARY KEY, doctype_id INTEGER NOT NULL REFERENCES xlsx_xml_doctype(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), parameter INTEGER NOT NULL CHECK(parameter IN (0,1)), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE pdf_stream_filter (id INTEGER PRIMARY KEY, chain_id INTEGER NOT NULL REFERENCES pdf_filter_chain(id), ordinal INTEGER NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('flate','lzw','asciiHex','ascii85','runLength','dct','jpx','ccitt','jbig2','crypt')), early_change INTEGER CHECK (early_change IN (0,1)), color_transform INTEGER, globals BLOB, crypt_name TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE pdf_filter_ccitt (id INTEGER PRIMARY KEY REFERENCES pdf_stream_filter(id), k INTEGER NOT NULL, columns INTEGER NOT NULL, rows INTEGER NOT NULL, black_is_1 INTEGER NOT NULL CHECK (black_is_1 IN (0,1)), encoded_byte_align INTEGER NOT NULL CHECK (encoded_byte_align IN (0,1)), end_of_line INTEGER NOT NULL CHECK (end_of_line IN (0,1)), end_of_block INTEGER NOT NULL CHECK (end_of_block IN (0,1)), damaged_rows_before_error INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE pdf_cos_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','boolean','integer','decimal','string','name','array','dictionary','reference','stream','text','date')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_value INTEGER, negative INTEGER CHECK (negative IN (0,1)), coefficient TEXT, scale INTEGER, byte_string BLOB, name TEXT, reference_number INTEGER, reference_generation INTEGER, stream_data BLOB, filter_chain_id INTEGER REFERENCES pdf_filter_chain(id), date_id INTEGER REFERENCES pdf_date(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 15,
+      "text": "CREATE TABLE pdf_color_space (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('deviceGray','deviceRgb','deviceCmyk','calGray','calRgb','lab','iccBased','indexed','separation','deviceN','pattern','named')), components INTEGER, profile_id INTEGER REFERENCES pdf_artifact_reference(id), hival INTEGER, palette BLOB, name TEXT, alternate_id INTEGER REFERENCES pdf_color_space(id), tint_transform_id INTEGER REFERENCES pdf_function(id), attributes_id INTEGER REFERENCES pdf_cos_value(id), range_present INTEGER CHECK (range_present IN (0,1)), black_present INTEGER CHECK (black_present IN (0,1)), gamma_present INTEGER CHECK (gamma_present IN (0,1)), matrix_present INTEGER CHECK (matrix_present IN (0,1)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 63,
+      "text": "CREATE TABLE pdf_embedded_file (id INTEGER PRIMARY KEY, resource_name TEXT NOT NULL, file_name TEXT NOT NULL, description TEXT, mime_type TEXT, data BLOB NOT NULL, creation_date_id INTEGER REFERENCES pdf_date(id), modification_date_id INTEGER REFERENCES pdf_date(id), relationship TEXT, listed INTEGER NOT NULL CHECK (listed IN (0,1)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 112,
+      "text": "CREATE TABLE pdf_document(id INTEGER PRIMARY KEY CHECK(id=1),schema TEXT NOT NULL,declared_version TEXT NOT NULL,acro_id INTEGER REFERENCES pdf_acro_form(id),optional_id INTEGER REFERENCES pdf_optional_content(id),page_layout TEXT,page_mode TEXT,preferences_id INTEGER REFERENCES pdf_viewer_preferences(id),open_action_id INTEGER REFERENCES pdf_open_action(id),language TEXT,mark_id INTEGER REFERENCES pdf_mark_info(id),metadata TEXT,document_id_first BLOB,document_id_second BLOB,encryption_id INTEGER REFERENCES pdf_encryption(id),info_id INTEGER NOT NULL REFERENCES pdf_document_info(id),catalog_extra_id INTEGER NOT NULL REFERENCES pdf_cos_value(id),trailer_id INTEGER NOT NULL REFERENCES pdf_cos_value(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql",
+      "line": 134,
+      "text": "CREATE TABLE pdf_stream_role(id INTEGER PRIMARY KEY,identity_id INTEGER NOT NULL REFERENCES pdf_graph_identity(id),kind TEXT NOT NULL CHECK(kind IN ('operators','sampledWords','calculatorProgram','unicodeMap','characterMap','fontProgram','image','metadataText','attachmentBytes','paletteComponents','glyphIds','referenceBody')),operators_id INTEGER REFERENCES pdf_content(id),sample_count INTEGER CHECK(sample_count>=0),code TEXT,unicode_id INTEGER REFERENCES pdf_to_unicode(id),cmap_id INTEGER REFERENCES pdf_cmap(id),program_id INTEGER REFERENCES pdf_font_program(id),image_id INTEGER REFERENCES pdf_image(id),metadata_text TEXT,attachment_data BLOB, palette_components BLOB, glyph_count INTEGER CHECK(glyph_count >= 0), artifact_reference_id INTEGER REFERENCES pdf_artifact_reference(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE docx_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, package_id INTEGER NOT NULL REFERENCES docx_package(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE docx_package (id INTEGER PRIMARY KEY, comment TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE docx_binary_part (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES docx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), path TEXT NOT NULL, content_type TEXT NOT NULL, data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE docx_default_content_type (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES docx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), extension TEXT NOT NULL, content_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE docx_override_content_type (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES docx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), part_name TEXT NOT NULL, content_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE docx_relationship_owner (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES docx_package(id), owner_path TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE docx_xml_part (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES docx_document(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), content_type TEXT NOT NULL, xml_document_id INTEGER NOT NULL REFERENCES docx_xml_document(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE docx_xml_document (id INTEGER PRIMARY KEY, path TEXT NOT NULL, root_node_id INTEGER REFERENCES docx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE docx_xml_node (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('element','text','cdata','comment','processing_instruction')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE docx_xml_element (node_id INTEGER PRIMARY KEY REFERENCES docx_xml_node(id), name TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE docx_xml_text (node_id INTEGER PRIMARY KEY REFERENCES docx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 13,
+      "text": "CREATE TABLE docx_xml_cdata (node_id INTEGER PRIMARY KEY REFERENCES docx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 14,
+      "text": "CREATE TABLE docx_xml_comment (node_id INTEGER PRIMARY KEY REFERENCES docx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 15,
+      "text": "CREATE TABLE docx_xml_processing_instruction (node_id INTEGER PRIMARY KEY REFERENCES docx_xml_node(id), target TEXT NOT NULL, data TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 16,
+      "text": "CREATE TABLE docx_xml_attribute (id INTEGER PRIMARY KEY, element_node_id INTEGER NOT NULL REFERENCES docx_xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 17,
+      "text": "CREATE TABLE docx_xml_child (id INTEGER PRIMARY KEY, parent_element_node_id INTEGER NOT NULL REFERENCES docx_xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), child_node_id INTEGER NOT NULL REFERENCES docx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 18,
+      "text": "CREATE TABLE docx_xml_document_misc (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES docx_xml_document(id), position TEXT NOT NULL CHECK(position IN ('prolog','epilog')), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), node_id INTEGER NOT NULL REFERENCES docx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 19,
+      "text": "CREATE TABLE docx_xml_declaration (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES docx_xml_document(id), version TEXT NOT NULL, encoding TEXT, standalone INTEGER CHECK(standalone IN (0,1)), quote TEXT NOT NULL CHECK(quote IN ('double','single')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 20,
+      "text": "CREATE TABLE docx_xml_doctype (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES docx_xml_document(id), prolog_position_decimal TEXT NOT NULL, name TEXT NOT NULL, external_kind TEXT CHECK(external_kind IN ('system','public')), public_id TEXT, system_id TEXT, CHECK((external_kind IS NULL AND public_id IS NULL AND system_id IS NULL) OR (external_kind = 'system' AND public_id IS NULL AND system_id IS NOT NULL) OR (external_kind = 'public' AND public_id IS NOT NULL AND system_id IS NOT NULL)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 21,
+      "text": "CREATE TABLE docx_xml_entity (id INTEGER PRIMARY KEY, doctype_id INTEGER NOT NULL REFERENCES docx_xml_doctype(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), parameter INTEGER NOT NULL CHECK(parameter IN (0,1)), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE xml_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_node_id INTEGER REFERENCES xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE xml_node (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('element','text','cdata','comment','processing_instruction')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE xml_element (node_id INTEGER PRIMARY KEY REFERENCES xml_node(id), name TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE xml_text (node_id INTEGER PRIMARY KEY REFERENCES xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE xml_cdata (node_id INTEGER PRIMARY KEY REFERENCES xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE xml_comment (node_id INTEGER PRIMARY KEY REFERENCES xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE xml_processing_instruction (node_id INTEGER PRIMARY KEY REFERENCES xml_node(id), target TEXT NOT NULL, data TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE xml_attribute (id INTEGER PRIMARY KEY, element_node_id INTEGER NOT NULL REFERENCES xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE xml_child (id INTEGER PRIMARY KEY, parent_element_node_id INTEGER NOT NULL REFERENCES xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), child_node_id INTEGER NOT NULL REFERENCES xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE xml_document_misc (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES xml_document(id), position TEXT NOT NULL CHECK(position IN ('prolog','epilog')), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), node_id INTEGER NOT NULL REFERENCES xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE xml_declaration (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES xml_document(id), version TEXT NOT NULL, encoding TEXT, standalone INTEGER CHECK(standalone IN (0,1)), quote TEXT NOT NULL CHECK(quote IN ('double','single')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE xml_doctype (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES xml_document(id), prolog_position_decimal TEXT NOT NULL, name TEXT NOT NULL, external_kind TEXT CHECK(external_kind IN ('system','public')), public_id TEXT, system_id TEXT, CHECK((external_kind IS NULL AND public_id IS NULL AND system_id IS NULL) OR (external_kind = 'system' AND public_id IS NULL AND system_id IS NOT NULL) OR (external_kind = 'public' AND public_id IS NOT NULL AND system_id IS NOT NULL)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 13,
+      "text": "CREATE TABLE xml_entity (id INTEGER PRIMARY KEY, doctype_id INTEGER NOT NULL REFERENCES xml_doctype(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), parameter INTEGER NOT NULL CHECK(parameter IN (0,1)), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 13,
+      "text": "CREATE TABLE png_ancillary_chunk (id INTEGER PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES png_image(id), ordinal INTEGER NOT NULL, kind BLOB NOT NULL, after_raster INTEGER NOT NULL CHECK(after_raster IN (0,1)), data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE avi_stream_header(id INTEGER PRIMARY KEY REFERENCES avi_stream(id),fcc_type TEXT NOT NULL,fcc_handler TEXT NOT NULL,flags INTEGER NOT NULL CHECK(flags BETWEEN 0 AND 4294967295),priority INTEGER NOT NULL CHECK(priority BETWEEN 0 AND 65535),language INTEGER NOT NULL CHECK(language BETWEEN 0 AND 65535),initial_frames INTEGER NOT NULL CHECK(initial_frames BETWEEN 0 AND 4294967295),scale INTEGER NOT NULL CHECK(scale BETWEEN 0 AND 4294967295),rate INTEGER NOT NULL CHECK(rate BETWEEN 0 AND 4294967295),start INTEGER NOT NULL CHECK(start BETWEEN 0 AND 4294967295),length INTEGER NOT NULL CHECK(length BETWEEN 0 AND 4294967295),suggested_buffer_size INTEGER NOT NULL CHECK(suggested_buffer_size BETWEEN 0 AND 4294967295),quality INTEGER NOT NULL CHECK(quality BETWEEN -2147483648 AND 2147483647),sample_size INTEGER NOT NULL CHECK(sample_size BETWEEN 0 AND 4294967295),rc_frame_left INTEGER NOT NULL CHECK(rc_frame_left BETWEEN -2147483648 AND 2147483647),rc_frame_top INTEGER NOT NULL CHECK(rc_frame_top BETWEEN -2147483648 AND 2147483647),rc_frame_right INTEGER NOT NULL CHECK(rc_frame_right BETWEEN -2147483648 AND 2147483647),rc_frame_bottom INTEGER NOT NULL CHECK(rc_frame_bottom BETWEEN -2147483648 AND 2147483647),rc_frame_width INTEGER NOT NULL CHECK(rc_frame_width BETWEEN 0 AND 255),strh_extra BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE avi_wave_format(id INTEGER PRIMARY KEY REFERENCES avi_stream(id),format_tag INTEGER NOT NULL CHECK(format_tag BETWEEN 0 AND 65535),channels INTEGER NOT NULL CHECK(channels BETWEEN 0 AND 65535),samples_per_sec INTEGER NOT NULL CHECK(samples_per_sec BETWEEN 0 AND 4294967295),avg_bytes_per_sec INTEGER NOT NULL CHECK(avg_bytes_per_sec BETWEEN 0 AND 4294967295),block_align INTEGER NOT NULL CHECK(block_align BETWEEN 0 AND 65535),bits_per_sample INTEGER NOT NULL CHECK(bits_per_sample BETWEEN 0 AND 65535),extra BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE avi_raw_format(id INTEGER PRIMARY KEY REFERENCES avi_stream(id),data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE avi_stream_chunk(id INTEGER PRIMARY KEY,stream_id INTEGER NOT NULL REFERENCES avi_stream(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),fourcc TEXT NOT NULL,data BLOB NOT NULL,keyframe INTEGER NOT NULL CHECK(keyframe IN(0,1)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE avi_stream_extra(id INTEGER PRIMARY KEY,stream_id INTEGER NOT NULL REFERENCES avi_stream(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),fourcc TEXT NOT NULL,data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE avi_unknown_chunk(id INTEGER PRIMARY KEY,document_id INTEGER NOT NULL REFERENCES avi_document(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),fourcc TEXT NOT NULL,data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE avi_hdrl_extra(id INTEGER PRIMARY KEY,document_id INTEGER NOT NULL REFERENCES avi_document(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),fourcc TEXT NOT NULL,data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE pptx_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, package_id INTEGER NOT NULL REFERENCES pptx_package(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE pptx_package (id INTEGER PRIMARY KEY, comment TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE pptx_binary_part (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES pptx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), path TEXT NOT NULL, content_type TEXT NOT NULL, data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE pptx_default_content_type (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES pptx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), extension TEXT NOT NULL, content_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE pptx_override_content_type (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES pptx_package(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), part_name TEXT NOT NULL, content_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE pptx_relationship_owner (id INTEGER PRIMARY KEY, package_id INTEGER NOT NULL REFERENCES pptx_package(id), owner_path TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE pptx_xml_part (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES pptx_document(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), content_type TEXT NOT NULL, xml_document_id INTEGER NOT NULL REFERENCES pptx_xml_document(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE pptx_xml_document (id INTEGER PRIMARY KEY, path TEXT NOT NULL, root_node_id INTEGER REFERENCES pptx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE pptx_xml_node (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('element','text','cdata','comment','processing_instruction')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE pptx_xml_element (node_id INTEGER PRIMARY KEY REFERENCES pptx_xml_node(id), name TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE pptx_xml_text (node_id INTEGER PRIMARY KEY REFERENCES pptx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 13,
+      "text": "CREATE TABLE pptx_xml_cdata (node_id INTEGER PRIMARY KEY REFERENCES pptx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 14,
+      "text": "CREATE TABLE pptx_xml_comment (node_id INTEGER PRIMARY KEY REFERENCES pptx_xml_node(id), text TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 15,
+      "text": "CREATE TABLE pptx_xml_processing_instruction (node_id INTEGER PRIMARY KEY REFERENCES pptx_xml_node(id), target TEXT NOT NULL, data TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 16,
+      "text": "CREATE TABLE pptx_xml_attribute (id INTEGER PRIMARY KEY, element_node_id INTEGER NOT NULL REFERENCES pptx_xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 17,
+      "text": "CREATE TABLE pptx_xml_child (id INTEGER PRIMARY KEY, parent_element_node_id INTEGER NOT NULL REFERENCES pptx_xml_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), child_node_id INTEGER NOT NULL REFERENCES pptx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 18,
+      "text": "CREATE TABLE pptx_xml_document_misc (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES pptx_xml_document(id), position TEXT NOT NULL CHECK(position IN ('prolog','epilog')), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), node_id INTEGER NOT NULL REFERENCES pptx_xml_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 19,
+      "text": "CREATE TABLE pptx_xml_declaration (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES pptx_xml_document(id), version TEXT NOT NULL, encoding TEXT, standalone INTEGER CHECK(standalone IN (0,1)), quote TEXT NOT NULL CHECK(quote IN ('double','single')));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 20,
+      "text": "CREATE TABLE pptx_xml_doctype (id INTEGER PRIMARY KEY, xml_document_id INTEGER NOT NULL REFERENCES pptx_xml_document(id), prolog_position_decimal TEXT NOT NULL, name TEXT NOT NULL, external_kind TEXT CHECK(external_kind IN ('system','public')), public_id TEXT, system_id TEXT, CHECK((external_kind IS NULL AND public_id IS NULL AND system_id IS NULL) OR (external_kind = 'system' AND public_id IS NULL AND system_id IS NOT NULL) OR (external_kind = 'public' AND public_id IS NOT NULL AND system_id IS NOT NULL)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 21,
+      "text": "CREATE TABLE pptx_xml_entity (id INTEGER PRIMARY KEY, doctype_id INTEGER NOT NULL REFERENCES pptx_xml_doctype(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), parameter INTEGER NOT NULL CHECK(parameter IN (0,1)), name TEXT NOT NULL, value TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 36,
+      "text": "ieee754_binary32_bits INTEGER NOT NULL CHECK (ieee754_binary32_bits BETWEEN 0 AND 4294967295),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/🗄️.sql",
+      "line": 39,
+      "text": "kind TEXT NOT NULL CHECK(kind IN ('string','real','boolean','integer8','integer16','integer32','integer64','point3d','binary','handle','object_id')),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/🗄️.sql",
+      "line": 49,
+      "text": "CREATE TABLE dwg_xrecord_binary_octet (id INTEGER PRIMARY KEY, value_id INTEGER NOT NULL REFERENCES dwg_xrecord_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value INTEGER NOT NULL CHECK(value BETWEEN 0 AND 255));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE deflate_payload_byte ("
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🌳️node/🗄️.sql",
+      "line": 12,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🌳️node/🗄️.sql",
+      "line": 13,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql",
+      "line": 7,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql",
+      "line": 8,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql",
+      "line": 16,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql",
+      "line": 17,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql",
+      "line": 33,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql",
+      "line": 34,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 6,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 7,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 18,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 19,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 27,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 28,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 35,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+      "line": 36,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🏔️mesh/🗄️.sql",
+      "line": 6,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🏔️mesh/🗄️.sql",
+      "line": 7,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🏔️mesh/🗄️.sql",
+      "line": 27,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🏔️mesh/🗄️.sql",
+      "line": 28,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 4,
+      "text": "source_form TEXT NOT NULL CHECK(source_form IN ('json','glb')),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 7,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 8,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 18,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 19,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 26,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+      "line": 27,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+      "line": 9,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+      "line": 10,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+      "line": 27,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+      "line": 28,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+      "line": 46,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+      "line": 47,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 12,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 13,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 31,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 32,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 52,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 53,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 61,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 62,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 70,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 71,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 80,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 81,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 92,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+      "line": 93,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+      "line": 10,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+      "line": 11,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+      "line": 24,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+      "line": 25,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+      "line": 41,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+      "line": 42,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🦴️skin/🗄️.sql",
+      "line": 10,
+      "text": "extensions_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🦴️skin/🗄️.sql",
+      "line": 11,
+      "text": "extras_id INTEGER REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE gltf_json_value ("
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 13,
+      "text": "CREATE TABLE gltf_json_array_element ("
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 15,
+      "text": "array_id INTEGER NOT NULL REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 17,
+      "text": "value_id INTEGER NOT NULL REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 19,
+      "text": "CREATE TABLE gltf_json_object_member ("
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 21,
+      "text": "object_id INTEGER NOT NULL REFERENCES gltf_json_value(id),"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+      "line": 24,
+      "text": "value_id INTEGER NOT NULL REFERENCES gltf_json_value(id)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "format TEXT NOT NULL CHECK (format IN ('ascii', 'binary_little_endian', 'binary_big_endian'))"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_flow_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, position_x REAL, position_y REAL, position_x_ieee754_bits INTEGER, position_x_numeric_class TEXT, position_y_ieee754_bits INTEGER, position_y_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_flow_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, source_node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), source_port TEXT NOT NULL, target_node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), target_port TEXT NOT NULL, kind TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_video_sample (id INTEGER PRIMARY KEY, stream_id INTEGER NOT NULL REFERENCES semio_video_stream(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), presentation_timestamp TEXT NOT NULL, key_frame INTEGER NOT NULL CHECK (key_frame IN (0,1)), data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_model_entity (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_model_document(id), kind TEXT NOT NULL CHECK (kind IN ('spatial','element')), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE semio_model_geometry_reference (id INTEGER PRIMARY KEY REFERENCES semio_model_element(id), kind TEXT NOT NULL CHECK (kind IN ('none','brep','mesh')), target_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_model_relation (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_model_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('aggregates','contained_in','connects_to','fills_void','voids_element','other')), other_label TEXT, source_entity_id INTEGER NOT NULL REFERENCES semio_model_entity(id), target_entity_id INTEGER NOT NULL REFERENCES semio_model_entity(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_table_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, reference_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_document_style (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, name TEXT NOT NULL, based_on_id INTEGER REFERENCES semio_document_style(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_document_image (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_presentation_master (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_presentation_layout (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, master_id INTEGER NOT NULL REFERENCES semio_presentation_master(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_presentation_slide (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, layout_id INTEGER REFERENCES semio_presentation_layout(id), notes_collection_id INTEGER NOT NULL REFERENCES semio_presentation_collection(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE semio_presentation_picture (id INTEGER PRIMARY KEY REFERENCES semio_presentation_shape(id), asset_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_value_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, target_node_id INTEGER REFERENCES semio_value_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_value_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_value_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES semio_value_value(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_mesh_mesh (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_mesh_primitive (id INTEGER PRIMARY KEY, mesh_id INTEGER NOT NULL REFERENCES semio_mesh_mesh(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, topology TEXT NOT NULL CHECK (topology IN ('points','lines','line_strip','triangles','triangle_strip','triangle_fan')), material_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_mesh_material (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, base_r REAL, base_g REAL, base_b REAL, base_a REAL, metallic REAL, roughness REAL, base_color_texture_native_id TEXT, metallic_roughness_texture_native_id TEXT, normal_texture_native_id TEXT, occlusion_texture_native_id TEXT, emissive_texture_native_id TEXT, base_r_ieee754_bits INTEGER, base_r_numeric_class TEXT, base_g_ieee754_bits INTEGER, base_g_numeric_class TEXT, base_b_ieee754_bits INTEGER, base_b_numeric_class TEXT, base_a_ieee754_bits INTEGER, base_a_numeric_class TEXT, metallic_ieee754_bits INTEGER, metallic_numeric_class TEXT, roughness_ieee754_bits INTEGER, roughness_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE semio_mesh_texture (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_graph_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_graph_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, position_x REAL, position_y REAL, width REAL, height REAL, position_x_ieee754_bits INTEGER, position_x_numeric_class TEXT, position_y_ieee754_bits INTEGER, position_y_numeric_class TEXT, width_ieee754_bits INTEGER, width_numeric_class TEXT, height_ieee754_bits INTEGER, height_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_graph_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_graph_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, source_node_id INTEGER NOT NULL REFERENCES semio_graph_node(id), target_node_id INTEGER NOT NULL REFERENCES semio_graph_node(id), kind TEXT NOT NULL, label TEXT NOT NULL, source_port TEXT, target_port TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE semio_graph_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, reference_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_drawing_layer (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_drawing_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, name TEXT NOT NULL, visible INTEGER NOT NULL, root_node_id INTEGER NOT NULL REFERENCES semio_drawing_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_drawing_image (id INTEGER PRIMARY KEY REFERENCES semio_drawing_node(id), x REAL, y REAL, width REAL, height REAL, mime TEXT NOT NULL, bytes BLOB NOT NULL, x_ieee754_bits INTEGER, x_numeric_class TEXT, y_ieee754_bits INTEGER, y_numeric_class TEXT, width_ieee754_bits INTEGER, width_numeric_class TEXT, height_ieee754_bits INTEGER, height_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE semio_image_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, width INTEGER NOT NULL CHECK (width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK (height BETWEEN 0 AND 4294967295), colorspace TEXT NOT NULL CHECK (colorspace IN ('rgb','rgba','grayscale','grayscale_alpha','indexed')), bit_depth INTEGER NOT NULL CHECK (bit_depth BETWEEN 0 AND 255), icc BLOB);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_brep_vertex (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, x REAL, y REAL, z REAL, tolerance REAL, x_ieee754_bits INTEGER, x_numeric_class TEXT, y_ieee754_bits INTEGER, y_numeric_class TEXT, z_ieee754_bits INTEGER, z_numeric_class TEXT, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_native_id TEXT NOT NULL, end_vertex_native_id TEXT NOT NULL, curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_brep_loop (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_brep_loop_edge (id INTEGER PRIMARY KEY, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), ordinal INTEGER NOT NULL, edge_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE semio_brep_coedge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, edge_native_id TEXT NOT NULL, forward INTEGER NOT NULL, curve_id INTEGER REFERENCES semio_brep_curve2(id), parameter_start REAL, parameter_end REAL, loop_native_id TEXT NOT NULL, next_native_id TEXT NOT NULL, previous_native_id TEXT NOT NULL, parameter_start_ieee754_bits INTEGER, parameter_start_numeric_class TEXT, parameter_end_ieee754_bits INTEGER, parameter_end_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE semio_brep_face (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, outer_loop_native_id TEXT NOT NULL, surface_id INTEGER NOT NULL REFERENCES semio_brep_surface(id), orientation INTEGER NOT NULL, tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE semio_brep_inner_loop (id INTEGER PRIMARY KEY, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), ordinal INTEGER NOT NULL, loop_native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_brep_shell (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE semio_brep_shell_face (id INTEGER PRIMARY KEY, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), ordinal INTEGER NOT NULL, face_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE semio_brep_solid (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE semio_brep_solid_shell (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES semio_brep_solid(id), ordinal INTEGER NOT NULL, shell_native_id TEXT NOT NULL, is_void INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_kit_type (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_kit_design (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, name TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_kit_piece (id INTEGER PRIMARY KEY, design_id INTEGER NOT NULL REFERENCES semio_kit_design(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, type_id INTEGER NOT NULL REFERENCES semio_kit_type(id), translation_x REAL, translation_y REAL, translation_z REAL, rotation_x REAL, rotation_y REAL, rotation_z REAL, rotation_w REAL, scale_x REAL, scale_y REAL, scale_z REAL, translation_x_ieee754_bits INTEGER, translation_x_numeric_class TEXT, translation_y_ieee754_bits INTEGER, translation_y_numeric_class TEXT, translation_z_ieee754_bits INTEGER, translation_z_numeric_class TEXT, rotation_x_ieee754_bits INTEGER, rotation_x_numeric_class TEXT, rotation_y_ieee754_bits INTEGER, rotation_y_numeric_class TEXT, rotation_z_ieee754_bits INTEGER, rotation_z_numeric_class TEXT, rotation_w_ieee754_bits INTEGER, rotation_w_numeric_class TEXT, scale_x_ieee754_bits INTEGER, scale_x_numeric_class TEXT, scale_y_ieee754_bits INTEGER, scale_y_numeric_class TEXT, scale_z_ieee754_bits INTEGER, scale_z_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_kit_connection (id INTEGER PRIMARY KEY, design_id INTEGER NOT NULL REFERENCES semio_kit_design(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, connecting_piece_id INTEGER NOT NULL REFERENCES semio_kit_piece(id), connecting_port TEXT NOT NULL, connected_piece_id INTEGER NOT NULL REFERENCES semio_kit_piece(id), connected_port TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE semio_kit_representation (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), type_id INTEGER NOT NULL REFERENCES semio_kit_type(id), target_reference_id INTEGER NOT NULL REFERENCES semio_kit_reference(id), pin_kind TEXT NOT NULL CHECK (pin_kind IN ('head','checkpoint','snapshot')), checkpoint_id TEXT, blob_id INTEGER REFERENCES semio_kit_blob(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE semio_kit_blob (id INTEGER PRIMARY KEY, hash TEXT NOT NULL, size TEXT NOT NULL, media_type TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_flow_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, position_x REAL, position_y REAL, position_x_ieee754_bits INTEGER, position_x_numeric_class TEXT, position_y_ieee754_bits INTEGER, position_y_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_flow_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, source_node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), source_port TEXT NOT NULL, target_node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), target_port TEXT NOT NULL, kind TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_video_sample (id INTEGER PRIMARY KEY, stream_id INTEGER NOT NULL REFERENCES semio_video_stream(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), presentation_timestamp TEXT NOT NULL, key_frame INTEGER NOT NULL CHECK (key_frame IN (0,1)), data BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_model_entity (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_model_document(id), kind TEXT NOT NULL CHECK (kind IN ('spatial','element')), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE semio_model_geometry_reference (id INTEGER PRIMARY KEY REFERENCES semio_model_element(id), kind TEXT NOT NULL CHECK (kind IN ('none','brep','mesh')), target_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_model_relation (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_model_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('aggregates','contained_in','connects_to','fills_void','voids_element','other')), other_label TEXT, source_entity_id INTEGER NOT NULL REFERENCES semio_model_entity(id), target_entity_id INTEGER NOT NULL REFERENCES semio_model_entity(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_table_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, reference_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_document_style (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, name TEXT NOT NULL, based_on_id INTEGER REFERENCES semio_document_style(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_document_image (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_presentation_master (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_presentation_layout (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, master_id INTEGER NOT NULL REFERENCES semio_presentation_master(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_presentation_slide (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, layout_id INTEGER REFERENCES semio_presentation_layout(id), notes_collection_id INTEGER NOT NULL REFERENCES semio_presentation_collection(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE semio_presentation_picture (id INTEGER PRIMARY KEY REFERENCES semio_presentation_shape(id), asset_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_value_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, target_node_id INTEGER REFERENCES semio_value_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_value_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_value_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES semio_value_value(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_mesh_mesh (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_mesh_primitive (id INTEGER PRIMARY KEY, mesh_id INTEGER NOT NULL REFERENCES semio_mesh_mesh(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, topology TEXT NOT NULL CHECK (topology IN ('points','lines','line_strip','triangles','triangle_strip','triangle_fan')), material_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_mesh_material (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, base_r REAL, base_g REAL, base_b REAL, base_a REAL, metallic REAL, roughness REAL, base_color_texture_native_id TEXT, metallic_roughness_texture_native_id TEXT, normal_texture_native_id TEXT, occlusion_texture_native_id TEXT, emissive_texture_native_id TEXT, base_r_ieee754_bits INTEGER, base_r_numeric_class TEXT, base_g_ieee754_bits INTEGER, base_g_numeric_class TEXT, base_b_ieee754_bits INTEGER, base_b_numeric_class TEXT, base_a_ieee754_bits INTEGER, base_a_numeric_class TEXT, metallic_ieee754_bits INTEGER, metallic_numeric_class TEXT, roughness_ieee754_bits INTEGER, roughness_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE semio_mesh_texture (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_graph_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_graph_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, position_x REAL, position_y REAL, width REAL, height REAL, position_x_ieee754_bits INTEGER, position_x_numeric_class TEXT, position_y_ieee754_bits INTEGER, position_y_numeric_class TEXT, width_ieee754_bits INTEGER, width_numeric_class TEXT, height_ieee754_bits INTEGER, height_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_graph_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_graph_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, source_node_id INTEGER NOT NULL REFERENCES semio_graph_node(id), target_node_id INTEGER NOT NULL REFERENCES semio_graph_node(id), kind TEXT NOT NULL, label TEXT NOT NULL, source_port TEXT, target_port TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE semio_graph_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, reference_native_id TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_drawing_layer (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_drawing_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, name TEXT NOT NULL, visible INTEGER NOT NULL, root_node_id INTEGER NOT NULL REFERENCES semio_drawing_node(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_drawing_image (id INTEGER PRIMARY KEY REFERENCES semio_drawing_node(id), x REAL, y REAL, width REAL, height REAL, mime TEXT NOT NULL, bytes BLOB NOT NULL, x_ieee754_bits INTEGER, x_numeric_class TEXT, y_ieee754_bits INTEGER, y_numeric_class TEXT, width_ieee754_bits INTEGER, width_numeric_class TEXT, height_ieee754_bits INTEGER, height_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 1,
+      "text": "CREATE TABLE semio_image_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, width INTEGER NOT NULL CHECK (width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK (height BETWEEN 0 AND 4294967295), colorspace TEXT NOT NULL CHECK (colorspace IN ('rgb','rgba','grayscale','grayscale_alpha','indexed')), bit_depth INTEGER NOT NULL CHECK (bit_depth BETWEEN 0 AND 255), icc BLOB);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_brep_vertex (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, x REAL, y REAL, z REAL, tolerance REAL, x_ieee754_bits INTEGER, x_numeric_class TEXT, y_ieee754_bits INTEGER, y_numeric_class TEXT, z_ieee754_bits INTEGER, z_numeric_class TEXT, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_native_id TEXT NOT NULL, end_vertex_native_id TEXT NOT NULL, curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_brep_loop (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_brep_loop_edge (id INTEGER PRIMARY KEY, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), ordinal INTEGER NOT NULL, edge_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 6,
+      "text": "CREATE TABLE semio_brep_coedge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, edge_native_id TEXT NOT NULL, forward INTEGER NOT NULL, curve_id INTEGER REFERENCES semio_brep_curve2(id), parameter_start REAL, parameter_end REAL, loop_native_id TEXT NOT NULL, next_native_id TEXT NOT NULL, previous_native_id TEXT NOT NULL, parameter_start_ieee754_bits INTEGER, parameter_start_numeric_class TEXT, parameter_end_ieee754_bits INTEGER, parameter_end_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE semio_brep_face (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, outer_loop_native_id TEXT NOT NULL, surface_id INTEGER NOT NULL REFERENCES semio_brep_surface(id), orientation INTEGER NOT NULL, tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 8,
+      "text": "CREATE TABLE semio_brep_inner_loop (id INTEGER PRIMARY KEY, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), ordinal INTEGER NOT NULL, loop_native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 9,
+      "text": "CREATE TABLE semio_brep_shell (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE semio_brep_shell_face (id INTEGER PRIMARY KEY, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), ordinal INTEGER NOT NULL, face_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE semio_brep_solid (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 12,
+      "text": "CREATE TABLE semio_brep_solid_shell (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES semio_brep_solid(id), ordinal INTEGER NOT NULL, shell_native_id TEXT NOT NULL, is_void INTEGER NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE semio_kit_type (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 3,
+      "text": "CREATE TABLE semio_kit_design (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, name TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 4,
+      "text": "CREATE TABLE semio_kit_piece (id INTEGER PRIMARY KEY, design_id INTEGER NOT NULL REFERENCES semio_kit_design(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, type_id INTEGER NOT NULL REFERENCES semio_kit_type(id), translation_x REAL, translation_y REAL, translation_z REAL, rotation_x REAL, rotation_y REAL, rotation_z REAL, rotation_w REAL, scale_x REAL, scale_y REAL, scale_z REAL, translation_x_ieee754_bits INTEGER, translation_x_numeric_class TEXT, translation_y_ieee754_bits INTEGER, translation_y_numeric_class TEXT, translation_z_ieee754_bits INTEGER, translation_z_numeric_class TEXT, rotation_x_ieee754_bits INTEGER, rotation_x_numeric_class TEXT, rotation_y_ieee754_bits INTEGER, rotation_y_numeric_class TEXT, rotation_z_ieee754_bits INTEGER, rotation_z_numeric_class TEXT, rotation_w_ieee754_bits INTEGER, rotation_w_numeric_class TEXT, scale_x_ieee754_bits INTEGER, scale_x_numeric_class TEXT, scale_y_ieee754_bits INTEGER, scale_y_numeric_class TEXT, scale_z_ieee754_bits INTEGER, scale_z_numeric_class TEXT);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 5,
+      "text": "CREATE TABLE semio_kit_connection (id INTEGER PRIMARY KEY, design_id INTEGER NOT NULL REFERENCES semio_kit_design(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, connecting_piece_id INTEGER NOT NULL REFERENCES semio_kit_piece(id), connecting_port TEXT NOT NULL, connected_piece_id INTEGER NOT NULL REFERENCES semio_kit_piece(id), connected_port TEXT NOT NULL);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 10,
+      "text": "CREATE TABLE semio_kit_representation (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), type_id INTEGER NOT NULL REFERENCES semio_kit_type(id), target_reference_id INTEGER NOT NULL REFERENCES semio_kit_reference(id), pin_kind TEXT NOT NULL CHECK (pin_kind IN ('head','checkpoint','snapshot')), checkpoint_id TEXT, blob_id INTEGER REFERENCES semio_kit_blob(id));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 11,
+      "text": "CREATE TABLE semio_kit_blob (id INTEGER PRIMARY KEY, hash TEXT NOT NULL, size TEXT NOT NULL, media_type TEXT NOT NULL);"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "owners": ["discardedMutation", "snapshotFrame", "emptyOriginalVector", "issuer"],
+  "copyBytes": 24,
+  "capacityBytes": 528,
+  "releaseBytes": 65536,
+  "depth": 3,
+  "grants": [
+    {"items": 0, "copy": 24, "capacity": 528, "release": 65536, "depth": 3, "accepted": false},
+    {"items": 1, "copy": 23, "capacity": 528, "release": 65536, "depth": 3, "accepted": false},
+    {"items": 1, "copy": 24, "capacity": 527, "release": 65536, "depth": 3, "accepted": false},
+    {"items": 1, "copy": 24, "capacity": 528, "release": 65535, "depth": 3, "accepted": false},
+    {"items": 1, "copy": 24, "capacity": 528, "release": 65536, "depth": 2, "accepted": false},
+    {"items": 1, "copy": 24, "capacity": 528, "release": 65536, "depth": 3, "accepted": true}
+  ]
+}

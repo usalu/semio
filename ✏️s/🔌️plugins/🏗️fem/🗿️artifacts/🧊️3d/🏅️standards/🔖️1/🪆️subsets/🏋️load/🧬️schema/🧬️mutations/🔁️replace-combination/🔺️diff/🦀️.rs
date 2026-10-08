@@ -5,7 +5,7 @@
 //! `create-combination` runs (`mutation.target-missing` on a case this base does not carry), the
 //! finite-factor bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dCombinationsDelta, Fem3dCombinationsPatchEntry, Fem3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dCombinationsDelta, Fem3dCombinationsModification, Fem3dDiff};
 use crate::standards::v1::subsets::any::schema::mutations::{combination_breach,target_mismatch,invariant,resolve_combination_terms};
 
 use crate::Fem3dSnapshot;
@@ -27,6 +27,6 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem3dSnapshot) -> protocol::Mut
     if *existing == payload.new_combination {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" already has that value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { patched: vec![Fem3dCombinationsPatchEntry { id: payload.id.clone(), item: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { modified: vec![Fem3dCombinationsModification { id: payload.id.clone(), patch: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -88,47 +88,12 @@ mod layers {
     }
 
     //#region 🔖️Id3v2
-    /// 🏷️ One ID3v2 text frame as this oracle expresses it: the four-character frame id and its
-    /// decoded text. A non-text frame is refused rather than silently dropped — losing one on a
-    /// re-write would make the mutation look clean while destroying content.
-    pub(super) struct TextFrame {
-        pub id: String,
-        pub text: String,
+    pub(super) struct MetadataFrame {pub id:String,pub content:id3::Content}
+    pub(super) fn read_v2(v2:&[u8])->Result<Option<(id3::Version,Vec<MetadataFrame>)>,String>{
+        if v2.is_empty(){return Ok(None);}let tag=id3::Tag::read_from2(Cursor::new(v2)).map_err(|e|e.to_string())?;
+        let mut frames=Vec::new();for frame in tag.frames(){match frame.content(){id3::Content::Text(_)|id3::Content::ExtendedText(_)|id3::Content::Link(_)|id3::Content::ExtendedLink(_)|id3::Content::Comment(_)|id3::Content::Lyrics(_)|id3::Content::Picture(_)|id3::Content::Unknown(_)=>frames.push(MetadataFrame{id:frame.id().into(),content:frame.content().clone()}),other=>return Err(format!("unsupported oracle frame {other:?}"))}}Ok(Some((tag.version(),frames)))
     }
-
-    /// 🔎️ Reads the ID3v2 region with the reference. `None` when the stream carries no tag.
-    pub(super) fn read_v2(v2: &[u8]) -> Result<Option<(id3::Version, Vec<TextFrame>)>, String> {
-        if v2.is_empty() {
-            return Ok(None);
-        }
-        let tag = id3::Tag::read_from2(Cursor::new(v2)).map_err(|error| format!("id3::Tag::read_from2 failed: {error}"))?;
-        let mut frames = Vec::new();
-        for frame in tag.frames() {
-            match frame.content() {
-                id3::Content::Text(text) => frames.push(TextFrame { id: frame.id().to_string(), text: text.clone() }),
-                other => return Err(format!("ID3v2 frame {:?} carries {other:?}, which this oracle does not express — refusing to drop it silently", frame.id())),
-            }
-        }
-        Ok(Some((tag.version(), frames)))
-    }
-
-    /// 🏷️ Writes an ID3v2 region of `version` with the reference's own encoder. An empty frame list means "no
-    /// tag at all", which is a real state of the format, not an empty tag.
-    pub(super) fn write_v2(version: id3::Version, frames: &[TextFrame]) -> Result<Vec<u8>, String> {
-        if frames.is_empty() {
-            return Ok(Vec::new());
-        }
-        let mut tag = id3::Tag::with_version(version);
-        for frame in frames {
-            if frame.id.len() != 4 {
-                return Err(format!("ID3v2.3 frame id {:?} is not four characters", frame.id));
-            }
-            tag.add_frame(id3::Frame::text(&frame.id, frame.text.clone()));
-        }
-        let mut out = Vec::new();
-        tag.write_to(&mut out, version).map_err(|error| format!("id3::Tag::write_to failed: {error}"))?;
-        Ok(out)
-    }
+    pub(super) fn write_v2(_version:id3::Version,frames:&[MetadataFrame])->Result<Vec<u8>,String>{let mut tag=id3::Tag::with_version(id3::Version::Id3v24);for frame in frames{tag.add_frame(id3::Frame::with_content(&frame.id,frame.content.clone()));}let mut out=Vec::new();tag.write_to(&mut out,id3::Version::Id3v24).map_err(|e|e.to_string())?;Ok(out)}
     //#endregion 🔖️Id3v2
 
     //#region 🔖️Id3v1
@@ -141,6 +106,7 @@ mod layers {
         pub year: String,
         pub comment: String,
         pub genre_id: u8,
+        pub track: Option<u8>,
     }
 
     /// 🔎️ Reads the ID3v1 trailer with the reference (`id3::v1::Tag::read_from`, which seeks from
@@ -150,7 +116,7 @@ mod layers {
             return Ok(None);
         }
         let tag = id3::v1::Tag::read_from(Cursor::new(input)).map_err(|error| format!("id3::v1::Tag::read_from failed: {error}"))?;
-        Ok(Some(V1Fields { title: tag.title, artist: tag.artist, album: tag.album, year: tag.year, comment: tag.comment, genre_id: tag.genre_id }))
+        Ok(Some(V1Fields { title: tag.title, artist: tag.artist, album: tag.album, year: tag.year, comment: tag.comment, genre_id: tag.genre_id, track:tag.track }))
     }
 
     /// 🏷️ Writes the 128-byte ID3v1 trailer. `id3` has no ID3v1 writer, and the layout leaves none
@@ -175,7 +141,8 @@ mod layers {
         put(&fields.artist, 33, 30)?;
         put(&fields.album, 63, 30)?;
         put(&fields.year, 93, 4)?;
-        put(&fields.comment, 97, 30)?;
+        put(&fields.comment, 97, if fields.track.is_some(){28}else{30})?;
+        if let Some(track)=fields.track{if track==0{return Err("track zero".into());}out[126]=track;}
         out[127] = fields.genre_id;
         Ok(out)
     }
@@ -305,21 +272,28 @@ mod layers {
     //#endregion 🔖️MpegFrames
 
     //#region 🔖️Projection
-    fn text_frames_json(frames: &[TextFrame]) -> Json {
-        Json::Array(frames.iter().map(|frame| Json::Object(vec![("id".to_string(), Json::String(frame.id.clone())), ("text".to_string(), Json::String(frame.text.clone()))])).collect())
+    fn content_json(content:&id3::Content)->Result<Json,String>{
+        let text=|s:&str|Json::String(s.into());let values=|s:&str|Json::Array(s.split('\0').map(text).collect());let bytes=|v:&[u8]|Json::Array(v.iter().map(|&b|Json::Number(b.into())).collect());
+        let fields=match content{
+            id3::Content::Text(v)=>vec![("kind",text("text")),("values",values(v))],
+            id3::Content::ExtendedText(v)=>vec![("kind",text("userText")),("description",text(&v.description)),("values",values(&v.value))],
+            id3::Content::Link(v)=>vec![("kind",text("url")),("url",text(v))],
+            id3::Content::ExtendedLink(v)=>vec![("kind",text("userUrl")),("description",text(&v.description)),("url",text(&v.link))],
+            id3::Content::Comment(v)=>vec![("kind",text("comment")),("language",text(&v.lang)),("description",text(&v.description)),("text",text(&v.text))],
+            id3::Content::Lyrics(v)=>vec![("kind",text("lyrics")),("language",text(&v.lang)),("description",text(&v.description)),("text",text(&v.text))],
+            id3::Content::Picture(v)=>vec![("kind",text("picture")),("mime",text(&v.mime_type)),("pictureType",Json::Number(u8::from(v.picture_type).into())),("description",text(&v.description)),("payload",bytes(&v.data))],
+            id3::Content::Unknown(v)=>vec![("kind",text("opaque")),("bytes",bytes(&v.data))],
+            other=>return Err(format!("unsupported semantic oracle frame {other:?}")),
+        };Ok(Json::Object(fields.into_iter().map(|(k,v)|(k.into(),v)).collect()))
     }
-
+    fn metadata_frames_json(frames:&[MetadataFrame])->Result<Json,String>{Ok(Json::Array(frames.iter().map(|frame|Ok(Json::Object(vec![("id".into(),Json::String(frame.id.clone())),("content".into(),content_json(&frame.content)?)]))).collect::<Result<_,String>>()?))}
     /// 🎯️ The projection `semantic-mp3-mpeg1-layer3-v1` compares. ID3v2 padding, the synchsafe size
     /// field and the flags byte are writer freedom and are not projected at all.
     pub(super) fn project(input: &[u8]) -> Result<Json, String> {
         let regions = split(input)?;
         let v2 = match read_v2(&regions.v2)? {
             None => Json::Null,
-            // 🧭️ `id3::Version::minor()` returns 2/3/4 — the ID3v2 specification's own MAJOR
-            // version byte (offset 3), which is what `Id3v2Tag::major_version` holds too. The
-            // revision byte (offset 4) is not modelled by the reference at all, so it is not
-            // projected rather than being invented from a default.
-            Some((version, frames)) => Json::Object(vec![("majorVersion".to_string(), Json::Number(f64::from(version.minor()))), ("frames".to_string(), text_frames_json(&frames))]),
+            Some((_version, frames)) => Json::Object(vec![("frames".to_string(), metadata_frames_json(&frames)?)]),
         };
         let frames = walk(&regions.audio)?;
         let audio = Json::Array(
@@ -346,7 +320,8 @@ mod layers {
                 ("album".to_string(), Json::String(fields.album)),
                 ("year".to_string(), Json::String(fields.year)),
                 ("comment".to_string(), Json::String(fields.comment)),
-                ("genreId".to_string(), Json::Number(f64::from(fields.genre_id))),
+                ("genre".to_string(), if fields.genre_id==255{Json::Null}else{Json::Number(f64::from(fields.genre_id))}),
+                ("track".to_string(),fields.track.map_or(Json::Null,|v|Json::Number(v.into()))),
             ]),
         };
         Ok(Json::Object(vec![("id3v2".to_string(), v2), ("frames".to_string(), audio), ("id3v1".to_string(), v1)]))
@@ -384,27 +359,6 @@ fn wire_bool(value: &Json, key: &str) -> Result<bool, String> {
     }
 }
 
-/// 🏷️ The text of one ID3v2.3 text-frame body (§4.2): an encoding byte, then ISO-8859-1 (`0`) or byte-order-marked
-/// UTF-16 (`1`), up to the first terminator. Any other frame or encoding is refused rather than dropped.
-#[cfg(feature = "oracles")]
-fn text_of_frame(id: &str, data: &[u8]) -> Result<String, String> {
-    if !id.starts_with('T') || id == "TXXX" {
-        return Err(format!("ID3v2 frame {id:?} is not a plain text frame, which this oracle does not express"));
-    }
-    let Some((&encoding, body)) = data.split_first() else { return Err(format!("ID3v2 text frame {id:?} carries no encoding byte")) };
-    match encoding {
-        0 => Ok(body.iter().take_while(|byte| **byte != 0).map(|byte| char::from(*byte)).collect()),
-        1 => {
-            let units: Vec<u16> = match body {
-                [0xFF, 0xFE, rest @ ..] => rest.chunks_exact(2).map(|pair| u16::from_le_bytes([pair[0], pair[1]])).collect(),
-                [0xFE, 0xFF, rest @ ..] => rest.chunks_exact(2).map(|pair| u16::from_be_bytes([pair[0], pair[1]])).collect(),
-                _ => return Err(format!("ID3v2 text frame {id:?} declares UTF-16 without a byte-order mark")),
-            };
-            String::from_utf16(&units.into_iter().take_while(|unit| *unit != 0).collect::<Vec<u16>>()).map_err(|error| format!("ID3v2 text frame {id:?} is not UTF-16: {error}"))
-        }
-        other => Err(format!("ID3v2 text frame {id:?} declares encoding {other}, which ID3v2.3 does not define")),
-    }
-}
 //#endregion 🔖️WireReaders
 
 //#region 🔖️Projection
@@ -426,13 +380,15 @@ pub fn project_mp3(_bytes: &[u8]) -> Result<Json, String> {
 #[cfg(feature = "oracles")]
 fn id3v2_region(tag: Option<&Json>) -> Result<Vec<u8>, String> {
     let Some(tag @ Json::Object(_)) = tag else { return Ok(Vec::new()) };
-    let version = match wire_u8(tag, "majorVersion")? {
-        3 => id3::Version::Id3v23,
-        4 => id3::Version::Id3v24,
-        other => return Err(format!("ID3v2.{other} is not a version this oracle writes")),
-    };
-    let frames = tag.array("frames").iter().map(|frame| Ok(layers::TextFrame { id: frame.str("id"), text: text_of_frame(&frame.str("id"), &wire_bytes(frame, "data")?)? })).collect::<Result<Vec<layers::TextFrame>, String>>()?;
-    layers::write_v2(version, &frames)
+    let mut frames=Vec::new();for frame in tag.array("frames"){let id=frame.str("id");let c=frame.get("content").ok_or("metadata content")?;let values=||->Result<String,String>{let rows=c.array("values");if rows.is_empty(){return Err("metadata values".into());}rows.iter().map(|v|match v{Json::String(s)=>Ok(s.clone()),_=>Err("metadata text value".into())}).collect::<Result<Vec<_>,String>>().map(|v|v.join("\0"))};
+    let content=match c.str("kind").as_str(){
+        "text"=>id3::Content::Text(values()?),"userText"=>id3::Content::ExtendedText(id3::frame::ExtendedText{description:c.str("description"),value:values()?}),
+        "url"=>id3::Content::Link(c.str("url")),"userUrl"=>id3::Content::ExtendedLink(id3::frame::ExtendedLink{description:c.str("description"),link:c.str("url")}),
+        "comment"=>id3::Content::Comment(id3::frame::Comment{lang:c.str("language"),description:c.str("description"),text:c.str("text")}),
+        "lyrics"=>id3::Content::Lyrics(id3::frame::Lyrics{lang:c.str("language"),description:c.str("description"),text:c.str("text")}),
+        "picture"=>id3::Content::Picture(id3::frame::Picture{mime_type:c.str("mime"),picture_type:id3::frame::PictureType::Undefined(wire_u8(c,"pictureType")?),description:c.str("description"),data:wire_bytes(c,"payload")?}),
+        "opaque"=>id3::Content::Unknown(id3::frame::Unknown{data:wire_bytes(c,"bytes")?,version:id3::Version::Id3v24}),other=>return Err(format!("metadata variant {other}")),
+    };frames.push(layers::MetadataFrame{id,content});}layers::write_v2(id3::Version::Id3v24,&frames)
 }
 
 /// 🎼️ The audio region an `Mp3Frame` wire list describes: each frame's four header bytes packed from its typed
@@ -467,17 +423,9 @@ fn audio_region(frames: Option<&Json>) -> Result<Vec<u8>, String> {
     Ok(audio)
 }
 
-/// 🏷️ The trailing ID3v1 region an `Id3v1Tag` wire value (or `null`, no trailer) describes: its 128 raw bytes,
-/// checked against the only framing the layer has — the length and the `TAG` magic.
-#[cfg(feature = "oracles")]
-fn id3v1_region(tag: Option<&Json>) -> Result<Vec<u8>, String> {
-    let Some(tag @ Json::Object(_)) = tag else { return Ok(Vec::new()) };
-    let raw = wire_bytes(tag, "raw")?;
-    if raw.len() != 128 || !raw.starts_with(b"TAG") {
-        return Err(format!("an ID3v1 trailer is 128 bytes led by `TAG`, not {} byte(s)", raw.len()));
-    }
-    Ok(raw)
-}
+/// 🏷️ Writes named semantic ID3v1 metadata with the independent fixed-width writer.
+#[cfg(feature="oracles")]
+fn id3v1_region(tag:Option<&Json>)->Result<Vec<u8>,String>{let Some(tag @ Json::Object(_))=tag else{return Ok(Vec::new())};let optional=|key|match tag.get(key){Some(Json::Null)=>Ok(None),Some(_)=>wire_u8(tag,key).map(Some),None=>Err(format!("missing {key}"))};layers::write_v1(&layers::V1Fields{title:tag.str("title"),artist:tag.str("artist"),album:tag.str("album"),year:tag.str("year"),comment:tag.str("comment"),track:optional("track")?,genre_id:optional("genre")?.unwrap_or(255)})}
 
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes. `params` is the
 /// leaf's wire payload (`payload_value()`), and the three layers are addressed independently, exactly as

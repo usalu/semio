@@ -9,9 +9,9 @@
   "nightSetbackK": null,
   "zones": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "zone-office",
+        "index": 1,
         "row": {
           "id": "zone-meeting",
           "name": "Meeting room",
@@ -37,11 +37,13 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "ventSystems": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

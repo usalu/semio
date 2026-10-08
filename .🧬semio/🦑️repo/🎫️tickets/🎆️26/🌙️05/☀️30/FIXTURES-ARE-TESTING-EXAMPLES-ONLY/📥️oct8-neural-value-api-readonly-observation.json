@@ -1,0 +1,29 @@
+{
+  "role": "read-only observations; not source authorship or freeze",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "sha256": "6cb2fd1de62509351e1dbb563aa6453f8d198cddc5f2f1ff59c18ac3c32a1824"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json",
+      "sha256": "dd7fae6c5ab32320641a0a42c8976b34660655cb7489a39a7819c967492632f4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "86307e50a442abbc531e21aad1e7128a27290e5680cad76db1d9aac97a7a95c6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts",
+      "sha256": "0b083443caee3704f8d28b7c6d1fa302566723db5f3cc80bbe31ad937e49f499"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "sha256": "65583b31cd9c939ce1a0682f3543baba075d9f6f06b8e40bc9706c48e80c91e4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "sha256": "8bb2e4b3af17a60b19c4fea9e9f34d31176df3cbcedbd3d533819a0b9567b453"
+    }
+  ]
+}

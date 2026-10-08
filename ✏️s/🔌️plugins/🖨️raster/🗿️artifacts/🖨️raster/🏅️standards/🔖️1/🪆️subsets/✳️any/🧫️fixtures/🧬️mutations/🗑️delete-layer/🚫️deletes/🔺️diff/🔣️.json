@@ -3,12 +3,15 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [],
     "removed": [
-      "frame"
+      {
+        "id": "frame",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "moved": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "assets": null
 }

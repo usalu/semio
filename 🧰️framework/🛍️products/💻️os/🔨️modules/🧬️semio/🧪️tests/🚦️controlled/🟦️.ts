@@ -4,6 +4,17 @@ import {NativeDecodeControl} from "../../../../../../🔨️modules/🌱️value
 import {unwrapBinaryControlled,admitTextPreambleControlled} from "../../🟦️.ts";
 import envelopeFixture from "../../🧫️fixtures/🚦️controlled/🔣️.json";
 
+test("neutral retained text ownership keeps payload work separate from complete backing release",()=>{
+  const f=envelopeFixture;
+  expect(f.retained.ownership).toEqual({copy:"bounded-original-payload",capacity:"exact-natural-birth",release:"exact-physical-allocation",depth:"exact-original-frontier",refusal:"original-owner-kept"});
+  const body=f.textBody.repeat(f.retained.textRepeats),wire=`semio ${f.id}.dsl v${f.version}\n${body}`;
+  const bytes=new TextEncoder().encode(wire);
+  expect(Buffer.from(wire).equals(Buffer.from(bytes))).toBe(true);
+  expect(Buffer.byteLength(body)).toBeGreaterThan(f.retained.retirementBytes);
+  expect(f.retained.maximumRetirementDepth).toBeGreaterThan(1);
+  expect(f.retained.sourceReleases).toBe(1);
+});
+
 test("native envelopes admit exact identity without owning their payload",async()=>{const f=envelopeFixture;
   const token=Buffer.from(`${f.id}.pack v${f.version}`),header=Buffer.alloc(12);Buffer.from([0x89,0x53,0x45,0x4d,13,10,26,10]).copy(header);header.writeUInt32LE(token.length,8);const bytes=Buffer.concat([header,token,Buffer.alloc(f.bodyBytes,127)]);
   const control=new NativeDecodeControl(0,()=>true),body=await unwrapBinaryControlled(bytes,f.id,"pack",f.version,control);expect(body.buffer).toBe(bytes.buffer);expect(body.byteOffset).toBe(bytes.byteOffset+12+bytes.readUInt32LE(8));expect(body.length).toBe(f.bodyBytes);expect(control.ownedBytes).toBe(0);

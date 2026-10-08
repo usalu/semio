@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.ui.scene.block_list.v1;
+message BlockListSelectionTarget { string granularity = 1; string id = 2; }
+message BlockListBlock { string id = 1; string label = 2; string kind = 3; optional string description = 4; optional BlockListSelectionTarget target = 5; }
+message BlockListStep { string id = 1; string title = 2; optional string description = 3; repeated BlockListBlock blocks = 4; optional BlockListSelectionTarget target = 5; }
+message BlockListPaletteEntry { string block_kind = 1; string label = 2; string icon_id = 3; }
+message BlockListScene { repeated BlockListStep steps = 1; repeated BlockListPaletteEntry palette = 2; optional string selected_id = 3; optional string dragging_id = 4; optional string domain_id = 5; }

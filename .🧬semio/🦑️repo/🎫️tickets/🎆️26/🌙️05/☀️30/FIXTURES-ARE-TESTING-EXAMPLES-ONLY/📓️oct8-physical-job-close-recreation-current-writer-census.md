@@ -1,0 +1,9 @@
+# Physical Job Close Recreation Writer Census
+
+Read-only current recreated `UI/🧪️tests/♻️physical-job-close/🧬️schema/🔣️.json`: SHA81ed390173d85500e406c5dc1775db0f65474c773f0c5dbde85083eaf8caefa9,1959bytes,mtime2026-10-08T21:43:08.934618Z. It defines the complete contract/texts/capacities/copyGrants/cancelTurns/prepared fixture envelope. Timestamp is file observation, not writer attribution.
+
+Direct repository-owned TS/Rust/MJS/JSON literal census excluding ticket/generated/cache/thirdparty/build found only the declaration, original plaintext contract, project input globs, plain prepared-close import and native test module registrations. It found no write routine naming this declaration or ID. Current native physical schema include and ID equality are absent after Root removal; current UI-wide schema includes are localized-label domain schema, real WebGPU surface schema and contract facet embed, not this corpus. No current prepared/raster wholefixture schema include appeared in the bounded native census.
+
+Physical-close source/native targets both declare cache:false and outputs:[] in UI Rust project; their fixture globs are hash inputs, not restored outputs. UI package script physical-close routes dispatch test consumers and contains no schema-writing FS call in the bounded script inspection. Prior ui-axes/styling generator outputs exclude this path. Repo generatorOutputOwners derives explicit outputs from canonical contract outputRoots; none of those inspected roots restores this test directory. Therefore actual generator/cache restoration is not established by current source evidence. Reappearance during a generation prerequisite remains temporal association only.
+
+No foreign process was interrupted, no compiler/test/generator was run, and no source was changed. Dynamic unexamined writers or concurrent actors remain possible; this census does not identify an author or prove universal writer absence.

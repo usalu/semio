@@ -2,66 +2,196 @@ syntax = "proto3";
 package semio.s.norm.en1997.diff;
 
 message En1997LayersPatch {
+  optional double oedometric_modulus = 1;
+  optional double phi_prime_deg = 2;
+}
+
+message En1997LayersRemoved {
   string id = 1;
-  optional double oedometric_modulus = 2;
-  optional double phi_prime_deg = 3;
+  uint64 index = 2;
+}
+
+message En1997LayersInserted {
+  uint64 index = 1;
+}
+
+message En1997LayersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1997LayersModified {
+  string id = 1;
+  En1997LayersPatch patch = 2;
 }
 
 message En1997LayersRows {
-  repeated string removed = 1;
-  repeated En1997LayersPatch modified = 2;
-  repeated string order = 3;
+  repeated En1997LayersRemoved removed = 1;
+  repeated En1997LayersInserted inserted = 2;
+  repeated En1997LayersMoved moved = 3;
+  repeated En1997LayersModified modified = 4;
 }
 
 message En1997FootingsPatch {
+  optional double width = 1;
+  optional double embedment = 2;
+}
+
+message En1997FootingsRemoved {
   string id = 1;
-  optional double width = 2;
-  optional double embedment = 3;
+  uint64 index = 2;
+}
+
+message En1997FootingsInserted {
+  uint64 index = 1;
+}
+
+message En1997FootingsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1997FootingsModified {
+  string id = 1;
+  En1997FootingsPatch patch = 2;
 }
 
 message En1997FootingsRows {
-  repeated string removed = 1;
-  repeated En1997FootingsPatch modified = 2;
-  repeated string order = 3;
+  repeated En1997FootingsRemoved removed = 1;
+  repeated En1997FootingsInserted inserted = 2;
+  repeated En1997FootingsMoved moved = 3;
+  repeated En1997FootingsModified modified = 4;
 }
 
 message En1997PilesPatch {
+  optional double length = 1;
+  optional uint32 count = 2;
+}
+
+message En1997PilesRemoved {
   string id = 1;
-  optional double length = 2;
-  optional uint32 count = 3;
+  uint64 index = 2;
+}
+
+message En1997PilesInserted {
+  uint64 index = 1;
+}
+
+message En1997PilesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1997PilesModified {
+  string id = 1;
+  En1997PilesPatch patch = 2;
 }
 
 message En1997PilesRows {
-  repeated string removed = 1;
-  repeated En1997PilesPatch modified = 2;
-  repeated string order = 3;
+  repeated En1997PilesRemoved removed = 1;
+  repeated En1997PilesInserted inserted = 2;
+  repeated En1997PilesMoved moved = 3;
+  repeated En1997PilesModified modified = 4;
 }
 
 message En1997RetainingWallsPatch {
+  optional double base_width = 1;
+}
+
+message En1997RetainingWallsRemoved {
   string id = 1;
-  optional double base_width = 2;
+  uint64 index = 2;
+}
+
+message En1997RetainingWallsInserted {
+  uint64 index = 1;
+}
+
+message En1997RetainingWallsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1997RetainingWallsModified {
+  string id = 1;
+  En1997RetainingWallsPatch patch = 2;
 }
 
 message En1997RetainingWallsRows {
-  repeated string removed = 1;
-  repeated En1997RetainingWallsPatch modified = 2;
-  repeated string order = 3;
+  repeated En1997RetainingWallsRemoved removed = 1;
+  repeated En1997RetainingWallsInserted inserted = 2;
+  repeated En1997RetainingWallsMoved moved = 3;
+  repeated En1997RetainingWallsModified modified = 4;
 }
 
 message En1997SlopesPatch {
+  optional double angle_deg = 1;
+}
+
+message En1997SlopesRemoved {
   string id = 1;
-  optional double angle_deg = 2;
+  uint64 index = 2;
+}
+
+message En1997SlopesInserted {
+  uint64 index = 1;
+}
+
+message En1997SlopesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1997SlopesModified {
+  string id = 1;
+  En1997SlopesPatch patch = 2;
 }
 
 message En1997SlopesRows {
-  repeated string removed = 1;
-  repeated En1997SlopesPatch modified = 2;
-  repeated string order = 3;
+  repeated En1997SlopesRemoved removed = 1;
+  repeated En1997SlopesInserted inserted = 2;
+  repeated En1997SlopesMoved moved = 3;
+  repeated En1997SlopesModified modified = 4;
+}
+
+message En1997UpliftCasesPatch {
+  optional double permanent_stabilizing = 1;
+  optional double permanent_destabilizing = 2;
+  optional double variable_destabilizing = 3;
+  optional double pore_pressure = 4;
+  optional double total_stress = 5;
+}
+
+message En1997UpliftCasesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message En1997UpliftCasesInserted {
+  uint64 index = 1;
+}
+
+message En1997UpliftCasesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message En1997UpliftCasesModified {
+  string id = 1;
+  En1997UpliftCasesPatch patch = 2;
 }
 
 message En1997UpliftCasesRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated En1997UpliftCasesRemoved removed = 1;
+  repeated En1997UpliftCasesInserted inserted = 2;
+  repeated En1997UpliftCasesMoved moved = 3;
+  repeated En1997UpliftCasesModified modified = 4;
 }
 
 message En1997Diff {

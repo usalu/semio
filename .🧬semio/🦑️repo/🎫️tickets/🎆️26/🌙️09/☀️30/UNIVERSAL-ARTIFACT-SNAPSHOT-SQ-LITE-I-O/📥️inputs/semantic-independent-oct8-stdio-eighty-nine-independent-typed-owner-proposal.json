@@ -1,0 +1,2185 @@
+{
+  "qualification": "Frozen read-only expected typed branches reconciled from defining source; no production mount or compile",
+  "rows": [
+    {
+      "kind": "s.stdio.avi",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.avi",
+      "snapshotType": "semio_s_artifact_stdio_avi::AviSnapshot",
+      "mutationType": "semio_s_artifact_stdio_avi::AviMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+      "line": 108,
+      "schemaExpression": "STDIO_AVI_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 51,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+          "line": 22,
+          "value": "stdio.avi"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 19,
+          "value": "stdio.avi"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "*",
+      "schema": "stdio.bcf",
+      "snapshotType": "semio_s_artifact_stdio_bcf::BcfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_bcf::BcfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+      "line": 86,
+      "schemaExpression": "STDIO_BCF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 49,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+          "line": 22,
+          "value": "stdio.bcf"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "*",
+      "schema": "stdio.binary",
+      "snapshotType": "semio_s_artifact_stdio_binary::BinarySnapshot",
+      "mutationType": "semio_s_artifact_stdio_binary::BinaryMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs",
+      "line": 82,
+      "schemaExpression": "STDIO_BINARY_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 8,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs",
+          "line": 42,
+          "value": "stdio.binary"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.bmp",
+      "standard": "v3",
+      "subset": "*",
+      "schema": "stdio.bmp",
+      "snapshotType": "semio_s_artifact_stdio_bmp::BmpSnapshot",
+      "mutationType": "semio_s_artifact_stdio_bmp::BmpMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs",
+      "line": 73,
+      "schemaExpression": "STDIO_BMP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 7,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs",
+          "line": 24,
+          "value": "stdio.bmp"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.csv",
+      "standard": "rfc4180",
+      "subset": "*",
+      "schema": "stdio.csv",
+      "snapshotType": "semio_s_artifact_stdio_csv::CsvSnapshot",
+      "mutationType": "semio_s_artifact_stdio_csv::CsvMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+      "line": 93,
+      "schemaExpression": "STDIO_CSV_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 8,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+          "line": 22,
+          "value": "stdio.csv"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "*",
+      "schema": "stdio.deflate",
+      "snapshotType": "semio_s_artifact_stdio_deflate::DeflateSnapshot",
+      "mutationType": "semio_s_artifact_stdio_deflate::DeflateMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+      "line": 93,
+      "schemaExpression": "STDIO_DEFLATE_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 6,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+          "line": 24,
+          "value": "stdio.deflate"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.docx",
+      "snapshotType": "semio_s_artifact_stdio_docx::DocxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_docx::DocxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+      "line": 91,
+      "schemaExpression": "STDIO_DOCX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+          "line": 22,
+          "value": "stdio.docx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.docx",
+      "snapshotType": "semio_s_artifact_stdio_docx::DocxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_docx::DocxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+      "line": 92,
+      "schemaExpression": "STDIO_DOCX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+          "line": 22,
+          "value": "stdio.docx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.docx",
+      "snapshotType": "semio_s_artifact_stdio_docx::DocxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_docx::DocxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+      "line": 93,
+      "schemaExpression": "STDIO_DOCX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+          "line": 22,
+          "value": "stdio.docx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1018",
+      "subset": "*",
+      "schema": "stdio.dwg",
+      "snapshotType": "semio_s_artifact_stdio_dwg::DwgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_dwg::DwgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+      "line": 115,
+      "schemaExpression": "STDIO_DWG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 71,
+        "sqlFragmentPaths": [
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔧️header/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗃️tables/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📐️entities/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔗️associativity/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧮️evaluation/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️blocks/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️actions/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/👁️visual/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/🧱️material/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/🗃️table/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📃️layout/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/↗️mleader/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️constraints/🗄️.sql"
+        ],
+        "sqlConstantExpressions": [
+          "const SQLITE_SCHEMA:&'static str=concat!(\n include_str!(\"📄️document/🗄️.sql\"),\"\\n\",include_str!(\"🔧️header/🗄️.sql\"),\"\\n\",\n include_str!(\"✏️drawing/🗄️.sql\"),\"\\n\",include_str!(\"🗃️tables/🗄️.sql\"),\"\\n\",\n include_str!(\"📐️entities/🗄️.sql\"),\"\\n\",include_str!(\"📦️objects/🗄️.sql\"),\"\\n\",\n include_str!(\"🔗️associativity/🗄️.sql\"),\"\\n\",include_str!(\"🧮️evaluation/🗄️.sql\"),\"\\n\",\n include_str!(\"🧩️blocks/🗄️.sql\"),\"\\n\",include_str!(\"🎬️actions/🗄️.sql\"),\"\\n\",\n include_str!(\"🖌️styles/👁️visual/🗄️.sql\"),\"\\n\",include_str!(\"🖌️styles/🧱️material/🗄️.sql\"),\"\\n\",\n include_str!(\"🖌️styles/🗃️table/🗄️.sql\"),\"\\n\",include_str!(\"📃️layout/🗄️.sql\"),\"\\n\",\n include_str!(\"🖌️styles/↗️mleader/🗄️.sql\"),\"\\n\",include_str!(\"📏️constraints/🗄️.sql\"));"
+        ]
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+          "line": 33,
+          "value": "stdio.dwg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1024",
+      "subset": "*",
+      "schema": "stdio.dwg",
+      "snapshotType": "semio_s_artifact_stdio_dwg::DwgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_dwg::DwgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+      "line": 116,
+      "schemaExpression": "STDIO_DWG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 71,
+        "sqlFragmentPaths": [
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔧️header/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗃️tables/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📐️entities/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔗️associativity/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧮️evaluation/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️blocks/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️actions/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/👁️visual/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/🧱️material/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/🗃️table/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📃️layout/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️styles/↗️mleader/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️constraints/🗄️.sql"
+        ],
+        "sqlConstantExpressions": [
+          "const SQLITE_SCHEMA:&'static str=concat!(\n include_str!(\"📄️document/🗄️.sql\"),\"\\n\",include_str!(\"🔧️header/🗄️.sql\"),\"\\n\",\n include_str!(\"✏️drawing/🗄️.sql\"),\"\\n\",include_str!(\"🗃️tables/🗄️.sql\"),\"\\n\",\n include_str!(\"📐️entities/🗄️.sql\"),\"\\n\",include_str!(\"📦️objects/🗄️.sql\"),\"\\n\",\n include_str!(\"🔗️associativity/🗄️.sql\"),\"\\n\",include_str!(\"🧮️evaluation/🗄️.sql\"),\"\\n\",\n include_str!(\"🧩️blocks/🗄️.sql\"),\"\\n\",include_str!(\"🎬️actions/🗄️.sql\"),\"\\n\",\n include_str!(\"🖌️styles/👁️visual/🗄️.sql\"),\"\\n\",include_str!(\"🖌️styles/🧱️material/🗄️.sql\"),\"\\n\",\n include_str!(\"🖌️styles/🗃️table/🗄️.sql\"),\"\\n\",include_str!(\"📃️layout/🗄️.sql\"),\"\\n\",\n include_str!(\"🖌️styles/↗️mleader/🗄️.sql\"),\"\\n\",include_str!(\"📏️constraints/🗄️.sql\"));"
+        ]
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+          "line": 33,
+          "value": "stdio.dwg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "*",
+      "schema": "stdio.dxf",
+      "snapshotType": "semio_s_artifact_stdio_dxf::DxfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_dxf::DxfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+      "line": 101,
+      "schemaExpression": "STDIO_DXF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 131,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+          "line": 23,
+          "value": "stdio.dxf"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.epw",
+      "standard": "energyplus",
+      "subset": "*",
+      "schema": "stdio.epw",
+      "snapshotType": "semio_s_artifact_stdio_epw::EpwSnapshot",
+      "mutationType": "semio_s_artifact_stdio_epw::EpwMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️.rs",
+      "line": 72,
+      "schemaExpression": "STDIO_EPW_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 26,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️.rs",
+          "line": 22,
+          "value": "stdio.epw"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 282,
+          "value": "stdio.epw"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "87a",
+      "subset": "*",
+      "schema": "stdio.gif",
+      "snapshotType": "semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot",
+      "mutationType": "semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::GifMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+      "line": 87,
+      "schemaExpression": "STDIO_GIF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 40,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+          "line": 28,
+          "value": "stdio.gif"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "*",
+      "schema": "stdio.gif.89a",
+      "snapshotType": "semio_s_artifact_stdio_gif::GifSnapshot",
+      "mutationType": "semio_s_artifact_stdio_gif::GifMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+      "line": 88,
+      "schemaExpression": "STDIO_GIF89A_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 46,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 19,
+          "value": "stdio.gif.89a"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.gltf",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.gltf",
+      "snapshotType": "semio_s_artifact_stdio_gltf::GltfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_gltf::GltfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+      "line": 115,
+      "schemaExpression": "STDIO_GLTF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 61,
+        "sqlFragmentPaths": [
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🌳️node/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🏔️mesh/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/📦️buffer/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖌️material/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🖼️texture/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🦴️skin/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎬️animation/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🎥️camera/🗄️.sql"
+        ],
+        "sqlConstantExpressions": [
+          "pub const SQLITE_SCHEMA:&str=concat!(include_str!(\"📄️document/🗄️.sql\"),\"\\n\",include_str!(\"🧩️extras/🗄️.sql\"),\"\\n\",include_str!(\"🌳️node/🗄️.sql\"),\"\\n\",include_str!(\"🏔️mesh/🗄️.sql\"),\"\\n\",include_str!(\"📦️buffer/🗄️.sql\"),\"\\n\",include_str!(\"🖌️material/🗄️.sql\"),\"\\n\",include_str!(\"🖼️texture/🗄️.sql\"),\"\\n\",include_str!(\"🦴️skin/🗄️.sql\"),\"\\n\",include_str!(\"🎬️animation/🗄️.sql\"),\"\\n\",include_str!(\"🎥️camera/🗄️.sql\"));",
+          "const SQLITE_SCHEMA:&'static str=SQLITE_SCHEMA;"
+        ]
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+          "line": 26,
+          "value": "stdio.gltf"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.html",
+      "standard": "5",
+      "subset": "*",
+      "schema": "stdio.html",
+      "snapshotType": "semio_s_artifact_stdio_html::HtmlSnapshot",
+      "mutationType": "semio_s_artifact_stdio_html::HtmlMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+      "line": 76,
+      "schemaExpression": "STDIO_HTML_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 82,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+          "line": 22,
+          "value": "stdio.html"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 28,
+          "value": "stdio.html"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "*",
+      "schema": "stdio.ifc.2x3",
+      "snapshotType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutationType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "line": 69,
+      "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 18,
+          "value": "stdio.ifc.2x3"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cobie",
+      "schema": "stdio.ifc.2x3",
+      "snapshotType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutationType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "line": 72,
+      "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 18,
+          "value": "stdio.ifc.2x3"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cv20",
+      "schema": "stdio.ifc.2x3",
+      "snapshotType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutationType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "line": 70,
+      "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 18,
+          "value": "stdio.ifc.2x3"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "sav",
+      "schema": "stdio.ifc.2x3",
+      "snapshotType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutationType": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "line": 71,
+      "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 80,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 18,
+          "value": "stdio.ifc.2x3"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "*",
+      "schema": "stdio.ifc",
+      "snapshotType": "semio_s_artifact_stdio_ifc::IfcSnapshot",
+      "mutationType": "semio_s_artifact_stdio_ifc::IfcMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "line": 68,
+      "schemaExpression": "STDIO_IFC_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 47,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+          "line": 25,
+          "value": "stdio.ifc"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "*",
+      "schema": "stdio.jpg",
+      "snapshotType": "semio_s_artifact_stdio_jpg::JpgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_jpg::JpgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+      "line": 123,
+      "schemaExpression": "STDIO_JPG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 52,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+          "line": 24,
+          "value": "stdio.jpg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "baseline",
+      "schema": "stdio.jpg",
+      "snapshotType": "semio_s_artifact_stdio_jpg::JpgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_jpg::JpgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+      "line": 124,
+      "schemaExpression": "STDIO_JPG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 52,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+          "line": 24,
+          "value": "stdio.jpg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "*",
+      "schema": "stdio.json",
+      "snapshotType": "semio_s_artifact_stdio_json::JsonSnapshot",
+      "mutationType": "semio_s_artifact_stdio_json::JsonMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "line": 107,
+      "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 53,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "line": 22,
+          "value": "stdio.json"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "geojson",
+      "schema": "stdio.json",
+      "snapshotType": "semio_s_artifact_stdio_json::JsonSnapshot",
+      "mutationType": "semio_s_artifact_stdio_json::JsonMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "line": 109,
+      "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 53,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "line": 22,
+          "value": "stdio.json"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "i-json",
+      "schema": "stdio.json",
+      "snapshotType": "semio_s_artifact_stdio_json::JsonSnapshot",
+      "mutationType": "semio_s_artifact_stdio_json::JsonMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "line": 108,
+      "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 53,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "line": 22,
+          "value": "stdio.json"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.las",
+      "snapshotType": "semio_s_artifact_stdio_las::LasSnapshot",
+      "mutationType": "semio_s_artifact_stdio_las::LasMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+      "line": 88,
+      "schemaExpression": "STDIO_LAS_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 37,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+          "line": 23,
+          "value": "stdio.las"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "*",
+      "schema": "stdio.md",
+      "snapshotType": "semio_s_artifact_stdio_md::MdSnapshot",
+      "mutationType": "semio_s_artifact_stdio_md::MdMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+      "line": 117,
+      "schemaExpression": "STDIO_MD_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 122,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+          "line": 22,
+          "value": "stdio.md"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.mp3",
+      "standard": "mpeg1-layer3",
+      "subset": "*",
+      "schema": "stdio.mp3",
+      "snapshotType": "semio_s_artifact_stdio_mp3::Mp3Snapshot",
+      "mutationType": "semio_s_artifact_stdio_mp3::Mp3Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+      "line": 109,
+      "schemaExpression": "STDIO_MP3_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 40,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+          "line": 22,
+          "value": "stdio.mp3"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 78,
+          "value": "stdio.mp3"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.mp4",
+      "standard": "isobmff",
+      "subset": "*",
+      "schema": "stdio.mp4",
+      "snapshotType": "semio_s_artifact_stdio_mp4::Mp4Snapshot",
+      "mutationType": "semio_s_artifact_stdio_mp4::Mp4Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+      "line": 108,
+      "schemaExpression": "STDIO_MP4_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 49,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+          "line": 22,
+          "value": "stdio.mp4"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 9,
+          "value": "stdio.mp4"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "*",
+      "schema": "stdio.obj",
+      "snapshotType": "semio_s_artifact_stdio_obj::ObjSnapshot",
+      "mutationType": "semio_s_artifact_stdio_obj::ObjMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+      "line": 90,
+      "schemaExpression": "STDIO_OBJ_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 171,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+          "line": 23,
+          "value": "stdio.obj"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "*",
+      "schema": "stdio.pdf",
+      "snapshotType": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 187,
+      "schemaExpression": "STDIO_PDF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 11,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "line": 23,
+          "value": "stdio.pdf"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "a",
+      "schema": "stdio.pdf",
+      "snapshotType": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 194,
+      "schemaExpression": "STDIO_PDF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 11,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "line": 23,
+          "value": "stdio.pdf"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "x",
+      "schema": "stdio.pdf",
+      "snapshotType": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 195,
+      "schemaExpression": "STDIO_PDF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 11,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "line": 23,
+          "value": "stdio.pdf"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "*",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 186,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "a",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 188,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "e",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 190,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "h",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 193,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "ua",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 191,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "vt",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 192,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "x",
+      "schema": "stdio.pdf.1.7",
+      "snapshotType": "semio_s_artifact_stdio_pdf::PdfSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pdf::PdfMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "line": 189,
+      "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/🦀️.rs",
+        "line": 21,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📄️document/../🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 29,
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.ply",
+      "snapshotType": "semio_s_artifact_stdio_ply::PlySnapshot",
+      "mutationType": "semio_s_artifact_stdio_ply::PlyMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+      "line": 84,
+      "schemaExpression": "STDIO_PLY_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 110,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+          "line": 23,
+          "value": "stdio.ply"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "*",
+      "schema": "stdio.png",
+      "snapshotType": "semio_s_artifact_stdio_png::PngSnapshot",
+      "mutationType": "semio_s_artifact_stdio_png::PngMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+      "line": 118,
+      "schemaExpression": "STDIO_PNG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 7,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+          "line": 27,
+          "value": "stdio.png"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.pptx",
+      "snapshotType": "semio_s_artifact_stdio_pptx::PptxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pptx::PptxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+      "line": 93,
+      "schemaExpression": "STDIO_PPTX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 88,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+          "line": 24,
+          "value": "stdio.pptx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.pptx",
+      "snapshotType": "semio_s_artifact_stdio_pptx::PptxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pptx::PptxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+      "line": 94,
+      "schemaExpression": "STDIO_PPTX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 88,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+          "line": 24,
+          "value": "stdio.pptx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.pptx",
+      "snapshotType": "semio_s_artifact_stdio_pptx::PptxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_pptx::PptxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+      "line": 95,
+      "schemaExpression": "STDIO_PPTX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 88,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+          "line": 24,
+          "value": "stdio.pptx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "*",
+      "schema": "stdio.semio",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::SemioMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs",
+      "line": 146,
+      "schemaExpression": "crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 47,
+        "sqlFragmentPaths": [
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../📦️object/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+          "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+        ],
+        "sqlConstantExpressions": [
+          "const SQL:&str=concat!(include_str!(\"🗄️.sql\"),include_str!(\"../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../📦️object/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"),include_str!(\"../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql\"));",
+          "const SQLITE_SCHEMA:&'static str=SQL;"
+        ]
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+          "line": 42,
+          "value": "stdio.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 66,
+          "value": "stdio.semio"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "animation",
+      "schema": "s.stdio.semio.animation",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🦀️.rs",
+      "line": 144,
+      "schemaExpression": "crate::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 59,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 17,
+          "value": "s.stdio.semio.animation"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "audio",
+      "schema": "stdio.semio.audio",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs",
+      "line": 159,
+      "schemaExpression": "crate::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 37,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 22,
+          "value": "stdio.semio.audio"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "brep",
+      "schema": "stdio.semio.brep",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🦀️.rs",
+      "line": 99,
+      "schemaExpression": "crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 123,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 17,
+          "value": "stdio.semio.brep"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "cad",
+      "schema": "stdio.semio.cad",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🦀️.rs",
+      "line": 161,
+      "schemaExpression": "crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 106,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 13,
+          "value": "stdio.semio.cad"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "document",
+      "schema": "s.stdio.semio.document",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🦀️.rs",
+      "line": 203,
+      "schemaExpression": "crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 169,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 179,
+          "value": "s.stdio.semio.document"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "drawing",
+      "schema": "stdio.semio.drawing",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🦀️.rs",
+      "line": 173,
+      "schemaExpression": "crate::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 56,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 139,
+          "value": "stdio.semio.drawing"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow",
+      "schema": "stdio.semio.flow",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🦀️.rs",
+      "line": 136,
+      "schemaExpression": "crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 57,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 65,
+          "value": "stdio.semio.flow"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph",
+      "schema": "s.stdio.semio.graph",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs",
+      "line": 102,
+      "schemaExpression": "crate::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 67,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 35,
+          "value": "s.stdio.semio.graph"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "image",
+      "schema": "s.stdio.semio.image",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🦀️.rs",
+      "line": 144,
+      "schemaExpression": "crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 44,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 21,
+          "value": "s.stdio.semio.image"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "kit",
+      "schema": "stdio.semio.kit",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs",
+      "line": 124,
+      "schemaExpression": "crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 121,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 25,
+          "value": "stdio.semio.kit"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "mesh",
+      "schema": "stdio.semio.mesh",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🦀️.rs",
+      "line": 164,
+      "schemaExpression": "crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 67,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 110,
+          "value": "stdio.semio.mesh"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model",
+      "schema": "stdio.semio.model",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::SemioModelMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🦀️.rs",
+      "line": 138,
+      "schemaExpression": "crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 117,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 22,
+          "value": "stdio.semio.model"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object",
+      "schema": "stdio.semio.object",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs",
+      "line": 126,
+      "schemaExpression": "crate::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 47,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 19,
+          "value": "stdio.semio.object"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "presentation",
+      "schema": "s.stdio.semio.presentation",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🦀️.rs",
+      "line": 144,
+      "schemaExpression": "crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 88,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 152,
+          "value": "s.stdio.semio.presentation"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "table",
+      "schema": "s.stdio.semio.table",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs",
+      "line": 104,
+      "schemaExpression": "crate::standards::v1::subsets::table::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 47,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 34,
+          "value": "s.stdio.semio.table"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "schema": "s.stdio.semio.text",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🦀️.rs",
+      "line": 101,
+      "schemaExpression": "crate::standards::v1::subsets::text::schema::snapshot::STDIO_SEMIOTEXT_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 48,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 22,
+          "value": "s.stdio.semio.text"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "value",
+      "schema": "stdio.semio.value",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🦀️.rs",
+      "line": 136,
+      "schemaExpression": "crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 120,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 10,
+          "value": "stdio.semio.value"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "video",
+      "schema": "stdio.semio.video",
+      "snapshotType": "semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot",
+      "mutationType": "semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🦀️.rs",
+      "line": 152,
+      "schemaExpression": "crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 36,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 80,
+          "value": "stdio.semio.video"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "*",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::StepMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 99,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc1",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 100,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc2",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 101,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc3",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc3::schema::mutations::StepCc3Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 102,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc4",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc4::schema::mutations::StepCc4Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 103,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc5",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 104,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6",
+      "schema": "stdio.step",
+      "snapshotType": "semio_s_artifact_stdio_step::StepSnapshot",
+      "mutationType": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc6::schema::mutations::StepCc6Mutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 105,
+      "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 77,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "line": 25,
+          "value": "stdio.step"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.stl",
+      "standard": "ascii",
+      "subset": "*",
+      "schema": "stdio.stl",
+      "snapshotType": "semio_s_artifact_stdio_stl::StlSnapshot",
+      "mutationType": "semio_s_artifact_stdio_stl::StlMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+      "line": 84,
+      "schemaExpression": "STDIO_STL_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 84,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+          "line": 23,
+          "value": "stdio.stl"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "*",
+      "schema": "stdio.svg",
+      "snapshotType": "semio_s_artifact_stdio_svg::SvgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_svg::SvgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+      "line": 124,
+      "schemaExpression": "STDIO_SVG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 28,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+          "line": 26,
+          "value": "stdio.svg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "basic",
+      "schema": "stdio.svg",
+      "snapshotType": "semio_s_artifact_stdio_svg::SvgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_svg::SvgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+      "line": 126,
+      "schemaExpression": "STDIO_SVG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 28,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+          "line": 26,
+          "value": "stdio.svg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "tiny",
+      "schema": "stdio.svg",
+      "snapshotType": "semio_s_artifact_stdio_svg::SvgSnapshot",
+      "mutationType": "semio_s_artifact_stdio_svg::SvgMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+      "line": 125,
+      "schemaExpression": "STDIO_SVG_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 28,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+          "line": 26,
+          "value": "stdio.svg"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "*",
+      "schema": "stdio.tiff",
+      "snapshotType": "semio_s_artifact_stdio_tiff::TiffSnapshot",
+      "mutationType": "semio_s_artifact_stdio_tiff::TiffMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+      "line": 120,
+      "schemaExpression": "STDIO_TIFF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 40,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+          "line": 24,
+          "value": "stdio.tiff"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "baseline",
+      "schema": "stdio.tiff",
+      "snapshotType": "semio_s_artifact_stdio_tiff::TiffSnapshot",
+      "mutationType": "semio_s_artifact_stdio_tiff::TiffMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+      "line": 121,
+      "schemaExpression": "STDIO_TIFF_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 40,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+          "line": 24,
+          "value": "stdio.tiff"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "*",
+      "schema": "stdio.tsv",
+      "snapshotType": "semio_s_artifact_stdio_tsv::TsvSnapshot",
+      "mutationType": "semio_s_artifact_stdio_tsv::TsvMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+      "line": 67,
+      "schemaExpression": "STDIO_TSV_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 8,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+          "line": 22,
+          "value": "stdio.tsv"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 18,
+          "value": "stdio.tsv"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.txt",
+      "standard": "utf-8",
+      "subset": "*",
+      "schema": "stdio.txt",
+      "snapshotType": "semio_s_artifact_stdio_txt::TxtSnapshot",
+      "mutationType": "semio_s_artifact_stdio_txt::TxtMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+      "line": 85,
+      "schemaExpression": "STDIO_TXT_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 34,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+          "line": 40,
+          "value": "stdio.txt"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "*",
+      "schema": "stdio.wav",
+      "snapshotType": "semio_s_artifact_stdio_wav::WavSnapshot",
+      "mutationType": "semio_s_artifact_stdio_wav::WavMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs",
+      "line": 71,
+      "schemaExpression": "STDIO_WAV_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 205,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs",
+          "line": 22,
+          "value": "stdio.wav"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 345,
+          "value": "stdio.wav"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.xlsx",
+      "snapshotType": "semio_s_artifact_stdio_xlsx::XlsxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_xlsx::XlsxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+      "line": 93,
+      "schemaExpression": "STDIO_XLSX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 91,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+          "line": 24,
+          "value": "stdio.xlsx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.xlsx",
+      "snapshotType": "semio_s_artifact_stdio_xlsx::XlsxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_xlsx::XlsxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+      "line": 94,
+      "schemaExpression": "STDIO_XLSX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 91,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+          "line": 24,
+          "value": "stdio.xlsx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.xlsx",
+      "snapshotType": "semio_s_artifact_stdio_xlsx::XlsxSnapshot",
+      "mutationType": "semio_s_artifact_stdio_xlsx::XlsxMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+      "line": 95,
+      "schemaExpression": "STDIO_XLSX_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 91,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+          "line": 24,
+          "value": "stdio.xlsx"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.xml",
+      "snapshotType": "semio_s_artifact_stdio_xml::XmlSnapshot",
+      "mutationType": "semio_s_artifact_stdio_xml::XmlMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+      "line": 117,
+      "schemaExpression": "STDIO_XML_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 147,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+          "line": 24,
+          "value": "stdio.xml"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "valid",
+      "schema": "stdio.xml",
+      "snapshotType": "semio_s_artifact_stdio_xml::XmlSnapshot",
+      "mutationType": "semio_s_artifact_stdio_xml::XmlMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+      "line": 118,
+      "schemaExpression": "STDIO_XML_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 147,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+          "line": 24,
+          "value": "stdio.xml"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.zip",
+      "snapshotType": "semio_s_artifact_stdio_zip::ZipSnapshot",
+      "mutationType": "semio_s_artifact_stdio_zip::ZipMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+      "line": 90,
+      "schemaExpression": "STDIO_ZIP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 60,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+          "line": 24,
+          "value": "stdio.zip"
+        }
+      ]
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320",
+      "schema": "stdio.zip",
+      "snapshotType": "semio_s_artifact_stdio_zip::ZipSnapshot",
+      "mutationType": "semio_s_artifact_stdio_zip::ZipMutation",
+      "authority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+      "line": 91,
+      "schemaExpression": "STDIO_ZIP_DOCUMENT_SCHEMA",
+      "sqlSchemaAuthority": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "line": 60,
+        "sqlPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      },
+      "schemaLiteralAuthority": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+          "line": 24,
+          "value": "stdio.zip"
+        }
+      ]
+    }
+  ],
+  "currentCounts": {
+    "bindingRows": 89,
+    "distinctConcreteTypes": 57,
+    "artifactKinds": 36
+  },
+  "cargoFeasibility": {
+    "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+    "featureAuthorityLine": 109,
+    "dependencyLines": [
+      129,
+      164
+    ],
+    "imports": "Existing semio_framework_os_kernel crate supplies ArtifactCodec and ArtifactSqliteSnapshot; all36 owner crates already optional dependencies enabled by full-artifact-catalog, no new dependency needed. Common root public Snapshot/Mutation exports inspected; special IFC2x3/GIF87a/PDF14 and Semio19 use public standards/subsets/schema paths. Compilation not run."
+  }
+}

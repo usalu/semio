@@ -4,15 +4,103 @@ type GridPatch { baselineGrid: Float baselineOffset: Float snapToBaseline: Boole
 type PrintTargetChange { target: String }
 enum DataFieldsPresence { CREATED DELETED REPLACED }
 type LayoutDataFieldsDelta { presence: DataFieldsPresence entries: LayoutDataEntriesDelta }
-type LayoutDataEntriesDelta { added: [FormDictionaryEntry!]! removed: [String!]! patched: [LayoutDataEntryPatchEntry!]! reordered: [String!] }
-type LayoutDataEntryPatchEntry { id: String! item: FormDictionaryEntry! }
+type LayoutPageRemoval { id: String! index: Int! }
+type LayoutPageRemoval { id: String! index: Int! }
+type LayoutPageInsertion { index: Int! row: Page! }
+type LayoutPageRelocation { id: String! from: Int! to: Int! }
+type LayoutPagesModification { id: String! patch: PagePatch! }
+type LayoutPagesDelta { removed: [LayoutPageRemoval!]! inserted: [LayoutPageInsertion!]! moved: [LayoutPageRelocation!]! modified: [LayoutPagesModification!]! }
+type LayoutStoryRemoval { id: String! index: Int! }
+type LayoutStoryInsertion { index: Int! row: TextStory! }
+type LayoutStoryRelocation { id: String! from: Int! to: Int! }
+type LayoutStoriesModification { id: String! patch: TextStoryPatch! }
+type LayoutStoriesDelta { removed: [LayoutStoryRemoval!]! inserted: [LayoutStoryInsertion!]! moved: [LayoutStoryRelocation!]! modified: [LayoutStoriesModification!]! }
+type LayoutLinkRemoval { id: String! index: Int! }
+type LayoutLinkInsertion { index: Int! row: ImageLink! }
+type LayoutLinkRelocation { id: String! from: Int! to: Int! }
+type LayoutLinksModification { id: String! patch: ImageLinkPatch! }
+type LayoutLinksDelta { removed: [LayoutLinkRemoval!]! inserted: [LayoutLinkInsertion!]! moved: [LayoutLinkRelocation!]! modified: [LayoutLinksModification!]! }
+type LayoutParagraphStyleRemoval { id: String! index: Int! }
+type LayoutParagraphStyleInsertion { index: Int! row: ParagraphStyle! }
+type LayoutParagraphStyleRelocation { id: String! from: Int! to: Int! }
+type LayoutParagraphStylesModification { id: String! patch: ParagraphStylePatch! }
+type LayoutParagraphStylesDelta { removed: [LayoutParagraphStyleRemoval!]! inserted: [LayoutParagraphStyleInsertion!]! moved: [LayoutParagraphStyleRelocation!]! modified: [LayoutParagraphStylesModification!]! }
+type LayoutCharacterStyleRemoval { id: String! index: Int! }
+type LayoutCharacterStyleInsertion { index: Int! row: CharacterStyle! }
+type LayoutCharacterStyleRelocation { id: String! from: Int! to: Int! }
+type LayoutCharacterStylesModification { id: String! patch: CharacterStylePatch! }
+type LayoutCharacterStylesDelta { removed: [LayoutCharacterStyleRemoval!]! inserted: [LayoutCharacterStyleInsertion!]! moved: [LayoutCharacterStyleRelocation!]! modified: [LayoutCharacterStylesModification!]! }
+type LayoutParentPageRemoval { id: String! index: Int! }
+type LayoutParentPageInsertion { index: Int! row: ParentPage! }
+type LayoutParentPageRelocation { id: String! from: Int! to: Int! }
+type LayoutParentPagesModification { id: String! patch: ParentPagePatch! }
+type LayoutParentPagesDelta { removed: [LayoutParentPageRemoval!]! inserted: [LayoutParentPageInsertion!]! moved: [LayoutParentPageRelocation!]! modified: [LayoutParentPagesModification!]! }
+type LayoutSpreadRemoval { id: String! index: Int! }
+type LayoutSpreadInsertion { index: Int! row: Spread! }
+type LayoutSpreadRelocation { id: String! from: Int! to: Int! }
+type LayoutSpreadsModification { id: String! patch: SpreadPatch! }
+type LayoutSpreadsDelta { removed: [LayoutSpreadRemoval!]! inserted: [LayoutSpreadInsertion!]! moved: [LayoutSpreadRelocation!]! modified: [LayoutSpreadsModification!]! }
+type PageOverrideRemoval { id: String! index: Int! }
+type PageOverrideInsertion { index: Int! row: PageOverride! }
+type PageOverrideRelocation { id: String! from: Int! to: Int! }
+type PageOverridesDelta { removed: [PageOverrideRemoval!]! inserted: [PageOverrideInsertion!]! moved: [PageOverrideRelocation!]! }
+type LayoutDataEntryRemoval { id: String! index: Int! }
+type LayoutDataEntryInsertion { index: Int! row: FormDictionaryEntry! }
+type LayoutDataEntryRelocation { id: String! from: Int! to: Int! }
+type LayoutDataEntriesDelta { removed: [LayoutDataEntryRemoval!]! inserted: [LayoutDataEntryInsertion!]! moved: [LayoutDataEntryRelocation!]! }
+type PageFrameRemoval { id: String! index: Int! }
+type PageFrameInsertion { index: Int! row: Frame! }
+type PageFrameRelocation { id: String! from: Int! to: Int! }
+type PageFramesModification { id: String! patch: FramePatch! }
+type PageFramesDelta { removed: [PageFrameRemoval!]! inserted: [PageFrameInsertion!]! moved: [PageFrameRelocation!]! modified: [PageFramesModification!]! }
+type PageLayerRemoval { id: String! index: Int! }
+type PageLayerInsertion { index: Int! row: Layer! }
+type PageLayerRelocation { id: String! from: Int! to: Int! }
+type PageLayersModification { id: String! patch: LayerPatch! }
+type PageLayersDelta { removed: [PageLayerRemoval!]! inserted: [PageLayerInsertion!]! moved: [PageLayerRelocation!]! modified: [PageLayersModification!]! }
+type LayerPatch { name: String visible: Boolean locked: Boolean }
+type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float parent_page_id: String guides: PageGuidesDelta overrides: PageOverridesDelta! frames: PageFramesDelta! layers: PageLayersDelta! }
+type LayoutPageRelocation { id: String! from: Int! to: Int! }
+type LayoutPagesModification { id: String! patch: PagePatch! }
+type LayoutStoryRemoval { id: String! index: Int! }
+type LayoutStoryRelocation { id: String! from: Int! to: Int! }
+type LayoutStoriesModification { id: String! patch: TextStoryPatch! }
+type LayoutLinkRemoval { id: String! index: Int! }
+type LayoutLinkRelocation { id: String! from: Int! to: Int! }
+type LayoutLinksModification { id: String! patch: ImageLinkPatch! }
+type LayoutParagraphStyleRemoval { id: String! index: Int! }
+type LayoutParagraphStyleRelocation { id: String! from: Int! to: Int! }
+type LayoutParagraphStylesModification { id: String! patch: ParagraphStylePatch! }
+type LayoutCharacterStyleRemoval { id: String! index: Int! }
+type LayoutCharacterStyleRelocation { id: String! from: Int! to: Int! }
+type LayoutCharacterStylesModification { id: String! patch: CharacterStylePatch! }
+type LayoutParentPageRemoval { id: String! index: Int! }
+type LayoutParentPageRelocation { id: String! from: Int! to: Int! }
+type LayoutParentPagesModification { id: String! patch: ParentPagePatch! }
+type LayoutSpreadRemoval { id: String! index: Int! }
+type LayoutSpreadRelocation { id: String! from: Int! to: Int! }
+type LayoutSpreadsModification { id: String! patch: SpreadPatch! }
+type PageOverrideRemoval { id: String! index: Int! }
+type PageOverrideRelocation { id: String! from: Int! to: Int! }
+type LayoutDataEntryRemoval { id: String! index: Int! }
+type LayoutDataEntryRelocation { id: String! from: Int! to: Int! }
+type PageFrameRemoval { id: String! index: Int! }
+type PageFrameInsertion { index: Int! row: Frame! }
+type PageFrameRelocation { id: String! from: Int! to: Int! }
+type PageFramesModification { id: String! patch: FramePatch! }
+type PageFramesDelta { removed: [PageFrameRemoval!]! inserted: [PageFrameInsertion!]! moved: [PageFrameRelocation!]! modified: [PageFramesModification!]! }
+type PageLayerRemoval { id: String! index: Int! }
+type PageLayerInsertion { index: Int! row: Layer! }
+type PageLayerRelocation { id: String! from: Int! to: Int! }
+type PageLayersModification { id: String! patch: LayerPatch! }
+type PageLayersDelta { removed: [PageLayerRemoval!]! inserted: [PageLayerInsertion!]! moved: [PageLayerRelocation!]! modified: [PageLayersModification!]! }
+type LayerPatch { name: String visible: Boolean locked: Boolean }
 type LayoutDrawingTextRow { index: Int! text: String! }
 type TextStyleRunRow { index: Int! run: TextStyleRun! }
 type TextStyleRunsDelta { len: Int rows: [TextStyleRunRow!]! }
 type PageGuideRow { index: Int! guide: LayoutRect! }
 type PageGuidesDelta { len: Int rows: [PageGuideRow!]! }
-type PageOverridePatchEntry { id: String! item: PageOverride! }
-type PageOverridesDelta { added: [PageOverride!]! removed: [String!]! patched: [PageOverridePatchEntry!]! reordered: [String!] }
+
 
 type LayoutDiff {
   schema: String @state(class: ARTIFACT)
@@ -70,30 +158,10 @@ type Page { id: String! name: String! spreadId: String! parentPageId: String wid
 type Spread { id: String! name: String! pageIds: [String!]! }
 type LayoutDrawingChild { handle: ArtifactChild! content: SemioDrawingSnapshot! }
 
-type LayoutPagesDelta { added: [Page!]! removed: [String!]! patched: [LayoutPagePatchEntry!]! reordered: [String!] }
-type LayoutPagePatchEntry { id: String! patch: PagePatch! }
-type LayoutStoriesDelta { added: [TextStory!]! removed: [String!]! patched: [LayoutStoryPatchEntry!]! reordered: [String!] }
-type LayoutStoryPatchEntry { id: String! patch: TextStoryPatch! }
-type LayoutLinksDelta { added: [ImageLink!]! removed: [String!]! patched: [LayoutLinkPatchEntry!]! reordered: [String!] }
-type LayoutLinkPatchEntry { id: String! patch: ImageLinkPatch! }
-type LayoutParagraphStylesDelta { added: [ParagraphStyle!]! removed: [String!]! patched: [LayoutParagraphStylePatchEntry!]! reordered: [String!] }
-type LayoutParagraphStylePatchEntry { id: String! patch: ParagraphStylePatch! }
-type LayoutCharacterStylesDelta { added: [CharacterStyle!]! removed: [String!]! patched: [LayoutCharacterStylePatchEntry!]! reordered: [String!] }
-type LayoutCharacterStylePatchEntry { id: String! patch: CharacterStylePatch! }
-type LayoutParentPagesDelta { added: [ParentPage!]! removed: [String!]! patched: [LayoutParentPagePatchEntry!]! reordered: [String!] }
-type LayoutParentPagePatchEntry { id: String! patch: ParentPagePatch! }
-type LayoutSpreadsDelta { added: [Spread!]! removed: [String!]! patched: [LayoutSpreadPatchEntry!]! reordered: [String!] }
-type LayoutSpreadPatchEntry { id: String! patch: SpreadPatch! }
 type ParagraphStylePatch { name: String fontFamily: String fontSize: Float fontWeight: Int leading: Float tracking: Float alignment: String }
 type CharacterStylePatch { name: String fontFamily: String fontSize: Float fontWeight: Int italic: Boolean color: [Float!] tracking: Float }
 type ParentPagePatch { name: String width: Float height: Float }
 type SpreadPatch { name: String }
 type TextStoryPatch { content: String style_runs: TextStyleRunsDelta }
 type ImageLinkPatch { path: String width: Int height: Int dpi: Int color_profile: String }
-type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float frame_added: PageFrameAdded frame_removed: String frames_patched: [PageFramePatched!]! layer_patched: PageLayerPatched parent_page_id: String guides: PageGuidesDelta overrides: PageOverridesDelta layer_added: PageLayerAdded layer_removed: String frame_layer: PageFrameLayer frame_order: [String!] }
-type PageLayerPatched { layer_id: String! name: String visible: Boolean locked: Boolean }
-type PageFrameLayer { frame_id: String! layer_id: String! }
-type PageLayerAdded { layer: Layer! index: Int }
-type PageFrameAdded { frame: Frame! index: Int layer_id: String }
-type PageFramePatched { frame_id: String! patch: FramePatch! }
-type FramePatch { x: Float y: Float width: Float height: Float rotation: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int locked: Boolean visible: Boolean story_id: String thread_next: String inset_x: Float inset_y: Float inset_width: Float inset_height: Float }
+type FramePatch { x: Float y: Float width: Float height: Float rotation: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int locked: Boolean visible: Boolean story_id: String thread_next: String inset_x: Float inset_y: Float inset_width: Float inset_height: Float layer_id: String }

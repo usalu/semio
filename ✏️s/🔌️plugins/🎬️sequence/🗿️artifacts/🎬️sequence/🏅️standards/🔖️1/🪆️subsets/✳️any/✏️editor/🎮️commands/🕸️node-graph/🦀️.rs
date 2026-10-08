@@ -1,7 +1,7 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::sequence::{sequence_child_leaves_emit, sequence_child_leaves_from_host_mutation, SEQUENCE_PLAY_APP_ID};
+use crate::editor::sequence::{edit_rules, sequence_child_leaves_emit, sequence_scene_edit, SEQUENCE_PLAY_APP_ID};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -34,7 +34,7 @@ pub mod node_graph_edit {
     }
 
     /// 🧾️ Every row edits the editor host by the ids it names, and the published edit is the child INTENT leaves that carry
-    /// the content from where it was to where the host left it (`sequence_content_leaves`), never a whole-content snapshot:
+    /// the content from where it was to where the host left it (`edit_rules::SceneEdit`), never a whole-content snapshot:
     /// - `move` — the node-graph gesture record (design §13.3): its steps move by the ONE offset, landing as relative
     ///   `drag-nodes`; a drag commits through the ONE node-drag machine as ONE composed-child tool transaction (design §12);
     /// - `connect`, `disconnect`, `delete` — one-shot structural edits of the steps and edges they name.
@@ -44,39 +44,29 @@ pub mod node_graph_edit {
             _ => return Err(crate::editor::sequence::sequence_fault("sequence.node-graph.malformed", "sequence nodeGraphEdit operations must be a JSON array")),
         };
         let records: Vec<NodeDragRecord> = rows.iter().filter_map(|row| if let NodeGraphEditRow::Move(record) = row { Some(record.clone()) } else { None }).filter(NodeDragRecord::moves).collect();
-        let leaves = sequence_child_leaves_from_host_mutation(doc, |host| {
-            if !records.is_empty() {
-                let mut next = host.snapshot.clone();
-                for record in &records {
-                    for step in next.steps.iter_mut().filter(|step| record.node_ids.contains(&step.id)) {
-                        step.x += record.dx;
-                        step.y += record.dy;
-                    }
+        let mut edit = sequence_scene_edit(doc)?;
+        for record in &records {
+            edit.drag(&record.node_ids, record.dx, record.dy);
+        }
+        for row in &rows {
+            match row {
+                NodeGraphEditRow::Connect { source_node_id, target_node_id, .. } => {
+                    edit.connect(source_node_id, target_node_id, false);
                 }
-                let _ = host.replace_snapshot(next);
-            }
-            for row in &rows {
-                match row {
-                    NodeGraphEditRow::Connect { source_node_id, target_node_id, .. } => {
-                        let _ = host.connect_steps(source_node_id, target_node_id);
-                    }
-                    NodeGraphEditRow::Disconnect { synapse_id } => {
-                        if let Some(edge) = host.snapshot.edges.iter().find(|edge| &edge.id == synapse_id).cloned() {
-                            host.disconnect_steps(&edge.from, &edge.to);
-                        }
-                    }
-                    NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
-                        for edge in host.snapshot.edges.iter().filter(|edge| synapse_ids.contains(&edge.id)).cloned().collect::<Vec<_>>() {
-                            host.disconnect_steps(&edge.from, &edge.to);
-                        }
-                        for step_id in node_ids {
-                            host.remove_step(step_id);
-                        }
-                    }
-                    NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => {}
+                NodeGraphEditRow::Disconnect { synapse_id } => {
+                    edit.disconnect_edge(synapse_id);
                 }
+                NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
+                    for synapse_id in synapse_ids {
+                        edit.disconnect_edge(synapse_id);
+                    }
+                    let ids = edit_rules::removal_closure(&edit.scene, node_ids.iter().cloned());
+                    edit.remove_steps(&ids);
+                }
+                NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => {}
             }
-        })?;
+        }
+        let leaves = edit.leaves;
         let dragged = leaves.iter().any(|leaf| matches!(leaf, SemioFlowMutation::DragNodes(_)));
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         if !dragged || authoring_seed.is_empty() {

@@ -1,19 +1,30 @@
 {
   "schema": null,
   "seed": null,
-  "inputWidth": null,
-  "inputHeight": null,
-  "inputPixels": null,
-  "inputRegions": [],
-  "palette": null,
+  "input": {
+    "size": null,
+    "writes": []
+  },
+  "palette": {
+    "removed": [],
+    "inserted": [],
+    "recolored": []
+  },
   "output": {
     "width": 2,
     "height": 2,
     "periodic": true
   },
   "model": null,
-  "pinnedRemoved": [
-    "4:3"
-  ],
-  "pinnedUpserted": []
+  "pinned": {
+    "removed": [
+      {
+        "id": "4:3",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

@@ -4,7 +4,7 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `material_id`
 //! resolution and meshability bounds `create-region` runs, and finally `mutation.no-op`.
 use super::ReplaceRegion;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionsDelta, Fem2dRegionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionsDelta, Fem2dRegionsModification};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -25,6 +25,6 @@ pub fn diff(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> protocol::Mutation
     if *existing == payload.new_region {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Region \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { patched: vec![Fem2dRegionsPatchEntry { id: payload.id.clone(), item: payload.new_region.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { modified: vec![Fem2dRegionsModification { id: payload.id.clone(), patch: payload.new_region.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

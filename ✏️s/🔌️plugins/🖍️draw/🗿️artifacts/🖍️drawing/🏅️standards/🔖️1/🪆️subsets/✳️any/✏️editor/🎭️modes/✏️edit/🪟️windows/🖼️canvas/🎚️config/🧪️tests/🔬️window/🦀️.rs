@@ -151,5 +151,4 @@ async fn config_inverse_sums_to_the_negative_diff() {
     let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&config_mutation, &base_config).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<DrawingCanvasWindowConfig, super::DrawingCanvasWindowConfigDiff>(&base_config, &next_config).await;
 }

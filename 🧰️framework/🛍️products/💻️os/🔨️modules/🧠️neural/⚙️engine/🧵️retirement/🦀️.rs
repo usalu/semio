@@ -1,173 +1,108 @@
 //! 🧹️ Exact nested-value retirement and explicitly synchronous construction owners.
 
 use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, NeuronSnapshot, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
-use protocol::value::ordered::{OrderedMap, Retirement, RetirementStep};
-use semio_framework_value::retained_clone::RetainedCloneGrant;
-use std::collections::{BTreeMap, LinkedList};
+use protocol::value::ordered::{OrderedMap, RetirementStep,SharedOwner,UpdateCursor};
+use semio_framework_value::list::PagedList;
+use protocol::causal::transition::HistoryFoldIndex;
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::retirement::{controlled::ControlledRetirement,queue::RetirementQueue,RetireOwned,RetirementCursor};
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close};
+use std::collections::VecDeque;
 use std::mem::{size_of, ManuallyDrop};
 use std::sync::Arc;
 
 //#region 🧵️DomainRetirement
+#[derive(semio_framework_value::RetireOwned)]
 enum Owner {
-    Map(Retirement<Value>), Value(Value), Shared(Arc<Value>),
-    Owned(Box<dyn semio_framework_value::ErasedSnapshotRetirement>),
-    /// 🎟️ A byte buffer plus the payload bytes still to be drawn down before it is freed. A
-    /// `Vec<u8>` cannot be freed in pieces, so the grant is charged against `remaining_bytes` one
-    /// turn at a time and the whole buffer is released once the charge reaches zero — the
-    /// `min(grant, left)` drawdown the language-agnostic contract states
-    /// (`🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts`). An all-or-nothing release would answer
-    /// `Blocked` to every fixed-page driver in the tree and spin forever
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    Bytes { values: Vec<u8>, remaining_bytes: usize },
-    Strings(Vec<String>),
-    Dictionaries(BTreeMap<String, Dictionary>), Snapshot(TreeSnapshot), Neurons(BTreeMap<String, NeuronSnapshot>), Seeds(BTreeMap<String, u64>),
-    Operator(OperatorInfo), Channels(Vec<ChannelSpec>), Schema(Schema), Fields(Vec<FieldSpec>), Type(ValueType),
+    Map(OrderedMap<Value>), Value(Value), Shared(Arc<Value>), Bytes(Vec<u8>), Strings(Vec<String>),
+    Dictionaries(HistoryFoldIndex<String,Dictionary>), Snapshot(TreeSnapshot), Operator(OperatorInfo),
+    Channels(EvalChannels), Schema(Schema), Fields(Vec<FieldSpec>), Type(ValueType),
+    SchemaEntry(String,Schema), OperatorEntry(String,OperatorInfo), StringsEntry(String,Vec<String>),
+    Input(protocol::value::DslValue), InputFrame(DictionaryInputFrame),InputFrames(PagedList<DictionaryInputFrame,128>),
+    Update(UpdateCursor<Value>),InputSharedKey(SharedOwner<String>),InputSharedValue(SharedOwner<Value>),
 }
 
-/// 🎟️ One byte-buffer owner whose drawdown charge starts at its live payload length.
-fn byte_owner(values: Vec<u8>) -> Owner {
-    let remaining_bytes = values.len();
-    Owner::Bytes { values, remaining_bytes }
-}
-/// 🎟️ Exact released payload bytes and one retained structural ownership operation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ValueRetirementStep { Blocked, Pending { released_items: usize, released_bytes: usize }, Complete }
-
-/// 🔒️ Owns all nested dictionary and string frontiers until explicit terminal-empty close.
+/// 🔒️ Keeps one original domain root inline and every additional frame in admitted custody.
 #[must_use = "nested value retirement must reach terminal-empty before drop"]
-pub struct ValueRetirement { owners: ManuallyDrop<LinkedList<Owner>> }
-impl Default for ValueRetirement { fn default() -> Self { Self { owners: ManuallyDrop::new(LinkedList::new()) } } }
-impl ValueRetirement {
-    pub fn from_value(value: Value) -> Self { let mut owner = Self::default(); owner.push_value(value); owner }
-    pub fn from_dictionary(value: Dictionary) -> Self { let mut owner = Self::default(); owner.push_dictionary(value); owner }
-    pub fn push_value(&mut self, value: Value) { self.owners.push_back(Owner::Value(value)); }
-    /// 🎒️ Takes one domain-neutral candidate into this same nested-value retirement authority.
-    pub fn push_owned<T:semio_framework_value::retirement::RetireOwned>(&mut self,value:T) {self.owners.push_back(Owner::Owned(semio_framework_value::retirement::owned_retirement(value)));}
-    pub fn push_shared(&mut self, value: Arc<Value>) { self.owners.push_back(Owner::Shared(value)); }
-    pub fn push_dictionary(&mut self, mut dictionary: Dictionary) { self.push_map(std::mem::take(&mut dictionary.pairs)); }
-    pub fn text(&mut self, text: String) { self.owners.push_back(byte_owner(text.into_bytes())); }
-    pub fn push_dictionaries(&mut self, values: BTreeMap<String, Dictionary>) { self.owners.push_back(Owner::Dictionaries(values)); }
-    pub fn push_channels(&mut self, channels: EvalChannels) { self.push_dictionaries(channels.outputs); self.push_dictionaries(channels.inputs); }
-    pub fn push_snapshot(&mut self, snapshot: TreeSnapshot) { self.owners.push_back(Owner::Snapshot(snapshot)); }
-    pub fn push_operator(&mut self, operator: OperatorInfo) { self.owners.push_back(Owner::Operator(operator)); }
-    pub fn push_schema(&mut self, schema: Schema) { self.owners.push_back(Owner::Schema(schema)); }
-    pub fn push_strings(&mut self, strings: Vec<String>) { self.owners.push_back(Owner::Strings(strings)); }
-    pub fn terminal_is_empty(&self) -> bool { self.owners.is_empty() }
-    pub fn allocated_bytes(&self) -> usize {
-        self.owners.iter().fold(0usize, |total, owner| total.saturating_add(match owner {
-            Owner::Map(values) => values.allocated_bytes(),
-            Owner::Bytes { values, .. } => values.capacity(),
-            Owner::Strings(values) => values.capacity().saturating_mul(size_of::<String>()),
-            Owner::Channels(values) => values.capacity().saturating_mul(size_of::<ChannelSpec>()),
-            Owner::Fields(values) => values.capacity().saturating_mul(size_of::<FieldSpec>()),
-            _ => 0,
-        }))
-    }
-    /// 📏️ Borrows the next typed owner's exact allocation demand before ownership moves.
-    pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
-        Ok(match self.owners.front() {
-            Some(Owner::Owned(value)) => value.next_close_byte_demand(),
-            Some(Owner::Map(value)) => value.next_close_byte_demand().map_err(|_| "Neural ordered retirement demand refused")?,
-            Some(_) => 1,
-            None => 0,
-        })
-    }
-    /// 📏️ Preserves the logical page while admitting the next indivisible typed cleanup allocation.
-    pub fn next_step_byte_demand(&self, logical_bytes: usize) -> Result<usize, &'static str> { Ok(logical_bytes.max(self.next_close_byte_demand()?)) }
-    pub(crate) fn push_map(&mut self, map: OrderedMap<Value>) { let retirement = map.retire(); if !retirement.is_empty() { self.owners.push_back(Owner::Map(retirement)); } }
-
-
-    /// ♻️ Advances one original owner; an undersized typed allocation grant retains it unchanged.
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
-        if self.owners.is_empty() { return ValueRetirementStep::Complete; }
-        if maximum_items == 0 || maximum_bytes == 0 { return ValueRetirementStep::Blocked; }
-        if maximum_bytes < self.next_close_byte_demand().expect("finite Neural owner demand") { return ValueRetirementStep::Blocked; }
-        let owner = self.owners.pop_front().expect("checked nonempty neural retirement");
-        let mut released_bytes = 0;
-        match owner {
-            Owner::Owned(mut value)=>{let step=value.close_step(maximum_items,maximum_bytes).expect("typed input payload retirement");if !value.terminal_is_empty() {self.owners.push_front(Owner::Owned(value));}match step {semio_framework_value::SnapshotRetirementStep::Pending {released_bytes:bytes,..}=>released_bytes=bytes,semio_framework_value::SnapshotRetirementStep::Blocked=>return ValueRetirementStep::Blocked,semio_framework_value::SnapshotRetirementStep::Complete=>{}}},
-            Owner::Map(mut map) => {
-                let step = map.advance(RetainedCloneGrant { maximum_items: maximum_items.min(1), maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth: map.next_depth_demand() });
-                if !map.is_empty() { self.owners.push_front(Owner::Map(map)); }
-                match step {
-                    RetirementStep::OwnedValue(value) => self.owners.push_front(Owner::Value(value)),
-                    RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-                    RetirementStep::ProcessedBytes(_) => return ValueRetirementStep::Pending { released_items: 0, released_bytes: 0 },
-                    RetirementStep::Failure(error) => panic!("Neural ordered retirement refused: {error}"),
-                    RetirementStep::Blocked => return ValueRetirementStep::Blocked,
-                    RetirementStep::Complete => {}
-                }
-            }
-            Owner::Shared(value) => if let Some(value) = Arc::into_inner(value) { self.owners.push_front(Owner::Value(value)); },
-            Owner::Value(Value::Dictionary(dictionary)) => self.push_dictionary(dictionary),
-            Owner::Value(Value::Atom(Atom::String(text))) => self.owners.push_front(byte_owner(text.into_bytes())),
-            Owner::Value(Value::Atom(_)) => {}
-            Owner::Strings(mut values) if !values.is_empty() => {
-                if let Some(value) = values.pop() { self.text(value); }
-                self.owners.push_front(Owner::Strings(values));
-            }
-            Owner::Strings(values) => drop(values),
-            Owner::Dictionaries(mut values) => {
-                if let Some((key, value)) = values.pop_first() { self.text(key); self.push_dictionary(value); }
-                if !values.is_empty() { self.owners.push_front(Owner::Dictionaries(values)); }
-            }
-            Owner::Snapshot(value) => { self.owners.push_front(Owner::Neurons(value.neurons)); self.owners.push_front(Owner::Seeds(value.seed_keys)); }
-            Owner::Neurons(mut values) => {
-                if let Some((key, value)) = values.pop_first() { self.text(key); self.owners.push_back(Owner::Strings(value.dependents)); }
-                if !values.is_empty() { self.owners.push_front(Owner::Neurons(values)); }
-            }
-            Owner::Seeds(mut values) => {
-                if let Some((key, _)) = values.pop_first() { self.text(key); }
-                if !values.is_empty() { self.owners.push_front(Owner::Seeds(values)); }
-            }
-            Owner::Operator(value) => {
-                self.text(value.id); self.text(value.extension); self.text(value.name); self.text(value.abbreviation); self.text(value.icon); self.text(value.summary);
-                self.owners.push_back(Owner::Channels(value.inputs)); self.owners.push_back(Owner::Channels(value.outputs)); self.owners.push_back(Owner::Strings(value.group));
-                if let Some(value) = value.variadic_input { self.text(value.slot_key); }
-                if let Some(value) = value.variadic_output { self.text(value.slot_key); }
-            }
-            Owner::Channels(mut values) if !values.is_empty() => {
-                if let Some(value) = values.pop() {
-                    self.text(value.code); self.text(value.abbreviation); self.text(value.name); self.text(value.full_name);
-                    if let Some(label) = value.label { self.text(label); }
-                    if let Some(default) = value.default { self.push_value(default); }
-                    self.owners.push_back(Owner::Strings(value.operators));
-                }
-                self.owners.push_front(Owner::Channels(values));
-            }
-            Owner::Channels(values) => drop(values),
-            Owner::Schema(value) => {
-                self.text(value.id); self.text(value.module); self.text(value.name); self.text(value.icon); self.text(value.summary);
-                self.owners.push_back(Owner::Fields(value.fields));
-            }
-            Owner::Fields(mut values) if !values.is_empty() => {
-                if let Some(value) = values.pop() {
-                    self.text(value.key);
-                    if let Some(label) = value.label { self.text(label); }
-                    if let Some(default) = value.default { self.push_value(default); }
-                    self.owners.push_back(Owner::Type(value.value));
-                }
-                self.owners.push_front(Owner::Fields(values));
-            }
-            Owner::Fields(values) => drop(values),
-            Owner::Type(ValueType::Schema(id)) => self.text(id),
-            Owner::Type(ValueType::List(inner)) => self.owners.push_front(Owner::Type(*inner)),
-            Owner::Type(_) => {}
-            Owner::Bytes { values, remaining_bytes } => {
-                released_bytes = maximum_bytes.min(remaining_bytes);
-                let remaining_bytes = remaining_bytes - released_bytes;
-                if remaining_bytes != 0 {
-                    self.owners.push_front(Owner::Bytes { values, remaining_bytes });
-                    return ValueRetirementStep::Pending { released_items: 1, released_bytes };
-                }
-                drop(values);
-            }
+pub struct ValueRetirement { root:Option<ControlledRetirement<Owner>>, owners:RetirementQueue }
+impl Default for ValueRetirement {fn default()->Self {Self {root:None,owners:RetirementQueue::default()}}}
+macro_rules! domain_admission {
+    ($name:ident,$variant:ident,$type:ty) => {
+        pub fn $name(&mut self,value:$type,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,$type)> {
+            self.admit_domain(Owner::$variant(value),grant).map_err(|(error,value)|match value {Owner::$variant(value)=>(error,value),_=>unreachable!("original domain admission kind")})
         }
-        ValueRetirementStep::Pending { released_items: 1, released_bytes }
+    };
+}
+impl ValueRetirement {
+    fn from_owner(value:Owner)->Self {Self {root:Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("Neural domain retirement refused: {error}"))),owners:RetirementQueue::default()}}
+    pub fn from_value(value:Value)->Self {Self::from_owner(Owner::Value(value))}
+    pub fn from_dictionary(value:Dictionary)->Self {Self::from_value(Value::Dictionary(value))}
+    pub fn from_shared(value:Arc<Value>)->Self {Self::from_owner(Owner::Shared(value))}
+    pub fn from_channels(value:EvalChannels)->Self {Self::from_owner(Owner::Channels(value))}
+    pub fn from_snapshot(value:TreeSnapshot)->Self {Self::from_owner(Owner::Snapshot(value))}
+    pub fn from_schema_entry(key:String,value:Schema)->Self {Self::from_owner(Owner::SchemaEntry(key,value))}
+    pub fn from_operator_entry(key:String,value:OperatorInfo)->Self {Self::from_owner(Owner::OperatorEntry(key,value))}
+    pub fn from_strings_entry(key:String,value:Vec<String>)->Self {Self::from_owner(Owner::StringsEntry(key,value))}
+    fn from_map(value:OrderedMap<Value>)->Self {Self::from_owner(Owner::Map(value))}
+    fn from_input(value:protocol::value::DslValue)->Self {Self::from_owner(Owner::Input(value))}
+    fn from_input_frame(value:DictionaryInputFrame)->Self {Self::from_owner(Owner::InputFrame(value))}
+    fn from_input_frames(value:PagedList<DictionaryInputFrame,128>)->Self {Self::from_owner(Owner::InputFrames(value))}
+    fn from_update(value:UpdateCursor<Value>)->Self {Self::from_owner(Owner::Update(value))}
+    pub fn original_value(&self)->Option<&Value> {match self.root.as_ref()?.original()? {Owner::Value(value)=>Some(value),_=>None}}
+    pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.owners.terminal_is_empty()}
+    pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {self.owners.next_reserve_capacity_byte_demand()}
+    pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.owners.reserve_step(grant)}
+    pub const fn domain_frame_birth_bytes()->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Owner>()}
+    fn admit_domain(&mut self,value:Owner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Owner)> {
+        if self.root.is_some() {return self.owners.admit_owned(value,grant);}
+        if grant.maximum_items==0 {return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Neural original handoff requires one admitted item"),value));}
+        if grant.maximum_depth==0 {return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"Neural original handoff requires admitted depth"),value));}
+        match ControlledRetirement::new(value) {Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress {copied_items:1,..Default::default()})},Err(error)=>Err(error)}
+    }
+    domain_admission!(push_value,Value,Value);
+    domain_admission!(push_shared,Shared,Arc<Value>);
+    domain_admission!(push_dictionaries,Dictionaries,HistoryFoldIndex<String,Dictionary>);
+    domain_admission!(push_channels,Channels,EvalChannels);
+    domain_admission!(push_snapshot,Snapshot,TreeSnapshot);
+    domain_admission!(push_operator,Operator,OperatorInfo);
+    domain_admission!(push_schema,Schema,Schema);
+    domain_admission!(push_strings,Strings,Vec<String>);
+    pub fn push_dictionary(&mut self,value:Dictionary,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Dictionary)> {
+        self.push_value(Value::Dictionary(value),grant).map_err(|(error,value)|match value {Value::Dictionary(value)=>(error,value),_=>unreachable!("original dictionary admission kind")})
+    }
+    pub fn text(&mut self,value:String,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,String)> {
+        self.push_value(Value::Atom(Atom::String(value)),grant).map_err(|(error,value)|match value {Value::Atom(Atom::String(value))=>(error,value),_=>unreachable!("original string admission kind")})
+    }
+    pub fn push_owned<T:RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,T)> {self.owners.admit_owned(value,grant)}
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_copy_byte_demand(),ControlledRetirement::next_copy_byte_demand)}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_capacity_byte_demand(copy),|owner|owner.next_capacity_byte_demand(copy))}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_release_byte_demand(),ControlledRetirement::next_release_byte_demand)}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_depth_demand(),ControlledRetirement::next_depth_demand)}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let Some(root)=self.root.as_mut() else {return self.owners.step(grant);};
+        let step=root.step(grant)?;
+        let progress=admit_retained_clone_close(grant,step,root.terminal_is_empty(),"Neural original inline root")?.progress();
+        if root.terminal_is_empty() {self.root=None;}
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 }
-impl Drop for ValueRetirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(), "neural values must finish explicit domain retirement before drop"); } }
+impl Drop for ValueRetirement {fn drop(&mut self) {assert!(std::thread::panicking()||self.terminal_is_empty(),"neural values must finish explicit domain retirement before drop");}}
+impl RetireOwned for ValueRetirement {
+    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self)}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
+    fn controlled_retirement_supported()->bool {true}
+}
+impl RetirementCursor for ValueRetirement {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::RetirementStep as Step;
+        match Self::close_step(self,grant) {Err(error)=>Step::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress)}
+    }
+    fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
+    fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
+    fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}
+    fn next_depth_demand(&self)->Result<usize,ValueError> {Self::next_depth_demand(self)}
+    fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl semio_framework_value::retirement::RetireOwned for Dictionary {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.pairs)}
@@ -188,6 +123,15 @@ semio_framework_value::artifact_retire_struct!(FieldSpec {key,value,default,labe
 semio_framework_value::artifact_retire_struct!(Schema {id,module,name,icon,summary,fields});
 semio_framework_value::artifact_retire_struct!(ChannelSpec {code,abbreviation,name,full_name,operators,value_types,item_types,default,label,cardinality});
 semio_framework_value::artifact_retire_struct!(OperatorInfo {id,extension,name,abbreviation,icon,summary,inputs,outputs,variadic_input,variadic_output,group});
+semio_framework_value::artifact_retire_struct!(super::Tree {neurons,synapses});
+semio_framework_value::artifact_retire_struct!(super::Neuron {id,kind,params,tree});
+semio_framework_value::artifact_retire_struct!(super::Synapse {id,from,to,from_port,to_port});
+semio_framework_value::artifact_retire_struct!(NeuronSnapshot {key,incoming,dependents});
+semio_framework_value::artifact_retire_struct!(TreeSnapshot {neurons,seed_keys});
+semio_framework_value::artifact_retire_struct!(EvalChannels {outputs,inputs});
+semio_framework_value::artifact_retire_struct!(super::OperatorImpl {schemas,operator});
+semio_framework_value::artifact_retire_struct!(super::OperatorRecord {info,implementations});
+semio_framework_value::artifact_retire_struct!(super::Registry {schemas,operators,operator_produces,schema_providers,finalized});
 impl semio_framework_value::retirement::RetireOwned for super::VariadicSpec {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.slot_key)}
     fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.slot_key)}
@@ -203,7 +147,11 @@ impl semio_framework_value::retirement::RetireOwned for super::Cardinality {
 //#region 🧊️ColdOwners
 /// 🧊️ Explicit synchronous boundary; never used by retained advance or close operations.
 pub fn retire_value_cold(mut owner: ValueRetirement) {
-    while !matches!(owner.close_step(1, 4096), ValueRetirementStep::Complete) {}
+    while !owner.terminal_is_empty() {
+        let copy=4096.max(owner.next_copy_byte_demand().expect("cold Neural copy demand"));
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).expect("cold Neural capacity demand"),maximum_release_bytes:owner.next_release_byte_demand().expect("cold Neural release demand"),maximum_depth:owner.next_depth_demand().expect("cold Neural depth demand")};
+        owner.close_step(grant).expect("cold Neural retirement");
+    }
 }
 
 /// 🧊️ Cold construction owns replacement and error cleanup; its name makes unbounded work explicit.
@@ -218,7 +166,7 @@ impl ColdDictionaryBuilder {
         let mut update = dictionary.pairs.begin_set(key, value);
         while !update.is_complete() { update.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand().expect("cold dictionary allocation demand"), maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }).expect("cold dictionary update"); }
         let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
-        let mut retirement = ValueRetirement::default(); retirement.push_map(displaced); retire_value_cold(retirement);
+        retire_value_cold(ValueRetirement::from_map(displaced));
         update.begin_close();
         loop {
             match update.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: update.next_close_byte_demand().expect("cold dictionary release demand"), maximum_depth: update.next_close_depth_demand() }) {
@@ -241,9 +189,7 @@ impl ColdDictionaryBuilder {
         let result = (|| {
             while !update.is_complete() { update.advance_insert_controlled(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand()?, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }, control)?; }
             let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
-            let mut retirement = ValueRetirement::default();
-            retirement.push_map(displaced);
-            retire_value_cold(retirement);
+            retire_value_cold(ValueRetirement::from_map(displaced));
             Ok(())
         })();
         update.begin_close();
@@ -278,80 +224,144 @@ impl Drop for ColdValueOwner {
 }
 //#endregion 🧊️ColdOwners
 
-struct DictionaryInputFrame {entries:std::vec::IntoIter<(String,protocol::value::DslValue)>,dictionary:Dictionary,key:Option<String>}
+#[derive(semio_framework_value::RetireOwned)]
+struct DictionaryInputFrame {entries:VecDeque<(String,protocol::value::DslValue)>,dictionary:Dictionary,key:Option<String>}
+
+/// 📤️ Preserves the full physical receipt of one original input phase.
+pub struct DictionaryInputStep {pub progress:RetainedCloneProgress,pub dictionary:Option<Dictionary>}
 
 /// 🎒️ Retains typed input binding through the existing Dictionary update and retirement owners.
 pub struct RetainedDictionaryInput {
-    pending:Option<protocol::value::DslValue>,value:Option<Value>,frames:Vec<DictionaryInputFrame>,
-    update:Option<protocol::value::ordered::UpdateCursor<Value>>,closing_update:bool,retirement:ValueRetirement,
+    pending:Option<protocol::value::DslValue>,value:Option<Value>,frames:PagedList<DictionaryInputFrame,128>,
+    update:Option<UpdateCursor<Value>>,closing_update:bool,retirement:ValueRetirement,
+    shared_key:Option<SharedOwner<String>>,shared_value:Option<SharedOwner<Value>>,
     cancelled:bool,done:bool,units:usize,phase:&'static str,
 }
 impl RetainedDictionaryInput {
-    /// 🌱️ Takes the admitted canonical candidate without cloning its text or nested objects.
-    pub fn new(value:protocol::value::DslValue)->Self {Self {pending:Some(value),value:None,frames:Vec::new(),update:None,closing_update:false,retirement:Default::default(),cancelled:false,done:false,units:0,phase:"input-bind-value"}}
+    /// 🌱️ Takes the original candidate without allocating a new ownership frontier.
+    pub fn new(value:protocol::value::DslValue)->Self {Self {pending:Some(value),value:None,frames:Default::default(),update:None,closing_update:false,retirement:Default::default(),shared_key:None,shared_value:None,cancelled:false,done:false,units:0,phase:"input-bind-value"}}
     /// 📍️ Reports retained binding transitions and the current input phase.
     pub fn progress(&self)->(usize,usize,&'static str) {(self.units,self.units.saturating_add(usize::from(!self.done)),self.phase)}
-    /// 📏️ Borrows the next indivisible allocation without moving its retained input custody.
-    pub fn next_step_byte_demand(&self,logical_bytes:usize)->Result<usize,protocol::value::ValueError> {
-        let demand=if !self.retirement.terminal_is_empty() {self.retirement.next_close_byte_demand().map_err(|message|protocol::value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,message))?}
-        else if let Some(update)=self.update.as_ref() {if self.closing_update {update.next_close_byte_demand()?}else {update.next_capacity_byte_demand()?}}
-        else {0};
-        Ok(logical_bytes.max(demand))
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {
+        if !self.retirement.terminal_is_empty() {return self.retirement.next_copy_byte_demand();}
+        Ok(self.update.as_ref().filter(|_|!self.closing_update).map_or(0,UpdateCursor::next_copy_byte_demand))
     }
-    /// ⏱️ Binds at most the granted structural transitions and key-comparison bytes.
-    pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize)->Result<Option<Dictionary>,protocol::value::ValueError> {
-        use protocol::value::{DslValue,FromValue,ValueError};use semio_framework_value::ValueRefusalKind;
-        if maximum_units==0 || maximum_bytes==0 {return Ok(None);}
-        if self.cancelled {return Err(ValueError::new(ValueRefusalKind::Canceled,"typed input binding canceled"));}
-        for _ in 0..maximum_units {
-            if !self.retirement.terminal_is_empty() {self.phase="input-bind-retire";self.retirement.close_step(1,maximum_bytes);}
-            else if self.update.is_some() {
-                if self.closing_update {self.phase="input-bind-retire";self.close_update(maximum_bytes)?;}
-                else {self.phase="input-bind-update";let update=self.update.as_mut().unwrap();update.advance(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:0,maximum_depth:update.next_depth_demand()})?;if update.is_complete() {let dictionary=&mut self.frames.last_mut().unwrap().dictionary;self.retirement.push_map(std::mem::replace(&mut dictionary.pairs,update.take_result().unwrap()));update.begin_close();self.closing_update=true;}}
-            } else if let Some(value)=self.value.take() {
-                self.phase="input-bind-value";
-                if let Some(frame)=self.frames.last_mut() {self.update=Some(frame.dictionary.pairs.begin_set(frame.key.take().unwrap(),value));self.closing_update=false;}
-                else {let Value::Dictionary(dictionary)=value else {unreachable!()};self.units=self.units.saturating_add(1);self.done=true;return Ok(Some(dictionary));}
-            } else if let Some(value)=&self.pending {
-                self.phase="input-bind-value";
-                if self.frames.is_empty() && !matches!(value,DslValue::Object(_)) {return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected an object for Dictionary"));}
-                match value {
-                    DslValue::Object(_)=>{if self.frames.len()>128 {return Err(ValueError::new(ValueRefusalKind::DepthLimit,"typed input nesting limit exceeded"));}let Some(DslValue::Object(entries))=self.pending.take() else {unreachable!()};self.frames.push(DictionaryInputFrame {entries:entries.into_iter(),dictionary:Dictionary::new(),key:None});},
-                    DslValue::Array(_)|DslValue::Bytes(_)=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected an atom, found an array or bytes")),
-                    DslValue::Number(protocol::value::Number::UInt(value)) if *value>i64::MAX as u64=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsigned atom exceeds the signed integer range")),
-                    _=>self.value=Some(Value::Atom(Atom::from_value(self.pending.take().unwrap())?)),
-                }
-            } else if let Some(frame)=self.frames.last_mut() {
-                self.phase="input-bind-value";
-                if let Some((key,value))=frame.entries.next() {frame.key=Some(key);self.pending=Some(value);}
-                else {let frame=self.frames.pop().unwrap();self.value=Some(Value::Dictionary(frame.dictionary));}
-            } else {return Ok(None);}
-            self.units=self.units.saturating_add(1);
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {
+        if !self.retirement.terminal_is_empty() {return self.retirement.next_capacity_byte_demand(copy);}
+        if let Some(update)=self.update.as_ref() {return if self.closing_update {Ok(0)}else {update.next_capacity_byte_demand()};}
+        if self.value.is_some()&&!self.frames.is_empty() {
+            return Ok(if self.shared_key.is_none() {SharedOwner::<String>::allocation_bytes()}else if self.shared_value.is_none() {SharedOwner::<Value>::allocation_bytes()}else {0});
         }
-        Ok(None)
+        if matches!(self.pending,Some(protocol::value::DslValue::Object(_))) {
+            return self.frames.next_capacity_allocation_bytes(self.frames.len()+1).map(|bytes|bytes.unwrap_or(0)).map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason));
+        }
+        Ok(0)
     }
-    fn close_update(&mut self,maximum_bytes:usize)->Result<(),protocol::value::ValueError> {
-        let update=self.update.as_mut().unwrap();match update.close_step(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:0,maximum_release_bytes:maximum_bytes,maximum_depth:update.next_close_depth_demand()}) {RetirementStep::OwnedValue(value)=>self.retirement.push_value(value),RetirementStep::Complete=>{assert!(update.terminal_is_empty());self.update=None;self.closing_update=false;},RetirementStep::Blocked|RetirementStep::Progress {..}|RetirementStep::ProcessedBytes(_)=>{},RetirementStep::Failure(error)=>return Err(error)}
-        Ok(())
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(0)}else{self.retirement.next_release_byte_demand()}}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {
+        if !self.retirement.terminal_is_empty() {return self.retirement.next_depth_demand();}
+        Ok(self.update.as_ref().filter(|_|!self.closing_update).map_or(usize::from(!self.done),UpdateCursor::next_depth_demand))
+    }
+    /// ⏱️ Performs one admitted binding phase and preserves every independent receipt currency.
+    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<DictionaryInputStep,ValueError> {
+        use protocol::value::{DslValue,FromValue};
+        if self.cancelled {return Err(ValueError::literal(ValueRefusalKind::Canceled,"typed input binding canceled"));}
+        if grant.maximum_items==0 {return Ok(DictionaryInputStep {progress:Default::default(),dictionary:None});}
+        if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"typed input phase requires admitted depth"));}
+        if !self.retirement.terminal_is_empty() {
+            self.phase="input-bind-retire";
+            let step=self.retirement.close_step(grant)?;
+            let progress=admit_retained_clone_close(grant,step,self.retirement.terminal_is_empty(),"Neural input child")?.progress();
+            return Ok(DictionaryInputStep {progress,dictionary:None});
+        }
+        let mut progress=RetainedCloneProgress {copied_items:1,..Default::default()};
+        if self.update.is_some() {
+            if self.closing_update {
+                self.phase="input-bind-retire";self.retirement=ValueRetirement::from_update(self.update.take().unwrap());self.closing_update=false;
+            } else {
+                self.phase="input-bind-update";let update=self.update.as_mut().unwrap();
+                let step=update.advance(grant)?;
+                progress=admit_retained_clone_close(grant,step,update.is_complete(),"Neural input update")?.progress();
+                if update.is_complete() {
+                    let dictionary=&mut self.frames.last_mut().unwrap().dictionary;
+                    self.retirement=ValueRetirement::from_map(std::mem::replace(&mut dictionary.pairs,update.take_result().unwrap()));
+                    self.closing_update=true;
+                }
+            }
+        } else if self.value.is_some() {
+            self.phase="input-bind-value";
+            if let Some(frame)=self.frames.last_mut() {
+                if self.shared_key.is_none() {
+                    match SharedOwner::admit(frame.key.take().unwrap(),grant) {Ok((owner,receipt))=>{self.shared_key=Some(owner);progress=receipt;},Err((error,key))=>{frame.key=Some(key);return Err(error);}}
+                } else if self.shared_value.is_none() {
+                    match SharedOwner::admit(self.value.take().unwrap(),grant) {Ok((owner,receipt))=>{self.shared_value=Some(owner);progress=receipt;},Err((error,value))=>{self.value=Some(value);return Err(error);}}
+                } else {
+                    self.update=Some(frame.dictionary.pairs.begin_set_shared(self.shared_key.take().unwrap(),self.shared_value.take().unwrap()));
+                }
+            } else if !self.frames.terminal_is_empty() {
+                self.retirement=ValueRetirement::from_input_frames(std::mem::take(&mut self.frames));
+            } else {
+                let Value::Dictionary(dictionary)=self.value.take().unwrap() else {unreachable!()};
+                self.units=self.units.saturating_add(1);self.done=true;return Ok(DictionaryInputStep {progress,dictionary:Some(dictionary)});
+            }
+        } else if self.shared_value.is_some() {
+            self.phase="input-bind-update";
+            self.update=Some(self.frames.last().unwrap().dictionary.pairs.begin_set_shared(self.shared_key.take().unwrap(),self.shared_value.take().unwrap()));
+        } else if let Some(value)=self.pending.as_ref() {
+            self.phase="input-bind-value";
+            if self.frames.is_empty()&&!matches!(value,DslValue::Object(_)) {return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"expected an object for Dictionary"));}
+            match value {
+                DslValue::Object(_)=>{
+                    if self.frames.len()>=128 {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"typed input nesting limit exceeded"));}
+                    if !self.frames.has_reserved_slot() {
+                        let receipt=self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason))?;
+                        progress=RetainedCloneProgress {copied_items:usize::from(receipt.progressed),retained_capacity_bytes:receipt.allocated_bytes,..Default::default()};
+                    } else {
+                        let Some(DslValue::Object(entries))=self.pending.take() else {unreachable!()};
+                        self.frames.push_reserved(DictionaryInputFrame {entries:VecDeque::from(entries),dictionary:Dictionary::new(),key:None}).unwrap_or_else(|_|unreachable!("admitted original input frame"));
+                    }
+                },
+                DslValue::Array(_)|DslValue::Bytes(_)=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"expected an atom, found an array or bytes")),
+                DslValue::Number(protocol::value::Number::UInt(value)) if *value>i64::MAX as u64=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unsigned atom exceeds the signed integer range")),
+                _=>self.value=Some(Value::Atom(Atom::from_value(self.pending.take().unwrap())?)),
+            }
+        } else if let Some(frame)=self.frames.last_mut() {
+            self.phase="input-bind-value";
+            if let Some((key,value))=frame.entries.pop_front() {frame.key=Some(key);self.pending=Some(value);}
+            else {
+                let mut frame=self.frames.pop().unwrap();
+                self.value=Some(Value::Dictionary(std::mem::replace(&mut frame.dictionary,Dictionary::new())));
+                self.retirement=ValueRetirement::from_input_frame(frame);
+            }
+        } else {progress=Default::default();}
+        self.units=self.units.saturating_add(progress.copied_items);
+        Ok(DictionaryInputStep {progress,dictionary:None})
     }
     /// 🛑️ Records cancellation without releasing any candidate or partial update.
     pub fn cancel(&mut self) {self.cancelled=true;}
-    /// ♻️ Closes the same raw, typed, update and displaced-value ownership frontiers.
-    pub fn close_step(&mut self,maximum_units:usize,maximum_bytes:usize)->ValueRetirementStep {
-        if maximum_units==0 || maximum_bytes==0 {return ValueRetirementStep::Blocked;}
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(0)}else{self.retirement.next_copy_byte_demand()}}
+    pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(0)}else{self.retirement.next_capacity_byte_demand(copy)}}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(0)}else{self.retirement.next_release_byte_demand()}}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(usize::from(!self.terminal_is_empty()))}else{self.retirement.next_depth_demand()}}
+    /// ♻️ Moves each original inline frontier before closing its genuine payload and backing.
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         self.cancelled=true;
-        if !self.retirement.terminal_is_empty() {return self.retirement.close_step(1,maximum_bytes);}
-        if let Some(update)=&mut self.update {if !self.closing_update {update.begin_close();self.closing_update=true;}self.close_update(maximum_bytes).expect("Neural retained input close");}
-        else if let Some(value)=self.pending.take() {self.retirement.push_owned(value);}
-        else if let Some(value)=self.value.take() {self.retirement.push_value(value);}
-        else if let Some(frame)=self.frames.pop() {self.retirement.push_dictionary(frame.dictionary);self.retirement.push_owned(frame.entries);if let Some(key)=frame.key {self.retirement.text(key);}}
-        else {self.done=true;return ValueRetirementStep::Complete;}
-        ValueRetirementStep::Pending {released_items:1,released_bytes:0}
+        if !self.retirement.terminal_is_empty() {return self.retirement.close_step(grant).map(|step|if self.terminal_is_empty(){step}else{RetainedCloneStep::Progress(step.progress())});}
+        if self.terminal_is_empty() {self.done=true;return Ok(RetainedCloneStep::Complete(Default::default()));}
+        if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if grant.maximum_depth==0 {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"typed input handoff requires admitted depth"));}
+        self.retirement=if let Some(update)=self.update.take() {self.closing_update=false;ValueRetirement::from_update(update)}
+        else if let Some(value)=self.pending.take() {ValueRetirement::from_input(value)}
+        else if let Some(value)=self.value.take() {ValueRetirement::from_value(value)}
+        else if let Some(value)=self.shared_key.take() {ValueRetirement::from_owner(Owner::InputSharedKey(value))}
+        else if let Some(value)=self.shared_value.take() {ValueRetirement::from_owner(Owner::InputSharedValue(value))}
+        else {ValueRetirement::from_input_frames(std::mem::take(&mut self.frames))};
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}))
     }
     /// 🔒️ Confirms that all private input ownership has drained or moved to its caller.
-    pub fn terminal_is_empty(&self)->bool {self.pending.is_none() && self.value.is_none() && self.frames.is_empty() && self.update.is_none() && self.retirement.terminal_is_empty()}
+    pub fn terminal_is_empty(&self)->bool {self.pending.is_none()&&self.value.is_none()&&self.frames.terminal_is_empty()&&self.update.is_none()&&self.shared_key.is_none()&&self.shared_value.is_none()&&self.retirement.terminal_is_empty()}
 }
-impl Drop for RetainedDictionaryInput {fn drop(&mut self) {assert!(std::thread::panicking() || self.terminal_is_empty(),"typed input owner dropped before terminal-empty");}}
+impl Drop for RetainedDictionaryInput {fn drop(&mut self) {assert!(std::thread::panicking()||self.terminal_is_empty(),"typed input owner dropped before terminal-empty");}}
 
 #[cfg(test)]
 #[path = "🧪️tests/🧵️retirement/🦀️.rs"]

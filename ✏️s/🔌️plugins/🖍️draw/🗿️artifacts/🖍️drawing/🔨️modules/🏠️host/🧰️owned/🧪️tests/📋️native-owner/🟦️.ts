@@ -212,7 +212,7 @@ test("Drawing sparse path patches preserve native array ownership and semantic r
   const delta=JSON.parse(readFileSync(join(fixture,"🔺️diff/🔣️.json"),"utf8"));
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(before)).toBe(true);expect(validate(after)).toBe(true);
-  const segments=delta.layers.patched[0].patch.pathSegments;
+  const segments=delta.layers.modified[0].patch.pathSegments;
   const applied=applyPatch(before,[{op:"replace",path:"/layers/0/segments",value:segments}],true,false).newDocument;
   expect(applied).toEqual(after);
   const restored=applyPatch(applied,[{op:"replace",path:"/layers/0/segments",value:before.layers[0].segments}],true,false).newDocument;
@@ -285,7 +285,7 @@ test("Drawing root and asset census reads original native field owners once",()=
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
   const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const long=law.text.repeat(law.repeat)+"\0";
-  input.id=input.title=long;input.assets={[long]:{mime:"image/png",data:long}};
+  input.id=input.title=long;input.assets={[long]:{width:long.length,height:1,samples:Array.from({length:long.length},()=>[1,2,3,4])}};
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(input)).toBe(true);
   const copied=applyPatch({},[{op:"add",path:"/snapshot",value:structuredClone(input)}],true,false).newDocument.snapshot;
@@ -295,8 +295,10 @@ test("Drawing root and asset census reads original native field owners once",()=
     database.exec("CREATE TABLE fields (scope TEXT NOT NULL, field TEXT NOT NULL, bytes INTEGER NOT NULL, UNIQUE(scope,field))");
     for(const field of law.recordFootprint.snapshotTexts)database.query("INSERT INTO fields VALUES (?, ?, ?)").run("snapshot",field,Buffer.byteLength(input[field]??"","utf8"));
     for(const field of law.recordFootprint.assetTexts)database.query("INSERT INTO fields VALUES (?, ?, ?)").run("asset",field,Buffer.byteLength(field==="key"?long:input.assets[long][field],"utf8"));
-    expect(database.query("SELECT scope, COUNT(*) AS count FROM fields GROUP BY scope ORDER BY scope").all()).toEqual([{scope:"asset",count:3},{scope:"snapshot",count:3}]);
-    expect((database.query("SELECT SUM(bytes) AS bytes FROM fields WHERE scope = ?").get("asset") as {bytes:number}).bytes).toBe(Buffer.byteLength(long,"utf8")*2+9);
+    expect(database.query("SELECT scope, COUNT(*) AS count FROM fields GROUP BY scope ORDER BY scope").all()).toEqual([{scope:"asset",count:1},{scope:"snapshot",count:3}]);
+    expect((database.query("SELECT SUM(bytes) AS bytes FROM fields WHERE scope = ?").get("asset") as {bytes:number}).bytes).toBe(Buffer.byteLength(long,"utf8"));
+    database.exec("CREATE TABLE samples(ordinal INTEGER PRIMARY KEY, r INTEGER NOT NULL,g INTEGER NOT NULL,b INTEGER NOT NULL,a INTEGER NOT NULL)");for(const [index,sample]of input.assets[long].samples.entries())database.query("INSERT INTO samples VALUES (?,?,?,?,?)").run(index,...sample);expect((database.query("SELECT COUNT(*) AS count FROM samples").get()as{count:number}).count).toBe(long.length);
+
   }finally{database.close();}
   expect(law.recordFootprint.inlineBytesCountedByParent).toBe(true);
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
@@ -435,13 +437,13 @@ test("Drawing initial snapshot copying retains native paged assets and separate 
   const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const long=law.text.repeat(law.repeat)+"\0";
-  input.id=long;input.title=long;input.assets={[long]:{mime:"image/png",data:long,width:1,height:1}};
+  input.id=long;input.title=long;input.assets={[long]:{width:long.length,height:1,samples:Array.from({length:long.length},()=>[1,2,3,4])}};
   const schema=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(schema,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(schema,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(input)).toBe(true);
   const copied=applyPatch({},[{op:"add",path:"/snapshot",value:structuredClone(input)}],true,false).newDocument.snapshot;
   expect(copied).toEqual(input);expect(validate(copied)).toBe(true);
-  expect(new TextEncoder().encode(copied.assets[long].data).length).toBeGreaterThan(law.bodyBytes);
+  expect(copied.assets[long].samples.length*law.recordFootprint.assetSampleComponents).toBeGreaterThan(law.bodyBytes);
   expect(applyPatch({snapshot:copied},[{op:"remove",path:"/snapshot"}],true,false).newDocument).toEqual({});
   const source=readFileSync(join(owner,"🦀️.rs"),"utf8");
   expect(source).toContain("CloneInitialSnapshot");
@@ -483,7 +485,7 @@ test("Drawing native paged owner preserves semantic snapshot and UTF-8 keys", ()
   const law = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
   const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
   const text = law.text.repeat(law.repeat);
-  input.id = text; input.title = text; input.assets = {[text]:{mime:"image/png",data:"Grundstück🧬"}};
+  input.id = text; input.title = text; input.assets = {[text]:{width:1,height:1,samples:[[1,2,3,4]]}};
   const longLayerText = text + "\0";
   input.layers[1].children[0].id = longLayerText; input.layers[1].children[0].name = longLayerText; input.layers[1].children[0].content = longLayerText;
   const schemaRoot = resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");

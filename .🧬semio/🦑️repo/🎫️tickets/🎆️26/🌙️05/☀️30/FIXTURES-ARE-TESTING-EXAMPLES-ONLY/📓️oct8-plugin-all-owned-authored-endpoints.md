@@ -15,3 +15,7 @@ Two historical native/private helper preimages used `📥️current-plugin-facet
 Protected normal publication source freeze adds four new publication endpoints plus the existing Hub sweep to the curated union:1381 authored endpoints, four ticket executable input endpoints. Current six source hashes and schema scope are retained in `📥️oct8-protected-sweep-settled-source-inputs.json`; native outputs and observation rosters remain excluded.
 
 Semantic placement correction removes former collection helper/schema and creates their genuine Dev verification owner at `🔎️verification/🧾️publication`, keeping tests/examples in the collection. Curated union now1383 endpoints (622current files/761absent endpoints) plus4ticket executable inputs. Exact new/removed endpoints and current hashes are in the refreshed source ledger; full actual inventory admits os.dev.verification.publication.
+
+## Current Lease Corpus and Injected Catalog Identity Actions
+
+The ten frozen narrow actions are reconciled without Native/core/WGPU adoption or unrelated hash refresh. Current counts:1,411 authored endpoints (648current files/763authored absences) plus4retained executable ticket inputs. Nine actions are source roles and one updates the retained ticket facet. Five source paths are new to the master. Details, current genuine schema IDs and33distinct publication binding inputs are in `📓️oct8-publication-curated-master-identity-actions-reconciliation.md`.

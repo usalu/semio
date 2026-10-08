@@ -20,6 +20,5 @@
   "cooling": null,
   "lighting": null,
   "renewables": null,
-  "climate": null,
-  "climateTable": null
+  "climate": null
 }

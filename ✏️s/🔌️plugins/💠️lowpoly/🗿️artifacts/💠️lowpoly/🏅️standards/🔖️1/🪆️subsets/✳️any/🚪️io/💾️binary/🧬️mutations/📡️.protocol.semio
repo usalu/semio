@@ -88,3 +88,6 @@ field object-id utf8
 field vertex-ids array varint
 field pivot array f32
 field factor array f32
+record set-vertex-positions tag=22
+field object-id utf8
+field positions bytes

@@ -25,8 +25,10 @@ export function flowSelectedCopySelfTests(): number {
     && value.includes("root: Arc<dyn Any + Send + Sync>") && value.includes("unsafe impl<T: Sync> Send for Rooted<T>")
     && value.includes("maximum_bytes.min(source.len() - start)") && value.includes("if !state.started")
     && value.includes("state.failed = true") && value.includes("!std::thread::panicking()")
-    && value.includes("state.tasks.pop_front()") && value.includes('expect("selected copy retirement factory").retire(root)')
-    && value.includes("released_items > 1 || released_bytes > maximum_bytes") && value.includes("state.root_retirement.is_none()")
+    && value.includes("state.tasks.pop_front()") && value.includes('expect("selected copy retirement factory").retire(root,grant)')
+    && value.includes("admit_retained_clone_close(grant,step,terminal,owner)") && value.includes("state.root_retirement.is_none()") && value.includes("factory.preborn_factory_retirement(grant)")
+    && value.includes("maximum_release_bytes<self.next_release_byte_demand()?") && value.includes("released_bytes:bytes")
+    && !value.includes("released_bytes.min(page_bytes)")
     && value.includes("target.try_reserve_exact(count)") && value.includes("bytes > self.maximum_single_bytes || total > self.maximum_total_bytes")
     && value.includes("source: Rooted<T>") && value.includes("self.source.get().clone()")
     && !/BTreeMap|BTreeSet|\.nth\(|serde_json::to_|Arc::make_mut|target\.insert\(/.test(value);
@@ -36,8 +38,8 @@ export function flowSelectedCopySelfTests(): number {
     source.replace("maximum_bytes.min(source.len() - start)", "source.len() - start"),
     source.replaceAll("state.failed = true", "state.failed = false"),
     source.replaceAll("!std::thread::panicking()", "true"),
-    source.replace('expect("selected copy retirement factory").retire(root)', 'expect("selected copy retirement factory").drop(root)'),
-    source.replace("released_items > 1 || released_bytes > maximum_bytes", "false"),
+    source.replace('expect("selected copy retirement factory").retire(root,grant)', 'expect("selected copy retirement factory").drop(root,grant)'),
+    source.replace("admit_retained_clone_close(grant,step,terminal,owner)", "false"),
     source.replace("bytes > self.maximum_single_bytes || total > self.maximum_total_bytes", "false"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow selected copy accepted hostile ownership source");

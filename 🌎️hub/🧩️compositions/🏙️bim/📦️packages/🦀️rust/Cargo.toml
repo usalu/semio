@@ -19,6 +19,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "bim"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.bim.model@1/*#editor"
 ports = { react = 6302, wgpu = 6402 }
 

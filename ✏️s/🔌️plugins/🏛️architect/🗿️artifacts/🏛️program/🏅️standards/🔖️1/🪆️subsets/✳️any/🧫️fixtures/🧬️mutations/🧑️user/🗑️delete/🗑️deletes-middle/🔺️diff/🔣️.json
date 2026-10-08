@@ -4,12 +4,15 @@
   "project": null,
   "stakeholders": null,
   "users": {
-    "added": [],
     "removed": [
-      "user-profile-a"
+      {
+        "id": "user-profile-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "activities": null,
   "functions": null,

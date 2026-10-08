@@ -1,19 +1,22 @@
 {
   "nodes": null,
   "elements": {
-    "added": [
+    "inserted": [
       {
-        "kind": "bar",
-        "id": "br2",
-        "start": "n4",
-        "end": "n5",
-        "materialId": "steel_s355",
-        "sectionId": "chs889"
+        "index": 7,
+        "row": {
+          "kind": "bar",
+          "id": "br2",
+          "start": "n4",
+          "end": "n5",
+          "materialId": "steel_s355",
+          "sectionId": "chs889"
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "regions": null,
   "materials": null,

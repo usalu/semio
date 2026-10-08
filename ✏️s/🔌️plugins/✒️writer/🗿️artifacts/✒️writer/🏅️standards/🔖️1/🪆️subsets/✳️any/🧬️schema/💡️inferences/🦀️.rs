@@ -8,7 +8,6 @@ use crate::WriterSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a writer snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — writer is a

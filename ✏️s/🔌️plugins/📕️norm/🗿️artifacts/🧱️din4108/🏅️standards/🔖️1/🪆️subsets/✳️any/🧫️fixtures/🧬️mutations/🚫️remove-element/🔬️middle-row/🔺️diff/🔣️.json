@@ -1,0 +1,32 @@
+{
+  "climateZone": null,
+  "usage": null,
+  "tIntC": null,
+  "rhInt": null,
+  "hasMechanicalVentilation": null,
+  "airtightnessN50": null,
+  "bb2DetailsConform": null,
+  "zones": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "elements": {
+    "removed": [
+      {
+        "id": "roof",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "thermalBridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

@@ -1,6 +1,6 @@
 //! 📤️ Frame-pumped icon export batches with request-owned cleanup before delivery.
 use super::{present_media_export_bytes_cancellable, shell_chrome_string, ShellDetached, ShellState};
-use crate::scenes::icon_export::{asset::IconExportAssetRequest, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
+use crate::scenes::icon_export::{asset::IconExportAssetRequest, IconExportFault, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
 use semio_framework::kernel::IconRenderExportItem;
 use semio_framework_async::CancelToken;
 use std::collections::LinkedList;
@@ -39,8 +39,8 @@ pub(super) struct IconExportBatch {
     vector_rejected: Option<IconSvgRejected>,
     saving: Option<ShellDetached<Result<bool, String>>>,
     bytes: Option<Vec<u8>>,
-    item_fault: Option<String>,
-    last_fault: Option<String>,
+    item_fault: Option<IconExportFault>,
+    last_fault: Option<IconExportFault>,
     cancelled: bool,
     cancel: CancelToken,
     admission_cancel: CancelToken,
@@ -78,10 +78,11 @@ impl IconExportBatch {
         }
     }
 
-    fn fail(&mut self, fault: String) {
+    fn fail(&mut self, fault: impl Into<IconExportFault>) {
+        let fault=fault.into();
         if self.item_fault.is_none() {
             ShellState::debug_log(&format!("[TRACE] wgpu icon export refused name={} reason={fault}", self.filename));
-            self.item_fault = Some(fault);
+            self.item_fault = Some(fault.into());
         }
         self.bytes = None;
         self.phase = Phase::Retire;
@@ -106,12 +107,12 @@ impl IconExportBatch {
                 }
             }
             Phase::Prepare => {
-                let Some(preparation) = self.preparing.as_mut() else { return self.fail("icon export preparation was missing".into()) };
+                let Some(preparation) = self.preparing.as_mut() else { return self.fail("icon export preparation was missing") };
                 match preparation.advance() {
                     Ok(true) => {
                         self.scene = preparation.take_prepared().map(Box::new);
                         self.preparing = None;
-                        if self.scene.is_some() { self.phase = Phase::Device; } else { self.fail("icon export scene was missing".into()); }
+                        if self.scene.is_some() { self.phase = Phase::Device; } else { self.fail("icon export scene was missing"); }
                     }
                     Ok(false) => {}
                     Err(fault) => self.fail(fault),
@@ -119,24 +120,24 @@ impl IconExportBatch {
             }
             Phase::Device => self.device(),
             Phase::Render => {
-                let Some(rendering) = self.rendering.as_mut() else { return self.fail("icon export render was missing".into()) };
+                let Some(rendering) = self.rendering.as_mut() else { return self.fail("icon export render was missing") };
                 match rendering.advance() {
                     Ok(true) => {
                         self.bytes = rendering.take_png();
                         self.phase = Phase::Retire;
-                        if self.bytes.is_none() { self.fail("icon export produced no PNG".into()); }
+                        if self.bytes.is_none() { self.fail("icon export produced no PNG"); }
                     }
                     Ok(false) => {}
                     Err(fault) => self.fail(fault),
                 }
             }
             Phase::Vector => {
-                let Some(vector) = self.vector.as_mut() else { return self.fail("icon export vector renderer was missing".into()) };
+                let Some(vector) = self.vector.as_mut() else { return self.fail("icon export vector renderer was missing") };
                 match vector.advance() {
                     Ok(true) => {
                         self.bytes = vector.take_svg();
                         self.phase = Phase::Retire;
-                        if self.bytes.is_none() { self.fail("icon export produced no SVG".into()); }
+                        if self.bytes.is_none() { self.fail("icon export produced no SVG"); }
                     }
                     Ok(false) => {}
                     Err(fault) => self.fail(fault),
@@ -152,7 +153,7 @@ impl IconExportBatch {
                         ShellState::debug_log(&format!("[TRACE] wgpu icon export delivered name={} completed={}/{}", self.filename, self.completed, self.total));
                     }
                     Ok(false) => self.cancel(),
-                    Err(fault) => { self.item_fault = Some(fault); }
+                    Err(fault) => { self.item_fault = Some(fault.into()); }
                 }
                 self.finish_item();
             }
@@ -184,7 +185,7 @@ impl IconExportBatch {
     }
 
     fn device(&mut self) {
-        let Some(scene) = self.scene.as_mut() else { return self.fail("icon export scene was missing".into()) };
+        let Some(scene) = self.scene.as_mut() else { return self.fail("icon export scene was missing") };
         if self.source.is_none() {
             if let Some(initializing) = self.initializing.as_ref() {
                 let Some(answer) = initializing.take() else { return };
@@ -199,7 +200,7 @@ impl IconExportBatch {
             }
         }
         let (width, height) = scene.dimensions();
-        let Some(packet) = scene.take_packet() else { return self.fail("icon export packet was already transferred".into()) };
+        let Some(packet) = scene.take_packet() else { return self.fail("icon export packet was already transferred") };
         match IconGpuPngExport::new(self.source.as_deref().expect("accepted device"), width, height, packet) {
             Ok(rendering) => { self.rendering = Some(Box::new(rendering)); self.phase = Phase::Render; }
             Err(rejected) => { self.fail(rejected.fault.clone()); self.gpu_rejected = Some(rejected); }
@@ -234,7 +235,7 @@ impl IconExportBatch {
         if let Some(rendering) = self.rendering.as_mut() {
             if !rendering.terminal() {
                 rendering.cancel();
-                if let Err(fault) = rendering.advance() { self.last_fault = Some(fault); }
+                if let Err(fault) = rendering.advance() { self.last_fault = Some(fault.into()); }
                 return false;
             }
             self.rendering = None;
@@ -247,7 +248,7 @@ impl IconExportBatch {
         }
         if let Some(preparing) = self.preparing.as_mut() {
             preparing.cancel();
-            if let Err(fault) = preparing.advance() { self.last_fault = Some(fault); }
+            if let Err(fault) = preparing.advance() { self.last_fault = Some(fault.into()); }
             if !preparing.terminal() { return false; }
             self.preparing = None;
             return false;
@@ -264,7 +265,11 @@ impl IconExportBatch {
         }
         if let Some(scene) = self.scene.as_mut() {
             scene.begin_close();
-            if !scene.close_step() { return false; }
+            match scene.close_step() {
+                Ok(true)=>{},
+                Ok(false)=>return false,
+                Err(fault)=>{self.last_fault=Some(IconExportFault::World(fault));return false;}
+            }
             self.scene = None;
             return false;
         }
@@ -285,7 +290,7 @@ impl IconExportBatch {
     fn finish_item(&mut self) {
         if let Some(fault) = self.item_fault.take() {
             self.failed += 1;
-            self.last_fault = Some(fault);
+            self.last_fault = Some(fault.into());
         }
         self.request.clear();
         self.phase = Phase::Next;
@@ -328,7 +333,7 @@ impl IconExportBatch {
         let progress = detail.filter(|(_, _, total, _)| *total > 1).map(|(_, done, total, _)| format!(" · {done}/{total}")).unwrap_or_default();
         let status = format!("{phase} {step}/{} · {}{progress}", self.total, self.filename);
         if self.phase == Phase::Failed {
-            format!("{status}: {}", self.last_fault.as_deref().unwrap_or_default())
+            format!("{status}: {}", self.last_fault.as_ref().map(ToString::to_string).unwrap_or_default())
         } else {
             status
         }

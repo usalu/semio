@@ -2,20 +2,32 @@
 syntax = "proto3";
 package semio.s.norm.din16798.diff;
 
-message Din16798ZoneAddition {
-  optional string after = 1;
+message Din16798ZoneRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din16798ZoneInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din16798ZoneRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din16798ZoneModification {
-  string key = 1;
+  string id = 1;
   Din16798ZonePatch patch = 2;
 }
 
 message Din16798ZoneDelta {
-  repeated string removed = 1;
-  repeated Din16798ZoneAddition added = 2;
-  repeated Din16798ZoneModification modified = 3;
+  repeated Din16798ZoneRemoval removed = 1;
+  repeated Din16798ZoneInsertion inserted = 2;
+  repeated Din16798ZoneRelocation moved = 3;
+  repeated Din16798ZoneModification modified = 4;
 }
 
 message Din16798ZonePatch {
@@ -41,20 +53,32 @@ message Din16798ZonePatch {
   optional string vent_system_id = 20;
 }
 
-message Din16798VentSystemAddition {
-  optional string after = 1;
+message Din16798VentSystemRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Din16798VentSystemInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message Din16798VentSystemRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message Din16798VentSystemModification {
-  string key = 1;
+  string id = 1;
   Din16798VentSystemPatch patch = 2;
 }
 
 message Din16798VentSystemDelta {
-  repeated string removed = 1;
-  repeated Din16798VentSystemAddition added = 2;
-  repeated Din16798VentSystemModification modified = 3;
+  repeated Din16798VentSystemRemoval removed = 1;
+  repeated Din16798VentSystemInsertion inserted = 2;
+  repeated Din16798VentSystemRelocation moved = 3;
+  repeated Din16798VentSystemModification modified = 4;
 }
 
 message Din16798VentSystemPatch {

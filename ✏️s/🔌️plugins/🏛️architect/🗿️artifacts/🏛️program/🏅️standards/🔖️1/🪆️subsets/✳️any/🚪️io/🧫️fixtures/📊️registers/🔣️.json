@@ -1,0 +1,4 @@
+{
+  "header": ["register", "id", "name", "status", "priority", "tags", "source"],
+  "rows": [["stakeholders", "00000000-0000-0000-0000-000000000001", "Owner, Client", "draft", "high", "", "brief"]]
+}

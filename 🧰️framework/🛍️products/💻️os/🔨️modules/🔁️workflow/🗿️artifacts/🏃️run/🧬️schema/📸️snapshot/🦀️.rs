@@ -230,6 +230,39 @@ impl semio_framework_dsl_record::DslField for RunTrigger {
     }
 }
 
+const fn run_borrowed_optional(mut field: semio_framework_dsl_record::BorrowedFieldSpec) -> semio_framework_dsl_record::BorrowedFieldSpec {
+    field.optional = true;
+    field
+}
+
+const RUN_STATUS_LABELS: &[(&str, u32)] = &[("pending", 0), ("running", 1), ("succeeded", 2), ("failed", 3), ("canceled", 4)];
+const RUN_NODE_STATUS_LABELS: &[(&str, u32)] = &[("computed", 0), ("cacheHit", 1), ("failed", 2)];
+
+impl semio_framework_dsl_record::BorrowedDslField for RunStatus {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(RUN_STATUS_LABELS);
+}
+
+impl semio_framework_dsl_record::BorrowedDslField for RunNodeStatus {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(RUN_NODE_STATUS_LABELS);
+}
+
+impl semio_framework_dsl_record::BorrowedDslRecord for RunTrigger {
+    const RECORD: semio_framework_dsl_record::BorrowedRecordSpec = semio_framework_dsl_record::BorrowedRecordSpec {
+        keyword: None,
+        layout: semio_framework_dsl_record::RecordLayout::Inline,
+        fields: &[
+            semio_framework_dsl_record::BorrowedFieldSpec::new(0, "kind", semio_framework_dsl_record::BorrowedShape::Text),
+            run_borrowed_optional(semio_framework_dsl_record::BorrowedFieldSpec::new(1, "actor", semio_framework_dsl_record::BorrowedShape::Text)),
+            run_borrowed_optional(semio_framework_dsl_record::BorrowedFieldSpec::new(2, "automation_ref", semio_framework_dsl_record::BorrowedShape::Text)),
+            run_borrowed_optional(semio_framework_dsl_record::BorrowedFieldSpec::new(3, "event_fingerprint", semio_framework_dsl_record::BorrowedShape::Text)),
+        ],
+    };
+}
+
+impl semio_framework_dsl_record::BorrowedDslField for RunTrigger {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
+}
+
 /// 🎛️ One resolved config-overlay value for a run — `value` carries a JSON-encoded scalar/text as
 /// plain `Text` (not a raw `dsl::DslValue` field): a `dsl::DslValue` embeds arbitrary nested
 /// object/array shapes, which risks not being self-delimiting as a bare `#[dsl(table)]` column (see

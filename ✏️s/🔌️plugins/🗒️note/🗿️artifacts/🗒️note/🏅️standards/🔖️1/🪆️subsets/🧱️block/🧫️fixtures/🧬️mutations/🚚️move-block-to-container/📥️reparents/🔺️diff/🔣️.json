@@ -7,6 +7,8 @@
       {
         "row": "move",
         "id": "blk-ink",
+        "fromParentId": null,
+        "fromIndex": 1,
         "parentId": "blk-group",
         "index": 0
       }

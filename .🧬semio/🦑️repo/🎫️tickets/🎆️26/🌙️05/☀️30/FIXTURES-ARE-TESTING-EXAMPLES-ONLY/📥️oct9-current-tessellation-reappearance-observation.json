@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-10-08T22:51:49.343522+00:00",
+  "writer": "unresolved",
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "sha256": "3806775f26b6c9fa8b6d71281b13ececff0e5e38bde55c3d0ea328e9895e4c37",
+      "bytes": 6811,
+      "mtimeUtc": "2026-10-08T22:48:58.193612+00:00",
+      "role": "observation only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🔣️.json",
+      "sha256": "77489398fc797d00b6f63c959263f503d311d14160ae23b6cde8ec6bbbe28a88",
+      "bytes": 1320,
+      "mtimeUtc": "2026-10-08T22:48:58.193208+00:00",
+      "role": "observation only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "ec3d2b11d9bfe4aff78e335ada66598113f649c7cff734b12f6300ff0b4554dc",
+      "bytes": 2041,
+      "mtimeUtc": "2026-10-08T22:34:45.411934+00:00",
+      "role": "observation only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "c0a308e3f8d4abd774e7182fad422b99d096fdbadc7031586484c11163ecd3ed",
+      "bytes": 44898,
+      "mtimeUtc": "2026-10-08T22:48:58.193820+00:00",
+      "role": "observation only"
+    }
+  ]
+}

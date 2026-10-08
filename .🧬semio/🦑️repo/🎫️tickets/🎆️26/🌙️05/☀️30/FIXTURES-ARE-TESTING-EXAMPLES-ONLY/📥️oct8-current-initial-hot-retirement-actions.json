@@ -1,0 +1,53 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+  "actions": [
+    {
+      "before": "    selected: ManuallyDrop<Option<SelectedMemberHistoryInput<F>>>,",
+      "after": "    selected: ManuallyDrop<Option<SelectedMemberHistoryInput<F>>>,\n    rejected_history_input: ManuallyDrop<Option<super::history::VerifiedMemberHistoryInput>>,"
+    },
+    {
+      "before": "            selected: ManuallyDrop::new(None),",
+      "after": "            selected: ManuallyDrop::new(None),\n            rejected_history_input: ManuallyDrop::new(None),"
+    },
+    {
+      "before": "            && self.selected.is_none()",
+      "after": "            && self.selected.is_none()\n            && self.rejected_history_input.is_none()"
+    },
+    {
+      "before": "child!(witness); child!(dictionary); child!(selected); child!(selection); child!(history); child!(snapshot_open);",
+      "after": "child!(witness); child!(dictionary); child!(selected); child!(rejected_history_input); child!(selection); child!(history); child!(snapshot_open);"
+    },
+    {
+      "before": "        close_field!(selected);",
+      "after": "        close_field!(selected);\n        close_field!(rejected_history_input);"
+    },
+    {
+      "before": "        if self.active.is_none() { return Ok(false); }\n        if cx.should_yield() { return Ok(true); }\n        let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };\n        let step = crate::os_store::artifact_retirement_box_close_step(&mut self.active, child).map_err(|_| MemberOpenDiagnostic::Initialization)?;",
+      "after": "        if self.active.is_none() && self.history_auxiliary.is_none() { return Ok(false); }\n        if cx.should_yield() { return Ok(true); }\n        let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };\n        let step = if self.active.is_some() { crate::os_store::artifact_retirement_box_close_step(&mut self.active, child) } else { crate::os_store::artifact_retirement_admit_owned(&mut self.history_auxiliary, &mut self.active, child) }.map_err(|_| MemberOpenDiagnostic::Initialization)?;"
+    },
+    {
+      "before": "                *self.active = self.selected.take().map(|selected| Box::new(selected) as Box<dyn ErasedSnapshotRetirement>);\n                self.reject(diagnostic)",
+      "after": "                self.reject(diagnostic)"
+    },
+    {
+      "before": "Err(rejected) => { *self.active = Some(Box::new(rejected.request)); return self.reject(rejected.diagnostic); },",
+      "after": "Err(rejected) => { *self.genesis_request = Some(rejected.request); return self.reject(rejected.diagnostic); },"
+    },
+    {
+      "before": "*self.active = Some(Box::new(rejected.input));",
+      "after": "*self.rejected_history_input = Some(rejected.input);"
+    },
+    {
+      "before": "*self.active = Some(semio_framework_value::retirement::owned_retirement((history, auxiliary)));",
+      "after": "*self.decoded_history = history;\n                        *self.history_auxiliary = Some(auxiliary);"
+    },
+    {
+      "before": "*self.active = Some(semio_framework_value::retirement::owned_retirement(auxiliary));",
+      "after": "*self.history_auxiliary = Some(auxiliary);"
+    },
+    {
+      "before": "            Phase::RetireHistoryBytes => {\n                if cx.should_yield() {\n                    return MemberOpenStep::Pending(self.replay_progress());\n                }\n                let bytes = self.history_bytes.as_mut().expect(\"copied history bytes remain retained\");\n                if bytes.is_empty() {\n                    self.history_bytes.take();\n                    self.phase = Phase::RetireInput;\n                    cx.consume_fuel(1);\n                    return MemberOpenStep::Pending(self.replay_progress());\n                }\n                let released = bytes.len().min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));\n                bytes.truncate(bytes.len() - released);\n                cx.consume_fuel(released.max(1) as u64);\n                MemberOpenStep::Pending(self.replay_progress())\n            }\n",
+      "after": "            Phase::RetireHistoryBytes => {\n                if cx.should_yield() { return MemberOpenStep::Pending(self.replay_progress()); }\n                if self.history_bytes.is_some() {\n                    let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };\n                    let step = match crate::os_store::artifact_retirement_admit_owned(&mut self.history_bytes, &mut self.active, child) {\n                        Ok(step) => step,\n                        Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),\n                    };\n                    let progress = step.progress();\n                    let Some(fuel) = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()) else { return self.reject(MemberOpenDiagnostic::Capacity); };\n                    cx.consume_fuel(fuel);\n                } else {\n                    self.phase = Phase::RetireInput;\n                }\n                MemberOpenStep::Pending(self.replay_progress())\n            }\n"
+    }
+  ]
+}

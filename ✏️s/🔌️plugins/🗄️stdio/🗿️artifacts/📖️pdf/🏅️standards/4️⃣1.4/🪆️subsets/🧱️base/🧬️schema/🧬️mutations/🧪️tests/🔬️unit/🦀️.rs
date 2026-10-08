@@ -43,9 +43,10 @@ fn own14_diff_signed_zero_and_sparse_nan_text_are_exact() {
     use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
     let base=PdfSnapshot{schema:"stdio.pdf".into(),pages:vec![PageDoc{width:0.0,height:1.0,text:"same".into()}]};let mut next=base.clone();next.pages[0].width=-0.0;
     assert_ne!(base,next,"own14 publication equality must distinguish owner words");
-    let diff=PdfDiff::between(&base,&next);assert!(!diff.is_empty());let applied=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(applied.pages[0].width.to_bits(),(-0.0f64).to_bits());let restored=protocol::apply_diff(&diff.inverse(&base), &applied).unwrap();assert_eq!(restored.pages[0].width.to_bits(),0);
-    next.pages[0].width=f64::from_bits(0x7ff8000000000042);let diff=PdfDiff::between(&base,&next);let text=diff.print_diff();assert!(text.contains("nan64_7ff8000000000042"),"{text}");let parsed=PdfDiff::parse_diff(&text).unwrap();assert_eq!(protocol::apply_diff(&parsed, &base).unwrap().pages[0].width.to_bits(),0x7ff8000000000042);
-    assert!(PdfDiff::between(&next,&next).is_empty(),"unchanged NaN owner word is no mutation");
+    let width_diff=|width:f64|PdfDiff {pages:Some(crate::standards::v1_4::subsets::base::schema::diff::PdfPagesDiff {modified:vec![crate::standards::v1_4::subsets::base::schema::diff::PdfPageModified {index:0,diff:crate::standards::v1_4::subsets::base::schema::diff::PdfPageDiff {width:Some(width),..Default::default()}}],..Default::default()})};
+    let diff=width_diff(-0.0);assert!(!diff.is_empty());let applied=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(applied.pages[0].width.to_bits(),(-0.0f64).to_bits());let restored=protocol::apply_diff(&diff.inverse(&base), &applied).unwrap();assert_eq!(restored.pages[0].width.to_bits(),0);
+    next.pages[0].width=f64::from_bits(0x7ff8000000000042);let diff=width_diff(f64::from_bits(0x7ff8000000000042));let text=diff.print_diff();assert!(text.contains("nan64_7ff8000000000042"),"{text}");let parsed=PdfDiff::parse_diff(&text).unwrap();assert_eq!(protocol::apply_diff(&parsed, &base).unwrap().pages[0].width.to_bits(),0x7ff8000000000042);
+    assert!(PdfDiff::default().is_empty(),"unchanged NaN owner word is no mutation");
     eprintln!("[DEBUG] own14 signed-zero publication equality sparse diff and payload NaN text");
 }
 #[test]
@@ -87,20 +88,26 @@ fn paged_pdf14_original_source_preserves_five_frames_raw_words_and_fixed_page_gr
     eprintln!("[DEBUG] PDF1.4 five neutral literal frames, NaN payload/signed-zero words, actual8194 text, same-control caller ceilings and exact physical4096 page retirement");
 }
 
+fn resolved(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, String> {
+    if let Some(leaves) = special_edit(event, base).map_err(|fault| format!("{fault:?}"))? {
+        return Ok(leaves);
+    }
+    EDIT_RULES.resolve::<PdfSnapshot, PdfMutation>(base, event).map_err(|error| error.to_string())
+}
+
 #[test]
-fn the_net_of_a_page_edit_replays_to_exactly_the_edited_document() {
+fn a_details_edit_dispatches_the_concrete_page_kind_it_names() {
     use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
+    use semio_framework_value::{DslValue, ToValue};
+    use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
     let base = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "first".to_string() }, PageDoc { width: 100.0, height: 200.0, text: "middle".to_string() }, PageDoc { width: 300.0, height: 400.0, text: "last".to_string() }], ..Default::default() };
-    let edit = |change: fn(&mut PdfSnapshot)| {
-        let mut next = base.clone();
-        change(&mut next);
-        semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &next, net_mutations).expect("the net replays to the edited document")
-    };
-    assert!(edit(|_| {}).is_empty(), "an unchanged document needs no leaf");
-    assert_eq!(edit(|next| next.pages[1].text = "edited".to_string()), vec![PdfMutation::ReplacePageText(ReplacePageText { index: 1, text: "edited".to_string() })]);
-    assert_eq!(edit(|next| { next.pages[2].width = 10.0; next.pages[2].height = 20.0; }), vec![PdfMutation::ResizePage(ResizePage { index: 2, width: 10.0, height: 20.0 })]);
-    assert_eq!(edit(|next| { next.pages.remove(1); }), vec![PdfMutation::RemovePage(RemovePage { index: 1 })]);
-    assert_eq!(edit(|next| next.pages.insert(1, PageDoc::new(1.0, 2.0))), vec![PdfMutation::InsertPage(InsertPage { index: 1, page: PageDoc::new(1.0, 2.0) })]);
-    assert_eq!(edit(|next| next.pages.swap(0, 1)), vec![PdfMutation::MovePage(MovePage { from: 0, to: 1 })]);
-    assert_eq!(edit(|next| next.pages.rotate_left(1)), vec![PdfMutation::MovePage(MovePage { from: 0, to: 2 })]);
+    let set = |path: &str, value: DslValue| resolved(&SnapshotEditEvent::SetValue { path: path.to_string(), value }, &base).expect("the edit names a page kind");
+    assert_eq!(set("/pages/1/text", "edited".to_string().to_value()), vec![PdfMutation::ReplacePageText(ReplacePageText { index: 1, text: "edited".to_string() })]);
+    assert_eq!(set("/pages/2/width", 10.0f64.to_value()), vec![PdfMutation::ResizePage(ResizePage { index: 2, width: 10.0, height: 400.0 })]);
+    assert_eq!(set("/pages/2", PageDoc { width: 10.0, height: 20.0, text: "last".to_string() }.to_value()), vec![PdfMutation::ResizePage(ResizePage { index: 2, width: 10.0, height: 20.0 })]);
+    let page = PageDoc::new(1.0, 2.0);
+    assert_eq!(resolved(&SnapshotEditEvent::InsertValue { path: "/pages/1".to_string(), value: page.to_value() }, &base).unwrap(), vec![PdfMutation::InsertPage(InsertPage { index: 1, page })]);
+    assert_eq!(resolved(&SnapshotEditEvent::RemoveValue { path: "/pages/1".to_string() }, &base).unwrap(), vec![PdfMutation::RemovePage(RemovePage { index: 1 })]);
+    assert_eq!(resolved(&SnapshotEditEvent::MoveValue { from: "/pages/0".to_string(), path: "/pages/2".to_string() }, &base).unwrap(), vec![PdfMutation::MovePage(MovePage { from: 0, to: 2 })]);
+    assert!(resolved(&SnapshotEditEvent::SetValue { path: "/schema".to_string(), value: "x".to_string().to_value() }, &base).is_err());
 }

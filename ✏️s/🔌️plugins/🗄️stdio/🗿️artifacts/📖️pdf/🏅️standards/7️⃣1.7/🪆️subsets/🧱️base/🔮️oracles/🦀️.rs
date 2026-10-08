@@ -860,3 +860,32 @@ pub fn reference_sampled_function_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)
     }
     Ok(streams)
 }
+
+/// 🖼️ Independently reads native image sample streams through lopdf without production PDF APIs.
+#[cfg(feature="oracles")]
+pub fn reference_image_sample_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)>,String>{let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;let mut result=Vec::new();for object in document.objects.values(){if let lopdf::Object::Stream(stream)=object{if stream.dict.get(b"Subtype").ok().and_then(|value|value.as_name().ok())==Some(b"Image".as_slice()){let bits=u32::try_from(stream.dict.get(b"BitsPerComponent").map_err(|error|error.to_string())?.as_i64().map_err(|error|error.to_string())?).map_err(|error|error.to_string())?;result.push((bits,stream.get_plain_content().map_err(|error|error.to_string())?));}}}Ok(result)}
+
+/// 📄️ Counts pages through the independent native PDF reader.
+#[cfg(feature="oracles")]
+pub fn reference_page_count(input:&[u8])->Result<usize,String> {Ok(lopdf::Document::load_mem(input).map_err(|error|error.to_string())?.get_pages().len())}
+
+/// 🌈️ Reads retained ICC stream bodies through the independent native PDF reader.
+#[cfg(feature="oracles")]
+pub fn reference_profile_streams(input:&[u8])->Result<Vec<Vec<u8>>,String> {
+    let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
+    document.objects.values().filter_map(|object|object.as_stream().ok()).filter(|stream|stream.dict.get(b"N").is_ok()).map(|stream|stream.get_plain_content().map_err(|error|error.to_string())).collect()
+}
+
+/// 📦️ Reads native stream bodies through the independent PDF filter implementation.
+#[cfg(feature="oracles")]
+pub fn reference_stream_bodies(input:&[u8])->Result<Vec<Vec<u8>>,String> {
+    let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
+    document.objects.values().filter_map(|object|object.as_stream().ok()).map(|stream|stream.get_plain_content().map_err(|error|error.to_string())).collect()
+}
+
+/// 📄️ Reads each native page's operator spelling through the independent PDF grammar.
+#[cfg(feature = "oracles")]
+pub fn reference_page_operator_names(input:&[u8])->Result<Vec<Vec<String>>,String> {
+    let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
+    document.get_pages().values().map(|page|lopdf::content::Content::decode(&document.get_page_content(*page)).map(|content|content.operations.into_iter().map(|operation|operation.operator).collect()).map_err(|error|error.to_string())).collect()
+}

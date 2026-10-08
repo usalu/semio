@@ -1,0 +1,85 @@
+{
+  "observedAt": "2026-10-08T18:13:52.158660+00:00",
+  "role": "Read-only lifecycle source/executable attestation input; not new canonical source authorship or a protocol/closure execution",
+  "inputs": [
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🧑‍💻coordination/🔌️ticket-mcp/📜️script.ts",
+      "expectedSha256": "a04f1623951cbfa7819e2eabdf77cf336d3bd0bd6ad4fe57ed6753cc154f9b2c",
+      "actualSha256": "a04f1623951cbfa7819e2eabdf77cf336d3bd0bd6ad4fe57ed6753cc154f9b2c",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/go.work",
+      "expectedSha256": "10e30da119d45d6f5f42452bde2142b82ac9e994f76a55603325b59e38ddbdb0",
+      "actualSha256": "10e30da119d45d6f5f42452bde2142b82ac9e994f76a55603325b59e38ddbdb0",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go",
+      "expectedSha256": "2262b280c1b96e389f0a8ec252af7d6e9c3675acc9bdefab6ce74a366f617e5c",
+      "actualSha256": "2262b280c1b96e389f0a8ec252af7d6e9c3675acc9bdefab6ce74a366f617e5c",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📤️event-export/🐹️.go",
+      "expectedSha256": "d69effc399d2dae560f12decbd4f2ea518975ae9cd2d57d894bff3b3fe8ac055",
+      "actualSha256": "d69effc399d2dae560f12decbd4f2ea518975ae9cd2d57d894bff3b3fe8ac055",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go",
+      "expectedSha256": "40678dad34250593fc6bffd0a3194c18fe34beeae85567c5d52ab5f76782ad96",
+      "actualSha256": "40678dad34250593fc6bffd0a3194c18fe34beeae85567c5d52ab5f76782ad96",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧵️executor/🐹️.go",
+      "expectedSha256": "27927fbeba214d945f5061b197e91677b01540fb2e3b286a9a3995e0c384d736",
+      "actualSha256": "27927fbeba214d945f5061b197e91677b01540fb2e3b286a9a3995e0c384d736",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️protocol/🐹️.go",
+      "expectedSha256": "c3d0e33d28e9e710e76798135dbf597a65fad518c5e7ff627d029b75d5e99f05",
+      "actualSha256": "c3d0e33d28e9e710e76798135dbf597a65fad518c5e7ff627d029b75d5e99f05",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📡️event/🐹️.go",
+      "expectedSha256": "45f40be49e96f472b993fd51397ae7ee448b6de7f2641d48742524eadba7047c",
+      "actualSha256": "45f40be49e96f472b993fd51397ae7ee448b6de7f2641d48742524eadba7047c",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🖥️server/🐹️.go",
+      "expectedSha256": "926623f82ef443b32a4a6eed8d0c18076590a095a8719576723012de2d8750c2",
+      "actualSha256": "926623f82ef443b32a4a6eed8d0c18076590a095a8719576723012de2d8750c2",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go",
+      "expectedSha256": "f371af58b082a540e9df10c66999d35f63a217a05d9e4a737423d323e9abf896",
+      "actualSha256": "f371af58b082a540e9df10c66999d35f63a217a05d9e4a737423d323e9abf896",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🚚️transport/🐹️.go",
+      "expectedSha256": "9a16218b30601ff68868d2b82629f7163e56f9d58b3ec95a8b88341878af895e",
+      "actualSha256": "9a16218b30601ff68868d2b82629f7163e56f9d58b3ec95a8b88341878af895e",
+      "matches": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧩️component/🐹️.go",
+      "expectedSha256": "29a1875fa300aad1a6cbce657715975c77e24572b6822fe1f094ab091ce93005",
+      "actualSha256": "29a1875fa300aad1a6cbce657715975c77e24572b6822fe1f094ab091ce93005",
+      "matches": true
+    }
+  ],
+  "executable": {
+    "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/coordinator/mcp/repo-mcp",
+    "expectedSha256": "9dd829350d2bc9d46355a91cfa76b349bdff61fbe99fdec74c574537c2cdeb50",
+    "actualSha256": "9dd829350d2bc9d46355a91cfa76b349bdff61fbe99fdec74c574537c2cdeb50",
+    "matches": true
+  },
+  "closeInputPresent": false
+}

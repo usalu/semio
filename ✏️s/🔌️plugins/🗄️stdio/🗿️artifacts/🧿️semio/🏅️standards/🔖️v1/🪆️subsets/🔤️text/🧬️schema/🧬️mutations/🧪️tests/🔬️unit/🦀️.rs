@@ -60,7 +60,7 @@ async fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
 async fn edit_run_and_change_run_language_round_trip() {
     let base = fixture();
 
-    let edit = SemioTextMutation::EditRun(edit_run::EditRun { index: 0, new_content: "greetings".into() });
+    let edit = SemioTextMutation::EditRun(edit_run::EditRun { index: 0, new_text: "greetings".into() });
     let after = round_trip(&base, &edit);
     assert_eq!(after.runs[0].content, "greetings");
     assert_eq!(after.runs[0].language, base.runs[0].language);
@@ -69,7 +69,7 @@ async fn edit_run_and_change_run_language_round_trip() {
     let after = round_trip(&base, &change_lang);
     assert_eq!(after.runs[0].language, "fr");
 
-    let missing = SemioTextMutation::EditRun(edit_run::EditRun { index: 99, new_content: "x".into() });
+    let missing = SemioTextMutation::EditRun(edit_run::EditRun { index: 99, new_text: "x".into() });
     assert!(missing.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "editing an absent index has nothing to undo");
 }
 

@@ -4,17 +4,19 @@
   "sections": null,
   "members": null,
   "connections": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "support-weld",
-        "weldsThroat": null,
-        "boltsRows": 3,
-        "boltsBoltsPerRow": null
+        "patch": {
+          "weldsThroat": null,
+          "boltsRows": 3,
+          "boltsBoltsPerRow": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "fireScenarios": null,
   "fatigueDetails": null,

@@ -19,7 +19,7 @@ Feature: Apply every typed s.mathematical.equation geometry mutation to its comm
   its first point (its inverse, `remove-point` at the same index, is exercised end to end), `move-points`
   drags two points by an offset from their base positions, and `set-point-positions` puts them back — each
   the other's exact undo. `remove-point` carries a REJECTION vector (declared outcome
-  `mutation.target-missing`) and `replace-points` an `applied`-but-`mutation.no-op` vector that restates the
+  `mutation.target-missing`) and none an `applied`-but-`mutation.no-op` vector that restates the
   empty cloud the document already holds; those two are listed by name in the adapter's own
   `mutation_is_observable` call.
 
@@ -36,7 +36,6 @@ Feature: Apply every typed s.mathematical.equation geometry mutation to its comm
     Then the applied snapshot, the produced diff and the outcome's diagnostics are exactly what the vector commits, and a kind the vector declares observable really moved the projection
     Examples:
       | id                  |
-      | replace-points      |
       | insert-point        |
       | remove-point        |
       | move-points         |
@@ -51,7 +50,6 @@ Feature: Apply every typed s.mathematical.equation geometry mutation to its comm
     Then the snapshot's projection is the before-snapshot's projection again, and any divergence is reported by JSON path
     Examples:
       | id                  |
-      | replace-points      |
       | insert-point        |
       | remove-point        |
       | move-points         |

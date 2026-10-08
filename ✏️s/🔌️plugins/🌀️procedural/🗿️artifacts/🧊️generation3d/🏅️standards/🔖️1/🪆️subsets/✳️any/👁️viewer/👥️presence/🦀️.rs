@@ -113,12 +113,6 @@ impl protocol::DiffAlgebra<Generation3dViewPresence> for Generation3dViewPresenc
             show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
         }
     }
-    fn between(base: &Generation3dViewPresence, other: &Generation3dViewPresence) -> Self {
-        Self {
-            preview_camera: (base.preview_camera != other.preview_camera).then(|| other.preview_camera.clone()),
-            show_mode: (base.show_mode != other.show_mode).then(|| other.show_mode.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.preview_camera.is_none() && self.show_mode.is_none()
     }

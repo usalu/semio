@@ -162,7 +162,7 @@ pub struct HomeViewer;
 impl ArtifactViewer for HomeViewer {
     type Snapshot = SHomeSnapshot;
     type Mutation = SHomeMutation;
-    // 📇️ Shared with the editor, not `NoConfig`/`NoTransient` — the viewer renders the SAME table (`crate::home_space_rows`)
+    // 📇️ Shared with the editor, not `NoConfig`/`NoTransient` — the viewer renders the SAME table (`semio_s_space_core::home_space_rows`)
     // from the SAME folded directory (its own transient projection) and the SAME local-studio tombstones.
     // `assert_viewer_never_mutates` only asserts the ARTIFACT/draft store never advances (contract §2.5).
     type Config = HomeConfig;

@@ -7,7 +7,7 @@ use crate::registers::ProgramElementPatch;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameProgramElement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.elements.iter().find(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [payload.id.0.clone()]);
@@ -16,5 +16,5 @@ pub fn diff(payload: &RenameProgramElement, base: &ProgramSnapshot) -> protocol:
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This program element already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = ProgramElementPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(ProgramDiff { elements: Some(ProgramElementsDelta { patched: vec![ProgramElementsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { elements: Some(ProgramElementsDelta { modified: vec![ProgramElementsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

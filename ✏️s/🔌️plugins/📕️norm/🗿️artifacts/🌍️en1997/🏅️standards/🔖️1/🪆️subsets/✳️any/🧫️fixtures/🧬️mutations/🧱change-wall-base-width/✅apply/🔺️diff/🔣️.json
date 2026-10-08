@@ -10,15 +10,17 @@
   "footings": null,
   "piles": null,
   "retainingWalls": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "wall-W1",
-        "baseWidth": 2.9
+        "patch": {
+          "baseWidth": 2.9
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "slopes": null,
   "upliftCases": null

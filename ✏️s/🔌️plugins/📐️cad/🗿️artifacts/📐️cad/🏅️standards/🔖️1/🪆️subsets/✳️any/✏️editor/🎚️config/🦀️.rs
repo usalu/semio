@@ -206,16 +206,6 @@ impl protocol::DiffAlgebra<CadConfig> for CadConfigDiff {
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
     }
-    fn between(base: &CadConfig, other: &CadConfig) -> Self {
-        Self {
-            selected_node_ids: (base.selected_node_ids != other.selected_node_ids).then(|| other.selected_node_ids.clone()),
-            hovered_reference_id: (base.hovered_reference_id != other.hovered_reference_id).then(|| CadTextSet { value: other.hovered_reference_id.clone() }),
-            active_example_id: (base.active_example_id != other.active_example_id).then(|| CadTextSet { value: other.active_example_id.clone() }),
-            selected_reference_model_definition_id: (base.selected_reference_model_definition_id != other.selected_reference_model_definition_id).then(|| CadTextSet { value: other.selected_reference_model_definition_id.clone() }),
-            selected_reference_id: (base.selected_reference_id != other.selected_reference_id).then(|| CadTextSet { value: other.selected_reference_id.clone() }),
-            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

@@ -91,14 +91,6 @@ impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
             output_height: self.output_height.as_ref().map(|_| base.output_height.clone()),
         }
     }
-    fn between(base: &BitmapTransient, other: &BitmapTransient) -> Self {
-        Self {
-            output_pixels: (base.output_pixels != other.output_pixels).then(|| BitmapTransientText { value: other.output_pixels.clone() }),
-            contradiction: (base.contradiction != other.contradiction).then(|| other.contradiction.clone()),
-            output_width: (base.output_width != other.output_width).then(|| other.output_width.clone()),
-            output_height: (base.output_height != other.output_height).then(|| other.output_height.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.output_pixels.is_none() && self.contradiction.is_none() && self.output_width.is_none() && self.output_height.is_none()
     }

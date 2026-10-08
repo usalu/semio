@@ -2,7 +2,7 @@
 use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::schema::modules::mutation_support::top_level_collections::{reject, scenes_op, GltfTopLevelFamily, GltfTopLevelMutationRejection};
+use crate::schema::modules::mutation_support::top_level_collections::{reject, GltfTopLevelFamily, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.delete-scene.v1";
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -28,3 +28,5 @@ mod tests_remove_type_removes_the_column_type_and_keeps_the_beam_type;
 mod tests_rename_type_renames_the_beam_type_without_recategorising_it;
 #[path = "../../✂️unbind-representation/🧪️tests/🔗️unbinds/🦀️.rs"]
 mod tests_unbind_representation_unbinds_the_leading_representation_and_keeps_the_trailing_one;
+#[path = "../../✂️unbind-representation/🧪️tests/↩️inverts/🦀️.rs"]
+mod tests_unbind_representation_inverts;

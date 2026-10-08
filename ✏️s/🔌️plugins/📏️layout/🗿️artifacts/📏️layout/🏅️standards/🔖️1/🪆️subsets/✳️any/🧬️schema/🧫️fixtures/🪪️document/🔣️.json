@@ -106,34 +106,35 @@
     "dataFields": {
       "presence": "replaced",
       "entries": {
-        "added": [
+        "inserted": [
           {
-            "questionId": "unsigned",
-            "value": {
-              "kind": "unsigned",
-              "high": 4294967295,
-              "low": 4294967295
+            "index": 0,
+            "row": {
+              "questionId": "unsigned",
+              "value": {
+                "kind": "unsigned",
+                "high": 4294967295,
+                "low": 4294967295
+              }
             }
           },
           {
-            "questionId": "bytes",
-            "value": {
-              "kind": "bytes",
-              "value": [
-                0,
-                128,
-                255
-              ]
+            "index": 1,
+            "row": {
+              "questionId": "bytes",
+              "value": {
+                "kind": "bytes",
+                "value": [
+                  0,
+                  128,
+                  255
+                ]
+              }
             }
-          }
-        ],
-        "removed": [
-          "project"
-        ],
-        "patched": [
+          },
           {
-            "id": "signed",
-            "item": {
+            "index": 2,
+            "row": {
               "questionId": "signed",
               "value": {
                 "kind": "signed",
@@ -143,8 +144,8 @@
             }
           },
           {
-            "id": "float",
-            "item": {
+            "index": 3,
+            "row": {
               "questionId": "float",
               "value": {
                 "kind": "float",
@@ -154,12 +155,13 @@
             }
           }
         ],
-        "reordered": [
-          "unsigned",
-          "bytes",
-          "signed",
-          "float"
-        ]
+        "removed": [
+          {
+            "id": "project",
+            "index": 0
+          }
+        ],
+        "moved": []
       }
     },
     "backgroundDrawing": {

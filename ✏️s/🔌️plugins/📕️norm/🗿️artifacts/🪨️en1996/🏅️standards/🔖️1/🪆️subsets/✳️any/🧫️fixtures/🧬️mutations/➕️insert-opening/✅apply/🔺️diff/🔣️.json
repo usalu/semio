@@ -5,10 +5,11 @@
   "storeys": null,
   "walls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "wall-north",
+        "id": "wall-north",
         "patch": {
           "labelEn": null,
           "labelDe": null,
@@ -42,9 +43,9 @@
           "isBasement": null,
           "openings": {
             "removed": [],
-            "added": [
+            "inserted": [
               {
-                "after": null,
+                "index": 0,
                 "row": {
                   "id": "win-2",
                   "widthM": 1.0,
@@ -53,11 +54,13 @@
                 }
               }
             ],
+            "moved": [],
             "modified": []
           },
           "loadCases": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           }
         }

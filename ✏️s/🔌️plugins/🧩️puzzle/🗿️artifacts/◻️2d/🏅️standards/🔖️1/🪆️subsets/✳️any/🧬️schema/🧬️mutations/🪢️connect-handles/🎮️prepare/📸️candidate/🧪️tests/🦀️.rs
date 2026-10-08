@@ -1,7 +1,8 @@
 //! 🧪️ Native connection candidates preserve all untouched records and exact granted cancellation.
 
 use super::*;
-use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneBorrowAuthority};
+use semio_framework_value::paged::PagedUtf8;
+use crate::test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -17,8 +18,10 @@ fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<Retained
 
 fn close(cursor: &mut Puzzle2dConnectHandlesCandidateCursor) {
     cursor.begin_close();
-    for turn in 0..1_000_000 { if cursor.terminal_is_empty() { return; }let permit = grant(turn);observed(permit, || cursor.close_step(permit)); }
-    panic!("connect candidate retained ownership after controlled close");
+    test_source_custody::close_cursor(cursor,1_000_000,|cursor|{
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
+    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
 }
 
 fn retire(snapshot: Puzzle2dSnapshot) {
@@ -53,7 +56,7 @@ fn history_edit_puzzle2d_native_connect_candidate_preserves_ordered_native_field
         if intent["mutation"]["gap"] == "nan" { payload.gap = f64::NAN; }
         if case["name"] == "large-native" { payload.edge_kind = Some(PagedUtf8::from("kind-only\0😀".repeat(20000)));snapshot.meta.manifest_id = Some(PagedUtf8::from("retained-metadata\0😀".repeat(10000))); }
         let original = serde_json::to_value(&snapshot).unwrap();let original_payload = serde_json::to_value(&payload).unwrap();let bits = payload.gap.to_bits();
-        let source = RetainedCloneBorrowAuthority::new("connection candidate immutable snapshot");let mutation = RetainedCloneBorrowAuthority::new("connection candidate original native payload");
+        let mut source = test_source_custody::admit();let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dConnectHandlesCandidateCursor::default);assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observed(RetainedCloneGrant::default(), || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default())).progress(), RetainedCloneProgress::default());
         let mut complete = false;
@@ -72,7 +75,7 @@ fn history_edit_puzzle2d_native_connect_candidate_preserves_ordered_native_field
         }
         if case["name"] == "middle" { let mut cancelled = Puzzle2dConnectHandlesCandidateCursor::default();let mut placed = false;for turn in 0..1_000_000 { let inserting = cancelled.phase == 9;let permit = grant(turn);let step = observed(permit, || cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));assert!(!matches!(step, RetainedCloneStep::Complete(_)));if inserting && cancelled.pending.is_none() && cancelled.phase == 9 { placed = true;break; } }assert!(placed);close(&mut cancelled); }
         let mut fenced = Puzzle2dConnectHandlesCandidateCursor::default();fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant(1)).unwrap();let other = payload.clone();assert!(fenced.advance(source.borrow(&snapshot), mutation.borrow(&other), grant(1)).is_err());close(&mut fenced);
-        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));count += 1;
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);count += 1;
         eprintln!("[DEBUG] Puzzle2d ConnectHandles candidate {} preserves native ordered fields and untouched owners with zero constructor/terminal heap and exact three-lane clone/edge/insertion cancellation", case["name"].as_str().unwrap());
     }
     assert_eq!(count, 9);

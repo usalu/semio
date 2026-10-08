@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::{puzzle2d_gesture_phase, puzzle2d_selection_pivot, Puzzle2dActionCtx, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
 use semio_framework_tool_machine::GesturePhase;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🔄️ Rotates the selected nodes by `angle` degrees (or `radians`) about their centroid through the select tool:
 /// the `rotate-selection` leaf records the ids, the pivot and the angle, so positions orbit the recorded pivot and

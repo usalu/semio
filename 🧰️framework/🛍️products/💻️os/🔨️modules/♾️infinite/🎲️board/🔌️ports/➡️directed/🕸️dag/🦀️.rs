@@ -854,440 +854,19 @@ pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &
 // #endregion 🔖️Acyclicity
 
 // #region 🔖️Layout
-//#region 🌳️TidyTree
-/// 🌲️ Buchheim tidy-tree on string-labeled directed edges.
-fn buchheim_positions(roots: &[String], directed: &[(String, String)], depth: &HashMap<String, i32>) -> HashMap<String, (f64, f64)> {
-    let roots_set: HashSet<String> = roots.iter().cloned().collect();
-    let mut incoming: HashMap<String, Vec<String>> = HashMap::new();
-    for (u, v) in directed {
-        incoming.entry(v.clone()).or_default().push(u.clone());
-    }
-    for v in incoming.values_mut() {
-        v.sort();
-        v.dedup();
-    }
-    let mut chosen_parent: HashMap<String, String> = HashMap::new();
-    let mut all_ids: HashSet<String> = HashSet::new();
-    for (u, v) in directed {
-        all_ids.insert(u.clone());
-        all_ids.insert(v.clone());
-    }
-    for r in roots {
-        all_ids.insert(r.clone());
-    }
-    for id in &all_ids {
-        if roots_set.contains(id) {
-            continue;
-        }
-        let ps = incoming.get(id).cloned().unwrap_or_default();
-        if ps.is_empty() {
-            continue;
-        }
-        let best = ps
-            .iter()
-            .min_by_key(|p| {
-                let dp = depth.get(*p).copied().unwrap_or(0);
-                (dp, (*p).clone())
-            })
-            .expect("non-empty ps")
-            .clone();
-        chosen_parent.insert(id.clone(), best);
-    }
-    let mut ordered_ids: Vec<String> = all_ids.into_iter().collect();
-    ordered_ids.sort();
-    if ordered_ids.is_empty() {
-        return HashMap::new();
-    }
-    let id_to_idx: HashMap<String, usize> = ordered_ids.iter().enumerate().map(|(i, s)| (s.clone(), i)).collect();
-    let super_idx = ordered_ids.len();
-    let mut nodes: Vec<BuchheimNode> =
-        ordered_ids.iter().map(|id| BuchheimNode { ancestor: 0, change: 0.0, children: vec![], id: id.clone(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: false, thread: None, x: -1.0, y: 0.0 }).collect();
-    nodes.push(BuchheimNode { ancestor: super_idx, change: 0.0, children: vec![], id: "__tree_super__".into(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: true, thread: None, x: -1.0, y: 0.0 });
-    for (i, oid) in ordered_ids.iter().enumerate() {
-        let pidx = if roots_set.contains(oid) {
-            super_idx
-        } else {
-            match chosen_parent.get(oid) {
-                Some(p) => *id_to_idx.get(p).unwrap_or(&super_idx),
-                None => super_idx,
-            }
-        };
-        nodes[i].parent = Some(pidx);
-    }
-    for node in nodes.iter_mut() {
-        node.children.clear();
-    }
-    for i in 0..super_idx {
-        let pi = nodes[i].parent.expect("parent set for every non-super node in the loop above");
-        nodes[pi].children.push(i);
-    }
-    for p in 0..=super_idx {
-        let mut ch = nodes[p].children.clone();
-        ch.sort_by_key(|&c| nodes[c].id.clone());
-        nodes[p].children = ch;
-    }
-    for p in 0..=super_idx {
-        if nodes[p].children.is_empty() {
-            continue;
-        }
-        let ch = nodes[p].children.clone();
-        for (k, &c) in ch.iter().enumerate() {
-            nodes[c].number = (k + 1) as i32;
-            nodes[c].ancestor = c;
-        }
-    }
-    buchheim_first_walk(&mut nodes, super_idx, 1.0);
-    let min_x = buchheim_second_walk(&mut nodes, super_idx, 0.0, 0, f64::INFINITY);
-    if min_x.is_finite() && min_x < 0.0 {
-        buchheim_third_walk(&mut nodes, super_idx, -min_x);
-    }
-    let mut out = HashMap::new();
-    for (i, n) in nodes.iter().enumerate() {
-        if i == super_idx || n.synthetic {
-            continue;
-        }
-        out.insert(n.id.clone(), (n.x, n.y));
-    }
-    out
-}
-
-#[derive(Debug)]
-struct BuchheimNode {
-    id: String,
-    parent: Option<usize>,
-    children: Vec<usize>,
-    x: f64,
-    y: f64,
-    mod_: f64,
-    thread: Option<usize>,
-    ancestor: usize,
-    change: f64,
-    shift: f64,
-    number: i32,
-    synthetic: bool,
-}
-
-fn buchheim_left_brother(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-    let p = nodes[i].parent?;
-    let ch = &nodes[p].children;
-    let pos = ch.iter().position(|&c| c == i)?;
-    if pos == 0 {
-        return None;
-    }
-    Some(ch[pos - 1])
-}
-
-fn buchheim_leftmost_sibling(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-    let p = nodes[i].parent?;
-    let ch = &nodes[p].children;
-    if ch.first() == Some(&i) {
-        return None;
-    }
-    ch.first().copied()
-}
-
-fn buchheim_next_right(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-    if let Some(t) = nodes[i].thread {
-        return Some(t);
-    }
-    nodes[i].children.last().copied()
-}
-
-fn buchheim_next_left(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-    if let Some(t) = nodes[i].thread {
-        return Some(t);
-    }
-    nodes[i].children.first().copied()
-}
-
-fn buchheim_move_subtree(nodes: &mut [BuchheimNode], wl: usize, wr: usize, shift: f64) {
-    let subtrees = (nodes[wr].number - nodes[wl].number) as f64;
-    if subtrees <= 0.0 {
-        return;
-    }
-    nodes[wr].change -= shift / subtrees;
-    nodes[wr].shift += shift;
-    nodes[wl].change += shift / subtrees;
-    nodes[wr].x += shift;
-    nodes[wr].mod_ += shift;
-}
-
-fn buchheim_execute_shifts(nodes: &mut [BuchheimNode], v: usize) {
-    let mut shift = 0.0f64;
-    let mut change = 0.0f64;
-    for &w in nodes[v].children.iter().rev() {
-        nodes[w].x += shift;
-        nodes[w].mod_ += shift;
-        change += nodes[w].change;
-        shift += nodes[w].shift + change;
-    }
-}
-
-fn buchheim_apportion(nodes: &mut [BuchheimNode], v: usize, default_ancestor: usize, distance: f64) -> usize {
-    let w = match buchheim_left_brother(nodes, v) {
-        Some(w) => w,
-        None => return default_ancestor,
-    };
-    let mut vir = v;
-    let mut vil = w;
-    let mut vol = buchheim_leftmost_sibling(nodes, v).unwrap_or(v);
-    let mut vor = v;
-    let mut sir = nodes[v].mod_;
-    let mut sil = nodes[vil].mod_;
-    loop {
-        let vil_r = buchheim_next_right(nodes, vil);
-        let vir_l = buchheim_next_left(nodes, vir);
-        if vil_r.is_none() || vir_l.is_none() {
-            break;
-        }
-        vil = vil_r.expect("checked Some above");
-        vir = vir_l.expect("checked Some above");
-        let vol_l = buchheim_next_left(nodes, vol);
-        let vor_r = buchheim_next_right(nodes, vor);
-        if vol_l.is_none() || vor_r.is_none() {
-            break;
-        }
-        vol = vol_l.expect("checked Some above");
-        vor = vor_r.expect("checked Some above");
-        nodes[vor].ancestor = v;
-        let shift = (nodes[vil].x + sil) - (nodes[vir].x + sir) + distance;
-        if shift > 0.0 {
-            buchheim_move_subtree(nodes, default_ancestor, v, shift);
-            sir += shift;
-        }
-        sil += nodes[vil].mod_;
-        sir += nodes[vir].mod_;
-    }
-    default_ancestor
-}
-
-fn buchheim_first_walk(nodes: &mut [BuchheimNode], v: usize, distance: f64) -> usize {
-    if nodes[v].children.is_empty() {
-        if let Some(lb) = buchheim_left_brother(nodes, v) {
-            nodes[v].x = nodes[lb].x + distance;
-        } else {
-            nodes[v].x = 0.0;
-        }
-        return v;
-    }
-    let mut default_ancestor = nodes[v].children[0];
-    for &w in nodes[v].children.clone().iter() {
-        buchheim_first_walk(nodes, w, distance);
-        default_ancestor = buchheim_apportion(nodes, w, default_ancestor, distance);
-    }
-    buchheim_execute_shifts(nodes, v);
-    let c0 = nodes[v].children[0];
-    let c1 = *nodes[v].children.last().expect("children non-empty per the is_empty check above");
-    let mid = (nodes[c0].x + nodes[c1].x) * 0.5;
-    if let Some(w) = buchheim_left_brother(nodes, v) {
-        nodes[v].x = nodes[w].x + distance;
-        nodes[v].mod_ = nodes[v].x - mid;
-    } else {
-        nodes[v].x = mid;
-    }
-    v
-}
-
-fn buchheim_second_walk(nodes: &mut [BuchheimNode], v: usize, m: f64, depth: i32, min_x: f64) -> f64 {
-    nodes[v].x += m;
-    nodes[v].y = depth as f64;
-    let mut min_x = min_x.min(nodes[v].x);
-    for &w in nodes[v].children.clone().iter() {
-        min_x = buchheim_second_walk(nodes, w, m + nodes[v].mod_, depth + 1, min_x);
-    }
-    min_x
-}
-
-fn buchheim_third_walk(nodes: &mut [BuchheimNode], v: usize, n: f64) {
-    nodes[v].x += n;
-    for &c in nodes[v].children.clone().iter() {
-        buchheim_third_walk(nodes, c, n);
-    }
-}
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️tidy-tree/🦀️.rs"]
-mod tidy_tree_tests;
-//#endregion 🌳️TidyTree
-
-use semio_framework_pack_json::Value;
-
-/// 🧭️ Tree layout flow direction for layered DAG positions.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub enum DagLayoutOrientation {
-    #[default]
-    LeftRight,
-    TopBottom,
-}
-
-/// 🌲️ Layered DAG layout options for snapshot JSON. `ToValue`/`FromValue` added
-/// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass) so
-/// `host::FlowHost::reorganize` can route through `pack::json::from_json_str` instead of
-/// `serde_json::from_str` — `host::FlowCoreError` only has `From<pack::json::JsonError>`, not
-/// `From<serde_json::Error>` (see its own docstring), so the old call never actually compiled
-/// with the `?` operator once that conversion impl was dropped.
-#[derive(Clone, Debug, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct DagLayoutOptions {
-    #[value(default = "default_layer_spacing")]
-    pub layer_spacing: f64,
-    #[value(default = "default_sibling_gap")]
-    pub sibling_gap: f64,
-    #[value(default)]
-    pub orientation: DagLayoutOrientation,
-    #[value(default)]
-    pub center_x: Option<f64>,
-    #[value(default)]
-    pub center_y: Option<f64>,
-}
-
-fn default_layer_spacing() -> f64 {
-    ui_styling::metrics::board::LAYOUT_LAYER_SPACING
-}
-
-fn default_sibling_gap() -> f64 {
-    ui_styling::metrics::board::LAYOUT_SIBLING_GAP
-}
-
-fn resolve_layout_node_id(handle_to_node: &HashMap<String, String>, key: &str, node_ids: &HashSet<String>) -> String {
-    if let Some(nid) = handle_to_node.get(key) {
-        return nid.clone();
-    }
-    if node_ids.contains(key) {
-        return key.to_string();
-    }
-    if let Some(base) = key.split('@').next() {
-        if node_ids.contains(base) {
-            return base.to_string();
-        }
-    }
-    key.to_string()
-}
-
-impl Default for DagLayoutOptions {
-    fn default() -> Self {
-        Self { layer_spacing: default_layer_spacing(), sibling_gap: default_sibling_gap(), orientation: DagLayoutOrientation::default(), center_x: None, center_y: None }
-    }
-}
-
-/// 🌳️ Writes node centers from a layered DAG layout into `dag.hostDocument`.
-pub fn apply_dag_layout_to_host_snapshot_v1_value(snapshot: &mut Value, opts: &DagLayoutOptions) -> Result<(), DagError> {
-    let Some(root) = snapshot.as_object_mut() else {
-        return Err(DagError::SnapshotRootNotObject);
-    };
-    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.hostDocument") {
-        return Err(DagError::SchemaMismatch);
-    }
-    let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-    let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-        return Err(DagError::NodesMissing);
-    };
-    if nodes.is_empty() {
-        return Ok(());
-    }
-    let mut handle_to_node: HashMap<String, String> = HashMap::new();
-    let mut node_ids: HashSet<String> = HashSet::new();
-    for node in nodes.iter() {
-        let Some(obj) = node.as_object() else {
-            continue;
-        };
-        let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-            continue;
-        };
-        node_ids.insert(nid.to_string());
-        if let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) {
-            for h in handles {
-                if let Some(hid) = h.get("id").and_then(|v| v.as_str()) {
-                    handle_to_node.insert(hid.to_string(), nid.to_string());
-                }
-            }
-        }
-    }
-    let mut directed: Vec<(String, String)> = Vec::new();
-    for e in &edges_json {
-        let Some(eo) = e.as_object() else {
-            continue;
-        };
-        let src = eo.get("source").and_then(|v| v.as_str()).or_else(|| eo.get("sourceHandle").and_then(|v| v.as_str()));
-        let tgt = eo.get("target").and_then(|v| v.as_str()).or_else(|| eo.get("targetHandle").and_then(|v| v.as_str()));
-        let (Some(src_h), Some(tgt_h)) = (src, tgt) else {
-            continue;
-        };
-        let u = resolve_layout_node_id(&handle_to_node, src_h, &node_ids);
-        let v = resolve_layout_node_id(&handle_to_node, tgt_h, &node_ids);
-        if u != v && node_ids.contains(&u) && node_ids.contains(&v) {
-            directed.push((u, v));
-        }
-    }
-    let mut incoming: HashMap<String, u32> = HashMap::new();
-    for id in &node_ids {
-        incoming.insert(id.clone(), 0);
-    }
-    for (_, v) in &directed {
-        *incoming.entry(v.clone()).or_insert(0) += 1;
-    }
-    let roots: Vec<String> = node_ids.iter().filter(|id| incoming.get(*id).copied().unwrap_or(0) == 0).cloned().collect();
-    let roots = if roots.is_empty() { node_ids.iter().cloned().collect() } else { roots };
-    let mut depth: HashMap<String, i32> = HashMap::new();
-    for r in &roots {
-        depth.insert(r.clone(), 0);
-    }
-    for _ in 0..directed.len().saturating_add(node_ids.len()).saturating_add(4) {
-        let mut changed = false;
-        for (u, v) in &directed {
-            let Some(&du) = depth.get(u) else {
-                continue;
-            };
-            let nd = du + 1;
-            if depth.get(v).copied().unwrap_or(-1) < nd {
-                depth.insert(v.clone(), nd);
-                changed = true;
-            }
-        }
-        if !changed {
-            break;
-        }
-    }
-    let pos = buchheim_positions(&roots, &directed, &depth);
-    let mut minx = f64::INFINITY;
-    let mut maxx = f64::NEG_INFINITY;
-    let mut miny = f64::INFINITY;
-    let mut maxy = f64::NEG_INFINITY;
-    for (x, y) in pos.values() {
-        minx = minx.min(*x);
-        maxx = maxx.max(*x);
-        miny = miny.min(*y);
-        maxy = maxy.max(*y);
-    }
-    let cx = (minx + maxx) * 0.5;
-    let cy = (miny + maxy) * 0.5;
-    let gx = opts.center_x.unwrap_or(0.0);
-    let gy = opts.center_y.unwrap_or(0.0);
-    let (dx, dy) = match opts.orientation {
-        DagLayoutOrientation::LeftRight => (gx - cy * opts.layer_spacing, gy - cx * opts.sibling_gap),
-        DagLayoutOrientation::TopBottom => (gx - cx * opts.sibling_gap, gy - cy * opts.layer_spacing),
-    };
-    for node in nodes.iter_mut() {
-        let Some(obj) = node.as_object_mut() else {
-            continue;
-        };
-        let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-            continue;
-        };
-        let Some((bx, by)) = pos.get(nid) else {
-            continue;
-        };
-        let (nx, ny) = match opts.orientation {
-            DagLayoutOrientation::LeftRight => (by * opts.layer_spacing + dx, bx * opts.sibling_gap + dy),
-            DagLayoutOrientation::TopBottom => (bx * opts.sibling_gap + dx, by * opts.layer_spacing + dy),
-        };
-        obj.insert("x", Value::from(nx));
-        obj.insert("y", Value::from(ny));
-    }
-    Ok(())
+use crate::infinite::board::schema::layout::{DagLayoutOptions,DagLayoutOrientation,LayoutControl};
+/// 🌳️ Applies original layered geometry directly to admitted DAG records.
+pub fn apply_dag_layout(snapshot:&mut DagHostSnapshot,opts:&DagLayoutOptions,control:&mut LayoutControl<'_>)->Result<(),DagError>{
+ if snapshot.schema!="dag.hostDocument"{return Err(DagError::SchemaMismatch);}
+ let ids:HashSet<String>=snapshot.nodes.iter().map(|n|n.id.clone()).collect();
+ let mut handle_owners=HashMap::new();for node in &snapshot.nodes{for port in node.inputs().iter().chain(node.outputs().iter()){handle_owners.insert(format!("{}@{}",node.id,port.id),node.id.clone());}}
+ let resolve=|key:&str|handle_owners.get(key).cloned().or_else(||ids.contains(key).then(||key.to_owned())).or_else(||key.split('@').next().filter(|base|ids.contains(*base)).map(str::to_owned)).unwrap_or_else(||key.to_owned());
+ let directed:Vec<(String,String)>=snapshot.edges.iter().filter_map(|e|{let a=resolve(&e.source);let b=resolve(&e.target);(a!=b&&ids.contains(&a)&&ids.contains(&b)).then_some((a,b))}).collect();
+ let positions=crate::infinite::board::schema::layout_inferences::layered::layered_positions(&ids,&directed,opts,control).map_err(|e|DagError::Json(e.to_string()))?;
+ for node in &mut snapshot.nodes{if let Some(&(x,y))=positions.get(&node.id){node.x=x;node.y=y;}}Ok(())
 }
 // #endregion 🔖️Layout
+
 
 // #region 🔖️GraphExtension
 /// 🧩️ DAG-specific graph extension marker.
@@ -1523,67 +1102,8 @@ const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT
 //#endregion 🔖️Grid
 
 // #region 🔖️ChannelRef
-/// 🔌️ Resolved snapshot channel from a port handle hover or selection.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct DagChannelRef {
-    pub widget_id: String,
-    pub port: String,
-    pub direction: String,
-}
-
-impl DagChannelRef {
-    pub fn is_input(&self) -> bool {
-        self.direction == "in"
-    }
-
-    pub fn is_output(&self) -> bool {
-        self.direction == "out"
-    }
-}
-/// 🩺️ What a screen point resolves to, once and for all: the draggable snapshot node under it, the
-/// port channel when the pick landed on a connector, and the four hits that hand the gesture to
-/// `pointer_*_screen` instead of to the bounded plan path.
-#[derive(Clone, Debug, PartialEq)]
-pub struct DagScreenHit {
-    pub node_id: Option<String>,
-    pub channel: Option<DagChannelRef>,
-    pub minimap: bool,
-    /// 🧭️ Inside the minimap panel AND on its viewport rectangle — the press that GRABS the camera
-    /// rather than the one that navigates to where it landed.
-    pub minimap_viewport: bool,
-    pub port_insert: bool,
-    pub handle: bool,
-    pub widget: bool,
-}
-
-impl DagScreenHit {
-    /// 🖱️ Whether this point belongs to the screen pointer path — the minimap widget, a wire handle,
-    /// a port insertion target or an inline widget.
-    pub fn is_screen_path(&self) -> bool {
-        self.minimap || self.port_insert || self.handle || self.widget
-    }
-
-    /// 🫳️ Whether a press here would select and start dragging a node through the bounded plan path.
-    /// A node's body is draggable everywhere EXCEPT over its own inline widgets and connector dots.
-    pub fn is_draggable_body(&self) -> bool {
-        self.node_id.is_some() && !self.is_screen_path()
-    }
-}
-
-/// 🩺️ The wire shape of [`DagScreenHit`].
-#[derive(Clone, Debug, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-struct DagScreenHitJson {
-    node: Option<String>,
-    draggable: bool,
-    handle: Option<String>,
-    direction: Option<String>,
-    widget: bool,
-    minimap: bool,
-    minimap_viewport: bool,
-    port_insert: bool,
-}
+pub use crate::infinite::board::schema::dag_input::DagChannelRef;
+use crate::infinite::board::schema::dag_input::{DagSelectionDomains,DagNodeStatuses,DagNodeEvaluationStatus};
 // #endregion 🔖️ChannelRef
 
 // #region 🔖️NoteEdit
@@ -3613,16 +3133,10 @@ impl DagHost {
         self.engine.selection.edge_ids.iter().filter_map(|&eid| self.edge_id_map.get(&eid).cloned()).collect()
     }
 
-    /// 🎯️ Nodes, edges, and handles in the current selection as JSON (`nodes`, `edges`, `🐙️handles`).
-    pub fn selection_domains_json(&self) -> String {
-        #[derive(ToValue, FromValue)]
-        struct Domains {
-            nodes: Vec<String>,
-            edges: Vec<String>,
-            handles: Vec<String>,
-        }
-        let handles: Vec<String> = self.selected_channels().into_iter().map(|channel| format!("{}@{}", channel.widget_id, channel.port)).collect();
-        semio_framework_pack_json::to_json_string(&Domains { nodes: self.selected_node_ids(), edges: self.selected_edge_ids(), handles })
+    /// 🎯️ Projects typed node, edge and handle selection facts.
+    pub fn selection_domains(&self)->DagSelectionDomains {
+        let handles=self.selected_channels().into_iter().map(|channel|format!("{}@{}",channel.widget_id,channel.port)).collect();
+        DagSelectionDomains {nodes:self.selected_node_ids(),edges:self.selected_edge_ids(),handles}
     }
 
     fn apply_selection_domains(&mut self, nodes: &[String], edges: &[String], handles: &[String]) {
@@ -3651,21 +3165,8 @@ impl DagHost {
         self.engine.preselect_removed = Selection::default();
     }
 
-    /// ✅️ Replaces selection from domain JSON (`{ nodes, edges, handles }`) or a legacy node-id array.
-    pub fn set_selection_domains_json(&mut self, json: &str) {
-        #[derive(Default, ToValue, FromValue)]
-        struct Domains {
-            nodes: Vec<String>,
-            edges: Vec<String>,
-            handles: Vec<String>,
-        }
-        if let Ok(domains) = semio_framework_pack_json::from_json_str::<Domains>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-            self.apply_selection_domains(&domains.nodes, &domains.edges, &domains.handles);
-            return;
-        }
-        let ids: Vec<String> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
-        self.set_selection(&ids);
-    }
+    /// ✅️ Replaces selection from fully admitted semantic domains.
+    pub fn set_selection_domains(&mut self,domains:&DagSelectionDomains){self.apply_selection_domains(&domains.nodes,&domains.edges,&domains.handles);}
 
     /// ✅️ Whether the engine has any committed node, edge, or handle selection.
     pub fn has_selection(&self) -> bool {
@@ -3719,9 +3220,7 @@ impl DagHost {
     }
 
     /// 🔌️ Selected snapshot channels as JSON.
-    pub fn selected_channels_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(&self.selected_channels())
-    }
+
 
     /// 🚫️ The refusal a live wire drag is hovering, as JSON, or `null` — the port pair the declared
     /// port types forbid, with both declared type lists so a surface can name them in the user's own
@@ -4449,9 +3948,8 @@ impl DagHost {
         self.set_hover(Some(widget_id));
     }
 
-    /// 🔌️ Replaces channel handle selection from snapshot channel JSON, falling back to node selection below channel LOD.
-    pub fn set_selected_channels_json(&mut self, json: &str) {
-        let channels: Vec<DagChannelRef> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
+    /// 🔌️ Replaces typed channel selection, using node selection below channel LOD.
+    pub fn set_selected_channels(&mut self, channels: &[DagChannelRef]) {
         if self.draw_lod_for_frame().uses_channel_row_pick() {
             let mut selection = Selection::default();
             for channel in channels {
@@ -4464,7 +3962,7 @@ impl DagHost {
             self.engine.preselect_removed = Selection::default();
             return;
         }
-        let widget_ids: Vec<String> = channels.into_iter().map(|channel| channel.widget_id).collect();
+        let widget_ids: Vec<String> = channels.iter().map(|channel| channel.widget_id.clone()).collect();
         self.set_selection(&widget_ids);
     }
 
@@ -4499,47 +3997,22 @@ impl DagHost {
         self.unresolved_input_ports.clear();
     }
 
-    /// 🚦 Applies per-widget eval status from flow `statusJson` (widget id → `{ status, … }`).
-    pub fn set_node_statuses_from_json(&mut self, json: &str) {
-        self.computing_active = None;
+    /// 🚦️ Replaces chrome from complete admitted per-widget evaluation facts.
+    pub fn set_node_statuses(&mut self,statuses:&DagNodeStatuses) {
+        self.computing_active=None;
         self.computing_stale.clear();
         self.node_eval_status.clear();
         self.unresolved_input_ports.clear();
-        let Ok(value) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            return;
-        };
-        let Some(map) = value.as_object() else {
-            return;
-        };
-        for (widget_id, entry) in map {
-            let Some(nid) = self.node_id_for_widget_id(widget_id) else {
-                continue;
+        for (widget_id,status)in statuses {
+            let Some(nid)=self.node_id_for_widget_id(widget_id)else{continue};
+            let kind=match status {
+                DagNodeEvaluationStatus::Computing=>{self.computing_active=Some(nid);DagNodeEvalStatusKind::Computing},
+                DagNodeEvaluationStatus::Queued=>{self.computing_stale.insert(nid);DagNodeEvalStatusKind::Queued},
+                DagNodeEvaluationStatus::Error{..}=>DagNodeEvalStatusKind::Error,
+                DagNodeEvaluationStatus::Blocked{ports}=>{for port in ports{self.unresolved_input_ports.insert((nid,port.clone()));}DagNodeEvalStatusKind::Blocked},
+                DagNodeEvaluationStatus::Ok=>DagNodeEvalStatusKind::Ok,
             };
-            let status = entry.get("status").and_then(|value| value.as_str()).unwrap_or("ok");
-            match status {
-                "computing" => {
-                    self.computing_active = Some(nid);
-                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Computing);
-                }
-                "queued" => {
-                    self.computing_stale.insert(nid);
-                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Queued);
-                }
-                "error" => {
-                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Error);
-                }
-                "blocked" => {
-                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Blocked);
-                    if let Some(ports) = entry.get("ports").and_then(|value| value.as_array()) {
-                        for port in ports.iter().filter_map(|value| value.as_str()) {
-                            self.unresolved_input_ports.insert((nid, port.to_string()));
-                        }
-                    }
-                }
-                _ => {
-                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Ok);
-                }
-            }
+            self.node_eval_status.insert(nid,kind);
         }
     }
 
@@ -4832,10 +4305,8 @@ impl DagHost {
     }
 
     /// 🌳️ Recomputes node positions from the current graph using layered tree layout.
-    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), DagError> {
-        let mut snapshot_value = semio_framework_pack_json::from_dsl_value(&<DagHostSnapshot as semio_framework_value::ToValue>::to_value(&self.host_snapshot));
-        apply_dag_layout_to_host_snapshot_v1_value(&mut snapshot_value, opts)?;
-        self.host_snapshot = <DagHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&snapshot_value))?;
+    pub fn reorganize(&mut self, opts: &DagLayoutOptions,control:&mut LayoutControl<'_>) -> Result<(), DagError> {
+        apply_dag_layout(&mut self.host_snapshot,opts,control)?;
         self.rebuild_engine_with_layout(false);
         Ok(())
     }
@@ -4857,11 +4328,8 @@ impl DagHost {
         let (cx, cy, zoom) = (self.host_snapshot.camera.x, self.host_snapshot.camera.y, self.host_snapshot.camera.zoom);
         self.engine.set_camera(cx, cy, zoom);
         if apply_layout {
-            let mut snapshot_value = semio_framework_pack_json::from_dsl_value(&<DagHostSnapshot as semio_framework_value::ToValue>::to_value(&self.host_snapshot));
-            let _ = apply_dag_layout_to_host_snapshot_v1_value(&mut snapshot_value, &DagLayoutOptions::default());
-            if let Ok(updated) = <DagHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&snapshot_value)) {
-                self.host_snapshot = updated;
-            }
+            let mut progress=|_|true;let mut control=LayoutControl::new(100_000_000,&mut progress);
+            let _=apply_dag_layout(&mut self.host_snapshot,&DagLayoutOptions::default(),&mut control);
         }
         let mut next_handle: u64 = 10;
         let mut handle_map: HashMap<String, u64> = HashMap::new();
@@ -5071,6 +4539,12 @@ impl DagHost {
     /// point after a completed pointer gesture.
     pub fn take_graph_edits(&mut self) -> Vec<DagGraphEdit> {
         std::mem::take(&mut self.pending_graph_edits)
+    }
+
+    /// 👁️ The journalled graph edits not yet drained, in gesture order — read without draining so the embedding host can record
+    /// the gesture's own concrete edits as history leaves before the renderer drains them ([`Self::take_graph_edits`]).
+    pub fn graph_edits(&self) -> &[DagGraphEdit] {
+        &self.pending_graph_edits
     }
 
     /// 🚫️ Drains why the last gesture was refused whole, if it was.
@@ -5863,10 +5337,9 @@ impl DagHost {
         cancelled
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), DagError> {
-        self.canvas_theme.merge_from_json(json).map_err(DagError::CanvasTheme)?;
+    pub fn set_canvas_palette(&mut self, overlay:&crate::infinite::board::BoardPaletteOverlay) {
+        self.canvas_theme.apply_overlay(overlay);
         self.icon_paint_cache.clear();
-        Ok(())
     }
 
     /// 🖼️ Screen-node overlay rects in CSS pixel space for DOM media layers.
@@ -7074,14 +6547,19 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = reorganize)]
-        pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() };
-            self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub fn reorganize(&self,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<(),JsValue>{
+            let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|v|v.as_bool().unwrap_or(false)).unwrap_or(false);
+            let mut decoding=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
+            let opts=crate::infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
+            let mut working=|p:crate::infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=LayoutControl::new(maximum_work as u64,&mut working);
+            self.state.borrow_mut().host.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = setCanvasThemeJson)]
         pub fn set_canvas_theme_json(&mut self, json: &str) {
-            let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
+            let mut accepted=|_|true;
+            let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);
+            if let Ok(overlay)=crate::infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.set_canvas_palette(&overlay);}
         }
 
         #[wasm_bindgen(js_name = renderFrame)]

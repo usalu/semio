@@ -7,34 +7,77 @@ import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅�
 message FormsOptionalText { optional string value = 1; }
 message FormsBlockField { string field = 1; semio.framework.value.DslValue value = 2; }
 message FormsQuestionPatch {
+  optional string kind = 1;
+  repeated FormsBlockField changes = 2;
+}
+message FormsQuestionRemoval {
   string id = 1;
-  optional string kind = 2;
-  repeated FormsBlockField changes = 3;
+  uint32 index = 2;
+}
+message FormsQuestionInsertion {
+  uint32 index = 1;
+  semio.s.forms.forms.definition.FormQuestion row = 2;
+}
+message FormsQuestionRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 message FormsQuestionsDelta {
-  repeated semio.s.forms.forms.definition.FormQuestion added = 1;
-  repeated string removed = 2;
-  repeated FormsQuestionPatch patched = 3;
-  repeated string reordered = 4;
+  repeated FormsQuestionRemoval removed = 1;
+  repeated FormsQuestionInsertion inserted = 2;
+  repeated FormsQuestionRelocation moved = 3;
+  repeated FormsQuestionsModification modified = 4;
+}
+message FormsQuestionsModification {
+  string id = 1;
+  FormsQuestionPatch patch = 2;
 }
 message FormsStepPatch {
+  optional string title = 1;
+  optional FormsOptionalText description = 2;
+  optional FormsQuestionsDelta blocks = 3;
+}
+message FormsStepRemoval {
   string id = 1;
-  optional string title = 2;
-  optional FormsOptionalText description = 3;
-  optional FormsQuestionsDelta blocks = 4;
+  uint32 index = 2;
+}
+message FormsStepInsertion {
+  uint32 index = 1;
+  semio.s.forms.forms.definition.FormStep row = 2;
+}
+message FormsStepRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 message FormsStepsDelta {
-  repeated semio.s.forms.forms.definition.FormStep added = 1;
-  repeated string removed = 2;
-  repeated FormsStepPatch patched = 3;
-  repeated string reordered = 4;
+  repeated FormsStepRemoval removed = 1;
+  repeated FormsStepInsertion inserted = 2;
+  repeated FormsStepRelocation moved = 3;
+  repeated FormsStepsModification modified = 4;
 }
-message FormsResponsePatch { string id = 1; }
+message FormsStepsModification {
+  string id = 1;
+  FormsStepPatch patch = 2;
+}
+message FormsResponseRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message FormsResponseInsertion {
+  uint32 index = 1;
+  semio.s.forms.forms.response.FormsResponse row = 2;
+}
+message FormsResponseRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message FormsResponsesDelta {
-  repeated semio.s.forms.forms.response.FormsResponse added = 1;
-  repeated string removed = 2;
-  repeated FormsResponsePatch patched = 3;
-  repeated string reordered = 4;
+  repeated FormsResponseRemoval removed = 1;
+  repeated FormsResponseInsertion inserted = 2;
+  repeated FormsResponseRelocation moved = 3;
 }
 message FormsDiff {
   optional string schema = 1;
@@ -43,6 +86,4 @@ message FormsDiff {
   optional FormsOptionalText title = 4;
   optional FormsStepsDelta steps = 5;
   optional FormsResponsesDelta responses = 6;
-  semio.os.store.ArtifactChild structure = 7;
-  semio.os.store.ArtifactChild results = 8;
 }

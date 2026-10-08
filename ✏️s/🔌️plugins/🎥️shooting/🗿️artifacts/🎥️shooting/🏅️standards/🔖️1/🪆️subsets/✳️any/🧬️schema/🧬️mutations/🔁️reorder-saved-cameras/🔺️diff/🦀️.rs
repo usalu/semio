@@ -13,5 +13,5 @@ pub fn diff(payload: &ReorderSavedCameras, base: &ShootingSnapshot) -> protocol:
     if index == from {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Saved camera \"{}\" order is unchanged.", payload.id));
     }
-    protocol::MutationOutcome::new(ShootingDiff::camera_edit(ShootingEdit::Move { id: payload.id.clone(), index }))
+    protocol::MutationOutcome::new(ShootingDiff::camera_edit(ShootingEdit::Move { id: payload.id.clone(), from, to: index }))
 }

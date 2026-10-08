@@ -27,10 +27,7 @@ impl GisMapViewerCamera {
         self.x.is_finite() && self.y.is_finite() && self.zoom.is_finite() && self.zoom > 0.0
     }
 
-    /// 🎬️ The exact `TiledMapScene::camera_json` string this camera stands for.
-    pub fn scene_camera_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(self))
-    }
+
 }
 
 /// 🎚️ Persisted local state for ONE concrete `gis2d-view-map` viewer window: its camera, and nothing
@@ -72,9 +69,6 @@ impl protocol::MutationDiff<GisMapViewerWindowConfig> for GisMapViewerWindowConf
 impl protocol::DiffAlgebra<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
     fn inverse(&self, base: &GisMapViewerWindowConfig) -> Self {
         Self { camera: self.camera.map(|_| base.camera) }
-    }
-    fn between(base: &GisMapViewerWindowConfig, other: &GisMapViewerWindowConfig) -> Self {
-        Self { camera: (base.camera != other.camera).then_some(other.camera) }
     }
     fn is_empty(&self) -> bool {
         self.camera.is_none()

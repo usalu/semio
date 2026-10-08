@@ -6,5 +6,5 @@ pub fn diff(payload: &RemoveLoadCase, base: &En1996Snapshot) -> protocol::Mutati
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid load-case remove."), Vec::<String>::new());
     }
     let wall = &base.walls[payload.wall_index];
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { load_cases: En1996LoadCaseDelta::removal(&wall.load_cases[payload.index].id), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { load_cases: En1996LoadCaseDelta::removal(&wall.load_cases, payload.index), ..Default::default() }), ..Default::default() })
 }

@@ -109,11 +109,6 @@ impl protocol::DiffAlgebra<PlaybookConfig> for PlaybookConfigDiff {
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
     }
-    fn between(base: &PlaybookConfig, other: &PlaybookConfig) -> Self {
-        Self {
-            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.contributions_json.is_none()
     }

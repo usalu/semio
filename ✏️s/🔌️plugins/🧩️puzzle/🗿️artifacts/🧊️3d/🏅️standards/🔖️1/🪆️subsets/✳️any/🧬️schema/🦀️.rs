@@ -816,14 +816,11 @@ pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
 /// scope by value, and because `🧬️mutations/💾️binary`'s `encode_engine_command`/`decode_engine_command`
 /// wrap it exactly like it already does for `Puzzle3dMutation`. Field shapes mirror the exact payload each
 /// old JSON-string method parsed: `SetScene` mirrors `set_scene`'s `SceneConfig` JSON body,
-/// `ApplyBrushPlacement` mirrors `apply_brush_placement_json`'s `BrushPlacePayload` body,
 /// `UpdateKindWeights` mirrors `update_kind_weights`'s two JSON map bodies.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Puzzle3dEngineCommand {
     #[dsl(key = "set-scene")]
     SetScene { scene: SceneConfig },
-    #[dsl(key = "apply-brush-placement")]
-    ApplyBrushPlacement { payload: BrushPlacePayload },
     #[dsl(key = "update-kind-weights")]
     UpdateKindWeights { object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64> },
     #[dsl(key = "brush-preview")]
@@ -836,12 +833,11 @@ pub enum Puzzle3dEngineCommand {
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📬️ What `dispatch` hands back — the typed counterpart of what each old JSON-string method
-/// returned (a `EngineSceneSnapshot` JSON string, a `BrushPreviewState` JSON string, or nothing). Plain Rust, no
+/// returned (a `BrushPreviewState` JSON string, or nothing). Plain Rust, no
 /// DSL/wasm-bindgen requirement — this only ever crosses the artifact <-> app boundary in-process.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Puzzle3dEngineOutcome {
     Unit,
-    EngineSceneSnapshot(EngineSceneSnapshot),
     BrushPreview(Option<BrushPreviewState>),
 }
 //#endregion 🔖️PrecomputeCommand

@@ -163,19 +163,6 @@ fn engine_precompute_step_is_false_with_no_scene() {
 }
 
 #[test]
-fn engine_apply_brush_placement_none_without_scene_or_catalogs() {
-    let mut engine = Puzzle3dCollision::new();
-    let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    assert!(engine.apply_brush_placement(&payload).is_none(), "no scene means no placement");
-
-    engine.set_scene(&single_object_scene_json()).expect("seed");
-    if let Some(scene) = &mut engine.scene {
-        Arc::make_mut(scene).kind_catalogs = None;
-    }
-    assert!(engine.apply_brush_placement(&payload).is_none(), "no catalogs means no placement");
-}
-
-#[test]
 fn engine_has_mesh_invalidate_and_refresh_brush_candidates() {
     let mut engine = Puzzle3dCollision::new();
     engine.set_scene(&single_object_scene_json()).expect("seed");
@@ -212,15 +199,6 @@ fn precompute_session_native_wrapper_exercises_public_methods() {
     object_weights.insert("Host".to_string(), 1.0);
     session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() }).expect("update kind weights");
 
-    let missing_payload = BrushPlacePayload { target_vortex_full_id: "missing:v0".to_string(), object_kind_id: "Nonexistent".to_string(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    assert!(session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: missing_payload }).is_err());
-}
-
-#[test]
-fn precompute_session_native_wrapper_errors_without_scene() {
-    let mut session = Puzzle3dPrecomputeSession::new();
-    let payload = BrushPlacePayload { target_vortex_full_id: "a:v0".to_string(), object_kind_id: "b".to_string(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    assert!(session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload }).is_err());
 }
 
 #[test]
@@ -250,8 +228,6 @@ fn enqueue_brush_target_appends_once() {
 /// this test long before it breaks 5d.
 #[test]
 fn the_5d_facing_precompute_surface_stays_public() {
-    use crate::Puzzle3dError as GuardError;
-
     let mut session = Puzzle3dPrecomputeSession::new();
     assert!(session.set_scene("{ not json").is_err(), "set_scene surfaces a Puzzle3dError");
     session.register_mesh("/probe.glb", &[], &[]);
@@ -259,9 +235,6 @@ fn the_5d_facing_precompute_surface_stays_public() {
     assert!(!session.precompute_step(1));
     let _: BrushCollisionFreeResult = session.brush_candidates("probe:v0");
     let _: Option<BrushPreviewState> = session.brush_preview("probe:v0", 0);
-    let payload = BrushPlacePayload { target_vortex_full_id: "probe:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    let rejected: Result<Puzzle3dEngineOutcome, GuardError> = session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload });
-    assert!(matches!(rejected, Err(GuardError::BrushPlacementRejected)));
     let _: fn(&EngineSceneSnapshot, &BrushPlacePayload, &KindCatalogBundle) -> EngineSceneSnapshot = apply_brush_placement_to_snapshot;
 }
 

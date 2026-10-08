@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.board.dag_input.v1;
+message DagSelectionDomains { repeated string nodes = 1; repeated string edges = 2; repeated string handles = 3; }
+message DagChannelRef { string widget_id = 1; string port = 2; enum Direction { IN = 0; OUT = 1; } Direction direction = 3; }
+message DagNodeEvaluationStatus { message Empty {} message Error { string message = 1; } message Blocked { repeated string ports = 1; } oneof state { Empty ok = 1; Empty queued = 2; Empty computing = 3; Error error = 4; Blocked blocked = 5; } }
+message DagNodeStatusEntry { string widget_id = 1; DagNodeEvaluationStatus status = 2; }

@@ -66,10 +66,6 @@ impl Din4108Artifact {
             thermal_bridges: snapshot.thermal_bridges,
         }
     }
-    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::Din4108Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 
 //#endregion 🔖️Conversions

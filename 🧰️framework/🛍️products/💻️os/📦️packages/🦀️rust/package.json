@@ -9,6 +9,10 @@
     "test-artifact-kind": "nx run @semio-tech/framework-os-kernel:test-artifact-kind",
     "test-snapshot-sqlite-admission": "nx run @semio-tech/framework-os-kernel:test-snapshot-sqlite-admission",
     "test-borrowed-key-index-native": "bun nx run @semio-tech/framework-os-kernel:test-borrowed-key-index-native",
-    "test-intrinsic-retirement-native": "bun nx run @semio-tech/framework-os-kernel:test-intrinsic-retirement-native"
+    "test-intrinsic-retirement-native": "bun nx run @semio-tech/framework-os-kernel:test-intrinsic-retirement-native",
+    "test-directory-checkpoint-pair-source": "bun nx run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-source",
+    "test-directory-checkpoint-pair-native": "bun nx run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-native",
+    "test-directory-descriptor-digest-source": "bun nx run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-source",
+    "test-directory-descriptor-digest-native": "bun nx run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native"
   }
 }

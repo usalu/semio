@@ -38,7 +38,6 @@ pub use crate::schema::mutations::Process3dMutation;
 
 pub use crate::schema::diff::Process3dDiff;
 
-use crate::schema::diff::{keyed_between, keyed_apply, keyed_is_empty, Process3dStepsDelta, Process3dToolSolidsDelta};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -233,15 +232,6 @@ impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
         if let Some(capabilities) = &patch.capabilities {
             self.capabilities = capabilities.clone();
         }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<WorkshopMachinePatch> {
-        let patch = WorkshopMachinePatch {
-            label: (self.label != other.label).then(|| other.label.clone()),
-            icon_id: (self.icon_id != other.icon_id).then(|| other.icon_id.clone()),
-            capabilities: (self.capabilities != other.capabilities).then(|| other.capabilities.clone()),
-        };
-        (patch != WorkshopMachinePatch::default()).then_some(patch)
     }
 }
 
@@ -561,16 +551,6 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
         if let Some(origin) = &patch.origin {
             self.origin = origin.clone();
         }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<ProcessStepPatch> {
-        let patch = ProcessStepPatch {
-            label: (self.label != other.label).then(|| other.label.clone()),
-            enabled: (self.enabled != other.enabled).then_some(other.enabled),
-            measure: (self.measure != other.measure).then(|| other.measure.clone()),
-            origin: (self.origin != other.origin).then(|| other.origin.clone()),
-        };
-        (patch != ProcessStepPatch::default()).then_some(patch)
     }
 }
 
@@ -985,21 +965,6 @@ pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> Proc
     ProcessWorkingScene { stock, steps: snapshot.step_payloads.clone() }
 }
 
-/// 🔁 Shared re-mint for every step-scoped mutation (`create`/`delete`/`rename`/`change-step-
-/// enabled`/`change-step-origin`/`replace-step-measure`/`reorder-steps`): given `base` and the kind's own step-row delta, derives
-/// the minted `steps` handle and the `tool_solids` delta by delegating to
-/// `process_working_scene_to_snapshot` — the one place real composed-child content is minted —
-/// so no mutation duplicates that minting logic. `stock`/`workshop` are carried
-/// through from `base` untouched; callers only ever splice the returned diff's `steps`/
-/// `step_payloads`/`tool_solids` fields into their own `Process3dDiff`.
-pub fn process3d_step_timeline_diff(base: &Process3dSnapshot, steps: Process3dStepsDelta) -> Process3dDiff {
-    let after = keyed_apply(&base.step_payloads, &steps).unwrap_or_else(|_| base.step_payloads.clone());
-    let mut scene = process_working_scene_from_snapshot(base);
-    scene.steps = after;
-    let minted = process_working_scene_to_snapshot(&scene, base.workshop.clone());
-    let tool_solids = keyed_between::<Process3dToolSolidsDelta>(&base.tool_solids, &minted.tool_solids);
-    Process3dDiff { steps: (minted.steps != base.steps).then_some(minted.steps), step_payloads: Some(steps), tool_solids: (!keyed_is_empty(&tool_solids)).then_some(tool_solids), ..Default::default() }
-}
 //#endregion 🔖️SceneConverters
 //#endregion 🔖️WorkingScene
 

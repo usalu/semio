@@ -1,9 +1,9 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{GENERATION2D_OWNER_BYTES,GENERATION2D_RETAINED_STACK_CAPACITY,GENERATION2D_MAXIMUM_DOMAIN_ITEMS,generation2d_close_flow_frontier,generation2d_apply_initialization_mutation,generation2d_copy_string,generation2d_copy_widget,generation2d_copy_synapse,generation2d_copy_generation};
+
 #[cfg(test)]
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_retire_mutations_cold,generation2d_apply_retained_mutations_for_test};
+
 use crate::standards::v1::subsets::any::io::text::snapshot::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
     WidgetLayoutDsl,
@@ -11,6 +11,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
 use protocol::OpBinary;
 use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
+use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_apply_retained_mutations_for_test, generation2d_close_flow_frontier, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget, generation2d_retire_mutations_cold};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Generation2dPublicationLease {
@@ -243,7 +244,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
         match self.phase {
             Generation2dStoreInitializationPhase::BindGenesis => {
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 self.phase = Generation2dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
                 return semio_framework_job::StepOutcome::Yield;
@@ -284,7 +285,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
                 }
             }
             Generation2dStoreInitializationPhase::CopyInitial => {
-                let source = &self.envelope.as_ref().expect("P2 initializer envelope").vcs.genesis.snapshot();
+                let source = &self.envelope.as_ref().expect("P2 initializer envelope").vcs.genesis.facts().snapshot();
                 match self.copy.as_mut().expect("P2 copy retained").step(source) {
                     Ok(true) => self.phase = Generation2dStoreInitializationPhase::AdoptWorkspace,
                     Ok(false) => {}
@@ -381,7 +382,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
                 };
                 if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
                     self.resume_phase = Some(self.phase);
-                    match Generation2dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return semio_framework_job::StepOutcome::Yield; } }
+                    match Generation2dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return semio_framework_job::StepOutcome::Yield; } }
                     self.phase = Generation2dStoreInitializationPhase::CopyInitial;
                     cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
@@ -1900,6 +1901,7 @@ struct Generation2dRetainedMutationOwner {
     targets: Vec<String>,
     numbers: [f64; 2],
     index: usize,
+    index_present: bool,
     widget: Option<semio_framework_artifact_flow_flow::Widget>,
     synapse: Option<semio_framework_artifact_flow_flow::SynapseSpec>,
     layout: Option<semio_framework_artifact_flow_flow::WidgetLayout>,
@@ -1935,6 +1937,7 @@ impl Generation2dRetainedMutationOwner {
             targets: Vec::new(),
             numbers: [0.0; 2],
             index: 0,
+            index_present: false,
             widget: None,
             synapse: None,
             layout: None,
@@ -2044,6 +2047,10 @@ impl Generation2dRetainedMutationOwner {
             Generation2dMutationStringTarget::Root(field) => {
                 let slot = match (self.ordinal, field) {
                     (2 | 5 | 6 | 7 | 9 | 11 | 14, 0) => 0,
+                    (16, 0) => {
+                        self.index = 1;
+                        0
+                    }
                     (12 | 13, 0) => 0,
                     (12 | 13, 1) => 1,
                     _ => return Err("generation2d-mutation.root-string-field"),
@@ -2434,6 +2441,7 @@ impl Generation2dRetainedMutationOwner {
             },
             Token::Unsigned { role: Role::Unsigned, value } if self.json_destination.is_none() && self.dsl_destination.is_none() => {
                 self.index = usize::try_from(value).map_err(|_| "generation2d-mutation.index")?;
+                self.index_present = true;
                 if let Some(Generation2dMutationFrame::Root { field }) = self.stack.last_mut() {
                     *field = None;
                 }
@@ -2649,12 +2657,16 @@ impl Generation2dRetainedMutationOwner {
                     7 => clear_widget_layout(first),
                     8 => update_camera(self.camera.take().ok_or("generation2d-mutation.update-camera")?),
                     9 => change_schema(first),
-                    10 => create_generation(self.generation.take().ok_or("generation2d-mutation.create-generation")?),
+                    10 => {
+                        let generation = self.generation.take().ok_or("generation2d-mutation.create-generation")?;
+                        Generation2dMutation::CreateGeneration(create_generation::CreateGeneration { generation, index: self.index_present.then_some(self.index) })
+                    }
                     11 => delete_generation(first),
                     12 => rename_generation(first, second),
                     13 => change_generation_value(first, second, std::mem::replace(&mut self.json, semio_framework_value::DslValue::Null)),
                     14 => change_slider_value(first, self.numbers[0]),
                     15 => move_nodes(std::mem::take(&mut self.targets), self.numbers[0], self.numbers[1]),
+                    16 => select_generation((self.index == 1).then_some(first)),
                     _ => return Err("generation2d-mutation.variant"),
                 };
                 *self.value = Some(mutation);
@@ -2730,7 +2742,7 @@ enum Generation2dMutationSessionPhase {
     Closed,
 }
 
-const GENERATION2D_MUTATION_VARIANT_COUNT: usize = 16;
+const GENERATION2D_MUTATION_VARIANT_COUNT: usize = 17;
 
 #[derive(Default)]
 struct Generation2dMutationWidgetOwner {
@@ -2842,6 +2854,7 @@ pub const GENERATION2D_RETAINED_MUTATION_OWNERS: [&str; GENERATION2D_MUTATION_VA
     "change-generation-value",
     "change-slider-value",
     "move-nodes",
+    "select-generation",
 ];
 
 #[derive(Default)]
@@ -2914,6 +2927,7 @@ pub const GENERATION2D_RETAINED_OWNER_CATALOG: &[&str] = &[
     "mutations.change-generation-value",
     "mutations.change-slider-value",
     "mutations.move-nodes",
+    "mutations.select-generation",
     "history.edit.id",
     "history.edit.actor",
     "history.edit.forward",

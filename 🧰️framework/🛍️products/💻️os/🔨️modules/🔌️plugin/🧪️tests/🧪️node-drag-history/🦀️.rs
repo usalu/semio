@@ -36,7 +36,7 @@ where
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().unwrap_or_else(|error| panic!("{guest}: the applied operations read: {error:?}")).into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids.get(*index).cloned().unwrap_or_else(|| panic!("{guest}: edit #{index} names no logged leaf of {}", ids.len()));
-        let drafts = BTreeMap::from([(target.clone(), protocol::InputReplacement::Input { schema: schema.into(), payload: edited.encode_op().unwrap_or_else(|error| panic!("{guest}: edit #{index} encodes: {error:?}")) })]);
+        let drafts = protocol::HistoryInputDrafts::from([(target.clone(), protocol::InputReplacement::Input { schema: schema.into(), payload: edited.encode_op().unwrap_or_else(|error| panic!("{guest}: edit #{index} encodes: {error:?}")) })]);
         let preview = store.state_before(&target, &drafts).unwrap_or_else(|error| panic!("{guest}: the preview base of edit #{index} folds: {error:?}"));
         assert_eq!(preview.as_ref(), &fresh(&log[..*index]), "{guest}: the preview base of edit #{index} is the state right before the edited drag");
         drop(preview);

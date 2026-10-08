@@ -173,11 +173,11 @@ fn committed_vectors_are_this_implementations_answer() {
     assert!(missing.is_empty(), "kinds without a committed applied vector or wire witness: {missing:?}");
 }
 
-/// ✅️ The committed vector's concrete inverse sums to the negative of its diff (L3), through the framework law.
-async fn assert_inverse_sum_law(leaf: &str, scenario: &str) {
+/// ✅️ The committed vector's mutation and before-snapshot — the inputs of each leaf's inverse-sum law (L3) test.
+fn committed_inputs(leaf: &str, scenario: &str) -> (Din4108Mutation, Din4108Snapshot) {
     let bundle = root().join(leaf).join(scenario);
     let mutation = decode_din4108_mutation_json(&read(&bundle.join("🦠️mutation/🔣️.json"))).unwrap_or_else(|error| panic!("{}: {error}", bundle.display()));
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &snapshot(&bundle.join("📸️snapshot/⬅️before/🔣️.json"))).await;
+    (mutation, snapshot(&bundle.join("📸️snapshot/⬅️before/🔣️.json")))
 }
 
 //#region 🧫️CanonicalVectorTests
@@ -300,3 +300,18 @@ mod change_airtightness_n50_noop;
 #[path = "../../🗂️change-usage/🧪️tests/🟰noop/🦀️.rs"]
 mod change_usage_noop;
 //#endregion 🧫️CanonicalVectorTests
+
+//#region 🔬️MiddleRowVectors
+#[path = "../../➖️remove-layer/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_layer;
+#[path = "../../➖️remove-zone/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_zone;
+#[path = "../../🔀️reorder-layers/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_reorder_layers;
+#[path = "../../🚫️remove-element/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_element;
+#[path = "../../🚫️remove-zone-window/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_zone_window;
+#[path = "../../🧊remove-thermal-bridge/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_thermal_bridge;
+//#endregion 🔬️MiddleRowVectors

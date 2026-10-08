@@ -5,12 +5,719 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "opc": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/snapshot.json#/$defs/OpcPackage", "x-semio-state": "artifact" },
-    "xmlParts": {
-      "type": "array",
-      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/snapshot.json#/$defs/PptxXmlPart" },
+    "schema": {
+      "type": "string",
       "x-semio-state": "artifact"
+    },
+    "opc": {
+      "$ref": "#/$defs/PptxOpcDiff",
+      "x-semio-state": "artifact"
+    },
+    "xmlParts": {
+      "$ref": "#/$defs/PptxXmlPartsDiff",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "OpcPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/OpcContentTypes"
+        },
+        "relationships": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/OpcRelationship"
+            }
+          }
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "OpcPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "OpcContentTypes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "OpcRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "relType",
+        "target",
+        "targetMode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "$ref": "#/$defs/OpcTargetMode"
+        }
+      }
+    },
+    "OpcTargetMode": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "external"
+      ]
+    },
+    "PptxOpcCtEntriesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "contentType"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "$ref": "#/$defs/PptxOpcCtEntryPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PptxOpcPartDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "PptxOpcPartsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/OpcPart"
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "$ref": "#/$defs/PptxOpcPartDiff"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PptxOpcRelDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "$ref": "#/$defs/OpcTargetMode"
+        }
+      }
+    },
+    "PptxOpcRelListDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/OpcRelationship"
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "$ref": "#/$defs/PptxOpcRelDiff"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PptxOpcRelationshipsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "owner",
+                  "relationships"
+                ],
+                "properties": {
+                  "owner": {
+                    "type": "string"
+                  },
+                  "relationships": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/OpcRelationship"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "$ref": "#/$defs/PptxOpcOwnerPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PptxOpcContentTypesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "$ref": "#/$defs/PptxOpcCtEntriesDiff"
+        },
+        "overrides": {
+          "$ref": "#/$defs/PptxOpcCtEntriesDiff"
+        }
+      }
+    },
+    "PptxOpcDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/PptxOpcContentTypesDiff"
+        },
+        "parts": {
+          "$ref": "#/$defs/PptxOpcPartsDiff"
+        },
+        "relationships": {
+          "$ref": "#/$defs/PptxOpcRelationshipsDiff"
+        }
+      }
+    },
+    "PptxXmlPart": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/snapshot.json#/$defs/PptxXmlPart"
+    },
+    "PptxXmlPartDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "document": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/diff.json"
+        }
+      }
+    },
+    "PptxXmlPartsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/PptxXmlPart"
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "patch": {
+                "$ref": "#/$defs/PptxXmlPartDiff"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PptxOpcCtEntryPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    "PptxOpcOwnerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relationships": {
+          "$ref": "#/$defs/PptxOpcRelListDiff"
+        }
+      }
     }
   }
 }

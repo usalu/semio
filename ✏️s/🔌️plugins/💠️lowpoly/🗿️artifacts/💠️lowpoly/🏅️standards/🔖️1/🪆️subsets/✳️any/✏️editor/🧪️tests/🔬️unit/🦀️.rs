@@ -243,7 +243,7 @@ fn retained_route_partition_and_publication_are_exact() {
 #[semio_framework_async_macros::async_test]
 async fn retained_progress_replay_freshness_and_close_are_exact() {
     let command = LowpolyCommand::ToggleShowEdges(toggle_show_edges::ToggleShowEdges {});
-    let snapshot = crate::schema::default_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let config = LowpolyConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -361,7 +361,7 @@ const INTERACTIVE_TURN_ATTEMPTS: usize = 16;
 #[semio_framework_async_macros::async_test]
 async fn retained_migrated_turns_stay_below_eight_milliseconds() {
     let unit_box = semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("box json");
-    let snapshot = crate::snapshot_from_mesh_json(&unit_box, "obj-1", "Unit Box");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json(&unit_box, "obj-1", "Unit Box");
     let config = LowpolyConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -610,7 +610,7 @@ async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
     let mesh_document = crate::schema::mesh_document_value(&mesh);
     let json = semio_framework_pack_json::to_json_string(&mesh_document);
     let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
-    let projection = crate::schema::default_snapshot();
+    let projection = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");

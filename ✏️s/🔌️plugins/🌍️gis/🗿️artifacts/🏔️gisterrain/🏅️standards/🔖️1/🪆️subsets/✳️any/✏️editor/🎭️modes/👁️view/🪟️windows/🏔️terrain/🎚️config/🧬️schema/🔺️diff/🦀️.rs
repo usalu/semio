@@ -64,9 +64,6 @@ impl protocol::DiffAlgebra<GisTerrainWindowConfig> for GisTerrainWindowConfigDif
     fn inverse(&self, base: &GisTerrainWindowConfig) -> Self {
         Self::from(GisTerrainWindowConfigDelta { camera_json: self.folded().camera_json.map(|_| base.camera_json.clone()) })
     }
-    fn between(base: &GisTerrainWindowConfig, other: &GisTerrainWindowConfig) -> Self {
-        Self::from(GisTerrainWindowConfigDelta { camera_json: (base.camera_json != other.camera_json).then(|| other.camera_json.clone()) })
-    }
     fn is_empty(&self) -> bool {
         self.steps.iter().all(|step| *step == GisTerrainWindowConfigDelta::default())
     }

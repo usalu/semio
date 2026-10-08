@@ -1,6 +1,7 @@
 //! ⚡️ Puzzle5d artifact — OpText/OpBinary codecs + grammar for `Puzzle5dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation,inverse_puzzle5d_mutation,puzzle5d_document_delta_operations,Puzzle5dMutation,Puzzle5dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mutation,Puzzle5dMutation};
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 
 
 //#region 📖️SemioGrammar

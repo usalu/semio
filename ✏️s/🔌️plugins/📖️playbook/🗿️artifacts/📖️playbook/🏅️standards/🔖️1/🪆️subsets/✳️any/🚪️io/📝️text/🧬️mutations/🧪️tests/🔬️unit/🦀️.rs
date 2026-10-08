@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::mutations::*;
 use crate::empty_playbook_snapshot;
+use crate::central_apply::{apply_playbook_mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn change_title_op_sets_title() {

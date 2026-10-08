@@ -901,17 +901,35 @@ impl FlexTree {
 
     /// 🧹️ Releases exactly ONE node, newest first — the same one-owner-per-grant close discipline
     /// every other bounded list in `mounted_layout` follows. Returns `true` once already empty.
-    pub(crate) fn release_one(&mut self) -> bool {
-        let Some(_) = self.flows.pop() else {
-            self.main = Vec::new();
-            self.cross = Vec::new();
-            return true;
-        };
-        self.grids.pop();
-        self.intrinsic.pop();
-        self.resolved.pop();
-        false
+    pub(crate) fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
+        if let Some(Some(grid))=self.grids.last(){
+            if !grid.columns.is_empty(){return Ok(0)}
+            if !grid.columns.terminal_is_empty(){return grid.columns.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}
+            if !grid.rows.is_empty(){return Ok(0)}
+            if !grid.rows.terminal_is_empty(){return grid.rows.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}
+            return Ok(std::mem::size_of::<ui_contract::GridLayout>())
+        }
+        if !self.flows.is_empty(){return Ok(0)}
+        fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(std::mem::size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"flex backing extent overflow"))}
+        if self.flows.capacity()!=0{return bytes(&self.flows)}if self.grids.capacity()!=0{return bytes(&self.grids)}if self.intrinsic.capacity()!=0{return bytes(&self.intrinsic)}if self.resolved.capacity()!=0{return bytes(&self.resolved)}if self.main.capacity()!=0{return bytes(&self.main)}bytes(&self.cross)
     }
+    pub(crate) fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+        let empty=RetainedCloneProgress::default();if self.close_is_empty(){return Step::Complete{progress:empty}}
+        if grant.maximum_items==0{return Step::Pending{progress:empty}}
+        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused(error.kind)};
+        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        if let Some(Some(grid))=self.grids.last_mut(){
+            let result=if grid.columns.pop().is_some(){None}else if !grid.columns.terminal_is_empty(){Some(grid.columns.release_empty_page(grant.maximum_release_bytes))}else if grid.rows.pop().is_some(){None}else if !grid.rows.terminal_is_empty(){Some(grid.rows.release_empty_page(grant.maximum_release_bytes))}else{*self.grids.last_mut().unwrap()=None;return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}};
+            return match result{Some(Ok(receipt))=>Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}},Some(Err(error))=>Step::Refused(semio_framework_value::ValueError::from(error).kind),None=>Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+        }
+        if self.flows.pop().is_some(){self.grids.pop();self.intrinsic.pop();self.resolved.pop();return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+        macro_rules! release{($field:ident)=>{if self.$field.capacity()!=0{drop(std::mem::take(&mut self.$field));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}}}
+        release!(flows);release!(grids);release!(intrinsic);release!(resolved);release!(main);release!(cross);Step::Complete{progress:empty}
+    }
+    pub(crate) fn close_is_empty(&self)->bool{self.flows.capacity()==0&&self.grids.capacity()==0&&self.intrinsic.capacity()==0&&self.resolved.capacity()==0&&self.main.capacity()==0&&self.cross.capacity()==0}
+
+
 }
 
 impl FlowStyle {

@@ -191,7 +191,7 @@ impl<'a> DrawingRecordFootprintSource<'a> {
     fn field(self, index: usize) -> Option<&'a PagedUtf8<{usize::MAX}>> {
         match self {
             Self::Snapshot(value) => match index { 0 => Some(&value.schema), 1 => Some(&value.id), 2 => value.title.as_ref(), _ => None },
-            Self::Asset(key, value) => match index { 0 => Some(key), 1 => Some(&value.mime), 2 => Some(&value.data), _ => None },
+            Self::Asset(key, _) => if index==0 {Some(key)} else {None},
         }
     }
 }
@@ -226,6 +226,7 @@ impl DrawingRecordFootprintCursor {
                     self.add(value.layers.capacity().checked_add(1).ok_or("drawing-store.record-footprint-item-overflow")?, value.layers.allocated_bytes())?;
                     self.add(value.assets.retained_entries().capacity().checked_add(1).ok_or("drawing-store.record-footprint-item-overflow")?, value.assets.retained_entries().allocated_bytes())?;
                 }
+                if let DrawingRecordFootprintSource::Asset(_,value)=source{self.add(value.samples.capacity().checked_add(1).ok_or("drawing-store.record-footprint-item-overflow")?,value.samples.allocated_bytes())?;}
                 self.phase = 1;
             }
             1 => {

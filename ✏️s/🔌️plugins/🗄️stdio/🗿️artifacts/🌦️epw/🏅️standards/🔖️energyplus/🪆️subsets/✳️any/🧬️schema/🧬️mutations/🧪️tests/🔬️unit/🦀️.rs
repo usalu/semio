@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -93,9 +94,9 @@ async fn mutation_diff_law() {
         let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
-        let returned_diff = apply_epw_mutation(&mut via_apply, &m);
+        let returned_diff = apply_mutation(&mut via_apply, &m);
 
-        assert_eq!(via_apply, expected, "apply_epw_mutation mismatch for {m:?}");
+        assert_eq!(via_apply, expected, "apply_mutation mismatch for {m:?}");
         assert_eq!(returned_diff, diff, "returned diff mismatch for {m:?}");
     }
 }
@@ -114,9 +115,9 @@ async fn inverse_law() {
     ];
     for m in variants {
         let mut forward = base.clone();
-        apply_epw_mutation(&mut forward, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_epw_mutation(&mut forward, &inv);
+        apply_mutation(&mut forward, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
@@ -187,71 +188,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
     assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
-}
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = base_snapshot();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&EpwDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&EpwDiff::between(&b, &a), &b).unwrap(), a);
-    assert!(EpwDiff::between(&a, &a).is_empty());
-}
-//#endregion 🔖️BetweenRoundtripLaw
-
-//#region 🔖️FieldSweep
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_every_mutable_field_changes() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let d_ab = EpwDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d_ab, &a).unwrap(), b, "between(a,b).apply(a) == b");
-
-    let d_ba = EpwDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_ba, &b).unwrap(), a, "between(b,a).apply(b) == a");
-
-    assert!(d_ab.location.is_some(), "location must be populated");
-    assert!(d_ab.design_conditions.is_some());
-    assert!(d_ab.typical_extreme_periods.is_some());
-    assert!(d_ab.ground_temperatures.is_some());
-    assert!(d_ab.holidays_dst.is_some());
-    assert!(d_ab.comments_1.is_some());
-    assert!(d_ab.comments_2.is_some());
-    assert!(d_ab.data_periods.is_some());
-    // 🧭️ `EpwDiff::between` is positional (this file's own doc comment: "EPW rows have no
-    // stable identity beyond position") — `min_len` covers only the index range both arrays
-    // share, so a single `between()` call can populate `removed` XOR `added` (whichever side
-    // is longer), never both at once. `sweep_a`/`sweep_b` are equal-length, so every index is
-    // a same-position comparison: `modified` is the one populated triple here; `removed`/
-    // `added` are exercised on their own just below via genuinely shorter/longer snapshots.
-    let records = d_ab.records.as_ref().expect("records diff must be populated");
-    assert!(records.removed.is_empty(), "equal-length record lists: no positional removal");
-    assert!(!records.modified.is_empty(), "modified must be non-empty (every record differs positionally)");
-    assert!(records.added.is_empty(), "equal-length record lists: no positional addition");
-    assert_eq!(records.modified.len(), 3, "all three positions differ between sweep_a and sweep_b");
-    let modified = &records.modified[0];
-    for i in 0..crate::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
-        assert!(modified.diff.get_at(i).unwrap().is_some(), "column {i} of the modified record must be patched");
-    }
-
-    let mut shorter = a.clone();
-    shorter.records.pop();
-    let d_shrink = EpwDiff::between(&a, &shorter);
-    let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
-    assert!(!shrink_records.removed.is_empty(), "a shorter record list must produce a removed entry");
-    assert_eq!(protocol::apply_diff(&d_shrink, &a).unwrap(), shorter);
-
-    let mut longer = a.clone();
-    longer.records.push(record("4", "-5.0"));
-    let d_grow = EpwDiff::between(&a, &longer);
-    let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
-    assert!(!grow_records.added.is_empty(), "a longer record list must produce an added entry");
-    assert_eq!(protocol::apply_diff(&d_grow, &a).unwrap(), longer);
-
-    assert!(EpwDiff::between(&a, &a).is_empty());
 }
 //#endregion 🔖️FieldSweep
 

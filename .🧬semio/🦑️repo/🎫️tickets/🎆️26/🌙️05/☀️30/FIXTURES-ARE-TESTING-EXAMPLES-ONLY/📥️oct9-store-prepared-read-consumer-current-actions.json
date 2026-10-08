@@ -1,0 +1,61 @@
+{
+  "status": "partial-consumer-current-source",
+  "logicalActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "37b5eda20311413b7dc869b201117c3c5e3b4f8df5fc6fb297a37f5d084669a0",
+      "before": "fn group_snapshot(step: store::SnapshotRetirementStep) -> RetainedCloneStep { match step { store::SnapshotRetirementStep::Complete => group_structural(), store::SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() }), store::SnapshotRetirementStep::Blocked => RetainedCloneStep::Progress(Default::default()) } }\n",
+      "after": "",
+      "occurrences": 1,
+      "afterSha256": "53c5bc05452ca8b4446210f6b1b550bacaab0aa9ddd22c95ca7d65ef3b9c2d3b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "53c5bc05452ca8b4446210f6b1b550bacaab0aa9ddd22c95ca7d65ef3b9c2d3b",
+      "before": "Ok(step) => { self.projection_ready = true; return Ok(group_snapshot(step)); }",
+      "after": "Ok(step) => { self.projection_ready = true; return Ok(step); }",
+      "occurrences": 1,
+      "afterSha256": "3f16fdc59124e2ce50c79009cb4008c0a290cf4e1e85e676abe1d5c99a9ce3ec"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "3f16fdc59124e2ce50c79009cb4008c0a290cf4e1e85e676abe1d5c99a9ce3ec",
+      "before": "Ok(step) => return Ok(group_snapshot(step)),",
+      "after": "Ok(step) => return Ok(step),",
+      "occurrences": 1,
+      "afterSha256": "7308b2cfb7c1334b0552ca4b7d25d13b9120462c5126dd5b3d9f0a04af56158f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "7308b2cfb7c1334b0552ca4b7d25d13b9120462c5126dd5b3d9f0a04af56158f",
+      "before": "Err(rejected) => { *self.parent_read = Some(rejected.snapshot); return Err(plugin_sdk_fault(rejected.reason)); }",
+      "after": "Err((error, original)) => { *self.parent_read = Some(original); return Err(plugin_sdk_fault(error.to_string())); }",
+      "occurrences": 2,
+      "afterSha256": "5d48e7ea71729d3d7fe37bd6abc0bba9bf18ab5266ec5466c121fe09b737715e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeSha256": "a6bd8a411c8665ab8984460f7a7c7d723b66b8458f7574d905ca65d3c041ea52",
+      "before": "Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes }) if released_bytes == store::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES => {",
+      "after": "Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) if progress.copied_items == 1 && progress.copied_bytes == 0 && progress.retained_capacity_bytes == 0 && progress.released_bytes == store::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES => {",
+      "occurrences": 1,
+      "afterSha256": "7a122fed4b3a2a7124199e31c4b51ce51aab10f6a5eb7c62c80f8ad1225dc2c3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeSha256": "7a122fed4b3a2a7124199e31c4b51ce51aab10f6a5eb7c62c80f8ad1225dc2c3",
+      "before": "                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });\n                    }\n                    Ok(_) => {\n                        *self.metadata = Some([owner, slot, child_id, artifact_id, dialect.artifact_kind, dialect.standard, dialect.subset]);",
+      "after": "                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: progress.released_bytes });\n                    }\n                    Ok(_) => {\n                        *self.metadata = Some([owner, slot, child_id, artifact_id, dialect.artifact_kind, dialect.standard, dialect.subset]);",
+      "occurrences": 1,
+      "afterSha256": "5ebecea36ea5b303ed27cc75fb6fd2436111e5d373d1cae8809c9b690a891451"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeSha256": "5ebecea36ea5b303ed27cc75fb6fd2436111e5d373d1cae8809c9b690a891451",
+      "before": "                    Err(rejected) => {\n                        *self.entry = Some(ChildContentEntry { owner, slot, child_id, artifact_id, dialect, revision, snapshot: rejected.snapshot });\n                        return Err(plugin_sdk_fault(rejected.reason));\n                    }",
+      "after": "                    Err((error, original)) => {\n                        *self.entry = Some(ChildContentEntry { owner, slot, child_id, artifact_id, dialect, revision, snapshot: original });\n                        return Err(plugin_sdk_fault(error.to_string()));\n                    }",
+      "occurrences": 1,
+      "afterSha256": "b7553560c7dd65f99a217d527dff4d7fb02e7460e6ea5f1f40a0b481dac2555a"
+    }
+  ]
+}

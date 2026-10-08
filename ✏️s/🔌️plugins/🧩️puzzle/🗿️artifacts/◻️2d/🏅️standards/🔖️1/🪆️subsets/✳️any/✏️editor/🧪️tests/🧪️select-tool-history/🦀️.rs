@@ -9,12 +9,13 @@
 //! through the app and through a standalone store (`state_before`, `begin_report_replay`).
 
 use super::select_tool_transaction_tests::{dispatched_rows, english, flush, german, move_to, painted_host_of, press, release};
+use crate::apply_puzzle2d_mutation;
 use super::*;
 use crate::editor::puzzle2d::engine::board_host::unit_tests::context::close_board_host;
 use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
 
 use crate::Puzzle2dSnapshot;
 use protocol::{OpBinary, OpText};
@@ -26,15 +27,15 @@ const SELECT_TOOL_HISTORY_CORPUS: &str = include_str!("../../🧫️fixtures/�
 
 /// 🧫️ The corpus, its schema tag checked.
 pub(super) fn corpus() -> Value {
-    let corpus: Value = serde_json::from_str(SELECT_TOOL_HISTORY_CORPUS).expect("the select-tool history corpus parses");
+    let corpus: Value = semio_framework_pack_json::from_json_str(SELECT_TOOL_HISTORY_CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the select-tool history corpus parses");
     assert_eq!(corpus["schema"], "s.puzzle2d.select-tool-history.v1");
     corpus
 }
 
-/// 🧱️ A registered app holding `board` as its one seed edit.
+/// 🧱️ A registered app holding `board`, seeded as the concrete kinds that build it.
 pub(super) fn seeded_app(board: &Value) -> Puzzle2dApp {
     let mut app = app_with_registry();
-    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": board })), None).expect("seed the board");
+    seed_board(&mut app, board);
     app
 }
 
@@ -56,7 +57,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::DslValue::from(&args)), &meta)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -86,13 +87,13 @@ fn edits(app: &mut Puzzle2dApp) -> Vec<HistoryEntry> {
 
 /// 🖼️ The overview board scene as the window paints it.
 fn board_scene(app: &mut Puzzle2dApp) -> Value {
-    let body: Value = serde_json::from_str(&render_body(app, overview::BODY_KEY)).expect("board body");
+    let body: Value = semio_framework_pack_json::from_json_str(&render_body(app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("board body");
     body["board2d"].clone()
 }
 
 /// 🎨️ The document the overview paints — the time-travel preview while a session is open.
 fn painted(app: &mut Puzzle2dApp) -> Value {
-    serde_json::from_str(board_scene(app)["snapshotJson"].as_str().expect("painted snapshot lane")).expect("painted snapshot parses")
+    semio_framework_pack_json::from_json_str(board_scene(app)["snapshotJson"].as_str().expect("painted snapshot lane"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("painted snapshot parses")
 }
 
 fn node_position(snapshot: &Value, id: &str) -> Option<(f64, f64)> {
@@ -147,12 +148,12 @@ fn same(actual: &Value, expected: &Value) -> bool {
 fn row_leaf(row: &HistoryEntry) -> Value {
     let line = row.op_lines.first().expect("the row prints its op");
     let mutation = <Puzzle2dMutation as OpText>::parse_op(line).unwrap_or_else(|error| panic!("row op {line} parses: {error:?}"));
-    serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&mutation))).expect("leaf payload")
+    semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&mutation)), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("leaf payload")
 }
 
 /// 🧾️ The row's first mutation as the history wire carries it.
 fn row_mutation(row: &HistoryEntry) -> Value {
-    serde_json::to_value(row.mutations.first().expect("the row's mutation")).expect("mutation row serializes")
+    semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(row.mutations.first().expect("the row's mutation"))))
 }
 //#endregion 🧰️Harness
 
@@ -160,7 +161,7 @@ fn row_mutation(row: &HistoryEntry) -> Value {
 /// 🖱️ Selects `ids` as nodes of the board's interaction domain (`interactionSelect`), as a pick or a marquee does.
 fn select(app: &mut Puzzle2dApp, ids: Vec<String>) {
     let targets: Vec<InteractionTarget> = ids.into_iter().map(|id| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id }).collect();
-    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&targets).expect("targets"), "merge": "replace", "method": "pick" })), None).expect("select");
+    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": semio_framework_pack_json::to_json_string(&targets), "merge": "replace", "method": "pick" })), None).expect("select");
 }
 
 /// ▶️ Runs one corpus step on the app; a drag grabs a selection the app holds, painted into the engine as hosts paint it.
@@ -221,7 +222,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         "input" => history_edit(app, "historyEditInput", json!({ "path": spec["path"], "value": spec["value"] })),
         "useSelection" => {
             let pointer = spec.as_str().expect("the reference input's path");
-            let history: Value = serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view())).expect("history body");
+            let history: Value = semio_framework_pack_json::from_json_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("history body");
             let key = format!("framework.history.editor.input{}.row", pointer.replace('/', "."));
             let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
             let (button, binding) = find_binding(control, "historyEditUseSelection").unwrap_or_else(|| panic!("{what}: {key} offers Use selection: {control}"));
@@ -260,7 +261,7 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
             assert_eq!((english(entry), german(entry)), (label["en"].as_str().expect("en").to_string(), label["de"].as_str().expect("de").to_string()), "{what}: the row is labelled from its leaf");
         }
     }
-    let status = session(app).map(|status| serde_json::to_value(status).expect("status serializes"));
+    let status = session(app).map(|status| semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(status))));
     if let Some(stage) = expect.get("stage") {
         assert_eq!(status.as_ref().map_or(&Value::Null, |status| &status["stage"]), stage, "{what}: stage of {status:?}");
     }
@@ -283,7 +284,7 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
     }
     if let Some(inputs) = expect["inputs"].as_array() {
         let panel = app.time_travel_ledger().panel().and_then(|panel| panel.editor).unwrap_or_else(|| panic!("{what}: the draft editor"));
-        let history: Value = serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view())).expect("history body");
+        let history: Value = semio_framework_pack_json::from_json_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("history body");
         for input in inputs {
             let path = input["path"].as_str().expect("input path");
             let row = panel.rows.iter().find(|row| row.pointer == path).unwrap_or_else(|| panic!("{what}: the editor shows {path} among {:?}", panel.rows.iter().map(|row| &row.pointer).collect::<Vec<_>>()));
@@ -333,11 +334,11 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
     }
     if let Some(highlighted) = expect.get("highlighted") {
         let scene = board_scene(app);
-        let painted: Value = serde_json::from_str(scene["highlightedIdsJson"].as_str().unwrap_or("[]")).expect("highlighted ids parse");
+        let painted: Value = semio_framework_pack_json::from_json_str(scene["highlightedIdsJson"].as_str().unwrap_or("[]"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("highlighted ids parse");
         assert!(same(&painted, highlighted), "{what}: the board highlights {painted}, the draft references {highlighted}");
     }
     if let Some(chips) = expect["chips"].as_object() {
-        let history: Value = serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view())).expect("history body");
+        let history: Value = semio_framework_pack_json::from_json_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("history body");
         for (pointer, labels) in chips {
             let key = format!("framework.history.editor.input{}.row", pointer.replace('/', "."));
             let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
@@ -348,7 +349,7 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
         }
     }
     if let Some(draft) = expect["draft"].as_object() {
-        let value = Value::from(&app.time_travel_ledger().editor().expect("the draft editor").value);
+        let value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(&app.time_travel_ledger().editor().expect("the draft editor").value)));
         for (pointer, wanted) in draft {
             assert!(value.pointer(pointer).is_some_and(|held| same(held, wanted)), "{what}: the draft holds {wanted} at {pointer}: {value}");
         }

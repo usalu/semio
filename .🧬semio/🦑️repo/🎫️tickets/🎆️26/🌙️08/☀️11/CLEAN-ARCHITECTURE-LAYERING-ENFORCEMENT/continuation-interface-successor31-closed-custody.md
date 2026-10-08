@@ -1,0 +1,9 @@
+# Interface Successor31 Closed Custody
+
+Registration271/current146 actual outerNx/Bun0 closed; independently exact journal producer/input/schema and both endpoints all9 GUI74. Receiving-red72637 outer0/inner1; receiving-test60604 outer0/inner0; metadata-red94583 outer0; metadata-test80107 outer0; stage65005 outer0 (177 rows/41 original laws). Strict inspection40351 actual outer1.
+
+Strict retained703 full frames/zero missing/all physical-snapshot postguards exact. Four TS2339 diagnostics are two missing exports repeated in snapshot/physical transitive contexts. Existing complete Backbone envelope IO test body is unchanged from30 (df309f98bac22a30ec525fc73e3513b38c06c1d2e7bb13dd847c00bdbdad40aa); Directory schema physically advanced34ec6c...→00789b... removing two functions whose actual defining bodies exist in Directory text IO. Current client-probe already uses that owner. No actor inferred. Diagnosis31 and whole31 not executed; all31 evidence immutable.
+
+Three full unrelated physical successors qualified: Hub Rust script; Root General lease test advanced; duplicate lease test schema absent. Full prior/current observations retained; earlier Root proof intervals remain historical. No source restoration or schema waiver.
+
+The one existing actual full Backbone test import is now hand-rebound to real text IO, preserving every command/fixture/case/assertion. Complete before/after/defining bodies and original diagnostics retained in cargo-inputs/📥️directory-io-receiving-32/📸️source-custody.json. This lane authored one actual test source write, no production runtime/schema writes, no acceptance/publication. Fresh32 will capture that receiver and preserve all original177/8/9/41/full controls/Root47 authority; full31 inputs remain retained. No owned live handles. Root overall goal active.

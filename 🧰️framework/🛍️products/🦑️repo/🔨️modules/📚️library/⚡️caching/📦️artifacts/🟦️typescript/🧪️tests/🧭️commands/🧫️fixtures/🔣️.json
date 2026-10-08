@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"explicit-argv","commands":["verify"],"selected":"verify","args":["Ω","","space ' data"],"status":0,"error":null},
+    {"id":"second-owner","commands":["verify","inspect"],"selected":"inspect","args":["literal"],"status":0,"error":null},
+    {"id":"reserved-owner","commands":["test"],"selected":"test","args":[],"status":1,"error":"already registered"},
+    {"id":"empty-owner","commands":[""],"selected":"verify","args":[],"status":1,"error":"nonempty and trimmed"},
+    {"id":"untrimmed-owner","commands":[" verify "],"selected":"verify","args":[],"status":1,"error":"nonempty and trimmed"},
+    {"id":"absent-owner","commands":["verify"],"selected":"absent","args":[],"status":1,"error":"unknown command"}
+  ]
+}

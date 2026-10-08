@@ -35,10 +35,6 @@ impl DiffAlgebra<NoteCompositeWindowConfig> for NoteCompositeWindowConfigDiff {
         Self { camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 
-    fn between(base: &NoteCompositeWindowConfig, other: &NoteCompositeWindowConfig) -> Self {
-        Self { camera: (base.camera != other.camera).then(|| other.camera.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }
@@ -77,10 +73,6 @@ impl MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindowTransient
 impl DiffAlgebra<NoteCompositeWindowTransient> for NoteCompositeWindowTransientDiff {
     fn inverse(&self, base: &NoteCompositeWindowTransient) -> Self {
         Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), ink_tool: self.ink_tool.as_ref().map(|_| NoteAssigned::new(base.ink_tool.clone())) }
-    }
-
-    fn between(base: &NoteCompositeWindowTransient, other: &NoteCompositeWindowTransient) -> Self {
-        Self { engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), ink_tool: (base.ink_tool != other.ink_tool).then(|| NoteAssigned::new(other.ink_tool.clone())) }
     }
 
     fn is_empty(&self) -> bool {

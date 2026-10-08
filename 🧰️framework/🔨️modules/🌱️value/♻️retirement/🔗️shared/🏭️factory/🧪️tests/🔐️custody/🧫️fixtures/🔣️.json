@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "name": "Multibyte Final Alias",
+      "text": "ä🐚\u0000",
+      "repeat": 16000,
+      "capacity": 120000,
+      "weak": false,
+      "refuseOnce": false
+    },
+    {
+      "name": "Empty Retained Capacity",
+      "text": "",
+      "repeat": 1,
+      "capacity": 337,
+      "weak": false,
+      "refuseOnce": true
+    },
+    {
+      "name": "Weak Alias",
+      "text": "original",
+      "repeat": 7,
+      "capacity": 199,
+      "weak": true,
+      "refuseOnce": false
+    }
+  ],
+  "copyGrants": [
+    0,
+    1,
+    23,
+    4096
+  ],
+  "releaseGrants": [
+    0,
+    1,
+    23,
+    4096
+  ],
+  "admissionRoutes": [
+    "owned",
+    "shared"
+  ]
+}

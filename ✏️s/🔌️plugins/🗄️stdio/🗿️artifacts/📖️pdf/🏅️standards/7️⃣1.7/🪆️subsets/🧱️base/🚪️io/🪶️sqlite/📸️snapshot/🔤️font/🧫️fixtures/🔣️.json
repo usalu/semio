@@ -1,17 +1,141 @@
 {
   "feature": "PDF font descriptors programs encodings Unicode CMaps and CID metrics",
-  "binary64": ["0000000000000000", "8000000000000000", "0000000000000001", "7ff0000000000000", "fff0000000000000", "7ff0000000000042", "fff8000000000055"],
+  "binary64": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000042",
+    "fff8000000000055"
+  ],
   "fontName": "Neutral Ω Font",
   "programs": [
-    {"kind": "type1", "data": [0, 255, 128], "length1": 4294967295, "length2": 0, "length3": 3},
-    {"kind": "trueType", "data": [0, 1]}, {"kind": "cff", "data": [255, 0]},
-    {"kind": "cidCff", "data": [128, 127]}, {"kind": "openType", "data": [0, 255]}
+    {
+      "kind": "type1",
+      "reference": {
+        "artifactId": "fixture:type1:f742b965f156c10374bc23aea96e3a8aff8facd6fc079defeaa30219ad86f211",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    },
+    {
+      "kind": "trueType",
+      "reference": {
+        "artifactId": "fixture:trueType:b413f47d13ee2fe6c845b2ee141af81de858df4ec549a58b7970bb96645bc8d2",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    },
+    {
+      "kind": "cff",
+      "reference": {
+        "artifactId": "fixture:cff:ea5dbf9596d187e9500f23e9a680109475341cf4e81f7e043f7d97152c10772f",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    },
+    {
+      "kind": "cidCff",
+      "reference": {
+        "artifactId": "fixture:cidCff:e65aceb89baab6ddba7f8ff28bdaf5da68026060445be6ac268c138d9a959b3f",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    },
+    {
+      "kind": "openType",
+      "reference": {
+        "artifactId": "fixture:openType:06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    }
   ],
-  "encodings": ["standard", "winAnsi", "macRoman", "macExpert", null],
-  "differences": [{"code": 255, "glyph": "Ω"}, {"code": 0, "glyph": "duplicate"}, {"code": 0, "glyph": "duplicate"}],
-  "unicode": {"byteWidth": 4, "mappings": [{"kind": "char", "code": 4294967295, "text": "Ω"}, {"kind": "range", "low": 0, "high": 4294967295, "text": "A 🧬"}]},
+  "encodings": [
+    "standard",
+    "winAnsi",
+    "macRoman",
+    "macExpert",
+    null
+  ],
+  "differences": [
+    {
+      "code": 255,
+      "glyph": "Ω"
+    },
+    {
+      "code": 0,
+      "glyph": "duplicate"
+    },
+    {
+      "code": 0,
+      "glyph": "duplicate"
+    }
+  ],
+  "unicode": {
+    "byteWidth": 4,
+    "mappings": [
+      {
+        "kind": "char",
+        "code": 4294967295,
+        "text": "Ω"
+      },
+      {
+        "kind": "range",
+        "low": 0,
+        "high": 4294967295,
+        "text": "A 🧬"
+      }
+    ]
+  },
   "cmaps": [
-    {"kind": "predefined", "name": "Identity-H"},
-    {"kind": "embedded", "cmap": {"name": "Authored Ω", "vertical": true, "codespace": [{"byteWidth": 4, "low": 0, "high": 4294967295}], "mappings": [{"kind": "char", "code": 4294967295, "cid": 65535}, {"kind": "range", "low": 0, "high": 255, "cid": 1}], "useCmap": null}}
+    {
+      "kind": "predefined",
+      "name": "Identity-H"
+    },
+    {
+      "kind": "embedded",
+      "cmap": {
+        "name": "Authored Ω",
+        "vertical": true,
+        "codespace": [
+          {
+            "byteWidth": 4,
+            "low": 0,
+            "high": 4294967295
+          }
+        ],
+        "mappings": [
+          {
+            "kind": "char",
+            "code": 4294967295,
+            "cid": 65535
+          },
+          {
+            "kind": "range",
+            "low": 0,
+            "high": 255,
+            "cid": 1
+          }
+        ],
+        "useCmap": null
+      }
+    }
   ]
 }

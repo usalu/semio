@@ -1,20 +1,10 @@
-//! 📥️ Deserialize `s.stdio.mp3` (mpeg1-layer3/✳️any) into `s.stdio.semio` (v1/audio) —
-//! metadata-plus-opaque-payload only, per the ticket brief's explicit, unavoidable asymmetry:
-//! mp3's own honest boundary never decodes Huffman/MDCT frame payloads to samples (see
-//! `Mp3FrameHeader`'s own doc comment), so this deserializer CANNOT produce real f32 samples the
-//! way `audio↔wav` does. What IS real and honest here: `sample_rate` is derived from the first
-//! frame's `mpeg_version_id`/`sample_rate_index` via the genuine MPEG Table 3.B.2 lookup (never
-//! guessed), `channels` gets the correct COUNT from `channel_mode` (mono=1, else=2) with each
-//! channel's `samples` left empty (never fabricated PCM), and `tags` carries real ID3v2 text
-//! frames (best-effort ISO-8859-1/UTF-16 decode of the frame's raw bytes, matching real-world ID3
-//! text-frame content) plus a synthetic `"id3v1.raw"` tag when an ID3v1 trailer is present (its
-//! 128 bytes are NOT sub-field-decoded here -- `Id3v1Tag` itself only retains them verbatim, see
-//! its own doc comment -- so this bridge doesn't fabricate a decode ID3v1's own type declines to
-//! do either).
+//! 📥️ Projects admitted MP3 metadata and MPEG header meaning into semantic audio.
+//! Compressed MPEG payload is retained by MP3; this bridge does not fabricate PCM samples.
 
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_mp3::Mp3Snapshot;
+use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
@@ -37,11 +27,20 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
         let mut tags = Vec::new();
         if let Some(id3v2) = &from.id3v2 {
             for frame in &id3v2.frames {
-                tags.push(SemioAudioTag { key: frame.id.clone(), value: decode_id3_text(&frame.data) });
+                match &frame.content {
+                    Id3Content::Text{values} => for value in values{tags.push(SemioAudioTag{key:frame.id.clone(),value:value.clone()});},
+                    Id3Content::UserText{description,values} => for value in values{tags.push(SemioAudioTag{key:format!("{}:{description}",frame.id),value:value.clone()});},
+                    Id3Content::Comment{language,description,text}|Id3Content::Lyrics{language,description,text} => tags.push(SemioAudioTag{key:format!("{}:{language}:{description}",frame.id),value:text.clone()}),
+                    Id3Content::Url{url} => tags.push(SemioAudioTag{key:frame.id.clone(),value:url.clone()}),
+                    Id3Content::UserUrl{description,url} => tags.push(SemioAudioTag{key:format!("{}:{description}",frame.id),value:url.clone()}),
+                    Id3Content::Picture{..}|Id3Content::Opaque{..} => {},
+                }
             }
         }
-        if let Some(id3v1) = &from.id3v1 {
-            tags.push(SemioAudioTag { key: "id3v1.raw".into(), value: id3v1.raw.iter().map(|b| format!("{b:02x}")).collect() });
+        if let Some(tag) = &from.id3v1 {
+            for(key,value)in [("title",&tag.title),("artist",&tag.artist),("album",&tag.album),("year",&tag.year),("comment",&tag.comment)]{tags.push(SemioAudioTag{key:format!("id3v1.{key}"),value:value.clone()});}
+            if let Some(track)=tag.track{tags.push(SemioAudioTag{key:"id3v1.track".into(),value:track.to_string()});}
+            if let Some(genre)=tag.genre{tags.push(SemioAudioTag{key:"id3v1.genre".into(),value:genre.to_string()});}
         }
 
         Ok(SemioAudioSnapshot { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate, format: SemioAudioFormat::default(), channels, tags })
@@ -64,24 +63,6 @@ fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
         (0, 1) => 12_000,
         (0, 2) => 8_000, // MPEG2.5
         _ => 0,
-    }
-}
-
-/// 🔤️ Best-effort ID3v2 text-frame decode: a leading encoding byte (`0`=ISO-8859-1, `1`=UTF-16
-/// w/ BOM, `2`/`3`=UTF-16BE/UTF-8 in ID3v2.4) followed by the text; falls back to a lossy
-/// byte-for-byte Latin-1 mapping on anything this doesn't recognize -- never panics, never drops
-/// the frame outright.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_id3_text(data: &[u8]) -> String {
-    match data.first() {
-        Some(0) => data[1..].iter().map(|&b| b as char).collect(),
-        Some(3) => String::from_utf8_lossy(&data[1..]).into_owned(),
-        Some(1) | Some(2) if data.len() > 2 => {
-            let body = &data[1..];
-            let units: Vec<u16> = body.as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
-            String::from_utf16_lossy(&units)
-        }
-        _ => data.iter().map(|&b| b as char).collect(),
     }
 }
 

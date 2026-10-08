@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { createHmac, webcrypto } from "node:crypto";
 import { EventEmitter } from "node:events";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { PassThrough } from "node:stream";
 import type { ChildProcess } from "node:child_process";
@@ -441,3 +441,20 @@ test("package, target and input registrations bind only the moved owners", () =>
   expect(project.targets[fixture.route.target]?.inputs).toEqual(["hubFoundationSources"]);
   expect(project.targets[fixture.route.target]?.options?.command).toBe("bun ./📜️script.ts foundation-source-check");
 }, 600_000);
+
+test("ordinary selected Dev actor acquisition refuses an absent production ledger",async()=>{
+ const {runtimeSelectedActorsV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts"),root=process.cwd(),config=JSON.parse(readFileSync(join(repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json"),"utf8")),directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,`missing-actor-ledger-${crypto.randomUUID()}`),previous=process.env.OS_HUB_DATA;mkdirSync(join(directory,"trusted-catalog"),{recursive:true});process.env.OS_HUB_DATA=directory;
+ try{const started=Date.now(),observation={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>false,remainingMs:()=>60_000-(Date.now()-started),onProgress:()=>{}};await expect(runtimeSelectedActorsV1(root,config,{read:path=>{try{return readFileSync(resolve(root,path),"utf8")}catch{return undefined}},current:()=>false,fixtureCollections:["🧫️fixtures"],checkCancellation:()=>{},observation})).rejects.toThrow("current.json");const {LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES}=await import("../../🚀️local-bootstrap/🏃️execution/🟦️.ts");expect(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES.split(",")).toHaveLength(6);}finally{if(previous===undefined)delete process.env.OS_HUB_DATA;else process.env.OS_HUB_DATA=previous;}
+});
+
+
+test("read-only current Dev actors use the actual owner and honor cancellation without acquisition",async()=>{
+ const {loadCurrentDevelopmentActorsV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts"),vectors=JSON.parse(readFileSync(join(hubRoot,"🧫️fixtures/🧱️foundation-source/🎭️actors/🔣️.json"),"utf8")).developmentActorReads,previous=process.env.OS_HUB_DATA;
+ expect(typeof loadCurrentDevelopmentActorsV1).toBe("function");
+ for(const row of vectors){const directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,`read-only-actors-${crypto.randomUUID()}`);mkdirSync(join(directory,"trusted-catalog"),{recursive:true});process.env.OS_HUB_DATA=directory;let checked=0;const started=Date.now();try{await expect(loadCurrentDevelopmentActorsV1(process.cwd(),{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>{checked++;if(row.cancelled)throw Error(row.expected);return false;},remainingMs:()=>60_000-(Date.now()-started),onProgress:()=>{}})).rejects.toThrow(row.expected);expect(checked).toBeGreaterThan(0);expect(readdirSync(directory)).toEqual(["trusted-catalog"]);expect(readdirSync(join(directory,"trusted-catalog"))).toEqual([]);}finally{if(previous===undefined)delete process.env.OS_HUB_DATA;else process.env.OS_HUB_DATA=previous;}}
+ const source=ts.createSourceFile("verification.ts",readFileSync(join(hubRoot,"🏗️bootstrap/🎭️actors/🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true),definition=source.statements.find(statement=>ts.isFunctionDeclaration(statement)&&statement.name?.text==="loadCurrentDevelopmentActorsV1")!;expect(!!definition).toBe(true);const calls:string[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(source));ts.forEachChild(node,visit)};visit(definition);expect(calls).toContain("runtimeSelectedActorsV1");expect(calls.some(call=>/runTool|spawn|prepareCargo/u.test(call))).toBe(false);
+});
+
+test("actual Hub document sweep and read-only actor publication are owned callable receivers",async()=>{
+ const sweep=await import("../🗂️document-sweep/🟦️.ts");expect(typeof sweep.runHubDocumentSweep).toBe("function");const runtime=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts");expect(typeof runtime.loadCurrentDevelopmentActorsV1).toBe("function");
+});

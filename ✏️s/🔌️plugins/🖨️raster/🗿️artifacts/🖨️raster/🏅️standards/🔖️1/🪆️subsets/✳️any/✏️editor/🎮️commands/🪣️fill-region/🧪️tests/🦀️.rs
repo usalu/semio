@@ -56,7 +56,7 @@ fn a_mask_fill_fills_the_session_mask_value_as_its_grey_level() {
 #[test]
 fn the_session_selection_clips_only_fills_on_its_own_layer_and_target() {
     let document = document(false, true);
-    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: "[[1,2,255],[6,3,128]]".into() }), ..config("pixels") };
+    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![crate::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, crate::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
     let built = leaf(fill_region_leaf(&click("ink", 1.0, 0.0), &document, &selected).expect("the clipped fill fills"));
     assert_eq!(built.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, RasterSelectionSpan { start: 6, length: 3, coverage: 128 }]));
     retire(document);

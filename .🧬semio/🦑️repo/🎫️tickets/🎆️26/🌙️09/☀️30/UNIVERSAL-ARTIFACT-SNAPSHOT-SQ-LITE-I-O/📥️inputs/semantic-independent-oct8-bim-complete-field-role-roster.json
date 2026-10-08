@@ -1,0 +1,1953 @@
+{
+  "authority": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+  "topLevel": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "project": {
+      "$ref": "#/$defs/Project",
+      "x-semio-state": "artifact"
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Material"
+      },
+      "x-semio-state": "artifact"
+    },
+    "wall_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WallType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "slab_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SlabType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "roof_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RoofType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "column_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ColumnType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "beam_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/BeamType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "window_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WindowType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "door_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/DoorType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "sites": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Site"
+      },
+      "x-semio-state": "artifact"
+    },
+    "buildings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Building"
+      },
+      "x-semio-state": "artifact"
+    },
+    "storeys": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Storey"
+      },
+      "x-semio-state": "artifact"
+    },
+    "grids": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/GridLine"
+      },
+      "x-semio-state": "artifact"
+    },
+    "walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Wall"
+      },
+      "x-semio-state": "artifact"
+    },
+    "curtain_walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/CurtainWall"
+      },
+      "x-semio-state": "artifact"
+    },
+    "columns": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Column"
+      },
+      "x-semio-state": "artifact"
+    },
+    "beams": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Beam"
+      },
+      "x-semio-state": "artifact"
+    },
+    "slabs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Slab"
+      },
+      "x-semio-state": "artifact"
+    },
+    "roofs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Roof"
+      },
+      "x-semio-state": "artifact"
+    },
+    "openings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Opening"
+      },
+      "x-semio-state": "artifact"
+    },
+    "stairs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Stair"
+      },
+      "x-semio-state": "artifact"
+    },
+    "railings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Railing"
+      },
+      "x-semio-state": "artifact"
+    },
+    "spaces": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Space"
+      },
+      "x-semio-state": "artifact"
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/PropertySet"
+      },
+      "x-semio-state": "artifact"
+    },
+    "classifications": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Classification"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "MaterialCategory": {
+      "enum": [
+        "Concrete",
+        "Masonry",
+        "Wood",
+        "Metal",
+        "Glass",
+        "Insulation",
+        "Finish",
+        "Membrane",
+        "Other"
+      ]
+    },
+    "LayerFunction": {
+      "enum": [
+        "Structure",
+        "Substrate",
+        "Insulation",
+        "Finish",
+        "Membrane",
+        "Core"
+      ]
+    },
+    "LocationLine": {
+      "enum": [
+        "Center",
+        "Interior",
+        "Exterior",
+        "CoreCenter"
+      ]
+    },
+    "Phase": {
+      "enum": [
+        "Existing",
+        "New",
+        "Demolished",
+        "Temporary"
+      ]
+    },
+    "DoorLeaves": {
+      "enum": [
+        "Single",
+        "Double"
+      ]
+    },
+    "Swing": {
+      "enum": [
+        "Left",
+        "Right"
+      ]
+    },
+    "Turn": {
+      "enum": [
+        "Left",
+        "Right"
+      ]
+    },
+    "StringerKind": {
+      "enum": [
+        "None",
+        "Closed",
+        "Open",
+        "Mono"
+      ]
+    },
+    "RiserKind": {
+      "enum": [
+        "Open",
+        "Closed"
+      ]
+    },
+    "Axis": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Line"
+          ],
+          "properties": {
+            "Line": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "#/$defs/Point2"
+                },
+                "end": {
+                  "$ref": "#/$defs/Point2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Arc"
+          ],
+          "properties": {
+            "Arc": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end",
+                "bulge"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "#/$defs/Point2"
+                },
+                "end": {
+                  "$ref": "#/$defs/Point2"
+                },
+                "bulge": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TopConstraint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Unconnected"
+          ],
+          "properties": {
+            "Unconnected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "height"
+              ],
+              "properties": {
+                "height": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "StoreyTop"
+          ],
+          "properties": {
+            "StoreyTop": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "offset"
+              ],
+              "properties": {
+                "offset": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Storey"
+          ],
+          "properties": {
+            "Storey": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "storey",
+                "offset"
+              ],
+              "properties": {
+                "storey": {
+                  "type": "string"
+                },
+                "offset": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Profile": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Rectangle"
+          ],
+          "properties": {
+            "Rectangle": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "width",
+                "depth"
+              ],
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "depth": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Circle"
+          ],
+          "properties": {
+            "Circle": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "diameter"
+              ],
+              "properties": {
+                "diameter": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "IShape"
+          ],
+          "properties": {
+            "IShape": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "width",
+                "depth",
+                "web",
+                "flange"
+              ],
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "depth": {
+                  "type": "number"
+                },
+                "web": {
+                  "type": "number"
+                },
+                "flange": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ],
+          "properties": {
+            "Custom": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "outline": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Vertex"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RoofShape": {
+      "oneOf": [
+        {
+          "const": "Flat"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Shed"
+          ],
+          "properties": {
+            "Shed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pitch",
+                "direction"
+              ],
+              "properties": {
+                "pitch": {
+                  "type": "number"
+                },
+                "direction": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Gable"
+          ],
+          "properties": {
+            "Gable": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pitch",
+                "ridge_direction"
+              ],
+              "properties": {
+                "pitch": {
+                  "type": "number"
+                },
+                "ridge_direction": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Hip"
+          ],
+          "properties": {
+            "Hip": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pitch"
+              ],
+              "properties": {
+                "pitch": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Mansard"
+          ],
+          "properties": {
+            "Mansard": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "lower_pitch",
+                "upper_pitch",
+                "break_height"
+              ],
+              "properties": {
+                "lower_pitch": {
+                  "type": "number"
+                },
+                "upper_pitch": {
+                  "type": "number"
+                },
+                "break_height": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OpeningKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Window"
+          ],
+          "properties": {
+            "Window": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "window_type"
+              ],
+              "properties": {
+                "window_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Door"
+          ],
+          "properties": {
+            "Door": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "door_type"
+              ],
+              "properties": {
+                "door_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Void"
+          ],
+          "properties": {
+            "Void": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "width",
+                "height"
+              ],
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StairFlight": {
+      "oneOf": [
+        {
+          "const": "Straight"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "LTurn"
+          ],
+          "properties": {
+            "LTurn": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "split",
+                "turn"
+              ],
+              "properties": {
+                "split": {
+                  "type": "number"
+                },
+                "turn": {
+                  "$ref": "#/$defs/Turn"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "UTurn"
+          ],
+          "properties": {
+            "UTurn": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "gap"
+              ],
+              "properties": {
+                "gap": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Spiral"
+          ],
+          "properties": {
+            "Spiral": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "radius",
+                "sweep"
+              ],
+              "properties": {
+                "radius": {
+                  "type": "number"
+                },
+                "sweep": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PropertyValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Text"
+          ],
+          "properties": {
+            "Text": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Real"
+          ],
+          "properties": {
+            "Real": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Integer"
+          ],
+          "properties": {
+            "Integer": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Boolean"
+          ],
+          "properties": {
+            "Boolean": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Length"
+          ],
+          "properties": {
+            "Length": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Area"
+          ],
+          "properties": {
+            "Area": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Volume"
+          ],
+          "properties": {
+            "Volume": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Angle"
+          ],
+          "properties": {
+            "Angle": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Infill": {
+      "oneOf": [
+        {
+          "const": "None"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Glass"
+          ],
+          "properties": {
+            "Glass": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "thickness"
+              ],
+              "properties": {
+                "thickness": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Panel"
+          ],
+          "properties": {
+            "Panel": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "thickness"
+              ],
+              "properties": {
+                "thickness": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SpaceBoundary": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Bounded"
+          ],
+          "properties": {
+            "Bounded": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "seed"
+              ],
+              "properties": {
+                "seed": {
+                  "$ref": "#/$defs/Point2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Explicit"
+          ],
+          "properties": {
+            "Explicit": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "outline": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Vertex"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Point2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "Rgb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        }
+      }
+    },
+    "Vertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "point",
+        "bulge"
+      ],
+      "properties": {
+        "point": {
+          "$ref": "#/$defs/Point2"
+        },
+        "bulge": {
+          "type": "number"
+        }
+      }
+    },
+    "Slope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "angle"
+      ],
+      "properties": {
+        "direction": {
+          "type": "number"
+        },
+        "angle": {
+          "type": "number"
+        }
+      }
+    },
+    "StairStringer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "width",
+        "depth"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/StringerKind"
+        },
+        "width": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        }
+      }
+    },
+    "Baluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "spacing"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/Profile"
+        },
+        "spacing": {
+          "type": "number"
+        }
+      }
+    },
+    "Layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material",
+        "thickness",
+        "function"
+      ],
+      "properties": {
+        "material": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "function": {
+          "$ref": "#/$defs/LayerFunction"
+        }
+      }
+    },
+    "Project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "author",
+        "organization"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "organization": {
+          "type": "string"
+        },
+        "phase_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "category",
+        "color",
+        "density",
+        "conductivity",
+        "specific_heat"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/MaterialCategory"
+        },
+        "color": {
+          "$ref": "#/$defs/Rgb"
+        },
+        "density": {
+          "type": "number"
+        },
+        "conductivity": {
+          "type": "number"
+        },
+        "specific_heat": {
+          "type": "number"
+        }
+      }
+    },
+    "WallType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Layer"
+          }
+        }
+      }
+    },
+    "SlabType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Layer"
+          }
+        }
+      }
+    },
+    "RoofType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Layer"
+          }
+        }
+      }
+    },
+    "ColumnType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "profile",
+        "material"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/Profile"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "BeamType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "profile",
+        "material"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/Profile"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "WindowType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "width",
+        "height",
+        "sill",
+        "frame_width",
+        "frame_depth",
+        "panes",
+        "material"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "sill": {
+          "type": "number"
+        },
+        "frame_width": {
+          "type": "number"
+        },
+        "frame_depth": {
+          "type": "number"
+        },
+        "panes": {
+          "type": "integer"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "DoorType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "width",
+        "height",
+        "frame_width",
+        "frame_depth",
+        "leaves",
+        "swing",
+        "material"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "frame_width": {
+          "type": "number"
+        },
+        "frame_depth": {
+          "type": "number"
+        },
+        "leaves": {
+          "$ref": "#/$defs/DoorLeaves"
+        },
+        "swing": {
+          "$ref": "#/$defs/Swing"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "Site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "latitude",
+        "longitude",
+        "elevation",
+        "true_north"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "true_north": {
+          "type": "number"
+        },
+        "boundary": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point2"
+          }
+        }
+      }
+    },
+    "Building": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "site",
+        "name",
+        "origin",
+        "rotation",
+        "elevation"
+      ],
+      "properties": {
+        "site": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/Point2"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        }
+      }
+    },
+    "Storey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "building",
+        "name",
+        "level",
+        "height"
+      ],
+      "properties": {
+        "building": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "number"
+        },
+        "cut_height": {
+          "type": "number",
+          "description": "Plan view convention: height in metres above the storey elevation at which the plan cuts through the storey; absent means the default of 1.2 m."
+        }
+      }
+    },
+    "GridLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "building",
+        "label",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "building": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "#/$defs/Point2"
+        },
+        "end": {
+          "$ref": "#/$defs/Point2"
+        }
+      }
+    },
+    "Wall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "wall_type",
+        "axis",
+        "location",
+        "base_offset",
+        "top",
+        "phase",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "wall_type": {
+          "type": "string"
+        },
+        "axis": {
+          "$ref": "#/$defs/Axis"
+        },
+        "location": {
+          "$ref": "#/$defs/LocationLine"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "top": {
+          "$ref": "#/$defs/TopConstraint"
+        },
+        "phase": {
+          "$ref": "#/$defs/Phase"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "CurtainWall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "axis",
+        "base_offset",
+        "top",
+        "u_spacing",
+        "v_spacing",
+        "mullion",
+        "panel_material",
+        "mullion_material",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "axis": {
+          "$ref": "#/$defs/Axis"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "top": {
+          "$ref": "#/$defs/TopConstraint"
+        },
+        "u_spacing": {
+          "type": "number"
+        },
+        "v_spacing": {
+          "type": "number"
+        },
+        "mullion": {
+          "$ref": "#/$defs/Profile"
+        },
+        "panel_material": {
+          "type": "string"
+        },
+        "mullion_material": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "column_type",
+        "position",
+        "rotation",
+        "base_offset",
+        "top",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "column_type": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Point2"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "top": {
+          "$ref": "#/$defs/TopConstraint"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Beam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "beam_type",
+        "start",
+        "end",
+        "top_offset",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "beam_type": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "#/$defs/Point2"
+        },
+        "end": {
+          "$ref": "#/$defs/Point2"
+        },
+        "top_offset": {
+          "type": "number",
+          "description": "Signed vertical offset in metres of the top of the beam from the top of its storey: positive lifts it above the storey top, negative hangs it below, zero is flush."
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Slab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "slab_type",
+        "offset",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "slab_type": {
+          "type": "string"
+        },
+        "boundary": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vertex"
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Vertex"
+            }
+          }
+        },
+        "offset": {
+          "type": "number"
+        },
+        "slope": {
+          "$ref": "#/$defs/Slope"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Roof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "roof_type",
+        "shape",
+        "overhang",
+        "base_offset",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "roof_type": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vertex"
+          }
+        },
+        "shape": {
+          "$ref": "#/$defs/RoofShape"
+        },
+        "overhang": {
+          "type": "number"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Opening": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "kind",
+        "offset",
+        "flip_hand",
+        "flip_facing",
+        "name"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/OpeningKind"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "sill_override": {
+          "type": "number",
+          "description": "Sill height in metres above the host base that replaces the sill of the window type; absent means the type sill for windows and zero for doors and voids."
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "flip_hand": {
+          "type": "boolean"
+        },
+        "flip_facing": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Stair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "start",
+        "direction",
+        "width",
+        "flight",
+        "top",
+        "max_riser",
+        "min_tread",
+        "stringer",
+        "nosing",
+        "tread_thickness",
+        "riser",
+        "landing_depth",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "#/$defs/Point2"
+        },
+        "direction": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "flight": {
+          "$ref": "#/$defs/StairFlight"
+        },
+        "top": {
+          "$ref": "#/$defs/TopConstraint"
+        },
+        "max_riser": {
+          "type": "number"
+        },
+        "min_tread": {
+          "type": "number"
+        },
+        "stringer": {
+          "$ref": "#/$defs/StairStringer",
+          "description": "Stringer construction: kind, plus width and depth of each stringer in metres."
+        },
+        "nosing": {
+          "type": "number",
+          "description": "Overhang in metres of a tread beyond the riser below it; zero is flush."
+        },
+        "tread_thickness": {
+          "type": "number",
+          "description": "Vertical thickness in metres of each tread slab."
+        },
+        "riser": {
+          "$ref": "#/$defs/RiserKind",
+          "description": "Whether riser boards close the gap between treads."
+        },
+        "landing_depth": {
+          "type": "number",
+          "description": "Depth in metres of the landing of a turning flight, measured along the arriving flight."
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Railing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "height",
+        "post_spacing",
+        "profile",
+        "post_profile",
+        "infill",
+        "material",
+        "base_offset",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point2"
+          }
+        },
+        "height": {
+          "type": "number"
+        },
+        "post_spacing": {
+          "type": "number"
+        },
+        "profile": {
+          "$ref": "#/$defs/Profile",
+          "description": "Section of the top rail."
+        },
+        "post_profile": {
+          "$ref": "#/$defs/Profile",
+          "description": "Section of a post."
+        },
+        "baluster": {
+          "$ref": "#/$defs/Baluster",
+          "description": "Optional baluster row between the posts: section and spacing."
+        },
+        "infill": {
+          "$ref": "#/$defs/Infill",
+          "description": "Fill between the posts: none, glass or a panel with a thickness in metres."
+        },
+        "material": {
+          "type": "string"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "number",
+        "name",
+        "boundary",
+        "usage"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "boundary": {
+          "$ref": "#/$defs/SpaceBoundary"
+        },
+        "usage": {
+          "type": "string"
+        }
+      }
+    },
+    "Classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "code",
+        "title"
+      ],
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "PropertySet": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/$defs/PropertyValue"
+        }
+      }
+    }
+  },
+  "policy": {
+    "numericBounds": "No min/max present. Rust i32/u32 limits are actual Native representability, not currently Source neutral bounds.",
+    "references": "String domain references may be unresolved. Map keys are persisted identity independent of names.",
+    "normalization": "Omitted top-level maps and default Vec values normalize empty in Native; absent optional values remain absent, not zero/default inferred geometry."
+  }
+}

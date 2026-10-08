@@ -83,20 +83,21 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-drawing/appends-drawing-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let list = produced.diff().drawings.as_ref().expect("create-drawing fills the drawings child list");
-    assert_eq!(list.values.iter().map(|handle| handle.child_id.as_str()).collect::<Vec<_>>(), vec!["cad-drawing-1", "cad-drawing-2"], "create-drawing emits the WHOLE post-state list, not an added/removed delta");
+    assert_eq!(list.inserted.iter().map(|insertion| (insertion.index, insertion.row.child_id.as_str())).collect::<Vec<_>>(), vec![(1, "cad-drawing-2")], "create-drawing emits ONE positional insertion, not the whole list");
+    assert!(list.removed.is_empty() && list.moved.is_empty(), "create-drawing only inserts");
     assert!(produced.diff().nodes.is_none(), "create-drawing must not emit a nodes delta");
 }
 
 /// 🔺️ The sparse delta `create-drawing` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here `drawings` carries the WHOLE post-state handle list (the existing handle plus the new one) — unlike `nodes` there is no added/removed delta for this composition slot.
+/// end state matches. Here `drawings` carries one positional insertion row.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-drawing/appends-drawing-2: create-drawing must emit the whole post-state drawings list, not an added-only delta");
+    assert_eq!(produced, committed, "create-drawing/appends-drawing-2: create-drawing must emit one positional insertion");
 }
 
 /// 🔣️ The committed diff decodes into `CadDiff` and re-encodes byte-for-byte: `CadDiff` has

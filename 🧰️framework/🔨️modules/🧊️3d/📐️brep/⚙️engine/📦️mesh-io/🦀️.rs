@@ -33,7 +33,10 @@ use crate::brep::representation::tolerance::Tol;
 use crate::brep::representation::topology::history::OpRecorder;
 use crate::brep::representation::topology::{Body,EntityRef};
 use crate::brep::representation::vector::{Pnt3, Vec3};
-use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
+use semio_framework_mesh_engine::{MeshData};
+use semio_framework_mesh_engine::io::text::{mesh_from_obj, mesh_to_obj};
+use semio_framework_mesh_engine::io::binary::{mesh_from_stl, mesh_to_stl};
+use semio_framework_mesh_engine::io::{GlbExporter, GlbImporter, MeshExporter, MeshImporter};
 
 // #region 🔖️Types
 
@@ -76,7 +79,7 @@ struct ImportIndexRetirement {
     edges: std::collections::BTreeMap<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
 }
 impl crate::brep::engine::retirement::RetirementFrontier for ImportIndexRetirement {
-    fn advance(&mut self,_:&mut crate::brep::engine::retirement::PayloadRetirement)->bool {if self.vertices.pop_first().is_none() {self.edges.pop_first();}self.vertices.is_empty() && self.edges.is_empty()}
+    fn advance(&mut self,_:&mut crate::brep::engine::retirement::PayloadRetirement,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->bool {if self.vertices.pop_first().is_none() {self.edges.pop_first();}self.vertices.is_empty() && self.edges.is_empty()}
 }
 /// 📦 The current result of advancing the existing mesh import mutation.
 pub enum MeshImportStep { Working, Cancelled, Done(crate::brep::representation::topology::EntityRef) }

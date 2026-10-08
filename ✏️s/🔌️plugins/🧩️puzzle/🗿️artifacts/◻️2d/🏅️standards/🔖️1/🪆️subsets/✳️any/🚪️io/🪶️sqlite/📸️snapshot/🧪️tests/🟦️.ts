@@ -68,14 +68,15 @@ test("Puzzle 2D complete semantic cells have independent exact and one-short gra
 
 
 test("Puzzle2d typed sparse deltas and pilot grammar retain neutral authored records",async()=>{
- const corpus=await Bun.file(new URL("../../../📝️text/🔺️diff/🧫️fixtures/🔣️.json",import.meta.url)).json() as {samples:{json:unknown;document:string}[];diffRecordOwners:string[]};
+ const corpus=await Bun.file(new URL("../../../📝️text/🔺️diff/🧫️fixtures/🔣️.json",import.meta.url)).json() as {samples:{json:unknown;document:string}[];diffRecordOwners:string[];deltaOwners:string[]};
  const schema=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🔣️.json",import.meta.url)).json();
  const validate=new Ajv({strict:false}).addSchema(artifactSchema).compile(schema);
  for(const sample of corpus.samples){expect(validate(sample.json)).toBe(true);expect(JSON.parse(JSON.stringify(sample.json))).toEqual(sample.json)}
  expect(validate({schema:3})).toBe(false);expect(validate({unknown:"field"})).toBe(false);
  const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
  for(const name of corpus.diffRecordOwners)expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"));
- expect(diff.match(/pub removed: Vec<PagedUtf8<\{ usize::MAX \}>>/gu)?.length).toBe(4);expect(diff.match(/pub reordered: Option<Vec<PagedUtf8<\{ usize::MAX \}>>>/gu)?.length).toBe(4);
+ expect(diff.match(/protocol::list_delta! \{ pub /gu)?.length).toBe(corpus.deltaOwners.length);expect(diff).not.toContain("reordered");
+ for(const name of corpus.deltaOwners)expect(diff).toContain("protocol::list_delta! { pub "+name+" {");
  const artifact=await Bun.file(new URL("../../../../🧬️schema/🦀️.rs",import.meta.url)).text();expect(artifact).toContain("semio_framework_dsl_record_derive::DslRecord");
  const owner=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text();
  for(const constant of ["COMPONENT_GRAMMAR_SEMIO","COMPONENT_GRAMMAR_PATH"])expect(owner).toContain("standards::v1::subsets::any::io::text::diff::"+constant);

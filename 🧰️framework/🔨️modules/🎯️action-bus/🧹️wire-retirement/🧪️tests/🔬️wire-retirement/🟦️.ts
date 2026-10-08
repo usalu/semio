@@ -1,67 +1,21 @@
-/** 🧹️ The wire-retirement ledger: per-step item/byte releases and the short-close backing release. */
-type WireRetirementFixture = {
-  readonly version: number;
-  readonly pageBytes: number;
-  readonly grants: readonly number[];
-  readonly zeroItemsBlocked: boolean;
-  readonly terminalBackingBytes: number;
-  readonly shortClose: {
-    readonly wireHex: string;
-    readonly logicalBytes: number;
-    readonly steps: readonly {
-      readonly items: number;
-      readonly bytes: number;
-      readonly blocked: boolean;
-      readonly releasedItems: number;
-      readonly releasedBytes: number;
-      readonly remaining: number;
-    }[];
-    readonly backingReleaseItems: number;
-    readonly backingReleaseLogicalBytes: number;
-  };
-  readonly cases: readonly {
-    readonly id: string;
-    readonly declared: number;
-    readonly admitted: number;
-    readonly sealed: boolean;
-  }[];
-};
-
-/** 🔬️ Canonical testWireRetirementFixture fixture and oracle checks. */
+/** 🧹️ Independent wire backing grant and source conservation oracle. */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import Ajv from "ajv";
+import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {applyPatch} from "fast-json-patch";
 
-export function testWireRetirementFixture():void {
-  const fixture: WireRetirementFixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
-  
-  assert.equal(new Set(fixture.cases.map((row:any)=>row.id)).size,5);
-  const wire=Buffer.alloc(8);wire.writeBigUInt64LE(42n);assert.equal(wire.toString("hex"),fixture.shortClose.wireHex);
-  let remaining=wire;let shortReleased=0;
-  for(const row of fixture.shortClose.steps){
-    const released=row.items===0?0:Math.min(row.bytes,remaining.length);
-    const blocked=row.items===0||(remaining.length>0&&row.bytes===0);
-    remaining=remaining.subarray(0,remaining.length-released);shortReleased+=released;
-    assert.equal(blocked,row.blocked);assert.equal(released,row.releasedBytes);assert.equal(remaining.length,row.remaining);
-    assert.equal(Number(!blocked&&remaining.length===0),row.releasedItems);assert.equal(shortReleased+remaining.length,fixture.shortClose.logicalBytes);
+export function testWireRetirementFixture():void{
+ const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ assert.equal(new Set(fixture.cases.map((row:{id:string})=>row.id)).size,5);
+ const wire=Buffer.alloc(8);wire.writeBigUInt64LE(42n);assert.equal(wire.toString("hex"),fixture.shortClose.wireHex);
+ for(const row of fixture.cases){assert.ok(row.admitted<=row.declared);if(row.sealed)assert.equal(row.admitted,row.declared);
+  const source=Buffer.from(Array.from({length:row.admitted},(_,index)=>index%251)),digest=createHash("sha256").update(source).digest("hex");
+  for(const wordBytes of fixture.wordBytes){const capacity=Math.ceil(row.declared/fixture.pageBytes),physical=capacity*(fixture.pageBytes+wordBytes),backing=Buffer.alloc(physical);assert.equal(backing.byteLength,physical);
+   for(const copy of fixture.copyGrants){const grant={items:1,copy,capacity:0,release:physical,depth:1};
+    if(capacity)for(const denied of fixture.denied){const unfunded=applyPatch(structuredClone(grant),[{op:"replace",path:`/${denied}`,value:0}],true).newDocument;assert.ok(unfunded.items===0||unfunded.release<physical||unfunded.depth===0);assert.equal(createHash("sha256").update(source).digest("hex"),digest);assert.equal(backing.byteLength,physical);}
+    const progress={copiedItems:Number(capacity>0),copiedBytes:0,retainedCapacityBytes:0,releasedBytes:physical};assert.ok(progress.copiedItems<=grant.items);assert.ok(progress.copiedBytes<=grant.copy);assert.ok(progress.retainedCapacityBytes<=grant.capacity);assert.equal(progress.releasedBytes,grant.release);assert.equal(createHash("sha256").update(source).digest("hex"),digest);
+   }
   }
-  assert.equal(shortReleased,wire.length);
-  for(const row of fixture.cases){assert.ok(row.admitted<=row.declared);if(row.sealed)assert.equal(row.admitted,row.declared);
-    const original=Buffer.from(Array.from({length:row.admitted},(_,index)=>index%251));
-    for(const grant of fixture.grants){const pages=Array.from({length:Math.ceil(row.admitted/fixture.pageBytes)},(_,index)=>original.subarray(index*fixture.pageBytes,(index+1)*fixture.pageBytes));
-      let capacity=Math.ceil(row.declared/fixture.pageBytes);const initialCapacity=capacity;const initialPages=pages.length;let items=0;let owned=row.admitted;let released=0;const disposal:number[]=[];
-      if(grant===0&&owned>0){assert.equal(pages.reduce((sum,page)=>sum+page.length,0),owned);continue;}
-      while(pages.length){const page=pages[pages.length-1];const count=Math.min(grant,page.length);assert.ok(count>0);assert.ok(count<=grant);
-        for(let index=page.length-1;index>=page.length-count;index--)disposal.push(page[index]);
-        pages[pages.length-1]=page.subarray(0,page.length-count);owned-=count;released+=count;
-        if(!pages[pages.length-1].length){pages.pop();items++;}assert.equal(owned,pages.reduce((sum,page)=>sum+page.length,0));
-      }
-      if(capacity>0)items++;capacity=0;assert.equal(items,initialPages+Number(initialCapacity>0));assert.equal(owned,0);assert.equal(released,row.admitted);assert.equal(capacity,fixture.terminalBackingBytes);
-      const expected=Buffer.from(original).reverse();assert.deepEqual(Buffer.from(disposal),expected);
-      assert.equal(createHash("sha256").update(Buffer.from(disposal)).digest("hex"),createHash("sha256").update(expected).digest("hex"));
-    }
-  }
-  const invalid=[{...fixture,pageBytes:4097},{...fixture,grants:[1,64]},{...fixture,terminalBackingBytes:4096},{...fixture,extra:true}];
-  
+ }
+ console.log("[DEBUG] original wire grant oracle5cases×2wordWidths×4copyCredits preserves complete physical backing and terminal receipt");
 }

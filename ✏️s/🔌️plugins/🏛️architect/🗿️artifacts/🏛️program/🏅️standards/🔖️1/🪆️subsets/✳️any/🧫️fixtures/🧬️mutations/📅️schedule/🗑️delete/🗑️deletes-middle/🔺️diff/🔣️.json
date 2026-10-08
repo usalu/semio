@@ -32,12 +32,15 @@
   "communication": null,
   "wayfinding": null,
   "schedules": {
-    "added": [],
     "removed": [
-      "schedule-requirement-a"
+      {
+        "id": "schedule-requirement-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "flexibility": null,
   "growth": null,

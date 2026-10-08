@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-auxiliary-header/schema.json",
+  "title": "SetAuxiliaryHeader",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "auxiliaryHeader"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setAuxiliaryHeader",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "auxiliaryHeader": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgAuxiliaryHeader",
+      "x-semio-ui": {
+        "label": {
+          "en": "Auxiliary header",
+          "de": "Hilfskopf"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

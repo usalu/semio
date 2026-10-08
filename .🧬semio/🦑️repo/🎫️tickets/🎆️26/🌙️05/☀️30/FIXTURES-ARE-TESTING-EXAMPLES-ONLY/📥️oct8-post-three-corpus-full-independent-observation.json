@@ -1,0 +1,130 @@
+{
+  "rawSHA": "baca6ce55b4ab6f07168e9d7893116270499e4e3a72b51d78e77fee0b5619ba2",
+  "bytes": 5464745,
+  "rows": 12387,
+  "counts": {
+    "schema-module-id-missing": 278,
+    "schema-owner-ineligible": 532,
+    "schema-dialect-not-draft-07": 85,
+    "schema-mutation-leaf-id": 75,
+    "schema-export-incomplete": 9386,
+    "schema-export-id-invalid": 255,
+    "schema-ref-unresolved": 811,
+    "schema-mutation-aggregate-id": 6,
+    "schema-document-id-unaddressable": 139,
+    "schema-document-id-duplicate": 366,
+    "schema-module-id-inconsistent": 10,
+    "schema-export-id-duplicate": 284,
+    "schema-scope-ambiguous": 147,
+    "schema-fixture-defines-schema": 6,
+    "schema-placement-forbidden-filename": 6,
+    "schema-catalog-stale": 1
+  },
+  "catalogAuthority": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+  "catalogSHA": "e126e36f08609ed2a9679b226fab930992a700e3df963eeae08cdd23707659eb",
+  "bindings": [
+    {
+      "scopeId": "hub.bootstrap",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "repo.discovery.runtime",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "os.plugin.browser-bundle",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "os.dev.distribution",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "os.dev.verification.publication",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "repo.library.workspaces.cargo.preparation.custody",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "s.dev.entry",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "os.plugin.registry.descriptor-verification",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "os.plugin.registry",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    },
+    {
+      "scopeId": "os.dev.playground-session",
+      "path": true,
+      "exports": true,
+      "formatMatch": true,
+      "expectedMatch": true
+    }
+  ],
+  "ownedDiagnostics": [],
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🧬️schema.json",
+      "detail": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🧬️schema.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🧬️schema.json",
+      "detail": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🧬️schema.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🧫️fixtures/⏱️cold-preview/🧬️schema.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🧫️fixtures/⏱️cold-preview/🧬️schema.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    }
+  ]
+}

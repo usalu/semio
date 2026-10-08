@@ -1,580 +1,64 @@
 //! 🧵️ Shared typed Flow ownership frontiers for resumable copying and retirement.
 
-use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 use crate::{neural, FlowArtifact, FlowHostSnapshot, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
-use protocol::value::list::{PagedList, PagedListAllocationError, PagedListError, PagedListRefusalKind, PagedListProgress};
-use protocol::value::ordered::{Grant, Retirement, RetirementStep};
-use std::mem::{size_of, ManuallyDrop};
+use semio_framework_value::{ValueError,retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,queue::RetirementQueue},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 //#region 📑️SelectedCopy
 #[path = "📑️copy/🦀️.rs"]
 pub mod copy;
 pub use copy::{FlowCopyAllocationBudget, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
+
+#[path = "🧬️fields/🦀️.rs"]
+mod fields;
 //#endregion 📑️SelectedCopy
 
 //#region 🧹️TypedRetirement
-const FLOW_RETIREMENT_FRONTIER_OWNERS: usize = usize::MAX;
-
-/// ⛔️ How many consecutive close steps may free nothing and move no owner before a cold drain
-/// refuses instead of spinning. A driver that pays [`FlowRetirement::next_close_byte_demand`] is
-/// granted every physical minimum this frontier can name, so a run of non-progress steps is a
-/// broken owner, not back-pressure (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-const FLOW_RETIREMENT_CLOSE_STALL_BOUND: usize = 64;
-
 pub enum FlowOwner {
-    Bytes(Vec<u8>),
-    Strings(Vec<String>),
-    Set(OrderedSet),
-    SetCursor(Retirement<()>),
-    Dictionary(neural::Dictionary),
-    Value(neural::Value),
-    Neural(neural::ValueRetirement),
-    HostSnapshot(FlowHostSnapshot),
-    Widget(Widget),
-    Widgets(Vec<Widget>),
-    Specs(Vec<SynapseSpec>),
-    Layouts(OrderedMap<WidgetLayout>),
-    LayoutCursor(Retirement<WidgetLayout>),
-    Tree(neural::Tree),
-    Neurons(Vec<neural::Neuron>),
-    Synapses(Vec<neural::Synapse>),
-    Gui(FlowGui),
-    Nodes(OrderedMap<FlowNodeGui>),
-    NodeCursor(Retirement<FlowNodeGui>),
-    Previews(Vec<FlowPreviewGui>),
-    Layout(Vec<FlowLayoutEntry>),
-    Chrome(NodeChrome),
+    Bytes(Vec<u8>),Strings(Vec<String>),Set(OrderedSet),Dictionary(neural::Dictionary),Value(neural::Value),
+    HostSnapshot(FlowHostSnapshot),Widget(Widget),Widgets(Vec<Widget>),Specs(Vec<SynapseSpec>),Layouts(OrderedMap<WidgetLayout>),
+    Tree(neural::Tree),Neurons(Vec<neural::Neuron>),Synapses(Vec<neural::Synapse>),Gui(FlowGui),Nodes(OrderedMap<FlowNodeGui>),
+    Previews(Vec<FlowPreviewGui>),Layout(Vec<FlowLayoutEntry>),Chrome(NodeChrome),Mutation(crate::FlowMutation),
 }
-
-fn backing_bytes<T>(values: &Vec<T>) -> Result<usize, &'static str> {
-    values.capacity().checked_mul(size_of::<T>()).ok_or("Flow backing capacity byte count overflow")
+macro_rules! owned_variant {
+    ($($variant:ident),+)=>{impl RetireOwned for FlowOwner {
+        fn retirement(self)->Box<dyn RetirementCursor> {match self {$(Self::$variant(value)=>value.retirement()),+}}
+        fn retirement_birth_bytes(&self)->Option<usize> {match self {$(Self::$variant(value)=>value.retirement_birth_bytes()),+}}
+        fn controlled_retirement_supported()->bool {true}
+    }};
 }
+owned_variant!(Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget,Widgets,Specs,Layouts,Tree,Neurons,Synapses,Gui,Nodes,Previews,Layout,Chrome,Mutation);
 
-/// 🎟️ The live PAYLOAD a backing still owes before its allocation is freed. An element vector
-/// that has already been drained owes nothing — its remaining `capacity` is an ALLOCATION, not
-/// payload, and `capacity * size_of::<T>()` is machine-width dependent, so it can never be charged
-/// against a caller's byte grant: a seven-byte scene must report seven bytes on every target
-/// (tickets 26/09/09/PROCEDURAL-3D-END-TO-END, 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-fn owner_backing_payload(owner: &FlowOwner) -> usize {
-    match owner {
-        FlowOwner::Bytes(values) => values.len(),
-        _ => 0,
-    }
-}
-
-/// ♻️ The ALLOCATION a backing holds, which leaves [`FlowRetirement::allocated_bytes`] whole or
-/// not at all. This is the allocation-admission quantity and never the caller's payload grant.
-fn owner_backing_bytes(owner: &FlowOwner) -> Result<usize, &'static str> {
-    match owner {
-        FlowOwner::Bytes(values) => backing_bytes(values),
-        FlowOwner::Strings(values) => backing_bytes(values),
-        FlowOwner::Widgets(values) => backing_bytes(values),
-        FlowOwner::Specs(values) => backing_bytes(values),
-        FlowOwner::Neurons(values) => backing_bytes(values),
-        FlowOwner::Synapses(values) => backing_bytes(values),
-        FlowOwner::Previews(values) => backing_bytes(values),
-        FlowOwner::Layout(values) => backing_bytes(values),
-        FlowOwner::SetCursor(values) => Ok(values.allocated_bytes()),
-        FlowOwner::LayoutCursor(values) => Ok(values.allocated_bytes()),
-        FlowOwner::NodeCursor(values) => Ok(values.allocated_bytes()),
-        FlowOwner::Neural(values) => Ok(values.allocated_bytes()),
-        _ => Ok(0),
-    }
-}
-
-/// 📏️ The SMALLEST byte grant the next close step can spend on this owner. A direct backing's
-/// PAYLOAD can be charged in pieces, so one byte always makes progress and one byte is the honest
-/// answer; a nested cursor owns whole buffers it cannot split, so it publishes its own physical
-/// minimum and a driver READS this before it grants — which is the only way a foreign
-/// `Box<dyn ErasedSnapshotRetirement>` holder can tell "I under-granted" from "someone else is
-/// blocking" (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-fn owner_release_demand(owner: &FlowOwner) -> Result<usize, &'static str> {
-    match owner {
-        FlowOwner::SetCursor(values) => values.next_close_byte_demand(),
-        FlowOwner::LayoutCursor(values) => values.next_close_byte_demand(),
-        FlowOwner::NodeCursor(values) => values.next_close_byte_demand(),
-        FlowOwner::Neural(values) => values.next_close_byte_demand(),
-        _ => Ok(1),
-    }
-    .map(|bytes| bytes.max(1))
-}
-
-/// ♻️ One turn of the current root's own backing release.
-enum RootBackingRelease {
-    /// 🚫️ The current root owns no backing that is ready to be freed by itself.
-    NotApplicable,
-    /// 🎟️ Payload charged against the caller's grant; the allocation is still held whole.
-    Charged(usize),
-    /// ✅️ The payload is settled and the WHOLE allocation left in this one step.
-    Released(usize),
-}
-
-fn owner_waits_for_backing_release(owner: &FlowOwner) -> bool {
-    match owner {
-        FlowOwner::Bytes(_) => true,
-        FlowOwner::Strings(values) => values.is_empty(),
-        FlowOwner::Widgets(values) => values.is_empty(),
-        FlowOwner::Specs(values) => values.is_empty(),
-        FlowOwner::Neurons(values) => values.is_empty(),
-        FlowOwner::Synapses(values) => values.is_empty(),
-        FlowOwner::Previews(values) => values.is_empty(),
-        FlowOwner::Layout(values) => values.is_empty(),
-        _ => false,
-    }
-}
-
-fn owner_continuation_slots(owner: &FlowOwner) -> usize {
-    match owner {
-        FlowOwner::Strings(values) if !values.is_empty() => 1,
-        FlowOwner::Widgets(values) if !values.is_empty() => 1,
-        FlowOwner::Specs(values) if !values.is_empty() => 5,
-        FlowOwner::Synapses(values) if !values.is_empty() => 5,
-        FlowOwner::Neurons(values) if !values.is_empty() => 4,
-        FlowOwner::Previews(values) if !values.is_empty() => 7,
-        FlowOwner::Layout(values) if !values.is_empty() => 1,
-        FlowOwner::HostSnapshot(_) => 3,
-        FlowOwner::Widget(Widget::Neuron { .. }) => 4,
-        FlowOwner::Widget(Widget::InputSlider { .. })
-        | FlowOwner::Widget(Widget::InputNote { .. })
-        | FlowOwner::Widget(Widget::InputImage { .. })
-        | FlowOwner::Widget(Widget::OutputAction { .. })
-        | FlowOwner::Widget(Widget::OutputExport { .. }) => 1,
-        FlowOwner::Widget(Widget::Variable { .. }) => 2,
-        FlowOwner::Widget(Widget::OutputPreview { .. }) => 2,
-        FlowOwner::Widget(Widget::Cluster { .. }) => 3,
-        FlowOwner::Tree(_) | FlowOwner::Gui(_) => 1,
-        FlowOwner::NodeCursor(_) => 1,
-        FlowOwner::Chrome(NodeChrome::Variable { .. }) => 1,
-        _ => 0,
-    }
-}
-
-#[must_use = "Flow ownership must be transferred or retired to an empty frontier"]
-pub struct FlowRetirement {
-    root: ManuallyDrop<Option<FlowOwner>>,
-    frontier: ManuallyDrop<PagedList<FlowOwner, FLOW_RETIREMENT_FRONTIER_OWNERS>>,
-    /// 🎟️ Payload bytes already charged against the CURRENT root's backing. Payload is portable
-    /// and divisible, so the caller's grant is drawn down `min(grant, left)` per turn — never
-    /// `Blocked`, which is what made every fixed-page driver spin — and the allocation is freed in
-    /// one piece once the charge is settled (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    root_backing_credit: usize,
-    fault: Option<&'static str>,
-}
-
-impl Default for FlowRetirement {
-    fn default() -> Self {
-        Self { root: ManuallyDrop::new(None), frontier: ManuallyDrop::new(PagedList::empty()), root_backing_credit: 0, fault: None }
-    }
-}
-
+#[must_use="Flow ownership must close every original owner and admitted scaffold"]
+pub struct FlowRetirement {root:Option<ControlledRetirement<FlowOwner>>,queue:RetirementQueue}
+impl Default for FlowRetirement {fn default()->Self {Self {root:None,queue:RetirementQueue::default()}}}
 impl FlowRetirement {
-    pub fn from_owner(owner: FlowOwner) -> Self {
-        Self { root: ManuallyDrop::new(Some(owner)), frontier: ManuallyDrop::new(PagedList::empty()), root_backing_credit: 0, fault: None }
+    pub fn from_owner(owner:FlowOwner)->Self {Self {root:Some(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|panic!("Flow owner retirement refused: {error}"))),queue:RetirementQueue::default()}}
+    pub fn push(&mut self,owner:FlowOwner)->Result<(),FlowOwner> {if self.root.is_some(){return Err(owner);}self.root=Some(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|panic!("Flow owner retirement refused: {error}")));Ok(())}
+    pub fn text(&mut self,text:String)->Result<(),FlowOwner> {self.push(FlowOwner::Bytes(text.into_bytes()))}
+    pub fn next_push_capacity_byte_demand(&self)->Result<usize,ValueError> {if self.queue.has_reserved_slot(){Ok(RetirementQueue::frame_birth_bytes::<FlowOwner>())}else{self.queue.next_reserve_capacity_byte_demand()}}
+    pub fn reserve_push(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.queue.reserve_step(grant)}
+    pub fn admit_owner(&mut self,owner:FlowOwner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,FlowOwner)> {self.queue.admit_owned(owner,grant)}
+    pub fn push_cold(&mut self,owner:FlowOwner) {
+        if self.root.is_none(){self.push(owner).unwrap_or_else(|_|panic!("empty Flow root admission refused"));return;}
+        while !self.queue.has_reserved_slot(){self.reserve_push(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:self.queue.next_reserve_capacity_byte_demand().expect("cold Flow queue capacity"),maximum_release_bytes:0,maximum_depth:self.queue.len()+1}).expect("cold Flow queue reservation");}
+        self.admit_owner(owner,RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:RetirementQueue::frame_birth_bytes::<FlowOwner>(),maximum_release_bytes:0,maximum_depth:self.queue.len()+1}).unwrap_or_else(|(error,_)|panic!("cold Flow frame admission refused: {error}"));
     }
-
-    pub fn push(&mut self, owner: FlowOwner) {
-        if self.root.is_none() {
-            *self.root = Some(owner);
-            self.root_backing_credit = 0;
-            return;
-        }
-        while !self.frontier.has_reserved_slot() {
-            let demand = self.frontier.next_allocation_bytes().expect("unbounded Flow frontier has a finite next page");
-            if let Err(error) = self.frontier.reserve_one(demand) {
-                self.fault.get_or_insert(error.reason);
-                std::mem::forget(owner);
-                return;
-            }
-        }
-        let previous = self.root.replace(owner).expect("checked Flow root");
-        self.root_backing_credit = 0;
-        if let Err(previous) = self.frontier.push_reserved(previous) {
-            std::mem::forget(previous);
-            panic!("reserved Flow frontier rejected an owner");
-        }
+    pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.queue.terminal_is_empty()}
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_copy_byte_demand(),ControlledRetirement::next_copy_byte_demand)}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_capacity_byte_demand(copy),|owner|owner.next_capacity_byte_demand(copy))}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_release_byte_demand(),ControlledRetirement::next_release_byte_demand)}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_depth_demand(),ControlledRetirement::next_depth_demand)}
+    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));}
+        if let Some(root)=self.root.as_mut(){if root.terminal_is_empty(){self.root=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}let step=root.step(grant)?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});}
+        self.queue.step(grant)
     }
-
-    pub fn text(&mut self, value: String) {
-        self.push(FlowOwner::Bytes(value.into_bytes()));
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.root.is_none() && self.frontier.terminal_is_empty()
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.is_empty() && self.allocated_bytes() == 0
-    }
-
-    pub fn fault(&self) -> Option<&'static str> {
-        self.fault
-    }
-
-    pub fn allocated_bytes(&self) -> usize {
-        self.root.iter().chain(self.frontier.iter()).fold(self.frontier.allocated_bytes(), |total, owner| {
-            total.saturating_add(owner_backing_bytes(owner).unwrap_or(usize::MAX))
-        })
-    }
-
-    fn target_frontier_capacity(&self) -> Result<usize, &'static str> {
-        self.frontier.len().checked_add(self.root.as_ref().map_or(0, owner_continuation_slots)).ok_or("Flow frontier capacity overflow")
-    }
-
-    pub fn next_allocation_bytes(&self) -> Result<Option<usize>, PagedListError> {
-        self.frontier.next_capacity_allocation_bytes(self.target_frontier_capacity().map_err(|reason|PagedListError {kind:PagedListRefusalKind::OwnershipLimit,reason})?)
-    }
-
-    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListAllocationError> {
-        let target = self.target_frontier_capacity().map_err(|reason| PagedListAllocationError { allocated_bytes: 0, kind:PagedListRefusalKind::OwnershipLimit, reason })?;
-        match self.frontier.reserve_capacity_one(target, maximum_bytes) {
-            Ok(step) => Ok(step),
-            Err(error) => {
-                self.fault.get_or_insert(error.reason);
-                Err(error)
-            }
-        }
-    }
-
-    /// 📏️ The SMALLEST byte grant the next [`ErasedSnapshotRetirement::close_step`] needs to make
-    /// progress. One byte of credit per turn is all a direct backing needs — payload is drawn down
-    /// `min(grant, left)` — and every ALLOCATION this frontier owns (a reserved page, an emptied
-    /// element vector) is paid out of the frontier's OWN reservation currency
-    /// ([`FlowRetirement::allocated_bytes`]), never out of the caller's payload grant, because
-    /// `capacity * size_of::<T>()` is machine-width dependent. A nested cursor that owns whole
-    /// buffers publishes a larger minimum, and a driver READS this before it grants
-    /// (tickets 26/09/09/PROCEDURAL-3D-END-TO-END, 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
-        if let Some(owner) = self.root.as_ref() {
-            return owner_release_demand(owner);
-        }
-        Ok(usize::from(!self.terminal_is_empty()))
-    }
-
-    /// 📄️ The named inherent twin of [`ErasedSnapshotRetirement::close_step`], which pays this
-    /// frontier's OWN page reservations out of its own allocation currency before it closes an
-    /// owner. Both entries are the same step: a driver holding only the erased view is never worse
-    /// off than one holding the concrete frontier
-    /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        <Self as ErasedSnapshotRetirement>::close_step(self, maximum_items, maximum_bytes)
-    }
-
-    /// 🧊️ Explicit cold-only teardown; retained callers use [`FlowRetirement::close_page`]. Every
-    /// turn grants the published demand, so a step that frees nothing and moves nothing is a fault:
-    /// the drain refuses at [`FLOW_RETIREMENT_CLOSE_STALL_BOUND`] instead of spinning.
     pub fn retire_cold(mut self) {
-        let mut stalled = 0usize;
-        loop {
-            while let Some(bytes) = self.next_allocation_bytes().expect("finite cold Flow allocation demand") {
-                self.reserve_allocation(bytes).expect("cold Flow frontier allocation");
-            }
-            let bytes = self.next_close_byte_demand().expect("finite cold Flow release demand");
-            match self.close_step(1, bytes.max(1)).expect("cold Flow retirement") {
-                SnapshotRetirementStep::Complete => break,
-                SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } | SnapshotRetirementStep::Blocked => {
-                    stalled += 1;
-                    assert!(stalled <= FLOW_RETIREMENT_CLOSE_STALL_BOUND, "cold Flow retirement made no progress at its published close demand");
-                }
-                SnapshotRetirementStep::Pending { .. } => stalled = 0,
-            }
-        }
-    }
-
-    fn install<const N: usize>(&mut self, owners: [Option<FlowOwner>; N]) {
-        for owner in owners.into_iter().flatten() {
-            self.root_backing_credit = 0;
-            if let Some(previous) = self.root.replace(owner) {
-                if let Err(previous) = self.frontier.push_reserved(previous) {
-                    std::mem::forget(previous);
-                    panic!("preflighted Flow continuation slot disappeared");
-                }
-            }
-        }
-    }
-
-    fn widget(&mut self, widget: Widget) {
-        match widget {
-            Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => self.install([
-                Some(FlowOwner::Bytes(id.into_bytes())),
-                Some(FlowOwner::Bytes(neuron_kind.into_bytes())),
-                Some(FlowOwner::Dictionary(params)),
-                Some(FlowOwner::Strings(input_ports)),
-                Some(FlowOwner::Strings(output_ports)),
-            ]),
-            Widget::InputSlider { id, label, .. } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Bytes(label.into_bytes()))]),
-            Widget::InputNote { id, text } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Bytes(text.into_bytes()))]),
-            Widget::InputImage { id, src } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Bytes(src.into_bytes()))]),
-            Widget::Variable { id, name, schema } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Bytes(name.into_bytes())), Some(FlowOwner::Bytes(schema.into_bytes()))]),
-            Widget::OutputPreview { id, preview, expanded } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Dictionary(preview)), Some(FlowOwner::Set(expanded))]),
-            Widget::OutputAction { id, action } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Bytes(action.into_bytes()))]),
-            Widget::OutputExport { id, format } => self.install([Some(FlowOwner::Bytes(id.into_bytes())), Some(FlowOwner::Bytes(format.into_bytes()))]),
-            Widget::Cluster { id, name, tree, flow } => self.install([
-                Some(FlowOwner::Bytes(id.into_bytes())),
-                Some(FlowOwner::Bytes(name.into_bytes())),
-                Some(FlowOwner::Tree(tree)),
-                Some(FlowOwner::Gui(flow)),
-            ]),
-        }
-    }
-
-    fn chrome(&mut self, chrome: NodeChrome) {
-        match chrome {
-            NodeChrome::Plain { .. } => {}
-            NodeChrome::Slider { label, .. } => self.install([Some(FlowOwner::Bytes(label.into_bytes()))]),
-            NodeChrome::Note { text } => self.install([Some(FlowOwner::Bytes(text.into_bytes()))]),
-            NodeChrome::Image { src } => self.install([Some(FlowOwner::Bytes(src.into_bytes()))]),
-            NodeChrome::Variable { name, schema } => self.install([Some(FlowOwner::Bytes(name.into_bytes())), Some(FlowOwner::Bytes(schema.into_bytes()))]),
-        }
-    }
-
-    /// 🧩️ One owner family's retirement step, `None` when the family blocked on its grant. Every
-    /// family owns a SEPARATE function on purpose: `FlowOwner` is `size_of` 3160 bytes (its
-    /// `SetCursor`/`LayoutCursor`/`NodeCursor` payloads inline `Retirement<V>`'s
-    /// `MAX_AVL_HEIGHT + 3` slot array), and an unoptimised build gives every `install([…])`
-    /// temporary of every arm its own slot in the enclosing frame — one flat `match` compiled to a
-    /// 518 KiB `close_step` frame, two of which overflow a 2 MiB test thread mid-teardown and abort
-    /// the binary under whichever test happened to be running
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn retire_owner(&mut self, owner: FlowOwner, maximum_bytes: usize) -> Option<usize> {
-        match owner {
-            FlowOwner::Bytes(values) => {
-                *self.root = Some(FlowOwner::Bytes(values));
-                self.fault.get_or_insert("Flow byte backing reached logical dispatch before its physical release");
-                None
-            }
-            FlowOwner::Strings(values) => self.strings(values),
-            FlowOwner::Set(values) => self.set(values),
-            FlowOwner::SetCursor(values) => self.set_cursor(values, maximum_bytes),
-            FlowOwner::Dictionary(value) => self.dictionary(value),
-            FlowOwner::Value(value) => self.value(value),
-            FlowOwner::Neural(value) => self.neural(value, maximum_bytes),
-            FlowOwner::HostSnapshot(value) => self.host_snapshot(value),
-            FlowOwner::Widget(value) => {
-                self.widget(value);
-                Some(0)
-            }
-            FlowOwner::Widgets(values) => self.widgets(values),
-            FlowOwner::Specs(values) => self.specs(values),
-            FlowOwner::Layouts(values) => self.layouts(values),
-            FlowOwner::LayoutCursor(values) => self.layout_cursor(values, maximum_bytes),
-            FlowOwner::Tree(value) => self.tree(value),
-            FlowOwner::Neurons(values) => self.neurons(values),
-            FlowOwner::Synapses(values) => self.synapses(values),
-            FlowOwner::Gui(value) => self.gui(value),
-            FlowOwner::Nodes(values) => self.nodes(values),
-            FlowOwner::NodeCursor(values) => self.node_cursor(values, maximum_bytes),
-            FlowOwner::Previews(values) => self.previews(values),
-            FlowOwner::Layout(values) => self.layout(values),
-            FlowOwner::Chrome(value) => {
-                self.chrome(value);
-                Some(0)
-            }
-        }
-    }
-
-    fn strings(&mut self, mut values: Vec<String>) -> Option<usize> {
-        let value = values.pop().expect("nonempty string owner");
-        self.install([Some(FlowOwner::Strings(values)), Some(FlowOwner::Bytes(value.into_bytes()))]);
-        Some(0)
-    }
-
-    fn set(&mut self, values: OrderedSet) -> Option<usize> {
-        self.install([Some(FlowOwner::SetCursor(values.retire()))]);
-        Some(0)
-    }
-
-    fn set_cursor(&mut self, mut values: Retirement<()>, maximum_bytes: usize) -> Option<usize> {
-        let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
-        let pending = !values.is_empty();
-        let blocked = matches!(step, RetirementStep::Blocked);
-        let mut released_bytes = 0;
-        match step {
-            RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-            RetirementStep::OwnedValue(()) | RetirementStep::Complete | RetirementStep::Blocked => {}
-        }
-        if pending {
-            self.install([Some(FlowOwner::SetCursor(values))]);
-        }
-        (!blocked).then_some(released_bytes)
-    }
-
-    fn dictionary(&mut self, value: neural::Dictionary) -> Option<usize> {
-        self.install([Some(FlowOwner::Neural(neural::ValueRetirement::from_dictionary(value)))]);
-        Some(0)
-    }
-
-    fn value(&mut self, value: neural::Value) -> Option<usize> {
-        self.install([Some(FlowOwner::Neural(neural::ValueRetirement::from_value(value)))]);
-        Some(0)
-    }
-
-    fn neural(&mut self, mut value: neural::ValueRetirement, maximum_bytes: usize) -> Option<usize> {
-        let step = value.close_step(1, maximum_bytes);
-        let blocked = matches!(step, neural::ValueRetirementStep::Blocked);
-        let mut released_bytes = 0;
-        match step {
-            neural::ValueRetirementStep::Pending { released_bytes: bytes, .. } => released_bytes = bytes,
-            neural::ValueRetirementStep::Blocked | neural::ValueRetirementStep::Complete => {}
-        }
-        if !value.terminal_is_empty() {
-            self.install([Some(FlowOwner::Neural(value))]);
-        }
-        (!blocked).then_some(released_bytes)
-    }
-
-    fn host_snapshot(&mut self, value: FlowHostSnapshot) -> Option<usize> {
-        self.install([
-            Some(FlowOwner::Bytes(value.schema.into_bytes())),
-            Some(FlowOwner::Widgets(value.widgets)),
-            Some(FlowOwner::Specs(value.synapses)),
-            Some(FlowOwner::Layouts(value.layout)),
-        ]);
-        Some(0)
-    }
-
-    fn widgets(&mut self, mut values: Vec<Widget>) -> Option<usize> {
-        let value = values.pop().expect("nonempty widget owner");
-        self.install([Some(FlowOwner::Widgets(values)), Some(FlowOwner::Widget(value))]);
-        Some(0)
-    }
-
-    fn specs(&mut self, mut values: Vec<SynapseSpec>) -> Option<usize> {
-        let value = values.pop().expect("nonempty specification owner");
-        self.install([
-            Some(FlowOwner::Specs(values)),
-            Some(FlowOwner::Bytes(value.id.into_bytes())),
-            Some(FlowOwner::Bytes(value.from.into_bytes())),
-            Some(FlowOwner::Bytes(value.to.into_bytes())),
-            Some(FlowOwner::Bytes(value.from_port.into_bytes())),
-            Some(FlowOwner::Bytes(value.to_port.into_bytes())),
-        ]);
-        Some(0)
-    }
-
-    fn layouts(&mut self, values: OrderedMap<WidgetLayout>) -> Option<usize> {
-        self.install([Some(FlowOwner::LayoutCursor(values.retire()))]);
-        Some(0)
-    }
-
-    fn layout_cursor(&mut self, mut values: Retirement<WidgetLayout>, maximum_bytes: usize) -> Option<usize> {
-        let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
-        let pending = !values.is_empty();
-        let blocked = matches!(step, RetirementStep::Blocked);
-        let mut released_bytes = 0;
-        match step {
-            RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-            RetirementStep::OwnedValue(_) | RetirementStep::Complete | RetirementStep::Blocked => {}
-        }
-        if pending {
-            self.install([Some(FlowOwner::LayoutCursor(values))]);
-        }
-        (!blocked).then_some(released_bytes)
-    }
-
-    fn tree(&mut self, value: neural::Tree) -> Option<usize> {
-        self.install([Some(FlowOwner::Neurons(value.neurons)), Some(FlowOwner::Synapses(value.synapses))]);
-        Some(0)
-    }
-
-    fn neurons(&mut self, mut values: Vec<neural::Neuron>) -> Option<usize> {
-        let value = values.pop().expect("nonempty neuron owner");
-        self.install([
-            Some(FlowOwner::Neurons(values)),
-            Some(FlowOwner::Bytes(value.id.into_bytes())),
-            Some(FlowOwner::Bytes(value.kind.into_bytes())),
-            Some(FlowOwner::Dictionary(value.params)),
-            value.tree.map(|tree| FlowOwner::Tree(*tree)),
-        ]);
-        Some(0)
-    }
-
-    fn synapses(&mut self, mut values: Vec<neural::Synapse>) -> Option<usize> {
-        let value = values.pop().expect("nonempty synapse owner");
-        self.install([
-            Some(FlowOwner::Synapses(values)),
-            Some(FlowOwner::Bytes(value.id.into_bytes())),
-            Some(FlowOwner::Bytes(value.from.into_bytes())),
-            Some(FlowOwner::Bytes(value.to.into_bytes())),
-            Some(FlowOwner::Bytes(value.from_port.into_bytes())),
-            Some(FlowOwner::Bytes(value.to_port.into_bytes())),
-        ]);
-        Some(0)
-    }
-
-    fn gui(&mut self, value: FlowGui) -> Option<usize> {
-        self.install([Some(FlowOwner::Nodes(value.nodes)), Some(FlowOwner::Previews(value.previews))]);
-        Some(0)
-    }
-
-    fn nodes(&mut self, values: OrderedMap<FlowNodeGui>) -> Option<usize> {
-        self.install([Some(FlowOwner::NodeCursor(values.retire()))]);
-        Some(0)
-    }
-
-    fn node_cursor(&mut self, mut values: Retirement<FlowNodeGui>, maximum_bytes: usize) -> Option<usize> {
-        let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
-        let pending = !values.is_empty();
-        let blocked = matches!(step, RetirementStep::Blocked);
-        let mut released_bytes = 0;
-        match step {
-            RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-            RetirementStep::OwnedValue(value) => self.install([Some(FlowOwner::Chrome(value.chrome))]),
-            RetirementStep::Complete | RetirementStep::Blocked => {}
-        }
-        if pending {
-            self.install([Some(FlowOwner::NodeCursor(values))]);
-        }
-        (!blocked).then_some(released_bytes)
-    }
-
-    fn previews(&mut self, mut values: Vec<FlowPreviewGui>) -> Option<usize> {
-        let value = values.pop().expect("nonempty preview owner");
-        let (neuron, channel) = value.source.map_or((None, None), |source| {
-            (Some(FlowOwner::Bytes(source.neuron.into_bytes())), Some(FlowOwner::Bytes(source.channel.into_bytes())))
-        });
-        self.install([
-            Some(FlowOwner::Previews(values)),
-            Some(FlowOwner::Bytes(value.id.into_bytes())),
-            Some(FlowOwner::Bytes(value.mode.into_bytes())),
-            Some(FlowOwner::Dictionary(value.preview)),
-            Some(FlowOwner::Set(value.expanded)),
-            neuron,
-            channel,
-            None,
-        ]);
-        Some(0)
-    }
-
-    fn layout(&mut self, mut values: Vec<FlowLayoutEntry>) -> Option<usize> {
-        let value = values.pop().expect("nonempty layout owner");
-        self.install([Some(FlowOwner::Layout(values)), Some(FlowOwner::Bytes(value.id.into_bytes()))]);
-        Some(0)
-    }
-
-    /// 🎟️ Draws the current root's backing PAYLOAD down by at most `maximum_bytes` and frees the
-    /// whole allocation in ONE step once the charge is settled. The two quantities are different
-    /// currencies: the payload (`len`) is portable and divisible and is what the caller's grant
-    /// buys; the allocation (`capacity * size_of::<T>()`) is machine-width dependent, leaves
-    /// [`FlowRetirement::allocated_bytes`] whole or not at all, and is never charged to a caller
-    /// (tickets 26/09/09/PROCEDURAL-3D-END-TO-END, 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    fn release_root_backing(&mut self, maximum_bytes: usize) -> RootBackingRelease {
-        let Some(owner) = self.root.as_ref() else {
-            return RootBackingRelease::NotApplicable;
-        };
-        if !owner_waits_for_backing_release(owner) {
-            return RootBackingRelease::NotApplicable;
-        }
-        let payload = owner_backing_payload(owner);
-        let charged = maximum_bytes.min(payload.saturating_sub(self.root_backing_credit));
-        self.root_backing_credit = self.root_backing_credit.saturating_add(charged);
-        if self.root_backing_credit < payload {
-            return RootBackingRelease::Charged(charged);
-        }
-        self.root_backing_credit = 0;
-        *self.root = None;
-        RootBackingRelease::Released(charged)
+        while !self.terminal_is_empty(){let copy=self.next_copy_byte_demand().expect("cold Flow copy demand");let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_capacity_byte_demand(copy).expect("cold Flow allocation demand"),maximum_release_bytes:self.next_release_byte_demand().expect("cold Flow release demand"),maximum_depth:self.next_depth_demand().expect("cold Flow depth demand")};let step=self.step(grant).expect("cold Flow retirement");assert!(step.progress().copied_items!=0,"cold Flow retirement stalled at exact demand");}
     }
 }
+impl Drop for FlowRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Flow retirement abandoned original ownership");}}
 
 impl FlowHostSnapshot {
     /// 🧊️ Explicit cold-only disposal of a detached fixture.
@@ -621,78 +105,12 @@ impl FlowArtifact {
     }
 }
 
-impl ErasedSnapshotRetirement for FlowRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        use SnapshotRetirementStep as Step;
-        if self.terminal_is_empty() {
-            return Ok(Step::Complete);
-        }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(Step::Blocked);
-        }
-        if let Some(demand) = self.next_allocation_bytes().map_err(semio_framework_value::ValueError::from)? {
-            self.reserve_allocation(demand).map_err(|error|semio_framework_value::ValueError::from(error.refusal()))?;
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-        }
-        match self.release_root_backing(maximum_bytes) {
-            RootBackingRelease::Charged(released_bytes) => return Ok(Step::Pending { released_items: 0, released_bytes }),
-            RootBackingRelease::Released(released_bytes) => return Ok(Step::Pending { released_items: 1, released_bytes }),
-            RootBackingRelease::NotApplicable => {}
-        }
-        if self.root.is_none() {
-            if let Some(owner) = self.frontier.pop() {
-                *self.root = Some(owner);
-                self.root_backing_credit = 0;
-                return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-            }
-            let demand = self.frontier.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)?;
-            let release = self.frontier.release_empty_page(maximum_bytes.max(demand)).map_err(semio_framework_value::ValueError::from)?;
-            if !release.progressed {
-                return Ok(Step::Blocked);
-            }
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-        }
-        let owner = self.root.take().expect("nonempty Flow retirement");
-        if matches!(owner, FlowOwner::Bytes(_)) {
-            *self.root = Some(owner);
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow byte backing reached logical dispatch before its physical release"));
-        }
-        let Some(released_bytes) = self.retire_owner(owner, maximum_bytes) else {
-            return Ok(Step::Blocked);
-        };
-        Ok(Step::Pending { released_items: 1, released_bytes })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        FlowRetirement::terminal_is_empty(self)
-    }
-
-    /// 📏️ The erased view of [`FlowRetirement::next_close_byte_demand`], the one a foreign
-    /// `Box<dyn ErasedSnapshotRetirement>` holder can actually reach. A frontier that can name no
-    /// finite demand answers one byte and surfaces the fault from its own `close_step`.
-    fn next_close_byte_demand(&self) -> usize {
-        FlowRetirement::next_close_byte_demand(self).map_or(1, |bytes| bytes.max(1))
-    }
-}
-
-impl Drop for FlowRetirement {
-    fn drop(&mut self) {
-        if !self.terminal_is_empty() {
-            if !std::thread::panicking() {
-                panic!("Flow retirement dropped with live owned payloads");
-            }
-            return;
-        }
-        unsafe {
-            ManuallyDrop::drop(&mut self.root);
-            ManuallyDrop::drop(&mut self.frontier);
-        }
-    }
-}
-//#endregion 🧹️TypedRetirement
-
 //#region 🧪️RetirementLaws
 #[cfg(test)]
 #[path = "🧪️tests/🧵️retained/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️fields/🦀️.rs"]
+mod field_tests;
 //#endregion 🧪️RetirementLaws

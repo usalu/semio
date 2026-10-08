@@ -57,10 +57,10 @@ pub fn validate(payload: &ApplyLocalCatalogDocument) -> Result<(), Fault> {
 /// 💾️ Stage two — the one catalog write: admits the kept studio under its own id and name, then bumps the catalog generation.
 pub fn commit(payload: &ApplyLocalCatalogDocument, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let (pack, spr) = decoded(payload)?;
-    semio_framework_os::host::import_os_space_from_pack(&pack, &spr, &::semio_framework_async::poll::resolve_ready(crate::catalog_port()))
+    semio_framework_os::host::import_os_space_from_pack(&pack, &spr, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port()))
         .map_err(|error| Fault::new(FaultOrigin::App, "s.home.apply-local-catalog-document.catalog-refused", format!("the local catalog refused the kept studio: {error:?}")))?;
-    let draft_port = ::semio_framework_async::poll::resolve_ready(crate::draft_backbone_port());
-    ::semio_framework_async::poll::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, &payload.document_id);
+    let draft_port = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::draft_backbone_port());
+    ::semio_framework_async::poll::resolve_ready(semio_s_space_core::ephemeral_draft_catalog()).discard_draft(&draft_port, &payload.document_id);
     Ok(Emit::mutations(vec![change_catalog_generation(doc.snapshot.catalog_generation + 1)]))
 }
 
@@ -69,7 +69,7 @@ pub fn commit(payload: &ApplyLocalCatalogDocument, doc: &ArtifactView<'_, SHomeS
 /// studio into that lane, records it in its local catalog and hands it back through `applyLocalCatalogDocument`.
 pub fn keep_on_device(space_id: &str, storage: &str, target: &str) -> Result<Effect, Fault> {
     let refused = |code: &'static str, message: String| Fault::new(FaultOrigin::App, code, message);
-    let document = ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(space_id)).ok_or_else(|| refused("s.home.keep-on-device.unknown-studio", format!("no local studio {space_id} exists")))?;
+    let document = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(space_id)).ok_or_else(|| refused("s.home.keep-on-device.unknown-studio", format!("no local studio {space_id} exists")))?;
     let files = semio_framework_os::export_backbone_pack(&document).map_err(|error| refused("s.home.keep-on-device.export-failed", format!("studio {space_id} could not be exported: {error:?}")))?;
     let name = semio_framework_os::materialize_backbone_snapshot(&document, &[]).map_err(|error| refused("s.home.keep-on-device.export-failed", format!("studio {space_id} could not be read: {error:?}")))?.name;
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({

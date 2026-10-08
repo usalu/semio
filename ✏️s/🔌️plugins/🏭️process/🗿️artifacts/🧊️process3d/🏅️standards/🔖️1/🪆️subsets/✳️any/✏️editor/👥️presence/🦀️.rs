@@ -81,14 +81,6 @@ impl protocol::DiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
             camera_fov: self.camera_fov.as_ref().map(|_| base.camera_fov.clone()),
         }
     }
-    fn between(base: &Process3dPresence, other: &Process3dPresence) -> Self {
-        Self {
-            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
-            camera_position: (base.camera_position != other.camera_position).then(|| other.camera_position.clone()),
-            camera_target: (base.camera_target != other.camera_target).then(|| other.camera_target.clone()),
-            camera_fov: (base.camera_fov != other.camera_fov).then(|| other.camera_fov.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none()
     }
@@ -180,8 +172,7 @@ impl Mutation<Process3dPresence> for Process3dPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }]
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+    }, protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-camera",
         semantic_kind: "set-camera",
@@ -196,7 +187,7 @@ impl Mutation<Process3dPresence> for Process3dPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }]
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

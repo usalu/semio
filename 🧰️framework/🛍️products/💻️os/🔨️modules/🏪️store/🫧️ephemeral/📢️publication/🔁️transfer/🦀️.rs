@@ -2,7 +2,7 @@
 
 use super::{
     ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint,
-    ArtifactStoreOneItemGrant, SnapshotRetirementStep,
+    ArtifactStoreOneItemGrant,
 };
 use std::sync::Arc;
 
@@ -63,12 +63,15 @@ impl<P, M> super::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> 
         Ok(super::ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint: ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, ..Default::default() } })
     }
     fn begin_close(&mut self) {}
-    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        true
-    }
+ }
+impl<P, M> crate::os_store::ErasedSnapshotRetirement for TransferTask<P, M> {
+    fn close_step(&mut self, _: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
+    fn terminal_is_empty(&self) -> bool { true }
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+
 }
 
 #[cfg(test)]

@@ -6,32 +6,35 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "wind",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [
+            "inserted": [
               {
-                "kind": "nodal",
-                "id": "lw3",
-                "nodeId": "n3",
-                "dof": "Tx",
-                "value": 7500.0
+                "index": 2,
+                "row": {
+                  "kind": "nodal",
+                  "id": "lw3",
+                  "nodeId": "n3",
+                  "dof": "Tx",
+                  "value": 7500.0
+                }
               }
             ],
             "removed": [],
-            "patched": [],
-            "reordered": null
+            "moved": [],
+            "modified": []
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

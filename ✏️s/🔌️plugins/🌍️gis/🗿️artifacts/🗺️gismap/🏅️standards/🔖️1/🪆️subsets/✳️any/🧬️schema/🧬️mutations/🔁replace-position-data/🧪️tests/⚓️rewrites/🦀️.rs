@@ -5,7 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, never here.
 //!
 //! 🔁️ `replace-position-data` is a WHOLE-value swap of the opaque `MapFeature::data` payload —
-//! `MapFeaturePatch` has exactly one field, so the delta is a single `patched` entry and the feature's
+//! `MapFeaturePatch` has exactly one field, so the delta is a single `modified` entry and the feature's
 //! identity and list position are untouched. Its inverse is BASE-derived: the prior payload, read out of the
 //! pre-mutation snapshot.
 //!
@@ -13,7 +13,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-position-data/⚓️rewrites/📸️snapshot/⬅️before/🔣️.json");
@@ -119,7 +120,7 @@ async fn committed_diff_applies_to_after() {
 }
 
 /// 🔁️ `replace-position-data` is a WHOLE-value swap of the opaque `MapFeature::data` payload —
-/// `MapFeaturePatch` has exactly one field, so the delta is a single `patched` entry and the feature's
+/// `MapFeaturePatch` has exactly one field, so the delta is a single `modified` entry and the feature's
 /// identity and list position are untouched. Its inverse is BASE-derived: the prior payload, read out of the
 /// pre-mutation snapshot.
 #[semio_framework_async_macros::async_test]
@@ -129,10 +130,10 @@ async fn patches_only_the_harbor_payload_and_inverts_to_the_base_payload() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "replace-position-data/rewrites-harbor-position-payload: a genuinely different payload must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().positions.as_ref().expect("replace-position-data writes a positions delta");
-    assert_eq!(delta.patched.len(), 1, "replace-position-data/rewrites-harbor-position-payload: exactly one feature is patched, got {delta:?}");
-    assert_eq!(delta.patched[0].id, "pos-harbor", "replace-position-data/rewrites-harbor-position-payload: the patch is addressed by the payload's own id");
-    assert_eq!(delta.patched[0].patch.data.as_ref(), Some(&after.positions[0].data), "replace-position-data/rewrites-harbor-position-payload: the patch carries the committed replacement payload verbatim");
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.reordered.is_none(), "replace-position-data/rewrites-harbor-position-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
+    assert_eq!(delta.modified.len(), 1, "replace-position-data/rewrites-harbor-position-payload: exactly one feature is patched, got {delta:?}");
+    assert_eq!(delta.modified[0].id, "pos-harbor", "replace-position-data/rewrites-harbor-position-payload: the patch is addressed by the payload's own id");
+    assert_eq!(delta.modified[0].patch.data.as_ref(), Some(&after.positions[0].data), "replace-position-data/rewrites-harbor-position-payload: the patch carries the committed replacement payload verbatim");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "replace-position-data/rewrites-harbor-position-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
     assert!(produced.diff().routes.is_none() && produced.diff().regions.is_none(), "replace-position-data/rewrites-harbor-position-payload: replace-position-data must never touch the routes or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "replace-position-data/rewrites-harbor-position-payload: a payload swap undoes with exactly one step, got {inverse:?}");

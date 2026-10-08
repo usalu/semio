@@ -7,7 +7,7 @@
 //!
 //! ⚠️ Why this leaf pins the NO-OP branch: `FormsSnapshot` keeps its `steps` tree in the composed
 //! `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), and every content-changing forms
-//! diff routes through `forms_diff_from_delta`, which re-mints both handles with a `child_id` that
+//! diff routes through `FormsDiff::apply`, which re-derives both handles with a `child_id` that
 //! is a `DefaultHasher` digest of the child content — hand-authoring such an `➡️after` would mean
 //! forging a value out of `std`'s deliberately unspecified default hasher. This guard returns
 //! before that call, so nothing is minted and `➡️after == ⬅️before`.
@@ -19,8 +19,9 @@
 //! `index.min(blocks.len())` clamp is computed against a list the block has already been lifted out
 //! of, exactly as it is for a genuine move.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no/📸️snapshot/➡️after/🔣️.json");

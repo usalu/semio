@@ -1,0 +1,85 @@
+{
+  "catalogSHA": "a94cea3fb19f6d9f5c2b515d5e836149aee1ef8753d235bf702267b8a01147cc",
+  "scopes": 3644,
+  "bindings": [
+    {
+      "scopeId": "hub.bootstrap",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "repo.discovery.runtime",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "os.plugin.browser-bundle",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "os.dev.distribution",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "os.dev.verification.publication",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "repo.library.workspaces.cargo.preparation.custody",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "s.dev.entry",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "os.plugin.registry.descriptor-verification",
+      "formatHashes": 1,
+      "drift": []
+    },
+    {
+      "scopeId": "os.plugin.registry",
+      "formatHashes": 2,
+      "drift": []
+    }
+  ],
+  "thirdActions": [
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+      "match": true,
+      "sha256": null
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+      "match": true,
+      "sha256": "83e1c3cc83503647af3a4232c7d77fa48b329305b2cc25d4138b81d360d0d08d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts",
+      "match": true,
+      "sha256": "735ecdacbbc06761a60ba0a18f25e722aa60165e2e7b6c0430f58ba81dd58220"
+    }
+  ],
+  "originalRequestedPaths": [
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+      "absent": true,
+      "catalogReferences": 0
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🧬️schema/🔣️.json",
+      "absent": true,
+      "catalogReferences": 0
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️control/🧬️schema/🔣️.json",
+      "absent": true,
+      "catalogReferences": 0
+    }
+  ]
+}

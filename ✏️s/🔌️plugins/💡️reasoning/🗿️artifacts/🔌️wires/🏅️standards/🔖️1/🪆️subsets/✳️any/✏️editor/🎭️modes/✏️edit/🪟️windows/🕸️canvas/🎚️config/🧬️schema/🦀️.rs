@@ -55,11 +55,6 @@ impl protocol::DiffAlgebra<WiresCanvasWindowConfig> for WiresCanvasWindowConfigD
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
     }
-    fn between(base: &WiresCanvasWindowConfig, other: &WiresCanvasWindowConfig) -> Self {
-        Self {
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none()
     }

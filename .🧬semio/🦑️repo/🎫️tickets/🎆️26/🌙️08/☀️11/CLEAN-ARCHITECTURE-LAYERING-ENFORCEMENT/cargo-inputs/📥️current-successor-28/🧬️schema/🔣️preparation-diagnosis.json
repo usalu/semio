@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tests",
+    "names",
+    "nativeLaw",
+    "nativeFixture",
+    "maximumFiles",
+    "maximumBytes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tests": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts"
+      ]
+    },
+    "names": {
+      "const": [
+        "every compiling native command prepares owners and keeps diagnostics off machine stdout",
+        "selected preparation development closure matches Cargo tree root ownership",
+        "queued native preparation survives waiting beyond one active recipe budget"
+      ]
+    },
+    "nativeLaw": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts"
+    },
+    "nativeFixture": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json"
+    },
+    "maximumFiles": {
+      "const": 4096
+    },
+    "maximumBytes": {
+      "const": 67108864
+    }
+  }
+}

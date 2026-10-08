@@ -60,20 +60,6 @@ fn indexed_is_empty<D, T>(t: &IndexedTripleDiff<D, T>) -> bool {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn indexed_between<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_between: impl Fn(&T, &T) -> Option<D>) -> IndexedTripleDiff<D, T> {
-    let min = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        if let Some(d) = diff_between(&base[i], &other[i]) {
-            modified.push(IndexModified { index: i, diff: d });
-        }
-    }
-    let removed: Vec<usize> = (min..base.len()).collect();
-    let added: Vec<IndexAdded<T>> = (min..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    IndexedTripleDiff { removed, modified, added }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T], diff_apply: impl Fn(&D, &T) -> T) -> Vec<T> {
     let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
     for m in &triple.modified {
@@ -233,11 +219,7 @@ impl SemioAudioChannelDiff {
         self.samples.is_none()
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &SemioAudioChannel, other: &SemioAudioChannel) -> Self {
-        Self { samples: (base.samples != other.samples).then_some(other.samples.clone()) }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn apply(&self, base: &SemioAudioChannel) -> SemioAudioChannel {
+    pub fn apply_row(&self, base: &SemioAudioChannel) -> SemioAudioChannel {
         let mut next = base.clone();
         if let Some(v) = &self.samples {
             next.samples = v.clone();
@@ -259,19 +241,12 @@ impl SemioAudioChannelDiff {
 pub type SemioAudioChannelsDiff = IndexedTripleDiff<SemioAudioChannelDiff, SemioAudioChannel>;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn channels_between(base: &[SemioAudioChannel], other: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
-    indexed_between(base, other, |a, b| {
-        let d = SemioAudioChannelDiff::between(a, b);
-        (!d.is_empty()).then_some(d)
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn channels_apply(d: &SemioAudioChannelsDiff, base: &[SemioAudioChannel]) -> Vec<SemioAudioChannel> {
-    indexed_apply(d, base, |diff, item| diff.apply(item))
+    indexed_apply(d, base, |diff, item| diff.apply_row(item))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn channels_absorb(mine: &mut SemioAudioChannelsDiff, other: SemioAudioChannelsDiff) {
-    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item));
+    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply_row(item));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
@@ -284,10 +259,6 @@ fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioChannel]
 /// [`SemioAudioTag`] (`D = T = SemioAudioTag`), no further sub-diffing of a key/value pair.
 pub type SemioAudioTagsDiff = IndexedTripleDiff<SemioAudioTag, SemioAudioTag>;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn tags_between(base: &[SemioAudioTag], other: &[SemioAudioTag]) -> SemioAudioTagsDiff {
-    indexed_between(base, other, |a, b| (a != b).then_some(b.clone()))
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tags_apply(d: &SemioAudioTagsDiff, base: &[SemioAudioTag]) -> Vec<SemioAudioTag> {
     indexed_apply(d, base, |diff, _item| diff.clone())
@@ -375,109 +346,27 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
         }
     }
 
-    fn between(base: &SemioAudioSnapshot, other: &SemioAudioSnapshot) -> Self {
-        let channels_diff = channels_between(&base.channels, &other.channels);
-        let tags_diff = tags_between(&base.tags, &other.tags);
-        Self {
-            sample_rate: (base.sample_rate != other.sample_rate).then_some(other.sample_rate),
-            format: (base.format != other.format).then_some(other.format),
-            channels: (!indexed_is_empty(&channels_diff)).then_some(channels_diff),
-            tags: (!indexed_is_empty(&tags_diff)).then_some(tags_diff),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
 
 
-//#endregion 🔖️Diff
-
-//#region 🔖️HandcraftedDiffCodec
-/// 🧪️ Hand-rolled `protocol::DiffCodec` per the ticket's blanket instruction (never fight the
-/// derive — see this module's doc comment for the generic-collection `DslField` gap that would
-/// otherwise block `#[derive(dsl::DslDiff)]` on the `channels`/`tags` fields).
-///
-/// **Grammar** (real, not `serde_json`): one space-separated `name=value` token per changed
-/// top-level scalar field; the two collections print as `name{<🧰️triples enc_indexed_triple
-/// output>}` sections, reusing the SHARED engine codec directly (no per-collection hand-duplicated
-/// bracket printer, unlike gif's `enc_frames_diff`/`enc_comments_diff` — the docx-precedent
-/// simplification this ticket calls for). `f32` samples print as `to_bits()` hex tokens (exact
-/// round trip, no float-formatting precision loss, no NaN/–0.0 ambiguity). Strings are lowercase
-/// hex. Worked example: `rate=44100 format=f32 channels{[];[1:[1,[3f800000]]];[]}
-/// tags{[0];[];[0:[74697465,6669727374]]}`.
-//#region 🔖️Primitives
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueCodecs
-
-//#region 🔖️TopLevel
-
-
-
-
-
-
-
-//#endregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
 //#region 🔖️Demo
-/// 🌱 Representative `SemioAudioDiff` cases (empty/no-op, a full field sweep both directions incl.
-/// both collection triples) — single source of truth for `diff_grammar_conformance_law`/
-/// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
+/// 🌱 Representative `SemioAudioDiff` cases built declaratively (empty/no-op, every scalar with both collection triples) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-audio"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn channel(seed: f32, len: usize) -> SemioAudioChannel {
-        SemioAudioChannel { samples: (0..len).map(|i| seed + i as f32 * 0.1).collect() }
-    }
-    let a = SemioAudioSnapshot {
-        sample_rate: 44_100,
-        format: SemioAudioFormat::Pcm16,
-        channels: vec![channel(0.0, 4), channel(1.0, 4), channel(2.0, 4)],
-        tags: vec![SemioAudioTag { key: "title".into(), value: "one".into() }],
-        ..SemioAudioSnapshot::default()
-    };
-    let b = SemioAudioSnapshot {
-        sample_rate: 48_000,
-        format: SemioAudioFormat::Float32,
-        channels: vec![channel(9.0, 2), channel(1.0, 4)],
-        tags: vec![SemioAudioTag { key: "title".into(), value: "two".into() }, SemioAudioTag { key: "artist".into(), value: "someone".into() }],
-        ..SemioAudioSnapshot::default()
-    };
-    vec![SemioAudioDiff::default(), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a)]
+    vec![
+        SemioAudioDiff::default(),
+        SemioAudioDiff {
+            sample_rate: Some(48_000),
+            format: Some(SemioAudioFormat::Float32),
+            channels: Some(IndexedTripleDiff { removed: vec![0], modified: Vec::new(), added: vec![IndexAdded { index: 1, item: SemioAudioChannel { samples: vec![0.1, 0.2] } }] }),
+            tags: Some(IndexedTripleDiff { removed: vec![0], modified: Vec::new(), added: vec![IndexAdded { index: 0, item: SemioAudioTag { key: "artist".into(), value: "someone".into() } }] }),
+        },
+    ]
 }
 //#endregion 🔖️Demo
 

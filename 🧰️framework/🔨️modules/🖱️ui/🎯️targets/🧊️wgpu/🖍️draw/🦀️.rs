@@ -692,9 +692,6 @@ impl MeshGpuTable {
             let schema = lease.schema().map_err(|_| "mesh upload lease was stale")?;
             let vertex_bytes = u64::from(schema.vertices).checked_mul(size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
             let index_bytes = u64::from(schema.indices).checked_mul(size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
-            if vertex_bytes == 0 {
-                return Err("mesh upload schema was empty");
-            }
             let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
             let index_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
             self.upload = Some(MeshGpuUploadCursor { key, version, lease, schema, vertex_buffer: Some(vertex_buffer), index_buffer: Some(index_buffer), vertex: 0, index: 0 });
@@ -4611,7 +4608,7 @@ impl UiPipelines {
         height: f32,
     ) -> Result<bool, &'static str> {
         let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };
-        if mesh.index_count == 0 { return Ok(false); }
+        if mesh.index_count == 0 { return Ok(true); }
         let globals = World3dGlobals::from_pass(pass_owner);
         self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -4673,7 +4670,7 @@ impl UiPipelines {
         height: f32,
     ) -> Result<bool, &'static str> {
         let Some(mesh) = mesh_store.get_versioned(&draw_owner.mesh_key, draw_owner.mesh_version) else { return Ok(false) };
-        if mesh.index_count == 0 { return Ok(false); }
+        if mesh.index_count == 0 { return Ok(true); }
         let globals = World3dGlobals::from_pass(pass_owner);
         self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));

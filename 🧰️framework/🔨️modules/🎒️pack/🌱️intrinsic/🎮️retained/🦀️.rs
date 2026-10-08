@@ -112,7 +112,7 @@ impl<'a,D:Driver> Materializer<'a,D>{
   Ok(RetainedIntrinsicStep{units,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete})
  }
  pub fn take_output(&mut self)->Option<DslValue>{if self.complete&&!self.closing&&self.fault.is_none(){self.owned.output.take()}else{None}}
- pub fn next_close_copy_byte_demand(&self)->usize{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_copy_byte_demand()}}self.cursor.next_copy_demand()}
+ pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_copy_byte_demand()}}Ok(self.cursor.next_copy_demand())}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_capacity_byte_demand(body)}}self.cursor.next_capacity_demand(body)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,PackRefusal>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_release_byte_demand().map_err(PackRefusal::from)}}self.cursor.next_release_demand()}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_depth_demand()}}self.cursor.next_depth_demand()}
@@ -173,7 +173,7 @@ macro_rules! operation{($name:ident,$driver:ty)=>{
   pub fn input(&self)->Option<&[u8]>{self.0.input()}
   pub fn admitted_bytes(&self)->usize{self.0.admitted_bytes()}
   pub fn take_output(&mut self)->Option<DslValue>{self.0.take_output()}
-  pub fn next_close_copy_byte_demand(&self)->usize{self.0.next_close_copy_byte_demand()}
+  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.0.next_close_copy_byte_demand()}
   pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.0.next_close_capacity_byte_demand(body)}
   pub fn next_close_release_byte_demand(&self)->Result<usize,PackRefusal>{self.0.next_close_release_byte_demand()}
   pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.0.next_close_depth_demand()}

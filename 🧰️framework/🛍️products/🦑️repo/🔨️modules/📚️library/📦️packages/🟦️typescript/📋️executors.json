@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "owner-command": {
+      "implementation": "../../🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "schema": "../../🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+      "description": "Forward literal argv to canonical native/process ownership without shell interpolation."
+    }
+  }
+}

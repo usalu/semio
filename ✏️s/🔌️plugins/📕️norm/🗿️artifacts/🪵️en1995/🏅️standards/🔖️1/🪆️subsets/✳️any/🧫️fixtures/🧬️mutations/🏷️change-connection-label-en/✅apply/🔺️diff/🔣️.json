@@ -2,15 +2,17 @@
   "annex": null,
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "connections": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "conn-C1",
+        "id": "conn-C1",
         "patch": {
           "labelEn": "Bolt group (revised)",
           "labelDe": null,
@@ -31,7 +33,8 @@
           "fUK": null,
           "actions": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           }
         }

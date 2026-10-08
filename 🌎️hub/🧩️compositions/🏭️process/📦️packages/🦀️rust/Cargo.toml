@@ -20,6 +20,7 @@ consumes = ["process.machines"]
 
 [[package.metadata.semio.playground]]
 variant = "process3d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.process.process3d@1/*#editor"
 aliases = ["process 3d"]
 ports = { react = 6022, wgpu = 6122 }

@@ -32,5 +32,5 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateNode {
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]
     }
-, index: None }
+}
 //#endregion 🔖️Mutation

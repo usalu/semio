@@ -6,8 +6,8 @@ use crate::diff::ProgramApprovalsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
-/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns, in place:
+/// `removed = [{id, index}]` and `inserted = [{index, payload row}]` at the same coordinate, so the new row keeps its position.
 pub fn diff(payload: &ReplaceApprovalRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = &payload.approval_record.header.id;
     let Some(position) = base.approvals.iter().position(|row| row.header.id == *id) else {
@@ -16,6 +16,7 @@ pub fn diff(payload: &ReplaceApprovalRecord, base: &ProgramSnapshot) -> protocol
     if base.approvals[position] == payload.approval_record {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This approval record already matches the requested value.").at([id.0.clone()])]);
     }
-    let reordered = (position + 1 != base.approvals.len()).then(|| base.approvals.iter().map(|row| row.header.id.0.clone()).collect());
-    protocol::MutationOutcome::new(ProgramDiff { approvals: Some(ProgramApprovalsDelta { removed: vec![id.0.clone()], added: vec![payload.approval_record.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let mut delta = ProgramApprovalsDelta::removal(&base.approvals, position);
+    delta.absorb(ProgramApprovalsDelta::insertion(position, payload.approval_record.clone()));
+    protocol::MutationOutcome::new(ProgramDiff { approvals: Some(delta), ..Default::default() })
 }

@@ -358,7 +358,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             };
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let authority = super::super::tests::authority();
-            let mut owner = authority.begin_one_item_seal(edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::super::tests::FixtureSnapshotRetirement));
+            let mut owner = super::super::tests::admit_sealer(Arc::clone(&authority), edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::super::tests::FixtureSnapshotRetirement));
             let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes };
             let mut actual = Vec::new();
             let mut failure = None;

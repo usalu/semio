@@ -96,27 +96,70 @@
         "🟦️typescript"
       ]
     },
-    "En1996OpeningAddition": {
-      "title": "En1996OpeningAddition",
+    "En1996OpeningRemoval": {
+      "title": "En1996OpeningRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996OpeningInsertion": {
+      "title": "En1996OpeningInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallOpening"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996OpeningRelocation": {
+      "title": "En1996OpeningRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -129,11 +172,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -151,20 +194,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1996OpeningRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1996OpeningAddition"
+            "$ref": "#/$defs/En1996OpeningInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996OpeningRelocation"
           }
         },
         "modified": {
@@ -220,27 +270,70 @@
         "🟦️typescript"
       ]
     },
-    "En1996ConcentratedAddition": {
-      "title": "En1996ConcentratedAddition",
+    "En1996ConcentratedRemoval": {
+      "title": "En1996ConcentratedRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996ConcentratedInsertion": {
+      "title": "En1996ConcentratedInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ConcentratedLoad"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996ConcentratedRelocation": {
+      "title": "En1996ConcentratedRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -253,11 +346,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -275,20 +368,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1996ConcentratedRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1996ConcentratedAddition"
+            "$ref": "#/$defs/En1996ConcentratedInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996ConcentratedRelocation"
           }
         },
         "modified": {
@@ -417,27 +517,70 @@
         "🟦️typescript"
       ]
     },
-    "En1996LoadCaseAddition": {
-      "title": "En1996LoadCaseAddition",
+    "En1996LoadCaseRemoval": {
+      "title": "En1996LoadCaseRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996LoadCaseInsertion": {
+      "title": "En1996LoadCaseInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996LoadCaseRelocation": {
+      "title": "En1996LoadCaseRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -450,11 +593,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -472,20 +615,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1996LoadCaseRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1996LoadCaseAddition"
+            "$ref": "#/$defs/En1996LoadCaseInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996LoadCaseRelocation"
           }
         },
         "modified": {
@@ -817,27 +967,70 @@
         "🟦️typescript"
       ]
     },
-    "En1996WallAddition": {
-      "title": "En1996WallAddition",
+    "En1996WallRemoval": {
+      "title": "En1996WallRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996WallInsertion": {
+      "title": "En1996WallInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996WallRelocation": {
+      "title": "En1996WallRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -850,11 +1043,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -872,20 +1065,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1996WallRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1996WallAddition"
+            "$ref": "#/$defs/En1996WallInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996WallRelocation"
           }
         },
         "modified": {

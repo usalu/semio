@@ -57,9 +57,9 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     ["whole-world-instance", 1, "pass.draw_indexed(0..mesh.index_count, 0, 0..1)", "pass.draw_indexed(0..mesh.index_count, 0, 0..instances.len() as u32)"],
     ["whole-world-line", 1, "pass.draw(0..2, 0..1)", "pass.draw(0..vertices.len() as u32, 0..1)"],
     ["unmounted-gpu-drain", 3, "PreparedGpuPresentCursor::close_abandoned_step()", "true"],
-    ["unmounted-input-drain", 3, "PreparedRenderInput::close_abandoned_step()", "true"],
-    ["unmounted-job-drain", 3, "PreparedRenderJob::close_abandoned_step()", "true"],
-    ["unmounted-packet-drain", 3, "PreparedRenderPacket::close_abandoned_step()", "true"],
+    ["unmounted-input-drain", 3, "PreparedRenderInput::close_abandoned_step(grant)", "true"],
+    ["unmounted-job-drain", 3, "PreparedRenderJob::close_abandoned_step(grant)", "true"],
+    ["unmounted-packet-drain", 3, "PreparedRenderPacket::close_abandoned_step(grant)", "true"],
     ["caller-bulk-fuel", 3, "fuel_per_step: 1", "fuel_per_step: 64"],
     [
       "caller-wide-deadline",

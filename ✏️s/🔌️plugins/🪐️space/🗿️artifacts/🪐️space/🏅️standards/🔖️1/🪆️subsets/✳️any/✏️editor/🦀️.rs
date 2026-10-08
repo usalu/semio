@@ -276,11 +276,11 @@ impl ArtifactEditor for SpaceIndexEditor {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        crate::space_core::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-index-artifact-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
+        semio_s_space_core::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-index-artifact-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        crate::space_core::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
+        semio_s_space_core::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 
     /// 🗃️ …and once presence stops refusing, the ARTIFACT store's own retirement catalog is the next
@@ -532,4 +532,3 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
-

@@ -19,9 +19,10 @@
   "storage": null,
   "environmental": null,
   "humanFactors": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "human-factor-requirement-a",
         "patch": {
@@ -56,8 +57,7 @@
           "verificationMethod": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "accessibility": null,
   "privacy": null,

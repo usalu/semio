@@ -4,7 +4,7 @@ use crate::En1993Snapshot;
 pub fn inverse(payload: &RemoveSection, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
     if payload.index >= base.sections.len() { return Vec::new(); }
-    vec![En1993Mutation::InsertSection(insert_section::InsertSection { index: payload.index, section: base.sections[payload.index].clone() })]
+    vec![En1993Mutation::InsertSection(insert_section::InsertSection { index: Some(payload.index), section: base.sections[payload.index].clone() })]
 
     })())
 }

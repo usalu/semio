@@ -5,12 +5,15 @@
   "synapses": null,
   "layout": null,
   "generations": {
-    "added": [],
     "removed": [
-      "gen-2"
+      {
+        "id": "gen-2",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "selectedGeneration": {
     "id": "gen-1"

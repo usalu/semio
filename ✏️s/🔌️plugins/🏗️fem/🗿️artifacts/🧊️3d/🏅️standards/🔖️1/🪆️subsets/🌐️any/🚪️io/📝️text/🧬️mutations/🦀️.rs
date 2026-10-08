@@ -1,6 +1,7 @@
 //! ⚡️ Fem3d artifact — OpText/OpBinary codecs + grammar for `Fem3dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation,Fem3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation,Fem3dMutation};
+use crate::central_apply::apply_fem3d_mutation;
 
 
 //#region 📖️SemioGrammar
@@ -103,7 +104,7 @@ pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
     let inverse = <Fem3dMutation as Mutation<Fem3dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         let (next, outcome) = store::apply_outcome(&undone, <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(step, &undone));
         undone = next;
         inverse_messages.extend(outcome.messages().iter().cloned());

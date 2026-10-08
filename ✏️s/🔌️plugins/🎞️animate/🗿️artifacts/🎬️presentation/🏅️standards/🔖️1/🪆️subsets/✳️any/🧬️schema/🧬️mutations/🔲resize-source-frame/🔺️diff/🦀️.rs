@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `resize-source-frame`.
 use super::ResizeSourceFrame;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -18,6 +18,6 @@ pub fn diff(payload: &ResizeSourceFrame, base: &PresentationSnapshot) -> protoco
     if base.source.frame == payload.new_frame {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Source frame is already unchanged.".to_string());
     }
-    protocol::MutationOutcome::new(diff_set_presentation(base, Some(PresentationSourcePatch { frame: Some(payload.new_frame.clone()), ..Default::default() }), None))
+    protocol::MutationOutcome::new(PresentationDiff { source: Some(PresentationSourcePatch { frame: Some(payload.new_frame.clone()), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

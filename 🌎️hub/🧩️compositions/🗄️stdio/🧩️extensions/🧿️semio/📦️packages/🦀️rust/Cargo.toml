@@ -26,114 +26,133 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-brep"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/brep#editor"
 aliases = ["stdio semio brep"]
 ports = { react = 6276, wgpu = 6376 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-drawing"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/drawing#editor"
 aliases = ["stdio semio drawing"]
 ports = { react = 6278, wgpu = 6378 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-graph"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/graph#editor"
 aliases = ["stdio semio graph"]
 ports = { react = 6279, wgpu = 6379 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-kit"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/kit#editor"
 aliases = ["stdio semio kit"]
 ports = { react = 6280, wgpu = 6380 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-mesh"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/mesh#editor"
 aliases = ["stdio semio mesh"]
 ports = { react = 6281, wgpu = 6381 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-object"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/object#editor"
 aliases = ["stdio semio object"]
 ports = { react = 6282, wgpu = 6382 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-table"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/table#editor"
 aliases = ["stdio semio table"]
 ports = { react = 6283, wgpu = 6383 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-text"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/text#editor"
 aliases = ["stdio semio text"]
 ports = { react = 6284, wgpu = 6384 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-animation"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/animation#editor"
 aliases = ["stdio semio animation"]
 ports = { react = 6285, wgpu = 6385 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/*#editor"
 aliases = ["stdio semio"]
 ports = { react = 6286, wgpu = 6386 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-audio"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/audio#editor"
 aliases = ["stdio semio audio"]
 ports = { react = 6287, wgpu = 6387 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-cad"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/cad#editor"
 aliases = ["stdio semio cad"]
 ports = { react = 6288, wgpu = 6388 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-document"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/document#editor"
 aliases = ["stdio semio document"]
 ports = { react = 6289, wgpu = 6389 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-flow"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/flow#editor"
 aliases = ["stdio semio flow"]
 ports = { react = 6290, wgpu = 6390 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-image"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/image#editor"
 aliases = ["stdio semio image"]
 ports = { react = 6291, wgpu = 6391 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-model"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/model#editor"
 aliases = ["stdio semio model"]
 ports = { react = 6292, wgpu = 6392 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-presentation"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/presentation#editor"
 aliases = ["stdio semio presentation"]
 ports = { react = 6293, wgpu = 6393 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-value"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/value#editor"
 aliases = ["stdio semio value"]
 ports = { react = 6294, wgpu = 6394 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-video"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.semio@v1/video#editor"
 aliases = ["stdio semio video"]
 ports = { react = 6295, wgpu = 6395 }

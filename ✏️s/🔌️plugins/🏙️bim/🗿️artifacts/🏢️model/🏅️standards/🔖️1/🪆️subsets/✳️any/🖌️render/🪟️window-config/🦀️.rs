@@ -1,11 +1,16 @@
 //! 🪟️ One macro for every persisted-local window configuration of the BIM surfaces: given a `DslRecord` + `DslArtifact` state struct it
-//! derives the text/pack codecs, the whole-record `Snapshot` mutation with its concrete inverse, the op codecs, the window-config owner
+//! derives the text/pack codecs, the sparse per-field diff, the `Replace` mutation (a `replace-<entity>` kind: payload is the window's whole configuration,
+//! diff is only the fields that differ from the base, inverse is the same kind carrying the base configuration), the op codecs, the window-config owner
 //! and the three accessors (`current`, `from_snapshot`, `addressed`). Editor and viewer windows share it; each invocation owns its module.
 
-/// 🪟️ The shared half of [`bim_window_config`]: codecs, mutation, owner and accessors around an already declared diff type `$diff` and its constructor `$diff_of`.
+/// 🪟️ Declares one window configuration's sparse diff (`store::sparse_record_diff!`), its `ConfigRecord` mark, codecs, `Replace` mutation, owner and accessors.
 #[macro_export]
-macro_rules! bim_window_config_common {
-    (config: $config:ident, diff: $diff:ty, diff_of: $diff_of:expr, mutation: $mutation:ident, owner: $owner:ident, window: $window:expr, schema: $schema:literal, owner_path: $path:literal, display: $display:literal, bytes: $bytes:expr $(,)?) => {
+macro_rules! bim_window_config {
+    (config: $config:ident, diff: $diff:ident, mutation: $mutation:ident, owner: $owner:ident, window: $window:expr, schema: $schema:literal, owner_path: $path:literal, display: $display:literal, bytes: $bytes:expr, fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
+        impl store::ConfigRecord for $config {}
+
+        store::sparse_record_diff! { record: $config, diff: $diff, fields: { $($field: $ty),+ } }
+
         impl store::ArtifactDsl for $config {
             const EXTENSION: &'static str = Self::__DSL_EXTENSION;
             fn envelope_id() -> &'static str {
@@ -45,7 +50,7 @@ macro_rules! bim_window_config_common {
         #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
         #[value(tag = "kind", rename_all = "kebab-case")]
         pub enum $mutation {
-            Snapshot { config: $config },
+            Replace { config: $config },
         }
 
         impl protocol::Mutation<$config> for $mutation {
@@ -56,7 +61,7 @@ macro_rules! bim_window_config_common {
                 semantic_kind: "set-window-config",
                 display_name: $display,
                 emoji: "🎚️",
-                aggregate_variant: "Snapshot",
+                aggregate_variant: "Replace",
                 payload_schema: $schema,
                 text_opcode: None,
                 binary_tag: None,
@@ -70,12 +75,11 @@ macro_rules! bim_window_config_common {
                 &Self::DESCRIPTORS[0]
             }
             fn diff(&self, base: &$config) -> protocol::MutationOutcome<Self::Diff> {
-                match self {
-                    Self::Snapshot { config } => protocol::MutationOutcome::new(($diff_of)(base, config)),
-                }
+                let Self::Replace { config } = self;
+                protocol::MutationOutcome::new(<$diff>::changing(base, config))
             }
             fn inverse(&self, base: &$config) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-                Ok(vec![Self::Snapshot { config: base.clone() }])
+                Ok(vec![Self::Replace { config: base.clone() }])
             }
         }
 
@@ -134,104 +138,27 @@ macro_rules! bim_window_config_common {
             if kind != $window {
                 return Err(semio_framework_plugin::Fault::from("bim-window-kind-mismatch"));
             }
-            Ok(semio_framework_plugin::WindowConfigMutation::of::<$owner>(id, $mutation::Snapshot { config }))
+            Ok(semio_framework_plugin::WindowConfigMutation::of::<$owner>(id, $mutation::Replace { config }))
         }
     };
 }
 
-/// 🪟️ Expands the window-config boilerplate for `$config` inside the invoking module (see the module docs). Two forms: with `diff:` and `fields:` the configuration travels as a
-/// sparse diff (one optional per field, `between` is the state delta); without them it is written whole (`impl_whole_record_config!`).
-#[macro_export]
-macro_rules! bim_window_config {
-    (config: $config:ident, diff: $diff:ident, mutation: $mutation:ident, owner: $owner:ident, window: $window:expr, schema: $schema:literal, owner_path: $path:literal, display: $display:literal, bytes: $bytes:expr, fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
-        impl store::ConfigRecord for $config {}
-
-        /// 🔺️ Sparse delta of the window configuration: only the fields a mutation actually changes.
-        #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-        #[value(rename_all = "camelCase", default)]
-        pub struct $diff {
-            $(
-                #[value(skip_serializing_if = "Option::is_none")]
-                pub $field: Option<$ty>,
-            )+
-        }
-
-        impl protocol::MutationDiff<$config> for $diff {
-            fn apply(&self, base: &$config, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<$config> {
-                Ok($config { $($field: self.$field.clone().unwrap_or_else(|| base.$field.clone())),+ })
-            }
-            fn absorb(&mut self, other: Self) {
-                $(
-                    if other.$field.is_some() {
-                        self.$field = other.$field;
-                    }
-                )+
-            }
-        }
-
-        impl protocol::DiffAlgebra<$config> for $diff {
-            fn inverse(&self, base: &$config) -> Self {
-                Self { $($field: self.$field.as_ref().map(|_| base.$field.clone())),+ }
-            }
-            fn between(base: &$config, other: &$config) -> Self {
-                Self { $($field: (base.$field != other.$field).then(|| other.$field.clone())),+ }
-            }
-            fn is_empty(&self) -> bool {
-                true $(&& self.$field.is_none())+
-            }
-        }
-
-
-        $crate::bim_window_config_common! {
-            config: $config,
-            diff: $diff,
-            diff_of: |base: &$config, config: &$config| <$diff as protocol::DiffAlgebra<$config>>::between(base, config),
-            mutation: $mutation,
-            owner: $owner,
-            window: $window,
-            schema: $schema,
-            owner_path: $path,
-            display: $display,
-            bytes: $bytes,
-        }
-    };
-    (config: $config:ident, mutation: $mutation:ident, owner: $owner:ident, window: $window:expr, schema: $schema:literal, owner_path: $path:literal, display: $display:literal, bytes: $bytes:expr $(,)?) => {
-        store::impl_whole_record_config!($config);
-
-        $crate::bim_window_config_common! {
-            config: $config,
-            diff: $config,
-            diff_of: |_base: &$config, config: &$config| config.clone(),
-            mutation: $mutation,
-            owner: $owner,
-            window: $window,
-            schema: $schema,
-            owner_path: $path,
-            display: $display,
-            bytes: $bytes,
-        }
-    };
-}
-
-/// ⚖️ The laws every window configuration owes: the mutation applies as a whole-record write, its concrete inverse restores the base, the inverse sums to
-/// the negative diff, `between` is the state delta, and the mutation and the state survive their text and binary codecs.
+/// ⚖️ The laws every window configuration owes: the `Replace` mutation applies through its sparse diff, its concrete inverse restores the base, the inverse sums to
+/// the negative diff, and the mutation and the state survive their text and binary codecs.
 #[cfg(test)]
 pub async fn assert_window_config_laws<S, D, M>(base: &S, mutation: &M)
 where
     S: store::ArtifactDsl + store::ArtifactPack + Clone + std::fmt::Debug + PartialEq + 'static,
-    D: protocol::MutationDiff<S> + protocol::DiffAlgebra<S> + 'static,
+    D: protocol::MutationDiff<S> + 'static,
     M: protocol::Mutation<S, Diff = D> + protocol::OpText + protocol::OpBinary + Clone + std::fmt::Debug + PartialEq,
 {
     use protocol::{Mutation, OpBinary, OpText};
     let after = protocol::apply_diff(mutation.diff(base).diff(), base).expect("the mutation applies");
-    let restored = mutation.inverse(base).expect("the mutation has an inverse").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("the inverse applies"));
+    let restored = mutation.inverse(base).expect("the mutation has an inverse").into_iter().rev().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("the inverse applies"));
     assert_eq!(&restored, base, "the concrete inverse restores the base");
     assert_eq!(M::parse_op(&mutation.print_op()).expect("op text parses"), *mutation);
     assert_eq!(M::decode_op(&mutation.encode_op().expect("op encodes")).expect("op decodes"), *mutation);
     assert_eq!(S::parse_dsl(&after.print_dsl()).expect("dsl parses"), after);
     assert_eq!(S::decode_pack(&after.encode_pack()).expect("pack decodes"), after);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, base).await;
-    if std::any::TypeId::of::<D>() != std::any::TypeId::of::<S>() {
-        protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<S, D>(base, &after).await;
-    }
 }

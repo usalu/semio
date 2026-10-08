@@ -11,7 +11,7 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { isHostPlaygroundFilter } from "../../📇️registry/🟦️.ts";
+import { projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
 
 import type { DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
@@ -70,7 +70,7 @@ function resolvePluginBuildTargets(entries: readonly DeployedRegistryEntryV1[], 
     if (matched.length === 0) throw new Error(`SEMIO_PLUGIN_ONLY=${JSON.stringify(only)} matched no plugin crates`);
     return matched;
   }
-  if (!filterPlugin || isHostPlaygroundFilter(filterPlugin)) return entries;
+  if (!filterPlugin || projectedHostPluginFilter(readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")), filterPlugin)) return entries;
   if (entries.length === 0) throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);
   return entries;
 }
@@ -99,7 +99,7 @@ function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter
 
 /** 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
 function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
-  return filterPlugin && !isHostPlaygroundFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
+  return filterPlugin && !projectedHostPluginFilter(readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")), filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 
 export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, devStagingProfile, ensureWasmTarget, playgroundCatalog, pluginCargoArgs, pluginOutRoot, pluginWasmProfile, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };

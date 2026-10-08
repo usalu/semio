@@ -2,14 +2,40 @@
   "name": "@semio-tech/forms-js",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
-    "build":{"executor":"nx:run-commands","options":{"cwd":"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript","command":"bun ./📜️script.ts build","forwardAllArgs":true},"outputs":["{projectRoot}/dist"]},
-    "check":{"executor":"nx:run-commands","options":{"cwd":"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript","command":"bun ./📜️script.ts check","forwardAllArgs":true},"cache":false},
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
+      }
+    },
+    "verify-physical-codecs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify physical-codecs"
       }
     }
   }

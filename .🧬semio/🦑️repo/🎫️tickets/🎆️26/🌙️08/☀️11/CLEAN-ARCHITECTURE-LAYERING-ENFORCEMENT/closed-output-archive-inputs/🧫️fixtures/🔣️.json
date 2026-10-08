@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "bodyBase64": "",
+      "expected": "round-trip",
+      "budgetMs": 10000,
+      "maximumBytes": 1048576,
+      "maximumWork": 128,
+      "cancelled": false
+    },
+    {
+      "id": "unicode",
+      "bodyBase64": "8J+nrO+4jyBjbG9zZWQgb3JpZ2luYWwgYnl0ZXMKR3LDvMOfZQo=",
+      "expected": "round-trip",
+      "budgetMs": 10000,
+      "maximumBytes": 1048576,
+      "maximumWork": 128,
+      "cancelled": false
+    },
+    {
+      "id": "journal",
+      "bodyBase64": "eyJwaGFzZSI6InByZXBhcmVkIiwicGFpcnMiOlt7ImJlZm9yZSI6ImxpdGVyYWwgJCgpIFxuIiwiYWZ0ZXIiOiJubyBldmFsdWF0aW9uIiwiaW52ZXJzZSI6ImxpdGVyYWwgJCgpIFxuIn1dfQ==",
+      "expected": "round-trip",
+      "budgetMs": 10000,
+      "maximumBytes": 1048576,
+      "maximumWork": 128,
+      "cancelled": false
+    },
+    {
+      "id": "cancelled",
+      "bodyBase64": "Ym91bmRlZCBvcmlnaW5hbA==",
+      "expected": "cancelled",
+      "budgetMs": 10000,
+      "maximumBytes": 1048576,
+      "maximumWork": 128,
+      "cancelled": true
+    },
+    {
+      "id": "deadline",
+      "bodyBase64": "Ym91bmRlZCBvcmlnaW5hbA==",
+      "expected": "deadline",
+      "budgetMs": 0,
+      "maximumBytes": 1048576,
+      "maximumWork": 128,
+      "cancelled": false
+    },
+    {
+      "id": "byte-capacity",
+      "bodyBase64": "Ym91bmRlZCBvcmlnaW5hbA==",
+      "expected": "byte-capacity",
+      "budgetMs": 10000,
+      "maximumBytes": 1,
+      "maximumWork": 128,
+      "cancelled": false
+    },
+    {
+      "id": "work-capacity",
+      "bodyBase64": "Ym91bmRlZCBvcmlnaW5hbA==",
+      "expected": "work-capacity",
+      "budgetMs": 10000,
+      "maximumBytes": 1048576,
+      "maximumWork": 0,
+      "cancelled": false
+    }
+  ]
+}

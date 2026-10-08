@@ -6,10 +6,16 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framewor
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
+import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "physical-codecs") {
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
+      return;
+    }
+
 if (segments[0] === "layout-window-ownership") {
       const windowsRoot = join(this.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
       const configRoot = join(windowsRoot, "📐️blueprint/🎚️config");
@@ -46,4 +52,6 @@ if (segments[0] === "layout-frame-selection") {
   }
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+
+
 

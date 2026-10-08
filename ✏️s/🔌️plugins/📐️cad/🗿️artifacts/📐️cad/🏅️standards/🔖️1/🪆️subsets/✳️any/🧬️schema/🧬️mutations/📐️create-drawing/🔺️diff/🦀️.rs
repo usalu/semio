@@ -17,11 +17,6 @@ pub fn diff(payload: &CreateDrawing, base: &CadSnapshot) -> protocol::MutationOu
     if index > base.drawings.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Drawing insertion index {index} exceeds the {} existing drawings.", base.drawings.len()), [payload.child_id.clone()]);
     }
-    let reordered = (index != base.drawings.len()).then(|| {
-        let mut order: Vec<String> = base.drawings.iter().map(|drawing| drawing.child_id.clone()).collect();
-        order.insert(index, payload.child_id.clone());
-        order
-    });
-    protocol::MutationOutcome::new(CadDiff { drawings: Some(CadDrawingsDelta { added: vec![candidate], reordered, ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(CadDiff { drawings: Some(CadDrawingsDelta::insertion(index, candidate)), ..Default::default() })
 }
 //#endregion 🔖️Diff

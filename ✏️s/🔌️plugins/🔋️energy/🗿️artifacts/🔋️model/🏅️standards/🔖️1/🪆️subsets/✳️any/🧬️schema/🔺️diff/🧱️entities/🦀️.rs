@@ -32,17 +32,14 @@ impl Unchanged for OutputVariableSpecPatch {
 
 impl FieldPatch for OutputVariableSpecPatch {
     type Target = crate::model::OutputVariableSpec;
-    fn apply(&self, target: &mut Self::Target) -> Result<(), MutationApplyError> {
-        self.reporting_frequency.apply(&mut target.reporting_frequency)
+    fn commit_onto(&self, target: &mut Self::Target) -> Result<(), MutationApplyError> {
+        self.reporting_frequency.commit_onto(&mut target.reporting_frequency)
     }
     fn absorb(&mut self, later: Self) {
         self.reporting_frequency.absorb(later.reporting_frequency);
     }
     fn inverse(&self, base: &Self::Target) -> Self {
         Self { name: self.name.clone(), key: self.key.clone(), reporting_frequency: self.reporting_frequency.inverse(&base.reporting_frequency) }
-    }
-    fn between(base: &Self::Target, other: &Self::Target) -> Self {
-        Self { name: base.name.clone(), key: base.key.clone(), reporting_frequency: <Option<crate::model::OutputReportFrequency> as FieldPatch>::between(&base.reporting_frequency, &other.reporting_frequency) }
     }
 }
 
@@ -81,15 +78,12 @@ impl Unchanged for AdjacencyPairPatch {
 
 impl FieldPatch for AdjacencyPairPatch {
     type Target = crate::model::AdjacencyPair;
-    fn apply(&self, _target: &mut Self::Target) -> Result<(), MutationApplyError> {
+    fn commit_onto(&self, _target: &mut Self::Target) -> Result<(), MutationApplyError> {
         Ok(())
     }
     fn absorb(&mut self, _later: Self) {}
     fn inverse(&self, _base: &Self::Target) -> Self {
         self.clone()
-    }
-    fn between(base: &Self::Target, _other: &Self::Target) -> Self {
-        Self { surface_a_id: base.surface_a_id, surface_b_id: base.surface_b_id }
     }
 }
 

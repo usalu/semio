@@ -24,12 +24,14 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartRoot {
         MutationOutcome::new(diff::graph_edit(support::dpart_root_rows(base, &self.job, &self.placements, self.entry_index)))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {})]
-    
-    })())
-}
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+        Ok({
+            match support::catalog_entry(base, "DPartRoot") {
+                Some(_) => vec![PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default(), placements: support::placements_of(base, &support::dpart_root_creation_ids(base)), entry_index: None })],
+                None => vec![PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {})],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT document partition {}", self.job), &format!("PDF/VT-Dokumentpartition {} setzen", self.job))

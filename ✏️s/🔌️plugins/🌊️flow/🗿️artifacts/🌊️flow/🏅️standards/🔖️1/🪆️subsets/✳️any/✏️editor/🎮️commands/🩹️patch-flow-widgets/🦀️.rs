@@ -31,7 +31,7 @@ pub fn widget_field_leaf(node: &FlowNode, field: &str, raw: &str) -> Option<Semi
         ("text", "inputNote") => (current != Some(raw)).then(|| raw.to_string())?,
         _ => return None,
     };
-    Some(SemioFlowMutation::SetNodeParam(SetNodeParam { id: node.id.clone(), key: field.into(), value }))
+    Some(SemioFlowMutation::SetNodeParam(SetNodeParam { id: node.id.clone(), key: field.into(), value, at: None }))
 }
 
 /// 🧮️ The leaves `payload` means on `content`: one per addressed node, in content order, whose field it changes.

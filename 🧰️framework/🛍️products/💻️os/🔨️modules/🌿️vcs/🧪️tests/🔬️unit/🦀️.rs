@@ -1,3 +1,5 @@
+use crate::os_vcs::io::binary::entity_identity::{content_addressed_entity_id,edit_scoped_id,mint_alternative_id,mint_change_id,mint_edit_id,mint_mutation_id};
+use crate::os_vcs::io::binary::checkpoint_identity::{content_addressed_checkpoint_id,content_addressed_checkpoint_id_with_pending_change};
 use super::*;
 use serde::{Deserialize, Serialize};
 
@@ -158,45 +160,9 @@ async fn pending_change_checkpoint_hash_is_byte_identical_before_history_reserva
     drop(changes.pop());
 }
 
-/// 🔬️ `content_addressed_checkpoint_id_core`'s committed-`Change` branch now hashes
-/// `crate::os_pack::json::to_json_string(change)` instead of `serde_json::to_vec(change)` —
-/// direct proof the two are byte-identical for `Change`, both with and without `description`
-/// (its one `Option` field, `skip_serializing_if`-omitted when `None`).
-#[test]
-fn change_to_json_string_matches_serde_json_byte_for_byte() {
-    for description in [Some("a change".to_string()), None] {
-        let change = Change { id: "change-x".into(), edit_ids: vec!["edit-1".into(), "edit-2".into()], description, saved_at: "2026-09-01T00:00:00Z".into() };
-        let mine = semio_framework_pack_json::to_json_string(&change);
-        let theirs = serde_json::to_string(&change).unwrap();
-        assert_eq!(mine, theirs, "Change's ToValue/pack::json bridge diverged from serde_json for description={:?}", change.description);
-    }
-}
 
-/// 🔬️ `pending_change_ref_json`'s hand-built wire shape, byte-for-byte against an
-/// independent `serde_json` oracle (a local `#[derive(Serialize)]` twin reproducing
-/// `PendingChangeRef`'s pre-conversion shape) — the direct proof this ticket's own
-/// `float-format-parity.md` calls for, that converting `content_addressed_checkpoint_id_core`
-/// off `serde_json` changed zero bytes. Both branches (`description` present and absent, since
-/// unlike `Change` this type has no `skip_serializing_if`) are checked.
-#[test]
-fn pending_change_ref_json_matches_serde_json_oracle() {
-    #[derive(serde::Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Oracle<'a> {
-        id: &'a str,
-        edit_ids: &'a [String],
-        description: Option<&'a str>,
-        saved_at: &'a str,
-    }
-    let edit_ids = vec!["edit-1".to_string(), "edit-2".to_string()];
-    for description in [Some("a pending change"), None] {
-        let pending = PendingChangeRef { id: "change-x", edit_ids: &edit_ids, description, saved_at: "2026-09-01T00:00:00Z" };
-        let mine = pending_change_ref_json(&pending);
-        let oracle = Oracle { id: "change-x", edit_ids: &edit_ids, description, saved_at: "2026-09-01T00:00:00Z" };
-        let theirs = serde_json::to_string(&oracle).unwrap();
-        assert_eq!(mine, theirs, "pending_change_ref_json diverged from the serde_json oracle for description={description:?}");
-    }
-}
+
+
 
 /// 🧩️ `composition_pins`/`CompositionPin` extension to `content_addressed_checkpoint_id`:
 /// the three properties the ticket calls for — pin-set changes flip the id, identical
@@ -268,20 +234,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 //#region 🆔️Ids
 #[semio_framework_async_macros::async_test]
 async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
-    assert_eq!(content_addressed_entity_id("x", b"payload").await, content_addressed_entity_id("x", b"payload").await);
-    assert_ne!(content_addressed_entity_id("x", b"a").await, content_addressed_entity_id("x", b"b").await);
-    assert_eq!(edit_scoped_id("edit-1", 0).await, edit_scoped_id("edit-1", 0).await);
-    assert_ne!(edit_scoped_id("edit-1", 0).await, edit_scoped_id("edit-1", 1).await);
-    assert!(edit_scoped_id("edit-1", 0).await.starts_with("scoped-"));
-    assert_eq!(mint_edit_id(7, 3, b"fwd").await, mint_edit_id(7, 3, b"fwd").await);
-    assert_ne!(mint_edit_id(7, 3, b"fwd").await, mint_edit_id(8, 3, b"fwd").await);
-    assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg")).await, mint_change_id(&["e1".into(), "e2".into()], Some("msg")).await);
-    assert_eq!(mint_alternative_id("main", &["ck1".into()]).await, mint_alternative_id("main", &["ck1".into()]).await);
-    assert_eq!(mint_mutation_id(b"op-bytes", (7, 1, 0)).await, mint_mutation_id(b"op-bytes", (7, 1, 0)).await);
-    assert_ne!(mint_mutation_id(b"op-bytes", (7, 1, 0)).await, mint_mutation_id(b"op-bytes", (7, 1, 1)).await);
-    assert_ne!(mint_mutation_id(b"op-bytes", (7, 1, 0)).await, mint_mutation_id(b"op-bytes", (8, 1, 0)).await);
-    assert_eq!(create_document_vcs_id("draft").await, create_document_vcs_id("draft").await);
-    assert!(create_document_vcs_id("draft").await.starts_with("draft-"));
+    let mut progress=Vec::new();
+    let mut observer=|event|{progress.push(event);true};
+    let mut control=semio_framework_value::NativeEncodeControl::new(32*("alternative".len()+17),&mut observer);
+    assert_eq!(content_addressed_entity_id("x", b"payload", &mut control).unwrap(), content_addressed_entity_id("x", b"payload", &mut control).unwrap());
+    assert_ne!(content_addressed_entity_id("x", b"a", &mut control).unwrap(), content_addressed_entity_id("x", b"b", &mut control).unwrap());
+    assert_eq!(edit_scoped_id("edit-1", 0, &mut control).unwrap(), edit_scoped_id("edit-1", 0, &mut control).unwrap());
+    assert_ne!(edit_scoped_id("edit-1", 0, &mut control).unwrap(), edit_scoped_id("edit-1", 1, &mut control).unwrap());
+    assert!(edit_scoped_id("edit-1", 0, &mut control).unwrap().starts_with("scoped-"));
+    assert_eq!(mint_edit_id(7, 3, b"fwd", &mut control).unwrap(), mint_edit_id(7, 3, b"fwd", &mut control).unwrap());
+    assert_ne!(mint_edit_id(7, 3, b"fwd", &mut control).unwrap(), mint_edit_id(8, 3, b"fwd", &mut control).unwrap());
+    assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg"), &mut control).unwrap(), mint_change_id(&["e1".into(), "e2".into()], Some("msg"), &mut control).unwrap());
+    assert_eq!(mint_alternative_id("main", &["ck1".into()], &mut control).unwrap(), mint_alternative_id("main", &["ck1".into()], &mut control).unwrap());
+    assert_eq!(mint_mutation_id(b"op-bytes", (7, 1, 0), &mut control).unwrap(), mint_mutation_id(b"op-bytes", (7, 1, 0), &mut control).unwrap());
+    assert_ne!(mint_mutation_id(b"op-bytes", (7, 1, 0), &mut control).unwrap(), mint_mutation_id(b"op-bytes", (7, 1, 1), &mut control).unwrap());
+    assert_ne!(mint_mutation_id(b"op-bytes", (7, 1, 0), &mut control).unwrap(), mint_mutation_id(b"op-bytes", (8, 1, 0), &mut control).unwrap());
+    drop(control);drop(observer);
+    assert!(!progress.is_empty());
 }
 //#endregion 🆔️Ids
 

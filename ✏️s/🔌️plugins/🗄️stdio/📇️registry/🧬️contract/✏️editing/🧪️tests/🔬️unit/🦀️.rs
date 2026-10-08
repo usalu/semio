@@ -2,6 +2,35 @@ use super::*;
 use semio_framework_plugin::plugin_app_close_prelude::store as fixture_store;
 use std::collections::BTreeMap;
 
+fn apply_snapshot_edit<S: ArtifactDsl + ToValue + FromValue>(snapshot: &S, event: &SnapshotEditEvent) -> Result<S, SnapshotEditError> {
+    if let SnapshotEditEvent::ReplaceSource { source } = event {
+        return snapshot_from_edit_source(source);
+    }
+    let mut value = snapshot.to_value();
+    match event {
+        SnapshotEditEvent::SetValue { path, value: next } => set_value(&mut value, path, next.clone())?,
+        SnapshotEditEvent::InsertValue { path, value: next } => insert_value(&mut value, path, next.clone())?,
+        SnapshotEditEvent::RemoveValue { path } => {
+            remove_value(&mut value, path)?;
+        }
+        SnapshotEditEvent::MoveValue { from, path } => move_value(&mut value, from, path)?,
+        SnapshotEditEvent::RenameKey { path, key } => rename_key(&mut value, path, key)?,
+        SnapshotEditEvent::ReplaceSource { .. } => unreachable!(),
+    }
+    validate_value(&value, "")?;
+    let next = S::from_value(value.clone()).map_err(|error| SnapshotEditError::new("snapshot-edit.schema-invalid", "", error.to_string()))?;
+    if !values_equivalent(&next.to_value(), &value) {
+        return Err(SnapshotEditError::new("snapshot-edit.lossy-conversion", "", "the typed snapshot would normalize or discard part of the edit"));
+    }
+    Ok(next)
+}
+
+fn apply_snapshot_edit_with_schema<S: ArtifactDsl + ToValue + FromValue>(snapshot: &S, event: &SnapshotEditEvent, schema: &str) -> Result<S, SnapshotEditError> {
+    let next = apply_snapshot_edit(snapshot, event)?;
+    validate_snapshot_value_against_schema(&next.to_value(), schema)?;
+    Ok(next)
+}
+
 #[derive(Clone, Debug, PartialEq)]
 struct NativeCommand(u8);
 

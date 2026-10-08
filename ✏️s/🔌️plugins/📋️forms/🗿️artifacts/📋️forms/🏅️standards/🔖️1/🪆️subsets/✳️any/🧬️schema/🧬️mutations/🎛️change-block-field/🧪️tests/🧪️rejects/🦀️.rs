@@ -1,8 +1,9 @@
 //! 🧪️ `change-block-field` fixture — `🧪️rejects-a-field-of-a-question-the-scene-does-not-hold`: a question no step holds is an Error-level
 //! `mutation.target-missing` naming the question id, the document untouched (contract D6: `🔺️diff/🚫️.absent`, `➡️after == ⬅️before`).
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️rejects/📸️snapshot/➡️after/🔣️.json");

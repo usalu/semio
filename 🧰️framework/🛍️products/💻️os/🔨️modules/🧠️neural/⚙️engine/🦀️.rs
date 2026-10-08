@@ -1,10 +1,10 @@
 //! 🧠️ Headless neural engine: dictionary in, dictionary out.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
+use std::collections::{HashMap,HashSet,VecDeque};
+use protocol::causal::transition::HistoryFoldIndex;
 use std::mem::ManuallyDrop;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
 
 /// 🔮️ Test-only: production moved to `ToValue`/`FromValue` below (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass — see `📓️orderedmap-tenth-seam.md`).
 #[cfg(test)]
@@ -15,7 +15,8 @@ use semio_framework_value::{ValueKind, ValueType};
 
 #[path = "🧵️retirement/🦀️.rs"]
 pub mod retirement;
-pub use retirement::{ColdDictionaryBuilder, ColdValueOwner, ValueRetirement, ValueRetirementStep};
+pub use retirement::{ColdDictionaryBuilder,ColdValueOwner,ValueRetirement};
+pub use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
 #[path = "🧊️cold/🦀️.rs"]
 pub mod cold;
@@ -23,7 +24,7 @@ pub use cold::{ColdOwner, ColdRetire};
 
 #[path = "📔️registry/🦀️.rs"]
 pub mod registry;
-pub use registry::{RegistryIdentity, RegistryRetirement, SharedRegistry};
+pub use registry::{RegistryIdentity,RegistryRetirement,RegistryLeaseRetirement,SharedRegistry};
 
 // #region 🔖️Dictionary
 /// 📚️ Immutable, unordered, collision-free key-value collection. `serde` is TEST-ONLY
@@ -174,10 +175,20 @@ impl FromValue for Dictionary {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut input=retirement::RetainedDictionaryInput::new(value);
         loop {
-            match input.step(1,input.next_step_byte_demand(4096).expect("cold dictionary input demand")) {
-                Ok(Some(dictionary))=>return Ok(dictionary),
-                Ok(None)=>{},
-                Err(error)=>{input.cancel();while !input.terminal_is_empty() {input.close_step(1,input.next_step_byte_demand(4096).expect("cold dictionary input close demand"));}return Err(error);},
+            let copy=4096.max(input.next_copy_byte_demand().expect("cold dictionary input copy demand"));
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_capacity_byte_demand(copy).expect("cold dictionary input capacity demand"),maximum_release_bytes:input.next_release_byte_demand().expect("cold dictionary input release demand"),maximum_depth:input.next_depth_demand().expect("cold dictionary input depth demand")};
+            match input.step(grant) {
+                Ok(retirement::DictionaryInputStep {dictionary:Some(dictionary),..})=>return Ok(dictionary),
+                Ok(_)=>{},
+                Err(error)=>{
+                    input.cancel();
+                    while !input.terminal_is_empty() {
+                        let copy=4096.max(input.next_close_copy_byte_demand().expect("cold input close copy demand"));
+                        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_close_capacity_byte_demand(copy).expect("cold input close capacity demand"),maximum_release_bytes:input.next_close_release_byte_demand().expect("cold input close release demand"),maximum_depth:input.next_close_depth_demand().expect("cold input close depth demand")};
+                        input.close_step(grant).expect("cold dictionary input closure");
+                    }
+                    return Err(error);
+                },
             }
         }
     }
@@ -856,14 +867,19 @@ impl Operator for SchemaComponent {
         fn retire_cold(self: Box<Self>) { self.schema.retire_cold(); }
 
     fn retirement_is_empty(&self) -> bool {
-        self.schema.id.is_empty() && self.schema.module.is_empty() && self.schema.name.is_empty() && self.schema.icon.is_empty() && self.schema.summary.is_empty() && self.schema.fields.is_empty()
+        self.schema.id.capacity()==0 && self.schema.module.capacity()==0 && self.schema.name.capacity()==0 && self.schema.icon.capacity()==0 && self.schema.summary.capacity()==0 && self.schema.fields.capacity()==0
     }
 
-    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, values: &mut ValueRetirement) -> Result<ValueRetirementStep, &'static str> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(ValueRetirementStep::Blocked); }
-        if self.retirement_is_empty() { return Ok(ValueRetirementStep::Complete); }
-        values.push_schema(std::mem::take(&mut self.schema));
-        Ok(ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
+    fn next_retire_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError> {Ok(0)}
+    fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
+    fn next_retire_depth_demand(&self)->Result<usize,ValueError> {Ok(usize::from(!self.retirement_is_empty()))}
+    fn retire_step(&mut self,grant:RetainedCloneGrant,values:&mut ValueRetirement)->Result<RetainedCloneStep,ValueError> {
+        if self.retirement_is_empty() {return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));}
+        if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));}
+        if grant.maximum_depth==0 {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Schema component handoff requires admitted depth"));}
+        let schema=std::mem::take(&mut self.schema);
+        match values.push_schema(schema,grant) {Ok(progress)=>Ok(RetainedCloneStep::Complete(progress)),Err((error,schema))=>{self.schema=schema;Err(error)}}
     }
 
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -1119,11 +1135,13 @@ pub trait OperatorJob: Send {
     /// 🛑️ Retires the job at the next observable boundary. A job that already produced its output
     /// is never retired: supersession may only stop work still in flight.
     fn cancel(&mut self);
-    /// 🧹️ Advances acknowledged cancellation with explicit structural and payload-byte grants.
-    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<OperatorJobStep,EvalError> {
-        if maximum_bytes==0 {return Ok(OperatorJobStep::Working(self.progress()));}
-        self.step(maximum_items)
-    }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>;
+    fn next_close_capacity_byte_demand(&self,maximum_copy_bytes:usize)->Result<usize,ValueError>;
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>;
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>;
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+    fn terminal_is_empty(&self)->bool;
+
 }
 
 /// 🧮️ Computational unit: one dictionary to another.
@@ -1150,10 +1168,13 @@ pub trait Operator: Send + Sync {
     }
     /// 🪶️ Only compiler-proven trivial operators are terminal without domain-specific field retirement.
     fn retirement_is_empty(&self) -> bool { !std::mem::needs_drop::<Self>() }
-    /// 🧹️ Transfers or retires one granted domain frontier while the caller retains the operator itself.
-    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, _values: &mut ValueRetirement) -> Result<ValueRetirementStep, &'static str> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(ValueRetirementStep::Blocked); }
-        if self.retirement_is_empty() { Ok(ValueRetirementStep::Complete) } else { Err("neural.operator-retirement-not-implemented") }
+    fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator copy ownership is not declared"))}}
+    fn next_retire_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator capacity ownership is not declared"))}}
+    fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator release ownership is not declared"))}}
+    fn next_retire_depth_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator depth ownership is not declared"))}}
+    /// 🧹️ Retires or transfers actual fields while preserving the original dynamic operator shell.
+    fn retire_step(&mut self,_grant:RetainedCloneGrant,_values:&mut ValueRetirement)->Result<RetainedCloneStep,ValueError> {
+        if self.retirement_is_empty(){Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator retained ownership is not declared"))}
     }
     /// 🧊️ Explicit cold registry teardown; implementations owning neural domains retire those fields here.
     fn retire_cold(self: Box<Self>) { drop(self); }
@@ -1557,10 +1578,10 @@ pub struct OperatorRecord {
 /// 📋️ Registry of schemas and operators by id.
 #[derive(Default)]
 pub struct Registry {
-    schemas: BTreeMap<String, Schema>,
-    operators: BTreeMap<String, OperatorRecord>,
-    operator_produces: BTreeMap<String, Vec<String>>,
-    schema_providers: BTreeMap<String, BTreeSet<String>>,
+    schemas: HistoryFoldIndex<String, Schema>,
+    operators: HistoryFoldIndex<String, OperatorRecord>,
+    operator_produces: HistoryFoldIndex<String, Vec<String>>,
+    schema_providers: HistoryFoldIndex<String, HistoryFoldIndex<String,()>>,
     finalized: bool,
 }
 
@@ -1577,11 +1598,11 @@ impl Registry {
     pub fn register_operator(&mut self, info: OperatorInfo, implementations: Vec<OperatorImpl>, produces: &[&str]) {
         let id = info.id.clone();
         for schema in produces {
-            self.schema_providers.entry(schema.to_string()).or_default();
+            self.schema_providers.get_or_insert(schema.to_string(),HistoryFoldIndex::default());
         }
         for implementation in &implementations {
             for schema in &implementation.schemas {
-                self.schema_providers.entry(schema.clone()).or_default().insert(id.clone());
+                self.schema_providers.get_or_insert(schema.clone(),HistoryFoldIndex::default()).insert(id.clone(),());
             }
         }
         self.operator_produces.insert(id.clone(), produces.iter().map(|entry| (*entry).to_string()).collect());
@@ -1606,15 +1627,15 @@ impl Registry {
             let info = schema_component_info(&schema);
             let produces = vec![schema.id.clone()];
             for produced in &produces {
-                self.schema_providers.entry(produced.clone()).or_default();
+                self.schema_providers.get_or_insert(produced.clone(),HistoryFoldIndex::default());
             }
-            self.schema_providers.entry(schema.id.clone()).or_default().insert(operator_id.clone());
+            self.schema_providers.get_or_insert(schema.id.clone(),HistoryFoldIndex::default()).insert(operator_id.clone(),());
             self.operator_produces.insert(operator_id.clone(), produces);
             self.operators.insert(operator_id, OperatorRecord { info, implementations: vec![OperatorImpl { schemas: vec![], operator: Box::new(SchemaComponent { schema: schema.into_inner() }) }] }).retire_cold();
         }
         let operator_produces = self.operator_produces.clone();
         let schema_providers = self.schema_providers.clone();
-        for (operator_id, operator) in &mut self.operators {
+        for (operator_id, operator) in self.operators.slot_entries_mut() {
             let produces = operator_produces.get(operator_id).cloned().unwrap_or_default();
             for channel in &mut operator.info.outputs {
                 if !channel.operators.is_empty() {
@@ -1623,7 +1644,7 @@ impl Registry {
                 let mut provided = HashSet::new();
                 for schema in &produces {
                     if let Some(providers) = schema_providers.get(schema) {
-                        provided.extend(providers.iter().cloned());
+                        provided.extend(providers.keys().cloned());
                     }
                 }
                 let mut operators: Vec<String> = provided.into_iter().collect();
@@ -1635,7 +1656,7 @@ impl Registry {
     }
 
     pub fn operators_for_schema(&self, schema_id: &str) -> Vec<String> {
-        let mut operators: Vec<String> = self.schema_providers.get(schema_id).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
+        let mut operators: Vec<String> = self.schema_providers.get(schema_id).map(|entries| entries.keys().cloned().collect()).unwrap_or_default();
         operators.sort();
         operators
     }
@@ -1693,7 +1714,7 @@ impl Registry {
         items
     }
 
-    fn finalize_operator_info(info: &OperatorInfo, produces: Option<&[String]>, schema_providers: &BTreeMap<String, BTreeSet<String>>) -> OperatorInfo {
+    fn finalize_operator_info(info: &OperatorInfo, produces: Option<&[String]>, schema_providers: &HistoryFoldIndex<String, HistoryFoldIndex<String,()>>) -> OperatorInfo {
         let mut finalized = info.clone();
         let produces = produces.unwrap_or(&[]);
         for channel in &mut finalized.outputs {
@@ -1703,7 +1724,7 @@ impl Registry {
             let mut provided = HashSet::new();
             for schema in produces {
                 if let Some(providers) = schema_providers.get(schema) {
-                    provided.extend(providers.iter().cloned());
+                    provided.extend(providers.keys().cloned());
                 }
             }
             let mut operators: Vec<String> = provided.into_iter().collect();
@@ -1817,143 +1838,86 @@ pub fn node_hash(kind: &str, input: &Dictionary) -> u64 {
     hasher.finish()
 }
 
-/// 🧠️ Epoch-bounded in-process cache for DAG node outputs.
-#[derive(Default)]
+/// 🧠️ Epoch-bounded in-process cache retaining actual original outputs and displaced roots.
 pub struct NeuralCache {
-    entries: ManuallyDrop<Mutex<BTreeMap<u64, (u64, Dictionary)>>>,
-    retirement: ManuallyDrop<Mutex<ValueRetirement>>,
-    epoch: AtomicU64,
+    state:ManuallyDrop<semio_framework_value::retirement::controlled::RetainedOwnerGate<NeuralCacheState>>,
+    epoch:AtomicU64,
 }
-
-struct NeuralCacheRetirementState {
-    cache: Option<std::sync::Arc<NeuralCache>>,
-    entries: BTreeMap<u64, (u64, Dictionary)>,
-    retirement: ValueRetirement,
-    terminal: bool,
+#[derive(Default,semio_framework_value::RetireOwned)]
+struct NeuralCacheState {entries:HistoryFoldIndex<u64,(u64,Dictionary)>,displaced:Vec<Dictionary>}
+impl NeuralCacheState {fn terminal_is_empty(&self)->bool {self.entries.terminal_is_empty()&&self.displaced.capacity()==0}}
+impl Default for NeuralCache {
+    fn default()->Self {Self {state:ManuallyDrop::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(NeuralCacheState::default())),epoch:AtomicU64::new(0)}}
 }
-
-/// 🧹️ Exact cache-root handoff and byte-aware nested retirement; u64 tree metadata has fixed machine-width height.
-pub struct NeuralCacheRetirement { state: ManuallyDrop<NeuralCacheRetirementState> }
-
+/// 🧹️ Keeps the original Arc and every final cache allocation until admitted physical closure.
+pub struct NeuralCacheRetirement {owner:semio_framework_value::retirement::shared::SharedControlledRetirement<NeuralCache>}
 impl NeuralCacheRetirement {
-    pub fn new(cache: std::sync::Arc<NeuralCache>) -> Self {
-        Self { state: ManuallyDrop::new(NeuralCacheRetirementState { cache: Some(cache), entries: BTreeMap::new(), retirement: ValueRetirement::default(), terminal: false }) }
+    pub fn new(cache:std::sync::Arc<NeuralCache>)->Self {Self {owner:semio_framework_value::retirement::shared::SharedControlledRetirement::lease(cache)}}
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_copy_byte_demand()}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owner.next_capacity_byte_demand(copy)}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_release_byte_demand()}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.owner.next_depth_demand()}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let step=self.owner.step(grant)?;
+        semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.owner.terminal_is_empty(),"Neural original cache root")
     }
-
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
-        if maximum_items == 0 || maximum_bytes == 0 { return ValueRetirementStep::Blocked; }
-        let state = &mut *self.state;
-        if !state.retirement.terminal_is_empty() { return state.retirement.close_step(maximum_items, maximum_bytes); }
-        if let Some(cache) = state.cache.take() {
-            if let Some(mut cache) = std::sync::Arc::into_inner(cache) {
-                state.entries = std::mem::take(cache.entries.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner));
-                state.retirement = std::mem::take(cache.retirement.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner));
-            }
-            return ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some((_, (_, value))) = state.entries.pop_first() {
-            state.retirement.push_dictionary(value);
-            return ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        state.terminal = true;
-        ValueRetirementStep::Complete
-    }
-
-    pub fn terminal_nonopaque_is_empty(&self) -> bool {
-        self.state.terminal && self.state.cache.is_none() && self.state.entries.is_empty() && self.state.retirement.terminal_is_empty()
-    }
+    pub fn terminal_is_empty(&self)->bool {self.owner.terminal_is_empty()}
 }
-
-impl Drop for NeuralCacheRetirement {
-    fn drop(&mut self) {
-        if !self.terminal_nonopaque_is_empty() { assert!(std::thread::panicking(), "NeuralCacheRetirement must reach terminal-empty before release"); return; }
-        unsafe { ManuallyDrop::drop(&mut self.state); }
+impl semio_framework_value::retirement::RetireOwned for NeuralCache {
+    fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        let state=std::mem::replace(&mut *self.state,semio_framework_value::retirement::controlled::RetainedOwnerGate::new(NeuralCacheState::default())).into_inner();
+        semio_framework_value::retirement::RetireOwned::retirement(state)
     }
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&*self.state.try_lock().ok()?)}
+    fn controlled_retirement_supported()->bool {true}
 }
-
 impl Drop for NeuralCache {
     fn drop(&mut self) {
-        let empty = self.entries.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty()
-            && self.retirement.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).terminal_is_empty();
-        if !empty { assert!(std::thread::panicking(), "final NeuralCache must be explicitly retired"); return; }
-        unsafe { ManuallyDrop::drop(&mut self.entries); ManuallyDrop::drop(&mut self.retirement); }
+        let empty=self.state.get_mut().terminal_is_empty();
+        assert!(std::thread::panicking()||empty,"final NeuralCache must be explicitly retired");
+        if empty {unsafe {ManuallyDrop::drop(&mut self.state);}}
     }
 }
-
 impl NeuralCache {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new()->Self {Self::default()}
+    pub fn begin_epoch(&self) {self.epoch.fetch_add(1,Ordering::Relaxed);}
+    pub fn current_epoch(&self)->u64 {self.epoch.load(Ordering::Relaxed)}
+    pub fn len(&self)->usize {self.state.try_lock().map_or(0,|state|state.entries.len())}
+    pub fn is_empty(&self)->bool {self.state.try_lock().is_ok_and(|state|state.entries.is_empty())}
+    pub fn contains(&self,key:u64)->bool {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        let Ok(mut state)=self.state.try_lock() else {return false;};
+        let Some(entry)=state.entries.get_mut(&key) else {return false;};
+        entry.0=epoch;
+        true
     }
-
-    pub fn begin_epoch(&self) {
-        self.epoch.fetch_add(1, Ordering::Relaxed);
+    /// 🌱️ Cold cache construction retains displaced original outputs; contention returns the exact input.
+    pub fn seed(&self,key:u64,value:Dictionary)->Result<(),Dictionary> {
+        let Ok(mut state)=self.state.try_lock() else {return Err(value);};
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        if let Some((_,value))=state.entries.insert(key,(epoch,value)) {state.displaced.push(value);}
+        Ok(())
     }
-
-    pub fn current_epoch(&self) -> u64 {
-        self.epoch.load(Ordering::Relaxed)
+    pub fn get(&self,key:u64)->Option<Dictionary> {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        let Ok(mut state)=self.state.try_lock() else {return None;};
+        let entry=state.entries.get_mut(&key)?;
+        entry.0=epoch;
+        Some(entry.1.clone())
     }
-
-    pub fn len(&self) -> usize {
-        self.entries.lock().map_or(0, |entries| entries.len())
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.entries.lock().map_or(true, |entries| entries.is_empty())
-    }
-
-    /// 🔎️ Whether `key` has a cached entry (from any epoch) — a hit here means
-    /// [`NeuralCache::get_or_insert_with`] would return without calling `compute`.
-    pub fn contains(&self, key: u64) -> bool {
-        let epoch = self.epoch.load(Ordering::Relaxed);
-        if let Ok(mut entries) = self.entries.lock() {
-            if let Some(entry) = entries.get_mut(&key) {
-                entry.0 = epoch;
-                return true;
-            }
-        }
-        false
-    }
-
-    /// 🌱️ Pre-seeds a node output (host-mediated extension eval) so the next budgeted pass hits the cache.
-    pub fn seed(&self, key: u64, value: Dictionary) {
-        let epoch = self.epoch.load(Ordering::Relaxed);
-        let displaced = self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, (epoch, value));
-        if let Some((_, value)) = displaced { self.retirement.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push_dictionary(value); }
-    }
-
-    pub fn get(&self, key: u64) -> Option<Dictionary> {
-        let epoch = self.epoch.load(Ordering::Relaxed);
-        if let Ok(mut entries) = self.entries.lock() {
-            if let Some(entry) = entries.get_mut(&key) {
-                entry.0 = epoch;
-                return Some(entry.1.clone());
-            }
-        }
-        None
-    }
-
-    pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>
-    where
-        F: FnOnce() -> Result<Dictionary, EvalError>,
-    {
-        let epoch = self.epoch.load(Ordering::Relaxed);
-        if let Ok(mut entries) = self.entries.lock() {
-            if let Some(entry) = entries.get_mut(&key) {
-                entry.0 = epoch;
-                return Ok(entry.1.clone());
-            }
-        }
-        let value = compute()?;
-        self.seed(key, value.clone());
+    pub fn get_or_insert_with<F>(&self,key:u64,compute:F)->Result<Dictionary,EvalError> where F:FnOnce()->Result<Dictionary,EvalError> {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut state)=self.state.try_lock() {if let Some(entry)=state.entries.get_mut(&key) {entry.0=epoch;return Ok(entry.1.clone());}}
+        let value=compute()?;
+        if let Err(original)=self.seed(key,value.clone()) {original.retire_cold();}
         Ok(value)
     }
-
+    /// 🧊️ Epoch sweep is a cold source mutation and retains every removed original until retirement.
     pub fn sweep(&self) {
-        let epoch = self.epoch.load(Ordering::Relaxed);
-        let mut entries = self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let expired: Vec<_> = entries.iter().filter(|(_, (entry_epoch, _))| *entry_epoch != epoch).map(|(key, _)| *key).collect();
-        let mut retirement = self.retirement.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        for key in expired { if let Some((_, value)) = entries.remove(&key) { retirement.push_dictionary(value); } }
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        let Ok(mut state)=self.state.try_lock() else {return;};
+        let expired:Vec<_>=state.entries.iter().filter(|(_,entry)|entry.0!=epoch).map(|(key,_)|*key).collect();
+        for key in expired {if let Some((_,value))=state.entries.remove(&key) {state.displaced.push(value);}}
     }
 }
 
@@ -2035,13 +1999,13 @@ struct NeuronSnapshot {
 /// evaluations without re-hashing or re-walking neurons that provably didn't change.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TreeSnapshot {
-    neurons: BTreeMap<String, NeuronSnapshot>,
-    seed_keys: BTreeMap<String, u64>,
+    neurons: HistoryFoldIndex<String, NeuronSnapshot>,
+    seed_keys: HistoryFoldIndex<String, u64>,
 }
 
 impl TreeSnapshot {
     pub fn capture(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Self {
-        let mut neurons: BTreeMap<String, NeuronSnapshot> = tree.neurons.iter().map(|neuron| (neuron.id.clone(), NeuronSnapshot { key: neuron_key_hash(neuron), incoming: incoming_edges_signature(tree, &neuron.id), dependents: Vec::new() })).collect();
+        let mut neurons: HistoryFoldIndex<String, NeuronSnapshot> = tree.neurons.iter().map(|neuron| (neuron.id.clone(), NeuronSnapshot { key: neuron_key_hash(neuron), incoming: incoming_edges_signature(tree, &neuron.id), dependents: Vec::new() })).collect();
         for syn in &tree.synapses {
             if !neurons.contains_key(&syn.to) {
                 continue;
@@ -2050,7 +2014,7 @@ impl TreeSnapshot {
                 source.dependents.push(syn.to.clone());
             }
         }
-        let mut seed_keys = BTreeMap::new();
+        let mut seed_keys = HistoryFoldIndex::new();
         for (id, dict) in seeds {
             let mut hasher = std::collections::hash_map::DefaultHasher::new();
             hash_dictionary(&mut hasher, dict);
@@ -2148,8 +2112,8 @@ fn waits_on_parked(tree: &Tree, parked: &HashSet<String>, neuron_id: &str) -> bo
 /// 📡️ Resolved neuron inputs and outputs from one evaluation pass.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct EvalChannels {
-    pub outputs: BTreeMap<String, Dictionary>,
-    pub inputs: BTreeMap<String, Dictionary>,
+    pub outputs: HistoryFoldIndex<String, Dictionary>,
+    pub inputs: HistoryFoldIndex<String, Dictionary>,
 }
 
 /// ⏳️ Result of a budget-limited evaluation pass — `remaining` (in topo order) is empty once the
@@ -2264,7 +2228,7 @@ impl<'a> Evaluator<'a> {
         Self { registry }
     }
 
-    pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<BTreeMap<String, Dictionary>, EvalError> {
+    pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HistoryFoldIndex<String, Dictionary>, EvalError> {
         let EvalChannels { outputs, inputs } = self.evaluate_channels(tree, seeds, &HashMap::new())?;
         inputs.retire_cold(); Ok(outputs)
     }
@@ -2275,7 +2239,7 @@ impl<'a> Evaluator<'a> {
         seeds: &HashMap<String, Dictionary>,
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
-    ) -> Result<BTreeMap<String, Dictionary>, EvalError> {
+    ) -> Result<HistoryFoldIndex<String, Dictionary>, EvalError> {
         let EvalChannels { outputs, inputs } = self.evaluate_channels_with(tree, seeds, operator_infos, dispatch)?;
         inputs.retire_cold(); Ok(outputs)
     }
@@ -2339,8 +2303,8 @@ impl<'a> Evaluator<'a> {
         source_required: &dyn Fn(u64)->bool,
     ) -> Result<BudgetedEval, EvalError> {
         let order = topo_order(tree)?;
-        let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
-        let mut inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
+        let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<HistoryFoldIndex<String, Dictionary>>());
+        let mut inputs = ColdOwner::new(HistoryFoldIndex::<String, Dictionary>::new());
         let mut spent = 0usize;
         let mut parked: HashSet<String> = HashSet::new();
         let mut pending_extensions: Vec<PendingExtensionEval> = Vec::new();
@@ -2454,11 +2418,11 @@ impl<'a> Evaluator<'a> {
         previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
         let levels = topo_levels(tree)?;
-        let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
-        let mut inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
+        let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<HistoryFoldIndex<String, Dictionary>>());
+        let mut inputs = ColdOwner::new(HistoryFoldIndex::<String, Dictionary>::new());
         for level in levels {
-            let mut level_inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
-            let mut level_outputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
+            let mut level_inputs = ColdOwner::new(HistoryFoldIndex::<String, Dictionary>::new());
+            let mut level_outputs = ColdOwner::new(HistoryFoldIndex::<String, Dictionary>::new());
             let mut deferred_clusters = ColdOwner::new(Vec::<(String, Tree, Dictionary)>::new());
             let mut compute_jobs = ColdOwner::new(Vec::<(String, String, Dictionary)>::new());
 
@@ -2770,7 +2734,7 @@ fn validate_operator_outputs(info: &OperatorInfo, output: &Dictionary) -> Result
     Ok(())
 }
 
-fn collect_neuron_input(tree: &Tree, outputs: &BTreeMap<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Result<Dictionary, EvalError> {
+fn collect_neuron_input(tree: &Tree, outputs: &HistoryFoldIndex<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Result<Dictionary, EvalError> {
     let mut acc = Dictionary::new();
     let variadic = operator_info.and_then(|info| info.variadic_input.as_ref());
     for syn in &tree.synapses {

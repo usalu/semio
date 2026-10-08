@@ -1,0 +1,288 @@
+{
+  "strings": [
+    {
+      "source": "\"plain\"",
+      "expected": "plain"
+    },
+    {
+      "source": "'single\\'quote'",
+      "expected": "single'quote"
+    },
+    {
+      "source": "\"\\x69nput\"",
+      "expected": "input"
+    },
+    {
+      "source": "\"\\u0069nput\"",
+      "expected": "input"
+    },
+    {
+      "source": "\"\\u{1f680}\"",
+      "expected": "🚀"
+    },
+    {
+      "source": "\"\\ud83d\\ude80\"",
+      "expected": "🚀"
+    },
+    {
+      "source": "'line\\\nbreak'",
+      "expected": "linebreak"
+    },
+    {
+      "source": "'line\\\r\nbreak'",
+      "expected": "linebreak"
+    },
+    {
+      "source": "\"\\n\\r\\t\\b\\f\\v\\0\"",
+      "expected": "\n\r\t\b\f\u000b\u0000"
+    },
+    {
+      "source": "\"\\q\"",
+      "expected": "q"
+    },
+    {
+      "source": "\"unterminated",
+      "expected": null
+    },
+    {
+      "source": "\"raw\nnewline\"",
+      "expected": null
+    },
+    {
+      "source": "\"\\xG0\"",
+      "expected": null
+    },
+    {
+      "source": "\"\\u{110000}\"",
+      "expected": null
+    },
+    {
+      "source": "\"\\01\"",
+      "expected": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "atomic-comments-regex-and-repeated-paths",
+      "source": "/* new URL(\"fake.json\", import.meta.url) */ const pattern = /readFileSync\\(\"fake\"\\)/u; const first = \"./🧫️fixtures/input.json\"; const second = \"./🧫️fixtures/input.json\";",
+      "literalValues": [
+        "./🧫️fixtures/input.json",
+        "./🧫️fixtures/input.json"
+      ]
+    },
+    {
+      "id": "control-parenthesis-regex-goal",
+      "source": "if (ready) /}/.test(subject); const value = \"yes\";",
+      "literalValues": [
+        "yes"
+      ]
+    },
+    {
+      "id": "division-keeps-real-code",
+      "source": "const ratio = a / b / c; const value = 'ok';",
+      "literalValues": [
+        "ok"
+      ]
+    },
+    {
+      "id": "nested-template-original-expressions",
+      "source": "const value = `outer ${ /}/.test(\"}\") ? `inner ${ new URL(\"./🧫️fixtures/input.json\", import.meta.url) }` : \"\" }`;",
+      "literalValues": [
+        "}",
+        "./🧫️fixtures/input.json",
+        ""
+      ]
+    },
+    {
+      "id": "original-utf16-offsets-and-unicode-identifiers",
+      "source": "const café = '🚀'; const value = '\\x69nput';",
+      "literalValues": [
+        "🚀",
+        "input"
+      ]
+    },
+    {
+      "id": "function-expression-division",
+      "source": "const f = function() {} / 2 / g; const value = \"after\";",
+      "literalValues": [
+        "after"
+      ]
+    },
+    {
+      "id": "function-declaration-regexp",
+      "source": "function f() {} /[}]/u.test(subject); const value = \"after\";",
+      "literalValues": [
+        "after"
+      ]
+    },
+    {
+      "id": "control-regexp-and-call-division",
+      "source": "if (ready) /[}]/u.test(subject); call() / 2 / divisor;",
+      "literalValues": []
+    },
+    {
+      "id": "unicode-identifier-original-offsets",
+      "source": "const 𝒳 = 12; const \\u0061 = 0x10; const value = \"🧬\";",
+      "literalValues": [
+        "🧬"
+      ]
+    }
+  ],
+  "invalidSources": [
+    "/* unclosed",
+    "const x = \"unclosed",
+    "const x = \"raw\nnewline\";",
+    "const x = `unclosed ${ value }",
+    "const x = /unclosed",
+    "const \\u00G0 = 1;",
+    "const \\u{110000} = 1;",
+    "const value = 0x;",
+    "const value = 1__2;",
+    "const value = 1e+;"
+  ],
+  "cancellationAtoms": [
+    {
+      "id": "string",
+      "prefix": "\"",
+      "unit": "x",
+      "repeat": 8192,
+      "suffix": "\""
+    },
+    {
+      "id": "template",
+      "prefix": "`",
+      "unit": "x",
+      "repeat": 8192,
+      "suffix": "`"
+    },
+    {
+      "id": "regex",
+      "prefix": "/",
+      "unit": "x",
+      "repeat": 8192,
+      "suffix": "/"
+    },
+    {
+      "id": "identifier",
+      "prefix": "",
+      "unit": "x",
+      "repeat": 8192,
+      "suffix": ""
+    },
+    {
+      "id": "comment",
+      "prefix": "/*",
+      "unit": "x",
+      "repeat": 8192,
+      "suffix": "*/"
+    }
+  ],
+  "programs": [
+    {
+      "id": "static-whole",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);"
+    },
+    {
+      "id": "validator-alias",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; const check=new Ajv().compile(schema);const original=fixture;check(original);"
+    },
+    {
+      "id": "file-url",
+      "source": "import Ajv from \"ajv\"; import {readFileSync} from \"node:fs\"; const read=p=>JSON.parse(readFileSync(new URL(p,import.meta.url),\"utf8\"));const schema=read(\"./schema.json\"),law=read(\"./examples.json\");new Ajv().compile(schema)(law);"
+    },
+    {
+      "id": "escaped-reader-alias",
+      "source": "import Ajv from \"ajv\";import {readFileSync as \\u0072ead} from \"node:fs\";const law=JSON.parse(read(new URL(\"./examples.json\",import.meta.url),\"utf8\"));import schema from \"./schema.json\";new Ajv().compile(schema)(law);"
+    },
+    {
+      "id": "projected-scene",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture.scene);"
+    },
+    {
+      "id": "loop-row",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; for(const row of fixture.cases)new Ajv().compile(schema)(row.value);"
+    },
+    {
+      "id": "domain-snapshot",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);"
+    },
+    {
+      "id": "runtime-request",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; export const validateRequest=new Ajv().compile(schema);validateRequest(fixture);"
+    },
+    {
+      "id": "shadowed-validator",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; function run(Ajv){new Ajv().compile(schema)(fixture)}"
+    },
+    {
+      "id": "reassigned",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; let value=fixture;value=getValue();new Ajv().compile(schema)(value);"
+    },
+    {
+      "id": "computed-source",
+      "source": "import Ajv from \"ajv\";const schema=await import(path);const fixture=await load(path);new Ajv().compile(schema)(fixture);"
+    },
+    {
+      "id": "fake-comments",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; /* new Ajv().compile(schema)(fixture) */ const text=\"compile(schema)(fixture)\";"
+    },
+    {
+      "id": "inline-trial",
+      "source": "import Ajv from \"ajv\";import fixture from \"./examples.json\";new Ajv().compile({type:\"object\",required:[\"cases\",\"copyGrants\",\"expected\"],properties:{cases:{type:\"array\"},copyGrants:{type:\"array\"},expected:{type:\"object\"}}})(fixture);"
+    }
+  ],
+  "identifiers": [
+    {
+      "source": "read",
+      "expected": "read"
+    },
+    {
+      "source": "\\u0072ead",
+      "expected": "read"
+    },
+    {
+      "source": "\\u{1d4b3}",
+      "expected": "𝒳"
+    },
+    {
+      "source": "a\\u200cb",
+      "expected": "a‌b"
+    },
+    {
+      "source": "\\u00G0",
+      "expected": null
+    }
+  ],
+  "syntaxBoundaries": [
+    {
+      "id": "bad-variable",
+      "source": "const schema fixture = value;",
+      "valid": false
+    },
+    {
+      "id": "bad-parameter",
+      "source": "function f(a b){read(a);}",
+      "valid": false
+    },
+    {
+      "id": "throw-line",
+      "source": "function f(){throw\nread(\"x\");}",
+      "valid": false
+    },
+    {
+      "id": "return-line",
+      "source": "function f(){return\nread(\"x\");}",
+      "valid": true
+    },
+    {
+      "id": "spread-range",
+      "source": "f(... /*original*/ value);",
+      "valid": true
+    },
+    {
+      "id": "empty-statements",
+      "source": ";;const x=read(\"x\");",
+      "valid": true
+    }
+  ]
+}

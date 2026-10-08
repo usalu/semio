@@ -819,6 +819,14 @@ pub use crate::standards::v1::subsets::any::schema::operations::*;
 /// 📸️ Persisted Jack snapshot shared by the artifact's schema and app surfaces.
 pub use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
+/// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `protocol::apply_diff` delegate through the central applier.
+pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
+    let outcome = protocol::Mutation::diff(mutation, snapshot);
+    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
+    *snapshot = next;
+    Ok(())
+}
+
 #[path = "."]
 pub mod examples {
     #[path = "."]

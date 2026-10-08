@@ -22,12 +22,15 @@
   "accessibility": null,
   "privacy": null,
   "safety": {
-    "added": [],
     "removed": [
-      "safety-requirement-a"
+      {
+        "id": "safety-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "security": null,
   "regulatory": null,

@@ -10,11 +10,19 @@ export interface TxtMainViewModel {
   revision: string;
 }
 
-/** ✏️ `textEdit` payload shape — mirrors `TxtEditorCommand::ReplaceText`, a whole-document
- * replace (re-split into `lines` on the document's own line ending). */
+/** ✂️ One range of the draft's change set: `delete` Unicode scalars at `offset` of the body as the document's line ending joins it
+ * were replaced by `insert` (ascending, disjoint, in the coordinates of the text the draft started from). */
+export interface TxtTextSplice {
+  offset: number;
+  delete: number;
+  insert: string;
+}
+
+/** ✏️ `textEdit` payload shape — mirrors `TxtEditorCommand::SpliceText`: the draft's change set as JSON text
+ * (`JSON.stringify(TxtTextSplice[])`), never the draft itself. */
 export interface TxtTextEdit {
   revision: string;
-  text: string;
+  splices: string;
 }
 
 export const TXT_MAIN_WINDOW_KIND_ID = "framework.window.text" as const;

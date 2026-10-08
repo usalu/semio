@@ -130,18 +130,6 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
             self.kind = kind.clone();
         }
     }
-
-    /// 🧮️ `self`-relative-to-`other` diff (crate::os_spr::Patchable convention).
-    fn diff_patch(&self, other: &Self) -> Option<DagNodePatch> {
-        Some(DagNodePatch {
-            name: (self.name != other.name).then(|| other.name.clone()),
-            x: (self.x != other.x).then_some(other.x),
-            y: (self.y != other.y).then_some(other.y),
-            width: (self.width != other.width).then_some(other.width),
-            height: (self.height != other.height).then_some(other.height),
-            kind: (self.kind != other.kind).then(|| other.kind.clone()),
-        })
-    }
 }
 
 /// 🩹️ Sparse patch of a {@link DagHostSnapshotEdge}'s endpoints.
@@ -159,11 +147,6 @@ impl Patchable<DagEdgePatch> for DagHostSnapshotEdge {
         if let Some(target) = &patch.target {
             self.target = target.clone();
         }
-    }
-
-    /// 🧮️ `self`-relative-to-`other` diff — see {@link DagNodeSpec}'s `Patchable` impl above.
-    fn diff_patch(&self, other: &Self) -> Option<DagEdgePatch> {
-        Some(DagEdgePatch { source: (self.source != other.source).then(|| other.source.clone()), target: (self.target != other.target).then(|| other.target.clone()) })
     }
 }
 //#endregion 🔖️ExternalPatchSupport
@@ -511,15 +494,16 @@ impl DagDelta {
         atoms
     }
 
-    /// ↩️ The steps that undo one single-slot delta, in application order, read from the state `before` it ran on.
-    fn atom_inverse(&self, before: &DagSnapshot) -> Vec<DagDelta> {
-        let node = |id: &str| before.nodes.iter().find(|node| node.id == id);
+    /// ↩️ The steps that undo one single-slot delta, in application order, read from `base`. The slots of one diff address distinct rows;
+    /// slots that edit a row an earlier slot of the same diff created are inverted step by step by the store, which absorbs the per-step inverses.
+    fn atom_inverse(&self, base: &DagSnapshot) -> Vec<DagDelta> {
+        let node = |id: &str| base.nodes.iter().find(|node| node.id == id);
         let mut steps = Vec::new();
         if let Some(created) = &self.created_node {
             steps.push(DagDelta { deleted_node_ids: Some(vec![created.id.clone()]), ..DagDelta::default() });
         }
         if let Some(ids) = &self.deleted_node_ids {
-            for (at, node) in before.nodes.iter().enumerate().filter(|(_, node)| ids.contains(&node.id)) {
+            for (at, node) in base.nodes.iter().enumerate().filter(|(_, node)| ids.contains(&node.id)) {
                 steps.push(DagDelta { created_node: Some(node.clone()), created_node_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
             }
         }
@@ -551,13 +535,13 @@ impl DagDelta {
             steps.extend(node(&replaced.id).map(|node| DagDelta { replaced_node_properties: Some(ReplacedNodeProperties { id: replaced.id.clone(), new_properties: node.properties.clone() }), ..DagDelta::default() }));
         }
         if self.reordered_nodes.is_some() {
-            steps.push(DagDelta { reordered_nodes: Some(before.nodes.iter().map(|node| node.id.clone()).collect()), ..DagDelta::default() });
+            steps.push(DagDelta { reordered_nodes: Some(base.nodes.iter().map(|node| node.id.clone()).collect()), ..DagDelta::default() });
         }
         if let Some(edge) = &self.connected_edge {
             steps.push(DagDelta { disconnected_edge_ids: Some(vec![edge.id.clone()]), ..DagDelta::default() });
         }
         if let Some(ids) = &self.disconnected_edge_ids {
-            for (at, edge) in before.edges.iter().enumerate().filter(|(_, edge)| ids.contains(&edge.id)) {
+            for (at, edge) in base.edges.iter().enumerate().filter(|(_, edge)| ids.contains(&edge.id)) {
                 steps.push(DagDelta { connected_edge: Some(edge.clone()), connected_edge_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
             }
         }
@@ -565,7 +549,7 @@ impl DagDelta {
             let restored: Vec<RewrittenEdgeEndpoint> = rewrites
                 .iter()
                 .filter_map(|rewrite| {
-                    before.edges.iter().find(|edge| edge.id == rewrite.id).map(|edge| RewrittenEdgeEndpoint {
+                    base.edges.iter().find(|edge| edge.id == rewrite.id).map(|edge| RewrittenEdgeEndpoint {
                         id: rewrite.id.clone(),
                         new_source: rewrite.new_source.as_ref().map(|_| edge.source.clone()),
                         new_target: rewrite.new_target.as_ref().map(|_| edge.target.clone()),
@@ -580,23 +564,8 @@ impl DagDelta {
 
 impl DiffAlgebra<DagSnapshot> for DagDiff {
     fn inverse(&self, base: &DagSnapshot) -> Self {
-        let mut state = base.clone();
-        let mut groups = Vec::new();
-        for atom in self.steps.iter().flat_map(DagDelta::atoms) {
-            groups.push(atom.atom_inverse(&state));
-            if atom.apply_into(&mut state).is_err() {
-                return Self::default();
-            }
-        }
+        let groups: Vec<Vec<DagDelta>> = self.steps.iter().flat_map(DagDelta::atoms).map(|atom| atom.atom_inverse(base)).collect();
         Self { steps: groups.into_iter().rev().flatten().collect() }
-    }
-
-    fn between(base: &DagSnapshot, other: &DagSnapshot) -> Self {
-        let mut steps = vec![DagDelta { disconnected_edge_ids: Some(base.edges.iter().map(|edge| edge.id.clone()).collect()), ..DagDelta::default() }, DagDelta { deleted_node_ids: Some(base.nodes.iter().map(|node| node.id.clone()).collect()), ..DagDelta::default() }];
-        steps.extend(other.nodes.iter().enumerate().map(|(at, node)| DagDelta { created_node: Some(node.clone()), created_node_at: Some(dag_index_to_wire(at)), ..DagDelta::default() }));
-        steps.extend(other.edges.iter().enumerate().map(|(at, edge)| DagDelta { connected_edge: Some(edge.clone()), connected_edge_at: Some(dag_index_to_wire(at)), ..DagDelta::default() }));
-        steps.retain(|step| step.disconnected_edge_ids.as_ref().is_none_or(|ids| !ids.is_empty()) && step.deleted_node_ids.as_ref().is_none_or(|ids| !ids.is_empty()));
-        Self { steps }
     }
 
     fn is_empty(&self) -> bool {

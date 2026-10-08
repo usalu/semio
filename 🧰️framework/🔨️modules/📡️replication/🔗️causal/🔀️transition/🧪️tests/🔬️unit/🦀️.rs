@@ -502,7 +502,7 @@ fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> cra
     envelope
 }
 
-fn expected_supersessions(expect: &serde_json::Value) -> std::collections::BTreeMap<MutationId, EffectiveSupersession> {
+fn expected_supersessions(expect: &serde_json::Value) -> HistoryFoldIndex<MutationId, EffectiveSupersession> {
     expect["supersessions"]
         .as_array()
         .expect("supersessions")
@@ -622,11 +622,11 @@ fn bounded_history_fold_obeys_the_neutral_law() {
     for grant in law["workGrants"].as_array().unwrap() {
         let grant = grant.as_u64().unwrap() as usize;
         let captured = input.clone();
-        let mut job = HistoryFoldJob::new(move |control| async move { fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &none(), &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = none(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &|id| excluded.contains(id), &ViewerHead::canonical_trunk(&captured.0), &control).await });
         let mut done = 0;
         let mut result = None;
         for _ in 0..100000 {
-            match job.step(grant, job.next_step_byte_demand(bytes.as_u64().unwrap() as usize), &mut || false).unwrap() {
+            match job.step(job.next_step_grant(grant,bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                 HistoryFoldJobStep::Pending { completed, .. } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
                 HistoryFoldJobStep::Ready(fold) => { result = Some(fold); break; },
                 HistoryFoldJobStep::Rejected(error) => panic!("bounded fold: {error:?}"),
@@ -638,12 +638,12 @@ fn bounded_history_fold_obeys_the_neutral_law() {
     }
     for cancelled_at in law["cancelAt"].as_array().unwrap() {
         let captured = input.clone();
-        let mut job = HistoryFoldJob::new(move |control| async move { fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &none(), &ViewerHead::canonical_trunk(&captured.0), &control).await });
-        for _ in 0..cancelled_at.as_u64().unwrap() { let _ = job.step(1, 7, &mut || false).unwrap(); }
+        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = none(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &|id| excluded.contains(id), &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        for _ in 0..cancelled_at.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,7).unwrap(), &mut || false).unwrap(); }
         let done = job.completed();
         job.request_cancel();
         let mut closed = false;
-        for _ in 0..100000 { if job.close_step(1, job.next_close_byte_demand()).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { closed = true; break; } }
+        for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { closed = true; break; } }
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), done);
     }
@@ -670,7 +670,7 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(&input, &control).await });
             let mut actual = None;
             for _ in 0..100000 {
-                match job.step(1, job.next_step_byte_demand(grant.as_u64().unwrap() as usize), &mut || false).unwrap() {
+                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
                     HistoryFoldJobStep::Ready(value) => { actual = Some(Ok(value)); break; },
                     HistoryFoldJobStep::Rejected(error) => { actual = Some(Err(error)); break; },
@@ -707,7 +707,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
             let mut outcome = None;
             for _ in 0..100000 {
-                match job.step(1, job.next_step_byte_demand(grant.as_u64().unwrap() as usize), &mut || false).unwrap() {
+                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
                     HistoryFoldJobStep::Ready(value) => { outcome = Some(Ok(value)); break; },
                     HistoryFoldJobStep::Rejected(error) => { outcome = Some(Err(error)); break; },
@@ -721,10 +721,10 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
         for stop in law["cancelAt"].as_array().unwrap() {
             let input = source.clone();
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
-            for _ in 0..stop.as_u64().unwrap() { let _ = job.step(1, 1, &mut || false).unwrap(); }
+            for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,1).unwrap(), &mut || false).unwrap(); }
             let completed = job.completed();
             job.request_cancel();
-            for _ in 0..100000 { if job.close_step(1, job.next_close_byte_demand()).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { break; } }
+            for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; } }
             assert!(job.terminal_is_empty());
             assert_eq!(job.completed(), completed);
         }

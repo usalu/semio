@@ -555,7 +555,7 @@
       "runId": "752622b6-ba07-40a0-9a6d-afbbf2216ff2"
     }
   },
-  "recordedAt": "2026-10-06T13:09:00Z",
+  "recordedAt": "2026-10-08T18:41:18.242Z",
   "goalStatus": "active",
   "epw": {
     "source": {
@@ -2476,5 +2476,164 @@
     "originalBudgetMs": 300000,
     "historicalCachedCredit": false
   },
-  "rootConcrete60Framework7CurrentAudit": "📓️semantic-independent-concrete-sixty-framework-seven-current-owning-selectors.md"
+  "rootConcrete60Framework7CurrentAudit": "📓️semantic-independent-concrete-sixty-framework-seven-current-owning-selectors.md",
+  "rootOct8CurrentRevalidation": {
+    "report": "📓️root-oct8-current-universal-revalidation.md",
+    "oldHandlesMissing": [
+      3737,
+      42966
+    ],
+    "oldGeneratedDirectoryMissing": true,
+    "repoMcpAvailable": false
+  },
+  "rootOct8FourDedicatedOriginalNative": {
+    "session": 28360,
+    "pending": false,
+    "exitCode": 1,
+    "qualification": "compiler-only; no Nextest across4 originalowning targets",
+    "sharedKernelErrors": [
+      509,
+      513
+    ],
+    "graphErrors": 2,
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-oct8-four-owning-native-after-capacity-recovery.log"
+  },
+  "rootOct6SemioWholeHistoricalTerminal": {
+    "session": 77293,
+    "exitCode": 0,
+    "passed": 271,
+    "failed": 0,
+    "skipped": 2181,
+    "seconds": 78.806,
+    "nextestRunId": "997fa789-a9b7-40f3-8fc5-b78c21e9d7e8",
+    "currentLogMissing": true,
+    "currentProviderChanged": true,
+    "currentWorkspaceQualification": false
+  },
+  "rootOct8FourDedicatedSource": {
+    "session": 6565,
+    "exitCode": 0,
+    "passed": 55,
+    "failed": 0,
+    "expects": 552,
+    "owners": {
+      "step": {
+        "passed": 9,
+        "expects": 102
+      },
+      "ifc": {
+        "passed": 24,
+        "expects": 235
+      },
+      "bcf": {
+        "passed": 8,
+        "expects": 86
+      },
+      "md": {
+        "passed": 14,
+        "expects": 129
+      }
+    }
+  },
+  "rootOct8StdioCensusSource": {
+    "session": 80089,
+    "exitCode": 0,
+    "passed": 6,
+    "failed": 0,
+    "expects": 48,
+    "strict": {
+      "session": 64965,
+      "exitCode": 0
+    }
+  },
+  "rootOct8StdioIndependentOwnerMount": {
+    "session": 40276,
+    "exitCode": 0,
+    "paths": 2,
+    "bindings": 89,
+    "concreteTypes": 57,
+    "nativeQualificationPending": true,
+    "launchGenerationPending": true
+  },
+  "rootOct8VcsSource": {
+    "session": 66769,
+    "exitCode": 0,
+    "passed": 17,
+    "failed": 0,
+    "expects": 147
+  },
+  "rootOct8RemodelingStructuredContent": {
+    "tables": 39,
+    "knownStructuredBlobAuthority": false,
+    "totalSchemaSnapshotFragments": true,
+    "positiveMeshTags": 12,
+    "neutralFragmentCases": 11,
+    "source": {
+      "sessionId": 43211,
+      "exitCode": 0,
+      "passed": 27,
+      "failed": 0,
+      "expectations": 1071,
+      "strictSessionId": 34042,
+      "strictExitCode": 0,
+      "log": "🗑️generated/root-oct8-remodeling-total-fragment-source-independent-schema-types.log",
+      "strictLog": "🗑️generated/root-oct8-remodeling-total-fragment-source-independent-schema-strict-types.log",
+      "scope": "owning Source provider and strict neutral schema witnesses"
+    },
+    "nativeSyntax": {
+      "sessionId": 22403,
+      "exitCode": 0,
+      "sourceFiles": 3,
+      "log": "🗑️generated/root-oct8-remodeling-total-fragment-native-public-io-syntax.log",
+      "scope": "syntax only"
+    },
+    "native": {
+      "implementationMounted": true,
+      "owningRuntimeQualified": false,
+      "publicIoSnapshots": 14,
+      "publicIoTextBinaryAssertions": 28,
+      "commonKernelCompilerFrontier": true
+    },
+    "schemaAuthority": "outside fixture tree under owning SQLite schema",
+    "report": "📓️root-oct8-remodeling-structured-content-provider-correction.md"
+  },
+  "rootOct8PagedSourceNativePrerequisite": {
+    "lastSessionId": 57160,
+    "exitCode": 0,
+    "passed": 73,
+    "skipped": 95,
+    "durationSeconds": 18.6,
+    "ownedSourceCurrency": true,
+    "directBorrowedVariant": true,
+    "actualAuthoredSetLabel": false,
+    "completeChildEmit": false,
+    "scope": "original Value/DSL/Pack source and variant prerequisite only",
+    "report": "📓️typed-source-resumed-origin-ownership-authority.md"
+  },
+  "rootOct8CanonicalRetirementFloor": {
+    "lastSessionId": 92501,
+    "exitCode": 0,
+    "passed": 31,
+    "skipped": 166,
+    "durationSeconds": 0.503,
+    "sourcePassed": 2,
+    "sourceExpectations": 20,
+    "outerFactorySlotWitness": true,
+    "scope": "canonical floor only",
+    "report": "📓️physical-oct08-canonical-close-depth-fallible-demand-read-integration.md"
+  },
+  "rootOct8VcsOriginalNativeCurrent": {
+    "lastSessionId": 27639,
+    "exitCode": 1,
+    "kernelCompilerErrors": 520,
+    "nextest": false,
+    "runtimeQualified": false
+  },
+  "rootOct8LaunchPublication": {
+    "generatedPublished": false,
+    "blockingOwner": "JPG",
+    "field": "/nativeCodecs/9/protocolSourceSha256",
+    "requires": "genuine current owning JPG Native receipt and selected guarded refresh",
+    "report": "📓️semantic-independent-oct8-jpg-publication-source-digest-and-native-io-lineage.md"
+  }
 }

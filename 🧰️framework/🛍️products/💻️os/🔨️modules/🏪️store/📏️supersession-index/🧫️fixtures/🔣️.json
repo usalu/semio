@@ -1,0 +1,27 @@
+{
+  "schema": "semio.store.owned-supersession-index/v1",
+  "targets": [
+    "op-c",
+    "op-a",
+    "op-b"
+  ],
+  "extent": 65536,
+  "logicalItems": 1,
+  "expectedOrder": [
+    "op-a",
+    "op-b",
+    "op-c"
+  ],
+  "lowerBounds": {
+    "op-a": "op-b",
+    "op-b": "op-c",
+    "op-c": null
+  },
+  "independentCredits": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

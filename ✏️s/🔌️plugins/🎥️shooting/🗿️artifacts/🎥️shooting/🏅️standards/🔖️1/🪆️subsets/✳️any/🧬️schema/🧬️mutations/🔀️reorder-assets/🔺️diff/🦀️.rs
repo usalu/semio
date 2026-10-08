@@ -13,5 +13,5 @@ pub fn diff(payload: &ReorderAssets, base: &ShootingSnapshot) -> protocol::Mutat
     if index == from {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" order is unchanged.", payload.id));
     }
-    protocol::MutationOutcome::new(ShootingDiff::asset_edit(ShootingEdit::Move { id: payload.id.clone(), index }))
+    protocol::MutationOutcome::new(ShootingDiff::asset_edit(ShootingEdit::Move { id: payload.id.clone(), from, to: index }))
 }

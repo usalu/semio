@@ -9,7 +9,7 @@ document = "stdio.pdf.1.7" field*
 field = text-field / value-field
 text-field = ("schema" / "declaredVersion") "=" (STRING / IDENT)
 value-field = value-key "=" value
-value-key = "pages" / "fonts" / "images" / "forms" / "extGStates" / "shadings" / "patterns" / "colorSpaces" / "properties" / "outlines" / "namedDestinations" / "pageLabels" / "embeddedFiles" / "outputIntents" / "acroForm" / "optionalContent" / "pageLayout" / "pageMode" / "viewerPreferences" / "openAction" / "language" / "markInfo" / "metadata" / "documentId" / "encryption" / "info" / "catalogExtra" / "objects" / "trailer"
+value-key = "pages" / "fonts" / "images" / "forms" / "extGStates" / "shadings" / "patterns" / "colorSpaces" / "properties" / "outlines" / "namedDestinations" / "pageLabels" / "embeddedFiles" / "outputIntents" / "acroForm" / "optionalContent" / "pageLayout" / "pageMode" / "viewerPreferences" / "openAction" / "language" / "markInfo" / "metadata" / "documentId" / "encryption" / "info" / "catalogExtra" / "objects" / "trailer" / "admittedStreamRoles"
 value = "null" / "true" / "false" / number / STRING / bytes / array / object
 array = "[" value* "]"
 object = "{" member* "}"

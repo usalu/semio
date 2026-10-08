@@ -2,7 +2,8 @@ import { BundleScript } from "../../../../../../../🔨️modules/🏃️process
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { acquireResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
-import { deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
+import {compactCargoIncrementalSessionsV1, deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
+import {cargoDirectories} from "../../🦀️cargo/🟦️.ts";
 import { areaUnitRoot, pruneTestEvidence, scanCacheAreas } from "../🌐️workspace/🟦️.ts";
 
 /** 📊️ Dry-run visibility into the shared cache root: per-area sizes, unit counts, and exactly what `cache-prune` would delete. */
@@ -44,6 +45,11 @@ export class CachePruneScript extends BundleScript {
     process.once("SIGTERM", cancel);
     const dryRun = args.includes("--dry-run");
     try {
+      if(args.includes("--stale-incremental-only")){
+        const index=args.indexOf("--profile"),profile=args[index+1];if(index<0||!profile||profile.startsWith("-")||args.some((arg,position)=>!["--stale-incremental-only","--dry-run","--profile"].includes(arg)&&position!==index+1))throw Error("Incremental compaction requires exactly one explicit Cargo profile");
+        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:repoCacheDirectory(this.repoRoot,"agents/resource-leases"),profile,signal:controller.signal,dryRun,onUnit:unit=>console.log(`[DEBUG] Incremental compaction ${dryRun?"planned":"removing"} ${unit.path} bytes=${unit.bytes}`)});
+        console.log(`[DEBUG] Incremental compaction result=${JSON.stringify(result)}`);return;
+      }
       const lease = await acquireResourceLease({
         directory: repoCacheDirectory(this.repoRoot, "agents/resource-leases"),
         resource: "cache-prune",

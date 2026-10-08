@@ -1,0 +1,167 @@
+{
+  "schema": "semio.stdio.md.splice-source.v1",
+  "note": "One explicit Apply of the markdown window is ONE splice-source mutation: the ranges the editor made, ascending and disjoint, in Unicode scalars of the source as rendered. `after` is the source the ranges mean; the sparse diff reparses only the blocks the ranges touch (plus their neighbours), and the document then reads exactly the blocks of the parse of `after`.",
+  "cases": [
+    {
+      "id": "edits-a-word",
+      "before": "# Title\n\nFirst.\n\nSecond.\n",
+      "splices": [
+        {
+          "offset": 14,
+          "delete": 0,
+          "insert": ", edited"
+        }
+      ],
+      "after": "# Title\n\nFirst, edited.\n\nSecond.\n"
+    },
+    {
+      "id": "retitles-a-heading",
+      "before": "# Title\n\nBody.\n",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 5,
+          "insert": "Better title"
+        }
+      ],
+      "after": "# Better title\n\nBody.\n"
+    },
+    {
+      "id": "splits-a-paragraph",
+      "before": "First sentence. Second sentence.\n\nTail.\n",
+      "splices": [
+        {
+          "offset": 15,
+          "delete": 1,
+          "insert": "\n\n"
+        }
+      ],
+      "after": "First sentence.\n\nSecond sentence.\n\nTail.\n"
+    },
+    {
+      "id": "joins-two-paragraphs",
+      "before": "One.\n\nTwo.\n\nThree.\n",
+      "splices": [
+        {
+          "offset": 4,
+          "delete": 2,
+          "insert": " "
+        }
+      ],
+      "after": "One. Two.\n\nThree.\n"
+    },
+    {
+      "id": "changes-a-heading-level",
+      "before": "# Title\n\nBody.\n",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 0,
+          "insert": "#"
+        }
+      ],
+      "after": "## Title\n\nBody.\n"
+    },
+    {
+      "id": "edits-inside-a-quote",
+      "before": "Intro.\n\n> one\n>\n> two\n",
+      "splices": [
+        {
+          "offset": 18,
+          "delete": 3,
+          "insert": "2"
+        }
+      ],
+      "after": "Intro.\n\n> one\n>\n> 2\n"
+    },
+    {
+      "id": "edits-a-list-item",
+      "before": "- one\n- two\n- three\n",
+      "splices": [
+        {
+          "offset": 8,
+          "delete": 3,
+          "insert": "2"
+        }
+      ],
+      "after": "- one\n- 2\n- three\n"
+    },
+    {
+      "id": "appends-a-block",
+      "before": "First.\n",
+      "splices": [
+        {
+          "offset": 7,
+          "delete": 0,
+          "insert": "\nSecond.\n"
+        }
+      ],
+      "after": "First.\n\nSecond.\n"
+    },
+    {
+      "id": "two-ranges-in-two-blocks",
+      "before": "# One\n\nTwo\n\n## Three\n",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 3,
+          "insert": "1"
+        },
+        {
+          "offset": 15,
+          "delete": 5,
+          "insert": "3"
+        }
+      ],
+      "after": "# 1\n\nTwo\n\n## 3\n"
+    },
+    {
+      "id": "rewrites-a-code-block",
+      "before": "```\nold\n```\n",
+      "splices": [
+        {
+          "offset": 4,
+          "delete": 3,
+          "insert": "new"
+        }
+      ],
+      "after": "```\nnew\n```\n"
+    },
+    {
+      "id": "edits-after-an-astral-scalar",
+      "before": "😀 emoji\n\nTail text.\n",
+      "splices": [
+        {
+          "offset": 9,
+          "delete": 4,
+          "insert": "Last"
+        }
+      ],
+      "after": "😀 emoji\n\nLast text.\n"
+    },
+    {
+      "id": "deletes-everything",
+      "before": "First.\n\nSecond.\n",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 16,
+          "insert": ""
+        }
+      ],
+      "after": ""
+    },
+    {
+      "id": "unchanged",
+      "before": "# Title\n\nFirst.\n",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 5,
+          "insert": "Title"
+        }
+      ],
+      "after": "# Title\n\nFirst.\n"
+    }
+  ]
+}

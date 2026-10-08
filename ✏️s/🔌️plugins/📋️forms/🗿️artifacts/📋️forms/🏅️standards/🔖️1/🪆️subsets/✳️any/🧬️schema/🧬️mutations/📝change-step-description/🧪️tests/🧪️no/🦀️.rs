@@ -7,7 +7,7 @@
 //!
 //! ⚠️ Why this leaf pins the NO-OP branch: `FormsSnapshot` keeps its `steps` tree in the composed
 //! `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), and every content-changing forms
-//! diff routes through `forms_diff_from_delta`, which re-mints both handles with a `child_id` that
+//! diff routes through `FormsDiff::apply`, which re-derives both handles with a `child_id` that
 //! is a `DefaultHasher` digest of the child content. Hand-authoring such an `➡️after` would mean
 //! forging a value out of `std`'s deliberately unspecified default hasher. This verb's guard
 //! returns before that call, mints nothing, and leaves `➡️after == ⬅️before`.
@@ -19,8 +19,9 @@
 //! seeded step takes its `id` and its `description` from the committed payload; its `title` is this
 //! case's own fixture value and is deliberately arbitrary — `change-step-description` never reads it.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no/📸️snapshot/➡️after/🔣️.json");

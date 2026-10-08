@@ -9,7 +9,7 @@ pub fn diff(payload: &super::TouchArtifact, base: &SSpaceSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Artifact \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     protocol::MutationOutcome::new(SSpaceDiff {
-        artifacts: Some(SSpaceArtifactsDelta { patched: vec![SSpaceArtifactPatch { id: payload.id.clone(), updated_at_ms: Some(payload.updated_at_ms), updated_by: Some(payload.updated_by.clone()), ..Default::default() }], ..Default::default() }),
+        artifacts: Some(SSpaceArtifactsDelta::modification(payload.id.clone(), SSpaceArtifactPatch { updated_at_ms: Some(payload.updated_at_ms), updated_by: Some(payload.updated_by.clone()), ..Default::default() })),
         ..Default::default()
     })
 }

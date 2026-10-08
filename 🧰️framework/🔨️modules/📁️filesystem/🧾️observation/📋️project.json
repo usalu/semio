@@ -1,0 +1,4 @@
+{
+ "name":"@semio-tech/filesystem-observation",
+ "targets":{"test-typescript":{"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/📁️filesystem/🧾️observation","command":"bun ./📜️script.ts test","forwardAllArgs":true},"inputs":["default","^default"]}}
+}

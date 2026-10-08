@@ -2,8 +2,8 @@
   "artifact": null,
   "domain": null,
   "fasteners": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "fast-1",
         "patch": {
@@ -18,8 +18,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "kindCompatibility": null,
   "meta": null,

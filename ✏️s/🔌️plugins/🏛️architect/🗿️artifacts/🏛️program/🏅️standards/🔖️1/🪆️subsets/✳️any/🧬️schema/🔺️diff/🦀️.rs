@@ -1,6 +1,6 @@
 //! 🧬️ ProgramSnapshot diff schema — sparse field delta over the artifact.
 //!
-//! Every collection is an identified `added / removed / patched / reordered` delta, every singleton section
+//! Every collection is a positional `removed / inserted / moved / modified` delta (`protocol::list_delta`), every singleton section
 //! (`meta`, `project`, `governance`) a `set / patch` edit, and `knowledge` / `benchmarks` are deltas over the rows their
 //! composed child tables are derived from. The diff never carries a whole after-snapshot; `apply` derives the composed
 //! child handles from the patched rows.
@@ -161,1465 +161,466 @@ pub struct ProgramDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramStringList {
-    pub values: Vec<String>,
-}
-
-/// 🧩 Identified-collection delta for `stakeholders`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramStakeholdersDelta {
-    pub added: Vec<Stakeholder>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramStakeholdersPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Stakeholder` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramStakeholdersPatchEntry {
-    pub id: String,
-    pub patch: StakeholderPatch,
-}
-
-/// 🧩 Identified-collection delta for `users`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramUsersDelta {
-    pub added: Vec<UserProfile>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramUsersPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `UserProfile` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramUsersPatchEntry {
-    pub id: String,
-    pub patch: UserProfilePatch,
-}
-
-/// 🧩 Identified-collection delta for `activities`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramActivitiesDelta {
-    pub added: Vec<Activity>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramActivitiesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Activity` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramActivitiesPatchEntry {
-    pub id: String,
-    pub patch: ActivityPatch,
-}
-
-/// 🧩 Identified-collection delta for `functions`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramFunctionsDelta {
-    pub added: Vec<Function>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramFunctionsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Function` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramFunctionsPatchEntry {
-    pub id: String,
-    pub patch: FunctionPatch,
-}
-
-/// 🧩 Identified-collection delta for `elements`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramElementsDelta {
-    pub added: Vec<ProgramElement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramElementsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ProgramElement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramElementsPatchEntry {
-    pub id: String,
-    pub patch: ProgramElementPatch,
-}
-
-/// 🧩 Identified-collection delta for `quantities`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramQuantitiesDelta {
-    pub added: Vec<QuantityRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramQuantitiesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `QuantityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramQuantitiesPatchEntry {
-    pub id: String,
-    pub patch: QuantityRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `relationships`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramRelationshipsDelta {
-    pub added: Vec<Relationship>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramRelationshipsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Relationship` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramRelationshipsPatchEntry {
-    pub id: String,
-    pub patch: RelationshipPatch,
-}
-
-/// 🧩 Identified-collection delta for `adjacencies`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramAdjacenciesDelta {
-    pub added: Vec<Adjacency>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramAdjacenciesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Adjacency` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramAdjacenciesPatchEntry {
-    pub id: String,
-    pub patch: AdjacencyPatch,
-}
-
-/// 🧩 Identified-collection delta for `processes`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramProcessesDelta {
-    pub added: Vec<Process>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramProcessesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Process` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramProcessesPatchEntry {
-    pub id: String,
-    pub patch: ProcessPatch,
-}
-
-/// 🧩 Identified-collection delta for `flows`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramFlowsDelta {
-    pub added: Vec<FlowRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramFlowsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `FlowRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramFlowsPatchEntry {
-    pub id: String,
-    pub patch: FlowRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `access_rules`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramAccessRulesDelta {
-    pub added: Vec<AccessRule>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramAccessRulesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `AccessRule` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramAccessRulesPatchEntry {
-    pub id: String,
-    pub patch: AccessRulePatch,
-}
-
-/// 🧩 Identified-collection delta for `operations`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramOperationsDelta {
-    pub added: Vec<OperationalRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramOperationsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `OperationalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramOperationsPatchEntry {
-    pub id: String,
-    pub patch: OperationalRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `equipment`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramEquipmentDelta {
-    pub added: Vec<Equipment>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramEquipmentPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Equipment` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramEquipmentPatchEntry {
-    pub id: String,
-    pub patch: EquipmentPatch,
-}
-
-/// 🧩 Identified-collection delta for `resources`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramResourcesDelta {
-    pub added: Vec<Resource>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramResourcesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Resource` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramResourcesPatchEntry {
-    pub id: String,
-    pub patch: ResourcePatch,
-}
-
-/// 🧩 Identified-collection delta for `storage`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramStorageDelta {
-    pub added: Vec<StorageRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramStoragePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `StorageRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramStoragePatchEntry {
-    pub id: String,
-    pub patch: StorageRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `environmental`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramEnvironmentalDelta {
-    pub added: Vec<EnvironmentalRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramEnvironmentalPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `EnvironmentalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramEnvironmentalPatchEntry {
-    pub id: String,
-    pub patch: EnvironmentalRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `human_factors`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramHumanFactorsDelta {
-    pub added: Vec<HumanFactorRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramHumanFactorsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `HumanFactorRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramHumanFactorsPatchEntry {
-    pub id: String,
-    pub patch: HumanFactorRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `accessibility`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramAccessibilityDelta {
-    pub added: Vec<AccessibilityRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramAccessibilityPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `AccessibilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramAccessibilityPatchEntry {
-    pub id: String,
-    pub patch: AccessibilityRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `privacy`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramPrivacyDelta {
-    pub added: Vec<PrivacyRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramPrivacyPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `PrivacyRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramPrivacyPatchEntry {
-    pub id: String,
-    pub patch: PrivacyRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `safety`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSafetyDelta {
-    pub added: Vec<SafetyRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSafetyPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `SafetyRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSafetyPatchEntry {
-    pub id: String,
-    pub patch: SafetyRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `security`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSecurityDelta {
-    pub added: Vec<SecurityRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSecurityPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `SecurityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSecurityPatchEntry {
-    pub id: String,
-    pub patch: SecurityRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `regulatory`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramRegulatoryDelta {
-    pub added: Vec<RegulatoryRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramRegulatoryPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `RegulatoryRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramRegulatoryPatchEntry {
-    pub id: String,
-    pub patch: RegulatoryRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `site_context`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSiteContextDelta {
-    pub added: Vec<SiteContext>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSiteContextPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `SiteContext` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSiteContextPatchEntry {
-    pub id: String,
-    pub patch: SiteContextPatch,
-}
-
-/// 🧩 Identified-collection delta for `organizational`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramOrganizationalDelta {
-    pub added: Vec<OrganizationalRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramOrganizationalPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `OrganizationalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramOrganizationalPatchEntry {
-    pub id: String,
-    pub patch: OrganizationalRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `services`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramServicesDelta {
-    pub added: Vec<ServiceRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramServicesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ServiceRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramServicesPatchEntry {
-    pub id: String,
-    pub patch: ServiceRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `infrastructure`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramInfrastructureDelta {
-    pub added: Vec<InfrastructureRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramInfrastructurePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `InfrastructureRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramInfrastructurePatchEntry {
-    pub id: String,
-    pub patch: InfrastructureRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `information`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramInformationDelta {
-    pub added: Vec<InformationRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramInformationPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `InformationRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramInformationPatchEntry {
-    pub id: String,
-    pub patch: InformationRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `communication`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramCommunicationDelta {
-    pub added: Vec<CommunicationRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramCommunicationPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `CommunicationRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramCommunicationPatchEntry {
-    pub id: String,
-    pub patch: CommunicationRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `wayfinding`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramWayfindingDelta {
-    pub added: Vec<WayfindingRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramWayfindingPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `WayfindingRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramWayfindingPatchEntry {
-    pub id: String,
-    pub patch: WayfindingRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `schedules`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSchedulesDelta {
-    pub added: Vec<ScheduleRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSchedulesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ScheduleRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSchedulesPatchEntry {
-    pub id: String,
-    pub patch: ScheduleRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `flexibility`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramFlexibilityDelta {
-    pub added: Vec<FlexibilityRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramFlexibilityPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `FlexibilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramFlexibilityPatchEntry {
-    pub id: String,
-    pub patch: FlexibilityRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `growth`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramGrowthDelta {
-    pub added: Vec<GrowthPlan>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramGrowthPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `GrowthPlan` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramGrowthPatchEntry {
-    pub id: String,
-    pub patch: GrowthPlanPatch,
-}
-
-/// 🧩 Identified-collection delta for `sustainability`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSustainabilityDelta {
-    pub added: Vec<SustainabilityRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSustainabilityPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `SustainabilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSustainabilityPatchEntry {
-    pub id: String,
-    pub patch: SustainabilityRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `resilience`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramResilienceDelta {
-    pub added: Vec<ResilienceRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramResiliencePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ResilienceRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramResiliencePatchEntry {
-    pub id: String,
-    pub patch: ResilienceRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `costs`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramCostsDelta {
-    pub added: Vec<CostRequirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramCostsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `CostRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramCostsPatchEntry {
-    pub id: String,
-    pub patch: CostRequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `delivery`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramDeliveryDelta {
-    pub added: Vec<DeliveryConstraint>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramDeliveryPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `DeliveryConstraint` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramDeliveryPatchEntry {
-    pub id: String,
-    pub patch: DeliveryConstraintPatch,
-}
-
-/// 🧩 Identified-collection delta for `risks`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramRisksDelta {
-    pub added: Vec<Risk>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramRisksPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Risk` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramRisksPatchEntry {
-    pub id: String,
-    pub patch: RiskPatch,
-}
-
-/// 🧩 Identified-collection delta for `conflicts`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramConflictsDelta {
-    pub added: Vec<Conflict>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramConflictsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Conflict` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramConflictsPatchEntry {
-    pub id: String,
-    pub patch: ConflictPatch,
-}
-
-/// 🧩 Identified-collection delta for `requirements`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramRequirementsDelta {
-    pub added: Vec<Requirement>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramRequirementsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Requirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramRequirementsPatchEntry {
-    pub id: String,
-    pub patch: RequirementPatch,
-}
-
-/// 🧩 Identified-collection delta for `priorities`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramPrioritiesDelta {
-    pub added: Vec<PriorityRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramPrioritiesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `PriorityRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramPrioritiesPatchEntry {
-    pub id: String,
-    pub patch: PriorityRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `scenarios`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramScenariosDelta {
-    pub added: Vec<Scenario>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramScenariosPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Scenario` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramScenariosPatchEntry {
-    pub id: String,
-    pub patch: ScenarioPatch,
-}
-
-/// 🧩 Identified-collection delta for `options`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramOptionsDelta {
-    pub added: Vec<OptionEvaluation>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramOptionsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `OptionEvaluation` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramOptionsPatchEntry {
-    pub id: String,
-    pub patch: OptionEvaluationPatch,
-}
-
-/// 🧩 Identified-collection delta for `decisions`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramDecisionsDelta {
-    pub added: Vec<Decision>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramDecisionsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Decision` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramDecisionsPatchEntry {
-    pub id: String,
-    pub patch: DecisionPatch,
-}
-
-/// 🧩 Identified-collection delta for `validations`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramValidationsDelta {
-    pub added: Vec<ValidationRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramValidationsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ValidationRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramValidationsPatchEntry {
-    pub id: String,
-    pub patch: ValidationRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `performance`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramPerformanceDelta {
-    pub added: Vec<PerformanceCriterion>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramPerformancePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `PerformanceCriterion` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramPerformancePatchEntry {
-    pub id: String,
-    pub patch: PerformanceCriterionPatch,
-}
-
-/// 🧩 Identified-collection delta for `quality`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramQualityDelta {
-    pub added: Vec<QualityRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramQualityPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `QualityRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramQualityPatchEntry {
-    pub id: String,
-    pub patch: QualityRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `documents`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramArtifactsDelta {
-    pub added: Vec<ArtifactRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramArtifactsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ArtifactRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramArtifactsPatchEntry {
-    pub id: String,
-    pub patch: ArtifactRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `assumptions`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramAssumptionsDelta {
-    pub added: Vec<Assumption>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramAssumptionsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Assumption` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramAssumptionsPatchEntry {
-    pub id: String,
-    pub patch: AssumptionPatch,
-}
-
-/// 🧩 Identified-collection delta for `constraints`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramConstraintsDelta {
-    pub added: Vec<ConstraintRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramConstraintsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ConstraintRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramConstraintsPatchEntry {
-    pub id: String,
-    pub patch: ConstraintRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `compliance_records`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramComplianceRecordsDelta {
-    pub added: Vec<ComplianceRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramComplianceRecordsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ComplianceRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramComplianceRecordsPatchEntry {
-    pub id: String,
-    pub patch: ComplianceRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `approvals`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramApprovalsDelta {
-    pub added: Vec<ApprovalRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramApprovalsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ApprovalRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramApprovalsPatchEntry {
-    pub id: String,
-    pub patch: ApprovalRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `meetings`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramMeetingsDelta {
-    pub added: Vec<MeetingRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramMeetingsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `MeetingRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramMeetingsPatchEntry {
-    pub id: String,
-    pub patch: MeetingRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `changes`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramChangesDelta {
-    pub added: Vec<ChangeRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramChangesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ChangeRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramChangesPatchEntry {
-    pub id: String,
-    pub patch: ChangeRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `collaboration`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramCollaborationDelta {
-    pub added: Vec<CollaborationRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramCollaborationPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `CollaborationRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramCollaborationPatchEntry {
-    pub id: String,
-    pub patch: CollaborationRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `analyses`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramAnalysesDelta {
-    pub added: Vec<AnalysisRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramAnalysesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `AnalysisRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramAnalysesPatchEntry {
-    pub id: String,
-    pub patch: AnalysisRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `reports`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramReportsDelta {
-    pub added: Vec<ReportRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramReportsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `ReportRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramReportsPatchEntry {
-    pub id: String,
-    pub patch: ReportRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `search_filters`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSearchFiltersDelta {
-    pub added: Vec<SearchFilter>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSearchFiltersPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `SearchFilter` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSearchFiltersPatchEntry {
-    pub id: String,
-    pub patch: SearchFilterPatch,
-}
-
-/// 🧩 Identified-collection delta for `status_records`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramStatusRecordsDelta {
-    pub added: Vec<StatusRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramStatusRecordsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `StatusRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramStatusRecordsPatchEntry {
-    pub id: String,
-    pub patch: StatusRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `workshops`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramWorkshopsDelta {
-    pub added: Vec<Workshop>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramWorkshopsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Workshop` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramWorkshopsPatchEntry {
-    pub id: String,
-    pub patch: WorkshopPatch,
-}
-
-/// 🧩 Identified-collection delta for `surveys`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramSurveysDelta {
-    pub added: Vec<Survey>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramSurveysPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Survey` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramSurveysPatchEntry {
-    pub id: String,
-    pub patch: SurveyPatch,
-}
-
-/// 🧩 Identified-collection delta for `issues`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramIssuesDelta {
-    pub added: Vec<Issue>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramIssuesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `Issue` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramIssuesPatchEntry {
-    pub id: String,
-    pub patch: IssuePatch,
-}
-
-/// 🧩 Identified-collection delta for `audit_events`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramAuditEventsDelta {
-    pub added: Vec<AuditEvent>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramAuditEventsPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `AuditEvent` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramAuditEventsPatchEntry {
-    pub id: String,
-    pub patch: AuditEventPatch,
-}
-
-/// 🧩 Identified-collection delta for `templates`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramTemplatesDelta {
-    pub added: Vec<TemplateRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramTemplatesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `TemplateRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramTemplatesPatchEntry {
-    pub id: String,
-    pub patch: TemplateRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `traces`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramTracesDelta {
-    pub added: Vec<TraceLink>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramTracesPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `TraceLink` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramTracesPatchEntry {
-    pub id: String,
-    pub patch: TraceLinkPatch,
-}
-
-/// 🧩 Identified-collection delta for `knowledge`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramKnowledgeDelta {
-    pub added: Vec<KnowledgeRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramKnowledgePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `KnowledgeRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramKnowledgePatchEntry {
-    pub id: String,
-    pub patch: KnowledgeRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `benchmarks`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", default, deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-pub struct ProgramBenchmarksDelta {
-    pub added: Vec<BenchmarkRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramBenchmarksPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `BenchmarkRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct ProgramBenchmarksPatchEntry {
-    pub id: String,
-    pub patch: BenchmarkRecordPatch,
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `stakeholders`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramStakeholdersDelta { removal: ProgramStakeholdersRemoval, insertion: ProgramStakeholdersInsertion, relocation: ProgramStakeholdersRelocation, modification: ProgramStakeholdersPatchEntry, row: Stakeholder, patch: StakeholderPatch, list: Vec<Stakeholder>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `users`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramUsersDelta { removal: ProgramUsersRemoval, insertion: ProgramUsersInsertion, relocation: ProgramUsersRelocation, modification: ProgramUsersPatchEntry, row: UserProfile, patch: UserProfilePatch, list: Vec<UserProfile>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `activities`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramActivitiesDelta { removal: ProgramActivitiesRemoval, insertion: ProgramActivitiesInsertion, relocation: ProgramActivitiesRelocation, modification: ProgramActivitiesPatchEntry, row: Activity, patch: ActivityPatch, list: Vec<Activity>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `functions`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramFunctionsDelta { removal: ProgramFunctionsRemoval, insertion: ProgramFunctionsInsertion, relocation: ProgramFunctionsRelocation, modification: ProgramFunctionsPatchEntry, row: Function, patch: FunctionPatch, list: Vec<Function>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `elements`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramElementsDelta { removal: ProgramElementsRemoval, insertion: ProgramElementsInsertion, relocation: ProgramElementsRelocation, modification: ProgramElementsPatchEntry, row: ProgramElement, patch: ProgramElementPatch, list: Vec<ProgramElement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `quantities`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramQuantitiesDelta { removal: ProgramQuantitiesRemoval, insertion: ProgramQuantitiesInsertion, relocation: ProgramQuantitiesRelocation, modification: ProgramQuantitiesPatchEntry, row: QuantityRequirement, patch: QuantityRequirementPatch, list: Vec<QuantityRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `relationships`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramRelationshipsDelta { removal: ProgramRelationshipsRemoval, insertion: ProgramRelationshipsInsertion, relocation: ProgramRelationshipsRelocation, modification: ProgramRelationshipsPatchEntry, row: Relationship, patch: RelationshipPatch, list: Vec<Relationship>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `adjacencies`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramAdjacenciesDelta { removal: ProgramAdjacenciesRemoval, insertion: ProgramAdjacenciesInsertion, relocation: ProgramAdjacenciesRelocation, modification: ProgramAdjacenciesPatchEntry, row: Adjacency, patch: AdjacencyPatch, list: Vec<Adjacency>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `processes`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramProcessesDelta { removal: ProgramProcessesRemoval, insertion: ProgramProcessesInsertion, relocation: ProgramProcessesRelocation, modification: ProgramProcessesPatchEntry, row: Process, patch: ProcessPatch, list: Vec<Process>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `flows`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramFlowsDelta { removal: ProgramFlowsRemoval, insertion: ProgramFlowsInsertion, relocation: ProgramFlowsRelocation, modification: ProgramFlowsPatchEntry, row: FlowRequirement, patch: FlowRequirementPatch, list: Vec<FlowRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `access_rules`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramAccessRulesDelta { removal: ProgramAccessRulesRemoval, insertion: ProgramAccessRulesInsertion, relocation: ProgramAccessRulesRelocation, modification: ProgramAccessRulesPatchEntry, row: AccessRule, patch: AccessRulePatch, list: Vec<AccessRule>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `operations`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramOperationsDelta { removal: ProgramOperationsRemoval, insertion: ProgramOperationsInsertion, relocation: ProgramOperationsRelocation, modification: ProgramOperationsPatchEntry, row: OperationalRequirement, patch: OperationalRequirementPatch, list: Vec<OperationalRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `equipment`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramEquipmentDelta { removal: ProgramEquipmentRemoval, insertion: ProgramEquipmentInsertion, relocation: ProgramEquipmentRelocation, modification: ProgramEquipmentPatchEntry, row: Equipment, patch: EquipmentPatch, list: Vec<Equipment>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `resources`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramResourcesDelta { removal: ProgramResourcesRemoval, insertion: ProgramResourcesInsertion, relocation: ProgramResourcesRelocation, modification: ProgramResourcesPatchEntry, row: Resource, patch: ResourcePatch, list: Vec<Resource>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `storage`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramStorageDelta { removal: ProgramStorageRemoval, insertion: ProgramStorageInsertion, relocation: ProgramStorageRelocation, modification: ProgramStoragePatchEntry, row: StorageRequirement, patch: StorageRequirementPatch, list: Vec<StorageRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `environmental`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramEnvironmentalDelta { removal: ProgramEnvironmentalRemoval, insertion: ProgramEnvironmentalInsertion, relocation: ProgramEnvironmentalRelocation, modification: ProgramEnvironmentalPatchEntry, row: EnvironmentalRequirement, patch: EnvironmentalRequirementPatch, list: Vec<EnvironmentalRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `human_factors`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramHumanFactorsDelta { removal: ProgramHumanFactorsRemoval, insertion: ProgramHumanFactorsInsertion, relocation: ProgramHumanFactorsRelocation, modification: ProgramHumanFactorsPatchEntry, row: HumanFactorRequirement, patch: HumanFactorRequirementPatch, list: Vec<HumanFactorRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `accessibility`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramAccessibilityDelta { removal: ProgramAccessibilityRemoval, insertion: ProgramAccessibilityInsertion, relocation: ProgramAccessibilityRelocation, modification: ProgramAccessibilityPatchEntry, row: AccessibilityRequirement, patch: AccessibilityRequirementPatch, list: Vec<AccessibilityRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `privacy`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramPrivacyDelta { removal: ProgramPrivacyRemoval, insertion: ProgramPrivacyInsertion, relocation: ProgramPrivacyRelocation, modification: ProgramPrivacyPatchEntry, row: PrivacyRequirement, patch: PrivacyRequirementPatch, list: Vec<PrivacyRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `safety`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSafetyDelta { removal: ProgramSafetyRemoval, insertion: ProgramSafetyInsertion, relocation: ProgramSafetyRelocation, modification: ProgramSafetyPatchEntry, row: SafetyRequirement, patch: SafetyRequirementPatch, list: Vec<SafetyRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `security`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSecurityDelta { removal: ProgramSecurityRemoval, insertion: ProgramSecurityInsertion, relocation: ProgramSecurityRelocation, modification: ProgramSecurityPatchEntry, row: SecurityRequirement, patch: SecurityRequirementPatch, list: Vec<SecurityRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `regulatory`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramRegulatoryDelta { removal: ProgramRegulatoryRemoval, insertion: ProgramRegulatoryInsertion, relocation: ProgramRegulatoryRelocation, modification: ProgramRegulatoryPatchEntry, row: RegulatoryRequirement, patch: RegulatoryRequirementPatch, list: Vec<RegulatoryRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `site_context`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSiteContextDelta { removal: ProgramSiteContextRemoval, insertion: ProgramSiteContextInsertion, relocation: ProgramSiteContextRelocation, modification: ProgramSiteContextPatchEntry, row: SiteContext, patch: SiteContextPatch, list: Vec<SiteContext>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `organizational`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramOrganizationalDelta { removal: ProgramOrganizationalRemoval, insertion: ProgramOrganizationalInsertion, relocation: ProgramOrganizationalRelocation, modification: ProgramOrganizationalPatchEntry, row: OrganizationalRequirement, patch: OrganizationalRequirementPatch, list: Vec<OrganizationalRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `services`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramServicesDelta { removal: ProgramServicesRemoval, insertion: ProgramServicesInsertion, relocation: ProgramServicesRelocation, modification: ProgramServicesPatchEntry, row: ServiceRequirement, patch: ServiceRequirementPatch, list: Vec<ServiceRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `infrastructure`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramInfrastructureDelta { removal: ProgramInfrastructureRemoval, insertion: ProgramInfrastructureInsertion, relocation: ProgramInfrastructureRelocation, modification: ProgramInfrastructurePatchEntry, row: InfrastructureRequirement, patch: InfrastructureRequirementPatch, list: Vec<InfrastructureRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `information`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramInformationDelta { removal: ProgramInformationRemoval, insertion: ProgramInformationInsertion, relocation: ProgramInformationRelocation, modification: ProgramInformationPatchEntry, row: InformationRequirement, patch: InformationRequirementPatch, list: Vec<InformationRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `communication`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramCommunicationDelta { removal: ProgramCommunicationRemoval, insertion: ProgramCommunicationInsertion, relocation: ProgramCommunicationRelocation, modification: ProgramCommunicationPatchEntry, row: CommunicationRequirement, patch: CommunicationRequirementPatch, list: Vec<CommunicationRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `wayfinding`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramWayfindingDelta { removal: ProgramWayfindingRemoval, insertion: ProgramWayfindingInsertion, relocation: ProgramWayfindingRelocation, modification: ProgramWayfindingPatchEntry, row: WayfindingRequirement, patch: WayfindingRequirementPatch, list: Vec<WayfindingRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `schedules`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSchedulesDelta { removal: ProgramSchedulesRemoval, insertion: ProgramSchedulesInsertion, relocation: ProgramSchedulesRelocation, modification: ProgramSchedulesPatchEntry, row: ScheduleRequirement, patch: ScheduleRequirementPatch, list: Vec<ScheduleRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `flexibility`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramFlexibilityDelta { removal: ProgramFlexibilityRemoval, insertion: ProgramFlexibilityInsertion, relocation: ProgramFlexibilityRelocation, modification: ProgramFlexibilityPatchEntry, row: FlexibilityRequirement, patch: FlexibilityRequirementPatch, list: Vec<FlexibilityRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `growth`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramGrowthDelta { removal: ProgramGrowthRemoval, insertion: ProgramGrowthInsertion, relocation: ProgramGrowthRelocation, modification: ProgramGrowthPatchEntry, row: GrowthPlan, patch: GrowthPlanPatch, list: Vec<GrowthPlan>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `sustainability`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSustainabilityDelta { removal: ProgramSustainabilityRemoval, insertion: ProgramSustainabilityInsertion, relocation: ProgramSustainabilityRelocation, modification: ProgramSustainabilityPatchEntry, row: SustainabilityRequirement, patch: SustainabilityRequirementPatch, list: Vec<SustainabilityRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `resilience`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramResilienceDelta { removal: ProgramResilienceRemoval, insertion: ProgramResilienceInsertion, relocation: ProgramResilienceRelocation, modification: ProgramResiliencePatchEntry, row: ResilienceRequirement, patch: ResilienceRequirementPatch, list: Vec<ResilienceRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `costs`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramCostsDelta { removal: ProgramCostsRemoval, insertion: ProgramCostsInsertion, relocation: ProgramCostsRelocation, modification: ProgramCostsPatchEntry, row: CostRequirement, patch: CostRequirementPatch, list: Vec<CostRequirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `delivery`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramDeliveryDelta { removal: ProgramDeliveryRemoval, insertion: ProgramDeliveryInsertion, relocation: ProgramDeliveryRelocation, modification: ProgramDeliveryPatchEntry, row: DeliveryConstraint, patch: DeliveryConstraintPatch, list: Vec<DeliveryConstraint>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `risks`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramRisksDelta { removal: ProgramRisksRemoval, insertion: ProgramRisksInsertion, relocation: ProgramRisksRelocation, modification: ProgramRisksPatchEntry, row: Risk, patch: RiskPatch, list: Vec<Risk>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `conflicts`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramConflictsDelta { removal: ProgramConflictsRemoval, insertion: ProgramConflictsInsertion, relocation: ProgramConflictsRelocation, modification: ProgramConflictsPatchEntry, row: Conflict, patch: ConflictPatch, list: Vec<Conflict>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `requirements`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramRequirementsDelta { removal: ProgramRequirementsRemoval, insertion: ProgramRequirementsInsertion, relocation: ProgramRequirementsRelocation, modification: ProgramRequirementsPatchEntry, row: Requirement, patch: RequirementPatch, list: Vec<Requirement>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `priorities`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramPrioritiesDelta { removal: ProgramPrioritiesRemoval, insertion: ProgramPrioritiesInsertion, relocation: ProgramPrioritiesRelocation, modification: ProgramPrioritiesPatchEntry, row: PriorityRecord, patch: PriorityRecordPatch, list: Vec<PriorityRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `scenarios`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramScenariosDelta { removal: ProgramScenariosRemoval, insertion: ProgramScenariosInsertion, relocation: ProgramScenariosRelocation, modification: ProgramScenariosPatchEntry, row: Scenario, patch: ScenarioPatch, list: Vec<Scenario>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `options`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramOptionsDelta { removal: ProgramOptionsRemoval, insertion: ProgramOptionsInsertion, relocation: ProgramOptionsRelocation, modification: ProgramOptionsPatchEntry, row: OptionEvaluation, patch: OptionEvaluationPatch, list: Vec<OptionEvaluation>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `decisions`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramDecisionsDelta { removal: ProgramDecisionsRemoval, insertion: ProgramDecisionsInsertion, relocation: ProgramDecisionsRelocation, modification: ProgramDecisionsPatchEntry, row: Decision, patch: DecisionPatch, list: Vec<Decision>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `validations`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramValidationsDelta { removal: ProgramValidationsRemoval, insertion: ProgramValidationsInsertion, relocation: ProgramValidationsRelocation, modification: ProgramValidationsPatchEntry, row: ValidationRecord, patch: ValidationRecordPatch, list: Vec<ValidationRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `performance`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramPerformanceDelta { removal: ProgramPerformanceRemoval, insertion: ProgramPerformanceInsertion, relocation: ProgramPerformanceRelocation, modification: ProgramPerformancePatchEntry, row: PerformanceCriterion, patch: PerformanceCriterionPatch, list: Vec<PerformanceCriterion>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `quality`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramQualityDelta { removal: ProgramQualityRemoval, insertion: ProgramQualityInsertion, relocation: ProgramQualityRelocation, modification: ProgramQualityPatchEntry, row: QualityRecord, patch: QualityRecordPatch, list: Vec<QualityRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `artifacts`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramArtifactsDelta { removal: ProgramArtifactsRemoval, insertion: ProgramArtifactsInsertion, relocation: ProgramArtifactsRelocation, modification: ProgramArtifactsPatchEntry, row: ArtifactRecord, patch: ArtifactRecordPatch, list: Vec<ArtifactRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `assumptions`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramAssumptionsDelta { removal: ProgramAssumptionsRemoval, insertion: ProgramAssumptionsInsertion, relocation: ProgramAssumptionsRelocation, modification: ProgramAssumptionsPatchEntry, row: Assumption, patch: AssumptionPatch, list: Vec<Assumption>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `constraints`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramConstraintsDelta { removal: ProgramConstraintsRemoval, insertion: ProgramConstraintsInsertion, relocation: ProgramConstraintsRelocation, modification: ProgramConstraintsPatchEntry, row: ConstraintRecord, patch: ConstraintRecordPatch, list: Vec<ConstraintRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `compliance_records`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramComplianceRecordsDelta { removal: ProgramComplianceRecordsRemoval, insertion: ProgramComplianceRecordsInsertion, relocation: ProgramComplianceRecordsRelocation, modification: ProgramComplianceRecordsPatchEntry, row: ComplianceRecord, patch: ComplianceRecordPatch, list: Vec<ComplianceRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `approvals`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramApprovalsDelta { removal: ProgramApprovalsRemoval, insertion: ProgramApprovalsInsertion, relocation: ProgramApprovalsRelocation, modification: ProgramApprovalsPatchEntry, row: ApprovalRecord, patch: ApprovalRecordPatch, list: Vec<ApprovalRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `meetings`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramMeetingsDelta { removal: ProgramMeetingsRemoval, insertion: ProgramMeetingsInsertion, relocation: ProgramMeetingsRelocation, modification: ProgramMeetingsPatchEntry, row: MeetingRecord, patch: MeetingRecordPatch, list: Vec<MeetingRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `changes`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramChangesDelta { removal: ProgramChangesRemoval, insertion: ProgramChangesInsertion, relocation: ProgramChangesRelocation, modification: ProgramChangesPatchEntry, row: ChangeRecord, patch: ChangeRecordPatch, list: Vec<ChangeRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `collaboration`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramCollaborationDelta { removal: ProgramCollaborationRemoval, insertion: ProgramCollaborationInsertion, relocation: ProgramCollaborationRelocation, modification: ProgramCollaborationPatchEntry, row: CollaborationRecord, patch: CollaborationRecordPatch, list: Vec<CollaborationRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `analyses`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramAnalysesDelta { removal: ProgramAnalysesRemoval, insertion: ProgramAnalysesInsertion, relocation: ProgramAnalysesRelocation, modification: ProgramAnalysesPatchEntry, row: AnalysisRecord, patch: AnalysisRecordPatch, list: Vec<AnalysisRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `reports`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramReportsDelta { removal: ProgramReportsRemoval, insertion: ProgramReportsInsertion, relocation: ProgramReportsRelocation, modification: ProgramReportsPatchEntry, row: ReportRecord, patch: ReportRecordPatch, list: Vec<ReportRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `search_filters`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSearchFiltersDelta { removal: ProgramSearchFiltersRemoval, insertion: ProgramSearchFiltersInsertion, relocation: ProgramSearchFiltersRelocation, modification: ProgramSearchFiltersPatchEntry, row: SearchFilter, patch: SearchFilterPatch, list: Vec<SearchFilter>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `status_records`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramStatusRecordsDelta { removal: ProgramStatusRecordsRemoval, insertion: ProgramStatusRecordsInsertion, relocation: ProgramStatusRecordsRelocation, modification: ProgramStatusRecordsPatchEntry, row: StatusRecord, patch: StatusRecordPatch, list: Vec<StatusRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `workshops`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramWorkshopsDelta { removal: ProgramWorkshopsRemoval, insertion: ProgramWorkshopsInsertion, relocation: ProgramWorkshopsRelocation, modification: ProgramWorkshopsPatchEntry, row: Workshop, patch: WorkshopPatch, list: Vec<Workshop>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `surveys`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramSurveysDelta { removal: ProgramSurveysRemoval, insertion: ProgramSurveysInsertion, relocation: ProgramSurveysRelocation, modification: ProgramSurveysPatchEntry, row: Survey, patch: SurveyPatch, list: Vec<Survey>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `issues`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramIssuesDelta { removal: ProgramIssuesRemoval, insertion: ProgramIssuesInsertion, relocation: ProgramIssuesRelocation, modification: ProgramIssuesPatchEntry, row: Issue, patch: IssuePatch, list: Vec<Issue>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `audit_events`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramAuditEventsDelta { removal: ProgramAuditEventsRemoval, insertion: ProgramAuditEventsInsertion, relocation: ProgramAuditEventsRelocation, modification: ProgramAuditEventsPatchEntry, row: AuditEvent, patch: AuditEventPatch, list: Vec<AuditEvent>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `templates`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramTemplatesDelta { removal: ProgramTemplatesRemoval, insertion: ProgramTemplatesInsertion, relocation: ProgramTemplatesRelocation, modification: ProgramTemplatesPatchEntry, row: TemplateRecord, patch: TemplateRecordPatch, list: Vec<TemplateRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `traces`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramTracesDelta { removal: ProgramTracesRemoval, insertion: ProgramTracesInsertion, relocation: ProgramTracesRelocation, modification: ProgramTracesPatchEntry, row: TraceLink, patch: TraceLinkPatch, list: Vec<TraceLink>, key: String = |row| row.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `knowledge`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramKnowledgeDelta { removal: ProgramKnowledgeRemoval, insertion: ProgramKnowledgeInsertion, relocation: ProgramKnowledgeRelocation, modification: ProgramKnowledgePatchEntry, row: KnowledgeRecord, patch: KnowledgeRecordPatch, list: Vec<KnowledgeRecord>, key: String = |row| row.header.id.0.clone() }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 🧩 Positional row delta of `benchmarks`: rows removed at their base index, inserted at their after index, moved, and modified by sparse patch.
+    pub ProgramBenchmarksDelta { removal: ProgramBenchmarksRemoval, insertion: ProgramBenchmarksInsertion, relocation: ProgramBenchmarksRelocation, modification: ProgramBenchmarksPatchEntry, row: BenchmarkRecord, patch: BenchmarkRecordPatch, list: Vec<BenchmarkRecord>, key: String = |row| row.header.id.0.clone() }
 }
 
 /// ✏️ Edit of the `meta` section: `set` replaces the whole section (a `replace-meta` kind), `patch` then rewrites only the
@@ -1657,118 +658,9 @@ pub struct GovernanceEdit {
 
 //#endregion 🔖️DeltaHelpers
 
-#[path = "🧮️algebra/🦀️.rs"]
-pub mod algebra;
-
 use crate::ProgramSnapshot;
-use algebra::{CollectionDelta, PatchEntry};
-use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff, Patchable};
-
-//#region 🔖️CollectionDeltaImpls
-macro_rules! impl_collection_delta {
-    ($delta:ty, $row:ty, $patch:ty, $entry:ty) => {
-        impl PatchEntry<$patch> for $entry {
-            fn new(id: String, patch: $patch) -> Self {
-                Self { id, patch }
-            }
-            fn id(&self) -> &str {
-                &self.id
-            }
-            fn patch(&self) -> &$patch {
-                &self.patch
-            }
-            fn patch_mut(&mut self) -> &mut $patch {
-                &mut self.patch
-            }
-            fn into_parts(self) -> (String, $patch) {
-                (self.id, self.patch)
-            }
-        }
-
-        impl CollectionDelta for $delta {
-            type Row = $row;
-            type Patch = $patch;
-            type Entry = $entry;
-            fn from_parts(added: Vec<$row>, removed: Vec<String>, patched: Vec<$entry>, reordered: Option<Vec<String>>) -> Self {
-                Self { added, removed, patched, reordered }
-            }
-            fn into_parts(self) -> algebra::DeltaParts<Self> {
-                (self.added, self.removed, self.patched, self.reordered)
-            }
-            fn parts(&self) -> (&[$row], &[String], &[$entry], Option<&[String]>) {
-                (&self.added, &self.removed, &self.patched, self.reordered.as_deref())
-            }
-        }
-    };
-}
-
-impl_collection_delta!(ProgramStakeholdersDelta, Stakeholder, StakeholderPatch, ProgramStakeholdersPatchEntry);
-impl_collection_delta!(ProgramUsersDelta, UserProfile, UserProfilePatch, ProgramUsersPatchEntry);
-impl_collection_delta!(ProgramActivitiesDelta, Activity, ActivityPatch, ProgramActivitiesPatchEntry);
-impl_collection_delta!(ProgramFunctionsDelta, Function, FunctionPatch, ProgramFunctionsPatchEntry);
-impl_collection_delta!(ProgramElementsDelta, ProgramElement, ProgramElementPatch, ProgramElementsPatchEntry);
-impl_collection_delta!(ProgramQuantitiesDelta, QuantityRequirement, QuantityRequirementPatch, ProgramQuantitiesPatchEntry);
-impl_collection_delta!(ProgramRelationshipsDelta, Relationship, RelationshipPatch, ProgramRelationshipsPatchEntry);
-impl_collection_delta!(ProgramAdjacenciesDelta, Adjacency, AdjacencyPatch, ProgramAdjacenciesPatchEntry);
-impl_collection_delta!(ProgramProcessesDelta, Process, ProcessPatch, ProgramProcessesPatchEntry);
-impl_collection_delta!(ProgramFlowsDelta, FlowRequirement, FlowRequirementPatch, ProgramFlowsPatchEntry);
-impl_collection_delta!(ProgramAccessRulesDelta, AccessRule, AccessRulePatch, ProgramAccessRulesPatchEntry);
-impl_collection_delta!(ProgramOperationsDelta, OperationalRequirement, OperationalRequirementPatch, ProgramOperationsPatchEntry);
-impl_collection_delta!(ProgramEquipmentDelta, Equipment, EquipmentPatch, ProgramEquipmentPatchEntry);
-impl_collection_delta!(ProgramResourcesDelta, Resource, ResourcePatch, ProgramResourcesPatchEntry);
-impl_collection_delta!(ProgramStorageDelta, StorageRequirement, StorageRequirementPatch, ProgramStoragePatchEntry);
-impl_collection_delta!(ProgramEnvironmentalDelta, EnvironmentalRequirement, EnvironmentalRequirementPatch, ProgramEnvironmentalPatchEntry);
-impl_collection_delta!(ProgramHumanFactorsDelta, HumanFactorRequirement, HumanFactorRequirementPatch, ProgramHumanFactorsPatchEntry);
-impl_collection_delta!(ProgramAccessibilityDelta, AccessibilityRequirement, AccessibilityRequirementPatch, ProgramAccessibilityPatchEntry);
-impl_collection_delta!(ProgramPrivacyDelta, PrivacyRequirement, PrivacyRequirementPatch, ProgramPrivacyPatchEntry);
-impl_collection_delta!(ProgramSafetyDelta, SafetyRequirement, SafetyRequirementPatch, ProgramSafetyPatchEntry);
-impl_collection_delta!(ProgramSecurityDelta, SecurityRequirement, SecurityRequirementPatch, ProgramSecurityPatchEntry);
-impl_collection_delta!(ProgramRegulatoryDelta, RegulatoryRequirement, RegulatoryRequirementPatch, ProgramRegulatoryPatchEntry);
-impl_collection_delta!(ProgramSiteContextDelta, SiteContext, SiteContextPatch, ProgramSiteContextPatchEntry);
-impl_collection_delta!(ProgramOrganizationalDelta, OrganizationalRequirement, OrganizationalRequirementPatch, ProgramOrganizationalPatchEntry);
-impl_collection_delta!(ProgramServicesDelta, ServiceRequirement, ServiceRequirementPatch, ProgramServicesPatchEntry);
-impl_collection_delta!(ProgramInfrastructureDelta, InfrastructureRequirement, InfrastructureRequirementPatch, ProgramInfrastructurePatchEntry);
-impl_collection_delta!(ProgramInformationDelta, InformationRequirement, InformationRequirementPatch, ProgramInformationPatchEntry);
-impl_collection_delta!(ProgramCommunicationDelta, CommunicationRequirement, CommunicationRequirementPatch, ProgramCommunicationPatchEntry);
-impl_collection_delta!(ProgramWayfindingDelta, WayfindingRequirement, WayfindingRequirementPatch, ProgramWayfindingPatchEntry);
-impl_collection_delta!(ProgramSchedulesDelta, ScheduleRequirement, ScheduleRequirementPatch, ProgramSchedulesPatchEntry);
-impl_collection_delta!(ProgramFlexibilityDelta, FlexibilityRequirement, FlexibilityRequirementPatch, ProgramFlexibilityPatchEntry);
-impl_collection_delta!(ProgramGrowthDelta, GrowthPlan, GrowthPlanPatch, ProgramGrowthPatchEntry);
-impl_collection_delta!(ProgramSustainabilityDelta, SustainabilityRequirement, SustainabilityRequirementPatch, ProgramSustainabilityPatchEntry);
-impl_collection_delta!(ProgramResilienceDelta, ResilienceRequirement, ResilienceRequirementPatch, ProgramResiliencePatchEntry);
-impl_collection_delta!(ProgramCostsDelta, CostRequirement, CostRequirementPatch, ProgramCostsPatchEntry);
-impl_collection_delta!(ProgramDeliveryDelta, DeliveryConstraint, DeliveryConstraintPatch, ProgramDeliveryPatchEntry);
-impl_collection_delta!(ProgramRisksDelta, Risk, RiskPatch, ProgramRisksPatchEntry);
-impl_collection_delta!(ProgramConflictsDelta, Conflict, ConflictPatch, ProgramConflictsPatchEntry);
-impl_collection_delta!(ProgramRequirementsDelta, Requirement, RequirementPatch, ProgramRequirementsPatchEntry);
-impl_collection_delta!(ProgramPrioritiesDelta, PriorityRecord, PriorityRecordPatch, ProgramPrioritiesPatchEntry);
-impl_collection_delta!(ProgramScenariosDelta, Scenario, ScenarioPatch, ProgramScenariosPatchEntry);
-impl_collection_delta!(ProgramOptionsDelta, OptionEvaluation, OptionEvaluationPatch, ProgramOptionsPatchEntry);
-impl_collection_delta!(ProgramDecisionsDelta, Decision, DecisionPatch, ProgramDecisionsPatchEntry);
-impl_collection_delta!(ProgramValidationsDelta, ValidationRecord, ValidationRecordPatch, ProgramValidationsPatchEntry);
-impl_collection_delta!(ProgramPerformanceDelta, PerformanceCriterion, PerformanceCriterionPatch, ProgramPerformancePatchEntry);
-impl_collection_delta!(ProgramQualityDelta, QualityRecord, QualityRecordPatch, ProgramQualityPatchEntry);
-impl_collection_delta!(ProgramArtifactsDelta, ArtifactRecord, ArtifactRecordPatch, ProgramArtifactsPatchEntry);
-impl_collection_delta!(ProgramAssumptionsDelta, Assumption, AssumptionPatch, ProgramAssumptionsPatchEntry);
-impl_collection_delta!(ProgramConstraintsDelta, ConstraintRecord, ConstraintRecordPatch, ProgramConstraintsPatchEntry);
-impl_collection_delta!(ProgramComplianceRecordsDelta, ComplianceRecord, ComplianceRecordPatch, ProgramComplianceRecordsPatchEntry);
-impl_collection_delta!(ProgramApprovalsDelta, ApprovalRecord, ApprovalRecordPatch, ProgramApprovalsPatchEntry);
-impl_collection_delta!(ProgramMeetingsDelta, MeetingRecord, MeetingRecordPatch, ProgramMeetingsPatchEntry);
-impl_collection_delta!(ProgramChangesDelta, ChangeRecord, ChangeRecordPatch, ProgramChangesPatchEntry);
-impl_collection_delta!(ProgramCollaborationDelta, CollaborationRecord, CollaborationRecordPatch, ProgramCollaborationPatchEntry);
-impl_collection_delta!(ProgramAnalysesDelta, AnalysisRecord, AnalysisRecordPatch, ProgramAnalysesPatchEntry);
-impl_collection_delta!(ProgramReportsDelta, ReportRecord, ReportRecordPatch, ProgramReportsPatchEntry);
-impl_collection_delta!(ProgramSearchFiltersDelta, SearchFilter, SearchFilterPatch, ProgramSearchFiltersPatchEntry);
-impl_collection_delta!(ProgramStatusRecordsDelta, StatusRecord, StatusRecordPatch, ProgramStatusRecordsPatchEntry);
-impl_collection_delta!(ProgramWorkshopsDelta, Workshop, WorkshopPatch, ProgramWorkshopsPatchEntry);
-impl_collection_delta!(ProgramSurveysDelta, Survey, SurveyPatch, ProgramSurveysPatchEntry);
-impl_collection_delta!(ProgramIssuesDelta, Issue, IssuePatch, ProgramIssuesPatchEntry);
-impl_collection_delta!(ProgramAuditEventsDelta, AuditEvent, AuditEventPatch, ProgramAuditEventsPatchEntry);
-impl_collection_delta!(ProgramTemplatesDelta, TemplateRecord, TemplateRecordPatch, ProgramTemplatesPatchEntry);
-impl_collection_delta!(ProgramTracesDelta, TraceLink, TraceLinkPatch, ProgramTracesPatchEntry);
-impl_collection_delta!(ProgramKnowledgeDelta, KnowledgeRecord, KnowledgeRecordPatch, ProgramKnowledgePatchEntry);
-impl_collection_delta!(ProgramBenchmarksDelta, BenchmarkRecord, BenchmarkRecordPatch, ProgramBenchmarksPatchEntry);
-//#endregion 🔖️CollectionDeltaImpls
+use protocol::list_delta::RowPatch;
+use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
 
 //#region 🔖️SectionEdits
 macro_rules! impl_section_edit {
@@ -1784,29 +676,26 @@ macro_rules! impl_section_edit {
                 Self { set: None, patch: Some(patch) }
             }
 
-            /// 🔑️ Writes the edit into `value`: the replacement first, then the patched fields.
-            fn write(&self, value: &mut $value) {
+            /// 🔑️ Writes the edit into `value` under the capability: the replacement first, then the patched fields.
+            fn write(&self, value: &mut $value, capability: ApplyCapability) -> MutationApplyResult<()> {
                 if let Some(set) = &self.set {
                     *value = set.clone();
                 }
                 if let Some(patch) = &self.patch {
-                    value.apply_patch(patch);
+                    patch.commit_into(value, capability)?;
                 }
+                Ok(())
             }
 
-            /// ➕️ Composes this edit with a later one: a later replacement wins, a later patch folds into the replacement or merges into the patch.
+            /// ➕️ Composes this edit with a later one: a later replacement wins, a later patch merges into the patch (the replacement is applied first, the patch last).
             fn compose(mut self, later: Self) -> Self {
                 if later.set.is_some() {
                     return later;
                 }
-                if let (Some(set), Some(patch)) = (self.set.as_mut(), self.patch.take()) {
-                    set.apply_patch(&patch);
-                }
                 if let Some(patch) = later.patch {
-                    match (&mut self.set, &mut self.patch) {
-                        (Some(set), _) => set.apply_patch(&patch),
-                        (None, Some(existing)) => existing.merge(patch),
-                        (None, slot) => *slot = Some(patch),
+                    match &mut self.patch {
+                        Some(existing) => existing.absorb(patch),
+                        slot => *slot = Some(patch),
                     }
                 }
                 self
@@ -1815,23 +704,9 @@ macro_rules! impl_section_edit {
             /// 🔁️ The edit that puts the edited fields of `base` back.
             fn undo(&self, base: &$value) -> Self {
                 match (&self.set, &self.patch) {
-                    (None, Some(patch)) => match patch.restore(base) {
-                        Some(restored) => Self::patching(restored),
-                        None => Self::replacing(base.clone()),
-                    },
+                    (None, Some(patch)) => Self::patching(patch.inverse(base)),
                     _ => Self::replacing(base.clone()),
                 }
-            }
-
-            /// 🧭️ The edit that turns `base` into `other` (`None` when equal).
-            fn between(base: &$value, other: &$value) -> Option<Self> {
-                if base == other {
-                    return None;
-                }
-                Some(match base.diff_patch(other) {
-                    Some(patch) if !patch.is_empty() && { let mut candidate = base.clone(); candidate.apply_patch(&patch); candidate == *other } => Self::patching(patch),
-                    _ => Self::replacing(other.clone()),
-                })
             }
 
             fn is_empty(&self) -> bool {
@@ -1855,7 +730,7 @@ fn compose_edit<E>(first: Option<E>, later: Option<E>, compose: impl FnOnce(E, E
 //#endregion 🔖️SectionEdits
 
 //#region 🔖️CollectionList
-/// 🗂️ Expands `$each!(context.. field "wire")` once per identified collection of the diff.
+/// 🗂️ Expands `$each!(context.. field "wire")` once per positional collection of the diff.
 macro_rules! program_collections {
     ($each:ident, $($context:tt)*) => {
         $each!($($context)* stakeholders "stakeholders");
@@ -1927,10 +802,10 @@ macro_rules! program_collections {
 //#endregion 🔖️CollectionList
 
 //#region 🔖️ProgramDiffAlgebra
-macro_rules! apply_collection {
-    ($diff:expr, $next:ident, $field:ident $wire:literal) => {
+macro_rules! commit_collection {
+    ($diff:expr, $next:ident, $capability:ident, $field:ident $wire:literal) => {
         if let Some(delta) = &$diff.$field {
-            algebra::apply(delta, &mut $next.$field).map_err(|error| error.under([$wire]))?;
+            $next.$field = delta.commit_onto(&$next.$field, $capability).map_err(|error| error.under([$wire]))?;
         }
     };
 }
@@ -1938,8 +813,9 @@ macro_rules! apply_collection {
 macro_rules! absorb_collection {
     ($first:expr, $later:ident, $field:ident $wire:literal) => {
         if let Some(later) = $later.$field {
-            let merged = algebra::absorb($first.$field.take().unwrap_or_default(), later);
-            $first.$field = (!algebra::is_empty(&merged)).then_some(merged);
+            let mut merged = $first.$field.take().unwrap_or_default();
+            merged.absorb(later);
+            $first.$field = (!merged.is_empty()).then_some(merged);
         }
     };
 }
@@ -1947,47 +823,40 @@ macro_rules! absorb_collection {
 macro_rules! inverse_collection {
     ($diff:expr, $base:ident, $undo:ident, $field:ident $wire:literal) => {
         if let Some(delta) = &$diff.$field {
-            let inverse = algebra::inverse(delta, &$base.$field);
-            $undo.$field = (!algebra::is_empty(&inverse)).then_some(inverse);
+            let inverse = delta.inverse(&$base.$field);
+            $undo.$field = (!inverse.is_empty()).then_some(inverse);
         }
-    };
-}
-
-macro_rules! between_collection {
-    ($base:ident, $other:ident, $out:ident, $field:ident $wire:literal) => {
-        let delta = algebra::between(&$base.$field, &$other.$field);
-        $out.$field = (!algebra::is_empty(&delta)).then_some(delta);
     };
 }
 
 macro_rules! empty_collection {
     ($diff:expr, $verdict:ident, $field:ident $wire:literal) => {
-        $verdict &= $diff.$field.as_ref().is_none_or(algebra::is_empty);
+        $verdict &= $diff.$field.as_ref().is_none_or(|delta| delta.is_empty());
     };
 }
 
 impl MutationDiff<ProgramSnapshot> for ProgramDiff {
-    fn apply(&self, base: &ProgramSnapshot, _capability: ApplyCapability) -> MutationApplyResult<ProgramSnapshot> {
+    fn apply(&self, base: &ProgramSnapshot, capability: ApplyCapability) -> MutationApplyResult<ProgramSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
         if let Some(edit) = &self.meta {
-            edit.write(&mut next.meta);
+            edit.write(&mut next.meta, capability).map_err(|error| error.under(["meta"]))?;
         }
         if let Some(edit) = &self.project {
-            edit.write(&mut next.project);
+            edit.write(&mut next.project, capability).map_err(|error| error.under(["project"]))?;
         }
         if let Some(edit) = &self.governance {
-            edit.write(&mut next.governance);
+            edit.write(&mut next.governance, capability).map_err(|error| error.under(["governance"]))?;
         }
-        program_collections!(apply_collection, self, next,);
+        program_collections!(commit_collection, self, next, capability,);
         if let Some(delta) = &self.knowledge {
-            algebra::apply(delta, &mut next.knowledge_payload).map_err(|error| error.under(["knowledge"]))?;
+            next.knowledge_payload = delta.commit_onto(&next.knowledge_payload, capability).map_err(|error| error.under(["knowledge"]))?;
             next.knowledge = crate::knowledge_child_from_records(&next.knowledge_payload);
         }
         if let Some(delta) = &self.benchmarks {
-            algebra::apply(delta, &mut next.benchmarks_payload).map_err(|error| error.under(["benchmarks"]))?;
+            next.benchmarks_payload = delta.commit_onto(&next.benchmarks_payload, capability).map_err(|error| error.under(["benchmarks"]))?;
             next.benchmarks = crate::benchmarks_child_from_records(&next.benchmarks_payload);
         }
         Ok(next)
@@ -2002,12 +871,14 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
         self.governance = compose_edit(self.governance.take(), other.governance, GovernanceEdit::compose);
         program_collections!(absorb_collection, self, other,);
         if let Some(delta) = other.knowledge {
-            let merged = algebra::absorb(self.knowledge.take().unwrap_or_default(), delta);
-            self.knowledge = (!algebra::is_empty(&merged)).then_some(merged);
+            let mut merged = self.knowledge.take().unwrap_or_default();
+            merged.absorb(delta);
+            self.knowledge = (!merged.is_empty()).then_some(merged);
         }
         if let Some(delta) = other.benchmarks {
-            let merged = algebra::absorb(self.benchmarks.take().unwrap_or_default(), delta);
-            self.benchmarks = (!algebra::is_empty(&merged)).then_some(merged);
+            let mut merged = self.benchmarks.take().unwrap_or_default();
+            merged.absorb(delta);
+            self.benchmarks = (!merged.is_empty()).then_some(merged);
         }
     }
 }
@@ -2021,34 +892,20 @@ impl DiffAlgebra<ProgramSnapshot> for ProgramDiff {
         undo.governance = self.governance.as_ref().map(|edit| edit.undo(&base.governance));
         program_collections!(inverse_collection, self, base, undo,);
         if let Some(delta) = &self.knowledge {
-            let inverse = algebra::inverse(delta, &base.knowledge_payload);
-            undo.knowledge = (!algebra::is_empty(&inverse)).then_some(inverse);
+            let inverse = delta.inverse(&base.knowledge_payload);
+            undo.knowledge = (!inverse.is_empty()).then_some(inverse);
         }
         if let Some(delta) = &self.benchmarks {
-            let inverse = algebra::inverse(delta, &base.benchmarks_payload);
-            undo.benchmarks = (!algebra::is_empty(&inverse)).then_some(inverse);
+            let inverse = delta.inverse(&base.benchmarks_payload);
+            undo.benchmarks = (!inverse.is_empty()).then_some(inverse);
         }
         undo
-    }
-
-    fn between(base: &ProgramSnapshot, other: &ProgramSnapshot) -> Self {
-        let mut out = Self::default();
-        out.schema = (base.schema != other.schema).then(|| other.schema.clone());
-        out.meta = ProgramMetaEdit::between(&base.meta, &other.meta);
-        out.project = ProjectDefinitionEdit::between(&base.project, &other.project);
-        out.governance = GovernanceEdit::between(&base.governance, &other.governance);
-        program_collections!(between_collection, base, other, out,);
-        let knowledge = algebra::between(&base.knowledge_payload, &other.knowledge_payload);
-        out.knowledge = (!algebra::is_empty(&knowledge)).then_some(knowledge);
-        let benchmarks = algebra::between(&base.benchmarks_payload, &other.benchmarks_payload);
-        out.benchmarks = (!algebra::is_empty(&benchmarks)).then_some(benchmarks);
-        out
     }
 
     fn is_empty(&self) -> bool {
         let mut verdict = self.schema.is_none() && self.meta.as_ref().is_none_or(ProgramMetaEdit::is_empty) && self.project.as_ref().is_none_or(ProjectDefinitionEdit::is_empty) && self.governance.as_ref().is_none_or(GovernanceEdit::is_empty);
         program_collections!(empty_collection, self, verdict,);
-        verdict && self.knowledge.as_ref().is_none_or(algebra::is_empty) && self.benchmarks.as_ref().is_none_or(algebra::is_empty)
+        verdict && self.knowledge.as_ref().is_none_or(|delta| delta.is_empty()) && self.benchmarks.as_ref().is_none_or(|delta| delta.is_empty())
     }
 }
 //#endregion 🔖️ProgramDiffAlgebra

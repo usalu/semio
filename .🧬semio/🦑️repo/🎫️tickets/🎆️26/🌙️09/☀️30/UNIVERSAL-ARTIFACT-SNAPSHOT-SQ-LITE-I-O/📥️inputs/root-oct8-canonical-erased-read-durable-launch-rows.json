@@ -1,0 +1,28 @@
+[
+  {
+    "name": "🪶️ SQLite · Canonical Erased Read Lease Provider",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx exec --projects=@semio-tech/value-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" canonical-erased-read-lease-provider",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "🪶️ Snapshot SQLite",
+      "order": 206.1916
+    }
+  },
+  {
+    "type": "node-terminal",
+    "name": "🪪️ Read Lease · Original Erased Read Native",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/value-rs:test --skip-nx-cache --skip-remote-cache --excludeTaskDependencies -- long --lib --filter-expr \"test(erased_read)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "SEMIO_TEST_LEVEL": "long"
+    },
+    "presentation": {
+      "group": "🪶️ Snapshot SQLite",
+      "order": 206.1917
+    }
+  }
+]

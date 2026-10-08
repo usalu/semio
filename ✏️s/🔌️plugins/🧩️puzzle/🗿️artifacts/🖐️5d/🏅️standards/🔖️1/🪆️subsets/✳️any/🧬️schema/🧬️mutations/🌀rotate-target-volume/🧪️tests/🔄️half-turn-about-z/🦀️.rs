@@ -7,7 +7,8 @@
 //! by `fixtures generate` and are asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation,inverse_puzzle5d_mutation};
+use crate::apply_puzzle5d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mutation};
 
 use crate::Puzzle5dSnapshot;
 
@@ -44,7 +45,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle5d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_puzzle5d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle5d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "rotate-target-volume/half-turn-about-z: inverse did not restore the before-snapshot");

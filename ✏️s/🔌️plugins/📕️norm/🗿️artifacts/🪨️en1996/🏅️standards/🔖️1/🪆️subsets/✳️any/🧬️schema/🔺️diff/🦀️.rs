@@ -1,50 +1,65 @@
-//! 🧬️ EN1996 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
+//! 🧬️ EN1996 diff schema — sparse scalar fields plus positional row deltas for every list the document owns.
 
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
-use semio_s_artifact_norm_contract::{norm_list_delta, norm_row_patch};
 
 use crate::En1996Snapshot;
 
 //#region 🔖️Rows
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `WallOpening`.
     pub En1996OpeningPatch of crate::WallOpening { set { width_m: f64, height_m: f64, sill_height_m: f64 } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `WallOpening` list.
-    pub En1996OpeningDelta { addition: En1996OpeningAddition, modification: En1996OpeningModification, row: crate::WallOpening, patch: En1996OpeningPatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `WallOpening` list.
+    pub En1996OpeningDelta { removal: En1996OpeningRemoval, insertion: En1996OpeningInsertion, relocation: En1996OpeningRelocation, modification: En1996OpeningModification, row: crate::WallOpening, patch: En1996OpeningPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ConcentratedLoad`.
     pub En1996ConcentratedPatch of crate::ConcentratedLoad { set { force_n: f64, bearing_area_m2: f64, bearing_length_m: f64 } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `ConcentratedLoad` list.
-    pub En1996ConcentratedDelta { addition: En1996ConcentratedAddition, modification: En1996ConcentratedModification, row: crate::ConcentratedLoad, patch: En1996ConcentratedPatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `ConcentratedLoad` list.
+    pub En1996ConcentratedDelta { removal: En1996ConcentratedRemoval, insertion: En1996ConcentratedInsertion, relocation: En1996ConcentratedRelocation, modification: En1996ConcentratedModification, row: crate::ConcentratedLoad, patch: En1996ConcentratedPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `WallLoadCase`.
     pub En1996LoadCasePatch of crate::WallLoadCase { set { design_situation: String, imposed_category: String, g_k_slab_n: f64, q_k_imposed_pa: f64, tributary_area_m2: f64, slab_span_m: f64, q_k_snow_pa: f64, q_p_wind_pa: f64, c_pe: f64, h_k_earth_n: f64 } nest { concentrated: En1996ConcentratedDelta } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `WallLoadCase` list.
-    pub En1996LoadCaseDelta { addition: En1996LoadCaseAddition, modification: En1996LoadCaseModification, row: crate::WallLoadCase, patch: En1996LoadCasePatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `WallLoadCase` list.
+    pub En1996LoadCaseDelta { removal: En1996LoadCaseRemoval, insertion: En1996LoadCaseInsertion, relocation: En1996LoadCaseRelocation, modification: En1996LoadCaseModification, row: crate::WallLoadCase, patch: En1996LoadCasePatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `MasonryWall`.
     pub En1996WallPatch of crate::MasonryWall { set { label_en: String, label_de: String, wall_type: crate::WallType, thickness_m: f64, height_m: f64, length_m: f64, support_sides: u8, slab_bearing_depth_m: f64, eccentricity_top_m: f64, eccentricity_bottom_m: f64, unit_group: crate::UnitGroup, unit_material: crate::UnitMaterial, f_b_pa: f64, unit_length_m: f64, unit_width_m: f64, unit_height_m: f64, mortar_type: crate::MortarType, mortar_class: crate::MortarClass, mortar_strength_pa: f64, bed_joint_thickness_m: f64, reinforced: bool, as_vertical_m2: f64, as_horizontal_m2: f64, f_yd_pa: f64, fire_rei_min: u32, exposure: crate::ExposureClass, mu: f64, density_kg_m3: f64, phi_infinity: f64, is_basement: bool } nest { openings: En1996OpeningDelta, load_cases: En1996LoadCaseDelta } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `MasonryWall` list.
-    pub En1996WallDelta { addition: En1996WallAddition, modification: En1996WallModification, row: crate::MasonryWall, patch: En1996WallPatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `MasonryWall` list.
+    pub En1996WallDelta { removal: En1996WallRemoval, insertion: En1996WallInsertion, relocation: En1996WallRelocation, modification: En1996WallModification, row: crate::MasonryWall, patch: En1996WallPatch, key: id }
 }
 
 //#endregion 🔖️Rows
@@ -71,13 +86,13 @@ pub struct En1996Diff {
 //#endregion 🔖️Diff
 
 impl MutationDiff<En1996Snapshot> for En1996Diff {
-    fn apply(&self, base: &En1996Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1996Snapshot> {
+    fn apply(&self, base: &En1996Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1996Snapshot> {
         Ok(En1996Snapshot {
             annex: self.annex.unwrap_or(base.annex),
             masonry_class: self.masonry_class.unwrap_or(base.masonry_class),
             design_situation: self.design_situation.unwrap_or(base.design_situation),
             storeys: self.storeys.unwrap_or(base.storeys),
-            walls: self.walls.commit_onto(&base.walls).map_err(|error| error.under(["walls"]))?,
+            walls: self.walls.commit_onto(&base.walls, capability).map_err(|error| error.under(["walls"]))?,
         })
     }
 
@@ -106,16 +121,6 @@ impl DiffAlgebra<En1996Snapshot> for En1996Diff {
             design_situation: self.design_situation.as_ref().map(|_| base.design_situation),
             storeys: self.storeys.as_ref().map(|_| base.storeys),
             walls: self.walls.inverse(&base.walls),
-        }
-    }
-
-    fn between(base: &En1996Snapshot, other: &En1996Snapshot) -> Self {
-        Self {
-            annex: (base.annex != other.annex).then(|| other.annex),
-            masonry_class: (base.masonry_class != other.masonry_class).then(|| other.masonry_class),
-            design_situation: (base.design_situation != other.design_situation).then(|| other.design_situation),
-            storeys: (base.storeys != other.storeys).then(|| other.storeys),
-            walls: En1996WallDelta::between(&base.walls, &other.walls),
         }
     }
 

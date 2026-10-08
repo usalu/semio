@@ -2,9 +2,9 @@
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
-//! leaf's own `🔺️diff/🦀️.rs`, which checks both endpoint elements exist, normalizes the pair, forces `normalized = true`, and — because no edge yet joins `element-a`/`element-b` — takes the `added = [normalized edge]` branch.
+//! leaf's own `🔺️diff/🦀️.rs`, which checks both endpoint elements exist, normalizes the pair, forces `normalized = true`, and — because no edge yet joins `element-a`/`element-b` — takes the `inserted = [{index, normalized edge}]` branch.
 //!
-//! That leaf's own contract line reads: 🔌️ Error `mutation.target-missing` if either endpoint element is absent (empty diff); Warning `mutation.no-op` if the edge already carries this exact value (empty diff); else `added = [normalized edge]` if the pair is new, else the edge is replaced under its own id: `removed = [id]`, `added = [value]`, and `reordered` (the base order) unless the edge was last.
+//! That leaf's own contract line reads: 🔌️ Error `mutation.target-missing` if either endpoint element is absent or a new pair's `index` lies past the end (empty diff); Warning `mutation.no-op` if the edge already carries this exact value (empty diff); else `inserted = [{index, normalized edge}]` if the pair is new (appended when `index` is absent), else the edge is replaced in place under its own id: `removed = [{id, index}]` and `inserted = [{index, value}]`.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.

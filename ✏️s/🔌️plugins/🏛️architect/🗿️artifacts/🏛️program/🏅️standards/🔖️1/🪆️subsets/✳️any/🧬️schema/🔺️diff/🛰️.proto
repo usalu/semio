@@ -146,10 +146,26 @@ message ProgramDiff {
 }
 
 message ProgramStakeholdersDelta {
-  repeated Stakeholder added = 1;
-  repeated string removed = 2;
-  repeated ProgramStakeholdersPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramStakeholdersRemoval removed = 1;
+  repeated ProgramStakeholdersInsertion inserted = 2;
+  repeated ProgramStakeholdersRelocation moved = 3;
+  repeated ProgramStakeholdersPatchEntry modified = 4;
+}
+
+message ProgramStakeholdersInsertion {
+  uint32 index = 1;
+  Stakeholder row = 2;
+}
+
+message ProgramStakeholdersRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramStakeholdersRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramStakeholdersPatchEntry {
@@ -158,10 +174,26 @@ message ProgramStakeholdersPatchEntry {
 }
 
 message ProgramUsersDelta {
-  repeated UserProfile added = 1;
-  repeated string removed = 2;
-  repeated ProgramUsersPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramUsersRemoval removed = 1;
+  repeated ProgramUsersInsertion inserted = 2;
+  repeated ProgramUsersRelocation moved = 3;
+  repeated ProgramUsersPatchEntry modified = 4;
+}
+
+message ProgramUsersInsertion {
+  uint32 index = 1;
+  UserProfile row = 2;
+}
+
+message ProgramUsersRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramUsersRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramUsersPatchEntry {
@@ -170,10 +202,26 @@ message ProgramUsersPatchEntry {
 }
 
 message ProgramActivitiesDelta {
-  repeated Activity added = 1;
-  repeated string removed = 2;
-  repeated ProgramActivitiesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramActivitiesRemoval removed = 1;
+  repeated ProgramActivitiesInsertion inserted = 2;
+  repeated ProgramActivitiesRelocation moved = 3;
+  repeated ProgramActivitiesPatchEntry modified = 4;
+}
+
+message ProgramActivitiesInsertion {
+  uint32 index = 1;
+  Activity row = 2;
+}
+
+message ProgramActivitiesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramActivitiesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramActivitiesPatchEntry {
@@ -182,10 +230,26 @@ message ProgramActivitiesPatchEntry {
 }
 
 message ProgramFunctionsDelta {
-  repeated Function added = 1;
-  repeated string removed = 2;
-  repeated ProgramFunctionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramFunctionsRemoval removed = 1;
+  repeated ProgramFunctionsInsertion inserted = 2;
+  repeated ProgramFunctionsRelocation moved = 3;
+  repeated ProgramFunctionsPatchEntry modified = 4;
+}
+
+message ProgramFunctionsInsertion {
+  uint32 index = 1;
+  Function row = 2;
+}
+
+message ProgramFunctionsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramFunctionsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramFunctionsPatchEntry {
@@ -194,10 +258,26 @@ message ProgramFunctionsPatchEntry {
 }
 
 message ProgramElementsDelta {
-  repeated ProgramElement added = 1;
-  repeated string removed = 2;
-  repeated ProgramElementsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramElementsRemoval removed = 1;
+  repeated ProgramElementsInsertion inserted = 2;
+  repeated ProgramElementsRelocation moved = 3;
+  repeated ProgramElementsPatchEntry modified = 4;
+}
+
+message ProgramElementsInsertion {
+  uint32 index = 1;
+  ProgramElement row = 2;
+}
+
+message ProgramElementsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramElementsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramElementsPatchEntry {
@@ -206,10 +286,26 @@ message ProgramElementsPatchEntry {
 }
 
 message ProgramQuantitiesDelta {
-  repeated QuantityRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramQuantitiesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramQuantitiesRemoval removed = 1;
+  repeated ProgramQuantitiesInsertion inserted = 2;
+  repeated ProgramQuantitiesRelocation moved = 3;
+  repeated ProgramQuantitiesPatchEntry modified = 4;
+}
+
+message ProgramQuantitiesInsertion {
+  uint32 index = 1;
+  QuantityRequirement row = 2;
+}
+
+message ProgramQuantitiesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramQuantitiesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramQuantitiesPatchEntry {
@@ -218,10 +314,26 @@ message ProgramQuantitiesPatchEntry {
 }
 
 message ProgramRelationshipsDelta {
-  repeated Relationship added = 1;
-  repeated string removed = 2;
-  repeated ProgramRelationshipsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramRelationshipsRemoval removed = 1;
+  repeated ProgramRelationshipsInsertion inserted = 2;
+  repeated ProgramRelationshipsRelocation moved = 3;
+  repeated ProgramRelationshipsPatchEntry modified = 4;
+}
+
+message ProgramRelationshipsInsertion {
+  uint32 index = 1;
+  Relationship row = 2;
+}
+
+message ProgramRelationshipsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramRelationshipsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramRelationshipsPatchEntry {
@@ -230,10 +342,26 @@ message ProgramRelationshipsPatchEntry {
 }
 
 message ProgramAdjacenciesDelta {
-  repeated Adjacency added = 1;
-  repeated string removed = 2;
-  repeated ProgramAdjacenciesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramAdjacenciesRemoval removed = 1;
+  repeated ProgramAdjacenciesInsertion inserted = 2;
+  repeated ProgramAdjacenciesRelocation moved = 3;
+  repeated ProgramAdjacenciesPatchEntry modified = 4;
+}
+
+message ProgramAdjacenciesInsertion {
+  uint32 index = 1;
+  Adjacency row = 2;
+}
+
+message ProgramAdjacenciesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramAdjacenciesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramAdjacenciesPatchEntry {
@@ -242,10 +370,26 @@ message ProgramAdjacenciesPatchEntry {
 }
 
 message ProgramProcessesDelta {
-  repeated Process added = 1;
-  repeated string removed = 2;
-  repeated ProgramProcessesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramProcessesRemoval removed = 1;
+  repeated ProgramProcessesInsertion inserted = 2;
+  repeated ProgramProcessesRelocation moved = 3;
+  repeated ProgramProcessesPatchEntry modified = 4;
+}
+
+message ProgramProcessesInsertion {
+  uint32 index = 1;
+  Process row = 2;
+}
+
+message ProgramProcessesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramProcessesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramProcessesPatchEntry {
@@ -254,10 +398,26 @@ message ProgramProcessesPatchEntry {
 }
 
 message ProgramFlowsDelta {
-  repeated FlowRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramFlowsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramFlowsRemoval removed = 1;
+  repeated ProgramFlowsInsertion inserted = 2;
+  repeated ProgramFlowsRelocation moved = 3;
+  repeated ProgramFlowsPatchEntry modified = 4;
+}
+
+message ProgramFlowsInsertion {
+  uint32 index = 1;
+  FlowRequirement row = 2;
+}
+
+message ProgramFlowsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramFlowsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramFlowsPatchEntry {
@@ -266,10 +426,26 @@ message ProgramFlowsPatchEntry {
 }
 
 message ProgramAccessRulesDelta {
-  repeated AccessRule added = 1;
-  repeated string removed = 2;
-  repeated ProgramAccessRulesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramAccessRulesRemoval removed = 1;
+  repeated ProgramAccessRulesInsertion inserted = 2;
+  repeated ProgramAccessRulesRelocation moved = 3;
+  repeated ProgramAccessRulesPatchEntry modified = 4;
+}
+
+message ProgramAccessRulesInsertion {
+  uint32 index = 1;
+  AccessRule row = 2;
+}
+
+message ProgramAccessRulesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramAccessRulesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramAccessRulesPatchEntry {
@@ -278,10 +454,26 @@ message ProgramAccessRulesPatchEntry {
 }
 
 message ProgramOperationsDelta {
-  repeated OperationalRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramOperationsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramOperationsRemoval removed = 1;
+  repeated ProgramOperationsInsertion inserted = 2;
+  repeated ProgramOperationsRelocation moved = 3;
+  repeated ProgramOperationsPatchEntry modified = 4;
+}
+
+message ProgramOperationsInsertion {
+  uint32 index = 1;
+  OperationalRequirement row = 2;
+}
+
+message ProgramOperationsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramOperationsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramOperationsPatchEntry {
@@ -290,10 +482,26 @@ message ProgramOperationsPatchEntry {
 }
 
 message ProgramEquipmentDelta {
-  repeated Equipment added = 1;
-  repeated string removed = 2;
-  repeated ProgramEquipmentPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramEquipmentRemoval removed = 1;
+  repeated ProgramEquipmentInsertion inserted = 2;
+  repeated ProgramEquipmentRelocation moved = 3;
+  repeated ProgramEquipmentPatchEntry modified = 4;
+}
+
+message ProgramEquipmentInsertion {
+  uint32 index = 1;
+  Equipment row = 2;
+}
+
+message ProgramEquipmentRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramEquipmentRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramEquipmentPatchEntry {
@@ -302,10 +510,26 @@ message ProgramEquipmentPatchEntry {
 }
 
 message ProgramResourcesDelta {
-  repeated Resource added = 1;
-  repeated string removed = 2;
-  repeated ProgramResourcesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramResourcesRemoval removed = 1;
+  repeated ProgramResourcesInsertion inserted = 2;
+  repeated ProgramResourcesRelocation moved = 3;
+  repeated ProgramResourcesPatchEntry modified = 4;
+}
+
+message ProgramResourcesInsertion {
+  uint32 index = 1;
+  Resource row = 2;
+}
+
+message ProgramResourcesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramResourcesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramResourcesPatchEntry {
@@ -314,10 +538,26 @@ message ProgramResourcesPatchEntry {
 }
 
 message ProgramStorageDelta {
-  repeated StorageRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramStoragePatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramStorageRemoval removed = 1;
+  repeated ProgramStorageInsertion inserted = 2;
+  repeated ProgramStorageRelocation moved = 3;
+  repeated ProgramStoragePatchEntry modified = 4;
+}
+
+message ProgramStorageInsertion {
+  uint32 index = 1;
+  StorageRequirement row = 2;
+}
+
+message ProgramStorageRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramStorageRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramStoragePatchEntry {
@@ -326,10 +566,26 @@ message ProgramStoragePatchEntry {
 }
 
 message ProgramEnvironmentalDelta {
-  repeated EnvironmentalRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramEnvironmentalPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramEnvironmentalRemoval removed = 1;
+  repeated ProgramEnvironmentalInsertion inserted = 2;
+  repeated ProgramEnvironmentalRelocation moved = 3;
+  repeated ProgramEnvironmentalPatchEntry modified = 4;
+}
+
+message ProgramEnvironmentalInsertion {
+  uint32 index = 1;
+  EnvironmentalRequirement row = 2;
+}
+
+message ProgramEnvironmentalRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramEnvironmentalRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramEnvironmentalPatchEntry {
@@ -338,10 +594,26 @@ message ProgramEnvironmentalPatchEntry {
 }
 
 message ProgramHumanFactorsDelta {
-  repeated HumanFactorRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramHumanFactorsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramHumanFactorsRemoval removed = 1;
+  repeated ProgramHumanFactorsInsertion inserted = 2;
+  repeated ProgramHumanFactorsRelocation moved = 3;
+  repeated ProgramHumanFactorsPatchEntry modified = 4;
+}
+
+message ProgramHumanFactorsInsertion {
+  uint32 index = 1;
+  HumanFactorRequirement row = 2;
+}
+
+message ProgramHumanFactorsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramHumanFactorsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramHumanFactorsPatchEntry {
@@ -350,10 +622,26 @@ message ProgramHumanFactorsPatchEntry {
 }
 
 message ProgramAccessibilityDelta {
-  repeated AccessibilityRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramAccessibilityPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramAccessibilityRemoval removed = 1;
+  repeated ProgramAccessibilityInsertion inserted = 2;
+  repeated ProgramAccessibilityRelocation moved = 3;
+  repeated ProgramAccessibilityPatchEntry modified = 4;
+}
+
+message ProgramAccessibilityInsertion {
+  uint32 index = 1;
+  AccessibilityRequirement row = 2;
+}
+
+message ProgramAccessibilityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramAccessibilityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramAccessibilityPatchEntry {
@@ -362,10 +650,26 @@ message ProgramAccessibilityPatchEntry {
 }
 
 message ProgramPrivacyDelta {
-  repeated PrivacyRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramPrivacyPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramPrivacyRemoval removed = 1;
+  repeated ProgramPrivacyInsertion inserted = 2;
+  repeated ProgramPrivacyRelocation moved = 3;
+  repeated ProgramPrivacyPatchEntry modified = 4;
+}
+
+message ProgramPrivacyInsertion {
+  uint32 index = 1;
+  PrivacyRequirement row = 2;
+}
+
+message ProgramPrivacyRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramPrivacyRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramPrivacyPatchEntry {
@@ -374,10 +678,26 @@ message ProgramPrivacyPatchEntry {
 }
 
 message ProgramSafetyDelta {
-  repeated SafetyRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramSafetyPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSafetyRemoval removed = 1;
+  repeated ProgramSafetyInsertion inserted = 2;
+  repeated ProgramSafetyRelocation moved = 3;
+  repeated ProgramSafetyPatchEntry modified = 4;
+}
+
+message ProgramSafetyInsertion {
+  uint32 index = 1;
+  SafetyRequirement row = 2;
+}
+
+message ProgramSafetyRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSafetyRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSafetyPatchEntry {
@@ -386,10 +706,26 @@ message ProgramSafetyPatchEntry {
 }
 
 message ProgramSecurityDelta {
-  repeated SecurityRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramSecurityPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSecurityRemoval removed = 1;
+  repeated ProgramSecurityInsertion inserted = 2;
+  repeated ProgramSecurityRelocation moved = 3;
+  repeated ProgramSecurityPatchEntry modified = 4;
+}
+
+message ProgramSecurityInsertion {
+  uint32 index = 1;
+  SecurityRequirement row = 2;
+}
+
+message ProgramSecurityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSecurityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSecurityPatchEntry {
@@ -398,10 +734,26 @@ message ProgramSecurityPatchEntry {
 }
 
 message ProgramRegulatoryDelta {
-  repeated RegulatoryRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramRegulatoryPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramRegulatoryRemoval removed = 1;
+  repeated ProgramRegulatoryInsertion inserted = 2;
+  repeated ProgramRegulatoryRelocation moved = 3;
+  repeated ProgramRegulatoryPatchEntry modified = 4;
+}
+
+message ProgramRegulatoryInsertion {
+  uint32 index = 1;
+  RegulatoryRequirement row = 2;
+}
+
+message ProgramRegulatoryRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramRegulatoryRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramRegulatoryPatchEntry {
@@ -410,10 +762,26 @@ message ProgramRegulatoryPatchEntry {
 }
 
 message ProgramSiteContextDelta {
-  repeated SiteContext added = 1;
-  repeated string removed = 2;
-  repeated ProgramSiteContextPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSiteContextRemoval removed = 1;
+  repeated ProgramSiteContextInsertion inserted = 2;
+  repeated ProgramSiteContextRelocation moved = 3;
+  repeated ProgramSiteContextPatchEntry modified = 4;
+}
+
+message ProgramSiteContextInsertion {
+  uint32 index = 1;
+  SiteContext row = 2;
+}
+
+message ProgramSiteContextRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSiteContextRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSiteContextPatchEntry {
@@ -422,10 +790,26 @@ message ProgramSiteContextPatchEntry {
 }
 
 message ProgramOrganizationalDelta {
-  repeated OrganizationalRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramOrganizationalPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramOrganizationalRemoval removed = 1;
+  repeated ProgramOrganizationalInsertion inserted = 2;
+  repeated ProgramOrganizationalRelocation moved = 3;
+  repeated ProgramOrganizationalPatchEntry modified = 4;
+}
+
+message ProgramOrganizationalInsertion {
+  uint32 index = 1;
+  OrganizationalRequirement row = 2;
+}
+
+message ProgramOrganizationalRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramOrganizationalRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramOrganizationalPatchEntry {
@@ -434,10 +818,26 @@ message ProgramOrganizationalPatchEntry {
 }
 
 message ProgramServicesDelta {
-  repeated ServiceRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramServicesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramServicesRemoval removed = 1;
+  repeated ProgramServicesInsertion inserted = 2;
+  repeated ProgramServicesRelocation moved = 3;
+  repeated ProgramServicesPatchEntry modified = 4;
+}
+
+message ProgramServicesInsertion {
+  uint32 index = 1;
+  ServiceRequirement row = 2;
+}
+
+message ProgramServicesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramServicesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramServicesPatchEntry {
@@ -446,10 +846,26 @@ message ProgramServicesPatchEntry {
 }
 
 message ProgramInfrastructureDelta {
-  repeated InfrastructureRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramInfrastructurePatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramInfrastructureRemoval removed = 1;
+  repeated ProgramInfrastructureInsertion inserted = 2;
+  repeated ProgramInfrastructureRelocation moved = 3;
+  repeated ProgramInfrastructurePatchEntry modified = 4;
+}
+
+message ProgramInfrastructureInsertion {
+  uint32 index = 1;
+  InfrastructureRequirement row = 2;
+}
+
+message ProgramInfrastructureRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramInfrastructureRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramInfrastructurePatchEntry {
@@ -458,10 +874,26 @@ message ProgramInfrastructurePatchEntry {
 }
 
 message ProgramInformationDelta {
-  repeated InformationRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramInformationPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramInformationRemoval removed = 1;
+  repeated ProgramInformationInsertion inserted = 2;
+  repeated ProgramInformationRelocation moved = 3;
+  repeated ProgramInformationPatchEntry modified = 4;
+}
+
+message ProgramInformationInsertion {
+  uint32 index = 1;
+  InformationRequirement row = 2;
+}
+
+message ProgramInformationRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramInformationRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramInformationPatchEntry {
@@ -470,10 +902,26 @@ message ProgramInformationPatchEntry {
 }
 
 message ProgramCommunicationDelta {
-  repeated CommunicationRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramCommunicationPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramCommunicationRemoval removed = 1;
+  repeated ProgramCommunicationInsertion inserted = 2;
+  repeated ProgramCommunicationRelocation moved = 3;
+  repeated ProgramCommunicationPatchEntry modified = 4;
+}
+
+message ProgramCommunicationInsertion {
+  uint32 index = 1;
+  CommunicationRequirement row = 2;
+}
+
+message ProgramCommunicationRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramCommunicationRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramCommunicationPatchEntry {
@@ -482,10 +930,26 @@ message ProgramCommunicationPatchEntry {
 }
 
 message ProgramWayfindingDelta {
-  repeated WayfindingRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramWayfindingPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramWayfindingRemoval removed = 1;
+  repeated ProgramWayfindingInsertion inserted = 2;
+  repeated ProgramWayfindingRelocation moved = 3;
+  repeated ProgramWayfindingPatchEntry modified = 4;
+}
+
+message ProgramWayfindingInsertion {
+  uint32 index = 1;
+  WayfindingRequirement row = 2;
+}
+
+message ProgramWayfindingRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramWayfindingRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramWayfindingPatchEntry {
@@ -494,10 +958,26 @@ message ProgramWayfindingPatchEntry {
 }
 
 message ProgramSchedulesDelta {
-  repeated ScheduleRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramSchedulesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSchedulesRemoval removed = 1;
+  repeated ProgramSchedulesInsertion inserted = 2;
+  repeated ProgramSchedulesRelocation moved = 3;
+  repeated ProgramSchedulesPatchEntry modified = 4;
+}
+
+message ProgramSchedulesInsertion {
+  uint32 index = 1;
+  ScheduleRequirement row = 2;
+}
+
+message ProgramSchedulesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSchedulesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSchedulesPatchEntry {
@@ -506,10 +986,26 @@ message ProgramSchedulesPatchEntry {
 }
 
 message ProgramFlexibilityDelta {
-  repeated FlexibilityRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramFlexibilityPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramFlexibilityRemoval removed = 1;
+  repeated ProgramFlexibilityInsertion inserted = 2;
+  repeated ProgramFlexibilityRelocation moved = 3;
+  repeated ProgramFlexibilityPatchEntry modified = 4;
+}
+
+message ProgramFlexibilityInsertion {
+  uint32 index = 1;
+  FlexibilityRequirement row = 2;
+}
+
+message ProgramFlexibilityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramFlexibilityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramFlexibilityPatchEntry {
@@ -518,10 +1014,26 @@ message ProgramFlexibilityPatchEntry {
 }
 
 message ProgramGrowthDelta {
-  repeated GrowthPlan added = 1;
-  repeated string removed = 2;
-  repeated ProgramGrowthPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramGrowthRemoval removed = 1;
+  repeated ProgramGrowthInsertion inserted = 2;
+  repeated ProgramGrowthRelocation moved = 3;
+  repeated ProgramGrowthPatchEntry modified = 4;
+}
+
+message ProgramGrowthInsertion {
+  uint32 index = 1;
+  GrowthPlan row = 2;
+}
+
+message ProgramGrowthRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramGrowthRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramGrowthPatchEntry {
@@ -530,10 +1042,26 @@ message ProgramGrowthPatchEntry {
 }
 
 message ProgramSustainabilityDelta {
-  repeated SustainabilityRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramSustainabilityPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSustainabilityRemoval removed = 1;
+  repeated ProgramSustainabilityInsertion inserted = 2;
+  repeated ProgramSustainabilityRelocation moved = 3;
+  repeated ProgramSustainabilityPatchEntry modified = 4;
+}
+
+message ProgramSustainabilityInsertion {
+  uint32 index = 1;
+  SustainabilityRequirement row = 2;
+}
+
+message ProgramSustainabilityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSustainabilityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSustainabilityPatchEntry {
@@ -542,10 +1070,26 @@ message ProgramSustainabilityPatchEntry {
 }
 
 message ProgramResilienceDelta {
-  repeated ResilienceRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramResiliencePatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramResilienceRemoval removed = 1;
+  repeated ProgramResilienceInsertion inserted = 2;
+  repeated ProgramResilienceRelocation moved = 3;
+  repeated ProgramResiliencePatchEntry modified = 4;
+}
+
+message ProgramResilienceInsertion {
+  uint32 index = 1;
+  ResilienceRequirement row = 2;
+}
+
+message ProgramResilienceRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramResilienceRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramResiliencePatchEntry {
@@ -554,10 +1098,26 @@ message ProgramResiliencePatchEntry {
 }
 
 message ProgramCostsDelta {
-  repeated CostRequirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramCostsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramCostsRemoval removed = 1;
+  repeated ProgramCostsInsertion inserted = 2;
+  repeated ProgramCostsRelocation moved = 3;
+  repeated ProgramCostsPatchEntry modified = 4;
+}
+
+message ProgramCostsInsertion {
+  uint32 index = 1;
+  CostRequirement row = 2;
+}
+
+message ProgramCostsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramCostsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramCostsPatchEntry {
@@ -566,10 +1126,26 @@ message ProgramCostsPatchEntry {
 }
 
 message ProgramDeliveryDelta {
-  repeated DeliveryConstraint added = 1;
-  repeated string removed = 2;
-  repeated ProgramDeliveryPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramDeliveryRemoval removed = 1;
+  repeated ProgramDeliveryInsertion inserted = 2;
+  repeated ProgramDeliveryRelocation moved = 3;
+  repeated ProgramDeliveryPatchEntry modified = 4;
+}
+
+message ProgramDeliveryInsertion {
+  uint32 index = 1;
+  DeliveryConstraint row = 2;
+}
+
+message ProgramDeliveryRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramDeliveryRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramDeliveryPatchEntry {
@@ -578,10 +1154,26 @@ message ProgramDeliveryPatchEntry {
 }
 
 message ProgramRisksDelta {
-  repeated Risk added = 1;
-  repeated string removed = 2;
-  repeated ProgramRisksPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramRisksRemoval removed = 1;
+  repeated ProgramRisksInsertion inserted = 2;
+  repeated ProgramRisksRelocation moved = 3;
+  repeated ProgramRisksPatchEntry modified = 4;
+}
+
+message ProgramRisksInsertion {
+  uint32 index = 1;
+  Risk row = 2;
+}
+
+message ProgramRisksRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramRisksRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramRisksPatchEntry {
@@ -590,10 +1182,26 @@ message ProgramRisksPatchEntry {
 }
 
 message ProgramConflictsDelta {
-  repeated Conflict added = 1;
-  repeated string removed = 2;
-  repeated ProgramConflictsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramConflictsRemoval removed = 1;
+  repeated ProgramConflictsInsertion inserted = 2;
+  repeated ProgramConflictsRelocation moved = 3;
+  repeated ProgramConflictsPatchEntry modified = 4;
+}
+
+message ProgramConflictsInsertion {
+  uint32 index = 1;
+  Conflict row = 2;
+}
+
+message ProgramConflictsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramConflictsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramConflictsPatchEntry {
@@ -602,10 +1210,26 @@ message ProgramConflictsPatchEntry {
 }
 
 message ProgramRequirementsDelta {
-  repeated Requirement added = 1;
-  repeated string removed = 2;
-  repeated ProgramRequirementsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramRequirementsRemoval removed = 1;
+  repeated ProgramRequirementsInsertion inserted = 2;
+  repeated ProgramRequirementsRelocation moved = 3;
+  repeated ProgramRequirementsPatchEntry modified = 4;
+}
+
+message ProgramRequirementsInsertion {
+  uint32 index = 1;
+  Requirement row = 2;
+}
+
+message ProgramRequirementsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramRequirementsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramRequirementsPatchEntry {
@@ -614,10 +1238,26 @@ message ProgramRequirementsPatchEntry {
 }
 
 message ProgramPrioritiesDelta {
-  repeated PriorityRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramPrioritiesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramPrioritiesRemoval removed = 1;
+  repeated ProgramPrioritiesInsertion inserted = 2;
+  repeated ProgramPrioritiesRelocation moved = 3;
+  repeated ProgramPrioritiesPatchEntry modified = 4;
+}
+
+message ProgramPrioritiesInsertion {
+  uint32 index = 1;
+  PriorityRecord row = 2;
+}
+
+message ProgramPrioritiesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramPrioritiesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramPrioritiesPatchEntry {
@@ -626,10 +1266,26 @@ message ProgramPrioritiesPatchEntry {
 }
 
 message ProgramScenariosDelta {
-  repeated Scenario added = 1;
-  repeated string removed = 2;
-  repeated ProgramScenariosPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramScenariosRemoval removed = 1;
+  repeated ProgramScenariosInsertion inserted = 2;
+  repeated ProgramScenariosRelocation moved = 3;
+  repeated ProgramScenariosPatchEntry modified = 4;
+}
+
+message ProgramScenariosInsertion {
+  uint32 index = 1;
+  Scenario row = 2;
+}
+
+message ProgramScenariosRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramScenariosRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramScenariosPatchEntry {
@@ -638,10 +1294,26 @@ message ProgramScenariosPatchEntry {
 }
 
 message ProgramOptionsDelta {
-  repeated OptionEvaluation added = 1;
-  repeated string removed = 2;
-  repeated ProgramOptionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramOptionsRemoval removed = 1;
+  repeated ProgramOptionsInsertion inserted = 2;
+  repeated ProgramOptionsRelocation moved = 3;
+  repeated ProgramOptionsPatchEntry modified = 4;
+}
+
+message ProgramOptionsInsertion {
+  uint32 index = 1;
+  OptionEvaluation row = 2;
+}
+
+message ProgramOptionsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramOptionsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramOptionsPatchEntry {
@@ -650,10 +1322,26 @@ message ProgramOptionsPatchEntry {
 }
 
 message ProgramDecisionsDelta {
-  repeated Decision added = 1;
-  repeated string removed = 2;
-  repeated ProgramDecisionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramDecisionsRemoval removed = 1;
+  repeated ProgramDecisionsInsertion inserted = 2;
+  repeated ProgramDecisionsRelocation moved = 3;
+  repeated ProgramDecisionsPatchEntry modified = 4;
+}
+
+message ProgramDecisionsInsertion {
+  uint32 index = 1;
+  Decision row = 2;
+}
+
+message ProgramDecisionsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramDecisionsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramDecisionsPatchEntry {
@@ -662,10 +1350,26 @@ message ProgramDecisionsPatchEntry {
 }
 
 message ProgramValidationsDelta {
-  repeated ValidationRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramValidationsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramValidationsRemoval removed = 1;
+  repeated ProgramValidationsInsertion inserted = 2;
+  repeated ProgramValidationsRelocation moved = 3;
+  repeated ProgramValidationsPatchEntry modified = 4;
+}
+
+message ProgramValidationsInsertion {
+  uint32 index = 1;
+  ValidationRecord row = 2;
+}
+
+message ProgramValidationsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramValidationsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramValidationsPatchEntry {
@@ -674,10 +1378,26 @@ message ProgramValidationsPatchEntry {
 }
 
 message ProgramPerformanceDelta {
-  repeated PerformanceCriterion added = 1;
-  repeated string removed = 2;
-  repeated ProgramPerformancePatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramPerformanceRemoval removed = 1;
+  repeated ProgramPerformanceInsertion inserted = 2;
+  repeated ProgramPerformanceRelocation moved = 3;
+  repeated ProgramPerformancePatchEntry modified = 4;
+}
+
+message ProgramPerformanceInsertion {
+  uint32 index = 1;
+  PerformanceCriterion row = 2;
+}
+
+message ProgramPerformanceRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramPerformanceRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramPerformancePatchEntry {
@@ -686,10 +1406,26 @@ message ProgramPerformancePatchEntry {
 }
 
 message ProgramQualityDelta {
-  repeated QualityRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramQualityPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramQualityRemoval removed = 1;
+  repeated ProgramQualityInsertion inserted = 2;
+  repeated ProgramQualityRelocation moved = 3;
+  repeated ProgramQualityPatchEntry modified = 4;
+}
+
+message ProgramQualityInsertion {
+  uint32 index = 1;
+  QualityRecord row = 2;
+}
+
+message ProgramQualityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramQualityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramQualityPatchEntry {
@@ -698,10 +1434,26 @@ message ProgramQualityPatchEntry {
 }
 
 message ProgramArtifactsDelta {
-  repeated ArtifactRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramArtifactsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramArtifactsRemoval removed = 1;
+  repeated ProgramArtifactsInsertion inserted = 2;
+  repeated ProgramArtifactsRelocation moved = 3;
+  repeated ProgramArtifactsPatchEntry modified = 4;
+}
+
+message ProgramArtifactsInsertion {
+  uint32 index = 1;
+  ArtifactRecord row = 2;
+}
+
+message ProgramArtifactsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramArtifactsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramArtifactsPatchEntry {
@@ -710,10 +1462,26 @@ message ProgramArtifactsPatchEntry {
 }
 
 message ProgramAssumptionsDelta {
-  repeated Assumption added = 1;
-  repeated string removed = 2;
-  repeated ProgramAssumptionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramAssumptionsRemoval removed = 1;
+  repeated ProgramAssumptionsInsertion inserted = 2;
+  repeated ProgramAssumptionsRelocation moved = 3;
+  repeated ProgramAssumptionsPatchEntry modified = 4;
+}
+
+message ProgramAssumptionsInsertion {
+  uint32 index = 1;
+  Assumption row = 2;
+}
+
+message ProgramAssumptionsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramAssumptionsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramAssumptionsPatchEntry {
@@ -722,10 +1490,26 @@ message ProgramAssumptionsPatchEntry {
 }
 
 message ProgramConstraintsDelta {
-  repeated ConstraintRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramConstraintsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramConstraintsRemoval removed = 1;
+  repeated ProgramConstraintsInsertion inserted = 2;
+  repeated ProgramConstraintsRelocation moved = 3;
+  repeated ProgramConstraintsPatchEntry modified = 4;
+}
+
+message ProgramConstraintsInsertion {
+  uint32 index = 1;
+  ConstraintRecord row = 2;
+}
+
+message ProgramConstraintsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramConstraintsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramConstraintsPatchEntry {
@@ -734,10 +1518,26 @@ message ProgramConstraintsPatchEntry {
 }
 
 message ProgramComplianceRecordsDelta {
-  repeated ComplianceRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramComplianceRecordsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramComplianceRecordsRemoval removed = 1;
+  repeated ProgramComplianceRecordsInsertion inserted = 2;
+  repeated ProgramComplianceRecordsRelocation moved = 3;
+  repeated ProgramComplianceRecordsPatchEntry modified = 4;
+}
+
+message ProgramComplianceRecordsInsertion {
+  uint32 index = 1;
+  ComplianceRecord row = 2;
+}
+
+message ProgramComplianceRecordsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramComplianceRecordsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramComplianceRecordsPatchEntry {
@@ -746,10 +1546,26 @@ message ProgramComplianceRecordsPatchEntry {
 }
 
 message ProgramApprovalsDelta {
-  repeated ApprovalRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramApprovalsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramApprovalsRemoval removed = 1;
+  repeated ProgramApprovalsInsertion inserted = 2;
+  repeated ProgramApprovalsRelocation moved = 3;
+  repeated ProgramApprovalsPatchEntry modified = 4;
+}
+
+message ProgramApprovalsInsertion {
+  uint32 index = 1;
+  ApprovalRecord row = 2;
+}
+
+message ProgramApprovalsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramApprovalsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramApprovalsPatchEntry {
@@ -758,10 +1574,26 @@ message ProgramApprovalsPatchEntry {
 }
 
 message ProgramMeetingsDelta {
-  repeated MeetingRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramMeetingsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramMeetingsRemoval removed = 1;
+  repeated ProgramMeetingsInsertion inserted = 2;
+  repeated ProgramMeetingsRelocation moved = 3;
+  repeated ProgramMeetingsPatchEntry modified = 4;
+}
+
+message ProgramMeetingsInsertion {
+  uint32 index = 1;
+  MeetingRecord row = 2;
+}
+
+message ProgramMeetingsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramMeetingsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramMeetingsPatchEntry {
@@ -770,10 +1602,26 @@ message ProgramMeetingsPatchEntry {
 }
 
 message ProgramChangesDelta {
-  repeated ChangeRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramChangesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramChangesRemoval removed = 1;
+  repeated ProgramChangesInsertion inserted = 2;
+  repeated ProgramChangesRelocation moved = 3;
+  repeated ProgramChangesPatchEntry modified = 4;
+}
+
+message ProgramChangesInsertion {
+  uint32 index = 1;
+  ChangeRecord row = 2;
+}
+
+message ProgramChangesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramChangesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramChangesPatchEntry {
@@ -782,10 +1630,26 @@ message ProgramChangesPatchEntry {
 }
 
 message ProgramCollaborationDelta {
-  repeated CollaborationRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramCollaborationPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramCollaborationRemoval removed = 1;
+  repeated ProgramCollaborationInsertion inserted = 2;
+  repeated ProgramCollaborationRelocation moved = 3;
+  repeated ProgramCollaborationPatchEntry modified = 4;
+}
+
+message ProgramCollaborationInsertion {
+  uint32 index = 1;
+  CollaborationRecord row = 2;
+}
+
+message ProgramCollaborationRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramCollaborationRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramCollaborationPatchEntry {
@@ -794,10 +1658,26 @@ message ProgramCollaborationPatchEntry {
 }
 
 message ProgramAnalysesDelta {
-  repeated AnalysisRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramAnalysesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramAnalysesRemoval removed = 1;
+  repeated ProgramAnalysesInsertion inserted = 2;
+  repeated ProgramAnalysesRelocation moved = 3;
+  repeated ProgramAnalysesPatchEntry modified = 4;
+}
+
+message ProgramAnalysesInsertion {
+  uint32 index = 1;
+  AnalysisRecord row = 2;
+}
+
+message ProgramAnalysesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramAnalysesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramAnalysesPatchEntry {
@@ -806,10 +1686,26 @@ message ProgramAnalysesPatchEntry {
 }
 
 message ProgramReportsDelta {
-  repeated ReportRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramReportsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramReportsRemoval removed = 1;
+  repeated ProgramReportsInsertion inserted = 2;
+  repeated ProgramReportsRelocation moved = 3;
+  repeated ProgramReportsPatchEntry modified = 4;
+}
+
+message ProgramReportsInsertion {
+  uint32 index = 1;
+  ReportRecord row = 2;
+}
+
+message ProgramReportsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramReportsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramReportsPatchEntry {
@@ -818,10 +1714,26 @@ message ProgramReportsPatchEntry {
 }
 
 message ProgramSearchFiltersDelta {
-  repeated SearchFilter added = 1;
-  repeated string removed = 2;
-  repeated ProgramSearchFiltersPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSearchFiltersRemoval removed = 1;
+  repeated ProgramSearchFiltersInsertion inserted = 2;
+  repeated ProgramSearchFiltersRelocation moved = 3;
+  repeated ProgramSearchFiltersPatchEntry modified = 4;
+}
+
+message ProgramSearchFiltersInsertion {
+  uint32 index = 1;
+  SearchFilter row = 2;
+}
+
+message ProgramSearchFiltersRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSearchFiltersRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSearchFiltersPatchEntry {
@@ -830,10 +1742,26 @@ message ProgramSearchFiltersPatchEntry {
 }
 
 message ProgramStatusRecordsDelta {
-  repeated StatusRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramStatusRecordsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramStatusRecordsRemoval removed = 1;
+  repeated ProgramStatusRecordsInsertion inserted = 2;
+  repeated ProgramStatusRecordsRelocation moved = 3;
+  repeated ProgramStatusRecordsPatchEntry modified = 4;
+}
+
+message ProgramStatusRecordsInsertion {
+  uint32 index = 1;
+  StatusRecord row = 2;
+}
+
+message ProgramStatusRecordsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramStatusRecordsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramStatusRecordsPatchEntry {
@@ -842,10 +1770,26 @@ message ProgramStatusRecordsPatchEntry {
 }
 
 message ProgramWorkshopsDelta {
-  repeated Workshop added = 1;
-  repeated string removed = 2;
-  repeated ProgramWorkshopsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramWorkshopsRemoval removed = 1;
+  repeated ProgramWorkshopsInsertion inserted = 2;
+  repeated ProgramWorkshopsRelocation moved = 3;
+  repeated ProgramWorkshopsPatchEntry modified = 4;
+}
+
+message ProgramWorkshopsInsertion {
+  uint32 index = 1;
+  Workshop row = 2;
+}
+
+message ProgramWorkshopsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramWorkshopsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramWorkshopsPatchEntry {
@@ -854,10 +1798,26 @@ message ProgramWorkshopsPatchEntry {
 }
 
 message ProgramSurveysDelta {
-  repeated Survey added = 1;
-  repeated string removed = 2;
-  repeated ProgramSurveysPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramSurveysRemoval removed = 1;
+  repeated ProgramSurveysInsertion inserted = 2;
+  repeated ProgramSurveysRelocation moved = 3;
+  repeated ProgramSurveysPatchEntry modified = 4;
+}
+
+message ProgramSurveysInsertion {
+  uint32 index = 1;
+  Survey row = 2;
+}
+
+message ProgramSurveysRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramSurveysRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramSurveysPatchEntry {
@@ -866,10 +1826,26 @@ message ProgramSurveysPatchEntry {
 }
 
 message ProgramIssuesDelta {
-  repeated Issue added = 1;
-  repeated string removed = 2;
-  repeated ProgramIssuesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramIssuesRemoval removed = 1;
+  repeated ProgramIssuesInsertion inserted = 2;
+  repeated ProgramIssuesRelocation moved = 3;
+  repeated ProgramIssuesPatchEntry modified = 4;
+}
+
+message ProgramIssuesInsertion {
+  uint32 index = 1;
+  Issue row = 2;
+}
+
+message ProgramIssuesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramIssuesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramIssuesPatchEntry {
@@ -878,10 +1854,26 @@ message ProgramIssuesPatchEntry {
 }
 
 message ProgramAuditEventsDelta {
-  repeated AuditEvent added = 1;
-  repeated string removed = 2;
-  repeated ProgramAuditEventsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramAuditEventsRemoval removed = 1;
+  repeated ProgramAuditEventsInsertion inserted = 2;
+  repeated ProgramAuditEventsRelocation moved = 3;
+  repeated ProgramAuditEventsPatchEntry modified = 4;
+}
+
+message ProgramAuditEventsInsertion {
+  uint32 index = 1;
+  AuditEvent row = 2;
+}
+
+message ProgramAuditEventsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramAuditEventsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramAuditEventsPatchEntry {
@@ -890,10 +1882,26 @@ message ProgramAuditEventsPatchEntry {
 }
 
 message ProgramTemplatesDelta {
-  repeated TemplateRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramTemplatesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramTemplatesRemoval removed = 1;
+  repeated ProgramTemplatesInsertion inserted = 2;
+  repeated ProgramTemplatesRelocation moved = 3;
+  repeated ProgramTemplatesPatchEntry modified = 4;
+}
+
+message ProgramTemplatesInsertion {
+  uint32 index = 1;
+  TemplateRecord row = 2;
+}
+
+message ProgramTemplatesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramTemplatesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramTemplatesPatchEntry {
@@ -902,10 +1910,26 @@ message ProgramTemplatesPatchEntry {
 }
 
 message ProgramTracesDelta {
-  repeated TraceLink added = 1;
-  repeated string removed = 2;
-  repeated ProgramTracesPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramTracesRemoval removed = 1;
+  repeated ProgramTracesInsertion inserted = 2;
+  repeated ProgramTracesRelocation moved = 3;
+  repeated ProgramTracesPatchEntry modified = 4;
+}
+
+message ProgramTracesInsertion {
+  uint32 index = 1;
+  TraceLink row = 2;
+}
+
+message ProgramTracesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramTracesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramTracesPatchEntry {
@@ -913,15 +1937,27 @@ message ProgramTracesPatchEntry {
   TraceLink item = 2;
 }
 
-message ProgramStringList {
-  repeated string values = 1;
+message ProgramKnowledgeDelta {
+  repeated ProgramKnowledgeRemoval removed = 1;
+  repeated ProgramKnowledgeInsertion inserted = 2;
+  repeated ProgramKnowledgeRelocation moved = 3;
+  repeated ProgramKnowledgePatchEntry modified = 4;
 }
 
-message ProgramKnowledgeDelta {
-  repeated KnowledgeRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramKnowledgePatchEntry patched = 3;
-  repeated string reordered = 4;
+message ProgramKnowledgeInsertion {
+  uint32 index = 1;
+  KnowledgeRecord row = 2;
+}
+
+message ProgramKnowledgeRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramKnowledgeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramKnowledgePatchEntry {
@@ -930,10 +1966,26 @@ message ProgramKnowledgePatchEntry {
 }
 
 message ProgramBenchmarksDelta {
-  repeated BenchmarkRecord added = 1;
-  repeated string removed = 2;
-  repeated ProgramBenchmarksPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ProgramBenchmarksRemoval removed = 1;
+  repeated ProgramBenchmarksInsertion inserted = 2;
+  repeated ProgramBenchmarksRelocation moved = 3;
+  repeated ProgramBenchmarksPatchEntry modified = 4;
+}
+
+message ProgramBenchmarksInsertion {
+  uint32 index = 1;
+  BenchmarkRecord row = 2;
+}
+
+message ProgramBenchmarksRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message ProgramBenchmarksRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message ProgramBenchmarksPatchEntry {

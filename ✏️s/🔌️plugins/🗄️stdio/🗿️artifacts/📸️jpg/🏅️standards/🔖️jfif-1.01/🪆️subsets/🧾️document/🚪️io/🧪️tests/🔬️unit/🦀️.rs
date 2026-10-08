@@ -269,17 +269,13 @@ mod conformance_laws {
 
     /// 🧫️ Admits the committed native mutation corpus and covers every declared variant.
     fn demo_mutation_cases() -> Vec<JpgMutation> {
-        use semio_s_artifact_stdio_contract::editing;
-        let base = demo_jpg_snapshot();
-        let event = editing::SnapshotEditEvent::SetValue { path: "/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(73)) };
-        let patch = editing::prepare_snapshot_patch(&base, &event).expect("prepare committed quality case");
-        let mut cases = vec![
-        ];
+        let mut cases = vec![];
         for text in [
             include_str!("../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"),
             include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"),
             include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"),
             include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🖼️replace-image/🎯️direct/🦠️mutation/🔣️.json"),
         ] {
             cases.push(semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("admit committed mutation case"));
         }

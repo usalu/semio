@@ -61,7 +61,7 @@ impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJ
             JsonWriteNode::Object(length) => N::Object(length),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<&str, String> { self.object_key_at_path(path, index).map_err(|error| error.to_string()) }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, String> { self.object_key_at_path(path, index).map(Into::into).map_err(|error| error.to_string()) }
 }
 
 #[path="../📥️decode/🫳️borrowed/🦀️.rs"]

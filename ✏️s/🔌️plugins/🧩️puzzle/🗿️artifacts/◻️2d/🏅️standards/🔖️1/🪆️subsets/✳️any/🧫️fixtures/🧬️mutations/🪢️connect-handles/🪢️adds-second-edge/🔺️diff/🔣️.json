@@ -2,25 +2,28 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [
+    "inserted": [
       {
-        "edgeKind": "edge-kind-b",
-        "gap": 0.0,
-        "id": "edge-2",
-        "rise": 0.0,
-        "rotation": 0.0,
-        "shift": 0.0,
-        "source": "handle-spare",
-        "target": "handle-2",
-        "tilt": 0.0,
-        "turn": 0.0,
-        "x": 0.0,
-        "y": 0.0
+        "index": 1,
+        "row": {
+          "edgeKind": "edge-kind-b",
+          "gap": 0.0,
+          "id": "edge-2",
+          "rise": 0.0,
+          "rotation": 0.0,
+          "shift": 0.0,
+          "source": "handle-spare",
+          "target": "handle-2",
+          "tilt": 0.0,
+          "turn": 0.0,
+          "x": 0.0,
+          "y": 0.0
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   },
   "meta": null,
   "nodes": null,

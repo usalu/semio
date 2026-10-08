@@ -3411,7 +3411,7 @@ impl DrawingMutationCandidateAuthority {
             return Err("drawing-store.selection-transform-rejected");
         }
         let mut retired: semio_framework_value::list::PagedList<semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}> = Default::default();
-        for entry in outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()) {
+        for entry in outcome.diff().layers.iter().flat_map(|delta| delta.modified.iter()) {
             let mut fault = None;
             let found = crate::schema::update_layer_in_tree(&mut source.layers, &entry.id, &mut |layer| {
                 if let Some(transform) = entry.patch.transform.as_ref() {
@@ -4339,7 +4339,7 @@ struct DrawingStoreInitializationAuthority {
     mutation_candidate: std::mem::ManuallyDrop<Option<DrawingMutationCandidateAuthority>>,
     prepared_history_id: std::mem::ManuallyDrop<Option<String>>,
     edit_index: store::ArtifactStoreInitializationEditIndex,
-    /// 🧬️ The paged clone of `envelope.vcs.genesis.snapshot()` that becomes the runtime's live fold —
+    /// 🧬️ The paged clone of `envelope.vcs.genesis.facts().snapshot()` that becomes the runtime's live fold —
     /// the envelope keeps its own initial snapshot, which `print_document_pack` / the cold from-scratch
     /// fold read back (moving it out left every loaded document's `.pack` empty — ticket
     /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17).
@@ -4514,6 +4514,10 @@ impl DrawingStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapshot, DrawingMutation> for DrawingStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(DRAWING_OWNED_FIELD_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.arena_bootstrap_job.terminal = true;
@@ -4550,7 +4554,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::BindGenesis => {
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
                 let owner_catalog = self.owner_catalog.take().expect("pre-admitted Drawing owner catalog");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone(), owner_catalog));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone(), owner_catalog));
                 self.phase = DrawingStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -4617,7 +4621,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::CloneInitialSnapshot => {
                 let grant = initial_snapshot_clone_grant(self.initial_clone_turn);
                 self.initial_clone_turn = self.initial_clone_turn.wrapping_add(1);
-                let source = self.envelope.as_ref().expect("retained Drawing clone genesis").vcs.genesis.snapshot();
+                let source = self.envelope.as_ref().expect("retained Drawing clone genesis").vcs.genesis.facts().snapshot();
                 let clone = self.initial_snapshot_clone.as_mut().expect("retained native Drawing snapshot clone");
                 match clone.advance(self.initial_clone_authority.borrow(source), grant) {
                     Ok(step) => {

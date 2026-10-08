@@ -3,12 +3,15 @@
   "materials": null,
   "sections": null,
   "members": {
-    "added": [],
     "removed": [
-      "purlin-1"
+      {
+        "id": "purlin-1",
+        "index": 0
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "connections": null,
   "fireScenarios": null,

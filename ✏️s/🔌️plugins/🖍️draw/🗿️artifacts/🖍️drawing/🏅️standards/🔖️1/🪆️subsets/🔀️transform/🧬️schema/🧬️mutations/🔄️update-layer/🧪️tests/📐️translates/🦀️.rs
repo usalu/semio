@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot};
 
@@ -90,7 +91,7 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "update-layer-transform/translates-and-scales-shape-a: every component is finite and both scales are positive, so no invariant may fire, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("update-layer-transform's diff pins a layers delta");
-    assert!(delta.patched[0].patch.transform.is_some(), "the transform travels as one JSON-blob patch field, not five scalars");
+    assert!(delta.modified[0].patch.transform.is_some(), "the transform travels as one JSON-blob patch field, not five scalars");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one. The whole transform facet travels as ONE
@@ -103,7 +104,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "update-layer-transform/translates-and-scales-shape-a: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("update-layer-transform pins a layers delta");
-    let patch = &delta.patched[0].patch;
+    let patch = &delta.modified[0].patch;
     let transform = patch.transform.as_ref().expect("typed transform patch");
     assert_eq!((transform.x, transform.y, transform.scale_x, transform.scale_y, transform.rotation), (24.0, -8.0, 2.0, 1.5, 0.0), "all five components ride in the single blob");
     assert!(patch.fill.is_none() && patch.stroke.is_none() && patch.trace_params.is_none(), "no other blob lane is written");

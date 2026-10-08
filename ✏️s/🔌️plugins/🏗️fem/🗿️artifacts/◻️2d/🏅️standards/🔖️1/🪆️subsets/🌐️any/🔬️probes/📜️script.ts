@@ -9,7 +9,7 @@
 //
 // Everything here MARSHALS and INVOKES; nothing here computes geometry. `../🚪️io/📤️export/🧵️serializers/
 // 🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️.rs` and the sibling `🔺️stl` leaf both bridge every
-// `FemRegion` through `crate::fem2d_engine::meshing::build_semio_mesh_snapshot` (triangulate the
+// `FemRegion` through `crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot` (triangulate the
 // outline+holes footprint, extrude by the region's OWN thickness, split to tets, take the boundary
 // faces) into the real, already-oracled `s.stdio.semio@v1/🔺️mesh` OBJ/STL bridge — so these ARE real
 // geometry carriers, not `print_dsl` under a foreign extension. `three` parses them; `manifold-3d`
@@ -20,7 +20,7 @@
 // `create-region`/`replace-region`/`delete-region`. Every other kind — nodes, bar/beam elements
 // (no cross-section PROFILE, so no honest 3D solid — see the bridge fn's own doc), materials,
 // sections, supports, load cases, loads, combinations, analysis settings — is INVISIBLE in OBJ/STL
-// by construction: `crate::fem2d_engine::meshing::build_semio_mesh_snapshot` reads only
+// by construction: `crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot` reads only
 // `region.{outline,holes,thickness}` and consults nothing else on the document. There is no
 // "unsupported" branch below for that reason — this probe suite is never even asked about them; the
 // owning `🔣️oracle.json`'s `mutationManifests` route those 22 kinds to no oracle at all.

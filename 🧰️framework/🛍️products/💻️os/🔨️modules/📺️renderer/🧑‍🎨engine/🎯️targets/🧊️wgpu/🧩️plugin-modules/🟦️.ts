@@ -25,33 +25,46 @@ function descriptorDependencies(descriptor: PluginPackageDescriptor): readonly P
 }
 
 /** 📇️ Reads trusted descriptors in withdrawable turns and restricts the planner to supplied modules. */
-export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: readonly WgpuPluginModule[], options: { readonly signal?: AbortSignal; readonly readDescriptor?: typeof fetchPackageDescriptor; readonly progress?: (pluginId: string, index: number, count: number) => void; readonly yieldTurn?: () => Promise<void> } = {}): Promise<WgpuPreparedPluginModules> {
+export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: readonly WgpuPluginModule[], options: { readonly signal?: AbortSignal; readonly deadlineMs?: number; readonly now?: () => number; readonly maxDescriptors?: number; readonly readDescriptor?: typeof fetchPackageDescriptor; readonly progress?: (pluginId: string, index: number, count: number) => void; readonly yieldTurn?: () => Promise<void> } = {}): Promise<WgpuPreparedPluginModules> {
+  const now = options.now ?? (() => performance.now());
+  const start = now(), deadline = options.deadlineMs ?? start + 30000, maximum = options.maxDescriptors ?? schema.maxItems;
+  if (!Number.isFinite(start) || !Number.isFinite(deadline) || deadline > start + 30000 || !Number.isSafeInteger(maximum) || maximum < 0 || maximum > schema.maxItems || modules.length > maximum) return refused("descriptor finite authority");
+  const check = () => { options.signal?.throwIfAborted(); if (!Number.isFinite(now()) || now() >= deadline) return refused("descriptor deadline"); };
+  check();
   const packages = new Map<string, PluginPackageDescriptor>();
   const dependencies = new Map<string, readonly PluginDependency[]>();
   const targets: PluginCatalogTarget[] = [];
   const urls = new Map(modules.map(row => [row.pluginId, row.moduleUrl]));
   const known = new Map([...catalog.plugins, ...catalog.extensions].map(row => [row.pluginId, row]));
   for (let index = 0; index < modules.length; index++) {
-    options.signal?.throwIfAborted();
+    check();
     await options.yieldTurn?.();
-    options.signal?.throwIfAborted();
+    check();
     const row = modules[index]!;
-    const descriptor = await (options.readDescriptor ?? fetchPackageDescriptor)(row.pluginId, row.moduleUrl, options.signal, () => options.progress?.(row.pluginId, index, modules.length));
-    options.signal?.throwIfAborted();
+    const timeout = AbortSignal.timeout(Math.max(1, Math.ceil(deadline - now())));
+    const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
+    let withdraw: (() => void) | undefined;
+    const stopped = new Promise<never>((_, reject) => { withdraw = () => reject(signal.reason); signal.addEventListener("abort", withdraw, { once: true }); });
+    let descriptor: PluginPackageDescriptor;
+    try {
+      descriptor = await Promise.race([(options.readDescriptor ?? fetchPackageDescriptor)(row.pluginId, row.moduleUrl, signal, () => { check(); options.progress?.(row.pluginId, index, modules.length); }), stopped]);
+    } finally { if (withdraw) signal.removeEventListener("abort", withdraw); }
+    check();
     if (descriptor.manifest.pluginId !== row.pluginId || typeof descriptor.manifest.version !== "string" || descriptor.manifest.version.length === 0 || descriptor.manifest.version.length > policy.maxVersionLength) return refused("descriptor identity or version");
     const edges = descriptorDependencies(descriptor);
     packages.set(row.pluginId, descriptor);
     dependencies.set(row.pluginId, edges);
     const metadata = known.get(row.pluginId);
-    targets.push({ pluginId: row.pluginId, wasmOut: row.moduleUrl, role: metadata?.role ?? "plugin", contributes: metadata?.contributes ?? [], consumes: metadata?.consumes ?? [], dependsOn: edges.map(edge => edge.pluginId), activationEvents: metadata?.activationEvents });
+    targets.push({ pluginId: row.pluginId, wasmOut: row.moduleUrl, role: metadata?.role ?? "plugin", contributes: metadata?.contributes ?? [], consumes: metadata?.consumes ?? [], dependsOn: edges.map(edge => edge.pluginId), activationEvents: metadata?.activationEvents, capabilities: metadata?.capabilities, extends: metadata?.extends });
   }
   const moduleUrl = (id: string) => urls.get(id) ?? refused(`module ${id} is absent`);
   return { packages, dependencies, catalog: { plugins: targets.filter(row => row.role === "plugin"), extensions: targets.filter(row => row.role === "extension"), hosts: catalog.hosts, playgrounds: catalog.playgrounds, moduleUrl, extensionModuleUrl: moduleUrl } };
 }
 
 /** 🛂️ Refuses missing, cyclic or incompatible selected dependencies without starting actors. */
-export function assertWgpuPluginPlan(plan: PlaygroundBoot, prepared: WgpuPreparedPluginModules): void {
-  if (plan.plugins.length === 0 || plan.dependencyErrors.length) return refused("selected module dependency graph");
+export function assertWgpuPluginPlan(plan: PlaygroundBoot, prepared: WgpuPreparedPluginModules, selection: "variant" | "all"): void {
+  const idle = selection === "all" && prepared.catalog.plugins.length === 0 && prepared.catalog.extensions.length === 0;
+  if ((plan.plugins.length === 0 && !idle) || plan.dependencyErrors.length) return refused("selected module dependency graph");
   const graph = resolvePluginLoadOrder(plan.plugins.map(row => ({ pluginId: row.pluginId, version: prepared.packages.get(row.pluginId)?.manifest.version, dependencies: prepared.dependencies.get(row.pluginId) })));
   if (graph.errors.length || graph.order.length !== plan.plugins.length) return refused("selected descriptor dependency graph");
 }

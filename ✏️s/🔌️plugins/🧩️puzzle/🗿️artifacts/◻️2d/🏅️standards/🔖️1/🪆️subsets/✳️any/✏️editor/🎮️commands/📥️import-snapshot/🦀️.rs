@@ -1,13 +1,14 @@
-//! 📥 Replaces the document with an imported snapshot JSON file. The host's chunked inbound lane
+//! 📥 Loads an imported snapshot JSON file as the whole document — the artifact's load path (`Effect::LoadDocument`, outside
+//! history), never a mutation and never a difference of the imported board against the current one. The host's chunked inbound lane
 //! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per
 //! `IMPORT_CHUNK_BYTES` page) is reassembled by the framework before this action runs
 //! (`semio_framework::kernel::ImportStaging`, admitted in the SDK's `dispatch_action`), so the action reads
 //! one whole `payload`, which may contain picked JSON text or an explicit inline snapshot object.
 
-use crate::editor::puzzle2d::{Puzzle2dActionCtx, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA};
+use crate::editor::puzzle2d::{puzzle2d_load_document_effect, Puzzle2dActionCtx, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA};
 use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
 use semio_framework::kernel::{UiDirtyScope, IMPORT_ARGUMENT_PAYLOAD};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 //#region 🔖️Vocabulary
 /// 🚫️ Why one import was refused — every arm becomes a localized shell notice, never a silent no-op.
@@ -36,7 +37,7 @@ impl Puzzle2dImportFault {
 pub fn puzzle2d_import_value(args: &Value) -> Result<Value, Puzzle2dImportFault> {
     let value = match args.get(IMPORT_ARGUMENT_PAYLOAD).and_then(Value::as_str) {
         Some(text) if text.len() > PUZZLE_IMPORT_TOTAL_BYTES => return Err(Puzzle2dImportFault::Capacity),
-        Some(text) => serde_json::from_str::<Value>(text).map_err(|_| Puzzle2dImportFault::Payload)?,
+        Some(text) => semio_framework_pack_json::from_json_str::<Value>(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Puzzle2dImportFault::Payload)?,
         None => args.get(IMPORT_ARGUMENT_PAYLOAD).cloned().filter(Value::is_object).ok_or(Puzzle2dImportFault::Payload)?,
     };
     let is_snapshot = value.get("schema").and_then(Value::as_str) == Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) || value.get("nodes").is_some_and(Value::is_array);
@@ -46,8 +47,8 @@ pub fn puzzle2d_import_value(args: &Value) -> Result<Value, Puzzle2dImportFault>
     Ok(value)
 }
 
-/// 📥 Replaces the document with the imported snapshot as one document edit; every refusal publishes a named,
-/// localized notice and changes nothing.
+/// 📥 Loads the imported snapshot as the whole document through the load path; every refusal — a file too large, not a
+/// puzzle 2d snapshot, or one the typed model refuses — publishes a named, localized notice and changes nothing.
 pub fn import_snapshot(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let mut snapshot = match args.ok_or(Puzzle2dImportFault::Payload).and_then(puzzle2d_import_value) {
         Ok(snapshot) => snapshot,
@@ -64,6 +65,11 @@ pub fn import_snapshot(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         object.entry("schema").or_insert_with(|| Value::String(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA.into()));
         object.entry("edges").or_insert_with(|| Value::Array(Vec::new()));
     }
-    ctx.scene.board_snapshot = snapshot;
+    let Ok(document) = <crate::Puzzle2dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&snapshot)) else {
+        ctx.notice(|labels| labels.import_invalid.as_str());
+        *ctx.ui_scope = UiDirtyScope::None;
+        return;
+    };
+    ctx.effects.push(puzzle2d_load_document_effect(&document));
 }
 //#endregion 🔖️Command

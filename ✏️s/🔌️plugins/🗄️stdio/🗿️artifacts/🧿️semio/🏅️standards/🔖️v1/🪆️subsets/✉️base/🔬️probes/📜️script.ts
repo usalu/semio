@@ -11,8 +11,7 @@
 // third-party JSON Schema validator no production code links — holds each document to the carrier the
 // subset PUBLISHES (`../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/🔣️.json` and every
 // schema they reference). Then the envelope's published law is applied in TypeScript, sharing no code
-// with the Rust subject or the json-rust oracle: `setSnapshot` replaces the envelope with its payload,
-// an `apply<Arm>` wrapper whose arm does not match is refused with `mutation.target-missing`. Those two
+// with the Rust subject or the json-rust oracle: an `apply<Arm>` wrapper whose arm does not match is refused with `mutation.target-missing`. Those two
 // laws are what the carrier can express, so those vectors are REPRODUCED from `before` + `mutation`
 // and compared with the committed `after`. What a delegated arm verb does to its arm is the arm's own
 // semantics; for those vectors this reader checks the routing (the wrapper names the arm both envelopes
@@ -146,7 +145,7 @@ const ARM_LAWS: Readonly<Record<string, (subset: Json, payload: Json) => Json>> 
     const column = located(subset.columns, "name", payload.column_name);
     return { ...subset, rows: subset.rows.map((row: Json, index: number) => (index === payload.row_index ? { ...row, cells: row.cells.map((cell: unknown, at: number) => (at === column ? payload.new_value : cell)) } : row)) };
   },
-  EditRun: (subset, payload) => ({ ...subset, runs: subset.runs.map((run: Json, index: number) => (index === payload.index ? { ...run, content: payload.new_content } : run)) }),
+  EditRun: (subset, payload) => ({ ...subset, runs: subset.runs.map((run: Json, index: number) => (index === payload.index ? { ...run, content: payload.new_text } : run)) }),
   insertChannel: (subset, payload) => ({ ...subset, channels: inserted(subset.channels, payload.index, payload.channel) }),
   insertImage: (subset, payload) => ({ ...subset, images: [...subset.images, payload.image] }),
   insertListItem: (subset, payload) => ({ ...subset, root: insertedAtPath(subset.root, payload.path, payload.index, payload.value) }),
@@ -179,9 +178,8 @@ function armVerb(inner: Json): { verb: string; payload: Json } {
 /** ▶️ The envelope law, then the arm's own verb where this implementation states it; `undefined` when it does not. */
 function route(before: unknown, mutation: unknown): Routed | undefined {
   const tag = member(mutation, "mutation");
-  if (tag === "setSnapshot") return { envelope: member(member(mutation, "payload"), "snapshot"), refused: [] };
   const arm = typeof tag === "string" ? wrappedArm(tag) : undefined;
-  if (arm === undefined) throw new Error(`mutation tag ${JSON.stringify(tag)} is neither setSnapshot nor an apply<Arm> wrapper`);
+  if (arm === undefined) throw new Error(`mutation tag ${JSON.stringify(tag)} is not an apply<Arm> wrapper`);
   if (armOf(before) !== arm) return { envelope: before, refused: [TARGET_MISSING] };
   const { verb, payload } = armVerb(member(member(mutation, "payload"), "mutation") as Json);
   const law = ARM_LAWS[verb];

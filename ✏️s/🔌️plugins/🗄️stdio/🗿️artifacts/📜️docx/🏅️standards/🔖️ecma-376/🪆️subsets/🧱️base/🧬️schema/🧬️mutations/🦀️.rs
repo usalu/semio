@@ -2,6 +2,7 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcPartPatch, OpcPartsDelta};
 
 
 
@@ -19,7 +20,8 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 
 
 
-use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
+use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, DocxXmlPartModification, DocxXmlPartRemoval, DocxXmlPartsDelta};
+use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;
 use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
@@ -35,6 +37,18 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
+#[path = "🔗opc-layer/🦀️.rs"]
+pub(crate) mod opc_layer;
+#[path = "📎set-relationship/🦀️.rs"]
+pub mod set_relationship;
+#[path = "🧷remove-relationship/🦀️.rs"]
+pub mod remove_relationship;
+#[path = "📇set-content-type/🦀️.rs"]
+pub mod set_content_type;
+#[path = "🧺remove-content-type/🦀️.rs"]
+pub mod remove_content_type;
 #[path = "➕insert-block/🦀️.rs"]
 pub mod insert_block;
 #[path = "🖌️insert-style/🦀️.rs"]
@@ -133,6 +147,14 @@ pub enum DocxMutation {
     SetPart(set_part::SetPart),
     /// ➖️ Removes a raw OPC part by path.
     RemovePart(remove_part::RemovePart),
+    /// 📎 Writes one relationship of an owner part (inserted at `index`, or changed in place).
+    SetRelationship(set_relationship::SetRelationship),
+    /// 🧷 Removes one relationship of an owner part.
+    RemoveRelationship(remove_relationship::RemoveRelationship),
+    /// 📇 Writes one `[Content_Types].xml` entry (inserted at `index`, or changed in place).
+    SetContentType(set_content_type::SetContentType),
+    /// 🧺 Removes one `[Content_Types].xml` entry.
+    RemoveContentType(remove_content_type::RemoveContentType),
 }
 
 /// 📇️ Kebab-case spelling of every `DocxMutation` variant, in declaration order -- the exhaustive
@@ -160,6 +182,10 @@ pub const KINDS: &[&str] = &[
     "set-style-based-on",
     "set-part",
     "remove-part",
+    "set-relationship",
+    "remove-relationship",
+    "set-content-type",
+    "remove-content-type",
 ];
 //#endregion 🔖️Mutations
 
@@ -168,6 +194,7 @@ pub const KINDS: &[&str] = &[
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -179,39 +206,6 @@ pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation)
     }
 }
 
-
-/// 🧮️ The part-level mutations that carry `base` to `next`: removed parts become `remove-part`, new or changed XML parts and non-XML package parts
-/// become `set-part` (a new non-XML part at its position in `next`). `None` when `next` changes anything those kinds do not address (the
-/// schema, relationships, the package comment, content-type defaults), which is detected by replaying the result against `base`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_mutations(base: &DocxSnapshot, next: &DocxSnapshot) -> Option<Vec<DocxMutation>> {
-    if base.schema != next.schema {
-        return None;
-    }
-    let base_opc = base.opc.materialize_package_exact().ok()?;
-    let next_opc = next.opc.materialize_package_exact().ok()?;
-    let mut leaves: Vec<DocxMutation> = Vec::new();
-    leaves.extend(base.xml_parts.iter().filter(|part| next.xml_part(&part.path).is_none()).map(|part| DocxMutation::RemovePart(remove_part::RemovePart { path: part.path.clone() })));
-    leaves.extend(base_opc.parts.iter().filter(|part| !next_opc.parts.iter().any(|other| other.path == part.path)).map(|part| DocxMutation::RemovePart(remove_part::RemovePart { path: part.path.clone() })));
-    for part in next.xml_parts.iter() {
-        if base.xml_part(&part.path) != Some(part) {
-            leaves.push(DocxMutation::SetPart(set_part::SetPart { path: part.path.clone(), content_type: part.content_type.clone(), payload: set_part::DocxPartContent::Xml { document: part.materialize_document_exact().ok()? }, index: None }));
-        }
-    }
-    for (at, part) in next_opc.parts.iter().enumerate() {
-        if base_opc.parts.iter().find(|other| other.path == part.path) != Some(part) {
-            leaves.push(DocxMutation::SetPart(set_part::SetPart { path: part.path.clone(), content_type: part.content_type.clone(), payload: set_part::DocxPartContent::Binary { bytes: part.bytes.clone() }, index: Some(at) }));
-        }
-    }
-    let mut state = base.clone();
-    for leaf in &leaves {
-        if !apply_docx_mutation(&mut state, leaf).messages().is_empty() {
-            return None;
-        }
-    }
-    (state == *next).then_some(leaves)
-}
-
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
@@ -221,13 +215,13 @@ pub struct PreparedDocxXmlMutation {
     pub diff: DocxDiff,
     pub inverse: DocxMutation,
     pub changed: bool,
-    address: DocxXmlAddress,
-    replacement: XmlNode,
+    pub(crate) address: DocxXmlAddress,
+    pub(crate) replacement: XmlNode,
 }
 
 fn part_diff(address: &DocxXmlAddress, leaf: XmlNodeDiff) -> DocxDiff {
     let document = xml_diff_at_path(&address.node_path, leaf);
-    DocxDiff { opc: None, xml_parts: Some(NamedTripleDiff { modified: vec![NamedModified { key: address.part_path.clone(), diff: DocxXmlPartDiff { content_type: None, document: Some(document) } }], ..Default::default() }) }
+    DocxDiff { opc: None, xml_parts: Some(DocxXmlPartsDelta::modification(&address.part_path, DocxXmlPartDiff { content_type: None, document: Some(document) })) }
 }
 
 fn replacement_plan(snapshot: &DocxSnapshot, address: &DocxXmlAddress, replacement: XmlNode) -> Result<PreparedDocxXmlMutation, ValueError> {
@@ -466,39 +460,45 @@ pub(crate) fn optional_plan_inverse(plan: Result<Option<PreparedDocxXmlMutation>
     plan.ok().flatten().map(|prepared| vec![prepared.inverse]).unwrap_or_default()
 }
 
-/// 📦️ The package part `path` holds in `base`, read back as the `set-part` payload that writes it, with its content type and (for a non-XML
-/// part) its position among the package parts.
+/// 📦️ The package part `path` holds in `base`, read back as the `set-part` payload that writes it, with its content type, its position among the
+/// parts of its kind and the position of its explicit content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn current_part(base: &DocxSnapshot, path: &str) -> Result<Option<(String, set_part::DocxPartContent, Option<usize>)>, ValueError> {
-    if let Some(part) = base.xml_part(path) {
-        return Ok(Some((part.content_type.clone(), set_part::DocxPartContent::Xml { document: part.materialize_document_exact()? }, None)));
-    }
-    let opc = base.opc.materialize_package_exact()?;
-    Ok(opc.parts.iter().position(|part| part.path == path).map(|at| (opc.parts[at].content_type.clone(), set_part::DocxPartContent::Binary { bytes: opc.parts[at].bytes.clone() }, Some(at))))
-}
-
-/// 🧾️ The `[Content_Types].xml` override write that makes `path` resolve to `content_type`: none when it already does.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn override_diff(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage, path: &str, content_type: &str) -> Option<DocxOpcContentTypesDiff> {
-    if opc.content_types.resolve(path) == Some(content_type) {
-        return None;
-    }
+fn current_part(base: &DocxSnapshot, path: &str) -> Result<Option<(String, set_part::DocxPartContent, usize, Option<usize>)>, ValueError> {
     let name = format!("/{path}");
-    let overrides = if opc.content_types.overrides.iter().any(|(existing, _)| *existing == name) {
-        NamedTripleDiff { modified: vec![NamedModified { key: name, diff: content_type.to_string() }], ..Default::default() }
-    } else {
-        NamedTripleDiff { added: vec![(name, content_type.to_string())], ..Default::default() }
-    };
-    Some(DocxOpcContentTypesDiff { defaults: None, overrides: Some(overrides) })
+    let opc = base.opc.materialize_package_exact()?;
+    let override_index = opc.content_types.overrides.iter().position(|(existing, _)| *existing == name);
+    if let Some(at) = base.xml_parts.iter().position(|part| part.path == path) {
+        let part = &base.xml_parts[at];
+        return Ok(Some((part.content_type.clone(), set_part::DocxPartContent::Xml { document: part.materialize_document_exact()? }, at, override_index)));
+    }
+    Ok(opc.parts.iter().position(|part| part.path == path).map(|at| (opc.parts[at].content_type.clone(), set_part::DocxPartContent::Binary { bytes: opc.parts[at].bytes.clone() }, at, override_index)))
 }
 
-/// 📦️ The diff that writes part `path` -- inserting it (a non-XML part at `index` among the package parts, last by default) or replacing it
-/// whole -- and keeps its content type resolvable.
+/// 🧾️ The `[Content_Types].xml` override write that makes `path` resolve to `content_type`. An explicit override that already carries it is left alone; with
+/// `override_index` an explicit entry is always written (added at that position); without it, a type the extension default already yields needs no entry and
+/// drops a differing one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn set_part_diff(base: &DocxSnapshot, path: &str, content_type: &str, payload: &set_part::DocxPartContent, index: Option<usize>) -> Result<DocxDiff, ValueError> {
+fn override_diff(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage, path: &str, content_type: &str, override_index: Option<usize>) -> Option<OpcContentTypesDiff> {
+    let name = format!("/{path}");
+    let default = path.rsplit('.').next().and_then(|extension| opc.content_types.defaults.iter().find(|(existing, _)| existing.eq_ignore_ascii_case(extension))).map(|(_, value)| value.as_str());
+    let list = &opc.content_types.overrides;
+    let overrides = match list.iter().position(|(existing, _)| *existing == name) {
+        Some(at) if list[at].1 == content_type => return None,
+        Some(at) if override_index.is_none() && default == Some(content_type) => OpcContentTypeEntriesDelta::removal_by_id(name, at),
+        Some(_) => OpcContentTypeEntriesDelta::modification(&name, OpcContentTypePatch { content_type: Some(content_type.to_string()) }),
+        None if override_index.is_none() && default == Some(content_type) => return None,
+        None => OpcContentTypeEntriesDelta::insertion(insertion_index(list.len(), override_index), OpcContentTypeRow { name, content_type: content_type.to_string() }),
+    };
+    Some(OpcContentTypesDiff { defaults: None, overrides: Some(overrides) })
+}
+
+/// 📦️ The diff that writes part `path` -- inserting it (a new XML part, or a non-XML part at `index` among the package parts, last by default) or
+/// replacing an existing non-XML part's bytes -- and keeps its content type resolvable. An existing XML part keeps its nodes: only its content type can change here.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn set_part_diff(base: &DocxSnapshot, path: &str, content_type: &str, payload: &set_part::DocxPartContent, index: Option<usize>, override_index: Option<usize>) -> Result<DocxDiff, ValueError> {
     let path = path.trim_start_matches('/');
     let opc = base.opc.materialize_package_exact()?;
-    let content_types = override_diff(&opc, path, content_type);
+    let content_types = override_diff(&opc, path, content_type, override_index);
     match payload {
         set_part::DocxPartContent::Xml { document } => {
             if !docx_part_is_xml(path, content_type) {
@@ -506,23 +506,19 @@ pub(crate) fn set_part_diff(base: &DocxSnapshot, path: &str, content_type: &str,
             }
             let xml_parts = match base.xml_part(path) {
                 Some(existing) => {
-                    let unchanged = existing.document.materialize_exact()? == *document;
-                    let replacement = DocxXmlPartDiff {
-                        content_type: (existing.content_type != content_type).then(|| content_type.to_string()),
-                        document: (!unchanged).then(|| xml_replace_document(document)),
-                    };
-                    (replacement.content_type.is_some() || replacement.document.is_some()).then(|| NamedTripleDiff { modified: vec![NamedModified { key: path.to_string(), diff: replacement }], ..Default::default() })
+                    if existing.document.materialize_exact()? != *document {
+                        return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("{path} already exists; its nodes are edited through the xml-address kinds, never by replacing the part")));
+                    }
+                    let replacement = DocxXmlPartDiff { content_type: (existing.content_type != content_type).then(|| content_type.to_string()), document: None };
+                    replacement.content_type.is_some().then(|| DocxXmlPartsDelta::modification(path, replacement))
                 }
                 None => {
                     let added = DocxXmlPart::try_from_document(path.to_string(), content_type.to_string(), document.clone())?;
-                    let mut keys: Vec<String> = base.xml_parts.iter().map(|part| part.path.clone()).collect();
-                    keys.push(path.to_string());
-                    let mut sorted = keys.clone();
-                    sorted.sort_unstable();
-                    Some(NamedTripleDiff { added: vec![added], order: if keys == sorted { Vec::new() } else { sorted }, ..Default::default() })
+                    let at = index.map_or_else(|| base.xml_parts.iter().take_while(|part| part.path.as_str() < path).count(), |at| at.min(base.xml_parts.len()));
+                    Some(DocxXmlPartsDelta::insertion(at, added))
                 }
             };
-            Ok(DocxDiff { opc: content_types.map(|content_types| DocxOpcDiff { content_types: Some(content_types), ..Default::default() }), xml_parts })
+            Ok(DocxDiff { opc: content_types.map(|content_types| OpcDiff { content_types: Some(content_types), ..Default::default() }), xml_parts })
         }
         set_part::DocxPartContent::Binary { bytes } => {
             if docx_part_is_xml(path, content_type) {
@@ -530,56 +526,40 @@ pub(crate) fn set_part_diff(base: &DocxSnapshot, path: &str, content_type: &str,
             }
             let parts = match opc.parts.iter().find(|part| part.path == path) {
                 Some(existing) => {
-                    let replacement = DocxOpcPartDiff { content_type: (existing.content_type != content_type).then(|| content_type.to_string()), bytes: (existing.bytes != *bytes).then(|| bytes.clone()) };
-                    (replacement.content_type.is_some() || replacement.bytes.is_some()).then(|| NamedTripleDiff { modified: vec![NamedModified { key: path.to_string(), diff: replacement }], ..Default::default() })
+                    let replacement = OpcPartPatch { content_type: (existing.content_type != content_type).then(|| content_type.to_string()), bytes: (existing.bytes != *bytes).then(|| bytes.clone()) };
+                    (replacement.content_type.is_some() || replacement.bytes.is_some()).then(|| OpcPartsDelta::modification(path, replacement))
                 }
                 None => {
-                    let mut keys: Vec<String> = opc.parts.iter().map(|part| part.path.clone()).collect();
-                    let mut order = Vec::new();
-                    if let Some(at) = index.filter(|at| *at < keys.len()) {
-                        keys.insert(at, path.to_string());
-                        order = keys;
-                    }
-                    Some(NamedTripleDiff { added: vec![semio_s_artifact_stdio_zip::opc::OpcPart { path: path.to_string(), content_type: content_type.to_string(), bytes: bytes.clone() }], order, ..Default::default() })
+                    Some(OpcPartsDelta::insertion(insertion_index(opc.parts.len(), index), semio_s_artifact_stdio_zip::opc::OpcPart { path: path.to_string(), content_type: content_type.to_string(), bytes: bytes.clone() }))
                 }
             };
-            Ok(DocxDiff { opc: (parts.is_some() || content_types.is_some()).then(|| DocxOpcDiff { parts, content_types, ..Default::default() }), xml_parts: None })
+            Ok(DocxDiff { opc: (parts.is_some() || content_types.is_some()).then(|| OpcDiff { parts, content_types, ..Default::default() }), xml_parts: None })
         }
     }
 }
 
-/// 🌳 The XML diff that replaces a whole document with `document`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_replace_document(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument) -> semio_s_artifact_stdio_xml::schema::diff::XmlDiff {
-    semio_s_artifact_stdio_xml::schema::diff::XmlDiff {
-        prolog: Some(document.prolog.clone()),
-        epilog: Some(document.epilog.clone()),
-        declaration: Some(document.declaration.clone()),
-        doctype: Some(document.doctype.clone()),
-        root: Some(XmlNodeDiff::Replace { node: document.root.clone() }),
-    }
-}
-
-/// 📦️ The inverse of writing part `path`: the exact previous part, or its removal when the write created it.
+/// 📦️ The inverse of writing part `path`: the exact previous part at its positions, or its removal when the write created it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn set_part_inverse(base: &DocxSnapshot, path: &str) -> Result<Vec<DocxMutation>, ValueError> {
     let path = path.trim_start_matches('/');
     Ok(vec![match current_part(base, path)? {
-        Some((content_type, payload, index)) => DocxMutation::SetPart(set_part::SetPart { path: path.to_string(), content_type, payload, index }),
+        Some((content_type, payload, index, override_index)) => DocxMutation::SetPart(set_part::SetPart { path: path.to_string(), content_type, payload, index: Some(index), override_index }),
         None => DocxMutation::RemovePart(remove_part::RemovePart { path: path.to_string() }),
     }])
 }
 
-/// 📦️ The diff that removes part `path` (and nothing else: its content-type override stays).
+/// 📦️ The diff that removes part `path` together with its explicit content-type override, if it has one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_part_diff(base: &DocxSnapshot, path: &str) -> Result<DocxDiff, ValueError> {
     let path = path.trim_start_matches('/');
-    if base.xml_part(path).is_some() {
-        return Ok(DocxDiff { xml_parts: Some(NamedTripleDiff { removed: vec![path.to_string()], ..Default::default() }), ..Default::default() });
-    }
     let opc = base.opc.materialize_package_exact()?;
-    if opc.parts.iter().any(|part| part.path == path) {
-        return Ok(DocxDiff { opc: Some(DocxOpcDiff { parts: Some(NamedTripleDiff { removed: vec![path.to_string()], ..Default::default() }), ..Default::default() }), ..Default::default() });
+    let name = format!("/{path}");
+    let content_types = opc.content_types.overrides.iter().position(|(existing, _)| *existing == name).map(|at| OpcContentTypesDiff { defaults: None, overrides: Some(OpcContentTypeEntriesDelta::removal_by_id(name.clone(), at)) });
+    if let Some(at) = base.xml_parts.iter().position(|part| part.path == path) {
+        return Ok(DocxDiff { xml_parts: Some(DocxXmlPartsDelta { removed: vec![DocxXmlPartRemoval { id: path.to_string(), index: at }], ..Default::default() }), opc: content_types.map(|content_types| OpcDiff { content_types: Some(content_types), ..Default::default() }) });
+    }
+    if let Some(at) = opc.parts.iter().position(|part| part.path == path) {
+        return Ok(DocxDiff { opc: Some(OpcDiff { parts: Some(OpcPartsDelta::removal_by_id(path, at)), content_types, ..Default::default() }), xml_parts: None });
     }
     Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("DOCX package has no part {path}")))
 }
@@ -592,17 +572,6 @@ pub(crate) fn part_outcome(diff: Result<DocxDiff, ValueError>) -> protocol::Muta
         Err(error) => protocol::MutationOutcome::error("mutation.target-mismatch", error.into_message(), Vec::<String>::new()),
     }
 }
-/// ▶️ Applies one revision-bound canonical XML edit in place on an OWNED snapshot -- the bounded retained-execution seam
-/// (`✏️editor/📬️preparation`) that moves the document's parts into the edit instead of cloning them; every other caller goes through the
-/// central diff apply.
-pub fn apply_addressed_xml_mutation_in_place(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, ValueError> {
-    let prepared = prepare_addressed_xml_mutation(snapshot, mutation)?;
-    if prepared.changed {
-        xml_address::replace_addressed_node(snapshot, &prepared.address, prepared.replacement.clone())?;
-    }
-    Ok(prepared)
-}
-
 /// 🌳 The XML diff that rewrites every attribute value equal to a member of `from` into `to` anywhere under `node` -- a namespace
 /// declaration is an ordinary attribute, so one walk covers `xmlns`, `xmlns:r` and whatever prefixed alias a package uses. `None` when
 /// nothing under `node` declares one of `from`.
@@ -626,12 +595,12 @@ pub(crate) fn root_edits_diff(edits: Vec<(String, XmlNodeDiff)>) -> DocxDiff {
     }
     let modified = edits
         .into_iter()
-        .map(|(key, root)| NamedModified {
-            key,
-            diff: DocxXmlPartDiff { content_type: None, document: Some(semio_s_artifact_stdio_xml::schema::diff::XmlDiff { root: Some(root), ..Default::default() }) },
+        .map(|(id, root)| DocxXmlPartModification {
+            id,
+            patch: DocxXmlPartDiff { content_type: None, document: Some(semio_s_artifact_stdio_xml::schema::diff::XmlDiff { root: Some(root), ..Default::default() }) },
         })
         .collect();
-    DocxDiff { opc: None, xml_parts: Some(NamedTripleDiff { modified, ..Default::default() }) }
+    DocxDiff { opc: None, xml_parts: Some(DocxXmlPartsDelta { modified, ..Default::default() }) }
 }
 
 /// 🌿️ The attribute edit that sets (`Some`) or removes (`None`) attribute `name` on the ROOT element of `document`; `None` when nothing changes.
@@ -655,13 +624,56 @@ pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema:
     Some(XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attributes), children: None }))
 }
 
-/// 🌿️ The children edit that appends `node` to (`Some`) or strips every child named `name` from (`None`) the ROOT element of `document`.
+/// 🌿️ The children edit that inserts `insert.1` at final index `insert.0` of, or removes the children at the base indexes `remove` from, the ROOT element of `document`;
+/// `None` when nothing changes. Insertion and removal are never combined in one call.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, append: Option<XmlNode>, strip: Option<&str>) -> Option<XmlNodeDiff> {
-    let Some(XmlNode::Element { children, .. }) = document.root.as_ref() else { return None };
-    let removed: Vec<usize> = strip.map(|name| children.iter().enumerate().filter(|(_, child)| matches!(child, XmlNode::Element { name: actual, .. } if actual == name)).map(|(index, _)| index).collect()).unwrap_or_default();
-    let added: Vec<XmlChildAdded> = append.map(|item| vec![XmlChildAdded { index: children.len(), item }]).unwrap_or_default();
-    (!removed.is_empty() || !added.is_empty()).then(|| XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed, modified: Vec::new(), added }) }))
+pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, insert: Option<(usize, XmlNode)>, remove: &[usize]) -> Option<XmlNodeDiff> {
+    let Some(XmlNode::Element { .. }) = document.root.as_ref() else { return None };
+    let added: Vec<XmlChildAdded> = insert.map(|(index, item)| vec![XmlChildAdded { index, item }]).unwrap_or_default();
+    (!remove.is_empty() || !added.is_empty()).then(|| XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: remove.to_vec(), modified: Vec::new(), added }) }))
+}
+
+/// 🧩️ The diff that adds XML part `path` of `content_type` with `document` at `index` among the XML parts (appended when `None`) together with its
+/// content-type override at `override_index` among the overrides (appended when `None`). Empty when a part of that name already exists.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn insert_xml_part_diff(base: &DocxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Result<DocxDiff, ValueError> {
+    let path = path.trim_start_matches('/');
+    if base.xml_part(path).is_some() || base.opc.part(path).is_some() {
+        return Ok(DocxDiff::default());
+    }
+    let opc = base.opc.materialize_package_exact()?;
+    let name = format!("/{path}");
+    let list = &opc.content_types.overrides;
+    let overrides = match list.iter().position(|(existing, _)| *existing == name) {
+        Some(at) if list[at].1 == content_type => None,
+        Some(_) => Some(OpcContentTypeEntriesDelta::modification(&name, OpcContentTypePatch { content_type: Some(content_type.to_string()) })),
+        None => Some(OpcContentTypeEntriesDelta::insertion(insertion_index(list.len(), override_index), OpcContentTypeRow { name, content_type: content_type.to_string() })),
+    };
+    let added = DocxXmlPart::try_from_document(path.to_string(), content_type.to_string(), document.clone())?;
+    Ok(DocxDiff {
+        opc: overrides.map(|overrides| OpcDiff { content_types: Some(OpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }),
+        xml_parts: Some(DocxXmlPartsDelta::insertion(insertion_index(base.xml_parts.len(), index), added)),
+    })
+}
+
+/// 🧩️ The diff that removes XML part `path` together with its explicit content-type override, if it has one; empty when no such part exists.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn remove_xml_part_diff(base: &DocxSnapshot, path: &str) -> DocxDiff {
+    let path = path.trim_start_matches('/');
+    let Some(at) = base.xml_parts.iter().position(|part| part.path == path) else { return DocxDiff::default() };
+    let name = format!("/{path}");
+    let content_types = base.opc.materialize_package_exact().ok().and_then(|opc| opc.content_types.overrides.iter().position(|(existing, _)| *existing == name).map(|position| OpcContentTypesDiff { defaults: None, overrides: Some(OpcContentTypeEntriesDelta::removal_by_id(name.clone(), position)) }));
+    DocxDiff { xml_parts: Some(DocxXmlPartsDelta { removed: vec![DocxXmlPartRemoval { id: path.to_string(), index: at }], ..Default::default() }), opc: content_types.map(|content_types| OpcDiff { content_types: Some(content_types), ..Default::default() }) }
+}
+
+/// 🧭️ Where XML part `path` and its explicit content-type override sit in their lists: `(part index, override index)`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xml_part_positions(base: &DocxSnapshot, path: &str) -> Option<(usize, Option<usize>)> {
+    let path = path.trim_start_matches('/');
+    let part = base.xml_parts.iter().position(|part| part.path == path)?;
+    let name = format!("/{path}");
+    let at = base.opc.materialize_package_exact().ok().and_then(|opc| opc.content_types.overrides.iter().position(|(existing, _)| *existing == name));
+    Some((part, at))
 }
 //#endregion 🔖️MutationTrait
 
@@ -736,7 +748,7 @@ fn fixture() -> DocxSnapshot {
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
     });
     snapshot.opc.set_part("word/media/original.bin", "application/octet-stream", vec![1, 2, 3]);
-    snapshot
+    opc_layer::with_demo_entries(snapshot)
 }
 
 #[cfg(test)]
@@ -779,9 +791,12 @@ pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
         DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: "Normal".into() }),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id: "Normal".into(), name: "Body".into() }),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) }),
-        DocxMutation::SetPart(set_part::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument { root: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "w:numbering".into(), attrs: Vec::new(), children: Vec::new() }), ..Default::default() } } , index: None }),
+        DocxMutation::SetPart(set_part::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument { root: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "w:numbering".into(), attrs: Vec::new(), children: Vec::new() }), ..Default::default() } } , index: None, override_index: None }),
         DocxMutation::RemovePart(remove_part::RemovePart { path: "word/media/original.bin".into() }),
     ]
+    .into_iter()
+    .chain(opc_layer::demo_cases())
+    .collect()
 }
 //#endregion 🔖️DemoCases
 

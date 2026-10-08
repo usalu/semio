@@ -1,58 +1,61 @@
 {
   "objects": {
-    "added": [],
-    "patched": [
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "obj-hull",
-        "paintLayers": {
-          "edits": [
-            {
-              "op": "stroke",
-              "index": 0,
-              "runs": [
-                {
-                  "bytes": "yB4e/8geHv/IHh7/",
-                  "offset": 36
-                },
-                {
-                  "bytes": "yB4e/8geHv/IHh7/",
-                  "offset": 68
-                },
-                {
-                  "bytes": "yB4e/8geHv/IHh7/yB4e/8geHv8=",
-                  "offset": 100
-                },
-                {
-                  "bytes": "yB4e/8geHv/IHh7/yB4e/w==",
-                  "offset": 140
-                },
-                {
-                  "bytes": "yB4e/8geHv/IHh7/yB4e/w==",
-                  "offset": 172
-                },
-                {
-                  "bytes": "yB4e/8geHv/IHh7/",
-                  "offset": 208
-                }
-              ]
-            }
-          ]
-        },
         "patch": {
-          "mesh": null,
-          "meshContent": null,
-          "name": null,
-          "smoothShading": null,
-          "meshState": null,
-          "position": null,
-          "rotation": null,
-          "scale": null
-        },
-        "meshMotions": []
+          "paintLayers": {
+            "edits": [
+              {
+                "op": "stroke",
+                "index": 0,
+                "runs": [
+                  {
+                    "bytes": "yB4e/8geHv/IHh7/",
+                    "offset": 36
+                  },
+                  {
+                    "bytes": "yB4e/8geHv/IHh7/",
+                    "offset": 68
+                  },
+                  {
+                    "bytes": "yB4e/8geHv/IHh7/yB4e/8geHv8=",
+                    "offset": 100
+                  },
+                  {
+                    "bytes": "yB4e/8geHv/IHh7/yB4e/w==",
+                    "offset": 140
+                  },
+                  {
+                    "bytes": "yB4e/8geHv/IHh7/yB4e/w==",
+                    "offset": 172
+                  },
+                  {
+                    "bytes": "yB4e/8geHv/IHh7/",
+                    "offset": 208
+                  }
+                ]
+              }
+            ]
+          },
+          "patch": {
+            "mesh": null,
+            "meshContent": null,
+            "name": null,
+            "smoothShading": null,
+            "meshState": null,
+            "position": null,
+            "rotation": null,
+            "scale": null
+          },
+          "meshVertices": [],
+          "meshAttributes": []
+        }
       }
-    ],
-    "removed": [],
-    "reordered": null
+    ]
   },
   "schema": null
 }

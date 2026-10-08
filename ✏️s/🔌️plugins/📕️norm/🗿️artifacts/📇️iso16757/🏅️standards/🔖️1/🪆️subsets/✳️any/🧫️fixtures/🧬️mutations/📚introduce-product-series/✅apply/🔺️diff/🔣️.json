@@ -4,29 +4,33 @@
   "productGroups": null,
   "productClasses": null,
   "productSeries": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "series-pr-plus",
-        "classId": "class.panel-radiator",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "PR Plus"
-          },
-          "shortName": null,
-          "alternatives": [
-            {
-              "locale": "de",
+        "index": 1,
+        "row": {
+          "id": "series-pr-plus",
+          "classId": "class.panel-radiator",
+          "names": {
+            "preferred": {
+              "locale": "en",
               "text": "PR Plus"
-            }
-          ]
-        },
-        "sharedPropertyValues": {},
-        "geometryId": null
+            },
+            "shortName": null,
+            "alternatives": [
+              {
+                "locale": "de",
+                "text": "PR Plus"
+              }
+            ]
+          },
+          "sharedPropertyValues": {},
+          "geometryId": null
+        }
       }
     ],
-    "removed": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "products": null,
   "productIndexes": null,

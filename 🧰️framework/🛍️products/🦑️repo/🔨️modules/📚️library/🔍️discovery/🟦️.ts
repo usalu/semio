@@ -1,3 +1,6 @@
+import { ecmaProgram, ecmaTokens, type EcmaToken, type EcmaPattern, type EcmaExpression, type EcmaStatement } from "../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
+import { parseGeneratorPreviewProgressPolicyV1, type GeneratorPreviewProgressPolicyV1 } from "../🏭️generator/👁️preview/📈️progress/🟦️.ts";
+import { parseGeneratorPreviewArgumentsV1, parseGeneratorPreviewLiteralCommandV1 } from "../🏭️generator/👁️preview/🔤️arguments/🟦️.ts";
 import { type RustAttributes, type RustCompileReference, type RustMetadataAttributeFact, type RustStructuralVisibility, type RustToken, type RustVisibility, rustAttributes, rustFindTopLevel, rustIdentifierSymbol, rustMetadataAttributeHead, rustMetadataAttributes, rustMetadataDerives, rustMetadataPath, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens, rustVisibility } from "../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { foldPathEmojiIdentity, pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
@@ -627,6 +630,7 @@ export interface GeneratorContract {
   readonly target: string | null;
   readonly previewTarget?: string;
   readonly previewArguments?: readonly string[];
+  readonly previewProgress?: GeneratorPreviewProgressPolicyV1;
   readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
   readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
   readonly checkTarget?: string;
@@ -1906,8 +1910,8 @@ export function generatorPreviewScriptArguments(contract: Pick<GeneratorContract
     if (contract.previewTarget !== `${project}:preview-generated`) throw new Error("previewTarget must be the exact owner preview-generated target or an explicit same-project preview-* invocation");
     return ["preview-generated"];
   }
-  const args = contract.previewArguments, separator = contract.previewTarget.lastIndexOf(":");
-  if (contract.previewTarget.slice(0, separator) !== project || !/^preview-[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(contract.previewTarget.slice(separator + 1)) || !Array.isArray(args) || args.length < 1 || args.length > 8 || args.some(arg => typeof arg !== "string" || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(arg)) || args.at(-1) !== "preview") throw new Error("Invalid explicit same-project preview invocation");
+  const args = parseGeneratorPreviewArgumentsV1(contract.previewArguments), separator = contract.previewTarget.lastIndexOf(":");
+  if (contract.previewTarget.slice(0, separator) !== project || !/^preview-[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(contract.previewTarget.slice(separator + 1)) || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(args[0]!) || args.at(-1) !== "preview") throw new Error("Invalid explicit same-project preview invocation");
   return args;
 }
 
@@ -3067,7 +3071,8 @@ function schemaRootAuthority(value: unknown): boolean {
   if (node.required !== undefined && !(Array.isArray(node.required) && node.required.every(key => typeof key === "string"))) return false;
   const constraints = ["enum", "const", "minLength", "maxLength", "pattern", "format", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "items", "additionalItems", "minItems", "maxItems", "uniqueItems", "contains", "required", "additionalProperties", "patternProperties", "propertyNames", "minProperties", "maxProperties", "dependencies", "not", "if", "then", "else"];
   const annotations = ["type", "title", "description", "default", "examples", "readOnly", "writeOnly", "$id", "$comment", "$schema"];
-  if (typeof node.$ref === "string" || object(node.properties) || node.type !== undefined && (constraints.some(key => Object.hasOwn(node, key)) || Object.keys(node).every(key => annotations.includes(key)))) return true;
+  const propertiesAuthority = object(node.properties) && (Object.keys(node.properties).length > 0 || node.type !== undefined || Object.keys(node).every(key => annotations.includes(key) || constraints.includes(key) || ["properties", "$defs", "definitions", "allOf", "anyOf", "oneOf"].includes(key) || key.startsWith("x-")));
+  if (typeof node.$ref === "string" || propertiesAuthority || node.type !== undefined && (constraints.some(key => Object.hasOwn(node, key)) || Object.keys(node).every(key => annotations.includes(key)))) return true;
   return ["allOf", "anyOf", "oneOf"].some(key => Array.isArray(node[key]) && node[key].length > 0 && node[key].every(child => typeof child === "boolean" || schemaRootAuthority(child)))
     || ["$defs", "definitions"].some(key => object(node[key]) && Object.values(node[key]).some(schemaRootAuthority));
 }
@@ -3339,7 +3344,21 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
       if (owns(properties, ["fields", "copy", "frontier", "maximumBytes", "tinyMaximumBytes", "recursiveDepth", "refusals"]) && owns(fields(properties.copy), ["repeatCount", "cancelAt"]) && owns(fields(properties.frontier), ["fieldCount", "cancelAt"]) && ["ownership", "cancellation"].every(key => refusals[key] && typeof refusals[key] === "object" && Object.hasOwn(refusals[key]!, "const"))) return true;
     }
     const fixedTrials = fixedProperties.some(([key, child]) => /(?:Grants|Frontiers|Cuts|budgetCases|zeroGrants)$/u.test(key) && Array.isArray((child as Record<string, unknown>).const));
-    if (fixedTrials && fixedProperties.some(([key]) => /(?:Survives|Allocations|Readable|Mutates|Unchanged|RequiresTerminal|AfterClose|BeforeFinalReader)/u.test(key))) return true;
+    const fixedRefusals = fixedProperties.some(([key, child]) => /(?:^refusals$|Refusals$)/u.test(key) && Array.isArray((child as Record<string, unknown>).const));
+    const fixedAfterVerification = fixedProperties.some(([key, child]) => {
+      const outcome = (child as Record<string, unknown>).const;
+      return /^after[A-Z]/u.test(key) && outcome !== null && typeof outcome === "object" && !Array.isArray(outcome) && Object.values(outcome).some(value => typeof value === "boolean");
+    });
+    const fixedScalarSchedules = fixedProperties.filter(([, child]) => {
+      const schedule = (child as Record<string, unknown>).const;
+      return Array.isArray(schedule) && schedule.length > 0 && schedule.every(value => typeof value === "number");
+    });
+    const sampleTexts = Object.values(properties).some(child => child && typeof child === "object" && (child as Record<string, unknown>).type === "array" && ((child as Record<string, unknown>).items as Record<string, unknown> | undefined)?.type === "string");
+    const fixedOwnershipMove = fixedProperties.some(([, child]) => {
+      const move = (child as Record<string, unknown>).const as Record<string, unknown> | null;
+      return move !== null && typeof move === "object" && !Array.isArray(move) && move.items === 1 && move.copyBytes === 0;
+    });
+    if (!producedRecord && (fixedRefusals && fixedAfterVerification || fixedTrials && (expectations.length > 0 || fixedProperties.some(([key]) => /(?:Survives|Allocations|Readable|Mutates|Unchanged|RequiresTerminal|AfterClose|BeforeFinalReader)/u.test(key))) || fixedRefusals && sampleTexts && fixedScalarSchedules.length >= 2 && fixedOwnershipMove)) return true;
     if (Object.entries(properties).some(([key, child]) => {
       const examples = child && typeof child === "object" ? (child as Record<string, unknown>).const : undefined;
       return Array.isArray(examples) && (["cases", "vectors", "scenarios", "laws"].includes(key) || examples.some((example) => example && typeof example === "object" && Object.keys(example).some((field) => /^(?:expect$|expected(?:$|[A-Z]))/u.test(field))));
@@ -4915,7 +4934,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewLimits", "checkTarget", "nativeConsumers", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewProgress", "previewLimits", "checkTarget", "nativeConsumers", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
@@ -4944,6 +4963,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
           targets.set(contract.previewTarget, id);
         }
       } else if (contract.previewTarget !== undefined) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget is forbidden for external contracts.`);
+      if (contract.previewProgress !== undefined) { try { if (!runnable || contract.previewTarget === undefined) throw new Error("Declared progress requires owned preview authority"); parseGeneratorPreviewProgressPolicyV1(contract.previewProgress); } catch (error) { problems.push(`generatorContracts[${JSON.stringify(id)}].previewProgress: ${(error as Error).message}`); } }
       if (contract.previewArguments !== undefined && (!runnable || contract.previewTarget === undefined)) problems.push(`generatorContracts[${JSON.stringify(id)}].previewArguments requires an owned preview target.`);
       try { generatorPreviewResourceLimits(contract); } catch (error) { problems.push(`generatorContracts[${JSON.stringify(id)}].previewLimits: ${(error as Error).message}`); }
       if (contract.compilerInputManifest !== undefined) {
@@ -6223,7 +6243,10 @@ export function generatorPreviewExecution(contract: Pick<GeneratorContract, "own
   const framework = "🧰️framework", frameworkOwner = owner.startsWith(`${framework}/`) && !/[\\\s]/u.test(owner) && owner.split("/").every(part => part && part !== "." && part !== "..") ? owner.slice(framework.length + 1) : null;
   const configured = frameworkOwner ? ["./🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", frameworkOwner, "--manifest", `${frameworkOwner}/Cargo.toml`, "--", "bun", ...direct] : null;
   const args = options.cwd === owner ? direct : options.cwd === "." ? native : options.cwd === framework ? configured : null;
-  if (!args || options.command !== ["bun", ...args].join(" ")) throw new Error("Generator target is not the exact owner JSON preview command");
+  let declared: readonly string[];
+  try { declared = parseGeneratorPreviewLiteralCommandV1(options.command); } catch { throw new Error("Generator target is not the exact owner JSON preview command"); }
+  const expected = ["bun", ...(args ?? [])];
+  if (!args || declared.length !== expected.length || declared.some((value, index) => value !== expected[index])) throw new Error("Generator target is not the exact owner JSON preview command");
   return { command: "bun", args, cwd: options.cwd as string };
 }
 
@@ -10489,64 +10512,11 @@ export function classifyPackageSource(content: string, grammar: PackageGlueGramm
   return rest ? { role: "unresolved", evidence: "unsupported .NET package form" } : { role: "declaration", evidence: ".NET namespace or using declarations only" };
 }
 
-type EcmaRouteTokenKind = "identifier" | "string" | "number" | "template" | "regex" | "punctuation" | "eof";
-
-export interface EcmaRouteToken {
-  readonly kind: EcmaRouteTokenKind;
-  readonly text: string;
-  readonly expressions?: readonly string[];
-}
-
-interface EcmaRoutePattern {
-  readonly names: readonly string[];
-  readonly defaults: boolean;
-  readonly destructured: boolean;
-  readonly objectBindings?: readonly { readonly imported: string; readonly local: string }[];
-}
-
-interface EcmaRouteExpression {
-  readonly kind: string;
-  readonly name?: string;
-  readonly operator?: string;
-  readonly value?: string;
-  readonly object?: EcmaRouteExpression;
-  readonly property?: EcmaRouteExpression | string;
-  readonly optional?: boolean;
-  readonly callee?: EcmaRouteExpression;
-  readonly arguments?: readonly EcmaRouteExpression[];
-  readonly elements?: readonly EcmaRouteExpression[];
-  readonly properties?: readonly { readonly key?: EcmaRouteExpression; readonly value: EcmaRouteExpression; readonly computed?: boolean }[];
-  readonly left?: EcmaRouteExpression;
-  readonly right?: EcmaRouteExpression;
-  readonly condition?: EcmaRouteExpression;
-  readonly whenTrue?: EcmaRouteExpression;
-  readonly whenFalse?: EcmaRouteExpression;
-  readonly parameters?: readonly EcmaRoutePattern[];
-  readonly body?: EcmaRouteExpression | readonly EcmaRouteStatement[];
-  readonly expressions?: readonly EcmaRouteExpression[];
-}
-
-interface EcmaRouteStatement {
-  readonly kind: string;
-  readonly imports?: readonly { readonly local: string; readonly imported: string; readonly runtime: boolean; readonly module: string }[];
-  readonly name?: string;
-  readonly base?: EcmaRouteExpression;
-  readonly parameters?: readonly EcmaRoutePattern[];
-  readonly body?: readonly EcmaRouteStatement[];
-  readonly declarations?: readonly { readonly pattern: EcmaRoutePattern; readonly initializer: EcmaRouteExpression }[];
-  readonly expression?: EcmaRouteExpression;
-  readonly then?: EcmaRouteStatement;
-  readonly otherwise?: EcmaRouteStatement;
-  readonly initializer?: EcmaRoutePattern;
-  readonly iterable?: EcmaRouteExpression;
-  readonly statement?: EcmaRouteStatement;
-}
-
 interface EcmaRouteBinding {
   readonly kind: "pending" | "import-value" | "import-type" | "class" | "parameter" | "data" | "finite" | "receipt" | "module" | "closure" | "router";
   readonly imported?: string;
   readonly module?: string;
-  readonly closure?: EcmaRouteExpression;
+  readonly closure?: EcmaExpression;
   readonly scope?: EcmaRouteScope;
 }
 
@@ -10569,413 +10539,6 @@ class EcmaRouteScope {
   }
 }
 
-/** 🧩️ Finds the closing brace of one template interpolation. */
-function ecmaRouteTemplateEnd(source: string, start: number): number {
-  let depth = 1, quote = "", escaped = false;
-  for (let index = start; index < source.length; index++) {
-    const char = source[index]!, next = source[index + 1];
-    if (quote) {
-      if (!escaped && char === quote) quote = "";
-      escaped = !escaped && char === "\\";
-      if (char !== "\\") escaped = false;
-      continue;
-    }
-    if (char === '"' || char === "'" || char === "`") { quote = char; continue; }
-    if (char === "/" && next === "/") { const end = source.indexOf("\n", index + 2); index = end < 0 ? source.length : end; continue; }
-    if (char === "/" && next === "*") { const end = source.indexOf("*/", index + 2); index = end < 0 ? source.length : end + 1; continue; }
-    if (char === "{") depth++;
-    else if (char === "}" && --depth === 0) return index;
-  }
-  return -1;
-}
-
-/** 🪙️ Tokenizes the closed command-router subset without importing a runtime parser. */
-export function ecmaRouteTokens(content: string): readonly EcmaRouteToken[] {
-  const tokens: EcmaRouteToken[] = [];
-  const punctuation = ["===", "!==", "??=", "...", "=>", "?.", "??", "&&", "||", "<=", ">=", "==", "!=", "++", "--", "+=", "-=", "*=", "/=", "**"];
-  let index = 0;
-  const previousAllowsRegex = (): boolean => tokens.length === 0 || ["(", "[", "{", ",", "=", "=>", ":", "!", "&&", "||", "?", ";", "return"].includes(tokens.at(-1)!.text);
-  while (index < content.length) {
-    const char = content[index]!, next = content[index + 1];
-    if (/\s/u.test(char)) { index++; continue; }
-    if (index === 0 && char === "#" && next === "!") { const end = content.indexOf("\n", index + 2); index = end < 0 ? content.length : end + 1; continue; }
-    if (char === "/" && next === "/") { const end = content.indexOf("\n", index + 2); index = end < 0 ? content.length : end + 1; continue; }
-    if (char === "/" && next === "*") { const end = content.indexOf("*/", index + 2); if (end < 0) return [{ kind: "punctuation", text: "invalid" }, { kind: "eof", text: "" }]; index = end + 2; continue; }
-    if (char === '"' || char === "'") {
-      const quote = char, start = index++;
-      let escaped = false;
-      while (index < content.length) {
-        const value = content[index++]!;
-        if (!escaped && value === quote) break;
-        escaped = !escaped && value === "\\";
-        if (value !== "\\") escaped = false;
-      }
-      if (content[index - 1] !== quote) return [{ kind: "punctuation", text: "invalid" }, { kind: "eof", text: "" }];
-      tokens.push({ kind: "string", text: content.slice(start, index) });
-      continue;
-    }
-    if (char === "`") {
-      const start = index++, expressions: string[] = [];
-      let escaped = false, closed = false;
-      while (index < content.length) {
-        const value = content[index]!;
-        if (!escaped && value === "`") { index++; closed = true; break; }
-        if (!escaped && value === "$" && content[index + 1] === "{") {
-          const end = ecmaRouteTemplateEnd(content, index + 2);
-          if (end < 0) break;
-          expressions.push(content.slice(index + 2, end)); index = end + 1; escaped = false; continue;
-        }
-        escaped = !escaped && value === "\\";
-        if (value !== "\\") escaped = false;
-        index++;
-      }
-      if (!closed) return [{ kind: "punctuation", text: "invalid" }, { kind: "eof", text: "" }];
-      tokens.push({ kind: "template", text: content.slice(start, index), expressions });
-      continue;
-    }
-    if (char === "/" && next !== "=" && previousAllowsRegex()) {
-      const start = index++;
-      let escaped = false, bracket = false, closed = false;
-      while (index < content.length) {
-        const value = content[index++]!;
-        if (!escaped && value === "[") bracket = true;
-        else if (!escaped && value === "]") bracket = false;
-        else if (!escaped && value === "/" && !bracket) { closed = true; break; }
-        escaped = !escaped && value === "\\";
-        if (value !== "\\") escaped = false;
-      }
-      if (closed) {
-        while (index < content.length && /[A-Za-z]/u.test(content[index]!)) index++;
-        tokens.push({ kind: "regex", text: content.slice(start, index) });
-        continue;
-      }
-      index = start;
-    }
-    const operator = punctuation.find((value) => content.startsWith(value, index));
-    if (operator) { tokens.push({ kind: "punctuation", text: operator }); index += operator.length; continue; }
-    if (/[A-Za-z_$]/u.test(char)) {
-      const start = index++;
-      while (index < content.length && /[A-Za-z0-9_$]/u.test(content[index]!)) index++;
-      tokens.push({ kind: "identifier", text: content.slice(start, index) });
-      continue;
-    }
-    if (/\d/u.test(char)) {
-      const start = index++;
-      while (index < content.length && /[\d._A-Fa-fxobn]/u.test(content[index]!)) index++;
-      tokens.push({ kind: "number", text: content.slice(start, index) });
-      continue;
-    }
-    tokens.push({ kind: "punctuation", text: char }); index++;
-  }
-  tokens.push({ kind: "eof", text: "" });
-  return tokens;
-}
-
-/** 🌳️ Parses the command-router subset into owned syntax nodes. */
-class EcmaRouteParser {
-  private index = 0;
-  constructor(private readonly tokens: readonly EcmaRouteToken[]) {}
-  private peek(offset = 0): EcmaRouteToken { return this.tokens[this.index + offset] ?? { kind: "eof", text: "" }; }
-  private consume(text: string): boolean { if (this.peek().text !== text) return false; this.index++; return true; }
-  private take(): EcmaRouteToken { return this.tokens[this.index++] ?? { kind: "eof", text: "" }; }
-  private matching(open: number, left: string, right: string): number {
-    let depth = 0;
-    for (let index = open; index < this.tokens.length; index++) {
-      if (this.tokens[index]!.text === left) depth++;
-      else if (this.tokens[index]!.text === right && --depth === 0) return index;
-    }
-    return -1;
-  }
-  private chunks(tokens: readonly EcmaRouteToken[]): readonly (readonly EcmaRouteToken[])[] {
-    const rows: EcmaRouteToken[][] = [[]];
-    let round = 0, square = 0, curly = 0, angle = 0;
-    for (const token of tokens) {
-      if (token.text === "(" ) round++; else if (token.text === ")") round--;
-      else if (token.text === "[") square++; else if (token.text === "]") square--;
-      else if (token.text === "{") curly++; else if (token.text === "}") curly--;
-      else if (token.text === "<") angle++; else if (token.text === ">") angle = Math.max(0, angle - 1);
-      if (token.text === "," && round === 0 && square === 0 && curly === 0 && angle === 0) rows.push([]);
-      else rows.at(-1)!.push(token);
-    }
-    return rows.filter((row) => row.length > 0);
-  }
-  private pattern(tokens: readonly EcmaRouteToken[]): EcmaRoutePattern | null {
-    let values = [...tokens];
-    if (values[0]?.text === "...") values = values.slice(1);
-    const assignment = values.findIndex((token) => token.text === "=");
-    const defaults = assignment >= 0;
-    if (defaults) values = values.slice(0, assignment);
-    if (values[0]?.kind === "identifier") return { names: [values[0].text], defaults, destructured: false };
-    if (!(["{", "["].includes(values[0]?.text ?? "") && ["}", "]"].includes(values.at(-1)?.text ?? ""))) return null;
-    const names: string[] = [];
-    for (const row of this.chunks(values.slice(1, -1))) {
-      const identifiers = row.filter((token) => token.kind === "identifier" && token.text !== "type");
-      const name = identifiers.at(-1)?.text;
-      if (!name) return null;
-      names.push(name);
-    }
-    const members = this.chunks(values.slice(1, -1));
-    const objectBindings = values[0]?.text === "{" && members.every((row) => row.length === 1 && row[0]?.kind === "identifier" || row.length === 3 && row[0]?.kind === "identifier" && row[1]?.text === ":" && row[2]?.kind === "identifier") ? members.map((row) => ({ imported: row[0]!.text, local: row.at(-1)!.text })) : undefined;
-    return { names, defaults: defaults || values.some((token) => token.text === "="), destructured: true, objectBindings };
-  }
-  private parameters(tokens: readonly EcmaRouteToken[]): readonly EcmaRoutePattern[] | null {
-    const rows: EcmaRoutePattern[] = [];
-    for (const chunk of this.chunks(tokens)) {
-      if (chunk.some((token) => token.text === "@")) return null;
-      const pattern = this.pattern(chunk);
-      if (!pattern) return null;
-      rows.push(pattern);
-    }
-    return rows;
-  }
-  private expressionList(end: string): readonly EcmaRouteExpression[] | null {
-    const rows: EcmaRouteExpression[] = [];
-    if (this.consume(end)) return rows;
-    while (this.peek().kind !== "eof") {
-      const spread = this.consume("...");
-      const expression = this.expression();
-      if (!expression) return null;
-      rows.push(spread ? { kind: "spread", object: expression } : expression);
-      if (this.consume(end)) return rows;
-      if (!this.consume(",")) return null;
-      if (this.consume(end)) return rows;
-    }
-    return null;
-  }
-  private primary(): EcmaRouteExpression | null {
-    const token = this.peek();
-    if (token.text === "await" || token.text === "!" || token.text === "+" || token.text === "-" || token.text === "delete" || token.text === "yield") {
-      this.take(); const object = this.expression(9); return object ? { kind: "unary", operator: token.text, object } : null;
-    }
-    if (token.text === "new") {
-      this.take(); const callee = this.primary();
-      if (!callee || !this.consume("(")) return null;
-      const args = this.expressionList(")");
-      return args ? { kind: "new", callee, arguments: args } : null;
-    }
-    if (token.text === "(") {
-      const close = this.matching(this.index, "(", ")");
-      if (close > this.index && this.tokens[close + 1]?.text === "=>") {
-        const parameters = this.parameters(this.tokens.slice(this.index + 1, close));
-        if (!parameters) return null;
-        this.index = close + 2;
-        const body = this.peek().text === "{" ? this.block() : this.expression();
-        return body ? { kind: "arrow", parameters, body } : null;
-      }
-      this.take(); const expression = this.expression();
-      if (!expression || !this.consume(")")) return null;
-      return { kind: "parenthesized", object: expression };
-    }
-    if (token.text === "[") {
-      this.take(); const elements = this.expressionList("]");
-      return elements ? { kind: "array", elements } : null;
-    }
-    if (token.text === "{") {
-      this.take(); const properties: { key?: EcmaRouteExpression; value: EcmaRouteExpression; computed?: boolean }[] = [];
-      if (this.consume("}")) return { kind: "object", properties };
-      while (this.peek().kind !== "eof") {
-        if (this.consume("...")) {
-          const value = this.expression(); if (!value) return null;
-          properties.push({ value: { kind: "spread", object: value } });
-        } else {
-          let key: EcmaRouteExpression | undefined, computed = false;
-          if (this.consume("[")) { computed = true; key = this.expression() ?? undefined; if (!key || !this.consume("]")) return null; }
-          else {
-            const name = this.take();
-            if (!["identifier", "string", "number"].includes(name.kind)) return null;
-            key = { kind: name.kind === "identifier" ? "identifier" : "literal", name: name.kind === "identifier" ? name.text : undefined, value: name.text };
-          }
-          if (this.consume(":")) {
-            const value = this.expression(); if (!value) return null;
-            properties.push({ key, value, computed });
-          } else if (key.kind === "identifier") properties.push({ key, value: key, computed });
-          else return null;
-        }
-        if (this.consume("}")) return { kind: "object", properties };
-        if (!this.consume(",")) return null;
-        if (this.consume("}")) return { kind: "object", properties };
-      }
-      return null;
-    }
-    if (token.kind === "template") {
-      this.take();
-      const expressions: EcmaRouteExpression[] = [];
-      for (const source of token.expressions ?? []) {
-        const parser = new EcmaRouteParser(ecmaRouteTokens(source)), expression = parser.expression();
-        if (!expression || parser.peek().kind !== "eof") return null;
-        expressions.push(expression);
-      }
-      return { kind: "template", expressions };
-    }
-    if (["string", "number", "regex"].includes(token.kind) || ["true", "false", "null", "undefined"].includes(token.text)) { this.take(); return { kind: token.kind === "regex" ? "regex" : "literal", value: token.text }; }
-    if (token.kind !== "identifier") return null;
-    this.take();
-    if (this.consume("=>")) {
-      const body = this.peek().text === "{" ? this.block() : this.expression();
-      return body ? { kind: "arrow", parameters: [{ names: [token.text], defaults: false, destructured: false }], body } : null;
-    }
-    return { kind: "identifier", name: token.text };
-  }
-  expression(minimum = 0): EcmaRouteExpression | null {
-    let left = this.primary();
-    if (!left) return null;
-    while (true) {
-      if (this.peek().text === "." || this.peek().text === "?.") {
-        const optional = this.take().text === "?.";
-        const property = this.take(); if (property.kind !== "identifier") return null;
-        left = { kind: "member", object: left, property: property.text, optional }; continue;
-      }
-      if (this.consume("[")) {
-        const property = this.expression(); if (!property || !this.consume("]")) return null;
-        left = { kind: "member", object: left, property }; continue;
-      }
-      if (this.consume("(")) {
-        const args = this.expressionList(")"); if (!args) return null;
-        left = { kind: "call", callee: left, arguments: args }; continue;
-      }
-      if (this.consume("!")) { left = { kind: "nonnull", object: left }; continue; }
-      const precedence: Readonly<Record<string, number>> = { "=": 1, "??=": 1, "+=": 1, "-=": 1, "*=": 1, "/=": 1, "??": 3, "||": 4, "&&": 5, "===": 6, "!==": 6, "==": 6, "!=": 6, "<": 7, "<=": 7, ">": 7, ">=": 7, "+": 8, "-": 8, "*": 9, "/": 9, "%": 9 };
-      const operator = this.peek().text, rank = precedence[operator] ?? 0;
-      if (rank <= minimum) break;
-      this.take(); const right = this.expression(rank - (rank === 1 ? 1 : 0));
-      if (!right) return null;
-      left = { kind: rank === 1 ? "assignment" : "binary", operator, left, right };
-    }
-    if (minimum === 0 && this.consume("?")) {
-      const whenTrue = this.expression();
-      if (!whenTrue || !this.consume(":")) return null;
-      const whenFalse = this.expression();
-      if (!whenFalse) return null;
-      left = { kind: "conditional", condition: left, whenTrue, whenFalse };
-    }
-    return left;
-  }
-  private variable(kind: string): EcmaRouteStatement | null {
-    this.take(); const declarations: { pattern: EcmaRoutePattern; initializer: EcmaRouteExpression }[] = [];
-    while (true) {
-      const start = this.index;
-      let round = 0, square = 0, curly = 0;
-      while (this.peek().kind !== "eof") {
-        const text = this.peek().text;
-        if (text === "(" ) round++; else if (text === ")") round--;
-        else if (text === "[") square++; else if (text === "]") square--;
-        else if (text === "{") curly++; else if (text === "}") curly--;
-        if (text === "=" && round === 0 && square === 0 && curly === 0) break;
-        this.index++;
-      }
-      if (!this.consume("=")) return null;
-      const pattern = this.pattern(this.tokens.slice(start, this.index - 1)), initializer = this.expression();
-      if (!pattern || !initializer) return null;
-      declarations.push({ pattern, initializer });
-      if (!this.consume(",")) break;
-    }
-    this.consume(";");
-    return { kind, declarations };
-  }
-  private importStatement(): EcmaRouteStatement | null {
-    this.take();
-    if (this.peek().kind === "string") { this.take(); this.consume(";"); return { kind: "import", imports: [] }; }
-    const rows: { local: string; imported: string; runtime: boolean; module: string }[] = [];
-    const clauseType = this.consume("type");
-    if (this.peek().kind === "identifier" && this.peek(1).text !== "from") {
-      const local = this.take().text; rows.push({ local, imported: "default", runtime: !clauseType, module: "" }); this.consume(",");
-    }
-    if (this.consume("*")) {
-      if (!this.consume("as") || this.peek().kind !== "identifier") return null;
-      const local = this.take().text; rows.push({ local, imported: "*", runtime: !clauseType, module: "" });
-    } else if (this.consume("{")) {
-      while (!this.consume("}")) {
-        const typeOnly = this.consume("type");
-        const imported = this.take(); if (imported.kind !== "identifier") return null;
-        let local = imported.text;
-        if (this.consume("as")) { const alias = this.take(); if (alias.kind !== "identifier") return null; local = alias.text; }
-        rows.push({ local, imported: imported.text, runtime: !clauseType && !typeOnly, module: "" });
-        if (!this.consume(",") && this.peek().text !== "}") return null;
-      }
-    }
-    if (!this.consume("from") || this.peek().kind !== "string") return null;
-    const module = this.take().text.slice(1, -1);
-    this.consume(";");
-    return { kind: "import", imports: rows.map((row) => ({ ...row, module })) };
-  }
-  private classStatement(): EcmaRouteStatement | null {
-    this.take(); const name = this.take();
-    if (name.kind !== "identifier" || !this.consume("extends")) return null;
-    const base = this.expression(10);
-    if (!base || !this.consume("{")) return null;
-    const methods: EcmaRouteStatement[] = [];
-    while (!this.consume("}")) {
-      if (this.peek().text === "@" || this.peek().kind === "eof") return null;
-      this.consume("async");
-      const method = this.take(); if (method.text !== "run" || !this.consume("(")) return null;
-      const close = this.matching(this.index - 1, "(", ")"); if (close < 0) return null;
-      const parameters = this.parameters(this.tokens.slice(this.index, close)); if (!parameters) return null;
-      this.index = close + 1;
-      if (this.consume(":")) while (this.peek().text !== "{" && this.peek().kind !== "eof") this.index++;
-      const body = this.block(); if (!body) return null;
-      methods.push({ kind: "method", name: "run", parameters, body });
-    }
-    return methods.length === 1 ? { kind: "class", name: name.text, base, body: methods } : null;
-  }
-  private ifStatement(): EcmaRouteStatement | null {
-    this.take(); if (!this.consume("(")) return null;
-    const expression = this.expression(); if (!expression || !this.consume(")")) return null;
-    const then = this.statement(); if (!then) return null;
-    const otherwise = this.consume("else") ? this.statement() ?? undefined : undefined;
-    return { kind: "if", expression, then, otherwise };
-  }
-  private forStatement(): EcmaRouteStatement | null {
-    this.take(); if (!this.consume("(")) return null;
-    const kind = this.take(); if (kind.text !== "const") return null;
-    const start = this.index;
-    while (this.peek().text !== "of" && this.peek().kind !== "eof") this.index++;
-    const initializer = this.pattern(this.tokens.slice(start, this.index));
-    if (!initializer || !this.consume("of")) return null;
-    const iterable = this.expression(); if (!iterable || !this.consume(")")) return null;
-    const statement = this.statement();
-    return statement ? { kind: "for", initializer, iterable, statement } : null;
-  }
-  private block(): readonly EcmaRouteStatement[] | null {
-    if (!this.consume("{")) return null;
-    const rows: EcmaRouteStatement[] = [];
-    while (!this.consume("}")) {
-      const row = this.statement(); if (!row) return null;
-      rows.push(row);
-    }
-    return rows;
-  }
-  private statement(): EcmaRouteStatement | null {
-    while (this.consume(";")) {}
-    if (this.peek().kind === "eof" || this.peek().text === "}") return null;
-    if (this.peek().text === "import" && this.peek(1).text !== "(") return this.importStatement();
-    if (this.peek().text === "export" || this.peek().text === "function" || this.peek().text === "@") return null;
-    if (this.peek().text === "class") return this.classStatement();
-    if (["const", "let", "var"].includes(this.peek().text)) return this.variable(this.peek().text);
-    if (this.peek().text === "if") return this.ifStatement();
-    if (this.peek().text === "for") return this.forStatement();
-    if (this.peek().text === "{") { const body = this.block(); return body ? { kind: "block", body } : null; }
-    if (this.consume("return")) {
-      if (this.consume(";")) return { kind: "return" };
-      const expression = this.expression(); if (!expression) return null;
-      this.consume(";"); return { kind: "return", expression };
-    }
-    if (this.consume("throw")) {
-      const expression = this.expression(); if (!expression) return null;
-      this.consume(";"); return { kind: "throw", expression };
-    }
-    const expression = this.expression(); if (!expression) return null;
-    this.consume(";"); return { kind: "expression", expression };
-  }
-  program(): readonly EcmaRouteStatement[] | null {
-    const rows: EcmaRouteStatement[] = [];
-    while (this.peek().kind !== "eof") {
-      const row = this.statement(); if (!row) return null;
-      rows.push(row);
-    }
-    return rows;
-  }
-}
-
 type EcmaRouteValue = "invalid" | "data" | "finite" | "receipt" | "module" | "closure" | "router" | "error" | "console" | "process";
 
 interface EcmaRouteValidation {
@@ -10984,11 +10547,11 @@ interface EcmaRouteValidation {
   readonly wiredClasses: Set<string>;
 }
 
-function ecmaRouteUnwrap(expression: EcmaRouteExpression): EcmaRouteExpression {
+function ecmaRouteUnwrap(expression: EcmaExpression): EcmaExpression {
   return ["unary", "parenthesized", "nonnull"].includes(expression.kind) && (expression.kind !== "unary" || expression.operator === "await") ? ecmaRouteUnwrap(expression.object!) : expression;
 }
 
-function ecmaRouteIdentifier(expression: EcmaRouteExpression): string | null {
+function ecmaRouteIdentifier(expression: EcmaExpression): string | null {
   const value = ecmaRouteUnwrap(expression);
   return value.kind === "identifier" ? value.name! : null;
 }
@@ -11000,7 +10563,7 @@ function ecmaRouteIntrinsic(scope: EcmaRouteScope, name: string): EcmaRouteValue
   return name === "Error" ? "error" : "invalid";
 }
 
-function ecmaRouteImportedRoot(expression: EcmaRouteExpression, scope: EcmaRouteScope): EcmaRouteBinding | undefined {
+function ecmaRouteImportedRoot(expression: EcmaExpression, scope: EcmaRouteScope): EcmaRouteBinding | undefined {
   let value = ecmaRouteUnwrap(expression);
   while (value.kind === "member") value = ecmaRouteUnwrap(value.object!);
   const name = ecmaRouteIdentifier(value);
@@ -11008,20 +10571,20 @@ function ecmaRouteImportedRoot(expression: EcmaRouteExpression, scope: EcmaRoute
   return binding?.kind === "import-value" ? binding : undefined;
 }
 
-function ecmaRouteArgument(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteArgument(expression: EcmaExpression, scope: EcmaRouteScope): boolean {
   return ["data", "finite", "receipt", "closure", "router"].includes(ecmaRouteValue(expression, scope));
 }
 
-function ecmaRouteClosure(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteClosure(expression: EcmaExpression, scope: EcmaRouteScope): boolean {
   if (expression.kind !== "arrow" || expression.parameters?.some((pattern) => pattern.defaults || pattern.destructured)) return false;
   const nested = new EcmaRouteScope(scope);
   for (const pattern of expression.parameters ?? []) for (const name of pattern.names) if (!nested.define(name, { kind: "parameter" })) return false;
   if (Array.isArray(expression.body)) return ecmaRouteBlock(expression.body, nested, { terminals: 0, classes: new Set(), wiredClasses: new Set() }, true, true);
-  const value = ecmaRouteValue(expression.body as EcmaRouteExpression, nested);
+  const value = ecmaRouteValue(expression.body as EcmaExpression, nested);
   return value === "receipt";
 }
 
-function ecmaRouteCollectionCall(expression: EcmaRouteExpression, scope: EcmaRouteScope): EcmaRouteValue {
+function ecmaRouteCollectionCall(expression: EcmaExpression, scope: EcmaRouteScope): EcmaRouteValue {
   const callee = ecmaRouteUnwrap(expression.callee!), receiver = callee.object!, member = typeof callee.property === "string" ? callee.property : "";
   const receiverValue = ecmaRouteValue(receiver, scope), args = expression.arguments ?? [];
   if (member === "at" || member === "includes") return args.every((argument) => ecmaRouteArgument(argument, scope)) && ["data", "finite", "receipt"].includes(receiverValue) ? "data" : "invalid";
@@ -11031,7 +10594,7 @@ function ecmaRouteCollectionCall(expression: EcmaRouteExpression, scope: EcmaRou
     const arrow = args[0]!, pattern = arrow.parameters?.[0];
     if (!pattern || arrow.parameters!.length !== 1 || pattern.defaults || pattern.destructured || Array.isArray(arrow.body)) return "invalid";
     const nested = new EcmaRouteScope(scope); nested.define(pattern.names[0]!, { kind: "parameter" });
-    return ecmaRouteValue(arrow.body as EcmaRouteExpression, nested) === "data" ? "data" : "invalid";
+    return ecmaRouteValue(arrow.body as EcmaExpression, nested) === "data" ? "data" : "invalid";
   }
   if (member !== "map" && member !== "flatMap" || receiverValue !== "finite" || args.length !== 1 || args[0]!.kind !== "arrow") return "invalid";
   const arrow = args[0]!, pattern = arrow.parameters?.[0];
@@ -11039,11 +10602,11 @@ function ecmaRouteCollectionCall(expression: EcmaRouteExpression, scope: EcmaRou
   const nested = new EcmaRouteScope(scope); nested.define(pattern.names[0]!, { kind: "parameter" });
   if (Array.isArray(arrow.body)) {
     if (!ecmaRouteBlock(arrow.body, nested, { terminals: 0, classes: new Set(), wiredClasses: new Set() }, false, true)) return "invalid";
-  } else if (!ecmaRouteArgument(arrow.body as EcmaRouteExpression, nested)) return "invalid";
+  } else if (!ecmaRouteArgument(arrow.body as EcmaExpression, nested)) return "invalid";
   return "finite";
 }
 
-function ecmaRouteRegistrationValue(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteRegistrationValue(expression: EcmaExpression, scope: EcmaRouteScope): boolean {
   const value = ecmaRouteUnwrap(expression);
   if (value.kind === "literal" || value.kind === "regex") return true;
   if (value.kind === "identifier") {
@@ -11064,7 +10627,7 @@ function ecmaRouteRegistrationValue(expression: EcmaRouteExpression, scope: Ecma
   return false;
 }
 
-function ecmaRouteValue(expression: EcmaRouteExpression, scope: EcmaRouteScope): EcmaRouteValue {
+function ecmaRouteValue(expression: EcmaExpression, scope: EcmaRouteScope): EcmaRouteValue {
   if (expression.kind === "unary") {
     if (expression.operator === "await") return ecmaRouteValue(expression.object!, scope);
     return expression.operator === "!" && ecmaRouteArgument(expression.object!, scope) ? "data" : "invalid";
@@ -11125,13 +10688,13 @@ function ecmaRouteValue(expression: EcmaRouteExpression, scope: EcmaRouteScope):
   return imported && value.arguments!.every((row) => ecmaRouteArgument(row, scope)) ? "receipt" : "invalid";
 }
 
-function ecmaRouteStatus(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteStatus(expression: EcmaExpression, scope: EcmaRouteScope): boolean {
   const value = ecmaRouteUnwrap(expression);
   if (value.kind === "binary" && value.operator === "+") return ecmaRouteStatus(value.left!, scope) && ecmaRouteStatus(value.right!, scope);
   return ecmaRouteArgument(value, scope);
 }
 
-function ecmaRouteDefine(pattern: EcmaRoutePattern, initializer: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteDefine(pattern: EcmaPattern, initializer: EcmaExpression, scope: EcmaRouteScope): boolean {
   if (pattern.defaults) return false;
   const value = ecmaRouteValue(initializer, scope);
   if (value === "invalid" || value === "console" || value === "process" || value === "error") return false;
@@ -11141,7 +10704,7 @@ function ecmaRouteDefine(pattern: EcmaRoutePattern, initializer: EcmaRouteExpres
   return pattern.names.every((name) => scope.initialize(name, { kind }));
 }
 
-function ecmaRoutePrebind(rows: readonly EcmaRouteStatement[], scope: EcmaRouteScope): boolean {
+function ecmaRoutePrebind(rows: readonly EcmaStatement[], scope: EcmaRouteScope): boolean {
   for (const row of rows) {
     if (row.kind === "class") {
       if (!row.name || !scope.define(row.name, { kind: "pending" })) return false;
@@ -11153,7 +10716,7 @@ function ecmaRoutePrebind(rows: readonly EcmaRouteStatement[], scope: EcmaRouteS
   return true;
 }
 
-function ecmaRouteEnvironment(statement: EcmaRouteStatement, scope: EcmaRouteScope): boolean {
+function ecmaRouteEnvironment(statement: EcmaStatement, scope: EcmaRouteScope): boolean {
   if (statement.kind !== "expression" || statement.expression?.kind !== "assignment" || statement.expression.operator !== "??=") return false;
   const left = statement.expression.left!, right = statement.expression.right!;
   if (right.kind !== "literal" || !/^["'\d]/u.test(right.value ?? "") || left.kind !== "member" || typeof left.property !== "string" || !/^[A-Z][A-Z0-9_]*$/u.test(left.property)) return false;
@@ -11161,7 +10724,7 @@ function ecmaRouteEnvironment(statement: EcmaRouteStatement, scope: EcmaRouteSco
   return env.kind === "member" && env.property === "env" && ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(env.object!) ?? "") === "process";
 }
 
-function ecmaRouteEnvironmentGuard(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteEnvironmentGuard(expression: EcmaExpression, scope: EcmaRouteScope): boolean {
   const value = ecmaRouteUnwrap(expression);
   if (value.kind !== "binary" || value.operator !== "===" || value.right?.kind !== "literal") return false;
   const left = ecmaRouteUnwrap(value.left!);
@@ -11170,14 +10733,14 @@ function ecmaRouteEnvironmentGuard(expression: EcmaRouteExpression, scope: EcmaR
   return argv.kind === "member" && argv.property === "argv" && ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(argv.object!) ?? "") === "process";
 }
 
-function ecmaRouteImportMetaMember(expression: EcmaRouteExpression, member: string, scope: EcmaRouteScope): boolean {
+function ecmaRouteImportMetaMember(expression: EcmaExpression, member: string, scope: EcmaRouteScope): boolean {
   const value = ecmaRouteUnwrap(expression);
   if (value.kind !== "member" || value.property !== member || value.optional) return false;
   const meta = ecmaRouteUnwrap(value.object!);
   return meta.kind === "member" && meta.property === "meta" && !meta.optional && ecmaRouteIdentifier(meta.object!) === "import" && !scope.resolve("import");
 }
 
-function ecmaRouteBlock(rows: readonly EcmaRouteStatement[], scope: EcmaRouteScope, validation: EcmaRouteValidation, guarded = false, closure = false, maximum = 64): boolean {
+function ecmaRouteBlock(rows: readonly EcmaStatement[], scope: EcmaRouteScope, validation: EcmaRouteValidation, guarded = false, closure = false, maximum = 64): boolean {
   if (rows.length === 0 || rows.length > maximum || !ecmaRoutePrebind(rows, scope)) return false;
   for (const row of rows) {
     if (row.kind === "const") {
@@ -11204,7 +10767,7 @@ function ecmaRouteBlock(rows: readonly EcmaRouteStatement[], scope: EcmaRouteSco
     }
     if (row.kind === "if") {
       if (!ecmaRouteArgument(row.expression!, scope)) return false;
-      const branch = (statement: EcmaRouteStatement): boolean => ecmaRouteBlock(statement.kind === "block" ? statement.body! : [statement], new EcmaRouteScope(scope), validation, true, closure, maximum);
+      const branch = (statement: EcmaStatement): boolean => ecmaRouteBlock(statement.kind === "block" ? statement.body! : [statement], new EcmaRouteScope(scope), validation, true, closure, maximum);
       if (!branch(row.then!) || row.otherwise && !branch(row.otherwise)) return false;
       continue;
     }
@@ -11221,7 +10784,7 @@ function ecmaRouteBlock(rows: readonly EcmaRouteStatement[], scope: EcmaRouteSco
   return true;
 }
 
-function ecmaRouteRouter(expression: EcmaRouteExpression, scope: EcmaRouteScope, validation: EcmaRouteValidation): boolean {
+function ecmaRouteRouter(expression: EcmaExpression, scope: EcmaRouteScope, validation: EcmaRouteValidation): boolean {
   const value = ecmaRouteUnwrap(expression);
   if (value.kind === "identifier") return scope.resolve(value.name!)?.kind === "router";
   if (value.kind === "new") {
@@ -11231,7 +10794,7 @@ function ecmaRouteRouter(expression: EcmaRouteExpression, scope: EcmaRouteScope,
     const callee = ecmaRouteUnwrap(value.callee!);
     if (callee.kind !== "member" || callee.property !== "register" || !ecmaRouteRouter(callee.object!, scope, validation)) return false;
   } else return false;
-  const inspect = (argument: EcmaRouteExpression): boolean => {
+  const inspect = (argument: EcmaExpression): boolean => {
     const item = ecmaRouteUnwrap(argument);
     if (item.kind === "identifier") {
       const binding = scope.resolve(item.name!);
@@ -11245,7 +10808,7 @@ function ecmaRouteRouter(expression: EcmaRouteExpression, scope: EcmaRouteScope,
   return (value.arguments ?? []).every(inspect);
 }
 
-function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard = false): boolean {
+function ecmaRouteTerminal(statement: EcmaStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard = false): boolean {
   if (statement.kind !== "expression") return false;
   const expression = ecmaRouteUnwrap(statement.expression!);
   if (expression.kind !== "call") return false;
@@ -11265,12 +10828,12 @@ function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope,
   return true;
 }
 
-function ecmaRouteTestMetadata(expression: EcmaRouteExpression, member: string, scope: EcmaRouteScope): boolean {
+function ecmaRouteTestMetadata(expression: EcmaExpression, member: string, scope: EcmaRouteScope): boolean {
   const meta = expression.object;
   return expression.kind === "member" && expression.property === member && !expression.optional && meta?.kind === "member" && meta.property === "meta" && !meta.optional && meta.object?.kind === "identifier" && meta.object.name === "import" && !scope.resolve("import");
 }
 
-function ecmaRouteTestDependency(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+function ecmaRouteTestDependency(expression: EcmaExpression, scope: EcmaRouteScope): boolean {
   if (expression.kind === "parenthesized" || expression.kind === "nonnull") return ecmaRouteTestDependency(expression.object!, scope);
   if (expression.kind === "literal") return expression.value !== "undefined";
   if (expression.kind === "identifier") {
@@ -11282,7 +10845,7 @@ function ecmaRouteTestDependency(expression: EcmaRouteExpression, scope: EcmaRou
   return expression.kind === "object" && expression.properties!.every((row) => !row.computed && ecmaRouteTestDependency(row.value, scope));
 }
 
-function ecmaRouteTestRegistration(statement: EcmaRouteStatement, scope: EcmaRouteScope): boolean {
+function ecmaRouteTestRegistration(statement: EcmaStatement, scope: EcmaRouteScope): boolean {
   if (statement.otherwise || statement.then?.kind !== "block" || statement.then.body?.length !== 2) return false;
   const [declaration, invocation] = statement.then.body;
   if (declaration?.kind !== "const" || declaration.declarations?.length !== 1 || invocation?.kind !== "expression") return false;
@@ -11305,7 +10868,7 @@ function ecmaRouteTestRegistration(statement: EcmaRouteStatement, scope: EcmaRou
 
 /** 🚦️ Recognizes only value-bound, lexically scoped command routing. */
 function ecmaCommandRouterModule(content: string, grammar: PackageGlueGrammarSpec): boolean {
-  const parser = new EcmaRouteParser(ecmaRouteTokens(content)), program = parser.program();
+  const program = ecmaProgram(content);
   if (!program) return false;
   const scope = new EcmaRouteScope(), validation: EcmaRouteValidation = { terminals: 0, classes: new Set(), wiredClasses: new Set() };
   let environmentDefaults = 0, testRegistrations = 0;

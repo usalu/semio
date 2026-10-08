@@ -278,7 +278,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 self.phase = RasterStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -308,7 +308,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 semio_framework_job::StepOutcome::Yield
             }
             RasterStoreInitializationPhase::CloneInitial => {
-                let source = &self.envelope.as_ref().expect("Raster envelope remains retained during initial clone").vcs.genesis.snapshot();
+                let source = &self.envelope.as_ref().expect("Raster envelope remains retained during initial clone").vcs.genesis.facts().snapshot();
                 let clone = self.clone.as_mut().expect("Raster initial clone authority remains retained");
                 if clone.bounds.terminal && self.control_reservation.is_none() {
                     if !raster_reserve_unit(cx) {
@@ -1007,6 +1007,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ApplyFilter(value) => Some(&value.layer_id),
             RasterMutation::TransformImage(value) => Some(&value.layer_id),
             RasterMutation::FillSelection(value) => Some(&value.layer_id),
+            RasterMutation::WritePixelRegion(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
     }
@@ -1331,7 +1332,7 @@ impl RasterMutationCandidateAuthority {
                         let (key, child) = removed.take();
                         *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(child) })));
                     }
-                    RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) | RasterMutation::ApplyFilter(_) | RasterMutation::TransformImage(_) | RasterMutation::FillSelection(_) => {
+                    RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) | RasterMutation::ApplyFilter(_) | RasterMutation::TransformImage(_) | RasterMutation::FillSelection(_) | RasterMutation::WritePixelRegion(_) => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -2034,6 +2035,7 @@ impl RasterOwnedRetirement {
             ApplyFilter(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.filter), third: None },
             TransformImage(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.operation), third: None },
             FillSelection(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: None },
+            WritePixelRegion(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: None },
         }
     }
 

@@ -7,7 +7,8 @@
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -45,7 +46,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-node/deletes-the-tambour-and-severs-its-ten-edges: inverse did not restore the before-snapshot");
@@ -86,11 +87,11 @@ fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-node/deletes-the-tambour-and-severs-its-ten-edges: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["nodes"]["removed"].as_array().map(Vec::len), Some(1), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: the diff must record exactly 1 removed node id(s)");
-    assert_eq!(committed["nodes"]["removed"][0].as_str(), Some("17d5dec8-87b2-44a9-84ff-93b7e7419bdd"), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: removals are recorded as bare ids");
-    assert!(committed["nodes"]["reordered"].is_null(), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: a null index must leave reordered unset");
+    assert_eq!(committed["nodes"]["removed"][0]["id"].as_str(), Some("17d5dec8-87b2-44a9-84ff-93b7e7419bdd"), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: removals are recorded as bare ids");
+    assert!(committed["nodes"]["moved"].as_array().is_some_and(Vec::is_empty), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: this diff moves no row");
     assert_eq!(committed["edges"]["removed"].as_array().map(Vec::len), Some(10), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: the diff must record exactly 10 removed edge id(s)");
-    assert_eq!(committed["edges"]["removed"][0].as_str(), Some("015032e9-67ed-4736-adab-a6e10351079b"), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: removals are recorded as bare ids");
-    assert!(committed["edges"]["reordered"].is_null(), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: a null index must leave reordered unset");
+    assert_eq!(committed["edges"]["removed"][0]["id"].as_str(), Some("015032e9-67ed-4736-adab-a6e10351079b"), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: removals are recorded as bare ids");
+    assert!(committed["edges"]["moved"].as_array().is_some_and(Vec::is_empty), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: this diff moves no row");
     assert!(committed["meta"].is_null(), "delete-node/deletes-the-tambour-and-severs-its-ten-edges: this mutation must never touch the document meta");
 }
 

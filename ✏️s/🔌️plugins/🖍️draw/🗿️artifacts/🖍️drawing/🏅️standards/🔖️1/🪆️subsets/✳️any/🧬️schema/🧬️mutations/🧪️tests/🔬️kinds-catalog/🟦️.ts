@@ -55,7 +55,7 @@ it("mutation blend vocabulary is strict while owned layer blend identifiers are 
     if (accepted) {
       expect(parseDrawingLayerNode(root)).toEqual(root);
       expect(parseDrawingLayerPatch({blendMode:patch.value}).blendMode).toBe(patch.value);
-      expect(blendDiff(mutation as never).layers.patched[0]!.patch.blendMode).toBe(patch.value);
+      expect(blendDiff(mutation as never).layers.modified[0]!.patch.blendMode).toBe(patch.value);
     } else {
       expect(() => parseDrawingLayerPatch({blendMode:patch.value})).toThrow();
       expect(() => blendDiff(mutation as never)).toThrow();

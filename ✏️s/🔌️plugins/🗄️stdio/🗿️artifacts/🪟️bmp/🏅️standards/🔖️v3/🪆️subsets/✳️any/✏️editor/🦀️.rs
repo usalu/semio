@@ -264,10 +264,6 @@ impl ArtifactEditor for BmpEditor {
         crate::standards::v_v3::subsets::any::io::decode_bmp(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(BmpMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image:snapshot.image }))
-    }
-
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
         const OWNER_FILE: &str = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🦀️.rs";
         const CONTROLLER: &str = "s.stdio.bmp@v3/*#editor";
@@ -421,8 +417,44 @@ impl editing::SnapshotEditingEditor for BmpEditor {
             BmpEditCommand::Native(_) => None,
         }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net_exact(event,snapshot,|before,after|if before.image==after.image{Vec::new()}else{vec![BmpMutation::ReplaceImage(crate::schema::mutations::ReplaceImage{image:after.image.clone()})]})
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::bmp::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::schema::mutations::{BmpMutation, ReplaceSamples};
+        use crate::schema::snapshot::{BmpNativeSample, BmpPixels, BmpRegion};
+        let editing::SnapshotEditEvent::SetValue { path, value: semio_framework_value::DslValue::Number(number) } = event else { return Ok(None) };
+        let image = &snapshot.image;
+        let value = u32::try_from(number.as_u64().ok_or_else(|| Fault::from("a BMP sample is an unsigned integer"))?).map_err(|_| Fault::from("a BMP sample is a 32-bit unsigned integer"))?;
+        let at = |ordinal: usize| -> Result<BmpRegion, Fault> {
+            let width = image.width as usize;
+            if width == 0 || ordinal >= width * image.height as usize {
+                return Err(Fault::from(format!("sample {ordinal} is outside the image")));
+            }
+            Ok(BmpRegion { x: (ordinal % width) as u32, y: (ordinal / width) as u32, width: 1, height: 1 })
+        };
+        match (&image.pixels, path.strip_prefix("/image/pixels/")) {
+            (BmpPixels::Indexed { .. }, Some(rest)) => {
+                let Some(ordinal) = rest.strip_prefix("indices/").and_then(|ordinal| ordinal.parse::<usize>().ok()) else { return Ok(None) };
+                let index = u8::try_from(value).map_err(|_| Fault::from("a palette index is an 8-bit unsigned integer"))?;
+                Ok(Some(vec![BmpMutation::ReplaceSamples(ReplaceSamples { region: at(ordinal)?, indices: vec![index], samples: Vec::new() })]))
+            }
+            (BmpPixels::Direct { samples }, Some(rest)) => {
+                let Some((ordinal, field)) = rest.strip_prefix("samples/").and_then(|rest| rest.split_once('/')) else { return Ok(None) };
+                let Ok(ordinal) = ordinal.parse::<usize>() else { return Ok(None) };
+                let mut sample: BmpNativeSample = *samples.get(ordinal).ok_or_else(|| Fault::from(format!("sample {ordinal} is outside the image")))?;
+                match field {
+                    "red" => sample.red = value,
+                    "green" => sample.green = value,
+                    "blue" => sample.blue = value,
+                    "alpha" => sample.alpha = value,
+                    "reserved" => sample.reserved = value,
+                    _ => return Ok(None),
+                }
+                Ok(Some(vec![BmpMutation::ReplaceSamples(ReplaceSamples { region: at(ordinal)?, indices: Vec::new(), samples: vec![sample] })]))
+            }
+            _ => Ok(None),
+        }
     }
 }
 

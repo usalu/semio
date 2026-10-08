@@ -132,7 +132,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation;
+    
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_tsv::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::io::text::snapshot::{print_tsv_document};
@@ -156,7 +156,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_tsv_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         let output = encode_tsv(&snapshot).into_bytes();
         let projection = project_tsv_grid(&output)?;
         Ok(Outcome::with_raw(output, projection))
@@ -168,9 +168,9 @@ mod subject {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let undo = mutation_inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_tsv_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_tsv_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         let output = encode_tsv(&snapshot).into_bytes();
         let projection = project_tsv_grid(&output)?;

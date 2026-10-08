@@ -22,6 +22,7 @@ test("Puzzle2d optional text candidate changes only first original owner and ret
  }}finally{db.close()}
  console.log("[DEBUG] optional text candidates match fourteen SQLite first-owner/RFC6902 cases; duplicates and source retained",fixture.pausePoints);
  const path=resolve(import.meta.dir,"../🦀️.rs");expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");
- for(const marker of ["Puzzle2dTextCandidateCursor","Puzzle2dTextPreparationCursor","RetainedFieldCursor","ControlledRetirement","displaced","close_granted","RetainedCloneBinding::close_one"])expect(source).toContain(marker);
+ for(const marker of ["Puzzle2dTextCandidateCursor","Puzzle2dTextPreparationCursor","RetainedFieldCursor","ControlledRetirement","displaced","self.snapshot_clone.close_step(grant)","self.preparation.close_step(grant)","RetainedCloneBinding::close_one"])expect(source).toContain(marker);
+ expect(source).not.toContain("SnapshotRetirementStep");
  expect(source).not.toMatch(/\.to_string_owner\(|MutationKind::(?:diff|inverse)|\.collect\(|vec!\[/u);
 });

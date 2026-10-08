@@ -4,6 +4,8 @@ enum PngNativeProfile { INDEXED GRAYSCALE GRAYSCALE_ALPHA RGB RGBA }
 input PngNativeRegion { x: Int! y: Int! width: Int! height: Int! }
 input PngNativePaint { profile: PngNativeProfile! first: Int! second: Int! third: Int! fourth: Int! }
 input PaintNativeSamplesMutation { revision: String! region: PngNativeRegion! paint: PngNativePaint! }
-input PngMutation @oneOf { replaceImage: ReplaceImage  patchPixels: PatchPixelsMutation changeGamma: ChangeGammaMutation paintNativeSamples: PaintNativeSamplesMutation }
+input SetGamma { gama: Int }
+input ReplaceSamples { region: PngNativeRegion! samples: [Int!]! }
+input PngMutation @oneOf { replaceImage: ReplaceImage  patchPixels: PatchPixelsMutation changeGamma: ChangeGammaMutation paintNativeSamples: PaintNativeSamplesMutation setGamma: SetGamma replaceSamples: ReplaceSamples }
 
 input ReplaceImage { image: PngImageInput! }

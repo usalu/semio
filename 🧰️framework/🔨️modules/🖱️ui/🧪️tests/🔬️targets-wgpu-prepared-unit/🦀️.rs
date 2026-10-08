@@ -1,4 +1,85 @@
 use super::*;
+
+fn close_packet_step(packet: &mut PreparedRenderPacket) -> bool {
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    let grant = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..packet.next_close_demands(16 * 1024).unwrap() };
+    match packet.close_step(grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(packet.retirement_is_empty()); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original packet refused admitted close: {kind:?}"),
+    }
+}
+fn close_abandoned_packet_step() -> bool {
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    let grant = PreparedRenderPacket::next_abandoned_close_demands(16 * 1024).unwrap();
+    match PreparedRenderPacket::close_abandoned_step(grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original abandoned packet refused admitted close: {kind:?}"),
+    }
+}
+fn close_abandoned_mailbox_step() -> bool {
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    let grant = PreparedRenderReceiver::next_abandoned_close_demands(16 * 1024).unwrap();
+    match PreparedRenderReceiver::close_abandoned_step(grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original abandoned mailbox refused admitted close: {kind:?}"),
+    }
+}
+
+
+fn close_job_step(job: &mut PreparedRenderJob) -> bool {
+    use semio_framework_job::{InteractiveJobCloseStep as Close, RetainedCloneGrant};
+    InteractiveJob::begin_close(job);
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(job, 1).unwrap(), maximum_release_bytes: InteractiveJob::next_close_release_byte_demand(job).unwrap(), maximum_depth: InteractiveJob::next_close_depth_demand(job).unwrap() };
+    match InteractiveJob::close_step(job, grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(job.terminal_is_empty()); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original prepared owner refused admitted close: {kind:?}"),
+    }
+}
+fn close_abandoned_job_step() -> bool {
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    let grant = PreparedRenderJob::next_abandoned_close_demands(1).unwrap();
+    match PreparedRenderJob::close_abandoned_step(grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original abandoned owner refused admitted close: {kind:?}"),
+    }
+}
+
+fn close_abandoned_input_step() -> bool {
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    let grant = PreparedRenderInput::next_abandoned_close_demands(16 * 1024).unwrap();
+    match PreparedRenderInput::close_abandoned_step(grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original abandoned input refused admitted close: {kind:?}"),
+    }
+}
+
+fn close_abandoned_atlas_step() -> bool {
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    let grant = PreparedAtlasPages::next_abandoned_close_demands(16 * 1024).unwrap();
+    match PreparedAtlasPages::close_abandoned_step(grant) {
+        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
+        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
+        Close::Blocked => false,
+        Close::Refused(kind) => panic!("original abandoned atlas refused admitted close: {kind:?}"),
+    }
+}
+
+
+#[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32")))]
+#[path = "../♻️physical-job-close/🎟️prepared/🦀️.rs"]
+mod physical_job_close_laws;
 use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveStage, OperationId, StepBudget};
 
 #[test]
@@ -24,8 +105,8 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
             assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
             let mut packet = job.take_packet().expect("measured packet");
             assert_eq!(packet.has_animated_primitives(), row["active"].as_bool().unwrap(), "{}", row["id"]);
-            while !packet.retire_step() {}
-            while !job.close_step() {}
+            while !close_packet_step(&mut packet) {}
+            while !close_job_step(&mut job) {}
         }
     }
 }
@@ -62,15 +143,15 @@ fn prepared_process_guard() -> std::sync::MutexGuard<'static, ()> {
 }
 
 fn drain_abandoned_atlases() {
-    while !PreparedAtlasPages::close_abandoned_step() {}
+    while !close_abandoned_atlas_step() {}
 }
 
 fn drain_abandoned_preparations() {
     loop {
-        let inputs = PreparedRenderInput::close_abandoned_step();
-        let jobs = PreparedRenderJob::close_abandoned_step();
-        let mailboxes = PreparedRenderReceiver::close_abandoned_step();
-        let packets = PreparedRenderPacket::close_abandoned_step();
+        let inputs = close_abandoned_input_step();
+        let jobs = close_abandoned_job_step();
+        let mailboxes = close_abandoned_mailbox_step();
+        let packets = close_abandoned_packet_step();
         if inputs && jobs && mailboxes && packets {
             break;
         }
@@ -279,7 +360,7 @@ fn abandoned_atlas_schedules_the_same_incremental_close_authority() {
     assert!(owner.push_page(&[7; 32], 0).is_ok());
     drop(owner);
     let mut turns = 0;
-    while !PreparedAtlasPages::close_abandoned_step() {
+    while !close_abandoned_atlas_step() {
         turns += 1;
         assert!(turns < 16, "one page, backing owner, and four permit fields must converge");
     }
@@ -302,7 +383,7 @@ fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
     assert_eq!(owner.len(), 1);
     drop(owner);
     let mut turns = 0;
-    while !PreparedAtlasPages::close_abandoned_step() {
+    while !close_abandoned_atlas_step() {
         turns += 1;
         assert!(turns < 16);
     }
@@ -402,7 +483,7 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
         assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.len(), expected);
     }
     assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.as_ptr(), retained_pointer);
-    while !job.close_step() {}
+    while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
 }
 
@@ -575,7 +656,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX), root_cancel_token(), now_ms, &mut preview, &mut None);
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert_eq!(job.fault(), Some("raster producer generation is stale"));
-    while !job.close_step() {}
+    while !close_job_step(&mut job) {}
 
     let (mut bound, _) = PreparedRasterProducer::try_admit("bound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     assert!(bound.bind_frame_generation(3));
@@ -585,7 +666,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX), root_cancel_token(), now_ms, &mut preview, &mut None);
     assert!(matches!(outcome, StepOutcome::Yield));
     assert_eq!(job.fault(), None);
-    while !job.close_step() {}
+    while !close_job_step(&mut job) {}
 }
 
 #[test]
@@ -654,7 +735,7 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     assert_eq!(retained.source.as_ptr(), source_pointer);
     assert!(retained.pages.as_ref().unwrap().slots.is_empty());
 
-    while !job.close_step() {}
+    while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
 }
 
@@ -664,10 +745,10 @@ fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 }).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
-    assert!(!job.close_step());
+    assert!(!close_job_step(&mut job));
     assert!(!job.terminal_is_empty());
     let mut turns = 1;
-    while !job.close_step() {
+    while !close_job_step(&mut job) {
         turns += 1;
         assert!(turns < 5_000);
     }
@@ -738,8 +819,8 @@ fn preparation_completes_across_bounded_steps() {
     assert!(matches!(outcome, StepOutcome::Complete(_)));
     let mut packet = job.take_packet().expect("prepared packet");
     assert_eq!((packet.scene_revision, packet.preview_generation), (7, 3));
-    while !packet.retire_step() {}
-    while !PreparedRenderJob::close_step(&mut job) {}
+    while !close_packet_step(&mut packet) {}
+    while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
 }
 
@@ -812,7 +893,7 @@ fn presenter_ack_is_exact_one_shot_and_preserves_old_until_acknowledged() {
     assert_eq!(replacement.previous.as_ref().map(|packet| (packet.scene_revision, packet.preview_generation)), Some((7, 3)));
     assert!(gate.acknowledge_presented(duplicate).is_err(), "duplicate acknowledgement is stale after publication");
     let mut previous = replacement.take_previous().expect("old last-valid owner");
-    while !previous.retire_step() {}
+    while !close_packet_step(&mut previous) {}
     assert!(previous.retirement_is_empty());
 }
 
@@ -834,10 +915,10 @@ fn accepted_a_stale_b_abort_and_accepted_c_preserve_exact_presenter_owners() {
     assert_eq!(gate.last_valid_identity(), Some((9, 5)), "C alone replaces A after exact acknowledgement");
     let mut first = replacement.take_previous().expect("accepted A owner handback");
     assert_eq!((first.scene_revision, first.preview_generation), (7, 3));
-    while !stale.retire_step() {}
-    while !first.retire_step() {}
+    while !close_packet_step(&mut stale) {}
+    while !close_packet_step(&mut first) {}
     let mut third = gate.take_last_valid().expect("accepted C owner handback");
-    while !third.retire_step() {}
+    while !close_packet_step(&mut third) {}
     while !gate.close_step() {}
     assert!(gate.terminal_is_empty());
 }
@@ -859,7 +940,7 @@ fn pending_presenter_witness_rejects_superseding_packet_with_exact_owner() {
     };
     assert_eq!((returned.scene_revision, returned.preview_generation), (8, 4));
     assert!(matches!(returned.uploads.get(0), Some(PreparedRenderUpload::GlyphAtlas { pixels: returned_pixels, .. }) if returned_pixels.as_ptr() == pixels));
-    assert!(!returned.retire_step(), "one close grant retires only one admitted pixel page");
+    assert!(!close_packet_step(&mut returned), "one close grant retires only one admitted pixel page");
     assert!(matches!(returned.uploads.get(0), Some(PreparedRenderUpload::GlyphAtlas { pixels, .. }) if pixels.len() == 1));
 }
 
@@ -871,7 +952,7 @@ fn gate_close_requires_pending_and_last_valid_packet_handback_before_terminal_sc
     let _ = gate.acknowledge_presented(witness).expect("presenter acknowledgement");
     assert!(!gate.close_step(), "last-valid owner prevents gate terminalization");
     let mut last = gate.take_last_valid().expect("last-valid owner handback");
-    while !last.retire_step() {}
+    while !close_packet_step(&mut last) {}
     assert!(!gate.close_step(), "first scalar grant retires only the sequence");
     assert!(gate.close_step(), "second scalar grant publishes the terminal witness");
     assert!(gate.terminal_is_empty());
@@ -888,7 +969,7 @@ fn upload_byte_cap_faults_before_packet_publication() {
     let outcome = drive_preparation_until_terminal(&mut job);
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert!(job.take_packet().is_none());
-    while !PreparedRenderJob::close_step(&mut job) {}
+    while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
 }
 
@@ -902,7 +983,7 @@ fn eviction_byte_cap_faults_before_packet_publication() {
     let outcome = drive_preparation_until_terminal(&mut job);
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert!(job.take_packet().is_none());
-    while !PreparedRenderJob::close_step(&mut job) {}
+    while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
 }
 
@@ -917,7 +998,7 @@ fn draw_item_cap_faults_before_packet_publication() {
     let outcome = drive_preparation_until_terminal(&mut job);
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert!(job.take_packet().is_none());
-    while !PreparedRenderJob::close_step(&mut job) {}
+    while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
 }
 
@@ -930,7 +1011,7 @@ fn input_drop_hands_back_exact_process_permits_for_incremental_close() {
     drop(input);
     assert_ne!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
     let mut turns = 0;
-    while !PreparedRenderInput::close_abandoned_step() {
+    while !close_abandoned_input_step() {
         turns += 1;
         assert!(turns < 128);
     }
@@ -949,7 +1030,7 @@ fn worker_panic_hands_back_the_exact_job_and_mailbox_owners() {
     }));
     assert!(result.is_err());
     let mut turns = 0;
-    while !PreparedRenderJob::close_abandoned_step() {
+    while !close_abandoned_job_step() {
         turns += 1;
         assert!(turns < 256);
     }
@@ -966,7 +1047,7 @@ fn packet_drop_retires_nested_backings_and_permit_scalars_separately() {
     owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], crate::wgpu::theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
     drop(owner);
     let mut turns = 0;
-    while !PreparedRenderPacket::close_abandoned_step() {
+    while !close_abandoned_packet_step() {
         turns += 1;
         assert!(turns < 256);
     }
@@ -1021,8 +1102,8 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     assert!((0..packet.commands.len())
         .filter_map(|index| packet.commands.get(index))
         .any(|command| { command.kind == PreparedRenderCommandKind::Tessellate && command.draw_cursor == Some(DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false }) && !command.packet_overlay }));
-    while !packet.retire_step() {}
-    while !job.close_step() {}
+    while !close_packet_step(&mut packet) {}
+    while !close_job_step(&mut job) {}
 }
 
 #[test]
@@ -1082,7 +1163,7 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
         }
     }
     assert_eq!(keys, ["main-image", "inline-overlay-image", "top-overlay-image"]);
-    while !packet.retire_step() {}
+    while !close_packet_step(&mut packet) {}
 }
 
 
@@ -1094,3 +1175,43 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
 #[cfg(feature = "wgpu-engine")]
 #[path = "../🔬️targets-wgpu-prepared-engine-unit/🦀️.rs"]
 mod engine_tests;
+
+#[test]
+fn prepared_render_common_close_funds_declared_frontiers_without_losing_original_owners() {
+    let _guard = prepared_process_guard();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️prepared-close/🔣️.json")).unwrap();
+    for row in fixture["grants"].as_array().unwrap() {
+        let grant = semio_framework_job::RetainedCloneGrant {
+            maximum_items: row["items"].as_u64().unwrap() as usize,
+            maximum_copy_bytes: row["copy"].as_u64().unwrap() as usize,
+            maximum_capacity_bytes: row["capacity"].as_u64().unwrap() as usize,
+            maximum_release_bytes: row["release"].as_u64().unwrap() as usize,
+            maximum_depth: row["depth"].as_u64().unwrap() as usize,
+        };
+        let atlas = &fixture["atlas"];
+        let pixels = vec![7; atlas["byteLength"].as_u64().unwrap() as usize];
+        let mut pages = PreparedAtlasPages::try_new(atlas["width"].as_u64().unwrap() as u32, atlas["height"].as_u64().unwrap() as u32, atlas["channels"].as_u64().unwrap() as u8, pixels.len()).unwrap();
+        pages.push_page(&pixels, 0).unwrap();
+        let mut retained_input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+        retained_input.uploads.try_push(PreparedRenderUpload::GlyphAtlasPages { pixels: pages }).unwrap();
+        let mut job = PreparedRenderJob::new(retained_input, 1);
+        let input = job.input.as_ref().unwrap() as *const PreparedRenderInput;
+        assert!(job.commands.take().unwrap().terminal_is_empty());
+        assert_eq!(InteractiveJob::close_step(&mut job, grant), semio_framework_job::InteractiveJobCloseStep::Blocked);
+        InteractiveJob::begin_close(&mut job);
+        let outcome = InteractiveJob::close_step(&mut job, grant);
+        let expected = semio_framework_job::RetainedCloneProgress { copied_items: row["expectedItems"].as_u64().unwrap() as usize, ..Default::default() };
+        assert_eq!(outcome, semio_framework_job::InteractiveJobCloseStep::Pending { progress: expected });
+        assert!(outcome.progress().fits(grant));
+        assert_eq!(job.input.as_ref().unwrap() as *const PreparedRenderInput, input);
+        assert_eq!(job.commands.is_some(), row["commandsRetained"].as_bool().unwrap());
+        assert!(!PreparedRenderJob::terminal_is_empty(&job));
+        assert!(InteractiveJob::next_close_release_byte_demand(&job).is_ok());
+        let mut complete = false;
+        for _ in 0..10_000 { if close_job_step(&mut job) { complete = true; break; } }
+        assert!(complete);
+        assert!(PreparedRenderJob::terminal_is_empty(&job));
+        assert_eq!(InteractiveJob::close_step(&mut job, grant), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
+        println!("[DEBUG] prepared close {} declared=true originalInput=true fullGrantCleanup=true", row["name"].as_str().unwrap());
+    }
+}

@@ -1,11 +1,14 @@
 {
   "nodes": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "n3"
+      {
+        "id": "n3",
+        "index": 2
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "elements": null,
   "regions": null,

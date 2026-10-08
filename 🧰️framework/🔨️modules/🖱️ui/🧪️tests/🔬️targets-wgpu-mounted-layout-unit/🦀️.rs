@@ -97,9 +97,9 @@ fn mounted_layout_actual_glyph_max_plus_one_retains_the_exact_rejected_scalar() 
     assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Fault("layout.glyph-credits")));
     assert_eq!(job.rejected_glyph().map(|owner| owner.scalar), Some('x'));
     job.begin_close();
-    let before = job.glyphs.len();
+    let before = job.glyphs.as_deref().expect("original layout owner").len();
     assert!(!job.close_one());
-    assert_eq!(job.glyphs.len(), before);
+    assert_eq!(job.glyphs.as_deref().expect("original layout owner").len(), before);
     while !job.close_one() {}
     assert!(job.terminal_is_empty());
 }
@@ -112,7 +112,7 @@ fn mounted_layout_actual_node_max_plus_one_retains_the_exact_rejected_tree_owner
     assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Fault("layout.node-credits")));
     let rejected = job.rejected_node().unwrap_or_else(|| panic!("rejected node owner"));
     assert!(tree.contains(rejected.id));
-    assert!(!job.nodes.iter().any(|retained| retained.id == rejected.id));
+    assert!(!job.nodes.as_deref().expect("original layout owner").iter().any(|retained| retained.id == rejected.id));
     job.begin_close();
     while !job.close_one() {}
     assert!(job.terminal_is_empty());
@@ -126,9 +126,9 @@ fn mounted_layout_deep_tree_depth_refusal_retains_walk_authority_for_close() {
     assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Fault("layout.depth-credits")));
     assert!(job.rejected_walk.is_some());
     job.begin_close();
-    let retained = job.nodes.len() + job.walk.len() + usize::from(job.rejected_walk.is_some());
+    let retained = job.nodes.as_deref().expect("original layout owner").len() + job.walk.as_deref().expect("original layout owner").len() + usize::from(job.rejected_walk.is_some());
     assert!(!job.close_one());
-    let after = job.nodes.len() + job.walk.len() + usize::from(job.rejected_walk.is_some());
+    let after = job.nodes.as_deref().expect("original layout owner").len() + job.walk.as_deref().expect("original layout owner").len() + usize::from(job.rejected_walk.is_some());
     assert_eq!(retained - after, 1);
     while !job.close_one() {}
     assert!(job.terminal_is_empty());
@@ -152,7 +152,7 @@ fn mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn()
     assert_eq!(job.glyph_cursor, LAYOUT_GLYPH_CREDITS);
     assert_eq!(job.atlas_candidate.page_cursor, LAYOUT_ATLAS_PAGE_CREDITS - 1);
     assert!(turns > LAYOUT_GLYPH_CREDITS);
-    assert!(job.glyph_previews.iter().all(|preview| preview.generation == 11 && preview.revision == 13));
+    assert!(job.glyph_previews.as_deref().expect("original layout owner").iter().all(|preview| preview.generation == 11 && preview.revision == 13));
     job.begin_close();
     while !job.close_one() {}
     assert!(job.terminal_is_empty());
@@ -185,7 +185,7 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     assert!(session.checked_out_job_mut().is_some_and(|owner| owner.worker_thread_observed()));
     session.begin_close();
     for _ in 0..LAYOUT_GLYPH_CREDITS + LAYOUT_NODE_CREDITS * 4 {
-        let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(session.next_close_demands(0).expect("original layout worker close demands"));
         if session.terminal_is_empty() {
             break;
         }
@@ -229,10 +229,10 @@ fn mounted_layout_deadline_and_partial_close_each_advance_at_most_one_owner() {
     let mut expired = semio_framework_job::StepContext::new(semio_framework_job::OperationId(41), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, 0), cancel, clock_zero, &mut preview);
     assert!(matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut expired), semio_framework_job::StepOutcome::Yield));
     assert_eq!(job.glyph_cursor, 0);
-    let retained = job.glyphs.len() + job.nodes.len() + job.runs.len() + LAYOUT_ATLAS_PAGE_CREDITS;
+    let retained = job.glyphs.as_deref().expect("original layout owner").len() + job.nodes.as_deref().expect("original layout owner").len() + job.runs.as_deref().expect("original layout owner").len() + LAYOUT_ATLAS_PAGE_CREDITS;
     job.begin_close();
     assert!(!job.close_one());
-    let after_one = job.glyphs.len() + job.nodes.len() + job.runs.len() + job.atlas_candidate.pages.iter().filter(|page| page.is_some()).count();
+    let after_one = job.glyphs.as_deref().expect("original layout owner").len() + job.nodes.as_deref().expect("original layout owner").len() + job.runs.as_deref().expect("original layout owner").len() + job.atlas_candidate.pages.iter().filter(|page| page.is_some()).count();
     assert_eq!(retained - after_one, 1);
     while !job.close_one() {}
     assert!(job.terminal_is_empty());

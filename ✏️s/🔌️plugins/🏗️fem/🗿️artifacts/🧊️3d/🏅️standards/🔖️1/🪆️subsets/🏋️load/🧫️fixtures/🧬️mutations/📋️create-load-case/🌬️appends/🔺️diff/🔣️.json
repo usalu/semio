@@ -6,25 +6,28 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [
+    "inserted": [
       {
-        "id": "wind",
-        "name": "Wind X",
-        "loads": [
-          {
-            "kind": "nodal",
-            "id": "w1",
-            "nodeId": "n3",
-            "dof": "Tx",
-            "value": 7.5
-          }
-        ],
-        "selfWeight": false
+        "index": 1,
+        "row": {
+          "id": "wind",
+          "name": "Wind X",
+          "loads": [
+            {
+              "kind": "nodal",
+              "id": "w1",
+              "nodeId": "n3",
+              "dof": "Tx",
+              "value": 7.5
+            }
+          ],
+          "selfWeight": false
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "combinations": null,
   "analysis": null

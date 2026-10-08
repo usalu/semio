@@ -48,6 +48,19 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use crate::standards::v1::subsets::any::schema::mutations::{change_data_fields,change_frame_columns,change_frame_fill,change_frame_stroke,change_frame_wrap_mode,change_link_path,change_page_height,change_page_width,change_print_target,create_frame,create_link,create_page,create_story,delete_frame,delete_link,delete_page,delete_story,drag_frames,edit_story,move_frame,rename_layout,rotate_frames,scale_frames,rename_page,reorder_pages,resize_frame,rotate_frame,set_frame_flags,update_grid,create_character_style,delete_character_style,set_page_guides,set_page_parent,set_story_runs,update_link,set_page_overrides,create_layer,set_frame_layer,set_drawing_text,reorder_frame,update_character_style,update_layer,update_page_columns,update_page_margins,update_paragraph_style,update_parent_page,update_spread,update_text_frame};
 
 
+/// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
+/// no-op kind is a RESULT this bridge reports, never an error it swallows.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn bridge_step(snapshot: &crate::LayoutSnapshot, mutation: &LayoutMutation) -> Result<(crate::LayoutSnapshot, Vec<String>), String> {
+    use protocol::Mutation;
+    let outcome = <LayoutMutation as Mutation<crate::LayoutSnapshot>>::diff(mutation, snapshot);
+    let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
+    match protocol::apply_diff(outcome.diff(), snapshot) {
+        Ok(next) => Ok((next, messages)),
+        Err(error) => Err(format!("{error:?}")),
+    }
+}
+
 /// 🧩️ Decodes one committed `📸️snapshot/⬅️before/🔣️.json` document together with the
 /// `🦠️mutation/🔣️.json` payload beside it — the same bytes the leaf's own fixture test
 /// reads — into real typed values.
@@ -77,7 +90,6 @@ pub(crate) fn bridge_render(snapshot: &LayoutSnapshot, messages: &[String]) -> S
 }
 pub use mutations_wire_codec::*;
 
-use crate::standards::v1::subsets::any::schema::mutations::bridge_step;
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
@@ -102,7 +114,7 @@ pub fn undo_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <LayoutMutation as Mutation<LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+    for undo in <LayoutMutation as Mutation<LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);
@@ -111,3 +123,7 @@ pub fn undo_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
 }
 
 
+
+#[cfg(test)]
+#[path="🔮️oracle/🦀️.rs"]
+mod oracle;

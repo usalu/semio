@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "commands": [
+    {
+      "generalCommand": "hub-live-journey-check",
+      "command": "journey-check",
+      "className": "HubLiveJourneyCheckScript",
+      "laws": [
+        "shell::hub_projection_workspace_tests::a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace"
+      ]
+    },
+    {
+      "generalCommand": "hub-live-creation-check",
+      "command": "creation-check",
+      "className": "HubLiveCreationCheckScript",
+      "laws": [
+        "shell::hub_projection_workspace_tests::a_live_hub_artifact_is_created_through_the_wgpu_creation_door"
+      ]
+    },
+    {
+      "generalCommand": "hub-live-collaboration-check",
+      "command": "collaboration-check",
+      "className": "HubLiveCollaborationCheckScript",
+      "laws": [
+        "shell::hub_projection_workspace_tests::two_live_wgpu_shells_collaborate_on_one_hub_document"
+      ]
+    },
+    {
+      "generalCommand": "hub-collaboration-acceptance",
+      "command": "collaboration-acceptance",
+      "className": "HubCollaborationAcceptanceScript",
+      "laws": []
+    },
+    {
+      "generalCommand": "native-guest-journey-check",
+      "command": "native-guest-journey-check",
+      "className": "NativeGuestJourneyCheckScript",
+      "laws": [
+        "a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub",
+        "a_native_guest_undoes_its_authored_edit_without_a_hub",
+        "a_native_guest_redoes_its_undone_edit_without_a_hub",
+        "a_native_guest_copies_and_pastes_its_selection_without_a_hub"
+      ]
+    }
+  ],
+  "collaboration": {
+    "generalHarness": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🤝️hub-collaboration/🟦️.ts",
+    "specificHarness": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🤝️collaboration/🟦️.ts",
+    "journeys": [
+      "wasm32",
+      "wasm32-react",
+      "wasm32-native",
+      "native-react",
+      "native-react-cursors",
+      "cursors",
+      "agent-pixels"
+    ],
+    "bounds": {
+      "bootMs": 180000,
+      "liveMs": 120000,
+      "presenceMs": 45000,
+      "editSeenMs": 60000,
+      "shortCutMs": 15000,
+      "mediumCutMs": 20000,
+      "expiryMs": 120000,
+      "relinkMs": 60000,
+      "frozenBeatMs": 2000,
+      "keptLineMs": 8000,
+      "cursorSettleMs": 3500,
+      "agentSeenMs": 60000,
+      "agentEditMinPixels": 256,
+      "agentSameMaxPixels": 64,
+      "nativeStepMs": 900000
+    }
+  }
+}

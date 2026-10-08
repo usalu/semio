@@ -32,7 +32,7 @@ impl ColdRetire for Value { fn retire_cold(self) { retirement::retire_value_cold
 impl<T: ColdRetire> ColdRetire for Vec<T> { fn retire_cold(self) { for value in self { value.retire_cold(); } } }
 impl<T: ColdRetire> ColdRetire for Option<T> { fn retire_cold(self) { if let Some(value) = self { value.retire_cold(); } } }
 impl<K, V: ColdRetire> ColdRetire for HashMap<K, V> { fn retire_cold(self) { for (_, value) in self { value.retire_cold(); } } }
-impl<K, V: ColdRetire> ColdRetire for BTreeMap<K, V> { fn retire_cold(self) { for (_, value) in self { value.retire_cold(); } } }
+impl<K:Ord, V: ColdRetire> ColdRetire for HistoryFoldIndex<K, V> { fn retire_cold(self) { for (_, value) in self { value.retire_cold(); } } }
 impl ColdRetire for FieldSpec { fn retire_cold(self) { self.default.retire_cold(); } }
 impl ColdRetire for Schema { fn retire_cold(self) { self.fields.retire_cold(); } }
 impl ColdRetire for ChannelSpec { fn retire_cold(self) { self.default.retire_cold(); } }
@@ -48,7 +48,11 @@ impl ColdRetire for BudgetedEval { fn retire_cold(self) { self.channels.retire_c
 impl ColdRetire for NeuralCache {
     fn retire_cold(self) {
         let mut retirement = NeuralCacheRetirement::new(std::sync::Arc::new(self));
-        while !matches!(retirement.close_step(1, 4096), ValueRetirementStep::Complete) {}
+        while !retirement.terminal_is_empty() {
+            let copy=4096.max(retirement.next_copy_byte_demand().expect("cold cache copy demand"));
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).expect("cold cache capacity demand"),maximum_release_bytes:retirement.next_release_byte_demand().expect("cold cache release demand"),maximum_depth:retirement.next_depth_demand().expect("cold cache depth demand")};
+            retirement.close_step(grant).expect("cold Neural cache retirement");
+        }
     }
 }
 //#endregion 🧬️DomainOwners

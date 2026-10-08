@@ -5,8 +5,8 @@
   "kindCompatibility": null,
   "meta": null,
   "parts": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "part-b",
         "patch": {
@@ -20,8 +20,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetVolumes": null

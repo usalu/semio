@@ -191,7 +191,7 @@ pub(super) fn fixture() -> (Edit<MapMutation>, serde_json::Value, Arc<MapLifetim
 
 fn owner() -> (ArtifactStoreOneItemSealer<u64, MapMutation>, serde_json::Value, Arc<MapLifetime>) {
     let (edit, fixture, lifetime) = fixture();
-    (tests::authority().begin_one_item_seal(edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement)), fixture, lifetime)
+    (tests::admit_sealer(tests::authority(), edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement)), fixture, lifetime)
 }
 
 fn close(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, lifetime: &MapLifetime) {

@@ -5,10 +5,11 @@
 //! COMMITTED `➡️after.obj` of the row's pair (`⬅️before.obj` for an inverse row), answered by `🟦️.ts`, and the
 //! `obj-3-0-document-compare-v1` pipeline reads it and this subject's `actual-obj` with three's OBJLoader. The subject
 //! fully parses the committed `⬅️before.obj` into `ObjSnapshot`, applies the typed mutation through this subset's own
-//! `apply_obj_mutation` and re-serializes from the model alone (no byte pass-through). Every row's `params` is the leaf
+//! `apply_mutation` and re-serializes from the model alone (no byte pass-through). Every row's `params` is the leaf
 //! wire payload, decoded by `ObjMutation`'s own payload constructor; an inverse row applies the kind and then the
 //! production inverse — a re-`set-*` of the value the committed before-document carries.
 
+use semio_s_artifact_stdio_obj::apply_mutation;
 use semio_repo_test_host::Adapter;
 
 //#region 🔖️Subject
@@ -18,7 +19,7 @@ mod subject {
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_obj::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::apply_obj_mutation;
+    
 
     /// 📦️ Runs the row: decodes the committed before-document, applies the row's wire payload decoded by `ObjMutation`'s
     /// own payload constructor (and, for an inverse row, the production inverse computed against the before-document),
@@ -32,9 +33,9 @@ mod subject {
         let kind = spec.str("kind");
         let forward = wire_operation(&kind, &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)?;
         let backward = if undo { mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture") } else { Vec::new() };
-        apply_obj_mutation(&mut snapshot, &forward);
+        apply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
-            apply_obj_mutation(&mut snapshot, mutation);
+            apply_mutation(&mut snapshot, mutation);
         }
         let bytes = encode_obj(&snapshot).into_bytes();
         if !undo && bytes == input {

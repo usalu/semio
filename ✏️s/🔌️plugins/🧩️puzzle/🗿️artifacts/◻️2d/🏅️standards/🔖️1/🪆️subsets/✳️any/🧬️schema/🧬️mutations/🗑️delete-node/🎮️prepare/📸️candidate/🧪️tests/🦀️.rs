@@ -1,7 +1,8 @@
 //! 🧪️ Native deletion preserves first-ID semantics and meters all partial owner retirement.
 
 use super::*;
-use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneBorrowAuthority};
+use semio_framework_value::paged::PagedUtf8;
+use crate::test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -17,8 +18,10 @@ fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<Retained
 
 fn close(cursor: &mut Puzzle2dDeleteNodeCandidateCursor) {
     cursor.begin_close();
-    for turn in 0..1_000_000 { if cursor.terminal_is_empty() { return; }let permit = grant(turn);observed(permit, || cursor.close_step(permit)); }
-    panic!("delete candidate retained native ownership after controlled closure");
+    test_source_custody::close_cursor(cursor,1_000_000,|cursor|{
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
+    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
 }
 
 fn retire(snapshot: Puzzle2dSnapshot) {
@@ -46,7 +49,7 @@ fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and
         snapshot.edges = case["edges"].as_array().unwrap().iter().enumerate().map(|(index, edge)| Puzzle2dEdge { id: text(&edge["id"]), source: text(&edge["source"]), target: text(&edge["target"]), gap: -3.0, shift: index as f64, source_tip: Some("é\0😀".into()), visible: Some(index % 2 == 0), locked: Some(index % 2 != 0), ..Default::default() }).collect();
         let payload = DeleteNode { id: text(&case["target"]) };
         let original = serde_json::to_value(&snapshot).unwrap();let original_payload = serde_json::to_value(&payload).unwrap();
-        let source = RetainedCloneBorrowAuthority::new("delete candidate immutable native snapshot");let mutation = RetainedCloneBorrowAuthority::new("delete candidate original native payload");
+        let mut source = test_source_custody::admit();let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dDeleteNodeCandidateCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observed(RetainedCloneGrant::default(), || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default())).progress(), RetainedCloneProgress::default());
@@ -83,6 +86,7 @@ fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and
         let other = payload.clone();assert!(swapped.advance(source.borrow(&snapshot), mutation.borrow(&other), grant(1)).is_err());close(&mut swapped);
         assert_eq!(serde_json::to_value(&snapshot).unwrap(), original);assert_eq!(serde_json::to_value(&payload).unwrap(), original_payload);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
         count += 1;
         eprintln!("[DEBUG] Puzzle2d DeleteNode candidate {} preserved exact first-ID removal/refusal and full untouched owners with zero-heap construction and granted cascade/clone/removal retirement", case["id"].as_str().unwrap());
     }

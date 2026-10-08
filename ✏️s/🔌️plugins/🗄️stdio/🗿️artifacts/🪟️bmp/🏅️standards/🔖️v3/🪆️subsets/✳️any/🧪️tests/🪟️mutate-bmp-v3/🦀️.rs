@@ -1,5 +1,6 @@
 //! 🦀️ Exhaustive owned BMP mutation, inverse, and logical identity adapter.
 
+use semio_s_artifact_stdio_bmp::apply_mutation;
 use semio_repo_test_host::{Adapter, Context, Outcome, law};
 use semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_identity_round_trip, oracle_undo_mutation, project_bmp_mutation};
 
@@ -48,7 +49,7 @@ mod subject {
     use semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::project_bmp_mutation;
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
     use semio_s_artifact_stdio_bmp::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, BmpSnapshot, ArtifactDsl};
-    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, BmpMutation};
+    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{BmpMutation};
 
     fn mutation_from_spec(spec: &Json) -> Result<BmpMutation, String> {
         law::wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
@@ -56,7 +57,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode_bmp(&mutable_input(ctx)?)?;
-        let _ = apply_bmp_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        let _ = apply_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_bmp(&snapshot)?;
         let projection = project_bmp_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -68,9 +69,9 @@ mod subject {
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
-        let _ = apply_bmp_mutation(&mut snapshot, &mutation);
-        for inverse in mutation_inverse(&mutation, &base).map_err(|error| format!("{error:?}"))? {
-            let _ = apply_bmp_mutation(&mut snapshot, &inverse);
+        let _ = apply_mutation(&mut snapshot, &mutation);
+        for inverse in mutation_inverse(&mutation, &base).map_err(|error| format!("{error:?}"))?.into_iter().rev() {
+            let _ = apply_mutation(&mut snapshot, &inverse);
         }
         if snapshot != base { return Err("algebraic inverse did not restore the complete owned snapshot".into()); }
         let bytes = encode_bmp(&snapshot)?;

@@ -1,0 +1,5 @@
+{
+  "mutation": "disconnectKindCompatibility",
+  "source": "vortex-kind-b",
+  "target": "vortex-kind-c"
+}

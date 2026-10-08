@@ -32,12 +32,48 @@ impl Default for Generation2dPresence {
     }
 }
 
-impl protocol::MutationDiff<Generation2dPresence> for Generation2dPresence {
-    fn apply(&self, _base: &Generation2dPresence) -> protocol::MutationApplyResult<Generation2dPresence> {
-        Ok(self.clone())
+/// 🩹 Wire change of the active generation selection; the inner `None` clears it.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Generation2dPresenceSelectionChange {
+    pub id: Option<String>,
+}
+
+/// 🩹 Owned-field diff of [`Generation2dPresence`]: exactly the fields a leaf sets.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation2dPresencePatch {
+    pub camera: Option<CameraJson>,
+    pub show_mode: Option<String>,
+    pub selected_generation: Option<Generation2dPresenceSelectionChange>,
+}
+
+impl protocol::MutationDiff<Generation2dPresence> for Generation2dPresencePatch {
+    fn apply(&self, base: &Generation2dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation2dPresence> {
+        Ok(Generation2dPresence {
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            selected_generation_id: self.selected_generation.as_ref().map_or_else(|| base.selected_generation_id.clone(), |change| change.id.clone()),
+            ..base.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        self.camera = other.camera.or_else(|| self.camera.take());
+        self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
+        self.selected_generation = other.selected_generation.or_else(|| self.selected_generation.take());
+    }
+}
+
+impl protocol::DiffAlgebra<Generation2dPresence> for Generation2dPresencePatch {
+    fn inverse(&self, base: &Generation2dPresence) -> Self {
+        Self {
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+            show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
+            selected_generation: self.selected_generation.as_ref().map(|_| Generation2dPresenceSelectionChange { id: base.selected_generation_id.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.show_mode.is_none() && self.selected_generation.is_none()
     }
 }
 
@@ -91,10 +127,18 @@ impl ArtifactPack for Generation2dPresence {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum Generation2dPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set-camera")]
+    SetCamera {
         #[dsl(block)]
-        presence: Generation2dPresence,
+        camera: CameraJson,
+    },
+    #[dsl(key = "set-show-mode")]
+    SetShowMode {
+        show_mode: String,
+    },
+    #[dsl(key = "select-generation")]
+    SelectGeneration {
+        generation_id: Option<String>,
     },
 }
 
@@ -104,13 +148,14 @@ impl Mutation<Generation2dPresence> for Generation2dPresenceMutation {
     /// shape. One entry per variant, in declaration order. ⚠️ PROVISIONAL: no variant below has an
     /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
     /// the same precedent puzzle3d's own config/presence aggregates set.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+    protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot",
-        semantic_kind: "set-snapshot",
-        display_name: "Set Snapshot",
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-camera",
+        semantic_kind: "set-camera",
+        display_name: "Set Camera",
         emoji: "👥️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetCamera",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -119,28 +164,70 @@ impl Mutation<Generation2dPresence> for Generation2dPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-show-mode",
+        semantic_kind: "set-show-mode",
+        display_name: "Set Show Mode",
+        emoji: "👥️",
+        aggregate_variant: "SetShowMode",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️select-generation",
+        semantic_kind: "select-generation",
+        display_name: "Select Generation",
+        emoji: "👥️",
+        aggregate_variant: "SelectGeneration",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    },
+    ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Generation2dPresenceMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Generation2dPresenceMutation::SetCamera { .. } => &Self::DESCRIPTORS[0],
+            Generation2dPresenceMutation::SetShowMode { .. } => &Self::DESCRIPTORS[1],
+            Generation2dPresenceMutation::SelectGeneration { .. } => &Self::DESCRIPTORS[2],
         }
     }
 
-    type Diff = Generation2dPresence;
+    type Diff = Generation2dPresencePatch;
 
-    fn diff(&self, _base: &Generation2dPresence) -> protocol::MutationOutcome<Generation2dPresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
+    fn diff(&self, base: &Generation2dPresence) -> protocol::MutationOutcome<Generation2dPresencePatch> {
+        let patch = match self {
+            Self::SetCamera { camera } => (camera != &base.camera).then(|| Generation2dPresencePatch { camera: Some(camera.clone()), ..Default::default() }),
+            Self::SetShowMode { show_mode } => (show_mode != &base.show_mode).then(|| Generation2dPresencePatch { show_mode: Some(show_mode.clone()), ..Default::default() }),
+            Self::SelectGeneration { generation_id } => (generation_id != &base.selected_generation_id).then(|| Generation2dPresencePatch { selected_generation: Some(Generation2dPresenceSelectionChange { id: generation_id.clone() }), ..Default::default() }),
+        };
+        match patch {
+            Some(patch) => protocol::MutationOutcome::new(patch),
+            None => protocol::MutationOutcome::empty().warning("mutation.no-op", "The presence already holds that value."),
         }
     }
 
     fn inverse(&self, base: &Generation2dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetCamera { .. } => Self::SetCamera { camera: base.camera.clone() },
+            Self::SetShowMode { .. } => Self::SetShowMode { show_mode: base.show_mode.clone() },
+            Self::SelectGeneration { .. } => Self::SelectGeneration { generation_id: base.selected_generation_id.clone() },
+        }])
+    }
 }
 
 impl protocol::OpText for Generation2dPresenceMutation {

@@ -172,7 +172,7 @@ fn a_dragged_node_lands_one_drag_slots_in_document_units_keeping_z() {
     assert_eq!(mutations.len(), 1, "one gesture is one edit, never one per pointer tick");
     assert_eq!(mutations, vec![drag_slots(vec!["cantilever".into()], 2.5, 2.0, 0.0)]);
     let mut moved = document.clone();
-    crate::mutations::apply_wfc3d_mutation(&mut moved, &mutations[0]).expect("the drag applies");
+    vcs::apply_mutation(&moved, &mutations[0]).map(|(applied_state, _)| { moved = applied_state; }).expect("the drag applies");
     let landed = moved.slots.iter().find(|slot| slot.id == "cantilever").expect("the cantilever survives its drag");
     assert_eq!((landed.x, landed.y, landed.z), (authored.x + 2.5, authored.y + 2.0, authored.z), "z is kept");
     let absolute = format!(r#"[{{"operation":"move","nodeId":"cantilever","x":{},"y":{}}}]"#, 4.0 * WFC_3D_GRAPH_UNIT, 5.0 * WFC_3D_GRAPH_UNIT);

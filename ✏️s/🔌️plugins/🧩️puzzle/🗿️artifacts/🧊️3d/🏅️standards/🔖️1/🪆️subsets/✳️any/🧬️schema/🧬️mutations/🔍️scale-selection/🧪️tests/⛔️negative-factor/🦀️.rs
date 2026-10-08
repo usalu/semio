@@ -6,6 +6,7 @@
 //! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::apply_puzzle3d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
 use crate::Puzzle3dSnapshot;

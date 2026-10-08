@@ -10,7 +10,7 @@ pub fn diff(payload: &super::InsertPoint, base: &EquationSnapshot) -> protocol::
     let was_clamped = index != payload.index;
     let edit = EquationPointEdit::Insert { at: index as u32, point: EquationPoint { x: payload.x, y: payload.y } };
     let diff = EquationDiff { points: Some(EquationPointsDelta { edits: vec![edit] }), ..Default::default() };
-    let outcome = protocol::MutationOutcome::new(crate::equation_state_diff(diff, base));
+    let outcome = protocol::MutationOutcome::new(diff);
     if was_clamped {
         outcome.warning("mutation.clamped", format!("Insert index {} was out of range and clamped to {}.", payload.index, index))
     } else {

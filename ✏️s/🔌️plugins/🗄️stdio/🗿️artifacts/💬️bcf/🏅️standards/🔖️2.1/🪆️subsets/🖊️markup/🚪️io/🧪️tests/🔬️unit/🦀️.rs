@@ -1,7 +1,8 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::diff::BcfDiff;
 use crate::schema::mutations::{
-    apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
+    insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
     BcfMutation,
 };
 use crate::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
@@ -175,7 +176,7 @@ async fn codec_round_trip() {
 
 //#region 🧪️Law1_MutationDiffLaw
 /// ⚖️ Law 1 — `mutation_diff_law`: for every mutation variant, applying via
-/// `apply_bcf_mutation` matches `m.diff(base).diff().apply(base)`, and the returned diff equals
+/// `apply_mutation` matches `m.diff(base).diff().apply(base)`, and the returned diff equals
 /// `m.diff(base)`.
 #[semio_framework_async_macros::async_test]
 async fn mutation_diff_law() {
@@ -205,7 +206,7 @@ async fn mutation_diff_law() {
     ];
     for m in mutations {
         let mut snap = base.clone();
-        let returned = apply_bcf_mutation(&mut snap, &m);
+        let returned = apply_mutation(&mut snap, &m);
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
         assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("diff must apply to base"), "apply mismatch for {m:?}");
@@ -235,10 +236,10 @@ async fn inverse_law() {
     ];
     for m in mutations {
         let mut snap = base.clone();
-        apply_bcf_mutation(&mut snap, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
+        apply_mutation(&mut snap, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             let mut undone = snap.clone();
-            apply_bcf_mutation(&mut undone, &inv);
+            apply_mutation(&mut undone, &inv);
             assert_eq!(undone, base, "mutation-level inverse mismatch for {m:?}");
         }
 
@@ -319,26 +320,6 @@ fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOu
     MutationDiff::absorb(&mut absorbed, d2.diff().clone());
     assert_eq!(protocol::apply_diff(&absorbed, base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
     absorbed
-}
-//#endregion
-
-//#region 🧪️Law4_BetweenRoundtripLaw
-/// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on real fixtures.
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
-    let mut b = a.clone();
-    b.version = "2.2".into();
-    b.topics[0].title = "Renamed via between".into();
-    b.topics[0].comments.push(sample_comment("c2", None));
-    b.topics.push(sample_topic("t2"));
-    b.parts.push(BcfRawPart { name: "extra.txt".into(), data: b"stray".to_vec() });
-
-    let d = BcfDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("d must apply to a"), b);
-    let d_back = BcfDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_back, &b).expect("d_back must apply to b"), a);
-    assert!(BcfDiff::between(&a, &a).is_empty());
 }
 //#endregion
 
@@ -427,59 +408,6 @@ fn sweep_b() -> BcfSnapshot {
     }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let forward = BcfDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&forward, &a).expect("forward must apply to a"), b, "between(a,b).apply(a) must equal b");
-    let backward = BcfDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&backward, &b).expect("backward must apply to b"), a, "between(b,a).apply(b) must equal a");
-    assert!(BcfDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-
-    // Every top-level field patched.
-    assert!(forward.version.is_some(), "version field not swept");
-    let topics_diff = forward.topics.as_ref().expect("topics diff present");
-    assert!(!topics_diff.removed.is_empty(), "topics.removed not swept");
-    let keep_diff = &topics_diff.modified.iter().find(|m| m.index == 0).expect("keep topic modified").diff;
-
-    // Every scalar field on the modified topic patched.
-    assert!(keep_diff.title.is_some(), "topic.title not swept");
-    assert!(keep_diff.description.is_some(), "topic.description not swept");
-    assert!(keep_diff.status.is_some(), "topic.status not swept");
-    assert!(keep_diff.priority.is_some(), "topic.priority not swept");
-    assert!(keep_diff.labels.is_some(), "topic.labels not swept");
-    assert!(keep_diff.creation_date.is_some(), "topic.creation_date not swept");
-    assert!(keep_diff.creation_author.is_some(), "topic.creation_author not swept");
-
-    let comments_diff = keep_diff.comments.as_ref().expect("comments diff present");
-    assert!(!comments_diff.removed.is_empty(), "comments.removed not swept");
-    let kept_comment_diff = &comments_diff.modified.iter().find(|m| m.index == 0).expect("c-keep modified").diff;
-    assert!(kept_comment_diff.date.is_some());
-    assert!(kept_comment_diff.author.is_some());
-    assert!(kept_comment_diff.text.is_some());
-    assert_eq!(kept_comment_diff.viewpoint_ref, Some(None), "comment.viewpoint_ref tri-state Some(None) not swept");
-
-    let viewpoints_diff = keep_diff.viewpoints.as_ref().expect("viewpoints diff present");
-    assert!(!viewpoints_diff.removed.is_empty(), "viewpoints.removed not swept");
-    let kept_vp_diff = &viewpoints_diff.modified.iter().find(|m| m.index == 0).expect("vp-keep modified").diff;
-    assert!(kept_vp_diff.camera.is_some(), "viewpoint.camera not swept");
-    assert_eq!(kept_vp_diff.components, Some(None), "viewpoint.components tri-state Some(None) not swept");
-    assert_eq!(kept_vp_diff.snapshot, Some(None), "viewpoint.snapshot tri-state Some(None) not swept");
-
-    let parts_diff = forward.parts.as_ref().expect("parts diff present");
-    assert!(!parts_diff.removed.is_empty(), "parts.removed not swept");
-    let kept_part_diff = &parts_diff.modified.iter().find(|m| m.index == 0).expect("part-keep modified").diff;
-    assert!(kept_part_diff.data.is_some(), "part.data not swept");
-
-    let grown = backward.topics.as_ref().expect("backward topics diff present");
-    assert!(!grown.added.is_empty(), "topics.added not swept");
-    let grown_topic = grown.modified.iter().find(|m| m.index == 0).expect("keep topic modified backward");
-    assert!(grown_topic.diff.comments.as_ref().is_some_and(|d| !d.added.is_empty()), "comments.added not swept");
-    assert!(grown_topic.diff.viewpoints.as_ref().is_some_and(|d| !d.added.is_empty()), "viewpoints.added not swept");
-    assert!(backward.parts.as_ref().is_some_and(|d| !d.added.is_empty()), "parts.added not swept");
-}
 //#endregion
 
 //#region 🧪️Law7_OpTextBinaryRoundtripLaw
@@ -533,16 +461,10 @@ async fn op_text_binary_roundtrip_law() {
 
 //#region 🧪️Law8_DiffCodecTextBinaryRoundtripLaw
 /// ⚖️ Law 8 — `diff_codec_text_binary_roundtrip_law` (F6): `DiffCodec` round-trip laws for the
-/// hand-rolled `BcfDiff` grammar — exercises every collection triple (`topics`/`comments`/
-/// `viewpoints`/`parts`, all guid/name-keyed) plus every tri-state field's `Some(None)`
-/// transition, via `sweep_a`/`sweep_b`'s `between()` result (the same fixtures `field_sweep`
-/// uses, incl. `BcfCamera`'s `Perspective`->`Orthogonal` transition inside `vp-keep`'s diff).
+/// hand-rolled `BcfDiff` grammar over the declaratively built `demo_diff_cases`.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let cases = vec![BcfDiff::default(), BcfDiff::between(&a, &b), BcfDiff::between(&b, &a), BcfDiff::between(&a, &a)];
-    for d in cases {
+    for d in crate::schema::diff::demo_diff_cases() {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
         let parsed = BcfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
@@ -695,6 +617,7 @@ async fn bcf_mutation_inverse_sum_law_holds_for_every_leaf() {
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t2".into(), guid: "vp2".into(), camera: Some(orthogonal_camera()) }),
         BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t2".into(), guid: "vp2".into(), components: None }),
         BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: "t2".into(), guid: "vp2".into(), snapshot: Some(vec![1, 2]) }),
+        BcfMutation::SetParts(set_parts::SetParts { parts: vec![crate::schema::snapshot::BcfRawPart { name: "a.bin".into(), data: vec![1] }] }),
     ] {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }

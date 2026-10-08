@@ -43,9 +43,10 @@
   "requirements": null,
   "priorities": null,
   "scenarios": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "scenario-a",
         "patch": {
@@ -78,8 +79,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "options": null,
   "decisions": null,

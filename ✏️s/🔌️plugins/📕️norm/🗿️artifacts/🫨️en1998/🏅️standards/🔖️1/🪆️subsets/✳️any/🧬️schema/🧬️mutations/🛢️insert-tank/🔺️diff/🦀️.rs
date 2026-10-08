@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertTank, base: &En1998Snapshot) -> protocol::MutationOu
     if base.tanks.iter().any(|existing| existing.id == payload.tank.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Tank id {} already exists.", payload.tank.id), [payload.tank.id.clone()]);
     }
-    let index = payload.index.min(base.tanks.len());
-    protocol::MutationOutcome::new(En1998Diff { tanks: En1998TankDelta::insertion(&base.tanks, index, payload.tank.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.tanks.len());
+    protocol::MutationOutcome::new(En1998Diff { tanks: En1998TankDelta::insertion(index, payload.tank.clone()), ..Default::default() })
 }

@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/md/commonmark/any/mutation/splice-source/schema.json",
+  "title": "SpliceSource",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "splices"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "spliceSource",
+      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
+    },
+    "splices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offset",
+          "delete",
+          "insert"
+        ],
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-semio-ui": {
+              "label": {
+                "en": "Offset",
+                "de": "Versatz"
+              },
+              "description": {
+                "en": "Unicode scalar offset in the document source, counted from 0.",
+                "de": "Unicode-Skalar-Versatz im Quelltext des Dokuments, ab 0 gezählt."
+              },
+              "group": "target",
+              "order": 10,
+              "widget": "stepper",
+              "step": 1,
+              "precision": 0
+            }
+          },
+          "delete": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-semio-ui": {
+              "label": {
+                "en": "Deleted scalars",
+                "de": "Gelöschte Skalare"
+              },
+              "description": {
+                "en": "How many scalars from the offset the splice removes.",
+                "de": "Wie viele Skalare ab dem Versatz die Änderung entfernt."
+              },
+              "group": "target",
+              "order": 20,
+              "widget": "stepper",
+              "step": 1,
+              "precision": 0
+            }
+          },
+          "insert": {
+            "type": "string",
+            "x-semio-ui": {
+              "label": {
+                "en": "Inserted source",
+                "de": "Eingefügter Quelltext"
+              },
+              "description": {
+                "en": "The CommonMark text that takes the place of the deleted scalars.",
+                "de": "Der CommonMark-Text, der an die Stelle der gelöschten Skalare tritt."
+              },
+              "group": "value",
+              "order": 30,
+              "widget": "text"
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Splices",
+          "de": "Änderungen"
+        },
+        "description": {
+          "en": "The ranges of one edit, ascending and disjoint, in the coordinates of the source they were taken from.",
+          "de": "Die Bereiche einer Bearbeitung, aufsteigend und disjunkt, in den Koordinaten des Quelltextes, dem sie entnommen wurden."
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

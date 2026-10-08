@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceSection`.
 use super::ReplaceSection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSectionsDelta, Fem3dSectionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSectionsDelta, Fem3dSectionsModification};
 use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,section_breach};
 
 use crate::Fem3dSnapshot;
@@ -19,6 +19,6 @@ pub fn diff(payload: &ReplaceSection, base: &Fem3dSnapshot) -> protocol::Mutatio
     if let Some(breach) = section_breach(&payload.new_section) {
         return invariant(breach, vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { sections: Some(Fem3dSectionsDelta { patched: vec![Fem3dSectionsPatchEntry { id: payload.id.clone(), item: payload.new_section.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { sections: Some(Fem3dSectionsDelta { modified: vec![Fem3dSectionsModification { id: payload.id.clone(), patch: payload.new_section.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,5 +1,5 @@
 /** ⚙️ Pure BMP revisions and native sample paint operations. */
-import {parseBmpSnapshot,bmpBitsPerPixel,bmpMaskMaximum,type BmpSnapshot,type BmpRegion,type BmpColor} from "../📸️snapshot/🟦️.ts";
+import {parseBmpSnapshot,bmpBitsPerPixel,bmpMaskMaximum,type BmpSnapshot,type BmpRegion,type BmpColor,type BmpNativeSample} from "../📸️snapshot/🟦️.ts";
 import type {BmpMutation} from "../🧬️mutations/🟦️.ts";
 export interface BmpOperationControl {signal?:AbortSignal;maximumOwnedBytes?:number;progress?:(completed:number,total:number)=>boolean|void;}
 const fail=(reason:string):never=>{throw new Error(`bmp: ${reason}`);};
@@ -18,5 +18,14 @@ async function paint(snapshot:BmpSnapshot,revision:string,region:BmpRegion,color
 }
 export function paintBmpIndexedRegion(snapshot:BmpSnapshot,revision:string,region:BmpRegion,index:number,control:BmpOperationControl={}):Promise<BmpSnapshot>{return paint(snapshot,revision,region,index,control);}
 export function paintBmpDirectRegion(snapshot:BmpSnapshot,revision:string,region:BmpRegion,color:BmpColor,control:BmpOperationControl={}):Promise<BmpSnapshot>{return paint(snapshot,revision,region,color,control);}
+/** 🧩 Writes exactly the rectangle's samples into its region and nothing else. */
+export function replaceBmpSamples(snapshot:BmpSnapshot,region:BmpRegion,indices:readonly number[],samples:readonly BmpNativeSample[]):BmpSnapshot{
+ const image=snapshot.image;for(const n of [region.x,region.y,region.width,region.height])if(!Number.isSafeInteger(n)||n<0)fail("invalid region");
+ if(region.width===0||region.height===0||region.x+region.width>image.width||region.y+region.height>image.height)fail("sample rectangle exceeds the owned image or is empty");
+ const count=region.width*region.height;const pixels=image.pixels.storage==="indexed"?{storage:"indexed" as const,indices:[...image.pixels.indices]}:{storage:"direct" as const,samples:[...image.pixels.samples]};
+ if(pixels.storage==="indexed"?indices.length!==count||samples.length!==0:samples.length!==count||indices.length!==0)fail("sample rectangle storage or cardinality differs from its region");
+ for(let row=0;row<region.height;row++)for(let x=0;x<region.width;x++){const at=(region.y+row)*image.width+region.x+x,from=row*region.width+x;if(pixels.storage==="indexed"){const index=indices[from]!;if(!Number.isInteger(index)||index<0||index>=image.palette.length)fail("sample references an absent palette entry");pixels.indices[at]=index;}else pixels.samples[at]={...samples[from]!};}
+ return parseBmpSnapshot({schema:snapshot.schema,image:{...image,pixels}});
+}
 export function bmpDimensions(snapshot:BmpSnapshot){const image=snapshot.image;return{width:image.width,height:image.height,bitDepth:bmpBitsPerPixel(image.profile),hasAlpha:image.masks[3]!==0,pixelCount:image.width*image.height};}
-export async function applyBmpMutation(snapshot:BmpSnapshot,mutation:BmpMutation,control:BmpOperationControl={}):Promise<BmpSnapshot>{const {mutation:kind,payload:p}=mutation;switch(kind){case"replace-image":return parseBmpSnapshot({schema:snapshot.schema,image:p.image});case"paint-indexed-region":return paintBmpIndexedRegion(snapshot,p.revision,p,p.paletteIndex,control);case"paint-direct-region":return paintBmpDirectRegion(snapshot,p.revision,p,p,control);}}
+export async function applyBmpMutation(snapshot:BmpSnapshot,mutation:BmpMutation,control:BmpOperationControl={}):Promise<BmpSnapshot>{const {mutation:kind,payload:p}=mutation;switch(kind){case"replace-image":return parseBmpSnapshot({schema:snapshot.schema,image:p.image});case"paint-indexed-region":return paintBmpIndexedRegion(snapshot,p.revision,p,p.paletteIndex,control);case"paint-direct-region":return paintBmpDirectRegion(snapshot,p.revision,p,p,control);case"replace-samples":return replaceBmpSamples(snapshot,p.region,p.indices??[],p.samples??[]);}}

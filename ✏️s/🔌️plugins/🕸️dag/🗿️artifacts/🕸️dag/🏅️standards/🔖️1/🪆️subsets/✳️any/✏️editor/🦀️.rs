@@ -795,12 +795,6 @@ impl ArtifactEditor for DagPlayApp {
         crate::default_snapshot()
     }
 
-    // 🎞️ No `whole_document_operation` override: whole-document replace is not an in-history
-    // mutation any more (the old whole-snapshot-replacement variant is gone with no replacement —
-    // see the mutations facet report). The trait default (`None`) applies, so the generic
-    // `document:in` media importer correctly reports `MediaError::NotImplemented`; a real
-    // whole-document load goes through `store::ArtifactStore::reset` instead.
-
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
     fn command_id(command: &DagCommand) -> &'static str {

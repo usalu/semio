@@ -1,13 +1,21 @@
 {
   "schema": null,
   "seed": 99,
-  "inputWidth": null,
-  "inputHeight": null,
-  "inputPixels": null,
-  "inputRegions": [],
-  "palette": null,
+  "input": {
+    "size": null,
+    "writes": []
+  },
+  "palette": {
+    "removed": [],
+    "inserted": [],
+    "recolored": []
+  },
   "output": null,
   "model": null,
-  "pinnedRemoved": [],
-  "pinnedUpserted": []
+  "pinned": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

@@ -1,0 +1,20 @@
+{
+  "schema": "semio.test.service-io-boundary/v1",
+  "semanticOwner": "inference/service",
+  "wireOwner": "inference/service/io",
+  "limits": {
+    "nodes": 4096,
+    "depth": 32,
+    "capacity": 16384
+  },
+  "unicode": {
+    "value": "ä",
+    "count": 9000,
+    "semanticAccepted": true,
+    "wireAccepted": false
+  },
+  "preserveNegativeZero": true,
+  "frozenCopy": true,
+  "refuseGetters": true,
+  "refuseCycles": true
+}

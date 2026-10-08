@@ -35,3 +35,7 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for MoveNodes {
     }
 }
 //#endregion 🔖️Payload
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

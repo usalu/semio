@@ -8,13 +8,15 @@ mod index;
 #[path = "🧾️record/🦀️.rs"]
 mod record;
 
-use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, SnapshotRetirementStep, VerifiedMemberHistoryInput, diagnostic};
+use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, VerifiedMemberHistoryInput, diagnostic};
 use crate::os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification, record::RetainedSprRecordObservation};
 use crate::os_spr::history::identity::id::{HistoryIdDiagnostic, RetainedHistoryIdV1};
 use identity::SemanticRecord;
-use index::{DictionaryIndexClose, DictionaryIndexError, DictionaryRange, RetainedDictionaryIndex};
+use index::{DictionaryIndexError, DictionaryRange, RetainedDictionaryIndex};
 use record::{DictionaryDeltaError, DictionaryDeltaEvent, RetainedDictionaryDelta};
 use semio_framework_job::StepContext;
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy)]
@@ -59,37 +61,24 @@ impl DictionaryOwners {
     fn terminal_is_empty(&self) -> bool {
         self.input.is_none() && self.index.is_none()
     }
-    fn next_close_byte_demand(&self) -> usize { if self.index.is_some() { 1 } else { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) } }
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.terminal_is_empty() {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
-        if items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(index) = self.index.as_mut() {
-            return Ok(match index.close_step(items, bytes) {
-                DictionaryIndexClose::Complete if index.terminal_is_empty() => {
-                    self.index.take();
-                    SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                DictionaryIndexClose::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary index returned false terminal")),
-                DictionaryIndexClose::Pending { released_items, released_bytes } => SnapshotRetirementStep::Pending { released_items, released_bytes },
-            });
-        }
-        let input = self.input.as_mut().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary input owner is absent"))?;
-        match input.close_step(items, bytes)? {
-            SnapshotRetirementStep::Complete if input.terminal_is_empty() => {
-                self.input.take();
-                Ok(SnapshotRetirementStep::Complete)
-            }
-            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary input returned false terminal")),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => {
-                Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary input exceeded retirement grant"))
-            }
-            step => Ok(step),
-        }
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.index.is_some() { return crate::os_store::artifact_retirement_owner_demands(&self.index, body); }
+        crate::os_store::artifact_retirement_owner_demands(&self.input, body)
     }
+}
+impl ErasedSnapshotRetirement for DictionaryOwners {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.index.is_some() {
+            let step = crate::os_store::artifact_retirement_owner_close(&mut self.index, grant)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        crate::os_store::artifact_retirement_owner_close(&mut self.input, grant)
+    }
+    fn terminal_is_empty(&self) -> bool { DictionaryOwners::terminal_is_empty(self) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
 }
 
 impl Drop for DictionaryOwners {
@@ -440,65 +429,51 @@ impl MemberHistoryDictionaryOwner {
     }
 }
 
+impl MemberHistoryDictionaryOwner {
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return Ok(RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() }); }
+        if self.scanner.is_some() || self.record.is_some() || self.semantic.is_some() || self.lookup.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        crate::os_store::artifact_retirement_owner_demands(&self.owners, body)
+    }
+}
 impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.terminal_is_empty() {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "dictionary retirement exceeds admitted depth")); }
+        if self.next_copy_byte_demand()? > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.closing = true;
-        if items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
         if self.pending.is_some() || self.lookup_byte.is_some() {
-            if bytes == 0 {
-                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.pending.take().is_none() {
-                self.lookup_byte = None;
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 1 });
+            if self.pending.take().is_none() { self.lookup_byte = None; }
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 1, ..empty }));
         }
         if let Some(delta) = self.delta.as_mut() {
-            let released_bytes = delta.close_bytes(bytes);
-            let released_items = usize::from(delta.terminal_is_empty());
-            if released_items == 1 {
-                self.delta.take();
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items, released_bytes });
+            let copied_bytes = delta.close_bytes(grant.maximum_copy_bytes);
+            if delta.terminal_is_empty() { drop(self.delta.take()); }
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..empty }));
         }
         if let Some(id) = self.id.as_mut() {
-            if bytes == 0 {
-                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            let released_bytes = id.close_bytes(bytes);
-            let released_items = usize::from(released_bytes < bytes);
-            if released_items == 1 {
-                self.id.take();
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items, released_bytes });
+            let copied_bytes = id.close_bytes(grant.maximum_copy_bytes);
+            if copied_bytes < grant.maximum_copy_bytes { drop(self.id.take()); }
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..empty }));
         }
-        self.scanner = None;
-        self.record = None;
-        self.semantic = None;
-        self.lookup = None;
-        self.id_retiring = false;
-        self.ready = false;
-        if let Some(owners) = self.owners.as_mut() {
-            let result = owners.close_step(items, bytes)?;
-            if matches!(result, SnapshotRetirementStep::Complete) && owners.terminal_is_empty() {
-                self.owners.take();
-            }
-            return Ok(result);
+        if self.scanner.is_some() || self.record.is_some() || self.semantic.is_some() || self.lookup.is_some() {
+            self.scanner = None;
+            self.record = None;
+            self.semantic = None;
+            self.lookup = None;
+            self.id_retiring = false;
+            self.ready = false;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        Ok(SnapshotRetirementStep::Complete)
+        crate::os_store::artifact_retirement_owner_close(&mut self.owners, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.owners.is_none() && self.pending.is_none() && self.lookup_byte.is_none() && self.delta.is_none() && self.id.is_none() && self.scanner.is_none() && self.record.is_none() && self.semantic.is_none() && self.lookup.is_none()
-    }
-    fn next_close_byte_demand(&self) -> usize {
-        if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return 1; }
-        self.owners.as_ref().map_or(0, DictionaryOwners::next_close_byte_demand)
-    }
+    fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.pending.is_none() && self.lookup_byte.is_none() && self.delta.is_none() && self.id.is_none() && self.scanner.is_none() && self.record.is_none() && self.semantic.is_none() && self.lookup.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
 }
 
 impl Drop for MemberHistoryDictionaryOwner {
@@ -551,21 +526,15 @@ impl VerifiedMemberHistoryDictionary {
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        self.closing = true;
-        let Some(owners) = self.owners.as_mut() else {
-            return Ok(SnapshotRetirementStep::Complete);
-        };
-        let result = owners.close_step(items, bytes)?;
-        if matches!(result, SnapshotRetirementStep::Complete) && owners.terminal_is_empty() {
-            self.owners.take();
-        }
-        Ok(result)
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
+        crate::os_store::artifact_retirement_owner_close(&mut self.owners, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.owners.is_none()
-    }
-    fn next_close_byte_demand(&self) -> usize { self.owners.as_ref().map_or(0, DictionaryOwners::next_close_byte_demand) }
+    fn terminal_is_empty(&self) -> bool { self.owners.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::artifact_retirement_owner_demands(&self.owners, 0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(crate::os_store::artifact_retirement_owner_demands(&self.owners, body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::artifact_retirement_owner_demands(&self.owners, 0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::artifact_retirement_owner_demands(&self.owners, 0)?.depth) }
 }
 
 impl Drop for VerifiedMemberHistoryDictionary {

@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+  "sha256": "8499f91660f943ea65f391d199e9a65f5bfb7d1fc90b2a8d2facdeecdb8380fe",
+  "content": "        if let Some(context)=self.context.as_mut(){\n            let progress=match context.close_step(child_grant){\n                semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>progress,\n                semio_framework_job::InteractiveJobCloseStep::Blocked=>return Err(Fault::new(FaultOrigin::Framework,FaultCode::new(\"mounted-publication.retirement-blocked\"),\"original step context ledger remains held by its live borrower\")),\n                semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{self.context=None;progress},\n            };\n            let step=RetainedCloneStep::Progress(progress);\n            semio_framework_value::admit_retained_clone_close(step,child_grant).map_err(|error|plugin_sdk_fault(error.to_string()))?;\n            return Ok(step);\n        }\n"
+}

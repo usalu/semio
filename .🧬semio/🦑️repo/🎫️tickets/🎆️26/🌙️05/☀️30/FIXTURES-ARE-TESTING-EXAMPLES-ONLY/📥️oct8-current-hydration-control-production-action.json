@@ -1,0 +1,40 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+  "helpersBefore": "/// 📦️ One hydration work unit funds an exact physical release within its recorded allocation ceiling.\nfn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, cx: &mut StepContext<'_>) -> Result<bool, MemberOpenDiagnostic> {\n    if active.is_none() { return Ok(false); }\n    if cx.is_cancelled() || cx.should_yield() { return Ok(true); }\n    let demand = super::artifact_retirement_box_byte_demand(active.as_ref().unwrap());\n    if demand > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(MemberOpenDiagnostic::Capacity); }\n    let maximum_bytes = crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES.max(demand);\n    match super::artifact_retirement_box_close_step(active, 1, maximum_bytes) {\n        Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => {}\n        Ok(SnapshotRetirementStep::Complete) if active.is_none() => {}\n        Ok(SnapshotRetirementStep::Blocked) => {}\n        _ => return Err(MemberOpenDiagnostic::Initialization),\n    }\n    cx.consume_fuel(1);\n    Ok(true)\n}\n\n/// 🧾️ One envelope hydration turn closes its retained initialization runtime.\nfn drive_hydration_runtime<P>(runtime: &mut ArtifactStoreInitializationRuntime<P>, factory: &dyn crate::os_store::ArtifactOwnedValueRetirementFactory<P>, cx: &mut StepContext<'_>) -> Result<bool, MemberOpenDiagnostic> {\n    if cx.is_cancelled() || cx.should_yield() { return Ok(false); }\n    let demand = runtime.next_close_byte_demand();\n    if demand > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(MemberOpenDiagnostic::Capacity); }\n    let maximum_bytes = crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES.max(demand);\n    match runtime.close_step(factory, 1, maximum_bytes) {\n        Ok(SnapshotRetirementStep::Complete) if runtime.terminal_is_empty() => { cx.consume_fuel(1); Ok(true) }\n        Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => { cx.consume_fuel(1); Ok(false) }\n        _ => Err(MemberOpenDiagnostic::Initialization),\n    }\n}\n\n",
+  "helpersAfter": "/// 📦️ Forwards the supplied currencies to the current retained child.\nfn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<bool, MemberOpenDiagnostic> {\n    if active.is_none() { return Ok(false); }\n    if cx.is_cancelled() || cx.should_yield() { return Ok(true); }\n    let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };\n    let step = super::artifact_retirement_box_close_step(active, grant).map_err(|_| MemberOpenDiagnostic::Initialization)?;\n    let progress = step.progress();\n    let fuel = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()).ok_or(MemberOpenDiagnostic::Capacity)?;\n    cx.consume_fuel(fuel);\n    Ok(true)\n}\n\n/// 🧾️ Closes the original initialization runtime under the supplied current authority.\nfn drive_hydration_runtime<P: Send + Sync + 'static>(runtime: &mut ArtifactStoreInitializationRuntime<P>, factory: &std::sync::Arc<dyn crate::os_store::ArtifactOwnedValueRetirementFactory<P>>, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<bool, MemberOpenDiagnostic> {\n    if cx.is_cancelled() || cx.should_yield() { return Ok(false); }\n    let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };\n    let step = runtime.close_step(factory, grant).map_err(|_| MemberOpenDiagnostic::Initialization)?;\n    let terminal = runtime.terminal_is_empty();\n    semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, terminal, \"hydration original initialization\").map_err(|_| MemberOpenDiagnostic::Initialization)?;\n    let progress = step.progress();\n    let fuel = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()).ok_or(MemberOpenDiagnostic::Capacity)?;\n    cx.consume_fuel(fuel);\n    Ok(terminal)\n}\n\n",
+  "patches": [
+    [
+      "use semio_framework_job::{Generation, OperationId, StepContext};",
+      "use semio_framework_job::{Generation, OperationId, StepContext};\nuse semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};"
+    ],
+    [
+      "fn drive_active(&mut self, cx: &mut StepContext<'_>)",
+      "fn drive_active(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant)"
+    ],
+    [
+      "drive_hydration_retirement(&mut self.active, cx)",
+      "drive_hydration_retirement(&mut self.active, cx, grant)"
+    ],
+    [
+      "pub fn step_store(&mut self, cx: &mut StepContext<'_>)",
+      "pub fn step_store(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant)"
+    ],
+    [
+      "match self.step(cx)",
+      "match self.step(cx, grant)"
+    ],
+    [
+      "pub fn step(&mut self, cx: &mut StepContext<'_>)",
+      "pub fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant)"
+    ],
+    [
+      "match self.drive_active(cx)",
+      "match self.drive_active(cx, grant)"
+    ],
+    [
+      "drive_hydration_runtime(runtime, owners.initial_snapshot_retirement.as_ref(), cx)",
+      "drive_hydration_runtime(runtime, &owners.initial_snapshot_retirement, cx, grant)"
+    ]
+  ],
+  "initialCaller": "hydration.step_store(cx, grant)"
+}

@@ -15,3 +15,4 @@ enums:
     9: paint_indexed_region
     10: paint_direct_region
     12: replace_image
+    13: replace_samples

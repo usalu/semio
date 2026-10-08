@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾set-region-property",
+  "semanticKind": "set-region-property",
+  "displayName": "Set Region Property",
+  "emoji": "🗾",
+  "aggregateVariant": "SetRegionProperty",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-region-property",
+  "binaryTag": 16,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

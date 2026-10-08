@@ -101,66 +101,6 @@ pub const KINDS: &[&str] = &[
     "change-anchor-as",
 ];
 
-impl En1992Mutation {
-    /// 📔️ Decompose whole-document replacement into semantic mutations (best-effort full replace via set fields).
-    pub fn from_snapshot(base: &En1992Snapshot, target: &En1992Snapshot) -> Vec<Self> {
-        let mut out = Vec::new();
-        if base.annex != target.annex {
-            out.push(Self::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex }));
-        }
-        if base.title != target.title {
-            out.push(Self::ChangeTitle(change_title::ChangeTitle { new_title: target.title.clone() }));
-        }
-        if (base.design_working_life_years - target.design_working_life_years).abs() > f64::EPSILON {
-            out.push(Self::ChangeDesignWorkingLife(change_design_working_life::ChangeDesignWorkingLife { new_years: target.design_working_life_years }));
-        }
-        if (base.delta_c_dev - target.delta_c_dev).abs() > f64::EPSILON {
-            out.push(Self::ChangeDeltaCDev(change_delta_c_dev::ChangeDeltaCDev { new_delta_c_dev: target.delta_c_dev }));
-        }
-        if base.cement_type != target.cement_type {
-            out.push(Self::ChangeCementType(change_cement_type::ChangeCementType { new_cement_type: target.cement_type.clone() }));
-        }
-        // Structural list replaces handled by removing extras then inserting missing — simplified: rebuild members via remove+insert.
-        for m in &base.members {
-            if !target.members.iter().any(|t| t.id == m.id) {
-                out.push(Self::RemoveMember(remove_member::RemoveMember { member_id: m.id.clone() }));
-            }
-        }
-        for (i, m) in target.members.iter().enumerate() {
-            if !base.members.iter().any(|b| b.id == m.id) {
-                out.push(Self::InsertMember(insert_member::InsertMember { index: i, member: m.clone() }));
-            }
-        }
-        for a in &base.anchors {
-            if !target.anchors.iter().any(|t| t.id == a.id) {
-                out.push(Self::RemoveAnchor(remove_anchor::RemoveAnchor { anchor_id: a.id.clone() }));
-            }
-        }
-        for (i, a) in target.anchors.iter().enumerate() {
-            if !base.anchors.iter().any(|b| b.id == a.id) {
-                out.push(Self::InsertAnchor(insert_anchor::InsertAnchor { index: i, anchor: a.clone() }));
-            }
-        }
-        out
-    }
-}
-
-//#region 🌉️ExternalCodecBridge
-pub fn apply_en1992_mutation(base: &En1992Snapshot, mutation: &En1992Mutation) -> Result<(En1992Snapshot, Vec<String>), String> {
-    let raised = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(mutation, base)?
-
-    })
-}
-
-//#endregion 🌉️ExternalCodecBridge
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

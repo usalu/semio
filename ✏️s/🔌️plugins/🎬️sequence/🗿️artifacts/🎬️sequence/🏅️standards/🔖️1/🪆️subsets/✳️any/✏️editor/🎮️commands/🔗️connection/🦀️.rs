@@ -1,7 +1,7 @@
 //! 🔗️ Sequence play app commands — connect/disconnect steps.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::sequence::sequence_child_emit_from_host_mutation;
+use crate::editor::sequence::{sequence_edit_emit, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -19,9 +19,9 @@ pub mod connect_steps {
     }
 
     pub fn handle(payload: &ConnectSteps, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let _ = host.connect_steps(&payload.source_node_id, &payload.target_node_id);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.connect(&payload.source_node_id, &payload.target_node_id, true);
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️ConnectSteps
@@ -38,9 +38,9 @@ pub mod disconnect_steps {
     }
 
     pub fn handle(payload: &DisconnectSteps, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            host.disconnect_steps(&payload.from_id, &payload.to_id);
-        })
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.disconnect(&payload.from_id, &payload.to_id);
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️DisconnectSteps

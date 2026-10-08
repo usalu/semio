@@ -25,9 +25,10 @@
   "security": null,
   "regulatory": null,
   "siteContext": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "site-context-a",
         "patch": {
@@ -61,8 +62,7 @@
           "maxCoverage": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "organizational": null,
   "services": null,

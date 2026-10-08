@@ -25,6 +25,8 @@ pub struct Mp3Diff {
 
 impl MutationDiff<Mp3Snapshot> for Mp3Diff {
     fn apply(&self, base: &Mp3Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Mp3Snapshot> {
+        if let Some(Some(tag))=&self.id3v2{for frame in &tag.frames{crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3_frame(frame).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-metadata",message).at(["id3v2"]))?;}}
+        if let Some(Some(tag))=&self.id3v1{crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3v1_tag(tag).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-metadata",message).at(["id3v1"]))?;}
         let mut next = base.clone();
         if let Some(v) = &self.id3v2 {
             next.id3v2 = v.clone();
@@ -51,9 +53,6 @@ impl MutationDiff<Mp3Snapshot> for Mp3Diff {
 }
 
 impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
-    fn between(base: &Mp3Snapshot, other: &Mp3Snapshot) -> Self {
-        Mp3Diff { id3v2: (base.id3v2 != other.id3v2).then(|| other.id3v2.clone()), frames: (base.frames != other.frames).then(|| other.frames.clone()), id3v1: (base.id3v1 != other.id3v1).then(|| other.id3v1.clone()) }
-    }
     fn inverse(&self, base: &Mp3Snapshot) -> Self {
         Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: self.frames.as_ref().map(|_| base.frames.clone()), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
     }
@@ -130,6 +129,14 @@ pub fn diff_set_id3v1(id3v1: Option<Id3v1Tag>) -> Mp3Diff {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Tests
+/// 🧪️ Representative `Mp3Diff` cases built declaratively (empty diff and the cleared id3v2, id3v1 and frames builders) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
+/// conformance-law tests.
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<Mp3Diff> {
+    vec![Mp3Diff::default(), diff_set_id3v2(None), diff_set_id3v1(None), diff_set_frames(vec![])]
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

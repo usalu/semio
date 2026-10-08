@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-application-history/schema.json",
+  "title": "SetApplicationHistory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "applicationHistory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setApplicationHistory",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "applicationHistory": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgApplicationHistory",
+      "x-semio-ui": {
+        "label": {
+          "en": "Application history",
+          "de": "Anwendungsverlauf"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

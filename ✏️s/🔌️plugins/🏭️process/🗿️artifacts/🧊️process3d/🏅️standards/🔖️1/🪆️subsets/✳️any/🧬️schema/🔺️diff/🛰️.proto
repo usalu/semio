@@ -13,9 +13,7 @@ message Process3dDiff {
   optional Process3dStock stock_payload = 5;
   optional ArtifactChildHandle stock_solid = 6;
   // @state artifact
-  optional ArtifactChildHandle steps = 7;
   optional Process3dStepsDelta step_payloads = 8;
-  optional Process3dToolSolidsDelta tool_solids = 9;
   // @state presence
   // @state config
 }
@@ -29,42 +27,65 @@ message Process3dMeasure {}
 message Process3dOrigin {}
 message ArtifactChildHandle { string child_id = 1; string target = 2; }
 
+message Process3dMachinesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message Process3dMachinesInsertion {
+  uint32 index = 1;
+  Process3dMachine row = 2;
+}
+message Process3dMachinesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message Process3dMachinesDelta {
-  repeated Process3dMachine added = 1;
-  repeated string removed = 2;
-  repeated Process3dMachinePatch patched = 3;
-  repeated string reordered = 4;
+  repeated Process3dMachinesRemoval removed = 1;
+  repeated Process3dMachinesInsertion inserted = 2;
+  repeated Process3dMachinesRelocation moved = 3;
+  repeated Process3dMachinesModification modified = 4;
+}
+message Process3dMachinesModification {
+  string id = 1;
+  Process3dMachinePatch patch = 2;
 }
 
 message Process3dMachinePatch {
-  string id = 1;
-  optional string label = 2;
-  optional string icon_id = 3;
-  repeated Process3dCapability capabilities = 4;
+  optional string label = 1;
+  optional string icon_id = 2;
+  repeated Process3dCapability capabilities = 3;
 }
 
+message Process3dStepsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message Process3dStepsInsertion {
+  uint32 index = 1;
+  Process3dStep row = 2;
+}
+message Process3dStepsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message Process3dStepsDelta {
-  repeated Process3dStep added = 1;
-  repeated string removed = 2;
-  repeated Process3dStepPatch patched = 3;
-  repeated string reordered = 4;
+  repeated Process3dStepsRemoval removed = 1;
+  repeated Process3dStepsInsertion inserted = 2;
+  repeated Process3dStepsRelocation moved = 3;
+  repeated Process3dStepsModification modified = 4;
+}
+message Process3dStepsModification {
+  string id = 1;
+  Process3dStepPatch patch = 2;
 }
 
 message Process3dStepPatch {
-  string id = 1;
-  optional string label = 2;
-  optional bool enabled = 3;
-  optional Process3dMeasure measure = 4;
-  optional Process3dOptionalOrigin origin = 5;
+  optional string label = 1;
+  optional bool enabled = 2;
+  optional Process3dMeasure measure = 3;
+  optional Process3dOptionalOrigin origin = 4;
 }
 
 message Process3dOptionalOrigin { optional Process3dOrigin value = 1; }
-
-message Process3dToolSolidsDelta {
-  repeated ArtifactChildHandle added = 1;
-  repeated string removed = 2;
-  repeated Process3dToolSolidPatch patched = 3;
-  repeated string reordered = 4;
-}
-
-message Process3dToolSolidPatch { string child_id = 1; }

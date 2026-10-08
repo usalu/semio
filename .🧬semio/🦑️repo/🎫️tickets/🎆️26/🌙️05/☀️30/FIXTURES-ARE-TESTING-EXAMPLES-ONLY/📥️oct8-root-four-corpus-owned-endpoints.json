@@ -1,0 +1,119 @@
+{
+  "at": "2026-10-08T19:04:00.609752+00:00",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin/🧬️schema/🔣️.json",
+      "beforeSha256": "0eab483c5fba90d39a7b427ab54ce2d7b7ba149c1c54fc86280fe26923c1df06",
+      "afterSha256": null,
+      "action": "remove-corpus-declaration",
+      "qualification": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧬️schema/🔣️.json",
+      "beforeSha256": "d39dccece1d0a389c554dd8057c3507852781ba40c4585f64bc21825ed9e4bdf",
+      "afterSha256": null,
+      "action": "remove-corpus-declaration",
+      "qualification": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "beforeSha256": "43091fb5c6769b2b7bc8cc499e3258f1f199d07727ca716d49291bf2519cd63b",
+      "afterSha256": null,
+      "action": "remove-corpus-declaration",
+      "qualification": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source/🧬️schema/🔣️.json",
+      "beforeSha256": "441791cfbe6f817df0d6c3cec410722f60df94bf7ae9ab3be3bf0fecc89d72c7",
+      "afterSha256": null,
+      "action": "remove-corpus-declaration",
+      "qualification": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🟦️.ts",
+      "beforeSha256": "3c3aba30d46416157ec14530d0ace698008aa3a0442886af1c9c2fbdb26868e8",
+      "afterSha256": "9d397c826ad28f2cabb3f31e9adb3bc28b943ae0fd198cd7e2de7458f7376be3",
+      "action": "remove-whole-fixture-schema-consumer",
+      "qualification": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "8083288a17094f3cbddf05717b83c33918101308055c301ca22a0dfdc48a09eb",
+      "afterSha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+      "action": "remove-whole-fixture-schema-consumer",
+      "qualification": null
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "97e49269e882e545a31834fd026263473209e4a05e36c690105a252a4689733e",
+      "afterSha256": "012470cd4623faeb50586ca799a39785b18beca1555f7995fedbd2359fa9b9c5",
+      "action": "add-existing-private-current-four-facet",
+      "qualification": "Own exact facet only; concurrently inserted Pub facet observed, not authored"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "66f504b0c61dbbe826473708ddb967b0edadf0ef58b6a05f92ee75e61ccb38d9",
+      "afterSha256": "8c4020145a3b386e92f24c8746e913dd2d2aae136cb1ad45ca87b3c72f9cb206",
+      "action": "insert-exact-private-current-four-facet",
+      "ownedText": "    {\n      \"name\": \"🧫️fixtures-testing-only-current-four-corpora🧪️\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun \\\"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\\\" run ticket-fixture-verification:root-resumed-corpus-tests --skip-nx-cache --outputStyle=static --args=--current-four-only\",\n      \"cwd\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"NX_ISOLATE_PLUGINS\": \"false\",\n        \"NX_CACHE_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-cache\",\n        \"NX_WORKSPACE_DATA_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data\",\n        \"SEMIO_TEST_ARTIFACT_DIR\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated\",\n        \"FORCE_COLOR\": \"0\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.2985\n      }\n    },",
+      "qualification": "Only exact own900.2985 block is authored; shared whole text is observer"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "145d74a4876a5cc67bf76d110145f32e6da59ed3ed0949f5a361a2cdaf9d4b8e",
+      "afterSha256": "01a773516d6ffca59f442cae19a6a0ff88167296a627f235026be1416cae8884",
+      "action": "insert-exact-private-current-four-facet",
+      "ownedText": "    {\n      \"name\": \"🧫️fixtures-testing-only-current-four-corpora🧪️\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun \\\"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\\\" run ticket-fixture-verification:root-resumed-corpus-tests --skip-nx-cache --outputStyle=static --args=--current-four-only\",\n      \"cwd\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"NX_ISOLATE_PLUGINS\": \"false\",\n        \"NX_CACHE_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-cache\",\n        \"NX_WORKSPACE_DATA_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data\",\n        \"SEMIO_TEST_ARTIFACT_DIR\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated\",\n        \"FORCE_COLOR\": \"0\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.2985\n      }\n    },",
+      "qualification": "Only exact own900.2985 block is authored; shared whole text is observer"
+    }
+  ],
+  "plainExampleObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin/🔣️.json",
+      "beforeSha256": "363e4c48c738458eeec4e1ecac6670d599a163502063cff89e5ad947901dae73",
+      "afterSha256": "363e4c48c738458eeec4e1ecac6670d599a163502063cff89e5ad947901dae73",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧫️fixtures/🔣️.json",
+      "beforeSha256": "de62308c2b645c32f6deff2aaf1c07854b6c9ad31f7bebcb01016c04f64acc2f",
+      "afterSha256": "de62308c2b645c32f6deff2aaf1c07854b6c9ad31f7bebcb01016c04f64acc2f",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🔣️.json",
+      "beforeSha256": "8acab61d63594aa58e25846f4a3ca85e2e6d2ab25b55393caa490f3db86029f1",
+      "afterSha256": "8acab61d63594aa58e25846f4a3ca85e2e6d2ab25b55393caa490f3db86029f1",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source/🔣️.json",
+      "beforeSha256": "351077a8f16aaa3b7ddbac688b633054b8c7aa9b127374f3f88658d40cd36bce",
+      "afterSha256": "351077a8f16aaa3b7ddbac688b633054b8c7aa9b127374f3f88658d40cd36bce",
+      "unchanged": true,
+      "ownMutation": false
+    }
+  ],
+  "red": {
+    "session": 7210,
+    "exitCode": 1,
+    "duration": "747ms",
+    "sha256": "b1fa6e7ce564910d2328abc76db2f09d1ed201cd649f9a74947d4d1d28c465ca",
+    "reason": "Actual four physical corpus declarations"
+  },
+  "qualifiedAttempt": {
+    "exitCode": 1,
+    "duration": "89ms",
+    "reason": "Removed file left an empty adjacent schema module directory; exact empty retired directories removed"
+  },
+  "green": {
+    "exitCode": 0,
+    "sha256": "cb6565db81695efda47d67fb55928996a8c758b5ca167a9fec132536dc9a7371",
+    "log": "🗑️generated/oct8-root-current-four-corpus-settled-green.log",
+    "nativeInvocationCount": 0
+  },
+  "authority": "Retire four test schemas/two whole-corpus validators; retain every plain vector and genuine Rust/independent Three/RFC6902/Node bytes/UTF8 laws; no new schema/runtime feature/library/fallback"
+}

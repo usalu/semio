@@ -22,7 +22,7 @@ async fn removing_a_locked_middle_layer_restores_its_position_and_flags() {
     let mutation = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-mid".into(), name: "layer-mid".into(), remove: true, index: None });
     let removed = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("remove");
     let mut restored = removed;
-    for step in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
+    for step in mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         restored = protocol::apply_diff(step.diff(&restored).diff(), &restored).expect("inverse step");
     }
     assert_eq!(restored, base);

@@ -42,7 +42,8 @@
         "set-line-ending",
         "insert-line",
         "remove-line",
-        "set-line"
+        "set-line",
+        "splice-text"
       ]
     }
   ],
@@ -153,6 +154,28 @@
             "operation": "set-trailing-newline",
             "bridgeVersion": 1,
             "variant": "SetTrailingNewline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "txt-utf-8-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "bstr-txt-utf-8-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "splice-text",
+          "capability": "txt-utf-8-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "splice-text",
+            "bridgeVersion": 1,
+            "variant": "SpliceText"
           },
           "oracleRequirements": [
             {

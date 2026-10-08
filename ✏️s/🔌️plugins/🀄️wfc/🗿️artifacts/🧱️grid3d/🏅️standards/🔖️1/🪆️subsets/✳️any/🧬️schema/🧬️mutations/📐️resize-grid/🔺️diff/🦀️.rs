@@ -21,9 +21,9 @@ pub fn diff(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> protocol::Mut
         width: Some(payload.width),
         height: Some(payload.height),
         depth: Some(payload.depth),
-        cell_sizes_x: Some(Grid3dAxisPatch::between(&base.cell_sizes_x, &resized_axis(&base.cell_sizes_x, payload.width))).filter(|patch| !patch.is_empty()),
-        cell_sizes_y: Some(Grid3dAxisPatch::between(&base.cell_sizes_y, &resized_axis(&base.cell_sizes_y, payload.height))).filter(|patch| !patch.is_empty()),
-        cell_sizes_z: Some(Grid3dAxisPatch::between(&base.cell_sizes_z, &resized_axis(&base.cell_sizes_z, payload.depth))).filter(|patch| !patch.is_empty()),
+        cell_sizes_x: Some(Grid3dAxisPatch::resizing(&base.cell_sizes_x, payload.width)).filter(|patch| !patch.is_empty()),
+        cell_sizes_y: Some(Grid3dAxisPatch::resizing(&base.cell_sizes_y, payload.height)).filter(|patch| !patch.is_empty()),
+        cell_sizes_z: Some(Grid3dAxisPatch::resizing(&base.cell_sizes_z, payload.depth)).filter(|patch| !patch.is_empty()),
         ..Default::default()
     })
 }

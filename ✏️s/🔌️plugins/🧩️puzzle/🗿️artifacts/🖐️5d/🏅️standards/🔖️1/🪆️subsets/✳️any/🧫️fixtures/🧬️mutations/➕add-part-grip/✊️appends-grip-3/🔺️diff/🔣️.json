@@ -5,37 +5,40 @@
   "kindCompatibility": null,
   "meta": null,
   "parts": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "part-a",
         "patch": {
           "grips": {
-            "added": [
+            "inserted": [
               {
-                "2d": {
-                  "angle": 0.0
-                },
-                "3d": {
-                  "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                  ]
-                },
-                "gripKind": "grip-kind-b",
-                "id": "grip-3"
+                "index": 2,
+                "row": {
+                  "2d": {
+                    "angle": 0.0
+                  },
+                  "3d": {
+                    "position": [
+                      0.0,
+                      0.0,
+                      0.0
+                    ]
+                  },
+                  "gripKind": "grip-kind-b",
+                  "id": "grip-3"
+                }
               }
             ],
-            "patched": [],
-            "removed": [],
-            "reordered": null
+            "modified": [],
+            "moved": [],
+            "removed": []
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetVolumes": null

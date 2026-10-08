@@ -38,18 +38,23 @@ pub fn validate(payload: &GltfReparentNodePayload, base: &GltfSnapshot) -> Resul
 pub fn plan(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
     let child = p.child;
+    let occurrences = |children: &[usize]| -> Vec<(usize, usize)> { children.iter().enumerate().filter(|(_, candidate)| **candidate == child).map(|(at, _)| (child, at)).collect() };
     let mut nodes = Vec::new();
     for (index, node) in base.document.nodes.iter().enumerate() {
-        let kept: Vec<usize> = node.children.iter().copied().filter(|candidate| *candidate != child).collect();
-        let next = if index == p.parent { with_inserted(&kept, p.position, child) } else { kept };
-        if next != node.children {
-            nodes.push(GltfModified { index, diff: GltfNodeDiff { children: Some(next), ..Default::default() } });
+        let removed = occurrences(&node.children);
+        if index == p.parent && removed == [(child, p.position)] {
+            continue;
+        }
+        let inserted = if index == p.parent { vec![(p.position, GltfRef(child))] } else { Vec::new() };
+        if !removed.is_empty() || !inserted.is_empty() {
+            nodes.push(GltfModified { index, diff: GltfNodeDiff { children: Some(GltfRefsDelta::rows(removed, inserted, Vec::new())), ..Default::default() } });
         }
     }
     let mut scenes = Vec::new();
     for (index, scene) in base.document.scenes.iter().enumerate() {
-        if scene.nodes.contains(&child) {
-            scenes.push(GltfModified { index, diff: GltfSceneDiff { nodes: Some(scene.nodes.iter().copied().filter(|candidate| *candidate != child).collect()), ..Default::default() } });
+        let removed = occurrences(&scene.nodes);
+        if !removed.is_empty() {
+            scenes.push(GltfModified { index, diff: GltfSceneDiff { nodes: Some(GltfRefsDelta::rows(removed, Vec::new(), Vec::new())), ..Default::default() } });
         }
     }
     Ok(GltfDiff {
@@ -65,8 +70,7 @@ pub fn inverse(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Vec<super::G
     }
     let child = p.child;
     let parent_children = &base.document.nodes[p.parent].children;
-    let kept: Vec<usize> = parent_children.iter().copied().filter(|candidate| *candidate != child).collect();
-    let parent_changed = with_inserted(&kept, p.position, child) != *parent_children;
+    let parent_changed = parent_children.iter().position(|candidate| *candidate == child) != Some(p.position) || parent_children.iter().filter(|candidate| **candidate == child).count() != 1;
     let mut rows = Vec::new();
     if parent_changed {
         rows.push(super::unbind_node_child::mutation(super::unbind_node_child::GltfUnbindNodeChildPayload { parent: p.parent, child }));

@@ -20,7 +20,7 @@ export interface RemoveRun {
 
 export interface EditRun {
   index: number;
-  new_content: string;
+  new_text: string;
 }
 
 export interface ChangeRunLanguage {

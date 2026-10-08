@@ -7,7 +7,7 @@ export interface NamedModified<K, D> {
 export interface NamedTripleDiff<K, D, T> {
   removed: K[];
   modified: NamedModified<K, D>[];
-  added: T[];
+  added: NamedAdded<T>[];
 }
 import type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge} from "../📸️snapshot/🟦️.ts";
 export type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge} from "../📸️snapshot/🟦️.ts";
@@ -32,3 +32,6 @@ export interface SemioFlowDiff {
   /** @state artifact */ nodes?: FlowNodesDiff;
   /** @state artifact */ edges?: FlowEdgesDiff;
 }
+
+/** 🧩 One positional add: the row and the final index it lands at. */
+export interface NamedAdded<T> { index: number; item: T }

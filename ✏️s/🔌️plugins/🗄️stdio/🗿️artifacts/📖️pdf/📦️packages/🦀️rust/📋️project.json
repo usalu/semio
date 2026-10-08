@@ -109,6 +109,22 @@
         "command": "bun ./📜️script.ts test recursive-retirement",
         "forwardAllArgs": true
       }
+    },
+    "test-stream-roles": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test stream-roles",
+        "forwardAllArgs": true
+      }
     }
   }
 }

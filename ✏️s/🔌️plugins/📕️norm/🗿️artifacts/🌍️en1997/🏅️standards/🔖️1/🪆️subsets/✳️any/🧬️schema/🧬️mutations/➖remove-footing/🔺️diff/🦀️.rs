@@ -6,5 +6,5 @@ pub fn diff(payload: &RemoveFooting, base: &En1997Snapshot) -> protocol::Mutatio
     if payload.index >= base.footings.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("footing #{} missing", payload.index), vec![payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1997Diff { footings: Some(En1997FootingsRows { removed: vec![base.footings[payload.index].id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { footings: Some(En1997FootingsRows::removal(&base.footings, payload.index)), ..Default::default() })
 }

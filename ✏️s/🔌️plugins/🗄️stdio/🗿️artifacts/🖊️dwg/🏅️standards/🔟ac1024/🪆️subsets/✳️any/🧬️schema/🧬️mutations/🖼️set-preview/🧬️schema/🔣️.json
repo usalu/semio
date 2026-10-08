@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-preview/schema.json",
+  "title": "SetPreview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "preview"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setPreview",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "preview": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgIndexedPreview",
+      "x-semio-ui": {
+        "label": {
+          "en": "Preview image",
+          "de": "Vorschaubild"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

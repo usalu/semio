@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeFastenerKind` — patches the one addressed fastener in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenersDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenersDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::ChangeFastenerKind, base: &Puzzle5dSnapshot) -> pro
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
-        fasteners: Some(Puzzle5dFastenersDelta::patching(payload.id.clone(), patch)),
+        fasteners: Some(Puzzle5dFastenersDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

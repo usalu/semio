@@ -54,6 +54,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dxf/r12/header/mutation/set-block/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dxf/r12/header/mutation/set-other-tables/schema.json"
     }
   ]
 }

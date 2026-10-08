@@ -15,12 +15,8 @@ pub fn diff(payload: &super::AddNodeHandle, base: &Puzzle2dSnapshot) -> protocol
     if node.handles.iter().any(|handle| handle.id == payload.handle.id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Handle \"{}\" already exists on node \"{}\".", payload.handle.id, payload.node_id));
     }
-    let reordered = payload.index.filter(|index| *index < node.handles.len()).map(|index| {
-        let mut order: Vec<_> = node.handles.iter().map(|handle| handle.id.clone()).collect();
-        order.insert(index, payload.handle.id.clone());
-        order
-    });
-    let patch = Puzzle2dNodePatch { handles: Some(Puzzle2dHandlesDelta::adding(payload.handle.clone(), reordered)), ..Default::default() };
-    protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(Puzzle2dNodesDelta::patching(payload.node_id.clone(), patch)), ..Default::default() })
+    let index = payload.index.map_or(node.handles.len(), |index| index.min(node.handles.len()));
+    let patch = Puzzle2dNodePatch { handles: Some(Puzzle2dHandlesDelta::insertion(index, payload.handle.clone())), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(Puzzle2dNodesDelta::modification(payload.node_id.clone(), patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

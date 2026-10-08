@@ -1,16 +1,17 @@
 syntax = "proto3";
-// 🔺️ SemioTableDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+// 🔺️ SemioTableDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
 package semio.s_stdio_semio_table.diff;
 
-import "../📸️snapshot/🛰️.proto";
-
-message SemioTableColumnListDiff {
-  repeated semio.s_stdio_semio_table.snapshot.SemioTableColumn values = 1;
-}
-message SemioTableRowListDiff {
-  repeated semio.s_stdio_semio_table.snapshot.SemioTableRow values = 1;
-}
-message SemioTableDiff {
-  optional SemioTableColumnListDiff columns = 1;
-  optional SemioTableRowListDiff rows = 2;
-}
+message ReplaceSemioValue { bytes value = 1; }
+message IndexModifiedReplaceSemioValue { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioValue { uint64 index = 1; bytes item = 2; }
+message IndexedTripleReplaceSemioValueSemioValue { repeated uint64 removed = 1; repeated IndexModifiedReplaceSemioValue modified = 2; repeated IndexAddedSemioValue added = 3; }
+message IndexModifiedSemioTableColumnDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioTableColumn { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioTableColumnDiffSemioTableColumn { repeated uint64 removed = 1; repeated IndexModifiedSemioTableColumnDiff modified = 2; repeated IndexAddedSemioTableColumn added = 3; }
+message IndexModifiedSemioTableRowDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioTableRow { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioTableRowDiffSemioTableRow { repeated uint64 removed = 1; repeated IndexModifiedSemioTableRowDiff modified = 2; repeated IndexAddedSemioTableRow added = 3; }
+message SemioTableColumnDiff { optional string name = 1; optional SemioTableCellKind kind = 2; }
+message SemioTableRowDiff { optional IndexedTripleReplaceSemioValueSemioValue cells = 1; }
+message SemioTableDiff { optional IndexedTripleSemioTableColumnDiffSemioTableColumn columns = 1; optional IndexedTripleSemioTableRowDiffSemioTableRow rows = 2; }

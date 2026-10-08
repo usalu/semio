@@ -2,7 +2,7 @@
 
 use crate::editor::zip::base::modes::edit;
 use crate::editor::zip::base::modes::edit::windows::main;
-use crate::schema::mutations::net_mutations;
+use crate::schema::mutations::add_entry;
 use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
@@ -223,8 +223,16 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for ZipAnyE
         }
     }
 
-    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::zip::base::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::InsertValue { path, value } = event else { return Ok(None) };
+        let Some(position) = path.strip_prefix("/entries/") else { return Ok(None) };
+        let fail = |message: String| Fault::from(message);
+        let index = if position == "-" { snapshot.entries.len() } else { position.parse::<usize>().map_err(|error| fail(error.to_string()))? };
+        let entry = <crate::schema::snapshot::ZipEntry as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| fail(error.to_string()))?;
+        Ok(Some(vec![ZipMutation::AddEntry(add_entry::AddEntry { entry, before: snapshot.entries.get(index).map(|following| following.name.clone()) })]))
     }
 }
 //#endregion 🔖️Editor

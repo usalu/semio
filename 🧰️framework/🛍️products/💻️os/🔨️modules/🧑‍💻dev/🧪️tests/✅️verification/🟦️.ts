@@ -25,9 +25,7 @@ import { runTwoHumanCli } from "../👥️two-human/🟦️.ts";
 
 import { runToolRunMatrixCli } from "../⏯️tool-run-matrix/🟦️.ts";
 
-import { runHubDocumentSweepCli } from "../🗂️hub-document-sweep/🟦️.ts";
 
-import { runIoMatrixCli } from "../🚪️io-matrix/🟦️.ts";
 
 import { runConnectionBudgetCli } from "../🔀️connection-budget/🟦️.ts";
 
@@ -50,14 +48,6 @@ class VerifyScript extends BundleScript {
     const port = process.env.S_OS_PORT ?? "6070";
     const studioUrl = process.env.S_STUDIO_URL ?? `http://127.0.0.1:${port}/`;
     const timeoutMs = Number(process.env.S_STUDIO_E2E_TIMEOUT_MS ?? 300_000);
-    if (segments[0] === "hub-sweep") {
-      await runHubDocumentSweepCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🗂️hub-document-sweep"), segments.slice(1));
-      return;
-    }
-    if (segments[0] === "io") {
-      await runIoMatrixCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🚪️io-matrix"), segments.slice(1));
-      return;
-    }
     if (segments[0] === "home") {
       await runHomeE2eCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🏠️home-e2e"), segments.slice(1));
       return;

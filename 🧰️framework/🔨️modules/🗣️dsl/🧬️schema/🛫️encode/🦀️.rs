@@ -2,7 +2,7 @@
 use super::{DslField,DslVariants,FieldValue,RecordValue,NativeEncodeControl,ValueError,RecordFields};
 
 /// 🔎️ One immutable authored field at an ordinal path, without constructing a source mirror.
-pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
+pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value::paged_text::TextReadView<'a>),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
 
 /// 🌱️ The retained operation keeps this source immutable until projection and publication finish.
 pub trait FieldProjectionSource{
@@ -50,7 +50,7 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
                 if depth>=65{return Err(ValueError::new(K::DepthLimit,"retained source demand exceeds depth limit"))}
                 let mut frame=FieldProjectionMeasureFrame::default();
                 let (count,width)=match source.projection_view(&self.measure_path[..depth])?{
-                    V::Text(text)|V::IntrinsicText(text)=>(text.len(),1),V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>(bytes.len(),1),
+                    V::Text(text)|V::IntrinsicText(text)=>(text.len(),1),V::TextSource(text)|V::IntrinsicTextSource(text)=>(text.len(),1),V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>(bytes.len(),1),
                     V::Record(ids)=>{if ids.len()>256{return Err(ValueError::new(K::OwnershipLimit,"retained record exceeds declared field capacity"))}frame.kind=3;frame.length=ids.len();(ids.len(),std::mem::size_of::<(u16,FieldValue)>())},
                     V::List(length)|V::Tuple(length)=>{frame.kind=4;frame.length=length;(length,std::mem::size_of::<FieldValue>())},
                     V::Map(length)=>{frame.kind=7;frame.length=length;(length,std::mem::size_of::<(String,FieldValue)>())},
@@ -82,6 +82,7 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
         use FieldProjectionView as V;
         let mut frame=FieldProjectionFrame{value:FieldValue::Absent,kind:0,length:0,next:0,position:0,ids:&[],key:None,key_length:0};
         frame.value=match view{
+            V::TextSource(_)|V::IntrinsicTextSource(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"paged semantic source requires its direct retained encoding route")),
             V::Absent=>FieldValue::Absent,V::Bool(value)=>FieldValue::Bool(value),V::Int(value)=>FieldValue::Int(value),V::UInt(value)=>FieldValue::UInt(value),V::Float(value)=>FieldValue::Float(value),V::Enum(value)=>FieldValue::Enum(value),
             V::Text(text)=>{control.charge(text.len())?;let mut value=String::new();value.try_reserve_exact(text.len()).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"retained field text allocation failed"))?;frame.kind=1;frame.length=text.len();FieldValue::Text(value)},
             V::Bytes(bytes)=>{frame.kind=2;frame.length=bytes.len();FieldValue::Bytes64(control.allocate_vec(bytes.len())?)},
@@ -198,12 +199,12 @@ pub fn project_statements<T:DslVariants,C:super::DslSequenceView<T>+?Sized>(valu
 }
 
 /// 🫳️ Borrows a declared original operation variant without owning a Record payload mirror.
-pub struct VariantProjection<'a,T:DslVariants>{source:&'a T}
-impl<'a,T:DslVariants> VariantProjection<'a,T>{
+pub struct VariantProjection<'a,T:crate::BorrowedDslVariants>{source:&'a T}
+impl<'a,T:crate::BorrowedDslVariants> VariantProjection<'a,T>{
     /// 🌿️ Keeps the exact original variant immutable through canonical emission.
     pub fn new(source:&'a T)->Self{Self{source}}
 }
-impl<T:DslVariants> FieldProjectionSource for VariantProjection<'_,T>{
-    fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>{self.source.projected_variant_view(path)}
-    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.source.projected_variant_key(path,index)}
+impl<T:crate::BorrowedDslVariants> FieldProjectionSource for VariantProjection<'_,T>{
+    fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>{self.source.projected_borrowed_variant_view(path)}
+    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.source.projected_borrowed_variant_key(path,index)}
 }

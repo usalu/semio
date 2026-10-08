@@ -91,7 +91,7 @@ mod subject {
     use super::{mutable_input, spec};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::apply_zip_mutation;
+    
     use semio_s_artifact_stdio_zip::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, ZipMutation, ZipSnapshot};
     use semio_s_artifact_stdio_zip_test_oracle::standards::v2_0::subsets::base::project_zip_mutation;
     use semio_repo_test_host::law::wire_operation;
@@ -119,7 +119,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode(&input)?;
-        apply_zip_mutation(&mut snapshot, &mutation_from_spec(&spec(ctx)?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&spec(ctx)?)?);
         let bytes = encode(&snapshot)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".into());
@@ -134,9 +134,9 @@ mod subject {
         let original = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut snapshot = original.clone();
-        apply_zip_mutation(&mut snapshot, &mutation);
-        for step in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
-            apply_zip_mutation(&mut snapshot, &step);
+        apply_mutation(&mut snapshot, &mutation);
+        for step in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &step);
         }
         let bytes = encode(&snapshot)?;
         let projection = project_zip_mutation(&bytes)?;

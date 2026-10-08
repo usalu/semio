@@ -1,0 +1,91 @@
+{
+  "capturedAt": "2026-10-08T16:57:53.013Z",
+  "ownedEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "bytes": 33569,
+      "sha256": "5caf8e9883671200445f84443972de14e0dbad19720ce0f51eb810bf2fda3115"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "bytes": 4497,
+      "sha256": "c021ee239bb89a688366759482664043038c1870afda8737f263b22412c1723d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "bytes": 7056,
+      "sha256": "0051f5fb82a2c435fdea086ad0d0cda35156711f0057468d1a1d8927981427d3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+      "bytes": 4093,
+      "sha256": "6ed52b410e06b30849578a7d6dd110df5285c4f7cbc7bf9d95aa3aa9458a6574"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+      "bytes": 28027,
+      "sha256": "6c55980229f7d109c5e10601485a3c6540f5753b30c64fafd1b7591d528850f2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+      "bytes": 17877,
+      "sha256": "de6986b88dedb5eaf334325fb99a6766e5558c5131f3e71e4567823f66099274"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "bytes": 7056,
+      "sha256": "b39961ab5f9c9a247c7e933ef083b39edcfcb61df58e2e570756948f3627f58e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "bytes": 14663,
+      "sha256": "f1c2ee7b31e627963c8291601c1eb30359080bdedeafa4e68722244d26a703f5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "bytes": 1097,
+      "sha256": "ec37e216f82b1e40cfbeede7a92ea8fa0eea0db0bad9ca805dff48e62136d904"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 2642,
+      "sha256": "2918b3af75ce65a54de5a6bc0daa98f69348b4954aaf2f6d63ddb2d59c87778d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+      "bytes": 40136,
+      "sha256": "d585bdade032c1d1b57d64cbbde7204660e578233bd862880dfe3ee6b025b335"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧰️runtime/🟦️.ts",
+      "bytes": 1757,
+      "sha256": "8609214e3916ab40f2c8c4f31ec2d73b708a443b86000dbadddbb14e91ccece5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts",
+      "bytes": 3474,
+      "sha256": "3c5091823c57092a0213e680930fe0896ac21e96ea8dea639880d0e5fae8e006"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",
+      "bytes": 497,
+      "sha256": "b171b33c66ef5d82f166bf20a0ae02930694a9776b969fe581f892c69422c877"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🕰️queued-preparation/🔣️.json",
+      "bytes": 207,
+      "sha256": "95e52ad19babdfdb4e52d1bc7e71aaabff6148f9c19a4ecab24019bef3d7dbe7"
+    }
+  ],
+  "canonicalScope": "repo.library.workspaces.cargo.preparation.custody",
+  "invocationDefinitionRestored": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json",
+    "sha256": "5b6e1b17fc20748ecab793e37cc47795a5f52127e025203e16dec0efe18a3b27",
+    "hasDefs": false
+  },
+  "newExports": [
+    "CargoPreparationSelectionV1",
+    "CargoPreparationInvocationV1"
+  ],
+  "canonicalInventory": "🗑️generated/oct8-scoped-planner-final-artifacts/cargo-custody-inventory.json"
+}

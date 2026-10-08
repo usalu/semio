@@ -153,17 +153,6 @@ impl protocol::DiffAlgebra<MapWindowConfig> for MapWindowConfigDiff {
         })
     }
 
-    fn between(base: &MapWindowConfig, other: &MapWindowConfig) -> Self {
-        Self::from(MapWindowConfigDelta {
-            layer_visibility: base.layer_visibility.keys().chain(other.layer_visibility.keys()).collect::<std::collections::BTreeSet<_>>().into_iter().filter(|id| base.layer_visibility.get(*id) != other.layer_visibility.get(*id)).map(|id| (id.clone(), other.layer_visibility.get(id).copied())).collect(),
-            camera_json: (base.camera_json != other.camera_json).then(|| other.camera_json.clone()),
-            render_mode: (base.render_mode != other.render_mode).then(|| other.render_mode.clone()),
-            vector_style: (base.vector_style != other.vector_style).then(|| other.vector_style.clone()),
-            lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()),
-            layer_stroke_scale: base.layer_stroke_scale.keys().chain(other.layer_stroke_scale.keys()).collect::<std::collections::BTreeSet<_>>().into_iter().filter(|id| base.layer_stroke_scale.get(*id) != other.layer_stroke_scale.get(*id)).map(|id| (id.clone(), other.layer_stroke_scale.get(id).copied())).collect(),
-        })
-    }
-
     fn is_empty(&self) -> bool {
         self.steps.iter().all(|step| *step == MapWindowConfigDelta::default())
     }

@@ -1,0 +1,7 @@
+{
+  "SetRouteProperty": {
+    "feature": "route-ferry",
+    "key": "label",
+    "value": "Lake Express"
+  }
+}

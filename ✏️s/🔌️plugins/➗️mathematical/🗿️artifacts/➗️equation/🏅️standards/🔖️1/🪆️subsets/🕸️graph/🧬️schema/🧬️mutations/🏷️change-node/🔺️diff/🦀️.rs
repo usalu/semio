@@ -10,8 +10,8 @@ pub fn diff(payload: &super::ChangeNodeLabel, base: &EquationSnapshot) -> protoc
     if existing.label == payload.new_label {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" already has label \"{}\".", payload.id, payload.new_label));
     }
-    let patch = EquationNodePatch { id: payload.id.clone(), label: Some(payload.new_label.clone()), ..Default::default() };
-    let diff = EquationDiff { nodes: Some(EquationNodesDelta { patched: vec![patch], ..Default::default() }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base))
+    let patch = EquationNodePatch { label: Some(payload.new_label.clone()), ..Default::default() };
+    let diff = EquationDiff { nodes: Some(EquationNodesDelta::modification(payload.id.clone(), patch)), ..Default::default() };
+    protocol::MutationOutcome::new(diff)
 }
 //#endregion 🔖️Diff

@@ -39,13 +39,17 @@ use crate::standards::v_ap214::engine::ladder;
 use crate::StepSnapshot;
 use protocol::Mutation;
 
-pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
+#[cfg(test)]
+pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation};
+pub use crate::standards::v_ap214::subsets::base::schema::mutations::{StepMutation};
 
 //#region 🔖️Vocabulary
 /// 🏷️ How this class names itself in a rejection message.
 pub(crate) const CLASS: &str = "ISO 10303-214 CC5 (faceted B-Rep)";
 
 //#region 🔖️Leaves
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "↩️restore-entities/🦀️.rs"]
 pub mod restore_entities;
 #[path = "⬇️demote-shape-representation/🦀️.rs"]
@@ -96,6 +100,7 @@ impl StepCc5Mutation {
 /// A rejected edit reports an error message with an empty diff and leaves the snapshot untouched —
 /// never applied partially, never silently skipped.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_step_cc5_mutation(snapshot: &mut StepSnapshot, mutation: &StepCc5Mutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepCc5Mutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -119,22 +124,6 @@ pub(crate) fn restored(rows: Vec<ladder::EntityRestore>) -> Vec<StepCc5Mutation>
         return Vec::new();
     }
     vec![StepCc5Mutation::RestoreEntities(restore_entities::RestoreEntities { entities: rows })]
-}
-
-/// 🧮️ The leaf mutations that carry `base` to `next`: a changed `FILE_SCHEMA` becomes `set-file-schema` and every entity edit becomes a
-/// `restore-entities` row ordered so no intermediate snapshot holds a dangling reference. `None` when `next` changes the document `schema`, the
-/// file description or the file name, which this class has no verb for, or when the entity edits cannot be ordered.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_mutations(base: &StepSnapshot, next: &StepSnapshot) -> Option<Vec<StepCc5Mutation>> {
-    if base.schema != next.schema || base.header.file_description != next.header.file_description || base.header.file_name != next.header.file_name {
-        return None;
-    }
-    let mut leaves = Vec::new();
-    if base.header.file_schema != next.header.file_schema {
-        leaves.push(StepCc5Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: next.header.file_schema.schemas.clone() }));
-    }
-    leaves.extend(restored(ladder::net_restore_rows(base, next)?));
-    Some(leaves)
 }
 //#endregion 🔖️Apply
 

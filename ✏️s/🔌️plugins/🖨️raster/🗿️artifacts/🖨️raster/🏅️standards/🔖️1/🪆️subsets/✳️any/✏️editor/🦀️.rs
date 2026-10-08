@@ -82,6 +82,14 @@ use std::collections::HashMap;
 use store::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
+/// 🌱️ Load effect for a whole document: example switches, JSON loads and imports replace the document through the
+/// artifact's load path, never as mutation rows or history.
+pub(crate) fn raster_reset_document_effect(document: &RasterSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <RasterSnapshot as ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&document.id.to_string(), RASTER_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+
 //#region 🔖️Constants
 pub const RASTER_PLAY_CONTROLLER_ID: &str = "raster-play";
 /// 🌳️ Prefix for every layer-tree row id — shared by the document/masks panels and the `moveLayer`
@@ -1312,8 +1320,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// 🎞️ `image:in` inserts the incoming raster media as a new composited layer + embedded asset —
     /// two real semantic mutations (`add-layer-asset` then `create-layer`, in dependency order)
     /// bundled in one `Emit`, never a whole-document replace (`RasterMutation` has no such variant
-    /// anymore). Falls through to the inherited `document:in` default (`MediaError::NotImplemented`,
-    /// since `whole_document_operation` is no longer overridden) for any other port.
+    /// anymore). Falls through to the inherited `document:in` load default for any other port.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "image:in" {
             return Err(MediaError::NotImplemented);

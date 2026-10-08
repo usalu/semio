@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -131,4 +132,26 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
     artifact_app_laws::close_registered_fixture_app(&mut reopened);
     artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
+    
+    use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviStream};
+    let base = AviSnapshot { streams: vec![AviStream { chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1], keyframe: false }], ..AviStream::default() }], ..AviSnapshot::default() };
+    let emit = |event: editing::SnapshotEditEvent| <AviEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let header = emit(editing::SnapshotEditEvent::SetValue { path: "/mainHeader/width".into(), value: semio_framework_value::DslValue::uint(640) }).expect("a header field edit resolves");
+    let [mutation @ AviMutation::SetMainHeader(_)] = header.artifact_mutations.as_slice() else { panic!("a main header edit raises the main-header kind") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.main_header.width, 640);
+    let key = emit(editing::SnapshotEditEvent::SetValue { path: "/streams/0/chunks/0/keyframe".into(), value: semio_framework_value::DslValue::Bool(true) }).expect("a keyframe flag edit resolves");
+    assert!(matches!(key.artifact_mutations.as_slice(), [AviMutation::SetChunkKeyframe(_)]));
+    let content = emit(editing::SnapshotEditEvent::SetValue { path: "/streams/0/chunks/0/fourcc".into(), value: semio_framework_value::DslValue::String("01wb".into()) }).expect("a chunk content edit resolves");
+    let mut state = base.clone();
+    content.artifact_mutations.iter().for_each(|mutation| {
+        apply_mutation(&mut state, mutation);
+    });
+    assert_eq!(state.streams[0].chunks[0].fourcc, "01wb");
+    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
 }

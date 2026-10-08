@@ -209,7 +209,7 @@ fn enrich_surfaces(snapshot: &mut Generation3dSnapshot, from: &GltfSnapshot) -> 
         }
         payload.as_object_mut().ok_or_else(|| io_error("glTF constructor is not an object"))?.insert("attributes", Json::Object(attributes));
         let enriched = payload.to_string();
-        semio_framework::parse_polygon_mesh_source(&enriched).map_err(io_error)?;
+        semio_framework::mesh_io::text::parse_polygon_mesh_source(&enriched).map_err(io_error)?;
         total = total.checked_add(enriched.len()).ok_or_else(|| io_error("glTF surface payload capacity overflow"))?;
         if total > 16_000_000 { return Err(io_error("glTF surface exceeds its document capacity")); }
         *text = enriched;

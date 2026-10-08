@@ -3227,9 +3227,9 @@ pub mod ui {
         canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal,
         canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step,
         world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page,
-        world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dFraming, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage,
+        world3d_snapshot_write_terminal_is_empty, BlockListSelectionTarget, BlockListBlock, BlockListStep, BlockListPaletteEntry, BlockListScene, Board2dScene, Canvas2dFraming, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage,
         Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain,
-        NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, LocatedTextSplice, AppliedTextSplice, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TiledMapScene, VirtualFileSystemScene,
+        NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, LocatedTextSplice, AppliedTextSplice, DraftChange, DRAFT_SPLICES_ARGUMENT, compose_draft_step, write_draft_changes_json_into, DraftChangesJsonCursor, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TiledMapScene, VirtualFileSystemScene,
         scene_lane_hash, world3d_modelling_lane_text, world3d_modelling_strings, world3d_sub_element_paint, project_world3d_annotations, format_world3d_legend_value, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dHighlight, World3dLabelAlign,
         World3dLegendLines, World3dMarkerShape, World3dModellingOptions, World3dModellingStrings, World3dPickGranularity, World3dProjectedAnnotation, World3dScalarDomain, World3dScalarField, World3dSection, World3dSubElementDefaults, World3dText, World3dTone,
         WORLD3D_ANNOTATION_ARROW_PX, WORLD3D_ANNOTATION_LABEL_GAP_PX, WORLD3D_ANNOTATION_MARKER_PX, WORLD3D_ANNOTATION_STROKE_PX, WORLD3D_SCALAR_NO_DATA_RGB, World3dProjectedArc,
@@ -3407,7 +3407,7 @@ pub mod ui {
     }
 
     // 🎬️ `BlockListScene` itself moved to `semio-framework-ui-scene` (see the re-export above);
-    // `BlockPaletteEntry` above stays — `palette_json` is an opaque string on the moved type.
+    // `BlockPaletteEntry` above is the host palette contribution projected into scene entries.
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]

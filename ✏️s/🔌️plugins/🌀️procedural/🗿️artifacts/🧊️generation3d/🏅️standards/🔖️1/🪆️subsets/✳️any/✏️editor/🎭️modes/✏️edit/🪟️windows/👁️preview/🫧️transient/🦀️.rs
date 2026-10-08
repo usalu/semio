@@ -137,11 +137,6 @@ impl protocol::DiffAlgebra<Generation3dPreviewWindowTransient> for Generation3dP
             preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalText { value: base.preview_eval_text.clone() }),
         }
     }
-    fn between(base: &Generation3dPreviewWindowTransient, other: &Generation3dPreviewWindowTransient) -> Self {
-        Self {
-            preview_eval_text: (base.preview_eval_text != other.preview_eval_text).then(|| Generation3dPreviewEvalText { value: other.preview_eval_text.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.preview_eval_text.is_none()
     }

@@ -1,0 +1,12 @@
+{
+  "name": "@semio-framework/os-infinite-terrain-ownership",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📜️script.ts\" test"
+      }
+    }
+  }
+}

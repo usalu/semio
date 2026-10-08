@@ -8,7 +8,7 @@ use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use crate::editor::puzzle2d::unit_tests::context::*;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 fn fill_children(runtime: Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
     let measure = measures(&scene(empty_board_snapshot(), runtime, overview::utilities::select::UTILITY_ID), labels);
@@ -47,12 +47,12 @@ fn fill_count_is_the_only_unbounded_measure_and_defaults_to_one_hundred() {
 /// table: policies, trace kind, job kinds, stage/counter/reason ids and codes, verdicts and the EN/DE texts.
 #[test]
 fn fill_tool_declares_the_schema_tool_run_definition() {
-    let schema: Value = serde_json::from_str(include_str!("../../../../../../../🧬️schema/🔣️.json")).expect("puzzle2d schema parses");
+    let schema: Value = semio_framework_pack_json::from_json_str(include_str!("../../../../../../../🧬️schema/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("puzzle2d schema parses");
     let table = &schema["$defs"]["Puzzle2dFillRun"]["x-semio-toolRun"];
     let definition = definition(puzzle2d_localized(|labels| labels.fill));
     let run = definition.run.as_ref().expect("the fill tool declares run");
     run.validate().expect("the fill run definition validates");
-    let json = serde_json::to_value(run).expect("run definition serializes");
+    let json = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(run)));
     for key in ["mutating", "rebase", "reconfigure", "trace", "runJob", "revalidateJob"] {
         assert_eq!(json[key], table[key], "{key}");
     }
@@ -71,7 +71,7 @@ fn fill_tool_declares_the_schema_tool_run_definition() {
     for (reason, row) in run.reasons.iter().zip(rows("reasons")) {
         assert_eq!(u64::from(reason.code), row["code"].as_u64().unwrap_or(u64::MAX), "{}", reason.id);
         assert_eq!(reason.id, row["id"].as_str().unwrap_or_default());
-        assert_eq!(serde_json::to_value(reason.verdict).expect("verdict serializes"), row["verdict"], "{}", reason.id);
+        assert_eq!(semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(reason.verdict))), row["verdict"], "{}", reason.id);
         assert_eq!((text(&reason.template, Locale::En), text(&reason.template, Locale::De)), (row["en"].as_str().unwrap_or_default().to_string(), row["de"].as_str().unwrap_or_default().to_string()), "{}", reason.id);
     }
 }

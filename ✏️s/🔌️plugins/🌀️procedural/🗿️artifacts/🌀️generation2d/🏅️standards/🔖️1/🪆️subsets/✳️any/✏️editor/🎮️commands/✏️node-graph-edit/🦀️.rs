@@ -1,7 +1,7 @@
 //! 🕸️ Generation2d command — `node-graph-edit`: the one verb both node-graph hosts dispatch for graph edits.
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::host_operations;
+use crate::standards::v1::subsets::any::schema::{host_connect_ports, host_disconnect, host_insert_port, host_remove_widget, with_host};
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{change_slider_value,move_nodes};
 
@@ -30,14 +30,11 @@ pub fn rows(payload: &NodeGraphEdit) -> Result<Vec<NodeGraphEditRow>, Fault> {
 /// ✂️ Cuts the wire `synapse_id`. When operator kinds are not yet contributed, the host rebuild can drop unresolved wires
 /// before the cut runs; the canvas still names the document synapse, so that cut lands as a document-level
 /// `disconnect-synapse`. A wire neither holds is refused.
-fn cut(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, synapse_id: &str, document_cuts: &mut Vec<Generation2dMutation>) -> Result<(), String> {
-    match host.disconnect(synapse_id) {
-        Ok(()) => Ok(()),
-        Err(_) if host_snapshot.synapses.iter().any(|synapse| synapse.id == synapse_id) => {
-            document_cuts.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string()));
-            Ok(())
-        }
-        Err(error) => Err(error.to_string()),
+fn cut(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, synapse_id: &str) -> Result<Vec<Generation2dMutation>, String> {
+    match host_disconnect(host, synapse_id) {
+        Ok(leaves) => Ok(leaves),
+        Err(_) if host_snapshot.synapses.iter().any(|synapse| synapse.id == synapse_id) => Ok(vec![crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string())]),
+        Err(error) => Err(error),
     }
 }
 
@@ -52,35 +49,56 @@ fn cut(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, synapse_id: &str, 
 fn apply_rows(doc: &ArtifactView<'_, Generation2dSnapshot>, rows: &[NodeGraphEditRow]) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let host_snapshot = &doc.snapshot.host_snapshot;
     let structural = rows.iter().any(|row| matches!(row, NodeGraphEditRow::Connect { .. } | NodeGraphEditRow::Disconnect { .. } | NodeGraphEditRow::InsertPort { .. } | NodeGraphEditRow::Delete { .. }));
-    let mut document_cuts = Vec::new();
     let mut refusal = None;
-    let mut leaves = if structural {
-        host_operations(host_snapshot, |host| {
-            refusal = rows
-                .iter()
-                .try_for_each(|row| match row {
-                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(|error| error.to_string()),
-                    NodeGraphEditRow::Disconnect { synapse_id } => cut(host, host_snapshot, synapse_id, &mut document_cuts),
-                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Input, index } => host.add_input_port(node_id, *index as usize).map_err(|error| error.to_string()),
-                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Output, index } => host.add_output_port(node_id, *index as usize).map_err(|error| error.to_string()),
+    let mut leaves = Vec::new();
+    if structural {
+        with_host(host_snapshot, |host| {
+            for row in rows {
+                let produced = match row {
+                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => host_connect_ports(host, source_node_id, source_port_id, target_node_id, target_port_id),
+                    NodeGraphEditRow::Disconnect { synapse_id } => cut(host, host_snapshot, synapse_id),
+                    NodeGraphEditRow::InsertPort { node_id, side, index } => host_insert_port(host, node_id, matches!(side, NodePortSide::Input), *index as usize),
                     NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
-                        synapse_ids.iter().try_for_each(|synapse_id| cut(host, host_snapshot, synapse_id, &mut document_cuts))?;
-                        node_ids.iter().try_for_each(|node_id| host.remove_widget(node_id).map_err(|error| error.to_string()))
+                        let mut cuts = Vec::new();
+                        let mut failed = None;
+                        for synapse_id in synapse_ids {
+                            match cut(host, host_snapshot, synapse_id) {
+                                Ok(mut produced) => cuts.append(&mut produced),
+                                Err(error) => {
+                                    failed = Some(error);
+                                    break;
+                                }
+                            }
+                        }
+                        for node_id in node_ids.iter().filter(|_| failed.is_none()) {
+                            match host_remove_widget(host, node_id) {
+                                Ok(mut produced) => cuts.append(&mut produced),
+                                Err(error) => {
+                                    failed = Some(error);
+                                    break;
+                                }
+                            }
+                        }
+                        failed.map_or(Ok(cuts), Err)
                     }
-                    NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } => Ok(()),
-                })
-                .err();
-        })
-    } else {
-        Vec::new()
-    };
+                    NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } => Ok(Vec::new()),
+                };
+                match produced {
+                    Ok(mut produced) => leaves.append(&mut produced),
+                    Err(error) => {
+                        refusal = Some(error);
+                        break;
+                    }
+                }
+            }
+        });
+    }
     if let Some(reason) = refusal {
-        for leaf in leaves.into_iter().chain(document_cuts) {
+        for leaf in leaves {
             leaf.retire_cold();
         }
         return Err(Fault::from(format!("nodeGraphEdit refusal: {reason}")));
     }
-    leaves.extend(document_cuts);
     leaves.extend(rows.iter().filter_map(|row| match row {
         NodeGraphEditRow::SetSlider { widget_id, value } => slider_leaf(host_snapshot, widget_id, *value),
         _ => None,

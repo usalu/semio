@@ -1,0 +1,336 @@
+{
+  "messageOwnerBytes": 96,
+  "targetOwnerBytes": 24,
+  "maximumEntryBytes": 4096,
+  "maximumCodeBytes": 64,
+  "copyGrants": [
+    1,
+    2,
+    4,
+    7
+  ],
+  "cancelTurns": [
+    0,
+    1,
+    2,
+    7,
+    31,
+    127
+  ],
+  "cases": [
+    {
+      "name": "missing-node",
+      "level": "error",
+      "code": "mutation.target-missing",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "static",
+          "text": "node \"",
+          "repeat": 1
+        },
+        {
+          "kind": "text",
+          "text": "ä🐚\u0000",
+          "repeat": 1
+        },
+        {
+          "kind": "static",
+          "text": "\" not found",
+          "repeat": 1
+        }
+      ],
+      "targets": [
+        {
+          "text": "ä🐚\u0000",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          0
+        ],
+        "text": "node \"ä🐚\u0000\" not found",
+        "truncated": false,
+        "entryBytes": 174
+      }
+    },
+    {
+      "name": "giant-id",
+      "level": "fatal",
+      "code": "mutation.invariant",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "static",
+          "text": "node \"",
+          "repeat": 1
+        },
+        {
+          "kind": "text",
+          "text": "🐚ä",
+          "repeat": 20000
+        },
+        {
+          "kind": "static",
+          "text": "\" not found",
+          "repeat": 1
+        }
+      ],
+      "targets": [
+        {
+          "text": "🐚ä",
+          "repeat": 20000
+        }
+      ],
+      "expected": {
+        "targetIndices": [],
+        "text": "node \"🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚",
+        "truncated": true,
+        "entryBytes": 256
+      }
+    },
+    {
+      "name": "quoted-shape",
+      "level": "fatal",
+      "code": "mutation.invariant",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "static",
+          "text": "invalid shape ",
+          "repeat": 1
+        },
+        {
+          "kind": "quoted",
+          "text": "a\"\\\n\r\t\b\f\u0000\u0001ä🐚",
+          "repeat": 1
+        }
+      ],
+      "targets": [
+        {
+          "text": "id",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          0
+        ],
+        "text": "invalid shape \"a\\\"\\\\\\n\\r\\t\\b\\f\\u0000\\u0001ä🐚\"",
+        "truncated": false,
+        "entryBytes": 189
+      }
+    },
+    {
+      "name": "giant-quoted",
+      "level": "fatal",
+      "code": "mutation.invariant",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "quoted",
+          "text": "🐚\u0000",
+          "repeat": 20000
+        }
+      ],
+      "targets": [
+        {
+          "text": "id",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          0
+        ],
+        "text": "\"🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\u0000🐚\\",
+        "truncated": true,
+        "entryBytes": 256
+      }
+    },
+    {
+      "name": "empty-target-owners",
+      "level": "warning",
+      "code": "mutation.no-op",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "static",
+          "text": "no changes to apply",
+          "repeat": 1
+        }
+      ],
+      "targets": [
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "text": "no",
+        "truncated": true,
+        "entryBytes": 256
+      }
+    },
+    {
+      "name": "skipped-large-target",
+      "level": "error",
+      "code": "mutation.target-missing",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "static",
+          "text": "not found",
+          "repeat": 1
+        }
+      ],
+      "targets": [
+        {
+          "text": "large",
+          "repeat": 2000
+        },
+        {
+          "text": "small",
+          "repeat": 1
+        },
+        {
+          "text": "",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          1,
+          2
+        ],
+        "text": "not found",
+        "truncated": false,
+        "entryBytes": 181
+      }
+    },
+    {
+      "name": "native-limit",
+      "level": "fatal",
+      "code": "mutation.invariant",
+      "limit": 4096,
+      "fragments": [
+        {
+          "kind": "text",
+          "text": "ä🐚",
+          "repeat": 20000
+        }
+      ],
+      "targets": [
+        {
+          "text": "id",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          0
+        ],
+        "text": "ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä🐚ä",
+        "truncated": true,
+        "entryBytes": 4096
+      }
+    },
+    {
+      "name": "decimal-count",
+      "level": "warning",
+      "code": "mutation.partial-selection",
+      "limit": 256,
+      "fragments": [
+        {
+          "kind": "unsigned",
+          "text": "18446744073709551615",
+          "repeat": 1
+        },
+        {
+          "kind": "static",
+          "text": " of ",
+          "repeat": 1
+        },
+        {
+          "kind": "unsigned",
+          "text": "18",
+          "repeat": 1
+        },
+        {
+          "kind": "static",
+          "text": " selected",
+          "repeat": 1
+        }
+      ],
+      "targets": [
+        {
+          "text": "a",
+          "repeat": 1
+        }
+      ],
+      "expected": {
+        "targetIndices": [
+          0
+        ],
+        "text": "18446744073709551615 of 18 selected",
+        "truncated": false,
+        "entryBytes": 182
+      }
+    },
+    {
+      "name": "empty-body",
+      "level": "info",
+      "code": "mutation.cascade",
+      "limit": 256,
+      "fragments": [],
+      "targets": [],
+      "expected": {
+        "targetIndices": [],
+        "text": "",
+        "truncated": false,
+        "entryBytes": 112
+      }
+    }
+  ]
+}

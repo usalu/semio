@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "sha256": "bdd6df214577a579118bf4ed4189757b952b03fa7be54f68cfeee5a36f3a0c0e",
+    "role": "shared observer with only exact preimage/action blocks authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/🦀️.rs",
+    "sha256": "3cc27c6cdb2dfcc7577afe9c8925623a126938f298446fbcfa0f2dad187afe9a",
+    "role": "shared observer with only exact preimage/action blocks authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+    "sha256": "6499b39d6d3002b3d9b9bee88d68734a079feb641b008835b767bab85055e613",
+    "role": "shared observer with only exact preimage/action blocks authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "sha256": "59c7680c54e3a0c053601ce28489a22ecbb064e39ba7803048a5fa82e83bf4ad",
+    "role": "shared observer with only exact preimage/action blocks authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "sha256": "8e6e80a3235c238a9cfea0d09b4f45299022327c96003af026b38c6ec8889513",
+    "role": "current authored neutral"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "b1279da2d6fd33146fe9d96aa82c42d68e259629ab381ed5f61e2555dde49315",
+    "role": "shared observer with only exact preimage/action blocks authored"
+  }
+]

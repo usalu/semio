@@ -1,0 +1,77 @@
+{
+  "status": "source-only-phased-test-ingress-and-installed-readiness",
+  "logicalActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "265bd9070ae180be4e9ab01ed56ff179571a1f3c9fcfa34c3b9376d97e354d83",
+      "before": "fn physical_test_close_grant() -> RetainedCloneGrant {",
+      "after": "fn complete_test_catalog<P, M>(admitted: Result<(DocumentStoreOwners<P, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, M>>) -> DocumentStoreOwners<P, M>\nwhere P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + super::Mutation<P>,\n{\n    let grant=physical_test_close_grant();\n    let (mut owners,progress)=admitted.unwrap_or_else(|error|panic!(\"test catalog ingress refused while retaining original custody: {}\",error.error));\n    assert!(progress.fits(grant));\n    for _ in 0..8 {\n        if owners.constructor_is_complete() { return owners; }\n        owners.constructor_demands().expect(\"test catalog has genuine pending ticket demand\");\n        let progress=owners.admit_constructor(grant).unwrap_or_else(|(error,_)|panic!(\"test catalog ticket admission refused: {error}\"));\n        assert!(progress.fits(grant));assert!(progress.copied_items<=1);\n    }\n    panic!(\"test catalog retained incomplete original factory tickets\");\n}\n\nfn physical_test_close_grant() -> RetainedCloneGrant {",
+      "occurrences": 1,
+      "afterSha256": "e6bd024296b68eb060e8991042a6d11f6e79880e74890a456e928a3b33e51092"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "e6bd024296b68eb060e8991042a6d11f6e79880e74890a456e928a3b33e51092",
+      "before": "P::member_store_owners()",
+      "after": "complete_test_catalog(P::member_store_owners(physical_test_close_grant()))",
+      "occurrences": 1,
+      "afterSha256": "d93f8b3af98c9e7b517e99a39895f96e2abb02e97a3580e460c7afc68f86ae1e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "d93f8b3af98c9e7b517e99a39895f96e2abb02e97a3580e460c7afc68f86ae1e",
+      "before": "DemoSnapshot::member_store_owners()",
+      "after": "complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))",
+      "occurrences": 6,
+      "afterSha256": "31139d006452b2e566742a9479e8345a313b76a2768eb184374a79cb48928576"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "31139d006452b2e566742a9479e8345a313b76a2768eb184374a79cb48928576",
+      "before": "<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners()",
+      "after": "complete_test_catalog(<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(physical_test_close_grant()))",
+      "occurrences": 2,
+      "afterSha256": "176e291fdec72ce6c23ecec8abb9422a84594dd481cd7ae760c00a16ac9c12a1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "176e291fdec72ce6c23ecec8abb9422a84594dd481cd7ae760c00a16ac9c12a1",
+      "before": "DocumentStoreOwners::new(\n        Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&completed))),\n        Arc::new(ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis))),\n        Arc::new(DemoMutationRetirementFactory),\n        Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()),\n    )",
+      "after": "complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))",
+      "occurrences": 3,
+      "afterSha256": "4d407eea3026f09053e07f8d72f8427f584d6d2a3e4eba573ed9e9a3e76ec1f6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "4d407eea3026f09053e07f8d72f8427f584d6d2a3e4eba573ed9e9a3e76ec1f6",
+      "before": "DocumentStoreOwners::new(Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots))), Arc::new(ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis))), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))",
+      "after": "complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))",
+      "occurrences": 1,
+      "afterSha256": "33a176da5445f4f210a1fbe87fa31cff794ae04a42809cb702f06c44f4034fa4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "33a176da5445f4f210a1fbe87fa31cff794ae04a42809cb702f06c44f4034fa4",
+      "before": "DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))",
+      "after": "complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))",
+      "occurrences": 1,
+      "afterSha256": "b6a4b92ab43229ed759b9d9f96ac9946ffd680ecdb9867ba77b7d302c8426681"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "b6a4b92ab43229ed759b9d9f96ac9946ffd680ecdb9867ba77b7d302c8426681",
+      "before": "DocumentStoreOwners::new(\n        Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),\n        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default()),\n        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),\n        Box::new(ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new()),\n    )",
+      "after": "complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new())))",
+      "occurrences": 1,
+      "afterSha256": "9814cfa4fad434c15e64e07160049945d91cfa102356d65975bb2664fe469baf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "dee2ed688543efb3cec51120726ca1f108edd92b1baffcedf246aa02a276fcd3",
+      "before": "    pub fn install_document_store_owners_exact(&mut self, mut owners: DocumentStoreOwners<P, Mutation>) {\n        assert!(",
+      "after": "    pub fn install_document_store_owners_exact(&mut self, mut owners: DocumentStoreOwners<P, Mutation>) {\n        assert!(owners.constructor_is_complete(), \"installed original catalog requires every admitted factory ticket before transfer\");\n        assert!(",
+      "occurrences": 1,
+      "afterSha256": "7385e3541bf3aacb29b07b104ab6a6b2a6540ec3c08738e7c7d1839f827fa717"
+    }
+  ]
+}

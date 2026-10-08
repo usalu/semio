@@ -1,5 +1,5 @@
 ; Direct binary frame: version, descriptor tag, leaf-owned payload.
-; paint-indexed-region=9, paint-direct-region=10
+; paint-indexed-region=9, paint-direct-region=10, replace-image=12, replace-samples=13
 mutation = %x01 tag *OCTET
-tag = %x07 / %x08 / %x09 / %x0A
+tag = %x09 / %x0A / %x0C / %x0D
 OCTET = %x00-FF

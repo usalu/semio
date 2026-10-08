@@ -9,29 +9,35 @@
   "breps": null,
   "referencesByModelDefinitionId": {
     "spatial.shape": {
-      "added": [
+      "removed": [
         {
-          "id": "ref-2",
-          "sourceUrl": "https://example.test/site.png",
-          "mediaKind": "image",
-          "origin": [
-            5.0,
-            0.0,
-            0.0
-          ],
-          "orientation": null,
-          "scale": null,
-          "widthWorld": 16.0,
-          "hidden": false,
-          "locked": false,
-          "opacity": null
+          "id": "ref-1",
+          "index": 0
         }
       ],
-      "removed": [
-        "ref-1"
+      "inserted": [
+        {
+          "index": 0,
+          "row": {
+            "id": "ref-2",
+            "sourceUrl": "https://example.test/site.png",
+            "mediaKind": "image",
+            "origin": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "orientation": null,
+            "scale": null,
+            "widthWorld": 16.0,
+            "hidden": false,
+            "locked": false,
+            "opacity": null
+          }
+        }
       ],
-      "patched": [],
-      "reordered": null
+      "moved": [],
+      "modified": []
     }
   },
   "nodes": null

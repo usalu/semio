@@ -1,17 +1,22 @@
 //! 🧪️ Native topology lookup follows independent SQLite results without ownership copies.
 
 use super::*;
-use semio_framework_value::retained_clone::RetainedCloneBorrowAuthority;
-
 fn close(cursor: &mut Puzzle2dLookupCursor) {
     cursor.begin_close();
     for _ in 0..32 {
         if cursor.terminal_is_empty() { return; }
-        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(1, 4));
-        assert_eq!(allocation.requested_bytes, 0);
-        assert_eq!(allocation.released_bytes, 0);
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();
+        let release=cursor.next_close_release_byte_demand().unwrap();
+        let depth=cursor.next_close_depth_demand().unwrap();
+        assert!(copy+capacity+release<=4096);
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
+        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(grant));
+        let progress=step.unwrap().progress();
+        assert!(progress.fits(grant));
+        assert_eq!(allocation.requested_bytes, progress.retained_capacity_bytes);
+        assert_eq!(allocation.released_bytes, progress.released_bytes);
         assert!(!allocation.overflowed);
-        assert!(!matches!(step.unwrap(), SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > 4));
     }
     panic!("native lookup retained an alias after bounded closure");
 }
@@ -27,7 +32,8 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
             None => PagedUtf8::<{usize::MAX}>::from(value),
         }
     };
-    let grant = BoundedOrdGrant { maximum_items: controls["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: controls["maximumBytes"].as_u64().unwrap() as usize };
+    assert_eq!(controls["maximumItems"],1);
+    let grant = RetainedCloneGrant::one_payload_turn(controls["maximumBytes"].as_u64().unwrap() as usize,1);
     for case in corpus["cases"].as_array().unwrap() {
         let scope = match case["scope"].as_str().unwrap() { "node" => Puzzle2dLookupScope::Node, "edge" => Puzzle2dLookupScope::Edge, "region" => Puzzle2dLookupScope::Region, "handle" => Puzzle2dLookupScope::Handle, _ => panic!("unknown authored lookup scope") };
         let mut snapshot = Puzzle2dSnapshot::default();
@@ -36,22 +42,23 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
         snapshot.target_regions = case["regions"].as_array().unwrap().iter().map(|id| crate::Puzzle2dTargetRegion { id: text(id), ..Default::default() }).collect();
         let target = text(&case["target"]);
         let original = serde_json::to_value(&snapshot).unwrap();
-        let source = RetainedCloneBorrowAuthority::new("native lookup snapshot");
-        let query = RetainedCloneBorrowAuthority::new("native lookup target");
+        let mut source = crate::test_source_custody::admit();
+        let mut query = crate::test_source_custody::admit();
         let mut cursor = Puzzle2dLookupCursor::new(scope);
-        let (zero, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), query.borrow(&target), BoundedOrdGrant { maximum_items: 0, maximum_bytes: 0 }));
-        assert_eq!(zero.unwrap(), Puzzle2dLookupStep::Pending(BoundedOrdProgress::default()));
+        let (zero, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), query.borrow(&target), RetainedCloneGrant::default()));
+        assert_eq!(zero.unwrap(), Puzzle2dLookupStep::Pending(Default::default()));
         assert_eq!(allocation.requested_bytes, 0);
         assert_eq!(allocation.released_bytes, 0);
         let mut found = None;
-        for _ in 0..100_000 {
+        for turn in 0..100_000 {
+            let grant=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,1)};
             let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), query.borrow(&target), grant));
             assert_eq!(allocation.requested_bytes, 0);
             assert_eq!(allocation.released_bytes, 0);
             assert!(!allocation.overflowed);
             let step = step.unwrap();
             let progress = match step { Puzzle2dLookupStep::Pending(progress) | Puzzle2dLookupStep::Complete { progress, .. } => progress };
-            assert!(progress.compared_items <= grant.maximum_items && progress.compared_bytes <= grant.maximum_bytes);
+            assert!(progress.fits(grant));
             if let Puzzle2dLookupStep::Complete { location, .. } = step { found = Some(location); break; }
         }
         let found = found.expect("native lookup failed to complete");
@@ -73,6 +80,8 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
             close(&mut cancelled);
             assert_eq!(cancelled.take(), None);
         }
+        crate::test_source_custody::close(&mut query);
+        crate::test_source_custody::close(&mut source);
     }
     eprintln!("[DEBUG] Puzzle2d native lookup matched six authored SQLite topologies, zero-allocation UTF8 comparison, source swap and exact alias closure");
 }

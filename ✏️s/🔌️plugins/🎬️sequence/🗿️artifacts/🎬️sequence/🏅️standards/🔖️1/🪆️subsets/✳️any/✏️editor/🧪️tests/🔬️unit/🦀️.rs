@@ -540,33 +540,6 @@ async fn execution_ports_use_triangle_shape() {
 
 
 #[semio_framework_async_macros::async_test]
-async fn replace_snapshot_preserves_next_serial_and_selection() {
-    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
-    let first = host.add_step("math.add", 40.0, 40.0);
-    host.dag.set_selection(std::slice::from_ref(&first));
-    let json = host.to_json().expect("fixture json");
-    let round_trip: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parse");
-    host.replace_snapshot(round_trip).expect("replace");
-    let second = host.add_step("math.add", 80.0, 80.0);
-    assert_ne!(first, second);
-    assert!(host.snapshot.steps.iter().any(|step| step.id == first));
-    assert!(host.snapshot.steps.iter().any(|step| step.id == second));
-    assert!(host.dag.selected_node_ids().contains(&first));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn repeated_drops_after_replace_snapshot_use_distinct_ids() {
-    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
-    let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
-    let json = host.to_json().expect("fixture json");
-    let round_trip: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parse");
-    host.replace_snapshot(round_trip).expect("replace");
-    let second = host.add_step_dropped("math.add", 20.0, 20.0, None);
-    assert_ne!(first, second);
-    assert_eq!(host.snapshot.steps.iter().filter(|step| step.kind == "math.add").count(), 2);
-}
-
-#[semio_framework_async_macros::async_test]
 async fn add_step_dropped_targets_expanded_control_slot() {
     let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });

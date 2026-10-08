@@ -332,7 +332,14 @@ export type ValueSpec =
   | { k: "list"; of: ValueSpec }
   | { k: "map"; of: ValueSpec }
   | { k: "rec"; of: () => RecordSpec }
-  | { k: "opt"; of: ValueSpec };
+  | { k: "opt"; of: ValueSpec }
+  | { k: "tagged"; tag: string; variants: readonly TaggedVariant[] };
+
+/** 🏷️ One variant of an internally tagged union: the wire object is `{ [tag]: name, ...fields }`. */
+export interface TaggedVariant {
+  name: string;
+  spec: () => RecordSpec;
+}
 
 export interface FieldSpec {
   /** 🐍 Rust `snake_case` name — the single source both wire renames derive from. */
@@ -798,6 +805,7 @@ export function decodeValue(value:unknown,spec:ValueSpec,path:string):unknown {
  case "map":{if(!isPlainObject(value))return fail(path,"expected a map");const out:Record<string,unknown>={};for(const key of Object.keys(value).sort())Object.defineProperty(out,key,{value:decodeValue(value[key],spec.of,path+"."+key),enumerable:true,writable:true,configurable:true});return out}
  case "rec":return decodeRecord(value,spec.of(),path);
  case "opt":return value===null?null:decodeValue(value,spec.of,path);
+ case "tagged":{if(!isPlainObject(value))return fail(path,"expected a tagged object");const variant=spec.variants.find(candidate=>candidate.name===value[spec.tag]);if(variant===undefined)return fail(path+"."+spec.tag,"unknown variant");const fields={...value};delete fields[spec.tag];return{[spec.tag]:variant.name,...decodeRecord(fields,variant.spec(),path)}}
  }
 }
 export function decodeRecord(value: unknown, spec: RecordSpec, path: string): Record<string, unknown> {

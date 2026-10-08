@@ -1,0 +1,1 @@
+{"version":1,"endpoint":"/__semio_composition_probe","cases":[{"id":"caller-config-dev","profile":"dev","buildMode":"dev","accepted":true},{"id":"caller-config-release","profile":"release","buildMode":"ship","accepted":true},{"id":"parent-path-refused","profile":"dev","buildMode":"dev","accepted":false}]}

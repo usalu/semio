@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-template/schema.json",
+  "title": "SetTemplate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "template"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setTemplate",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "template": {
+      "type": "object",
+      "x-semio-ui": {
+        "label": {
+          "en": "Template",
+          "de": "Vorlage"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

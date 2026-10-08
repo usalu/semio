@@ -5,7 +5,7 @@ use crate::{BridgeFatigue, En1993Mutation, En1993Snapshot};
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct InsertBridgeFatigue { pub index: usize, pub bridge_fatigue_item: BridgeFatigue }
+pub struct InsertBridgeFatigue { pub index: Option<usize>, pub bridge_fatigue_item: BridgeFatigue }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertBridgeFatigue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "bridge-fatigue", kind: "insert-bridge-fatigue", record: "InsertedBridgeFatigue" };
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> { super::diff::diff(self, base) }

@@ -21,18 +21,30 @@ type En1993Diff {
 }
 
 type En1993MaterialDelta {
-  removed: [String!]!
-  added: [En1993MaterialAddition!]!
+  removed: [En1993MaterialRemoval!]!
+  inserted: [En1993MaterialInsertion!]!
+  moved: [En1993MaterialRelocation!]!
   modified: [En1993MaterialModification!]!
 }
 
-type En1993MaterialAddition {
-  after: String
+type En1993MaterialRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993MaterialInsertion {
+  index: Int!
   row: SteelMaterial!
 }
 
+type En1993MaterialRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993MaterialModification {
-  key: String!
+  id: String!
   patch: En1993MaterialPatch!
 }
 
@@ -47,18 +59,30 @@ type En1993MaterialPatch {
 }
 
 type En1993SectionDelta {
-  removed: [String!]!
-  added: [En1993SectionAddition!]!
+  removed: [En1993SectionRemoval!]!
+  inserted: [En1993SectionInsertion!]!
+  moved: [En1993SectionRelocation!]!
   modified: [En1993SectionModification!]!
 }
 
-type En1993SectionAddition {
-  after: String
+type En1993SectionRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993SectionInsertion {
+  index: Int!
   row: SteelSection!
 }
 
+type En1993SectionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993SectionModification {
-  key: String!
+  id: String!
   patch: En1993SectionPatch!
 }
 
@@ -85,18 +109,30 @@ type En1993SectionPatch {
 }
 
 type En1993MemberDelta {
-  removed: [String!]!
-  added: [En1993MemberAddition!]!
+  removed: [En1993MemberRemoval!]!
+  inserted: [En1993MemberInsertion!]!
+  moved: [En1993MemberRelocation!]!
   modified: [En1993MemberModification!]!
 }
 
-type En1993MemberAddition {
-  after: String
+type En1993MemberRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993MemberInsertion {
+  index: Int!
   row: SteelMember!
 }
 
+type En1993MemberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993MemberModification {
-  key: String!
+  id: String!
   patch: En1993MemberPatch!
 }
 
@@ -118,18 +154,30 @@ type En1993MemberPatch {
 }
 
 type En1993LoadCaseDelta {
-  removed: [String!]!
-  added: [En1993LoadCaseAddition!]!
+  removed: [En1993LoadCaseRemoval!]!
+  inserted: [En1993LoadCaseInsertion!]!
+  moved: [En1993LoadCaseRelocation!]!
   modified: [En1993LoadCaseModification!]!
 }
 
-type En1993LoadCaseAddition {
-  after: String
+type En1993LoadCaseRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993LoadCaseInsertion {
+  index: Int!
   row: LoadCase!
 }
 
+type En1993LoadCaseRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993LoadCaseModification {
-  key: String!
+  id: String!
   patch: En1993LoadCasePatch!
 }
 
@@ -140,18 +188,30 @@ type En1993LoadCasePatch {
 }
 
 type En1993MemberActionDelta {
-  removed: [String!]!
-  added: [En1993MemberActionAddition!]!
+  removed: [En1993MemberActionRemoval!]!
+  inserted: [En1993MemberActionInsertion!]!
+  moved: [En1993MemberActionRelocation!]!
   modified: [En1993MemberActionModification!]!
 }
 
-type En1993MemberActionAddition {
-  after: String
+type En1993MemberActionRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993MemberActionInsertion {
+  index: Int!
   row: MemberAction!
 }
 
+type En1993MemberActionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993MemberActionModification {
-  key: String!
+  id: String!
   patch: En1993MemberActionPatch!
 }
 
@@ -162,18 +222,30 @@ type En1993MemberActionPatch {
 }
 
 type En1993JointDelta {
-  removed: [String!]!
-  added: [En1993JointAddition!]!
+  removed: [En1993JointRemoval!]!
+  inserted: [En1993JointInsertion!]!
+  moved: [En1993JointRelocation!]!
   modified: [En1993JointModification!]!
 }
 
-type En1993JointAddition {
-  after: String
+type En1993JointRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993JointInsertion {
+  index: Int!
   row: SteelJoint!
 }
 
+type En1993JointRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993JointModification {
-  key: String!
+  id: String!
   patch: En1993JointPatch!
 }
 
@@ -204,18 +276,30 @@ type En1993JointPatch {
 }
 
 type En1993FatigueDetailDelta {
-  removed: [String!]!
-  added: [En1993FatigueDetailAddition!]!
+  removed: [En1993FatigueDetailRemoval!]!
+  inserted: [En1993FatigueDetailInsertion!]!
+  moved: [En1993FatigueDetailRelocation!]!
   modified: [En1993FatigueDetailModification!]!
 }
 
-type En1993FatigueDetailAddition {
-  after: String
+type En1993FatigueDetailRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993FatigueDetailInsertion {
+  index: Int!
   row: FatigueDetail!
 }
 
+type En1993FatigueDetailRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993FatigueDetailModification {
-  key: String!
+  id: String!
   patch: En1993FatigueDetailPatch!
 }
 
@@ -227,18 +311,30 @@ type En1993FatigueDetailPatch {
 }
 
 type En1993FireExposureDelta {
-  removed: [String!]!
-  added: [En1993FireExposureAddition!]!
+  removed: [En1993FireExposureRemoval!]!
+  inserted: [En1993FireExposureInsertion!]!
+  moved: [En1993FireExposureRelocation!]!
   modified: [En1993FireExposureModification!]!
 }
 
-type En1993FireExposureAddition {
-  after: String
+type En1993FireExposureRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993FireExposureInsertion {
+  index: Int!
   row: FireExposure!
 }
 
+type En1993FireExposureRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993FireExposureModification {
-  key: String!
+  id: String!
   patch: En1993FireExposurePatch!
 }
 
@@ -255,18 +351,30 @@ type En1993FireExposurePatch {
 }
 
 type En1993ColdFormedMemberDelta {
-  removed: [String!]!
-  added: [En1993ColdFormedMemberAddition!]!
+  removed: [En1993ColdFormedMemberRemoval!]!
+  inserted: [En1993ColdFormedMemberInsertion!]!
+  moved: [En1993ColdFormedMemberRelocation!]!
   modified: [En1993ColdFormedMemberModification!]!
 }
 
-type En1993ColdFormedMemberAddition {
-  after: String
+type En1993ColdFormedMemberRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993ColdFormedMemberInsertion {
+  index: Int!
   row: ColdFormedMember!
 }
 
+type En1993ColdFormedMemberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993ColdFormedMemberModification {
-  key: String!
+  id: String!
   patch: En1993ColdFormedMemberPatch!
 }
 
@@ -281,18 +389,30 @@ type En1993ColdFormedMemberPatch {
 }
 
 type En1993PlatedPanelDelta {
-  removed: [String!]!
-  added: [En1993PlatedPanelAddition!]!
+  removed: [En1993PlatedPanelRemoval!]!
+  inserted: [En1993PlatedPanelInsertion!]!
+  moved: [En1993PlatedPanelRelocation!]!
   modified: [En1993PlatedPanelModification!]!
 }
 
-type En1993PlatedPanelAddition {
-  after: String
+type En1993PlatedPanelRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993PlatedPanelInsertion {
+  index: Int!
   row: PlatedPanel!
 }
 
+type En1993PlatedPanelRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993PlatedPanelModification {
-  key: String!
+  id: String!
   patch: En1993PlatedPanelPatch!
 }
 
@@ -306,18 +426,30 @@ type En1993PlatedPanelPatch {
 }
 
 type En1993SiloShellDelta {
-  removed: [String!]!
-  added: [En1993SiloShellAddition!]!
+  removed: [En1993SiloShellRemoval!]!
+  inserted: [En1993SiloShellInsertion!]!
+  moved: [En1993SiloShellRelocation!]!
   modified: [En1993SiloShellModification!]!
 }
 
-type En1993SiloShellAddition {
-  after: String
+type En1993SiloShellRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993SiloShellInsertion {
+  index: Int!
   row: SiloShell!
 }
 
+type En1993SiloShellRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993SiloShellModification {
-  key: String!
+  id: String!
   patch: En1993SiloShellPatch!
 }
 
@@ -331,18 +463,30 @@ type En1993SiloShellPatch {
 }
 
 type En1993TensionComponentDelta {
-  removed: [String!]!
-  added: [En1993TensionComponentAddition!]!
+  removed: [En1993TensionComponentRemoval!]!
+  inserted: [En1993TensionComponentInsertion!]!
+  moved: [En1993TensionComponentRelocation!]!
   modified: [En1993TensionComponentModification!]!
 }
 
-type En1993TensionComponentAddition {
-  after: String
+type En1993TensionComponentRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993TensionComponentInsertion {
+  index: Int!
   row: TensionComponent!
 }
 
+type En1993TensionComponentRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993TensionComponentModification {
-  key: String!
+  id: String!
   patch: En1993TensionComponentPatch!
 }
 
@@ -353,18 +497,30 @@ type En1993TensionComponentPatch {
 }
 
 type En1993BridgeFatigueDelta {
-  removed: [String!]!
-  added: [En1993BridgeFatigueAddition!]!
+  removed: [En1993BridgeFatigueRemoval!]!
+  inserted: [En1993BridgeFatigueInsertion!]!
+  moved: [En1993BridgeFatigueRelocation!]!
   modified: [En1993BridgeFatigueModification!]!
 }
 
-type En1993BridgeFatigueAddition {
-  after: String
+type En1993BridgeFatigueRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993BridgeFatigueInsertion {
+  index: Int!
   row: BridgeFatigue!
 }
 
+type En1993BridgeFatigueRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993BridgeFatigueModification {
-  key: String!
+  id: String!
   patch: En1993BridgeFatiguePatch!
 }
 
@@ -378,18 +534,30 @@ type En1993BridgeFatiguePatch {
 }
 
 type En1993TowerLegDelta {
-  removed: [String!]!
-  added: [En1993TowerLegAddition!]!
+  removed: [En1993TowerLegRemoval!]!
+  inserted: [En1993TowerLegInsertion!]!
+  moved: [En1993TowerLegRelocation!]!
   modified: [En1993TowerLegModification!]!
 }
 
-type En1993TowerLegAddition {
-  after: String
+type En1993TowerLegRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993TowerLegInsertion {
+  index: Int!
   row: TowerLeg!
 }
 
+type En1993TowerLegRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993TowerLegModification {
-  key: String!
+  id: String!
   patch: En1993TowerLegPatch!
 }
 
@@ -401,18 +569,30 @@ type En1993TowerLegPatch {
 }
 
 type En1993PileDelta {
-  removed: [String!]!
-  added: [En1993PileAddition!]!
+  removed: [En1993PileRemoval!]!
+  inserted: [En1993PileInsertion!]!
+  moved: [En1993PileRelocation!]!
   modified: [En1993PileModification!]!
 }
 
-type En1993PileAddition {
-  after: String
+type En1993PileRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993PileInsertion {
+  index: Int!
   row: SteelPile!
 }
 
+type En1993PileRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993PileModification {
-  key: String!
+  id: String!
   patch: En1993PilePatch!
 }
 
@@ -426,18 +606,30 @@ type En1993PilePatch {
 }
 
 type En1993CraneRunwayDelta {
-  removed: [String!]!
-  added: [En1993CraneRunwayAddition!]!
+  removed: [En1993CraneRunwayRemoval!]!
+  inserted: [En1993CraneRunwayInsertion!]!
+  moved: [En1993CraneRunwayRelocation!]!
   modified: [En1993CraneRunwayModification!]!
 }
 
-type En1993CraneRunwayAddition {
-  after: String
+type En1993CraneRunwayRemoval {
+  id: String!
+  index: Int!
+}
+
+type En1993CraneRunwayInsertion {
+  index: Int!
   row: CraneRunway!
 }
 
+type En1993CraneRunwayRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type En1993CraneRunwayModification {
-  key: String!
+  id: String!
   patch: En1993CraneRunwayPatch!
 }
 

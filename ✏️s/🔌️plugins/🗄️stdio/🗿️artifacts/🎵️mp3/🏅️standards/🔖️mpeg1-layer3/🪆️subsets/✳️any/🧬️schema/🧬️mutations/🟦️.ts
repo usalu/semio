@@ -1,10 +1,8 @@
-/** 🧬️ Mp3Mutation schema. 🚧 scaffolded by W1b — generic facet mirror; the Mp3Mutation
- * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Mp3MutationEntry {
-  key: string;
-  value: string;
-}
-export interface Mp3Mutation {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Mp3MutationEntry[];
-}
+import {parseId3v1Tag,parseId3v2Tag,parseMp3Frame,type Id3v1Tag,type Id3v2Tag,type Mp3Frame,type Mp3Snapshot,Mp3SnapshotRefusal} from "../📸️snapshot/🟦️.ts";
+import {parseMp3Diff,type Mp3Diff} from "../🔺️diff/🟦️.ts";
+/** 🧬️ Semantic MP3 tag and encoded audio sequence mutations. */
+export type Mp3Mutation={mutation:"setId3v1";id3v1:Id3v1Tag|null}|{mutation:"setId3v2";id3v2:Id3v2Tag|null}|{mutation:"setFrames";frames:Mp3Frame[]};
+export function parseMp3Mutation(value:unknown):Mp3Mutation{if(value===null||typeof value!=="object"||Array.isArray(value))throw new Mp3SnapshotRefusal("$","mutation object");const row=value as Record<string,unknown>;if(row.mutation==="setId3v1")return{mutation:row.mutation,id3v1:row.id3v1===null?null:parseId3v1Tag(row.id3v1)};if(row.mutation==="setId3v2")return{mutation:row.mutation,id3v2:row.id3v2===null?null:parseId3v2Tag(row.id3v2)};if(row.mutation==="setFrames"&&Array.isArray(row.frames))return{mutation:row.mutation,frames:row.frames.map((item,index)=>parseMp3Frame(item,`frames[${index}]`))};throw new Mp3SnapshotRefusal("$","mutation kind");}
+export function mp3MutationDiff(mutation:Mp3Mutation):Mp3Diff{const admitted=parseMp3Mutation(mutation);return admitted.mutation==="setId3v1"?{id3v1:admitted.id3v1}:admitted.mutation==="setId3v2"?{id3v2:admitted.id3v2}:{frames:admitted.frames};}
+export function applyMp3Diff(base:Mp3Snapshot,diff:Mp3Diff):Mp3Snapshot{const admitted=parseMp3Diff(diff);return{schema:base.schema,id3v1:Object.hasOwn(admitted,"id3v1")?admitted.id3v1!:base.id3v1,id3v2:Object.hasOwn(admitted,"id3v2")?admitted.id3v2!:base.id3v2,frames:admitted.frames??base.frames};}
+export function inverseMp3Diff(base:Mp3Snapshot,diff:Mp3Diff):Mp3Diff{const admitted=parseMp3Diff(diff);return{...(Object.hasOwn(admitted,"id3v1")?{id3v1:base.id3v1}:{}),...(Object.hasOwn(admitted,"id3v2")?{id3v2:base.id3v2}:{}),...(Object.hasOwn(admitted,"frames")?{frames:base.frames}:{})};}

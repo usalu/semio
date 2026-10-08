@@ -41,22 +41,6 @@ pub fn decode_semio_cad_mutation_json(text: &str) -> Result<SemioCadMutation, St
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
-/// 🎙️ Hand-rolled `OpText`/`OpBinary` — reuses the diff module's `pub(crate)` grammar primitives
-/// (`enc_str`/`enc_layer`/`enc_block`/`enc_entity`/`encode_option`/...) rather than duplicating
-/// them, same pattern `BcfMutation` established. Grammar: `keyword arg=value ...`
-/// (space-separated), one match arm per variant.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_cad_snapshot(s: &SemioCadSnapshot) -> String {
-    format!("[{},{},{},{}]", enc_str(&s.schema), enc_list(&s.layers, enc_layer), enc_list(&s.blocks, enc_block), enc_list(&s.entities, enc_entity_record))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, layers, blocks, entities] = parts.as_slice() else { return Err(format!("cad snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioCadSnapshot { schema: dec_str(schema)?, layers: dec_list(layers, dec_layer)?, blocks: dec_list(blocks, dec_block)?, entities: dec_list(entities, dec_entity_record)? })
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_at(at: Option<usize>) -> String {
     at.map(|at| format!(" at={at}")).unwrap_or_default()

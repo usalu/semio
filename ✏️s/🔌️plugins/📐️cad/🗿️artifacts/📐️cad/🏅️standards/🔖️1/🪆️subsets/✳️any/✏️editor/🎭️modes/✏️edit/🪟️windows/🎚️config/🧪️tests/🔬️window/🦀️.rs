@@ -367,5 +367,4 @@ async fn cad_world_window_config_inverse_sums_to_the_negative_diff() {
     next.camera.zoom = 2.5;
     next.dislocate_options.move_enabled = false;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadWorldWindowConfigMutation::Set { config: Box::new(next.clone()) }, &base).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<CadWorldWindowConfig, CadWorldWindowConfigDiff>(&base, &next).await;
 }

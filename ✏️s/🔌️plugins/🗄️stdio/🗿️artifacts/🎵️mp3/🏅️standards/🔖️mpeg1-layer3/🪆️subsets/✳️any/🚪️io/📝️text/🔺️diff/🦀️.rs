@@ -100,60 +100,13 @@ pub(crate) fn enc_bool(b: bool) -> &'static str {
     }
 }
 
-/// 🧭️ `Id3Frame.id` is a 4-char printable ID3 frame id (`TIT2`/`TPE1`/…) — never contains
-/// `,`/`[`/`]`/`;` in practice, so it's safe as a bare top-level token.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_id3_frame(f: &Id3Frame) -> String {
-    format!("[{},{},{}]", f.id, f.flags, hex_encode(&f.data))
-}
+fn enc_metadata<T:semio_framework_value::ToValue>(value:&T)->String{format!("[{}]",hex_encode(semio_framework_pack_json::to_json_string(&value.to_value()).as_bytes()))}
+fn dec_metadata<T:semio_framework_value::FromValue>(source:&str)->Result<T,String>{let bytes=hex_decode(strip_brackets(source)?)?;let text=std::str::from_utf8(&bytes).map_err(|e|e.to_string())?;semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e|e.to_string())}
+pub(crate) fn enc_id3v2(tag:&Id3v2Tag)->String{enc_metadata(tag)}
+pub(crate) fn dec_id3v2(source:&str)->Result<Id3v2Tag,String>{let tag:Id3v2Tag=dec_metadata(source)?;for frame in &tag.frames{crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3_frame(frame)?;}Ok(tag)}
+pub(crate) fn enc_id3v1(tag:&Id3v1Tag)->String{enc_metadata(tag)}
+pub(crate) fn dec_id3v1(source:&str)->Result<Id3v1Tag,String>{let tag=dec_metadata(source)?;crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3v1_tag(&tag)?;Ok(tag)}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_id3_frame(s: &str) -> Result<Id3Frame, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    if parts.len() != 3 {
-        return Err(format!("id3 frame: expected 3 fields, got {}", parts.len()));
-    }
-    Ok(Id3Frame { id: parts[0].to_string(), flags: parse_u16(parts[1])?, data: hex_decode(parts[2])? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_id3_frames(frames: &[Id3Frame]) -> String {
-    format!("[{}]", frames.iter().map(enc_id3_frame).collect::<Vec<_>>().join(";"))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_id3_frames(s: &str) -> Result<Vec<Id3Frame>, String> {
-    let inner = strip_brackets(s)?;
-    split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_id3_frame).collect()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_id3v2(tag: &Id3v2Tag) -> String {
-    format!("[{},{},{},{}]", tag.major_version, tag.minor_version, tag.flags, enc_id3_frames(&tag.frames))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_id3v2(s: &str) -> Result<Id3v2Tag, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    if parts.len() != 4 {
-        return Err(format!("id3v2: expected 4 fields, got {}", parts.len()));
-    }
-    Ok(Id3v2Tag { major_version: parse_u8(parts[0])?, minor_version: parse_u8(parts[1])?, flags: parse_u8(parts[2])?, frames: dec_id3_frames(parts[3])? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_id3v1(tag: &Id3v1Tag) -> String {
-    format!("[{}]", hex_encode(&tag.raw))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_id3v1(s: &str) -> Result<Id3v1Tag, String> {
-    Ok(Id3v1Tag { raw: hex_decode(strip_brackets(s)?)? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",

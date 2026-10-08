@@ -1884,15 +1884,15 @@
             }
           },
           {
-            "id": "patchSnapshot",
+            "id": "renameVcs",
             "label": {
               "native": {
-                "en": "Patch Projection",
-                "de": "Projektion aktualisieren"
+                "en": "Rename",
+                "de": "Umbenennen"
               },
               "reuse": {
-                "en": "Patch Projection",
-                "de": "Projektion aktualisieren"
+                "en": "Rename",
+                "de": "Umbenennen"
               }
             },
             "kind": "mutation",
@@ -1927,12 +1927,174 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets one field of the demo document (title, counter, status or notes) from a text value.",
-                  "de": "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."
+                  "en": "Sets the demo document's title.",
+                  "de": "Setzt den Titel des Demodokuments."
                 },
                 "reuse": {
-                  "en": "Sets one field of the demo document (title, counter, status or notes) from a text value.",
-                  "de": "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."
+                  "en": "Sets the demo document's title.",
+                  "de": "Setzt den Titel des Demodokuments."
+                }
+              }
+            }
+          },
+          {
+            "id": "changeCounter",
+            "label": {
+              "native": {
+                "en": "Change Counter",
+                "de": "Zähler ändern"
+              },
+              "reuse": {
+                "en": "Change Counter",
+                "de": "Zähler ändern"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the demo document's counter to an integer.",
+                  "de": "Setzt den Zähler des Demodokuments auf eine ganze Zahl."
+                },
+                "reuse": {
+                  "en": "Sets the demo document's counter to an integer.",
+                  "de": "Setzt den Zähler des Demodokuments auf eine ganze Zahl."
+                }
+              }
+            }
+          },
+          {
+            "id": "changeStatus",
+            "label": {
+              "native": {
+                "en": "Change Status",
+                "de": "Status ändern"
+              },
+              "reuse": {
+                "en": "Change Status",
+                "de": "Status ändern"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the demo document's status.",
+                  "de": "Setzt den Status des Demodokuments."
+                },
+                "reuse": {
+                  "en": "Sets the demo document's status.",
+                  "de": "Setzt den Status des Demodokuments."
+                }
+              }
+            }
+          },
+          {
+            "id": "changeNotes",
+            "label": {
+              "native": {
+                "en": "Change Notes",
+                "de": "Notizen ändern"
+              },
+              "reuse": {
+                "en": "Change Notes",
+                "de": "Notizen ändern"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the demo document's notes.",
+                  "de": "Setzt die Notizen des Demodokuments."
+                },
+                "reuse": {
+                  "en": "Sets the demo document's notes.",
+                  "de": "Setzt die Notizen des Demodokuments."
                 }
               }
             }

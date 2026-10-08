@@ -6,7 +6,7 @@
 //! asserted by the shared codec-matrix harness, not here.
 //!
 //! ✅️ `change-coefficient` edits `EquationSnapshot.equation`, the plain persistent expression field, and never derives the
-//! `notation`/`results`/`computed` children (they follow `graph`/`geometry` only, `crate::equation_state_diff`): the diff
+//! `notation`/`results`/`computed` children (they follow `graph`/`geometry` only, `EquationDiff::apply`): the diff
 //! carries `equation` alone and the composed triple is byte-identical across `⬅️before` and `➡️after` — an invariant this
 //! fixture asserts directly.
 //!

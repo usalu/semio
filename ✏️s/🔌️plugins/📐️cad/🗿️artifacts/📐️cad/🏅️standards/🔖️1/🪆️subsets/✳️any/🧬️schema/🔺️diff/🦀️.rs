@@ -4,7 +4,7 @@ use crate::mutations::{CadNodePatch, CadOpacitySet, CadOrientationSet, CadRefere
 use crate::{CadBrepChild, CadDrawingChild, CadModelChild, CadNode, CadReference};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the cad artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -36,12 +36,6 @@ pub struct CadDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadStringList {
-    pub values: Vec<String>,
-}
 
 /// 🧱️ Explicit replacement of one fixed model slot: preserves an untouched slot (absent) apart from a cleared one (`child: None`),
 /// which a bare `Option<Option<_>>` would collapse on the wire.
@@ -51,244 +45,67 @@ pub struct CadModelSlot {
     pub child: Option<CadModelChild>,
 }
 
-/// 🧩️ Identified-collection delta for the `drawings` composed CHILD COLLECTION: removed ids, appended children and, only when the
-/// final order is not "survivors then appended", the complete final id order.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadDrawingsDelta {
-    pub added: Vec<CadDrawingChild>,
-    pub removed: Vec<String>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 🧩 Positional delta for nodes (`protocol::list_delta`).
+    pub CadNodesDelta { removal: CadNodeRemoval, insertion: CadNodeInsertion, relocation: CadNodeRelocation, modification: CadNodeModification, row: CadNode, patch: CadNodePatch, key: id }
 }
 
-/// 🧊️ Identified-collection delta for the ordered `breps` topology sibling collection.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadBrepsDelta {
-    pub added: Vec<CadBrepChild>,
-    pub removed: Vec<String>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 📎 Positional delta for one model's reference list (`protocol::list_delta`).
+    pub CadReferencesDelta { removal: CadReferenceRemoval, insertion: CadReferenceInsertion, relocation: CadReferenceRelocation, modification: CadReferenceModification, row: CadReference, patch: CadReferencePatch, key: id }
 }
 
-/// 📎 Identified-collection delta for one model's reference list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadReferencesDelta {
-    pub added: Vec<CadReference>,
-    pub removed: Vec<String>,
-    pub patched: Vec<CadReferencePatchEntry>,
-    pub reordered: Option<Vec<String>>,
+protocol::plain_list_delta! {
+    /// 🧩️ Positional delta for the `drawings` composed CHILD COLLECTION (`protocol::list_delta`).
+    pub CadDrawingsDelta { removal: CadDrawingRemoval, insertion: CadDrawingInsertion, relocation: CadDrawingRelocation, row: CadDrawingChild, list: Vec<CadDrawingChild>, key: String = |row| row.child_id.clone() }
 }
 
-/// 🩹 One patched reference entry.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct CadReferencePatchEntry {
-    pub id: String,
-    pub patch: CadReferencePatch,
-}
-
-/// 🧩 Identified-collection delta for nodes.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadNodesDelta {
-    pub added: Vec<CadNode>,
-    pub removed: Vec<String>,
-    pub patched: Vec<CadNodePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched node entry.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct CadNodePatchEntry {
-    pub id: String,
-    pub patch: CadNodePatch,
+protocol::plain_list_delta! {
+    /// 🧊️ Positional delta for the ordered `breps` topology sibling collection (`protocol::list_delta`).
+    pub CadBrepsDelta { removal: CadBrepRemoval, insertion: CadBrepInsertion, relocation: CadBrepRelocation, row: CadBrepChild, list: Vec<CadBrepChild>, key: String = |row| row.child_id.clone() }
 }
 //#endregion 🔖️DeltaHelpers
 
 //#region 🔖️Rows
 use crate::CadSnapshot;
+use protocol::list_delta::RowPatch;
 use protocol::MutationDiff;
 
-trait RowKey {
-    fn row_key(&self) -> &str;
-}
-
-impl RowKey for CadNode {
-    fn row_key(&self) -> &str {
-        &self.id
+impl RowPatch<CadNode> for CadNodePatch {
+    fn commit_into(&self, row: &mut CadNode, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        patch_node(row, self);
+        Ok(())
     }
-}
 
-impl RowKey for CadReference {
-    fn row_key(&self) -> &str {
-        &self.id
+    fn absorb(&mut self, later: Self) {
+        merge_node_patch(self, later);
     }
-}
 
-impl RowKey for CadDrawingChild {
-    fn row_key(&self) -> &str {
-        &self.child_id
+    fn inverse(&self, row: &CadNode) -> Self {
+        invert_node_patch(self, row)
     }
-}
 
-impl RowKey for CadBrepChild {
-    fn row_key(&self) -> &str {
-        &self.child_id
-    }
-}
-
-/// 🧮️ The one keyed-collection algebra every cad collection delta shares: removed ids, appended rows, keyed field patches and an
-/// optional complete final order — apply, absorb (create∘delete cancels, patch∘patch merges, a later order supersedes), the
-/// negative delta and the state delta all work on this shape.
-#[derive(Clone, Debug, PartialEq)]
-struct Rows<T, P> {
-    added: Vec<T>,
-    removed: Vec<String>,
-    patched: Vec<(String, P)>,
-    reordered: Option<Vec<String>>,
-}
-
-impl<T, P> Default for Rows<T, P> {
-    fn default() -> Self {
-        Self { added: Vec::new(), removed: Vec::new(), patched: Vec::new(), reordered: None }
-    }
-}
-
-fn keys_of<T: RowKey>(rows: &[T]) -> Vec<String> {
-    rows.iter().map(|row| row.row_key().to_string()).collect()
-}
-
-impl<T: Clone + RowKey, P: Clone + Default + PartialEq> Rows<T, P> {
     fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.patched.iter().all(|(_, patch)| *patch == P::default()) && self.reordered.is_none()
+        *self == CadNodePatch::default()
+    }
+}
+
+impl RowPatch<CadReference> for CadReferencePatch {
+    fn commit_into(&self, row: &mut CadReference, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        patch_reference(row, self);
+        Ok(())
     }
 
-    fn normalize(&mut self) {
-        self.removed.sort();
-        self.removed.dedup();
-        self.patched.sort_by(|left, right| left.0.cmp(&right.0));
+    fn absorb(&mut self, later: Self) {
+        merge_reference_patch(self, later);
     }
 
-    fn apply(&self, rows: &[T], patch_row: impl Fn(&mut T, &P)) -> protocol::MutationApplyResult<Vec<T>> {
-        for (index, id) in self.removed.iter().enumerate() {
-            if !rows.iter().any(|row| row.row_key() == id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed row does not exist").at(["removed".to_string(), index.to_string()]));
-            }
-            if self.removed[..index].contains(id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "row is removed more than once").at(["removed".to_string(), index.to_string()]));
-            }
-        }
-        for (index, item) in self.added.iter().enumerate() {
-            let id = item.row_key();
-            if rows.iter().any(|row| row.row_key() == id && !self.removed.iter().any(|removed| removed == id)) || self.added[..index].iter().any(|prior| prior.row_key() == id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added row identity already exists").at(["added".to_string(), index.to_string()]));
-            }
-        }
-        for (index, (id, _)) in self.patched.iter().enumerate() {
-            if !rows.iter().any(|row| row.row_key() == id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched row does not exist").at(["patched".to_string(), index.to_string()]));
-            }
-            if self.removed.contains(id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "row cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
-            }
-            if self.patched[..index].iter().any(|(prior, _)| prior == id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "row is patched more than once").at(["patched".to_string(), index.to_string()]));
-            }
-        }
-        let mut next: Vec<T> = rows.iter().filter(|row| !self.removed.iter().any(|id| id == row.row_key())).cloned().collect();
-        for (id, patch) in &self.patched {
-            if let Some(row) = next.iter_mut().find(|row| row.row_key() == id) {
-                patch_row(row, patch);
-            }
-        }
-        next.extend(self.added.iter().cloned());
-        if let Some(order) = &self.reordered {
-            if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|row| row.row_key() == id)) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered"]));
-            }
-            let mut by_id: BTreeMap<String, T> = next.into_iter().map(|row| (row.row_key().to_string(), row)).collect();
-            let mut ordered = Vec::with_capacity(order.len());
-            for id in order {
-                ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered row does not exist").at(["reordered".to_string(), id.clone()]))?);
-            }
-            next = ordered;
-        }
-        Ok(next)
+    fn inverse(&self, row: &CadReference) -> Self {
+        invert_reference_patch(self, row)
     }
 
-    fn absorb(&mut self, other: Self, patch_row: impl Fn(&mut T, &P), merge: impl Fn(&mut P, P)) {
-        let Self { added, removed, patched, reordered } = other;
-        for id in &removed {
-            if let Some(at) = self.added.iter().position(|row| row.row_key() == id) {
-                self.added.remove(at);
-                continue;
-            }
-            self.patched.retain(|(key, _)| key != id);
-            if !self.removed.contains(id) {
-                self.removed.push(id.clone());
-            }
-        }
-        for (id, incoming) in patched {
-            if let Some(row) = self.added.iter_mut().find(|row| row.row_key() == id) {
-                patch_row(row, &incoming);
-            } else if let Some((_, existing)) = self.patched.iter_mut().find(|(key, _)| *key == id) {
-                merge(existing, incoming);
-            } else {
-                self.patched.push((id, incoming));
-            }
-        }
-        match reordered {
-            Some(order) => self.reordered = Some(order),
-            None => {
-                if let Some(order) = self.reordered.as_mut() {
-                    order.retain(|id| !removed.contains(id));
-                    order.extend(added.iter().map(|row| row.row_key().to_string()));
-                }
-            }
-        }
-        self.added.extend(added);
-        self.normalize();
-    }
-
-    fn inverse(&self, base: &[T], invert: impl Fn(&P, &T) -> P) -> Self {
-        let base_keys = keys_of(base);
-        let added_keys: BTreeSet<&str> = self.added.iter().map(RowKey::row_key).collect();
-        let restored: Vec<T> = base.iter().filter(|row| self.removed.iter().any(|id| id == row.row_key())).cloned().collect();
-        let patched = self.patched.iter().filter(|(id, _)| !added_keys.contains(id.as_str())).filter_map(|(id, patch)| base.iter().find(|row| row.row_key() == id).map(|row| (id.clone(), invert(patch, row)))).collect();
-        let mut after: Vec<String> = base_keys.iter().filter(|id| !self.removed.contains(id)).cloned().chain(self.added.iter().map(|row| row.row_key().to_string())).collect();
-        if let Some(order) = &self.reordered {
-            after = order.clone();
-        }
-        let natural: Vec<String> = after.into_iter().filter(|id| !added_keys.contains(id.as_str())).chain(restored.iter().map(|row| row.row_key().to_string())).collect();
-        let reordered = (natural != base_keys).then_some(base_keys);
-        let mut inverse = Self { added: restored, removed: self.added.iter().map(|row| row.row_key().to_string()).collect(), patched, reordered };
-        inverse.normalize();
-        inverse
-    }
-
-    fn between(base: &[T], other: &[T], compare: impl Fn(&T, &T) -> Option<Option<P>>) -> Self {
-        let base_keys = keys_of(base);
-        let other_keys = keys_of(other);
-        let mut delta = Self::default();
-        let mut replaced = BTreeSet::new();
-        for row in other {
-            let Some(source) = base.iter().find(|candidate| candidate.row_key() == row.row_key()) else { continue };
-            match compare(source, row) {
-                Some(Some(patch)) => delta.patched.push((row.row_key().to_string(), patch)),
-                Some(None) => {}
-                None => {
-                    replaced.insert(row.row_key().to_string());
-                }
-            }
-        }
-        delta.removed = base.iter().filter(|row| !other_keys.iter().any(|id| id == row.row_key()) || replaced.contains(row.row_key())).map(|row| row.row_key().to_string()).collect();
-        delta.added = other.iter().filter(|row| !base_keys.iter().any(|id| id == row.row_key()) || replaced.contains(row.row_key())).cloned().collect();
-        let natural: Vec<String> = base_keys.iter().filter(|id| !delta.removed.contains(id)).cloned().chain(delta.added.iter().map(|row| row.row_key().to_string())).collect();
-        delta.reordered = (natural != other_keys).then_some(other_keys);
-        delta.normalize();
-        delta
+    fn is_empty(&self) -> bool {
+        *self == CadReferencePatch::default()
     }
 }
 
@@ -308,12 +125,6 @@ fn invert_node_patch(patch: &CadNodePatch, base: &CadNode) -> CadNodePatch {
     CadNodePatch { label: patch.label.as_ref().map(|_| base.label.clone()) }
 }
 
-fn compare_nodes(base: &CadNode, other: &CadNode) -> Option<Option<CadNodePatch>> {
-    if base.kind != other.kind {
-        return None;
-    }
-    Some((base.label != other.label).then(|| CadNodePatch { label: Some(other.label.clone()) }))
-}
 
 fn patch_reference(reference: &mut CadReference, patch: &CadReferencePatch) {
     if let Some(source_url) = &patch.source_url {
@@ -378,77 +189,12 @@ fn invert_reference_patch(patch: &CadReferencePatch, base: &CadReference) -> Cad
     }
 }
 
-fn compare_references(base: &CadReference, other: &CadReference) -> Option<Option<CadReferencePatch>> {
-    let patch = CadReferencePatch {
-        source_url: (base.source_url != other.source_url).then(|| other.source_url.clone()),
-        media_kind: (base.media_kind != other.media_kind).then(|| other.media_kind.clone()),
-        origin: (base.origin != other.origin).then_some(other.origin),
-        orientation: (base.orientation != other.orientation).then_some(CadOrientationSet { value: other.orientation }),
-        scale: (base.scale != other.scale).then_some(CadScaleSet { value: other.scale }),
-        width_world: (base.width_world != other.width_world).then_some(other.width_world),
-        hidden: (base.hidden != other.hidden).then_some(other.hidden),
-        locked: (base.locked != other.locked).then_some(other.locked),
-        opacity: (base.opacity != other.opacity).then_some(CadOpacitySet { value: other.opacity }),
-    };
-    Some((patch != CadReferencePatch::default()).then_some(patch))
-}
 
-impl CadNodesDelta {
-    fn rows(&self) -> Rows<CadNode, CadNodePatch> {
-        Rows { added: self.added.clone(), removed: self.removed.clone(), patched: self.patched.iter().map(|entry| (entry.id.clone(), entry.patch.clone())).collect(), reordered: self.reordered.clone() }
-    }
-    fn from_rows(rows: Rows<CadNode, CadNodePatch>) -> Self {
-        Self { added: rows.added, removed: rows.removed, patched: rows.patched.into_iter().map(|(id, patch)| CadNodePatchEntry { id, patch }).collect(), reordered: rows.reordered }
-    }
-    /// 🕳️ Whether the delta changes nothing.
-    pub fn is_empty(&self) -> bool {
-        self.rows().is_empty()
-    }
-}
-
-impl CadReferencesDelta {
-    fn rows(&self) -> Rows<CadReference, CadReferencePatch> {
-        Rows { added: self.added.clone(), removed: self.removed.clone(), patched: self.patched.iter().map(|entry| (entry.id.clone(), entry.patch.clone())).collect(), reordered: self.reordered.clone() }
-    }
-    fn from_rows(rows: Rows<CadReference, CadReferencePatch>) -> Self {
-        Self { added: rows.added, removed: rows.removed, patched: rows.patched.into_iter().map(|(id, patch)| CadReferencePatchEntry { id, patch }).collect(), reordered: rows.reordered }
-    }
-    /// 🕳️ Whether the delta changes nothing.
-    pub fn is_empty(&self) -> bool {
-        self.rows().is_empty()
-    }
-}
-
-impl CadDrawingsDelta {
-    fn rows(&self) -> Rows<CadDrawingChild, ()> {
-        Rows { added: self.added.clone(), removed: self.removed.clone(), patched: Vec::new(), reordered: self.reordered.clone() }
-    }
-    fn from_rows(rows: Rows<CadDrawingChild, ()>) -> Self {
-        Self { added: rows.added, removed: rows.removed, reordered: rows.reordered }
-    }
-    /// 🕳️ Whether the delta changes nothing.
-    pub fn is_empty(&self) -> bool {
-        self.rows().is_empty()
-    }
-}
-
-impl CadBrepsDelta {
-    fn rows(&self) -> Rows<CadBrepChild, ()> {
-        Rows { added: self.added.clone(), removed: self.removed.clone(), patched: Vec::new(), reordered: self.reordered.clone() }
-    }
-    fn from_rows(rows: Rows<CadBrepChild, ()>) -> Self {
-        Self { added: rows.added, removed: rows.removed, reordered: rows.reordered }
-    }
-    /// 🕳️ Whether the delta changes nothing.
-    pub fn is_empty(&self) -> bool {
-        self.rows().is_empty()
-    }
-}
 //#endregion 🔖️Rows
 
 //#region 🔖️Apply
 impl MutationDiff<CadSnapshot> for CadDiff {
-    fn apply(&self, snapshot: &CadSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadSnapshot> {
+    fn apply(&self, snapshot: &CadSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadSnapshot> {
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -469,15 +215,15 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             next.structure_classic_model = slot.child.clone();
         }
         if let Some(delta) = &self.drawings {
-            next.drawings = delta.rows().apply(&next.drawings, |_, _| {}).map_err(|error| error.under(["drawings"]))?;
+            next.drawings = delta.commit_onto(&next.drawings, capability).map_err(|error| error.under(["drawings"]))?;
         }
         if let Some(delta) = &self.breps {
-            next.breps = delta.rows().apply(&next.breps, |_, _| {}).map_err(|error| error.under(["breps"]))?;
+            next.breps = delta.commit_onto(&next.breps, capability).map_err(|error| error.under(["breps"]))?;
         }
         if let Some(models) = &self.references_by_model_definition_id {
             for (model, delta) in models {
                 let existing = next.references_by_model_definition_id.get(model).cloned().unwrap_or_default();
-                let rows = delta.rows().apply(&existing, patch_reference).map_err(|error| error.under(["referencesByModelDefinitionId".to_string(), model.clone()]))?;
+                let rows = delta.commit_onto(&existing, capability).map_err(|error| error.under(["referencesByModelDefinitionId".to_string(), model.clone()]))?;
                 if rows.is_empty() {
                     next.references_by_model_definition_id.remove(model);
                 } else {
@@ -486,7 +232,7 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             }
         }
         if let Some(delta) = &self.nodes {
-            next.nodes = delta.rows().apply(&next.nodes, patch_node).map_err(|error| error.under(["nodes"]))?;
+            next.nodes = delta.commit_onto(&next.nodes, capability).map_err(|error| error.under(["nodes"]))?;
         }
         Ok(next)
     }
@@ -506,20 +252,12 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         take!(energy_model);
         take!(structure_classic_model);
         match (&mut self.drawings, other.drawings) {
-            (Some(dst), Some(src)) => {
-                let mut rows = dst.rows();
-                rows.absorb(src.rows(), |_, _| {}, |_, _| {});
-                *dst = CadDrawingsDelta::from_rows(rows);
-            }
+            (Some(dst), Some(src)) => dst.absorb(src),
             (None, Some(src)) => self.drawings = Some(src),
             _ => {}
         }
         match (&mut self.breps, other.breps) {
-            (Some(dst), Some(src)) => {
-                let mut rows = dst.rows();
-                rows.absorb(src.rows(), |_, _| {}, |_, _| {});
-                *dst = CadBrepsDelta::from_rows(rows);
-            }
+            (Some(dst), Some(src)) => dst.absorb(src),
             (None, Some(src)) => self.breps = Some(src),
             _ => {}
         }
@@ -527,11 +265,7 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             let models = self.references_by_model_definition_id.get_or_insert_with(BTreeMap::new);
             for (model, src) in incoming {
                 match models.get_mut(&model) {
-                    Some(dst) => {
-                        let mut rows = dst.rows();
-                        rows.absorb(src.rows(), patch_reference, merge_reference_patch);
-                        *dst = CadReferencesDelta::from_rows(rows);
-                    }
+                    Some(dst) => dst.absorb(src),
                     None => {
                         models.insert(model, src);
                     }
@@ -539,11 +273,7 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             }
         }
         match (&mut self.nodes, other.nodes) {
-            (Some(dst), Some(src)) => {
-                let mut rows = dst.rows();
-                rows.absorb(src.rows(), patch_node, merge_node_patch);
-                *dst = CadNodesDelta::from_rows(rows);
-            }
+            (Some(dst), Some(src)) => dst.absorb(src),
             (None, Some(src)) => self.nodes = Some(src),
             _ => {}
         }
@@ -574,48 +304,19 @@ impl protocol::DiffAlgebra<CadSnapshot> for CadDiff {
             building_model: self.building_model.as_ref().map(|_| CadModelSlot { child: base.building_model.clone() }),
             energy_model: self.energy_model.as_ref().map(|_| CadModelSlot { child: base.energy_model.clone() }),
             structure_classic_model: self.structure_classic_model.as_ref().map(|_| CadModelSlot { child: base.structure_classic_model.clone() }),
-            drawings: self.drawings.as_ref().map(|delta| CadDrawingsDelta::from_rows(delta.rows().inverse(&base.drawings, |_, _| ()))),
-            breps: self.breps.as_ref().map(|delta| CadBrepsDelta::from_rows(delta.rows().inverse(&base.breps, |_, _| ()))),
+            drawings: self.drawings.as_ref().map(|delta| delta.inverse(&base.drawings)),
+            breps: self.breps.as_ref().map(|delta| delta.inverse(&base.breps)),
             references_by_model_definition_id: self.references_by_model_definition_id.as_ref().map(|models| {
+                let none = Vec::new();
                 models
                     .iter()
                     .map(|(model, delta)| {
-                        let existing = base.references_by_model_definition_id.get(model).map(Vec::as_slice).unwrap_or_default();
-                        (model.clone(), CadReferencesDelta::from_rows(delta.rows().inverse(existing, invert_reference_patch)))
+                        let existing = base.references_by_model_definition_id.get(model).unwrap_or(&none);
+                        (model.clone(), delta.inverse(existing))
                     })
                     .collect()
             }),
-            nodes: self.nodes.as_ref().map(|delta| CadNodesDelta::from_rows(delta.rows().inverse(&base.nodes, invert_node_patch))),
-        }
-    }
-
-    fn between(base: &CadSnapshot, other: &CadSnapshot) -> Self {
-        let drawings = CadDrawingsDelta::from_rows(Rows::between(&base.drawings, &other.drawings, |left, right| (left == right).then_some(None)));
-        let breps = CadBrepsDelta::from_rows(Rows::between(&base.breps, &other.breps, |left, right| (left == right).then_some(None)));
-        let nodes = CadNodesDelta::from_rows(Rows::between(&base.nodes, &other.nodes, compare_nodes));
-        let models: BTreeMap<String, CadReferencesDelta> = base
-            .references_by_model_definition_id
-            .keys()
-            .chain(other.references_by_model_definition_id.keys())
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .map(|model| {
-                let (left, right) = (base.references_by_model_definition_id.get(model).map(Vec::as_slice).unwrap_or_default(), other.references_by_model_definition_id.get(model).map(Vec::as_slice).unwrap_or_default());
-                (model.clone(), CadReferencesDelta::from_rows(Rows::between(left, right, compare_references)))
-            })
-            .filter(|(_, delta)| !delta.is_empty())
-            .collect();
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            id: (base.id != other.id).then(|| other.id.clone()),
-            shape_model: (base.shape_model != other.shape_model).then(|| CadModelSlot { child: other.shape_model.clone() }),
-            building_model: (base.building_model != other.building_model).then(|| CadModelSlot { child: other.building_model.clone() }),
-            energy_model: (base.energy_model != other.energy_model).then(|| CadModelSlot { child: other.energy_model.clone() }),
-            structure_classic_model: (base.structure_classic_model != other.structure_classic_model).then(|| CadModelSlot { child: other.structure_classic_model.clone() }),
-            drawings: (!drawings.is_empty()).then_some(drawings),
-            breps: (!breps.is_empty()).then_some(breps),
-            references_by_model_definition_id: (!models.is_empty()).then_some(models),
-            nodes: (!nodes.is_empty()).then_some(nodes),
+            nodes: self.nodes.as_ref().map(|delta| delta.inverse(&base.nodes)),
         }
     }
 

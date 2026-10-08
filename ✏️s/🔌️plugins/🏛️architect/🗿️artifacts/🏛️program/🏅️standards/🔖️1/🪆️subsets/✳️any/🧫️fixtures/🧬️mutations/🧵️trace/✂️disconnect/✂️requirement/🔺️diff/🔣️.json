@@ -68,12 +68,15 @@
   "knowledge": null,
   "benchmarks": null,
   "traces": {
-    "added": [],
     "removed": [
-      "trace-a"
+      {
+        "id": "trace-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "governance": null
 }

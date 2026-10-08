@@ -37,7 +37,7 @@ fn random_edit(rng: &mut Xorshift, list: &[u32], fresh: &mut u32) -> Splice<u32,
 }
 
 fn applied(edit: &Splice<u32, u32>, list: &[u32]) -> Vec<u32> {
-    edit.apply(list.to_vec(), |entry, key| entry == key).expect("the edit applies")
+    edit.commit_onto(list.to_vec(), |entry, key| entry == key).expect("the edit applies")
 }
 
 #[test]
@@ -115,9 +115,9 @@ fn an_insertion_removed_again_cancels() {
 #[test]
 fn a_script_that_does_not_fit_its_list_is_refused() {
     let wrong_entry: Splice<u32, u32> = Splice::cutting(0, 5);
-    assert_eq!(wrong_entry.apply(vec![1, 2], |entry, key| entry == key), Err(SpliceFault::CutMismatch { index: 0 }));
+    assert_eq!(wrong_entry.commit_onto(vec![1, 2], |entry, key| entry == key), Err(SpliceFault::CutMismatch { index: 0 }));
     let past_end: Splice<u32, u32> = Splice::cutting(4, 1);
-    assert_eq!(past_end.apply(vec![1, 2], |entry, key| entry == key), Err(SpliceFault::CutOutOfRange { index: 4, len: 2 }));
+    assert_eq!(past_end.commit_onto(vec![1, 2], |entry, key| entry == key), Err(SpliceFault::CutOutOfRange { index: 4, len: 2 }));
     let gap: Splice<u32, u32> = Splice::putting(5, 1);
-    assert_eq!(gap.apply(vec![1, 2], |entry, key| entry == key), Err(SpliceFault::PutOutOfRange { index: 5, len: 3 }));
+    assert_eq!(gap.commit_onto(vec![1, 2], |entry, key| entry == key), Err(SpliceFault::PutOutOfRange { index: 5, len: 3 }));
 }

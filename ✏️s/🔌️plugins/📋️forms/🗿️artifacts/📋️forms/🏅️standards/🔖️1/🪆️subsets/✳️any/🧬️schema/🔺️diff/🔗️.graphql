@@ -9,8 +9,6 @@ type FormsDiff {
   title: FormsOptionalText @state(class: ARTIFACT)
   steps: FormsStepsDelta @state(class: ARTIFACT)
   responses: FormsResponsesDelta @state(class: ARTIFACT)
-  structure: ArtifactChild @state(class: ARTIFACT)
-  results: ArtifactChild @state(class: ARTIFACT)
 }
 
 type FormsOptionalText { value: String }
@@ -18,37 +16,90 @@ type FormsOptionalText { value: String }
 type FormsBlockField { field: String! value: DslValue }
 
 type FormsQuestionPatch {
-  id: String!
   kind: String
   changes: [FormsBlockField!]!
 }
 
 type FormsQuestionsDelta {
-  added: [FormQuestion!]!
-  removed: [String!]!
-  patched: [FormsQuestionPatch!]!
-  reordered: [String!]
+  removed: [FormsQuestionRemoval!]!
+  inserted: [FormsQuestionInsertion!]!
+  moved: [FormsQuestionRelocation!]!
+  modified: [FormsQuestionsModification!]!
+}
+
+type FormsQuestionsModification {
+  id: String!
+  patch: FormsQuestionPatch!
+}
+
+type FormsQuestionRemoval {
+  id: String!
+  index: Int!
+}
+
+type FormsQuestionInsertion {
+  index: Int!
+  row: FormQuestion!
+}
+
+type FormsQuestionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type FormsStepPatch {
-  id: String!
   title: String
   description: FormsOptionalText
   blocks: FormsQuestionsDelta
 }
 
 type FormsStepsDelta {
-  added: [FormStep!]!
-  removed: [String!]!
-  patched: [FormsStepPatch!]!
-  reordered: [String!]
+  removed: [FormsStepRemoval!]!
+  inserted: [FormsStepInsertion!]!
+  moved: [FormsStepRelocation!]!
+  modified: [FormsStepsModification!]!
 }
 
-type FormsResponsePatch { id: String! }
+type FormsStepsModification {
+  id: String!
+  patch: FormsStepPatch!
+}
+
+type FormsStepRemoval {
+  id: String!
+  index: Int!
+}
+
+type FormsStepInsertion {
+  index: Int!
+  row: FormStep!
+}
+
+type FormsStepRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
 
 type FormsResponsesDelta {
-  added: [FormsResponse!]!
-  removed: [String!]!
-  patched: [FormsResponsePatch!]!
-  reordered: [String!]
+  removed: [FormsResponseRemoval!]!
+  inserted: [FormsResponseInsertion!]!
+  moved: [FormsResponseRelocation!]!
+}
+
+type FormsResponseRemoval {
+  id: String!
+  index: Int!
+}
+
+type FormsResponseInsertion {
+  index: Int!
+  row: FormsResponse!
+}
+
+type FormsResponseRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }

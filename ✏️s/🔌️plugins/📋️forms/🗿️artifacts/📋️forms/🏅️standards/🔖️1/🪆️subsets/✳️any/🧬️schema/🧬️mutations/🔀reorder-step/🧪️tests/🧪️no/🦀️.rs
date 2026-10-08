@@ -7,7 +7,7 @@
 //!
 //! ⚠️ Why this leaf pins the NO-OP branch: `FormsSnapshot` keeps its `steps` tree in the composed
 //! `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), and every content-changing forms
-//! diff routes through `forms_diff_from_delta`, which re-mints both handles with a `child_id` that
+//! diff routes through `FormsDiff::apply`, which re-derives both handles with a `child_id` that
 //! is a `DefaultHasher` digest of the child content — an `➡️after` for a real reorder would mean
 //! forging a value out of `std`'s deliberately unspecified default hasher. The guard below returns
 //! before that call, so nothing is minted and `➡️after == ⬅️before`.
@@ -19,8 +19,9 @@
 //! semantics observable; the two sibling steps are this case's own fixture scene, the addressed
 //! `step-photos` is the committed payload's own id.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-step/🧪️no/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-step/🧪️no/📸️snapshot/➡️after/🔣️.json");
@@ -114,7 +115,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The delta a redundant reorder produces is exactly the committed all-null `FormsDiff`: the
-/// guard returns before any `FormsStepsDelta { reordered, .. }` reaches `forms_diff_from_delta`.
+/// guard returns before any a `FormsStepsDelta` relocation reaches `FormsDiff::apply`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());

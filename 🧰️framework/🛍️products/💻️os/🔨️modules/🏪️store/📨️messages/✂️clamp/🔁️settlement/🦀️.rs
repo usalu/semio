@@ -1,211 +1,44 @@
-//! 🔁️ Settles one edit's diagnostic views without discarding mutation severity.
-use super::EditMessageClamp;
-use super::super::{ArtifactStoreMessageLedgerRetirement, ErasedSnapshotRetirement, MessageCopyCursor, MessageCopyGrant, MessageCopyStep, SnapshotRetirementStep, ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES};
+//! 🔁️ Selects the original edit once and rebuilds each visible operation view under full grants.
 use crate::os_spr::{MutationMessage, MutationReplayOutcome};
-use semio_framework_value::ValueError;
-
-enum Phase { Clamp, RetireOutcome, Copy, CloseCopy, NextOutcome, Finish, Finished }
-
-pub(crate) struct EditMessageSettlement {
-    clamp: EditMessageClamp,
-    phase: Phase,
-    outcome: usize,
-    end: usize,
-    ledger: usize,
-    copy: Option<MessageCopyCursor>,
-    active: Option<Box<dyn ErasedSnapshotRetirement>>,
-    work: u64,
-}
-
-struct MessageCopyRetirement(MessageCopyCursor);
-
-impl ErasedSnapshotRetirement for MessageCopyRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> { self.0.close_step(maximum_items, maximum_bytes) }
-    fn terminal_is_empty(&self) -> bool { self.0.terminal_is_empty() }
-    fn next_close_byte_demand(&self) -> usize { self.0.next_close_byte_demand() }
-}
-
+use crate::os_spr::command::{FinalMessageSelection, MutationMessageLedgerRetirement, MutationMessageRetirement, ReplayMessageAccumulator};
+use super::super::MessageCopyCursor;
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use std::mem::{ManuallyDrop,size_of};
+enum Phase { Select, Reserve, Visit, Copy, CloseCopy, Place, Finished }
+pub(crate) struct EditMessageSettlement {selection:FinalMessageSelection,messages:ManuallyDrop<Option<Vec<MutationMessage>>>,phase:Phase,outcome:usize,end:usize,ledger:usize,copy:Option<MessageCopyCursor>,pending:Option<MutationMessage>,active:Option<MutationMessageRetirement>,retiring:Option<MutationMessageLedgerRetirement>,closing:bool,work:u64}
+fn refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"edit diagnostic settlement lost its original admitted owner")}
 impl EditMessageSettlement {
-    pub(crate) fn new(edit_id: &str, messages: &[MutationMessage], first_outcome: usize, end: usize) -> Self {
-        Self { clamp: EditMessageClamp::new(edit_id, messages), phase: Phase::Clamp, outcome: first_outcome, end, ledger: 0, copy: None, active: None, work: 0 }
-    }
-
-    pub(crate) fn completed_work(&self) -> u64 { self.work }
-    pub(crate) fn is_finished(&self) -> bool { matches!(self.phase, Phase::Finished) }
-
-    /// ⏳️ Visits one diagnostic segment, view entry or exact cleanup child.
-    pub(crate) fn step(&mut self, messages: &mut Vec<MutationMessage>, outcomes: &mut [MutationReplayOutcome], maximum_bytes: usize, maximum_release_bytes: usize) -> Result<bool, ValueError> {
-        if self.is_finished() { return Ok(true); }
-        self.work = self.work.saturating_add(1);
-        if let Some(active) = self.active.as_mut() {
-            if active.close_step(1, maximum_release_bytes)? == SnapshotRetirementStep::Complete {
-                assert!(active.terminal_is_empty(), "settlement cleanup child is terminal");
-                drop(self.active.take());
-            }
-            return Ok(false);
-        }
-        match self.phase {
-            Phase::Clamp => {
-                if self.clamp.step(messages, maximum_release_bytes)? {
-                    self.phase = if self.clamp.changed() { Phase::RetireOutcome } else { Phase::Finish };
-                }
-            }
-            Phase::RetireOutcome => {
-                if self.outcome == self.end { self.phase = Phase::Finish; }
-                else {
-                    let original = std::mem::replace(&mut outcomes[self.outcome].messages, Vec::with_capacity(messages.len()));
-                    self.active = Some(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), original)));
-                    self.ledger = 0;
-                    self.phase = Phase::Copy;
-                }
-            }
-            Phase::Copy => {
-                if let Some(source) = messages.get(self.ledger) {
-                    if source.op_index != Some(outcomes[self.outcome].op_index) { self.ledger += 1; }
-                    else if let Some(copy) = self.copy.as_mut() {
-                        let grant = MessageCopyGrant { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES };
-                        if matches!(copy.advance(source, grant)?, MessageCopyStep::Complete(_)) {
-                            outcomes[self.outcome].messages.push(copy.take().expect("completed message copy owns a diagnostic"));
-                            copy.begin_close();
-                            self.phase = Phase::CloseCopy;
-                        }
-                    } else { self.copy = Some(MessageCopyCursor::new()); }
-                } else { self.phase = Phase::NextOutcome; }
-            }
-            Phase::CloseCopy => {
-                let copy = self.copy.as_mut().expect("settlement owns its completed copy cursor");
-                if copy.close_step(1, maximum_release_bytes)? == SnapshotRetirementStep::Complete {
-                    assert!(copy.terminal_is_empty());
-                    drop(self.copy.take());
-                    self.ledger += 1;
-                    self.phase = Phase::Copy;
-                }
-            }
-            Phase::NextOutcome => { self.outcome += 1; self.phase = Phase::RetireOutcome; }
-            Phase::Finish => { self.phase = Phase::Finished; }
-            Phase::Finished => {}
-        }
-        Ok(self.is_finished())
-    }
-
-    /// 🛑️ Transfers each retained partial owner before the replay's existing rows retire.
-    pub(crate) fn retire_item(&mut self) -> Option<Box<dyn ErasedSnapshotRetirement>> {
-        if let Some(active) = self.active.take() { return Some(active); }
-        if let Some(mut copy) = self.copy.take() {
-            copy.cancel();
-            copy.begin_close();
-            return Some(Box::new(MessageCopyRetirement(copy)));
-        }
-        self.clamp.retire_item()
-    }
-
-    pub(crate) fn finish_retirement(&mut self) { self.clamp.finish_retirement(); self.phase = Phase::Finished; }
-
-    pub(crate) fn close_cold(&mut self) {
-        while let Some(mut child) = self.retire_item() {
-            while child.close_step(1, ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES).expect("cold settlement retirement") != SnapshotRetirementStep::Complete {}
-            assert!(child.terminal_is_empty());
-        }
-        self.finish_retirement();
-    }
+ pub(crate) fn new(edit_id:&str,messages:&ReplayMessageAccumulator,first:usize,end:usize)->Self{Self{selection:FinalMessageSelection::new(edit_id.len(),messages.rows().len()),messages:ManuallyDrop::new(None),phase:Phase::Select,outcome:first,end,ledger:0,copy:None,pending:None,active:None,retiring:None,closing:false,work:0}}
+ pub(crate) fn completed_work(&self)->u64{self.work}
+ pub(crate) fn is_finished(&self)->bool{matches!(self.phase,Phase::Finished)&&!self.closing}
+ pub(crate) fn messages(&self)->&[MutationMessage]{self.messages.as_ref().map_or(&[],Vec::as_slice)}
+ pub(crate) fn take_messages(&mut self)->Option<Vec<MutationMessage>>{if self.is_finished(){self.messages.take()}else{None}}
+ pub(crate) fn next_capacity_byte_demand(&self)->Result<usize,ValueError>{Ok(match self.phase{Phase::Select=>self.selection.next_capacity_byte_demand(),Phase::Reserve if self.outcome<self.end=>self.messages().len()*size_of::<MutationMessage>(),Phase::Copy=>self.copy.as_ref().ok_or_else(refusal)?.next_capacity_byte_demand(self.messages().get(self.ledger).ok_or_else(refusal)?)?,_=>0})}
+ pub(crate) fn next_copy_byte_demand(&self,input:&ReplayMessageAccumulator)->Result<usize,ValueError>{Ok(match self.phase{Phase::Select=>self.selection.next_copy_byte_demand(input),Phase::Copy=>self.copy.as_ref().ok_or_else(refusal)?.next_copy_byte_demand(self.messages().get(self.ledger).ok_or_else(refusal)?)?,Phase::CloseCopy=>self.copy.as_ref().ok_or_else(refusal)?.next_close_copy_byte_demand()?,Phase::Place=>size_of::<MutationMessage>(),_=>0})}
+ pub(crate) fn next_release_byte_demand(&self,input:&ReplayMessageAccumulator)->Result<usize,ValueError>{match self.phase{Phase::Select=>self.selection.next_release_byte_demand(input),Phase::CloseCopy=>self.copy.as_ref().ok_or_else(refusal)?.next_close_release_byte_demand(),_=>Ok(0)}}
+ pub(crate) fn step(&mut self,input:&mut ReplayMessageAccumulator,outcomes:&mut[MutationReplayOutcome],grant:RetainedCloneGrant)->Result<bool,ValueError>{
+  if self.closing||self.is_finished()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(self.is_finished());}if grant.maximum_capacity_bytes<self.next_capacity_byte_demand()?||grant.maximum_copy_bytes<self.next_copy_byte_demand(input)?||grant.maximum_release_bytes<self.next_release_byte_demand(input)?{return Ok(false);}self.work=self.work.saturating_add(1);
+  match self.phase{
+   Phase::Select=>{self.selection.step(input,grant)?;if self.selection.is_finished(){*self.messages=Some(self.selection.take().ok_or_else(refusal)?);self.phase=Phase::Reserve;}},
+   Phase::Reserve=>{if self.outcome==self.end{self.phase=Phase::Finished;}else{let count=self.messages().len();let view=&mut outcomes[self.outcome].messages;if !view.is_empty()||view.capacity()!=0{return Err(refusal());}view.try_reserve_exact(count).map_err(|_|refusal())?;self.ledger=0;self.phase=Phase::Visit;}},
+   Phase::Visit=>{if self.ledger==self.messages().len(){self.outcome+=1;self.phase=Phase::Reserve;}else if self.messages()[self.ledger].op_index!=Some(outcomes[self.outcome].op_index){self.ledger+=1;}else{self.copy=Some(MessageCopyCursor::new());self.phase=Phase::Copy;}},
+   Phase::Copy=>{let source=self.messages.as_ref().and_then(|rows|rows.get(self.ledger)).ok_or_else(refusal)?;let copy=self.copy.as_mut().ok_or_else(refusal)?;if matches!(copy.advance(source,grant)?,RetainedCloneStep::Complete(_)){self.pending=copy.take();copy.begin_close();self.phase=Phase::CloseCopy;}},
+   Phase::CloseCopy=>{let copy=self.copy.as_mut().ok_or_else(refusal)?;copy.close_step(grant)?;if copy.terminal_is_empty(){self.copy=None;self.phase=Phase::Place;}},
+   Phase::Place=>{let view=&mut outcomes[self.outcome].messages;if view.len()==view.capacity(){return Err(refusal());}view.push(self.pending.take().ok_or_else(refusal)?);self.ledger+=1;self.phase=Phase::Visit;},
+   Phase::Finished=>{}
+  }Ok(self.is_finished())
+ }
+ pub(crate) fn begin_close(&mut self){self.closing=true;self.selection.begin_close();if let Some(copy)=self.copy.as_mut(){copy.cancel();copy.begin_close();}}
+ pub(crate) fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if !self.selection.terminal_is_empty(){return Ok(self.selection.next_close_copy_byte_demand());}if let Some(copy)=self.copy.as_ref(){return copy.next_close_copy_byte_demand();}if let Some(active)=self.active.as_ref(){return Ok(active.next_copy_byte_demand());}if self.pending.is_some(){return Ok(size_of::<MutationMessage>());}if let Some(retiring)=self.retiring.as_ref(){return Ok(retiring.next_copy_byte_demand());}Ok(usize::from(self.messages.is_some())*size_of::<Vec<MutationMessage>>())}
+ pub(crate) fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+ pub(crate) fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if !self.selection.terminal_is_empty(){return Ok(self.selection.next_close_release_byte_demand());}if let Some(copy)=self.copy.as_ref(){return copy.next_close_release_byte_demand();}if let Some(active)=self.active.as_ref(){return Ok(active.next_release_byte_demand());}self.retiring.as_ref().map_or(Ok(0),MutationMessageLedgerRetirement::next_release_byte_demand)}
+ pub(crate) fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(copy)=self.copy.as_ref(){return copy.next_close_depth_demand().map(|depth|depth+1);}if let Some(retiring)=self.retiring.as_ref(){return retiring.next_depth_demand().map(|depth|depth+1);}Ok(if !self.selection.terminal_is_empty()||self.active.is_some(){2}else{usize::from(!self.terminal_is_empty())})}
+ pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let idle=RetainedCloneProgress::default();if !self.closing||grant.maximum_items==0||grant.maximum_depth<self.next_close_depth_demand()?||grant.maximum_copy_bytes<self.next_close_copy_byte_demand()?||grant.maximum_release_bytes<self.next_close_release_byte_demand()?{return Ok(RetainedCloneStep::Progress(idle));}if !self.selection.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.selection.close_step(grant)));}if let Some(copy)=self.copy.as_mut(){let step=copy.close_step(grant)?;if copy.terminal_is_empty(){self.copy=None;}return Ok(step);}if let Some(active)=self.active.as_mut(){let progress=active.close_step(grant);if active.terminal_is_empty(){self.active=None;}return Ok(RetainedCloneStep::Progress(progress));}if let Some(row)=self.pending.take(){self.active=Some(MutationMessageRetirement::new(row));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:size_of::<MutationMessage>(),..idle}));}if let Some(retiring)=self.retiring.as_mut(){let step=retiring.close_step(grant)?;if retiring.terminal_is_empty(){self.retiring=None;}return Ok(step);}if let Some(messages)=self.messages.take(){self.retiring=Some(MutationMessageLedgerRetirement::new(String::new(),messages));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:size_of::<Vec<MutationMessage>>(),..idle}));}Ok(RetainedCloneStep::Complete(idle))}
+ pub(crate) fn terminal_is_empty(&self)->bool{self.selection.terminal_is_empty()&&self.messages.is_none()&&self.copy.is_none()&&self.pending.is_none()&&self.active.is_none()&&self.retiring.is_none()}
+ pub(crate) fn close_cold(&mut self){self.begin_close();while !self.terminal_is_empty(){self.close_step(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX}).expect("cold edit diagnostic settlement");}}
 }
-
-impl Drop for EditMessageSettlement {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.is_finished() && self.copy.is_none() && self.active.is_none()), "message settlement dropped before terminal ownership");
-    }
-}
+impl Drop for EditMessageSettlement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"edit diagnostic views must transfer or close exact owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.messages);}}}}
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn close(mut owner: Box<dyn ErasedSnapshotRetirement>, bytes: usize) {
-        for _ in 0..1_000_000 {
-            match owner.close_step(1, bytes).unwrap() {
-                SnapshotRetirementStep::Complete => { assert!(owner.terminal_is_empty()); return; }
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= bytes); }
-                SnapshotRetirementStep::Blocked => panic!("nonzero settlement cleanup grant blocked"),
-            }
-        }
-        panic!("settlement cleanup did not terminate");
-    }
-
-    #[test]
-    fn edit_message_clamp_partial_copy_retirement_exposes_exact_whole_release() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-        for copy_bytes in law["settlement"]["copyRelease"]["copyGrants"].as_array().unwrap() {
-            let source = MutationMessage::fatal("mutation.invariant", "x".repeat(law["settlement"]["copyRelease"]["allocationBytes"].as_u64().unwrap() as usize));
-            let mut copy = MessageCopyCursor::new();
-            for _ in 0..12 { copy.advance(&source, MessageCopyGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes.as_u64().unwrap() as usize, maximum_capacity_bytes: 4096 }).unwrap(); }
-            copy.cancel(); copy.begin_close();
-            let mut owner = MessageCopyRetirement(copy);
-            let mut released = 0;
-            for _ in 0..1000 {
-                if owner.terminal_is_empty() { break; }
-                let demand = owner.next_close_byte_demand();
-                assert!(demand <= law["settlement"]["maximumReleaseBytes"].as_u64().unwrap() as usize);
-                if demand > 0 {
-                    let (step, allocated, freed) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand - 1).unwrap());
-                    assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                    assert_eq!((allocated, freed), (0, 0));
-                    assert_eq!(owner.next_close_byte_demand(), demand);
-                }
-                let (step, allocated, freed) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand).unwrap());
-                assert_eq!(allocated, 0);
-                if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step { assert!(released_items <= 1 && released_bytes <= demand && freed <= released_bytes); }
-                released += freed;
-            }
-            assert!(owner.terminal_is_empty());
-            let (_, allocated, freed) = crate::test_allocation::observe_backing(|| drop(owner));
-            assert_eq!((allocated, freed), (0, 0));
-            println!("[DEBUG] settlement partial copy exact paid release={released} copy={copy_bytes} one-below retains original physical owner");
-        }
-    }
-
-    #[test]
-    fn edit_message_clamp_settlement_cancels_at_every_owned_stage() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-        let release_bytes = law["settlement"]["maximumReleaseBytes"].as_u64().unwrap() as usize;
-        for bytes in [1, 7] {
-            for stage in law["settlement"]["cancelStages"].as_array().unwrap() {
-                let baseline = serde_json::json!({"artifact": "unchanged", "alternatives": ["original"]});
-                let mut messages: Vec<_> = (0..6).map(|index| { let mut message = MutationMessage::fatal("mutation.invariant", "x".repeat(1000)); message.op_index = Some(index); message }).collect();
-                let mut outcomes: Vec<_> = messages.iter().map(|message| MutationReplayOutcome { mutation_id: crate::os_spr::MutationId(format!("mutation:{}", message.op_index.unwrap())), edit_id: "owned-stages".into(), op_index: message.op_index.unwrap(), worst: Some(message.level), messages: vec![message.clone()], superseded: false, withdrawn: false }).collect();
-                let original_status: Vec<_> = outcomes.iter().map(|outcome| outcome.worst).collect();
-                let mut cursor = EditMessageSettlement::new("owned-stages", &messages, 0, outcomes.len());
-                for turn in 0..1_000_000 {
-                    let reached = match stage.as_str().unwrap() {
-                        "clamp" => turn == 1,
-                        "outcome-retirement" => matches!(cursor.phase, Phase::Copy) && cursor.active.is_some(),
-                        "partial-copy" => matches!(cursor.phase, Phase::Copy) && cursor.copy.is_some(),
-                        "finished" => cursor.is_finished(),
-                        _ => unreachable!(),
-                    };
-                    if reached {
-                        if stage == "partial-copy" {
-                            for _ in 0..10 { cursor.step(&mut messages, &mut outcomes, bytes, release_bytes).unwrap(); }
-                            assert!(cursor.copy.is_some());
-                            assert!(matches!(cursor.phase, Phase::Copy));
-                            assert!(outcomes[cursor.outcome].messages.is_empty());
-                        }
-                        break;
-                    }
-                    let before = cursor.completed_work();
-                    cursor.step(&mut messages, &mut outcomes, bytes, release_bytes).unwrap();
-                    assert_eq!(cursor.completed_work() - before, 1);
-                    assert_eq!(outcomes.iter().map(|outcome| outcome.worst).collect::<Vec<_>>(), original_status);
-                    assert!(turn < 999_999, "requested settlement stage was not reached");
-                }
-                while let Some(child) = cursor.retire_item() { close(child, release_bytes); }
-                cursor.finish_retirement();
-                assert!(cursor.is_finished());
-                drop(cursor);
-                close(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), messages)), release_bytes);
-                for outcome in outcomes { close(Box::new(ArtifactStoreMessageLedgerRetirement::new(outcome.edit_id, outcome.messages)), release_bytes); }
-                assert_eq!(baseline, serde_json::json!({"artifact": "unchanged", "alternatives": ["original"]}));
-            }
-        }
-        eprintln!("[DEBUG] edit settlement cancellation covered clamp, exact outcome retirement, partial bounded copy and finished ownership with1/7 copy bytes and explicit whole4096 release bytes");
-    }
-}
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

@@ -154,7 +154,7 @@ test('SQLite Puzzle5d every persisted field retains its authored artifact state 
 for(let batch=0;batch<12;batch++)test('SQLite Puzzle5d neutral mutation snapshot batch '+batch+' retains declared JSON state through relational reconstruction',async()=>{
  const root=new URL('../../../../🧫️fixtures/',import.meta.url),ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
  for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text(),original=JSON.parse(source);expect(validate(original)).toBe(true);const value=io.puzzle5dSnapshotFromJsonText(source),database=await artifactSqlite0.puzzle5dSnapshotToSqliteDatabase(value),restored=await artifactSqlite0.puzzle5dSnapshotFromSqliteDatabase(database);expect(restored).toEqual(value);expect(io.puzzle5dSnapshotFromJsonText(io.puzzle5dSnapshotToJsonText(restored))).toEqual(value);count++}
- expect(index).toBe(138);expect(count).toBe(Math.floor((laws.snapshotAssetCount+11-batch)/12));
+ expect(index).toBe(laws.snapshotAssetCount);expect(count).toBe(Math.floor((laws.snapshotAssetCount+11-batch)/12));
 });
 
 test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral records",async()=>{
@@ -165,7 +165,9 @@ test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral re
  expect(owner).toContain("impl semio_framework_dsl_record::BorrowedDslField for Puzzle5dScale");
  expect(owner).toContain("<Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE");
  const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
+ expect([...diff.matchAll(/^pub struct (Puzzle5d\w+)\b/gm)].map(match=>match[1]!).sort()).toEqual([...laws.diffRecordOwners].sort());
  for(const name of laws.diffRecordOwners){expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"))}
+ for(const name of laws.deltaOwners)expect(diff).toContain("protocol::list_delta! { pub "+name+" {");
 });
 
 test("Puzzle5d nullable delta retains omission, clearing and exact typed replacement",async()=>{

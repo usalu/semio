@@ -426,7 +426,7 @@ mod oracles {
     /// m)` then `apply(_, inverse(m, base)) == base`, no serialization step named anywhere in it) —
     /// and it is genuinely independent of the subject: this oracle's tree, dispatch and serializer
     /// share no code with `crate::standards::v5::subsets::any`.
-    pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+    pub fn apply_then_undo(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let base = parse(input)?;
         let mut doc = base.clone();
         apply_kind(&mut doc, kind, params)?;
@@ -532,7 +532,7 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
         return Err("mutation spec carries no `kind`".to_string());
     }
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
-    oracles::apply_mutation_inverse(input, &kind, &params)
+    oracles::apply_then_undo(input, &kind, &params)
 }
 
 /// 🔁️ Decodes and re-encodes one real artifact through the reference implementation alone.

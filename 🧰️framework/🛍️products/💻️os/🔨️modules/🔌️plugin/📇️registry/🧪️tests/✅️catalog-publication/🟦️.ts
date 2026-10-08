@@ -166,13 +166,13 @@ describe("owner descriptor admission", () => {
     if (vector.change === "utf8") writeFileSync(path, new Uint8Array([0xff]));
     if (vector.change === "missing") rmSync(path);
     if (vector.change === "symlink") { put(workspace, "owner/actual.json", source); rmSync(path); symlinkSync(join(workspace, "owner/actual.json"), path, "file"); }
-    const contract = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧬️schema/🔣️.json"), "utf8"));
+    const contract = JSON.parse(readFileSync(join(import.meta.dirname, "../../🛂️descriptor-verification/🧬️schema/🔣️.json"), "utf8"));
     const oracle = (() => {
       try {
         const bytes = readFileSync(path);
         if (lstatSync(path).isSymbolicLink() || bytes.byteLength > 4 * 1024 * 1024) return false;
         const value = decodeOracle(bytes);
-        return Boolean(new Ajv({ strict: true }).compile({ ...contract, $ref: "#/$defs/CatalogDescriptorV1" })(value));
+        return Boolean(new Ajv({ strict: true }).compile({ ...contract, $ref: "#/$defs/PackageDescriptorV1" })(value));
       } catch { return false; }
     })();
     expect(oracle).toBe(vector.valid);

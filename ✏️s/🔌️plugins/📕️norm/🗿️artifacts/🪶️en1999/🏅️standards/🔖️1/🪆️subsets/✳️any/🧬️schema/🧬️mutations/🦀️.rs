@@ -75,54 +75,12 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-impl En1999Mutation {
-    /// 🔀 Raise the mutation sequence that turns `base` into `target` (B2 app-surface setField/insert/remove/remedy).
-    pub fn from_snapshot(base: &En1999Snapshot, target: &En1999Snapshot) -> Vec<En1999Mutation> {
-        let mut out = Vec::new();
-        if base.annex != target.annex {
-            out.push(En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex }));
-        }
-        if base.materials != target.materials {
-            out.push(En1999Mutation::ChangeMaterials(change_materials::ChangeMaterials { materials: target.materials.clone() }));
-        }
-        if base.sections != target.sections {
-            out.push(En1999Mutation::ChangeSections(change_sections::ChangeSections { sections: target.sections.clone() }));
-        }
-        if base.members != target.members {
-            out.push(En1999Mutation::ChangeMembers(change_members::ChangeMembers { members: target.members.clone() }));
-        }
-        if base.connections != target.connections {
-            out.push(En1999Mutation::ChangeConnections(change_connections::ChangeConnections { connections: target.connections.clone() }));
-        }
-        if base.fire_scenarios != target.fire_scenarios {
-            out.push(En1999Mutation::ChangeFireScenarios(change_fire_scenarios::ChangeFireScenarios { fire_scenarios: target.fire_scenarios.clone() }));
-        }
-        if base.fatigue_details != target.fatigue_details {
-            out.push(En1999Mutation::ChangeFatigueDetails(change_fatigue_details::ChangeFatigueDetails { fatigue_details: target.fatigue_details.clone() }));
-        }
-        out
-    }
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
 
-
-pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -> Result<(En1999Snapshot, Vec<String>), String> {
-    let raised = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-
-pub fn inverse_en1999_mutation(mutation: &En1999Mutation, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <En1999Mutation as protocol::Mutation<En1999Snapshot>>::inverse(mutation, base)?
-
-    })
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]

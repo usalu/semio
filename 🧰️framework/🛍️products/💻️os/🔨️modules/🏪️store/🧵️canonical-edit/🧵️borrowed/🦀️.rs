@@ -31,17 +31,17 @@ impl<'a> Iterator for ArtifactCanonicalJsonArray<'a> {
 
 /// 🗂️ A retained ordered map/field iterator. Native borrowed iterators preserve exact serde order.
 pub struct ArtifactCanonicalJsonObject<'a> {
-    values: Box<dyn Iterator<Item = (&'a str, ArtifactCanonicalJsonValue<'a>)> + Send + 'a>,
+    values: Box<dyn Iterator<Item = (ArtifactCanonicalJsonText<'a>, ArtifactCanonicalJsonValue<'a>)> + Send + 'a>,
 }
 
 impl<'a> ArtifactCanonicalJsonObject<'a> {
-    pub fn new(values: impl Iterator<Item = (&'a str, ArtifactCanonicalJsonValue<'a>)> + Send + 'a) -> Self {
-        Self { values: Box::new(values) }
+    pub fn new<K: Into<ArtifactCanonicalJsonText<'a>> + 'a>(values: impl Iterator<Item = (K, ArtifactCanonicalJsonValue<'a>)> + Send + 'a) -> Self {
+        Self { values: Box::new(values.map(|(key, value)| (key.into(), value))) }
     }
 }
 
 impl<'a> Iterator for ArtifactCanonicalJsonObject<'a> {
-    type Item = (&'a str, ArtifactCanonicalJsonValue<'a>);
+    type Item = (ArtifactCanonicalJsonText<'a>, ArtifactCanonicalJsonValue<'a>);
     fn next(&mut self) -> Option<Self::Item> {
         self.values.next()
     }
@@ -50,8 +50,9 @@ impl<'a> Iterator for ArtifactCanonicalJsonObject<'a> {
 
 //#region 🔒️RootedEncoding
 struct BorrowedString<'a> {
-    text: &'a str,
+    text: ArtifactCanonicalJsonText<'a>,
     offset: usize,
+    chunk: usize,
     phase: u8,
     escape: [u8; 6],
     escape_length: usize,
@@ -59,31 +60,30 @@ struct BorrowedString<'a> {
 }
 
 impl<'a> BorrowedString<'a> {
-    fn new(text: &'a str) -> Self {
-        Self { text, offset: 0, phase: 0, escape: [0; 6], escape_length: 0, escape_offset: 0 }
+    fn new(text: ArtifactCanonicalJsonText<'a>) -> Self {
+        Self { text, offset: 0, chunk: 0, phase: 0, escape: [0; 6], escape_length: 0, escape_offset: 0 }
     }
 
-    fn next_byte(&mut self) -> Option<u8> {
+    fn next_byte(&mut self) -> Result<Option<u8>, String> {
         if self.phase == 0 {
             self.phase = 1;
-            return Some(b'"');
+            return Ok(Some(b'"'));
         }
         if self.phase == 2 {
-            return None;
+            return Ok(None);
         }
         if self.escape_offset < self.escape_length {
             let byte = self.escape[self.escape_offset];
             self.escape_offset += 1;
-            return Some(byte);
+            return Ok(Some(byte));
         }
-        let Some(byte) = self.text.as_bytes().get(self.offset).copied() else {
+        let Some(byte) = self.text.next_byte(&mut self.chunk, &mut self.offset).map_err(str::to_owned)? else {
             self.phase = 2;
-            return Some(b'"');
+            return Ok(Some(b'"'));
         };
-        self.offset += 1;
         self.escape_length = canonical_escape(byte, &mut self.escape);
         self.escape_offset = 1;
-        Some(self.escape[0])
+        Ok(Some(self.escape[0]))
     }
 }
 
@@ -113,6 +113,11 @@ impl Default for ArtifactCanonicalEditEncoder {
 }
 
 impl ArtifactCanonicalEditEncoder {
+    /// 📏️ Measures the current concrete frontier backing before canonical ownership is admitted.
+    pub(super) const fn constructor_capacity_bytes() -> usize {
+        ARTIFACT_CANONICAL_JSON_DEPTH * std::mem::size_of::<Option<BorrowedFrame<'static>>>()
+    }
+
     /// 🪪️ Extends only references obtained from the exact privately owned immutable root.
     /// Private callers retain its Box or Arc until every frame is empty, including unwind.
     fn bind<T: ArtifactCanonicalJson>(&mut self, root: &T) -> Result<(), String> {
@@ -159,7 +164,8 @@ impl ArtifactCanonicalEditEncoder {
             match frame {
                 BorrowedFrame::Pending(value) => {
                     self.frames[top] = Some(match value {
-                        ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String(text)) => BorrowedFrame::String(BorrowedString::new(text)),
+                        ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String(text)) => BorrowedFrame::String(BorrowedString::new(text.into())),
+                        ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::Text(text)) => BorrowedFrame::String(BorrowedString::new(text)),
                         ArtifactCanonicalJsonValue::Scalar(node) => BorrowedFrame::Scalar { bytes: ScalarBytes::from_node(node)?, offset: 0 },
                         ArtifactCanonicalJsonValue::Source(source) => match source.canonical_json_borrowed_root()? {
                             Some(value) => BorrowedFrame::Pending(value),
@@ -170,7 +176,7 @@ impl ArtifactCanonicalEditEncoder {
                     });
                 }
                 BorrowedFrame::String(mut value) => {
-                    if let Some(byte) = value.next_byte() {
+                    if let Some(byte) = value.next_byte()? {
                         self.frames[top] = Some(BorrowedFrame::String(value));
                         return Ok(Some(byte));
                     }
@@ -267,14 +273,14 @@ impl ArtifactCanonicalEditEncoder {
         self.depth == 0 && self.root_address == 0 && !self.started
     }
 
-    pub(super) fn close_step(&mut self) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.depth != 0 {
-            self.depth -= 1;
-            self.frames[self.depth] = None;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        self.reset()?;
-        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    pub(super) fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_depth == 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical encoder retirement requires admitted depth")); }
+        if self.depth != 0 { self.depth -= 1; self.frames[self.depth] = None; } else { self.reset()?; }
+        let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 }
 //#endregion 🔒️RootedEncoding

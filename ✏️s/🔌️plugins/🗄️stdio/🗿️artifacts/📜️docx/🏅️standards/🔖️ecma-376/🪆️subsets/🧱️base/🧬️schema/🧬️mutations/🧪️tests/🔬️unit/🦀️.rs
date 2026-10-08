@@ -84,7 +84,7 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
         let mutation = DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { address, bold: false, italic: false, underline: false });
         let prepared = prepare_addressed_xml_mutation(&before, &mutation).unwrap();
         let mut after = before.clone();
-        apply_addressed_xml_mutation_in_place(&mut after, &mutation).unwrap();
+        apply_addressed(&mut after, &mutation).unwrap();
         let output = xml_document_to_text(&after.xml_part("word/document.xml").unwrap().document.materialize_exact().unwrap());
         let oracle = word_namespace_oracle(&output, namespace);
         for marker in case["retainedMarkers"].as_array().unwrap() {
@@ -97,7 +97,7 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
         }
         let reopened = crate::engine::decode_docx(&crate::engine::encode_docx(&after).unwrap()).unwrap();
         assert_eq!(reopened, after);
-        apply_addressed_xml_mutation_in_place(&mut after, &prepared.inverse).unwrap();
+        apply_addressed(&mut after, &prepared.inverse).unwrap();
         assert_eq!(after, before);
         let address = docx_top_level_block_address(&before, 0).unwrap();
         let mut styled = before.clone();
@@ -106,14 +106,14 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
             assert!(prepare_addressed_xml_mutation(&before, &mutation).is_err());
         } else {
             let prepared = prepare_addressed_xml_mutation(&before, &mutation).unwrap();
-            apply_addressed_xml_mutation_in_place(&mut styled, &mutation).unwrap();
+            apply_addressed(&mut styled, &mutation).unwrap();
             let output = xml_document_to_text(&styled.xml_part("word/document.xml").unwrap().document.materialize_exact().unwrap());
             let oracle = word_namespace_oracle(&output, namespace);
             for marker in case["retainedMarkers"].as_array().unwrap() {
                 assert!(output.contains(marker.as_str().unwrap()), "{}: {output}", case["id"]);
             }
             assert!(oracle.iter().any(|(name, attrs)| name == "pStyle" && attrs.contains(&("val".into(), "Heading".into()))));
-            apply_addressed_xml_mutation_in_place(&mut styled, &prepared.inverse).unwrap();
+            apply_addressed(&mut styled, &prepared.inverse).unwrap();
             assert_eq!(styled, before);
         }
     }
@@ -148,7 +148,7 @@ async fn block_run_style_and_part_mutations_apply_and_inverse() {
         DocxMutation::InsertStyle(insert_style::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: Some("Normal".into()) } }),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id: "Normal".into(), name: "Body".into() }),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) }),
-        DocxMutation::SetPart(set_part::SetPart { path: "word/media/new.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![4, 5, 6] }, index: None }),
+        DocxMutation::SetPart(set_part::SetPart { path: "word/media/new.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![4, 5, 6] }, index: None, override_index: None }),
         DocxMutation::RemovePart(remove_part::RemovePart { path: "word/media/original.bin".into() }),
     ];
 
@@ -194,12 +194,14 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
     let base = fixture();
     let mut middle = base.clone();
     let address = docx_block_run_address(&base, &DocxBlockPath { segments: vec![], index: 0 }, 0).expect("run address");
-    apply(&mut middle, &DocxMutation::SetRunText(set_run_text::SetRunText { address, text: "middle".into() }));
+    let text_edit = DocxMutation::SetRunText(set_run_text::SetRunText { address, text: "middle".into() });
+    apply(&mut middle, &text_edit);
     let mut final_snapshot = middle.clone();
-    apply(&mut final_snapshot, &DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![9, 8, 7] }, index: None }));
+    let binary_edit = DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![9, 8, 7] }, index: None, override_index: None });
+    apply(&mut final_snapshot, &binary_edit);
 
-    let first = DocxDiff::between(&base, &middle);
-    let second = DocxDiff::between(&middle, &final_snapshot);
+    let first = Mutation::diff(&text_edit, &base).diff().clone();
+    let second = Mutation::diff(&binary_edit, &middle).diff().clone();
     assert!(first.xml_parts.is_some(), "text edit must be an XML-part diff");
     assert!(second.opc.is_some(), "binary part edit must be an OPC diff");
     let mut absorbed = first;
@@ -328,7 +330,7 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
         assert_eq!(part_diff.modified.len(), 1);
         assert!(part_diff.added.is_empty() && part_diff.removed.is_empty());
 
-        apply_addressed_xml_mutation_in_place(&mut snapshot, &mutation).unwrap();
+        apply_addressed(&mut snapshot, &mutation).unwrap();
         let inverse = prepared.inverse.clone();
         let output = xml_document_to_text(&snapshot.xml_part(part_path).unwrap().document.materialize_exact().unwrap());
         let mut reader = Reader::from_str(&output);
@@ -360,7 +362,7 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
         if case["replacement"].as_str().unwrap().starts_with(' ') {
             assert!(output.contains("xml:space=\"preserve\""));
         }
-        apply_addressed_xml_mutation_in_place(&mut snapshot, &inverse).unwrap();
+        apply_addressed(&mut snapshot, &inverse).unwrap();
         assert_eq!(snapshot, before, "compact inverse restores exact canonical XML");
     }
 }
@@ -374,7 +376,7 @@ fn identical_natural_run_text_is_a_no_op_without_restructuring_xml() {
     let prepared = prepare_addressed_xml_mutation(&snapshot, &mutation).unwrap();
     assert!(!prepared.changed);
     assert_eq!(prepared.diff, DocxDiff::default());
-    apply_addressed_xml_mutation_in_place(&mut snapshot, &mutation).unwrap();
+    apply_addressed(&mut snapshot, &mutation).unwrap();
     assert_eq!(snapshot, before);
 }
 
@@ -459,7 +461,7 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
         let mutation = prepare(&snapshot, &address, replacement).unwrap().unwrap();
         assert!(matches!(mutation, DocxMutation::InsertXmlNode(_)));
         let prepared = prepare_addressed_xml_mutation(&snapshot, &mutation).unwrap();
-        apply_addressed_xml_mutation_in_place(&mut snapshot, &mutation).unwrap();
+        apply_addressed(&mut snapshot, &mutation).unwrap();
         assert!(prepare(&snapshot, &address, "stale draft").is_err());
         let output = xml_document_to_text(&snapshot.xml_part(&part_path).unwrap().document.materialize_exact().unwrap());
         for fragment in case["preserved"].as_array().unwrap() {
@@ -509,7 +511,7 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
         let saved = crate::engine::encode_docx(&snapshot).unwrap();
         let reopened = crate::engine::decode_docx(&saved).unwrap();
         assert_eq!(reopened.xml_part(&part_path).unwrap().document, snapshot.xml_part(&part_path).unwrap().document);
-        apply_addressed_xml_mutation_in_place(&mut snapshot, &prepared.inverse).unwrap();
+        apply_addressed(&mut snapshot, &prepared.inverse).unwrap();
         assert_eq!(snapshot, before);
         println!("[DEBUG] DOCX empty paragraph {} retains markup, namespace, save/reopen, and exact undo", case["id"]);
     }
@@ -541,4 +543,10 @@ async fn removing_a_middle_member_is_restored_at_its_original_position() {
     let table = docx_top_level_block_address(&base, 3).expect("table address");
     laws(&DocxMutation::RemoveTableRow(remove_table_row::RemoveTableRow { address: table, index: 1 }), &base).await;
     laws(&DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: "Two".into() }), &base).await;
+}
+
+fn apply_addressed(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, semio_framework_value::ValueError> {
+    let prepared = prepare_addressed_xml_mutation(snapshot, mutation)?;
+    *snapshot = protocol::apply_diff(&prepared.diff, snapshot).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.message))?;
+    Ok(prepared)
 }

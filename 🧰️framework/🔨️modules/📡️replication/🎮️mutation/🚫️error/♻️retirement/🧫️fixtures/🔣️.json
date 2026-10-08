@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "id": "empty-unused",
+      "wire": {
+        "code": "",
+        "message": "",
+        "target": [
+          ""
+        ]
+      },
+      "capacities": [
+        8192,
+        16384,
+        32768
+      ],
+      "targetCapacity": 4096
+    },
+    {
+      "id": "unicode-pair",
+      "wire": {
+        "code": "mutation.ä",
+        "message": "界🧬\u0000\"refused\"",
+        "target": [
+          "",
+          "node",
+          "界🧬"
+        ]
+      },
+      "capacities": [
+        64,
+        65536,
+        8192,
+        64,
+        16384
+      ],
+      "targetCapacity": 8192
+    }
+  ],
+  "copyGrants": [
+    1,
+    17,
+    4096
+  ],
+  "cancelCuts": [
+    0,
+    3
+  ],
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

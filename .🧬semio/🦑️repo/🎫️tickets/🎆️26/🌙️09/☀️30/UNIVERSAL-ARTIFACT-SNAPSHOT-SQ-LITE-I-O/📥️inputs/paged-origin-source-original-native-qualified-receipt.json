@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-08",
+  "session": 18840,
+  "exitCode": 0,
+  "route": "@semio-tech/framework-pack-record-rs:test-native",
+  "selector": "borrowed_static_paged_origin_source8194_exact_body_and_physical4096",
+  "sourceBytes": 8194,
+  "canonicalBodyBytes": 8200,
+  "canonicalOperationBytes": 8202,
+  "operationScope": "frame prefix modeled independently; native body producer only",
+  "cumulativeConstructionBytes": 65536,
+  "metadataWindowBytes": 512,
+  "maximumItems": 1,
+  "maximumPhysicalReleaseBytes": 4096,
+  "qualifiedTests": 71,
+  "skippedTests": 94,
+  "scope": "Original Record native route; genuine paged semantic source/read-view/static canonical body/capsule/output physical event prerequisite; original SetLabel String and whole ChildEmit family unchanged and unqualified",
+  "runtimeEvidence": [
+    "$ bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-pack-record-rs:test-native --skip-nx-cache -- quick \"borrowed_static_paged_origin_source8194_exact_body_and_physical4096\" --no-fail-fast -- --nocapture",
+    "> nx run @semio-tech/framework-pack-record-rs:test-native quick borrowed_static_paged_origin_source8194_exact_body_and_physical4096 --no-fail-fast -- --nocapture",
+    "> bun ./📜️script.ts test-native quick borrowed_static_paged_origin_source8194_exact_body_and_physical4096 --no-fail-fast -- --nocapture\r",
+    "\u001b[32;1m       START\u001b[0m [         ] (25/71) \u001b[35;1msemio-framework-pack\u001b[0m \u001b[36mrecord::operation_page_tests\u001b[0m\u001b[36m::\u001b[0m\u001b[34;1mborrowed_static_paged_origin_source8194_exact_body_and_physical4096\u001b[0m",
+    "[DEBUG] original paged semantic source mode=complete logical8194 originalBacking=9762 disposed=9762; exact canonical body8200 and real1/4096 source/capsule/output events; original contiguous String and whole ChildEmit family unqualified",
+    "[DEBUG] original paged semantic source mode=initial4096 logical8194 originalBacking=392 disposed=392; exact canonical body8200 and real1/4096 source/capsule/output events; original contiguous String and whole ChildEmit family unqualified",
+    "[DEBUG] original paged semantic source mode=file-one-short logical8194 originalBacking=9762 disposed=9762; exact canonical body8200 and real1/4096 source/capsule/output events; original contiguous String and whole ChildEmit family unqualified",
+    "[DEBUG] original paged semantic source mode=depth-zero logical8194 originalBacking=9762 disposed=9762; exact canonical body8200 and real1/4096 source/capsule/output events; original contiguous String and whole ChildEmit family unqualified",
+    "[DEBUG] original paged semantic source mode=interior256 logical8194 originalBacking=9762 disposed=9762; exact canonical body8200 and real1/4096 source/capsule/output events; original contiguous String and whole ChildEmit family unqualified",
+    "test record::operation_page_tests::borrowed_static_paged_origin_source8194_exact_body_and_physical4096 ... ok",
+    "\u001b[32;1m        PASS\u001b[0m [   0.031s] (25/71) \u001b[35;1msemio-framework-pack\u001b[0m \u001b[36mrecord::operation_page_tests\u001b[0m\u001b[36m::\u001b[0m\u001b[34;1mborrowed_static_paged_origin_source8194_exact_body_and_physical4096\u001b[0m",
+    "\u001b[32;1m     Summary\u001b[0m [   4.591s] \u001b[1m71\u001b[0m tests run: \u001b[1m71\u001b[0m \u001b[32;1mpassed\u001b[0m, \u001b[1m94\u001b[0m \u001b[33;1mskipped\u001b[0m"
+  ]
+}

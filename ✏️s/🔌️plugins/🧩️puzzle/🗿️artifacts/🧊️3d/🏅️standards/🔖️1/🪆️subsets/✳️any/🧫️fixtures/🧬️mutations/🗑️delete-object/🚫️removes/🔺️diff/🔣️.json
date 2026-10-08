@@ -1,22 +1,28 @@
 {
   "artifact": null,
   "attractions": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "attraction-1"
-    ],
-    "reordered": null
+      {
+        "id": "attraction-1",
+        "index": 0
+      }
+    ]
   },
   "domain": null,
   "meta": null,
   "objects": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "object-a"
-    ],
-    "reordered": null
+      {
+        "id": "object-a",
+        "index": 0
+      }
+    ]
   },
   "references": null,
   "schema": null,

@@ -5,7 +5,7 @@ use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactOutputChunks};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::Fault;
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 📤 The download filename for one export: the document's own manifest id (`concrete-forest.json`,
 /// `nakagin.json`), or the app-generic `puzzle-2d.json` for a document that came from no example.

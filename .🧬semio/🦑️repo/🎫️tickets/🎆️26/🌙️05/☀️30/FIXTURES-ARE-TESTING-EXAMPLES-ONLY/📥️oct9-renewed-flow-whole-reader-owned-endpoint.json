@@ -1,0 +1,11 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "beforeSha256": "42a475806b4244e9aa3ea7f9eaae6aa247d4c0ef64d0cac6058f3cae829a213b",
+      "afterSha256": "5897da9c6cc5285d97a8459ea21e49af4187b1136fcb2278e445030d3cf85b67",
+      "action": "updated",
+      "qualification": "remove recreated test-envelope compiler and mutation-schema-only checks; preserve UTF8/TextEncoder/stableJSON oracle"
+    }
+  ]
+}

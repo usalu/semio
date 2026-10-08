@@ -2197,17 +2197,18 @@ export const schema={
             "kind": {
               "const": "map"
             },
-            "data": {
+            "glyphs": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 65535
               }
             }
           },
           "required": [
             "kind",
-            "data"
+            "glyphs"
           ]
         }
       ]
@@ -2483,11 +2484,7 @@ export const schema={
               "minimum": 0
             },
             "profile": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "$ref": "#/$defs/ArtifactRef"
             },
             "alternate": {
               "anyOf": [
@@ -2532,7 +2529,7 @@ export const schema={
               "type": "integer",
               "minimum": 0
             },
-            "lookup": {
+            "palette": {
               "type": "array",
               "items": {
                 "type": "integer",
@@ -2544,7 +2541,7 @@ export const schema={
             "kind",
             "base",
             "hival",
-            "lookup"
+            "palette"
           ]
         },
         {
@@ -3758,113 +3755,83 @@ export const schema={
       "oneOf": [
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "type1"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "length1": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "length2": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "length3": {
-              "type": "integer",
-              "minimum": 0
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data",
-            "length1",
-            "length2",
-            "length3"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "trueType"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "cff"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "cidCff"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "openType"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         }
       ]
     },
@@ -4486,16 +4453,6 @@ export const schema={
         "interpolate": {
           "type": "boolean"
         },
-        "codec": {
-          "$ref": "#/$defs/PdfImageCodec"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
         "softMask": {
           "anyOf": [
             {
@@ -4576,101 +4533,16 @@ export const schema={
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
           }
+        },
+        "body": {
+          "$ref": "#/$defs/PdfImageBody"
         }
       },
       "required": [
         "id",
         "width",
         "height",
-        "data"
-      ]
-    },
-    "PdfImageCodec": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "raw"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "dct"
-            },
-            "colorTransform": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "jpx"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "ccitt"
-            },
-            "parameters": {
-              "$ref": "#/$defs/PdfCcittParameters"
-            }
-          },
-          "required": [
-            "kind",
-            "parameters"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "jbig2"
-            },
-            "globals": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        }
+        "body"
       ]
     },
     "PdfImageMask": {
@@ -4864,30 +4736,20 @@ export const schema={
         "interpolate": {
           "type": "boolean"
         },
-        "filters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PdfStreamFilter"
-          }
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
           }
+        },
+        "body": {
+          "$ref": "#/$defs/PdfImageBody"
         }
       },
       "required": [
         "width",
         "height",
-        "data"
+        "body"
       ]
     },
     "PdfLineCap": {
@@ -6672,11 +6534,7 @@ export const schema={
         "profile": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "$ref": "#/$defs/ArtifactRef"
             },
             {
               "type": "null"
@@ -7356,12 +7214,8 @@ export const schema={
                 }
               ]
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
           "required": [
@@ -7370,7 +7224,7 @@ export const schema={
             "bitsPerCoordinate",
             "bitsPerComponent",
             "decode",
-            "data"
+            "reference"
           ]
         }
       ]
@@ -7959,6 +7813,299 @@ export const schema={
           }
         }
       }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string"
+            },
+            "standard": {
+              "type": "string"
+            },
+            "subset": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "PdfImageBody": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "samples"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "properties": {
+            "kind": {
+              "const": "artifact"
+            },
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PdfStreamRoleValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "content"
+          ],
+          "properties": {
+            "kind": {
+              "const": "operators"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfOp"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "samples"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sampledWords"
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "code"
+          ],
+          "properties": {
+            "kind": {
+              "const": "calculatorProgram"
+            },
+            "code": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "mapping"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unicodeMap"
+            },
+            "mapping": {
+              "$ref": "#/$defs/PdfToUnicode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "cmap"
+          ],
+          "properties": {
+            "kind": {
+              "const": "characterMap"
+            },
+            "cmap": {
+              "$ref": "#/$defs/PdfEmbeddedCMap"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "program"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fontProgram"
+            },
+            "program": {
+              "$ref": "#/$defs/PdfFontProgram"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "image"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "image": {
+              "$ref": "#/$defs/PdfImage"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "metadataText"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "attachmentBytes"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "paletteComponents"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "components"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "glyphIds"
+            },
+            "glyphs": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "glyphs"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "referenceBody"
+            },
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
+            }
+          },
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "additionalProperties": false
+        }
+      ]
     }
   }
 } as const;

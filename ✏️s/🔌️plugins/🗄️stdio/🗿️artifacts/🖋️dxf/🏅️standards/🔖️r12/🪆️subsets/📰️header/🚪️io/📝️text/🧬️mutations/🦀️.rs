@@ -9,9 +9,10 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::io::binary::diff::dec_block_bin;
 use crate::standards::v_r12::subsets::any::schema::mutations::*;
-use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
+use crate::schema::diff::{block_field_changes, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
     // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
+    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_field_changes, layer_field_changes, linetype_field_changes, style_field_changes, DxfDiff};
+use crate::standards::v_r12::subsets::any::io::text::diff::{dec_list, enc_list, dec_other_table, enc_other_table};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{enc_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_style};
@@ -77,6 +78,7 @@ pub(crate) fn print_dxf_mutation(m: &DxfMutation) -> String {
         DxfMutation::InsertBlock(insert_block::InsertBlock { index, block }) => format!("insert-block index={index} block={}", enc_block(block)),
         DxfMutation::RemoveBlock(remove_block::RemoveBlock { index }) => format!("remove-block index={index}"),
         DxfMutation::SetBlock(set_block::SetBlock { index, block }) => format!("set-block index={index} block={}", enc_block(block)),
+        DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables }) => format!("set-other-tables other-tables={}", enc_list(other_tables, enc_other_table)),
     }
 }
 
@@ -110,6 +112,7 @@ pub(crate) fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
         "insert-block" => Ok(DxfMutation::InsertBlock(insert_block::InsertBlock { index: usize_arg("index")?, block: dec_block(arg("block")?)? })),
         "remove-block" => Ok(DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: usize_arg("index")? })),
         "set-block" => Ok(DxfMutation::SetBlock(set_block::SetBlock { index: usize_arg("index")?, block: dec_block(arg("block")?)? })),
+        "set-other-tables" => Ok(DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables: dec_list(arg("other-tables")?, dec_other_table)? })),
 
         other => Err(format!("dxf mutation: unknown keyword {other:?}")),
     }

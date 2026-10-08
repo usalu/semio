@@ -39,6 +39,8 @@ type ShootingAssetEdit {
   edit: ShootingEditKind!
   index: UInt32
   id: String
+  from: UInt32
+  to: UInt32
   item: ShootingAsset
 }
 
@@ -46,6 +48,8 @@ type ShootingShotEdit {
   edit: ShootingEditKind!
   index: UInt32
   id: String
+  from: UInt32
+  to: UInt32
   item: ShootingShot
 }
 
@@ -53,6 +57,8 @@ type ShootingSavedCameraEdit {
   edit: ShootingEditKind!
   index: UInt32
   id: String
+  from: UInt32
+  to: UInt32
   item: ShootingSavedCamera
 }
 

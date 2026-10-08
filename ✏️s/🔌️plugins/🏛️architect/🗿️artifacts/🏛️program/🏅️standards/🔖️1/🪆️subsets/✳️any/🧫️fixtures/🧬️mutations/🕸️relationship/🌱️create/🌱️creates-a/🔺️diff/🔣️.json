@@ -9,51 +9,54 @@
   "elements": null,
   "quantities": null,
   "relationships": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "relationship-a",
-        "name": "Relationship A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
+        "index": 0,
+        "row": {
+          "id": "relationship-a",
+          "name": "Relationship A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "sourceId": "",
+          "targetId": "",
+          "kind": "contains",
+          "strength": null,
+          "directional": false,
+          "rationale": null,
+          "constraints": [],
+          "conditions": [],
+          "relationshipPriority": "preferred",
+          "validFrom": null,
+          "validUntil": null,
+          "evidence": [],
+          "conflictIds": [],
+          "traceLinks": [],
+          "bidirectional": false,
+          "distanceConstraintM": null,
+          "capacityConstraint": null,
+          "regulatoryBasis": [],
+          "reviewCycle": null,
           "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "sourceId": "",
-        "targetId": "",
-        "kind": "contains",
-        "strength": null,
-        "directional": false,
-        "rationale": null,
-        "constraints": [],
-        "conditions": [],
-        "relationshipPriority": "preferred",
-        "validFrom": null,
-        "validUntil": null,
-        "evidence": [],
-        "conflictIds": [],
-        "traceLinks": [],
-        "bidirectional": false,
-        "distanceConstraintM": null,
-        "capacityConstraint": null,
-        "regulatoryBasis": [],
-        "reviewCycle": null,
-        "ownerId": null,
-        "proximityRequirement": null,
-        "compatibilityRequirement": null,
-        "incompatibilityRequirement": null,
-        "separationRequirements": []
+          "proximityRequirement": null,
+          "compatibilityRequirement": null,
+          "incompatibilityRequirement": null,
+          "separationRequirements": []
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "adjacencies": null,
   "processes": null,

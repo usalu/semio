@@ -288,7 +288,7 @@ fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical
         if &next == snapshot {
             return Ok(Emit::default());
         }
-        return Ok(Emit { artifact_mutations: semio_s_artifact_stdio_contract::editing::net_leaves_exact(snapshot, &next, crate::schema::mutations::net_mutations)?, ..Default::default() });
+        return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&next, STDIO_XML_DOCUMENT_SCHEMA)], ..Default::default() });
     }
     let path = decode_node_id(node_id).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-node-path"), detail))?;
     let root = snapshot.doc.root.as_ref().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.missing-root"), "The XML document has no root node to edit."))?;
@@ -581,8 +581,11 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XmlAnyE
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::xml_any::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        crate::editor::xml_any::edit_rules::resolve(snapshot, event)
     }
 }
 //#endregion 🔖️Editor

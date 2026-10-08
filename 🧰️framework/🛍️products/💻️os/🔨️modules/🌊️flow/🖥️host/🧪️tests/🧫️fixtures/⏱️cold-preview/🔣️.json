@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "phase": "validating",
+      "unitsDone": 0,
+      "unitsTotal": 8,
+      "facesDone": 0,
+      "facesTotal": 0,
+      "chunks": 0,
+      "cancellable": true
+    },
+    {
+      "phase": "collectingTopology",
+      "unitsDone": 1,
+      "unitsTotal": 8,
+      "facesDone": 0,
+      "facesTotal": 0,
+      "chunks": 0,
+      "cancellable": true
+    },
+    {
+      "phase": "samplingEdges",
+      "unitsDone": 2,
+      "unitsTotal": 8,
+      "facesDone": 0,
+      "facesTotal": 0,
+      "chunks": 0,
+      "cancellable": true
+    }
+  ]
+}

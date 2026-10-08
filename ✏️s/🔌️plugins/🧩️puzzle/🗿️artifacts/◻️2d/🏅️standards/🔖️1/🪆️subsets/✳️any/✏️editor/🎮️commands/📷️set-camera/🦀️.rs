@@ -1,7 +1,7 @@
 //! 🎥️ `set-camera` command.
 
 use crate::editor::puzzle2d::{puzzle2d_window_only_scope, set_runtime_camera, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn set_camera(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let Some(camera) = args.and_then(|value| value.get("camera")) else {

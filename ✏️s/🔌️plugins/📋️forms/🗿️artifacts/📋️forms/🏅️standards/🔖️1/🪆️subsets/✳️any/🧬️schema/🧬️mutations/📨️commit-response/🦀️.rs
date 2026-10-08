@@ -5,3 +5,6 @@ pub mod mutation;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

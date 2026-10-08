@@ -30,7 +30,7 @@ pub fn plan(p: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<Glt
     let Some(index) = base.document.scenes[p.scene].nodes.iter().position(|node| *node == p.node) else {
         return Err(reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", p.scene), "node is not a root of this scene"));
     };
-    Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { nodes: Some(with_moved(&base.document.scenes[p.scene].nodes, index, p.position)), ..Default::default() }), ..Default::default() })
+    Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { nodes: Some(GltfRefsDelta::relocation(&refs(&base.document.scenes[p.scene].nodes), index, p.position)), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

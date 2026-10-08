@@ -5,12 +5,15 @@
   "productClasses": null,
   "productSeries": null,
   "products": {
-    "added": [],
     "removed": [
-      "product.pr600-m1"
+      {
+        "id": "product.pr600-m1",
+        "index": 1
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "productIndexes": null,
   "propertyDefinitions": null,

@@ -50,9 +50,6 @@ impl crate::os_spr::DiffAlgebra<Value> for Value {
     fn inverse(&self, base: &Value) -> Self {
         base.clone()
     }
-    fn between(_base: &Value, other: &Value) -> Self {
-        other.clone()
-    }
     fn is_empty(&self) -> bool {
         false
     }

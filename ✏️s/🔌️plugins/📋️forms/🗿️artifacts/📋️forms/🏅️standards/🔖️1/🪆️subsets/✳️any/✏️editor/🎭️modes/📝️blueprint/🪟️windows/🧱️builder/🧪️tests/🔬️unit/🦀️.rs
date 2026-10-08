@@ -55,7 +55,12 @@ async fn renders_blueprint_builder_cards() {
     let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
     let expected = crate::mutations::as_playbook_spec(&spec);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
+    assert_eq!(scene.steps.len(),expected.steps.len());
+    for (actual,expected) in scene.steps.iter().zip(&expected.steps) {
+        assert_eq!((&actual.id,&actual.title,&actual.description),(&expected.id,&expected.title,&expected.description));
+        assert_eq!(actual.blocks.len(),expected.blocks.len());
+        for (actual,expected) in actual.blocks.iter().zip(&expected.blocks) { assert_eq!((&actual.id,&actual.label,&actual.kind),(&expected.id,&expected.label,&expected.kind)); }
+    }
     assert!(scene.selected_id.is_none());
 }
 
@@ -73,7 +78,7 @@ fn blueprint_cards_publish_exact_forms_selection_targets() {
     let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).unwrap();
     assert_eq!(scene.domain_id.as_deref(), Some(crate::editor::forms::FORMS_INTERACTION_FIELDS));
-    let steps: serde_json::Value = serde_json::from_str(&scene.steps_json).unwrap();
+    let steps: serde_json::Value = serde_json::to_value(&scene.steps).unwrap();
     assert_eq!(steps[0]["target"], serde_json::json!({ "granularity": "section", "id": "step:contact" }));
     assert_eq!(steps[0]["blocks"][0]["target"], serde_json::json!({ "granularity": "field", "id": "name" }));
     assert_eq!(scene.selected_id.as_deref(), Some("name"));

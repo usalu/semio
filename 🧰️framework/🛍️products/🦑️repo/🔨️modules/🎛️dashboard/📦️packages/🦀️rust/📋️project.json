@@ -207,6 +207,15 @@
         "forwardAllArgs": true
       },
       "cache": false
+    },
+    "launch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts launch",
+        "forwardAllArgs": true
+      },
+      "cache": false
     }
   }
 }

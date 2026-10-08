@@ -15,15 +15,44 @@ record snapshot {
   id3v1 Value
 }
 record Id3v2Tag {
-  majorVersion u8
-  minorVersion u8
-  flags u8
   frames array Id3Frame
 }
 record Id3Frame {
   id utf8
-  flags u16
-  data bytes
+  content Value
+}
+record Id3Text {
+  values array utf8
+}
+record Id3UserText {
+  description utf8
+  values array utf8
+}
+record Id3Comment {
+  language utf8
+  description utf8
+  text utf8
+}
+record Id3Lyrics {
+  language utf8
+  description utf8
+  text utf8
+}
+record Id3Url {
+  url utf8
+}
+record Id3UserUrl {
+  description utf8
+  url utf8
+}
+record Id3Picture {
+  mime utf8
+  pictureType u8
+  description utf8
+  payload bytes
+}
+record Id3Opaque {
+  bytes bytes
 }
 record Mp3Frame {
   header Mp3FrameHeader
@@ -44,5 +73,11 @@ record Mp3FrameHeader {
   emphasis u8
 }
 record Id3v1Tag {
-  raw bytes
+  title utf8
+  artist utf8
+  album utf8
+  year utf8
+  comment utf8
+  track Value
+  genre Value
 }

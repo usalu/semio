@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertSilo, base: &En1998Snapshot) -> protocol::MutationOu
     if base.silos.iter().any(|existing| existing.id == payload.silo.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Silo id {} already exists.", payload.silo.id), [payload.silo.id.clone()]);
     }
-    let index = payload.index.min(base.silos.len());
-    protocol::MutationOutcome::new(En1998Diff { silos: En1998SiloDelta::insertion(&base.silos, index, payload.silo.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.silos.len());
+    protocol::MutationOutcome::new(En1998Diff { silos: En1998SiloDelta::insertion(index, payload.silo.clone()), ..Default::default() })
 }

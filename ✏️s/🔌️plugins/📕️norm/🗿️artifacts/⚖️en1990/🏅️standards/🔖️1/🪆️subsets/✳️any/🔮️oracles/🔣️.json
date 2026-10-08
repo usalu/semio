@@ -271,6 +271,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-effect-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -282,6 +286,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-member-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -293,6 +301,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-seismic-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -304,6 +316,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-accidental-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -315,6 +331,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-variable-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -326,6 +346,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-permanent-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

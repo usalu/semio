@@ -7,12 +7,15 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "sls_qp_spare"
+      {
+        "id": "sls_qp_spare",
+        "index": 2
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "analysis": null
 }

@@ -2,30 +2,63 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "015032e9-67ed-4736-adab-a6e10351079b",
-      "13c6ff51-664b-46a2-a291-9cf044bef338",
-      "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
-      "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
-      "77d41b5c-e532-45b3-ba07-7bc3fa960fe8",
-      "8684b51c-94f5-4a50-be16-526ac8e0892a",
-      "8fd1aad8-5f00-4032-900d-a91810294ffc",
-      "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
-      "f38996aa-33cd-433c-8217-fb6c55262b20",
-      "feba8972-394f-4ecc-923c-9f1701881fd0"
-    ],
-    "reordered": null
+      {
+        "id": "015032e9-67ed-4736-adab-a6e10351079b",
+        "index": 0
+      },
+      {
+        "id": "13c6ff51-664b-46a2-a291-9cf044bef338",
+        "index": 1
+      },
+      {
+        "id": "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
+        "index": 2
+      },
+      {
+        "id": "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
+        "index": 3
+      },
+      {
+        "id": "77d41b5c-e532-45b3-ba07-7bc3fa960fe8",
+        "index": 4
+      },
+      {
+        "id": "8684b51c-94f5-4a50-be16-526ac8e0892a",
+        "index": 5
+      },
+      {
+        "id": "8fd1aad8-5f00-4032-900d-a91810294ffc",
+        "index": 6
+      },
+      {
+        "id": "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
+        "index": 7
+      },
+      {
+        "id": "f38996aa-33cd-433c-8217-fb6c55262b20",
+        "index": 8
+      },
+      {
+        "id": "feba8972-394f-4ecc-923c-9f1701881fd0",
+        "index": 9
+      }
+    ]
   },
   "meta": null,
   "nodes": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
-    ],
-    "reordered": null
+      {
+        "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd",
+        "index": 2
+      }
+    ]
   },
   "schema": null,
   "targetRegions": null

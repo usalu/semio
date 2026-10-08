@@ -17,143 +17,28 @@ type Puzzle2dEdgePatch { source: String target: String edgeKind: String gap: Flo
 type Puzzle2dTargetRegionPatch { x: Float y: Float width: Float height: Float label: String hidden: Boolean locked: Boolean }
 type Puzzle2dKindCompatibilityPatch { bidirectional: Boolean important: Boolean specificity: Puzzle2dCompatSpecificity }
 type Puzzle2dMetaPatch { manifestId: String kindCompatibility: Puzzle2dKindCompatibilityDelta kindCatalogs: Puzzle2dKindCatalogs }
-type Puzzle2dHandlesDelta { added: [Puzzle2dHandle!]! removed: [String!]! patched: [Puzzle2dHandlePatchEntry!]! reordered: [String!] }
-type Puzzle2dHandlePatchEntry { id: String! patch: Puzzle2dHandlePatch! }
-type Puzzle2dNodesDelta { added: [Puzzle2dNode!]! removed: [String!]! patched: [Puzzle2dNodePatchEntry!]! reordered: [String!] }
-type Puzzle2dNodePatchEntry { id: String! patch: Puzzle2dNodePatch! }
-type Puzzle2dEdgesDelta { added: [Puzzle2dEdge!]! removed: [String!]! patched: [Puzzle2dEdgePatchEntry!]! reordered: [String!] }
-type Puzzle2dEdgePatchEntry { id: String! patch: Puzzle2dEdgePatch! }
-type Puzzle2dTargetRegionsDelta { added: [Puzzle2dTargetRegion!]! removed: [String!]! patched: [Puzzle2dTargetRegionPatchEntry!]! reordered: [String!] }
-type Puzzle2dTargetRegionPatchEntry { id: String! patch: Puzzle2dTargetRegionPatch! }
-type Puzzle2dKindCompatibilityDelta { added: [Puzzle2dKindCompatibility!]! removed: [Puzzle2dKindCompatibilityKey!]! patched: [Puzzle2dKindCompatibilityPatchEntry!]! reordered: [Puzzle2dKindCompatibilityKey!] }
-type Puzzle2dKindCompatibilityPatchEntry { id: Puzzle2dKindCompatibilityKey! patch: Puzzle2dKindCompatibilityPatch! }
-
-enum Puzzle2dNodeAnchor { FIXED DERIVED }
-
-type Puzzle2dCamera { x: Float! y: Float! zoom: Float! }
-
-type Puzzle2dHandle {
-  id: String!
-  handleKind: String
-  angle: Float!
-  radius: Float
-  color: String
-  iconKind: String
-  scale: Float
-  visible: Boolean
-  locked: Boolean
-}
-
-type Puzzle2dNode {
-  id: String!
-  nodeKind: String
-  shape: String
-  x: Float!
-  y: Float!
-  radius: Float
-  width: Float
-  height: Float
-  text: String
-  iconKind: String
-  root: Boolean
-  scale: Float
-  visible: Boolean
-  locked: Boolean
-  anchor: Puzzle2dNodeAnchor!
-  handles: [Puzzle2dHandle!]!
-}
-
-type Puzzle2dEdge {
-  id: String!
-  source: String!
-  target: String!
-  edgeKind: String
-  gap: Float!
-  shift: Float!
-  rise: Float!
-  rotation: Float!
-  turn: Float!
-  tilt: Float!
-  x: Float!
-  y: Float!
-  sourceTip: String
-  targetTip: String
-  visible: Boolean
-  locked: Boolean
-}
-
-enum Puzzle2dCompatSpecificity { GENERAL NODE EDGE HANDLE WIRE VORTEX }
-
-type Puzzle2dKindCompatibility {
-  source: String!
-  target: String!
-  bidirectional: Boolean!
-  important: Boolean!
-  specificity: Puzzle2dCompatSpecificity!
-}
-
-type Puzzle2dAttribute { id: String! key: String! value: String! definition: String }
-type Puzzle2dAuthor { id: String! name: String! email: String! role: String rank: Int }
-type Puzzle2dRepresentation { id: String! name: String! url: String! mime: String! tags: [String!]! lod: String description: String! }
-type Puzzle2dHandleTemplate {
-  id: String!
-  name: String!
-  label: String!
-  description: String!
-  icon: String!
-  handleKind: String
-  angle: Float!
-  t: Float
-  mandatory: Boolean
-  radius: Float
-}
-type Puzzle2dCatalogNodeKind {
-  id: String!
-  name: String!
-  label: String!
-  description: String!
-  icon: String!
-  image: String!
-  unit: String!
-  abstract: Boolean!
-  baseKinds: [String!]!
-  representations: [Puzzle2dRepresentation!]!
-  handles: [Puzzle2dHandleTemplate!]!
-  attributes: [Puzzle2dAttribute!]!
-  authors: [Puzzle2dAuthor!]!
-}
-type Puzzle2dCatalogHandleKind {
-  id: String!
-  code: String
-  label: String
-  order: Int
-  compatibleWith: [String!]!
-  description: String!
-  icon: String!
-  color: String!
-  defaultWireKind: String!
-}
-type Puzzle2dCatalogEdgeKind { id: String! name: String! label: String! description: String! icon: String! color: String! }
-type Puzzle2dCatalogWireKind { id: String! name: String! label: String! description: String! icon: String! color: String! defaultEdgeKind: String! }
-type Puzzle2dKindCatalogs {
-  nodes: [Puzzle2dCatalogNodeKind!]!
-  handles: [Puzzle2dCatalogHandleKind!]!
-  edges: [Puzzle2dCatalogEdgeKind!]!
-  wires: [Puzzle2dCatalogWireKind!]!
-}
-type Puzzle2dTargetRegion {
-  id: String!
-  x: Float!
-  y: Float!
-  width: Float!
-  height: Float!
-  label: String
-  hidden: Boolean!
-  locked: Boolean!
-}
-
-type Puzzle2dMeta {
-  manifestId: String
-  kindCompatibility: [Puzzle2dKindCompatibility!]!
-  kindCatalogs: Puzzle2dKindCatalogs
-}
+type Puzzle2dHandlesDelta { removed: [Puzzle2dHandleRemoval!]! inserted: [Puzzle2dHandleInsertion!]! moved: [Puzzle2dHandleRelocation!]! modified: [Puzzle2dHandleModification!]! }
+type Puzzle2dHandleRemoval { id: String! index: Int! }
+type Puzzle2dHandleInsertion { index: Int! row: Puzzle2dHandle! }
+type Puzzle2dHandleRelocation { id: String! from: Int! to: Int! }
+type Puzzle2dHandleModification { id: String! patch: Puzzle2dHandlePatch! }
+type Puzzle2dNodesDelta { removed: [Puzzle2dNodeRemoval!]! inserted: [Puzzle2dNodeInsertion!]! moved: [Puzzle2dNodeRelocation!]! modified: [Puzzle2dNodeModification!]! }
+type Puzzle2dNodeRemoval { id: String! index: Int! }
+type Puzzle2dNodeInsertion { index: Int! row: Puzzle2dNode! }
+type Puzzle2dNodeRelocation { id: String! from: Int! to: Int! }
+type Puzzle2dNodeModification { id: String! patch: Puzzle2dNodePatch! }
+type Puzzle2dEdgesDelta { removed: [Puzzle2dEdgeRemoval!]! inserted: [Puzzle2dEdgeInsertion!]! moved: [Puzzle2dEdgeRelocation!]! modified: [Puzzle2dEdgeModification!]! }
+type Puzzle2dEdgeRemoval { id: String! index: Int! }
+type Puzzle2dEdgeInsertion { index: Int! row: Puzzle2dEdge! }
+type Puzzle2dEdgeRelocation { id: String! from: Int! to: Int! }
+type Puzzle2dEdgeModification { id: String! patch: Puzzle2dEdgePatch! }
+type Puzzle2dTargetRegionsDelta { removed: [Puzzle2dTargetRegionRemoval!]! inserted: [Puzzle2dTargetRegionInsertion!]! moved: [Puzzle2dTargetRegionRelocation!]! modified: [Puzzle2dTargetRegionModification!]! }
+type Puzzle2dTargetRegionRemoval { id: String! index: Int! }
+type Puzzle2dTargetRegionInsertion { index: Int! row: Puzzle2dTargetRegion! }
+type Puzzle2dTargetRegionRelocation { id: String! from: Int! to: Int! }
+type Puzzle2dTargetRegionModification { id: String! patch: Puzzle2dTargetRegionPatch! }
+type Puzzle2dKindCompatibilityDelta { removed: [Puzzle2dKindCompatibilityRemoval!]! inserted: [Puzzle2dKindCompatibilityInsertion!]! moved: [Puzzle2dKindCompatibilityRelocation!]! modified: [Puzzle2dKindCompatibilityModification!]! }
+type Puzzle2dKindCompatibilityRemoval { id: Puzzle2dKindCompatibilityKey! index: Int! }
+type Puzzle2dKindCompatibilityInsertion { index: Int! row: Puzzle2dKindCompatibility! }
+type Puzzle2dKindCompatibilityRelocation { id: Puzzle2dKindCompatibilityKey! from: Int! to: Int! }
+type Puzzle2dKindCompatibilityModification { id: Puzzle2dKindCompatibilityKey! patch: Puzzle2dKindCompatibilityPatch! }

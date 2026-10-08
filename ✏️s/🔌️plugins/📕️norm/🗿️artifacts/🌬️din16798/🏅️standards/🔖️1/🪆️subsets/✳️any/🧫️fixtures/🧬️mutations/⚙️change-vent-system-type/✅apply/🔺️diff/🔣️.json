@@ -9,15 +9,17 @@
   "nightSetbackK": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "ventSystems": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "vent-central",
+        "id": "vent-central",
         "patch": {
           "name": null,
           "systemType": "decentral_mech",

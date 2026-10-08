@@ -328,6 +328,7 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.place_reserved(source, bytes)
     }
+    pub fn next_release_allocation_bytes(&self)->Result<usize,PagedListError>{self.storage.next_release_allocation_bytes()}
     pub fn release_empty_page(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.release_empty_page(maximum_bytes)
     }

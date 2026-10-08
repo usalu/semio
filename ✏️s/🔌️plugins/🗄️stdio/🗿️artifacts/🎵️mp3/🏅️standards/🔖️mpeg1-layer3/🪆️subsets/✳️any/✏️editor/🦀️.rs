@@ -203,7 +203,7 @@ impl ArtifactEditor for Mp3Editor {
         if snapshot.frames.is_empty() {
             return Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "MPEG-1 Layer III requires at least one audio frame".into()));
         }
-        let bytes = crate::standards::mpeg1_layer3::subsets::any::io::encode_mp3(snapshot);
+        let bytes = crate::standards::mpeg1_layer3::subsets::any::io::encode_mp3(snapshot).map_err(|error|semio_framework_plugin::MediaError::Payload("artifact:natural".into(),error))?;
         let reopened = crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
         if reopened == *snapshot {
             Ok(bytes)
@@ -216,8 +216,6 @@ impl ArtifactEditor for Mp3Editor {
         let snapshot = crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
         if snapshot.frames.is_empty() {
             Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "MPEG-1 Layer III requires at least one audio frame".into()))
-        } else if crate::standards::mpeg1_layer3::subsets::any::io::encode_mp3(&snapshot).as_slice() != bytes {
-            Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "MP3 input is outside the exact MPEG-1 Layer III subset".into()))
         } else {
             Ok(snapshot)
         }
@@ -350,8 +348,8 @@ impl editing::SnapshotEditingEditor for Mp3Editor {
             _ => None,
         }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::mp3::edit_rules::EDIT_RULES
     }
 }
 

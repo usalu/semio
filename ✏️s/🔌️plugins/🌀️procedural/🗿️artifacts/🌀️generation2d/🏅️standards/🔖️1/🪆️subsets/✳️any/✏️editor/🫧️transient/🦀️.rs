@@ -92,11 +92,6 @@ impl protocol::DiffAlgebra<Generation2dTransient> for Generation2dTransientPatch
             generation_preview_text: self.generation_preview_text.as_ref().map(|_| Generation2dPreviewTextChange { text: base.generation_preview_text.clone() }),
         }
     }
-    fn between(base: &Generation2dTransient, other: &Generation2dTransient) -> Self {
-        Self {
-            generation_preview_text: (base.generation_preview_text != other.generation_preview_text).then(|| Generation2dPreviewTextChange { text: other.generation_preview_text.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.generation_preview_text.is_none()
     }

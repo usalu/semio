@@ -506,6 +506,13 @@
     "entities": {
       "$ref": "#/$defs/DxfEntitiesDiff",
       "x-semio-state": "artifact"
+    },
+    "otherTables": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "x-semio-state": "artifact"
     }
   }
 }

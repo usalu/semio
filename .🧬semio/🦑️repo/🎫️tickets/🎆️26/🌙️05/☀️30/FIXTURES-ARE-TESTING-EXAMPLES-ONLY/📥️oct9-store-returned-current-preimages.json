@@ -1,0 +1,16 @@
+{
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "sha256": "0c23b86ab7c5bbe68a0be6be15945cca11f564c136245b7728827c0d03038e6a",
+  "blocks": [
+    {
+      "label": "actual returned read admission",
+      "text": "    pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError>\n    where\n        P: Sync,\n    {\n        if !self.snapshot_read_leases.has_returned() {\n            return Ok(None);\n        }\n        let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {\n            return Err(VcsError::ValidationFailed(\"returned snapshot read requires its exact owned-snapshot retirement factory\".into()));\n        };\n        for _ in 0..=SNAPSHOT_READ_LEASE_CAPACITY {\n            if let Some(owner) = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(|error| VcsError::ValidationFailed(error.into_value_error().into_message()))? {\n                return Ok(Some(Box::new(ReturnedSnapshotReadRetirement::new(owner, factory.clone())) as Box<dyn ErasedSnapshotRetirement>));\n            }\n            if !self.snapshot_read_leases.has_returned() {\n                return Ok(None);\n            }\n        }\n        Err(VcsError::ValidationFailed(\"returned snapshot read cursor could not reach a returned lease within one full registry sweep\".into()))\n    }\n\n"
+    },
+    {
+      "label": "cursor returned original demand",
+      "text": "            ArtifactStoreCursorDisposerPhase::ReturnedReads if self.snapshot_read_leases.has_returned() => self.snapshot_read_leases.returned_admission_demands::<P>(|_| Ok(birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes())))?,"
+    }
+  ],
+  "neutralSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+  "neutralSha256": "a1768b02deff7cc2c1578a63594b41e20b88564f24154c344343d3cefcf97d2c"
+}

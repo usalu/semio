@@ -8,7 +8,8 @@
 //! The *first* catalogue row is swapped whole-value, proving a patch keeps its slot instead of migrating to the tail.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -85,12 +86,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be a single `materials.patched` entry keyed by `steel`.
+/// 🔺️ The delta must be a single `materials.modified` entry keyed by `steel`.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().materials.as_ref().expect("materials delta").patched.len(), 1, "replace-material/restates-steel-7c22bc: exactly one material may be patched");
+    assert_eq!(outcome.diff().materials.as_ref().expect("materials delta").modified.len(), 1, "replace-material/restates-steel-7c22bc: exactly one material may be patched");
     assert!(outcome.diff().materials.as_ref().expect("materials delta").added.is_empty(), "replace-material/restates-steel-7c22bc: a replacement is never an addition");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -106,7 +107,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "replace-material/restates-steel-7c22bc: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `materials.patched` entry on `before` must keep S355 ahead of the concrete row.
+/// 🩹 Replaying the committed `materials.modified` entry on `before` must keep S355 ahead of the concrete row.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

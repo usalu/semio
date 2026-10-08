@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ A no-op emits the artifact's `Default` diff — every slot `null` — proving the guard fires before
-/// `crate::equation_state_diff` is ever reached.
+/// `EquationDiff::apply` is ever reached.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();

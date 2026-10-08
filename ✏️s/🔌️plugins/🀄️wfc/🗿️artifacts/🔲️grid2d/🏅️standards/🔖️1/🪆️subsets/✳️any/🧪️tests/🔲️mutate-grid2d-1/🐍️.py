@@ -154,6 +154,11 @@ def cell_id(x: int, y: int) -> str:
     return f"{x},{y}"
 
 
+def rows(removed=None, inserted=None, moved=None, modified=None) -> dict:
+    """📂 One list's positional delta: removed ids at their base index, inserted rows at their after index, moved ids, and id-keyed patches."""
+    return {"removed": removed or [], "inserted": inserted or [], "moved": moved or [], "modified": modified or []}
+
+
 EMPTY_DIFF = {
     "schema": None,
     "seed": None,
@@ -163,14 +168,10 @@ EMPTY_DIFF = {
     "cellHeight": None,
     "periodicX": None,
     "periodicY": None,
-    "tilesRemoved": [],
-    "tilesUpserted": [],
-    "rulesRemoved": [],
-    "rulesUpserted": [],
-    "pinnedRemoved": [],
-    "pinnedUpserted": [],
-    "maskedRemoved": [],
-    "maskedUpserted": [],
+    "tiles": rows(),
+    "rules": rows(),
+    "pinned": rows(),
+    "masked": rows(),
 }
 
 
@@ -180,6 +181,21 @@ def diff(**lanes: Any) -> dict:
         assert key in out, key
         out[key] = value
     return out
+
+
+def removals(base: list[dict], key: Callable[[dict], str], ids: list[str]) -> dict:
+    """➖ The removals of `ids`, each at its base index."""
+    return rows(removed=[{"id": identifier, "index": next(at for at, item in enumerate(base) if key(item) == identifier)} for identifier in ids if any(key(item) == identifier for item in base)])
+
+
+def insertion(index: int, row: dict) -> dict:
+    """➕ One row inserted at its after-list index."""
+    return rows(inserted=[{"index": index, "row": row}])
+
+
+def tile_patch(**fields: Any) -> dict:
+    """🩹 A tile patch: every field present, the unset ones `None`, the label wrapped."""
+    return {"weight": fields.get("weight"), "media": fields.get("media"), "label": {"value": fields["label"]} if "label" in fields else None}
 #endregion
 
 
@@ -255,7 +271,7 @@ def build(base: dict, mutation: dict) -> Outcome:
         pins = [cell_id(row["x"], row["y"]) for row in base["pinned"] if outside(row)]
         masks = [cell_id(row["x"], row["y"]) for row in base["masked"] if outside(row)]
         messages = [{"level": "info", "code": "mutation.cascade"}] if pins or masks else []
-        return applied(diff(width=payload["width"], height=payload["height"], pinnedRemoved=pins, maskedRemoved=masks), messages)
+        return applied(diff(width=payload["width"], height=payload["height"], pinned=removals(base["pinned"], lambda row: cell_id(row["x"], row["y"]), pins), masked=removals(base["masked"], lambda row: cell_id(row["x"], row["y"]), masks)), messages)
     if variant == "ChangeCellSize":
         if payload["cellWidth"] <= 0 or payload["cellHeight"] <= 0:
             return fatal("mutation.invariant")
@@ -275,14 +291,14 @@ def build(base: dict, mutation: dict) -> Outcome:
         if not new_tile["weight"] > 0:
             return fatal("mutation.invariant")
         at = ordered_index(base["tiles"], "id", new_tile["id"])
-        return applied(diff(tilesUpserted=[[at, new_tile]]))
+        return applied(diff(tiles=insertion(at, new_tile)))
     if variant == "DeleteTile":
         if not _find(base["tiles"], "id", payload["id"]):
             return rejected("mutation.target-missing")
         rules = [row["id"] for row in base["rules"] if payload["id"] in (row["tileAId"], row["tileBId"])]
         pins = [cell_id(row["x"], row["y"]) for row in base["pinned"] if row["tileId"] == payload["id"]]
         messages = [{"level": "info", "code": "mutation.cascade"}] if rules or pins else []
-        return applied(diff(tilesRemoved=[payload["id"]], rulesRemoved=rules, pinnedRemoved=pins), messages)
+        return applied(diff(tiles=removals(base["tiles"], lambda row: row["id"], [payload["id"]]), rules=removals(base["rules"], lambda row: row["id"], rules), pinned=removals(base["pinned"], lambda row: cell_id(row["x"], row["y"]), pins)), messages)
     if variant == "ChangeTileWeight":
         found = _find(base["tiles"], "id", payload["id"])
         if not found:
@@ -291,20 +307,14 @@ def build(base: dict, mutation: dict) -> Outcome:
             return fatal("mutation.invariant")
         if found["weight"] == payload["weight"]:
             return no_op()
-        index = base["tiles"].index(found)
-        updated = copy.deepcopy(found)
-        updated["weight"] = Float(payload["weight"])
-        return applied(diff(tilesUpserted=[[index, updated]]))
+        return applied(diff(tiles=rows(modified=[{"id": found["id"], "patch": tile_patch(weight=Float(payload["weight"]))}])))
     if variant == "ChangeTileMedia":
         found = _find(base["tiles"], "id", payload["id"])
         if not found:
             return rejected("mutation.target-missing")
         if found["media"] == payload["media"]:
             return no_op()
-        index = base["tiles"].index(found)
-        updated = copy.deepcopy(found)
-        updated["media"] = copy.deepcopy(payload["media"])
-        return applied(diff(tilesUpserted=[[index, updated]]))
+        return applied(diff(tiles=rows(modified=[{"id": found["id"], "patch": tile_patch(media=copy.deepcopy(payload["media"]))}])))
     if variant == "CreateRule":
         new_rule = payload["rule"]
         if not new_rule["id"]:
@@ -317,11 +327,11 @@ def build(base: dict, mutation: dict) -> Outcome:
         if any(row["tileAId"] == new_rule["tileAId"] and row["tileBId"] == new_rule["tileBId"] and row["direction"] == new_rule["direction"] for row in base["rules"]):
             return fatal("mutation.invariant")
         at = ordered_index(base["rules"], "id", new_rule["id"])
-        return applied(diff(rulesUpserted=[[at, new_rule]]))
+        return applied(diff(rules=insertion(at, new_rule)))
     if variant == "DeleteRule":
         if not _find(base["rules"], "id", payload["id"]):
             return rejected("mutation.target-missing")
-        return applied(diff(rulesRemoved=[payload["id"]]))
+        return applied(diff(rules=removals(base["rules"], lambda row: row["id"], [payload["id"]])))
     if variant == "PinCell":
         x, y = payload["x"], payload["y"]
         if x >= base["width"] or y >= base["height"]:
@@ -334,13 +344,14 @@ def build(base: dict, mutation: dict) -> Outcome:
         existing = _find_cell(base["pinned"], x, y)
         if existing == row:
             return no_op()
-        at = base["pinned"].index(existing) if existing else ordered_cell_index(base["pinned"], x, y)
-        return applied(diff(pinnedUpserted=[[at, row]]))
+        if existing:
+            return applied(diff(pinned=rows(modified=[{"id": cell_id(x, y), "patch": {"tileId": payload["tileId"]}}])))
+        return applied(diff(pinned=insertion(ordered_cell_index(base["pinned"], x, y), row)))
     if variant == "UnpinCell":
         x, y = payload["x"], payload["y"]
         if not _find_cell(base["pinned"], x, y):
             return rejected("mutation.target-missing")
-        return applied(diff(pinnedRemoved=[cell_id(x, y)]))
+        return applied(diff(pinned=removals(base["pinned"], lambda row: cell_id(row["x"], row["y"]), [cell_id(x, y)])))
     if variant == "MaskCell":
         x, y = payload["x"], payload["y"]
         if x >= base["width"] or y >= base["height"]:
@@ -350,25 +361,45 @@ def build(base: dict, mutation: dict) -> Outcome:
         at = ordered_cell_index(base["masked"], x, y)
         pins = [cell_id(x, y)] if _find_cell(base["pinned"], x, y) else []
         messages = [{"level": "info", "code": "mutation.cascade"}] if pins else []
-        return applied(diff(maskedUpserted=[[at, cell(x, y)]], pinnedRemoved=pins), messages)
+        return applied(diff(masked=insertion(at, cell(x, y)), pinned=removals(base["pinned"], lambda row: cell_id(row["x"], row["y"]), pins)), messages)
     if variant == "UnmaskCell":
         x, y = payload["x"], payload["y"]
         if not _find_cell(base["masked"], x, y):
             return rejected("mutation.target-missing")
-        return applied(diff(maskedRemoved=[cell_id(x, y)]))
+        return applied(diff(masked=removals(base["masked"], lambda row: cell_id(row["x"], row["y"]), [cell_id(x, y)])))
     raise KeyError(variant)
 #endregion
 
 
 #region 🩹 apply
-def _apply_collection(base: list[dict], removed: list[str], upserted: list[list], key: Callable[[dict], str]) -> list[dict]:
-    items = [item for item in base if key(item) not in removed]
-    for index, value in upserted:
-        existing = next((position for position, item in enumerate(items) if key(item) == key(value)), None)
-        if existing is None:
-            items.insert(index, copy.deepcopy(value))
-        else:
-            items[existing] = copy.deepcopy(value)
+def _apply_collection(base: list[dict], delta: dict, key: Callable[[dict], str], plain: tuple[str, ...], optional: tuple[str, ...]) -> list[dict]:
+    """📂 The positional list-delta apply: removed and moved keys are checked at their base index, inserted and moved rows take their after slots, survivors fill the rest in base order, then the patches write."""
+    taken: set[int] = set()
+    for entry in delta["removed"] + [{"id": move["id"], "index": move["from"]} for move in delta["moved"]]:
+        assert entry["index"] < len(base) and key(base[entry["index"]]) == entry["id"] and entry["index"] not in taken, f"{entry['id']} is not at base index {entry['index']}"
+        taken.add(entry["index"])
+    slots: list[dict | None] = [None] * (len(base) - len(delta["removed"]) + len(delta["inserted"]))
+    for entry in delta["inserted"]:
+        assert entry["index"] < len(slots) and slots[entry["index"]] is None, f"no free after slot {entry['index']}"
+        slots[entry["index"]] = copy.deepcopy(entry["row"])
+    for move in delta["moved"]:
+        slots[move["to"]] = base[move["from"]]
+    survivors = iter([item for at, item in enumerate(base) if at not in taken])
+    items = [slot if slot is not None else next(survivors) for slot in slots]
+    assert len({key(item) for item in items}) == len(items), "two rows carry the same key"
+    for entry in delta["modified"]:
+        at = next(position for position, item in enumerate(items) if key(item) == entry["id"])
+        row = dict(items[at])
+        for name in plain:
+            if entry["patch"].get(name) is not None:
+                row[name] = copy.deepcopy(entry["patch"][name])
+        for name in optional:
+            if entry["patch"].get(name) is not None:
+                if entry["patch"][name]["value"] is None:
+                    row.pop(name, None)
+                else:
+                    row[name] = entry["patch"][name]["value"]
+        items[at] = row
     return items
 
 
@@ -377,10 +408,10 @@ def apply(base: dict, delta: dict) -> dict:
     for scalar in ("schema", "seed", "width", "height", "cellWidth", "cellHeight", "periodicX", "periodicY"):
         if delta[scalar] is not None:
             out[scalar] = delta[scalar]
-    out["tiles"] = _apply_collection(out["tiles"], delta["tilesRemoved"], delta["tilesUpserted"], lambda row: row["id"])
-    out["rules"] = _apply_collection(out["rules"], delta["rulesRemoved"], delta["rulesUpserted"], lambda row: row["id"])
-    out["pinned"] = _apply_collection(out["pinned"], delta["pinnedRemoved"], delta["pinnedUpserted"], lambda row: cell_id(row["x"], row["y"]))
-    out["masked"] = _apply_collection(out["masked"], delta["maskedRemoved"], delta["maskedUpserted"], lambda row: cell_id(row["x"], row["y"]))
+    out["tiles"] = _apply_collection(out["tiles"], delta["tiles"], lambda row: row["id"], ("weight", "media"), ("label",))
+    out["rules"] = _apply_collection(out["rules"], delta["rules"], lambda row: row["id"], ("tileAId", "tileBId", "direction", "allowed"), ())
+    out["pinned"] = _apply_collection(out["pinned"], delta["pinned"], lambda row: cell_id(row["x"], row["y"]), ("tileId",), ())
+    out["masked"] = _apply_collection(out["masked"], delta["masked"], lambda row: cell_id(row["x"], row["y"]), (), ())
     return out
 
 

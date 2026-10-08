@@ -4,18 +4,21 @@
   "edges": null,
   "meta": {
     "kindCompatibility": {
-      "added": [
+      "inserted": [
         {
-          "bidirectional": false,
-          "important": true,
-          "source": "handle-kind-b",
-          "specificity": "wire",
-          "target": "handle-kind-c"
+          "index": 1,
+          "row": {
+            "bidirectional": false,
+            "important": true,
+            "source": "handle-kind-b",
+            "specificity": "wire",
+            "target": "handle-kind-c"
+          }
         }
       ],
-      "patched": [],
-      "removed": [],
-      "reordered": null
+      "modified": [],
+      "moved": [],
+      "removed": []
     }
   },
   "nodes": null,

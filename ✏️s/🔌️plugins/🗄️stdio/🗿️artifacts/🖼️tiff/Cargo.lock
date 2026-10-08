@@ -534,7 +534,6 @@ dependencies = [
 name = "semio-framework-dsl"
 version = "0.1.0"
 dependencies = [
- "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-value",
 ]
@@ -1106,6 +1105,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-tiff"
 version = "0.1.0"
 dependencies = [
+ "fax",
  "image",
  "semio-framework",
  "semio-framework-2d",

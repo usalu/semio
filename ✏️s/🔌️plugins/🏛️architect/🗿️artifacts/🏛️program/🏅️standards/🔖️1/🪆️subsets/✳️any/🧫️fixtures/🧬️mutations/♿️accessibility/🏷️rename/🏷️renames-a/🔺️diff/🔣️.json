@@ -20,9 +20,10 @@
   "environmental": null,
   "humanFactors": null,
   "accessibility": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "accessibility-requirement-a",
         "patch": {
@@ -58,8 +59,7 @@
           "universalDesignPrinciples": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "privacy": null,
   "safety": null,

@@ -119,20 +119,91 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
     result
 }
 
-/// 🔀️ Runs a host mutation seeded from the projection fixture and diffs the result into operations.
-/// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
-/// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
-/// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
+//#region 🔖️HostGestures
+/// 🔌️ Connects two ports through the host and returns the concrete leaves the host names: a `disconnect-synapse` for every wire
+/// the host displaces from the target port, then one `connect-synapse` of the minted wire at the end of the list.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_operations(host_snapshot: &FlowHostSnapshot, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation> {
-    with_host(host_snapshot, |host| {
-        let baseline = host.host_snapshot.clone();
-        mutate(host);
-        let operations = crate::standards::v1::subsets::any::schema::mutations::generation2d_host_snapshot_operations(&baseline, &host.host_snapshot);
-        baseline.retire_cold();
-        operations
-    })
+pub fn host_connect_ports(host: &mut FlowHost, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
+    use crate::standards::v1::subsets::any::schema::mutations::{connect_synapse, disconnect_synapse};
+    let displaced: Vec<String> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.to == to_id && synapse.to_port == to_port).map(|synapse| synapse.id.clone()).collect();
+    let id = host.connect_ports(from_id, from_port, to_id, to_port).map_err(|error| error.to_string())?;
+    let minted = host.host_snapshot.synapses.iter().position(|synapse| synapse.id == id).ok_or_else(|| format!("the host minted no wire {id}"))?;
+    let mut leaves: Vec<_> = displaced.into_iter().map(disconnect_synapse).collect();
+    leaves.push(connect_synapse(minted, host.host_snapshot.synapses[minted].clone()));
+    Ok(leaves)
 }
+
+/// ✂️ Cuts one wire through the host: the single `disconnect-synapse` leaf.
+#[cfg(feature = "component-app-assembly")]
+pub fn host_disconnect(host: &mut FlowHost, synapse_id: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
+    host.disconnect(synapse_id).map_err(|error| error.to_string())?;
+    Ok(vec![crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string())])
+}
+
+/// 🗑️ Removes a widget through the host: a `disconnect-synapse` per wire it carried, its `clear-widget-layout` when it was placed,
+/// then its `delete-widget`.
+#[cfg(feature = "component-app-assembly")]
+pub fn host_remove_widget(host: &mut FlowHost, widget_id: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
+    use crate::standards::v1::subsets::any::schema::mutations::{clear_widget_layout, delete_widget, disconnect_synapse};
+    let wires: Vec<String> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id || synapse.to == widget_id).map(|synapse| synapse.id.clone()).collect();
+    let placed = host.host_snapshot.layout.contains_key(widget_id);
+    host.remove_widget(widget_id).map_err(|error| error.to_string())?;
+    let mut leaves: Vec<_> = wires.into_iter().map(disconnect_synapse).collect();
+    if placed {
+        leaves.push(clear_widget_layout(widget_id.to_string()));
+    }
+    leaves.push(delete_widget(widget_id.to_string()));
+    Ok(leaves)
+}
+
+/// ➕️ Adds a widget through the host: the `create-widget` of what the host built from `descriptor_json` at the end of the list,
+/// then the `move-widget` of the position the gesture named.
+#[cfg(feature = "component-app-assembly")]
+pub fn host_add_widget(host: &mut FlowHost, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
+    use crate::standards::v1::subsets::any::schema::mutations::{create_widget, move_widget};
+    let id = host.add_widget(descriptor_json, world_x, world_y).map_err(|error| error.to_string())?;
+    let at = host.host_snapshot.widgets.iter().position(|widget| crate::widget_id(widget) == id).ok_or_else(|| format!("the host built no widget {id}"))?;
+    let widget = host.host_snapshot.widgets[at].clone();
+    Ok(vec![create_widget(at, widget), move_widget(id, semio_framework_artifact_flow_flow::WidgetLayout { x: world_x, y: world_y })])
+}
+
+/// 🔢️ Inserts a port through the host: the `replace-widget` of the widget the host rebuilt, and a `replace-synapse` for each of its wires the
+/// rebuild re-addressed.
+#[cfg(feature = "component-app-assembly")]
+pub fn host_insert_port(host: &mut FlowHost, widget_id: &str, input: bool, index: usize) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
+    use crate::standards::v1::subsets::any::schema::mutations::{replace_synapse, replace_widget};
+    let wires: Vec<_> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id || synapse.to == widget_id).cloned().collect();
+    if input {
+        host.add_input_port(widget_id, index).map_err(|error| error.to_string())?;
+    } else {
+        host.add_output_port(widget_id, index).map_err(|error| error.to_string())?;
+    }
+    let at = host.host_snapshot.widgets.iter().position(|widget| crate::widget_id(widget) == widget_id).ok_or_else(|| format!("the host lost widget {widget_id}"))?;
+    let widget = host.host_snapshot.widgets[at].clone();
+    let mut leaves = vec![replace_widget(widget)];
+    for before in wires {
+        if let Some(after) = host.host_snapshot.synapses.iter().find(|synapse| synapse.id == before.id).filter(|after| **after != before) {
+            leaves.push(replace_synapse(after.clone()));
+        }
+    }
+    Ok(leaves)
+}
+
+/// 🗺️ Reorganizes the graph through the host: one `move-widget` per widget whose placement the layout pass changed.
+#[cfg(feature = "component-app-assembly")]
+pub fn host_reorganize(host: &mut FlowHost, options_json: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
+    use crate::standards::v1::subsets::any::schema::mutations::move_widget;
+    let before: Vec<(String, semio_framework_artifact_flow_flow::WidgetLayout)> = host.host_snapshot.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
+    host.reorganize(options_json).map_err(|error| error.to_string())?;
+    Ok(host
+        .host_snapshot
+        .layout
+        .iter()
+        .filter(|(id, layout)| before.iter().find(|(held, _)| held == *id).map(|(_, previous)| previous) != Some(*layout))
+        .map(|(id, layout)| move_widget(id.clone(), layout.clone()))
+        .collect())
+}
+//#endregion 🔖️HostGestures
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))

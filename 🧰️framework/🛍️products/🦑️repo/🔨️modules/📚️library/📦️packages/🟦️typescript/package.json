@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "go-test": "nx run @semio-tech/repo-lib:go-test",
@@ -96,7 +97,9 @@
     "test-rust-family-ownership-native": "bun nx run @semio-tech/repo-lib:test-rust-family-ownership-native",
     "test-fixture-ownership": "nx run @semio-tech/repo-lib:test-fixture-ownership",
     "test-general-execution-ownership": "nx run @semio-tech/repo-lib:test-general-execution-ownership",
-    "test-runtime-fixture-graph": "nx run @semio-tech/repo-lib:test-runtime-fixture-graph"
+    "test-runtime-fixture-graph": "nx run @semio-tech/repo-lib:test-runtime-fixture-graph",
+    "test-nx-owner-arguments": "nx run @semio-tech/repo-lib:test-nx-owner-arguments",
+    "probe-nx-owner-arguments": "nx run @semio-tech/repo-lib:probe-nx-owner-arguments"
   },
   "nx": {
     "includedScripts": []
@@ -109,5 +112,6 @@
     "minimatch": "9.0.3",
     "typescript": "^5.9.3",
     "commander": "13.1.0"
-  }
+  },
+  "executors": "./📋️executors.json"
 }

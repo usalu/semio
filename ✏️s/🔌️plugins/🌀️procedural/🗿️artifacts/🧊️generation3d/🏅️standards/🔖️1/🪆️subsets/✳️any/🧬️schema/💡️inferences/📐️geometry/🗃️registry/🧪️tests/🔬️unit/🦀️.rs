@@ -1,7 +1,9 @@
 //! 🧪️ Registry laws: one compute per catalogue kind, no unknown or duplicate ids, every registered compute honours the output contract.
 
+use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::compute::WidgetStep;
+use crate::standards::v1::subsets::any::schema::inferences::geometry::compute::{WidgetStep,GeometryComputeContext};
+use crate::standards::v1::subsets::any::io::geometry::NativeGeometryComputeContext;
 use crate::standards::v1::subsets::any::schema::inferences::geometry::contract_checked;
 use crate::standards::v1::subsets::any::schema::inferences::geometry::inputs::resolve_inputs;
 use crate::standards::v1::subsets::any::schema::inferences::geometry::value::WidgetEvaluation;
@@ -15,11 +17,11 @@ fn localized(fault: &WidgetFault) -> bool {
 #[test]
 fn every_registered_id_is_a_catalogue_kind_and_registered_once() {
     let mut seen = BTreeSet::new();
-    for entry in TABLES.iter().flat_map(|table| table.iter()) {
+    for entry in TABLES.iter().chain(crate::standards::v1::subsets::any::io::geometry::TABLES).flat_map(|table| table.iter()) {
         assert!(catalogue().kind(entry.id).is_some(), "{} is not a catalogue kind", entry.id);
         assert!(seen.insert(entry.id), "{} is registered twice", entry.id);
     }
-    assert_eq!(registered().len(), seen.len());
+    assert_eq!(registered().len()+crate::standards::v1::subsets::any::io::geometry::index().len(),seen.len());
     assert!(["math.number", "math.plane", "brep.primitive.box", "brep.primitive.sphere"].iter().all(|id| lookup(id).is_some()));
 }
 
@@ -31,11 +33,10 @@ fn every_table_belongs_to_one_catalogue_category() {
     }
 }
 
-/// 🔴️ EXPECTED RED until compute lanes O1 to O4 have delivered all 199 catalogue kinds: the failure message prints the missing count and ids.
-/// No placeholder compute may be added to make it pass.
+/// 🧩️ The native capability composition covers the admitted catalogue.
 #[test]
-fn expected_red_until_o1_to_o4_every_catalogue_kind_has_a_compute() {
-    let missing = missing_kinds(catalogue());
+fn geometry_compute_context_admits_every_catalogue_kind() {
+    let missing:Vec<_>=catalogue().kinds().filter(|kind|NativeGeometryComputeContext.lookup(&kind.id).is_none()).map(|kind|kind.id.as_str()).collect();
     assert!(missing.is_empty(), "{} of {} catalogue kinds have no compute yet: {}", missing.len(), catalogue().kinds().count(), missing.join(", "));
 }
 

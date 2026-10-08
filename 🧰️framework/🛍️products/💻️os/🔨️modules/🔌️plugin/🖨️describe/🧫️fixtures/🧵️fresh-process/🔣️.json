@@ -97,6 +97,23 @@
     "nestedName": "fresh_nested_owner_neutral",
     "missingName": "fresh_missing_owner_neutral",
     "stdout": "fresh-nested-owner-neutral",
-    "source": "fn main(){print!(\"fresh-nested-owner-neutral\");}"
-  }
+    "source": "fn main(){print!(\"fresh-nested-owner-neutral\");}",
+    "consumerArguments": [
+      "build",
+      "--locked",
+      "--offline"
+    ],
+    "currentStdout": "fresh-nested-owner-current",
+    "currentSource": "fn main(){print!(\"fresh-nested-owner-current\");}"
+  },
+  "queuedPreparationCases": [
+    {
+      "name": "queued-preparation-cancel",
+      "mode": "cancel"
+    },
+    {
+      "name": "queued-preparation-deadline",
+      "mode": "timeout"
+    }
+  ]
 }

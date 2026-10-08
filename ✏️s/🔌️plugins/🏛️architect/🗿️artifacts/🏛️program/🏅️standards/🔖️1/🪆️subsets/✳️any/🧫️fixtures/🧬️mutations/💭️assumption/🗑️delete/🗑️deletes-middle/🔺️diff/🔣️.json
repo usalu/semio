@@ -50,12 +50,15 @@
   "quality": null,
   "artifacts": null,
   "assumptions": {
-    "added": [],
     "removed": [
-      "assumption-a"
+      {
+        "id": "assumption-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "constraints": null,
   "complianceRecords": null,

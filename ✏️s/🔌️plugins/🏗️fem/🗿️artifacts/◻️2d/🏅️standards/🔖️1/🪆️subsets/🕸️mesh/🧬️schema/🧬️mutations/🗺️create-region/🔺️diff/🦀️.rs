@@ -4,7 +4,7 @@
 //! (`mutation.target-missing`, Error), then the shared `guards::region_geometry` meshability bounds
 //! (`mutation.invariant`, Fatal) — outline arity and area, thickness, mesh size, hole containment.
 use super::CreateRegion;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionsDelta, insertion_order};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionInsertion, Fem2dRegionsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -19,6 +19,9 @@ pub fn diff(payload: &CreateRegion, base: &Fem2dSnapshot) -> protocol::MutationO
     if let Some(rejection) = guards::region_geometry(&payload.region) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { added: vec![payload.region.clone()], reordered: insertion_order(base.regions.iter().map(|item| item.id.as_str()), &payload.region.id, payload.index), ..Default::default() }), ..Default::default() })
+    if payload.index.is_some_and(|at| at > base.regions.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.regions.len()), [&payload.region.id.to_string()]);
+    }
+    protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { inserted: vec![Fem2dRegionInsertion { index: payload.index.unwrap_or(base.regions.len()), row: payload.region.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

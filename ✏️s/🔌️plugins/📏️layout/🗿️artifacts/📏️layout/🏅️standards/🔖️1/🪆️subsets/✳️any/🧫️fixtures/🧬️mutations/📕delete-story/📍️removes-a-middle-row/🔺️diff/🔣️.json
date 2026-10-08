@@ -5,12 +5,15 @@
   "paragraphStyles": null,
   "characterStyles": null,
   "stories": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "story-2"
+      {
+        "id": "story-2",
+        "index": 2
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "links": null,
   "parentPages": null,

@@ -825,10 +825,8 @@ impl ArtifactEditor for ShootingPlayApp {
         }
     }
 
-    /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
-    /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
-    /// trait's own default (`None`); `import_media`'s `"artifact:in"` override below handles the
-    /// real gesture via `reset_document_effect` instead.
+    /// 🧬️ `"artifact:in"` is handled below as a `reset_document_effect` (a `Effect::LoadDocument`, outside undo history);
+    /// whole-document replace has no mutation.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, MediaError> {
         if port != "artifact:in" {
             return Err(MediaError::NotImplemented);

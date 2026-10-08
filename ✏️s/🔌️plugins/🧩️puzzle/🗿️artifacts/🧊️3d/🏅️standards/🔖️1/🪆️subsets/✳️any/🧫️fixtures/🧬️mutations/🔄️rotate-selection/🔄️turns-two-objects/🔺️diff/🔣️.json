@@ -1,8 +1,8 @@
 {
   "artifact": null,
   "attractions": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "attraction-1",
         "patch": {
@@ -12,14 +12,14 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "domain": null,
   "meta": null,
   "objects": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "object-a",
         "patch": {
@@ -43,8 +43,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "references": null,
   "schema": null,

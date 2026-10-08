@@ -2,5 +2,8 @@
   "schemaVersion": 1,
   "waitMillis": 31250,
   "expectedPublication": "owned-input",
-  "expectedMachineOutput": { "prepared": true }
+  "expectedMachineOutput": {
+    "prepared": true
+  },
+  "expectedWait": "[cargo-preparation] waiting for Cargo.toml"
 }

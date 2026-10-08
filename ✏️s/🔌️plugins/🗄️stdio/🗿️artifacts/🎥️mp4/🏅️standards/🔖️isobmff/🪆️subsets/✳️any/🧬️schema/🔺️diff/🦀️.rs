@@ -102,24 +102,6 @@ fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: i
     Ok(())
 }
 
-/// 🧭️ State delta (schema-design.md's `between` matching for index keys): pairwise by position,
-/// `modified` = compare `0..min(base.len(),other.len())`, `removed` = base tail, `added` = other tail.
-pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            let d = between_item(&base[i], &other[i]);
-            if !item_is_empty(&d) {
-                modified.push(IndexedModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
-    IndexedDiff { removed, modified, added }
-}
-
 /// 📐️ Shared rank/unrank index-transport arithmetic (adapted from gif 89a's `GifDiff` absorb —
 /// `🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs`
 /// `count_le`/`rank_excluding`/`unrank_excluding`/`transport_forward` — chosen over deriving a
@@ -148,12 +130,10 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
 /// into an existing base-diff; `apply_item_diff` applies a diff onto a `T` in place (used when
 /// `d2` patches an item `d1` just added).
 pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
-    let mut removed1_sorted = d1.removed.clone();
-    removed1_sorted.sort_unstable();
+    let removed1_sorted = semio_s_artifact_stdio_contract::ordered(&d1.removed);
     let mut added1_index_sorted: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = d2.removed.clone();
-    removed2_sorted.sort_unstable();
+    let removed2_sorted = semio_s_artifact_stdio_contract::ordered(&d2.removed);
     let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     added2_index_sorted.sort_unstable();
 
@@ -231,9 +211,7 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 /// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -269,16 +247,13 @@ fn apply_sample_diff_mut(item: &mut Mp4Sample, d: &Mp4SampleDiff) {
     *item = apply_sample_diff(item, d);
 }
 
-fn between_sample(a: &Mp4Sample, b: &Mp4Sample) -> Mp4SampleDiff {
-    Mp4SampleDiff { data: (a.data != b.data).then(|| b.data.clone()), duration: (a.duration != b.duration).then_some(b.duration), cts_offset: (a.cts_offset != b.cts_offset).then_some(b.cts_offset), sync: (a.sync != b.sync).then_some(b.sync) }
-}
 fn inverse_sample_diff(d: &Mp4SampleDiff, base: &Mp4Sample) -> Mp4SampleDiff {
     Mp4SampleDiff { data: d.data.as_ref().map(|_| base.data.clone()), duration: d.duration.map(|_| base.duration), cts_offset: d.cts_offset.map(|_| base.cts_offset), sync: d.sync.map(|_| base.sync) }
 }
 fn sample_diff_is_empty(d: &Mp4SampleDiff) -> bool {
     d.data.is_none() && d.duration.is_none() && d.cts_offset.is_none() && d.sync.is_none()
 }
-fn absorb_sample_diff(a: &mut Mp4SampleDiff, b: Mp4SampleDiff) {
+fn absorb_sample_rows(a: &mut Mp4SampleDiff, b: Mp4SampleDiff) {
     if b.data.is_some() {
         a.data = b.data;
     }
@@ -379,19 +354,6 @@ fn apply_track_diff_mut(item: &mut Mp4Track, d: &Mp4TrackDiff) {
     *item = apply_track_diff(item, d);
 }
 
-fn between_track(a: &Mp4Track, b: &Mp4Track) -> Mp4TrackDiff {
-    let samples_diff = between_indexed(&a.samples, &b.samples, between_sample, sample_diff_is_empty);
-    Mp4TrackDiff {
-        track_id: (a.track_id != b.track_id).then_some(b.track_id),
-        timescale: (a.timescale != b.timescale).then_some(b.timescale),
-        codec: (a.codec != b.codec).then(|| b.codec.clone()),
-        width: (a.width != b.width).then_some(b.width),
-        height: (a.height != b.height).then_some(b.height),
-        metadata: (a.metadata != b.metadata).then(|| b.metadata.clone()),
-        chunk_sample_counts: (a.chunk_sample_counts != b.chunk_sample_counts).then(|| b.chunk_sample_counts.clone()),
-        samples: (!samples_diff.is_empty()).then_some(samples_diff),
-    }
-}
 fn inverse_track_diff(d: &Mp4TrackDiff, base: &Mp4Track) -> Mp4TrackDiff {
     Mp4TrackDiff {
         track_id: d.track_id.map(|_| base.track_id),
@@ -407,7 +369,7 @@ fn inverse_track_diff(d: &Mp4TrackDiff, base: &Mp4Track) -> Mp4TrackDiff {
 fn track_diff_is_empty(d: &Mp4TrackDiff) -> bool {
     d.track_id.is_none() && d.timescale.is_none() && d.codec.is_none() && d.width.is_none() && d.height.is_none() && d.metadata.is_none() && d.chunk_sample_counts.is_none() && d.samples.is_none()
 }
-fn absorb_track_diff(a: &mut Mp4TrackDiff, b: Mp4TrackDiff) {
+fn absorb_track_rows(a: &mut Mp4TrackDiff, b: Mp4TrackDiff) {
     if b.track_id.is_some() {
         a.track_id = b.track_id;
     }
@@ -430,7 +392,7 @@ fn absorb_track_diff(a: &mut Mp4TrackDiff, b: Mp4TrackDiff) {
         a.chunk_sample_counts = b.chunk_sample_counts;
     }
     match (&mut a.samples, b.samples) {
-        (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_sample_diff, apply_sample_diff_mut),
+        (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_sample_rows, apply_sample_diff_mut),
         (a_slot @ None, Some(other)) => *a_slot = Some(other),
         _ => {}
     }
@@ -516,7 +478,7 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
             self.movie = other.movie;
         }
         match (&mut self.tracks, other.tracks) {
-            (Some(existing), Some(other_tracks)) => absorb_indexed(existing, other_tracks, absorb_track_diff, apply_track_diff_mut),
+            (Some(existing), Some(other_tracks)) => absorb_indexed(existing, other_tracks, absorb_track_rows, apply_track_diff_mut),
             (slot @ None, Some(other_tracks)) => *slot = Some(other_tracks),
             _ => {}
         }
@@ -531,10 +493,6 @@ fn validate_track_diff(base: &Mp4Track, diff: &Mp4TrackDiff) -> MutationApplyRes
 }
 
 impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
-    fn between(base: &Mp4Snapshot, other: &Mp4Snapshot) -> Self {
-        let tracks_diff = between_indexed(&base.tracks, &other.tracks, between_track, track_diff_is_empty);
-        Self { ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()), movie: (base.movie != other.movie).then(|| other.movie.clone()), tracks: (!tracks_diff.is_empty()).then_some(tracks_diff) }
-    }
     fn inverse(&self, base: &Mp4Snapshot) -> Self {
         Self {
             ftyp: self.ftyp.as_ref().map(|_| base.ftyp.clone()),

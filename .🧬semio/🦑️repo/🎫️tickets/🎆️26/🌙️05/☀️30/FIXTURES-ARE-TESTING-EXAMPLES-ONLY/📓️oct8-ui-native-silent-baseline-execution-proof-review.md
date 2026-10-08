@@ -1,0 +1,9 @@
+# UI Native Silent Baseline Execution Proof Review
+
+Actual retained log SHA `d7f722df1cff6eb261efaa279064686a57ea5f732d2834cac3bffcca554e88c9`, terminal Nx0/2m36s, cache skipped. It contains cargo:build progress only; no cargo:assert, retained artifact TRACE, native test names, summary or DEBUG. This is not assertion proof.
+
+Source chain: UI Rust script physical-close-native41 requests features wgpu-engine/lib/offline/Nextest filter test(physical_job_close)/success-output immediate. Native owner-command42–57 validates manifest and transports policy to original command via runOwnedCommand. That runner pipes stdout and stderr; no cache interception/replay was found in this route. Both normal target cache:false/outputs:[] plus explicit --skip-nx-cache reinforce the bounded no-Nx-replay evidence.
+
+Canonical runCargoTestsV1 plan128 yields captured build `nextest list --list-type binaries-only --message-format json`, then uncaptured assertion `nextest run --binaries-metadata ... --no-tests fail`. Default status/final-status fail can suppress ordinary passing names, but requested success-output immediate should expose actual successful println output. Execution160 awaits each plan step and writes captured metadata after build; assertion stdio is inherited through budgeted execution21. The source explains hidden build JSON, not absent assertion phase/DEBUG. Current source does not establish why this retained invocation shows only build.
+
+Root may obtain actual proof using existing flexible normal selector and explicit status/final-status pass/all plus success-output or nocapture, retaining exact level/features/filter and current source hashes. Capture actual named tests/counts/DEBUG rather than assuming Nx success means assertions. A neutral execution-port plan test cannot substitute actual native execution. No retry, compiler or producer was launched by this audit; no source changed.

@@ -92,13 +92,6 @@ pub enum PdfVtMutation {
 //#endregion 🔖️Codecs
 
 //#region 🔖️Delegation
-/// ▶️ Applies one PDF/VT mutation through its leaf-owned diff.
-pub fn apply_vt_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfVtMutation) -> protocol::MutationOutcome<PdfDiff> {
-    use protocol::Mutation;
-    let outcome = mutation.diff(snapshot);
-    crate::standards::v1_7::subsets::base::schema::mutations::apply_outcome(outcome, snapshot)
-}
-
 /// 🧾️ Returns the derive-owned semantic catalog.
 pub fn pdf_vt_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
     use protocol::SemanticMutation;

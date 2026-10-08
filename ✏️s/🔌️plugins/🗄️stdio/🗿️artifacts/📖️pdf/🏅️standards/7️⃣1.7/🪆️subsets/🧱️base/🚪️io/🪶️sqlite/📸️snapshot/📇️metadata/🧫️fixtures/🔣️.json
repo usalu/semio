@@ -1,8 +1,127 @@
 {
-  "contract":"Complete PDF file, intent, encryption, viewer and mark fields",
-  "files":[{"id":"attachment","fileName":"ü.txt","description":"attachment description","mimeType":"text/plain","data":[0,255,42],"creationDate":{"year":-2147483648,"month":4294967295,"day":1,"hour":0,"minute":0,"second":0,"offsetMinutes":2147483647},"modificationDate":null,"relationship":"Source","listed":true}],
-  "intents":[{"subtype":"GTS_PDFA1","conditionIdentifier":"custom","condition":"condition","registryName":"registry","info":"profile info","profile":[0,255]},{"subtype":"GTS_PDFX","conditionIdentifier":"empty","condition":null,"registryName":null,"info":null,"profile":[]},{"subtype":"custom","conditionIdentifier":"absent","condition":null,"registryName":null,"info":null,"profile":null}],
-  "encryption":[{"algorithm":"rc4_40","permissions":-2147483648,"userPassword":"user","ownerPassword":"owner","encryptMetadata":false},{"algorithm":"rc4_128","permissions":2147483647,"userPassword":"","ownerPassword":null,"encryptMetadata":true},{"algorithm":"aes128","permissions":-1,"userPassword":"u","ownerPassword":"","encryptMetadata":true},{"algorithm":"aes256","permissions":0,"userPassword":"u","ownerPassword":"o","encryptMetadata":false}],
-  "preferences":{"hideToolbar":true,"hideMenubar":true,"hideWindowUi":true,"fitWindow":true,"centerWindow":true,"displayDocTitle":true,"nonFullScreenPageMode":"useAttachments","direction":"R2L","viewArea":"CropBox","viewClip":"MediaBox","printArea":"BleedBox","printClip":"TrimBox","printScaling":"None","duplex":"DuplexFlipLongEdge","pickTrayByPdfSize":true,"printPageRange":[4294967295,0,4294967295],"numCopies":4294967295,"extra":[]},
-  "mark":{"marked":true,"userProperties":true,"suspects":true}
+  "contract": "Complete PDF file, intent, encryption, viewer and mark fields",
+  "files": [
+    {
+      "id": "attachment",
+      "fileName": "ü.txt",
+      "description": "attachment description",
+      "mimeType": "text/plain",
+      "data": [
+        0,
+        255,
+        42
+      ],
+      "creationDate": {
+        "year": -2147483648,
+        "month": 4294967295,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "offsetMinutes": 2147483647
+      },
+      "modificationDate": null,
+      "relationship": "Source",
+      "listed": true
+    }
+  ],
+  "intents": [
+    {
+      "subtype": "GTS_PDFA1",
+      "conditionIdentifier": "custom",
+      "condition": "condition",
+      "registryName": "registry",
+      "info": "profile info",
+      "profile": {
+        "artifactId": "fixture:icc",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    },
+    {
+      "subtype": "GTS_PDFX",
+      "conditionIdentifier": "empty",
+      "condition": null,
+      "registryName": null,
+      "info": null,
+      "profile": {
+        "artifactId": "fixture:icc",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    },
+    {
+      "subtype": "custom",
+      "conditionIdentifier": "absent",
+      "condition": null,
+      "registryName": null,
+      "info": null,
+      "profile": null
+    }
+  ],
+  "encryption": [
+    {
+      "algorithm": "rc4_40",
+      "permissions": -2147483648,
+      "userPassword": "user",
+      "ownerPassword": "owner",
+      "encryptMetadata": false
+    },
+    {
+      "algorithm": "rc4_128",
+      "permissions": 2147483647,
+      "userPassword": "",
+      "ownerPassword": null,
+      "encryptMetadata": true
+    },
+    {
+      "algorithm": "aes128",
+      "permissions": -1,
+      "userPassword": "u",
+      "ownerPassword": "",
+      "encryptMetadata": true
+    },
+    {
+      "algorithm": "aes256",
+      "permissions": 0,
+      "userPassword": "u",
+      "ownerPassword": "o",
+      "encryptMetadata": false
+    }
+  ],
+  "preferences": {
+    "hideToolbar": true,
+    "hideMenubar": true,
+    "hideWindowUi": true,
+    "fitWindow": true,
+    "centerWindow": true,
+    "displayDocTitle": true,
+    "nonFullScreenPageMode": "useAttachments",
+    "direction": "R2L",
+    "viewArea": "CropBox",
+    "viewClip": "MediaBox",
+    "printArea": "BleedBox",
+    "printClip": "TrimBox",
+    "printScaling": "None",
+    "duplex": "DuplexFlipLongEdge",
+    "pickTrayByPdfSize": true,
+    "printPageRange": [
+      4294967295,
+      0,
+      4294967295
+    ],
+    "numCopies": 4294967295,
+    "extra": []
+  },
+  "mark": {
+    "marked": true,
+    "userProperties": true,
+    "suspects": true
+  }
 }

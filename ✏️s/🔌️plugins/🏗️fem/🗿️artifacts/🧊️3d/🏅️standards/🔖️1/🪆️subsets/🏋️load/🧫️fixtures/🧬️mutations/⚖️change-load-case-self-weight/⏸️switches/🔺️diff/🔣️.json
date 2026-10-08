@@ -6,9 +6,10 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "dead",
         "patch": {
@@ -17,8 +18,7 @@
           "loads": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

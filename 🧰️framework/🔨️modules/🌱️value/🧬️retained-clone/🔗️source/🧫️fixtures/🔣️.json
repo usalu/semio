@@ -1,0 +1,11 @@
+{
+  "vectors": [
+    {"id": "empty-owned-capacity", "owner": "", "ownerCapacity": 8194, "authority": "", "authorityCapacity": 1025},
+    {"id": "unicode-owned-capacity", "owner": "Grundstück🧬", "ownerCapacity": 8194, "authority": "Quelle é", "authorityCapacity": 1025},
+    {"id": "one-byte-owned-capacity", "owner": "x", "ownerCapacity": 8194, "authority": "a", "authorityCapacity": 1025}
+  ],
+  "workGrants": [1, 3, 64],
+  "sourceClosesBeforeCursor": true,
+  "originalOwnerSurvivesRefusal": true,
+  "physicalConservation": true
+}

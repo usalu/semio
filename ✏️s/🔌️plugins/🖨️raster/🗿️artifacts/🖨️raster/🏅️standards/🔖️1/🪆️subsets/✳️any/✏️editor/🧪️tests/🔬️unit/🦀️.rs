@@ -677,7 +677,7 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetBrushHardness(set_brush_hardness::SetBrushHardness { value: 0.25 }),
         RasterCommand::SetPaintTarget(set_paint_target::SetPaintTarget{value:"mask".into()}),
         RasterCommand::SetMaskValue(set_mask_value::SetMaskValue{value:96}),
-        RasterCommand::SetPixelSelection(set_pixel_selection::SetPixelSelection{selection:Some(crate::editor::raster::config::RasterPixelSelection{layer_id:"l1".into(),target:"pixels".into(),width:2,height:2,spans:"[]".into()}),expected_image_key:None}),
+        RasterCommand::SetPixelSelection(set_pixel_selection::SetPixelSelection{selection:Some(crate::editor::raster::config::RasterPixelSelection{layer_id:"l1".into(),target:"pixels".into(),width:2,height:2,spans:vec![]}),expected_image_key:None}),
         RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
         RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
@@ -685,7 +685,7 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::ExportPng(export_png::ExportPng {}),
         RasterCommand::FlattenLayers(flatten_layers::FlattenLayers {name:"Flattened Image".into()}),
         RasterCommand::MergeDown(merge_down::MergeDown {layer_id:"l1".into()}),
-        RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:"[[0,1,255]]".into()}),
+        RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:vec![crate::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]}),
         RasterCommand::PaintStroke(paint_stroke::PaintStroke { layer_id: "l1".into(), tool: "eraser".into(), xs: vec![0.5, 3.25], ys: vec![1.5, 2.0], phase: None, reason: None, gesture: None }),
         RasterCommand::FillRegion(fill_region::FillRegion { layer_id: "l1".into(), x: 1.5, y: 0.25 }),
         RasterCommand::SetFillTolerance(set_fill_tolerance::SetFillTolerance { value: 40 }),
@@ -698,7 +698,7 @@ fn every_command() -> Vec<RasterCommand> {
 /// ⚖️ Every command has one exact factory proof and publication lane; PNG export is resumable and host-only.
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
-    use semio_framework::{ToolCancellationPolicy, ToolExecutionShape,ToolJobFactory};
+    use semio_framework::{ToolCancellationPolicy, ToolExecutionShape, ToolJobFactory};
     use std::collections::BTreeSet;
     assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 29);
     assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 30);

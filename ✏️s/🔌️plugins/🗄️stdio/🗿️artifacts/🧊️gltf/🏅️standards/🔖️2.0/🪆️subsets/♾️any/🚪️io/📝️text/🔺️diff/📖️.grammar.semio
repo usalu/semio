@@ -34,9 +34,7 @@ f64-list = "[" "]" | "[" gltf-f64 {"," gltf-f64}* "]"
 f64-list-opt = "[" "0" "]" | "[" "1" "," f64-list "]"
 f64-list-triopt = "[" "0" "]" | "[" "1" "," f64-list-opt "]"
 usize-list = "[" "]" | "[" INT {"," INT}* "]"
-usize-list-opt = "[" "0" "]" | "[" "1" "," usize-list "]"
-str-list = "[" "]" | "[" hex {"," hex}* "]"
-str-list-opt = "[" "0" "]" | "[" "1" "," str-list "]"
+refs-delta-opt = "[" "0" "]" | "[" "1" "," refs-delta "]"
 attr-pair = hex ":" INT
 attr-pairs = "[" "]" | "[" attr-pair {"," attr-pair}* "]"
 #endregion
@@ -76,9 +74,9 @@ source-form-opt = "[" "0" "]" | "[" "1" "," source-form "]"
 asset-value = "[" hex "," str-opt "," str-opt "," str-opt "," json-opt "," json-opt "]"
 asset-diff-value = "[" str-opt "," str-triopt "," str-triopt "," str-triopt "," json-triopt "," json-triopt "]"
 scene-value = "[" usize-list "," str-opt "," json-opt "," json-opt "]"
-scene-diff-value = "[" usize-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+scene-diff-value = "[" refs-delta-opt "," str-triopt "," json-triopt "," json-triopt "]"
 node-value = "[" usize-list "," int-opt "," int-opt "," int-opt "," f64-list-opt "," f64-list-opt "," f64-list-opt "," f64-list-opt "," f64-list "," str-opt "," json-opt "," json-opt "]"
-node-diff-value = "[" usize-list-opt "," tri-int "," tri-int "," tri-int "," f64-list-triopt "," f64-list-triopt "," f64-list-triopt "," f64-list-triopt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+node-diff-value = "[" refs-delta-opt "," tri-int "," tri-int "," tri-int "," f64-list-triopt "," f64-list-triopt "," f64-list-triopt "," f64-list-triopt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
 #endregion
 
 #region MeshAccessorMaterial
@@ -93,9 +91,9 @@ primitives-modified = INT ":" primitive-diff-value
 primitives-added-list = primitives-added {"," primitives-added}*
 primitives-added = INT ":" primitive-value
 primitives-collection-opt = "[" "0" "]" | "[" "1" "," primitives-collection "]"
-attr-pairs-opt = "[" "0" "]" | "[" "1" "," attr-pairs "]"
-morph-target-list-opt = "[" "0" "]" | "[" "1" "," morph-target-list "]"
-primitive-diff-value = "[" attr-pairs-opt "," tri-int "," tri-int "," tri-int "," morph-target-list-opt "," json-triopt "," json-triopt "]"
+attr-delta-opt = "[" "0" "]" | "[" "1" "," attr-delta "]"
+target-delta-opt = "[" "0" "]" | "[" "1" "," target-delta "]"
+primitive-diff-value = "[" attr-delta-opt "," tri-int "," tri-int "," tri-int "," target-delta-opt "," json-triopt "," json-triopt "]"
 mesh-diff-value = "[" primitives-collection-opt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
 
 sparse-indices-value = "[" INT "," INT "," component-type "]"
@@ -136,7 +134,7 @@ sampler-value = "[" int-opt "," int-opt "," INT "," INT "," str-opt "," json-opt
 skin-value = "[" int-opt "," int-opt "," usize-list "," str-opt "," json-opt "," json-opt "]"
 texture-diff-value = "[" tri-int "," tri-int "," str-triopt "," json-triopt "," json-triopt "]"
 image-diff-value = "[" str-triopt "," str-triopt "," tri-int "," str-triopt "," json-triopt "," json-triopt "]"
-skin-diff-value = "[" tri-int "," tri-int "," usize-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+skin-diff-value = "[" tri-int "," tri-int "," refs-delta-opt "," str-triopt "," json-triopt "," json-triopt "]"
 #endregion
 
 #region Animation
@@ -146,9 +144,9 @@ animation-sampler-value = "[" INT "," interpolation "," INT "," json-opt "," jso
 channel-list = "[" "]" | "[" animation-channel-value {"," animation-channel-value}* "]"
 animation-sampler-list = "[" "]" | "[" animation-sampler-value {"," animation-sampler-value}* "]"
 animation-value = "[" channel-list "," animation-sampler-list "," str-opt "," json-opt "," json-opt "]"
-channel-list-opt = "[" "0" "]" | "[" "1" "," channel-list "]"
-animation-sampler-list-opt = "[" "0" "]" | "[" "1" "," animation-sampler-list "]"
-animation-diff-value = "[" channel-list-opt "," animation-sampler-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+channel-delta-opt = "[" "0" "]" | "[" "1" "," channel-delta "]"
+sampler-delta-opt = "[" "0" "]" | "[" "1" "," sampler-delta "]"
+animation-diff-value = "[" channel-delta-opt "," sampler-delta-opt "," str-triopt "," json-triopt "," json-triopt "]"
 #endregion
 
 #region Camera
@@ -174,7 +172,7 @@ asset-clause = "asset" "=" asset-diff-value
 # …) — those have no separate "token" of their own to carry the outer presence bit, so BOTH layers
 # must be explicit there. Confirmed against the real printed line, e.g. `scene=[1,1]` (a bare
 # `int-opt`, not `[1,[1,1]]`), `extensions=[1,B[1]]` (a bare `json-opt`), `source-form=glb` (a bare
-# WORD, no bracket at all), `extensions-used=[a,b]` (a bare `str-list`, no opt wrapper).
+# WORD, no bracket at all), `extensions-used=[];[0:61];[]` (bare `str-delta`, no opt wrapper).
 scene-clause = "scene" "=" int-opt
 
 # The 14 collection-triple clauses (P2-P1 csv report §2's copy-pasteable shape, index-keyed since
@@ -184,37 +182,81 @@ scene-clause = "scene" "=" int-opt
 # return value is placed directly after the `=`, matching every scalar clause's own convention.
 removed-list = INT {"," INT}*
 
-scenes-clause = "scenes" "=" "[" removed-list? "]" ";" "[" scenes-modified-list? "]" ";" "[" scenes-added-list? "]"
+refs-delta = "[" refs-removal-list? "]" ";" "[" refs-insertion-list? "]" ";" "[" refs-move-list? "]"
+refs-removal-list = refs-removal {"," refs-removal}*
+refs-removal = INT "@" INT
+refs-insertion-list = refs-insertion {"," refs-insertion}*
+refs-insertion = INT ":" INT
+refs-move-list = refs-move {"," refs-move}*
+refs-move = INT "@" INT ">" INT
+str-delta = "[" str-removal-list? "]" ";" "[" str-insertion-list? "]" ";" "[" str-move-list? "]"
+str-removal-list = str-removal {"," str-removal}*
+str-removal = hex "@" INT
+str-insertion-list = str-insertion {"," str-insertion}*
+str-insertion = INT ":" hex
+str-move-list = str-move {"," str-move}*
+str-move = hex "@" INT ">" INT
+attr-delta = "[" attr-removal-list? "]" ";" "[" attr-insertion-list? "]" ";" "[" attr-move-list? "]"
+attr-removal-list = attr-removal {"," attr-removal}*
+attr-removal = hex "@" INT
+attr-insertion-list = attr-insertion {"," attr-insertion}*
+attr-insertion = INT ":" attr-row
+attr-move-list = attr-move {"," attr-move}*
+attr-move = hex "@" INT ">" INT
+attr-row = "[" hex "," INT "]"
+target-delta = "[" target-removal-list? "]" ";" "[" target-insertion-list? "]" ";" "[" target-move-list? "]"
+target-removal-list = target-removal {"," target-removal}*
+target-removal = hex "@" INT
+target-insertion-list = target-insertion {"," target-insertion}*
+target-insertion = INT ":" attr-pairs
+target-move-list = target-move {"," target-move}*
+target-move = hex "@" INT ">" INT
+channel-delta = "[" channel-removal-list? "]" ";" "[" channel-insertion-list? "]" ";" "[" channel-move-list? "]"
+channel-removal-list = channel-removal {"," channel-removal}*
+channel-removal = hex "@" INT
+channel-insertion-list = channel-insertion {"," channel-insertion}*
+channel-insertion = INT ":" animation-channel-value
+channel-move-list = channel-move {"," channel-move}*
+channel-move = hex "@" INT ">" INT
+sampler-delta = "[" sampler-removal-list? "]" ";" "[" sampler-insertion-list? "]" ";" "[" sampler-move-list? "]"
+sampler-removal-list = sampler-removal {"," sampler-removal}*
+sampler-removal = hex "@" INT
+sampler-insertion-list = sampler-insertion {"," sampler-insertion}*
+sampler-insertion = INT ":" animation-sampler-value
+sampler-move-list = sampler-move {"," sampler-move}*
+sampler-move = hex "@" INT ">" INT
+
+scenes-clause = "scenes" "=" "[" removed-list? "]" ";" "[" scenes-modified-list? "]" ";" "[" scenes-added-list? "]" scenes-amended-section?
 scenes-modified-list = scenes-modified {"," scenes-modified}*
 scenes-modified = INT ":" scene-diff-value
 scenes-added-list = scenes-added {"," scenes-added}*
 scenes-added = INT ":" scene-value
 
-nodes-clause = "nodes" "=" "[" removed-list? "]" ";" "[" nodes-modified-list? "]" ";" "[" nodes-added-list? "]"
+nodes-clause = "nodes" "=" "[" removed-list? "]" ";" "[" nodes-modified-list? "]" ";" "[" nodes-added-list? "]" nodes-amended-section?
 nodes-modified-list = nodes-modified {"," nodes-modified}*
 nodes-modified = INT ":" node-diff-value
 nodes-added-list = nodes-added {"," nodes-added}*
 nodes-added = INT ":" node-value
 
-meshes-clause = "meshes" "=" "[" removed-list? "]" ";" "[" meshes-modified-list? "]" ";" "[" meshes-added-list? "]"
+meshes-clause = "meshes" "=" "[" removed-list? "]" ";" "[" meshes-modified-list? "]" ";" "[" meshes-added-list? "]" meshes-amended-section?
 meshes-modified-list = meshes-modified {"," meshes-modified}*
 meshes-modified = INT ":" mesh-diff-value
 meshes-added-list = meshes-added {"," meshes-added}*
 meshes-added = INT ":" mesh-value
 
-accessors-clause = "accessors" "=" "[" removed-list? "]" ";" "[" accessors-modified-list? "]" ";" "[" accessors-added-list? "]"
+accessors-clause = "accessors" "=" "[" removed-list? "]" ";" "[" accessors-modified-list? "]" ";" "[" accessors-added-list? "]" accessors-amended-section?
 accessors-modified-list = accessors-modified {"," accessors-modified}*
 accessors-modified = INT ":" accessor-diff-value
 accessors-added-list = accessors-added {"," accessors-added}*
 accessors-added = INT ":" accessor-value
 
-buffer-views-clause = "buffer-views" "=" "[" removed-list? "]" ";" "[" buffer-views-modified-list? "]" ";" "[" buffer-views-added-list? "]"
+buffer-views-clause = "buffer-views" "=" "[" removed-list? "]" ";" "[" buffer-views-modified-list? "]" ";" "[" buffer-views-added-list? "]" buffer-views-amended-section?
 buffer-views-modified-list = buffer-views-modified {"," buffer-views-modified}*
 buffer-views-modified = INT ":" buffer-view-diff-value
 buffer-views-added-list = buffer-views-added {"," buffer-views-added}*
 buffer-views-added = INT ":" buffer-view-value
 
-buffers-clause = "buffers" "=" "[" removed-list? "]" ";" "[" buffers-modified-list? "]" ";" "[" buffers-added-list? "]"
+buffers-clause = "buffers" "=" "[" removed-list? "]" ";" "[" buffers-modified-list? "]" ";" "[" buffers-added-list? "]" buffers-amended-section?
 buffers-modified-list = buffers-modified {"," buffers-modified}*
 buffers-modified = INT ":" buffer-diff-value
 buffers-added-list = buffers-added {"," buffers-added}*
@@ -222,13 +264,13 @@ buffers-added = INT ":" buffer-value
 
 # `buffer_bytes` -- the WEAK, index-aligned raw byte-content counterpart to `buffers` (`GltfSnapshot::
 # buffers[i]`, a plain `Vec<u8>`, diff == whole new value, `hex`-encoded).
-buffer-bytes-clause = "buffer-bytes" "=" "[" removed-list? "]" ";" "[" buffer-bytes-modified-list? "]" ";" "[" buffer-bytes-added-list? "]"
+buffer-bytes-clause = "buffer-bytes" "=" "[" removed-list? "]" ";" "[" buffer-bytes-modified-list? "]" ";" "[" buffer-bytes-added-list? "]" buffer-bytes-amended-section?
 buffer-bytes-modified-list = buffer-bytes-modified {"," buffer-bytes-modified}*
 buffer-bytes-modified = INT ":" hex
 buffer-bytes-added-list = buffer-bytes-added {"," buffer-bytes-added}*
 buffer-bytes-added = INT ":" hex
 
-materials-clause = "materials" "=" "[" removed-list? "]" ";" "[" materials-modified-list? "]" ";" "[" materials-added-list? "]"
+materials-clause = "materials" "=" "[" removed-list? "]" ";" "[" materials-modified-list? "]" ";" "[" materials-added-list? "]" materials-amended-section?
 materials-modified-list = materials-modified {"," materials-modified}*
 materials-modified = INT ":" material-diff-value
 materials-added-list = materials-added {"," materials-added}*
@@ -238,44 +280,58 @@ materials-added = INT ":" material-value
 # legitimately their whole new value per the recipe's strong/weak split, `GltfWeakCollectionDiff<T>
 # = GltfCollectionDiff<T, T>`) -- `modified`'s value and `added`'s value use the SAME `<T>-value`
 # production.
-textures-clause = "textures" "=" "[" removed-list? "]" ";" "[" textures-modified-list? "]" ";" "[" textures-added-list? "]"
+textures-clause = "textures" "=" "[" removed-list? "]" ";" "[" textures-modified-list? "]" ";" "[" textures-added-list? "]" textures-amended-section?
 textures-modified-list = textures-modified {"," textures-modified}*
 textures-modified = INT ":" texture-diff-value
 textures-added-list = textures-added {"," textures-added}*
 textures-added = INT ":" texture-value
 
-images-clause = "images" "=" "[" removed-list? "]" ";" "[" images-modified-list? "]" ";" "[" images-added-list? "]"
+images-clause = "images" "=" "[" removed-list? "]" ";" "[" images-modified-list? "]" ";" "[" images-added-list? "]" images-amended-section?
 images-modified-list = images-modified {"," images-modified}*
 images-modified = INT ":" image-diff-value
 images-added-list = images-added {"," images-added}*
 images-added = INT ":" image-value
 
-samplers-clause = "samplers" "=" "[" removed-list? "]" ";" "[" samplers-modified-list? "]" ";" "[" samplers-added-list? "]"
+samplers-clause = "samplers" "=" "[" removed-list? "]" ";" "[" samplers-modified-list? "]" ";" "[" samplers-added-list? "]" samplers-amended-section?
 samplers-modified-list = samplers-modified {"," samplers-modified}*
 samplers-modified = INT ":" sampler-value
 samplers-added-list = samplers-added {"," samplers-added}*
 samplers-added = INT ":" sampler-value
 
-skins-clause = "skins" "=" "[" removed-list? "]" ";" "[" skins-modified-list? "]" ";" "[" skins-added-list? "]"
+skins-clause = "skins" "=" "[" removed-list? "]" ";" "[" skins-modified-list? "]" ";" "[" skins-added-list? "]" skins-amended-section?
 skins-modified-list = skins-modified {"," skins-modified}*
 skins-modified = INT ":" skin-diff-value
 skins-added-list = skins-added {"," skins-added}*
 skins-added = INT ":" skin-value
 
-animations-clause = "animations" "=" "[" removed-list? "]" ";" "[" animations-modified-list? "]" ";" "[" animations-added-list? "]"
+animations-clause = "animations" "=" "[" removed-list? "]" ";" "[" animations-modified-list? "]" ";" "[" animations-added-list? "]" animations-amended-section?
 animations-modified-list = animations-modified {"," animations-modified}*
 animations-modified = INT ":" animation-diff-value
 animations-added-list = animations-added {"," animations-added}*
 animations-added = INT ":" animation-value
 
-cameras-clause = "cameras" "=" "[" removed-list? "]" ";" "[" cameras-modified-list? "]" ";" "[" cameras-added-list? "]"
+cameras-clause = "cameras" "=" "[" removed-list? "]" ";" "[" cameras-modified-list? "]" ";" "[" cameras-added-list? "]" cameras-amended-section?
 cameras-modified-list = cameras-modified {"," cameras-modified}*
 cameras-modified = INT ":" camera-value
 cameras-added-list = cameras-added {"," cameras-added}*
 cameras-added = INT ":" camera-value
 
-extensions-used-clause = "extensions-used" "=" str-list
-extensions-required-clause = "extensions-required" "=" str-list
+accessors-amended-section = ";" "[" accessors-modified-list? "]"
+animations-amended-section = ";" "[" animations-modified-list? "]"
+buffer-bytes-amended-section = ";" "[" buffer-bytes-modified-list? "]"
+buffer-views-amended-section = ";" "[" buffer-views-modified-list? "]"
+buffers-amended-section = ";" "[" buffers-modified-list? "]"
+cameras-amended-section = ";" "[" cameras-modified-list? "]"
+images-amended-section = ";" "[" images-modified-list? "]"
+materials-amended-section = ";" "[" materials-modified-list? "]"
+meshes-amended-section = ";" "[" meshes-modified-list? "]"
+nodes-amended-section = ";" "[" nodes-modified-list? "]"
+samplers-amended-section = ";" "[" samplers-modified-list? "]"
+scenes-amended-section = ";" "[" scenes-modified-list? "]"
+skins-amended-section = ";" "[" skins-modified-list? "]"
+textures-amended-section = ";" "[" textures-modified-list? "]"
+extensions-used-clause = "extensions-used" "=" str-delta
+extensions-required-clause = "extensions-required" "=" str-delta
 extensions-clause = "extensions" "=" json-opt
 extras-clause = "extras" "=" json-opt
 source-form-clause = "source-form" "=" source-form

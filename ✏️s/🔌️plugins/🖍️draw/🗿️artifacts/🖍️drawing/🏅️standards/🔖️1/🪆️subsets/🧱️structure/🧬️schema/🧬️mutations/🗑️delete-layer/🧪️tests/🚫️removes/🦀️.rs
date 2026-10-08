@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::find_drawing_layer;
 use crate::DrawingSnapshot;
 
@@ -86,8 +87,9 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "delete-layer/removes-group-a-with-its-child: group-a exists, so target-missing must not fire, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("delete-layer's diff pins a layers delta");
-    assert_eq!(delta.removed, vec!["group-a".to_string()], "the delta names only the addressed group");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "delete-layer is a pure removal");
+    assert_eq!(delta.removed.len(), 1, "the delta names only the addressed group");
+    assert_eq!((delta.removed[0].id.as_str(), delta.removed[0].parent_id.clone(), delta.removed[0].index), ("group-a", None, 1), "the row carries the group's BASE address");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-layer is a pure removal");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: a `removed` list naming ONLY the group. The
@@ -100,8 +102,9 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-layer/removes-group-a-with-its-child: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("delete-layer pins a layers delta");
-    assert_eq!(delta.removed, vec!["group-a".to_string()], "only the addressed group is named");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "a delete is neither a move nor a patch");
+    assert_eq!(delta.removed.len(), 1, "only the addressed group is named");
+    assert_eq!(delta.removed[0].id, "group-a", "the removed row names the addressed group");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "a delete is neither a move nor a patch");
     assert!(!DIFF.contains("text-a"), "the nested child must not be enumerated in the committed diff");
     assert!(!DIFF.contains("shape-a"), "the untouched sibling must not appear in the committed diff");
 }

@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
@@ -86,11 +87,11 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "rename-layer/renames-shape-a-without-touching-its-id: the label really changes, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("rename-layer's diff pins a layers delta");
-    assert_eq!(delta.patched[0].patch.name.as_deref(), Some("Alpha Renamed"), "the patch pins the name field");
+    assert_eq!(delta.modified[0].patch.name.as_deref(), Some("Alpha Renamed"), "the patch pins the name field");
     assert!(delta.removed.is_empty(), "a rename never removes and re-adds the layer");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: one `patched` entry setting `name`. The entry's
+/// 🔺️ The produced diff is EXACTLY the committed one: one `modified` entry setting `name`. The entry's
 /// own `id` addresses `shape-a` and is NOT part of the patch — drawing's identity key is never a patch
 /// field, which is exactly why a rename here cannot become a re-identification.
 #[semio_framework_async_macros::async_test]
@@ -100,11 +101,11 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-layer/renames-shape-a-without-touching-its-id: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("rename-layer pins a layers delta");
-    assert_eq!(delta.patched[0].id, "shape-a", "the entry addresses the layer by its unchanged identity key");
-    let patch = &delta.patched[0].patch;
+    assert_eq!(delta.modified[0].id, "shape-a", "the entry addresses the layer by its unchanged identity key");
+    let patch = &delta.modified[0].patch;
     assert_eq!(patch.name.as_deref(), Some("Alpha Renamed"), "the name lane carries the new label");
     assert!(patch.layer.is_none(), "a rename must not degrade into a whole-layer replacement");
-    assert!(delta.removed.is_empty() && delta.added.is_empty(), "a rename is never expressed as a remove-and-re-add");
+    assert!(delta.removed.is_empty() && delta.inserted.is_empty() && delta.moved.is_empty(), "a rename is never expressed as a remove-and-re-add");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

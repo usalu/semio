@@ -46,7 +46,8 @@
         "command",
         "sources",
         "inputs",
-        "outputs"
+        "outputs",
+        "resolutions"
       ],
       "properties": {
         "version": {
@@ -87,6 +88,92 @@
           "minItems": 0,
           "items": {
             "$ref": "#/$defs/CargoPreparationInputV1"
+          }
+        },
+        "resolutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CargoPreparationResolutionV1"
+          }
+        }
+      }
+    },
+    "CargoPreparationResolutionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "specifier",
+        "selected"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selected": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "CargoPreparationSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "packages"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?:Cargo\\.toml|.+/Cargo\\.toml)$"
+        },
+        "packages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^\\u0000]+$"
+          }
+        }
+      }
+    },
+    "CargoPreparationInvocationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "args",
+        "cwd",
+        "environment"
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
           }
         }
       }

@@ -5,15 +5,17 @@
   "deltaCDev": null,
   "cementType": null,
   "concreteGrades": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "c35",
-        "fCk": 45000000.0
+        "patch": {
+          "fCk": 45000000.0
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "reinforcementGrades": null,
   "prestressSteels": null,

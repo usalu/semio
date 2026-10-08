@@ -1,0 +1,5 @@
+# Native Prepared Portable Green 4
+
+The actual registered portable4 launch row exactly matched registration316 and physically closed outer Nx/Bun0. The permanent owning UI script executed the complete file: three tests, 71 assertions, no failures or filters. All eight captured source/fixture/schema/permanent script bodies remained exact. Full literal row, before and after bodies, stdout, stderr and terminal are retained under 🗑️generated/native-ui-prepared-close-portable-4.
+
+AJV2020 accepted the independent Prepared, physical job-close and moved raster schemas. Node Buffer/RFC6902 observations preserve original atlas pages, original retained raster backing capacities (16 logical/32 backing and65,536/65,536), byte contents, source backing identity and every original copy grant independently from physical release. This is portable authority acceptance; native moved backing and complete real receiving closure still require fresh owning runtime and full Flow gates. UI9 remains genuinely failed and qualified exact=false.

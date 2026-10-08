@@ -1,0 +1,17 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧫️fixtures/🔣️.json",
+      "beforeSha256": "a3683c64cec52f850d26b954f389bc26738721b1446bc0f4e2864cf643c58378",
+      "afterSha256": "8a9945c3d6037a6c6ae7e8a05467ab742334411df6cf93eadbe06a41de7ed772",
+      "action": "updated"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+      "beforeSha256": "785abb09020fc83c4e04b7848f98a4ad7985c6d3cb97c380c1a8602beca58420",
+      "afterSha256": "4286e52e791304201b1c4733bd56ec10f67e3a92ea399fc115d810a7cf06c2f5",
+      "action": "updated"
+    }
+  ],
+  "sampleCount": 14
+}

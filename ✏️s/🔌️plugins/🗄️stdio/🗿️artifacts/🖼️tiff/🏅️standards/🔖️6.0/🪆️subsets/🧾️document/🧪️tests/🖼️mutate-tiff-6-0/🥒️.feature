@@ -10,36 +10,15 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff`. Its second IFD is a genuinely real second
   page — the actual decoded, downsampled (16x16) pixels of the real
   `🏛️rathaus-ahlen-grundriss/🖼️.png` floor plan, appended by this subset's own independent IFD-chain
-  writer (`../../../../🔮️oracles/🦀️component.rs`'s `fixture_derivation` module — `image`'s public TIFF
+  writer (`../../🔮️oracles/🦀️.rs`'s `fixture_derivation` module — `image`'s public TIFF
   encoder can only ever emit a single IFD) — so `InsertIfd`/`RemoveIfd`, TIFF's own multi-page
   operations, are substantive on a genuinely multi-IFD document from the very first `Given`, without
   needing a second fixture per row. Every scenario copies the fixture into the case work directory
   before touching it; the committed document is never written to.
 
-  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
-  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
-  read by the oracle's IFD-chain codec by the same field names: a tag carries its `TiffValues` as
-  `{kind, value}` (ASCII as its NUL-terminated octets), and an IFD's raster travels as its `storage`
-  — strip chunks of raw sample bytes whose offsets and byte counts each writer lays out itself.
-  `paint-region` paints only uncompressed TILED pages and is guarded by the revision of the subject's
-  canonical snapshot; neither committed document is tiled, so it is witnessed on the wire only. `replace-samples` rewrites a run of sample words
-  inside one block and is the leaf `paint-region` undoes itself with; it is witnessed on the wire only as well.
-
-  On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
-  the law binds NEITHER side, and the exact-bytes law binds BOTH. The committed fixture is the output
-  of the oracle's own independent IFD-chain writer (see above) in the canonical baseline layout —
-  header, strips, IFD chain — and this repository's `encode_tiff` emits that same layout from a
-  snapshot that carries every tag typed and each IFD's strip bytes as its own raster, so both writers
-  reproducing it byte for byte is canonical determinism, not a byte pass-through. Both sides therefore
-  assert the two halves that ARE checkable — the semantic projection survives the decode/re-encode,
-  and the writer reproduces the committed bytes exactly, which a dropped tag, a reordered IFD or a
-  miscounted strip would all break. The mutate rows, every one of which moves the bytes, are what
-  prove a real parse happened. The mutate and inverse laws are stated against the document as an
-  unchanged reference round trip leaves it, which on the scan is the scan itself.
-
-  `insert-ifd` inserts an 8x8 RGB page whose `storage` is one strip of real sample bytes and whose
-  `RowsPerStrip` states that one strip covers the page (TIFF6 §Strips), so both writers lay the page
-  out identically and the projection compares its seven entries and its raster.
+  Examples carry canonical authored entries and exact sample-word blocks.
+  ASCII values are ordered strings; native policy and storage offsets are chosen at IO.
+  The independent reference and subject must preserve the semantic projection through export.
 
   @id-mutate
   @level-exhaustive
@@ -53,10 +32,9 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | change-byte-order | {"byteOrder":"bigEndian"} |
-      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"values":{"kind":"long","value":[8]}},{"tag":257,"values":{"kind":"long","value":[8]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[8]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]]}}} |
+      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"values":{"kind":"long","value":[8]}},{"tag":257,"values":{"kind":"long","value":[8]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}}],"blocks":[{"x":0,"y":0,"width":8,"height":8,"channels":3,"samples":[{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":249,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":249,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":251,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":247,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":248,"hi":0},{"lo":243,"hi":0},{"lo":243,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":251,"hi":0},{"lo":249,"hi":0},{"lo":249,"hi":0},{"lo":250,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":253,"hi":0},{"lo":253,"hi":0},{"lo":253,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":251,"hi":0},{"lo":249,"hi":0},{"lo":249,"hi":0},{"lo":251,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":251,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":253,"hi":0},{"lo":252,"hi":0},{"lo":252,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":249,"hi":0},{"lo":245,"hi":0},{"lo":245,"hi":0},{"lo":248,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":248,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":250,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":248,"hi":0},{"lo":245,"hi":0},{"lo":245,"hi":0},{"lo":252,"hi":0},{"lo":252,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":248,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0}]}]}} |
       | remove-ifd | {"index":1} |
-      | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":[68,101,114,105,118,101,100,32,102,111,114,32,116,105,99,107,101,116,32,50,54,47,48,56,47,50,51,47,69,78,68,45,84,79,45,69,78,68,45,84,69,83,84,73,78,71,45,82,69,70,65,67,84,79,82,0]}} |
+      | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
 
   @id-inverse
@@ -72,10 +50,9 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | change-byte-order | {"byteOrder":"bigEndian"} |
-      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"values":{"kind":"long","value":[8]}},{"tag":257,"values":{"kind":"long","value":[8]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[8]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]]}}} |
+      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"values":{"kind":"long","value":[8]}},{"tag":257,"values":{"kind":"long","value":[8]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}}],"blocks":[{"x":0,"y":0,"width":8,"height":8,"channels":3,"samples":[{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":249,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":249,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":251,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":247,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":248,"hi":0},{"lo":243,"hi":0},{"lo":243,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":251,"hi":0},{"lo":249,"hi":0},{"lo":249,"hi":0},{"lo":250,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":253,"hi":0},{"lo":253,"hi":0},{"lo":253,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":254,"hi":0},{"lo":251,"hi":0},{"lo":249,"hi":0},{"lo":249,"hi":0},{"lo":251,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":251,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":253,"hi":0},{"lo":252,"hi":0},{"lo":252,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":249,"hi":0},{"lo":245,"hi":0},{"lo":245,"hi":0},{"lo":248,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":250,"hi":0},{"lo":247,"hi":0},{"lo":247,"hi":0},{"lo":248,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0},{"lo":250,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":248,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":248,"hi":0},{"lo":245,"hi":0},{"lo":245,"hi":0},{"lo":252,"hi":0},{"lo":252,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":251,"hi":0},{"lo":250,"hi":0},{"lo":250,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":252,"hi":0},{"lo":251,"hi":0},{"lo":251,"hi":0},{"lo":248,"hi":0},{"lo":244,"hi":0},{"lo":244,"hi":0},{"lo":249,"hi":0},{"lo":246,"hi":0},{"lo":246,"hi":0}]}]}} |
       | remove-ifd | {"index":1} |
-      | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":[68,101,114,105,118,101,100,32,102,111,114,32,116,105,99,107,101,116,32,50,54,47,48,56,47,50,51,47,69,78,68,45,84,79,45,69,78,68,45,84,69,83,84,73,78,71,45,82,69,70,65,67,84,79,82,0]}} |
+      | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
 
   @id-identity-round-trip
@@ -85,3 +62,34 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When the document is decoded and re-encoded with no mutation
     Then the oracle and the subject agree on the semantic projection
+
+  @id-mutate-owned
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> against authentic exact sample words
+    Given the real input document shared://🎨️paint-region-applied/⬅️before.tiff
+    When the <id> mutation is applied with its canonical parameters
+      """
+      {"kind":"<id>","params":<params>}
+      """
+    Then the independent TIFF reader and subject agree on exact metadata and raster samples
+    Examples:
+      | id | params |
+      | paint-region | {"revision":"1354e519afaf27f6","ifdIndex":0,"x":1,"y":1,"width":1,"height":1,"red":9,"green":8,"blue":7,"alpha":255} |
+      | replace-samples | {"ifdIndex":0,"block":0,"offset":0,"samples":[{"lo":24,"hi":0},{"lo":96,"hi":0},{"lo":192,"hi":0}]} |
+
+  @id-inverse-owned
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Undo <id> against authentic exact sample words
+    Given the real input document shared://🎨️paint-region-applied/⬅️before.tiff
+    When the <id> mutation is applied with its canonical parameters
+      """
+      {"kind":"<id>","params":<params>}
+      """
+    And its concrete inverse is applied
+    Then the independent TIFF reader and subject agree on exact metadata and raster samples
+    Examples:
+      | id | params |
+      | paint-region | {"revision":"1354e519afaf27f6","ifdIndex":0,"x":1,"y":1,"width":1,"height":1,"red":9,"green":8,"blue":7,"alpha":255} |
+      | replace-samples | {"ifdIndex":0,"block":0,"offset":0,"samples":[{"lo":24,"hi":0},{"lo":96,"hi":0},{"lo":192,"hi":0}]} |

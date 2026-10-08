@@ -3,7 +3,7 @@
 //! variant's `diff()`/`inverse()` is HAND-WRITTEN below (schema-design.md: apply-and-capture via
 //! clone+apply+re-diff is banned -- each variant constructs its `SemioModelDiff` directly).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
 
 
@@ -131,7 +131,7 @@ pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioM
 /// replays on any base. An empty or repeated target list is a Fatal `mutation.invariant`, no addressed element left is
 /// `mutation.target-missing`, a target the model lacks is skipped as `mutation.partial`, an `identity` motion is
 /// `mutation.no-op`.
-pub(crate) fn relative_placement_diff(targets: &[String], identity: bool, base: &SemioModelSnapshot, edit: impl Fn(&mut SemioTransform)) -> protocol::MutationOutcome<SemioModelDiff> {
+pub(crate) fn relative_placement_diff(targets: &[String], identity: bool, base: &SemioModelSnapshot, edit: impl Fn(SemioTransform) -> SemioTransform) -> protocol::MutationOutcome<SemioModelDiff> {
     if targets.is_empty() || targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "targets must name at least one element and never one twice", targets.to_vec());
     }
@@ -149,9 +149,7 @@ pub(crate) fn relative_placement_diff(targets: &[String], identity: bool, base: 
         .iter()
         .filter(|element| targets.contains(&element.id))
         .map(|element| {
-            let mut placement = element.placement;
-            edit(&mut placement);
-            NamedModified { key: element.id.clone(), diff: SemioModelElementDiff { placement: Some(placement), ..Default::default() } }
+            NamedModified { key: element.id.clone(), diff: SemioModelElementDiff { placement: Some(edit(element.placement)), ..Default::default() } }
         })
         .collect();
     protocol::MutationOutcome::new(SemioModelDiff { elements: Some(NamedTripleDiff { modified, ..Default::default() }), ..Default::default() }).absorb_messages(partial)

@@ -4,7 +4,7 @@ use crate::En1993Snapshot;
 pub fn inverse(payload: &RemoveColdFormedMember, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
     if payload.index >= base.cold_formed_members.len() { return Vec::new(); }
-    vec![En1993Mutation::InsertColdFormedMember(insert_cold_formed_member::InsertColdFormedMember { index: payload.index, cold_formed_member: base.cold_formed_members[payload.index].clone() })]
+    vec![En1993Mutation::InsertColdFormedMember(insert_cold_formed_member::InsertColdFormedMember { index: Some(payload.index), cold_formed_member: base.cold_formed_members[payload.index].clone() })]
 
     })())
 }

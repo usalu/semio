@@ -60,8 +60,10 @@ export interface BimWorldWindowConfig {
   sectionOffset: number;
   framed: boolean;
 }
-/** 🧬️ The one `snapshot` mutation of BimWorldWindowConfig: the whole configuration replaces the previous one. */
-export type BimWorldWindowConfigMutation = { kind: "snapshot"; config: BimWorldWindowConfig };
+/** 🧬️ The one `replace` mutation of BimWorldWindowConfig: its payload is the window's whole configuration; its diff names only the fields that differ from the base. */
+export type BimWorldWindowConfigMutation = { kind: "replace"; config: BimWorldWindowConfig };
+/** 🔺️ Sparse diff of BimWorldWindowConfig: exactly the fields a mutation changes. */
+export type BimWorldWindowConfigDiff = Partial<BimWorldWindowConfig>;
 /** 🚪️ Parses one exact BimWorldWindowConfig. */
 export function parseBimWorldWindowConfig(value: unknown): BimWorldWindowConfig {
   const row = exact(value, "$", ["camera", "projection", "isolatedStorey", "hiddenStoreys", "sectionEnabled", "sectionAxis", "sectionOffset", "framed"]);
@@ -76,7 +78,14 @@ export function parseBimWorldWindowConfig(value: unknown): BimWorldWindowConfig 
     framed: flag(row.framed, "$.framed"),
   };
 }
-/** 🔁️ Applies one exact BimWorldWindowConfig mutation. */
-export function applyBimWorldWindowConfigMutation(_base: BimWorldWindowConfig, mutation: BimWorldWindowConfigMutation): BimWorldWindowConfig {
-  return parseBimWorldWindowConfig(mutation.config);
+/** 🔺️ The sparse diff one exact BimWorldWindowConfig mutation produces over `base`. */
+export function diffBimWorldWindowConfigMutation(base: BimWorldWindowConfig, mutation: BimWorldWindowConfigMutation): BimWorldWindowConfigDiff {
+  const next = parseBimWorldWindowConfig(mutation.config);
+  const diff: Record<string, unknown> = {};
+  for (const key of Object.keys(next) as (keyof BimWorldWindowConfig)[]) if (JSON.stringify(next[key]) !== JSON.stringify(base[key])) diff[key] = next[key];
+  return diff as BimWorldWindowConfigDiff;
+}
+/** 🔁️ Applies one exact BimWorldWindowConfig mutation through its sparse diff. */
+export function applyBimWorldWindowConfigMutation(base: BimWorldWindowConfig, mutation: BimWorldWindowConfigMutation): BimWorldWindowConfig {
+  return { ...base, ...diffBimWorldWindowConfigMutation(base, mutation) };
 }

@@ -166,8 +166,10 @@ impl ArtifactOwnedToolJobFactory for SemioAnyEditorExampleFactory {
     const DOCUMENT_SCHEMA: &'static str = SEMIO_ANY_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
-#[path = "🧮️net/🦀️.rs"]
-pub(crate) mod net;
+#[path = "🧭️edit-plumbing/🦀️.rs"]
+pub(crate) mod edit_plumbing;
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub(crate) mod edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -290,8 +292,11 @@ impl editing::SnapshotEditingEditor for SemioAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { SemioAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net(event, snapshot, net::net)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        edit_rules::special(event, snapshot)
     }
 }
 

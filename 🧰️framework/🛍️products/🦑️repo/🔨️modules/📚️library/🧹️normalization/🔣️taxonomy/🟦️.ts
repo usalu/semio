@@ -1,3 +1,4 @@
+import { parseGeneratorPreviewProgressPolicyV1, type GeneratorPreviewProgressPolicyV1 } from "../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 /** 🏗️ Canonical 🔣️taxonomy source service. */
 import { validateTaxonomy, type Taxonomy as DiscoveryTaxonomy, createTaxonomyPathMatcher, parseNamedFixedDirectoryContractSetScope, parseFixedDirectoryContractSetScope, canonicalPrimaryFilenameForKind, parseSemanticOwnedDocumentCorrections, parseSemanticOwnedCurrentSourceRevisions, type SemanticPathProjectionReferenceConsumerForm, generatorPreviewScriptArguments, generatorPreviewResourceLimits, type RegistryCatalogInputDiscovery, type GeneratorProjectionActivation, type SemanticPackageGeneration, semanticOwnedInputFileSnapshot, type TaxonomyPathMatcher, type SemanticOwnedInputFileSnapshot, type SemanticFacetPrimaryFileProjectionContract } from "../../🔍️discovery/🟦️.ts";
@@ -315,6 +316,7 @@ export interface GeneratorContractSpec {
   readonly target: string | null;
   readonly previewTarget?: string;
   readonly previewArguments?: readonly string[];
+  readonly previewProgress?: GeneratorPreviewProgressPolicyV1;
   readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
   readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
   readonly checkTarget?: string;
@@ -1035,6 +1037,8 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
     const previewArguments = spec.previewArguments === undefined ? undefined : requireStringArray(spec.previewArguments, `generatorContracts.${id}.previewArguments`);
     if (target) generatorPreviewScriptArguments({ ownership, target, previewTarget, previewArguments });
     else if (previewArguments !== undefined) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewArguments requires owned output authority`);
+    const previewProgress = spec.previewProgress === undefined ? undefined : parseGeneratorPreviewProgressPolicyV1(spec.previewProgress);
+    if (previewProgress && (!target || !previewTarget || ownership !== "owned")) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewProgress requires owned preview authority`);
     const previewLimits = spec.previewLimits === undefined ? undefined : generatorPreviewResourceLimits({ ownership, previewTarget, previewLimits: spec.previewLimits as GeneratorContractSpec["previewLimits"] });
     const compilerInputManifest = spec.compilerInputManifest === undefined ? undefined : requireRecord(spec.compilerInputManifest, `generatorContracts.${id}.compilerInputManifest`) as unknown as GeneratorContractSpec["compilerInputManifest"];
     if (checkTarget && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(checkTarget)) throw new Error(`Taxonomy v7 generatorContracts.${id}.checkTarget must be one exact Nx target`);
@@ -1055,7 +1059,7 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
     if (inputDiscovery && (id !== "plugin-registry" || ownership !== "owned" || inputDiscovery.kind !== "registry-catalog")) throw new Error(`Taxonomy v7 generatorContracts.${id}.inputDiscovery has no exact catalog authority`);
     const projectionActivation = spec.projectionActivation === undefined ? undefined : requireRecord(spec.projectionActivation, `generatorContracts.${id}.projectionActivation`) as unknown as GeneratorProjectionActivation;
     const packageGeneration = spec.packageGeneration === undefined ? undefined : requireRecord(spec.packageGeneration, `generatorContracts.${id}.packageGeneration`) as unknown as SemanticPackageGeneration;
-    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, previewArguments, previewLimits, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, compilerInputManifest, packageGeneration, projectionActivation, outputRoots, reason: requireString(spec.reason, `generatorContracts.${id}.reason`) };
+    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, previewArguments, previewProgress, previewLimits, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, compilerInputManifest, packageGeneration, projectionActivation, outputRoots, reason: requireString(spec.reason, `generatorContracts.${id}.reason`) };
   }
   if (Object.keys(generatorContracts).length === 0) throw new Error("Taxonomy v7 generatorContracts must not be empty");
   for (let left = 0; left < generatorRoots.length; left++) for (let right = left + 1; right < generatorRoots.length; right++) {

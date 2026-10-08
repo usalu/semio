@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Board Edge Tip Catalog Entry",
+  "type": "object",
+  "required": [
+    "id"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "geometry": {
+      "enum": [
+        "arrow",
+        "fine-arrow",
+        "diamond",
+        "circle",
+        "bar",
+        null
+      ]
+    },
+    "filled": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "scale": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

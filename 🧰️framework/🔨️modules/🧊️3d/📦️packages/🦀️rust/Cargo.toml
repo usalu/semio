@@ -35,6 +35,7 @@ semio-framework-replication = { workspace = true }
 pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+semio-framework-replication = { workspace = true, features = ["history-index-serde"] }
 num-rational = "0.4"
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with

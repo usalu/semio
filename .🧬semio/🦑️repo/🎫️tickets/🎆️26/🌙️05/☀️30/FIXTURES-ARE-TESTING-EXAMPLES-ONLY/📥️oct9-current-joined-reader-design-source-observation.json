@@ -1,0 +1,17 @@
+{
+  "role": "observation, no authored source",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "603a6303a42ff2aaa0829267046ee18470c8926793758285396f50b0ce4a3c55"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "sha256": "1d32831aa393dcb79d4c5b2209e85a6fa085da4784da3c8045ea42289974369b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️.rs",
+      "sha256": "65527bb6dc1e30657d5cf35eaf1db09ac5077c00e06ce59d6f6c8502ce7230f9"
+    }
+  ]
+}

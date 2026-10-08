@@ -11,16 +11,36 @@ type Vdi3805ManufacturerFilePatch {
 }
 
 type Vdi3805ProductsPatch {
-  id: String!
   title: [LocalizedText!]
   configuration: Configuration
 }
 
+type Vdi3805ProductsRemoved {
+  id: String!
+  index: Int!
+}
+
+type Vdi3805ProductsInserted {
+  index: Int!
+  row: CatalogueProduct!
+}
+
+type Vdi3805ProductsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Vdi3805ProductsModified {
+  id: String!
+  patch: Vdi3805ProductsPatch!
+}
+
 type Vdi3805ProductsRows {
-  added: [CatalogueProduct!]!
-  removed: [String!]!
-  modified: [Vdi3805ProductsPatch!]!
-  order: [String!]
+  removed: [Vdi3805ProductsRemoved!]!
+  inserted: [Vdi3805ProductsInserted!]!
+  moved: [Vdi3805ProductsMoved!]!
+  modified: [Vdi3805ProductsModified!]!
 }
 
 type Vdi3805EditionProfileEntry {
@@ -34,27 +54,43 @@ type Vdi3805EditionProfileRows {
   modified: [Vdi3805EditionProfileEntry!]!
 }
 
-type Vdi3805IndexEntriesPatchDnValue {
-  value: Int
+type Vdi3805GeometryConnectionsPatchDiameterMmValue {
+  value: Float
 }
 
-type Vdi3805IndexEntriesPatch {
+type Vdi3805GeometryConnectionsPatch {
+  medium: String
+  position: [Float!]
+  direction: [Float!]
+  diameterMm: Vdi3805GeometryConnectionsPatchDiameterMmValue
+}
+
+type Vdi3805GeometryConnectionsRemoved {
   id: String!
-  dn: Vdi3805IndexEntriesPatchDnValue
-  tags: [String!]
+  index: Int!
 }
 
-type Vdi3805IndexEntriesRows {
-  added: [CatalogIndexEntry!]!
-  removed: [String!]!
-  modified: [Vdi3805IndexEntriesPatch!]!
-  order: [String!]
+type Vdi3805GeometryConnectionsInserted {
+  index: Int!
+  row: ConnectionPoint!
+}
+
+type Vdi3805GeometryConnectionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Vdi3805GeometryConnectionsModified {
+  id: String!
+  patch: Vdi3805GeometryConnectionsPatch!
 }
 
 type Vdi3805GeometryConnectionsRows {
-  added: [ConnectionPoint!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [Vdi3805GeometryConnectionsRemoved!]!
+  inserted: [Vdi3805GeometryConnectionsInserted!]!
+  moved: [Vdi3805GeometryConnectionsMoved!]!
+  modified: [Vdi3805GeometryConnectionsModified!]!
 }
 
 type Vdi3805GeometryEntry {
@@ -105,7 +141,6 @@ type Vdi3805Diff {
   editionProfile: Vdi3805EditionProfileRows @state(class: ARTIFACT)
   correctionAsOf: EditionId @state(class: ARTIFACT)
   strictMode: Boolean @state(class: ARTIFACT)
-  indexEntries: Vdi3805IndexEntriesRows @state(class: ARTIFACT)
   geometry: Vdi3805GeometryRows @state(class: ARTIFACT)
   curves: Vdi3805CurvesRows @state(class: ARTIFACT)
   limits: Vdi3805LimitsPatch @state(class: ARTIFACT)

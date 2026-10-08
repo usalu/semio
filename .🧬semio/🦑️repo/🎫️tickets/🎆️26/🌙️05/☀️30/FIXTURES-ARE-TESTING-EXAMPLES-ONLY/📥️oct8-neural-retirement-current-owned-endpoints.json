@@ -1,0 +1,202 @@
+{
+  "at": "2026-10-08T19:02:57.895496+00:00",
+  "state": "ten owned endpoints frozen; complete current Neural Rust96913 and source24501 positive; normal WGPU held",
+  "ownedEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "beforeSha256": "c9b341a9686e27661816de0e47db9b3782aba221237b99f28fbcf79aa12979b1",
+      "afterSha256": "915d635a631187b9459ee8bd48905345cab53cf42294f6ddf1955ed705ff2440"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs",
+      "beforeSha256": "a64414b1d2ef71f8009b41e96199af730eeeb1d2e969dc153de5f2919f504bd6",
+      "afterSha256": "3baafd3b6193cbe28333fb4036885a421998eea3c912ac179457789a721a1d6f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+      "beforeSha256": "e7856c4661481b983cb9df3c7887b0a3677c460ad36a6e5eda450801e35fd612",
+      "afterSha256": "9a6cb93ec96e5ca687d2e75c83c9d7cd556b16edf368fecfb52f377550719908"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📏️owned-demand/🔣️.json",
+      "beforeSha256": "f83831f94c1cf9f35637bb8c16eaa8e9243462a794c7694e1be0f7d96229da98",
+      "afterSha256": "d0103d63d6bb674e75cfa604ad62df1b68c123f525b0fcaa10fbf7e576fc4183"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "06a5a1861aaca8e510d36bf56f066c57798fcd9c066fc98a7b10448afc109e96",
+      "afterSha256": "025cebb9d67ffb9304f4026851148ce167310325ee425c0b89690f7e32a8e07f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs",
+      "beforeSha256": "ef9f5f2f98198490509ccaef7ae789d71515ef270f54a10e707994598d2ced04",
+      "afterSha256": "aad630e83bb835de6f6d1a950230a7501d32b699040f69c180f1e8d758ace3a3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧪️tests/📔️registry/🦀️.rs",
+      "beforeSha256": "0a49c5c9fe749cb65ef8872bb540feaa482c334caf5a65abe20a66fc31df3e1b",
+      "afterSha256": "5b38dc98eddb150b13c9d9d99c1e1e3f428c4111a549d6199d851f405461321e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧫️fixtures/🔣️.json",
+      "beforeSha256": "39701e5eed759001c301ce4556c7f32a381b98c3c7aea26338f8f2911351aab3",
+      "afterSha256": "e391d7689a70c1fdd1cac325e1816e6355fcc918d60f8d5fbd21b460f976c62a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs",
+      "beforeSha256": "c1bdc6287b7ac3f0f9fad15b45087e06752960fdeb8fd986a789f392b4389190",
+      "afterSha256": "f4523daaf0f4bc1542a7015a054bcc9b87bfdf5c69e8af2d2ce9551ea766a84a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧊️cold/🦀️.rs",
+      "beforeSha256": "94b0884c065b767ec7c4c128301d69200f828b3135db7dd772765e48fb956859",
+      "afterSha256": "276addda4a675fefc3c582efd5c3a8c14771a73b972d5ca1c14baada3f325b0d"
+    }
+  ],
+  "producerAndSchemaObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧬️schema/🔣️.json",
+      "initialSha256": "61ade8399c7c4b0a35502b6c1988697b7a1d51459a44b4f95b3879144cb2f5bc",
+      "currentSha256": "61ade8399c7c4b0a35502b6c1988697b7a1d51459a44b4f95b3879144cb2f5bc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "initialSha256": "6cb2fd1de62509351e1dbb563aa6453f8d198cddc5f2f1ff59c18ac3c32a1824",
+      "currentSha256": "b3592fb79d8dc9f96bece19a4d88cb4fb077517cda9b16e131f05fd4ad0a931b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json",
+      "initialSha256": "dd7fae6c5ab32320641a0a42c8976b34660655cb7489a39a7819c967492632f4",
+      "currentSha256": "dd7fae6c5ab32320641a0a42c8976b34660655cb7489a39a7819c967492632f4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "initialSha256": "86307e50a442abbc531e21aad1e7128a27290e5680cad76db1d9aac97a7a95c6",
+      "currentSha256": "6c445b880b3283c0a288e102ec58c4d2815c85fbdd80691d73f3633842270b6f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "initialSha256": "65583b31cd9c939ce1a0682f3543baba075d9f6f06b8e40bc9706c48e80c91e4",
+      "currentSha256": "f1b3b68320b7c39bb19cd9e383c27f28a56216fa8e4cf3038fb0af207f8bcbb5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "initialSha256": "056727fb41fdc043c09035f33c41c5b7e3223e960ad8735cd7a1ffacf7079061",
+      "currentSha256": "bfed5a7d7340124162cba9ed5cfd5d66808bcabf4f8340e14e78e5639fb8f66b"
+    }
+  ],
+  "domainMutationPreimages": "📥️oct8-neural-current-domain-demand-mutation-preimages.json",
+  "terminalReceipts": [
+    {
+      "session": 96913,
+      "command": "bun nx run @semio-tech/neural-engine-rs:test --skip-nx-cache --outputStyle=static --args='--lib -- --nocapture'",
+      "exitCode": 0,
+      "nxDuration": "54.4s",
+      "passed": 78,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "runtimeSeconds": 0.26,
+      "log": "🗑️generated/oct8-neural-current-domain-demand-rust.log"
+    },
+    {
+      "session": 24501,
+      "exitCode": 0,
+      "nxDuration": "700ms",
+      "log": "🗑️generated/oct8-neural-current-domain-demand-source.log"
+    }
+  ],
+  "postTerminalOwnedCurrentness": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "sha256": "915d635a631187b9459ee8bd48905345cab53cf42294f6ddf1955ed705ff2440",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs",
+      "sha256": "3baafd3b6193cbe28333fb4036885a421998eea3c912ac179457789a721a1d6f",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+      "sha256": "9a6cb93ec96e5ca687d2e75c83c9d7cd556b16edf368fecfb52f377550719908",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📏️owned-demand/🔣️.json",
+      "sha256": "d0103d63d6bb674e75cfa604ad62df1b68c123f525b0fcaa10fbf7e576fc4183",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "025cebb9d67ffb9304f4026851148ce167310325ee425c0b89690f7e32a8e07f",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs",
+      "sha256": "aad630e83bb835de6f6d1a950230a7501d32b699040f69c180f1e8d758ace3a3",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧪️tests/📔️registry/🦀️.rs",
+      "sha256": "5b38dc98eddb150b13c9d9d99c1e1e3f428c4111a549d6199d851f405461321e",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧫️fixtures/🔣️.json",
+      "sha256": "e391d7689a70c1fdd1cac325e1816e6355fcc918d60f8d5fbd21b460f976c62a",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs",
+      "sha256": "f4523daaf0f4bc1542a7015a054bcc9b87bfdf5c69e8af2d2ce9551ea766a84a",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧊️cold/🦀️.rs",
+      "sha256": "276addda4a675fefc3c582efd5c3a8c14771a73b972d5ca1c14baada3f325b0d",
+      "matchesFrozen": true
+    }
+  ],
+  "postTerminalProducerObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧬️schema/🔣️.json",
+      "sha256": "61ade8399c7c4b0a35502b6c1988697b7a1d51459a44b4f95b3879144cb2f5bc",
+      "matchesRunFreeze": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "sha256": "b3592fb79d8dc9f96bece19a4d88cb4fb077517cda9b16e131f05fd4ad0a931b",
+      "matchesRunFreeze": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json",
+      "sha256": "dd7fae6c5ab32320641a0a42c8976b34660655cb7489a39a7819c967492632f4",
+      "matchesRunFreeze": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "6c445b880b3283c0a288e102ec58c4d2815c85fbdd80691d73f3633842270b6f",
+      "matchesRunFreeze": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "sha256": "f1b3b68320b7c39bb19cd9e383c27f28a56216fa8e4cf3038fb0af207f8bcbb5",
+      "matchesRunFreeze": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "sha256": "bfed5a7d7340124162cba9ed5cfd5d66808bcabf4f8340e14e78e5639fb8f66b",
+      "matchesRunFreeze": true
+    }
+  ],
+  "observedOwnedPidsAbsent": [
+    45992,
+    45993,
+    45994,
+    46306,
+    46045,
+    46046,
+    46047
+  ]
+}

@@ -1,4 +1,4 @@
-import type{LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
+import type{LowpolyMeshAttribute,LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
 /** 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
  * `LowpolyMutation` enum (`dsl::Mutations`-derived, twenty-one variants: nine object-lane verbs, a
  * create/delete pair for the `mesh` CHILD slot, six paint-layer verbs, one pixel edit, one paint stroke and three selection motions).
@@ -36,7 +36,8 @@ export type LowpolyMutation =
   | { ApplyPaintStroke: { objectId: string; layerIndex: number; eraser: boolean; color: [number, number, number]; radius: number; hardness: number; opacity: number; points: [number, number][] } }
   | { MoveSelection: { objectId: string; vertexIds: number[]; offset: [number, number, number] } }
   | { RotateSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; axis: [number, number, number]; angle: number } }
-  | { ScaleSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; factor: [number, number, number] } };
+  | { ScaleSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; factor: [number, number, number] } }
+  | { SetVertexPositions: { objectId: string; positions: { vertex: number; position: [number, number, number] }[]; channels: LowpolyMeshAttribute[] } };
 
 /** 🏷️ The exact wire tag (Rust enum variant name / `dsl::Mutations` `aggregateVariant`) of every
  * [`LowpolyMutation`] member, in declaration order — mirrors `🦀️.rs`'s `KINDS` intent one
@@ -63,4 +64,5 @@ export const LOWPOLY_MUTATION_TAGS = [
   "MoveSelection",
   "RotateSelection",
   "ScaleSelection",
+  "SetVertexPositions",
 ] as const;

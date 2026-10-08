@@ -10,4 +10,5 @@ export type AviMutation =
   | { mutation: "removeChunk"; streamIndex: number; index: number }
   | { mutation: "setChunkKeyframe"; streamIndex: number; index: number; keyframe: boolean }
   | { mutation: "addUnknownChunk"; index: number; item: import("../📸️snapshot/🟦️").RiffChunk }
-  | { mutation: "removeUnknownChunk"; index: number };
+  | { mutation: "removeUnknownChunk"; index: number }
+  | { mutation: "setHdrlExtra"; chunks: import("../📸️snapshot/🟦️").RiffChunk[] };

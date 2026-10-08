@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+  "beforeSha256": "2bea4dd7d665ca53cab981889769548832d944a8d50684c6b037e8310dc818dc",
+  "before": "    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().ok_or(\"batch group lacks original snapshot factory\")?)));\n",
+  "anchor": "    store.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| \"batch group history reservation is stale\".to_string())?;\n",
+  "after": "    store.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| \"batch group history reservation is stale\".to_string())?;\n    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().ok_or(\"batch group lacks original snapshot factory\")?)));\n"
+}

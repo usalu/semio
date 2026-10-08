@@ -16,3 +16,5 @@ enums:
     12: replace_image
     18: patch_pixels
     20: paint_native_samples
+    21: set_gamma
+    22: replace_samples

@@ -33,7 +33,7 @@ async fn round_trip(mutation: Ifc2x3Cv20Mutation) {
 #[semio_framework_async_macros::async_test]
 async fn every_concept_kind_round_trips_through_its_own_inverse() {
     round_trip(Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: "StructuralAnalysisView".into() })).await;
-    round_trip(Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: None })).await;
+    round_trip(Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: None, instance: None })).await;
     round_trip(Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project: 1, units: None })).await;
     round_trip(Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product: 2, placement: None })).await;
 }
@@ -46,26 +46,26 @@ fn the_mvd_guards_reject_rather_than_silently_edit() {
     assert!(
         !apply_ifc2x3_cv20_mutation(
             &mut snapshot,
-            &Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCWALL".into(), global_id: "x".into(), name: "x".into() }), index: None })
+            &Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCWALL".into(), global_id: "x".into(), name: "x".into() }), index: None, instance: None })
         )
         .messages()
         .is_empty(),
         "IFCWALL is not a type CV2.0 excludes"
     );
-    assert!(!apply_ifc2x3_cv20_mutation(&mut snapshot, &Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 2, entity: None, index: None })).messages().is_empty(), "clearing a structural entity must not delete a real wall");
+    assert!(!apply_ifc2x3_cv20_mutation(&mut snapshot, &Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 2, entity: None, index: None, instance: None })).messages().is_empty(), "clearing a structural entity must not delete a real wall");
     assert_eq!(snapshot, base(), "a rejected mutation leaves the snapshot untouched");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn removing_a_middle_row_is_restored_at_its_original_index() {
     let mut start = base();
-    let created = Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: Some(1) });
+    let created = Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: Some(1), instance: None });
     let outcome = apply_ifc2x3_cv20_mutation(&mut start, &created);
     assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
     assert_eq!(mvd::position(&start, 99), Some(1), "the creation honours its index");
-    let removal = Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: None, index: None });
+    let removal = Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: None, index: None, instance: None });
     let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse, vec![Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: Some(1) })], "the removal's inverse restores the row at its original index");
+    assert_eq!(inverse, vec![Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: Some(1), instance: None })], "the removal's inverse restores the row at its original index");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
 }
 
@@ -76,7 +76,7 @@ async fn removing_a_middle_row_is_restored_at_its_original_index() {
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
         Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: String::new() }),
-        Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 0, entity: None, index: None }),
+        Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 0, entity: None, index: None, instance: None }),
         Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project: 0, units: None }),
         Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product: 0, placement: None }),
     ];

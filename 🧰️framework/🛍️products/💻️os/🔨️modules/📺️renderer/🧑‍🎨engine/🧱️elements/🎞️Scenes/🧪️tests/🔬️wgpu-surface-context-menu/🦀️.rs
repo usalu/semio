@@ -103,7 +103,7 @@ fn whole_surface_kinds_report_no_hits_and_no_selection() {
     let mut timeline = scene(SurfaceKind::GraphTimeline);
     timeline.graph_timeline = Some(GraphTimelineScene { columns_json: json!([]).to_string() });
     let mut blocks = scene(SurfaceKind::BlockList);
-    blocks.block_list = Some(BlockListScene { steps_json: json!([]).to_string(), palette_json: json!([]).to_string(), selected_id: None, dragging_id: None, domain_id: None });
+    blocks.block_list = Some(BlockListScene { steps: Vec::new(), palette: Vec::new(), selected_id: None, dragging_id: None, domain_id: None });
     let mut diff = scene(SurfaceKind::DiffView);
     diff.diff_view = Some(DiffViewScene { before: "a".into(), after: "b".into(), mode: Some("unified".into()), language: None, domain_id: None });
     let mut canvas = scene(SurfaceKind::Canvas2d);

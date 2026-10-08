@@ -33,9 +33,10 @@
   "wayfinding": null,
   "schedules": null,
   "flexibility": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "flexibility-requirement-a",
         "patch": {
@@ -67,8 +68,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "growth": null,
   "sustainability": null,

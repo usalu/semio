@@ -1,0 +1,5 @@
+type BlockListSelectionTarget { granularity: String!, id: String! }
+type BlockListBlock { id: String!, label: String!, kind: String!, description: String, target: BlockListSelectionTarget }
+type BlockListStep { id: String!, title: String!, description: String, blocks: [BlockListBlock!]!, target: BlockListSelectionTarget }
+type BlockListPaletteEntry { blockKind: String!, label: String!, iconId: String! }
+type BlockListScene { steps: [BlockListStep!]!, palette: [BlockListPaletteEntry!]!, selectedId: String, draggingId: String, domainId: String }

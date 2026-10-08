@@ -3,7 +3,7 @@ import {GradientRamp} from "./🎨️sampling/🟦️.ts";
 export type Color = [number,number,number,number];
 export interface Stop { offset:number; color:Color }
 export type Fill = {kind:"solid";color:Color} | {kind:"linearGradient";x1:number;y1:number;x2:number;y2:number;stops:Stop[]} | {kind:"radialGradient";cx:number;cy:number;r:number;stops:Stop[]};
-export type FillEdit = {kind:"type";value:"none"|Fill["kind"]} | {kind:"coordinate";axis:"x1"|"y1"|"x2"|"y2"|"cx"|"cy"|"r";value:number} | {kind:"color";index?:number;value:string} | {kind:"alpha";index?:number;value:number} | {kind:"offset";index:number;value:number} | {kind:"addStop";offset:number} | {kind:"removeStop";index:number};
+export type FillEdit = {kind:"type";value:"none"|Fill["kind"]} | {kind:"coordinate";axis:"x1"|"y1"|"x2"|"y2"|"cx"|"cy"|"r";value:number} | {kind:"color";index?:number;value:Color} | {kind:"alpha";index?:number;value:number} | {kind:"offset";index:number;value:number} | {kind:"addStop";offset:number} | {kind:"removeStop";index:number};
 const invalid = (message:string):never => { throw new Error(message); };
 const unit = (value:number):number => Number.isFinite(value) && value>=0 && value<=1 ? value : invalid("Value must be between zero and one");
 export function editFill(source:Fill|null, edit:FillEdit):Fill|null {
@@ -26,9 +26,8 @@ export function editFill(source:Fill|null, edit:FillEdit):Fill|null {
       if (!Number.isFinite(edit.value) || (edit.axis==="r" && edit.value<=0) || !(edit.axis in fill)) invalid("Invalid gradient coordinate");
       (fill as unknown as Record<string,unknown>)[edit.axis]=edit.value; break;
     case "color": {
-      if (!/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(edit.value)) invalid("Invalid color");
-      const target=color(edit.index),hex=edit.value.length===4 ? [...edit.value.slice(1)].map(value=>value+value).join("") : edit.value.slice(1);
-      for(let index=0;index<3;index++) target[index]=parseInt(hex.slice(index*2,index*2+2),16)/255;
+      if(edit.value.length!==4||edit.value.some(value=>!Number.isFinite(value)||value<0||value>1))invalid("Invalid color components");
+      const target=color(edit.index);for(let index=0;index<4;index++)target[index]=edit.value[index];
       break;
     }
     case "alpha": color(edit.index)[3]=unit(edit.value); break;

@@ -1,0 +1,22 @@
+//! 🧪️ Native original defining genesis owner witnesses.
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🌱️genesis/🦀️.rs"] pub mod genesis;
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs"] pub mod binary_genesis;
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/📝️text/🌱️genesis/🦀️.rs"] pub mod text_genesis;
+pub mod os_vcs {pub use crate::genesis;pub mod io{pub mod binary{pub use crate::binary_genesis as genesis;}}}
+#[cfg(test)]mod tests{
+ use super::*;use semio_framework_value::{DslValue,ToValue,FromValue,ValueError,NativeDecodeControl,NativeEncodeControl};use binary_genesis::{AdmittedArtifactGenesis,ArtifactGenesisCodec};
+ #[derive(Debug,PartialEq)]struct Snapshot{i:i64}
+ impl ToValue for Snapshot{fn to_value(&self)->DslValue{self.i.to_value()}}
+ impl FromValue for Snapshot{fn from_value(v:DslValue)->Result<Self,ValueError>{Ok(Self{i:i64::from_value(v)?})}}
+ impl ArtifactGenesisCodec for Snapshot{
+ fn encode_genesis_pack(&self)->Result<Vec<u8>,ValueError>{Ok(semio_framework_pack_json::to_json_string(self).into_bytes())}
+ fn decode_genesis_pack(bytes:&[u8])->Result<Self,ValueError>{let source=std::str::from_utf8(bytes).unwrap();semio_framework_pack_json::from_json_str(source,semio_framework_pack_json::JsonMemberPolicy::Reject)}
+ }
+ #[test]fn original_native_pack_and_pure_facts_match_independent_readers(){
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();for row in fixture["packs"].as_array().unwrap(){let source=row["text"].as_str().unwrap();let pack=source.as_bytes().to_vec();let pointer=pack.as_ptr();let owner=AdmittedArtifactGenesis::<Snapshot>::from_stored_pack(pack).unwrap();let oracle:i64=serde_json::from_str(source).unwrap();assert_eq!(owner.facts().snapshot().i,oracle);assert_eq!(owner.pack().as_ptr(),pointer);assert_eq!(owner.facts().digest(),*blake3::hash(source.as_bytes()).as_bytes());let clone=owner.clone();assert!(std::sync::Arc::ptr_eq(&owner.share_pack(),&clone.share_pack()));assert!(std::sync::Arc::ptr_eq(&owner.facts().share_snapshot(),&clone.facts().share_snapshot()));let pure=owner.facts().to_value();let observed:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&pure)).unwrap();assert_eq!(observed["snapshot"].as_i64(),Some(oracle));assert_eq!(observed["digest"].as_array().unwrap().len(),32);let recovered=genesis::ArtifactGenesis::<Snapshot>::from_value(pure).unwrap();assert_eq!(recovered.snapshot().i,oracle);assert_eq!(recovered.digest(),owner.facts().digest());let text=owner.to_value();let read=AdmittedArtifactGenesis::<Snapshot>::from_value(text).unwrap();assert_eq!(read.pack(),source.as_bytes());}
+  let born=AdmittedArtifactGenesis::born(Snapshot{i:5}).unwrap();assert_eq!(born.pack(),serde_json::to_vec(&5i64).unwrap());println!("[DEBUG] Native Genesis4 exact original Pack/snapshot/digest custody matches independent Serde+Blake3; pure facts roundtrip4; birth1");
+ }
+ #[test]fn explicit_genesis_text_controls_preserve_borrowed_owners(){
+  let bytes=vec![0x7b;4096];let pointer=bytes.as_ptr();let mut observations=0;let hex=text_genesis::encode_genesis_hex_controlled(&bytes,&mut NativeEncodeControl::new(8192,&mut |_|{observations+=1;true})).unwrap();assert!(observations>10);let decoded=text_genesis::decode_genesis_hex_controlled(&hex,&mut NativeDecodeControl::new(4096,&mut |_|true)).unwrap();assert_eq!(decoded,bytes);for ceiling in [0,8191]{assert!(text_genesis::encode_genesis_hex_controlled(&bytes,&mut NativeEncodeControl::new(ceiling,&mut |_|true)).is_err());}assert!(text_genesis::encode_genesis_hex_controlled(&bytes,&mut NativeEncodeControl::new(8192,&mut |_|false)).is_err());assert!(text_genesis::decode_genesis_hex_controlled(&hex,&mut NativeDecodeControl::new(4095,&mut |_|true)).is_err());assert!(text_genesis::decode_genesis_hex_controlled(&hex,&mut NativeDecodeControl::new(4096,&mut |_|false)).is_err());assert_eq!(bytes.as_ptr(),pointer);for bad in ["","7","7B","zz"]{assert!(text_genesis::decode_genesis_hex_controlled(bad,&mut NativeDecodeControl::new(4096,&mut |_|true)).is_err());}println!("[DEBUG] Native Genesis hex controls original pointer unchanged, observations={observations}, explicit encode/decode ceilings and cancellation/refusal witnessed");
+ }
+}

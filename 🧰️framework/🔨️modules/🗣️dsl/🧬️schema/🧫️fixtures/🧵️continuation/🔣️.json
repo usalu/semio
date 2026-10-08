@@ -23,6 +23,17 @@
     "parserUnit": "one-frame-transition",
     "firstStep": "progress",
     "sameControl": true,
+    "textUnescape": {
+      "unit": "one-unicode-scalar",
+      "sourceCopies": 0,
+      "outputTransfer": "after-exact-end",
+      "cases": [
+        { "nativeBody": "Mesh 😀 \\n\\t\\r\\\"\\\\", "jsonBody": "Mesh 😀 \\n\\t\\r\\\"\\\\", "text": "Mesh 😀 \n\t\r\"\\" },
+        { "nativeBody": "\\u{1f600}\\u{0}\\u{10ffff}", "jsonBody": "\\ud83d\\ude00\\u0000\\udbff\\udfff", "text": "😀\u0000􏿿" },
+        { "nativeBody": "", "jsonBody": "", "text": "" }
+      ],
+      "invalid": ["\\", "\\q", "\\u0", "\\u{}", "\\u{d800}", "\\u{110000}", "\\u{0000000}"]
+    },
     "publication": "after-exact-end-and-typed-conversion",
     "restorationNative": "payload data={nested=[\"Mesh 😀 \\\\ \\\" Label\\n\" {enabled=true nothing=null}] numbers=[0 42 -7 1.5]}",
     "restorationSemantic": {

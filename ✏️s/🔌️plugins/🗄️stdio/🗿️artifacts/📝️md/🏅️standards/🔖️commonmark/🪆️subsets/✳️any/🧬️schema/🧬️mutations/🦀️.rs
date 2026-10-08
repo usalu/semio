@@ -48,6 +48,8 @@ pub mod remove_block;
 pub mod replace_block;
 #[path = "✏️set-inlines/🦀️.rs"]
 pub mod set_inlines;
+#[path = "✂️splice-source/🦀️.rs"]
+pub mod splice_source;
 /// 📐️ Typed content mutation for `stdio.md`. Every `path`-carrying variant addresses the
 /// CONTAINER (the `Vec<MdBlock>` -- top level, a block-quote's `blocks`, or a list item's
 /// content) the mutation's `index` lives in; `path == []` addresses the top-level `blocks`.
@@ -78,6 +80,9 @@ pub enum MdMutation {
     /// graceful no-op (empty diff) if the addressed block isn't one of those two kinds --
     /// documented degrade-gracefully behavior, never a panic.
     SetInlines(set_inlines::SetInlines),
+    /// ✂️ Applies the ranges an editor made to the CommonMark source text (the blocks rendered, blank-line separated): the blocks the
+    /// ranges touch and their neighbours are reparsed from the edited source, every other block stays.
+    SpliceSource(splice_source::SpliceSource),
 }
 //#endregion 🔖️Mutations
 
@@ -90,24 +95,10 @@ pub enum MdMutation {
 /// names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration:
 /// `no` is not an approved semantic verb) and is handled directly by that adapter's `mutate`/
 /// `inverse` functions rather than through this vocabulary.
-pub const KINDS: &[&str] = &["insert-block", "remove-block", "replace-block", "set-inlines"];
+pub const KINDS: &[&str] = &["insert-block", "remove-block", "replace-block", "set-inlines", "splice-source"];
 //#endregion 🔖️Kinds
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
-/// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
-/// apply path.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> protocol::MutationOutcome<MdDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion 🔖️Apply
 
@@ -172,6 +163,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
             ],
         }),
         MdMutation::SetInlines(set_inlines::SetInlines { path: vec![MdPathStep::ListItem { index: 0, item: 0 }], index: 5, inlines: Vec::new() }),
+        MdMutation::SpliceSource(splice_source::SpliceSource { splices: vec![splice_source::SourceSplice { offset: 1, delete: 1, insert: "ho".into() }, splice_source::SourceSplice { offset: 2, delete: 0, insert: "\n\n# t".into() }] }),
     ]
 }
 //#endregion 🔖️DemoCases

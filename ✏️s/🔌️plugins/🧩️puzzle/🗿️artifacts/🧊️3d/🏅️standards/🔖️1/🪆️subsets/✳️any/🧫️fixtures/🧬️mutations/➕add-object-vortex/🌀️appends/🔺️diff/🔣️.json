@@ -4,34 +4,37 @@
   "domain": null,
   "meta": null,
   "objects": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "object-b",
         "patch": {
           "vortices": {
-            "added": [
+            "inserted": [
               {
-                "hidden": false,
-                "id": "vortex-3",
-                "locked": false,
-                "position": [
-                  0.0,
-                  0.0,
-                  1.0
-                ],
-                "vortexKind": "vortex-kind-b"
+                "index": 1,
+                "row": {
+                  "hidden": false,
+                  "id": "vortex-3",
+                  "locked": false,
+                  "position": [
+                    0.0,
+                    0.0,
+                    1.0
+                  ],
+                  "vortexKind": "vortex-kind-b"
+                }
               }
             ],
-            "patched": [],
-            "removed": [],
-            "reordered": null
+            "modified": [],
+            "moved": [],
+            "removed": []
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "references": null,
   "schema": null,

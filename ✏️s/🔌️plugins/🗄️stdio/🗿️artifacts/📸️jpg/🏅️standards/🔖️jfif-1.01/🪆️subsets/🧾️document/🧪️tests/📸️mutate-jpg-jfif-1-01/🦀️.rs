@@ -15,6 +15,7 @@
 //! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
 //! compiles the local implementation.
 
+use semio_s_artifact_stdio_jpg::apply_mutation;
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_jpg_mutation};
 use semio_repo_test_host::law;
@@ -67,7 +68,7 @@ const RASTER_KINDS: &[&str] = &["replace-pixels"];
 /// codec, and the baseline both the observability and the inverse law are stated against.
 ///
 /// It is deliberately NOT the committed bytes. JPEG is lossy and both encoders regenerate their
-/// quantization tables from `re_encode_quality` rather than preserving the scanner's, so a single
+/// quantization tables from explicit physical options rather than preserving the scanner's, so a single
 /// decode/re-encode already moves the raster and replaces the DQT. Measuring "did this mutation
 /// change anything" or "did the inverse restore it" against the untouched scan would fold that
 /// unavoidable normalization into every scenario — making every kind look observable and every
@@ -138,7 +139,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, JpgMutation};
+    use semio_s_artifact_stdio_jpg::schema::mutations::{JpgMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
@@ -157,7 +158,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let bytes = mutable_input(ctx)?;
         let mut snapshot = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
-        apply_jpg_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let output = encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| format!("encode_jpg failed: {error:?}"))?;
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -176,9 +177,9 @@ mod subject {
         let base = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
-        apply_jpg_mutation(&mut snapshot, &mutation);
-        for undo in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_jpg_mutation(&mut snapshot, &undo);
+        apply_mutation(&mut snapshot, &mutation);
+        for undo in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &undo);
         }
         let output = encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;
         if output == bytes {

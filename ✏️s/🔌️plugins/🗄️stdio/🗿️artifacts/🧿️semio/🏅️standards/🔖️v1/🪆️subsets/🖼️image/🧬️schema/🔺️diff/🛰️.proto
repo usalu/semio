@@ -19,7 +19,7 @@ message SemioImageMetadataEntry { string key = 1; string value = 2; }
 message SemioImageMetadataDiff {
   repeated string removed = 1;
   repeated NamedModifiedMetadata modified = 2;
-  repeated SemioImageMetadataEntry added = 3;
+  repeated SemioImageMetadataEntryAdded added = 3;
 }
 
 message SemioImageDiff {
@@ -31,3 +31,5 @@ message SemioImageDiff {
   SemioImageFramesDiff frames = 6;
   SemioImageMetadataDiff metadata = 7;
 }
+
+message SemioImageMetadataEntryAdded { uint64 index = 1; SemioImageMetadataEntry item = 2; }

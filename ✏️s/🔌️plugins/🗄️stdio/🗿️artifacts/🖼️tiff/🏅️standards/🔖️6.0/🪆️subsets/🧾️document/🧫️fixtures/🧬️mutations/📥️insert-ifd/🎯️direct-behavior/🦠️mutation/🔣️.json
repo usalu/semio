@@ -1,6 +1,7 @@
 {
   "mutation": "insert-ifd",
   "payload": {
+    "index": 1,
     "ifd": {
       "entries": [
         {
@@ -8,29 +9,12 @@
           "values": {
             "kind": "ascii",
             "value": [
-              68,
-              105,
-              114,
-              101,
-              99,
-              116,
-              32,
-              79,
-              119,
-              110,
-              101,
-              114
+              "Direct Owner"
             ]
           }
         }
       ],
-      "storage": {
-        "kind": "none",
-        "offsetsKind": "long",
-        "byteCountsKind": "long",
-        "chunks": []
-      }
-    },
-    "index": 1
+      "blocks": []
+    }
   }
 }

@@ -1,6 +1,53 @@
 //! 🎒️ Concrete Semio tessellation cost and cache laws.
 use semio_framework_os_flow::mesh::*;
 use semio_s_spatial_kernel_semio_session::{Session, TessellationStepOutcome};
+
+#[test]
+fn original_session_cold_validation_remains_inside_each_granted_turn() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧊️validation/🔣️.json")).unwrap();
+    let session = Session::new();
+    let created: serde_json::Value = serde_json::from_str(&session.brep_invoke_json("box", &fixture["box"].to_string())).unwrap();
+    let handle = created["handle"].as_str().unwrap();
+    let tolerance = fixture["tolerance"].as_f64().unwrap();
+    let mut traces = Vec::new();
+    traces.push(session.tessellate_step(handle, tolerance, fixture["probeUnits"].as_u64().unwrap() as usize));
+    for _ in 0..fixture["initialTurns"].as_u64().unwrap() { traces.push(session.tessellate_step(handle, tolerance, fixture["turnUnits"].as_u64().unwrap() as usize)); }
+    let cancelled = session.cancel_tessellation(handle, tolerance);
+    let cancelled_progress = session.tessellation_progress(handle, tolerance);
+    let mesh = session.tessellate_geometry(handle, tolerance).unwrap();
+    let point = |id: u32| { let i = id as usize * 3; [mesh.positions[i] as f64, mesh.positions[i + 1] as f64, mesh.positions[i + 2] as f64] };
+    let mut area = 0.0;
+    let mut volume = 0.0;
+    for ids in mesh.indices.chunks_exact(3) {
+        let [a, b, c] = [point(ids[0]), point(ids[1]), point(ids[2])];
+        let u = std::array::from_fn::<_, 3, _>(|i| b[i] - a[i]);
+        let v = std::array::from_fn::<_, 3, _>(|i| c[i] - a[i]);
+        let cross = [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]];
+        area += cross.iter().map(|value| value*value).sum::<f64>().sqrt()/2.0;
+        volume += (a[0]*(b[1]*c[2]-b[2]*c[1]) + a[1]*(b[2]*c[0]-b[0]*c[2]) + a[2]*(b[0]*c[1]-b[1]*c[0]))/6.0;
+    }
+    let triangles = mesh.indices.len()/3;
+    session.evict_mesh_cache_for_handle(handle);
+    session.close();
+    assert!(cancelled);
+    assert!(cancelled_progress.is_none());
+    let mut done = 0;
+    for trace in traces {
+        match trace {
+            TessellationStepOutcome::Working { units_done, units_total, faces_done, faces_total, phase } => {
+                assert_eq!(phase, fixture["phase"].as_str().unwrap());
+                assert!(units_done >= done && units_done <= done + 1 && units_done <= units_total);
+                assert_eq!((faces_done, faces_total), (0, 0));
+                done = units_done;
+            }
+            other => panic!("cold validation left its original funded phase: {other:?}"),
+        }
+    }
+    assert_eq!(triangles, fixture["expected"]["triangles"].as_u64().unwrap() as usize);
+    assert!((area - fixture["expected"]["area"].as_f64().unwrap()).abs() < 1e-8);
+    assert!((volume - fixture["expected"]["volume"].as_f64().unwrap()).abs() < 1e-8);
+    eprintln!("[DEBUG] original Session cold validation turns={done} cancelled={cancelled} triangles={triangles} area={area} volume={volume}");
+}
 // #region 📏️RealMeshCost
 /// ⚖️ LAW: on a REAL tessellated solid (not a toy triangle) the binary body is at least twice as
 /// small as the JSON number-array string. Prints the measured bytes per LOD under `--nocapture` —

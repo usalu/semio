@@ -88,9 +88,6 @@ impl protocol::DiffAlgebra<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfi
             animation: self.animation.as_ref().map(|_| base.animation.clone()),
         }
     }
-    fn between(base: &Fem2dResultsWindowConfig, other: &Fem2dResultsWindowConfig) -> Self {
-        Self::replacing(other).against(base)
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none() && self.result_source_id.is_none() && self.result_mode.is_none() && self.result_mode_index.is_none() && self.animation.is_none()
     }

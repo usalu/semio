@@ -1,3 +1,17 @@
 grammar Semio_mp3_snapshot;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.mp3.snapshot' ;
+document: 'schema' '=' text id3v2? audioFrames id3v1? EOF;
+id3v2: 'id3v2' '=' 'frames' '=' '[' id3Frame* ']';
+id3Frame: '{' 'id' '=' text id3Content '}';
+id3Content: 'text' values | 'user-text' 'description' '=' text values | ('comment' | 'lyrics') 'language' '=' text 'description' '=' text 'text' '=' text | 'url' 'url' '=' text | 'user-url' 'description' '=' text 'url' '=' text | 'picture' 'mime' '=' text 'picture-type' '=' INT 'description' '=' text 'payload' '=' STRING | 'opaque' 'bytes' '=' STRING;
+values: 'values' '=' '[' text+ ']';
+id3v1: 'id3v1' '=' 'title' '=' text 'artist' '=' text 'album' '=' text 'year' '=' text 'comment' '=' text ('track' '=' INT)? ('genre' '=' INT)?;
+audioFrames: 'frames' '=' '[' audioFrame* ']';
+audioFrame: '{' 'payload' '=' STRING 'header' '=' audioHeader '}';
+audioHeader: 'mpeg-version-id' '=' INT 'layer' '=' INT 'protection-bit' '=' boolean 'bitrate-index' '=' INT 'sample-rate-index' '=' INT 'padding' '=' boolean 'private-bit' '=' boolean 'channel-mode' '=' INT 'mode-extension' '=' INT 'copyright' '=' boolean 'original' '=' boolean 'emphasis' '=' INT;
+boolean: 'true' | 'false';
+text: STRING | IDENT | INT | FLOAT;
+STRING: '"' ('\\' . | ~["\\])* '"';
+INT: '-'? [0-9]+;
+FLOAT: '-'? [0-9]+ '.' [0-9]+;
+IDENT: [A-Za-z_] [A-Za-z_0-9./:-]*;
+WS: [ \t\r\n]+ -> skip;

@@ -1,0 +1,27 @@
+{
+  "pdf": {
+    "cos": {
+      "kind": "int",
+      "value": 9007199254740991
+    },
+    "function": {
+      "kind": "exponential",
+      "domain": [
+        0,
+        1
+      ],
+      "range": null,
+      "c0": [
+        0
+      ],
+      "c1": [
+        1
+      ],
+      "n": 1.5
+    }
+  },
+  "word": {
+    "number": 1.5,
+    "bits": "3ff8000000000000"
+  }
+}

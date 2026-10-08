@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeTileMedia` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::{Wfc2dDiff, Wfc2dRowPatch, Wfc2dRows, Wfc2dTilePatch};
+use crate::diff::{Wfc2dDiff, Wfc2dTilePatch, Wfc2dTilesDelta, Wfc2dTilesModification};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::ChangeTileMedia, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -11,5 +11,5 @@ pub fn diff(payload: &super::ChangeTileMedia, base: &Wfc2dSnapshot) -> protocol:
     if tile.media == payload.media {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already carries that media.", payload.tile_id));
     }
-    protocol::MutationOutcome::new(Wfc2dDiff { tiles: Wfc2dRows { patched: vec![Wfc2dRowPatch { id: tile.id.clone(), patch: Wfc2dTilePatch { media: Some(payload.media.clone()), ..Default::default() } }], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { tiles: Wfc2dTilesDelta { modified: vec![Wfc2dTilesModification { id: tile.id.clone(), patch: Wfc2dTilePatch { media: Some(payload.media.clone()), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

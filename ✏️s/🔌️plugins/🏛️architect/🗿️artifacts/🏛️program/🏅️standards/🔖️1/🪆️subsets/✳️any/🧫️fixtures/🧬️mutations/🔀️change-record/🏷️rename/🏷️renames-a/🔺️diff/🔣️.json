@@ -55,9 +55,10 @@
   "approvals": null,
   "meetings": null,
   "changes": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "change-record-a",
         "patch": {
@@ -90,8 +91,7 @@
           "auditEventIds": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "collaboration": null,
   "analyses": null,

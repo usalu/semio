@@ -172,11 +172,14 @@ where
                 }
             }
             1 => {
+                if app_store::ArtifactStoreOneItemSealer::<S, M>::constructor_demand().admit(grant.retained_grant()).is_err() {
+                    return Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked);
+                }
                 let (post, inverse) = self.copy.as_mut().ok_or_else(|| format!("{}-copy-owner", self.prefix))?.take_result().ok_or_else(|| format!("{}-copy-result", self.prefix))?;
                 let mutation = self.mutation.take().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-owner", self.prefix))?;
                 let edit = authority.next_edit(mutation, vec![inverse]);
-                self.sealer = Some(authority.begin_one_item_seal(edit, Arc::new(post), Arc::clone(&self.mutation_retirement), Arc::clone(&self.snapshot_retirement)));
+                self.sealer = Some(Arc::clone(authority).begin_one_item_seal(edit, Arc::new(post), Arc::clone(&self.mutation_retirement), Arc::clone(&self.snapshot_retirement), grant.retained_grant()).unwrap_or_else(|_| unreachable!("pre-admitted exact Semio sealer birth")).0);
                 self.seal_base_checkpoint = Some(self.checkpoint);
                 self.phase = 2;
                 Ok(self.progress(1, 0))

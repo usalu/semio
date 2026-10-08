@@ -98,11 +98,10 @@ pub fn canonical(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
 /// 🏷️ The diff that re-stamps `FILE_DESCRIPTION`'s first description string to `ViewDefinition [<view>]`; the empty diff when it already is.
 pub fn view_definition_diff(base: &Ifc2x3Snapshot, view: &str) -> Ifc2x3Diff {
     let stamped = Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]);
-    let mut description = base.document.header.file_description.clone();
-    match description.first_mut() {
-        Some(slot) => *slot = stamped,
-        None => description.push(stamped),
-    }
+    let description: Vec<Part21Value> = match base.document.header.file_description.split_first() {
+        Some((_, rest)) => std::iter::once(stamped).chain(rest.iter().cloned()).collect(),
+        None => vec![stamped],
+    };
     if description == base.document.header.file_description {
         return Ifc2x3Diff::default();
     }
@@ -120,10 +119,8 @@ pub fn argument_diff(base: &Ifc2x3Snapshot, id: u64, expect: &[&str], index: usi
     if args.get(index) == Some(&value) {
         return Ok(Ifc2x3Diff::default());
     }
-    let mut replacement = instance.clone();
-    let args = &mut replacement.entities[0].1;
-    args.resize(args.len().max(index + 1), Part21Value::Unset);
-    args[index] = value;
+    let padded: Vec<Part21Value> = args.iter().cloned().chain(std::iter::repeat(Part21Value::Unset)).take(args.len().max(index + 1)).enumerate().map(|(at, existing)| if at == index { value.clone() } else { existing }).collect();
+    let replacement = Part21Instance { id: instance.id, entities: std::iter::once((name.clone(), padded)).chain(instance.entities.iter().skip(1).cloned()).collect() };
     Ok(Ifc2x3Diff { upserted_instances: vec![replacement], ..Default::default() })
 }
 
@@ -172,6 +169,11 @@ pub fn standing(base: &Ifc2x3Snapshot, id: u64, expect: &[&str]) -> Standing {
         (Some(_), _) => Standing::Foreign,
         _ => Standing::Absent,
     }
+}
+
+/// 🧬️ The base instance `rebuilt` stands for, when rebuilding it from its typed row would lose something (an attribute no row field carries); `None` when the row is exact.
+pub fn exact_instance_if_lossy(base: &Ifc2x3Snapshot, rebuilt: Part21Instance) -> Option<Part21Instance> {
+    base.document.instance(rebuilt.id).filter(|actual| **actual != rebuilt).cloned()
 }
 
 /// 🧩️ The diff that sets (`Some`, at `index` when new) or clears (`None`) one MVD concept's instance; an id held by an unrelated entity is an error.

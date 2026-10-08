@@ -19,7 +19,7 @@ fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
         let order=document.layers.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
         let mutations=plan(&document,&["converted".into()],"toPath").unwrap();
         assert_eq!(mutations.len(),2);
-        for mutation in mutations { crate::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap(); }
+        for mutation in mutations { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap(); }
         assert_eq!(document.layers.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>(),order);
         let DrawingLayerNode::Path(path)=&document.layers[1] else { panic!("Expected path") };
         assert_eq!(path.base,original);
@@ -41,7 +41,7 @@ fn conversion_preserves_distinct_parents_and_rejects_locked_or_unsupported_selec
     let original=DrawingSnapshot { layers:vec![a,group].into(),..Default::default() };
     let ids=vec!["a".into(),"b".into()];
     let mut converted=original.clone();
-    for mutation in plan(&original,&ids,"toPath").unwrap() { crate::mutations::apply_drawing_mutation(&mut converted,&mutation).unwrap(); }
+    for mutation in plan(&original,&ids,"toPath").unwrap() { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut converted,&mutation).unwrap(); }
     for id in &ids {
         assert!(matches!(find_drawing_layer(&converted,id),Some(DrawingLayerNode::Path(_))));
         assert_eq!(find_drawing_layer_location(&original,id).unwrap().parent_id,find_drawing_layer_location(&converted,id).unwrap().parent_id);
@@ -65,7 +65,7 @@ fn selection_operation_fixtures() {
         let ids = serde_json::from_value::<Vec<String>>(case["ids"].clone()).unwrap();
         let operations = plan(&document, &ids, case["operation"].as_str().unwrap()).unwrap();
         let mut output = document.clone();
-        for operation in operations { crate::mutations::apply_drawing_mutation(&mut output, &operation).unwrap(); }
+        for operation in operations { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output, &operation).unwrap(); }
         if let Some(count) = case["rootCount"].as_u64() { assert_eq!(output.layers.len(), count as usize, "{case}"); }
         if let Some(order) = case["order"].as_array() { assert_eq!(output.layers.iter().map(|layer| layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(), order.iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "{case}"); }
         if let Some(bounds) = case["bounds"].as_array() {
@@ -86,7 +86,7 @@ fn repeated_duplication_preserves_unique_descendant_ids() {
     let id = layer_base(&group).id.clone();
     let mut document = DrawingSnapshot { layers: vec![group].into(), ..Default::default() };
     for _ in 0..2 {
-        for mutation in plan(&document, &[id.to_string_owner()], "duplicate").unwrap() { crate::mutations::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
+        for mutation in plan(&document, &[id.to_string_owner()], "duplicate").unwrap() { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
     }
     let ids = document.layers.iter().flat_map(|layer| match layer { DrawingLayerNode::Group(group) => vec![group.base.id.clone(), layer_base(&group.children[0]).id.clone()], _ => unreachable!() }).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(ids.len(), 6);
@@ -133,7 +133,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
         if case["after"].is_null() {assert!(result.is_err(),"{}",case["name"]);continue;}
         let mutations=result.unwrap();
         let mut output=document.clone();
-        for mutation in mutations {crate::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
+        for mutation in mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         let mut actual=std::collections::BTreeMap::new();visit(&output.layers,[1.0,0.0,0.0,1.0,0.0,0.0],&mut actual);
         let expected:std::collections::BTreeMap<String,[f64;4]>=serde_json::from_value(case["after"].clone()).unwrap();
         assert_eq!(actual.len(),expected.len());
@@ -161,7 +161,7 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
         assert_eq!(document,saved);
         if case["order"]==case["after"] {assert!(mutations.is_empty(),"{}",case["name"]);}
         let mut output=document.clone();
-        for mutation in mutations {crate::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
+        for mutation in mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         let layers=if nested {let DrawingLayerNode::Group(group)=&output.layers[0] else {unreachable!()}; &group.children}else {&output.layers};
         assert_eq!(layers.iter().map(|layer|layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(),case["after"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>(),"{}",case["name"]);
     }}
@@ -180,7 +180,7 @@ fn ungroup_matches_shared_structure_transform_and_selection_cases() {
         let (mutations,selection)=result.unwrap();
         assert_eq!(selection,serde_json::from_value::<Vec<String>>(case["selection"].clone()).unwrap());
         let mut output=document.clone();
-        for mutation in mutations {crate::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
+        for mutation in mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         assert_eq!(output.layers.iter().map(|layer|layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(),case["order"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>());
         for (id,expected) in case["matrices"].as_object().unwrap() {
             let base=layer_base(find_drawing_layer(&output,id).unwrap());

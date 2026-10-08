@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "cases": [
+    "physical-codecs/extension-1",
+    "physical-codecs/extension-2"
+  ],
+  "maximumBytes": 4294967296,
+  "maximumWork": 200000,
+  "budgetMs": 300000
+}

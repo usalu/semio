@@ -16,7 +16,6 @@ use super::delete_tiles;
 use super::rename_tile;
 use super::reorder_tiles;
 use super::replace_source;
-use super::replace_tiles;
 use super::resize_source_frame;
 use super::resize_tile_crop;
 //#endregion 🔖️MutationLeaves
@@ -27,7 +26,7 @@ use super::resize_tile_crop;
 /// triad leaf; `#[derive(dsl::Mutations)]` wires `Mutation`/`SemanticMutation` from those leaves.
 /// `source` (a singleton facet) gets `replace-source`/`resize-source-frame`; `tiles` (an id-keyed
 /// ordered collection) gets `create`/`delete`/`delete-tiles`/`rename`/`resize-tile-crop`/`reorder`/
-/// `replace-tiles` per `derivation-rules.md`'s per-id-keyed-collection recipe. Replaces the former
+/// the concrete tile kinds per `derivation-rules.md`'s per-id-keyed-collection recipe. Replaces the former
 /// generic whole-collection `Tiles(...)`/`SetSource`/`SetTiles`/whole-document-replacement
 /// vocabulary — whole-document replacement is not expressible as an in-history mutation at all
 /// (goes through `ArtifactStore::reset`, an app-level concern outside this enum).
@@ -42,7 +41,6 @@ pub enum PresentationMutation {
     RenameTile(rename_tile::RenameTile),
     ResizeTileCrop(resize_tile_crop::ResizeTileCrop),
     ReorderTiles(reorder_tiles::ReorderTiles),
-    ReplaceTiles(replace_tiles::ReplaceTiles),
 }
 
 /// 🏷️ The kebab spelling of every [`PresentationMutation`] variant, in DECLARATION ORDER — the one list
@@ -51,7 +49,7 @@ pub enum PresentationMutation {
 /// (`../../🔣️oracle.json`), which the completeness gate counts, and the
 /// `🧭️mutate-presentation-1` case adapter, which must not link this crate in the oracle role.
 /// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
-pub const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"];
+pub const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles"];
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests

@@ -1,6 +1,7 @@
 /** 🔤️ Handwritten font descriptors, intrinsic programs, Unicode and CID encodings. */
 import type { PdfFont, PdfFontKind, PdfCharProc, PdfFontDescriptor, PdfFontProgram, PdfSimpleEncoding, PdfBaseEncoding, PdfToUnicode, PdfToUnicodeMapping, PdfCMap, PdfCodespaceRange, PdfCidMapping, PdfCidFont, PdfCidToGid, PdfCidWidthRun, PdfCidVerticalRun, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type SqliteRow, type PdfCell } from "../🧩️entity/🟦️.ts";
+import {writePdfArtifactReference,readPdfArtifactReference} from "../📦️artifact-reference/🟦️.ts";
 import { writePdfDictionary, readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfOperations, readPdfOperations, pdfContentNumberColumns } from "../🖋️content/🟦️.ts";
 import { artifactSqliteInteger, artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
@@ -35,19 +36,10 @@ export async function readPdfFontDescriptor(reader: PdfReader, key: bigint): Pro
   return { fontName: await reader.text(row, 1), flags: pdfNumber(row, 2), fontBbox: [number(3), number(4), number(5), number(6)], italicAngle: number(7), ascent: number(8), descent: number(9), capHeight: number(10), stemV: number(11), stemH: optional(12), xHeight: optional(13), leading: optional(14), avgWidth: optional(15), maxWidth: optional(16), missingWidth: optional(17), fontFamily: await reader.optionalText(row, 18), fontStretch: await reader.optionalText(row, 19), fontWeight: optional(20), charSet: await reader.optionalText(row, 21), extra: await readPdfDictionary(reader, artifactSqliteInteger(row, 22)) };
 }
 
-/** 🅰️ Preserve font program bytes as intrinsic program entities, with Type1 segment lengths. */
-export async function writePdfFontProgram(out: PdfProjection, value: PdfFontProgram): Promise<bigint> {
-  const lengths = value.kind === "type1" ? [pdfInteger(value.length1), pdfInteger(value.length2), pdfInteger(value.length3)] : [null, null, null];
-  if (!["type1", "trueType", "cff", "cidCff", "openType"].includes(value.kind)) throw new Error("Unknown PDF font program");
-  return out.insert("pdf_font_program", [value.kind, await out.bytes(value.data), ...lengths]);
-}
-/** 📥️ Reject program parameters that do not belong to the actual program variant. */
-export async function readPdfFontProgram(reader: PdfReader, key: bigint): Promise<PdfFontProgram> {
-  const row = await reader.take("pdf_font_program", key, 6);
-  const kind = artifactSqliteText(row, 1); const data = await reader.bytes(row, 2);
-  if (kind !== "type1") reader.nullExcept("pdf_font_program", row, 3, 6, []);
-  switch (kind) { case "type1": return { kind, data, length1: pdfNumber(row, 3), length2: pdfNumber(row, 4), length3: pdfNumber(row, 5) }; case "trueType": case "cff": case "cidCff": case "openType": return { kind, data }; default: throw new Error("Unknown PDF program variant"); }
-}
+/** 🅰️ Preserve the semantic font kind and independently admitted native artifact reference. */
+export async function writePdfFontProgram(out:PdfProjection,value:PdfFontProgram):Promise<bigint>{if(!["type1","trueType","cff","cidCff","openType"].includes(value.kind))throw new Error("Unknown PDF font program");return out.insert("pdf_font_program",[value.kind,await writePdfArtifactReference(out,value.reference)]);}
+/** 📥️ Restore explicit font artifact custody without encoded program bodies. */
+export async function readPdfFontProgram(reader:PdfReader,key:bigint):Promise<PdfFontProgram>{const row=await reader.take("pdf_font_program",key,3);const kind=artifactSqliteText(row,1);const reference=await readPdfArtifactReference(reader,artifactSqliteInteger(row,2));switch(kind){case "type1":case "trueType":case "cff":case "cidCff":case "openType":return {kind,reference};default:throw new Error("Unknown PDF font program");}}
 
 function encodingBase(value: string | null): PdfBaseEncoding | null { switch (value) { case null: case "standard": case "winAnsi": case "macRoman": case "macExpert": return value; default: throw new Error("Unknown PDF base encoding"); } }
 /** 🔡️ Preserve the optional base and every ordered difference, including duplicate codes. */
@@ -113,10 +105,11 @@ export async function writePdfCidFont(out: PdfProjection, font: PdfCidFont): Pro
   const system = font.systemInfo ?? { registry: "Adobe", ordering: "Identity", supplement: 0 };
   const vertical = font.defaultVertical ?? null;
   if (vertical !== null && vertical.length !== 2) throw new Error("PDF vertical defaults require both metric components");
-  let gidKind: string | null = null; let gidData: Uint8Array | null = null;
-  if (font.cidToGid != null) { switch (font.cidToGid.kind) { case "identity": gidKind = "identity"; break; case "map": gidKind = "map"; gidData = await out.bytes(font.cidToGid.data); break; default: throw new Error("Unknown PDF CID to glyph mapping"); } }
+  let gidKind: string | null = null; let gidData: bigint | null = null;
+  if (font.cidToGid != null) { switch (font.cidToGid.kind) { case "identity": gidKind = "identity"; break; case "map": gidKind = "map"; gidData = pdfInteger(font.cidToGid.glyphs.length); break; default: throw new Error("Unknown PDF CID to glyph mapping"); } }
   const key = await out.insert("pdf_cid_font", [font.trueType ? 1n : 0n, font.baseFont, system.registry, system.ordering, pdfInteger(system.supplement), descriptor, font.defaultWidth ?? { bits: 0x408f400000000000n }, vertical?.[0] ?? null, vertical?.[1] ?? null, gidKind, gidData, program, extra]);
   out.checkRowsAdditional((font.widths?.length ?? 0) + (font.verticalMetrics?.length ?? 0));
+  if(font.cidToGid?.kind==="map"){out.checkRowsAdditional(font.cidToGid.glyphs.length);for(const[ordinal,glyph]of font.cidToGid.glyphs.entries())await out.insert("pdf_cid_glyph",[key,BigInt(ordinal),pdfInteger(glyph,16)]);}
   for (const [ordinal, run] of (font.widths ?? []).entries()) {
     out.checkRowsAdditional(run.widths.length + 1);
     const runKey = await out.insert("pdf_cid_width_run", [key, BigInt(ordinal), pdfInteger(run.startCid)]);
@@ -136,7 +129,7 @@ export async function readPdfCidFont(reader: PdfReader, key: bigint): Promise<Pd
   const y = optionalReal(reader, "pdf_cid_font", row, 8); const width = optionalReal(reader, "pdf_cid_font", row, 9);
   if ((y === null) !== (width === null)) throw new Error("PDF vertical defaults require both metric components");
   const gidKind = await reader.optionalText(row, 10); let cidToGid: PdfCidToGid | null = null;
-  switch (gidKind) { case null: case "identity": reader.nullExcept("pdf_cid_font", row, 11, 12, []); cidToGid = gidKind === null ? null : { kind: "identity" }; break; case "map": cidToGid = { kind: "map", data: await reader.bytes(row, 11) }; break; default: throw new Error("Unknown PDF CID to glyph mapping"); }
+  switch (gidKind) { case null: case "identity": reader.nullExcept("pdf_cid_font", row, 11, 12, []); cidToGid = gidKind === null ? null : { kind: "identity" }; break; case "map": {const glyphs:number[]=[];for(const child of await reader.children("pdf_cid_glyph",1,2,key)){const value=await reader.take("pdf_cid_glyph",child.rowid,4);glyphs.push(pdfNumber(value,3,16));}if(glyphs.length!==pdfNumber(row,11))throw new Error("PDF CID glyph count mismatch");cidToGid={kind:"map",glyphs};} break; default: throw new Error("Unknown PDF CID to glyph mapping"); }
   const widths: PdfCidWidthRun[] = []; const verticalMetrics: PdfCidVerticalRun[] = [];
   for (const child of await reader.children("pdf_cid_width_run", 1, 2, key)) {
     const run = await reader.take("pdf_cid_width_run", child.rowid, 4); const values: Binary64[] = [];

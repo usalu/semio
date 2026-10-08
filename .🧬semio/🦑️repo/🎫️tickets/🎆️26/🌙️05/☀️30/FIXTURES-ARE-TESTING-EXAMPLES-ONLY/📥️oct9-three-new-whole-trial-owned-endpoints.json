@@ -1,0 +1,68 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧬️schema/🔣️.json",
+      "beforeSha256": "393adc926a6b87c02d344035293db539316ff4619e34d0eef553120dd3a37741",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧬️schema/🧹️retirement/🔣️.json",
+      "beforeSha256": "27561879a42977b3424c8c70c2f1da75af6bbcff56ec9926ed1f6a1e8e8efed9",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🌱️entry/🔣️.json",
+      "beforeSha256": "c495264de2521909cac44df57fc68fa892bdff7f6b852592504a9148ee32d3fe",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🟦️.ts",
+      "beforeSha256": "186411d3154c8bcfba55e6bc30ac5b585abd712b5bb25fffac2d0c60f3ea4d2b",
+      "afterSha256": "3e1efe129e1ed413e90b6c89c1901023079c723856c23c04bacc20027f70780a",
+      "action": "updated",
+      "qualification": "whole test-envelope schema validator only; genuine production/domain assertions retained"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🟦️.ts",
+      "beforeSha256": "61279c3271cd828669727e837cd26e1275e2d88f142cdb60a0699f7d2a0452fe",
+      "afterSha256": "47adabd4965eb39157c081c8f569feada1c78795cae86d26670447bd741d48a5",
+      "action": "updated",
+      "qualification": "whole test-envelope schema validator only; genuine production/domain assertions retained"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts",
+      "beforeSha256": "6786ae7e85091bfb653e71b09dce5b47082d98adf93ebf9624c64c3f1a0a0173",
+      "afterSha256": "308d1375383c2cc06c1a76f2828a2004e762d4b97e07b9674cbc8a080833d0dd",
+      "action": "updated",
+      "qualification": "whole test-envelope schema validator only; genuine production/domain assertions retained"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "5716cef2577254ce1e9762e4ad8dad6ada52d0012cf0823f96ef799ce87d2d2f",
+      "afterSha256": "3333d5621a4e61beaeeb5e5c03f24dd7ef97df404b001fcac3157154e7d06b15",
+      "action": "updated",
+      "qualification": "existing current-corpus explicit reviewed AST guards and neutral test selection; exact final wire call anchor appends actual owned/fold behavioral files"
+    }
+  ],
+  "observedNotAuthored": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧫️fixtures/🔣️.json",
+      "sha256": "b6b74abc7aba116f4fc4e3161d332364e1b320031fcdffd67f322a459f3befeb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧫️fixtures/🧹️retirement/🔣️.json",
+      "sha256": "4b6f206623b494fe4a650f952fb9d65c2db7d31cc7f4a207b234cdca422e66bb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🌱️entry/🔣️.json",
+      "sha256": "1093fb7ec2fb79ac4beb820304c395a919959655ec2fa567ea667e141d5e697b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧬️schema/🔣️.json",
+      "sha256": "74e51909c391016cdb6662e2ec2a5661b2ad3517d0dbf3977ca95a1868a193c7"
+    }
+  ]
+}

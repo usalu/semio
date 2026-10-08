@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-08T19:26:25.284Z",
+  "state": "two owned Surface endpoints frozen; source28362 Nx0/843ms3/84; native integration unverified due current FrameworkJob23 refusal before Surface",
+  "ownedEndpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🦀️.rs",
+      "beforeSha256": "d3f2ee7d58556d58b5d0948b0e4473aaa32c6c73142515d4034bb43efe9e1261",
+      "afterSha256": "e1995d6c0c2df1c3372885c988ca8c42aa414dc7e08c84046f1dddeb30dd5e0d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🦀️.rs",
+      "beforeSha256": "dabc4e768b91734d7477c77082224afb3e5c0d20b899faf52da6317ff0826f66",
+      "afterSha256": "a51feafbcfea80aa18efbb19d9f4ca726533581ee2fb4461d4399d84c641bc24"
+    }
+  ],
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs",
+      "sha256": "4c9972aeabf61f01140653b0af5601a594211d364fecdccdb09ec69c93d6bb26",
+      "role": "current producer/payload observer, not owned mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "6c445b880b3283c0a288e102ec58c4d2815c85fbdd80691d73f3633842270b6f",
+      "role": "current producer/payload observer, not owned mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "a1396d65234df81506a1cdbbc7421c2c1afca1bac2714aee739706c5b9431f88",
+      "role": "current producer/payload observer, not owned mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧬️schema/🔣️.json",
+      "sha256": "0aed5140d33e5ef5728a9d069f70236685c8ee9ae9bbcc85de81fec5bf611e4c",
+      "role": "current producer/payload observer, not owned mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧫️fixtures/🔣️.json",
+      "sha256": "57f2d5815835e7637aa09656f9640abfd38d237d307693356233284248bfa3a4",
+      "role": "current producer/payload observer, not owned mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧫️fixtures/📦️body/🔣️.json",
+      "sha256": "3766d97e4cfac9f38f348c8ab917969aef8b69420c87a7d3903c45afc46f1897",
+      "role": "current producer/payload observer, not owned mutation"
+    }
+  ],
+  "actualOriginalCompilerRed": 66487,
+  "intermediateNativeTransitionRefusal": 51822,
+  "pendingNativeCommand": "bun nx run @semio-tech/framework-surface-rs:test-scene-wire-native --skip-nx-cache --outputStyle=static",
+  "normalProducerHeld": true,
+  "postSourceOwnedCurrentness": [
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🦀️.rs",
+      "sha256": "e1995d6c0c2df1c3372885c988ca8c42aa414dc7e08c84046f1dddeb30dd5e0d",
+      "matchesFrozen": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🦀️.rs",
+      "sha256": "a51feafbcfea80aa18efbb19d9f4ca726533581ee2fb4461d4399d84c641bc24",
+      "matchesFrozen": true
+    }
+  ],
+  "sourceTerminal": {
+    "session": 28362,
+    "exitCode": 0,
+    "duration": "843ms",
+    "testsPassed": 3,
+    "assertions": 84,
+    "log": "🗑️generated/oct8-surface-current-fallible-demand-source.log"
+  }
+}

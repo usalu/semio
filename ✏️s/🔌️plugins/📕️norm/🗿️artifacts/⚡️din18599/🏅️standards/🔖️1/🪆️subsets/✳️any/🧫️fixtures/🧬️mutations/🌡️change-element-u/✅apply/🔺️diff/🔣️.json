@@ -10,25 +10,27 @@
   "automationClass": null,
   "zones": null,
   "elements": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "wall-n",
-        "labelEn": null,
-        "labelDe": null,
-        "kind": null,
-        "zoneId": null,
-        "areaM2": null,
-        "uValueWM2k": 0.18,
-        "orientationDeg": null,
-        "tiltDeg": null,
-        "gValue": null,
-        "fc": null,
-        "adjacency": null
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "kind": null,
+          "zoneId": null,
+          "areaM2": null,
+          "uValueWM2k": 0.18,
+          "orientationDeg": null,
+          "tiltDeg": null,
+          "gValue": null,
+          "fc": null,
+          "adjacency": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "heating": null,
   "dhw": null,
@@ -36,6 +38,5 @@
   "cooling": null,
   "lighting": null,
   "renewables": null,
-  "climate": null,
-  "climateTable": null
+  "climate": null
 }

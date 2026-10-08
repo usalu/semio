@@ -36,46 +36,49 @@
   "growth": null,
   "sustainability": null,
   "resilience": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "resilience-requirement-a",
-        "name": "Resilience Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
+        "index": 0,
+        "row": {
+          "id": "resilience-requirement-a",
+          "name": "Resilience Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "hazard": "",
+          "riskLevel": "negligible",
+          "scenario": null,
+          "recoveryTime": null,
+          "recoveryPoint": null,
+          "redundancy": [],
+          "hardeningMeasures": [],
+          "backupSystems": [],
+          "alternateSites": [],
+          "supplyChain": [],
+          "communicationPlan": [],
+          "drillRequirements": [],
+          "elementIds": [],
+          "infrastructureIds": [],
+          "standards": [],
+          "insuranceImplications": [],
+          "climateAdaptation": [],
           "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "hazard": "",
-        "riskLevel": "negligible",
-        "scenario": null,
-        "recoveryTime": null,
-        "recoveryPoint": null,
-        "redundancy": [],
-        "hardeningMeasures": [],
-        "backupSystems": [],
-        "alternateSites": [],
-        "supplyChain": [],
-        "communicationPlan": [],
-        "drillRequirements": [],
-        "elementIds": [],
-        "infrastructureIds": [],
-        "standards": [],
-        "insuranceImplications": [],
-        "climateAdaptation": [],
-        "ownerId": null,
-        "verificationPlan": null
+          "verificationPlan": null
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "costs": null,
   "delivery": null,

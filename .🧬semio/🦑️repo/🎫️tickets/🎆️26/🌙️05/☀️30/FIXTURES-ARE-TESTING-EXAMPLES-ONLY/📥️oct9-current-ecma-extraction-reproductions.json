@@ -1,0 +1,55 @@
+{
+  "authorship": false,
+  "sourceObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "sha256": "d1960bdbbba3d4dc51cb33b6c9cc50cbaee6ea6a739a438d2cb8c80339c5eea3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "fcb58e212315c9f23a59a381d4bc021de578ff07dcb5f582171fc5fffa7f4033"
+    }
+  ],
+  "cases": [
+    {
+      "id": "malformed-variable-pattern",
+      "source": "const schema fixture = value;",
+      "expectation": "TypeScript parse diagnostics; first-party null, not schema binding"
+    },
+    {
+      "id": "malformed-parameter-pattern",
+      "source": "function f(a b){ read(a); }",
+      "expectation": "TypeScript parse diagnostics; null"
+    },
+    {
+      "id": "spread-original-range",
+      "source": "f(... /*original*/ value);",
+      "expectation": "SpreadElement starts at literal three dots, not value.start minus three"
+    },
+    {
+      "id": "return-line-terminator",
+      "source": "function f(){return\nread(\"x\");}",
+      "expectation": "ReturnStatement has no expression, following read is separate expression statement"
+    },
+    {
+      "id": "throw-line-terminator",
+      "source": "function f(){throw\nread(\"x\");}",
+      "expectation": "TypeScript diagnostic; null"
+    },
+    {
+      "id": "trailing-semicolon-range",
+      "source": ";;const x=read(\"x\");",
+      "expectation": "VariableStatement starts at const, not preceding empty statements"
+    },
+    {
+      "id": "ordinary-class-unresolved",
+      "source": "class Reader { read(){return value;} }",
+      "expectation": "current conservative null; no absence proof"
+    },
+    {
+      "id": "namespace-constructor-unresolved",
+      "source": "new Namespace.Ajv().compile(schema)(fixture);",
+      "expectation": "current conservative null; explicit unresolved namespace constructor syntax"
+    }
+  ]
+}

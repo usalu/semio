@@ -1,0 +1,10 @@
+# Root Closed Guard Successor Archive Plan 3
+
+Interface40 is registered through actual321, but registration authorizes no archive. Root will admit only a finite exact physical inventory of individually closed40 guards after its whole producer/consumer proof. A changed producer, source identity, source hash, live handle, incomplete outer closure or future raw guard consumer refuses publication.
+
+The existing gzip codec, incremental file descriptor reads, before/publication native census, bounded bytes/work/deadline, cancellation and full decoded hash checks remain unchanged. The private guards operator will replace its hardcoded37 epoch and nine-row assumption with an explicit mandatory interfaceEpoch and a finite one-to-ten-row request. Every request schema keeps the entire current inventory cases and controls as constants; source paths are derived exactly from declared command, pre/post position, epoch and owning producer. No historical37 request authorizes40 and no implicit old request shape is accepted.
+
+Root will run a schema-first portable defining red against the old37 metadata schema using a freshly closed40 guard fixture before changing the operator or schemas. The successor law will exercise the original codec corpus with native gzip versus test-only fflate, first-party schema versus strict Ajv, complete metadata JSON round trips and refusal vectors for wrong authority, epoch, producer, identity, hash and closure/success promotion. Full producer/request/schema/fixture before and after bodies and inverse are retained.
+
+With changing free capacity, Interface will park after every physical closure. Root can losslessly archive that exact closed phase before another phase allocates a full guard. The carrier stays at the original guard filename to preserve the producer's wx refusal. Complete input/proposal, stage, admission, capture, frames, receipts and original assertions remain unchanged. No shared cache, peer output, live input or source file is eligible. Root cannot claim whole architecture acceptance from archive completion.
+

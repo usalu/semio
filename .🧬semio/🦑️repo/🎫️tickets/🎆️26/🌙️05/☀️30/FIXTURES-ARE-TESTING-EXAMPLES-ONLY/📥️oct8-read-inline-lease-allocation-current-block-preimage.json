@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "sha256": "8ab22bdd0814986a773b4a6b22735562059e555d4acd183f3b31a9fe838fe5a8",
+  "before": "    /// 📏️ Whole allocation retained by one immutable read's shared return flag.\n    pub const LEASE_ALLOCATION_BYTES: usize = std::mem::size_of::<(std::sync::atomic::AtomicUsize, std::sync::atomic::AtomicUsize, std::sync::atomic::AtomicBool)>();",
+  "after": "    /// 📏️ Generation leases use the registry's fixed inline atomics and allocate no per-read backing.\n    pub const LEASE_ALLOCATION_BYTES: usize = 0;"
+}

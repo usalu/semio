@@ -28,16 +28,7 @@ fn base() -> IfcSnapshot {
 /// triple, and the nested per-entity `args` collection triple + `complex` weak-list replace.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = base();
-    let mut b = base();
-    b.header.file_name = vec![IfcValue::String("changed".into())];
-    b.entities.remove(0); // remove id 1
-    b.entities[0].name = "IFCQUANTITYVOLUME".into(); // modify id 2
-    b.entities[0].args = vec![IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }];
-    b.entities[0].complex = vec![];
-    b.entities.push(entity(300, "IFCBUILDINGSTOREY", vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])]));
-
-    let cases = vec![IfcDiff::default(), IfcDiff::between(&a, &b), IfcDiff::between(&b, &a), IfcDiff::between(&a, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

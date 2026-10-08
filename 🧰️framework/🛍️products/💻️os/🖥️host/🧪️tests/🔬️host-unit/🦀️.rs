@@ -655,6 +655,8 @@ mod tests {
         store_a.tick().expect("pump a");
         store_b.tick().expect("pump b");
 
+        let history_a = store_a.document();
+        let history_b = store_b.document();
         let (converged_a, conflicts_a) = store_a.snapshot_with_conflicts().expect("snapshot with conflicts a");
         let (converged_b, conflicts_b) = store_b.snapshot_with_conflicts().expect("snapshot with conflicts b");
         assert_eq!(converged_a, converged_b, "both peers must converge on the same reconciled document");
@@ -665,6 +667,8 @@ mod tests {
             "dropping the dangling edge must surface a Warning-level conflict targeting the dropped edge"
         );
         assert_eq!(conflicts_a, conflicts_b, "both peers must report the same reconciliation conflicts");
+        assert_eq!(store_a.document(), history_a, "reconciling a read projection must not add a history row (load repair only)");
+        assert_eq!(store_b.document(), history_b, "reconciling a read projection must not add a history row (load repair only)");
     }
 
     // 🫀️ The old `presence_upserts_prunes_and_excludes_self` test exercised the deleted `presence:`

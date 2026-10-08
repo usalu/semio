@@ -16,7 +16,9 @@
     "manifestPath",
     "assertionBudgets",
     "coverageEnabled",
-    "targetDirectory"
+    "targetDirectory",
+    "buildDirectory",
+    "leaseDirectory"
   ],
   "properties": {
     "version": {
@@ -105,6 +107,16 @@
       "type": "boolean"
     },
     "targetDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "buildDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "leaseDirectory": {
       "type": "string",
       "minLength": 1,
       "pattern": "^(?:/|[A-Za-z]:[\\\\/])"

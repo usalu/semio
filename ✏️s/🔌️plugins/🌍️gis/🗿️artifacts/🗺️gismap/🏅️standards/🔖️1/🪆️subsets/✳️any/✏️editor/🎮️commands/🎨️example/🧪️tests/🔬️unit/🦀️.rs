@@ -4,43 +4,33 @@ use crate::editor::gis2d::Gis2dCommand;
 use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_empty_then_reuse_round_trips_document() {
+async fn set_active_example_loads_the_document_without_history() {
     let mut app = app().await;
     assert!(!app.snapshot().expect("projection").positions.is_empty());
     dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() })).await;
-    assert!(app.snapshot().expect("projection").positions.is_empty());
+    assert!(app.snapshot().expect("projection").positions.is_empty(), "the empty example loads an empty map");
     dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEFAULT_EXAMPLE_ID.into() })).await;
-    assert!(!app.snapshot().expect("projection").positions.is_empty());
-    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo settles its reserved job");
-    for _ in 0..10_000 {
-        app.maintenance_step(1, 4_096).expect("undo maintenance");
-        if app.snapshot().expect("projection").positions.is_empty() {
-            break;
-        }
-        std::thread::yield_now();
-    }
-    assert!(app.snapshot().expect("projection").positions.is_empty(), "undo returns to the empty document");
+    assert!(!app.snapshot().expect("projection").positions.is_empty(), "the demo example loads its features");
     close(&mut app);
 }
 
-/// 🧬️ `setActiveExample` replaces document content with batched create/delete/replace-data
-/// operations, so it MUST be declared as an Operation. Under the real registry the View/Shell →
-/// emits-operations guard rejects a mis-declaration; this proves the corrected declaration lets
-/// the document-replacing edit flow through without erroring.
+/// 🧬️ `setActiveExample` is a document load: it emits one load-document effect and no mutation rows, and an example the
+/// open document already carries emits nothing (the shell replays the action on every boot).
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_is_operation_under_registry_kind_discipline() {
+async fn set_active_example_is_a_load_effect_and_idempotent() {
     let definition = crate::editor::gis2d::create_gis2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-    assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits document-mutating operations, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
-
-    let mut app = app().await;
-    let result = dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() })).await;
-    assert!(result.artifact_publication_count() > 0, "clearing a non-empty example publishes at least one delete operation per removed feature");
-    assert!(app.snapshot().expect("projection").positions.is_empty(), "the empty example clears every position feature");
-    drop(result);
-    close(&mut app);
+    let demo = example_document(DEFAULT_EXAMPLE_ID).expect("the demo resolves");
+    let history = semio_framework_plugin::HistoryView::empty();
+    let view = ArtifactView::new(&demo, &history);
+    let no_config = semio_framework_plugin::NoConfig {};
+    let config = semio_framework_plugin::ConfigView { snapshot: &no_config, window: None };
+    let same = set_active_example::handle(&set_active_example::SetActiveExample { example_id: DEFAULT_EXAMPLE_ID.into() }, &view, &config).expect("handles");
+    assert!(same.artifact_mutations.is_empty() && same.effects.is_empty(), "an already loaded example emits nothing");
+    let cleared = set_active_example::handle(&set_active_example::SetActiveExample { example_id: String::new() }, &view, &config).expect("handles");
+    assert!(cleared.artifact_mutations.is_empty(), "an example switch writes no mutation rows");
+    assert!(matches!(cleared.effects.as_slice(), [semio_framework_plugin::Effect::LoadDocument { .. }]), "it loads the document instead");
 }
 
 /// 🎬️ The catalogue is real content addressed by id, not an empty-vs-non-empty switch: the declared

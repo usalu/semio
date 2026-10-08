@@ -1,0 +1,82 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧬️schema/🔣️.json",
+      "beforeSha256": "a3a5f7d58be5d6bcad3bf16b93461e55474ec15f3bfeaf275b7fcd1b1188cab0",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "beforeSha256": "4163cb6d495d6c27fb1bc0a519c751e48d4cfd2276638b1efb38c89d41c9943e",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪆️child/📐️declaration-query.schema.json",
+      "beforeSha256": "9f5fa643e2bd69b2e91d7cbc08f3adc0774e7ed2867e8c82be7c738be1bd2e4f",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/📐️schema.json",
+      "beforeSha256": "d8e6dc5b20f84a37e868d69ee0c99061fe37575253e9d2e8afab648e24bd5710",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/📐️schema.json",
+      "beforeSha256": "0ecff52027ea40189bde39747b45d9f1c1b09febc62669a594a23ad0995e59fe",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧪️tests/🟦️.ts",
+      "beforeSha256": "567c282a5c527e5b508d6124ea684660fdf62b0d579c0d59285ae486a09d6a28",
+      "afterSha256": "b297ca4a04983da0d76065e119d6834b31ec00cce6516f21ef4d3279d004f5f4",
+      "action": "updated",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "beforeSha256": "db50a1d5a0749ecc7904b1176b543dab7d1efc6231e346fbbee801c4f95709a3",
+      "afterSha256": "792106778683b0b7c0b7386a23ec675ae95d0df0d14744d6bf555e954bf8cbe3",
+      "action": "updated",
+      "qualification": "wholelaw schema or reader"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "2e412a6bc521387c3e37de08d448790e6988d5c6896ab3d149c257169c96b49d",
+      "afterSha256": "dbde4a59b7bca421a0fc3a2dbd456d55e17f3de954900759689b7e4342ffaa0a",
+      "action": "updated",
+      "qualification": "Root current-corpus facet only"
+    }
+  ],
+  "plainObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧫️fixtures/🔣️.json",
+      "sha256": "b63eae05eec804804e94bb9748a60dfb36f304096245e9eb4f78dca1cb0a0d90"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/♻️ownership/🔣️.json",
+      "sha256": "8d9e5a7b123adfd394a5ca4551dd86435d76d66a8d35a21fd545dd79d398be34"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪆️child/🧫️fixtures/📍️declaration-query.json",
+      "sha256": "b00170f06438a7317089d239133f8fff2a63747e8b7559263b071ed2604b5d62"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧫️fixtures/🔣️.json",
+      "sha256": "88aa452d6c71fe784362c934040787be72f1091c9e1367b8100be195c1323be0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/🧫️fixtures/🔣️.json",
+      "sha256": "a6409a7c615646fc536e728687e1a3d5e5af405af948bade402c78c73d1cb56f"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.general.retained-source-custody/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["vectors", "workGrants", "sourceClosesBeforeCursor", "originalOwnerSurvivesRefusal", "physicalConservation"],
+  "properties": {
+    "vectors": {"type": "array", "minItems": 3, "items": {"type": "object", "additionalProperties": false, "required": ["id", "owner", "ownerCapacity", "authority", "authorityCapacity"], "properties": {"id": {"type": "string"}, "owner": {"type": "string"}, "ownerCapacity": {"type": "integer", "minimum": 0}, "authority": {"type": "string"}, "authorityCapacity": {"type": "integer", "minimum": 0}}}},
+    "workGrants": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "sourceClosesBeforeCursor": {"const": true},
+    "originalOwnerSurvivesRefusal": {"const": true},
+    "physicalConservation": {"const": true}
+  }
+}

@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `DragSelection` — every unlocked addressed object and target volume moves
 //! by the payload offset, read off the BASE origin, so the leaf replays on any base. The attraction graph is
 //! re-solved: attracted objects are re-placed from their moved parents, other touched attractions re-derive.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
+use protocol::list_delta::RowPatch;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle3d_selection, puzzle3d_selection_follow, puzzle3d_selection_outcome, Puzzle3dPose, Puzzle3dSelectionFollow};
 use crate::Puzzle3dSnapshot;
 
@@ -22,7 +23,7 @@ pub fn diff(payload: &super::mutation::DragSelection, base: &Puzzle3dSnapshot) -
         .volumes
         .iter()
         .filter(|_| !identity)
-        .map(|volume| Puzzle3dTargetVolumePatchEntry { id: volume.id.clone(), patch: Puzzle3dTargetVolumePatch { origin: Some(moved(volume.origin)).filter(|origin| *origin != volume.origin), ..Default::default() } })
+        .map(|volume| Puzzle3dTargetVolumeModification { id: volume.id.clone(), patch: Puzzle3dTargetVolumePatch { origin: Some(moved(volume.origin)).filter(|origin| *origin != volume.origin), ..Default::default() } })
         .filter(|entry| !entry.patch.is_empty())
         .collect();
     puzzle3d_selection_outcome(selection, &payload.targets, solved, base, volumes)

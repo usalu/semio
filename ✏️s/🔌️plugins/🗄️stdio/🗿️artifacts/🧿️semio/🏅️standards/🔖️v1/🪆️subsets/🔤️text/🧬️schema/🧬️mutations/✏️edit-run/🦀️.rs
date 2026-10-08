@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 #[mutation_leaf(contract = ::protocol)]
 pub struct EditRun {
     pub index: usize,
-    pub new_content: String,
+    pub new_text: String,
 }
 
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for EditRun {

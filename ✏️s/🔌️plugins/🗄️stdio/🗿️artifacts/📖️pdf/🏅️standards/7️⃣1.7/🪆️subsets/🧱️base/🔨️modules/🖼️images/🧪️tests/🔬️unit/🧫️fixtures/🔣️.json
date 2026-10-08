@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "name": "one-bit-row-padding",
+      "width": 3,
+      "height": 2,
+      "components": 1,
+      "bits": 1,
+      "values": [
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "packed": [
+        160,
+        64
+      ]
+    },
+    {
+      "name": "four-bit-components",
+      "width": 1,
+      "height": 2,
+      "components": 3,
+      "bits": 4,
+      "values": [
+        0,
+        7,
+        15,
+        15,
+        8,
+        1
+      ],
+      "packed": [
+        7,
+        240,
+        248,
+        16
+      ]
+    },
+    {
+      "name": "sixteen-bit-big-endian",
+      "width": 2,
+      "height": 1,
+      "components": 1,
+      "bits": 16,
+      "values": [
+        1,
+        65535
+      ],
+      "packed": [
+        0,
+        1,
+        255,
+        255
+      ]
+    }
+  ]
+}

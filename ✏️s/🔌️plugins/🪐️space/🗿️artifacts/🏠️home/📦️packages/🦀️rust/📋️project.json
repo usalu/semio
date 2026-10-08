@@ -107,6 +107,33 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
+    },
+    "mutation-inventory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
+        "command": "bun ./📜️script.ts list-mutations",
+        "forwardAllArgs": true
+      }
+    },
+    "mutation-inventory-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": false
+      }
+    },
+    "test-complete-app-document": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": false
+      }
     }
   }
 }

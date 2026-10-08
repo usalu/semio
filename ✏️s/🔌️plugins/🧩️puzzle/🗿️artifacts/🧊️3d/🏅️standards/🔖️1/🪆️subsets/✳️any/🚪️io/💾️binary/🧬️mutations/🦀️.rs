@@ -140,7 +140,8 @@ pub use mutations_codec::*;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation,puzzle3d_document_delta_operations,Puzzle3dMutation,Puzzle3dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation,Puzzle3dMutation};
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 pub use mutations_codec::*;
 
 impl protocol::OpBinary for Puzzle3dMutation {

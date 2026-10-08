@@ -9,16 +9,18 @@
   "layers": null,
   "footings": null,
   "piles": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "pile-P1",
-        "length": 16.0,
-        "count": null
+        "patch": {
+          "length": 16.0,
+          "count": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "retainingWalls": null,
   "slopes": null,

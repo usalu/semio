@@ -17,10 +17,10 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 📝️ The editable text buffer is natural CommonMark source, edited as the kit's explicit draft (markup: edited locally, ONE
-/// `textEdit` on Apply); `parse_dsl` accepts the same source directly.
+/// `textEdit` on Apply carrying the change set the editor made); `parse_dsl` accepts the same source directly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &MdSnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: snapshot.to_text(), language: Some("markdown".into()), revision: None, publication_revision }, locale)
+pub fn render(snapshot: &MdSnapshot, locale: Locale, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    TextWindowKit::render_editable_by_splices(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: snapshot.to_text(), language: Some("markdown".into()), revision: Some(revision.into()), publication_revision }, locale)
 }
 
 #[cfg(test)]

@@ -21,7 +21,7 @@ updatePageColumns: 'update-page-columns' SP id SP number SP number ;
 reorderPages: 'reorder-pages' SP id SP number ;
 createStory: 'create-story' SP block SP number? ;
 deleteStory: 'delete-story' SP id ;
-editStory: 'edit-story' SP id SP text ;
+editStory: 'edit-story' SP id SP number SP number SP text ;
 createLink: 'create-link' SP block SP number? ;
 deleteLink: 'delete-link' SP id ;
 changeLinkPath: 'change-link-path' SP id SP text ;

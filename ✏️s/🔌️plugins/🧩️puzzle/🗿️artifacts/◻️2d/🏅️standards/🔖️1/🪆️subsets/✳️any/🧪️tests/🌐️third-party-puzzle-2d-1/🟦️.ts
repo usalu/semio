@@ -374,7 +374,7 @@ function collectionIds(document: Json, member: string): string[] {
 }
 
 /**
- * 🔺 The ids fast-json-patch says CHANGED while surviving — the typed diff's `patched` set.
+ * 🔺 The ids fast-json-patch says CHANGED while surviving — the typed diff's `modified` set.
  *
  * Computed per RECORD rather than by reading indices off the whole-document patch: removing an entry
  * from the middle of a collection shifts every later index, and a whole-document patch then
@@ -402,17 +402,27 @@ function applyRecordPatch(record: Json, patch: Json): Json {
   return result;
 }
 
-/** 🧩 Applies one id-keyed collection delta in the order the typed diff declares: removals, additions, patches, then the explicit order. */
+/** 🧩 Applies one positional list delta: every removed id is checked at its BASE index, inserted rows take their AFTER slots, moved rows go from their base index to their after slot, every other base row fills the remaining slots in base order, then the patches write. */
 function applyKeyedDelta(items: Json[], delta: Json): Json[] {
-  const removed = new Set((delta.removed ?? []) as string[]);
-  const patches = new Map(((delta.patched ?? []) as Json[]).map((entry) => [entry.id as string, entry.patch as Json]));
-  let next = [...items.filter((item) => !removed.has(item.id as string)), ...JSON.parse(JSON.stringify(delta.added ?? []))] as Json[];
-  next = next.map((item) => (patches.has(item.id as string) ? applyRecordPatch(item, patches.get(item.id as string)!) : item));
-  if (delta.reordered !== undefined && delta.reordered !== null) {
-    const byId = new Map(next.map((item) => [item.id as string, item]));
-    next = (delta.reordered as string[]).map((id) => byId.get(id)!);
+  const removed = (delta.removed ?? []) as Json[];
+  const moved = (delta.moved ?? []) as Json[];
+  const inserted = (delta.inserted ?? []) as Json[];
+  const gone = new Set<number>();
+  for (const entry of removed) {
+    if (items[entry.index as number]?.id !== entry.id) throw new Error("removed row is not at its base index");
+    gone.add(entry.index as number);
   }
-  return next;
+  for (const entry of moved) {
+    if (items[entry.from as number]?.id !== entry.id) throw new Error("moved row is not at its base index");
+    gone.add(entry.from as number);
+  }
+  const slots: (Json | undefined)[] = new Array(items.length - removed.length + inserted.length).fill(undefined);
+  for (const entry of inserted) slots[entry.index as number] = JSON.parse(JSON.stringify(entry.row));
+  for (const entry of moved) slots[entry.to as number] = items[entry.from as number];
+  const survivors = items.filter((_, position) => !gone.has(position))[Symbol.iterator]();
+  const next = slots.map((slot) => slot ?? (survivors.next().value as Json));
+  const patches = new Map(((delta.modified ?? []) as Json[]).map((entry) => [entry.id as string, entry.patch as Json]));
+  return next.map((item) => (patches.has(item.id as string) ? applyRecordPatch(item, patches.get(item.id as string)!) : item));
 }
 
 function diffReproduction(ctx: AdapterContext): AdapterOutcome {
@@ -443,13 +453,20 @@ function diffReproduction(ctx: AdapterContext): AdapterOutcome {
       const beforeIds = new Set(collectionIds(vector.before, member));
       const afterIds = new Set(collectionIds(vector.after, member));
       checks += 3;
+      const removedIds = ((delta.removed ?? []) as Json[]).map((entry) => entry.id as string);
+      const insertedIds = ((delta.inserted ?? []) as Json[]).map((entry) => (entry.row as Json).id as string);
       const removed = sorted([...beforeIds].filter((id) => !afterIds.has(id)));
       const added = sorted([...afterIds].filter((id) => !beforeIds.has(id)));
-      if (JSON.stringify(sorted((delta.removed ?? []) as string[])) !== JSON.stringify(removed)) failures.push(`${vector.id}: the typed diff removes ${JSON.stringify(sorted((delta.removed ?? []) as string[]))} from ${member}, the two snapshots differ by ${JSON.stringify(removed)}`);
-      if (JSON.stringify(sorted(((delta.added ?? []) as Json[]).map((record) => record.id as string))) !== JSON.stringify(added)) failures.push(`${vector.id}: the typed diff adds ${JSON.stringify(sorted(((delta.added ?? []) as Json[]).map((record) => record.id as string)))} to ${member}, the two snapshots differ by ${JSON.stringify(added)}`);
+      if (JSON.stringify(sorted(removedIds)) !== JSON.stringify(removed)) failures.push(`${vector.id}: the typed diff removes ${JSON.stringify(sorted(removedIds))} from ${member}, the two snapshots differ by ${JSON.stringify(removed)}`);
+      if (JSON.stringify(sorted(insertedIds)) !== JSON.stringify(added)) failures.push(`${vector.id}: the typed diff inserts ${JSON.stringify(sorted(insertedIds))} into ${member}, the two snapshots differ by ${JSON.stringify(added)}`);
+      checks += 2;
+      const beforeOrder = collectionIds(vector.before, member);
+      const afterOrder = collectionIds(vector.after, member);
+      if (((delta.removed ?? []) as Json[]).some((entry) => beforeOrder[entry.index as number] !== entry.id)) failures.push(`${vector.id}: a removed row of ${member} does not sit at its declared BASE index`);
+      if (((delta.inserted ?? []) as Json[]).some((entry) => afterOrder[entry.index as number] !== (entry.row as Json).id)) failures.push(`${vector.id}: an inserted row of ${member} does not sit at its declared AFTER index`);
       const reached = sorted(patchedIds(vector.before, vector.after, member));
-      if (JSON.stringify(sorted(((delta.patched ?? []) as Json[]).map((entry) => entry.id as string))) !== JSON.stringify(reached)) failures.push(`${vector.id}: the typed diff patches ${JSON.stringify(sorted(((delta.patched ?? []) as Json[]).map((entry) => entry.id as string)))} in ${member}, fast-json-patch needs operations for ${JSON.stringify(reached)}`);
-      for (const entry of (delta.patched ?? []) as Json[]) {
+      if (JSON.stringify(sorted(((delta.modified ?? []) as Json[]).map((entry) => entry.id as string))) !== JSON.stringify(reached)) failures.push(`${vector.id}: the typed diff patches ${JSON.stringify(sorted(((delta.modified ?? []) as Json[]).map((entry) => entry.id as string)))} in ${member}, fast-json-patch needs operations for ${JSON.stringify(reached)}`);
+      for (const entry of (delta.modified ?? []) as Json[]) {
         checks += 1;
         const original = ((vector.before[member] ?? []) as Json[]).find((record) => record.id === entry.id);
         const committed = ((vector.after[member] ?? []) as Json[]).find((record) => record.id === entry.id);

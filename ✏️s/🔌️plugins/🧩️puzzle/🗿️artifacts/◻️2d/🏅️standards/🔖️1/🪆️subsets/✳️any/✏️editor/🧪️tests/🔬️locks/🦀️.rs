@@ -78,7 +78,7 @@ fn board_gesture_records_refuse_a_locked_node_with_one_notice() {
     ] {
         let (mut app, id) = locked_seed_app();
         let before = fixture_of(&app);
-        let events_json = serde_json::to_string(&json!([{ "name": "gesture", "payload": record }])).expect("serialize rows").replace("SEED", &id);
+        let events_json = semio_framework_pack_json::to_json_string(&json!([{ "name": "gesture", "payload": record }])).replace("SEED", &id);
         let refused = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events_json })), None).expect("gesture on a locked node");
         assert_refused(&app, &before, &refused, kind);
         close_app(&mut app);
@@ -91,7 +91,7 @@ fn board_gesture_records_refuse_a_locked_node_with_one_notice() {
 fn a_whole_locked_gesture_batch_raises_exactly_one_notice() {
     let (mut app, id) = locked_seed_app();
     let rows: Vec<Value> = (0..3).map(|step| json!({ "name": "gesture", "payload": { "gestureId": format!("gesture-{step}"), "kind": "drag", "targets": [id], "dx": 10.0, "dy": 0.0, "proximity": [] } })).collect();
-    let refused = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": serde_json::to_string(&rows).expect("serialize rows") })), None).expect("drag a locked node");
+    let refused = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(&rows) })), None).expect("drag a locked node");
     assert_eq!(notices(&refused).len(), 1, "three refused records raise one sentence, not three: {:?}", refused.requested_effects);
     close_app(&mut app);
 }

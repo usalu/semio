@@ -1211,6 +1211,12 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
+                        pub mod write_pixel_region {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲write-pixel-region/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod remove_layer_asset {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️remove-layer-asset/🦀️.rs"]
                             mod component;
@@ -1437,7 +1443,7 @@ pub mod standards {
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation,RasterMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::RasterMutation;
 
 }
 

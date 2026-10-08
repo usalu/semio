@@ -1,0 +1,60 @@
+{
+  "role": "read-only observation",
+  "files": [
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️control/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+      "exists": true,
+      "sha256": "95e13e74b5d2eb4662530edbf4d3b32a6ab00e3481bbab504c4a6ddbf8062bfe"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+      "exists": true,
+      "sha256": "3fa06e17a0ce3cba6b74131919260ff84fa4aeaf30e12f204f59912a53098497"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "sha256": "7b693ca865447568eec07f79ead690e6b67c54da2b0427fd08dac95fcd6cb354"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "exists": true,
+      "sha256": "9a472cd7c7d180c6d6997df1c537542d943ffb904e018b7b839563b11737d10e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+      "exists": true,
+      "sha256": "f817619e42abbfb137d46bfad23dc7b412259c2552943255f7ae67a4aa6bdb9d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+      "exists": true,
+      "sha256": "5314ed0ea9d58e88063fc50956aaf4b9fca70fef53a57e6836fea00bccdaa8d9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "sha256": "4d1c8cc3e5e2fc364856e0ca3f42031a7d714efa67ea71e1301cc0687ab88c5a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "exists": true,
+      "sha256": "dbb518497e8f2a7e9ec1b4e35169d8fc653271640f6c2d0875fea7156ef97fa8"
+    }
+  ]
+}

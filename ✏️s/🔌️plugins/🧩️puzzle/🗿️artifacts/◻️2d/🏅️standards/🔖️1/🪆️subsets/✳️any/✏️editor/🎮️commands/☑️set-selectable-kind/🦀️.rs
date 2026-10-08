@@ -2,7 +2,7 @@
 //! instance. The 2d twin of puzzle3d's `setSelectableKind` over `objects`/`vortices`/`attractions`.
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🗂️ `kind` names one granularity (`node` / `handle` / `edge`, plurals accepted for symmetry with
 /// puzzle3d's own arg vocabulary); a missing `pressed` flips that one flag.

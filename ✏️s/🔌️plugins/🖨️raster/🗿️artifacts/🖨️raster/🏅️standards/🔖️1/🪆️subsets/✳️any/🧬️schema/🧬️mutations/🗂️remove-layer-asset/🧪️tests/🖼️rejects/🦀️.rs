@@ -13,7 +13,8 @@
 //! unspecified default hasher. The `mutation.target-missing` branch below is reached without ever
 //! touching the minting path, and is the same branch this verb really emits in production.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/📸️snapshot/⬅️before/🔣️.json");
@@ -118,5 +119,5 @@ async fn declared_outcome_holds() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

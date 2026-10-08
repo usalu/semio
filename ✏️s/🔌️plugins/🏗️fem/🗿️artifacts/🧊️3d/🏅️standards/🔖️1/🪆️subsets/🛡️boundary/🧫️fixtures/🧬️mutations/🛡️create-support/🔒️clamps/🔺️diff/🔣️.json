@@ -5,23 +5,26 @@
   "sections": null,
   "solids": null,
   "supports": {
-    "added": [
+    "inserted": [
       {
-        "id": "s1",
-        "nodeId": "n1",
-        "fixed": [
-          "Tx",
-          "Ty",
-          "Tz",
-          "Rx",
-          "Ry",
-          "Rz"
-        ]
+        "index": 0,
+        "row": {
+          "id": "s1",
+          "nodeId": "n1",
+          "fixed": [
+            "Tx",
+            "Ty",
+            "Tz",
+            "Rx",
+            "Ry",
+            "Rz"
+          ]
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "loadCases": null,
   "combinations": null,

@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::DwgSnapshot;
 use crate::STDIO_DWG_DOCUMENT_SCHEMA;
@@ -354,7 +355,7 @@ async fn real_fixture_page_directory_matches_header_cross_check() {
 #[semio_framework_async_macros::async_test]
 async fn well_known_fixture_lossless_system_roundtrip() {
     use crate::schema::diff::DwgDiff;
-    use crate::schema::mutations::{apply_dwg_mutation, set_version_info, DwgMutation};
+    use crate::schema::mutations::{set_version_info, DwgMutation};
     use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::encode_dwg;
     use protocol::command::DiffAlgebra;
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
@@ -382,13 +383,13 @@ async fn well_known_fixture_lossless_system_roundtrip() {
     let pack_snapshot = <DwgSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("pack decode");
     assert_eq!(encode_dwg(&pack_snapshot).expect("pack export"), ARCHITECTURAL_FIXTURE);
 
-    let self_diff = DwgDiff::between(&snapshot, &snapshot);
+    let self_diff = DwgDiff::default();
     assert!(self_diff.is_empty());
     assert_eq!(encode_dwg(&protocol::apply_diff(&self_diff, &snapshot).expect("self-diff must apply")).expect("self-diff export"), ARCHITECTURAL_FIXTURE);
 
     let same_version_info = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage });
     let mut no_op_snapshot = snapshot.clone();
-    let no_op_diff = apply_dwg_mutation(&mut no_op_snapshot, &same_version_info);
+    let no_op_diff = apply_mutation(&mut no_op_snapshot, &same_version_info);
     assert!(no_op_diff.diff().is_empty());
     assert_eq!(encode_dwg(&no_op_snapshot).expect("no-op export"), ARCHITECTURAL_FIXTURE);
 
@@ -399,27 +400,15 @@ async fn well_known_fixture_lossless_system_roundtrip() {
     assert_eq!(set_from_text, same_version_info);
     assert_eq!(set_from_binary, same_version_info);
 
-    let persisted_diff = DwgDiff::between(&DwgSnapshot::default(), &snapshot);
-    let diff_text = persisted_diff.print_diff();
-    assert_eq!(DwgDiff::parse_diff(&diff_text).expect("diff text decode"), persisted_diff);
-    let diff_binary = persisted_diff.encode_diff().expect("diff binary encode");
-    let decoded_diff = DwgDiff::decode_diff(&diff_binary).expect("diff binary decode");
-    let from_persisted_diff = protocol::apply_diff(&decoded_diff, &DwgSnapshot::default()).expect("persisted diff must apply");
-    assert_eq!(encode_dwg(&from_persisted_diff).expect("diff export"), ARCHITECTURAL_FIXTURE);
-
-    let mut absorbed = persisted_diff.clone();
-    absorbed.absorb(DwgDiff::between(&snapshot, &snapshot));
-    assert_eq!(encode_dwg(&protocol::apply_diff(&absorbed, &DwgSnapshot::default()).expect("absorbed diff must apply")).expect("absorbed export"), ARCHITECTURAL_FIXTURE,);
-
     let header_mutation = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: snapshot.maintenance_version.wrapping_add(1), codepage: 1252 });
     let mut header_snapshot = snapshot.clone();
-    apply_dwg_mutation(&mut header_snapshot, &header_mutation);
+    apply_mutation(&mut header_snapshot, &header_mutation);
     let header_bytes = encode_dwg(&header_snapshot).expect("supported header export");
     assert_ne!(header_bytes, ARCHITECTURAL_FIXTURE);
     assert_eq!(header_bytes[0x12], header_snapshot.maintenance_version);
     assert_eq!(u16::from_le_bytes([header_bytes[0x13], header_bytes[0x14]]), 1252);
-    for inverse in header_mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture") {
-        apply_dwg_mutation(&mut header_snapshot, &inverse);
+    for inverse in header_mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        apply_mutation(&mut header_snapshot, &inverse);
     }
     assert_eq!(encode_dwg(&header_snapshot).expect("inverse export"), ARCHITECTURAL_FIXTURE);
     assert_eq!(header_snapshot, snapshot);

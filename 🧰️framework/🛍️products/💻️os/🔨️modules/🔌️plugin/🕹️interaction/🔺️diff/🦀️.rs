@@ -90,15 +90,6 @@ impl protocol::DiffAlgebra<InteractionState> for InteractionStateDiff {
         }
     }
 
-    fn between(base: &InteractionState, other: &InteractionState) -> Self {
-        Self {
-            selection: DomainEdit::changed(&base.selection, &other.selection),
-            hover: DomainEdit::changed(&base.hover, &other.hover),
-            active_mode: DomainEdit::changed(&base.active_mode, &other.active_mode),
-            active_granularity: DomainEdit::changed(&base.active_granularity, &other.active_granularity),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }

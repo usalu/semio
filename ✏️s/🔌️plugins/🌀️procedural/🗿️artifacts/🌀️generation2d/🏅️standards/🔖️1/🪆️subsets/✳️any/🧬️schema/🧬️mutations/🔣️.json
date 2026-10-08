@@ -194,6 +194,18 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/move-nodes/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SelectGeneration"
+      ],
+      "properties": {
+        "SelectGeneration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/select-generation/schema.json"
+        }
+      }
     }
   ]
 }

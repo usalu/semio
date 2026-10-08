@@ -61,46 +61,49 @@
   "searchFilters": null,
   "statusRecords": null,
   "workshops": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "workshop-a",
-        "name": "Workshop A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "workshopType": "",
-        "objectives": [],
-        "agenda": [],
-        "facilitatorId": null,
-        "participants": [],
-        "scheduledStart": null,
-        "scheduledEnd": null,
-        "location": null,
-        "materials": [],
-        "methods": [],
-        "outputs": [],
-        "decisions": [],
-        "issues": [],
-        "followUpActions": [],
-        "feedback": [],
-        "recordingRef": null,
-        "budget": null,
-        "workshopStatus": "draft",
-        "surveyIds": []
+        "index": 0,
+        "row": {
+          "id": "workshop-a",
+          "name": "Workshop A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "workshopType": "",
+          "objectives": [],
+          "agenda": [],
+          "facilitatorId": null,
+          "participants": [],
+          "scheduledStart": null,
+          "scheduledEnd": null,
+          "location": null,
+          "materials": [],
+          "methods": [],
+          "outputs": [],
+          "decisions": [],
+          "issues": [],
+          "followUpActions": [],
+          "feedback": [],
+          "recordingRef": null,
+          "budget": null,
+          "workshopStatus": "draft",
+          "surveyIds": []
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "surveys": null,
   "issues": null,

@@ -4,17 +4,16 @@ import type {WorkRetirement} from "../../../../../../../../../../../../🧰️fr
 import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import type {CompositeBlend,CompositeAffine} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
 export type RasterSceneGroup={readonly id:string;readonly opacity:number;readonly blendMode:CompositeBlend};
-export type RasterSceneAsset={readonly id:string;readonly mime:string;readonly data:string};
+export type RasterSceneAsset={readonly id:string;readonly image:PixelImage};
 export type RasterSceneContent=({readonly kind:"path"}&Pick<PathRasterInput,"segments"|"fillRule"|"fill"|"stroke">)|{readonly kind:"pixels";readonly image:PixelImage}|{readonly kind:"image";readonly asset:string;readonly width:number;readonly height:number};
 export type RasterSceneNode={readonly id:string;readonly groups:readonly RasterSceneGroup[];readonly transform:CompositeAffine;readonly opacity:number;readonly blendMode:CompositeBlend;readonly visible:boolean;readonly content:RasterSceneContent};
-export type RasterSceneInput={width:number;height:number;origin:readonly[number,number];tolerance:number;maxPixels:number;maxSourceBytes:number;maxBytes:number;maxChunks:number;assets:readonly RasterSceneAsset[];nodes:readonly RasterSceneNode[]};
-export type RasterSceneProgress={phase:string;nodes:number;totalNodes:number;pixels:number;assets:number;totalAssets:number;sourceBytes:number;decodes:number;decoding:ImageDecodeProgress|null;work:number;done:boolean};
+export type RasterSceneInput={width:number;height:number;origin:readonly[number,number];tolerance:number;maxPixels:number;maxSourceBytes:number;assets:readonly RasterSceneAsset[];nodes:readonly RasterSceneNode[]};
+export type RasterSceneProgress={phase:string;nodes:number;totalNodes:number;pixels:number;assets:number;totalAssets:number;sourceBytes:number;admittedImages:number;work:number;done:boolean};
 export type RasterSceneOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:RasterSceneProgress)=>void};
 import {CompositeJob,type CompositeLayer} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
 import {validateExtent,validateImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import {arcGeometry} from "../../🧮️geometry/🟦️.ts";
 import {AffineImageJob} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts";
-import {ImageDecodeJob,type ImageDecodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🟦️.ts";
 const identity:CompositeAffine=[1,0,0,1,0,0];
 const coordinate=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=1e9;
 function fail(message:string):never{throw new RangeError(message);}
@@ -23,12 +22,12 @@ const blends:readonly string[]=["normal","multiply","screen","overlay","darken",
 const validStyle=(s:{opacity:number;blendMode:string})=>Number.isFinite(s.opacity)&&s.opacity>=0&&s.opacity<=1&&blends.includes(s.blendMode);
 const validId=(id:string)=>typeof id==="string"&&id.length>0&&id.length<=4096&&new TextEncoder().encode(id).length<=4096;
 type Scope={group:RasterSceneGroup;layers:CompositeLayer[]};
-/** 🧱️ Cropped path candidates and decoded assets remain private until tiled scene completion. */
+/** 🧱️ Cropped path candidates and admitted assets remain private until tiled scene completion. */
 export class RasterSceneJob {
  private readonly width:number;private readonly height:number;private readonly origin:readonly[number,number];private readonly tolerance:number;private readonly maxPixels:number;private readonly totalNodes:number;
- private readonly maxSourceBytes:number;private readonly maxBytes:number;private readonly maxChunks:number;private readonly totalAssets:number;
- private assetSource:readonly RasterSceneAsset[];private assetAt=0;private assetChar=0;private assetCurrent:RasterSceneAsset|null=null;private assets=0;private sourceBytes=0;private decodes=0;
- private catalog=new Map<string,RasterSceneAsset>();private decoded=new Map<string,PixelImage>();private decoder:ImageDecodeJob|null=null;private decoderKey="";private decoding:ImageDecodeProgress|null=null;private decoderCharged=false;
+ private readonly maxSourceBytes:number;private readonly totalAssets:number;
+ private assetSource:readonly RasterSceneAsset[];private assetAt=0;private assetChar=0;private assetCurrent:RasterSceneAsset|null=null;private assets=0;private sourceBytes=0;private admittedImages=0;
+ private catalog=new Map<string,RasterSceneAsset>();private admitted=new Map<string,PixelImage>();
  private source:readonly RasterSceneNode[];private at=0;private groupAt=0;private nodes=0;private pixels=0;private work=0;private entries=0;private phase="assets";private current:RasterSceneNode|null=null;
  private stack:Scope[]=[];private root:CompositeLayer[]=[];private closed=new Set<string>();private ids=new Set<string>();private images:Record<string,PixelImage>=Object.create(null);
  private segment=0;private from:[number,number]=[0,0];private start:[number,number]=[0,0];private contour=false;private bounds:[number,number,number,number]=[Infinity,Infinity,-Infinity,-Infinity];
@@ -38,8 +37,8 @@ export class RasterSceneJob {
  private compositorRetirement:WorkRetirement|null=null;
  constructor(input:RasterSceneInput) {
   validateExtent(input.width,input.height);
-  if(input.origin.length!==2||!input.origin.every(coordinate)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||!Number.isSafeInteger(input.maxPixels)||input.maxPixels<1||input.maxPixels>67108864||input.nodes.length>1024||!Array.isArray(input.assets)||input.assets.length>1024||!Number.isSafeInteger(input.maxSourceBytes)||input.maxSourceBytes<1||input.maxSourceBytes>268439552||!Number.isSafeInteger(input.maxBytes)||input.maxBytes<8||input.maxBytes>67108864||!Number.isSafeInteger(input.maxChunks)||input.maxChunks<1||input.maxChunks>65536)fail("Invalid scene raster contract");
-  this.width=input.width;this.height=input.height;this.origin=[...input.origin];this.tolerance=input.tolerance;this.maxPixels=input.maxPixels;this.source=input.nodes;this.totalNodes=input.nodes.length;this.maxSourceBytes=input.maxSourceBytes;this.maxBytes=input.maxBytes;this.maxChunks=input.maxChunks;this.assetSource=input.assets;this.totalAssets=input.assets.length;
+  if(input.origin.length!==2||!input.origin.every(coordinate)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||!Number.isSafeInteger(input.maxPixels)||input.maxPixels<1||input.maxPixels>67108864||input.nodes.length>1024||!Array.isArray(input.assets)||input.assets.length>1024||!Number.isSafeInteger(input.maxSourceBytes)||input.maxSourceBytes<1||input.maxSourceBytes>268439552)fail("Invalid scene raster contract");
+  this.width=input.width;this.height=input.height;this.origin=[...input.origin];this.tolerance=input.tolerance;this.maxPixels=input.maxPixels;this.source=input.nodes;this.totalNodes=input.nodes.length;this.maxSourceBytes=input.maxSourceBytes;this.assetSource=input.assets;this.totalAssets=input.assets.length;
  }
  private layers():CompositeLayer[]{return this.stack.at(-1)?.layers??this.root;}
  private active():boolean{return this.current!.visible&&this.current!.opacity>0&&this.stack.every(s=>s.group.opacity>0);}
@@ -81,20 +80,7 @@ export class RasterSceneJob {
   this.painter=new PathRasterJob({width:right-left,height:bottom-top,origin,transform:m,tolerance:this.tolerance,segments:c.segments,fillRule:c.fillRule,fill:c.fill,stroke:c.stroke});this.phase="path";
  }
  private skip():void{this.current=null;this.nodes++;this.phase="nodes";}
- private assetStep():void{
-  if(!this.assetCurrent){
-   if(this.assetAt===this.assetSource.length){this.assetSource=[];this.phase="nodes";return;}
-   const a=this.assetSource[this.assetAt]!;
-   if(!a||!validId(a.id)||this.catalog.has(a.id)||typeof a.mime!=="string"||!a.mime.length||a.mime.length>128||new TextEncoder().encode(a.mime).length>128||typeof a.data!=="string"||!a.data.length)fail("Invalid scene asset catalog");
-   if(this.sourceBytes+a.data.length>this.maxSourceBytes)fail("Scene aggregate source byte budget exceeded");
-   this.assetCurrent={id:a.id,mime:a.mime,data:a.data};this.assetChar=0;return;
-  }
-  const a=this.assetCurrent;
-  if(this.assetChar===a.data.length){this.catalog.set(a.id,a);this.assetCurrent=null;this.assetAt++;this.assets++;return;}
-  const code=a.data.charCodeAt(this.assetChar++);let size=code<128?1:code<2048?2:3;
-  if(code>=0xd800&&code<=0xdbff&&this.assetChar<a.data.length){const low=a.data.charCodeAt(this.assetChar);if(low>=0xdc00&&low<=0xdfff){this.assetChar++;size=4;}}
-  this.sourceBytes+=size;if(this.sourceBytes>this.maxSourceBytes)fail("Scene aggregate source byte budget exceeded");
- }
+ private assetStep():void{const asset=this.assetSource[this.assetAt++];if(!asset){this.assetSource=[];this.phase="nodes";return;}if(!validId(asset.id)||this.catalog.has(asset.id))fail("Invalid scene asset catalog");validateImage(asset.image);if(asset.image.pixels.length>this.maxSourceBytes-this.sourceBytes)fail("Scene aggregate sample byte budget exceeded");this.sourceBytes+=asset.image.pixels.length;this.catalog.set(asset.id,asset);this.assets++;}
  private imageCrop(width:number,height:number):[number,number,number,number]|null{
   const m=this.current!.transform;if(!this.active()||m[0]*m[3]-m[1]*m[2]===0)return null;
   const points=[[0,0],[width,0],[width,height],[0,height]].map(p=>this.map(p as [number,number]));
@@ -108,19 +94,11 @@ export class RasterSceneJob {
  }
  private prepareImage(c:Extract<RasterSceneContent,{kind:"image"}>):void{
   if(!validId(c.asset)||!coordinate(c.width)||c.width<=0||!coordinate(c.height)||c.height<=0)fail("Invalid authored scene image");
-  const cached=this.decoded.get(c.asset),asset=this.catalog.get(c.asset);if(!cached&&!asset)fail("Missing scene image asset: "+c.asset);
+  const cached=this.admitted.get(c.asset),asset=this.catalog.get(c.asset);if(!cached&&!asset)fail("Missing scene image asset: "+c.asset);
   if(!this.imageCrop(c.width,c.height)){this.skip();return;}
   if(cached){this.assetImage(c,cached);return;}
   const available=Math.min(16777216,this.maxPixels-this.pixels);if(available<1)fail("Scene aggregate pixel budget exceeded");
-  this.decoder=new ImageDecodeJob({mime:asset!.mime,data:asset!.data,maxSourceBytes:this.maxSourceBytes,maxBytes:this.maxBytes,maxPixels:available,maxChunks:this.maxChunks});
-  this.decoding=null;this.decoderKey=c.asset;this.decoderCharged=false;this.catalog.delete(c.asset);this.decodes++;this.phase="source";
- }
- private sourceStep():void{
-  const p=this.decoder!.advance(1);this.decoding=p;
-  if(p.totalPixels&&!this.decoderCharged){this.reserve(p.totalPixels);this.decoderCharged=true;}
-  if(!p.done)return;
-  const c=this.current!.content;if(c.kind!=="image")fail("Expected scene image source");
-  const image=this.decoder!.result();this.decoded.set(this.decoderKey,image);this.decoder=null;this.decoderKey="";this.assetImage(c,image);
+  const image=asset!.image,count=image.width*image.height;if(count>available)fail("Scene aggregate pixel budget exceeded");this.reserve(count);this.catalog.delete(c.asset);this.admitted.set(c.asset,image);this.admittedImages++;this.assetImage(c,image);
  }
  private image(image:PixelImage,charged=false):void{
   validateImage(image);const count=validateExtent(image.width,image.height),m=this.current!.transform,crop=this.imageCrop(image.width,image.height);
@@ -131,10 +109,10 @@ export class RasterSceneJob {
  }
  private step():void{
   if(this.phase==="assets"){this.assetStep();return;}
-  if(this.phase==="source"){this.sourceStep();return;}
+  
   if(this.phase==="nodes"){
    if(!this.current){
-    if(this.at===this.source.length){if(this.stack.length){this.close();return;}this.source=[];this.catalog.clear();this.decoded.clear();this.compositor=new CompositeJob({width:this.width,height:this.height,origin:this.origin,images:this.images,layers:this.root});this.images=Object.create(null);this.root=[];this.closed.clear();this.ids.clear();this.phase="compositing";return;}
+    if(this.at===this.source.length){if(this.stack.length){this.close();return;}this.source=[];this.catalog.clear();this.admitted.clear();this.compositor=new CompositeJob({width:this.width,height:this.height,origin:this.origin,images:this.images,layers:this.root});this.images=Object.create(null);this.root=[];this.closed.clear();this.ids.clear();this.phase="compositing";return;}
     const n=this.source[this.at++]!;
     if(!validId(n.id)||this.ids.has(n.id)||!validStyle(n)||typeof n.visible!=="boolean"||n.transform.length!==6||!n.transform.every(coordinate)||n.groups.length>32||!n.content||!["path","pixels","image"].includes(n.content.kind))fail("Invalid resolved scene node");
     this.ids.add(n.id);this.entry();this.current=n;this.groupAt=0;return;
@@ -162,9 +140,9 @@ export class RasterSceneJob {
  advance(budget:number):RasterSceneProgress{
   if(!Number.isSafeInteger(budget)||budget<=0)fail("Scene work grant must be a positive integer");if(this.aborted)cancelled();if(this.failure)throw this.failure;
   try{for(let i=0;i<budget&&this.phase!=="complete";i++){this.step();this.work++;}}catch(error){this.failure=error;this.clear();throw error;}
-  return {phase:this.phase,nodes:this.nodes,totalNodes:this.totalNodes,pixels:this.pixels,assets:this.assets,totalAssets:this.totalAssets,sourceBytes:this.sourceBytes,decodes:this.decodes,decoding:this.decoding,work:this.work,done:this.phase==="complete"};
+  return {phase:this.phase,nodes:this.nodes,totalNodes:this.totalNodes,pixels:this.pixels,assets:this.assets,totalAssets:this.totalAssets,sourceBytes:this.sourceBytes,admittedImages:this.admittedImages,work:this.work,done:this.phase==="complete"};
  }
- private clear():void{this.decoder?.cancel();this.decoder=null;this.decoderKey="";this.decoding=null;this.assetSource=[];this.assetCurrent=null;this.catalog.clear();this.decoded.clear();this.painter?.cancel();this.sampler?.cancel();this.compositor?.cancel();this.painter=null;this.painterRetirement=null;this.painted=null;this.sampler=null;this.samplerRetirement=null;this.sampled=null;this.compositor=null;this.compositorRetirement=null;this.output=null;this.current=null;this.source=[];this.stack=[];this.root=[];this.images=Object.create(null);this.ids.clear();this.closed.clear();}
+ private clear():void{this.assetSource=[];this.assetCurrent=null;this.catalog.clear();this.admitted.clear();this.painter?.cancel();this.sampler?.cancel();this.compositor?.cancel();this.painter=null;this.painterRetirement=null;this.painted=null;this.sampler=null;this.samplerRetirement=null;this.sampled=null;this.compositor=null;this.compositorRetirement=null;this.output=null;this.current=null;this.source=[];this.stack=[];this.root=[];this.images=Object.create(null);this.ids.clear();this.closed.clear();}
  cancel():void{this.aborted=true;this.clear();}
  result():PixelImage{if(this.aborted)cancelled();if(this.failure)throw this.failure;if(this.phase!=="complete")throw Error("Scene raster incomplete");return this.output!;}
 }

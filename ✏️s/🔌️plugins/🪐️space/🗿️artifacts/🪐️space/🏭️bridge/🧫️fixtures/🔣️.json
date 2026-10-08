@@ -1,0 +1,23 @@
+{
+  "artifact": "s.space.space",
+  "producedBy": "semio-space-mutation-bridge",
+  "refusedArtifacts": [
+    "s.space.home"
+  ],
+  "excludedOwnerSegments": [
+    "👁️viewer",
+    "✏️editor"
+  ],
+  "aggregates": [
+    "SSpaceMutation"
+  ],
+  "coordinates": [
+    {
+      "artifact": "s.space.space",
+      "standard": "1",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    }
+  ]
+}

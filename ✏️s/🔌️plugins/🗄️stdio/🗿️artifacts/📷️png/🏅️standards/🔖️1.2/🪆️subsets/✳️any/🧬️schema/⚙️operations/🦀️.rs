@@ -2,17 +2,7 @@
 use crate::schema::{diff::PngDiff, mutations::PngMutation};
 use crate::PngSnapshot;
 
-//#region Operations
-pub fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) -> protocol::MutationOutcome<PngDiff> {
-    let outcome = <PngMutation as protocol::Mutation<PngSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion Operations
 
@@ -64,7 +54,7 @@ pub fn validate_native_paint_target(snapshot:&PngSnapshot,region:PngRegion,paint
 
 pub fn png_native_pixel(snapshot: &PngSnapshot,x:u32,y:u32) -> Result<Vec<u16>,String> { snapshot.validate()?;let image=&snapshot.image;if x>=image.width || y>=image.height {return Err("png: pixel exceeds owned image".into());}let spp=image.color_type.samples_per_pixel();let start=(y as usize*image.width as usize+x as usize)*spp;Ok(image.samples[start..start+spp].to_vec()) }
 
-pub fn paint_native_region_controlled(snapshot:&PngSnapshot,revision:&str,region:PngRegion,paint:PngNativePaint,progress:&mut dyn FnMut(usize,usize)->bool)->Result<PngSnapshot,String> {
+pub fn paint_native_region_controlled(snapshot:&PngSnapshot,revision:&str,region:PngRegion,paint:PngNativePaint,mut progress:impl FnMut(usize,usize)->bool)->Result<PngSnapshot,String> {
     require_revision(snapshot,revision)?;let rows=validate_native_paint(snapshot,region,paint)?;
     if !progress(0,rows) {return Err("png: native paint cancelled".into());}
     let mut next=snapshot.clone();let spp=next.image.color_type.samples_per_pixel();let samples=paint.samples();
@@ -72,12 +62,44 @@ pub fn paint_native_region_controlled(snapshot:&PngSnapshot,revision:&str,region
     Ok(next)
 }
 
-pub fn paint_rgba8_region_controlled(snapshot:&PngSnapshot,revision:&str,region:PngRegion,color:[u8;4],progress:&mut dyn FnMut(usize,usize)->bool)->Result<PngSnapshot,String> {
+pub fn paint_rgba8_region_controlled(snapshot:&PngSnapshot,revision:&str,region:PngRegion,color:[u8;4],progress:impl FnMut(usize,usize)->bool)->Result<PngSnapshot,String> {
     if snapshot.image.color_type!=PngColorType::Rgba || snapshot.image.bit_depth!=8 {return Err("png: pixel patches need an 8-bit RGBA image".into());}
     paint_native_region_controlled(snapshot,revision,region,PngNativePaint::rgba(u16::from(color[0]),u16::from(color[1]),u16::from(color[2]),u16::from(color[3])),progress)
 }
 
-pub fn set_gamma_chunk_controlled(snapshot:&PngSnapshot,revision:&str,gamma:Option<u32>,progress:&mut dyn FnMut(usize,usize)->bool)->Result<PngSnapshot,String> {snapshot.validate()?;require_revision(snapshot,revision)?;if gamma==Some(0) {return Err("png: gamma must be positive".into());}if !progress(0,1) {return Err("png: gamma change cancelled".into());}let mut next=snapshot.clone();next.image.gamma=gamma;if !progress(1,1) {return Err("png: gamma change cancelled".into());}Ok(next)}
+/// 🎨 The sparse rectangle a native paint writes — `None` when the region already holds the paint — computed from the payload and the base samples in that region only.
+pub fn paint_native_rect(snapshot: &PngSnapshot, revision: &str, region: PngRegion, paint: PngNativePaint) -> Result<Option<crate::schema::snapshot::PngSampleRect>, String> {
+    require_revision(snapshot, revision)?;
+    validate_native_paint(snapshot, region, paint)?;
+    Ok(native_rect(snapshot, region, paint))
+}
+
+/// 🎨 The rectangle holding `paint` over `region`, `None` when the base already holds exactly those samples (the region must have passed [`validate_native_paint`]).
+pub fn native_rect(snapshot: &PngSnapshot, region: PngRegion, paint: PngNativePaint) -> Option<crate::schema::snapshot::PngSampleRect> {
+    let spp = snapshot.image.color_type.samples_per_pixel();
+    let samples: Vec<u16> = paint.samples()[..spp].iter().copied().cycle().take(region.width as usize * region.height as usize * spp).collect();
+    (snapshot.image.region_samples(region).as_deref() != Some(samples.as_slice())).then_some(crate::schema::snapshot::PngSampleRect { region, samples })
+}
+
+/// 🩹 [`paint_native_rect`] for the RGBA8 profile patch.
+pub fn paint_rgba8_rect(snapshot: &PngSnapshot, revision: &str, region: PngRegion, color: [u8; 4]) -> Result<Option<crate::schema::snapshot::PngSampleRect>, String> {
+    if snapshot.image.color_type != PngColorType::Rgba || snapshot.image.bit_depth != 8 {
+        return Err("png: pixel patches need an 8-bit RGBA image".into());
+    }
+    paint_native_rect(snapshot, revision, region, PngNativePaint::rgba(u16::from(color[0]), u16::from(color[1]), u16::from(color[2]), u16::from(color[3])))
+}
+
+/// 🌗 Checks a guarded gamma change against the base — stale revision, zero gamma — and answers the gamma value the diff sets, `None` when the chunk already holds it.
+pub fn gamma_change(snapshot: &PngSnapshot, revision: &str, gama: Option<u32>) -> Result<Option<crate::schema::snapshot::PngGammaValue>, String> {
+    snapshot.validate()?;
+    require_revision(snapshot, revision)?;
+    if gama == Some(0) {
+        return Err("png: gamma must be positive".into());
+    }
+    Ok((snapshot.image.gamma != gama).then_some(crate::schema::snapshot::PngGammaValue { gama }))
+}
+
+pub fn set_gamma_chunk_controlled(snapshot:&PngSnapshot,revision:&str,gamma:Option<u32>,mut progress:impl FnMut(usize,usize)->bool)->Result<PngSnapshot,String> {snapshot.validate()?;require_revision(snapshot,revision)?;if gamma==Some(0) {return Err("png: gamma must be positive".into());}if !progress(0,1) {return Err("png: gamma change cancelled".into());}let mut next=snapshot.clone();next.image.gamma=gamma;if !progress(1,1) {return Err("png: gamma change cancelled".into());}Ok(next)}
 
 pub fn validate_completed_native_paint(base:&PngSnapshot,result:&PngSnapshot,region:PngRegion,paint:PngNativePaint)->Result<(),String> {
     validate_native_paint(base,region,paint)?;result.validate()?;

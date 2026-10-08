@@ -1,0 +1,90 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧬️schema/🔣️.json",
+      "beforeSha256": "249bd560e908751cf669479b6a7cd6935f0c72a083498e6a88d010aadc567da3",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "3cce3747b7b1a1193524805164c5c49d2a892f0528078d403cca53e500784328",
+      "afterSha256": "f2bbd43e688d6d2e9454a7bb720e19251cee4414bb4d31049714f3f0d858299f",
+      "action": "updated",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts",
+      "beforeSha256": "8f0690d94e79280f7c9a073fe3c92d5a5e04aaf9e53cdf75cfcd5776c6966960",
+      "afterSha256": "3ec33a6025794e60d3c3e82f20efbc75fdada4a805d06aa867aeac304278b898",
+      "action": "updated",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+      "beforeSha256": "61796e2195a1f2849ee706a91f8a3c9c7348dbf3547c88f82b026ec93ee9c453",
+      "afterSha256": "294141c33b577f922d5964c772a082fe9cca19d353fa4c4cfe1794f7e06d631d",
+      "action": "updated",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/🟦️.ts",
+      "beforeSha256": "46ac8d1b911c7494fe789ce3ca18f13f855a5dc015029826ab3ed22053049449",
+      "afterSha256": "a9b211b1e37e53fee65045bda11b37da423a85525bd8ec1e45e85b0a71be059d",
+      "action": "updated",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "beforeSha256": "777c932d72e2c85d401c28bee377569626f22cb0fa579dd020e5e0e62d37a3e1",
+      "afterSha256": "1f004ca7c83d1bc54557ebabe373ef3e44ffaca6648e17373d5f544b8ef3e432",
+      "action": "updated",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "beforeSha256": "54a8f482fce0635a2fb4807925a03a83655a449e692e9d96f82eaa8014b5a5dc",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "007273ab67f6f1d8c211a14b15f5ef55a970de1e2756c38e44387192a36d57c5",
+      "afterSha256": "6b7a1eada8ee564079b9011f16bac791df0fb3e92cc9d8f50f01aa6d8c007491",
+      "action": "updated",
+      "qualification": "wholetrial schema-only checks; private Root current-corpus facet only"
+    }
+  ],
+  "plainObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧫️fixtures/🔣️.json",
+      "sha256": "c045e2fcee54bf0f5538716742f191fad9d7cd27a19039ffa28fdd7d9115d009"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧫️fixtures/🔣️.json",
+      "sha256": "35ce28ee076dfdde30bae36d45757e5c1fdad09d9662beaee1672bf5325689a0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json",
+      "sha256": "d7706f73aacea232ad8aff7ca74f6fb745fd5ca3d8ac2e205b4ae561fc6d6869"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json",
+      "sha256": "959e99348748136e34cf662e19ca68d79124894fa5bb15f24d71dcee45d60857"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json",
+      "sha256": "6d62c47ed1a2830a03a229bfc83d4dfa2af572dc068c2ea7e5da0acf749b0f9d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json",
+      "sha256": "224e72af48edc900b9e5bc681486d0238de42f3ae246095f015aa0d81d3c4ddb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json",
+      "sha256": "f3a2b52efecf9f4ef72d06db295140de3d76456a4aa96f967d7d58956c9efdc1"
+    }
+  ]
+}

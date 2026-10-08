@@ -55,7 +55,7 @@ async fn a_still_gesture_leaves_zero_trace_and_two_gestures_are_two_transactions
 #[semio_framework_async_macros::async_test]
 async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let base = crate::schema::default_snapshot();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let object_id = base.objects[0].id.clone();
     let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new(store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<LowpolySnapshot, LowpolyMutation>());

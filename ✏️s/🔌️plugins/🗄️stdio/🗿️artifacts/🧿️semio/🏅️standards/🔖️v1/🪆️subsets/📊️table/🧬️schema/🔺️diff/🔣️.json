@@ -2,35 +2,199 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/diff.json",
   "title": "SemioTableDiff",
-  "description": "Sparse per-field diff over SemioTableSnapshot — two optional whole-list-replace slots, columns and rows.",
+  "description": "Sparse keyed-row diff: per collection `removed` base indices, `modified` rows (sparse row diffs) and `added` rows with their final index.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "columns": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-semio-state": "artifact",
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "values": {
+        "removed": {
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioTableColumnDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "SemioTableColumn"
+              }
+            }
           }
         }
       }
     },
     "rows": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-semio-state": "artifact",
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "values": {
+        "removed": {
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioTableRowDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "SemioTableRow"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "SemioTableColumnDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "object",
+          "x-semio-type": "SemioTableCellKind"
+        }
+      }
+    },
+    "SemioTableRowDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "diff"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "diff": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "object",
+                        "x-semio-type": "SemioValue"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "added": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "item"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "item": {
+                    "type": "object",
+                    "x-semio-type": "SemioValue"
+                  }
+                }
+              }
+            }
           }
         }
       }

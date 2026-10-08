@@ -6,7 +6,7 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block3d_mutation,inverse_block3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_block3d_mutation;
 
 use crate::Block3dSnapshot;
 
@@ -34,7 +34,7 @@ fn mutation() -> Block3dMutation {
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_block3d_mutation(&mut snapshot, &mutation()).expect("change-object-kind-unit applies to its committed before-snapshot");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("change-object-kind-unit applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-object-kind-unit/switches-unit-to-centimeter: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.object_kind.unit.as_deref(), Some("cm"), "change-object-kind-unit must rewrite only the identity unit");
 }
@@ -46,9 +46,9 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = inverse_block3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
-    apply_block3d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     for step in &inverse {
-        apply_block3d_mutation(&mut snapshot, step).expect("inverse step applies");
+        vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-object-kind-unit/switches-unit-to-centimeter: inverse did not restore the before-snapshot");
 }
@@ -74,7 +74,7 @@ async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let mut snapshot = before();
-    let applied = apply_block3d_mutation(&mut snapshot, &mutation()).is_ok();
+    let applied = vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).is_ok();
     match status {
         "applied" => assert!(applied, "change-object-kind-unit/switches-unit-to-centimeter: declared applied but the mutation was rejected"),
         "rejected" => {

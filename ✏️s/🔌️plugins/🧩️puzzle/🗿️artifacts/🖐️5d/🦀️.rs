@@ -142,9 +142,9 @@ impl semio_framework_value::ToValue for Puzzle5dScale {
 impl semio_framework_value::FromValue for Puzzle5dScale {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            semio_framework_value::DslValue::Array(items) if items.len() >= 3 => {
-                let axis = |i: usize| items[i].as_f64().unwrap_or(1.0);
-                Ok(Puzzle5dScale::Vec3([axis(0), axis(1), axis(2)]))
+            semio_framework_value::DslValue::Array(items) => {
+                let axes = <[f64; 3] as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Array(items))?;
+                Ok(Puzzle5dScale::Vec3(axes))
             }
             other => f64::from_value(other).map(Puzzle5dScale::Uniform),
         }
@@ -204,7 +204,7 @@ impl semio_framework_dsl_record::DslField for Puzzle5dScale {
                 semio_framework_dsl_record::FieldValue::Float(scale) => Ok(Puzzle5dScale::Uniform(*scale)),
                 other => Err(format!("expected Float, found {other:?}")),
             },
-            semio_framework_dsl_record::FieldValue::List(items) if items.len() >= 3 => {
+            semio_framework_dsl_record::FieldValue::List(items) if items.len() == 3 => {
                 let axis = |i: usize| match &items[i] {
                     semio_framework_dsl_record::FieldValue::Float(v) => Ok(*v),
                     other => Err(format!("expected Float, found {other:?}")),
@@ -1273,7 +1273,7 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
+pub use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1370,6 +1370,9 @@ mod tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_part_a_and_severs_fastener;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🗑️removes-middle-part/🦀️.rs"]
+                                    mod tests_removes_the_middle_part_and_its_fasteners;
                                 }
                                 #[path = "."]
                                 pub mod move_part_2d {
@@ -1565,6 +1568,9 @@ mod tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_grip_1_and_severs_fastener;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/➖removes-middle-grip/🦀️.rs"]
+                                    mod tests_removes_the_middle_grip_and_its_fastener;
                                 }
                                 #[path = "."]
                                 pub mod replace_part_grip {
@@ -1604,6 +1610,9 @@ mod tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-grips/🧪️tests/🚫️removes-fast-1/🦀️.rs"]
                                     mod tests_removes_fast_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-grips/🧪️tests/✂️severs-middle-fastener/🦀️.rs"]
+                                    mod tests_severs_the_middle_fastener;
                                 }
                                 #[path = "."]
                                 pub mod replace_fastener_geometry {
@@ -1695,6 +1704,9 @@ mod tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_grip_pair;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
+                                    mod tests_withdraws_the_middle_row;
                                 }
                                 #[path = "."]
                                 pub mod replace_kind_catalogs {
@@ -1740,6 +1752,9 @@ mod tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️removes-volume-1/🦀️.rs"]
                                     mod tests_removes_volume_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🪦️removes-middle-volume/🦀️.rs"]
+                                    mod tests_removes_the_middle_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🌲️clears/🦀️.rs"]
                                     mod tests_clears_the_seed_bay;
@@ -2065,6 +2080,13 @@ mod tests;
 
                 pub use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+
+/// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
+pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+    *projection = next;
+    Ok(())
+}
         pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 
 #[cfg(feature = "component-app-assembly")]
@@ -2156,16 +2178,8 @@ pub mod editor {
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️add-brush-part/🦀️.rs"]
             pub mod add_brush_part;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-node/🦀️.rs"]
-            pub mod add_node;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️add-part-kind/🦀️.rs"]
-            pub mod add_part_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎲️apply-board-events/🦀️.rs"]
-            pub mod apply_board_events;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️apply-sun/🦀️.rs"]
             pub mod apply_sun;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️create-fastener/🦀️.rs"]
-            pub mod create_fastener;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-brush-candidate/🦀️.rs"]
             pub mod cycle_brush_candidate;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎣️target-brush-suggestions/🦀️.rs"]
@@ -2178,14 +2192,10 @@ pub mod editor {
             pub mod hover_suggestion;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️accept-suggestion/🦀️.rs"]
             pub mod accept_suggestion;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💔️delete-fastener/🦀️.rs"]
-            pub mod delete_fastener;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👯️duplicate-selection/🦀️.rs"]
             pub mod duplicate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️edit-fastener/🦀️.rs"]
-            pub mod edit_fastener;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️engagement-abort/🦀️.rs"]
             pub mod engagement_abort;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️engagement-control-select/🦀️.rs"]
@@ -2196,26 +2206,16 @@ pub mod editor {
             pub mod engagement_repeat_last;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
             pub mod engagement_submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪛️patch-fastener/🦀️.rs"]
-            pub mod patch_fastener;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✊️patch-grip/🦀️.rs"]
-            pub mod patch_grip;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-part/🦀️.rs"]
-            pub mod patch_part;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️proximity-connect/🦀️.rs"]
             pub mod proximity_connect;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️register-brush-mesh/🦀️.rs"]
             pub mod register_brush_mesh;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️retarget-fastener/🦀️.rs"]
-            pub mod retarget_fastener;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🦀️.rs"]
             pub mod rotate_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🦀️.rs"]
             pub mod scale_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️select-same-kind/🦀️.rs"]
             pub mod select_same_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛍️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]
             pub mod set_brush_placement_contact_tolerance;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️.rs"]

@@ -17,18 +17,26 @@
       },
       "outputs": []
     },
-    "🏭️generator-byte-order": {
-      "cache": true,
+    "🧪️test": {
+      "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts byte-order",
+        "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
     },
-    "🏭️generator-byte-order-manifests": {
-      "cache": true,
+    "🧪️test-oracle": {
+      "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts byte-order-manifests",
+        "command": "bun ./📜️script.ts test-oracle",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "🧪️test-conformance-oracle": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-conformance-oracle",
         "forwardAllArgs": true
       },
       "outputs": []

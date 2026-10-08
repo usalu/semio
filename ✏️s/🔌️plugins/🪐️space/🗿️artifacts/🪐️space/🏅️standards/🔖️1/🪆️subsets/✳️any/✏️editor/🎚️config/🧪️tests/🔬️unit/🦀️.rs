@@ -55,6 +55,19 @@ async fn artifact_presence_sets_clears_and_inverts_exactly() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn artifact_presence_sets_and_clears_at_the_sorted_middle_slot() {
+    let row = |id: &str| SpaceIndexArtifactPresence { artifact_id: id.into(), actors_csv: "user:1".into() };
+    let base = SpaceIndexConfig { presence: vec![row("artifact-1"), row("artifact-3")], ..Default::default() };
+    let set = SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-2".into(), actors_csv: "user:1".into() };
+    let diff = <SpaceIndexConfigMutation as protocol::Mutation<SpaceIndexConfig>>::diff(&set, &base).into_parts().0;
+    let inserted = diff.presence.as_ref().expect("a new presence row").inserted.iter().map(|entry| (entry.index, entry.row.artifact_id.as_str())).collect::<Vec<_>>();
+    assert_eq!(inserted, vec![(1, "artifact-2")]);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&set, &base).await;
+    let full = SpaceIndexConfig { presence: vec![row("artifact-1"), row("artifact-2"), row("artifact-3")], ..Default::default() };
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceIndexConfigMutation::ClearArtifactPresence { artifact_id: "artifact-2".into() }, &full).await;
+}
+
+#[semio_framework_async_macros::async_test]
 async fn config_mutation_op_text_round_trips() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ReplaceDirectoryProjection { projection: SpaceIndexDirectoryProjection::default() });
     store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() });

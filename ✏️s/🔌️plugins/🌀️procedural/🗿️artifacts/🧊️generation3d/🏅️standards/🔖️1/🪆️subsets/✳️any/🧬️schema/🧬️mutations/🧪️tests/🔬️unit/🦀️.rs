@@ -18,7 +18,8 @@ use rename_generation::RenameGeneration;
 use update_camera::UpdateCamera;
 use update_synapse::UpdateSynapse;
 use update_widget::UpdateWidget;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_document_replacement,generation3d_selection_removal,generation3d_widget_removal};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_selection_removal,generation3d_widget_removal};
+use crate::central_apply::{apply_generation3d_mutation};
 
 fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutation) -> crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead {
     let mut forward = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection.clone());
@@ -133,90 +134,6 @@ fn wire(id: &str, from: &str, to: &str) -> SynapseSpec {
 fn note(id: &str, text: &str) -> Widget {
     Widget::InputNote { id: id.into(), text: text.into() }
 }
-
-#[test]
-fn document_replacement_ignores_the_camera() {
-    let before = default_generation3d_snapshot();
-    let mut after = before.clone();
-    after.host_snapshot.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
-    let leaves = generation3d_document_replacement(&before, &after);
-    assert!(leaves.is_empty(), "an equal document authors nothing, and the camera rides the config lane: {leaves:?}");
-    before.retire_cold();
-    after.retire_cold();
-}
-
-/// 🧱️ The plan names only what differs, in an order that replays: positions, wires and widgets that go come first (a position
-/// leaf addresses a live widget), the schema and the entities that are new or changed follow, wires after both their ends exist.
-#[test]
-fn document_replacement_names_only_what_differs_in_replay_order() {
-    let before = document("old-schema", vec![note("w-gone", ""), note("w-keep", "old"), note("w-end", "")], vec![wire("s-gone", "w-gone", "w-keep"), wire("s-keep", "w-keep", "w-end")], vec![("w-gone", 0.0), ("w-keep", 1.0)], &["g-a", "g-b"], Some("g-a"), Some("old preview"));
-    let after = document("new-schema", vec![note("w-new", ""), note("w-keep", "new"), note("w-end", "")], vec![wire("s-keep", "w-keep", "w-end"), wire("s-new", "w-new", "w-keep")], vec![("w-keep", 2.0), ("w-new", 3.0)], &["g-b", "g-c"], Some("g-b"), None);
-    let leaves = generation3d_document_replacement(&before, &after);
-    let kinds: Vec<&str> = leaves.iter().map(|leaf| protocol::SemanticMutation::semantics(leaf).kind).collect();
-    let count = |kind: &str| kinds.iter().filter(|candidate| **candidate == kind).count();
-    let first = |kind: &str| kinds.iter().position(|candidate| *candidate == kind).unwrap_or_else(|| panic!("{kind} is authored"));
-    let last = |kind: &str| kinds.iter().rposition(|candidate| *candidate == kind).unwrap_or_else(|| panic!("{kind} is authored"));
-    assert!(last("delete-widget-position") < first("delete-widget"), "{kinds:?}");
-    assert!(last("disconnect-synapse") < first("delete-widget"), "{kinds:?}");
-    assert!(last("delete-widget") < first("create-widget"), "{kinds:?}");
-    assert!(last("create-widget") < first("connect-synapse"), "{kinds:?}");
-    assert!(last("create-widget") < first("move-widget"), "{kinds:?}");
-    assert_eq!((count("delete-widget"), count("create-widget"), count("update-widget")), (1, 1, 1), "w-end is shared and equal, so it is not authored: {kinds:?}");
-    assert_eq!((count("disconnect-synapse"), count("connect-synapse"), count("update-synapse")), (1, 1, 0), "s-keep is shared and equal, so it is not authored: {kinds:?}");
-    assert!(kinds.contains(&"change-schema") && kinds.contains(&"change-generation-preview") && kinds.contains(&"select-generation"), "{kinds:?}");
-    let replayed = replay(&before, &leaves);
-    assert_eq!(replayed.host_snapshot.widgets, after.host_snapshot.widgets);
-    assert_eq!(replayed.host_snapshot.synapses, after.host_snapshot.synapses);
-    assert_eq!(replayed.host_snapshot.layout, after.host_snapshot.layout);
-    assert_eq!(replayed.host_snapshot.schema, after.host_snapshot.schema);
-    assert_eq!(replayed.generation, after.generation);
-    for leaf in leaves {
-        leaf.retire_cold();
-    }
-    before.retire_cold();
-    after.retire_cold();
-}
-
-/// 🧱️ Re-loading the document in front of the user authors nothing; one edited text authors one `update-widget`.
-#[test]
-fn document_replacement_of_a_shared_document_authors_only_the_edit() {
-    let base = document("s", vec![note("a", "one"), note("b", "")], vec![wire("ab", "a", "b")], vec![("a", 0.0)], &["g"], Some("g"), None);
-    let same = base.clone();
-    assert!(generation3d_document_replacement(&base, &same).is_empty());
-    same.retire_cold();
-    let edited = document("s", vec![note("a", "two"), note("b", "")], vec![wire("ab", "a", "b")], vec![("a", 0.0)], &["g"], Some("g"), None);
-    assert_eq!(generation3d_document_replacement(&base, &edited), vec![Generation3dMutation::UpdateWidget(UpdateWidget { widget: note("a", "two") })]);
-    base.retire_cold();
-    edited.retire_cold();
-}
-
-/// 🧱️ A document that differs in its selection alone authors the selection alone.
-#[test]
-fn document_replacement_of_the_selection_alone_is_one_leaf() {
-    let before = document("s", vec![note("w", "")], Vec::new(), Vec::new(), &["g-a", "g-b"], Some("g-a"), None);
-    let after = document("s", vec![note("w", "")], Vec::new(), Vec::new(), &["g-a", "g-b"], Some("g-b"), None);
-    assert_eq!(generation3d_document_replacement(&before, &after), vec![Generation3dMutation::SelectGeneration(select_generation::SelectGeneration { generation_id: Some("g-b".into()) })]);
-    before.retire_cold();
-    after.retire_cold();
-}
-
-/// 🧱️ Widgets and wires the two documents share in another relative order are rebuilt whole — the vocabulary has no reorder
-/// verb, and the all-or-nothing rule replaces any choice of which survivors to keep.
-#[test]
-fn document_replacement_reaches_a_reordered_widget_and_wire_list() {
-    let before = document("s", vec![note("a", ""), note("b", ""), note("c", "")], vec![wire("ab", "a", "b"), wire("bc", "b", "c")], Vec::new(), &[], None, None);
-    let after = document("s", vec![note("c", ""), note("a", ""), note("b", "")], vec![wire("bc", "b", "c"), wire("ab", "a", "b")], Vec::new(), &[], None, None);
-    let leaves = generation3d_document_replacement(&before, &after);
-    let replayed = replay(&before, &leaves);
-    assert_eq!(replayed.host_snapshot.widgets, after.host_snapshot.widgets);
-    assert_eq!(replayed.host_snapshot.synapses, after.host_snapshot.synapses);
-    for leaf in leaves {
-        leaf.retire_cold();
-    }
-    before.retire_cold();
-    after.retire_cold();
-}
-
 /// 🗑️ `delete-widget` does not cascade; the cascade is spelled by `generation3d_widget_removal` and is complete: no wire
 /// naming the widget and no layout entry is left standing, and the leaves replay on their own.
 #[test]

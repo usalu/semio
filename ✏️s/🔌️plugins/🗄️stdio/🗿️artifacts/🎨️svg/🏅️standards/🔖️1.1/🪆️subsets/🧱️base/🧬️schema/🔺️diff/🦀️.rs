@@ -383,17 +383,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
             epilog: self.epilog.as_ref().map(|_| base.doc.epilog.clone()),
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
-            root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
-        }
-    }
-
-    fn between(base: &SvgSnapshot, other: &SvgSnapshot) -> Self {
-        SvgDiff {
-            prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
-            epilog: if base.doc.epilog != other.doc.epilog { Some(other.doc.epilog.clone()) } else { None },
-            declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
-            doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
-            root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
+            root: self.root.as_ref().map(|d| rewind_node_diff(base.doc.root.as_ref(), d)),
         }
     }
 
@@ -403,7 +393,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_node_diff(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> SvgNodeDiff {
+fn rewind_node_diff(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> SvgNodeDiff {
     match diff {
         SvgNodeDiff::Replace { .. } => SvgNodeDiff::Replace { node: current.cloned() },
         SvgNodeDiff::Text { .. } => match current {
@@ -414,8 +404,8 @@ fn inverse_node_diff(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> SvgNodeDi
         SvgNodeDiff::Element(element_diff) => match current {
             Some(SvgNode::Element { name, attrs, children }) => SvgNodeDiff::Element(SvgElementDiff {
                 name: element_diff.name.as_ref().map(|_| name.clone()),
-                attributes: element_diff.attributes.as_ref().map(|ad| inverse_attrs_diff(attrs, ad)),
-                children: element_diff.children.as_ref().map(|cd| inverse_children_diff(children, cd)),
+                attributes: element_diff.attributes.as_ref().map(|ad| rewind_attrs_diff(attrs, ad)),
+                children: element_diff.children.as_ref().map(|cd| rewind_children_diff(children, cd)),
             }),
             Some(other) => SvgNodeDiff::Replace { node: Some(other.clone()) },
             None => SvgNodeDiff::Replace { node: None },
@@ -424,7 +414,7 @@ fn inverse_node_diff(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> SvgNodeDi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_attrs_diff(base_attrs: &[SvgAttr], diff: &SvgAttributesDiff) -> SvgAttributesDiff {
+fn rewind_attrs_diff(base_attrs: &[SvgAttr], diff: &SvgAttributesDiff) -> SvgAttributesDiff {
     let removed: Vec<String> = diff.added.iter().map(|a| a.name.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -444,13 +434,13 @@ fn inverse_attrs_diff(base_attrs: &[SvgAttr], diff: &SvgAttributesDiff) -> SvgAt
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_children_diff(base_children: &[SvgNode], diff: &SvgChildrenDiff) -> SvgChildrenDiff {
+fn rewind_children_diff(base_children: &[SvgNode], diff: &SvgChildrenDiff) -> SvgChildrenDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_children.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(SvgChildModified { index: next_index, diff: inverse_node_diff(Some(original), &m.diff) });
+            modified.push(SvgChildModified { index: next_index, diff: rewind_node_diff(Some(original), &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -463,83 +453,6 @@ fn inverse_children_diff(base_children: &[SvgNode], diff: &SvgChildrenDiff) -> S
     SvgChildrenDiff { removed, modified, added }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_root(base: Option<&SvgNode>, other: Option<&SvgNode>) -> Option<SvgNodeDiff> {
-    match (base, other) {
-        (None, None) => None,
-        (None, Some(n)) => Some(SvgNodeDiff::Replace { node: Some(n.clone()) }),
-        (Some(_), None) => Some(SvgNodeDiff::Replace { node: None }),
-        (Some(b), Some(o)) => between_node(b, o),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_node(base: &SvgNode, other: &SvgNode) -> Option<SvgNodeDiff> {
-    if base == other {
-        return None;
-    }
-    match (base, other) {
-        (SvgNode::Text { .. }, SvgNode::Text { text: ot }) => Some(SvgNodeDiff::Text { text: Some(ot.clone()) }),
-        (SvgNode::Element { name: bn, attrs: ba, children: bc }, SvgNode::Element { name: on, attrs: oa, children: oc }) => {
-            let name = if bn != on { Some(on.clone()) } else { None };
-            let attributes = between_attrs(ba, oa);
-            let children = between_children(bc, oc);
-            if name.is_none() && attributes.is_none() && children.is_none() {
-                None
-            } else {
-                Some(SvgNodeDiff::Element(SvgElementDiff { name, attributes, children }))
-            }
-        }
-        _ => Some(SvgNodeDiff::Replace { node: Some(other.clone()) }),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_attrs(base: &[SvgAttr], other: &[SvgAttr]) -> Option<SvgAttributesDiff> {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        match other.iter().find(|o| o.name == b.name) {
-            Some(o) if o.value != b.value => modified.push(SvgAttrModified { name: b.name.clone(), value: o.value.clone() }),
-            Some(_) => {}
-            None => removed.push(b.name.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, o) in other.iter().enumerate() {
-        if !base.iter().any(|b| b.name == o.name) {
-            added.push(SvgAttrAdded { index: i, name: o.name.clone(), value: o.value.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(SvgAttributesDiff { removed, modified, added })
-    }
-}
-
-/// 🧮️ Naive positional child diff per the recipe's "between matching" rule for index-keyed
-/// collections: pairwise-compare `0..min(base.len(), other.len())` as `modified`, the base tail
-/// as `removed`, the other tail as `added`. Not an LCS-based diff (no move/reorder detection).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_children(base: &[SvgNode], other: &[SvgNode]) -> Option<SvgChildrenDiff> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = between_node(&base[i], &other[i]) {
-                modified.push(SvgChildModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<SvgChildAdded> = (min_len..other.len()).map(|i| SvgChildAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(SvgChildrenDiff { removed, modified, added })
-    }
-}
 //#endregion 🔖️DiffAlgebra
 
 //#region 🔖️Absorb
@@ -735,68 +648,40 @@ fn absorb_children_diff(d1: SvgChildrenDiff, d2: &SvgChildrenDiff) -> SvgChildre
 }
 //#endregion 🔖️Absorb
 
-
 //#region 🔖️HandcraftedDiffCodec
-/// 🧪️ F6-PILOT: **hand-rolled** `protocol::DiffCodec` for `SvgDiff` — the template every other
-/// enum-shaped-diff artifact's F6 agent copies (svg is the plan's own named proof-of-concept for
-/// this path, `SvgNodeDiff` being a real tagged enum in the tree; xml/json/dxf/pdf/md follow the
-/// same shape). Same grammar style `GifDiff`'s hand-rolled codec uses (bracket-depth-aware split,
-/// hex for strings/bytes, `[0]`/`[1,x]` for `Option<T>`) — see that file's doc comment for the
-/// primitive rationale; this file re-derives its own copies of the small helper functions since
-/// each hand-rolled codec is self-contained (no shared "hand-roll helpers" module exists yet —
-/// flagged as a good future extraction once ≥3 artifacts hand-roll, not worth adding here for one).
-//#region 🔖️Primitives
-// 🚫️aaaaa️aaaa️a️agion 🔖️BinaryPrimitives
-/// 🧪️aaa️a️aregion 🔖️BinaryPrimitives
-//#endregion 🔖️Primitives
-
-//#region 🔖️XmlValueCodecs
-
-// 🚫️aa�️️aaaaaa gion 🔖️XmlValueBinaryCodecs
-
-// 🚫️aaaaregion 🔖️XmlValueBinaryCodecs
-//#endregion 🔖️XmlValueCodecs
-
-//#region 🔖️DiffValueCodecs
-// 🚫️aa� aaagion 🔖️DiffValueBinaryCodecs
-/// 🧪️a️aa️aaregion 🔖️DiffValueBinaryCodecs
-//#endregion 🔖️DiffValueCodecs
-
-//#region 🔖️TopLevel
-// 🚫️aaprregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
 //#region 🔖️DemoCases
-/// 🧪️ P2-FG3: representative `SvgDiff` values (both top-level tri-states, the recursive
-/// `Element`/`Text`/`Replace` `SvgNodeDiff` tree, attribute add/remove/modify, nested child
-/// add/remove/modify) — the single prolog of truth reused by `diff_codec_text_binary_roundtrip_law`
-/// below AND by `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
+/// 🧪️ P2-FG3: representative `SvgDiff` values built declaratively (both top-level tri-states, the recursive `Element`/`Text`/`Replace`
+/// `SvgNodeDiff` tree, attribute add/remove/modify, nested child add/remove/modify) — the single source of truth reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
-    use crate::schema::snapshot::SvgDocument;
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn elem(name: &str, attrs: Vec<(&str, crate::schema::snapshot::SvgAttributeValue)>, children: Vec<SvgNode>) -> SvgNode {
-        SvgNode::Element { name: name.to_string(), attrs: attrs.into_iter().map(|(n, v)| SvgAttr { name: n.to_string(), value: v }).collect(), children }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn snapshot(doc: SvgDocument) -> SvgSnapshot {
-        SvgSnapshot { doc, ..Default::default() }
-    }
-
-    let a = snapshot(SvgDocument {
-        root: Some(elem("svg", vec![("width", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:10.0,unit:"".into()}))], vec![elem("rect", vec![("x", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:0.0,unit:"".into()}))], vec![])])),
-        doctype: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype{name:"svg".into(),..Default::default()}),
-        declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single }),
-        prolog: Vec::new(),
-        epilog: Vec::new(),
-    });
-    let b = snapshot(SvgDocument { root: Some(elem("svg", vec![("width", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:20.0,unit:"".into()})), ("height", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:30.0,unit:"".into()}))], vec![elem("circle", vec![("r", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:5.0,unit:"".into()}))], vec![]), SvgNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
-    let c = snapshot(SvgDocument { root: None, doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
-
-    vec![SvgDiff::default(), SvgDiff::between(&a, &b), SvgDiff::between(&b, &a), SvgDiff::between(&a, &c), SvgDiff::between(&c, &a)]
+    use crate::schema::snapshot::SvgAttributeValue;
+    let element = SvgElementDiff {
+        name: Some("svg2".into()),
+        attributes: Some(SvgAttributesDiff {
+            removed: vec!["width".into()],
+            modified: vec![SvgAttrModified { name: "x".into(), value: SvgAttributeValue::Text("1".into()) }],
+            added: vec![SvgAttrAdded { index: 0, name: "height".into(), value: SvgAttributeValue::Text("30".into()) }],
+        }),
+        children: Some(SvgChildrenDiff {
+            removed: vec![0],
+            modified: vec![SvgChildModified { index: 1, diff: SvgNodeDiff::Text { text: Some("hi".into()) } }],
+            added: vec![SvgChildAdded { index: 0, item: SvgNode::CData { text: "raw".into() } }],
+        }),
+    };
+    vec![
+        SvgDiff::default(),
+        SvgDiff {
+            prolog: Some(vec![SvgNode::Comment { text: " c ".into() }]),
+            epilog: Some(Vec::new()),
+            declaration: Some(Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single })),
+            doctype: Some(None),
+            root: Some(SvgNodeDiff::Element(element)),
+        },
+        SvgDiff { root: Some(SvgNodeDiff::Replace { node: None }), ..Default::default() },
+    ]
 }
 //#endregion 🔖️DemoCases
 

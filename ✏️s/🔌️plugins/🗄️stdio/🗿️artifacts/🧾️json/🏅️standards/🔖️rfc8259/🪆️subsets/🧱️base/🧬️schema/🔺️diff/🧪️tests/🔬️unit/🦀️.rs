@@ -26,41 +26,17 @@ fn str_(s: &str) -> JsonValue {
     JsonValue::String { value: s.into() }
 }
 
-//#region between_roundtrip_law
-#[test]
-fn between_roundtrip_law_scalars_and_kind_change() {
-    let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
-    for (a, b) in cases {
-        let (sa, sb) = (snap(a.clone()), snap(b.clone()));
-        assert_eq!(protocol::apply_diff(&JsonDiff::between(&sa, &sb), &sa).unwrap(), sb, "a={a:?} b={b:?}");
-        assert_eq!(protocol::apply_diff(&JsonDiff::between(&sb, &sa), &sb).unwrap(), sa);
-    }
-}
-
-#[test]
-fn between_roundtrip_law_nested_collections() {
-    let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
-    let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
-    let (sa, sb) = (snap(a.clone()), snap(b.clone()));
-    assert_eq!(protocol::apply_diff(&JsonDiff::between(&sa, &sb), &sa).unwrap(), sb);
-    assert_eq!(protocol::apply_diff(&JsonDiff::between(&sb, &sa), &sb).unwrap(), sa);
-}
-
-#[test]
-fn between_self_is_empty() {
-    let a = objv(vec![("x", num("1"))]);
-    let sa = snap(a);
-    assert!(JsonDiff::between(&sa, &sa).is_empty());
-}
-//#endregion between_roundtrip_law
-
 //#region inverse_law
 #[test]
 fn inverse_law_diff_level() {
     let a = objv(vec![("x", num("1")), ("y", arr(vec![num("1"), num("2")]))]);
     let b = objv(vec![("x", num("2")), ("z", str_("new"))]);
     let (sa, sb) = (snap(a), snap(b));
-    let d = JsonDiff::between(&sa, &sb);
+    let d = object_diff(JsonObjectDiff {
+        removed: vec!["y".into()],
+        modified: vec![JsonObjectModified { key: "x".into(), diff: JsonValueDiff::Number { lexeme: "2".into() } }],
+        added: vec![JsonObjectAdded { index: 1, key: "z".into(), item: str_("new") }],
+    });
     let mid = protocol::apply_diff(&d, &sa).unwrap();
     assert_eq!(mid, sb);
     let inv = d.inverse(&sa);
@@ -69,16 +45,16 @@ fn inverse_law_diff_level() {
 //#endregion inverse_law
 
 //#region absorb_law canonical cases (array/index-keyed)
-// NOTE: these construct `d1`/`d2` DIRECTLY as genuine Insert/Remove/Modify array diffs
-// (matching exactly what `JsonMutation::InsertArrayElement`/`RemoveArrayElement`/`SetScalar`
-// would produce) rather than via `JsonDiff::between(base, next)` — `between` does a PURE
-// POSITIONAL comparison (0..min(len)), so a middle-insertion between two concrete array
-// VALUES is represented as a same-position `modified` entry plus a tail `added` entry, not as
-// a genuine `Insert` — the right, and separately law-tested, behavior for `between`, but the
-// wrong fixture shape for exercising the mandated Insert/Remove canonical absorb cases.
+// NOTE: these construct `d1`/`d2` DIRECTLY as genuine Insert/Remove/Modify array diffs (matching exactly what
+// `JsonMutation::InsertArrayElement`/`RemoveArrayElement`/`SetScalar` would produce).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn array_diff(d: JsonArrayDiff) -> JsonDiff {
     JsonDiff { value: Some(JsonValueDiff::Array { diff: d }) }
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn object_diff(d: JsonObjectDiff) -> JsonDiff {
+    JsonDiff { value: Some(JsonValueDiff::Object { diff: d }) }
 }
 
 #[test]
@@ -182,9 +158,9 @@ fn absorb_array_associativity() {
     let s1 = snap(arr(vec![num("1"), num("9"), num("3")]));
     let s2 = snap(arr(vec![num("9"), num("3"), num("4")]));
     let s3 = snap(arr(vec![num("9"), num("4")]));
-    let d1 = JsonDiff::between(&s0, &s1);
-    let d2 = JsonDiff::between(&s1, &s2);
-    let d3 = JsonDiff::between(&s2, &s3);
+    let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 1, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
+    let d2 = array_diff(JsonArrayDiff { removed: vec![0], added: vec![JsonArrayAdded { index: 2, item: num("4") }], ..Default::default() });
+    let d3 = array_diff(JsonArrayDiff { removed: vec![1], ..Default::default() });
 
     let mut left = d1.clone();
     left.absorb(d2.clone());
@@ -208,8 +184,11 @@ fn absorb_object_add_then_setfield_patches_added_payload() {
     let mid = objv(vec![("config", objv(vec![]))]);
     let after = objv(vec![("config", objv(vec![("x", num("5"))]))]);
     let (sbase, smid, safter) = (snap(base), snap(mid), snap(after.clone()));
-    let d1 = JsonDiff::between(&sbase, &smid);
-    let d2 = JsonDiff::between(&smid, &safter);
+    let d1 = object_diff(JsonObjectDiff { added: vec![JsonObjectAdded { index: 0, key: "config".into(), item: objv(vec![]) }], ..Default::default() });
+    let d2 = object_diff(JsonObjectDiff {
+        modified: vec![JsonObjectModified { key: "config".into(), diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 0, key: "x".into(), item: num("5") }], ..Default::default() } } }],
+        ..Default::default()
+    });
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
     assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), snap(after));
@@ -229,8 +208,8 @@ fn absorb_object_modify_then_remove_drops_pending_patch() {
     let mid = objv(vec![("a", num("9")), ("b", num("2"))]);
     let after = objv(vec![("b", num("2"))]);
     let (sbase, smid, safter) = (snap(base), snap(mid), snap(after));
-    let d1 = JsonDiff::between(&sbase, &smid);
-    let d2 = JsonDiff::between(&smid, &safter);
+    let d1 = object_diff(JsonObjectDiff { modified: vec![JsonObjectModified { key: "a".into(), diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
+    let d2 = object_diff(JsonObjectDiff { removed: vec!["a".into()], ..Default::default() });
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
     assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), safter);
@@ -249,8 +228,8 @@ fn absorb_object_insert_insert_both_survive() {
     let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
     let after = objv(vec![("a", num("1")), ("f", num("2")), ("g", num("3"))]);
     let (sbase, smid, safter) = (snap(base), snap(mid), snap(after.clone()));
-    let d1 = JsonDiff::between(&sbase, &smid);
-    let d2 = JsonDiff::between(&smid, &safter);
+    let d1 = object_diff(JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "f".into(), item: num("2") }], ..Default::default() });
+    let d2 = object_diff(JsonObjectDiff { added: vec![JsonObjectAdded { index: 2, key: "g".into(), item: num("3") }], ..Default::default() });
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
     assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), snap(after));
@@ -266,8 +245,8 @@ fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
     let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
     let after = objv(vec![("a", num("1"))]);
     let (sbase, smid, safter) = (snap(base.clone()), snap(mid), snap(after));
-    let d1 = JsonDiff::between(&sbase, &smid);
-    let d2 = JsonDiff::between(&smid, &safter);
+    let d1 = object_diff(JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "f".into(), item: num("2") }], ..Default::default() });
+    let d2 = object_diff(JsonObjectDiff { removed: vec!["f".into()], ..Default::default() });
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
     assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), snap(base));
@@ -280,9 +259,9 @@ fn absorb_object_associativity() {
     let s1 = snap(objv(vec![("a", num("1")), ("b", num("2"))]));
     let s2 = snap(objv(vec![("a", num("9")), ("b", num("2"))]));
     let s3 = snap(objv(vec![("b", num("2")), ("c", num("3"))]));
-    let d1 = JsonDiff::between(&s0, &s1);
-    let d2 = JsonDiff::between(&s1, &s2);
-    let d3 = JsonDiff::between(&s2, &s3);
+    let d1 = object_diff(JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "b".into(), item: num("2") }], ..Default::default() });
+    let d2 = object_diff(JsonObjectDiff { modified: vec![JsonObjectModified { key: "a".into(), diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
+    let d3 = object_diff(JsonObjectDiff { removed: vec!["a".into()], added: vec![JsonObjectAdded { index: 1, key: "c".into(), item: num("3") }], ..Default::default() });
 
     let mut left = d1.clone();
     left.absorb(d2.clone());
@@ -330,51 +309,6 @@ fn sweep_b() -> JsonSnapshot {
     ]))
 }
 
-#[test]
-fn field_sweep_between_roundtrips_both_directions() {
-    let (a, b) = (sweep_a(), sweep_b());
-    assert_eq!(protocol::apply_diff(&JsonDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&JsonDiff::between(&b, &a), &b).unwrap(), a);
-    assert!(JsonDiff::between(&a, &a).is_empty());
-}
-
-#[test]
-fn field_sweep_every_field_present_in_diff() {
-    let (a, b) = (sweep_a(), sweep_b());
-    let diff = JsonDiff::between(&a, &b);
-    let object_diff = match diff.value {
-        Some(JsonValueDiff::Object { diff }) => diff,
-        other => panic!("expected a top-level object diff, got {other:?}"),
-    };
-    assert_eq!(object_diff.removed, vec!["removedMember".to_string()]);
-    assert_eq!(object_diff.added.len(), 1);
-    assert_eq!(object_diff.added[0].key, "addedMember");
-
-    let by_key: HashMap<&str, &JsonValueDiff> = object_diff.modified.iter().map(|m| (m.key.as_str(), &m.diff)).collect();
-    for key in ["keepBool", "keepNumber", "keepString", "kindChange", "nullToValue", "modifiedMember", "nestedArray", "nestedObject"] {
-        assert!(by_key.contains_key(key), "expected a modified entry for `{key}`");
-    }
-    assert!(matches!(by_key["kindChange"], JsonValueDiff::Replace { .. }), "Number->String must fall back to Replace");
-    assert!(matches!(by_key["nullToValue"], JsonValueDiff::Replace { .. }), "Null->Bool must fall back to Replace");
-    assert!(matches!(by_key["keepBool"], JsonValueDiff::Bool { .. }));
-    assert!(matches!(by_key["keepNumber"], JsonValueDiff::Number { .. }));
-    assert!(matches!(by_key["keepString"], JsonValueDiff::String { .. }));
-    assert!(matches!(by_key["modifiedMember"], JsonValueDiff::Number { .. }));
-    match by_key["nestedArray"] {
-        JsonValueDiff::Array { diff } => {
-            assert!(!diff.modified.is_empty());
-            assert!(!diff.added.is_empty());
-        }
-        other => panic!("expected array diff, got {other:?}"),
-    }
-    match by_key["nestedObject"] {
-        JsonValueDiff::Object { diff } => {
-            assert!(!diff.modified.is_empty());
-            assert!(!diff.added.is_empty());
-        }
-        other => panic!("expected object diff, got {other:?}"),
-    }
-}
 //#endregion field_sweep
 
 //#region 🔖️HandcraftedDiffCodecTests

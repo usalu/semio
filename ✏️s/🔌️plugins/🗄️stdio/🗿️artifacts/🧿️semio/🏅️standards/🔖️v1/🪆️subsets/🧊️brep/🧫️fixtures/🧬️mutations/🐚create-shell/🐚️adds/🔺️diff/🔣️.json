@@ -2,13 +2,16 @@
   "shells": {
     "added": [
       {
-        "id": "s2",
-        "faces": [
-          {
-            "face": "f1",
-            "orientation": false
-          }
-        ]
+        "index": 1,
+        "item": {
+          "id": "s2",
+          "faces": [
+            {
+              "face": "f1",
+              "orientation": false
+            }
+          ]
+        }
       }
     ]
   }

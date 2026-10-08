@@ -209,9 +209,6 @@ impl protocol::DiffAlgebra<TestSnapshot> for TestDiff {
     fn inverse(&self, base: &TestSnapshot) -> Self {
         Self { count: self.count.map(|_| base.count), label: self.label.as_ref().map(|_| base.label.clone()), slot: self.slot.as_ref().map(|_| test_slot_uris(base)) }
     }
-    fn between(base: &TestSnapshot, other: &TestSnapshot) -> Self {
-        Self { count: (base.count != other.count).then_some(other.count), label: (base.label != other.label).then(|| other.label.clone()), slot: (test_slot_uris(base) != test_slot_uris(other)).then(|| test_slot_uris(other)) }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

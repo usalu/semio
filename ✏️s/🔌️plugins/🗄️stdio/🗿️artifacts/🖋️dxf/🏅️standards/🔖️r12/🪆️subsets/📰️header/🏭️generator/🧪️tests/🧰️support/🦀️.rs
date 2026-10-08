@@ -298,7 +298,7 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
             Some(RecipeOutput::Pair(before, Some(after)))
         }
         // 🧬 SetLayer{name:"GHOST_LAYER", ..} — `diff_set_layer` ALWAYS emits a `modified` entry
-        // (unlike SetHeaderVar, `layer_diff_between(&old.unwrap_or_default(), layer)` runs
+        // (unlike SetHeaderVar, `layer_field_changes(&old.unwrap_or_default(), layer)` runs
         // regardless of presence — 🧬️mutations/🦀️.rs:247-250); absent name fails the modify path's
         // `unique(key)` check — `invalid-modify-target`.
         "set-layer-rejected-missing" => Some(RecipeOutput::Pair(before, None)),

@@ -1,16 +1,19 @@
 //! 🧪️ Borrowed create plans match literal invariant priority without owning mutation payloads.
 
 use super::*;
-use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneBorrowAuthority};
+use semio_framework_value::paged::PagedUtf8;
+use crate::test_source_custody;
 
 fn close(cursor: &mut Puzzle2dCreateNodePreparationCursor) {
     cursor.begin_close();
     for _ in 0..32 {
         if cursor.terminal_is_empty() { return; }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(1, 32));
+        let copy=cursor.next_close_copy_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();let release=cursor.next_close_release_byte_demand().unwrap();let depth=cursor.next_close_depth_demand().unwrap();assert!(copy+capacity+release<=4096);
+        let permit=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(permit));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!heap.overflowed);
-        assert!(!matches!(step.unwrap(), SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > 32));
+        assert!(step.unwrap().progress().fits(permit));
     }
     panic!("borrowed create preparation retained a native alias after closure");
 }
@@ -21,7 +24,7 @@ fn history_edit_puzzle2d_borrowed_create_preparation_preserves_invariant_priorit
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
-    let grant = BoundedOrdGrant { maximum_items: 1, maximum_bytes: 32 };
+    let grant = RetainedCloneGrant::one_payload_turn(32,64);
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
         snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|id| crate::Puzzle2dNode { id: text(id), ..Default::default() }).collect();
@@ -36,21 +39,22 @@ fn history_edit_puzzle2d_borrowed_create_preparation_preserves_invariant_priorit
         let original = serde_json::to_value(&snapshot).unwrap();
         let original_payload = serde_json::to_value(&payload).unwrap();
         let bits = [payload.node.x.to_bits(), payload.node.y.to_bits()];
-        let source = RetainedCloneBorrowAuthority::new("borrowed create native snapshot");
-        let mutation = RetainedCloneBorrowAuthority::new("borrowed create original mutation");
+        let mut source = test_source_custody::admit();
+        let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dCreateNodePreparationCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), BoundedOrdGrant { maximum_items: 0, maximum_bytes: 0 }));
-        assert_eq!(zero.unwrap(), Puzzle2dCreateNodePreparationStep::Pending(BoundedOrdProgress::default()));
+        let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default()));
+        assert_eq!(zero.unwrap(), Puzzle2dCreateNodePreparationStep::Pending(RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut plan = None;
-        for _ in 0..100_000 {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant));
+        for turn in 0..100_000 {
+            let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(!heap.overflowed);
             let step = step.unwrap();
             let progress = match step { Puzzle2dCreateNodePreparationStep::Pending(progress) | Puzzle2dCreateNodePreparationStep::Complete { progress, .. } => progress };
-            assert!(progress.compared_items <= 1 && progress.compared_bytes <= 32);
+            assert!(progress.fits(permit));
             if let Puzzle2dCreateNodePreparationStep::Complete { plan: value, .. } = step { plan = Some(value); break; }
         }
         let plan = plan.expect("borrowed create preparation did not finish");
@@ -69,7 +73,8 @@ fn history_edit_puzzle2d_borrowed_create_preparation_preserves_invariant_priorit
         assert!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&swapped), grant).is_err());
         close(&mut cancelled);
         assert_eq!(cancelled.take(), None);
-        if case["id"] == "large-prefix" { let mut cancelled = Puzzle2dCreateNodePreparationCursor::default(); for _ in 0..30 { assert!(matches!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant).unwrap(), Puzzle2dCreateNodePreparationStep::Pending(_))); } close(&mut cancelled); }
+        if case["id"] == "large-prefix" { let mut cancelled = Puzzle2dCreateNodePreparationCursor::default(); for turn in 0..30 { let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};assert!(matches!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit).unwrap(), Puzzle2dCreateNodePreparationStep::Pending(_))); } close(&mut cancelled); }
+        test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
         eprintln!("[DEBUG] Puzzle2d create {} retained invariant priority, literal placement and original native owners with zero heap birth/copy/alias closure", case["id"].as_str().unwrap());
     }
 }

@@ -11,9 +11,9 @@ pub fn diff(payload: &super::EditRun, base: &SemioTextSnapshot) -> protocol::Mut
     let Some(existing) = base.runs.get(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]);
     };
-    if existing.content == payload.new_content {
-        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_content));
+    if existing.content == payload.new_text {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_text));
     }
-    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(IndexedTripleDiff { modified: vec![IndexModified { index: payload.index, diff: SemioTextRunDiff { content: Some(payload.new_content.clone()), ..Default::default() } }], ..Default::default() }) })
+    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(IndexedTripleDiff { modified: vec![IndexModified { index: payload.index, diff: SemioTextRunDiff { content: Some(payload.new_text.clone()), ..Default::default() } }], ..Default::default() }) })
 }
 //#endregion 🔖️Diff

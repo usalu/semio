@@ -4,7 +4,7 @@
 
 use crate::editor::las::modes::edit;
 use crate::editor::las::modes::edit::windows::main;
-use crate::standards::v1_0::subsets::any::schema::mutations::{net_mutations, LasMutation};
+use crate::standards::v1_0::subsets::any::schema::mutations::{LasMutation};
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -288,8 +288,42 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { LasAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::las::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v1_0::subsets::any::schema::mutations::{insert_vlr, remove_vlr, set_bounds, set_creation_date, set_points_by_return, set_scale_and_offset, set_software_info, set_system_identifier, set_version};
+        use crate::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasVlr};
+        let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return Ok(None) };
+        let fail = |message: String| Fault::from(message);
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        match segments.as_slice() {
+            ["header", field, ..] => {
+                let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(&snapshot.header), "/header", event).map_err(|error| fail(error.to_string()))?;
+                let new = <LasHeader as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                let leaf = match *field {
+                    "versionMajor" | "versionMinor" => LasMutation::SetVersion(set_version::SetVersion { major: new.version_major, minor: new.version_minor }),
+                    "systemIdentifier" => LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: new.system_identifier }),
+                    "generatingSoftware" => LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: new.generating_software }),
+                    "creationDayOfYear" | "creationYear" => LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: new.creation_day_of_year, year: new.creation_year }),
+                    "xScale" | "yScale" | "zScale" | "xOffset" | "yOffset" | "zOffset" => {
+                        LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: (new.x_scale, new.y_scale, new.z_scale), offset: (new.x_offset, new.y_offset, new.z_offset) })
+                    }
+                    "maxX" | "minX" | "maxY" | "minY" | "maxZ" | "minZ" => LasMutation::SetBounds(set_bounds::SetBounds { max: (new.max_x, new.max_y, new.max_z), min: (new.min_x, new.min_y, new.min_z) }),
+                    "pointsByReturn" => LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: new.points_by_return }),
+                    other => return Err(fail(format!("no kind edits the structural header field '{other}' ({path})"))),
+                };
+                Ok(Some(vec![leaf]))
+            }
+            ["vlrs", index, field] if *field != "data" => {
+                let index = index.parse::<usize>().map_err(|error| fail(error.to_string()))?;
+                let current = snapshot.vlrs.get(index).ok_or_else(|| fail(format!("VLR {index} does not exist")))?;
+                let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/vlrs/{index}"), event).map_err(|error| fail(error.to_string()))?;
+                let vlr = <LasVlr as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                Ok(Some(vec![LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index }), LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr })]))
+            }
+            _ => Ok(None),
+        }
     }
 }
 

@@ -3,6 +3,6 @@
 import type { DeleteCuratedItem } from "../🟦️.ts";
 import type { CurationCuratedDelta } from "../../../🔺️diff/🟦️.ts";
 
-export function diff(payload: DeleteCuratedItem): { curated: CurationCuratedDelta } {
-  return { curated: { removed: [payload.objectId] } };
+export function diff(payload: DeleteCuratedItem, base: { curated: { objectId: string }[] }): { curated: CurationCuratedDelta } {
+  return { curated: { removed: [{ id: payload.objectId, index: base.curated.findIndex((item) => item.objectId === payload.objectId) }] } };
 }

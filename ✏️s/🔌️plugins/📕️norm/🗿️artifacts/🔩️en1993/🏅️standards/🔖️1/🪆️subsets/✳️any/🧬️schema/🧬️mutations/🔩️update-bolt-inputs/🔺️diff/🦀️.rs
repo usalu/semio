@@ -8,11 +8,11 @@ pub fn diff(payload: &UpdateBoltInputs, base: &En1993Snapshot) -> protocol::Muta
     let delta = match base.joints.iter().position(|row| row.id == payload.joint.id) {
         Some(index) if base.joints[index] == payload.joint => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
         Some(index) => {
-            let mut replacement = En1993JointDelta::removal(&payload.joint.id);
-            replacement.absorb(En1993JointDelta::insertion(&base.joints, index, payload.joint.clone()));
+            let mut replacement = En1993JointDelta::removal(&base.joints, index);
+            replacement.absorb(En1993JointDelta::insertion(index, payload.joint.clone()));
             replacement
         }
-        None => En1993JointDelta::insertion(&base.joints, base.joints.len(), payload.joint.clone()),
+        None => En1993JointDelta::insertion(base.joints.len(), payload.joint.clone()),
     };
     protocol::MutationOutcome::new(En1993Diff { joints: delta, ..Default::default() })
 }

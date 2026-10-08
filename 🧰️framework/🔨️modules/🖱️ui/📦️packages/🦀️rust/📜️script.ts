@@ -29,6 +29,24 @@ class TestScript extends BundleScript {
       await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🧊️feature-ownership/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
       return;
     }
+    if (segments[0] === "physical-close") {
+      if (segments.length !== 1) throw Error("Expected test physical-close");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📦️prepared-close/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
+      return;
+    }
+    if (segments[0] === "physical-close-native") {
+      if (segments.length !== 1) throw Error("Expected test physical-close-native");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(physical_job_close)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env));
+      return;
+    }
+    if (segments[0] === "prepared-close") {
+      if (segments.length !== 1) throw Error("Expected test prepared-close");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📦️prepared-close/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
+      return;
+    }
     if (segments[0] === "commands") {
       if (segments.length !== 1) throw Error("Expected test commands");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");

@@ -35,9 +35,6 @@ impl protocol::DiffAlgebra<PlaygroundSnapshot> for PlaygroundDiff {
     fn inverse(&self, base: &PlaygroundSnapshot) -> Self {
         Self { schema: self.schema.as_ref().map(|_| base.schema.clone()) }
     }
-    fn between(base: &PlaygroundSnapshot, other: &PlaygroundSnapshot) -> Self {
-        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none()
     }

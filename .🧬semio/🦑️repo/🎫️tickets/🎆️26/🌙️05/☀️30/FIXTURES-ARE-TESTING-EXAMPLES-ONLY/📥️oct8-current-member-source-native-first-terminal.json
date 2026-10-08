@@ -1,0 +1,26 @@
+{
+  "session": 12829,
+  "nxExit": 1,
+  "duration": "1m36s",
+  "compilerRan": false,
+  "cargoExit": 2,
+  "failure": "unexpected argument '--args' found",
+  "kind": "actual original launcher transport failure before current compiler",
+  "knownOwnedPids": [
+    33146,
+    33152,
+    33154,
+    34689,
+    34962,
+    34986
+  ],
+  "originalInnerArguments": [
+    "test-native",
+    "member",
+    "--",
+    "--nocapture",
+    "--args=member -- --nocapture"
+  ],
+  "nativeSourceEdited": false,
+  "time": "2026-10-08T21:58:43.956477+00:00"
+}

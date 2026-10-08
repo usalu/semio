@@ -217,6 +217,9 @@ pub mod delete_generation {
     #[cfg(test)]
     #[path = "🗑️delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
     mod tests_removes_a_middle_row;
+    #[cfg(test)]
+    #[path = "❌delete-widget/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
+    mod tests_removes_an_unselected_middle_row;
 }
 
 #[path = "."]
@@ -557,8 +560,8 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
         }
         return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
     }
-    let patched = composed.into_iter().map(|(index, widget)| crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetPatchEntry { id: widget_id(&base.host_snapshot.widgets[index]).to_string(), patch: crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetPatch::Replace { widget } }).collect();
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::Generation3dDiff { widgets: Some(crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetsDelta { patched, ..Default::default() }), ..Default::default() }).absorb_messages(messages)
+    let patched = composed.into_iter().map(|(index, widget)| crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetModification { id: widget_id(&base.host_snapshot.widgets[index]).to_string(), patch: crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetPatch::Replace { widget } }).collect();
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::Generation3dDiff { widgets: Some(crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetsDelta { modified: patched, ..Default::default() }), ..Default::default() }).absorb_messages(messages)
 }
 
 /// 🔙️ The exact inverse of one relative gumball leaf: every operator it would compose restored to its BASE widget —
@@ -640,78 +643,6 @@ pub fn generation3d_selection_removal(host_snapshot: &FlowHostSnapshot, selected
 }
 //#endregion 🔖️Cascades
 
-//#region 🔖️DocumentReplacement
-/// 📦️ Whether the entries two keyed sequences share keep their relative order — the one condition under which the
-/// vocabulary's in-place `update-*` leaves reach the target order. When they do not, the shared entries are taken down
-/// and put up again: the vocabulary has no reorder verb, and a rule that is all-or-nothing needs no heuristic to choose
-/// which of them to keep.
-fn survivors_keep_their_order<'a>(before: impl Iterator<Item = &'a str>, after: impl Iterator<Item = &'a str>) -> bool {
-    let (before, after): (Vec<&str>, Vec<&str>) = (before.collect(), after.collect());
-    let kept_before: Vec<&str> = before.iter().copied().filter(|id| after.contains(id)).collect();
-    let kept_after: Vec<&str> = after.iter().copied().filter(|id| before.contains(id)).collect();
-    kept_before == kept_after
-}
-
-/// 📦️ The explicit leaves that carry the document `before` to the document `after` — the intent of loading an example or an
-/// imported file, spelled entity by entity, never read off a scratch host. The vocabulary has no snapshot-replacement verb
-/// on purpose (`protocol::APPROVED_VERBS`) and a document load must not rewrite what it shares with the document in front
-/// of the user, so the plan names only what differs, in an order that replays:
-///
-/// 1. `delete-widget-position` of every position whose widget goes unpositioned (the position leaf addresses a live widget,
-///    so it comes before the widget is deleted), `disconnect-synapse` of every wire that goes, `delete-widget` of every
-///    widget that goes;
-/// 2. `change-schema`, then per widget (`update-widget` where the body differs, `create-widget` at its index where it is new),
-///    per wire (`update-synapse` / `connect-synapse` at its index, after both ends exist) and per position (`move-widget`);
-/// 3. the generations: when the roster differs, every generation is deleted and the target's created (`create-generation`
-///    appends and selects), then `select-generation` and `change-generation-preview` where the target says otherwise.
-///
-/// Entries the two documents share in another relative order are rebuilt whole ([`survivors_keep_their_order`]). The
-/// document camera is not authored here: it rides the config lane with the rest of the view.
-pub fn generation3d_document_replacement(before: &Generation3dSnapshot, after: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-    let (old, new) = (&before.host_snapshot, &after.host_snapshot);
-    let mut leaves = Vec::new();
-    let rebuild_widgets = !survivors_keep_their_order(old.widgets.iter().map(widget_id), new.widgets.iter().map(widget_id));
-    let rebuild_synapses = !survivors_keep_their_order(old.synapses.iter().map(|synapse| synapse.id.as_str()), new.synapses.iter().map(|synapse| synapse.id.as_str()));
-    let rebuilt_widget = |id: &str| rebuild_widgets && widget_index(new, id).is_some();
-    let rebuilt_synapse = |id: &str| rebuild_synapses && synapse_index(new, id).is_some();
-    leaves.extend(old.layout.keys().filter(|id| !new.layout.contains_key(id) && widget_index(old, id).is_some()).map(|id| Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: id.clone() })));
-    leaves.extend(old.synapses.iter().filter(|synapse| synapse_index(new, &synapse.id).is_none() || rebuilt_synapse(&synapse.id)).map(|synapse| Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: synapse.id.clone() })));
-    leaves.extend(old.widgets.iter().map(widget_id).filter(|id| widget_index(new, id).is_none() || rebuilt_widget(id)).map(|id| Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: id.to_string() })));
-    if old.schema != new.schema {
-        leaves.push(Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: new.schema.clone() }));
-    }
-    for (index, widget) in new.widgets.iter().enumerate() {
-        let id = widget_id(widget);
-        match widget_index(old, id).filter(|_| !rebuilt_widget(id)).map(|at| &old.widgets[at]) {
-            Some(prior) if prior != widget => leaves.push(Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: widget.clone() })),
-            Some(_) => {}
-            None => leaves.push(Generation3dMutation::CreateWidget(create_widget::CreateWidget { index, widget: widget.clone() })),
-        }
-    }
-    for (index, synapse) in new.synapses.iter().enumerate() {
-        match synapse_index(old, &synapse.id).filter(|_| !rebuilt_synapse(&synapse.id)).map(|at| &old.synapses[at]) {
-            Some(prior) if prior != synapse => leaves.push(Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: synapse.clone() })),
-            Some(_) => {}
-            None => leaves.push(Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index, synapse: synapse.clone() })),
-        }
-    }
-    leaves.extend(new.layout.iter().filter(|(id, layout)| widget_index(new, id).is_some() && old.layout.get(id) != Some(*layout)).map(|(id, layout)| Generation3dMutation::MoveWidget(move_widget::MoveWidget { id: id.clone(), layout: layout.clone() })));
-    let roster_equal = before.generation.generations == after.generation.generations;
-    if !roster_equal {
-        leaves.extend(before.generation.generations.iter().map(|generation| Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id: generation.id.clone() })));
-        leaves.extend(after.generation.generations.iter().map(|generation| Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: generation.clone(), index: None })));
-    }
-    let left_selected = if roster_equal { before.generation.selected_generation_id.clone() } else { after.generation.generations.last().map(|generation| generation.id.clone()) };
-    let selected = after.generation.selected_generation_id.clone();
-    if left_selected != selected && selected.as_ref().is_none_or(|id| after.generation.generations.iter().any(|generation| &generation.id == id)) {
-        leaves.push(Generation3dMutation::SelectGeneration(select_generation::SelectGeneration { generation_id: selected }));
-    }
-    if before.generation.preview_text != after.generation.preview_text {
-        leaves.push(Generation3dMutation::ChangeGenerationPreview(change_generation_preview::ChangeGenerationPreview { text: after.generation.preview_text.clone() }));
-    }
-    leaves
-}
-//#endregion 🔖️DocumentReplacement
 
 pub type Generation3dEnvelope = ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>;
 pub type Generation3dStore = ArtifactStore<Generation3dSnapshot, Generation3dMutation>;
@@ -733,31 +664,6 @@ impl Generation3dMutation {
 }
 //#endregion 🧊️Retirement
 
-//#region 🔖️Apply
-/// 🎬️ Fallible in-place `vcs::apply_mutation` boundary. A diff builder that REJECTED the mutation
-/// answers `MutationOutcome::{error,fatal}`, whose diff side is forced to `Default` (LAW 1,
-/// `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:1061-1069`) — applying that empty delta
-/// would return the unchanged base as implicit success, exactly what [`protocol::MutationDiff`]'s
-/// own contract forbids. The rejection is raised here instead, so a caller's `Ok` is a real witness
-/// that the mutation landed. The refusal travels as the outcome's own messages, codes and levels unchanged; an apply-time
-/// rejection joins them as the `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist — a vocabulary
-/// code is never re-typed as an apply error.
-pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
-    let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
-    if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-        delta.retire_cold();
-        return Err(messages);
-    }
-    let applied = protocol::apply_diff(&delta, &*projection);
-    delta.retire_cold();
-    match applied {
-        Ok(next) => {
-            std::mem::replace(projection, next).retire_cold();
-            Ok(())
-        }
-        Err(error) => Err(messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect()),
-    }
-}
 
 pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({

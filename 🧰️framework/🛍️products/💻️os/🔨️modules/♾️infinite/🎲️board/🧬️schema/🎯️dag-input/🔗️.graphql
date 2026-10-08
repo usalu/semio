@@ -1,0 +1,6 @@
+enum DagChannelDirection { IN OUT }
+enum DagNodeEvaluationKind { OK QUEUED COMPUTING ERROR BLOCKED }
+type DagSelectionDomains { nodes: [String!]! edges: [String!]! handles: [String!]! }
+type DagChannelRef { widgetId: String! port: String! direction: DagChannelDirection! }
+type DagNodeEvaluationStatus { kind: DagNodeEvaluationKind! message: String ports: [String!] }
+type DagNodeStatusEntry { widgetId: String! status: DagNodeEvaluationStatus! }

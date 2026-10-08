@@ -1,0 +1,9 @@
+# Owned Factory and Stroke Confirmed Corpus Review
+
+Two current confirmed whole trial validators, exact four hashes observed in `📥️oct9-owned-factory-stroke-reader-observation.json`.
+
+Value `♻retirement/🏭factory/📦owned/🧬schema/🔣json` requires schema/cases/copyGrants/cancelCuts/refusalAxes and fixed retainOriginalOnProviderRefusal/separateChildFrameRelease/releaseOriginalIssuer outcomes. Existing owned/tests/TS7 reads the entire plain corpus and schema through Bun.file/newURL and compiles corpus. Retire only this complete example schema and whole compile; preserve actual FactoryOwnedRetirement production ownership/factory APIs, plain cases and subsequent SQLite/RFC6902/original issuer/source assertions. Executor Native was notified to preserve source ownership.
+
+2d `🛤path/🖊stroke/🧬schema/🧹retirement/🔣json` is an array of named trial source/stop/work/output rows. Existing stroke/tests/TS10–14 imports retirementRows/schema and validates entire array. Retire separate retirement corpus schema and whole validation only. Preserve full actual stroke cancellation/retirement/terminal/original source assertions, independent sharp/canvas paint and CoverageJob laws. Main stroke schema is a genuine individual StrokeOutlineInput contours/transform/tolerance/style contract with retirementProgress domain definition; preserve both and their actual per-value validators.
+
+Bounded literal compile census across Framework and s modules also reviewed affine frame component validation: produced row.input and individual AffineControls remain genuine domain values. Replication outcome/report/MapDelta, controlled diagnostic/parser records and production snapshot validators must remain; function name or fixture variable alone does not determine corpus authority. No source edits, compilers, tests or producers. No global absence claim.

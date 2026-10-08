@@ -210,3 +210,24 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Iso16757Analyzer,
     composer: Iso16757Composer,
 );
+
+//#region 🌉️ExternalCodecBridge
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::{Iso16757Mutation, Iso16757Snapshot};
+
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutation) -> Result<(Iso16757Snapshot, Vec<String>), String> {
+        let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+        <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use mutation_bridge::*;
+//#endregion 🌉️ExternalCodecBridge

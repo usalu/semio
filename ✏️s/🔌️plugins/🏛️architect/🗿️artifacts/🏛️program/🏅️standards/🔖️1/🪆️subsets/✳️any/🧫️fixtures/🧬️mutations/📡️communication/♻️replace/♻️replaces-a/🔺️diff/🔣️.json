@@ -30,48 +30,54 @@
   "infrastructure": null,
   "information": null,
   "communication": {
-    "added": [
+    "removed": [
       {
         "id": "communication-requirement-a",
-        "name": "Communication Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "channel": "Replaced Communication Requirement A",
-        "audienceIds": [],
-        "messageTypes": [],
-        "frequency": null,
-        "medium": [],
-        "language": [],
-        "accessibility": [],
-        "emergencyUse": false,
-        "twoWay": false,
-        "recordingPolicy": null,
-        "signageLocations": [],
-        "technology": [],
-        "escalationPath": [],
-        "feedbackLoop": false,
-        "privacyControls": [],
-        "elementIds": [],
-        "standards": [],
-        "ownerId": null,
-        "templates": []
+        "index": 0
       }
     ],
-    "removed": [
-      "communication-requirement-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "communication-requirement-a",
+          "name": "Communication Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "channel": "Replaced Communication Requirement A",
+          "audienceIds": [],
+          "messageTypes": [],
+          "frequency": null,
+          "medium": [],
+          "language": [],
+          "accessibility": [],
+          "emergencyUse": false,
+          "twoWay": false,
+          "recordingPolicy": null,
+          "signageLocations": [],
+          "technology": [],
+          "escalationPath": [],
+          "feedbackLoop": false,
+          "privacyControls": [],
+          "elementIds": [],
+          "standards": [],
+          "ownerId": null,
+          "templates": []
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "wayfinding": null,
   "schedules": null,

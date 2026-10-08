@@ -1,0 +1,15 @@
+# Neutral Nine-Vector Runtime Corpus
+
+The new owning Rust `test-surface` command executes all nine authored portable vectors through the actual original `triangulate`, `extrude_tri_mesh`, `split_to_tets`, and `boundary_faces` algorithms. It preserves region order, failed-triangulation omission, bar/beam empty geometry, holes, winding, own thickness (including zero/negative), exact binary64 bounds, indices and original algorithms. It emits only neutral geometry to an explicit bounded ticket artifact, with a 60-second observed test deadline and 1-MiB output ceiling. These are small bounded test vectors; this execution does not prove per-step production cancellation or allocation authority.
+
+The independent Bun receiving law validates each actual native surface with both first-party JSON Schema and Ajv, exact coordinate goldens, manifold edges/Euler characteristic, signed surface volume, tetrahedral volume, and independent Earcut binary64 footprint area. It neither synthesizes OBJ/STL nor substitutes these outputs for installed-provider outputs. Existing full five-law defining target remains intact and will continue to refuse missing provider extraction or installed output.
+
+The original Rust command keeps its full original 28 laws plus the new corpus; its concrete launch row now declares the output authority. Full before/proposed/current joins are retained in `fem2d-surface-inputs/neutral-nine-corpus-joins.jsonl`. Proposed GUI rows are `fem2d-surface-inputs/neutral-nine-launch.json`; execution awaits Root registration.
+
+## Following Ownership Publication
+
+The next reviewable `document-bridge-owner-proposed.jsonl` retains all seven actual document-dependent 2D bridge and original unit-test bodies while placing them under the FEM2D artifact (`⚙️engine/◻️2d`). The four actual Rust mounts are hand-ported. The Semio snapshot builder is removed from the region/model bridge and owned as an explicit foreign export conversion, and both original OBJ/STL leaves invoke that new owning module. No old exported alias remains. The six foreign provider Cargo edges and erased serializer dispatch remain an explicit subsequent frontier, so this intermediate transfer does not claim artifact independence or installed output acceptance. These eighteen bodies are proposed only and await the neutral test source interval closure before publication.
+
+## Physical Document Ownership Successor
+
+No neutral test source interval had been dispatched while launch registration was pending. The full eighteen-body proposal was therefore re-admitted byte-exact before narrow publication, with no live own runtime handle. All seven original document-dependent module bodies now live under the artifact; all three original test bodies are preserved in full, with the four actual mounts and two foreign leaves hand-ported. The full before/proposed/current journal is `fem2d-surface-inputs/document-bridge-owner-publication1.jsonl`. No General/Root/Native source was changed. No new runtime or complete extraction claim follows from this source publication.

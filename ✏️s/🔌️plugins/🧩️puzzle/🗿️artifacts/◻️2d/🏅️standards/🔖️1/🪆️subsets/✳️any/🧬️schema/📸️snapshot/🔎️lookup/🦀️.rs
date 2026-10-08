@@ -1,8 +1,8 @@
 //! 🔎️ Borrowed native identifier lookup retains topology and exact comparison grants.
 
 use crate::Puzzle2dSnapshot;
-use semio_framework_value::{paged::PagedUtf8, SnapshotRetirementStep, ValueError, ValueRefusalKind};
-use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneRef, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdProgress, BoundedOrdStep}};
+use semio_framework_value::{paged::PagedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Puzzle2dLookupScope { Node, Edge, Region, Handle }
@@ -22,7 +22,7 @@ impl Puzzle2dLookupScope {
 pub struct Puzzle2dLookupLocation { pub outer: usize, pub inner: Option<usize> }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Puzzle2dLookupStep { Pending(BoundedOrdProgress), Complete { location: Option<Puzzle2dLookupLocation>, progress: BoundedOrdProgress } }
+pub enum Puzzle2dLookupStep { Pending(RetainedCloneProgress), Complete { location: Option<Puzzle2dLookupLocation>, progress: RetainedCloneProgress } }
 
 pub struct Puzzle2dLookupCursor {
     scope: Puzzle2dLookupScope,
@@ -42,34 +42,33 @@ impl Puzzle2dLookupCursor {
         Self { scope, outer: 0, inner: 0, phase: 0, source: None, target: None, comparison: Default::default(), output: None, spent: false, closing: false }
     }
 
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, grant: BoundedOrdGrant) -> Result<Puzzle2dLookupStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, grant: RetainedCloneGrant) -> Result<Puzzle2dLookupStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native lookup cursor is closing or spent")); }
-        if grant.maximum_items == 0 { return Ok(Puzzle2dLookupStep::Pending(BoundedOrdProgress::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dLookupStep::Pending(Default::default())); }
         source.bind(&mut self.source)?;
         target.bind(&mut self.target)?;
-        if let Some(location) = self.output { return Ok(Puzzle2dLookupStep::Complete { location, progress: BoundedOrdProgress::default() }); }
+        if let Some(location) = self.output { return Ok(Puzzle2dLookupStep::Complete { location, progress: Default::default() }); }
         if self.phase == 1 {
-            return match self.comparison.close_step(grant.maximum_items, grant.maximum_bytes)? {
-                SnapshotRetirementStep::Complete => { self.comparison = Default::default(); self.phase = 2; Ok(Puzzle2dLookupStep::Pending(BoundedOrdProgress::default())) },
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(Puzzle2dLookupStep::Pending(BoundedOrdProgress { compared_items: released_items, compared_bytes: released_bytes })),
-                SnapshotRetirementStep::Blocked => Ok(Puzzle2dLookupStep::Pending(BoundedOrdProgress::default())),
-            };
+            let step = self.comparison.close_step(grant)?;
+            if self.comparison.terminal_is_empty() { self.comparison = Default::default(); self.phase = 2; }
+            return Ok(Puzzle2dLookupStep::Pending(step.progress()));
         }
         if self.phase == 2 {
             if self.scope == Puzzle2dLookupScope::Handle && source.get().nodes.get(self.outer).is_some_and(|node| self.inner + 1 < node.handles.len()) { self.inner += 1; } else { self.outer += 1; self.inner = 0; }
             self.phase = 0;
-            return Ok(Puzzle2dLookupStep::Pending(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
+            return Ok(Puzzle2dLookupStep::Pending(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if self.scope.identifier(source.get(), self.outer, self.inner).is_none() {
-            if self.scope == Puzzle2dLookupScope::Handle && source.get().nodes.get(self.outer).is_some() { self.outer += 1; self.inner = 0; return Ok(Puzzle2dLookupStep::Pending(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 })); }
+            if self.scope == Puzzle2dLookupScope::Handle && source.get().nodes.get(self.outer).is_some() { self.outer += 1; self.inner = 0; return Ok(Puzzle2dLookupStep::Pending(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
             self.output = Some(None);
-            return Ok(Puzzle2dLookupStep::Complete { location: None, progress: BoundedOrdProgress { compared_items: 1, compared_bytes: 0 } });
+            return Ok(Puzzle2dLookupStep::Complete { location: None, progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
         }
         let scope = self.scope;
         let (outer, inner) = (self.outer, self.inner);
-        match self.comparison.compare(source.project(1, |snapshot| scope.identifier(snapshot, outer, inner).expect("immutable native lookup candidate")), target, grant)? {
-            BoundedOrdStep::Progress(progress) => Ok(Puzzle2dLookupStep::Pending(progress)),
+        match self.comparison.compare(source.project(1, |snapshot| scope.identifier(snapshot, outer, inner).expect("immutable native lookup candidate")), target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes })? {
+            BoundedOrdStep::Progress(progress) => Ok(Puzzle2dLookupStep::Pending(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() })),
             BoundedOrdStep::Complete { ordering, progress } => {
+                let progress = RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() };
                 if ordering == std::cmp::Ordering::Equal {
                     let location = Some(Puzzle2dLookupLocation { outer, inner: (scope == Puzzle2dLookupScope::Handle).then_some(inner) });
                     self.output = Some(location);
@@ -88,18 +87,43 @@ impl Puzzle2dLookupCursor {
 
     pub fn begin_close(&mut self) { self.closing = true; self.comparison.begin_close(); }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        if self.output.is_some() { return Ok(std::mem::size_of_val(&self.output)); }
+        if !self.comparison.terminal_is_empty() { return self.comparison.next_close_copy_byte_demand(); }
+        RetainedCloneBinding::copy_demand(if self.source.is_some() { &self.source } else { &self.target })
+    }
+
+    pub fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> {
+        if self.output.is_some() { return Ok(0); }
+        if !self.comparison.terminal_is_empty() { return self.comparison.next_close_capacity_byte_demand(body); }
+        RetainedCloneBinding::capacity_demand(if self.source.is_some() { &self.source } else { &self.target }, body)
+    }
+
+    pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        if self.output.is_some() { return Ok(0); }
+        if !self.comparison.terminal_is_empty() { return self.comparison.next_close_release_byte_demand(); }
+        RetainedCloneBinding::release_demand(if self.source.is_some() { &self.source } else { &self.target })
+    }
+
+    pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        if self.output.is_some() { return Ok(1); }
+        if !self.comparison.terminal_is_empty() { return BoundedOrdCursor::next_close_depth_demand(&self.comparison); }
+        RetainedCloneBinding::depth_demand(if self.source.is_some() { &self.source } else { &self.target })
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native lookup closure was not started")); }
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.output.is_some() {
-            if maximum_items == 0 { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+            let bytes = std::mem::size_of_val(&self.output);
+            if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.output = None;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
         }
-        let step = self.comparison.close_step(maximum_items, maximum_bytes)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(step); }
-        let step = RetainedCloneBinding::close_one(&mut self.source, maximum_items)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(step); }
-        RetainedCloneBinding::close_one(&mut self.target, maximum_items)
+        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        let step = RetainedCloneBinding::close_one(if self.source.is_some() { &mut self.source } else { &mut self.target }, grant)?;
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.comparison.terminal_is_empty() && self.source.is_none() && self.target.is_none() }

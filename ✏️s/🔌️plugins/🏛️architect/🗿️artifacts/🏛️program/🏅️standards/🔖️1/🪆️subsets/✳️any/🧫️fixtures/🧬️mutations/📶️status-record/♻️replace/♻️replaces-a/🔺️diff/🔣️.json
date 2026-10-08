@@ -60,47 +60,53 @@
   "reports": null,
   "searchFilters": null,
   "statusRecords": {
-    "added": [
+    "removed": [
       {
         "id": "status-record-a",
-        "name": "Status Record A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "subjectId": "",
-        "subjectKind": "Replaced Status Record A",
-        "recordStatus": "draft",
-        "previousStatus": null,
-        "changedBy": null,
-        "changedAt": null,
-        "reason": null,
-        "blockers": [],
-        "nextActions": [],
-        "dueDate": null,
-        "progressPercent": null,
-        "health": null,
-        "escalationLevel": null,
-        "relatedIssueIds": [],
-        "relatedRiskIds": [],
-        "milestoneId": null,
-        "reportingPeriod": null,
-        "statusNotes": []
+        "index": 0
       }
     ],
-    "removed": [
-      "status-record-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "status-record-a",
+          "name": "Status Record A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "subjectId": "",
+          "subjectKind": "Replaced Status Record A",
+          "recordStatus": "draft",
+          "previousStatus": null,
+          "changedBy": null,
+          "changedAt": null,
+          "reason": null,
+          "blockers": [],
+          "nextActions": [],
+          "dueDate": null,
+          "progressPercent": null,
+          "health": null,
+          "escalationLevel": null,
+          "relatedIssueIds": [],
+          "relatedRiskIds": [],
+          "milestoneId": null,
+          "reportingPeriod": null,
+          "statusNotes": []
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "workshops": null,
   "surveys": null,

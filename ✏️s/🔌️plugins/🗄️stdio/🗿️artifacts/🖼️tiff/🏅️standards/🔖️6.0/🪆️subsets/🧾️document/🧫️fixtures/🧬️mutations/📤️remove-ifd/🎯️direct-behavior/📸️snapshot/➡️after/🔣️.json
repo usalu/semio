@@ -1,5 +1,4 @@
 {
-  "byteOrder": "littleEndian",
-  "ifds": [],
-  "schema": "stdio.tiff"
+  "schema": "stdio.tiff",
+  "ifds": []
 }

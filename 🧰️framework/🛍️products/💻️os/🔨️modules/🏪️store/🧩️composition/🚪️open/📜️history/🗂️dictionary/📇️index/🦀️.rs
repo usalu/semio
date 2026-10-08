@@ -2,6 +2,8 @@
 //! The retained record owner validates UTF-8/EOF and supplies ranges from its own witness.
 
 use std::mem::ManuallyDrop;
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
 const PAGE_ENTRIES: usize = 64;
 const MAXIMUM_PAGES: usize = 128;
@@ -18,12 +20,6 @@ pub(super) enum DictionaryIndexError {
     Malformed,
     Capacity,
     State,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum DictionaryIndexClose {
-    Complete,
-    Pending { released_items: usize, released_bytes: usize },
 }
 
 #[derive(Clone, Copy)]
@@ -45,7 +41,6 @@ pub(super) struct RetainedDictionaryIndex {
     delta: Option<Delta>,
     diagnostic: Option<DictionaryIndexError>,
     closing: bool,
-    close_offset: usize,
 }
 
 impl RetainedDictionaryIndex {
@@ -53,7 +48,7 @@ impl RetainedDictionaryIndex {
         if maximum_entries > PAGE_ENTRIES * MAXIMUM_PAGES || maximum_bytes > 1_048_576 {
             return Err(DictionaryIndexError::Capacity);
         }
-        Ok(Self { pages: ManuallyDrop::new(std::array::from_fn(|_| None)), allocated: 0, visible: 0, dictionary_bytes: 0, maximum_entries, maximum_bytes, verified_end, last_end: 0, delta: None, diagnostic: None, closing: false, close_offset: 0 })
+        Ok(Self { pages: ManuallyDrop::new(std::array::from_fn(|_| None)), allocated: 0, visible: 0, dictionary_bytes: 0, maximum_entries, maximum_bytes, verified_end, last_end: 0, delta: None, diagnostic: None, closing: false })
     }
 
     fn reject<T>(&mut self, diagnostic: DictionaryIndexError) -> Result<T, DictionaryIndexError> {
@@ -145,39 +140,38 @@ impl RetainedDictionaryIndex {
         Ok(self.pages[index / PAGE_ENTRIES].as_ref().ok_or(DictionaryIndexError::State)?[index % PAGE_ENTRIES])
     }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> DictionaryIndexClose {
+    pub(super) fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+    pub(super) fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
+    pub(super) fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.allocated == 0 { 0 } else { PAGE_BYTES }) }
+    pub(super) fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
+
+    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "dictionary backing requires admitted depth")); }
+        if self.allocated != 0 && grant.maximum_release_bytes < PAGE_BYTES { return Ok(RetainedCloneStep::Progress(empty)); }
         self.closing = true;
         self.delta = None;
         self.visible = 0;
-        if self.allocated == 0 {
-            return DictionaryIndexClose::Complete;
-        }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return DictionaryIndexClose::Pending { released_items: 0, released_bytes: 0 };
-        }
-        let count = maximum_bytes.min(PAGE_BYTES - self.close_offset);
-        let page = self.pages[self.allocated - 1].as_mut().expect("dense private range pages");
-        for offset in self.close_offset..self.close_offset + count {
-            let entry = &mut page[offset / 16];
-            let byte = offset % 16;
-            let field = if byte < 8 { &mut entry.offset } else { &mut entry.length };
-            *field &= !(255u64 << ((byte % 8) * 8));
-        }
-        self.close_offset += count;
-        let released_items = if self.close_offset == PAGE_BYTES {
-            self.allocated -= 1;
-            self.pages[self.allocated].take();
-            self.close_offset = 0;
-            1
-        } else {
-            0
-        };
-        DictionaryIndexClose::Pending { released_items, released_bytes: count }
+        if self.allocated == 0 { return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty })); }
+        self.allocated -= 1;
+        drop(self.pages[self.allocated].take());
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: PAGE_BYTES, ..empty }))
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
         self.closing && self.allocated == 0 && self.delta.is_none()
     }
+}
+
+impl semio_framework_value::ErasedSnapshotRetirement for RetainedDictionaryIndex {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { RetainedDictionaryIndex::close_step(self, grant) }
+    fn terminal_is_empty(&self) -> bool { RetainedDictionaryIndex::terminal_is_empty(self) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { RetainedDictionaryIndex::next_copy_byte_demand(self) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { RetainedDictionaryIndex::next_capacity_byte_demand(self, body) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { RetainedDictionaryIndex::next_release_byte_demand(self) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { RetainedDictionaryIndex::next_depth_demand(self) }
 }
 
 impl Drop for RetainedDictionaryIndex {

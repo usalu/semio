@@ -4,12 +4,15 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "slab"
+      {
+        "id": "slab",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "supports": null,
   "loadCases": null,

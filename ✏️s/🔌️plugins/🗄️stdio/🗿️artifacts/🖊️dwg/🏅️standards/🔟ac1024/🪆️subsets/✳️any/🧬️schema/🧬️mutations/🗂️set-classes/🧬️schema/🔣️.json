@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-classes/schema.json",
+  "title": "SetClasses",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "classes"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setClasses",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Classes",
+          "de": "Klassen"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

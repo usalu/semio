@@ -1,244 +1,287 @@
-import type {BlockKindIdentity,Block5dPart2d,Block5dPart3d,BlockRepresentation,Block5dGripKind,Block5dGripTemplate,BlockCompatibilityRule,BlockAttribute,BlockAuthor,BlockCamera2d,BlockCamera3d,BlockMeta,Block5dArtifact} from "../🟦️.ts";
-import * as model from "../🟦️.ts";
-/** 🧬️ Block5d diff schema — sparse field delta. */
+import type { Block5dGripKind, Block5dGripTemplate, BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation } from "../🟦️.ts";
+
+/** 🧬️ Block5d diff schema — a field-sparse, id-keyed delta over the artifact: sub-documents carry field patches, id-keyed lists carry positional rows (`protocol::list_delta`): removed (id at base index), inserted (row at after index), moved (id from base index to after index) and id-keyed modified rows. */
 
 export interface Block5dDiff {
-  /** @state artifact */
-  artifact?: Block5dArtifact;
-  /** @state artifact */
-  schema?: string;
-  /** @state artifact */
-  partKind?: BlockKindIdentity;
-  /** @state artifact */
-  part2d?: Block5dPart2d;
-  /** @state artifact */
-  part3d?: Block5dPart3d;
-  /** @state artifact */
-  representations?: Block5dRepresentationsDelta;
-  /** @state artifact */
-  gripKinds?: Block5dGripKindsDelta;
-  /** @state artifact */
-  grips?: Block5dGripsDelta;
-  /** @state artifact */
-  compatibility?: Block5dCompatibilityDelta;
-  /** @state artifact */
-  attributes?: Block5dAttributesDelta;
-  /** @state artifact */
-  authors?: Block5dAuthorList;
-  /** @state artifact */
-  camera2d?: BlockCamera2d;
-  /** @state artifact */
-  camera3d?: BlockCamera3d;
-  /** @state artifact */
-  meta?: BlockMeta;
+  schema?: string | null;
+  partKind?: BlockKindIdentityPatch | null;
+  part2d?: Block5dPart2dPatch | null;
+  part3d?: Block5dPart3dPatch | null;
+  representations: BlockRepresentationsDelta;
+  gripKinds: Block5dGripKindsDelta;
+  grips: Block5dGripsDelta;
+  compatibility: BlockCompatibilityDelta;
+  attributes: BlockAttributesDelta;
+  authors: BlockAuthorsDelta;
+  camera2d?: BlockCamera2dPatch | null;
+  camera3d?: BlockCamera3dPatch | null;
+  meta?: BlockMetaPatch | null;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-export interface Block5dStringList {
-  values: string[];
+export interface BlockOptionalText {
+  value: string | null;
 }
 
-export interface Block5dAuthorList {
-  values: BlockAuthor[];
+export interface BlockOptionalNumber {
+  value: number | null;
 }
 
-export interface Block5dRepresentationsDelta {
-  added: BlockRepresentation[];
-  removed: string[];
-  patched: Block5dRepresentationsPatchEntry[];
-  reordered?: string[];
+export interface BlockOptionalOrientation {
+  value: readonly [number, number, number, number] | null;
 }
 
-export interface Block5dRepresentationsPatchEntry {
+export interface BlockOptionalScale {
+  value: readonly [number, number, number] | null;
+}
+
+export interface BlockKindIdentityPatch {
+  id?: string | null;
+  name?: string | null;
+  label?: string | null;
+  description?: string | null;
+  variant?: BlockOptionalText | null;
+  icon?: BlockOptionalText | null;
+  unit?: BlockOptionalText | null;
+}
+
+export interface Block5dPart2dPatch {
+  shape?: BlockOptionalText | null;
+  radius?: BlockOptionalNumber | null;
+  width?: BlockOptionalNumber | null;
+  height?: BlockOptionalNumber | null;
+  color?: BlockOptionalText | null;
+  iconKind?: BlockOptionalText | null;
+}
+
+export interface Block5dPart3dPatch {
+  orientation?: BlockOptionalOrientation | null;
+  scale?: BlockOptionalScale | null;
+}
+
+export interface BlockRepresentationPatch {
+  name?: string | null;
+  meshUrl?: BlockOptionalText | null;
+  lod?: BlockOptionalText | null;
+  description?: string | null;
+  tagsRemoved?: string[] | null;
+  tagsAdded?: string[] | null;
+  attributesRemoved?: string[] | null;
+  attributesAdded?: BlockAttribute[] | null;
+}
+
+export interface Block5dGripKindPatch {
+  name?: string | null;
+  label?: string | null;
+  color?: string | null;
+  defaultRopeKind?: string | null;
+}
+
+export interface Block5dGripTemplatePatch {
+  gripKind?: string | null;
+  angle?: number | null;
+  radius2d?: number | null;
+  position?: readonly [number, number, number] | null;
+  direction?: readonly [number, number, number] | null;
+  radius3d?: number | null;
+}
+
+export interface BlockCompatibilityRulePatch {
+  source?: string | null;
+  target?: string | null;
+  bidirectional?: boolean | null;
+}
+
+export interface BlockAttributePatch {
+  value?: string | null;
+  definition?: BlockOptionalText | null;
+}
+
+export interface BlockAuthorPatch {
+  name?: string | null;
+  email?: BlockOptionalText | null;
+}
+
+export interface BlockCamera2dPatch {
+  x?: number | null;
+  y?: number | null;
+  zoom?: number | null;
+}
+
+export interface BlockCamera3dPatch {
+  position?: readonly [number, number, number] | null;
+  target?: readonly [number, number, number] | null;
+  zoom?: number | null;
+}
+
+export interface BlockMetaPatch {
+  description?: string | null;
+}
+
+export interface BlockRepresentationsPatchEntry {
   id: string;
-  patch: Block5dRepresentationsPatch;
+  patch: BlockRepresentationPatch;
 }
 
-export interface Block5dRepresentationsPatch {
-  replacement?: BlockRepresentation;
+export interface BlockRepresentationsRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Block5dGripKindsDelta {
-  added: Block5dGripKind[];
-  removed: string[];
-  patched: Block5dGripKindsPatchEntry[];
-  reordered?: string[];
+export interface BlockRepresentationsInsertion {
+  index: number;
+  row: BlockRepresentation;
+}
+
+export interface BlockRepresentationsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface BlockRepresentationsDelta {
+  removed: BlockRepresentationsRemoval[];
+  inserted: BlockRepresentationsInsertion[];
+  moved: BlockRepresentationsRelocation[];
+  modified: BlockRepresentationsPatchEntry[];
 }
 
 export interface Block5dGripKindsPatchEntry {
   id: string;
-  patch: Block5dGripKindsPatch;
+  patch: Block5dGripKindPatch;
 }
 
-export interface Block5dGripKindsPatch {
-  replacement?: Block5dGripKind;
+export interface Block5dGripKindsRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Block5dGripsDelta {
-  added: Block5dGripTemplate[];
-  removed: string[];
-  patched: Block5dGripsPatchEntry[];
-  reordered?: string[];
+export interface Block5dGripKindsInsertion {
+  index: number;
+  row: Block5dGripKind;
+}
+
+export interface Block5dGripKindsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Block5dGripKindsDelta {
+  removed: Block5dGripKindsRemoval[];
+  inserted: Block5dGripKindsInsertion[];
+  moved: Block5dGripKindsRelocation[];
+  modified: Block5dGripKindsPatchEntry[];
 }
 
 export interface Block5dGripsPatchEntry {
   id: string;
-  patch: Block5dGripsPatch;
+  patch: Block5dGripTemplatePatch;
 }
 
-export interface Block5dGripsPatch {
-  replacement?: Block5dGripTemplate;
-}
-
-export interface Block5dCompatibilityDelta {
-  added: BlockCompatibilityRule[];
-  removed: string[];
-  patched: Block5dCompatibilityPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Block5dCompatibilityPatchEntry {
+export interface Block5dGripsRemoval {
   id: string;
-  patch: Block5dCompatibilityPatch;
+  index: number;
 }
 
-export interface Block5dCompatibilityPatch {
-  replacement?: BlockCompatibilityRule;
+export interface Block5dGripsInsertion {
+  index: number;
+  row: Block5dGripTemplate;
 }
 
-export interface Block5dAttributesDelta {
-  added: BlockAttribute[];
-  removed: string[];
-  patched: Block5dAttributesPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Block5dAttributesPatchEntry {
+export interface Block5dGripsRelocation {
   id: string;
-  patch: Block5dAttributesPatch;
+  from: number;
+  to: number;
 }
 
-export interface Block5dAttributesPatch {
-  replacement?: BlockAttribute;
+export interface Block5dGripsDelta {
+  removed: Block5dGripsRemoval[];
+  inserted: Block5dGripsInsertion[];
+  moved: Block5dGripsRelocation[];
+  modified: Block5dGripsPatchEntry[];
 }
 
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class blockBlock5dDiffGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
+export interface BlockCompatibilityPatchEntry {
+  id: string;
+  patch: BlockCompatibilityRulePatch;
 }
 
-const blockBlock5dDiffGuardReject = (at: string, why: string): never => {
-  throw new blockBlock5dDiffGuardRefusal(at, why);
-};
-
-type blockBlock5dDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type blockBlock5dDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type blockBlock5dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const blockBlock5dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : blockBlock5dDiffGuardReject(at, "value is not an object");
-export const blockBlock5dDiffGuardArray = (value: unknown, at: string, bounds: blockBlock5dDiffGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return blockBlock5dDiffGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) blockBlock5dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) blockBlock5dDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const blockBlock5dDiffGuardString = (value: unknown, at: string, bounds: blockBlock5dDiffGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return blockBlock5dDiffGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) blockBlock5dDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) blockBlock5dDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) blockBlock5dDiffGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const blockBlock5dDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : blockBlock5dDiffGuardReject(at, "value is not a boolean"));
-export const blockBlock5dDiffGuardNumber = (value: unknown, at: string, bounds: blockBlock5dDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return blockBlock5dDiffGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) blockBlock5dDiffGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) blockBlock5dDiffGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const blockBlock5dDiffGuardInteger = (value: unknown, at: string, bounds: blockBlock5dDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? blockBlock5dDiffGuardNumber(value, at, bounds) : blockBlock5dDiffGuardReject(at, "value is not an integer");
-export const blockBlock5dDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : blockBlock5dDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const blockBlock5dDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : blockBlock5dDiffGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseBlock5dStringList(value: unknown, at = "$"): Block5dStringList {
-  const row = blockBlock5dDiffGuardObject(value, at);
-  return {
-    values: blockBlock5dDiffGuardArray(row["values"], `${at}.values`).map((item, index) => blockBlock5dDiffGuardString(item, `${at}.values[${index}]`)),
-  };
+export interface BlockCompatibilityRemoval {
+  id: string;
+  index: number;
 }
 
-export function parseBlock5dRepresentationsPatchEntry(value: unknown, at = "$"): Block5dRepresentationsPatchEntry {
-  const row = blockBlock5dDiffGuardObject(value, at);
-  return {
-    id: blockBlock5dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock5dRepresentationsPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityInsertion {
+  index: number;
+  row: BlockCompatibilityRule;
 }
 
-export function parseBlock5dGripKindsPatchEntry(value: unknown, at = "$"): Block5dGripKindsPatchEntry {
-  const row = blockBlock5dDiffGuardObject(value, at);
-  return {
-    id: blockBlock5dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock5dGripKindsPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
-export function parseBlock5dGripsPatchEntry(value: unknown, at = "$"): Block5dGripsPatchEntry {
-  const row = blockBlock5dDiffGuardObject(value, at);
-  return {
-    id: blockBlock5dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock5dGripsPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityDelta {
+  removed: BlockCompatibilityRemoval[];
+  inserted: BlockCompatibilityInsertion[];
+  moved: BlockCompatibilityRelocation[];
+  modified: BlockCompatibilityPatchEntry[];
 }
 
-export function parseBlock5dCompatibilityPatchEntry(value: unknown, at = "$"): Block5dCompatibilityPatchEntry {
-  const row = blockBlock5dDiffGuardObject(value, at);
-  return {
-    id: blockBlock5dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock5dCompatibilityPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockAttributesPatchEntry {
+  id: string;
+  patch: BlockAttributePatch;
 }
 
-export function parseBlock5dAttributesPatchEntry(value: unknown, at = "$"): Block5dAttributesPatchEntry {
-  const row = blockBlock5dDiffGuardObject(value, at);
-  return {
-    id: blockBlock5dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock5dAttributesPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockAttributesRemoval {
+  id: string;
+  index: number;
 }
 
-/** 🧩️ Admit the literal canonical replacement record. */
-export function parseBlock5dRepresentationsPatch(value:unknown,at="$"):Block5dRepresentationsPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockRepresentation(row.replacement)})}}
+export interface BlockAttributesInsertion {
+  index: number;
+  row: BlockAttribute;
+}
 
-/** 🧩️ Admit the literal canonical replacement record. */
-export function parseBlock5dGripKindsPatch(value:unknown,at="$"):Block5dGripKindsPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock5dGripKind(row.replacement)})}}
+export interface BlockAttributesRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
 
-/** 🧩️ Admit the literal canonical replacement record. */
-export function parseBlock5dGripsPatch(value:unknown,at="$"):Block5dGripsPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock5dGripTemplate(row.replacement)})}}
+export interface BlockAttributesDelta {
+  removed: BlockAttributesRemoval[];
+  inserted: BlockAttributesInsertion[];
+  moved: BlockAttributesRelocation[];
+  modified: BlockAttributesPatchEntry[];
+}
 
-/** 🧩️ Admit the literal canonical replacement record. */
-export function parseBlock5dCompatibilityPatch(value:unknown,at="$"):Block5dCompatibilityPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockCompatibilityRule(row.replacement)})}}
+export interface BlockAuthorsPatchEntry {
+  id: string;
+  patch: BlockAuthorPatch;
+}
 
-/** 🧩️ Admit the literal canonical replacement record. */
-export function parseBlock5dAttributesPatch(value:unknown,at="$"):Block5dAttributesPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockAttribute(row.replacement)})}}
+export interface BlockAuthorsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface BlockAuthorsInsertion {
+  index: number;
+  row: BlockAuthor;
+}
+
+export interface BlockAuthorsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface BlockAuthorsDelta {
+  removed: BlockAuthorsRemoval[];
+  inserted: BlockAuthorsInsertion[];
+  moved: BlockAuthorsRelocation[];
+  modified: BlockAuthorsPatchEntry[];
+}
+

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateTile` — a real id-keyed upsert into `tiles`.
 
-use crate::diff::{Wfc3dDiff, Wfc3dRows};
+use crate::diff::{Wfc3dDiff, Wfc3dRow, Wfc3dTilesDelta};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::CreateTile, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -14,5 +14,5 @@ pub fn diff(payload: &super::CreateTile, base: &Wfc3dSnapshot) -> protocol::Muta
     if payload.index != canonical {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" must be inserted at its canonical position {canonical}, not {}.", payload.tile.id, payload.index), [payload.tile.id.clone()]);
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { tiles: Wfc3dRows { added: vec![payload.tile.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc3dDiff { tiles: Wfc3dTilesDelta::insertion(Wfc3dRow::insert_at(&base.tiles, &payload.tile), payload.tile.clone()), ..Default::default() })
 }

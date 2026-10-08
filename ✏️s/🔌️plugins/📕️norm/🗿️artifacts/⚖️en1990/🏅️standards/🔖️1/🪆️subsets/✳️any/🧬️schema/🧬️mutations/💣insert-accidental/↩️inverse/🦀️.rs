@@ -5,5 +5,5 @@ use crate::mutations::remove_accidental::RemoveAccidental;
 use crate::{En1990Mutation, En1990Snapshot};
 
 pub fn inverse(payload: &InsertAccidental, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok(vec![En1990Mutation::RemoveAccidental(RemoveAccidental { index: payload.index.min(base.accidentals.len()) })])
+    Ok(vec![En1990Mutation::RemoveAccidental(RemoveAccidental { index: payload.index.unwrap_or(usize::MAX).min(base.accidentals.len()) })])
 }

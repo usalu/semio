@@ -1,7 +1,9 @@
 //! 🔍️ Selection-aware, localized layer inspection through undoable semantic commands.
 use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text, ui_value_number};
-use crate::schema::{selected_drawing_layers, layer_base, rgba_to_hex};
+use crate::schema::{selected_drawing_layers, layer_base};
+fn color_text(color:[f64;4])->UiAssemblyResult<String>{let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(7,&mut accepted);crate::standards::v1::subsets::any::io::text::color::encode_color_text(color,&mut control).map_err(|_|error())}
+fn dash_text(samples:Option<&semio_framework_value::list::PagedList<f64,{usize::MAX}>>)->UiAssemblyResult<String>{let mut values=[0.0;64];let length=samples.map_or(0,|samples|samples.len());if length>64{return Err(error());}if let Some(samples)=samples{for(index,sample)in samples.iter().enumerate(){values[index]=*sample;}}let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(128,&mut accepted);crate::standards::v1::subsets::any::io::text::dash::encode_dash_text(Some(&values[..length]),&mut control).map_err(|_|error())}
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, PathSegment};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::BuiltNode;
@@ -50,9 +52,9 @@ struct Field {
     max: Option<f64>,
 }
 
-fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
+fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> UiAssemblyResult<Vec<Field>> {
     let base = layer_base(layer);
-    let fill = match &base.attributes.fill { Some(FillStyle::Solid { color }) => rgba_to_hex(*color), _ => String::new() };
+    let fill = match &base.attributes.fill { Some(FillStyle::Solid { color }) => color_text(*color)?, _ => String::new() };
     let mut rows = Vec::new();
     for (key, label, value, kind, toggle, min, max) in [
         ("name", labels.name, base.name.to_string_owner(), InputKind::Text, false, None, None),
@@ -63,12 +65,12 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
         ("fillRule", labels.fill_rule, base.attributes.fill_rule.as_str().into(), InputKind::Text, false, None, None),
         ("fillEnabled", labels.fill_enabled, base.attributes.fill.is_some().to_string().into(), InputKind::Text, true, None, None),
         ("strokeEnabled", labels.stroke_enabled, base.attributes.stroke.is_some().to_string().into(), InputKind::Text, true, None, None),
-        ("strokeColor", labels.stroke_color, base.attributes.stroke.as_ref().map(|stroke| rgba_to_hex(stroke.color)).unwrap_or_else(|| "#000000".into()).into(), InputKind::Color, false, None, None),
+        ("strokeColor", labels.stroke_color, base.attributes.stroke.as_ref().map(|stroke|color_text(stroke.color)).transpose()?.unwrap_or_else(||"#000000".into()), InputKind::Color, false, None, None),
         ("fillColor", labels.fill, fill.into(), InputKind::Color, false, None, None),
         ("strokeWidth", labels.stroke_width, base.attributes.stroke.as_ref().map_or(0.0, |stroke| stroke.width).to_string().into(), InputKind::Number, false, Some(0.0), None),
         ("strokeCap", labels.stroke_cap, base.attributes.stroke.as_ref().map_or("butt", |stroke| stroke.cap.as_str()).into(), InputKind::Text, false, None, None),
         ("strokeJoin", labels.stroke_join, base.attributes.stroke.as_ref().map_or("miter", |stroke| stroke.join.as_str()).into(), InputKind::Text, false, None, None),
-        ("strokeDash", labels.stroke_dash, base.attributes.stroke.as_ref().and_then(|stroke| stroke.dash.as_ref()).map_or_else(String::new, |dash| dash.iter().map(f64::to_string).collect::<Vec<_>>().join(" ")).into(), InputKind::Text, false, None, None),
+        ("strokeDash", labels.stroke_dash, dash_text(base.attributes.stroke.as_ref().and_then(|stroke|stroke.dash.as_ref()))?, InputKind::Text, false, None, None),
         ("transformX", labels.position_x, base.transform.x.to_string().into(), InputKind::Number, false, None, None),
         ("transformY", labels.position_y, base.transform.y.to_string().into(), InputKind::Number, false, None, None),
         ("transformScaleX", labels.scale_x, base.transform.scale_x.to_string().into(), InputKind::Number, false, None, None),
@@ -90,7 +92,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
     if let DrawingLayerNode::Boolean(boolean) = layer {
         rows.push(Field { key: "booleanOperation", label: labels.boolean_operation, value: boolean.operation.to_string_owner(), kind: InputKind::Text, toggle: false, min: None, max: None });
     }
-    rows
+    Ok(rows)
 }
 
 fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLayerNode], mixed: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
@@ -240,8 +242,8 @@ fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&Fil
 fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &crate::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.fill.stop.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}",labels.gradient_stop.as_str(),index+1))?)).default_open(true).try_id(&id).map_err(|_| error())?;
-    for (kind,label,input,value) in [("color",labels.fill,InputKind::Color,rgba_to_hex(stop.color)),("alpha",labels.opacity,InputKind::Number,stop.color[3].to_string()),("offset",labels.stop_position,InputKind::Number,stop.offset.to_string())] {
-        let value_arg = if input == InputKind::Color { ui_value_text(&value)? } else { ui_value_number(if kind == "alpha" { stop.color[3] } else { stop.offset }) };
+    for (kind,label,input,value) in [("color",labels.fill,InputKind::Color,color_text(stop.color)?),("alpha",labels.opacity,InputKind::Number,stop.color[3].to_string()),("offset",labels.stop_position,InputKind::Number,stop.offset.to_string())] {
+        let value_arg = if input == InputKind::Color { ui_value_list(stop.color.into_iter().map(ui_value_number))? } else { ui_value_number(if kind == "alpha" { stop.color[3] } else { stop.offset }) };
         let edit = ui_value_map([("kind",ui_value_text(kind)?),("index",ui_value_number(index as f64)),("value",value_arg)])?;
         let control = fill_input(layer_id,&format!("{id}.{kind}"),label,input,&value,edit,disabled)?;
         if kind == "color" {
@@ -262,8 +264,8 @@ fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &c
 pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let selected = selected_drawing_layers(document, ids);
     let Some(first) = selected.first() else { return semio_framework_plugin::built_text_node(Label::data(labels.select_hint.as_str())).map_err(|_| error()) };
-    let all_fields = selected.iter().map(|layer| fields(layer, labels)).collect::<Vec<_>>();
-    let rows = fields(first, labels).into_iter().filter(|field| all_fields.iter().all(|fields| fields.iter().any(|other| other.key == field.key))).collect::<Vec<_>>();
+    let all_fields = selected.iter().map(|layer|fields(layer,labels)).collect::<UiAssemblyResult<Vec<_>>>()?;
+    let rows = fields(first, labels)?.into_iter().filter(|field| all_fields.iter().all(|fields| fields.iter().any(|other| other.key == field.key))).collect::<Vec<_>>();
     let mut actions = vec![("group", labels.group), ("duplicate", labels.duplicate), ("delete", labels.delete), ("bringForward", labels.bring_forward), ("sendBackward", labels.send_backward), ("bringToFront", labels.bring_front), ("sendToBack", labels.send_back), ("alignLeft", labels.align_left), ("alignCenter", labels.align_center), ("alignRight", labels.align_right), ("alignTop", labels.align_top), ("alignMiddle", labels.align_middle), ("alignBottom", labels.align_bottom), ("distributeHorizontal", labels.distribute_horizontal), ("distributeVertical", labels.distribute_vertical)];
     if selected.iter().all(|layer|matches!(layer,DrawingLayerNode::Group(_)) && !crate::schema::drawing_layer_is_locked(document,&layer_base(layer).id)) {actions.insert(1,("ungroup",labels.ungroup));}
     if selected.iter().any(|layer| matches!(layer,DrawingLayerNode::Shape(_))) && selected.iter().all(|layer| matches!(layer,DrawingLayerNode::Shape(_) | DrawingLayerNode::Path(_)) && !crate::schema::drawing_layer_is_locked(document,&layer_base(layer).id)) { actions.insert(0,("toPath",labels.convert_to_path)); }

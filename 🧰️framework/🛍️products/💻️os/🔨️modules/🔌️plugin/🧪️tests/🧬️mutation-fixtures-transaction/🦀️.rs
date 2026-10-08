@@ -95,9 +95,6 @@ impl protocol::DiffAlgebra<TxnSnapshot> for TxnDiff {
     fn inverse(&self, base: &TxnSnapshot) -> Self {
         Self { count: self.count.map(|_| base.count) }
     }
-    fn between(base: &TxnSnapshot, other: &TxnSnapshot) -> Self {
-        Self { count: (base.count != other.count).then_some(other.count) }
-    }
     fn is_empty(&self) -> bool {
         self.count.is_none()
     }
@@ -429,11 +426,14 @@ fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
         if app.close_terminal_is_empty() {
             return;
         }
-        match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("fixture app close") {
-            crate::app::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
-            crate::app::PluginCloseStep::AwaitingInput { reason } => panic!("fixture close awaited input: {reason}"),
-            crate::app::PluginCloseStep::Blocked { reason } => panic!("fixture close blocked: {reason}"),
-            crate::app::PluginCloseStep::Complete => break,
+        let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
+            match app.close_step(grant).expect("fixture app close") {
+            crate::app::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
+            crate::app::PluginLifecycleStep::AwaitingInput { reason } => panic!("fixture close awaited input: {reason}"),
+            crate::app::PluginLifecycleStep::Blocked { reason } => panic!("fixture close blocked: {reason}"),
+            crate::app::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
         }
     }
     assert!(app.close_terminal_is_empty(), "transaction fixture must retire every exact store owner");

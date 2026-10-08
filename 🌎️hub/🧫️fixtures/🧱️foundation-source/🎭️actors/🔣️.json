@@ -1,0 +1,14 @@
+{
+  "developmentActorReads": [
+    {
+      "name": "missing-current",
+      "cancelled": false,
+      "expected": "current.json"
+    },
+    {
+      "name": "caller-cancelled",
+      "cancelled": true,
+      "expected": "Neutral actor read cancelled"
+    }
+  ]
+}

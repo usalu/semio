@@ -4,7 +4,7 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `node_id` resolution
 //! `create-support` runs (`mutation.target-missing`, Error), and finally `mutation.no-op`.
 use super::ReplaceSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportsDelta, Fem2dSupportsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportsDelta, Fem2dSupportsModification};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -22,6 +22,6 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem2dSnapshot) -> protocol::Mutatio
     if *existing == payload.new_support {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Support \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { patched: vec![Fem2dSupportsPatchEntry { id: payload.id.clone(), item: payload.new_support.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { modified: vec![Fem2dSupportsModification { id: payload.id.clone(), patch: payload.new_support.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

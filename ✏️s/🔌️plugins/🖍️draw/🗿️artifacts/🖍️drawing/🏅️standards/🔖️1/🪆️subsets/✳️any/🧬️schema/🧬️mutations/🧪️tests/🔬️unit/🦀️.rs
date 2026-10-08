@@ -1,5 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::mutations::parse_layer_field_input;
+fn field_input(field:&str,source:&str)->semio_framework_value::DslValue{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);crate::standards::v1::subsets::any::io::text::mutations::field_input::parse_layer_field_input(field,source,&mut control).unwrap()}
 use super::*;
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{create_drawing_shape_layer_rect};
 use crate::standards::v1::subsets::any::schema::{default_drawing_document};
 use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
@@ -164,7 +165,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
     let id = crate::schema::layer_id(&original.layers[0]);
     let mut document = original.clone();
     for (field, input) in [("strokeWidth", "3"), ("strokeColor", "#123456"), ("strokeCap", "round"), ("strokeJoin", "bevel"), ("strokeDash", "8")] {
-        let value = parse_layer_field_input(field, input);
+        let value = field_input(field, input);
         let operation = drawing_op_for_layer_field(&document, id, field, &value).unwrap();
         let inverse = operation.inverse(&document).expect("valid retained mutation inverse fixture");
         let before = document.clone();
@@ -178,7 +179,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
     assert_eq!(stroke.dash, Some([8.0].into_iter().collect()));
     let scene = crate::schema::flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
-    assert_eq!(parse_layer_field_input("name", "123"), semio_framework_value::DslValue::String("123".into()));
+    assert_eq!(field_input("name", "123"), semio_framework_value::DslValue::String("123".into()));
 }
 
 #[test]
@@ -189,7 +190,7 @@ fn text_field_edits_preserve_numeric_strings_and_other_facets() {
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for (field, input) in [("textContent", "123"), ("textContent", "Grüße 🌍\nHello"), ("textSize", "36")] {
         let before = document.clone();
-        let mutation = drawing_op_for_layer_field(&document, &id, field, &parse_layer_field_input(field, input)).unwrap();
+        let mutation = drawing_op_for_layer_field(&document, &id, field, &field_input(field, input)).unwrap();
         let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");
         apply_drawing_mutation(&mut document, &mutation).unwrap();
         let DrawingLayerNode::Text(text) = &document.layers[0] else { panic!("Expected text") };
@@ -198,9 +199,9 @@ fn text_field_edits_preserve_numeric_strings_and_other_facets() {
         for undo in inverse { apply_drawing_mutation(&mut document, &undo).unwrap(); }
         assert_eq!(document, before);
     }
-    assert!(drawing_op_for_layer_field(&document, &id, "textSize", &parse_layer_field_input("textSize", "0")).is_none());
+    assert!(drawing_op_for_layer_field(&document, &id, "textSize", &field_input("textSize", "0")).is_none());
     let shape = base_document();
-    assert!(drawing_op_for_layer_field(&shape, crate::schema::layer_id(&shape.layers[0]), "textContent", &parse_layer_field_input("textContent", "123")).is_none());
+    assert!(drawing_op_for_layer_field(&shape, crate::schema::layer_id(&shape.layers[0]), "textContent", &field_input("textContent", "123")).is_none());
 }
 
 #[test]
@@ -210,7 +211,7 @@ fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
     let id = crate::schema::layer_id(&original.layers[0]);
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true) {
         let mode = case["patch"]["value"].as_str().unwrap();
-        let operation = drawing_op_for_layer_field(&original, id, "blendMode", &parse_layer_field_input("blendMode", mode)).unwrap();
+        let operation = drawing_op_for_layer_field(&original, id, "blendMode", &field_input("blendMode", mode)).unwrap();
         let inverse = operation.inverse(&original).expect("valid retained mutation inverse fixture");
         let mut document = original.clone();
         apply_drawing_mutation(&mut document, &operation).unwrap();
@@ -350,6 +351,27 @@ async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
     assert_mutation_inverse_sum_law_for(&delete_layer(middle.clone().into()), &base).await;
     assert_mutation_inverse_sum_law_for(&reorder_layer(middle.into(), None, 0), &base).await;
     assert_mutation_inverse_sum_law_for(&create_layer(None, Some(1), create_drawing_path_layer("Inserted", Vec::new().into())), &base).await;
+}
+
+/// ⚖️ Absorb law across index shifts: a later delete or insert before an earlier add never moves it, because adds are anchored by id.
+#[semio_framework_async_macros::async_test]
+async fn absorbing_layer_adds_survives_earlier_sibling_shifts() {
+    let mut base = base_document();
+    base.layers.push(create_drawing_path_layer("Middle", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer("Last", Vec::new().into()));
+    let (first, last) = (crate::schema::layer_id(&base.layers[0]).clone(), crate::schema::layer_id(&base.layers[2]).clone());
+    let steps: Vec<Vec<DrawingMutation>> = vec![
+        vec![create_layer(None, Some(2), create_drawing_path_layer("Inserted", Vec::new().into())), delete_layer(first.clone().into())],
+        vec![create_layer(None, Some(2), create_drawing_path_layer("Inserted", Vec::new().into())), create_layer(None, Some(0), create_drawing_path_layer("Head", Vec::new().into()))],
+        vec![reorder_layer(last.clone().into(), None, 0), delete_layer(first.clone().into())],
+        vec![create_layer(None, Some(1), create_drawing_path_layer("Inserted", Vec::new().into())), reorder_layer(last.into(), None, 0)],
+    ];
+    for pair in steps {
+        let d1 = pair[0].diff(&base).diff().clone();
+        let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+        let d2 = pair[1].diff(&mid).diff().clone();
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    }
 }
 
 async fn assert_mutation_inverse_sum_law_for(mutation: &DrawingMutation, base: &DrawingSnapshot) {

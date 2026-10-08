@@ -1,0 +1,249 @@
+{
+  "schema": "semio.stdio.binary.hex-splices.v1",
+  "note": "One explicit Apply of the hex window is the change set the editor made to its text: ranges of hex digits (Unicode scalars of the window text, the digits then a comment line), ascending and disjoint. Each run of ranges that touch the same bytes is ONE replace-byte-range over exactly those bytes; runs are listed last first so every offset is a base offset. `leaves` is `null` when the change set is refused.",
+  "cases": [
+    {
+      "id": "unchanged",
+      "before": "deadbeef",
+      "splices": [],
+      "leaves": []
+    },
+    {
+      "id": "changes-a-byte",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 2,
+          "insert": "00"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 1,
+          "removeLen": 1,
+          "insert": "00"
+        }
+      ]
+    },
+    {
+      "id": "a-nibble-edit-rewrites-its-byte",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 3,
+          "delete": 1,
+          "insert": "0"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 1,
+          "removeLen": 1,
+          "insert": "a0"
+        }
+      ]
+    },
+    {
+      "id": "inserts-a-byte-between-bytes",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 6,
+          "delete": 0,
+          "insert": "01"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 3,
+          "removeLen": 0,
+          "insert": "01"
+        }
+      ]
+    },
+    {
+      "id": "appends-bytes-at-the-end-of-the-digits",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 8,
+          "delete": 0,
+          "insert": "cafe"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 4,
+          "removeLen": 0,
+          "insert": "cafe"
+        }
+      ]
+    },
+    {
+      "id": "deletes-two-bytes",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 4,
+          "insert": ""
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 1,
+          "removeLen": 2,
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "id": "digits-typed-inside-a-byte-rewrite-that-byte",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 3,
+          "delete": 0,
+          "insert": "ff"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 1,
+          "removeLen": 1,
+          "insert": "affd"
+        }
+      ]
+    },
+    {
+      "id": "two-ranges-in-two-bytes-emit-last-first",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 2,
+          "insert": "ff"
+        },
+        {
+          "offset": 6,
+          "delete": 2,
+          "insert": "00"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 3,
+          "removeLen": 1,
+          "insert": "00"
+        },
+        {
+          "offset": 0,
+          "removeLen": 1,
+          "insert": "ff"
+        }
+      ]
+    },
+    {
+      "id": "two-ranges-in-one-byte-are-one-run",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 1,
+          "insert": "f"
+        },
+        {
+          "offset": 1,
+          "delete": 1,
+          "insert": "f"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 0,
+          "removeLen": 1,
+          "insert": "ff"
+        }
+      ]
+    },
+    {
+      "id": "whitespace-in-edited-digits-is-ignored",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 8,
+          "delete": 0,
+          "insert": " 01 02"
+        }
+      ],
+      "leaves": [
+        {
+          "offset": 4,
+          "removeLen": 0,
+          "insert": "0102"
+        }
+      ]
+    },
+    {
+      "id": "a-range-in-the-comment-moves-nothing",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 14,
+          "delete": 1,
+          "insert": "9"
+        }
+      ],
+      "leaves": []
+    },
+    {
+      "id": "an-odd-digit-is-refused",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 8,
+          "delete": 0,
+          "insert": "f"
+        }
+      ],
+      "leaves": null
+    },
+    {
+      "id": "a-non-hex-digit-is-refused",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 2,
+          "insert": "zz"
+        }
+      ],
+      "leaves": null
+    },
+    {
+      "id": "a-range-crossing-into-the-comment-is-refused",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 7,
+          "delete": 3,
+          "insert": ""
+        }
+      ],
+      "leaves": null
+    },
+    {
+      "id": "a-range-beyond-the-window-is-refused",
+      "before": "deadbeef",
+      "splices": [
+        {
+          "offset": 99,
+          "delete": 0,
+          "insert": "00"
+        }
+      ],
+      "leaves": null
+    }
+  ]
+}

@@ -19,7 +19,8 @@
     "previewText": "Prior preview"
   },
   "sparseFields": [
-    "generation"
+    "selectedGeneration",
+    "previewText"
   ],
   "hostPreservation": "exact",
   "inverse": "exact-before",

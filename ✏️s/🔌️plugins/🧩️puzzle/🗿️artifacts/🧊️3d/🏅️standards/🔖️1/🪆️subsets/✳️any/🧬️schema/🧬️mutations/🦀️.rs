@@ -5,15 +5,13 @@
 //! from those payloads — no hand-written apply/diff/inverse dispatch here. `dsl::DslEnum` supplies
 //! `DslVariants`, consumed by `OpText`/`OpBinary` in the sibling `📝️text`/`💾️binary` modules.
 //!
-//! The `serde_json::Value` bridge (`🔖️ValueBridge`) and the play app's `Puzzle3dPlaySnapshot`
-//! newtype (`🔖️PlaySnapshot`) live here too, same shape as `puzzle2d`/`puzzle5d`'s: the bridge
-//! round-trips through the typed `Puzzle3dSnapshot` instead of hand-splicing JSON per mutation kind.
+//! The native editor owns its immutable play root; semantic mutation authority remains the
+//! canonical typed snapshot and its typed diff algebra.
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
 use protocol::{DiffAlgebra, Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-3d document mutation vocabulary: id-keyed object/target-volume/reference
@@ -208,11 +206,12 @@ pub fn puzzle3d_selection_outcome(
     targets: &[String],
     solved: Puzzle3dSelectionFollow,
     base: &Puzzle3dSnapshot,
-    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dTargetVolumePatchEntry>,
+    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dTargetVolumeModification>,
 ) -> protocol::MutationOutcome<Puzzle3dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta, Puzzle3dTargetVolumesDelta};
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectModification, Puzzle3dObjectsDelta, Puzzle3dTargetVolumesDelta};
+    use protocol::list_delta::RowPatch;
     let mut messages = selection.warnings;
-    let objects: Vec<Puzzle3dObjectPatchEntry> = base
+    let objects: Vec<Puzzle3dObjectModification> = base
         .objects
         .iter()
         .zip(&solved.poses)
@@ -224,7 +223,7 @@ pub fn puzzle3d_selection_outcome(
                 scale: (pose.scale != entry.scale).then_some(pose.scale),
                 ..Default::default()
             };
-            (!patch.is_empty()).then(|| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch })
+            (!patch.is_empty()).then(|| Puzzle3dObjectModification { id: entry.id.clone(), patch })
         })
         .collect();
     let attractions = solved.attractions;
@@ -236,9 +235,9 @@ pub fn puzzle3d_selection_outcome(
         messages.push(protocol::MutationMessage::info("mutation.cascade", format!("{} attracted object(s) followed, {} attraction(s) re-derived", solved.followers.len(), attractions.len())).at(cascade));
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
-        objects: (!objects.is_empty()).then(|| Puzzle3dObjectsDelta { patched: objects, ..Default::default() }),
-        target_volumes: (!volumes.is_empty()).then(|| Puzzle3dTargetVolumesDelta { patched: volumes, ..Default::default() }),
-        attractions: (!attractions.is_empty()).then(|| Puzzle3dAttractionsDelta { patched: attractions, ..Default::default() }),
+        objects: (!objects.is_empty()).then(|| Puzzle3dObjectsDelta { modified: objects, ..Default::default() }),
+        target_volumes: (!volumes.is_empty()).then(|| Puzzle3dTargetVolumesDelta { modified: volumes, ..Default::default() }),
+        attractions: (!attractions.is_empty()).then(|| Puzzle3dAttractionsDelta { modified: attractions, ..Default::default() }),
         ..Default::default()
     })
     .absorb_messages(messages)
@@ -331,7 +330,7 @@ pub struct Puzzle3dPose {
 pub struct Puzzle3dSelectionFollow {
     pub poses: Vec<Option<Puzzle3dPose>>,
     pub followers: Vec<String>,
-    pub attractions: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dAttractionPatchEntry>,
+    pub attractions: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dAttractionModification>,
 }
 
 /// 🌲️ Re-solves the attraction graph of one selection move on `base`, with the document's own placement kernel
@@ -344,7 +343,7 @@ pub struct Puzzle3dSelectionFollow {
 /// ([`derive_attraction_params`]), so resolving the document afterwards never snaps a moved object back. Without
 /// `follow` (a scaling) nothing follows and no attraction changes.
 pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], selection: &Puzzle3dSelection<'_>, pose: &dyn Fn(&crate::Puzzle3dObject) -> Puzzle3dPose, follow: bool) -> Puzzle3dSelectionFollow {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionPatchEntry};
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionModification};
     let survivors: std::collections::BTreeSet<&str> = selection.objects.iter().map(|entry| entry.id.as_str()).collect();
     let mut solved = Puzzle3dSelectionFollow { poses: vec![None; base.objects.len()], ..Default::default() };
     let mut queue = std::collections::VecDeque::new();
@@ -421,7 +420,7 @@ pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], se
                 tilt: (tilt != attraction.tilt).then_some(tilt),
                 ..Default::default()
             };
-            (patch != Puzzle3dAttractionPatch::default()).then(|| Puzzle3dAttractionPatchEntry { id: attraction.id.clone(), patch })
+            (patch != Puzzle3dAttractionPatch::default()).then(|| Puzzle3dAttractionModification { id: attraction.id.clone(), patch })
         })
         .collect();
     solved
@@ -625,199 +624,7 @@ pub fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a
 }
 //#endregion 🔖️AttractionPose
 
-//#region 🔖️SnapshotDelta
-/// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
-/// both the VCS layer and the `serde_json::Value` scene bridge below replay through.
-pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
-    let mut mutations = Vec::new();
-    for object in &before.objects {
-        if !after.objects.iter().any(|entry| entry.id == object.id) {
-            mutations.push(delete_object(object.id.clone()));
-        }
-    }
-    for object in &after.objects {
-        match before.objects.iter().find(|entry| entry.id == object.id) {
-            None => mutations.push(create_object(object.clone(), None)),
-            Some(prior) => {
-                if prior.origin != object.origin {
-                    mutations.push(move_object(object.id.clone(), object.origin));
-                }
-                if prior.orientation != object.orientation {
-                    mutations.push(rotate_object(object.id.clone(), object.orientation));
-                }
-                if prior.scale != object.scale {
-                    mutations.push(scale_object(object.id.clone(), object.scale));
-                }
-                if prior.mesh_url != object.mesh_url {
-                    mutations.push(change_object_mesh(object.id.clone(), object.mesh_url.clone()));
-                }
-                if prior.label != object.label {
-                    mutations.push(edit_object_label(object.id.clone(), object.label.clone()));
-                }
-                if prior.object_kind != object.object_kind {
-                    mutations.push(change_object_kind(object.id.clone(), object.object_kind.clone()));
-                }
-                if prior.anchor != object.anchor {
-                    mutations.push(change_object_anchor(object.id.clone(), object.anchor));
-                }
-                if prior.hidden != object.hidden {
-                    mutations.push(change_object_hidden(object.id.clone(), object.hidden));
-                }
-                if prior.locked != object.locked {
-                    mutations.push(change_object_locked(object.id.clone(), object.locked));
-                }
-                for vortex in &prior.vortices {
-                    if !object.vortices.iter().any(|entry| entry.id == vortex.id) {
-                        mutations.push(remove_object_vortex(object.id.clone(), vortex.id.clone()));
-                    }
-                }
-                for vortex in &object.vortices {
-                    match prior.vortices.iter().find(|entry| entry.id == vortex.id) {
-                        None => mutations.push(add_object_vortex(object.id.clone(), vortex.clone(), None)),
-                        Some(prior_vortex) if prior_vortex != vortex => mutations.push(replace_object_vortex(object.id.clone(), vortex.id.clone(), vortex.clone())),
-                        Some(_) => {}
-                    }
-                }
-            }
-        }
-    }
-    for attraction in &before.attractions {
-        if !after.attractions.iter().any(|entry| entry.id == attraction.id) {
-            mutations.push(disconnect_vortices(attraction.id.clone()));
-        }
-    }
-    for attraction in &after.attractions {
-        match before.attractions.iter().find(|entry| entry.id == attraction.id) {
-            None => mutations.push(connect_vortices(
-                attraction.id.clone(),
-                attraction.attracting.clone(),
-                attraction.attracted.clone(),
-                attraction.gap,
-                attraction.shift,
-                attraction.rise,
-                attraction.rotation,
-                attraction.turn,
-                attraction.tilt,
-                attraction.x,
-                attraction.y, None,
-            )),
-            Some(prior) if prior.attracting != attraction.attracting || prior.attracted != attraction.attracted => {
-                mutations.push(disconnect_vortices(attraction.id.clone()));
-                mutations.push(connect_vortices(
-                    attraction.id.clone(),
-                    attraction.attracting.clone(),
-                    attraction.attracted.clone(),
-                    attraction.gap,
-                    attraction.shift,
-                    attraction.rise,
-                    attraction.rotation,
-                    attraction.turn,
-                    attraction.tilt,
-                    attraction.x,
-                    attraction.y, None,
-                ));
-            }
-            Some(prior) => {
-                if prior.gap != attraction.gap
-                    || prior.shift != attraction.shift
-                    || prior.rise != attraction.rise
-                    || prior.rotation != attraction.rotation
-                    || prior.turn != attraction.turn
-                    || prior.tilt != attraction.tilt
-                    || prior.x != attraction.x
-                    || prior.y != attraction.y
-                {
-                    mutations.push(replace_attraction_geometry(ReplaceAttractionGeometry { id: attraction.id.clone(), new_gap: attraction.gap, new_shift: attraction.shift, new_rise: attraction.rise, new_rotation: attraction.rotation, new_turn: attraction.turn, new_tilt: attraction.tilt, new_x: attraction.x, new_y: attraction.y }));
-                }
-            }
-        }
-    }
-    for volume in &before.target_volumes {
-        if !after.target_volumes.iter().any(|entry| entry.id == volume.id) {
-            mutations.push(delete_target_volume(volume.id.clone()));
-        }
-    }
-    for volume in &after.target_volumes {
-        match before.target_volumes.iter().find(|entry| entry.id == volume.id) {
-            None => mutations.push(create_target_volume(volume.clone(), None)),
-            Some(prior) => {
-                if prior.origin != volume.origin {
-                    mutations.push(move_target_volume(volume.id.clone(), volume.origin));
-                }
-                if prior.orientation != volume.orientation {
-                    mutations.push(rotate_target_volume(volume.id.clone(), volume.orientation));
-                }
-                if prior.scale != volume.scale {
-                    mutations.push(scale_target_volume(volume.id.clone(), volume.scale));
-                }
-                if prior.hidden != volume.hidden {
-                    mutations.push(change_target_volume_hidden(volume.id.clone(), volume.hidden));
-                }
-                if prior.locked != volume.locked {
-                    mutations.push(change_target_volume_locked(volume.id.clone(), volume.locked));
-                }
-            }
-        }
-    }
-    for reference in &before.references {
-        if !after.references.iter().any(|entry| entry.id == reference.id) {
-            mutations.push(delete_reference(reference.id.clone()));
-        }
-    }
-    for reference in &after.references {
-        match before.references.iter().find(|entry| entry.id == reference.id) {
-            None => mutations.push(create_reference(reference.clone(), None)),
-            Some(prior) => {
-                if prior.origin != reference.origin {
-                    mutations.push(move_reference(reference.id.clone(), reference.origin));
-                }
-                if prior.width_world != reference.width_world {
-                    mutations.push(resize_reference(reference.id.clone(), reference.width_world));
-                }
-                if prior.source != reference.source {
-                    mutations.push(replace_reference_source(reference.id.clone(), reference.source.clone()));
-                }
-                if prior.hidden != reference.hidden {
-                    mutations.push(change_reference_hidden(reference.id.clone(), reference.hidden));
-                }
-                if prior.locked != reference.locked {
-                    mutations.push(change_reference_locked(reference.id.clone(), reference.locked));
-                }
-            }
-        }
-    }
-    if before.domain != after.domain {
-        mutations.push(change_domain(after.domain.clone()));
-    }
-    for row in &before.meta.kind_compatibility {
-        if !after.meta.kind_compatibility.iter().any(|entry| entry.source == row.source && entry.target == row.target) {
-            mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
-        }
-    }
-    for row in &after.meta.kind_compatibility {
-        match before.meta.kind_compatibility.iter().find(|entry| entry.source == row.source && entry.target == row.target) {
-            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None)),
-            Some(prior) if prior != row => {
-                mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
-                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
-            }
-            Some(_) => {}
-        }
-    }
-    if before.meta.kind_catalogs != after.meta.kind_catalogs {
-        mutations.push(replace_kind_catalogs(after.meta.kind_catalogs.clone()));
-    }
-    mutations
-}
-//#endregion 🔖️SnapshotDelta
 
-/// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-
-    *projection = next;
-    Ok(())
-}
 
 pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -826,307 +633,9 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
     })
 }
 
-//#region 🔖️ValueBridge
-// 🌉️ The play app's scene-mutation helpers predate this typed projection and stay on a bare
-// `serde_json::Value` scratch scene_snapshot. Bridging `Puzzle3dMutation`/`Puzzle3dDiff` onto that `Value`
-// boundary round-trips through the typed `Puzzle3dSnapshot` (`serde_json::from_value`/`to_value`)
-// rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
-impl MutationDiff<Value> for Puzzle3dDiff {
-    fn apply(&self, projection: &Value, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Value> {
-        // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
-        // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
-        // `serde_json::from_value`/`to_value` on `Puzzle3dSnapshot` directly — that type only
-        // derives `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's own
-        // boundary type) is untouched.
-        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
-        let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base, capability).map_err(|error| error.under(["document"]))?;
-        Ok(Value::from(semio_framework_value::ToValue::to_value(&next)))
-    }
-    fn absorb(&mut self, other: Self) {
-        MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
-    }
-}
-
-impl DiffAlgebra<Value> for Puzzle3dDiff {
-    fn inverse(&self, base: &Value) -> Self {
-        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
-        DiffAlgebra::<Puzzle3dSnapshot>::inverse(self, &base)
-    }
-    fn between(base: &Value, other: &Value) -> Self {
-        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
-        let other: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(other)).unwrap_or_default();
-        <Self as DiffAlgebra<Puzzle3dSnapshot>>::between(&base, &other)
-    }
-    fn is_empty(&self) -> bool {
-        DiffAlgebra::<Puzzle3dSnapshot>::is_empty(self)
-    }
-}
-
-impl Mutation<Value> for Puzzle3dMutation {
-    type Diff = Puzzle3dDiff;
-
-    /// 🧷️ `#[derive(dsl::Mutations)]` on the enum only generates `impl Mutation<Puzzle3dSnapshot>`
-    /// (the `#[mutations(snapshot = ...)]` type); this bridge `impl Mutation<Value>` is hand-written
-    /// and forwards here too, same as every other method in this impl.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle3dSnapshot>>::DESCRIPTORS;
-    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMAS;
-    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
-
-    fn input_schema(&self) -> Option<&'static str> {
-        Mutation::<Puzzle3dSnapshot>::input_schema(self)
-    }
-
-    fn payload_value(&self) -> semio_framework_value::DslValue {
-        Mutation::<Puzzle3dSnapshot>::payload_value(self)
-    }
-
-    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        Mutation::<Puzzle3dSnapshot>::with_payload_value(self, value)
-    }
-
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        Mutation::<Puzzle3dSnapshot>::descriptor(self)
-    }
-
-    fn inverse_rows(&self) -> usize {
-        Mutation::<Puzzle3dSnapshot>::inverse_rows(self)
-    }
-
-    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).unwrap_or_default();
-        Mutation::<Puzzle3dSnapshot>::diff(self, &base)
-    }
-
-    fn inverse(&self, projection: &Value) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok({
-        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).unwrap_or_default();
-        Mutation::<Puzzle3dSnapshot>::inverse(self, &base)?
-    
-    })
-}
-    fn may_emit_foreign_steps(&self) -> bool {
-        Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
-    }
-    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        <Self as Mutation<Puzzle3dSnapshot>>::from_payload_value(kind, value)
-    }
-    fn conflict_target(&self) -> Vec<String> {
-        Mutation::<Puzzle3dSnapshot>::conflict_target(self)
-    }
-}
-
-/// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
-/// bare document JSON the play app mutates), by round-tripping through the typed
-/// `Puzzle3dSnapshot` and delegating to [`puzzle3d_snapshot_mutations`].
-pub fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle3dMutation> {
-    let before_snapshot: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(before)).unwrap_or_default();
-    let after_snapshot: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(after)).unwrap_or_default();
-    if before_snapshot == after_snapshot {
-        return Vec::new();
-    }
-    puzzle3d_snapshot_mutations(&before_snapshot, &after_snapshot)
-}
-//#endregion 🔖️ValueBridge
-
-//#region 🔖️PlaySnapshot
-/// 🌱️ The play app's `Puzzle3dPlayApp` predates the typed `Puzzle3dSnapshot` above and stays on
-/// this ad-hoc `serde_json::Value` scene_snapshot shape for its scene-mutation helpers. This newtype exists
-/// only to satisfy `ArtifactApp::Snapshot: store::ArtifactDsl + store::ArtifactPack`;
-/// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
-/// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
-/// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot`. `Mutation`/`MutationDiff`
-/// delegate straight through to the `Value` impls above too.
-#[derive(Debug)]
-pub struct Puzzle3dPlaySnapshot {
-    typed: std::sync::Arc<Puzzle3dSnapshot>,
-    value: std::sync::OnceLock<std::sync::Arc<Value>>,
-}
-
-impl Puzzle3dPlaySnapshot {
-    /// 🎯️ Builds the typed snapshot once and retains the supplied projection for read paths.
-    ///
-    /// 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
-    /// through `dsl::DslValue`/`dsl::FromValue` instead of `serde_json::from_value` —
-    /// `Puzzle3dSnapshot` only derives `Deserialize` under `#[cfg(test)]` now.
-    pub fn new(value: Value) -> Self {
-        let typed = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&value)).unwrap_or_default();
-        let projected = std::sync::OnceLock::new();
-        let _ = projected.set(std::sync::Arc::new(value));
-        Self { typed: std::sync::Arc::new(typed), value: projected }
-    }
-
-    /// 🧬️ Keeps mutation application typed and defers the JSON bridge until a reader needs it.
-    pub(crate) fn from_typed(typed: Puzzle3dSnapshot) -> Self {
-        Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
-    }
-
-    /// 👁️ Materializes the legacy play projection at most once per immutable snapshot.
-    ///
-    /// 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
-    /// through `dsl::ToValue`/`dsl::DslValue` instead of `serde_json::to_value` —
-    /// `Puzzle3dSnapshot` only derives `Serialize` under `#[cfg(test)]` now.
-    pub fn value(&self) -> &Value {
-        self.value.get_or_init(|| std::sync::Arc::new(Value::from(semio_framework_value::ToValue::to_value(self.typed.as_ref())))).as_ref()
-    }
-
-    /// 🧬️ Exposes the immutable typed authority without materializing the legacy JSON projection.
-    pub fn typed(&self) -> &Puzzle3dSnapshot {
-        self.typed.as_ref()
-    }
-
-    /// 🧬️ Shares the immutable typed authority — what a tool request holds without copying the document.
-    pub fn typed_arc(&self) -> std::sync::Arc<Puzzle3dSnapshot> {
-        std::sync::Arc::clone(&self.typed)
-    }
-}
-
-/// 🩹️ Hand-written, not derived (ticket
-/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `ArtifactEditor::Snapshot`
-/// (see `✏️editor/🦀️.rs`'s `type Snapshot = Puzzle3dPlaySnapshot`) requires `ToValue + FromValue`;
-/// there is no field-wise derive shape for this struct's `Arc<Puzzle3dSnapshot>`/
-/// `OnceLock<Arc<Value>>` split, so this bridges through the same materialized `Value` projection
-/// `value()`/`new()` already maintain.
-impl semio_framework_value::ToValue for Puzzle3dPlaySnapshot {
-    fn to_value(&self) -> semio_framework_value::DslValue { <Puzzle3dSnapshot as semio_framework_value::ToValue>::to_value(self.typed()) }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::ToValue>::to_value_controlled(self.typed(), control) }
-}
-
-impl semio_framework_value::FromValue for Puzzle3dPlaySnapshot {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_typed) }
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self::from_typed) }
-}
-
-impl Clone for Puzzle3dPlaySnapshot {
-    fn clone(&self) -> Self {
-        let value = std::sync::OnceLock::new();
-        if let Some(projected) = self.value.get() {
-            let _ = value.set(std::sync::Arc::clone(projected));
-        }
-        Self { typed: std::sync::Arc::clone(&self.typed), value }
-    }
-}
 
 
 
-
-
-impl PartialEq for Puzzle3dPlaySnapshot {
-    fn eq(&self, other: &Self) -> bool {
-        self.typed == other.typed
-    }
-}
-
-
-
-/// 🧒️ Composition view of the play snapshot: a puzzle document owns no child artifacts, so the
-/// typed snapshot's own (empty) composition is the whole answer.
-impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle3dPlaySnapshot {
-    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
-        semio_framework_schema_composition::ArtifactCompositionFields::visit_child_refs(self.typed.as_ref(), visitor)
-    }
-    fn child_slots() -> &'static [semio_framework_schema_composition::ChildSlotSpec] {
-        <Puzzle3dSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots()
-    }
-    fn link_slots() -> &'static [semio_framework_schema_composition::LinkSlotSpec] {
-        <Puzzle3dSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::link_slots()
-    }
-}
-
-
-
-impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn apply(&self, projection: &Puzzle3dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
-        MutationDiff::<Puzzle3dSnapshot>::apply(self, projection.typed(), capability).map(Puzzle3dPlaySnapshot::from_typed)
-    }
-    fn absorb(&mut self, other: Self) {
-        MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
-    }
-}
-
-impl DiffAlgebra<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn inverse(&self, base: &Puzzle3dPlaySnapshot) -> Self {
-        DiffAlgebra::<Puzzle3dSnapshot>::inverse(self, base.typed())
-    }
-    fn between(base: &Puzzle3dPlaySnapshot, other: &Puzzle3dPlaySnapshot) -> Self {
-        <Self as DiffAlgebra<Puzzle3dSnapshot>>::between(base.typed(), other.typed())
-    }
-    fn is_empty(&self) -> bool {
-        DiffAlgebra::<Puzzle3dSnapshot>::is_empty(self)
-    }
-}
-
-impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
-    type Diff = Puzzle3dDiff;
-
-    /// 🧷️ Same bridge shape as `impl Mutation<Value>` above: the derive only covers
-    /// `Mutation<Puzzle3dSnapshot>`, so this hand-written impl forwards its descriptor metadata
-    /// there too.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle3dSnapshot>>::DESCRIPTORS;
-    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMAS;
-    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
-
-    fn input_schema(&self) -> Option<&'static str> {
-        Mutation::<Puzzle3dSnapshot>::input_schema(self)
-    }
-
-    fn payload_value(&self) -> semio_framework_value::DslValue {
-        Mutation::<Puzzle3dSnapshot>::payload_value(self)
-    }
-
-    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        Mutation::<Puzzle3dSnapshot>::with_payload_value(self, value)
-    }
-
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        Mutation::<Puzzle3dSnapshot>::descriptor(self)
-    }
-
-    fn inverse_rows(&self) -> usize {
-        Mutation::<Puzzle3dSnapshot>::inverse_rows(self)
-    }
-
-    fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        Mutation::<Puzzle3dSnapshot>::diff(self, projection.typed.as_ref())
-    }
-
-    fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
-    Ok({
-        Mutation::<Puzzle3dSnapshot>::inverse(self, projection.typed.as_ref())?
-    
-    })
-}
-    fn may_emit_foreign_steps(&self) -> bool {
-        Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
-    }
-    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        <Self as Mutation<Puzzle3dSnapshot>>::from_payload_value(kind, value)
-    }
-    fn conflict_target(&self) -> Vec<String> {
-        Mutation::<Puzzle3dSnapshot>::conflict_target(self)
-    }
-}
-
-/// 🪪️ `kinds`/`semantics`/`label`/`target` are projection-independent (the derive-generated
-/// `SemanticMutation<Puzzle3dSnapshot>` impl above never actually reads `Puzzle3dSnapshot` data in
-/// any of the four), so this bridges the same vocabulary onto `Puzzle3dPlaySnapshot` by forwarding
-/// straight through — the `SemanticMutation` twin of the `Mutation<Puzzle3dPlaySnapshot>` bridge
-/// immediately above, needed so `.editor_mutation_roster::<Puzzle3dPlayApp>()` can register this
-/// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
-impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
-    fn kinds() -> &'static [protocol::SemanticDescriptor] {
-        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds()
-    }
-    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
-        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::semantics(self)
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::label(self)
-    }
-    fn target(&self) -> Vec<String> {
-        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::target(self)
-    }
-}
-//#endregion 🔖️PlaySnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

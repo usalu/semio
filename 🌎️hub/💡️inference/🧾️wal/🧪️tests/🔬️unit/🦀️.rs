@@ -140,7 +140,7 @@ fn encode_hex(bytes: &[u8]) -> String {
 pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixtureRecord {
     use directory::Inference as _;
     use semio_s_artifact_gis_gismap::{
-        mutations::apply_gis_map_mutation,
+        standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation,
         schema::{gis_map_descriptor_json, gis_map_document_from_descriptor_json, gis_map_snapshot_to_drawing},
         standards::v1::subsets::any::schema::inferences::GisMapInference,
     };

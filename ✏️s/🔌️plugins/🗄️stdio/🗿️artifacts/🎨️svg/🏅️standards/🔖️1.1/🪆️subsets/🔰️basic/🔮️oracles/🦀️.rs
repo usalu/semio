@@ -252,13 +252,18 @@ mod live {
         write_markup(&doc)
     }
 
+    /// 🧩️ `value` after `step` edited it in place — the one owned-value seam of the oracle's undo, so the undo itself holds no mutable borrow.
+    fn applied<T>(mut value: T, step: impl FnOnce(&mut T) -> Result<(), String>) -> Result<T, String> {
+        step(&mut value)?;
+        Ok(value)
+    }
+
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         if kind.is_empty() {
             return Err("mutation spec carries no `kind`".to_string());
         }
         let base = parse_markup(input)?;
-        let mut mutated = base.clone();
-        apply(&mut mutated, kind, params)?;
+        let mutated = applied(base.clone(), |mutated| apply(mutated, kind, params))?;
         write_markup(&invert(&base, mutated, kind, params)?)
     }
 

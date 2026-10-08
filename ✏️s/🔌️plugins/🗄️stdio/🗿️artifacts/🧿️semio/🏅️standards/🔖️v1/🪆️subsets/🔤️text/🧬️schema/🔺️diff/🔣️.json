@@ -2,20 +2,138 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/diff.json",
   "title": "SemioTextDiff",
-  "description": "Sparse per-field diff over SemioTextSnapshot — a single optional whole-list-replace slot for `runs`.",
+  "description": "Sparse keyed-row diff: per collection `removed` base indices, `modified` rows (sparse row diffs) and `added` rows with their final index.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "runs": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-semio-state": "artifact",
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "values": {
+        "removed": {
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioTextRunDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "SemioTextRun"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "SemioTextRunDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "diff"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "diff": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "object",
+                        "x-semio-type": "SemioTextMark"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "added": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "item"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "item": {
+                    "type": "object",
+                    "x-semio-type": "SemioTextMark"
+                  }
+                }
+              }
+            }
           }
         }
       }

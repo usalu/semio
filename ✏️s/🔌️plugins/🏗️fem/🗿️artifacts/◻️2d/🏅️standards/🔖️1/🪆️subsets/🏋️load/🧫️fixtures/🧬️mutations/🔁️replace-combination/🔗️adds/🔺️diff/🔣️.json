@@ -7,12 +7,13 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "uls1",
-        "item": {
+        "patch": {
           "id": "uls1",
           "name": "ULS 6.10b",
           "terms": [
@@ -31,8 +32,7 @@
           ]
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "analysis": null
 }

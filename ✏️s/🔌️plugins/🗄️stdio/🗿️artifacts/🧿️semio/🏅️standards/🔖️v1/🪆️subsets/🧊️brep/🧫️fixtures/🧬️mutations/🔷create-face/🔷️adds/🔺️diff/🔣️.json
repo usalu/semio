@@ -2,24 +2,27 @@
   "faces": {
     "added": [
       {
-        "id": "f2",
-        "outerLoop": "l1",
-        "innerLoops": [],
-        "surface": {
-          "kind": "plane",
-          "origin": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 1.0
+        "index": 1,
+        "item": {
+          "id": "f2",
+          "outerLoop": "l1",
+          "innerLoops": [],
+          "surface": {
+            "kind": "plane",
+            "origin": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            },
+            "normal": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": -1.0
+            }
           },
-          "normal": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": -1.0
-          }
-        },
-        "orientation": false,
-        "tol": 4e-7
+          "orientation": false,
+          "tol": 4e-07
+        }
       }
     ]
   }

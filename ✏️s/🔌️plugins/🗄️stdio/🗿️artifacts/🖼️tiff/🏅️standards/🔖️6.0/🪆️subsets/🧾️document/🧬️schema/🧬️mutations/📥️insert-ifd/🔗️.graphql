@@ -1,3 +1,2 @@
-# 🧬️ insert-ifd/InsertIfd
-scalar InsertIfdMutationValue
-input InsertIfdMutation { index: Int! ifd: InsertIfdMutationValue! }
+# 🧬️ Insert an owned TIFF page with typed entries and exact sample blocks.
+input InsertIfdMutation { index: Int! ifd: TiffIfdInput! }

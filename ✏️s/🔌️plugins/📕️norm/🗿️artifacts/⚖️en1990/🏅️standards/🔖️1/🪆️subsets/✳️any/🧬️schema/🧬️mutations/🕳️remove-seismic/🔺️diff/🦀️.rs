@@ -9,5 +9,5 @@ pub fn diff(payload: &RemoveSeismic, base: &En1990Snapshot) -> MutationOutcome<E
     if payload.index >= base.seismics.len() {
         return MutationOutcome::error("mutation.target-missing", "seismics index out of range", [payload.index.to_string()]);
     }
-    MutationOutcome::new(En1990Diff { seismics: En1990SeismicDelta::removal(&base.seismics[payload.index].id), ..En1990Diff::default() })
+    MutationOutcome::new(En1990Diff { seismics: En1990SeismicDelta::removal(&base.seismics, payload.index), ..En1990Diff::default() })
 }

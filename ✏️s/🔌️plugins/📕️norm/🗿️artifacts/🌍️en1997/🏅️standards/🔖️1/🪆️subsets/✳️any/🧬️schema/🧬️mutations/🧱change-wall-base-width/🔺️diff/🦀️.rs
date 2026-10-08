@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeWallBaseWidth, base: &En1997Snapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("wall {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {
-        retaining_walls: Some(En1997RetainingWallsRows { modified: vec![En1997RetainingWallsPatch { id: payload.id.clone(), base_width: Some(payload.new_base_width), ..Default::default() }], ..Default::default() }),
+        retaining_walls: Some(En1997RetainingWallsRows::modification(&payload.id, En1997RetainingWallsPatch { base_width: Some(payload.new_base_width), ..Default::default() })),
         ..Default::default()
     })
 }

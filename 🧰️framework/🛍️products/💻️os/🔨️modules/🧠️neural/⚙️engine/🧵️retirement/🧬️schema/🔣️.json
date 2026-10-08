@@ -33,6 +33,88 @@
           "minimum": 0
         }
       }
+    },
+    "Frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceBirthBytes",
+        "sourceReleaseBytes",
+        "storage",
+        "currencies",
+        "denied",
+        "terminal"
+      ],
+      "properties": {
+        "sourceBirthBytes": {
+          "const": 0
+        },
+        "sourceReleaseBytes": {
+          "const": 0
+        },
+        "storage": {
+          "const": "inlineOriginalAndAdmittedQueue"
+        },
+        "currencies": {
+          "const": [
+            "items",
+            "copy",
+            "capacity",
+            "release",
+            "depth"
+          ]
+        },
+        "denied": {
+          "const": "sameOriginalPointerAndZeroPhysicalChange"
+        },
+        "terminal": {
+          "const": "originalAndEveryAdmittedBacking"
+        }
+      }
+    },
+    "InputBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "progress",
+        "dictionary"
+      ],
+      "properties": {
+        "progress": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Progress"
+        },
+        "dictionary": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "description": "One original input phase reports all physical births and releases. Frame pages and shared key/value headers require separate admitted turns. Publication follows physical closure of empty frame and update backings."
+    },
+    "InputPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceBirthBytes",
+        "sourceReleaseBytes",
+        "headers",
+        "publication"
+      ],
+      "properties": {
+        "sourceBirthBytes": {
+          "const": 0
+        },
+        "sourceReleaseBytes": {
+          "const": 0
+        },
+        "headers": {
+          "const": "separateAdmittedOriginal"
+        },
+        "publication": {
+          "const": "frameAndUpdateTerminal"
+        }
+      }
     }
   }
 }

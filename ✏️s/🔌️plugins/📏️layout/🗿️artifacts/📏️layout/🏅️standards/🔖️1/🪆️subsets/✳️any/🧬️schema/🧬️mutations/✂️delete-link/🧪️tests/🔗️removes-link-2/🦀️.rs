@@ -85,8 +85,8 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "delete-link/removes-link-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().links.as_ref().expect("delete-link fills the links delta");
-    assert_eq!(delta.removed, vec!["link-2".to_string()], "delete-link's diff carries the id in `removed`");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "delete-link touches only the `removed` arm of the links delta");
+    assert_eq!(delta.removed, vec![crate::diff::LayoutLinkRemoval { id: "link-2".to_string(), index: 1 }], "delete-link's diff carries the id and base index in `removed`");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-link touches only the `removed` arm of the links delta");
 }
 
 /// 🔺️ The sparse delta `delete-link` produces is exactly the committed diff — the most load-bearing

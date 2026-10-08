@@ -60,12 +60,15 @@
   "reports": null,
   "searchFilters": null,
   "statusRecords": {
-    "added": [],
     "removed": [
-      "status-record-a"
+      {
+        "id": "status-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "workshops": null,
   "surveys": null,

@@ -126,7 +126,7 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     let seed = SemioValueSnapshot::default();
     let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed, None);
     envelope.dialect = Some(subset_dialect("value"));
-    let runtime = dsl::ArtifactStoreInitializationRuntime::new("value-close-law", STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
+    let runtime = dsl::ArtifactStoreInitializationRuntime::new("value-close-law", STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::MemberStoreOwner<SemioValueMutation>>::member_store_owners());
 
     let first = store.snapshot_read().expect("first snapshot read lease");
@@ -199,7 +199,7 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
     let seed = SemioValueSnapshot::default();
     let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, document, seed, None);
     envelope.dialect = Some(subset_dialect("value"));
-    let runtime = dsl::ArtifactStoreInitializationRuntime::new(document, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
+    let runtime = dsl::ArtifactStoreInitializationRuntime::new(document, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::MemberStoreOwner<SemioValueMutation>>::member_store_owners());
     for value in case["values"].as_array().unwrap() {
         store.apply_one(store.generation(), SemioValueMutation::SetValue(SetValue { path: Vec::new(), value: SemioValue::Str { value: value.as_str().unwrap().into() } }), dsl::HistoryLane::Document).await.expect("real registered value operation");

@@ -26,60 +26,70 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-4-a"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.4/a#editor"
 aliases = ["stdio pdf 1.4 archival"]
 ports = { react = 6256, wgpu = 6356 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-4"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.4/*#editor"
 aliases = ["stdio pdf 1.4"]
 ports = { react = 6257, wgpu = 6357 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-4-x"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.4/x#editor"
 aliases = ["stdio pdf 1.4 print"]
 ports = { react = 6258, wgpu = 6358 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-a"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/a#editor"
 aliases = ["stdio pdf 1.7 archival"]
 ports = { react = 6259, wgpu = 6359 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/*#editor"
 aliases = ["stdio pdf 1.7"]
 ports = { react = 6260, wgpu = 6360 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-e"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/e#editor"
 aliases = ["stdio pdf engineering"]
 ports = { react = 6261, wgpu = 6361 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-h"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/h#editor"
 aliases = ["stdio pdf healthcare"]
 ports = { react = 6262, wgpu = 6362 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-ua"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/ua#editor"
 aliases = ["stdio pdf accessible"]
 ports = { react = 6263, wgpu = 6363 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-vt"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/vt#editor"
 aliases = ["stdio pdf variable print"]
 ports = { react = 6264, wgpu = 6364 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-x"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pdf@1.7/x#editor"
 aliases = ["stdio pdf 1.7 print"]
 ports = { react = 6265, wgpu = 6365 }

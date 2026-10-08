@@ -16,6 +16,7 @@ use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
 use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewport};
 use crate::editor::sequence::commands::playback::{run_command, stop_command};
 use crate::editor::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
+use crate::editor::sequence::edit_rules;
 use crate::editor::sequence::modes::edit;
 use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
 use crate::editor::sequence::modes::edit::windows::main::config::SequenceMainWindowConfig;
@@ -24,7 +25,8 @@ use crate::editor::sequence::panels::{catalogue as catalogue_panel, document as 
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
-use dag::{would_create_cycle, DagHost, DagLayoutOptions};
+use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions};
+use dag::{would_create_cycle, DagHost};
 use graph::manifest::PropertyBag;
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use infinite_board_port_directed_dag as dag;
@@ -77,7 +79,7 @@ use semio_framework_pack_json::Value;
 use semio_framework_tool_machine::{node_drag_emit, NodeDragEmit, NodeGraphEditRow};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use semio_framework_2d::compute::EngineHandles;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{self as semio_flow_mutations, SemioFlowMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️Constants
@@ -205,78 +207,6 @@ pub fn sequence_host_snapshot_from_children(snapshot: &SequenceSnapshot, childre
 }
 
 //#region 🔖️ChildIntentLeaves
-/// 📏️ How far two drag offsets may differ and still be one drag: a host moves every dragged step by one world delta, and
-/// recomputing `after - before` per step only differs by rounding.
-const SEQUENCE_DRAG_OFFSET_TOLERANCE: f64 = 1e-6;
-
-/// 🧮️ The intent leaves of the composed Flow content child that carry `base` to `next`, never a whole `set-snapshot`:
-/// severed edges first (`remove-edge`), removed steps (`remove-node`), inserted steps (`insert-node`), each kept step's
-/// kind/label/param changes (`set-node-kind`, `set-node-label`, `set-node-param`, `remove-node-param`), its position
-/// changes as relative `drag-nodes` (one leaf per drag offset), then edge endpoint/kind changes and inserted edges.
-pub fn sequence_content_leaves(base: &SemioFlowSnapshot, next: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
-    let mut leaves = Vec::new();
-    for edge in &base.edges {
-        if !next.edges.iter().any(|entry| entry.id == edge.id) {
-            leaves.push(SemioFlowMutation::RemoveEdge(semio_flow_mutations::remove_edge::RemoveEdge { id: edge.id.clone() }));
-        }
-    }
-    for node in &base.nodes {
-        if !next.nodes.iter().any(|entry| entry.id == node.id) {
-            leaves.push(SemioFlowMutation::RemoveNode(semio_flow_mutations::remove_node::RemoveNode { id: node.id.clone() }));
-        }
-    }
-    let mut drags: Vec<(f64, f64, Vec<String>)> = Vec::new();
-    for node in &next.nodes {
-        let Some(prior) = base.nodes.iter().find(|entry| entry.id == node.id) else {
-            leaves.push(SemioFlowMutation::InsertNode(semio_flow_mutations::insert_node::InsertNode::new(node.clone())));
-            continue;
-        };
-        if prior.kind != node.kind {
-            leaves.push(SemioFlowMutation::SetNodeKind(semio_flow_mutations::set_node_kind::SetNodeKind { id: node.id.clone(), kind: node.kind.clone() }));
-        }
-        if prior.label != node.label {
-            leaves.push(SemioFlowMutation::SetNodeLabel(semio_flow_mutations::set_node_label::SetNodeLabel { id: node.id.clone(), label: node.label.clone() }));
-        }
-        for param in &node.params {
-            if !prior.params.iter().any(|entry| entry.key == param.key && entry.value == param.value) {
-                leaves.push(SemioFlowMutation::SetNodeParam(semio_flow_mutations::set_node_param::SetNodeParam { id: node.id.clone(), key: param.key.clone(), value: param.value.clone() }));
-            }
-        }
-        for param in &prior.params {
-            if !node.params.iter().any(|entry| entry.key == param.key) {
-                leaves.push(SemioFlowMutation::RemoveNodeParam(semio_flow_mutations::remove_node_param::RemoveNodeParam { id: node.id.clone(), key: param.key.clone() }));
-            }
-        }
-        let (dx, dy) = (node.position.x - prior.position.x, node.position.y - prior.position.y);
-        if (dx, dy) != (0.0, 0.0) && dx.is_finite() && dy.is_finite() {
-            match drags.iter_mut().find(|(gx, gy, _)| (gx - dx).abs() <= SEQUENCE_DRAG_OFFSET_TOLERANCE && (gy - dy).abs() <= SEQUENCE_DRAG_OFFSET_TOLERANCE) {
-                Some((_, _, targets)) => targets.push(node.id.clone()),
-                None => drags.push((dx, dy, vec![node.id.clone()])),
-            }
-        }
-    }
-    leaves.extend(drags.into_iter().map(|(dx, dy, targets)| SemioFlowMutation::DragNodes(semio_flow_mutations::drag_nodes::DragNodes { targets, dx, dy })));
-    for edge in &next.edges {
-        match base.edges.iter().find(|entry| entry.id == edge.id) {
-            None => leaves.push(SemioFlowMutation::InsertEdge(semio_flow_mutations::insert_edge::InsertEdge::new(edge.clone()))),
-            Some(prior) => {
-                if prior.from != edge.from || prior.to != edge.to {
-                    leaves.push(SemioFlowMutation::SetEdgeEndpoints(semio_flow_mutations::set_edge_endpoints::SetEdgeEndpoints { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
-                }
-                if prior.kind != edge.kind {
-                    leaves.push(SemioFlowMutation::SetEdgeKind(semio_flow_mutations::set_edge_kind::SetEdgeKind { id: edge.id.clone(), kind: edge.kind.clone() }));
-                }
-            }
-        }
-    }
-    leaves
-}
-
-/// 🧮️ The child intent leaves that carry the working scene `base` to `next`.
-pub fn sequence_scene_leaves(base: &SequenceWorkingScene, next: &SequenceWorkingScene) -> Vec<SemioFlowMutation> {
-    sequence_content_leaves(&crate::sequence_content_snapshot_from_working(&base.steps, &base.edges), &crate::sequence_content_snapshot_from_working(&next.steps, &next.edges))
-}
-
 /// 🌊️ Publishes child intent `leaves` as ONE edit of the exact composed Flow content child; nothing is the empty emit.
 pub fn sequence_child_leaves_emit(snapshot: &SequenceSnapshot, leaves: Vec<SemioFlowMutation>) -> Emit<SequenceMutation, NoConfigMutation> {
     if leaves.is_empty() {
@@ -285,19 +215,15 @@ pub fn sequence_child_leaves_emit(snapshot: &SequenceSnapshot, leaves: Vec<Semio
     Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
 }
 
-/// 🧰️ The child intent leaves one editor host mutation yields against the captured typed child.
-pub fn sequence_child_leaves_from_host_mutation(doc: &ArtifactView<'_, SequenceSnapshot>, mutate: impl FnOnce(&mut SequenceHost)) -> Result<Vec<SemioFlowMutation>, Fault> {
-    let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)?;
-    let mut host = ColdOwner::new(host_from_host_snapshot(&live));
-    mutate(&mut host);
-    let base = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-    let next = ColdOwner::new(SequenceWorkingScene { steps: host.snapshot.steps.clone(), edges: host.snapshot.edges.clone() });
-    Ok(sequence_scene_leaves(&base, &next))
+/// ✏️ Starts one editing gesture over the exact working scene of the composed content child `doc` carries.
+pub fn sequence_scene_edit(doc: &ArtifactView<'_, SequenceSnapshot>) -> Result<edit_rules::SceneEdit, Fault> {
+    let scene = sequence_working_scene_from_children(doc.snapshot, &doc.children)?;
+    Ok(edit_rules::SceneEdit::new(SequenceWorkingScene { steps: scene.steps.clone(), edges: scene.edges.clone() }))
 }
 
-/// 🧰️ Applies one editor host mutation to the captured typed child and publishes its intent leaves as ONE child edit.
-pub fn sequence_child_emit_from_host_mutation(doc: &ArtifactView<'_, SequenceSnapshot>, mutate: impl FnOnce(&mut SequenceHost)) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-    Ok(sequence_child_leaves_emit(doc.snapshot, sequence_child_leaves_from_host_mutation(doc, mutate)?))
+/// 🌊️ Publishes the concrete leaves one finished gesture emitted as ONE edit of the content child; no leaf is the empty emit.
+pub fn sequence_edit_emit(doc: &ArtifactView<'_, SequenceSnapshot>, edit: edit_rules::SceneEdit) -> Emit<SequenceMutation, NoConfigMutation> {
+    sequence_child_leaves_emit(doc.snapshot, edit.leaves)
 }
 //#endregion 🔖️ChildIntentLeaves
 
@@ -536,7 +462,7 @@ pub struct SequenceHost {
     /// working representation, matching `SequenceHostSnapshot`'s doc comment. `SequenceHost` edits this
     /// in place exactly as it edited `SequenceSnapshot.steps`/`.edges` directly before the
     /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` migration (`sequence→C:flow`) — only the
-    /// boundary conversions (`from_snapshot`/`replace_snapshot`/`to_json`/`load_json`) changed.
+    /// boundary conversions (`from_snapshot`/`to_json`/`load_json`) changed.
     pub snapshot: SequenceHostSnapshot,
     /// 🎥️ The canvas camera — session-only host state (never a `SequenceSnapshot` document field; see
     /// the exact main-window camera). Persists across `rebuild_dag()` calls
@@ -578,16 +504,6 @@ impl SequenceHost {
         };
         host.rebuild_dag();
         host
-    }
-
-    pub fn replace_snapshot(&mut self, snapshot: SequenceHostSnapshot) -> Result<(), SequenceCoreError> {
-        if snapshot.schema != "sequence.sequence" {
-            return Err(SequenceCoreError::UnsupportedSchema(snapshot.schema));
-        }
-        self.next_serial = self.next_serial.max(max_serial_in_snapshot(&snapshot));
-        self.snapshot = snapshot;
-        self.rebuild_dag();
-        Ok(())
     }
 
     pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
@@ -872,7 +788,7 @@ impl SequenceHost {
 
     /// 🌳️ Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
-        self.dag.reorganize(opts).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
+        let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.dag.reorganize(opts,&mut control).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
         let positions: HashMap<String, (f64, f64)> = self.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
         for step in self.snapshot.steps.iter_mut() {
             if let Some(&(x, y)) = positions.get(&step.id) {
@@ -1081,114 +997,59 @@ fn sequence_retained_artifact_command_admitted(command: &SequenceCommand) -> boo
     }
 }
 
-fn sequence_retained_serial(prefix: &str, id: &str) -> Option<u64> {
-    id.strip_prefix(prefix)?.parse().ok()
-}
-
-fn sequence_retained_next_id(scene: &SequenceWorkingScene, prefix: &str) -> String {
-    let step_max = scene.steps.iter().filter_map(|step| sequence_retained_serial("step-", &step.id)).max().unwrap_or(0);
-    let edge_max = scene.edges.iter().filter_map(|edge| sequence_retained_serial("edge-", &edge.id)).max().unwrap_or(0);
-    format!("{prefix}-{}", step_max.max(edge_max).max(100).saturating_add(1))
-}
-
-fn sequence_retained_is_control(kind: &str) -> bool {
-    matches!(kind, "control.if" | "control.while" | "control.repeat")
-}
-
-fn sequence_retained_default_slot(kind: &str) -> &'static str {
-    if kind == "control.if" {
-        "then"
-    } else {
-        "body"
-    }
-}
-
-fn sequence_retained_create_step(scene: &SequenceWorkingScene, kind: String, x: f64, y: f64, slot: Option<SlotRef>) -> SequenceStep {
-    SequenceStep { id: sequence_retained_next_id(scene, "step"), kind, params: StepParams::new(), x, y, slot, collapsed: false }
-}
-
-fn sequence_retained_remove(target: &mut SequenceWorkingScene, ids: &[String]) {
-    target.steps.retain(|step| !ids.contains(&step.id));
-    target.edges.retain(|edge| !ids.contains(&edge.from) && !ids.contains(&edge.to));
-}
-
-fn sequence_retained_delete_ids(scene: &SequenceWorkingScene, roots: impl IntoIterator<Item = String>) -> Vec<String> {
-    let mut selected = Vec::new();
-    for root in roots {
-        if !selected.iter().any(|id| id == &root) && scene.steps.iter().any(|step| step.id == root) {
-            selected.push(root.clone());
-        }
-        if scene.steps.iter().any(|step| step.id == root && sequence_retained_is_control(&step.kind)) {
-            for step in &scene.steps {
-                if step.slot.as_ref().is_some_and(|slot| slot.owner == root) && !selected.iter().any(|id| id == &step.id) {
-                    selected.push(step.id.clone());
-                }
-            }
-        }
-    }
-    scene.steps.iter().filter(|step| selected.iter().any(|id| id == &step.id)).map(|step| step.id.clone()).collect()
-}
-
 fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &SequenceSnapshot, scene: &SequenceWorkingScene, interaction: &protocol::InteractionState) -> Result<(Emit<SequenceMutation, NoConfigMutation>, Option<Dictionary>), Fault> {
     if scene.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || scene.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
         return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-scene-capacity"));
     }
     let mut discarded_params = None;
-    let mut target = scene.clone();
+    let mut edit = edit_rules::SceneEdit::new(scene.clone());
     match command {
-        SequenceCommand::AddStep(payload) => target.steps.push(sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, None)),
-        SequenceCommand::AddStepToSlot(payload) => target.steps.push(sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }))),
-        SequenceCommand::AddStepDropped(payload) => {
-            let slot = payload.picked_step_id.as_ref().and_then(|owner_id| {
-                scene.steps.iter().find(|step| step.id == *owner_id && sequence_retained_is_control(&step.kind) && !step.collapsed).map(|owner| SlotRef { owner: owner_id.clone(), name: sequence_retained_default_slot(&owner.kind).into() })
-            });
-            target.steps.push(sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, slot));
+        SequenceCommand::AddStep(payload) => {
+            edit.add_step(&payload.kind, payload.x, payload.y, None);
         }
-        SequenceCommand::RemoveStep(payload) => sequence_retained_remove(&mut target, &sequence_retained_delete_ids(scene, [payload.id.clone()])),
+        SequenceCommand::AddStepToSlot(payload) => {
+            edit.add_step(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
+        }
+        SequenceCommand::AddStepDropped(payload) => {
+            edit.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
+        }
+        SequenceCommand::RemoveStep(payload) => {
+            edit.remove_steps(&edit_rules::removal_closure(scene, [payload.id.clone()]));
+        }
         SequenceCommand::DeleteSelection(_) => {
             let selected = interaction.selection.get(SEQUENCE_INTERACTION_STEPS).map(|selection| selection.ids.clone()).unwrap_or_default();
             if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                 return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-selection-capacity"));
             }
-            sequence_retained_remove(&mut target, &sequence_retained_delete_ids(scene, selected));
+            edit.remove_steps(&edit_rules::removal_closure(scene, selected));
         }
         SequenceCommand::MoveStep(payload) => {
-            if let Some(step) = target.steps.iter_mut().find(|step| step.id == payload.node_id) {
-                step.x = payload.x;
-                step.y = payload.y;
+            if let Some(step) = scene.steps.iter().find(|step| step.id == payload.node_id) {
+                edit.drag(std::slice::from_ref(&payload.node_id), payload.x - step.x, payload.y - step.y);
             }
         }
         SequenceCommand::SetStepParams(payload) => {
-            let params = semio_framework_pack_json::from_json_str::<StepParams>(&payload.params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok();
-            match (target.steps.iter_mut().find(|step| step.id == payload.id), params) {
-                (Some(step), Some(params)) if step.params != params => step.params = params,
-                (_, Some(mut params)) => discarded_params = Some(std::mem::take(&mut params.0)),
-                (_, None) => {}
+            if let Ok(params) = semio_framework_pack_json::from_json_str::<StepParams>(&payload.params_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+                if let Err(mut params) = edit.set_params(&payload.id, params) {
+                    discarded_params = Some(std::mem::take(&mut params.0));
+                }
             }
         }
         SequenceCommand::SetStepCollapsed(payload) => {
-            if let Some(step) = target.steps.iter_mut().find(|step| step.id == payload.id && sequence_retained_is_control(&step.kind)) {
-                step.collapsed = !step.collapsed;
-            }
+            edit.toggle_collapsed(&payload.id);
         }
-        SequenceCommand::DisconnectSteps(payload) => target.edges.retain(|edge| edge.from != payload.from_id || edge.to != payload.to_id),
+        SequenceCommand::DisconnectSteps(payload) => {
+            edit.disconnect(&payload.from_id, &payload.to_id);
+        }
         SequenceCommand::ConnectSteps(payload) => {
-            let from = scene.steps.iter().find(|step| step.id == payload.source_node_id);
-            let to = scene.steps.iter().find(|step| step.id == payload.target_node_id);
-            let same_slot = from.zip(to).is_some_and(|(from, to)| from.slot.as_ref().map(|slot| (&slot.owner, &slot.name)) == to.slot.as_ref().map(|slot| (&slot.owner, &slot.name)));
-            let existing: Vec<(String, String)> = scene.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
-            if payload.source_node_id != payload.target_node_id && same_slot && !would_create_cycle(&existing, &payload.source_node_id, &payload.target_node_id) && !scene.edges.iter().any(|edge| edge.from == payload.source_node_id) {
-                target.edges.retain(|edge| edge.to != payload.target_node_id);
-                target.edges.push(SequenceEdge { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() });
-            }
+            edit.connect(&payload.source_node_id, &payload.target_node_id, true);
         }
         _ => return Err(sequence_fault("app.command.tool-mismatch", "sequence-retained-artifact-route-mismatch")),
     }
-    let leaves = sequence_scene_leaves(scene, &target);
-    if leaves.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
+    if edit.leaves.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
         return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-output-capacity"));
     }
-    Ok((sequence_child_leaves_emit(snapshot, leaves), discarded_params))
+    Ok((sequence_child_leaves_emit(snapshot, edit.leaves), discarded_params))
 }
 
 #[derive(Default)]
@@ -1477,13 +1338,10 @@ impl SequenceReorganizeState {
             self.emit += 1;
             return Ok(SequencePersistentAdvance::Progress("sequence-reorganize-publish-plan", b"{\"en\":\"Planning node position\",\"de\":\"Knotenposition wird geplant\"}"));
         }
-        let mut target = scene.clone();
-        for (index, x, y) in self.moves.drain(..) {
-            let step = &mut target.steps[index];
-            step.x = x;
-            step.y = y;
-        }
-        Ok(SequencePersistentAdvance::Complete(sequence_scene_leaves(scene, &target)))
+        let mut edit = edit_rules::SceneEdit::new(scene.clone());
+        let positions: Vec<(String, f64, f64)> = self.moves.drain(..).map(|(index, x, y)| (scene.steps[index].id.clone(), x, y)).collect();
+        edit.move_to(&positions);
+        Ok(SequencePersistentAdvance::Complete(edit.leaves))
     }
 
     fn release_one(&mut self) -> bool {
@@ -1510,8 +1368,7 @@ struct SequenceNodeGraphState {
     stage: SequenceNodeGraphStage,
     operations: Vec<NodeGraphEditRow>,
     operation: usize,
-    base: Option<SequenceWorkingScene>,
-    target: Option<SequenceWorkingScene>,
+    edit: Option<edit_rules::SceneEdit>,
     gesture: Option<String>,
     delete_frontier: VecDeque<String>,
     delete_current: Option<String>,
@@ -1551,39 +1408,32 @@ impl SequenceNodeGraphState {
                 if self.operations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                     return Err(sequence_fault("sequence.node-graph.malformed", "sequence-node-graph-items"));
                 }
-                self.base = Some(scene.clone());
-                self.target = Some(scene.clone());
+                self.edit = Some(edit_rules::SceneEdit::new(scene.clone()));
                 self.stage = SequenceNodeGraphStage::Apply;
                 Ok(SequencePersistentAdvance::Progress("sequence-node-graph-parse", b"{\"en\":\"Decoded graph edit\",\"de\":\"Graphbearbeitung wurde dekodiert\"}"))
             }
             SequenceNodeGraphStage::Apply if self.operation < self.operations.len() => {
                 let operation = &self.operations[self.operation];
-                let target = self.target.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
+                let edit = self.edit.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
                 match operation {
                     NodeGraphEditRow::Move(record) => {
-                        let mut moved = false;
-                        for step in target.steps.iter_mut().filter(|step| record.node_ids.contains(&step.id)) {
-                            step.x += record.dx;
-                            step.y += record.dy;
-                            moved = true;
-                        }
-                        if moved && record.moves() {
+                        if edit.drag(&record.node_ids, record.dx, record.dy) {
                             self.gesture.get_or_insert_with(|| record.gesture_id.clone());
                         }
                     }
                     NodeGraphEditRow::Connect { source_node_id: from, target_node_id: to, .. } => {
-                        let existing: Vec<(String, String)> = target.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
-                        if from != to && target.steps.iter().any(|step| &step.id == from) && target.steps.iter().any(|step| &step.id == to) && !would_create_cycle(&existing, from, to) && !target.edges.iter().any(|edge| &edge.from == from) {
-                            target.edges.retain(|edge| &edge.to != to);
-                            target.edges.push(SequenceEdge { id: sequence_retained_next_id(target, "edge"), from: from.clone(), to: to.clone() });
-                        }
+                        edit.connect(from, to, false);
                     }
-                    NodeGraphEditRow::Disconnect { synapse_id } => target.edges.retain(|edge| &edge.id != synapse_id),
+                    NodeGraphEditRow::Disconnect { synapse_id } => {
+                        edit.disconnect_edge(synapse_id);
+                    }
                     NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
                         if node_ids.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                             return Err(sequence_fault("sequence.editor.capacity", "sequence-node-graph-delete-capacity"));
                         }
-                        target.edges.retain(|edge| !synapse_ids.contains(&edge.id));
+                        for synapse_id in synapse_ids {
+                            edit.disconnect_edge(synapse_id);
+                        }
                         self.delete_frontier = node_ids.iter().cloned().collect();
                         self.stage = SequenceNodeGraphStage::DeleteDiscover;
                         return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete", b"{\"en\":\"Preparing bounded graph removal\",\"de\":\"Begrenzte Graphentfernung wird vorbereitet\"}"));
@@ -1607,7 +1457,7 @@ impl SequenceNodeGraphState {
                     self.delete_scan = 0;
                     return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-apply", "{\"en\":\"Preparing selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wird vorbereitet\"}".as_bytes()));
                 }
-                let target = self.target.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
+                let target = &self.edit.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?.scene;
                 if self.delete_scan < target.steps.len() {
                     let step = &target.steps[self.delete_scan];
                     if step.slot.as_ref().is_some_and(|slot| self.delete_current.as_ref().is_some_and(|id| slot.owner == *id)) && !self.delete_discovered.contains(&step.id) && !self.delete_frontier.contains(&step.id) {
@@ -1622,11 +1472,8 @@ impl SequenceNodeGraphState {
             }
             SequenceNodeGraphStage::DeleteApply => {
                 if let Some(id) = self.delete_discovered.pop() {
-                    let target = self.target.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
-                    if let Some(index) = target.steps.iter().position(|step| step.id == id) {
-                        self.discarded_steps.push_back(target.steps.remove(index));
-                    }
-                    target.edges.retain(|edge| edge.from != id && edge.to != id);
+                    let edit = self.edit.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
+                    self.discarded_steps.extend(edit.remove_steps(std::slice::from_ref(&id)));
                     return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-delete", "{\"en\":\"Removing one selected graph step\",\"de\":\"Ein ausgewählter Graphschritt wird entfernt\"}".as_bytes()));
                 }
                 self.operation += 1;
@@ -1638,9 +1485,8 @@ impl SequenceNodeGraphState {
                 self.advance(command, scene)
             }
             SequenceNodeGraphStage::Complete => {
-                let base = self.base.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-base"))?;
-                let target = self.target.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
-                let leaves = sequence_scene_leaves(base, target);
+                let edit = self.edit.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
+                let leaves = std::mem::take(&mut edit.leaves);
                 if leaves.len() > SEQUENCE_PERSISTENT_MAXIMUM_UNITS {
                     return Err(sequence_fault("sequence.editor.capacity", "sequence-node-graph-output-items"));
                 }
@@ -1665,15 +1511,15 @@ impl SequenceNodeGraphState {
         {
             return SequencePersistentRelease::Progress(0);
         }
-        let step = self.discarded_steps.pop_front().or_else(|| self.base.as_mut().and_then(|scene| scene.steps.pop())).or_else(|| self.target.as_mut().and_then(|scene| scene.steps.pop()));
+        let step = self.discarded_steps.pop_front().or_else(|| self.edit.as_mut().and_then(|edit| edit.scene.steps.pop()));
         if let Some(SequenceStep { mut params, .. }) = step {
             self.retirement.push_dictionary(std::mem::take(&mut params.0));
             return SequencePersistentRelease::Progress(0);
         }
-        if self.base.as_mut().is_some_and(|scene| scene.edges.pop().is_some()) || self.target.as_mut().is_some_and(|scene| scene.edges.pop().is_some()) {
+        if self.edit.as_mut().is_some_and(|edit| edit.scene.edges.pop().is_some() || edit.leaves.pop().is_some()) {
             return SequencePersistentRelease::Progress(0);
         }
-        if self.base.take().is_some() || self.target.take().is_some() {
+        if self.edit.take().is_some() {
             return SequencePersistentRelease::Progress(0);
         }
         SequencePersistentRelease::Complete
@@ -1686,8 +1532,7 @@ impl SequenceNodeGraphState {
             && self.delete_discovered.is_empty()
             && self.discarded_steps.is_empty()
             && self.retirement.terminal_is_empty()
-            && self.base.is_none()
-            && self.target.is_none()
+            && self.edit.is_none()
     }
 }
 
@@ -2371,16 +2216,17 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         }
         let context = context.ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-context-required"))?;
         let view = context.view_state.as_ref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-view-required"))?;
-        let mut config = main::config::from_snapshot(context.window_config.as_ref());
+        let base = main::config::from_snapshot(context.window_config.as_ref());
+        let mut config = base.clone();
         self.completed = true;
         match command {
             SequenceCommand::SetViewport(payload) => {
                 config.camera = payload.camera.clone();
-                Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: vec![main::config::addressed(view, config)?], ..Default::default() }))
+                Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: main::config::addressed(view, &base, config)?, ..Default::default() }))
             }
             SequenceCommand::SetOrientation(payload) => {
                 config.orientation = payload.value.clone();
-                Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: vec![main::config::addressed(view, config)?], ..Default::default() }))
+                Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: main::config::addressed(view, &base, config)?, ..Default::default() }))
             }
             SequenceCommand::Stop(_) => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                 emit: Emit::default(),
@@ -2821,15 +2667,14 @@ impl SequenceImportJob {
         let (Some(snapshot), Some(children)) = (self.snapshot.as_ref(), self.children.as_ref()) else {
             return Some(sequence_job_fault(cx, "sequence import lost its snapshot authority"));
         };
-        let Ok(mut live) = sequence_host_snapshot_from_children(snapshot.as_ref(), children) else {
+        let Ok(live) = sequence_host_snapshot_from_children(snapshot.as_ref(), children) else {
             return Some(sequence_job_fault(cx, "sequence import could not read its composed flow child"));
         };
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
-        let base = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        live.steps.push(SequenceStep { id, kind: "computation.import".into(), params: self.params.take().expect("retained parameter binding completed"), x, y: 0.0, slot: None, collapsed: false });
-        let next = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        self.emit = Some(sequence_child_leaves_emit(snapshot.as_ref(), sequence_scene_leaves(&base, &next)));
+        let mut edit = edit_rules::SceneEdit::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
+        edit.insert_step(SequenceStep { id, kind: "computation.import".into(), params: self.params.take().expect("retained parameter binding completed"), x, y: 0.0, slot: None, collapsed: false });
+        self.emit = Some(sequence_child_leaves_emit(snapshot.as_ref(), edit.leaves));
         self.children = None;
         self.decoded = true;
         None
@@ -3286,13 +3131,12 @@ impl ArtifactEditor for SequencePlayApp {
         let value = json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let params_value = if value.as_object().is_some() { value } else { json!({ "value": value }) };
         let params: StepParams = semio_framework_pack_json::from_json_str(&params_value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let mut live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
+        let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
-        let base = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        live.steps.push(SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false });
-        let next = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        Ok(sequence_child_leaves_emit(doc.snapshot, sequence_scene_leaves(&base, &next)))
+        let mut edit = edit_rules::SceneEdit::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
+        edit.insert_step(SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false });
+        Ok(sequence_child_leaves_emit(doc.snapshot, edit.leaves))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by

@@ -144,7 +144,7 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
             (Some(d1), None) => Some(d1),
             (None, Some(d2)) => Some(d2),
             (Some(d1), Some(d2)) => {
-                let combined = absorb_value_diff(d1, d2);
+                let combined = absorb_value_rows(d1, d2);
                 if is_value_diff_effectively_empty(&combined) {
                     None
                 } else {
@@ -159,10 +159,6 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
     /// 🔁️ The negative diff: walked structurally against the base value, never by applying the diff and differencing the result.
     fn inverse(&self, base: &JsonSnapshot) -> Self {
         JsonDiff { value: self.value.as_ref().map(|diff| inverse_value_diff(diff, &base.value)) }
-    }
-
-    fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
-        JsonDiff { value: value_diff_between(&base.value, &other.value) }
     }
 
     fn is_empty(&self) -> bool {
@@ -186,9 +182,7 @@ fn inverse_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValueDiff {
 /// index, and each modified row inverts against its base item at the index the row has after the diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> JsonArrayDiff {
-    let mut removed_base = diff.removed.clone();
-    removed_base.sort_unstable();
-    removed_base.dedup();
+    let removed_base = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -352,9 +346,7 @@ pub fn apply_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Vec<JsonVal
             }
         }
     }
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     for idx in removed_sorted.into_iter().rev() {
         if idx < items.len() {
             items.remove(idx);
@@ -394,80 +386,7 @@ pub fn apply_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Vec<Json
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Between
-/// 🧭️ State-delta construction: `None` when nodes are equal; a direct field diff when the KIND
-/// is stable; `Replace` when it changed.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValueDiff> {
-    if a == b {
-        return None;
-    }
-    match (a, b) {
-        (JsonValue::Bool { value: _ }, JsonValue::Bool { value: next }) => Some(JsonValueDiff::Bool { value: *next }),
-        (JsonValue::Number { .. }, JsonValue::Number { lexeme }) => Some(JsonValueDiff::Number { lexeme: lexeme.clone() }),
-        (JsonValue::String { value: _ }, JsonValue::String { value: next }) => Some(JsonValueDiff::String { value: next.clone() }),
-        (JsonValue::Array { items: av }, JsonValue::Array { items: bv }) => {
-            let diff = array_diff_between(av, bv);
-            if is_array_diff_empty(&diff) {
-                None
-            } else {
-                Some(JsonValueDiff::Array { diff })
-            }
-        }
-        (JsonValue::Object { members: am }, JsonValue::Object { members: bm }) => {
-            let diff = object_diff_between(am, bm);
-            if is_object_diff_empty(&diff) {
-                None
-            } else {
-                Some(JsonValueDiff::Object { diff })
-            }
-        }
-        _ => Some(JsonValueDiff::Replace { value: b.clone() }),
-    }
-}
-
-/// 🧭️ Index-pairwise: `modified` compares `0..min(len)`, `removed` is the base tail, `added` is
-/// the other tail (final-state indices, per the normative apply contract).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn array_diff_between(a: &[JsonValue], b: &[JsonValue]) -> JsonArrayDiff {
-    let min = a.len().min(b.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        if let Some(diff) = value_diff_between(&a[i], &b[i]) {
-            modified.push(JsonArrayModified { index: i, diff });
-        }
-    }
-    let removed: Vec<usize> = if a.len() > b.len() { (b.len()..a.len()).collect() } else { Vec::new() };
-    let added: Vec<JsonArrayAdded> = if b.len() > a.len() { (a.len()..b.len()).map(|i| JsonArrayAdded { index: i, item: b[i].clone() }).collect() } else { Vec::new() };
-    JsonArrayDiff { removed, modified, added }
-}
-
-/// 🧭️ Name-keyed: base members missing from `b` are `removed`; members present in both with a
-/// changed value are `modified`; members only in `b` are `added` at their `b`-position (renames
-/// are documented as `removed`+`added` — no rename detection).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn object_diff_between(a: &[JsonMember], b: &[JsonMember]) -> JsonObjectDiff {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for am in a {
-        match b.iter().find(|bm| bm.key == am.key) {
-            Some(bm) => {
-                if let Some(diff) = value_diff_between(&am.value, &bm.value) {
-                    modified.push(JsonObjectModified { key: am.key.clone(), diff });
-                }
-            }
-            None => removed.push(am.key.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, bm) in b.iter().enumerate() {
-        if !a.iter().any(|am| am.key == bm.key) {
-            added.push(JsonObjectAdded { index: i, key: bm.key.clone(), item: bm.value.clone() });
-        }
-    }
-    JsonObjectDiff { removed, modified, added }
-}
-
+//#region 🔖️EmptyDiffs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn is_array_diff_empty(d: &JsonArrayDiff) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
@@ -492,7 +411,7 @@ fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
         _ => false,
     }
 }
-//#endregion 🔖️Between
+//#endregion 🔖️EmptyDiffs
 
 //#region 🔖️Absorb
 /// ➕️ Diff-level absorb (base→mid composed with mid→after). `d2` always wins on a full `Replace`
@@ -501,7 +420,7 @@ fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
 /// KIND (guaranteed by construction against the real intervening `mid` state) and compose
 /// per-kind, recursing into collections.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
+fn absorb_value_rows(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
     if matches!(d2, JsonValueDiff::Replace { .. }) {
         return d2;
     }
@@ -513,8 +432,8 @@ fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
         (JsonValueDiff::Bool { .. }, JsonValueDiff::Bool { value }) => JsonValueDiff::Bool { value },
         (JsonValueDiff::Number { .. }, JsonValueDiff::Number { lexeme }) => JsonValueDiff::Number { lexeme },
         (JsonValueDiff::String { .. }, JsonValueDiff::String { value }) => JsonValueDiff::String { value },
-        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_diff(a1, &a2) },
-        (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_diff(o1, o2) },
+        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_rows(a1, &a2) },
+        (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_rows(o1, o2) },
         // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs that were
         // actually produced by real sequential application against the same intervening state —
         // fall back to d2 (last-write-wins) rather than panicking.
@@ -533,7 +452,7 @@ fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
 /// a `d2`-removal of a `d1`-added slot silently drops the add, and a `d2`-modify of a `d1`-added
 /// slot patches the carried payload — matching the recipe's canonical absorb cases exactly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
+fn absorb_array_rows(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
     #[derive(Clone, Copy)]
     enum Origin {
         Base(usize),
@@ -560,9 +479,7 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
 
     // Step A: base -> mid.
     let mut mid: Vec<Origin> = (0..n).map(Origin::Base).collect();
-    let mut d1_removed_sorted = d1.removed.clone();
-    d1_removed_sorted.sort_unstable();
-    d1_removed_sorted.dedup();
+    let d1_removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
     for idx in d1_removed_sorted.iter().rev() {
         if *idx < mid.len() {
             mid.remove(*idx);
@@ -586,9 +503,7 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
         .collect();
 
     let mut final_removed: Vec<usize> = d1.removed.clone();
-    let mut d2_removed_sorted = d2.removed.clone();
-    d2_removed_sorted.sort_unstable();
-    d2_removed_sorted.dedup();
+    let d2_removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&d2.removed);
     for idx in d2_removed_sorted.iter().rev() {
         if *idx < after.len() {
             match after.remove(*idx) {
@@ -603,14 +518,14 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
             match slot {
                 AfterSlot::Base { diff, .. } => {
                     let combined = match diff.take() {
-                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
+                        Some(existing) => absorb_value_rows(existing, m.diff.clone()),
                         None => m.diff.clone(),
                     };
                     *diff = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
                 }
                 AfterSlot::D1Added { patch, .. } => {
                     let combined = match patch.take() {
-                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
+                        Some(existing) => absorb_value_rows(existing, m.diff.clone()),
                         None => m.diff.clone(),
                     };
                     *patch = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
@@ -665,7 +580,7 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
 /// the unshifted carry-forward this replaced was not: `{a:1} -> {a:1,b:2} -> {a:9,b:2} -> {b:2,c:3}`
 /// produced two additions claiming index 1 and failed `validate_object_diff` outright.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff {
+fn absorb_object_rows(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff {
     let mut removed: Vec<String> = d1.removed;
     let mut modified: Vec<JsonObjectModified> = d1.modified;
     let mut added: Vec<JsonObjectAdded> = d1.added;
@@ -699,7 +614,7 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
         if let Some(a) = added.iter_mut().find(|a| a.key == m.key) {
             a.item = apply_value_diff(&m.diff, &a.item);
         } else if let Some(pos) = modified.iter().position(|e| e.key == m.key) {
-            let combined = absorb_value_diff(modified[pos].diff.clone(), m.diff.clone());
+            let combined = absorb_value_rows(modified[pos].diff.clone(), m.diff.clone());
             if is_value_diff_effectively_empty(&combined) {
                 modified.remove(pos);
             } else {
@@ -786,49 +701,33 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️DemoCases
-/// 🧪️ P2-P1: representative `JsonDiff` values (scalars, a kind-change `Replace`, nested array/object
-/// collection triples, and the empty/`None` diff) — the single source of truth reused by
-/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s
-/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
+/// 🧪️ P2-P1: representative `JsonDiff` values built declaratively (scalars, a kind-change `Replace`, nested array/object collection
+/// triples, and the empty/`None` diff) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` below AND by
+/// `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<JsonDiff> {
-    use crate::STDIO_JSON_DOCUMENT_SCHEMA;
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn snap(value: JsonValue) -> JsonSnapshot {
-        JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn arr(items: Vec<JsonValue>) -> JsonValue {
-        JsonValue::Array { items }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
-        JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn num(lexeme: &str) -> JsonValue {
-        JsonValue::Number { lexeme: lexeme.into() }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn str_(s: &str) -> JsonValue {
-        JsonValue::String { value: s.into() }
-    }
-
-    let a = snap(objv(vec![("keepNumber", num("1")), ("kindChange", num("1"))]));
-    let b = snap(objv(vec![("keepNumber", num("2.5e3")), ("kindChange", str_("now a string"))]));
-    let nested = objv(vec![("tags", arr(vec![str_("x"), str_("y"), str_("z")])), ("meta", objv(vec![("a", num("1")), ("b", JsonValue::Null)]))]);
-    let nested2 = objv(vec![("tags", arr(vec![str_("x"), str_("w")])), ("meta", objv(vec![("a", num("9")), ("c", str_("new"))])), ("extra", JsonValue::Bool { value: true })]);
-
+    let value = |diff: JsonValueDiff| JsonDiff { value: Some(diff) };
+    let number = |lexeme: &str| JsonValue::Number { lexeme: lexeme.into() };
+    let text = |text: &str| JsonValue::String { value: text.into() };
+    let object = JsonObjectDiff {
+        removed: vec!["b".into()],
+        modified: vec![JsonObjectModified { key: "meta".into(), diff: JsonValueDiff::Number { lexeme: "9".into() } }, JsonObjectModified { key: "kindChange".into(), diff: JsonValueDiff::Replace { value: text("now a string") } }],
+        added: vec![JsonObjectAdded { index: 2, key: "extra".into(), item: JsonValue::Bool { value: true } }],
+    };
+    let array = JsonArrayDiff {
+        removed: vec![2],
+        modified: vec![JsonArrayModified { index: 1, diff: JsonValueDiff::String { value: "w".into() } }],
+        added: vec![JsonArrayAdded { index: 0, item: number("1") }],
+    };
     vec![
         JsonDiff::default(),
-        JsonDiff::between(&a, &b),
-        JsonDiff::between(&b, &a),
-        JsonDiff::between(&snap(nested.clone()), &snap(nested2.clone())),
-        JsonDiff::between(&snap(nested2), &snap(nested)),
-        JsonDiff::between(&snap(num("1")), &snap(str_("1"))),
-        JsonDiff::between(&snap(JsonValue::Null), &snap(arr(vec![num("1"), num("2")]))),
+        value(JsonValueDiff::Number { lexeme: "2.5e3".into() }),
+        value(JsonValueDiff::Bool { value: false }),
+        value(JsonValueDiff::Replace { value: text("1") }),
+        value(JsonValueDiff::Replace { value: JsonValue::Array { items: vec![number("1"), number("2")] } }),
+        value(JsonValueDiff::Object { diff: object }),
+        value(JsonValueDiff::Array { diff: array }),
     ]
 }
 //#endregion 🔖️DemoCases

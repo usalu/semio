@@ -50,48 +50,51 @@
   "quality": null,
   "artifacts": null,
   "assumptions": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "assumption-a",
-        "name": "Assumption A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
+        "index": 0,
+        "row": {
+          "id": "assumption-a",
+          "name": "Assumption A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "statement": {
+            "text": ""
+          },
+          "basis": null,
+          "confidenceLevel": null,
+          "impactIfFalse": null,
+          "relatedEntityIds": [],
+          "validationStatus": "pending",
+          "validatedBy": null,
+          "validationDate": null,
           "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "statement": {
-          "text": ""
-        },
-        "basis": null,
-        "confidenceLevel": null,
-        "impactIfFalse": null,
-        "relatedEntityIds": [],
-        "validationStatus": "pending",
-        "validatedBy": null,
-        "validationDate": null,
-        "ownerId": null,
-        "reviewCycle": null,
-        "source": null,
-        "category": null,
-        "dependencies": [],
-        "mitigation": [],
-        "linkedRequirementIds": [],
-        "linkedRiskIds": [],
-        "expirationDate": null,
-        "statusNotes": [],
-        "artifactRefs": []
+          "reviewCycle": null,
+          "source": null,
+          "category": null,
+          "dependencies": [],
+          "mitigation": [],
+          "linkedRequirementIds": [],
+          "linkedRiskIds": [],
+          "expirationDate": null,
+          "statusNotes": [],
+          "artifactRefs": []
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "constraints": null,
   "complianceRecords": null,

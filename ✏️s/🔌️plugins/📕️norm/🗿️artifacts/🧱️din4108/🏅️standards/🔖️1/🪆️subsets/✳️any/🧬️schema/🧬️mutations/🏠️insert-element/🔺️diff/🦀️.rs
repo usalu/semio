@@ -9,10 +9,10 @@ pub fn diff(payload: &InsertElement, base: &Din4108Snapshot) -> protocol::Mutati
     if base.elements.iter().any(|existing| existing.id == payload.element.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An envelope element with id '{}' already exists.", payload.element.id), [payload.element.id.clone()]);
     }
-    let index = payload.index.min(base.elements.len());
-    let outcome = protocol::MutationOutcome::new(Din4108Diff { elements: Din4108ElementDelta::insertion(&base.elements, index, payload.element.clone()), ..Default::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.elements.len());
+    let outcome = protocol::MutationOutcome::new(Din4108Diff { elements: Din4108ElementDelta::insertion(index, payload.element.clone()), ..Default::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the envelope element list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the envelope element list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

@@ -89,7 +89,7 @@ mod subject {
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3, Mp3EncodeAdvance, Mp3EncodeCursor};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp3::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation,Mp3Mutation};
+    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{Mp3Mutation};
 
     use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     use semio_repo_test_host::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
@@ -107,8 +107,8 @@ mod subject {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode_mp3(&input).map_err(|error| format!("decode_mp3 failed: {error}"))?;
         let mutation = mutation_of(&ctx.doc_json()?)?;
-        apply_mp3_mutation(&mut snapshot, &mutation);
-        let bytes = encode_mp3(&snapshot);
+        apply_mutation(&mut snapshot, &mutation);
+        let bytes = encode_mp3(&snapshot).unwrap();
         let projection = project_mp3(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
@@ -119,11 +119,11 @@ mod subject {
         let spec = ctx.doc_json()?;
         let forward = mutation_of(&spec)?;
         let mut snapshot = base.clone();
-        apply_mp3_mutation(&mut snapshot, &forward);
-        for backward in mutation_inverse(&forward, &base).expect("valid retained mutation inverse fixture") {
-            apply_mp3_mutation(&mut snapshot, &backward);
+        apply_mutation(&mut snapshot, &forward);
+        for backward in mutation_inverse(&forward, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &backward);
         }
-        let bytes = encode_mp3(&snapshot);
+        let bytes = encode_mp3(&snapshot).unwrap();
         let projection = project_mp3(&bytes)?;
         inverse_restores_within(&spec.str("kind"), &projection, &project_mp3(&input)?, MP3_WRITER_FREEDOM, MP3_TOLERANCE)?;
         Ok(Outcome::with_raw(bytes, projection))

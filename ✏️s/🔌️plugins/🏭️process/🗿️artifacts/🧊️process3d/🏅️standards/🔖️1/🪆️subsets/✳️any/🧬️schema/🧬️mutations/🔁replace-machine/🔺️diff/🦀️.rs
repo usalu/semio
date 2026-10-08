@@ -13,6 +13,6 @@ pub fn diff(payload: &super::ReplaceMachineCapabilities, base: &Process3dSnapsho
     if existing.capabilities == payload.new_capabilities {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" capabilities are unchanged.", payload.id));
     }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { patched: vec![Process3dMachinePatch { id: payload.id.clone(), capabilities: Some(payload.new_capabilities.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta::modification(payload.id.clone(), Process3dMachinePatch { capabilities: Some(payload.new_capabilities.clone()), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔖️Diff

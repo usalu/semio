@@ -4,11 +4,11 @@
 //! (see `bin.rs`). `#[cfg(feature = "neo4j")]`-gated as a whole by the parent `directory` module
 //! (see `📇️directory/🦀️.rs`'s `//#region 🔖️Backends`).
 
+use crate::artifact_authority::creation::io::{decide_artifact_creation_fact_append_v1};
+use directory::os_directory::io::text::validate_directory_event_page_event;
 use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
 use crate::artifact_authority::creation::{
-    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1,
-    decide_artifact_creation_fact_append_v1,
-};
+    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DIRECTORY_WIRE_INTEGER_MAX, DirectoryAppendOutcomeV1,
@@ -18,10 +18,8 @@ use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, Direct
     prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim,
     validate_checkpoint_publication_completion, validate_directory_command_claim, validate_document_genesis_append_v1, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
 };
-use directory::os_directory::{
-    ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
-    hex_lower, validate_directory_event_page_event,
-};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint};
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_identity::time_ordered_id;
 use directory::{FromValue, ToValue};
 use neo4rs::{Graph, Txn, query};
@@ -423,7 +421,7 @@ pub struct Neo4jDirectory {
 impl Neo4jDirectory {
     /// 🔁️ One attempt of [`HubDirectory::claim_artifact_creation`]; the trait method retries it while Neo4j reports a transient fault.
     async fn claim_artifact_creation_attempt(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let request_key = lock_artifact_creation_request(&mut txn, &intent.actor.user_id, &intent.request.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut txn, &intent.actor, &intent.scope.space_id, None).await?;
@@ -432,7 +430,7 @@ impl Neo4jDirectory {
         }
         let facts = artifact_creation_facts(&mut txn, &request_key).await?;
         if !facts.is_empty() {
-            let operation = ArtifactCreationOperationV1::fold(&facts)?;
+            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
             if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
                 return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
             }
@@ -470,7 +468,7 @@ impl Neo4jDirectory {
             recorded_at_ms: intent.accepted_at_ms,
             body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
         };
-        let operation = ArtifactCreationOperationV1::fold(std::slice::from_ref(&fact))?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
         insert_artifact_creation_fact(&mut txn, &request_key, intent, &fact).await?;
         txn.commit().await.map_err(backend)?;
         Ok(ArtifactCreationClaimV1::Accepted(operation))
@@ -488,7 +486,7 @@ impl Neo4jDirectory {
         let request_key = lock_artifact_creation_request(&mut txn, &append.actor.user_id, &append.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut txn, &append.actor, &append.space_id, None).await?;
         let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -496,18 +494,18 @@ impl Neo4jDirectory {
             insert_artifact_creation_fact(&mut txn, &request_key, &operation.intent, &next).await?;
             facts.push(next);
         }
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         txn.commit().await.map_err(backend)?;
         Ok(operation)
     }
 
     /// 🔁️ One attempt of [`HubDirectory::artifact_creation_terminate_uncommitted`]; the trait method retries it while Neo4j reports a transient fault.
     async fn artifact_creation_terminate_uncommitted_attempt(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let request_key = lock_artifact_creation_request(&mut txn, &intent.actor.user_id, &intent.request.request_id).await?;
         let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != *intent {
             return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
         }
@@ -533,7 +531,7 @@ impl Neo4jDirectory {
         }
         let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
         facts.push(next.clone());
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         insert_artifact_creation_fact(&mut txn, &request_key, intent, &next).await?;
         txn.commit().await.map_err(backend)?;
         Ok(operation)
@@ -547,7 +545,7 @@ impl Neo4jDirectory {
     /// 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
     /// terminal and `validate_document_genesis_append_v1` refuses a publication on it.
     async fn append_document_genesis_attempt(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
-        append.intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&append.intent)?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let request_key = lock_artifact_creation_request(&mut txn, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
         let lease_expires_at_ms = cas_lock_space(&mut txn, &append.intent.scope.space_id).await?;
@@ -560,7 +558,7 @@ impl Neo4jDirectory {
         let observed_now_override = None;
         let observed_now = validate_artifact_creation_authority(&mut txn, &append.intent.actor, &append.intent.scope.space_id, observed_now_override).await?;
         let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != append.intent {
             return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
         }
@@ -655,7 +653,7 @@ impl Neo4jDirectory {
         let completion = document_genesis_completion_v1(&operation, append, &events)?;
         insert_artifact_creation_fact(&mut txn, &request_key, &append.intent, &completion).await?;
         facts.push(completion);
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         match txn.commit().await {
             Ok(()) => {
                 #[cfg(test)]
@@ -1573,7 +1571,7 @@ impl HubDirectory for Neo4jDirectory {
             let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                 return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
             };
-            intent.validate()?;
+            crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
             intents.push(intent);
         }
         Ok(intents)

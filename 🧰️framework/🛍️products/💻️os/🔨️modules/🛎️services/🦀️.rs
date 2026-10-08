@@ -698,10 +698,6 @@ impl ComputePool {
     /// [`ComputeError::DeadlineExceeded`].
     pub async fn run_job<J: InteractiveJob + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, job: J) -> Result<StepOutcome, ComputeError> {
         let lane = Lane::from_context_lane(ctx.lane);
-        let Some(permit) = self.acquire_job_permit(runtime, &ctx).await? else { return Ok(StepOutcome::Cancelled) };
-        if ctx.cancel.is_cancelled().await {
-            return Ok(StepOutcome::Cancelled);
-        }
         let (stage, fuel, wall_us) = compute_job_budget(lane);
         let params = semio_framework_job::BatchJobParams {
             operation: OperationId(ctx.trace.0),
@@ -714,10 +710,18 @@ impl ComputePool {
             Ok(session) => session,
             Err(mut rejected) => {
                 rejected.begin_close();
-                while !rejected.terminal_is_empty() {
-                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                }
+                schedule_rejected_compute_job(&self.pool, lane, rejected);
                 return Err(ComputeError::WorkerLost);
+            }
+        };
+        let permit = match self.acquire_job_permit(runtime, &ctx).await {
+            Ok(Some(permit)) => Some(permit),
+            result => {
+                let error = match result { Ok(None) => Ok(StepOutcome::Cancelled), Err(error) => Err(error), Ok(Some(_)) => unreachable!() };
+                let mut session = session;session.begin_close();
+                let state = Arc::new(Mutex::new(ComputeJobDriveState { session, lane, retained_outcome: None, sender: None, closing: true, _permit: None }));
+                schedule_compute_job_cleanup(&self.pool, state);
+                return error;
             }
         };
         let (result_tx, result_rx) = oneshot::channel::<Result<StepOutcome, ComputeError>>();
@@ -791,7 +795,7 @@ struct ComputeJobDriveState<J: InteractiveJob + 'static> {
     retained_outcome: Option<StepOutcome>,
     sender: Option<oneshot::Sender<Result<StepOutcome, ComputeError>>>,
     closing: bool,
-    _permit: OwnedPermit,
+    _permit: Option<OwnedPermit>,
 }
 
 fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
@@ -807,19 +811,15 @@ fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, sta
     let next_pool = pool.clone();
     let lane = state.lock().expect("ComputeJobDriveState mutex poisoned").lane;
     let retry_state = state.clone();
+    let delivery_state = state.clone();
     let job = Box::new(move || {
         let (terminal, finished) = {
             let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
-            if state.closing {
-                let step = state.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                (None, matches!(step, semio_framework_job::WorkerJobCloseStep::Complete) && state.session.terminal_is_empty())
-            } else if let Some(outcome) = state.retained_outcome.as_mut() {
-                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                if outcome.terminal_is_empty() {
-                    state.retained_outcome = None;
-                    let _ = state.session.resume();
-                }
+            if state.retained_outcome.is_some() {
+                close_compute_job_outcome(&mut state);
                 (None, false)
+            } else if state.closing {
+                (None, close_compute_job_session(&mut state))
             } else {
                 let lane = state.lane;
                 match state.session.pump_one(&next_pool, lane) {
@@ -845,10 +845,14 @@ fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, sta
             }
         };
         if let Some((sender, outcome)) = terminal {
-            let _ = sender.send(outcome);
+            if let Err(Ok(outcome)) = sender.send(outcome) {
+                let mut state = delivery_state.lock().expect("ComputeJobDriveState mutex poisoned");
+                state.retained_outcome = Some(outcome);
+            }
         }
         if !finished {
-            schedule_compute_job_step(&next_pool, state);
+            let retained_pool = next_pool.clone();
+            next_pool.callback_at(next_pool.now_ms().saturating_add(1), move || schedule_compute_job_step(&retained_pool, state));
         }
     });
     match pool.try_submit(lane, job) {
@@ -859,7 +863,7 @@ fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, sta
                 let retained = error.into_job();
                 pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(&retry_pool, lane, retained, retry_state));
             }
-            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(&retry_state),
+            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(pool, retry_state.clone()),
         },
     }
 }
@@ -873,31 +877,78 @@ fn submit_retained_compute_job<J: InteractiveJob + 'static>(pool: &WorkerPool, l
                 let retained = error.into_job();
                 pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(&retry, lane, retained, state));
             }
-            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(&state),
+            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(pool, state.clone()),
         },
     }
 }
 
-fn fail_compute_job_state<J: InteractiveJob + 'static>(state: &Mutex<ComputeJobDriveState<J>>) {
-    let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
-    if let Some(outcome) = state.retained_outcome.as_mut() {
-        while !outcome.terminal_is_empty() {
-            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        }
+fn compute_job_close_grant() -> semio_framework_job::RetainedCloneGrant {
+    semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 }
+}
+
+fn close_compute_job_outcome<J: InteractiveJob + 'static>(state: &mut ComputeJobDriveState<J>) {
+    let Some(outcome) = state.retained_outcome.as_mut() else { return };
+    let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    if outcome.terminal_is_empty() {
         state.retained_outcome = None;
-        let _ = state.session.resume();
+        if !state.closing { let _ = state.session.resume(); }
     }
-    state.session.begin_close();
-    for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_mul(4).saturating_add(8) {
-        match state.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-            semio_framework_job::WorkerJobCloseStep::Complete => break,
-            semio_framework_job::WorkerJobCloseStep::Blocked => break,
-            semio_framework_job::WorkerJobCloseStep::Pending { .. } => {}
+}
+
+fn close_compute_job_session<J: InteractiveJob + 'static>(state: &mut ComputeJobDriveState<J>) -> bool {
+    let authority = compute_job_close_grant();
+    match state.session.next_close_demands(authority.maximum_copy_bytes) {
+        Ok(demand) if demand.maximum_items <= authority.maximum_items && demand.maximum_copy_bytes <= authority.maximum_copy_bytes && demand.maximum_capacity_bytes <= authority.maximum_capacity_bytes && demand.maximum_release_bytes <= authority.maximum_release_bytes && demand.maximum_depth <= authority.maximum_depth => {},
+        Ok(_) | Err(semio_framework_job::WorkerJobDemandError::Refused(_)) => {
+            if let Some(sender) = state.sender.take() { let _ = sender.send(Err(ComputeError::WorkerLost)); }
+            return false;
+        }
+        Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false,
+    }
+    let grant = authority;
+    match state.session.close_step(grant) {
+        semio_framework_job::WorkerJobCloseStep::Complete { .. } => state.session.terminal_is_empty(),
+        semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => false,
+        semio_framework_job::WorkerJobCloseStep::Refused(_) => {
+            if let Some(sender) = state.sender.take() { let _ = sender.send(Err(ComputeError::WorkerLost)); }
+            false
         }
     }
-    if let Some(sender) = state.sender.take() {
-        let _ = sender.send(Err(ComputeError::WorkerLost));
+}
+
+fn schedule_rejected_compute_job<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, mut rejected: semio_framework_job::WorkerJobSessionAdmissionRejected<J>) {
+    let next_pool = pool.clone();
+    pool.callback_at(pool.now_ms().saturating_add(1), move || {
+        let grant = compute_job_close_grant();
+        if let Ok(demand) = rejected.next_close_demands(grant.maximum_copy_bytes) {
+            if demand.maximum_items <= grant.maximum_items && demand.maximum_copy_bytes <= grant.maximum_copy_bytes && demand.maximum_capacity_bytes <= grant.maximum_capacity_bytes && demand.maximum_release_bytes <= grant.maximum_release_bytes && demand.maximum_depth <= grant.maximum_depth {
+                let _ = rejected.close_step(grant);
+            }
+        }
+        if !rejected.terminal_is_empty() { schedule_rejected_compute_job(&next_pool, lane, rejected); }
+    });
+}
+
+fn schedule_compute_job_cleanup<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+    let next_pool = pool.clone();
+    pool.callback_at(pool.now_ms().saturating_add(1), move || {
+        let terminal = {
+            let mut retained = state.lock().expect("ComputeJobDriveState mutex poisoned");
+            if retained.retained_outcome.is_some() { close_compute_job_outcome(&mut retained); false }
+            else { close_compute_job_session(&mut retained) }
+        };
+        if !terminal { schedule_compute_job_cleanup(&next_pool, state); }
+    });
+}
+
+fn fail_compute_job_state<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+    {
+        let mut retained = state.lock().expect("ComputeJobDriveState mutex poisoned");
+        retained.closing = true;
+        retained.session.begin_close();
+        if let Some(sender) = retained.sender.take() { let _ = sender.send(Err(ComputeError::WorkerLost)); }
     }
+    schedule_compute_job_cleanup(pool, state);
 }
 //#endregion 🧮️ComputePool
 

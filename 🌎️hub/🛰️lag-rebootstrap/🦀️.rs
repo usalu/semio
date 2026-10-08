@@ -3,7 +3,8 @@
 use crate::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStores};
 use crate::artifact_authority::{checkpoint_id_encoding_v1, ArtifactBlobIntegrity, ArtifactPair, AuthorityError, AuthorityLimits, AuthorityOperationControl, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob, AUTHORITY_MAX_PAIR_BYTES};
 use crate::directory::{published_artifact_checkpoint, HubDirectories, HubDirectory};
-use directory::os_directory::{descriptor_digest_v1, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentScope, PublishedArtifactBlob, RebootstrapRequired};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentScope, PublishedArtifactBlob, RebootstrapRequired};
+use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use protocol::{
     ArtifactBootstrap, ArtifactBootstrapChunkBytes, ArtifactBootstrapPair, RuntimeFrontierSummary, ARTIFACT_BOOTSTRAP_CHUNK_BYTES, ARTIFACT_BOOTSTRAP_FORMAT_VERSION, ARTIFACT_BOOTSTRAP_MAX_CHUNKS, ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES,
     REBOOTSTRAP_SCOPE_MAX_BYTES,

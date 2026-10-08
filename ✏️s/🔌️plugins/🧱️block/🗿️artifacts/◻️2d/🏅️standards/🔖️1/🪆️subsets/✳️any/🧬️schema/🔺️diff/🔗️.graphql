@@ -1,107 +1,221 @@
-# 🧬️ Block2d diff schema — sparse field delta.
+# 🧬️ Block2d diff schema — field-sparse, id-keyed delta.
 
 type Block2dDiff {
-  artifact: Block2dArtifact @state(class: ARTIFACT)
-  schema: String @state(class: ARTIFACT)
-  nodeKind: BlockKindIdentity @state(class: ARTIFACT)
-  presentation: Block2dPresentation @state(class: ARTIFACT)
-  handleKinds: Block2dHandleKindsDelta @state(class: ARTIFACT)
-  handles: Block2dHandlesDelta @state(class: ARTIFACT)
-  compatibility: Block2dCompatibilityDelta @state(class: ARTIFACT)
-  attributes: Block2dAttributesDelta @state(class: ARTIFACT)
-  authors: Block2dAuthorList @state(class: ARTIFACT)
-  camera2d: BlockCamera2d @state(class: ARTIFACT)
-  meta: BlockMeta @state(class: ARTIFACT)
+  schema: String
+  nodeKind: BlockKindIdentityPatch
+  presentation: Block2dPresentationPatch
+  handleKinds: Block2dHandleKindsDelta
+  handles: Block2dHandlesDelta
+  compatibility: BlockCompatibilityDelta
+  attributes: BlockAttributesDelta
+  authors: BlockAuthorsDelta
+  camera2d: BlockCamera2dPatch
+  meta: BlockMetaPatch
 }
 
-type BlockKindIdentity { _placeholder: Boolean }
-
-type Block2dPresentation { _placeholder: Boolean }
-
-type Block2dHandleKind { _placeholder: Boolean }
-
-type Block2dHandleTemplate { _placeholder: Boolean }
-
-type BlockCompatibilityRule { _placeholder: Boolean }
-
-type BlockAttribute { _placeholder: Boolean }
-
-type BlockAuthor { _placeholder: Boolean }
-
-type BlockCamera2d { _placeholder: Boolean }
-
-type BlockMeta { _placeholder: Boolean }
-
-type Block2dStringList {
-  values: [String!]!
+type BlockOptionalText {
+  value: String
 }
 
-type Block2dAuthorList {
-  values: [BlockAuthor!]!
+type BlockOptionalNumber {
+  value: Float
 }
 
-type Block2dHandleKindsDelta {
-  added: [Block2dHandleKind!]!
-  removed: [String!]!
-  patched: [Block2dHandleKindsPatchEntry!]!
-  reordered: [String!]
+type BlockKindIdentityPatch {
+  id: String
+  name: String
+  label: String
+  description: String
+  variant: BlockOptionalText
+  icon: BlockOptionalText
+  unit: BlockOptionalText
+}
+
+type Block2dPresentationPatch {
+  shape: BlockOptionalText
+  radius: BlockOptionalNumber
+  width: BlockOptionalNumber
+  height: BlockOptionalNumber
+  color: BlockOptionalText
+  iconKind: BlockOptionalText
+}
+
+type Block2dHandleKindPatch {
+  name: String
+  label: String
+  color: String
+  defaultWireKind: String
+}
+
+type Block2dHandleTemplatePatch {
+  handleKind: String
+  angle: Float
+  radius: Float
+}
+
+type BlockCompatibilityRulePatch {
+  source: String
+  target: String
+  bidirectional: Boolean
+}
+
+type BlockAttributePatch {
+  value: String
+  definition: BlockOptionalText
+}
+
+type BlockAuthorPatch {
+  name: String
+  email: BlockOptionalText
+}
+
+type BlockCamera2dPatch {
+  x: Float
+  y: Float
+  zoom: Float
+}
+
+type BlockMetaPatch {
+  description: String
 }
 
 type Block2dHandleKindsPatchEntry {
   id: String!
-  patch: Block2dHandleKindsPatch!
+  patch: Block2dHandleKindPatch!
 }
 
-type Block2dHandleKindsPatch {
-  replacement: Block2dHandleKind
+type Block2dHandleKindsRemoval {
+  id: String!
+  index: Int!
 }
 
-type Block2dHandlesDelta {
-  added: [Block2dHandleTemplate!]!
-  removed: [String!]!
-  patched: [Block2dHandlesPatchEntry!]!
-  reordered: [String!]
+type Block2dHandleKindsInsertion {
+  index: Int!
+  row: Block2dHandleKind!
+}
+
+type Block2dHandleKindsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Block2dHandleKindsDelta {
+  removed: [Block2dHandleKindsRemoval!]!
+  inserted: [Block2dHandleKindsInsertion!]!
+  moved: [Block2dHandleKindsRelocation!]!
+  modified: [Block2dHandleKindsPatchEntry!]!
 }
 
 type Block2dHandlesPatchEntry {
   id: String!
-  patch: Block2dHandlesPatch!
+  patch: Block2dHandleTemplatePatch!
 }
 
-type Block2dHandlesPatch {
-  replacement: Block2dHandleTemplate
-}
-
-type Block2dCompatibilityDelta {
-  added: [BlockCompatibilityRule!]!
-  removed: [String!]!
-  patched: [Block2dCompatibilityPatchEntry!]!
-  reordered: [String!]
-}
-
-type Block2dCompatibilityPatchEntry {
+type Block2dHandlesRemoval {
   id: String!
-  patch: Block2dCompatibilityPatch!
+  index: Int!
 }
 
-type Block2dCompatibilityPatch {
-  replacement: BlockCompatibilityRule
+type Block2dHandlesInsertion {
+  index: Int!
+  row: Block2dHandleTemplate!
 }
 
-type Block2dAttributesDelta {
-  added: [BlockAttribute!]!
-  removed: [String!]!
-  patched: [Block2dAttributesPatchEntry!]!
-  reordered: [String!]
-}
-
-type Block2dAttributesPatchEntry {
+type Block2dHandlesRelocation {
   id: String!
-  patch: Block2dAttributesPatch!
+  from: Int!
+  to: Int!
 }
 
-type Block2dAttributesPatch {
-  replacement: BlockAttribute
+type Block2dHandlesDelta {
+  removed: [Block2dHandlesRemoval!]!
+  inserted: [Block2dHandlesInsertion!]!
+  moved: [Block2dHandlesRelocation!]!
+  modified: [Block2dHandlesPatchEntry!]!
 }
 
-type Block2dArtifact { schema: String! }
+type BlockCompatibilityPatchEntry {
+  id: String!
+  patch: BlockCompatibilityRulePatch!
+}
+
+type BlockCompatibilityRemoval {
+  id: String!
+  index: Int!
+}
+
+type BlockCompatibilityInsertion {
+  index: Int!
+  row: BlockCompatibilityRule!
+}
+
+type BlockCompatibilityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockCompatibilityDelta {
+  removed: [BlockCompatibilityRemoval!]!
+  inserted: [BlockCompatibilityInsertion!]!
+  moved: [BlockCompatibilityRelocation!]!
+  modified: [BlockCompatibilityPatchEntry!]!
+}
+
+type BlockAttributesPatchEntry {
+  id: String!
+  patch: BlockAttributePatch!
+}
+
+type BlockAttributesRemoval {
+  id: String!
+  index: Int!
+}
+
+type BlockAttributesInsertion {
+  index: Int!
+  row: BlockAttribute!
+}
+
+type BlockAttributesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockAttributesDelta {
+  removed: [BlockAttributesRemoval!]!
+  inserted: [BlockAttributesInsertion!]!
+  moved: [BlockAttributesRelocation!]!
+  modified: [BlockAttributesPatchEntry!]!
+}
+
+type BlockAuthorsPatchEntry {
+  id: String!
+  patch: BlockAuthorPatch!
+}
+
+type BlockAuthorsRemoval {
+  id: String!
+  index: Int!
+}
+
+type BlockAuthorsInsertion {
+  index: Int!
+  row: BlockAuthor!
+}
+
+type BlockAuthorsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BlockAuthorsDelta {
+  removed: [BlockAuthorsRemoval!]!
+  inserted: [BlockAuthorsInsertion!]!
+  moved: [BlockAuthorsRelocation!]!
+  modified: [BlockAuthorsPatchEntry!]!
+}
+

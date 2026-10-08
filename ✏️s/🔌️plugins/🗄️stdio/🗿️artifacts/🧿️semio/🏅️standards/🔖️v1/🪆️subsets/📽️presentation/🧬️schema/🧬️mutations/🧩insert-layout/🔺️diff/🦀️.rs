@@ -5,6 +5,9 @@ use super::super::*;
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::InsertLayout, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
+    if layout_at(base, &payload.layout.id).is_some() {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Layout \"{}\" already exists.", payload.layout.id), [payload.layout.id.clone()]);
+    }
     let super::InsertLayout { layout, at } = payload;
     protocol::MutationOutcome::new(diff_insert_layout(base, layout.clone(), *at))
 }

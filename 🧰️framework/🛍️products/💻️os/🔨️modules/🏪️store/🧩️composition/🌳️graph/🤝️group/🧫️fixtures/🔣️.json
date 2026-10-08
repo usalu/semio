@@ -391,5 +391,129 @@
     "allocatedBytes": 0,
     "releasedBytes": 0,
     "generationChanges": 1
+  },
+  "closeAxes": {
+    "rowWords": 9,
+    "wordBytes": 8,
+    "stringCapacities": [
+      3,
+      5,
+      7
+    ],
+    "grants": [
+      {
+        "items": 0,
+        "copyBytes": 72,
+        "capacityBytes": 0,
+        "releaseBytes": 7,
+        "depth": 1,
+        "expectedMove": false
+      },
+      {
+        "items": 1,
+        "copyBytes": 71,
+        "capacityBytes": 0,
+        "releaseBytes": 7,
+        "depth": 1,
+        "expectedMove": false
+      },
+      {
+        "items": 1,
+        "copyBytes": 72,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 0,
+        "expectedMove": false
+      },
+      {
+        "items": 1,
+        "copyBytes": 72,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 1,
+        "expectedMove": true
+      }
+    ],
+    "retirement": {
+      "copiedBytes": 72,
+      "releasedBytes": 15,
+      "allocatedBytes": 0
+    }
+  },
+  "links": {
+    "rows": [
+      [
+        "other",
+        [
+          "leaf"
+        ]
+      ],
+      [
+        "source",
+        [
+          "target-b",
+          "target-a",
+          "target-a"
+        ]
+      ]
+    ],
+    "expected": [
+      [
+        "other",
+        "leaf"
+      ],
+      [
+        "source",
+        "target-a"
+      ],
+      [
+        "source",
+        "target-b"
+      ]
+    ],
+    "terminalDropBytes": 0
+  },
+  "preparationAxes": {
+    "edge": [
+      "parent",
+      "slot",
+      "child"
+    ],
+    "bodyBytes": 15,
+    "rowWords": 9,
+    "wordBytes": 8,
+    "count": 2,
+    "rowBackingBytes": 144,
+    "grants": [
+      {
+        "copy": 87,
+        "capacity": 14,
+        "expected": false
+      },
+      {
+        "copy": 86,
+        "capacity": 15,
+        "expected": false
+      },
+      {
+        "copy": 87,
+        "capacity": 15,
+        "expected": true
+      }
+    ],
+    "copiedBytes": 87
+  },
+  "emptyAdditionRoot": {
+    "original": [
+      "prior",
+      "slot",
+      "old"
+    ],
+    "additions": [],
+    "expected": [
+      "prior",
+      "slot",
+      "old"
+    ]
   }
 }

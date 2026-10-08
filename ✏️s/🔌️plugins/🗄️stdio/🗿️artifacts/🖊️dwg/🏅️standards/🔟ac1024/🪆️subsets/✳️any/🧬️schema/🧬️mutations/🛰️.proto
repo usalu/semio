@@ -2,4 +2,15 @@ syntax = "proto3";
 package semio.s_stdio_dwg.mutation;
 import "../📸️snapshot/🛰️.proto";
 message SetVersionInfo { string version = 1; uint32 maintenance_version = 2; uint32 codepage = 3; }
-message DwgMutation { oneof mutation { bool no_mutation = 1; SetVersionInfo set_version_info = 3; } }
+message SetDrawing { semio.s_stdio_dwg.snapshot.DwgLogicalDrawing drawing = 1; }
+message SetHeader { semio.s_stdio_dwg.snapshot.DwgHeaderVariables header = 1; }
+message SetClasses { repeated semio.s_stdio_dwg.snapshot.DwgClass classes = 1; }
+message SetDependencies { repeated semio.s_stdio_dwg.snapshot.DwgDependency dependencies = 1; }
+message SetSummary { semio.s_stdio_dwg.snapshot.DwgSummaryInfo summary = 1; }
+message SetApplication { semio.s_stdio_dwg.snapshot.DwgApplicationInfo application = 1; }
+message SetTemplate { semio.s_stdio_dwg.snapshot.DwgTemplate template = 1; }
+message SetAuxiliaryHeader { semio.s_stdio_dwg.snapshot.DwgAuxiliaryHeader auxiliary_header = 1; }
+message SetRevisionHistory { semio.s_stdio_dwg.snapshot.DwgRevisionHistory revision_history = 1; }
+message SetPreview { semio.s_stdio_dwg.snapshot.DwgIndexedPreview preview = 1; }
+message SetApplicationHistory { semio.s_stdio_dwg.snapshot.DwgApplicationHistory application_history = 1; }
+message DwgMutation { oneof mutation { bool no_mutation = 1; SetVersionInfo set_version_info = 3; SetDrawing set_drawing = 4; SetHeader set_header = 5; SetClasses set_classes = 6; SetDependencies set_dependencies = 7; SetSummary set_summary = 8; SetApplication set_application = 9; SetTemplate set_template = 10; SetAuxiliaryHeader set_auxiliary_header = 11; SetRevisionHistory set_revision_history = 12; SetPreview set_preview = 13; SetApplicationHistory set_application_history = 14; } }

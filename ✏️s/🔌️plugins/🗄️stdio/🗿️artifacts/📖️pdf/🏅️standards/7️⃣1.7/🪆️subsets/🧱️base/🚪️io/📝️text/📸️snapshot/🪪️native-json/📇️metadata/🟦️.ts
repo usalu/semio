@@ -1,3 +1,4 @@
+import { parseArtifactRef } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 /** 📇️ Explicit native metadata admission into canonical PDF ownership. */
 import type { PdfInfo,PdfEmbeddedFile,PdfOutputIntent,PdfEncryption,PdfViewerPreferences,PdfMarkInfo,PdfPageMode,PdfPageLayout } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { record,array,text,integer,integers,boolean,pdfDictionaryFromNativeJson } from "../🟦️.ts";
@@ -13,7 +14,7 @@ export function pdfInfoFromNativeJson(input:unknown):PdfInfo{const row=record(in
 /** 📎️ Admit complete attachment bytes and intrinsic dates. */
 export function pdfEmbeddedFromNativeJson(input:unknown):PdfEmbeddedFile{const row=record(input);return {id:text(row.id),fileName:text(row.fileName),description:optionalText(row.description),mimeType:optionalText(row.mimeType),data:integers(row.data),creationDate:row.creationDate==null?null:pdfDateFromNativeJson(row.creationDate),modificationDate:row.modificationDate==null?null:pdfDateFromNativeJson(row.modificationDate),relationship:optionalText(row.relationship),listed:boolean(row.listed??false)};}
 /** 🎯️ Admit explicit output-intent profile ownership and absence. */
-export function pdfIntentFromNativeJson(input:unknown):PdfOutputIntent{const row=record(input);return {subtype:text(row.subtype),conditionIdentifier:text(row.conditionIdentifier),condition:optionalText(row.condition),registryName:optionalText(row.registryName),info:optionalText(row.info),profile:row.profile==null?null:integers(row.profile)};}
+export function pdfIntentFromNativeJson(input:unknown):PdfOutputIntent{const row=record(input);return {subtype:text(row.subtype),conditionIdentifier:text(row.conditionIdentifier),condition:optionalText(row.condition),registryName:optionalText(row.registryName),info:optionalText(row.info),profile:row.profile==null?null:parseArtifactRef(row.profile)};}
 /** 🔒️ Admit all four named encryption domains and authored defaults. */
 export function pdfEncryptionFromNativeJson(input:unknown):PdfEncryption{const row=record(input);const value=text(row.algorithm);let algorithm:PdfEncryption["algorithm"];switch(value){case "rc4_40":algorithm="rc4_40";break;case "rc4_128":algorithm="rc4_128";break;case "aes128":algorithm="aes128";break;case "aes256":algorithm="aes256";break;default:throw new Error("Unknown PDF encryption algorithm");}return {algorithm,permissions:integer(row.permissions??-1),userPassword:text(row.userPassword??""),ownerPassword:optionalText(row.ownerPassword),encryptMetadata:boolean(row.encryptMetadata??true)};}
 /** 🪟️ Admit every viewer preference, print range and COS extra. */

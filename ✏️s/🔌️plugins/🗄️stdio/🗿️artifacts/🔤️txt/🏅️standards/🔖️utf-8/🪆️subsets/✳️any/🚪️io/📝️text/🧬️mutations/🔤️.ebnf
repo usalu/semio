@@ -2,9 +2,11 @@
    variant's own fields follow -- mirrors the Rust `#[serde(tag = "mutation")]` enum. *)
 mutation      = "{" , '"mutation"' , ":" , kind , { "," , field } , "}" ;
 kind          = '"setTrailingNewline"' | '"setLineEnding"'
-              | '"insertLine"' | '"removeLine"' | '"setLine"' ;
-field         = snapshot-field | value-field | index-field | text-field ;
+              | '"insertLine"' | '"removeLine"' | '"setLine"' | '"spliceText"' ;
+field         = snapshot-field | value-field | index-field | text-field | splices-field ;
 snapshot-field = '"snapshot"' , ":" , snapshot-object ;  (* see snapshot/text grammar *)
 value-field   = '"value"' , ":" , ( boolean | '"lf"' | '"crLf"' ) ;
 index-field   = '"index"' , ":" , integer ;
 text-field    = '"text"' , ":" , string ;
+splices-field = '"splices"' , ":" , "[" , [ splice-object , { "," , splice-object } ] , "]" ;
+splice-object = "{" , '"offset"' , ":" , integer , "," , '"delete"' , ":" , integer , "," , '"insert"' , ":" , string , "}" ;

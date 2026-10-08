@@ -229,12 +229,11 @@ fn write_fixture(directory: &std::path::Path, leaf: &str, body: &str) {
 #[test]
 #[ignore]
 fn emit_committed_fixtures() {
-    use crate::mutations::apply_bitmap_mutation;
-    let root = subset_root();
+        let root = subset_root();
     for (kind, case, before, mutation) in fixtures::cases() {
         let outcome = <crate::BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &before);
         let mut after = before.clone();
-        apply_bitmap_mutation(&mut after, &mutation).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
+        vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
         let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);
         write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&before)));
         write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&after)));

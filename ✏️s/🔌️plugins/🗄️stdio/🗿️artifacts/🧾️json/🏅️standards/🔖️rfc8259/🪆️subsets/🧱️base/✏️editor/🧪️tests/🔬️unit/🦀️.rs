@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::snapshot::JsonValue;
 
@@ -214,3 +215,26 @@ async fn source_edit_reaches_the_document_through_the_retained_event_route() {
 //#endregion 🪟️KitVerbLaws
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", JsonAnyEditor, || semio_framework_plugin::App { definition: create_json_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_node() {
+    
+    use crate::schema::snapshot::JsonMember;
+    let base = JsonSnapshot {
+        value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "1".into() } }, JsonMember { key: "list".into(), value: JsonValue::Array { items: vec![JsonValue::Null, JsonValue::Bool { value: true }] } }] },
+        ..JsonSnapshot::default()
+    };
+    let emit = |event: semio_s_artifact_stdio_contract::editing::SnapshotEditEvent| <JsonAnyEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let edited = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/value/members/0/value/lexeme".into(), value: semio_framework_value::DslValue::String("2".into()) }).expect("a scalar edit resolves");
+    let [mutation @ JsonMutation::SetScalar(_)] = edited.artifact_mutations.as_slice() else { panic!("a scalar edit raises set-scalar") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.value, JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "2".into() } }, JsonMember { key: "list".into(), value: JsonValue::Array { items: vec![JsonValue::Null, JsonValue::Bool { value: true }] } }] });
+    let removed = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::RemoveValue { path: "/value/members/1/value/items/0".into() }).expect("an element removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [JsonMutation::RemoveArrayElement(_)]));
+    let dropped = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::RemoveValue { path: "/value/members/0".into() }).expect("a member removal resolves");
+    assert!(matches!(dropped.artifact_mutations.as_slice(), [JsonMutation::RemoveMember(_)]));
+    let renamed = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/value/members/0/key".into(), value: semio_framework_value::DslValue::String("b".into()) }).expect("a key rename resolves");
+    assert!(matches!(renamed.artifact_mutations.as_slice(), [JsonMutation::RemoveMember(_), JsonMutation::SetMember(_)]));
+    assert_eq!(emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

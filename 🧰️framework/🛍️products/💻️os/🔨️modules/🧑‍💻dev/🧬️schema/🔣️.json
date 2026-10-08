@@ -569,8 +569,30 @@
         "logPath": {
           "type": "string",
           "minLength": 1
+        },
+        "compositionConfigPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^\\u0000\\r\\n]+$"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "renderer": {
+                "const": "wgpu"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "compositionConfigPath"
+            ]
+          }
+        }
+      ]
     },
     "ProgramMatrixRenderedEditV1": {
       "description": "A program-matrix verb driven through the program's own rendered editor instead of the Actions rail: a revision-bound verb (`set-cell`, `set-node`) needs the document revision the render stamped into the control's binding, which no staged rail argument can know. The harness types `value` into the inline commit-on-blur input `control` (a selector inside the window body) and commits it with Enter, as a user does.",

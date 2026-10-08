@@ -1,0 +1,52 @@
+[
+  {
+    "scopeId": "hub.bootstrap",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "repo.discovery.runtime",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "os.plugin.browser-bundle",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "os.dev.distribution",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "os.dev.verification.publication",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "repo.library.workspaces.cargo.preparation.custody",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "s.dev.entry",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "os.plugin.registry.descriptor-verification",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "os.plugin.registry",
+    "matches": true,
+    "role": "expected physical source observation"
+  },
+  {
+    "scopeId": "os.dev.playground-session",
+    "matches": true,
+    "role": "Read-only genuine peer physical-progress production-policy delta; not authored"
+  }
+]

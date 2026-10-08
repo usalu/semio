@@ -19,6 +19,6 @@ pub fn diff(payload: &super::AddRepresentationTag, base: &Block3dSnapshot) -> pr
         }
         None => BlockRepresentationPatch { tags_added: vec![payload.tag.clone()], ..Default::default() },
     };
-    protocol::MutationOutcome::new(Block3dDiff { representations: Some(BlockRepresentationsDelta { patched: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { representations: BlockRepresentationsDelta { modified: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, ..Default::default() })
 }
 //#endregion 🔖️Diff

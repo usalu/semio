@@ -1441,35 +1441,37 @@ impl WorkflowDiff {
         }
     }
 
-    /// ↩️ The steps that undo this one atom, in application order, read from `state` as it stands just before the atom applies.
-    fn negation(&self, state: &WorkflowSnapshot) -> Vec<WorkflowDiff> {
+    /// ↩️ The steps that undo this one atom, in application order, read from `base` or, for a row the diff itself introduced, from the
+    /// `earlier` atoms' rows. Nothing is applied; an atom that edits a slot an earlier atom of the same diff already edited is inverted
+    /// step by step by the store, which absorbs the per-step inverses.
+    fn undo_rows(&self, base: &WorkflowSnapshot, earlier: &[&WorkflowDiff]) -> Vec<WorkflowDiff> {
         match self {
             WorkflowDiff::Empty | WorkflowDiff::SyncNodePorts | WorkflowDiff::Sequence { .. } => Vec::new(),
             WorkflowDiff::AddNode { node } => vec![WorkflowDiff::RemoveNode { node_id: node.id.clone() }],
             WorkflowDiff::RemoveNode { node_id } => {
-                let Some(node) = state.graph.nodes.iter().find(|node| node.id == *node_id) else { return Vec::new() };
+                let Some(node) = base.graph.nodes.iter().find(|node| node.id == *node_id).or_else(|| earlier.iter().rev().find_map(|atom| if let WorkflowDiff::AddNode { node } = atom { (node.id == *node_id).then_some(node) } else { None })) else { return Vec::new() };
                 let mut steps = vec![WorkflowDiff::AddNode { node: node.clone() }];
-                steps.extend(state.output_bindings.iter().rev().filter(|binding| binding.node_id == *node_id).map(|binding| WorkflowDiff::BindOutput { binding: binding.clone() }));
-                steps.extend(state.input_bindings.iter().rev().filter(|binding| binding.node_id == *node_id).map(|binding| WorkflowDiff::BindInput { binding: binding.clone() }));
-                steps.extend(state.parameter_bindings.iter().rev().filter(|binding| binding.node_id == *node_id).map(|binding| WorkflowDiff::BindParameterField { binding: binding.clone() }));
-                steps.extend(state.graph.edges.iter().rev().filter(|edge| edge.source_node_id == *node_id || edge.target_node_id == *node_id).map(|edge| WorkflowDiff::ConnectPorts { edge: edge.clone() }));
+                steps.extend(base.output_bindings.iter().rev().filter(|binding| binding.node_id == *node_id).map(|binding| WorkflowDiff::BindOutput { binding: binding.clone() }));
+                steps.extend(base.input_bindings.iter().rev().filter(|binding| binding.node_id == *node_id).map(|binding| WorkflowDiff::BindInput { binding: binding.clone() }));
+                steps.extend(base.parameter_bindings.iter().rev().filter(|binding| binding.node_id == *node_id).map(|binding| WorkflowDiff::BindParameterField { binding: binding.clone() }));
+                steps.extend(base.graph.edges.iter().rev().filter(|edge| edge.source_node_id == *node_id || edge.target_node_id == *node_id).map(|edge| WorkflowDiff::ConnectPorts { edge: edge.clone() }));
                 steps
             }
             WorkflowDiff::ConnectPorts { edge } => vec![WorkflowDiff::DisconnectEdge { edge_id: edge.id.clone() }],
-            WorkflowDiff::DisconnectEdge { edge_id } => state.graph.edges.iter().find(|edge| edge.id == *edge_id).map(|edge| vec![WorkflowDiff::ConnectPorts { edge: edge.clone() }]).unwrap_or_default(),
-            WorkflowDiff::MoveNode { node_id, .. } => state.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowDiff::MoveNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            WorkflowDiff::DisconnectEdge { edge_id } => base.graph.edges.iter().find(|edge| edge.id == *edge_id).or_else(|| earlier.iter().rev().find_map(|atom| if let WorkflowDiff::ConnectPorts { edge } = atom { (edge.id == *edge_id).then_some(edge) } else { None })).map(|edge| vec![WorkflowDiff::ConnectPorts { edge: edge.clone() }]).unwrap_or_default(),
+            WorkflowDiff::MoveNode { node_id, .. } => base.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowDiff::MoveNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
             WorkflowDiff::PlaceNodes { positions } => vec![WorkflowDiff::PlaceNodes {
                 positions: positions
                     .iter()
-                    .filter_map(|position| state.graph.nodes.iter().find(|node| node.id == position.node_id).map(|node| WorkflowNodePosition { node_id: position.node_id.clone(), x: node.x, y: node.y }))
+                    .filter_map(|position| base.graph.nodes.iter().find(|node| node.id == position.node_id).map(|node| WorkflowNodePosition { node_id: position.node_id.clone(), x: node.x, y: node.y }))
                     .collect(),
             }],
-            WorkflowDiff::PatchNode { node_id, .. } => state.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowDiff::PatchNode { node_id: node_id.clone(), label: node.label.clone() }]).unwrap_or_default(),
+            WorkflowDiff::PatchNode { node_id, .. } => base.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowDiff::PatchNode { node_id: node_id.clone(), label: node.label.clone() }]).unwrap_or_default(),
             WorkflowDiff::AddParameter { parameter } => vec![WorkflowDiff::RemoveParameter { parameter_id: workflow_parameter_entity_id(parameter).to_string() }],
             WorkflowDiff::RemoveParameter { parameter_id } => {
-                let Some(parameter) = state.parameters.iter().find(|parameter| workflow_parameter_entity_id(parameter) == parameter_id) else { return Vec::new() };
+                let Some(parameter) = base.parameters.iter().find(|parameter| workflow_parameter_entity_id(parameter) == parameter_id).or_else(|| earlier.iter().rev().find_map(|atom| if let WorkflowDiff::AddParameter { parameter } = atom { (workflow_parameter_entity_id(parameter) == parameter_id).then_some(parameter) } else { None })) else { return Vec::new() };
                 let mut steps = vec![WorkflowDiff::AddParameter { parameter: parameter.clone() }];
-                steps.extend(state.parameter_bindings.iter().rev().filter(|binding| binding.parameter_id == *parameter_id).map(|binding| WorkflowDiff::BindParameterField { binding: binding.clone() }));
+                steps.extend(base.parameter_bindings.iter().rev().filter(|binding| binding.parameter_id == *parameter_id).map(|binding| WorkflowDiff::BindParameterField { binding: binding.clone() }));
                 steps
             }
             WorkflowDiff::PatchParameter { parameter_id, parameter } => state
@@ -1478,7 +1480,7 @@ impl WorkflowDiff {
                 .find(|entry| workflow_parameter_entity_id(entry) == parameter_id)
                 .map(|prior| vec![WorkflowDiff::PatchParameter { parameter_id: workflow_parameter_entity_id(parameter).to_string(), parameter: prior.clone() }])
                 .unwrap_or_default(),
-            WorkflowDiff::BindParameterField { binding } => vec![match state.parameter_bindings.iter().find(|entry| entry.node_id == binding.node_id && entry.field_path == binding.field_path) {
+            WorkflowDiff::BindParameterField { binding } => vec![match base.parameter_bindings.iter().find(|entry| entry.node_id == binding.node_id && entry.field_path == binding.field_path) {
                 Some(prior) => WorkflowDiff::BindParameterField { binding: prior.clone() },
                 None => WorkflowDiff::UnbindParameterField { node_id: binding.node_id.clone(), field_path: binding.field_path.clone() },
             }],
@@ -1490,17 +1492,17 @@ impl WorkflowDiff {
                 .unwrap_or_default(),
             WorkflowDiff::DeclareInput { input } => vec![WorkflowDiff::RemoveInput { input_id: input.id.clone() }],
             WorkflowDiff::RemoveInput { input_id } => {
-                let Some(input) = state.inputs.iter().find(|input| input.id == *input_id) else { return Vec::new() };
+                let Some(input) = base.inputs.iter().find(|input| input.id == *input_id).or_else(|| earlier.iter().rev().find_map(|atom| if let WorkflowDiff::DeclareInput { input } = atom { (input.id == *input_id).then_some(input) } else { None })) else { return Vec::new() };
                 let mut steps = vec![WorkflowDiff::DeclareInput { input: input.clone() }];
-                steps.extend(state.input_bindings.iter().rev().filter(|binding| binding.input_id == *input_id).map(|binding| WorkflowDiff::BindInput { binding: binding.clone() }));
+                steps.extend(base.input_bindings.iter().rev().filter(|binding| binding.input_id == *input_id).map(|binding| WorkflowDiff::BindInput { binding: binding.clone() }));
                 steps
             }
-            WorkflowDiff::BindInput { binding } => vec![match state.input_bindings.iter().find(|entry| entry.input_id == binding.input_id) {
+            WorkflowDiff::BindInput { binding } => vec![match base.input_bindings.iter().find(|entry| entry.input_id == binding.input_id) {
                 Some(prior) => WorkflowDiff::BindInput { binding: prior.clone() },
                 None => WorkflowDiff::UnbindInput { input_id: binding.input_id.clone() },
             }],
-            WorkflowDiff::UnbindInput { input_id } => state.input_bindings.iter().find(|binding| binding.input_id == *input_id).map(|binding| vec![WorkflowDiff::BindInput { binding: binding.clone() }]).unwrap_or_default(),
-            WorkflowDiff::BindOutput { binding } => vec![match state.output_bindings.iter().find(|entry| entry.node_id == binding.node_id && entry.port_id == binding.port_id) {
+            WorkflowDiff::UnbindInput { input_id } => base.input_bindings.iter().find(|binding| binding.input_id == *input_id).map(|binding| vec![WorkflowDiff::BindInput { binding: binding.clone() }]).unwrap_or_default(),
+            WorkflowDiff::BindOutput { binding } => vec![match base.output_bindings.iter().find(|entry| entry.node_id == binding.node_id && entry.port_id == binding.port_id) {
                 Some(prior) => WorkflowDiff::BindOutput { binding: prior.clone() },
                 None => WorkflowDiff::UnbindOutput { node_id: binding.node_id.clone(), port_id: binding.port_id.clone() },
             }],
@@ -1675,73 +1677,9 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
 
 impl protocol::DiffAlgebra<WorkflowSnapshot> for WorkflowDiff {
     fn inverse(&self, base: &WorkflowSnapshot) -> Self {
-        let mut state = base.clone();
-        let mut negations = Vec::new();
-        for atom in self.atoms() {
-            negations.push(atom.negation(&state));
-            match atom.apply_atom(&state) {
-                Ok(next) => state = next,
-                Err(_) => return WorkflowDiff::Empty,
-            }
-        }
-        WorkflowDiff::sequence(negations.into_iter().rev().flatten().collect())
-    }
-
-    fn between(base: &WorkflowSnapshot, other: &WorkflowSnapshot) -> Self {
-        fn shared<T: PartialEq>(left: &[T], right: &[T]) -> usize {
-            left.iter().zip(right).take_while(|(left, right)| left == right).count()
-        }
-        let mut state = base.clone();
-        let mut steps = Vec::new();
-        let mut push = |state: &mut WorkflowSnapshot, step: WorkflowDiff| {
-            if let Ok(next) = step.apply_atom(state) {
-                *state = next;
-                steps.push(step);
-            }
-        };
-        for node in base.graph.nodes[shared(&base.graph.nodes, &other.graph.nodes)..].iter().rev() {
-            push(&mut state, WorkflowDiff::RemoveNode { node_id: node.id.clone() });
-        }
-        for parameter in base.parameters[shared(&base.parameters, &other.parameters)..].iter().rev() {
-            push(&mut state, WorkflowDiff::RemoveParameter { parameter_id: workflow_parameter_entity_id(parameter).to_string() });
-        }
-        for input in base.inputs[shared(&base.inputs, &other.inputs)..].iter().rev() {
-            push(&mut state, WorkflowDiff::RemoveInput { input_id: input.id.clone() });
-        }
-        for binding in state.output_bindings[shared(&state.output_bindings, &other.output_bindings)..].to_vec().iter().rev() {
-            push(&mut state, WorkflowDiff::UnbindOutput { node_id: binding.node_id.clone(), port_id: binding.port_id.clone() });
-        }
-        for binding in state.input_bindings[shared(&state.input_bindings, &other.input_bindings)..].to_vec().iter().rev() {
-            push(&mut state, WorkflowDiff::UnbindInput { input_id: binding.input_id.clone() });
-        }
-        for binding in state.parameter_bindings[shared(&state.parameter_bindings, &other.parameter_bindings)..].to_vec().iter().rev() {
-            push(&mut state, WorkflowDiff::UnbindParameterField { node_id: binding.node_id.clone(), field_path: binding.field_path.clone() });
-        }
-        for edge in state.graph.edges[shared(&state.graph.edges, &other.graph.edges)..].to_vec().iter().rev() {
-            push(&mut state, WorkflowDiff::DisconnectEdge { edge_id: edge.id.clone() });
-        }
-        for node in &other.graph.nodes[shared(&state.graph.nodes, &other.graph.nodes)..] {
-            push(&mut state, WorkflowDiff::AddNode { node: node.clone() });
-        }
-        for parameter in &other.parameters[shared(&state.parameters, &other.parameters)..] {
-            push(&mut state, WorkflowDiff::AddParameter { parameter: parameter.clone() });
-        }
-        for input in &other.inputs[shared(&state.inputs, &other.inputs)..] {
-            push(&mut state, WorkflowDiff::DeclareInput { input: input.clone() });
-        }
-        for binding in &other.parameter_bindings[shared(&state.parameter_bindings, &other.parameter_bindings)..] {
-            push(&mut state, WorkflowDiff::BindParameterField { binding: binding.clone() });
-        }
-        for binding in &other.input_bindings[shared(&state.input_bindings, &other.input_bindings)..] {
-            push(&mut state, WorkflowDiff::BindInput { binding: binding.clone() });
-        }
-        for binding in &other.output_bindings[shared(&state.output_bindings, &other.output_bindings)..] {
-            push(&mut state, WorkflowDiff::BindOutput { binding: binding.clone() });
-        }
-        for edge in &other.graph.edges[shared(&state.graph.edges, &other.graph.edges)..] {
-            push(&mut state, WorkflowDiff::ConnectPorts { edge: edge.clone() });
-        }
-        WorkflowDiff::sequence(steps)
+        let atoms = self.atoms();
+        let rows: Vec<Vec<WorkflowDiff>> = atoms.iter().enumerate().map(|(index, atom)| atom.undo_rows(base, &atoms[..index])).collect();
+        WorkflowDiff::sequence(rows.into_iter().rev().flatten().collect())
     }
 
     fn is_empty(&self) -> bool {

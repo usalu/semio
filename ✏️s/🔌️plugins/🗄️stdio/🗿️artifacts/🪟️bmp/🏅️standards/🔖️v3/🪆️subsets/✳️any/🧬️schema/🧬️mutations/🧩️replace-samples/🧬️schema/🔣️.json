@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-samples/schema.json",
+  "title": "ReplaceSamples",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "region"
+  ],
+  "properties": {
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Region",
+          "de": "Bereich"
+        },
+        "group": "region",
+        "order": 10
+      },
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left",
+              "de": "Links"
+            },
+            "group": "position",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top",
+              "de": "Oben"
+            },
+            "group": "position",
+            "order": 20
+          }
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "group": "position",
+            "order": 30
+          }
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "group": "position",
+            "order": 40
+          }
+        }
+      }
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Palette indices",
+          "de": "Palettenindizes"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "red",
+          "green",
+          "blue",
+          "alpha",
+          "reserved"
+        ],
+        "properties": {
+          "red": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "green": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "blue": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "alpha": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Direct samples",
+          "de": "Direkte Abtastwerte"
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

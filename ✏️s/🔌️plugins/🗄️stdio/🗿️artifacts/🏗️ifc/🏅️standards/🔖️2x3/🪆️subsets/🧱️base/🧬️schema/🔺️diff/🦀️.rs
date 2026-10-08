@@ -185,32 +185,6 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
         }
     }
 
-    fn between(base: &Ifc2x3Snapshot, other: &Ifc2x3Snapshot) -> Self {
-        let schema = if base.schema != other.schema { Some(other.schema.clone()) } else { None };
-        let header = if base.document.header != other.document.header { Some(other.document.header.clone()) } else { None };
-        let base_order = base.document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
-        let other_order = other.document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
-        let instance_order = (base_order != other_order).then(|| other_order.clone());
-        let edm_preamble = (base.edm_preamble != other.edm_preamble).then(|| other.edm_preamble.clone());
-        if base.document.instances.is_empty() {
-            let mut upserted_instances = other.document.instances.clone();
-            upserted_instances.sort_by_key(|instance| instance.id);
-            return Ifc2x3Diff { schema, header, removed_instances: Vec::new(), upserted_instances, edm_preamble, instance_order };
-        }
-        if other.document.instances.is_empty() {
-            let mut removed_instances = base_order;
-            removed_instances.sort_unstable();
-            return Ifc2x3Diff { schema, header, removed_instances, upserted_instances: Vec::new(), edm_preamble, instance_order };
-        }
-        let base_by_id: std::collections::HashMap<u64, &Part21Instance> = base.document.instances.iter().map(|i| (i.id, i)).collect();
-        let other_by_id: std::collections::HashMap<u64, &Part21Instance> = other.document.instances.iter().map(|i| (i.id, i)).collect();
-        let mut removed_instances: Vec<u64> = base_by_id.keys().filter(|id| !other_by_id.contains_key(id)).copied().collect();
-        removed_instances.sort_unstable();
-        let mut upserted_instances: Vec<Part21Instance> = other.document.instances.iter().filter(|i| base_by_id.get(&i.id).is_none_or(|b| *b != *i)).cloned().collect();
-        upserted_instances.sort_by_key(|i| i.id);
-        Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order }
-    }
-
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.header.is_none() && self.removed_instances.is_empty() && self.upserted_instances.is_empty() && self.edm_preamble.is_none() && self.instance_order.is_none()
     }
@@ -218,104 +192,26 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
 
 //#endregion 🔖️Diff
 
-//#region 🔖️HandcraftedDiffCodec
-/// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real hand-rolled
-/// `protocol::DiffCodec` for `Ifc2x3Diff` — this standard had NO `DiffCodec` impl at all before this
-/// wave (confirmed by W0/F6's own census, the sole remaining `dsl-migration/diff-completeness`
-/// breach across all 32 stdio standards). `Part21Value` is a genuine data-carrying enum (`Ref`/
-/// `Str`/`Enum`/`Int`/`Real`/`List`/`Typed`, all with fields) reachable from `header`/
-/// `upserted_instances` directly, so `#[derive(dsl::DslDiff)]` cannot be used here either (identical
-/// `DslField`-unsatisfied root cause `4`'s own `IfcDiff`/`IfcValue` doc comment documents). Same
-/// grammar style `4`'s own hand-rolled `IfcDiff`/`IfcValue` codec uses (bracket-depth-aware split,
-/// hex for strings, single-uppercase-letter tag prefix for the data-carrying enum) — own local copy
-/// per this dialect's per-file convention, `pub(crate)` so the mutations sibling can reuse rather
-/// than duplicating a second time (same intra-artifact-reuse split `4`'s own files use).
-//#region 🔖️TextPrimitives
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-
-
-
-
-
-//#endregion 🔖️BinaryPrimitives
-
-//#region 🔖️Part21ValueCodecs
-
-
-
-
-
-
-
-//#region 🔖️Part21ValueBinaryCodecs
-
-
-
-
-//#endregion 🔖️Part21ValueBinaryCodecs
-//#endregion 🔖️Part21ValueCodecs
-
-//#region 🔖️HeaderInstanceCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️HeaderInstanceCodecs
-
-//#region 🔖️TopLevel
-
-
-
-
-//#endregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
 //#region 🔖️DemoCases
-/// 🧪️ Representative `Ifc2x3Diff` cases — real `print_diff()`-conformance-law fodder
-/// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
-/// `between()` result exercising every top-level field (schema/header/removed/upserted, incl. a
-/// COMPLEX instance and every `Part21Value` tag), and its reverse direction.
+/// 🧪️ Representative `Ifc2x3Diff` cases built declaratively — `diff_grammar_conformance_law` and `protocol_walk_law` fodder: the empty
+/// diff, every top-level field (schema/header/removed/upserted incl. a COMPLEX instance and every `Part21Value` tag) and an
+/// upsert-only diff with the instance order.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
-    let a = crate::standards::v2x3::engine::demo_ifc2x3_snapshot();
-    let mut b = a.clone();
-    b.schema = "stdio.ifc.2x3.v2".into();
-    b.document.header.file_name = vec![Part21Value::Str("changed.ifc".into())];
-    b.document.instances.retain(|i| i.id != 2);
-    if let Some(first) = b.document.instances.first_mut() {
-        first.entities = vec![("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5.into()), Part21Value::Enum("EDGE".into())]), ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset])];
-    }
-    b.document.instances.push(Part21Instance {
+    let base = crate::standards::v2x3::engine::demo_ifc2x3_snapshot();
+    let mut header = base.document.header.clone();
+    header.file_name = vec![Part21Value::Str("changed.ifc".into())];
+    let storey = Part21Instance {
         id: 300,
         entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed { name: "IFCLENGTHMEASURE".into(), items: vec![Part21Value::Real(3000.0.into())] }])],
-    });
-    vec![Ifc2x3Diff::default(), Ifc2x3Diff::between(&a, &b), Ifc2x3Diff::between(&b, &a)]
+    };
+    let quantity = Part21Instance { id: 1, entities: vec![("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5.into()), Part21Value::Enum("EDGE".into())]), ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset])] };
+    vec![
+        Ifc2x3Diff::default(),
+        Ifc2x3Diff { schema: Some("stdio.ifc.2x3.v2".into()), header: Some(header), removed_instances: vec![2], upserted_instances: vec![storey], ..Default::default() },
+        Ifc2x3Diff { upserted_instances: vec![quantity], instance_order: Some(vec![300, 1]), ..Default::default() },
+    ]
 }
 //#endregion 🔖️DemoCases
 

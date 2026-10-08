@@ -1,6 +1,6 @@
 (* Direct text registry; payload productions are owned by each leaf. *)
 mutation = opcode, { " ", argument } ;
-opcode = "change-gamma" | "patch-pixels" | "paint-native-samples" ;
+opcode = "change-gamma" | "patch-pixels" | "paint-native-samples" | "set-gamma" | "replace-samples" ;
 argument = name, "=", value ;
 name = letter, { letter | digit | "-" } ;
 value = character, { character } ;

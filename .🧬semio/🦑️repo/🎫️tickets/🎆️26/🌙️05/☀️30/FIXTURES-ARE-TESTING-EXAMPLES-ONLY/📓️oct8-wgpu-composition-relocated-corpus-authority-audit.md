@@ -1,0 +1,11 @@
+# WGPU Composition Relocated Corpus Authority Audit
+
+Read-only actual schema and source consumer census; no tests, producers or source edits. Normal Native compiler route remains independently governed by its frozen fifteen endpoints; this test-source finding alone does not revoke that producer's release.
+
+Exact new authority is `🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json`, ID `https://json.schemas.assets.semio-tech.com/hub/renderer/wgpu/command-composition.json`, title HubRendererWgpuCommandCompositionV1. It closes the entire version/commands/collaboration object. Commands have exact count five and generalCommand/command/className/laws fields. Collaboration fixes general/specific test-harness paths, exact seven test journeys and literal test timing/pixel limits. These are the fixture's source assertion selections and testing bounds, rather than an independent serialized production domain contract.
+
+Actual authority edge: `🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts:11` reads that schema; line12 validates the whole plain fixture through SchemaSubset and Ajv; line13 validates three mutated whole fixtures. Current authored-source census finds that exact schema path/ID only in this test reader and schema itself, with no production reader. Moving it under composition while retaining a test-owned whole-fixture consumer does not remove independent corpus authority.
+
+The same consumer's new collaboration checks are meaningful separate source/runtime oracles: absent General harness, current Specific harness path/import, exact exported checks/kinds/journeys/bounds and CLI function. Preserve those peer additions, all five command/source selections, and the plain payload. The three structural refusal vectors belong to the whole-corpus schema assertion; retain their meaningful behavior only through an actual domain admission law if one exists, rather than inventing production authority for fixture shape.
+
+Verdict: concrete renewed independent test-corpus authority, requiring narrow schema/whole-fixture validation retirement while preserving peer collaboration behavior. Prior full/gate snapshots remain genuine historical receipts; current source purity requires a subsequent checkpoint. No normal compiler inputs, Native source freeze or compiler package/profile flags changed as part of this read-only observation.

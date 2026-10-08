@@ -5,26 +5,29 @@
   "productClasses": null,
   "productSeries": null,
   "products": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "product.pr900",
-        "seriesId": "series-pr",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "PR-900"
+        "index": 1,
+        "row": {
+          "id": "product.pr900",
+          "seriesId": "series-pr",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "PR-900"
+            },
+            "shortName": null,
+            "alternatives": []
           },
-          "shortName": null,
-          "alternatives": []
-        },
-        "parameterDomains": [],
-        "variants": [],
-        "staticProperties": []
+          "parameterDomains": [],
+          "variants": [],
+          "staticProperties": []
+        }
       }
     ],
-    "removed": [],
-    "modified": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "productIndexes": null,
   "propertyDefinitions": null,

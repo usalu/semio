@@ -1,10 +1,12 @@
 use super::*;
 
 #[test]
-fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
+fn text_edit_requires_an_explicit_revision_and_change_set_and_allows_an_empty_one() {
     assert!(md_command_from_action(MD_KIT_ACTION_ID, None).is_err());
-    let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(String::new()))]);
-    assert_eq!(md_command_from_action(MD_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), MdEditCommand::ReplaceText { text: String::new() });
+    let only_revision = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("r".into()))]);
+    assert!(md_command_from_action(MD_KIT_ACTION_ID, Some(&only_revision)).is_err());
+    let args = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("r".into())), ("splices".into(), semio_framework_value::DslValue::String("[]".into()))]);
+    assert_eq!(md_command_from_action(MD_KIT_ACTION_ID, Some(&args)).expect("explicit empty change set"), MdEditCommand::SpliceText { revision: "r".into(), splices: "[]".into() });
 }
 
 #[test]
@@ -105,125 +107,115 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }
 
-/// ⚖️ LAW: `replace-text` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
+/// 🧾️ The change set JSON the editor sends: `(offset, delete, insert)` ranges of Unicode scalars of the source it started from.
+fn splices_json(ranges: &[(usize, usize, &str)]) -> String {
+    serde_json::Value::Array(ranges.iter().map(|(offset, delete, insert)| serde_json::json!({ "offset": offset, "delete": delete, "insert": insert })).collect()).to_string()
+}
+
+/// ⚖️ LAW: `textEdit` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
 /// editor's exact retained factory. Unregistered, the reactor refused it inside `s` with
 /// `interactive-job.missing-factory` (S15, session 11).
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
-    let target = md_example_snapshot(crate::examples::demo::ID);
-    let mut app = kit_fixture_holding(&MdSnapshot::default()).await;
-    dispatch_settled(&mut app, "textEdit", &[("text", &<MdSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("replace-text settles");
+    let base = MdSnapshot::default();
+    let target = MdSnapshot::from_text(&md_example_snapshot(crate::examples::demo::ID).to_text());
+    let mut app = kit_fixture_holding(&base).await;
+    let (revision, base_text) = (semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base), base.to_text());
+    let changes = splices_json(&[(0, base_text.chars().count(), &target.to_text())]);
+    dispatch_settled(&mut app, "textEdit", &[("revision", &revision), ("splices", &changes)]).await.expect("textEdit settles");
     assert_eq!(app.snapshot().expect("md snapshot"), target);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws
 
-//#region 🧮️NetLeafLaws
-const NET_LEAVES: &str = include_str!("../../../🧫️fixtures/🧫️net-leaves/🔣️.json");
-
-/// 🧾️ A leaf as the net-leaves corpus names it: kind, container path, index.
-fn net_leaf_summary(leaf: &MdMutation) -> serde_json::Value {
-    let step = |step: &MdPathStep| match step {
-        MdPathStep::BlockQuote { index } => format!("quote:{index}"),
-        MdPathStep::ListItem { index, item } => format!("item:{index}:{item}"),
-    };
-    let (path, index) = match leaf {
-        MdMutation::InsertBlock(leaf) => (leaf.path.iter().map(step).collect::<Vec<_>>(), leaf.index),
-        MdMutation::RemoveBlock(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
-        MdMutation::ReplaceBlock(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
-        MdMutation::SetInlines(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
-    };
-    serde_json::json!({ "kind": protocol::SemanticMutation::<MdSnapshot>::semantics(leaf).kind, "path": path, "index": index })
-}
-
-/// ⚖️ LAW (corpus `🧫️fixtures/🧫️net-leaves`): an applied markdown text is exactly the corpus's net block leaves; applied in
-/// order they carry the committed document to exactly the applied text, and every leaf undoes with ONE row of its own, so the
-/// edit reverts leaf by leaf back to the committed document.
-#[test]
-fn an_applied_text_is_its_net_block_leaves_and_they_reach_exactly_that_text() {
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let id = case["id"].as_str().expect("id");
-        let (base, next) = (MdSnapshot::from_text(case["before"].as_str().expect("before")), MdSnapshot::from_text(case["after"].as_str().expect("after")));
-        let leaves = md_net_mutations(&base, &next);
-        assert_eq!(serde_json::Value::Array(leaves.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the net leaves");
-        let mut state = base.clone();
-        let mut undo = Vec::new();
-        for leaf in &leaves {
-            let inverse = protocol::Mutation::inverse(leaf, &state).expect("valid retained mutation inverse fixture");
-            assert_eq!(inverse.len(), 1, "{id}: {leaf:?} undoes with exactly one row");
-            undo.extend(inverse);
-            assert!(crate::standards::v_commonmark::subsets::any::schema::mutations::apply_md_mutation(&mut state, leaf).messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Fatal), "{id}: {leaf:?} applies");
-        }
-        assert_eq!(state, next, "{id}: the net leaves reach exactly the applied text");
-        for leaf in undo.iter().rev() {
-            crate::standards::v_commonmark::subsets::any::schema::mutations::apply_md_mutation(&mut state, leaf);
-        }
-        assert_eq!(state, base, "{id}: undoing every leaf restores the committed document");
-    }
-}
-
-/// ⚖️ LAW: an applied envelope naming another document schema is refused by the exact replay instead of being published as a
-/// whole-document replacement, and no net-leaves corpus change (every one keeps its schema) is refused.
-#[test]
-fn another_document_schema_is_refused_and_no_corpus_change_is() {
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let (base, next) = (MdSnapshot::from_text(case["before"].as_str().expect("before")), MdSnapshot::from_text(case["after"].as_str().expect("after")));
-        assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &next, md_net_mutations).is_ok(), "{}: a block edit is addressed by its leaves", case["id"]);
-    }
-    let base = MdSnapshot::from_text("# Title\n\nBody.\n");
-    let other = MdSnapshot { schema: "stdio.md.other-schema".into(), ..base.clone() };
-    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &other, md_net_mutations).is_err(), "another document schema is unaddressed");
-}
-
-/// ⚖️ LAW (design §20.3): a document-details edit publishes the artifact's own net block leaves — exactly the corpus leaves of
-/// the same change, with each history row labelled by its own leaf in every supported locale.
-#[test]
-fn a_document_details_edit_is_its_net_block_leaves() {
-    use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
-    ::semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v_commonmark::subsets::any::schema::md_artifact_schema_descriptor()]).expect("register md schema");
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let id = case["id"].as_str().expect("id");
-        let (base, next) = (MdSnapshot::from_text(case["before"].as_str().expect("before")), MdSnapshot::from_text(case["after"].as_str().expect("after")));
-        let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&next) };
-        let emit = <MdEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).unwrap_or_else(|fault| panic!("{id}: the details edit publishes: {fault:?}"));
-        assert_eq!(serde_json::Value::Array(emit.artifact_mutations.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the details edit is the net leaves");
-        for leaf in &emit.artifact_mutations {
-            let (en, de) = match leaf {
-                MdMutation::InsertBlock(_) => ("Insert block", "Block einfügen"),
-                MdMutation::RemoveBlock(_) => ("Remove block", "Block entfernen"),
-                MdMutation::ReplaceBlock(_) => ("Replace block", "Block ersetzen"),
-                MdMutation::SetInlines(_) => ("Set inlines", "Inline-Elemente setzen"),
-            };
-            assert_eq!(protocol::SemanticMutation::<MdSnapshot>::label(leaf), semio_framework_ui_locale::LocalizedLabel::native(en, de), "{id}: the row is labelled from its leaf in every supported locale");
-        }
-    }
-}
-
-/// ⚖️ LAW: the kit verb applies CommonMark source — the text the main window shows and edits — as ONE edit of its net leaves:
-/// one changed paragraph is one `set-inlines` row labelled from the leaf, the document reads exactly the applied text, and ONE
-/// undo restores the committed document.
+//#region ✂️SpliceLaws
+/// ⚖️ LAW: the kit verb applies the editor's change set verbatim as ONE `splice-source` edit: one changed word is one row
+/// labelled from the leaf in every supported locale, the document reads exactly the edited source, and ONE undo restores the
+/// committed document.
 #[semio_framework_async_macros::async_test]
-async fn one_applied_markdown_text_is_one_edit_of_its_net_leaves() {
+async fn one_applied_change_set_is_one_splice_source_edit() {
     use semio_framework_plugin::PluginApp;
-    let before = "# Title\n\nFirst.\n\nSecond.\n";
-    let after = "# Title\n\nFirst, edited.\n\nSecond.\n";
-    let mut app = kit_fixture_holding(&MdSnapshot::from_text(before)).await;
+    let (before, after) = ("# Title\n\nFirst.\n\nSecond.\n", "# Title\n\nFirst, edited.\n\nSecond.\n");
+    let base = MdSnapshot::from_text(before);
+    let mut app = kit_fixture_holding(&base).await;
     let edits = app.edit_transactions().len();
-    dispatch_settled(&mut app, "textEdit", &[("text", after)]).await.expect("the applied markdown settles");
+    let offset = base.to_text().find("First.").expect("the paragraph") + "First".len();
+    let changes = splices_json(&[(base.to_text()[..offset].chars().count(), 0, ", edited")]);
+    dispatch_settled(&mut app, "textEdit", &[("revision", &semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base)), ("splices", &changes)]).await.expect("the applied change set settles");
     assert_eq!(app.snapshot().expect("md snapshot"), MdSnapshot::from_text(after));
     assert_eq!(app.edit_transactions().len(), edits + 1, "one Apply, one edit");
     let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
-    let row = rows.iter().max_by_key(|row| row.seq).expect("the applied text's row");
-    assert_eq!(row.mutations.len(), 1, "one changed paragraph is one net leaf: {:?}", row.mutations);
-    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Set inlines");
-    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Inline-Elemente setzen");
+    let row = rows.iter().max_by_key(|row| row.seq).expect("the applied change set's row");
+    assert_eq!(row.mutations.len(), 1, "one change set is one leaf: {:?}", row.mutations);
+    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Edit source");
+    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Quelltext bearbeiten");
     semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
-    assert_eq!(app.snapshot().expect("md snapshot"), MdSnapshot::from_text(before), "one undo restores the committed document");
+    assert_eq!(app.snapshot().expect("md snapshot"), base, "one undo restores the committed document");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
-//#endregion 🧮️NetLeafLaws
+
+const SPLICE_SOURCE: &str = include_str!("../../../🧫️fixtures/✂️splice-source/🔣️.json");
+
+/// ⚖️ LAW (corpus `🧫️fixtures/✂️splice-source`): the ranges of a row carry the committed document to exactly the parse of the
+/// source they mean, and the leaf's own concrete inverse carries it back to the committed document.
+#[test]
+fn the_corpus_ranges_reach_exactly_the_source_they_mean_and_undo() {
+    let corpus: serde_json::Value = serde_json::from_str(SPLICE_SOURCE).expect("splice-source corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let base = MdSnapshot::from_text(case["before"].as_str().expect("before"));
+        assert_eq!(base.to_text(), case["before"].as_str().expect("before"), "{id}: the corpus source is the source the window shows");
+        let ranges = case["splices"].as_array().expect("splices").iter().map(|range| splice_source::SourceSplice { offset: range["offset"].as_u64().expect("offset") as u32, delete: range["delete"].as_u64().expect("delete") as u32, insert: range["insert"].as_str().expect("insert").into() }).collect();
+        let leaf = MdMutation::SpliceSource(splice_source::SpliceSource { splices: ranges });
+        let inverse = protocol::Mutation::inverse(&leaf, &base).expect("valid retained mutation inverse fixture");
+        let mut state = base.clone();
+        assert!(crate::apply_mutation(&mut state, &leaf).messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Fatal), "{id}: the ranges apply");
+        assert_eq!(state, MdSnapshot::from_text(case["after"].as_str().expect("after")), "{id}: the ranges reach exactly the source they mean");
+        for row in inverse.iter().rev() {
+            crate::apply_mutation(&mut state, row);
+        }
+        assert_eq!(state, base, "{id}: the concrete inverse restores the committed document");
+    }
+}
+
+/// ⚖️ LAW: an empty change set is no edit, a stale revision is refused, and a range beyond the source is refused by the leaf's own
+/// diff instead of being published.
+#[test]
+fn empty_stale_and_unrepresentable_change_sets_publish_nothing() {
+    let snapshot = MdSnapshot::from_text("# Title\n\nBody.\n");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    let command = |revision: &str, splices: String| MdEditCommand::SpliceText { revision: revision.into(), splices };
+    assert!(md_emit(&command(&revision, "[]".into()), &snapshot, None).expect("empty").artifact_mutations.is_empty());
+    assert_eq!(md_emit(&command("stale", "[]".into()), &snapshot, None).expect_err("stale").code.0, "stdio.md.stale-text-edit");
+    assert!(md_emit(&command(&revision, splices_json(&[(10_000, 0, "x")])), &snapshot, None).is_err());
+    let identical = splices_json(&[(2, 5, "Title")]);
+    assert!(md_emit(&command(&revision, identical), &snapshot, None).expect("identical").artifact_mutations.is_empty());
+}
+
+/// ⚖️ LAW: replacing the whole source through the details pane is a document load, not an edit, so no mutation is published.
+#[test]
+fn replacing_the_whole_source_is_refused_as_a_load() {
+    use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
+    let (base, next) = (MdSnapshot::from_text("# Title\n\nBody.\n"), MdSnapshot::from_text("# Other\n"));
+    let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&next) };
+    assert_eq!(<MdEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect_err("a load, not an edit").code.0, "snapshot-edit.unsupported-path");
+}
+//#endregion ✂️SpliceLaws
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", MdEditor, || semio_framework_plugin::App { definition: create_md_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let base = MdSnapshot::from_text("# Title\n\nFirst.\n\n> quoted\n");
+    let emit = |event: SnapshotEditEvent| <MdEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let inlines = emit(SnapshotEditEvent::SetValue { path: "/blocks/1/inlines/0/text".into(), value: semio_framework_value::DslValue::String("Second.".into()) }).expect("an inline edit resolves");
+    assert!(matches!(inlines.artifact_mutations.as_slice(), [MdMutation::SetInlines(_)]));
+    let removed = emit(SnapshotEditEvent::RemoveValue { path: "/blocks/0".into() }).expect("a block removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [MdMutation::RemoveBlock(_)]));
+    let nested = emit(SnapshotEditEvent::RemoveValue { path: "/blocks/2/blocks/0".into() }).expect("a nested block removal resolves");
+    assert!(matches!(nested.artifact_mutations.as_slice(), [MdMutation::RemoveBlock(remove)] if remove.path.len() == 1));
+    let level = emit(SnapshotEditEvent::SetValue { path: "/blocks/0/level".into(), value: semio_framework_value::DslValue::uint(2) }).expect("a heading level edit resolves");
+    assert!(matches!(level.artifact_mutations.as_slice(), [MdMutation::ReplaceBlock(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

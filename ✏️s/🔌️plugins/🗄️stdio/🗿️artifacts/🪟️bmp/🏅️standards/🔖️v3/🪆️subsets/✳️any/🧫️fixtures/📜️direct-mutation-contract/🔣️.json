@@ -46,6 +46,21 @@
         "🔗️.graphql",
         "🛰️.proto"
       ]
+    },
+    {
+      "kind": "replace-samples",
+      "variant": "ReplaceSamples",
+      "directory": "🧩️replace-samples",
+      "textOpcode": "replace-samples",
+      "binaryTag": 13,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
     }
   ]
 }

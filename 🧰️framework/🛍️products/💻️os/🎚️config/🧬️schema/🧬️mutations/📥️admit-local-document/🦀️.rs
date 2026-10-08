@@ -73,17 +73,6 @@ impl protocol::DiffAlgebra<LocalCatalog> for LocalCatalogDiff {
         Self { documents: self.documents.iter().map(|row| KeyedEdit::new(row.key.clone(), base.documents.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
     }
 
-    fn between(base: &LocalCatalog, other: &LocalCatalog) -> Self {
-        let mut documents: Vec<KeyedEdit<LocalDocument>> = base
-            .documents
-            .iter()
-            .filter(|entry| other.documents.iter().find(|candidate| candidate.document_id == entry.document_id) != Some(*entry))
-            .map(|entry| KeyedEdit::new(entry.document_id.clone(), other.documents.iter().find(|candidate| candidate.document_id == entry.document_id).cloned()))
-            .collect();
-        documents.extend(other.documents.iter().filter(|entry| !base.documents.iter().any(|candidate| candidate.document_id == entry.document_id)).map(|entry| KeyedEdit::new(entry.document_id.clone(), Some(entry.clone()))));
-        Self { documents }
-    }
-
     fn is_empty(&self) -> bool {
         self.documents.is_empty()
     }
@@ -163,20 +152,11 @@ pub fn inverse_local_catalog_config_mutation(snapshot: &LocalCatalog, mutation: 
     })
 }
 
-/// 📥️ Decodes the internally tagged local-catalog mutation JSON projection.
-pub fn decode_local_catalog_config_mutation_json(text: &str) -> Result<LocalCatalogConfigMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
 
-/// 📤️ Encodes the local catalog to its canonical camel-case JSON projection.
-pub fn encode_local_catalog_json(snapshot: &LocalCatalog) -> String {
-    serde_json::to_string(snapshot).expect("LocalCatalog serialization is infallible")
-}
 
-/// 📥️ Decodes the canonical local catalog JSON projection.
-pub fn decode_local_catalog_json(text: &str) -> Result<LocalCatalog, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
+
+
+
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
 pub fn inverse_local_catalog_config_mutation_steps(mutation: &LocalCatalogConfigMutation, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {

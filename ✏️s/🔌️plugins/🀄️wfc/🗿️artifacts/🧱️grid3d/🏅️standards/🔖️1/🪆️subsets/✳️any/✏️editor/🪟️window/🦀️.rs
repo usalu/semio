@@ -77,19 +77,6 @@ impl protocol::DiffAlgebra<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
             show_masked: self.show_masked.as_ref().map(|_| base.show_masked.clone()),
         }
     }
-    fn between(base: &Grid3dWindowConfig, other: &Grid3dWindowConfig) -> Self {
-        Self {
-            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
-            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
-            camera_z: (base.camera_z != other.camera_z).then(|| other.camera_z.clone()),
-            target_x: (base.target_x != other.target_x).then(|| other.target_x.clone()),
-            target_y: (base.target_y != other.target_y).then(|| other.target_y.clone()),
-            target_z: (base.target_z != other.target_z).then(|| other.target_z.clone()),
-            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
-            active_tile_id: (base.active_tile_id != other.active_tile_id).then(|| other.active_tile_id.clone()),
-            show_masked: (base.show_masked != other.show_masked).then(|| other.show_masked.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.camera_x.is_none() && self.camera_y.is_none() && self.camera_z.is_none() && self.target_x.is_none() && self.target_y.is_none() && self.target_z.is_none() && self.camera_zoom.is_none() && self.active_tile_id.is_none() && self.show_masked.is_none()
     }

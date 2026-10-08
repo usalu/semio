@@ -13,7 +13,8 @@
 //! 🗑️ `n7` is the TRAILING node and is referenced by nothing, so the `create-node` inverse — which always appends — restores the table exactly.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -110,8 +111,8 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     let delta = outcome.diff().nodes.as_ref().expect("nodes delta");
-    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (0, 1, 0), "delete-node/drops-the-spare-6c285d: the delta must be exactly one removed entry");
-    assert!(delta.reordered.is_none(), "delete-node/drops-the-spare-6c285d: no verb in this vocabulary re-orders a collection");
+    assert_eq!((delta.inserted.len(), delta.removed.len(), delta.modified.len()), (0, 1, 0), "delete-node/drops-the-spare-6c285d: the delta must be exactly one removed entry");
+    assert!(delta.moved.is_empty(), "delete-node/drops-the-spare-6c285d: no verb in this vocabulary re-orders a collection");
     assert!(outcome.diff().elements.is_none(), "delete-node/drops-the-spare-6c285d: no elements delta may be opened by this verb");
     assert!(outcome.diff().regions.is_none(), "delete-node/drops-the-spare-6c285d: no regions delta may be opened by this verb");
     assert!(outcome.diff().materials.is_none(), "delete-node/drops-the-spare-6c285d: no materials delta may be opened by this verb");

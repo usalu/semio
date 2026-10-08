@@ -2,10 +2,9 @@
 // `keyword key=value ...` line per EquationMutation variant, exactly what `print_op` writes.
 grammar Mathematical_equation_mutations;
 
-line: changeGraphDirected | updateGraphAlgorithm | replaceGraph | createNode | deleteNode | deleteNodes | changeNodeLabel | moveNode | connectNodes | disconnectNodes | replacePoints | insertPoint | removePoint | movePoints | changeCoefficient | moveNodes | setNodePositions | setPointPositions ;
+line: changeGraphDirected | updateGraphAlgorithm | createNode | deleteNode | deleteNodes | changeNodeLabel | moveNode | connectNodes | disconnectNodes | insertPoint | removePoint | movePoints | changeCoefficient | moveNodes | setNodePositions | setPointPositions ;
 changeGraphDirected: 'change-graph-directed' SP 'new-directed=' boolean ;
 updateGraphAlgorithm: 'update-graph-algorithm' SP 'new-algorithm=' quoted SP 'new-algorithm-seed=' optionalQuoted ;
-replaceGraph: 'replace-graph' SP 'graph=' quoted ;
 createNode: 'create-node' SP 'id=' quoted SP 'label=' quoted SP 'x=' number SP 'y=' number ( SP 'index=' count )? ;
 deleteNode: 'delete-node' SP 'id=' quoted ;
 deleteNodes: 'delete-nodes' SP 'ids=' quoted ;
@@ -13,7 +12,6 @@ changeNodeLabel: 'change-node-label' SP 'id=' quoted SP 'new-label=' quoted ;
 moveNode: 'move-node' SP 'id=' quoted SP 'x=' number SP 'y=' number ;
 connectNodes: 'connect-nodes' SP 'id=' quoted SP 'source=' quoted SP 'target=' quoted ( SP 'index=' count )? ;
 disconnectNodes: 'disconnect-nodes' SP 'id=' quoted ;
-replacePoints: 'replace-points' SP 'points=' points ;
 insertPoint: 'insert-point' SP 'index=' count SP 'x=' number SP 'y=' number ;
 removePoint: 'remove-point' SP 'index=' count ;
 movePoints: 'move-points' SP 'indices=' quoted SP 'dx=' number SP 'dy=' number ;

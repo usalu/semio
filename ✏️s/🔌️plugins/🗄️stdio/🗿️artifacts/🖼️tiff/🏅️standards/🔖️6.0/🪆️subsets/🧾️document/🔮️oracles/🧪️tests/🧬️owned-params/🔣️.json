@@ -1,0 +1,186 @@
+{
+  "ifd": {
+    "entries": [
+      {
+        "tag": 256,
+        "values": {
+          "kind": "long",
+          "value": [
+            2
+          ]
+        }
+      },
+      {
+        "tag": 257,
+        "values": {
+          "kind": "long",
+          "value": [
+            1
+          ]
+        }
+      },
+      {
+        "tag": 258,
+        "values": {
+          "kind": "short",
+          "value": [
+            8,
+            8,
+            8
+          ]
+        }
+      },
+      {
+        "tag": 262,
+        "values": {
+          "kind": "short",
+          "value": [
+            2
+          ]
+        }
+      },
+      {
+        "tag": 277,
+        "values": {
+          "kind": "short",
+          "value": [
+            3
+          ]
+        }
+      },
+      {
+        "tag": 315,
+        "values": {
+          "kind": "ascii",
+          "value": [
+            "",
+            "A",
+            ""
+          ]
+        }
+      },
+      {
+        "tag": 65000,
+        "values": {
+          "kind": "float",
+          "value": [
+            {
+              "bits": 2143289345
+            }
+          ]
+        }
+      },
+      {
+        "tag": 65001,
+        "values": {
+          "kind": "double",
+          "value": [
+            {
+              "lo": 1,
+              "hi": 2146959360
+            }
+          ]
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2,
+        "height": 1,
+        "channels": 3,
+        "samples": [
+          {
+            "lo": 1,
+            "hi": 0
+          },
+          {
+            "lo": 2,
+            "hi": 0
+          },
+          {
+            "lo": 3,
+            "hi": 0
+          },
+          {
+            "lo": 4,
+            "hi": 0
+          },
+          {
+            "lo": 5,
+            "hi": 0
+          },
+          {
+            "lo": 6,
+            "hi": 0
+          }
+        ]
+      }
+    ]
+  },
+  "rgba": [
+    1,
+    2,
+    3,
+    255,
+    4,
+    5,
+    6,
+    255
+  ],
+  "mutations": [
+    {
+      "kind": "paint-region",
+      "params": {
+        "ifdIndex": 0,
+        "x": 1,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "red": 9,
+        "green": 8,
+        "blue": 7,
+        "alpha": 255
+      },
+      "expected": [
+        1,
+        2,
+        3,
+        9,
+        8,
+        7
+      ]
+    },
+    {
+      "kind": "replace-samples",
+      "params": {
+        "ifdIndex": 0,
+        "block": 0,
+        "offset": 3,
+        "samples": [
+          {
+            "lo": 24,
+            "hi": 0
+          },
+          {
+            "lo": 96,
+            "hi": 0
+          },
+          {
+            "lo": 192,
+            "hi": 0
+          }
+        ]
+      },
+      "expected": [
+        1,
+        2,
+        3,
+        24,
+        96,
+        192
+      ]
+    }
+  ]
+}

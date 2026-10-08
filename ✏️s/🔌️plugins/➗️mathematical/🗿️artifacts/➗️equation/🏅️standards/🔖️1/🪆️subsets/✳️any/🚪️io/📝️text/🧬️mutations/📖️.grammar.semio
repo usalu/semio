@@ -5,7 +5,6 @@ start line
 
 line = change-graph-directed
      / update-graph-algorithm
-     / replace-graph
      / create-node
      / delete-node
      / delete-nodes
@@ -13,7 +12,6 @@ line = change-graph-directed
      / move-node
      / connect-nodes
      / disconnect-nodes
-     / replace-points
      / insert-point
      / remove-point
      / move-points
@@ -24,7 +22,6 @@ line = change-graph-directed
 
 change-graph-directed = "change-graph-directed" SP "new-directed=" boolean
 update-graph-algorithm = "update-graph-algorithm" SP "new-algorithm=" quoted SP "new-algorithm-seed=" optional-quoted
-replace-graph = "replace-graph" SP "graph=" quoted
 create-node = "create-node" SP "id=" quoted SP "label=" quoted SP "x=" number SP "y=" number (SP "index=" count)?
 delete-node = "delete-node" SP "id=" quoted
 delete-nodes = "delete-nodes" SP "ids=" quoted
@@ -32,7 +29,6 @@ change-node-label = "change-node-label" SP "id=" quoted SP "new-label=" quoted
 move-node = "move-node" SP "id=" quoted SP "x=" number SP "y=" number
 connect-nodes = "connect-nodes" SP "id=" quoted SP "source=" quoted SP "target=" quoted (SP "index=" count)?
 disconnect-nodes = "disconnect-nodes" SP "id=" quoted
-replace-points = "replace-points" SP "points=" points
 insert-point = "insert-point" SP "index=" count SP "x=" number SP "y=" number
 remove-point = "remove-point" SP "index=" count
 move-points = "move-points" SP "indices=" quoted SP "dx=" number SP "dy=" number

@@ -670,6 +670,12 @@ mod oracles {
         write_svg(&doc)
     }
 
+    /// 🧩️ `value` after `step` edited it in place — the one owned-value seam of the oracle's undo, so the undo itself holds no mutable borrow.
+    fn applied<T>(mut value: T, step: impl FnOnce(&mut T) -> Result<(), String>) -> Result<T, String> {
+        step(&mut value)?;
+        Ok(value)
+    }
+
     /// ↩️ Applies `{kind, params}` and then its computed inverse to ONE parsed tree — the caller
     /// compares its projection against the ORIGINAL input's own, proving `apply(inverse(m,base),
     /// apply(m, base)) == base` against this independent reference implementation.
@@ -689,9 +695,10 @@ mod oracles {
             return Err("mutation spec carries no `kind`".to_string());
         }
         let base = parse_svg(input)?;
-        let mut doc = base.clone();
-        apply_kind(&mut doc, kind, params)?;
-        invert(&base, &mut doc, kind, params)?;
+        let doc = applied(base.clone(), |doc| {
+            apply_kind(doc, kind, params)?;
+            invert(&base, doc, kind, params)
+        })?;
         write_svg(&doc)
     }
 

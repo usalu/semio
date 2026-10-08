@@ -78,20 +78,22 @@
     },
     {
       "curated": {
-        "patched": [
+        "modified": [
           {
-            "objectId": "beam",
-            "count": 20
+            "id": "beam",
+            "patch": {
+              "count": 20
+            }
           }
         ]
       }
     },
     {
       "curated": {
-        "added": [],
         "removed": [],
-        "patched": [],
-        "reordered": null
+        "inserted": [],
+        "moved": [],
+        "modified": []
       }
     }
   ],
@@ -110,10 +112,12 @@
     },
     {
       "curated": {
-        "patched": [
+        "modified": [
           {
-            "objectId": "beam",
-            "count": -1
+            "id": "beam",
+            "patch": {
+              "count": -1
+            }
           }
         ]
       }

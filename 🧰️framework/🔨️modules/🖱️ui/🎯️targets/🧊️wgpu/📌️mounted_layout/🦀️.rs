@@ -743,14 +743,14 @@ pub(crate) struct MountedLayoutJob {
     block_reversed: bool,
     admission: AdmissionPhase,
     pending_node: Option<(NodeId, Option<usize>)>,
-    walk: Box<ui_contract::UiFixedList<WalkFrame, LAYOUT_DEPTH_CREDITS>>,
-    nodes: Box<ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>>,
-    glyphs: Box<ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>>,
-    runs: Box<ui_contract::UiFixedList<RetainedTextRun, LAYOUT_NODE_CREDITS>>,
-    lines: Box<ui_contract::UiFixedList<RetainedLine, LAYOUT_NODE_CREDITS>>,
-    glyph_previews: Box<ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>>,
+    walk: Option<Box<ui_contract::UiFixedList<WalkFrame, LAYOUT_DEPTH_CREDITS>>>,
+    nodes: Option<Box<ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>>>,
+    glyphs: Option<Box<ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>>>,
+    runs: Option<Box<ui_contract::UiFixedList<RetainedTextRun, LAYOUT_NODE_CREDITS>>>,
+    lines: Option<Box<ui_contract::UiFixedList<RetainedLine, LAYOUT_NODE_CREDITS>>>,
+    glyph_previews: Option<Box<ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>>>,
     atlas_candidate: RetainedAtlasCandidate,
-    results: Box<ui_contract::UiFixedList<MountedLayoutResult, LAYOUT_NODE_CREDITS>>,
+    results: Option<Box<ui_contract::UiFixedList<MountedLayoutResult, LAYOUT_NODE_CREDITS>>>,
     rejected_node: Option<LayoutInputNode>,
     rejected_walk: Option<WalkFrame>,
     rejected_glyph: Option<RetainedGlyphInput>,
@@ -811,14 +811,14 @@ impl MountedLayoutJob {
             block_reversed,
             admission: if block_reversed { AdmissionPhase::VisitReversed } else { AdmissionPhase::Visit },
             pending_node: Some((root, None)),
-            walk: Box::new(ui_contract::UiFixedList::default()),
-            nodes: Box::new(ui_contract::UiFixedList::default()),
-            glyphs: Box::new(ui_contract::UiFixedList::default()),
-            runs: Box::new(ui_contract::UiFixedList::default()),
-            lines: Box::new(ui_contract::UiFixedList::default()),
-            glyph_previews: Box::new(ui_contract::UiFixedList::default()),
+            walk: Some(Box::new(ui_contract::UiFixedList::default())),
+            nodes: Some(Box::new(ui_contract::UiFixedList::default())),
+            glyphs: Some(Box::new(ui_contract::UiFixedList::default())),
+            runs: Some(Box::new(ui_contract::UiFixedList::default())),
+            lines: Some(Box::new(ui_contract::UiFixedList::default())),
+            glyph_previews: Some(Box::new(ui_contract::UiFixedList::default())),
             atlas_candidate: RetainedAtlasCandidate::new(),
-            results: Box::new(ui_contract::UiFixedList::default()),
+            results: Some(Box::new(ui_contract::UiFixedList::default())),
             rejected_node: None,
             rejected_walk: None,
             rejected_glyph: None,
@@ -903,10 +903,10 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
-        let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
+        let parent_kind = parent.and_then(|index| self.nodes.as_deref().expect("live layout list owner").get(index)).map(|input| input.kind);
         let content = self.tree_content(tree, id, parent);
         let tree_inline_control = matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TableRow { .. }));
-        let tree_detail = parent.and_then(|index| self.nodes.get(index)).is_some_and(|owner| is_tree_item_detail(tree, id, owner.id));
+        let tree_detail = parent.and_then(|index| self.nodes.as_deref().expect("live layout list owner").get(index)).is_some_and(|owner| is_tree_item_detail(tree, id, owner.id));
         let popup_overlay_row = tree.is_open_select_popup_row(id);
         let kind = if popup_overlay_row {
             LayoutNodeKind::OverlayRow { rect: FlexRect { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height } }
@@ -943,7 +943,7 @@ impl MountedLayoutJob {
                 }
             }
         };
-        let index = self.nodes.len();
+        let index = self.nodes.as_deref().expect("live layout list owner").len();
         let chrome = match &node.spec.0 {
             UiNode::Section(_) | UiNode::Field(_) if content.is_some() => ChromeTextRanges::None,
             UiNode::Section(section) => ChromeTextRanges::Section { title: section.label.as_ref().map(|_| GlyphRange::default()) },
@@ -952,7 +952,7 @@ impl MountedLayoutJob {
             _ => ChromeTextRanges::None,
         };
         let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0, chrome, content };
-        if let Err(owner) = self.nodes.try_push(input) {
+        if let Err(owner) = self.nodes.as_deref_mut().expect("live layout list owner").try_push(input) {
             self.rejected_node = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
@@ -963,25 +963,25 @@ impl MountedLayoutJob {
             return (0, 0);
         }
         if let Some(parent) = parent {
-            let previous = self.nodes.get(parent).and_then(|owner| owner.last_child);
+            let previous = self.nodes.as_deref().expect("live layout list owner").get(parent).and_then(|owner| owner.last_child);
             match previous {
                 Some(sibling) => {
-                    if let Some(sibling) = self.nodes.get_mut(sibling) {
+                    if let Some(sibling) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(sibling) {
                         sibling.next_sibling = Some(index);
                     }
                 }
                 None => {
-                    if let Some(owner) = self.nodes.get_mut(parent) {
+                    if let Some(owner) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(parent) {
                         owner.first_child = Some(index);
                     }
                 }
             }
-            if let Some(owner) = self.nodes.get_mut(parent) {
+            if let Some(owner) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(parent) {
                 owner.last_child = Some(index);
             }
         }
         let expanded = matches!(kind, LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TreeSection { .. }) || tree.disclosure_open(id).unwrap_or(true);
-        if let Err(owner) = self.walk.try_push(WalkFrame { next_child: expanded.then_some(node.first_child).flatten(), node: index }) {
+        if let Err(owner) = self.walk.as_deref_mut().expect("live layout list owner").try_push(WalkFrame { next_child: expanded.then_some(node.first_child).flatten(), node: index }) {
             self.rejected_walk = Some(owner);
             self.fault = Some(MountedLayoutFault::DepthCredits);
             return (0, 0);
@@ -990,9 +990,9 @@ impl MountedLayoutJob {
             self.text_node = Some(index);
             self.text_byte = 0;
             self.text_part = 0;
-            self.text_glyph_start = self.glyphs.len();
-            if let Some(node) = self.nodes.get_mut(index) {
-                node.glyph_start = self.glyphs.len();
+            self.text_glyph_start = self.glyphs.as_deref().expect("live layout list owner").len();
+            if let Some(node) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(index) {
+                node.glyph_start = self.glyphs.as_deref().expect("live layout list owner").len();
             }
             self.admission = AdmissionPhase::Text;
         } else {
@@ -1005,7 +1005,7 @@ impl MountedLayoutJob {
     /// child of a row whose content is more than one inline control takes its slot below the content before it
     /// (`reconcile::tree_row_content_lines`), a content container's children stack as columns and lines.
     fn tree_content(&self, tree: &UiTree, id: NodeId, parent: Option<usize>) -> Option<TreeContentFlow> {
-        let owner = self.nodes.get(parent?)?;
+        let owner = self.nodes.as_deref().expect("live layout list owner").get(parent?)?;
         let document = tree.document()?;
         let record = document.record(tree.document_id(id)?)?;
         let metrics = retained_tree_row_metrics(tree, id, &self.row_metrics);
@@ -1041,7 +1041,7 @@ impl MountedLayoutJob {
             self.admission = AdmissionPhase::Unwind;
             return (0, 0);
         };
-        let Some(input) = self.nodes.get(index).copied() else {
+        let Some(input) = self.nodes.as_deref().expect("live layout list owner").get(index).copied() else {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
@@ -1068,13 +1068,13 @@ impl MountedLayoutJob {
             }
         };
         let Some(value) = part else {
-            let run = RetainedTextRun { node: index, glyph_start: input.glyph_start, glyph_end: self.glyphs.len() };
-            if let Err(owner) = self.runs.try_push(run) {
+            let run = RetainedTextRun { node: index, glyph_start: input.glyph_start, glyph_end: self.glyphs.as_deref().expect("live layout list owner").len() };
+            if let Err(owner) = self.runs.as_deref_mut().expect("live layout list owner").try_push(run) {
                 self.rejected_run = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
                 return (0, 0);
             }
-            if let Some(node) = self.nodes.get_mut(index) {
+            if let Some(node) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(index) {
                 node.glyph_start = run.glyph_start;
                 node.glyph_end = run.glyph_end;
             }
@@ -1088,18 +1088,18 @@ impl MountedLayoutJob {
             self.record_chrome_range(index, self.text_part, None);
             self.text_part += 1;
             self.text_byte = 0;
-            self.text_glyph_start = self.glyphs.len();
+            self.text_glyph_start = self.glyphs.as_deref().expect("live layout list owner").len();
             return (0, 0);
         };
         let Some(scalar) = value.get(self.text_byte..).and_then(|tail| tail.chars().next()) else {
-            self.record_chrome_range(index, self.text_part, Some(GlyphRange { start: self.text_glyph_start, end: self.glyphs.len() }));
+            self.record_chrome_range(index, self.text_part, Some(GlyphRange { start: self.text_glyph_start, end: self.glyphs.as_deref().expect("live layout list owner").len() }));
             self.text_part += 1;
             self.text_byte = 0;
-            self.text_glyph_start = self.glyphs.len();
+            self.text_glyph_start = self.glyphs.as_deref().expect("live layout list owner").len();
             return (0, 0);
         };
         self.text_byte += scalar.len_utf8();
-        if let Err(owner) = self.glyphs.try_push(RetainedGlyphInput { node: index, scalar }) {
+        if let Err(owner) = self.glyphs.as_deref_mut().expect("live layout list owner").try_push(RetainedGlyphInput { node: index, scalar }) {
             self.rejected_glyph = Some(owner);
             self.fault = Some(MountedLayoutFault::GlyphCredits);
             return (0, 0);
@@ -1108,7 +1108,7 @@ impl MountedLayoutJob {
     }
 
     fn record_chrome_range(&mut self, index: usize, part: u8, range: Option<GlyphRange>) {
-        let Some(node) = self.nodes.get_mut(index) else {
+        let Some(node) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(index) else {
             self.fault = Some(MountedLayoutFault::Stale);
             return;
         };
@@ -1124,7 +1124,7 @@ impl MountedLayoutJob {
     }
 
     fn unwind_one(&mut self, tree: &UiTree) -> (usize, usize) {
-        let Some(frame) = self.walk.last_mut() else {
+        let Some(frame) = self.walk.as_deref_mut().expect("live layout list owner").last_mut() else {
             self.admission = AdmissionPhase::Ready;
             return (0, 0);
         };
@@ -1134,7 +1134,7 @@ impl MountedLayoutJob {
             self.admission = if self.block_reversed { AdmissionPhase::VisitReversed } else { AdmissionPhase::Visit };
             return (0, 0);
         }
-        self.walk.pop();
+        self.walk.as_deref_mut().expect("live layout list owner").pop();
         (1, 0)
     }
 
@@ -1175,12 +1175,12 @@ impl MountedLayoutJob {
     }
 
     fn shape_one(&mut self) -> (usize, usize) {
-        let Some(run) = self.runs.get(self.run_cursor).copied() else {
-            if self.flex.len() != self.nodes.len() {
+        let Some(run) = self.runs.as_deref().expect("live layout list owner").get(self.run_cursor).copied() else {
+            if self.flex.len() != self.nodes.as_deref().expect("live layout list owner").len() {
                 self.fault = Some(MountedLayoutFault::Solver);
                 return (0, 0);
             }
-            self.measure_cursor = self.nodes.len();
+            self.measure_cursor = self.nodes.as_deref().expect("live layout list owner").len();
             self.stage = LayoutJobStage::MeasureLayout;
             return (0, 0);
         };
@@ -1192,11 +1192,11 @@ impl MountedLayoutJob {
             self.run_cursor += 1;
             return (0, 0);
         }
-        let Some(input) = self.glyphs.get(self.glyph_cursor).copied() else {
+        let Some(input) = self.glyphs.as_deref().expect("live layout list owner").get(self.glyph_cursor).copied() else {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
-        let next = self.glyphs.get(self.glyph_cursor + 1).filter(|_| self.glyph_cursor + 1 < run.glyph_end).map(|glyph| glyph.scalar);
+        let next = self.glyphs.as_deref().expect("live layout list owner").get(self.glyph_cursor + 1).filter(|_| self.glyph_cursor + 1 < run.glyph_end).map(|glyph| glyph.scalar);
         let raw_preview = self.text_worker.shape_one(input, next);
         let preview = match self.atlas_candidate.retain_one(input.scalar, self.generation, self.revision, raw_preview) {
             Ok(Some(preview)) => preview,
@@ -1206,12 +1206,12 @@ impl MountedLayoutJob {
                 return (0, 0);
             }
         };
-        if let Err(owner) = self.glyph_previews.try_push(preview) {
+        if let Err(owner) = self.glyph_previews.as_deref_mut().expect("live layout list owner").try_push(preview) {
             self.rejected_preview = Some(owner);
             self.fault = Some(MountedLayoutFault::GlyphCredits);
             return (0, 0);
         }
-        if let Some(node) = self.nodes.get_mut(input.node) {
+        if let Some(node) = self.nodes.as_deref_mut().expect("live layout list owner").get_mut(input.node) {
             node.intrinsic.width += preview.advance + preview.kerning;
             node.intrinsic.height = node.intrinsic.height.max(preview.height);
         }
@@ -1223,10 +1223,10 @@ impl MountedLayoutJob {
     /// order — the sibling links admission built, so no scan over the node array is ever needed.
     fn gather_children(&mut self, index: usize) {
         self.child_scratch.clear();
-        let mut cursor = self.nodes.get(index).and_then(|owner| owner.first_child);
+        let mut cursor = self.nodes.as_deref().expect("live layout list owner").get(index).and_then(|owner| owner.first_child);
         while let Some(child) = cursor {
             self.child_scratch.push(child);
-            cursor = self.nodes.get(child).and_then(|owner| owner.next_sibling);
+            cursor = self.nodes.as_deref().expect("live layout list owner").get(child).and_then(|owner| owner.next_sibling);
         }
     }
 
@@ -1245,7 +1245,7 @@ impl MountedLayoutJob {
         };
         self.measure_cursor = index;
         self.gather_children(index);
-        let chrome = self.nodes.get(index).and_then(|node| composite_chrome(node, &self.glyphs, &self.glyph_previews, self.width, self.theme.gap_standard));
+        let chrome = self.nodes.as_deref().expect("live layout list owner").get(index).and_then(|node| composite_chrome(node, self.glyphs.as_deref().expect("live layout list owner"), self.glyph_previews.as_deref().expect("live layout list owner"), self.width, self.theme.gap_standard));
         if let Some((top, bottom)) = chrome {
             if !self.flex.set_composite_chrome(index, top, bottom) {
                 self.fault = Some(MountedLayoutFault::Solver);
@@ -1253,7 +1253,7 @@ impl MountedLayoutJob {
             }
         }
         let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
-        let (nodes_ref, glyphs_ref, previews_ref) = (&**nodes, &**glyphs, &**glyph_previews);
+        let (Some(nodes_ref), Some(glyphs_ref), Some(previews_ref)) = (nodes.as_deref(), glyphs.as_deref(), glyph_previews.as_deref()) else { self.fault = Some(MountedLayoutFault::Stale); return (0, 0); };
         let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
         if !flex.measure_one(index, child_scratch, &mut measure) {
             self.fault = Some(MountedLayoutFault::Solver);
@@ -1267,7 +1267,7 @@ impl MountedLayoutJob {
     /// are placed. This is the grant the eight-millisecond slice law is charged against: its cost is
     /// the container's child count, so a 1,025-node surface is ~1,025 small solves, never one large one.
     fn arrange_one(&mut self) -> (usize, usize) {
-        if self.nodes.get(self.arrange_cursor).is_none() {
+        if self.nodes.as_deref().expect("live layout list owner").get(self.arrange_cursor).is_none() {
             self.stage = LayoutJobStage::CollectResults;
             return (0, 0);
         }
@@ -1278,7 +1278,7 @@ impl MountedLayoutJob {
             return (1, 0);
         }
         let width = self.flex.rect(index).map_or(self.width, |rect| rect.width);
-        let chrome = self.nodes.get(index).and_then(|node| composite_chrome(node, &self.glyphs, &self.glyph_previews, width, self.theme.gap_standard));
+        let chrome = self.nodes.as_deref().expect("live layout list owner").get(index).and_then(|node| composite_chrome(node, self.glyphs.as_deref().expect("live layout list owner"), self.glyph_previews.as_deref().expect("live layout list owner"), width, self.theme.gap_standard));
         if let Some((top, bottom)) = chrome {
             if !self.flex.set_composite_chrome(index, top, bottom) {
                 self.fault = Some(MountedLayoutFault::Solver);
@@ -1286,7 +1286,7 @@ impl MountedLayoutJob {
             }
         }
         let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
-        let (nodes_ref, glyphs_ref, previews_ref) = (&**nodes, &**glyphs, &**glyph_previews);
+        let (Some(nodes_ref), Some(glyphs_ref), Some(previews_ref)) = (nodes.as_deref(), glyphs.as_deref(), glyph_previews.as_deref()) else { self.fault = Some(MountedLayoutFault::Stale); return (0, 0); };
         let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
         if !flex.arrange_one(index, child_scratch, &mut measure) {
             self.fault = Some(MountedLayoutFault::Solver);
@@ -1298,7 +1298,7 @@ impl MountedLayoutJob {
     /// 📐️ Reads exactly ONE solved box back out of the flex tree, in admission order so
     /// `results[i]` stays the box of `nodes[i]` — the invariant `publish_one` re-checks.
     fn collect_one(&mut self) -> (usize, usize) {
-        let Some(input) = self.nodes.get(self.collect_cursor).copied() else {
+        let Some(input) = self.nodes.as_deref().expect("live layout list owner").get(self.collect_cursor).copied() else {
             self.stage = LayoutJobStage::PublishResults;
             return (0, 0);
         };
@@ -1311,7 +1311,7 @@ impl MountedLayoutJob {
         if matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. } | LayoutNodeKind::OverlayRow { .. } | LayoutNodeKind::Field { .. } | LayoutNodeKind::Section { .. })
             || matches!(input.chrome, ChromeTextRanges::SliderUnit { .. })
         {
-            if let Err(owner) = self.lines.try_push(RetainedLine { node: index, width: rect.width, height: rect.height }) {
+            if let Err(owner) = self.lines.as_deref_mut().expect("live layout list owner").try_push(RetainedLine { node: index, width: rect.width, height: rect.height }) {
                 self.rejected_line = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
                 return (0, 0);
@@ -1319,7 +1319,7 @@ impl MountedLayoutJob {
             self.line_cursor += 1;
         }
         let inline_suffix_width = if matches!(input.chrome, ChromeTextRanges::SliderUnit { .. }) { input.intrinsic.width } else { 0.0 };
-        if let Err(owner) = self.results.try_push(MountedLayoutResult { id: input.id, x: rect.x, y: rect.y, width: rect.width, height: rect.height, inline_suffix_width }) {
+        if let Err(owner) = self.results.as_deref_mut().expect("live layout list owner").try_push(MountedLayoutResult { id: input.id, x: rect.x, y: rect.y, width: rect.width, height: rect.height, inline_suffix_width }) {
             self.rejected_result = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
@@ -1328,13 +1328,13 @@ impl MountedLayoutJob {
     }
 
     pub(crate) fn take_preview_one(&mut self) -> Option<MountedLayoutResult> {
-        let preview = self.results.get(self.preview_cursor).copied()?;
+        let preview = self.results.as_deref().expect("live layout list owner").get(self.preview_cursor).copied()?;
         self.preview_cursor += 1;
         Some(preview)
     }
 
     pub(crate) fn latest_glyph_preview(&self) -> Option<RetainedGlyphPreview> {
-        self.glyph_previews.get(self.glyph_cursor.saturating_sub(1)).copied()
+        self.glyph_previews.as_deref().expect("live layout list owner").get(self.glyph_cursor.saturating_sub(1)).copied()
     }
 
     pub(crate) fn root_intrinsic_height(&self) -> Option<f32> {
@@ -1373,8 +1373,8 @@ impl MountedLayoutJob {
             return LayoutJobStep::Fault(MountedLayoutFault::Stale.label());
         }
         let generation = identity.1;
-        let Some(result) = self.results.get(self.publish_cursor).copied() else {
-            if self.results.len() != self.nodes.len() || self.glyph_previews.len() != self.glyphs.len() || self.lines.len() != self.runs.len() {
+        let Some(result) = self.results.as_deref().expect("live layout list owner").get(self.publish_cursor).copied() else {
+            if self.results.as_deref().expect("live layout list owner").len() != self.nodes.as_deref().expect("live layout list owner").len() || self.glyph_previews.as_deref().expect("live layout list owner").len() != self.glyphs.as_deref().expect("live layout list owner").len() || self.lines.as_deref().expect("live layout list owner").len() != self.runs.as_deref().expect("live layout list owner").len() {
                 self.fault = Some(MountedLayoutFault::Stale);
                 return LayoutJobStep::Fault(MountedLayoutFault::Stale.label());
             }
@@ -1410,53 +1410,50 @@ impl MountedLayoutJob {
         self.close_requested = true;
     }
 
-    pub(crate) fn close_one(&mut self) -> bool {
-        if self.rejected_result.take().is_some()
-            || self.rejected_line.take().is_some()
-            || self.rejected_glyph.take().is_some()
-            || self.rejected_preview.take().is_some()
-            || self.rejected_run.take().is_some()
-            || self.rejected_walk.take().is_some()
-            || self.rejected_node.take().is_some()
-            || self.results.pop().is_some()
-            || self.lines.pop().is_some()
-            || self.glyph_previews.pop().is_some()
-            || self.glyphs.pop().is_some()
-            || self.runs.pop().is_some()
-            || self.walk.pop().is_some()
-            || self.nodes.pop().is_some()
-        {
-            return false;
-        }
-        if !self.child_scratch.is_empty() {
-            self.child_scratch.clear();
-            return false;
-        }
-        if !self.flex.release_one() {
-            return false;
-        }
-        self.atlas_candidate.close_one()
+    fn next_close_release_bytes(&self)->Result<usize,semio_framework_value::ValueError>{
+        if self.rejected_result.is_some()||self.rejected_line.is_some()||self.rejected_glyph.is_some()||self.rejected_preview.is_some()||self.rejected_run.is_some()||self.rejected_walk.is_some()||self.rejected_node.is_some(){return Ok(0)}
+        if self.results.as_deref().is_some_and(|owner|!owner.is_empty())||self.lines.as_deref().is_some_and(|owner|!owner.is_empty())||self.glyph_previews.as_deref().is_some_and(|owner|!owner.is_empty())||self.glyphs.as_deref().is_some_and(|owner|!owner.is_empty())||self.runs.as_deref().is_some_and(|owner|!owner.is_empty())||self.walk.as_deref().is_some_and(|owner|!owner.is_empty())||self.nodes.as_deref().is_some_and(|owner|!owner.is_empty()){return Ok(0)}
+        fn list<T,const N:usize>(owner:&ui_contract::UiFixedList<T,N>)->Result<usize,semio_framework_value::ValueError>{if !owner.is_empty(){Ok(0)}else if !owner.terminal_is_empty(){owner.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}else{Ok(std::mem::size_of::<ui_contract::UiFixedList<T,N>>())}}
+        if let Some(owner)=self.results.as_deref(){return list(owner)}
+        if let Some(owner)=self.lines.as_deref(){return list(owner)}
+        if let Some(owner)=self.glyph_previews.as_deref(){return list(owner)}
+        if let Some(owner)=self.glyphs.as_deref(){return list(owner)}
+        if let Some(owner)=self.runs.as_deref(){return list(owner)}
+        if let Some(owner)=self.walk.as_deref(){return list(owner)}
+        if let Some(owner)=self.nodes.as_deref(){return list(owner)}
+        if self.child_scratch.capacity()!=0{return self.child_scratch.capacity().checked_mul(std::mem::size_of::<usize>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"layout scratch backing overflow"))}
+        if !self.flex.close_is_empty(){return self.flex.next_close_release_byte_demand()}
+        Ok(if self.atlas_candidate.pages.iter().any(Option::is_some){LAYOUT_ATLAS_PAGE_BYTES}else{0})
+    }
+    fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+        let empty=RetainedCloneProgress::default();if !self.close_requested{return Step::Blocked}if self.terminal_is_empty(){return Step::Complete{progress:empty}}
+        if grant.maximum_items==0{return Step::Pending{progress:empty}}
+        let bytes=match self.next_close_release_bytes(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused(error.kind)};
+        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        if self.rejected_result.take().is_some()||self.rejected_line.take().is_some()||self.rejected_glyph.take().is_some()||self.rejected_preview.take().is_some()||self.rejected_run.take().is_some()||self.rejected_walk.take().is_some()||self.rejected_node.take().is_some(){return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+        macro_rules! close_item{($field:ident)=>{if let Some(owner)=self.$field.as_deref_mut(){if owner.pop().is_some(){return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}}}}
+        close_item!(results);close_item!(lines);close_item!(glyph_previews);close_item!(glyphs);close_item!(runs);close_item!(walk);close_item!(nodes);
+        macro_rules! close_list{($field:ident)=>{if let Some(owner)=self.$field.as_deref_mut(){
+            if !owner.terminal_is_empty(){return match owner.release_empty_page(grant.maximum_release_bytes){Ok(receipt)=>Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}},Err(error)=>Step::Refused(semio_framework_value::ValueError::from(error).kind)}}
+            self.$field.take();return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}
+        }}}
+        close_list!(results);close_list!(lines);close_list!(glyph_previews);close_list!(glyphs);close_list!(runs);close_list!(walk);close_list!(nodes);
+        if self.child_scratch.capacity()!=0{drop(std::mem::take(&mut self.child_scratch));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}
+        if !self.flex.close_is_empty(){return self.flex.close_granted(grant)}
+        if !self.atlas_candidate.is_empty(){self.atlas_candidate.close_one();return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}
+        Step::Complete{progress:empty}
+    }
+    pub(crate) fn close_one(&mut self)->bool{
+        let Ok(bytes)=self.next_close_release_bytes()else{return false};
+        matches!(self.close_granted(semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:bytes,maximum_depth:1}),semio_framework_job::InteractiveJobCloseStep::Complete{..})
+    }
+    pub(crate) fn terminal_is_empty(&self)->bool{
+        self.rejected_result.is_none()&&self.rejected_line.is_none()&&self.rejected_glyph.is_none()&&self.rejected_preview.is_none()&&self.rejected_run.is_none()&&self.rejected_walk.is_none()&&self.rejected_node.is_none()
+        &&self.results.is_none()&&self.lines.is_none()&&self.glyph_previews.is_none()&&self.glyphs.is_none()&&self.runs.is_none()&&self.walk.is_none()&&self.nodes.is_none()
+        &&self.child_scratch.capacity()==0&&self.flex.close_is_empty()&&self.atlas_candidate.is_empty()
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.rejected_result.is_none()
-            && self.rejected_line.is_none()
-            && self.rejected_glyph.is_none()
-            && self.rejected_preview.is_none()
-            && self.rejected_run.is_none()
-            && self.rejected_walk.is_none()
-            && self.rejected_node.is_none()
-            && self.results.is_empty()
-            && self.lines.is_empty()
-            && self.glyph_previews.is_empty()
-            && self.glyphs.is_empty()
-            && self.runs.is_empty()
-            && self.walk.is_empty()
-            && self.nodes.is_empty()
-            && self.child_scratch.is_empty()
-            && self.flex.is_empty()
-            && self.atlas_candidate.is_empty()
-    }
 }
 
 /// 🧪️ Drives ONE whole bounded layout pass to completion in a single call and mirrors the solved
@@ -1525,16 +1522,11 @@ impl semio_framework_job::InteractiveJob for MountedLayoutJob {
         MountedLayoutJob::begin_close(self);
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.close_one() {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-        }
-    }
+    fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{self.close_granted(grant)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_release_bytes()}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
 
     fn terminal_is_empty(&self) -> bool {
         MountedLayoutJob::terminal_is_empty(self)

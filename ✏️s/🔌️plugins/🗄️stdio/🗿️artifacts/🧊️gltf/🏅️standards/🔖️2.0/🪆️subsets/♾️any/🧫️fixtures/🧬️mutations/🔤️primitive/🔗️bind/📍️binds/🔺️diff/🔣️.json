@@ -4,14 +4,28 @@
       {
         "index": 0,
         "diff": {
-          "primitives": [
-            {
-              "attributes": {
-                "POSITION": 0,
-                "TEXCOORD_0": 1
+          "primitives": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "attributes": {
+                    "removed": [],
+                    "inserted": [
+                      {
+                        "index": 1,
+                        "row": {
+                          "semantic": "TEXCOORD_0",
+                          "accessor": 1
+                        }
+                      }
+                    ],
+                    "moved": []
+                  }
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       }
     ]

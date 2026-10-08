@@ -23,49 +23,55 @@
   "privacy": null,
   "safety": null,
   "security": {
-    "added": [
+    "removed": [
       {
         "id": "security-requirement-a",
-        "name": "Security Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "controlKind": "accessControl",
-        "threat": "Replaced Security Requirement A",
-        "riskLevel": "negligible",
-        "assetIds": [],
-        "zoneIds": [],
-        "accessLevel": "public",
-        "perimeterControls": [],
-        "surveillance": [],
-        "intrusionDetection": [],
-        "cybersecurity": [],
-        "screening": [],
-        "visitorManagement": [],
-        "keyManagement": [],
-        "standards": [],
-        "responseProcedures": [],
-        "drillFrequency": null,
-        "liaisonContacts": [],
-        "classifiedLevel": null,
-        "redundancy": [],
-        "auditRequirements": []
+        "index": 0
       }
     ],
-    "removed": [
-      "security-requirement-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "security-requirement-a",
+          "name": "Security Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "controlKind": "accessControl",
+          "threat": "Replaced Security Requirement A",
+          "riskLevel": "negligible",
+          "assetIds": [],
+          "zoneIds": [],
+          "accessLevel": "public",
+          "perimeterControls": [],
+          "surveillance": [],
+          "intrusionDetection": [],
+          "cybersecurity": [],
+          "screening": [],
+          "visitorManagement": [],
+          "keyManagement": [],
+          "standards": [],
+          "responseProcedures": [],
+          "drillFrequency": null,
+          "liaisonContacts": [],
+          "classifiedLevel": null,
+          "redundancy": [],
+          "auditRequirements": []
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "regulatory": null,
   "siteContext": null,

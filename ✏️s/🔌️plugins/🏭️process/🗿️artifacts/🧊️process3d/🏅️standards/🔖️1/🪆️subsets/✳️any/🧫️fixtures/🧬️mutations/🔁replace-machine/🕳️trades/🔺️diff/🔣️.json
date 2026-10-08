@@ -1,54 +1,54 @@
 {
   "workshop": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "saw",
-        "label": null,
-        "iconId": null,
-        "capabilities": [
-          {
-            "id": "pocket",
-            "label": "Pocket",
-            "iconId": "square",
-            "recipe": {
-              "recipe": "pocketCut",
-              "diameter": "diameter",
-              "depth": "depth"
-            },
-            "parameters": [
-              {
-                "id": "diameter",
-                "label": "Diameter",
-                "value": 0.125
+        "patch": {
+          "label": null,
+          "iconId": null,
+          "capabilities": [
+            {
+              "id": "pocket",
+              "label": "Pocket",
+              "iconId": "square",
+              "recipe": {
+                "recipe": "pocketCut",
+                "diameter": "diameter",
+                "depth": "depth"
               },
-              {
-                "id": "depth",
-                "label": "Depth",
-                "value": 0.25
-              }
-            ],
-            "rules": [
-              {
-                "kind": "min",
-                "quantity": "width",
-                "parameter": "diameter",
-                "margin": 0.0625
-              }
-            ]
-          }
-        ]
+              "parameters": [
+                {
+                  "id": "diameter",
+                  "label": "Diameter",
+                  "value": 0.125
+                },
+                {
+                  "id": "depth",
+                  "label": "Depth",
+                  "value": 0.25
+                }
+              ],
+              "rules": [
+                {
+                  "kind": "min",
+                  "quantity": "width",
+                  "parameter": "diameter",
+                  "margin": 0.0625
+                }
+              ]
+            }
+          ]
+        }
       }
-    ],
-    "reordered": null
+    ]
   },
   "stockId": null,
   "stockLabel": null,
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": null,
-  "stepPayloads": null,
-  "toolSolids": null
+  "stepPayloads": null
 }

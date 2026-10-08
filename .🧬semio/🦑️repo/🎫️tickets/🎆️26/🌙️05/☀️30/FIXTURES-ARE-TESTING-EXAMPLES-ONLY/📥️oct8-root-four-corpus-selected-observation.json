@@ -1,0 +1,9 @@
+{
+  "role": "Read-only selected findings; not authorship",
+  "paths": [
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source/🧬️schema/🔣️.json"
+  ]
+}

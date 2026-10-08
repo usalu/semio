@@ -17,11 +17,20 @@ import {
 } from "../🟦️.ts";
 
 export interface CadNodePatch { label?: string | null }
-export interface CadNodePatchEntry { id: string; patch: CadNodePatch }
-export interface CadNodesDelta { added: CadNode[]; removed: string[]; patched: CadNodePatchEntry[]; reordered: string[] | null }
+export interface CadNodeModification { id: string; patch: CadNodePatch }
+export interface CadNodeRemoval { id: string; index: number }
+export interface CadNodeRelocation { id: string; from: number; to: number }
+export interface CadReferenceRemoval { id: string; index: number }
+export interface CadReferenceRelocation { id: string; from: number; to: number }
+export interface CadDrawingRemoval { id: string; index: number }
+export interface CadDrawingRelocation { id: string; from: number; to: number }
+export interface CadBrepRemoval { id: string; index: number }
+export interface CadBrepRelocation { id: string; from: number; to: number }
+/** Positional delta: `removed` rows carry their base index, `inserted` rows their after index, `moved` rows both; no order list. */
+export interface CadNodesDelta { removed: CadNodeRemoval[]; inserted: Array<{ index: number; row: CadNode }>; moved: CadNodeRelocation[]; modified: CadNodeModification[] }
 export interface CadModelSlot { child: ArtifactChild | null }
-export interface CadDrawingsDelta { added: ArtifactChild[]; removed: string[]; reordered: string[] | null }
-export interface CadBrepsDelta { added: CadBrepChild[]; removed: string[]; reordered: string[] | null }
+export interface CadDrawingsDelta { removed: CadDrawingRemoval[]; inserted: Array<{ index: number; row: ArtifactChild }>; moved: CadDrawingRelocation[] }
+export interface CadBrepsDelta { removed: CadBrepRemoval[]; inserted: Array<{ index: number; row: CadBrepChild }>; moved: CadBrepRelocation[] }
 export interface CadOrientationSet { value: [number, number, number, number] | null }
 export interface CadScaleSet { value: number | null }
 export interface CadOpacitySet { value: number | null }
@@ -36,8 +45,8 @@ export interface CadReferencePatch {
   locked?: boolean | null;
   opacity?: CadOpacitySet | null;
 }
-export interface CadReferencePatchEntry { id: string; patch: CadReferencePatch }
-export interface CadReferencesDelta { added: CadReference[]; removed: string[]; patched: CadReferencePatchEntry[]; reordered: string[] | null }
+export interface CadReferenceModification { id: string; patch: CadReferencePatch }
+export interface CadReferencesDelta { removed: CadReferenceRemoval[]; inserted: Array<{ index: number; row: CadReference }>; moved: CadReferenceRelocation[]; modified: CadReferenceModification[] }
 
 export interface CadDiff {
   /** @state artifact */ schema?: string | null;
@@ -52,8 +61,30 @@ export interface CadDiff {
   /** @state artifact */ nodes?: CadNodesDelta | null;
 }
 
-const strings = (value: unknown, at: string): string[] => cadContractArray(value, at).map((item, index) => cadContractString(item, `${at}[${index}]`));
-const optionalStrings = (value: unknown, at: string): string[] | null => (value === null ? null : strings(value, at));
+
+const rowIndex = (value: unknown, at: string): number => {
+  const parsed = cadContractNumber(value, at);
+  if (!Number.isInteger(parsed) || parsed < 0) throw new Error(`${at}: non-negative integer required`);
+  return parsed;
+};
+const parseRemovals = (value: unknown, at: string): { id: string; index: number }[] =>
+  cadContractArray(value, at).map((item, index) => {
+    const path = `${at}[${index}]`, row = cadContractObject(item, path);
+    cadContractExact(row, ["id", "index"], ["id", "index"], path);
+    return { id: cadContractString(row.id, `${path}.id`), index: rowIndex(row.index, `${path}.index`) };
+  });
+const parseRelocations = (value: unknown, at: string): { id: string; from: number; to: number }[] =>
+  cadContractArray(value, at).map((item, index) => {
+    const path = `${at}[${index}]`, row = cadContractObject(item, path);
+    cadContractExact(row, ["id", "from", "to"], ["id", "from", "to"], path);
+    return { id: cadContractString(row.id, `${path}.id`), from: rowIndex(row.from, `${path}.from`), to: rowIndex(row.to, `${path}.to`) };
+  });
+const parseInsertions = <T,>(value: unknown, at: string, parse: (input: unknown, path: string) => T): Array<{ index: number; row: T }> =>
+  cadContractArray(value, at).map((item, index) => {
+    const path = `${at}[${index}]`, row = cadContractObject(item, path);
+    cadContractExact(row, ["index", "row"], ["index", "row"], path);
+    return { index: rowIndex(row.index, `${path}.index`), row: parse(row.row, `${path}.row`) };
+  });
 
 function parseNodePatch(value: unknown, at: string): CadNodePatch {
   const row = cadContractObject(value, at);
@@ -63,17 +94,17 @@ function parseNodePatch(value: unknown, at: string): CadNodePatch {
 
 function parseNodesDelta(value: unknown, at: string): CadNodesDelta {
   const row = cadContractObject(value, at);
-  const keys = ["added", "removed", "patched", "reordered"];
+  const keys = ["removed", "inserted", "moved", "modified"];
   cadContractExact(row, keys, keys, at);
   return {
-    added: cadContractArray(row.added, `${at}.added`).map((item, index) => parseCadNode(item, `${at}.added[${index}]`)),
-    removed: strings(row.removed, `${at}.removed`),
-    patched: cadContractArray(row.patched, `${at}.patched`).map((item, index) => {
-      const path = `${at}.patched[${index}]`, patch = cadContractObject(item, path);
+    removed: parseRemovals(row.removed, `${at}.removed`),
+    inserted: parseInsertions(row.inserted, `${at}.inserted`, parseCadNode),
+    moved: parseRelocations(row.moved, `${at}.moved`),
+    modified: cadContractArray(row.modified, `${at}.modified`).map((item, index) => {
+      const path = `${at}.modified[${index}]`, patch = cadContractObject(item, path);
       cadContractExact(patch, ["id", "patch"], ["id", "patch"], path);
       return { id: cadContractString(patch.id, `${path}.id`), patch: parseNodePatch(patch.patch, `${path}.patch`) };
     }),
-    reordered: optionalStrings(row.reordered, `${at}.reordered`),
   };
 }
 
@@ -85,12 +116,12 @@ function parseModelSlot(value: unknown, at: string): CadModelSlot {
 
 function parseChildrenDelta<S extends "drawing" | "brep">(value: unknown, subset: S, at: string) {
   const row = cadContractObject(value, at);
-  const keys = ["added", "removed", "reordered"];
+  const keys = ["removed", "inserted", "moved"];
   cadContractExact(row, keys, keys, at);
   return {
-    added: cadContractArray(row.added, `${at}.added`).map((item, index) => parseCadChild(item, subset, `${at}.added[${index}]`)),
-    removed: strings(row.removed, `${at}.removed`),
-    reordered: optionalStrings(row.reordered, `${at}.reordered`),
+    removed: parseRemovals(row.removed, `${at}.removed`),
+    inserted: parseInsertions(row.inserted, `${at}.inserted`, (input, path) => parseCadChild(input, subset, path)),
+    moved: parseRelocations(row.moved, `${at}.moved`),
   };
 }
 
@@ -121,17 +152,17 @@ function parseReferencePatch(value: unknown, at: string): CadReferencePatch {
 
 function parseReferencesDelta(value: unknown, at: string): CadReferencesDelta {
   const row = cadContractObject(value, at);
-  const keys = ["added", "removed", "patched", "reordered"];
+  const keys = ["removed", "inserted", "moved", "modified"];
   cadContractExact(row, keys, keys, at);
   return {
-    added: cadContractArray(row.added, `${at}.added`).map((item, index) => parseCadReference(item, `${at}.added[${index}]`)),
-    removed: strings(row.removed, `${at}.removed`),
-    patched: cadContractArray(row.patched, `${at}.patched`).map((item, index) => {
-      const path = `${at}.patched[${index}]`, patch = cadContractObject(item, path);
+    removed: parseRemovals(row.removed, `${at}.removed`),
+    inserted: parseInsertions(row.inserted, `${at}.inserted`, parseCadReference),
+    moved: parseRelocations(row.moved, `${at}.moved`),
+    modified: cadContractArray(row.modified, `${at}.modified`).map((item, index) => {
+      const path = `${at}.modified[${index}]`, patch = cadContractObject(item, path);
       cadContractExact(patch, ["id", "patch"], ["id", "patch"], path);
       return { id: cadContractString(patch.id, `${path}.id`), patch: parseReferencePatch(patch.patch, `${path}.patch`) };
     }),
-    reordered: optionalStrings(row.reordered, `${at}.reordered`),
   };
 }
 

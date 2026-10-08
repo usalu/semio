@@ -6,7 +6,8 @@ import "../../🔺️diff/🛰️.proto";
 
 // 🔧️ Direct set-object-value protobuf payload.
 message SetObjectValueMutation {
-  ObjRef id = 1;
-  PdfObject value = 2;
+  semio.s_stdio_pdf_1_7.snapshot.ObjRef id = 1;
+  semio.s_stdio_pdf_1_7.snapshot.PdfObject value = 2;
   optional uint64 index = 3;
+  semio.s_stdio_pdf_1_7.diff.PdfIndexedStreamRoleDiff admitted_stream_roles = 4;
 }

@@ -1,3 +1,4 @@
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤝️ The hub-edit-durability gate: is every accepted hub edit durable collaboration state?
  *
@@ -36,7 +37,7 @@ import { serviceHubCatalogPublisher } from "../../📇️catalog/📣️publishe
 import { devHubStatusTextV1, devHubLocaleV1, devLocalHubDataDir, ensureCurrentTrustedCatalogV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
 import { decodePresencePeer, decodeServerFrame, encodeClientFrame } from "../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+
 import { createSpaceCommandV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));

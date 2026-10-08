@@ -6,11 +6,15 @@
   "productSeries": null,
   "products": null,
   "productIndexes": {
-    "added": [],
     "removed": [
-      "index-pr600-m1"
+      {
+        "id": "index-pr600-m1",
+        "index": 1
+      }
     ],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "propertyDefinitions": null,
   "subjects": null,

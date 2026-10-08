@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeReinforcementFYk, base: &En1992Snapshot) -> protocol
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        reinforcement_grades: Some(En1992ReinforcementGradesRows { modified: vec![En1992ReinforcementGradesPatch { id: payload.grade_id.clone(), f_yk: Some(payload.new_f_yk), ..Default::default() }], ..Default::default() }),
+        reinforcement_grades: Some(En1992ReinforcementGradesRows::modification(&payload.grade_id, En1992ReinforcementGradesPatch { f_yk: Some(payload.new_f_yk), ..Default::default() })),
         ..Default::default()
     })
 }

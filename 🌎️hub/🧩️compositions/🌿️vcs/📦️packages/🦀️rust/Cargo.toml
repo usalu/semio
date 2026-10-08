@@ -19,6 +19,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "vcs"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6075, wgpu = 6175 }
 
 [lib]

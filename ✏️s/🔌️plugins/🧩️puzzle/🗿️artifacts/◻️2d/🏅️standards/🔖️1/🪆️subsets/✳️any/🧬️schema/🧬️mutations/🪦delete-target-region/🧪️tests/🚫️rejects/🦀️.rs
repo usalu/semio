@@ -8,7 +8,8 @@
 //! documents are written with.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 

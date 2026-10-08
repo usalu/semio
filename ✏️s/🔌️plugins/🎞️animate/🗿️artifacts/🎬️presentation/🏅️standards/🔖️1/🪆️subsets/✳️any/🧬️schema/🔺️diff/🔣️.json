@@ -33,18 +33,6 @@
         }
       ],
       "x-semio-state": "artifact"
-    },
-    "presentation": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
-        }
-      ],
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
     }
   },
   "$defs": {
@@ -198,48 +186,117 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FigureTileDraft"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PresentationTilesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PresentationTilePatch"
+            "$ref": "#/$defs/PresentationTilesInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PresentationTilesRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PresentationTilesModification"
           }
         }
-      },
+      }
+    },
+    "PresentationTilesModification": {
+      "title": "PresentationTilesModification",
+      "type": "object",
+      "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
-      ]
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/PresentationTilePatch"
+        }
+      }
+    },
+    "PresentationTilesRemoval": {
+      "title": "PresentationTilesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "PresentationTilesInsertion": {
+      "title": "PresentationTilesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "#/$defs/FigureTileDraft"
+        }
+      }
+    },
+    "PresentationTilesRelocation": {
+      "title": "PresentationTilesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     },
     "PresentationTilePatch": {
       "title": "PresentationTilePatch",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "name": {
           "type": [
             "string",
@@ -257,9 +314,7 @@
           ]
         }
       },
-      "required": [
-        "id"
-      ]
+      "required": []
     }
   }
 }

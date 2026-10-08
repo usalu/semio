@@ -92,7 +92,8 @@ mod subject {
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::mutation_bridge::apply_pdf_mutation;
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
     use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_4::subsets::base::project_pdf_1_4;
 
     /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.

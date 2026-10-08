@@ -86,8 +86,8 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-link-path/relinks-link-1-to-a-new-file: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().links.as_ref().expect("change-link-path fills the links delta");
-    assert_eq!(delta.patched.len(), 1, "change-link-path patches exactly one link");
-    assert_eq!(delta.patched[0].patch.path.as_deref(), Some("alpha-v2.png"), "change-link-path fills the patch's `path` field — the only field ImageLinkPatch has");
+    assert_eq!(delta.modified.len(), 1, "change-link-path patches exactly one link");
+    assert_eq!(delta.modified[0].patch.path.as_deref(), Some("alpha-v2.png"), "change-link-path fills the patch's `path` field — the only field ImageLinkPatch has");
 }
 
 /// 🔺️ The sparse delta `change-link-path` produces is exactly the committed diff — the most load-bearing

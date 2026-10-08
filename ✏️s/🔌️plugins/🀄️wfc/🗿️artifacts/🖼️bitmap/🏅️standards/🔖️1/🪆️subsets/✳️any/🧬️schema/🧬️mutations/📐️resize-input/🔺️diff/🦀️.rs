@@ -6,7 +6,7 @@
 //! declared") would not hold at the field level. The buffer is bounded by the same ceiling the
 //! document itself is, and a resize is not a per-frame gesture.
 
-use crate::diff::{BitmapDiff, BitmapInputOp};
+use crate::diff::{BitmapDiff, BitmapInputPatch, BitmapSize};
 use crate::schema::snapshot::{BitmapSnapshot, BITMAP_MAX_EDGE};
 
 pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -22,5 +22,5 @@ pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::Mu
     if base.input.indices().is_none() {
         return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
     }
-    protocol::MutationOutcome::new(BitmapDiff { input_ops: vec![BitmapInputOp::Resize { width: payload.width, height: payload.height }], ..Default::default() })
+    protocol::MutationOutcome::new(BitmapDiff { input: BitmapInputPatch { size: Some(BitmapSize { width: payload.width, height: payload.height }), writes: Vec::new() }, ..Default::default() })
 }

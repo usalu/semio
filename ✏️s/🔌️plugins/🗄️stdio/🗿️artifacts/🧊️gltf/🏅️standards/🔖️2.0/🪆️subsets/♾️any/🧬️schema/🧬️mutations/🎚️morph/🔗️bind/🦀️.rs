@@ -30,8 +30,8 @@ pub fn validate(payload: &GltfBindMorphTargetAttributePayload, base: &GltfSnapsh
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let value = with_replaced(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, GltfMorphTarget(with_inserted(&base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0, base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.len(), (p.semantic.clone(), p.accessor))));
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+    let rows = target_replacement(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, target_with_pair(&base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target], (p.semantic.clone(), p.accessor)));
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

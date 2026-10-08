@@ -2,7 +2,7 @@
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
-use crate::standards::v_ecma_376::subsets::base::schema::namespaces::{apply_bindings, expanded_name, is_word_name, qualified_word_prefix, set_word_attr, word_attr, XML_NAMESPACE};
+use crate::standards::v_ecma_376::subsets::base::schema::namespaces::{apply_bindings, expanded_name, scoped_bindings, is_word_name, qualified_word_prefix, set_word_attr, word_attr, XML_NAMESPACE};
 
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 
@@ -78,15 +78,13 @@ pub fn docx_run_formatting(snapshot: &DocxSnapshot, address: &DocxXmlAddress) ->
     let mut formatting = DocxRunFormatting::default();
     let XmlNode::Element { children, .. } = &resolved.node else { unreachable!() };
     for child in children {
-        let mut bindings = resolved.bindings.clone();
-        apply_bindings(child, &mut bindings);
+        let mut bindings = scoped_bindings(child, &resolved.bindings);
         if !is_word_name(child, "rPr", &bindings) {
             continue;
         }
         let XmlNode::Element { children, .. } = child else { unreachable!() };
         for property in children {
-            let mut bindings = bindings.clone();
-            apply_bindings(property, &mut bindings);
+            let mut bindings = scoped_bindings(property, &bindings);
             let enabled = !matches!(word_attr(property, "val", &bindings), Some("0" | "false" | "off" | "none"));
             if is_word_name(property, "b", &bindings) {
                 formatting.bold = Some(enabled);
@@ -144,12 +142,6 @@ fn scoped_node_at_path<'a>(root: &'a XmlNode, path: &[usize]) -> Result<(&'a Xml
 fn parent_bindings_at_path(root: &XmlNode, path: &[usize]) -> Result<Vec<(String, String)>, ValueError> {
     let Some((_, parent_path)) = path.split_last() else { return Ok(vec![("xml".into(), XML_NAMESPACE.into())]) };
     scoped_node_at_path(root, parent_path).map(|(_, bindings)| bindings)
-}
-
-fn node_mut_at_path<'a>(node: &'a mut XmlNode, path: &[usize]) -> Option<&'a mut XmlNode> {
-    let Some((&index, rest)) = path.split_first() else { return Some(node) };
-    let XmlNode::Element { children, .. } = node else { return None };
-    node_mut_at_path(children.get_mut(index)?, rest)
 }
 
 fn hash_bytes(hash: &mut u64, bytes: &[u8]) {
@@ -311,8 +303,7 @@ fn word_child_path(snapshot: &DocxSnapshot, part_path: &str, parent_path: &[usiz
     let XmlNode::Element { children, .. } = parent else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX XML path parent is not an element")) };
     let mut seen = 0usize;
     for (index, _) in children.iter().enumerate() {
-        let mut path = parent_path.to_vec();
-        path.push(index);
+        let path = [parent_path, &[index]].concat();
         let (child, bindings) = scoped_node_at_path(root, &path)?;
         if locals.iter().any(|local| is_word_name(child, local, &bindings)) {
             if seen == ordinal {
@@ -329,8 +320,7 @@ fn collect_word_descendants(snapshot: &DocxSnapshot, part_path: &str, parent_pat
         let (parent, _) = scoped_node_at_path(root, parent_path)?;
         let XmlNode::Element { children, .. } = parent else { return Ok(()) };
         for index in 0..children.len() {
-            let mut path = parent_path.to_vec();
-            path.push(index);
+            let path = [parent_path, &[index]].concat();
             let (child, bindings) = scoped_node_at_path(root, &path)?;
             if is_word_name(child, local, &bindings) {
                 paths.push(path.clone());
@@ -395,8 +385,7 @@ fn word_text(node: &XmlNode, bindings: &[(String, String)]) -> String {
         match node {
             XmlNode::Text { text } | XmlNode::CData { text } if inside_text => output.push_str(text),
             XmlNode::Element { children, .. } => {
-                let mut bindings = bindings.to_vec();
-                apply_bindings(node, &mut bindings);
+                let mut bindings = scoped_bindings(node, &bindings);
                 let inside_text = inside_text || is_word_name(node, "t", &bindings);
                 for child in children {
                     append(child, &bindings, inside_text, output);
@@ -423,16 +412,14 @@ pub fn docx_top_level_run_at(snapshot: &DocxSnapshot, block_index: usize, run_in
 }
 
 fn contains_word_run(node: &XmlNode, parent_bindings: &[(String, String)]) -> bool {
-    let mut bindings = parent_bindings.to_vec();
-    apply_bindings(node, &mut bindings);
+    let mut bindings = scoped_bindings(node, &parent_bindings);
     is_word_name(node, "r", &bindings) || matches!(node, XmlNode::Element { children, .. } if children.iter().any(|child| contains_word_run(child, &bindings)))
 }
 
 /// 🧭️ Projects text targets in document order with a single traversal of each body block.
 pub fn docx_top_level_text_targets(snapshot: &DocxSnapshot, block_index: usize) -> Result<Vec<DocxEditableText>, ValueError> {
     fn visit(part_path: &str, root: &XmlNode, node: &XmlNode, path: &mut Vec<usize>, parent_bindings: &[(String, String)], targets: &mut Vec<DocxEditableText>) -> Result<(), ValueError> {
-        let mut bindings = parent_bindings.to_vec();
-        apply_bindings(node, &mut bindings);
+        let bindings = scoped_bindings(node, &parent_bindings);
         let kind = if is_word_name(node, "r", &bindings) {
             Some(DocxTextTargetKind::Run)
         } else if is_word_name(node, "p", &bindings) && !contains_word_run(node, parent_bindings) {
@@ -531,8 +518,7 @@ pub fn docx_styles_root(snapshot: &DocxSnapshot) -> Result<(DocxXmlAddress, Vec<
     let ids = children
         .iter()
         .map(|child| {
-            let mut bindings = root_bindings.clone();
-            apply_bindings(child, &mut bindings);
+            let bindings = scoped_bindings(child, &root_bindings);
             if is_word_name(child, "style", &bindings) { word_attr(child, "styleId", &bindings).map(str::to_string) } else { None }
         })
         .collect();
@@ -586,8 +572,7 @@ fn word_name_like(node: &XmlNode, local: &str) -> Result<String, ValueError> {
 fn direct_word_child_index(node: &XmlNode, parent_bindings: &[(String, String)], local: &str) -> Option<usize> {
     let XmlNode::Element { children, .. } = node else { return None };
     children.iter().enumerate().find_map(|(index, child)| {
-        let mut bindings = parent_bindings.to_vec();
-        apply_bindings(child, &mut bindings);
+        let mut bindings = scoped_bindings(child, &parent_bindings);
         is_word_name(child, local, &bindings).then_some(index)
     })
 }
@@ -598,8 +583,7 @@ fn direct_word_child_indices(node: &XmlNode, parent_bindings: &[(String, String)
         .iter()
         .enumerate()
         .filter_map(|(index, child)| {
-            let mut bindings = parent_bindings.to_vec();
-            apply_bindings(child, &mut bindings);
+            let mut bindings = scoped_bindings(child, &parent_bindings);
             is_word_name(child, local, &bindings).then_some(index)
         })
         .collect()
@@ -612,12 +596,15 @@ pub(super) fn run_with_text(resolved: &ResolvedDocxXmlAddress, text: &str) -> Re
     if word_text(&resolved.node, &resolved.bindings) == text {
         return Ok(resolved.node.clone());
     }
-    let mut run = resolved.node.clone();
+    edited_run_text(resolved.node.clone(), &resolved.bindings, text)
+}
+
+/// ✍️ The run `run` (an owned copy of the addressed run) with its text nodes holding `text`: the first `w:t` takes it, the others are emptied.
+fn edited_run_text(mut run: XmlNode, scope: &[(String, String)], text: &str) -> Result<XmlNode, ValueError> {
     let XmlNode::Element { name: run_name, children, .. } = &mut run else { unreachable!() };
     let mut found = false;
     for child in children.iter_mut() {
-        let mut bindings = resolved.bindings.clone();
-        apply_bindings(child, &mut bindings);
+        let bindings = scoped_bindings(child, scope);
         if !is_word_name(child, "t", &bindings) {
             continue;
         }
@@ -645,16 +632,19 @@ pub(super) fn run_with_formatting(resolved: &ResolvedDocxXmlAddress, bold: bool,
     if !is_word_name(&resolved.node, "r", &resolved.bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("set-run-formatting requires a WordprocessingML run, got {}", resolved.node_name())));
     }
-    let mut run = resolved.node.clone();
+    edited_run_formatting(resolved.node.clone(), &resolved.bindings, bold, italic, underline)
+}
+
+/// 🎨 The run `run` (an owned copy of the addressed run) whose direct `b`, `i` and `u` properties hold the requested formatting.
+fn edited_run_formatting(mut run: XmlNode, scope: &[(String, String)], bold: bool, italic: bool, underline: bool) -> Result<XmlNode, ValueError> {
     let rpr_name = word_name_like(&run, "rPr")?;
+    let existing = direct_word_child_index(&run, scope, "rPr");
     let XmlNode::Element { children, .. } = &mut run else { unreachable!() };
-    let existing = direct_word_child_index(&resolved.node, &resolved.bindings, "rPr");
     let rpr_index = existing.unwrap_or_else(|| {
         children.insert(0, XmlNode::Element { name: rpr_name.clone(), attrs: Vec::new(), children: Vec::new() });
         0
     });
-    let mut bindings = resolved.bindings.clone();
-    apply_bindings(&children[rpr_index], &mut bindings);
+    let mut bindings = scoped_bindings(&children[rpr_index], scope);
     for (local, value) in [("b", if bold { "1" } else { "0" }), ("i", if italic { "1" } else { "0" }), ("u", if underline { "single" } else { "none" })] {
         let indices = direct_word_child_indices(&children[rpr_index], &bindings, local);
         if indices.is_empty() {
@@ -664,8 +654,7 @@ pub(super) fn run_with_formatting(resolved: &ResolvedDocxXmlAddress, bold: bool,
         } else {
             let XmlNode::Element { children: properties, .. } = &mut children[rpr_index] else { unreachable!() };
             for index in indices {
-                let mut property_bindings = bindings.clone();
-                apply_bindings(&properties[index], &mut property_bindings);
+                let mut property_bindings = scoped_bindings(&properties[index], &bindings);
                 set_word_attr(&mut properties[index], "val", value, &mut property_bindings)?;
             }
         }
@@ -692,8 +681,7 @@ fn paragraph_style_exists(snapshot: &DocxSnapshot, style_id: &str) -> Result<boo
     }
     let XmlNode::Element { children, .. } = root else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX styles root is not an element")) };
     for child in children {
-        let mut bindings = root_bindings.clone();
-        apply_bindings(child, &mut bindings);
+        let mut bindings = scoped_bindings(child, &root_bindings);
         if !is_word_name(child, "style", &bindings) {
             continue;
         }
@@ -715,10 +703,14 @@ pub(super) fn paragraph_with_style(snapshot: &DocxSnapshot, resolved: &ResolvedD
             return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX paragraph style {style_id:?} does not exist")));
         }
     }
-    let mut paragraph = resolved.node.clone();
+    edited_paragraph_style(resolved.node.clone(), &resolved.bindings, style_id)
+}
+
+/// 🖌️ The paragraph `paragraph` (an owned copy of the addressed paragraph) whose `pPr/pStyle` names `style_id` (`None` removes it).
+fn edited_paragraph_style(mut paragraph: XmlNode, scope: &[(String, String)], style_id: Option<&str>) -> Result<XmlNode, ValueError> {
     let ppr_name = word_name_like(&paragraph, "pPr")?;
+    let existing = direct_word_child_index(&paragraph, scope, "pPr");
     let XmlNode::Element { children, .. } = &mut paragraph else { unreachable!() };
-    let existing = direct_word_child_index(&resolved.node, &resolved.bindings, "pPr");
     if existing.is_none() && style_id.is_none() {
         return Ok(paragraph);
     }
@@ -726,8 +718,7 @@ pub(super) fn paragraph_with_style(snapshot: &DocxSnapshot, resolved: &ResolvedD
         children.insert(0, XmlNode::Element { name: ppr_name.clone(), attrs: Vec::new(), children: Vec::new() });
         0
     });
-    let mut bindings = resolved.bindings.clone();
-    apply_bindings(&children[ppr_index], &mut bindings);
+    let mut bindings = scoped_bindings(&children[ppr_index], scope);
     let indices = direct_word_child_indices(&children[ppr_index], &bindings, "pStyle");
     if let Some(style_id) = style_id {
         if indices.is_empty() {
@@ -737,8 +728,7 @@ pub(super) fn paragraph_with_style(snapshot: &DocxSnapshot, resolved: &ResolvedD
         } else {
             let XmlNode::Element { children: properties, .. } = &mut children[ppr_index] else { unreachable!() };
             for index in indices {
-                let mut property_bindings = bindings.clone();
-                apply_bindings(&properties[index], &mut property_bindings);
+                let mut property_bindings = scoped_bindings(&properties[index], &bindings);
                 set_word_attr(&mut properties[index], "val", style_id, &mut property_bindings)?;
             }
         }
@@ -797,8 +787,7 @@ pub(super) fn table_row_removal(resolved: &ResolvedDocxXmlAddress, index: usize)
 }
 
 pub(super) fn child_identity(resolved: &ResolvedDocxXmlAddress, node: &XmlNode) -> Result<String, ValueError> {
-    let mut bindings = resolved.bindings.clone();
-    apply_bindings(node, &mut bindings);
+    let mut bindings = scoped_bindings(node, &resolved.bindings);
     node_identity(node, &bindings)
 }
 
@@ -808,26 +797,12 @@ impl ResolvedDocxXmlAddress {
     }
 }
 
-pub(super) fn validate_replacement_identity(resolved: &ResolvedDocxXmlAddress, replacement: &XmlNode) -> Result<(), ValueError> {
-    let mut bindings = resolved.parent_bindings.clone();
-    apply_bindings(replacement, &mut bindings);
+pub fn validate_replacement_identity(resolved: &ResolvedDocxXmlAddress, replacement: &XmlNode) -> Result<(), ValueError> {
+    let bindings = scoped_bindings(replacement, &resolved.parent_bindings);
     let actual = node_identity(replacement, &bindings)?;
     let expected = node_identity(&resolved.node, &resolved.bindings)?;
     if actual != expected {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("replacement XML node identity {actual} does not match {expected}")));
     }
     Ok(())
-}
-
-pub(super) fn replace_addressed_node(snapshot: &mut DocxSnapshot, address: &DocxXmlAddress, replacement: XmlNode) -> Result<(), ValueError> {
-    let resolved = resolve_docx_xml_address(snapshot, address)?;
-    validate_replacement_identity(&resolved, &replacement)?;
-    let part_index = resolved.part_index;
-    let mut document = snapshot.xml_parts[part_index].materialize_document_exact()?;
-    let root = document.root.as_mut().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX XML part {} has no root", address.part_path)))?;
-    let node = node_mut_at_path(root, &address.node_path).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"DOCX XML address became stale during apply".to_string()))?;
-    *node = replacement;
-    semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&document).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
-    snapshot.xml_parts[part_index].replace_document(document)?;
-    snapshot.validate_authority().map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)
 }

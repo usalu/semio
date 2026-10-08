@@ -1,0 +1,201 @@
+{
+  "schema": "semio.stdio.txt.splice-text.v1",
+  "note": "One explicit Apply of the plain-text window is ONE splice-text mutation: the ranges the editor made, ascending and disjoint, in Unicode scalars of the body as the line ending joins it. `after` is the text the ranges mean; `null` is a change the native shape refuses.",
+  "cases": [
+    {
+      "id": "unchanged",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 0,
+          "insert": ""
+        }
+      ],
+      "after": "alpha\nbeta\ngamma\n"
+    },
+    {
+      "id": "replaces-inside-a-line",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 6,
+          "delete": 4,
+          "insert": "BETA"
+        }
+      ],
+      "after": "alpha\nBETA\ngamma\n"
+    },
+    {
+      "id": "a-newline-splits-a-line",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 8,
+          "delete": 0,
+          "insert": "\n"
+        }
+      ],
+      "after": "alpha\nbe\nta\ngamma\n"
+    },
+    {
+      "id": "deleting-a-separator-joins-lines",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 5,
+          "delete": 1,
+          "insert": ""
+        }
+      ],
+      "after": "alphabeta\ngamma\n"
+    },
+    {
+      "id": "typing-after-the-terminator-adds-an-unterminated-line",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 17,
+          "delete": 0,
+          "insert": "delta"
+        }
+      ],
+      "after": "alpha\nbeta\ngamma\ndelta"
+    },
+    {
+      "id": "deleting-the-terminator-drops-the-flag",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 16,
+          "delete": 1,
+          "insert": ""
+        }
+      ],
+      "after": "alpha\nbeta\ngamma"
+    },
+    {
+      "id": "two-ranges-in-base-coordinates",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 1,
+          "insert": "A"
+        },
+        {
+          "offset": 11,
+          "delete": 5,
+          "insert": "G"
+        }
+      ],
+      "after": "Alpha\nbeta\nG\n"
+    },
+    {
+      "id": "two-ranges-in-one-line-merge-their-window",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 1,
+          "delete": 1,
+          "insert": "L"
+        },
+        {
+          "offset": 3,
+          "delete": 1,
+          "insert": "H"
+        }
+      ],
+      "after": "aLpHa\nbeta\ngamma\n"
+    },
+    {
+      "id": "deleting-everything-empties-the-document",
+      "before": "alpha\nbeta\ngamma\n",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 17,
+          "insert": ""
+        }
+      ],
+      "after": ""
+    },
+    {
+      "id": "typing-into-an-empty-document",
+      "before": "",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 0,
+          "insert": "first\nsecond\n"
+        }
+      ],
+      "after": "first\nsecond\n"
+    },
+    {
+      "id": "astral-scalars-count-once",
+      "before": "a😀b\nc\n",
+      "splices": [
+        {
+          "offset": 2,
+          "delete": 1,
+          "insert": "x"
+        }
+      ],
+      "after": "a😀x\nc\n"
+    },
+    {
+      "id": "crlf-document-keeps-its-separator",
+      "before": "a\r\nb\r\n",
+      "splices": [
+        {
+          "offset": 3,
+          "delete": 1,
+          "insert": "BB"
+        }
+      ],
+      "after": "a\r\nBB\r\n"
+    },
+    {
+      "id": "a-bare-cr-before-lf-is-refused",
+      "before": "a\nb\n",
+      "splices": [
+        {
+          "offset": 1,
+          "delete": 0,
+          "insert": "\r"
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "a-range-beyond-the-text-is-refused",
+      "before": "a\nb\n",
+      "splices": [
+        {
+          "offset": 10,
+          "delete": 0,
+          "insert": "x"
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "overlapping-ranges-are-refused",
+      "before": "abcdef\n",
+      "splices": [
+        {
+          "offset": 0,
+          "delete": 3,
+          "insert": "x"
+        },
+        {
+          "offset": 2,
+          "delete": 1,
+          "insert": "y"
+        }
+      ],
+      "after": null
+    }
+  ]
+}

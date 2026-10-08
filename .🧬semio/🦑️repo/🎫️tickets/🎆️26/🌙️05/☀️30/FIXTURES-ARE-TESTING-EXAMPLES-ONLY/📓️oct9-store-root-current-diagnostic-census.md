@@ -1,0 +1,322 @@
+# Current Store Root Compiler Census
+
+Actual Native83030 terminal is the RED source. No Kernel native assertion ran. The following diagnostics are historical compile observations; every source block is freshly checked before owned mutation.
+
+- 11018: E0407 method `next_close_byte_demand` is not a member of trait `ArtifactEnvelopeVcsFieldAuthority`
+- 5043: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 5455: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 7182: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 7484: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 8737: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 8955: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10146: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10245: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10328: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10364: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10894: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10898: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 10905: E0425 cannot find function `owned_retirement` in module `semio_framework_value::retirement`
+- 10916: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 11060: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 11447: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 23174: E0425 cannot find value `identity` in this scope
+- 23181: E0425 cannot find value `identity` in this scope
+- 27078: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 27078: E0425 cannot find type `SnapshotRetirementRejected` in this scope
+- 27083: E0425 cannot find type `SnapshotRetirementRejected` in this scope
+- 27443: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 27443: E0425 cannot find type `SnapshotRetirementRejected` in this scope
+- 27444: E0422 cannot find struct, variant or union type `SnapshotRetirementRejected` in this scope
+- 27470: E0425 cannot find type `SnapshotRetirementRejected` in this scope
+- 27472: E0422 cannot find struct, variant or union type `SnapshotRetirementRejected` in this scope
+- 27475: E0422 cannot find struct, variant or union type `SnapshotRetirementRejected` in this scope
+- 27801: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 27801: E0425 cannot find type `SnapshotRetirementRejected` in this scope
+- 27815: E0425 cannot find type `SnapshotRetirementRejected` in this scope
+- 28560: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 30162: E0425 cannot find type `SnapshotRetirementStep` in this scope
+- 28135: E0425 cannot find type `Author` in module `$crate::os_store`
+- 28135: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28144: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28147: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28156: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28159: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28168: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28171: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28174: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28177: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28180: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28192: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28195: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28201: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28204: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28207: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28210: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28251: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28254: E0433 cannot find `VcsError` in `os_store`
+- 28257: E0425 cannot find type `VcsError` in module `$crate::os_store`
+- 28260: E0433 cannot find `VcsError` in `os_store`
+- 30152: E0050 method `retire` has 2 parameters but the declaration in trait `semio_framework_value::SnapshotRetirementFactory::retire` has 3
+- 30162: E0050 method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2
+- 30161: E0046 not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`
+- 30181: E0050 method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3
+- 30180: E0046 not all trait items implemented, missing: `retirement_birth_bytes`
+- 28560: E0050 method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2
+- 28559: E0046 not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`
+- 28581: E0050 method `retire` has 2 parameters but the declaration in trait `semio_framework_value::SnapshotRetirementFactory::retire` has 3
+- 28590: E0050 method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3
+- 28589: E0046 not all trait items implemented, missing: `retirement_birth_bytes`
+- 28596: E0050 method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3
+- 28595: E0046 not all trait items implemented, missing: `retirement_birth_bytes`
+- 10022: E0050 method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2
+- 10146: E0050 method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2
+- 10138: E0046 not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`
+- 10245: E0050 method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2
+- 10240: E0046 not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`
+- 11060: E0050 method `close_step` has 3 parameters but the declaration in trait `os_store::component::ArtifactEnvelopeVcsFieldAuthority::close_step` has 2
+- 10978: E0046 not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand`
+- 8955: E0050 method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2
+- 8950: E0046 not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`
+- 4104: E0061 this function takes 1 argument but 0 arguments were supplied
+- 4104: E0308 mismatched types
+- 4125: E0061 this function takes 1 argument but 0 arguments were supplied
+- 4125: E0308 mismatched types
+- 29811: E0061 this method takes 2 arguments but 1 argument was supplied
+- 29813: E0061 this method takes 2 arguments but 1 argument was supplied
+- 29815: E0061 this method takes 2 arguments but 1 argument was supplied
+- 28567: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 28608: E0061 this function takes 5 arguments but 4 arguments were supplied
+- 28608: E0308 mismatched types
+- 28640: E0061 this method takes 1 argument but 2 arguments were supplied
+- 28640: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 30102: E0061 this function takes 2 arguments but 3 arguments were supplied
+- 30116: E0061 this function takes 5 arguments but 4 arguments were supplied
+- 30116: E0308 mismatched types
+- 30142: E0061 this method takes 1 argument but 2 arguments were supplied
+- 30142: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 30169: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 27306: E0277 the trait bound `Arc<_>: ArtifactStoreBatchItemAuthority<P, Mutation>` is not satisfied
+- 27315: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 27343: E0560 struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`
+- 27343: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 27373: E0560 struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`
+- 27373: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 27437: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 20229: E0599 no method named `try_take_one_returned` found for struct `ManuallyDrop<os_store::component::SnapshotReadLeaseRegistryOwner>` in the current scope
+- 20244: E0308 mismatched types
+- 20244: E0277 `?` couldn't convert the error to `semio_framework_value::ValueError`
+- 24659: E0061 this method takes 1 argument but 2 arguments were supplied
+- 20315: E0308 mismatched types
+- 20351: E0308 mismatched types
+- 19527: E0599 no associated function or constant named `progress` found for struct `os_store::component::EditReplay<_, _>` in the current scope
+- 19621: E0599 no associated function or constant named `is_finished` found for struct `os_store::component::EditReplay<_, _>` in the current scope
+- 19670: E0061 this function takes 2 arguments but 1 argument was supplied
+- 19670: E0308 mismatched types
+- 21204: E0061 this method takes 2 arguments but 1 argument was supplied
+- 21204: E0631 type mismatch in function arguments
+- 21205: E0308 mismatched types
+- 21233: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 21236: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 21237: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 19721: E0061 this method takes 2 arguments but 1 argument was supplied
+- 19721: E0308 mismatched types
+- 21465: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 21476: E0609 no field `inverse` on type `std::option::Option<std::boxed::Box<protocol::Edit<Mutation>>>`
+- 21479: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 21482: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 21482: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 21483: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 19749: E0061 this method takes 2 arguments but 1 argument was supplied
+- 21545: E0061 this method takes 2 arguments but 1 argument was supplied
+- 19749: E0308 mismatched types
+- 21545: E0308 mismatched types
+- 19779: E0061 this method takes 2 arguments but 1 argument was supplied
+- 19779: E0308 mismatched types
+- 19786: E0061 this method takes 2 arguments but 1 argument was supplied
+- 19786: E0308 mismatched types
+- 10910: E0061 this method takes 2 arguments but 1 argument was supplied
+- 10910: E0308 mismatched types
+- 10913: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10920: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 20040: E0061 this method takes 2 arguments but 1 argument was supplied
+- 22393: E0061 this method takes 2 arguments but 1 argument was supplied
+- 22393: E0308 mismatched types
+- 10921: E0061 this method takes 1 argument but 2 arguments were supplied
+- 20040: E0308 mismatched types
+- 10922: E0061 this method takes 1 argument but 2 arguments were supplied
+- 10923: E0061 this method takes 1 argument but 2 arguments were supplied
+- 10924: E0061 this method takes 1 argument but 2 arguments were supplied
+- 10926: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10974: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5049: E0560 struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`
+- 5049: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 5050: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5061: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 5061: E0061 this function takes 4 arguments but 5 arguments were supplied
+- 5062: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5067: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 11026: E0599 no method named `next_close_byte_demand` found for reference `&std::boxed::Box<dyn os_store::component::ArtifactEnvelopeSnapshotFieldAuthority<P>>` in the current scope
+- 11034: E0425 cannot find function `artifact_retirement_box_byte_demand` in this scope
+- 5067: E0061 this method takes 1 argument but 2 arguments were supplied
+- 5068: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5088: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 5096: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 8956: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 8967: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 8999: E0061 this function takes 2 arguments but 3 arguments were supplied
+- 11041: E0599 no method named `next_close_byte_demand` found for reference `&os_store::component::OwnedSchemaBoundedArrayAuthority<protocol::Edit<Mutation>>` in the current scope
+- 9767: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11042: E0599 no method named `next_close_byte_demand` found for reference `&os_store::component::OwnedSchemaBoundedArrayAuthority<os_vcs::Change>` in the current scope
+- 10042: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10042: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10044: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10051: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10051: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10064: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10064: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10072: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10072: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10084: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10084: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10088: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10088: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10096: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_items`
+- 10096: E0559 variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`
+- 10103: E0533 expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete`
+- 10155: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10161: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10174: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10193: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 4998: E0560 struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`
+- 4998: E0609 no field `maximum_bytes` on type `os_store::component::ArtifactStoreOneItemGrant`
+- 10203: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10208: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10251: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10265: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10274: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10277: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10369: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11043: E0599 no method named `next_close_byte_demand` found for reference `&os_store::component::OwnedSchemaBoundedArrayAuthority<os_vcs::Checkpoint>` in the current scope
+- 10374: E0061 this method takes 1 argument but 2 arguments were supplied
+- 10377: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11044: E0599 no method named `next_close_byte_demand` found for reference `&os_store::component::OwnedSchemaBoundedArrayAuthority<os_vcs::Alternative>` in the current scope
+- 10895: E0061 this function takes 2 arguments but 3 arguments were supplied
+- 5791: E0061 this method takes 2 arguments but 1 argument was supplied
+- 5791: E0308 mismatched types
+- 11067: E0599 no method named `next_close_byte_demand` found for mutable reference `&mut Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>` in the current scope
+- 11074: E0061 this method takes 1 argument but 2 arguments were supplied
+- 11094: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 6149: E0061 this method takes 2 arguments but 1 argument was supplied
+- 6149: E0308 mismatched types
+- 7188: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11422: E0599 no method named `next_close_byte_demand` found for reference `&Box<dyn ArtifactEnvelopeVcsFieldAuthority<P, Mutation>>` in the current scope
+- 11423: E0599 no method named `next_close_byte_demand` found for reference `&Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>` in the current scope
+- 11428: E0425 cannot find function `artifact_retirement_box_byte_demand` in this scope
+- 11455: E0061 this method takes 1 argument but 2 arguments were supplied
+- 11464: E0061 this method takes 1 argument but 2 arguments were supplied
+- 11495: E0061 this function takes 2 arguments but 3 arguments were supplied
+- 11506: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5460: E0061 this method takes 1 argument but 2 arguments were supplied
+- 5461: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5493: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5549: E0308 mismatched types
+- 5551: E0308 mismatched types
+- 11895: E0061 this method takes 1 argument but 2 arguments were supplied
+- 151: E0599 no associated function or constant named `operation_preparation_progress` found for struct `os_store::component::EditReplay<_, _>` in the current scope
+- 12140: E0061 this function takes 1 argument but 0 arguments were supplied
+- 12140: E0308 mismatched types
+- 12162: E0593 function is expected to take 0 arguments, but it takes 1 argument
+- 12162: E0593 function is expected to take 0 arguments, but it takes 1 argument
+- 12162: E0593 function is expected to take 0 arguments, but it takes 1 argument
+- 9507: E0507 cannot move out of `self.reservation` as enum variant `Some` which is behind a mutable reference
+- 5058: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5075: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5081: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5084: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5089: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5092: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5457: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5468: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5474: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5477: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5483: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5488: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 5491: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 7184: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 7187: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 8959: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 8959: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 8960: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9000: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9001: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9002: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9782: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9789: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9793: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9794: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9827: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9831: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9832: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 9833: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10046: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10053: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10057: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10060: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10087: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10090: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10091: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10092: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10148: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10159: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10163: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10169: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10171: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10177: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10190: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10197: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10200: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10247: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10258: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10262: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10366: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10371: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10375: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10379: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10902: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10906: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10911: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10940: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10945: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10948: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10953: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10956: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10961: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10964: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10969: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 10972: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11062: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11072: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11075: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11081: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11084: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11091: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11098: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11449: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11456: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11465: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11482: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11486: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11491: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11497: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11501: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11896: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11900: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 11901: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 24660: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 24660: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 24661: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 27452: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 28562: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 28565: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 30164: E0433 cannot find type `SnapshotRetirementStep` in this scope
+- 30167: E0433 cannot find type `SnapshotRetirementStep` in this scope

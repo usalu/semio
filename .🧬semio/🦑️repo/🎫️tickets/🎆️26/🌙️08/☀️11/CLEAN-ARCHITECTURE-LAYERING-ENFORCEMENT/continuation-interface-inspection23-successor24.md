@@ -1,0 +1,7 @@
+# Inspection 23 and Corrected Successor 24
+
+The registered strict inspection completed with actual process exit 1. It retained 700 full input frames, zero missing imports, all snapshot and physical postguards true, and two diagnostics: preparation line 36 referenced an unbound control, and workspace-contract schema compilation received a TypeScript unknown value. All five preceding registered routes completed with actual outer exit 0; receiving red and green retained original inner exit 1 and 0. No whole execution or publication occurred.
+
+Successor 24 preserves the full immutable 23 evidence and all 41 original laws, 177 candidate bodies, eight retirement rows, nine companion inputs, complete original import corpus, full Root47 corpus and both schemas, and original controls. The corrections bind a fresh CargoController in each preparation loop iteration and pass an exact JSON clone to the independent strict Ajv compile oracle. Recipe identity now binds the originating manifest and its full script/command, preserving different authored commands sharing one script.
+
+Frozen successor 24 producer SHA-256: `8de11d0845eb45d213997e1aee7e8b05f4b7f75dbf005579be535d7c01b951c1`; 202 full defining input bodies. Fresh exact guards pass. Seven exact successor 24 rows are authored in `cargo-inputs/📥️current-origin/gui-additions-67.json`, awaiting actual launch admission before execution. Source and report changes are confined to the ticket.

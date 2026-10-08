@@ -116,8 +116,14 @@
           ]
         },
         "value": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$"
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "minItems": 4,
+          "maxItems": 4
         }
       },
       "required": [
@@ -256,9 +262,19 @@
           ]
         },
         "value": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[ \\t\\r\\n]*(?:(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[ \\t\\r\\n]+(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+))*)?[ \\t\\r\\n]*$"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "maxItems": 64
+            }
+          ]
         }
       },
       "required": [

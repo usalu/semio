@@ -6,11 +6,15 @@
     "rows": [
       {
         "row": "remove",
-        "id": "blk-image"
+        "id": "blk-image",
+        "parentId": null,
+        "index": 4
       },
       {
         "row": "remove",
-        "id": "blk-ink"
+        "id": "blk-ink",
+        "parentId": null,
+        "index": 1
       }
     ]
   },

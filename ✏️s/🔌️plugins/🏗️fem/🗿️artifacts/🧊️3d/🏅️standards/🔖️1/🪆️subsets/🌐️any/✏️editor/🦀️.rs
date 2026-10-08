@@ -943,13 +943,9 @@ impl ArtifactEditor for Fem3dPlayApp {
         }
     }
 
-    /// 🧬️ No `whole_document_operation` override on this impl — per `📓️taxonomy.md`, whole-document
-    /// replace (`SetSnapshot`) is banned outright with NO replacement mutation, so this falls back to
-    /// the trait's own default (`None`).
-    ///
     /// 🎞️ `"artifact:in"` swaps the whole live document via `reset_document_effect` (a
     /// `Effect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
-    /// `reset_document_effect`'s own doc comment) instead of routing through `whole_document_operation`.
+    /// `reset_document_effect`'s own doc comment).
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...],
     /// "baseZ"?: f64, "height"?: f64, "layers"?: usize}` extruded-footprint contract into a new
     /// `FemSolid`, defaulted to the document's first existing material if any, else an `"unassigned"`

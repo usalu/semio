@@ -67,9 +67,6 @@ impl Din16798Artifact {
             night_setback_k: snapshot.night_setback_k,
         }
     }
-    pub fn set_snapshot(&mut self, snapshot: crate::Din16798Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 //#endregion 🔖️Conversions
 

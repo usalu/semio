@@ -31,7 +31,7 @@ impl InteractiveJob for EntryProbe {
     }
 
     fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self, _: usize, _: usize) -> InteractiveJobCloseStep { InteractiveJobCloseStep::Complete }
+    fn close_step(&mut self,_:RetainedCloneGrant)->InteractiveJobCloseStep { InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()} }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
@@ -46,7 +46,7 @@ fn microsecond_zero_expired_or_empty_fuel_never_enters_job() {
         let mut sequence = 0;
         let outcome = drive_step(&mut probe, "microsecond-entry", allocate_operation_id(), Generation(1), InteractiveStage::InteractiveStep, StepBudget::new(fuel, deadline), root_cancel_token(), now, &mut sequence, &mut None);
         probe.begin_close();
-        assert_eq!(probe.close_step(1, 4_096), InteractiveJobCloseStep::Complete);
+        assert_eq!(probe.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
         assert!(probe.terminal_is_empty());
         assert!(matches!(outcome, StepOutcome::Yield));
         assert_eq!(probe.entered, 0, "expired or exhausted grant entered job: fuel={fuel}, deadline={deadline}");
@@ -84,7 +84,7 @@ fn microsecond_language_neutral_deadline_boundaries_and_overflow() {
 fn close_authority(mut authority: WorkerJobAuthorityOwner<EntryProbe>) -> usize {
     let job = authority.job.as_mut().unwrap();
     job.begin_close();
-    assert_eq!(job.close_step(1, 4_096), InteractiveJobCloseStep::Complete);
+    assert_eq!(job.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
     assert!(job.terminal_is_empty());
     let entered = job.entered;
     if let Some(outcome) = authority.outcome.as_mut() {
@@ -151,7 +151,7 @@ impl InteractiveJob for CompletionProbe {
         StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
     }
     fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self, _: usize, _: usize) -> InteractiveJobCloseStep { InteractiveJobCloseStep::Complete }
+    fn close_step(&mut self,_:RetainedCloneGrant)->InteractiveJobCloseStep { InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()} }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
@@ -186,14 +186,15 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
         let ledger = Arc::clone(&owner.authority.as_ref().unwrap().payload_ledger);
         owner.begin_close();
         let owned_bytes = ledger.bytes.load(Ordering::Acquire);
-        let _ = session.close_step(0, 0);
+        let _ = session.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()});
         assert_eq!(ledger.bytes.load(Ordering::Acquire), owned_bytes);
         let mut released_bytes = 0;
         for _ in 0..64 {
-            match session.close_step(1, JOB_PAYLOAD_PAGE_BYTES) {
-                WorkerJobCloseStep::Pending { released_items, released_bytes: bytes } => { assert!(released_items <= 1 && bytes <= JOB_PAYLOAD_PAGE_BYTES); released_bytes += bytes; }
+            match session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()}) {
+                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= JOB_PAYLOAD_PAGE_BYTES); released_bytes += bytes; }
                 WorkerJobCloseStep::Blocked => std::thread::yield_now(),
-                WorkerJobCloseStep::Complete => break,
+            WorkerJobCloseStep::Refused(kind)=>panic!("original close grant refused: {kind:?}"),
+                WorkerJobCloseStep::Complete {progress} => break,
             }
         }
         assert!(session.terminal_is_empty());
@@ -230,14 +231,14 @@ impl InteractiveJob for SlowProbe {
         StepOutcome::Yield
     }
     fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self, _: usize, _: usize) -> InteractiveJobCloseStep { InteractiveJobCloseStep::Complete }
+    fn close_step(&mut self,_:RetainedCloneGrant)->InteractiveJobCloseStep { InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()} }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
 fn close_slow_authority(mut authority: WorkerJobAuthorityOwner<SlowProbe>) -> usize {
     let job = authority.job.as_mut().unwrap();
     job.begin_close();
-    assert_eq!(job.close_step(1, 4_096), InteractiveJobCloseStep::Complete);
+    assert_eq!(job.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
     let steps = job.steps;
     if let Some(outcome) = authority.outcome.as_mut() {
         while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }

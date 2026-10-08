@@ -5,7 +5,7 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, net_mutations, set_cell};
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, edit_rules, set_cell};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -113,6 +113,11 @@ impl ArtifactEditor for XlsxTransitionalEditor {
     const DIALECT: Dialect = XLSX_TRANSITIONAL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
         Some(semio_framework_plugin::NaturalFileCodec {
             format_kind: "s.stdio.xlsx@ecma-376",
@@ -210,10 +215,12 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxTra
         }
     }
 
-    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
-        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("xlsx: the edit changes something the cell and shared-string mutations do not address (sheets, parts or the OPC layer)"))?;
-        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &edit_rules::EDIT_RULES
+    }
+
+    fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

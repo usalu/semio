@@ -1,7 +1,7 @@
 //! 🧭️ Revision-bound canonical PresentationML addresses and projections.
 
 use super::{move_slide, remove_slide, remove_shape, insert_slide, insert_shape, replace_xml_node, PptxMutation};
-use crate::schema::diff::{NamedModified, NamedTripleDiff, PptxDiff, PptxXmlPartDiff};
+use crate::schema::diff::{PptxDiff, PptxXmlPartDiff, PptxXmlPartsDelta};
 use crate::schema::snapshot::{PptxTransform, PptxXmlPart};
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path, XmlChildAdded, XmlChildModified, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
 use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{attribute_value,element_matches,expanded_element_name,namespace_scope,resolve_office_document_relationship,DRAWINGML_NAMESPACES,OFFICE_RELATIONSHIP_NAMESPACES,PRESENTATIONML_NAMESPACES}}};
@@ -310,9 +310,7 @@ fn shape_position(node: &XmlNode, scope: &[(String, String)]) -> Result<Option<P
 }
 
 fn child_path(parent: &[usize], index: usize) -> Vec<usize> {
-    let mut path = parent.to_vec();
-    path.push(index);
-    path
+    [parent, &[index]].concat()
 }
 
 pub fn pptx_slides(snapshot: &PptxSnapshot) -> Result<Vec<PptxSlideProjection>, String> {
@@ -486,7 +484,7 @@ pub struct PptxPlan {
 /// 🧩️ The diff that applies `leaf` to the node `node_path` names inside XML part `part_path`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn part_diff(part_path: &str, node_path: &[usize], leaf: XmlNodeDiff) -> PptxDiff {
-    PptxDiff { schema: None, opc: None, xml_parts: Some(NamedTripleDiff { modified: vec![NamedModified { key: part_path.to_string(), diff: PptxXmlPartDiff { content_type: None, document: Some(diff_at_path(node_path, leaf)) } }], ..Default::default() }) }
+    PptxDiff { schema: None, opc: None, xml_parts: Some(PptxXmlPartsDelta::modification(part_path, PptxXmlPartDiff { content_type: None, document: Some(diff_at_path(node_path, leaf)) })) }
 }
 
 /// 🌳 The element diff that only edits the children of its target.
@@ -604,8 +602,8 @@ pub fn move_slide_plan(snapshot: &PptxSnapshot, address: &PptxSlideAddress, dest
     values.insert(destination_index, moved);
     let (low, high) = (from.min(destination_index), from.max(destination_index));
     let modified: Vec<XmlChildModified> = (low..=high).filter(|slot| values[*slot] != children[slots[*slot]]).map(|slot| XmlChildModified { index: slots[slot], diff: XmlNodeDiff::Replace { node: Some(values[slot].clone()) } }).collect();
-    let mut moved_address = address.clone();
-    moved_address.entry.node_path = child_path(&container.node_path, slots[destination_index]);
+    let moved_entry = PptxXmlAddress { node_path: child_path(&container.node_path, slots[destination_index]), ..address.entry.clone() };
+    let moved_address = PptxSlideAddress { entry: moved_entry, ..address.clone() };
     let diff = if modified.is_empty() { PptxDiff::default() } else { part_diff(&container.part_path, &container.node_path, children_leaf(Vec::new(), modified, Vec::new())) };
     let _ = index;
     Ok(PptxPlan { diff, inverse: PptxMutation::MoveSlide(move_slide::MoveSlide { address: moved_address, destination_index: from }) })

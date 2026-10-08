@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeLayerPhiPrime, base: &En1997Snapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("layer {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {
-        layers: Some(En1997LayersRows { modified: vec![En1997LayersPatch { id: payload.id.clone(), phi_prime_deg: Some(payload.new_phi_prime_deg), ..Default::default() }], ..Default::default() }),
+        layers: Some(En1997LayersRows::modification(&payload.id, En1997LayersPatch { phi_prime_deg: Some(payload.new_phi_prime_deg), ..Default::default() })),
         ..Default::default()
     })
 }

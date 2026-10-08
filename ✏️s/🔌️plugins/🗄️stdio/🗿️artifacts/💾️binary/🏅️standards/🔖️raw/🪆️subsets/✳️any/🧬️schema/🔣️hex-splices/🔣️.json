@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/hex-splices-corpus/schema.json",
+  "title": "BinaryHexSplicesCorpusRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "before",
+    "splices",
+    "leaves"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "before": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+    },
+    "splices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offset",
+          "delete",
+          "insert"
+        ],
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "delete": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "insert": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "leaves": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "offset",
+              "removeLen",
+              "insert"
+            ],
+            "properties": {
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "removeLen": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "insert": {
+                "type": "string",
+                "pattern": "^([0-9a-f]{2})*$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

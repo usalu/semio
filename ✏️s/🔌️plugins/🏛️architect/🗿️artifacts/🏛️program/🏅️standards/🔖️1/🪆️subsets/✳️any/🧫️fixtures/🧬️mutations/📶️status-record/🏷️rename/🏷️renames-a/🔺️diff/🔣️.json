@@ -60,9 +60,10 @@
   "reports": null,
   "searchFilters": null,
   "statusRecords": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "status-record-a",
         "patch": {
@@ -94,8 +95,7 @@
           "statusNotes": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "workshops": null,
   "surveys": null,

@@ -1872,17 +1872,15 @@ impl ArtifactEditor for LowpolyPlayApp {
     }
 
     fn initial_snapshot() -> LowpolySnapshot {
-        crate::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(lowpoly_io())
     }
 
-    /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
-    /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
-    /// trait's own default (`None`); `import_media`'s `"mesh:in"`/`"artifact:in"` arms below build
-    /// `reset_document_effect` (a `Effect::LoadDocument`, outside undo history) instead.
+    /// 🧬️ `import_media`'s `"mesh:in"`/`"artifact:in"` arms build `reset_document_effect` (a `Effect::LoadDocument`, outside
+    /// undo history); whole-document replace has no mutation.
     ///
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,

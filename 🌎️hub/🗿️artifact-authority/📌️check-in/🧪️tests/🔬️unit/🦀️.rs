@@ -116,7 +116,7 @@ fn check_in_job_status_is_monotonic_single_terminal_and_canonical() {
     assert_eq!(job.status().progress.completed_units, 3, "progress never goes back");
     job.advance(DocumentCheckInPhaseV1::Publishing, 99);
     assert_eq!(job.status().progress.completed_units, DOCUMENT_CHECK_IN_TOTAL_UNITS - 1, "only ready completes the last unit");
-    let baseline = EditedArtifactFrontierV1::of_artifact_frontier(&head(3)).unwrap();
+    let baseline = directory::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&head(3)).unwrap();
     job.finish_ready(ArtifactHash([5; 32]), ArtifactHash([6; 32]), baseline.clone());
     job.finish_refused(DocumentCheckInRefusalV1::Unavailable);
     job.finish_cancelled();

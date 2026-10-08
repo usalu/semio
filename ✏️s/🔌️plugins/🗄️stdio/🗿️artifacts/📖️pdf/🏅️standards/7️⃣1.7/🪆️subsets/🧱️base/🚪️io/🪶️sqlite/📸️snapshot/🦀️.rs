@@ -7,6 +7,11 @@ use std::collections::{BTreeMap, BTreeSet};
 mod number;
 use number::{Row,Projection};
 
+#[path = "🪪️stream-roles/🦀️.rs"]
+mod stream_roles;
+#[path = "📦️artifact-reference/🦀️.rs"]
+mod artifact_reference;
+
 #[path = "🧩️cos/🦀️.rs"]
 mod cos;
 #[path = "🌈️color/🦀️.rs"]
@@ -417,7 +422,7 @@ mod tests {
             assert_eq!(object(1).dict_get("OutputIntents"),Some(&PdfObject::Array(vec![PdfObject::Ref(reference(2))])));
             assert_eq!(object(2).dict_get("Type"),Some(&PdfObject::Name("OutputIntent".into())));
             assert_eq!(object(2).dict_get("S"),Some(&PdfObject::Name("GTS_PDFX".into())));
-            assert_eq!(object(2).dict_get("OutputConditionIdentifier"),Some(&PdfObject::Str(b"sRGB2014".to_vec())));
+            assert_eq!(object(2).dict_get("OutputConditionIdentifier"),Some(&PdfObject::Text("sRGB2014".into())));
             assert_eq!(object(2).dict_get("DestOutputProfile"),Some(&PdfObject::Ref(reference(3))));
             let PdfObject::Stream{dict,data,filters}=object(3) else {panic!("real profile stream")};
             assert_eq!(dict, &vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}]);
@@ -425,7 +430,7 @@ mod tests {
             assert_eq!(object(4).dict_get("Type"),Some(&PdfObject::Name("Pages".into())));
             assert_eq!(object(4).dict_get("Kids"),Some(&PdfObject::Array(Vec::new())));
             assert_eq!(object(4).dict_get("Count"),Some(&PdfObject::Int(0)));assert!(owner.pages.is_empty());
-            assert_eq!(owner.output_intents,vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(ICC.to_vec())}]);
+            assert_eq!(owner.output_intents,vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",object(3).clone()).unwrap())}]);
             assert!(crate::standards::v1_7::subsets::x::io::check_x_conformance(owner).iter().all(|diagnostic|!matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));
         }
         let contract=semio_repo_test_host::parse_json(include_str!("🧫️fixtures/🌈️x-vt-initial/🖨️x.json")).unwrap();
@@ -461,7 +466,7 @@ mod tests {
             assert_eq!(object(1).dict_get("OutputIntents"),Some(&PdfObject::Array(vec![PdfObject::Ref(reference(2))])));
             assert_eq!(object(2).dict_get("Type"),Some(&PdfObject::Name("OutputIntent".into())));
             assert_eq!(object(2).dict_get("S"),Some(&PdfObject::Name("GTS_PDFX".into())));
-            assert_eq!(object(2).dict_get("OutputConditionIdentifier"),Some(&PdfObject::Str(b"sRGB2014".to_vec())));
+            assert_eq!(object(2).dict_get("OutputConditionIdentifier"),Some(&PdfObject::Text("sRGB2014".into())));
             assert_eq!(object(2).dict_get("DestOutputProfile"),Some(&PdfObject::Ref(reference(3))));
             let PdfObject::Stream{dict,data,filters}=object(3) else {panic!("real profile stream")};
             assert_eq!(dict, &vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}]);
@@ -477,7 +482,7 @@ mod tests {
             assert_eq!(object(11).dict_get("DPM"),Some(&PdfObject::Dict(Vec::new())));
             assert_eq!(object(5).dict_get("Type"),Some(&PdfObject::Name("Page".into())));assert_eq!(object(5).dict_get("Parent"),Some(&PdfObject::Ref(reference(4))));
             let page=PdfPage::new(612.0,792.0);let mut expected=page;expected.trim_box=Some([0.0,0.0,612.0,792.0]);assert_eq!(owner.pages,vec![expected]);
-            assert_eq!(owner.output_intents,vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(ICC.to_vec())}]);
+            assert_eq!(owner.output_intents,vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",object(3).clone()).unwrap())}]);
             assert!(crate::standards::v1_7::subsets::vt::io::check_vt_conformance(owner).iter().all(|diagnostic|!matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));
         }
         let contract=semio_repo_test_host::parse_json(include_str!("🧫️fixtures/🌈️x-vt-initial/🧾️vt.json")).unwrap();
@@ -504,8 +509,9 @@ mod tests {
         let dictionary=|entries:Vec<(&str,PdfObject)>|PdfObject::Dict(entries.into_iter().map(|(key,value)|PdfDictEntry{key:key.into(),value}).collect());
         let mut page=PdfPage::new(612.0,792.0);page.trim_box=Some(page.media_box);
         let profile=include_bytes!("🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
+        let profile_reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",PdfObject::Stream{dict:vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}],data:profile.clone(),filters:Vec::new()}).unwrap();
         let owner=PdfSnapshot{
-            pages:vec![page],output_intents:vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(profile.clone())}],
+            pages:vec![page],output_intents:vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(profile_reference)}],
             catalog_extra:vec![PdfDictEntry{key:"DPartRoot".into(),value:PdfObject::Ref(r(10))}],
             trailer:vec![PdfDictEntry{key:"Root".into(),value:PdfObject::Ref(r(1))}],
             objects:vec![

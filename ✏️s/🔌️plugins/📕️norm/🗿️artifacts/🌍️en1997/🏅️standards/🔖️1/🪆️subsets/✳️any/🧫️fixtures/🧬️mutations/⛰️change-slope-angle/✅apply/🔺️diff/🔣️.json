@@ -11,15 +11,17 @@
   "piles": null,
   "retainingWalls": null,
   "slopes": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "slope-S1",
-        "angleDeg": 30.0
+        "patch": {
+          "angleDeg": 30.0
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "upliftCases": null
 }

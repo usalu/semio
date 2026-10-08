@@ -39,3 +39,11 @@ Session99501 exited0: 13 architecture tests, 367 assertions, independent TypeScr
 Procedural retry1938 exited1: schema setup now succeeds but the actual host fixture is `{}`, so all7 host fixture laws are RED. That placeholder predates the newly included suite and cannot serve as runtime evidence. The committed fixture must be authored against actual native request/result values after the native package compiles. No test omission or fixture fallback was added.
 
 Root registered native Architect check75476 and sourcing admitted-module law81363; both remain in preparation/build. Sourcing has a new neutral admitted-roster fixture and independent serde_json stock projection law. Four focused law registrations were added to both launch owners without deleting peer configuration entries.
+
+## Resumed Authoritative State
+
+The preceding turn made source progress (expanded implemented-export guard, typed Curation queries, independent1827-source syntax proof, native law registrations), so it is classified as progress. On resume, inherited handles60435/75476/81363/25003/49995 are missing, and respective native logs are terminal failures after38–58minutes; no own compiler error was emitted before wrapper failure. Those jobs are stopped, not verified waits or successful runtime proof. Fresh focused validations are warranted. NativeSourceSyntax log reports1827 Rust sources parsed without syntax errors; it does not establish native type correctness.
+
+Current df confirms75GiB available after external workspace changes; root only removed308MiB completed owned Nx matrix output earlier and did not invoke broad clean. New execution agents continue PDF graph roles, JPEG/TIFF/protocol framing, and the fresh read-only audit gaps (CAD DSL parsing in semantic inference, Lowpoly semantic transforms in IO). No goal scope was narrowed.
+
+The DSL reference ownership failure was traced to an async runtime dependency with no production source reference. Its async test executor is explicitly dependency-free; that dependency was confined to dev-dependencies rather than widening the runtime ownership test. Both launch owners have a focused reference-law row using this ticket outputs. Actual reference/runtime results remain pending.

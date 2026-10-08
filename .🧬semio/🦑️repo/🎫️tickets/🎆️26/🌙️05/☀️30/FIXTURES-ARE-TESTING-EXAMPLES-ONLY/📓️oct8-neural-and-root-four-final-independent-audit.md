@@ -1,0 +1,7 @@
+# Neural And Root Four Final Independent Audit
+
+Current Native10 owned source SHA endpoints match exactly; six separate genuine Value/schema observer hashes match their current observation epoch and remain observer-only. Actual raw Rust96913 confirms78passed/0failed/0ignored/0filtered runtime0.26s, Nx0/54.4s; Source24501 confirms Nx0/700ms. This is complete current Neural unit runtime proof, not original WGPU compiler proof. Original aliases/replaced cache owners now have explicit retirement; UTF8 payload vectors remain exact while construction-to-terminal allocator born==freed is a separate physical proof, including worker aggregate and structural metadata. No silent zero demand fallback observed.
+
+Root four9 action ledger current7nonlaunch endpoints match, including4physical schema absences. Shared live/seed wholehash later drift is qualified; exact current-four-only BunNx registration remains both. Facet uses actual current inventory, filters corpus diagnostics by code but independently asserts **every actual owned module is absent**, so this is not a schema-authority waiver. Exact empty adjacent schema directories were removed. Preserved independent Node8200/8202/frame8202/UTF8, Three and RFC6902 laws remain; nativeInvocation0 qualifies neutral proof. Raw current route Nx0/350ms4/47 is observed log evidence. No tests/producers/source edits in this lane. Full current ten-scope boundary gate and original normal producers remain pending.
+
+Independent hash joins/log hashes retained in `📥️oct8-neural-and-root-four-final-independent-observation.json`.

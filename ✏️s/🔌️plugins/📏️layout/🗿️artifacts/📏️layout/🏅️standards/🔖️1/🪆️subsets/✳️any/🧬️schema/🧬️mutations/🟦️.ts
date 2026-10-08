@@ -192,7 +192,9 @@ export interface DeleteStory {
 
 export interface EditStory {
   id: string;
-  newContent: string;
+  offset: number;
+  delete: number;
+  insert: string;
 }
 
 export interface CreateLink {

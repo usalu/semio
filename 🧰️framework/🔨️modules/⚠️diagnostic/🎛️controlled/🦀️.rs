@@ -49,8 +49,13 @@ fn push<T: ToValue + ?Sized>(fields: &mut Fields, name: &str, value: &T, c: &mut
     c.step()
 }
 pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
-    let mut cursor = semio_framework_value::retirement::owned_retirement(value);
-    while !cursor.terminal_is_empty() { cursor.close_step(256, 65536).expect("diagnostic retirement respects bounded grant"); }
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let mut cursor = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("diagnostic owner requires controlled retirement"));
+    while !cursor.terminal_is_empty() {
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: cursor.next_capacity_byte_demand(65536).expect("diagnostic retirement capacity"), maximum_release_bytes: cursor.next_release_byte_demand().expect("diagnostic retirement release"), maximum_depth: cursor.next_depth_demand().expect("diagnostic retirement depth") };
+        let step = cursor.step(grant).expect("diagnostic retirement respects independent grants");
+        assert!(step.progress().fits(grant), "diagnostic retirement exceeded admitted authority");
+    }
 }
 
 pub(crate) fn encode_span(value: &TextSpan, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {

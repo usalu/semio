@@ -1,0 +1,3 @@
+# Successor26 Fresh Producer Freeze
+
+Full own producer SHA256 `be861f1af09d94af3ae65e4dc3279fb94399828eea6df9891a2aa425a737fde5`; 249 distinct full defining inputs retained, including all28 current Root physical lease publication bodies, corrected schema/parser/permanent declaring script/project/package routes, original9 companions/7imports, peer full-body custody, original41 law identities and unchanged long/60000/8388608units/67108864bytes/depth64 controls. Nine GUI69 rows join exact26 script/name/output/positional epochs independently. Additional diagnostic/worker routes run retained complete original cases after strict inspection; final whole controls/corpus unchanged. No production mutation, runtime proof or acceptance claimed. Root launch admission required.

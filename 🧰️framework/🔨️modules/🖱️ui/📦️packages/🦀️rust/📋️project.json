@@ -217,6 +217,38 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test control-commit"
       }
+    },
+    "test-physical-close": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📦️prepared-close/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test physical-close"
+      }
+    },
+    "test-physical-close-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test physical-close-native"
+      }
     }
   }
 }

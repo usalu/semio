@@ -10,12 +10,3 @@ fn default_snapshot_has_members() {
     assert!(!s.materials.is_empty());
 }
 
-#[test]
-fn from_snapshot_bulk_replace_count() {
-    let empty = En1999Snapshot::empty();
-    let target = En1999Snapshot::compliant_roof_purlin();
-    let raised = En1999Mutation::from_snapshot(&empty, &target);
-    assert!(raised.len() >= 5, "expected hierarchical replace mutations, got {}", raised.len());
-    let noop = En1999Mutation::from_snapshot(&target, &target);
-    assert!(noop.is_empty());
-}

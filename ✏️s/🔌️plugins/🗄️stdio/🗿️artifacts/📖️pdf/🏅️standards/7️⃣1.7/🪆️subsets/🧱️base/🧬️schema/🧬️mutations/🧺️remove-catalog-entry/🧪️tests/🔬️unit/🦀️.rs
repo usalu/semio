@@ -17,7 +17,7 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_a_middle_row() {
     let (base, _after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🧺️remove-catalog-entry/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🧺️remove-catalog-entry/➡️after.pdf"));
-    let set = |base: &PdfSnapshot, key: &str, index: Option<usize>| support::applied(base, &PdfMutation::SetCatalogEntry(crate::standards::v1_7::subsets::base::schema::mutations::SetCatalogEntry { key: key.to_string(), value: PdfObject::Int(7), index }));
+    let set = |base: &PdfSnapshot, key: &str, index: Option<usize>| crate::standards::v1_7::subsets::base::io::mutation_bridge::applied(base, &PdfMutation::SetCatalogEntry(crate::standards::v1_7::subsets::base::schema::mutations::SetCatalogEntry { key: key.to_string(), value: PdfObject::Int(7), index }));
     let base = set(&set(&set(&base, "First", None), "Last", None), "Marker", Some(1));
     assert_mutation_inverse_sum_law(&PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key: "Marker".to_string() }), &base).await;
 }

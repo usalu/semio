@@ -1,0 +1,5 @@
+{
+  "mutation": "disconnectKindCompatibility",
+  "source": "handle-kind-b",
+  "target": "handle-kind-c"
+}

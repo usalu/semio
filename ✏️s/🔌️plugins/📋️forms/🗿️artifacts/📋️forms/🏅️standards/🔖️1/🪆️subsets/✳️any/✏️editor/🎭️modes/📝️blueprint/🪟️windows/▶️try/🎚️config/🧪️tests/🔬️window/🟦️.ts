@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { applyPatch, compare } from "fast-json-patch";
-import { applyFormsTryWindowConfigMutation, type FormsTryWindowConfig } from "../../🧬️schema/🟦️.ts";
+import { applyFormsTryWindowConfigMutation, type FormsTryWindowConfig, type FormsTryWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyFormsTryWindowTransientMutation, type FormsTryWindowTransient } from "../../../🫧️transient/🧬️schema/🟦️.ts";
 
 type Lease = {
@@ -17,9 +17,9 @@ type Fixture = {
   document: { bytes: string };
   windows: Record<"left" | "right", { lease: Lease; config: FormsTryWindowConfig; transient: FormsTryWindowTransient }>;
   leftMutations: {
-    advance: { kind: "snapshot"; config: FormsTryWindowConfig };
+    advance: FormsTryWindowConfigMutation;
     stage: { kind: "snapshot"; transient: FormsTryWindowTransient };
-    resetConfig: { kind: "snapshot"; config: FormsTryWindowConfig };
+    resetConfig: FormsTryWindowConfigMutation;
     resetTransient: { kind: "snapshot"; transient: FormsTryWindowTransient };
   };
   continuations: Record<"left" | "right", Lease & Record<"appId" | "documentId" | "operationId" | "baseRevision", string> & { generation: number }>;

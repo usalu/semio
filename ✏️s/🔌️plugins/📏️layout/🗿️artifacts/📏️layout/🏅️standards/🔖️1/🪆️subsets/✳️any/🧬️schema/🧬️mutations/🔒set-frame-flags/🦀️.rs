@@ -1,8 +1,8 @@
 //! 🔒 `set-frame-flags` — sets a frame's locked and visible flags.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -52,9 +52,9 @@ pub fn diff_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> p
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { locked: payload.locked, visible: payload.visible, ..Default::default() } }], ..Default::default() },
+                patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { locked: payload.locked, visible: payload.visible, ..Default::default() }), ..Default::default() },
             }],
             ..Default::default()
         }),

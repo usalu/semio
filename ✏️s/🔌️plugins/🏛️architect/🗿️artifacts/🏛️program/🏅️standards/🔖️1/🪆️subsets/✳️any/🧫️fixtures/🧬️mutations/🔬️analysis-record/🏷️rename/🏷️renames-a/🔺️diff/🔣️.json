@@ -57,9 +57,10 @@
   "changes": null,
   "collaboration": null,
   "analyses": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "analysis-record-a",
         "patch": {
@@ -91,8 +92,7 @@
           "rawResultRef": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "reports": null,
   "searchFilters": null,

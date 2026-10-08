@@ -3170,51 +3170,9 @@ impl FromValue for EventFeedScene {
 //#endregion 🔖️EventFeedScene
 
 //#region 🔖️BlockListScene
-/** 🧩️ Ordered pages with block cards and an insertion palette. Each page has `id`, `title`,
- * optional `description`, and `blocks` with `id`, `label`, and `kind`. Pages and blocks may carry
- * `target: { granularity, id }` for selection in `domain_id`; `selected_id` is the row's own ID.
- * `palette_json` contains `{ blockKind, label, iconId }` entries. */
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BlockListScene {
-    pub steps_json: String,
-    pub palette_json: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub selected_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub dragging_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub domain_id: Option<String>,
-}
-
-impl SceneDoc for BlockListScene {
-    const SCHEMA: &'static str = "block-list@1";
-}
-
-impl ToValue for BlockListScene {
-    fn to_value(&self) -> DslValue {
-        let mut entries = Vec::new();
-        value_push(&mut entries, "stepsJson", &self.steps_json);
-        value_push(&mut entries, "paletteJson", &self.palette_json);
-        value_push_option(&mut entries, "selectedId", &self.selected_id);
-        value_push_option(&mut entries, "draggingId", &self.dragging_id);
-        value_push_option(&mut entries, "domainId", &self.domain_id);
-        DslValue::Object(entries)
-    }
-}
-
-impl FromValue for BlockListScene {
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let entries = value.into_object()?;
-        Ok(Self {
-            steps_json: value_decode(&entries, "stepsJson")?,
-            palette_json: value_decode(&entries, "paletteJson")?,
-            selected_id: value_decode_option(&entries, "selectedId")?,
-            dragging_id: value_decode_option(&entries, "draggingId")?,
-            domain_id: value_decode_option(&entries, "domainId")?,
-        })
-    }
-}
+#[path = "../🧬️schema/🧩️block-list/🦀️.rs"]
+mod block_list;
+pub use block_list::*;
 //#endregion 🔖️BlockListScene
 
 #[cfg(test)]

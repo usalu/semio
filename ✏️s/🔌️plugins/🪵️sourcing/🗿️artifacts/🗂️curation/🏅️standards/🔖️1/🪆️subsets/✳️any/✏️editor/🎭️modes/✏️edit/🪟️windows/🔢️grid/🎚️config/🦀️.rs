@@ -90,11 +90,6 @@ impl protocol::DiffAlgebra<GridWindowConfig> for GridWindowConfigDiff {
             instance_display: self.instance_display.as_ref().map(|_| base.instance_display.clone()),
         }
     }
-    fn between(base: &GridWindowConfig, other: &GridWindowConfig) -> Self {
-        Self {
-            instance_display: (base.instance_display != other.instance_display).then(|| other.instance_display.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.instance_display.is_none()
     }

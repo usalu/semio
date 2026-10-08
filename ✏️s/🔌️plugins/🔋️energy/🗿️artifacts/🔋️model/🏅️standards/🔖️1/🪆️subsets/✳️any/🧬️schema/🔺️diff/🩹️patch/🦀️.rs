@@ -1,7 +1,7 @@
 //! 🩹 Sparse typed patches — the vocabulary the energy-model diff is spelled in. A [`FieldPatch`] names one
 //! field (or one record) and carries only what changed; [`Rows`] keys a collection by entity id and carries
 //! removed, inserted and modified rows. Every patch composes (`absorb`), negates against its base (`inverse`)
-//! and differences two states (`between`, for sync and import only).
+//! and reads the base row by row for its negative.
 
 use super::splice::{Splice, SpliceFault};
 use std::fmt::Debug;
@@ -18,14 +18,12 @@ pub trait Unchanged {
 /// 🩹 One sparse patch over `Self::Target`.
 pub trait FieldPatch: Unchanged + Clone + PartialEq + Debug {
     type Target;
-    /// ▶️ Writes the patch into `target`; only the diff's own `apply` may reach this (the central applier mints its capability).
-    fn apply(&self, target: &mut Self::Target) -> Result<(), MutationApplyError>;
+    /// ▶️ Writes the patch into `target`; only the diff's own capability-gated `apply` reaches this.
+    fn commit_onto(&self, target: &mut Self::Target) -> Result<(), MutationApplyError>;
     /// ➕️ Composes `self` then `later` into one patch.
     fn absorb(&mut self, later: Self);
     /// ↩️ The patch that restores `base` after `self` was applied to it.
     fn inverse(&self, base: &Self::Target) -> Self;
-    /// 🧭️ The patch that carries `base` to `other`.
-    fn between(base: &Self::Target, other: &Self::Target) -> Self;
 }
 
 /// 🔑️ A collection entry addressed by a stable key.
@@ -58,7 +56,7 @@ impl<T> Unchanged for Option<T> {
 /// 🎯️ `Some(value)` assigns the field; `None` leaves it alone.
 impl<T: Clone + PartialEq + Debug> FieldPatch for Option<T> {
     type Target = T;
-    fn apply(&self, target: &mut T) -> Result<(), MutationApplyError> {
+    fn commit_onto(&self, target: &mut T) -> Result<(), MutationApplyError> {
         if let Some(value) = self {
             *target = value.clone();
         }
@@ -71,9 +69,6 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for Option<T> {
     }
     fn inverse(&self, base: &T) -> Self {
         self.as_ref().map(|_| base.clone())
-    }
-    fn between(base: &T, other: &T) -> Self {
-        (base != other).then(|| other.clone())
     }
 }
 //#endregion 🔖️Set
@@ -105,7 +100,7 @@ impl<T> Unchanged for OptionChange<T> {
 
 impl<T: Clone + PartialEq + Debug> FieldPatch for OptionChange<T> {
     type Target = Option<T>;
-    fn apply(&self, target: &mut Option<T>) -> Result<(), MutationApplyError> {
+    fn commit_onto(&self, target: &mut Option<T>) -> Result<(), MutationApplyError> {
         match self {
             Self::Unchanged => {}
             Self::Cleared => *target = None,
@@ -123,13 +118,6 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for OptionChange<T> {
             Self::Unchanged
         } else {
             Self::assign(base.clone())
-        }
-    }
-    fn between(base: &Option<T>, other: &Option<T>) -> Self {
-        if base == other {
-            Self::Unchanged
-        } else {
-            Self::assign(other.clone())
         }
     }
 }
@@ -175,7 +163,7 @@ impl<T, const N: usize> Unchanged for Slots<T, N> {
 
 impl<T: Clone + PartialEq + Debug, const N: usize> FieldPatch for Slots<T, N> {
     type Target = [T; N];
-    fn apply(&self, target: &mut [T; N]) -> Result<(), MutationApplyError> {
+    fn commit_onto(&self, target: &mut [T; N]) -> Result<(), MutationApplyError> {
         for Slot { index, value } in &self.0 {
             *target.get_mut(*index).ok_or_else(|| refused("diff.slot-out-of-range", format!("slot {index} is outside an array of {N}")))? = value.clone();
         }
@@ -191,9 +179,6 @@ impl<T: Clone + PartialEq + Debug, const N: usize> FieldPatch for Slots<T, N> {
     }
     fn inverse(&self, base: &[T; N]) -> Self {
         Self(self.0.iter().filter_map(|slot| base.get(slot.index).map(|value| Slot { index: slot.index, value: value.clone() })).collect())
-    }
-    fn between(base: &[T; N], other: &[T; N]) -> Self {
-        Self((0..N).filter(|index| base[*index] != other[*index]).map(|index| Slot { index, value: other[index].clone() }).collect())
     }
 }
 
@@ -296,8 +281,8 @@ impl<T> Unchanged for ListEdit<T> {
 
 impl<T: Clone + PartialEq + Debug> FieldPatch for ListEdit<T> {
     type Target = Vec<T>;
-    fn apply(&self, target: &mut Vec<T>) -> Result<(), MutationApplyError> {
-        *target = self.0.apply(std::mem::take(target), |entry, key| entry == key).map_err(splice_refused)?;
+    fn commit_onto(&self, target: &mut Vec<T>) -> Result<(), MutationApplyError> {
+        *target = self.0.commit_onto(std::mem::take(target), |entry, key| entry == key).map_err(splice_refused)?;
         Ok(())
     }
     fn absorb(&mut self, later: Self) {
@@ -306,9 +291,6 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for ListEdit<T> {
     }
     fn inverse(&self, base: &Vec<T>) -> Self {
         Self(self.0.inverse(base, T::clone))
-    }
-    fn between(base: &Vec<T>, other: &Vec<T>) -> Self {
-        Self(Splice::replacing(base, other))
     }
 }
 
@@ -400,29 +382,6 @@ impl<P: RowPatch> Rows<P> {
     }
 }
 
-/// 🔢️ Positions (indices into `values`) of one longest strictly increasing run.
-fn longest_increasing(values: &[usize]) -> Vec<usize> {
-    let mut tails: Vec<usize> = Vec::new();
-    let mut previous: Vec<Option<usize>> = vec![None; values.len()];
-    for (position, value) in values.iter().enumerate() {
-        let slot = tails.partition_point(|tail| values[*tail] < *value);
-        previous[position] = slot.checked_sub(1).map(|before| tails[before]);
-        if slot == tails.len() {
-            tails.push(position);
-        } else {
-            tails[slot] = position;
-        }
-    }
-    let mut run = Vec::new();
-    let mut cursor = tails.last().copied();
-    while let Some(position) = cursor {
-        run.push(position);
-        cursor = previous[position];
-    }
-    run.reverse();
-    run
-}
-
 impl<P: RowPatch> Unchanged for Rows<P> {
     fn unchanged(&self) -> bool {
         self.edit.is_empty() && self.modified.iter().all(Unchanged::unchanged)
@@ -431,13 +390,13 @@ impl<P: RowPatch> Unchanged for Rows<P> {
 
 impl<P: RowPatch> FieldPatch for Rows<P> {
     type Target = Vec<P::Target>;
-    fn apply(&self, target: &mut Vec<P::Target>) -> Result<(), MutationApplyError> {
+    fn commit_onto(&self, target: &mut Vec<P::Target>) -> Result<(), MutationApplyError> {
         for patch in &self.modified {
             let key = patch.key();
             let row = target.iter_mut().find(|row| row.key() == key).ok_or_else(|| refused("diff.target-missing", "a row patch names a row the collection does not hold"))?;
-            patch.apply(row)?;
+            patch.commit_onto(row)?;
         }
-        *target = self.edit.apply(std::mem::take(target), |row, key| row.key() == *key).map_err(splice_refused)?;
+        *target = self.edit.commit_onto(std::mem::take(target), |row, key| row.key() == *key).map_err(splice_refused)?;
         Ok(())
     }
     fn absorb(&mut self, later: Self) {
@@ -452,7 +411,7 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
             }
             let folded = puts.iter_mut().find(|(_, row)| row.key() == key).is_some_and(|(_, row)| {
                 let mut next = row.clone();
-                let applied = patch.apply(&mut next).is_ok();
+                let applied = patch.commit_onto(&mut next).is_ok();
                 if applied {
                     *row = next;
                 }
@@ -476,14 +435,6 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
             modified: self.modified.iter().filter_map(|patch| base.iter().find(|row| row.key() == patch.key()).map(|row| patch.inverse(row))).collect(),
         }
         .normalized()
-    }
-    fn between(base: &Vec<P::Target>, other: &Vec<P::Target>) -> Self {
-        let base_keys: Vec<_> = base.iter().map(Row::key).collect();
-        let shared: Vec<(usize, usize)> = other.iter().enumerate().filter_map(|(after, row)| base_keys.iter().position(|key| *key == row.key()).map(|before| (after, before))).collect();
-        let kept: Vec<(usize, usize)> = longest_increasing(&shared.iter().map(|pair| pair.1).collect::<Vec<_>>()).into_iter().map(|position| shared[position]).collect();
-        let cuts = base.iter().enumerate().filter(|(before, _)| !kept.iter().any(|pair| pair.1 == *before)).map(|(before, row)| (before, row.key())).collect();
-        let puts = other.iter().enumerate().filter(|(after, _)| !kept.iter().any(|pair| pair.0 == *after)).map(|(after, row)| (after, row.clone())).collect();
-        Self { edit: Splice::new(cuts, puts), modified: kept.iter().map(|(after, before)| P::between(&base[*before], &other[*after])).collect() }.normalized()
     }
 }
 
@@ -602,8 +553,8 @@ macro_rules! patch {
 
         impl FieldPatch for $patch {
             type Target = $row;
-            fn apply(&self, target: &mut $row) -> Result<(), MutationApplyError> {
-                $(self.$field.apply(&mut target.$field)?;)*
+            fn commit_onto(&self, target: &mut $row) -> Result<(), MutationApplyError> {
+                $(self.$field.commit_onto(&mut target.$field)?;)*
                 Ok(())
             }
             fn absorb(&mut self, later: Self) {
@@ -611,9 +562,6 @@ macro_rules! patch {
             }
             fn inverse(&self, base: &$row) -> Self {
                 Self { $($key: self.$key.clone(),)? $($field: self.$field.inverse(&base.$field),)* }
-            }
-            fn between(base: &$row, other: &$row) -> Self {
-                Self { $($key: base.$key.clone(),)? $($field: <<$kind as Field<$ty>>::Patch as FieldPatch>::between(&base.$field, &other.$field),)* }
             }
         }
     };

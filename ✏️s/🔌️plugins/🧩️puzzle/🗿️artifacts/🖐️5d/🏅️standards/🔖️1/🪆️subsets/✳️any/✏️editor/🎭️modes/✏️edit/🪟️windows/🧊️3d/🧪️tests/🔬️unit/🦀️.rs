@@ -32,10 +32,10 @@ fn part_selection() -> Puzzle5dInteractionSnapshot {
 fn world_instances_paint_the_live_selection_and_hover() {
     let document = document_with_one_gripped_part();
     let marked = Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: vec!["teil-ä".into()], referenced: Vec::new() };
-    let instances: Value = serde_json::from_str::<serde_json::Value>(&world_instances_json(&document, &marked, None)).expect("instancesJson");
+    let instances: Value = semio_framework_pack_json::from_json_str(&world_instances_json(&document, &marked, None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instancesJson");
     assert_eq!(instances[0]["selected"], serde_json::json!(true));
     assert_eq!(instances[0]["hovered"], serde_json::json!(true));
-    let idle: Value = serde_json::from_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None)).expect("instancesJson");
+    let idle: Value = semio_framework_pack_json::from_json_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instancesJson");
     assert_eq!(idle[0]["selected"], serde_json::json!(false));
     assert_eq!(idle[0]["hovered"], serde_json::json!(false));
 }
@@ -46,9 +46,9 @@ fn world_instances_paint_the_live_selection_and_hover() {
 fn world_instances_highlight_the_parts_a_history_draft_references() {
     let document = document_with_one_gripped_part();
     let drafted = Puzzle5dInteractionSnapshot { referenced: vec!["teil-ä".into()], ..Puzzle5dInteractionSnapshot::default() };
-    let instances: Value = serde_json::from_str::<serde_json::Value>(&world_instances_json(&document, &drafted, None)).expect("instancesJson");
+    let instances: Value = semio_framework_pack_json::from_json_str(&world_instances_json(&document, &drafted, None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instancesJson");
     assert_eq!(instances[0]["highlighted"], serde_json::json!(true), "the referenced part is highlighted");
-    let idle: Value = serde_json::from_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None)).expect("instancesJson");
+    let idle: Value = semio_framework_pack_json::from_json_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instancesJson");
     assert_eq!(idle[0]["highlighted"], serde_json::json!(false), "nothing is highlighted without a draft");
 }
 
@@ -59,7 +59,7 @@ fn world_selection_json_carries_the_live_ids() {
     let mut interaction = part_selection();
     interaction.hovered = vec!["teil-ä".into()];
     let envelope = scene_with(interaction, Puzzle5dRuntime::default(), "select");
-    let value: Value = serde_json::from_str(&world_selection_json_ex(&envelope)).expect("selectionJson");
+    let value: Value = semio_framework_pack_json::from_json_str(&world_selection_json_ex(&envelope), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selectionJson");
     assert_eq!(value["ids"], serde_json::json!(["teil-ä"]));
     assert_eq!(value["activeObjectId"], serde_json::json!("teil-ä"));
     assert_eq!(value["hoveredId"], serde_json::json!("teil-ä"));
@@ -71,13 +71,13 @@ fn world_selection_json_carries_the_live_ids() {
 fn grip_markers_follow_the_show_mode_and_the_live_marks() {
     let document = document_with_one_gripped_part();
     let selected_mode = Puzzle5dRuntime::default();
-    let idle: Vec<Value> = serde_json::from_str(&world_grips_json(&document, &selected_mode, &Puzzle5dInteractionSnapshot::default(), "select")).expect("vorticesJson");
+    let idle: Vec<Value> = semio_framework_pack_json::from_json_str(&world_grips_json(&document, &selected_mode, &Puzzle5dInteractionSnapshot::default(), "select"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("vorticesJson");
     assert!(idle.is_empty(), "selected mode emits no markers for an untouched part");
-    let touched: Vec<Value> = serde_json::from_str(&world_grips_json(&document, &selected_mode, &part_selection(), "select")).expect("vorticesJson");
+    let touched: Vec<Value> = semio_framework_pack_json::from_json_str(&world_grips_json(&document, &selected_mode, &part_selection(), "select"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("vorticesJson");
     assert_eq!(touched.len(), 1);
     assert_eq!(touched[0]["displayDirection"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_OUTWARDS));
     let always = Puzzle5dRuntime { grip_show: PUZZLE5D_GRIP_SHOW_ALWAYS.into(), ..Puzzle5dRuntime::default() };
-    let shown: Vec<Value> = serde_json::from_str(&world_grips_json(&document, &always, &Puzzle5dInteractionSnapshot::default(), "select")).expect("vorticesJson");
+    let shown: Vec<Value> = semio_framework_pack_json::from_json_str(&world_grips_json(&document, &always, &Puzzle5dInteractionSnapshot::default(), "select"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("vorticesJson");
     assert_eq!(shown.len(), 1);
 }
 
@@ -103,7 +103,7 @@ fn gumball_needs_the_transform_utility_a_selection_and_a_flag() {
 #[test]
 fn the_transform_utility_arms_the_host_gumball() {
     let envelope = scene_with(part_selection(), Puzzle5dRuntime::default(), utilities::transform::UTILITY_ID);
-    let value: Value = serde_json::from_str(&world_selection_json_ex(&envelope)).expect("selectionJson");
+    let value: Value = semio_framework_pack_json::from_json_str(&world_selection_json_ex(&envelope), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selectionJson");
     assert_eq!(value["transformMode"], serde_json::json!("transform"));
     assert_eq!(value["gumballActive"], serde_json::json!(true));
     assert_eq!(value["gumballConfig"]["moveAxes"], serde_json::json!(true));
@@ -177,10 +177,10 @@ fn camera_json_follows_the_projection() {
     let mut camera = Puzzle5dCamera3d::default();
     camera.position = [8.0, -8.0, 8.0];
     camera.zoom = 1.0;
-    let perspective: Value = serde_json::from_str(&camera3d_json(&camera)).expect("cameraJson");
+    let perspective: Value = semio_framework_pack_json::from_json_str(&camera3d_json(&camera), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cameraJson");
     camera.projection.kind = "orthographic".into();
     camera.projection.orthographic_view = "front".into();
-    let orthographic: Value = serde_json::from_str(&camera3d_json(&camera)).expect("cameraJson");
+    let orthographic: Value = semio_framework_pack_json::from_json_str(&camera3d_json(&camera), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cameraJson");
     assert_ne!(perspective, orthographic, "the projection must reach the host camera payload");
 }
 //#endregion ☑️Options
@@ -282,9 +282,9 @@ fn world_markers_declare_this_domains_granularities() {
         "fasteners": [{ "id": "f1", "source": "teil-ä:g1", "target": "teil-ä:g2" }]
     });
     let document = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("projection"))).expect("document");
-    let grips: Vec<Value> = serde_json::from_str(&world_grips_json(&document, &Puzzle5dRuntime::default(), &part_selection(), "select")).expect("vorticesJson");
+    let grips: Vec<Value> = semio_framework_pack_json::from_json_str(&world_grips_json(&document, &Puzzle5dRuntime::default(), &part_selection(), "select"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("vorticesJson");
     assert_eq!(grips[0]["interactionGranularityId"], serde_json::json!(PUZZLE5D_GRANULARITY_GRIP));
-    let fasteners: Vec<Value> = serde_json::from_str(&world_fasteners_json(&document)).expect("attractionsJson");
+    let fasteners: Vec<Value> = semio_framework_pack_json::from_json_str(&world_fasteners_json(&document), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("attractionsJson");
     assert_eq!(fasteners[0]["interactionGranularityId"], serde_json::json!(PUZZLE5D_GRANULARITY_FASTENER));
 }
 //#endregion 🔗️DomainBinding
@@ -296,12 +296,12 @@ fn world_markers_declare_this_domains_granularities() {
 fn the_interaction_lane_carries_the_hovered_grip_and_the_open_suggestion_menu() {
     let labels = &Puzzle5dLabels::NATIVE_EN;
     let hovered = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: Vec::new(), hovered: vec!["teil-ä:g1".into()], referenced: Vec::new() };
-    let idle: Value = serde_json::from_str(&world_interaction_json(&scene_with(hovered.clone(), Puzzle5dRuntime::default(), "select"), labels, None)).expect("interactionJson");
+    let idle: Value = semio_framework_pack_json::from_json_str(&world_interaction_json(&scene_with(hovered.clone(), Puzzle5dRuntime::default(), "select"), labels, None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("interactionJson");
     assert_eq!(idle["hoveredVortexFullId"], serde_json::json!("teil-ä:g1"));
     assert_eq!(idle["suggestionMenu"], Value::Null, "no menu is open");
     let menu = crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu { x: 4.0, y: 5.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "teil-ä:g1".into(), submenu: true };
     let runtime = Puzzle5dRuntime { suggestion_menu: Some(menu), ..Puzzle5dRuntime::default() };
-    let open: Value = serde_json::from_str(&world_interaction_json(&scene_with(hovered, runtime, "select"), labels, None)).expect("interactionJson");
+    let open: Value = semio_framework_pack_json::from_json_str(&world_interaction_json(&scene_with(hovered, runtime, "select"), labels, None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("interactionJson");
     assert_eq!(
         open["suggestionMenu"],
         serde_json::json!({ "open": true, "x": 4.0, "y": 5.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "teil-ä:g1", "submenu": true, "pending": true, "candidates": [] }),

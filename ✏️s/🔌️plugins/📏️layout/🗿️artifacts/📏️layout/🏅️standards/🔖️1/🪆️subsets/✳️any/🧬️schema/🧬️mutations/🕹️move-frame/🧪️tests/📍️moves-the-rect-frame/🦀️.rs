@@ -58,7 +58,7 @@ async fn inverse_moves_the_rect_frame_back() {
         other => panic!("move-frame must invert to move-frame, got {other:?}"),
     }
     let mut snapshot = applied();
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("move-frame/moves-the-rect-frame: inverse step applies");
     }
     assert_eq!(snapshot, base, "move-frame/moves-the-rect-frame: inverse did not restore the before-snapshot");
@@ -86,9 +86,9 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "move-frame/moves-the-rect-frame: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    let patch = &produced.diff().pages.as_ref().expect("move-frame fills the pages delta").patched[0].patch;
-    let [patched] = patch.frames_patched.as_slice() else { panic!("move-frame fills the page patch's `frames_patched` with exactly one frame") };
-    assert_eq!(patched.frame_id, "frame-rect", "the `frames_patched` entry addresses the moved frame");
+    let patch = &produced.diff().pages.as_ref().expect("move-frame fills the pages delta").modified[0].patch;
+    let [patched] = patch.frames.modified.as_slice() else { panic!("move-frame fills the page patch's `frames.modified` with exactly one frame") };
+    assert_eq!(patched.id, "frame-rect", "the `frames.modified` entry addresses the moved frame");
     assert_eq!((patched.patch.x, patched.patch.y), (Some(55.0), Some(65.0)), "move-frame fills only x/y of the frame patch");
     assert!(patched.patch.width.is_none() && patched.patch.height.is_none(), "move-frame must not emit a size patch");
 }

@@ -2,8 +2,8 @@
 //! never meaningfully edited one field at a time — a margins dialog writes all four at once).
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -51,7 +51,7 @@ pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapsh
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.id.clone(),
                 patch: PagePatch { margin_top: Some(payload.top), margin_right: Some(payload.right), margin_bottom: Some(payload.bottom), margin_left: Some(payload.left), ..Default::default() },
             }],

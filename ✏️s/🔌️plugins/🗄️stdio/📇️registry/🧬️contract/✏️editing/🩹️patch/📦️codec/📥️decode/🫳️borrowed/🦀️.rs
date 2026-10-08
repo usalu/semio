@@ -52,20 +52,15 @@ impl<'source> SnapshotPatchReadCursor<'source>{
     }
     /// 🎁️ Transfers the single admitted typed patch while retaining the consumed parse scaffold.
     pub fn take_patch(&mut self)->Option<SnapshotPatch>{self.patch.take()}
-    /// ♻️ Returns the parser, semantic scaffold and any untaken typed patch to the actual retirement owner.
-    pub fn into_retirement(self)->Box<dyn semio_framework_value::ErasedSnapshotRetirement>{Box::new(PatchReadRetirement{owners:[Some(self.parser.into_retirement()),Some(semio_framework_value::retirement::owned_retirement((self.candidate,self.patch)))]})}
-}
-struct PatchReadRetirement{owners:[Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>;2]}
-impl semio_framework_value::ErasedSnapshotRetirement for PatchReadRetirement{
-    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_value::SnapshotRetirementStep,ValueError>{
-        use semio_framework_value::SnapshotRetirementStep;
-        if maximum_items==0||maximum_bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}
-        for slot in &mut self.owners{let Some(owner)=slot.as_mut()else{continue};if !owner.terminal_is_empty(){return owner.close_step(1,maximum_bytes).map(|step|match step{SnapshotRetirementStep::Complete=>SnapshotRetirementStep::Pending{released_items:0,released_bytes:0},other=>other});}let bytes=std::mem::size_of_val(&**owner);if bytes>maximum_bytes{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}slot.take();return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:bytes});}Ok(SnapshotRetirementStep::Complete)
+    /// 🎟️ Publishes the one grammar-and-candidate ownership frame before transfer.
+    pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<(semio_framework_pack_json::JsonGrammarCursor<DslValue>,Option<DslValue>,Option<SnapshotPatch>)>()}
+    /// ♻️ Retains the complete original reader when any independent handoff grant refuses.
+    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>{
+        let Self{parser,candidate,patch,admitted}=self;
+        let(source,parser)=parser.into_grammar();
+        semio_framework_value::admit_owned_retirement((parser,candidate,patch),grant).map_err(|(error,(parser,candidate,patch))|(error,Self{parser:JsonSourceCursor::from_grammar(source,parser),candidate,patch,admitted}))
     }
-    fn terminal_is_empty(&self)->bool{self.owners.iter().all(Option::is_none)}
-    fn next_close_byte_demand(&self)->usize{self.owners.iter().find_map(|owner|owner.as_ref().map(|owner|if owner.terminal_is_empty(){std::mem::size_of_val(&**owner)}else{owner.next_close_byte_demand()})).unwrap_or(0)}
 }
-impl Drop for PatchReadRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.owners.iter().all(Option::is_none),"patch read retirement retains actual parser/candidate owners");}}
 fn refusal(message:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn member<'value>(fields:&'value[(String,DslValue)],name:&str)->Option<&'value DslValue>{fields.iter().find(|(key,_)|key==name).map(|(_,value)|value)}
 fn text<'value>(fields:&'value[(String,DslValue)],name:&str)->Result<&'value str,ValueError>{match member(fields,name){Some(DslValue::String(value))=>Ok(value),_=>Err(refusal("required patch field must be text"))}}

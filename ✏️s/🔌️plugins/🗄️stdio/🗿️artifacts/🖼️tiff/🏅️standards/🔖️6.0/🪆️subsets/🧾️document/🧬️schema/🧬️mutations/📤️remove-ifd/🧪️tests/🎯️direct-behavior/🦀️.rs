@@ -15,6 +15,7 @@
 //! frame.
 
 use super::*;
+use crate::standards::v6_0::subsets::document::io::binary::mutations::remove_ifd::BINARY_TAG;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json");
@@ -38,7 +39,7 @@ fn mutation() -> TiffMutation {
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let produced = protocol::apply_diff(&mutation().diff(&base).diff(), &base).expect("remove-ifd applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-ifd applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-ifd/direct-behavior: applied state differs from the committed after-snapshot");
 }
 
@@ -48,9 +49,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
-    let mut current = protocol::apply_diff(&payload.diff(&base).diff(), &base).expect("forward remove-ifd applies");
-    for step in payload.inverse(&base).expect("valid retained mutation inverse fixture") {
-        current = protocol::apply_diff(&step.diff(&current).diff(), &current).expect("the remove-ifd inverse step applies");
+    let mut current = protocol::apply_diff(payload.diff(&base).diff(), &base).expect("forward remove-ifd applies");
+    for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the remove-ifd inverse step applies");
     }
     assert_eq!(current, base, "remove-ifd/direct-behavior: the undo did not restore the committed before-snapshot");
 }
@@ -98,7 +99,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let produced = protocol::apply_diff(&mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-ifd/direct-behavior: committed diff did not carry before to after");
 }
 
@@ -109,7 +110,7 @@ fn op_codecs_round_trip() {
     let payload = mutation();
     assert_eq!(TiffMutation::parse_op(&payload.print_op()).expect("the text op parses"), payload, "remove-ifd/direct-behavior: the text op form does not round-trip");
     let bytes = payload.encode_op().expect("the binary op encodes");
-    assert_eq!(bytes[1], binary::BINARY_TAG, "remove-ifd/direct-behavior: the binary frame must carry this schema's tag");
+    assert_eq!(bytes[1], BINARY_TAG, "remove-ifd/direct-behavior: the binary frame must carry this schema's tag");
     assert_eq!(TiffMutation::decode_op(&bytes).expect("the binary op decodes"), payload, "remove-ifd/direct-behavior: the binary op form does not round-trip");
     assert!(TiffMutation::decode_op(&bytes[..1]).is_err(), "remove-ifd/direct-behavior: a truncated binary frame must be rejected");
 }

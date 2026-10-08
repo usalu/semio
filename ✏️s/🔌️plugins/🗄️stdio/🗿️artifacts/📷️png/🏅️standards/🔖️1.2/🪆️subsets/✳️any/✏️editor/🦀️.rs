@@ -136,18 +136,6 @@ fn pngEditor_retained_reduce(command: &PngEditCommand, _snapshot: &PngSnapshot, 
 fn pngEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
-fn pngEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &PngSnapshot) -> Result<PngSnapshot, Fault> {
-    if let editing::SnapshotEditEvent::ReplaceSource { source } = event {
-        return editing::snapshot_from_edit_source(source).map_err(|error| pngEditor_edit_fault("stdio.png.invalid-source", error.to_string()));
-    }
-    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| pngEditor_edit_fault(error.code, error.to_string()))?;
-    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA).map_err(|error| pngEditor_edit_fault(error.code, error.to_string()))
-}
-
-fn pngEditor_metadata_mutation(_next: &PngSnapshot, _base: &PngSnapshot) -> Option<PngMutation> {
-    None
-}
-
 type PngDetailsProvider = editing::DslSnapshotDetailsProvider<'static, PngSnapshot>;
 
 struct PngEditorExampleFactory { keys: Vec<ToolFactoryKey> }
@@ -267,10 +255,6 @@ impl ArtifactEditor for PngEditor {
         crate::standards::v1_2::subsets::any::io::decode_png(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image:snapshot.image }))
-    }
-
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
         const OWNER_FILE: &str = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️.rs";
         const CONTROLLER: &str = "s.stdio.png@1.2/*#editor";
@@ -370,12 +354,23 @@ impl editing::SnapshotEditingEditor for PngEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { PngEditCommand::Edit(event) => Some(event), PngEditCommand::Native(_) => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = pngEditor_snapshot_edit(event, snapshot)?;
-        if let Some(mutation) = pngEditor_metadata_mutation(&next, snapshot) {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
-        }
-        editing::snapshot_edit_net_exact(event,snapshot,|before,after|if before.image==after.image{Vec::new()}else{vec![PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage{image:after.image.clone()})]})
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::png::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::schema::mutations::{replace_samples, PngMutation};
+        use crate::schema::snapshot::PngRegion;
+        let editing::SnapshotEditEvent::SetValue { path, value: semio_framework_value::DslValue::Number(number) } = event else { return Ok(None) };
+        let Some(index) = path.strip_prefix("/image/samples/").and_then(|rest| rest.parse::<usize>().ok()) else { return Ok(None) };
+        let image = &snapshot.image;
+        let spp = image.color_type.samples_per_pixel();
+        let sample = u16::try_from(number.as_u64().ok_or_else(|| Fault::from("a PNG sample is an unsigned integer"))?).map_err(|_| Fault::from("a PNG sample is a 16-bit unsigned integer"))?;
+        let pixel = index / spp;
+        let (x, y) = ((pixel % image.width as usize) as u32, (pixel / image.width as usize) as u32);
+        let region = PngRegion { x, y, width: 1, height: 1 };
+        let mut samples = image.region_samples(region).ok_or_else(|| Fault::from(format!("sample {index} is outside the image")))?;
+        samples[index % spp] = sample;
+        Ok(Some(vec![PngMutation::ReplaceSamples(replace_samples::ReplaceSamples { region, samples })]))
     }
 }
 

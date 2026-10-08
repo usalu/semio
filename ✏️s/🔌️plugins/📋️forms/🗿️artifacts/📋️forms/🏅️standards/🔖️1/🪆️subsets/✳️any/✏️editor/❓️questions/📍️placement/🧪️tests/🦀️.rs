@@ -36,7 +36,7 @@ fn move_commands_apply_the_requested_sibling_order() {
         let result = handle(&command, &ArtifactView::new(&snapshot, &history), &ConfigView { snapshot: &config, window: None });
         if case.get("error").is_some() { assert!(result.is_err(), "{}", case["name"]); }
         else {
-            for mutation in result.unwrap().artifact_mutations { mutation.diff(&snapshot).apply_to(&mut snapshot); }
+            for mutation in result.unwrap().artifact_mutations { snapshot = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("valid mutation diff"); }
             let order: Vec<&str> = snapshot.definition.steps.iter().find(|step| step.id == command.to_step_id).unwrap().blocks.iter().map(|question| question.id.as_str()).collect();
             assert_eq!(serde_json::to_value(order).unwrap(), case["order"], "{}", case["name"]);
         }
@@ -57,7 +57,7 @@ fn question_placement_matches_shared_events() {
             let expected: crate::FormMutation = semio_framework_pack_json::from_json_str(&case["event"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(result.unwrap(), expected, "{}", case["name"]);
             let mut snapshot = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "placement".into(), "1".into(), None, &definition.steps);
-            expected.diff(&snapshot).apply_to(&mut snapshot);
+            snapshot = protocol::apply_diff(expected.diff(&snapshot).diff(), &snapshot).expect("valid mutation diff");
             assert_eq!(snapshot.definition.steps.iter().flat_map(|step| &step.blocks).filter(|question| question.id == "q").count(), 1);
         }
     }

@@ -19,8 +19,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#endregion 🔖️OpenDocument
 
 //#region 🔖️JsonSetters
-/// 🙈️ Shared body for `SetSnapshotJson`/`LoadDocumentJson` — both replace the whole document from a raw
-/// JSON string, silently no-op'ing on a parse failure (dev-only chrome setters, never user-facing).
+/// 🙈️ Loads the document from a raw JSON string as a `LoadDocument` effect outside history — no mutation rows —
+/// silently no-op'ing on a parse failure (dev-only chrome loader, never user-facing).
 fn parse_document_json(json: &str) -> Emit<WriterMutation, NoConfigMutation> {
     match semio_framework_pack_json::from_json_str::<WriterSnapshot>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(document) => Emit { effects: vec![reset_document_effect(&document)], ..Default::default() },
@@ -40,7 +40,7 @@ fn parse_document_json(json: &str) -> Emit<WriterMutation, NoConfigMutation> {
 //#endregion 🔖️CommitRename
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[dsl(keyword = "document-json")]
+#[dsl(keyword = "load-document-json")]
 pub struct LoadDocumentJson {
     pub json: String,
 }

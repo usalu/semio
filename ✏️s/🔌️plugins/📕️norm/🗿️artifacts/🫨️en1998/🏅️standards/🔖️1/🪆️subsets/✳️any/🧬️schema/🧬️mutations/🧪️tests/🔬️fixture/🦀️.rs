@@ -75,3 +75,22 @@ mod vector_remove_foundation;
 mod vector_remove_retaining_wall;
 #[path = "../../➖️remove-tower/🧪️tests/✅apply/🦀️.rs"]
 mod vector_remove_tower;
+
+//#region 🔬️MiddleRowVectors
+#[path = "../../➖️remove-assessment/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_assessment;
+#[path = "../../➖️remove-bridge/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_bridge;
+#[path = "../../➖️remove-building/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_building;
+#[path = "../../➖️remove-foundation/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_foundation;
+#[path = "../../➖️remove-retaining-wall/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_retaining_wall;
+#[path = "../../➖️remove-silo/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_silo;
+#[path = "../../➖️remove-tank/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_tank;
+#[path = "../../➖️remove-tower/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_tower;
+//#endregion 🔬️MiddleRowVectors

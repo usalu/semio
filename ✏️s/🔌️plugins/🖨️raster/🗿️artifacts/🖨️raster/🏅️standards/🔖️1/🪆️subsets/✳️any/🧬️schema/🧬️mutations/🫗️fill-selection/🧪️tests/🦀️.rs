@@ -3,7 +3,8 @@
 //! downstream; the store folds it like the leaf.
 
 use super::*;
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation};
+use crate::mutations::{inverse_raster_mutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::find_layer;
 use crate::{RasterLayerNode, SemioImageSnapshot, RASTER_DOCUMENT_SCHEMA};
 use protocol::Mutation;

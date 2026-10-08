@@ -58,7 +58,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
 /// handcrafted `::semio_framework_os_kernel::CompositeMutationKind` impl — `#[composite(snapshot = YourSnapshot, op =
 /// YourOpEnum)]` on the payload struct that already `impl CompositeMutationKind<YourSnapshot,
 /// YourOpEnum> for` itself. `diff`/`inverse`/`foreign_steps` delegate to the free
-/// `::semio_framework_os_kernel::fold_plan_diff`/`fold_plan_inverse`/`plan_foreign_steps` helpers — deliberately NOT
+/// `::semio_framework_os_kernel::os_spr::fold::{fold_plan_diff, fold_plan_inverse}` and `plan_foreign_steps` helpers — deliberately NOT
 /// a blanket `impl<T: CompositeMutationKind> MutationKind for T`, which coherence rejects against
 /// the ~200 concrete `impl MutationKind` in the tree (see
 /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`

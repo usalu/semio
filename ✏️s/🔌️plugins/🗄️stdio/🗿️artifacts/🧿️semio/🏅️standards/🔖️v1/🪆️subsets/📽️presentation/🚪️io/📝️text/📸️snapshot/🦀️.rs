@@ -180,18 +180,5 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
-/// 🌱 Full (non-diff) snapshot codec — only `SetSnapshot`'s whole-payload op encoding needs this.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_presentation_snapshot(s: &SemioPresentationSnapshot) -> String {
-    format!("[{},{},{},{}]", enc_str(&s.schema), enc_list(&s.masters, enc_master), enc_list(&s.layouts, enc_layout), enc_list(&s.slides, enc_slide))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_presentation_snapshot(s: &str) -> Result<SemioPresentationSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [schema, masters, layouts, slides] = parts.as_slice() else { return Err(format!("snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioPresentationSnapshot { schema: dec_str(schema)?, masters: dec_list(masters, dec_master)?, layouts: dec_list(layouts, dec_layout)?, slides: dec_list(slides, dec_slide)? })
-}
 }
 pub use diff_codec::*;

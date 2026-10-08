@@ -1,0 +1,436 @@
+[
+  {
+    "id": "current-plugin",
+    "valid": true,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "declarative",
+    "valid": true,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "extension",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "declarative",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "linked",
+    "valid": true,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "extension",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "linked",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "exclusive",
+    "valid": true,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "extension",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "exclusive",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "cold",
+    "valid": true,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "extension",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "cold",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "activation",
+    "valid": true,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "activationEvents": [
+        "onStartupFinished",
+        {
+          "onCommand": {
+            "id": "alpha.run"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "stale-channel",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 22
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "protocol-field",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23,
+        "extra": true
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "missing-role",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "unknown-role",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "library",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "unknown-execution",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "cooperative",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "unknown-field",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "extra": true
+    }
+  },
+  {
+    "id": "malformed-activation",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "activationEvents": [
+        {
+          "onCommand": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "hash-boundary",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "semio:alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111\n",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "package-identity",
+    "valid": false,
+    "value": {
+      "descriptorVersion": 1,
+      "packageId": "alpha",
+      "role": "plugin",
+      "manifest": {
+        "pluginId": "alpha",
+        "label": "Alpha",
+        "version": "1.0.0",
+        "apps": [],
+        "examples": []
+      },
+      "execution": "isolated",
+      "executionProtocol": {
+        "appChannelVersion": 23
+      },
+      "quotas": {},
+      "contributions": {},
+      "hashes": {
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "coreWasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  {
+    "id": "root-15",
+    "valid": false,
+    "value": null
+  },
+  {
+    "id": "root-16",
+    "valid": false,
+    "value": []
+  },
+  {
+    "id": "root-17",
+    "valid": false,
+    "value": {}
+  }
+]

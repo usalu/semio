@@ -3,4 +3,8 @@ input SetObjectValueMutationInput {
   id: ObjRefInput
   value: PdfObjectInput
   index: Int
+  admittedStreamRoles: PdfIndexedStreamRoleDiffInput
 }
+
+input PdfIndexedStreamRoleDiffInput { removed: [Int64!] modified: [PdfIndexedStreamRoleItemInput!] added: [PdfIndexedStreamRoleItemInput!] }
+input PdfIndexedStreamRoleItemInput { index: Int64! value: PdfAdmittedStreamRoleInput! }

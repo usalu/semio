@@ -13,6 +13,7 @@
 //! glue-mounted siblings.
 
 use crate::{LayoutDiff, LayoutSnapshot};
+use crate::standards::v1::subsets::any::schema::diff::{PagePatch};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
@@ -87,7 +88,7 @@ pub enum LayoutMutation {
 /// locked targets are skipped with one Warning `mutation.partial` per reason; a transform that moves nothing is the
 /// Warning `mutation.no-op`.
 pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets: &[String], transform: impl Fn(&crate::LayoutBounds) -> crate::LayoutBounds, fields: impl Fn(&crate::LayoutBounds) -> crate::FramePatch) -> protocol::MutationOutcome<LayoutDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+    use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PageFramesModification, PagePatch};
     if let Err(reason) = layout_frame_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
     }
@@ -105,12 +106,12 @@ pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets
         .filter(|(ids, _)| !ids.is_empty())
         .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
-    let patched: Vec<crate::PageFramePatched> = movable.iter().filter_map(|frame| Some(transform(frame.bounds())).filter(|next| next != frame.bounds()).map(|next| crate::PageFramePatched { frame_id: frame.id().to_string(), patch: fields(&next) })).collect();
+    let patched: Vec<PageFramesModification> = movable.iter().filter_map(|frame| Some(transform(frame.bounds())).filter(|next| next != frame.bounds()).map(|next| PageFramesModification { id: frame.id().to_string(), patch: fields(&next) })).collect();
     if patched.is_empty() {
         return protocol::MutationOutcome::new(LayoutDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "The transform moves no frame.").at(targets.to_vec())]));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: page_id.to_string(), patch: crate::PagePatch { frames_patched: patched, ..Default::default() } }], ..Default::default() }),
+        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: page_id.to_string(), patch: PagePatch { frames: PageFramesDelta { modified: patched, ..Default::default() }, ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
     .absorb_messages(partial)
@@ -168,26 +169,6 @@ pub fn layout_label_frames(count: usize) -> (String, String) {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-//#region 🌉️ExternalCodecBridge
-
-
-/// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
-/// no-op kind is a RESULT this bridge reports, never an error it swallows.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_step(snapshot: &LayoutSnapshot, mutation: &LayoutMutation) -> Result<(LayoutSnapshot, Vec<String>), String> {
-    use protocol::{Mutation, MutationDiff};
-    let outcome = <LayoutMutation as Mutation<LayoutSnapshot>>::diff(mutation, snapshot);
-    let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => Ok((next, messages)),
-        Err(error) => Err(format!("{error:?}")),
-    }
-}
-
-
-
-//#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `LayoutMutation` variant, in declaration order — the vocabulary

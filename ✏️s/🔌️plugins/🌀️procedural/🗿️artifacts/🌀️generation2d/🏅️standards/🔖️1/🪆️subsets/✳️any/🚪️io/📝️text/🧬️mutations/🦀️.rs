@@ -2,7 +2,7 @@
 //!
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_generation2d_mutation,generation2d_host_snapshot_operations,generation_mutation_to_generation2d,inverse_generation2d_mutation,replace_widget,Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation2d, inverse_generation2d_mutation, replace_widget, Generation2dMutation};
 
 
 //#region 📖️SemioGrammar
@@ -20,6 +20,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
     WidgetLayoutDsl,
 };
+use crate::central_apply::{apply_generation2d_mutation};
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub(crate) enum Generation2dOperationDsl {
     CreateWidget {
@@ -73,6 +74,9 @@ pub(crate) enum Generation2dOperationDsl {
         id: String,
         name: String,
     },
+    SelectGeneration {
+        generation_id: Option<String>,
+    },
     ChangeGenerationValue {
         id: String,
         question_id: String,
@@ -123,6 +127,7 @@ pub(crate) fn generation2d_operation_to_dsl(operation: &Generation2dMutation) ->
         Generation2dMutation::ChangeSchema(payload) => Generation2dOperationDsl::ChangeSchema { schema: payload.schema.clone() },
         Generation2dMutation::CreateGeneration(payload) => Generation2dOperationDsl::CreateGeneration { generation: form_generation_to_dsl(&payload.generation), index: payload.index },
         Generation2dMutation::DeleteGeneration(payload) => Generation2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
+        Generation2dMutation::SelectGeneration(payload) => Generation2dOperationDsl::SelectGeneration { generation_id: payload.generation_id.clone() },
         Generation2dMutation::RenameGeneration(payload) => Generation2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
         Generation2dMutation::ChangeGenerationValue(payload) => Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() },
         Generation2dMutation::ChangeSliderValue(payload) => Generation2dOperationDsl::ChangeSliderValue { id: payload.id.clone(), value: payload.value },
@@ -131,7 +136,7 @@ pub(crate) fn generation2d_operation_to_dsl(operation: &Generation2dMutation) ->
 }
 
 pub(crate) fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Result<Generation2dMutation, semio_framework_diagnostic::TextError> {
-    use crate::standards::v1::subsets::any::schema::mutations::{change_generation_value,change_schema,change_slider_value,clear_widget_layout,connect_synapse,create_generation,create_widget,delete_generation,delete_widget,disconnect_synapse,move_nodes,move_widget,rename_generation,replace_synapse,replace_widget,update_camera};
+    use crate::standards::v1::subsets::any::schema::mutations::{change_generation_value,change_schema,change_slider_value,clear_widget_layout,connect_synapse,create_generation,create_widget,delete_generation,delete_widget,disconnect_synapse,move_nodes,move_widget,rename_generation,select_generation,replace_synapse,replace_widget,update_camera};
 
     Ok(match operation {
         Generation2dOperationDsl::CreateWidget { index, widget } => create_widget(index, widget_from_dsl(*widget)?),
@@ -146,6 +151,7 @@ pub(crate) fn generation2d_operation_from_dsl(operation: Generation2dOperationDs
         Generation2dOperationDsl::ChangeSchema { schema } => change_schema(schema),
         Generation2dOperationDsl::CreateGeneration { generation, index } => Generation2dMutation::CreateGeneration(create_generation::CreateGeneration { generation: form_generation_from_dsl(generation), index, index: None }),
         Generation2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
+        Generation2dOperationDsl::SelectGeneration { generation_id } => select_generation(generation_id),
         Generation2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
         Generation2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, value),
         Generation2dOperationDsl::ChangeSliderValue { id, value } => change_slider_value(id, value),

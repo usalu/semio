@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { EllipseCurve, Line3, Plane, Vector2, Vector3 } from "three";
-import { casesOf, loadFixture, type BrepCase } from "../../../⏱️phased-job/🧰️test-support/🟦️.ts";
+import { casesOf, loadFixture, type BrepCase } from "../../../⏱️phased-job/🧪️tests/🧰️support/🟦️.ts";
 
 const fixture = loadFixture(import.meta.url);
 const close = (actual: number[], expected: number[], tolerance = fixture.tolerance) => actual.every((value, index) => Math.abs(value - expected[index]!) <= tolerance * Math.max(1, Math.abs(expected[index]!)));

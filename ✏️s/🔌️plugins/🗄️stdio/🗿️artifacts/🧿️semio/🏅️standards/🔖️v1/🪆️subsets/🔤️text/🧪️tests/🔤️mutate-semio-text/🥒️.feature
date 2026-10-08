@@ -72,7 +72,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
       | id                  | mutation |
       | insert-run          | {"InsertRun":{"index":331,"run":{"language":"fr","content":"concevoir avec l'existant","marks":[{"kind":"italic","href":""}]}}} |
       | remove-run          | {"RemoveRun":{"index":336}} |
-      | edit-run            | {"EditRun":{"index":60,"new_content":"Baustellenblog Variowohnungen"}} |
+      | edit-run            | {"EditRun":{"index":60,"new_text":"Baustellenblog Variowohnungen"}} |
       | change-run-language | {"ChangeRunLanguage":{"index":330,"new_language":"en"}} |
       | reorder-runs        | {"ReorderRuns":{"from":329,"to":356}} |
       | add-mark            | {"AddMark":{"run_index":330,"index":0,"mark":{"kind":"link","href":"https://www.zukunftbau.de/projekte/forschungsfoerderung"}}} |
@@ -92,7 +92,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
       | id                  | mutation |
       | insert-run          | {"InsertRun":{"index":331,"run":{"language":"fr","content":"concevoir avec l'existant","marks":[{"kind":"italic","href":""}]}}} |
       | remove-run          | {"RemoveRun":{"index":336}} |
-      | edit-run            | {"EditRun":{"index":60,"new_content":"Baustellenblog Variowohnungen"}} |
+      | edit-run            | {"EditRun":{"index":60,"new_text":"Baustellenblog Variowohnungen"}} |
       | change-run-language | {"ChangeRunLanguage":{"index":330,"new_language":"en"}} |
       | reorder-runs        | {"ReorderRuns":{"from":329,"to":356}} |
       | add-mark            | {"AddMark":{"run_index":330,"index":0,"mark":{"kind":"link","href":"https://www.zukunftbau.de/projekte/forschungsfoerderung"}}} |

@@ -44,7 +44,7 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
  let expected=encode_semio_graph_snapshot_json(&old).expect("all words and fields");
  let key=("workingGraph".to_owned(),contract["childId"].as_str().expect("declared member key").to_owned());
  let RichFrameMembers::Graph(member)=app.test_child_member_mut(&key).expect("real member") else{panic!("workingGraph member must be the actual Semio Graph owner")};
- member.dispatch(store::ArtifactCommand::Apply{mutations:vec![SemioGraphMutation::SetSnapshot(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::set_snapshot::SetSnapshot{snapshot:full_frame_child(&contract,true)})],transaction:None}).await.expect("actual next child publication");
+ member.dispatch(store::ArtifactCommand::Apply{mutations:vec![SemioGraphMutation::ChangeNodeLabel(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::change_node_label::ChangeNodeLabel{id:old.nodes[0].id.clone(),new_label:full_frame_child(&contract,true).nodes[0].label.clone()})],transaction:None}).await.expect("actual next child publication");
  app.test_publish_child_content(&key.0,&key.1).await.expect("real next root");
  assert_eq!(&*old as *const SemioGraphSnapshot,pointer);
  assert_eq!(encode_semio_graph_snapshot_json(&old).expect("old full owner"),expected);

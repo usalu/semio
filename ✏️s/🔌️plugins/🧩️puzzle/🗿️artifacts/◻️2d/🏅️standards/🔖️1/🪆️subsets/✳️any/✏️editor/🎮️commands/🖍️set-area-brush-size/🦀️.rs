@@ -1,7 +1,7 @@
 //! 🖍️ `set-area-brush-size` command.
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🖍️ One Area Brush extent stepper — `{axis: "w"|"h", value}` in whole grid cells, clamped to at
 /// least one cell. The 2d twin of puzzle3d's `setVoxelDims`: window-config state only, never a

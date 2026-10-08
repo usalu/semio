@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/retirement/contract/schema.json",
+  "title": "Full Grant Shared and Owned Retirement",
+  "$defs": {
+    "Grant": {"$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"},
+    "Demand": {
+      "type": "object", "additionalProperties": false,
+      "required": ["copyBytes", "capacityBytes", "releaseBytes", "depth"],
+      "properties": {
+        "copyBytes": {"type": "integer", "minimum": 0},
+        "capacityBytes": {"type": "integer", "minimum": 0},
+        "releaseBytes": {"type": "integer", "minimum": 0},
+        "depth": {"type": "integer", "minimum": 0}
+      }
+    },
+    "SharedCustody": {
+      "type": "object", "additionalProperties": false,
+      "required": ["strongLeases", "weakLeases", "leaseOnly", "demand"],
+      "properties": {
+        "strongLeases": {"type": "integer", "minimum": 1},
+        "weakLeases": {"type": "integer", "minimum": 0},
+        "leaseOnly": {"type": "boolean"},
+        "demand": {"$ref": "#/$defs/Demand"}
+      }
+    }
+  }
+}

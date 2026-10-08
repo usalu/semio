@@ -1,0 +1,25 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": {
+    "kindCompatibility": {
+      "inserted": [],
+      "modified": [],
+      "moved": [],
+      "removed": [
+        {
+          "id": {
+            "source": "vortex-kind-b",
+            "target": "vortex-kind-c"
+          },
+          "index": 1
+        }
+      ]
+    }
+  },
+  "objects": null,
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
+}

@@ -83,8 +83,9 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-link/appends-link-3: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().links.as_ref().expect("create-link fills the links delta");
-    assert_eq!(delta.added.len(), 1, "create-link adds exactly one link");
-    assert_eq!(delta.added[0].hash, "hash-caption", "create-link's `added` entry carries the payload link's hash");
+    assert_eq!(delta.inserted.len(), 1, "create-link inserts exactly one link");
+    assert_eq!(delta.inserted[0].row.hash, "hash-caption", "create-link's `inserted` row carries the payload link's hash");
+    assert_eq!(delta.inserted[0].index, 2, "create-link's `inserted` row carries its index in the resulting list");
     assert!(produced.diff().stories.is_none(), "create-link must not emit a stories delta");
 }
 
@@ -97,7 +98,7 @@ async fn produces_committed_diff() {
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-link/appends-link-3: create-link must emit a links delta whose only populated arm is `added`");
+    assert_eq!(produced, committed, "create-link/appends-link-3: create-link must emit a links delta whose only populated arm is `inserted`");
 }
 
 /// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has

@@ -2,12 +2,15 @@
   "catalogueName": null,
   "manufacturerName": null,
   "productGroups": {
-    "added": [],
     "removed": [
-      "group.radiators"
+      {
+        "id": "group.radiators",
+        "index": 0
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "productClasses": null,
   "productSeries": null,

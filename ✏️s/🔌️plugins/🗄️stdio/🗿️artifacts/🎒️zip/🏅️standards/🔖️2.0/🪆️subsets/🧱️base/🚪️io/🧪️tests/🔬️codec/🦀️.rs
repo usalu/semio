@@ -473,7 +473,7 @@ async fn deterministic_logical_round_trip() {
     let from_pack = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode logical ZIP pack");
     assert_eq!(from_pack, logical);
 
-    let self_diff = ZipDiff::between(&logical, &logical);
+    let self_diff = ZipDiff::default();
     let text_diff = ZipDiff::parse_diff(&self_diff.print_diff()).expect("parse logical ZIP diff");
     assert_eq!(protocol::apply_diff(&text_diff, &logical).unwrap(), logical);
     let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).expect("decode logical ZIP diff");
@@ -486,9 +486,9 @@ async fn deterministic_logical_round_trip() {
     let mut from_binary_op = ZipSnapshot::default();
     for operation in &operations {
         let text_op = ZipMutation::parse_op(&operation.print_op()).expect("parse logical ZIP operation");
-        crate::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);
+        crate::apply_mutation(&mut from_text_op, &text_op);
         let binary_op = ZipMutation::decode_op(&operation.encode_op().expect("encode logical ZIP operation")).expect("decode logical ZIP operation");
-        crate::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
+        crate::apply_mutation(&mut from_binary_op, &binary_op);
     }
     assert_eq!(from_text_op, logical);
     assert_eq!(from_binary_op, logical);

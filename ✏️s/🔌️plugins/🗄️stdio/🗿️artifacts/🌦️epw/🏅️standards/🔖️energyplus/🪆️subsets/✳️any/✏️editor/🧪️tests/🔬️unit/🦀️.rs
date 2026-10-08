@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -86,3 +87,23 @@ async fn set_cell_reaches_the_document_through_the_registered_native_factory() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", super::EpwEditor, || semio_framework_plugin::App { definition: super::create_epw_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
+    
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let base = EpwSnapshot { records: vec![Default::default(), Default::default()], ..EpwSnapshot::default() };
+    let emit = |event: SnapshotEditEvent| <EpwEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let header = emit(SnapshotEditEvent::SetValue { path: "/designConditions".into(), value: semio_framework_value::DslValue::String("sizing".into()) }).expect("a header line edit resolves");
+    let [mutation @ EpwMutation::SetDesignConditions(_)] = header.artifact_mutations.as_slice() else { panic!("a header line raises its own kind") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.design_conditions, "sizing");
+    let cell = emit(SnapshotEditEvent::SetValue { path: "/records/1/dryBulbTemp".into(), value: semio_framework_value::DslValue::String("21.5".into()) }).expect("a column edit resolves");
+    let [mutation @ EpwMutation::SetRecordField(_)] = cell.artifact_mutations.as_slice() else { panic!("a column edit raises the record-field kind") };
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.records[1].dry_bulb_temp, "21.5");
+    let removed = emit(SnapshotEditEvent::RemoveValue { path: "/records/0".into() }).expect("a record removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [EpwMutation::RemoveRecord(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

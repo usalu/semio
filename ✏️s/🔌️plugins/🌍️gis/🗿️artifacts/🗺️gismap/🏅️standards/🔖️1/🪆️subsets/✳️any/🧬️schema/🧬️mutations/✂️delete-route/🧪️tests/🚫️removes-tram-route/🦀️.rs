@@ -13,7 +13,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-route/🚫️removes-tram-route/📸️snapshot/⬅️before/🔣️.json");
@@ -128,8 +129,8 @@ async fn removes_exactly_one_route_without_cascading_and_inverts_from_base() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "delete-route/removes-tram-route: deleting a present id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().routes.as_ref().expect("delete-route writes a routes delta");
-    assert_eq!(delta.removed, vec!["route-tram".to_string()], "delete-route/removes-tram-route: exactly the payload's own id is removed");
-    assert!(delta.added.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "delete-route/removes-tram-route: a delete must not add, patch or reorder anything, got {delta:?}");
+    assert_eq!(delta.removed.iter().map(|removal| removal.id.as_str()).collect::<Vec<_>>(), vec!["route-tram"], "delete-route/removes-tram-route: exactly the payload's own id is removed");
+    assert!(delta.inserted.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "delete-route/removes-tram-route: a delete must not add, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().regions.is_none(), "delete-route/removes-tram-route: deleting a route cascades to nothing — positions and regions stay absent from the delta");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-route/removes-tram-route: a delete undoes with exactly one step — there is no severed-reference repair to add, got {inverse:?}");

@@ -7,7 +7,7 @@
 use crate::{ModelDiff, ModelSnapshot};
 
 #[cfg(test)]
-#[path = "🧰️kit/🦀️.rs"]
+#[path = "🧪️tests/🧰️kit/🦀️.rs"]
 pub mod kit;
 
 #[path = "🧵️elements/🦀️.rs"]

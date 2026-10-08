@@ -10,7 +10,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { WasmCanvas, type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ActionOperationControlV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
+import { composeDraftStepV1, createTextEditorTypingRunV1, draftChangesJsonV1, DRAFT_SPLICES_ARGUMENT, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ActionOperationControlV1, type DraftChangeV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1, type LocalDocumentOwnerV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
@@ -62,8 +62,8 @@ export type TextEditorExplicitDraftSettings = Readonly<{
   publicationRevision: string;
 }>;
 
-export type TextEditorExplicitDraftPending = Readonly<{ token: object; value: string; revision: string; outcome: InputOutcomeV1 | null; settled: boolean }>;
-export type TextEditorExplicitDraftState = Readonly<{ surfaceId: string; base: string; revision: string; draft: string; dirty: boolean; conflicted: boolean; failed: boolean; diagnostic: InputDiagnosticV1 | null; pending: TextEditorExplicitDraftPending | null; operation: ActionOperationControlV1 | null; cancelling: boolean; cancellationAccepted: boolean }>;
+export type TextEditorExplicitDraftPending = Readonly<{ token: object; value: string; changes: readonly DraftChangeV1[]; revision: string; outcome: InputOutcomeV1 | null; settled: boolean }>;
+export type TextEditorExplicitDraftState = Readonly<{ surfaceId: string; base: string; revision: string; draft: string; changes: readonly DraftChangeV1[]; dirty: boolean; conflicted: boolean; failed: boolean; diagnostic: InputDiagnosticV1 | null; pending: TextEditorExplicitDraftPending | null; operation: ActionOperationControlV1 | null; cancelling: boolean; cancellationAccepted: boolean }>;
 type RetainedTextEditorDraftV1 = { readonly owner: LocalDocumentOwnerV1; readonly key: string; readonly bucket: RetainedTextEditorDraftBucketV1; state: TextEditorExplicitDraftState; attached: boolean; readonly listeners: Set<(state: TextEditorExplicitDraftState) => void> };
 type RetainedTextEditorDraftBucketV1 = { readonly entries: Map<string, RetainedTextEditorDraftV1>; unsubscribe: () => void };
 //#endregion Types
@@ -490,14 +490,16 @@ export function parseTextEditorExplicitDraftSettings(json: string | undefined): 
   }
 }
 
-/** 📦 Merges a local draft into its artifact-owned action without mutating static arguments. */
-export function textEditorExplicitDraftAction(settings: TextEditorExplicitDraftSettings, draft: string): ActionDescriptor {
-  return { controllerId: "", action: settings.editAction, args: { ...settings.editArguments, [settings.editArgument]: draft } };
+/** 📦 Merges a local draft into its artifact-owned action without mutating static arguments. A window that declares
+ * {@link DRAFT_SPLICES_ARGUMENT} as its edit argument receives the draft's change set (the JSON list of ranges the editor made,
+ * in the coordinates of the text the draft started from) instead of the draft text. */
+export function textEditorExplicitDraftAction(settings: TextEditorExplicitDraftSettings, draft: string, changes: readonly DraftChangeV1[] = []): ActionDescriptor {
+  return { controllerId: "", action: settings.editAction, args: { ...settings.editArguments, [settings.editArgument]: settings.editArgument === DRAFT_SPLICES_ARGUMENT ? draftChangesJsonV1(changes) : draft } };
 }
 
 /** 🆕️ Starts a source draft at one canonical document publication. */
 export function createTextEditorExplicitDraft(surfaceId: string, buffer: string, revision: string): TextEditorExplicitDraftState {
-  return { surfaceId, base: buffer, revision, draft: buffer, dirty: false, conflicted: false, failed: false, diagnostic: null, pending: null, operation: null, cancelling: false, cancellationAccepted: false };
+  return { surfaceId, base: buffer, revision, draft: buffer, changes: [], dirty: false, conflicted: false, failed: false, diagnostic: null, pending: null, operation: null, cancelling: false, cancellationAccepted: false };
 }
 
 /** 🔄️ Only the exact native receipt acknowledges Apply; equal foreign text preserves a conflict. */
@@ -508,7 +510,7 @@ export function reconcileTextEditorExplicitDraft(state: TextEditorExplicitDraftS
     if (!pending.settled) return state;
     if (pending.outcome && inputCommitReceiptMatchesPublicationV1(pending.outcome, revision)) {
       const draft = state.draft === pending.value ? buffer : state.draft;
-      return { ...createTextEditorExplicitDraft(surfaceId, buffer, revision), draft, dirty: draft !== buffer };
+      return { ...createTextEditorExplicitDraft(surfaceId, buffer, revision), draft, changes: composeDraftStepV1([], buffer, draft), dirty: draft !== buffer };
     }
     if (pending.outcome?.kind === "applied" && pending.outcome.commit && revision === pending.revision) return state;
     return { ...state, pending: null, operation: null, cancelling: false, cancellationAccepted: false, failed: true, diagnostic: pending.outcome?.kind === "refused" ? pending.outcome.diagnostic ?? null : null, conflicted: revision !== state.revision || buffer !== state.base };
@@ -519,14 +521,14 @@ export function reconcileTextEditorExplicitDraft(state: TextEditorExplicitDraftS
 
 /** ✍️ Editing while Apply is pending preserves the newer draft across its eventual publication. */
 export function changeTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, buffer: string, draft: string, revision: string): TextEditorExplicitDraftState {
-  if (state.surfaceId !== surfaceId || (!state.pending && draft === buffer)) return { ...createTextEditorExplicitDraft(surfaceId, buffer, revision), draft, dirty: draft !== buffer };
-  return { ...state, draft, dirty: draft !== state.base || state.pending !== null, failed: false, diagnostic: null, conflicted: state.pending ? state.conflicted : revision !== state.revision || buffer !== state.base };
+  if (state.surfaceId !== surfaceId || (!state.pending && draft === buffer)) return { ...createTextEditorExplicitDraft(surfaceId, buffer, revision), draft, changes: composeDraftStepV1([], buffer, draft), dirty: draft !== buffer };
+  return { ...state, draft, changes: composeDraftStepV1(state.changes, state.draft, draft), dirty: draft !== state.base || state.pending !== null, failed: false, diagnostic: null, conflicted: state.pending ? state.conflicted : revision !== state.revision || buffer !== state.base };
 }
 
 /** 📮️ Reserves a single Apply owner until both completion and its publication arrive. */
 export function beginTextEditorExplicitDraft(state: TextEditorExplicitDraftState): TextEditorExplicitDraftState {
   if (!state.dirty || state.conflicted || state.pending) return state;
-  return { ...state, failed: false, diagnostic: null, pending: { token: {}, value: state.draft, revision: state.revision, outcome: null, settled: false }, operation: null, cancelling: false, cancellationAccepted: false };
+  return { ...state, failed: false, diagnostic: null, pending: { token: {}, value: state.draft, changes: state.changes, revision: state.revision, outcome: null, settled: false }, operation: null, cancelling: false, cancellationAccepted: false };
 }
 
 const ownsTextEditorExplicitDraftPending = (state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending): boolean => state.pending?.token === pending.token;
@@ -1578,7 +1580,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
     updateDraft(next);
     let outcome: unknown;
     try {
-      outcome = await onAction({ ...textEditorExplicitDraftAction(explicitDraft, owner.value), controllerId: node.controllerId }, { started: (operation) => {
+      outcome = await onAction({ ...textEditorExplicitDraftAction(explicitDraft, owner.value, owner.changes), controllerId: node.controllerId }, { started: (operation) => {
         const current = retainedDraft?.state ?? draftStateRef.current;
         updateDraft(startTextEditorExplicitDraftOperation(current, owner, operation));
       } });

@@ -71,9 +71,6 @@ impl protocol::DiffAlgebra<Fem3dModelWindowConfig> for Fem3dModelWindowConfigPat
             gumball: self.gumball.as_ref().map(|_| base.gumball.clone()),
         }
     }
-    fn between(base: &Fem3dModelWindowConfig, other: &Fem3dModelWindowConfig) -> Self {
-        Self::replacing(other).against(base)
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none() && self.gumball.is_none()
     }

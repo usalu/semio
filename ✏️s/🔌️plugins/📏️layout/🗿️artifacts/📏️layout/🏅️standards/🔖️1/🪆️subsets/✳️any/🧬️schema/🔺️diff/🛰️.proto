@@ -11,36 +11,103 @@ message TextStyleRunRow { uint64 index = 1; semio.s.layout.layout.artifact.TextS
 message TextStyleRunsDelta { optional uint64 len = 1; repeated TextStyleRunRow rows = 2; }
 message TextStoryPatch { optional string content = 1; optional TextStyleRunsDelta style_runs = 2; }
 message ImageLinkPatch { optional string path = 1; optional uint32 width = 2; optional uint32 height = 3; optional uint32 dpi = 4; optional string color_profile = 5; }
-message FramePatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional semio.s.layout.layout.artifact.Rgba fill = 5; optional semio.s.layout.layout.artifact.Rgba stroke = 6; optional string wrap_mode = 7; optional uint32 columns = 8; optional double rotation = 9; optional bool locked = 10; optional bool visible = 11; optional string story_id = 12; optional string thread_next = 13; optional double inset_x = 14; optional double inset_y = 15; optional double inset_width = 16; optional double inset_height = 17; }
-message PageLayerAdded { semio.s.layout.layout.artifact.Layer layer = 1; optional uint64 index = 2; }
-message PageFrameAdded { semio.s.layout.layout.artifact.Frame frame = 1; optional uint64 index = 2; optional string layer_id = 3; }
-message PageFramePatched { string frame_id = 1; FramePatch patch = 2; }
+message FramePatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional semio.s.layout.layout.artifact.Rgba fill = 5; optional semio.s.layout.layout.artifact.Rgba stroke = 6; optional string wrap_mode = 7; optional uint32 columns = 8; optional double rotation = 9; optional bool locked = 10; optional bool visible = 11; optional string story_id = 12; optional string thread_next = 13; optional double inset_x = 14; optional double inset_y = 15; optional double inset_width = 16; optional double inset_height = 17; optional string layer_id = 18; }
+message LayoutPageRemoval { string id = 1; uint64 index = 2; }
+message LayoutPageRemoval { string id = 1; uint64 index = 2; }
+message LayoutPageInsertion { uint64 index = 1; semio.s.layout.layout.artifact.Page row = 2; }
+message LayoutPageRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutPagesModification { string id = 1; PagePatch patch = 2; }
+message LayoutPagesDelta { repeated LayoutPageRemoval removed = 1; repeated LayoutPageInsertion inserted = 2; repeated LayoutPageRelocation moved = 3; repeated LayoutPagesModification modified = 4; }
+message LayoutStoryRemoval { string id = 1; uint64 index = 2; }
+message LayoutStoryInsertion { uint64 index = 1; semio.s.layout.layout.artifact.TextStory row = 2; }
+message LayoutStoryRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutStoriesModification { string id = 1; TextStoryPatch patch = 2; }
+message LayoutStoriesDelta { repeated LayoutStoryRemoval removed = 1; repeated LayoutStoryInsertion inserted = 2; repeated LayoutStoryRelocation moved = 3; repeated LayoutStoriesModification modified = 4; }
+message LayoutLinkRemoval { string id = 1; uint64 index = 2; }
+message LayoutLinkInsertion { uint64 index = 1; semio.s.layout.layout.artifact.ImageLink row = 2; }
+message LayoutLinkRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutLinksModification { string id = 1; ImageLinkPatch patch = 2; }
+message LayoutLinksDelta { repeated LayoutLinkRemoval removed = 1; repeated LayoutLinkInsertion inserted = 2; repeated LayoutLinkRelocation moved = 3; repeated LayoutLinksModification modified = 4; }
+message LayoutParagraphStyleRemoval { string id = 1; uint64 index = 2; }
+message LayoutParagraphStyleInsertion { uint64 index = 1; semio.s.layout.layout.artifact.ParagraphStyle row = 2; }
+message LayoutParagraphStyleRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutParagraphStylesModification { string id = 1; ParagraphStylePatch patch = 2; }
+message LayoutParagraphStylesDelta { repeated LayoutParagraphStyleRemoval removed = 1; repeated LayoutParagraphStyleInsertion inserted = 2; repeated LayoutParagraphStyleRelocation moved = 3; repeated LayoutParagraphStylesModification modified = 4; }
+message LayoutCharacterStyleRemoval { string id = 1; uint64 index = 2; }
+message LayoutCharacterStyleInsertion { uint64 index = 1; semio.s.layout.layout.artifact.CharacterStyle row = 2; }
+message LayoutCharacterStyleRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutCharacterStylesModification { string id = 1; CharacterStylePatch patch = 2; }
+message LayoutCharacterStylesDelta { repeated LayoutCharacterStyleRemoval removed = 1; repeated LayoutCharacterStyleInsertion inserted = 2; repeated LayoutCharacterStyleRelocation moved = 3; repeated LayoutCharacterStylesModification modified = 4; }
+message LayoutParentPageRemoval { string id = 1; uint64 index = 2; }
+message LayoutParentPageInsertion { uint64 index = 1; semio.s.layout.layout.artifact.ParentPage row = 2; }
+message LayoutParentPageRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutParentPagesModification { string id = 1; ParentPagePatch patch = 2; }
+message LayoutParentPagesDelta { repeated LayoutParentPageRemoval removed = 1; repeated LayoutParentPageInsertion inserted = 2; repeated LayoutParentPageRelocation moved = 3; repeated LayoutParentPagesModification modified = 4; }
+message LayoutSpreadRemoval { string id = 1; uint64 index = 2; }
+message LayoutSpreadInsertion { uint64 index = 1; semio.s.layout.layout.artifact.Spread row = 2; }
+message LayoutSpreadRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutSpreadsModification { string id = 1; SpreadPatch patch = 2; }
+message LayoutSpreadsDelta { repeated LayoutSpreadRemoval removed = 1; repeated LayoutSpreadInsertion inserted = 2; repeated LayoutSpreadRelocation moved = 3; repeated LayoutSpreadsModification modified = 4; }
+message PageOverrideRemoval { string id = 1; uint64 index = 2; }
+message PageOverrideInsertion { uint64 index = 1; semio.s.layout.layout.artifact.PageOverride row = 2; }
+message PageOverrideRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message PageOverridesDelta { repeated PageOverrideRemoval removed = 1; repeated PageOverrideInsertion inserted = 2; repeated PageOverrideRelocation moved = 3; }
+message LayoutDataEntryRemoval { string id = 1; uint64 index = 2; }
+message LayoutDataEntryInsertion { uint64 index = 1; semio.s.forms.forms.dictionary.FormDictionaryEntry row = 2; }
+message LayoutDataEntryRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutDataEntriesDelta { repeated LayoutDataEntryRemoval removed = 1; repeated LayoutDataEntryInsertion inserted = 2; repeated LayoutDataEntryRelocation moved = 3; }
+message PageFrameRemoval { string id = 1; uint64 index = 2; }
+message PageFrameInsertion { uint64 index = 1; semio.s.layout.layout.artifact.Frame row = 2; }
+message PageFrameRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message PageFramesModification { string id = 1; FramePatch patch = 2; }
+message PageFramesDelta { repeated PageFrameRemoval removed = 1; repeated PageFrameInsertion inserted = 2; repeated PageFrameRelocation moved = 3; repeated PageFramesModification modified = 4; }
+message PageLayerRemoval { string id = 1; uint64 index = 2; }
+message PageLayerInsertion { uint64 index = 1; semio.s.layout.layout.artifact.Layer row = 2; }
+message PageLayerRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message PageLayersModification { string id = 1; LayerPatch patch = 2; }
+message PageLayersDelta { repeated PageLayerRemoval removed = 1; repeated PageLayerInsertion inserted = 2; repeated PageLayerRelocation moved = 3; repeated PageLayersModification modified = 4; }
+message LayerPatch { optional string name = 1; optional bool visible = 2; optional bool locked = 3; }
+message PagePatch { optional string name = 1; optional double width = 2; optional double height = 3; optional double margin_top = 4; optional double margin_right = 5; optional double margin_bottom = 6; optional double margin_left = 7; optional uint32 columns_count = 8; optional double columns_gutter = 9; optional string parent_page_id = 10; optional PageGuidesDelta guides = 11; PageOverridesDelta overrides = 12; PageFramesDelta frames = 13; PageLayersDelta layers = 14; }
+message LayoutPageRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutPagesModification { string id = 1; PagePatch patch = 2; }
+message LayoutStoryRemoval { string id = 1; uint64 index = 2; }
+message LayoutStoryRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutStoriesModification { string id = 1; TextStoryPatch patch = 2; }
+message LayoutLinkRemoval { string id = 1; uint64 index = 2; }
+message LayoutLinkRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutLinksModification { string id = 1; ImageLinkPatch patch = 2; }
+message LayoutParagraphStyleRemoval { string id = 1; uint64 index = 2; }
+message LayoutParagraphStyleRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutParagraphStylesModification { string id = 1; ParagraphStylePatch patch = 2; }
+message LayoutCharacterStyleRemoval { string id = 1; uint64 index = 2; }
+message LayoutCharacterStyleRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutCharacterStylesModification { string id = 1; CharacterStylePatch patch = 2; }
+message LayoutParentPageRemoval { string id = 1; uint64 index = 2; }
+message LayoutParentPageRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutParentPagesModification { string id = 1; ParentPagePatch patch = 2; }
+message LayoutSpreadRemoval { string id = 1; uint64 index = 2; }
+message LayoutSpreadRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutSpreadsModification { string id = 1; SpreadPatch patch = 2; }
+message PageOverrideRemoval { string id = 1; uint64 index = 2; }
+message PageOverrideRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message LayoutDataEntryRemoval { string id = 1; uint64 index = 2; }
+message LayoutDataEntryRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message PageFrameRemoval { string id = 1; uint64 index = 2; }
+message PageFrameInsertion { uint64 index = 1; semio.s.layout.layout.artifact.Frame row = 2; }
+message PageFrameRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message PageFramesModification { string id = 1; FramePatch patch = 2; }
+message PageFramesDelta { repeated PageFrameRemoval removed = 1; repeated PageFrameInsertion inserted = 2; repeated PageFrameRelocation moved = 3; repeated PageFramesModification modified = 4; }
+message PageLayerRemoval { string id = 1; uint64 index = 2; }
+message PageLayerInsertion { uint64 index = 1; semio.s.layout.layout.artifact.Layer row = 2; }
+message PageLayerRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message PageLayersModification { string id = 1; LayerPatch patch = 2; }
+message PageLayersDelta { repeated PageLayerRemoval removed = 1; repeated PageLayerInsertion inserted = 2; repeated PageLayerRelocation moved = 3; repeated PageLayersModification modified = 4; }
+message LayerPatch { optional string name = 1; optional bool visible = 2; optional bool locked = 3; }
 message PageGuideRow { uint64 index = 1; semio.s.layout.layout.artifact.LayoutRect guide = 2; }
 message PageGuidesDelta { optional uint64 len = 1; repeated PageGuideRow rows = 2; }
-message PageOverridePatchEntry { string id = 1; semio.s.layout.layout.artifact.PageOverride item = 2; }
-message PageOverridesDelta { repeated semio.s.layout.layout.artifact.PageOverride added = 1; repeated string removed = 2; repeated PageOverridePatchEntry patched = 3; repeated string reordered = 4; }
-message PagePatch { optional string name = 1; optional double width = 2; optional double height = 3; optional double margin_top = 4; optional double margin_right = 5; optional double margin_bottom = 6; optional double margin_left = 7; optional uint32 columns_count = 8; optional double columns_gutter = 9; optional PageFrameAdded frame_added = 10; optional string frame_removed = 11; repeated PageFramePatched frames_patched = 12; optional PageLayerPatched layer_patched = 13; optional string parent_page_id = 14; optional PageGuidesDelta guides = 15; optional PageOverridesDelta overrides = 16; optional PageLayerAdded layer_added = 17; optional string layer_removed = 18; optional PageFrameLayer frame_layer = 19; repeated string frame_order = 20; }
-message PageLayerPatched { string layer_id = 1; optional string name = 2; optional bool visible = 3; optional bool locked = 4; }
-message PageFrameLayer { string frame_id = 1; string layer_id = 2; }
-message LayoutPagePatchEntry { string id = 1; PagePatch patch = 2; }
-message LayoutStoryPatchEntry { string id = 1; TextStoryPatch patch = 2; }
-message LayoutLinkPatchEntry { string id = 1; ImageLinkPatch patch = 2; }
-message LayoutParagraphStylePatchEntry { string id = 1; ParagraphStylePatch patch = 2; }
-message LayoutCharacterStylePatchEntry { string id = 1; CharacterStylePatch patch = 2; }
-message LayoutParentPagePatchEntry { string id = 1; ParentPagePatch patch = 2; }
-message LayoutSpreadPatchEntry { string id = 1; SpreadPatch patch = 2; }
-message LayoutPagesDelta { repeated semio.s.layout.layout.artifact.Page added = 1; repeated string removed = 2; repeated LayoutPagePatchEntry patched = 3; repeated string reordered = 4; }
-message LayoutStoriesDelta { repeated semio.s.layout.layout.artifact.TextStory added = 1; repeated string removed = 2; repeated LayoutStoryPatchEntry patched = 3; repeated string reordered = 4; }
-message LayoutLinksDelta { repeated semio.s.layout.layout.artifact.ImageLink added = 1; repeated string removed = 2; repeated LayoutLinkPatchEntry patched = 3; repeated string reordered = 4; }
-message LayoutParagraphStylesDelta { repeated semio.s.layout.layout.artifact.ParagraphStyle added = 1; repeated string removed = 2; repeated LayoutParagraphStylePatchEntry patched = 3; repeated string reordered = 4; }
-message LayoutCharacterStylesDelta { repeated semio.s.layout.layout.artifact.CharacterStyle added = 1; repeated string removed = 2; repeated LayoutCharacterStylePatchEntry patched = 3; repeated string reordered = 4; }
-message LayoutParentPagesDelta { repeated semio.s.layout.layout.artifact.ParentPage added = 1; repeated string removed = 2; repeated LayoutParentPagePatchEntry patched = 3; repeated string reordered = 4; }
-message LayoutSpreadsDelta { repeated semio.s.layout.layout.artifact.Spread added = 1; repeated string removed = 2; repeated LayoutSpreadPatchEntry patched = 3; repeated string reordered = 4; }
 message GridPatch { optional double baseline_grid = 1; optional double baseline_offset = 2; optional bool snap_to_baseline = 3; }
 message PrintTargetChange { optional string target = 1; }
 enum DataFieldsPresence { DATA_FIELDS_PRESENCE_UNSPECIFIED = 0; CREATED = 1; DELETED = 2; REPLACED = 3; }
-message LayoutDataEntryPatchEntry { string id = 1; semio.s.forms.forms.dictionary.FormDictionaryEntry item = 2; }
-message LayoutDataEntriesDelta { repeated semio.s.forms.forms.dictionary.FormDictionaryEntry added = 1; repeated string removed = 2; repeated LayoutDataEntryPatchEntry patched = 3; repeated string reordered = 4; }
 message LayoutDataFieldsDelta { optional DataFieldsPresence presence = 1; optional LayoutDataEntriesDelta entries = 2; }
 message LayoutDrawingTextRow { uint32 index = 1; string text = 2; }
 message LayoutDiff {

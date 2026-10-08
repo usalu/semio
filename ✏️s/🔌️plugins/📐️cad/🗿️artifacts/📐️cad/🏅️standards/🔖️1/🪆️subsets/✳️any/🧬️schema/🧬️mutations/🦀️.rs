@@ -75,7 +75,7 @@ pub struct CadOpacitySet {
 /// `📓️derivation-rules.md` from `CadSnapshot`'s shape. `SetSnapshot`/`SetPaneObjects`-as-whole-doc-
 /// replace and every generic `Patch*`/`CollectionMutation` variant this facet used to carry are
 /// gone — whole-document replace is not an in-history mutation at all (routed through
-/// `ArtifactStore::reset`, see `CadPlayApp::whole_document_operation` returning `None` now).
+/// `ArtifactStore::reset` / `Effect::LoadDocument`).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value_derive::RetireOwned)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CadSnapshot, diff = CadDiff, schema = "cad.cad")]

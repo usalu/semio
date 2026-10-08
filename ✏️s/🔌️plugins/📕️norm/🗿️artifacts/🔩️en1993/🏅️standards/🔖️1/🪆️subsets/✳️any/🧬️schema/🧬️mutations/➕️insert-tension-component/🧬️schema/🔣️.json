@@ -5,12 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
     "tensionComponent"
   ],
   "properties": {
     "index": {
-      "type": "integer",
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 0,
       "x-semio-ui": {
         "widget": "stepper",
@@ -20,8 +22,8 @@
           "de": "Position"
         },
         "description": {
-          "en": "Zero-based list position at which the record is inserted.",
-          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+          "en": "Zero-based list position at which the record is inserted. Empty appends; positions past the end append.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird. Ohne Angabe am Ende; Positionen hinter dem Ende hängen an."
         },
         "step": 1,
         "precision": 0,

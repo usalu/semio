@@ -66,9 +66,10 @@
   "auditEvents": null,
   "templates": null,
   "knowledge": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "knowledge-record-a",
         "patch": {
@@ -100,8 +101,7 @@
           "usageCount": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "benchmarks": null,
   "traces": null,

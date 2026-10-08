@@ -98,18 +98,6 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/reorder-tiles/schema.json"
         }
       }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ReplaceTiles"
-      ],
-      "properties": {
-        "ReplaceTiles": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/replace-tiles/schema.json"
-        }
-      }
     }
   ]
 }

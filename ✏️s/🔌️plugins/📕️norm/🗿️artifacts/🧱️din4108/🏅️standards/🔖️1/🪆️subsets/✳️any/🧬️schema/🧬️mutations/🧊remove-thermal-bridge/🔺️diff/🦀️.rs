@@ -5,8 +5,8 @@ use crate::diff::{Din4108Diff, Din4108ThermalBridgeDelta};
 use crate::Din4108Snapshot;
 
 pub fn diff(payload: &RemoveThermalBridge, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
-    let Some(row) = base.thermal_bridges.get(payload.index) else {
+    if payload.index >= base.thermal_bridges.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "bridge index out of range", Vec::<String>::new());
-    };
-    protocol::MutationOutcome::new(Din4108Diff { thermal_bridges: Din4108ThermalBridgeDelta::removal(&row.id), ..Default::default() })
+    }
+    protocol::MutationOutcome::new(Din4108Diff { thermal_bridges: Din4108ThermalBridgeDelta::removal(&base.thermal_bridges, payload.index), ..Default::default() })
 }

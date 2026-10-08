@@ -99,3 +99,4 @@ test("primary dependent declarations explicitly own every published structural s
     console.log("[DEBUG] declared structural dependency " + definition.id + ": " + claim);
   }
 });
+

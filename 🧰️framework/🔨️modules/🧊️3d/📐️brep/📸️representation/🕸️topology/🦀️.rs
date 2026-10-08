@@ -20,6 +20,15 @@ use crate::brep::representation::tolerance::Tol;
 use crate::brep::representation::topology::history::{LabelSource, PersistentLabel};
 use crate::brep::representation::vector::Pnt3;
 
+#[cfg(test)]
+std::thread_local! { pub(crate) static EDGE_USE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+
+pub(crate) fn coedge_uses_edge(coedge: &Coedge, edge: EdgeId) -> bool {
+    #[cfg(test)]
+    EDGE_USE_PROBES.with(|probes| probes.set(probes.get() + 1));
+    coedge.edge == edge
+}
+
 // #region 🔖️Entities
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -117,6 +126,15 @@ pub struct Body {
     pub labels: LabelSource,
 }
 
+semio_framework_value::artifact_retire_struct!(Vertex {position,tol,label});
+semio_framework_value::artifact_retire_struct!(Edge {curve,range,v0,v1,tol,label});
+semio_framework_value::artifact_retire_struct!(Coedge {edge,forward,pcurve,prange,loop_id,next,prev});
+semio_framework_value::artifact_retire_struct!(Loop {first,face});
+semio_framework_value::artifact_retire_struct!(Face {surface,outer,inners,flipped,tol,label});
+semio_framework_value::artifact_retire_struct!(Shell {faces,label});
+semio_framework_value::artifact_retire_struct!(Solid {outer,inners,label});
+semio_framework_value::artifact_retire_struct!(Body {vertices,edges,coedges,loops,faces,shells,solids,curves3,curves2,surfaces,labels});
+
 impl Body {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
@@ -196,7 +214,7 @@ impl Body {
     /// 🧱️ Every coedge that uses `edge_id` (both orientations, both faces if the edge is shared).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn edge_coedges(&self, edge_id: EdgeId) -> Vec<CoedgeId> {
-        self.coedges.iter().filter(|(_, c)| c.edge == edge_id).map(|(id, _)| id).collect()
+        self.coedges.iter().filter(|(_, c)| coedge_uses_edge(c, edge_id)).map(|(id, _)| id).collect()
     }
 }
 
@@ -437,6 +455,9 @@ pub mod history {
     pub struct LabelSource {
         next: u64,
     }
+
+    semio_framework_value::artifact_retire_leaf!(PersistentLabel);
+    semio_framework_value::artifact_retire_struct!(LabelSource {next});
 
     impl LabelSource {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

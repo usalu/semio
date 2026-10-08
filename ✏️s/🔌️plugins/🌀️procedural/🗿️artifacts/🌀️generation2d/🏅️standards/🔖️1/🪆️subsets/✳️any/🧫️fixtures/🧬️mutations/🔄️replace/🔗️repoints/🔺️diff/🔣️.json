@@ -3,12 +3,13 @@
   "camera": null,
   "widgets": null,
   "synapses": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "link-ab",
-        "item": {
+        "patch": {
           "id": "link-ab",
           "from": "note-a",
           "to": "note-b",
@@ -16,8 +17,7 @@
           "toPort": "alt"
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "layout": null,
   "generations": null,

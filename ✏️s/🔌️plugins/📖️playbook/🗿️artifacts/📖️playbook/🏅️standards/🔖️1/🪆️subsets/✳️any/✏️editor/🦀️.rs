@@ -117,7 +117,7 @@ pub const PLAYBOOK_INTERACTION_GRANULARITY_STEP: &str = "step";
 /// 🌳️ `blocks` domain topology from the document's own step/block nesting — step ids and block ids
 /// share the same flat id namespace `PlaybookConfig::selected_ids` used to (`remove-block`'s old manual
 /// prune matched on either), so `validate_state` prunes a deleted step's OR block's id automatically
-/// after every document dispatch (`revalidate_interaction_state_after_document_change`), replacing the
+/// after every document dispatch (`revalidate_interaction_on_document_change`), replacing the
 /// deleted hand-rolled prune in `remove_block::handle`.
 fn playbook_blocks_topology(spec: &PlaybookSpec) -> DomainTopology {
     let mut ordered = Vec::new();
@@ -367,16 +367,22 @@ where
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, playbook_bounded_serialized_bytes(mutation)?))
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<PlaybookOneItemPreparation<P,M>>(),depth:1})
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M>)> {
+        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
+        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preparation rejected original publication authority"),request));
         }
-        Ok(Box::new(PlaybookOneItemPreparation {
+        Ok((Box::new(PlaybookOneItemPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
             authority: Some(request.authority),
@@ -386,7 +392,7 @@ where
             phase: 0,
             cancelled: false,
             closing: false,
-        }))
+        }),progress))
     }
 }
 

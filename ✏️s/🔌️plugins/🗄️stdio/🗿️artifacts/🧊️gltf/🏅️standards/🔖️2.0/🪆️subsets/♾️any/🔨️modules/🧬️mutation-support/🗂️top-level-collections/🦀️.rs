@@ -1,6 +1,7 @@
 //! 🔒 Read-only typed-reference scan and sparse row mechanics private to the top-level collection leaves. Nothing here writes
 //! into a snapshot: every function reads `base` and answers the sparse rows the owning leaf declares.
 use crate::schema::diff::*;
+use protocol::list_delta::Keyed;
 use crate::schema::snapshot::*;
 use crate::GltfSnapshot;
 pub use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -23,42 +24,46 @@ pub enum GltfTopLevelFamily {
     Cameras,
 }
 
-//#region 🔖️ListValues
-/// 📋️ `items` with `item` inserted at `position`.
+//#region 🔖️PositionalMoves
+/// 📋️ The moves that rebuild a keyed list as `order` (`order[new] = old`): only entries that change position are named, each by key
+/// with its base and its after position.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn with_inserted<T: Clone>(items: &[T], position: usize, item: T) -> Vec<T> {
-    let mut next = items.to_vec();
-    next.insert(position, item);
-    next
+pub fn moves_to_order<R: Keyed>(items: &[R], order: &[usize]) -> Vec<(R::Key, usize, usize)> {
+    order.iter().enumerate().filter(|(new, old)| new != *old).map(|(new, old)| (items[*old].key(), *old, new)).collect()
 }
-/// 📋️ `items` without the entry at `index`.
+/// 📋️ The moves that rebuild a keyed list in the order `order` names by key; an unnamed key keeps the entry where it is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn without<T: Clone>(items: &[T], index: usize) -> Vec<T> {
-    let mut next = items.to_vec();
-    next.remove(index);
-    next
+pub fn moves_to_keys<R: Keyed>(items: &[R], order: &[R::Key]) -> Vec<(R::Key, usize, usize)> {
+    let positions: Vec<usize> = order.iter().map(|wanted| items.iter().position(|item| item.key() == *wanted).unwrap_or(0)).collect();
+    moves_to_order(items, &positions)
 }
-/// 📋️ `items` with the entry at `from` moved to `to`.
+/// 📋️ Where each entry of a list of `len` entries sits once the entry at `from` moves to `to` (`result[new] = old`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn with_moved<T: Clone>(items: &[T], from: usize, to: usize) -> Vec<T> {
-    let mut next = items.to_vec();
-    let item = next.remove(from);
-    next.insert(to, item);
-    next
+pub fn order_after_move(len: usize, from: usize, to: usize) -> Vec<usize> {
+    let rest: Vec<usize> = (0..len).filter(|index| *index != from).collect();
+    rest.iter().take(to).copied().chain(std::iter::once(from)).chain(rest.iter().skip(to).copied()).collect()
 }
-/// 📋️ `items` with the entry at `index` replaced by `item`.
+/// 📋️ The target with `pair` appended.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn with_replaced<T: Clone>(items: &[T], index: usize, item: T) -> Vec<T> {
-    let mut next = items.to_vec();
-    next[index] = item;
-    next
+pub fn target_with_pair(target: &GltfMorphTarget, pair: (String, usize)) -> GltfMorphTarget {
+    GltfMorphTarget(target.0.iter().cloned().chain(std::iter::once(pair)).collect())
 }
-/// 📋️ `items` rebuilt as `order` (`order[new] = old`).
+/// 📋️ The target without the pair at `index`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn permuted<T: Clone>(items: &[T], order: &[usize]) -> Vec<T> {
-    order.iter().map(|old| items[*old].clone()).collect()
+pub fn target_without_pair(target: &GltfMorphTarget, index: usize) -> GltfMorphTarget {
+    GltfMorphTarget(target.0.iter().enumerate().filter(|(at, _)| *at != index).map(|(_, pair)| pair.clone()).collect())
 }
-//#endregion 🔖️ListValues
+/// 📋️ The target whose pairs follow `order` (`order[new] = old`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn target_in_order(target: &GltfMorphTarget, order: &[usize]) -> GltfMorphTarget {
+    GltfMorphTarget(order.iter().map(|old| target.0[*old].clone()).collect())
+}
+/// 📋️ The delta that replaces the target at `index` by `next`: its removal and the insertion of the new value at the same position.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn target_replacement(targets: &[GltfMorphTarget], index: usize, next: GltfMorphTarget) -> GltfTargetsDelta {
+    GltfTargetsDelta::rows(vec![(targets[index].key(), index)], vec![(index, next)], Vec::new())
+}
+//#endregion 🔖️PositionalMoves//#endregion 🔖️PositionalRows
 
 //#region 🔖️RowBuilders
 /// 🩹 `diff` unless it names nothing.
@@ -79,7 +84,7 @@ pub fn primitives_rows(mesh: usize, rows: GltfPrimitivesDiff) -> Option<GltfMesh
 /// 🩹 One modified row at base `index`, or nothing when the row names no field.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn patch<T, D: Default + PartialEq>(index: usize, diff: D) -> Option<GltfCollectionDiff<T, D>> {
-    changed(diff).map(|diff| GltfCollectionDiff { removed: Vec::new(), modified: vec![GltfModified { index, diff }], added: Vec::new() })
+    changed(diff).map(|diff| GltfCollectionDiff { removed: Vec::new(), modified: vec![GltfModified { index, diff }], added: Vec::new(), amended: Vec::new() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn row<T, D: Default>(slot: &mut Option<GltfCollectionDiff<T, D>>, index: usize) -> &mut D {
@@ -154,17 +159,36 @@ type Remap<'a> = &'a mut dyn FnMut(usize) -> Option<usize>;
 fn optional(value: Option<usize>, remap: Remap) -> Option<usize> {
     value.and_then(|index| remap(index))
 }
+/// 🧵️ The rows that rewrite every entry of a keyed list through `rewrite`: an entry it drops leaves, one it changes is removed at its base
+/// position and reinserted at its after position, one it keeps stays.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn list(values: &[usize], remap: Remap) -> Vec<usize> {
-    values.iter().filter_map(|index| remap(*index)).collect()
+fn rewritten<R: Keyed + Clone + PartialEq>(rows: &[R], mut rewrite: impl FnMut(&R) -> Option<R>) -> (Vec<(R::Key, usize)>, Vec<(usize, R)>) {
+    let (mut removed, mut inserted, mut after) = (Vec::new(), Vec::new(), 0);
+    for (at, row) in rows.iter().enumerate() {
+        match rewrite(row) {
+            None => removed.push((row.key(), at)),
+            Some(next) => {
+                if &next != row {
+                    removed.push((row.key(), at));
+                    inserted.push((after, next));
+                }
+                after += 1;
+            }
+        }
+    }
+    (removed, inserted)
 }
+/// 🧵️ The delta that rebinds each reference of a list through the remap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pairs(values: &[(String, usize)], remap: Remap) -> Vec<(String, usize)> {
-    values.iter().filter_map(|(semantic, index)| remap(*index).map(|mapped| (semantic.clone(), mapped))).collect()
+fn refs_through(values: &[usize], remap: Remap) -> Option<GltfRefsDelta> {
+    let (removed, inserted) = rewritten(&refs(values), |reference| remap(reference.0).map(GltfRef));
+    (!removed.is_empty() || !inserted.is_empty()).then(|| GltfRefsDelta::rows(removed, inserted, Vec::new()))
 }
+/// 🧵️ The delta that rebinds each attribute accessor of a primitive or morph target through the remap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn texture_info(info: &Option<GltfTextureInfo>, remap: Remap) -> Option<GltfTextureInfo> {
-    info.as_ref().and_then(|info| remap(info.index).map(|index| GltfTextureInfo { index, ..info.clone() }))
+fn attributes_through(values: &[(String, usize)], remap: Remap) -> Option<GltfAttributesDelta> {
+    let (removed, inserted) = rewritten(&attribute_rows(values), |attribute| remap(attribute.accessor).map(|accessor| GltfAttribute { semantic: attribute.semantic.clone(), accessor }));
+    (!removed.is_empty() || !inserted.is_empty()).then(|| GltfAttributesDelta::rows(removed, inserted, Vec::new()))
 }
 
 /// 🧵️ The sparse rows that rebind every typed reference to `family` through `remap`: a referrer is named only when one of its
@@ -183,15 +207,13 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
         }
         GltfTopLevelFamily::Nodes => {
             for (index, scene) in document.scenes.iter().enumerate() {
-                let nodes = list(&scene.nodes, remap);
-                if nodes != scene.nodes {
-                    row(&mut diff.scenes, index).nodes = Some(nodes);
+                if let Some(rows) = refs_through(&scene.nodes, remap) {
+                    row(&mut diff.scenes, index).nodes = Some(rows);
                 }
             }
             for (index, node) in document.nodes.iter().enumerate() {
-                let children = list(&node.children, remap);
-                if children != node.children {
-                    row(&mut diff.nodes, index).children = Some(children);
+                if let Some(rows) = refs_through(&node.children, remap) {
+                    row(&mut diff.nodes, index).children = Some(rows);
                 }
             }
             for (index, skin) in document.skins.iter().enumerate() {
@@ -199,15 +221,14 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
                 if skeleton != skin.skeleton {
                     row(&mut diff.skins, index).skeleton = Some(skeleton);
                 }
-                let joints = list(&skin.joints, remap);
-                if joints != skin.joints {
-                    row(&mut diff.skins, index).joints = Some(joints);
+                if let Some(rows) = refs_through(&skin.joints, remap) {
+                    row(&mut diff.skins, index).joints = Some(rows);
                 }
             }
             for (index, animation) in document.animations.iter().enumerate() {
-                let channels: Vec<GltfAnimationChannel> = animation.channels.iter().map(|channel| GltfAnimationChannel { target: GltfAnimationChannelTarget { node: optional(channel.target.node, remap), ..channel.target.clone() }, ..channel.clone() }).collect();
-                if channels != animation.channels {
-                    row(&mut diff.animations, index).channels = Some(channels);
+                let (removed, inserted) = rewritten(&animation.channels, |channel| Some(GltfAnimationChannel { target: GltfAnimationChannelTarget { node: optional(channel.target.node, remap), ..channel.target.clone() }, ..channel.clone() }));
+                if !removed.is_empty() || !inserted.is_empty() {
+                    row(&mut diff.animations, index).channels = Some(GltfChannelsDelta::rows(removed, inserted, Vec::new()));
                 }
             }
         }
@@ -222,17 +243,16 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
         GltfTopLevelFamily::Accessors => {
             for (index, mesh) in document.meshes.iter().enumerate() {
                 for (position, primitive) in mesh.primitives.iter().enumerate() {
-                    let attributes = pairs(&primitive.attributes, remap);
-                    if attributes != primitive.attributes {
-                        primitive_row(&mut diff, index, position).attributes = Some(GltfMorphTarget(attributes));
+                    if let Some(rows) = attributes_through(&primitive.attributes, remap) {
+                        primitive_row(&mut diff, index, position).attributes = Some(rows);
                     }
                     let indices = optional(primitive.indices, remap);
                     if indices != primitive.indices {
                         primitive_row(&mut diff, index, position).indices = Some(indices);
                     }
-                    let targets: Vec<GltfMorphTarget> = primitive.targets.iter().map(|target| GltfMorphTarget(pairs(&target.0, remap))).collect();
-                    if targets != primitive.targets {
-                        primitive_row(&mut diff, index, position).targets = Some(targets);
+                    let (removed, inserted) = rewritten(&primitive.targets, |target| Some(GltfMorphTarget(target.0.iter().filter_map(|(semantic, accessor)| remap(*accessor).map(|mapped| (semantic.clone(), mapped))).collect())));
+                    if !removed.is_empty() || !inserted.is_empty() {
+                        primitive_row(&mut diff, index, position).targets = Some(GltfTargetsDelta::rows(removed, inserted, Vec::new()));
                     }
                 }
             }
@@ -243,9 +263,9 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
                 }
             }
             for (index, animation) in document.animations.iter().enumerate() {
-                let samplers: Vec<GltfAnimationSampler> = animation.samplers.iter().map(|sampler| GltfAnimationSampler { input: remap(sampler.input).unwrap_or(sampler.input), output: remap(sampler.output).unwrap_or(sampler.output), ..sampler.clone() }).collect();
-                if samplers != animation.samplers {
-                    row(&mut diff.animations, index).samplers = Some(samplers);
+                let (removed, inserted) = rewritten(&animation.samplers, |sampler| Some(GltfAnimationSampler { input: remap(sampler.input).unwrap_or(sampler.input), output: remap(sampler.output).unwrap_or(sampler.output), ..sampler.clone() }));
+                if !removed.is_empty() || !inserted.is_empty() {
+                    row(&mut diff.animations, index).samplers = Some(GltfAnimationSamplersDelta::rows(removed, inserted, Vec::new()));
                 }
             }
         }

@@ -21,7 +21,7 @@ async fn applies_insert_zone() {
 }
 
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
-    Din16798Mutation::InsertZone(insert_zone::InsertZone { index: base.zones.len(), zone: { let mut z = crate::ZoneDocument::default(); z.id = "zone-inserted".into(); z } })
+    Din16798Mutation::InsertZone(insert_zone::InsertZone { index: Some(base.zones.len()), zone: { let mut z = crate::ZoneDocument::default(); z.id = "zone-inserted".into(); z } })
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,15 +1,18 @@
 {
   "nodes": {
-    "added": [
+    "inserted": [
       {
-        "id": "n8",
-        "x": 8.0,
-        "y": 3.5
+        "index": 7,
+        "row": {
+          "id": "n8",
+          "x": 8.0,
+          "y": 3.5
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "elements": null,
   "regions": null,

@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::conformance_support::applied;
+use crate::standards::v1_7::subsets::base::io::mutation_bridge::applied;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject};
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
@@ -26,4 +26,10 @@ async fn inserts_at_the_placements_it_is_given() {
     let next = applied(&base, &mutation);
     assert_eq!(next.objects[1].id.num, 98);
     assert_mutation_inverse_sum_law(&mutation, &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replacing_an_installed_entry_inverts_position_exactly() {
+    let base = support::with_tail(&applied(&support::document(), &PdfUaMutation::SetStructTreeRoot { placements: Vec::new(), entry_index: None }));
+    assert_mutation_inverse_sum_law(&PdfUaMutation::SetStructTreeRoot { placements: Vec::new(), entry_index: None }, &base).await;
 }

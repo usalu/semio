@@ -17,7 +17,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
         let Self { name, layer } = self;
         protocol::MutationOutcome::new({
             let old = base.tables.layers.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
-            diff_set_layer(name, layer_diff_between(&old, layer))
+            diff_set_layer(name, layer_field_changes(&old, layer))
         })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {

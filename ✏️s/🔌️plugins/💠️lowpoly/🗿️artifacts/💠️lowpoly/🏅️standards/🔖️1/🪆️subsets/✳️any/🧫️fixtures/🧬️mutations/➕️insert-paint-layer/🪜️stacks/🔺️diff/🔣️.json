@@ -1,39 +1,42 @@
 {
   "objects": {
-    "added": [],
-    "patched": [
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "obj-hull",
-        "paintLayers": {
-          "edits": [
-            {
-              "op": "insert",
-              "index": 1,
-              "layer": {
-                "blendMode": "normal",
-                "name": "Detail",
-                "opacity": 1.0,
-                "pixels": "AAAAAAAAAAA=",
-                "visible": true
-              }
-            }
-          ]
-        },
         "patch": {
-          "mesh": null,
-          "meshContent": null,
-          "name": null,
-          "smoothShading": null,
-          "meshState": null,
-          "position": null,
-          "rotation": null,
-          "scale": null
-        },
-        "meshMotions": []
+          "paintLayers": {
+            "edits": [
+              {
+                "op": "insert",
+                "index": 1,
+                "layer": {
+                  "blendMode": "normal",
+                  "name": "Detail",
+                  "opacity": 1.0,
+                  "pixels": "AAAAAAAAAAA=",
+                  "visible": true
+                }
+              }
+            ]
+          },
+          "patch": {
+            "mesh": null,
+            "meshContent": null,
+            "name": null,
+            "smoothShading": null,
+            "meshState": null,
+            "position": null,
+            "rotation": null,
+            "scale": null
+          },
+          "meshVertices": [],
+          "meshAttributes": []
+        }
       }
-    ],
-    "removed": [],
-    "reordered": null
+    ]
   },
   "schema": null
 }

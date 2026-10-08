@@ -460,7 +460,7 @@ impl semio_framework_value::retirement::RetirementCursor for DagOwnedSnapshotCur
         }
     }
 
-    fn next_work_byte_demand(&self) -> usize { usize::from(!self.retirement.terminal_is_empty()) }
+    fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.retirement.terminal_is_empty()))}
 
     fn terminal_is_empty(&self) -> bool {
         ErasedSnapshotRetirement::terminal_is_empty(&self.retirement)
@@ -480,16 +480,12 @@ impl MemberStoreOwner<DagMutation> for DagSnapshot {
     /// document archive carrying a real DAG member was refused before it began.
     type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        crate::os_store::document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, DagMutation>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DagSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DagOwnedSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DagMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, DagMutation>::source_birth_bytes::<DagSnapshotRetirementFactory, DagOwnedSnapshotRetirementFactory, DagMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, DagMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, DagMutation> {
-        DocumentStoreOwners::new(Arc::new(DagSnapshotRetirementFactory), Arc::new(DagOwnedSnapshotRetirementFactory), Arc::new(DagMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DagSnapshot, DagMutation>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DagMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, DagMutation>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DagSnapshotRetirementFactory, DagOwnedSnapshotRetirementFactory, DagMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, DagMutation>::new()))
     }
 }
 

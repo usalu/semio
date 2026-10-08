@@ -2,19 +2,22 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "added": [
+    "inserted": [
       {
-        "id": "alu",
-        "name": "Aluminium EN AW-6082",
-        "e": 70000000000.0,
-        "g": 26000000000.0,
-        "nu": 0.25,
-        "rho": 2700.0
+        "index": 1,
+        "row": {
+          "id": "alu",
+          "name": "Aluminium EN AW-6082",
+          "e": 70000000000.0,
+          "g": 26000000000.0,
+          "nu": 0.25,
+          "rho": 2700.0
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "sections": null,
   "solids": null,

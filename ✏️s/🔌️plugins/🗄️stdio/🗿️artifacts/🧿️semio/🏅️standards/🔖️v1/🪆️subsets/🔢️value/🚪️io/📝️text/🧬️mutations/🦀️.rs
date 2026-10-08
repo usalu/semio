@@ -9,7 +9,7 @@ use super::*;
 use crate::standards::v1::subsets::value::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
+use crate::standards::v1::subsets::value::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
 use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::value::io::binary::diff::{dec_semio_value_node_bin};
@@ -22,9 +22,7 @@ use crate::standards::v1::subsets::value::io::text::diff::{dec_value_id};
 use crate::standards::v1::subsets::value::io::text::diff::{enc_value_id};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-use crate::standards::v1::subsets::value::io::text::snapshot::{dec_semio_value_snapshot};
-use crate::standards::v1::subsets::value::io::text::snapshot::{enc_semio_value_snapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, OpText};
@@ -60,19 +58,6 @@ pub(crate) fn enc_path(p: &SemioValuePath) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_path(s: &str) -> Result<SemioValuePath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
-}
-
-/// 🧭️ `enc_semio_snapshot`/`dec_semio_snapshot` — thin aliases for the single-source-of-truth
-/// `SemioValueSnapshot` text codec now owned by the sibling `📸️snapshot/🦀️.rs` (also
-/// reused there by `ArtifactDsl`/`ArtifactPack`), rather than a second independent copy.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_semio_snapshot(s: &SemioValueSnapshot) -> String {
-    enc_semio_value_snapshot(s)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_semio_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    dec_semio_value_snapshot(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

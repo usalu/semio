@@ -7,38 +7,42 @@
   "products": null,
   "productIndexes": null,
   "propertyDefinitions": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "prop.length",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Length"
+        "index": 1,
+        "row": {
+          "id": "prop.length",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Length"
+            },
+            "shortName": null,
+            "alternatives": []
           },
-          "shortName": null,
-          "alternatives": []
-        },
-        "dataType": "decimal",
-        "unit": {
-          "symbol": "mm",
-          "dimension": {
-            "length": 1,
-            "mass": 0,
-            "time": 0,
-            "temperature": 0
+          "dataType": "decimal",
+          "unit": {
+            "symbol": "mm",
+            "dimension": {
+              "length": 1,
+              "mass": 0,
+              "time": 0,
+              "temperature": 0
+            },
+            "siFactor": 0.001
           },
-          "siFactor": 0.001
-        },
-        "cardinality": {
-          "min": 0,
-          "max": 1
-        },
-        "kind": "Selection",
-        "dictionaryPropertyId": null
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "kind": "Selection",
+          "dictionaryPropertyId": null
+        }
       }
     ],
-    "removed": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "subjects": null,
   "geometryObjects": null,

@@ -3,34 +3,39 @@
   "site": null,
   "buildings": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "assessments": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "silos": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "tanks": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "foundations": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "fd-1",
+        "index": 1,
         "row": {
           "id": "fd-2",
           "supportedBuildingId": "bldg-office",
@@ -42,16 +47,19 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "retainingWalls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "towers": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

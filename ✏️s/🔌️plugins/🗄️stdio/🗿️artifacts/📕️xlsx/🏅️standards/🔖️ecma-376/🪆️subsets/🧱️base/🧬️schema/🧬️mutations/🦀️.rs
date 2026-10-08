@@ -2,6 +2,7 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use crate::schema::diff::XlsxDiff;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff};
 
 
 #[cfg(test)]
@@ -20,6 +21,18 @@ use semio_s_artifact_stdio_zip::opc::OpcTargetMode;
 //#region 🔖️Mutations
 #[path = "🧭️canonical-edit/🦀️.rs"]
 mod canonical_edit;
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
+#[path = "🔗opc-layer/🦀️.rs"]
+pub(crate) mod opc_layer;
+#[path = "📎set-relationship/🦀️.rs"]
+pub mod set_relationship;
+#[path = "🧷remove-relationship/🦀️.rs"]
+pub mod remove_relationship;
+#[path = "📇set-content-type/🦀️.rs"]
+pub mod set_content_type;
+#[path = "🧺remove-content-type/🦀️.rs"]
+pub mod remove_content_type;
 use canonical_edit::XlsxPlan;
 #[path = "🧭️cell-address/🦀️.rs"]
 pub mod cell_address;
@@ -71,17 +84,26 @@ pub enum XlsxMutation {
     RemoveSharedString(remove_shared_string::RemoveSharedString),
     /// ✍️ Replaces the shared string at `index`.
     SetSharedString(set_shared_string::SetSharedString),
+    /// 📎 Writes one relationship of an owner part (inserted at `index`, or changed in place).
+    SetRelationship(set_relationship::SetRelationship),
+    /// 🧷 Removes one relationship of an owner part.
+    RemoveRelationship(remove_relationship::RemoveRelationship),
+    /// 📇 Writes one `[Content_Types].xml` entry (inserted at `index`, or changed in place).
+    SetContentType(set_content_type::SetContentType),
+    /// 🧺 Removes one `[Content_Types].xml` entry.
+    RemoveContentType(remove_content_type::RemoveContentType),
 }
 
 /// 🧾️ Kebab-case spelling of every `XlsxMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-base` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "insert-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"];
+pub const KINDS: &[&str] = &["insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "insert-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string", "set-relationship", "remove-relationship", "set-content-type", "remove-content-type"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> protocol::MutationOutcome<XlsxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -108,56 +130,6 @@ pub(crate) fn plan_outcome(plan: Result<XlsxPlan, String>) -> protocol::Mutation
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn plan_inverse(plan: Result<XlsxPlan, String>) -> Vec<XlsxMutation> {
     plan.map(|plan| plan.inverse).unwrap_or_default()
-}
-/// 🧮️ The cell and shared-string mutations that carry `base` to `next`, replayed against `base` step by step so every revision-bound address is fresh.
-/// `None` when `next` changes anything those kinds do not address (the sheet list, the OPC layer, which parts exist), detected by the final comparison.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_mutations(base: &XlsxSnapshot, next: &XlsxSnapshot) -> Option<Vec<XlsxMutation>> {
-    if base == next {
-        return Some(Vec::new());
-    }
-    let before = base.project_workbook().ok()?;
-    let after = next.project_workbook().ok()?;
-    if before.sheets.iter().map(|sheet| &sheet.name).ne(after.sheets.iter().map(|sheet| &sheet.name)) || before.shared_strings.len() != after.shared_strings.len() {
-        return None;
-    }
-    let mut state = base.clone();
-    let mut leaves = Vec::new();
-    let mut step = |state: &mut XlsxSnapshot, leaf: Option<XlsxMutation>| -> Option<()> {
-        let leaf = leaf?;
-        if !apply_xlsx_mutation(state, &leaf).messages().is_empty() {
-            return None;
-        }
-        leaves.push(leaf);
-        Some(())
-    };
-    for (index, (old, new)) in before.shared_strings.iter().zip(&after.shared_strings).enumerate() {
-        if old != new {
-            step(&mut state, Some(XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value: new.clone() })))?;
-        }
-    }
-    for (old_sheet, new_sheet) in before.sheets.iter().zip(&after.sheets) {
-        for cell in &new_sheet.cells {
-            match old_sheet.cells.iter().find(|candidate| candidate.row == cell.row && candidate.col == cell.col) {
-                Some(old) if old.value == cell.value => {}
-                Some(_) => {
-                    let leaf = cell_address::xlsx_cell_address(&state, &old_sheet.name, cell.row, cell.col).ok().map(|address| XlsxMutation::SetCell(set_cell::SetCell { address, value: cell.value.clone() }));
-                    step(&mut state, leaf)?;
-                }
-                None => {
-                    let leaf = cell_address::xlsx_cell_vacancy_address(&state, &old_sheet.name, cell.row, cell.col).ok().map(|address| XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: cell.value.clone() }));
-                    step(&mut state, leaf)?;
-                }
-            }
-        }
-        for cell in &old_sheet.cells {
-            if !new_sheet.cells.iter().any(|candidate| candidate.row == cell.row && candidate.col == cell.col) {
-                let leaf = cell_address::xlsx_cell_address(&state, &old_sheet.name, cell.row, cell.col).ok().map(|address| XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }));
-                step(&mut state, leaf)?;
-            }
-        }
-    }
-    (state == *next).then_some(leaves)
 }
 /// 🌳 The XML diff that rewrites every attribute value equal to a member of `from` into `to` anywhere under `node` -- a namespace declaration is an
 /// ordinary attribute, so one walk covers `xmlns`, `xmlns:r` and whatever prefixed alias a package uses. `None` when nothing under `node` declares one of `from`.
@@ -200,60 +172,69 @@ pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema:
     Some(XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attributes), children: None }))
 }
 
-/// 🧩️ The diff that adds XML part `path` of `content_type` with `document` at `index` (appended when `None`), together with its content-type override.
-/// `None` when a part of that name already exists.
+/// 🧩️ The diff that adds XML part `path` of `content_type` with `document` at `index` (appended when `None`), together with its content-type override at
+/// `override_index` (appended when `None`). `None` when a part of that name already exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn insert_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>) -> Option<XlsxDiff> {
-    use crate::schema::diff::{NamedModified, NamedTripleDiff, XlsxOpcContentTypesDiff, XlsxOpcDiff};
+pub(crate) fn insert_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Option<XlsxDiff> {
+    use crate::schema::diff::XlsxXmlPartsDelta;
+    use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let key = path.trim_start_matches('/');
     if base.xml_part(key).is_some() || base.opc.part(key).is_some() {
         return None;
     }
-    let position = index.map_or(base.xml_parts.len(), |index| index.min(base.xml_parts.len()));
-    let mut order: Vec<String> = base.xml_parts.iter().map(|part| part.path.clone()).collect();
-    order.insert(position, key.to_string());
-    let appended = position == base.xml_parts.len();
     let name = format!("/{key}");
-    let current = base.opc.content_types.overrides.iter().find(|(existing, _)| *existing == name).map(|(_, value)| value.clone());
-    let overrides = match current {
-        Some(current) if current == content_type => None,
-        Some(_) => Some(NamedTripleDiff { modified: vec![NamedModified { key: name, diff: content_type.to_string() }], ..Default::default() }),
-        None => Some(NamedTripleDiff { added: vec![(name, content_type.to_string())], ..Default::default() }),
+    let list = &base.opc.content_types.overrides;
+    let overrides = match list.iter().position(|(existing, _)| *existing == name) {
+        Some(at) => (list[at].1 != content_type).then(|| OpcContentTypeEntriesDelta::modification(&name, OpcContentTypePatch { content_type: Some(content_type.to_string()) })),
+        None => Some(OpcContentTypeEntriesDelta::insertion(insertion_index(list.len(), override_index), OpcContentTypeRow { name, content_type: content_type.to_string() })),
     };
     Some(XlsxDiff {
-        opc: overrides.map(|overrides| XlsxOpcDiff { content_types: Some(XlsxOpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }),
-        xml_parts: Some(NamedTripleDiff { added: vec![crate::schema::snapshot::XlsxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() }], order: if appended { Vec::new() } else { order }, ..Default::default() }),
+        opc: overrides.map(|overrides| OpcDiff { content_types: Some(OpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }),
+        xml_parts: Some(XlsxXmlPartsDelta::insertion(insertion_index(base.xml_parts.len(), index), crate::schema::snapshot::XlsxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() })),
     })
 }
 
 /// 🧩️ The diff that removes XML part `path` and its content-type override; `None` when no such part exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_xml_part_diff(base: &XlsxSnapshot, path: &str) -> Option<XlsxDiff> {
-    use crate::schema::diff::{NamedTripleDiff, XlsxOpcContentTypesDiff, XlsxOpcDiff};
+    use crate::schema::diff::XlsxXmlPartsDelta;
     let key = path.trim_start_matches('/');
-    base.xml_part(key)?;
+    let at = base.xml_parts.iter().position(|part| part.path == key)?;
     let name = format!("/{key}");
-    let has_override = base.opc.content_types.overrides.iter().any(|(existing, _)| *existing == name);
-    Some(XlsxDiff {
-        opc: has_override.then(|| XlsxOpcDiff { content_types: Some(XlsxOpcContentTypesDiff { defaults: None, overrides: Some(NamedTripleDiff { removed: vec![name], ..Default::default() }) }), ..Default::default() }),
-        xml_parts: Some(NamedTripleDiff { removed: vec![key.to_string()], ..Default::default() }),
-    })
+    let overrides = &base.opc.content_types.overrides;
+    let content_types = overrides.iter().position(|(existing, _)| *existing == name).map(|position| OpcContentTypesDiff { defaults: None, overrides: Some(OpcContentTypeEntriesDelta::removal_by_id(name.clone(), position)) });
+    Some(XlsxDiff { opc: content_types.map(|content_types| OpcDiff { content_types: Some(content_types), ..Default::default() }), xml_parts: Some(XlsxXmlPartsDelta::removal_by_id(key, at)) })
 }
 
-/// 🧩️ The diff that retypes XML part `path`: the part's own `content_type` and its content-type override move together. Empty when the part is absent
-/// or already carries `content_type` in both places.
+/// 🧩️ The diff that retypes XML part `path`: the part's own `content_type` and its content-type override move together. Without `override_index` a type the extension
+/// default already yields needs no explicit override and drops a differing one; with it an explicit override is always written at that position. Empty when the part is
+/// absent or already carries `content_type` in both places.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn retype_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type: &str) -> XlsxDiff {
-    use crate::schema::diff::{NamedModified, NamedTripleDiff, XlsxOpcContentTypesDiff, XlsxOpcDiff, XlsxXmlPartDiff};
+pub(crate) fn retype_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type: &str, override_index: Option<usize>) -> XlsxDiff {
+    use crate::schema::diff::{XlsxXmlPartDiff, XlsxXmlPartsDelta};
+    use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let Some(part) = base.xml_part(path) else { return XlsxDiff::default() };
     let name = format!("/{}", path.trim_start_matches('/'));
-    let overrides = match base.opc.content_types.overrides.iter().find(|(existing, _)| *existing == name) {
-        Some((_, current)) if current == content_type => None,
-        Some(_) => Some(NamedTripleDiff { modified: vec![NamedModified { key: name, diff: content_type.to_string() }], ..Default::default() }),
-        None => Some(NamedTripleDiff { added: vec![(name, content_type.to_string())], ..Default::default() }),
+    let default = path.rsplit('.').next().and_then(|extension| base.opc.content_types.defaults.iter().find(|(existing, _)| existing.eq_ignore_ascii_case(extension))).map(|(_, value)| value.as_str());
+    let list = &base.opc.content_types.overrides;
+    let overrides = match list.iter().position(|(existing, _)| *existing == name) {
+        Some(at) if list[at].1 == content_type => None,
+        Some(at) if override_index.is_none() && default == Some(content_type) => Some(OpcContentTypeEntriesDelta::removal_by_id(name, at)),
+        Some(_) => Some(OpcContentTypeEntriesDelta::modification(&name, OpcContentTypePatch { content_type: Some(content_type.to_string()) })),
+        None if override_index.is_none() && default == Some(content_type) => None,
+        None => Some(OpcContentTypeEntriesDelta::insertion(insertion_index(list.len(), override_index), OpcContentTypeRow { name, content_type: content_type.to_string() })),
     };
-    let retyped = (part.content_type != content_type).then(|| NamedTripleDiff { modified: vec![NamedModified { key: part.path.clone(), diff: XlsxXmlPartDiff { content_type: Some(content_type.to_string()), document: None } }], ..Default::default() });
-    XlsxDiff { opc: overrides.map(|overrides| XlsxOpcDiff { content_types: Some(XlsxOpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }), xml_parts: retyped }
+    let retyped = (part.content_type != content_type).then(|| XlsxXmlPartsDelta::modification(&part.path, XlsxXmlPartDiff { content_type: Some(content_type.to_string()), document: None }));
+    XlsxDiff { opc: overrides.map(|overrides| OpcDiff { content_types: Some(OpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }), xml_parts: retyped }
+}
+
+/// 🧭️ Where XML part `path` and its explicit content-type override sit in their lists: `(part index, override index)`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xml_part_positions(base: &XlsxSnapshot, path: &str) -> Option<(usize, Option<usize>)> {
+    let key = path.trim_start_matches('/');
+    let part = base.xml_parts.iter().position(|part| part.path == key)?;
+    let name = format!("/{key}");
+    Some((part, base.opc.content_types.overrides.iter().position(|(existing, _)| *existing == name)))
 }
 //#endregion 🔖️MutationTrait
 
@@ -267,10 +248,10 @@ pub(crate) fn retype_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> XlsxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    opc_layer::with_demo_entries(crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
         shared_strings: vec!["hello".into()],
-    })
+    }))
 }
 
 //#region 🔖️Fixtures
@@ -353,16 +334,19 @@ pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
     let address = cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address");
     let vacancy = cell_address::xlsx_cell_vacancy_address(&base, "Sheet1", 2, 1).expect("fixture cell vacancy address");
     vec![
-        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "x".into(), cells: vec![] }, index: None }),
+        XlsxMutation::InsertSheet(insert_sheet::InsertSheet::minted(&base, XlsxSheet { name: "x".into(), cells: vec![] }, None).expect("the gesture mints the sheet slot")),
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Sheet2".into() }),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() }),
-        XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(true) }),
-        XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::InlineString("created".into()) }),
+        XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(true), node: None }),
+        XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::InlineString("created".into()), node: None }),
         XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address") }),
-        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: None }),
+        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: None, node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
-        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "y".into() }),
+        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "y".into(), node: None }),
     ]
+    .into_iter()
+    .chain(opc_layer::demo_cases())
+    .collect()
 }
 //#endregion 🔖️DemoCases
 

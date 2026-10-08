@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "interfaceEpoch": "40",
+  "inventory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-second-closed-guard-inventory.json",
+  "cases": [
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-40.json",
+      "epoch": "40",
+      "command": "receiving-test",
+      "position": "pre",
+      "producer": {
+        "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+        "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+      },
+      "identity": {
+        "device": "16777233",
+        "inode": "322965223",
+        "bytes": "1378833688",
+        "mtimeNs": "1791497525527263125",
+        "ctimeNs": "1791497525527263125"
+      },
+      "bytes": 1378833688,
+      "sha256": "c2ad60858631871f2319dbaf9dcb97e14824073857a1311a73a5b237e9e240db",
+      "physicalOuterClosure": {
+        "index": 1,
+        "session_id": 33654,
+        "exit_code": 0
+      },
+      "childClosure": {
+        "code": 0,
+        "kind": "Complete original five receiving laws passed under physically closed outer; not independent Nx outer",
+        "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-test-40.json"
+      },
+      "consumerProof": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface40-fullguard-consumer-audit.json"
+    }
+  ],
+  "maximumBytes": 8589934592,
+  "maximumWork": 32768,
+  "budgetMs": 180000,
+  "chunkBytes": 1048576
+}

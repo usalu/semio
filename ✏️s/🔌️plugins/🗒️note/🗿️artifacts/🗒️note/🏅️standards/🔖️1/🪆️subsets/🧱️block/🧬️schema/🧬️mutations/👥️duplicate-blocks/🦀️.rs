@@ -44,7 +44,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlocks {
 //#endregion 🔖️Mutation
 
 /// 🧭️ Where each duplicate lands, in payload order: right after its source's BASE position (`index + 1`), the position every later duplicate of the same container is pinned to as well — plus the source ids that do not exist.
-fn placements(payload: &DuplicateBlocks, base: &NoteSnapshot) -> (Vec<(Option<String>, usize, crate::NoteBlockNode)>, Vec<String>) {
+pub fn placements(payload: &DuplicateBlocks, base: &NoteSnapshot) -> (Vec<(Option<String>, usize, crate::NoteBlockNode)>, Vec<String>) {
     let mut placed = Vec::new();
     let mut missing = Vec::new();
     for (source_id, block) in payload.source_ids.iter().zip(payload.blocks.iter()) {

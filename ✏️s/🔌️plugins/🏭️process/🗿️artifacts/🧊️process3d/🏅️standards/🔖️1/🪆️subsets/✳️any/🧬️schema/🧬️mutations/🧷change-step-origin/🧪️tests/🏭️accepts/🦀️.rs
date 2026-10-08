@@ -1,6 +1,6 @@
 //! 🧪️ `change-step-origin` fixture — `🏭️accepts`.
 //!
-//! `change-step-origin` sets the id-keyed step's `origin` provenance in `step_payloads` and re-mints `steps`/`tool_solids` (`process3d_step_timeline_diff`) — provenance is display-only (kernel replay never resolves it back to a workshop entry) but is now genuinely recorded and round-trips.
+//! `change-step-origin` sets the id-keyed step's `origin` provenance in `step_payloads` (`apply` re-derives `steps`/`tool_solids`) — provenance is display-only (kernel replay never resolves it back to a workshop entry) but is now genuinely recorded and round-trips.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

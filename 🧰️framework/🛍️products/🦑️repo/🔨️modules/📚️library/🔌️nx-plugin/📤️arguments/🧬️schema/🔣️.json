@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "arguments"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "arguments": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "string",
+        "maxLength": 1048576,
+        "pattern": "^[^\\u0000]*$"
+      }
+    }
+  }
+}

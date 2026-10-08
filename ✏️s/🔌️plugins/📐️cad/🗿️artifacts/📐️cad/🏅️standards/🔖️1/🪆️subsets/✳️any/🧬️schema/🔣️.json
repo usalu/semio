@@ -182,7 +182,7 @@
         }
       }
     },
-    "CadNodePatchEntry": {
+    "CadNodeModification": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -202,42 +202,74 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadNode"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/CadNodeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CadNodePatchEntry"
+            "$ref": "#/$defs/CadNodeInsertion"
           }
         },
-        "reordered": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadNodeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadNodeModification"
+          }
+        }
+      }
+    },
+    "CadNodeRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CadNodeRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -338,35 +370,67 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "reordered"
+        "inserted",
+        "moved"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadDrawingChild"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/CadDrawingRemoval"
           }
         },
-        "reordered": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadDrawingInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadDrawingRelocation"
+          }
+        }
+      }
+    },
+    "CadDrawingRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CadDrawingRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -374,35 +438,67 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "reordered"
+        "inserted",
+        "moved"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadBrepChild"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/CadBrepRemoval"
           }
         },
-        "reordered": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadBrepInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadBrepRelocation"
+          }
+        }
+      }
+    },
+    "CadBrepRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CadBrepRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -560,7 +656,7 @@
         }
       }
     },
-    "CadReferencePatchEntry": {
+    "CadReferenceModification": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -580,42 +676,142 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadReference"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/CadReferenceRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CadReferencePatchEntry"
+            "$ref": "#/$defs/CadReferenceInsertion"
           }
         },
-        "reordered": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadReferenceRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadReferenceModification"
+          }
+        }
+      }
+    },
+    "CadReferenceRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CadReferenceRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CadNodeInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/CadNode"
+        }
+      }
+    },
+    "CadReferenceInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/CadReference"
+        }
+      }
+    },
+    "CadDrawingInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/CadDrawingChild"
+        }
+      }
+    },
+    "CadBrepInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/CadBrepChild"
         }
       }
     }

@@ -4,7 +4,16 @@
       {
         "index": 0,
         "diff": {
-          "nodes": []
+          "nodes": {
+            "removed": [
+              {
+                "id": 0,
+                "index": 0
+              }
+            ],
+            "inserted": [],
+            "moved": []
+          }
         }
       }
     ]

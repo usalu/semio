@@ -12,11 +12,9 @@ pub fn inverse(payload: &super::DeleteNode, base: &Puzzle2dSnapshot) -> Result<V
     };
     let index = base.nodes.iter().position(|entry| entry.id == payload.id);
     let handle_ids: Vec<&semio_framework_value::paged::PagedUtf8<{ usize::MAX }>> = node.handles.iter().map(|handle| &handle.id).collect();
-    let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::create_node::create_node(node.clone(), index)];
-    for (index, edge) in base.edges.iter().enumerate().filter(|(_, edge)| handle_ids.contains(&&edge.source) || handle_ids.contains(&&edge.target)) {
-        crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index, &mut mutations);
-    }
-    mutations
+    let restored_edges = base.edges.iter().enumerate().filter(|(_, edge)| handle_ids.contains(&&edge.source) || handle_ids.contains(&&edge.target)).flat_map(|(index, edge)| crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index));
+    let natural: Vec<Puzzle2dMutation> = std::iter::once(crate::standards::v1::subsets::any::schema::mutations::create_node::create_node(node.clone(), index)).chain(restored_edges).collect();
+    natural.into_iter().rev().collect()
 
     })())
 }

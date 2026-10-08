@@ -76,6 +76,7 @@ fn a_node_drag_moves_placed_nodes_relative_to_their_base_position() {
     use semio_framework_diagnostic::Severity::Error;
 use semio_framework_diagnostic::Severity::Fatal;
 use semio_framework_diagnostic::Severity::Warning;
+use crate::central_apply::{apply_generation2d_mutation};
     let base = base();
     let applied = applied_and_restored(&move_nodes(vec!["height".into(), "note".into()], 40.0, -12.5), &base);
     assert_eq!(applied.host_snapshot.layout.get("height").map(|layout| (layout.x, layout.y)), Some((50.0, 7.5)));

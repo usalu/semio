@@ -1,5 +1,6 @@
+import {writePdfArtifactReference,readPdfArtifactReference} from "../📦️artifact-reference/🟦️.ts";
 /** 🖋️ Handwritten PDF operators, named operands and intrinsic inline image entities. */
-import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage, PdfImageBody, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type PdfCell, type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary, readPdfDictionary, writePdfObject, readPdfObject, writePdfFilters, readPdfFilters } from "../🧩️cos/🟦️.ts";
 import { writePdfColorSpace, readPdfColorSpace, pdfColorNumberColumns } from "../🌈️color/🟦️.ts";
@@ -24,9 +25,10 @@ export function pdfContentNumberColumns(table: string): readonly Ieee754Column[]
 /** 🖼️ Project complete inline images using intrinsic octets and explicit decode rows. */
 export async function writePdfInlineImage(out: PdfProjection, image: PdfInlineImage): Promise<bigint> {
   const color = image.colorSpace == null ? null : await writePdfColorSpace(out, image.colorSpace);
-  const filters = await writePdfFilters(out, image.filters ?? []); const extra = await writePdfDictionary(out, image.extra ?? []);
-  const key = await out.insert("pdf_inline_image", [pdfInteger(image.width), pdfInteger(image.height), pdfInteger(image.bitsPerComponent ?? 0), color, image.imageMask ? 1n : 0n, image.interpolate ? 1n : 0n, filters, await out.bytes(image.data), extra]);
+  const reference=image.body.kind==="artifact"?await writePdfArtifactReference(out,image.body.reference):null; const extra = await writePdfDictionary(out, image.extra ?? []);
+  const key = await out.insert("pdf_inline_image", [pdfInteger(image.width), pdfInteger(image.height), pdfInteger(image.bitsPerComponent ?? 0), color, image.imageMask ? 1n : 0n, image.interpolate ? 1n : 0n, image.body.kind,reference, extra]);
   out.checkRowsAdditional(image.decode?.length ?? 0);
+  if(image.body.kind==="samples"){out.checkRowsAdditional(image.body.values.length);for(const[ordinal,value]of image.body.values.entries())await out.insert("pdf_inline_sample",[key,BigInt(ordinal),pdfInteger(value,16)]);}
   for (const [ordinal, value] of (image.decode ?? []).entries()) await out.insert("pdf_inline_decode", [key, BigInt(ordinal), value]);
   return key;
 }
@@ -34,7 +36,8 @@ export async function writePdfInlineImage(out: PdfProjection, image: PdfInlineIm
 export async function readPdfInlineImage(reader: PdfReader, key: bigint): Promise<PdfInlineImage> {
   const row = await reader.take("pdf_inline_image", key, 10); const decode: Binary64[] = [];
   for (const child of await reader.children("pdf_inline_decode",1,2,key)) { const row = await reader.take("pdf_inline_decode",child.rowid,4); decode.push(reader.real("pdf_inline_decode",row,3)); }
-  return { width:pdfNumber(row,1),height:pdfNumber(row,2),bitsPerComponent:pdfNumber(row,3),colorSpace:row.values[4] === null ? null : await readPdfColorSpace(reader,artifactSqliteInteger(row,4)),imageMask:pdfBoolean(row,5),interpolate:pdfBoolean(row,6),filters:await readPdfFilters(reader,artifactSqliteInteger(row,7)),data:await reader.bytes(row,8),extra:await readPdfDictionary(reader,artifactSqliteInteger(row,9)),decode };
+  let body:PdfImageBody;switch(artifactSqliteText(row,7)){case "samples":{reader.nullExcept("pdf_inline_image",row,8,9,[]);const values:number[]=[];for(const child of await reader.children("pdf_inline_sample",1,2,key)){const value=await reader.take("pdf_inline_sample",child.rowid,4);values.push(pdfNumber(value,3,16));}body={kind:"samples",values};break;}case "artifact":body={kind:"artifact",reference:await readPdfArtifactReference(reader,artifactSqliteInteger(row,8))};break;default:throw new Error("Unknown PDF inline image body");}
+  return { width:pdfNumber(row,1),height:pdfNumber(row,2),bitsPerComponent:pdfNumber(row,3),colorSpace:row.values[4] === null ? null : await readPdfColorSpace(reader,artifactSqliteInteger(row,4)),imageMask:pdfBoolean(row,5),interpolate:pdfBoolean(row,6),body,extra:await readPdfDictionary(reader,artifactSqliteInteger(row,9)),decode };
 }
 
 async function writeCodes(out:PdfProjection,table:string,owner:bigint,codes:readonly number[]):Promise<void> {

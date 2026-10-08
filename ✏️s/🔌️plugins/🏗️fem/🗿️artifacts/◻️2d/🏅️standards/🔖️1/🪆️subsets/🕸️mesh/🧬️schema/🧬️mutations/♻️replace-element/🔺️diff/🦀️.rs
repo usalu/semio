@@ -5,7 +5,7 @@
 //! resolutions `create-element` runs (`mutation.target-missing`, Error), and finally the
 //! `mutation.no-op` warning when the replacement equals what is already there.
 use super::ReplaceElement;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dElementsDelta, Fem2dElementsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dElementsDelta, Fem2dElementsModification};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::{element_id, Fem2dSnapshot};
 
@@ -23,6 +23,6 @@ pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshot) -> protocol::Mutatio
     if existing == payload.new_element.as_ref() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Element \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { patched: vec![Fem2dElementsPatchEntry { id: payload.id.clone(), item: payload.new_element.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { modified: vec![Fem2dElementsModification { id: payload.id.clone(), patch: payload.new_element.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

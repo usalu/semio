@@ -35,12 +35,6 @@ impl protocol::DiffAlgebra<BitmapInputWindowConfig> for BitmapInputWindowConfigD
             zoom: self.zoom.as_ref().map(|_| base.zoom.clone()),
         }
     }
-    fn between(base: &BitmapInputWindowConfig, other: &BitmapInputWindowConfig) -> Self {
-        Self {
-            active_color: (base.active_color != other.active_color).then(|| other.active_color.clone()),
-            zoom: (base.zoom != other.zoom).then(|| other.zoom.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.active_color.is_none() && self.zoom.is_none()
     }

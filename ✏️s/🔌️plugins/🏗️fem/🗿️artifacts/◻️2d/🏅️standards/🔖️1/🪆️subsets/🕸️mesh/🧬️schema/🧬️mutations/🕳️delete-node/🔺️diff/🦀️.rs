@@ -6,14 +6,14 @@
 //! an oversight; the committed vector `🚫️removes` pins it. Every other
 //! guarded `delete-` refuses with `mutation.target-referenced` instead (see `mutations::guards`).
 use super::DeleteNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodeRemoval};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteNode, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
-    if !base.nodes.iter().any(|node| node.id == payload.id) {
+    let Some(at) = base.nodes.iter().position(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(Fem2dDiff { nodes: Some(Fem2dNodesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(Fem2dDiff { nodes: Some(Fem2dNodesDelta { removed: vec![Fem2dNodeRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

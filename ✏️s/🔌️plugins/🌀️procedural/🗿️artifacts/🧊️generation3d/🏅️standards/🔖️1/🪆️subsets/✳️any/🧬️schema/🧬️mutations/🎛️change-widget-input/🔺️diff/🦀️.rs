@@ -1,7 +1,7 @@
 //! 🔺️ `change-widget-input` sparse diff — replaces the ONE addressed operator with its input set to the typed literal
 //! (or the addressed text source with its text set), read off the BASE widget through [`ChangeWidgetInput::landing`].
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dWidgetPatch, Generation3dWidgetPatchEntry, Generation3dWidgetsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dWidgetPatch, Generation3dWidgetModification, Generation3dWidgetsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::ChangeWidgetInput;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
@@ -21,6 +21,6 @@ pub fn diff(payload: &ChangeWidgetInput, base: &Generation3dSnapshot) -> protoco
     match payload.landing(&base.host_snapshot.widgets[index], wired) {
         Err(refusal) => protocol::MutationOutcome::error(refusal.code(), format!("Input \"{}\" of \"{}\" {}.", payload.channel, payload.id, refusal.reason()), target()),
         Ok(None) => protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("Input \"{}\" of \"{}\" already holds this value.", payload.channel, payload.id)).at(target())]),
-        Ok(Some(next)) => protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { patched: vec![Generation3dWidgetPatchEntry { id: payload.id.clone(), patch: Generation3dWidgetPatch::Replace { widget: next } }], ..Default::default() }), ..Default::default() }),
+        Ok(Some(next)) => protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { modified: vec![Generation3dWidgetModification { id: payload.id.clone(), patch: Generation3dWidgetPatch::Replace { widget: next } }], ..Default::default() }), ..Default::default() }),
     }
 }

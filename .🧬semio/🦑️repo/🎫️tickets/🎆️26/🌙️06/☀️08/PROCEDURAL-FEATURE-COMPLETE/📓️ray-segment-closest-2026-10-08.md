@@ -1,0 +1,49 @@
+# Original Closest-Point Selection
+
+The original object ray cursor and component edge selector used segment midpoint depth. A neutral pair exposes the error: the near edge starts at depth1 then slopes to101, while the other crosses at3. Midpoint sorting would select the far edge. Six shared schema-validated witnesses retain the actual forward-ray and authored segment points, including endpoint, behind-origin, parallel and nonunit direction cases. The third-party oracle is Three Ray.distanceSqToSegment with both output vectors.
+
+The tests were authored before refining the original scene ray helper. The closest-pair query now retains the minimum constrained candidate; the gap query uses that same calculation. Original native object/hover and component edge paths use actual segment point depth, with no alternate selector registry or evaluator. Genuine edge-only input remains without authored vertex IDs. The actual original World law exercises two bridge-published wire instances and original dispatch plans under bounded grants.
+
+Native World runtime remains unqualified behind the known shared kernel511 compiler floor. The lower UI Scene focused math gate will run after Root GPU gate terminates; Root keeps one heavy native command. Original broad 3d JS oracle first launch83700 exit1 before assertions; exact failure diagnostic is being investigated. No runtime GREEN or feature RED is claimed.
+
+Original oracle83700 actually reached1 selected assertion (14 skipped) and failed: parallel forward rays have an interval of equally close points, and Three picks the far endpoint4 while our neutral witness selected near endpoint2. This was an ambiguous fixture expectation, not a geometry distance defect. The parallel witness now lies entirely behind the ray origin, giving one unique constrained closest endpoint; both implementations must agree on all outputs. The native helper retains nearest-ray tie order for nonunique minima.
+
+Corrected independent Three/Ajv oracle21093 actual terminal exit0:1selected/14skipped,61msassertions,567msVitest,totalNx1.6s. Six unique constrained point/gap witnesses and original component-selection corpus passed. This is independent fixture qualification, not native World runtime proof.
+
+Current shared value source now includes demanded next_close_depth_demand on scalar/list/option/result/box and tuple-macro original cursors, changing the prior13-error floor. Root admitted one fresh original lower scene ray_segment native gate (one heavy Root command) before retrying GPU. No identical unchanged-floor replay.
+
+Original Scene native86398 terminal PREASSERT: current DSL3/replication6 Result-demand caller mismatch, bounded diagnostics ray-native-replication6-bounded.json, zero assertions. Those original Result callers became coherent through concurrent edits; High enduser agent preserved them and repaired DSL advance_unit exact current depth demand. Root admitted one fresh changed-floor Scene ray_segment native gate. GPU audit findings were handled in the same selected law: explicit bounded packet/raster-commit completion, resident+absent version commands and exact recovery markers, assertions after exact geometry owner retirement.
+
+## Actual component cursor correction
+
+Fresh exact source inspection found that the previous component closest-depth edit affected only cfg(test) pick_component_at. The real WorldComponentPickCursor edge candidate still used its midpoint. The original overlapping-wire law now drives real component Select and Hover cursors, asserts the actual near object/depth and original action target, and closes input/cursor owners. Only then was the actual production candidate changed to original ray_segment_closest segment depth plus finite/nonnegative validation. The prior third-party six-witness receipt remains actual; this new World cursor law is authored and native-unqualified until the original World dependency floor compiles.
+
+## Lower Scene native replay3
+
+Session3864 actually exited0 after the original Scene demand Result caller repair. Exact terminal receipts:     test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 193 filtered out; finished in 0.00s;     test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 193 filtered out; finished in 0.00s;     test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 193 filtered out; finished in 0.00s;     [DEBUG] originalRaySegmentClosest cases=6 independentThreeWitnesses=true finiteForwardRay=true nonUnitDirection=true;     test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 193 filtered out; finished in 0.00s;      Summary [   0.010s] 4 tests run: 4 passed, 190 skipped;   Run duration:      1.3s
+
+This lower native receipt qualifies original closest-point math against six independent Three witnesses and existing distance laws; it does not qualify the new original World select/hover cursors.
+
+## Depth clipping test-first baseline
+
+Authored strict neutral schema first: eight segments cover near/far/both-depth crossings, reverse order, both full refusals, interior and horizontal exterior without changing screen aperture. Independent existing Three Plane/Line3 witnesses validate authored intersection points. The new original projected-segment query initially preserves the existing endpoint-only projection, and the lower original native ray_segment gate now asserts its visible depth-clipped endpoints plus finite-only refusal. This baseline is deliberately admitted before replacing the endpoint-only behavior. Original World clipped-wire select/hover law follows, with the natural camera near0.2 and independent Three witness.
+
+Three clip oracle1 session98611 actually exited1: selected1RED/14skip, Ajv strictRequired rejects the then-branch points requirement without its local declaration. Repaired the local then points schema while retaining strict validation; no geometry assertion qualified by this first oracle.
+
+Clip native baseline1 session10686 actually exited1 before compilation/assertions: original Cargo policy now requires buildDirectory and leaseDirectory, but the original producer has not yet supplied these fields. Schema/caller infrastructure mutation is concurrent; no policy bypass or runtime RED claim.
+
+## Actual clipping RED2 and original repair
+
+Session41826 actually reached native assertions:4PASS/1RED/190skip,15ms assertions/Nx20.4s. Original endpoint-only projection refused the neutral near-crossing segment, expected visible. After this real RED the original query clips homogeneous z>=0 and w-z>=0 before projection, retains authored interpolated world points and applies the existing image transform. Finite inputs and positive viewport/w are required; screen aperture semantics stay with original callers. Uses bounded fixed arrays and f64 intermediate arithmetic, with no retained topology or external runtime dependency. Current repair is pending native replay. Three oracle2 session76091 actual selected1PASS/14skip Nx1.3s strict schema+8Plane/Line witnesses.
+
+Capture correction: recent runner calls supplied a relative SEMIO_TEST_ARTIFACT_DIR, causing their native captures to be rooted inside package directories. Only the exact owned sol-2026-10-08 captures were moved to this ticket generated/relocated-owned-captures, and empty parents removed. All future runner calls use the absolute ticket generated path. No unrelated files were removed.
+
+Original World production object ray cursor and component edge cursor now use the accepted-depth projected segment for both aperture and closest-depth evaluation. The cfg(test) convenience picker matches this same original query. Authored clipped-wire law drives real Select/Hover cursors, exact original target17 and object IDs, actual action verbs, depth0.2 and input closure. The overlap law also now asserts actual select/hover verbs and select merge replacement after read-only audit gap. World laws remain native-unqualified behind current original kernel callers.
+
+Clip repair replay1 session54038 actually exited1:4PASS/1RED/190skip,18ms/Nx7.2s. The clipped points pass their visible/interpolation assertions, but the native screen oracle called original project_point at a depth boundary and unwrapped its roundoff refusal. Replaced that test-only screen oracle with authored neutral numeric screens, validated independently by existing Three projection after Plane/Line3 clipping. No production clipping change or relaxed tolerances. This preserves the first genuine near-crossing RED and now compares original output directly with independent witness pixels.
+
+Clipping native repair2 session65056 actual5/5PASS190skip with genuine DEBUG cases8,14ms/Nx26.6s; Three3 session36824 actual1PASS14skip Nx2.4s. These receipts qualify the eight original lower query witnesses at their compiled source. Added three diagonal/transverse witnesses to address remaining noncollinear geometry coverage and neutral contained/crossing clipped marquees before changing the real marquee edge branch; these additions require new actual receipts.
+
+## Eleven-case lower geometry qualification
+
+Native clip repair3 session15788 actually exited0:5/5PASS190skip,11ms/Nx18.0s; exact DEBUG originalProjectedSegment cases11 includes diagonal-near, diagonal-far and transverse-inside independent witness cases. Original helper production was unchanged after the previous eight-case GREEN. Three4 session2492 actually exited0:  Test Files  1 passed (1);       Tests  1 passed | 14 skipped (15);   Run duration:      1.0s; strict neutral schema and11 Plane/Line/projection witnesses plus independent contained/crossing marquee coordinates pass. The actual World marquee edge branch now consumes the same clipped original query, after authored real rectangle laws. Its native runtime qualification remains pending original kernel integration.

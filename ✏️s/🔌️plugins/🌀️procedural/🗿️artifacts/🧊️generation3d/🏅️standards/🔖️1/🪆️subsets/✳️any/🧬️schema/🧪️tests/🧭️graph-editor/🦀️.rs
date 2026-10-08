@@ -1,7 +1,8 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::example_snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+use crate::central_apply::{apply_generation3d_mutation};
 
 /// 🧭️ The document the host would normalise `bundled` to — the base every replay law is stated on, so a normalisation the
 /// host applies on open is not mistaken for an edit.

@@ -1,0 +1,22 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "sha256": "ec6f3017f1b3e817dbae4dc74bc843eada5a78386dae68e837817ff26b8336b8",
+  "changes": [
+    {
+      "before": "#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum ArtifactStoreCloseStringLane {\n    AppliedEditIds,\n    RedoEditIds,\n    AppliedRevisionIds,\n    RedoRevisionIds,\n    CurrentCheckpointId,\n    LocalActorId,\n    TailUndoEditId,\n    Supersessions,\n}\n",
+      "after": ""
+    },
+    {
+      "before": "#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum ArtifactStoreHistoryMetadataLane {\n    Changes,\n    Checkpoints,\n    Alternatives,\n}\n",
+      "after": ""
+    },
+    {
+      "before": "#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum ArtifactStoreMessageLedgerLane {\n    Durable,\n}\n",
+      "after": ""
+    },
+    {
+      "before": "pub enum ArtifactStoreSnapshotRootClose {\n    Empty,\n    ReleasedShared,\n    Retirement(Box<dyn ErasedSnapshotRetirement>),\n}\n",
+      "after": ""
+    }
+  ]
+}

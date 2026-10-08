@@ -83,41 +83,19 @@ fn a_document_details_edit_is_only_the_domain_leaves_it_changed() {
     assert!(matches!(dictionary.artifact_mutations.as_slice(), [DeflateMutation::SetPresetDictionary(set)] if set.dict_id == Some(7)), "{:?}", dictionary.artifact_mutations);
     assert!(edit("/windowBits", semio_framework_value::DslValue::uint(u64::from(base.window_bits))).artifact_mutations.is_empty(), "an unchanged value moves nothing");
     let payload = DeflateSnapshot { payload: b"hello".to_vec(), ..DeflateSnapshot::default() };
-    assert_eq!(super::deflate_net_mutations(&base, &payload), vec![DeflateMutation::SetPayload(crate::schema::mutations::set_payload::SetPayload { payload: b"hello".to_vec() })], "a changed payload is ONE set-payload");
+    let bytes = edit("/payload", semio_framework_value::ToValue::to_value(&payload.payload));
+    assert_eq!(bytes.artifact_mutations, vec![DeflateMutation::SetPayload(crate::schema::mutations::set_payload::SetPayload { payload: b"hello".to_vec() })], "a changed payload is ONE set-payload");
 }
 
 #[test]
-fn details_reject_window_bits_outside_the_normative_schema_atomically() {
-    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::schema::deflate_artifact_schema_descriptor()]).expect("register deflate schema");
+fn compression_params_reject_header_fields_outside_their_four_bits() {
+    use crate::schema::mutations::set_compression_params::SetCompressionParams;
     let base = DeflateSnapshot::default();
-    let accepted = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
-        &base,
-        &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/windowBits".into(), value: semio_framework_value::DslValue::uint(15) },
-        DEFLATE_EDITOR_DIALECT,
-        STDIO_DEFLATE_DOCUMENT_SCHEMA,
-    )
-    .expect("maximum boundary");
-    assert_eq!(accepted.window_bits, 15);
-    let error = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
-        &base,
-        &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/windowBits".into(), value: semio_framework_value::DslValue::uint(255) },
-        DEFLATE_EDITOR_DIALECT,
-        STDIO_DEFLATE_DOCUMENT_SCHEMA,
-    )
-    .expect_err("windowBits maximum");
-    assert_eq!(error.code, "snapshot-edit.constraint-invalid");
-    assert_eq!(error.path, "$.windowBits");
-    assert!(error.message.contains("maximum"));
-    assert_eq!(base.window_bits, DeflateSnapshot::default().window_bits);
-    let identity_error = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
-        &base,
-        &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.unknown".into()) },
-        DEFLATE_EDITOR_DIALECT,
-        STDIO_DEFLATE_DOCUMENT_SCHEMA,
-    )
-    .expect_err("schema identity");
-    assert_eq!(identity_error.code, "snapshot-edit.schema-identity");
-    assert_eq!(base.schema, STDIO_DEFLATE_DOCUMENT_SCHEMA);
+    let diff = |window_bits: u8| <SetCompressionParams as protocol::MutationKind<DeflateSnapshot, DeflateMutation>>::diff(&SetCompressionParams { method: 8, window_bits, level_hint: base.compression_level_hint }, &base);
+    assert!(diff(15).messages().is_empty(), "the maximum boundary is admitted");
+    assert!(!diff(255).messages().is_empty(), "a window size beyond the 4-bit field is refused");
+    let identity = semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.unknown".into()) };
+    assert_eq!(<DeflateEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&identity, &base).expect_err("no kind edits the schema identity").code.0, "snapshot-edit.unsupported-path");
     let mut unknown = base.clone();
     unknown.schema = "stdio.unknown".into();
     let adapter_error = semio_s_artifact_stdio_contract::editing::validate_snapshot_schema_for_dialect(&semio_framework_value::ToValue::to_value(&unknown), DEFLATE_EDITOR_DIALECT, STDIO_DEFLATE_DOCUMENT_SCHEMA).expect_err("registered adapter identity");

@@ -280,7 +280,7 @@ pub fn procedure_flow_leaves(base: &Path, next: &Path) -> Vec<SemioFlowMutation>
             leaves.push(SemioFlowMutation::SetNodeKind(flow::set_node_kind::SetNodeKind { id: node.id.clone(), kind: node.kind.clone() }));
         }
         for param in node.params.iter().filter(|param| !prior.params.contains(param)) {
-            leaves.push(SemioFlowMutation::SetNodeParam(flow::set_node_param::SetNodeParam { id: node.id.clone(), key: param.key.clone(), value: param.value.clone() }));
+            leaves.push(SemioFlowMutation::SetNodeParam(flow::set_node_param::SetNodeParam { id: node.id.clone(), key: param.key.clone(), value: param.value.clone(), at: None }));
         }
         for param in prior.params.iter().filter(|param| !node.params.iter().any(|entry| entry.key == param.key)) {
             leaves.push(SemioFlowMutation::RemoveNodeParam(flow::remove_node_param::RemoveNodeParam { id: node.id.clone(), key: param.key.clone() }));

@@ -1,10 +1,11 @@
 use super::*;
+use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode};
 
 #[test]
 fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
     assert!(html_command_from_action(HTML_KIT_ACTION_ID, None).is_err());
     let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(String::new()))]);
-    assert_eq!(html_command_from_action(HTML_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), HtmlEditCommand::ReplaceText { text: String::new() });
+    assert_eq!(html_command_from_action(HTML_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), HtmlEditCommand::LoadText { text: String::new() });
 }
 
 #[test]
@@ -114,23 +115,22 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }
 
-/// ⚖️ LAW: `replace-text` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
-/// editor's exact retained factory. Unregistered, the reactor refused it inside `s` with
+/// ⚖️ LAW: `textEdit` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the host through this
+/// editor's exact retained factory and loads the parsed document. Unregistered, the reactor refused it inside `s` with
 /// `interactive-job.missing-factory` (S15, session 11).
 #[semio_framework_async_macros::async_test]
-async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
+async fn the_kit_verb_loads_the_document_through_its_exact_retained_factory() {
     let target = html_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&HtmlSnapshot::default()).await;
-    dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("replace-text settles");
+    dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("textEdit settles");
     assert_eq!(app.snapshot().expect("html snapshot"), target);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
-/// ⚖️ LAW: `replace-text` with text that is not this artifact's DSL is refused loudly with
-/// `stdio.html.invalid-text` and leaves the document untouched — it used to answer an empty emit, which
-/// read as an accepted edit that moved nothing.
+/// ⚖️ LAW: `textEdit` with text that is not this artifact's DSL is refused loudly with
+/// `stdio.html.invalid-text` and leaves the document untouched.
 #[semio_framework_async_macros::async_test]
-async fn replace_text_refuses_text_that_is_not_the_artifacts_dsl() {
+async fn text_edit_refuses_text_that_is_not_the_artifacts_dsl() {
     let example = html_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&example).await;
     let fault = dispatch_settled(&mut app, "textEdit", &[("text", "not a dsl document")]).await.expect_err("invalid text is refused");
@@ -138,128 +138,40 @@ async fn replace_text_refuses_text_that_is_not_the_artifacts_dsl() {
     assert_eq!(app.snapshot().expect("html snapshot"), example);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+/// ⚖️ LAW: the window's DSL envelope is a whole-document dump, so an Apply is a load and publishes no mutation row.
+#[test]
+fn an_applied_envelope_is_a_load_and_publishes_no_mutation() {
+    let next = html_example_snapshot(crate::examples::demo::ID);
+    let emit = html_emit(&HtmlEditCommand::LoadText { text: <HtmlSnapshot as store::ArtifactDsl>::print_dsl(&next) }).expect("the envelope parses");
+    assert!(emit.artifact_mutations.is_empty());
+    assert!(matches!(emit.effects.as_slice(), [semio_framework_plugin::Effect::LoadDocument { .. }]));
+}
 //#endregion 🪟️KitVerbLaws
 
-//#region 🧮️NetLeafLaws
-const NET_LEAVES: &str = include_str!("../../../🧫️fixtures/🧫️net-leaves/🔣️.json");
-
-/// 🧾️ A leaf as the net-leaves corpus names it: kind and the node path it addresses (the parent path plus the child index for
-/// an insert or a remove).
-fn net_leaf_summary(leaf: &HtmlMutation) -> serde_json::Value {
-    let child = |parent: &[usize], index: usize| parent.iter().copied().chain(std::iter::once(index)).collect::<Vec<_>>();
-    let at = match leaf {
-        HtmlMutation::InsertNode(leaf) => child(&leaf.parent, leaf.index),
-        HtmlMutation::RemoveNode(leaf) => child(&leaf.parent, leaf.index),
-        HtmlMutation::SetElementName(leaf) => leaf.path.clone(),
-        HtmlMutation::SetAttribute(leaf) => leaf.path.clone(),
-        HtmlMutation::SetText(leaf) => leaf.path.clone(),
-        HtmlMutation::SetComment(leaf) => leaf.path.clone(),
-        HtmlMutation::SetRawText(leaf) => leaf.path.clone(),
-        HtmlMutation::SetDoctype(_) => Vec::new(),
-    };
-    serde_json::json!({ "kind": protocol::SemanticMutation::<HtmlSnapshot>::semantics(leaf).kind, "at": at })
-}
-
-/// ⚖️ LAW (corpus `🧫️fixtures/🧫️net-leaves`): an applied HTML text is exactly the corpus's net node leaves; applied in order
-/// they carry the committed document to exactly the applied text, and every leaf undoes with ONE row of its own, so the edit
-/// reverts leaf by leaf back to the committed document.
+//#region 🪟️DetailsLaws
+/// ⚖️ LAW: replacing the whole source through the details pane is a document load, not an edit, so no mutation is published.
 #[test]
-fn an_applied_text_is_its_net_node_leaves_and_they_reach_exactly_that_text() {
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let id = case["id"].as_str().expect("id");
-        let parse = |field: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(case[field].as_str().expect("text")).unwrap_or_else(|error| panic!("{id}: {field} parses: {error:?}"));
-        let (base, next) = (parse("before"), parse("after"));
-        let leaves = html_net_mutations(&base, &next);
-        assert_eq!(serde_json::Value::Array(leaves.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the net leaves");
-        let mut state = base.clone();
-        let mut undo = Vec::new();
-        for leaf in &leaves {
-            let inverse = protocol::Mutation::inverse(leaf, &state).expect("valid retained mutation inverse fixture");
-            assert_eq!(inverse.len(), 1, "{id}: {leaf:?} undoes with exactly one row");
-            undo.extend(inverse);
-            assert!(crate::standards::v5::subsets::any::schema::mutations::apply_html_mutation(&mut state, leaf).messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Fatal), "{id}: {leaf:?} applies");
-        }
-        assert_eq!(state, next, "{id}: the net leaves reach exactly the applied text");
-        for leaf in undo.iter().rev() {
-            crate::standards::v5::subsets::any::schema::mutations::apply_html_mutation(&mut state, leaf);
-        }
-        assert_eq!(state, base, "{id}: undoing every leaf restores the committed document");
-    }
-}
-
-/// ⚖️ LAW: a change the node leaves cannot reach — another document schema, or a root of another node kind — is refused by the
-/// exact replay instead of being published as a whole-document replacement, and no net-leaves corpus change is refused.
-#[test]
-fn an_unreachable_replacement_is_refused_and_no_corpus_change_is() {
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let parse = |field: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(case[field].as_str().expect("text")).unwrap_or_else(|error| panic!("{}: {field} parses: {error:?}", case["id"]));
-        assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&parse("before"), &parse("after"), html_net_mutations).is_ok(), "{}: a node edit is addressed by its leaves", case["id"]);
-    }
-    let base = HtmlSnapshot::default();
-    let other = HtmlSnapshot { schema: "stdio.html.other-schema".into(), ..base.clone() };
-    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &other, html_net_mutations).is_err(), "another document schema is unaddressed");
-    let text_root = HtmlSnapshot { root: HtmlNode::Text { text: "plain".into() }, ..base.clone() };
-    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &text_root, html_net_mutations).is_err(), "a root of another kind is unaddressed");
-}
-
-/// ⚖️ LAW (design §20.3): a document-details edit publishes the artifact's own net node leaves — exactly the corpus leaves of the
-/// same change, never a whole-document replacement for a node edit — with no description, so its row is labelled from its leaves.
-#[test]
-fn a_document_details_edit_is_its_net_node_leaves() {
+fn replacing_the_whole_source_is_refused_as_a_load() {
     use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
-    ::semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()]).expect("register html schema");
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let id = case["id"].as_str().expect("id");
-        let parse = |field: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(case[field].as_str().expect("text")).unwrap_or_else(|error| panic!("{id}: {field} parses: {error:?}"));
-        let (base, next) = (parse("before"), parse("after"));
-        let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&next) };
-        let emit = <HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).unwrap_or_else(|fault| panic!("{id}: the details edit publishes: {fault:?}"));
-        assert_eq!(serde_json::Value::Array(emit.artifact_mutations.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the details edit is the net leaves");
-        for leaf in &emit.artifact_mutations {
-            let expected = match leaf {
-                HtmlMutation::SetDoctype(_) => ("Set doctype", "Dokumenttyp setzen"),
-                HtmlMutation::InsertNode(_) => ("Insert node", "Knoten einfügen"),
-                HtmlMutation::RemoveNode(_) => ("Remove node", "Knoten entfernen"),
-                HtmlMutation::SetElementName(_) => ("Set element name", "Elementname setzen"),
-                HtmlMutation::SetAttribute(_) => ("Set attribute", "Attribut setzen"),
-                HtmlMutation::SetText(_) => ("Set text", "Text setzen"),
-                HtmlMutation::SetComment(_) => ("Set comment", "Kommentar setzen"),
-                HtmlMutation::SetRawText(_) => ("Set raw text", "Rohtext setzen"),
-            };
-            let label = protocol::SemanticMutation::<HtmlSnapshot>::label(leaf);
-            assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), expected.0, "{id}: English leaf label");
-            assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), expected.1, "{id}: German leaf label");
-        }
-    }
+    let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&html_example_snapshot(crate::examples::demo::ID)) };
+    assert_eq!(<HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &HtmlSnapshot::default()).expect_err("a load, not an edit").code.0, "snapshot-edit.unsupported-path");
 }
-
-/// ⚖️ LAW: the kit verb applies the HTML source the main window edits as ONE edit of its net leaves: one changed text is one
-/// `set-text` row labelled from the leaf, the document reads exactly the applied text, and ONE undo restores it.
-#[semio_framework_async_macros::async_test]
-async fn one_applied_html_text_is_one_edit_of_its_net_leaves() {
-    use semio_framework_plugin::PluginApp;
-    let before = "<html><head><title>T</title></head><body><p>One</p></body></html>";
-    let after = "<html><head><title>T</title></head><body><p>Uno</p></body></html>";
-    let parse = |text: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("html parses");
-    let mut app = kit_fixture_holding(&parse(before)).await;
-    let edits = app.edit_transactions().len();
-    dispatch_settled(&mut app, "textEdit", &[("text", after)]).await.expect("the applied html settles");
-    assert_eq!(app.snapshot().expect("html snapshot"), parse(after));
-    assert_eq!(app.edit_transactions().len(), edits + 1, "one Apply, one edit");
-    let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
-    let row = rows.iter().max_by_key(|row| row.seq).expect("the applied text's row");
-    assert_eq!(row.mutations.len(), 1, "one changed text is one net leaf: {:?}", row.mutations);
-    assert_eq!(
-        row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En),
-        protocol::SemanticMutation::<HtmlSnapshot>::label(&html_net_mutations(&parse(before), &parse(after))[0]).resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En)
-    );
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
-    assert_eq!(app.snapshot().expect("html snapshot"), parse(before), "one undo restores the committed document");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
-}
-//#endregion 🧮️NetLeafLaws
-
+//#endregion 🪟️DetailsLaws
 semio_framework_plugin::history_edit_acceptance_law!("stdio", HtmlEditor, || semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_node() {
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let base = HtmlSnapshot { root: HtmlNode::Element { name: "div".into(), attributes: vec![HtmlAttr::new("class", "a")], children: vec![HtmlNode::Text { text: "hi".into() }, HtmlNode::Comment { text: "c".into() }] }, ..HtmlSnapshot::default() };
+    let emit = |event: SnapshotEditEvent| <HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let text = emit(SnapshotEditEvent::SetValue { path: "/root/children/0/text".into(), value: semio_framework_value::DslValue::String("bye".into()) }).expect("a text edit resolves");
+    assert!(matches!(text.artifact_mutations.as_slice(), [HtmlMutation::SetText(_)]));
+    let attribute = emit(SnapshotEditEvent::SetValue { path: "/root/attributes/0/value".into(), value: semio_framework_value::DslValue::String("b".into()) }).expect("an attribute edit resolves");
+    assert!(matches!(attribute.artifact_mutations.as_slice(), [HtmlMutation::SetAttribute(_)]));
+    let renamed = emit(SnapshotEditEvent::SetValue { path: "/root/name".into(), value: semio_framework_value::DslValue::String("section".into()) }).expect("an element rename resolves");
+    assert!(matches!(renamed.artifact_mutations.as_slice(), [HtmlMutation::SetElementName(_)]));
+    let removed = emit(SnapshotEditEvent::RemoveValue { path: "/root/children/1".into() }).expect("a node removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [HtmlMutation::RemoveNode(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

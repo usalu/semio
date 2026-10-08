@@ -6,13 +6,9 @@ import {createCanvas,Path2D} from "@napi-rs/canvas";
 import cases from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import strokeCases from "../../🧫️fixtures/🧹️stroke/🔣️.json";
-import strokeSchema from "../../🧬️schema/🧹️stroke/🔣️.json";
 import coverageCases from "../../🧫️fixtures/🧹️coverage/🔣️.json";
-import coverageSchema from "../../🧬️schema/🧹️coverage/🔣️.json";
 import flattenCases from "../../🧫️fixtures/🧹️flatten/🔣️.json";
-import flattenSchema from "../../🧬️schema/🧹️flatten/🔣️.json";
 import retirementCases from "../../🧫️fixtures/🧹️retirement/🔣️.json";
-import retirementSchema from "../../🧬️schema/🧹️retirement/🔣️.json";
 import {StrokeOutlineJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts";
 import {PreparedFill} from "../../../../🎨️fill/🎨️sampling/🟦️.ts";
 import {PathFlattenJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
@@ -22,7 +18,7 @@ const validate=new Ajv({strict:true}).compile(schema);
 const validateProgress=new Ajv({strict:true}).compile({definitions:schema.definitions,$ref:"#/definitions/progress"});
 const validateRetirement=new Ajv({strict:true}).compile(schema.definitions.retirementProgress);
 test("whole painted path retirement retains real children, private candidates and published pixels",async()=>{
- expect(new Ajv({strict:true}).compile(retirementSchema)(retirementCases)).toBe(true);let comparisons=0;
+ let comparisons=0;
  for(const row of retirementCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=structuredClone(source.input) as PathRasterInput;if(row.mode==="failure")input.segments=[{kind:"move",to:[0,0]},{kind:"line",to:[1e10,0]}];const before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{source:object;job:any;work:number}[]=[];
   const spies=[PathFlattenJob,StrokeOutlineJob,CoverageJob,PreparedFill].map(kind=>{const prototype=kind.prototype as any,original=prototype.intoRetirement;return spyOn(prototype,"intoRetirement").mockImplementation(function(this:object){const result=original.call(this),owner="job"in result?result.job:result,record={source:this,job:owner,work:0};records.push(record);const advance=owner.advance.bind(owner);owner.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return result;});});
   try{if(row.mode==="failure")expect(()=>job.advance(4096)).toThrow();else{let reached=false;for(let at=0;at<2000000;at++){if(state.phase===row.phase){reached=true;break;}job.advance(1);}expect(reached).toBe(true);if(row.steps)job.advance(row.steps);}
@@ -48,7 +44,7 @@ test("async whole path drains real owners after final cancellation and callback 
  }
 });
 test("painted paths consume real flattened contours before conversion",async()=>{
- expect(new Ajv({strict:true}).compile(flattenSchema)(flattenCases)).toBe(true);const original=PathFlattenJob.prototype.intoRetirement;let comparisons=0;
+ const original=PathFlattenJob.prototype.intoRetirement;let comparisons=0;
  for(const row of flattenCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;let adopted=0,childWork=0,owner:ReturnType<PathFlattenJob["intoRetirement"]>|null=null;
   const spy=spyOn(PathFlattenJob.prototype,"intoRetirement").mockImplementation(function(this:PathFlattenJob){adopted++;const contours=this.result(),retired=original.call(this);owner=retired;expect(retired.output).toBe(contours);const advance=retired.job.advance.bind(retired.job);retired.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("flattenCleanup");expect(state.flat).toBe(contours);expect(state.flatten).toBeNull();expect(state.fillContours).toHaveLength(0);expect(state.strokeContours).toHaveLength(0);expect(state.coverage).toBeNull();const p=advance(unit);expect(p.work-childWork).toBe(1);childWork=p.work;return p;};return retired;});
   try{let done=false,work=0;for(let at=0;at<2000000;at++){if(state.phase==="contours")expect(owner!.job.terminalIsEmpty()).toBe(true);const p=job.advance(grant);expect(validateProgress(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}expect(done).toBe(true);}finally{spy.mockRestore();}
@@ -152,7 +148,7 @@ test("reversing quadratic retains the ideal segment area despite renderer cusp v
 });
 
 test("painted paths retire the real stroke before downstream coverage",async()=>{
- expect(new Ajv({strict:true}).compile(strokeSchema)(strokeCases)).toBe(true);let comparisons=0;
+ let comparisons=0;
  for(const row of strokeCases)for(const grant of [1,7,4096]) {
   const source=cases.find(c=>c.name===row.source)!;expect(source).toBeDefined();const input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;
   let work=0,cleanupWork=0,cleanupCalls=0,observed=false,completed=false,polygons:unknown=null,retired:any=null;
@@ -186,7 +182,7 @@ test("painted stroke cleanup refuses invalid grants and interrupted output",()=>
 });
 
 test("painted paths consume actual coverage masks before downstream work",async()=>{
- expect(new Ajv({strict:true}).compile(coverageSchema)(coverageCases)).toBe(true);const original=CoverageJob.prototype.intoRetirement;let comparisons=0;
+ const original=CoverageJob.prototype.intoRetirement;let comparisons=0;
  for(const row of coverageCases)for(const grant of [1,7,4096]){
   const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{kind:string;owner:ReturnType<CoverageJob["intoRetirement"]>;work:number}[]=[];
   const spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){const kind=state.phase==="fillCoverage"?"fill":"stroke",mask=this.result(),owner=original.call(this);expect(owner.output).toBe(mask);const record={kind,owner,work:0};records.push(record);const advance=owner.job.advance.bind(owner.job);owner.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe(`${kind}CoverageCleanup`);expect(state.coverage).toBeNull();expect(state[`${kind}Mask`]).toBe(mask);expect(state.pixels.every((v:number)=>v===0)).toBe(true);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return owner;});

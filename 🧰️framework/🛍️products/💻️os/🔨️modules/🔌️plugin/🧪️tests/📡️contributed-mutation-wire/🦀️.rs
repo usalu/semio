@@ -32,9 +32,6 @@ impl protocol::DiffAlgebra<WireTestSnapshot> for WireTestDiff {
     fn inverse(&self, _base: &WireTestSnapshot) -> Self {
         Self { deltas: self.deltas.iter().rev().map(|delta| delta.saturating_neg()).collect() }
     }
-    fn between(base: &WireTestSnapshot, other: &WireTestSnapshot) -> Self {
-        Self { deltas: if base.value == other.value { Vec::new() } else { vec![other.value.wrapping_sub(base.value)] } }
-    }
     fn is_empty(&self) -> bool {
         self.deltas.iter().all(|delta| *delta == 0)
     }

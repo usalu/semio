@@ -237,11 +237,14 @@ impl HistoryLog {
     /// [`crate::os_spr::mutation_ids_for_edit`] fallback). Edits owning an operation of a
     /// non-accepted quarantined conflict are excluded.
     pub fn fold(&self) -> Result<crate::os_spr::HistoryFold, ProtocolError> {
-        use semio_framework_value::ErasedSnapshotRetirement;
+        use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant};
         let (fold, transitions, replay_order, conflicts) = crate::os_spr::HistoryFoldJob::new(|control| async move { self.fold_controlled(crate::os_spr::HistoryShape::Document, &control).await }).finish_cold()?;
-        let mut retirement = semio_framework_value::retirement::owned_retirement((transitions, replay_order, conflicts));
-        while retirement.close_step(64, 4096).expect("normalized cold fold owners have exact retirement") != semio_framework_value::SnapshotRetirementStep::Complete {}
-        assert!(retirement.terminal_is_empty());
+        let mut retirement = ControlledRetirement::new((transitions, replay_order, conflicts)).unwrap_or_else(|_| unreachable!("normalized history declares controlled typed ownership"));
+        while !retirement.terminal_is_empty() {
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: retirement.next_capacity_byte_demand(4096).expect("normalized history constructor demand"), maximum_release_bytes: retirement.next_release_byte_demand().expect("normalized history whole release demand"), maximum_depth: retirement.next_depth_demand().expect("normalized history actual depth demand") };
+            let step = retirement.step(grant).expect("normalized cold fold owners have exact retirement");
+            assert!(step.progress().fits(grant));
+        }
         Ok(fold)
     }
 

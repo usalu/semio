@@ -11,17 +11,26 @@ type Generation2dDiff {
   previewText: Generation2dPreviewChange @state(class: ARTIFACT)
 }
 
-type Generation2dWidgetsDelta { added: [Widget!]! removed: [String!]! patched: [Generation2dWidgetPatchEntry!]! reordered: [String!] }
-type Generation2dWidgetPatchEntry { id: String! patch: Generation2dWidgetPatch! }
+type Generation2dWidgetsDelta { removed: [Generation2dWidgetRemoval!]! inserted: [Generation2dWidgetInsertion!]! moved: [Generation2dWidgetRelocation!]! patched: [Generation2dWidgetModification!]! }
+type Generation2dWidgetRemoval { id: String! index: Int! }
+type Generation2dWidgetInsertion { index: Int! row: Widget! }
+type Generation2dWidgetRelocation { id: String! from: Int! to: Int! }
+type Generation2dWidgetModification { id: String! patch: Generation2dWidgetPatch! }
 union Generation2dWidgetPatch = Generation2dWidgetReplace | Generation2dWidgetSlider
 type Generation2dWidgetReplace { kind: String! widget: Widget! }
 type Generation2dWidgetSlider { kind: String! value: Float! min: Float! max: Float! step: Float! }
-type Generation2dSynapsesDelta { added: [SynapseSpec!]! removed: [String!]! patched: [Generation2dSynapsePatchEntry!]! reordered: [String!] }
-type Generation2dSynapsePatchEntry { id: String! item: SynapseSpec! }
+type Generation2dSynapsesDelta { removed: [Generation2dSynapseRemoval!]! inserted: [Generation2dSynapseInsertion!]! moved: [Generation2dSynapseRelocation!]! patched: [Generation2dSynapseModification!]! }
+type Generation2dSynapseRemoval { id: String! index: Int! }
+type Generation2dSynapseInsertion { index: Int! row: SynapseSpec! }
+type Generation2dSynapseRelocation { id: String! from: Int! to: Int! }
+type Generation2dSynapseModification { id: String! patch: SynapseSpec! }
 type Generation2dLayoutRow { id: String! layout: WidgetLayout! }
 type Generation2dLayoutDelta { added: [Generation2dLayoutRow!]! removed: [String!]! patched: [Generation2dLayoutRow!]! }
-type Generation2dGenerationsDelta { added: [FormGeneration!]! removed: [String!]! patched: [Generation2dGenerationPatchEntry!]! reordered: [String!] }
-type Generation2dGenerationPatchEntry { id: String! patch: Generation2dGenerationPatch! }
+type Generation2dGenerationsDelta { removed: [Generation2dGenerationRemoval!]! inserted: [Generation2dGenerationInsertion!]! moved: [Generation2dGenerationRelocation!]! modified: [Generation2dGenerationModification!]! }
+type Generation2dGenerationRemoval { id: String! index: Int! }
+type Generation2dGenerationInsertion { index: Int! row: FormGeneration! }
+type Generation2dGenerationRelocation { id: String! from: Int! to: Int! }
+type Generation2dGenerationModification { id: String! patch: Generation2dGenerationPatch! }
 type Generation2dGenerationPatch { name: String values: Generation2dValuesDelta }
 type Generation2dValueRow { questionId: String! value: JSON }
 type Generation2dValuesDelta { added: [Generation2dValueRow!]! removed: [String!]! patched: [Generation2dValueRow!]! }

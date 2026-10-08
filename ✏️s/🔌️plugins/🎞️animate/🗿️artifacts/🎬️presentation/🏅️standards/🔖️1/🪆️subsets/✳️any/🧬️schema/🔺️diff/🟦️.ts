@@ -1,6 +1,5 @@
-/** 🔺️ Presentation durable delta: a field patch of the working source, an id-keyed tile row delta and the exact presentation child-slot replacement. */
-import { parseArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseFigureTileDraft, parseFigureTileFrame, type ArtifactChild, type FigureTileDraft, type FigureTileFrame } from "../🟦️.ts";
+/** 🔺️ Presentation durable delta: a field patch of the working source, a positional tile row delta (the presentation child handle is derived by apply). */
+import { parseFigureTileDraft, parseFigureTileFrame, type FigureTileDraft, type FigureTileFrame } from "../🟦️.ts";
 
 export interface PresentationOptionalAspect { value: number | null }
 export interface PresentationOptionalPage { value: number | null }
@@ -11,13 +10,16 @@ export interface PresentationSourcePatch {
   sourceAspect: PresentationOptionalAspect | null;
   pdfPage: PresentationOptionalPage | null;
 }
-export interface PresentationTilePatch { id: string; name: string | null; crop: FigureTileFrame | null }
-export interface PresentationTilesDelta { added: FigureTileDraft[]; removed: string[]; patched: PresentationTilePatch[]; reordered: string[] | null }
+export interface PresentationTilePatch { name: string | null; crop: FigureTileFrame | null }
+export interface PresentationTilesModification { id: string; patch: PresentationTilePatch }
+export interface PresentationTilesRemoval { id: string; index: number }
+export interface PresentationTilesInsertion { index: number; row: FigureTileDraft }
+export interface PresentationTilesRelocation { id: string; from: number; to: number }
+export interface PresentationTilesDelta { removed: PresentationTilesRemoval[]; inserted: PresentationTilesInsertion[]; moved: PresentationTilesRelocation[]; modified: PresentationTilesModification[] }
 export interface PresentationDiff {
   /** @state artifact */ schema: string | null;
   /** @state artifact */ source: PresentationSourcePatch | null;
   /** @state artifact */ tiles: PresentationTilesDelta | null;
-  /** @state artifact @child kind=s.stdio.semio */ presentation: ArtifactChild | null;
 }
 
 const record = (value: unknown, at: string): Record<string, unknown> => {
@@ -42,7 +44,7 @@ const slot = (value: unknown, at: string, kind: "number" | "integer"): { value: 
 
 export function parsePresentationTilePatch(value: unknown, at = "$"): PresentationTilePatch {
   const row = record(value, at);
-  return { id: text(row.id, `${at}.id`), name: optional(row.name, (name) => text(name, `${at}.name`)), crop: optional(row.crop, (crop) => parseFigureTileFrame(crop, `${at}.crop`)) };
+  return { name: optional(row.name, (name) => text(name, `${at}.name`)), crop: optional(row.crop, (crop) => parseFigureTileFrame(crop, `${at}.crop`)) };
 }
 
 export function parsePresentationSourcePatch(value: unknown, at = "$"): PresentationSourcePatch {
@@ -56,24 +58,40 @@ export function parsePresentationSourcePatch(value: unknown, at = "$"): Presenta
   };
 }
 
+const count = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) throw new Error(`${at}: value must be a non-negative integer`);
+  return value;
+};
+
 export function parsePresentationTilesDelta(value: unknown, at = "$"): PresentationTilesDelta {
   const row = record(value, at);
   return {
-    added: list(row.added, `${at}.added`).map((tile, index) => parseFigureTileDraft(tile, `${at}.added[${index}]`)),
-    removed: list(row.removed, `${at}.removed`).map((id, index) => text(id, `${at}.removed[${index}]`)),
-    patched: list(row.patched, `${at}.patched`).map((patch, index) => parsePresentationTilePatch(patch, `${at}.patched[${index}]`)),
-    reordered: optional(row.reordered, (order) => list(order, `${at}.reordered`).map((id, index) => text(id, `${at}.reordered[${index}]`))),
+    removed: list(row.removed, `${at}.removed`).map((entry, index) => {
+      const removal = record(entry, `${at}.removed[${index}]`);
+      return { id: text(removal.id, `${at}.removed[${index}].id`), index: count(removal.index, `${at}.removed[${index}].index`) };
+    }),
+    inserted: list(row.inserted, `${at}.inserted`).map((entry, index) => {
+      const insertion = record(entry, `${at}.inserted[${index}]`);
+      return { index: count(insertion.index, `${at}.inserted[${index}].index`), row: parseFigureTileDraft(insertion.row, `${at}.inserted[${index}].row`) };
+    }),
+    moved: list(row.moved, `${at}.moved`).map((entry, index) => {
+      const relocation = record(entry, `${at}.moved[${index}]`);
+      return { id: text(relocation.id, `${at}.moved[${index}].id`), from: count(relocation.from, `${at}.moved[${index}].from`), to: count(relocation.to, `${at}.moved[${index}].to`) };
+    }),
+    modified: list(row.modified, `${at}.modified`).map((entry, index) => {
+      const modification = record(entry, `${at}.modified[${index}]`);
+      return { id: text(modification.id, `${at}.modified[${index}].id`), patch: parsePresentationTilePatch(modification.patch, `${at}.modified[${index}].patch`) };
+    }),
   };
 }
 
 /** 🧮️ Resolves omitted delta fields to the native unchanged null value. */
 export function parsePresentationDiff(value: unknown, at = "$"): PresentationDiff {
   const row = record(value, at);
-  if (Object.keys(row).some((key) => !["schema", "source", "tiles", "presentation"].includes(key))) throw new Error(`${at}: fields do not match PresentationDiff`);
+  if (Object.keys(row).some((key) => !["schema", "source", "tiles"].includes(key))) throw new Error(`${at}: fields do not match PresentationDiff`);
   return {
     schema: optional(row.schema, (schema) => text(schema, `${at}.schema`)),
     source: optional(row.source, (source) => parsePresentationSourcePatch(source, `${at}.source`)),
     tiles: optional(row.tiles, (tiles) => parsePresentationTilesDelta(tiles, `${at}.tiles`)),
-    presentation: optional(row.presentation, (child) => parseArtifactChild(child)),
   };
 }

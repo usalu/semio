@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-data-fields/attaches-a-data-fields-payload: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    assert_eq!(produced.diff().data_fields, Some(crate::diff::LayoutDataFieldsDelta { presence: Some(crate::diff::DataFieldsPresence::Created), entries: Some(crate::diff::LayoutDataEntriesDelta { added: vec![crate::FormDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
+    assert_eq!(produced.diff().data_fields, Some(crate::diff::LayoutDataFieldsDelta { presence: Some(crate::diff::DataFieldsPresence::Created), entries: Some(crate::diff::LayoutDataEntriesDelta { inserted: vec![crate::diff::LayoutDataEntryInsertion { index: 0, row: crate::FormDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) } }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
     assert!(produced.diff().print_target.is_none(), "change-data-fields leaves `print_target` untouched in the diff");
 }
 

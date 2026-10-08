@@ -9,14 +9,15 @@
   "nightSetbackK": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "ventSystems": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "vent-central",
+        "index": 1,
         "row": {
           "id": "vent-meeting",
           "name": "Meeting room unit",
@@ -38,6 +39,7 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   }
 }

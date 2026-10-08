@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/framework-mesh-engine-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-native": "bun nx run @semio-tech/framework-mesh-engine-rs:test-native"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

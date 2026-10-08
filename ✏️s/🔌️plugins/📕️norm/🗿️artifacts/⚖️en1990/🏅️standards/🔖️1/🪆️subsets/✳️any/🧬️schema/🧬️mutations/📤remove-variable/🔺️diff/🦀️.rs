@@ -9,5 +9,5 @@ pub fn diff(payload: &RemoveVariable, base: &En1990Snapshot) -> MutationOutcome<
     if payload.index >= base.variables.len() {
         return MutationOutcome::error("mutation.target-missing", "variables index out of range", [payload.index.to_string()]);
     }
-    MutationOutcome::new(En1990Diff { variables: En1990VariableDelta::removal(&base.variables[payload.index].id), ..En1990Diff::default() })
+    MutationOutcome::new(En1990Diff { variables: En1990VariableDelta::removal(&base.variables, payload.index), ..En1990Diff::default() })
 }

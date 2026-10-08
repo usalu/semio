@@ -17,6 +17,7 @@
 //! `WindowPaneStateStore`), `📌️ChromePanels/🟦️.tsx` (`useNamedLayoutHost`), and
 //! `🧑‍💻dev/🏷️brand/🟦️.ts` (`resolveShellBrandById`).
 
+use semio_framework_os_config::io::text::mutations::{decode_ui_preferences_config_mutation_json};
 use super::*;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation the sibling law files use.

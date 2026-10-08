@@ -44,7 +44,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlocks {
 //#endregion 🔖️Mutation
 
 /// 🧭️ The blocks a delete really removes, in descending `(parent, index)` order: listed ids that exist, each once, without the ids that vanish with a listed ancestor.
-fn removal_roots(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<(Option<String>, usize, crate::NoteBlockNode)> {
+pub fn removal_roots(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<(Option<String>, usize, crate::NoteBlockNode)> {
     let mut roots: Vec<(Option<String>, usize, crate::NoteBlockNode)> = Vec::new();
     for (position, id) in payload.ids.iter().enumerate() {
         let (Some(block), Some((parent_id, index))) = (crate::schema::find_block(&base.blocks, id), crate::schema::find_block_location(&base.blocks, id)) else {

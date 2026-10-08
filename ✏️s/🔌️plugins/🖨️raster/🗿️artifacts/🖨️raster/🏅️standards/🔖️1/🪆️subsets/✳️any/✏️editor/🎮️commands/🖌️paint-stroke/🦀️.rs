@@ -108,8 +108,8 @@ pub(crate) fn hex_color(value: &str) -> Option<Vec<f64>> {
 pub(crate) fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<Vec<RasterSelectionSpan>>, Fault> {
     let Some(selection) = config.pixel_selection.as_ref().filter(|selection| selection.layer_id == layer_id && selection.target == config.paint_target) else { return Ok(None) };
     let count = selection.validate()?;
-    let spans = crate::editor::raster::selection::selection_spans(&selection.spans, count)?;
-    Ok(Some(spans.into_iter().map(|(start, end, coverage)| RasterSelectionSpan { start: start as u32, length: (end - start) as u32, coverage: u32::from(coverage) }).collect()))
+    crate::editor::raster::selection::selection_spans(&selection.spans, count)?;
+    Ok(Some(selection.spans.clone()))
 }
 
 /// 🧱️ The one leaf a released stroke means on `document` under the session `config`, refused (zero trace) when the
@@ -340,7 +340,7 @@ pub fn raster_tool_commit(tool: &str, authoring_seed: &str, stroke: RasterMutati
 /// does not apply. The caller retires the preview it renders.
 pub fn raster_stroke_preview(document: &RasterSnapshot, transient: &RasterCompositeWindowTransient) -> Option<RasterSnapshot> {
     let leaf: RasterMutation = semio_framework_value::FromValue::from_value(transient.stroke.as_ref()?.stroke.clone()).ok()?;
-    crate::mutations::apply_raster_mutation(document, &leaf).ok()
+    crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation(document, &leaf).ok()
 }
 //#endregion 🛠️PaintTool
 

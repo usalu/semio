@@ -1,0 +1,39 @@
+{
+  "preparedAt": "2026-10-08T19:09:50.775422+00:00",
+  "state": "prepared command record only; not launched; conditional release absent",
+  "requiredReleaseFile": "📥️oct8-normal-wgpu-production-release.json",
+  "command": [
+    "bun",
+    "nx",
+    "run",
+    "@semio-tech/framework-renderer-wgpu:wasm",
+    "--skip-nx-cache",
+    "--outputStyle=static"
+  ],
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build",
+    "SEMIO_COMPILER_RESOURCE_ROOT": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/semio-compiler-resources",
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-selected-native-nx-cache",
+    "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-selected-native-nx-data"
+  },
+  "budgetOverrides": {},
+  "defaultNativeBudgets": 0,
+  "sourceEvidence": "🗑️generated/oct8-post-neural-normal-wgpu-readonly-readiness.json",
+  "selectedClosureEvidence": "🗑️generated/oct8-post-neural-current-selected-wgpu-declared-closure.json",
+  "neuralLedger": "📥️oct8-neural-retirement-current-owned-endpoints.json",
+  "plannedActualLog": "🗑️generated/oct8-post-neural-original-wgpu-dev.log",
+  "requiredActualCompletionWitnesses": [
+    "original compiler source/currentness",
+    "actual locked offline metadata",
+    "original Trunk compile outcome",
+    "raw compiler artifact before/after exact Cargo query",
+    "original Cargo compiler/resource/input custody",
+    "current dev profile staging JS/WASM hashes",
+    "strict retained original evidence verification"
+  ],
+  "afterPositive": "report actual dev; hold wasm-release and normal activation for next serial producer coordination"
+}

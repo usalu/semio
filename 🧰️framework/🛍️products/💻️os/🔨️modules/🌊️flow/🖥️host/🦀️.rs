@@ -1,5 +1,6 @@
 //! 🖥️ Flow host: canvas editing, evaluation session, and host errors.
 
+use crate::infinite::board::schema::dag_input::{DagSelectionDomains,DagNodeStatuses};
 use crate::infinite::board::ports::directed_dag as dag;
 use semio_framework_canvas as canvas;
 use neural_engine as neural;
@@ -8,9 +9,10 @@ use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use dag::{fit_node_size, would_create_cycle, DagHost, DagLayoutOptions};
+use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions};
+use dag::{fit_node_size, would_create_cycle, DagHost};
 use semio_framework_artifact_infinite_dag::{dag_host_snapshot_execution_rows, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
-use semio_framework_artifact_flow_flow::{widget_id_for, FlowMutation, FlowStore, ReplaceFlowHostSnapshot, FLOW_DOCUMENT_SCHEMA};
+use semio_framework_artifact_flow_flow::{retire_flow_mutation, widget_id_for, AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowLayoutEntry, FlowMutation, FlowStore, RemoveSynapse, RemoveWidget, FLOW_DOCUMENT_SCHEMA};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
@@ -83,6 +85,9 @@ pub enum FlowCoreError {
     /// 📦️ A content-addressed payload referenced a digest this guest process does not hold, so the
     /// sender must carry the body again — see [`resolve_flow_shared_payload`].
     UnknownSharedPayload(String),
+    /// 🧾️ The history store refused a gesture's leaves. No partial history row survives: the history was reset to the live
+    /// content, so earlier undo steps are gone, and the carried text names the refusal.
+    HistoryRefused(String),
 }
 
 impl std::fmt::Display for FlowCoreError {
@@ -118,6 +123,7 @@ impl std::fmt::Display for FlowCoreError {
             Self::UnknownCluster(id) => write!(formatter, "unknown cluster: {id}"),
             Self::WidgetNotCluster(id) => write!(formatter, "widget is not a cluster: {id}"),
             Self::UnknownSharedPayload(digest) => write!(formatter, "unknown shared payload: {digest}"),
+            Self::HistoryRefused(reason) => write!(formatter, "history refused the edit: {reason}"),
         }
     }
 }
@@ -263,6 +269,18 @@ pub struct FlowHost {
     /// `history_store` — lets `can_undo` reflect it immediately, mirroring how the old snapshot stack's
     /// `begin_change` pushed synchronously instead of lazily.
     pending_change: bool,
+    /// 🧾️ The concrete flow leaves the edit in progress emitted at its gesture sites, in application order; recorded as ONE
+    /// store transaction by `record_history_edit`, retired cold when discarded.
+    pending_leaves: Vec<FlowMutation>,
+    /// 🧯️ The refusal of the last history row, kept until [`FlowHost::take_history_fault`] hands it over.
+    history_fault: Option<FlowCoreError>,
+    /// 🧪️ The leaves of every recorded edit, in order, so tests read what each gesture emitted.
+    #[cfg(test)]
+    recorded: Vec<Vec<FlowMutation>>,
+    /// 🔗️ How many dag journal rows predated the open gesture, so only the gesture's own rows become leaves.
+    journal_mark: usize,
+    /// ✏️ The note widget an inline note edit is changing, recorded as one `ChangeWidget` at `note_commit_edit`.
+    edited_note: Option<String>,
     /// 🖐️ `true` while a coalescing gesture (drag, inline note edit) is in progress — guards
     /// `begin_change` from checkpointing mid-gesture; see `begin_gesture`/`commit_gesture_history`.
     gesture_active: bool,
@@ -351,6 +369,12 @@ impl FlowHost {
             history_store: None,
             pending_history_baseline: None,
             pending_change: false,
+            pending_leaves: Vec::new(),
+            history_fault: None,
+            #[cfg(test)]
+            recorded: Vec::new(),
+            journal_mark: 0,
+            edited_note: None,
             gesture_active: false,
             pending_extension_evals: Vec::new(),
             interaction_revision: 0,
@@ -362,24 +386,23 @@ impl FlowHost {
         host
     }
 
-    /// 📥️ Replaces fixture content while keeping catalogue, operator metadata, eval bridge, and the live camera.
+    /// 📥️ Loads fixture content while keeping catalogue, operator metadata, eval bridge, and the live camera. A load is a history
+    /// reset: no edit survives it.
     pub fn replace_host_snapshot(&mut self, host_snapshot: FlowHostSnapshot) {
         self.apply_host_snapshot(host_snapshot, true, false);
     }
 
-    /// 📥️ Scene resync: reloads fixture layout/content without discarding eval baseline or cached outputs.
+    /// 📥️ Scene resync: reloads fixture layout/content without discarding eval baseline or cached outputs. A scene that merely
+    /// echoes the live content leaves the history alone; a scene whose content differs is a load and resets the history, because
+    /// a content change may only enter the history as concrete leaves.
     pub fn resync_host_snapshot_from_scene(&mut self, host_snapshot: FlowHostSnapshot) {
         self.apply_host_snapshot(host_snapshot, false, true);
     }
 
-    /// 📥️ Replaces fixture content without clearing undo/redo history.
-    pub fn set_host_snapshot_preserving_history(&mut self, host_snapshot: FlowHostSnapshot) {
-        self.apply_host_snapshot(host_snapshot, false, false);
-    }
-
-    fn apply_host_snapshot(&mut self, mut host_snapshot: FlowHostSnapshot, reset_history: bool, preserve_eval: bool) {
+    fn apply_host_snapshot(&mut self, mut host_snapshot: FlowHostSnapshot, force_reset: bool, preserve_eval: bool) {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         dedupe_host_snapshot_widgets(&mut host_snapshot);
+        let load = force_reset || self.host_snapshot.widgets != host_snapshot.widgets || self.host_snapshot.synapses != host_snapshot.synapses || self.host_snapshot.layout != host_snapshot.layout;
         // 🎥️ Camera is ephemeral view state (same as undo/redo) — never snap the live pan/zoom when a
         // scene resync reloads fixture content (hover, eval tick, remote operations, …).
         let camera = self.host_snapshot.camera.clone();
@@ -393,17 +416,25 @@ impl FlowHost {
         self.ghost_node = None;
         self.rebuild_dag();
         self.refresh_interaction_projection();
-        if reset_history {
-            if let Some(store) = self.history_store.as_mut() {
-                let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_snapshot.clone(), None);
-                ::semio_framework_async::poll::resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
-                store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
-            }
-            if let Some(stale) = self.pending_history_baseline.take() {
-                stale.retire_cold();
-            }
+        if load {
+            self.reset_history_store();
             self.pending_change = false;
             self.gesture_active = false;
+            self.edited_note = None;
+            self.discard_pending_leaves();
+        }
+    }
+
+    /// 🧹️ Restarts the history at the live content: the store is reset to it (when one exists) and the armed baseline is
+    /// retired. Used by every load and by a refused history row, since the store can no longer represent the live content.
+    fn reset_history_store(&mut self) {
+        if let Some(store) = self.history_store.as_mut() {
+            let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_snapshot.clone(), None);
+            ::semio_framework_async::poll::resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
+            store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
+        }
+        if let Some(stale) = self.pending_history_baseline.take() {
+            stale.retire_cold();
         }
     }
 
@@ -663,9 +694,7 @@ impl FlowHost {
     }
 
     /// ⚙️ Marks one actively computing widget and downstream widgets as stale.
-    pub fn set_node_statuses_from_json(&mut self, json: &str) {
-        self.dag.set_node_statuses_from_json(json);
-    }
+    pub fn set_node_statuses(&mut self,statuses:&DagNodeStatuses){self.dag.set_node_statuses(statuses);}
 
     pub fn set_computing_progress(&mut self, active_widget_id: Option<&str>, stale_widget_ids: &[String]) {
         self.dag.set_computing_progress(active_widget_id, stale_widget_ids);
@@ -897,22 +926,30 @@ impl FlowHost {
             return Err(FlowCoreError::WidgetIdExists(id));
         }
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
+        let added = FlowMutation::AddWidget(AddWidget { index: u32::try_from(self.host_snapshot.widgets.len()).unwrap_or(u32::MAX), widget: widget.clone() });
         self.host_snapshot.widgets.push(widget);
         self.host_snapshot.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
+        self.note_leaves([added].into_iter().chain(self.layout_leaf([id.as_str()])));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(id)
     }
 
     pub fn remove_widget(&mut self, widget_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let before = self.host_snapshot.widgets.len();
+        let touching: Vec<String> = self.host_snapshot.synapses.iter().filter(|s| s.from == widget_id || s.to == widget_id).map(|s| s.id.clone()).collect();
+        let had_layout = self.host_snapshot.layout.contains_key(widget_id);
         self.host_snapshot.widgets.retain(|w| widget_id_for(w) != widget_id);
         if self.host_snapshot.widgets.len() == before {
             return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         }
         self.host_snapshot.layout.remove(widget_id);
         self.host_snapshot.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
+        let unplaced = had_layout.then(|| FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: widget_id.to_string(), layout: None }] }));
+        self.note_leaves(touching.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain(unplaced).chain([FlowMutation::RemoveWidget(RemoveWidget { id: widget_id.to_string() })]));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -920,8 +957,12 @@ impl FlowHost {
         if !self.host_snapshot.widgets.iter().any(|w| widget_id_for(w) == widget_id) {
             return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         }
+        self.begin_change();
         self.host_snapshot.layout.insert(widget_id.to_string(), WidgetLayout { x, y });
+        let moved = self.layout_leaf([widget_id]);
+        self.note_leaves(moved);
         self.dag.set_widget_position(widget_id, x, y)?;
+        self.checked_change()?;
         Ok(())
     }
 
@@ -975,10 +1016,15 @@ impl FlowHost {
                 target_type: target_types.join(","),
             });
         }
+        let displaced: Vec<String> = self.host_snapshot.synapses.iter().filter(|s| s.to == to_id && s.to_port == to_port).map(|s| s.id.clone()).collect();
         self.host_snapshot.synapses.retain(|s| !(s.to == to_id && s.to_port == to_port));
         let synapse_id = self.next_synapse_id();
-        self.host_snapshot.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string(), from_port: from_port.to_string(), to_port: to_port.to_string() });
+        let synapse = SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string(), from_port: from_port.to_string(), to_port: to_port.to_string() };
+        let added = FlowMutation::AddSynapse(AddSynapse { index: u32::try_from(self.host_snapshot.synapses.len()).unwrap_or(u32::MAX), synapse: synapse.clone() });
+        self.host_snapshot.synapses.push(synapse);
+        self.note_leaves(displaced.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain([added]));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(synapse_id)
     }
 
@@ -1006,6 +1052,7 @@ impl FlowHost {
         }
         let insert_at = index.min(ports.len());
         ports.insert(insert_at, insert_at.to_string());
+        let mut renumbered = Vec::new();
         for synapse in &mut self.host_snapshot.synapses {
             if synapse.to != widget_id {
                 continue;
@@ -1013,11 +1060,15 @@ impl FlowHost {
             if let Ok(old_index) = synapse.to_port.parse::<usize>() {
                 if old_index >= insert_at {
                     synapse.to_port = (old_index + 1).to_string();
+                    renumbered.push(synapse.clone());
                 }
             }
         }
         *input_ports = (0..ports.len()).map(|slot| slot.to_string()).collect();
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(renumbered.into_iter().map(|synapse| FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse.id.clone(), synapse })).chain(changed));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1044,7 +1095,9 @@ impl FlowHost {
         let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
             return Err(FlowCoreError::UnknownInputPort(port_id.to_string()));
         };
+        let severed: Vec<String> = self.host_snapshot.synapses.iter().filter(|synapse| synapse.to == widget_id && synapse.to_port == port_id).map(|synapse| synapse.id.clone()).collect();
         self.host_snapshot.synapses.retain(|synapse| !(synapse.to == widget_id && synapse.to_port == port_id));
+        let mut renumbered = Vec::new();
         for synapse in &mut self.host_snapshot.synapses {
             if synapse.to != widget_id {
                 continue;
@@ -1052,13 +1105,17 @@ impl FlowHost {
             if let Ok(old_index) = synapse.to_port.parse::<usize>() {
                 if old_index > remove_index {
                     synapse.to_port = (old_index - 1).to_string();
+                    renumbered.push(synapse.clone());
                 }
             }
         }
         let mut next_ports = ports;
         next_ports.remove(remove_index);
         *input_ports = (0..next_ports.len()).map(|slot| slot.to_string()).collect();
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(severed.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain(renumbered.into_iter().map(|synapse| FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse.id.clone(), synapse }))).chain(changed));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1086,6 +1143,7 @@ impl FlowHost {
         }
         let insert_at = index.min(ports.len());
         ports.insert(insert_at, insert_at.to_string());
+        let mut renumbered = Vec::new();
         for synapse in &mut self.host_snapshot.synapses {
             if synapse.from != widget_id {
                 continue;
@@ -1093,11 +1151,15 @@ impl FlowHost {
             if let Ok(old_index) = synapse.from_port.parse::<usize>() {
                 if old_index >= insert_at {
                     synapse.from_port = (old_index + 1).to_string();
+                    renumbered.push(synapse.clone());
                 }
             }
         }
         *output_ports = (0..ports.len()).map(|slot| slot.to_string()).collect();
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(renumbered.into_iter().map(|synapse| FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse.id.clone(), synapse })).chain(changed));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1124,7 +1186,9 @@ impl FlowHost {
         let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
             return Err(FlowCoreError::UnknownOutputPort(port_id.to_string()));
         };
+        let severed: Vec<String> = self.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id && synapse.from_port == port_id).map(|synapse| synapse.id.clone()).collect();
         self.host_snapshot.synapses.retain(|synapse| !(synapse.from == widget_id && synapse.from_port == port_id));
+        let mut renumbered = Vec::new();
         for synapse in &mut self.host_snapshot.synapses {
             if synapse.from != widget_id {
                 continue;
@@ -1132,13 +1196,17 @@ impl FlowHost {
             if let Ok(old_index) = synapse.from_port.parse::<usize>() {
                 if old_index > remove_index {
                     synapse.from_port = (old_index - 1).to_string();
+                    renumbered.push(synapse.clone());
                 }
             }
         }
         let mut next_ports = ports;
         next_ports.remove(remove_index);
         *output_ports = (0..next_ports.len()).map(|slot| slot.to_string()).collect();
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(severed.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain(renumbered.into_iter().map(|synapse| FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse.id.clone(), synapse }))).chain(changed));
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1149,7 +1217,9 @@ impl FlowHost {
         if self.host_snapshot.synapses.len() == before {
             return Err(FlowCoreError::UnknownSynapse(synapse_id.to_string()));
         }
+        self.note_leaves([FlowMutation::RemoveSynapse(RemoveSynapse { id: synapse_id.to_string() })]);
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1180,21 +1250,29 @@ impl FlowHost {
             return Err(FlowCoreError::CycleWouldBeCreated);
         }
         let mid_has_input = self.host_snapshot.synapses.iter().any(|synapse| synapse.to == mid_id);
+        let mut rerouted = Vec::new();
         if !mid_has_input {
             for synapse in &mut self.host_snapshot.synapses {
                 if synapse.from == anchor_id && synapse.from_port == anchor_out_port {
                     synapse.from = mid_id.to_string();
                     synapse.from_port = mid_out_port.to_string();
+                    rerouted.push(synapse.clone());
                 }
             }
         }
+        self.note_leaves(rerouted.into_iter().map(|synapse| FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse.id.clone(), synapse })));
         if self.host_snapshot.synapses.iter().any(|synapse| synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port) {
             self.rebuild_dag();
+            self.checked_change()?;
             return Ok(());
         }
         let synapse_id = self.next_synapse_id();
-        self.host_snapshot.synapses.push(SynapseSpec { id: synapse_id, from: anchor_id.to_string(), to: mid_id.to_string(), from_port: anchor_out_port.to_string(), to_port: mid_in_port.to_string() });
+        let synapse = SynapseSpec { id: synapse_id, from: anchor_id.to_string(), to: mid_id.to_string(), from_port: anchor_out_port.to_string(), to_port: mid_in_port.to_string() };
+        let added = FlowMutation::AddSynapse(AddSynapse { index: u32::try_from(self.host_snapshot.synapses.len()).unwrap_or(u32::MAX), synapse: synapse.clone() });
+        self.host_snapshot.synapses.push(synapse);
+        self.note_leaves([added]);
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1203,11 +1281,13 @@ impl FlowHost {
         self.begin_change();
         let anchor_x = self.host_snapshot.layout.get(anchor_id).map(|layout| layout.x).ok_or_else(|| FlowCoreError::UnknownWidgetLayout(anchor_id.to_string()))?;
         let previous = std::mem::take(&mut self.host_snapshot.layout);
+        let mut shifted = Vec::new();
         for (widget_id, layout) in &previous {
             let mut layout = layout.clone();
             if layout.x > anchor_x {
                 layout.x += dx;
                 layout.y += dy;
+                shifted.push(widget_id.clone());
             }
             let _ = self.dag.set_widget_position(widget_id, layout.x, layout.y);
             self.host_snapshot.layout.insert(widget_id.clone(), layout);
@@ -1215,6 +1295,9 @@ impl FlowHost {
         let mut retirement = crate::retained::FlowRetirement::default();
         retirement.push(crate::retained::FlowOwner::Layouts(previous));
         retirement.retire_cold();
+        let moved = self.layout_leaf(shifted.iter().map(String::as_str));
+        self.note_leaves(moved);
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1229,20 +1312,22 @@ impl FlowHost {
         };
         self.displaced.push_dictionary(patch);
         self.displaced.push_dictionary(merged?);
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(changed);
         self.sync_dag_display_from_widgets();
+        self.checked_change()?;
         Ok(())
     }
     // #endregion GumballEditing
 
     /// 🌳️ Recomputes widget positions from the current graph using layered tree layout.
-    pub fn reorganize(&mut self, opts_json: &str) -> Result<(), FlowCoreError> {
-        self.begin_change();
-        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { semio_framework_pack_json::from_json_str(opts_json, semio_framework_pack_json::JsonMemberPolicy::Reject)? };
-        let theme = self.dag.canvas_theme;
-        self.dag = DagHost::from_host_snapshot_without_layout(self.build_dag_host_snapshot_v1());
-        self.dag.canvas_theme = theme;
-        self.dag.reorganize(&opts)?;
-        self.sync_from_dag();
+    pub fn reorganize(&mut self,opts:&DagLayoutOptions,control:&mut semio_framework_os_infinite::board::schema::layout::LayoutControl<'_>)->Result<(),FlowCoreError>{
+        let mut dag=DagHost::from_host_snapshot_without_layout(self.build_dag_host_snapshot_v1());dag.canvas_theme=self.dag.canvas_theme;
+        dag.reorganize(opts,control)?;self.begin_change();self.dag=dag;self.sync_from_dag();
+        let placed: Vec<String> = self.host_snapshot.layout.keys().cloned().collect();
+        let moved = self.layout_leaf(placed.iter().map(String::as_str));
+        self.note_leaves(moved);
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1308,6 +1393,8 @@ impl FlowHost {
             return;
         }
         self.gesture_active = false;
+        self.discard_pending_leaves();
+        self.edited_note = None;
         let Some(mut baseline) = self.pending_history_baseline.take() else {
             return;
         };
@@ -1364,8 +1451,15 @@ impl FlowHost {
             return Ok(());
         }
         self.begin_change();
+        let nodes: Vec<String> = self.dag.selected_node_ids().into_iter().filter(|id| self.host_snapshot.widgets.iter().any(|widget| widget_id_for(widget) == id)).collect();
+        let edges = self.dag.selected_edge_ids();
+        let severed: Vec<String> = self.host_snapshot.synapses.iter().filter(|synapse| edges.contains(&synapse.id) || nodes.contains(&synapse.from) || nodes.contains(&synapse.to)).map(|synapse| synapse.id.clone()).collect();
+        let unplaced: Vec<FlowLayoutEntry> = nodes.iter().filter(|id| self.host_snapshot.layout.contains_key(id.as_str())).map(|id| FlowLayoutEntry { id: id.clone(), layout: None }).collect();
         self.dag.delete_selected();
         self.sync_from_dag();
+        let unplaced = (!unplaced.is_empty()).then(|| FlowMutation::ChangeLayout(ChangeLayout { entries: unplaced }));
+        self.note_leaves(severed.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain(unplaced).chain(nodes.into_iter().map(|id| FlowMutation::RemoveWidget(RemoveWidget { id }))));
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1755,6 +1849,11 @@ impl FlowHost {
 
     fn rebuild_dag(&mut self) {
         let fixture = self.build_dag_host_snapshot_v1();
+        if self.pending_change || self.gesture_active {
+            let kept: BTreeSet<&str> = fixture.edges.iter().map(|edge| edge.id.as_str()).collect();
+            let dropped: Vec<FlowMutation> = self.host_snapshot.synapses.iter().filter(|synapse| !kept.contains(synapse.id.as_str())).map(|synapse| FlowMutation::RemoveSynapse(RemoveSynapse { id: synapse.id.clone() })).collect();
+            self.pending_leaves.extend(dropped);
+        }
         let theme = self.dag.canvas_theme;
         let automatic_lod = self.dag.automatic_lod();
         let forced_draw_lod = self.dag.forced_draw_lod_label().map(str::to_string);
@@ -1782,10 +1881,8 @@ impl FlowHost {
         semio_framework_pack_json::to_json_string(&self.dag.selected_node_ids())
     }
 
-    /// 🎯️ Full selection snapshot as JSON (`nodes`, `edges`, `🐙️handles`).
-    pub fn selection_domains_json(&self) -> String {
-        self.dag.selection_domains_json()
-    }
+    /// 🎯️ Projects typed node, edge and handle selection.
+    pub fn selection_domains(&self)->DagSelectionDomains{self.dag.selection_domains()}
 
     /// 🖱️ Hovered widget id when the pointer is over a node or port handle.
     pub fn hovered_widget_id(&self) -> Option<String> {
@@ -1808,25 +1905,14 @@ impl FlowHost {
         self.dag.hovered_channel_json()
     }
 
-    /// 🔌️ Selected widget channels from handle picks.
-    pub fn selected_channels_json(&self) -> String {
-        self.dag.selected_channels_json()
-    }
+    /// 🔌️ Projects selected typed widget channels.
+    pub fn selected_channels(&self)->Vec<dag::DagChannelRef>{self.dag.selected_channels()}
 
-    /// ✅️ Replaces selection from domain JSON or a legacy widget-id array.
-    pub fn set_selection_json(&mut self, json: &str) {
-        self.dag.set_selection_domains_json(json);
-    }
+    /// ✅️ Replaces selection from admitted semantic domains.
+    pub fn set_selection_domains(&mut self,domains:&DagSelectionDomains){self.dag.set_selection_domains(domains);}
 
-    /// ✅️ Same as `set_selection_json` but over a flat node-id list (the `NodeGraphScene.selection` wire shape).
-    pub fn set_selection(&mut self, ids: &[String]) {
-        let json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
-            ("nodes".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&ids.to_vec()))),
-            ("edges".to_string(), semio_framework_pack_json::Value::Array(vec![])),
-            ("handles".to_string(), semio_framework_pack_json::Value::Array(vec![])),
-        ]));
-        self.dag.set_selection_domains_json(&json);
-    }
+    /// ✅️ Replaces the node domain selection directly.
+    pub fn set_selection(&mut self,ids:&[String]){self.dag.set_selection(ids);}
 
     /// 📦️ Screen-space union bounds of the current selection for DOM overlays.
     pub fn selection_union_bounds_screen_json(&self) -> String {
@@ -1841,10 +1927,17 @@ impl FlowHost {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         let baseline = self.dag.node_positions();
         self.dag.align_selection(mode)?;
-        if self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
+        let refused = self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err();
+        if refused {
             self.dag.restore_node_positions(&baseline);
         }
         self.sync_from_dag();
+        if !refused {
+            let aligned = self.dag.selected_node_ids();
+            let moved = self.layout_leaf(aligned.iter().map(String::as_str));
+            self.note_leaves(moved);
+        }
+        self.checked_change()?;
         Ok(())
     }
 
@@ -1858,10 +1951,8 @@ impl FlowHost {
         self.dag.set_hover_channel(widget_id, port_id);
     }
 
-    /// 🔌️ Replaces channel selection from JSON.
-    pub fn set_selected_channels_json(&mut self, json: &str) {
-        self.dag.set_selected_channels_json(json);
-    }
+    /// 🔌️ Replaces admitted typed channel selection.
+    pub fn set_selected_channels(&mut self,channels:&[dag::DagChannelRef]){self.dag.set_selected_channels(channels);}
 
     /// 🌫️ Widget ids with preview disabled.
     pub fn preview_off_widget_ids(&self) -> Vec<String> {
@@ -1990,8 +2081,11 @@ impl FlowHost {
                 }
             }
         }
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(changed);
         self.sync_dag_display_from_widgets();
         self.refresh_computing_chrome_from_pending();
+        self.finish_change();
     }
 
     pub fn slider_overlay_state_json(&self) -> Result<String, FlowCoreError> {
@@ -2007,14 +2101,18 @@ impl FlowHost {
                 }
             }
         }
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(changed);
         self.sync_dag_display_from_widgets();
         self.dag.fit_note_sizes();
         self.refresh_computing_chrome_from_pending();
+        self.finish_change();
     }
 
     /// ✏️ Begins inline note editing for a widget at a world-space click.
     pub fn begin_note_edit(&mut self, widget_id: &str, world_x: f64, world_y: f64) {
         self.begin_gesture();
+        self.edited_note = Some(widget_id.to_string());
         self.dag.begin_note_edit(widget_id, world_x, world_y);
     }
 
@@ -2080,7 +2178,10 @@ impl FlowHost {
                 }
             }
         }
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(changed);
         self.rebuild_dag();
+        self.finish_change();
     }
 
     pub fn set_variable_schema(&mut self, widget_id: &str, schema: &str) {
@@ -2096,7 +2197,10 @@ impl FlowHost {
                 }
             }
         }
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(changed);
         self.rebuild_dag();
+        self.finish_change();
     }
 
     pub fn set_image_src(&mut self, widget_id: &str, src: &str) {
@@ -2108,9 +2212,12 @@ impl FlowHost {
                 }
             }
         }
+        let changed = self.changed_widget_leaf(widget_id);
+        self.note_leaves(changed);
         self.sync_dag_display_from_widgets();
         self.dag.fit_preview_sizes();
         self.refresh_computing_chrome_from_pending();
+        self.finish_change();
     }
 
     pub fn preview_text(&self) -> String {
@@ -2191,6 +2298,8 @@ impl FlowHost {
             return Err(FlowCoreError::CollapseContainsClusters);
         }
         self.begin_change();
+        let severed: Vec<String> = self.host_snapshot.synapses.iter().filter(|synapse| selected.contains(&synapse.from) || selected.contains(&synapse.to)).map(|synapse| synapse.id.clone()).collect();
+        let unplaced: Vec<FlowLayoutEntry> = selected.iter().filter(|id| self.host_snapshot.layout.contains_key(id.as_str())).map(|id| FlowLayoutEntry { id: id.clone(), layout: None }).collect();
         let mut crossing_external = Vec::new();
         for synapse in &self.host_snapshot.synapses {
             let from_selected = selected.contains(&synapse.from);
@@ -2300,11 +2409,13 @@ impl FlowHost {
             flow: FlowGui { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain { preview: true } })).collect(), previews: vec![] },
         };
         self.host_snapshot.widgets.retain(|widget| !selected.contains(widget_id_for(widget)));
+        let clustered = FlowMutation::AddWidget(AddWidget { index: u32::try_from(self.host_snapshot.widgets.len()).unwrap_or(u32::MAX), widget: cluster.clone() });
         self.host_snapshot.widgets.push(cluster);
         for id in &selected {
             self.host_snapshot.layout.remove(id);
         }
         self.host_snapshot.layout.insert(cluster_id.clone(), WidgetLayout { x: cluster_x, y: cluster_y });
+        let retained_count = retained_external.len();
         self.host_snapshot.synapses = retained_external;
         for synapse in cluster_external {
             if synapse.to.is_empty() {
@@ -2313,7 +2424,14 @@ impl FlowHost {
                 self.host_snapshot.synapses.push(SynapseSpec { id: synapse.id, from: cluster_id.clone(), to: synapse.to, from_port: synapse.from_port, to_port: synapse.to_port });
             }
         }
+        let unplaced = (!unplaced.is_empty()).then(|| FlowMutation::ChangeLayout(ChangeLayout { entries: unplaced }));
+        let rewired: Vec<FlowMutation> = self.host_snapshot.synapses[retained_count..].iter().enumerate().map(|(offset, synapse)| FlowMutation::AddSynapse(AddSynapse { index: u32::try_from(retained_count + offset).unwrap_or(u32::MAX), synapse: synapse.clone() })).collect();
+        let placed = self.layout_leaf([cluster_id.as_str()]);
+        self.note_leaves(
+            severed.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain(unplaced).chain(selected.iter().map(|id| FlowMutation::RemoveWidget(RemoveWidget { id: id.clone() }))).chain([clustered]).chain(placed).chain(rewired),
+        );
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(cluster_id)
     }
 
@@ -2331,6 +2449,8 @@ impl FlowHost {
         };
         let cluster_layout = self.host_snapshot.layout.get(cluster_id).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
         self.begin_change();
+        let severed: Vec<String> = self.host_snapshot.synapses.iter().filter(|synapse| synapse.from == cluster_id || synapse.to == cluster_id).map(|synapse| synapse.id.clone()).collect();
+        let had_layout = self.host_snapshot.layout.contains_key(cluster_id);
         let mut boundary_channels: HashMap<String, (String, String)> = HashMap::new();
         for neuron in &tree.neurons {
             if neuron.kind == INPUT_KIND {
@@ -2370,18 +2490,25 @@ impl FlowHost {
         // RETIRED rather than dropped (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         self.host_snapshot.widgets.remove(cluster_index).retire_cold();
         self.host_snapshot.layout.remove(cluster_id);
-        for (_, _, widget) in restored_widgets {
+        let mut restored_ids = Vec::with_capacity(restored_widgets.len());
+        let mut restored_leaves = Vec::with_capacity(restored_widgets.len());
+        for (namespaced_id, _, widget) in restored_widgets {
+            restored_leaves.push(FlowMutation::AddWidget(AddWidget { index: u32::try_from(self.host_snapshot.widgets.len()).unwrap_or(u32::MAX), widget: widget.clone() }));
+            restored_ids.push(namespaced_id);
             self.host_snapshot.widgets.push(widget);
         }
         let mut next_synapses = Vec::new();
+        let mut rewired = Vec::new();
         for synapse in &self.host_snapshot.synapses {
             if synapse.to == cluster_id {
                 if let Some((variable_id, variable_port)) = boundary_channels.get(&synapse.to_port) {
+                    rewired.push(next_synapses.len());
                     next_synapses.push(SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: variable_id.clone(), from_port: synapse.from_port.clone(), to_port: variable_port.clone() });
                     continue;
                 }
             } else if synapse.from == cluster_id {
                 if let Some((variable_id, variable_port)) = boundary_channels.get(&synapse.from_port) {
+                    rewired.push(next_synapses.len());
                     next_synapses.push(SynapseSpec { id: synapse.id.clone(), from: variable_id.clone(), to: synapse.to.clone(), from_port: variable_port.clone(), to_port: synapse.to_port.clone() });
                     continue;
                 }
@@ -2403,19 +2530,23 @@ impl FlowHost {
                 .find(|neuron| neuron.id == synapse.to && neuron.kind == OUTPUT_KIND)
                 .and_then(|neuron| neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str())).map_or_else(|| synapse.to_port.clone(), str::to_string);
             let id = self.next_synapse_id();
+            rewired.push(next_synapses.len());
             next_synapses.push(SynapseSpec { id, from: from.clone(), to: to.clone(), from_port, to_port });
         }
+        let reconnected: Vec<FlowMutation> = rewired.into_iter().map(|index| FlowMutation::AddSynapse(AddSynapse { index: u32::try_from(index).unwrap_or(u32::MAX), synapse: next_synapses[index].clone() })).collect();
         self.host_snapshot.synapses = next_synapses;
         exploded.retire_cold();
+        let unplaced = had_layout.then(|| FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: cluster_id.to_string(), layout: None }] }));
+        let placed = self.layout_leaf(restored_ids.iter().map(String::as_str));
+        self.note_leaves(
+            severed.into_iter().map(|id| FlowMutation::RemoveSynapse(RemoveSynapse { id })).chain(unplaced).chain([FlowMutation::RemoveWidget(RemoveWidget { id: cluster_id.to_string() })]).chain(restored_leaves).chain(placed).chain(reconnected),
+        );
         self.rebuild_dag();
+        self.checked_change()?;
         Ok(())
     }
 
     // #region History
-    fn content_changed(a: &FlowHostSnapshot, b: &FlowHostSnapshot) -> bool {
-        a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
-    }
-
     /// 🧾️ Lazily seeds the undo/redo store from `baseline`.
     ///
     /// ⚠️ `baseline` is CONSUMED only on the first call — the store is seeded once, and every later
@@ -2437,20 +2568,117 @@ impl FlowHost {
         self.history_store.as_mut()
     }
 
-    /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
-    /// invertible `FlowMutation::ReplaceFlowHostSnapshot` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
+    /// 🧾️ Appends the concrete leaves a gesture site just emitted to the edit in progress.
+    fn note_leaves(&mut self, leaves: impl IntoIterator<Item = FlowMutation>) {
+        self.pending_leaves.extend(leaves);
+    }
+
+    /// 🗑️ Retires the leaves of an edit that is not recorded; a widget leaf owns fail-closed roots that refuse a bare drop.
+    fn discard_pending_leaves(&mut self) {
+        std::mem::take(&mut self.pending_leaves).into_iter().for_each(retire_flow_mutation);
+    }
+
+    /// 🩹 The `change-widget` leaf carrying `widget_id`'s current content, when the widget exists.
+    fn changed_widget_leaf(&self, widget_id: &str) -> Option<FlowMutation> {
+        self.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == widget_id).map(|widget| FlowMutation::ChangeWidget(ChangeWidget { id: widget_id.to_string(), widget: widget.clone() }))
+    }
+
+    /// 📐️ The `change-layout` leaf assigning each of `ids` its current layout; an id without a layout is skipped.
+    fn layout_leaf<'a>(&self, ids: impl IntoIterator<Item = &'a str>) -> Option<FlowMutation> {
+        let entries: Vec<FlowLayoutEntry> = ids.into_iter().filter_map(|id| self.host_snapshot.layout.get(id).map(|layout| FlowLayoutEntry { id: id.to_string(), layout: Some(layout.clone()) })).collect();
+        (!entries.is_empty()).then(|| FlowMutation::ChangeLayout(ChangeLayout { entries }))
+    }
+
+    /// 🔗️ The leaves of the wire, slider and move edits the open pointer gesture journalled in the dag (the gesture's own
+    /// narration, read without draining); a port insert is recorded where `add_*_port` runs, and a connect that displaced
+    /// the wire already feeding its target removes it first.
+    fn gesture_journal_leaves(&self, baseline: &FlowHostSnapshot) -> Vec<FlowMutation> {
+        let edits = self.dag.graph_edits();
+        self.journal_leaves(edits.get(self.journal_mark..).unwrap_or(edits), baseline)
+    }
+
+    /// 🔗️ The leaves one gesture's journal `rows` stand for, given the `baseline` before the gesture and the live content after it.
+    fn journal_leaves(&self, rows: &[dag::DagGraphEdit], baseline: &FlowHostSnapshot) -> Vec<FlowMutation> {
+        let mut leaves = Vec::new();
+        for edit in rows {
+            match edit {
+                dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
+                    let displaced = baseline.synapses.iter().filter(|synapse| synapse.to == *target_node_id && synapse.to_port == *target_port_id && self.host_snapshot.synapses.iter().all(|now| now.id != synapse.id));
+                    leaves.extend(displaced.map(|synapse| FlowMutation::RemoveSynapse(RemoveSynapse { id: synapse.id.clone() })));
+                    let created = self.host_snapshot.synapses.iter().enumerate().find(|(_, synapse)| synapse.from == *source_node_id && synapse.from_port == *source_port_id && synapse.to == *target_node_id && synapse.to_port == *target_port_id);
+                    leaves.extend(created.map(|(index, synapse)| FlowMutation::AddSynapse(AddSynapse { index: u32::try_from(index).unwrap_or(u32::MAX), synapse: synapse.clone() })));
+                }
+                dag::DagGraphEdit::Disconnect { synapse_id } => {
+                    if baseline.synapses.iter().any(|synapse| synapse.id == *synapse_id) {
+                        leaves.push(FlowMutation::RemoveSynapse(RemoveSynapse { id: synapse_id.clone() }));
+                    }
+                }
+                dag::DagGraphEdit::Move { node_ids, .. } => leaves.extend(self.layout_leaf(node_ids.iter().map(String::as_str))),
+                dag::DagGraphEdit::SetSlider { node_id, .. } => leaves.extend(self.changed_widget_leaf(node_id)),
+                dag::DagGraphEdit::InsertPort { .. } => {}
+            }
+        }
+        leaves
+    }
+
+    /// 🧾️ Records the leaves emitted since the edit was armed as ONE store transaction (seeding the store from `baseline` on
+    /// first use), retiring them cold when there is nothing to record; an edit that emitted no leaf leaves no history row.
+    /// A refused transaction is never ignored: the history restarts at the live content (no partial row survives) and the
+    /// refusal is kept as [`FlowCoreError::HistoryRefused`] for [`FlowHost::take_history_fault`].
+    fn record_history_edit(&mut self, baseline: FlowHostSnapshot) {
+        let operations = std::mem::take(&mut self.pending_leaves);
+        #[cfg(test)]
+        {
+            if !operations.is_empty() {
+                self.recorded.push(operations.clone());
+            }
+        }
+        let recorded = !operations.is_empty();
+        let refusal = match self.history_store_from_baseline(baseline) {
+            Some(store) if recorded => ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None })).err().map(|error| format!("{error:?}")),
+            _ => {
+                operations.into_iter().for_each(retire_flow_mutation);
+                None
+            }
+        };
+        if let Some(reason) = refusal {
+            self.reset_history_store();
+            self.history_fault = Some(FlowCoreError::HistoryRefused(reason));
+        }
+    }
+
+    /// 🚦️ Closes a discrete edit: records its leaves now unless a gesture is still coalescing them.
+    fn finish_change(&mut self) {
+        if !self.gesture_active {
+            self.flush_pending_change();
+        }
+    }
+
+    /// 🚦️ [`Self::finish_change`] that hands a refused history row back to the gesture that caused it.
+    fn checked_change(&mut self) -> Result<(), FlowCoreError> {
+        self.finish_change();
+        self.history_outcome()
+    }
+
+    /// 🧯️ Hands over the refusal of the last history row, if any; the gestures that cannot return it (slider and text setters,
+    /// pointer release, note commit) leave it here for their caller to collect.
+    pub fn take_history_fault(&mut self) -> Option<FlowCoreError> {
+        self.history_fault.take()
+    }
+
+    /// 🧯️ [`Self::take_history_fault`] as a `Result`.
+    pub fn history_outcome(&mut self) -> Result<(), FlowCoreError> {
+        self.take_history_fault().map_or(Ok(()), Err)
+    }
+
+    /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as the concrete flow leaves its gesture site emitted — the standard `crate::os_store::ArtifactStore`/`Mutation`/
     /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
-    /// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack. Unconditional once armed (no `content_changed`
-    /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
-    /// the gesture-coalescing path (`commit_gesture_history`) skips a no-op edit.
+    /// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack. An armed edit that emitted no leaf leaves no history row.
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
-            let fixture = self.host_snapshot.clone();
-            if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], transaction: None }));
-            }
+            self.record_history_edit(baseline);
         }
     }
 
@@ -2485,6 +2713,7 @@ impl FlowHost {
     fn begin_gesture(&mut self) {
         self.flush_pending_change();
         self.arm_history_baseline();
+        self.journal_mark = self.dag.graph_edits().len();
         self.gesture_active = true;
     }
 
@@ -2503,21 +2732,25 @@ impl FlowHost {
         if self.gesture_active {
             self.gesture_active = false;
             let mut baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
-            if !Self::content_changed(&baseline, &self.host_snapshot) {
-                baseline.retire_cold();
-                return;
-            }
             if let Err(refusal) = self.journal_gesture_moves(&baseline) {
+                self.discard_pending_leaves();
                 baseline.camera = self.host_snapshot.camera.clone();
                 std::mem::replace(&mut self.host_snapshot, baseline).retire_cold();
                 self.rebuild_dag();
                 self.dag.carry_journal_refusal(refusal);
                 return;
             }
-            let fixture = self.host_snapshot.clone();
-            if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], transaction: None }));
+            if let Some(id) = self.edited_note.take() {
+                let edited = self.changed_widget_leaf(&id).filter(|_| baseline.widgets.iter().find(|widget| widget_id_for(widget) == id).is_some_and(|before| self.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == id) != Some(before)));
+                self.note_leaves(edited);
             }
+            let journalled = self.gesture_journal_leaves(&baseline);
+            self.note_leaves(journalled);
+            if self.pending_leaves.is_empty() {
+                baseline.retire_cold();
+                return;
+            }
+            self.record_history_edit(baseline);
         }
     }
 
@@ -2575,7 +2808,7 @@ impl FlowHost {
 
     /// ↩️ Whether a content undo step is available.
     pub fn can_undo(&self) -> bool {
-        self.pending_change || self.history_store.as_ref().is_some_and(|store| !store.applied_edit_ids().is_empty())
+        !self.pending_leaves.is_empty() || self.history_store.as_ref().is_some_and(|store| !store.applied_edit_ids().is_empty())
     }
 
     /// ↪️ Whether a content redo step is available.
@@ -2694,12 +2927,22 @@ impl FlowHostRetirement {
             history_store,
             pending_history_baseline,
             pending_change: _,
+            pending_leaves,
+            history_fault: _,
+            #[cfg(test)]
+            recorded,
+            journal_mark: _,
+            edited_note: _,
             gesture_active: _,
             pending_extension_evals,
             interaction_revision: _,
             interaction_projection,
             displaced,
         } = host;
+        let mut domain = crate::retained::FlowRetirement::default();
+        pending_leaves.into_iter().for_each(|leaf| domain.push_cold(crate::retained::FlowOwner::Mutation(leaf)));
+        #[cfg(test)]
+        recorded.into_iter().flatten().for_each(|leaf| domain.push_cold(crate::retained::FlowOwner::Mutation(leaf)));
         let mut dag = dag::DagHostRetirement::new(dag);
         if let Some(node) = ghost_node {
             dag.retain_node_payload(node);
@@ -2722,7 +2965,7 @@ impl FlowHostRetirement {
                 pending_history_baseline,
                 pending_extension_evals,
                 interaction_projection,
-                domain: crate::retained::FlowRetirement::default(),
+                domain,
                 neural: displaced,
                 terminal: false,
                 faulted: false,
@@ -3743,9 +3986,9 @@ impl FlowEvalSession {
         self.extension_evaluate_fault.as_ref()
     }
 
-    pub fn seed_node_cache(&self, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
+    pub fn seed_node_cache(&self, node_hash: u64, output: Dictionary) {
         let cache = self.neural_cache.as_deref().expect("live Flow evaluation session owns its neural cache");
-        seed_flow_eval_node_cache(cache, node_hash, output_json)
+        seed_flow_eval_node_cache(cache, node_hash, output)
     }
 
     /// 🧊 Preview mesh body (base64 `pack` record body) previously resolved through the owning
@@ -4910,3 +5153,6 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
         }
     }
 }
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

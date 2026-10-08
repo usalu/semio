@@ -4,10 +4,29 @@ use super::{RetireOwned, RetirementCursor, RetirementStep};
 use crate::{ValueError, ValueRefusalKind, list::PagedList, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 
+/// 🚦️ Keeps retained-owner exclusion inline and refuses contention without parking or allocating.
+pub struct RetainedOwnerGate<T> { occupied:std::sync::atomic::AtomicBool,value:std::cell::UnsafeCell<T> }
+unsafe impl<T:Send> Send for RetainedOwnerGate<T> {}
+unsafe impl<T:Send> Sync for RetainedOwnerGate<T> {}
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub struct RetainedOwnerGateBusy;
+pub struct RetainedOwnerGateGuard<'a,T> {gate:&'a RetainedOwnerGate<T>,exclusive:std::marker::PhantomData<&'a mut T>}
+impl<T> RetainedOwnerGate<T> {
+    pub const fn new(value:T)->Self {Self{occupied:std::sync::atomic::AtomicBool::new(false),value:std::cell::UnsafeCell::new(value)}}
+    pub fn try_lock(&self)->Result<RetainedOwnerGateGuard<'_,T>,RetainedOwnerGateBusy> {
+        self.occupied.compare_exchange(false,true,std::sync::atomic::Ordering::Acquire,std::sync::atomic::Ordering::Relaxed).map(|_|RetainedOwnerGateGuard{gate:self,exclusive:std::marker::PhantomData}).map_err(|_|RetainedOwnerGateBusy)
+    }
+    pub fn get_mut(&mut self)->&mut T {self.value.get_mut()}
+    pub fn into_inner(self)->T {self.value.into_inner()}
+}
+impl<T> std::ops::Deref for RetainedOwnerGateGuard<'_,T> {type Target=T;fn deref(&self)->&T {unsafe{&*self.gate.value.get()}}}
+impl<T> std::ops::DerefMut for RetainedOwnerGateGuard<'_,T> {fn deref_mut(&mut self)->&mut T {unsafe{&mut*self.gate.value.get()}}}
+impl<T> Drop for RetainedOwnerGateGuard<'_,T> {fn drop(&mut self){self.gate.occupied.store(false,std::sync::atomic::Ordering::Release)}}
+
 /// 🎮️ Erases only the owner type while preserving each independent retirement authority.
 pub trait ErasedControlledRetirement: Send {
     fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
-    fn next_copy_byte_demand(&self) -> usize;
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
     fn next_release_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_depth_demand(&self) -> Result<usize, ValueError>;
@@ -20,6 +39,10 @@ pub const fn controlled_retirement_birth_bytes<T: RetireOwned>() -> usize { size
 
 /// 🎟️ Admits the exact typed frame before allocation and returns original ownership on refusal.
 pub fn admit_controlled_retirement<T: RetireOwned>(value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedControlledRetirement>, RetainedCloneProgress), (ValueError, T)> {
+    admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedControlledRetirement>, progress))
+}
+
+pub fn admit_typed_controlled_retirement<T: RetireOwned>(value: T, grant: RetainedCloneGrant) -> Result<(Box<ControlledRetirement<T>>, RetainedCloneProgress), (ValueError, T)> {
     if !T::controlled_retirement_supported() { return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "typed owner has no controlled retirement authority"), value)); }
     if grant.maximum_items == 0 { return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "typed retirement frame requires one admitted item"), value)); }
     if grant.maximum_depth == 0 { return Err((ValueError::literal(ValueRefusalKind::DepthLimit, "typed retirement frame requires admitted depth"), value)); }
@@ -29,6 +52,15 @@ pub fn admit_controlled_retirement<T: RetireOwned>(value: T, grant: RetainedClon
     let owner = match ControlledRetirement::new(value) { Ok(owner) => owner, Err((error, value)) => { unsafe { std::alloc::dealloc(pointer.as_ptr().cast(), layout) }; return Err((error, value)); } };
     let owner = unsafe { pointer.as_ptr().write(owner); Box::from_raw(pointer.as_ptr()) };
     Ok((owner, RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: layout.size(), released_bytes: 0 }))
+}
+
+impl<T: RetireOwned> crate::ErasedSnapshotRetirement for ControlledRetirement<T> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.step(grant) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Self::next_copy_byte_demand(self) }
+    fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Self::next_capacity_byte_demand(self, copy) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Self::next_release_byte_demand(self) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Self::next_depth_demand(self) }
+    fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
 }
 
 pub struct ControlledRetirement<T: RetireOwned> {
@@ -43,13 +75,20 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         Ok(Self { value: ManuallyDrop::new(Some(value)), cursors: ManuallyDrop::new(PagedList::default()) })
     }
 
+    /// 👁️ Borrows the original typed owner before retirement cursor construction.
+    pub fn original(&self) -> Option<&T> { self.value.as_ref() }
+    /// ✍️ Mutates the original typed owner before retirement cursor construction.
+    pub fn original_mut(&mut self) -> Option<&mut T> { self.value.as_mut() }
+    /// 🎁️ Transfers an untouched original while retaining its empty admitted frame.
+    pub fn take_original(&mut self) -> Option<T> { if self.cursors.terminal_is_empty() { self.value.take() } else { None } }
+
     pub fn terminal_is_empty(&self) -> bool { self.value.is_none() && self.cursors.terminal_is_empty() }
 
     /// 🧮️ Borrows the next minimum payload-work grant without releasing its physical backing.
-    pub fn next_copy_byte_demand(&self) -> usize {
-        if self.value.is_some() || self.cursors.is_empty() || !self.cursors.has_reserved_slot() { return 0; }
+    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        if self.value.is_some() || self.cursors.is_empty() || !self.cursors.has_reserved_slot() { return Ok(0); }
         let cursor = self.cursors.get(self.cursors.len() - 1).unwrap();
-        if cursor.terminal_is_empty() { 0 } else { cursor.next_work_byte_demand() }
+        if cursor.terminal_is_empty() { Ok(0) } else { cursor.next_work_byte_demand() }
     }
 
     /// 📏️ Exposes the next complete constructor allocation before the caller grants it.
@@ -66,7 +105,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         if self.cursors.is_empty() { return self.cursors.next_release_allocation_bytes().map_err(ValueError::from); }
         let cursor = self.cursors.get(self.cursors.len() - 1).unwrap();
         if cursor.terminal_is_empty() { cursor.terminal_release_bytes().ok_or_else(|| refusal("retirement owner has no controlled terminal release authority")) }
-        else if cursor.next_work_byte_demand() != 0 { Ok(0) }
+        else if cursor.next_work_byte_demand()? != 0 { Ok(0) }
         else { Ok(cursor.next_close_byte_demand().unwrap_or(0)) }
     }
 
@@ -108,14 +147,18 @@ impl<T: RetireOwned> ControlledRetirement<T> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: bytes, released_bytes: 0 }));
         }
         let index = self.cursors.len() - 1;
-        let minimum_work_bytes = self.cursors.get(index).unwrap().next_work_byte_demand();
+        let minimum_work_bytes = self.cursors.get(index).unwrap().next_work_byte_demand()?;
         let work = minimum_work_bytes != 0;
         let body_bytes = if work { grant.maximum_copy_bytes } else { grant.maximum_release_bytes };
-        if work && body_bytes < minimum_work_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let birth = self.cursors.get(index).and_then(|cursor| cursor.next_birth_bytes(body_bytes)).ok_or_else(|| refusal("retirement child has no controlled birth authority"))?;
+        if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work()) { return Ok(RetainedCloneStep::Progress(empty)); }
         if birth > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let cursor_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - self.cursors.len(), ..grant };
         let (processed, bytes, progressed) = match self.cursors.get_mut(index).unwrap().close_step(cursor_grant) {
+            RetirementStep::Progress(progress) => {
+                if !progress.fits(cursor_grant) || (progress.copied_items!=0 && progress.retained_capacity_bytes!=birth) { return Err(refusal("typed retirement receipt exceeded or changed its declared full grant")); }
+                return Ok(RetainedCloneStep::Progress(progress));
+            }
             RetirementStep::Child(child) => { self.cursors.push_reserved(child).map_err(|_| refusal("retirement child lost its admitted frontier slot"))?; (0, 0, true) }
             RetirementStep::Advanced => (0, 0, true),
             RetirementStep::Failure(error) => return Err(error),
@@ -140,7 +183,7 @@ impl<T: RetireOwned> Drop for ControlledRetirement<T> {
 
 impl<T: RetireOwned> ErasedControlledRetirement for ControlledRetirement<T> {
     fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { ControlledRetirement::step(self, grant) }
-    fn next_copy_byte_demand(&self) -> usize { ControlledRetirement::next_copy_byte_demand(self) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_copy_byte_demand(self) }
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { ControlledRetirement::next_capacity_byte_demand(self, maximum_body_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_release_byte_demand(self) }
     fn terminal_is_empty(&self) -> bool { ControlledRetirement::terminal_is_empty(self) }
@@ -160,16 +203,14 @@ impl<T: RetireOwned> RetirementCursor for ControlledRetirement<T> {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         match self.step(grant) {
             Err(error) => RetirementStep::Failure(error),
-            Ok(RetainedCloneStep::Complete(_)) => RetirementStep::Complete,
-            Ok(RetainedCloneStep::Progress(progress)) if progress.copied_items == 0 => RetirementStep::BudgetExhausted,
-            Ok(RetainedCloneStep::Progress(progress)) if progress.copied_bytes != 0 => RetirementStep::ProcessedBytes(progress.copied_bytes),
-            Ok(RetainedCloneStep::Progress(progress)) if progress.released_bytes != 0 => RetirementStep::Bytes(progress.released_bytes),
-            Ok(RetainedCloneStep::Progress(_)) => RetirementStep::Advanced,
+            Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,
+            Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),
         }
     }
     fn terminal_is_empty(&self) -> bool { ControlledRetirement::terminal_is_empty(self) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_depth_demand(self) }
-    fn next_work_byte_demand(&self) -> usize { self.next_copy_byte_demand() }
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.next_copy_byte_demand()}
+    fn allows_admitted_narrow_work(&self)->bool{true}
     fn next_close_byte_demand(&self) -> Option<usize> { self.next_release_byte_demand().ok() }
     fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> { self.next_capacity_byte_demand(maximum_bytes).ok() }
     fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }

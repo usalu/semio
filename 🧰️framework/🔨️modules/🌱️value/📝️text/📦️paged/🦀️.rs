@@ -1,5 +1,5 @@
 //! 📝️ First-party UTF8 text owns separately admitted metadata and physical payload pages.
-use crate::{NativeDecodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,SnapshotRetirementStep,list::{PagedList,PagedListError}};
+use crate::{NativeDecodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,list::{PagedList,PagedListError},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 /// 🪟️ Immutable UTF8 input exposes original octets without requiring contiguous storage.
 pub trait TextReadSource{fn byte_len(&self)->usize;fn byte_at(&self,index:usize)->Option<u8>;}
@@ -60,17 +60,73 @@ impl<const N:usize> PagedText<N>{
     }
 }
 impl<const N:usize> ErasedSnapshotRetirement for PagedText<N>{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{
-        if items==0||bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}
-        if self.terminal_is_empty(){return Ok(SnapshotRetirementStep::Complete);}self.closing=true;
-        if self.bytes.pop().is_some(){return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0});}
-        let step=self.bytes.release_empty_page(bytes).map_err(error)?;
-        Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_depth<1{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"paged text retirement requires admitted depth"));}
+        if !self.bytes.is_empty(){
+            let count=grant.maximum_copy_bytes.min(self.bytes.len());
+            if count==0{return Ok(RetainedCloneStep::Progress(empty));}
+            self.closing=true;
+            for _ in 0..count{self.bytes.pop().unwrap();}
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:count,..empty}));
+        }
+        let step=self.bytes.release_empty_page(grant.maximum_release_bytes).map_err(error)?;
+        if step.progressed{self.closing=true;}
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))
     }
     fn terminal_is_empty(&self)->bool{self.bytes.terminal_is_empty()}
-    fn next_close_byte_demand(&self)->usize{if self.bytes.len()!=0{1}else{self.bytes.next_release_allocation_bytes().unwrap_or(0)}}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.bytes.is_empty()))}
+    fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{if !self.bytes.is_empty(){Ok(0)}else{self.bytes.next_release_allocation_bytes().map_err(error)}}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
+}
+struct PagedTextRetirement<const N:usize>{owner:PagedText<N>}
+impl<const N:usize> crate::retirement::RetirementCursor for PagedTextRetirement<N>{
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep{match self.owner.close_step(grant){Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress)}}
+    fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn next_close_byte_demand(&self)->Option<usize>{self.owner.next_release_byte_demand().ok()}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl<const N:usize> crate::retirement::RetireOwned for PagedText<N>{
+    fn retirement(self)->Box<dyn crate::retirement::RetirementCursor>{Box::new(PagedTextRetirement{owner:self})}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PagedTextRetirement<N>>())}
+    fn controlled_retirement_supported()->bool{true}
 }
 impl<const N:usize> Drop for PagedText<N>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"paged semantic text retains actual physical allocations");}}
+
+/// 👓️ Borrows validated original UTF8 storage without flattening its physical ownership.
+#[derive(Clone,Copy)]
+pub struct TextReadView<'a>{source:TextReadRepresentation<'a>}
+#[derive(Clone,Copy)]
+enum TextReadRepresentation<'a>{Contiguous(&'a str),Paged(&'a dyn TextReadSource)}
+impl<'a> TextReadView<'a>{
+    pub const fn from_str(source:&'a str)->Self{Self{source:TextReadRepresentation::Contiguous(source)}}
+    pub fn len(&self)->usize{match self.source{TextReadRepresentation::Contiguous(source)=>source.len(),TextReadRepresentation::Paged(source)=>source.byte_len()}}
+    pub fn is_empty(&self)->bool{self.len()==0}
+    pub fn byte_at(&self,index:usize)->Option<u8>{match self.source{TextReadRepresentation::Contiguous(source)=>source.as_bytes().get(index).copied(),TextReadRepresentation::Paged(source)=>source.byte_at(index)}}
+    /// 🪪️ Exposes a contiguous original only when its representation already provides it.
+    pub fn contiguous(&self)->Option<&'a str>{match self.source{TextReadRepresentation::Contiguous(source)=>Some(source),TextReadRepresentation::Paged(_)=>None}}
+    /// 📥️ Copies at most the supplied output window from the same immutable original storage.
+    pub fn copy_bytes(&self,offset:usize,output:&mut[u8])->Result<usize,ValueError>{
+        let remaining=self.len().checked_sub(offset).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"text source offset exceeds its original extent"))?;
+        let count=remaining.min(output.len());for(index,byte)in output[..count].iter_mut().enumerate(){*byte=self.byte_at(offset+index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"text source lost an original octet"))?;}Ok(count)
+    }
+    /// 🔤️ Advances one validated Unicode scalar, including a scalar crossing an original page boundary.
+    pub fn character_at(&self,position:&mut usize)->Result<char,ValueError>{character(self,position)}
+}
+impl std::fmt::Display for TextReadView<'_>{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{let mut position=0;while position<self.len(){let character=self.character_at(&mut position).map_err(|_|std::fmt::Error)?;let mut bytes=[0;4];formatter.write_str(character.encode_utf8(&mut bytes))?;}Ok(())}}
+impl TextReadSource for TextReadView<'_>{fn byte_len(&self)->usize{self.len()}fn byte_at(&self,index:usize)->Option<u8>{self.byte_at(index)}}
+impl<const N:usize> TextReadSource for PagedText<N>{fn byte_len(&self)->usize{self.byte_len()}fn byte_at(&self,index:usize)->Option<u8>{self.bytes.get(index).copied()}}
+impl<const N:usize> PagedText<N>{
+    /// 🌱️ Captures the actual validated paged owner directly; partial and retiring owners refuse access.
+    pub fn read_view(&self)->Result<TextReadView<'_>,ValueError>{let _=self.borrow()?;Ok(TextReadView{source:TextReadRepresentation::Paged(self)})}
+}
+
 /// 🔤️ A complete text borrow streams validated bytes and Unicode scalars without flattening.
 pub struct TextReadSpan<'a,const N:usize>{owner:&'a PagedText<N>}
 impl<const N:usize> TextReadSpan<'_,N>{

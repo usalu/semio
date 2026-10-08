@@ -6,5 +6,5 @@ pub fn diff(payload: &RemovePile, base: &En1997Snapshot) -> protocol::MutationOu
     if payload.index >= base.piles.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("pile #{} missing", payload.index), vec![payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1997Diff { piles: Some(En1997PilesRows { removed: vec![base.piles[payload.index].id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { piles: Some(En1997PilesRows::removal(&base.piles, payload.index)), ..Default::default() })
 }

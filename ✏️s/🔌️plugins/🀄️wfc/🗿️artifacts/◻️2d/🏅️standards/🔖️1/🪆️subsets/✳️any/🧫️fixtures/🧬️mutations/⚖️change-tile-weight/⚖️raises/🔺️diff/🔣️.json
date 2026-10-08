@@ -3,18 +3,21 @@
   "seed": null,
   "slots": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "edges": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "tiles": {
     "removed": [],
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "tile-wall",
         "patch": {
@@ -27,7 +30,8 @@
   },
   "rules": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

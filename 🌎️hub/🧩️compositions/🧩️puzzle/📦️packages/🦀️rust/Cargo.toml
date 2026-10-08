@@ -31,6 +31,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "puzzle2d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🧬️schema/🔣️.json"
 app = "s.puzzle.puzzle2d@1/*#editor"
 aliases = ["2d", "puzzle 2d"]
@@ -39,6 +40,7 @@ engines = ["./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀�
 
 [[package.metadata.semio.playground]]
 variant = "puzzle3d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🧬️schema/🔣️.json"
 app = "s.puzzle.puzzle3d@1/*#editor"
 aliases = ["3d", "puzzle 3d"]
@@ -46,6 +48,7 @@ ports = { react = 6013, wgpu = 6113 }
 
 [[package.metadata.semio.playground]]
 variant = "puzzle5d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🧬️schema/🔣️.json"
 app = "s.puzzle.puzzle5d@1/*#editor"
 aliases = ["5d", "puzzle 5d"]

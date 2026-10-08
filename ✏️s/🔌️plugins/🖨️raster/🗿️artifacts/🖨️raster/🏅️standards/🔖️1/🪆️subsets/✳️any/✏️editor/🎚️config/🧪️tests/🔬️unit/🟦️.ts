@@ -48,23 +48,23 @@ test("bucket tolerance rejects values outside 0..255",()=>{
 });
 
 import selections from "../../🧫️fixtures/🎯️pixel-selection/🔣️.json";
-import {parseRasterPixelSelection} from "../../🧬️schema/🟦️.ts";
+import { parsePixelLayerSelectionV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
 for(const row of selections.cases)test(`completed selection: ${row.name}`,async()=>{
   const value={...config("#2878dc",1),paintTarget:row.selection.target,pixelSelection:row.selection};
   expect(validate(value)).toBe(true);
   expect(parseRasterConfig(value).pixelSelection).toEqual(row.selection);
-  const selected=parseRasterPixelSelection(row.selection);
+  const selected=parsePixelLayerSelectionV1(row.selection);
   const coverage=new Uint8Array(selected.width*selected.height);
-  for(const [start,length,alpha] of JSON.parse(selected.spans))coverage.fill(alpha,start,start+length);
+  for(const {start,length,coverage:alpha} of selected.spans)coverage.fill(alpha,start,start+length);
   expect([...coverage]).toEqual(row.coverage);
   const pixels=await sharp(Buffer.from(coverage),{raw:{width:selected.width,height:selected.height,channels:1}}).png().toBuffer();
   expect([...await sharp(pixels).extractChannel(0).raw().toBuffer()]).toEqual(row.coverage);
 });
 test("completed selection rejects malformed coverage and incompatible paint targets",()=>{
   const base=selections.cases[0].selection;
-  for(const invalid of selections.invalid)expect(()=>parseRasterPixelSelection({...base,...invalid})).toThrow();
-  expect(()=>parseRasterPixelSelection({...base,layerId:"x".repeat(257)})).toThrow();
-  expect(()=>parseRasterPixelSelection({...base,spans:" ".repeat(40001)})).toThrow();
+  for(const invalid of selections.invalid)expect(()=>parsePixelLayerSelectionV1({...base,...invalid})).toThrow();
+  expect(()=>parsePixelLayerSelectionV1({...base,layerId:"x".repeat(257)})).toThrow();
+  expect(()=>parsePixelLayerSelectionV1({...base,spans:" ".repeat(40001)})).toThrow();
   expect(()=>parseRasterConfig({...config("#2878dc",1),pixelSelection:{...base,target:"mask"}})).toThrow();
   expect(parseRasterConfig(config("#2878dc",1)).pixelSelection).toBeUndefined();
 });
@@ -77,7 +77,7 @@ test("completed selection survives the shared optional scene carrier",()=>{
   const {spine,laneTexts,assembled}=sceneContract.roundTrip;
   const restored=paint2dSceneFromLanes(spine as Paint2dScene,new Map(Object.entries(laneTexts)));
   expect(restored).toEqual({...assembled,lanes:spine.lanes});
-  expect(parseRasterPixelSelection(JSON.parse(restored.pixelSelectionJson!)).spans).toBe("[[0,2,255],[3,1,128]]");
+  expect(parsePixelLayerSelectionV1(JSON.parse(restored.pixelSelectionJson!)).spans).toEqual([{start:0,length:2,coverage:255},{start:3,length:1,coverage:128}]);
   const without={...spine,lanes:spine.lanes.filter(lane=>lane.lane!=="pixelSelection")} as Paint2dScene;
   expect(paint2dSceneFromLanes(without,new Map(Object.entries(laneTexts).filter(([key])=>!key.endsWith(".pixelSelection")))).pixelSelectionJson).toBeUndefined();
 });

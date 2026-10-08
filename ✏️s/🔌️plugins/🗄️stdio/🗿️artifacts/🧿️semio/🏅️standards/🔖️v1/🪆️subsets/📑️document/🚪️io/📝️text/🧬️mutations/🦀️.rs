@@ -8,7 +8,7 @@ use super::*;
 use crate::standards::v1::subsets::document::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::document::schema::diff::{diff_block, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
+use crate::standards::v1::subsets::document::schema::diff::{BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
 use crate::standards::v1::subsets::document::io::text::diff::{dec_run_style};
 use crate::standards::v1::subsets::document::io::text::diff::{enc_run_style};
 use crate::standards::v1::subsets::document::io::text::diff::{dec_u8};

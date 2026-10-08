@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ResizeGrid` — the two extent lanes PLUS the cascade: every pinned
 //! and masked cell that falls outside the new extent is removed in the same atomic delta.
 
-use crate::diff::{cell_id, Grid2dDiff};
+use crate::diff::{cell_id, Grid2dDiff, Grid2dMaskedDelta, Grid2dPinnedDelta};
 use crate::schema::snapshot::Grid2dSnapshot;
 
 pub fn diff(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
@@ -15,7 +15,7 @@ pub fn diff(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> protocol::Mut
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| cell_id(cell.x, cell.y)).collect();
     let masked_removed: Vec<String> = base.masked.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| cell_id(cell.x, cell.y)).collect();
     let dropped = pinned_removed.len() + masked_removed.len();
-    let outcome = protocol::MutationOutcome::new(Grid2dDiff { width: Some(payload.width), height: Some(payload.height), pinned: Grid2dRows { removed: pinned_removed, ..Default::default() }, masked: Grid2dRows { removed: masked_removed, ..Default::default() }, ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Grid2dDiff { width: Some(payload.width), height: Some(payload.height), pinned: Grid2dPinnedDelta::removals(&base.pinned, &base.pinned.iter().enumerate().filter(|(_, row)| pinned_removed.contains(&protocol::list_delta::Keyed::key(*row))).map(|(index, _)| index).collect::<Vec<_>>()), masked: Grid2dMaskedDelta::removals(&base.masked, &base.masked.iter().enumerate().filter(|(_, row)| masked_removed.contains(&protocol::list_delta::Keyed::key(*row))).map(|(index, _)| index).collect::<Vec<_>>()), ..Default::default() });
     if dropped == 0 {
         outcome
     } else {

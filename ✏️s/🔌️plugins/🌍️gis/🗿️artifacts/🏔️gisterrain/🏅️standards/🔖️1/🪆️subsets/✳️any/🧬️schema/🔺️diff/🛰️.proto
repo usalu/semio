@@ -3,7 +3,7 @@ import "🗺️imported-map/🛰️.proto";
 package semio.s.gis.gisterrain;
 import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message GisTerrainDiff {
-  optional GisTerrainArtifact artifact = 1;
+ 
   optional double exaggeration = 2;
   optional ImportedMapChange imported_map = 3;
 }

@@ -1,0 +1,1559 @@
+{
+  "qualification": "Defining schema order joined to actual derive sequential-ID/kebab rules; no Native execution; counts are semantic role counts before final table partition",
+  "fields": {
+    "ModelSnapshot": [
+      {
+        "id": 0,
+        "field": "schema",
+        "wireKey": "schema"
+      },
+      {
+        "id": 1,
+        "field": "project",
+        "wireKey": "project"
+      },
+      {
+        "id": 2,
+        "field": "materials",
+        "wireKey": "materials"
+      },
+      {
+        "id": 3,
+        "field": "wall_types",
+        "wireKey": "wall-types"
+      },
+      {
+        "id": 4,
+        "field": "slab_types",
+        "wireKey": "slab-types"
+      },
+      {
+        "id": 5,
+        "field": "roof_types",
+        "wireKey": "roof-types"
+      },
+      {
+        "id": 6,
+        "field": "column_types",
+        "wireKey": "column-types"
+      },
+      {
+        "id": 7,
+        "field": "beam_types",
+        "wireKey": "beam-types"
+      },
+      {
+        "id": 8,
+        "field": "window_types",
+        "wireKey": "window-types"
+      },
+      {
+        "id": 9,
+        "field": "door_types",
+        "wireKey": "door-types"
+      },
+      {
+        "id": 10,
+        "field": "sites",
+        "wireKey": "sites"
+      },
+      {
+        "id": 11,
+        "field": "buildings",
+        "wireKey": "buildings"
+      },
+      {
+        "id": 12,
+        "field": "storeys",
+        "wireKey": "storeys"
+      },
+      {
+        "id": 13,
+        "field": "grids",
+        "wireKey": "grids"
+      },
+      {
+        "id": 14,
+        "field": "walls",
+        "wireKey": "walls"
+      },
+      {
+        "id": 15,
+        "field": "curtain_walls",
+        "wireKey": "curtain-walls"
+      },
+      {
+        "id": 16,
+        "field": "columns",
+        "wireKey": "columns"
+      },
+      {
+        "id": 17,
+        "field": "beams",
+        "wireKey": "beams"
+      },
+      {
+        "id": 18,
+        "field": "slabs",
+        "wireKey": "slabs"
+      },
+      {
+        "id": 19,
+        "field": "roofs",
+        "wireKey": "roofs"
+      },
+      {
+        "id": 20,
+        "field": "openings",
+        "wireKey": "openings"
+      },
+      {
+        "id": 21,
+        "field": "stairs",
+        "wireKey": "stairs"
+      },
+      {
+        "id": 22,
+        "field": "railings",
+        "wireKey": "railings"
+      },
+      {
+        "id": 23,
+        "field": "spaces",
+        "wireKey": "spaces"
+      },
+      {
+        "id": 24,
+        "field": "properties",
+        "wireKey": "properties"
+      },
+      {
+        "id": 25,
+        "field": "classifications",
+        "wireKey": "classifications"
+      }
+    ],
+    "Point2": [
+      {
+        "id": 0,
+        "field": "x",
+        "wireKey": "x"
+      },
+      {
+        "id": 1,
+        "field": "y",
+        "wireKey": "y"
+      }
+    ],
+    "Rgb": [
+      {
+        "id": 0,
+        "field": "r",
+        "wireKey": "r"
+      },
+      {
+        "id": 1,
+        "field": "g",
+        "wireKey": "g"
+      },
+      {
+        "id": 2,
+        "field": "b",
+        "wireKey": "b"
+      }
+    ],
+    "Vertex": [
+      {
+        "id": 0,
+        "field": "point",
+        "wireKey": "point"
+      },
+      {
+        "id": 1,
+        "field": "bulge",
+        "wireKey": "bulge"
+      }
+    ],
+    "Slope": [
+      {
+        "id": 0,
+        "field": "direction",
+        "wireKey": "direction"
+      },
+      {
+        "id": 1,
+        "field": "angle",
+        "wireKey": "angle"
+      }
+    ],
+    "StairStringer": [
+      {
+        "id": 0,
+        "field": "kind",
+        "wireKey": "kind"
+      },
+      {
+        "id": 1,
+        "field": "width",
+        "wireKey": "width"
+      },
+      {
+        "id": 2,
+        "field": "depth",
+        "wireKey": "depth"
+      }
+    ],
+    "Baluster": [
+      {
+        "id": 0,
+        "field": "profile",
+        "wireKey": "profile"
+      },
+      {
+        "id": 1,
+        "field": "spacing",
+        "wireKey": "spacing"
+      }
+    ],
+    "Layer": [
+      {
+        "id": 0,
+        "field": "material",
+        "wireKey": "material"
+      },
+      {
+        "id": 1,
+        "field": "thickness",
+        "wireKey": "thickness"
+      },
+      {
+        "id": 2,
+        "field": "function",
+        "wireKey": "function"
+      }
+    ],
+    "Project": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "description",
+        "wireKey": "description"
+      },
+      {
+        "id": 2,
+        "field": "author",
+        "wireKey": "author"
+      },
+      {
+        "id": 3,
+        "field": "organization",
+        "wireKey": "organization"
+      },
+      {
+        "id": 4,
+        "field": "phase_names",
+        "wireKey": "phase-names"
+      }
+    ],
+    "Material": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "category",
+        "wireKey": "category"
+      },
+      {
+        "id": 2,
+        "field": "color",
+        "wireKey": "color"
+      },
+      {
+        "id": 3,
+        "field": "density",
+        "wireKey": "density"
+      },
+      {
+        "id": 4,
+        "field": "conductivity",
+        "wireKey": "conductivity"
+      },
+      {
+        "id": 5,
+        "field": "specific_heat",
+        "wireKey": "specific-heat"
+      }
+    ],
+    "WallType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "layers",
+        "wireKey": "layers"
+      }
+    ],
+    "SlabType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "layers",
+        "wireKey": "layers"
+      }
+    ],
+    "RoofType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "layers",
+        "wireKey": "layers"
+      }
+    ],
+    "ColumnType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "profile",
+        "wireKey": "profile"
+      },
+      {
+        "id": 2,
+        "field": "material",
+        "wireKey": "material"
+      }
+    ],
+    "BeamType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "profile",
+        "wireKey": "profile"
+      },
+      {
+        "id": 2,
+        "field": "material",
+        "wireKey": "material"
+      }
+    ],
+    "WindowType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "width",
+        "wireKey": "width"
+      },
+      {
+        "id": 2,
+        "field": "height",
+        "wireKey": "height"
+      },
+      {
+        "id": 3,
+        "field": "sill",
+        "wireKey": "sill"
+      },
+      {
+        "id": 4,
+        "field": "frame_width",
+        "wireKey": "frame-width"
+      },
+      {
+        "id": 5,
+        "field": "frame_depth",
+        "wireKey": "frame-depth"
+      },
+      {
+        "id": 6,
+        "field": "panes",
+        "wireKey": "panes"
+      },
+      {
+        "id": 7,
+        "field": "material",
+        "wireKey": "material"
+      }
+    ],
+    "DoorType": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "width",
+        "wireKey": "width"
+      },
+      {
+        "id": 2,
+        "field": "height",
+        "wireKey": "height"
+      },
+      {
+        "id": 3,
+        "field": "frame_width",
+        "wireKey": "frame-width"
+      },
+      {
+        "id": 4,
+        "field": "frame_depth",
+        "wireKey": "frame-depth"
+      },
+      {
+        "id": 5,
+        "field": "leaves",
+        "wireKey": "leaves"
+      },
+      {
+        "id": 6,
+        "field": "swing",
+        "wireKey": "swing"
+      },
+      {
+        "id": 7,
+        "field": "material",
+        "wireKey": "material"
+      }
+    ],
+    "Site": [
+      {
+        "id": 0,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 1,
+        "field": "latitude",
+        "wireKey": "latitude"
+      },
+      {
+        "id": 2,
+        "field": "longitude",
+        "wireKey": "longitude"
+      },
+      {
+        "id": 3,
+        "field": "elevation",
+        "wireKey": "elevation"
+      },
+      {
+        "id": 4,
+        "field": "true_north",
+        "wireKey": "true-north"
+      },
+      {
+        "id": 5,
+        "field": "boundary",
+        "wireKey": "boundary"
+      }
+    ],
+    "Building": [
+      {
+        "id": 0,
+        "field": "site",
+        "wireKey": "site"
+      },
+      {
+        "id": 1,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 2,
+        "field": "origin",
+        "wireKey": "origin"
+      },
+      {
+        "id": 3,
+        "field": "rotation",
+        "wireKey": "rotation"
+      },
+      {
+        "id": 4,
+        "field": "elevation",
+        "wireKey": "elevation"
+      }
+    ],
+    "Storey": [
+      {
+        "id": 0,
+        "field": "building",
+        "wireKey": "building"
+      },
+      {
+        "id": 1,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 2,
+        "field": "level",
+        "wireKey": "level"
+      },
+      {
+        "id": 3,
+        "field": "height",
+        "wireKey": "height"
+      },
+      {
+        "id": 4,
+        "field": "cut_height",
+        "wireKey": "cut-height"
+      }
+    ],
+    "GridLine": [
+      {
+        "id": 0,
+        "field": "building",
+        "wireKey": "building"
+      },
+      {
+        "id": 1,
+        "field": "label",
+        "wireKey": "label"
+      },
+      {
+        "id": 2,
+        "field": "start",
+        "wireKey": "start"
+      },
+      {
+        "id": 3,
+        "field": "end",
+        "wireKey": "end"
+      }
+    ],
+    "Wall": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "wall_type",
+        "wireKey": "wall-type"
+      },
+      {
+        "id": 2,
+        "field": "axis",
+        "wireKey": "axis"
+      },
+      {
+        "id": 3,
+        "field": "location",
+        "wireKey": "location"
+      },
+      {
+        "id": 4,
+        "field": "base_offset",
+        "wireKey": "base-offset"
+      },
+      {
+        "id": 5,
+        "field": "top",
+        "wireKey": "top"
+      },
+      {
+        "id": 6,
+        "field": "phase",
+        "wireKey": "phase"
+      },
+      {
+        "id": 7,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "CurtainWall": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "axis",
+        "wireKey": "axis"
+      },
+      {
+        "id": 2,
+        "field": "base_offset",
+        "wireKey": "base-offset"
+      },
+      {
+        "id": 3,
+        "field": "top",
+        "wireKey": "top"
+      },
+      {
+        "id": 4,
+        "field": "u_spacing",
+        "wireKey": "u-spacing"
+      },
+      {
+        "id": 5,
+        "field": "v_spacing",
+        "wireKey": "v-spacing"
+      },
+      {
+        "id": 6,
+        "field": "mullion",
+        "wireKey": "mullion"
+      },
+      {
+        "id": 7,
+        "field": "panel_material",
+        "wireKey": "panel-material"
+      },
+      {
+        "id": 8,
+        "field": "mullion_material",
+        "wireKey": "mullion-material"
+      },
+      {
+        "id": 9,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Column": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "column_type",
+        "wireKey": "column-type"
+      },
+      {
+        "id": 2,
+        "field": "position",
+        "wireKey": "position"
+      },
+      {
+        "id": 3,
+        "field": "rotation",
+        "wireKey": "rotation"
+      },
+      {
+        "id": 4,
+        "field": "base_offset",
+        "wireKey": "base-offset"
+      },
+      {
+        "id": 5,
+        "field": "top",
+        "wireKey": "top"
+      },
+      {
+        "id": 6,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Beam": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "beam_type",
+        "wireKey": "beam-type"
+      },
+      {
+        "id": 2,
+        "field": "start",
+        "wireKey": "start"
+      },
+      {
+        "id": 3,
+        "field": "end",
+        "wireKey": "end"
+      },
+      {
+        "id": 4,
+        "field": "top_offset",
+        "wireKey": "top-offset"
+      },
+      {
+        "id": 5,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Slab": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "slab_type",
+        "wireKey": "slab-type"
+      },
+      {
+        "id": 2,
+        "field": "boundary",
+        "wireKey": "boundary"
+      },
+      {
+        "id": 3,
+        "field": "holes",
+        "wireKey": "holes"
+      },
+      {
+        "id": 4,
+        "field": "offset",
+        "wireKey": "offset"
+      },
+      {
+        "id": 5,
+        "field": "slope",
+        "wireKey": "slope"
+      },
+      {
+        "id": 6,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Roof": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "roof_type",
+        "wireKey": "roof-type"
+      },
+      {
+        "id": 2,
+        "field": "footprint",
+        "wireKey": "footprint"
+      },
+      {
+        "id": 3,
+        "field": "shape",
+        "wireKey": "shape"
+      },
+      {
+        "id": 4,
+        "field": "overhang",
+        "wireKey": "overhang"
+      },
+      {
+        "id": 5,
+        "field": "base_offset",
+        "wireKey": "base-offset"
+      },
+      {
+        "id": 6,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Opening": [
+      {
+        "id": 0,
+        "field": "host",
+        "wireKey": "host"
+      },
+      {
+        "id": 1,
+        "field": "kind",
+        "wireKey": "kind"
+      },
+      {
+        "id": 2,
+        "field": "offset",
+        "wireKey": "offset"
+      },
+      {
+        "id": 3,
+        "field": "sill_override",
+        "wireKey": "sill-override"
+      },
+      {
+        "id": 4,
+        "field": "width",
+        "wireKey": "width"
+      },
+      {
+        "id": 5,
+        "field": "height",
+        "wireKey": "height"
+      },
+      {
+        "id": 6,
+        "field": "flip_hand",
+        "wireKey": "flip-hand"
+      },
+      {
+        "id": 7,
+        "field": "flip_facing",
+        "wireKey": "flip-facing"
+      },
+      {
+        "id": 8,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Stair": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "start",
+        "wireKey": "start"
+      },
+      {
+        "id": 2,
+        "field": "direction",
+        "wireKey": "direction"
+      },
+      {
+        "id": 3,
+        "field": "width",
+        "wireKey": "width"
+      },
+      {
+        "id": 4,
+        "field": "flight",
+        "wireKey": "flight"
+      },
+      {
+        "id": 5,
+        "field": "top",
+        "wireKey": "top"
+      },
+      {
+        "id": 6,
+        "field": "max_riser",
+        "wireKey": "max-riser"
+      },
+      {
+        "id": 7,
+        "field": "min_tread",
+        "wireKey": "min-tread"
+      },
+      {
+        "id": 8,
+        "field": "stringer",
+        "wireKey": "stringer"
+      },
+      {
+        "id": 9,
+        "field": "nosing",
+        "wireKey": "nosing"
+      },
+      {
+        "id": 10,
+        "field": "tread_thickness",
+        "wireKey": "tread-thickness"
+      },
+      {
+        "id": 11,
+        "field": "riser",
+        "wireKey": "riser"
+      },
+      {
+        "id": 12,
+        "field": "landing_depth",
+        "wireKey": "landing-depth"
+      },
+      {
+        "id": 13,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Railing": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "path",
+        "wireKey": "path"
+      },
+      {
+        "id": 2,
+        "field": "height",
+        "wireKey": "height"
+      },
+      {
+        "id": 3,
+        "field": "post_spacing",
+        "wireKey": "post-spacing"
+      },
+      {
+        "id": 4,
+        "field": "profile",
+        "wireKey": "profile"
+      },
+      {
+        "id": 5,
+        "field": "post_profile",
+        "wireKey": "post-profile"
+      },
+      {
+        "id": 6,
+        "field": "baluster",
+        "wireKey": "baluster"
+      },
+      {
+        "id": 7,
+        "field": "infill",
+        "wireKey": "infill"
+      },
+      {
+        "id": 8,
+        "field": "material",
+        "wireKey": "material"
+      },
+      {
+        "id": 9,
+        "field": "base_offset",
+        "wireKey": "base-offset"
+      },
+      {
+        "id": 10,
+        "field": "name",
+        "wireKey": "name"
+      }
+    ],
+    "Space": [
+      {
+        "id": 0,
+        "field": "storey",
+        "wireKey": "storey"
+      },
+      {
+        "id": 1,
+        "field": "number",
+        "wireKey": "number"
+      },
+      {
+        "id": 2,
+        "field": "name",
+        "wireKey": "name"
+      },
+      {
+        "id": 3,
+        "field": "boundary",
+        "wireKey": "boundary"
+      },
+      {
+        "id": 4,
+        "field": "usage",
+        "wireKey": "usage"
+      }
+    ],
+    "Classification": [
+      {
+        "id": 0,
+        "field": "system",
+        "wireKey": "system"
+      },
+      {
+        "id": 1,
+        "field": "code",
+        "wireKey": "code"
+      },
+      {
+        "id": 2,
+        "field": "title",
+        "wireKey": "title"
+      }
+    ]
+  },
+  "variants": {
+    "Axis": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Line",
+        "wireKeyword": "line",
+        "fields": [
+          {
+            "id": 0,
+            "field": "start",
+            "wireKey": "start"
+          },
+          {
+            "id": 1,
+            "field": "end",
+            "wireKey": "end"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Arc",
+        "wireKeyword": "arc",
+        "fields": [
+          {
+            "id": 0,
+            "field": "start",
+            "wireKey": "start"
+          },
+          {
+            "id": 1,
+            "field": "end",
+            "wireKey": "end"
+          },
+          {
+            "id": 2,
+            "field": "bulge",
+            "wireKey": "bulge"
+          }
+        ]
+      }
+    ],
+    "TopConstraint": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Unconnected",
+        "wireKeyword": "unconnected",
+        "fields": [
+          {
+            "id": 0,
+            "field": "height",
+            "wireKey": "height"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "StoreyTop",
+        "wireKeyword": "storey-top",
+        "fields": [
+          {
+            "id": 0,
+            "field": "offset",
+            "wireKey": "offset"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "Storey",
+        "wireKeyword": "storey",
+        "fields": [
+          {
+            "id": 0,
+            "field": "storey",
+            "wireKey": "storey"
+          },
+          {
+            "id": 1,
+            "field": "offset",
+            "wireKey": "offset"
+          }
+        ]
+      }
+    ],
+    "Profile": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Rectangle",
+        "wireKeyword": "rectangle",
+        "fields": [
+          {
+            "id": 0,
+            "field": "width",
+            "wireKey": "width"
+          },
+          {
+            "id": 1,
+            "field": "depth",
+            "wireKey": "depth"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Circle",
+        "wireKeyword": "circle",
+        "fields": [
+          {
+            "id": 0,
+            "field": "diameter",
+            "wireKey": "diameter"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "IShape",
+        "wireKeyword": "i-shape",
+        "fields": [
+          {
+            "id": 0,
+            "field": "width",
+            "wireKey": "width"
+          },
+          {
+            "id": 1,
+            "field": "depth",
+            "wireKey": "depth"
+          },
+          {
+            "id": 2,
+            "field": "web",
+            "wireKey": "web"
+          },
+          {
+            "id": 3,
+            "field": "flange",
+            "wireKey": "flange"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 3,
+        "jsonTag": "Custom",
+        "wireKeyword": "custom",
+        "fields": [
+          {
+            "id": 0,
+            "field": "outline",
+            "wireKey": "outline"
+          }
+        ]
+      }
+    ],
+    "RoofShape": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Flat",
+        "wireKeyword": "flat",
+        "fields": []
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Shed",
+        "wireKeyword": "shed",
+        "fields": [
+          {
+            "id": 0,
+            "field": "pitch",
+            "wireKey": "pitch"
+          },
+          {
+            "id": 1,
+            "field": "direction",
+            "wireKey": "direction"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "Gable",
+        "wireKeyword": "gable",
+        "fields": [
+          {
+            "id": 0,
+            "field": "pitch",
+            "wireKey": "pitch"
+          },
+          {
+            "id": 1,
+            "field": "ridge_direction",
+            "wireKey": "ridge-direction"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 3,
+        "jsonTag": "Hip",
+        "wireKeyword": "hip",
+        "fields": [
+          {
+            "id": 0,
+            "field": "pitch",
+            "wireKey": "pitch"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 4,
+        "jsonTag": "Mansard",
+        "wireKeyword": "mansard",
+        "fields": [
+          {
+            "id": 0,
+            "field": "lower_pitch",
+            "wireKey": "lower-pitch"
+          },
+          {
+            "id": 1,
+            "field": "upper_pitch",
+            "wireKey": "upper-pitch"
+          },
+          {
+            "id": 2,
+            "field": "break_height",
+            "wireKey": "break-height"
+          }
+        ]
+      }
+    ],
+    "OpeningKind": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Window",
+        "wireKeyword": "window",
+        "fields": [
+          {
+            "id": 0,
+            "field": "window_type",
+            "wireKey": "window-type"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Door",
+        "wireKeyword": "door",
+        "fields": [
+          {
+            "id": 0,
+            "field": "door_type",
+            "wireKey": "door-type"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "Void",
+        "wireKeyword": "void",
+        "fields": [
+          {
+            "id": 0,
+            "field": "width",
+            "wireKey": "width"
+          },
+          {
+            "id": 1,
+            "field": "height",
+            "wireKey": "height"
+          }
+        ]
+      }
+    ],
+    "StairFlight": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Straight",
+        "wireKeyword": "straight",
+        "fields": []
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "LTurn",
+        "wireKeyword": "l-turn",
+        "fields": [
+          {
+            "id": 0,
+            "field": "split",
+            "wireKey": "split"
+          },
+          {
+            "id": 1,
+            "field": "turn",
+            "wireKey": "turn"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "UTurn",
+        "wireKeyword": "u-turn",
+        "fields": [
+          {
+            "id": 0,
+            "field": "gap",
+            "wireKey": "gap"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 3,
+        "jsonTag": "Spiral",
+        "wireKeyword": "spiral",
+        "fields": [
+          {
+            "id": 0,
+            "field": "radius",
+            "wireKey": "radius"
+          },
+          {
+            "id": 1,
+            "field": "sweep",
+            "wireKey": "sweep"
+          }
+        ]
+      }
+    ],
+    "PropertyValue": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Text",
+        "wireKeyword": "text",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Real",
+        "wireKeyword": "real",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "Integer",
+        "wireKeyword": "integer",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 3,
+        "jsonTag": "Boolean",
+        "wireKeyword": "boolean",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 4,
+        "jsonTag": "Length",
+        "wireKeyword": "length",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 5,
+        "jsonTag": "Area",
+        "wireKeyword": "area",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 6,
+        "jsonTag": "Volume",
+        "wireKeyword": "volume",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 7,
+        "jsonTag": "Angle",
+        "wireKeyword": "angle",
+        "fields": [
+          {
+            "id": 0,
+            "field": "value",
+            "wireKey": "value"
+          }
+        ]
+      }
+    ],
+    "Infill": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "None",
+        "wireKeyword": "none",
+        "fields": []
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Glass",
+        "wireKeyword": "glass",
+        "fields": [
+          {
+            "id": 0,
+            "field": "thickness",
+            "wireKey": "thickness"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 2,
+        "jsonTag": "Panel",
+        "wireKeyword": "panel",
+        "fields": [
+          {
+            "id": 0,
+            "field": "thickness",
+            "wireKey": "thickness"
+          }
+        ]
+      }
+    ],
+    "SpaceBoundary": [
+      {
+        "variantOrdinal": 0,
+        "jsonTag": "Bounded",
+        "wireKeyword": "bounded",
+        "fields": [
+          {
+            "id": 0,
+            "field": "seed",
+            "wireKey": "seed"
+          }
+        ]
+      },
+      {
+        "variantOrdinal": 1,
+        "jsonTag": "Explicit",
+        "wireKeyword": "explicit",
+        "fields": [
+          {
+            "id": 0,
+            "field": "outline",
+            "wireKey": "outline"
+          }
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "topLevelEntityRows": {
+      "materials": 9,
+      "wall_types": 2,
+      "slab_types": 2,
+      "roof_types": 2,
+      "column_types": 4,
+      "beam_types": 4,
+      "window_types": 1,
+      "door_types": 2,
+      "sites": 1,
+      "buildings": 1,
+      "storeys": 2,
+      "grids": 1,
+      "walls": 4,
+      "curtain_walls": 1,
+      "columns": 1,
+      "beams": 1,
+      "slabs": 2,
+      "roofs": 5,
+      "openings": 3,
+      "stairs": 5,
+      "railings": 3,
+      "spaces": 3,
+      "properties": 2,
+      "classifications": 1
+    },
+    "project": 1,
+    "projectPhases": 2,
+    "layers": 18,
+    "siteBoundaryPoints": 3,
+    "slabBoundaryVertices": 4,
+    "slabHoleParents": 2,
+    "slabHoleVertices": 4,
+    "roofFootprintVertices": 20,
+    "railingPathPoints": 6,
+    "customProfileParents": 5,
+    "customProfileVertices": 20,
+    "spaceExplicitParents": 2,
+    "spaceExplicitVertices": 4,
+    "propertyElementParents": 2,
+    "propertySetParents": 2,
+    "propertyValues": 8,
+    "optionalCutHeightPresent": 1,
+    "optionalSlopePresent": 1,
+    "optionalBalusterPresent": 2,
+    "openingOptionalSillPresent": 1,
+    "openingOptionalWidthPresent": 1,
+    "openingOptionalHeightPresent": 1
+  },
+  "cellCost": {
+    "null": 0,
+    "integer": 8,
+    "real": 8,
+    "text": "UTF8 byte length",
+    "blob": "byte length",
+    "row": "sum all stored cell costs; rowid only if a stored column",
+    "f64": "query finite REAL8 else NULL0 + bits INTEGER8 + class UTF8 length",
+    "optional": "present marker INTEGER8 if chosen plus all payload cells, inactive payload NULL0"
+  }
+}

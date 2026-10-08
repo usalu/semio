@@ -51,7 +51,7 @@ pub fn validate(dsl: &str) -> Result<(), Fault> {
 /// the host to keep it on this device (`os.local-catalog.admit` into the device's own data folder), so the import outlives
 /// the session.
 pub fn commit(dsl: &str, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    let entry = semio_framework_os::import_os_space_from_dsl(dsl, &::semio_framework_async::poll::resolve_ready(crate::catalog_port()))
+    let entry = semio_framework_os::import_os_space_from_dsl(dsl, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port()))
         .map_err(|error| Fault::new(FaultOrigin::App, "s.home.import-space.catalog-refused", format!("the local catalog refused the imported studio: {error:?}")))?;
     Ok(Emit { artifact_mutations: vec![change_catalog_generation(doc.snapshot.catalog_generation + 1)], effects: vec![super::apply_local_catalog_document::keep_on_device(&entry.id, "folder", "")?], ..Default::default() })
 }

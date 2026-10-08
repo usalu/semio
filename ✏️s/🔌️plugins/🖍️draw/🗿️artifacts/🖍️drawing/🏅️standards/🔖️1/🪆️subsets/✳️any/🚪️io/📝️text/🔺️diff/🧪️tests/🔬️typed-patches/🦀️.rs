@@ -21,7 +21,7 @@ fn typed_patch_preserves_explicit_clear_with_json_oracle() {
 fn semantic_constructors_preserve_clear_without_encoding() {
     let fill = diff_set_fill("layer", &None);
     let stroke = diff_set_stroke("layer", &None);
-    assert_eq!(fill.layers.unwrap().patched[0].patch.fill.as_ref().unwrap().value, None);
-    assert_eq!(stroke.layers.unwrap().patched[0].patch.stroke.as_ref().unwrap().value, None);
+    assert_eq!(fill.layers.unwrap().modified[0].patch.fill.as_ref().unwrap().value, None);
+    assert_eq!(stroke.layers.unwrap().modified[0].patch.stroke.as_ref().unwrap().value, None);
     eprintln!("[DEBUG] typed semantic constructors preserve explicit clear");
 }

@@ -13,7 +13,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭reorder-routes/🚌️moves/📸️snapshot/⬅️before/🔣️.json");
@@ -118,8 +119,8 @@ async fn committed_diff_applies_to_after() {
     assert_eq!(produced, expected_after(), "reorder-routes/moves-bus-route-to-front: committed diff did not carry before to after");
 }
 
-/// 🧭 `reorder-routes` lifts one route out of the order and re-inserts it at `to_index`, emitting the
-/// COMPLETE recomputed id permutation. This case moves the LAST route to the FRONT, so every one of the three
+/// 🧭 `reorder-routes` lifts one route out of the order and re-inserts it at `to_index`, emitting ONE positional
+/// move row. This case moves the LAST route to the FRONT, so every one of the three
 /// ids changes position — a delta that would be indistinguishable from a no-op if the builder emitted
 /// anything less than the full order.
 #[semio_framework_async_macros::async_test]
@@ -128,8 +129,8 @@ async fn permutes_the_whole_route_order_without_touching_any_payload() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "reorder-routes/moves-bus-route-to-front: a genuine move must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().routes.as_ref().expect("reorder-routes writes a routes delta");
-    assert_eq!(delta.reordered.as_deref(), Some(["route-bus".to_string(), "route-ferry".to_string(), "route-tram".to_string()].as_slice()), "reorder-routes/moves-bus-route-to-front: the delta is the full recomputed id order");
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-routes/moves-bus-route-to-front: a reorder must not add, remove or patch anything, got {delta:?}");
+    assert_eq!(delta.moved.iter().map(|moved| (moved.id.as_str(), moved.from, moved.to)).collect::<Vec<_>>(), vec![("route-bus", 2, 0)], "reorder-routes/moves-bus-route-to-front: the delta is one positional move row");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.modified.is_empty(), "reorder-routes/moves-bus-route-to-front: a reorder must not add, remove or patch anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().regions.is_none(), "reorder-routes/moves-bus-route-to-front: reorder-routes must never touch the positions or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "reorder-routes/moves-bus-route-to-front: a reorder undoes with exactly one step, got {inverse:?}");

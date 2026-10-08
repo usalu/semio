@@ -83,9 +83,9 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-node/appends-node-3: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().nodes.as_ref().expect("create-node fills the nodes delta");
-    assert_eq!(delta.added.len(), 1, "create-node adds exactly one node");
-    assert_eq!(delta.added[0].id, "node-3", "create-node's `added` entry is the payload node");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "create-node touches only the `added` arm of the nodes delta");
+    assert_eq!(delta.inserted.len(), 1, "create-node inserts exactly one node");
+    assert_eq!(delta.inserted[0].row.id, "node-3", "create-node's `inserted` row is the payload node");
+    assert!(delta.removed.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "create-node touches only the `added` arm of the nodes delta");
 }
 
 /// 🔺️ The sparse delta `create-node` produces is exactly the committed diff — the most load-bearing

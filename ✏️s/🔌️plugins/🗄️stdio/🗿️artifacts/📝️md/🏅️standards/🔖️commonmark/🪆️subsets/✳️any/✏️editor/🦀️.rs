@@ -1,15 +1,14 @@
 //! ✏️ `md` editor (any) — `ArtifactEditor` surface built on the frozen
 //! `TextWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! Emits the frozen `replace-text` action: the incoming text is the CommonMark source the main window edits (or the artifact's own
-//! DSL envelope, `print_dsl`/`parse_dsl`, when it carries the preamble); the window is an explicit draft, so one Apply is ONE edit of the net block leaves the applied text means (design §13.2 of ticket
-//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), never a whole-document replace per delivery.
+//! Emits the frozen `textEdit` action by `splices`: the CommonMark source the main window edits is an explicit draft, and one Apply carries
+//! the change set the editor made to it (ranges of Unicode scalars of the source) as ONE `splice-source` mutation (design §13.2 of ticket
+//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); the sparse diff reparses only the blocks the ranges touch. Replacing the whole document is the details pane's load.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::md::modes::edit;
 use crate::editor::md::modes::edit::windows::main;
-use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_block,remove_block,replace_block,set_inlines,MdMutation,MdPathStep};
+use crate::standards::v_commonmark::subsets::any::schema::mutations::{splice_source, MdMutation};
 
-use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -50,8 +49,9 @@ use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum MdEditCommand {
-    ReplaceText {
-        text: String,
+    SpliceText {
+        revision: String,
+        splices: String,
     },
     EditSnapshot {
         event: SnapshotEditEvent,
@@ -65,7 +65,7 @@ pub enum MdEditCommand {
 impl protocol::OpBinary for MdEditCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TextWindowKit`
-    /// mints `replace-text`, but only this editor can reduce it into its own mutation, so it is an
+    /// mints `textEdit`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = MD_COMMAND_TOOL_IDS;
 
@@ -82,11 +82,11 @@ impl protocol::OpBinary for MdEditCommand {
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
 const MD_KIT_ACTION_ID: &str = "textEdit";
-/// 🧵️ The app-owned retained routes this editor declares: the example switch and `replace-text`.
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `textEdit`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
 /// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
-/// ids. Without the kit verb's row the reactor refused every `replace-text` with
+/// ids. Without the kit verb's row the reactor refused every `textEdit` with
 /// `interactive-job.missing-factory`.
 const MD_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, MD_KIT_ACTION_ID];
 const MD_COMMAND_TOOL_IDS: &[&str] = &[
@@ -100,11 +100,11 @@ const MD_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
 ];
 const MD_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.md.tool-command.v1";
-/// 📏️ `replace-text` carries the whole buffer, so the wire bound is the largest document this route
+/// 📏️ `textEdit` carries the draft's change set, whose inserted text is bounded by the largest document this route
 /// admits — kept under the guest's 64 KiB contiguous-request ceiling.
 const MD_RETAINED_RAW_BYTES: usize = 16 * 1_024 * 1_024;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `replace-text` publishes the artifact
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `textEdit` publishes the artifact
 /// mutation it reduces into, so its only lane is `Artifact`.
 const MD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -138,7 +138,7 @@ fn md_command_from_action(action: &str, args: Option<&semio_framework_value::Dsl
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(MdEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        MD_KIT_ACTION_ID => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
+        MD_KIT_ACTION_ID => Ok(MdEditCommand::SpliceText { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, splices: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "splices")? }),
         other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"))),
     }
 }
@@ -147,7 +147,7 @@ fn md_command_from_action(action: &str, args: Option<&semio_framework_value::Dsl
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn md_command_id(command: &MdEditCommand) -> &'static str {
     match command {
-        MdEditCommand::ReplaceText { .. } => MD_KIT_ACTION_ID,
+        MdEditCommand::SpliceText { .. } => MD_KIT_ACTION_ID,
         MdEditCommand::EditSnapshot { event } => event.action_id(),
         MdEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
@@ -159,15 +159,30 @@ fn md_retained_extent(_command: &MdEditCommand, _snapshot: &MdSnapshot, _interac
 }
 
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
-/// its document, `replace-text` (the explicit Apply of the text window's draft) becomes the net block leaves that carry the
-/// committed document to the applied text ([`md_net_mutations`]).
+/// its document, `textEdit` by `splices` becomes ONE `splice-source` mutation carrying the editor's ranges verbatim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn md_emit(command: &MdEditCommand, snapshot: &MdSnapshot) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn md_emit(command: &MdEditCommand, snapshot: &MdSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let fault = |code: &'static str, message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message);
     match command {
-        MdEditCommand::ReplaceText { text } => match md_applied_text(text) {
-            Ok(next) => Ok(Emit::mutations(semio_s_artifact_stdio_contract::editing::net_leaves_exact(snapshot, &next, md_net_mutations)?)),
-            Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.invalid-text"), error.to_string())),
-        },
+        MdEditCommand::SpliceText { revision, splices } => {
+            let current_revision = canonical_revision.map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), semio_s_artifact_stdio_contract::window_kit_canonical_revision);
+            if revision != &current_revision {
+                return Err(fault("stdio.md.stale-text-edit", "the markdown document changed while this draft was open".to_string()));
+            }
+            let ranges = semio_s_artifact_stdio_contract::draft_splices_from_json(splices)?;
+            if ranges.is_empty() {
+                return Ok(Emit::default());
+            }
+            let range_fault = |_| fault("stdio.md.splice-out-of-range", "a range of the change set exceeds the supported source size".to_string());
+            let mutation = MdMutation::SpliceSource(splice_source::SpliceSource {
+                splices: ranges.iter().map(|range| Ok(splice_source::SourceSplice { offset: u32::try_from(range.offset)?, delete: u32::try_from(range.delete)?, insert: range.insert.clone() })).collect::<Result<Vec<_>, std::num::TryFromIntError>>().map_err(range_fault)?,
+            });
+            let outcome = <MdMutation as protocol::Mutation<MdSnapshot>>::diff(&mutation, snapshot);
+            if let Some(message) = outcome.messages().first() {
+                return Err(fault("stdio.md.splice-unrepresentable", message.message.to_string()));
+            }
+            Ok(if outcome.diff() == &crate::schema::diff::MdDiff::default() { Emit::default() } else { Emit::mutations(vec![mutation]) })
+        }
         MdEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-md-snapshot-edit-routed-to-native-reducer")),
         MdEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&md_example_snapshot(example_id), STDIO_MD_DOCUMENT_SCHEMA)], ..Default::default() }),
     }
@@ -183,9 +198,9 @@ fn md_retained_reduce(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<MdEditor>>>,
-    _operation: &AppOperationContext,
+    operation: &AppOperationContext,
 ) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    md_emit(command, snapshot)
+    md_emit(command, snapshot, Some(operation.canonical_base_revision))
 }
 
 struct MdRetainedCommandJobFactory {
@@ -240,65 +255,6 @@ impl ArtifactOwnedToolJobFactory for MdRetainedCommandJobFactory {
 }
 //#endregion 🧵️RetainedRoutes
 
-//#region 🧮️NetLeaves
-/// 📥️ The document an applied text means: the artifact's own DSL envelope when the text carries its preamble (an agent's
-/// whole-document write), else the CommonMark source the main window edits.
-fn md_applied_text(text: &str) -> Result<MdSnapshot, semio_framework_diagnostic::TextError> {
-    match store::semio_format::split_text_preamble(text) {
-        Ok(_) => <MdSnapshot as store::ArtifactDsl>::parse_dsl(text),
-        Err(_) => Ok(MdSnapshot::from_text(text)),
-    }
-}
-
-/// 🧮️ The net leaves of one applied text: the block edits that carry `base` to exactly `next`, in application order. Blocks
-/// unchanged at either end of a container stay untouched; a changed paragraph, or a heading that keeps its level, re-sets its
-/// inlines; a block quote, and a list that keeps its shape and item count, recurse into their own blocks; any other changed
-/// block is replaced; surplus blocks are removed (last first) or inserted. History therefore edits the block an author
-/// changed, never the whole document. An applied DSL envelope that names another document schema answers no leaves and is
-/// refused by the exact replay. The main window's Apply and the document-details editor both commit through here.
-fn md_net_mutations(base: &MdSnapshot, next: &MdSnapshot) -> Vec<MdMutation> {
-    if base.schema != next.schema {
-        return Vec::new();
-    }
-    let mut leaves = Vec::new();
-    md_net_blocks(&[], &base.blocks, &next.blocks, &mut leaves);
-    leaves
-}
-
-fn md_net_blocks(path: &[MdPathStep], old: &[MdBlock], new: &[MdBlock], leaves: &mut Vec<MdMutation>) {
-    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
-    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
-    let (old_middle, new_middle) = (&old[prefix..old.len() - suffix], &new[prefix..new.len() - suffix]);
-    let paired = old_middle.len().min(new_middle.len());
-    for (offset, (before, after)) in old_middle.iter().zip(new_middle).enumerate() {
-        md_net_block(path, prefix + offset, before, after, leaves);
-    }
-    for offset in (paired..old_middle.len()).rev() {
-        leaves.push(MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.to_vec(), index: prefix + offset }));
-    }
-    for (offset, block) in new_middle.iter().enumerate().skip(paired) {
-        leaves.push(MdMutation::InsertBlock(insert_block::InsertBlock { path: path.to_vec(), index: prefix + offset, block: block.clone() }));
-    }
-}
-
-fn md_net_block(path: &[MdPathStep], index: usize, before: &MdBlock, after: &MdBlock, leaves: &mut Vec<MdMutation>) {
-    let nested = |step: MdPathStep| path.iter().cloned().chain(std::iter::once(step)).collect::<Vec<_>>();
-    match (before, after) {
-        _ if before == after => {}
-        (MdBlock::Paragraph { .. }, MdBlock::Paragraph { inlines }) => leaves.push(MdMutation::SetInlines(set_inlines::SetInlines { path: path.to_vec(), index, inlines: inlines.clone() })),
-        (MdBlock::Heading { level, .. }, MdBlock::Heading { level: next_level, inlines }) if level == next_level => leaves.push(MdMutation::SetInlines(set_inlines::SetInlines { path: path.to_vec(), index, inlines: inlines.clone() })),
-        (MdBlock::BlockQuote { blocks }, MdBlock::BlockQuote { blocks: next_blocks }) => md_net_blocks(&nested(MdPathStep::BlockQuote { index }), blocks, next_blocks, leaves),
-        (MdBlock::List { ordered, start, tight, items }, MdBlock::List { ordered: next_ordered, start: next_start, tight: next_tight, items: next_items })
-            if (ordered, start, tight) == (next_ordered, next_start, next_tight) && items.len() == next_items.len() =>
-        {
-            for (item, (blocks, next_blocks)) in items.iter().zip(next_items).enumerate() {
-                md_net_blocks(&nested(MdPathStep::ListItem { index, item }), blocks, next_blocks, leaves);
-            }
-        }
-        _ => leaves.push(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: path.to_vec(), index, block: after.clone() })),
-    }
-}
-//#endregion 🧮️NetLeaves
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -480,15 +436,17 @@ impl ArtifactEditor for MdEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             MdEditCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            _ => md_emit(command, doc.snapshot),
+            _ => md_emit(command, doc.snapshot, doc.operation_optional().map(|operation| operation.canonical_base_revision)),
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
+                let revision =
+                    doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render(doc.snapshot, view_state.locale, &revision, publication_revision).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
@@ -510,8 +468,11 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for MdEdito
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, md_net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::md::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        crate::editor::md::edit_rules::resolve(snapshot, event)
     }
 }
 //#endregion 🔖️Editor

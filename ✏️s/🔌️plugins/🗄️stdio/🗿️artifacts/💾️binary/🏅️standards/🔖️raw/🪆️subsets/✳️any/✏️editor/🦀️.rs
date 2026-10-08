@@ -2,9 +2,9 @@
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). `BinarySnapshot` is the simplest
 //! possible document: one opaque `bytes: Vec<u8>` buffer. One window, `🪟️main` (`TextWindowKit`),
 //! renders it as a complete paged hex dump; its `textEdit` action funnels through the one typed command
-//! this surface declares, `BinaryEditorCommand::ReplaceText`, which parses the hex text back into
-//! bytes and emits ONE net `BinaryMutation::ReplaceByteRange` over the bytes it changed (nothing when it changed none) through the artifact-owned
-//! retained command factory.
+//! this surface declares, `BinaryEditorCommand::SpliceText`, which receives the change set the editor made to the hex text (ranges of hex
+//! digits) and emits one `BinaryMutation::ReplaceByteRange` per touched byte run — the bytes the ranges cover, replaced by the bytes
+//! the edited digits mean — through the artifact-owned retained command factory.
 
 use crate::editor::binary::modes::edit;
 use crate::editor::binary::modes::edit::windows::main;
@@ -59,8 +59,8 @@ pub const BINARY_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bin
 /// `editable_window_kind()` action (`replace-text`, contract §2.6) can trigger.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum BinaryEditorCommand {
-    #[dsl(key = "replace-binary-text")]
-    ReplaceText { text: String },
+    #[dsl(key = "splice-binary-text")]
+    SpliceText { splices: String },
 }
 
 //#region 🔖️OpCodec
@@ -161,27 +161,62 @@ fn binary_command_id(command: &semio_s_artifact_stdio_contract::editing::Snapsho
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn binary_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>, snapshot: &BinarySnapshot) -> Result<Emit<BinaryMutation>, Fault> {
-    let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::ReplaceText { text }) = command else {
+    let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::SpliceText { splices }) = command else {
         return Err(Fault::from("stdio-binary-snapshot-edit-routed-to-native-reducer"));
     };
-    let parsed =
-        parse_hex_dump(text).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.invalid-hex"), "The byte editor contains an odd digit count or a non-hexadecimal character."))?;
-    Ok(Emit::mutations(binary_net_replacement(&snapshot.bytes, &parsed).into_iter().collect()))
+    let ranges = semio_s_artifact_stdio_contract::draft_splices_from_json(splices)?;
+    Ok(Emit::mutations(binary_hex_ranges(&snapshot.bytes, &ranges)?))
 }
 
-/// 🧮️ The net leaves of one document-details edit: the ONE `replace-byte-range` that carries `base`'s bytes to `next`'s. The
-/// snapshot `schema` is a constant of the artifact and never differs.
-fn binary_net_mutations(base: &BinarySnapshot, next: &BinarySnapshot) -> Vec<BinaryMutation> {
-    binary_net_replacement(&base.bytes, &next.bytes).into_iter().collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn binary_invalid_hex() -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.invalid-hex"), "The byte editor contains an odd digit count or a non-hexadecimal digit.")
 }
 
-/// ✂️ The ONE byte-range replacement that carries `old` to `new`: the bytes both share at either end stay untouched, so history
-/// edits the range an author changed, never the whole buffer; `None` when nothing changed.
-fn binary_net_replacement(old: &[u8], new: &[u8]) -> Option<BinaryMutation> {
-    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
-    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
-    let (remove_len, insert) = (old.len() - prefix - suffix, &new[prefix..new.len() - suffix]);
-    (remove_len > 0 || !insert.is_empty()).then(|| BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: prefix, remove_len, insert: insert.to_vec() }))
+/// ✂️ The byte runs a hex-window change set covers. The window shows the bytes as contiguous lowercase hex (two digits per byte) followed
+/// by an informational comment line; a range of hex digits edits the bytes it touches, so each run of ranges that touch the same bytes is ONE
+/// `replace-byte-range` — the touched bytes, replaced by the bytes the edited digits mean (whitespace and `#` comment lines inside the
+/// edited digits are ignored). A range wholly inside the comment is informational and moves nothing; a range that crosses between the
+/// digits and the comment, or leaves the window, is refused. Runs are emitted last first, so every offset is a base offset.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn binary_hex_ranges(bytes: &[u8], ranges: &[semio_s_artifact_stdio_contract::DraftSplice]) -> Result<Vec<BinaryMutation>, Fault> {
+    let hex: Vec<char> = bytes.iter().flat_map(|byte| format!("{byte:02x}").chars().collect::<Vec<_>>()).collect();
+    let digits = hex.len();
+    let window = digits + format!("\n# total bytes: {}", bytes.len()).chars().count();
+    let mut runs: Vec<(usize, usize, Vec<&semio_s_artifact_stdio_contract::DraftSplice>)> = Vec::new();
+    for range in ranges {
+        let end = range.offset.checked_add(range.delete).filter(|end| *end <= window).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.splice-out-of-range"), "a range of the change set leaves the byte editor"))?;
+        if range.offset > digits && end <= window {
+            continue;
+        }
+        if end > digits || (range.offset == digits && range.delete > 0) {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.splice-crosses-comment"), "a range of the change set crosses between the hex digits and the comment line"));
+        }
+        let (low, high) = (range.offset / 2, end.div_ceil(2));
+        match runs.last_mut() {
+            Some(run) if low <= run.1 => {
+                run.1 = run.1.max(high);
+                run.2.push(range);
+            }
+            _ => runs.push((low, high, vec![range])),
+        }
+    }
+    let mut mutations = Vec::new();
+    for (low, high, members) in runs.into_iter().rev() {
+        let mut edited = String::new();
+        let mut position = low * 2;
+        for range in &members {
+            edited.extend(&hex[position..range.offset]);
+            edited.push_str(&range.insert);
+            position = range.offset + range.delete;
+        }
+        edited.extend(&hex[position..high * 2]);
+        let insert = parse_hex_dump(&edited).ok_or_else(binary_invalid_hex)?;
+        if bytes[low..high] != insert[..] {
+            mutations.push(BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: low, remove_len: high - low, insert }));
+        }
+    }
+    Ok(mutations)
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -202,7 +237,7 @@ fn binary_text_reduce(
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn binary_text_extent(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>, _snapshot: &BinarySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
-        semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::ReplaceText { text }) => parse_hex_dump(text).map(|bytes| bytes.len().max(1)),
+        semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::SpliceText { splices }) => semio_s_artifact_stdio_contract::draft_splices_from_json(splices).ok().map(|ranges| ranges.len().max(1)),
         _ => None,
     }
 }
@@ -335,7 +370,7 @@ impl ArtifactEditor for BinaryEditor {
 
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
-            "textEdit" => Ok(BinaryEditorCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
+            "textEdit" => Ok(BinaryEditorCommand::SpliceText { splices: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "splices")? }),
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.unhandled-action"), format!("unknown binary editor action '{other}'"))),
         })
     }
@@ -356,7 +391,7 @@ impl ArtifactEditor for BinaryEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::ReplaceText { .. }) = command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::SpliceText { .. }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
@@ -389,8 +424,53 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BinaryE
         }
     }
 
-    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, binary_net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::binary::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+        let path = match event {
+            SnapshotEditEvent::SetValue { path, .. } | SnapshotEditEvent::InsertValue { path, .. } | SnapshotEditEvent::RemoveValue { path } | SnapshotEditEvent::MoveValue { path, .. } | SnapshotEditEvent::RenameKey { path, .. } => path,
+            SnapshotEditEvent::ReplaceSource { .. } => return Ok(None),
+        };
+        if path != "/bytes" && !path.starts_with("/bytes/") {
+            return Ok(None);
+        }
+        let fail = |message: String| Fault::from(message);
+        let octet = |value: &semio_framework_value::DslValue| match value {
+            semio_framework_value::DslValue::Number(number) => number.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or_else(|| fail("a byte is an integer from 0 to 255".to_string())),
+            _ => Err(fail("a byte is an integer from 0 to 255".to_string())),
+        };
+        let index = |segment: &str, length: usize, insertion: bool| -> Result<usize, Fault> {
+            if insertion && segment == "-" {
+                return Ok(length);
+            }
+            segment.parse::<usize>().ok().filter(|index| if insertion { *index <= length } else { *index < length }).ok_or_else(|| fail(format!("byte index '{segment}' is outside 0..{length}")))
+        };
+        let range = |offset: usize, remove_len: usize, insert: Vec<u8>| BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset, remove_len, insert });
+        let length = snapshot.bytes.len();
+        let element = path.strip_prefix("/bytes/");
+        Ok(Some(match (event, element) {
+            (SnapshotEditEvent::SetValue { value, .. }, None) => {
+                if !matches!(value, semio_framework_value::DslValue::Array(_) | semio_framework_value::DslValue::Bytes(_)) {
+                    return Err(fail("the bytes are a list of integers".to_string()));
+                }
+                let inserted = <Vec<u8> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| fail(error.to_string()))?;
+                if inserted == snapshot.bytes { Vec::new() } else { vec![range(0, length, inserted)] }
+            }
+            (SnapshotEditEvent::SetValue { value, .. }, Some(segment)) => {
+                let (at, byte) = (index(segment, length, false)?, octet(value)?);
+                if snapshot.bytes[at] == byte { Vec::new() } else { vec![range(at, 1, vec![byte])] }
+            }
+            (SnapshotEditEvent::InsertValue { value, .. }, Some(segment)) => vec![range(index(segment, length, true)?, 0, vec![octet(value)?])],
+            (SnapshotEditEvent::RemoveValue { .. }, Some(segment)) => vec![range(index(segment, length, false)?, 1, Vec::new())],
+            (SnapshotEditEvent::MoveValue { from, .. }, Some(segment)) => {
+                let origin = index(from.strip_prefix("/bytes/").ok_or_else(|| fail("a byte moves within the bytes".to_string()))?, length, false)?;
+                let target = index(segment, length - 1, true)?;
+                if origin == target { Vec::new() } else { vec![range(origin, 1, Vec::new()), range(target, 0, vec![snapshot.bytes[origin]])] }
+            }
+            _ => return Ok(None),
+        }))
     }
 }
 //#endregion 🔖️Editor

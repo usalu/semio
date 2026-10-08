@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { isAbsolute, join, win32, resolve } from "node:path";
 import { parseDocumentOpenIntentV1, parseDocumentExecutionTargetLeaseFieldsV1, type DocumentOpenIntentV1, type DocumentExecutionTargetLeaseFieldsV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "../../../📇️directory/🧬️schema/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
 
 export type ProtectedActorByteClaimV1 = Readonly<{sha256:string;byteLength:number}>;
 export type ProtectedActorResponseInputV1 = Readonly<{asset:string;url:string;method:string;status:number;authenticated:boolean;intent:unknown;body:Uint8Array}>;
@@ -163,8 +164,11 @@ export function protectedActorChildUrlV1(root:string,baseUrl:string):string{
 
 
 /** 🔐️ Requires the existing live normal Dev owner to hold this exact Hub port and selected data root. */
-export async function observeNormalDevHubPublicationOwnerV1(root:string,dataRoot:string,hubUrl:string){
-  const api=await import("../../🚀️local-hub/🏃️execution/🟦️.ts"),claims=await import("../../../../../../../🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"),url=hubUrl.replace(/\/+$/u,""),port=api.parseHubPort(url),paths=api.devHubLeasePathsV1(api.devHubLeaseRootV1(root),port,dataRoot),leases=paths.map(path=>api.liveDevHubLeaseV1(path));
-  if(leases.some(lease=>lease===null||lease.port!==port||resolve(lease.dataDir)!==resolve(dataRoot)||lease.hubUrl!==url)||JSON.stringify(leases[0])!==JSON.stringify(leases[1]))throw Error("normal protected sweep requires the existing current Dev Hub owner/data-root lease");
-  return{hubUrl:url,dataRoot:resolve(dataRoot),pid:leases[0]!.pid,acquiredAt:leases[0]!.acquiredAt,leases:paths.map(path=>claims.trustedCatalogPhysicalClaimV1(path))};
+export async function observeNormalDevHubPublicationOwnerV1(root:string,dataRoot:string,hubUrl:string,control:FileObservationControlV1){
+ const api=await import("../../🚀️local-hub/🏃️execution/🟦️.ts"),url=hubUrl.replace(/\/+$/u,""),port=api.parseHubPort(url),paths=api.devHubLeasePathsV1(api.devHubLeaseRootV1(root),port,dataRoot),leases:ReturnType<typeof api.parseDevHubLeaseBytesV1>[]=[],claims:PhysicalFileClaimV1[]=[];
+ const refuse=():never=>{throw Error("normal protected sweep requires the existing current Dev Hub owner/data-root lease");};
+ for(const path of paths){const observed=await readPhysicalFileV1(path,control);try{const lease=api.parseDevHubLeaseBytesV1(observed.bytes);if(!lease||lease.port!==port||resolve(lease.dataDir)!==resolve(dataRoot)||lease.hubUrl!==url)refuse();if(!api.isPidAliveV1(lease!.pid))refuse();leases.push(lease);claims.push(observed.claim);}finally{observed.bytes.fill(0);}}
+ if(JSON.stringify(leases[0])!==JSON.stringify(leases[1]))refuse();
+ for(let index=0;index<paths.length;index++){const current=await observePhysicalFileV1(paths[index]!,control);if(current.sha256!==claims[index]!.sha256||current.byteLength!==claims[index]!.byteLength)throw Error("normal protected sweep owner lease changed while observed");}
+ if(leases.some(lease=>!lease||!api.isPidAliveV1(lease.pid)))refuse();return{hubUrl:url,dataRoot:resolve(dataRoot),pid:leases[0]!.pid,acquiredAt:leases[0]!.acquiredAt,leases:claims};
 }

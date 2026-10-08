@@ -100,16 +100,6 @@ impl protocol::DiffAlgebra<WiresCanvasTransient> for WiresCanvasTransientDiff {
             drag_zoom: self.drag_zoom.as_ref().map(|_| base.drag_zoom.clone()),
         }
     }
-    fn between(base: &WiresCanvasTransient, other: &WiresCanvasTransient) -> Self {
-        Self {
-            drag_node_id: (base.drag_node_id != other.drag_node_id).then(|| WiresCanvasOptionalNode { value: other.drag_node_id.clone() }),
-            drag_start_x: (base.drag_start_x != other.drag_start_x).then(|| other.drag_start_x.clone()),
-            drag_start_y: (base.drag_start_y != other.drag_start_y).then(|| other.drag_start_y.clone()),
-            drag_last_x: (base.drag_last_x != other.drag_last_x).then(|| other.drag_last_x.clone()),
-            drag_last_y: (base.drag_last_y != other.drag_last_y).then(|| other.drag_last_y.clone()),
-            drag_zoom: (base.drag_zoom != other.drag_zoom).then(|| other.drag_zoom.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.drag_node_id.is_none() && self.drag_start_x.is_none() && self.drag_start_y.is_none() && self.drag_last_x.is_none() && self.drag_last_y.is_none() && self.drag_zoom.is_none()
     }

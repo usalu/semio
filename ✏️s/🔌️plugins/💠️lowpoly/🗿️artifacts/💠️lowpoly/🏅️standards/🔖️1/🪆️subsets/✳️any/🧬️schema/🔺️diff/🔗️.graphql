@@ -1,4 +1,4 @@
-# import LowpolyMeshState,LowpolyMeshStateInput from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
+# import LowpolyMeshState,LowpolyMeshStateInput,LowpolyMeshAttribute from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
 # 🧬️ Lowpoly diff schema — sparse field delta.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 # import LowpolyObject, LowpolyPaintLayer from "../🔗️.graphql"
@@ -9,17 +9,38 @@ type LowpolyDiff {
 }
 
 type LowpolyObjectsDelta {
-  added: [LowpolyObject!]!
-  removed: [String!]!
-  patched: [LowpolyObjectPatchEntry!]!
-  reordered: [String!]
+  removed: [LowpolyObjectRemoval!]!
+  inserted: [LowpolyObjectInsertion!]!
+  moved: [LowpolyObjectRelocation!]!
+  modified: [LowpolyObjectsModification!]!
+}
+
+type LowpolyObjectsModification {
+  id: String!
+  patch: LowpolyObjectPatchEntry!
+}
+
+type LowpolyObjectRemoval {
+  id: String!
+  index: Int!
+}
+
+type LowpolyObjectInsertion {
+  index: Int!
+  row: LowpolyObject!
+}
+
+type LowpolyObjectRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type LowpolyObjectPatchEntry {
-  id: String!
   patch: LowpolyObjectPatch!
   paintLayers: LowpolyPaintLayersDelta
-  meshMotions: [LowpolyMeshMotion!]!
+  meshVertices: [LowpolyVertexPosition!]!
+  meshAttributes: [LowpolyMeshAttribute!]!
 }
 
 type LowpolyObjectPatch {
@@ -47,13 +68,7 @@ type LowpolyPaintPatch { op: String! index: Int! patch: LowpolyPaintLayerPatch! 
 
 type LowpolyPaintStroke { op: String! index: Int! runs: [PixelRun!]! }
 
-union LowpolyMeshMotion = LowpolyMeshOffset | LowpolyMeshTurn | LowpolyMeshStretch
-
-type LowpolyMeshOffset { motion: String! vertexIds: [Int!]! offset: [Float!]! }
-
-type LowpolyMeshTurn { motion: String! vertexIds: [Int!]! pivot: [Float!]! axis: [Float!]! angle: Float! }
-
-type LowpolyMeshStretch { motion: String! vertexIds: [Int!]! pivot: [Float!]! factor: [Float!]! }
+type LowpolyVertexPosition { vertex: Int! position: [Float!]! }
 
 type LowpolyPaintLayerPatch {
   name: String

@@ -1,3 +1,2 @@
-# 🧬️ replace-tag/ReplaceTag
-scalar ReplaceTagMutationValue
-input ReplaceTagMutation { ifdIndex: Int! tag: Int! kind: ReplaceTagMutationValue! values: ReplaceTagMutationValue! }
+# 🏷️ Replace the exact scalar payload of one owned TIFF tag.
+input ReplaceTagMutation { ifdIndex: Int! tag: UInt16! values: TiffValuesInput! }

@@ -31,18 +31,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ReplaceGraph"
-      ],
-      "properties": {
-        "ReplaceGraph": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/replace-graph/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "CreateNode"
       ],
       "properties": {
@@ -120,18 +108,6 @@
       "properties": {
         "DisconnectNodes": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/disconnect-nodes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ReplacePoints"
-      ],
-      "properties": {
-        "ReplacePoints": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/replace-points/schema.json"
         }
       }
     },

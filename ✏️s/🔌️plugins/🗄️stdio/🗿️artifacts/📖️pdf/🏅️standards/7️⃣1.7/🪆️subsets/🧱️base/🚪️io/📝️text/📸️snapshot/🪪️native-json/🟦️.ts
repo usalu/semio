@@ -1,3 +1,4 @@
+import { parseArtifactRef } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import {pdfDateFromNativeJson} from "./📌️annotation/🟦️.ts";
 /** 🪪️ Explicit finite native JSON admission into PDF's canonical owned scalar model. */
 import type { PdfObject, PdfDictEntry, PdfStreamFilter, PdfFunction, PdfColorSpace, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -109,8 +110,8 @@ function colorShallow(input: unknown, child: PdfColorSpace | null): PdfColorSpac
     case "calGray": return { kind, whitePoint: three(row.whitePoint), blackPoint: row.blackPoint == null ? null : three(row.blackPoint), gamma: row.gamma == null ? null : real(row.gamma) };
     case "calRgb": return { kind, whitePoint: three(row.whitePoint), blackPoint: row.blackPoint == null ? null : three(row.blackPoint), gamma: row.gamma == null ? null : three(row.gamma), matrix: row.matrix == null ? null : nine(row.matrix) };
     case "lab": return { kind, whitePoint: three(row.whitePoint), blackPoint: row.blackPoint == null ? null : three(row.blackPoint), range: row.range == null ? null : four(row.range) };
-    case "iccBased": return { kind, components: integer(row.components), profile: integers(row.profile), alternate: child, range: optionalReals(row.range) };
-    case "indexed": if (!child) throw new Error("Native PDF indexed color has no base"); return { kind, base: child, hival: integer(row.hival), lookup: integers(row.lookup) };
+    case "iccBased": return { kind, components: integer(row.components), profile: parseArtifactRef(row.profile), alternate: child, range: optionalReals(row.range) };
+    case "indexed": if (!child) throw new Error("Native PDF indexed color has no base"); return { kind, base: child, hival: integer(row.hival), palette: integers(row.palette) };
     case "separation": if (!child) throw new Error("Native PDF color has no alternate"); return { kind, name: text(row.name), alternate: child, tintTransform: pdfFunctionFromNativeJson(row.tintTransform) };
     case "deviceN": if (!child) throw new Error("Native PDF color has no alternate"); return { kind, names: array(row.names).map(text), alternate: child, tintTransform: pdfFunctionFromNativeJson(row.tintTransform), attributes: row.attributes == null ? null : pdfDictionaryFromNativeJson(row.attributes) };
     case "pattern": return { kind, base: child };

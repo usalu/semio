@@ -4,6 +4,8 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[path = "🌉️apply/🦀️.rs"]
+pub mod central_apply;
 extern crate semio_framework_os_kernel as vcs;
 
 use semio_framework_artifact_flow_flow::Widget;
@@ -365,6 +367,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
                             mod tests_removes_a_middle_row;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
+                            mod tests_removes_an_unselected_middle_row;
                         }
                         #[path = "."]
                         pub mod rename_generation {
@@ -380,6 +385,19 @@ pub mod standards {
                             mod tests_retitles_generation_1;
                         }
                         #[path = "."]
+                        pub mod select_generation {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👆️select-generation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👆️select-generation/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👆️select-generation/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👆️select-generation/🧪️tests/👆️picks/🦀️.rs"]
+                            mod tests_picks;
+                        }
+                        #[path = "."]
                         pub mod change_slider_value {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-slider-value/🦀️.rs"]
                             mod component;
@@ -388,6 +406,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-slider-value/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-slider-value/🧪️tests/🎚️sets/🦀️.rs"]
+                            mod tests_sets;
                         }
                         #[path = "."]
                         pub mod move_nodes {
@@ -398,6 +419,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🧪️tests/🚚️shifts/🦀️.rs"]
+                            mod tests_shifts;
                         }
                         #[path = "."]
                         pub mod change_generation_value {

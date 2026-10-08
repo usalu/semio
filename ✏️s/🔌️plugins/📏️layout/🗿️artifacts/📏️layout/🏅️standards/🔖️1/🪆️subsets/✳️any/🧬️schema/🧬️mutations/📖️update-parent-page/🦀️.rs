@@ -1,7 +1,7 @@
 //! 📖 `update-parent-page` — sets a parent page's name and size.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutParentPagePatchEntry, LayoutParentPagesDelta, ParentPagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutParentPagesDelta, LayoutParentPagesModification, ParentPagePatch};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -39,7 +39,7 @@ pub fn diff_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot
     if page.name == payload.name && page.width == payload.width && page.height == payload.height {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Parent page is already set to that value.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { parent_pages: Some(LayoutParentPagesDelta { patched: vec![LayoutParentPagePatchEntry { id: payload.id.clone(), patch: ParentPagePatch { name: Some(payload.name.clone()), width: Some(payload.width), height: Some(payload.height) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { parent_pages: Some(LayoutParentPagesDelta { modified: vec![LayoutParentPagesModification { id: payload.id.clone(), patch: ParentPagePatch { name: Some(payload.name.clone()), width: Some(payload.width), height: Some(payload.height) } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

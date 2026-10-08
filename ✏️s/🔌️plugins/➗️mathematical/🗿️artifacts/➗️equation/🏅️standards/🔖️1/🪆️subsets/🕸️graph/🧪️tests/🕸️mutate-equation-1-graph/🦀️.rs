@@ -9,7 +9,7 @@
 //! forward vector. Nine (`create-node`, `delete-node`, `delete-nodes`, `change-node-label`,
 //! `move-node`, `connect-nodes`, `disconnect-nodes`) carry REJECTION vectors
 //! (`mutation.target-missing`, `mutation.duplicate-id`) and three (`change-graph-directed`,
-//! `update-graph-algorithm`, `replace-graph`) carry `applied`-but-`mutation.no-op` vectors. The snapshot holds the graph
+//! `update-graph-algorithm`) carry `applied`-but-`mutation.no-op` vectors. The snapshot holds the graph
 //! INLINE again (model (a), design §20.15), so forward vectors are now authorable and remain open work. Those vectors are
 //! worth asserting — a rejection vector pins the fault code, the
 //! offending address AND that the document was left untouched, which is where the frozen outcome
@@ -31,11 +31,11 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["change-graph-directed", "update-graph-algorithm", "replace-graph", "create-node", "delete-node", "delete-nodes", "change-node-label", "move-node", "connect-nodes", "disconnect-nodes"];
+const KINDS: &[&str] = &["change-graph-directed", "update-graph-algorithm", "create-node", "delete-node", "delete-nodes", "change-node-label", "move-node", "connect-nodes", "disconnect-nodes"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
-const UNOBSERVABLE: &[&str] = &["change-graph-directed", "update-graph-algorithm", "replace-graph", "create-node", "delete-node", "delete-nodes", "change-node-label", "move-node", "connect-nodes", "disconnect-nodes"];
+const UNOBSERVABLE: &[&str] = &["change-graph-directed", "update-graph-algorithm", "create-node", "delete-node", "delete-nodes", "change-node-label", "move-node", "connect-nodes", "disconnect-nodes"];
 
 //#endregion 🔖️Kinds
 
@@ -70,13 +70,6 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/➡️after/🔣️.json"),
             diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🔺️diff/🔣️.json")),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🎯️outcome/🔣️.json"),
-        },
-        "replace-graph" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-graph/🧪️replays/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-graph/🧪️replays/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-graph/🧪️replays/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-graph/🧪️replays/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-graph/🧪️replays/🎯️outcome/🔣️.json"),
         },
         "create-node" => Vector {
             before: include_str!("../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),

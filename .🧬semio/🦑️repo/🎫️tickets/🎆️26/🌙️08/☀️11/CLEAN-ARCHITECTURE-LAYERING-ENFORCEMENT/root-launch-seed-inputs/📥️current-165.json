@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "🧰️ Artifact TypeScript Command Extension 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/repo-lib:test-artifact-command-extension --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-command-extension"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.811
+      }
+    }
+  ],
+  "retireNames": []
+}

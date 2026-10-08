@@ -9,6 +9,6 @@ pub fn diff(payload: &super::RemoveAuthor, base: &Block3dSnapshot) -> protocol::
     if !base.authors.iter().any(|author| author.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "author", payload.id), vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block3dDiff { authors: Some(BlockAuthorsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { authors: BlockAuthorsDelta::removal(&base.authors, base.authors.iter().position(|author| author.id == payload.id).unwrap_or(usize::MAX)), ..Default::default() })
 }
 //#endregion 🔖️Diff

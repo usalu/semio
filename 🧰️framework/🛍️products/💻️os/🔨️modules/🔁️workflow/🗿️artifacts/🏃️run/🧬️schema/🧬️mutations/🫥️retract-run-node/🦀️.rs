@@ -14,7 +14,7 @@ pub struct RetractRunNode {
 
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for RetractRunNode {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "retract", entity: "run-node", kind: "retract-run-node", record: "RetractedRunNode" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "run-node", kind: "retract-run-node", record: "RemovedRunNode" };
     fn diff(&self, base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         if !base.node_records.iter().any(|entry| entry.node_id == self.node_id) {
             return protocol::MutationOutcome::error("mutation.target-missing", "run node record does not exist", ["nodes", self.node_id.as_str()]);

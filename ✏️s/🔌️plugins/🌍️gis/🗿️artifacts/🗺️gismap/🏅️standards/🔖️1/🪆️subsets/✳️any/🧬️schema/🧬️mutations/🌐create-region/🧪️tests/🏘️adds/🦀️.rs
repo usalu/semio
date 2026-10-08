@@ -13,7 +13,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌐create-region/🏘️adds/📸️snapshot/⬅️before/🔣️.json");
@@ -128,8 +129,8 @@ async fn adds_exactly_one_region_and_inverts_to_a_delete_of_that_id() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "create-region/adds-old-town-region-after-harbor-district: creating a fresh id must be diagnostic-free even when an existing region shares its kind, got {:?}", produced.messages());
     let delta = produced.diff().regions.as_ref().expect("create-region writes a regions delta");
-    assert_eq!(delta.added.iter().map(|feature| feature.id.as_str()).collect::<Vec<_>>(), vec!["region-old-town"], "create-region/adds-old-town-region-after-harbor-district: exactly the payload's own feature is added");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "create-region/adds-old-town-region-after-harbor-district: a create must not remove, patch or reorder anything, got {delta:?}");
+    assert_eq!(delta.inserted.iter().map(|insertion| insertion.row.id.as_str()).collect::<Vec<_>>(), vec!["region-old-town"], "create-region/adds-old-town-region-after-harbor-district: exactly the payload's own feature is added");
+    assert!(delta.removed.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "create-region/adds-old-town-region-after-harbor-district: a create must not remove, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "create-region/adds-old-town-region-after-harbor-district: create-region must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-region/adds-old-town-region-after-harbor-district: a create undoes with exactly one step, got {inverse:?}");

@@ -1,0 +1,9 @@
+# UI Prepared Child Physical Census
+
+PreparedFixedList owns Box fixed pages; command pages own Boxpage and Boxdirectory scaffolds. Actual1569 teardown drops command slot/page/directory individually, requiring distinct exact released physical extents. Raster page close separates slots/backing/key/credit: key.pop is semantic scalar removal, String::new final key frees original capacity, ledger credit release is resource identity transition. Vec/String/page physical backing must not be guessed from bool false/true or semantic length.
+
+Prepared job receiver/mailbox, raster generation permits and fixed abandonment slots preserve exact current identities. close_abandoned2626 Box::from_raw/Box::into_raw transfers same job pointer; refused control must return pointer to same slot without drop, and final jobBox extent release needs grant and true terminal. Current boolclose OR abandonment_slotMAX branch should not be copied into a zero-progress fullGrant wrapper without terminal proof. Canonical Value fullGrant/admission helpers can validate fit/refusal; controlled Job payload offers genuine fullprogress, but bespoke prepared resources still need their own exact child demands/receipts rather than treating all as generic Value.
+
+Existing genuine native tests: UI 🧪tests/🔬targets-wgpu-prepared-unit/🦀.rs, especially raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant615, paged producer identity, stale-generation refusal, exact/plusone byte/item credits, simultaneous decode peak/source transfer. Existing 🧪tests/🔬interactivity-prepared-raster-producer/🟦.ts enumerates these retained native law filters. Extend those with physical allocator identity/zeroaxis/frame-gate checks and existing independent image/raster byte oracles; no corpus schema or test-only bypass.
+
+Root notified actual ownership points; no source/producers/tests. Generic/private child drafts are not complete runtime proof until exact source/terminal receipts arrive.

@@ -2,36 +2,250 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/diff.json",
   "title": "SemioGraphDiff",
-  "description": "Sparse per-field diff over SemioGraphSnapshot — two independent optional whole-list-replace slots, `nodes` and `edges`.",
+  "description": "Sparse keyed-row diff: per collection `removed` base indices, `modified` rows (sparse row diffs) and `added` rows with their final index.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "nodes": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-semio-state": "artifact",
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "values": {
+        "removed": {
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioGraphNodeDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "SemioGraphNode"
+              }
+            }
           }
         }
       }
     },
     "edges": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-semio-state": "artifact",
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "values": {
+        "removed": {
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "integer",
+            "minimum": 0
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioGraphEdgeDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "SemioGraphEdge"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "SemioGraphEntryDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/snapshot.json#/$defs/SemioValue"
+        }
+      }
+    },
+    "SemioGraphNodeDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "object",
+          "x-semio-type": "GraphNodeId"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "position": {
+          "type": "object",
+          "x-semio-type": "SemioPoint2"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "ports": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "diff"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "diff": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "object",
+                        "x-semio-type": "SemioGraphPort"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "added": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "item"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "item": {
+                    "type": "object",
+                    "x-semio-type": "SemioGraphPort"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "x-semio-type": "SemioGraphPropertiesDiff"
+        }
+      }
+    },
+    "SemioGraphEdgeDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "object",
+          "x-semio-type": "GraphNodeId"
+        },
+        "target": {
+          "type": "object",
+          "x-semio-type": "GraphNodeId"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "sourcePort": {
+          "type": "string"
+        },
+        "targetPort": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "x-semio-type": "SemioGraphPropertiesDiff"
         }
       }
     }

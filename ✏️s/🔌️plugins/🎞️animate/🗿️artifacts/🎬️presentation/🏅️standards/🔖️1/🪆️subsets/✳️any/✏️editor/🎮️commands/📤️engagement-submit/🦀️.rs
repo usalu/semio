@@ -3,9 +3,8 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, PresentationDispatchCtx};
+use crate::editor::animate::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, tile_roster_mutations, PresentationDispatchCtx};
 use crate::mutations::create_tile::CreateTile;
-use crate::mutations::replace_tiles::ReplaceTiles;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
@@ -26,7 +25,7 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSna
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows, columns, gap: 0.0, key_prefix: "tile" });
         let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         return Ok(Emit {
-            artifact_mutations: vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })],
+            artifact_mutations: tile_roster_mutations(deck, tiles),
             config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })],
             effects: vec![interaction_select_effect(&selected, "replace")],
             ..Default::default()
@@ -44,7 +43,7 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSna
             })
         }
         "clear" => Ok(Emit {
-            artifact_mutations: vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() })],
+            artifact_mutations: tile_roster_mutations(deck, Vec::new()),
             config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })],
             effects: vec![interaction_select_effect(&[], "replace")],
             ..Default::default()

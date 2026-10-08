@@ -1,3 +1,5 @@
+use serde_json::Value;
+use crate::apply_puzzle3d_mutation;
 
 use super::*;
 
@@ -22,21 +24,24 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
         "attractions": [], "targetVolumes": [], "references": [],
     });
     let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle3dSnapshot>(value.clone()).expect("typed puzzle3d scene_snapshot")).expect("canonical puzzle3d JSON");
-    let operations = puzzle3d_document_delta_operations(&before, &after);
+    let before_snapshot: Puzzle3dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&before)).expect("base admits");
+    let after_snapshot: Puzzle3dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&after)).expect("result admits");
+    let created = crate::Puzzle3dObject { id: "o3".into(), label: None, object_kind: None, anchor: Default::default(), origin: [2.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
+    let operations = vec![delete_object("o1".into()), move_object("o2".into(), [9.0, 0.0, 0.0]), create_object(created, None)];
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle3dMutation::MoveObject(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle3dMutation::CreateObject(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle3dMutation::DeleteObject(_))));
-    let mut forward = before.clone();
+    let mut forward = before_snapshot.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse scene_snapshot"));
-        forward = protocol::apply_diff(Mutation::<Value>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
+        inverses.extend(Mutation::<Puzzle3dSnapshot>::inverse(operation, &forward).expect("valid retained mutation inverse scene_snapshot"));
+        forward = protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
     }
-    assert_eq!(forward, canonical(&after));
+    assert_eq!(serde_json::to_value(&forward).unwrap(),canonical(&after));
     for inverse in inverses.iter().rev() {
-        forward = protocol::apply_diff(Mutation::<Value>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
+        forward = protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
     }
-    assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
+    assert_eq!(serde_json::to_value(&forward).unwrap(),canonical(&before), "backwards operations must restore the pre-edit document");
 }
 
 //#region 🔖️MutationLaws
@@ -357,7 +362,7 @@ fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
 /// inverse diffs sum to the negative diff.
 #[semio_framework_async_macros::async_test]
 async fn middle_row_removals_restore_their_position() {
-    use crate::{Puzzle3dCompatSpecificity, Puzzle3dObject, Puzzle3dVortex};
+    use crate::{Puzzle3dCompatSpecificity, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume, Puzzle3dVortex};
     use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     let step = |base: Puzzle3dSnapshot, mutation: Puzzle3dMutation| protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     let vortex = |id: &str| Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false };
@@ -365,14 +370,65 @@ async fn middle_row_removals_restore_their_position() {
     let mut base = empty();
     for id in ["a", "b", "c"] {
         base = step(base, create_object(object(id), None));
+        base = step(base, create_target_volume(Puzzle3dTargetVolume { id: id.into(), origin: [0.0; 3], orientation: None, scale: None, hidden: false, locked: false }, None));
+        base = step(base, create_reference(Puzzle3dReference { id: id.into(), source: Puzzle3dReferenceSource { url: "u".into(), media_kind: None }, origin: [0.0; 3], width_world: 1.0, locked: false, hidden: false }, None));
         base = step(base, connect_kind_compatibility(id.into(), "z".into(), false, false, Puzzle3dCompatSpecificity::General, None));
     }
     for (id, attracting, attracted) in [("t1", "a:v1", "b:v1"), ("t2", "b:v2", "c:v2"), ("t3", "a:v3", "c:v3")] {
         base = step(base, connect_vortices(id.into(), attracting.into(), attracted.into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None));
     }
-    let removals = [delete_object("b".into()), remove_object_vortex("b".into(), "v2".into()), disconnect_vortices("t2".into()), disconnect_kind_compatibility("b".into(), "z".into())];
+    let removals = [delete_object("b".into()), remove_object_vortex("b".into(), "v2".into()), disconnect_vortices("t2".into()), disconnect_kind_compatibility("b".into(), "z".into()), delete_target_volume("b".into()), delete_reference("b".into())];
     for mutation in &removals {
         assert_mutation_inverse_law(&base, mutation).await;
         assert_mutation_inverse_sum_law(mutation, &base).await;
+    }
+}
+
+/// 🧫️ Language-neutral roots retain typed mutation authority and match Serde's admitted values.
+#[test]
+fn puzzle3d_typed_mutation_fixture_and_refusal_law() {
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📸️typed-mutation/🔣️.json")).expect("neutral fixture");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let before: Puzzle3dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&case["before"])).expect("base admits");
+        let after: Puzzle3dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&case["after"])).expect("result admits");
+        let oracle_before: Puzzle3dSnapshot=serde_json::from_value(case["before"].clone()).expect("third-party base");
+        let oracle_after: Puzzle3dSnapshot=serde_json::from_value(case["after"].clone()).expect("third-party result");
+        assert_eq!(before,oracle_before);
+        assert_eq!(after,oracle_after);
+        let operations: Vec<Puzzle3dMutation>=serde_json::from_value(case["operations"].clone()).expect("authored concrete mutations");
+        assert!(operations.len()>=case["minimumOperations"].as_u64().expect("count") as usize);
+        let mut current=before.clone();
+        let mut inverse=Vec::new();
+        for operation in &operations {
+            inverse.extend(Mutation::<Puzzle3dSnapshot>::inverse(operation,&current).expect("inverse"));
+            current=protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed apply");
+        }
+        assert_eq!(current,oracle_after);
+        for operation in inverse.iter().rev() {
+            current=protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed inverse apply");
+        }
+        assert_eq!(current,oracle_before);
+        println!("[DEBUG] puzzle3d typed mutations {} {}",case["name"],operations.len());
+    }
+    for value in fixture["invalid"].as_array().expect("invalid") {
+        let actual= <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(value));
+        let oracle=serde_json::from_value::<Puzzle3dSnapshot>(value.clone());
+        assert!(actual.is_err());
+        assert!(oracle.is_err());
+    }
+}
+
+/// 🔢️ The shared native field corpus preserves the complete scalar words through typed patches.
+#[test]
+fn puzzle3d_native_float_typed_mutation_fixture() {
+    use crate::standards::v1::subsets::any::schema::diff::Puzzle3dObjectPatch;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🔺️diff/🧫️fixtures/🔢️native-fields/🔣️.json")).expect("neutral words");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let words:Vec<u64>=case["words"].as_array().expect("words").iter().map(|word|word.as_str().expect("decimal word").parse().expect("unsigned word")).collect();
+        let value=semio_framework_value::DslValue::object([("origin".into(),semio_framework_value::DslValue::Array(words.iter().map(|word|semio_framework_value::DslValue::float(f64::from_bits(*word))).collect()))]);
+        let patch=<Puzzle3dObjectPatch as semio_framework_value::FromValue>::from_value(value).expect("typed patch");
+        let actual:Vec<String>=patch.origin.expect("native origin").iter().map(|number|number.to_bits().to_string()).collect();
+        assert_eq!(serde_json::to_value(actual).expect("third-party output"),case["words"]);
+        println!("[DEBUG] puzzle3d native field words {}",case["name"]);
     }
 }

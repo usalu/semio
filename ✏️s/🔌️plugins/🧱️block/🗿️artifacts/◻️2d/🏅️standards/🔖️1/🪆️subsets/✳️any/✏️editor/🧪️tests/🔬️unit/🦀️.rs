@@ -70,6 +70,25 @@ pub(crate) mod context {
         result
     }
     
+    /// 📚️ Runs the `setActiveExample` handler and lands its `LoadDocument` effect exactly like the runtime does: an example
+    /// switch is a whole-document load, so the handler must emit no mutation and the app only changes through the load.
+    pub async fn load_example(app: &mut Block2dApp, id: &str) {
+        let snapshot = app.snapshot().expect("snapshot");
+        let config = crate::editor::block2d::config::Block2dConfig::default();
+        let emit = crate::editor::block2d::commands::set_active_example::handle(
+            &crate::editor::block2d::commands::set_active_example::SetActiveExample { id: id.into() },
+            &semio_framework_plugin::ArtifactView::new(&snapshot, &semio_framework_plugin::HistoryView::empty()),
+            &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+        )
+        .expect("example handler");
+        assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
+        for effect in emit.effects {
+            if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
+                semio_framework_plugin::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the example loads");
+            }
+        }
+    }
+
     pub async fn render(app: &mut Block2dApp, body_key: &str) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
@@ -96,7 +115,8 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(block2d_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
     for tool_id in BLOCK2D_RETAINED_TOOL_IDS {
         let contract = Block2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
-        assert_eq!(contract.lanes, [ArtifactToolPublicationLane::Artifact].as_slice(), "every block2d handler emits document mutations only");
+        let lane = if matches!(*tool_id, "setActiveExample" | "edit") { ArtifactToolPublicationLane::HostOnly } else { ArtifactToolPublicationLane::Artifact };
+        assert_eq!(contract.lanes, [lane].as_slice(), "every block2d handler emits document mutations only, except the two whole-document loads (host-only)");
     }
     let definition = create_block2d_app();
     let migrated: Vec<&str> = every_command().iter().map(Block2dCommand::command_id).collect();
@@ -270,7 +290,7 @@ async fn boots_on_the_forest_left_example_document() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_left_fixture() {
     let mut app = new_app().await;
-    context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
+    context::load_example(&mut app, set_active_example::BLOCK2D_EXAMPLE_LEFT).await;
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.node_kind.id, "Hexagonal Cut Concrete Forest Left");
     assert_eq!(projection.handles.len(), 11);
@@ -294,7 +314,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
     let mut app = new_app().await;
-    context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
+    context::load_example(&mut app, set_active_example::BLOCK2D_EXAMPLE_LEFT).await;
     let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
@@ -359,10 +379,34 @@ async fn example_announcements_keep_live_maintenance_within_its_contract() {
     let mut app = new_app().await;
     drain(&mut app, "boot");
     for id in [set_active_example::BLOCK2D_EXAMPLE_LEFT, set_active_example::BLOCK2D_EXAMPLE_RIGHT, set_active_example::BLOCK2D_EXAMPLE_LEFT] {
-        context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: id.into() })).await;
+        context::load_example(&mut app, id).await;
         let turns = drain(&mut app, id);
         eprintln!("block2d {id}: live maintenance settled in {turns} turns");
     }
     assert_eq!(app.snapshot().expect("snapshot").node_kind.id, "Hexagonal Cut Concrete Forest Left");
 }
 //#endregion 🔖️LiveMaintenance
+
+/// 🗃️ An example switch and a JSON edit answer a whole-document `LoadDocument` effect, never mutation rows: no diff, no history row.
+#[test]
+fn example_switch_and_json_edit_load_a_document_instead_of_editing_one() {
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::empty_block2d_snapshot();
+    let config = crate::editor::block2d::config::Block2dConfig::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let view = semio_framework_plugin::ArtifactView::new(&document, &history);
+    let config_view = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    for id in [set_active_example::BLOCK2D_EXAMPLE_LEFT, set_active_example::BLOCK2D_EXAMPLE_RIGHT] {
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { id: id.into() }, &view, &config_view).expect("every offered example loads");
+        assert!(emit.artifact_mutations.is_empty(), "{id}: an example load is not a document edit");
+        assert!(matches!(emit.effects.first(), Some(semio_framework::kernel::Effect::LoadDocument { .. })), "{id}: an example load is one LoadDocument effect");
+    }
+    let unknown = set_active_example::handle(&set_active_example::SetActiveExample { id: "not-an-example".into() }, &view, &config_view).expect("an unknown example is a no-op");
+    assert!(unknown.artifact_mutations.is_empty() && unknown.effects.is_empty());
+    let mut edited = document.clone();
+    edited.meta.description = "edited through JSON".into();
+    let emit = edit::handle(&edit::Edit { text: semio_framework_pack_json::to_json_string(&edited) }, &view, &config_view).expect("a valid JSON edit loads");
+    assert!(emit.artifact_mutations.is_empty(), "a JSON edit is a load, not a mutation set");
+    assert!(matches!(emit.effects.first(), Some(semio_framework::kernel::Effect::LoadDocument { .. })), "a JSON edit is one LoadDocument effect");
+    let unchanged = edit::handle(&edit::Edit { text: semio_framework_pack_json::to_json_string(&document) }, &view, &config_view).expect("an unchanged document");
+    assert!(unchanged.artifact_mutations.is_empty() && unchanged.effects.is_empty(), "re-sending the open document mints nothing");
+}

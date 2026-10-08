@@ -1,3 +1,4 @@
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use super::*;
 use directory::os_plugin_module_schema::TrustedPluginModuleIndexV1;
 

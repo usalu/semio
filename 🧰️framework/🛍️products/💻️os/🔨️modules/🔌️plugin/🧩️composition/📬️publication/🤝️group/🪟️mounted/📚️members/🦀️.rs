@@ -110,14 +110,28 @@ impl MountedGroupMemberReceipts {
         if let Some(row)=self.final_receipt.as_ref().filter(|row|!row.terminal_is_empty()){return Ok(row.next_close_byte_demand());}
         if self.close_cursor<=self.rows.child_count{if let Some(row)=self.rows.rows[self.close_cursor].as_ref(){return if row.terminal_is_empty(){Ok(MountedMemberReceipt::frame_birth_bytes())}else{row.next_close_byte_demand()};}}Ok(0)
     }
+    /// 📏️ Retains exact row currencies and separately prices each paid terminal frame.
+    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if self.pending_triple.is_some() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth: if matches!(self.pending_close_field, 7 | 8 | 14) { 4 } else { 3 }, ..Default::default() }); }
+        if let Some(row) = self.final_receipt.as_ref().filter(|row| !row.terminal_is_empty()) { return mounted_nested_retirement_demand(row.retirement_demands()?, 1); }
+        if self.final_receipt.is_some() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
+        if self.close_cursor <= self.rows.child_count {
+            if let Some(row) = self.rows.rows[self.close_cursor].as_ref() {
+                return if row.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { release_bytes: MountedMemberReceipt::frame_birth_bytes(), depth: 2, ..Default::default() }) } else { mounted_nested_retirement_demand(row.retirement_demands()?, 2) };
+            }
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        Ok(semio_framework_value::RetirementDemand { depth: 2, ..Default::default() })
+    }
     /// 🍂️ Keeps all completed row edits, typed vectors and physical frames until their exact release phase is funded.
     pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.next_close_byte_demand()?;if grant.maximum_items==0||grant.maximum_release_bytes<demand{return Ok(RetainedCloneStep::Progress(Default::default()));}self.closing=true;
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.next_close_byte_demand()?;if grant.maximum_items==0||grant.maximum_release_bytes<demand{return Ok(RetainedCloneStep::Progress(Default::default()));}if !mounted_retirement_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }self.closing=true;
         if let Some(triple)=self.pending_triple.as_mut(){let ready=match self.pending_close_field{0..=9=>MountedGroupReceipt::clear_mutation(&mut triple.0,self.pending_close_field),10=>{MountedGroupReceipt::clear_text(&mut triple.1.0);true},11..=14=>MountedGroupReceipt::clear_inverse(&mut triple.2,self.pending_close_field-11),_=>{self.pending_triple=None;self.pending_close_field=0;return Ok(Self::progress(0,0));}};if ready{self.pending_close_field+=1;}return Ok(Self::progress(0,demand));}
-        if let Some(row)=self.final_receipt.as_mut().filter(|row|!row.terminal_is_empty()){return Ok(row.close_step(grant));}
+        if let Some(row)=self.final_receipt.as_mut().filter(|row|!row.terminal_is_empty()){return Ok(row.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }));}
         if self.final_receipt.is_some(){self.final_receipt=None;return Ok(Self::progress(0,0));}
-        if self.close_cursor<=self.rows.child_count{if let Some(row)=self.rows.rows[self.close_cursor].as_mut(){if !row.terminal_is_empty(){return row.close_step(grant);}drop(self.rows.rows[self.close_cursor].take());self.close_cursor+=1;return Ok(Self::progress(0,demand));}self.close_cursor+=1;return Ok(Self::progress(0,0));}
-        let step=self.issuer.close_step(grant);self.issuer_closed=true;Ok(step)
+        if self.close_cursor<=self.rows.child_count{if let Some(row)=self.rows.rows[self.close_cursor].as_mut(){if !row.terminal_is_empty(){return row.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant });}drop(self.rows.rows[self.close_cursor].take());self.close_cursor+=1;return Ok(Self::progress(0,demand));}self.close_cursor+=1;return Ok(Self::progress(0,0));}
+        let step=self.issuer.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });self.issuer_closed=true;Ok(step)
     }
     pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.pending_triple.is_none()&&self.final_receipt.is_none()&&self.close_cursor>self.rows.child_count&&self.issuer_closed}
     pub(crate) fn terminal_frame_byte_demand(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}

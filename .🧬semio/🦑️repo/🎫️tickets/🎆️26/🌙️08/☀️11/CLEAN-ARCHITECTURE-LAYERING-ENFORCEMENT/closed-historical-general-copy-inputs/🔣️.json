@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "cases": [
+    3,
+    4
+  ],
+  "maximumBytes": 4294967296,
+  "maximumFiles": 32768,
+  "maximumWork": 500000,
+  "budgetMs": 300000,
+  "preserved": [
+    "receiver/lease-owner/data/local-hub-owner.json",
+    "receiver/lease-owner/.🧬semio/🌐hub/dev-hub-leases/port-8877.json"
+  ]
+}

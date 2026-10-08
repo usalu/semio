@@ -40,4 +40,5 @@ record snapshot {
   catalogExtra Value
   objects Value
   trailer Value
+  admittedStreamRoles Value
 }

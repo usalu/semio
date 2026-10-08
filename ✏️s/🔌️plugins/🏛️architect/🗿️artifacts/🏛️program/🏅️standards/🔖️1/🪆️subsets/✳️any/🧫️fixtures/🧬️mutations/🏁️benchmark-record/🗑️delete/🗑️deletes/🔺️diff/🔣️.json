@@ -67,12 +67,15 @@
   "templates": null,
   "knowledge": null,
   "benchmarks": {
-    "added": [],
     "removed": [
-      "benchmark-record-a"
+      {
+        "id": "benchmark-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "traces": null,
   "governance": null

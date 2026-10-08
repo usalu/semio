@@ -7,12 +7,15 @@
   "groundwaterLevel": null,
   "investigationDepth": null,
   "layers": {
-    "added": [],
     "removed": [
-      "layer-sand"
+      {
+        "id": "layer-sand",
+        "index": 0
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "footings": null,
   "piles": null,

@@ -3,12 +3,15 @@
   "elements": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "shs120"
+      {
+        "id": "shs120",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "solids": null,
   "supports": null,

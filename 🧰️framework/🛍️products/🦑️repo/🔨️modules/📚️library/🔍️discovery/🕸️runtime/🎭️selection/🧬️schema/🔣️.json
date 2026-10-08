@@ -1,0 +1,1966 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/discovery/runtime/selection/component.json",
+  "title": "SelectedRuntimeActorEvidenceV1",
+  "$ref": "#/$defs/SelectedRuntimeActorEvidenceV1",
+  "$defs": {
+    "SelectedRuntimeRelativeClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relativePath",
+        "sha256",
+        "byteLength"
+      ],
+      "properties": {
+        "relativePath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 134217728
+        }
+      }
+    },
+    "SelectedRuntimeActorProducerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "actor",
+        "component",
+        "descriptor",
+        "policyCanonical",
+        "policySha256",
+        "runtime",
+        "compiler",
+        "inputs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.closed-browser-actor-producer/v1"
+        },
+        "actor": {
+          "$ref": "#/$defs/SelectedRuntimeRelativeClaimV1"
+        },
+        "component": {
+          "$ref": "#/$defs/SelectedRuntimeRelativeClaimV1"
+        },
+        "descriptor": {
+          "$ref": "#/$defs/SelectedRuntimeRelativeClaimV1"
+        },
+        "policyCanonical": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 134217728
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "runtime": {
+          "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+        },
+        "compiler": {
+          "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "logicalPath",
+              "path",
+              "sha256",
+              "byteLength"
+            ],
+            "properties": {
+              "logicalPath": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "byteLength": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 134217728
+              }
+            }
+          }
+        }
+      }
+    },
+    "SelectedRuntimePackageProducerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "cargoPackage",
+        "component",
+        "descriptor",
+        "cargoInvocations",
+        "browserActor"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "cargoPackage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "component": {
+          "$ref": "#/$defs/SelectedRuntimeRelativeClaimV1"
+        },
+        "descriptor": {
+          "$ref": "#/$defs/SelectedRuntimeRelativeClaimV1"
+        },
+        "cargoInvocations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+          }
+        },
+        "browserActor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SelectedRuntimeGenerationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "profileId",
+        "generationId",
+        "bundle",
+        "packages"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "profileId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bundle": {
+          "$ref": "#/$defs/SelectedRuntimeRelativeClaimV1"
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/$defs/SelectedRuntimePackageProducerV1"
+          }
+        }
+      }
+    },
+    "SelectedRuntimePublicationRecordV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "dataRoot",
+        "profileId",
+        "generationId",
+        "publicationRevision",
+        "pointer",
+        "bundle",
+        "producer"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "dataRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "profileId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "publicationRevision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "maxLength": 128
+        },
+        "pointer": {
+          "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+        },
+        "bundle": {
+          "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+        },
+        "producer": {
+          "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+        }
+      }
+    },
+    "SelectedRuntimePublicationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "record",
+        "generationPath",
+        "generation"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "record": {
+          "$ref": "#/$defs/SelectedRuntimePublicationRecordV1"
+        },
+        "generationPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "generation": {
+          "$ref": "#/$defs/SelectedRuntimeGenerationV1"
+        }
+      }
+    },
+    "SelectedRuntimeClosedActorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema",
+        "codegenPolicy",
+        "sha256",
+        "byteLength",
+        "path",
+        "sourceComponentSha256",
+        "sourceDescriptorByteSha256",
+        "policySha256",
+        "importInterfaces"
+      ],
+      "properties": {
+        "kind": {
+          "const": "closed-browser-actor"
+        },
+        "schema": {
+          "const": "semio.os.closed-browser-actor.v1"
+        },
+        "codegenPolicy": {
+          "const": "semio.os.browser-jco-1.34.0-jspi.v1"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 134217728
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sourceComponentSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceDescriptorByteSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "importInterfaces": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "SelectedRuntimeActorWitnessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "actor",
+        "producer",
+        "componentInvocation",
+        "descriptorInvocation",
+        "owner",
+        "closed"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "actor": {
+          "$ref": "#/$defs/SelectedRuntimeClosedActorV1"
+        },
+        "producer": {
+          "$ref": "#/$defs/SelectedRuntimeActorProducerV1"
+        },
+        "componentInvocation": {
+          "$ref": "#/definitions/RuntimeCargoObservationV1"
+        },
+        "descriptorInvocation": {
+          "$ref": "#/definitions/RuntimeCargoObservationV1"
+        },
+        "owner": {
+          "$ref": "#/definitions/RuntimeDynamicImportOwnerV1"
+        },
+        "closed": {
+          "$ref": "#/definitions/RuntimeGraphEvidenceV1"
+        }
+      }
+    },
+    "SelectedRuntimeActorEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "dataRoot",
+        "requested",
+        "profile",
+        "published",
+        "dynamicImports",
+        "observations",
+        "witnesses"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "dataRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "requested": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "published": {
+          "$ref": "#/$defs/SelectedRuntimePublicationV1"
+        },
+        "dynamicImports": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 128,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 65536,
+            "items": {
+              "$ref": "#/definitions/RuntimeDynamicImportOwnerV1"
+            }
+          }
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoObservationV1"
+          }
+        },
+        "witnesses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/$defs/SelectedRuntimeActorWitnessV1"
+          }
+        }
+      }
+    },
+    "SelectedRuntimeGraphPackageRootsV1": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096,
+        "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$"
+      }
+    }
+  },
+  "x-semio-observation": {
+    "maximumBytes": 134217728,
+    "maximumWork": 65536,
+    "maximumDepth": 64,
+    "maximumChunkBytes": 1048576
+  },
+  "x-semio-ports": {
+    "SelectedRuntimeActorPublicationPortV1": {
+      "diagnosticOwner": "string",
+      "observeCurrent": {
+        "control": "FileObservationControlV1",
+        "returns": "SelectedRuntimeActorsV1"
+      },
+      "acquireCurrent": {
+        "control": "FileObservationControlV1",
+        "returns": "void"
+      },
+      "SelectedRuntimeActorsV1": {
+        "evidence": "SelectedRuntimeActorEvidenceV1",
+        "recheck": {
+          "control": "FileObservationControlV1",
+          "returns": "void"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "RuntimeGraphEdgeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "module",
+            "import",
+            "resource",
+            "dependency",
+            "generated"
+          ]
+        }
+      }
+    },
+    "RuntimeGraphFindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "runtime-fixture-edge",
+            "runtime-unresolved-edge",
+            "runtime-input-mismatch"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "RuntimeGraphEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "nodes",
+        "edges",
+        "findings"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeGraphEdgeV1"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeGraphFindingV1"
+          }
+        }
+      }
+    },
+    "RuntimeDynamicImportOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "sourceSha256",
+        "callsiteIndex"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA256 of the exact active parsed caller source, including its production test exclusion transformation."
+        },
+        "callsiteIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Zero-based lexical ordinal among computed import and require calls in that exact parsed source."
+        }
+      }
+    },
+    "RuntimeCargoInputDigestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        }
+      }
+    },
+    "RuntimeCargoBuildScriptV1": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "reason",
+        "package_id",
+        "cfgs",
+        "env",
+        "out_dir"
+      ],
+      "properties": {
+        "reason": {
+          "const": "build-script-executed"
+        },
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cfgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RuntimeBuildResourceObservationV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "entries",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "directory"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RuntimeCompilerResourceEntryV1"
+              }
+            },
+            "operation": {
+              "$ref": "#/definitions/RuntimeCompilerResourceOperationV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "copy"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "output",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "read"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "$ref": "#/definitions/RuntimeCompilerResourceOperationV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "failed"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "$ref": "#/definitions/RuntimeCompilerResourceOperationV1"
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeCargoBuildResourceSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "sha256",
+        "outputSha256"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/definitions/RuntimeBuildResourceObservationV1"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "outputSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeCompilerResourceEntryV1"
+          }
+        }
+      }
+    },
+    "RuntimeCargoBuildResourcesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "out_dir",
+        "path",
+        "text",
+        "sha256",
+        "observedAtMs",
+        "resources"
+      ],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoBuildResourceSnapshotV1"
+          }
+        }
+      }
+    },
+    "RuntimeCargoInvocationInputV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RuntimeCargoDepInfoV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "text",
+        "baseDirectory"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseDirectory": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RuntimeBrowserArtifactV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "compiledSha256",
+        "mountedSha256",
+        "current"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiledSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "mountedSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RuntimeTrunkCompilationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawSha256",
+        "querySha256",
+        "outputs"
+      ],
+      "properties": {
+        "rawSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "querySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeTrunkObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "profile",
+        "manifest",
+        "outputDirectory",
+        "builtAtMs",
+        "observedAtMs",
+        "owner",
+        "compiler",
+        "raw",
+        "configuration",
+        "toolVersions",
+        "outputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "wgpu-trunk"
+        },
+        "profile": {
+          "enum": [
+            "dev",
+            "release"
+          ]
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "builtAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "owner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "compiler": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "configuration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "html",
+            "toml"
+          ],
+          "properties": {
+            "html": {
+              "type": "string",
+              "minLength": 1
+            },
+            "toml": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "toolVersions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bindgen",
+            "binaryen",
+            "trunk"
+          ],
+          "properties": {
+            "bindgen": {
+              "type": "string",
+              "minLength": 1
+            },
+            "binaryen": {
+              "type": "string",
+              "minLength": 1
+            },
+            "trunk": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeCompilerChecksumV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "blake3",
+        "length"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blake3": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RuntimeCompilerResourceEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "symlinkTarget"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "symlink",
+            "other"
+          ]
+        },
+        "symlinkTarget": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RuntimeCompilerResourceReadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "output",
+        "callsite",
+        "operation",
+        "snapshotOperation"
+      ],
+      "properties": {
+        "kind": {
+          "const": "read"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "output": {
+          "type": "string",
+          "minLength": 1
+        },
+        "callsite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "line"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "operation": {
+          "$ref": "#/definitions/RuntimeCompilerResourceOperationV1"
+        },
+        "snapshotOperation": {
+          "$ref": "#/definitions/RuntimeCompilerResourceOperationV1"
+        }
+      }
+    },
+    "RuntimeCompilerResourceDirectoryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "entries",
+        "callsite",
+        "operation"
+      ],
+      "properties": {
+        "kind": {
+          "const": "directory"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeCompilerResourceEntryV1"
+          }
+        },
+        "callsite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "line"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "operation": {
+          "$ref": "#/definitions/RuntimeCompilerResourceOperationV1"
+        }
+      }
+    },
+    "RuntimeCompilerResourceObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "producer",
+        "caller",
+        "builtAtMs",
+        "observedAtMs",
+        "completed",
+        "resources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "compiler-resource"
+        },
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "source"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "caller": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "crate",
+            "source"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "crate": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "builtAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed": {
+          "const": true
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/RuntimeCompilerResourceReadV1"
+              },
+              {
+                "$ref": "#/definitions/RuntimeCompilerResourceDirectoryV1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "RuntimeCompilerResourceOperationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "line",
+        "name"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "enum": [
+            "read",
+            "read_dir"
+          ]
+        }
+      }
+    },
+    "RuntimeResourceReadInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        }
+      }
+    },
+    "RuntimeResourceReadOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceSha256",
+        "callsiteOffset",
+        "inputs"
+      ],
+      "properties": {
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "callsiteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Exact zero-based UTF-16 source offset of the original Rust filesystem reader operation token."
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeResourceReadInputV1"
+          }
+        }
+      }
+    },
+    "RuntimeActorCargoSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cargoPackage",
+        "componentPath",
+        "componentSha256"
+      ],
+      "properties": {
+        "cargoPackage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "componentPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "componentSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "RuntimeJsonValueV1": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "maxLength": 134217728
+        },
+        {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeJsonValueV1"
+          }
+        },
+        {
+          "type": "object",
+          "maxProperties": 65536,
+          "additionalProperties": {
+            "$ref": "#/definitions/RuntimeJsonValueV1"
+          }
+        }
+      ]
+    },
+    "SelectedRuntimePhysicalClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "byteLength"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 134217728
+        }
+      }
+    },
+    "RuntimeCompilerInputV1": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/RuntimeJsonValueV1"
+      },
+      "required": [
+        "reason",
+        "package_id",
+        "features",
+        "target",
+        "profile",
+        "filenames"
+      ],
+      "properties": {
+        "reason": {
+          "const": "compiler-artifact"
+        },
+        "package_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "manifest_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "features": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "name",
+            "src_path",
+            "kind"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "src_path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "kind": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 65536,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/RuntimeJsonValueV1"
+          }
+        },
+        "profile": {
+          "type": "object",
+          "required": [
+            "test"
+          ],
+          "properties": {
+            "test": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/RuntimeJsonValueV1"
+          }
+        },
+        "filenames": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "runtimeTarget": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtimeWorkspace": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RuntimeCargoUnitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "observedAtMs",
+        "depInfo",
+        "inputs",
+        "artifacts"
+      ],
+      "properties": {
+        "message": {
+          "$ref": "#/definitions/RuntimeCompilerInputV1"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depInfo": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoDepInfoV1"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoInputDigestV1"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "stagedPath": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "stagedSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeCargoCompilerResourcesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "text",
+        "sha256",
+        "observedAtMs",
+        "producerUnit",
+        "callerUnit",
+        "resources"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 134217728
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "producerUnit": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RuntimeCompilerInputV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "callerUnit": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RuntimeCompilerInputV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "input",
+              "sha256",
+              "outputSha256"
+            ],
+            "properties": {
+              "input": {
+                "$ref": "#/definitions/RuntimeCompilerResourceObservationV1"
+              },
+              "sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "outputSha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observedEntries": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 65536,
+                "items": {
+                  "$ref": "#/definitions/RuntimeCompilerResourceEntryV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeCargoObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "manifest",
+        "cwd",
+        "command",
+        "args",
+        "builtAtMs",
+        "observedAtMs",
+        "status",
+        "cancelled",
+        "units",
+        "buildScripts",
+        "compilerResourceRoot",
+        "compilerResources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "command": {
+          "const": "cargo"
+        },
+        "args": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "builtAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "const": 0
+        },
+        "cancelled": {
+          "const": false
+        },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoUnitV1"
+          }
+        },
+        "buildScripts": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoBuildScriptV1"
+          }
+        },
+        "compilerResourceRoot": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "compilerResources": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoCompilerResourcesV1"
+          }
+        },
+        "invocationInputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoInvocationInputV1"
+          }
+        },
+        "buildDirectory": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "buildResources": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/RuntimeCargoBuildResourcesV1"
+          }
+        }
+      }
+    }
+  }
+}

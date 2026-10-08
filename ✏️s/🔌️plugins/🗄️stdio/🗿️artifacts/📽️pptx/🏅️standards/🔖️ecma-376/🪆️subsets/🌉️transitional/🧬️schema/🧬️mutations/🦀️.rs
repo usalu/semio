@@ -17,12 +17,13 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, PptxDiff, PptxOpcDiff, PptxOpcRelDiff, PptxOpcRelListDiff, PptxOpcRelationshipsDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{retarget_attribute_values_diff, root_attribute_diff, root_children_diff, root_edits_diff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional PresentationML main namespace.
@@ -85,6 +86,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-drawing-namespace", "set
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
 /// source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_pptx_transitional_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxTransitionalMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -171,22 +173,22 @@ fn diff_retarget_namespace(base: &PptxSnapshot, from: [&str; 2], to: &str) -> Pp
 fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &str) -> PptxDiff {
     let mut modified = Vec::new();
     for (owner, relationships) in base.opc.relationships.groups() {
-        let entries: Vec<NamedModified<String, PptxOpcRelDiff>> = relationships
+        let entries: Vec<OpcRelationshipModification> = relationships
             .iter()
             .filter_map(|relationship| {
                 let prefix = from.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix))?;
                 let retargeted = format!("{to}{}", &relationship.rel_type[prefix.len()..]);
-                (retargeted != relationship.rel_type).then(|| NamedModified { key: relationship.id.clone(), diff: PptxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } })
+                (retargeted != relationship.rel_type).then(|| OpcRelationshipModification { id: relationship.id.clone(), patch: OpcRelationshipPatch { rel_type: Some(retargeted), target: None, target_mode: None } })
             })
             .collect();
         if !entries.is_empty() {
-            modified.push(NamedModified { key: owner.clone(), diff: PptxOpcRelListDiff { modified: entries, ..Default::default() } });
+            modified.push(OpcOwnerModification { id: owner.clone(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta { modified: entries, ..Default::default() } } });
         }
     }
     if modified.is_empty() {
         return PptxDiff::default();
     }
-    PptxDiff { schema: None, opc: Some(PptxOpcDiff { relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
+    PptxDiff { schema: None, opc: Some(OpcDiff { relationships: Some(OpcOwnersDelta { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.

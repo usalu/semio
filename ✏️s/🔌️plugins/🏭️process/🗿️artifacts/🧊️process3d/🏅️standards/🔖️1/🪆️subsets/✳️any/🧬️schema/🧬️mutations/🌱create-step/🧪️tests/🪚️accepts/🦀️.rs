@@ -1,6 +1,6 @@
 //! 🧪️ `create-step` fixture — `🪚️accepts`.
 //!
-//! `create-step` inserts the rip-cut step into `step_payloads` at `index` and re-mints `steps`/`tool_solids` from the edited timeline (`process3d_step_timeline_diff`), so the committed diff carries all three fields and the after-snapshot's timeline gains one entry.
+//! `create-step` inserts the rip-cut step into `step_payloads` at `index` (`apply` re-derives `steps`/`tool_solids`), so the committed diff carries only `stepPayloads` and the after-snapshot's timeline gains one entry.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

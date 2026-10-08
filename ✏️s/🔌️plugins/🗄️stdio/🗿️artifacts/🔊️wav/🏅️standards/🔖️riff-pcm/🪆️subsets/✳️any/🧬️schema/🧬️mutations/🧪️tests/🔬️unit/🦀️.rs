@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -14,17 +15,18 @@ fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
         WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
         WavMutation::PatchData(patch_data::PatchData { index: 1, remove_count: 1, data: WavData::Pcm16(vec![42]), move_to: None }),
         WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2], pad_byte: 0 }], chunk_order: None }),
+        WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0, data_pad_byte: 0 }),
     ]
 }
 
 //#region mutation_diff_law
-/// 🧪️ `mutation.diff(base).diff().apply(base) == apply_wav_mutation(base, mutation)`.
+/// 🧪️ `mutation.diff(base).diff().apply(base) == apply_mutation(base, mutation)`.
 #[semio_framework_async_macros::async_test]
 async fn mutation_diff_law_every_variant() {
     let base = base_snapshot();
     for m in variants(&base) {
         let mut via_apply = base.clone();
-        let returned = apply_wav_mutation(&mut via_apply, &m);
+        let returned = apply_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
         assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
@@ -39,9 +41,9 @@ async fn inverse_law_mutation_and_diff_level() {
     let base = base_snapshot();
     for m in variants(&base) {
         let mut round = base.clone();
-        apply_wav_mutation(&mut round, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_wav_mutation(&mut round, &inv);
+        apply_mutation(&mut round, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut round, &inv);
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
@@ -61,6 +63,7 @@ fn kind_of(m: &WavMutation) -> &'static str {
         WavMutation::SetData(_) => "set-data",
         WavMutation::PatchData(_) => "patch-data",
         WavMutation::SetOtherChunks(_) => "set-other-chunks",
+        WavMutation::SetPadBytes(_) => "set-pad-bytes",
     }
 }
 
@@ -132,7 +135,7 @@ async fn mutations_reject_states_that_cannot_round_trip_through_riff() {
     ];
     for invalid in invalid_mutations {
         let mut current = base_snapshot();
-        let outcome = apply_wav_mutation(&mut current, &invalid);
+        let outcome = apply_mutation(&mut current, &invalid);
         assert!(!outcome.messages().is_empty(), "unrepresentable mutation must report a diagnostic");
         assert!(outcome.diff().is_empty(), "unrepresentable mutation must carry an empty diff");
         assert_eq!(current, base_snapshot(), "unrepresentable mutation must leave the document unchanged");
@@ -163,29 +166,8 @@ async fn wav_mutation_inverse_sum_law_holds_for_every_leaf() {
     ] {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
-}
-
-#[semio_framework_async_macros::async_test]
-async fn net_mutations_replay_exactly_onto_the_edited_snapshot() {
-    let base = WavSnapshot {
-        data: WavData::Pcm16(vec![1, 2, 3, 4, 5, 6]),
-        other_chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2, 3, 4], pad_byte: 0 }],
-        chunk_order: vec![WavChunkRef::Other(0), WavChunkRef::Format, WavChunkRef::Samples],
-        ..WavSnapshot::default()
-    };
-    let next = WavSnapshot {
-        fmt: WavFmt { channels: 2, ..base.fmt.clone() },
-        data: WavData::Pcm16(vec![1, 2, 9, 9, 9, 5, 6]),
-        other_chunks: vec![],
-        chunk_order: vec![WavChunkRef::Format, WavChunkRef::Samples],
-        ..base.clone()
-    };
-    let leaves = net_mutations(&base, &next);
-    assert!(!leaves.is_empty());
-    let mut state = base.clone();
-    for leaf in &leaves {
-        apply_wav_mutation(&mut state, leaf);
+    let odd = WavSnapshot { fmt: WavFmt { ext: Some(vec![1]), ..WavFmt::default() }, data: WavData::Raw(vec![1, 2, 3]), ..WavSnapshot::default() };
+    for mutation in [WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0x11, data_pad_byte: 0x22 }), WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0, data_pad_byte: 0x33 })] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &odd).await;
     }
-    assert_eq!(state, next);
-    assert!(net_mutations(&base, &base).is_empty());
 }

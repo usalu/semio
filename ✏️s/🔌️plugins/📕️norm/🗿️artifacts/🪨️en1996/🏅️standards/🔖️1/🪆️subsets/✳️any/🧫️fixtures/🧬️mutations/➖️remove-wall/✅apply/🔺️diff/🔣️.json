@@ -5,9 +5,13 @@
   "storeys": null,
   "walls": {
     "removed": [
-      "wall-north"
+      {
+        "id": "wall-north",
+        "index": 0
+      }
     ],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

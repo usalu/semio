@@ -1,0 +1,41 @@
+{
+  "publication": {
+    "contractId": "s-playground-session",
+    "variant": "draw",
+    "catalogPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated",
+    "outputRoot": "✏️s/🧑‍💻dev/🤖️generated"
+  },
+  "integration": {
+    "schemaVersion": 1,
+    "default": {
+      "variant": "draw",
+      "sourcePath": "✏️s/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+      "producerScript": "✏️s/🧑‍💻dev/📜️script.ts",
+      "producerSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts"
+    },
+    "isolation": {
+      "canonicalOutputRoot": "default",
+      "stagedOutputRoot": "variants",
+      "canonicalRootEnvironment": "SEMIO_PLAYGROUND_SESSION_OUTPUT_ROOT",
+      "resolverSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts"
+    },
+    "staging": {
+      "rootPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions",
+      "ownerDirectory": "🎮️playground-session",
+      "sourceLeaf": "🟦️.ts",
+      "artifactKey": "🎮️playground-session/🟦️.ts",
+      "viteConfigPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "viteSpecifier": "virtual:semio-playground-session",
+      "variants": [
+        {
+          "variant": "draw",
+          "pluginId": "draw"
+        },
+        {
+          "variant": "puzzle5d",
+          "pluginId": "puzzle"
+        }
+      ]
+    }
+  }
+}

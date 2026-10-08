@@ -24,8 +24,7 @@ pub use builder_kit::{build_palette, build_playbook_list_scene, playbook_builder
 /// 🧬️ Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
 /// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
 pub use generation_forms::{
-    add_generation, apply_generation_mutation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body,
-    render_generation_preview_text, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationMutation, GenerationPlayState,
+    add_generation, apply_generation_mutation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationMutation, GenerationPlayState,
 };
 
 //#region 🔖️Domain
@@ -337,24 +336,14 @@ pub mod generation_forms {
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
     use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, DslValue, FromValue, PlaybookBlock, PlaybookSpec, PlaybookValues, ToValue};
-    use ui_wgpu::wgpu::build_text_editor_scene;
-    use ui_wgpu::wgpu::ui_stack_vertical;
-    use ui_wgpu::wgpu::ui_text;
     use ui_wgpu::wgpu::ActionDescriptor;
     use semio_framework_ui_locale::Label;
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework_ui_locale::Terminology;
-    use ui_wgpu::wgpu::TextEditorScene;
     use ui_wgpu::wgpu::UiControlNode;
-    use ui_wgpu::wgpu::UiFieldNode;
-    use ui_wgpu::wgpu::UiInputNode;
     use ui_wgpu::wgpu::UiNode;
     use ui_wgpu::wgpu::UiPresence;
-    use ui_wgpu::wgpu::UiSelectItem;
-    use ui_wgpu::wgpu::UiSelectNode;
-    use ui_wgpu::wgpu::UiSliderNode;
-    use ui_wgpu::wgpu::UiToggleNode;
     use ui_wgpu::wgpu::UiTreeActionPlacement;
     use ui_wgpu::wgpu::UiTreeItemAction;
     use ui_wgpu::wgpu::UiTreeItemNode;
@@ -552,7 +541,7 @@ pub mod generation_forms {
     //#endregion 🔖️Mutations
 
     //#region 🔖️Render
-    fn generation_action(controller_id: &str, action: &str, args: Option<DslValue>) -> ActionDescriptor {
+    pub(crate) fn generation_action(controller_id: &str, action: &str, args: Option<DslValue>) -> ActionDescriptor {
         ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args }
     }
 
@@ -674,188 +663,6 @@ pub mod generation_forms {
         UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
-    fn render_question_field(question: &PlaybookBlock, values: &PlaybookValues, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {
-        if !is_block_visible(question, values) {
-            return None;
-        }
-        let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_block(question));
-        let field_id = format!("generate.form.{}", question.id);
-        let on_change = || generation_action(controller_id, patch_action, Some(DslValue::object([("generationId".to_string(), DslValue::String(generation_id.to_string())), ("questionId".to_string(), DslValue::String(question.id.clone()))])));
-        let child = match question.kind.as_str() {
-            "text" | "longText" => UiControlNode::Input(UiInputNode {
-                id: format!("{field_id}.input"),
-                input_kind: if question.kind == "longText" { "textarea".into() } else { "text".into() },
-                value: value.as_str().unwrap_or_default().to_string(),
-                placeholder: question.placeholder.clone().map(Label::data),
-                accessibility_label: None,
-                commit: None,
-                on_change: on_change(),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                precision: None,
-                snaps: Vec::new(),
-                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
-                menu: None,
-                ..Default::default()
-            }),
-            "number" => UiControlNode::Input(UiInputNode {
-                id: format!("{field_id}.input"),
-                input_kind: "number".into(),
-                value: value.as_f64().map(|number| number.to_string()).unwrap_or_default(),
-                placeholder: question.placeholder.clone().map(Label::data),
-                accessibility_label: None,
-                commit: None,
-                on_change: on_change(),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                precision: None,
-                snaps: Vec::new(),
-                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
-                menu: None,
-                ..Default::default()
-            }),
-            "slider" => UiControlNode::Slider(UiSliderNode {
-                id: format!("{field_id}.slider"),
-                value: value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0)),
-                min: question.min.unwrap_or(0.0),
-                max: question.max.unwrap_or(100.0),
-                step: question.step.unwrap_or(1.0),
-                on_change: on_change(),
-                unit: None,
-                snaps: Vec::new(),
-                presence: UiPresence::default(),
-                menu: None,
-                ..Default::default()
-            }),
-            "boolean" => UiControlNode::Toggle(UiToggleNode {
-                appearance: Default::default(),
-                id: format!("{field_id}.toggle"),
-                icon_id: "toggle-left".into(),
-                text: Some(Label::data(question.label.clone())),
-                on_change: on_change(),
-                presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
-                menu: None,
-            }),
-            "single" => {
-                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.clone()) }).collect()).unwrap_or_default();
-                UiControlNode::Select(UiSelectNode {
-                    id: format!("{field_id}.select"),
-                    value: value.as_str().unwrap_or_default().to_string(),
-                    items,
-                    placeholder: question.placeholder.clone().map(Label::data),
-                    on_change: on_change(),
-                    presence: UiPresence::default(),
-                    menu: None,
-                })
-            }
-            "vector" => {
-                let numbers: Vec<DslValue> = value.as_array().map_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect()).unwrap_or_default(), |slice| slice.to_vec());
-                let labels: Vec<String> = question
-                    .fields
-                    .as_ref()
-                    .map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect());
-                let children: Vec<UiNode> = numbers
-                    .iter()
-                    .enumerate()
-                    .map(|(index, number)| {
-                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
-                        UiNode::Field(UiFieldNode {
-                            id: format!("{field_id}.vector.{index}"),
-                            label: Label::data(label),
-                            child: Box::new(UiNode::Input(UiInputNode {
-                                id: format!("{field_id}.vector.{index}.input"),
-                                input_kind: "number".into(),
-                                value: number.as_f64().map(|entry| entry.to_string()).unwrap_or_default(),
-                                placeholder: None,
-                                accessibility_label: None,
-                                commit: None,
-                                on_change: generation_action(
-                                    controller_id,
-                                    patch_action,
-                                    Some(DslValue::object([
-                                        ("generationId".to_string(), DslValue::String(generation_id.to_string())),
-                                        ("questionId".to_string(), DslValue::String(question.id.clone())),
-                                        ("fieldIndex".to_string(), DslValue::uint(index as u64)),
-                                    ])),
-                                ),
-                                min: None,
-                                max: None,
-                                step: None,
-                                accept: None,
-                                precision: None,
-                                snaps: Vec::new(),
-                                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
-                                menu: None,
-                                ..Default::default()
-                            })),
-                            description: None,
-                            required: None,
-                            error: None,
-                            presence: UiPresence::default(),
-                            menu: None,
-                        })
-                    })
-                    .collect();
-                return Some(ui_stack_vertical(children));
-            }
-            "note" => return Some(ui_text(Label::data(question.text.clone().unwrap_or_default()))),
-            "image" => return Some(ui_text(Label::data(question.src.clone().unwrap_or_else(|| "(no image)".into())))),
-            _ => UiControlNode::Input(UiInputNode {
-                id: format!("{field_id}.input"),
-                input_kind: "text".into(),
-                value: semio_framework_pack_json::to_json_string(&value),
-                placeholder: question.placeholder.clone().map(Label::data),
-                accessibility_label: None,
-                commit: None,
-                on_change: on_change(),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                precision: None,
-                snaps: Vec::new(),
-                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
-                menu: None,
-                ..Default::default()
-            }),
-        };
-        Some(UiNode::Field(UiFieldNode {
-            id: field_id,
-            label: Label::data(question.label.clone()),
-            child: Box::new(ui_wgpu::wgpu::ui_control_to_node(child)),
-            description: None,
-            required: None,
-            error: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }))
-    }
-
-    pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &PlaybookValues, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
-        let mut children = Vec::new();
-        for step in &form_spec.steps {
-            if !step.blocks.is_empty() {
-                children.push(ui_text(Label::data(step.title.clone())));
-            }
-            for question in &step.blocks {
-                if let Some(field) = render_question_field(question, values, controller_id, patch_action, generation_id) {
-                    children.push(field);
-                }
-            }
-        }
-        if children.is_empty() {
-            return ui_text(Label::data("No input widgets to generate from."));
-        }
-        ui_stack_vertical(children)
-    }
-
-    pub fn render_generation_preview_text(surface: &str, controller_id: &str, text: &str) -> UiNode {
-        build_text_editor_scene(surface, controller_id, TextEditorScene::base(text.to_string(), Some("json".into()), None))
-    }
     //#endregion 🔖️Render
 
     #[cfg(test)]
@@ -939,8 +746,15 @@ pub mod builder_kit {
 
     pub fn build_playbook_list_scene(spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>) -> BlockListScene {
         BlockListScene {
-            steps_json: serde_json::to_string(&spec.steps).unwrap_or_else(|_| "[]".into()),
-            palette_json: serde_json::to_string(palette).unwrap_or_else(|_| "[]".into()),
+            steps: spec.steps.iter().map(|step| ui_wgpu::wgpu::BlockListStep {
+                id: step.id.clone(),title: step.title.clone(),description: step.description.clone(),target: None,
+                blocks: step.blocks.iter().map(|block| ui_wgpu::wgpu::BlockListBlock {
+                    id: block.id.clone(),label: block.label.clone(),kind: block.kind.clone(),description: block.description.clone(),target: None,
+                }).collect(),
+            }).collect(),
+            palette: palette.iter().map(|entry| ui_wgpu::wgpu::BlockListPaletteEntry {
+                block_kind: entry.block_kind.clone(),label: entry.label.clone(),icon_id: entry.icon_id.as_str().to_owned(),
+            }).collect(),
             selected_id: selected_id.map(String::from),
             dragging_id: None,
             domain_id: None,

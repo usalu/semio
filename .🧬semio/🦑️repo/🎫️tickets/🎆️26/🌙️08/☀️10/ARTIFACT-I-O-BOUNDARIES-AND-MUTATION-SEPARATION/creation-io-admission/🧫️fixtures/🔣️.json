@@ -1,0 +1,21 @@
+{
+  "schema": "semio.test.creation-io-admission/v1",
+  "sources": [
+    "🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs",
+    "🌎️hub/🗿️artifact-authority/🌱️creation/🚪️io/🦀️.rs",
+    "🌎️hub/🗿️artifact-authority/🌱️creation/🦀️.rs",
+    "🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+    "🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs",
+    "🌎️hub/📇️directory/🦀️.rs",
+    "🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+    "🌎️hub/📇️directory/🪶️sqlite/🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs",
+    "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs",
+    "🌎️hub/📇️directory/🌐️neo4j/🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs",
+    "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs",
+    "🌎️hub/📇️directory/🐘️postgres/🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs",
+    "🌎️hub/📇️directory/🐘️postgres/🦀️.rs",
+    "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs"
+  ],
+  "operation": "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json",
+  "cancellations": "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🛑️cancel.json"
+}

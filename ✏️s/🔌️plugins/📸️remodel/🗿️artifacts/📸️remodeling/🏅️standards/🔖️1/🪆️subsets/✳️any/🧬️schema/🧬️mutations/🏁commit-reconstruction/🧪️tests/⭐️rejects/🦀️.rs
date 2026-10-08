@@ -92,3 +92,10 @@ async fn committed_json_is_canonical() {
     let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(json_of(&mutation()), original, "commit-reconstruction/rejects-an-2e5568: committed mutation JSON is not canonical");
 }
+
+/// ⚖️ An APPLIED commit over this scenario's base (every result lane cleared) inverts to the negative diff: the inverse rows sum to it and replaying them restores the base.
+#[semio_framework_async_macros::async_test]
+async fn an_applied_commit_inverts_to_the_negative_diff() {
+    let commit = RemodelingMutation::CommitReconstruction(crate::mutations::CommitReconstruction { sparse: None, trajectory: None, mesh: None, geo: None, qc: None, assets: Vec::new() });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&commit, &before()).await;
+}

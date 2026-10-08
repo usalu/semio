@@ -1,0 +1,10 @@
+{
+  "grant": {
+    "copy": 1,
+    "capacity": 7,
+    "release": 4096,
+    "depth": 3
+  },
+  "total": 4107,
+  "maximumCalls": 1
+}

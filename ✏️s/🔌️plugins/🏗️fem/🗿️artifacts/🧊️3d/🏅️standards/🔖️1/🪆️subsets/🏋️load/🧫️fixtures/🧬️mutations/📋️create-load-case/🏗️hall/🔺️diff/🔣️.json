@@ -6,26 +6,29 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [
+    "inserted": [
       {
-        "id": "snow_drift",
-        "name": "Snow Drift",
-        "loads": [
-          {
-            "kind": "memberUdl",
-            "id": "ld_drift_l",
-            "elementId": "raf_l_1",
-            "wx": 0.0,
-            "wy": 0.0,
-            "wz": -8640.0
-          }
-        ],
-        "selfWeight": false
+        "index": 4,
+        "row": {
+          "id": "snow_drift",
+          "name": "Snow Drift",
+          "loads": [
+            {
+              "kind": "memberUdl",
+              "id": "ld_drift_l",
+              "elementId": "raf_l_1",
+              "wx": 0.0,
+              "wy": 0.0,
+              "wz": -8640.0
+            }
+          ],
+          "selfWeight": false
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "combinations": null,
   "analysis": null

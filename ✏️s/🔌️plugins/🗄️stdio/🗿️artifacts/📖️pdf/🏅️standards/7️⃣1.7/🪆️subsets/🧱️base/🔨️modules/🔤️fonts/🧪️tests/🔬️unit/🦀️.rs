@@ -41,7 +41,7 @@ fn standard_fonts_have_afm_widths_and_aliases_fold() {
 #[test]
 fn simple_font_codec_encodes_and_decodes_with_widths() {
     let font = PdfFont::standard("F1", "Helvetica");
-    let codec = FontCodec::new(&font);
+    let codec = FontCodec::new(&font,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();
     assert!(!codec.is_composite());
     let bytes = codec.encode("Aé").unwrap();
     assert_eq!(bytes, vec![0x41, 0xE9]);
@@ -60,7 +60,7 @@ fn differences_override_the_base_encoding() {
     if let PdfFontKind::Type1 { encoding, .. } = &mut font.kind {
         encoding.differences.push(PdfEncodingDifference { code: 0x41, glyph: "bullet".into() });
     }
-    let codec = FontCodec::new(&font);
+    let codec = FontCodec::new(&font,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();
     assert_eq!(codec.decode_text(&[0x41]).as_deref(), Some("•"));
     assert_eq!(codec.encode("•"), Some(vec![0x41]));
 }
@@ -73,7 +73,7 @@ fn composite_font_codec_maps_through_to_unicode_and_cid_widths() {
         to_unicode: Some(PdfToUnicode { byte_width: 2, mappings: vec![PdfToUnicodeMapping::Range { low: 36, high: 37, text: "A".into() }] }),
         extra: Vec::new(),
     };
-    let codec = FontCodec::new(&font);
+    let codec = FontCodec::new(&font,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();
     assert!(codec.is_composite());
     assert_eq!(codec.encode("AB"), Some(vec![0, 36, 0, 37]));
     let glyphs = codec.decode(&[0, 36, 0, 37, 0, 99]);
@@ -87,13 +87,15 @@ fn composite_font_codec_maps_through_to_unicode_and_cid_widths() {
 fn composite_font_without_to_unicode_encodes_through_the_embedded_cmap() {
     let program = truetype::synthesize_truetype(1000, &[('A' as u32, 600, vec![vec![(0, 0), (0, 700), (500, 700)]]), ('B' as u32, 650, Vec::new())]);
     let ttf = TrueTypeFont::parse(&program).unwrap();
+    use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort};
+    let mut resources=NativePdfArtifactResources::default();let reference=resources.admit("s.stdio.font.truetype",crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {dict:Vec::new(),data:program,filters:Vec::new()}).unwrap();
     let font = PdfFont {
         id: "F0".into(),
-        kind: PdfFontKind::Type0 { base_font: "Synth".into(), cmap: PdfCMap::identity_h(), descendant: PdfCidFont { true_type: true, base_font: "Synth".into(), system_info: Default::default(), descriptor: PdfFontDescriptor { font_name: "Synth".into(), ..Default::default() }, default_width: 1000.0, widths: vec![PdfCidWidthRun { start_cid: 1, widths: vec![600.0, 650.0] }], default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: None, program: Some(PdfFontProgram::TrueType { data: program }), extra: Vec::new() } },
+        kind: PdfFontKind::Type0 { base_font: "Synth".into(), cmap: PdfCMap::identity_h(), descendant: PdfCidFont { true_type: true, base_font: "Synth".into(), system_info: Default::default(), descriptor: PdfFontDescriptor { font_name: "Synth".into(), ..Default::default() }, default_width: 1000.0, widths: vec![PdfCidWidthRun { start_cid: 1, widths: vec![600.0, 650.0] }], default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: None, program: Some(PdfFontProgram::TrueType { reference:reference.clone() }), extra: Vec::new() } },
         to_unicode: None,
         extra: Vec::new(),
     };
-    let codec = FontCodec::new(&font);
+    let codec = FontCodec::new(&font,&resources).unwrap();
     assert_eq!(codec.encode("BA"), Some(vec![0, ttf.glyph_for_char('B').unwrap() as u8, 0, 1]));
     assert_eq!(codec.decode_text(&[0, 1]).as_deref(), Some("A"));
     assert_eq!(codec.text_width("AB"), Some(1250.0));

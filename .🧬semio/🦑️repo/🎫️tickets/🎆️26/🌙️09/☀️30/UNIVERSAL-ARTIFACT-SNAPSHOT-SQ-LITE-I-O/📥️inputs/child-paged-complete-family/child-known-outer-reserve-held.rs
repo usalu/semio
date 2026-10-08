@@ -1,0 +1,3 @@
+fn reserve_encoded<T>(owner:&mut PagedList<T,CAPACITY>,known_count:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{
+    while !owner.has_reserved_slot(){let required=owner.next_exact_capacity_allocation_bytes(known_count).map_err(ValueError::from)?.ok_or_else(||invalid("known child prefix lacks its next outer slot"))?;if required>4096{return Err(invalid("child producer outer page exceeds physical grant").into())}control.checkpoint()?;control.charge(required)?;let step=owner.reserve_exact_capacity_one(known_count,required).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(invalid("child producer outer page differs from exact known admission").into())}}Ok(())
+}

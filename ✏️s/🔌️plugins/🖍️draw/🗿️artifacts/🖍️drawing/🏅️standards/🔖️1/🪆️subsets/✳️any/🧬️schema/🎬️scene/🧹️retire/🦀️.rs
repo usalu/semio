@@ -7,7 +7,7 @@ use crate::schema::scene_raster::RasterSceneAsset;
 use std::{sync::Arc,vec::IntoIter};
 enum Owner{
  Plan(DocumentScenePlan),Assets(IntoIter<RasterSceneAsset>),Asset(RasterSceneAsset),Nodes(IntoIter<DocumentSceneNode>),Node(DocumentSceneNode),
- Groups(IntoIter<DrawingSceneGroup>),Group(DrawingSceneGroup),Content(DocumentSceneContent),Strings(IntoIter<String>),String(String),Source(Arc<String>),
+ Groups(IntoIter<DrawingSceneGroup>),Group(DrawingSceneGroup),Content(DocumentSceneContent),Strings(IntoIter<String>),String(String),Source(Arc<semio_framework_pixels::RasterImage>),
  Address(Vec<u16>),Segments(Vec<PathSegment>),Fill(FillStyle),Stroke(StrokeStyle),Stops(PagedList<GradientStop,{usize::MAX}>),Dash(PagedList<f64,{usize::MAX}>),
 }
 #[derive(Clone,Copy,Debug)]
@@ -24,7 +24,7 @@ impl ScenePlanCloseJob{
    Owner::Nodes(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Nodes(entries));self.stack.push(Owner::Node(value));return false;}},
    Owner::Groups(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Groups(entries));self.stack.push(Owner::Group(value));return false;}},
    Owner::Strings(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Strings(entries));self.stack.push(Owner::String(value));return false;}},
-   Owner::Asset(a)=>{self.stack.push(Owner::String(a.id));self.stack.push(Owner::String(a.mime));self.stack.push(Owner::Source(a.data));},
+   Owner::Asset(a)=>{self.stack.push(Owner::String(a.id));self.stack.push(Owner::Source(a.image));},
    Owner::Node(n)=>{self.stack.push(Owner::Address(n.source_path));self.stack.push(Owner::String(n.id));self.stack.push(Owner::String(n.blend_mode));self.stack.push(Owner::Groups(n.groups.into_iter()));self.stack.push(Owner::Content(n.content));},
    Owner::Group(g)=>{self.stack.push(Owner::String(g.id));self.stack.push(Owner::String(g.blend_mode));},
    Owner::Content(c)=>match c{

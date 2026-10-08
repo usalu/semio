@@ -1,12 +1,10 @@
 use super::*;
-use protocol::{command::DiffAlgebra, MutationDiff};
 
 #[test]
-fn stale_semantic_projection_is_not_a_diff_authority() {
+fn a_declared_schema_diff_changes_only_the_schema() {
     let before = demo_snapshot_a();
-    let after = demo_snapshot_b();
-    let diff = PptxDiff::between(&before, &after);
-    assert!(diff.schema.is_none());
-    assert!(diff.opc.is_some() || diff.xml_parts.is_some());
-    assert_eq!(protocol::apply_diff(&diff, &before).unwrap(), after);
+    let diff = PptxDiff { schema: Some("s.stdio.pptx.ecma-376.base.v2".into()), ..Default::default() };
+    let mut expected = before.clone();
+    expected.schema = "s.stdio.pptx.ecma-376.base.v2".into();
+    assert_eq!(protocol::apply_diff(&diff, &before).unwrap(), expected);
 }

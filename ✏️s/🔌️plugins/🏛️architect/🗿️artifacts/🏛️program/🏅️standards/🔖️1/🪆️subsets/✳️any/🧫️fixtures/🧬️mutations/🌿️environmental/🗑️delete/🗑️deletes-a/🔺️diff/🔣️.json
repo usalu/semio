@@ -18,12 +18,15 @@
   "resources": null,
   "storage": null,
   "environmental": {
-    "added": [],
     "removed": [
-      "environmental-requirement-a"
+      {
+        "id": "environmental-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "humanFactors": null,
   "accessibility": null,

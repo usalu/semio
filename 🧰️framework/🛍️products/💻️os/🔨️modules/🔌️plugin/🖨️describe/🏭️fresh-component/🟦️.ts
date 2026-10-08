@@ -6,7 +6,7 @@ import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, op
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import { selectedCargoArguments } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoWorkspacePreparationInvocationV1, selectedCargoArguments } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -35,16 +35,38 @@ export async function freshRun(command: string, args: string[], cwd: string, env
   const evidence = retained ? trace : "ephemeral";
   if (retained) console.log("fresh-component-process: stage=" + stage + " evidence=" + evidence);
   const controller = new AbortController();
-  const observe = () => { if (control.cancelled() || control.remainingMs() <= 0) controller.abort(); };
+  let preparing = false;
+  const observe = () => { if (control.cancelled() || control.remainingMs() <= 0) controller.abort(); else if (preparing) control.checkpoint("prepare-cargo", completed, total); };
   const watch = setInterval(observe, 100);
   let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
   try {
     observe();
-    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(cwd, "agents", "resource-leases"), buildDirectory: cargoDirectories(cwd, env).build, args: selectedArgs, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
-    if (command === "cargo") freshCheckpoint(control, stage, completed, total);
-    const builtAtMs = Date.now();
     const directories = command === "cargo" ? cargoDirectories(cwd, env) : undefined;
     const observedEnv = directories ? { ...env, SEMIO_COMPILER_RESOURCE_ROOT: join(directories.build, "semio-compiler-resources") } : env;
+    const preparation = command === "cargo" ? cargoWorkspacePreparationInvocationV1(cwd, argv, cwd, observedEnv) : undefined;
+    if (preparation) {
+      freshCheckpoint(control, "prepare-cargo", completed, total);
+      const preparationTrace = join(trace, "preparation");
+      mkdirSync(preparationTrace);
+      preparing = true;
+      const result = await captureOwnedProcess(preparation.command, [...preparation.args], {
+        cwd: preparation.cwd,
+        env: preparation.environment,
+        budgetMs: Math.min(budgetMs, control.remainingMs()),
+        maxOutputBytes: 64 * 1024 * 1024,
+        stdoutPath: join(preparationTrace, "stdout.jsonl"),
+        stderrPath: join(preparationTrace, "stderr.txt"),
+        cancelled: () => control.cancelled(),
+      });
+      preparing = false;
+      const reason = result.reason ?? "exit";
+      writeFileSync(join(preparationTrace, "outcome.json"), JSON.stringify({ schema: "semio.plugin.fresh-process/v1", stage: "prepare-cargo", command: preparation.command, args: preparation.args, status: result.status, signal: result.signal, reason }) + "\n", { flag: "wx", mode: 0o600 });
+      if (result.status !== 0 || result.signal !== null || reason !== "exit") throw new Error("fresh component preparation " + reason + " at " + stage + "; evidence=" + evidence + "\n" + (result.stderr || result.stdout).slice(-6000));
+      freshCheckpoint(control, stage, completed, total);
+    }
+    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(cwd, "agents", "resource-leases"), buildDirectory: directories!.build, args: selectedArgs, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
+    if (command === "cargo") freshCheckpoint(control, stage, completed, total);
+    const builtAtMs = Date.now();
     const result = await captureOwnedProcess(command, argv, {
       cwd,
       env: observedEnv,

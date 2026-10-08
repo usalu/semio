@@ -132,6 +132,14 @@
             {
               "id": "removes-the-selected-generation-2-and-falls-back-to-generation-1",
               "directoryName": "🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1"
+            },
+            {
+              "id": "removes-a-middle-generation",
+              "directoryName": "📍️removes-a-middle-row"
+            },
+            {
+              "id": "removes-an-unselected-middle-generation",
+              "directoryName": "🔓️removes-an-unselected-middle-row"
             }
           ]
         },
@@ -143,6 +151,10 @@
             {
               "id": "removes-note-a-and-flags-the-dangling-synapse",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-a-middle-widget",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -154,6 +166,10 @@
             {
               "id": "severs-link-ab-leaving-both-notes",
               "directoryName": "✂️severs"
+            },
+            {
+              "id": "severs-a-middle-synapse",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -211,6 +227,17 @@
               "directoryName": "📷️pans"
             }
           ]
+        },
+        {
+          "mutationId": "select-generation",
+          "sourceMutationDirectoryName": "👆️select-generation",
+          "mutationDirectoryName": "👆️select-generation",
+          "scenarios": [
+            {
+              "id": "selects-generation-2",
+              "directoryName": "👆️picks"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -227,7 +254,8 @@
         "create-generation",
         "delete-generation",
         "rename-generation",
-        "change-generation-value"
+        "change-generation-value",
+        "select-generation"
       ],
       "deferredKinds": [
         "change-slider-value",
@@ -520,6 +548,27 @@
             "operation": "update-camera",
             "bridgeVersion": 1,
             "variant": "UpdateCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "select-generation",
+          "capability": "procedural-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "select-generation",
+            "bridgeVersion": 1,
+            "variant": "SelectGeneration"
           },
           "oracleRequirements": [
             {

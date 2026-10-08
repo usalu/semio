@@ -31,5 +31,39 @@
     1,
     9,
     33
-  ]
+  ],
+  "frameKinds": [
+    "typed",
+    "snapshot"
+  ],
+  "transfers": [
+    {
+      "reservedSlot": false,
+      "items": 1,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "reservedSlot": true,
+      "items": 0,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "reservedSlot": true,
+      "items": 1,
+      "depth": 0,
+      "accepted": false
+    },
+    {
+      "reservedSlot": true,
+      "items": 1,
+      "depth": 1,
+      "accepted": true
+    }
+  ],
+  "snapshotCase": {
+    "text": "original/🐚",
+    "reservedCapacity": 8192
+  }
 }

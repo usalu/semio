@@ -29,9 +29,6 @@ impl protocol::DiffAlgebra<VcsDemoPresence> for VcsDemoPresenceDiff {
     fn inverse(&self, _base: &VcsDemoPresence) -> Self {
         Self {}
     }
-    fn between(_base: &VcsDemoPresence, _other: &VcsDemoPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

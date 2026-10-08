@@ -6,10 +6,10 @@ use crate::diff::ProgramWorkshopsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteWorkshop, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.workshops.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.workshops.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No workshop exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { workshops: Some(ProgramWorkshopsDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { workshops: Some(ProgramWorkshopsDelta::removal(&base.workshops, position)), ..Default::default() })
 }

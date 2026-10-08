@@ -2,7 +2,6 @@
 
 use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use framework_schema::ArtifactSchema;
-use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_plugin::MeshData;
 
 //#region 🔖️Artifact
@@ -79,42 +78,6 @@ pub fn lowpoly_artifact_schema_descriptor() -> semio_framework_schema_registry::
 pub const LOWPOLY_DEFAULT_EXAMPLE_ID: &str = "hexagonal-cut-concrete-forest-left";
 
 pub const LOWPOLY_DEFAULT_EXAMPLE_LABEL: &str = "Hexagonal Cut Concrete Forest Left";
-
-const CONCRETE_FOREST_LEFT_MESH_JSON: &str = include_str!("../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🧊️.mesh.json");
-
-/// 🧺 One caller-owned default document pair. The parent snapshot owns only the exact
-/// `ArtifactChild` handle while the app session owns its matching mesh payload.
-pub struct LowpolyOwnedDefaultDocument {
-    pub snapshot: crate::LowpolySnapshot,
-    pub mesh_workspace: std::collections::HashMap<String, crate::LowpolyMeshState>,
-}
-
-/// 🌲️ Hexagonal Cut Concrete Forest Left — the same CAD-derived mesh fixture puzzle 3d and cad shape use.
-pub fn concrete_forest_left_owned_document() -> LowpolyOwnedDefaultDocument {
-    let mesh=HalfedgeMesh::from_json(CONCRETE_FOREST_LEFT_MESH_JSON).expect("authored default mesh source is valid");
-    let state=crate::LowpolyMeshState::from_mesh(mesh);
-    let mut snapshot=crate::snapshot_from_mesh_json(CONCRETE_FOREST_LEFT_MESH_JSON,"obj-1",LOWPOLY_DEFAULT_EXAMPLE_LABEL);
-    snapshot.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-1",&state));
-    snapshot.objects[0].mesh_state=Some(state.clone());
-    let mesh_workspace=std::collections::HashMap::from([("obj-1".to_string(),state)]);
-    LowpolyOwnedDefaultDocument { snapshot, mesh_workspace }
-}
-
-/// 🧱️ Builds the default play document without UV repacking, so every owner gets a fresh matching
-/// handle/payload pair and no process-global child payload cache is required.
-pub fn default_owned_document() -> LowpolyOwnedDefaultDocument {
-    concrete_forest_left_owned_document()
-}
-
-/// 🎞️ Default document projection used by tests and the play app.
-pub fn default_snapshot() -> crate::LowpolySnapshot {
-    default_owned_document().snapshot
-}
-
-/// 🕸️ Fresh app-owned companion payload for `default_snapshot()`'s exact child handle.
-pub fn default_mesh_workspace() -> std::collections::HashMap<String, crate::LowpolyMeshState> {
-    default_owned_document().mesh_workspace
-}
 
 /// 🔧️ Shared by the app's compute session and the `edit-paint-layer`/`insert-paint-layer` mutation
 /// leaves — a mutable lookup of an object by id within a projection. Relocated from `⚙️engine`.

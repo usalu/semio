@@ -9,7 +9,7 @@ window_config! {
     extension: "bimsectionwindowcfg",
     owner_path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️section/🎚️config",
     display: "Set BIM Section Window Configuration",
-    type BimSectionWindowConfig, BimSectionWindowConfigMutation, BimSectionWindowConfigOwner;
+    type BimSectionWindowConfig, BimSectionWindowConfigDiff, BimSectionWindowConfigMutation, BimSectionWindowConfigOwner;
     start_x: f64 = 0.0;
     start_y: f64 = 0.0;
     end_x: f64 = 10.0;

@@ -11,7 +11,7 @@
 
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
-use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, load_document_json, set_snapshot, set_snapshot_json, set_text, text_edit, text_splice};
+use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, load_document_json, set_text, text_edit, text_splice};
 use crate::editor::writer::commands::{engagement_input, engagement_submit};
 use crate::editor::writer::commands::{lint_document, request_completions};
 use crate::editor::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
@@ -202,7 +202,7 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
 /// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
 /// the sanctioned non-mutation path for a whole-document replace (open file, load example, dev JSON
 /// setters). Per the SMO-agreed mutation taxonomy, whole-document replace has NO mutation-enum
-/// representative (`SetSnapshot` is banned outright); every former "replace the whole document"
+/// representative; every former "replace the whole document"
 /// gesture builds this effect instead of an `Emit::mutations([...])` — mirrors `📐️cad`'s identical
 /// `reset_document_effect` (`📓️wave3-reports/cad-report.md`). The spr is a fresh, edit-free op-log
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
@@ -254,10 +254,8 @@ semio_framework_plugin::app_commands! {
     pub enum WriterCommand for WriterSnapshot, WriterMutation, NoConfig, NoConfigMutation {
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "setText" as "set-text" => set_text::SetText,
-        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "openDocument" as "open-document" => open_document::OpenDocument,
-        "setSnapshotJson" as "document-json" => set_snapshot_json::SetSnapshotJson,
-        "loadDocumentJson" as "document-json" => load_document_json::LoadDocumentJson,
+        "loadDocumentJson" as "load-document-json" => load_document_json::LoadDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "formatDocument" as "format-document" => format_document::FormatDocument,
         "commitRename" as "commit-rename" => commit_rename::CommitRename,
@@ -337,9 +335,7 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "textEdit",
     "setText",
     "setActiveExample",
-    "setSnapshot",
     "openDocument",
-    "setSnapshotJson",
     "loadDocumentJson",
     "formatDocument",
     "commitRename",
@@ -423,9 +419,7 @@ impl WriterCommandToolJob {
         if matches!(command, WriterCommand::SetActiveExample(payload) if payload.example_id.len() > MAX_WRITER_EXAMPLE_ID_BYTES) {
             return false;
         }
-        if matches!(command, WriterCommand::SetSnapshot(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
-            || matches!(command, WriterCommand::SetSnapshotJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
-            || matches!(command, WriterCommand::LoadDocumentJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+        if matches!(command, WriterCommand::LoadDocumentJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
         {
             return false;
         }
@@ -519,17 +513,7 @@ impl WriterCommandToolJob {
             WriterCommand::SetActiveExample(payload) => {
                 emit.effects.push(reset_document_effect_now(&set_active_example::document_for_example_id(&payload.example_id)));
             }
-            WriterCommand::SetSnapshot(payload) => {
-                if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-                    emit.effects.push(reset_document_effect_now(&document));
-                }
-            }
             WriterCommand::OpenDocument(payload) => emit = open_document::emit(&payload),
-            WriterCommand::SetSnapshotJson(payload) => {
-                if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-                    emit.effects.push(reset_document_effect_now(&document));
-                }
-            }
             WriterCommand::LoadDocumentJson(payload) => {
                 if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     emit.effects.push(reset_document_effect_now(&document));
@@ -892,9 +876,7 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setText", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textSplice", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitRename", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -952,7 +934,7 @@ fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> R
     }
     let inverse = crate::schema::mutations::inverse_writer_mutation(base, &mutation).map_err(semio_framework_value::ValueError::into_message)?;
     let mut post = base.clone();
-    crate::schema::mutations::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
+    crate::central_apply::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
     Ok((post, inverse, mutation))
 }
 
@@ -1171,9 +1153,7 @@ impl ArtifactEditor for WriterPlayApp {
             "textEdit",
             "setText",
             "setActiveExample",
-            "setSnapshot",
             "openDocument",
-            "setSnapshotJson",
             "loadDocumentJson",
             "formatDocument",
             "commitRename",
@@ -1218,13 +1198,6 @@ impl ArtifactEditor for WriterPlayApp {
         Some(writer_io())
     }
 
-    // 🌱️ No `whole_document_operation` override: per the SMO-agreed mutation taxonomy
-    // (`📌️important.md`'s "Forbidden vocabulary"), whole-document replace has NO mutation-enum
-    // representative — `SetSnapshot` is banned outright — so this falls back to the trait's own
-    // default (`None`), matching `📐️cad`/`💠️lowpoly`'s identical ruling. Every former "replace the
-    // whole document" gesture (`setSnapshot`/`openDocument`/JSON setters/`setActiveExample`) now
-    // builds `reset_document_effect` (a `Effect::LoadDocument`, outside undo history) instead.
-
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
     fn command_id(command: &WriterCommand) -> &'static str {
@@ -1243,9 +1216,7 @@ impl ArtifactEditor for WriterPlayApp {
         match action {
             "textEdit" => Ok(WriterCommand::TextEdit(text_edit::TextEdit { text: text_arg(&["text", "value"]).unwrap_or_default() })),
             "setText" => Ok(WriterCommand::SetText(set_text::SetText { text: text_arg(&["text", "value"]).unwrap_or_default() })),
-            "setSnapshot" => Ok(WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: text_arg(&["json", "value"]).unwrap_or_default() })),
             "openDocument" => Ok(WriterCommand::OpenDocument(open_document::OpenDocument { uri: text_arg(&["uri"]).unwrap_or_default(), text: text_arg(&["text"]).unwrap_or_default() })),
-            "setSnapshotJson" => Ok(WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
             "loadDocumentJson" => Ok(WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
             "setActiveExample" => Ok(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| "jack".into()) })),
             "formatDocument" => Ok(WriterCommand::FormatDocument(format_document::FormatDocument {})),
@@ -1482,11 +1453,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen"), "sparkles").with_category("transform"))
             .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), "sparkles"))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_with(writer_hidden_operation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), "sparkles"))
-            .action_destructive("setSnapshot")
             .action_with(writer_hidden_operation("openDocument", LocalizedLabel::native("Open Document", "Dokument öffnen"), "folder-open"))
-            .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen"), "sparkles"))
-            .action_destructive("setSnapshotJson")
             .action_with(writer_hidden_operation("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), "sparkles"))
             .action_destructive("loadDocumentJson")
             // 🙈️ Internal View measures — editor caret/range, completions, editor settings. AST
@@ -1516,9 +1483,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setEditorSetting", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("openDocument", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSnapshotJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadDocumentJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("commitRename", InteractiveJobClassification::Migrated)
@@ -1531,7 +1496,6 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
                 ]).default_value(&"jack"),
             ])
             .action_args("setText", vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])
-            .action_args("setSnapshotJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
             .action_args("loadDocumentJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -1565,9 +1529,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document with a bundled example (the Jack demo or the DAG Jack example), or with an empty document for any other id.", "Ersetzt das gesamte Dokument durch ein mitgeliefertes Beispiel (die Jack-Demo oder das DAG-Jack-Beispiel), bei jeder anderen Id durch ein leeres Dokument."))
             .action_describe("setText", LocalizedLabel::native("Replaces the document's entire text with the given text; the previous text is gone unless the edit is undone.", "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."))
             .action_describe("commitRename", LocalizedLabel::native("With the caret on a Jack variable, renames every occurrence of it to the given text; otherwise replaces the editor's selected range with that text.", "Steht die Einfügemarke auf einer Jack-Variablen, werden alle ihre Vorkommen in den angegebenen Text umbenannt; sonst ersetzt der Text den ausgewählten Bereich des Editors."))
-            .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.", "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."))
             .action_describe("openDocument", LocalizedLabel::native("Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.", "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."))
-            .action_describe("setSnapshotJson", LocalizedLabel::native("Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.", "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."))
             .action_describe("loadDocumentJson", LocalizedLabel::native("Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.", "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."))
             .action_audience("textEdit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("textSplice", semio_framework_plugin::CapabilityAudience::Input)

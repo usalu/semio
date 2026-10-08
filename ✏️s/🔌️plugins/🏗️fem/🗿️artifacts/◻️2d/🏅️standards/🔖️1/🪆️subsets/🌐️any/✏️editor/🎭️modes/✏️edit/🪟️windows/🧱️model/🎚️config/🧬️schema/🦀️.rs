@@ -50,9 +50,6 @@ impl protocol::DiffAlgebra<Fem2dModelWindowConfig> for Fem2dModelWindowConfigPat
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
     }
-    fn between(base: &Fem2dModelWindowConfig, other: &Fem2dModelWindowConfig) -> Self {
-        Self::replacing(other).against(base)
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none()
     }

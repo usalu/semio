@@ -9,7 +9,7 @@ type SemioImageFrameJson { delayMs: Int! rgba8: String! }
 type SemioImageFramesDiff {
   removed: [Int!]!
   modified: [IndexModifiedFrame!]!
-  added: [IndexAddedFrame!]!
+  added: [IndexAddedFrameAdded!]!
 }
 
 type NamedModifiedMetadata { key: String! diff: String! }
@@ -17,7 +17,7 @@ type SemioImageMetadataEntryJson { key: String! value: String! }
 type SemioImageMetadataDiff {
   removed: [String!]!
   modified: [NamedModifiedMetadata!]!
-  added: [SemioImageMetadataEntryJson!]!
+  added: [SemioImageMetadataEntryJsonAdded!]!
 }
 
 type SemioImageDiff {
@@ -29,3 +29,6 @@ type SemioImageDiff {
   frames: SemioImageFramesDiff
   metadata: SemioImageMetadataDiff
 }
+
+type IndexAddedFrameAdded { index: Int! item: IndexAddedFrame! }
+type SemioImageMetadataEntryJsonAdded { index: Int! item: SemioImageMetadataEntryJson! }

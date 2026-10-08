@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-dependencies/schema.json",
+  "title": "SetDependencies",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "dependencies"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setDependencies",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Dependencies",
+          "de": "Abhängigkeiten"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

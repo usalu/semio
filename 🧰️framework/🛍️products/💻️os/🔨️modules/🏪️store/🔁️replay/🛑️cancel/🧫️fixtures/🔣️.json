@@ -1,0 +1,16 @@
+{
+  "originals": ["snapshot", "inverse", "drafts", "messages", "factories"],
+  "cancellation": { "copiedBytes": 0, "capacityBytes": 0, "releasedBytes": 0, "retained": 5 },
+  "finish": [
+    { "ready": false, "cancelled": false, "accepted": false, "originalsRetained": 5 },
+    { "ready": true, "cancelled": true, "accepted": false, "originalsRetained": 5 },
+    { "ready": true, "cancelled": false, "accepted": true, "originalsRetained": 5 }
+  ],
+  "terminalReplacement": { "capacityBytes": 0, "releasedBytes": 0 },
+  "release": [
+    { "items": 0, "depth": 2, "grant": 65536, "demand": 65536, "released": 0 },
+    { "items": 1, "depth": 0, "grant": 65536, "demand": 65536, "released": 0 },
+    { "items": 1, "depth": 2, "grant": 65535, "demand": 65536, "released": 0 },
+    { "items": 1, "depth": 2, "grant": 65536, "demand": 65536, "released": 65536 }
+  ]
+}

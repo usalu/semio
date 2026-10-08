@@ -1,0 +1,109 @@
+{
+  "id3v1": {
+    "title": "Café",
+    "artist": "Semio",
+    "album": "Album",
+    "year": "2026",
+    "comment": "Comment",
+    "track": 7,
+    "genre": 13
+  },
+  "id3v2": {
+    "frames": [
+      {
+        "id": "TIT2",
+        "content": {
+          "kind": "text",
+          "values": [
+            "Café"
+          ]
+        }
+      },
+      {
+        "id": "TXXX",
+        "content": {
+          "kind": "userText",
+          "description": "source",
+          "values": [
+            "Semio",
+            "世界"
+          ]
+        }
+      },
+      {
+        "id": "COMM",
+        "content": {
+          "kind": "comment",
+          "language": "deu",
+          "description": "note",
+          "text": "Grüße"
+        }
+      },
+      {
+        "id": "USLT",
+        "content": {
+          "kind": "lyrics",
+          "language": "eng",
+          "description": "",
+          "text": "Line one\nLine two"
+        }
+      },
+      {
+        "id": "WXXX",
+        "content": {
+          "kind": "userUrl",
+          "description": "Home",
+          "url": "https://semio.tech"
+        }
+      },
+      {
+        "id": "XABC",
+        "content": {
+          "kind": "opaque",
+          "bytes": [
+            0,
+            255,
+            3
+          ]
+        }
+      },
+      {
+        "id": "WOAR",
+        "content": {
+          "kind": "url",
+          "url": "https://semio.tech"
+        }
+      },
+      {
+        "id": "APIC",
+        "content": {
+          "kind": "picture",
+          "mime": "image/png",
+          "pictureType": 3,
+          "description": "cover",
+          "payload": [
+            137,
+            80,
+            78,
+            71
+          ]
+        }
+      }
+    ]
+  },
+  "nativeTextEncodings": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "nativeVersions": [
+    3,
+    4
+  ],
+  "id3v1Padding": [
+    0,
+    32
+  ],
+  "mutationTitle": "Edited"
+}

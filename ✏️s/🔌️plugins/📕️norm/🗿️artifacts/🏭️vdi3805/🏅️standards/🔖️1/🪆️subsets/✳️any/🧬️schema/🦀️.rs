@@ -61,10 +61,6 @@ impl Vdi3805Artifact {
             limits: snapshot.limits,
         }
     }
-    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: Vdi3805Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 
 //#endregion 🔖️Conversions

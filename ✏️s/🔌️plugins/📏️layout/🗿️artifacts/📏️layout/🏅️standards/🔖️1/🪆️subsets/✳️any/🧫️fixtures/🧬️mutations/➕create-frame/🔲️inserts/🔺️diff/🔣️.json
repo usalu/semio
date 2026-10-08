@@ -9,9 +9,10 @@
   "parentPages": null,
   "spreads": null,
   "pages": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "page-1",
         "patch": {
@@ -24,45 +25,53 @@
           "margin_left": null,
           "columns_count": null,
           "columns_gutter": null,
-          "frame_added": {
-            "frame": {
-              "kind": "rect",
-              "id": "frame-badge",
-              "layerId": "layer-1",
-              "bounds": {
-                "x": 120.0,
-                "y": 30.0,
-                "w": 40.0,
-                "h": 40.0,
-                "rotation": 0.0
-              },
-              "locked": null,
-              "visible": null,
-              "fill": [
-                0.0,
-                0.5,
-                1.0,
-                1.0
-              ],
-              "stroke": null
-            },
-            "index": 1,
-            "layer_id": "layer-1"
-          },
-          "frame_removed": null,
-          "frames_patched": [],
-          "frame_layer": null,
-          "frame_order": null,
+          "parent_page_id": null,
           "guides": null,
-          "layer_added": null,
-          "layer_patched": null,
-          "layer_removed": null,
-          "overrides": null,
-          "parent_page_id": null
+          "overrides": {
+            "removed": [],
+            "inserted": [],
+            "moved": []
+          },
+          "frames": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 1,
+                "row": {
+                  "kind": "rect",
+                  "id": "frame-badge",
+                  "layerId": "layer-1",
+                  "bounds": {
+                    "x": 120.0,
+                    "y": 30.0,
+                    "w": 40.0,
+                    "h": 40.0,
+                    "rotation": 0.0
+                  },
+                  "locked": null,
+                  "visible": null,
+                  "fill": [
+                    0.0,
+                    0.5,
+                    1.0,
+                    1.0
+                  ],
+                  "stroke": null
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          },
+          "layers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "printTarget": null,
   "backgroundDrawing": null,

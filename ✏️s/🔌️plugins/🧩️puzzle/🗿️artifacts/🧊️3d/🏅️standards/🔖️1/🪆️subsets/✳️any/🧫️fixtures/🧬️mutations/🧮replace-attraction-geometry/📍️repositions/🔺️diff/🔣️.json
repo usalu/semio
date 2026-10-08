@@ -1,8 +1,8 @@
 {
   "artifact": null,
   "attractions": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "attraction-1",
         "patch": {
@@ -14,8 +14,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "domain": null,
   "meta": null,

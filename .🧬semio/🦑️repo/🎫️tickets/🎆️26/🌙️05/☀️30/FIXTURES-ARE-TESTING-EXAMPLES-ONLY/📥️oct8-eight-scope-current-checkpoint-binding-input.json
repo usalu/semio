@@ -1,0 +1,140 @@
+{
+  "role": "Physical policy/schema expected binding input; not current catalog proof or compiler evidence",
+  "observedAt": "2026-10-08T16:58:09.380365+00:00",
+  "bindings": [
+    {
+      "scopeId": "hub.bootstrap",
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🧬️schema",
+      "physicalSha256": "33c6f93b3db0d917c0c5c4453ce9cc86c43ce50ca87752f3b5c288906037b557",
+      "expectedExports": [
+        "ActorProducerV1",
+        "ByteClaimV1",
+        "GenerationProducerV1",
+        "ObservationClaimV1",
+        "PackageProducerV1",
+        "PhysicalInputV1",
+        "PublicationProducerV1"
+      ]
+    },
+    {
+      "scopeId": "repo.discovery.runtime",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema",
+      "physicalSha256": "3690533367c57d80211db7b8541a7b48a15911313b7180d64a92fda34a166806",
+      "expectedExports": [
+        "RuntimeActorCargoSelectionV1",
+        "RuntimeBrowserArtifactV1",
+        "RuntimeBuildResourceObservationV1",
+        "RuntimeCargoBuildResourceSnapshotV1",
+        "RuntimeCargoBuildResourcesV1",
+        "RuntimeCargoBuildScriptV1",
+        "RuntimeCargoDepInfoV1",
+        "RuntimeCargoInputDigestV1",
+        "RuntimeCargoInvocationInputV1",
+        "RuntimeCompilerChecksumV1",
+        "RuntimeCompilerResourceDirectoryV1",
+        "RuntimeCompilerResourceEntryV1",
+        "RuntimeCompilerResourceObservationV1",
+        "RuntimeCompilerResourceOperationV1",
+        "RuntimeCompilerResourceReadV1",
+        "RuntimeDynamicImportOwnerV1",
+        "RuntimeGraphEdgeV1",
+        "RuntimeGraphEvidenceV1",
+        "RuntimeGraphFindingV1",
+        "RuntimeResourceReadInputV1",
+        "RuntimeResourceReadOwnerV1",
+        "RuntimeTrunkCompilationV1",
+        "RuntimeTrunkObservationV1"
+      ]
+    },
+    {
+      "scopeId": "os.plugin.browser-bundle",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema",
+      "physicalSha256": "c32c7b89824f61ad80940311cc1c37be25ee3c7e5127dc9a01af4e2aa26d5aa0",
+      "expectedExports": [
+        "BrowserActorLifecycleState",
+        "BrowserActorName",
+        "BrowserActorPhysicalClaimV1",
+        "BrowserActorPhysicalInputV1",
+        "BrowserActorProducerInputsV1",
+        "BrowserArtifactDistributionV1",
+        "BrowserByte",
+        "BrowserContractId",
+        "BrowserFault",
+        "BrowserFaultCode",
+        "BrowserLifecyclePhase",
+        "BrowserLogicalPath",
+        "BrowserPackBytes",
+        "BrowserSha256",
+        "BrowserSourceDigest",
+        "BrowserStreamOutcome",
+        "CodegenDigest",
+        "CodegenManifestV1",
+        "CodegenPolicyV1",
+        "GuestLogLine",
+        "GuestMaintenanceDiagnostic",
+        "WitFunctionId",
+        "WitInterfaceId"
+      ]
+    },
+    {
+      "scopeId": "os.dev.distribution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🧬️schema",
+      "physicalSha256": "3ec59278818573a28e996993870ea63c65d78bf9be6e70c8cbd950a493646b40",
+      "expectedExports": [
+        "DistributionDigest",
+        "DistributionLayout",
+        "DistributionLayoutAsset",
+        "DistributionLayoutChunk",
+        "DistributionManifest",
+        "DistributionManifestInput",
+        "DistributionManifestOutput",
+        "DistributionPathList",
+        "DistributionSourceCoordinate",
+        "DistributionStaticInputs"
+      ]
+    },
+    {
+      "scopeId": "os.dev.verification.publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧬️schema",
+      "physicalSha256": "efd12568470ab21f04ff4550066578a651eb5f8b7284041290c61dd2ef901573",
+      "expectedExports": [
+        "ByteClaimV1",
+        "ChildExecutionV1",
+        "NormalDevHubOwnerV1",
+        "OriginalPhysicalClaimV1",
+        "ProtectedActorExecutionV1",
+        "ProtectedResponseV1"
+      ]
+    },
+    {
+      "scopeId": "repo.library.workspaces.cargo.preparation.custody",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema",
+      "physicalSha256": "6ed52b410e06b30849578a7d6dd110df5285c4f7cbc7bf9d95aa3aa9458a6574",
+      "expectedExports": [
+        "CargoPreparationInputV1",
+        "CargoPreparationInvocationV1",
+        "CargoPreparationObservationV1",
+        "CargoPreparationResolutionV1",
+        "CargoPreparationSelectionV1"
+      ]
+    },
+    {
+      "scopeId": "s.dev.entry",
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧬️schema",
+      "physicalSha256": "21d8e85278338ce67994bfc7b7c4f9e6d136f3af02e67705d855134c848d975b",
+      "expectedExports": [
+        "SDevBrowserInventoryV1"
+      ]
+    },
+    {
+      "scopeId": "os.plugin.registry.descriptor-verification",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema",
+      "physicalSha256": "e25829a763f79829b00b51ded56c0892494c02a8f39391d5c943346fbdb842fe",
+      "expectedExports": [
+        "PackageDescriptorV1",
+        "RegistryPackageId",
+        "RegistryPluginId"
+      ]
+    }
+  ]
+}

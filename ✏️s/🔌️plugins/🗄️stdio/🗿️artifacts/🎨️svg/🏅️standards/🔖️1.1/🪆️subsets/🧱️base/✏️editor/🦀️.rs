@@ -1,11 +1,11 @@
 //! ✏️ `svg` editor (any) — `ArtifactEditor` surface built on the frozen
 //! `ImageWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! SVG has no pixel buffer: `set-pixel-region` parses the vector DSL and emits direct prolog, attribute, and child mutations rather than editing pixels.
+//! SVG has no pixel buffer: `set-pixel-region` parses the vector DSL and replaces the content of the drawing's root element by the one it describes, as the concrete element and attribute kinds of that gesture (undoable row by row), rather than editing pixels.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::svg_any::modes::edit;
 use crate::editor::svg_any::modes::edit::windows::main;
-use crate::standards::v1_1::subsets::base::schema::mutations::net_mutations;
+use crate::standards::v1_1::subsets::base::schema::mutations::edit_rules;
 
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
@@ -149,6 +149,11 @@ impl ArtifactEditor for SvgAnyEditor {
     const DIALECT: Dialect = SVG_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
         Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.svg@1.1", extension: ".svg", media_type: "image/svg+xml", binary: false })
     }
@@ -213,7 +218,7 @@ impl ArtifactEditor for SvgAnyEditor {
             }),
             SvgAnyEditCommand::SetPixelRegion { source } => {
                 let Ok(snapshot) = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) else { return Ok(Emit::default()) };
-                Ok(net_mutations(doc.snapshot, &snapshot).map_or_else(Emit::default, Emit::mutations))
+                edit_rules::region(doc.snapshot, &snapshot).map(Emit::mutations).map_err(Fault::from)
             }
         }
     }
@@ -233,10 +238,11 @@ impl editing::SnapshotEditingEditor for SvgAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { SvgAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
-        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("svg: the edit changes prolog or epilog nodes or the root element's kind, which no mutation leaf addresses"))?;
-        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

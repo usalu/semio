@@ -117,12 +117,26 @@
           "type": "array",
           "items": {
             "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
             "properties": {
-              "key": {
-                "type": "string"
+              "index": {
+                "type": "integer",
+                "minimum": 0
               },
-              "value": {
-                "type": "string"
+              "item": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }

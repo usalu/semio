@@ -107,6 +107,7 @@ impl protocol::OpBinary for MdMutation {
             MdMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
             MdMutation::ReplaceBlock(_) => TAG_REPLACE_BLOCK,
             MdMutation::SetInlines(_) => TAG_SET_INLINES,
+            MdMutation::SpliceSource(_) => TAG_SPLICE_SOURCE,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -128,6 +129,14 @@ impl protocol::OpBinary for MdMutation {
                 enc_path_bin(path, &mut out);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_inline_list_bin(inlines, &mut out);
+            }
+            MdMutation::SpliceSource(splice_source::SpliceSource { splices }) => {
+                store::pack_rt::write_varint_u64(&mut out, splices.len() as u64);
+                for splice in splices {
+                    store::pack_rt::write_varint_u64(&mut out, u64::from(splice.offset));
+                    store::pack_rt::write_varint_u64(&mut out, u64::from(splice.delete));
+                    write_str_bin(&mut out, &splice.insert);
+                }
             }
         }
         Ok(out)
@@ -162,6 +171,17 @@ impl protocol::OpBinary for MdMutation {
                 let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", reader.position(), e))?;
                 Ok(MdMutation::SetInlines(set_inlines::SetInlines { path, index, inlines }))
             }
+            TAG_SPLICE_SOURCE => {
+                let count = reader.read_varint_u64().map_err(|e| malformed("op splice count", reader.position(), e.to_string()))?;
+                let mut splices = Vec::new();
+                for _ in 0..count {
+                    let mut number = |what: &'static str| -> Result<u32, protocol::ProtocolError> { u32::try_from(reader.read_varint_u64().map_err(|e| malformed(what, 0, e.to_string()))?).map_err(|e| malformed(what, 0, e.to_string())) };
+                    let (offset, delete) = (number("op splice offset")?, number("op splice delete")?);
+                    let insert = read_str_bin(&mut reader).map_err(|e| malformed("op splice insert", reader.position(), e))?;
+                    splices.push(splice_source::SourceSplice { offset, delete, insert });
+                }
+                Ok(MdMutation::SpliceSource(splice_source::SpliceSource { splices }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }
@@ -176,4 +196,5 @@ const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_REPLACE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-block");
 const TAG_SET_INLINES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-inlines");
+const TAG_SPLICE_SOURCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "splice-source");
 //#endregion 🏷️WireTags

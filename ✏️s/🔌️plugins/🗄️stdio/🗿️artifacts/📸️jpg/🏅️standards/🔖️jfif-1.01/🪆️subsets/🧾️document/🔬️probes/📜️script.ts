@@ -100,15 +100,7 @@ type ProbeResult = { status: "ok" | "failed" | "unsupported"; measurements: Reco
 const MARKER_ENGINE = { family: "pillow", implementation: "Pillow 11.3.0 JPEG marker reader (quantization tables, JFIF APP0)", version: "11.3.0" } as const;
 const MARKER_PROBE_VERSION = "pillow@11.3.0";
 
-/** 🐍️ Pillow reads back the MARKER-level facts `image`-rs does not surface. `image` decodes a JPEG to
- *  pixels — quantisation tables and the JFIF APP0 segment are consumed and discarded on the way, which
- *  is why those kinds were `-uncarried` against it. Pillow keeps both: `im.quantization` and
- *  `im.info['jfif_*']`.
- *
- *  Measured before registering: `replace-quant-table` and `change-jfif-header` each move this
- *  projection. `change-restart-interval` does NOT (Pillow does not read the DRI segment back) and the
- *  Huffman accessors return empty and are deprecated for removal in Pillow 12 — so those kinds stay
- *  `-uncarried` rather than being claimed. */
+/** 🐍️ Independently reads JFIF metadata and native quantization observations. */
 const MARKER_READER = String.raw`
 import io, json, sys
 from PIL import Image
@@ -137,52 +129,7 @@ function markerRun(paths: readonly string[]): Record<string, unknown> {
   return JSON.parse(result.stdout) as Record<string, unknown>;
 }
 
-const LIBJPEG_ENGINE = { family: "libjpeg-turbo", implementation: "djpeg -v -v marker dump (libjpeg-turbo 3.2.0)", version: "3.2.0" } as const;
-const LIBJPEG_PROBE_VERSION = "libjpeg-turbo@3.2.0";
-
-/** 🏷️ The MARKER STRUCTURE, as libjpeg's own decoder reports it.
- *
- *  Neither of this subset's other readers can reach it. `image`-rs decodes to pixels. Pillow's DRI
- *  handler is literally `Skip` and its Huffman accessors return empty and are deprecated for removal in
- *  Pillow 12. `zune-jpeg` parses the DRI marker but keeps `restart_interval` `pub(crate)`.
- *
- *  `djpeg -v -v` prints every marker it walks — quantisation tables with their values, Huffman tables
- *  with their code-length counts, the Start-of-Frame, and `Define Restart Interval N`. That is a
- *  THIRD-PARTY CLI, which Protocol v2 lists as a qualifying oracle kind alongside third-party-library.
- *
- *  The banner lines are dropped: they carry the tool's build date, which would make the projection
- *  differ between machines for reasons that have nothing to do with the fixture. */
-const LIBJPEG_BANNER = /^(libjpeg-turbo version|Copyright|Emulating)/;
-
-function libjpegProjection(absPath: string): Record<string, unknown> {
-  const result = spawnSync("djpeg", ["-v", "-v", "-outfile", "/dev/null", absPath], { encoding: "utf8" });
-  // 🧭️djpeg writes its marker dump to STDERR and the decoded image to the outfile; a non-zero status
-  // means it refused the file, which is a real answer and not a probe failure to swallow.
-  if (result.status !== 0) throw new Error(`djpeg refused ${absPath}: ${result.stderr}`);
-  const lines = String(result.stderr).split("\n").map((line) => line.trimEnd()).filter((line) => line.length > 0 && !LIBJPEG_BANNER.test(line));
-  const markers = lines.filter((line) => !line.startsWith(" "));
-  const restart = lines.find((line) => line.startsWith("Define Restart Interval"));
-  return {
-    markerDump: lines,
-    markers,
-    huffmanTables: markers.filter((line) => line.startsWith("Define Huffman Table")).length,
-    quantTables: markers.filter((line) => line.startsWith("Define Quantization Table")).length,
-    restartInterval: restart ? Number(restart.replace(/\D+/g, "")) : null,
-  };
-}
-
 const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>> = {
-  "jpg-libjpeg-project": async (inputs) => {
-    requireInputs(inputs, 1, "jpg-libjpeg-project");
-    return { status: "ok", engine: LIBJPEG_ENGINE, probeVersion: LIBJPEG_PROBE_VERSION, measurements: libjpegProjection(inputs[0]!) } as never;
-  },
-  "jpg-libjpeg-compare": async (inputs) => {
-    requireInputs(inputs, 2, "jpg-libjpeg-compare");
-    const expected = libjpegProjection(inputs[0]!);
-    const actual = libjpegProjection(inputs[1]!);
-    return { status: "ok", engine: LIBJPEG_ENGINE, probeVersion: LIBJPEG_PROBE_VERSION, measurements: { equal: JSON.stringify(expected) === JSON.stringify(actual), expected, actual } } as never;
-  },
-
   "jpg-marker-project": async (inputs) => {
     requireInputs(inputs, 1, "jpg-marker-project");
     return { status: "ok", engine: MARKER_ENGINE, probeVersion: MARKER_PROBE_VERSION, measurements: markerRun([inputs[0]!]) } as never;

@@ -13,8 +13,8 @@ pub fn diff(payload: &super::MoveNode, base: &EquationSnapshot) -> protocol::Mut
     if existing.x == payload.x && existing.y == payload.y {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" is already at ({}, {}).", payload.id, payload.x, payload.y));
     }
-    let patch = EquationNodePatch { id: payload.id.clone(), x: Some(payload.x), y: Some(payload.y), ..Default::default() };
-    let diff = EquationDiff { nodes: Some(EquationNodesDelta { patched: vec![patch], ..Default::default() }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base))
+    let patch = EquationNodePatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() };
+    let diff = EquationDiff { nodes: Some(EquationNodesDelta::modification(payload.id.clone(), patch)), ..Default::default() };
+    protocol::MutationOutcome::new(diff)
 }
 //#endregion 🔖️Diff

@@ -73,8 +73,8 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
 //#region 🔖️StepMutations
 /// 🌱 Ticket `26/09/01/PROCESS-END-TO-END`: `step_payloads` is the durable, inline timeline
 /// record (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4) — the composed `steps`/
-/// `tool_solids` children carry composition identity only, re-minted from it via
-/// `process3d_step_timeline_diff`. These seven verbs are real mutations against it, mirroring
+/// `tool_solids` children carry composition identity only, re-derived from it by
+/// `Process3dDiff::apply`. These seven verbs are real mutations against it, mirroring
 /// the id-keyed `machine` tests below one-for-one.
 fn base_with_steps(steps: Vec<ProcessStep>) -> Process3dSnapshot {
     process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps }, Workshop::default())

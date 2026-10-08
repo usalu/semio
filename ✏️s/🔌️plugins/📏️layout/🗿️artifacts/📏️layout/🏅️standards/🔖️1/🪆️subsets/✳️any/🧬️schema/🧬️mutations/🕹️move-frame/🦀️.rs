@@ -1,8 +1,8 @@
 //! 🕹️ `move-frame` — absolute spatial reposition of a frame's `bounds.x`/`bounds.y`.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -52,9 +52,9 @@ pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { x: Some(payload.new_x), y: Some(payload.new_y), ..Default::default() } }], ..Default::default() },
+                patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { x: Some(payload.new_x), y: Some(payload.new_y), ..Default::default() }), ..Default::default() },
             }],
             ..Default::default()
         }),

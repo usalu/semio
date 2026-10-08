@@ -27,6 +27,15 @@ async fn editor_registers_every_natural_audio_action_as_retained_work() {
     }
 }
 
+fn published(event: &editing::SnapshotEditEvent, base: &WavSnapshot) -> WavSnapshot {
+    let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, base).expect("the edit resolves to a kind");
+    let mut next = base.clone();
+    emit.artifact_mutations.iter().for_each(|mutation| {
+        crate::apply_mutation(&mut next, mutation);
+    });
+    next
+}
+
 #[semio_framework_async_macros::async_test]
 async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
     register_document_schema();
@@ -34,7 +43,7 @@ async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
     let snapshot = WavSnapshot { data: WavData::Raw(samples.clone()), ..WavSnapshot::default() };
     let event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(48_000)) };
     assert!(<WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
-    let next = wavEditor_snapshot_edit(&event, &snapshot).expect("metadata edit");
+    let next = published(&event, &snapshot);
     assert_eq!(next.fmt.sample_rate, 48_000);
     assert_eq!(next.data, WavData::Raw(samples));
 }
@@ -48,7 +57,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
     snapshot.fmt.block_align = 1;
     snapshot.data = WavData::Raw(vec![1, 2]);
     let event = editing::SnapshotEditEvent::SetValue { path: "/data/kind".into(), value: semio_framework_value::DslValue::String("pcm8".into()) };
-    let next = wavEditor_snapshot_edit(&event, &snapshot).expect("data discriminator edit");
+    let next = published(&event, &snapshot);
     assert_eq!(next.data, WavData::Pcm8(vec![1, 2]));
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("data discriminator edit emits");
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("data discriminator edit must emit one mutation") };
@@ -60,7 +69,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn chunk_layout_and_pad_bytes_are_visible_details_and_an_unaddressed_pad_edit_is_refused() {
+async fn chunk_layout_and_pad_bytes_are_visible_details_and_an_unaddressed_path_is_refused() {
     register_document_schema();
     let snapshot = WavSnapshot {
         data: WavData::Raw(vec![7]),
@@ -80,7 +89,12 @@ async fn chunk_layout_and_pad_bytes_are_visible_details_and_an_unaddressed_pad_e
         Some(editing::SnapshotDetailValue::Number(semio_framework_value::Number::UInt(0x7F))),
     );
     let event = editing::SnapshotEditEvent::SetValue { path: "/dataPadByte".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0x5A)) };
-    assert!(<WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).is_err(), "a pad byte has no mutation leaf, so its edit is refused instead of dropped");
+    let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("a pad byte edit resolves to the pad-byte kind");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [WavMutation::SetPadBytes(_)]));
+    assert_eq!(published(&event, &snapshot).data_pad_byte, 0x5A);
+    let schema = editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) };
+    let refused = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&schema, &snapshot).expect_err("no kind edits the schema identity");
+    assert_eq!(refused.code.0, "snapshot-edit.unsupported-path");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -88,17 +102,17 @@ async fn sample_edit_patch_data_replays_and_inverts_without_losing_siblings() {
     register_document_schema();
     let base = WavSnapshot { data: WavData::Raw(vec![1, 2, 3]), ..WavSnapshot::default() };
     let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(9)) };
-    let next = wavEditor_snapshot_edit(&event, &base).expect("sample edit");
+    let next = published(&event, &base);
     assert_eq!(next.data, WavData::Raw(vec![1, 9, 3]));
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect("sample edit emits");
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("sample edit must emit one mutation") };
     let encoded = <WavMutation as store::OpBinary>::encode_op(mutation).expect("binary encode");
     let decoded = <WavMutation as store::OpBinary>::decode_op(&encoded).expect("binary decode");
     let mut replayed = base.clone();
-    crate::standards::riff_pcm::subsets::any::schema::mutations::apply_wav_mutation(&mut replayed, &decoded);
+    crate::apply_mutation(&mut replayed, &decoded);
     assert_eq!(replayed, next);
     for inverse in <WavMutation as protocol::Mutation<WavSnapshot>>::inverse(mutation, &base).expect("valid retained mutation inverse fixture") {
-        crate::standards::riff_pcm::subsets::any::schema::mutations::apply_wav_mutation(&mut replayed, &inverse);
+        crate::apply_mutation(&mut replayed, &inverse);
     }
     assert_eq!(replayed, base);
 }

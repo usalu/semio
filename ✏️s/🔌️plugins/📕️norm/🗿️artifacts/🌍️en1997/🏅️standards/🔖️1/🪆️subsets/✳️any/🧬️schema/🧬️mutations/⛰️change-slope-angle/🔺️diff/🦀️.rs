@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeSlopeAngle, base: &En1997Snapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("slope {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {
-        slopes: Some(En1997SlopesRows { modified: vec![En1997SlopesPatch { id: payload.id.clone(), angle_deg: Some(payload.new_angle_deg), ..Default::default() }], ..Default::default() }),
+        slopes: Some(En1997SlopesRows::modification(&payload.id, En1997SlopesPatch { angle_deg: Some(payload.new_angle_deg), ..Default::default() })),
         ..Default::default()
     })
 }

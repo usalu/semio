@@ -83,8 +83,9 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-story/appends-story-3: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().stories.as_ref().expect("create-story fills the stories delta");
-    assert_eq!(delta.added.len(), 1, "create-story adds exactly one story");
-    assert_eq!(delta.added[0].id, "story-3", "create-story's `added` entry is the payload story");
+    assert_eq!(delta.inserted.len(), 1, "create-story inserts exactly one story");
+    assert_eq!(delta.inserted[0].row.id, "story-3", "create-story's `inserted` row is the payload story");
+    assert_eq!(delta.inserted[0].index, 2, "create-story's `inserted` row carries its index in the resulting list");
     assert!(produced.diff().pages.is_none(), "create-story must not emit a pages delta");
 }
 

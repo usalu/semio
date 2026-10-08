@@ -1,0 +1,13 @@
+# Registered Strict Oracle Receipt
+
+Corrected registered oracle 61224 completed with exit 0: strict Ajv compiled Draft7, admitted the neutral fixture, rejected six missing ownership laws and four invalid contracts, and independently agreed on seven UTF8 bytes and stable JSON. Native assertions remain unrun. After execution the schema file was missing again while the strict TS oracle matched its raw authority exactly; no deleting actor is proven. Root restored the exact raw schema once; current ongoing source custody is not established by this execution.
+
+# Current Validation Qualification
+
+Initial registered oracle 69839 failed before assertions because default strict Ajv accepts Draft7 while the authored schema declared Draft2020. The subsequent 59209 run passed UTF8/stable JSON checks only after concurrent schema deletion and validator binding removal; it is not strict ownership proof. The finite read-only audit did not identify a deleting actor. Root restored a handcrafted validator-supported Draft7 ownership schema, strict Ajv binding and ten negative contract checks, retaining raw input authority in geometry-port-schema-authority-input.json. The corrected registered oracle is pending actual execution. Original native Box/source/System law remains authored and unrun at the current kernel compilation floor.
+
+# Original Supplied Geometry Port Full Ownership
+
+The original supplied GeometryPort and its actual Box retirement now expose four independent Result demands and accept the canonical five-currency grant. Retirement retains the exact supplied Box, refuses zero items or insufficient structural depth without moving it, passes unchanged child currencies with the actual parent frame depth reserved, validates every receipt and terminal child witness, and funds the exact concrete terminal Box release in a separate turn. No payload copy, ignored terminal physical receipt, two-currency adapter, default grant, new evaluator, or external runtime dependency is introduced.
+
+A strict neutral Unicode/spare-capacity fixture, independent Ajv/Buffer/stable JSON oracle, and native original Box/source/allocator law were authored before the defining API change. Native Flow depends on the currently unqualified OS kernel; that new native law is unrun. Existing first-party Trace RequestedAllocator is reused through a test-only dependency and records actual source/cursor/terminal births/frees. Mesh High owns genuine SessionPort/lifetime mock implementation migration alongside its measured whole-Tessellation ownership repair; Doc High owns the matching Neural contract. Current exact original before-text and input hashes are retained in geometry-port-full-grant-input.json.

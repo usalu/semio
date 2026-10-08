@@ -1,0 +1,5 @@
+# Prepared Job Contract Test First3
+
+UI2 was a genuine exact compiler red:1218 sources and producer unchanged, actual Nx/Bun1 Cargo101, six errors from two actual mounted layout borrowed lists still dereferenced as pre-Option boxes. These real receiver borrows now match Some owner explicitly and propagate Stale on absent owner without defaults. Full current body pair retained.
+
+The current peer Prepared InteractiveJob close now explicitly refuses UnsupportedOwner instead of the earlier old signature. It leaves the full actual retained closure unfinished. The new schema-first prepared law calls the real InteractiveJob trait, preserving work1/3/64, independently measures System heap births/frees against the full receipt, requires terminal physical emptiness, and refuses an UnsupportedOwner escape. No own production retirement implementation has been authored yet. UI3 will be an unfiltered whole-package actual engine gate after these owning borrow corrections and this stronger law; all controls stay unchanged.

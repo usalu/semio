@@ -22,9 +22,10 @@
   "accessibility": null,
   "privacy": null,
   "safety": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "safety-requirement-a",
         "patch": {
@@ -58,8 +59,7 @@
           "residualRisk": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "security": null,
   "regulatory": null,

@@ -1,0 +1,180 @@
+{
+  "scope": "Six exact test corpus actions plus three bounded private/live-seed routing actions; current peer Store-to-Framework relocation is observation only",
+  "observedAt": "2026-10-08T18:35:29.522670+00:00",
+  "sources": [
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+      "beforeSha256": "3f5a6c66dec5ecc3ac23a45b785f865b0d4e397c00564f21a5997ddf4c9069d2",
+      "afterSha256": null,
+      "action": "retire-test-corpus-schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "beforeSha256": "c2b6968ae4f3e1dacf64c6b488be1f165563dda9b84e7aedfbe7de4a77f0e5f9",
+      "afterSha256": null,
+      "action": "retire-test-corpus-schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "beforeSha256": "203a9f1f5926efacd4023df5ed6e8142376be249d8c00bfdc2f3858c194b337f",
+      "afterSha256": "c5fefdd8b4df2de61f736a76ce5447603b14d23bbe3cdf4156b70601003404fc",
+      "action": "remove-only-unused-top-level-schema-field"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+      "beforeSha256": "779d3e19049c8c9afd8e53751df2a356349bb9e51f05f0cb79db38d4c6dcee85",
+      "afterSha256": "19ae2d57ff1fd23ab11728bdefee2182d91a8f17e14e9b2a732fbfb9b4a5065a",
+      "action": "remove-only-corpus-validation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "e9f0b7c4d39eddf16a1622c2d575e98734a686b51588eb8f8433d10f05fdad3f",
+      "afterSha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+      "action": "remove-only-corpus-validation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+      "beforeSha256": "7143697174eeb34395833d1994f113aff5795a26ff666f61247cfc219380b1ac",
+      "afterSha256": "4ccf757cc56d7eb94ebaba3a8a5c21c583f1a09344512783485ce0cc956cf7ae",
+      "action": "remove-only-corpus-validation"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "bec7b5ec2240d1e02a19bc002c029f4374754e5206de80d8de91ab9f348cce59",
+      "afterSha256": "acb2f8dc719fca9c3878e7fd243f90ad388f16e6adf2560f6994835edc6e7a4b",
+      "action": "register-bounded-current-physical-collection-and-original-neutral-source-facet"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "a9fee929bca9d12120e52715fb06ebc34f1bc751d9784618f6d33c707f14a8ac",
+      "afterSha256": "9bacc29781d3c8d12e36ef59ad761ff0f4fdf60921b5ecf2abcfcf78e0d9c47d",
+      "action": "register-bounded-current-physical-collection-and-original-neutral-source-facet"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "2f57516f5a1957782ad7fb5b21debf6ccb3684911e8fd60e2ed7c40aa4bd4215",
+      "afterSha256": "081dfa20d5e80ea0ff5005836f2ee313d37d58df94bd5021832188454c488a90",
+      "action": "register-bounded-current-physical-collection-and-original-neutral-source-facet"
+    }
+  ],
+  "preservedObservations": [
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧫️fixtures/🔣️.json",
+      "beforeSha256": "daa1f12aead90b222dba91124140006b55242c5306236c49537154453cdab12e",
+      "afterSha256": "daa1f12aead90b222dba91124140006b55242c5306236c49537154453cdab12e",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🔣️.json",
+      "beforeSha256": "8acab61d63594aa58e25846f4a3ca85e2e6d2ab25b55393caa490f3db86029f1",
+      "afterSha256": "8acab61d63594aa58e25846f4a3ca85e2e6d2ab25b55393caa490f3db86029f1",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🦀️.rs",
+      "beforeSha256": "f97e8b919f5c37c120d8624d77e5e64db31a641f08e1c48f4b4c5504b06c6c4a",
+      "afterSha256": "f97e8b919f5c37c120d8624d77e5e64db31a641f08e1c48f4b4c5504b06c6c4a",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🦀️.rs",
+      "beforeSha256": "8b24d48d3e5e080b654aedc2516b0b5ac80edc1acbafe8f3ce2a82b07d5fbccc",
+      "afterSha256": "8b24d48d3e5e080b654aedc2516b0b5ac80edc1acbafe8f3ce2a82b07d5fbccc",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🦀️.rs",
+      "beforeSha256": "048b633ab715272bbba415ed98a21fdc1c5d5041ec8fa7307c2b48124db17b5c",
+      "afterSha256": "048b633ab715272bbba415ed98a21fdc1c5d5041ec8fa7307c2b48124db17b5c",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "04813987a41d57fd954277c37f8e602cc841f68a60eb362a3b7fc0f347eb0f9d",
+      "afterSha256": "04813987a41d57fd954277c37f8e602cc841f68a60eb362a3b7fc0f347eb0f9d",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🦀️.rs",
+      "beforeSha256": "b8d150f088e3a8d99e384c65ad41e7019c3493459bb5cb99b34b1a8801e6be1f",
+      "afterSha256": "25502459c3a53291f3f9c28852a6491dd7dc204568e1bc5ff1096d2dc4e9a040",
+      "unchanged": false,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🦀️.rs",
+      "beforeSha256": "1730b37be5bf7de9c50050381c534a3b1ebde22c7215cce13718dff6df276359",
+      "afterSha256": "1730b37be5bf7de9c50050381c534a3b1ebde22c7215cce13718dff6df276359",
+      "unchanged": true,
+      "ownMutation": false
+    }
+  ],
+  "plainInputProjection": {
+    "topLevelRemoved": [
+      "schema"
+    ],
+    "allOtherFieldValuesAndOrderEqual": true,
+    "preservedCases": 9,
+    "preservedCopyGrants": [
+      1,
+      2,
+      4,
+      7
+    ],
+    "preservedCancelTurns": [
+      0,
+      1,
+      2,
+      7,
+      31,
+      127
+    ],
+    "actualRustReferencedFields": [
+      "cases",
+      "copyGrants",
+      "cancelTurns"
+    ],
+    "actualRustReferencedInputsEqual": true,
+    "plainCaseProjectionSha256": "ce69550f6dbbb99786673a38a9b4e8ed7040330168b33d26dbcd0ca4cb499f22"
+  },
+  "emptySchemaDirectoryRemoval": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema",
+  "oldStoreOwnerAbsence": "observation-only; not own deletion",
+  "red": {
+    "nx": 1,
+    "duration": "179ms",
+    "log": "🗑️generated/oct8-post-corpus-three/red.log",
+    "actualCorpusFindings": 3,
+    "observedDiagnostics": 6,
+    "qualifier": "extra missing/owner diagnostics arise from standalone removed test schema and bounded ancestor skeleton; all three corpus findings genuine"
+  },
+  "qualifiedAttempts": [
+    {
+      "log": "🗑️generated/oct8-post-corpus-three/green.log",
+      "nx": 1,
+      "reason": "pre-mutation guard expected only3 diagnostics instead of3corpus+3scope findings; no source mutations had occurred"
+    },
+    {
+      "log": "🗑️generated/oct8-post-corpus-three/green-final.log",
+      "nx": 1,
+      "reason": "remaining empty ineligible Puzzle schema folder diagnosed; removed empty directory and asserted selected owner module boundaries, retaining outside copied ancestor observation"
+    }
+  ],
+  "green": {
+    "nx": 0,
+    "duration": "141ms",
+    "log": "🗑️generated/oct8-post-corpus-three/settled-green.log",
+    "tests": 4,
+    "assertions": 73,
+    "ownedModules": 0,
+    "ownedDiagnostics": 0,
+    "CargoNativeProducers": 0
+  },
+  "RustExecutionRequired": false,
+  "RustExecutionReason": "No actual production or Rust test source changed; the only Rust-read fixture delta removes an unreferenced metadata field, every actual Rust referenced field/value/order is equal. No runtime behavior pass is claimed."
+}

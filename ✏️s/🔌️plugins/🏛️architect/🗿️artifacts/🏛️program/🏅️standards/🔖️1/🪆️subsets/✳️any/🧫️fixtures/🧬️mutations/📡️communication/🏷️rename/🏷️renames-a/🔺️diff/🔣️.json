@@ -30,9 +30,10 @@
   "infrastructure": null,
   "information": null,
   "communication": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "communication-requirement-a",
         "patch": {
@@ -65,8 +66,7 @@
           "templates": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "wayfinding": null,
   "schedules": null,

@@ -7,7 +7,7 @@
 import "../../🎨️.css";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../../../🔌️plugin/📇️registry/🟦️.ts";
+import { composeSpecificOsCatalogV1 } from "../../../../../../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -30,7 +30,8 @@ const MULTI_HARNESS_APP_ROLE: "viewer" | "editor" = import.meta.env.VITE_SEMIO_A
 
 function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): React.ReactElement {
   const [mounted, setMounted] = React.useState(true);
-  const boot = React.useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, pane.variant), [pane.variant]);
+  const catalog = React.useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
+  const boot = React.useMemo(() => resolvePlaygroundBoot(catalog, pane.variant), [catalog, pane.variant]);
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: "1 1 0", minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px", background: "#111827", color: "#e5e7eb", fontFamily: "monospace", fontSize: 12 }}>
@@ -43,7 +44,7 @@ function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): R
       </div>
       <div style={{ flex: "1 1 0", minHeight: 0, position: "relative" }}>
         {mounted ? (
-          <FrameworkOsShell shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} />
+          <FrameworkOsShell catalog={catalog} shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} />
         ) : null}
       </div>
     </div>

@@ -1,0 +1,62 @@
+{
+  "observedAt": "2026-10-08T15:02:39.031Z",
+  "scope": "four bounded source actions only; original entry implementation and all fixture payloads are observation-only and preserved",
+  "authoredEndpoints": [
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md"
+      ],
+      "ownedActions": [
+        "retire-corpus-authority"
+      ],
+      "observedCurrent": "absent",
+      "role": "authored-source",
+      "observedCurrentSha256": null
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md"
+      ],
+      "ownedActions": [
+        "extract-real-browser-inventory-contract"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "39decdc91b797c45320ff6cb77b5b90a069f0e0dc952e9aad5a28ae020a967d1"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🔄️lifecycle/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md"
+      ],
+      "ownedActions": [
+        "consume-domain-values-with-locked-independent-oracles"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "0b98ac3287de523b669443c9ad072c2429bfa8647164981fd3360f17bc7663eb"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🏷️ownership/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md"
+      ],
+      "ownedActions": [
+        "assert-actual-domain-scope-admission"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "5f1560c26d3a37298a3c25fc3e04f0b21bdba8b4dec2f48a34511fe0f689e47b"
+    }
+  ],
+  "unchangedObservationInputs": [
+    "✏️s/🧑‍💻dev/🚀️entry/🟦️.ts",
+    "✏️s/🧑‍💻dev/🧩️service-composition/🧫️fixtures/🔣️.json"
+  ]
+}

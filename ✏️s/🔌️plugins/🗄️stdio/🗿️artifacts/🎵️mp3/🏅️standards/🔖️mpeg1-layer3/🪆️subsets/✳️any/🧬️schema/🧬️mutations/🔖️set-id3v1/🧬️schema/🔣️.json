@@ -31,27 +31,85 @@
   "$defs": {
     "Id3v1Tag": {
       "type": "object",
+      "required": [
+        "title",
+        "artist",
+        "album",
+        "year",
+        "comment",
+        "track",
+        "genre"
+      ],
       "additionalProperties": false,
       "properties": {
-        "raw": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          },
-          "x-semio-ui": {
-            "label": {
-              "en": "Raw tag bytes",
-              "de": "Rohbytes des Tags"
+        "title": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "artist": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "album": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "year": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 4
+        },
+        "comment": {
+          "type": "string",
+          "pattern": "^(?:[\\x01-\\xff]*[\\x01-\\x1f\\x21-\\xff])?$",
+          "maxLength": 30
+        },
+        "track": {
+          "anyOf": [
+            {
+              "type": "null"
             },
-            "description": {
-              "en": "The 128 bytes of the ID3v1 tag.",
-              "de": "Die 128 Bytes des ID3v1-Tags."
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            }
+          ]
+        },
+        "genre": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 254
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "track": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "comment": {
+                "maxLength": 28
+              }
             }
           }
         }
-      }
+      ]
     }
   }
 }

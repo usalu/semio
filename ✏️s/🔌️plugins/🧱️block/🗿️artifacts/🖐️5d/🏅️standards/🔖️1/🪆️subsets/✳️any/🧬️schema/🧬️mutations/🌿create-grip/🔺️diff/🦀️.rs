@@ -8,6 +8,6 @@ pub fn diff(payload: &super::CreateGrip, base: &Block5dSnapshot) -> protocol::Mu
     if base.grips.iter().any(|item| item.id == payload.grip.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "grip", payload.grip.id), vec![payload.grip.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block5dDiff { grips: Some(Block5dGripsDelta { added: vec![payload.grip.clone()], reordered: semio_s_plugin_block::block_insert_order(base.grips.iter().map(|item| item.id.as_str()), &payload.grip.id, payload.index), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff { grips: Block5dGripsDelta::insertion(semio_s_plugin_block::block_insert_index(base.grips.len(), payload.index), payload.grip.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

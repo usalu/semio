@@ -1,29 +1,32 @@
 {
   "objects": {
-    "added": [],
-    "patched": [
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "obj-hull",
-        "paintLayers": null,
         "patch": {
-          "mesh": null,
-          "meshContent": null,
-          "name": null,
-          "smoothShading": null,
-          "meshState": null,
-          "position": null,
-          "rotation": [
-            0.0,
-            1.5,
-            0.0
-          ],
-          "scale": null
-        },
-        "meshMotions": []
+          "paintLayers": null,
+          "patch": {
+            "mesh": null,
+            "meshContent": null,
+            "name": null,
+            "smoothShading": null,
+            "meshState": null,
+            "position": null,
+            "rotation": [
+              0.0,
+              1.5,
+              0.0
+            ],
+            "scale": null
+          },
+          "meshVertices": [],
+          "meshAttributes": []
+        }
       }
-    ],
-    "removed": [],
-    "reordered": null
+    ]
   },
   "schema": null
 }

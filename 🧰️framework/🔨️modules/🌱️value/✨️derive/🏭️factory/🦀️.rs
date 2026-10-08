@@ -59,29 +59,46 @@ pub fn expand(input: &DeriveInput) -> syn::Result<TokenStream> {
                 #(bytes = bytes.checked_add(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_birth_bytes(&self.#owned_members)).expect("factory inline close state birth");)*
                 bytes
             }
+            fn close_state_constructor_depth(&self) -> usize {
+                let mut depth = 0usize;
+                #(depth = depth.max(::semio_framework_value::FactoryRetirement::factory_retirement_depth_demand(self.#children.as_ref()));)*
+                #(depth = depth.max(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_constructor_depth(&self.#owned_members));)*
+                depth
+            }
             fn prepare_close_state(&self) -> Self::CloseState {
-                (::semio_framework_value::FactoryChildTickets([#(Some(::semio_framework_value::FactoryRetirement::preborn_factory_retirement(::std::sync::Arc::clone(&self.#children)))),*]), #(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::prepare_close_state(&self.#owned_members),)*)
+                (::semio_framework_value::FactoryChildTickets([#({
+                    let child = ::std::sync::Arc::clone(&self.#children);
+                    let grant = ::semio_framework_value::retained_clone::RetainedCloneGrant {
+                        maximum_items: 1,
+                        maximum_copy_bytes: 0,
+                        maximum_capacity_bytes: ::semio_framework_value::FactoryRetirement::factory_retirement_birth_bytes(child.as_ref()),
+                        maximum_release_bytes: 0,
+                        maximum_depth: ::semio_framework_value::FactoryRetirement::factory_retirement_depth_demand(child.as_ref()),
+                    };
+                    let (ticket, _) = ::semio_framework_value::FactoryRetirement::preborn_factory_retirement(child, grant).unwrap_or_else(|(error, _)| panic!("prefunded factory child refused: {error}"));
+                    Some(ticket)
+                }),*]), #(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::prepare_close_state(&self.#owned_members),)*)
             }
             fn transfer_payload(value: Self, state: &mut Self::CloseState) {
                 #unpack
                 #(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::transfer_payload(#owned_bindings, &mut state.#indices);)*
                 #(drop(#discarded);)*
             }
-            fn close_state_byte_demand(state: &Self::CloseState) -> usize {
-                if !state.0.terminal_is_empty() { return state.0.next_close_byte_demand(); }
-                #(if !<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) { return <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_byte_demand(&state.#indices); })*
-                0
+            fn close_state_demands(state: &Self::CloseState, copy: usize) -> Result<::semio_framework_value::RetirementDemand, ::semio_framework_value::ValueError> {
+                if !state.0.terminal_is_empty() { return state.0.demands(copy); }
+                #(if !<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) { return <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_demands(&state.#indices, copy); })*
+                Ok(::semio_framework_value::RetirementDemand::default())
             }
-            fn close_state_step(state: &mut Self::CloseState, items: usize, bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
-                if !state.0.terminal_is_empty() { return state.0.close_step(items, bytes); }
+            fn close_state_step(state: &mut Self::CloseState, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
+                if !state.0.terminal_is_empty() { return state.0.close_step(grant); }
                 #(if !<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) {
-                    return match <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_step(&mut state.#indices, items, bytes)? {
-                        ::semio_framework_value::SnapshotRetirementStep::Complete if <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) => Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
-                        ::semio_framework_value::SnapshotRetirementStep::Complete => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "factory inline payload returned false terminal")),
+                    return match <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_step(&mut state.#indices, grant)? {
+                        ::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) if <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) => Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)),
+                        ::semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated, "factory inline payload returned false terminal")),
                         step => Ok(step),
                     };
                 })*
-                Ok(::semio_framework_value::SnapshotRetirementStep::Complete)
+                Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress::default()))
             }
             fn close_state_terminal_is_empty(state: &Self::CloseState) -> bool { state.0.terminal_is_empty() #(&& <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices))* }
         }

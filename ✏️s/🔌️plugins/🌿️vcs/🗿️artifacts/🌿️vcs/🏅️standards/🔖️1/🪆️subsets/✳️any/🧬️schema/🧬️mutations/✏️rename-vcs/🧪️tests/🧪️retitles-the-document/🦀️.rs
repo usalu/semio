@@ -5,8 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_vcs_mutation, inverse_vcs_mutation, VcsDemoMutation};
+use crate::mutations::{inverse_vcs_mutation, VcsDemoMutation};
 use crate::VcsSnapshot;
+use crate::central_apply::{apply_vcs_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-vcs/🧪️retitles-the-document/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-vcs/🧪️retitles-the-document/📸️snapshot/➡️after/🔣️.json");

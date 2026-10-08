@@ -19,13 +19,24 @@ message VcsDiff {
   // @state config
 }
 
-message VcsStringList {
-  repeated string values = 1;
+message VcsTagRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message VcsTagInsertion {
+  uint32 index = 1;
+  string row = 2;
+}
+
+message VcsTagRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 
 message VcsTagsDelta {
-  repeated string added = 1;
-  repeated string removed = 2;
-  optional VcsStringList reordered = 3;
+  repeated VcsTagRemoval removed = 1;
+  repeated VcsTagInsertion inserted = 2;
+  repeated VcsTagRelocation moved = 3;
 }
-

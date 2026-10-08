@@ -2,6 +2,7 @@
 //! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
 //! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
 //! 📤️export/🧵️serializers.
+use crate::apply_mutation;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
@@ -92,7 +93,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::iana::subsets::any::schema::diff::TsvDiff;
-    use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation,TsvMutation};
+    use crate::standards::iana::subsets::any::schema::mutations::{TsvMutation};
 
     use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -119,7 +120,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_tsv_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

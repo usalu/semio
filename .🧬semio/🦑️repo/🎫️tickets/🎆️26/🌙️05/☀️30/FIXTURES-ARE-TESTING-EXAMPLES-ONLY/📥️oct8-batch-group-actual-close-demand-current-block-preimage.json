@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "beforeSha256": "cc8abbd29901826c651c2bb5b78ef2b23ffeab17ee9dcbc41f2f762191171647",
+  "before": "        if let Some(owner) = self.preparation.as_ref() {\n            return if owner.terminal_is_empty()",
+  "after": "        if let Some(group) = self.group_preparation.as_ref() { return group.retirement_demands(); }\n        if let Some(owner) = self.preparation.as_ref() {\n            return if owner.terminal_is_empty()"
+}

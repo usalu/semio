@@ -84,7 +84,7 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "update-page-columns/splits-page-1-into-three-columns: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    let patch = &produced.diff().pages.as_ref().expect("update-page-columns fills the pages delta").patched[0].patch;
+    let patch = &produced.diff().pages.as_ref().expect("update-page-columns fills the pages delta").modified[0].patch;
     assert_eq!((patch.columns_count, patch.columns_gutter), (Some(3), Some(12.0)), "update-page-columns fills both column fields of the patch");
     assert!(patch.margin_top.is_none(), "update-page-columns must not emit a margin patch");
 }

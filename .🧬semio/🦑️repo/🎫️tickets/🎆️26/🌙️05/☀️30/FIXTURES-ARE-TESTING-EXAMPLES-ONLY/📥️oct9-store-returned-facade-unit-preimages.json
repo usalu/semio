@@ -1,0 +1,23 @@
+{
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "sha256": "d8ce4512cb95a78b7a9cacd73ba6813f5bbab1e61b54b6b06e80c9ce8b47de3e",
+  "block": "    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {\n        SpaceMember::take_returned_snapshot_read_retirement(&mut self.0)\n    }",
+  "facadeBlocks": [
+    {
+      "before": "    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String>;",
+      "after": "    fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;"
+    },
+    {
+      "before": "    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {\n        ArtifactStore::take_returned_snapshot_read_retirement(self).map_err(|error| error.to_string())\n    }",
+      "after": "    fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {\n        ArtifactStore::take_returned_snapshot_read_retirement(self, grant)\n    }"
+    },
+    {
+      "before": "    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {\n        match *self {}\n    }",
+      "after": "    fn take_returned_snapshot_read_retirement(&mut self, _grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {\n        match *self {}\n    }"
+    },
+    {
+      "before": "            fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, String> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m.as_mut())),+ }\n            }",
+      "after": "            fn take_returned_snapshot_read_retirement(&mut self, grant: $crate::os_store::RetainedCloneGrant) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m.as_mut(), grant)),+ }\n            }"
+    }
+  ]
+}

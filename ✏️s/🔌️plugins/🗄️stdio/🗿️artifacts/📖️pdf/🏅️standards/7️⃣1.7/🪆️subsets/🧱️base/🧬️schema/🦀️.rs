@@ -6,6 +6,12 @@ use framework_schema::ArtifactSchema;
 #[path = "🔗️graph-source/🦀️.rs"]
 pub mod graph_source;
 
+#[path = "🪪️stream-roles/🦀️.rs"]
+pub mod stream_roles;
+
+#[path = "🔎️graph-projection/🦀️.rs"]
+pub mod graph_projection;
+
 #[path = "🧭️content-mapping/🦀️.rs"]
 pub mod content_mapping;
 
@@ -110,6 +116,9 @@ pub struct PdfArtifact {
     #[state(artifact)]
     #[value(default)]
     pub trailer: Vec<PdfDictEntry>,
+    #[state(artifact)]
+    #[value(default)]
+    pub admitted_stream_roles: Vec<stream_roles::PdfAdmittedStreamRole>,
 }
 
 impl Default for PdfArtifact {
@@ -121,11 +130,11 @@ impl Default for PdfArtifact {
 impl PdfArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> PdfSnapshot {
-        PdfSnapshot { schema: self.schema.clone(), declared_version: self.declared_version.clone(), pages: self.pages.clone(), fonts: self.fonts.clone(), images: self.images.clone(), forms: self.forms.clone(), ext_g_states: self.ext_g_states.clone(), shadings: self.shadings.clone(), patterns: self.patterns.clone(), color_spaces: self.color_spaces.clone(), properties: self.properties.clone(), outlines: self.outlines.clone(), named_destinations: self.named_destinations.clone(), page_labels: self.page_labels.clone(), embedded_files: self.embedded_files.clone(), output_intents: self.output_intents.clone(), acro_form: self.acro_form.clone(), optional_content: self.optional_content.clone(), page_layout: self.page_layout.clone(), page_mode: self.page_mode.clone(), viewer_preferences: self.viewer_preferences.clone(), open_action: self.open_action.clone(), language: self.language.clone(), mark_info: self.mark_info.clone(), metadata: self.metadata.clone(), document_id: self.document_id.clone(), encryption: self.encryption.clone(), info: self.info.clone(), catalog_extra: self.catalog_extra.clone(), objects: self.objects.clone(), trailer: self.trailer.clone() }
+        PdfSnapshot { schema: self.schema.clone(), declared_version: self.declared_version.clone(), pages: self.pages.clone(), fonts: self.fonts.clone(), images: self.images.clone(), forms: self.forms.clone(), ext_g_states: self.ext_g_states.clone(), shadings: self.shadings.clone(), patterns: self.patterns.clone(), color_spaces: self.color_spaces.clone(), properties: self.properties.clone(), outlines: self.outlines.clone(), named_destinations: self.named_destinations.clone(), page_labels: self.page_labels.clone(), embedded_files: self.embedded_files.clone(), output_intents: self.output_intents.clone(), acro_form: self.acro_form.clone(), optional_content: self.optional_content.clone(), page_layout: self.page_layout.clone(), page_mode: self.page_mode.clone(), viewer_preferences: self.viewer_preferences.clone(), open_action: self.open_action.clone(), language: self.language.clone(), mark_info: self.mark_info.clone(), metadata: self.metadata.clone(), document_id: self.document_id.clone(), encryption: self.encryption.clone(), info: self.info.clone(), catalog_extra: self.catalog_extra.clone(), objects: self.objects.clone(), trailer: self.trailer.clone(), admitted_stream_roles: self.admitted_stream_roles.clone() }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
-        Self { schema: snapshot.schema, declared_version: snapshot.declared_version, pages: snapshot.pages, fonts: snapshot.fonts, images: snapshot.images, forms: snapshot.forms, ext_g_states: snapshot.ext_g_states, shadings: snapshot.shadings, patterns: snapshot.patterns, color_spaces: snapshot.color_spaces, properties: snapshot.properties, outlines: snapshot.outlines, named_destinations: snapshot.named_destinations, page_labels: snapshot.page_labels, embedded_files: snapshot.embedded_files, output_intents: snapshot.output_intents, acro_form: snapshot.acro_form, optional_content: snapshot.optional_content, page_layout: snapshot.page_layout, page_mode: snapshot.page_mode, viewer_preferences: snapshot.viewer_preferences, open_action: snapshot.open_action, language: snapshot.language, mark_info: snapshot.mark_info, metadata: snapshot.metadata, document_id: snapshot.document_id, encryption: snapshot.encryption, info: snapshot.info, catalog_extra: snapshot.catalog_extra, objects: snapshot.objects, trailer: snapshot.trailer }
+        Self { schema: snapshot.schema, declared_version: snapshot.declared_version, pages: snapshot.pages, fonts: snapshot.fonts, images: snapshot.images, forms: snapshot.forms, ext_g_states: snapshot.ext_g_states, shadings: snapshot.shadings, patterns: snapshot.patterns, color_spaces: snapshot.color_spaces, properties: snapshot.properties, outlines: snapshot.outlines, named_destinations: snapshot.named_destinations, page_labels: snapshot.page_labels, embedded_files: snapshot.embedded_files, output_intents: snapshot.output_intents, acro_form: snapshot.acro_form, optional_content: snapshot.optional_content, page_layout: snapshot.page_layout, page_mode: snapshot.page_mode, viewer_preferences: snapshot.viewer_preferences, open_action: snapshot.open_action, language: snapshot.language, mark_info: snapshot.mark_info, metadata: snapshot.metadata, document_id: snapshot.document_id, encryption: snapshot.encryption, info: snapshot.info, catalog_extra: snapshot.catalog_extra, objects: snapshot.objects, trailer: snapshot.trailer, admitted_stream_roles: snapshot.admitted_stream_roles }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
@@ -160,6 +169,7 @@ impl PdfArtifact {
         self.catalog_extra = snapshot.catalog_extra;
         self.objects = snapshot.objects;
         self.trailer = snapshot.trailer;
+        self.admitted_stream_roles = snapshot.admitted_stream_roles;
     }
 }
 

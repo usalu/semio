@@ -28,7 +28,7 @@ fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_nam
     let port = semio_framework_os::open_folder_space_backbone(folder_path)?;
     let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let entry = create_os_space(name, SpaceKind::Atelier, SpaceVisibility::Private, owner, &port)?;
-    ::semio_framework_async::poll::resolve_ready(crate::register_studio_port(&entry.id, port));
+    ::semio_framework_async::poll::resolve_ready(semio_s_space_core::register_studio_port(&entry.id, port));
     Ok(entry)
 }
 
@@ -66,11 +66,11 @@ pub fn handle_with_identity(
             }
         }
         _ => {
-            // 🌉️ `crate::create_and_register_ephemeral_studio` is a plugin-root async fn (outside
+            // 🌉️ `semio_s_space_core::create_and_register_ephemeral_studio` is a plugin-root async fn (outside
             // this lease); `handle` must stay sync (the `app_commands!` dispatch contract), so the
             // call is bridged via `resolve_ready` — the same poll-once bridge the framework's own
             // `composer_entry_of`/`deserializer_entry_of` use for an identical sync/async seam.
-            let space_id = ::semio_framework_async::poll::resolve_ready(crate::create_and_register_ephemeral_studio(&payload.name, owner_id, owner_name));
+            let space_id = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::create_and_register_ephemeral_studio(&payload.name, owner_id, owner_name));
             Ok(created_studio_emit(generation, &space_id))
         }
     }

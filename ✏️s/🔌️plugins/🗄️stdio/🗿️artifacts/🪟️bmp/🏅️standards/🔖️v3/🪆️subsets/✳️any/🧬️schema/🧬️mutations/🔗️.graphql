@@ -19,6 +19,27 @@ input PaintDirectRegion {
   alpha: Int!
 }
 
-input BmpMutation @oneOf { replaceImage: ReplaceImage  paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion }
+input BmpRegionInput {
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+}
+
+input BmpNativeSampleInput {
+  red: Int!
+  green: Int!
+  blue: Int!
+  alpha: Int!
+  reserved: Int!
+}
+
+input ReplaceSamples {
+  region: BmpRegionInput!
+  indices: [Int!]
+  samples: [BmpNativeSampleInput!]
+}
+
+input BmpMutation @oneOf { replaceImage: ReplaceImage  paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion replaceSamples: ReplaceSamples }
 
 input ReplaceImage { image: BmpImageInput! }

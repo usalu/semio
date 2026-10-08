@@ -4,8 +4,9 @@
 type RecordCopyTaskFactory<T> = fn(&Rooted<T>, usize) -> Option<Box<dyn Task>>;
 
 use super::{FlowOwner as Owner, FlowRetirement as Retirement};
-use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
-use std::mem::ManuallyDrop;
+use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementFactory};
+use std::mem::{ManuallyDrop,size_of,size_of_val};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
 use crate::{FlowHostSnapshot, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
 use std::any::Any;
 use std::collections::LinkedList;
@@ -59,7 +60,7 @@ trait Task: Send {
 }
 
 struct TextTask { source: Rooted<String>, bytes: Vec<u8>, reserved: bool }
-impl Retire for String { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::Bytes(self.into_bytes())); } }
+impl Retire for String { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::Bytes(self.into_bytes())).unwrap_or_else(|_|panic!("Flow copy requires empty retirement handoff")); } }
 impl Copy for String {
     fn task(source: Rooted<Self>) -> Box<dyn Task> {
         Box::new(TextTask { source, bytes: Vec::new(), reserved: false })
@@ -84,7 +85,7 @@ impl Task for TextTask {
         Advance::Bytes(count)
     }
     fn accept(&mut self, _: Box<dyn Copied>) { unreachable!() }
-    fn retire(mut self: Box<Self>, retirement: &mut Retirement) { retirement.push(Owner::Bytes(std::mem::take(&mut self.bytes))); }
+    fn retire(mut self: Box<Self>, retirement: &mut Retirement) { retirement.push(Owner::Bytes(std::mem::take(&mut self.bytes))).unwrap_or_else(|_|panic!("Flow copy requires empty retirement handoff")); }
 }
 
 struct RecordTask<T: Copy> {
@@ -186,7 +187,7 @@ impl<T: Copy> Task for BoxTask<T> {
 
 //#region 🧬️DomainRecords
 macro_rules! retire_owner {
-    ($type:ty, $variant:ident) => { impl Retire for $type { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::$variant(self)); } } };
+    ($type:ty, $variant:ident) => { impl Retire for $type { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::$variant(self)).unwrap_or_else(|_|panic!("Flow copy requires empty retirement handoff")); } } };
 }
 retire_owner!(FlowHostSnapshot, HostSnapshot);
 retire_owner!(Widget, Widget);
@@ -313,7 +314,7 @@ impl Copy for neural::Value {
 //#region 🗿️SelectedCopyCursor
 /// ⛔️ How many consecutive close steps a selected copy tolerates without a byte freed and without
 /// an owner moved before it refuses. Every nested retirement is granted the demand it publishes
-/// through [`ErasedSnapshotRetirement::next_close_byte_demand`], so a run of non-progress steps is a
+/// through its independent copy, capacity, release, and depth demands, so a run of non-progress steps is a
 /// broken owner, not back-pressure, and a driver that kept asking would spin — which is exactly what
 /// a predecessor's doubling-offer workaround did for 21 minutes
 /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
@@ -322,15 +323,9 @@ const FLOW_COPY_CLOSE_STALL_BOUND: usize = 64;
 /// 🛑️ Counts consecutive close steps that freed nothing and moved nothing, and refuses past
 /// [`FLOW_COPY_CLOSE_STALL_BOUND`] with a named fault instead of handing its caller another
 /// `Blocked` to spin on.
-fn account(stalled: &mut usize, step: SnapshotRetirementStep, owner: &str) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-    if matches!(step, SnapshotRetirementStep::Blocked | SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }) {
-        *stalled += 1;
-        if *stalled > FLOW_COPY_CLOSE_STALL_BOUND {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{owner} made no progress at its published close demand")));
-        }
-        return Ok(step);
-    }
-    *stalled = 0;
+fn account(stalled:&mut usize,grant:RetainedCloneGrant,step:RetainedCloneStep,terminal:bool,owner:&str)->Result<RetainedCloneStep,ValueError> {
+    let step=admit_retained_clone_close(grant,step,terminal,owner)?;
+    if matches!(step,RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()) {*stalled+=1;if *stalled>FLOW_COPY_CLOSE_STALL_BOUND{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,format!("{owner} made no progress at its published close demand")));}}else{*stalled=0;}
     Ok(step)
 }
 
@@ -341,25 +336,14 @@ pub struct FlowCopyAllocationBudget {
     maximum_total_bytes: usize,
     reserved_bytes: usize,
     reservation_count: usize,
-    returned_bytes: usize,
 }
 
 impl FlowCopyAllocationBudget {
     pub fn new(maximum_single_bytes: usize, maximum_total_bytes: usize) -> Self {
-        Self { maximum_single_bytes, maximum_total_bytes, reserved_bytes: 0, reservation_count: 0, returned_bytes: 0 }
+        Self { maximum_single_bytes, maximum_total_bytes, reserved_bytes: 0, reservation_count: 0 }
     }
     pub fn reserved_bytes(&self) -> usize { self.reserved_bytes }
     pub fn reservation_count(&self) -> usize { self.reservation_count }
-    /// ♻️ Physical bytes this copy freed BEYOND the caller's payload page, out of its own
-    /// allocation admission. A heap allocation is freed whole or not at all, so a nested frontier
-    /// whose published demand is larger than the page is granted the difference here, and the
-    /// caller's page is charged only what fits in it.
-    pub fn returned_bytes(&self) -> usize { self.returned_bytes }
-    fn charge_release(&mut self, step: SnapshotRetirementStep, page_bytes: usize) -> SnapshotRetirementStep {
-        let SnapshotRetirementStep::Pending { released_items, released_bytes } = step else { return step };
-        self.returned_bytes = self.returned_bytes.saturating_add(released_bytes.saturating_sub(page_bytes));
-        SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(page_bytes) }
-    }
     fn reserve<T>(&mut self, target: &mut Vec<T>, count: usize) -> Result<(), String> {
         if !target.is_empty() || target.capacity() != 0 { return Err("Flow allocation reservation requires an empty unallocated target".into()); }
         let bytes = count.checked_mul(size_of::<T>()).ok_or("Flow allocation size overflow")?;
@@ -377,6 +361,7 @@ struct CopyState<R: Send + Sync + 'static, T: Copy> {
     result: Option<T>,
     retirement: Retirement,
     active_root_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    factory_close:Option<Box<dyn ErasedSnapshotRetirement>>,
     source: Option<Arc<R>>,
     root_retirement: Option<Arc<dyn SnapshotRetirementFactory<R>>>,
     allocation: FlowCopyAllocationBudget,
@@ -393,7 +378,7 @@ struct CopyCursor<R: Send + Sync + 'static, T: Copy> { owned: ManuallyDrop<CopyS
 
 impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn new(source: Arc<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a T>, root_retirement: Arc<dyn SnapshotRetirementFactory<R>>, allocation: FlowCopyAllocationBudget) -> Self {
-        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None, source: Some(source), root_retirement: Some(root_retirement), allocation, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
+        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None,factory_close:None, source: Some(source), root_retirement: Some(root_retirement), allocation, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
     }
     fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<usize>, String> {
         let state = &mut *self.owned;
@@ -428,50 +413,40 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn begin_close(&mut self) { self.owned.closing = true; }
     fn terminal_is_empty(&self) -> bool {
         let state = &*self.owned;
-        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.source.is_none() && state.root_retirement.is_none()
+        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.factory_close.is_none() && state.source.is_none() && state.root_retirement.is_none()
     }
-    /// 📏️ Every nested frontier is granted the PHYSICAL minimum it publishes, not the caller's
-    /// payload page: the difference is paid out of this copy's own allocation admission
-    /// ([`FlowCopyAllocationBudget::returned_bytes`]) because a heap allocation is freed whole or
-    /// not at all, and the caller's page is charged only what fits in it. A step that frees nothing
-    /// and moves nothing is counted and refused at [`FLOW_COPY_CLOSE_STALL_BOUND`]
-    /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        use SnapshotRetirementStep as Step;
-        if self.terminal_is_empty() { return Ok(Step::Complete); }
-        let state = &mut *self.owned;
-        if !state.closing || maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
-        if !state.retirement.terminal_is_empty() {
-            let demand = state.retirement.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,message))?;
-            let step = state.retirement.close_page(1, maximum_bytes.max(demand))?;
-            let step = state.allocation.charge_release(step, maximum_bytes);
-            return account(&mut state.stalled_steps, step, "selected Flow copy frontier");
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){state.retirement.next_copy_byte_demand()}else{state.active_root_retirement.as_ref().or(state.factory_close.as_ref()).map_or(Ok(0),|owner|owner.next_copy_byte_demand())}}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_capacity_byte_demand(copy);}if let Some(owner)=state.active_root_retirement.as_ref().or(state.factory_close.as_ref()){return owner.next_capacity_byte_demand(copy);}Ok(if state.tasks.is_empty()&&state.result.is_none(){state.root_retirement.as_ref().map_or(0,|factory|state.source.as_ref().map_or_else(||factory.factory_retirement_birth_bytes(),|source|factory.retirement_birth_bytes(source)))}else{0})}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){state.retirement.next_release_byte_demand()}else{state.active_root_retirement.as_ref().or(state.factory_close.as_ref()).map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(size_of_val(owner.as_ref()))}else{owner.next_release_byte_demand()})}}
+    fn next_depth_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){state.retirement.next_depth_demand()}else{state.active_root_retirement.as_ref().or(state.factory_close.as_ref()).map_or(Ok(state.root_retirement.as_ref().filter(|_|state.tasks.is_empty()&&state.result.is_none()&&state.source.is_none()).map_or(usize::from(!self.terminal_is_empty()),|factory|factory.factory_retirement_depth_demand())),|owner|owner.next_depth_demand())}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
+        if !self.owned.closing||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Flow copy close requires admitted depth"));}
+        if grant.maximum_copy_bytes<self.next_copy_byte_demand()?||grant.maximum_capacity_bytes<self.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<self.next_release_byte_demand()?{return Ok(RetainedCloneStep::Progress(empty));}
+        let state=&mut*self.owned;
+        if !state.retirement.terminal_is_empty(){let step=state.retirement.step(grant)?;return account(&mut state.stalled_steps,grant,step,state.retirement.terminal_is_empty(),"selected Flow copy frontier");}
+        if let Some(task)=state.tasks.pop_front(){task.retire(&mut state.retirement);}
+        else if let Some(result)=state.result.take(){result.retire(&mut state.retirement);}
+        else if let Some(active)=state.active_root_retirement.as_mut(){
+            if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.active_root_retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
+            let step=active.close_step(grant)?;let terminal=active.terminal_is_empty();
+            let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow root retirement")?;
+            if matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()));}
+            return Ok(step);
         }
-        if let Some(task) = state.tasks.pop_front() { task.retire(&mut state.retirement); }
-        else if let Some(result) = state.result.take() { result.retire(&mut state.retirement); }
-        else if state.active_root_retirement.is_some() {
-            let active = state.active_root_retirement.as_mut().expect("checked selected Flow root retirement");
-            let granted = maximum_bytes.max(active.next_close_byte_demand());
-            let step = active.close_step(1, granted)?;
-            let terminal = active.terminal_is_empty();
-            if matches!(step, Step::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > granted) {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"selected Flow root retirement exceeded its grant"));
-            }
-            if matches!(step, Step::Complete) {
-                if !terminal { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"selected Flow root retirement is not terminal")); }
-                state.active_root_retirement = None;
-                state.stalled_steps = 0;
-                return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-            }
-            let step = state.allocation.charge_release(step, maximum_bytes);
-            return account(&mut state.stalled_steps, step, "selected Flow root retirement");
+        else if let Some(root)=state.source.take(){match state.root_retirement.as_ref().expect("selected copy retirement factory").retire(root,grant){Ok((owner,progress))=>{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,root))=>{state.source=Some(root);return Err(error);}}}
+        else if let Some(active)=state.factory_close.as_mut(){
+            if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.factory_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
+            let step=active.close_step(grant)?;let terminal=active.terminal_is_empty();let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow factory retirement")?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});
         }
-        else if let Some(root) = state.source.take() { state.active_root_retirement = Some(state.root_retirement.as_ref().expect("selected copy retirement factory").retire(root)); }
-        else if state.root_retirement.take().is_some() {}
-        else { return Ok(Step::Complete); }
-        state.stalled_steps = 0;
-        Ok(Step::Pending { released_items: 1, released_bytes: 0 })
+        else if let Some(factory)=state.root_retirement.take(){match factory.preborn_factory_retirement(grant){Ok((owner,progress))=>{state.factory_close=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow factory retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,factory))=>{state.root_retirement=Some(factory);return Err(error);}}}
+        else{return Ok(RetainedCloneStep::Complete(empty));}
+        state.stalled_steps=0;
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}))
     }
+
 }
 
 impl<R: Send + Sync + 'static, T: Copy> Drop for CopyCursor<R, T> {
@@ -497,7 +472,11 @@ macro_rules! selected_cursor {
             pub fn complete(&self) -> bool { self.cursor.complete() }
             pub fn take(&mut self) -> Option<$value> { self.cursor.take() }
             pub fn begin_close(&mut self) { self.cursor.begin_close(); }
-            pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> { self.cursor.close_step(maximum_items, maximum_bytes) }
+            pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {self.cursor.close_step(grant)}
+            pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.cursor.next_copy_byte_demand()}
+            pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.cursor.next_capacity_byte_demand(copy)}
+            pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.cursor.next_release_byte_demand()}
+            pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.cursor.next_depth_demand()}
             pub fn terminal_is_empty(&self) -> bool { self.cursor.terminal_is_empty() }
         }
     };

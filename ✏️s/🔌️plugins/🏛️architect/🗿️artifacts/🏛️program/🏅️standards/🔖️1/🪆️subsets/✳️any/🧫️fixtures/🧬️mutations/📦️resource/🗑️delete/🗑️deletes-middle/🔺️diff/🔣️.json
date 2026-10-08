@@ -16,12 +16,15 @@
   "operations": null,
   "equipment": null,
   "resources": {
-    "added": [],
     "removed": [
-      "resource-a"
+      {
+        "id": "resource-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "storage": null,
   "environmental": null,

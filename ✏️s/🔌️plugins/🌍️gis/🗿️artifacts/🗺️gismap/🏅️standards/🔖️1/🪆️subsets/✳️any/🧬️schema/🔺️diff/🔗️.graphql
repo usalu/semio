@@ -1,6 +1,9 @@
 # 🔺️ Map deltas reuse the document and feature schema owners.
 # import GisMapArtifact from "../🔗️.graphql"
 # import GisMapFeature, GisMapFeaturePatch from "../📍️feature/🔗️.graphql"
-type GisMapDiff { artifact: GisMapArtifact, positions: GisMapFeaturesDelta, routes: GisMapFeaturesDelta, regions: GisMapFeaturesDelta }
-type GisMapFeaturesDelta { added: [GisMapFeature!]!, removed: [String!]!, patched: [GisMapFeaturePatchEntry!]!, reordered: [String!] }
-type GisMapFeaturePatchEntry { id: String!, patch: GisMapFeaturePatch! }
+type GisMapDiff { positions: GisMapFeaturesDelta, routes: GisMapFeaturesDelta, regions: GisMapFeaturesDelta }
+type GisMapFeatureRemoval { id: String!, index: Int! }
+type GisMapFeatureInsertion { index: Int!, row: GisMapFeature! }
+type GisMapFeatureRelocation { id: String!, from: Int!, to: Int! }
+type GisMapFeaturesDelta { removed: [GisMapFeatureRemoval!]!, inserted: [GisMapFeatureInsertion!]!, moved: [GisMapFeatureRelocation!]!, modified: [GisMapFeatureModification!]! }
+type GisMapFeatureModification { id: String!, patch: GisMapFeaturePatch! }

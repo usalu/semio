@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "cases": [
+    "wgpu-ownership/target-3",
+    "wgpu-ownership/target-4",
+    "wgpu-ownership/target-5",
+    "wgpu-ownership/target-6",
+    "wgpu-ownership/target-7",
+    "wgpu-ownership/target-8",
+    "wgpu-ownership/target-9",
+    "wgpu-composition/target-2"
+  ],
+  "maximumBytes": 4294967296,
+  "maximumWork": 200000,
+  "budgetMs": 300000
+}

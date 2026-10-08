@@ -137,15 +137,17 @@ export function isPidAliveV1(pid: number): boolean {
   }
 }
 
-export function readDevHubLeaseV1(path: string): DevHubLeaseV1 | null {
-  try {
-    const value = JSON.parse(readFileSync(path, "utf8")) as Partial<DevHubLeaseV1>;
-    if (!Number.isSafeInteger(value.pid) || (value.pid as number) < 1 || !Number.isSafeInteger(value.port) || typeof value.dataDir !== "string" || typeof value.hubUrl !== "string" || !Number.isSafeInteger(value.acquiredAt)) return null;
-    return value as DevHubLeaseV1;
-  } catch {
-    return null;
-  }
+/** 🔐️ Parses only the exact admitted first-party lease bytes; liveness remains separate.
+ * @see ./🔐lease/🧬️schema/🔣️.json
+ */
+export function parseDevHubLeaseBytesV1(bytes:Uint8Array):DevHubLeaseV1|null{
+ try{const value=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes)) as Partial<DevHubLeaseV1>;
+  if(!value||typeof value!=="object"||Array.isArray(value)||Object.keys(value).sort().join(",")!=="acquiredAt,dataDir,hubUrl,pid,port"||!Number.isSafeInteger(value.pid)||value.pid!<1||!Number.isSafeInteger(value.port)||value.port!<1||value.port!>65535||typeof value.dataDir!=="string"||!value.dataDir||typeof value.hubUrl!=="string"||!value.hubUrl||!Number.isSafeInteger(value.acquiredAt)||value.acquiredAt!<0)return null;
+  return Object.freeze({pid:value.pid!,port:value.port!,dataDir:value.dataDir,hubUrl:value.hubUrl,acquiredAt:value.acquiredAt!});
+ }catch{return null;}
 }
+
+export function readDevHubLeaseV1(path:string):DevHubLeaseV1|null{try{return parseDevHubLeaseBytesV1(readFileSync(path));}catch{return null;}}
 
 /** 🔐️ The live claim at `path`, or `null` (no claim, an unreadable one, or one whose process is gone). */
 export function liveDevHubLeaseV1(path: string, alive: (pid: number) => boolean = isPidAliveV1): DevHubLeaseV1 | null {
@@ -556,7 +558,7 @@ export type DevServeProfileV1 = "dev" | "release";
 
 /** 🧾️ What the serve owner asks its world to start (`DevServeSpawnRequestV1`, `🧑‍💻dev/🧬️schema/🔣️.json`): one shell serve on
  * `port`, local-only unless `hubUrl` names the hub it joins, output in `logPath`. */
-export type DevServeSpawnRequestV1 = Readonly<{ port: number; variant: string; renderer: DevServeRendererV1; profile: DevServeProfileV1; hubUrl: string | null; logPath: string }>;
+export type DevServeSpawnRequestV1 = Readonly<{ port: number; variant: string; renderer: DevServeRendererV1; profile: DevServeProfileV1; hubUrl: string | null; logPath: string; compositionConfigPath?: string }>;
 
 /** 🧾️ The process a spawn request becomes: `bun <script> …args` in `cwd` (all repo-relative), with `env` over the
  * caller's environment — a `null` value removes the variable, so a local-only serve never inherits a hub. */
@@ -567,11 +569,12 @@ const DEV_SERVE_WGPU_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨�
 
 /** 🧾️ Both spawn shapes, as data: HMR is off for either shell so no peer's edit reloads a page mid-run. */
 export function devServeCommandV1(request: DevServeSpawnRequestV1): DevServeCommandV1 {
+  if (request.renderer === "wgpu" && (!request.compositionConfigPath || request.compositionConfigPath.length > 4096)) throw new Error("dev serve: explicit bounded composition configuration required");
   const link = request.hubUrl === null ? { S_LOCAL_ONLY: "1", S_HUB_URL: null } : { S_LOCAL_ONLY: null, S_HUB_URL: request.hubUrl };
   const env = { SEMIO_PLUGIN: request.variant, SEMIO_RENDERER: request.renderer, SEMIO_VITE_HMR: "0", S_OS_PORT: String(request.port), ...link };
   return request.renderer === "react"
     ? { script: DEV_SERVE_REACT_SCRIPT, args: ["serve", request.variant, "react", request.profile], cwd: dirname(DEV_SERVE_REACT_SCRIPT), env }
-    : { script: DEV_SERVE_WGPU_SCRIPT, args: ["serve", request.variant, request.profile, "--port", String(request.port)], cwd: dirname(DEV_SERVE_WGPU_SCRIPT), env };
+    : { script: DEV_SERVE_WGPU_SCRIPT, args: ["serve", request.variant, request.profile, "--port", String(request.port), "--composition", request.compositionConfigPath!], cwd: dirname(DEV_SERVE_WGPU_SCRIPT), env };
 }
 
 /** 🔌️ The world the serve owner acts on — the real one by default, a double in the laws. */
@@ -592,6 +595,7 @@ export type DevServeOptionsV1 = Readonly<{
   repoRoot: string;
   port: number;
   variant?: string;
+  compositionConfigPath?: string;
   renderer?: DevServeRendererV1;
   profile?: DevServeProfileV1;
   locale?: DevHubLocaleV1;
@@ -687,7 +691,7 @@ export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevSer
   }
   options.signal?.throwIfAborted();
   const logPath = options.logPath ?? join(options.repoRoot, ".🧬semio", "🌐hub", "dev-serves", `serve-${options.port}.log`);
-  const child = world.spawnServe({ port: options.port, variant: options.variant ?? "s", renderer: options.renderer ?? "react", profile: options.profile ?? "dev", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
+  const child = world.spawnServe({ port: options.port, variant: options.variant ?? "", compositionConfigPath: options.compositionConfigPath, renderer: options.renderer ?? "react", profile: options.profile ?? "dev", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
   report({ kind: "spawning", url, pid: child.pid, logPath });
   let stopped: Promise<void> | null = null;
   const stop = (): Promise<void> =>

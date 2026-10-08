@@ -1,18 +1,15 @@
 semio stdio.tiff.dsl v1
 schema=stdio.tiff
-byteOrder="littleEndian"
 ifds=[
  {
   entries=[
    { tag=256 values={ kind="long" value=[3] } }
    { tag=257 values={ kind="long" value=[2] } }
    { tag=258 values={ kind="short" value=[8 8 8] } }
-   { tag=259 values={ kind="short" value=[1] } }
    { tag=262 values={ kind="short" value=[2] } }
    { tag=277 values={ kind="short" value=[3] } }
-   { tag=278 values={ kind="long" value=[2] } }
-   { tag=315 values={ kind="ascii" value=[115 116 100 105 111 46 116 105 102 102 32 100 101 109 111 0] } }
+   { tag=315 values={ kind="ascii" value=["stdio.tiff demo"] } }
   ]
-  storage={ kind="strips" offsetsKind="long" byteCountsKind="long" chunks=[[255 0 0 0 37 0 255 74 0 0 0 53 255 37 53 0 74 53]] }
+  blocks=[ { x=0 y=0 width=3 height=2 channels=3 samples=[ { lo=255 hi=0 } { lo=0 hi=0 } { lo=0 hi=0 } { lo=0 hi=0 } { lo=37 hi=0 } { lo=0 hi=0 } { lo=255 hi=0 } { lo=74 hi=0 } { lo=0 hi=0 } { lo=0 hi=0 } { lo=0 hi=0 } { lo=53 hi=0 } { lo=255 hi=0 } { lo=37 hi=0 } { lo=53 hi=0 } { lo=0 hi=0 } { lo=74 hi=0 } { lo=53 hi=0 } ] } ]
  }
 ]

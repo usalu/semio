@@ -1,19 +1,19 @@
 //! 🖼️ Resolved world-space scene inputs with isolated scopes and cropped private paint.
 use crate::{PathSegment,FillRule,FillStyle,StrokeStyle};
 use crate::schema::DrawingSceneGroup;
-use semio_framework_pixels::{RasterImage,image_decoding::{ImageDecodeInput,ImageDecodeJob,ImageDecodeProgress}};
+use semio_framework_pixels::RasterImage;
 use semio_framework_pixels::affine_sampling::{AffineImageJob,AffineImageInput,AffineSampling,AffineImageRetirement};
 use std::sync::Arc;
 #[derive(Clone,Debug)]
-pub struct RasterSceneAsset{pub id:String,pub mime:String,pub data:Arc<String>}
+pub struct RasterSceneAsset{pub id:String,pub image:Arc<RasterImage>}
 #[derive(Clone,Debug)]
 pub enum RasterSceneContent {Path {segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},Pixels(Arc<RasterImage>),Image{asset:String,width:f64,height:f64}}
 #[derive(Clone,Debug)]
 pub struct RasterSceneNode {pub id:String,pub groups:Vec<DrawingSceneGroup>,pub transform:[f64;6],pub opacity:f64,pub blend_mode:String,pub visible:bool,pub content:RasterSceneContent}
 #[derive(Clone,Debug)]
-pub struct RasterSceneInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize,pub max_bytes:usize,pub max_chunks:usize,pub assets:Vec<RasterSceneAsset>,pub nodes:Vec<RasterSceneNode>}
+pub struct RasterSceneInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize,pub assets:Vec<RasterSceneAsset>,pub nodes:Vec<RasterSceneNode>}
 #[derive(Clone,Debug)]
-pub struct RasterSceneProgress {pub phase:&'static str,pub nodes:usize,pub total_nodes:usize,pub pixels:usize,pub assets:usize,pub total_assets:usize,pub source_bytes:usize,pub decodes:usize,pub decoding:Option<ImageDecodeProgress>,pub work:u64,pub done:bool}
+pub struct RasterSceneProgress {pub phase:&'static str,pub nodes:usize,pub total_nodes:usize,pub pixels:usize,pub assets:usize,pub total_assets:usize,pub source_bytes:usize,pub admitted_images:usize,pub work:u64,pub done:bool}
 use crate::schema::geometry::{arc_geometry,raster::{PathRasterJob,PathRasterInput,PathRasterRetirement}};
 use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeRetirement,CompositeInput,CompositeLayer,CompositeContent,CompositeBlend}};
 use std::collections::{BTreeMap,BTreeSet,VecDeque};
@@ -36,8 +36,8 @@ struct Scope {group:DrawingSceneGroup,layers:Vec<CompositeLayer>}
 /// 🧱️ Incremental cropped paint and isolated group compilation into a private tiled candidate.
 pub struct RasterSceneJob {
  width:u32,height:u32,origin:[f64;2],tolerance:f64,max_pixels:usize,total_nodes:usize,source:VecDeque<RasterSceneNode>,
- max_source_bytes:usize,max_bytes:usize,max_chunks:usize,total_assets:usize,asset_source:VecDeque<RasterSceneAsset>,assets:usize,source_bytes:usize,decodes:usize,
- catalog:BTreeMap<String,RasterSceneAsset>,decoded:BTreeMap<String,Arc<RasterImage>>,decoder:Option<ImageDecodeJob>,decoder_key:String,decoder_charged:bool,decoding:Option<ImageDecodeProgress>,
+ max_source_bytes:usize,total_assets:usize,asset_source:VecDeque<RasterSceneAsset>,assets:usize,source_bytes:usize,admitted_images:usize,
+ catalog:BTreeMap<String,RasterSceneAsset>,admitted:BTreeMap<String,Arc<RasterImage>>,
  nodes:usize,group_at:usize,pixels:usize,work:u64,entries:usize,phase:&'static str,current:Option<RasterSceneNode>,
  stack:Vec<Scope>,root:Vec<CompositeLayer>,closed:BTreeSet<String>,ids:BTreeSet<String>,images:BTreeMap<String,Arc<RasterImage>>,
  segment:usize,from:[f64;2],start:[f64;2],contour:bool,bounds:[f64;4],crop:[f64;6],painter:Option<PathRasterJob>,sampler:Option<AffineImageJob>,compositor:Option<CompositeJob>,compositor_retirement:Option<CompositeRetirement>,output:Option<RasterImage>,cancelled:bool,failure:Option<RasterSceneError>,
@@ -46,9 +46,9 @@ pub struct RasterSceneJob {
 impl RasterSceneJob {
  pub fn new(input:RasterSceneInput)->Result<Self,RasterSceneError>{
   validate_extent(input.width,input.height).map_err(invalid)?;
-  if !input.origin.into_iter().all(coordinate)||!input.tolerance.is_finite()||!(1e-6..=16.0).contains(&input.tolerance)||!(1..=67_108_864).contains(&input.max_pixels)||input.nodes.len()>1024||input.assets.len()>1024||!(1..=268439552).contains(&input.max_source_bytes)||!(8..=67108864).contains(&input.max_bytes)||!(1..=65536).contains(&input.max_chunks){return Err(invalid("Invalid scene raster contract"));}
+  if !input.origin.into_iter().all(coordinate)||!input.tolerance.is_finite()||!(1e-6..=16.0).contains(&input.tolerance)||!(1..=67_108_864).contains(&input.max_pixels)||input.nodes.len()>1024||input.assets.len()>1024||!(1..=268439552).contains(&input.max_source_bytes){return Err(invalid("Invalid scene raster contract"));}
   let total_nodes=input.nodes.len();let total_assets=input.assets.len();
-  Ok(Self{width:input.width,height:input.height,origin:input.origin,tolerance:input.tolerance,max_pixels:input.max_pixels,total_nodes,source:input.nodes.into(),max_source_bytes:input.max_source_bytes,max_bytes:input.max_bytes,max_chunks:input.max_chunks,total_assets,asset_source:input.assets.into(),assets:0,source_bytes:0,decodes:0,catalog:BTreeMap::new(),decoded:BTreeMap::new(),decoder:None,decoder_key:String::new(),decoder_charged:false,decoding:None,nodes:0,group_at:0,pixels:0,work:0,entries:0,phase:"assets",current:None,stack:Vec::new(),root:Vec::new(),closed:BTreeSet::new(),ids:BTreeSet::new(),images:BTreeMap::new(),segment:0,from:[0.0;2],start:[0.0;2],contour:false,bounds:[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],crop:IDENTITY,painter:None,painter_retirement:None,painted:None,sampler:None,sampler_retirement:None,sampled:None,compositor:None,compositor_retirement:None,output:None,cancelled:false,failure:None})
+  Ok(Self{width:input.width,height:input.height,origin:input.origin,tolerance:input.tolerance,max_pixels:input.max_pixels,total_nodes,source:input.nodes.into(),max_source_bytes:input.max_source_bytes,total_assets,asset_source:input.assets.into(),assets:0,source_bytes:0,admitted_images:0,catalog:BTreeMap::new(),admitted:BTreeMap::new(),nodes:0,group_at:0,pixels:0,work:0,entries:0,phase:"assets",current:None,stack:Vec::new(),root:Vec::new(),closed:BTreeSet::new(),ids:BTreeSet::new(),images:BTreeMap::new(),segment:0,from:[0.0;2],start:[0.0;2],contour:false,bounds:[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],crop:IDENTITY,painter:None,painter_retirement:None,painted:None,sampler:None,sampler_retirement:None,sampled:None,compositor:None,compositor_retirement:None,output:None,cancelled:false,failure:None})
  }
  fn layers(&mut self)->&mut Vec<CompositeLayer>{self.stack.last_mut().map_or(&mut self.root,|s|&mut s.layers)}
  fn active(&self)->bool{let n=self.current.as_ref().unwrap();n.visible&&n.opacity>0.0&&self.stack.iter().all(|s|s.group.opacity>0.0)}
@@ -106,9 +106,10 @@ impl RasterSceneJob {
  fn skip(&mut self){self.current=None;self.nodes+=1;self.phase="nodes";}
  fn asset_step(&mut self)->Result<(),RasterSceneError>{
   let Some(asset)=self.asset_source.pop_front()else{self.phase="nodes";return Ok(());};
-  if !valid_id(&asset.id)||self.catalog.contains_key(&asset.id)||asset.mime.is_empty()||asset.mime.len()>128||asset.data.is_empty(){return Err(invalid("Invalid scene asset catalog"));}
-  if asset.data.len()>self.max_source_bytes-self.source_bytes{return Err(invalid("Scene aggregate source byte budget exceeded"));}
-  self.source_bytes+=asset.data.len();self.catalog.insert(asset.id.clone(),asset);self.assets+=1;Ok(())
+  if !valid_id(&asset.id)||self.catalog.contains_key(&asset.id){return Err(invalid("Invalid scene asset catalog"));}
+  validate_image(&asset.image).map_err(invalid)?;
+  if asset.image.pixels.len()>self.max_source_bytes.saturating_sub(self.source_bytes){return Err(invalid("Scene aggregate sample byte budget exceeded"));}
+  self.source_bytes+=asset.image.pixels.len();self.catalog.insert(asset.id.clone(),asset);self.assets+=1;Ok(())
  }
  fn image_crop(&self,width:f64,height:f64)->Result<Option<[f64;4]>,RasterSceneError>{
   let m=self.current.as_ref().unwrap().transform;if !self.active()||m[0]*m[3]-m[1]*m[2]==0.0{return Ok(None);}
@@ -123,20 +124,14 @@ impl RasterSceneJob {
  }
  fn prepare_image(&mut self,key:&str,width:f64,height:f64)->Result<(),RasterSceneError>{
   if !valid_id(key)||!coordinate(width)||width<=0.0||!coordinate(height)||height<=0.0{return Err(invalid("Invalid authored scene image"));}
-  if !self.decoded.contains_key(key)&&!self.catalog.contains_key(key){return Err(invalid(format!("Missing scene image asset: {key}")));}
+  if !self.admitted.contains_key(key)&&!self.catalog.contains_key(key){return Err(invalid(format!("Missing scene image asset: {key}")));}
   if self.image_crop(width,height)?.is_none(){self.skip();return Ok(());}
-  if let Some(cached)=self.decoded.get(key){return self.asset_image(width,height,Arc::clone(cached));}
+  if let Some(cached)=self.admitted.get(key){return self.asset_image(width,height,Arc::clone(cached));}
   let available=(self.max_pixels-self.pixels).min(16777216);if available==0{return Err(invalid("Scene aggregate pixel budget exceeded"));}
   let asset=self.catalog.remove(key).unwrap();
-  self.decoder=Some(ImageDecodeJob::new(ImageDecodeInput{mime:asset.mime,data:asset.data,max_source_bytes:self.max_source_bytes,max_bytes:self.max_bytes,max_pixels:available,max_chunks:self.max_chunks}).map_err(invalid)?);
-  self.decoding=None;self.decoder_key=asset.id;self.decoder_charged=false;self.decodes+=1;self.phase="source";Ok(())
- }
- fn source_step(&mut self)->Result<(),RasterSceneError>{
-  let p=self.decoder.as_mut().unwrap().advance(1).map_err(invalid)?;self.decoding=Some(p);
-  if p.total_pixels!=0&&!self.decoder_charged{self.reserve(p.total_pixels)?;self.decoder_charged=true;}
-  if !p.done{return Ok(());}
-  let RasterSceneContent::Image{width,height,..}=self.current.as_ref().unwrap().content else{return Err(invalid("Expected scene image source"));};
-  let image=Arc::new(self.decoder.take().unwrap().into_result().map_err(invalid)?);self.decoded.insert(std::mem::take(&mut self.decoder_key),Arc::clone(&image));self.asset_image(width,height,image)
+  let count=validate_extent(asset.image.width,asset.image.height).map_err(invalid)?;
+  if count>available{return Err(invalid("Scene aggregate pixel budget exceeded"));}self.reserve(count)?;
+  self.admitted_images+=1;let image=asset.image;self.admitted.insert(asset.id,Arc::clone(&image));self.asset_image(width,height,image)
  }
  fn image(&mut self,image:Arc<RasterImage>,charged:bool)->Result<(),RasterSceneError>{
   validate_image(&image).map_err(invalid)?;let count=validate_extent(image.width,image.height).map_err(invalid)?;let m=self.current.as_ref().unwrap().transform;
@@ -147,12 +142,11 @@ impl RasterSceneJob {
  }
  fn step(&mut self)->Result<(),RasterSceneError>{
   if self.phase=="assets"{return self.asset_step();}
-  if self.phase=="source"{return self.source_step();}
   if self.phase=="nodes"{
    if self.current.is_none(){
     let Some(n)=self.source.pop_front()else{
      if !self.stack.is_empty(){return self.close();}
-     self.catalog.clear();self.decoded.clear();self.compositor=Some(CompositeJob::new(CompositeInput{width:self.width,height:self.height,origin:self.origin,images:std::mem::take(&mut self.images),layers:std::mem::take(&mut self.root)}).map_err(invalid)?);self.closed.clear();self.ids.clear();self.phase="compositing";return Ok(());
+     self.catalog.clear();self.admitted.clear();self.compositor=Some(CompositeJob::new(CompositeInput{width:self.width,height:self.height,origin:self.origin,images:std::mem::take(&mut self.images),layers:std::mem::take(&mut self.root)}).map_err(invalid)?);self.closed.clear();self.ids.clear();self.phase="compositing";return Ok(());
     };
     if !valid_id(&n.id)||self.ids.contains(&n.id)||!n.transform.into_iter().all(coordinate)||n.groups.len()>32{return Err(invalid("Invalid resolved scene node"));}
     style(n.opacity,&n.blend_mode)?;self.ids.insert(n.id.clone());self.entry()?;self.current=Some(n);self.group_at=0;return Ok(());
@@ -189,9 +183,9 @@ impl RasterSceneJob {
   if budget==0||budget as u128>9_007_199_254_740_991{return Err(invalid("Scene work grant must be a positive integer"));}
   if self.cancelled{return Err(RasterSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
   for _ in 0..budget{if self.phase=="complete"{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());self.clear();return Err(error);}self.work+=1;}
-  Ok(RasterSceneProgress{phase:self.phase,nodes:self.nodes,total_nodes:self.total_nodes,pixels:self.pixels,assets:self.assets,total_assets:self.total_assets,source_bytes:self.source_bytes,decodes:self.decodes,decoding:self.decoding,work:self.work,done:self.phase=="complete"})
+  Ok(RasterSceneProgress{phase:self.phase,nodes:self.nodes,total_nodes:self.total_nodes,pixels:self.pixels,assets:self.assets,total_assets:self.total_assets,source_bytes:self.source_bytes,admitted_images:self.admitted_images,work:self.work,done:self.phase=="complete"})
  }
- fn clear(&mut self){if let Some(job)=&mut self.decoder{job.cancel();}self.decoder=None;self.decoder_key=String::new();self.decoding=None;self.asset_source=VecDeque::new();self.catalog=BTreeMap::new();self.decoded=BTreeMap::new();if let Some(job)=&mut self.painter{job.cancel();}if let Some(job)=&mut self.sampler{job.cancel();}if let Some(job)=&mut self.compositor{job.cancel();}self.painter=None;self.painter_retirement=None;self.painted=None;self.sampler=None;self.sampler_retirement=None;self.sampled=None;self.compositor=None;self.compositor_retirement=None;self.output=None;self.current=None;self.source=VecDeque::new();self.stack=Vec::new();self.root=Vec::new();self.images=BTreeMap::new();self.ids.clear();self.closed.clear();}
+ fn clear(&mut self){self.asset_source=VecDeque::new();self.catalog=BTreeMap::new();self.admitted=BTreeMap::new();if let Some(job)=&mut self.painter{job.cancel();}if let Some(job)=&mut self.sampler{job.cancel();}if let Some(job)=&mut self.compositor{job.cancel();}self.painter=None;self.painter_retirement=None;self.painted=None;self.sampler=None;self.sampler_retirement=None;self.sampled=None;self.compositor=None;self.compositor_retirement=None;self.output=None;self.current=None;self.source=VecDeque::new();self.stack=Vec::new();self.root=Vec::new();self.images=BTreeMap::new();self.ids.clear();self.closed.clear();}
  pub fn cancel(&mut self){self.cancelled=true;self.clear();}
  pub fn result(&self)->Result<&RasterImage,RasterSceneError>{if self.cancelled{return Err(RasterSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!="complete"{return Err(RasterSceneError::Incomplete);}Ok(self.output.as_ref().unwrap())}
  pub fn into_result(mut self)->Result<RasterImage,RasterSceneError>{self.result()?;Ok(self.output.take().unwrap())}

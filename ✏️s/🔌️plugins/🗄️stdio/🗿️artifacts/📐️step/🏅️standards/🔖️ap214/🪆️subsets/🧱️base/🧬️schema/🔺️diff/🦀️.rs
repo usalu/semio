@@ -133,9 +133,8 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
-    let mut removed_sorted = removed.to_vec();
-    removed_sorted.sort_unstable();
+fn rewind_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], rewind_item: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
+    let removed_sorted: Vec<usize> = removed.iter().copied().collect::<std::collections::BTreeSet<usize>>().into_iter().collect();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
     added_index_sorted.sort_unstable();
 
@@ -144,7 +143,7 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index, diff_inverse(d, orig)));
+            inv_modified.push((after_index, rewind_item(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -195,20 +194,6 @@ impl StepArgsDiff {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[StepValue], other: &[StepValue]) -> Self {
-        let min = base.len().min(other.len());
-        let mut modified = Vec::new();
-        for i in 0..min {
-            if base[i] != other[i] {
-                modified.push(StepArgModified { index: i, value: other[i].clone() });
-            }
-        }
-        let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<StepArgAdded> = (min..other.len()).map(|i| StepArgAdded { index: i, value: other[i].clone() }).collect();
-        Self { removed, modified, added }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[StepValue]) -> Vec<StepValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
@@ -247,7 +232,7 @@ impl StepArgsDiff {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_args: &[StepValue]) -> Self {
-        let (removed, modified, added) = inverse_indexed_collection(
+        let (removed, modified, added) = rewind_indexed_collection(
             &self.removed,
             &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(),
             &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(),
@@ -277,12 +262,6 @@ impl StepEntityDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &StepEntity, other: &StepEntity) -> Self {
-        let args_diff = StepArgsDiff::between(&base.args, &other.args);
-        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -356,28 +335,6 @@ impl StepEntitiesDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[StepEntity], other: &[StepEntity]) -> Self {
-        let base_ids: HashSet<u64> = base.iter().map(|e| e.id).collect();
-        let other_ids: HashSet<u64> = other.iter().map(|e| e.id).collect();
-
-        let removed: Vec<u64> = base.iter().filter(|e| !other_ids.contains(&e.id)).map(|e| e.id).collect();
-
-        let mut modified = Vec::new();
-        for be in base {
-            if let Some(oe) = other.iter().find(|o| o.id == be.id) {
-                let d = StepEntityDiff::between(be, oe);
-                if !d.is_empty() {
-                    modified.push(StepEntityModified { id: be.id, diff: d });
-                }
-            }
-        }
-
-        let added: Vec<StepEntityAdded> = other.iter().enumerate().filter(|(_, e)| !base_ids.contains(&e.id)).map(|(index, e)| StepEntityAdded { index, entity: e.clone() }).collect();
-
-        Self { removed, modified, added }
     }
 
     /// ↩️ The entity triple that undoes `self` on `base`: added ids are removed, modified entities get their base-relative inverse, and removed
@@ -460,7 +417,7 @@ fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -
                 continue; // modified-of-annihilated-add: moot.
             }
             if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
-                a.entity = dm.diff.apply(&a.entity);
+                a.entity = apply_entity_diff_to_added(&dm.diff, &a.entity);
             }
         } else {
             if merged_removed.contains(&dm.id) {
@@ -523,16 +480,14 @@ fn target_error(code: &'static str, message: &'static str, target: Vec<String>) 
 fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
-        let mut target = prefix.to_vec();
-        target.extend(["args".to_string(), index.to_string()]);
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), index.to_string()]).collect();
         if index >= base_len || !removed.insert(index) {
             return Err(target_error("mutation.apply.invalid-remove-index", "argument removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
-        let mut target = prefix.to_vec();
-        target.extend(["args".to_string(), entry.index.to_string()]);
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), entry.index.to_string()]).collect();
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
             return Err(target_error("mutation.apply.invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
         }
@@ -541,8 +496,7 @@ fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -
     additions.sort_unstable();
     let mut previous = None;
     for (length, index) in (base_len - removed.len()..).zip(additions) {
-        let mut target = prefix.to_vec();
-        target.extend(["args".to_string(), index.to_string()]);
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), index.to_string()]).collect();
         if index > length || previous == Some(index) {
             return Err(target_error("mutation.apply.invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
         }
@@ -642,16 +596,6 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
         }
     }
 
-    fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
-        let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities);
-        Self {
-            file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
-            file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
-            file_schema: (base.header.file_schema != other.header.file_schema).then(|| other.header.file_schema.clone()),
-            entities: (!entities_diff.is_empty()).then_some(entities_diff),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
@@ -659,144 +603,31 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
 
 //#endregion 🔖️Diff
 
-//#region 🔖️HandcraftedDiffCodec
-/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `StepDiff` — real `cargo check` confirms 3a
-/// (`#[derive(dsl::DslDiff)]` fails: `StepEntitiesDiff: DslField` unsatisfied, cascading from
-/// `StepEntityDiff.args: Option<StepArgsDiff>` -> `StepArgsDiff.modified/added` ->
-/// `StepValue: DslField` unsatisfied — `StepValue` is a genuine data-carrying enum, no `DslField`
-/// impl derivable for it, same root cause as `SvgNodeDiff`/`XmlNode`). No tri-state
-/// `Option<Option<_>>` anywhere in this diff (3b does not apply here) — every `StepDiff` field is a
-/// plain `Option<T>` ("weak value, whole-replaced"), so the grammar below needs no `[0]`/`[1,x]`
-/// tri-state wrapper at the TOP level (absent token = unchanged is already unambiguous); the
-/// wrapper IS still needed for genuinely nested `Option<T>` sub-fields (`StepEntityDiff.name`/
-/// `.args`/`.complex`). Same primitive set + grammar conventions as `GifDiff`/`SvgDiff`'s
-/// hand-rolled codecs (bracket-depth-aware split, hex for strings, `idx:payload`/`id:payload` for
-/// collection-triple entries) — own copy per the recipe's specific-code mandate (see this file's
-/// `IndexTransport` region doc comment for the same rationale), reused by `StepMutation`'s
-/// `OpText`/`OpBinary` via `pub(crate)`.
-//#region 🔖️Primitives
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️BinaryPrimitives
-
-
-
-
-
-
-
-
-//#endregion 🔖️BinaryPrimitives
-
-//#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueCodecs
-
-//#region 🔖️ValueBinaryCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueBinaryCodecs
-
-//#region 🔖️DiffValueCodecs
-
-
-
-
-
-
-
-
-//#endregion 🔖️DiffValueCodecs
-
-//#region 🔖️DiffValueBinaryCodecs
-
-
-
-
-
-
-
-
-//#endregion 🔖️DiffValueBinaryCodecs
-
-//#region 🔖️TopLevel
-
-
-
-
-//#endregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
 //#region 🔖️DemoCases
-/// 🧪️ P2-FG1: representative `StepDiff` cases — real `print_diff()`-conformance-law fodder
-/// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
-/// `between()` result exercising every top-level field plus all three `entities`/`args`
-/// collection-triple flavors and `StepEntityDiff.complex`, and its reverse direction.
+/// 🧪️ P2-FG1: representative `StepDiff` cases built declaratively — `diff_grammar_conformance_law` and `protocol_walk_law` fodder: the empty
+/// diff, every top-level field plus all three `entities`/`args` collection-triple flavors and `StepEntityDiff.complex`, and a header-only diff.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
-    let a = crate::engine::demo_step_snapshot();
-    let mut b = a.clone();
-    b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());
-    b.header.file_name.originating_system = "changed".into();
-    if let Some(first) = b.entities.first_mut() {
-        first.name = "RENAMED_POINT".into();
-        first.args.push(StepValue::Aggregate(vec![StepValue::Integer(1), StepValue::Integer(2)]));
-        first.complex.push(StepComplexType { name: "EXTRA_TYPE".into(), args: vec![StepValue::Real(1.5), StepValue::String("hi".into())] });
-    }
-    b.entities.push(StepEntity { id: 99, name: "ADDED_WITH_COMPLEX".into(), args: vec![StepValue::Unset], complex: vec![StepComplexType { name: "ANOTHER_TYPE".into(), args: vec![StepValue::Reference(42)] }] });
-    vec![StepDiff::default(), StepDiff::between(&a, &b), StepDiff::between(&b, &a)]
+    let entity = StepEntityDiff {
+        name: Some("RENAMED_POINT".into()),
+        args: Some(StepArgsDiff {
+            removed: vec![0],
+            modified: vec![StepArgModified { index: 1, value: StepValue::Aggregate(vec![StepValue::Integer(1), StepValue::Integer(2)]) }],
+            added: vec![StepArgAdded { index: 2, value: StepValue::Reference(42) }],
+        }),
+        complex: Some(vec![StepComplexType { name: "EXTRA_TYPE".into(), args: vec![StepValue::Real(1.5), StepValue::String("hi".into())] }]),
+    };
+    let entities = StepEntitiesDiff {
+        removed: vec![2],
+        modified: vec![StepEntityModified { id: 1, diff: entity }],
+        added: vec![StepEntityAdded { index: 1, entity: StepEntity { id: 99, name: "ADDED_WITH_COMPLEX".into(), args: vec![StepValue::Unset], complex: vec![StepComplexType { name: "ANOTHER_TYPE".into(), args: vec![StepValue::Reference(42)] }] } }],
+    };
+    vec![
+        StepDiff::default(),
+        StepDiff { file_schema: Some(StepFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] }), entities: Some(entities), ..Default::default() },
+        StepDiff { file_description: Some(StepFileDescription { description: vec!["changed".into()], implementation_level: "2;1".into() }), ..Default::default() },
+    ]
 }
 //#endregion 🔖️DemoCases
 
@@ -819,3 +650,9 @@ pub use crate::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::schema::snapshot::StepValue;
 //#endregion 🔁️Re-exports
+
+/// 🧩️ The carried value of an entity an earlier diff added, once a later diff modified it (absorb).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_entity_diff_to_added(diff: &StepEntityDiff, added: &StepEntity) -> StepEntity {
+    diff.apply(added)
+}

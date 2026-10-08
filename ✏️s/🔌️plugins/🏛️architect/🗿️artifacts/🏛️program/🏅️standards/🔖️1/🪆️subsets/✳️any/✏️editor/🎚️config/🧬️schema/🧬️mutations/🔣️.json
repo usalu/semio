@@ -7,11 +7,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ReplaceConfig"
+        "SetConfig"
       ],
       "properties": {
-        "ReplaceConfig": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/app/architect/architect/config/mutation/replace-config/schema.json"
+        "SetConfig": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/architect/architect/config/mutation/set-config/schema.json"
         }
       }
     }

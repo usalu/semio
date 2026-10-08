@@ -31,6 +31,8 @@ use crate::IfcSnapshot;
 use protocol::{Mutation};
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "➕insert-entity/🦀️.rs"]
 pub mod insert_entity;
 #[path = "🧩insert-entity-arg/🦀️.rs"]
@@ -102,30 +104,11 @@ pub enum IfcMutation {
 pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the header fields that differ are set, then the entities past the longest
-/// equal prefix are removed and the next ones inserted at their positions. The snapshot `schema` is a constant of the artifact.
-pub fn net_mutations(base: &IfcSnapshot, next: &IfcSnapshot) -> Vec<IfcMutation> {
-    let mut leaves = Vec::new();
-    if base.header.file_description != next.header.file_description {
-        leaves.push(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: next.header.file_description.clone() }));
-    }
-    if base.header.file_name != next.header.file_name {
-        leaves.push(IfcMutation::SetFileName(set_file_name::SetFileName { values: next.header.file_name.clone() }));
-    }
-    if base.header.file_schema != next.header.file_schema {
-        leaves.push(IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: next.header.file_schema.clone() }));
-    }
-    let common = base.entities.iter().zip(&next.entities).take_while(|(left, right)| left == right).count();
-    leaves.extend(base.entities[common..].iter().rev().map(|entity| IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: entity.id })));
-    leaves.extend(next.entities.iter().enumerate().skip(common).map(|(index, entity)| IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: entity.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an entity or argument target is missing or out of range.
+#[cfg(test)]
 pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
     let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

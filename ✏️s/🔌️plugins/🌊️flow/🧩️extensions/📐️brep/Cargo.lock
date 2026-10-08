@@ -2509,7 +2509,6 @@ dependencies = [
 name = "semio-framework-dsl"
 version = "0.1.0"
 dependencies = [
- "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-value",
 ]
@@ -2597,6 +2596,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-trace",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -2637,6 +2637,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-replication",
  "semio-framework-value-derive",
 ]
 
@@ -3043,6 +3044,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-ui-contract",

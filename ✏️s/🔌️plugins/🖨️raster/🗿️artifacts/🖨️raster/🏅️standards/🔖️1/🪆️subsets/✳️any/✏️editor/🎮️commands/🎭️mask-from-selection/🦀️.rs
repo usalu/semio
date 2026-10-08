@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct MaskFromSelection {
     pub layer_id: String,
     pub expected_image_key: Option<String>,
-    pub selection: String,
+    pub selection: Vec<crate::RasterSelectionSpan>,
 }
 
 struct Candidate {

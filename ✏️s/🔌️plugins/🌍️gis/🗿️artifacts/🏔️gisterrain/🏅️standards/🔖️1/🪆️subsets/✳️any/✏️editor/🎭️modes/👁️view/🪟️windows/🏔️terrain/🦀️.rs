@@ -9,7 +9,7 @@
 /// `crate::schema`'s `🔖️TerrainDescriptor` region.
 use crate::schema::{TerrainDescriptorJson};
 use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
-use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
+use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
 use crate::GisTerrainSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;
@@ -78,7 +78,7 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 }
 
 pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig) -> UiAssemblyResult<BuiltNode> {
-    let descriptor = parse_descriptor(document);
+    let descriptor = fixture_descriptor(document);
     let mut scene = World3dScene::base(
         cfg.camera_json,
         "[]".into(),

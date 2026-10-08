@@ -54,6 +54,7 @@ mod subject {
             info: PdfInfo { title: spec.title.clone(), author: spec.author.clone(), subject: None, keywords: None, creator: None, producer: None },
             objects: Vec::new(),
             trailer: Vec::new(),
+            admitted_stream_roles: Vec::new(),
         }
     }
 

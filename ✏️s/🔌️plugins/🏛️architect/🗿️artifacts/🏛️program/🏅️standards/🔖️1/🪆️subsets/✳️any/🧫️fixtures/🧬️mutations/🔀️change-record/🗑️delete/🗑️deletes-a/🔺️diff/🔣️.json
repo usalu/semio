@@ -55,12 +55,15 @@
   "approvals": null,
   "meetings": null,
   "changes": {
-    "added": [],
     "removed": [
-      "change-record-a"
+      {
+        "id": "change-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "collaboration": null,
   "analyses": null,

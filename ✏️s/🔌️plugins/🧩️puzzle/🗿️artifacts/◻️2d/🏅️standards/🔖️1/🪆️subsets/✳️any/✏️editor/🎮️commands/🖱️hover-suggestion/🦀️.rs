@@ -1,7 +1,7 @@
 //! 💡️ `hover-suggestion` command.
 
 use crate::editor::puzzle2d::{puzzle2d_restore_brush_slot, puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🖱️ Previews one candidate PROVISIONALLY — the board host rebuilds its ghost on `index` and nothing
 /// reaches the document until `acceptSuggestion` commits it. Hovering a popup row and cycling the armed

@@ -3,7 +3,7 @@
 test("PDF closed native semantic extent independently measures literal SQL cells",async()=>{
   const plan=JSON.parse(await Bun.file(new URL("../../🧫️fixtures/🛂️semantic/🔣️.json",import.meta.url)).text());expect(plan["encodings"]).toEqual(["binary","text"]);expect(plan["metadata"]).toEqual("excluded from direct domain");
   for(const item of plan.cases){
-    const value=pdfSnapshotFromNativeJson({schema:item.schema.repeat(item.repeat??1),declaredVersion:item.declaredVersion,pages:[],fonts:[],images:[],forms:[],extGStates:[],shadings:[],patterns:[],colorSpaces:[],properties:[],outlines:[],namedDestinations:[],pageLabels:[],embeddedFiles:[],outputIntents:[],info:{},catalogExtra:[],trailer:[],objects:[]});
+    const value=pdfSnapshotFromNativeJson({schema:item.schema.repeat(item.repeat??1),declaredVersion:item.declaredVersion,pages:[],fonts:[],images:[],forms:[],extGStates:[],shadings:[],patterns:[],colorSpaces:[],properties:[],outlines:[],namedDestinations:[],pageLabels:[],embeddedFiles:[],outputIntents:[],info:{},catalogExtra:[],trailer:[],admittedStreamRoles:[],objects:[]});
     const database=await pdf17SnapshotToSqliteDatabase(value),sql=new Database(":memory:");
     for(const table of database.tables){sql.run(table.sql);const fields=sql.query(`PRAGMA table_info("${table.name}")`).all() as {name:string}[];const insert=sql.query(`INSERT INTO "${table.name}"(${fields.map(field=>'"'+field.name+'"').join(",")}) VALUES(${fields.map(()=>"?").join(",")})`);for(const row of table.rows)insert.run(...row.values);}
     let rows=0,bytes=0;const counts:Record<string,number>={};
@@ -45,7 +45,7 @@ test("PDF native row fixture independently counts every COS value and relationsh
   const plan=JSON.parse(await Bun.file(new URL("../../🧫️fixtures/🛫️row-admission.json",import.meta.url)).text());
   
   expect(plan["schema"]).toEqual("semio.pdf.native-row-admission/v1");
-  const value=pdfSnapshotFromNativeJson({schema:"row-admission",declaredVersion:"1.7",pages:[],fonts:[],images:[],forms:[],extGStates:[],shadings:[],patterns:[],colorSpaces:[],properties:[],outlines:[],namedDestinations:[],pageLabels:[],embeddedFiles:[],outputIntents:[],info:{},catalogExtra:[],trailer:[],objects:[{id:{num:1,gen:0},value:{kind:"array",value:Array.from({length:plan.arrayLength},()=>({kind:"null"}))}}]});
+  const value=pdfSnapshotFromNativeJson({schema:"row-admission",declaredVersion:"1.7",pages:[],fonts:[],images:[],forms:[],extGStates:[],shadings:[],patterns:[],colorSpaces:[],properties:[],outlines:[],namedDestinations:[],pageLabels:[],embeddedFiles:[],outputIntents:[],info:{},catalogExtra:[],trailer:[],admittedStreamRoles:[],objects:[{id:{num:1,gen:0},value:{kind:"array",value:Array.from({length:plan.arrayLength},()=>({kind:"null"}))}}]});
   const database=await pdf17SnapshotToSqliteDatabase(value,{maxRows:plan.totalRows});
   const sql=Database.deserialize(await exportSqliteDatabase(database));
   const counts:Record<string,number>={};let total=0;
@@ -53,3 +53,23 @@ test("PDF native row fixture independently counts every COS value and relationsh
   expect(counts).toEqual(plan.counts);expect(total).toBe(plan.totalRows);sql.close();
   await expect(pdf17SnapshotToSqliteDatabase(value,{maxRows:plan.refusedRows})).rejects.toThrow();
 },{timeout:30_000});
+
+test("PDF stream roles persist normalized identities and exact unsigned sample words", async () => {
+  const fixture = JSON.parse(await Bun.file(new URL("../../📄️document/🧫️fixtures/🔣️.json", import.meta.url)).text());
+  const roles = JSON.parse(await Bun.file(new URL("../../../../../🧬️schema/🪪️stream-roles/🧫️fixtures/🔣️.json", import.meta.url)).text());
+  const value = pdfSnapshotFromNativeJson(fixture);
+  value.admittedStreamRoles=Object.values(roles).filter((item):item is typeof roles.role=>typeof item==="object"&&item!==null&&"identity" in item&&"dependencies" in item&&"value" in item);
+  value.objects=[{id:{num:3,gen:4},value:{kind:"dict",value:[{key:"Contents",value:{kind:"ref",num:7,gen:2}}]}},{id:{num:7,gen:2},value:{kind:"stream",dict:[],data:[113,32,81],filters:[]}},...value.admittedStreamRoles.filter(role=>role.identity.owner.num!==3).map(role=>({id:role.identity.owner,value:{kind:"stream" as const,dict:[],data:[],filters:[]}}))];
+  const bytes = await exportSqliteDatabase(await pdf17SnapshotToSqliteDatabase(value));
+  const sql = Database.deserialize(bytes);
+  expect(sql.query("SELECT CAST(word AS TEXT) AS word FROM pdf_stream_role_sample ORDER BY ordinal").all()).toEqual([{word:"513"},{word:"4095"},{word:"4294967295"}]);
+  expect(sql.query("SELECT object_number,object_generation FROM pdf_graph_identity WHERE object_number IN (3,7,9) ORDER BY id").all()).toEqual([{object_number:3,object_generation:4},{object_number:3,object_generation:4},{object_number:7,object_generation:2},{object_number:9,object_generation:1},{object_number:9,object_generation:1}]);
+  expect(value.admittedStreamRoles).toHaveLength(12);
+  const unbound=structuredClone(value);unbound.admittedStreamRoles[0]!.identity.owner.gen++;
+  await expect(pdf17SnapshotToSqliteDatabase(unbound)).rejects.toThrow();
+  expect(await pdf17SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes))).toEqual(value);
+  sql.query("UPDATE pdf_stream_role_sample SET ordinal=9 WHERE ordinal=1").run();
+  await expect(pdf17SnapshotFromSqliteDatabase(await importSqliteDatabase(sql.serialize()))).rejects.toThrow();
+  sql.close();
+  console.log("[DEBUG] PDF native SQLite independently confirmed normalized stream identity and sample word persistence");
+});

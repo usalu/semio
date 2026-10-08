@@ -1,0 +1,5 @@
+# Ray and Zero Index Example Authorities
+
+Ray-segment-closest schema owns at least six named input vectors together with expected distance, ray point and segment point, plus overlapping/projected/clipped pick testing envelopes and selected-object outcomes. Zero-index schema owns accepted geometry cases plus fixed zero index count, zero RGBA, missingMesh=false, draw paths and exactly two named resident/absent versions. Neither schema references genuine individual domain definitions. Lack of a current schema reader does not legitimize these exclusive whole-example declarations.
+
+Actual plain ray law lives in component-selection-merges fixture gumball; scene math-unit native tests at 1353/1372/1495 exercise real ray_segment_closest and independent Three witnesses. Actual zero-index law lives in component-source fixture zeroIndex; math-unit 198–224 constructs genuine Mesh3dSchema, verifies constructor refusals and preserves wire/point buffers. These native/plain consumers do not need the wrapper schemas. Retire only wrappers, preserve fixture bytes and all domain math/admission laws. No test execution, source mutation or writer attribution.

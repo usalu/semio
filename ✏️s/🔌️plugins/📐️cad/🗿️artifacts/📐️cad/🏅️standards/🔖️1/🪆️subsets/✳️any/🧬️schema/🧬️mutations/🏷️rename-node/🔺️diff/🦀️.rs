@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RenameNode`.
 use super::RenameNode;
-use crate::diff::{CadDiff, CadNodePatchEntry, CadNodesDelta};
+use crate::diff::{CadDiff, CadNodesDelta};
 use crate::mutations::CadNodePatch;
 use crate::CadSnapshot;
 
@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameNode, base: &CadSnapshot) -> protocol::MutationOutco
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" is already named \"{}\".", payload.node_id, payload.new_label));
     }
     protocol::MutationOutcome::new(CadDiff {
-        nodes: Some(CadNodesDelta { patched: vec![CadNodePatchEntry { id: payload.node_id.clone(), patch: CadNodePatch { label: Some(payload.new_label.clone()) } }], ..Default::default() }),
+        nodes: Some(CadNodesDelta::modification(payload.node_id.clone(), CadNodePatch { label: Some(payload.new_label.clone()) })),
         ..Default::default()
     })
 }

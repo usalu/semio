@@ -1,36 +1,152 @@
 syntax = "proto3";
-
 package semio.s.wfc.wfc2d;
 
-message Wfc2dSlotUpsert {
-  uint32 index = 1;
-  Wfc2dSlot value = 2;
+// 🔺️ wfc2d diff — scalars are optional absolutes; every list is a positional list delta (`protocol::list_delta`): removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
+
+message Wfc2dSlotPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double width = 3;
+  optional double height = 4;
+  optional string pinned_tile_id = 5; // set or clear
 }
 
-message Wfc2dSlotEdgeUpsert {
-  uint32 index = 1;
-  Wfc2dSlotEdge value = 2;
+message Wfc2dSlotsRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message Wfc2dTileUpsert {
+message Wfc2dSlotsInsertion {
   uint32 index = 1;
-  Wfc2dTile value = 2;
+  Wfc2dSlot row = 2;
 }
 
-message Wfc2dRuleUpsert {
+message Wfc2dSlotsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc2dSlotsModification {
+  string id = 1;
+  Wfc2dSlotPatch patch = 2;
+}
+
+message Wfc2dSlotsDelta {
+  repeated Wfc2dSlotsRemoval removed = 1;
+  repeated Wfc2dSlotsInsertion inserted = 2;
+  repeated Wfc2dSlotsRelocation moved = 3;
+  repeated Wfc2dSlotsModification modified = 4;
+}
+
+message Wfc2dEdgePatch {
+  optional string from_slot_id = 1;
+  optional string to_slot_id = 2;
+  optional string relation = 3;
+}
+
+message Wfc2dEdgesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Wfc2dEdgesInsertion {
   uint32 index = 1;
-  Wfc2dRule value = 2;
+  Wfc2dSlotEdge row = 2;
+}
+
+message Wfc2dEdgesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc2dEdgesModification {
+  string id = 1;
+  Wfc2dEdgePatch patch = 2;
+}
+
+message Wfc2dEdgesDelta {
+  repeated Wfc2dEdgesRemoval removed = 1;
+  repeated Wfc2dEdgesInsertion inserted = 2;
+  repeated Wfc2dEdgesRelocation moved = 3;
+  repeated Wfc2dEdgesModification modified = 4;
+}
+
+message Wfc2dTilePatch {
+  optional double weight = 1;
+  optional Wfc2dTileMedia media = 2;
+  optional string label = 3; // set or clear
+}
+
+message Wfc2dTilesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Wfc2dTilesInsertion {
+  uint32 index = 1;
+  Wfc2dTile row = 2;
+}
+
+message Wfc2dTilesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc2dTilesModification {
+  string id = 1;
+  Wfc2dTilePatch patch = 2;
+}
+
+message Wfc2dTilesDelta {
+  repeated Wfc2dTilesRemoval removed = 1;
+  repeated Wfc2dTilesInsertion inserted = 2;
+  repeated Wfc2dTilesRelocation moved = 3;
+  repeated Wfc2dTilesModification modified = 4;
+}
+
+message Wfc2dRulePatch {
+  optional string tile_a_id = 1;
+  optional string tile_b_id = 2;
+  optional bool allowed = 3;
+  optional string relation = 4; // set or clear
+}
+
+message Wfc2dRulesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Wfc2dRulesInsertion {
+  uint32 index = 1;
+  Wfc2dRule row = 2;
+}
+
+message Wfc2dRulesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc2dRulesModification {
+  string id = 1;
+  Wfc2dRulePatch patch = 2;
+}
+
+message Wfc2dRulesDelta {
+  repeated Wfc2dRulesRemoval removed = 1;
+  repeated Wfc2dRulesInsertion inserted = 2;
+  repeated Wfc2dRulesRelocation moved = 3;
+  repeated Wfc2dRulesModification modified = 4;
 }
 
 message Wfc2dDiff {
   optional string schema = 1;
   optional uint64 seed = 2;
-  repeated string slots_removed = 3;
-  repeated Wfc2dSlotUpsert slots_upserted = 4;
-  repeated string edges_removed = 5;
-  repeated Wfc2dSlotEdgeUpsert edges_upserted = 6;
-  repeated string tiles_removed = 7;
-  repeated Wfc2dTileUpsert tiles_upserted = 8;
-  repeated string rules_removed = 9;
-  repeated Wfc2dRuleUpsert rules_upserted = 10;
+  Wfc2dSlotsDelta slots = 3;
+  Wfc2dEdgesDelta edges = 4;
+  Wfc2dTilesDelta tiles = 5;
+  Wfc2dRulesDelta rules = 6;
 }

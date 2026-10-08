@@ -4,11 +4,6 @@ import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/�
 
 // 🔺️ Sparse Flow document delta.
 message FlowDiff {
-  optional FlowArtifact artifact = 1;
-  optional string schema = 2;
-  optional semio.os.store.ArtifactChild content = 3; // child s.stdio.semio@v1/flow
-}
-message FlowArtifact {
-  string schema = 1;
-  semio.os.store.ArtifactChild content = 2;
+  optional string schema = 1;
+  optional semio.os.store.ArtifactChild content = 2; // child s.stdio.semio@v1/flow
 }

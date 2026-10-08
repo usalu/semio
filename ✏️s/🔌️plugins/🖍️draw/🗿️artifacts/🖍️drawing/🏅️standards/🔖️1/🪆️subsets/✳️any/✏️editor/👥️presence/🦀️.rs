@@ -53,9 +53,6 @@ impl protocol::DiffAlgebra<DrawingPresence> for DrawingPresenceDiff {
     fn inverse(&self, base: &DrawingPresence) -> Self {
         Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
-    fn between(base: &DrawingPresence, other: &DrawingPresence) -> Self {
-        Self { engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), camera: (base.camera != other.camera).then(|| other.camera.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none() && self.camera.is_none()
     }

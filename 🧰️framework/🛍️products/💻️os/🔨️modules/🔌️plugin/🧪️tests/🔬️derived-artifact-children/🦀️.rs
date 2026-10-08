@@ -13,9 +13,6 @@ impl protocol::DiffAlgebra<ChildrenTestSnapshot> for ChildrenTestDiff {
     fn inverse(&self, _base: &ChildrenTestSnapshot) -> Self {
         Self {}
     }
-    fn between(_base: &ChildrenTestSnapshot, _other: &ChildrenTestSnapshot) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

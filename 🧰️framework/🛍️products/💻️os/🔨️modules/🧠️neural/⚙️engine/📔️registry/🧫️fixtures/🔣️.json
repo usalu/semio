@@ -8,8 +8,18 @@
     "fields": [
       {
         "key": "nested",
-        "value": { "kind": "list", "of": { "kind": "schema", "of": "sample" } },
-        "default": { "nested": { "label": "retained 🌊" } },
+        "value": {
+          "kind": "list",
+          "of": {
+            "kind": "schema",
+            "of": "sample"
+          }
+        },
+        "default": {
+          "nested": {
+            "label": "retained 🌊"
+          }
+        },
         "label": "Nested"
       }
     ]
@@ -27,17 +37,41 @@
         "abbreviation": "In",
         "name": "input",
         "fullName": "Input",
-        "default": { "label": "channel 🌊" },
+        "default": {
+          "label": "channel 🌊"
+        },
         "cardinality": "?"
       }
     ],
     "outputs": [],
-    "group": ["Tests"]
+    "group": [
+      "Tests"
+    ]
   },
-  "implementationSchemas": ["sample"],
+  "implementationSchemas": [
+    "sample"
+  ],
   "payload": "dynamic 🌊",
-  "grants": [1, 64, 4096],
-  "expected": { "dropsBeforeRetirement": 0, "dropsAfterRetirement": 1 },
-  "executionOwner": { "sameReaderSameIdentity": true, "distinctOwnerDifferentIdentity": true, "retirementGrantBytes": 3 },
-  "physicalShell": { "allocations": 2, "releasedBeforeGrant": 0, "zeroGrantFrozen": true, "undersizedGrantFrozen": true, "releasedBytesEqualAllocatorBytes": true }
+  "grants": [
+    1,
+    64,
+    4096
+  ],
+  "expected": {
+    "dropsBeforeRetirement": 0,
+    "dropsAfterRetirement": 1
+  },
+  "executionOwner": {
+    "sameReaderSameIdentity": true,
+    "distinctOwnerDifferentIdentity": true,
+    "retirementGrantBytes": 3,
+    "maximumRetirementTurns": 10000
+  },
+  "physicalShell": {
+    "allocations": 2,
+    "releasedBeforeGrant": 0,
+    "zeroGrantFrozen": true,
+    "undersizedGrantFrozen": true,
+    "releasedBytesEqualAllocatorBytes": true
+  }
 }

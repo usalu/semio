@@ -1,0 +1,43 @@
+{
+  "qualification": "Read-only actual factory/callee graph; absence bounded to current defining owners; no runtime claim",
+  "rows": [
+    {
+      "owner": "ProbeSnapshot",
+      "documentSchema": "os.agent.probe/v1",
+      "dialect": null,
+      "composition": "standalone MCP workspace host, not Plugin Runtime assembly",
+      "hostOrigin": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs:4287",
+      "registrationOrigin": "same source:406",
+      "providerOrigin": "same source:221",
+      "sqlOrigin": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🗄️.sql",
+      "owningLaw": "workspace/🧪️tests/🔬️quick/🦀️.rs:407 exercises Value, not SQLite publicIO",
+      "providerPresent": true,
+      "nativeRegistrationHook": "inherited None",
+      "publicSqliteOriginalTest": "no actual public SQLite IO law found",
+      "runtimeReceipt": "none claimed",
+      "defect": "ordinary actual host only publishes document codec; no native SQLite route for concrete snapshot"
+    },
+    {
+      "owner": "NativeSocketProbeSnapshot",
+      "documentSchema": "native.socket-grant.probe/v1",
+      "dialect": null,
+      "composition": "standalone renderer socket grant host, non-wasm",
+      "hostOrigin": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs:19332",
+      "registrationOrigin": "same source:19343",
+      "providerOrigin": "same source:19138",
+      "sqlOrigin": "same source parent/🪶️sqlite/🗄️.sql",
+      "owningLaw": "engine/🧪️tests/🧊️wgpu-renderer-standalone/🦀️.rs:25 exercises Value/serde, not SQLite publicIO",
+      "providerPresent": true,
+      "nativeRegistrationHook": "inherited None",
+      "publicSqliteOriginalTest": "no actual public SQLite IO law found",
+      "runtimeReceipt": "none claimed",
+      "defect": "ordinary actual host only publishes document codec; no native SQLite route for concrete snapshot"
+    }
+  ],
+  "calleeEvidence": {
+    "documentRegistration": "Store register_document_codecs_in_assembly12177 writes only document schema registry",
+    "publicSqliteLookup": "IO typed_snapshot_codec2530 requires exact native_snapshot_registry entry",
+    "nativePublication": "IO register_native_snapshot_codec1892 writes both registries",
+    "defaultHooks": "Store11378 native_snapshot_registration None and11380 publish_native_snapshot Ok(())"
+  }
+}

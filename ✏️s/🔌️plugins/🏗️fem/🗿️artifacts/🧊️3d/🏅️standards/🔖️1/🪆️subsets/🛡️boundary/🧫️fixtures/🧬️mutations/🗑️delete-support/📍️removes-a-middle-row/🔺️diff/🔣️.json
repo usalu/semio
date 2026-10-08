@@ -5,12 +5,15 @@
   "sections": null,
   "solids": null,
   "supports": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "sup_ext_a"
+      {
+        "id": "sup_ext_a",
+        "index": 7
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "loadCases": null,
   "combinations": null,

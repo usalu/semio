@@ -95,6 +95,26 @@
     {
       "source": "#[cfg(test)] mod probes { fn sample(value:ArtifactRef){let _=value.to_uri();} } fn apply(){}",
       "forbidden": []
+    },
+    {
+      "source": "pub fn mutate(value: &serde_json::Value) {}",
+      "forbidden": [
+        "serde_json"
+      ]
+    },
+    {
+      "source": "use serde_json::Value as NativeValue; pub struct Snapshot { pub value: NativeValue }",
+      "forbidden": [
+        "serde_json"
+      ]
+    },
+    {
+      "source": "#[cfg(test)] mod tests { use serde_json::Value; fn witness(_: Value) {} } pub struct Snapshot;",
+      "forbidden": []
+    },
+    {
+      "source": "pub fn owned(value: &DslValue) { let example = \"serde_json::Value\"; }",
+      "forbidden": []
     }
   ],
   "typescript": [

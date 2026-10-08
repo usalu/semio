@@ -1331,19 +1331,1249 @@
         }
       }
     },
-    "PageFrameAdded": {
+    "LayoutPageRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "frame",
-        "index",
-        "layer_id"
+        "id",
+        "index"
       ],
       "properties": {
-        "frame": {
-          "$ref": "#/$defs/Frame"
+        "id": {
+          "type": "string"
         },
         "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutPageInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/Page"
+        }
+      }
+    },
+    "LayoutPageRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutPagesModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/PagePatch"
+        }
+      }
+    },
+    "LayoutPagesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutPageRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutPageInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutPageRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutPagesModification"
+          }
+        }
+      }
+    },
+    "LayoutStoryRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutStoryInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/TextStory"
+        }
+      }
+    },
+    "LayoutStoryRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutStoriesModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/TextStoryPatch"
+        }
+      }
+    },
+    "LayoutStoriesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutStoryRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutStoryInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutStoryRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutStoriesModification"
+          }
+        }
+      }
+    },
+    "LayoutLinkRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutLinkInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/ImageLink"
+        }
+      }
+    },
+    "LayoutLinkRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutLinksModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ImageLinkPatch"
+        }
+      }
+    },
+    "LayoutLinksDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutLinkRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutLinkInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutLinkRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutLinksModification"
+          }
+        }
+      }
+    },
+    "LayoutParagraphStyleRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutParagraphStyleInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/ParagraphStyle"
+        }
+      }
+    },
+    "LayoutParagraphStyleRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutParagraphStylesModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ParagraphStylePatch"
+        }
+      }
+    },
+    "LayoutParagraphStylesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParagraphStyleRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParagraphStyleInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParagraphStyleRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParagraphStylesModification"
+          }
+        }
+      }
+    },
+    "LayoutCharacterStyleRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutCharacterStyleInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/CharacterStyle"
+        }
+      }
+    },
+    "LayoutCharacterStyleRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutCharacterStylesModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CharacterStylePatch"
+        }
+      }
+    },
+    "LayoutCharacterStylesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutCharacterStyleRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutCharacterStyleInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutCharacterStyleRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutCharacterStylesModification"
+          }
+        }
+      }
+    },
+    "LayoutParentPageRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutParentPageInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/ParentPage"
+        }
+      }
+    },
+    "LayoutParentPageRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutParentPagesModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ParentPagePatch"
+        }
+      }
+    },
+    "LayoutParentPagesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParentPageRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParentPageInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParentPageRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutParentPagesModification"
+          }
+        }
+      }
+    },
+    "LayoutSpreadRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutSpreadInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/Spread"
+        }
+      }
+    },
+    "LayoutSpreadRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutSpreadsModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SpreadPatch"
+        }
+      }
+    },
+    "LayoutSpreadsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutSpreadRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutSpreadInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutSpreadRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutSpreadsModification"
+          }
+        }
+      }
+    },
+    "PageOverrideRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PageOverrideInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/PageOverride"
+        }
+      }
+    },
+    "PageOverrideRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PageOverridesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageOverrideRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageOverrideInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageOverrideRelocation"
+          }
+        }
+      }
+    },
+    "LayoutDataEntryRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutDataEntryInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json#/properties/entries/items"
+        }
+      }
+    },
+    "LayoutDataEntryRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LayoutDataEntriesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutDataEntryRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutDataEntryInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutDataEntryRelocation"
+          }
+        }
+      }
+    },
+    "PageFrameRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PageFrameInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/Frame"
+        }
+      }
+    },
+    "PageFrameRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PageFramesModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FramePatch"
+        }
+      }
+    },
+    "PageFramesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageFrameRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageFrameInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageFrameRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageFramesModification"
+          }
+        }
+      }
+    },
+    "PageLayerRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PageLayerInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/Layer"
+        }
+      }
+    },
+    "PageLayerRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PageLayersModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/LayerPatch"
+        }
+      }
+    },
+    "PageLayersDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageLayerRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageLayerInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageLayerRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageLayersModification"
+          }
+        }
+      }
+    },
+    "LayerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PagePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "width",
+        "height",
+        "margin_top",
+        "margin_right",
+        "margin_bottom",
+        "margin_left",
+        "columns_count",
+        "columns_gutter"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_top": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_right": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_bottom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "margin_left": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns_count": {
           "anyOf": [
             {
               "type": "integer",
@@ -1354,7 +2584,17 @@
             }
           ]
         },
-        "layer_id": {
+        "columns_gutter": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_page_id": {
           "anyOf": [
             {
               "type": "string"
@@ -1363,6 +2603,25 @@
               "type": "null"
             }
           ]
+        },
+        "guides": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageGuidesDelta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overrides": {
+          "$ref": "#/$defs/PageOverridesDelta"
+        },
+        "frames": {
+          "$ref": "#/$defs/PageFramesDelta"
+        },
+        "layers": {
+          "$ref": "#/$defs/PageLayersDelta"
         }
       }
     },
@@ -1560,716 +2819,16 @@
               "type": "null"
             }
           ]
-        }
-      }
-    },
-    "PageFramePatched": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "frame_id",
-        "patch"
-      ],
-      "properties": {
-        "frame_id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/FramePatch"
-        }
-      }
-    },
-    "PagePatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "width",
-        "height",
-        "margin_top",
-        "margin_right",
-        "margin_bottom",
-        "margin_left",
-        "columns_count",
-        "columns_gutter",
-        "frame_added",
-        "frame_removed",
-        "frames_patched"
-      ],
-      "properties": {
-        "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "width": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "height": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "margin_top": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "margin_right": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "margin_bottom": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "margin_left": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "columns_count": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 0
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "columns_gutter": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "frame_added": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PageFrameAdded"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "frame_removed": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "frames_patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PageFramePatched"
-          }
-        },
-        "layer_patched": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PageLayerPatched"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "parent_page_id": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "guides": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PageGuidesDelta"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "overrides": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PageOverridesDelta"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "layer_added": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PageLayerAdded"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "layer_removed": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "frame_layer": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PageFrameLayer"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "frame_order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutPagePatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/PagePatch"
-        }
-      }
-    },
-    "LayoutPagesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Page"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutPagePatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutStoryPatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/TextStoryPatch"
-        }
-      }
-    },
-    "LayoutStoriesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/TextStory"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutStoryPatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutLinkPatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/ImageLinkPatch"
-        }
-      }
-    },
-    "LayoutLinksDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ImageLink"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutLinkPatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutParagraphStylePatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/ParagraphStylePatch"
-        }
-      }
-    },
-    "LayoutParagraphStylesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ParagraphStyle"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutParagraphStylePatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutCharacterStylePatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/CharacterStylePatch"
-        }
-      }
-    },
-    "LayoutCharacterStylesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CharacterStyle"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutCharacterStylePatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutParentPagePatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/ParentPagePatch"
-        }
-      }
-    },
-    "LayoutParentPagesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ParentPage"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutParentPagePatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutSpreadPatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/SpreadPatch"
-        }
-      }
-    },
-    "LayoutSpreadsDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Spread"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutSpreadPatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "PageLayerPatched": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "layer_id",
-        "name",
-        "visible",
-        "locked"
-      ],
-      "properties": {
-        "layer_id": {
-          "type": "string"
-        },
-        "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "visible": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "locked": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "PageFrameLayer": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "frame_id",
-        "layer_id"
-      ],
-      "properties": {
-        "frame_id": {
-          "type": "string"
         },
         "layer_id": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2361,49 +2920,6 @@
           ]
         }
       }
-    },
-    "LayoutDataEntriesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json#/properties/entries/items"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LayoutDataEntryPatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ]
     },
     "LayoutDrawingTextRow": {
       "type": "object",
@@ -2497,99 +3013,6 @@
           "items": {
             "$ref": "#/$defs/PageGuideRow"
           }
-        }
-      }
-    },
-    "PageOverridePatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "item"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "item": {
-          "$ref": "#/$defs/PageOverride"
-        }
-      }
-    },
-    "PageOverridesDelta": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PageOverride"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PageOverridePatchEntry"
-          }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "PageLayerAdded": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "layer",
-        "index"
-      ],
-      "properties": {
-        "layer": {
-          "$ref": "#/$defs/Layer"
-        },
-        "index": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 0
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "LayoutDataEntryPatchEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "item"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "item": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json#/properties/entries/items"
         }
       }
     }

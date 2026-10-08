@@ -1,6 +1,8 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN EN 16798 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use crate::mutations::{remove_vent_system::RemoveVentSystem, remove_zone::RemoveZone};
+use crate::{Din16798Mutation, Din16798Snapshot};
 
 /// 📚 Every path an DIN EN 16798 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
@@ -51,3 +53,31 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
 
     ],
 };
+
+fn row_position(path: &str, collection: &str, index: usize, ids: &[&str]) -> Result<Option<String>, String> {
+    let Some(selector) = path.strip_prefix(collection) else { return Ok(None) };
+    let position = match selector.strip_prefix('[').and_then(|rest| rest.strip_suffix(']')) {
+        None if selector.is_empty() => index,
+        Some(inner) => match inner.strip_prefix("id=") {
+            Some(id) => ids.iter().position(|existing| *existing == id).ok_or_else(|| format!("no row with id '{id}' in {collection}"))?,
+            None => inner.parse().map_err(|_| format!("'{inner}' is not a row position in {path}"))?,
+        },
+        None => return Ok(None),
+    };
+    ids.get(position).map(|id| Some((*id).to_string())).ok_or_else(|| format!("{collection} has no row at {position}"))
+}
+
+/// 🧭️ Resolves one value-tree edit into concrete kinds: the vocabulary of [`EDIT_RULES`], plus removal of a zone or vent system, which addresses its row by id — a spelling a rule's index selector cannot express.
+pub fn resolve_edit(document: &Din16798Snapshot, edit: &NormEdit) -> Result<Vec<Din16798Mutation>, String> {
+    if let NormEdit::RemoveItem { path, index } = edit {
+        let zones: Vec<&str> = document.zones.iter().map(|zone| zone.id.as_str()).collect();
+        if let Some(zone_id) = row_position(path, "zones", *index, &zones)? {
+            return Ok(vec![Din16798Mutation::RemoveZone(RemoveZone { zone_id })]);
+        }
+        let vents: Vec<&str> = document.vent_systems.iter().map(|vent| vent.id.as_str()).collect();
+        if let Some(vent_id) = row_position(path, "ventSystems", *index, &vents)? {
+            return Ok(vec![Din16798Mutation::RemoveVentSystem(RemoveVentSystem { vent_id })]);
+        }
+    }
+    EDIT_RULES.resolve(document, edit)
+}

@@ -23,11 +23,11 @@ fn multi_path_deletion_preserves_style_and_is_reversible() {
     let emit=plan(&before,"editNodes",&ids,&selected).unwrap();
     assert_eq!(emit.artifact_mutations.len(),2);assert_eq!(emit.effects.len(),2);
     let mut after=before.clone();let mut inverses=Vec::new();
-    for mutation in &emit.artifact_mutations {inverses.push(mutation.inverse(&after).expect("valid retained mutation inverse fixture"));crate::mutations::apply_drawing_mutation(&mut after,mutation).unwrap();}
+    for mutation in &emit.artifact_mutations {inverses.push(mutation.inverse(&after).expect("valid retained mutation inverse fixture"));crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,mutation).unwrap();}
     for (layer,original) in after.layers.iter().zip(&before.layers) {assert_eq!(crate::schema::layer_base(layer),crate::schema::layer_base(original));}
     let DrawingLayerNode::Path(first)=&after.layers[0] else {unreachable!()};
     assert_eq!(first.segments,vec![crate::PathSegment::Move {to:[10.0,10.0]}].into());
-    for group in inverses.into_iter().rev() {for mutation in group {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}}
+    for group in inverses.into_iter().rev() {for mutation in group {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}}
     assert_eq!(after,before);
 }
 
@@ -59,6 +59,6 @@ fn layer_deletion_normalizes_ancestors_and_respects_tool_context() {
     before.layers.push(group);
     let ids=vec!["group".into(),"first".into(),"second".into()];
     let emit=plan(&before,"selectDirect",&ids,&[]).unwrap();assert_eq!(emit.artifact_mutations.len(),2);
-    let mut after=before.clone();for mutation in emit.artifact_mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}assert!(after.layers.is_empty());
+    let mut after=before.clone();for mutation in emit.artifact_mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}assert!(after.layers.is_empty());
     for utility in ["editNodes","pen","shapeRect"] {assert!(plan(&before,utility,&ids,&[]).unwrap().artifact_mutations.is_empty());}
 }

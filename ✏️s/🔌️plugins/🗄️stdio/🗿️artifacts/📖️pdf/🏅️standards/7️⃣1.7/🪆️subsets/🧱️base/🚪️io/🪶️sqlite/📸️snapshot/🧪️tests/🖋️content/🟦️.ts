@@ -15,7 +15,7 @@ test("PDF content operators retain every named scalar, intrinsic image and order
   expect(sql.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"}); expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
   expect(sql.query("SELECT kind FROM pdf_operation ORDER BY ordinal").all()).toEqual(input.map(value => ({kind:value.op})));
   expect(sql.query("SELECT CAST(line_width_bits AS TEXT) AS bits,line_width_class FROM pdf_operation WHERE kind='setLineWidth'").get()).toEqual({bits:"-9223372036854775808",line_width_class:"finite"});
-  expect(sql.query("SELECT hex(data) AS bytes,CAST(width AS TEXT) AS width FROM pdf_inline_image").get()).toEqual({bytes:"00FF80",width:"4294967295"});
+  expect(sql.query("SELECT body_kind,CAST(width AS TEXT) AS width FROM pdf_inline_image").get()).toEqual({body_kind:"samples",width:"4294967295"});expect(sql.query("SELECT value FROM pdf_inline_sample ORDER BY ordinal").all()).toEqual([{value:0},{value:255},{value:128}]);
   const reader = await PdfReader.create(await importSqliteDatabase(bytes), PDF17_SQLITE_SCHEMA, {}, pdfContentNumberColumns); expect(await readPdfOperations(reader, root)).toEqual(input); await reader.finish(); sql.close();
 }, { timeout:30_000 });
 

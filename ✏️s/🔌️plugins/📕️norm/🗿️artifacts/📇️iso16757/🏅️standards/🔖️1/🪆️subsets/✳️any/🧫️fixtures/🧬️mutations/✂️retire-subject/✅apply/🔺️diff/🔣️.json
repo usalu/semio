@@ -8,11 +8,15 @@
   "productIndexes": null,
   "propertyDefinitions": null,
   "subjects": {
-    "added": [],
     "removed": [
-      "subject.radiator"
+      {
+        "id": "subject.radiator",
+        "index": 0
+      }
     ],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "geometryObjects": null,
   "selectionClassId": null,

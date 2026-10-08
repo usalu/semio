@@ -8,7 +8,7 @@ use crate::WriterSnapshot;
 /// undoing one author's run relocates past every other author's text typed around it and never removes it.
 pub fn inverse(payload: &SpliceText, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let inverse = payload.splice().apply(&crate::writer_text(base), semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS).inverse;
+    let inverse = payload.splice().splice_into(&crate::writer_text(base), semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS).inverse;
     vec![super::splice_text(inverse)]
 
     })())

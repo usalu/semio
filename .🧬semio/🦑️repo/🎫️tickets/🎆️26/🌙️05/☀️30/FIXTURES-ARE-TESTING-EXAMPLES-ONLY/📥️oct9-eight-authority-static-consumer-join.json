@@ -1,0 +1,105 @@
+{
+  "authorship": false,
+  "sourceFilesListed": 72526,
+  "schemaTargets": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json"
+  ],
+  "hits": [
+    {
+      "authority": "scene bounds",
+      "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "line": 21,
+      "literal": "../../🧬️schema/📐️bounds/🔣️.json",
+      "statement": "import boundSchema from \"../../🧬️schema/📐️bounds/🔣️.json\";",
+      "readerSha256": "dd07bcf1fda588e0857d38954cdd5bf5385667eb99d9f33c605dd55a31099a51",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "path handoff",
+      "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "line": 8,
+      "literal": "../../🧬️schema/🧹️path/🔣️.json",
+      "statement": "import pathHandoffSchema from \"../../🧬️schema/🧹️path/🔣️.json\";",
+      "readerSha256": "6115b44bebd7635253c530ab5263451de16bcdee1693f969834e793e4e534d8b",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "image handoff",
+      "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "line": 10,
+      "literal": "../../🧬️schema/🧹️image/🔣️.json",
+      "statement": "import imageHandoffSchema from \"../../🧬️schema/🧹️image/🔣️.json\";",
+      "readerSha256": "6115b44bebd7635253c530ab5263451de16bcdee1693f969834e793e4e534d8b",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "terrain ownership",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "line": 6,
+      "literal": "../🧬️schema/🔣️.json",
+      "statement": "import schema from \"../🧬️schema/🔣️.json\";",
+      "readerSha256": "619750748714917c4de2368a2c5641091aa3e6d39e9625e5f87f00b5260cc436",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "draft wire",
+      "schema": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "line": 494,
+      "literal": "../../✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "statement": "import draftWireSchema from \"../../✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json\";",
+      "readerSha256": "664b3a9e90a7881da32bf96c17924a326977c49ebc7139868998a91727e3933e",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "pack ordering",
+      "schema": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "reader": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "line": 6,
+      "literal": "../../🧬️schema/🔃️ordering/🔣️.json",
+      "statement": "import schema from\"../../🧬️schema/🔃️ordering/🔣️.json\";",
+      "readerSha256": "bca7da500defe5c662a50ca0d5a58cc486f21a41f2c3be333296a3a65b4c589a",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "IO ownership",
+      "schema": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "line": 11,
+      "literal": "../🧬️schema/🔣️.json",
+      "statement": "import schema from \"../🧬️schema/🔣️.json\";",
+      "readerSha256": "2fd1115b822b9cd4df945e9148073cdd55e7e491ec61377097144fa0b2545fd8",
+      "context": "test",
+      "resolution": "literal source-relative candidate; actual enclosing API checked manually"
+    },
+    {
+      "authority": "plugin lifecycle",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "line": 7,
+      "literal": "🧬️schema/🔣️.json",
+      "statement": " const law=await Bun.file(new URL(\"🧫️fixtures/🎟️lifecycle-grant/🔣️.json\",import.meta.url)).json();const schema=await Bun.file(new URL(\"🧬️schema/🔣️.json\",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);",
+      "readerSha256": "627f7540d5389555b7a90af110478ba178b4c89acaa3997794987b77e078f4c5",
+      "context": "test",
+      "resolution": "manual exact new URL(non-dot relative,import.meta.url) binding"
+    }
+  ],
+  "limits": "static quoted JSON literals only; no execution or dynamic path resolution"
+}

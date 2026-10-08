@@ -4,8 +4,8 @@
   "domain": null,
   "meta": null,
   "objects": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "object-a",
         "patch": {
@@ -17,14 +17,14 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "references": null,
   "schema": null,
   "targetVolumes": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "volume-1",
         "patch": {
@@ -36,7 +36,7 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   }
 }

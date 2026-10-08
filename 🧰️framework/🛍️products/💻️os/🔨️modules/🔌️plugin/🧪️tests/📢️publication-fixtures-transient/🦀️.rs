@@ -43,9 +43,6 @@ impl protocol::DiffAlgebra<PublicationTransient> for PublicationTransientDiff {
     fn inverse(&self, base: &PublicationTransient) -> Self {
         Self { revision: self.revision.map(|_| base.revision) }
     }
-    fn between(base: &PublicationTransient, other: &PublicationTransient) -> Self {
-        Self { revision: (base.revision != other.revision).then_some(other.revision) }
-    }
     fn is_empty(&self) -> bool {
         self.revision.is_none()
     }

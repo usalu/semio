@@ -58,7 +58,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     executables.extend(
         ["s.stdio.gltf.mutation.change-material-alpha-mode.v1", "s.stdio.gltf.mutation.change-material-double-sided.v1", "s.stdio.gltf.mutation.create-scene.v1"]
             .into_iter()
-            .map(|identity| semio_s_artifact_stdio_contract::ArtifactExecutable::from_function_pointer(identity, schema::mutations::apply_gltf_mutation as *const ())),
+            .map(|identity| semio_s_artifact_stdio_contract::ArtifactExecutable::from_function_pointer(identity, standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation as *const ())),
     );
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }

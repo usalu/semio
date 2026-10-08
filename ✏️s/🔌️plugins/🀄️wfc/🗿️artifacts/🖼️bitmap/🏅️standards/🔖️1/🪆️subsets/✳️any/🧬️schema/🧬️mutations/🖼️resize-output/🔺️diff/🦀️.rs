@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ResizeOutput` — the output lane plus the pin rows a shrink strands.
 
-use crate::diff::{BitmapDiff, BitmapRows};
+use crate::diff::{BitmapDiff, BitmapPinnedDelta};
 use crate::schema::snapshot::{pin_key, BitmapOutputSpec, BitmapSnapshot, BITMAP_MAX_EDGE};
 
 pub fn diff(payload: &super::ResizeOutput, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ResizeOutput, base: &BitmapSnapshot) -> protocol::M
     }
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|pin| pin.x >= payload.width || pin.y >= payload.height).map(|pin| pin_key(pin.x, pin.y)).collect();
     let cascaded = pinned_removed.len();
-    let outcome = protocol::MutationOutcome::new(BitmapDiff { output: Some(output), pinned: BitmapRows { removed: pinned_removed, ..Default::default() }, ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(BitmapDiff { output: Some(output), pinned: BitmapPinnedDelta::removals(&base.pinned, &base.pinned.iter().enumerate().filter(|(_, row)| pinned_removed.contains(&protocol::list_delta::Keyed::key(*row))).map(|(index, _)| index).collect::<Vec<_>>()), ..Default::default() });
     if cascaded == 0 {
         outcome
     } else {

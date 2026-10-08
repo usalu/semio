@@ -142,7 +142,9 @@
       "required": [
         "phase",
         "items",
-        "bytes"
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes"
       ],
       "properties": {
         "phase": {
@@ -156,7 +158,15 @@
           "type": "integer",
           "minimum": 0
         },
-        "bytes": {
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
           "type": "integer",
           "minimum": 0
         }
@@ -195,6 +205,47 @@
         "pattern": "^[1-9][0-9]{0,19}$",
         "description": "Exact positive uint64 decimal persistent label, scoped to the source topology."
       }
+    },
+    "SemioGeometryCloseGrantV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   },
   "$ref": "#/$defs/SemioGeometryCloseReceiptV1"

@@ -4,40 +4,43 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "added": [
+    "inserted": [
       {
-        "id": "slab",
-        "name": "Roof slab",
-        "outline": [
-          [
-            0.0,
-            0.0
+        "index": 0,
+        "row": {
+          "id": "slab",
+          "name": "Roof slab",
+          "outline": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              6.0,
+              0.0
+            ],
+            [
+              6.0,
+              4.0
+            ],
+            [
+              0.0,
+              4.0
+            ]
           ],
-          [
-            6.0,
-            0.0
-          ],
-          [
-            6.0,
-            4.0
-          ],
-          [
-            0.0,
-            4.0
-          ]
-        ],
-        "holes": [],
-        "baseZ": 3.5,
-        "height": 0.25,
-        "layers": 2,
-        "meshSize": 0.5,
-        "materialId": "c30",
-        "axis": "z"
+          "holes": [],
+          "baseZ": 3.5,
+          "height": 0.25,
+          "layers": 2,
+          "meshSize": 0.5,
+          "materialId": "c30",
+          "axis": "z"
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "supports": null,
   "loadCases": null,

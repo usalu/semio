@@ -62,38 +62,111 @@
       "title": "CurationStockExtraDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/CurationStockExtraRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CurationObjectKindExtraPatchEntry"
+            "$ref": "#/$defs/CurationStockExtraInsertion"
           }
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CurationStockExtraRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CurationStockExtraModification"
+          }
+        }
+      },
+      "required": []
+    },
+    "CurationStockExtraModification": {
+      "title": "CurationStockExtraModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CurationObjectKindExtraPatchEntry"
+        }
+      }
+    },
+    "CurationStockExtraRemoval": {
+      "title": "CurationStockExtraRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "CurationStockExtraInsertion": {
+      "title": "CurationStockExtraInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
+        }
+      }
+    },
+    "CurationStockExtraRelocation": {
+      "title": "CurationStockExtraRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -102,13 +175,9 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "extra"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "extra": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
         }
@@ -118,38 +187,111 @@
       "title": "CurationCuratedDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/CuratedItem"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/CurationCuratedRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CurationCuratedPatchEntry"
+            "$ref": "#/$defs/CurationCuratedInsertion"
           }
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CurationCuratedRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CurationCuratedModification"
+          }
+        }
+      },
+      "required": []
+    },
+    "CurationCuratedModification": {
+      "title": "CurationCuratedModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CurationCuratedPatchEntry"
+        }
+      }
+    },
+    "CurationCuratedRemoval": {
+      "title": "CurationCuratedRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "CurationCuratedInsertion": {
+      "title": "CurationCuratedInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/CuratedItem"
+        }
+      }
+    },
+    "CurationCuratedRelocation": {
+      "title": "CurationCuratedRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -157,13 +299,8 @@
       "title": "CurationCuratedPatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "objectId"
-      ],
+      "required": [],
       "properties": {
-        "objectId": {
-          "type": "string"
-        },
         "count": {
           "anyOf": [
             {

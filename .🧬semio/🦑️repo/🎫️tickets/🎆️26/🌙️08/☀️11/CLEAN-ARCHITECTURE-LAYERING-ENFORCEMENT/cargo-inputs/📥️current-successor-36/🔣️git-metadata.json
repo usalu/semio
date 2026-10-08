@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "required": [
+    "HEAD",
+    "config",
+    "index",
+    "objects"
+  ],
+  "optional": [
+    "refs",
+    "packed-refs",
+    "shallow",
+    "info",
+    "hooks",
+    "config.worktree"
+  ]
+}

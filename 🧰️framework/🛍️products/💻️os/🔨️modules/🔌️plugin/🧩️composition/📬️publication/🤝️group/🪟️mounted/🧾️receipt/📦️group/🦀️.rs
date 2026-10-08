@@ -155,17 +155,32 @@ impl MountedGroupReceipt {
     fn clear_mutation(mutation:&mut KernelMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut mutation.id.0),1=>Self::clear_text(&mut mutation.invocation_id.0),2=>Self::clear_text(&mut mutation.diff.schema.0),3=>drop(std::mem::take(&mut mutation.diff.payload)),4..=7=>return Self::clear_inverse(&mut mutation.inverse,field-4),8=>return Self::clear_dependencies(&mut mutation.dependencies),9=>Self::clear_text(&mut mutation.author.0),_=>{}}true}
     /// 🍂️ Borrows the next exact original field or empty-vector backing retirement demand.
     pub(crate) fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
+    /// 📏️ Quotes the fixed causal field path or the selected original byte cursor.
+    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if (5..=8).contains(&self.close_phase) {
+            let owner = match self.close_phase { 5 => &self.invocation, 6 => &self.parent, 7 => &self.child, _ => &self.edit };
+            return mounted_nested_retirement_demand(owner.retirement_demands()?, 1);
+        }
+        let depth = match self.close_phase {
+            0 if !self.mutations.is_empty() => if matches!(self.close_field, 7 | 8) { 4 } else { 3 },
+            2 if !self.inverses.is_empty() => if self.close_field == 3 { 4 } else { 3 },
+            1 | 3 | 4 => 2,
+            _ => 1,
+        };
+        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand(), depth, ..Default::default() })
+    }
     /// ♻️ Closes one retained causal field per turn and funds every indivisible allocation before taking it.
     pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
         if self.terminal_is_empty(){return RetainedCloneStep::Complete(Default::default());}
-        let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}self.closing=true;
+        let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if !mounted_retirement_grant_funds(self.retirement_demands().expect("fixed receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }self.closing=true;
         match self.close_phase{
             0=>if let Some(mutation)=self.mutations.last_mut(){if self.close_field==10{self.mutations.pop();self.close_field=0;}else if Self::clear_mutation(mutation,self.close_field){self.close_field+=1;}}else{drop(std::mem::take(&mut *self.mutations));self.close_phase+=1;},
             1=>if let Some(id)=self.undo_ids.last_mut(){Self::clear_text(&mut id.0);self.undo_ids.pop();}else{drop(std::mem::take(&mut *self.undo_ids));self.close_phase+=1;},
             2=>if let Some(inverse)=self.inverses.last_mut(){if self.close_field==4{self.inverses.pop();self.close_field=0;}else if Self::clear_inverse(inverse,self.close_field){self.close_field+=1;}}else{drop(std::mem::take(&mut *self.inverses));self.close_phase+=1;},
             3=>if let Some(edit)=self.member_edits.last_mut(){Self::clear_text(&mut edit.edit_id);self.member_edits.pop();}else{drop(std::mem::take(&mut *self.member_edits));self.close_phase+=1;},
             4=>if let Some(id)=self.command_children.last_mut(){Self::clear_text(id);self.command_children.pop();}else{drop(std::mem::take(&mut *self.command_children));self.close_phase+=1;},
-            5..=8=>{let owner=match self.close_phase{5=>&mut self.invocation,6=>&mut self.parent,7=>&mut self.child,_=>&mut self.edit};let step=owner.close_step(grant);if owner.terminal_is_empty(){self.close_phase+=1;}return step;},
+            5..=8=>{let owner=match self.close_phase{5=>&mut self.invocation,6=>&mut self.parent,7=>&mut self.child,_=>&mut self.edit};let step=owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });if owner.terminal_is_empty(){self.close_phase+=1;}return step;},
             _=>{}
         }
         Self::progress(0,bytes)

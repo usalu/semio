@@ -3,5 +3,18 @@
   "version": 1,
   "bodyBytes": 131072,
   "textBody": "🧬\u0000body",
-  "retained": { "budgets": [1, 8, 256], "textRepeats": 128, "retirementBytes": 3, "sourceReleases": 1 }
+  "retained": {
+    "budgets": [1, 8, 256],
+    "textRepeats": 128,
+    "retirementBytes": 3,
+    "sourceReleases": 1,
+    "maximumRetirementDepth": 64,
+    "ownership": {
+      "copy": "bounded-original-payload",
+      "capacity": "exact-natural-birth",
+      "release": "exact-physical-allocation",
+      "depth": "exact-original-frontier",
+      "refusal": "original-owner-kept"
+    }
+  }
 }

@@ -58,9 +58,10 @@
   "collaboration": null,
   "analyses": null,
   "reports": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "report-record-a",
         "patch": {
@@ -92,8 +93,7 @@
           "relatedDecisionIds": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "searchFilters": null,
   "statusRecords": null,

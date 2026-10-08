@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://test/artifact-service-io-receiving/v1",
+  "title": "Artifact Service IO Receiving Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "sources"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.test.artifact-service-io-receiving/v1"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 20,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^/].*\\.ts$"
+      }
+    }
+  }
+}

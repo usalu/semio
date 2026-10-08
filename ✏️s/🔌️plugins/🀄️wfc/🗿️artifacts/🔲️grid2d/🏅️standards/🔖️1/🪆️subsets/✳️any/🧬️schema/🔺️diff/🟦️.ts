@@ -14,34 +14,38 @@ export interface Grid2dRowPatch<Q> {
   patch: Q;
 }
 
-/** 📂 Id-keyed row delta: removed identities, added rows (landing at their canonical position) and per-row field patches. */
+/** 📂 Positional row delta (`protocol::list_delta`): removed keys at their BASE index, inserted rows at their AFTER index, moved keys, and key-addressed patches. */
 export interface Grid2dRows<T, Q> {
-  removed: string[];
-  added: T[];
-  patched: Grid2dRowPatch<Q>[];
+  removed: { id: string; index: number }[];
+  inserted: { index: number; row: T }[];
+  moved: { id: string; from: number; to: number }[];
+  modified: Grid2dRowPatch<Q>[];
 }
 
 /** 🕳️ An empty row delta. */
 export function emptyGrid2dRows<T, Q>(): Grid2dRows<T, Q> {
-  return { removed: [], added: [], patched: [] };
+  return { removed: [], inserted: [], moved: [], modified: [] };
 }
 
-/** 🧬️ One keyed collection's apply — the TS twin of the Rust rows apply: removals first, then canonical-position insertions, then field patches. */
-function applyRows<T, Q>(base: readonly T[], rows: Grid2dRows<T, Q>, key: (row: T) => string, before: (existing: T, added: T) => boolean, patched: (row: T, patch: Q) => T): T[] {
-  const items = [...base];
-  for (const id of rows.removed) {
-    const at = items.findIndex((item) => key(item) === id);
-    if (at === -1) throw new RangeError(`removed ${id} does not exist`);
-    items.splice(at, 1);
+/** 🧬️ One keyed collection's apply — the TS twin of the Rust positional list-delta apply: removed and moved keys are checked at their base index, inserted and moved rows take their after slots, survivors fill the rest in base order, then the patches write. */
+function applyRows<T, Q>(base: readonly T[], rows: Grid2dRows<T, Q>, key: (row: T) => string, patched: (row: T, patch: Q) => T): T[] {
+  const taken = new Set<number>();
+  for (const entry of [...rows.removed, ...rows.moved.map((move) => ({ id: move.id, index: move.from }))]) {
+    if (base[entry.index] === undefined || key(base[entry.index]!) !== entry.id || taken.has(entry.index)) throw new RangeError(`${entry.id} is not at base index ${entry.index}`);
+    taken.add(entry.index);
   }
-  for (const row of rows.added) {
-    if (items.some((item) => key(item) === key(row))) throw new RangeError(`added ${key(row)} already exists`);
-    const at = items.findIndex((item) => before(item, row));
-    items.splice(at === -1 ? items.length : at, 0, row);
+  const slots: (T | undefined)[] = new Array(base.length - rows.removed.length + rows.inserted.length).fill(undefined);
+  for (const entry of rows.inserted) {
+    if (entry.index >= slots.length || slots[entry.index] !== undefined) throw new RangeError(`inserted ${key(entry.row)} has no free after slot ${entry.index}`);
+    slots[entry.index] = entry.row;
   }
-  for (const entry of rows.patched) {
+  for (const move of rows.moved) slots[move.to] = base[move.from];
+  const survivors = base.filter((_, index) => !taken.has(index));
+  const items = slots.map((slot) => slot ?? survivors.shift()!);
+  if (new Set(items.map(key)).size !== items.length) throw new RangeError("two rows of the after list carry the same key");
+  for (const entry of rows.modified) {
     const at = items.findIndex((item) => key(item) === entry.id);
-    if (at === -1) throw new RangeError(`patched ${entry.id} does not exist`);
+    if (at === -1) throw new RangeError(`modified ${entry.id} does not exist`);
     items[at] = patched(items[at]!, entry.patch);
   }
   return items;
@@ -96,7 +100,6 @@ function patchedTile(row: WfcTile2d, patch: Grid2dTilePatch): WfcTile2d {
 /** 🩹 Applies a committed `Grid2dDiff` to a snapshot — the cross-language half of the fixture oracle: Rust computes the diff, TypeScript replays it, and the
  * committed `after` is what both must reach. */
 export function applyGrid2dDiff(base: Grid2dSnapshot, diff: Grid2dDiff): Grid2dSnapshot {
-  const cellAfter = (existing: { x: number; y: number }, added: { x: number; y: number }) => existing.y > added.y || (existing.y === added.y && existing.x > added.x);
   return {
     ...base,
     schema: diff.schema ?? base.schema,
@@ -107,9 +110,9 @@ export function applyGrid2dDiff(base: Grid2dSnapshot, diff: Grid2dDiff): Grid2dS
     cellHeight: diff.cellHeight ?? base.cellHeight,
     periodicX: diff.periodicX ?? base.periodicX,
     periodicY: diff.periodicY ?? base.periodicY,
-    tiles: applyRows(base.tiles, diff.tiles, (tile) => tile.id, (existing, added) => existing.id > added.id, patchedTile),
-    rules: applyRows(base.rules, diff.rules, (rule) => rule.id, (existing, added) => existing.id > added.id, (row, patch) => ({ ...row, tileAId: patch.tileAId ?? row.tileAId, tileBId: patch.tileBId ?? row.tileBId, direction: patch.direction ?? row.direction, allowed: patch.allowed ?? row.allowed })),
-    pinned: applyRows(base.pinned, diff.pinned, (cell) => cellId(cell.x, cell.y), cellAfter, (row, patch) => ({ ...row, tileId: patch.tileId ?? row.tileId })),
-    masked: applyRows(base.masked, diff.masked, (cell) => cellId(cell.x, cell.y), cellAfter, (row) => row),
+    tiles: applyRows(base.tiles, diff.tiles, (tile) => tile.id, patchedTile),
+    rules: applyRows(base.rules, diff.rules, (rule) => rule.id, (row, patch) => ({ ...row, tileAId: patch.tileAId ?? row.tileAId, tileBId: patch.tileBId ?? row.tileBId, direction: patch.direction ?? row.direction, allowed: patch.allowed ?? row.allowed })),
+    pinned: applyRows(base.pinned, diff.pinned, (cell) => cellId(cell.x, cell.y), (row, patch) => ({ ...row, tileId: patch.tileId ?? row.tileId })),
+    masked: applyRows(base.masked, diff.masked, (cell) => cellId(cell.x, cell.y), (row) => row),
   };
 }

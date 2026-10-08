@@ -1,0 +1,155 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧭️placement/🧬️schema/🔣️.json",
+      "beforeSha256": "a0460d09737d46dd37fcdce8ff1d327293995281a513e8908693ea989bc3eb6b",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/➰️loops/🧬️schema/🔣️.json",
+      "beforeSha256": "6d22fa8b6a2f5e497fda5d3d7d8a26dd614a5720997bd1e447b30c189947cb21",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🕸️mesh/🧬️schema/🔣️.json",
+      "beforeSha256": "e30a341955656d45ba77a5c7e2757d4b993578d514463f590678f87d4b8bfdc3",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🌙️bulge/🧬️schema/🔣️.json",
+      "beforeSha256": "e86830cfde9bcc9250a5d364d55f79068937b71d32e17f7422a964072b0c277e",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🔪️section/🧬️schema/🔣️.json",
+      "beforeSha256": "2b1cbfc8d5a893a4c4c9ca7eaf474e37c2092f3ac199d2de88710a018efe949f",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🦴️skeleton/🧬️schema/🔣️.json",
+      "beforeSha256": "a2eacf8c8732b77e243a8ca44d5205923a15d0ee502fd1be74a92e55aaebdaa7",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🔺️triangulation/🧬️schema/🔣️.json",
+      "beforeSha256": "e82e6bad1f6adf45b992c1bb722245a8fd6a202a96f58f641bcccf690ac5ef0d",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧱️regions/🧬️schema/🔣️.json",
+      "beforeSha256": "2c683deb60b3ac2b5ab9578abaec8c018e6851eef652e5f6a406a7ecd8bc121e",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/🔣️.json",
+      "beforeSha256": "81ed390173d85500e406c5dc1775db0f65474c773f0c5dbde85083eaf8caefa9",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "beforeSha256": "54a8f482fce0635a2fb4807925a03a83655a449e692e9d96f82eaa8014b5a5dc",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "eight whole geometry trials plus two fresh reintroduced whole laws"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "dbde4a59b7bca421a0fc3a2dbd456d55e17f3de954900759689b7e4342ffaa0a",
+      "afterSha256": "007273ab67f6f1d8c211a14b15f5ef55a970de1e2756c38e44387192a36d57c5",
+      "action": "updated",
+      "qualification": "Root current-corpus facet only"
+    }
+  ],
+  "plainAndReaderObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🧭️placement/🔣️.json",
+      "sha256": "1b6ce83c0e35e101b6c932129cf22f94093e1379e816cfe9e275045b027c4c09"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/➰️loops/🔣️.json",
+      "sha256": "56482255f69ee4b5f5e669b9a667ce6e9e746327f343f36dc1c5e56b81e4fa17"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🕸️mesh/🔣️.json",
+      "sha256": "0fd71d553ebc286e89f95a853485f3a4decc84c8d838ce78d84b4aece724431a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🌙️bulge/🔣️.json",
+      "sha256": "ee146d36061d00ccab3c04d347e9272cffb397c926fa0c3fd9f8b9ea2465fdc5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🔪️section/🔣️.json",
+      "sha256": "b48e4400e79c3b12afbe86c4aa985f13acdf8782e8470010db806edbe27c1c54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🦴️skeleton/🔣️.json",
+      "sha256": "93c78023097dbf95dfaa81d2aad5d393dabe84ad02c2666dee451665b7b434d4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🔺️triangulation/🔣️.json",
+      "sha256": "b8ea73acaa9c5daa65053c4c2d441f8a310f7149d27561fa042fde4f854fff63"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧱️regions/🧫️fixtures/🔣️.json",
+      "sha256": "3a87514505c5306e189ece096c7600dbd9957ba23ab8918787eaeeaed0ff49a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧭️placement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "9868a1105048c39deebde796fa9cc84d1512f52cb18178951d1442b26ab45979"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/➰️loops/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ed50a36faf6037d1ca8d0385478ed1c6ffe922e0cdddfadf1dc963a849f9e88c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🕸️mesh/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "bb89e506e4ca77493b5cb0a81333dda62bd0a5a578bce5a1797b40e33acd963e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🌙️bulge/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "99edc5a6339838a85029159babb61157a21895edadad42e0ec607f8a954e11b8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🔪️section/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "691409072d29a272556cf2b50f5e55b4dfa1c95356ea6a9cf6413db2e309f4fc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🦴️skeleton/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "0b4c668d01171c4bc421babfcfc430c3df12c2a91a2ccd475923a8fdf4073436"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🔺️triangulation/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a82cd9447858d4d697a15359dd3bf3a6bac41c3e3f18676666a7748c6fa9d555"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧱️regions/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a90d535cde4d9b17658dd5205de4e735baf6e54cf950fd334707fe6f799baf4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧪️tests/🏙️aec-oracles/🦀️.rs",
+      "sha256": "640526eed321b55e2952852d316389cc30db573dffa5f9606ebfd070e4003e8b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧪️tests/🏙️aec-oracles/🟦️.ts",
+      "sha256": "a24f830ef85b7842f3d2b81090b393addbbe811f0b82dd72e314f05582487bdc"
+    }
+  ]
+}

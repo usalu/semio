@@ -1,4 +1,6 @@
 # 📍️ GIS domain feature with a framework-owned dynamic value.
 # import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 type GisMapFeature { id: String!, data: DslValue }
-type GisMapFeaturePatch { data: DslValue }
+type GisMapFeaturePatch { data: DslValue, properties: [GisMapFeaturePropertyEdit!]! }
+type GisMapFeaturePropertyEdit { key: String!, before: String, set: GisMapFeaturePropertyValue }
+type GisMapFeaturePropertyValue { value: DslValue }

@@ -4,7 +4,7 @@ use semio_framework_pack_json::json;
 fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_close() {
     use semio_framework_os_kernel::MemberStoreOwnedBatch;
     use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::RetireOwned};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::{brep::schema::mutations::{SemioBrepMutation, set_snapshot::SetSnapshot}, model::schema::mutations::{SemioModelMutation, insert_element::InsertElement}};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::{brep::schema::mutations::{SemioBrepMutation, create_vertex::CreateVertex}, model::schema::mutations::{SemioModelMutation, insert_element::InsertElement}};
     fn close<M: RetireOwned + semio_framework_value::ToValue>(operations: Vec<M>) {
         let pointer = operations.as_ptr();
         let oracle = serde_json::to_value(semio_framework_value::ToValue::to_value(&operations)).unwrap();
@@ -26,8 +26,9 @@ fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_clos
     let mesh = crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&imported.geometry).unwrap();
     assert_eq!(mesh.indices.len() / 3, corpus["intrinsicGeometry"]["triangleCount"].as_u64().unwrap() as usize);
     assert_eq!(imported.geometry.vertices.len(), corpus["intrinsicGeometry"]["analyticVertexCount"].as_u64().unwrap() as usize);
-    close(vec![SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot: imported.geometry })]);
-    close(vec![SemioModelMutation::InsertElement(InsertElement { element: imported.element })]);
+    let first = &imported.geometry.vertices[0];
+    close(vec![SemioBrepMutation::CreateVertex(CreateVertex { id: first.id.clone(), point: first.point, tol: first.tol, at: None })]);
+    close(vec![SemioModelMutation::InsertElement(InsertElement { element: imported.element, at: None })]);
     println!("[DEBUG] imported OBJ Brep/Model batches retained exact pointer, value and ordered geometry, copy64/capacity4096/release4096 and terminal owners");
 }
 
@@ -2440,9 +2441,9 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         let geometry_child = &emit.child_emits[0];
         assert_eq!(geometry_child.slot, corpus["intrinsicGeometry"]["geometrySlot"].as_str().unwrap());
         assert_eq!(geometry_child.child_id, created.child_id);
-        assert_eq!(geometry_child.ops.len(), 1);
-        let geometry_mutation: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation = protocol::OpBinary::decode_op(&geometry_child.ops[0]).unwrap();
-        let semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation::SetSnapshot(geometry) = geometry_mutation else { panic!("actual retained topology") };
+        assert!(geometry_child.ops.is_empty(), "the imported topology is the child's genesis, not an operation");
+        let genesis = geometry_child.genesis.as_ref().expect("actual retained topology genesis");
+        let geometry = <semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&genesis.initial_pack).expect("genesis carries the imported topology");
         let child = &emit.child_emits[1];
         assert_eq!(child.slot, corpus["intrinsicGeometry"]["childSlot"].as_str().unwrap());
         assert_eq!(child.child_id, crate::cad_pane_model(&scene, CadPaneId::Shape).unwrap().child_id);
@@ -2450,7 +2451,7 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         let mutation: SemioModelMutation = protocol::OpBinary::decode_op(&child.ops[0]).expect("canonical child operation");
         let SemioModelMutation::InsertElement(insert) = mutation else { panic!("exact insert-element media mutation") };
         assert_eq!(insert.element.geometry, semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef::Brep { brep_id: created.child_id.clone() });
-        meshes.push(crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&geometry.snapshot).expect("retained topology projects after importer disposal"));
+        meshes.push(crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&geometry).expect("retained topology projects after importer disposal"));
     }
     for payload in [
         MediaPayload::Intrinsic { schema: "obj.3.0.geometry".into(), value: DslValue::Null },

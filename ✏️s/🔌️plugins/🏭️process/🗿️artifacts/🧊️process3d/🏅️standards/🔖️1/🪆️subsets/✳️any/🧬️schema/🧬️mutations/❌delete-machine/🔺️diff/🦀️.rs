@@ -6,9 +6,9 @@ use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
-    if !base.workshop.machines.iter().any(|machine| machine.id == payload.id) {
+    let Some(index) = base.workshop.machines.iter().position(|machine| machine.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta::removal(&base.workshop.machines, index)), ..Default::default() })
 }
 //#endregion 🔖️Diff

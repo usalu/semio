@@ -1,0 +1,32 @@
+{
+  "recipes": [
+    "insert-ifd-applied",
+    "remove-ifd-applied",
+    "replace-tag-applied",
+    "remove-tag-applied",
+    "paint-region-applied",
+    "replace-samples-applied"
+  ],
+  "raster": {
+    "width": 4,
+    "height": 4,
+    "channels": 3,
+    "paint": {
+      "x": 1,
+      "y": 1,
+      "rgb": [
+        9,
+        8,
+        7
+      ]
+    },
+    "replacement": {
+      "offset": 0,
+      "samples": [
+        24,
+        96,
+        192
+      ]
+    }
+  }
+}

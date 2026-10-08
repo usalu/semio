@@ -22,3 +22,23 @@ Guarded preparation65771/0a19b4 ended Nx0. Its actual executable SHA256 is`1ba55
 Final guarded read-only probea5a50a ended Nx0/0.428toolwall with actual initialization and lifecycle tool availability. Log 1489bytes SHA256`38df8940794774d4310f596918a6a3ea8ce4999e7ec5bacc60273102281461bc`. No ticket mutation was dispatched.
 
 Cross-host closure grammar also explicitly refuses ASCII drive-prefixed paths independent of the current native isAbsolute behavior. This final helper edit invalidates the earlier build attestation as designed; final fresh preparation is required before closure.
+
+## Lifecycle Receipts Reconciled After Interruption
+
+The prior read-only probe handle is missing from the current process registry. Its preserved complete stdout and current process inspection show terminal Nx success; it has not been restarted. The preceding prepare also completed. This reconciliation does not close or mutate the ticket.
+
+- Prepare: actual registered uncached Nx success; reported duration 6.5 seconds; 1541 raw bytes, SHA-256 `933d0d80048b7c16312ff7fa7976f59f04c756b5fdc629f4dac1721ff0da4aa4`.
+- Probe: actual registered uncached Nx success; reported duration 241 milliseconds; 1489 raw bytes, SHA-256 `d8c08bd2d20b6995ba8b94fae40fb90b2d04497c494659fb908085ec2022974b`.
+
+The current build attestation lists 12 original inputs. Current input drift count: 1. Executable bytes still match their recorded SHA: true. Final ticket closure remains held for actual end-to-end completion and the final authored file union. The close operation will recheck every source/executable hash and require fresh preparation if anything changes. No close input has been populated.
+
+Changed input paths observed: /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go
+
+## Restored Current Lifecycle Client
+
+The changed canonical Go input was resolved by preparing the actual current client again through the registered private Nx owner. The source was preserved; no canonical Go source, ticket, goal or Git state was modified by either operation.
+
+- Prepare: registered uncached Nx status 0; duration `14.1s`; 1543 complete raw bytes, SHA-256 `cc621ce39accf95e43eb9a202b293e179bce1676f7ea8ab5a7b3b98d2531a614`.
+- Probe: registered uncached Nx status 0; duration `411ms`; 1489 complete raw bytes, SHA-256 `6b64dfd1b5842a58686e2b00fdae53713a36b182fc8b91ac18792ce49e576ba6`.
+
+All 12 original input hashes and the built executable hash were rechecked after the terminal probe and match their current physical bytes. No close input exists. Final closure still requires the completed end-to-end objective, final authored file list and another immediate attestation recheck; any later drift requires preparation again.

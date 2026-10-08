@@ -1,25 +1,28 @@
 {
   "schema": null,
   "artifacts": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "artifact-3",
-        "name": "Energy Model",
-        "kindId": "s.energy.model",
-        "schema": "energy.model",
-        "dialect": {
-          "artifactKind": "s.energy.model",
-          "standard": "1",
-          "subset": "*"
-        },
-        "createdAtMs": 3000,
-        "createdBy": "user:grace",
-        "updatedAtMs": 3000,
-        "updatedBy": "user:grace"
+        "index": 2,
+        "row": {
+          "id": "artifact-3",
+          "name": "Energy Model",
+          "kindId": "s.energy.model",
+          "schema": "energy.model",
+          "dialect": {
+            "artifactKind": "s.energy.model",
+            "standard": "1",
+            "subset": "*"
+          },
+          "createdAtMs": 3000,
+          "createdBy": "user:grace",
+          "updatedAtMs": 3000,
+          "updatedBy": "user:grace"
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   }
 }

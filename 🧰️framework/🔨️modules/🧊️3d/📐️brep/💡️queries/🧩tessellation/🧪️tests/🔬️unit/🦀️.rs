@@ -326,9 +326,319 @@ async fn coedge_uv_prefers_stored_pcurve_when_present() {
         coedge.pcurve = Some(pcurve);
         coedge.prange = (0.0, 1.0);
     }
-    let mut cache = BTreeMap::new();
+    let mut cache = EdgeSampleCache::new();
     cache.insert(edge, sample_edge_points(&body, edge, 0.1).unwrap());
     let (_positions, uvs, _poles) = collect_loop_uv(&body, outer, body.surfaces.get(surface).unwrap(), &cache).unwrap();
     assert!((uvs[0].0 - 5.0).abs() < 1e-9 && (uvs[0].1 - 5.0).abs() < 1e-9, "first sample should come from the stored pcurve, got {:?}", uvs[0]);
 }
 
+
+struct TessellationAllocationObserver;
+std::thread_local! {
+    static SYSTEM_OBSERVING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    static SYSTEM_CAPACITY: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static SYSTEM_RELEASE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+fn observe_tessellation_system<T>(operation: impl FnOnce() -> T) -> (T, (usize, usize)) {
+    SYSTEM_CAPACITY.with(|value| value.set(0));
+    SYSTEM_RELEASE.with(|value| value.set(0));
+    SYSTEM_OBSERVING.with(|value| value.set(true));
+    let result = operation();
+    SYSTEM_OBSERVING.with(|value| value.set(false));
+    (result, (SYSTEM_CAPACITY.with(std::cell::Cell::get), SYSTEM_RELEASE.with(std::cell::Cell::get)))
+}
+static OBSERVED_SAMPLE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static OBSERVED_MESH: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static SAMPLE_RELEASES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static MESH_RELEASES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static OBSERVED_RELEASE_BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+#[global_allocator]
+static TESSELLATION_ALLOCATOR: TessellationAllocationObserver = TessellationAllocationObserver;
+unsafe impl std::alloc::GlobalAlloc for TessellationAllocationObserver {
+    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
+        let pointer = unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) };
+        if !pointer.is_null() && SYSTEM_OBSERVING.with(std::cell::Cell::get) { SYSTEM_CAPACITY.with(|value| value.set(value.get() + layout.size())); }
+        pointer
+    }
+    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) {
+        use std::sync::atomic::Ordering::SeqCst;
+        if SYSTEM_OBSERVING.with(std::cell::Cell::get) { SYSTEM_RELEASE.with(|value| value.set(value.get() + layout.size())); }
+        if OBSERVED_SAMPLE.compare_exchange(pointer as usize,0,SeqCst,SeqCst).is_ok() { SAMPLE_RELEASES.fetch_add(1,SeqCst);OBSERVED_RELEASE_BYTES.fetch_add(layout.size(),SeqCst); }
+        if OBSERVED_MESH.compare_exchange(pointer as usize,0,SeqCst,SeqCst).is_ok() { MESH_RELEASES.fetch_add(1,SeqCst);OBSERVED_RELEASE_BYTES.fetch_add(layout.size(),SeqCst); }
+        unsafe { std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout); }
+    }
+}
+
+#[test]
+fn tessellation_cancel_handoff_and_small_grants_cover_every_actual_system_allocation() {
+    use crate::brep::engine::retirement::{NativeRetirementStep, PayloadRetirement};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let solid = build_unit_box(&mut body, &mut OpRecorder::new());
+    let (mut job, constructor) = observe_tessellation_system(|| TessellationJob::new(0.1));
+    while job.transfer.position.is_empty() { assert!(matches!(job.step(&body, TessellationInput::Solid(solid), 1).unwrap(), TessellationStep::Working(_))); }
+    let (_, signal) = observe_tessellation_system(|| job.cancel());
+    let mut retirement = PayloadRetirement::default();
+    let (_, handoff) = observe_tessellation_system(|| job.detach_retirement(&mut retirement));
+    let items = fixture["grants"]["items"].as_u64().unwrap() as usize;
+    let bytes = fixture["grants"]["bytes"].as_u64().unwrap() as usize;
+    let mut maximum_small_release = 0;
+    let mut maximum_unfunded_capacity = 0;
+    let mut turns = 0;
+    while !retirement.terminal_is_empty() {
+        let (step, heap) = observe_tessellation_system(|| retirement.close_step(items, bytes));
+        maximum_small_release = maximum_small_release.max(heap.1);
+        maximum_unfunded_capacity = maximum_unfunded_capacity.max(heap.0);
+        if step == NativeRetirementStep::Blocked {
+            let demand = retirement.next_close_byte_demand();
+            retirement.close_step(items, demand);
+        }
+        turns += 1;
+        assert!(turns < 10000);
+    }
+    eprintln!("[DEBUG] whole original Tessellation System constructor={constructor:?} cancel={signal:?} handoff={handoff:?} maximumEightByteRelease={maximum_small_release} maximumUnfundedCapacity={maximum_unfunded_capacity} turns={turns}");
+    assert_eq!(constructor, (fixture["system"]["constructorCapacityBytes"].as_u64().unwrap() as usize, 0));
+    assert_eq!(signal, (fixture["system"]["cancelCapacityBytes"].as_u64().unwrap() as usize, fixture["system"]["cancelReleaseBytes"].as_u64().unwrap() as usize));
+    assert_eq!(handoff, (fixture["system"]["handoffCapacityBytes"].as_u64().unwrap() as usize, fixture["system"]["handoffReleaseBytes"].as_u64().unwrap() as usize), "existing owner handoff requires no unfunded allocation or release");
+    assert!(maximum_small_release <= bytes, "actual whole System deallocation exceeded the eight-byte grant: {maximum_small_release}");
+    assert_eq!(maximum_unfunded_capacity, fixture["system"]["turnCapacityBytes"].as_u64().unwrap() as usize);
+}
+
+#[test]
+fn original_native_family_handoff_retains_all_system_owners_until_grants() {
+    use crate::brep::engine::{Brep,retirement::{PayloadRetirement,NativeRetirementStep}};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let mut family=Brep::new();
+    family.box_prim_sync(1.0,1.0,1.0).unwrap();
+    let mut retirement=PayloadRetirement::default();
+    let (_,handoff)=observe_tessellation_system(||family.detach_retirement(&mut retirement));
+    let small=fixture["grants"]["bytes"].as_u64().unwrap() as usize;
+    let mut maximum_release=0;
+    let mut maximum_birth=0;
+    let mut turns=0;
+    while !retirement.terminal_is_empty() {
+        let (step,heap)=observe_tessellation_system(||retirement.close_step(1,small));
+        maximum_birth=maximum_birth.max(heap.0);maximum_release=maximum_release.max(heap.1);
+        if step==NativeRetirementStep::Blocked {retirement.close_step(1,retirement.next_close_byte_demand());}
+        turns+=1;assert!(turns<100000);
+    }
+    eprintln!("[DEBUG] original native family handoff={handoff:?} maximumEightByteRelease={maximum_release} maximumUnfundedBirth={maximum_birth} turns={turns}");
+    assert_eq!(handoff,(fixture["nativeFamily"]["handoffCapacityBytes"].as_u64().unwrap() as usize,fixture["nativeFamily"]["handoffReleaseBytes"].as_u64().unwrap() as usize));
+    assert!(maximum_release<=small,"original native family physical release exceeded the actual eight-byte grant");
+    assert_eq!(maximum_birth,0);
+}
+
+#[test]
+fn original_native_family_typed_owner_covers_nurbs_wire_aliases_and_compound() {
+    use crate::brep::engine::Brep;
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let cases=&fixture["nativeFamily"];
+    for converted in cases["convertToNurbs"].as_array().unwrap() {
+        let converted=converted.as_bool().unwrap();
+        let (family,source)=observe_tessellation_system(|| {
+            let mut family=Brep::new();let first=family.box_prim_sync(1.0,1.0,1.0).unwrap();let second=family.box_prim_sync(1.0,1.0,1.0).unwrap();
+            if converted {family.convert_to_nurbs_sync(&first).unwrap();}
+            family.deconstruct_sync(&first).unwrap();
+            let compound=family.compound_sync(&[first,second]).unwrap();assert!((family.volume_sync(&compound).unwrap()-cases["compoundVolume"].as_f64().unwrap()).abs()<1e-8);
+            let wire=family.rectangle_wire_sync(cases["wire"]["width"].as_f64().unwrap(),cases["wire"]["height"].as_f64().unwrap()).unwrap();assert!((family.length_sync(&wire).unwrap()-cases["wire"]["length"].as_f64().unwrap()).abs()<1e-8);
+            family.arc_curve_sync([0.0;3],[0.0,0.0,1.0],1.0,0.0,1.0).unwrap();family.plane_surface_sync([0.0;3],[0.0,0.0,1.0]).unwrap();
+            family
+        });
+        let vertex=family.representation().vertices.ids().next().unwrap();let pointer=family.representation().vertices.get(vertex).unwrap() as *const _;
+        let (mut owner,handoff)=observe_tessellation_system(||ControlledRetirement::new(family).unwrap_or_else(|_|panic!("original Brep controlled family")));assert_eq!(handoff,(0,0));assert_eq!(owner.original().unwrap().representation().vertices.get(vertex).unwrap() as *const _,pointer);
+        let (mut born,mut released,mut refusals,mut turns)=(0,0,0,0);
+        while !owner.terminal_is_empty() {
+            let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+            if grant.maximum_release_bytes>8 {for _ in 0..2 {let (step,heap)=observe_tessellation_system(||owner.step(RetainedCloneGrant{maximum_release_bytes:8,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refusals+=1;}}
+            let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;turns+=1;assert!(turns<100000);
+        }
+        assert!(refusals>0);assert_eq!(released,source.0-source.1+born);
+        eprintln!("[DEBUG] original typed Brep nurbs={converted} wire+aliases+compound samePointer=true retainedSource={} born={born} physicallyReleased={released} repeatedEightByteRefusals={refusals} turns={turns}",source.0-source.1);
+    }
+}
+
+#[test]
+fn original_live_index_extraction_preserves_row_pointers_without_heap_work() {
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let rows=&fixture["liveRows"];
+    let ((mut index,mut extracted),source)=observe_tessellation_system(|| {
+        let index:HistoryFoldIndex<String,Vec<u8>>=rows["keys"].as_array().unwrap().iter().map(|key|(key.as_str().unwrap().to_owned(),vec![0;rows["payloadBytes"].as_u64().unwrap() as usize])).collect();
+        (index,Vec::with_capacity(rows["removedKeys"].as_array().unwrap().len()))
+    });
+    let pointers=index.iter().map(|(key,value)|(key.clone(),(key.as_ptr(),value.as_ptr()))).collect::<std::collections::BTreeMap<_,_>>();
+    let removed=rows["removedKeys"].as_array().unwrap().iter().map(|key|key.as_str().unwrap()).collect::<Vec<_>>();
+    for slot in 0..index.slot_count() {
+        let mut predicates=0;
+        let (_,heap)=observe_tessellation_system(||if let Some(row)=index.extract_slot_if(slot,|key,_|{predicates+=1;!removed.contains(&key.as_str())}) {assert_eq!((row.0.as_ptr(),row.1.as_ptr()),pointers[&row.0]);extracted.push(row);});
+        assert!(predicates<=rows["maximumPredicatesPerTurn"].as_u64().unwrap() as usize);assert_eq!(heap,(rows["extractionCapacityBytes"].as_u64().unwrap() as usize,rows["extractionReleaseBytes"].as_u64().unwrap() as usize));
+    }
+    assert_eq!(extracted.iter().map(|(key,_)|key.as_str()).collect::<Vec<_>>(),removed);
+    let (mut owner,handoff)=observe_tessellation_system(||ControlledRetirement::new((index,extracted)).unwrap_or_else(|_|panic!("original live index row ownership")));assert_eq!(handoff,(0,0));
+    let (mut born,mut released)=(0,0);
+    while !owner.terminal_is_empty() {
+        let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+        let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;
+    }
+    assert_eq!(released,source.0-source.1+born);eprintln!("[DEBUG] original live index extract sameKey=true sameValue=true slotMaximum=1 heap=(0,0) retainedSource={} born={born} released={released}",source.0-source.1);
+}
+
+#[test]
+fn original_body_arenas_retire_by_exact_physical_full_grants() {
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let ((body,vertex),source)=observe_tessellation_system(|| {
+        let mut body=Body::new();build_unit_box(&mut body,&mut OpRecorder::new());
+        let vertex=body.vertices.ids().next().unwrap();
+        let spare=body.vertices.get(vertex).unwrap().clone();let hole=body.vertices.insert(spare);drop(body.vertices.remove(hole));
+        (body,vertex)
+    });
+    let pointer=body.vertices.get(vertex).unwrap() as *const _;
+    let (mut owner,handoff)=observe_tessellation_system(||ControlledRetirement::new(body).unwrap_or_else(|_|panic!("original Body controlled authority")));
+    assert_eq!(handoff,(0,0));assert_eq!(owner.original().unwrap().vertices.get(vertex).unwrap() as *const _,pointer);
+    let (mut born,mut freed,mut refusals,mut turns)=(0,0,0,0);
+    while !owner.terminal_is_empty() {
+        let copy=owner.next_copy_byte_demand().unwrap();
+        let grant=RetainedCloneGrant{maximum_items:fixture["grants"]["items"].as_u64().unwrap() as usize,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+        let small=fixture["grants"]["bytes"].as_u64().unwrap() as usize;
+        if grant.maximum_release_bytes>small {
+            for _ in 0..2 {
+                let (step,heap)=observe_tessellation_system(||owner.step(RetainedCloneGrant{maximum_release_bytes:small,..grant}).unwrap());
+                assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refusals+=1;
+            }
+        }
+        let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+        born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);
+    }
+    assert!(refusals>0);assert_eq!(freed,source.0-source.1+born);
+    eprintln!("[DEBUG] original Body slots+holes+freeLists retainedSource={} born={born} physicallyReleased={freed} repeatedEightByteRefusals={refusals} turns={turns}",source.0-source.1);
+}
+
+#[test]
+fn original_whole_tessellation_typed_owner_matches_each_physical_full_grant() {
+    use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::controlled::ControlledRetirement};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let solid = build_unit_box(&mut body, &mut OpRecorder::new());
+    let (mut job, source) = observe_tessellation_system(|| {
+        let mut job = TessellationJob::new(0.1);
+        while job.transfer.position.is_empty() { job.step(&body, TessellationInput::Solid(solid), 1).unwrap(); }
+        job
+    });
+    let sample_pointer = job.edge_cache.values().next().unwrap().as_ptr();
+    let mesh_pointer = job.transfer.position.as_ptr();
+    let (_, cancel) = observe_tessellation_system(|| job.cancel());
+    let (mut owner, handoff) = observe_tessellation_system(|| ControlledRetirement::new(job).unwrap_or_else(|_| panic!("original whole Tessellation authority")));
+    assert_eq!(owner.original().unwrap().edge_cache.values().next().unwrap().as_ptr(), sample_pointer);
+    assert_eq!(owner.original().unwrap().transfer.position.as_ptr(), mesh_pointer);
+    assert_eq!(cancel, (0, 0));
+    assert_eq!(handoff, (0, 0));
+    let mut born = 0;
+    let mut freed = 0;
+    let mut refusals = 0;
+    let mut turns = 0;
+    while !owner.terminal_is_empty() {
+        let copy = owner.next_copy_byte_demand().unwrap();
+        let grant = RetainedCloneGrant { maximum_items: fixture["grants"]["items"].as_u64().unwrap() as usize, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
+        let small_release = fixture["grants"]["bytes"].as_u64().unwrap() as usize;
+        if grant.maximum_release_bytes > small_release {
+            for _ in 0..2 {
+                let small = RetainedCloneGrant { maximum_release_bytes: small_release, ..grant };
+                let (step, heap) = observe_tessellation_system(|| owner.step(small).unwrap());
+                assert!(step.progress().fits(small));
+                assert_eq!(heap, (0, 0), "actual whole allocation must stay owned under the eight-byte grant");
+                assert_eq!(step.progress(), Default::default());
+                assert_eq!(owner.next_release_byte_demand().unwrap(), grant.maximum_release_bytes);
+                refusals += 1;
+            }
+        }
+        let (step, heap) = observe_tessellation_system(|| owner.step(grant).unwrap());
+        let progress = step.progress();
+        assert!(progress.fits(grant));
+        assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes), "each whole original typed receipt equals System allocation/deallocation");
+        born += heap.0;
+        freed += heap.1;
+        turns += 1;
+        assert!(turns < 100000);
+    }
+    assert!(refusals > 0);
+    assert_eq!(freed, source.0 - source.1 + born);
+    eprintln!("[DEBUG] original whole Tessellation typed custody retainedSource={} born={born} physicallyReleased={freed} repeatedEightByteRefusals={refusals} turns={turns}", source.0 - source.1);
+}
+
+#[test]
+fn tessellation_cancel_preserves_original_allocations_until_retirement_grants() {
+    use crate::brep::engine::retirement::{NativeRetirementStep,PayloadRetirement};
+    use std::sync::atomic::Ordering::SeqCst;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let mut body=Body::new();let mut rec=OpRecorder::new();let solid=build_unit_box(&mut body,&mut rec);
+    let mut job=TessellationJob::new(0.1);
+    while job.transfer.position.is_empty() { assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Working(_))); }
+    let sample=job.edge_cache.values().next().unwrap();
+    OBSERVED_SAMPLE.store(sample.as_ptr() as usize,SeqCst);OBSERVED_MESH.store(job.transfer.position.as_ptr() as usize,SeqCst);
+    SAMPLE_RELEASES.store(0,SeqCst);MESH_RELEASES.store(0,SeqCst);OBSERVED_RELEASE_BYTES.store(0,SeqCst);
+    job.cancel();
+    assert_eq!(SAMPLE_RELEASES.load(SeqCst),fixture["cancel"]["releasesAtSignal"].as_u64().unwrap() as usize,"cancel must retain the original sample allocation");
+    assert_eq!(MESH_RELEASES.load(SeqCst),0,"cancel must retain the original transfer allocation");
+    assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Cancelled(_)));
+    let mut retirement=PayloadRetirement::default();job.detach_retirement(&mut retirement);
+    assert_eq!(retirement.close_step(0,8),NativeRetirementStep::Blocked);assert_eq!(retirement.close_step(1,0),NativeRetirementStep::Blocked);
+    assert_eq!(SAMPLE_RELEASES.load(SeqCst),0);assert_eq!(MESH_RELEASES.load(SeqCst),0);
+    let mut turns=0;let mut refused=0;let mut physical=0;
+    while !retirement.terminal_is_empty() {
+        OBSERVED_RELEASE_BYTES.store(0,SeqCst);let small=retirement.close_step(1,8);
+        let released=OBSERVED_RELEASE_BYTES.load(SeqCst);assert!(released<=8,"physical sample/mesh release exceeded the actual eight-byte grant");physical+=released;
+        assert!(matches!(small,NativeRetirementStep::Blocked|NativeRetirementStep::Pending {released_items:0..=1,released_bytes:0..=8}));
+        if small==NativeRetirementStep::Blocked {
+            refused+=1;let demand=retirement.next_close_byte_demand();assert!(demand>8);let sample_before=SAMPLE_RELEASES.load(SeqCst);let mesh_before=MESH_RELEASES.load(SeqCst);
+            assert_eq!(retirement.close_step(1,8),NativeRetirementStep::Blocked);assert_eq!(SAMPLE_RELEASES.load(SeqCst),sample_before);assert_eq!(MESH_RELEASES.load(SeqCst),mesh_before);
+            OBSERVED_RELEASE_BYTES.store(0,SeqCst);let receipt=retirement.close_step(1,demand);let released=OBSERVED_RELEASE_BYTES.load(SeqCst);assert!(released<=demand,"physical sample/mesh release exceeded admitted original demand");physical+=released;
+            assert!(matches!(receipt,NativeRetirementStep::Pending {released_items:0..=1,released_bytes} if released_bytes<=demand));
+        }
+        turns+=1;assert!(turns<10000);
+    }
+    assert!(refused>0);assert!(physical>8);
+    assert_eq!(SAMPLE_RELEASES.load(SeqCst),fixture["cancel"]["sampleReleases"].as_u64().unwrap() as usize);assert_eq!(MESH_RELEASES.load(SeqCst),fixture["cancel"]["meshReleases"].as_u64().unwrap() as usize);
+    OBSERVED_SAMPLE.store(0,SeqCst);OBSERVED_MESH.store(0,SeqCst);
+    eprintln!("[DEBUG] Tessellation ownership: original sample/mesh allocations survived cancel and zero grants; actual allocator released each once after {} one-item turns, {} repeated eight-byte refusals, {} observed physical bytes",turns,refused,physical);
+}
+
+#[test]
+fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant() {
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let mut body=Body::new();let mut rec=OpRecorder::new();let solid=build_unit_box(&mut body,&mut rec);
+    let mut job=TessellationJob::new(0.1);
+    assert_eq!(job.edge_order.len(),fixture["cold"]["initialEdges"].as_u64().unwrap() as usize);
+    assert_eq!(job.faces.len(),fixture["cold"]["initialFaces"].as_u64().unwrap() as usize);
+    assert_eq!(job.progress().units_done,fixture["cold"]["initialUnits"].as_u64().unwrap() as usize);
+    assert!(matches!(job.step(&body,TessellationInput::Solid(solid),0).unwrap(),TessellationStep::Working(_)));
+    assert!(job.edge_order.is_empty() && job.faces.is_empty());
+    let before=job.progress().units_done;assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Working(_)));assert_eq!(job.progress().units_done,before+1);
+    let (mesh,_)=job.run_to_completion(&body,TessellationInput::Solid(solid)).unwrap();assert_eq!(mesh.face_groups.len(),fixture["box"]["faces"].as_u64().unwrap() as usize);assert_eq!(mesh.edge_groups.len(),12);assert_eq!(mesh.index.len()/3,12);assert!((triangle_area_sum(&mesh)-6.0).abs()<1e-6);
+    let volume=mesh.index.chunks_exact(3).map(|tri| {let p=|id:u32|Vec3::new(mesh.position[id as usize*3] as f64,mesh.position[id as usize*3+1] as f64,mesh.position[id as usize*3+2] as f64);p(tri[0]).dot(p(tri[1]).cross(p(tri[2])))/6.0}).sum::<f64>().abs();assert!((volume-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
+    use crate::brep::operations::staged::{StageStep,StagedOperation};
+    let mut caller=crate::brep::operations::boolean::SplitJob::new(&body,solid,Pnt3::new(0.5,0.0,0.0),Vec3::new(1.0,0.0,0.0),0.1).unwrap();
+    for turn in 0..fixture["cold"]["callerProbeTurns"].as_u64().unwrap() as usize {
+        assert_eq!(caller.advance(&mut body,&mut rec).unwrap(),StageStep::Working);
+        assert_eq!(caller.progress().phase,"tessellate","original Split Plan advanced before its cold child produced a mesh");assert_eq!(caller.progress().done,turn+1);assert!(caller.progress().total>=caller.progress().done);
+    }
+    assert!((crate::brep::queries::mass_properties::solid_volume(&body,solid,0.1).unwrap()-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
+    eprintln!("[DEBUG] Tessellation cold ownership: no original topology collection before grants; one grant advanced one frontier; original box parity area=6 volume=1 triangles=12; original Split Plan remains on cold tessellation through eight granted caller turns");
+}
+
+#[test]
+fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() {
+    use crate::brep::queries::validation::BodyValidationJob;
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["validationScratch"];
+    let mut body=Body::new();build_unit_box(&mut body,&mut OpRecorder::new());
+    let (mut job,constructor)=observe_tessellation_system(||BodyValidationJob::new(&body));assert_eq!(constructor,(laws["constructorCapacityBytes"].as_u64().unwrap() as usize,laws["constructorReleaseBytes"].as_u64().unwrap() as usize));
+    let (_,source)=observe_tessellation_system(||job.step(&body,laws["warmTurns"].as_u64().unwrap() as usize));assert!(source.0-source.1>=laws["minimumRetainedBytes"].as_u64().unwrap() as usize);
+    let (mut owner,handoff)=observe_tessellation_system(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original validation scratch requires typed retirement")));assert_eq!(handoff,(laws["handoffCapacityBytes"].as_u64().unwrap() as usize,laws["handoffReleaseBytes"].as_u64().unwrap() as usize));
+    let (mut born,mut freed,mut refusals,mut turns)=(0,0,0,0);
+    while !owner.terminal_is_empty() {
+        let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+        if grant.maximum_release_bytes>8 {for _ in 0..2 {let (step,heap)=observe_tessellation_system(||owner.step(RetainedCloneGrant {maximum_release_bytes:8,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refusals+=1;}}
+        let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<1000000);
+    }
+    assert!(refusals>0);assert_eq!(source.0-source.1+born,freed);eprintln!("[DEBUG] Original validation scratch source={} admittedBirth={born} physicalRelease={freed} repeatedEightByteRefusals={refusals} turns={turns}",source.0-source.1);
+}

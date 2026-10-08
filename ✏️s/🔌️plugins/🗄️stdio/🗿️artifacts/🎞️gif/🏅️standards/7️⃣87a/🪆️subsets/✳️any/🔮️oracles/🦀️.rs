@@ -420,13 +420,20 @@ mod live {
         }))
     }
 
+    /// 🧩️ `value` after `step` edited it in place — the one owned-value seam of the oracle's undo, so the undo itself holds no mutable borrow.
+    fn applied<T>(mut value: T, step: impl FnOnce(&mut T) -> Result<(), String>) -> Result<T, String> {
+        step(&mut value)?;
+        Ok(value)
+    }
+
     /// ↩️ Applies the independently computed inverse of `spec` on top of `mutated`.
     pub fn apply_mutation_inverse(original_bytes: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
         let empty_params = Json::Object(Vec::new());
-        let mut doc = oracle_decode(mutated)?;
-        if let Some((kind, params)) = inverse_spec(original_bytes, &spec.str("kind"), spec.get("params").unwrap_or(&empty_params))? {
-            apply_kind(&mut doc, kind, &params)?;
-        }
+        let decoded = oracle_decode(mutated)?;
+        let doc = match inverse_spec(original_bytes, &spec.str("kind"), spec.get("params").unwrap_or(&empty_params))? {
+            Some((kind, params)) => applied(decoded, |doc| apply_kind(doc, kind, &params))?,
+            None => decoded,
+        };
         oracle_encode(&doc)
     }
 

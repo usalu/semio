@@ -21,7 +21,7 @@
 //! fails with `Option<T>: DslField` is not satisfied. `DiffBinary,DiffCodec,DiffText` is hand-rolled below, following
 //! the svg/gif/docx template exactly.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedAdded, NamedModified, NamedTripleDiff};
 
 
 
@@ -212,33 +212,6 @@ pub struct SemioDocumentDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<BlocksDiff>,
 }
-//#endregion 🔖️DocumentDiffTypes
-
-//#region 🔖️GenericIndexedEngine
-/// 🧮️ Between (positional, per the recipe's index-keyed matching rule): pairwise-compares
-/// `0..min(base,other)` as `modified`, base tail as `removed`, other tail as `added`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
-where
-    T: Clone + PartialEq,
-{
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = diff_item(&base[i], &other[i]) {
-                modified.push(IndexModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(IndexedTripleDiff { removed, modified, added })
-    }
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -406,44 +379,6 @@ where
 
     IndexedTripleDiff { removed, modified, added }
 }
-//#endregion 🔖️GenericIndexedEngine
-
-//#region 🔖️GenericNamedEngine
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for (index, o) in other.iter().enumerate() {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(NamedAdded { index, item: o.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        return None;
-    }
-    if !reproduces_order(base, other, &removed, &added, &key_of) {
-        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
-    }
-    Some(NamedTripleDiff { removed, modified, added })
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[NamedAdded<T>], key_of: &impl Fn(&T) -> K) -> bool
@@ -568,24 +503,6 @@ fn diff_run_style(old: &RunStyle, new: &RunStyle) -> Option<RunStyleDiff> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_list_item(old: &DocListItem, new: &DocListItem) -> Option<DocListItemDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
-    blocks.map(|blocks| DocListItemDiff { blocks: Some(blocks) })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_cell(old: &DocTableCell, new: &DocTableCell) -> Option<DocTableCellDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
-    blocks.map(|blocks| DocTableCellDiff { blocks: Some(blocks) })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_row(old: &DocTableRow, new: &DocTableRow) -> Option<DocTableRowDiff> {
-    let cells = between_indexed(&old.cells, &new.cells, diff_cell);
-    cells.map(|cells| DocTableRowDiff { cells: Some(cells) })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_style(old: &DocStyle, new: &DocStyle) -> Option<DocStyleDiff> {
     if old == new {
         return None;
@@ -599,73 +516,6 @@ fn diff_image(old: &DocImage, new: &DocImage) -> Option<DocImageDiff> {
         return None;
     }
     Some(DocImageDiff { mime: (old.mime != new.mime).then(|| new.mime.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn diff_block(old: &DocBlock, new: &DocBlock) -> Option<DocBlockDiff> {
-    if old == new {
-        return None;
-    }
-    match (old, new) {
-        (DocBlock::Paragraph { style_id: os, runs: or }, DocBlock::Paragraph { style_id: ns, runs: nr }) => {
-            let style_id = (os != ns).then(|| ns.clone());
-            let runs = between_indexed(or, nr, diff_run);
-            if style_id.is_none() && runs.is_none() {
-                None
-            } else {
-                Some(DocBlockDiff::Paragraph(DocParagraphDiff { style_id, runs }))
-            }
-        }
-        (DocBlock::Heading { level: ol, style_id: os, runs: or }, DocBlock::Heading { level: nl, style_id: ns, runs: nr }) => {
-            let level = (ol != nl).then_some(*nl);
-            let style_id = (os != ns).then(|| ns.clone());
-            let runs = between_indexed(or, nr, diff_run);
-            if level.is_none() && style_id.is_none() && runs.is_none() {
-                None
-            } else {
-                Some(DocBlockDiff::Heading(DocHeadingDiff { level, style_id, runs }))
-            }
-        }
-        (DocBlock::List { ordered: oo, items: oi }, DocBlock::List { ordered: no, items: ni }) => {
-            let ordered = (oo != no).then_some(*no);
-            let items = between_indexed(oi, ni, diff_list_item);
-            if ordered.is_none() && items.is_none() {
-                None
-            } else {
-                Some(DocBlockDiff::List(DocListDiff { ordered, items }))
-            }
-        }
-        (DocBlock::Table { rows: or }, DocBlock::Table { rows: nr }) => {
-            let rows = between_indexed(or, nr, diff_row);
-            rows.map(|rows| DocBlockDiff::Table(DocTableDiff { rows: Some(rows) }))
-        }
-        (DocBlock::Code { language: ol, text: ot }, DocBlock::Code { language: nl, text: nt }) => {
-            let language = (ol != nl).then(|| nl.clone());
-            let text = (ot != nt).then(|| nt.clone());
-            if language.is_none() && text.is_none() {
-                None
-            } else {
-                Some(DocBlockDiff::Code(DocCodeDiff { language, text }))
-            }
-        }
-        (DocBlock::Quote { blocks: ob }, DocBlock::Quote { blocks: nb }) => {
-            let blocks = between_indexed(ob, nb, diff_block);
-            blocks.map(|blocks| DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(blocks) }))
-        }
-        (DocBlock::Image { image_id: oid, alt: oa, width: ow, height: oh }, DocBlock::Image { image_id: nid, alt: na, width: nw, height: nh }) => {
-            let image_id = (oid != nid).then(|| nid.clone());
-            let alt = (oa != na).then(|| na.clone());
-            let width = (ow != nw).then_some(*nw);
-            let height = (oh != nh).then_some(*nh);
-            if image_id.is_none() && alt.is_none() && width.is_none() && height.is_none() {
-                None
-            } else {
-                Some(DocBlockDiff::Image(DocImageBlockDiff { image_id, alt, width, height }))
-            }
-        }
-        (DocBlock::PageBreak, DocBlock::PageBreak) => None,
-        _ => Some(DocBlockDiff::Replace { block: new.clone() }),
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -825,31 +675,31 @@ fn apply_block(block: &mut DocBlock, diff: &DocBlockDiff) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn block_with_diff_applied(block: &DocBlock, diff: &DocBlockDiff) -> DocBlock {
+fn apply_block_to_copy(block: &DocBlock, diff: &DocBlockDiff) -> DocBlock {
     let mut out = block.clone();
     apply_block(&mut out, diff);
     out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn run_with_diff_applied(run: &DocRun, diff: &DocRunDiff) -> DocRun {
+fn apply_run_to_copy(run: &DocRun, diff: &DocRunDiff) -> DocRun {
     let mut out = run.clone();
     apply_run(&mut out, diff);
     out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn list_item_with_diff_applied(item: &DocListItem, diff: &DocListItemDiff) -> DocListItem {
+fn apply_list_item_to_copy(item: &DocListItem, diff: &DocListItemDiff) -> DocListItem {
     let mut out = item.clone();
     apply_list_item(&mut out, diff);
     out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn row_with_diff_applied(row: &DocTableRow, diff: &DocTableRowDiff) -> DocTableRow {
+fn apply_row_to_copy(row: &DocTableRow, diff: &DocTableRowDiff) -> DocTableRow {
     let mut out = row.clone();
     apply_row(&mut out, diff);
     out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn cell_with_diff_applied(cell: &DocTableCell, diff: &DocTableCellDiff) -> DocTableCell {
+fn apply_cell_to_copy(cell: &DocTableCell, diff: &DocTableCellDiff) -> DocTableCell {
     let mut out = cell.clone();
     apply_cell(&mut out, diff);
     out
@@ -947,7 +797,7 @@ fn absorb_list_item_diff(mut a: DocListItemDiff, b: DocListItemDiff) -> DocListI
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, apply_block_to_copy)),
     };
     a
 }
@@ -956,7 +806,7 @@ fn absorb_cell_diff(mut a: DocTableCellDiff, b: DocTableCellDiff) -> DocTableCel
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, apply_block_to_copy)),
     };
     a
 }
@@ -965,7 +815,7 @@ fn absorb_row_diff(mut a: DocTableRowDiff, b: DocTableRowDiff) -> DocTableRowDif
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, &cb, absorb_cell_diff, cell_with_diff_applied)),
+        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, &cb, absorb_cell_diff, apply_cell_to_copy)),
     };
     a
 }
@@ -994,7 +844,7 @@ fn absorb_image_diff(mut a: DocImageDiff, b: DocImageDiff) -> DocImageDiff {
 fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
     match (a, b) {
         (_, DocBlockDiff::Replace { block }) => DocBlockDiff::Replace { block },
-        (DocBlockDiff::Replace { block }, b) => DocBlockDiff::Replace { block: block_with_diff_applied(&block, &b) },
+        (DocBlockDiff::Replace { block }, b) => DocBlockDiff::Replace { block: apply_block_to_copy(&block, &b) },
         (DocBlockDiff::Paragraph(mut pa), DocBlockDiff::Paragraph(pb)) => {
             if pb.style_id.is_some() {
                 pa.style_id = pb.style_id;
@@ -1002,7 +852,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             pa.runs = match (pa.runs.take(), pb.runs) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, apply_run_to_copy)),
             };
             DocBlockDiff::Paragraph(pa)
         }
@@ -1016,7 +866,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             ha.runs = match (ha.runs.take(), hb.runs) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, apply_run_to_copy)),
             };
             DocBlockDiff::Heading(ha)
         }
@@ -1027,7 +877,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             la.items = match (la.items.take(), lb.items) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ia), Some(ib)) => Some(absorb_indexed(ia, &ib, absorb_list_item_diff, list_item_with_diff_applied)),
+                (Some(ia), Some(ib)) => Some(absorb_indexed(ia, &ib, absorb_list_item_diff, apply_list_item_to_copy)),
             };
             DocBlockDiff::List(la)
         }
@@ -1035,7 +885,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             ta.rows = match (ta.rows.take(), tb.rows) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_row_diff, row_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_row_diff, apply_row_to_copy)),
             };
             DocBlockDiff::Table(ta)
         }
@@ -1052,7 +902,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             qa.blocks = match (qa.blocks.take(), qb.blocks) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
+                (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, apply_block_to_copy)),
             };
             DocBlockDiff::Quote(qa)
         }
@@ -1075,18 +925,6 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
         // pair (never from real between()/mutation output, which always keys a modify against
         // the item's own live kind) — b wins, matching docx's own fallback.
         (_, b) => b,
-    }
-}
-//#endregion 🔖️DocumentDiffLogic
-
-//#region 🔖️TopLevel
-/// 🧭️ Whole-document `between`: `styles`/`images` name-keyed, `blocks` index-keyed recursive.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_document(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) -> SemioDocumentDiff {
-    SemioDocumentDiff {
-        styles: between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style),
-        images: between_named(&base.images, &other.images, |i| i.id.clone(), diff_image),
-        blocks: between_indexed(&base.blocks, &other.blocks, diff_block),
     }
 }
 
@@ -1125,15 +963,12 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
         self.blocks = match (blocks, other.blocks) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
+            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, apply_block_to_copy)),
         };
     }
 }
 
 impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
-    fn between(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) -> Self {
-        diff_document(base, other)
-    }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Self {
         SemioDocumentDiff {
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)),
@@ -1147,129 +982,8 @@ impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
 }
 
 
-//#endregion 🔖️TopLevel
-
-//#region 🔖️HandcraftedDiffCodec
-//#region 🔖️Primitives
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️BinaryPrimitives
-
-
-
-
-//#endregion 🔖️BinaryPrimitives
-
-//#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueCodecs
-
-//#region 🔖️DiffValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️HandcraftedDiffCodec
-
-//#region 🔖️Demo
-/// 🌱 Representative `SemioDocumentDiff` cases (empty/no-op, a full styles+images+blocks sweep both
-/// directions, reusing `tests::snapshot_a`/`tests::snapshot_b`) — single source of truth for
-/// `grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-document"))]
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioDocumentDiff> {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    vec![
-        SemioDocumentDiff::default(),
-        <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &b),
-        <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&b, &a),
-        <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &a),
-    ]
-}
-
-/// 🌱 Base fixture for `demo_diff_cases`/`diff_codec_text_binary_roundtrip_law` — module-scope
-/// (not `mod tests`-local) so both this facet's own tests and `demo_diff_cases` share one source of
+/// 🌱 Base fixture for `between_demo_cases`/`diff_codec_text_binary_roundtrip_law` — module-scope
+/// (not `mod tests`-local) so both this facet's own tests and `between_demo_cases` share one source of
 /// truth (model/flow's own `sweep_a`/`sweep_b` promotion precedent).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1294,6 +1008,14 @@ pub(crate) fn snapshot_b() -> SemioDocumentSnapshot {
         images: vec![DocImage { id: "added".into(), mime: "image/jpeg".into(), bytes: vec![1] }],
         blocks: vec![DocBlock::Paragraph { style_id: Some("keep".into()), runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, italic: true, ..Default::default() } }, DocRun::plain("second")] }],
     }
+}
+//#region 🔖️Demo
+/// 🌱 Representative `SemioDocumentDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
+#[cfg(all(test, feature = "conversion-document"))]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioDocumentDiff> {
+    vec![SemioDocumentDiff::default(), SemioDocumentDiff { styles: Some(Default::default()), images: Some(Default::default()), blocks: Some(Default::default()) }]
 }
 //#endregion 🔖️Demo
 

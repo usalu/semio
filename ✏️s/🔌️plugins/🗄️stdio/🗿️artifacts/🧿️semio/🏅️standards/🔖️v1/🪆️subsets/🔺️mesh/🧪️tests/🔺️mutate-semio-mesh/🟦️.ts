@@ -584,121 +584,12 @@ function textureOf(document: Snapshot, id: string, verb: string): Texture {
   return found;
 }
 
-/** 🩹️ One `SnapshotPatch` pointer operation of the vocabulary's `patch-snapshot`, read from RFC 6901 alone. */
-type Patch = { operation: string; path: string; from?: string; value?: unknown; index?: number; key?: string };
-type Container = Record<string, unknown> | unknown[];
-
-function tokensOf(path: string): string[] {
-  if (path === "") return [];
-  if (!path.startsWith("/")) throw new Error(`patch pointer ${path} is not an RFC 6901 pointer`);
-  return path.slice(1).split("/").map((token) => token.replace(/~1/g, "/").replace(/~0/g, "~"));
-}
-
-function located(document: unknown, tokens: string[]): unknown {
-  let node = document;
-  for (const token of tokens) {
-    if (Array.isArray(node) && /^\d+$/.test(token) && Number(token) < node.length) node = node[Number(token)];
-    else if (node !== null && typeof node === "object" && !Array.isArray(node) && Object.hasOwn(node, token)) node = (node as Record<string, unknown>)[token];
-    else throw new Error(`pointer token ${token} is absent`);
-  }
-  return node;
-}
-
-function containerAt(document: unknown, tokens: string[]): Container {
-  const node = located(document, tokens);
-  if (node === null || typeof node !== "object") throw new Error("a patch addresses into a value that is no container");
-  return node as Container;
-}
-
-/** 🔑️ An object rebuilt with `entries` in order, so member order — part of the snapshot — survives an edit. */
-function reordered(target: Record<string, unknown>, entries: [string, unknown][]): void {
-  for (const key of Object.keys(target)) delete target[key];
-  for (const [key, value] of entries) target[key] = value;
-}
-
-function taken(document: unknown, tokens: string[]): unknown {
-  if (tokens.length === 0) throw new Error("a removal addresses the document root");
-  const parent = containerAt(document, tokens.slice(0, -1));
-  const key = tokens[tokens.length - 1]!;
-  if (Array.isArray(parent) && /^\d+$/.test(key) && Number(key) < parent.length) return parent.splice(Number(key), 1)[0];
-  if (!Array.isArray(parent) && Object.hasOwn(parent, key)) {
-    const value = parent[key];
-    reordered(parent, Object.entries(parent).filter(([name]) => name !== key));
-    return value;
-  }
-  throw new Error(`removal target ${key} is absent`);
-}
-
-function inserted(document: unknown, tokens: string[], value: unknown, index: number | undefined): void {
-  if (tokens.length === 0) throw new Error("an insertion addresses the document root");
-  const parent = containerAt(document, tokens.slice(0, -1));
-  const key = tokens[tokens.length - 1]!;
-  if (Array.isArray(parent) && (key === "-" || (/^\d+$/.test(key) && Number(key) <= parent.length))) parent.splice(key === "-" ? parent.length : Number(key), 0, value);
-  else if (!Array.isArray(parent) && !Object.hasOwn(parent, key)) {
-    const entries = Object.entries(parent);
-    entries.splice(index === undefined ? entries.length : Math.min(index, entries.length), 0, [key, value]);
-    reordered(parent, entries);
-  } else throw new Error(`insertion at ${key} needs an absent object member or an array index`);
-}
-
-/** 🩹️ `patch` applied to a clone of `document`: `set`, `insert` (an object member at `index`, an array item at a position or
- * `-`), `remove`, `move` and `rename`; a pointer the document lacks is an error, and `splice` is outside this oracle. */
-function patchedSnapshot<T>(document: T, patch: Patch): T {
-  const result = clone(document) as unknown;
-  const tokens = tokensOf(patch.path);
-  switch (patch.operation) {
-    case "set": {
-      if (tokens.length === 0) return clone(patch.value) as T;
-      located(result, tokens);
-      const parent = containerAt(result, tokens.slice(0, -1));
-      const key = tokens[tokens.length - 1]!;
-      if (Array.isArray(parent)) parent[Number(key)] = clone(patch.value);
-      else parent[key] = clone(patch.value);
-      return result as T;
-    }
-    case "insert":
-      inserted(result, tokens, clone(patch.value), patch.index);
-      return result as T;
-    case "remove":
-      taken(result, tokens);
-      return result as T;
-    case "move":
-      inserted(result, tokens, taken(result, tokensOf(patch.from ?? "")), patch.index);
-      return result as T;
-    case "rename": {
-      const parent = containerAt(result, tokens.slice(0, -1));
-      const key = tokens[tokens.length - 1]!;
-      if (Array.isArray(parent) || !Object.hasOwn(parent, key) || (patch.key !== key && Object.hasOwn(parent, patch.key!))) throw new Error(`rename of ${key} does not fit its object`);
-      reordered(parent, Object.entries(parent).map(([name, value]) => [name === key ? patch.key! : name, value]));
-      return result as T;
-    }
-    default:
-      throw new Error(`snapshot patch operation ${patch.operation} is outside this oracle`);
-  }
-}
-
-/** ↩️ The exact inverse of one `set`, `insert` or `remove` taken against `document`, the state it applies to. */
-function patchInverse(document: unknown, patch: Patch): Patch {
-  const tokens = tokensOf(patch.path);
-  const parent = tokens.length === 0 ? null : containerAt(document, tokens.slice(0, -1));
-  const key = tokens[tokens.length - 1] ?? "";
-  switch (patch.operation) {
-    case "set":
-      return { operation: "set", path: patch.path, value: clone(located(document, tokens)) };
-    case "insert":
-      return { operation: "remove", path: Array.isArray(parent) && key === "-" ? `${patch.path.slice(0, -1)}${parent.length}` : patch.path };
-    case "remove":
-      return Array.isArray(parent) ? { operation: "insert", path: patch.path, value: clone(located(document, tokens)) } : { operation: "insert", path: patch.path, value: clone(located(document, tokens)), index: Object.keys(parent ?? {}).indexOf(key) };
-    default:
-      throw new Error(`the inverse of a ${patch.operation} patch is outside this oracle`);
-  }
-}
-
-/** 🔑️ An id-keyed pool's `create` arm: replace the member with this id in place, or append it. */
-function upsert<T extends { id: string }>(pool: T[], entry: T): void {
-  const at = pool.findIndex((member) => member.id === entry.id);
-  if (at === -1) pool.push(entry);
-  else pool[at] = entry;
+/** 🔑️ An id-keyed pool's `create` arm: replace the member with this id in place, or insert it at `at` (append when absent). */
+function upsert<T extends { id: string }>(pool: T[], entry: T, at?: number): void {
+  const found = pool.findIndex((member) => member.id === entry.id);
+  if (found !== -1) pool[found] = entry;
+  else if (at === undefined || at >= pool.length) pool.push(entry);
+  else pool.splice(at, 0, entry);
 }
 
 /**
@@ -714,17 +605,15 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
   const [verb, argument] = verbOf(mutation);
   const result = clone(document);
   switch (verb) {
-    case "PatchSnapshot":
-      return patchedSnapshot(result, argument.patch as Patch);
     case "CreateMesh":
-      upsert(result.meshes, clone(argument.mesh as Mesh));
+      upsert(result.meshes, clone(argument.mesh as Mesh), argument.at as number | undefined);
       return result;
     case "DeleteMesh":
       meshOf(result, argument.id as string, "delete-mesh");
       result.meshes = result.meshes.filter((mesh) => mesh.id !== argument.id);
       return result;
     case "CreatePrimitive":
-      upsert(meshOf(result, argument.mesh_id as string, "create-primitive").primitives, clone(argument.primitive as Primitive));
+      upsert(meshOf(result, argument.mesh_id as string, "create-primitive").primitives, clone(argument.primitive as Primitive), argument.at as number | undefined);
       return result;
     case "DeletePrimitive": {
       const mesh = meshOf(result, argument.mesh_id as string, "delete-primitive");
@@ -752,7 +641,7 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
       return result;
     case "CreateMaterial": {
       const material = clone(argument.material as Material);
-      upsert(result.materials, { ...material, id: material.id, baseColor: { r: Math.fround(material.baseColor.r), g: Math.fround(material.baseColor.g), b: Math.fround(material.baseColor.b), a: Math.fround(material.baseColor.a) }, metallic: Math.fround(material.metallic), roughness: Math.fround(material.roughness), baseColorTexture: material.baseColorTexture ?? null, metallicRoughnessTexture: material.metallicRoughnessTexture ?? null, normalTexture: material.normalTexture ?? null, occlusionTexture: material.occlusionTexture ?? null, emissiveTexture: material.emissiveTexture ?? null });
+      upsert(result.materials, { ...material, id: material.id, baseColor: { r: Math.fround(material.baseColor.r), g: Math.fround(material.baseColor.g), b: Math.fround(material.baseColor.b), a: Math.fround(material.baseColor.a) }, metallic: Math.fround(material.metallic), roughness: Math.fround(material.roughness), baseColorTexture: material.baseColorTexture ?? null, metallicRoughnessTexture: material.metallicRoughnessTexture ?? null, normalTexture: material.normalTexture ?? null, occlusionTexture: material.occlusionTexture ?? null, emissiveTexture: material.emissiveTexture ?? null }, argument.at as number | undefined);
       return result;
     }
     case "DeleteMaterial":
@@ -771,7 +660,7 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
       materialOf(result, argument.id as string, "change-material-roughness").roughness = Math.fround(argument.new_roughness as number);
       return result;
     case "CreateTexture":
-      upsert(result.textures, clone(argument.texture as Texture));
+      upsert(result.textures, clone(argument.texture as Texture), argument.at as number | undefined);
       return result;
     case "DeleteTexture":
       textureOf(result, argument.id as string, "delete-texture");
@@ -800,17 +689,15 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
  * ↩️ The verb's own inverse against the document it is about to be applied to, as the ORDERED
  * sequence of verbs that restores it.
  *
- * Every `create-` pool is append-only and carries no index, so undoing the removal of a member that
- * was not last cannot be one verb: the sequence lifts the whole tail off and re-declares it in
- * order, the same repair `🦁️mutate-obj-3-0`'s `restore_face_at` records for its own membership lists.
+ * Every `create-` verb carries an optional `at`, so undoing the removal of a member is one verb: the
+ * create that re-declares it at its original index.
  */
 export function inverseMutation(document: Snapshot, mutation: Mutation): Mutation[] {
   const [verb, argument] = verbOf(mutation);
-  const restorePool = <T extends { id: string }>(pool: T[], removedId: string, create: (entry: T) => Mutation, remove: (id: string) => Mutation): Mutation[] => {
+  const restorePool = <T extends { id: string }>(pool: T[], removedId: string, create: (entry: T, at: number) => Mutation): Mutation[] => {
     const at = pool.findIndex((member) => member.id === removedId);
     if (at === -1) throw new Error(`${kebab(verb)} addresses ${removedId}, which the document does not carry`);
-    const tail = pool.slice(at);
-    return [...tail.slice(1).map((member) => remove(member.id)), ...tail.map((member) => create(clone(member)))];
+    return [create(clone(pool[at]), at)];
   };
   switch (verb) {
     case "CreateMesh": {
@@ -818,12 +705,7 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
       return previous === undefined ? [{ DeleteMesh: { id: (argument.mesh as Mesh).id } }] : [{ CreateMesh: { mesh: clone(previous) } }];
     }
     case "DeleteMesh":
-      return restorePool(
-        document.meshes,
-        argument.id as string,
-        (mesh) => ({ CreateMesh: { mesh } }),
-        (id) => ({ DeleteMesh: { id } }),
-      );
+      return restorePool(document.meshes, argument.id as string, (mesh, at) => ({ CreateMesh: { mesh, at } }));
     case "CreatePrimitive": {
       const mesh = meshOf(document, argument.mesh_id as string, "create-primitive");
       const previous = mesh.primitives.find((primitive) => primitive.id === (argument.primitive as Primitive).id);
@@ -833,12 +715,7 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
     }
     case "DeletePrimitive": {
       const mesh = meshOf(document, argument.mesh_id as string, "delete-primitive");
-      return restorePool(
-        mesh.primitives,
-        argument.primitive_id as string,
-        (primitive) => ({ CreatePrimitive: { mesh_id: mesh.id, primitive } }),
-        (id) => ({ DeletePrimitive: { mesh_id: mesh.id, primitive_id: id } }),
-      );
+      return restorePool(mesh.primitives, argument.primitive_id as string, (primitive, at) => ({ CreatePrimitive: { mesh_id: mesh.id, primitive, at } }));
     }
     case "SetPrimitiveTopology": {
       const primitive = primitiveOf(document, argument.mesh_id as string, argument.primitive_id as string, "set-primitive-topology");
@@ -869,12 +746,7 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
       return previous === undefined ? [{ DeleteMaterial: { id: (argument.material as Material).id } }] : [{ CreateMaterial: { material: clone(previous) } }];
     }
     case "DeleteMaterial":
-      return restorePool(
-        document.materials,
-        argument.id as string,
-        (material) => ({ CreateMaterial: { material } }),
-        (id) => ({ DeleteMaterial: { id } }),
-      );
+      return restorePool(document.materials, argument.id as string, (material, at) => ({ CreateMaterial: { material, at } }));
     case "ChangeMaterialBaseColor":
       return [{ ChangeMaterialBaseColor: { id: argument.id, new_base_color: clone(materialOf(document, argument.id as string, "change-material-base-color").baseColor) } }];
     case "ChangeMaterialMetallic":
@@ -885,13 +757,8 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
       const previous = document.textures.find((texture) => texture.id === (argument.texture as Texture).id);
       return previous === undefined ? [{ DeleteTexture: { id: (argument.texture as Texture).id } }] : [{ CreateTexture: { texture: clone(previous) } }];
     }
-    case "DeleteTexture": {
-      const index=document.textures.findIndex(texture=>texture.id===argument.id);
-      if(index<0)throw Error("missing texture");
-      return [{PatchSnapshot:{patch:{operation:"insert",path:`/textures/${index}`,value:clone(document.textures[index])}}}];
-    }
-    case "PatchSnapshot":
-      return [{ PatchSnapshot: { patch: patchInverse(document, argument.patch as Patch) } }];
+    case "DeleteTexture":
+      return restorePool(document.textures, argument.id as string, (texture, at) => ({ CreateTexture: { texture, at } }));
     case "ChangeTextureMime":
       return [{ ChangeTextureMime: { id: argument.id, new_mime: textureOf(document, argument.id as string, "change-texture-mime").mime } }];
     case "ReplaceTextureBytes":

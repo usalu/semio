@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "nativeFamily": {
+    "handoffCapacityBytes": 0,
+    "handoffReleaseBytes": 0,
+    "convertToNurbs": [
+      false,
+      true
+    ],
+    "wire": {
+      "width": 2,
+      "height": 3,
+      "length": 10
+    },
+    "compoundVolume": 2
+  },
+  "system": {
+    "constructorCapacityBytes": 0,
+    "cancelCapacityBytes": 0,
+    "cancelReleaseBytes": 0,
+    "handoffCapacityBytes": 0,
+    "handoffReleaseBytes": 0,
+    "turnCapacityBytes": 0
+  },
+  "grants": {
+    "items": 1,
+    "bytes": 8
+  },
+  "cold": {
+    "initialEdges": 0,
+    "initialFaces": 0,
+    "initialUnits": 0,
+    "callerProbeTurns": 8
+  },
+  "cancel": {
+    "releasesAtSignal": 0,
+    "releasesBeforeCredit": 0,
+    "sampleReleases": 1,
+    "meshReleases": 1
+  },
+  "box": {
+    "faces": 6,
+    "edges": 12,
+    "triangles": 12,
+    "area": 6,
+    "volume": 1
+  },
+  "liveRows": {
+    "keys": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "removedKeys": [
+      "a",
+      "c"
+    ],
+    "payloadBytes": 17,
+    "maximumPredicatesPerTurn": 1,
+    "extractionCapacityBytes": 0,
+    "extractionReleaseBytes": 0
+  },
+  "validationScratch": {
+    "warmTurns": 100,
+    "constructorCapacityBytes": 0,
+    "constructorReleaseBytes": 0,
+    "handoffCapacityBytes": 0,
+    "handoffReleaseBytes": 0,
+    "minimumRetainedBytes": 1
+  }
+}

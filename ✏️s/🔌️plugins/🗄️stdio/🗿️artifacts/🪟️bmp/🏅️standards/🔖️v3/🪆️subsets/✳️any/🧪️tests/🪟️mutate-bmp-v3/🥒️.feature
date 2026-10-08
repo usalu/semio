@@ -10,7 +10,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   The mutation kinds operate on this image. Replace-image imports an exact typed image; region paints preserve the native profile and unpainted fields.
   Paint revisions are FNV-1a over the canonical owned field sequence with counted strings and arrays,
   native component scalars, palette and metadata. Encoded BMP octets are absent from that sequence.
-  Each inverse restores the complete owned base image.
+  Each inverse is a concrete replace-samples row carrying the base pixels of exactly the region the mutation overwrote.
 
   The oracle uses image-rs to read native indices and visual pixels, and separately retains precise
   native component words and every owned header field. Its own BMP writer preserves these fields.

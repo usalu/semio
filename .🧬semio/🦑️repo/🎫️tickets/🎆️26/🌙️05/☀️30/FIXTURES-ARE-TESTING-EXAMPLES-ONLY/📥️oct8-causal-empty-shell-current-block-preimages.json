@@ -1,0 +1,21 @@
+{
+  "source": {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs",
+    "sha256": "18042e5afecf4f3def0626c7b5be0fc80af03276b17339408be61c09a3b1b5da",
+    "changes": [
+      {
+        "before": "impl<T> MutationDagFixedSlots<T> {\n    fn new() -> Self {",
+        "after": "impl<T> MutationDagFixedSlots<T> {\n    fn empty() -> Self {\n        Self { slots: Vec::new().into_boxed_slice(), close_page: 0, generations: Vec::new().into_boxed_slice(), occupied: Vec::new().into_boxed_slice(), next: Vec::new().into_boxed_slice(), previous: Vec::new().into_boxed_slice(), free: Vec::new().into_boxed_slice(), free_len: 0, head: MUTATION_DAG_SLOT_NONE, tail: MUTATION_DAG_SLOT_NONE, len: 0 }\n    }\n\n    fn new() -> Self {"
+      },
+      {
+        "before": "impl MutationDag {\n    pub fn new() -> Self {",
+        "after": "impl MutationDag {\n    /// 🪹️ An allocation-free terminal shell for granted transfer of the original causal owner.\n    pub fn empty() -> Self {\n        Self { envelopes: MutationDagFixedSlots::empty(), applied: MutationDagFixedSlots::empty(), drained: 0, pending: MutationDagFixedSlots::empty() }\n    }\n\n    pub fn new() -> Self {"
+      }
+    ]
+  },
+  "test": {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "dbd11299c024b286351fa978fef988af9b43759b5ab7e033bc5954919f63b6e5",
+    "appended": "\n#[test]\nfn causal_empty_shell_has_no_physical_birth_or_terminal_release() {\n    let (mut empty, requested, released) = crate::test_allocation::observe_backing(MutationDag::empty);\n    assert_eq!((requested, released), (0, 0));\n    assert!(empty.terminal_is_empty() && empty.backing_is_empty());\n    assert_eq!(empty.next_backing_release_byte_demand(), 0);\n    assert!(empty.take_one_close_owner().is_none());\n    let (step, requested, released) = crate::test_allocation::observe_backing(|| empty.close_backing_step(0, 0));\n    assert_eq!(step, (0, 0, true));\n    assert_eq!((requested, released), (0, 0));\n    let (_, requested, released) = crate::test_allocation::observe_backing(|| drop(empty));\n    assert_eq!((requested, released), (0, 0));\n    println!(\"[DEBUG] genuine causal terminal shell System birth=0 release=0; original owner transfers without allocating a replacement\");\n}\n"
+  }
+}

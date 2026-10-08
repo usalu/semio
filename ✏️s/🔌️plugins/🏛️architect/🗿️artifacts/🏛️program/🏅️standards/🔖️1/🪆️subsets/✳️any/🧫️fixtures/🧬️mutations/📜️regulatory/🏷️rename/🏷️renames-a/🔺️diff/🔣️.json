@@ -24,9 +24,10 @@
   "safety": null,
   "security": null,
   "regulatory": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "regulatory-requirement-a",
         "patch": {
@@ -59,8 +60,7 @@
           "updateSource": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "siteContext": null,
   "organizational": null,

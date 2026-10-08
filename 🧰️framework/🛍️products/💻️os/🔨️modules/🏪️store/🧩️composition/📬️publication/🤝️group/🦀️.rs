@@ -23,6 +23,16 @@ impl MemberGroupPreparation {
     }
 
     pub(super) fn next_byte_demand(&self) -> usize { self.demand }
+    pub(super) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::RetirementDemand;
+        if self.history.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        if self.displaced.is_some() {
+            let capacity_bytes = if self.applied.capacity() != 0 || self.cursor.capacity() != 0 { std::mem::size_of::<ArtifactStoreStringVectorRetirement>() } else if self.revision.is_some() { std::mem::size_of::<ArtifactStoreRevisionAccumulatorRetirement>() } else if self.checkpoint.is_some() { std::mem::size_of::<ArtifactStoreStringRetirement>() } else { 0 };
+            return Ok(RetirementDemand { capacity_bytes, depth: 1, ..Default::default() });
+        }
+        let release_bytes = if Arc::strong_count(&self.visibility) == 1 { std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<crate::os_vcs::ArtifactGroupVisibility>()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "group visibility frame layout overflow"))?.0.pad_to_align().size() } else { 0 };
+        Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() })
+    }
 
     pub(super) fn visibility(&self) -> Arc<crate::os_vcs::ArtifactGroupVisibility> { Arc::clone(&self.visibility) }
 
@@ -49,25 +59,25 @@ where
         if publication.close_started || publication.cancel_requested { return Err("member group candidate was cancelled".into()); }
         if group.displaced.is_none() {
             group.demand = 4096;
-            if grant.maximum_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_capacity_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
             group.displaced = Some(self.displaced_retirements.reserve_owner_slots(12).map_err(|error| error.to_string())?);
             group.completed = group.completed.saturating_add(1);
             return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.progress()));
         }
         if group.history.is_none() {
             group.demand = self.envelope.vcs.edits.next_reservation_allocation_bytes().max(4096);
-            if grant.maximum_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_capacity_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
             group.history = Some(self.reserve_edit_history_slot().map_err(|error| error.to_string())?);
             group.completed = group.completed.saturating_add(1);
             return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.progress()));
         }
         if group.revision.is_none() {
-            group.revision = Some(CursorRevisionAccumulator { identity_digest: self.revision_accumulator.identity_digest, applied: crate::os_vcs::HistoryPageStack::empty(), redo: crate::os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: BTreeMap::new(), indexed_edits: BTreeMap::new(), unit_flags: BTreeMap::new() });
+            group.revision = Some(CursorRevisionAccumulator { identity_digest: self.revision_accumulator.identity_digest, applied: crate::os_vcs::HistoryPageStack::empty(), redo: crate::os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() });
         }
         if group.ordinal < self.applied_edit_ids.len() {
             let source = &self.applied_edit_ids[group.ordinal];
             group.demand = match group.phase { 0 => group.applied.next_push_allocation_bytes().saturating_add(source.len()), 1 => group.cursor.next_push_allocation_bytes().saturating_add(source.len()), _ => group.revision.as_ref().unwrap().applied.next_push_allocation_bytes().saturating_add(std::mem::size_of::<CursorRevisionRecord>()) }.max(1);
-            if grant.maximum_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_capacity_bytes < group.demand || grant.maximum_copy_bytes < if group.phase < 2 { source.len() } else { std::mem::size_of::<CursorRevisionRecord>() } { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
             match group.phase {
                 0 => { group.applied.try_push(source.clone()).map_err(|_| "member applied catalog is exhausted")?; group.phase = 1; }
                 1 => { group.cursor.try_push(source.clone()).map_err(|_| "member cursor catalog is exhausted")?; group.phase = 2; }
@@ -78,30 +88,30 @@ where
         }
         if group.phase < 3 { group.phase = 3; }
         group.demand = match group.phase {
-            3 => group.applied.next_push_allocation_bytes().saturating_add(stage.edit.id.len()),
-            4 => group.cursor.next_push_allocation_bytes().saturating_add(stage.edit.id.len()),
+            3 => group.applied.next_push_allocation_bytes().saturating_add(stage.edit.as_ref().expect("live staged edit owner").id.len()),
+            4 => group.cursor.next_push_allocation_bytes().saturating_add(stage.edit.as_ref().expect("live staged edit owner").id.len()),
             5 => group.revision.as_ref().unwrap().applied.next_push_allocation_bytes().saturating_add(std::mem::size_of::<CursorRevisionRecord>()),
             6 => self.current_checkpoint_id.as_ref().map_or(1, String::len),
             7 => self.revision_accumulator.mutation_positions.keys().next().map_or(1, |id| id.0.len().saturating_add(4096)),
             8..=10 => ARTIFACT_STORE_ONE_ITEM_ID_BYTES.saturating_add(4096),
-            _ => std::mem::size_of::<ArtifactStoreBatchStage<P, Mu>>().saturating_add(stage.unit_flags.capacity().saturating_mul(std::mem::size_of::<(usize, bool)>())).saturating_add(std::mem::size_of::<durable_group::StagedRootRetirement<P>>()).saturating_add(2048),
+            _ => std::mem::size_of::<ArtifactStoreBatchStage<P, Mu>>().saturating_add(stage.unit_flags.capacity().saturating_mul(std::mem::size_of::<(usize, bool)>())).saturating_add(std::mem::size_of::<durable_group::StagedRootRetirement<P, Mu>>()).saturating_add(2048),
         }.max(1);
-        if grant.maximum_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+        if grant.maximum_capacity_bytes < group.demand { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         match group.phase {
-            3 => { group.applied.try_push(stage.edit.id.clone()).map_err(|_| "member applied catalog is exhausted")?; group.phase = 4; }
-            4 => { group.cursor.try_push(stage.edit.id.clone()).map_err(|_| "member cursor catalog is exhausted")?; group.phase = 5; }
+            3 => { group.applied.try_push(stage.edit.as_ref().expect("live staged edit owner").id.clone()).map_err(|_| "member applied catalog is exhausted")?; group.phase = 4; }
+            4 => { group.cursor.try_push(stage.edit.as_ref().expect("live staged edit owner").id.clone()).map_err(|_| "member cursor catalog is exhausted")?; group.phase = 5; }
             5 => {
                 let revision = group.revision.as_mut().unwrap();
                 let previous = revision.applied.last().map_or(revision.identity_digest, |record| record.prefix_digest);
-                revision.applied.try_push(CursorRevisionRecord { ledger_key: None, id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[stage.edit.id.as_bytes()]), edit_digest: stage.digest, prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &stage.digest]) }).map_err(|_| "member revision catalog is exhausted")?;
+                revision.applied.try_push(CursorRevisionRecord { ledger_key: None, id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[stage.edit.as_ref().expect("live staged edit owner").id.as_bytes()]), edit_digest: stage.digest, prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &stage.digest]) }).map_err(|_| "member revision catalog is exhausted")?;
                 group.phase = 6;
             }
             6 => { group.checkpoint = (*self.current_checkpoint_id).clone(); group.phase = 7; }
             7 => {
                 use std::ops::Bound::{Excluded, Unbounded};
                 let revision = group.revision.as_mut().unwrap();
-                let next = match revision.mutation_positions.last_key_value() {
-                    Some((key, _)) => self.revision_accumulator.mutation_positions.range::<MutationId, _>((Excluded(key), Unbounded)).next(),
+                let next = match revision.mutation_positions.iter().next_back() {
+                    Some((key, _)) => self.revision_accumulator.mutation_positions.range((Excluded(key), Unbounded)).next(),
                     None => self.revision_accumulator.mutation_positions.first_key_value(),
                 };
                 if let Some((key, value)) = next { revision.mutation_positions.insert(key.clone(), *value); }
@@ -110,8 +120,8 @@ where
             8 => {
                 use std::ops::Bound::{Excluded, Unbounded};
                 let revision = group.revision.as_mut().unwrap();
-                let next = match revision.indexed_edits.last_key_value() {
-                    Some((key, _)) => self.revision_accumulator.indexed_edits.range::<[u8; 32], _>((Excluded(key), Unbounded)).next(),
+                let next = match revision.indexed_edits.iter().next_back() {
+                    Some((key, _)) => self.revision_accumulator.indexed_edits.range((Excluded(key), Unbounded)).next(),
                     None => self.revision_accumulator.indexed_edits.first_key_value(),
                 };
                 if let Some((key, value)) = next { revision.indexed_edits.insert(*key, *value); }
@@ -120,31 +130,31 @@ where
             9 => {
                 use std::ops::Bound::{Excluded, Unbounded};
                 let revision = group.revision.as_mut().unwrap();
-                let next = match revision.unit_flags.last_key_value() {
-                    Some((key, _)) => self.revision_accumulator.unit_flags.range::<([u8; 32], usize), _>((Excluded(key), Unbounded)).next(),
+                let next = match revision.unit_flags.iter().next_back() {
+                    Some((key, _)) => self.revision_accumulator.unit_flags.range((Excluded(key), Unbounded)).next(),
                     None => self.revision_accumulator.unit_flags.first_key_value(),
                 };
                 if let Some((key, value)) = next { revision.unit_flags.insert(*key, *value); }
                 else { group.phase = 10; }
             }
-            10 if group.operation < stage.edit.forwards.len() => {
+            10 if group.operation < stage.edit.as_ref().expect("live staged edit owner").forwards.len() => {
                 let index = group.operation;
-                let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[stage.edit.id.as_bytes()]);
-                let id = crate::os_spr::mutation_id_for_edit_operation::<P, Mu>(&stage.edit, index).ok_or("member operation identity is absent")?;
+                let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[stage.edit.as_ref().expect("live staged edit owner").id.as_bytes()]);
+                let id = crate::os_spr::mutation_id_for_edit_operation::<P, Mu>(stage.edit.as_ref().expect("live staged edit owner"), index).ok_or("member operation identity is absent")?;
                 let revision = group.revision.as_mut().unwrap();
                 revision.mutation_positions.insert(id, (group.applied.len() - 1, index, digest));
-                revision.indexed_edits.insert(digest, (group.applied.len() - 1, stage.edit.forwards.len()));
+                revision.indexed_edits.insert(digest, (group.applied.len() - 1, stage.edit.as_ref().expect("live staged edit owner").forwards.len()));
                 group.operation += 1;
             }
             10 => {
                 if let Some((index, flag)) = publication.stage.as_mut().unwrap().unit_flags.pop() {
                     let stage = publication.stage.as_ref().unwrap();
-                    let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[stage.edit.id.as_bytes()]);
+                    let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[stage.edit.as_ref().expect("live staged edit owner").id.as_bytes()]);
                     group.revision.as_mut().unwrap().unit_flags.insert((digest, index), flag);
                 } else { group.phase = 11; }
             }
             _ => {
-                durable_group::stage_prebuilt_batch_root(self, publication)?;
+                durable_group::stage_prebuilt_batch_root(self, publication, grant)?;
                 let group = publication.group_preparation.as_mut().unwrap();
                 group.phase = 12;
                 group.demand = 4096;
@@ -160,7 +170,7 @@ where
         if publication.published { return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress())); }
         let group = publication.group_preparation.as_ref().ok_or("member group lacks its retained adoption")?;
         if !Arc::ptr_eq(&group.visibility, visibility) || !visibility.committed() || group.phase != 12 { return Err("member adoption requires its exact committed common decision".into()); }
-        if !grant.permits_one() || grant.maximum_bytes < 4096 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+        if !grant.permits_one() || grant.maximum_capacity_bytes < 4096 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         let checkpoint = publication.progress();
         durable_group::adopt_staged_store_member(self, visibility).map_err(|error| error.to_string())?;
         *self.durable_group_root = None;
@@ -174,33 +184,41 @@ where
         Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress()))
     }
 
-    pub(super) fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, ValueError> {
-        let error = |message: &str| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
-        if !grant.permits_one() { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        let Some(group) = publication.group_preparation.as_mut() else { return Ok(SnapshotRetirementStep::Complete) };
+    pub(super) fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
+        let error = |message: &'static str| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "member group abort requires admitted depth")); }
+        let Some(group) = publication.group_preparation.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if group.visibility.committed() || group.visibility.pending() { return Err(error("member abort requires its exact aborted common decision")); }
-        group.demand = 4096;
-        if grant.maximum_bytes < group.demand { return Ok(SnapshotRetirementStep::Blocked); }
         if self.durable_group_root.is_some() {
-            durable_group::abort_staged_store_member(self, &group.visibility).map_err(|failure| error(&failure.to_string()))?;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            durable_group::abort_staged_store_member(self, &group.visibility).map_err(|_| error("member abort lost its exact staged root"))?;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(history) = group.history.take() {
             let ArtifactStoreHistoryCommitReservation { history, rejected_owner } = history;
             if let Err(history) = self.envelope.vcs.edits.cancel_reservation(history) { group.history = Some(ArtifactStoreHistoryCommitReservation { history, rejected_owner }); return Err(error("member abort lost its exact ledger reservation")); }
-            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|failure| error(&failure.to_string()))?;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|_| error("member abort lost its rejected owner reservation"))?;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(reservation) = group.displaced.as_mut() {
-            if group.applied.capacity() != 0 { retain_group_owner(&mut self.displaced_retirements, reservation, Box::new(ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut group.applied, crate::os_vcs::HistoryPageStack::empty())))); }
-            else if group.cursor.capacity() != 0 { retain_group_owner(&mut self.displaced_retirements, reservation, Box::new(ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty())))); }
-            else if let Some(revision) = group.revision.take() { retain_group_owner(&mut self.displaced_retirements, reservation, Box::new(ArtifactStoreRevisionAccumulatorRetirement::new(revision))); }
-            else if let Some(checkpoint) = group.checkpoint.take() { retain_group_owner(&mut self.displaced_retirements, reservation, Box::new(ArtifactStoreStringRetirement::new(checkpoint))); }
-            else { self.displaced_retirements.release_owner_slots(group.displaced.take().unwrap()).map_err(|failure| error(&failure.to_string()))?; }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            if group.applied.capacity() != 0 {
+                let original = std::mem::replace(&mut group.applied, crate::os_vcs::HistoryPageStack::empty());
+                match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.applied = original; return Err(error); } }
+            }
+            if group.cursor.capacity() != 0 {
+                let original = std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty());
+                match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.cursor = original; return Err(error); } }
+            }
+            if let Some(original) = group.revision.take() { match admit_artifact_retirement(original, grant, ArtifactStoreRevisionAccumulatorRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.revision = Some(original); return Err(error); } } }
+            if let Some(original) = group.checkpoint.take() { match admit_artifact_retirement(original, grant, ArtifactStoreStringRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.checkpoint = Some(original); return Err(error); } } }
+            self.displaced_retirements.release_owner_slots(group.displaced.take().unwrap()).map_err(|_| error("member abort lost its displaced owner reservation"))?;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
+        let released_bytes = group.retirement_demands()?.release_bytes;
+        if grant.maximum_release_bytes < released_bytes || Arc::weak_count(&group.visibility) != 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         publication.begin_close();
         publication.group_preparation = None;
-        Ok(SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
     }
 }

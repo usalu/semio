@@ -277,7 +277,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("pins live component gumball across a guest mesh and source refresh", async () => {
-    const fixture = (await import("../../../../../../♾️infinite/🌍️world/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
+    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
     const row = fixture.gumball;
     const refresh = row.liveRefresh;
     const object = fixture.objects[row.object]!;
@@ -387,7 +387,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("projects exact analytic component selections across instances", async () => {
-    const fixture = (await import("../../../../../../♾️infinite/🌍️world/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
+    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
     const three = await vi.importActual<typeof import("three")>("three");
     const indexed = new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(fixture.mesh.positions, 3)).setIndex(fixture.mesh.indices);
     const oracle = indexed.toNonIndexed();
@@ -499,4 +499,46 @@ describe("exact analytic component interaction targets", () => {
     for (const label of fixture.invalidLabels) expect(world3dComponentInteractionTarget(fixture.instances, [{ ...fixture.meshes[0], data: { ...fixture.meshes[0].data, componentReferences: { edge: ["1", label] } } }], fixture.instances[0].id, "edge", 1)).toBeUndefined();
     geometry.dispose();
   });
+  it("dispatches current analytic component hits and clears malformed or stale source targets through mounted handlers", async () => {
+    const fixture = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+    const law = fixture.mountedAdmissions;
+    const actions: { action: string; args?: Record<string, unknown> }[] = [];
+    const onAction = async (action: { action: string; args?: Record<string, unknown> }) => { actions.push(action); };
+    const node = (row: typeof law.cases[number]) => sceneNode(null, {
+      domainId: law.domain,
+      meshesJson: JSON.stringify([{ ...fixture.meshes[0], data: { ...fixture.meshes[0].data, faceIds: [law.faceGroup], componentReferences: { face: row.labels } } }]),
+      instancesJson: JSON.stringify([{ ...fixture.instances[0], componentSource: row.source }]),
+      selectionJson: JSON.stringify({ ids: [fixture.instances[0].id], activeObjectId: fixture.instances[0].id, componentIds: [law.faceGroup], gumballSelectionIds: row.selectedTargets, granularity: "face", selectionMode: "face", targets: { mesh: false, vertex: false, edge: false, face: true } }),
+      interactionJson: JSON.stringify({ granularity: "face", activeUtility: "select" }),
+      referencesJson: "[]",
+    }, onAction);
+    const view = render(node(law.cases[0]!));
+    try {
+      for (const row of law.cases) {
+        view.rerender(node(row));
+        runFrames();
+        actions.length = 0;
+        expect(view.container.querySelectorAll('[opacity="0.62"]'), row.name).toHaveLength(row.expectedOverlayCount);
+        const props = [...view.container.querySelectorAll("mesh")].map(element => {
+          const key = Object.keys(element).find(key => key.startsWith("__reactProps$"));
+          return key ? (element as unknown as Record<string, unknown>)[key] as { onClick?: (event: unknown) => void; onPointerMove?: (event: unknown) => void } : undefined;
+        }).find(props => props?.onClick && props.onPointerMove);
+        expect(props, `${row.name}: the mounted original mesh retains both hardware callbacks`).toBeDefined();
+        const hit = { faceIndex: law.faceIndex, buttons: 0, shiftKey: false, ctrlKey: false, metaKey: false, stopPropagation: vi.fn() };
+        await act(async () => { props!.onClick!(hit); props!.onPointerMove!(hit); });
+        const selection = actions.filter(action => action.action === "interactionSelect");
+        const hover = actions.filter(action => action.action === "interactionHover");
+        expect(selection, row.name).toHaveLength(1);
+        expect(hover, row.name).toHaveLength(1);
+        const expected = row.expectedTarget ? [{ granularity: "face", id: row.expectedTarget }] : [];
+        expect(JSON.parse(String(selection[0]!.args!.targets)), row.name).toEqual(expected);
+        expect(JSON.parse(String(hover[0]!.args!.targets)), row.name).toEqual(expected);
+        expect(selection[0]!.args!.domainId).toBe(law.domain);
+        expect(hover[0]!.args!.domainId).toBe(law.domain);
+        expect(actions.some(action => ["worldPick", "setHover", "gumballSelection"].includes(action.action))).toBe(false);
+        console.info(`[DEBUG] mounted analytic ${row.name}: target=${row.expectedTarget ?? "refused"} overlays=${row.expectedOverlayCount} originalPickHover=true`);
+      }
+    } finally { view.unmount(); }
+  });
+
 });

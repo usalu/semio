@@ -117,18 +117,69 @@
     }
   },
   "$defs": {
-    "En1992AnchorsPatch": {
+    "En1992AnchorsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Anchor"
+        }
+      }
+    },
+    "En1992AnchorsModified": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
-        "hEf",
-        "aS"
+        "patch"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
+        "patch": {
+          "$ref": "#/$defs/En1992AnchorsPatch"
+        }
+      }
+    },
+    "En1992AnchorsMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "En1992AnchorsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hEf",
+        "aS"
+      ],
+      "properties": {
         "hEf": {
           "anyOf": [
             {
@@ -151,46 +202,111 @@
         }
       }
     },
+    "En1992AnchorsRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "En1992AnchorsRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Anchor"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1992AnchorsRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992AnchorsInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992AnchorsMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1992AnchorsPatch"
+            "$ref": "#/$defs/En1992AnchorsModified"
           }
+        }
+      }
+    },
+    "En1992ConcreteGradesInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ConcreteGrade"
+        }
+      }
+    },
+    "En1992ConcreteGradesModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1992ConcreteGradesPatch"
+        }
+      }
+    },
+    "En1992ConcreteGradesMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -198,13 +314,9 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "fCk"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "fCk": {
           "anyOf": [
             {
@@ -217,46 +329,111 @@
         }
       }
     },
+    "En1992ConcreteGradesRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "En1992ConcreteGradesRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ConcreteGrade"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1992ConcreteGradesRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992ConcreteGradesInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992ConcreteGradesMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1992ConcreteGradesPatch"
+            "$ref": "#/$defs/En1992ConcreteGradesModified"
           }
+        }
+      }
+    },
+    "En1992MembersActionsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/LoadCaseActions"
+        }
+      }
+    },
+    "En1992MembersActionsModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1992MembersActionsPatch"
+        }
+      }
+    },
+    "En1992MembersActionsMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -264,15 +441,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "mK",
         "nK",
         "vK"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "mK": {
           "anyOf": [
             {
@@ -305,18 +478,128 @@
         }
       }
     },
+    "En1992MembersActionsRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "En1992MembersActionsRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "removed",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersActionsRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersActionsInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersActionsMoved"
+          }
+        },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1992MembersActionsPatch"
+            "$ref": "#/$defs/En1992MembersActionsModified"
           }
+        }
+      }
+    },
+    "En1992MembersInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember"
+        }
+      }
+    },
+    "En1992MembersLongitudinalInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/BarLayer"
+        }
+      }
+    },
+    "En1992MembersLongitudinalModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1992MembersLongitudinalPatch"
+        }
+      }
+    },
+    "En1992MembersLongitudinalMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -324,14 +607,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "diameter",
         "count"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "diameter": {
           "anyOf": [
             {
@@ -354,18 +633,94 @@
         }
       }
     },
+    "En1992MembersLongitudinalRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "En1992MembersLongitudinalRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "removed",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersLongitudinalRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersLongitudinalInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersLongitudinalMoved"
+          }
+        },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1992MembersLongitudinalPatch"
+            "$ref": "#/$defs/En1992MembersLongitudinalModified"
           }
+        }
+      }
+    },
+    "En1992MembersModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1992MembersPatch"
+        }
+      }
+    },
+    "En1992MembersMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -373,7 +728,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "exposure",
         "width",
         "height",
@@ -387,9 +741,6 @@
         "actions"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "exposure": {
           "anyOf": [
             {
@@ -502,46 +853,169 @@
         }
       }
     },
+    "En1992MembersRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "En1992MembersRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1992MembersRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1992MembersPatch"
+            "$ref": "#/$defs/En1992MembersModified"
           }
+        }
+      }
+    },
+    "En1992PrestressSteelsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "order": {
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PrestressSteel"
+        }
+      }
+    },
+    "En1992PrestressSteelsModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1992PrestressSteelsPatch"
+        }
+      }
+    },
+    "En1992PrestressSteelsMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "En1992PrestressSteelsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fPk",
+        "fP01k"
+      ],
+      "properties": {
+        "name": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PrestressSteel/properties/name"
             },
             {
               "type": "null"
             }
           ]
+        },
+        "fPk": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PrestressSteel/properties/fPk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fP01k": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PrestressSteel/properties/fP01k"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992PrestressSteelsRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -549,35 +1023,90 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PrestressSteel"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1992PrestressSteelsRemoved"
           }
         },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992PrestressSteelsInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992PrestressSteelsMoved"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992PrestressSteelsModified"
+          }
+        }
+      }
+    },
+    "En1992ReinforcementGradesInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ReinforcementGrade"
+        }
+      }
+    },
+    "En1992ReinforcementGradesModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1992ReinforcementGradesPatch"
+        }
+      }
+    },
+    "En1992ReinforcementGradesMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -585,13 +1114,9 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "fYk"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "fYk": {
           "anyOf": [
             {
@@ -604,46 +1129,56 @@
         }
       }
     },
+    "En1992ReinforcementGradesRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "En1992ReinforcementGradesRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ReinforcementGrade"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1992ReinforcementGradesRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992ReinforcementGradesInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992ReinforcementGradesMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1992ReinforcementGradesPatch"
+            "$ref": "#/$defs/En1992ReinforcementGradesModified"
           }
-        },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     }

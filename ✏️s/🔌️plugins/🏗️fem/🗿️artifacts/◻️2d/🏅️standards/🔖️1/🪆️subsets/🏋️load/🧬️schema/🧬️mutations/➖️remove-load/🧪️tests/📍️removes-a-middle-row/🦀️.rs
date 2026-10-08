@@ -3,7 +3,8 @@
 //! 📍️ The removed record sits in the MIDDLE of its collection, so the concrete inverse must restore it at its original index, not append it.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -100,8 +101,8 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     let delta = outcome.diff().load_cases.as_ref().expect("loadCases delta");
-    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (0, 0, 1), "remove-load/removes-a-middle-row: the delta must be exactly one patched entry");
-    assert!(delta.reordered.is_none(), "remove-load/removes-a-middle-row: no verb in this vocabulary re-orders a collection");
+    assert_eq!((delta.inserted.len(), delta.removed.len(), delta.modified.len()), (0, 0, 1), "remove-load/removes-a-middle-row: the delta must be exactly one patched entry");
+    assert!(delta.moved.is_empty(), "remove-load/removes-a-middle-row: no verb in this vocabulary re-orders a collection");
     assert!(outcome.diff().nodes.is_none(), "remove-load/removes-a-middle-row: no nodes delta may be opened by this verb");
     assert!(outcome.diff().elements.is_none(), "remove-load/removes-a-middle-row: no elements delta may be opened by this verb");
     assert!(outcome.diff().regions.is_none(), "remove-load/removes-a-middle-row: no regions delta may be opened by this verb");

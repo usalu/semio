@@ -63,64 +63,10 @@ fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4Sample
     track_diff_for(track_index, Mp4TrackDiff { samples: Some(samples), chunk_sample_counts, ..Mp4TrackDiff::default() })
 }
 
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
-/// `apply_gif_mutation` convention).
-pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) -> protocol::MutationOutcome<Mp4Diff> {
-    let outcome = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion 🔖️Mutation
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the file type and the movie header if they moved, then every track in place
-/// (its dimensions, its codec, and its samples row by row: a sample differing only in its sync flag is re-flagged, any other
-/// change is remove-then-insert; a track whose id, timescale, metadata or chunking differ is removed and inserted anew) and the
-/// diverging track tail. Sample leaves re-chunk a track into one chunk, so a track keeping its sample count must keep its chunking.
-pub fn net_mutations(base: &Mp4Snapshot, next: &Mp4Snapshot) -> Vec<Mp4Mutation> {
-    let mut leaves = Vec::new();
-    if base.ftyp != next.ftyp {
-        leaves.push(Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: next.ftyp.clone() }));
-    }
-    if base.movie != next.movie {
-        leaves.push(Mp4Mutation::SetMovie(set_movie::SetMovie { movie: next.movie.clone() }));
-    }
-    let paired = base.tracks.len().min(next.tracks.len());
-    for (track_index, (before, after)) in base.tracks.iter().zip(&next.tracks).enumerate().filter(|(_, (before, after))| before != after) {
-        if (before.track_id, before.timescale, &before.metadata) != (after.track_id, after.timescale, &after.metadata) || (before.samples.len() == after.samples.len() && before.chunk_sample_counts != after.chunk_sample_counts) {
-            leaves.push(Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: track_index }));
-            leaves.push(Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: track_index, track: after.clone() }));
-            continue;
-        }
-        if (before.width, before.height) != (after.width, after.height) {
-            leaves.push(Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index, width: after.width, height: after.height }));
-        }
-        if before.codec != after.codec {
-            leaves.push(Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index, codec: after.codec.clone() }));
-        }
-        let samples_paired = before.samples.len().min(after.samples.len());
-        for (index, (old, new)) in before.samples.iter().zip(&after.samples).enumerate().filter(|(_, (old, new))| old != new) {
-            if (&old.data, old.duration, old.cts_offset) == (&new.data, new.duration, new.cts_offset) {
-                leaves.push(Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index, index, sync: new.sync }));
-            } else {
-                leaves.push(Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index }));
-                leaves.push(Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample: new.clone() }));
-            }
-        }
-        leaves.extend((samples_paired..before.samples.len()).rev().map(|index| Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index })));
-        leaves.extend(after.samples.iter().enumerate().skip(samples_paired).map(|(index, sample)| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample: sample.clone() })));
-    }
-    leaves.extend((paired..base.tracks.len()).rev().map(|index| Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index })));
-    leaves.extend(next.tracks.iter().enumerate().skip(paired).map(|(index, track)| Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, track: track.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region OpCodecs
 

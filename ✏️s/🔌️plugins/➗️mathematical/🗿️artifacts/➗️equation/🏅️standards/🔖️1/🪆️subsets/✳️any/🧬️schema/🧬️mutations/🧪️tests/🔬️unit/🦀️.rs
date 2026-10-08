@@ -1,5 +1,4 @@
 use super::*;
-use crate::EquationGraph;
 use protocol::{Mutation, SemanticMutation};
 
 /// ↩️ Applies an operation's inverse the way the store does: TAIL-first (`replay_mutations` reverses
@@ -14,20 +13,17 @@ fn undo_tail_first(mut state: EquationSnapshot, undo: &[EquationMutation]) -> Eq
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replace_graph_diff_carries_the_whole_derived_triple() {
-    // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME
-    // `(graph, geometry)` pair, so a graph-scoped mutation always regenerates all three —
-    // unlike the pre-migration single `graph` slot this test named before composition.
-    let graph = EquationGraph { algorithm: "bfs".into(), ..EquationGraph::default() };
-    let mutation = EquationMutation::ReplaceGraph(replace_graph::ReplaceGraph { graph });
+async fn a_graph_diff_carries_sparse_slots_and_apply_re_derives_the_triple() {
+    // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME `(graph, geometry)` pair, so a graph-scoped
+    // mutation's diff never carries them — `apply` regenerates all three from the state it leaves behind.
+    let mutation = EquationMutation::UpdateGraphAlgorithm(update_graph_algorithm::UpdateGraphAlgorithm { new_algorithm: "bfs".into(), new_algorithm_seed: None });
     let base = EquationSnapshot::default();
     let outcome = Mutation::diff(&mutation, &base);
     let diff = outcome.diff();
-    assert!(diff.notation.is_some());
-    assert!(diff.results.is_some());
-    assert!(diff.computed.is_some());
+    assert_eq!(diff.algorithm.as_deref(), Some("bfs"));
     let applied = protocol::apply_diff(&diff, &base).expect("valid mutation diff");
     assert_eq!(applied.graph.algorithm, "bfs");
+    assert_eq!((applied.notation.clone(), applied.results.clone(), applied.computed.clone()), crate::equation_children(&applied.graph, &applied.geometry));
 }
 
 #[semio_framework_async_macros::async_test]

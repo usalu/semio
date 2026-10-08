@@ -212,7 +212,7 @@ fn raster_history_edit_initializer_aliases_genesis_and_publishes_next_generation
     let operation = semio_framework_job::OperationId(701);
     let generation = semio_framework_job::Generation(31);
     let mut authority = empty_raster_initializer(operation, generation);
-    let genesis = authority.envelope.as_ref().expect("retained Raster envelope").vcs.genesis.share_snapshot();
+    let genesis = authority.envelope.as_ref().expect("retained Raster envelope").vcs.genesis.facts().share_snapshot();
     assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Raster candidate");
     assert_eq!(candidate.generation_now(), 32);

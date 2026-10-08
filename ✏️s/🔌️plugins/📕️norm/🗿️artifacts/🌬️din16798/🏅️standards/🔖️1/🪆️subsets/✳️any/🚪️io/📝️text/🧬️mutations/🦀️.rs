@@ -82,6 +82,10 @@ fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
 //#endregion 🔖️ScalarCodec
 
 //#region 🔖️Tokenizer
+/// 📍 An insert's optional `index=` argument: absent appends.
+fn opt_index(args: &std::collections::BTreeMap<String, String>) -> Result<Option<usize>, String> {
+    args.get("index").map_or(Ok(None), |raw| dec_json::<Option<usize>>(raw))
+}
 fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
@@ -180,7 +184,7 @@ fn parse_din16798_mutation(line: &str) -> Result<Din16798Mutation, String> {
         "change-cellar-area" => Ok(Din16798Mutation::ChangeCellarArea(ChangeCellarArea { new_cellar_area_m2: dec_json(&arg("new-cellar-area-m2")?)? })),
         "change-cellar-ventilation" => Ok(Din16798Mutation::ChangeCellarVentilation(ChangeCellarVentilation { new_cellar_ventilation_m3_h: dec_json(&arg("new-cellar-ventilation-m3-h")?)? })),
         "change-night-setback" => Ok(Din16798Mutation::ChangeNightSetback(ChangeNightSetback { new_night_setback_k: dec_json(&arg("new-night-setback-k")?)? })),
-        "insert-zone" => Ok(Din16798Mutation::InsertZone(InsertZone { index: dec_json(&arg("index")?)?, zone: dec_json(&arg("zone")?)? })),
+        "insert-zone" => Ok(Din16798Mutation::InsertZone(InsertZone { index: opt_index(&args)?, zone: dec_json(&arg("zone")?)? })),
         "remove-zone" => Ok(Din16798Mutation::RemoveZone(RemoveZone { zone_id: dec_json(&arg("zone-id")?)? })),
         "change-zone-usage-type" => Ok(Din16798Mutation::ChangeZoneUsageType(ChangeZoneUsageType { zone_id: dec_json(&arg("zone-id")?)?, new_usage_type: dec_json(&arg("new-usage-type")?)? })),
         "change-zone-floor-area" => Ok(Din16798Mutation::ChangeZoneFloorArea(ChangeZoneFloorArea { zone_id: dec_json(&arg("zone-id")?)?, new_floor_area_m2: dec_json(&arg("new-floor-area-m2")?)? })),
@@ -201,7 +205,7 @@ fn parse_din16798_mutation(line: &str) -> Result<Din16798Mutation, String> {
         "change-zone-vent-system-id" => Ok(Din16798Mutation::ChangeZoneVentSystemId(ChangeZoneVentSystemId { zone_id: dec_json(&arg("zone-id")?)?, new_vent_system_id: dec_json(&arg("new-vent-system-id")?)? })),
         "change-zone-turbulence" => Ok(Din16798Mutation::ChangeZoneTurbulence(ChangeZoneTurbulence { zone_id: dec_json(&arg("zone-id")?)?, new_turbulence_intensity_percent: dec_json(&arg("new-turbulence-intensity-percent")?)? })),
         "change-zone-vent-method" => Ok(Din16798Mutation::ChangeZoneVentMethod(ChangeZoneVentMethod { zone_id: dec_json(&arg("zone-id")?)?, new_vent_method: dec_json(&arg("new-vent-method")?)? })),
-        "insert-vent-system" => Ok(Din16798Mutation::InsertVentSystem(InsertVentSystem { index: dec_json(&arg("index")?)?, vent: dec_json(&arg("vent")?)? })),
+        "insert-vent-system" => Ok(Din16798Mutation::InsertVentSystem(InsertVentSystem { index: opt_index(&args)?, vent: dec_json(&arg("vent")?)? })),
         "remove-vent-system" => Ok(Din16798Mutation::RemoveVentSystem(RemoveVentSystem { vent_id: dec_json(&arg("vent-id")?)? })),
         "change-vent-system-type" => Ok(Din16798Mutation::ChangeVentSystemType(ChangeVentSystemType { vent_id: dec_json(&arg("vent-id")?)?, new_system_type: dec_json(&arg("new-system-type")?)? })),
         "change-vent-sfp" => Ok(Din16798Mutation::ChangeVentSfp(ChangeVentSfp { vent_id: dec_json(&arg("vent-id")?)?, new_sfp_w_m3_s: dec_json(&arg("new-sfp-w-m3-s")?)? })),
@@ -289,7 +293,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Din16798Mutation> {
         Din16798Mutation::ChangeCellarArea(ChangeCellarArea { new_cellar_area_m2: 1.0 }),
         Din16798Mutation::ChangeCellarVentilation(ChangeCellarVentilation { new_cellar_ventilation_m3_h: 1.0 }),
         Din16798Mutation::ChangeNightSetback(ChangeNightSetback { new_night_setback_k: 1.0 }),
-        Din16798Mutation::InsertZone(InsertZone { index: 0, zone: crate::ZoneDocument::default() }),
+        Din16798Mutation::InsertZone(InsertZone { index: Some(0), zone: crate::ZoneDocument::default() }),
         Din16798Mutation::RemoveZone(RemoveZone { zone_id: "x".into() }),
         Din16798Mutation::ChangeZoneUsageType(ChangeZoneUsageType { zone_id: "x".into(), new_usage_type: "x".into() }),
         Din16798Mutation::ChangeZoneFloorArea(ChangeZoneFloorArea { zone_id: "x".into(), new_floor_area_m2: 1.0 }),
@@ -308,7 +312,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Din16798Mutation> {
         Din16798Mutation::ChangeZoneIlluminance(ChangeZoneIlluminance { zone_id: "x".into(), new_illuminance_lx: 1.0 }),
         Din16798Mutation::ChangeZoneNoise(ChangeZoneNoise { zone_id: "x".into(), new_noise_db: 1.0 }),
         Din16798Mutation::ChangeZoneVentSystemId(ChangeZoneVentSystemId { zone_id: "x".into(), new_vent_system_id: "x".into() }),
-        Din16798Mutation::InsertVentSystem(InsertVentSystem { index: 0, vent: crate::VentSystemDocument::default() }),
+        Din16798Mutation::InsertVentSystem(InsertVentSystem { index: Some(0), vent: crate::VentSystemDocument::default() }),
         Din16798Mutation::RemoveVentSystem(RemoveVentSystem { vent_id: "x".into() }),
         Din16798Mutation::ChangeVentSystemType(ChangeVentSystemType { vent_id: "x".into(), new_system_type: "x".into() }),
         Din16798Mutation::ChangeVentSfp(ChangeVentSfp { vent_id: "x".into(), new_sfp_w_m3_s: 1.0 }),

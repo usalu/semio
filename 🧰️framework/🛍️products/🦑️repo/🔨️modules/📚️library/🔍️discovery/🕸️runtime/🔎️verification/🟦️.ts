@@ -1,7 +1,12 @@
+export type { RuntimeTrunkObservationV1, RuntimeActorCargoSelectionV1, RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
+import type { RuntimeCompilerInputV1, RuntimeCargoBuildScriptV1, RuntimeCargoUnitV1, RuntimeCargoObservationV1, RuntimeBuildResourceObservationV1, RuntimeCargoBuildResourcesV1, RuntimeCompilerResourceEntryV1, RuntimeCompilerResourceOperationV1, RuntimeCompilerResourceV1, RuntimeCargoCompilerResourcesV1, RuntimeTrunkObservationV1, RuntimeActorCargoSelectionV1, RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
+import { observeSelectedRuntimeActorsV1, acquireSelectedRuntimeActorsV1, type SelectedRuntimeActorPublicationPortV1, type SelectedRuntimeActorsV1, parseSelectedRuntimeGraphPackageRootsV1, type SelectedRuntimeGraphPackageRootsV1 } from "../🎭️selection/🧬️schema/🟦️.ts";
 import { existsSync, readFileSync, realpathSync, writeFileSync, mkdirSync, readdirSync, statSync, lstatSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { cargoInputDigestV1, cargoDirectoryEntriesV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import type {FileObservationControlV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import {cmdBudgetMs} from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeRustReferencesV1, runtimeFixturePathV1, type RuntimeResourceReadOwnerV1, type RuntimeGraphEvidenceV1, type RuntimeGraphFindingV1 } from "../🟦️.ts";
@@ -20,18 +25,6 @@ export function runtimeActorChildImportV1(source:string,child:string,actor:strin
 
 interface CargoPackageV1 { readonly id: string; readonly name: string; readonly manifest_path: string; readonly source: string | null; readonly targets: readonly { readonly src_path: string; readonly kind: readonly string[] }[] }
 interface CargoNodeV1 { readonly id: string; readonly features: readonly string[]; readonly deps: readonly { readonly pkg: string; readonly dep_kinds: readonly { readonly kind: string | null }[] }[] }
-interface CompilerInputV1 { readonly package_id: string; readonly features: readonly string[]; readonly manifest_path?:string; readonly target: { readonly name:string; readonly src_path: string; readonly kind: readonly string[] }; readonly profile: { readonly test: boolean }; readonly filenames: readonly string[]; readonly runtimeTarget: string | null; readonly runtimeWorkspace: string | null }
-export interface RuntimeCargoBuildScriptV1 { readonly reason: "build-script-executed"; readonly package_id: string; readonly cfgs: readonly string[]; readonly env: readonly (readonly [string, string])[]; readonly out_dir: string }
-export interface RuntimeCargoUnitV1 { readonly message: CompilerInputV1; readonly observedAtMs: number; readonly depInfo: readonly { readonly path: string; readonly text: string; readonly baseDirectory:string }[]; readonly inputs: readonly { readonly path: string; readonly kind:"file"|"directory"; readonly sha256: string }[]; readonly artifacts: readonly { readonly path: string; readonly sha256: string; readonly stagedPath?: string; readonly stagedSha256?: string }[] }
-export interface RuntimeCargoObservationV1 { readonly version: 1; readonly invocationInputs?: readonly {readonly path:string;readonly sha256:string|null}[]; readonly buildDirectory?:string|null; readonly manifest: string; readonly cwd: string; readonly command: "cargo"; readonly args: readonly string[]; readonly builtAtMs: number; readonly observedAtMs: number; readonly status: number; readonly cancelled: boolean; readonly units: readonly RuntimeCargoUnitV1[]; readonly buildScripts: readonly RuntimeCargoBuildScriptV1[]; readonly buildResources?: readonly RuntimeCargoBuildResourcesV1[]; readonly compilerResourceRoot:string|null; readonly compilerResources:readonly RuntimeCargoCompilerResourcesV1[] }
-export type RuntimeBuildResourceObservationV1 = { readonly kind: "directory"; readonly path: string; readonly entries: readonly RuntimeCompilerResourceEntryV1[];readonly operation:RuntimeCompilerResourceOperationV1 } | { readonly kind: "copy"; readonly path: string; readonly output: string } | {readonly kind:"read";readonly path:string;readonly output:string;readonly operation:RuntimeCompilerResourceOperationV1} | {readonly kind:"failed";readonly path:string;readonly operation:RuntimeCompilerResourceOperationV1};
-export interface RuntimeCargoBuildResourcesV1 { readonly package_id: string; readonly out_dir: string; readonly path: string; readonly text: string; readonly sha256: string; readonly observedAtMs: number; readonly resources: readonly { readonly input: RuntimeBuildResourceObservationV1; readonly sha256: string | null; readonly outputSha256: string | null; readonly observedEntries?: readonly RuntimeCompilerResourceEntryV1[] }[] }
-
-export interface RuntimeCompilerResourceEntryV1 {readonly path:string;readonly kind:"file"|"directory"|"symlink"|"other";readonly symlinkTarget:string|null}
-export interface RuntimeCompilerResourceOperationV1 {readonly source:string;readonly line:number;readonly name:"read"|"read_dir"}
-export type RuntimeCompilerResourceV1 = {readonly kind:"read";readonly path:string;readonly output:string;readonly operation:RuntimeCompilerResourceOperationV1;readonly snapshotOperation:RuntimeCompilerResourceOperationV1;readonly callsite:{readonly source:string;readonly line:number}}|{readonly kind:"directory";readonly path:string;readonly operation:RuntimeCompilerResourceOperationV1;readonly entries:readonly RuntimeCompilerResourceEntryV1[];readonly callsite:{readonly source:string;readonly line:number}};
-export interface RuntimeCargoCompilerResourcesV1 {readonly path:string;readonly text:string|null;readonly sha256:string|null;readonly observedAtMs:number;readonly producerUnit:CompilerInputV1|null;readonly callerUnit:CompilerInputV1|null;readonly resources:readonly {readonly input:RuntimeCompilerResourceV1;readonly sha256:string|null;readonly outputSha256:string|null;readonly observedEntries?:readonly RuntimeCompilerResourceEntryV1[]}[]}
-
 /** 🧭️ Bridges the actual internal read operation to one exact source token and verified original byte/metadata inputs. */
 export function runtimeCompilerResourceReadOwnersV1(observation:RuntimeCargoObservationV1,context:Parameters<typeof runtimeCompilerResourceInputsV1>[2]):{readonly owners:Readonly<Record<string,readonly RuntimeResourceReadOwnerV1[]>>;readonly directories:Readonly<Record<string,string>>;readonly witnesses:readonly {readonly receipt:RuntimeCargoCompilerResourcesV1;readonly evidence:ReturnType<typeof runtimeCompilerResourceInputsV1>}[]}{
   const owners:Record<string,RuntimeResourceReadOwnerV1[]>={},directories:Record<string,string>={},unitFindings=new Map<RuntimeCargoUnitV1,readonly RuntimeGraphFindingV1[]>(),witnesses=(observation.compilerResources??[]).map(receipt=>({receipt,evidence:compilerResourceInputs(observation,receipt,context,unitFindings)})),relativePath=(path:string)=>relative(context.root,resolve(path)).replaceAll("\\","/");
@@ -66,7 +59,7 @@ function compilerResourceInputs(observation:RuntimeCargoObservationV1,resource:R
   if(!observation.compilerResourceRoot||!inside(observation.compilerResourceRoot,resource.path)||basename(resource.path)!=="observation.json"||!resource.text||!resource.sha256||createHash("sha256").update(resource.text).digest("hex")!==resource.sha256||context.digest(resource.path)!==resource.sha256||!Number.isFinite(resource.observedAtMs)||resource.observedAtMs>observation.observedAtMs){fail(resource.path,"Compiler resource capture lost its actual root, immutable bytes or completed observation time");return{inputs:[],directories:[],findings,verified:false}}
   let capture:any;try{capture=JSON.parse(resource.text)}catch{fail(resource.path,"Compiler resource capture is not valid JSON");return{inputs:[],directories:[],findings,verified:false}}
   if(capture.version!==1||capture.kind!=="compiler-resource"||capture.completed!==true||!Number.isFinite(capture.builtAtMs)||!Number.isFinite(capture.observedAtMs)||capture.observedAtMs<capture.builtAtMs||capture.observedAtMs>resource.observedAtMs||!Array.isArray(capture.resources))fail(resource.path,"Actual proc-macro entry has no complete original resource observation");
-  const units=(message:CompilerInputV1|null)=>message?observation.units.filter(unit=>JSON.stringify(unit.message)===JSON.stringify(message)&&!unit.message.profile.test):[],producers=units(resource.producerUnit),callers=units(resource.callerUnit),producer=producers[0],caller=callers[0];
+  const units=(message:RuntimeCompilerInputV1|null)=>message?observation.units.filter(unit=>JSON.stringify(unit.message)===JSON.stringify(message)&&!unit.message.profile.test):[],producers=units(resource.producerUnit),callers=units(resource.callerUnit),producer=producers[0],caller=callers[0];
   for(const[identity,unit,role]of [[capture.producer,producer,"producer"],[capture.caller,caller,"caller"]]as const){if(!identity||![identity.manifest,identity.source].every(value=>typeof value==="string"&&isAbsolute(value))||!unit||resolve(unit.message.manifest_path??"")!==resolve(identity.manifest)||!unit.inputs.some(input=>input.kind==="file"&&resolve(input.path)===resolve(identity.source)))fail(resource.path,`Compiler resource ${role} identity is not the same actual compiler unit`)}
   if(producers.length!==1||callers.length!==1||capture.caller?.crate!==caller?.message.target.name.replaceAll("-","_")||!producer?.message.target.kind.includes("proc-macro")||caller?.message.target.kind.some(kind=>["proc-macro","custom-build"].includes(kind))||!caller?.inputs.some(input=>resolve(input.path)===resolve(resource.path)&&input.sha256===resource.sha256))fail(resource.path,"Compiler resource capture lacks single exact producer/caller and tracked dep-info bindings");
   if(producer&&caller)for(const unit of[producer,caller]){if(!unitFindings.has(unit))unitFindings.set(unit,[...runtimeCargoUnitInputsV1(observation,unit,context.root,path=>context.digest(resolve(context.root,path))).findings,...runtimeCargoConsumedInputsV1(unit,context.read)]);findings.push(...unitFindings.get(unit)!);}
@@ -86,10 +79,6 @@ function compilerResourceInputs(observation:RuntimeCargoObservationV1,resource:R
   return{inputs:[...inputs].sort(),directories:[...directories].sort(),findings,verified:findings.length===0};
 }
 
-export interface RuntimeTrunkObservationV1 {
-  readonly version:1;readonly kind:"wgpu-trunk";readonly profile:string;readonly manifest:string;readonly outputDirectory:string;readonly builtAtMs:number;readonly observedAtMs:number;
-  readonly owner:{readonly path:string;readonly sha256:string};readonly compiler:{readonly path:string;readonly sha256:string};readonly raw:{readonly path:string;readonly sha256:string};readonly outputs:readonly {readonly path:string;readonly sha256:string}[];
-}
 
 /** 🎞️ Accepts only the actual profile owner, surviving compiler inputs and current server-mounted transformation bytes. */
 export function runtimeTrunkObservationCurrentV1(receipt:RuntimeTrunkObservationV1,context:{readonly root:string;readonly profile:string;readonly manifest:string;readonly outputDirectory:string;readonly owner:string;readonly digest:(path:string)=>string|undefined;readonly read:(path:string)=>string|Uint8Array|undefined;readonly compilerCurrent:(observation:RuntimeCargoObservationV1)=>boolean}):RuntimeCargoObservationV1|undefined{
@@ -209,7 +198,7 @@ export function runtimeCargoProvenanceV1(source: string): readonly RuntimeCargoO
 }
 
 /** 🧮️ Preserves rustc's own consumed-byte checksum rather than substituting a later receipt digest. */
-export function runtimeDepInfoChecksumsV1(source:string,baseDirectory:string):readonly {readonly path:string;readonly blake3:string;readonly length:number}[]{
+export function runtimeDepInfoChecksumsV1(source:string,baseDirectory:string):readonly RuntimeCompilerChecksumV1[]{
   return source.split(/\r?\n/u).flatMap(line=>{const match=/^# checksum:blake3=([0-9a-f]{64}) file_len:([0-9]+) (.+)$/u.exec(line);return match?[{path:resolve(baseDirectory,match[3]!),blake3:match[1]!,length:Number(match[2])}]:[]});
 }
 
@@ -243,7 +232,6 @@ export function runtimeCargoObservationsForChecksV1(observations:readonly Runtim
   });
 }
 
-export interface RuntimeActorCargoSelectionV1 {readonly cargoPackage:string;readonly componentPath:string;readonly componentSha256:string}
 
 /** 🏅️ Binds current package cdylib selection and original-to-final component custody to one production compiler unit. */
 export function runtimeActorCargoUnitV1(observation:RuntimeCargoObservationV1,selection:RuntimeActorCargoSelectionV1,context:{root:string;read:(path:string)=>string|Uint8Array|undefined}):RuntimeCargoUnitV1|undefined{
@@ -338,7 +326,7 @@ export function runtimeCargoPackagesV1(roots: readonly string[], nodes: readonly
 }
 
 /** 🧊️ Reads complete compiler-artifact records, preserving resolved feature and target identities. */
-export function runtimeCompilerArtifactsV1(source: string): readonly CompilerInputV1[] {
+export function runtimeCompilerArtifactsV1(source: string): readonly RuntimeCompilerInputV1[] {
   let runtimeTarget: string | null = null, runtimeWorkspace: string | null = null;
   return source.split("\n").flatMap(line => {
     const selection = /guest-framework-check (wasm32-[a-z0-9-]+) \(([^)]+)\):/u.exec(line);
@@ -360,51 +348,8 @@ export function reconcileRuntimeMacroInputsV1(evidence: RuntimeGraphEvidenceV1, 
 
 /** 🛡️ Executes actual Cargo target metadata and runtime source graphs, retaining qualified evidence rather than inferring compilation. */
 /** 🎭️ Resolves the actual Dev-selected closed actor generation and its original package/factory compiler custody. */
-export async function runtimeSelectedActorsV1(root:string,config:{actorProvenanceOwner:string;actorCatalogOwner:string;actorDevelopmentOwner:string;actorFactoryOwner:string;actorDescriptorOwner:string;actorChildOwner:string},context:{read:(path:string)=>string|undefined;current:(observation:RuntimeCargoObservationV1)=>boolean;fixtureCollections:readonly string[];checkCancellation:()=>void}){
-  context.checkCancellation();const [publicationOwner,catalogOwner,developmentOwner,factory,descriptorOwner]=await Promise.all([config.actorProvenanceOwner,config.actorCatalogOwner,config.actorDevelopmentOwner,config.actorFactoryOwner,config.actorDescriptorOwner].map(path=>import(join(root,path))));
-  const dataRoot=publicationOwner.trustedCatalogDataRootV1(root,"development"),published=publicationOwner.readTrustedCatalogPublicationProvenanceV1(dataRoot),requested=developmentOwner.LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES,selection=catalogOwner.trustedBootstrapSelectPackages(requested),profile=catalogOwner.trustedBootstrapProfileIdV1(selection),generationRoot=join(dataRoot,"trusted-catalog","generations",published.record.generationId),bundle=JSON.parse(context.read(relative(root,published.record.bundle.path))!),childSource=context.read(config.actorChildOwner);
-  const fail=(detail:string):never=>{throw Error("Selected production actor: "+detail);},hash=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex"),path=(value:string)=>relative(root,resolve(value)).replaceAll("\\","/"),inside=(owner:string,value:string)=>{const part=relative(owner,value);return part!==""&&!isAbsolute(part)&&part.split(/[\\/]/u)[0]!=="..";};
-  const bytes=(claim:{path:string;sha256:string;byteLength:number},owner?:string):Buffer=>{context.checkCancellation();if(!isAbsolute(claim.path)||owner&&!inside(owner,claim.path))fail("byte owner escaped");const stat=lstatSync(claim.path);if(!stat.isFile()||stat.isSymbolicLink()||!Number.isSafeInteger(claim.byteLength)||claim.byteLength<1||claim.byteLength>128*1024*1024||stat.size!==claim.byteLength||!/^[a-f0-9]{64}$/u.test(claim.sha256))fail("bounded original byte claim refused");const value=readFileSync(claim.path);if(value.length!==claim.byteLength||hash(value)!==claim.sha256)fail("original selected bytes changed");context.read(path(claim.path));return value;};
-  if(!childSource||published.record.profileId!==profile||bundle.schemaVersion!==3||bundle.profiles?.length!==1||bundle.profiles[0].id!==profile||bundle.profiles[0].generationId!==published.record.generationId||!Array.isArray(bundle.packages)||bundle.packages.length!==selection.length||published.generation.packages.length!==selection.length)fail("actual Dev profile/closed package selection differs");
-  const observations:RuntimeCargoObservationV1[]=[],owners:NonNullable<ReturnType<typeof runtimeActorChildImportV1>>[]=[],witnesses:unknown[]=[];
-  for(const spec of selection){
-    const records=bundle.packages.filter((record:any)=>record.pluginId===spec.pluginId&&record.packageId===spec.componentPackageId),producers=published.generation.packages.filter((record:any)=>record.pluginId===spec.pluginId&&record.packageId===spec.componentPackageId&&record.cargoPackage===spec.cargoPackage);if(records.length!==1||producers.length!==1)fail("package has no single actual declared producer");const record=records[0],producer=producers[0];
-    for(const field of["component","descriptor"]){const claim=producer[field],entry=record[field],expected=`packages/${spec.pluginId}/${field==="component"?"component.wasm":"descriptor.semio"}`;if(claim.relativePath!==expected||entry.path!==expected||claim.sha256!==entry.sha256||claim.byteLength!==entry.byteLength)fail("same package component/descriptor claims disagree");bytes({path:join(generationRoot,expected),sha256:claim.sha256,byteLength:claim.byteLength},generationRoot);}
-    const invocations=producer.cargoInvocations.flatMap((claim:any)=>runtimeCargoProvenanceV1(bytes(claim).toString("utf8")));if(invocations.length!==2||invocations.some((observation:RuntimeCargoObservationV1)=>!context.current(observation)||observation.units.some(unit=>unit.message.features.some(feature=>["mutation-testing","artifact-app-testing"].includes(feature)))))fail("original current production Cargo/unit/resource evidence is absent");
-    const componentPath=join(generationRoot,record.component.path),component=invocations.filter((observation:RuntimeCargoObservationV1)=>runtimeActorCargoUnitV1(observation,{cargoPackage:spec.cargoPackage,componentPath,componentSha256:record.component.sha256},{root,read:context.read}));
-    const descriptorArgs=selectedCargoArguments(root,["build","-p",descriptorOwner.CRATE_NAME,"--message-format=json"]),descriptorManifest=descriptorArgs[descriptorArgs.indexOf("--manifest-path")+1]!;
-    const descriptor=invocations.filter((observation:RuntimeCargoObservationV1)=>resolve(observation.cwd)===root&&resolve(observation.manifest)===resolve(descriptorManifest)&&JSON.stringify(observation.args)===JSON.stringify(descriptorArgs)&&observation.units.some(unit=>resolve(unit.message.manifest_path!)===resolve(descriptorManifest)&&!unit.message.profile.test&&unit.message.target.kind.includes("bin")&&(Bun.TOML.parse(String(context.read(unit.message.manifest_path!)))as{package:{name:string}}).package.name===descriptorOwner.CRATE_NAME&&unit.artifacts.some(artifact=>artifact.stagedPath&&artifact.stagedSha256===artifact.sha256)));
-    if(component.length!==1||descriptor.length!==1)fail("component or descriptor emitter is not the exact original selected production invocation");observations.push(...invocations);
-    for(const observation of invocations)for(const unit of observation.units)for(const input of unit.inputs){const physical=existsSync(input.path)?realpathSync(input.path):input.path;if(runtimeFixturePathV1(path(physical),context.fixtureCollections))fail("production compiler consumed a fixture-owned input");}
-    if(record.browserActor?.kind==="none"){if(producer.browserActor!==null)fail("actor producer is outside selected package behavior");continue;}
-    const actor=record.browserActor,actorPath=`packages/${spec.pluginId}/browser/closed-actor.mjs`;if(actor?.kind!=="closed-browser-actor"||actor.schema!=="semio.os.closed-browser-actor.v1"||actor.codegenPolicy!=="semio.os.browser-jco-1.34.0-jspi.v1"||actor.path!==actorPath||actor.sourceComponentSha256!==record.component.sha256||actor.sourceDescriptorByteSha256!==record.descriptor.sha256||!producer.browserActor)fail("closed actor does not name its same-package inputs");
-    const original=JSON.parse(bytes(producer.browserActor).toString("utf8"));if(original.schema!=="semio.os.closed-browser-actor-producer/v1"||original.actor.relativePath!==actorPath||original.actor.sha256!==actor.sha256||original.actor.byteLength!==actor.byteLength||original.policySha256!==actor.policySha256||["component","descriptor"].some(field=>JSON.stringify(original[field])!==JSON.stringify(producer[field])))fail("actor factory observation differs from selected package custody");
-    const actorPhysical=join(generationRoot,actorPath);bytes({path:actorPhysical,sha256:actor.sha256,byteLength:actor.byteLength},generationRoot);bytes(original.compiler);bytes(original.runtime);for(const input of original.inputs){bytes(input);if(runtimeFixturePathV1(path(realpathSync(input.path)),context.fixtureCollections))fail("actor factory consumed a fixture-owned original source");}
-    await factory.verifyBrowserActorProducerInputsV1({policyCanonical:original.policyCanonical,policySha256:original.policySha256,runtime:original.runtime,compiler:original.compiler,inputs:original.inputs},{cancelled:()=>{context.checkCancellation();return false;},progress:(phase:string,completed:number,total:number)=>console.log(`[runtime graph] actor ${spec.pluginId} ${phase} ${completed}/${total}`)});
-    const imports=factory.browserActorImportAdmissionV1(readFileSync(componentPath));if(imports.refused.length||JSON.stringify([...imports.admitted].sort())!==JSON.stringify([...actor.importInterfaces].sort()))fail("selected actor interfaces differ from its actual component");
-    const owner=runtimeActorChildImportV1(childSource!,config.actorChildOwner,path(actorPhysical),actor.sha256);if(!owner)fail("actual child has zero or multiple verified-Blob import operations");
-    const closed=inspectRuntimeGraphV1([path(actorPhysical),path(original.compiler.path)],{read:context.read,fixtureCollections:context.fixtureCollections,productionTests:"excluded",workingDirectory:".",checkCancellation:context.checkCancellation});if(closed.findings.length)fail("retained actor/compiler output has an unresolved source/resource edge: "+JSON.stringify(closed.findings));owners.push(owner!);witnesses.push({pluginId:spec.pluginId,packageId:spec.componentPackageId,actor,producer:original,componentInvocation:component[0],descriptorInvocation:descriptor[0],owner,closed});
-  }
-  if(!owners.length)fail("selected Dev generation has no closed actors");
-  const recheck=()=>{context.checkCancellation();const current=publicationOwner.readTrustedCatalogPublicationProvenanceV1(dataRoot);if(current.path!==published.path||JSON.stringify(current.record)!==JSON.stringify(published.record))fail("selected pointer or bundle changed during proof");for(const witness of witnesses as any[]){bytes(witness.producer.compiler);bytes(witness.producer.runtime);for(const input of witness.producer.inputs)bytes(input);}if(observations.some(observation=>!context.current(observation)))fail("original production compiler/resource inputs changed during proof");};recheck();
-  return{dataRoot,requested,profile,published,dynamicImports:{[config.actorChildOwner]:owners},observations,witnesses,recheck};
-}
-
-/** 🔎️ Supplies the current native storage and typed input owners to selected actor verification. */
-function runtimeDevelopmentActorContextV1(root:string,read:(path:string)=>string|undefined,fixtureCollections:readonly string[],checkCancellation:()=>void){
-  const current=(observation:RuntimeCargoObservationV1)=>{checkCancellation();return runtimeCargoObservationCurrentV1(observation,{root,cwd:observation.cwd,outDirectory:"",buildDirectory:cargoDirectories(root).build,cargoHome:resolve(process.env.CARGO_HOME??join(homedir(),".cargo")),digest:path=>cargoInputDigestV1(path).sha256??undefined,fixtureCollections,read:path=>{checkCancellation();try{return readFileSync(resolve(root,path))}catch{return undefined}},directoryEntries:path=>{checkCancellation();return cargoDirectoryEntriesV1(resolve(root,path))?.map(([name,kind,symlinkTarget])=>({path:join(resolve(root,path),name),kind:kind as RuntimeCompilerResourceEntryV1["kind"],symlinkTarget}));}});};
-  return{read,current,fixtureCollections,checkCancellation};
-}
-
-/** 🧾️ Verifies the existing selected Dev actors through their current owners without acquiring or publishing evidence. */
-export async function loadCurrentDevelopmentActorsV1(root:string,checkCancellation:()=>void){
-  checkCancellation();root=resolve(root);const config=JSON.parse(readFileSync(join(import.meta.dir,"../🔣️.json"),"utf8")),taxonomy=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),"utf8"));
-  const fixtureCollections=["fixtures","test-tube-fixtures"].flatMap(id=>["fixtures","examples"].filter(slug=>new RegExp(taxonomy.semanticDirectoryKinds[id].slugPattern,"u").test(slug)).map(slug=>taxonomy.semanticDirectoryKinds[id].emoji+slug)),identities=new Map<string,string>();
-  const read=(path:string):string|undefined=>{checkCancellation();const absolute=resolve(root,path);if(!existsSync(absolute))return;const actual=realpathSync(absolute),physical=relative(root,actual).replaceAll("\\","/");if(runtimeFixturePathV1(physical,fixtureCollections))throw Error("Selected production actor: physical input belongs to a fixture collection");let bytes:Buffer;try{bytes=readFileSync(actual)}catch{return;}const sha256=createHash("sha256").update(bytes).digest("hex"),previous=identities.get(actual);if(previous&&previous!==sha256)throw Error("Selected production actor: input changed during read-only verification");identities.set(actual,sha256);return bytes.toString("utf8");};
-  const selected=await runtimeSelectedActorsV1(root,config,runtimeDevelopmentActorContextV1(root,read,fixtureCollections,checkCancellation)),recheck=()=>{checkCancellation();selected.recheck();for(const [path,sha256]of identities)if(cargoInputDigestV1(path).sha256!==sha256)throw Error("Selected production actor: input changed after read-only verification");};recheck();return{...selected,recheck};
-}
-
-export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly string[]): Promise<void> {
+export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly string[], actorPort:SelectedRuntimeActorPublicationPortV1, packageRoots:SelectedRuntimeGraphPackageRootsV1): Promise<void> {
+  packageRoots=parseSelectedRuntimeGraphPackageRootsV1(packageRoots);
   for (let index = 0; index < args.length; index += 2) if (!["--report", "--compiler-artifacts", "--compiler-provenance", "--asset-owners", "--bundle-inputs", "--dynamic-imports"].includes(args[index]!) || !args[index + 1]) throw Error("runtime-graph accepts --report, --compiler-artifacts, --compiler-provenance, --asset-owners, --dynamic-imports and --bundle-inputs paths");
   const option = (name: string): string | undefined => { const index = args.indexOf(name); if (index < 0) return; if (!args[index + 1]) throw Error(`${name} needs a path`); return resolve(root, args[index + 1]!); };
   const report = option("--report") ?? join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoCacheDirectory(root,"runtime-fixture-graph","reports"),"runtime-fixture-graph.json");
@@ -412,11 +357,11 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
   const provenance = option("--compiler-provenance"), receiptText = provenance ? readFileSync(provenance, "utf8") : undefined;
   const receiptPaths = receiptText && Array.isArray(JSON.parse(receiptText)) && JSON.parse(receiptText).every((value: unknown) => typeof value === "string") ? JSON.parse(receiptText).map((path: string) => resolve(dirname(provenance!), path)) : provenance ? [provenance] : [];
   const observations = receiptPaths.flatMap((path: string) => runtimeCargoProvenanceV1(readFileSync(path, "utf8")));
-  const retainedUnits = new Map<CompilerInputV1, { readonly observation: RuntimeCargoObservationV1; readonly unit: RuntimeCargoUnitV1; readonly selection: ReturnType<typeof runtimeCargoInvocationV1> }>();
+  const retainedUnits = new Map<RuntimeCompilerInputV1, { readonly observation: RuntimeCargoObservationV1; readonly unit: RuntimeCargoUnitV1; readonly selection: ReturnType<typeof runtimeCargoInvocationV1> }>();
   const retainedBuildScripts = new Map<(typeof buildScripts)[number], RuntimeCargoObservationV1>();
   const assets = option("--asset-owners"), assetOwners = assets ? JSON.parse(readFileSync(assets, "utf8")) : {};
   const bundle = option("--bundle-inputs"), bundledInputs = bundle ? JSON.parse(readFileSync(bundle, "utf8")) : undefined;
-  const dynamic = option("--dynamic-imports");let dynamicImports = dynamic ? JSON.parse(readFileSync(dynamic, "utf8")) : undefined;let actorSelection:Awaited<ReturnType<typeof runtimeSelectedActorsV1>>|undefined;
+  const dynamic = option("--dynamic-imports");let dynamicImports = dynamic ? JSON.parse(readFileSync(dynamic, "utf8")) : undefined;let actorSelection:SelectedRuntimeActorsV1|undefined;
   const config = JSON.parse(readFileSync(join(import.meta.dir, "../🔣️.json"), "utf8"));
   const declaration = JSON.parse(readFileSync(join(root, config.guestChecks), "utf8"));
   const taxonomy = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
@@ -428,6 +373,7 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
   const signal = new AbortController(), cancel = (): void => signal.abort();
   process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
   const checkCancellation = (): void => { if (signal.signal.aborted) throw Error("Runtime graph canceled"); };
+  const observationStarted=Date.now(),observationBudget=cmdBudgetMs(),observation:FileObservationControlV1={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.signal.aborted,remainingMs:()=>(observationBudget>0?observationBudget:86_400_000)-(Date.now()-observationStarted),onProgress:step=>console.log(`[runtime graph] physical file ${step.phase} ${step.bytes}/${step.totalBytes}`)};
   const read = (path: string): string | undefined => {
     checkCancellation(); const absolute = resolve(root, path);
     if (!existsSync(absolute)) return;
@@ -457,23 +403,22 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
       }
       observations.push(...completed);
     }
-    const loadActors=()=>runtimeSelectedActorsV1(root,config,runtimeDevelopmentActorContextV1(root,read,fixtureCollections,checkCancellation));
+    const loadActors=()=>observeSelectedRuntimeActorsV1(actorPort,observation);
     try{try{actorSelection=await loadActors();}catch(error){
       if(provenance||artifacts||dynamic)throw error;
-      const publicationOwner=await import(join(root,config.actorProvenanceOwner)),developmentOwner=await import(join(root,config.actorDevelopmentOwner)),dataRoot=publicationOwner.trustedCatalogDataRootV1(root,"development");console.log(`[runtime graph] acquiring current selected actor/compiler/resource witnesses through ${config.actorProject}:trusted-catalog-bootstrap`);
-      await runTool(process.execPath,[join(root,"node_modules/nx/dist/bin/nx.js"),"run",config.actorProject+":trusted-catalog-bootstrap","--skip-nx-cache","--outputStyle=static","--","--packages",developmentOwner.LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES],root,signal.signal,false,{...process.env,OS_HUB_DATA:dataRoot,CARGO_TARGET_DIR:cargoDirectories(root).target,CARGO_BUILD_BUILD_DIR:cargoDirectories(root).build});actorSelection=await loadActors();
-    }}catch(error){findings.push({code:"runtime-unresolved-edge",path:config.actorProvenanceOwner,detail:`Actual selected actor producer proof failed: ${String(error)}`});}
+      await acquireSelectedRuntimeActorsV1(actorPort,observation);actorSelection=await loadActors();
+    }}catch(error){findings.push({code:"runtime-unresolved-edge",path:actorPort.diagnosticOwner,detail:`Actual selected actor producer proof failed: ${String(error)}`});}
     if(actorSelection){dynamicImports={...dynamicImports,...actorSelection.dynamicImports};observations.push(...actorSelection.observations);
       const version=await execute(["rustc","-vV"]),hostTarget=version.split("\n").find(line=>line.startsWith("host: "))?.slice(6);if(!hostTarget)throw Error("Actual Rust host target unavailable for selected actor descriptor producer");
       for(const observation of actorSelection.observations){const selected=runtimeCargoInvocationV1(observation,root);runtimeChecks.push({target:selected.target??hostTarget,workspace:selected.workspace,packages:selected.packages,features:selected.features,requestedPackages:selected.packages,witnessTarget:selected.target,binary:selected.target===null,observation});}
-      for(const witness of actorSelection.witnesses as any[])graphs.push({selection:{language:"typescript",kind:"selected-closed-actor",dataRoot:actorSelection.dataRoot,profile:actorSelection.profile,pointer:actorSelection.published.record.pointer,package:witness.packageId,actor:witness.actor,producer:witness.producer,importOwner:witness.owner},evidence:witness.closed});
+      for(const witness of actorSelection.witnesses)graphs.push({selection:{language:"typescript",kind:"selected-closed-actor",dataRoot:actorSelection.dataRoot,profile:actorSelection.profile,pointer:actorSelection.published.record.pointer,package:witness.packageId,actor:witness.actor,producer:witness.producer,importOwner:witness.owner},evidence:witness.closed});
     }
   for (const observation of observations) {
     const selection = runtimeCargoInvocationV1(observation, root);
     for (const unit of observation.units) { const message = { ...unit.message, runtimeTarget: selection.target, runtimeWorkspace: selection.workspace }; compiler.push(message); retainedUnits.set(message, { observation, unit, selection }); }
     for (const script of observation.buildScripts) { const record = { ...script, runtimeTarget: selection.target, runtimeWorkspace: selection.workspace }; buildScripts.push(record); retainedBuildScripts.set(record, observation); }
   }
-    const workspaceFiles = policyWalkRelFiles(root, ["🧰️framework", "✏️s", "🌎️hub"], (_, name) => name === "package.json");
+    const workspaceFiles = policyWalkRelFiles(root, packageRoots, (_, name) => name === "package.json");
     const aliases: Record<string, string> = {};
     for (const path of workspaceFiles) {
       const pkg = JSON.parse(readFileSync(join(root, path), "utf8"));
@@ -625,7 +570,7 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
   } catch(error) {
     findings.push({code:"runtime-unresolved-edge",path:config.guestChecks,detail:`Actual runtime witness acquisition/verification failed: ${String(error)}`});
   } finally {
-    try{actorSelection?.recheck();}catch(error){findings.push({code:"runtime-input-mismatch",path:config.actorProvenanceOwner,detail:String(error)});}
+    try{await actorSelection?.recheck(observation);}catch(error){findings.push({code:"runtime-input-mismatch",path:actorPort.diagnosticOwner,detail:String(error)});}
     for(const observation of observations)for(const resource of observation.compilerResources)findings.push(...runtimeCompilerResourceInputsV1(observation,resource,{root,digest:path=>cargoInputDigestV1(path).sha256??undefined,fixtureCollections,read:path=>{try{return readFileSync(path)}catch{return undefined}},entries:path=>cargoDirectoryEntriesV1(path)??undefined}).findings);
     for(const[path,sha256]of identities)try{if(createHash("sha256").update(readFileSync(resolve(root,path))).digest("hex")!==sha256)findings.push({code:"runtime-input-mismatch",path,detail:"Source/resource changed before actual runtime graph completion"});}catch{findings.push({code:"runtime-input-mismatch",path,detail:"Source/resource disappeared before actual runtime graph completion"});}
     process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel);

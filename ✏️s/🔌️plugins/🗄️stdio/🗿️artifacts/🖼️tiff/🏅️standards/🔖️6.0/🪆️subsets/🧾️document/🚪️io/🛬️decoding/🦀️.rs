@@ -91,11 +91,32 @@ fn pixels(data:&[u8],ifd:&NativeIfd,c:&mut NativeDecodeControl<'_>)->ReadResult<
     for index in 0..number_count(offsets){if row>=height{break}let rows=rows_per_strip.min(height-row);let length=rows.checked_mul(row_bytes).ok_or_else(||invalid("tiff: strip length overflow"))?;let start=usize::try_from(number(offsets,index).unwrap()).map_err(|_|invalid("tiff: strip offset width"))?;let target=&mut raster[row*row_bytes..row*row_bytes+length];if compression==32773{let count=usize::try_from(number(counts,index).ok_or_else(||invalid("tiff: missing StripByteCounts"))?).map_err(|_|invalid("tiff: strip length width"))?;packed_strip(window(data,start,count)?,target,c)?;}else{c.begin_stage(length)?;for(chunk,target)in window(data,start,length)?.chunks(65536).zip(target.chunks_mut(65536)){target.copy_from_slice(chunk);c.advance(chunk.len())?;}}row+=rows;}
     let photometric=first(ifd,TAG_PHOTOMETRIC).unwrap_or(1);let mut rgba=c.allocate_vec::<u8>(pixels.checked_mul(4).ok_or_else(||invalid("tiff: RGBA length overflow"))?)?;c.begin_stage(pixels)?;for index in 0..pixels{let src=&raster[index*samples..index*samples+samples];match samples{1=>{let gray=if photometric==0{255-src[0]}else{src[0]};rgba.extend_from_slice(&[gray,gray,gray,255]);},3=>rgba.extend_from_slice(&[src[0],src[1],src[2],255]),4=>rgba.extend_from_slice(src),_=>unreachable!()}c.step()?;}Ok(rgba)
 }
-fn read(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->ReadResult<NativeSnapshot>{
+fn read(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize,observations:Option<&mut super::native_observations::TiffNativeObservations>)->ReadResult<NativeSnapshot>{
     control.checkpoint()?;control.charge(std::mem::size_of::<NativeSnapshot>())?;window(data,0,8)?;let(e,byte_order)=match &data[..2]{b"II"=>(Endian::Little,TiffByteOrder::LittleEndian),b"MM"=>(Endian::Big,TiffByteOrder::BigEndian),_=>return Err(invalid("tiff: bad byte order"))};if read_u16(data,2,e)?!=42{return Err(invalid("tiff: bad magic"))}
-    let mut ifds=directories(data,usize::try_from(read_u32(data,4,e)?).map_err(|_|invalid("tiff: first IFD width"))?,e,control,maximum_rows)?;for ifd in &mut ifds{ifd.storage=raw_storage(data,ifd,control)?;ifd.entries.retain(|entry|!matches!(entry.tag,TAG_STRIP_OFFSETS|TAG_STRIP_BYTE_COUNTS|TAG_TILE_OFFSETS|TAG_TILE_BYTE_COUNTS));control.step()?;}
+    let mut ifds=directories(data,usize::try_from(read_u32(data,4,e)?).map_err(|_|invalid("tiff: first IFD width"))?,e,control,maximum_rows)?;
+    if let Some(observed)=observations{
+     observed.ifd_count=ifds.len();
+     if let Some(ifd)=ifds.first(){
+      let mut words=|tag|->ReadResult<Option<Vec<u32>>>{let value=numbers(ifd,tag);if value.is_none(){return Ok(None)}let count=number_count(value);let mut result=control.allocate_vec::<u32>(count)?;for index in 0..count{result.push(number(value,index).unwrap());control.step()?;}Ok(Some(result))};
+      observed.compression=words(TAG_COMPRESSION)?;observed.photometric=words(TAG_PHOTOMETRIC)?;observed.bits_per_sample=words(TAG_BITS_PER_SAMPLE)?;observed.tile_width=words(TAG_TILE_WIDTH)?;observed.tile_length=words(TAG_TILE_LENGTH)?;observed.strip_offsets=words(TAG_STRIP_OFFSETS)?;
+     }
+    }
+    for ifd in &mut ifds{ifd.storage=raw_storage(data,ifd,control)?;ifd.entries.retain(|entry|!matches!(entry.tag,TAG_STRIP_OFFSETS|TAG_STRIP_BYTE_COUNTS|TAG_TILE_OFFSETS|TAG_TILE_BYTE_COUNTS));control.step()?;}
     let schema=control.copy_text(STDIO_TIFF_DOCUMENT_SCHEMA)?;Ok(NativeSnapshot{schema,byte_order,ifds})
 }
 
 /// 📖️ Decodes only the actual TIFF carrier, admitting each field and work frontier.
-pub fn decode_tiff_controlled(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->Result<TiffSnapshot,ValueError>{let native=read(data,control,maximum_rows).map_err(Refusal::into_value_error)?;super::owned_samples::admit(native,control,maximum_rows)}
+pub fn decode_tiff_controlled(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->Result<TiffSnapshot,ValueError>{let native=read(data,control,maximum_rows,None).map_err(Refusal::into_value_error)?;super::owned_samples::admit(native,control,maximum_rows)}
+
+/// 👁️ Inspects native metadata while admitting the actual raster through the paid reader.
+pub fn inspect_tiff_native_controlled(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->Result<super::native_observations::TiffNativeObservations,ValueError>{
+ let mut observations=super::native_observations::TiffNativeObservations::default();
+ let native=read(data,control,maximum_rows,Some(&mut observations)).map_err(Refusal::into_value_error)?;
+ let snapshot=super::owned_samples::admit(native,control,maximum_rows)?;
+ observations.raster=snapshot.ifds.first().is_some_and(|page|!page.blocks.is_empty());
+ Ok(observations)
+}
+/// 👁️ Reads native observations without retaining carrier policy in the owned image.
+pub fn inspect_tiff_native(data:&[u8])->Result<super::native_observations::TiffNativeObservations,String>{
+ inspect_tiff_native_controlled(data,&mut NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).map_err(|e|e.message.into_owned())
+}

@@ -55,7 +55,7 @@ fn jpeg_samples(input:&[u8],tables:Option<&[u8]>,width:usize,height:usize,channe
 fn decompress(input:&[u8],compression:u32,expected:usize,width:usize,height:usize,fill:u32,options:u32,channels:usize,tables:Option<&[u8]>,c:&mut NativeDecodeControl<'_>)->Result<Vec<u8>,ValueError>{
  match compression{
   1=>{if input.len()<expected{return Err(invalid("tiff: native raster truncated"))}c.copy_bytes(&input[..expected])},
-  32773=>{c.charge(expected)?;let output=packbits_decode(input,expected).map_err(invalid)?;c.advance(expected)?;Ok(output)},
+  32773=>{c.begin_stage(expected)?;c.charge(expected)?;let output=packbits_decode(input,expected).map_err(invalid)?;c.advance(expected)?;Ok(output)},
   2|3|4=>super::fax::decode(input,compression,width,height,fill,options,c),
   5=>lzw_decode(input,expected,c),
   6|7=>{let output=jpeg_samples(input,tables,width,height,channels,c)?;if output.len()!=expected{return Err(invalid("tiff: JPEG exact raster extent"))}Ok(output)},

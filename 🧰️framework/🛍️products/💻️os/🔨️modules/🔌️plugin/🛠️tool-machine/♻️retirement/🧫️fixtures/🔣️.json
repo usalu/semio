@@ -1,0 +1,8 @@
+{
+  "originalId": 7,
+  "admission": [false, false, true],
+  "driver": {"runs": [0, 1, 2], "turns": 9, "copyBytes": 4096, "expectedCounts": [{"run": 0, "count": 3}, {"run": 1, "count": 3}, {"run": 2, "count": 3}]},
+  "cause": {"capacity": 8192, "phases": ["original", "typed", "terminal"]},
+  "ledger": [{"id": 1, "entries": 0, "capacity": 8192, "released": 0}, {"id": 2, "entries": 1, "capacity": 8192, "released": 0}],
+  "closedLedger": [{"id": 1, "entries": 0, "capacity": 0, "released": 8192}, {"id": 2, "entries": 1, "capacity": 8192, "released": 0}]
+}

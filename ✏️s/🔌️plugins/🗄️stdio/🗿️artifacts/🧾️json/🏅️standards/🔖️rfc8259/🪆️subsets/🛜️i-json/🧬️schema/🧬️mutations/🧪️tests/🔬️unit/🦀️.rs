@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -61,7 +62,7 @@ fn set_top_level_cannot_spell_a_scalar_root() {
 #[test]
 fn set_safe_number_at_the_boundary_is_accepted() {
     let mut snapshot = base();
-    let outcome = apply_json_i_json_mutation(&mut snapshot, &JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: key("revision"), lexeme: "9007199254740991".to_string() }));
+    let outcome = apply_mutation(&mut snapshot, &JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: key("revision"), lexeme: "9007199254740991".to_string() }));
     assert!(outcome.messages().is_empty(), "got {:?}", outcome.messages());
     assert_eq!(resolve(&snapshot.value, &key("revision")), Some(&number("9007199254740991")));
 }
@@ -69,7 +70,7 @@ fn set_safe_number_at_the_boundary_is_accepted() {
 #[test]
 fn set_safe_number_one_past_the_boundary_is_refused_and_never_applied() {
     let mut snapshot = base();
-    let outcome = apply_json_i_json_mutation(&mut snapshot, &JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: key("revision"), lexeme: "9007199254740992".to_string() }));
+    let outcome = apply_mutation(&mut snapshot, &JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: key("revision"), lexeme: "9007199254740992".to_string() }));
     assert!(outcome.messages().iter().any(|message| message.code.0 == CODE_INVARIANT), "got {:?}", outcome.messages());
     assert_eq!(resolve(&snapshot.value, &key("revision")), Some(&number("4")), "a refused edit must leave the snapshot untouched");
 }
@@ -85,7 +86,7 @@ fn a_fractional_lexeme_is_outside_the_safe_integer_clause() {
 #[test]
 fn set_string_refuses_a_unicode_noncharacter() {
     let mut snapshot = base();
-    let outcome = apply_json_i_json_mutation(&mut snapshot, &JsonIJsonMutation::SetString(set_string::SetString { path: key("title"), value: "before\u{FFFE}after".to_string() }));
+    let outcome = apply_mutation(&mut snapshot, &JsonIJsonMutation::SetString(set_string::SetString { path: key("title"), value: "before\u{FFFE}after".to_string() }));
     assert!(outcome.messages().iter().any(|message| message.code.0 == CODE_INVARIANT), "got {:?}", outcome.messages());
     assert_eq!(resolve(&snapshot.value, &key("title")), Some(&JsonValue::String { value: "hexagonal cut".to_string() }));
 }
@@ -93,7 +94,7 @@ fn set_string_refuses_a_unicode_noncharacter() {
 #[test]
 fn rename_member_is_atomic_and_position_preserving() {
     let mut snapshot = base();
-    apply_json_i_json_mutation(&mut snapshot, &JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: "revision".to_string(), to: "version".to_string() }));
+    apply_mutation(&mut snapshot, &JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: "revision".to_string(), to: "version".to_string() }));
     let JsonValue::Object { members } = &snapshot.value else { panic!("root stays an object") };
     assert_eq!(members.iter().map(|member| member.key.as_str()).collect::<Vec<_>>(), vec!["version", "title", "tags"]);
 }
@@ -101,7 +102,7 @@ fn rename_member_is_atomic_and_position_preserving() {
 #[test]
 fn rename_member_onto_an_existing_name_is_refused() {
     let mut snapshot = base();
-    let outcome = apply_json_i_json_mutation(&mut snapshot, &JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: "revision".to_string(), to: "title".to_string() }));
+    let outcome = apply_mutation(&mut snapshot, &JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: "revision".to_string(), to: "title".to_string() }));
     assert!(outcome.messages().iter().any(|message| message.code.0 == CODE_INVARIANT), "got {:?}", outcome.messages());
     let JsonValue::Object { members } = &snapshot.value else { panic!("root stays an object") };
     assert_eq!(members.iter().map(|member| member.key.as_str()).collect::<Vec<_>>(), vec!["revision", "title", "tags"]);
@@ -126,9 +127,9 @@ fn applying_a_mutation_and_then_its_inverse_restores_the_snapshot() {
     for mutation in mutations {
         let mut snapshot = original.clone();
         let undo = <JsonIJsonMutation as Mutation<JsonSnapshot>>::inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_json_i_json_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_json_i_json_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         assert_eq!(snapshot, original, "{mutation:?} did not invert cleanly");
     }

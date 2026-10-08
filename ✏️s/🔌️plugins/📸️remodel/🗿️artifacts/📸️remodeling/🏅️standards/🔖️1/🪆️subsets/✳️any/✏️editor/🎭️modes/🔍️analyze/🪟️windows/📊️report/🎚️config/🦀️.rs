@@ -13,26 +13,24 @@ impl Default for RemodelingReportWindowConfig { fn default() -> Self { Self { re
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
-pub enum RemodelingReportWindowConfigMutation { Snapshot { config: RemodelingReportWindowConfig } }
+pub enum RemodelingReportWindowConfigMutation { SetReportTable { report_table: String } }
 impl protocol::Mutation<RemodelingReportWindowConfig> for RemodelingReportWindowConfigMutation {
     type Diff = RemodelingReportWindowConfigDiff;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🎚️config", semantic_kind: "set-window-config", display_name: "Set Remodeling Report Window Configuration", emoji: "🎚️", aggregate_variant: "Snapshot", payload_schema: "remodeling.reportwindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] }];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🎚️config", semantic_kind: "set-report-table", display_name: "Set Remodeling Report Window Table", emoji: "🎚️", aggregate_variant: "SetReportTable", payload_schema: "remodeling.reportwindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &RemodelingReportWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } => {
-                let diff = RemodelingReportWindowConfigDiff {
-            report_table: (base.report_table != config.report_table).then(|| config.report_table.clone()),
-                };
+            Self::SetReportTable { report_table } => {
+                let diff = RemodelingReportWindowConfigDiff { report_table: (&base.report_table != report_table).then(|| report_table.clone()), ..Default::default() };
                 match protocol::DiffAlgebra::<RemodelingReportWindowConfig>::is_empty(&diff) {
-                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
+                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Report table is unchanged."),
                     false => protocol::MutationOutcome::new(diff),
                 }
             }
         }
     }
     fn inverse(&self, base: &RemodelingReportWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok(vec![Self::Snapshot { config: base.clone() }])
+    Ok(vec![Self::SetReportTable { report_table: base.report_table.clone() }])
 }
 }
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
@@ -86,7 +84,7 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingReportWindowConfigO
 }
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> RemodelingReportWindowConfig { view.window::<RemodelingReportWindowConfigOwner>().cloned().unwrap_or_default() }
 pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> RemodelingReportWindowConfig { snapshot.and_then(|snapshot| snapshot.get::<RemodelingReportWindowConfigOwner>()).cloned().unwrap_or_default() }
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingReportWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> { let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-report-window-required"))?; let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?; if kind != super::REMODELING_PLAY_WINDOW_REPORT { return Err(semio_framework_plugin::Fault::from("remodeling-report-window-kind-required")); } Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingReportWindowConfigOwner>(id, RemodelingReportWindowConfigMutation::Snapshot { config })) }
+pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingReportWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> { let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-report-window-required"))?; let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?; if kind != super::REMODELING_PLAY_WINDOW_REPORT { return Err(semio_framework_plugin::Fault::from("remodeling-report-window-kind-required")); } Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingReportWindowConfigOwner>(id, RemodelingReportWindowConfigMutation::SetReportTable { report_table: config.report_table })) }
 
 //#region 🔺️Diff
 /// 🔺️ Sparse field delta for the window configuration; an absent field is untouched.
@@ -116,12 +114,6 @@ impl protocol::DiffAlgebra<RemodelingReportWindowConfig> for RemodelingReportWin
     fn inverse(&self, base: &RemodelingReportWindowConfig) -> Self {
         Self {
             report_table: self.report_table.as_ref().map(|_| base.report_table.clone()),
-        }
-    }
-
-    fn between(base: &RemodelingReportWindowConfig, other: &RemodelingReportWindowConfig) -> Self {
-        Self {
-            report_table: (base.report_table != other.report_table).then(|| other.report_table.clone()),
         }
     }
 

@@ -17,9 +17,6 @@ impl protocol::DiffAlgebra<crate::WiresSnapshot> for WiresDiff {
     fn inverse(&self, _base: &crate::WiresSnapshot) -> Self {
         Self {}
     }
-    fn between(_base: &crate::WiresSnapshot, _other: &crate::WiresSnapshot) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

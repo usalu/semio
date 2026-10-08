@@ -159,8 +159,8 @@ async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
 
     let snapshot = crate::equation_snapshot_with_state(&EquationGraph::default(), &EquationGeometry::default());
     let point = crate::EquationPoint { x: 1.0, y: 2.0 };
-    let maximum_points = EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry { points: vec![point.clone(); EQUATION_MAX_POINTS] } });
-    let excessive_points = EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry { points: vec![point; EQUATION_MAX_POINTS + 1] } });
+    let maximum_points = EquationCommand::EditPoints(edit_points::EditPoints { geometry: EquationGeometry { points: vec![point.clone(); EQUATION_MAX_POINTS] } });
+    let excessive_points = EquationCommand::EditPoints(edit_points::EditPoints { geometry: EquationGeometry { points: vec![point; EQUATION_MAX_POINTS + 1] } });
     assert!(equation_command_extent(&maximum_points, &snapshot).is_some());
     assert!(equation_command_extent(&excessive_points, &snapshot).is_none());
     let maximum_text = "a".repeat(EQUATION_MAX_TEXT_BYTES);
@@ -331,23 +331,12 @@ async fn every_command_round_trips_through_text_and_binary() {
     }
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// (an undeclared host-pushed command) and `setDocument` → `set-artifact` (the `app_commands!`
-/// row's own `"setDocument" as "set-artifact" => set_artifact::SetArtifact` explicitly pins a
-/// non-kebab wire keyword, matching `SetArtifact`'s own `#[dsl(keyword = "set-artifact")]`).
-/// **Pre-existing bug, independently traced**: `git log -1 --date=iso -- 🎮️commands/🗿️set-artifact/
-/// 🦀️.rs` shows `SetArtifact`'s explicit `set-artifact` keyword predates this ticket's
-/// own edits to this file (which only touched `render`/`export_media`); this test's hardcoded
-/// exception list simply never accounted for the second declared divergence. Fixed outright
-/// per this ticket's own "trivial, safe, unambiguous" guidance rather than left unresolved.
+/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword, the kebab-case of its action id.
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
-        let expected = match id {
-            "setDocument" => "set-artifact".to_string(),
-            _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
-        };
+        let expected: String = id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect();
         let printed = protocol::OpText::print_op(&command);
         assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
     }
@@ -356,12 +345,12 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<EquationCommand> {
     vec![
-        EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::standards::v1::subsets::any::io::text::snapshot::math_graph_to_dsl(&EquationGraph::default()), geometry: EquationGeometry::default() }),
+        EquationCommand::EditEquation(edit_equation::EditEquation { graph: crate::standards::v1::subsets::any::io::text::snapshot::math_graph_to_dsl(&EquationGraph::default()), geometry: EquationGeometry::default() }),
         EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"move","gestureId":"node-drag:1","nodeIds":["a"],"dx":12.0,"dy":34.0}]"#.into() }),
         EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
-        EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
+        EquationCommand::EditPoints(edit_points::EditPoints { geometry: EquationGeometry::default() }),
         EquationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
         EquationCommand::AddNode(crate::editor::equation::commands::add_node::AddNode { x: 12.0, y: 34.0 }),
     ]

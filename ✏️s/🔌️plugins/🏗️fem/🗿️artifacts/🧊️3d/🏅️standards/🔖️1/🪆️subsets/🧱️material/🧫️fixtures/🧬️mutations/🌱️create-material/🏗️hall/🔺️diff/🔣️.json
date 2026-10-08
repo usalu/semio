@@ -2,19 +2,22 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "added": [
+    "inserted": [
       {
-        "id": "s235",
-        "name": "Steel S235",
-        "e": 210000000000.0,
-        "g": 81000000000.0,
-        "nu": 0.3,
-        "rho": 7850.0
+        "index": 5,
+        "row": {
+          "id": "s235",
+          "name": "Steel S235",
+          "e": 210000000000.0,
+          "g": 81000000000.0,
+          "nu": 0.3,
+          "rho": 7850.0
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "sections": null,
   "solids": null,

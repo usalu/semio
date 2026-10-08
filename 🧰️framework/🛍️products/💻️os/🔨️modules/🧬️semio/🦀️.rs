@@ -225,11 +225,15 @@ pub fn wrap_text_controlled(envelope_id:&str,component:Component,version:u16,bod
 }
 
 /// 🧵️ Owns one declared Text body until physical bytes and source retirement finish.
+struct RetainedTextEnvelopeSources { identity: Option<String>, body: Option<String> }
+semio_framework_value::artifact_retire_struct!(RetainedTextEnvelopeSources { identity, body });
+
+/// 📜️ Carries the original Text framing and its admitted source frontier.
 pub struct RetainedTextEnvelope {
     identity: Option<String>, body: Option<String>, component: Component,
     digits: [u8; 5], digit_start: usize, segment: usize, offset: usize,
     position: usize, output: Option<String>, admitted: bool, complete: bool,
-    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<RetainedTextEnvelopeSources>>,
 }
 impl RetainedTextEnvelope {
     /// 🌱️ Moves the original identity and body without creating a source mirror.
@@ -242,10 +246,10 @@ impl RetainedTextEnvelope {
     pub fn source_body(&self) -> Option<&str> { self.body.as_deref() }
     /// 📍️ Returns the cumulative physical byte position.
     pub fn position(&self) -> usize { self.position }
-    /// ⏱️ Writes one original scalar per unit and bounds source release by the supplied byte grant.
-    pub fn step(&mut self, maximum_units: usize, maximum_bytes: usize, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Option<String>,ValueError> {
-        if maximum_units==0 || maximum_bytes==0 || self.complete { return Ok(None); }
-        let mut remaining_bytes=maximum_bytes;
+    /// ⏱️ Writes original scalars and admits independent source copy, capacity, release and depth.
+    pub fn step(&mut self, maximum_units: usize, maximum_copy_bytes: usize, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Option<String>,ValueError> {
+        if maximum_units==0 || maximum_copy_bytes==0 || self.complete { return Ok(None); }
+        let mut remaining_copy_bytes=maximum_copy_bytes;
         for _ in 0..maximum_units {
             control.checkpoint()?;
             if !self.admitted {
@@ -256,16 +260,16 @@ impl RetainedTextEnvelope {
                 let mut output=String::new(); output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"native text envelope allocation failed"))?;
                 self.output=Some(output); self.admitted=true;
             } else if let Some(retirement)=self.retirement.as_mut() {
-                if remaining_bytes==0 { return Ok(None); }
-                match retirement.close_step(1,remaining_bytes)? {
-                    semio_framework_value::SnapshotRetirementStep::Pending { released_bytes,.. } => remaining_bytes-=released_bytes,
-                    semio_framework_value::SnapshotRetirementStep::Complete | semio_framework_value::SnapshotRetirementStep::Blocked => {}
-                }
+                if remaining_copy_bytes==0 { return Ok(None); }
+                let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{remaining_copy_bytes})?;let depth=retirement.next_depth_demand()?;
+                control.charge(capacity)?;
+                let step=retirement.step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:remaining_copy_bytes,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth})?;
+                let progress=match step{semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)=>progress};remaining_copy_bytes-=progress.copied_bytes;
                 if retirement.terminal_is_empty() {
                     self.retirement.take(); self.complete=true; control.step()?; return Ok(self.output.take());
                 }
             } else if self.segment==8 {
-                self.retirement=Some(semio_framework_value::retirement::owned_retirement((self.identity.take(),self.body.take())));
+                self.retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(RetainedTextEnvelopeSources{identity:self.identity.take(),body:self.body.take()}).map_err(|(error,sources)|{self.identity=sources.identity;self.body=sources.body;error})?);
             } else {
                 let text=match self.segment {
                     0=>"semio ",1=>self.identity.as_deref().expect("identity retained"),2=>".",3=>self.component.as_str(),4=>" v",
@@ -282,12 +286,11 @@ impl RetainedTextEnvelope {
     }
 }
 impl semio_framework_value::retirement::RetireOwned for RetainedTextEnvelope {
-    fn retirement(mut self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        use semio_framework_value::retirement::{sequence,erased_cursor};
-        let pending=self.retirement.take().map(erased_cursor);
-        let fields=semio_framework_value::artifact_retirement_sequence!(self.identity,self.body,self.output);
-        match pending { Some(pending)=>sequence(vec![pending,fields]),None=>fields }
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.identity),deferred(self.body),deferred(self.output),deferred(self.retirement)])
     }
+    fn retirement_birth_bytes(&self) -> Option<usize> { use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.identity),deferred_birth_bytes_for(&self.body),deferred_birth_bytes_for(&self.output),deferred_birth_bytes_for(&self.retirement)]) }
+    fn controlled_retirement_supported() -> bool { true }
 }
 
 /// 📖️ Parses a text `.semio` file into envelope and body (without preamble line).

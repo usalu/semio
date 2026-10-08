@@ -5,20 +5,23 @@
   "sections": null,
   "solids": null,
   "supports": {
-    "added": [
+    "inserted": [
       {
-        "id": "sup_ext_b",
-        "nodeId": "n_ext_b",
-        "fixed": [
-          "Tx",
-          "Ty",
-          "Tz"
-        ]
+        "index": 7,
+        "row": {
+          "id": "sup_ext_b",
+          "nodeId": "n_ext_b",
+          "fixed": [
+            "Tx",
+            "Ty",
+            "Tz"
+          ]
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "loadCases": null,
   "combinations": null,

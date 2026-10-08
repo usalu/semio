@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertPlatedPanel, base: &En1993Snapshot) -> protocol::Mut
     if base.plated_panels.iter().any(|existing| existing.id == payload.plated_panel.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Plated panel id {} already exists.", payload.plated_panel.id), [payload.plated_panel.id.clone()]);
     }
-    let index = payload.index.min(base.plated_panels.len());
-    protocol::MutationOutcome::new(En1993Diff { plated_panels: En1993PlatedPanelDelta::insertion(&base.plated_panels, index, payload.plated_panel.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.plated_panels.len());
+    protocol::MutationOutcome::new(En1993Diff { plated_panels: En1993PlatedPanelDelta::insertion(index, payload.plated_panel.clone()), ..Default::default() })
 }

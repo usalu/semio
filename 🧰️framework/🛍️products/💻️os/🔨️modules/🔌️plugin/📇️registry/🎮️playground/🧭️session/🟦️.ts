@@ -6,7 +6,7 @@ import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, module
 import { PLAYGROUND_SESSION_ARTIFACT_KEY, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
-import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
+import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 
 import { generatePluginRegistry, TAXONOMY } from "../../🔎️discovery/🟦️.ts";
 import { generatePlaygroundRegistry } from "../🔎️discovery/🟦️.ts";
@@ -50,7 +50,7 @@ export type PlaygroundSession = {
 
 
 /** 🎮️ Builds the pre-expanded plugin list and host metadata for one playground launch. */
-export function buildPlaygroundSession(variant: string, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): PlaygroundSession {
+export function buildPlaygroundSession(variant: string, projection: GeneratedCatalogProjection): PlaygroundSession {
   const hostMode = projectedHostPluginFilter(projection, variant);
   const playground = projection.playgrounds.find((entry) => entry.variant === variant || entry.aliases.includes(variant));
   const registryPluginId = playground?.pluginId ?? variant;
@@ -112,13 +112,13 @@ ${pluginRows}
 }
 
 
-export function renderPlaygroundSessionTypeScript(variant: string | undefined, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): string {
+export function renderPlaygroundSessionTypeScript(variant: string | undefined, projection: GeneratedCatalogProjection): string {
   return emitSessionTypeScript(variant === undefined ? undefined : buildPlaygroundSession(variant, projection));
 }
 
 
 /** 💾️ Writes the per-launch playground session artifact consumed by os/dev and wgpu boot. */
-export function writePlaygroundSession(variant: string, outPath: string, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): PlaygroundSession {
+export function writePlaygroundSession(variant: string, outPath: string, projection: GeneratedCatalogProjection): PlaygroundSession {
   const session = buildPlaygroundSession(variant, projection);
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, renderPlaygroundSessionTypeScript(variant, projection));
@@ -127,7 +127,7 @@ export function writePlaygroundSession(variant: string, outPath: string, project
 
 
 /** 🎮️ Stages one variant below its semantic session owner without changing the canonical default session. */
-export async function stagePlaygroundSession(variant: string, sessionsRoot = join(import.meta.dir, "..", "..", "dist", "sessions"), projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): Promise<{ readonly path: string; readonly session: PlaygroundSession }> {
+export async function stagePlaygroundSession(variant: string, sessionsRoot: string, projection: GeneratedCatalogProjection): Promise<{ readonly path: string; readonly session: PlaygroundSession }> {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error(`Invalid playground session variant: ${variant}`);
   const output = join(sessionsRoot, variant);
   mkdirSync(dirname(output), { recursive: true });

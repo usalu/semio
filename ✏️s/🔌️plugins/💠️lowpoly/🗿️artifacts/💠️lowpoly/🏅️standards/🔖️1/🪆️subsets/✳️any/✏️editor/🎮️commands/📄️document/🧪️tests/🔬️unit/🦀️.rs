@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::unit_tests::context::{app, dispatch};
 use crate::editor::lowpoly::LowpolyCommand;
-use crate::schema::default_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 
 /// 🧬️ `importSnapshotJson`/`replaceSnapshotJson` emit a `Effect::LoadDocument` (outside undo
 /// history), not an `artifact_mutations` entry — driven directly through `handle` (not
@@ -10,8 +10,8 @@ use crate::schema::default_snapshot;
 /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
 #[semio_framework_async_macros::async_test]
 async fn import_snapshot_json_replaces_the_whole_document() {
-    let mesh_json = crate::schema::default_mesh_workspace()["obj-1"].clone();
-    let mut replacement=crate::snapshot_from_mesh_json("", "obj-x", "X");
+    let mesh_json = crate::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace()["obj-1"].clone();
+    let mut replacement=crate::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json("", "obj-x", "X");
     replacement.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-x",&mesh_json));
     replacement.objects[0].mesh_state=Some(mesh_json);
     let json = crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(&replacement);

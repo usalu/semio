@@ -12,13 +12,10 @@ pub fn diff(payload: &ChangePlateThickness, base: &En1999Snapshot) -> protocol::
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Unknown element {}", payload.element_id), Vec::<String>::new());
     }
     protocol::MutationOutcome::new(En1999Diff {
-        sections: Some(En1999SectionsRows {
-            modified: vec![En1999SectionsPatch {
-                id: payload.section_id.clone(),
-                elements: Some(En1999SectionsElementsRows { modified: vec![En1999SectionsElementsPatch { id: payload.element_id.clone(), thickness: Some(payload.new_thickness), ..Default::default() }] }),
-            }],
+        sections: Some(En1999SectionsRows::modification(&payload.section_id, En1999SectionsPatch {
+            elements: Some(En1999SectionsElementsRows::modification(&payload.element_id, En1999SectionsElementsPatch { thickness: Some(payload.new_thickness), ..Default::default() })),
             ..Default::default()
-        }),
+        })),
         ..Default::default()
     })
 }

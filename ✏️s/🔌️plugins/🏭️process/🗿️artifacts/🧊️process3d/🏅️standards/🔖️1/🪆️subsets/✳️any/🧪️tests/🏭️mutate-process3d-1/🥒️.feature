@@ -42,7 +42,7 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   through an unresolved composed `s.stdio.semio.flow` child, with no resolver reaching it), but
   `step_payloads` is the durable, inline timeline record since `26/08/12/UNIFIED-COMPOSABLE-
   ARTIFACT-SYSTEM` wave 4, so every one of them now mutates it directly and re-mints `steps`/
-  `tool_solids` to match (`process3d_step_timeline_diff`, reusing `process_working_scene_to_
+  `tool_solids` to match (`Process3dDiff::apply`, reusing `process_working_scene_to_
   snapshot`'s own minting). Their committed vectors record the real observed effect, and the
   adapter's `mutation_is_observable` call no longer lists any kind as exempt.
 

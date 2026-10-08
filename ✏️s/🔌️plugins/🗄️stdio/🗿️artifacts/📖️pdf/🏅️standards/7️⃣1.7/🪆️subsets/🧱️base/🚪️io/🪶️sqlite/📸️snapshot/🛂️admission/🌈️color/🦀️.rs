@@ -20,8 +20,8 @@ pub(super) fn color(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  "calGray"=>{f[9]=Int;f[10]=Int;},
  "calRgb"=>{f[9]=Int;f[10]=Int;f[11]=Int;},
  "lab"=>{f[9]=Int;f[8]=Int;},
- "iccBased"=>{f[0]=integer(field(v,"components")?)?;f[1]=c.blob(field(v,"profile")?)?;f[8]=Int;},
- "indexed"=>{f[2]=Int;f[3]=c.blob(field(v,"lookup")?)?;},
+ "iccBased"=>{f[0]=integer(field(v,"components")?)?;artifact_reference(c,field(v,"profile")?)?;f[1]=Int;f[8]=Int;},
+ "indexed"=>{f[2]=Int;f[3]=c.blob(field(v,"palette")?)?;},
  "separation"=>{f[4]=Text(text(field(v,"name")?)?);function(c,field(v,"tintTransform")?)?;f[6]=Int;},
  "deviceN"=>{function(c,field(v,"tintTransform")?)?;f[6]=Int;let a=field(v,"attributes")?;if !matches!(a,D::Null){objects::dictionary(c,a)?;f[7]=Int;}},
  "pattern"=>{},"named"=>f[4]=Text(text(field(v,"name")?)?),_=>return Err(invalid())

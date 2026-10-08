@@ -1,0 +1,3 @@
+# Current Native Flow Job Lock Publication
+
+Root independently joined actual workspace Job/Value manifests, the current dependency name semio-framework-value, literal one-line proposed text and Iarna complete-tree equality outside that edge. Candidate before/ac57e867... actual prewrite guard refused peer Root lock advancement; no Root lock mutation. Full candidate/prepared/current-after-refusal bodies retained. No old source restored. Root initial check mistakenly expected semio-os-value and refused before any journal/publication; no alias introduced. Current actual Job dependencies observed are ["semio-framework-async","semio-framework-trace","semio-framework-value"]. No current receiving compiler acceptance.

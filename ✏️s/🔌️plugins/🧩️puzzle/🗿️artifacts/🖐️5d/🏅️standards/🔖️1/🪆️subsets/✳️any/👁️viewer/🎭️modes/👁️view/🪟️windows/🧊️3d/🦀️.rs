@@ -26,7 +26,7 @@ pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
 /// 👁️ Default identity-ish camera — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), so this is a fixed, documented simplification, not a bug.
 fn default_camera_json() -> String {
-    serde_json::json!({ "position": [8.0, 8.0, 8.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0, "fov": 45.0 }).to_string()
+    semio_framework_pack_json::json!({ "position": [8.0, 8.0, 8.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0, "fov": 45.0 }).to_string()
 }
 
 /// ✂️ Same wire shape as `Puzzle5dScale`'s own `ToValue` impl (bare number = uniform, `[x,y,z]` =
@@ -37,8 +37,8 @@ fn default_camera_json() -> String {
 /// 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes through
 /// `dsl::ToValue`/`dsl::DslValue` instead of `serde_json::to_value` — `Puzzle5dScale` only derives
 /// `Serialize` under `#[cfg(test)]` now.
-fn scale_json(scale: Option<Puzzle5dScale>) -> serde_json::Value {
-    serde_json::Value::from(semio_framework_value::ToValue::to_value(&scale.unwrap_or(Puzzle5dScale::Uniform(1.0))))
+fn scale_json(scale: Option<Puzzle5dScale>) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&scale.unwrap_or(Puzzle5dScale::Uniform(1.0))))
 }
 
 const FALLBACK_MESH_ID: &str = "box";
@@ -60,11 +60,11 @@ fn meshes_json(document: &Puzzle5dSnapshot) -> String {
 }
 
 fn instances_json(document: &Puzzle5dSnapshot) -> String {
-    let instances: Vec<serde_json::Value> = document
+    let instances: Vec<semio_framework_pack_json::Value> = document
         .parts
         .iter()
         .map(|part| {
-            serde_json::json!({
+            semio_framework_pack_json::json!({
                 "id": part.id,
                 "meshId": mesh_id_for(part),
                 "position": part.part_3d.origin,
@@ -74,7 +74,7 @@ fn instances_json(document: &Puzzle5dSnapshot) -> String {
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    semio_framework_pack_json::to_json_string(&instances)
 }
 
 /// 👁️ Pure `Puzzle5dSnapshot -> UiNode` read: default camera, no selection, no gumball, no

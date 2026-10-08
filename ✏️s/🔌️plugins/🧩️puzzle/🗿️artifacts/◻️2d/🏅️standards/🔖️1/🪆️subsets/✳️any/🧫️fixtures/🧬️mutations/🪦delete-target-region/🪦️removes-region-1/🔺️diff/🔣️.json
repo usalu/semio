@@ -6,11 +6,14 @@
   "nodes": null,
   "schema": null,
   "targetRegions": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "region-1"
-    ],
-    "reordered": null
+      {
+        "id": "region-1",
+        "index": 0
+      }
+    ]
   }
 }

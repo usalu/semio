@@ -32,48 +32,6 @@ pub struct NamedAdded<T> {
     pub index: usize,
     pub item: T,
 }
-//#endregion 🔖️NamedAdded
-
-//#region 🔖️GenericNamedEngine
-/// 🏷️ Name/id-keyed `between`/`apply`/`absorb` over the shared `NamedTripleDiff<K,D,T>` struct,
-/// with `T` instantiated as [`NamedAdded<Item>`] for the `added` field so re-added entries land at
-/// their real target position instead of always appending at the end. Ported verbatim (same
-/// algorithm, generic over key/item/diff) from bcf/docx's own hand-rolled copies — this subset's
-/// own instance since no shared generic ALGORITHM exists yet (only the shared struct does; see
-/// module doc comment / `w1b-type-ownership.md`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for (idx, o) in other.iter().enumerate() {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(NamedAdded { index: idx, item: o.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(NamedTripleDiff { removed, modified, added })
-    }
-}
 
 /// ▶️ Apply semantics (normative, mirrors `IndexedTripleDiff`'s own `added` handling):
 /// `removed`/`modified` resolve by key; `added` entries carry their FINAL-state target position
@@ -373,14 +331,6 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
         }
     }
 
-    fn between(base: &SemioMeshSnapshot, other: &SemioMeshSnapshot) -> Self {
-        SemioMeshDiff {
-            meshes: between_named(&base.meshes, &other.meshes, |m| m.id.clone(), between_mesh),
-            materials: between_named(&base.materials, &other.materials, |m| m.id.clone(), between_material),
-            textures: between_named(&base.textures, &other.textures, |t| t.id.clone(), between_texture),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.meshes.is_none() && self.materials.is_none() && self.textures.is_none()
     }
@@ -432,54 +382,6 @@ fn invert_material(diff: &SemioMaterialDiff, base: &SemioMaterial) -> SemioMater
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn invert_texture(diff: &SemioTextureDiff, base: &SemioTexture) -> SemioTextureDiff {
     SemioTextureDiff { mime: diff.mime.as_ref().map(|_| base.mime.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_mesh(base: &SemioMesh, other: &SemioMesh) -> Option<SemioMeshItemDiff> {
-    let primitives = between_named(&base.primitives, &other.primitives, |p| p.id.clone(), between_primitive);
-    primitives.map(|primitives| SemioMeshItemDiff { primitives: Some(primitives) })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_primitive(base: &SemioPrimitive, other: &SemioPrimitive) -> Option<SemioPrimitiveDiff> {
-    let topology = if base.topology != other.topology { Some(other.topology) } else { None };
-    let positions = if base.positions != other.positions { Some(other.positions.clone()) } else { None };
-    let normals = if base.normals != other.normals { Some(other.normals.clone()) } else { None };
-    let uvs = if base.uvs != other.uvs { Some(other.uvs.clone()) } else { None };
-    let colors = if base.colors != other.colors { Some(other.colors.clone()) } else { None };
-    let indices = if base.indices != other.indices { Some(other.indices.clone()) } else { None };
-    let material_id = if base.material_id != other.material_id { Some(other.material_id.clone()) } else { None };
-    if topology.is_none() && positions.is_none() && normals.is_none() && uvs.is_none() && colors.is_none() && indices.is_none() && material_id.is_none() {
-        None
-    } else {
-        Some(SemioPrimitiveDiff { topology, positions, normals, uvs, colors, indices, material_id })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_material(base: &SemioMaterial, other: &SemioMaterial) -> Option<SemioMaterialDiff> {
-    let diff = SemioMaterialDiff {
-        base_color: (base.base_color != other.base_color).then_some(other.base_color),
-        metallic: (base.metallic != other.metallic).then_some(other.metallic),
-        roughness: (base.roughness != other.roughness).then_some(other.roughness),
-        base_color_texture: (base.base_color_texture != other.base_color_texture).then(|| other.base_color_texture.clone()),
-        metallic_roughness_texture: (base.metallic_roughness_texture != other.metallic_roughness_texture).then(|| other.metallic_roughness_texture.clone()),
-        normal_texture: (base.normal_texture != other.normal_texture).then(|| other.normal_texture.clone()),
-        occlusion_texture: (base.occlusion_texture != other.occlusion_texture).then(|| other.occlusion_texture.clone()),
-        emissive_texture: (base.emissive_texture != other.emissive_texture).then(|| other.emissive_texture.clone()),
-    };
-    (diff != SemioMaterialDiff::default()).then_some(diff)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_texture(base: &SemioTexture, other: &SemioTexture) -> Option<SemioTextureDiff> {
-    let mime = if base.mime != other.mime { Some(other.mime.clone()) } else { None };
-    let bytes = if base.bytes != other.bytes { Some(other.bytes.clone()) } else { None };
-    if mime.is_none() && bytes.is_none() {
-        None
-    } else {
-        Some(SemioTextureDiff { mime, bytes })
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -882,17 +784,21 @@ fn demo_snapshot_b() -> SemioMeshSnapshot {
         ..Default::default()
     }
 }
+/// 🌱 Representative `SemioMeshDiff` cases built declaratively (empty/no-op, removed mesh and material rows, a bare mesh insert, a bare texture insert) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-mesh"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioMeshDiff> {
-    let a = demo_snapshot_a();
-    let b = demo_snapshot_b();
+    let base = demo_snapshot_a();
     vec![
         SemioMeshDiff::default(),
-        <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b),
-        <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a),
-        diff_add_mesh(&a, SemioMesh { id: "extra".into(), primitives: vec![] }, None),
-        diff_add_texture(&a, SemioTexture { id: "extra-tex".into(), mime: "image/gif".into(), bytes: vec![7, 7] }),
+        SemioMeshDiff {
+            meshes: Some(SemioMeshesDiff { removed: vec!["keep".into()], ..Default::default() }),
+            materials: Some(SemioMaterialsDiff { removed: vec!["mat-a".into()], ..Default::default() }),
+            textures: None,
+        },
+        diff_add_mesh(&base, SemioMesh { id: "extra".into(), primitives: vec![] }, None),
+        diff_add_texture(&base, SemioTexture { id: "extra-tex".into(), mime: "image/gif".into(), bytes: vec![7, 7] }, None),
     ]
 }
 //#endregion 🔖️Demo

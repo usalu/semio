@@ -5,7 +5,7 @@ package semio.s_stdio_semio_text.mutations;
 message InsertRun { uint64 index = 1; bytes run = 2;
   }
 message RemoveRun { uint64 index = 1; }
-message EditRun { uint64 index = 1; string new_content = 2; }
+message EditRun { uint64 index = 1; string new_text = 2; }
 message ChangeRunLanguage { uint64 index = 1; string new_language = 2; }
 message ReorderRuns { uint64 from = 1; uint64 to = 2; }
 message AddMark { uint64 run_index = 1; uint64 index = 2; bytes mark = 3; }

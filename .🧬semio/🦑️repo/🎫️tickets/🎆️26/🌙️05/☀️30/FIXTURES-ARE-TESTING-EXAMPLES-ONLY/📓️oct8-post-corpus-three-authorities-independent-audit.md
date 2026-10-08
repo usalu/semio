@@ -1,0 +1,11 @@
+# Post-Corpus Three Authorities Independent Audit
+
+Complete raw log independently parsed: 5,454,147 bytes; SHA `2f23f83bc42f52fedb777572bdc3fe06a620c8f0c6cfbc243d34184f00456078`; 12,355 JSON rows, zero malformed. Three exact fixture-authority findings, catalog-stale zero. Full Nx1 is qualified failure; no normal gate executed by this lane. Observed source hashes and footer retained in `📥️oct8-post-corpus-full-independent-observation.json`.
+
+All three findings are actual corpus authority, not inert parser specimens or domain production contracts:
+
+- Puzzle2d text prepare/messages `🧬️schema/🔣️.json` declares **Optional Text Diagnostic Cases**, entire `cases` wrapper and `expected` result grammar. Its `🧪️tests/🟦️.ts` imports it line7 and Ajv-compiles whole fixture line10. Retain actual Rust producer, plain case bytes and subsequent diagnostic/independent laws; delete separate corpus schema and whole-wrapper compile. Production diagnostic shape may be validated against its genuine message owner if applicable, without adopting wrapper fields.
+- Framework 3d BREP tessellation `🧫️fixtures/🎟️ownership/🧬️schema.json` uses explicit `$schema` and exact constants for grants/cold/cancel/unit-box expected geometry. Unit TS lines9–10 read/Ajv-compile whole fixture. It is an independent test law wrapper; remove schema/whole-corpus compile, preserve plain input and independent Three area/volume/triangle checks plus Rust allocator/cancel/cold laws. Do not label explicit authority inert.
+- OS store messages compose `🧫️fixtures/🔣️.json` embeds `schema` defining test-row name/fragments/repeat/expected fields. Unit TS line11 compiles `law.schema` and validates all rows; two synthetic wrapper refusals derive from it. Remove embedded corpus-authority field and only whole-row compile/derived-wrapper expectations. Preserve all case vectors, real JSON quoting/UTF8 prefix/RFC6902 comparison and actual producer/refusal laws; production message authority can validate actual message outputs independently. This schema is exercised authority, so inert parser declaration would be false.
+
+No source edits/tests/producers. Repairs require fresh exact endpoint ledgers and current normal checkpoint/gate; peer observations are not authorship.

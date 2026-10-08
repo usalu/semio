@@ -1,7 +1,8 @@
 //! 🧪️ Native ordered insertion preserves every unrelated owner and retires partial candidates.
 
 use super::*;
-use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneBorrowAuthority};
+use semio_framework_value::paged::PagedUtf8;
+use crate::test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -17,8 +18,10 @@ fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<Retained
 
 fn close(cursor: &mut Puzzle2dCreateNodeCandidateCursor) {
     cursor.begin_close();
-    for turn in 0..1_000_000 { if cursor.terminal_is_empty() { return; }let permit = grant(turn);observed(permit, || cursor.close_step(permit)); }
-    panic!("create candidate retained an owner or alias after bounded closure");
+    test_source_custody::close_cursor(cursor,1_000_000,|cursor|{
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
+    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
 }
 
 fn retire(snapshot: Puzzle2dSnapshot) {
@@ -51,7 +54,7 @@ fn history_edit_puzzle2d_native_create_candidate_preserves_ordered_placement_and
         if case["id"] == "large-prefix" { node.text = Some(PagedUtf8::from("node-only\0😀".repeat(12000))); }
         let payload = CreateNode { node, index: case["mutation"]["index"].as_u64().map(|value| value as usize) };
         let original = serde_json::to_value(&snapshot).unwrap();let original_payload = serde_json::to_value(&payload).unwrap();
-        let source = RetainedCloneBorrowAuthority::new("create candidate immutable snapshot");let mutation = RetainedCloneBorrowAuthority::new("create candidate original native leaf");
+        let mut source = test_source_custody::admit();let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dCreateNodeCandidateCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observed(RetainedCloneGrant::default(), || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default())).progress(), RetainedCloneProgress::default());
@@ -79,6 +82,7 @@ fn history_edit_puzzle2d_native_create_candidate_preserves_ordered_placement_and
             assert!(placed);close(&mut cancelled);assert!(cancelled.take().is_none());
         }
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
         count += 1;
         eprintln!("[DEBUG] Puzzle2d CreateNode candidate {} preserved exact ordered placement and full untouched owners with zero-heap construction and granted snapshot/node/insertion cancellation", case["id"].as_str().unwrap());
     }

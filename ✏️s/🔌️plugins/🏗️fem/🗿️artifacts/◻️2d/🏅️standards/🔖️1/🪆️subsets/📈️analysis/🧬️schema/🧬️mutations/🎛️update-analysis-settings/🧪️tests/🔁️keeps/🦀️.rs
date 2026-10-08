@@ -13,7 +13,8 @@
 //! 🔁️ `update-analysis-settings` is the ONE kind in this vocabulary with no rejection branch whatsoever: its only guard is the equality no-op pinned here. Nothing validates the counts or the scale, so absurd-but-decodable settings are accepted.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

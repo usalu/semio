@@ -1,0 +1,4941 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "closed-0",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "99be9c50f449228d7a9beb011f3b0fb8aab19bde7e54aa56e78fc9a6cb0406c9",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-1",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+        "command": "receiving-test",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322870021",
+          "bytes": "1116122471",
+          "mtimeNs": "1791490119058982906",
+          "ctimeNs": "1791490119058982906"
+        },
+        "decodedBytes": 1116122471,
+        "decodedSha256": "2bdcaf06b4a5008806757f99a87b13eb2380f553f3a6189cb97b369162190156",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 1,
+          "session_id": 80262,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-2",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+        "command": "metadata-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322873556",
+          "bytes": "1116122469",
+          "mtimeNs": "1791490165826643221",
+          "ctimeNs": "1791490165826643221"
+        },
+        "decodedBytes": 1116122469,
+        "decodedSha256": "b98573f8e4acdd9b81d3463aeae002144533a6da2d4866f4cdf096cb319febb3",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 2,
+          "session_id": 19961,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-3",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+        "command": "metadata-test",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322874023",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490198528825219",
+          "ctimeNs": "1791490198528825219"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "254ba331a04b3c5de1223f340075f10425c8739ffcb3e9f651a14087b734a451",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 3,
+          "session_id": 79692,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-4",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+        "command": "stage",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322874186",
+          "bytes": "1116122462",
+          "mtimeNs": "1791490221504159299",
+          "ctimeNs": "1791490221504159299"
+        },
+        "decodedBytes": 1116122462,
+        "decodedSha256": "12fc5e8e0bc25f50c7acf24f10df6985d9358a53e706e43d0d363e303ebf8e40",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 4,
+          "session_id": 43247,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-5",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+        "command": "inspect",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322874394",
+          "bytes": "1116122464",
+          "mtimeNs": "1791490261834456177",
+          "ctimeNs": "1791490261834456177"
+        },
+        "decodedBytes": 1116122464,
+        "decodedSha256": "d7e7196871fa1cca2ab84186be911248e53140212c0b5677c68854c9782c4d53",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 5,
+          "session_id": 37638,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-6",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+        "command": "preparation-test",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322876713",
+          "bytes": "1116122473",
+          "mtimeNs": "1791490337660368248",
+          "ctimeNs": "1791490337660368248"
+        },
+        "decodedBytes": 1116122473,
+        "decodedSha256": "e2530e45d58d6de5787d0be53991486b9ae57a573870686d9654ddfb6791f1aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 6,
+          "session_id": 48160,
+          "exit_code": 1
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-7",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+        "command": "preparation-worker",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322880227",
+          "bytes": "1116122475",
+          "mtimeNs": "1791490419732235550",
+          "ctimeNs": "1791490419732235550"
+        },
+        "decodedBytes": 1116122475,
+        "decodedSha256": "78cb9927a4d73fcd369037c0ebf271daef30703e2cb9dcaae489e9386d2b5fe4",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 6,
+          "session_id": 48160,
+          "exit_code": 1
+        },
+        "childClosure": {
+          "code": 1,
+          "argv": [
+            "/Users/ueli/.bun/bin/bun",
+            "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+            "preparation-worker",
+            "37"
+          ],
+          "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "closed-8",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json",
+        "command": "preparation-test",
+        "position": "post",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322881926",
+          "bytes": "1116122473",
+          "mtimeNs": "1791490451069962471",
+          "ctimeNs": "1791490451069962471"
+        },
+        "decodedBytes": 1116122473,
+        "decodedSha256": "e2530e45d58d6de5787d0be53991486b9ae57a573870686d9654ddfb6791f1aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 6,
+          "session_id": 48160,
+          "exit_code": 1
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "refuse-0",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "unknown",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "99be9c50f449228d7a9beb011f3b0fb8aab19bde7e54aa56e78fc9a6cb0406c9",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "refuse-1",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "38",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "99be9c50f449228d7a9beb011f3b0fb8aab19bde7e54aa56e78fc9a6cb0406c9",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "refuse-2",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "not-sha256",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "refuse-3",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "-1",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "99be9c50f449228d7a9beb011f3b0fb8aab19bde7e54aa56e78fc9a6cb0406c9",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "refuse-4",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "99be9c50f449228d7a9beb011f3b0fb8aab19bde7e54aa56e78fc9a6cb0406c9",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": true
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "refuse-5",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "37",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+          "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322869494",
+          "bytes": "1116122470",
+          "mtimeNs": "1791490076262500791",
+          "ctimeNs": "1791490076262500791"
+        },
+        "decodedBytes": 1116122470,
+        "decodedSha256": "99be9c50f449228d7a9beb011f3b0fb8aab19bde7e54aa56e78fc9a6cb0406c9",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 2131,
+          "exit_code": 0
+        },
+        "childClosure": null,
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false,
+        "promotion": true
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "37"
+          },
+          "originalPath": {
+            "enum": [
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-red-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-metadata-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-stage-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-inspect-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-worker-37.json",
+              "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-preparation-test-post-37.json"
+            ]
+          },
+          "command": {
+            "enum": [
+              "receiving-red",
+              "receiving-test",
+              "metadata-red",
+              "metadata-test",
+              "stage",
+              "inspect",
+              "preparation-test",
+              "preparation-worker"
+            ]
+          },
+          "position": {
+            "enum": [
+              "pre",
+              "post"
+            ]
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+              "hash": "ef45ec829b000623e77dc39314b9822023b3e45ae0c2acf1c4ba359a70f6efdb"
+            }
+          },
+          "originalIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "device",
+              "inode",
+              "bytes",
+              "mtimeNs",
+              "ctimeNs"
+            ],
+            "properties": {
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "decodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "decodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/interface37-exact-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "enum": [
+              {
+                "index": 0,
+                "session_id": 2131,
+                "exit_code": 0
+              },
+              {
+                "index": 1,
+                "session_id": 80262,
+                "exit_code": 0
+              },
+              {
+                "index": 2,
+                "session_id": 19961,
+                "exit_code": 0
+              },
+              {
+                "index": 3,
+                "session_id": 79692,
+                "exit_code": 0
+              },
+              {
+                "index": 4,
+                "session_id": 43247,
+                "exit_code": 0
+              },
+              {
+                "index": 5,
+                "session_id": 37638,
+                "exit_code": 0
+              },
+              {
+                "index": 6,
+                "session_id": 48160,
+                "exit_code": 1
+              }
+            ]
+          },
+          "childClosure": {
+            "enum": [
+              null,
+              {
+                "code": 1,
+                "argv": [
+                  "/Users/ueli/.bun/bin/bun",
+                  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-37/📜️script.ts",
+                  "preparation-worker",
+                  "37"
+                ],
+                "kind": "native worker terminal recorded by closed outer diagnosis; not independent Nx outer"
+              }
+            ]
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-complete-expected-red-closure",
+      "expectedValid": true,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-wrong-epoch",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "41",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-future-path",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-test-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-wrong-producer",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-wrong-identity",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "1",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-wrong-source-hash",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-outer-failure",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 1
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-inner-success-promotion",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 0,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-batch-atomicity",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": true
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "id": "current40-refuse-unknown-property",
+      "expectedValid": false,
+      "carrier": {
+        "version": 1,
+        "kind": "interface-closed-guard-gzip",
+        "epoch": "40",
+        "originalPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json",
+        "command": "receiving-red",
+        "position": "pre",
+        "producer": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+          "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+        },
+        "originalIdentity": {
+          "device": "16777233",
+          "inode": "322950471",
+          "bytes": "1374932407",
+          "mtimeNs": "1791496416987111209",
+          "ctimeNs": "1791496416987111209"
+        },
+        "decodedBytes": 1374932407,
+        "decodedSha256": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa",
+        "payloadPath": "fixture-payload.gz",
+        "encodedBytes": 1,
+        "encodedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyInventoryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json",
+        "physicalOuterClosure": {
+          "index": 0,
+          "session_id": 37031,
+          "exit_code": 0
+        },
+        "childClosure": {
+          "code": 1,
+          "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+          "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+        },
+        "verificationReceipt": "fixture-receipt.json",
+        "atomicBatchClaimed": false,
+        "promoted": true
+      },
+      "authoritySchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "kind",
+          "epoch",
+          "originalPath",
+          "command",
+          "position",
+          "producer",
+          "originalIdentity",
+          "decodedBytes",
+          "decodedSha256",
+          "payloadPath",
+          "encodedBytes",
+          "encodedSha256",
+          "custodyInventoryPath",
+          "physicalOuterClosure",
+          "childClosure",
+          "verificationReceipt",
+          "atomicBatchClaimed"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "const": "interface-closed-guard-gzip"
+          },
+          "epoch": {
+            "const": "40"
+          },
+          "originalPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-cut-observation-receiving-red-40.json"
+          },
+          "command": {
+            "const": "receiving-red"
+          },
+          "position": {
+            "const": "pre"
+          },
+          "producer": {
+            "const": {
+              "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-successor-40/📜️script.ts",
+              "hash": "a1eb194b97bc59feb806bde1bcc75cba5d080c9d3a3d15f11a864954220bf52a"
+            }
+          },
+          "originalIdentity": {
+            "const": {
+              "device": "16777233",
+              "inode": "322950471",
+              "bytes": "1374932407",
+              "mtimeNs": "1791496416987111209",
+              "ctimeNs": "1791496416987111209"
+            }
+          },
+          "decodedBytes": {
+            "const": 1374932407
+          },
+          "decodedSha256": {
+            "const": "3a910f18bd62252fe5960cd3a35a14ce3c5dbfbfbcd797722db5937414ebc0aa"
+          },
+          "payloadPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "encodedSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "custodyInventoryPath": {
+            "const": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/root-interface40-first-closed-guard-inventory.json"
+          },
+          "physicalOuterClosure": {
+            "const": {
+              "index": 0,
+              "session_id": 37031,
+              "exit_code": 0
+            }
+          },
+          "childClosure": {
+            "const": {
+              "code": 1,
+              "kind": "Expected complete Node receiving law refusal recorded by physically closed outer; not independent Nx outer",
+              "evidencePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/current-general-receiving-red-40.json"
+            }
+          },
+          "verificationReceipt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "atomicBatchClaimed": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

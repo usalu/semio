@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `resize-tile-crop`.
 use super::ResizeTileCrop;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -21,6 +21,6 @@ pub fn diff(payload: &ResizeTileCrop, base: &PresentationSnapshot) -> protocol::
     if existing.crop == payload.new_crop {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" crop is already unchanged.", payload.id));
     }
-    protocol::MutationOutcome::new(diff_set_presentation(base, None, Some(PresentationTilesDelta { patched: vec![PresentationTilePatch { id: payload.id.clone(), crop: Some(payload.new_crop.clone()), ..Default::default() }], ..Default::default() })))
+    protocol::MutationOutcome::new(PresentationDiff { tiles: Some(PresentationTilesDelta::modification(payload.id.clone(), PresentationTilePatch { crop: Some(payload.new_crop.clone()), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔹Diff

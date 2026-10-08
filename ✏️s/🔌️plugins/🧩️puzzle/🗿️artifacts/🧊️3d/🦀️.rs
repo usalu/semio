@@ -34,7 +34,6 @@ fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'s
 #[derive(Debug)]
 pub enum Puzzle3dError {
     Json(semio_framework_value::ValueError),
-    BrushPlacementRejected,
     FillSessionUnavailable,
 }
 
@@ -42,7 +41,6 @@ impl std::fmt::Display for Puzzle3dError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Json(error) => write!(formatter, "{error}"),
-            Self::BrushPlacementRejected => formatter.write_str("brush placement rejected"),
             Self::FillSessionUnavailable => formatter.write_str("fill session unavailable"),
         }
     }
@@ -52,7 +50,7 @@ impl std::error::Error for Puzzle3dError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Json(error) => std::error::Error::source(error),
-            Self::BrushPlacementRejected | Self::FillSessionUnavailable => None,
+            Self::FillSessionUnavailable => None,
         }
     }
 }
@@ -920,7 +918,7 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dPlaySnapshot;
+pub use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1011,6 +1009,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_object_a_and_severs_attraction;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🗑️removes-middle-object/🦀️.rs"]
+                                    mod tests_removes_the_middle_object_and_its_attractions;
                                 }
                                 #[path = "."]
                                 pub mod move_object {
@@ -1143,6 +1144,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_vortex_2_and_severs_attraction;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/➖removes-middle-vortex/🦀️.rs"]
+                                    mod tests_removes_the_middle_vortex_and_its_attraction;
                                 }
                                 #[path = "."]
                                 pub mod replace_object_vortex {
@@ -1179,6 +1183,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_attraction_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🧪️tests/✂️severs-middle-attraction/🦀️.rs"]
+                                    mod tests_severs_the_middle_attraction;
                                 }
                                 #[path = "."]
                                 pub mod replace_attraction_geometry {
@@ -1215,6 +1222,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️removes-volume-1/🦀️.rs"]
                                     mod tests_removes_volume_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🪦️removes-middle-volume/🦀️.rs"]
+                                    mod tests_removes_the_middle_volume;
                                 }
                                 #[path = "."]
                                 pub mod move_target_volume {
@@ -1299,6 +1309,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/🧪️tests/🚫️removes-reference-1/🦀️.rs"]
                                     mod tests_removes_reference_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/🧪️tests/🚮️removes-middle-reference/🦀️.rs"]
+                                    mod tests_removes_the_middle_reference;
                                 }
                                 #[path = "."]
                                 pub mod move_reference {
@@ -1395,6 +1408,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_vortex_kind_pair;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
+                                    mod tests_withdraws_the_middle_row;
                                 }
                                 #[path = "."]
                                 pub mod replace_kind_catalogs {
@@ -1585,6 +1601,13 @@ mod design_parity_schema_tests;
 
                 pub use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+
+/// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
+pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+    *projection = next;
+    Ok(())
+}
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle3dSnapshot;
 /// 🧩️ Cross-artifact solver inputs and outcomes used by Puzzle 2D and Puzzle 5D.
 pub use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
@@ -1677,20 +1700,12 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️accept-suggestion/🦀️.rs"]
-            pub mod accept_suggestion;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️add-brush-object/🦀️.rs"]
-            pub mod add_brush_object;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-object-kind/🦀️.rs"]
-            pub mod add_object_kind;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-target-volume/🦀️.rs"]
             pub mod add_target_volume;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️apply-sun/🦀️.rs"]
             pub mod apply_sun;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔒️close-vortex-suggestions/🦀️.rs"]
             pub mod close_vortex_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💞️create-attraction/🦀️.rs"]
-            pub mod create_attraction;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-candidate/🦀️.rs"]
             pub mod cycle_candidate;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💔️delete-attraction/🦀️.rs"]
@@ -1723,8 +1738,6 @@ pub mod editor {
             pub mod open_vortex_suggestions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️open-import-snapshot/🦀️.rs"]
             pub mod open_import_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-inspector/🦀️.rs"]
-            pub mod patch_inspector;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️register-brush-mesh/🦀️.rs"]
             pub mod register_brush_mesh;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️relocate-target-volume/🦀️.rs"]
@@ -1735,8 +1748,6 @@ pub mod editor {
             pub mod scale_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-same-kind/🦀️.rs"]
             pub mod select_same_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛍️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤖️set-automatic/🦀️.rs"]
             pub mod set_automatic;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]

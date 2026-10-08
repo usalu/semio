@@ -5,7 +5,7 @@
 Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in Python — and require the same answer
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory:
-  a second implementation of the `s.gis.gismap` document and all twelve typed mutations, written in
+  a second implementation of the `s.gis.gismap` document and all eighteen typed mutations, written in
   Python from the committed specification — `🧬️schema/📸️snapshot/🔣️.json` for the document,
   `🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the twelve verbs and their argument
   lists, and the committed `(before, mutation, after, diff, outcome)` vectors for the wire form of
@@ -91,6 +91,12 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
       | delete-region         | {"DeleteRegion":{"id":"region-campus-envelope"}}                                                                                                               |
       | replace-region-data   | {"ReplaceRegionData":{"id":"region-holz-fassade-envelope","newData":{"id":"region-holz-fassade-envelope","label":"Holz Fassade Envelope (buffered)","points":[[5.5817,50.6029],[5.5826,50.6029],[5.5826,50.6036],[5.5817,50.6036],[5.5817,50.6029]]}}} |
       | reorder-regions       | {"ReorderRegions":{"id":"region-campus-envelope","toIndex":1}}                                                                                                 |
+      | set-position-property | {"SetPositionProperty":{"feature":"p_lycee_block_3000","key":"label","value":"Surveyed label"}} |
+      | remove-position-property | {"RemovePositionProperty":{"feature":"p_lycee_block_3000","key":"label"}} |
+      | set-route-property | {"SetRouteProperty":{"feature":"bg_holz_fassade_botanique:bw_institut_botanique_ulg:0","key":"label","value":"Surveyed label"}} |
+      | remove-route-property | {"RemoveRouteProperty":{"feature":"bg_holz_fassade_botanique:bw_institut_botanique_ulg:0","key":"label"}} |
+      | set-region-property | {"SetRegionProperty":{"feature":"region-holz-fassade-envelope","key":"label","value":"Surveyed label"}} |
+      | remove-region-property | {"RemoveRegionProperty":{"feature":"region-holz-fassade-envelope","key":"label"}} |
 
   @id-inverse
   @level-exhaustive
@@ -116,6 +122,12 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
       | delete-region         | {"DeleteRegion":{"id":"region-campus-envelope"}}                                                                                                               |
       | replace-region-data   | {"ReplaceRegionData":{"id":"region-holz-fassade-envelope","newData":{"id":"region-holz-fassade-envelope","label":"Holz Fassade Envelope (buffered)","points":[[5.5817,50.6029],[5.5826,50.6029],[5.5826,50.6036],[5.5817,50.6036],[5.5817,50.6029]]}}} |
       | reorder-regions       | {"ReorderRegions":{"id":"region-campus-envelope","toIndex":1}}                                                                                                 |
+      | set-position-property | {"SetPositionProperty":{"feature":"p_lycee_block_3000","key":"label","value":"Surveyed label"}} |
+      | remove-position-property | {"RemovePositionProperty":{"feature":"p_lycee_block_3000","key":"label"}} |
+      | set-route-property | {"SetRouteProperty":{"feature":"bg_holz_fassade_botanique:bw_institut_botanique_ulg:0","key":"label","value":"Surveyed label"}} |
+      | remove-route-property | {"RemoveRouteProperty":{"feature":"bg_holz_fassade_botanique:bw_institut_botanique_ulg:0","key":"label"}} |
+      | set-region-property | {"SetRegionProperty":{"feature":"region-holz-fassade-envelope","key":"label","value":"Surveyed label"}} |
+      | remove-region-property | {"RemoveRegionProperty":{"feature":"region-holz-fassade-envelope","key":"label"}} |
 
   @id-spec-vector
   @level-exhaustive
@@ -140,6 +152,12 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
       | delete-region         | 🧹delete-region         | 🚫️removes-old-town-region                    |
       | replace-region-data   | 🔄replace-region-data   | 🏘️rewrites    |
       | reorder-regions       | 🔃reorder-regions       | 🌳️moves      |
+      | set-position-property | 📌set-position-property | 🔠relabels |
+      | remove-position-property | 🧲remove-position-property | 🧽drops |
+      | set-route-property | 🚏set-route-property | 🔠relabels |
+      | remove-route-property | 🔪remove-route-property | 🧽drops |
+      | set-region-property | 🗾set-region-property | 🔠relabels |
+      | remove-region-property | 🧨remove-region-property | 🧽drops |
 
   @id-identity-round-trip
   @level-long

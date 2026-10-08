@@ -3,5 +3,26 @@
   "reservedCapacity": 8193,
   "logicalPage": 3,
   "maximumTurns": 65536,
-  "unsupportedFullGrantKind": "unsupportedOwner"
+  "unsupportedFullGrantKind": "unsupportedOwner",
+  "birthRefusals": [
+    "zeroItems",
+    "zeroDepth",
+    "shortCapacity"
+  ],
+  "terminalFrameRelease": "separateAdmittedTurn",
+  "bodyDependentBirth": {
+    "minimumBody": 1,
+    "overhead": 8,
+    "logicalPage": 3,
+    "maximumTurns": 64
+  },
+  "occupiedSlot": "unreservedBackingOwnershipLimit",
+  "entryStorage": "sameVectorBackingPopFront",
+  "domainPhysicalClosure": {
+    "payloadOracle": "utf8-content",
+    "releaseGrant": "current-owner-demand",
+    "allocatorClosure": "original-and-frontier",
+    "workerClosure": "aggregate-both-threads",
+    "maximumTurns": 1000000
+  }
 }

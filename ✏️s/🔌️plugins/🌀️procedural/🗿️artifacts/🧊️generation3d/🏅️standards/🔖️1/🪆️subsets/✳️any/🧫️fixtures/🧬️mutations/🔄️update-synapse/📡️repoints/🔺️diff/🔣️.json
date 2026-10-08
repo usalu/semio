@@ -3,12 +3,13 @@
   "camera": null,
   "widgets": null,
   "synapses": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "wire-ab",
-        "item": {
+        "patch": {
           "id": "wire-ab",
           "from": "node-a",
           "to": "node-b",
@@ -16,8 +17,7 @@
           "toPort": "cap"
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "layout": null,
   "generations": null,

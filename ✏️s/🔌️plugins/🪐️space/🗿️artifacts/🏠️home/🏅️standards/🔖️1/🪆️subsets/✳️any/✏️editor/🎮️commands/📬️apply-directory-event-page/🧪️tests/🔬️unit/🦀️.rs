@@ -10,7 +10,7 @@ fn seal(mut page: store::os_directory::DirectoryEventPageV1) -> store::os_direct
 /// 📬️ The page route's answer against `transient`, with its one item (if any) folded the way the transient lane folds it.
 fn answer(transient: &HomeTransient, page: &store::os_directory::DirectoryEventPageV1) -> Result<(DirectoryProjectionReceiptV1, Option<HomeTransient>), Fault> {
     let answer = directory_page_answer(&semio_framework_pack_json::to_json_string(page), transient.directory())?;
-    let next = answer.item.map(|item| item.diff(transient).diff().clone());
+    let next = answer.item.map(|item| protocol::apply_diff(item.diff(transient).diff(), transient).expect("the page diff applies"));
     Ok((answer.receipt, next))
 }
 

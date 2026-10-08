@@ -9,8 +9,8 @@ start record
 # P2-W0 census, 100% of stdio's `DiffCodec` impls were still on that shortcut before this pilot
 # ladder; this artifact's own upgrade follows the exact pattern `stdio.json`'s `JsonDiff` set.
 #
-# `format u8` (`store::pack_rt::OP_BINARY_FORMAT` convention) + `flags u8` (a 4-bit presence mask —
-# bit0=`header_vars`, bit1=`tables`, bit2=`blocks`, bit3=`entities` — `DxfDiff` has FOUR independently
+# `format u8` (`store::pack_rt::OP_BINARY_FORMAT` convention) + `flags u8` (a 5-bit presence mask —
+# bit0=`header_vars`, bit1=`tables`, bit2=`blocks`, bit3=`entities`, bit4=`other_tables` — `DxfDiff` has FIVE independently
 # optional top-level fields, unlike `JsonDiff`'s single `value`, so a bitmask replaces json's own
 # single `has_value` byte) are the two REAL fixed header fields; each PRESENT field's own recursive
 # collection-triple/tri-state payload follows as one opaque trailing `bytes` chain — genuinely

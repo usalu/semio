@@ -63,7 +63,7 @@ async fn inverse_restores_before() {
     assert_eq!(undo.new_lhs, base.lhs, "the inverse restores exactly the LHS pattern BASE carried");
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_rewrite_rule_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "edit-lhs/narrows-the-lhs-pattern-to-a-shaft-neighbour: inverse did not restore the before-snapshot");

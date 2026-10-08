@@ -11,6 +11,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runOwnedCommand("bun", [
       "test",
+      resolve(import.meta.dir, "../../🧪️tests/🧩️block-list/🟦️.test.ts"),
       resolve(import.meta.dir, "../../🧪️tests/🚚️text-editor-lanes/🟦️.test.ts"),
       resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.test.ts"), resolve(import.meta.dir, "../../🧪️tests/✂️text-splice/🟦️.test.ts"),
       resolve(import.meta.dir, "../../🧪️tests/🚚️world3d-scene-lanes/🟦️.test.ts"),

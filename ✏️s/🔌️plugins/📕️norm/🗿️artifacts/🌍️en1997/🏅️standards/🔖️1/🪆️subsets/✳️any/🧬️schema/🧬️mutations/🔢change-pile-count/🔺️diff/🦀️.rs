@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangePileCount, base: &En1997Snapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("pile {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {
-        piles: Some(En1997PilesRows { modified: vec![En1997PilesPatch { id: payload.id.clone(), count: Some(payload.new_count), ..Default::default() }], ..Default::default() }),
+        piles: Some(En1997PilesRows::modification(&payload.id, En1997PilesPatch { count: Some(payload.new_count), ..Default::default() })),
         ..Default::default()
     })
 }

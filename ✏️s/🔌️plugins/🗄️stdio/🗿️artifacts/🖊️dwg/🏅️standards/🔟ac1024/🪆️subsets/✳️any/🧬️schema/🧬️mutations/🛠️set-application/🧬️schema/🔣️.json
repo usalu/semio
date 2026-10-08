@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-application/schema.json",
+  "title": "SetApplication",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "application"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setApplication",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "application": {
+      "type": "object",
+      "x-semio-ui": {
+        "label": {
+          "en": "Application info",
+          "de": "Anwendungsinfo"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

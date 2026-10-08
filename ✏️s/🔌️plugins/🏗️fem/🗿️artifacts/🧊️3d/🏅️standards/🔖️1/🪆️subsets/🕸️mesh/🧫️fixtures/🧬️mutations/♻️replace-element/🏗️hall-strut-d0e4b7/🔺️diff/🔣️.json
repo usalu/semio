@@ -1,12 +1,13 @@
 {
   "nodes": null,
   "elements": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "brc_0",
-        "item": {
+        "patch": {
           "kind": "frame",
           "id": "brc_0",
           "start": "el_0",
@@ -16,8 +17,7 @@
           "roll": 0.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "materials": null,
   "sections": null,

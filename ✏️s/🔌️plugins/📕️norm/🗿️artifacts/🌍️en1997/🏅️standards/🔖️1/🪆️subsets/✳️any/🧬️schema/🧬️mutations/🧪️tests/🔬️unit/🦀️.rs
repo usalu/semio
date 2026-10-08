@@ -65,22 +65,6 @@ async fn every_variant_round_trips_via_inverse() {
     }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn from_snapshot_round_trips_via_full_document_replacement() {
-    let base = En1997Snapshot::default();
-    let target = compliant_demo();
-    let mut projected = base.clone();
-    for mutation in En1997Mutation::from_snapshot(&base, &target) {
-        projected = vcs::apply_mutation(&projected, &mutation).expect("snapshot mutation applies").0;
-    }
-    assert_eq!(projected.annex, target.annex);
-    assert_eq!(projected.design_approach, target.design_approach);
-    assert_eq!(projected.groundwater_level, target.groundwater_level);
-    assert_eq!(projected.layers.len(), target.layers.len());
-    assert_eq!(projected.footings.len(), target.footings.len());
-    assert_eq!(projected.piles.len(), target.piles.len());
-}
-
 //#region 🧪️MutationLaws
 #[semio_framework_async_macros::async_test]
 async fn change_annex_satisfies_the_inverse_and_absorb_laws() {

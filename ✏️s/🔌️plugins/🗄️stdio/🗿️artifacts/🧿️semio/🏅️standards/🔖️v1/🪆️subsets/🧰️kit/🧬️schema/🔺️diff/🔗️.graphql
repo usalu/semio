@@ -1,16 +1,22 @@
-# import SemioKitType, SemioKitDesign from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🔗️.graphql"
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
-type SemioKitTypeList { values: [SemioKitType!]! }
-type SemioKitDesignList { values: [SemioKitDesign!]! }
-type SemioKitObjectChildList { values: [ArtifactChild!]! }
-type SemioKitModelChildList { values: [ArtifactChild!]! }
-type SemioKitLinkList { values: [ArtifactLink!]! }
-type SemioKitDiff {
-  types: SemioKitTypeList
-  designs: SemioKitDesignList
-  objects: SemioKitObjectChildList
-  models: SemioKitModelChildList
-  properties: ArtifactChild
-  representations: SemioKitLinkList
-}
+# 🔺️ SemioKitDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
+type ReplacestoreArtifactChildSemioModelSnapshot { value: ArtifactChildSemioModelSnapshot! }
+type ReplacestoreArtifactChildSemioObjectSnapshot { value: ArtifactChildSemioObjectSnapshot! }
+type IndexModifiedReplacestoreArtifactChildSemioModelSnapshot { index: Int! diff: ReplacestoreArtifactChildSemioModelSnapshot! }
+type IndexAddedstoreArtifactChildSemioModelSnapshot { index: Int! item: ArtifactChildSemioModelSnapshot! }
+type IndexedTripleReplacestoreArtifactChildSemioModelSnapshotstoreArtifactChildSemioModelSnapshot { removed: [Int!] modified: [IndexModifiedReplacestoreArtifactChildSemioModelSnapshot!] added: [IndexAddedstoreArtifactChildSemioModelSnapshot!] }
+type IndexModifiedReplacestoreArtifactChildSemioObjectSnapshot { index: Int! diff: ReplacestoreArtifactChildSemioObjectSnapshot! }
+type IndexAddedstoreArtifactChildSemioObjectSnapshot { index: Int! item: ArtifactChildSemioObjectSnapshot! }
+type IndexedTripleReplacestoreArtifactChildSemioObjectSnapshotstoreArtifactChildSemioObjectSnapshot { removed: [Int!] modified: [IndexModifiedReplacestoreArtifactChildSemioObjectSnapshot!] added: [IndexAddedstoreArtifactChildSemioObjectSnapshot!] }
+type IndexModifiedSemioKitDesignDiff { index: Int! diff: SemioKitDesignDiff! }
+type IndexAddedSemioKitDesign { index: Int! item: SemioKitDesign! }
+type IndexedTripleSemioKitDesignDiffSemioKitDesign { removed: [Int!] modified: [IndexModifiedSemioKitDesignDiff!] added: [IndexAddedSemioKitDesign!] }
+type IndexModifiedSemioKitLinkDiff { index: Int! diff: SemioKitLinkDiff! }
+type IndexAddedstoreArtifactLink { index: Int! item: ArtifactLink! }
+type IndexedTripleSemioKitLinkDiffstoreArtifactLink { removed: [Int!] modified: [IndexModifiedSemioKitLinkDiff!] added: [IndexAddedstoreArtifactLink!] }
+type IndexModifiedSemioKitTypeDiff { index: Int! diff: SemioKitTypeDiff! }
+type IndexAddedSemioKitType { index: Int! item: SemioKitType! }
+type IndexedTripleSemioKitTypeDiffSemioKitType { removed: [Int!] modified: [IndexModifiedSemioKitTypeDiff!] added: [IndexAddedSemioKitType!] }
+type SemioKitTypeDiff { name: String category: String }
+type SemioKitDesignDiff { name: String pieces: [SemioKitPiece!] connections: [SemioKitConnection!] }
+type SemioKitLinkDiff { pin: LinkPin }
+type SemioKitDiff { types: IndexedTripleSemioKitTypeDiffSemioKitType designs: IndexedTripleSemioKitDesignDiffSemioKitDesign objects: IndexedTripleReplacestoreArtifactChildSemioObjectSnapshotstoreArtifactChildSemioObjectSnapshot models: IndexedTripleReplacestoreArtifactChildSemioModelSnapshotstoreArtifactChildSemioModelSnapshot properties: ArtifactChildSemioValueSnapshot representations: IndexedTripleSemioKitLinkDiffstoreArtifactLink }

@@ -1,0 +1,107 @@
+{
+  "at": "2026-10-08T19:28:28.497343+00:00",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies/🧬️schema/🔣️.json",
+      "beforeSha256": "f7a0e48eaef3400ec9a1ee73f8c764227d21db7352c8c6fb806f293548f20b3d",
+      "afterSha256": null,
+      "action": "retire-corpus-declaration",
+      "qualification": "Only exact Root facet section is authored; other shared contents observed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "beforeSha256": "6abdf3f13756730774803e934a363e57bb4c57f16b752d059e66caa74ec6bae8",
+      "afterSha256": null,
+      "action": "retire-corpus-declaration",
+      "qualification": "Only exact Root facet section is authored; other shared contents observed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json",
+      "beforeSha256": "ec3e543605723952aedef1776f07aed5a5ce12f594ca78bd933cdb84d57832a6",
+      "afterSha256": null,
+      "action": "retire-corpus-declaration",
+      "qualification": "Only exact Root facet section is authored; other shared contents observed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "5e09e687ef2cbe12d9ef937a2de85b8c767d0b11eb22ea864d492baf2fdfc25c",
+      "afterSha256": "014b30016bf868f24f126f95bbe9049160260db7e747df7602342d98dfe7b02e",
+      "action": "extend-exact-existing-current-corpus-facet",
+      "qualification": "Only exact Root facet section is authored; other shared contents observed",
+      "ownedAfterText": "  if (rest[0] === \"--current-corpus-only\" && rest.length === 1) {\n    const { default: assert } = await import(\"node:assert/strict\");\n    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import(\"node:fs\");\n    const { inventorySchemaScopes } = await import(join(root, library, \"🔍️discovery/🟦️.ts\"));\n    const { runBudgetedTestCommand } = await import(join(root, \"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts\"));\n    const owners = [\"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin\", \"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire\", \"🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source\", \"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity\"];\n    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;\n    if (!output) throw Error(\"Explicit ticket output required for physical corpus inventory\");\n    mkdirSync(output, { recursive: true });\n    const scopeRoot = mkdtempSync(join(output, \"current-corpus-\"));\n    try {\n      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });\n      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, \"🔣️taxonomy.json\"), \"utf8\")));\n      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + \"/\"));\n      const authorities = inventory.modules.filter(row => owned(row.modulePath));\n      const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === \"schema-fixture-defines-schema\");\n      writeFileSync(join(output, \"current-corpus-placement.json\"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + \"\\n\");\n      assert.deepEqual(diagnostics, [], \"Physical or adjacent test-corpus authority must retire independent of filename\");\n      assert.deepEqual(authorities, []);\n    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }\n    const value = JSON.parse(readFileSync(join(root, owners[0]!, \"🔣️.json\"), \"utf8\"));\n    const plugin = JSON.parse(readFileSync(join(root, owners[3]!, \"🔣️.json\"), \"utf8\"));\n    const payload = Buffer.alloc(value.textBytes, value.textByte);\n    const body = Buffer.concat([Buffer.from(value.bodyPrefix), payload]);\n    const operation = Buffer.concat([Buffer.from(value.operationPrefix), payload]);\n    const frame = Buffer.concat([Buffer.from(plugin.framePrefix), Buffer.alloc(plugin.textBytes, plugin.textByte)]);\n    assert.equal(body.length, value.bodyBytes);\n    assert.equal(operation.length, value.operationBytes);\n    assert.equal(frame.length, plugin.frameBytes);\n    assert.deepEqual(frame, operation);\n    assert.deepEqual(plugin.modes, value.modes);\n    for (const text of value.unicode) {\n      const encoded = Buffer.from(text, \"utf8\"), crossing = Buffer.from(payload);\n      encoded.copy(crossing, value.maximumBytes - 1);\n      assert.equal(crossing.subarray(value.maximumBytes - 1, value.maximumBytes - 1 + encoded.length).toString(\"utf8\"), text);\n    }\n    const currencies = JSON.parse(readFileSync(join(root, owners[4]!, \"🔣️.json\"), \"utf8\"));\n    assert.equal(currencies.sourceBytes, payload.length);\n    assert.equal(currencies.maximumReleaseBytes, value.maximumBytes);\n    const identities = JSON.parse(readFileSync(join(root, owners[5]!, \"🧫️fixtures/🔣️.json\"), \"utf8\"));\n    const { blake3 } = await import(\"@noble/hashes/blake3.js\");\n    const { blake3Hex } = await import(join(root, \"🧰️framework/🔨️modules/🔏️hash/🟦️.ts\"));\n    const identityRows = [];\n    for (const row of identities.cases) {\n      const zero = Buffer.alloc(1), text = (input: string) => Buffer.from(input, \"utf8\");\n      const unsigned = (input: string) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(input)); return bytes; };\n      let bytes: Buffer;\n      switch (row.kind) {\n        case \"entity\": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.payload)]); break;\n        case \"scoped\": bytes = text(row.input.editId + \":\" + row.input.ordinal); break;\n        case \"edit\": { const sequence = Buffer.alloc(4); sequence.writeInt32LE(row.input.sequence); bytes = Buffer.concat([text(row.prefix), zero, unsigned(row.input.replica), zero, sequence, zero, Buffer.from(row.input.fingerprint)]); break; }\n        case \"change\": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.editIds.join(\"\\0\")), zero, text(row.input.description ?? \"\")]); break;\n        case \"alternative\": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.name), zero, text(row.input.checkpointIds.join(\"\\0\"))]); break;\n        case \"mutation\": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.operation), ...row.input.stamp.map(unsigned)]); break;\n        default: throw Error(\"Unknown identity specimen\");\n      }\n      assert.equal(bytes.toString(\"hex\"), row.preimageHex);\n      const independent = Buffer.from(blake3(bytes)).toString(\"hex\");\n      assert.equal(blake3Hex(bytes), independent);\n      identityRows.push({ kind: row.kind, preimageHex: row.preimageHex, hash: independent });\n    }\n    writeFileSync(join(output, \"current-corpus-identity-oracle.json\"), JSON.stringify({ rows: identityRows, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    writeFileSync(join(output, \"current-corpus-neutral-bytes.json\"), JSON.stringify({ bodyBytes: body.length, operationBytes: operation.length, frameBytes: frame.length, utf8Crossings: value.unicode.length, plainModes: value.modes, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    await runBudgetedTestCommand(process.execPath, [\"test\", join(root, owners[1]!, \"🧪️tests/🟦️.ts\"), join(root, owners[2]!, \"🧪️tests/🔬️unit/🟦️.ts\")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });\n    console.log(\"[DEBUG] current test corpora: physical authorities0; independent Node bytes/UTF8, Three and RFC6902; native invocation0\");\n    process.exit(0);\n  }\n",
+      "ownedBeforeText": "  if (rest[0] === \"--current-four-only\" && rest.length === 1) {\n    const { default: assert } = await import(\"node:assert/strict\");\n    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import(\"node:fs\");\n    const { inventorySchemaScopes } = await import(join(root, library, \"🔍️discovery/🟦️.ts\"));\n    const { runBudgetedTestCommand } = await import(join(root, \"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts\"));\n    const owners = [\"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin\", \"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire\", \"🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source\"];\n    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;\n    if (!output) throw Error(\"Explicit ticket output required for physical corpus inventory\");\n    mkdirSync(output, { recursive: true });\n    const scopeRoot = mkdtempSync(join(output, \"current-four-corpus-\"));\n    try {\n      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });\n      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, \"🔣️taxonomy.json\"), \"utf8\")));\n      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + \"/\"));\n      const authorities = inventory.modules.filter(row => owned(row.modulePath));\n      const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === \"schema-fixture-defines-schema\");\n      writeFileSync(join(output, \"current-four-corpus-placement.json\"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + \"\\n\");\n      assert.deepEqual(diagnostics, [], \"Physical or adjacent test-corpus authority must retire independent of filename\");\n      assert.deepEqual(authorities, []);\n    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }\n    const value = JSON.parse(readFileSync(join(root, owners[0]!, \"🔣️.json\"), \"utf8\"));\n    const plugin = JSON.parse(readFileSync(join(root, owners[3]!, \"🔣️.json\"), \"utf8\"));\n    const payload = Buffer.alloc(value.textBytes, value.textByte);\n    const body = Buffer.concat([Buffer.from(value.bodyPrefix), payload]);\n    const operation = Buffer.concat([Buffer.from(value.operationPrefix), payload]);\n    const frame = Buffer.concat([Buffer.from(plugin.framePrefix), Buffer.alloc(plugin.textBytes, plugin.textByte)]);\n    assert.equal(body.length, value.bodyBytes);\n    assert.equal(operation.length, value.operationBytes);\n    assert.equal(frame.length, plugin.frameBytes);\n    assert.deepEqual(frame, operation);\n    assert.deepEqual(plugin.modes, value.modes);\n    for (const text of value.unicode) {\n      const encoded = Buffer.from(text, \"utf8\"), crossing = Buffer.from(payload);\n      encoded.copy(crossing, value.maximumBytes - 1);\n      assert.equal(crossing.subarray(value.maximumBytes - 1, value.maximumBytes - 1 + encoded.length).toString(\"utf8\"), text);\n    }\n    writeFileSync(join(output, \"current-four-corpus-neutral-bytes.json\"), JSON.stringify({ bodyBytes: body.length, operationBytes: operation.length, frameBytes: frame.length, utf8Crossings: value.unicode.length, plainModes: value.modes, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    await runBudgetedTestCommand(process.execPath, [\"test\", join(root, owners[1]!, \"🧪️tests/🟦️.ts\"), join(root, owners[2]!, \"🧪️tests/🔬️unit/🟦️.ts\")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });\n    console.log(\"[DEBUG] current four test corpora: physical authorities0; independent Node bytes/UTF8, Three and RFC6902; native invocation0\");\n    process.exit(0);\n  }\n"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "f2b4fd5b462eaeb867f765b7ae38f959356d72b695b3b3fa787ee2bbf066a7d6",
+      "afterSha256": "fa0bf7dade28e45ca503bfe532a98c81b0e0315355129c9182be20c164691383",
+      "action": "extend-exact-existing-current-corpus-facet",
+      "qualification": "Only exact Root facet section is authored; other shared contents observed",
+      "ownedAfterText": "    {\n      \"name\": \"🧫️fixtures-testing-only-current-corpora🧪️\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun \\\"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\\\" run ticket-fixture-verification:root-resumed-corpus-tests --skip-nx-cache --outputStyle=static --args=--current-corpus-only\",\n      \"cwd\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"NX_ISOLATE_PLUGINS\": \"false\",\n        \"NX_CACHE_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-cache\",\n        \"NX_WORKSPACE_DATA_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data\",\n        \"SEMIO_TEST_ARTIFACT_DIR\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated\",\n        \"FORCE_COLOR\": \"0\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.2985\n      }\n    },",
+      "ownedBeforeText": "    {\n      \"name\": \"🧫️fixtures-testing-only-current-four-corpora🧪️\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun \\\"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\\\" run ticket-fixture-verification:root-resumed-corpus-tests --skip-nx-cache --outputStyle=static --args=--current-four-only\",\n      \"cwd\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"NX_ISOLATE_PLUGINS\": \"false\",\n        \"NX_CACHE_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-cache\",\n        \"NX_WORKSPACE_DATA_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data\",\n        \"SEMIO_TEST_ARTIFACT_DIR\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated\",\n        \"FORCE_COLOR\": \"0\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.2985\n      }\n    },"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "8abf807bca65993dbb0bead3887e1790e058f40bb416f57627f9e0ec1ed6abee",
+      "afterSha256": "94aa7f1f916ec33dca061334c12ed53ffb2cd2880b4a0102225d9815b383a2ce",
+      "action": "extend-exact-existing-current-corpus-facet",
+      "qualification": "Only exact Root facet section is authored; other shared contents observed",
+      "ownedAfterText": "    {\n      \"name\": \"🧫️fixtures-testing-only-current-corpora🧪️\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun \\\"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\\\" run ticket-fixture-verification:root-resumed-corpus-tests --skip-nx-cache --outputStyle=static --args=--current-corpus-only\",\n      \"cwd\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"NX_ISOLATE_PLUGINS\": \"false\",\n        \"NX_CACHE_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-cache\",\n        \"NX_WORKSPACE_DATA_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data\",\n        \"SEMIO_TEST_ARTIFACT_DIR\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated\",\n        \"FORCE_COLOR\": \"0\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.2985\n      }\n    },",
+      "ownedBeforeText": "    {\n      \"name\": \"🧫️fixtures-testing-only-current-four-corpora🧪️\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun \\\"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\\\" run ticket-fixture-verification:root-resumed-corpus-tests --skip-nx-cache --outputStyle=static --args=--current-four-only\",\n      \"cwd\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification\",\n      \"env\": {\n        \"NX_DAEMON\": \"false\",\n        \"NX_ISOLATE_PLUGINS\": \"false\",\n        \"NX_CACHE_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-cache\",\n        \"NX_WORKSPACE_DATA_DIRECTORY\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data\",\n        \"SEMIO_TEST_ARTIFACT_DIR\": \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated\",\n        \"FORCE_COLOR\": \"0\"\n      },\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 900.2985\n      }\n    },"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🟦️.ts",
+      "beforeSha256": "9d397c826ad28f2cabb3f31e9adb3bc28b943ae0fd198cd7e2de7458f7376be3",
+      "afterSha256": "a0ef40322244f16ed8e3a7f6f3207a53274a8ef600f654f3010d625a4e2abc49",
+      "action": "join-current-canonical-replication-command-subdomain-owner",
+      "qualification": "Only test assertion changes; Rust producer extraction is observer only"
+    }
+  ],
+  "plainExampleObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies/🔣️.json",
+      "beforeSha256": "0fb6e90a07bc681ea466689752657aa5201a737bebe876a03110760e8fdabc4e",
+      "afterSha256": "0fb6e90a07bc681ea466689752657aa5201a737bebe876a03110760e8fdabc4e",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🔣️.json",
+      "beforeSha256": "f3fde813d074c30b8e448de36c05d900cf714fbc8934179f446b9efed8bb652f",
+      "afterSha256": "f3fde813d074c30b8e448de36c05d900cf714fbc8934179f446b9efed8bb652f",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🔣️.json",
+      "beforeSha256": "089f5d6e6540187e6f3a617c34867fc0b8925b29f9a5af9a883fe819b11e5a44",
+      "afterSha256": "089f5d6e6540187e6f3a617c34867fc0b8925b29f9a5af9a883fe819b11e5a44",
+      "unchanged": true,
+      "ownMutation": false
+    }
+  ],
+  "red": {
+    "exitCode": 1,
+    "duration": "93ms",
+    "log": "🗑️generated/oct8-root-current-three-corpus-red.log",
+    "actualSelectedAuthorityDiagnostics": 3
+  },
+  "qualifiedAttempt": {
+    "session": 3574,
+    "exitCode": 1,
+    "duration": "207ms",
+    "reason": "Actual preserved RFC6902 law exposed stale Store parent reexport assertion after peer canonical command-subdomain extraction; no wrapper/schema failure"
+  },
+  "green": {
+    "session": 44118,
+    "exitCode": 0,
+    "duration": "358ms",
+    "tests": 4,
+    "assertions": 47,
+    "identityRows": 12,
+    "thirdParty": "Existing locked @noble/hashes BLAKE3 agrees with genuine first-party TS blake3Hex for independently reconstructed Node Buffer identity preimages",
+    "rawSha256": "815b3efb9403ce206a90f5fd9bbbcc5283eb4f74beb73a4696e5eff92f6758d0",
+    "nativeInvocationCount": 0
+  },
+  "authorship": "Three corpus declarations/one existing test assertion/existing private facet/live-seed exact sections only; no Rust producer, canonical domain schema or unchanged example is authored"
+}

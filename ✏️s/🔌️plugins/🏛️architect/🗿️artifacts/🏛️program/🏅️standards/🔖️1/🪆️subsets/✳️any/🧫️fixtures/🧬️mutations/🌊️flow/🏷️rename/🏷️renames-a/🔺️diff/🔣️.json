@@ -12,9 +12,10 @@
   "adjacencies": null,
   "processes": null,
   "flows": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "flow-requirement-a",
         "patch": {
@@ -49,8 +50,7 @@
           "verificationMethod": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "accessRules": null,
   "operations": null,

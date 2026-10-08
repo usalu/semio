@@ -1,0 +1,20 @@
+{
+  "time": "2026-10-08T22:01:27.757301+00:00",
+  "nxExit": 0,
+  "nxDuration": "4.1s",
+  "actual": {
+    "arguments": [
+      "member",
+      "--",
+      "--nocapture"
+    ],
+    "carrierPresent": false
+  },
+  "nodeOracle": [
+    "member",
+    "--",
+    "--nocapture"
+  ],
+  "matches": true,
+  "sourceMutation": false
+}

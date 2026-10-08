@@ -1,0 +1,39 @@
+{
+  "count": 229,
+  "unique": 229,
+  "baseOverlap": 0,
+  "preliminaryOmissions": [],
+  "roles": {
+    "authored-source": 55,
+    "retained-ticket-input-or-audit": 108,
+    "retained-input": 42,
+    "retained-report": 24
+  },
+  "missingCurrentExplicitActions": {
+    "📥️oct8-neural-retirement-current-owned-endpoints.json": [],
+    "📥️oct8-root-four-corpus-owned-endpoints.json": [],
+    "publicationMaster": [
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧬️schema/🔣️.json",
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧾️schema.json",
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧬️schema/🔣️.json",
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧾️schema.json",
+      "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧬️schema/🔣️.json"
+    ]
+  },
+  "generatedPromotions": [],
+  "absentSource": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧬️schema/🔣️.json",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧬️schema/🔣️.json",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source/🧬️schema/🔣️.json",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json"
+  ],
+  "baseCount": 6022,
+  "correction": "Earlier audit read5976 preimage as6022 currentbase; false four omissions withdrawn"
+}

@@ -82,18 +82,6 @@ impl protocol::DiffAlgebra<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
             solve_json: self.solve_json.as_ref().map(|_| base.solve_json.clone()),
         }
     }
-    fn between(base: &Grid2dWindowConfig, other: &Grid2dWindowConfig) -> Self {
-        Self {
-            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
-            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
-            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
-            grid_visible: (base.grid_visible != other.grid_visible).then(|| other.grid_visible.clone()),
-            grid_snap_enabled: (base.grid_snap_enabled != other.grid_snap_enabled).then(|| other.grid_snap_enabled.clone()),
-            grid_factor: (base.grid_factor != other.grid_factor).then(|| other.grid_factor.clone()),
-            active_tile_id: (base.active_tile_id != other.active_tile_id).then(|| other.active_tile_id.clone()),
-            solve_json: (base.solve_json != other.solve_json).then(|| other.solve_json.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.active_tile_id.is_none() && self.solve_json.is_none()
     }

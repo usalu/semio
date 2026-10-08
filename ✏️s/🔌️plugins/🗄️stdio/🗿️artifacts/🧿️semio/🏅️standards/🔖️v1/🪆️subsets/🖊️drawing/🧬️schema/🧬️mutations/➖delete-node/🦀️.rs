@@ -40,8 +40,7 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Dele
 /// the layer root (empty `path`), which has no parent to remove a child from.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parent_and_index(at: &NodePath) -> Option<(NodePath, usize)> {
-    let mut parent_path = at.path.clone();
-    let index = parent_path.pop()?;
-    Some((NodePath { layer: at.layer, path: parent_path }, index))
+    let (index, parent_path) = at.path.split_last()?;
+    Some((NodePath { layer: at.layer, path: parent_path.to_vec() }, *index))
 }
 //#endregion 🔖️ParentSplit

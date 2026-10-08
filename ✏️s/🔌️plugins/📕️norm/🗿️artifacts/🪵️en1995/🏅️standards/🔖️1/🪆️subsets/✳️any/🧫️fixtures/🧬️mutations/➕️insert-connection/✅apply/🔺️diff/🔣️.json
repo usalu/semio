@@ -2,14 +2,15 @@
   "annex": null,
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "connections": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "conn-C1",
+        "index": 1,
         "row": {
           "id": "conn-C9",
           "labelEn": "Bolt group at support",
@@ -46,6 +47,7 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   }
 }

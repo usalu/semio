@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨remove-region-property",
+  "semanticKind": "remove-region-property",
+  "displayName": "Remove Region Property",
+  "emoji": "🧨",
+  "aggregateVariant": "RemoveRegionProperty",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-region-property",
+  "binaryTag": 17,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

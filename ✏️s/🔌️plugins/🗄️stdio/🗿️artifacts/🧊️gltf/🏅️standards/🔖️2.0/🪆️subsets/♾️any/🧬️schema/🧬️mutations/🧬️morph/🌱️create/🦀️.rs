@@ -32,8 +32,8 @@ pub fn validate(payload: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let value = with_inserted(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.position, p.target.as_deref().cloned().unwrap_or_default());
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+    let rows = GltfTargetsDelta::insertion(p.position, p.target.as_deref().cloned().unwrap_or_default());
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

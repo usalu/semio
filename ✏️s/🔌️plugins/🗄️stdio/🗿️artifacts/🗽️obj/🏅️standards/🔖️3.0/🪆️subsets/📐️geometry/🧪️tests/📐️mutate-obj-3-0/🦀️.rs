@@ -246,7 +246,7 @@ mod subject {
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_obj::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation,ObjMutation};
+    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{ObjMutation};
 
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
 
@@ -272,7 +272,7 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
-        apply_obj_mutation(&mut snapshot, &mutation_of(&spec)?);
+        apply_mutation(&mut snapshot, &mutation_of(&spec)?);
         let bytes = reparsed(encode_obj(&snapshot).into_bytes(), &input)?;
         let projection = project(&bytes)?;
         moved_the_document(&spec.str("kind"), &projection, &project(&input)?)?;
@@ -286,9 +286,9 @@ mod subject {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
         let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_obj_mutation(&mut snapshot, &forward);
+        apply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
-            apply_obj_mutation(&mut snapshot, mutation);
+            apply_mutation(&mut snapshot, mutation);
         }
         let restored = encode_obj(&snapshot).into_bytes();
         let projection = project(&restored)?;

@@ -1,0 +1,1650 @@
+{
+  "qualification": "Bounded defining selected-editor associated type read; not actual composed bindings or tests",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "heldSchema": "writer.document",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 889,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1075,
+          "text": "type Snapshot = WriterSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1076,
+          "text": "type Mutation = WriterMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1089,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "EquationSnapshot",
+      "heldSchema": "semio.equation/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 886,
+          "text": "const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1027,
+          "text": "type Snapshot = EquationSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1028,
+          "text": "type Mutation = EquationMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1045,
+          "text": "const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "heldSchema": "s.wfc.wfc2d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 369,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 767,
+          "text": "type Snapshot = Wfc2dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 768,
+          "text": "type Mutation = Wfc2dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 780,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_2D_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "heldSchema": "s.wfc.grid2d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 380,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 601,
+          "text": "type Snapshot = Grid2dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 602,
+          "text": "type Mutation = Grid2dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 614,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "heldSchema": "s.wfc.bitmap",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 519,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 718,
+          "text": "type Snapshot = BitmapSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 719,
+          "text": "type Mutation = BitmapMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 731,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "heldSchema": "s.wfc.wfc3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 392,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 444,
+          "text": "type Snapshot = Wfc3dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 445,
+          "text": "type Mutation = Wfc3dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 457,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "heldSchema": "s.wfc.grid3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 518,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 541,
+          "text": "type Snapshot = Grid3dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 542,
+          "text": "type Mutation = Grid3dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 554,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "heldSchema": "generation.2d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 642,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 796,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1420,
+          "text": "type Snapshot = Generation2dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1421,
+          "text": "type Mutation = Generation2dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1497,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "heldSchema": "generation.3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1056,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1160,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1421,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1633,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1952,
+          "text": "type Snapshot = Generation3dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1953,
+          "text": "type Mutation = Generation3dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2085,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "FlowSnapshot",
+      "heldSchema": "s.flow.flow",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1004,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1228,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1444,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1685,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1913,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2003,
+          "text": "type Snapshot = FlowSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2004,
+          "text": "type Mutation = FlowMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2017,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "heldSchema": "gis.terrain",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 256,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 435,
+          "text": "type Snapshot = GisTerrainSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 436,
+          "text": "type Mutation = GisTerrainMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 449,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "heldSchema": "gis.map",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 515,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 811,
+          "text": "type Snapshot = GisMapSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 812,
+          "text": "type Mutation = GisMapMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 825,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "VcsSnapshot",
+      "heldSchema": "vcs.vcs",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 592,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 650,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 826,
+          "text": "type Snapshot = VcsSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 827,
+          "text": "type Mutation = VcsDemoMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 840,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "heldSchema": "animate.presentation",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 466,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 862,
+          "text": "type Snapshot = PresentationSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 863,
+          "text": "type Mutation = PresentationMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 876,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "heldSchema": "shooting.shooting",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 589,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 638,
+          "text": "type Snapshot = ShootingSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 639,
+          "text": "type Mutation = ShootingMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 652,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "heldSchema": "playground.playground",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 148,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 296,
+          "text": "type Snapshot = PlaygroundSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 297,
+          "text": "type Mutation = PlaygroundMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 309,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "heldSchema": "sequence.sequence",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1402,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2280,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2489,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2688,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 3070,
+          "text": "type Snapshot = SequenceSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 3071,
+          "text": "type Mutation = SequenceMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 3084,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "heldSchema": "fem.2d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 384,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 654,
+          "text": "type Snapshot = Fem2dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 655,
+          "text": "type Mutation = Fem2dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 669,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "heldSchema": "fem.3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 428,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 699,
+          "text": "type Snapshot = Fem3dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 700,
+          "text": "type Mutation = Fem3dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 721,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "heldSchema": "architect.program",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1310,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1457,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1512,
+          "text": "type Snapshot = ProgramSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1513,
+          "text": "type Mutation = ProgramMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1526,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "heldSchema": "process.3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 652,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 745,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1376,
+          "text": "type Snapshot = Process3dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1377,
+          "text": "type Mutation = Process3dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1391,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "heldSchema": "lowpoly.document",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1102,
+          "text": "const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1649,
+          "text": "type Snapshot = LowpolySnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1650,
+          "text": "type Mutation = LowpolyMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1663,
+          "text": "const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "WiresSnapshot",
+      "heldSchema": "reasoning.wires.identity.snapshot",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 529,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 540,
+          "text": "type Snapshot = WiresSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 541,
+          "text": "type Mutation = WiresMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 559,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "FormsSnapshot",
+      "heldSchema": "forms.form",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 747,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 946,
+          "text": "type Snapshot = FormsSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 948,
+          "text": "type Mutation = FormMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 972,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "heldSchema": "layout.layout",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 808,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1208,
+          "text": "type Snapshot = LayoutSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1209,
+          "text": "type Mutation = LayoutMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1222,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "CadSnapshot",
+      "heldSchema": "cad.scene",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1471,
+          "text": "const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2032,
+          "text": "type Snapshot = CadSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2033,
+          "text": "type Mutation = CadMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2122,
+          "text": "const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "En1990Snapshot",
+      "heldSchema": "semio.norm.en1990/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1990Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1990Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1990/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 213,
+          "text": "type Mutation = En1990Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "heldSchema": "semio.norm.din18599/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 79,
+          "text": "type Snapshot = Din18599Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 80,
+          "text": "type Mutation = Din18599Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.din18599/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 226,
+          "text": "type Mutation = Din18599Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1997Snapshot",
+      "heldSchema": "semio.norm.en1997/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1997Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1997Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1997/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 214,
+          "text": "type Mutation = En1997Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "heldSchema": "semio.norm.din16798/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = Din16798Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = Din16798Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.din16798/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 216,
+          "text": "type Mutation = Din16798Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1991Snapshot",
+      "heldSchema": "semio.norm.en1991/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1991Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1991Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1991/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 213,
+          "text": "type Mutation = En1991Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1992Snapshot",
+      "heldSchema": "semio.norm.en1992/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1992Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1992Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1992/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 213,
+          "text": "type Mutation = En1992Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "heldSchema": "semio.norm.vdi3805/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 100,
+          "text": "type Snapshot = Vdi3805Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 101,
+          "text": "type Mutation = Vdi3805Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 114,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.vdi3805/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 261,
+          "text": "const DOCUMENT_SCHEMA: &'static str = <Vdi3805PlayApp as semio_framework_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 291,
+          "text": "type Mutation = Vdi3805Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "heldSchema": "semio.norm.iso16757/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = Iso16757Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = Iso16757Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.iso16757/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 214,
+          "text": "type Mutation = Iso16757Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1993Snapshot",
+      "heldSchema": "semio.norm.en1993/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1993Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1993Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1993/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 213,
+          "text": "type Mutation = En1993Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1994Snapshot",
+      "heldSchema": "semio.norm.en1994/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1994Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1994Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1994/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 214,
+          "text": "type Mutation = En1994Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "heldSchema": "semio.norm.din4108/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = Din4108Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = Din4108Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.din4108/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 218,
+          "text": "type Mutation = Din4108Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1996Snapshot",
+      "heldSchema": "semio.norm.en1996/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1996Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1996Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1996/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 216,
+          "text": "type Mutation = En1996Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1995Snapshot",
+      "heldSchema": "semio.norm.en1995/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1995Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1995Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1995/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 213,
+          "text": "type Mutation = En1995Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1999Snapshot",
+      "heldSchema": "semio.norm.en1999/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 77,
+          "text": "type Snapshot = En1999Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 78,
+          "text": "type Mutation = En1999Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 91,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1999/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 213,
+          "text": "type Mutation = En1999Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "En1998Snapshot",
+      "heldSchema": "semio.norm.en1998/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 82,
+          "text": "type Snapshot = En1998Snapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 83,
+          "text": "type Mutation = En1998Mutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 96,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1998/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 218,
+          "text": "type Mutation = En1998Mutation;"
+        }
+      ]
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "heldSchema": "playbook.program",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 316,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 480,
+          "text": "type Snapshot = PlaybookSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 481,
+          "text": "type Mutation = PlaybookMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 494,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "heldSchema": "procedure.document/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 341,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 372,
+          "text": "type Snapshot = ProcedureSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 373,
+          "text": "type Mutation = ProcedureMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 390,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "heldSchema": "remodeling.scene",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 772,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 794,
+          "text": "type Snapshot = RemodelingSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 795,
+          "text": "type Mutation = RemodelingMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 808,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "heldSchema": "energy.model",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1361,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1526,
+          "text": "type Snapshot = EnergyModelSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1527,
+          "text": "type Mutation = EnergyModelMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1542,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "heldSchema": "trinity.rewrite.rule",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 629,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 691,
+          "text": "type Snapshot = RewritingSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 692,
+          "text": "type Mutation = RewriteRuleMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 709,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "JackSnapshot",
+      "heldSchema": "trinity.jackgraphwindowcfg",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 531,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 581,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 717,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 727,
+          "text": "type Snapshot = JackSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 728,
+          "text": "type Mutation = TrinityGraphMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 745,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "DagSnapshot",
+      "heldSchema": "dag.dag",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 412,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"dag.dag\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 614,
+          "text": "type Snapshot = DagSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 615,
+          "text": "type Mutation = DagMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 632,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"dag.dag\";"
+        }
+      ]
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "heldSchema": "drawing.document",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1097,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1332,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1590,
+          "text": "type Snapshot = DrawingSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1591,
+          "text": "type Mutation = DrawingMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1604,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "RasterSnapshot",
+      "heldSchema": "raster.document",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 573,
+          "text": "const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1094,
+          "text": "type Snapshot = RasterSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1095,
+          "text": "type Mutation = RasterMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1108,
+          "text": "const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "NoteSnapshot",
+      "heldSchema": "note.document",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 454,
+          "text": "type Snapshot = NoteSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 455,
+          "text": "type Mutation = NoteMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 476,
+          "text": "const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "heldSchema": "board.ports.directed.v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1982,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 4612,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 4613,
+          "text": "type Snapshot = Puzzle2dPlaySnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 4614,
+          "text": "type Mutation = Puzzle2dMutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "heldSchema": "puzzle.5d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 8474,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 8906,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 8907,
+          "text": "type Snapshot = Puzzle5dPlaySnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 8908,
+          "text": "type Mutation = Puzzle5dMutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "heldSchema": "puzzle.3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 6151,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 6683,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 6684,
+          "text": "type Snapshot = Puzzle3dPlaySnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 6685,
+          "text": "type Mutation = Puzzle3dMutation;"
+        }
+      ]
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "heldSchema": "block.2d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 272,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 392,
+          "text": "type Snapshot = Block2dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 393,
+          "text": "type Mutation = Block2dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 406,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "heldSchema": "block.5d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 238,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 359,
+          "text": "type Snapshot = Block5dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 360,
+          "text": "type Mutation = Block5dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 373,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "heldSchema": "block.3d",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 433,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 692,
+          "text": "type Snapshot = Block3dSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 693,
+          "text": "type Mutation = Block3dMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 706,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "heldSchema": "s.home",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 226,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 351,
+          "text": "type Snapshot = SHomeSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 352,
+          "text": "type Mutation = crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 364,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "heldSchema": "s.space",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 236,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 250,
+          "text": "type Snapshot = SSpaceSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 251,
+          "text": "type Mutation = SSpaceMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 264,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;"
+        }
+      ]
+    },
+    {
+      "owner": "CurationSnapshot",
+      "heldSchema": "sourcing.curation/v1",
+      "editorTypes": [
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 416,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 854,
+          "text": "type Snapshot = CurationSnapshot;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 855,
+          "text": "type Mutation = SourcingMutation;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 917,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;"
+        }
+      ]
+    }
+  ]
+}

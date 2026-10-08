@@ -19,3 +19,5 @@ record set-other-chunks tag=3
 field payload bytes
 record patch-data tag=4
 field payload bytes
+record set-pad-bytes tag=5
+field payload bytes

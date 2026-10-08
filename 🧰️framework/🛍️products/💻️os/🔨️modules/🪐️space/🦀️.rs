@@ -1,15 +1,15 @@
 //! 🪐️ OS host orchestration for space drafts and collection archives.
 
 pub use semio_framework_artifact_space_collection::{
-    artifact_backbone_uri, collection_backbone_uri, collection_package_from_schema, empty_collection_snapshot, entry_path, folder_path,
+    artifact_backbone_uri, collection_backbone_uri, empty_collection_snapshot, entry_path, folder_path,
     package_descriptor as collection_package_descriptor, reconcile_collection_integrity, resolve_entry_by_path, ArtifactBody, CollectionArtifactPackage,
-    CollectionDiff, CollectionEntriesDelta, CollectionEntry, CollectionEntryPatch, CollectionFolder, CollectionFolderPatch, CollectionFoldersDelta, CollectionMutation,
-    CollectionOptionalLink, CollectionPackageSchemaError, CollectionSnapshot, COLLECTION_ARTIFACT_DEFINITION_SCHEMA, S_COLLECTION_SCHEMA,
+    CollectionDiff, CollectionFolderRemoval, CollectionFolderInsertion, CollectionFolderRelocation, CollectionEntryRemoval, CollectionEntryInsertion, CollectionEntryRelocation, CollectionEntriesDelta, CollectionEntry, CollectionEntryPatch, CollectionFolder, CollectionFolderPatch, CollectionFoldersDelta, CollectionMutation,
+    CollectionOptionalLink, CollectionPackageError, CollectionSnapshot, S_COLLECTION_SCHEMA,
 };
 pub use semio_framework_artifact_space_space::{
     can_write, empty_space_snapshot, package_descriptor as space_package_descriptor, reconcile_space_atelier_invariant, space_backbone_uri,
-    space_package_from_schema, space_role_of, CollectionRef, InstalledExtension, SpaceArtifactPackage, SpaceCollectionPatch, SpaceCollectionsDelta, SpaceDiff, SpaceExtensionPatch, SpaceExtensionsDelta, SpaceKind,
-    SpaceMutation, SpaceOptionalAvatar, SpacePackageSchemaError, SpaceProgramPatch, SpaceProgramsDelta, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, SPACE_ARTIFACT_DEFINITION_SCHEMA, S_SPACE_SCHEMA,
+    space_role_of, CollectionRef, InstalledExtension, SpaceArtifactPackage, SpaceCollectionPatch, SpaceCollectionsDelta, SpaceDiff, SpaceExtensionPatch, SpaceExtensionsDelta, SpaceKind,
+    SpaceMutation, SpaceOptionalAvatar, SpacePackageError, SpaceProgramsDelta, SpaceUsersModification, SpaceCollectionsModification, SpaceExtensionsModification, CollectionFoldersModification, CollectionEntriesModification, SpaceUserRemoval, SpaceUserInsertion, SpaceUserRelocation, SpaceCollectionRemoval, SpaceCollectionInsertion, SpaceCollectionRelocation, SpaceProgramRemoval, SpaceProgramInsertion, SpaceProgramRelocation, SpaceExtensionRemoval, SpaceExtensionInsertion, SpaceExtensionRelocation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, S_SPACE_SCHEMA,
 };
 
 use serde::{Deserialize, Serialize};
@@ -134,7 +134,7 @@ impl DraftCatalog {
         // synchronously the same way `SpaceBackbonePort`'s blanket impl resolves its callee futures
         // above — this catalog stays a pure, synchronous type (see this fn's own doc: "no wall-clock
         // reads", matching `vcs`'s own convention).
-        let artifact_id = crate::host::resolve_kernel_future(vcs::content_addressed_entity_id("draft", format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes()));
+        let artifact_id = crate::host::resolve_kernel_future(vcs::io::binary::entity_identity::content_addressed_entity_id("draft", format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes()));
         let entry = DraftEntry { artifact_id, kind_id: kind_id.into(), schema: schema.into(), name: name.into(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(entry.artifact_id.clone(), entry.clone());
         entry

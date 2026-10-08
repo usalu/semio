@@ -1,10 +1,12 @@
 //! 🧵️ BIM inference session: one per mounted editor instance, holding the last inference and the snapshot it was inferred from, so a render after a mutation recomputes only
-//! the inference fields whose declared `reads` the diff touched (the tier-1 gate of `infer_field_after_diff`, applied to the whole `ModelInference`). The snapshot stays
+//! the inference fields whose declared `reads` the diff touched (the tier-1 gate of `infer_field_after_diff`, applied to the whole `ModelInference`). The diff is the SUM of the
+//! concrete diffs of the mutations the editor emitted since the last refresh ([`record_mutations`]); it is trusted only when applying it to the held snapshot yields exactly the
+//! snapshot being read, any other change (undo, a peer's edit, a load) recomputes every field. No two models are ever differenced. The snapshot stays
 //! authored-only; everything a window draws that is derived comes from here. Adding an inference field is one row of [`fields!`] below; the fidelity test fails until it is there.
 
 use crate::standards::v1::subsets::any::schema::inferences as inf;
-use crate::{ModelDiff, ModelInference, ModelSnapshot};
-use protocol::{DiffAlgebra, DiffRegions, TouchedPaths};
+use crate::{ModelDiff, ModelInference, ModelMutation, ModelSnapshot};
+use protocol::{DiffRegions, Mutation, MutationDiff, TouchedPaths};
 use semio_framework_plugin::PluginCloseStep;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -19,6 +21,7 @@ const UNMOUNTED: u32 = u32::MAX;
 #[derive(Default)]
 pub struct ModelInferenceSession {
     previous: Option<ModelSnapshot>,
+    pending: Option<ModelDiff>,
     inference: ModelInference,
     recomputed: Vec<&'static str>,
 }
@@ -65,12 +68,25 @@ impl ModelInferenceSession {
         Self::default()
     }
 
-    /// 🔁️ Brings the held inference up to `snapshot`: an unchanged snapshot answers from memory, a changed one recomputes exactly the fields its diff touches.
+    /// 📝️ Adds the concrete diff of mutations emitted since the last refresh to the pending sum.
+    pub fn record(&mut self, diff: ModelDiff) {
+        match self.pending.as_mut() {
+            Some(pending) => pending.absorb(diff),
+            None => self.pending = Some(diff),
+        }
+    }
+
+    /// 🔁️ Brings the held inference up to `snapshot`: an unchanged snapshot answers from memory, a changed one recomputes exactly the fields the recorded diffs touch when they
+    /// carry the held snapshot to this one, and every field otherwise.
     pub fn refresh(&mut self, snapshot: &ModelSnapshot) -> &ModelInference {
+        let pending = self.pending.take();
         if self.previous.as_ref() == Some(snapshot) {
             return &self.inference;
         }
-        let touched = self.previous.as_ref().map(|previous| <ModelDiff as DiffAlgebra<ModelSnapshot>>::between(previous, snapshot).touches());
+        let touched = match (self.previous.as_ref(), pending) {
+            (Some(previous), Some(pending)) if protocol::apply_diff(&pending, previous).is_ok_and(|applied| &applied == snapshot) => Some(pending.touches()),
+            _ => None,
+        };
         self.recompute(snapshot, touched.as_ref());
         self.previous = Some(snapshot.clone());
         &self.inference
@@ -95,6 +111,25 @@ pub fn with_inference<R>(instance: Option<u32>, snapshot: &ModelSnapshot, read: 
         let session = sessions.entry(instance.unwrap_or(UNMOUNTED)).or_default();
         read(session.refresh(snapshot))
     })
+}
+
+/// 📝️ Records the concrete diffs of `mutations` the editor emits against `snapshot`, in order, for the instance's next refresh. Each mutation's diff is read against the state
+/// the ones before it leave; a mutation whose diff does not apply records nothing and the next refresh recomputes every field.
+pub fn record_mutations(instance: Option<u32>, snapshot: &ModelSnapshot, mutations: &[ModelMutation]) {
+    let mut sum = ModelDiff::default();
+    let mut state: Option<ModelSnapshot> = None;
+    for (index, mutation) in mutations.iter().enumerate() {
+        let base = state.as_ref().unwrap_or(snapshot);
+        let (diff, _) = mutation.diff(base).into_parts();
+        if index + 1 < mutations.len() {
+            match protocol::apply_diff(&diff, base) {
+                Ok(next) => state = Some(next),
+                Err(_) => return,
+            }
+        }
+        sum.absorb(diff);
+    }
+    SESSIONS.with(|sessions| sessions.borrow_mut().entry(instance.unwrap_or(UNMOUNTED)).or_default().record(sum));
 }
 
 /// 📊️ The fields the last refresh of one instance's session recomputed.

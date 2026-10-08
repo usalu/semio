@@ -106,8 +106,8 @@ impl ArtifactCanonicalJson for OracleSource {
             serde_json::Value::Object(values) => N::Object(values.len()),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<&str, String> {
-        self.value(path)?.as_object().and_then(|values| values.keys().nth(index)).map(String::as_str).ok_or_else(|| "operation-wire.invalid-fixture-key".to_string())
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<crate::os_store::ArtifactCanonicalJsonText<'_>, String> {
+        self.value(path)?.as_object().and_then(|values| values.keys().nth(index)).map(|key| key.as_str().into()).ok_or_else(|| "operation-wire.invalid-fixture-key".to_string())
     }
 }
 

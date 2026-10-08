@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::standards::v1_0::subsets::valid::schema::{CODE_DOCTYPE_MISSING, CODE_ROOT_NAME_MISMATCH};
 
@@ -30,8 +31,8 @@ fn history_text_fixture_preserves_doctype_and_matches_independent_xml_reader() {
     assert_eq!(text, "World 文字");
     assert_eq!(doctype.as_deref(), Some("root"));
     let mut restored = next;
-    for inverse in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-        apply_xml_valid_mutation(&mut restored, &inverse);
+    for inverse in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        apply_mutation(&mut restored, &inverse);
     }
     assert_eq!(restored, base);
     println!("[DEBUG] XML history fixture edits Unicode text, retains DOCTYPE, and restores its exact inverse");
@@ -48,7 +49,7 @@ fn valid_document() -> XmlSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn applied(base: &XmlSnapshot, mutation: &XmlValidMutation) -> (XmlSnapshot, protocol::MutationOutcome<XmlDiff>) {
     let mut next = base.clone();
-    let outcome = apply_xml_valid_mutation(&mut next, mutation);
+    let outcome = apply_mutation(&mut next, mutation);
     (next, outcome)
 }
 
@@ -126,7 +127,7 @@ fn declare_entity_inserts_at_the_declared_index_and_inverts_to_the_prior_list() 
         })
         .collect();
     assert_eq!(names, vec!["first", "second", "third"], "position is semantic under §4.2");
-    for step in crate::mutation_inverse(&insertion, &with_two).expect("valid retained mutation inverse fixture") {
+    for step in crate::mutation_inverse(&insertion, &with_two).expect("valid retained mutation inverse fixture").into_iter().rev() {
         let (undone, _) = applied(&with_three, &step);
         with_three = undone;
     }
@@ -148,7 +149,7 @@ fn every_kind_round_trips_through_its_own_inverse() {
     for mutation in cases {
         let (mut next, outcome) = applied(&base, &mutation);
         assert!(!outcome.messages().iter().any(|message| message.code.0 == CODE_REJECTED), "{mutation:?} must apply against the fixture: {:?}", outcome.messages());
-        for step in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             let (undone, _) = applied(&next, &step);
             next = undone;
         }
@@ -163,7 +164,7 @@ fn set_standalone_is_exact_in_every_declaration_combination() {
         for target in [None, Some(true), Some(false)] {
             let mutation = XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: target });
             let (mut next, _) = applied(&base, &mutation);
-            for step in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+            for step in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
                 let (undone, _) = applied(&next, &step);
                 next = undone;
             }

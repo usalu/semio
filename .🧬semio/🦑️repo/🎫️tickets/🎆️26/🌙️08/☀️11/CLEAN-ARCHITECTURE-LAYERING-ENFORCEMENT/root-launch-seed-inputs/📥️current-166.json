@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "🔣️ @semio-tech/forms-js Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/forms-js:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.812
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/stdio-semio Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/stdio-semio:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/1"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8121
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/stdio-pdf Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/stdio-pdf:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/2"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8122
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/stdio-txt Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/stdio-txt:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/3"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8123
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/remodel-remodeling-rs Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/remodel-remodeling-rs:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/4"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8124
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/block-3d Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/block-3d:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/5"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8125
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/architect-program-rs Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/architect-program-rs:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/6"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8126
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/layout-layout-rs Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/layout-layout-rs:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/7"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8127000000001
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/trinity-jack-rs Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/trinity-jack-rs:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/8"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8128
+      }
+    },
+    {
+      "name": "🔣️ @semio-tech/gis-gismap-js Physical Codecs 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run @semio-tech/gis-gismap-js:verify-physical-codecs --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/physical-codecs/gui-owners/9"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8129
+      }
+    }
+  ],
+  "retireNames": []
+}

@@ -1,0 +1,3 @@
+# Actor Publication Port Red
+
+The registered installed Bun/Nx actor-port command physically closed with outer 1 and child 1. The complete eight-vector portable evidence corpus matched the first-party schema validator and independent Ajv plus JSON parser. The required-port test failed because its schema TypeScript implementation is absent; the actual verifier ownership test failed because the required third port argument is absent. One test passed, two failed, 18 assertions executed. All 17 original bodies and the complete schema/fixture/law/declaring/GUI producer bodies stayed exact across the actual command. Full before/after bodies, receipt and terminal are retained under `🗑️generated/actor-port-red1`. No actor runtime code preceded this red.

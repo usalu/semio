@@ -1,0 +1,5 @@
+# Root229 Candidate Independent Review
+
+229unique candidates,0overlap with unchanged6022base; all139preliminary candidates retained. Current Native10/Root9 explicit actions are covered by base+candidates. Four current publication master source endpoints remain missing: S entry schema, service-composition ownership test, lifecycle test and retired service-composition schema. Preserve these exact authored endpoint roles, including deletion; do not infer them from observer binding paths. No generated output promotion. Exact roles/absent source endpoints/coverage retained in `📥️oct8-root229-candidate-independent-observation.json`. Source current observations do not grant whole-file authorship or promote producer observers/shared-launch peer drift. Upcoming Publication12ledger/master and final runtime/cleanup evidence still require reconciliation; candidate receipt is not final union or closure.
+
+Correction: earlier four missing-path alarm used5976 pre-production preimage, not actual current6022 final roster. All four are already base members; no duplicates needed. Exact current recomputation now has 7 missing new Pub1436 action paths, retained in observer JSON.

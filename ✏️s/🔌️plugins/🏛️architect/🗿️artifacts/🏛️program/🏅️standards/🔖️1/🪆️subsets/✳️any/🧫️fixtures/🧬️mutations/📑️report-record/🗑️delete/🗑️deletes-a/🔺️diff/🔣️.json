@@ -58,12 +58,15 @@
   "collaboration": null,
   "analyses": null,
   "reports": {
-    "added": [],
     "removed": [
-      "report-record-a"
+      {
+        "id": "report-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "searchFilters": null,
   "statusRecords": null,

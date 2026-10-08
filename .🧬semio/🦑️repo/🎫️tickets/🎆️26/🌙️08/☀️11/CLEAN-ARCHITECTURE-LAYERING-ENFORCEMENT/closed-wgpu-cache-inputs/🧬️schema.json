@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "maximumBytes",
+    "maximumWork",
+    "budgetMs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "wgpu-ownership/target-3",
+          "wgpu-ownership/target-4",
+          "wgpu-ownership/target-5",
+          "wgpu-ownership/target-6",
+          "wgpu-ownership/target-7",
+          "wgpu-ownership/target-8",
+          "wgpu-ownership/target-9",
+          "wgpu-composition/target-2"
+        ]
+      }
+    },
+    "maximumBytes": {
+      "const": 4294967296
+    },
+    "maximumWork": {
+      "const": 200000
+    },
+    "budgetMs": {
+      "const": 300000
+    }
+  }
+}

@@ -38,4 +38,11 @@ pub(super) fn encode(value:&PropertyValue,control:&mut NativeEncodeControl<'_>)-
   if values.get_mut().len()!=1{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"property root cardinality differs"))}control.checkpoint()?;Ok(values.get_mut().pop().unwrap())
  })
 }
-pub(super) fn retire(value:PropertyValue){let mut cursor=semio_framework_value::retirement::owned_retirement(value);while !matches!(cursor.close_step(256,usize::MAX).expect("property retirement failed"),semio_framework_value::SnapshotRetirementStep::Complete){}assert!(cursor.terminal_is_empty());}
+pub(super) fn retire(value:PropertyValue){
+ let mut pending=vec![value];
+ while let Some(value)=pending.pop(){match value{
+  PropertyValue::Array(values)=>pending.extend(values),
+  PropertyValue::Object(values)=>pending.extend(values.into_values()),
+  _=>{}
+ }}
+}

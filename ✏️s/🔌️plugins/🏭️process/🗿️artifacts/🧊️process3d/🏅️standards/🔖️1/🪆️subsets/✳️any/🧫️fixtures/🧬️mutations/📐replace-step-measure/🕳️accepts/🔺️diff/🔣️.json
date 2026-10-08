@@ -5,54 +5,37 @@
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": {
-    "childId": "steps-flow-4c4aafdbb0856835",
-    "target": {
-      "artifactId": "steps-flow-4c4aafdbb0856835",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "flow"
-      }
-    }
-  },
   "stepPayloads": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "step-1",
-        "label": null,
-        "enabled": null,
-        "measure": {
-          "measure": "drill",
-          "radius": 0.008,
-          "depth": 0.02,
-          "pose": {
-            "position": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "axis": [
-              0.0,
-              0.0,
-              1.0
-            ],
-            "angle": 0.0
-          }
-        },
-        "origin": null
+        "patch": {
+          "label": null,
+          "enabled": null,
+          "measure": {
+            "measure": "drill",
+            "radius": 0.008,
+            "depth": 0.02,
+            "pose": {
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "axis": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "angle": 0.0
+            }
+          },
+          "origin": null
+        }
       }
-    ],
-    "reordered": null
-  },
-  "toolSolids": {
-    "added": [],
-    "removed": [
-      "tool-step-1-brep-6195cae6ebec0800"
-    ],
-    "patched": [],
-    "reordered": null
+    ]
   }
 }

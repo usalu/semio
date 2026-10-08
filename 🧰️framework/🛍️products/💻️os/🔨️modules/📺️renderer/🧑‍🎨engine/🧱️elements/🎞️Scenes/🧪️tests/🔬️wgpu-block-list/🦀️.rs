@@ -24,7 +24,7 @@ fn block_list_scene(surface_id: &str, controller_id: &str, steps: Value, palette
         graph_timeline: None,
         diff_view: None,
         event_feed: None,
-        block_list: Some(BlockListScene { steps_json: steps.to_string(), palette_json: palette.to_string(), selected_id: None, dragging_id: None, domain_id: None }),
+        block_list: Some(BlockListScene { steps: serde_json::from_value(steps).expect("typed steps"), palette: serde_json::from_value(palette).expect("typed palette"), selected_id: None, dragging_id: None, domain_id: None }),
         menu: None,
     }
 }
@@ -58,7 +58,7 @@ fn authored_selection_targets_support_pointer_and_accessibility() {
         let hit = block_list_hit(&node, bounds, control.rect.x + control.rect.w * 0.5, control.rect.y + theme.control_height * 0.5, &theme, UiDriverDrag::Handle).expect("pointer card target");
         assert_eq!(hit.control_id, control.key);
         let mut retired = node.clone();
-        retired.block_list.as_mut().unwrap().steps_json = "[]".into();
+        retired.block_list.as_mut().unwrap().steps.clear();
         assert!(!block_list_accessibility_action_is_current(&retired, &control.action));
     }
 }

@@ -1,17 +1,18 @@
 //! 👯️ `duplicate-selection` command.
 
-use crate::editor::puzzle5d::{Puzzle5dActionCtx, Puzzle5dFreshIds, Puzzle5dPart};
+use crate::editor::puzzle5d::{Puzzle5dActionCtx, Puzzle5dFreshIds};
+use crate::standards::v1::subsets::any::schema::mutations::create_part;
 
-/// 📄️ Clones every selected part at a small flat+volume offset. Aborts (emitting nothing at all) when
-/// the selection holds no parts — the pre-migration `return Emit::default()`. 🕹️ ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: no longer re-selects the new
-/// duplicates afterward — see puzzle3d's `duplicate-selection` doc comment for the identical
+/// 📄️ Clones every selected part at a small flat+volume offset, one `create-part` per clone built from the typed base
+/// part. Aborts (emitting nothing at all) when the selection holds no parts — the pre-migration
+/// `return Emit::default()`. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: no longer
+/// re-selects the new duplicates afterward — see puzzle3d's `duplicate-selection` doc comment for the identical
 /// limitation.
 pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     let ids = ctx.selected_part_ids();
-    let mut clones: Vec<Puzzle5dPart> = ctx
-        .scene
-        .document
+    let mut clones: Vec<crate::Puzzle5dPart> = ctx
+        .snapshot
+        .typed()
         .parts
         .iter()
         .filter(|part| ids.contains(&part.id))
@@ -32,5 +33,5 @@ pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     for clone in &mut clones {
         clone.id = fresh_ids.next_part();
     }
-    ctx.scene.document.parts.extend(clones);
+    ctx.artifact_mutations.extend(clones.into_iter().map(|clone| create_part(clone, None)));
 }

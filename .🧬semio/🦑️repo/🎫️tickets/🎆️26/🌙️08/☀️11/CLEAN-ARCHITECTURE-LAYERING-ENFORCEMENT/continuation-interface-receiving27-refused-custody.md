@@ -1,0 +1,5 @@
+# Successor27 Actual Receiving Guard Refusal
+
+Root registration256/current131 physical interval closed; producer/input/journal completed and exact, both endpoints all9 GUI70. Actual registered27 receiving-red outer Nx/Bun1 refused on General plugin describe fresh-component test advancing after its frozen255 definition. This precedes the inner receiver and is not its genuine red. Actual logs, full immutable27 producer/candidates/inputs, and complete advancing bodies retained. No own process live or output reused.
+
+The added full-workspace source guard is broader than this receiving route. Original receiving logic independently captures its actual complete Bun import closure and checks every captured current module/current law/current General wrapper afterward. A corrected route guard must preserve all original finite controls and exact owned authored-source bytes, retain full unrelated physical advance evidence, require current exact selected177 preimages for stage/inspection/whole/focus, and retain receiving-specific actual source guards. No unrelated drift may count as current acceptance, and publication remains unaccepted.

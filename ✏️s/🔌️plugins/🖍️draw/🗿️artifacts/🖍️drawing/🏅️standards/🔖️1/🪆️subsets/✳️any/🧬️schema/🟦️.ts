@@ -54,7 +54,7 @@ export type DrawingLayerNode =
  | (DrawingLayerBase & {kind:"group";isolation:boolean;children:DrawingLayerNode[]})
  | (DrawingLayerBase & {kind:"boolean";operation:string;children:string[]})
  | (DrawingLayerBase & {kind:"trace";sourceKey:string;params:{threshold:Binary64;simplifyEpsilon:Binary64}});
-export interface DrawingImageAsset {mime:string;data:string;width?:number;height?:number}
+export interface DrawingImageAsset {width:number;height:number;samples:[number,number,number,number][]}
 export interface DrawingArtboard {width:Binary64;height:Binary64}
 
 //#region 🚪️Parsers
@@ -144,14 +144,18 @@ export function parseDrawingLayerNode(value:unknown,at='$'):DrawingLayerNode{
  }return result[0]!;
 }
 
-export function parseDrawingImageAsset(value: unknown, at = "$"): DrawingImageAsset {
-  const row = drawingDrawingArtifactGuardObject(value, at);
-  return {
-    mime: drawingDrawingArtifactGuardString(row["mime"], `${at}.mime`),
-    data: drawingDrawingArtifactGuardString(row["data"], `${at}.data`),
-    width: row["width"] === undefined ? undefined : drawingDrawingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0,"maximum":4294967295}),
-    height: row["height"] === undefined ? undefined : drawingDrawingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0,"maximum":4294967295}),
-  };
+/** 🖼️ Admits exact dimensions and ordered logical RGBA samples. */
+export function parseDrawingImageAsset(value: unknown, at = "$" ): DrawingImageAsset {
+ const row=drawingDrawingArtifactGuardObject(value,at);
+ if(Object.keys(row).length!==3 || Object.keys(row).some(key=>!["width","height","samples"].includes(key)))drawingDrawingArtifactGuardReject(at,"image asset has unexpected fields");
+ const width=drawingDrawingArtifactGuardInteger(row.width,at+".width",{minimum:0,maximum:4294967295}),height=drawingDrawingArtifactGuardInteger(row.height,at+".height",{minimum:0,maximum:4294967295});
+ const source=drawingDrawingArtifactGuardArray(row.samples,at+".samples");
+ if(BigInt(source.length)!==BigInt(width)*BigInt(height))drawingDrawingArtifactGuardReject(at,"image sample count differs from dimensions");
+ const samples=source.map((sample,index):[number,number,number,number]=>{
+  const path=at+".samples["+index+"]",parts=drawingDrawingArtifactGuardArray(sample,path,{minItems:4,maxItems:4});
+  return parts.map((part,component)=>drawingDrawingArtifactGuardInteger(part,path+"["+component+"]",{minimum:0,maximum:255})) as [number,number,number,number];
+ });
+ return {width,height,samples};
 }
 
 export function parseDrawingArtboard(value: unknown, at = "$"): DrawingArtboard {

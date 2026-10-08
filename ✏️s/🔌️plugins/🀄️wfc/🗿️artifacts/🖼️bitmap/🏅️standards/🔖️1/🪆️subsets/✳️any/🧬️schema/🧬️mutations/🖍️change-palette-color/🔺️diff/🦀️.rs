@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangePaletteColor` — one palette lane write.
 
-use crate::diff::{BitmapDiff, BitmapPaletteOp};
+use crate::diff::{BitmapDiff, BitmapPaletteDelta};
 use crate::schema::snapshot::BitmapSnapshot;
 
 pub fn diff(payload: &super::ChangePaletteColor, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -10,5 +10,5 @@ pub fn diff(payload: &super::ChangePaletteColor, base: &BitmapSnapshot) -> proto
     if *existing == payload.color {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Palette colour {} already holds that value.", payload.index));
     }
-    protocol::MutationOutcome::new(BitmapDiff { palette_ops: vec![BitmapPaletteOp::Recolor { index: payload.index as u32, color: payload.color }], ..Default::default() })
+    protocol::MutationOutcome::new(BitmapDiff { palette: BitmapPaletteDelta::recoloring(payload.index as u32, payload.color), ..Default::default() })
 }

@@ -24,88 +24,200 @@ message Fem2dDiff {
   // @state config
 }
 
-message Fem2dNodesDelta {
-  repeated FemNode added = 1;
-  repeated string removed = 2;
-  repeated Fem2dNodesPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Fem2dNodeRemoval {
+  string id = 1;
+  uint64 index = 2;
 }
 
-message Fem2dNodesPatchEntry {
+message Fem2dNodeInsertion {
+  uint64 index = 1;
+  FemNode row = 2;
+}
+
+message Fem2dNodeRelocation {
   string id = 1;
-  FemNode item = 2;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dNodesModification {
+  string id = 1;
+  FemNode patch = 2;
+}
+
+message Fem2dNodesDelta {
+  repeated Fem2dNodeRemoval removed = 1;
+  repeated Fem2dNodeInsertion inserted = 2;
+  repeated Fem2dNodeRelocation moved = 3;
+  repeated Fem2dNodesModification modified = 4;
+}
+
+message Fem2dElementRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Fem2dElementInsertion {
+  uint64 index = 1;
+  FemElement row = 2;
+}
+
+message Fem2dElementRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dElementsModification {
+  string id = 1;
+  FemElement patch = 2;
 }
 
 message Fem2dElementsDelta {
-  repeated FemElement added = 1;
-  repeated string removed = 2;
-  repeated Fem2dElementsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem2dElementRemoval removed = 1;
+  repeated Fem2dElementInsertion inserted = 2;
+  repeated Fem2dElementRelocation moved = 3;
+  repeated Fem2dElementsModification modified = 4;
 }
 
-message Fem2dElementsPatchEntry {
+message Fem2dRegionRemoval {
   string id = 1;
-  FemElement item = 2;
+  uint64 index = 2;
+}
+
+message Fem2dRegionInsertion {
+  uint64 index = 1;
+  FemRegion row = 2;
+}
+
+message Fem2dRegionRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dRegionsModification {
+  string id = 1;
+  FemRegion patch = 2;
 }
 
 message Fem2dRegionsDelta {
-  repeated FemRegion added = 1;
-  repeated string removed = 2;
-  repeated Fem2dRegionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem2dRegionRemoval removed = 1;
+  repeated Fem2dRegionInsertion inserted = 2;
+  repeated Fem2dRegionRelocation moved = 3;
+  repeated Fem2dRegionsModification modified = 4;
 }
 
-message Fem2dRegionsPatchEntry {
+message Fem2dMaterialRemoval {
   string id = 1;
-  FemRegion item = 2;
+  uint64 index = 2;
+}
+
+message Fem2dMaterialInsertion {
+  uint64 index = 1;
+  FemMaterial row = 2;
+}
+
+message Fem2dMaterialRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dMaterialsModification {
+  string id = 1;
+  FemMaterial patch = 2;
 }
 
 message Fem2dMaterialsDelta {
-  repeated FemMaterial added = 1;
-  repeated string removed = 2;
-  repeated Fem2dMaterialsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem2dMaterialRemoval removed = 1;
+  repeated Fem2dMaterialInsertion inserted = 2;
+  repeated Fem2dMaterialRelocation moved = 3;
+  repeated Fem2dMaterialsModification modified = 4;
 }
 
-message Fem2dMaterialsPatchEntry {
+message Fem2dSectionRemoval {
   string id = 1;
-  FemMaterial item = 2;
+  uint64 index = 2;
+}
+
+message Fem2dSectionInsertion {
+  uint64 index = 1;
+  FemSection row = 2;
+}
+
+message Fem2dSectionRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dSectionsModification {
+  string id = 1;
+  FemSection patch = 2;
 }
 
 message Fem2dSectionsDelta {
-  repeated FemSection added = 1;
-  repeated string removed = 2;
-  repeated Fem2dSectionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem2dSectionRemoval removed = 1;
+  repeated Fem2dSectionInsertion inserted = 2;
+  repeated Fem2dSectionRelocation moved = 3;
+  repeated Fem2dSectionsModification modified = 4;
 }
 
-message Fem2dSectionsPatchEntry {
+message Fem2dSupportRemoval {
   string id = 1;
-  FemSection item = 2;
+  uint64 index = 2;
+}
+
+message Fem2dSupportInsertion {
+  uint64 index = 1;
+  FemSupport row = 2;
+}
+
+message Fem2dSupportRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dSupportsModification {
+  string id = 1;
+  FemSupport patch = 2;
 }
 
 message Fem2dSupportsDelta {
-  repeated FemSupport added = 1;
-  repeated string removed = 2;
-  repeated Fem2dSupportsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem2dSupportRemoval removed = 1;
+  repeated Fem2dSupportInsertion inserted = 2;
+  repeated Fem2dSupportRelocation moved = 3;
+  repeated Fem2dSupportsModification modified = 4;
 }
 
-message Fem2dSupportsPatchEntry {
+message Fem2dLoadCaseRemoval {
   string id = 1;
-  FemSupport item = 2;
+  uint64 index = 2;
+}
+
+message Fem2dLoadCaseInsertion {
+  uint64 index = 1;
+  FemLoadCase row = 2;
+}
+
+message Fem2dLoadCaseRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dLoadCasesModification {
+  string id = 1;
+  Fem2dLoadCasePatch patch = 2;
 }
 
 message Fem2dLoadCasesDelta {
-  repeated FemLoadCase added = 1;
-  repeated string removed = 2;
-  repeated Fem2dLoadCasesPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Fem2dLoadCasesPatchEntry {
-  string id = 1;
-  Fem2dLoadCasePatch patch = 2;
+  repeated Fem2dLoadCaseRemoval removed = 1;
+  repeated Fem2dLoadCaseInsertion inserted = 2;
+  repeated Fem2dLoadCaseRelocation moved = 3;
+  repeated Fem2dLoadCasesModification modified = 4;
 }
 
 message Fem2dLoadCasePatch {
@@ -114,28 +226,60 @@ message Fem2dLoadCasePatch {
   optional Fem2dLoadsDelta loads = 3;
 }
 
-message Fem2dLoadsDelta {
-  repeated FemLoad added = 1;
-  repeated string removed = 2;
-  repeated Fem2dLoadsPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Fem2dLoadRemoval {
+  string id = 1;
+  uint64 index = 2;
 }
 
-message Fem2dLoadsPatchEntry {
+message Fem2dLoadInsertion {
+  uint64 index = 1;
+  FemLoad row = 2;
+}
+
+message Fem2dLoadRelocation {
   string id = 1;
-  FemLoad item = 2;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dLoadsModification {
+  string id = 1;
+  FemLoad patch = 2;
+}
+
+message Fem2dLoadsDelta {
+  repeated Fem2dLoadRemoval removed = 1;
+  repeated Fem2dLoadInsertion inserted = 2;
+  repeated Fem2dLoadRelocation moved = 3;
+  repeated Fem2dLoadsModification modified = 4;
+}
+
+message Fem2dCombinationRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Fem2dCombinationInsertion {
+  uint64 index = 1;
+  FemCombination row = 2;
+}
+
+message Fem2dCombinationRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem2dCombinationsModification {
+  string id = 1;
+  FemCombination patch = 2;
 }
 
 message Fem2dCombinationsDelta {
-  repeated FemCombination added = 1;
-  repeated string removed = 2;
-  repeated Fem2dCombinationsPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Fem2dCombinationsPatchEntry {
-  string id = 1;
-  FemCombination item = 2;
+  repeated Fem2dCombinationRemoval removed = 1;
+  repeated Fem2dCombinationInsertion inserted = 2;
+  repeated Fem2dCombinationRelocation moved = 3;
+  repeated Fem2dCombinationsModification modified = 4;
 }
 
 message Fem2dAnalysisPatch {

@@ -3,7 +3,7 @@
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
 use crate::ProgramSnapshot;
-use semio_framework_plugin::BlockListScene;
+use semio_framework_plugin::{BlockListScene,BlockListStep,BlockListBlock,BlockListPaletteEntry};
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
@@ -45,27 +45,6 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🧱️ One block-list step per register row — the wire shape the block-list surface consumes.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-struct RegisterBlockStep {
-    id: String,
-    title: String,
-    blocks: Vec<RegisterBlockItem>,
-}
-
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-struct RegisterBlockItem {
-    id: String,
-    label: String,
-    kind: String,
-}
-
 pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let register = cfg.active_register.as_str();
     let entities = register_entities(program, register);
@@ -73,25 +52,20 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
         return semio_framework_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::ui_capacity_error());
     }
 
-    let steps: Vec<RegisterBlockStep> = entities
+    let steps: Vec<BlockListStep> = entities
         .iter()
         .filter_map(|entity| {
             let id = entity_id_from_json(entity)?;
             let name = entity_name_from_json(entity);
-            Some(RegisterBlockStep { id: id.clone(), title: name.clone(), blocks: vec![RegisterBlockItem { id: format!("{id}-block"), label: name, kind: register.into() }] })
+            Some(BlockListStep {id:id.clone(),title:name.clone(),description:None,target:None,blocks:vec![BlockListBlock {id:format!("{id}-block"),label:name,kind:register.into(),description:None,target:None}]})
         })
         .collect();
-    let steps_json = semio_framework_pack_json::to_json_string(&steps);
-    let palette_json = semio_framework_pack_json::to_json_string(&vec![semio_framework_value::DslValue::object([
-        ("blockKind".to_string(), semio_framework_value::DslValue::String(register.to_string())),
-        ("label".to_string(), semio_framework_value::DslValue::String(register.to_string())),
-        ("iconId".to_string(), semio_framework_value::DslValue::String("square".to_string())),
-    ])]);
+    let palette=vec![BlockListPaletteEntry {block_kind:register.into(),label:register.into(),icon_id:"square".into()}];
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
     // `InteractionView` and `BlockListScene` has no `interaction_domain` field for the wrapper to
     // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching
     // `dag`'s/`space`'s identical `NodeGraphScene` gap.
-    let scene = BlockListScene { steps_json, palette_json, selected_id: None, dragging_id: None, domain_id: None };
+    let scene = BlockListScene { steps, palette, selected_id: None, dragging_id: None, domain_id: None };
     semio_framework_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_framework_ui_contract::SurfaceKind::BlockList, &scene)
 }
 //#endregion 🔖️Render

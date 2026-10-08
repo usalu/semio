@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeFootingWidth, base: &En1997Snapshot) -> protocol::Mu
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "width unchanged");
     }
     protocol::MutationOutcome::new(En1997Diff {
-        footings: Some(En1997FootingsRows { modified: vec![En1997FootingsPatch { id: payload.id.clone(), width: Some(payload.new_width), ..Default::default() }], ..Default::default() }),
+        footings: Some(En1997FootingsRows::modification(&payload.id, En1997FootingsPatch { width: Some(payload.new_width), ..Default::default() })),
         ..Default::default()
     })
 }

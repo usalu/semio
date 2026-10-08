@@ -114,25 +114,6 @@ impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
         Self { splices }
     }
 
-    /// 🧭️ Minimal common-prefix/common-suffix splice: a single `ByteSplice` covering exactly
-    /// the differing middle region (empty splice list iff `base.bytes == other.bytes`).
-    fn between(base: &BinarySnapshot, other: &BinarySnapshot) -> Self {
-        let a = &base.bytes;
-        let b = &other.bytes;
-        let mut prefix = 0usize;
-        while prefix < a.len() && prefix < b.len() && a[prefix] == b[prefix] {
-            prefix += 1;
-        }
-        let mut suffix = 0usize;
-        while suffix < a.len() - prefix && suffix < b.len() - prefix && a[a.len() - 1 - suffix] == b[b.len() - 1 - suffix] {
-            suffix += 1;
-        }
-        let remove_len = a.len() - prefix - suffix;
-        let insert = b[prefix..b.len() - suffix].to_vec();
-        let splices = if remove_len == 0 && insert.is_empty() { vec![] } else { vec![ByteSplice { offset: prefix, remove_len, insert }] };
-        BinaryDiff { splices }
-    }
-
     fn is_empty(&self) -> bool {
         self.splices.is_empty()
     }
@@ -154,8 +135,7 @@ enum Lbl {
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: std::collections::HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
-    let mut added_sorted = added.to_vec();
-    added_sorted.sort_by_key(|(idx, _)| *idx);
+    let added_sorted = semio_s_artifact_stdio_contract::ordered_by_key(added, |(idx, _)| *idx);
     for (idx, label) in added_sorted {
         let pos = idx.min(survivors.len());
         survivors.insert(pos, label);

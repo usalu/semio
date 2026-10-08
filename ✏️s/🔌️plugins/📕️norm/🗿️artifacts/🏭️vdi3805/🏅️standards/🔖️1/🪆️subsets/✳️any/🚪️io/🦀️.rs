@@ -212,3 +212,24 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Vdi3805Analyzer,
     composer: Vdi3805Composer,
 );
+
+//#region 🌉️ExternalCodecBridge
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::{Vdi3805Mutation, Vdi3805Snapshot};
+
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation) -> Result<(Vdi3805Snapshot, Vec<String>), String> {
+        let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+        <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use mutation_bridge::*;
+//#endregion 🌉️ExternalCodecBridge

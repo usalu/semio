@@ -4,11 +4,15 @@
   "productGroups": null,
   "productClasses": null,
   "productSeries": {
-    "added": [],
     "removed": [
-      "series-pr"
+      {
+        "id": "series-pr",
+        "index": 0
+      }
     ],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "products": null,
   "productIndexes": null,

@@ -1,11 +1,10 @@
 //! 🎨️ Generation2d editor command — `set-active-example`.
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_host_snapshot_operations,generation_mutation_to_generation2d,Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 
 use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
 use crate::Generation2dSnapshot;
-use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -26,16 +25,17 @@ fn example_document(example_id: &str) -> Option<Generation2dSnapshot> {
     None
 }
 
-/// 🎨️ Loads the published `demo` document, clears the graph for an empty id, and ignores an unknown id.
-pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+/// 🎨️ Loads the published `demo` document, clears the graph for an empty id, and ignores an unknown id. The document rides the artifact's
+/// load effect (outside undo history); the config lane follows with the concrete selection leaf when the loaded document selects differently.
+pub fn emit(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let Some(target) = example_document(&payload.example_id) else {
         return Ok(Emit::default());
     };
-    let mut operations: Vec<Generation2dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_generation2d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
-    operations.extend(generation2d_host_snapshot_operations(&doc.snapshot.host_snapshot, &target.host_snapshot));
-    let config = Generation2dConfig { show_mode: cfg.snapshot.show_mode.clone(), selected_generation_id: None };
+    let effect = crate::editor::generation2d::reset_generation2d_document_effect(&target);
+    let selected = target.generation.selected_generation_id.clone();
     target.retire_cold();
-    Ok(Emit { artifact_mutations: operations, config_mutations: vec![Generation2dConfigMutation::Snapshot { config }], ..Default::default() })
+    let config_mutations = if cfg.snapshot.selected_generation_id == selected { Vec::new() } else { vec![Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: selected }] };
+    Ok(Emit { effects: vec![effect], config_mutations, ..Default::default() })
 }
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {

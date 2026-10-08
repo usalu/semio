@@ -121,6 +121,14 @@ pub struct MeshTransfer {
     pub edge_infos: Vec<EdgeInfo>,
 }
 
+semio_framework_value::artifact_retire_leaf!(SurfaceKind, CurveKind);
+semio_framework_value::artifact_retire_struct!(FaceGroup { start, count, entity_id });
+semio_framework_value::artifact_retire_struct!(EdgeGroup { start, count, entity_id });
+semio_framework_value::artifact_retire_struct!(VertexGroup { start, count, entity_id });
+semio_framework_value::artifact_retire_struct!(FaceInfo { entity_id, surface_kind, area, normal });
+semio_framework_value::artifact_retire_struct!(EdgeInfo { entity_id, curve_kind, length });
+semio_framework_value::artifact_retire_struct!(MeshTransfer { position, normal, index, edges, points, vertex_groups, face_groups, edge_groups, face_infos, edge_infos });
+
 /// 📍️ Point classification relative to a solid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]

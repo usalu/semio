@@ -5,7 +5,7 @@
 
 use crate::editor::gif_87a::modes::edit;
 use crate::editor::gif_87a::modes::edit::windows::main;
-use crate::standards::v87a::subsets::any::schema::mutations::{net_mutations, set_image_pixels, GifMutation};
+use crate::standards::v87a::subsets::any::schema::mutations::{edit_rules, set_image_pixels, GifMutation};
 
 use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::{GIF_87A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
@@ -148,6 +148,11 @@ impl ArtifactEditor for Gif87aEditor {
     const DIALECT: Dialect = GIF_87A_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_GIF_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<Gif87aEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -217,8 +222,11 @@ impl editing::SnapshotEditingEditor for Gif87aEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { Gif87aEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net(event, snapshot, net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

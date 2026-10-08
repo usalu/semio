@@ -41,21 +41,17 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(spec: &FormsSnapshot, config: &FormsConfig, view: &semio_framework_plugin::ViewModel, selected: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = crate::editor::forms::parse_contributions(config);
     let palette = crate::editor::forms::catalogue_kinds(&contributions, view).into_iter()
-        .map(|(kind, label, icon)| semio_framework_pack_json::json!({ "blockKind": kind, "label": label, "iconId": icon.as_str() })).collect();
-    let steps = spec.definition.steps.iter().map(|step| {
-        let blocks = step.blocks.iter().map(|question| semio_framework_pack_json::json!({
-            "id": question.id, "label": question.label, "kind": question.kind,
-            "target": { "granularity": crate::editor::forms::FORMS_INTERACTION_GRANULARITY_FIELD, "id": question.id }
-        })).collect();
-        semio_framework_pack_json::json!({
-            "id": step.id, "title": step.title, "description": step.description,
-            "target": { "granularity": crate::editor::forms::FORMS_INTERACTION_GRANULARITY_SECTION, "id": crate::schema::forms_play_step_tree_id(&step.id) },
-            "blocks": semio_framework_pack_json::Value::Array(blocks)
-        })
+        .map(|(kind,label,icon)| semio_framework_plugin::BlockListPaletteEntry {block_kind:kind,label,icon_id:icon.as_str().to_owned()}).collect();
+    let steps = spec.definition.steps.iter().map(|step| semio_framework_plugin::BlockListStep {
+        id:step.id.clone(),title:step.title.clone(),description:step.description.clone(),
+        target:Some(semio_framework_plugin::BlockListSelectionTarget {granularity:crate::editor::forms::FORMS_INTERACTION_GRANULARITY_SECTION.into(),id:crate::schema::forms_play_step_tree_id(&step.id)}),
+        blocks:step.blocks.iter().map(|question| semio_framework_plugin::BlockListBlock {
+            id:question.id.clone(),label:question.label.clone(),kind:question.kind.clone(),description:question.description.clone(),
+            target:Some(semio_framework_plugin::BlockListSelectionTarget {granularity:crate::editor::forms::FORMS_INTERACTION_GRANULARITY_FIELD.into(),id:question.id.clone()}),
+        }).collect(),
     }).collect();
     let scene = semio_framework_plugin::BlockListScene {
-        steps_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(steps)),
-        palette_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(palette)),
+        steps,palette,
         selected_id: selected.map(|id| id.strip_prefix("step:").unwrap_or(id).into()),
         dragging_id: None,
         domain_id: Some(crate::editor::forms::FORMS_INTERACTION_FIELDS.into()),

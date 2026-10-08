@@ -31,11 +31,11 @@ type DrawingImageAssetEntry {
   value: DrawingImageAsset!
 }
 
+scalar UInt32
 type DrawingImageAsset {
-  mime: String!
-  data: String!
-  width: Int
-  height: Int
+  width: UInt32!
+  height: UInt32!
+  samples: [[Int!]!]!
 }
 
 type DrawingArtboard {

@@ -2,7 +2,6 @@
 import type { SpaceArtifactDialect, SpaceArtifactRow } from "../📸️snapshot/🟦️.ts";
 
 export interface SSpaceArtifactPatch {
-  id: string;
   name?: string | null;
   kindId?: string | null;
   schema?: string | null;
@@ -13,11 +12,32 @@ export interface SSpaceArtifactPatch {
   updatedBy?: string | null;
 }
 
+export interface SSpaceArtifactRemoval {
+  id: string;
+  index: number;
+}
+
+export interface SSpaceArtifactInsertion {
+  index: number;
+  row: SpaceArtifactRow;
+}
+
+export interface SSpaceArtifactRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface SSpaceArtifactModification {
+  id: string;
+  patch: SSpaceArtifactPatch;
+}
+
 export interface SSpaceArtifactsDelta {
-  added: SpaceArtifactRow[];
-  removed: string[];
-  patched: SSpaceArtifactPatch[];
-  reordered?: string[] | null;
+  removed: SSpaceArtifactRemoval[];
+  inserted: SSpaceArtifactInsertion[];
+  moved: SSpaceArtifactRelocation[];
+  modified: SSpaceArtifactModification[];
 }
 
 export interface SSpaceDiff {

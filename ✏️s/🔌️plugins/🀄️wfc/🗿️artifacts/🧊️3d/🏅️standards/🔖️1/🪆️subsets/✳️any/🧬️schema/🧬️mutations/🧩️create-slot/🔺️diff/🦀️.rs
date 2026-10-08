@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateSlot` — a real id-keyed upsert into `slots`.
 
-use crate::diff::{Wfc3dDiff, Wfc3dRows};
+use crate::diff::{Wfc3dDiff, Wfc3dRow, Wfc3dSlotsDelta};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::CreateSlot, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -19,5 +19,5 @@ pub fn diff(payload: &super::CreateSlot, base: &Wfc3dSnapshot) -> protocol::Muta
     if payload.index != canonical {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Slot \"{}\" must be inserted at its canonical position {canonical}, not {}.", payload.slot.id, payload.index), [payload.slot.id.clone()]);
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dRows { added: vec![payload.slot.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dSlotsDelta::insertion(Wfc3dRow::insert_at(&base.slots, &payload.slot), payload.slot.clone()), ..Default::default() })
 }

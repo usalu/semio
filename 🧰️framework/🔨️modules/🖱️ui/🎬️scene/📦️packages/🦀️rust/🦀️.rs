@@ -44,4 +44,4 @@ pub use framing::{Canvas2dFraming, Canvas2dFrameCamera};
 
 #[path = "../../✂️text-splice/🦀️.rs"]
 mod text_splice;
-pub use text_splice::{rebase_text_edits, AppliedTextSplice, LocatedTextSplice, TextSplice, TextSpliceComposition, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS};
+pub use text_splice::{apply_draft_changes, compose_draft_step, write_draft_changes_json_into, DraftChangesJsonCursor, rebase_text_edits, DraftChange, DRAFT_SPLICES_ARGUMENT, AppliedTextSplice, LocatedTextSplice, TextSplice, TextSpliceComposition, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS};

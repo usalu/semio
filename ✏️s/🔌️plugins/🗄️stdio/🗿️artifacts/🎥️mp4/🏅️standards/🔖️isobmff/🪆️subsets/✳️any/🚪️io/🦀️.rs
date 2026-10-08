@@ -75,6 +75,7 @@ pub use derived_composition::*;
 // The schema retains named ISO-BMFF concepts and semantic encoded sample payloads only. Native
 // box syntax is parsed at import and deterministically rebuilt at export.
 
+use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Bitrate, Mp4Codec, Mp4CodecFormat, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA};
 
 #[path = "📦️boxes/🦀️.rs"]
@@ -1783,7 +1784,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::isobmff::subsets::any::schema::diff::Mp4Diff;
-    use crate::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation,Mp4Mutation};
+    use crate::standards::isobmff::subsets::any::schema::mutations::{Mp4Mutation};
 
     use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -1810,7 +1811,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<Mp4Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_mp4_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

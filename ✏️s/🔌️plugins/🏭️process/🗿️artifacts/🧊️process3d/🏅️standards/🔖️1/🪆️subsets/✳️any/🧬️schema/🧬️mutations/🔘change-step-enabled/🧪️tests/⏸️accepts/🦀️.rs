@@ -1,6 +1,6 @@
 //! 🧪️ `change-step-enabled` fixture — `⏸️accepts`.
 //!
-//! `change-step-enabled` sets the id-keyed step's `enabled` flag in `step_payloads` and re-mints `steps`/`tool_solids` (`process3d_step_timeline_diff`) — the flow node's `enabled` param changes, gating the step out of kernel replay.
+//! `change-step-enabled` sets the id-keyed step's `enabled` flag in `step_payloads` (`apply` re-derives `steps`/`tool_solids`) — the flow node's `enabled` param changes, gating the step out of kernel replay.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

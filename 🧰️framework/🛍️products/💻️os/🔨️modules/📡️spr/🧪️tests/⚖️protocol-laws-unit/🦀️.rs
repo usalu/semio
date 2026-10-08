@@ -400,6 +400,21 @@ async fn mutation_inverse_sum_law_holds_for_the_lawful_inverse() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_cold_holds_and_retires_every_projection_and_diff() {
+    let projections = std::cell::Cell::new(0usize);
+    let diffs = std::cell::Cell::new(0usize);
+    assert_mutation_inverse_sum_law_cold(&SumLawProbe { delta: 5, inverse: 0 }, &10i64, |_: i64| projections.set(projections.get() + 1), |_: CounterDiff| diffs.set(diffs.get() + 1)).await;
+    assert!(projections.get() >= 3, "the applied, restored and summed projections are retired, not dropped");
+    assert!(diffs.get() >= 3, "the forward, canonical-sum and canonical-negative diffs are retired, not dropped");
+}
+
+#[semio_framework_async_macros::async_test]
+#[should_panic(expected = "must restore base")]
+async fn mutation_inverse_sum_law_cold_catches_a_wrong_inverse() {
+    assert_mutation_inverse_sum_law_cold(&SumLawProbe { delta: 5, inverse: 1 }, &10i64, |_: i64| {}, |_: CounterDiff| {}).await;
+}
+
+#[semio_framework_async_macros::async_test]
 #[should_panic(expected = "must restore base")]
 async fn mutation_inverse_sum_law_catches_a_wrong_inverse() {
     assert_mutation_inverse_sum_law(&SumLawProbe { delta: 5, inverse: 1 }, &10i64).await;
@@ -438,7 +453,6 @@ crate::field_set_mutations! {
     owner: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws-unit",
     payload_schema: "probe.config",
     emoji: "🎚️",
-    replace: Snapshot { config } wire "snapshot" kind "set-snapshot" name "Set Snapshot",
     fields: {
         label: String => SetLabel "set-label",
         count: u32 => SetCount "set-count",
@@ -450,7 +464,7 @@ fn probe_config() -> ProbeConfig {
     ProbeConfig { label: "base".into(), count: 1, note: Some("n".into()) }
 }
 
-/// ⚖️ LAW: every generated set mutation (and the replace variant) satisfies the inverse-sum law: its inverse is the set of the base
+/// ⚖️ LAW: every generated set mutation satisfies the inverse-sum law: its inverse is the set of the base
 /// value, and the inverse diffs sum to the negative diff.
 #[semio_framework_async_macros::async_test]
 async fn generated_set_mutations_satisfy_the_inverse_sum_law() {
@@ -461,15 +475,13 @@ async fn generated_set_mutations_satisfy_the_inverse_sum_law() {
         ProbeConfigSet::SetNote(None),
         ProbeConfigSet::SetNote(Some("other".into())),
         ProbeConfigSet::SetCount(1),
-        ProbeConfigSet::Snapshot { config: ProbeConfig { label: "next".into(), count: 9, note: None } },
-        ProbeConfigSet::Snapshot { config: base.clone() },
     ] {
         assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }
 
-/// ⚖️ LAW: a generated diff carries only the slots a mutation owns, an unchanged value is an empty outcome, the replace variant sets only the
-/// slots where it differs from the base, `absorb` is later-slot-wins, and the wire round trips in text and binary.
+/// ⚖️ LAW: a generated diff carries only the slots a mutation owns, an unchanged value is an empty outcome, `setting` yields one set
+/// mutation per changed field, `absorb` is later-slot-wins, and the wire round trips in text and binary.
 #[test]
 fn generated_diffs_are_sparse_and_the_wire_round_trips() {
     use crate::os_spr::{apply_diff, DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
@@ -477,15 +489,16 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
     let set = ProbeConfigSet::SetCount(9);
     assert_eq!(*set.diff(&base).diff(), ProbeConfigDiff { count: Some(9), ..Default::default() });
     assert!(DiffAlgebra::<ProbeConfig>::is_empty(ProbeConfigSet::SetCount(1).diff(&base).diff()), "an unchanged value changes nothing");
-    let replace = ProbeConfigSet::Snapshot { config: ProbeConfig { label: "base".into(), count: 4, note: None } };
-    assert_eq!(*replace.diff(&base).diff(), ProbeConfigDiff { count: Some(4), note: Some(None), ..Default::default() }, "only the differing slots, a cleared option included");
+    let next = ProbeConfig { label: "base".into(), count: 4, note: None };
+    let steps = ProbeConfigSet::setting(&base, &next);
+    assert_eq!(steps, vec![ProbeConfigSet::SetCount(4), ProbeConfigSet::SetNote(None)], "one set mutation per changed field, in field order");
+    assert!(ProbeConfigSet::setting(&base, &base).is_empty(), "an identical record needs no mutation");
     let mut sum = ProbeConfigDiff { count: Some(2), ..Default::default() };
     sum.absorb(ProbeConfigDiff { count: Some(3), label: Some("x".into()), ..Default::default() });
     assert_eq!(sum, ProbeConfigDiff { count: Some(3), label: Some("x".into()), note: None });
     assert_eq!(apply_diff(&sum, &base), Ok(ProbeConfig { label: "x".into(), count: 3, note: Some("n".into()) }));
     assert_eq!(<ProbeConfigDiff as DiffAlgebra<ProbeConfig>>::inverse(&sum, &base), ProbeConfigDiff { count: Some(1), label: Some("base".into()), note: None });
-    assert_eq!(<ProbeConfigDiff as DiffAlgebra<ProbeConfig>>::between(&base, &ProbeConfig { note: None, ..base.clone() }), ProbeConfigDiff { note: Some(None), ..Default::default() });
-    for mutation in [set, replace, ProbeConfigSet::SetNote(None)] {
+    for mutation in [set, ProbeConfigSet::SetNote(None)] {
         let text = mutation.print_op();
         assert_eq!(ProbeConfigSet::parse_op(&text).expect("the text parses"), mutation, "{text}");
         assert_eq!(ProbeConfigSet::decode_op(&mutation.encode_op().expect("encodes")).expect("decodes"), mutation);
@@ -515,12 +528,44 @@ fn the_whole_diff_replaces_an_indivisible_record() {
     let value = semio_framework_value::ToValue::to_value(&diff);
     assert_eq!(<ProbeConfigWholeDiff as semio_framework_value::FromValue>::from_value(value).expect("decodes"), diff);
 }
-//#endregion 🧬️GeneratedConfig
 
-#[semio_framework_async_macros::async_test]
-async fn diff_algebra_between_law_holds_for_add() {
-    assert_diff_algebra_between_law::<i64, CounterDiff>(&10, &17).await;
+/// 🧪️ A probe record with a map-valued field whose sparse diff carries keyed rows.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+struct KeyedProbe {
+    name: String,
+    cameras: std::collections::BTreeMap<String, u32>,
 }
+
+crate::sparse_record_diff! { record: KeyedProbe, diff: KeyedProbeDiff, fields: { name: String }, keyed: { cameras: u32 } }
+
+/// ⚖️ LAW: a keyed field's diff is rows per key — insert, replace, remove — never the whole map: `changing` builds exactly the differing
+/// rows, `apply` refuses a duplicate insert and a missing replace/remove, the inverse undoes each row from the base, `absorb` composes
+/// per key (insert then remove cancels, remove then insert is a replace), and the wire round trips.
+#[semio_framework_async_macros::async_test]
+async fn keyed_rows_replace_the_whole_map_slot() {
+    use crate::os_spr::{apply_diff, DiffAlgebra, MutationDiff};
+    use crate::KeyedRow;
+    let base = KeyedProbe { name: "n".into(), cameras: [("a".to_string(), 1), ("b".to_string(), 2)].into() };
+    let next = KeyedProbe { name: "n".into(), cameras: [("b".to_string(), 5), ("c".to_string(), 3)].into() };
+    let diff = KeyedProbeDiff::changing(&base, &next);
+    assert_eq!(diff.name, None);
+    assert_eq!(diff.cameras, [("a".to_string(), KeyedRow::Remove), ("b".to_string(), KeyedRow::Replace(5)), ("c".to_string(), KeyedRow::Insert(3))].into(), "one row per changed key");
+    assert_eq!(apply_diff(&diff, &base), Ok(next.clone()));
+    assert_diff_algebra_inverse_law(&base, &diff).await;
+    assert_eq!(<KeyedProbeDiff as DiffAlgebra<KeyedProbe>>::inverse(&diff, &base).cameras, [("a".to_string(), KeyedRow::Insert(1)), ("b".to_string(), KeyedRow::Replace(2)), ("c".to_string(), KeyedRow::Remove)].into());
+    let refused = |rows: &[(&str, KeyedRow<u32>)]| apply_diff(&KeyedProbeDiff { cameras: rows.iter().map(|(key, row)| (key.to_string(), row.clone())).collect(), ..Default::default() }, &base).expect_err("refused").code;
+    assert_eq!(refused(&[("a", KeyedRow::Insert(9))]), "mutation.apply.duplicate-target");
+    assert_eq!(refused(&[("z", KeyedRow::Replace(9))]), "mutation.apply.missing-target");
+    assert_eq!(refused(&[("z", KeyedRow::Remove)]), "mutation.apply.missing-target");
+    let mut sum = KeyedProbeDiff { cameras: [("x".to_string(), KeyedRow::Insert(1)), ("a".to_string(), KeyedRow::Remove)].into(), ..Default::default() };
+    sum.absorb(KeyedProbeDiff { cameras: [("x".to_string(), KeyedRow::Remove), ("a".to_string(), KeyedRow::Insert(7)), ("b".to_string(), KeyedRow::Replace(8))].into(), ..Default::default() });
+    assert_eq!(sum.cameras, [("a".to_string(), KeyedRow::Replace(7)), ("b".to_string(), KeyedRow::Replace(8))].into(), "insert-then-remove cancels, remove-then-insert replaces");
+    assert!(DiffAlgebra::<KeyedProbe>::is_empty(&KeyedProbeDiff::default()));
+    let value = semio_framework_value::ToValue::to_value(&diff);
+    assert_eq!(<KeyedProbeDiff as semio_framework_value::FromValue>::from_value(value).expect("the keyed diff decodes"), diff);
+}
+//#endregion 🧬️GeneratedConfig
 
 #[semio_framework_async_macros::async_test]
 async fn diff_algebra_inverse_law_holds_for_add() {

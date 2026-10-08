@@ -1,0 +1,50 @@
+{
+  "capturedAt": "2026-10-08T17:12:53.420Z",
+  "ownedEndpoints": [
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧬️schema/🔣️.json",
+      "removed": true
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+      "bytes": 2735,
+      "sha256": "2a88dcc99d85285e1bb785e5321c45cf6559a5247feb3cee5de281176f322216"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts",
+      "bytes": 15985,
+      "sha256": "338a2971d16de2df9ef0504a681e937c766c169613a7da2527a595b31d9bb8de"
+    }
+  ],
+  "retainedObservations": [
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧫️fixtures/🔣️.json",
+      "sha256": "88d443a5f4238adc4555a92497aa65c141544856f64d99c86e9aa04bdf029eed"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📜️script.ts",
+      "sha256": "372983153b604e7a5fb9ccb2eb0f623cc2c3f9d6cf6fb7b3dcae5fb0e375f14b"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+      "sha256": "ec3724fcbc8823dd1fc12db817ccf6dc4376e3ed012ddc0a9d4ac7619d30f568"
+    }
+  ],
+  "nativeCoreChanged": [],
+  "placementInventory": "🗑️generated/oct8-hub-wgpu-corpus-green-artifacts/hub-wgpu-corpus-inventory.json",
+  "red": {
+    "session": 31186,
+    "exit": 1,
+    "duration": "848ms",
+    "log": "🗑️generated/oct8-hub-wgpu-corpus-red2.log"
+  },
+  "green": {
+    "session": 45834,
+    "exit": 0,
+    "duration": "1.3s",
+    "tests": 6,
+    "assertions": 460,
+    "log": "🗑️generated/oct8-hub-wgpu-corpus-green.log"
+  },
+  "hubControlledChanged": []
+}

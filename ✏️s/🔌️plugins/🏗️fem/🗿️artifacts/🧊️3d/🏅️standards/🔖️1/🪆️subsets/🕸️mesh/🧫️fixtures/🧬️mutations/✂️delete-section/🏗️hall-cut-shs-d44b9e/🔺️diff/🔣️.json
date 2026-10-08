@@ -3,12 +3,15 @@
   "elements": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "sec_strut"
+      {
+        "id": "sec_strut",
+        "index": 4
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "solids": null,
   "supports": null,

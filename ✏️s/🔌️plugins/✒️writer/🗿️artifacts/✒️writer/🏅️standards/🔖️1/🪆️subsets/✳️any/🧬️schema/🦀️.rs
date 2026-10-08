@@ -4,7 +4,6 @@ use crate::{document_child_handle_with_text, WriterDocumentChild, WriterSnapshot
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]

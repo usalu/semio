@@ -1,13 +1,15 @@
 {
   "positions": {
-    "added": [],
     "removed": [],
-    "patched": [],
-    "reordered": [
-      "pos-lighthouse",
-      "pos-quay",
-      "pos-harbor"
-    ]
+    "inserted": [],
+    "moved": [
+      {
+        "id": "pos-harbor",
+        "from": 0,
+        "to": 2
+      }
+    ],
+    "modified": []
   },
   "routes": null,
   "regions": null

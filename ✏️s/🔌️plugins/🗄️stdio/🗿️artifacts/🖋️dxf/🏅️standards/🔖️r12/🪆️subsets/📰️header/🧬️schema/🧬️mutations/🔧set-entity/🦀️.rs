@@ -16,7 +16,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { index, entity } = self;
         protocol::MutationOutcome::new(match base.entities.get(*index) {
-            Some(old) => diff_set_entity(*index, entity_diff_between_pub(old, entity)),
+            Some(old) => diff_set_entity(*index, entity_field_changes(old, entity)),
             None => diff_insert_entity(*index, entity.clone()),
         })
     }

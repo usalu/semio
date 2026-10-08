@@ -91,7 +91,7 @@ fn print_text_mutation(m: &SemioTextMutation) -> String {
     match m {
         SemioTextMutation::InsertRun(p) => format!("insertRun:{},{}", p.index, enc_run(&p.run)),
         SemioTextMutation::RemoveRun(p) => format!("removeRun:{}", p.index),
-        SemioTextMutation::EditRun(p) => format!("editRun:{},{}", p.index, enc_str(&p.new_content)),
+        SemioTextMutation::EditRun(p) => format!("editRun:{},{}", p.index, enc_str(&p.new_text)),
         SemioTextMutation::ChangeRunLanguage(p) => format!("changeRunLanguage:{},{}", p.index, enc_str(&p.new_language)),
         SemioTextMutation::ReorderRuns(p) => format!("reorderRuns:{},{}", p.from, p.to),
         SemioTextMutation::AddMark(p) => format!("addMark:{},{},{}", p.run_index, p.index, enc_mark(&p.mark)),
@@ -110,7 +110,7 @@ fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
         "removeRun" => Ok(SemioTextMutation::RemoveRun(RemoveRun { index: parse_usize(rest)? })),
         "editRun" => {
             let (idx, content) = rest.split_once(',').ok_or_else(|| "editRun: missing comma".to_string())?;
-            Ok(SemioTextMutation::EditRun(EditRun { index: parse_usize(idx)?, new_content: dec_str(content)? }))
+            Ok(SemioTextMutation::EditRun(EditRun { index: parse_usize(idx)?, new_text: dec_str(content)? }))
         }
         "changeRunLanguage" => {
             let (idx, lang) = rest.split_once(',').ok_or_else(|| "changeRunLanguage: missing comma".to_string())?;
@@ -154,7 +154,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioTextMutation> {
     vec![
         SemioTextMutation::InsertRun(InsertRun { index: 1, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }),
         SemioTextMutation::RemoveRun(RemoveRun { index: 0 }),
-        SemioTextMutation::EditRun(EditRun { index: 0, new_content: "greetings".into() }),
+        SemioTextMutation::EditRun(EditRun { index: 0, new_text: "greetings".into() }),
         SemioTextMutation::ChangeRunLanguage(ChangeRunLanguage { index: 0, new_language: "fr".into() }),
         SemioTextMutation::ReorderRuns(ReorderRuns { from: 0, to: 1 }),
         SemioTextMutation::AddMark(AddMark { run_index: 0, index: 0, mark: SemioTextMark { kind: SemioTextMarkKind::Link, href: "https://semio.tech".into() } }),

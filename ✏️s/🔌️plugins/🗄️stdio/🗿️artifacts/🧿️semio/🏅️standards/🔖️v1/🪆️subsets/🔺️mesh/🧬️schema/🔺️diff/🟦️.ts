@@ -3,7 +3,7 @@
 import type { SemioMesh, SemioMaterial, SemioTexture, SemioPrimitive, SemioTopology, SemioPoint3, SemioUv, SemioRgba } from "../📸️snapshot/🟦️";
 
 export interface NamedModified<K, D> { key: K; diff: D; }
-export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: T[]; }
+export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: NamedAdded<T>[]; }
 
 export interface SemioPrimitiveDiff {
   topology?: SemioTopology;
@@ -97,3 +97,6 @@ export function parseSemioMeshDiff(value: unknown, at = "$"): SemioMeshDiff {
     textures: row["textures"] === undefined ? undefined : stdioSemioV1MeshDiffGuardObject(row["textures"], `${at}.textures`),
   };
 }
+
+/** 🧩 One positional add: the row and the final index it lands at. */
+export interface NamedAdded<T> { index: number; item: T }

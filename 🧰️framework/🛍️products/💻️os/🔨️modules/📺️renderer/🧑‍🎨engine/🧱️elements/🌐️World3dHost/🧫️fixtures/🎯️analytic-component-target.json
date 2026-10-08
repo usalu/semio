@@ -242,4 +242,118 @@
       ]
     }
   ]
+,
+  "mountedAdmissions": {
+    "domain": "procedural.preview.mesh",
+    "faceIndex": 0,
+    "faceGroup": 0,
+    "cases": [
+      {
+        "name": "current exact uint64 source",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "labels": [
+          "18446744073709551615"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expectedOverlayCount": 1
+      },
+      {
+        "name": "malformed source handle",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "labels": [
+          "18446744073709551615"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": null,
+        "expectedOverlayCount": 0
+      },
+      {
+        "name": "malformed exact label",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "labels": [
+          "18446744073709551615\n"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": null,
+        "expectedOverlayCount": 0
+      },
+      {
+        "name": "zero exact label",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "labels": [
+          "0"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": null,
+        "expectedOverlayCount": 0
+      },
+      {
+        "name": "overflow exact label",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "labels": [
+          "18446744073709551616"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": null,
+        "expectedOverlayCount": 0
+      },
+      {
+        "name": "duplicate exact label",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "labels": [
+          "18446744073709551615",
+          "18446744073709551615"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": null,
+        "expectedOverlayCount": 0
+      },
+      {
+        "name": "stale selection after source refresh",
+        "source": {
+          "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "labels": [
+          "18446744073709551615"
+        ],
+        "selectedTargets": [
+          "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "expectedTarget": "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "expectedOverlayCount": 0
+      }
+    ]
+  }
 }

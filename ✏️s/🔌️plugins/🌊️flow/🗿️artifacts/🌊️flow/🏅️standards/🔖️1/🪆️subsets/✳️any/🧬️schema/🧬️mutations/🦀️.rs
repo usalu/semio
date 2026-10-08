@@ -2,7 +2,7 @@
 //! §20.15): a flow's widgets, synapses and layout live in its composed `content` child (`s.stdio.semio@v1/flow`), so every
 //! content edit is a child-lane leaf in that child's store (`insert-node`, `remove-edge`, `drag-nodes`, `set-node-param`, …)
 //! and the parent owns no leaf that could read the child. Editors publish those child leaves
-//! (`crate::editor::flow::flow_content_leaves`, `crate::editor::flow::flow_removal_leaves`).
+//! (`crate::editor::flow::edit_rules::ContentEdit`, `crate::editor::flow::flow_removal_leaves`).
 
 use crate::standards::v1::subsets::any::schema::diff::FlowDiff;
 use crate::FlowSnapshot;

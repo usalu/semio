@@ -9,6 +9,7 @@ pub mod derived_composition {
     use crate::standards::v1_0::subsets::base::io::XmlComposer as XmlAnyComposer;
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
     use semio_framework_diagnostic::Diagnostic;
+use crate::apply_mutation;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
@@ -99,7 +100,7 @@ pub mod derived_construction {
     use crate::standards::v1_0::subsets::base::schema::diff::XmlDiff;
     use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-    use crate::standards::v1_0::subsets::valid::schema::valid_mutations::{apply_xml_valid_mutation, XmlValidMutation};
+    use crate::standards::v1_0::subsets::valid::schema::valid_mutations::{XmlValidMutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -137,7 +138,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = apply_xml_valid_mutation(&mut self.snapshot, &mutation);
+            let outcome = apply_mutation(&mut self.snapshot, &mutation);
             (self, outcome)
         }
 

@@ -589,10 +589,6 @@
         "✂️unbind": "unbind-morph-target-attribute",
         "🚚️move": "move-morph-target-attribute",
         "🔀️reorder": "reorder-morph-target-attributes"
-      },
-      "📸️snapshot": {
-        "📸️set": "set-snapshot",
-        "🩹️patch": "patch-snapshot"
       }
     }
   },

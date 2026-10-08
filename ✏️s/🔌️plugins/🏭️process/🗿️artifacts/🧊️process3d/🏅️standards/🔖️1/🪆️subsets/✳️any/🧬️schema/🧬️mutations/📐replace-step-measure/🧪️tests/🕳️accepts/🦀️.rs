@@ -1,6 +1,6 @@
 //! 🧪️ `replace-step-measure` fixture — `🕳️accepts`.
 //!
-//! `replace-step-measure` swaps the id-keyed step's whole `ProcessMeasure` — the internally-tagged geometry enum the kernel replays — in `step_payloads` and re-mints `steps`/`tool_solids` (`process3d_step_timeline_diff`); swapping a `Cut` for a `Drill` also drops that step's tool solid, since `Drill` mints none.
+//! `replace-step-measure` swaps the id-keyed step's whole `ProcessMeasure` — the internally-tagged geometry enum the kernel replays — in `step_payloads` (`apply` re-derives `steps`/`tool_solids`); swapping a `Cut` for a `Drill` also drops that step's tool solid, since `Drill` mints none.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

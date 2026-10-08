@@ -13,7 +13,8 @@
 //! 👻️ A `replace-load` re-resolves the replacement's own target exactly as `add-load` does, so a load cannot be re-pointed at a node this base never had.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

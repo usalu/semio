@@ -1,0 +1,630 @@
+{
+  "version": 1,
+  "compositionConfigPath": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts",
+  "declarations": [
+    {
+      "path": "🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"trinity-jack\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"trinity-rewriting\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"remodel\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"animate\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"sequence\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"reasoning-wires\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"writer\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"block2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"block3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"block5d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-binary\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-deflate\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-zip\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-zip-iso21320\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-epw\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-svg\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-svg-basic\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-svg-tiny\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-png\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-jpg\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-jpg-baseline\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-gif-87a\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-gif-89a\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-bmp\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-tiff\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-tiff-baseline\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"demonstrator\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"generator\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"koordinator\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"aggregator\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"aussuchen\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"bearbeiten\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"verfolgen\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-gltf\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-obj\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-stl\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-ply\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-las\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"generation2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"generation3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-mp4\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-avi\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-mp3\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-wav\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"process3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-brep\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-drawing\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-graph\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-kit\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-mesh\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-object\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-table\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-text\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-animation\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-audio\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-cad\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-document\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-flow\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-image\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-model\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-presentation\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-value\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-semio-video\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-docx\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-docx-strict\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-docx-transitional\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pptx\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pptx-strict\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pptx-transitional\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-xlsx\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-xlsx-strict\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-xlsx-transitional\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"gis2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"gis3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"raster\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-ifc-2x3\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-ifc-2x3-cobie\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-ifc-2x3-cv20\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-ifc-2x3-sav\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-ifc-4\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-bcf\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step-cc1\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step-cc2\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step-cc3\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step-cc4\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step-cc5\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-step-cc6\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-dwg-ac1018\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-dwg-ac1024\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-dxf\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"bitmap\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"grid2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"wfc2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"grid3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"wfc3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"energy\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-4-a\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-4\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-4-x\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7-a\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7-e\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7-h\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7-ua\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7-vt\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-pdf-1-7-x\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"imperative\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"lowpoly\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-txt\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-xml\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-xml-valid\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-json\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-json-i\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-csv\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-tsv\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"stdio-html\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"shooting\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"flow\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"playbook\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"draw\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"architect\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"cad\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"fem2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"fem3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"note\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"forms\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"puzzle2d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"puzzle3d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"puzzle5d\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"sourcing\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"vcs\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"layout\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"mathematical\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"bim\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"s\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"home\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"space\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"dag\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"din4108\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"din16798\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"din18599\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1990\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1991\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1992\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1993\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1994\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1995\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1996\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1997\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1998\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"en1999\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"iso16757\""
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+      "line": "variant = \"vdi3805\""
+    }
+  ]
+}

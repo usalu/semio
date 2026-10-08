@@ -20,6 +20,7 @@ consumes = ["playbook.blockKind"]
 
 [[package.metadata.semio.playground]]
 variant = "playbook"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6085, wgpu = 6185 }
 
 [lib]

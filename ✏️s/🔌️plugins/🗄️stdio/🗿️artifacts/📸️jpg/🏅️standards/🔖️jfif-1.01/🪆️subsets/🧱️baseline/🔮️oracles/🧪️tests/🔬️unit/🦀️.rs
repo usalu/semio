@@ -19,9 +19,9 @@ fn libjpeg_reads_the_real_scan_inside_the_baseline_class() {
     assert_eq!(verdict(&axes), Vec::<&str>::new());
 }
 
-/// 🛡️ Every kind moves its own axis, and the codes are the ones T.81's tables name.
+/// 🛡️ Every native profile moves its own observation axis, and the codes are the ones T.81's tables name.
 #[test]
-fn every_kind_moves_its_axis_and_the_verdict_the_tables_name() {
+fn every_native_profile_moves_its_axis_and_verdict() {
     let axes = Axes { sof_marker: 0xC0, precision: 8, arithmetic: false, huffman_tables: vec![("dc".to_string(), 0), ("ac".to_string(), 0), ("dc".to_string(), 1), ("ac".to_string(), 1)], components: vec![(1, 1, 1), (2, 1, 1), (3, 1, 1)] };
     let json = |text: &str| semio_repo_test_host::parse_json(text).expect("params");
     for (kind, params, code) in [
@@ -34,7 +34,7 @@ fn every_kind_moves_its_axis_and_the_verdict_the_tables_name() {
         ("remove-frame-component", r#"{"id": 3}"#, None),
         ("set-component-sampling", r#"{"id": 1, "hSampling": 5, "vSampling": 1}"#, Some("stdio.jpg.baseline.component-sampling")),
     ] {
-        let next = apply(&axes, kind, &json(params)).expect("applies");
+        let next = profile(&axes, kind, &json(params)).expect("applies");
         assert_ne!(project(&next), project(&axes), "{kind} must move the projection");
         assert_eq!(verdict(&next).first().copied(), code, "{kind}");
     }

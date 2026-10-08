@@ -4,12 +4,15 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "shs100"
+      {
+        "id": "shs100",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "supports": null,
   "loadCases": null,

@@ -23,9 +23,6 @@ impl crate::mutation::DiffAlgebra<i64> for CausalAddDiff {
     fn inverse(&self, _base: &i64) -> Self {
         Self { delta: -self.delta }
     }
-    fn between(base: &i64, other: &i64) -> Self {
-        Self { delta: other - base }
-    }
     fn is_empty(&self) -> bool {
         self.delta == 0
     }
@@ -720,4 +717,19 @@ fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_all
         }
         assert_eq!(freed,birth);assert_eq!(dag.next_backing_release_byte_demand(),0);let(_,requested,released)=crate::test_allocation::observe_backing(||drop(dag));assert_eq!((requested,released),(0,0));println!("[DEBUG] causal case={} exact-original-slots={count} pages/metadata={turns} Systemrelease={freed}; zero/one-below retain; terminalDrop0heap",case["name"]);
     }
+}
+
+#[test]
+fn causal_empty_shell_has_no_physical_birth_or_terminal_release() {
+    let (mut empty, requested, released) = crate::test_allocation::observe_backing(MutationDag::empty);
+    assert_eq!((requested, released), (0, 0));
+    assert!(empty.terminal_is_empty() && empty.backing_is_empty());
+    assert_eq!(empty.next_backing_release_byte_demand(), 0);
+    assert!(empty.take_one_close_owner().is_none());
+    let (step, requested, released) = crate::test_allocation::observe_backing(|| empty.close_backing_step(0, 0));
+    assert_eq!(step, (0, 0, true));
+    assert_eq!((requested, released), (0, 0));
+    let (_, requested, released) = crate::test_allocation::observe_backing(|| drop(empty));
+    assert_eq!((requested, released), (0, 0));
+    println!("[DEBUG] genuine causal terminal shell System birth=0 release=0; original owner transfers without allocating a replacement");
 }

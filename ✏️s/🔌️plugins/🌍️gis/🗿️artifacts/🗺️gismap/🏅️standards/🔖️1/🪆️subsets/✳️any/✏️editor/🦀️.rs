@@ -16,7 +16,6 @@ use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::editor::gis2d::terminology::gis2d_labels;
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::schema::{positions_operations, regions_operations, routes_operations};
 use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::{artifact_kind, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -965,11 +964,8 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(gis2d_io())
     }
 
-    // 🧬️ No `whole_document_operation` override: per the taxonomy's banned-vocabulary rule, whole-
-    // document replace has no in-history mutation — `document:in` falls back to the trait's own
-    // default (`None`) and returns `MediaError::NotImplemented`. `setActiveExample` (this app's real
-    // document-replacing gesture) goes through `positions_operations`/`routes_operations`/
-    // `regions_operations` instead, diffing into batched create/delete/replace-data operations.
+    // 🧬️ Whole-document replace has no in-history mutation — `document:in`, `features:in` and
+    // `setActiveExample` are document loads (`Effect::LoadDocument`, no history row, no before/after diffing).
 
     /// 🎞️ `map:out` (see `gis2d_map_media` in `🔖️Io` below) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
@@ -986,9 +982,9 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    /// 🎞️ `features:in` normalizes an incoming `{positions,routes,regions}` descriptor into granular
-    /// add/patch/remove operations against every collection (a generic vector-features sink — not
-    /// pinned to `2d.map`, so a `draw`/another `gis2d`'s producer both work) plus the inherited
+    /// 🎞️ `features:in` loads an incoming `{positions,routes,regions}` descriptor as the document's
+    /// feature collections (a generic vector-features sink — not pinned to `2d.map`, so a
+    /// `draw`/another `gis2d`'s producer both work) plus the inherited
     /// `document:in` default (replicated inline for the same reason as `export_media`).
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Emit<GisMapMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
@@ -997,11 +993,8 @@ impl ArtifactEditor for Gis2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "features:in only accepts a Structured JSON payload".into()));
                 };
                 let incoming = gis_map_document_from_descriptor_json(json);
-                let document = doc.snapshot;
-                let mut operations = positions_operations(&document.positions, &incoming.positions);
-                operations.extend(routes_operations(&document.routes, &incoming.routes));
-                operations.extend(regions_operations(&document.regions, &incoming.regions));
-                Ok(Emit::mutations(operations))
+                let loaded = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: incoming.positions, routes: incoming.routes, regions: incoming.regions, ..doc.snapshot.clone() });
+                Ok(semio_framework_plugin::app::document_load_emit(&loaded, Self::DOCUMENT_SCHEMA))
             }
             "artifact:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -1009,10 +1002,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let snapshot = <GisMapSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(snapshot) {
-                    Some(operation) => Ok(Emit::mutations(vec![operation])),
-                    None => Err(MediaError::NotImplemented),
-                }
+                Ok(semio_framework_plugin::app::document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA))
             }
             _ => Err(MediaError::NotImplemented),
         }

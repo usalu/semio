@@ -1,7 +1,6 @@
 //! 🔺️ `reorder-step` — sparse diff construction.
 
 use super::mutation::ReorderStep;
-use crate::schema::diff::forms_diff_from_delta;
 use crate::schema::diff::FormsStepsDelta;
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
@@ -11,13 +10,10 @@ pub fn diff_reorder_step(payload: &ReorderStep, base: &FormsSnapshot) -> protoco
     let Some(current_index) = steps.iter().position(|step| step.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    let mut order: Vec<String> = steps.iter().map(|step| step.id.clone()).collect();
-    order.retain(|id| id != &payload.id);
-    let at = payload.to_index.min(order.len());
+    let at = payload.to_index.min(steps.len() - 1);
     if at == current_index {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already at index {at}.", payload.id));
     }
-    order.insert(at, payload.id.clone());
-    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { reordered: Some(order), ..Default::default() }, base))
+    protocol::MutationOutcome::new(FormsDiff { steps: Some(FormsStepsDelta::relocation(&steps, current_index, at)), ..Default::default() })
 }
 //#endregion 🔖️Diff

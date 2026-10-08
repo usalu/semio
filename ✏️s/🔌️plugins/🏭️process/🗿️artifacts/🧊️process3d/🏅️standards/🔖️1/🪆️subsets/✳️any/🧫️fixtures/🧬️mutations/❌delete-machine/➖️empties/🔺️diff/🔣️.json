@@ -1,18 +1,19 @@
 {
   "workshop": {
-    "added": [],
     "removed": [
-      "saw"
+      {
+        "id": "saw",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "stockId": null,
   "stockLabel": null,
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": null,
-  "stepPayloads": null,
-  "toolSolids": null
+  "stepPayloads": null
 }

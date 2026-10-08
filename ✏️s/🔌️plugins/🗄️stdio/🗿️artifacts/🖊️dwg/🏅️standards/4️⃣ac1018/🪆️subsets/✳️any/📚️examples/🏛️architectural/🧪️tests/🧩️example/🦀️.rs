@@ -1,8 +1,9 @@
 //! 🧪️ Tests for example `🏛️architectural` — real fixture, real D1/D2 decode assertions.
 
+use crate::apply_mutation;
 use crate::examples::architectural::{source, DOCUMENT_BYTES};
 use crate::schema::diff::DwgDiff;
-use crate::schema::mutations::{apply_dwg_mutation, set_version_info, DwgMutation};
+use crate::schema::mutations::{set_version_info, DwgMutation};
 use crate::schema::snapshot::{DwgSnapshot};
 use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::{encode_dwg};
 use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::{decode_dwg};
@@ -162,12 +163,12 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     let composition = crate::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
     assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export").await;
 
-    let empty = DwgDiff::between(&original, &original);
+    let empty = DwgDiff::default();
     assert!(empty.is_empty());
     assert_fixture_bytes(&encode_dwg(&protocol::apply_diff(&empty, &original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export").await;
 
     let mut no_op = original.clone();
-    let no_op_diff = apply_dwg_mutation(&mut no_op, &DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version, codepage: original.codepage }));
+    let no_op_diff = apply_mutation(&mut no_op, &DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version, codepage: original.codepage }));
     assert!(no_op_diff.diff().is_empty());
     assert_fixture_bytes(&encode_dwg(&no_op).expect("no-op mutation export"), "no-op mutation export").await;
 

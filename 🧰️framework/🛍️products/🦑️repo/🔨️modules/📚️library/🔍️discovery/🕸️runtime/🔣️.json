@@ -9,11 +9,7 @@
   "browserMountConfig": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
   "nativeBrowserProducer": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
   "nativeBrowserProject": "@semio-tech/framework-renderer-wgpu",
-  "actorProvenanceOwner": "🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts",
-  "actorCatalogOwner": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-  "actorDevelopmentOwner": "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
   "actorFactoryOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
   "actorDescriptorOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
-  "actorChildOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/👷️worker/🟦️.ts",
-  "actorProject": "os-hub"
+  "actorChildOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/👷️worker/🟦️.ts"
 }

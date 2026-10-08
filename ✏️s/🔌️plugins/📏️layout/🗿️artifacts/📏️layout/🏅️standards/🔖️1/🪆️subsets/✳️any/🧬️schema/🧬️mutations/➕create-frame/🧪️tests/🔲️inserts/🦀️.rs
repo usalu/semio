@@ -84,24 +84,24 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-frame/inserts-a-rect-frame-at-index-1: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    let patch = &produced.diff().pages.as_ref().expect("create-frame fills the pages delta").patched[0].patch;
-    let added = patch.frame_added.as_ref().expect("create-frame fills the page patch's `frame_added` fragment");
-    assert_eq!(added.frame.id(), "frame-badge", "the `frame_added` fragment carries the payload frame verbatim");
-    assert_eq!(added.index, Some(1), "the `frame_added` fragment carries the requested insertion index");
-    assert_eq!(added.layer_id.as_deref(), Some("layer-1"), "the `frame_added` fragment carries the layer to register on");
-    assert!(patch.frame_removed.is_none() && patch.frames_patched.is_empty(), "create-frame emits only the `frame_added` fragment");
+    let patch = &produced.diff().pages.as_ref().expect("create-frame fills the pages delta").modified[0].patch;
+    let [added] = patch.frames.inserted.as_slice() else { panic!("create-frame fills the page patch's `frames.inserted` with exactly one row") };
+    assert_eq!(added.row.id(), "frame-badge", "the inserted row carries the payload frame");
+    assert_eq!(added.index, 1, "the inserted row carries its index in the resulting frame list");
+    assert_eq!(added.row.layer_id(), "layer-1", "the inserted row carries the layer it registers on");
+    assert!(patch.frames.removed.is_empty() && patch.frames.moved.is_empty() && patch.frames.modified.is_empty() && patch.layers.is_empty(), "create-frame emits only the `frames.inserted` row");
 }
 
 /// 🔺️ The sparse delta `create-frame` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here the frame insert rides inside `pages.patched[0].patch.frame_added` — a NESTED page patch, never a top-level frames collection.
+/// end state matches. Here the frame insert rides inside `pages.modified[0].patch.frames.inserted` — a NESTED page patch, never a top-level frames collection.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-frame/inserts-a-rect-frame-at-index-1: create-frame must emit the insert as a nested `frame_added` fragment of a page patch");
+    assert_eq!(produced, committed, "create-frame/inserts-a-rect-frame-at-index-1: create-frame must emit the insert as a nested `frames.inserted` row of a page patch");
 }
 
 /// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has

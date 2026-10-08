@@ -1,0 +1,7 @@
+# Five Wrapper Edits and Recreation Writers
+
+Current BIM SQLite test preserves per-case validation against actual document/snapshot schemas at line 15; witnessSchema import and whole-law compiler are absent. Current Store source-authority and snapshot preparation-birth tests preserve independent RFC6902 refusal/ownership transitions and exact grants/outcomes while whole-law Ajv checks are absent. Current Replication drafts test preserves SQLite insertion and capacity checks, cancellation-prefix deletion and RFC6902 terminal assertions. These are source observations, not a test run. Infinite inline-source ownership had no TS schema compiler match in the bounded world census.
+
+Bounded TS/Rust writer searches in mesh-engine, BREP validation and Flow host found no writer of the three recreated schema declarations. The mesh attribute test does write copied assets into an explicit caller-owned sandbox, using targets resolved beneath that sandbox; that is not evidence of writing the original metadata schema path. The component-reference Rust oracle writes JSON to a spawned Bun stdin, not a schema file. Current root schema generation writes only the derived catalog as previously inspected.
+
+No actual writer identity is established. Missing declared writer evidence cannot establish manual authorship, exclude external editors or attribute peer work. No process was interrupted, source edited, compiler or producer run.

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateSlot` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::{Wfc2dDiff, Wfc2dRows};
+use crate::diff::{Wfc2dDiff, Wfc2dRow, Wfc2dSlotsDelta};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::CreateSlot, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -15,5 +15,5 @@ pub fn diff(payload: &super::CreateSlot, base: &Wfc2dSnapshot) -> protocol::Muta
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Slot \"{}\" pins unknown tile \"{}\".", payload.slot.id, pinned), [pinned.clone()]);
         }
     }
-    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dRows { added: vec![payload.slot.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dSlotsDelta::insertion(Wfc2dRow::insert_at(&base.slots, &payload.slot), payload.slot.clone()), ..Default::default() })
 }

@@ -1,7 +1,7 @@
 //! 🔧️ Drawing text mutation codecs and native JSON bridges.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-pub use crate::mutations::{drawing_op_for_layer_field, patch_layer_field, DrawingMutation};
+pub use crate::mutations::{drawing_op_for_layer_field, DrawingMutation};
 use crate::DrawingSnapshot;
 
 //#region 📖️SemioGrammar
@@ -43,7 +43,7 @@ pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutati
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
+use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
 use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::mutation::{rename_layer, RenameLayer};
@@ -68,15 +68,6 @@ use crate::standards::v1::subsets::transform::schema::mutations::rotate_layers::
 use crate::standards::v1::subsets::transform::schema::mutations::scale_layers::mutation::{scale_layers, ScaleLayers};
 use crate::standards::v1::subsets::transform::schema::mutations::drag_path_points::mutation::{drag_path_points, DragPathPoints, DrawingPathPointTarget};
 
-/// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
-pub fn parse_layer_field_input(field: &str, value: &str) -> semio_framework_value::DslValue {
-    let parsed = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|parsed| semio_framework_pack_json::to_dsl_value(&parsed));
-    if matches!(field, "textContent" | "name" | "blendMode" | "fillColor" | "fillRule" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
-        if let Some(semio_framework_value::DslValue::String(text)) = parsed { return semio_framework_value::DslValue::String(text); }
-        return semio_framework_value::DslValue::String(value.into());
-    }
-    parsed.unwrap_or_else(|| semio_framework_value::DslValue::String(value.into()))
-}
 
 /// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
@@ -92,7 +83,7 @@ pub use mutations_codec::*;
 mod mutations_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
+use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
 use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::mutation::{rename_layer, RenameLayer};
@@ -132,7 +123,7 @@ pub use mutations_wire_codec::*;
 /// 🌉️ Decodes native JSON payloads, applies their domain mutation and encodes its answer.
 pub fn apply_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (applied, messages) = crate::mutations::bridge_step(&snapshot, &mutation)?;
+    let (applied, messages) = bridge_step(&snapshot, &mutation)?;
     Ok(bridge_render(&applied, &messages))
 }
 
@@ -140,11 +131,52 @@ pub fn apply_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> 
 pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (mut current, mut messages) = crate::mutations::bridge_step(&base, &mutation)?;
+    let (mut current, mut messages) = bridge_step(&base, &mutation)?;
     for undo in <DrawingMutation as Mutation<DrawingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
-        let (next, raised) = crate::mutations::bridge_step(&current, &undo)?;
+        let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);
     }
     Ok(bridge_render(&current, &messages))
 }
+
+#[path="🎛️field-input/🦀️.rs"]
+pub mod field_input;
+
+//#region 🌉️Apply
+// The single central-apply entry points of the text/native bridge live here, outside the schema tree: only editors, io and
+// stores call `protocol::apply_diff`.
+/// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
+/// value itself (`drawing_op_for_layer_field` is the undoable/command-facing entry point).
+pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> protocol::MutationApplyResult<DrawingSnapshot> {
+    use protocol::Mutation;
+    match drawing_op_for_layer_field(doc, layer_id, field, value) {
+        Some(operation) => protocol::apply_diff(operation.diff(doc).diff(), doc).map_err(|error| error.under(["layers", layer_id])),
+        None => Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "layer field cannot be patched").at(["layers", layer_id, field])),
+    }
+}
+/// ▶️ Applies `mutation` to `snapshot` through its own diff — the artifact's single apply entry
+/// point (mirrors dag's `apply_dag_mutation`/puzzle5d's `apply_puzzle5d_mutation`). A rejecting
+/// diff carries an empty `DrawingDiff`, so the snapshot is left untouched and `Ok(())` is still
+/// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
+pub fn apply_drawing_mutation(snapshot: &mut DrawingSnapshot, mutation: &DrawingMutation) -> protocol::MutationApplyResult<()> {
+    *snapshot = protocol::apply_diff(<DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
+    Ok(())
+}
+
+/// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
+/// no-op kind is a RESULT this bridge reports, never an error it swallows.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingSnapshot, Vec<String>), String> {
+    use protocol::Mutation;
+    let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, snapshot);
+    let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
+    match protocol::apply_diff(outcome.diff(), snapshot) {
+        Ok(next) => Ok((next, messages)),
+        Err(error) => Err(format!("{error:?}")),
+    }
+}
+
+
+
+//#endregion 🌉️Apply

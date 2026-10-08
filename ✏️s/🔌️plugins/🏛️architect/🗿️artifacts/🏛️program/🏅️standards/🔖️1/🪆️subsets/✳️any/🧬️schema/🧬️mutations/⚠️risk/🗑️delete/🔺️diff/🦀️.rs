@@ -6,10 +6,10 @@ use crate::diff::ProgramRisksDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteRisk, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.risks.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.risks.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No risk exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { risks: Some(ProgramRisksDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { risks: Some(ProgramRisksDelta::removal(&base.risks, position)), ..Default::default() })
 }

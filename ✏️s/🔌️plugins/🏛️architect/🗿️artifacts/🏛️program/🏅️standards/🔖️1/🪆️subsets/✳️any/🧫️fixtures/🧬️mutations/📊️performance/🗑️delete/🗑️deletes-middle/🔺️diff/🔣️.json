@@ -47,12 +47,15 @@
   "decisions": null,
   "validations": null,
   "performance": {
-    "added": [],
     "removed": [
-      "performance-criterion-a"
+      {
+        "id": "performance-criterion-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "quality": null,
   "artifacts": null,

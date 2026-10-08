@@ -1,12 +1,15 @@
 {
   "artifact": null,
   "attractions": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "attraction-1"
-    ],
-    "reordered": null
+      {
+        "id": "attraction-1",
+        "index": 0
+      }
+    ]
   },
   "domain": null,
   "meta": null,

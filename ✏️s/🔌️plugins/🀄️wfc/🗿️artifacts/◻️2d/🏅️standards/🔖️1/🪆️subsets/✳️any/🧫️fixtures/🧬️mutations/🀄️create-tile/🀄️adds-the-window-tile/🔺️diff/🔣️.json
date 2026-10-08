@@ -3,77 +3,84 @@
   "seed": null,
   "slots": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "edges": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "tiles": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "id": "tile-window",
-        "weight": 1.5,
-        "media": {
-          "Vector": {
-            "paths": [
-              {
-                "segments": [
-                  {
-                    "Move": {
-                      "to": [
-                        0.2,
-                        0.2
-                      ]
-                    }
+        "index": 2,
+        "row": {
+          "id": "tile-window",
+          "weight": 1.5,
+          "media": {
+            "Vector": {
+              "paths": [
+                {
+                  "segments": [
+                    {
+                      "Move": {
+                        "to": [
+                          0.2,
+                          0.2
+                        ]
+                      }
+                    },
+                    {
+                      "Line": {
+                        "to": [
+                          0.8,
+                          0.2
+                        ]
+                      }
+                    },
+                    {
+                      "Line": {
+                        "to": [
+                          0.8,
+                          0.8
+                        ]
+                      }
+                    },
+                    {
+                      "Line": {
+                        "to": [
+                          0.2,
+                          0.8
+                        ]
+                      }
+                    },
+                    "Close"
+                  ],
+                  "fill": {
+                    "r": 96,
+                    "g": 165,
+                    "b": 250,
+                    "a": 255
                   },
-                  {
-                    "Line": {
-                      "to": [
-                        0.8,
-                        0.2
-                      ]
-                    }
-                  },
-                  {
-                    "Line": {
-                      "to": [
-                        0.8,
-                        0.8
-                      ]
-                    }
-                  },
-                  {
-                    "Line": {
-                      "to": [
-                        0.2,
-                        0.8
-                      ]
-                    }
-                  },
-                  "Close"
-                ],
-                "fill": {
-                  "r": 96,
-                  "g": 165,
-                  "b": 250,
-                  "a": 255
-                },
-                "strokeWidth": 0.0
-              }
-            ]
+                  "strokeWidth": 0.0
+                }
+              ]
+            }
           }
         }
       }
     ],
-    "patched": []
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

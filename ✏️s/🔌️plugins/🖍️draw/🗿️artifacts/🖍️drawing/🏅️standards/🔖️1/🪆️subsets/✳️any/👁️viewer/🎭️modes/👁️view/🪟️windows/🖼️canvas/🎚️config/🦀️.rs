@@ -48,9 +48,6 @@ impl protocol::DiffAlgebra<DrawingViewerCanvasWindowConfig> for DrawingViewerCan
     fn inverse(&self, base: &DrawingViewerCanvasWindowConfig) -> Self {
         Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()), framed: self.framed.map(|_| base.framed) }
     }
-    fn between(base: &DrawingViewerCanvasWindowConfig, other: &DrawingViewerCanvasWindowConfig) -> Self {
-        Self { viewport: (base.viewport != other.viewport).then(|| other.viewport.clone()), framed: (base.framed != other.framed).then_some(other.framed) }
-    }
     fn is_empty(&self) -> bool {
         self.viewport.is_none() && self.framed.is_none()
     }

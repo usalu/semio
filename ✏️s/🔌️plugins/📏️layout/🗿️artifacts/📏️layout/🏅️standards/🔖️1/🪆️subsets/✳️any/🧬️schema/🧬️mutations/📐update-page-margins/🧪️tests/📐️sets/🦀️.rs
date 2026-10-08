@@ -84,7 +84,7 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "update-page-margins/sets-asymmetric-margins-on-page-1: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    let patch = &produced.diff().pages.as_ref().expect("update-page-margins fills the pages delta").patched[0].patch;
+    let patch = &produced.diff().pages.as_ref().expect("update-page-margins fills the pages delta").modified[0].patch;
     assert_eq!((patch.margin_top, patch.margin_right, patch.margin_bottom, patch.margin_left), (Some(12.0), Some(18.0), Some(24.0), Some(6.0)), "update-page-margins fills all four margin fields of the patch");
     assert!(patch.columns_count.is_none() && patch.columns_gutter.is_none(), "update-page-margins must not emit a column patch");
 }

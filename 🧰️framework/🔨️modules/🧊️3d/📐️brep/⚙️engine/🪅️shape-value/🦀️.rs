@@ -172,14 +172,10 @@ impl ShapeValue {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_job(&self, deflection: f64) -> Result<ShapeTessellationJob, BrepError> {
         self.check()?;
-        let job = match &self.root {
-            ShapeRoot::Vertex(id) => TessellationJob::for_vertex(&self.body, *id, deflection),
-            ShapeRoot::Solid(id) => TessellationJob::for_solid(&self.body, *id, deflection),
-            ShapeRoot::Face(id) => TessellationJob::for_face(&self.body, *id, deflection),
-            ShapeRoot::Shell(id) => TessellationJob::for_shell(&self.body, *id, deflection),
-            ShapeRoot::Compound { solids, .. } => TessellationJob::for_solids(&self.body, solids, deflection),
-            ShapeRoot::Wire(wire) => Ok(TessellationJob::for_wire(&Wire { members: wire.members.clone(), vertices: wire.vertices.clone(), closed: wire.closed }, deflection)),
-            ShapeRoot::Edge(_) | ShapeRoot::Curve { .. } | ShapeRoot::Surface { .. } => return Err(BrepError::InvalidInput(format!("cannot tessellate {:?}", self.kind()))),
+        let job=match &self.root {
+            ShapeRoot::Vertex(id)=>TessellationJob::for_vertex(&self.body,*id,deflection),
+            ShapeRoot::Solid(_)|ShapeRoot::Face(_)|ShapeRoot::Shell(_)|ShapeRoot::Compound {..}|ShapeRoot::Wire(_)=>Ok(TessellationJob::new(deflection)),
+            _=>return Err(BrepError::InvalidInput(format!("cannot tessellate {:?}",self.kind()))),
         };
         job.map(|job| ShapeTessellationJob { shape: self.clone(), job }).map_err(|error| map_err(&error))
     }
@@ -208,7 +204,11 @@ impl ShapeTessellationJob {
     /// ⏱️ Advances by at most `budget` units.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn step(&mut self, budget: usize) -> Result<TessellationStep, BrepError> {
-        self.job.step(&self.shape.body, budget).map_err(|error| map_err(&error))
+        use crate::brep::queries::tessellation::TessellationInput;
+        let input=match &self.shape.root {
+            ShapeRoot::Vertex(id)=>TessellationInput::Vertex(*id),ShapeRoot::Solid(id)=>TessellationInput::Solid(*id),ShapeRoot::Face(id)=>TessellationInput::Face(*id),ShapeRoot::Shell(id)=>TessellationInput::Shell(*id),ShapeRoot::Compound {solids,..}=>TessellationInput::Solids(solids),ShapeRoot::Wire(wire)=>TessellationInput::Wire(&wire.members),_=>return Err(BrepError::InvalidInput("invalid tessellation root".into())),
+        };
+        self.job.step(&self.shape.body,input,budget).map_err(|error|map_err(&error))
     }
 
     /// 📈️ Progress right now.

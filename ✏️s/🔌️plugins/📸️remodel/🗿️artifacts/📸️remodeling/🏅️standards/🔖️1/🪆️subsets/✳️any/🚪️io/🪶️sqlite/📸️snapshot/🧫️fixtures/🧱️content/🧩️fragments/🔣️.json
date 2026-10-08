@@ -1,0 +1,707 @@
+{
+  "policy": "total-snapshot-explicit-fragments-v1",
+  "cases": [
+    {
+      "name": "sparse-partial-one-two-three",
+      "kind": "sparse",
+      "chunks": [
+        {
+          "sourceOctets": [
+            128
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "samples",
+            "fieldTag": null,
+            "elementType": "f32",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "trailing-word",
+                "value": 128
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            1,
+            254
+          ],
+          "expected": {
+            "ordinal": 1,
+            "field": "samples",
+            "fieldTag": null,
+            "elementType": "f32",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "trailing-word",
+                "value": 1
+              },
+              {
+                "ordinal": 1,
+                "role": "trailing-word",
+                "value": 254
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            0,
+            127,
+            255
+          ],
+          "expected": {
+            "ordinal": 2,
+            "field": "samples",
+            "fieldTag": null,
+            "elementType": "f32",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "trailing-word",
+                "value": 0
+              },
+              {
+                "ordinal": 1,
+                "role": "trailing-word",
+                "value": 127
+              },
+              {
+                "ordinal": 2,
+                "role": "trailing-word",
+                "value": 255
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "sparse-fullword-and-three-tail",
+      "kind": "sparse",
+      "chunks": [
+        {
+          "sourceOctets": [
+            0,
+            0,
+            160,
+            63,
+            1,
+            2,
+            255
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "samples",
+            "fieldTag": null,
+            "elementType": "f32",
+            "elementCount": 1,
+            "floatRows": [
+              {
+                "ordinal": 0,
+                "sample": 1.25,
+                "sampleBits": 1067450368,
+                "sampleClass": "finite"
+              }
+            ],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "trailing-word",
+                "value": 1
+              },
+              {
+                "ordinal": 1,
+                "role": "trailing-word",
+                "value": 2
+              },
+              {
+                "ordinal": 2,
+                "role": "trailing-word",
+                "value": 255
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "sparse-ieee-nonfinite-and-negativezero",
+      "kind": "sparse",
+      "chunks": [
+        {
+          "sourceOctets": [
+            52,
+            18,
+            192,
+            127,
+            0,
+            0,
+            128,
+            127,
+            0,
+            0,
+            128,
+            255,
+            0,
+            0,
+            0,
+            128
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "samples",
+            "fieldTag": null,
+            "elementType": "f32",
+            "elementCount": 4,
+            "floatRows": [
+              {
+                "ordinal": 0,
+                "sample": null,
+                "sampleBits": 2143294004,
+                "sampleClass": "nan"
+              },
+              {
+                "ordinal": 1,
+                "sample": null,
+                "sampleBits": 2139095040,
+                "sampleClass": "positiveInfinity"
+              },
+              {
+                "ordinal": 2,
+                "sample": null,
+                "sampleBits": 4286578688,
+                "sampleClass": "negativeInfinity"
+              },
+              {
+                "ordinal": 3,
+                "sample": 0,
+                "sampleBits": 2147483648,
+                "sampleClass": "finite"
+              }
+            ],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-empty-header",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [],
+          "expected": {
+            "ordinal": 0,
+            "field": "absent",
+            "fieldTag": null,
+            "elementType": "u8",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-unknown-255-payload",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            255,
+            0,
+            127,
+            255
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "unknown",
+            "fieldTag": 255,
+            "elementType": "u8",
+            "elementCount": 3,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "payload",
+                "value": 0
+              },
+              {
+                "ordinal": 1,
+                "role": "payload",
+                "value": 127
+              },
+              {
+                "ordinal": 2,
+                "role": "payload",
+                "value": 255
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-descending-and-repeated-fields",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            1,
+            0,
+            0,
+            128,
+            63
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "normals",
+            "fieldTag": 1,
+            "elementType": "f32",
+            "elementCount": 1,
+            "floatRows": [
+              {
+                "ordinal": 0,
+                "sample": 1,
+                "sampleBits": 1065353216,
+                "sampleClass": "finite"
+              }
+            ],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "expected": {
+            "ordinal": 1,
+            "field": "positions",
+            "fieldTag": 0,
+            "elementType": "f32",
+            "elementCount": 1,
+            "floatRows": [
+              {
+                "ordinal": 0,
+                "sample": 0,
+                "sampleBits": 0,
+                "sampleClass": "finite"
+              }
+            ],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            0,
+            0,
+            0,
+            128,
+            63
+          ],
+          "expected": {
+            "ordinal": 2,
+            "field": "positions",
+            "fieldTag": 0,
+            "elementType": "f32",
+            "elementCount": 1,
+            "floatRows": [
+              {
+                "ordinal": 0,
+                "sample": 1,
+                "sampleBits": 1065353216,
+                "sampleClass": "finite"
+              }
+            ],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-tagged-empty-known-fields",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            0
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "positions",
+            "fieldTag": 0,
+            "elementType": "f32",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            3
+          ],
+          "expected": {
+            "ordinal": 1,
+            "field": "indices",
+            "fieldTag": 3,
+            "elementType": "u32",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            10
+          ],
+          "expected": {
+            "ordinal": 2,
+            "field": "edge_is_seam",
+            "fieldTag": 10,
+            "elementType": "u8",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            11
+          ],
+          "expected": {
+            "ordinal": 3,
+            "field": "paint_texture_base64",
+            "fieldTag": 11,
+            "elementType": "text",
+            "elementCount": 0,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": {
+              "content": ""
+            },
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-known-float-and-integer-partial",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            0,
+            0,
+            0,
+            160,
+            63,
+            1,
+            2,
+            3
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "positions",
+            "fieldTag": 0,
+            "elementType": "f32",
+            "elementCount": 1,
+            "floatRows": [
+              {
+                "ordinal": 0,
+                "sample": 1.25,
+                "sampleBits": 1067450368,
+                "sampleClass": "finite"
+              }
+            ],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "trailing-word",
+                "value": 1
+              },
+              {
+                "ordinal": 1,
+                "role": "trailing-word",
+                "value": 2
+              },
+              {
+                "ordinal": 2,
+                "role": "trailing-word",
+                "value": 3
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            3,
+            255,
+            255,
+            255,
+            255,
+            0,
+            254
+          ],
+          "expected": {
+            "ordinal": 1,
+            "field": "indices",
+            "fieldTag": 3,
+            "elementType": "u32",
+            "elementCount": 1,
+            "floatRows": [],
+            "integerRows": [
+              {
+                "ordinal": 0,
+                "value": 4294967295
+              }
+            ],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "trailing-word",
+                "value": 0
+              },
+              {
+                "ordinal": 1,
+                "role": "trailing-word",
+                "value": 254
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-seam255",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            10,
+            0,
+            255,
+            1
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "edge_is_seam",
+            "fieldTag": 10,
+            "elementType": "u8",
+            "elementCount": 3,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "payload",
+                "value": 0
+              },
+              {
+                "ordinal": 1,
+                "role": "payload",
+                "value": 255
+              },
+              {
+                "ordinal": 2,
+                "role": "payload",
+                "value": 1
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-text-bom-nul-multibyte",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            11,
+            239,
+            187,
+            191,
+            0,
+            195,
+            164,
+            240,
+            159,
+            140,
+            141
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "paint_texture_base64",
+            "fieldTag": 11,
+            "elementType": "text",
+            "elementCount": 10,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [],
+            "textRow": {
+              "content": "﻿\u0000ä🌍"
+            },
+            "octetsIsNull": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mesh-invalid-utf8",
+      "kind": "mesh",
+      "chunks": [
+        {
+          "sourceOctets": [
+            11,
+            195,
+            40
+          ],
+          "expected": {
+            "ordinal": 0,
+            "field": "paint_texture_base64",
+            "fieldTag": 11,
+            "elementType": "invalid-text",
+            "elementCount": 2,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "payload",
+                "value": 195
+              },
+              {
+                "ordinal": 1,
+                "role": "payload",
+                "value": 40
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            11,
+            255,
+            0
+          ],
+          "expected": {
+            "ordinal": 1,
+            "field": "paint_texture_base64",
+            "fieldTag": 11,
+            "elementType": "invalid-text",
+            "elementCount": 2,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "payload",
+                "value": 255
+              },
+              {
+                "ordinal": 1,
+                "role": "payload",
+                "value": 0
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        },
+        {
+          "sourceOctets": [
+            11,
+            226,
+            130
+          ],
+          "expected": {
+            "ordinal": 2,
+            "field": "paint_texture_base64",
+            "fieldTag": 11,
+            "elementType": "invalid-text",
+            "elementCount": 2,
+            "floatRows": [],
+            "integerRows": [],
+            "byteRows": [
+              {
+                "ordinal": 0,
+                "role": "payload",
+                "value": 226
+              },
+              {
+                "ordinal": 1,
+                "role": "payload",
+                "value": 130
+              }
+            ],
+            "textRow": null,
+            "octetsIsNull": true
+          }
+        }
+      ]
+    }
+  ]
+}

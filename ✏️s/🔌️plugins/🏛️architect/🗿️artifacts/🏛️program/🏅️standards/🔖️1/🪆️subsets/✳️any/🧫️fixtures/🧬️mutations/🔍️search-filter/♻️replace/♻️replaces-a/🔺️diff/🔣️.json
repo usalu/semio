@@ -59,48 +59,54 @@
   "analyses": null,
   "reports": null,
   "searchFilters": {
-    "added": [
+    "removed": [
       {
         "id": "search-filter-a",
-        "name": "Search Filter A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "filterName": "Replaced Search Filter A",
-        "filterDescription": null,
-        "keywords": [],
-        "categories": [],
-        "ownerIds": [],
-        "statuses": [],
-        "priorities": [],
-        "sources": [],
-        "dateFrom": null,
-        "dateTo": null,
-        "entityKinds": [],
-        "tagFilters": [],
-        "sortField": null,
-        "sortDirection": null,
-        "isPublic": false,
-        "createdBy": null,
-        "lastUsed": null,
-        "useCount": 0,
-        "pinned": false
+        "index": 0
       }
     ],
-    "removed": [
-      "search-filter-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "search-filter-a",
+          "name": "Search Filter A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "filterName": "Replaced Search Filter A",
+          "filterDescription": null,
+          "keywords": [],
+          "categories": [],
+          "ownerIds": [],
+          "statuses": [],
+          "priorities": [],
+          "sources": [],
+          "dateFrom": null,
+          "dateTo": null,
+          "entityKinds": [],
+          "tagFilters": [],
+          "sortField": null,
+          "sortDirection": null,
+          "isPublic": false,
+          "createdBy": null,
+          "lastUsed": null,
+          "useCount": 0,
+          "pinned": false
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "statusRecords": null,
   "workshops": null,

@@ -19,6 +19,6 @@ pub fn diff(payload: &super::AddRepresentationAttribute, base: &Block5dSnapshot)
         }
         None => BlockRepresentationPatch { attributes_added: vec![payload.attribute.clone()], ..Default::default() },
     };
-    protocol::MutationOutcome::new(Block5dDiff { representations: Some(BlockRepresentationsDelta { patched: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff { representations: BlockRepresentationsDelta { modified: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, ..Default::default() })
 }
 //#endregion 🔖️Diff

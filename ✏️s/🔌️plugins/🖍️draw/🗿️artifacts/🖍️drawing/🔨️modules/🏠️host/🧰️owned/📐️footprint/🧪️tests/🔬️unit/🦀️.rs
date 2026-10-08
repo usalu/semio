@@ -144,7 +144,7 @@ fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_nativ
     let mut delta: crate::diff::DrawingDiff = serde_json::from_str(DELTA).unwrap();
     let after = protocol::apply_diff(&delta, &before).unwrap();
     assert_eq!(serde_json::to_value(&after).unwrap(), serde_json::from_str::<serde_json::Value>(AFTER).unwrap());
-    let segments = delta.layers.as_mut().unwrap().patched[0].patch.path_segments.take().unwrap();
+    let segments = delta.layers.as_mut().unwrap().modified[0].patch.path_segments.take().unwrap();
     assert!(segments.allocated_bytes() > 0);
     let (mut retirement, allocation) = observe(|| ControlledRetirement::new(segments).unwrap_or_else(|_| panic!("native path owner supports controlled retirement")));
     assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
@@ -223,7 +223,7 @@ fn paged_native_drawing_snapshot_record_footprint_matches_actual_root_and_asset_
     let (snapshot, allocation) = observe(|| crate::schema::default_drawing_document(&long, Some(&long)));
     assert!(!allocation.overflowed);
     let root_retained = allocation.requested_bytes.checked_sub(allocation.released_bytes).unwrap();
-    let ((key, asset), allocation) = observe(|| (PagedUtf8::try_from_str(&long).unwrap(), DrawingImageAsset { mime: "image/png".into(), data: PagedUtf8::try_from_str(&long).unwrap(), width: None, height: None }));
+    let ((key, asset), allocation) = observe(|| (PagedUtf8::try_from_str(&long).unwrap(), DrawingImageAsset { width: long.len() as u32, height: 1, samples: vec![[1,2,3,4];long.len()].into() }));
     assert!(!allocation.overflowed);
     let asset_retained = allocation.requested_bytes.checked_sub(allocation.released_bytes).unwrap();
     for (source, retained) in [(DrawingRecordFootprintSource::Snapshot(&snapshot), root_retained), (DrawingRecordFootprintSource::Asset(&key, &asset), asset_retained)] {

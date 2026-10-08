@@ -1,4 +1,4 @@
-//! 🔺️ `reorder-layers` sparse diff — a tree-aware remove-then-insert move, delegating to
+//! 🔺️ `reorder-layers` sparse diff — one tree-aware move row from the layer's base address to the new one, delegating to
 //! `diff_move_layer` (fixed to be genuinely sparse: no clone-mutate-diff of the whole snapshot).
 
 use crate::diff::{diff_move_layer, RasterDiff};
@@ -35,6 +35,6 @@ pub fn diff(payload: &super::ReorderLayers, base: &RasterSnapshot) -> protocol::
             return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" is already at that position.", payload.layer_id));
         }
     }
-    protocol::MutationOutcome::new(diff_move_layer(&payload.layer_id, payload.parent_id.clone(), payload.index))
+    protocol::MutationOutcome::new(diff_move_layer(&base.layers, &payload.layer_id, payload.parent_id.clone(), payload.index))
 }
 //#endregion 🔖️Diff

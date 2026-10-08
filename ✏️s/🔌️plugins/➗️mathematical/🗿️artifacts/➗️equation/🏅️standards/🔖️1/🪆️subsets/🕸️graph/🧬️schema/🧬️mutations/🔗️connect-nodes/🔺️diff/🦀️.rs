@@ -18,13 +18,9 @@ pub fn diff(payload: &super::ConnectNodes, base: &EquationSnapshot) -> protocol:
     if graph.edges.iter().any(|edge| edge.source == payload.source && edge.target == payload.target) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("An edge from \"{}\" to \"{}\" already exists; parallel edges are not allowed.", payload.source, payload.target));
     }
-    let reordered = payload.index.filter(|index| *index < graph.edges.len()).map(|index| {
-        let mut order: Vec<String> = graph.edges.iter().map(|edge| edge.id.clone()).collect();
-        order.insert(index, payload.id.clone());
-        order
-    });
+    let at = payload.index.map_or(graph.edges.len(), |index| index.min(graph.edges.len()));
     let edge = EquationEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone() };
-    let diff = EquationDiff { edges: Some(EquationEdgesDelta { added: vec![edge], reordered, ..Default::default() }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base))
+    let diff = EquationDiff { edges: Some(EquationEdgesDelta::insertion(at, edge)), ..Default::default() };
+    protocol::MutationOutcome::new(diff)
 }
 //#endregion 🔖️Diff

@@ -17,7 +17,7 @@ test("Cargo retains failed build stdout without admitting invalid metadata", asy
       const environment = { ...process.env, CARGO_FAILED_STDOUT: row.stdout, CARGO_FAILED_SPLIT: String(row.splitBytes), CARGO_FAILED_EXIT: String(row.exitCode) };
       const oracle = spawnSync("node", ["-e", program], { env: environment, encoding: "utf8" });
       expect(oracle.status).toBe(row.exitCode); expect(oracle.stdout).toBe(row.stdout);
-      const calls = join(directory, "calls.jsonl"), policy = { ...base, artifactDirectory: directory, retainArtifacts: true, buildBudgetMs: 1_000, coverageEnabled: false, coveragePath: null };
+      const calls = join(directory, "calls.jsonl"), policy = { ...base, artifactDirectory: directory, buildDirectory:join(directory,"build"),leaseDirectory:join(directory,"leases"),retainArtifacts: true, buildBudgetMs: 1_000, coverageEnabled: false, coveragePath: null };
       await expect(api.runCargoTestsV1({ manifestPath: base.manifestPath, packages: ["owner-package"], cwd: directory, environment: { ...environment, CARGO_FAILED_CALLS: calls } }, policy, { command: "node", args: ["-e", program, "--"] })).rejects.toThrow();
       const retained = join(directory, readdirSync(directory).find(name => name.startsWith("semio-nextest-"))!);
       expect(readFileSync(join(retained, "build-failure.stdout.txt"), "utf8")).toBe(oracle.stdout);
@@ -38,7 +38,7 @@ test("Kernel package executes neutral target selections through its exact bounde
   const base=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")).policies[0];
   for(const row of fixture.cases){
    process.env.SEMIO_TEST_LEVEL="fundamental";process.env.SEMIO_COVERAGE="0";
-   const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...base,manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,retainArtifacts:false,coverageEnabled:false})};let calls=0;
+   const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...base,manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"build"),leaseDirectory:join(temporary,"leases"),retainArtifacts:false,coverageEnabled:false})};let calls=0;
    const Runner=runInNewContext(body+";TestScript",{BundleScript:class{},resolve,process:{env:environment},resolveTestLevel:(args:string[])=>{const resolved=levels.resolveTestLevel(args);environment.SEMIO_TEST_LEVEL=resolved.level;return resolved;},readCargoTestPolicyV1:api.readCargoTestPolicyV1,runCargo:()=>{throw Error("Kernel runner bypasses exact bounded Cargo policy");},runCargoTestsV1:async(request:Parameters<typeof api.runCargoTestsV1>[0],policy:Parameters<typeof api.runCargoTestsV1>[1])=>{calls++;expect(request.manifestPath).toBe(manifest);expect(request.packages).toEqual([fixture.packageName]);expect([...request.extraArgs!]).toEqual(row.extraArgs);expect(policy.level).toBe(row.level);await api.runCargoTestsV1({...request,environment},policy);}});
    const runner=new Runner();runner.root=temporary;await runner.run(row.arguments);expect(calls).toBe(1);console.log(`[DEBUG] kernel package neutral selection=${row.id} policy=${row.level} actual-native=true`);
   }
@@ -59,7 +59,7 @@ test("Cargo keeps capture and output controls on Nextest execution with independ
   const output=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(output).toBeTruthy();mkdirSync(output,{recursive:true});const temporary=mkdtempSync(join(output,"cargo-execution-selection-"));
   try{
     mkdirSync(join(temporary,"src"));const manifest=join(temporary,"Cargo.toml"),config=join(temporary,"nextest.toml"),target=join(temporary,"target");writeFileSync(manifest,fixture.native.manifest);writeFileSync(join(temporary,"src/lib.rs"),fixture.native.source);writeFileSync(config,fixture.native.config);
-    const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target},policy={...base,level:"quick",manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,retainArtifacts:false};
+    const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target},policy={...base,level:"quick",manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"build"),leaseDirectory:join(temporary,"leases"),retainArtifacts:false};
     for(const item of fixture.cases)await api.runCargoTestsV1({manifestPath:manifest,packages:[fixture.native.packageName],cwd:temporary,extraArgs:item.arguments,environment},policy);
   }finally{rmSync(temporary,{recursive:true,force:true});}
 },15000);
@@ -69,7 +69,7 @@ test("Cargo refuses an empty selected snapshot suite with the independent Nextes
   const output=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(output).toBeTruthy();mkdirSync(output,{recursive:true});const temporary=mkdtempSync(join(output,"cargo-empty-selection-"));
   try{
     mkdirSync(join(temporary,"src"));const manifest=join(temporary,"Cargo.toml"),config=join(temporary,"nextest.toml"),target=join(temporary,"target");writeFileSync(manifest,fixture.manifest);writeFileSync(join(temporary,"src/lib.rs"),fixture.source);writeFileSync(config,fixture.config);
-    const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target},policy={...base,level:"quick",manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,retainArtifacts:false},request={manifestPath:manifest,packages:[fixture.packageName],cwd:temporary,extraArgs:["--lib","-E",fixture.filter],environment};
+    const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target},policy={...base,level:"quick",manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"build"),leaseDirectory:join(temporary,"leases"),retainArtifacts:false},request={manifestPath:manifest,packages:[fixture.packageName],cwd:temporary,extraArgs:["--lib","-E",fixture.filter],environment};
     const oracle=spawnSync("cargo",["nextest","run","--config-file",config,"--profile","quick","--manifest-path",manifest,"--lib","--no-tests",fixture.action,"-E",fixture.filter],{cwd:temporary,env:environment,encoding:"utf8"});expect(oracle.status).toBe(fixture.expectedStatus);expect(oracle.stderr).toContain("no tests");
     await expect(api.runCargoTestsV1(request,policy)).rejects.toThrow();
   }finally{rmSync(temporary,{recursive:true,force:true});}
@@ -97,7 +97,7 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
   const output=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(output).toBeTruthy();mkdirSync(output,{recursive:true});const temporary=mkdtempSync(join(output,"cargo-port-"));
   try {
     for(const base of fixture.policies){
-      const log=join(temporary,`${base.level}.jsonl`),policy={...base,manifestPath:join(temporary,"Cargo.toml"),configPath:join(temporary,"nextest.toml"),artifactDirectory:temporary,retainArtifacts:false,coveragePath:base.coveragePath?join(temporary,"coverage.lcov"):null};
+      const log=join(temporary,`${base.level}.jsonl`),policy={...base,manifestPath:join(temporary,"Cargo.toml"),configPath:join(temporary,"nextest.toml"),artifactDirectory:temporary,buildDirectory:join(temporary,"build"),leaseDirectory:join(temporary,"leases"),retainArtifacts:false,coveragePath:base.coveragePath?join(temporary,"coverage.lcov"):null};
       const request={manifestPath:policy.manifestPath,packages:["owner-package"],cwd:temporary,extraArgs:fixture.arguments,environment:{...process.env,CARGO_PORT_LOG:log}};
       const program="const fs=require('node:fs'),args=process.argv.slice(1);fs.appendFileSync(process.env.CARGO_PORT_LOG,JSON.stringify(args)+'\\n');if(args[0]==='nextest'&&args[1]==='list')process.stdout.write(JSON.stringify({rust_build_meta:{},rust_binaries:{}}));";
       await api.runCargoTestsV1(request,policy,{command:"node",args:["-e",program,"--"]});

@@ -4,18 +4,21 @@
   "domain": null,
   "meta": {
     "kindCompatibility": {
-      "added": [
+      "inserted": [
         {
-          "bidirectional": false,
-          "important": true,
-          "source": "vortex-kind-b",
-          "specificity": "cable",
-          "target": "vortex-kind-c"
+          "index": 1,
+          "row": {
+            "bidirectional": false,
+            "important": true,
+            "source": "vortex-kind-b",
+            "specificity": "cable",
+            "target": "vortex-kind-c"
+          }
         }
       ],
-      "patched": [],
-      "removed": [],
-      "reordered": null
+      "modified": [],
+      "moved": [],
+      "removed": []
     }
   },
   "objects": null,

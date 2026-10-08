@@ -28,6 +28,6 @@ use semio_framework_value::ToValue;
         next.search_query = payload.query.clone();
         next.search_history_json = semio_framework_pack_json::to_json_string(&history);
         next.last_result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&hits)));
-        Ok(Emit::config(snapshot(next)))
+        Ok(Emit::config(snapshot(base_config, next)))
     }
 }

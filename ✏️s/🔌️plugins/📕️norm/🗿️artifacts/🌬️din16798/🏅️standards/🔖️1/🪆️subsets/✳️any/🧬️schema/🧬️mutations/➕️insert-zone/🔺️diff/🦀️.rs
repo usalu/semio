@@ -9,10 +9,10 @@ pub fn diff(payload: &InsertZone, base: &Din16798Snapshot) -> protocol::Mutation
     if base.zones.iter().any(|existing| existing.id == payload.zone.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A zone with id '{}' already exists.", payload.zone.id), [payload.zone.id.clone()]);
     }
-    let index = payload.index.min(base.zones.len());
-    let outcome = protocol::MutationOutcome::new(Din16798Diff { zones: Din16798ZoneDelta::insertion(&base.zones, index, payload.zone.clone()), ..Default::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.zones.len());
+    let outcome = protocol::MutationOutcome::new(Din16798Diff { zones: Din16798ZoneDelta::insertion(index, payload.zone.clone()), ..Default::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the zone list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the zone list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

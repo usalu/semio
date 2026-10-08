@@ -6,7 +6,9 @@
   "additionalProperties": false,
   "required": [
     "id",
-    "newContent"
+    "offset",
+    "delete",
+    "insert"
   ],
   "properties": {
     "id": {
@@ -25,17 +27,51 @@
         "order": 10
       }
     },
-    "newContent": {
+    "offset": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset",
+          "de": "Position"
+        },
+        "group": "splice",
+        "order": 20,
+        "step": 1,
+        "precision": 0
+      }
+    },
+    "delete": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Delete",
+          "de": "Löschen"
+        },
+        "group": "splice",
+        "order": 30,
+        "step": 1,
+        "precision": 0
+      }
+    },
+    "insert": {
       "type": "string",
       "x-semio-ui": {
         "widget": "multiline",
         "role": "value",
         "label": {
-          "en": "Text",
-          "de": "Text"
+          "en": "Insert",
+          "de": "Einfügen"
         },
-        "group": "text",
-        "order": 20
+        "group": "splice",
+        "order": 40
       }
     }
   }

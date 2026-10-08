@@ -400,6 +400,17 @@
               "directoryName": "🚫️rejects"
             }
           ]
+        },
+        {
+          "mutationId": "write-pixel-region",
+          "sourceMutationDirectoryName": "🔲write-pixel-region",
+          "mutationDirectoryName": "🔲write-pixel-region",
+          "scenarios": [
+            {
+              "id": "writes-a-rectangle",
+              "directoryName": "🔲writes"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -424,7 +435,8 @@
         "fill-region",
         "apply-filter",
         "transform-image",
-        "fill-selection"
+        "fill-selection",
+        "write-pixel-region"
       ]
     }
   ],
@@ -885,6 +897,27 @@
             "operation": "fill-selection",
             "bridgeVersion": 1,
             "variant": "FillSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "write-pixel-region",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "write-pixel-region",
+            "bridgeVersion": 1,
+            "variant": "WritePixelRegion"
           },
           "oracleRequirements": [
             {

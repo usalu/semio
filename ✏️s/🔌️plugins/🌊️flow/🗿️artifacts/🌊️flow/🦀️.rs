@@ -582,6 +582,8 @@ pub mod editor {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
             pub mod schema;
         }
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📐️edit-rules/🦀️.rs"]
+        pub mod edit_rules;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
 

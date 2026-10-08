@@ -8,12 +8,15 @@
   "functions": null,
   "elements": null,
   "quantities": {
-    "added": [],
     "removed": [
-      "quantity-requirement-a"
+      {
+        "id": "quantity-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "relationships": null,
   "adjacencies": null,

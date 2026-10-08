@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertSection, base: &En1993Snapshot) -> protocol::Mutatio
     if base.sections.iter().any(|existing| existing.id == payload.section.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Section id {} already exists.", payload.section.id), [payload.section.id.clone()]);
     }
-    let index = payload.index.min(base.sections.len());
-    protocol::MutationOutcome::new(En1993Diff { sections: En1993SectionDelta::insertion(&base.sections, index, payload.section.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.sections.len());
+    protocol::MutationOutcome::new(En1993Diff { sections: En1993SectionDelta::insertion(index, payload.section.clone()), ..Default::default() })
 }

@@ -90,17 +90,22 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | create-widget           | 🌱️create-widget/📝️inserts                                            |
       | replace-widget          | 🔁️replace-widget/✍️rewrites                                   |
       | delete-widget           | 🗑️delete-widget/🚫️removes                       |
+      | delete-widget          | 🗑️delete-widget/📍️removes-a-middle-row |
       | connect-synapse         | 🔗️connect-synapse/🔗️joins                                  |
       | replace-synapse         | 🔄️replace/🔗️repoints                                 |
       | disconnect-synapse      | ✂️disconnect/✂️severs                              |
+      | disconnect-synapse     | ✂️disconnect/📍️removes-a-middle-row |
       | move-widget             | 📍️move/📍️repositions                                       |
       | clear-widget-layout     | 🧹clear-widget-layout/🧹️drops                                  |
       | update-camera           | 🎛️update-camera/📷️pans                                         |
       | change-schema           | 🔤️change-schema/🏷️restamps                                          |
       | create-generation       | ➕create-generation/🌱️appends                              |
       | delete-generation       | ➖delete-generation/🚫️removes |
+      | delete-generation      | ➖delete-generation/📍️removes-a-middle-row |
+      | delete-generation      | ➖delete-generation/🔓️removes-an-unselected-middle-row |
       | rename-generation       | 🏷️rename/🏷️retitles                                           |
       | change-generation-value | 🔢️change/📏️raises                   |
+      | select-generation      | 👆️select-generation/👆️picks |
 
   @id-inverse
   @level-exhaustive
@@ -124,17 +129,22 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | create-widget           | 🌱️create-widget/📝️inserts                                            |
       | replace-widget          | 🔁️replace-widget/✍️rewrites                                   |
       | delete-widget           | 🗑️delete-widget/🚫️removes                       |
+      | delete-widget          | 🗑️delete-widget/📍️removes-a-middle-row |
       | connect-synapse         | 🔗️connect-synapse/🔗️joins                                  |
       | replace-synapse         | 🔄️replace/🔗️repoints                                 |
       | disconnect-synapse      | ✂️disconnect/✂️severs                              |
+      | disconnect-synapse     | ✂️disconnect/📍️removes-a-middle-row |
       | move-widget             | 📍️move/📍️repositions                                       |
       | clear-widget-layout     | 🧹clear-widget-layout/🧹️drops                                  |
       | update-camera           | 🎛️update-camera/📷️pans                                         |
       | change-schema           | 🔤️change-schema/🏷️restamps                                          |
       | create-generation       | ➕create-generation/🌱️appends                              |
       | delete-generation       | ➖delete-generation/🚫️removes |
+      | delete-generation      | ➖delete-generation/📍️removes-a-middle-row |
+      | delete-generation      | ➖delete-generation/🔓️removes-an-unselected-middle-row |
       | rename-generation       | 🏷️rename/🏷️retitles                                           |
       | change-generation-value | 🔢️change/📏️raises                   |
+      | select-generation      | 👆️select-generation/👆️picks |
 
   @id-identity-round-trip
   @level-long

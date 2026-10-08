@@ -14,9 +14,9 @@ pub use set_error_n::SetErrorN;
 #[path = "🛑️set-fatal-n/🦀️.rs"]
 mod set_fatal_n;
 pub use set_fatal_n::SetFatalN;
-#[path = "↩️restore-n/🦀️.rs"]
-mod restore_n;
-pub use restore_n::RestoreN;
+#[path = "↩️assign-n/🦀️.rs"]
+mod assign_n;
+pub use assign_n::AssignN;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
@@ -27,5 +27,5 @@ pub(crate) enum SeverityMutation {
     SetWarningN(SetWarningN),
     SetErrorN(SetErrorN),
     SetFatalN(SetFatalN),
-    RestoreN(RestoreN),
+    AssignN(AssignN),
 }

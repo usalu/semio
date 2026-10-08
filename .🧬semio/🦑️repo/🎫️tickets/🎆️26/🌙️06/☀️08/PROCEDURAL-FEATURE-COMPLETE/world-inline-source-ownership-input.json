@@ -1,0 +1,43 @@
+{
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+  "beforeSha256": "ba4e9374979a1c4160e998fbd8d2f6acaadcb10f42eb3308091c24df548cbbb8",
+  "beforeRetireSource": "    fn retire_source_step(&mut self)->bool {\n        if let WorldMeshSource::Inline(mesh)=&mut self.source {self.source_retirement=Some(semio_framework_value::retirement::owned_retirement(std::mem::take(mesh.as_mut())));self.source=WorldMeshSource::Placeholder(WorldPlaceholderKind::Plane);return false}\n        if let Some(retirement)=self.source_retirement.as_mut(){if !matches!(retirement.close_step(1,4096),Ok(semio_framework_value::SnapshotRetirementStep::Complete)){return false}self.source_retirement=None;return false}\n        true\n    }\n",
+  "beforeOwner": "source_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>",
+  "currentNativeQualification": "PRE shared Store/Job floor; authored laws not executed",
+  "afterSha256": "f675319f7608aa7ef9045f7ad9a46086cb21eef9bb208cc2f1d0fb0e67ef6a3f",
+  "inputs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "bb69c2424daffa0f7d2839865048ce52253d68e2b9088b63dbea36e76879ffbe"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json",
+      "sha256": "959e99348748136e34cf662e19ca68d79124894fa5bb15f24d71dcee45d60857"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🧬️schema/🔣️.json",
+      "sha256": "fff3034c9c35defc6868b83db8c7dec5468162904c6d42591eb09945d5bba2f3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+      "sha256": "b6842db82f7c4775fac04ab25bd2059c1e21bb8fc5ea1bb5fd52200ac5048de4"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "7dc1db51d4061039d9eaac68e59b713a9bb6ba6afe559872db64dbb44cae4810"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "4cc7d3e9cf78e5755c114cbc749632f52bba72c59ac7d7d24ef150d001983d1a"
+    }
+  ],
+  "oracle": {
+    "session": 86039,
+    "exit": 0,
+    "passed": 1,
+    "skipped": 15,
+    "testMilliseconds": 33,
+    "nxSeconds": 1.5,
+    "claim": "strict fixture and independent Three geometry only"
+  }
+}

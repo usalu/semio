@@ -85,8 +85,8 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "delete-node/removes-node-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().nodes.as_ref().expect("delete-node fills the nodes delta");
-    assert_eq!(delta.removed, vec!["node-2".to_string()], "delete-node's diff carries the id in `removed`");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "delete-node touches only the `removed` arm of the nodes delta");
+    assert_eq!(delta.removed.iter().map(|removal| (removal.id.as_str(), removal.index)).collect::<Vec<_>>(), vec![("node-2", 1)], "delete-node's diff carries the id and its base index in `removed`");
+    assert!(delta.inserted.is_empty() && delta.modified.is_empty(), "delete-node touches only the `removed` arm of the nodes delta");
 }
 
 /// 🔺️ The sparse delta `delete-node` produces is exactly the committed diff — the most load-bearing

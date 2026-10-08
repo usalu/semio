@@ -30,9 +30,6 @@ impl protocol::DiffAlgebra<JobTestSnapshot> for JobTestDiff {
     fn inverse(&self, _base: &JobTestSnapshot) -> Self {
         Self { deltas: self.deltas.iter().rev().map(|delta| delta.saturating_neg()).collect() }
     }
-    fn between(base: &JobTestSnapshot, other: &JobTestSnapshot) -> Self {
-        Self { deltas: if base.value == other.value { Vec::new() } else { vec![other.value.wrapping_sub(base.value)] } }
-    }
     fn is_empty(&self) -> bool {
         self.deltas.iter().all(|delta| *delta == 0)
     }

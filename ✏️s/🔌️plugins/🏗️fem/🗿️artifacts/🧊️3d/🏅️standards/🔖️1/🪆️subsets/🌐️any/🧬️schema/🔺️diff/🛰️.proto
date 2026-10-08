@@ -23,88 +23,200 @@ message Fem3dDiff {
   optional Fem3dAnalysisPatch analysis = 9;
 }
 
-message Fem3dNodesDelta {
-  repeated FemNode added = 1;
-  repeated string removed = 2;
-  repeated Fem3dNodesPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Fem3dNodeRemoval {
+  string id = 1;
+  uint64 index = 2;
 }
 
-message Fem3dNodesPatchEntry {
+message Fem3dNodeInsertion {
+  uint64 index = 1;
+  FemNode row = 2;
+}
+
+message Fem3dNodeRelocation {
   string id = 1;
-  FemNode item = 2;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dNodesModification {
+  string id = 1;
+  FemNode patch = 2;
+}
+
+message Fem3dNodesDelta {
+  repeated Fem3dNodeRemoval removed = 1;
+  repeated Fem3dNodeInsertion inserted = 2;
+  repeated Fem3dNodeRelocation moved = 3;
+  repeated Fem3dNodesModification modified = 4;
+}
+
+message Fem3dElementRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Fem3dElementInsertion {
+  uint64 index = 1;
+  FemElement row = 2;
+}
+
+message Fem3dElementRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dElementsModification {
+  string id = 1;
+  FemElement patch = 2;
 }
 
 message Fem3dElementsDelta {
-  repeated FemElement added = 1;
-  repeated string removed = 2;
-  repeated Fem3dElementsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem3dElementRemoval removed = 1;
+  repeated Fem3dElementInsertion inserted = 2;
+  repeated Fem3dElementRelocation moved = 3;
+  repeated Fem3dElementsModification modified = 4;
 }
 
-message Fem3dElementsPatchEntry {
+message Fem3dMaterialRemoval {
   string id = 1;
-  FemElement item = 2;
+  uint64 index = 2;
+}
+
+message Fem3dMaterialInsertion {
+  uint64 index = 1;
+  FemMaterial row = 2;
+}
+
+message Fem3dMaterialRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dMaterialsModification {
+  string id = 1;
+  FemMaterial patch = 2;
 }
 
 message Fem3dMaterialsDelta {
-  repeated FemMaterial added = 1;
-  repeated string removed = 2;
-  repeated Fem3dMaterialsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem3dMaterialRemoval removed = 1;
+  repeated Fem3dMaterialInsertion inserted = 2;
+  repeated Fem3dMaterialRelocation moved = 3;
+  repeated Fem3dMaterialsModification modified = 4;
 }
 
-message Fem3dMaterialsPatchEntry {
+message Fem3dSectionRemoval {
   string id = 1;
-  FemMaterial item = 2;
+  uint64 index = 2;
+}
+
+message Fem3dSectionInsertion {
+  uint64 index = 1;
+  FemSection row = 2;
+}
+
+message Fem3dSectionRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dSectionsModification {
+  string id = 1;
+  FemSection patch = 2;
 }
 
 message Fem3dSectionsDelta {
-  repeated FemSection added = 1;
-  repeated string removed = 2;
-  repeated Fem3dSectionsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem3dSectionRemoval removed = 1;
+  repeated Fem3dSectionInsertion inserted = 2;
+  repeated Fem3dSectionRelocation moved = 3;
+  repeated Fem3dSectionsModification modified = 4;
 }
 
-message Fem3dSectionsPatchEntry {
+message Fem3dSolidRemoval {
   string id = 1;
-  FemSection item = 2;
+  uint64 index = 2;
+}
+
+message Fem3dSolidInsertion {
+  uint64 index = 1;
+  FemSolid row = 2;
+}
+
+message Fem3dSolidRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dSolidsModification {
+  string id = 1;
+  FemSolid patch = 2;
 }
 
 message Fem3dSolidsDelta {
-  repeated FemSolid added = 1;
-  repeated string removed = 2;
-  repeated Fem3dSolidsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem3dSolidRemoval removed = 1;
+  repeated Fem3dSolidInsertion inserted = 2;
+  repeated Fem3dSolidRelocation moved = 3;
+  repeated Fem3dSolidsModification modified = 4;
 }
 
-message Fem3dSolidsPatchEntry {
+message Fem3dSupportRemoval {
   string id = 1;
-  FemSolid item = 2;
+  uint64 index = 2;
+}
+
+message Fem3dSupportInsertion {
+  uint64 index = 1;
+  FemSupport row = 2;
+}
+
+message Fem3dSupportRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dSupportsModification {
+  string id = 1;
+  FemSupport patch = 2;
 }
 
 message Fem3dSupportsDelta {
-  repeated FemSupport added = 1;
-  repeated string removed = 2;
-  repeated Fem3dSupportsPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated Fem3dSupportRemoval removed = 1;
+  repeated Fem3dSupportInsertion inserted = 2;
+  repeated Fem3dSupportRelocation moved = 3;
+  repeated Fem3dSupportsModification modified = 4;
 }
 
-message Fem3dSupportsPatchEntry {
+message Fem3dLoadCaseRemoval {
   string id = 1;
-  FemSupport item = 2;
+  uint64 index = 2;
+}
+
+message Fem3dLoadCaseInsertion {
+  uint64 index = 1;
+  FemLoadCase row = 2;
+}
+
+message Fem3dLoadCaseRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dLoadCasesModification {
+  string id = 1;
+  Fem3dLoadCasePatch patch = 2;
 }
 
 message Fem3dLoadCasesDelta {
-  repeated FemLoadCase added = 1;
-  repeated string removed = 2;
-  repeated Fem3dLoadCasesPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Fem3dLoadCasesPatchEntry {
-  string id = 1;
-  Fem3dLoadCasePatch patch = 2;
+  repeated Fem3dLoadCaseRemoval removed = 1;
+  repeated Fem3dLoadCaseInsertion inserted = 2;
+  repeated Fem3dLoadCaseRelocation moved = 3;
+  repeated Fem3dLoadCasesModification modified = 4;
 }
 
 message Fem3dLoadCasePatch {
@@ -113,28 +225,60 @@ message Fem3dLoadCasePatch {
   optional Fem3dLoadsDelta loads = 3;
 }
 
-message Fem3dLoadsDelta {
-  repeated FemLoad added = 1;
-  repeated string removed = 2;
-  repeated Fem3dLoadsPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Fem3dLoadRemoval {
+  string id = 1;
+  uint64 index = 2;
 }
 
-message Fem3dLoadsPatchEntry {
+message Fem3dLoadInsertion {
+  uint64 index = 1;
+  FemLoad row = 2;
+}
+
+message Fem3dLoadRelocation {
   string id = 1;
-  FemLoad item = 2;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dLoadsModification {
+  string id = 1;
+  FemLoad patch = 2;
+}
+
+message Fem3dLoadsDelta {
+  repeated Fem3dLoadRemoval removed = 1;
+  repeated Fem3dLoadInsertion inserted = 2;
+  repeated Fem3dLoadRelocation moved = 3;
+  repeated Fem3dLoadsModification modified = 4;
+}
+
+message Fem3dCombinationRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Fem3dCombinationInsertion {
+  uint64 index = 1;
+  FemCombination row = 2;
+}
+
+message Fem3dCombinationRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Fem3dCombinationsModification {
+  string id = 1;
+  FemCombination patch = 2;
 }
 
 message Fem3dCombinationsDelta {
-  repeated FemCombination added = 1;
-  repeated string removed = 2;
-  repeated Fem3dCombinationsPatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message Fem3dCombinationsPatchEntry {
-  string id = 1;
-  FemCombination item = 2;
+  repeated Fem3dCombinationRemoval removed = 1;
+  repeated Fem3dCombinationInsertion inserted = 2;
+  repeated Fem3dCombinationRelocation moved = 3;
+  repeated Fem3dCombinationsModification modified = 4;
 }
 
 message Fem3dAnalysisPatch {

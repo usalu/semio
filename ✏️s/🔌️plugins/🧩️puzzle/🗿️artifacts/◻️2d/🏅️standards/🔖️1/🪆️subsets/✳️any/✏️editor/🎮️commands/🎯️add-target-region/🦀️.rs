@@ -1,7 +1,7 @@
 //! 🎯️ `add-target-region` command.
 
-use crate::editor::puzzle2d::{puzzle2d_paint_target_region, Puzzle2dActionCtx};
-use serde_json::Value;
+use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use semio_framework_pack_json::Value;
 
 /// 🖍️ Paints one grid-snapped target region at `args.origin`, sized by the Area Brush's own
 /// width/height steppers (in grid cells) unless `args.size` states an explicit extent. A dispatch
@@ -16,5 +16,5 @@ pub fn add_target_region(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
     };
     let size = pair("size").unwrap_or((ctx.scene.runtime.area_brush_width, ctx.scene.runtime.area_brush_height));
     let grid_factor = ctx.scene.runtime.grid_factor;
-    puzzle2d_paint_target_region(&mut ctx.scene.board_snapshot, origin, size, grid_factor);
+    ctx.recorder.paint_region_cells(origin, size, grid_factor);
 }

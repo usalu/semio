@@ -1,7 +1,7 @@
 //! 📝️ `update-paragraph-style` — replaces one paragraph style's typography.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutParagraphStylePatchEntry, LayoutParagraphStylesDelta, ParagraphStylePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutParagraphStylesDelta, LayoutParagraphStylesModification, ParagraphStylePatch};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -57,7 +57,7 @@ pub fn diff_update_paragraph_style(payload: &UpdateParagraphStyle, base: &Layout
     }
     protocol::MutationOutcome::new(LayoutDiff {
         paragraph_styles: Some(LayoutParagraphStylesDelta {
-            patched: vec![LayoutParagraphStylePatchEntry {
+            modified: vec![LayoutParagraphStylesModification {
                 id: payload.id.clone(),
                 patch: ParagraphStylePatch {
                     name: Some(payload.name.clone()),

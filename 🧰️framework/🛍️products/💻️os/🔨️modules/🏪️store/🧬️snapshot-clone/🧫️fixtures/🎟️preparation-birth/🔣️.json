@@ -1,0 +1,43 @@
+{
+  "kind": "funded-preparation-birth",
+  "request": {
+    "base": "original captured root",
+    "mutation": "original owned mutation",
+    "authority": "original publication authority"
+  },
+  "demand": {
+    "items": 1,
+    "capacity": "exact preparation frame",
+    "depth": 1,
+    "copy": 0,
+    "release": 0
+  },
+  "refusals": [
+    "items",
+    "capacity",
+    "depth"
+  ],
+  "deferred": [
+    "snapshot source",
+    "mutation source",
+    "clone cursor",
+    "edit cursor"
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 3,
+    "maximumCapacityBytes": 512,
+    "maximumReleaseBytes": 97,
+    "maximumDepth": 7
+  },
+  "afterRefusal": {
+    "requestReturned": true,
+    "allocatedBytes": 0,
+    "releasedBytes": 0
+  },
+  "afterBirth": {
+    "originalRequestRetained": true,
+    "copiedBytes": 0,
+    "releasedBytes": 0
+  }
+}

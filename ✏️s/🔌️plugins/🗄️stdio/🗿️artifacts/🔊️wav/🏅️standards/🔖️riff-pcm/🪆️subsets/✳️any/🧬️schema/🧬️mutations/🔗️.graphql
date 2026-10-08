@@ -3,6 +3,7 @@ enum WavMutationTag {
   SET_DATA
   PATCH_DATA
   SET_OTHER_CHUNKS
+  SET_PAD_BYTES
 }
 input WavMutationFmt { audioFormat: Int!, channels: Int!, sampleRate: Int!, byteRate: Int!, blockAlign: Int!, bitsPerSample: Int!, ext: [Int!] }
 input WavMutationData { kind: String!, value: [Float!]! }
@@ -17,4 +18,6 @@ input WavMutationInput {
   moveTo: Int
   chunks: [WavMutationRiffChunk!]
   chunkOrder: [WavMutationChunkRef!]
+  fmtPadByte: Int
+  dataPadByte: Int
 }

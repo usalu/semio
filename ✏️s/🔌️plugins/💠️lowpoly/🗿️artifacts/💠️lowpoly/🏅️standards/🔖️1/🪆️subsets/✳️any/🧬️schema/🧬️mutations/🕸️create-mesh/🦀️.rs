@@ -15,6 +15,13 @@ pub struct CreateMesh {
     pub mesh_state: Option<crate::LowpolyMeshState>,
 }
 
+impl CreateMesh {
+    /// 🕸️ The create-mesh row that sets `mesh` back onto `object` exactly as it holds it: the mesh entity's own replace-by-base value.
+    pub fn holding(object: &crate::LowpolyObject, handle: &store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>) -> Self {
+        Self { id: object.id.clone(), child_id: handle.child_id.clone(), target: handle.target.clone(), mesh_workspace: object.mesh_content.clone(), mesh_state: object.mesh_state.clone() }
+    }
+}
+
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for CreateMesh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "mesh", kind: "create-mesh", record: "CreatedMesh" };
 

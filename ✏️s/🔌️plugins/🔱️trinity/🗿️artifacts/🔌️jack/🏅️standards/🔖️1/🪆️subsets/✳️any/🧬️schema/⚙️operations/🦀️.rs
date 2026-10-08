@@ -255,14 +255,7 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::Prope
 //#endregion 🔖️Validation
 
 //#region 🔖️BatchHelpers
-/// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `protocol::apply_diff` delegate (P6:
-/// no per-variant hand match here anymore; each kind's real logic lives in its optional `🔺️diff` facet).
-pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
-    let outcome = mutation.diff(snapshot);
-    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
-    *snapshot = next;
-    Ok(())
-}
+pub use crate::apply_trinity_graph_mutation;
 
 pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Result<Vec<TrinityGraphMutation>, semio_framework_value::ValueError> {
     Ok({

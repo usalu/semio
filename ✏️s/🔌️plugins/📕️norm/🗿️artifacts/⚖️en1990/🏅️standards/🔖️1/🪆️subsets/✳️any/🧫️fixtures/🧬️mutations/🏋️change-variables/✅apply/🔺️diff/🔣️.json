@@ -14,17 +14,24 @@
   "betaComputed": null,
   "permanents": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "variables": {
     "removed": [
-      "Q-office",
-      "Q-wind"
-    ],
-    "added": [
       {
-        "after": null,
+        "id": "Q-office",
+        "index": 0
+      },
+      {
+        "id": "Q-wind",
+        "index": 1
+      }
+    ],
+    "inserted": [
+      {
+        "index": 0,
         "row": {
           "id": "Q-office",
           "category": "office",
@@ -32,7 +39,7 @@
         }
       },
       {
-        "after": "Q-office",
+        "index": 1,
         "row": {
           "id": "Q-wind",
           "category": "wind",
@@ -40,7 +47,7 @@
         }
       },
       {
-        "after": "Q-wind",
+        "index": 2,
         "row": {
           "id": "Q-snow",
           "category": "snow",
@@ -48,26 +55,31 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "accidentals": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "seismics": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridgeSls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "effects": []

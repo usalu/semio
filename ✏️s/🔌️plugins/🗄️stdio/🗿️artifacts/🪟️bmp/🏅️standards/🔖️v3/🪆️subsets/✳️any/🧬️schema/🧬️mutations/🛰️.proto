@@ -23,6 +23,27 @@ message PaintDirectRegion {
   uint32 alpha = 9;
 }
 
-message BmpMutation { oneof payload { ReplaceImage replace_image = 12; PaintIndexedRegion paint_indexed_region = 3; PaintDirectRegion paint_direct_region = 4; } }
+message BmpRegion {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+}
+
+message BmpNativeSample {
+  uint32 red = 1;
+  uint32 green = 2;
+  uint32 blue = 3;
+  uint32 alpha = 4;
+  uint32 reserved = 5;
+}
+
+message ReplaceSamples {
+  BmpRegion region = 1;
+  bytes indices = 2;
+  repeated BmpNativeSample samples = 3;
+}
+
+message BmpMutation { oneof payload { ReplaceImage replace_image = 12; PaintIndexedRegion paint_indexed_region = 3; PaintDirectRegion paint_direct_region = 4; ReplaceSamples replace_samples = 13; } }
 
 message ReplaceImage { semio.s_stdio_bmp.snapshot.BmpImage image = 1; }

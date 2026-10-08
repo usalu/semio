@@ -160,15 +160,6 @@ impl protocol::DiffAlgebra<EnergyModelConfig> for EnergyModelConfigDiff {
         }
     }
 
-    fn between(base: &EnergyModelConfig, other: &EnergyModelConfig) -> Self {
-        Self {
-            zone_timestep_minutes: (base.zone_timestep_minutes != other.zone_timestep_minutes).then_some(other.zone_timestep_minutes),
-            system_timestep_minutes: (base.system_timestep_minutes != other.system_timestep_minutes).then_some(other.system_timestep_minutes),
-            warmup_days: (base.warmup_days != other.warmup_days).then_some(other.warmup_days),
-            result_field: (base.result_field != other.result_field).then(|| other.result_field.clone()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.zone_timestep_minutes.is_none() && self.system_timestep_minutes.is_none() && self.warmup_days.is_none() && self.result_field.is_none()
     }

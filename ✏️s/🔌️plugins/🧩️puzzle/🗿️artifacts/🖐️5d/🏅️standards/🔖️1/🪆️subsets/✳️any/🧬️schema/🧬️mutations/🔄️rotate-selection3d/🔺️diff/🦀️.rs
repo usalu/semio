@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `RotateSelection3d` — every unlocked addressed part and target volume turns about its
 //! own world origin: its BASE orientation (identity when absent) is pre-multiplied by the payload's axis-angle
 //! quaternion, so the leaf replays on any base.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumePatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartModification, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumeModification};
+use protocol::list_delta::RowPatch;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection, puzzle5d_selection_outcome, quat_from_axis_angle, quat_mul};
 use crate::Puzzle5dSnapshot;
 
@@ -23,7 +24,7 @@ pub fn diff(payload: &super::RotateSelection3d, base: &Puzzle5dSnapshot) -> prot
         .filter(|_| !identity)
         .map(|part| {
             let world = Puzzle5dPart3dPatch { orientation: Some(turned(part.part_3d.orientation)).filter(|orientation| *orientation != part.part_3d.orientation), ..Default::default() };
-            Puzzle5dPartPatchEntry { id: part.id.clone(), patch: Puzzle5dPartPatch { part_3d: Some(world).filter(|world| !world.is_empty()), ..Default::default() } }
+            Puzzle5dPartModification { id: part.id.clone(), patch: Puzzle5dPartPatch { part_3d: Some(world).filter(|world| !world.is_empty()), ..Default::default() } }
         })
         .filter(|entry| !entry.patch.is_empty())
         .collect();
@@ -31,7 +32,7 @@ pub fn diff(payload: &super::RotateSelection3d, base: &Puzzle5dSnapshot) -> prot
         .volumes
         .iter()
         .filter(|_| !identity)
-        .map(|volume| Puzzle5dTargetVolumePatchEntry { id: volume.id.clone(), patch: Puzzle5dTargetVolumePatch { orientation: Some(turned(volume.orientation)).filter(|orientation| *orientation != volume.orientation), ..Default::default() } })
+        .map(|volume| Puzzle5dTargetVolumeModification { id: volume.id.clone(), patch: Puzzle5dTargetVolumePatch { orientation: Some(turned(volume.orientation)).filter(|orientation| *orientation != volume.orientation), ..Default::default() } })
         .filter(|entry| !entry.patch.is_empty())
         .collect();
     puzzle5d_selection_outcome(selection, &payload.targets, parts, volumes)

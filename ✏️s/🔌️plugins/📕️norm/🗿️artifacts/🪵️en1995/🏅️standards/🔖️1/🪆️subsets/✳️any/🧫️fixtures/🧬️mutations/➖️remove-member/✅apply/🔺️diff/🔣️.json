@@ -2,14 +2,19 @@
   "annex": null,
   "members": {
     "removed": [
-      "beam-B1"
+      {
+        "id": "beam-B1",
+        "index": 0
+      }
     ],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "connections": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

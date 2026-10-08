@@ -12,26 +12,36 @@
   "periodicZ": null,
   "tiles": {
     "removed": [
-      "air"
+      {
+        "id": "air",
+        "index": 0
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [
-      "r-right-air-air"
+      {
+        "id": "r-right-air-air",
+        "index": 0
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "pinned": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "masked": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

@@ -5,26 +5,29 @@
   "meta": null,
   "objects": null,
   "references": {
-    "added": [
+    "inserted": [
       {
-        "hidden": false,
-        "id": "reference-2",
-        "locked": false,
-        "origin": [
-          0.0,
-          0.0,
-          3.0
-        ],
-        "source": {
-          "mediaKind": "image",
-          "url": "asset://elevation.png"
-        },
-        "widthWorld": 6.0
+        "index": 1,
+        "row": {
+          "hidden": false,
+          "id": "reference-2",
+          "locked": false,
+          "origin": [
+            0.0,
+            0.0,
+            3.0
+          ],
+          "source": {
+            "mediaKind": "image",
+            "url": "asset://elevation.png"
+          },
+          "widthWorld": 6.0
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetVolumes": null

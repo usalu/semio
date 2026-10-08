@@ -154,10 +154,26 @@ export function parseProgramDiff(value: unknown, at = "$"): ProgramDiff {
 }
 
 export interface ProgramStakeholdersDelta {
-  added: Stakeholder[];
-  removed: string[];
-  patched: ProgramStakeholdersPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramStakeholdersRemoval[];
+  inserted: ProgramStakeholdersInsertion[];
+  moved: ProgramStakeholdersRelocation[];
+  modified: ProgramStakeholdersPatchEntry[];
+}
+
+export interface ProgramStakeholdersInsertion {
+  index: number;
+  row: Stakeholder;
+}
+
+export interface ProgramStakeholdersRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramStakeholdersRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramStakeholdersPatchEntry {
@@ -166,10 +182,26 @@ export interface ProgramStakeholdersPatchEntry {
 }
 
 export interface ProgramUsersDelta {
-  added: UserProfile[];
-  removed: string[];
-  patched: ProgramUsersPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramUsersRemoval[];
+  inserted: ProgramUsersInsertion[];
+  moved: ProgramUsersRelocation[];
+  modified: ProgramUsersPatchEntry[];
+}
+
+export interface ProgramUsersInsertion {
+  index: number;
+  row: UserProfile;
+}
+
+export interface ProgramUsersRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramUsersRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramUsersPatchEntry {
@@ -178,10 +210,26 @@ export interface ProgramUsersPatchEntry {
 }
 
 export interface ProgramActivitiesDelta {
-  added: Activity[];
-  removed: string[];
-  patched: ProgramActivitiesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramActivitiesRemoval[];
+  inserted: ProgramActivitiesInsertion[];
+  moved: ProgramActivitiesRelocation[];
+  modified: ProgramActivitiesPatchEntry[];
+}
+
+export interface ProgramActivitiesInsertion {
+  index: number;
+  row: Activity;
+}
+
+export interface ProgramActivitiesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramActivitiesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramActivitiesPatchEntry {
@@ -190,10 +238,26 @@ export interface ProgramActivitiesPatchEntry {
 }
 
 export interface ProgramFunctionsDelta {
-  added: Function[];
-  removed: string[];
-  patched: ProgramFunctionsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramFunctionsRemoval[];
+  inserted: ProgramFunctionsInsertion[];
+  moved: ProgramFunctionsRelocation[];
+  modified: ProgramFunctionsPatchEntry[];
+}
+
+export interface ProgramFunctionsInsertion {
+  index: number;
+  row: Function;
+}
+
+export interface ProgramFunctionsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramFunctionsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramFunctionsPatchEntry {
@@ -202,10 +266,26 @@ export interface ProgramFunctionsPatchEntry {
 }
 
 export interface ProgramElementsDelta {
-  added: ProgramElement[];
-  removed: string[];
-  patched: ProgramElementsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramElementsRemoval[];
+  inserted: ProgramElementsInsertion[];
+  moved: ProgramElementsRelocation[];
+  modified: ProgramElementsPatchEntry[];
+}
+
+export interface ProgramElementsInsertion {
+  index: number;
+  row: ProgramElement;
+}
+
+export interface ProgramElementsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramElementsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramElementsPatchEntry {
@@ -214,10 +294,26 @@ export interface ProgramElementsPatchEntry {
 }
 
 export interface ProgramQuantitiesDelta {
-  added: QuantityRequirement[];
-  removed: string[];
-  patched: ProgramQuantitiesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramQuantitiesRemoval[];
+  inserted: ProgramQuantitiesInsertion[];
+  moved: ProgramQuantitiesRelocation[];
+  modified: ProgramQuantitiesPatchEntry[];
+}
+
+export interface ProgramQuantitiesInsertion {
+  index: number;
+  row: QuantityRequirement;
+}
+
+export interface ProgramQuantitiesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramQuantitiesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramQuantitiesPatchEntry {
@@ -226,10 +322,26 @@ export interface ProgramQuantitiesPatchEntry {
 }
 
 export interface ProgramRelationshipsDelta {
-  added: Relationship[];
-  removed: string[];
-  patched: ProgramRelationshipsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramRelationshipsRemoval[];
+  inserted: ProgramRelationshipsInsertion[];
+  moved: ProgramRelationshipsRelocation[];
+  modified: ProgramRelationshipsPatchEntry[];
+}
+
+export interface ProgramRelationshipsInsertion {
+  index: number;
+  row: Relationship;
+}
+
+export interface ProgramRelationshipsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramRelationshipsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramRelationshipsPatchEntry {
@@ -238,10 +350,26 @@ export interface ProgramRelationshipsPatchEntry {
 }
 
 export interface ProgramAdjacenciesDelta {
-  added: Adjacency[];
-  removed: string[];
-  patched: ProgramAdjacenciesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramAdjacenciesRemoval[];
+  inserted: ProgramAdjacenciesInsertion[];
+  moved: ProgramAdjacenciesRelocation[];
+  modified: ProgramAdjacenciesPatchEntry[];
+}
+
+export interface ProgramAdjacenciesInsertion {
+  index: number;
+  row: Adjacency;
+}
+
+export interface ProgramAdjacenciesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramAdjacenciesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramAdjacenciesPatchEntry {
@@ -250,10 +378,26 @@ export interface ProgramAdjacenciesPatchEntry {
 }
 
 export interface ProgramProcessesDelta {
-  added: Process[];
-  removed: string[];
-  patched: ProgramProcessesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramProcessesRemoval[];
+  inserted: ProgramProcessesInsertion[];
+  moved: ProgramProcessesRelocation[];
+  modified: ProgramProcessesPatchEntry[];
+}
+
+export interface ProgramProcessesInsertion {
+  index: number;
+  row: Process;
+}
+
+export interface ProgramProcessesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramProcessesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramProcessesPatchEntry {
@@ -262,10 +406,26 @@ export interface ProgramProcessesPatchEntry {
 }
 
 export interface ProgramFlowsDelta {
-  added: FlowRequirement[];
-  removed: string[];
-  patched: ProgramFlowsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramFlowsRemoval[];
+  inserted: ProgramFlowsInsertion[];
+  moved: ProgramFlowsRelocation[];
+  modified: ProgramFlowsPatchEntry[];
+}
+
+export interface ProgramFlowsInsertion {
+  index: number;
+  row: FlowRequirement;
+}
+
+export interface ProgramFlowsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramFlowsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramFlowsPatchEntry {
@@ -274,10 +434,26 @@ export interface ProgramFlowsPatchEntry {
 }
 
 export interface ProgramAccessRulesDelta {
-  added: AccessRule[];
-  removed: string[];
-  patched: ProgramAccessRulesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramAccessRulesRemoval[];
+  inserted: ProgramAccessRulesInsertion[];
+  moved: ProgramAccessRulesRelocation[];
+  modified: ProgramAccessRulesPatchEntry[];
+}
+
+export interface ProgramAccessRulesInsertion {
+  index: number;
+  row: AccessRule;
+}
+
+export interface ProgramAccessRulesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramAccessRulesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramAccessRulesPatchEntry {
@@ -286,10 +462,26 @@ export interface ProgramAccessRulesPatchEntry {
 }
 
 export interface ProgramOperationsDelta {
-  added: OperationalRequirement[];
-  removed: string[];
-  patched: ProgramOperationsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramOperationsRemoval[];
+  inserted: ProgramOperationsInsertion[];
+  moved: ProgramOperationsRelocation[];
+  modified: ProgramOperationsPatchEntry[];
+}
+
+export interface ProgramOperationsInsertion {
+  index: number;
+  row: OperationalRequirement;
+}
+
+export interface ProgramOperationsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramOperationsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramOperationsPatchEntry {
@@ -298,10 +490,26 @@ export interface ProgramOperationsPatchEntry {
 }
 
 export interface ProgramEquipmentDelta {
-  added: Equipment[];
-  removed: string[];
-  patched: ProgramEquipmentPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramEquipmentRemoval[];
+  inserted: ProgramEquipmentInsertion[];
+  moved: ProgramEquipmentRelocation[];
+  modified: ProgramEquipmentPatchEntry[];
+}
+
+export interface ProgramEquipmentInsertion {
+  index: number;
+  row: Equipment;
+}
+
+export interface ProgramEquipmentRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramEquipmentRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramEquipmentPatchEntry {
@@ -310,10 +518,26 @@ export interface ProgramEquipmentPatchEntry {
 }
 
 export interface ProgramResourcesDelta {
-  added: Resource[];
-  removed: string[];
-  patched: ProgramResourcesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramResourcesRemoval[];
+  inserted: ProgramResourcesInsertion[];
+  moved: ProgramResourcesRelocation[];
+  modified: ProgramResourcesPatchEntry[];
+}
+
+export interface ProgramResourcesInsertion {
+  index: number;
+  row: Resource;
+}
+
+export interface ProgramResourcesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramResourcesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramResourcesPatchEntry {
@@ -322,10 +546,26 @@ export interface ProgramResourcesPatchEntry {
 }
 
 export interface ProgramStorageDelta {
-  added: StorageRequirement[];
-  removed: string[];
-  patched: ProgramStoragePatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramStorageRemoval[];
+  inserted: ProgramStorageInsertion[];
+  moved: ProgramStorageRelocation[];
+  modified: ProgramStoragePatchEntry[];
+}
+
+export interface ProgramStorageInsertion {
+  index: number;
+  row: StorageRequirement;
+}
+
+export interface ProgramStorageRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramStorageRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramStoragePatchEntry {
@@ -334,10 +574,26 @@ export interface ProgramStoragePatchEntry {
 }
 
 export interface ProgramEnvironmentalDelta {
-  added: EnvironmentalRequirement[];
-  removed: string[];
-  patched: ProgramEnvironmentalPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramEnvironmentalRemoval[];
+  inserted: ProgramEnvironmentalInsertion[];
+  moved: ProgramEnvironmentalRelocation[];
+  modified: ProgramEnvironmentalPatchEntry[];
+}
+
+export interface ProgramEnvironmentalInsertion {
+  index: number;
+  row: EnvironmentalRequirement;
+}
+
+export interface ProgramEnvironmentalRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramEnvironmentalRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramEnvironmentalPatchEntry {
@@ -346,10 +602,26 @@ export interface ProgramEnvironmentalPatchEntry {
 }
 
 export interface ProgramHumanFactorsDelta {
-  added: HumanFactorRequirement[];
-  removed: string[];
-  patched: ProgramHumanFactorsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramHumanFactorsRemoval[];
+  inserted: ProgramHumanFactorsInsertion[];
+  moved: ProgramHumanFactorsRelocation[];
+  modified: ProgramHumanFactorsPatchEntry[];
+}
+
+export interface ProgramHumanFactorsInsertion {
+  index: number;
+  row: HumanFactorRequirement;
+}
+
+export interface ProgramHumanFactorsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramHumanFactorsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramHumanFactorsPatchEntry {
@@ -358,10 +630,26 @@ export interface ProgramHumanFactorsPatchEntry {
 }
 
 export interface ProgramAccessibilityDelta {
-  added: AccessibilityRequirement[];
-  removed: string[];
-  patched: ProgramAccessibilityPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramAccessibilityRemoval[];
+  inserted: ProgramAccessibilityInsertion[];
+  moved: ProgramAccessibilityRelocation[];
+  modified: ProgramAccessibilityPatchEntry[];
+}
+
+export interface ProgramAccessibilityInsertion {
+  index: number;
+  row: AccessibilityRequirement;
+}
+
+export interface ProgramAccessibilityRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramAccessibilityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramAccessibilityPatchEntry {
@@ -370,10 +658,26 @@ export interface ProgramAccessibilityPatchEntry {
 }
 
 export interface ProgramPrivacyDelta {
-  added: PrivacyRequirement[];
-  removed: string[];
-  patched: ProgramPrivacyPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramPrivacyRemoval[];
+  inserted: ProgramPrivacyInsertion[];
+  moved: ProgramPrivacyRelocation[];
+  modified: ProgramPrivacyPatchEntry[];
+}
+
+export interface ProgramPrivacyInsertion {
+  index: number;
+  row: PrivacyRequirement;
+}
+
+export interface ProgramPrivacyRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramPrivacyRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramPrivacyPatchEntry {
@@ -382,10 +686,26 @@ export interface ProgramPrivacyPatchEntry {
 }
 
 export interface ProgramSafetyDelta {
-  added: SafetyRequirement[];
-  removed: string[];
-  patched: ProgramSafetyPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSafetyRemoval[];
+  inserted: ProgramSafetyInsertion[];
+  moved: ProgramSafetyRelocation[];
+  modified: ProgramSafetyPatchEntry[];
+}
+
+export interface ProgramSafetyInsertion {
+  index: number;
+  row: SafetyRequirement;
+}
+
+export interface ProgramSafetyRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSafetyRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSafetyPatchEntry {
@@ -394,10 +714,26 @@ export interface ProgramSafetyPatchEntry {
 }
 
 export interface ProgramSecurityDelta {
-  added: SecurityRequirement[];
-  removed: string[];
-  patched: ProgramSecurityPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSecurityRemoval[];
+  inserted: ProgramSecurityInsertion[];
+  moved: ProgramSecurityRelocation[];
+  modified: ProgramSecurityPatchEntry[];
+}
+
+export interface ProgramSecurityInsertion {
+  index: number;
+  row: SecurityRequirement;
+}
+
+export interface ProgramSecurityRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSecurityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSecurityPatchEntry {
@@ -406,10 +742,26 @@ export interface ProgramSecurityPatchEntry {
 }
 
 export interface ProgramRegulatoryDelta {
-  added: RegulatoryRequirement[];
-  removed: string[];
-  patched: ProgramRegulatoryPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramRegulatoryRemoval[];
+  inserted: ProgramRegulatoryInsertion[];
+  moved: ProgramRegulatoryRelocation[];
+  modified: ProgramRegulatoryPatchEntry[];
+}
+
+export interface ProgramRegulatoryInsertion {
+  index: number;
+  row: RegulatoryRequirement;
+}
+
+export interface ProgramRegulatoryRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramRegulatoryRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramRegulatoryPatchEntry {
@@ -418,10 +770,26 @@ export interface ProgramRegulatoryPatchEntry {
 }
 
 export interface ProgramSiteContextDelta {
-  added: SiteContext[];
-  removed: string[];
-  patched: ProgramSiteContextPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSiteContextRemoval[];
+  inserted: ProgramSiteContextInsertion[];
+  moved: ProgramSiteContextRelocation[];
+  modified: ProgramSiteContextPatchEntry[];
+}
+
+export interface ProgramSiteContextInsertion {
+  index: number;
+  row: SiteContext;
+}
+
+export interface ProgramSiteContextRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSiteContextRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSiteContextPatchEntry {
@@ -430,10 +798,26 @@ export interface ProgramSiteContextPatchEntry {
 }
 
 export interface ProgramOrganizationalDelta {
-  added: OrganizationalRequirement[];
-  removed: string[];
-  patched: ProgramOrganizationalPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramOrganizationalRemoval[];
+  inserted: ProgramOrganizationalInsertion[];
+  moved: ProgramOrganizationalRelocation[];
+  modified: ProgramOrganizationalPatchEntry[];
+}
+
+export interface ProgramOrganizationalInsertion {
+  index: number;
+  row: OrganizationalRequirement;
+}
+
+export interface ProgramOrganizationalRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramOrganizationalRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramOrganizationalPatchEntry {
@@ -442,10 +826,26 @@ export interface ProgramOrganizationalPatchEntry {
 }
 
 export interface ProgramServicesDelta {
-  added: ServiceRequirement[];
-  removed: string[];
-  patched: ProgramServicesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramServicesRemoval[];
+  inserted: ProgramServicesInsertion[];
+  moved: ProgramServicesRelocation[];
+  modified: ProgramServicesPatchEntry[];
+}
+
+export interface ProgramServicesInsertion {
+  index: number;
+  row: ServiceRequirement;
+}
+
+export interface ProgramServicesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramServicesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramServicesPatchEntry {
@@ -454,10 +854,26 @@ export interface ProgramServicesPatchEntry {
 }
 
 export interface ProgramInfrastructureDelta {
-  added: InfrastructureRequirement[];
-  removed: string[];
-  patched: ProgramInfrastructurePatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramInfrastructureRemoval[];
+  inserted: ProgramInfrastructureInsertion[];
+  moved: ProgramInfrastructureRelocation[];
+  modified: ProgramInfrastructurePatchEntry[];
+}
+
+export interface ProgramInfrastructureInsertion {
+  index: number;
+  row: InfrastructureRequirement;
+}
+
+export interface ProgramInfrastructureRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramInfrastructureRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramInfrastructurePatchEntry {
@@ -466,10 +882,26 @@ export interface ProgramInfrastructurePatchEntry {
 }
 
 export interface ProgramInformationDelta {
-  added: InformationRequirement[];
-  removed: string[];
-  patched: ProgramInformationPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramInformationRemoval[];
+  inserted: ProgramInformationInsertion[];
+  moved: ProgramInformationRelocation[];
+  modified: ProgramInformationPatchEntry[];
+}
+
+export interface ProgramInformationInsertion {
+  index: number;
+  row: InformationRequirement;
+}
+
+export interface ProgramInformationRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramInformationRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramInformationPatchEntry {
@@ -478,10 +910,26 @@ export interface ProgramInformationPatchEntry {
 }
 
 export interface ProgramCommunicationDelta {
-  added: CommunicationRequirement[];
-  removed: string[];
-  patched: ProgramCommunicationPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramCommunicationRemoval[];
+  inserted: ProgramCommunicationInsertion[];
+  moved: ProgramCommunicationRelocation[];
+  modified: ProgramCommunicationPatchEntry[];
+}
+
+export interface ProgramCommunicationInsertion {
+  index: number;
+  row: CommunicationRequirement;
+}
+
+export interface ProgramCommunicationRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramCommunicationRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramCommunicationPatchEntry {
@@ -490,10 +938,26 @@ export interface ProgramCommunicationPatchEntry {
 }
 
 export interface ProgramWayfindingDelta {
-  added: WayfindingRequirement[];
-  removed: string[];
-  patched: ProgramWayfindingPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramWayfindingRemoval[];
+  inserted: ProgramWayfindingInsertion[];
+  moved: ProgramWayfindingRelocation[];
+  modified: ProgramWayfindingPatchEntry[];
+}
+
+export interface ProgramWayfindingInsertion {
+  index: number;
+  row: WayfindingRequirement;
+}
+
+export interface ProgramWayfindingRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramWayfindingRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramWayfindingPatchEntry {
@@ -502,10 +966,26 @@ export interface ProgramWayfindingPatchEntry {
 }
 
 export interface ProgramSchedulesDelta {
-  added: ScheduleRequirement[];
-  removed: string[];
-  patched: ProgramSchedulesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSchedulesRemoval[];
+  inserted: ProgramSchedulesInsertion[];
+  moved: ProgramSchedulesRelocation[];
+  modified: ProgramSchedulesPatchEntry[];
+}
+
+export interface ProgramSchedulesInsertion {
+  index: number;
+  row: ScheduleRequirement;
+}
+
+export interface ProgramSchedulesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSchedulesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSchedulesPatchEntry {
@@ -514,10 +994,26 @@ export interface ProgramSchedulesPatchEntry {
 }
 
 export interface ProgramFlexibilityDelta {
-  added: FlexibilityRequirement[];
-  removed: string[];
-  patched: ProgramFlexibilityPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramFlexibilityRemoval[];
+  inserted: ProgramFlexibilityInsertion[];
+  moved: ProgramFlexibilityRelocation[];
+  modified: ProgramFlexibilityPatchEntry[];
+}
+
+export interface ProgramFlexibilityInsertion {
+  index: number;
+  row: FlexibilityRequirement;
+}
+
+export interface ProgramFlexibilityRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramFlexibilityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramFlexibilityPatchEntry {
@@ -526,10 +1022,26 @@ export interface ProgramFlexibilityPatchEntry {
 }
 
 export interface ProgramGrowthDelta {
-  added: GrowthPlan[];
-  removed: string[];
-  patched: ProgramGrowthPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramGrowthRemoval[];
+  inserted: ProgramGrowthInsertion[];
+  moved: ProgramGrowthRelocation[];
+  modified: ProgramGrowthPatchEntry[];
+}
+
+export interface ProgramGrowthInsertion {
+  index: number;
+  row: GrowthPlan;
+}
+
+export interface ProgramGrowthRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramGrowthRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramGrowthPatchEntry {
@@ -538,10 +1050,26 @@ export interface ProgramGrowthPatchEntry {
 }
 
 export interface ProgramSustainabilityDelta {
-  added: SustainabilityRequirement[];
-  removed: string[];
-  patched: ProgramSustainabilityPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSustainabilityRemoval[];
+  inserted: ProgramSustainabilityInsertion[];
+  moved: ProgramSustainabilityRelocation[];
+  modified: ProgramSustainabilityPatchEntry[];
+}
+
+export interface ProgramSustainabilityInsertion {
+  index: number;
+  row: SustainabilityRequirement;
+}
+
+export interface ProgramSustainabilityRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSustainabilityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSustainabilityPatchEntry {
@@ -550,10 +1078,26 @@ export interface ProgramSustainabilityPatchEntry {
 }
 
 export interface ProgramResilienceDelta {
-  added: ResilienceRequirement[];
-  removed: string[];
-  patched: ProgramResiliencePatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramResilienceRemoval[];
+  inserted: ProgramResilienceInsertion[];
+  moved: ProgramResilienceRelocation[];
+  modified: ProgramResiliencePatchEntry[];
+}
+
+export interface ProgramResilienceInsertion {
+  index: number;
+  row: ResilienceRequirement;
+}
+
+export interface ProgramResilienceRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramResilienceRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramResiliencePatchEntry {
@@ -562,10 +1106,26 @@ export interface ProgramResiliencePatchEntry {
 }
 
 export interface ProgramCostsDelta {
-  added: CostRequirement[];
-  removed: string[];
-  patched: ProgramCostsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramCostsRemoval[];
+  inserted: ProgramCostsInsertion[];
+  moved: ProgramCostsRelocation[];
+  modified: ProgramCostsPatchEntry[];
+}
+
+export interface ProgramCostsInsertion {
+  index: number;
+  row: CostRequirement;
+}
+
+export interface ProgramCostsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramCostsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramCostsPatchEntry {
@@ -574,10 +1134,26 @@ export interface ProgramCostsPatchEntry {
 }
 
 export interface ProgramDeliveryDelta {
-  added: DeliveryConstraint[];
-  removed: string[];
-  patched: ProgramDeliveryPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramDeliveryRemoval[];
+  inserted: ProgramDeliveryInsertion[];
+  moved: ProgramDeliveryRelocation[];
+  modified: ProgramDeliveryPatchEntry[];
+}
+
+export interface ProgramDeliveryInsertion {
+  index: number;
+  row: DeliveryConstraint;
+}
+
+export interface ProgramDeliveryRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramDeliveryRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramDeliveryPatchEntry {
@@ -586,10 +1162,26 @@ export interface ProgramDeliveryPatchEntry {
 }
 
 export interface ProgramRisksDelta {
-  added: Risk[];
-  removed: string[];
-  patched: ProgramRisksPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramRisksRemoval[];
+  inserted: ProgramRisksInsertion[];
+  moved: ProgramRisksRelocation[];
+  modified: ProgramRisksPatchEntry[];
+}
+
+export interface ProgramRisksInsertion {
+  index: number;
+  row: Risk;
+}
+
+export interface ProgramRisksRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramRisksRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramRisksPatchEntry {
@@ -598,10 +1190,26 @@ export interface ProgramRisksPatchEntry {
 }
 
 export interface ProgramConflictsDelta {
-  added: Conflict[];
-  removed: string[];
-  patched: ProgramConflictsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramConflictsRemoval[];
+  inserted: ProgramConflictsInsertion[];
+  moved: ProgramConflictsRelocation[];
+  modified: ProgramConflictsPatchEntry[];
+}
+
+export interface ProgramConflictsInsertion {
+  index: number;
+  row: Conflict;
+}
+
+export interface ProgramConflictsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramConflictsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramConflictsPatchEntry {
@@ -610,10 +1218,26 @@ export interface ProgramConflictsPatchEntry {
 }
 
 export interface ProgramRequirementsDelta {
-  added: Requirement[];
-  removed: string[];
-  patched: ProgramRequirementsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramRequirementsRemoval[];
+  inserted: ProgramRequirementsInsertion[];
+  moved: ProgramRequirementsRelocation[];
+  modified: ProgramRequirementsPatchEntry[];
+}
+
+export interface ProgramRequirementsInsertion {
+  index: number;
+  row: Requirement;
+}
+
+export interface ProgramRequirementsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramRequirementsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramRequirementsPatchEntry {
@@ -622,10 +1246,26 @@ export interface ProgramRequirementsPatchEntry {
 }
 
 export interface ProgramPrioritiesDelta {
-  added: PriorityRecord[];
-  removed: string[];
-  patched: ProgramPrioritiesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramPrioritiesRemoval[];
+  inserted: ProgramPrioritiesInsertion[];
+  moved: ProgramPrioritiesRelocation[];
+  modified: ProgramPrioritiesPatchEntry[];
+}
+
+export interface ProgramPrioritiesInsertion {
+  index: number;
+  row: PriorityRecord;
+}
+
+export interface ProgramPrioritiesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramPrioritiesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramPrioritiesPatchEntry {
@@ -634,10 +1274,26 @@ export interface ProgramPrioritiesPatchEntry {
 }
 
 export interface ProgramScenariosDelta {
-  added: Scenario[];
-  removed: string[];
-  patched: ProgramScenariosPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramScenariosRemoval[];
+  inserted: ProgramScenariosInsertion[];
+  moved: ProgramScenariosRelocation[];
+  modified: ProgramScenariosPatchEntry[];
+}
+
+export interface ProgramScenariosInsertion {
+  index: number;
+  row: Scenario;
+}
+
+export interface ProgramScenariosRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramScenariosRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramScenariosPatchEntry {
@@ -646,10 +1302,26 @@ export interface ProgramScenariosPatchEntry {
 }
 
 export interface ProgramOptionsDelta {
-  added: OptionEvaluation[];
-  removed: string[];
-  patched: ProgramOptionsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramOptionsRemoval[];
+  inserted: ProgramOptionsInsertion[];
+  moved: ProgramOptionsRelocation[];
+  modified: ProgramOptionsPatchEntry[];
+}
+
+export interface ProgramOptionsInsertion {
+  index: number;
+  row: OptionEvaluation;
+}
+
+export interface ProgramOptionsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramOptionsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramOptionsPatchEntry {
@@ -658,10 +1330,26 @@ export interface ProgramOptionsPatchEntry {
 }
 
 export interface ProgramDecisionsDelta {
-  added: Decision[];
-  removed: string[];
-  patched: ProgramDecisionsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramDecisionsRemoval[];
+  inserted: ProgramDecisionsInsertion[];
+  moved: ProgramDecisionsRelocation[];
+  modified: ProgramDecisionsPatchEntry[];
+}
+
+export interface ProgramDecisionsInsertion {
+  index: number;
+  row: Decision;
+}
+
+export interface ProgramDecisionsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramDecisionsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramDecisionsPatchEntry {
@@ -670,10 +1358,26 @@ export interface ProgramDecisionsPatchEntry {
 }
 
 export interface ProgramValidationsDelta {
-  added: ValidationRecord[];
-  removed: string[];
-  patched: ProgramValidationsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramValidationsRemoval[];
+  inserted: ProgramValidationsInsertion[];
+  moved: ProgramValidationsRelocation[];
+  modified: ProgramValidationsPatchEntry[];
+}
+
+export interface ProgramValidationsInsertion {
+  index: number;
+  row: ValidationRecord;
+}
+
+export interface ProgramValidationsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramValidationsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramValidationsPatchEntry {
@@ -682,10 +1386,26 @@ export interface ProgramValidationsPatchEntry {
 }
 
 export interface ProgramPerformanceDelta {
-  added: PerformanceCriterion[];
-  removed: string[];
-  patched: ProgramPerformancePatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramPerformanceRemoval[];
+  inserted: ProgramPerformanceInsertion[];
+  moved: ProgramPerformanceRelocation[];
+  modified: ProgramPerformancePatchEntry[];
+}
+
+export interface ProgramPerformanceInsertion {
+  index: number;
+  row: PerformanceCriterion;
+}
+
+export interface ProgramPerformanceRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramPerformanceRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramPerformancePatchEntry {
@@ -694,10 +1414,26 @@ export interface ProgramPerformancePatchEntry {
 }
 
 export interface ProgramQualityDelta {
-  added: QualityRecord[];
-  removed: string[];
-  patched: ProgramQualityPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramQualityRemoval[];
+  inserted: ProgramQualityInsertion[];
+  moved: ProgramQualityRelocation[];
+  modified: ProgramQualityPatchEntry[];
+}
+
+export interface ProgramQualityInsertion {
+  index: number;
+  row: QualityRecord;
+}
+
+export interface ProgramQualityRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramQualityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramQualityPatchEntry {
@@ -706,10 +1442,26 @@ export interface ProgramQualityPatchEntry {
 }
 
 export interface ProgramArtifactsDelta {
-  added: ArtifactRecord[];
-  removed: string[];
-  patched: ProgramArtifactsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramArtifactsRemoval[];
+  inserted: ProgramArtifactsInsertion[];
+  moved: ProgramArtifactsRelocation[];
+  modified: ProgramArtifactsPatchEntry[];
+}
+
+export interface ProgramArtifactsInsertion {
+  index: number;
+  row: ArtifactRecord;
+}
+
+export interface ProgramArtifactsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramArtifactsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramArtifactsPatchEntry {
@@ -718,10 +1470,26 @@ export interface ProgramArtifactsPatchEntry {
 }
 
 export interface ProgramAssumptionsDelta {
-  added: Assumption[];
-  removed: string[];
-  patched: ProgramAssumptionsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramAssumptionsRemoval[];
+  inserted: ProgramAssumptionsInsertion[];
+  moved: ProgramAssumptionsRelocation[];
+  modified: ProgramAssumptionsPatchEntry[];
+}
+
+export interface ProgramAssumptionsInsertion {
+  index: number;
+  row: Assumption;
+}
+
+export interface ProgramAssumptionsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramAssumptionsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramAssumptionsPatchEntry {
@@ -730,10 +1498,26 @@ export interface ProgramAssumptionsPatchEntry {
 }
 
 export interface ProgramConstraintsDelta {
-  added: ConstraintRecord[];
-  removed: string[];
-  patched: ProgramConstraintsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramConstraintsRemoval[];
+  inserted: ProgramConstraintsInsertion[];
+  moved: ProgramConstraintsRelocation[];
+  modified: ProgramConstraintsPatchEntry[];
+}
+
+export interface ProgramConstraintsInsertion {
+  index: number;
+  row: ConstraintRecord;
+}
+
+export interface ProgramConstraintsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramConstraintsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramConstraintsPatchEntry {
@@ -742,10 +1526,26 @@ export interface ProgramConstraintsPatchEntry {
 }
 
 export interface ProgramComplianceRecordsDelta {
-  added: ComplianceRecord[];
-  removed: string[];
-  patched: ProgramComplianceRecordsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramComplianceRecordsRemoval[];
+  inserted: ProgramComplianceRecordsInsertion[];
+  moved: ProgramComplianceRecordsRelocation[];
+  modified: ProgramComplianceRecordsPatchEntry[];
+}
+
+export interface ProgramComplianceRecordsInsertion {
+  index: number;
+  row: ComplianceRecord;
+}
+
+export interface ProgramComplianceRecordsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramComplianceRecordsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramComplianceRecordsPatchEntry {
@@ -754,10 +1554,26 @@ export interface ProgramComplianceRecordsPatchEntry {
 }
 
 export interface ProgramApprovalsDelta {
-  added: ApprovalRecord[];
-  removed: string[];
-  patched: ProgramApprovalsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramApprovalsRemoval[];
+  inserted: ProgramApprovalsInsertion[];
+  moved: ProgramApprovalsRelocation[];
+  modified: ProgramApprovalsPatchEntry[];
+}
+
+export interface ProgramApprovalsInsertion {
+  index: number;
+  row: ApprovalRecord;
+}
+
+export interface ProgramApprovalsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramApprovalsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramApprovalsPatchEntry {
@@ -766,10 +1582,26 @@ export interface ProgramApprovalsPatchEntry {
 }
 
 export interface ProgramMeetingsDelta {
-  added: MeetingRecord[];
-  removed: string[];
-  patched: ProgramMeetingsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramMeetingsRemoval[];
+  inserted: ProgramMeetingsInsertion[];
+  moved: ProgramMeetingsRelocation[];
+  modified: ProgramMeetingsPatchEntry[];
+}
+
+export interface ProgramMeetingsInsertion {
+  index: number;
+  row: MeetingRecord;
+}
+
+export interface ProgramMeetingsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramMeetingsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramMeetingsPatchEntry {
@@ -778,10 +1610,26 @@ export interface ProgramMeetingsPatchEntry {
 }
 
 export interface ProgramChangesDelta {
-  added: ChangeRecord[];
-  removed: string[];
-  patched: ProgramChangesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramChangesRemoval[];
+  inserted: ProgramChangesInsertion[];
+  moved: ProgramChangesRelocation[];
+  modified: ProgramChangesPatchEntry[];
+}
+
+export interface ProgramChangesInsertion {
+  index: number;
+  row: ChangeRecord;
+}
+
+export interface ProgramChangesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramChangesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramChangesPatchEntry {
@@ -790,10 +1638,26 @@ export interface ProgramChangesPatchEntry {
 }
 
 export interface ProgramCollaborationDelta {
-  added: CollaborationRecord[];
-  removed: string[];
-  patched: ProgramCollaborationPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramCollaborationRemoval[];
+  inserted: ProgramCollaborationInsertion[];
+  moved: ProgramCollaborationRelocation[];
+  modified: ProgramCollaborationPatchEntry[];
+}
+
+export interface ProgramCollaborationInsertion {
+  index: number;
+  row: CollaborationRecord;
+}
+
+export interface ProgramCollaborationRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramCollaborationRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramCollaborationPatchEntry {
@@ -802,10 +1666,26 @@ export interface ProgramCollaborationPatchEntry {
 }
 
 export interface ProgramAnalysesDelta {
-  added: AnalysisRecord[];
-  removed: string[];
-  patched: ProgramAnalysesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramAnalysesRemoval[];
+  inserted: ProgramAnalysesInsertion[];
+  moved: ProgramAnalysesRelocation[];
+  modified: ProgramAnalysesPatchEntry[];
+}
+
+export interface ProgramAnalysesInsertion {
+  index: number;
+  row: AnalysisRecord;
+}
+
+export interface ProgramAnalysesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramAnalysesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramAnalysesPatchEntry {
@@ -814,10 +1694,26 @@ export interface ProgramAnalysesPatchEntry {
 }
 
 export interface ProgramReportsDelta {
-  added: ReportRecord[];
-  removed: string[];
-  patched: ProgramReportsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramReportsRemoval[];
+  inserted: ProgramReportsInsertion[];
+  moved: ProgramReportsRelocation[];
+  modified: ProgramReportsPatchEntry[];
+}
+
+export interface ProgramReportsInsertion {
+  index: number;
+  row: ReportRecord;
+}
+
+export interface ProgramReportsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramReportsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramReportsPatchEntry {
@@ -826,10 +1722,26 @@ export interface ProgramReportsPatchEntry {
 }
 
 export interface ProgramSearchFiltersDelta {
-  added: SearchFilter[];
-  removed: string[];
-  patched: ProgramSearchFiltersPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSearchFiltersRemoval[];
+  inserted: ProgramSearchFiltersInsertion[];
+  moved: ProgramSearchFiltersRelocation[];
+  modified: ProgramSearchFiltersPatchEntry[];
+}
+
+export interface ProgramSearchFiltersInsertion {
+  index: number;
+  row: SearchFilter;
+}
+
+export interface ProgramSearchFiltersRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSearchFiltersRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSearchFiltersPatchEntry {
@@ -838,10 +1750,26 @@ export interface ProgramSearchFiltersPatchEntry {
 }
 
 export interface ProgramStatusRecordsDelta {
-  added: StatusRecord[];
-  removed: string[];
-  patched: ProgramStatusRecordsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramStatusRecordsRemoval[];
+  inserted: ProgramStatusRecordsInsertion[];
+  moved: ProgramStatusRecordsRelocation[];
+  modified: ProgramStatusRecordsPatchEntry[];
+}
+
+export interface ProgramStatusRecordsInsertion {
+  index: number;
+  row: StatusRecord;
+}
+
+export interface ProgramStatusRecordsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramStatusRecordsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramStatusRecordsPatchEntry {
@@ -850,10 +1778,26 @@ export interface ProgramStatusRecordsPatchEntry {
 }
 
 export interface ProgramWorkshopsDelta {
-  added: Workshop[];
-  removed: string[];
-  patched: ProgramWorkshopsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramWorkshopsRemoval[];
+  inserted: ProgramWorkshopsInsertion[];
+  moved: ProgramWorkshopsRelocation[];
+  modified: ProgramWorkshopsPatchEntry[];
+}
+
+export interface ProgramWorkshopsInsertion {
+  index: number;
+  row: Workshop;
+}
+
+export interface ProgramWorkshopsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramWorkshopsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramWorkshopsPatchEntry {
@@ -862,10 +1806,26 @@ export interface ProgramWorkshopsPatchEntry {
 }
 
 export interface ProgramSurveysDelta {
-  added: Survey[];
-  removed: string[];
-  patched: ProgramSurveysPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramSurveysRemoval[];
+  inserted: ProgramSurveysInsertion[];
+  moved: ProgramSurveysRelocation[];
+  modified: ProgramSurveysPatchEntry[];
+}
+
+export interface ProgramSurveysInsertion {
+  index: number;
+  row: Survey;
+}
+
+export interface ProgramSurveysRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramSurveysRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramSurveysPatchEntry {
@@ -874,10 +1834,26 @@ export interface ProgramSurveysPatchEntry {
 }
 
 export interface ProgramIssuesDelta {
-  added: Issue[];
-  removed: string[];
-  patched: ProgramIssuesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramIssuesRemoval[];
+  inserted: ProgramIssuesInsertion[];
+  moved: ProgramIssuesRelocation[];
+  modified: ProgramIssuesPatchEntry[];
+}
+
+export interface ProgramIssuesInsertion {
+  index: number;
+  row: Issue;
+}
+
+export interface ProgramIssuesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramIssuesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramIssuesPatchEntry {
@@ -886,10 +1862,26 @@ export interface ProgramIssuesPatchEntry {
 }
 
 export interface ProgramAuditEventsDelta {
-  added: AuditEvent[];
-  removed: string[];
-  patched: ProgramAuditEventsPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramAuditEventsRemoval[];
+  inserted: ProgramAuditEventsInsertion[];
+  moved: ProgramAuditEventsRelocation[];
+  modified: ProgramAuditEventsPatchEntry[];
+}
+
+export interface ProgramAuditEventsInsertion {
+  index: number;
+  row: AuditEvent;
+}
+
+export interface ProgramAuditEventsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramAuditEventsRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramAuditEventsPatchEntry {
@@ -898,10 +1890,26 @@ export interface ProgramAuditEventsPatchEntry {
 }
 
 export interface ProgramTemplatesDelta {
-  added: TemplateRecord[];
-  removed: string[];
-  patched: ProgramTemplatesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramTemplatesRemoval[];
+  inserted: ProgramTemplatesInsertion[];
+  moved: ProgramTemplatesRelocation[];
+  modified: ProgramTemplatesPatchEntry[];
+}
+
+export interface ProgramTemplatesInsertion {
+  index: number;
+  row: TemplateRecord;
+}
+
+export interface ProgramTemplatesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramTemplatesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramTemplatesPatchEntry {
@@ -910,10 +1918,26 @@ export interface ProgramTemplatesPatchEntry {
 }
 
 export interface ProgramTracesDelta {
-  added: TraceLink[];
-  removed: string[];
-  patched: ProgramTracesPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramTracesRemoval[];
+  inserted: ProgramTracesInsertion[];
+  moved: ProgramTracesRelocation[];
+  modified: ProgramTracesPatchEntry[];
+}
+
+export interface ProgramTracesInsertion {
+  index: number;
+  row: TraceLink;
+}
+
+export interface ProgramTracesRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramTracesRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramTracesPatchEntry {
@@ -967,17 +1991,6 @@ export const architectProgramDiffGuardMember = <T extends string>(value: unknown
 export const architectProgramDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
   value === expected ? expected : architectProgramDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
-
-export interface ProgramStringList {
-  readonly values: readonly string[];
-}
-
-export function parseProgramStringList(value: unknown, at = "$"): ProgramStringList {
-  const row = architectProgramDiffGuardObject(value, at);
-  return {
-    values: architectProgramDiffGuardArray(row["values"], `${at}.values`).map((item, index) => architectProgramDiffGuardString(item, `${at}.values[${index}]`)),
-  };
-}
 
 export type StakeholderPatch = Readonly<Record<string, unknown>>;
 
@@ -1876,10 +2889,26 @@ export function parseProgramTracesPatchEntry(value: unknown, at = "$"): ProgramT
 }
 
 export interface ProgramKnowledgeDelta {
-  added: KnowledgeRecord[];
-  removed: string[];
-  patched: ProgramKnowledgePatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramKnowledgeRemoval[];
+  inserted: ProgramKnowledgeInsertion[];
+  moved: ProgramKnowledgeRelocation[];
+  modified: ProgramKnowledgePatchEntry[];
+}
+
+export interface ProgramKnowledgeInsertion {
+  index: number;
+  row: KnowledgeRecord;
+}
+
+export interface ProgramKnowledgeRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramKnowledgeRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramKnowledgePatchEntry {
@@ -1888,10 +2917,26 @@ export interface ProgramKnowledgePatchEntry {
 }
 
 export interface ProgramBenchmarksDelta {
-  added: BenchmarkRecord[];
-  removed: string[];
-  patched: ProgramBenchmarksPatchEntry[];
-  reordered: string[] | null;
+  removed: ProgramBenchmarksRemoval[];
+  inserted: ProgramBenchmarksInsertion[];
+  moved: ProgramBenchmarksRelocation[];
+  modified: ProgramBenchmarksPatchEntry[];
+}
+
+export interface ProgramBenchmarksInsertion {
+  index: number;
+  row: BenchmarkRecord;
+}
+
+export interface ProgramBenchmarksRemoval {
+  id: string;
+  index: number;
+}
+
+export interface ProgramBenchmarksRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
 export interface ProgramBenchmarksPatchEntry {

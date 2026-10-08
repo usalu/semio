@@ -16,7 +16,7 @@ pub use crate::standards::v1_0::subsets::base::schema::*;
 /// catches a snapshot that arrived around the vocabulary entirely.
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod valid_mutations;
-pub use valid_mutations::{apply_xml_valid_mutation, XmlValidMutation, KINDS as VALID_MUTATION_KINDS};
+pub use valid_mutations::{XmlValidMutation, KINDS as VALID_MUTATION_KINDS};
 
 /// 🆕️ A new valid xml document: `<!DOCTYPE root><root/>` as the real parser reads it — XML 1.0 §5.1 validity needs a DOCTYPE
 /// whose Name is the document element's; the empty document has neither, and this subset refuses every edit (and every

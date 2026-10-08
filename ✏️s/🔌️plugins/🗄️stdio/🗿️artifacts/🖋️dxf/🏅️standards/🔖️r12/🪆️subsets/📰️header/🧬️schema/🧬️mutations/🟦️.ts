@@ -1,7 +1,7 @@
 /** 🧬️ DxfMutation union — mirrors `🧬️mutations/🦀️.rs`'s `#[serde(tag = "mutation")]`
  * enum, one discriminated variant per Rust variant, camelCase field names. */
 
-import type { DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfSnapshot, DxfStyle } from '../📸️snapshot/🟦️.ts';
+import type { DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle } from '../📸️snapshot/🟦️.ts';
 
 export type DxfMutation =
   | { mutation: 'setHeaderVar'; name: string; headerVar: DxfHeaderVar; index?: number }
@@ -20,4 +20,5 @@ export type DxfMutation =
   | { mutation: 'setEntity'; index: number; entity: DxfEntity }
   | { mutation: 'insertBlock'; index: number; block: DxfBlock }
   | { mutation: 'removeBlock'; index: number }
-  | { mutation: 'setBlock'; index: number; block: DxfBlock };
+  | { mutation: 'setBlock'; index: number; block: DxfBlock }
+  | { mutation: 'setOtherTables'; otherTables: DxfOtherTable[] };

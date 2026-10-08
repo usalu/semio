@@ -497,13 +497,15 @@
           }
         ],
         "interpolate": true,
-        "filters": [],
-        "data": [
-          0,
-          255,
-          128
-        ],
-        "extra": []
+        "extra": [],
+        "body": {
+          "kind": "samples",
+          "values": [
+            0,
+            255,
+            128
+          ]
+        }
       }
     },
     {

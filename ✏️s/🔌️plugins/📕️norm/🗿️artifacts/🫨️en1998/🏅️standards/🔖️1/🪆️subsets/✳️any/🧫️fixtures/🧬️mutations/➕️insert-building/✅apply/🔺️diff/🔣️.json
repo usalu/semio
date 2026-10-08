@@ -3,9 +3,9 @@
   "site": null,
   "buildings": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "bldg-office",
+        "index": 1,
         "row": {
           "id": "bldg-annex",
           "name": "Office annex RC frame",
@@ -108,41 +108,49 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "bridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "assessments": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "silos": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "tanks": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "foundations": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "retainingWalls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "towers": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

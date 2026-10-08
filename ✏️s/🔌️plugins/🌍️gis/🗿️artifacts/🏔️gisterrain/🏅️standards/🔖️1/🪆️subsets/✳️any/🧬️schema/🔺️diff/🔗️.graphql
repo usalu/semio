@@ -2,7 +2,6 @@
 # 🔺️ Sparse Terrain document changes; null means unchanged.
 # import GisTerrainArtifact from "../🔗️.graphql"
 type GisTerrainDiff {
-  artifact: GisTerrainArtifact @state(class: ARTIFACT)
   exaggeration: Float @state(class: ARTIFACT)
   importedMap: ImportedMapChange @state(class: ARTIFACT)
 }

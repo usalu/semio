@@ -24,23 +24,8 @@ fn absorb_cancels_a_create_followed_by_its_delete() {
     let mut floor = base.floors[0].clone();
     floor.id = "floor-extra".into();
     let mut sum = En1991Mutation::InsertFloors(crate::mutations::insert_floors::InsertFloors { index: 1, item: floor }).diff(&base).diff().clone();
-    sum.absorb(En1991Diff { floors: En1991FloorDelta::removal("floor-extra"), ..Default::default() });
+    let mid = apply_diff(&sum, &base).expect("the insertion applies");
+    sum.absorb(En1991Diff { floors: En1991FloorDelta::removal(&mid.floors, 1), ..Default::default() });
     assert!(sum.is_empty());
 }
 
-/// 🧭️ `between` carries a document to another and its `inverse` carries it back.
-#[test]
-fn between_carries_a_document_to_another_and_inverts() {
-    let base = En1991Snapshot::default();
-    let mut target = base.clone();
-    target.altitude += 250.0;
-    target.floors[0].assumed_qk += 50.0;
-    let mut extra = target.floors[0].clone();
-    extra.id = "floor-extra".into();
-    target.floors.push(extra);
-    target.roofs.clear();
-    let delta = En1991Diff::between(&base, &target);
-    assert_eq!(apply_diff(&delta, &base).expect("between applies"), target);
-    assert_eq!(apply_diff(&delta.inverse(&base), &target).expect("inverse applies"), base);
-    assert!(En1991Diff::between(&base, &base).is_empty());
-}

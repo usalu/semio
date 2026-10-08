@@ -8,6 +8,6 @@ pub fn diff(payload: &super::DeleteHandleKind, base: &Block2dSnapshot) -> protoc
     if !base.handle_kinds.iter().any(|item| item.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "handle-kind", payload.id), vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block2dDiff { handle_kinds: Some(Block2dHandleKindsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { handle_kinds: Block2dHandleKindsDelta::removal(&base.handle_kinds, base.handle_kinds.iter().position(|item| item.id == payload.id).unwrap_or(usize::MAX)), ..Default::default() })
 }
 //#endregion 🔖️Diff

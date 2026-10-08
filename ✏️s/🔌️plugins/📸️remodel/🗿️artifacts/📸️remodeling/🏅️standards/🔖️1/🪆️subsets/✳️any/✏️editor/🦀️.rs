@@ -144,6 +144,17 @@ pub use semio_framework_plugin::ui_node_list;
 
 //#endregion 🔖️Constants
 
+//#region 🔖️ResetDocument
+/// 🌱️ Builds an `Effect::LoadDocument` that swaps the live document to `document` OUTSIDE undo history — the sanctioned
+/// path for an example switch, a JSON load or an import: the whole document is load content, never mutation rows and never
+/// a before/after diff. The spr is a fresh, edit-free op-log for `document` (`store::empty_document_spr`).
+pub fn reset_document_effect(document: &RemodelingSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <RemodelingSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("remodeling", REMODELING_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
+
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_remodeling_app` already declares via `.artifact_kind(...)`, plus the two Wave-2 port-recipe ports:
@@ -637,9 +648,7 @@ fn remodeling_window_config_mutation(
 ) -> Result<Option<semio_framework_plugin::WindowConfigMutation>, Fault> {
     match command {
         RemodelingCommand::SetCamera(payload) => {
-            let mut config = model::windows::model::config::from_snapshot(snapshot);
-            config.camera = payload.camera.clone();
-            model::windows::model::config::addressed(view, config).map(Some)
+            model::windows::model::config::addressed_camera(view, payload.camera.clone()).map(Some)
         }
         RemodelingCommand::SetLayerVisibility(payload) => {
             let mut config = model::windows::model::config::from_snapshot(snapshot);
@@ -651,7 +660,7 @@ fn remodeling_window_config_mutation(
                 "gcps" => config.layers.gcps = payload.visible,
                 _ => {}
             }
-            model::windows::model::config::addressed(view, config).map(Some)
+            model::windows::model::config::addressed_layers(view, config.layers).map(Some)
         }
         RemodelingCommand::SetFrameCursor(payload) => {
             let mut config = capture::windows::frames::config::from_snapshot(snapshot);

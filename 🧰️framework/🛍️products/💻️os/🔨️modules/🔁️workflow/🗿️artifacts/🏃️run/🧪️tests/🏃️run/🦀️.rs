@@ -388,3 +388,27 @@ async fn language_neutral_package_cases_match_serde_json() {
         assert_eq!(actual, case["expected"], "{}", case["name"]);
     }
 }
+
+/// ↩️ A composed diff's inverse reads each slot's prior row from the base or from an earlier row of the same diff, never from
+/// an applied copy: undoing the sealed result returns to the base.
+#[semio_framework_async_macros::async_test]
+async fn composed_run_diff_inverse_reads_rows_and_restores_the_base() {
+    use protocol::DiffAlgebra as _;
+    let mut base = sample_run_document().await;
+    let line = |message: &str| RunLogLine { node_id: "a".into(), level: "info".into(), message: message.into(), at: "3".into() };
+    base.logs = vec![line("one"), line("two")];
+    let diff = RunDiff {
+        steps: vec![
+            RunStep::LogAppend(line("three")),
+            RunStep::LogRetract { count: 2 },
+            RunStep::Node { node_id: "b".into(), record: Some(sample_run_node_record("b", RunNodeStatus::Computed).await) },
+            RunStep::Node { node_id: "b".into(), record: None },
+            RunStep::Seal(RunSealEdit { sealed: true, status: RunStatus::Succeeded, finished_at: Some("9".into()) }),
+        ],
+    };
+    let after = protocol::apply_diff(&diff, &base).expect("composed run diff applies");
+    assert!(after.sealed);
+    let inverse = protocol::DiffAlgebra::<RunArtifact>::inverse(&diff, &base);
+    let restored = protocol::apply_diff(&inverse, &after).expect("the row-read inverse applies");
+    assert_eq!(restored, base);
+}

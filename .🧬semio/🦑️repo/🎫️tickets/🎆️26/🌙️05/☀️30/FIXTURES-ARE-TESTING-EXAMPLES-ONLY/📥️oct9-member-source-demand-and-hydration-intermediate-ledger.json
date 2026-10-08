@@ -1,0 +1,181 @@
+{
+  "time": "2026-10-08T23:03:01.238240+00:00",
+  "status": "INTERMEDIATE_NOT_SOURCE_FREEZE_NATIVE_RUNTIME_PENDING",
+  "endpoints": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "currentObservedSha256": "9586cf2651f335a24c68a5fe31d35c2562e2b487fbd79fbddce28a7113a6910a",
+      "actionReceipts": [
+        "📥️oct9-current-source-tree-demand-neutral-action.json",
+        "📥️oct9-current-hydration-full-close-neutral-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+      "currentObservedSha256": "25e88a16149c6700f3c51b5d1d4c8ac36624da5e769b71bd5857729ab538b93e",
+      "actionReceipts": [
+        "📥️oct9-current-source-tree-demand-neutral-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧵️retained/🦀️.rs",
+      "currentObservedSha256": "e6902bb586829faa28f7e67cf065f0def797231fbf77bd7a8f3d3ffac64d24b0",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+      "currentObservedSha256": "c14d856e48ecc20907336cceacd15448506478b90c93243193a16e00c69527d2",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "currentObservedSha256": "2893b136177fa8003f008ef1af72683cbf51116ac15c9732e5063252a00bf2cf",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️replay-retirement/🦀️.rs",
+      "currentObservedSha256": "b7f10f04f53b4f82abf4ce04404493e758eb25b4e72b5e26ab5e27b28ecac259",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs",
+      "currentObservedSha256": "c74ff42de96fe9571b9b46563ac113df6b2d003c7a7a374691b90698bb4b1642",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+      "currentObservedSha256": "e28e788f4b1410d7593d4ace30acdf3b42462a4319d6be79334dd4a55e08cab9",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs",
+      "currentObservedSha256": "6dd111e0ca56ebf1572b4bc57453df86be1bd7ff50a14fb4bab85afe821b3b37",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json",
+        "📥️oct9-current-plugin-member-original-source-tree-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "currentObservedSha256": "dee2ed688543efb3cec51120726ca1f108edd92b1baffcedf246aa02a276fcd3",
+      "actionReceipts": [
+        "📥️oct9-current-member-source-demand-defining-actions.json",
+        "📥️oct9-current-preparation-source-tree-pricing-actions.json",
+        "📥️oct9-current-initial-and-member-factory-source-demand-actions.json",
+        "📥️oct9-current-member-factory-demand-admission-action.json",
+        "📥️oct9-current-bounded-original-source-demand-action.json",
+        "📥️oct9-current-bounded-preparation-original-source-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "currentObservedSha256": "bda6b2e4fd013898601af678b12cabb18caf986dadc54602b8ce6168c674753b",
+      "actionReceipts": [
+        "📥️oct9-current-preparation-source-tree-pricing-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "currentObservedSha256": "99dc6f7b05327662f64c9e39d1da10adf14e29b62aa6b5e5563ab5913f6fe99a",
+      "actionReceipts": [
+        "📥️oct9-current-preparation-source-tree-pricing-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "currentObservedSha256": "8d553d554743254763f36bd271a0583e26ceaa7c332b5e7f3ea3165f8f2e5d9d",
+      "actionReceipts": [
+        "📥️oct9-current-initial-and-member-factory-source-demand-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+      "currentObservedSha256": "db821f7c5f895c915573d49dbc44f299b17dc55b963026ac5f824748b92b1c58",
+      "actionReceipts": [
+        "📥️oct9-current-plugin-member-original-source-tree-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+      "currentObservedSha256": "024bec88e7aad3f5d9d481812c6c2c6488592a6890d0500a400975c33d07f19f",
+      "actionReceipts": [
+        "📥️oct9-current-plugin-member-original-source-tree-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+      "currentObservedSha256": "da612a0ba53e7299cbd5d2a67461412c8bac2dfc4f82401c634269ca2178eed8",
+      "actionReceipts": [
+        "📥️oct9-current-db-member-source-defining-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+      "currentObservedSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767",
+      "actionReceipts": [
+        "📥️oct9-current-factory-law-defining-demand-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🔬️unit/🟦️.ts",
+      "currentObservedSha256": "536d265c757647c44b98d107868cbec130f81af46c8f2dd33d79710640901937",
+      "actionReceipts": [
+        "📥️oct9-current-birth-neutral-source-demand-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+      "currentObservedSha256": "6bccd5bfe3e0c0a565ad3b368c66c1b1e9589555ce2a62c0c661993f34d6a887",
+      "actionReceipts": [
+        "📥️oct9-current-member-catalog-native-full-receipt-actions.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧪️tests/🟦️.ts",
+      "currentObservedSha256": "42dcf29c568c44432a1efce6e2b57f93f83a7d75c5ce3623b165fe8fcae11198",
+      "actionReceipts": [
+        "📥️oct9-current-member-catalog-neutral-full-receipt-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "currentObservedSha256": "c75b701fa710f6ad3813360b59217ed8cac4452faf0a04b8424edc62777deb55",
+      "actionReceipts": [
+        "📥️oct9-current-hydration-full-close-production-action.json"
+      ],
+      "attribution": "only exact guarded logical actions in referenced preimages; whole current hash observes peer state too"
+    }
+  ]
+}

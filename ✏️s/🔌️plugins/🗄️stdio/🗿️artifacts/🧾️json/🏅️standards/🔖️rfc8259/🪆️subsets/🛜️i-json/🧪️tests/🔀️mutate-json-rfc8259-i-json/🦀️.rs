@@ -4,7 +4,7 @@
 //! restricts the JSON value space and the reference has to surface member order, duplicate names and
 //! exact number lexemes — see that file's own header and the subset's oracle manifest. This adapter
 //! therefore carries the SUBJECT half only: this repository's own
-//! `JsonSnapshot`/`JsonIJsonMutation`/`apply_json_i_json_mutation` over the full ten-kind vocabulary,
+//! `JsonSnapshot`/`JsonIJsonMutation`/`apply_mutation` over the full ten-kind vocabulary,
 //! decoded and re-encoded through the subset's own codec alone. It is gated behind the generated
 //! host's `sut` feature, so the oracle-only run never compiles the local implementation.
 //!
@@ -30,7 +30,7 @@ mod subject {
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_json::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::i_json::schema::mutations::{is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation};
     use semio_s_artifact_stdio_json_test_oracle::standards::v_rfc8259::subsets::base::project_json_value;
 
     //#region 🔖️Input
@@ -64,7 +64,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = snapshot_of(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let outcome = apply_json_i_json_mutation(&mut snapshot, &mutation);
+        let outcome = apply_mutation(&mut snapshot, &mutation);
         if !outcome.messages().is_empty() {
             return Err(format!("the subject refused the mutation: {:?}", outcome.messages()));
         }
@@ -81,9 +81,9 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
-        apply_json_i_json_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_json_i_json_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         let bytes = emit(&snapshot)?;
         let projection = project_json_value(&bytes)?;

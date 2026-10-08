@@ -1,0 +1,7 @@
+# Runtime28 Structural Source Review
+
+Current JSON/TS 28 declarations preserve raw Cargo extra fields and optional nullable runtime projection coordinates. Completed Unit retains strict digest/base-directory custody; Observation uses status=0 and cancelled=false, matching admitted proof. Compiler-resource records include optional nullable raw producer/caller identity and required nullable retained capture/unit fields. Verification explicitly reexports canonical Trunk/Actor/Checksum types rather than defining duplicate authorities. No fixture imports were introduced in schema source.
+
+Current test's exact AST names/count plus independent Ajv five examples establishes export roster and those example admissions, not structural equality. Strengthen the same test by deriving canonical structural signatures from JSON definitions and TypeScript AST: object property sets and optionality, openness/index signature, primitives/literals/enums, arrays/tuples, local references and union/null alternatives, recursively nested objects. Normalize union ordering and readonly array aliases, then compare each export. No new test schema is required. JSON numeric ranges, patterns and cross-field runtime invariants remain Ajv/parser responsibilities because TypeScript does not express them.
+
+No execution by this audit; Root's actual selected session 10848 supplies any terminal test receipt separately. No production/compiler positive inferred.

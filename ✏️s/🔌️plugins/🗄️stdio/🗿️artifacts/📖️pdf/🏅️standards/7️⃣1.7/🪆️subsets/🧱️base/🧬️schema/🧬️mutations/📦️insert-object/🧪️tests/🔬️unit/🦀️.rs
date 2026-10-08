@@ -11,5 +11,5 @@ fn semantic_identity_is_owned_by_this_leaf() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     let (before, _after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/📦️insert-object/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/📦️insert-object/➡️after.pdf"));
-    assert_mutation_inverse_sum_law(&PdfMutation::InsertObject(InsertObject { id: ObjRef { num: 900, gen: 0 }, value: PdfObject::Int(7), index: None }), &before).await;
+    assert_mutation_inverse_sum_law(&PdfMutation::InsertObject(InsertObject { id: ObjRef { num: 900, gen: 0 }, value: PdfObject::Int(7), index: None, admitted_stream_roles: None }), &before).await;
 }

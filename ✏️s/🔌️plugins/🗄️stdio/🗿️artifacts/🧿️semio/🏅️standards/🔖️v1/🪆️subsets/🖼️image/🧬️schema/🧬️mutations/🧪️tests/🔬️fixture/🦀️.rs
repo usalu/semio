@@ -20,5 +20,3 @@ mod tests_set_frame_pixels_repaints_the_only_frame_black;
 mod tests_set_icc_attaches_an_icc_profile_where_there_was_none;
 #[path = "../../🏷️set-metadata-entry/🧪️tests/✍️rewrites/🦀️.rs"]
 mod tests_set_metadata_entry_rewrites_the_existing_author_entry;
-#[path = "../../📸️set-snapshot/🧪️tests/⚫️retargets/🦀️.rs"]
-mod tests_set_snapshot_retargets_the_document_onto_a_grayscale_sixteen_bit_variant;

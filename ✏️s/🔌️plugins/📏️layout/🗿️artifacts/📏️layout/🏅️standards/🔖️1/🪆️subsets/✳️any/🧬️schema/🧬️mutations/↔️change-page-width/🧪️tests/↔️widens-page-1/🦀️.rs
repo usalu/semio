@@ -85,13 +85,13 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-page-width/widens-page-1: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().pages.as_ref().expect("change-page-width fills the pages delta");
-    assert_eq!(delta.patched[0].patch.width, Some(240.0), "change-page-width fills the patch's `width` field");
-    assert!(delta.patched[0].patch.height.is_none(), "change-page-width must not emit a `height` patch");
+    assert_eq!(delta.modified[0].patch.width, Some(240.0), "change-page-width fills the patch's `width` field");
+    assert!(delta.modified[0].patch.height.is_none(), "change-page-width must not emit a `height` patch");
 }
 
 /// 🔺️ The sparse delta `change-page-width` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here only `pages.patched[0].patch.width` is populated — `height` stays null, proving the single-axis contract at the diff level.
+/// end state matches. Here only `pages.modified[0].patch.width` is populated — `height` stays null, proving the single-axis contract at the diff level.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();

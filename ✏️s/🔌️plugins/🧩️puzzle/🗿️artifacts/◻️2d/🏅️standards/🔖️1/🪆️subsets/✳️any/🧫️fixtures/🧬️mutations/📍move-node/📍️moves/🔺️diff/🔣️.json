@@ -4,8 +4,8 @@
   "edges": null,
   "meta": null,
   "nodes": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36",
         "patch": {
@@ -14,8 +14,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetRegions": null

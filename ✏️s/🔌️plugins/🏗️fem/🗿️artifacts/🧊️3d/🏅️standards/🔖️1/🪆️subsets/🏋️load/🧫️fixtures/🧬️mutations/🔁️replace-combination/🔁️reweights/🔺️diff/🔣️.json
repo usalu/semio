@@ -7,12 +7,13 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "sls",
-        "item": {
+        "patch": {
           "id": "sls",
           "name": "SLS characteristic",
           "terms": {
@@ -21,8 +22,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "analysis": null
 }

@@ -1,16 +1,18 @@
 syntax = "proto3";
-// 🔺️ SemioGraphDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+// 🔺️ SemioGraphDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
 package semio.s_stdio_semio_graph.diff;
 
-import "../📸️snapshot/🛰️.proto";
-
-message SemioGraphNodeListDiff {
-  repeated semio.s_stdio_semio_graph.snapshot.SemioGraphNode values = 1;
-}
-message SemioGraphEdgeListDiff {
-  repeated semio.s_stdio_semio_graph.snapshot.SemioGraphEdge values = 1;
-}
-message SemioGraphDiff {
-  optional SemioGraphNodeListDiff nodes = 1;
-  optional SemioGraphEdgeListDiff edges = 2;
-}
+message ReplaceSemioGraphPort { bytes value = 1; }
+message IndexModifiedReplaceSemioGraphPort { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioGraphPort { uint64 index = 1; bytes item = 2; }
+message IndexedTripleReplaceSemioGraphPortSemioGraphPort { repeated uint64 removed = 1; repeated IndexModifiedReplaceSemioGraphPort modified = 2; repeated IndexAddedSemioGraphPort added = 3; }
+message IndexModifiedSemioGraphEdgeDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioGraphEdge { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioGraphEdgeDiffSemioGraphEdge { repeated uint64 removed = 1; repeated IndexModifiedSemioGraphEdgeDiff modified = 2; repeated IndexAddedSemioGraphEdge added = 3; }
+message IndexModifiedSemioGraphNodeDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioGraphNode { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioGraphNodeDiffSemioGraphNode { repeated uint64 removed = 1; repeated IndexModifiedSemioGraphNodeDiff modified = 2; repeated IndexAddedSemioGraphNode added = 3; }
+message SemioGraphEntryDiff { optional SemioValue value = 1; }
+message SemioGraphNodeDiff { optional GraphNodeId id = 1; optional string kind = 2; optional string label = 3; optional SemioPoint2 position = 4; optional double width = 5; optional double height = 6; optional IndexedTripleReplaceSemioGraphPortSemioGraphPort ports = 7; optional SemioGraphPropertiesDiff properties = 8; }
+message SemioGraphEdgeDiff { optional GraphNodeId source = 1; optional GraphNodeId target = 2; optional string kind = 3; optional string label = 4; optional optional string source_port = 5; optional optional string target_port = 6; optional SemioGraphPropertiesDiff properties = 7; }
+message SemioGraphDiff { optional IndexedTripleSemioGraphNodeDiffSemioGraphNode nodes = 1; optional IndexedTripleSemioGraphEdgeDiffSemioGraphEdge edges = 2; }

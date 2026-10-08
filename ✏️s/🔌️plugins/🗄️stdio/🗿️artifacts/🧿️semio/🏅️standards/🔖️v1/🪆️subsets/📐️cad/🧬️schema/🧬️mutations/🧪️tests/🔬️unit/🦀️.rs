@@ -102,3 +102,33 @@ async fn removals_invert_at_every_position() {
     }
 }
 
+//#region ↩️LeafInverseLaws
+#[path = "../../✂️remove-block-entity/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_block_entity;
+#[path = "../../🎚️set-layer/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_layer;
+#[path = "../../🏳️set-entity-layer/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_entity_layer;
+#[path = "../../📍set-block-base-point/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_block_base_point;
+#[path = "../../📐set-entity-geometry/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_entity_geometry;
+#[path = "../../🔷add-entity/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_add_entity;
+#[path = "../../🔺set-block-entity-geometry/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_block_entity_geometry;
+#[path = "../../🗂️add-layer/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_add_layer;
+#[path = "../../🗑️remove-entity/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_entity;
+#[path = "../../🚫remove-block/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_block;
+#[path = "../../🧩add-block-entity/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_add_block_entity;
+#[path = "../../🧱add-block/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_add_block;
+#[path = "../../🧷️set-block-entity-layer/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_block_entity_layer;
+#[path = "../../🧹remove-layer/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_layer;
+//#endregion ↩️LeafInverseLaws

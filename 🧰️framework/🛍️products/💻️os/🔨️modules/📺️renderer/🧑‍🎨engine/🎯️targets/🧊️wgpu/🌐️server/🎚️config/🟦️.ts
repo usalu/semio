@@ -3,7 +3,6 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWgpuBrowserConfig } from "../🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 
@@ -22,21 +21,22 @@ export function wgpuCompletedFrameworkRootsV1(profile: "dev" | "release") {
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
   };
 }
-export default () => {
-  const variant = process.env.SEMIO_PLUGIN;
-  const playground = PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant);
-  if (!playground) throw new Error("Select a generated WGPU playground through Nx");
+export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
+  const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
   const moduleRoot = pluginModulesRoot(profile);
   const runtime = developmentRuntimeRoot(resolve(root, "../../../../../🧑‍💻dev/📦️packages/🟦️typescript"), variant!, profile, "wgpu");
   const config = createWgpuBrowserConfig({
     workspace, root, profile, variant,
+    catalog: options.catalog,
     ...wgpuCompletedFrameworkRootsV1(profile),
     moduleRoot,
     extensionRoot: join(runtime, "extensions"),
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),
-    assets: playground.assets,
+    assets: options.assets,
     assetServeMode: resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE),
   });
   return { ...config, plugins: [semioServeCloseVitePlugin(), ...config.plugins!, semioBackboneVitePlugin(), ...semioAssetsVitePlugin(workspace), ...semioSourceFreshnessVitePlugins({ repoRoot: workspace })], server: { ...config.server, ...(process.env.S_LOCAL_RELAY_URL ? { proxy: { "/_semio": { target: process.env.S_LOCAL_RELAY_URL, changeOrigin: false, headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined } } } : {}) } };
-};
+}
+
+export default () => createCompletedWgpuConfigurationV1({ variant: undefined, catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, assets: [] });

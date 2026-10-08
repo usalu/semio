@@ -1739,8 +1739,8 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.controller_id = "block-list-controller".into();
     scene.block_list = Some(ui_wgpu::wgpu::BlockListScene {
-        steps_json: serde_json::json!([{ "id": "basics", "title": "Basics", "blocks": [] }]).to_string(),
-        palette_json: serde_json::json!([{ "blockKind": "filter", "label": "Filter", "iconId": "funnel" }]).to_string(),
+        steps: serde_json::from_value(serde_json::json!([{ "id": "basics", "title": "Basics", "blocks": [] }])).expect("typed section"),
+        palette: serde_json::from_value(serde_json::json!([{ "blockKind": "filter", "label": "Filter", "iconId": "funnel" }])).expect("typed palette"),
         selected_id: None,
         dragging_id: None,
         domain_id: None,

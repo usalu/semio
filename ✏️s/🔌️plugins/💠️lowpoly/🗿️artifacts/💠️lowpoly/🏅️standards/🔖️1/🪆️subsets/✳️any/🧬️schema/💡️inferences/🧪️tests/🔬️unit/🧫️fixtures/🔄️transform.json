@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "id": "identity",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "local": [
+        1,
+        2,
+        3
+      ],
+      "quaternion": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "world": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "scale-translate",
+      "transform": {
+        "position": [
+          10,
+          -20,
+          30
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          2,
+          -3,
+          0.5
+        ]
+      },
+      "local": [
+        1,
+        2,
+        4
+      ],
+      "quaternion": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "world": [
+        12,
+        -26,
+        32
+      ]
+    },
+    {
+      "id": "z-quarter-turn",
+      "transform": {
+        "position": [
+          3,
+          4,
+          5
+        ],
+        "rotation": [
+          0,
+          0,
+          90
+        ],
+        "scale": [
+          2,
+          3,
+          4
+        ]
+      },
+      "local": [
+        1,
+        2,
+        3
+      ],
+      "quaternion": [
+        0,
+        0,
+        0.7071067811865475,
+        0.7071067811865476
+      ],
+      "world": [
+        -3,
+        6,
+        17
+      ]
+    },
+    {
+      "id": "xyz-quarter-turns",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          90,
+          90,
+          90
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "local": [
+        1,
+        2,
+        3
+      ],
+      "quaternion": [
+        0.7071067811865475,
+        0,
+        0.7071067811865475,
+        0
+      ],
+      "world": [
+        3,
+        -2,
+        1
+      ]
+    },
+    {
+      "id": "negative-scale-y-half-turn",
+      "transform": {
+        "position": [
+          -1,
+          2,
+          -3
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          -1,
+          2,
+          -3
+        ]
+      },
+      "local": [
+        1,
+        -2,
+        3
+      ],
+      "quaternion": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "world": [
+        0,
+        -2,
+        6
+      ]
+    }
+  ]
+}

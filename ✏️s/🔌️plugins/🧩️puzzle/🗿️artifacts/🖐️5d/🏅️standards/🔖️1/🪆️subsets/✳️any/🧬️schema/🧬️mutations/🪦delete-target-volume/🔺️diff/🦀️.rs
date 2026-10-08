@@ -4,9 +4,9 @@ use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteTargetVolume, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
-    if !base.target_volumes.iter().any(|item| item.id == payload.id) {
+    let Some(at) = base.target_volumes.iter().position(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "target volume", payload.id), vec![payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(Puzzle5dDiff { target_volumes: Some(Puzzle5dTargetVolumesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(Puzzle5dDiff { target_volumes: Some(Puzzle5dTargetVolumesDelta::removal_by_id(payload.id.clone(), at)), ..Default::default() })
 }
 //#endregion 🔖️Diff

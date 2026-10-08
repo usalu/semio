@@ -1,0 +1,16 @@
+# Resumed Corpus Authority and Domain Data Repair
+
+The two newly found independent corpus schemas are removed. Their consumers still execute unchanged plain examples against real provider and ownership behavior; no corpus grammar is moved or recreated. The provider retains actual payload Ajv admission, minimatch ownership and third-party TOML comparison. The S ownership examples retain independent path projection and TOML comparison. Both original plain example files retain their exact preimage bytes.
+
+The actual full RED found 982 fixture diagnostics: 979 ordinary BIM snapshots with a domain `properties: {}` map, the two corpus authorities, and one S service-composition corpus authority assigned to the publication lane. Its complete 13281 JSON rows have zero malformed rows and footer 4458 modules / 3614 scopes / 13281 findings. This is an intermediate stale-derived source check, not a coordinated source or production success.
+
+The generic classifier now distinguishes an empty domain property map alongside ordinary model fields from a schema. Pure empty `properties` schemas, explicitly typed schemas, nonempty schema properties, dialect/ref/definitions/composition grammar and structural contract paths remain recognized. No BIM snapshot, inert declaration, runtime asset or path exemption was edited. Three new language-agnostic examples include independent locked Ajv compilation; `strictTypes: false` permits valid draft07 omission of `type` while strict schema keywords still refuse ordinary domain fields. The first GREEN attempt identified this oracle configuration issue; it is retained as a failure.
+
+Meaningful RED14681: actual inventory rejected the new ordinary-domain case, expected zero diagnostics but received schema-fixture-defines-schema (Nx1/2.5s). Final34924: registered private root-resumed-corpus-tests passed Nx0/1.9s, 47 actual provider laws, 2 S neutral tests with 38 expectations, and all4 schema catalog tests with584 expectations. Current catalog neutral case count is 113. Both live and seed launch register the existing private script command at 4_gate/900.299.
+
+- Actual full RED: 6060355 complete raw bytes, SHA-256 `fa02686fa972806afc9ce1e0809312c9098ae39ec47d8fb678bb57331626b4eb`, duration `54.2s`.
+- Meaningful domain-data RED: 13825 complete raw bytes, SHA-256 `4ac2dc1e29a48a2a0fa4800d43326628944d236e056f8b9f49505d4b2f8710be`, duration `2.5s`.
+- First incomplete GREEN: oracle failure: 17489 complete raw bytes, SHA-256 `6a018659c6114aca1ba1134f23b4a45740d38dc3389bf59f706dc3c4dde1147b`, duration `1.9s`.
+- Final locked-oracle GREEN: 14395 complete raw bytes, SHA-256 `75da9905fe335a00f2122122122a356d348c532b68937805ede2150be4a1b197`, duration `1.9s`.
+
+Exact authored ledger: 9 updated and2 removed source/wiring endpoints; both unchanged example observations are excluded from authorship. The original13 input bodies/hashes are retained in 📥️oct8-resumed-corpus-and-domain-authority-source-input.json. Current post-terminal source/byte ledger is 📥️oct8-resumed-corpus-and-domain-settled-inputs.json. Fresh derived/docs/full/permanent validation remains pending with the Native and real service inventory contracts; actual dev/release/publication/default runtime/HTTP are still required.

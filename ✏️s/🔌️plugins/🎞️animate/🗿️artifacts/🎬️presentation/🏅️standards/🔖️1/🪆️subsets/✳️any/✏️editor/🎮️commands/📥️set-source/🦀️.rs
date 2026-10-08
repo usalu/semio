@@ -3,9 +3,8 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
+use crate::editor::animate::{interaction_select_effect, tile_roster_mutations, PresentationDispatchCtx};
 use crate::mutations::replace_source::ReplaceSource;
-use crate::mutations::replace_tiles::ReplaceTiles;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{FigureTileSource, PresentationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -25,7 +24,7 @@ pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentationSnapshot>,
     let mut operations = vec![PresentationMutation::ReplaceSource(ReplaceSource { new_source: payload.source.clone() })];
     let mut emit_effects = Vec::new();
     if replaced {
-        operations.push(PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() }));
+        operations.extend(tile_roster_mutations(deck, Vec::new()));
         emit_effects.push(interaction_select_effect(&[], "replace"));
     }
     Ok(Emit { artifact_mutations: operations, effects: emit_effects, ..Default::default() })

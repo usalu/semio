@@ -40,9 +40,10 @@
   "delivery": null,
   "risks": null,
   "conflicts": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "conflict-a",
         "patch": {
@@ -75,8 +76,7 @@
           "relatedRiskIds": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "requirements": null,
   "priorities": null,

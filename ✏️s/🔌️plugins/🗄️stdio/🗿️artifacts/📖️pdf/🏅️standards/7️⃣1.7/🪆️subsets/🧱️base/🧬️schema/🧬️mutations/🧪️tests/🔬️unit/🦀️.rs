@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use crate::standards::v1_7::subsets::base::io::text_document;
 use crate::standards::v1_7::subsets::base::io::{binary::mutations as binary, text::mutations as text};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
@@ -70,27 +71,37 @@ fn samples_apply_and_invert_on_a_real_document() {
     }
 }
 
+fn resolved(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, String> {
+    if let Some(leaves) = special_edit(event, base).map_err(|fault| format!("{fault:?}"))? {
+        return Ok(leaves);
+    }
+    EDIT_RULES.resolve::<PdfSnapshot, PdfMutation>(base, event).map_err(|error| error.to_string())
+}
+
 #[test]
-fn the_net_of_an_edit_replays_to_exactly_the_edited_document() {
+fn a_details_edit_dispatches_the_concrete_kind_of_the_field_it_names() {
+    use semio_framework_value::ToValue;
+    use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
     let space = |name: &str| PdfNamedColorSpace { name: name.to_string(), color_space: PdfColorSpace::DeviceRgb };
     let mut base = text_document(&[(200.0, 100.0, "one"), (300.0, 100.0, "two"), (400.0, 100.0, "three")]);
     base.color_spaces = vec![space("A"), space("B"), space("C")];
-    let net = |change: fn(&mut PdfSnapshot)| {
-        let mut next = base.clone();
-        change(&mut next);
-        semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &next, net_mutations).expect("the net replays to the edited document")
-    };
-    assert!(net(|_| {}).is_empty(), "an unchanged document needs no leaf");
-    assert!(matches!(net(|next| next.language = Some("de-CH".to_string())).as_slice(), [PdfMutation::SetLanguage(_)]));
-    assert!(matches!(net(|next| next.info.title = Some("net".to_string())).as_slice(), [PdfMutation::SetInfo(_)]));
-    assert!(matches!(net(|next| next.pages[1].rotate = 90).as_slice(), [PdfMutation::ReplacePage(ReplacePage { index: 1, .. })]));
-    assert!(matches!(net(|next| next.pages.remove(1)).as_slice(), [PdfMutation::RemovePage(RemovePage { index: 1 })]));
-    assert!(matches!(net(|next| next.pages.swap(1, 2)).as_slice(), [PdfMutation::MovePage(MovePage { from: 1, to: 2 })]));
-    assert!(matches!(net(|next| { next.color_spaces.remove(1); }).as_slice(), [PdfMutation::RemoveColorSpace(_)]));
-    assert!(matches!(net(|next| next.color_spaces.insert(1, PdfNamedColorSpace { name: "Z".to_string(), color_space: PdfColorSpace::DeviceGray })).as_slice(), [PdfMutation::SetColorSpace(SetColorSpace { index: Some(1), .. })]));
-    assert_eq!(net(|next| next.color_spaces.swap(0, 2)).len(), 6, "reordered survivors are rebuilt whole");
-    let mut other = base.clone();
-    other.schema = "other".to_string();
-    assert!(net_mutations(&base, &other).is_empty(), "a field no leaf addresses yields no leaf");
-    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &other, net_mutations).is_err(), "and the exact replay refuses the edit");
+    let set = |path: &str, value: semio_framework_value::DslValue| resolved(&SnapshotEditEvent::SetValue { path: path.to_string(), value }, &base);
+    assert!(matches!(set("/language", Some("de-CH".to_string()).to_value()).unwrap().as_slice(), [PdfMutation::SetLanguage(SetLanguage { language: Some(_) })]));
+    assert!(matches!(set("/info/title", "net".to_string().to_value()).unwrap().as_slice(), [PdfMutation::SetInfo(_)]));
+    assert!(matches!(set("/pages/1/rotate", 90i64.to_value()).unwrap().as_slice(), [PdfMutation::ReplacePage(ReplacePage { index: 1, .. })]));
+    assert!(set("/language", None::<String>.to_value()).unwrap().is_empty(), "an unchanged lane needs no leaf");
+    assert!(matches!(set("/colorSpaces/1", space("B2").to_value()).unwrap().as_slice(), [PdfMutation::RemoveColorSpace(RemoveColorSpace { name }), PdfMutation::SetColorSpace(SetColorSpace { index: Some(1), .. })] if name == "B"), "a renamed row keeps its position");
+    assert!(matches!(set("/colorSpaces/1/name", "B2".to_string().to_value()).unwrap().as_slice(), [PdfMutation::RemoveColorSpace(_), PdfMutation::SetColorSpace(SetColorSpace { index: Some(1), .. })]));
+    assert!(matches!(set("/colorSpaces/1", space("B").to_value()).unwrap().as_slice(), []), "an unchanged row needs no leaf");
+    let remove = |path: &str| resolved(&SnapshotEditEvent::RemoveValue { path: path.to_string() }, &base).unwrap();
+    assert!(matches!(remove("/pages/1").as_slice(), [PdfMutation::RemovePage(RemovePage { index: 1 })]));
+    assert!(matches!(remove("/colorSpaces/1").as_slice(), [PdfMutation::RemoveColorSpace(RemoveColorSpace { name })] if name == "B"));
+    let insert = resolved(&SnapshotEditEvent::InsertValue { path: "/colorSpaces/1".to_string(), value: PdfNamedColorSpace { name: "Z".to_string(), color_space: PdfColorSpace::DeviceGray }.to_value() }, &base).unwrap();
+    assert!(matches!(insert.as_slice(), [PdfMutation::SetColorSpace(SetColorSpace { index: Some(1), .. })]));
+    let moved = resolved(&SnapshotEditEvent::MoveValue { from: "/pages/1".to_string(), path: "/pages/2".to_string() }, &base).unwrap();
+    assert!(matches!(moved.as_slice(), [PdfMutation::MovePage(MovePage { from: 1, to: 2 })]));
+    let entry = resolved(&SnapshotEditEvent::InsertValue { path: "/trailer/-".to_string(), value: PdfDictEntry { key: "K".to_string(), value: PdfObject::Int(1) }.to_value() }, &base).unwrap();
+    assert!(matches!(entry.as_slice(), [PdfMutation::SetTrailerEntry(SetTrailerEntry { key, index: Some(0), .. })] if key == "K"));
+    assert!(set("/schema", "other".to_string().to_value()).is_err(), "the identity markers are not editable");
+    assert!(set("/colorSpaces", Vec::<PdfNamedColorSpace>::new().to_value()).is_err(), "a list lane is edited item by item");
 }

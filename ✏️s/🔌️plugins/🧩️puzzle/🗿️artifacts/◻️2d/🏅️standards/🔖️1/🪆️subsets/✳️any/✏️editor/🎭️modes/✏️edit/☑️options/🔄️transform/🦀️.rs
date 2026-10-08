@@ -8,7 +8,7 @@ use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select a
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_action, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::WindowMeasure;
-use serde_json::json;
+use semio_framework_pack_json::json;
 
 /// 🎛️ Tagged with the select utility's id as a routing envelope only; `partition_window_measures`
 /// unwraps the children so both toggles render flat under the Select toggle that already owns the row.

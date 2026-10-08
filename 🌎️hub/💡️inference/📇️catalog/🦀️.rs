@@ -14,7 +14,9 @@ use crate::artifact_authority::{
     TrustedArtifactCatalog, TrustedArtifactIdentity,
 };
 use crate::directory::model::AuthSessionRecord;
-use directory::os_directory::{descriptor_digest_v1, hex_lower, ArtifactFrontier, DocumentDescriptor, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentScope};
+use directory::os_directory::{ArtifactFrontier, DocumentDescriptor, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentScope};
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
+use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use semio_framework::ContributedInferenceMetadata;
 use semio_framework_plugin::ArtifactInferenceService;
 

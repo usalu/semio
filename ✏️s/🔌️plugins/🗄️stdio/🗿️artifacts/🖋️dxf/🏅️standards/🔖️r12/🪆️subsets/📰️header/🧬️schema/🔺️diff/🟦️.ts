@@ -4,7 +4,7 @@
  * full-replace `snapshot` slot anywhere. */
 
 import type {
-  DxfBlock, DxfEntity, DxfGroupCode, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle, DxfVertex,
+  DxfBlock, DxfEntity, DxfGroupCode, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfVertex,
 } from '../📸️snapshot/🟦️.ts';
 
 //#region HeaderVarDiff
@@ -92,6 +92,7 @@ export interface DxfDiff {
   tables?: DxfTablesDiff;
   blocks?: DxfBlocksDiff;
   entities?: DxfEntitiesDiff;
+  otherTables?: DxfOtherTable[];
 }
 
 //#region 🚪️Parsers
@@ -148,6 +149,7 @@ export function parseDxfDiff(value: unknown, at = "$"): DxfDiff {
     tables: row["tables"] === undefined ? undefined : parseDxfTablesDiff(row["tables"], `${at}.tables`),
     blocks: row["blocks"] === undefined ? undefined : parseDxfBlocksDiff(row["blocks"], `${at}.blocks`),
     entities: row["entities"] === undefined ? undefined : parseDxfEntitiesDiff(row["entities"], `${at}.entities`),
+    otherTables: row["otherTables"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["otherTables"], `${at}.otherTables`) as DxfOtherTable[],
   };
 }
 

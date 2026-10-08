@@ -1,6 +1,6 @@
 //! ⚡️ GIS map artifact — OpText/OpBinary codecs + grammar for `GisMapMutation`.
 
-use crate::schema::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::schema::mutations::{inverse_gis_map_mutation, GisMapMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -66,14 +66,15 @@ pub fn gis_map_mutation_report_json(base_json: &str, mutation_json: &str, after_
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: GisMapMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let forward = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(&mutation, &base);
+    let applied = protocol::apply_diff(forward.diff(), &base).map_err(|error| error.to_string())?;
     let inverse = <GisMapMutation as Mutation<GisMapSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    for step in &inverse {
-        let outcome = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+    for step in inverse.iter().rev() {
+        let outcome = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(step, &undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
+        undone = protocol::apply_diff(outcome.diff(), &undone).map_err(|error| error.to_string())?;
     }
     let report = semio_framework_pack_json::object([
         ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),
@@ -89,3 +90,13 @@ pub fn gis_map_mutation_report_json(base_json: &str, mutation_json: &str, after_
 }
 }
 pub use mutations_codec::*;
+
+//#region 🌉️Apply
+/// 🕸️ Applies one parent mutation while preserving the stable drawing/value member coordinates — the central-apply entry
+/// point of the text/native bridge, kept outside the schema tree: only editors, io and stores call the central applier.
+pub fn apply_gis_map_mutation(snapshot: &mut crate::GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
+    *snapshot = next;
+    Ok(())
+}
+//#endregion 🌉️Apply

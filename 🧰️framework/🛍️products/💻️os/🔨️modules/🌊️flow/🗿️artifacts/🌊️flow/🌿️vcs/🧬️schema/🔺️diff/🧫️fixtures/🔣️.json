@@ -11,9 +11,6 @@
     { "name": "layout-assignments", "value": { "deltas": [
       { "delta": "layout", "value": [{ "id": "a", "layout": { "x": 3.0, "y": 4.0 } }, { "id": "a", "layout": null }] }
     ] } },
-    { "name": "explicit-fixture", "value": { "deltas": [
-      { "delta": "hostSnapshot", "value": { "schema": "flow.hostSnapshot", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "widgets": [], "synapses": [], "layout": {} } }
-    ] } },
     { "name": "maximum-wire-position", "value": { "deltas": [
       { "delta": "widgets", "value": { "removed": [], "inserted": [[4294967295, { "kind": "inputNote", "id": "x", "text": "" }]], "replaced": [] } }
     ] } }
@@ -21,6 +18,7 @@
   "invalid": [
     { "name": "missing-deltas", "value": {} },
     { "name": "operation-replay-is-not-diff", "value": { "deltas": [], "operations": [] } },
+    { "name": "whole-snapshot-delta-is-not-a-diff", "value": { "deltas": [{ "delta": "hostSnapshot", "value": {} }] } },
     { "name": "unknown-delta", "value": { "deltas": [{ "delta": "unknown", "value": {} }] } },
     { "name": "missing-fragment-fields", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [] } }] } },
     { "name": "unknown-fragment-field", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [], "replaced": [], "unknown": true } }] } },

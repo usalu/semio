@@ -10,6 +10,10 @@ exclude = [
   "**/🏭️bridge/**"
 ]
 
+[workspace.metadata.semio.mutation-inventory]
+script = "🏭️bridge/📜️script.ts"
+roots = ["."]
+
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
@@ -73,9 +77,6 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/�
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-space-space]
-path = "../🪐️space/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-csv]
 path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust"

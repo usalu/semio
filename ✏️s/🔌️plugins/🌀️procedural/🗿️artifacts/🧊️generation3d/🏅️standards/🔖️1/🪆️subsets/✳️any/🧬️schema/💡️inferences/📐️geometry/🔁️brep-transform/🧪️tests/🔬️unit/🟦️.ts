@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { Matrix4, Plane, Vector3 } from "three";
-import { casesOf, fixtureDisagreements, loadFixture, type BrepCase } from "../../../⏱️phased-job/🧰️test-support/🟦️.ts";
+import { casesOf, fixtureDisagreements, loadFixture, type BrepCase } from "../../../⏱️phased-job/🧪️tests/🧰️support/🟦️.ts";
 
 const fixture = loadFixture(import.meta.url);
 

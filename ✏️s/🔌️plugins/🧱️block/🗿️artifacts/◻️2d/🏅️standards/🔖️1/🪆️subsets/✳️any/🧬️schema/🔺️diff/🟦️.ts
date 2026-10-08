@@ -1,208 +1,223 @@
-import type {BlockKindIdentity,Block2dPresentation,Block2dHandleKind,Block2dHandleTemplate,BlockCompatibilityRule,BlockAttribute,BlockAuthor,BlockCamera2d,BlockMeta,Block2dArtifact} from "../🟦️.ts";
-import * as model from "../🟦️.ts";
-/** 🧬️ Block2d diff schema — sparse field delta. */
+import type { Block2dHandleKind, Block2dHandleTemplate, BlockAttribute, BlockAuthor, BlockCompatibilityRule } from "../🟦️.ts";
+
+/** 🧬️ Block2d diff schema — a field-sparse, id-keyed delta over the artifact: sub-documents carry field patches, id-keyed lists carry positional rows (`protocol::list_delta`): removed (id at base index), inserted (row at after index), moved (id from base index to after index) and id-keyed modified rows. */
 
 export interface Block2dDiff {
-  /** @state artifact */
-  artifact?: Block2dArtifact;
-  /** @state artifact */
-  schema?: string;
-  /** @state artifact */
-  nodeKind?: BlockKindIdentity;
-  /** @state artifact */
-  presentation?: Block2dPresentation;
-  /** @state artifact */
-  handleKinds?: Block2dHandleKindsDelta;
-  /** @state artifact */
-  handles?: Block2dHandlesDelta;
-  /** @state artifact */
-  compatibility?: Block2dCompatibilityDelta;
-  /** @state artifact */
-  attributes?: Block2dAttributesDelta;
-  /** @state artifact */
-  authors?: Block2dAuthorList;
-  /** @state artifact */
-  camera2d?: BlockCamera2d;
-  /** @state artifact */
-  meta?: BlockMeta;
+  schema?: string | null;
+  nodeKind?: BlockKindIdentityPatch | null;
+  presentation?: Block2dPresentationPatch | null;
+  handleKinds: Block2dHandleKindsDelta;
+  handles: Block2dHandlesDelta;
+  compatibility: BlockCompatibilityDelta;
+  attributes: BlockAttributesDelta;
+  authors: BlockAuthorsDelta;
+  camera2d?: BlockCamera2dPatch | null;
+  meta?: BlockMetaPatch | null;
 }
 
-
-
-
-
-
-
-
-
-
-export interface Block2dStringList {
-  values: string[];
+export interface BlockOptionalText {
+  value: string | null;
 }
 
-export interface Block2dAuthorList {
-  values: BlockAuthor[];
+export interface BlockOptionalNumber {
+  value: number | null;
 }
 
-export interface Block2dHandleKindsDelta {
-  added: Block2dHandleKind[];
-  removed: string[];
-  patched: Block2dHandleKindsPatchEntry[];
-  reordered?: string[];
+export interface BlockKindIdentityPatch {
+  id?: string | null;
+  name?: string | null;
+  label?: string | null;
+  description?: string | null;
+  variant?: BlockOptionalText | null;
+  icon?: BlockOptionalText | null;
+  unit?: BlockOptionalText | null;
+}
+
+export interface Block2dPresentationPatch {
+  shape?: BlockOptionalText | null;
+  radius?: BlockOptionalNumber | null;
+  width?: BlockOptionalNumber | null;
+  height?: BlockOptionalNumber | null;
+  color?: BlockOptionalText | null;
+  iconKind?: BlockOptionalText | null;
+}
+
+export interface Block2dHandleKindPatch {
+  name?: string | null;
+  label?: string | null;
+  color?: string | null;
+  defaultWireKind?: string | null;
+}
+
+export interface Block2dHandleTemplatePatch {
+  handleKind?: string | null;
+  angle?: number | null;
+  radius?: number | null;
+}
+
+export interface BlockCompatibilityRulePatch {
+  source?: string | null;
+  target?: string | null;
+  bidirectional?: boolean | null;
+}
+
+export interface BlockAttributePatch {
+  value?: string | null;
+  definition?: BlockOptionalText | null;
+}
+
+export interface BlockAuthorPatch {
+  name?: string | null;
+  email?: BlockOptionalText | null;
+}
+
+export interface BlockCamera2dPatch {
+  x?: number | null;
+  y?: number | null;
+  zoom?: number | null;
+}
+
+export interface BlockMetaPatch {
+  description?: string | null;
 }
 
 export interface Block2dHandleKindsPatchEntry {
   id: string;
-  patch: Block2dHandleKindsPatch;
+  patch: Block2dHandleKindPatch;
 }
 
-export interface Block2dHandleKindsPatch {
-  replacement?: Block2dHandleKind;
+export interface Block2dHandleKindsRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Block2dHandlesDelta {
-  added: Block2dHandleTemplate[];
-  removed: string[];
-  patched: Block2dHandlesPatchEntry[];
-  reordered?: string[];
+export interface Block2dHandleKindsInsertion {
+  index: number;
+  row: Block2dHandleKind;
+}
+
+export interface Block2dHandleKindsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Block2dHandleKindsDelta {
+  removed: Block2dHandleKindsRemoval[];
+  inserted: Block2dHandleKindsInsertion[];
+  moved: Block2dHandleKindsRelocation[];
+  modified: Block2dHandleKindsPatchEntry[];
 }
 
 export interface Block2dHandlesPatchEntry {
   id: string;
-  patch: Block2dHandlesPatch;
+  patch: Block2dHandleTemplatePatch;
 }
 
-export interface Block2dHandlesPatch {
-  replacement?: Block2dHandleTemplate;
-}
-
-export interface Block2dCompatibilityDelta {
-  added: BlockCompatibilityRule[];
-  removed: string[];
-  patched: Block2dCompatibilityPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Block2dCompatibilityPatchEntry {
+export interface Block2dHandlesRemoval {
   id: string;
-  patch: Block2dCompatibilityPatch;
+  index: number;
 }
 
-export interface Block2dCompatibilityPatch {
-  replacement?: BlockCompatibilityRule;
+export interface Block2dHandlesInsertion {
+  index: number;
+  row: Block2dHandleTemplate;
 }
 
-export interface Block2dAttributesDelta {
-  added: BlockAttribute[];
-  removed: string[];
-  patched: Block2dAttributesPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Block2dAttributesPatchEntry {
+export interface Block2dHandlesRelocation {
   id: string;
-  patch: Block2dAttributesPatch;
+  from: number;
+  to: number;
 }
 
-export interface Block2dAttributesPatch {
-  replacement?: BlockAttribute;
+export interface Block2dHandlesDelta {
+  removed: Block2dHandlesRemoval[];
+  inserted: Block2dHandlesInsertion[];
+  moved: Block2dHandlesRelocation[];
+  modified: Block2dHandlesPatchEntry[];
 }
 
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class blockBlock2dDiffGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
+export interface BlockCompatibilityPatchEntry {
+  id: string;
+  patch: BlockCompatibilityRulePatch;
 }
 
-const blockBlock2dDiffGuardReject = (at: string, why: string): never => {
-  throw new blockBlock2dDiffGuardRefusal(at, why);
-};
-
-type blockBlock2dDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type blockBlock2dDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type blockBlock2dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const blockBlock2dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : blockBlock2dDiffGuardReject(at, "value is not an object");
-export const blockBlock2dDiffGuardArray = (value: unknown, at: string, bounds: blockBlock2dDiffGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return blockBlock2dDiffGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) blockBlock2dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) blockBlock2dDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const blockBlock2dDiffGuardString = (value: unknown, at: string, bounds: blockBlock2dDiffGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return blockBlock2dDiffGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) blockBlock2dDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) blockBlock2dDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) blockBlock2dDiffGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const blockBlock2dDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : blockBlock2dDiffGuardReject(at, "value is not a boolean"));
-export const blockBlock2dDiffGuardNumber = (value: unknown, at: string, bounds: blockBlock2dDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return blockBlock2dDiffGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) blockBlock2dDiffGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) blockBlock2dDiffGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const blockBlock2dDiffGuardInteger = (value: unknown, at: string, bounds: blockBlock2dDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? blockBlock2dDiffGuardNumber(value, at, bounds) : blockBlock2dDiffGuardReject(at, "value is not an integer");
-export const blockBlock2dDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : blockBlock2dDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const blockBlock2dDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : blockBlock2dDiffGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseBlock2dStringList(value: unknown, at = "$"): Block2dStringList {
-  const row = blockBlock2dDiffGuardObject(value, at);
-  return {
-    values: blockBlock2dDiffGuardArray(row["values"], `${at}.values`).map((item, index) => blockBlock2dDiffGuardString(item, `${at}.values[${index}]`)),
-  };
+export interface BlockCompatibilityRemoval {
+  id: string;
+  index: number;
 }
 
-export function parseBlock2dHandleKindsPatchEntry(value: unknown, at = "$"): Block2dHandleKindsPatchEntry {
-  const row = blockBlock2dDiffGuardObject(value, at);
-  return {
-    id: blockBlock2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock2dHandleKindsPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityInsertion {
+  index: number;
+  row: BlockCompatibilityRule;
 }
 
-export function parseBlock2dHandlesPatchEntry(value: unknown, at = "$"): Block2dHandlesPatchEntry {
-  const row = blockBlock2dDiffGuardObject(value, at);
-  return {
-    id: blockBlock2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock2dHandlesPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
-export function parseBlock2dCompatibilityPatchEntry(value: unknown, at = "$"): Block2dCompatibilityPatchEntry {
-  const row = blockBlock2dDiffGuardObject(value, at);
-  return {
-    id: blockBlock2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock2dCompatibilityPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityDelta {
+  removed: BlockCompatibilityRemoval[];
+  inserted: BlockCompatibilityInsertion[];
+  moved: BlockCompatibilityRelocation[];
+  modified: BlockCompatibilityPatchEntry[];
 }
 
-export function parseBlock2dAttributesPatchEntry(value: unknown, at = "$"): Block2dAttributesPatchEntry {
-  const row = blockBlock2dDiffGuardObject(value, at);
-  return {
-    id: blockBlock2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock2dAttributesPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockAttributesPatchEntry {
+  id: string;
+  patch: BlockAttributePatch;
 }
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock2dHandleKindsPatch(value:unknown,at="$"):Block2dHandleKindsPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock2dHandleKind(row.replacement)})}}
+export interface BlockAttributesRemoval {
+  id: string;
+  index: number;
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock2dHandlesPatch(value:unknown,at="$"):Block2dHandlesPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock2dHandleTemplate(row.replacement)})}}
+export interface BlockAttributesInsertion {
+  index: number;
+  row: BlockAttribute;
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock2dCompatibilityPatch(value:unknown,at="$"):Block2dCompatibilityPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockCompatibilityRule(row.replacement)})}}
+export interface BlockAttributesRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock2dAttributesPatch(value:unknown,at="$"):Block2dAttributesPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockAttribute(row.replacement)})}}
+export interface BlockAttributesDelta {
+  removed: BlockAttributesRemoval[];
+  inserted: BlockAttributesInsertion[];
+  moved: BlockAttributesRelocation[];
+  modified: BlockAttributesPatchEntry[];
+}
+
+export interface BlockAuthorsPatchEntry {
+  id: string;
+  patch: BlockAuthorPatch;
+}
+
+export interface BlockAuthorsRemoval {
+  id: string;
+  index: number;
+}
+
+export interface BlockAuthorsInsertion {
+  index: number;
+  row: BlockAuthor;
+}
+
+export interface BlockAuthorsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface BlockAuthorsDelta {
+  removed: BlockAuthorsRemoval[];
+  inserted: BlockAuthorsInsertion[];
+  moved: BlockAuthorsRelocation[];
+  modified: BlockAuthorsPatchEntry[];
+}
+

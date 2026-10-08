@@ -2027,5 +2027,50 @@
       "commit": "hidden",
       "note": "the page was hidden or left (visibilitychange to hidden, pagehide): the keystrokes of the last idle bound are never lost"
     }
+  ],
+  "draftJson": [
+    {
+      "id": "empty",
+      "changes": [],
+      "json": "[]"
+    },
+    {
+      "id": "ordered",
+      "changes": [
+        {
+          "offset": 3,
+          "delete": 2,
+          "insert": "new"
+        }
+      ],
+      "json": "[{\"offset\":3,\"delete\":2,\"insert\":\"new\"}]"
+    },
+    {
+      "id": "raw-unicode-controls",
+      "changes": [
+        {
+          "offset": 0,
+          "delete": 0,
+          "insert": "🧬ö\u0000\"\\\n\r\t\b\f\u001f"
+        }
+      ],
+      "json": "[{\"offset\":0,\"delete\":0,\"insert\":\"🧬ö\\u0000\\\"\\\\\\n\\r\\t\\b\\f\\u001f\"}]"
+    },
+    {
+      "id": "two-ranges",
+      "changes": [
+        {
+          "offset": 0,
+          "delete": 1,
+          "insert": ""
+        },
+        {
+          "offset": 9007199254740991,
+          "delete": 0,
+          "insert": "tail"
+        }
+      ],
+      "json": "[{\"offset\":0,\"delete\":1,\"insert\":\"\"},{\"offset\":9007199254740991,\"delete\":0,\"insert\":\"tail\"}]"
+    }
   ]
 }

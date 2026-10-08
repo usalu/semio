@@ -188,6 +188,72 @@
               "directoryName": "⛴️rewrites"
             }
           ]
+        },
+        {
+          "mutationId": "set-position-property",
+          "sourceMutationDirectoryName": "📌set-position-property",
+          "mutationDirectoryName": "📌set-position-property",
+          "scenarios": [
+            {
+              "id": "relabels-position-middle-property",
+              "directoryName": "🔠relabels"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-position-property",
+          "sourceMutationDirectoryName": "🧲remove-position-property",
+          "mutationDirectoryName": "🧲remove-position-property",
+          "scenarios": [
+            {
+              "id": "drops-position-middle-property",
+              "directoryName": "🧽drops"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-route-property",
+          "sourceMutationDirectoryName": "🚏set-route-property",
+          "mutationDirectoryName": "🚏set-route-property",
+          "scenarios": [
+            {
+              "id": "relabels-route-middle-property",
+              "directoryName": "🔠relabels"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-route-property",
+          "sourceMutationDirectoryName": "🔪remove-route-property",
+          "mutationDirectoryName": "🔪remove-route-property",
+          "scenarios": [
+            {
+              "id": "drops-route-middle-property",
+              "directoryName": "🧽drops"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-region-property",
+          "sourceMutationDirectoryName": "🗾set-region-property",
+          "mutationDirectoryName": "🗾set-region-property",
+          "scenarios": [
+            {
+              "id": "relabels-region-middle-property",
+              "directoryName": "🔠relabels"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-region-property",
+          "sourceMutationDirectoryName": "🧨remove-region-property",
+          "mutationDirectoryName": "🧨remove-region-property",
+          "scenarios": [
+            {
+              "id": "drops-region-middle-property",
+              "directoryName": "🧽drops"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -202,7 +268,13 @@
         "create-region",
         "delete-region",
         "replace-region-data",
-        "reorder-regions"
+        "reorder-regions",
+        "set-position-property",
+        "remove-position-property",
+        "set-route-property",
+        "remove-route-property",
+        "set-region-property",
+        "remove-region-property"
       ]
     }
   ],
@@ -453,6 +525,132 @@
             "operation": "replace-route-data",
             "bridgeVersion": 1,
             "variant": "ReplaceRouteData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-position-property",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-position-property",
+            "bridgeVersion": 1,
+            "variant": "SetPositionProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-position-property",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-position-property",
+            "bridgeVersion": 1,
+            "variant": "RemovePositionProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-route-property",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-route-property",
+            "bridgeVersion": 1,
+            "variant": "SetRouteProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-route-property",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-route-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveRouteProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-region-property",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-region-property",
+            "bridgeVersion": 1,
+            "variant": "SetRegionProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-region-property",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-region-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveRegionProperty"
           },
           "oracleRequirements": [
             {

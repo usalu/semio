@@ -39,6 +39,11 @@ async fn render_builder_emits_playbook_list_component_scene() {
     let semio_framework_ui_contract::Component::Surface(props) = tree.root.component else { panic!("builder must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
     let expected = live_spec(&app).await;
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
-    assert_eq!(serde_json::from_str::<Vec<serde_json::Value>>(&scene.palette_json).unwrap().len(), PLAYBOOK_BUILTIN_KINDS.len());
+    assert_eq!(scene.steps.len(),expected.steps.len());
+    for (actual,expected) in scene.steps.iter().zip(&expected.steps) {
+        assert_eq!((&actual.id,&actual.title,&actual.description),(&expected.id,&expected.title,&expected.description));
+        assert_eq!(actual.blocks.len(),expected.blocks.len());
+        for (actual,expected) in actual.blocks.iter().zip(&expected.blocks) { assert_eq!((&actual.id,&actual.label,&actual.kind,&actual.description),(&expected.id,&expected.label,&expected.kind,&expected.description)); }
+    }
+    assert_eq!(scene.palette.len(), PLAYBOOK_BUILTIN_KINDS.len());
 }

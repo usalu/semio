@@ -1,0 +1,81 @@
+{
+  "sources": [
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧊️validation/🧬️schema/🔣️.json",
+      "beforeSha256": "ba9e343b06f844eeac208e58142d79c27641019b7f9dc9dfa7a489daffe0fb64",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/🔣️.json",
+      "beforeSha256": "81ed390173d85500e406c5dc1775db0f65474c773f0c5dbde85083eaf8caefa9",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧬️schema/🔣️.json",
+      "beforeSha256": "b594d49777895c031c4062369183e536fbfb380c329520c084f8f534645c168b",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/📦️prepared-close/🔣️.json",
+      "beforeSha256": "1425ad41cfbe36c117518d051fde6a55f582d0a055376e5d71ed218e3fc9047c",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🧬️schema/🔣️.json",
+      "beforeSha256": "3cd58c976ba9c19e422fc2cec5ead38979625dc699f209ff047cd6ac310e1e65",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🎒️mesh-session/🟦️.ts",
+      "beforeSha256": "d94542378e8f2c0845420188335323b5b372dc0841b788eaf49bf79e8407a1aa",
+      "afterSha256": "f04d9903b348b49caa8bf667220d331026a3b9dc78c4d54904aa7b12ce0723d4",
+      "action": "updated"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/🟦️.ts",
+      "beforeSha256": "1dc1eab2ad1dc66d1973acecc45f10588801ac60c28c47e2a70f81a471c529bb",
+      "afterSha256": "a9b211b1e37e53fee65045bda11b37da423a85525bd8ec1e45e85b0a71be059d",
+      "action": "updated"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "d587f3aca2471e5e2c2b7fa06040537f8677ad269e27d6b846689bc6b486d1e2",
+      "afterSha256": "20be178ff6aa2be4c9c0b892cbf0608d45d39082cc0a02ff491a5a124f111b65",
+      "action": "updated"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "47a515ea5907d0ab4c0df42d69efbf530bcf00d0e34cc6d9dcf76dcc2c6f3795",
+      "afterSha256": "14712b159dbafabb861671d63cfee384842fa436425357cb2a37fd2a0c40088d",
+      "action": "updated",
+      "qualification": "Only Root current-corpus facet additions; shared script path"
+    }
+  ],
+  "plainObservers": [
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧊️validation/🔣️.json",
+      "sha256": "cd22dd290f5c05519a06a2e4d60c075672822cdd7b1d0c34c18e8264d9fbc197"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json",
+      "sha256": "f3a2b52efecf9f4ef72d06db295140de3d76456a4aa96f967d7d58956c9efdc1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json",
+      "sha256": "d7706f73aacea232ad8aff7ca74f6fb745fd5ca3d8ac2e205b4ae561fc6d6869"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📦️prepared-close/🔣️.json",
+      "sha256": "8b808855e0516c2931b3afcfbfee2f6c24242c100e4506a009df2694b6760a4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🔣️.json",
+      "sha256": "0946315d5c287053f671fd2f49cbdfd06bff5b64d219606a576600b60b4c6887"
+    }
+  ]
+}

@@ -5,9 +5,9 @@ use crate::CurationSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteCuratedItem, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
-    if !base.curated.iter().any(|item| item.object_id == payload.object_id) {
+    let Some(index) = base.curated.iter().position(|item| item.object_id == payload.object_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("\"{}\" is not curated.", payload.object_id), [payload.object_id.clone()]);
-    }
-    protocol::MutationOutcome::new(CurationDiff { curated: Some(CurationCuratedDelta { removed: vec![payload.object_id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(CurationDiff { curated: Some(CurationCuratedDelta::removal(&base.curated, index)), ..Default::default() })
 }
 //#endregion 🔖️Diff

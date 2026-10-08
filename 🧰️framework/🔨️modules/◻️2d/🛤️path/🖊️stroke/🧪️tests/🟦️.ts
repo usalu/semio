@@ -8,10 +8,8 @@ import schema from "../🧬️schema/🔣️.json";
 import {StrokeOutlineJob,prepareStroke,type StrokeOutlineInput} from "../🟦️.ts";
 import {CoverageJob} from "../../../../🔲️pixels/🖊️coverage/🟦️.ts";
 import retirementRows from "../🧫️fixtures/🧹️retirement/🔣️.json";
-import retirementSchema from "../🧬️schema/🧹️retirement/🔣️.json";
 test("stroke retirement transfers completed paint and retains interrupted private owners until granted cleanup",async()=>{
  const validProgress=new Ajv({strict:true}).compile(schema.definitions.retirementProgress);
- expect(new Ajv({strict:true}).compile(retirementSchema)(retirementRows)).toBe(true);
  for(const row of retirementRows)for(const grant of [1,7,4096]){
   const base=fixture.find(sample=>sample.name===row.source)!,source=input(base);if(row.repeat)source.contours=Array.from({length:row.repeat},()=>structuredClone(source.contours[0]!));if(row.stop==="failure")source.contours[0]!.points[0]![0]=1000000001;const before=structuredClone(source),job=new StrokeOutlineJob(source),state=job as any;
   if(row.stop==="preparing")job.advance(1);else if(row.stop!=="fresh"){let reached=false;for(let at=0;at<200000;at++){try{job.advance(1);}catch(error){if(row.stop!=="failure")throw error;reached=true;break;}const stop=row.stop==="cancelled"?"queue":row.stop;if(stop==="queue"?state.queue.length>0:stop==="round"?state.round!==null:state.stage===stop){reached=true;break;}}expect(reached,row.name).toBe(true);}

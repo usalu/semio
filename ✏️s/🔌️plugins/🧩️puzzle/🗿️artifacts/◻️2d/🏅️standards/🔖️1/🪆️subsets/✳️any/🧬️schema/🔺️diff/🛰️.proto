@@ -28,200 +28,28 @@ message Puzzle2dEdgePatch { optional string source = 1; optional string target =
 message Puzzle2dTargetRegionPatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional string label = 5; optional bool hidden = 6; optional bool locked = 7; }
 message Puzzle2dKindCompatibilityPatch { optional bool bidirectional = 1; optional bool important = 2; optional Puzzle2dCompatSpecificity specificity = 3; }
 message Puzzle2dMetaPatch { optional string manifest_id = 1; optional Puzzle2dKindCompatibilityDelta kind_compatibility = 2; optional Puzzle2dKindCatalogs kind_catalogs = 3; }
-message Puzzle2dHandlesDelta { repeated Puzzle2dHandle added = 1; repeated string removed = 2; repeated Puzzle2dHandlePatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle2dHandlePatchEntry { string id = 1; Puzzle2dHandlePatch patch = 2; }
-message Puzzle2dNodesDelta { repeated Puzzle2dNode added = 1; repeated string removed = 2; repeated Puzzle2dNodePatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle2dNodePatchEntry { string id = 1; Puzzle2dNodePatch patch = 2; }
-message Puzzle2dEdgesDelta { repeated Puzzle2dEdge added = 1; repeated string removed = 2; repeated Puzzle2dEdgePatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle2dEdgePatchEntry { string id = 1; Puzzle2dEdgePatch patch = 2; }
-message Puzzle2dTargetRegionsDelta { repeated Puzzle2dTargetRegion added = 1; repeated string removed = 2; repeated Puzzle2dTargetRegionPatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle2dTargetRegionPatchEntry { string id = 1; Puzzle2dTargetRegionPatch patch = 2; }
-message Puzzle2dKindCompatibilityDelta { repeated Puzzle2dKindCompatibility added = 1; repeated Puzzle2dKindCompatibilityKey removed = 2; repeated Puzzle2dKindCompatibilityPatchEntry patched = 3; repeated Puzzle2dKindCompatibilityKey reordered = 4; }
-message Puzzle2dKindCompatibilityPatchEntry { Puzzle2dKindCompatibilityKey id = 1; Puzzle2dKindCompatibilityPatch patch = 2; }
-
-enum Puzzle2dNodeAnchor {
-  PUZZLE2D_NODE_ANCHOR_FIXED = 0;
-  PUZZLE2D_NODE_ANCHOR_DERIVED = 1;
-}
-
-message Puzzle2dCamera {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
-
-message Puzzle2dHandle {
-  string id = 1;
-  optional string handle_kind = 2;
-  double angle = 3;
-  optional double radius = 4;
-  optional string color = 5;
-  optional string icon_kind = 6;
-  optional double scale = 7;
-  optional bool visible = 8;
-  optional bool locked = 9;
-}
-
-message Puzzle2dNode {
-  string id = 1;
-  optional string node_kind = 2;
-  optional string shape = 3;
-  double x = 4;
-  double y = 5;
-  optional double radius = 6;
-  optional double width = 7;
-  optional double height = 8;
-  optional string text = 9;
-  optional string icon_kind = 10;
-  optional bool root = 11;
-  optional double scale = 12;
-  optional bool visible = 13;
-  optional bool locked = 14;
-  Puzzle2dNodeAnchor anchor = 15;
-  repeated Puzzle2dHandle handles = 16;
-}
-
-message Puzzle2dEdge {
-  string id = 1;
-  string source = 2;
-  string target = 3;
-  optional string edge_kind = 4;
-  double gap = 5;
-  double shift = 6;
-  double rise = 7;
-  double rotation = 8;
-  double turn = 9;
-  double tilt = 10;
-  double x = 11;
-  double y = 12;
-  optional string source_tip = 13;
-  optional string target_tip = 14;
-  optional bool visible = 15;
-  optional bool locked = 16;
-}
-
-enum Puzzle2dCompatSpecificity {
-  PUZZLE2D_COMPAT_SPECIFICITY_GENERAL = 0;
-  PUZZLE2D_COMPAT_SPECIFICITY_NODE = 1;
-  PUZZLE2D_COMPAT_SPECIFICITY_EDGE = 2;
-  PUZZLE2D_COMPAT_SPECIFICITY_HANDLE = 3;
-  PUZZLE2D_COMPAT_SPECIFICITY_WIRE = 4;
-  PUZZLE2D_COMPAT_SPECIFICITY_VORTEX = 5;
-}
-
-message Puzzle2dKindCompatibility {
-  string source = 1;
-  string target = 2;
-  bool bidirectional = 3;
-  bool important = 4;
-  Puzzle2dCompatSpecificity specificity = 5;
-}
-
-message Puzzle2dAttribute {
-  string id = 1;
-  string key = 2;
-  string value = 3;
-  optional string definition = 4;
-}
-
-message Puzzle2dAuthor {
-  string id = 1;
-  string name = 2;
-  string email = 3;
-  optional string role = 4;
-  optional int32 rank = 5;
-}
-
-message Puzzle2dRepresentation {
-  string id = 1;
-  string name = 2;
-  string url = 3;
-  string mime = 4;
-  repeated string tags = 5;
-  optional string lod = 6;
-  string description = 7;
-}
-
-message Puzzle2dHandleTemplate {
-  string id = 1;
-  string name = 2;
-  string label = 3;
-  string description = 4;
-  string icon = 5;
-  optional string handle_kind = 6;
-  double angle = 7;
-  optional double t = 8;
-  optional bool mandatory = 9;
-  optional double radius = 10;
-}
-
-message Puzzle2dCatalogNodeKind {
-  string id = 1;
-  string name = 2;
-  string label = 3;
-  string description = 4;
-  string icon = 5;
-  string image = 6;
-  string unit = 7;
-  bool abstract = 8;
-  repeated string base_kinds = 9;
-  repeated Puzzle2dRepresentation representations = 10;
-  repeated Puzzle2dHandleTemplate handles = 11;
-  repeated Puzzle2dAttribute attributes = 12;
-  repeated Puzzle2dAuthor authors = 13;
-}
-
-message Puzzle2dCatalogHandleKind {
-  string id = 1;
-  optional string code = 2;
-  optional string label = 3;
-  optional int32 order = 4;
-  repeated string compatible_with = 5;
-  string description = 6;
-  string icon = 7;
-  string color = 8;
-  string default_wire_kind = 9;
-}
-
-message Puzzle2dCatalogEdgeKind {
-  string id = 1;
-  string name = 2;
-  string label = 3;
-  string description = 4;
-  string icon = 5;
-  string color = 6;
-}
-
-message Puzzle2dCatalogWireKind {
-  string id = 1;
-  string name = 2;
-  string label = 3;
-  string description = 4;
-  string icon = 5;
-  string color = 6;
-  string default_edge_kind = 7;
-}
-
-message Puzzle2dKindCatalogs {
-  repeated Puzzle2dCatalogNodeKind nodes = 1;
-  repeated Puzzle2dCatalogHandleKind handles = 2;
-  repeated Puzzle2dCatalogEdgeKind edges = 3;
-  repeated Puzzle2dCatalogWireKind wires = 4;
-}
-
-message Puzzle2dTargetRegion {
-  string id = 1;
-  double x = 2;
-  double y = 3;
-  double width = 4;
-  double height = 5;
-  optional string label = 6;
-  bool hidden = 7;
-  bool locked = 8;
-}
-
-message Puzzle2dMeta {
-  optional string manifest_id = 1;
-  repeated Puzzle2dKindCompatibility kind_compatibility = 2;
-  optional Puzzle2dKindCatalogs kind_catalogs = 3;
-}
+message Puzzle2dHandlesDelta { repeated Puzzle2dHandleRemoval removed = 1; repeated Puzzle2dHandleInsertion inserted = 2; repeated Puzzle2dHandleRelocation moved = 3; repeated Puzzle2dHandleModification modified = 4; }
+message Puzzle2dHandleRemoval { string id = 1; uint64 index = 2; }
+message Puzzle2dHandleInsertion { uint64 index = 1; Puzzle2dHandle row = 2; }
+message Puzzle2dHandleRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle2dHandleModification { string id = 1; Puzzle2dHandlePatch patch = 2; }
+message Puzzle2dNodesDelta { repeated Puzzle2dNodeRemoval removed = 1; repeated Puzzle2dNodeInsertion inserted = 2; repeated Puzzle2dNodeRelocation moved = 3; repeated Puzzle2dNodeModification modified = 4; }
+message Puzzle2dNodeRemoval { string id = 1; uint64 index = 2; }
+message Puzzle2dNodeInsertion { uint64 index = 1; Puzzle2dNode row = 2; }
+message Puzzle2dNodeRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle2dNodeModification { string id = 1; Puzzle2dNodePatch patch = 2; }
+message Puzzle2dEdgesDelta { repeated Puzzle2dEdgeRemoval removed = 1; repeated Puzzle2dEdgeInsertion inserted = 2; repeated Puzzle2dEdgeRelocation moved = 3; repeated Puzzle2dEdgeModification modified = 4; }
+message Puzzle2dEdgeRemoval { string id = 1; uint64 index = 2; }
+message Puzzle2dEdgeInsertion { uint64 index = 1; Puzzle2dEdge row = 2; }
+message Puzzle2dEdgeRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle2dEdgeModification { string id = 1; Puzzle2dEdgePatch patch = 2; }
+message Puzzle2dTargetRegionsDelta { repeated Puzzle2dTargetRegionRemoval removed = 1; repeated Puzzle2dTargetRegionInsertion inserted = 2; repeated Puzzle2dTargetRegionRelocation moved = 3; repeated Puzzle2dTargetRegionModification modified = 4; }
+message Puzzle2dTargetRegionRemoval { string id = 1; uint64 index = 2; }
+message Puzzle2dTargetRegionInsertion { uint64 index = 1; Puzzle2dTargetRegion row = 2; }
+message Puzzle2dTargetRegionRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle2dTargetRegionModification { string id = 1; Puzzle2dTargetRegionPatch patch = 2; }
+message Puzzle2dKindCompatibilityDelta { repeated Puzzle2dKindCompatibilityRemoval removed = 1; repeated Puzzle2dKindCompatibilityInsertion inserted = 2; repeated Puzzle2dKindCompatibilityRelocation moved = 3; repeated Puzzle2dKindCompatibilityModification modified = 4; }
+message Puzzle2dKindCompatibilityRemoval { Puzzle2dKindCompatibilityKey id = 1; uint64 index = 2; }
+message Puzzle2dKindCompatibilityInsertion { uint64 index = 1; Puzzle2dKindCompatibility row = 2; }
+message Puzzle2dKindCompatibilityRelocation { Puzzle2dKindCompatibilityKey id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle2dKindCompatibilityModification { Puzzle2dKindCompatibilityKey id = 1; Puzzle2dKindCompatibilityPatch patch = 2; }

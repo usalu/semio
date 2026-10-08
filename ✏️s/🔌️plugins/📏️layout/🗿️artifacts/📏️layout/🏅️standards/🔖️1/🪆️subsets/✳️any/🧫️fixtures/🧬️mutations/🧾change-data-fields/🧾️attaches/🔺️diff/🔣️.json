@@ -16,18 +16,20 @@
   "dataFields": {
     "presence": "created",
     "entries": {
-      "added": [
+      "inserted": [
         {
-          "questionId": "client",
-          "value": {
-            "kind": "text",
-            "value": "acme"
+          "index": 0,
+          "row": {
+            "questionId": "client",
+            "value": {
+              "kind": "text",
+              "value": "acme"
+            }
           }
         }
       ],
       "removed": [],
-      "patched": [],
-      "reordered": null
+      "moved": []
     }
   }
 }

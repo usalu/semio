@@ -1,0 +1,20 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": null,
+  "objects": null,
+  "references": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "reference-2",
+        "index": 1
+      }
+    ]
+  },
+  "schema": null,
+  "targetVolumes": null
+}

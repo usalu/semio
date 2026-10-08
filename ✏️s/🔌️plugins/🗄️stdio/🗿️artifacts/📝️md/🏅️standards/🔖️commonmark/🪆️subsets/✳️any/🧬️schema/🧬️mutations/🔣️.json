@@ -15,6 +15,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/md/commonmark/any/mutation/set-inlines/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/md/commonmark/any/mutation/splice-source/schema.json"
     }
   ]
 }

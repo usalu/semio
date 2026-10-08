@@ -3,16 +3,42 @@ scalar GltfJson
 enum GltfTouchedRegion { ASSET SCENE SCENES NODES MESHES ACCESSORS BUFFER_VIEWS BUFFERS BUFFER_BYTES MATERIALS TEXTURES IMAGES SAMPLERS SKINS ANIMATIONS CAMERAS EXTENSIONS_USED EXTENSIONS_REQUIRED EXTENSIONS EXTRAS SOURCE_FORM }
 
 type GltfAssetDiff { version: String generator: String copyright: String minVersion: String extensions: GltfJson extras: GltfJson }
+type GltfRefRemoval { id: Int! index: Int! }
+type GltfRefInsertion { index: Int! row: Int! }
+type GltfRefRelocation { id: Int! from: Int! to: Int! }
+type GltfRefsDelta { removed: [GltfRefRemoval!] inserted: [GltfRefInsertion!] moved: [GltfRefRelocation!] }
+type GltfStringRemoval { id: String! index: Int! }
+type GltfStringInsertion { index: Int! row: String! }
+type GltfStringRelocation { id: String! from: Int! to: Int! }
+type GltfStringsDelta { removed: [GltfStringRemoval!] inserted: [GltfStringInsertion!] moved: [GltfStringRelocation!] }
+type GltfAttribute { semantic: String! accessor: Int! }
+type GltfAttributeRemoval { id: String! index: Int! }
+type GltfAttributeInsertion { index: Int! row: GltfAttribute! }
+type GltfAttributeRelocation { id: String! from: Int! to: Int! }
+type GltfAttributesDelta { removed: [GltfAttributeRemoval!] inserted: [GltfAttributeInsertion!] moved: [GltfAttributeRelocation!] }
+type GltfTargetRemoval { id: String! index: Int! }
+type GltfTargetInsertion { index: Int! row: GltfMorphTarget! }
+type GltfTargetRelocation { id: String! from: Int! to: Int! }
+type GltfTargetsDelta { removed: [GltfTargetRemoval!] inserted: [GltfTargetInsertion!] moved: [GltfTargetRelocation!] }
+type GltfChannelRemoval { id: String! index: Int! }
+type GltfChannelInsertion { index: Int! row: GltfAnimationChannel! }
+type GltfChannelRelocation { id: String! from: Int! to: Int! }
+type GltfChannelsDelta { removed: [GltfChannelRemoval!] inserted: [GltfChannelInsertion!] moved: [GltfChannelRelocation!] }
+type GltfAnimationSamplerRemoval { id: String! index: Int! }
+type GltfAnimationSamplerInsertion { index: Int! row: GltfAnimationSampler! }
+type GltfAnimationSamplerRelocation { id: String! from: Int! to: Int! }
+type GltfAnimationSamplersDelta { removed: [GltfAnimationSamplerRemoval!] inserted: [GltfAnimationSamplerInsertion!] moved: [GltfAnimationSamplerRelocation!] }
+
 type GltfSceneModified { index: Int! diff: GltfSceneDiff! }
 type GltfSceneAdded { index: Int! item: GltfScene! }
-type GltfScenesDiff { removed: [Int!] modified: [GltfSceneModified!] added: [GltfSceneAdded!] }
-type GltfSceneDiff { nodes: [Int!] name: String extensions: GltfJson extras: GltfJson }
+type GltfScenesDiff { removed: [Int!] modified: [GltfSceneModified!] added: [GltfSceneAdded!] amended: [GltfSceneModified!] }
+type GltfSceneDiff { nodes: GltfRefsDelta name: String extensions: GltfJson extras: GltfJson }
 
 type GltfNodeModified { index: Int! diff: GltfNodeDiff! }
 type GltfNodeAdded { index: Int! item: GltfNode! }
-type GltfNodesDiff { removed: [Int!] modified: [GltfNodeModified!] added: [GltfNodeAdded!] }
+type GltfNodesDiff { removed: [Int!] modified: [GltfNodeModified!] added: [GltfNodeAdded!] amended: [GltfNodeModified!] }
 type GltfNodeDiff {
-  children: [Int!]
+  children: GltfRefsDelta
   mesh: Int
   camera: Int
   skin: Int
@@ -28,16 +54,16 @@ type GltfNodeDiff {
 
 type GltfMeshModified { index: Int! diff: GltfMeshDiff! }
 type GltfMeshAdded { index: Int! item: GltfMesh! }
-type GltfMeshesDiff { removed: [Int!] modified: [GltfMeshModified!] added: [GltfMeshAdded!] }
+type GltfMeshesDiff { removed: [Int!] modified: [GltfMeshModified!] added: [GltfMeshAdded!] amended: [GltfMeshModified!] }
 type GltfPrimitiveModified { index: Int! diff: GltfPrimitiveDiff! }
 type GltfPrimitiveAdded { index: Int! item: GltfPrimitive! }
-type GltfPrimitivesDiff { removed: [Int!] modified: [GltfPrimitiveModified!] added: [GltfPrimitiveAdded!] }
-type GltfPrimitiveDiff { attributes: GltfMorphTarget indices: Int material: Int mode: Int targets: [GltfMorphTarget!] extensions: GltfJson extras: GltfJson }
+type GltfPrimitivesDiff { removed: [Int!] modified: [GltfPrimitiveModified!] added: [GltfPrimitiveAdded!] amended: [GltfPrimitiveModified!] }
+type GltfPrimitiveDiff { attributes: GltfAttributesDelta indices: Int material: Int mode: Int targets: GltfTargetsDelta extensions: GltfJson extras: GltfJson }
 type GltfMeshDiff { primitives: GltfPrimitivesDiff weights: [Float!] name: String extensions: GltfJson extras: GltfJson }
 
 type GltfAccessorModified { index: Int! diff: GltfAccessorDiff! }
 type GltfAccessorAdded { index: Int! item: GltfAccessor! }
-type GltfAccessorsDiff { removed: [Int!] modified: [GltfAccessorModified!] added: [GltfAccessorAdded!] }
+type GltfAccessorsDiff { removed: [Int!] modified: [GltfAccessorModified!] added: [GltfAccessorAdded!] amended: [GltfAccessorModified!] }
 type GltfAccessorDiff {
   bufferView: Int
   byteOffset: Int
@@ -55,7 +81,7 @@ type GltfAccessorDiff {
 
 type GltfMaterialModified { index: Int! diff: GltfMaterialDiff! }
 type GltfMaterialAdded { index: Int! item: GltfMaterial! }
-type GltfMaterialsDiff { removed: [Int!] modified: [GltfMaterialModified!] added: [GltfMaterialAdded!] }
+type GltfMaterialsDiff { removed: [Int!] modified: [GltfMaterialModified!] added: [GltfMaterialAdded!] amended: [GltfMaterialModified!] }
 type GltfMaterialDiff {
   name: String
   pbrMetallicRoughness: GltfPbrMetallicRoughness
@@ -72,46 +98,46 @@ type GltfMaterialDiff {
 
 type GltfBufferModified { index: Int! diff: GltfBufferDiff! }
 type GltfBufferAdded { index: Int! item: GltfBuffer! }
-type GltfBuffersDiff { removed: [Int!] modified: [GltfBufferModified!] added: [GltfBufferAdded!] }
+type GltfBuffersDiff { removed: [Int!] modified: [GltfBufferModified!] added: [GltfBufferAdded!] amended: [GltfBufferModified!] }
 type GltfBufferDiff { byteLength: Int uri: String name: String extensions: GltfJson extras: GltfJson }
 
 # Keyed sparse rows: bufferViews/textures/images/skins/animations; weak collections (diff IS the whole new item): bufferBytes/samplers/cameras
 type GltfBufferViewModified { index: Int! diff: GltfBufferViewDiff! }
 type GltfBufferViewAdded { index: Int! item: GltfBufferView! }
-type GltfBufferViewsDiff { removed: [Int!] modified: [GltfBufferViewModified!] added: [GltfBufferViewAdded!] }
+type GltfBufferViewsDiff { removed: [Int!] modified: [GltfBufferViewModified!] added: [GltfBufferViewAdded!] amended: [GltfBufferViewModified!] }
 type GltfBufferViewDiff { buffer: Int byteOffset: Int byteLength: Int byteStride: Int target: Int name: String extensions: GltfJson extras: GltfJson }
 
 type GltfBufferBytesModified { index: Int! diff: [Int!]! }
 type GltfBufferBytesAdded { index: Int! item: [Int!]! }
-type GltfBufferBytesDiff { removed: [Int!] modified: [GltfBufferBytesModified!] added: [GltfBufferBytesAdded!] }
+type GltfBufferBytesDiff { removed: [Int!] modified: [GltfBufferBytesModified!] added: [GltfBufferBytesAdded!] amended: [GltfBufferBytesModified!] }
 
 type GltfTextureModified { index: Int! diff: GltfTextureDiff! }
 type GltfTextureAdded { index: Int! item: GltfTexture! }
-type GltfTexturesDiff { removed: [Int!] modified: [GltfTextureModified!] added: [GltfTextureAdded!] }
+type GltfTexturesDiff { removed: [Int!] modified: [GltfTextureModified!] added: [GltfTextureAdded!] amended: [GltfTextureModified!] }
 type GltfTextureDiff { sampler: Int source: Int name: String extensions: GltfJson extras: GltfJson }
 
 type GltfImageModified { index: Int! diff: GltfImageDiff! }
 type GltfImageAdded { index: Int! item: GltfImage! }
-type GltfImagesDiff { removed: [Int!] modified: [GltfImageModified!] added: [GltfImageAdded!] }
+type GltfImagesDiff { removed: [Int!] modified: [GltfImageModified!] added: [GltfImageAdded!] amended: [GltfImageModified!] }
 type GltfImageDiff { uri: String mimeType: String bufferView: Int name: String extensions: GltfJson extras: GltfJson }
 
 type GltfSamplerModified { index: Int! diff: GltfSampler! }
 type GltfSamplerAdded { index: Int! item: GltfSampler! }
-type GltfSamplersDiff { removed: [Int!] modified: [GltfSamplerModified!] added: [GltfSamplerAdded!] }
+type GltfSamplersDiff { removed: [Int!] modified: [GltfSamplerModified!] added: [GltfSamplerAdded!] amended: [GltfSamplerModified!] }
 
 type GltfSkinModified { index: Int! diff: GltfSkinDiff! }
 type GltfSkinAdded { index: Int! item: GltfSkin! }
-type GltfSkinsDiff { removed: [Int!] modified: [GltfSkinModified!] added: [GltfSkinAdded!] }
-type GltfSkinDiff { inverseBindMatrices: Int skeleton: Int joints: [Int!] name: String extensions: GltfJson extras: GltfJson }
+type GltfSkinsDiff { removed: [Int!] modified: [GltfSkinModified!] added: [GltfSkinAdded!] amended: [GltfSkinModified!] }
+type GltfSkinDiff { inverseBindMatrices: Int skeleton: Int joints: GltfRefsDelta name: String extensions: GltfJson extras: GltfJson }
 
 type GltfAnimationModified { index: Int! diff: GltfAnimationDiff! }
 type GltfAnimationAdded { index: Int! item: GltfAnimation! }
-type GltfAnimationsDiff { removed: [Int!] modified: [GltfAnimationModified!] added: [GltfAnimationAdded!] }
-type GltfAnimationDiff { channels: [GltfAnimationChannel!] samplers: [GltfAnimationSampler!] name: String extensions: GltfJson extras: GltfJson }
+type GltfAnimationsDiff { removed: [Int!] modified: [GltfAnimationModified!] added: [GltfAnimationAdded!] amended: [GltfAnimationModified!] }
+type GltfAnimationDiff { channels: GltfChannelsDelta samplers: GltfAnimationSamplersDelta name: String extensions: GltfJson extras: GltfJson }
 
 type GltfCameraModified { index: Int! diff: GltfCamera! }
 type GltfCameraAdded { index: Int! item: GltfCamera! }
-type GltfCamerasDiff { removed: [Int!] modified: [GltfCameraModified!] added: [GltfCameraAdded!] }
+type GltfCamerasDiff { removed: [Int!] modified: [GltfCameraModified!] added: [GltfCameraAdded!] amended: [GltfCameraModified!] }
 
 type GltfDiff {
   asset: GltfAssetDiff @state(class: ARTIFACT)
@@ -130,8 +156,8 @@ type GltfDiff {
   skins: GltfSkinsDiff @state(class: ARTIFACT)
   animations: GltfAnimationsDiff @state(class: ARTIFACT)
   cameras: GltfCamerasDiff @state(class: ARTIFACT)
-  extensionsUsed: [String!] @state(class: ARTIFACT)
-  extensionsRequired: [String!] @state(class: ARTIFACT)
+  extensionsUsed: GltfStringsDelta @state(class: ARTIFACT)
+  extensionsRequired: GltfStringsDelta @state(class: ARTIFACT)
   extensions: GltfJson @state(class: ARTIFACT)
   extras: GltfJson @state(class: ARTIFACT)
   sourceForm: GltfSourceForm @state(class: ARTIFACT)

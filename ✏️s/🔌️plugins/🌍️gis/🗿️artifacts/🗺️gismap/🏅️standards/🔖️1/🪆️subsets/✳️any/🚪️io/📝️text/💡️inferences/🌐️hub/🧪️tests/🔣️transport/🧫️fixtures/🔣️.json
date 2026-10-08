@@ -1,0 +1,8 @@
+{
+  "gisInference": {
+    "requestId": "0123456789abcdef0123456789abcdef",
+    "lifetimeMs": 60000,
+    "json": "{\"schema\":\"semio.hub.inference-request/v1\",\"version\":1,\"requestId\":\"0123456789abcdef0123456789abcdef\",\"serviceId\":\"s.gis.gismap.inference\",\"policyVersion\":1,\"lifetimeMs\":60000}",
+    "bytes": 176
+  }
+}

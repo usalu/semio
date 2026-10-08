@@ -1,0 +1,122 @@
+{
+  "schema": "artifact-replay-message-accumulation/v1",
+  "entryBytes": 4096,
+  "messageOwnerBytes": 96,
+  "targetSegmentBytes": 24,
+  "maximumBodyBytes": 4096,
+  "preserveFullWorst": true,
+  "cases": [
+    {
+      "name": "full-original-omission-count-across-operations",
+      "editId": "same-edit",
+      "operations": [
+        {
+          "level": "info",
+          "count": 60,
+          "text": "i",
+          "bytes": 80
+        },
+        {
+          "level": "fatal",
+          "count": 3,
+          "text": "f",
+          "bytes": 1000
+        },
+        {
+          "level": "warning",
+          "count": 5,
+          "text": "w",
+          "bytes": 20
+        }
+      ],
+      "expectedKept": [
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66
+      ],
+      "expectedDropped": 61,
+      "expectedSummaryOp": 0
+    },
+    {
+      "name": "stable-ties-retain-original-first-prefix",
+      "editId": "same-edit",
+      "operations": [
+        {
+          "level": "error",
+          "count": 25,
+          "text": "a",
+          "bytes": 80
+        },
+        {
+          "level": "error",
+          "count": 25,
+          "text": "b",
+          "bytes": 80
+        }
+      ],
+      "expectedKept": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "expectedDropped": 30,
+      "expectedSummaryOp": 0
+    },
+    {
+      "name": "worst-original-large-row-uses-one-final-fallback",
+      "editId": "same-edit",
+      "operations": [
+        {
+          "level": "info",
+          "count": 60,
+          "text": "i",
+          "bytes": 80
+        },
+        {
+          "level": "fatal",
+          "count": 2,
+          "text": "f",
+          "bytes": 10000
+        }
+      ],
+      "expectedKept": [
+        60
+      ],
+      "expectedDropped": 61,
+      "expectedSummaryOp": 0
+    }
+  ],
+  "nativeRows": 513,
+  "cancelAt": [
+    0,
+    1,
+    2,
+    7,
+    31,
+    257,
+    512
+  ],
+  "minimumDepth": 1,
+  "pauseDepth": 0
+}

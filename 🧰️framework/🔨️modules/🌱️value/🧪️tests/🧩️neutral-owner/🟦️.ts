@@ -11,6 +11,37 @@ const root = resolve(import.meta.dir, "../../../../..");
 const owner = "🧰️framework/🔨️modules/🌱️value";
 const fixture = JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🧩️neutral-owner/🔣️.json"), "utf8"));
 const validValue = new Ajv({strict:false}).compile(JSON.parse(readFileSync(join(root, owner, "🧬️schema/🔣️.json"), "utf8")));
+test("typed read leases preserve independent sparse visitation and payload outputs", () => {
+  const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
+  for (const row of law.cases) {
+    const returned = new Set(row.returned), owners = Array.from({length:row.issued},(_,index)=>index);
+    let cursor = row.cursor;
+    const observed = row.visits.map(() => {
+      const next = owners.filter(index=>index>=cursor).at(0) ?? owners.filter(index=>index<cursor).at(0);
+      if(next===undefined)return null;
+      cursor=(next+1)%law.capacity;
+      if(!returned.has(next))return null;
+      owners.splice(owners.indexOf(next),1);
+      return next;
+    });
+    const independent = applyPatch({visits:[]},row.visits.map((value:number|null)=>({op:"add" as const,path:"/visits/-",value})),true,false).newDocument.visits;
+    expect(observed).toEqual(independent);
+  }
+  for (const text of law.texts) expect(applyPatch({},[{op:"add",path:"/root",value:text}],true,false).newDocument.root).toBe(JSON.parse(JSON.stringify(text)));
+  console.log("[DEBUG] Typed read sparse visitation and independent JSON Patch payload outputs verified");
+});
+test("erased read portable source pin law preserves independent payload authority", () => {
+  const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
+  for(const copy of law.workBytes){
+    expect(copy).toBeGreaterThan(0);
+    const original={root:law.erasedSource.text,source:law.erasedSource.text,read:true,authority:true};
+    const retained=applyPatch(original,[{op:"remove",path:"/read"},{op:"remove",path:"/authority"}],true,false).newDocument;
+    expect(retained.source).toBe(JSON.parse(JSON.stringify(law.erasedSource.text)));
+    expect(original.read).toBe(true);
+    expect(original.authority).toBe(true);
+  }
+  console.log("[DEBUG] Erased read strict neutral source pin and independent retained payload authority verified");
+});
 test("borrowed clone authority follows independent JSON Patch", () => {
   for (const row of fixture.vectors.filter((row: {accepted:boolean}) => row.accepted)) {
     const input = structuredClone(row.input);
@@ -140,6 +171,65 @@ test("owned projected fields preserve native value paths and exact alias closure
  console.log("[DEBUG] owned projection native value paths agree with independent RFC6902 pointer and exact alias closure");
 });
 
+test("owned source birth funds original custody before allocation", () => {
+  const source=join(root,owner,"🧬️retained-clone/🔗️source");
+  const law=JSON.parse(readFileSync(join(source,"🧫️fixtures/🎟️owned-birth/🔣️.json"),"utf8"));
+  const original={owner:law.owner,authority:law.authority,allocated:false};
+  for(const refusal of law.refusals){
+    const demand={items:law.birth.items,capacity:law.ownerCapacity+law.authorityCapacity,depth:law.birth.depth};
+    const grant=applyPatch(demand,[{op:"replace",path:`/${refusal.currency}`,value:demand[refusal.currency as keyof typeof demand]-refusal.shortBy}],true,false).newDocument;
+    expect(grant[refusal.currency as keyof typeof demand]).toBeLessThan(demand[refusal.currency as keyof typeof demand]);
+    const refused=applyPatch(original,[],true,false).newDocument;expect(refused).toEqual(original);
+    expect(refusal.kind).toBe({items:"WorkLimit",capacity:"OwnershipLimit",depth:"DepthLimit"}[refusal.currency as "items"|"capacity"|"depth"]);
+  }
+  const admitted=applyPatch(original,[{op:"replace",path:"/allocated",value:true}],true,false).newDocument;
+  expect(admitted.owner).toBe(original.owner);expect(admitted.authority).toBe(original.authority);expect(admitted.allocated).toBe(true);expect(law.birth.copyBytes).toBe(0);expect(law.birth.releaseBytes).toBe(0);
+  expect(law.sharedAuthorityRetainsAlias).toBe(true);
+  const shared=applyPatch({original:original.authority,aliases:["issuer","source"]},[{op:"remove",path:"/aliases/1"}],true,false).newDocument;expect(shared.original).toBe(original.authority);expect(shared.aliases).toEqual(["issuer"]);
+  console.log("[DEBUG] owned source birth independent RFC6902 oracle preserves original owners on all refused currencies");
+});
+
+test("funded read ownership keeps sparse returned roots independently of live readers", () => {
+  const law=JSON.parse(readFileSync(join(root,owner,"🔗️read/🧫️fixtures/🔣️.json"),"utf8"));
+  for(const row of law.cases){
+    let slots=Array.from({length:law.capacity},()=>({root:null as number|null,issued:false}));
+    for(let slot=0;slot<row.issued;slot++)slots=applyPatch(slots,[{op:"replace",path:`/${slot}/root`,value:slot},{op:"replace",path:`/${slot}/issued`,value:true}],true,false).newDocument;
+    for(const slot of row.returned)slots=applyPatch(slots,[{op:"replace",path:`/${slot}/issued`,value:false}],true,false).newDocument;
+    let cursor=row.cursor;
+    const visits=row.visits.map(()=>{
+      for(let offset=0;offset<law.capacity;offset++){
+        const slot=(cursor+offset)%law.capacity,entry=slots[slot]!;
+        if(entry.root===null)continue;
+        cursor=(slot+1)%law.capacity;
+        if(entry.issued)return null;
+        const original=entry.root;slots=applyPatch(slots,[{op:"replace",path:`/${slot}/root`,value:null}],true,false).newDocument;return original;
+      }
+      return null;
+    });
+    expect(visits).toEqual(row.visits);
+    for(let slot=0;slot<row.issued;slot++)if(!row.returned.includes(slot)){expect(slots[slot]!.issued).toBe(true);expect(slots[slot]!.root).toBe(slot);}
+  }
+  console.log("[DEBUG] independent read ownership oracle preserves original sparse wrap and live-reader starvation vectors");
+});
+
+test("retained clone close depth preserves an unfunded original birth", () => {
+  const law=JSON.parse(readFileSync(join(root,owner,"🧬️retained-clone/🧫️fixtures/🪜️close-demands/🔣️.json"),"utf8"));
+  const original={owner:law.owner,retiring:false,closing:false};
+  const closing=applyPatch(original,[{op:"replace",path:"/closing",value:true}],true,false).newDocument;
+  expect(law.idleDepth).toBe(0);expect(law.pendingBirthDepth).toBe(1);
+  const scaffold=JSON.parse(readFileSync(join(root,owner,"🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
+  expect(scaffold.physicalScaffoldDepth).toBe(1);
+  const deniedScaffold=applyPatch({backing:scaffold.physicalCursorBytes},[],true,false).newDocument;expect(deniedScaffold.backing).toBe(scaffold.physicalCursorBytes);
+  const closedScaffold=applyPatch(deniedScaffold,[{op:"replace",path:"/backing",value:0}],true,false).newDocument;expect(closedScaffold.backing).toBe(0);
+  const refused=applyPatch(closing,[],true,false).newDocument;
+  expect(law.refusedBirth.maximumDepth).toBeLessThan(law.pendingBirthDepth);expect(refused.owner).toBe(law.owner);expect(refused.retiring).toBe(false);
+  const admitted=applyPatch(closing,[{op:"replace",path:"/owner",value:null},{op:"replace",path:"/retiring",value:true}],true,false).newDocument;
+  expect(law.fundedBirth.maximumDepth).toBe(law.pendingBirthDepth);expect(admitted.owner).toBeNull();expect(admitted.retiring).toBe(true);
+  const terminal=applyPatch(admitted,[{op:"replace",path:"/retiring",value:false}],true,false).newDocument;
+  expect(terminal.owner).toBeNull();expect(terminal.retiring).toBe(false);expect(law.terminalDepth).toBe(0);
+  console.log("[DEBUG] independent close depth oracle preserves original custody across refused and funded birth");
+});
+
 test("recursive structural depth counts field and box owners independently", () => {
   const directory=join(root,owner,"🧬️retained-clone/🧫️fixtures/🌳️structural-depth");
   const law=JSON.parse(readFileSync(join(directory,"🔣️.json"),"utf8"));
@@ -156,4 +246,16 @@ test("recursive structural depth counts field and box owners independently", () 
   }
   expect(law.close).toEqual({maximumItems:1,maximumCopyBytes:2,maximumReleaseBytes:65536});
   console.log("[DEBUG] Recursive field/box depth oracle preserves zero, one, 31/32 and 255/256 ordered chain boundaries with separate two-byte copy and exact physical close authority");
+});
+
+test("read closure order retains the original typed payload until its exact last alias closes", () => {
+  const law=JSON.parse(readFileSync(join(root,owner,"🔗️read/🧫️fixtures/🔣️.json"),"utf8"));
+  for(const order of law.closeOrders){
+    let state={authority:true,read:true,original:"last-reader λ🙂",released:false};
+    if(order==="authority-first"){state=applyPatch(state,[{op:"replace",path:"/authority",value:false}],true,false).newDocument;expect(state.read).toBe(true);expect(JSON.parse(JSON.stringify(state.original))).toBe("last-reader λ🙂");expect(state.released).toBe(false);}
+    state=applyPatch(state,[{op:"replace",path:"/read",value:false}],true,false).newDocument;
+    if(order==="read-first"){expect(state.authority).toBe(true);expect(state.released).toBe(false);state=applyPatch(state,[{op:"replace",path:"/authority",value:false}],true,false).newDocument;}
+    expect(state.authority||state.read).toBe(false);state=applyPatch(state,[{op:"replace",path:"/released",value:true}],true,false).newDocument;expect(state.released).toBe(true);
+  }
+  console.log("[DEBUG] Independent AJV and RFC6902 close-order oracle preserves the original last-reader payload");
 });

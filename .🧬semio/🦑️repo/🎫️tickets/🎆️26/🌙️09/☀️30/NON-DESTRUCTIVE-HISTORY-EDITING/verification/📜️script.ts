@@ -43,7 +43,7 @@ if(segments[0]?.startsWith("managed-")){
       const {TEST_LEVEL_BUDGET_MS}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"));
       await runOwnedCommand(process.execPath,state.args,root,`verification:${name}`,TEST_LEVEL_BUDGET_MS.exhaustive,{signal:controller.signal,onLine(line){
         const text=line.replace(/\x1b\[[0-9;]*m/gu,"");
-        if(text.length<=8192&&/^(?:\[DEBUG\]|test .+ \.\.\. (?:ok|FAILED)|test result:|\s*\d+ (?:pass|fail)|\s*(?:PASS|FAIL|SKIP)\s+\[|Ran \d+ tests)/u.test(text)){evidence.push(text);if(evidence.length>256)evidence.shift();}
+        if(text.length<=8192&&/^(?:\[DEBUG\]|test .+ \.\.\. (?:ok|FAILED)|test result:|\s*\d+ (?:pass|fail)|\s*(?:PASS|FAIL)\s+\[|\s*Summary\s*\[|Ran \d+ tests)/u.test(text)){evidence.push(text);if(evidence.length>256)evidence.shift();}
       }});
       save({...state,pid:process.pid,status:"passed",completedAt:new Date().toISOString(),evidence});
     }catch(error){save({...state,pid:process.pid,status:controller.signal.aborted?"cancelled":"failed",error:String(error),completedAt:new Date().toISOString(),evidence});process.exitCode=1;}
@@ -67,6 +67,15 @@ else if(command==="history-oracles"){
   let failed=0;
   outcomes.forEach((result,index)=>{if(result.status==="rejected"){failed++;console.error(`${cases[index]![1]}: ${String(result.reason)}`);}});
   if(failed)throw Error(`${failed} history oracle(s) failed`);
+}else if(command==="browser-transport"){
+  const {testBrowserTransportOwnership}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧬️generator-ownership/🟦️.ts"));
+  await testBrowserTransportOwnership(root);
+}else if(command==="browser-inputs"){
+  const {testBrowserInputClosure}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧬️generator-ownership/🟦️.ts"));
+  await testBrowserInputClosure(root);
+}else if(command==="browser-ownership"){
+  const {testWgpuGeneratorOwnership}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧬️generator-ownership/🟦️.ts"));
+  await testWgpuGeneratorOwnership(root);
 }else if(command==="browser-imports"){
   const taxonomy=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),"utf8"));
   const profile=taxonomy.generatorContracts["wgpu-frame-worker"].packageGeneration.browserProfile, owned=new Set<string>(profile.sourceModulePaths), missing=new Map<string,string[]>();

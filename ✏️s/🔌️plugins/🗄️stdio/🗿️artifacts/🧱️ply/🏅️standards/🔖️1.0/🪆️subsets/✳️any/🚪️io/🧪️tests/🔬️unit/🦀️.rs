@@ -1,6 +1,7 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::diff::PlyElementsDiff;
-use crate::schema::mutations::apply_ply_mutation;
+
 use crate::schema::mutations::{add_element, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property};
 use crate::schema::{demo_ply_snapshot, empty_ply_snapshot};
 use crate::{PlyDiff, PlyMutation};
@@ -134,7 +135,7 @@ fn law_base() -> PlySnapshot {
 
 //#region 🔖️MutationDiffLaw
 /// 1️⃣ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base)` matches
-/// `apply_ply_mutation`'s in-place result, and the returned diff equals `m.diff(base)`.
+/// `apply_mutation`'s in-place result, and the returned diff equals `m.diff(base)`.
 #[semio_framework_async_macros::async_test]
 async fn mutation_diff_law() {
     let base = law_base();
@@ -152,10 +153,10 @@ async fn mutation_diff_law() {
     ];
     for m in variants {
         let mut snapshot = base.clone();
-        let returned = apply_ply_mutation(&mut snapshot, &m);
+        let returned = apply_mutation(&mut snapshot, &m);
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-        assert_eq!(snapshot, protocol::apply_diff(expected_diff.diff(), &base).expect("valid mutation diff"), "apply_ply_mutation result must equal diff.diff().apply(base) for {m:?}");
+        assert_eq!(snapshot, protocol::apply_diff(expected_diff.diff(), &base).expect("valid mutation diff"), "apply_mutation result must equal diff.diff().apply(base) for {m:?}");
     }
 }
 //#endregion
@@ -177,10 +178,10 @@ async fn inverse_law() {
     ];
     for m in variants {
         let mut snapshot = base.clone();
-        let d = apply_ply_mutation(&mut snapshot, &m);
+        let d = apply_mutation(&mut snapshot, &m);
         for inv in <PlyMutation as Mutation<PlySnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture") {
             let mut undone = snapshot.clone();
-            apply_ply_mutation(&mut undone, &inv);
+            apply_mutation(&mut undone, &inv);
             assert_eq!(undone, base, "mutation-level inverse must restore base for {m:?}");
         }
         let d_inv = d.diff().inverse(&base);
@@ -198,10 +199,10 @@ async fn absorb_law_insert_then_remove_before() {
     let base = law_base();
     let m1 = PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } });
     let mut mid = base.clone();
-    let d1 = apply_ply_mutation(&mut mid, &m1);
+    let d1 = apply_mutation(&mut mid, &m1);
     let m2 = PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: "vertex".into(), index: 0 });
     let mut after = mid.clone();
-    let d2 = apply_ply_mutation(&mut after, &m2);
+    let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after, "absorb(d1,d2).apply(base) == d2.diff().apply(d1.diff().apply(base))");
@@ -216,10 +217,10 @@ async fn absorb_law_insert_insert_same_index_both_survive() {
     let base = law_base();
     let m1 = PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } });
     let mut mid = base.clone();
-    let d1 = apply_ply_mutation(&mut mid, &m1);
+    let d1 = apply_mutation(&mut mid, &m1);
     let m2 = PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(2.0), PlyValue::Float(2.0), PlyValue::Float(2.0)] } });
     let mut after = mid.clone();
-    let d2 = apply_ply_mutation(&mut after, &m2);
+    let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after, "both inserts must survive absorb");
@@ -233,10 +234,10 @@ async fn absorb_law_add_element_then_set_row_property_patches_into_added() {
     let new_element = PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }] };
     let m1 = PlyMutation::AddElement(add_element::AddElement { index: 2, element: new_element });
     let mut mid = base.clone();
-    let d1 = apply_ply_mutation(&mut mid, &m1);
+    let d1 = apply_mutation(&mut mid, &m1);
     let m2 = PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "material".into(), row_index: 0, property_name: "shininess".into(), value: PlyValue::Float(0.9) });
     let mut after = mid.clone();
-    let d2 = apply_ply_mutation(&mut after, &m2);
+    let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after);
@@ -251,10 +252,10 @@ async fn absorb_law_modify_then_remove_name_keyed() {
     let base = law_base();
     let m1 = PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)]) });
     let mut mid = base.clone();
-    let d1 = apply_ply_mutation(&mut mid, &m1);
+    let d1 = apply_mutation(&mut mid, &m1);
     let m2 = PlyMutation::RemoveElement(remove_element::RemoveElement { name: "face".into() });
     let mut after = mid.clone();
-    let d2 = apply_ply_mutation(&mut after, &m2);
+    let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after);
@@ -268,10 +269,10 @@ async fn absorb_law_modify_then_remove_index_keyed() {
     let base = law_base();
     let m1 = PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "x".into(), value: PlyValue::Float(5.0) });
     let mut mid = base.clone();
-    let d1 = apply_ply_mutation(&mut mid, &m1);
+    let d1 = apply_mutation(&mut mid, &m1);
     let m2 = PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: "vertex".into(), index: 1 });
     let mut after = mid.clone();
-    let d2 = apply_ply_mutation(&mut after, &m2);
+    let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after);
@@ -287,11 +288,11 @@ async fn absorb_law_associativity() {
     let m2 = PlyMutation::InsertComment(insert_comment::InsertComment { index: 0, comment: "x".into() });
     let m3 = PlyMutation::RemoveElement(remove_element::RemoveElement { name: "face".into() });
     let mut s1 = base.clone();
-    let d1 = apply_ply_mutation(&mut s1, &m1);
+    let d1 = apply_mutation(&mut s1, &m1);
     let mut s2 = s1.clone();
-    let d2 = apply_ply_mutation(&mut s2, &m2);
+    let d2 = apply_mutation(&mut s2, &m2);
     let mut s3 = s2.clone();
-    let d3 = apply_ply_mutation(&mut s3, &m3);
+    let d3 = apply_mutation(&mut s3, &m3);
 
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
@@ -304,25 +305,6 @@ async fn absorb_law_associativity() {
 
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "associativity: (d1∘d2)∘d3 == d1∘(d2∘d3) applied");
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), s3, "both associations must equal sequential application");
-}
-//#endregion
-
-//#region 🔖️BetweenRoundtripLaw
-/// 4️⃣ `between_roundtrip_law`: `between(a,b).apply(a) == b` on synthetic fixtures.
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = law_base();
-    let mut b = a.clone();
-    b.format = PlyFormat::BinaryBigEndian;
-    b.comments = vec!["hello".into()];
-    b.elements[0].rows[0].values[0] = PlyValue::Float(100.0);
-    b.elements.remove(1); // drop "face" entirely
-    b.elements.push(PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] });
-
-    let d = PlyDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) == b");
-    let back = PlyDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&back, &b).expect("valid backward diff"), a, "between(b,a).apply(b) == a");
 }
 //#endregion
 
@@ -383,61 +365,6 @@ fn sweep_b() -> PlySnapshot {
     }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_covers_every_mutable_field() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let ab = PlyDiff::between(&a, &b);
-    assert!(ab.format.is_some(), "format field must be exercised");
-    assert!(ab.comments.is_some(), "comments field must be exercised");
-    let ab_elements = ab.elements.as_ref().expect("elements diff must be present");
-    assert!(!ab_elements.removed.is_empty(), "sweep must exercise a removed element (face)");
-    assert!(!ab_elements.added.is_empty(), "sweep must exercise an added element (edge)");
-    assert!(!ab_elements.modified.is_empty(), "sweep must exercise a modified element (vertex)");
-    let vertex_mod = ab_elements.modified.iter().find(|m| m.name == "vertex").expect("vertex modified");
-    assert!(vertex_mod.diff.properties.is_some(), "properties weak-replace must be exercised");
-    assert!(vertex_mod.diff.rows.is_some(), "rows triple must be exercised (schema-change scope cut path)");
-    assert_eq!(protocol::apply_diff(&ab, &a).expect("valid forward diff"), b, "between(a,b).apply(a) == b");
-
-    let ba = PlyDiff::between(&b, &a);
-    let ba_elements = ba.elements.as_ref().expect("reverse elements diff must be present");
-    assert!(!ba_elements.removed.is_empty(), "reverse direction: edge removed");
-    assert!(!ba_elements.added.is_empty(), "reverse direction: face added");
-    assert_eq!(protocol::apply_diff(&ba, &b).expect("valid backward diff"), a, "between(b,a).apply(b) == a");
-
-    assert!(PlyDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-    assert!(PlyDiff::between(&b, &b).is_empty(), "between(b,b) must be empty");
-}
-
-/// 🧪 Direct row-level triple sweep (not routed through the schema-change scope cut).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_row_triple_both_directions() {
-    let common_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Int }];
-    let a = PlySnapshot {
-        schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-        format: PlyFormat::Ascii,
-        comments: vec![],
-        elements: vec![PlyElement { name: "point".into(), count: 2, properties: common_props.clone(), rows: vec![PlyRow { values: vec![PlyValue::Int(1)] }, PlyRow { values: vec![PlyValue::Int(2)] }] }],
-    };
-    let b = PlySnapshot {
-        schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-        format: PlyFormat::Ascii,
-        comments: vec![],
-        elements: vec![PlyElement { name: "point".into(), count: 3, properties: common_props, rows: vec![PlyRow { values: vec![PlyValue::Int(99)] }, PlyRow { values: vec![PlyValue::Int(2)] }, PlyRow { values: vec![PlyValue::Int(3)] }] }],
-    };
-    let ab = PlyDiff::between(&a, &b);
-    let ab_rows = ab.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
-    assert!(!ab_rows.modified.is_empty(), "row 0 modified (1 -> 99)");
-    assert!(!ab_rows.added.is_empty(), "row 2 added (b longer)");
-    assert!(ab_rows.removed.is_empty(), "b is longer, no removed tail in this direction");
-    assert_eq!(protocol::apply_diff(&ab, &a).expect("valid forward diff"), b);
-
-    let ba = PlyDiff::between(&b, &a);
-    let ba_rows = ba.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
-    assert!(!ba_rows.removed.is_empty(), "a is shorter, removed tail in this direction");
-    assert_eq!(protocol::apply_diff(&ba, &b).expect("valid backward diff"), a);
-}
 //#endregion
 
 //#region 🔖️ConformanceLaws

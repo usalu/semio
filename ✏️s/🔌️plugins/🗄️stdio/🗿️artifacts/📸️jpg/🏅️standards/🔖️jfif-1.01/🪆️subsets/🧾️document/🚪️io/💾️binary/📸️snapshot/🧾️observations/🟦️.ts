@@ -15,7 +15,7 @@ export interface JpgFrameHeader {
   components: JpgFrameComponent[];
 }
 
-/** 📊️ One `DQT` table (id-keyed within `JpgSnapshot.quantTables`). `values` is retained in the
+/** 📊️ One `DQT` table (id-keyed within `JpgNativeObservations.quantTables`). `values` is retained in the
  * EXACT zigzag scan order the DQT segment stores on disk. */
 export interface JpgQuantTable {
   id: number;
@@ -27,7 +27,7 @@ export interface JpgQuantTable {
 /** 🌳️ `DHT` table class. */
 export type JpgHuffmanClass = 'dc' | 'ac';
 
-/** 🌳️ One `DHT` table, keyed by `(class, id)` within `JpgSnapshot.huffmanTables`. */
+/** 🌳️ One `DHT` table, keyed by `(class, id)` within `JpgNativeObservations.huffmanTables`. */
 export interface JpgHuffmanTable {
   id: number;
   class: JpgHuffmanClass;

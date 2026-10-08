@@ -255,7 +255,11 @@ fn retire_component_world_fixture(runtime: &RuntimeMailbox) {
                 semio_framework_job::default_now_us,
                 &mut sequence,
             );
-            if infinite_world::world::step_world3d_dynamic_retirement(&mut owner.value, &mut context) && infinite_world::world::world3d_dynamic_retirement_terminal_is_empty(&owner.value) {
+            let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+            let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value,terrain_grant,&mut context);
+            assert!(terrain.ownership.fits(terrain_grant));
+            assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
+            if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && infinite_world::world::step_world3d_dynamic_retirement(&mut owner.value, &mut context) && infinite_world::world::world3d_dynamic_retirement_terminal_is_empty(&owner.value) {
                 break;
             }
         }

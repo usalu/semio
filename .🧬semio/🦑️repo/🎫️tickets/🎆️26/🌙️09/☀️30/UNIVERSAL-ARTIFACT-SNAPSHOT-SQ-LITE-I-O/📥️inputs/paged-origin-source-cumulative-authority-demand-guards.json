@@ -1,0 +1,24 @@
+{
+  "paths": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/paged-origin-source-law-held.rs",
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/📦️operation-pages/🦀️.rs"
+  ],
+  "regions": [
+    [
+      "let mut label=Label{value:PagedText::empty()};assert!(label.value.read_view().is_err());let mut allow=|_|true;let mut origin=NativeEncodeControl::new(if mode==\"initial4096\"{4096}else{65536},&mut allow);",
+      "let mut label=Label{value:PagedText::empty()};assert!(label.value.read_view().is_err());let accepted=std::sync::atomic::AtomicUsize::new(0);let mut continuation=|_|mode!=\"interior256\"||accepted.load(std::sync::atomic::Ordering::Relaxed)<256;let mut origin=NativeEncodeControl::new(if mode==\"initial4096\"{4096}else{65536},&mut continuation);"
+    ],
+    [
+      "let mut output=protocol::io::binary::operation_bytes::OwnedOperationBytes::try_new(8200,65536).unwrap();let accepted=std::sync::atomic::AtomicUsize::new(0);let mut continuation=|_|mode!=\"interior256\"||accepted.load(std::sync::atomic::Ordering::Relaxed)<256;let mut control=NativeEncodeControl::new(65536,&mut continuation);let mut options=EncodeOptions::default();",
+      "if mode==\"complete\"{let mut measurement=protocol::io::binary::operation_bytes::OperationByteMeasurement::new(8200);let window=origin.owned_bytes()+512;let(result,metadata)=semio_framework_trace::observe_heap_allocations_on_this_thread(||origin.scoped_maximum(window,|control|capsule.write_body(&EncodeOptions::default(),&mut measurement,control)));assert_eq!(result.unwrap(),8200);assert_eq!((metadata.requested_bytes,metadata.released_bytes),(0,0));}\n   let mut output=protocol::io::binary::operation_bytes::OwnedOperationBytes::try_new(8200,65536).unwrap();let mut options=EncodeOptions::default();"
+    ],
+    [
+      "&mut CanceledOutput{inner:&mut output,accepted:&accepted},&mut control)",
+      "&mut CanceledOutput{inner:&mut output,accepted:&accepted},&mut origin)"
+    ],
+    [
+      "assert_eq!(encoded.released_bytes,diagnostic);assert!(encoded.largest_release_bytes<=4096);",
+      "assert_eq!(encoded.released_bytes,diagnostic);assert!(encoded.largest_release_bytes<=4096);assert_eq!(origin.owned_bytes(),original_backing+capsule.allocated_bytes()+output.allocated_bytes());assert!(origin.owned_bytes()<=65536);"
+    ]
+  ]
+}

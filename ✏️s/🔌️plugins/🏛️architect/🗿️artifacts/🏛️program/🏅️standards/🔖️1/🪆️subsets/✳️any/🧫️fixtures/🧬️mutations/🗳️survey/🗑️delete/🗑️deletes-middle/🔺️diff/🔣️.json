@@ -62,12 +62,15 @@
   "statusRecords": null,
   "workshops": null,
   "surveys": {
-    "added": [],
     "removed": [
-      "survey-a"
+      {
+        "id": "survey-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "issues": null,
   "auditEvents": null,

@@ -18,6 +18,17 @@ pub struct SetMemberMutation {
 
 pub type SetMemberPayload = SetMemberMutation;
 
+/// 🧱️ The one row this kind writes for a member that already exists: the new scalar in its own kind's field when the kind is stable, else the whole new value.
+fn replaced_row(existing: &JsonValue, new: &JsonValue) -> Option<JsonValueDiff> {
+    match (existing, new) {
+        _ if existing == new => None,
+        (JsonValue::Bool { .. }, JsonValue::Bool { value }) => Some(JsonValueDiff::Bool { value: *value }),
+        (JsonValue::Number { .. }, JsonValue::Number { lexeme }) => Some(JsonValueDiff::Number { lexeme: lexeme.clone() }),
+        (JsonValue::String { .. }, JsonValue::String { value }) => Some(JsonValueDiff::String { value: value.clone() }),
+        _ => Some(JsonValueDiff::Replace { value: new.clone() }),
+    }
+}
+
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "member", kind: "set-member", record: "SetMember" };
 
@@ -25,7 +36,7 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMuta
         protocol::MutationOutcome::new(match resolve(&base.value, &self.path) {
             Some(JsonValue::Object { members }) => match members.iter().find(|member| member.key == self.key) {
                 Some(existing) => {
-                    let leaf = crate::schema::diff::value_diff_between(&existing.value, &self.value);
+                    let leaf = replaced_row(&existing.value, &self.value);
                     diff_at_path(&self.path, leaf.map(|diff| JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: self.key.clone(), diff }] } }))
                 }
                 None => diff_at_path(

@@ -96,39 +96,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dGrip"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dGripRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dGripPatchEntry"
+            "$ref": "#/$defs/Puzzle5dGripInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dGripRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dGripModification"
           }
         }
       }
     },
-    "Puzzle5dGripPatchEntry": {
-      "title": "Puzzle5dGripPatchEntry",
+    "Puzzle5dGripRemoval": {
+      "title": "Puzzle5dGripRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dGripInsertion": {
+      "title": "Puzzle5dGripInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dGrip"
+        }
+      }
+    },
+    "Puzzle5dGripRelocation": {
+      "title": "Puzzle5dGripRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dGripModification": {
+      "title": "Puzzle5dGripModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -173,39 +233,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dPartRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dPartPatchEntry"
+            "$ref": "#/$defs/Puzzle5dPartInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dPartRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dPartModification"
           }
         }
       }
     },
-    "Puzzle5dPartPatchEntry": {
-      "title": "Puzzle5dPartPatchEntry",
+    "Puzzle5dPartRemoval": {
+      "title": "Puzzle5dPartRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dPartInsertion": {
+      "title": "Puzzle5dPartInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
+        }
+      }
+    },
+    "Puzzle5dPartRelocation": {
+      "title": "Puzzle5dPartRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dPartModification": {
+      "title": "Puzzle5dPartModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -256,39 +376,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dFastenerRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dFastenerPatchEntry"
+            "$ref": "#/$defs/Puzzle5dFastenerInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dFastenerRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dFastenerModification"
           }
         }
       }
     },
-    "Puzzle5dFastenerPatchEntry": {
-      "title": "Puzzle5dFastenerPatchEntry",
+    "Puzzle5dFastenerRemoval": {
+      "title": "Puzzle5dFastenerRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dFastenerInsertion": {
+      "title": "Puzzle5dFastenerInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
+        }
+      }
+    },
+    "Puzzle5dFastenerRelocation": {
+      "title": "Puzzle5dFastenerRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dFastenerModification": {
+      "title": "Puzzle5dFastenerModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -357,39 +537,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dTargetVolume"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dTargetVolumeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dTargetVolumePatchEntry"
+            "$ref": "#/$defs/Puzzle5dTargetVolumeInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle5dTargetVolumeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dTargetVolumeModification"
           }
         }
       }
     },
-    "Puzzle5dTargetVolumePatchEntry": {
-      "title": "Puzzle5dTargetVolumePatchEntry",
+    "Puzzle5dTargetVolumeRemoval": {
+      "title": "Puzzle5dTargetVolumeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dTargetVolumeInsertion": {
+      "title": "Puzzle5dTargetVolumeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dTargetVolume"
+        }
+      }
+    },
+    "Puzzle5dTargetVolumeRelocation": {
+      "title": "Puzzle5dTargetVolumeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dTargetVolumeModification": {
+      "title": "Puzzle5dTargetVolumeModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -447,39 +687,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dKindCompatibilityPatchEntry"
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityModification"
           }
         }
       }
     },
-    "Puzzle5dKindCompatibilityPatchEntry": {
-      "title": "Puzzle5dKindCompatibilityPatchEntry",
+    "Puzzle5dKindCompatibilityRemoval": {
+      "title": "Puzzle5dKindCompatibilityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dKindCompatibilityInsertion": {
+      "title": "Puzzle5dKindCompatibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
+        }
+      }
+    },
+    "Puzzle5dKindCompatibilityRelocation": {
+      "title": "Puzzle5dKindCompatibilityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dKindCompatibilityModification": {
+      "title": "Puzzle5dKindCompatibilityModification",
       "type": "object",
       "additionalProperties": false,
       "required": [

@@ -1,5 +1,72 @@
 {
+  "vcsRetirement": {
+    "snapshot": "genesis-owner-✓",
+    "repeat": 128,
+    "pack": [
+      0,
+      255,
+      1,
+      2
+    ],
+    "packCapacity": 8194,
+    "forwards": [
+      0,
+      18446744073709552000
+    ],
+    "inverse": [
+      9,
+      7
+    ],
+    "edit": "owned-edit-🧵",
+    "actor": "actor-owned",
+    "maximumCopyBytes": 1,
+    "constructorDropBytes": 0,
+    "terminalDropBytes": 0
+  },
+  "visibilityRetirement": [
+    {
+      "committed": true,
+      "pending": false
+    },
+    {
+      "committed": false,
+      "pending": false
+    }
+  ],
+  "dagRetirement": {
+    "appliedIdentity": "causal-owned-✓",
+    "maximumCopyBytes": 1,
+    "constructorBytes": 0,
+    "terminalDropBytes": 0
+  },
+  "editRetirement": {
+    "strings": [
+      "edit-owner",
+      "actor-owner",
+      "started",
+      "finished"
+    ],
+    "repeat": 128,
+    "maximumCopyBytes": 7,
+    "forwardBackingSlots": 17,
+    "metadataBackingSlots": 3,
+    "inverseRetainedAfterPop": true,
+    "constructorDropBytes": 0,
+    "terminalDropBytes": 0
+  },
   "maximumItems": 1,
+  "stringHistory": {
+    "itemCount": 3,
+    "bodyBytes": 8194,
+    "maximumCopyBytes": 1,
+    "zeroItemProgress": 0,
+    "terminalDropBytes": 0
+  },
+  "metadataWrapperStringCounts": [
+    1,
+    1,
+    3
+  ],
   "maximumAdmissionBytes": 262144,
   "retainedSlots": 1024,
   "deniedReleaseBytes": 0,
@@ -17,5 +84,76 @@
     "poisoned"
   ],
   "registryExternalAliases": 1,
-  "catalogTerminalDropBytes": 0
+  "catalogTerminalDropBytes": 0,
+  "displacedQueue": {
+    "body": "queued-original-✓",
+    "repeat": 128,
+    "maximumCopyBytes": 1,
+    "zeroItemProgress": 0,
+    "wholeReleaseUndergrantOffset": 1,
+    "terminalChildReceiptPreserved": true,
+    "queueBackingRetainedForMaintenance": true,
+    "terminalDropBytes": 0
+  },
+  "sparseLaneAuthority": {
+    "entries": [
+      [
+        "edit-z",
+        "interaction"
+      ],
+      [
+        "edit-a",
+        "document"
+      ],
+      [
+        "edit-ä",
+        "interaction"
+      ]
+    ],
+    "tailOrder": [
+      "edit-ä",
+      "edit-z",
+      "edit-a"
+    ],
+    "maximumCopyBytes": 1,
+    "popBirthBytes": 0,
+    "popReleaseBytes": 0,
+    "terminalDropBytes": 0
+  },
+  "repositoryHistoryEntry": {
+    "integer": "18446744073709551615",
+    "maximumCopyBytes": 1,
+    "zeroItem": "same-owner-zero-heap",
+    "oneBelow": "same-raw-and-factory-zero-heap",
+    "terminalDropBytes": 0,
+    "terminalReceipt": "full-physical-final-factory-release"
+  },
+  "sourceIterator": {
+    "values": [
+      "0",
+      "18446744073709551615",
+      "7"
+    ],
+    "consumedPrefix": 1,
+    "maximumCopyBytes": 8,
+    "backingCapacity": 17,
+    "constructorBytes": 0,
+    "zeroItem": "original-pointer-zero-heap",
+    "oneBelow": "original-whole-backing-zero-heap",
+    "terminalDropBytes": 0
+  },
+  "boundedConfigFactory": {
+    "body": "config-original-✓",
+    "repeat": 128,
+    "maximumCopyBytes": 1,
+    "constructorRefusals": [
+      "zero-item",
+      "short-capacity",
+      "zero-depth"
+    ],
+    "refusalBirthBytes": 0,
+    "refusalReleaseBytes": 0,
+    "terminalDropBytes": 0,
+    "receipt": "actual-full-owner-and-frame"
+  }
 }

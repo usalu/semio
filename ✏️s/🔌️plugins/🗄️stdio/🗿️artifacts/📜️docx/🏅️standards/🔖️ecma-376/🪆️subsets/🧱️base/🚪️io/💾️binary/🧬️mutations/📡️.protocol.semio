@@ -45,3 +45,11 @@ record insert-xml-node tag=16
 field payload bytes
 record remove-xml-node tag=17
 field payload bytes
+record set-relationship tag=18
+field payload bytes
+record remove-relationship tag=19
+field payload bytes
+record set-content-type tag=20
+field payload bytes
+record remove-content-type tag=21
+field payload bytes

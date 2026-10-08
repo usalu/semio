@@ -10,7 +10,7 @@ async fn change_mutation_diff_updates_only_its_field() {
     let outcome = mutation.diff(&base);
     let diff = outcome.diff();
     assert!(diff.annex.is_none() && diff.connections.is_empty());
-    assert_eq!((diff.members.removed.len(), diff.members.added.len(), diff.members.modified.len()), (0, 0, 1));
+    assert_eq!((diff.members.removed.len(), diff.members.inserted.len(), diff.members.modified.len()), (0, 0, 1));
     assert_eq!(diff.members.modified[0].patch.h_m, Some(0.5));
     let mut expected = base.clone();
     expected.members[0].h_m = 0.5;
@@ -34,19 +34,3 @@ async fn absorb_coalesces_per_key_and_keeps_the_sequential_result() {
     assert!((applied.members[0].h_m - 0.6).abs() < 1e-12);
 }
 
-/// 🧭️ `between` carries a document to another and its `inverse` carries it back.
-#[test]
-fn between_carries_a_document_to_another_and_inverts() {
-    let base = En1995Snapshot::compliant_building_beam();
-    let mut target = base.clone();
-    target.members[0].span_m += 1.0;
-    target.members[0].actions.push(crate::CharacteristicAction { id: "extra".into(), kind: "imposed".into(), category: "A".into(), load_duration: "medium".into(), q_line_n_per_m: 1.0, f_point_n: 0.0, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0, n_t_k_n: 0.0, f_c90_k_n: 0.0 });
-    let mut second = target.members[0].clone();
-    second.id = "beam-extra".into();
-    target.members.insert(0, second);
-    target.connections.clear();
-    let delta = En1995Diff::between(&base, &target);
-    assert_eq!(apply_diff(&delta, &base).expect("between applies"), target);
-    assert_eq!(apply_diff(&delta.inverse(&base), &target).expect("inverse applies"), base);
-    assert!(En1995Diff::between(&base, &base).is_empty());
-}

@@ -41,7 +41,8 @@
         "insert-block",
         "remove-block",
         "replace-block",
-        "set-inlines"
+        "set-inlines",
+        "splice-source"
       ]
     }
   ],
@@ -126,6 +127,26 @@
             "operation": "set-inlines",
             "bridgeVersion": 1,
             "variant": "SetInlines"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "md-commonmark-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "splice-source",
+          "capability": "md-commonmark-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "splice-source",
+            "bridgeVersion": 1,
+            "variant": "SpliceSource"
           },
           "oracleRequirements": [
             {

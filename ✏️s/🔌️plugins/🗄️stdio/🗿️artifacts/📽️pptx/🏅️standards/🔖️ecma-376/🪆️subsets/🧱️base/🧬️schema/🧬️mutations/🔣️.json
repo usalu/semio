@@ -27,6 +27,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/replace-xml-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/set-relationship/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/remove-relationship/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/set-content-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/remove-content-type/schema.json"
     }
   ]
 }

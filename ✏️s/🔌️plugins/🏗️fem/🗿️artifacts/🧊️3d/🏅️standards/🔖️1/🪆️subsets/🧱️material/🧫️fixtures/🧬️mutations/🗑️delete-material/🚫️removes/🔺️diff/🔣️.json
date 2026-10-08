@@ -2,12 +2,15 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "alu"
+      {
+        "id": "alu",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "sections": null,
   "solids": null,

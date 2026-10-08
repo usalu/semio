@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -26,3 +27,25 @@ async fn editor_mounts_the_bounded_zip_preparation_route() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", super::ZipIso21320Editor, || semio_framework_plugin::App { definition: super::create_zip_iso21320_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_member() {
+    
+    use crate::schema::snapshot::ZipEntry;
+    let base = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: vec![1], ..ZipEntry::default() }, ZipEntry { name: "b.txt".into(), data: vec![2], ..ZipEntry::default() }], ..ZipSnapshot::default() };
+    let emit = |event: semio_s_artifact_stdio_contract::editing::SnapshotEditEvent| <ZipIso21320Editor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let renamed = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/entries/1/name".into(), value: semio_framework_value::DslValue::String("c.txt".into()) }).expect("a rename resolves");
+    let [mutation @ ZipMutation::RenameEntry(_)] = renamed.artifact_mutations.as_slice() else { panic!("a name edit raises the rename kind") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.entries[1].name, "c.txt");
+    let removed = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::RemoveValue { path: "/entries/0".into() }).expect("a member removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [ZipMutation::RemoveEntry(_)]));
+    let added = emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::InsertValue { path: "/entries/1".into(), value: semio_framework_value::ToValue::to_value(&ZipEntry { name: "m.txt".into(), ..ZipEntry::default() }) }).expect("a member insertion resolves");
+    let mut state = base.clone();
+    added.artifact_mutations.iter().for_each(|mutation| {
+        apply_mutation(&mut state, mutation);
+    });
+    assert_eq!(state.entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(), ["a.txt", "m.txt", "b.txt"]);
+    assert_eq!(emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

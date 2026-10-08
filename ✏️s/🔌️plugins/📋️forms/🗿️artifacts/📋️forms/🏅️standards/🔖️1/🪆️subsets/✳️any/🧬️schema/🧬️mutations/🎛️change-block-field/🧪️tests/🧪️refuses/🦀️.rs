@@ -1,8 +1,9 @@
 //! 🛡️ `change-block-field` fixture — `🧪️refuses-a-minimum-above-the-maximum`: a minimum of 150 over a maximum of 100 breaks the
 //! question's own range, a Fatal `mutation.invariant` the replay of a history edit reports until the user edits it again.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️refuses/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️refuses/📸️snapshot/➡️after/🔣️.json");

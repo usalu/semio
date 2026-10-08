@@ -165,16 +165,6 @@ impl protocol::DiffAlgebra<SourcingCurationConfig> for SourcingCurationConfigDif
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
     }
-    fn between(base: &SourcingCurationConfig, other: &SourcingCurationConfig) -> Self {
-        Self {
-            filters_query: (base.filters.query != other.filters.query).then(|| other.filters.query.clone()),
-            filters_module_ids: (base.filters.module_ids != other.filters.module_ids).then(|| other.filters.module_ids.clone()),
-            filters_typology_path: (base.filters.typology_path != other.filters.typology_path).then(|| other.filters.typology_path.clone()),
-            filters_min_availability: (base.filters.min_availability != other.filters.min_availability).then_some(other.filters.min_availability),
-            filters_sort: (base.filters.sort != other.filters.sort).then(|| SourcingOptionalSort { value: other.filters.sort.clone() }),
-            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.filters_query.is_none() && self.filters_module_ids.is_none() && self.filters_typology_path.is_none() && self.filters_min_availability.is_none() && self.filters_sort.is_none() && self.contributions_json.is_none()
     }

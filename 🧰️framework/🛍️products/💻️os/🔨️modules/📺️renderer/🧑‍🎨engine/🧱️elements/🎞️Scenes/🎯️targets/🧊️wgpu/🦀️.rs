@@ -4716,46 +4716,7 @@ mod table_tests;
 //#endregion TableTests
 
 //#region BlockList
-/// 🧩️ Mirrors `playbook::PlaybookBlock`'s renderer-relevant fields — a typed block inside a
-/// [`BlockListScene`] step. Unknown/extra JSON fields (the block-kind-specific property editor
-/// fields owned by the host app) are ignored by `serde` since this crate never edits them.
-#[derive(Deserialize)]
-struct BlockListBlockJson {
-    id: String,
-    label: String,
-    kind: String,
-    #[serde(default)]
-    target: Option<BlockListSelectionTargetJson>,
-}
-
-#[derive(Deserialize, serde::Serialize)]
-struct BlockListSelectionTargetJson {
-    granularity: String,
-    id: String,
-}
-
-/// 🧩️ Mirrors `playbook::PlaybookStep`'s renderer-relevant fields.
-#[derive(Deserialize)]
-struct BlockListStepJson {
-    id: String,
-    title: String,
-    #[serde(default)]
-    target: Option<BlockListSelectionTargetJson>,
-    #[serde(default)]
-    description: Option<String>,
-    #[serde(default)]
-    blocks: Vec<BlockListBlockJson>,
-}
-
-/// 🧩️ Mirrors `ui_wgpu::wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct BlockListPaletteEntryJson {
-    block_kind: String,
-    label: String,
-    #[serde(default)]
-    icon_id: String,
-}
+use ui_wgpu::wgpu::{BlockListSelectionTarget,BlockListBlock,BlockListStep,BlockListPaletteEntry};
 
 /** 🧩️ What one laid-out block-list target paints as. Keeping the geometry (`BlockListTarget`)
  * and the appearance apart is what lets the paint and the pointer path share ONE layout pass: the
@@ -4811,7 +4772,7 @@ fn block_list_action(scene: &UiComponentSceneNode, action: &str, args: semio_fra
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: Some(args) }
 }
 
-fn block_list_selection_action(scene: &UiComponentSceneNode, target: Option<&BlockListSelectionTargetJson>) -> Option<ActionDescriptor> {
+fn block_list_selection_action(scene: &UiComponentSceneNode, target: Option<&BlockListSelectionTarget>) -> Option<ActionDescriptor> {
     let domain = scene.block_list.as_ref()?.domain_id.as_deref().filter(|id| !id.is_empty())?;
     let target = target.filter(|target| !target.id.is_empty() && !target.granularity.is_empty())?;
     Some(block_list_action(scene, "interactionSelect", semio_framework::dsl_value!({ "domainId": domain, "targets": json!([target]).to_string(), "merge": "replace", "method": "pick" })))
@@ -4822,7 +4783,7 @@ fn block_list_handle_rect(row: Rect, theme: &Theme) -> Rect {
     Rect::new(row.x + theme.padding_standard, row.y + (theme.control_height.min(row.h) - size) * 0.5, size.min((row.w - theme.padding_standard).max(0.0)), size)
 }
 
-fn block_list_palette_target_step_id<'a>(steps: &'a [BlockListStepJson], selected_id: Option<&str>) -> Option<&'a str> {
+fn block_list_palette_target_step_id<'a>(steps: &'a [BlockListStep], selected_id: Option<&str>) -> Option<&'a str> {
     if let Some(selected_id) = selected_id {
         if let Some(step) = steps.iter().find(|step| step.id == selected_id) {
             return Some(step.id.as_str());
@@ -4843,8 +4804,8 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
     let palette_rect = Rect::new(main.x + main.w, bounds.y, palette_w, bounds.h);
     let header = Rect::new(main.x, main.y, main.w, row_h);
     let body = Rect::new(main.x, main.y + row_h, main.w, (main.h - row_h).max(0.0));
-    let steps: Vec<BlockListStepJson> = scene.block_list.as_ref().map(|list| serde_json::from_str(&list.steps_json).unwrap_or_default()).unwrap_or_default();
-    let palette: Vec<BlockListPaletteEntryJson> = scene.block_list.as_ref().map(|list| serde_json::from_str(&list.palette_json).unwrap_or_default()).unwrap_or_default();
+    let steps = scene.block_list.as_ref().map(|list| list.steps.as_slice()).unwrap_or_default();
+    let palette = scene.block_list.as_ref().map(|list| list.palette.as_slice()).unwrap_or_default();
     let selected_id = scene.block_list.as_ref().and_then(|list| list.selected_id.clone());
     let selected_id = selected_id.as_deref();
     let palette_target_step_id = block_list_palette_target_step_id(&steps, selected_id).map(str::to_owned);
@@ -4998,8 +4959,8 @@ fn block_list_transfer_start(scene: &UiComponentSceneNode, bounds: Rect, x: f32,
     Some(SceneListTransferStart { source, rect: block_list_source_rect(&plan, &target.role)? })
 }
 
-fn block_list_steps(scene: &UiComponentSceneNode) -> Option<Vec<BlockListStepJson>> {
-    Some(serde_json::from_str(&scene.block_list.as_ref()?.steps_json).unwrap_or_default())
+fn block_list_steps(scene: &UiComponentSceneNode) -> Option<&[BlockListStep]> {
+    Some(&scene.block_list.as_ref()?.steps)
 }
 
 fn block_list_source_is_current(scene: &UiComponentSceneNode, source: &SceneListTransferSource) -> bool {
@@ -5011,7 +4972,7 @@ fn block_list_source_is_current(scene: &UiComponentSceneNode, source: &SceneList
             mime == BLOCK_LIST_PALETTE_DRAG_MIME
                 && payload == kind
                 && block_list_palette_target_step_id(&steps, scene.block_list.as_ref().and_then(|list| list.selected_id.as_deref())).is_some()
-                && scene.block_list.as_ref().and_then(|list| serde_json::from_str::<Vec<BlockListPaletteEntryJson>>(&list.palette_json).ok()).is_some_and(|palette| palette.iter().any(|entry| &entry.block_kind == kind))
+                && scene.block_list.as_ref().is_some_and(|list| list.palette.iter().any(|entry| &entry.block_kind == kind))
         }
         SceneListTransferSource::TableRow { .. } => false,
     }
@@ -5200,8 +5161,8 @@ fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, acti
     if action.controller_id != scene.controller_id {
         return false;
     }
-    let steps: Vec<BlockListStepJson> = serde_json::from_str(&list.steps_json).unwrap_or_default();
-    let palette: Vec<BlockListPaletteEntryJson> = serde_json::from_str(&list.palette_json).unwrap_or_default();
+    let steps = &list.steps;
+    let palette = &list.palette;
     let arg = |key: &str| action.args.as_ref().and_then(|args| args.get(key)).and_then(semio_framework::DslValue::as_str);
     match action.action.as_str() {
         "interactionSelect" => steps.iter().any(|step| {

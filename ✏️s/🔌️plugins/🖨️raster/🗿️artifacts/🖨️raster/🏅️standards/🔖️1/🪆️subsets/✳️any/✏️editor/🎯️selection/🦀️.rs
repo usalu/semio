@@ -15,7 +15,7 @@ pub struct RasterPixelSelection {
     #[state(config)]
     pub height:u32,
     #[state(config)]
-    pub spans:String,
+    pub spans:Vec<crate::RasterSelectionSpan>,
 }
 
 impl RasterPixelSelection {
@@ -51,26 +51,15 @@ impl RasterPixelSelection {
 
 fn fault(message:impl Into<String>)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("raster.pixel-selection"),message.into())}
 
-pub fn selection_spans(json:&str,count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
-    if json.len()>40000 {return Err(fault("Selection exceeds transport budget"));}
-    let value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("Invalid selection JSON"))?;
-    let spans = value.as_array().ok_or_else(|| fault("Selection must contain spans"))?;
+pub fn selection_spans(spans:&[crate::RasterSelectionSpan],count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
     let mut result=Vec::with_capacity(spans.len());
-    let mut previous = 0;
+    let mut previous=0;
     for span in spans {
-        let values = span.as_array().ok_or_else(|| fault("Invalid selection span"))?;
-        if values.len() != 3 { return Err(fault("Invalid selection span")); }
-        let mut triple = [0_usize; 3];
-        for (i, item) in values.iter().enumerate() {
-            let number = item.as_f64().ok_or_else(|| fault("Invalid selection span"))?;
-            if !number.is_finite() || number.fract() != 0.0 || number < 0.0 || number > count.max(255) as f64 { return Err(fault("Invalid selection span")); }
-            triple[i] = number as usize;
-        }
-        let [start, length, coverage] = triple;
-        let end = start.checked_add(length).ok_or_else(|| fault("Selection overflow"))?;
-        if start < previous || length == 0 || end > count || coverage > 255 { return Err(fault("Selection spans overlap or exceed image")); }
-        result.push((start,end,coverage as u8));
-        previous = end;
+        let start=span.start as usize;
+        let end=start.checked_add(span.length as usize).ok_or_else(||fault("Selection overflow"))?;
+        if start<previous||span.length==0||end>count||span.coverage>255{return Err(fault("Selection spans overlap or exceed image"));}
+        result.push((start,end,span.coverage as u8));
+        previous=end;
     }
     Ok(result)
 }

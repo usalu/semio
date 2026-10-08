@@ -1,0 +1,2 @@
+input PngNativeRegion { x: Int! y: Int! width: Int! height: Int! }
+input ReplaceSamples { region: PngNativeRegion! samples: [Int!]! }

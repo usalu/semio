@@ -4,20 +4,20 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "ipe200",
-        "item": {
+        "patch": {
           "id": "ipe200",
           "name": "IPE 200 reinforced",
           "area": 0.0035,
           "iy": 2.55e-05
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "supports": null,
   "loadCases": null,

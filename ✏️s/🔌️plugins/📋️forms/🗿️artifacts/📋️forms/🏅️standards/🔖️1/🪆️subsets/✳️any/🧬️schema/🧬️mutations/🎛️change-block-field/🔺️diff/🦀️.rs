@@ -2,7 +2,6 @@
 //! breaks the question's own invariants, and emits exactly the one field setting.
 
 use super::mutation::{BlockField, ChangeBlockField};
-use crate::schema::diff::forms_diff_from_delta;
 use crate::schema::diff::{FormsQuestionPatch, FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormQuestion, FormsDiff, FormsSnapshot};
 
@@ -13,27 +12,31 @@ pub fn diff_change_block_field(payload: &ChangeBlockField, base: &FormsSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Question \"{}\" does not exist.", payload.block_id), [payload.block_id.clone()]);
     };
     let existing = step.blocks.iter().find(|block| block.id == payload.block_id).expect("the step holds the question");
-    let next = payload.change.applied(existing);
-    if &next == existing {
+    if payload.change.read(existing) == payload.change {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Question \"{}\" already holds that {}.", payload.block_id, payload.change.labels().0));
     }
-    if let Some((code, reason)) = refusal(&next, &payload.change) {
+    if let Some((code, reason)) = refusal(existing, &payload.change) {
         return protocol::MutationOutcome::fatal(code, reason, vec![payload.block_id.clone()]);
     }
-    let blocks = FormsQuestionsDelta { patched: vec![FormsQuestionPatch { id: payload.block_id.clone(), kind: None, changes: vec![payload.change.clone()] }], ..Default::default() };
-    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatch { id: step.id.clone(), blocks: Some(blocks), ..Default::default() }], ..Default::default() }, base))
+    let blocks = FormsQuestionsDelta::modification(payload.block_id.clone(), FormsQuestionPatch { kind: None, changes: vec![payload.change.clone()] });
+    protocol::MutationOutcome::new(FormsDiff { steps: Some(FormsStepsDelta::modification(step.id.clone(), FormsStepPatch { blocks: Some(blocks), ..Default::default() })), ..Default::default() })
 }
 
-/// 🛡️ Why `next` (the question with `change` set) breaks an invariant of the field `change` sets: a non-finite or inverted
-/// numeric range, a step that is not positive, a default the question kind cannot answer, parameters that are no object,
-/// or an option value / vector key that is empty or repeated.
-fn refusal(next: &FormQuestion, change: &BlockField) -> Option<(&'static str, String)> {
+/// 🛡️ Why setting `change` on `existing` breaks an invariant of the field `change` sets — read from the change and the question's
+/// own other bound and kind, never from an edited copy: a non-finite or inverted numeric range, a step that is not positive, a
+/// default the question kind cannot answer, parameters that are no object, or an option value / vector key that is empty or repeated.
+fn refusal(existing: &FormQuestion, change: &BlockField) -> Option<(&'static str, String)> {
     let finite = |value: Option<f64>| value.is_none_or(f64::is_finite);
+    let (min, max) = match change {
+        BlockField::Min(value) => (*value, existing.max),
+        BlockField::Max(value) => (existing.min, *value),
+        _ => (existing.min, existing.max),
+    };
     match change {
-        BlockField::Min(_) | BlockField::Max(_) if !finite(next.min) || !finite(next.max) => Some(("mutation.invariant", "a numeric bound is not a finite number".into())),
-        BlockField::Min(_) | BlockField::Max(_) => next.min.zip(next.max).filter(|(min, max)| min > max).map(|(min, max)| ("mutation.invariant", format!("the minimum {min} exceeds the maximum {max}"))),
+        BlockField::Min(_) | BlockField::Max(_) if !finite(min) || !finite(max) => Some(("mutation.invariant", "a numeric bound is not a finite number".into())),
+        BlockField::Min(_) | BlockField::Max(_) => min.zip(max).filter(|(min, max)| min > max).map(|(min, max)| ("mutation.invariant", format!("the minimum {min} exceeds the maximum {max}"))),
         BlockField::Step(Some(step)) if !step.is_finite() || *step <= 0.0 => Some(("mutation.invariant", format!("the step {step} is not greater than zero"))),
-        BlockField::Default(Some(value)) if !default_fits(&next.kind, value) => Some(("mutation.invariant", format!("a {} question cannot default to that value", next.kind))),
+        BlockField::Default(Some(value)) if !default_fits(&existing.kind, value) => Some(("mutation.invariant", format!("a {} question cannot default to that value", existing.kind))),
         BlockField::Params(Some(value)) if !matches!(value, semio_framework_value::DslValue::Object(_)) => Some(("mutation.invariant", "parameters are one object".into())),
         BlockField::Options(Some(options)) => unique(options.iter().map(|option| option.value.as_str()), "option value"),
         BlockField::Fields(Some(fields)) => unique(fields.iter().map(|field| field.key.as_str()), "vector key"),

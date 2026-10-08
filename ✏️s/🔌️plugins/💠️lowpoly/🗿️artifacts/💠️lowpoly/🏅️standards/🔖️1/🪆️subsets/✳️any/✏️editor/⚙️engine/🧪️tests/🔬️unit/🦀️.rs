@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::{default_mesh_workspace, default_snapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_mesh_workspace, default_snapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn document_loads_meshes() {

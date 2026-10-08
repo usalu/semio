@@ -12107,7 +12107,8 @@
         "🏃️execution",
         "📋️orchestration",
         "🚑️actor-recovery",
-        "🤖️agent-delegations"
+        "🤖️agent-delegations",
+        "🟨️ecma"
       ],
       "source": "registry"
     },
@@ -27115,7 +27116,6 @@
       "target": "@semio-tech/framework-os-dev:generate-playground-session",
       "previewTarget": "@semio-tech/framework-os-dev:preview-playground-session",
       "previewArguments": [
-        "generate",
         "playground-session",
         "preview"
       ],
@@ -27127,10 +27127,11 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
       ],
@@ -27140,7 +27141,7 @@
           "inclusion": "ignored"
         }
       ],
-      "reason": "The dev session target exclusively owns the deterministic default registry projection and its byte freshness check"
+      "reason": "The General dev target owns an explicit empty catalog session and its exact byte freshness check"
     },
     "plugin-registry": {
       "ownership": "owned",
@@ -27303,6 +27304,53 @@
         }
       ],
       "reason": "Every native and transitive component consumer prepares this graph owner before compilation"
+    },
+    "s-playground-session": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🧑‍💻dev",
+      "target": "@semio-tech/s-dev-composition:generate-playground-session",
+      "previewTarget": "@semio-tech/s-dev-composition:preview-playground-session",
+      "previewArguments": [
+        "playground-session",
+        "preview"
+      ],
+      "checkTarget": "@semio-tech/s-dev-composition:check-playground-session",
+      "inputPatterns": [
+        "✏️s/🧑‍💻dev/📋️project.json",
+        "✏️s/🧑‍💻dev/📜️script.ts",
+        "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The Specific dev target owns its explicit installed catalog selection and exact session source publication",
+      "previewProgress": {
+        "protocol": "physical-file-progress-v1",
+        "maxEventBytes": 256,
+        "maxBytes": 8192,
+        "maxEvents": 64,
+        "maxWork": 65536,
+        "maxDurationMs": 30000,
+        "maxSourceBytes": 2097152,
+        "maxSources": 128
+      }
     },
     "scale-fixture": {
       "ownership": "owned",
@@ -27737,6 +27785,7 @@
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
@@ -27791,13 +27840,17 @@
             "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
@@ -27844,8 +27897,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🟦️.ts"
@@ -27901,6 +27953,7 @@
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
@@ -27952,13 +28005,17 @@
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
@@ -28034,6 +28091,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🟦️.ts",
@@ -30051,10 +30109,6 @@
         "✂️unbind": "unbind-morph-target-attribute",
         "🚚️move": "move-morph-target-attribute",
         "🔀️reorder": "reorder-morph-target-attributes"
-      },
-      "📸️snapshot": {
-        "📸️set": "set-snapshot",
-        "🩹️patch": "patch-snapshot"
       }
     }
   },

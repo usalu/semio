@@ -9,7 +9,7 @@ use super::*;
 use crate::standards::v1::subsets::value::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
+use crate::standards::v1::subsets::value::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
 use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::value::io::binary::diff::{dec_semio_value_node_bin};
@@ -22,73 +22,10 @@ use crate::standards::v1::subsets::value::io::text::diff::{dec_value_id};
 use crate::standards::v1::subsets::value::io::text::diff::{enc_value_id};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-use crate::standards::v1::subsets::value::io::text::snapshot::{dec_semio_value_snapshot};
-use crate::standards::v1::subsets::value::io::text::snapshot::{enc_semio_value_snapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, OpText};
-
-/// 🧭️ Real recursive binary twin of [`enc_path`]/[`dec_path`] — a varint segment COUNT, then per
-/// segment a 1-byte kind tag (`0`=Key/`1`=Index) and its own real payload. Template copied from
-/// json's own `enc_json_path_bin`/`dec_json_path_bin`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_semio_path_bin(path: &[SemioValuePathSegment], out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, path.len() as u64);
-    for segment in path {
-        match segment {
-            SemioValuePathSegment::Key { key } => {
-                out.push(0);
-                write_str_lp(out, key);
-            }
-            SemioValuePathSegment::Index { index } => {
-                out.push(1);
-                store::pack_rt::write_varint_u64(out, *index as u64);
-            }
-        }
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePath, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut path = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        let tag = reader.read_u8().map_err(|e| e.to_string())?;
-        match tag {
-            0 => path.push(SemioValuePathSegment::Key { key: read_str_lp(reader)? }),
-            1 => path.push(SemioValuePathSegment::Index { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
-            other => return Err(format!("semio value path binary: unknown segment tag {other}")),
-        }
-    }
-    Ok(path)
-}
-
-/// 🧭️ Real recursive binary twin of [`enc_semio_snapshot`]/[`dec_semio_snapshot`] — used ONLY by
-/// `SetSnapshot`'s own `OpBinary` payload (the sibling `📸️snapshot/🦀️.rs`'s own
-/// `ArtifactPack` stays text-native, matching `json`'s exact precedent — see that file's doc
-/// comment).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_semio_value_snapshot_bin(s: &SemioValueSnapshot, out: &mut Vec<u8>) {
-    write_str_lp(out, &s.schema);
-    enc_semio_value_bin(&s.root, out);
-    store::pack_rt::write_varint_u64(out, s.nodes.len() as u64);
-    for node in &s.nodes {
-        enc_semio_value_node_bin(node, out);
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueSnapshot, String> {
-    let schema = read_str_lp(reader)?;
-    let root = dec_semio_value_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut nodes = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        nodes.push(dec_semio_value_node_bin(reader)?);
-    }
-    Ok(SemioValueSnapshot { schema, root, nodes })
-}
 
 /// 🧪️ Real binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —

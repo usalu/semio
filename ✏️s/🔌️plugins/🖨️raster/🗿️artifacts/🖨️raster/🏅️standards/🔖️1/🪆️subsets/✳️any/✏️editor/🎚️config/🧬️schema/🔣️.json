@@ -149,9 +149,33 @@
           "maximum": 16384
         },
         "spans": {
-          "type": "string",
-          "maxLength": 40000,
-          "description": "JSON triples [start,length,coverage], ordered and non-overlapping; extent at most 16777216 pixels; positive lengths and byte coverage."
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "start",
+              "length",
+              "coverage"
+            ],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16777215
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16777216
+              },
+              "coverage": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
         }
       }
     }

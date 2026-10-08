@@ -9,7 +9,8 @@
 //! flips to `false` while `backdrop` — and every other field of `overlay` reachable through the
 //! same `RasterLayerPatch` — stays untouched.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_visible};
 use crate::{RasterDiff, RasterSnapshot};
 
@@ -91,10 +92,10 @@ async fn produces_committed_diff() {
     let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "change-layer-visible/hides-the-overlay-layer: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("change-layer-visible writes a layers delta");
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "change-layer-visible/hides-the-overlay-layer: this verb patches in place — it never adds, removes or moves a layer");
-    assert_eq!(delta.patched.len(), 1, "change-layer-visible/hides-the-overlay-layer: exactly one layer is patched");
-    assert_eq!(delta.patched[0].patch.visible, Some(false), "change-layer-visible/hides-the-overlay-layer: the patch must carry the new `visible`");
-    assert_eq!(delta.patched[0].patch.opacity, None, "change-layer-visible/hides-the-overlay-layer: visibility and opacity are separate verbs — the patch must leave `opacity` unset");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "change-layer-visible/hides-the-overlay-layer: this verb patches in place — it never adds, removes or moves a layer");
+    assert_eq!(delta.modified.len(), 1, "change-layer-visible/hides-the-overlay-layer: exactly one layer is patched");
+    assert_eq!(delta.modified[0].patch.visible, Some(false), "change-layer-visible/hides-the-overlay-layer: the patch must carry the new `visible`");
+    assert_eq!(delta.modified[0].patch.opacity, None, "change-layer-visible/hides-the-overlay-layer: visibility and opacity are separate verbs — the patch must leave `opacity` unset");
     assert!(produced.diff().assets.is_none(), "change-layer-visible/hides-the-overlay-layer: a visibility change never touches the asset map");
 }
 
@@ -119,5 +120,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

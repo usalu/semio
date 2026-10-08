@@ -317,7 +317,7 @@ async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
     let before = shown(&peer);
     assert_eq!(before.2, Some(103));
     let edited_operation = author.mutation_ops().expect("applied operations")[0].mutation_id.clone();
-    let drafts: BTreeMap<MutationId, protocol::InputReplacement> =
+    let drafts: protocol::HistoryInputDrafts =
         [(edited_operation, protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::SetN(SetN { n: 10 }).encode_op().expect("demo operations encode") })].into_iter().collect();
     let mut replay = author.begin_report_replay(&drafts, None).expect("the session replay");
     drive_test_report_replay(&mut replay, author.replay_edits());
@@ -407,7 +407,7 @@ type SeverityStore = ArtifactStore<DemoSnapshot, SeverityMutation>;
 
 /// ✏️ One history edit of `target` through the session path: the Report replay of its draft, finalized as `finalization`.
 async fn finalized(store: &mut SeverityStore, target: &MutationId, operation: SeverityMutation, finalization: HistoryFinalization) {
-    let drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: operation.encode_op().expect("severity operations encode") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: operation.encode_op().expect("severity operations encode") })].into_iter().collect();
     let mut replay = store.begin_report_replay(&drafts, None).expect("the session replay");
     drive_test_report_replay(&mut replay, store.replay_edits());
     let finished = replay.finish().expect("a finished replay yields its result");
@@ -534,7 +534,7 @@ async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
     assert_eq!((b.snapshot_ref().n, b.applied_edit_ids().len()), (Some(160), 2), "b shows a's document and a's edit");
 
     let target = a.mutation_ops().expect("applied operations")[1].mutation_id.clone();
-    let drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::AddN(AddN { delta: 80 }).encode_op().expect("demo operations encode") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::AddN(AddN { delta: 80 }).encode_op().expect("demo operations encode") })].into_iter().collect();
     assert_eq!(a.state_before(&target, &drafts).expect("the preview base").n, Some(100));
     let mut early = a.begin_report_replay(&drafts, None).expect("a replay begun before the peer's write");
     drive_test_report_replay(&mut early, a.replay_edits());
@@ -581,7 +581,7 @@ async fn a_port_rebinding_moves_no_content_and_keeps_a_finished_replay() {
     apply(&mut store, vec![DemoMutation::SetN(SetN { n: 1 })]).await;
     apply(&mut store, vec![DemoMutation::AddN(AddN { delta: 2 })]).await;
     let target = store.mutation_ops().expect("applied operations")[0].mutation_id.clone();
-    let drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(target, protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::SetN(SetN { n: 10 }).encode_op().expect("demo operations encode") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(target, protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::SetN(SetN { n: 10 }).encode_op().expect("demo operations encode") })].into_iter().collect();
     let finish = |store: &DemoStore| {
         let mut replay = store.begin_report_replay(&drafts, None).expect("the session replay");
         drive_test_report_replay(&mut replay, store.replay_edits());

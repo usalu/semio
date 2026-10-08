@@ -4,7 +4,6 @@ import "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equatio
 
 message ChangeGraphDirected { bool new_directed = 1; }
 message UpdateGraphAlgorithm { string new_algorithm = 1; optional string new_algorithm_seed = 2; }
-message ReplaceGraph { semio.s.mathematical.equation.artifact.EquationGraph graph = 1; }
 message CreateNode { string id = 1; string label = 2; double x = 3; double y = 4; optional uint64 index = 5; }
 message DeleteNode { string id = 1; }
 message DeleteNodes { repeated string ids = 1; }
@@ -12,7 +11,6 @@ message ChangeNodeLabel { string id = 1; string new_label = 2; }
 message MoveNode { string id = 1; double x = 2; double y = 3; }
 message ConnectNodes { string id = 1; string source = 2; string target = 3; optional uint64 index = 4; }
 message DisconnectNodes { string id = 1; }
-message ReplacePoints { repeated semio.s.mathematical.equation.artifact.EquationPoint points = 1; }
 message InsertPoint { uint64 index = 1; double x = 2; double y = 3; }
 message RemovePoint { uint64 index = 1; }
 message MovePoints { repeated uint64 indices = 1; double dx = 2; double dy = 3; }
@@ -27,7 +25,6 @@ message EquationMutation {
   oneof kind {
     ChangeGraphDirected change_graph_directed = 1;
     UpdateGraphAlgorithm update_graph_algorithm = 2;
-    ReplaceGraph replace_graph = 3;
     CreateNode create_node = 4;
     DeleteNode delete_node = 5;
     DeleteNodes delete_nodes = 6;
@@ -35,7 +32,6 @@ message EquationMutation {
     MoveNode move_node = 8;
     ConnectNodes connect_nodes = 9;
     DisconnectNodes disconnect_nodes = 10;
-    ReplacePoints replace_points = 11;
     InsertPoint insert_point = 12;
     RemovePoint remove_point = 13;
     MovePoints move_points = 14;

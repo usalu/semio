@@ -336,7 +336,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         run_at(result, args["index"], tag)
         del runs[args["index"]]
     elif tag == "EditRun":
-        run_at(result, args["index"], tag)["content"] = args["new_content"]
+        run_at(result, args["index"], tag)["content"] = args["new_text"]
     elif tag == "ChangeRunLanguage":
         run_at(result, args["index"], tag)["language"] = args["new_language"]
     elif tag == "ReorderRuns":
@@ -369,7 +369,7 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
     if tag == "RemoveRun":
         return {"InsertRun": {"index": args["index"], "run": run_at(document, args["index"], tag)}}
     if tag == "EditRun":
-        return {"EditRun": {"index": args["index"], "new_content": run_at(document, args["index"], tag)["content"]}}
+        return {"EditRun": {"index": args["index"], "new_text": run_at(document, args["index"], tag)["content"]}}
     if tag == "ChangeRunLanguage":
         return {"ChangeRunLanguage": {"index": args["index"], "new_language": run_at(document, args["index"], tag)["language"]}}
     if tag == "ReorderRuns":

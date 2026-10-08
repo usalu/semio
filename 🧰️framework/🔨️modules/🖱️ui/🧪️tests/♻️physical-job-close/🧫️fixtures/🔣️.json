@@ -1,0 +1,36 @@
+{
+  "contract": "framework.ui.physical-job-close",
+  "texts": [
+    "",
+    "ä🐚\u0000",
+    "original clipboard content"
+  ],
+  "capacities": [
+    337,
+    199,
+    4096
+  ],
+  "copyGrants": [
+    0,
+    1,
+    3,
+    64
+  ],
+  "cancelTurns": [
+    0,
+    2,
+    9
+  ],
+  "prepared": {
+    "sceneRevision": 7,
+    "previewGeneration": 3,
+    "maximumTurns": 65536,
+    "atlas": {
+      "width": 128,
+      "height": 128,
+      "channels": 4,
+      "byteLength": 65536,
+      "pageBytes": 16384
+    }
+  }
+}

@@ -2,7 +2,7 @@
 //! (`mutation.partial`).
 
 use super::{equation_targets_invariant, SetNodePositions};
-use crate::diff::{EquationNodePatch, EquationNodesDelta};
+use crate::diff::{EquationNodePatch, EquationNodesDelta, EquationNodesModification};
 use crate::{EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
@@ -22,16 +22,16 @@ pub fn diff(payload: &SetNodePositions, base: &EquationSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} node(s) exists.", ids.len()), missing);
     }
     let partial = (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} node(s) skipped (no such node): {}", missing.len(), ids.len(), missing.join(", "))).at(missing));
-    let patched: Vec<EquationNodePatch> = payload
+    let patched: Vec<EquationNodesModification> = payload
         .positions
         .iter()
         .filter(|position| nodes.iter().any(|node| node.id == position.id && (node.x, node.y) != (position.x, position.y)))
-        .map(|position| EquationNodePatch { id: position.id.clone(), x: Some(position.x), y: Some(position.y), ..Default::default() })
+        .map(|position| EquationNodesModification { id: position.id.clone(), patch: EquationNodePatch { x: Some(position.x), y: Some(position.y), ..Default::default() } })
         .collect();
     if patched.is_empty() {
         return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "Every node already sits at its position.").at(ids)]));
     }
-    let diff = EquationDiff { nodes: Some(EquationNodesDelta { patched, ..Default::default() }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base)).absorb_messages(partial)
+    let diff = EquationDiff { nodes: Some(EquationNodesDelta { modified: patched, ..Default::default() }), ..Default::default() };
+    protocol::MutationOutcome::new(diff).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

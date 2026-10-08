@@ -4,29 +4,32 @@
   "edges": null,
   "meta": null,
   "nodes": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd",
         "patch": {
           "handles": {
-            "added": [
+            "inserted": [
               {
-                "angle": 2.199114857512855,
-                "handleKind": "door tambour right",
-                "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d2",
-                "radius": 3.0
+                "index": 10,
+                "row": {
+                  "angle": 2.199114857512855,
+                  "handleKind": "door tambour right",
+                  "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d2",
+                  "radius": 3.0
+                }
               }
             ],
-            "patched": [],
-            "removed": [],
-            "reordered": null
+            "modified": [],
+            "moved": [],
+            "removed": []
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "schema": null,
   "targetRegions": null

@@ -33,6 +33,7 @@ type PdfDiff {
   objects: PdfObjectsDiff
   trailer: PdfDictDiff
   graphEdit: Boolean
+  admittedStreamRoles: PdfIndexedStreamRoleDiff
 }
 
 type PdfInfoDiff {
@@ -366,3 +367,6 @@ enum PdfPageBoxInput {
   TRIM
   ART
 }
+
+type PdfIndexedStreamRoleItem { index: Int64! value: PdfAdmittedStreamRole! }
+type PdfIndexedStreamRoleDiff { removed: [Int64!]! modified: [PdfIndexedStreamRoleItem!]! added: [PdfIndexedStreamRoleItem!]! }

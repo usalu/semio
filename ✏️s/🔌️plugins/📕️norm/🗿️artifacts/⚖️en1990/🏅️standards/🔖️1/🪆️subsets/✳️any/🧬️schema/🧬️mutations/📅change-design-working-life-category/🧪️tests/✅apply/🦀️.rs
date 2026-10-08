@@ -21,6 +21,7 @@ fn change_design_working_life_category_cat_5() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    super::assert_inverse_sum_law(vector()).await;
+    let (mutation, before) = super::committed_inputs(&vector());
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }
 

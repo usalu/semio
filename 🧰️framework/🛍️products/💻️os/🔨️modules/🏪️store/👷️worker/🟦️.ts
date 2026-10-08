@@ -1,5 +1,12 @@
-import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, parseDocumentServiceDeclarationV1, documentServiceRequestV1, type InstalledServiceDriverV1, type DocumentServiceDeclarationV1 } from "../../💡️inference/🔌️service/🟦️.ts";
-import { compileDocumentJsonSchemaV1 } from "../../📇️directory/🔌️client/🌐️document-http/🟦️.ts";
+import {admitCheckpointSelectionV1} from "../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
+import { parseDirectorySessionAuthorityJsonV1 } from "../../📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
+import { parseDirectoryEventPageV1 } from "../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts";
+import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1 } from "../../📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts";
+import { directoryAdministrationCommandAllowedV1, directoryCommandRequestJson, directoryCommandSha256, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, decodeCanonicalCheckpointPairV1 } from "../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
+import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, type InstalledServiceDriverV1, type AdmittedDocumentServiceDeclarationV1 } from "../../💡️inference/🔌️service/🟦️.ts";
+import {admitDocumentServiceWireDeclarationV1, documentServiceRequestV1, admitDocumentServiceResponseV1} from "../../💡️inference/🔌️service/🚪️io/🟦️.ts";
 // #region Header
 /**
  * 🧵️ `🏪️store/👷️worker/🟦️.ts` — browser backbone loader. Authenticated hub
@@ -9,8 +16,8 @@ import { compileDocumentJsonSchemaV1 } from "../../📇️directory/🔌️clien
  */
 // #endregion Header
 
-import { parseDirectorySessionAuthorityJsonV1, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "../../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
-import { DIRECTORY_PREFERENCE_PAGE_PATH_V1, parseDirectoryEventPageV1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "../../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+import { DIRECTORY_PREFERENCE_PAGE_PATH_V1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
 import { directoryStreamWakeV1 } from "../../📇️directory/🟦️.ts";
 import { StreamMuxPortEndpointV1, type StreamMuxEndpointV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 
@@ -56,7 +63,7 @@ import type {
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, encodeClientCommandsFrameExact, decodePresenceHistoryEdit, decodePresenceInteraction, decodePresencePeer, decodePresenceToolRun, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import { DEV_STREAM_ROUTES, DirectoryClient, DirectoryCommandError, DirectoryHttpError, DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, admitRemoteEnvelopes, noteAuthoredEnvelopeIds, hubCommandRejectionV1, hubTransientApplyRefusalV1, localCommandRejectionV1, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, documentLinkExpiresAtMs, documentLinkStatus, documentLinkTransition, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentArchiveBytes, decodeAppCommand, decodePackWire, decodePackValue, packValueToExactJson, faultDisplayMessage, documentRuntimeKeyV1, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeAppCommand, encodePackValue, isPackInteger, packUIntSafeOrNull, packWireNatural, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, HUB_SESSION_CAPABILITY_PATTERN_V1, parseHubSessionPortRequestV1, parseDocumentBackboneMessage, parseInboundDocumentBackboneMessage, parseDocumentSocketGrantReceiptV1, parseSocketGrantReceiptV1 } from "../../../🟦️";
 import type { PackValue } from "../../../🟦️";
-import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1, DOCUMENT_ACTOR_RECOVERY_V1, documentActorRecoveryStepV1, type DocumentActorLossCauseV1, type DocumentActorRecoveryMemoryV1 } from "./🚑️actor-recovery/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
@@ -74,46 +81,9 @@ import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️br
 import { panelTabKindId, panelViewContext, sectionViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "./🪟️visible-surfaces/🟦️.ts";
 import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectorySpaceAdministrationPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1 } from "../../📇️directory/🧬️schema/🟦️.ts";
-import {
-  DOCUMENT_CHECK_IN_MAX_BYTES,
-  DOCUMENT_CHECK_IN_SCHEMA_V1,
-  DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
-  documentCheckInCanonicalJson,
-  isTerminalDocumentCheckInPhaseV1,
-  parseDocumentCheckInStatusV1,
-  type DocumentCheckInRefusalV1,
-  type DocumentCheckInStatusV1,
-} from "../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
-import {
-  DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
-  DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1,
-} from "../../📇️directory/🧬️schema/🟦️.ts";
-import {
-  CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES,
-  CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
-  DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
-  DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
-  DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1,
-  admitCanonicalCheckpointPairV1,
-  decodeCanonicalCheckpointPairV1,
-  directoryCommandErrorIsTransient,
-  directoryAdministrationCommandAllowedV1,
-  directoryCommandRequestJson,
-  directoryCommandSha256,
-  documentExecutionTargetStatusRoleV1,
-  leaseFieldsFromPlanV1,
-  parseDocumentExecutionTargetLeaseFieldsV1,
-  parseDocumentOpenIntentV1,
-  parseDocumentOpenPlanV1,
-  parseDocumentPlanSocketGrantIntentV1,
-  sameExecutionTargetV1,
-  sameLeaseFieldsV1,
-  sealDirectoryCommandReceiptV1,
-  sealDirectoryCommandRequestV1,
-  surfaceOpensArtifactKindV1,
-  type SurfaceArtifactKindV1,
-  type SurfaceKindAppV1,
-} from "../../📇️directory/🧬️schema/🟦️.ts";
+import { DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, isTerminalDocumentCheckInPhaseV1, type DocumentCheckInRefusalV1, type DocumentCheckInStatusV1 } from "../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
+import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "../../📇️directory/🧬️schema/🟦️.ts";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, admitCanonicalCheckpointPairV1, directoryCommandErrorIsTransient, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameExecutionTargetV1, sameLeaseFieldsV1, surfaceOpensArtifactKindV1, type SurfaceArtifactKindV1, type SurfaceKindAppV1 } from "../../📇️directory/🧬️schema/🟦️.ts";
 /** 🔏️ First-party BLAKE3 runtime module — Web Crypto supplies SHA-256 but has no BLAKE3, so a
  * verified execution-target component is hashed with the repository's own implementation. */
 import { blake3Hex } from "@semio-tech/framework";
@@ -1115,7 +1085,7 @@ class DocumentExecutionTargetLease {
   }
 
   /** 📜 Reads installed service declarations only from this verified immutable owner descriptor. */
-  documentServices(): readonly DocumentServiceDeclarationV1[] {
+  documentServices(): readonly AdmittedDocumentServiceDeclarationV1[] {
     if (!this.#live || this.#descriptor === null) throw new Error("installed-service.owner-retired");
     const descriptor = decodePackValue(this.#descriptor) as Readonly<Record<string, PackValue>>;
     const manifest = descriptor.manifest as Readonly<Record<string, PackValue>>;
@@ -1125,7 +1095,7 @@ class DocumentExecutionTargetLease {
     return topics.flatMap((value) => {
       if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("installed-service.invalid-declarations");
       const topic = value as Readonly<Record<string, PackValue>>;
-      return topic.topic === DOCUMENT_SERVICE_TOPIC_V1 ? [parseDocumentServiceDeclarationV1(this.#fields.package.pluginId, packValueToExactJson(topic.payload!))] : [];
+      return topic.topic === DOCUMENT_SERVICE_TOPIC_V1 ? [admitDocumentServiceWireDeclarationV1(this.#fields.package.pluginId, packValueToExactJson(topic.payload!))] : [];
     });
   }
 
@@ -3713,10 +3683,8 @@ function activateDocumentServiceWorkerV1(owner: string, serviceId: string, facto
         if (declared !== null && (!Number.isSafeInteger(Number(declared)) || Number(declared) < 1 || Number(declared) > request.responseMaxBytes)) throw new Error("installed-service.bounds");
         const body = await response.text();
         if (retirement.signal.aborted || signal.aborted || !sameBrowserSessionOperationFence(fence)) throw new Error("installed-service.owner-retired");
-        if (body.length === 0 || new TextEncoder().encode(body).length > request.responseMaxBytes) throw new Error("installed-service.bounds");
-        const operation = declaration.operations.find((entry) => entry.action === action)!;
-        if (!compileDocumentJsonSchemaV1(operation.outputSchema)(JSON.parse(body))) throw new Error("installed-service.invalid-payload");
-        return { ok: response.ok, status: response.status, statusText: response.statusText, headers: response.headers, text: async () => body, json: async () => JSON.parse(body) };
+        const value = admitDocumentServiceResponseV1(declaration,action,body);
+        return { ok: response.ok, status: response.status, statusText: response.statusText, headers: response.headers, text: async () => body, json: async () => value };
       } });
     },
   };
@@ -5073,7 +5041,7 @@ async function seedColdPairFromCanonicalCheckpoint(state: ArtifactState, resumeT
   );
   assertCurrent();
   const pair = decodeCanonicalCheckpointPairV1(body);
-  admitCanonicalCheckpointPairV1(pair, { spaceId: binding.spaceId, documentId: state.config.documentId }, checkpoint);
+  admitCanonicalCheckpointPairV1(pair, { spaceId: binding.spaceId, documentId: state.config.documentId }, admitCheckpointSelectionV1(checkpoint));
   const frontier: WireFrontierSummary = {
     document_id: pair.baselineFrontier.documentId,
     head_edit_ordinal: pair.baselineFrontier.headEditOrdinal,

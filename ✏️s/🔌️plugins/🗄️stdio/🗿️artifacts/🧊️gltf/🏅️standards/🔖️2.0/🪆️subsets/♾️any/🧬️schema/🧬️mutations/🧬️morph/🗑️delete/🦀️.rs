@@ -26,8 +26,8 @@ pub fn validate(payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let value = without(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target);
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+    let rows = GltfTargetsDelta::removal(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target);
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

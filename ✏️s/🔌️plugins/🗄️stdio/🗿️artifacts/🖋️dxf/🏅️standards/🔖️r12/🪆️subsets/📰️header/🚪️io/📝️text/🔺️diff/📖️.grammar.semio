@@ -5,8 +5,8 @@ start document
 
 # P2-FG1: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
 # `../../../🧬️schema/🔺️diff/🦀️.rs`'s `print_dxf_diff`/`parse_dxf_diff` — zero or more space-separated
-# `key=[removed];[modified];[added]`-shaped tokens (`header-vars=`/`tables=`/`blocks=`/`entities=`,
-# the real four `DxfDiff` fields; `schema` is identity-only and never diffed). `document = diff-token*`
+# `key=[removed];[modified];[added]`-shaped tokens (`header-vars=`/`tables=`/`blocks=`/`entities=`/`other-tables=`,
+# the real five `DxfDiff` fields (`other-tables` replaces the whole raw-retention list); `schema` is identity-only and never diffed). `document = diff-token*`
 # naturally matches the empty line too (`Symbol::Star` matches zero occurrences, and an empty
 # `parse_diff("")` input lexes to zero tokens, so `recognize`'s `pos == tokens.len()` check passes
 # trivially) — no separate empty-line alternative needed, same shape `stdio.json`'s own diff
@@ -31,12 +31,18 @@ start document
 # rule applied to an enum collection element — same convention `stdio.json`'s `JsonValueDiff`
 # grammar and every other pilot's kind-changing diff arm uses.
 document = diff-token*
-diff-token = header-vars-tok | tables-tok | blocks-tok | entities-tok
+diff-token = header-vars-tok | tables-tok | blocks-tok | entities-tok | other-tables-tok
 
 header-vars-tok = "header-vars" "=" removed-hv-list ";" modified-hv-list ";" added-hv-list
 tables-tok = "tables" "=" tables-diff-payload
 blocks-tok = "blocks" "=" removed-blk-list ";" modified-blk-list ";" added-blk-list
 entities-tok = "entities" "=" removed-ent-list ";" modified-ent-list ";" added-ent-list
+other-tables-tok = "other-tables" "=" other-table-list
+
+dxf-tag = "[" INT "," hex "]"
+dxf-tag-list = "[" "]" | "[" dxf-tag {"," dxf-tag}* "]"
+other-table = "[" hex "," dxf-tag-list "]"
+other-table-list = "[" "]" | "[" other-table {"," other-table}* "]"
 
 # `enc_f64` (`format!("{v}")`) prints a bare decimal, lexing as `INT` (no `.`) or `FLOAT` (has `.`).
 num = INT | FLOAT

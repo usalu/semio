@@ -1088,7 +1088,7 @@ pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession) {
     let outcome = session.resolve_preview_eval(payload.node_hash, &payload.output_json);
     note_eval_answer_fault(payload, session);
     let given_up = match &outcome {
-        semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => session.seed_node_cache(payload.node_hash, output_json).is_err(),
+        semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => semio_framework_os_flow::host::io::evaluation_response::decode_flow_node_output_json(output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
         semio_framework_os_flow::PreviewEvalOutcome::Cancelled => true,
         semio_framework_os_flow::PreviewEvalOutcome::Working => false,
     };

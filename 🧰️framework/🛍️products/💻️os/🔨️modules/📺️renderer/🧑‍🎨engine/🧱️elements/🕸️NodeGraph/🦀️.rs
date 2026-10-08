@@ -328,7 +328,9 @@ impl GraphHost {
             }
         }
         if let Some(status_json) = &payload.status_json {
-            self.dag.set_node_statuses_from_json(status_json);
+            let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
+            let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
+            if let Ok(statuses)=crate::infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){self.dag.set_node_statuses(&statuses);}
         } else if let Some(computing_json) = &payload.computing_json {
             if let Ok(value) = serde_json::from_str::<Value>(computing_json) {
                 let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
@@ -941,9 +943,12 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = reorganize)]
-        pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() };
-            self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub fn reorganize(&self,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<(),JsValue>{
+            let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|v|v.as_bool().unwrap_or(false)).unwrap_or(false);
+            let mut decoding=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
+            let opts=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
+            let mut working=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut working);
+            self.state.borrow_mut().host.dag.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
         }
     }
 }
@@ -959,4 +964,4 @@ mod tests;
 //#endregion 🔖️Tests
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use dag::{dag_take_pending_open_instance_id, DagLayoutOptions};
+use dag::{dag_take_pending_open_instance_id};

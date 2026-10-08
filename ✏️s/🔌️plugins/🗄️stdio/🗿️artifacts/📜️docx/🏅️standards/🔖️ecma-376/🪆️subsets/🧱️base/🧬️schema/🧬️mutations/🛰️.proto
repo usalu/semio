@@ -32,4 +32,4 @@ message DocxPartContent {
     bytes binary = 2;
   }
 }
-message DocxSetPart { string path = 1; string content_type = 2; DocxPartContent payload = 3; optional uint64 index = 4; }
+message DocxSetPart { string path = 1; string content_type = 2; DocxPartContent payload = 3; optional uint64 index = 4; optional uint64 override_index = 5; }

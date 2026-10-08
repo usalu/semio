@@ -2,7 +2,7 @@
 //! raises, its label in both languages, its text and binary spelling, and its editable payload.
 
 use super::*;
-use crate::mutations::{apply_bitmap_mutation, BitmapMutation};
+use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::{BitmapSnapshot};
 
 fn point(x: u32, y: u32) -> BitmapStrokePoint {
@@ -29,7 +29,7 @@ fn consecutive_points_are_joined_by_an_inclusive_bresenham_line() {
 #[test]
 fn a_stroke_paints_exactly_its_cells_with_the_brush_colour() {
     let mut snapshot = base();
-    apply_bitmap_mutation(&mut snapshot, &paint_input_stroke(vec![point(0, 0), point(3, 2)], 1)).expect("the stroke applies");
+    vcs::apply_mutation(&snapshot, &paint_input_stroke(vec![point(0, 0), point(3, 2)], 1)).map(|(applied_state, _)| { snapshot = applied_state; }).expect("the stroke applies");
     let painted = snapshot.input.indices().expect("the buffer decodes");
     let before = base().input.indices().expect("the base decodes");
     for y in 0..3u32 {
@@ -80,10 +80,10 @@ fn the_inverse_restores_the_stroke_region() {
     let mutation = paint_input_stroke(vec![point(0, 2), point(3, 0)], 1);
     let inverse = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&mutation, &before).expect("valid retained mutation inverse fixture");
     let mut snapshot = before.clone();
-    apply_bitmap_mutation(&mut snapshot, &mutation).expect("forward applies");
+    vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     assert_ne!(snapshot, before);
     for step in &inverse {
-        apply_bitmap_mutation(&mut snapshot, step).expect("inverse step applies");
+        vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(snapshot, before);
 }

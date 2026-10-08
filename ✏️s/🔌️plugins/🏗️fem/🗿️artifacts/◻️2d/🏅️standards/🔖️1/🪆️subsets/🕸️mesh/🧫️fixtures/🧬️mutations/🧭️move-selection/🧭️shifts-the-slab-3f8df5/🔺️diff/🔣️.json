@@ -1,11 +1,12 @@
 {
   "nodes": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "rc0",
-        "item": {
+        "patch": {
           "id": "rc0",
           "x": 10.5,
           "y": 3.0
@@ -13,7 +14,7 @@
       },
       {
         "id": "rc1",
-        "item": {
+        "patch": {
           "id": "rc1",
           "x": 12.5,
           "y": 3.0
@@ -21,7 +22,7 @@
       },
       {
         "id": "rc2",
-        "item": {
+        "patch": {
           "id": "rc2",
           "x": 12.5,
           "y": 3.1
@@ -29,23 +30,23 @@
       },
       {
         "id": "rc3",
-        "item": {
+        "patch": {
           "id": "rc3",
           "x": 10.5,
           "y": 3.1
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "elements": null,
   "regions": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "r1",
-        "item": {
+        "patch": {
           "id": "r1",
           "name": "First Floor Slab",
           "outline": [
@@ -72,8 +73,7 @@
           "meshSize": 1.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "materials": null,
   "sections": null,

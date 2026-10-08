@@ -9,13 +9,14 @@ pub struct SetSpace {
     pub id: u64,
     pub space: Option<CobieSpaceRow>,
     pub index: Option<usize>,
+    pub instance: Option<semio_s_artifact_stdio_contract::part21::Part21Instance>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetSpace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "space", kind: "set-space", record: "SetSpace" };
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        let Self { id, space, index } = self;
+        let Self { id, space, index, instance: exact } = self;
         let instance = match space {
             None => None,
             Some(row) => {
@@ -26,7 +27,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetSpace {
                 if !placement.eq_ignore_ascii_case("IFCLOCALPLACEMENT") {
                     return rejected(format!("#{} is {placement:?}, not an IFCLOCALPLACEMENT -- a handover space is placed in the real spatial structure", row.placement));
                 }
-                Some(mvd::simple_instance(*id, SPACE, space_args(row)))
+                Some(exact.clone().unwrap_or_else(|| mvd::simple_instance(*id, SPACE, space_args(row))))
             }
         };
         match mvd::entity_diff(base, *id, &[SPACE], instance, *index) {
@@ -39,10 +40,13 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetSpace {
         let Self { id, space, .. } = self;
         Ok(match mvd::standing(base, *id, &[SPACE]) {
             mvd::Standing::Foreign => Vec::new(),
-            mvd::Standing::Absent if space.is_some() => vec![Ifc2x3CobieMutation::SetSpace(SetSpace { id: *id, space: None, index: None })],
+            mvd::Standing::Absent if space.is_some() => vec![Ifc2x3CobieMutation::SetSpace(SetSpace { id: *id, space: None, index: None, instance: None })],
             mvd::Standing::Absent => Vec::new(),
             mvd::Standing::Present { index } => match space_row(base, *id) {
-                Some(row) => vec![Ifc2x3CobieMutation::SetSpace(SetSpace { id: *id, space: Some(row), index: Some(index) })],
+                Some(row) => {
+                    let instance = mvd::exact_instance_if_lossy(base, mvd::simple_instance(*id, SPACE, space_args(&row)));
+                    vec![Ifc2x3CobieMutation::SetSpace(SetSpace { id: *id, space: Some(row), index: Some(index), instance })]
+                }
                 None => Vec::new(),
             },
         })

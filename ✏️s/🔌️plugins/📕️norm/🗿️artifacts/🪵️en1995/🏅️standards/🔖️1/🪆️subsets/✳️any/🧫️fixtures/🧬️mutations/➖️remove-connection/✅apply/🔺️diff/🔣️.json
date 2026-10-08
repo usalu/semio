@@ -2,14 +2,19 @@
   "annex": null,
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "connections": {
     "removed": [
-      "conn-C1"
+      {
+        "id": "conn-C1",
+        "index": 0
+      }
     ],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

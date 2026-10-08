@@ -73,17 +73,6 @@ impl protocol::DiffAlgebra<LocalFolderBindings> for LocalFoldersDiff {
         Self { bindings: self.bindings.iter().map(|row| KeyedEdit::new(row.key.clone(), base.bindings.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
     }
 
-    fn between(base: &LocalFolderBindings, other: &LocalFolderBindings) -> Self {
-        let mut bindings: Vec<KeyedEdit<LocalFolderBinding>> = base
-            .bindings
-            .iter()
-            .filter(|entry| other.bindings.iter().find(|candidate| candidate.document_id == entry.document_id) != Some(*entry))
-            .map(|entry| KeyedEdit::new(entry.document_id.clone(), other.bindings.iter().find(|candidate| candidate.document_id == entry.document_id).cloned()))
-            .collect();
-        bindings.extend(other.bindings.iter().filter(|entry| !base.bindings.iter().any(|candidate| candidate.document_id == entry.document_id)).map(|entry| KeyedEdit::new(entry.document_id.clone(), Some(entry.clone()))));
-        Self { bindings }
-    }
-
     fn is_empty(&self) -> bool {
         self.bindings.is_empty()
     }
@@ -161,20 +150,11 @@ pub fn inverse_local_folders_config_mutation(snapshot: &LocalFolderBindings, mut
     })
 }
 
-/// 📥️ Decodes the internally tagged local-folders mutation JSON projection.
-pub fn decode_local_folders_config_mutation_json(text: &str) -> Result<LocalFoldersConfigMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
 
-/// 📤️ Encodes the local folder bindings to their canonical camel-case JSON projection.
-pub fn encode_local_folder_bindings_json(snapshot: &LocalFolderBindings) -> String {
-    serde_json::to_string(snapshot).expect("LocalFolderBindings serialization is infallible")
-}
 
-/// 📥️ Decodes the canonical local folder bindings JSON projection.
-pub fn decode_local_folder_bindings_json(text: &str) -> Result<LocalFolderBindings, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
+
+
+
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
 pub fn inverse_local_folders_config_mutation_steps(mutation: &LocalFoldersConfigMutation, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {

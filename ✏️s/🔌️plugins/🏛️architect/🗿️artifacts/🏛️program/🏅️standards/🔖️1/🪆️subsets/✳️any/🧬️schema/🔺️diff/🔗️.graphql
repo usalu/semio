@@ -74,10 +74,26 @@ type ProgramDiff {
 }
 
 type ProgramStakeholdersDelta {
-  added: [Stakeholder!]!
-  removed: [String!]!
-  patched: [ProgramStakeholdersPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramStakeholdersRemoval!]!
+  inserted: [ProgramStakeholdersInsertion!]!
+  moved: [ProgramStakeholdersRelocation!]!
+  modified: [ProgramStakeholdersPatchEntry!]!
+}
+
+type ProgramStakeholdersInsertion {
+  index: Int!
+  row: Stakeholder!
+}
+
+type ProgramStakeholdersRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramStakeholdersRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramStakeholdersPatchEntry {
@@ -86,10 +102,26 @@ type ProgramStakeholdersPatchEntry {
 }
 
 type ProgramUsersDelta {
-  added: [UserProfile!]!
-  removed: [String!]!
-  patched: [ProgramUsersPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramUsersRemoval!]!
+  inserted: [ProgramUsersInsertion!]!
+  moved: [ProgramUsersRelocation!]!
+  modified: [ProgramUsersPatchEntry!]!
+}
+
+type ProgramUsersInsertion {
+  index: Int!
+  row: UserProfile!
+}
+
+type ProgramUsersRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramUsersRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramUsersPatchEntry {
@@ -98,10 +130,26 @@ type ProgramUsersPatchEntry {
 }
 
 type ProgramActivitiesDelta {
-  added: [Activity!]!
-  removed: [String!]!
-  patched: [ProgramActivitiesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramActivitiesRemoval!]!
+  inserted: [ProgramActivitiesInsertion!]!
+  moved: [ProgramActivitiesRelocation!]!
+  modified: [ProgramActivitiesPatchEntry!]!
+}
+
+type ProgramActivitiesInsertion {
+  index: Int!
+  row: Activity!
+}
+
+type ProgramActivitiesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramActivitiesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramActivitiesPatchEntry {
@@ -110,10 +158,26 @@ type ProgramActivitiesPatchEntry {
 }
 
 type ProgramFunctionsDelta {
-  added: [Function!]!
-  removed: [String!]!
-  patched: [ProgramFunctionsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramFunctionsRemoval!]!
+  inserted: [ProgramFunctionsInsertion!]!
+  moved: [ProgramFunctionsRelocation!]!
+  modified: [ProgramFunctionsPatchEntry!]!
+}
+
+type ProgramFunctionsInsertion {
+  index: Int!
+  row: Function!
+}
+
+type ProgramFunctionsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramFunctionsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramFunctionsPatchEntry {
@@ -122,10 +186,26 @@ type ProgramFunctionsPatchEntry {
 }
 
 type ProgramElementsDelta {
-  added: [ProgramElement!]!
-  removed: [String!]!
-  patched: [ProgramElementsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramElementsRemoval!]!
+  inserted: [ProgramElementsInsertion!]!
+  moved: [ProgramElementsRelocation!]!
+  modified: [ProgramElementsPatchEntry!]!
+}
+
+type ProgramElementsInsertion {
+  index: Int!
+  row: ProgramElement!
+}
+
+type ProgramElementsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramElementsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramElementsPatchEntry {
@@ -134,10 +214,26 @@ type ProgramElementsPatchEntry {
 }
 
 type ProgramQuantitiesDelta {
-  added: [QuantityRequirement!]!
-  removed: [String!]!
-  patched: [ProgramQuantitiesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramQuantitiesRemoval!]!
+  inserted: [ProgramQuantitiesInsertion!]!
+  moved: [ProgramQuantitiesRelocation!]!
+  modified: [ProgramQuantitiesPatchEntry!]!
+}
+
+type ProgramQuantitiesInsertion {
+  index: Int!
+  row: QuantityRequirement!
+}
+
+type ProgramQuantitiesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramQuantitiesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramQuantitiesPatchEntry {
@@ -146,10 +242,26 @@ type ProgramQuantitiesPatchEntry {
 }
 
 type ProgramRelationshipsDelta {
-  added: [Relationship!]!
-  removed: [String!]!
-  patched: [ProgramRelationshipsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramRelationshipsRemoval!]!
+  inserted: [ProgramRelationshipsInsertion!]!
+  moved: [ProgramRelationshipsRelocation!]!
+  modified: [ProgramRelationshipsPatchEntry!]!
+}
+
+type ProgramRelationshipsInsertion {
+  index: Int!
+  row: Relationship!
+}
+
+type ProgramRelationshipsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramRelationshipsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramRelationshipsPatchEntry {
@@ -158,10 +270,26 @@ type ProgramRelationshipsPatchEntry {
 }
 
 type ProgramAdjacenciesDelta {
-  added: [Adjacency!]!
-  removed: [String!]!
-  patched: [ProgramAdjacenciesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramAdjacenciesRemoval!]!
+  inserted: [ProgramAdjacenciesInsertion!]!
+  moved: [ProgramAdjacenciesRelocation!]!
+  modified: [ProgramAdjacenciesPatchEntry!]!
+}
+
+type ProgramAdjacenciesInsertion {
+  index: Int!
+  row: Adjacency!
+}
+
+type ProgramAdjacenciesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramAdjacenciesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramAdjacenciesPatchEntry {
@@ -170,10 +298,26 @@ type ProgramAdjacenciesPatchEntry {
 }
 
 type ProgramProcessesDelta {
-  added: [Process!]!
-  removed: [String!]!
-  patched: [ProgramProcessesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramProcessesRemoval!]!
+  inserted: [ProgramProcessesInsertion!]!
+  moved: [ProgramProcessesRelocation!]!
+  modified: [ProgramProcessesPatchEntry!]!
+}
+
+type ProgramProcessesInsertion {
+  index: Int!
+  row: Process!
+}
+
+type ProgramProcessesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramProcessesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramProcessesPatchEntry {
@@ -182,10 +326,26 @@ type ProgramProcessesPatchEntry {
 }
 
 type ProgramFlowsDelta {
-  added: [FlowRequirement!]!
-  removed: [String!]!
-  patched: [ProgramFlowsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramFlowsRemoval!]!
+  inserted: [ProgramFlowsInsertion!]!
+  moved: [ProgramFlowsRelocation!]!
+  modified: [ProgramFlowsPatchEntry!]!
+}
+
+type ProgramFlowsInsertion {
+  index: Int!
+  row: FlowRequirement!
+}
+
+type ProgramFlowsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramFlowsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramFlowsPatchEntry {
@@ -194,10 +354,26 @@ type ProgramFlowsPatchEntry {
 }
 
 type ProgramAccessRulesDelta {
-  added: [AccessRule!]!
-  removed: [String!]!
-  patched: [ProgramAccessRulesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramAccessRulesRemoval!]!
+  inserted: [ProgramAccessRulesInsertion!]!
+  moved: [ProgramAccessRulesRelocation!]!
+  modified: [ProgramAccessRulesPatchEntry!]!
+}
+
+type ProgramAccessRulesInsertion {
+  index: Int!
+  row: AccessRule!
+}
+
+type ProgramAccessRulesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramAccessRulesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramAccessRulesPatchEntry {
@@ -206,10 +382,26 @@ type ProgramAccessRulesPatchEntry {
 }
 
 type ProgramOperationsDelta {
-  added: [OperationalRequirement!]!
-  removed: [String!]!
-  patched: [ProgramOperationsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramOperationsRemoval!]!
+  inserted: [ProgramOperationsInsertion!]!
+  moved: [ProgramOperationsRelocation!]!
+  modified: [ProgramOperationsPatchEntry!]!
+}
+
+type ProgramOperationsInsertion {
+  index: Int!
+  row: OperationalRequirement!
+}
+
+type ProgramOperationsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramOperationsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramOperationsPatchEntry {
@@ -218,10 +410,26 @@ type ProgramOperationsPatchEntry {
 }
 
 type ProgramEquipmentDelta {
-  added: [Equipment!]!
-  removed: [String!]!
-  patched: [ProgramEquipmentPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramEquipmentRemoval!]!
+  inserted: [ProgramEquipmentInsertion!]!
+  moved: [ProgramEquipmentRelocation!]!
+  modified: [ProgramEquipmentPatchEntry!]!
+}
+
+type ProgramEquipmentInsertion {
+  index: Int!
+  row: Equipment!
+}
+
+type ProgramEquipmentRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramEquipmentRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramEquipmentPatchEntry {
@@ -230,10 +438,26 @@ type ProgramEquipmentPatchEntry {
 }
 
 type ProgramResourcesDelta {
-  added: [Resource!]!
-  removed: [String!]!
-  patched: [ProgramResourcesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramResourcesRemoval!]!
+  inserted: [ProgramResourcesInsertion!]!
+  moved: [ProgramResourcesRelocation!]!
+  modified: [ProgramResourcesPatchEntry!]!
+}
+
+type ProgramResourcesInsertion {
+  index: Int!
+  row: Resource!
+}
+
+type ProgramResourcesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramResourcesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramResourcesPatchEntry {
@@ -242,10 +466,26 @@ type ProgramResourcesPatchEntry {
 }
 
 type ProgramStorageDelta {
-  added: [StorageRequirement!]!
-  removed: [String!]!
-  patched: [ProgramStoragePatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramStorageRemoval!]!
+  inserted: [ProgramStorageInsertion!]!
+  moved: [ProgramStorageRelocation!]!
+  modified: [ProgramStoragePatchEntry!]!
+}
+
+type ProgramStorageInsertion {
+  index: Int!
+  row: StorageRequirement!
+}
+
+type ProgramStorageRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramStorageRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramStoragePatchEntry {
@@ -254,10 +494,26 @@ type ProgramStoragePatchEntry {
 }
 
 type ProgramEnvironmentalDelta {
-  added: [EnvironmentalRequirement!]!
-  removed: [String!]!
-  patched: [ProgramEnvironmentalPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramEnvironmentalRemoval!]!
+  inserted: [ProgramEnvironmentalInsertion!]!
+  moved: [ProgramEnvironmentalRelocation!]!
+  modified: [ProgramEnvironmentalPatchEntry!]!
+}
+
+type ProgramEnvironmentalInsertion {
+  index: Int!
+  row: EnvironmentalRequirement!
+}
+
+type ProgramEnvironmentalRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramEnvironmentalRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramEnvironmentalPatchEntry {
@@ -266,10 +522,26 @@ type ProgramEnvironmentalPatchEntry {
 }
 
 type ProgramHumanFactorsDelta {
-  added: [HumanFactorRequirement!]!
-  removed: [String!]!
-  patched: [ProgramHumanFactorsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramHumanFactorsRemoval!]!
+  inserted: [ProgramHumanFactorsInsertion!]!
+  moved: [ProgramHumanFactorsRelocation!]!
+  modified: [ProgramHumanFactorsPatchEntry!]!
+}
+
+type ProgramHumanFactorsInsertion {
+  index: Int!
+  row: HumanFactorRequirement!
+}
+
+type ProgramHumanFactorsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramHumanFactorsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramHumanFactorsPatchEntry {
@@ -278,10 +550,26 @@ type ProgramHumanFactorsPatchEntry {
 }
 
 type ProgramAccessibilityDelta {
-  added: [AccessibilityRequirement!]!
-  removed: [String!]!
-  patched: [ProgramAccessibilityPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramAccessibilityRemoval!]!
+  inserted: [ProgramAccessibilityInsertion!]!
+  moved: [ProgramAccessibilityRelocation!]!
+  modified: [ProgramAccessibilityPatchEntry!]!
+}
+
+type ProgramAccessibilityInsertion {
+  index: Int!
+  row: AccessibilityRequirement!
+}
+
+type ProgramAccessibilityRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramAccessibilityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramAccessibilityPatchEntry {
@@ -290,10 +578,26 @@ type ProgramAccessibilityPatchEntry {
 }
 
 type ProgramPrivacyDelta {
-  added: [PrivacyRequirement!]!
-  removed: [String!]!
-  patched: [ProgramPrivacyPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramPrivacyRemoval!]!
+  inserted: [ProgramPrivacyInsertion!]!
+  moved: [ProgramPrivacyRelocation!]!
+  modified: [ProgramPrivacyPatchEntry!]!
+}
+
+type ProgramPrivacyInsertion {
+  index: Int!
+  row: PrivacyRequirement!
+}
+
+type ProgramPrivacyRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramPrivacyRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramPrivacyPatchEntry {
@@ -302,10 +606,26 @@ type ProgramPrivacyPatchEntry {
 }
 
 type ProgramSafetyDelta {
-  added: [SafetyRequirement!]!
-  removed: [String!]!
-  patched: [ProgramSafetyPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSafetyRemoval!]!
+  inserted: [ProgramSafetyInsertion!]!
+  moved: [ProgramSafetyRelocation!]!
+  modified: [ProgramSafetyPatchEntry!]!
+}
+
+type ProgramSafetyInsertion {
+  index: Int!
+  row: SafetyRequirement!
+}
+
+type ProgramSafetyRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSafetyRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSafetyPatchEntry {
@@ -314,10 +634,26 @@ type ProgramSafetyPatchEntry {
 }
 
 type ProgramSecurityDelta {
-  added: [SecurityRequirement!]!
-  removed: [String!]!
-  patched: [ProgramSecurityPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSecurityRemoval!]!
+  inserted: [ProgramSecurityInsertion!]!
+  moved: [ProgramSecurityRelocation!]!
+  modified: [ProgramSecurityPatchEntry!]!
+}
+
+type ProgramSecurityInsertion {
+  index: Int!
+  row: SecurityRequirement!
+}
+
+type ProgramSecurityRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSecurityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSecurityPatchEntry {
@@ -326,10 +662,26 @@ type ProgramSecurityPatchEntry {
 }
 
 type ProgramRegulatoryDelta {
-  added: [RegulatoryRequirement!]!
-  removed: [String!]!
-  patched: [ProgramRegulatoryPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramRegulatoryRemoval!]!
+  inserted: [ProgramRegulatoryInsertion!]!
+  moved: [ProgramRegulatoryRelocation!]!
+  modified: [ProgramRegulatoryPatchEntry!]!
+}
+
+type ProgramRegulatoryInsertion {
+  index: Int!
+  row: RegulatoryRequirement!
+}
+
+type ProgramRegulatoryRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramRegulatoryRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramRegulatoryPatchEntry {
@@ -338,10 +690,26 @@ type ProgramRegulatoryPatchEntry {
 }
 
 type ProgramSiteContextDelta {
-  added: [SiteContext!]!
-  removed: [String!]!
-  patched: [ProgramSiteContextPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSiteContextRemoval!]!
+  inserted: [ProgramSiteContextInsertion!]!
+  moved: [ProgramSiteContextRelocation!]!
+  modified: [ProgramSiteContextPatchEntry!]!
+}
+
+type ProgramSiteContextInsertion {
+  index: Int!
+  row: SiteContext!
+}
+
+type ProgramSiteContextRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSiteContextRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSiteContextPatchEntry {
@@ -350,10 +718,26 @@ type ProgramSiteContextPatchEntry {
 }
 
 type ProgramOrganizationalDelta {
-  added: [OrganizationalRequirement!]!
-  removed: [String!]!
-  patched: [ProgramOrganizationalPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramOrganizationalRemoval!]!
+  inserted: [ProgramOrganizationalInsertion!]!
+  moved: [ProgramOrganizationalRelocation!]!
+  modified: [ProgramOrganizationalPatchEntry!]!
+}
+
+type ProgramOrganizationalInsertion {
+  index: Int!
+  row: OrganizationalRequirement!
+}
+
+type ProgramOrganizationalRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramOrganizationalRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramOrganizationalPatchEntry {
@@ -362,10 +746,26 @@ type ProgramOrganizationalPatchEntry {
 }
 
 type ProgramServicesDelta {
-  added: [ServiceRequirement!]!
-  removed: [String!]!
-  patched: [ProgramServicesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramServicesRemoval!]!
+  inserted: [ProgramServicesInsertion!]!
+  moved: [ProgramServicesRelocation!]!
+  modified: [ProgramServicesPatchEntry!]!
+}
+
+type ProgramServicesInsertion {
+  index: Int!
+  row: ServiceRequirement!
+}
+
+type ProgramServicesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramServicesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramServicesPatchEntry {
@@ -374,10 +774,26 @@ type ProgramServicesPatchEntry {
 }
 
 type ProgramInfrastructureDelta {
-  added: [InfrastructureRequirement!]!
-  removed: [String!]!
-  patched: [ProgramInfrastructurePatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramInfrastructureRemoval!]!
+  inserted: [ProgramInfrastructureInsertion!]!
+  moved: [ProgramInfrastructureRelocation!]!
+  modified: [ProgramInfrastructurePatchEntry!]!
+}
+
+type ProgramInfrastructureInsertion {
+  index: Int!
+  row: InfrastructureRequirement!
+}
+
+type ProgramInfrastructureRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramInfrastructureRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramInfrastructurePatchEntry {
@@ -386,10 +802,26 @@ type ProgramInfrastructurePatchEntry {
 }
 
 type ProgramInformationDelta {
-  added: [InformationRequirement!]!
-  removed: [String!]!
-  patched: [ProgramInformationPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramInformationRemoval!]!
+  inserted: [ProgramInformationInsertion!]!
+  moved: [ProgramInformationRelocation!]!
+  modified: [ProgramInformationPatchEntry!]!
+}
+
+type ProgramInformationInsertion {
+  index: Int!
+  row: InformationRequirement!
+}
+
+type ProgramInformationRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramInformationRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramInformationPatchEntry {
@@ -398,10 +830,26 @@ type ProgramInformationPatchEntry {
 }
 
 type ProgramCommunicationDelta {
-  added: [CommunicationRequirement!]!
-  removed: [String!]!
-  patched: [ProgramCommunicationPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramCommunicationRemoval!]!
+  inserted: [ProgramCommunicationInsertion!]!
+  moved: [ProgramCommunicationRelocation!]!
+  modified: [ProgramCommunicationPatchEntry!]!
+}
+
+type ProgramCommunicationInsertion {
+  index: Int!
+  row: CommunicationRequirement!
+}
+
+type ProgramCommunicationRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramCommunicationRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramCommunicationPatchEntry {
@@ -410,10 +858,26 @@ type ProgramCommunicationPatchEntry {
 }
 
 type ProgramWayfindingDelta {
-  added: [WayfindingRequirement!]!
-  removed: [String!]!
-  patched: [ProgramWayfindingPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramWayfindingRemoval!]!
+  inserted: [ProgramWayfindingInsertion!]!
+  moved: [ProgramWayfindingRelocation!]!
+  modified: [ProgramWayfindingPatchEntry!]!
+}
+
+type ProgramWayfindingInsertion {
+  index: Int!
+  row: WayfindingRequirement!
+}
+
+type ProgramWayfindingRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramWayfindingRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramWayfindingPatchEntry {
@@ -422,10 +886,26 @@ type ProgramWayfindingPatchEntry {
 }
 
 type ProgramSchedulesDelta {
-  added: [ScheduleRequirement!]!
-  removed: [String!]!
-  patched: [ProgramSchedulesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSchedulesRemoval!]!
+  inserted: [ProgramSchedulesInsertion!]!
+  moved: [ProgramSchedulesRelocation!]!
+  modified: [ProgramSchedulesPatchEntry!]!
+}
+
+type ProgramSchedulesInsertion {
+  index: Int!
+  row: ScheduleRequirement!
+}
+
+type ProgramSchedulesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSchedulesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSchedulesPatchEntry {
@@ -434,10 +914,26 @@ type ProgramSchedulesPatchEntry {
 }
 
 type ProgramFlexibilityDelta {
-  added: [FlexibilityRequirement!]!
-  removed: [String!]!
-  patched: [ProgramFlexibilityPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramFlexibilityRemoval!]!
+  inserted: [ProgramFlexibilityInsertion!]!
+  moved: [ProgramFlexibilityRelocation!]!
+  modified: [ProgramFlexibilityPatchEntry!]!
+}
+
+type ProgramFlexibilityInsertion {
+  index: Int!
+  row: FlexibilityRequirement!
+}
+
+type ProgramFlexibilityRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramFlexibilityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramFlexibilityPatchEntry {
@@ -446,10 +942,26 @@ type ProgramFlexibilityPatchEntry {
 }
 
 type ProgramGrowthDelta {
-  added: [GrowthPlan!]!
-  removed: [String!]!
-  patched: [ProgramGrowthPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramGrowthRemoval!]!
+  inserted: [ProgramGrowthInsertion!]!
+  moved: [ProgramGrowthRelocation!]!
+  modified: [ProgramGrowthPatchEntry!]!
+}
+
+type ProgramGrowthInsertion {
+  index: Int!
+  row: GrowthPlan!
+}
+
+type ProgramGrowthRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramGrowthRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramGrowthPatchEntry {
@@ -458,10 +970,26 @@ type ProgramGrowthPatchEntry {
 }
 
 type ProgramSustainabilityDelta {
-  added: [SustainabilityRequirement!]!
-  removed: [String!]!
-  patched: [ProgramSustainabilityPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSustainabilityRemoval!]!
+  inserted: [ProgramSustainabilityInsertion!]!
+  moved: [ProgramSustainabilityRelocation!]!
+  modified: [ProgramSustainabilityPatchEntry!]!
+}
+
+type ProgramSustainabilityInsertion {
+  index: Int!
+  row: SustainabilityRequirement!
+}
+
+type ProgramSustainabilityRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSustainabilityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSustainabilityPatchEntry {
@@ -470,10 +998,26 @@ type ProgramSustainabilityPatchEntry {
 }
 
 type ProgramResilienceDelta {
-  added: [ResilienceRequirement!]!
-  removed: [String!]!
-  patched: [ProgramResiliencePatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramResilienceRemoval!]!
+  inserted: [ProgramResilienceInsertion!]!
+  moved: [ProgramResilienceRelocation!]!
+  modified: [ProgramResiliencePatchEntry!]!
+}
+
+type ProgramResilienceInsertion {
+  index: Int!
+  row: ResilienceRequirement!
+}
+
+type ProgramResilienceRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramResilienceRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramResiliencePatchEntry {
@@ -482,10 +1026,26 @@ type ProgramResiliencePatchEntry {
 }
 
 type ProgramCostsDelta {
-  added: [CostRequirement!]!
-  removed: [String!]!
-  patched: [ProgramCostsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramCostsRemoval!]!
+  inserted: [ProgramCostsInsertion!]!
+  moved: [ProgramCostsRelocation!]!
+  modified: [ProgramCostsPatchEntry!]!
+}
+
+type ProgramCostsInsertion {
+  index: Int!
+  row: CostRequirement!
+}
+
+type ProgramCostsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramCostsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramCostsPatchEntry {
@@ -494,10 +1054,26 @@ type ProgramCostsPatchEntry {
 }
 
 type ProgramDeliveryDelta {
-  added: [DeliveryConstraint!]!
-  removed: [String!]!
-  patched: [ProgramDeliveryPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramDeliveryRemoval!]!
+  inserted: [ProgramDeliveryInsertion!]!
+  moved: [ProgramDeliveryRelocation!]!
+  modified: [ProgramDeliveryPatchEntry!]!
+}
+
+type ProgramDeliveryInsertion {
+  index: Int!
+  row: DeliveryConstraint!
+}
+
+type ProgramDeliveryRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramDeliveryRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramDeliveryPatchEntry {
@@ -506,10 +1082,26 @@ type ProgramDeliveryPatchEntry {
 }
 
 type ProgramRisksDelta {
-  added: [Risk!]!
-  removed: [String!]!
-  patched: [ProgramRisksPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramRisksRemoval!]!
+  inserted: [ProgramRisksInsertion!]!
+  moved: [ProgramRisksRelocation!]!
+  modified: [ProgramRisksPatchEntry!]!
+}
+
+type ProgramRisksInsertion {
+  index: Int!
+  row: Risk!
+}
+
+type ProgramRisksRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramRisksRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramRisksPatchEntry {
@@ -518,10 +1110,26 @@ type ProgramRisksPatchEntry {
 }
 
 type ProgramConflictsDelta {
-  added: [Conflict!]!
-  removed: [String!]!
-  patched: [ProgramConflictsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramConflictsRemoval!]!
+  inserted: [ProgramConflictsInsertion!]!
+  moved: [ProgramConflictsRelocation!]!
+  modified: [ProgramConflictsPatchEntry!]!
+}
+
+type ProgramConflictsInsertion {
+  index: Int!
+  row: Conflict!
+}
+
+type ProgramConflictsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramConflictsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramConflictsPatchEntry {
@@ -530,10 +1138,26 @@ type ProgramConflictsPatchEntry {
 }
 
 type ProgramRequirementsDelta {
-  added: [Requirement!]!
-  removed: [String!]!
-  patched: [ProgramRequirementsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramRequirementsRemoval!]!
+  inserted: [ProgramRequirementsInsertion!]!
+  moved: [ProgramRequirementsRelocation!]!
+  modified: [ProgramRequirementsPatchEntry!]!
+}
+
+type ProgramRequirementsInsertion {
+  index: Int!
+  row: Requirement!
+}
+
+type ProgramRequirementsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramRequirementsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramRequirementsPatchEntry {
@@ -542,10 +1166,26 @@ type ProgramRequirementsPatchEntry {
 }
 
 type ProgramPrioritiesDelta {
-  added: [PriorityRecord!]!
-  removed: [String!]!
-  patched: [ProgramPrioritiesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramPrioritiesRemoval!]!
+  inserted: [ProgramPrioritiesInsertion!]!
+  moved: [ProgramPrioritiesRelocation!]!
+  modified: [ProgramPrioritiesPatchEntry!]!
+}
+
+type ProgramPrioritiesInsertion {
+  index: Int!
+  row: PriorityRecord!
+}
+
+type ProgramPrioritiesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramPrioritiesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramPrioritiesPatchEntry {
@@ -554,10 +1194,26 @@ type ProgramPrioritiesPatchEntry {
 }
 
 type ProgramScenariosDelta {
-  added: [Scenario!]!
-  removed: [String!]!
-  patched: [ProgramScenariosPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramScenariosRemoval!]!
+  inserted: [ProgramScenariosInsertion!]!
+  moved: [ProgramScenariosRelocation!]!
+  modified: [ProgramScenariosPatchEntry!]!
+}
+
+type ProgramScenariosInsertion {
+  index: Int!
+  row: Scenario!
+}
+
+type ProgramScenariosRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramScenariosRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramScenariosPatchEntry {
@@ -566,10 +1222,26 @@ type ProgramScenariosPatchEntry {
 }
 
 type ProgramOptionsDelta {
-  added: [OptionEvaluation!]!
-  removed: [String!]!
-  patched: [ProgramOptionsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramOptionsRemoval!]!
+  inserted: [ProgramOptionsInsertion!]!
+  moved: [ProgramOptionsRelocation!]!
+  modified: [ProgramOptionsPatchEntry!]!
+}
+
+type ProgramOptionsInsertion {
+  index: Int!
+  row: OptionEvaluation!
+}
+
+type ProgramOptionsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramOptionsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramOptionsPatchEntry {
@@ -578,10 +1250,26 @@ type ProgramOptionsPatchEntry {
 }
 
 type ProgramDecisionsDelta {
-  added: [Decision!]!
-  removed: [String!]!
-  patched: [ProgramDecisionsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramDecisionsRemoval!]!
+  inserted: [ProgramDecisionsInsertion!]!
+  moved: [ProgramDecisionsRelocation!]!
+  modified: [ProgramDecisionsPatchEntry!]!
+}
+
+type ProgramDecisionsInsertion {
+  index: Int!
+  row: Decision!
+}
+
+type ProgramDecisionsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramDecisionsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramDecisionsPatchEntry {
@@ -590,10 +1278,26 @@ type ProgramDecisionsPatchEntry {
 }
 
 type ProgramValidationsDelta {
-  added: [ValidationRecord!]!
-  removed: [String!]!
-  patched: [ProgramValidationsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramValidationsRemoval!]!
+  inserted: [ProgramValidationsInsertion!]!
+  moved: [ProgramValidationsRelocation!]!
+  modified: [ProgramValidationsPatchEntry!]!
+}
+
+type ProgramValidationsInsertion {
+  index: Int!
+  row: ValidationRecord!
+}
+
+type ProgramValidationsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramValidationsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramValidationsPatchEntry {
@@ -602,10 +1306,26 @@ type ProgramValidationsPatchEntry {
 }
 
 type ProgramPerformanceDelta {
-  added: [PerformanceCriterion!]!
-  removed: [String!]!
-  patched: [ProgramPerformancePatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramPerformanceRemoval!]!
+  inserted: [ProgramPerformanceInsertion!]!
+  moved: [ProgramPerformanceRelocation!]!
+  modified: [ProgramPerformancePatchEntry!]!
+}
+
+type ProgramPerformanceInsertion {
+  index: Int!
+  row: PerformanceCriterion!
+}
+
+type ProgramPerformanceRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramPerformanceRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramPerformancePatchEntry {
@@ -614,10 +1334,26 @@ type ProgramPerformancePatchEntry {
 }
 
 type ProgramQualityDelta {
-  added: [QualityRecord!]!
-  removed: [String!]!
-  patched: [ProgramQualityPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramQualityRemoval!]!
+  inserted: [ProgramQualityInsertion!]!
+  moved: [ProgramQualityRelocation!]!
+  modified: [ProgramQualityPatchEntry!]!
+}
+
+type ProgramQualityInsertion {
+  index: Int!
+  row: QualityRecord!
+}
+
+type ProgramQualityRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramQualityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramQualityPatchEntry {
@@ -626,10 +1362,26 @@ type ProgramQualityPatchEntry {
 }
 
 type ProgramArtifactsDelta {
-  added: [ArtifactRecord!]!
-  removed: [String!]!
-  patched: [ProgramArtifactsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramArtifactsRemoval!]!
+  inserted: [ProgramArtifactsInsertion!]!
+  moved: [ProgramArtifactsRelocation!]!
+  modified: [ProgramArtifactsPatchEntry!]!
+}
+
+type ProgramArtifactsInsertion {
+  index: Int!
+  row: ArtifactRecord!
+}
+
+type ProgramArtifactsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramArtifactsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramArtifactsPatchEntry {
@@ -638,10 +1390,26 @@ type ProgramArtifactsPatchEntry {
 }
 
 type ProgramAssumptionsDelta {
-  added: [Assumption!]!
-  removed: [String!]!
-  patched: [ProgramAssumptionsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramAssumptionsRemoval!]!
+  inserted: [ProgramAssumptionsInsertion!]!
+  moved: [ProgramAssumptionsRelocation!]!
+  modified: [ProgramAssumptionsPatchEntry!]!
+}
+
+type ProgramAssumptionsInsertion {
+  index: Int!
+  row: Assumption!
+}
+
+type ProgramAssumptionsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramAssumptionsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramAssumptionsPatchEntry {
@@ -650,10 +1418,26 @@ type ProgramAssumptionsPatchEntry {
 }
 
 type ProgramConstraintsDelta {
-  added: [ConstraintRecord!]!
-  removed: [String!]!
-  patched: [ProgramConstraintsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramConstraintsRemoval!]!
+  inserted: [ProgramConstraintsInsertion!]!
+  moved: [ProgramConstraintsRelocation!]!
+  modified: [ProgramConstraintsPatchEntry!]!
+}
+
+type ProgramConstraintsInsertion {
+  index: Int!
+  row: ConstraintRecord!
+}
+
+type ProgramConstraintsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramConstraintsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramConstraintsPatchEntry {
@@ -662,10 +1446,26 @@ type ProgramConstraintsPatchEntry {
 }
 
 type ProgramComplianceRecordsDelta {
-  added: [ComplianceRecord!]!
-  removed: [String!]!
-  patched: [ProgramComplianceRecordsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramComplianceRecordsRemoval!]!
+  inserted: [ProgramComplianceRecordsInsertion!]!
+  moved: [ProgramComplianceRecordsRelocation!]!
+  modified: [ProgramComplianceRecordsPatchEntry!]!
+}
+
+type ProgramComplianceRecordsInsertion {
+  index: Int!
+  row: ComplianceRecord!
+}
+
+type ProgramComplianceRecordsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramComplianceRecordsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramComplianceRecordsPatchEntry {
@@ -674,10 +1474,26 @@ type ProgramComplianceRecordsPatchEntry {
 }
 
 type ProgramApprovalsDelta {
-  added: [ApprovalRecord!]!
-  removed: [String!]!
-  patched: [ProgramApprovalsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramApprovalsRemoval!]!
+  inserted: [ProgramApprovalsInsertion!]!
+  moved: [ProgramApprovalsRelocation!]!
+  modified: [ProgramApprovalsPatchEntry!]!
+}
+
+type ProgramApprovalsInsertion {
+  index: Int!
+  row: ApprovalRecord!
+}
+
+type ProgramApprovalsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramApprovalsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramApprovalsPatchEntry {
@@ -686,10 +1502,26 @@ type ProgramApprovalsPatchEntry {
 }
 
 type ProgramMeetingsDelta {
-  added: [MeetingRecord!]!
-  removed: [String!]!
-  patched: [ProgramMeetingsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramMeetingsRemoval!]!
+  inserted: [ProgramMeetingsInsertion!]!
+  moved: [ProgramMeetingsRelocation!]!
+  modified: [ProgramMeetingsPatchEntry!]!
+}
+
+type ProgramMeetingsInsertion {
+  index: Int!
+  row: MeetingRecord!
+}
+
+type ProgramMeetingsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramMeetingsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramMeetingsPatchEntry {
@@ -698,10 +1530,26 @@ type ProgramMeetingsPatchEntry {
 }
 
 type ProgramChangesDelta {
-  added: [ChangeRecord!]!
-  removed: [String!]!
-  patched: [ProgramChangesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramChangesRemoval!]!
+  inserted: [ProgramChangesInsertion!]!
+  moved: [ProgramChangesRelocation!]!
+  modified: [ProgramChangesPatchEntry!]!
+}
+
+type ProgramChangesInsertion {
+  index: Int!
+  row: ChangeRecord!
+}
+
+type ProgramChangesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramChangesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramChangesPatchEntry {
@@ -710,10 +1558,26 @@ type ProgramChangesPatchEntry {
 }
 
 type ProgramCollaborationDelta {
-  added: [CollaborationRecord!]!
-  removed: [String!]!
-  patched: [ProgramCollaborationPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramCollaborationRemoval!]!
+  inserted: [ProgramCollaborationInsertion!]!
+  moved: [ProgramCollaborationRelocation!]!
+  modified: [ProgramCollaborationPatchEntry!]!
+}
+
+type ProgramCollaborationInsertion {
+  index: Int!
+  row: CollaborationRecord!
+}
+
+type ProgramCollaborationRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramCollaborationRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramCollaborationPatchEntry {
@@ -722,10 +1586,26 @@ type ProgramCollaborationPatchEntry {
 }
 
 type ProgramAnalysesDelta {
-  added: [AnalysisRecord!]!
-  removed: [String!]!
-  patched: [ProgramAnalysesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramAnalysesRemoval!]!
+  inserted: [ProgramAnalysesInsertion!]!
+  moved: [ProgramAnalysesRelocation!]!
+  modified: [ProgramAnalysesPatchEntry!]!
+}
+
+type ProgramAnalysesInsertion {
+  index: Int!
+  row: AnalysisRecord!
+}
+
+type ProgramAnalysesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramAnalysesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramAnalysesPatchEntry {
@@ -734,10 +1614,26 @@ type ProgramAnalysesPatchEntry {
 }
 
 type ProgramReportsDelta {
-  added: [ReportRecord!]!
-  removed: [String!]!
-  patched: [ProgramReportsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramReportsRemoval!]!
+  inserted: [ProgramReportsInsertion!]!
+  moved: [ProgramReportsRelocation!]!
+  modified: [ProgramReportsPatchEntry!]!
+}
+
+type ProgramReportsInsertion {
+  index: Int!
+  row: ReportRecord!
+}
+
+type ProgramReportsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramReportsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramReportsPatchEntry {
@@ -746,10 +1642,26 @@ type ProgramReportsPatchEntry {
 }
 
 type ProgramSearchFiltersDelta {
-  added: [SearchFilter!]!
-  removed: [String!]!
-  patched: [ProgramSearchFiltersPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSearchFiltersRemoval!]!
+  inserted: [ProgramSearchFiltersInsertion!]!
+  moved: [ProgramSearchFiltersRelocation!]!
+  modified: [ProgramSearchFiltersPatchEntry!]!
+}
+
+type ProgramSearchFiltersInsertion {
+  index: Int!
+  row: SearchFilter!
+}
+
+type ProgramSearchFiltersRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSearchFiltersRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSearchFiltersPatchEntry {
@@ -758,10 +1670,26 @@ type ProgramSearchFiltersPatchEntry {
 }
 
 type ProgramStatusRecordsDelta {
-  added: [StatusRecord!]!
-  removed: [String!]!
-  patched: [ProgramStatusRecordsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramStatusRecordsRemoval!]!
+  inserted: [ProgramStatusRecordsInsertion!]!
+  moved: [ProgramStatusRecordsRelocation!]!
+  modified: [ProgramStatusRecordsPatchEntry!]!
+}
+
+type ProgramStatusRecordsInsertion {
+  index: Int!
+  row: StatusRecord!
+}
+
+type ProgramStatusRecordsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramStatusRecordsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramStatusRecordsPatchEntry {
@@ -770,10 +1698,26 @@ type ProgramStatusRecordsPatchEntry {
 }
 
 type ProgramWorkshopsDelta {
-  added: [Workshop!]!
-  removed: [String!]!
-  patched: [ProgramWorkshopsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramWorkshopsRemoval!]!
+  inserted: [ProgramWorkshopsInsertion!]!
+  moved: [ProgramWorkshopsRelocation!]!
+  modified: [ProgramWorkshopsPatchEntry!]!
+}
+
+type ProgramWorkshopsInsertion {
+  index: Int!
+  row: Workshop!
+}
+
+type ProgramWorkshopsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramWorkshopsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramWorkshopsPatchEntry {
@@ -782,10 +1726,26 @@ type ProgramWorkshopsPatchEntry {
 }
 
 type ProgramSurveysDelta {
-  added: [Survey!]!
-  removed: [String!]!
-  patched: [ProgramSurveysPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramSurveysRemoval!]!
+  inserted: [ProgramSurveysInsertion!]!
+  moved: [ProgramSurveysRelocation!]!
+  modified: [ProgramSurveysPatchEntry!]!
+}
+
+type ProgramSurveysInsertion {
+  index: Int!
+  row: Survey!
+}
+
+type ProgramSurveysRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramSurveysRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramSurveysPatchEntry {
@@ -794,10 +1754,26 @@ type ProgramSurveysPatchEntry {
 }
 
 type ProgramIssuesDelta {
-  added: [Issue!]!
-  removed: [String!]!
-  patched: [ProgramIssuesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramIssuesRemoval!]!
+  inserted: [ProgramIssuesInsertion!]!
+  moved: [ProgramIssuesRelocation!]!
+  modified: [ProgramIssuesPatchEntry!]!
+}
+
+type ProgramIssuesInsertion {
+  index: Int!
+  row: Issue!
+}
+
+type ProgramIssuesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramIssuesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramIssuesPatchEntry {
@@ -806,10 +1782,26 @@ type ProgramIssuesPatchEntry {
 }
 
 type ProgramAuditEventsDelta {
-  added: [AuditEvent!]!
-  removed: [String!]!
-  patched: [ProgramAuditEventsPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramAuditEventsRemoval!]!
+  inserted: [ProgramAuditEventsInsertion!]!
+  moved: [ProgramAuditEventsRelocation!]!
+  modified: [ProgramAuditEventsPatchEntry!]!
+}
+
+type ProgramAuditEventsInsertion {
+  index: Int!
+  row: AuditEvent!
+}
+
+type ProgramAuditEventsRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramAuditEventsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramAuditEventsPatchEntry {
@@ -818,10 +1810,26 @@ type ProgramAuditEventsPatchEntry {
 }
 
 type ProgramTemplatesDelta {
-  added: [TemplateRecord!]!
-  removed: [String!]!
-  patched: [ProgramTemplatesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramTemplatesRemoval!]!
+  inserted: [ProgramTemplatesInsertion!]!
+  moved: [ProgramTemplatesRelocation!]!
+  modified: [ProgramTemplatesPatchEntry!]!
+}
+
+type ProgramTemplatesInsertion {
+  index: Int!
+  row: TemplateRecord!
+}
+
+type ProgramTemplatesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramTemplatesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramTemplatesPatchEntry {
@@ -830,10 +1838,26 @@ type ProgramTemplatesPatchEntry {
 }
 
 type ProgramTracesDelta {
-  added: [TraceLink!]!
-  removed: [String!]!
-  patched: [ProgramTracesPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramTracesRemoval!]!
+  inserted: [ProgramTracesInsertion!]!
+  moved: [ProgramTracesRelocation!]!
+  modified: [ProgramTracesPatchEntry!]!
+}
+
+type ProgramTracesInsertion {
+  index: Int!
+  row: TraceLink!
+}
+
+type ProgramTracesRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramTracesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramTracesPatchEntry {
@@ -841,15 +1865,27 @@ type ProgramTracesPatchEntry {
   item: TraceLink!
 }
 
-type ProgramStringList {
-  values: [String!]!
+type ProgramKnowledgeDelta {
+  removed: [ProgramKnowledgeRemoval!]!
+  inserted: [ProgramKnowledgeInsertion!]!
+  moved: [ProgramKnowledgeRelocation!]!
+  modified: [ProgramKnowledgePatchEntry!]!
 }
 
-type ProgramKnowledgeDelta {
-  added: [KnowledgeRecord!]!
-  removed: [String!]!
-  patched: [ProgramKnowledgePatchEntry!]!
-  reordered: [String!]
+type ProgramKnowledgeInsertion {
+  index: Int!
+  row: KnowledgeRecord!
+}
+
+type ProgramKnowledgeRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramKnowledgeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramKnowledgePatchEntry {
@@ -858,10 +1894,26 @@ type ProgramKnowledgePatchEntry {
 }
 
 type ProgramBenchmarksDelta {
-  added: [BenchmarkRecord!]!
-  removed: [String!]!
-  patched: [ProgramBenchmarksPatchEntry!]!
-  reordered: [String!]
+  removed: [ProgramBenchmarksRemoval!]!
+  inserted: [ProgramBenchmarksInsertion!]!
+  moved: [ProgramBenchmarksRelocation!]!
+  modified: [ProgramBenchmarksPatchEntry!]!
+}
+
+type ProgramBenchmarksInsertion {
+  index: Int!
+  row: BenchmarkRecord!
+}
+
+type ProgramBenchmarksRemoval {
+  id: String!
+  index: Int!
+}
+
+type ProgramBenchmarksRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type ProgramBenchmarksPatchEntry {

@@ -93,9 +93,6 @@ impl En1997Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: En1997Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 //#endregion 🔖️Conversions
 

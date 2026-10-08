@@ -3,8 +3,9 @@
 use crate::document::AnnexChoice;
 use crate::part_1_2::FireRating;
 use crate::{ExposureClass, En1992Snapshot};
+use crate::standards::v1::subsets::any::io::{apply_en1992_mutation};
 use super::{
-    apply_en1992_mutation, change_action_mk, change_action_nk, change_action_vk, change_anchor_a_s,
+    change_action_mk, change_action_nk, change_action_vk, change_anchor_a_s,
     change_anchor_h_ef, change_annex, change_bar_layer_count, change_bar_layer_diameter, change_cement_type,
     change_concrete_f_ck, change_delta_c_dev, change_design_working_life, change_member_axis_distance,
     change_member_cover, change_member_effective_depth, change_member_exposure, change_member_fire_rating,

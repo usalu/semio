@@ -8,7 +8,8 @@
 //! arm of the diff builder's five-way match — and a deliberately NON-square target, so a builder
 //! that silently swapped the two extents could not pass.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::find_layer;
 use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
@@ -91,9 +92,9 @@ async fn produces_committed_diff() {
     let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "resize-layer/resizes-the-canvas-layer-to-256-by-128: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("resize-layer writes a layers delta");
-    assert_eq!(delta.patched.len(), 1, "resize-layer/resizes-the-canvas-layer-to-256-by-128: exactly one layer is patched");
-    assert_eq!((delta.patched[0].patch.width, delta.patched[0].patch.height), (Some(256), Some(128)), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the patch must carry both extents, unswapped");
-    assert_eq!(delta.patched[0].patch.adjustment_kind, None, "resize-layer/resizes-the-canvas-layer-to-256-by-128: `adjustmentKind` is rejected outright on a Pixel — the patch must leave it unset");
+    assert_eq!(delta.modified.len(), 1, "resize-layer/resizes-the-canvas-layer-to-256-by-128: exactly one layer is patched");
+    assert_eq!((delta.modified[0].patch.width, delta.modified[0].patch.height), (Some(256), Some(128)), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the patch must carry both extents, unswapped");
+    assert_eq!(delta.modified[0].patch.adjustment_kind, None, "resize-layer/resizes-the-canvas-layer-to-256-by-128: `adjustmentKind` is rejected outright on a Pixel — the patch must leave it unset");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -117,5 +118,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

@@ -3,29 +3,33 @@
   "site": null,
   "buildings": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "assessments": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "silos": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "tanks": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "tk-1",
+        "index": 1,
         "row": {
           "id": "tk-2",
           "heightM": 8.0,
@@ -38,21 +42,25 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "foundations": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "retainingWalls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "towers": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

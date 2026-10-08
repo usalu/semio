@@ -5,10 +5,11 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
 //! 🌱 The insertion is TREE-ADDRESSED: `parentId = "artwork"` puts the new node inside a nested
-//! `Group`, which is exactly what `RasterLayersDelta.added` exists to express sparsely (the root
+//! `Group`, which is exactly what `RasterLayersDelta.inserted` exists to express sparsely (the root
 //! layer list is left byte-identical).
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, locate_layer};
 use crate::{RasterDiff, RasterSnapshot};
 
@@ -82,7 +83,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta this mutation produces is exactly the committed diff — one
-/// `layers.added` insertion carrying its own tree address, never a whole-snapshot capture.
+/// `layers.inserted` insertion carrying its own tree address, never a whole-snapshot capture.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
@@ -91,10 +92,10 @@ async fn produces_committed_diff() {
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "create-layer/creates-an-ink-layer-inside-the-artwork-group: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(produced.diff().artifact.is_none(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: a creation must never fall back to a whole-artifact replacement");
     let delta = produced.diff().layers.as_ref().expect("create-layer writes a layers delta");
-    assert_eq!(delta.added.len(), 1, "create-layer/creates-an-ink-layer-inside-the-artwork-group: exactly one layer is added");
-    assert_eq!(delta.added[0].parent_id.as_deref(), Some("artwork"), "create-layer/creates-an-ink-layer-inside-the-artwork-group: the insertion must carry the nested parent id");
-    assert_eq!(delta.added[0].index, 1, "create-layer/creates-an-ink-layer-inside-the-artwork-group: the insertion must carry the payload's index");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty() && delta.moved.is_empty(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: creating a layer must not remove, patch or move anything");
+    assert_eq!(delta.inserted.len(), 1, "create-layer/creates-an-ink-layer-inside-the-artwork-group: exactly one layer is added");
+    assert_eq!(delta.inserted[0].parent_id.as_deref(), Some("artwork"), "create-layer/creates-an-ink-layer-inside-the-artwork-group: the insertion must carry the nested parent id");
+    assert_eq!(delta.inserted[0].index, 1, "create-layer/creates-an-ink-layer-inside-the-artwork-group: the insertion must carry the payload's index");
+    assert!(delta.removed.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: creating a layer must not remove, patch or move anything");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -118,5 +119,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

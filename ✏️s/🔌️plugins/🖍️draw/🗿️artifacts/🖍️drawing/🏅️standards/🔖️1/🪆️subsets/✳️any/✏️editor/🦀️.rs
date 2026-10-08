@@ -427,7 +427,11 @@ mod args_bridge {
                     let mut edit: semio_framework_value::DslValue = if let semio_framework_value::DslValue::String(json) = edit { semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))? } else { edit };
                     if let (Some((_,input)),semio_framework_value::DslValue::Object(fields)) = (entries.iter().find(|(key,_)| key == "value"),&mut edit) {
                         let kind = fields.iter().find(|(key,_)| key == "kind").and_then(|(_,value)| value.as_str()).unwrap_or("");
-                        let input = if matches!(kind,"type"|"color") {
+                        let input = if kind=="color" {
+                            let alpha=fields.iter().find(|(key,_)|key=="value").and_then(|(_,value)|value.as_array()).and_then(|parts|parts.get(3)).and_then(|value|value.as_f64()).unwrap_or(1.0);
+                            let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted);
+                            semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::io::text::color::decode_color_text(input.as_str().ok_or_else(||Fault::from("Choose a color"))?,alpha,&mut control).map_err(|error|Fault::from(error.to_string()))?)
+                        } else if kind=="type" {
                             semio_framework_value::DslValue::String(input.as_str().ok_or_else(|| Fault::from("Choose a fill value"))?.into())
                         } else {
                             let number = match input { semio_framework_value::DslValue::String(text) => text.parse::<f64>().ok(), other => <f64 as semio_framework_value::FromValue>::from_value(other.clone()).ok() }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite number"))?;

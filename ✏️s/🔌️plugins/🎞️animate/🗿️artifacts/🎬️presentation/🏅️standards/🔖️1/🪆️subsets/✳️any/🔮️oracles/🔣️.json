@@ -125,17 +125,6 @@
           ]
         },
         {
-          "mutationId": "replace-tiles",
-          "sourceMutationDirectoryName": "🔁replace-tiles",
-          "mutationDirectoryName": "🔁replace-tiles",
-          "scenarios": [
-            {
-              "id": "no-ops-when-the-collection-is-already-empty",
-              "directoryName": "🧪️no"
-            }
-          ]
-        },
-        {
           "mutationId": "resize-source-frame",
           "sourceMutationDirectoryName": "🔲resize-source-frame",
           "mutationDirectoryName": "🔲resize-source-frame",
@@ -166,8 +155,7 @@
         "delete-tiles",
         "rename-tile",
         "resize-tile-crop",
-        "reorder-tiles",
-        "replace-tiles"
+        "reorder-tiles"
       ]
     }
   ],
@@ -294,26 +282,6 @@
             "operation": "replace-source",
             "bridgeVersion": 1,
             "variant": "ReplaceSource"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "presentation-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "replace-tiles",
-          "capability": "presentation-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "replace-tiles",
-            "bridgeVersion": 1,
-            "variant": "ReplaceTiles"
           },
           "oracleRequirements": [
             {

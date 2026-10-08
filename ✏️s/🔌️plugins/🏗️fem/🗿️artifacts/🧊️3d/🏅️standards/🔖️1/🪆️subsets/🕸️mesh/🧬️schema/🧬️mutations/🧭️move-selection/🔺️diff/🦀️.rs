@@ -6,7 +6,7 @@
 //! (Warning) when the transform moves none of them; and `mutation.partial` (Warning), addressed at the ones that do
 //! not exist or cannot follow the transform, when some are skipped.
 use super::MoveSelection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta, Fem3dNodesPatchEntry, Fem3dSolidsDelta, Fem3dSolidsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta, Fem3dNodesModification, Fem3dSolidsDelta, Fem3dSolidsModification};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -20,15 +20,15 @@ pub fn diff(payload: &MoveSelection, base: &Fem3dSnapshot) -> protocol::Mutation
     if nodes.is_empty() && solids.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named node(s) and solid(s) exist.", targets.len()), targets);
     }
-    let patched_nodes: Vec<Fem3dNodesPatchEntry> = nodes.iter().filter_map(|node| payload.moved_node(node)).map(|item| Fem3dNodesPatchEntry { id: item.id.clone(), item }).collect();
+    let patched_nodes: Vec<Fem3dNodesModification> = nodes.iter().filter_map(|node| payload.moved_node(node)).map(|item| Fem3dNodesModification { id: item.id.clone(), patch: item }).collect();
     let followed: Vec<(&str, Option<crate::FemSolid>)> = solids.iter().map(|solid| (solid.id.as_str(), payload.map_solid(solid))).collect();
-    let patched_solids: Vec<Fem3dSolidsPatchEntry> = solids.iter().filter_map(|solid| payload.moved_solid(solid)).map(|item| Fem3dSolidsPatchEntry { id: item.id.clone(), item }).collect();
+    let patched_solids: Vec<Fem3dSolidsModification> = solids.iter().filter_map(|solid| payload.moved_solid(solid)).map(|item| Fem3dSolidsModification { id: item.id.clone(), patch: item }).collect();
     if patched_nodes.is_empty() && patched_solids.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The transform moves none of the {} named node(s) and solid(s).", targets.len()));
     }
     let outcome = protocol::MutationOutcome::new(Fem3dDiff {
-        nodes: (!patched_nodes.is_empty()).then(|| Fem3dNodesDelta { patched: patched_nodes, ..Default::default() }),
-        solids: (!patched_solids.is_empty()).then(|| Fem3dSolidsDelta { patched: patched_solids, ..Default::default() }),
+        nodes: (!patched_nodes.is_empty()).then(|| Fem3dNodesDelta { modified: patched_nodes, ..Default::default() }),
+        solids: (!patched_solids.is_empty()).then(|| Fem3dSolidsDelta { modified: patched_solids, ..Default::default() }),
         ..Default::default()
     });
     let skipped: Vec<String> = payload

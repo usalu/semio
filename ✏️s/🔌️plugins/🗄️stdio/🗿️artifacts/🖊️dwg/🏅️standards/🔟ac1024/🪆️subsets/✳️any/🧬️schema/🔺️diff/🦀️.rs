@@ -145,25 +145,6 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
         }
     }
 
-    /// 🧭️ Computes a field-by-field logical state delta.
-    fn between(base: &DwgSnapshot, other: &DwgSnapshot) -> Self {
-        let version = (base.version != other.version).then(|| other.version.clone());
-        let maintenance_version = (base.maintenance_version != other.maintenance_version).then_some(other.maintenance_version);
-        let codepage = (base.codepage != other.codepage).then_some(other.codepage);
-        let drawing = (base.drawing != other.drawing).then(|| other.drawing.clone());
-        let header = (base.header != other.header).then(|| other.header.clone());
-        let classes = (base.classes != other.classes).then(|| other.classes.clone());
-        let dependencies = (base.dependencies != other.dependencies).then(|| other.dependencies.clone());
-        let summary = (base.summary != other.summary).then(|| other.summary.clone());
-        let application = (base.application != other.application).then(|| other.application.clone());
-        let template = (base.template != other.template).then(|| other.template.clone());
-        let auxiliary_header = (base.auxiliary_header != other.auxiliary_header).then(|| other.auxiliary_header.clone());
-        let revision_history = (base.revision_history != other.revision_history).then(|| other.revision_history.clone());
-        let preview = (base.preview != other.preview).then(|| other.preview.clone());
-        let application_history = (base.application_history != other.application_history).then(|| other.application_history.clone());
-        DwgDiff { version, maintenance_version, codepage, drawing, header, classes, dependencies, summary, application, template, auxiliary_header, revision_history, preview, application_history }
-    }
-
     fn is_empty(&self) -> bool {
         self.version.is_none()
             && self.maintenance_version.is_none()

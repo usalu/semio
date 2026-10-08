@@ -7,5 +7,5 @@ tag = '"setHeaderVar"' | '"removeHeaderVar"'
     | '"insertStyle"' | '"removeStyle"' | '"setStyle"'
     | '"insertLinetype"' | '"removeLinetype"' | '"setLinetype"'
     | '"insertEntity"' | '"removeEntity"' | '"setEntity"'
-    | '"insertBlock"' | '"removeBlock"' | '"setBlock"' ;
+    | '"insertBlock"' | '"removeBlock"' | '"setBlock"' | '"setOtherTables"' ;
 member = json string, ":", json value ;

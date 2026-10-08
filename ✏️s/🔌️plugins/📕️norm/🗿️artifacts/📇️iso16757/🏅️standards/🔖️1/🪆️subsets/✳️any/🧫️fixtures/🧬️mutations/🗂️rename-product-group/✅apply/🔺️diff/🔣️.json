@@ -2,15 +2,17 @@
   "catalogueName": null,
   "manufacturerName": null,
   "productGroups": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "group.radiators",
-        "name": "Panel radiators"
+        "patch": {
+          "name": "Panel radiators"
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "productClasses": null,
   "productSeries": null,

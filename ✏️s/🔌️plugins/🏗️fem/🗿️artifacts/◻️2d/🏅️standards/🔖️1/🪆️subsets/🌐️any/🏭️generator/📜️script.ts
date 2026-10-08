@@ -8,7 +8,7 @@
 // 🏭️ Third-party fixture generator for `s.fem.fem2d@1/🌐️any`.
 //
 // A `FemRegion` is an outline (+ zero or more holes) extruded by its own `thickness` — exactly what
-// `crate::fem2d_engine::meshing::build_semio_mesh_snapshot` bridges into OBJ/STL. Every recipe here
+// `crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot` bridges into OBJ/STL. Every recipe here
 // builds the SAME kind of shape independently: `manifold-3d`'s own `CrossSection.extrude` (a real
 // solid-boolean kernel's native polygon-with-holes extrusion, not a re-derivation of our triangulator)
 // BUILDS it and is the sole source of its volume/area/genus truth, and `three` (a real 3D engine,
@@ -26,7 +26,7 @@
 //
 // @see ../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts
 //      — the pilot this file mirrors in CLI shape, bundle layout and manifest fields.
-// @see ../🕸️meshing/… (crate::fem2d_engine::meshing::build_semio_mesh_snapshot) — the honest-geometry
+// @see ../🚪️io/📤️export/🧩️geometry/🦀️.rs (crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot) — the honest-geometry
 //      bridge whose OUTER CAPABILITY (not its triangulation) this corpus stands in for.
 
 //#endregion 🧲️Header

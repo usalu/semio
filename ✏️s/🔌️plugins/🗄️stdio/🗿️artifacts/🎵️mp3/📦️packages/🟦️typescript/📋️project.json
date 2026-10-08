@@ -65,6 +65,30 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
+    },
+    "metadata-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts metadata-source",
+        "forwardAllArgs": true
+      }
+    },
+    "metadata-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts metadata-native",
+        "forwardAllArgs": true
+      }
+    },
+    "metadata-oracle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts metadata-oracle",
+        "forwardAllArgs": true
+      }
     }
   }
 }

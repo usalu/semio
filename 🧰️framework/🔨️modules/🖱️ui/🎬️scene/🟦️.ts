@@ -1281,14 +1281,8 @@ export type BlockPaletteEntry = {
   readonly iconId: IconName;
 };
 
-/** 🧩️ Ordered sections and fields with optional interaction targets in the declared selection domain. */
-export type BlockListScene = {
-  readonly stepsJson: string;
-  readonly paletteJson: string;
-  readonly domainId?: string;
-  readonly selectedId?: string;
-  readonly draggingId?: string;
-};
+export * from "./🧬️schema/🧩️block-list/🟦️.ts";
+import type {BlockListScene} from "./🧬️schema/🧩️block-list/🟦️.ts";
 
 /** 🆚️ A before/after text diff surface scene payload — mirrors the wasm `componentScene` node's `diffView` field. */
 export type DiffViewScene = {

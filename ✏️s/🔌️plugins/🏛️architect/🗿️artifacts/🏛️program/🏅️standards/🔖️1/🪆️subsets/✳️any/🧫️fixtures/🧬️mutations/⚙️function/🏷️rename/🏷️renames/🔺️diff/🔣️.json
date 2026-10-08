@@ -6,9 +6,10 @@
   "users": null,
   "activities": null,
   "functions": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "function-a",
         "patch": {
@@ -44,8 +45,7 @@
           "conflictIds": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "elements": null,
   "quantities": null,

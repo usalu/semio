@@ -2,4 +2,6 @@ syntax = "proto3";
 package semio.s.gis.gismap;
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 message GisMapFeature { string id = 1; semio.framework.value.DslValue data = 2; }
-message GisMapFeaturePatch { optional semio.framework.value.DslValue data = 1; }
+message GisMapFeaturePatch { optional semio.framework.value.DslValue data = 1; repeated GisMapFeaturePropertyEdit properties = 2; }
+message GisMapFeaturePropertyEdit { string key = 1; optional string before = 2; optional GisMapFeaturePropertyValue set = 3; }
+message GisMapFeaturePropertyValue { semio.framework.value.DslValue value = 1; }

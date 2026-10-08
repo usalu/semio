@@ -15,9 +15,10 @@ pub mod run_validation {
 
     pub fn handle(_payload: &RunValidation, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let diagnostics = validate_plugin(doc.snapshot);
-        let mut next = cfg.snapshot.clone();
+        let base_config = cfg.snapshot;
+        let mut next = base_config.clone();
         next.last_result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&diagnostics)));
-        Ok(Emit::config(snapshot(next)))
+        Ok(Emit::config(snapshot(base_config, next)))
     }
 }
 

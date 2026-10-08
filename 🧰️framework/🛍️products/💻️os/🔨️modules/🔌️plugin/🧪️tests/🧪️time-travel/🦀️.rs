@@ -2739,7 +2739,7 @@ impl store::Mutation<TestSnapshot> for InertLabelOp {
 }
 
 /// ⏭️ Replays `drafts` from `from` on `document` to completion through its history-edit owners and answers the report.
-async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, document: &mut ArtifactStore<TestSnapshot, InertLabelOp>, drafts: &BTreeMap<MutationId, protocol::InputReplacement>, from: &MutationId) -> protocol::ReplayReport {
+async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, document: &mut ArtifactStore<TestSnapshot, InertLabelOp>, drafts: &protocol::HistoryInputDrafts, from: &MutationId) -> protocol::ReplayReport {
     let started = owners.run(document, time_travel::TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: from.clone() }).await.expect("the replay starts");
     assert!(matches!(started, time_travel::TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the Report replay");
     for _ in 0..65_536 {
@@ -2818,7 +2818,7 @@ async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review
 
     let mut owners = TimeTravelStoreState::<TestSnapshot, InertLabelOp>::new(|_| LocalizedLabel::data("operation"));
     let negative = protocol::InputReplacement::Input { schema: schema.to_string(), payload: ::protocol::OpBinary::encode_op(&InertLabelOp(TestMutation::SetCount(SetCount { value: -1 }))).expect("the edited count encodes") };
-    let mut drafts = BTreeMap::from([(count.clone(), negative)]);
+    let mut drafts = protocol::HistoryInputDrafts::from([(count.clone(), negative)]);
     let blocked = replayed_report(&mut owners, &mut document, &drafts, &count).await;
     let problem = blocked.outcomes.iter().find(|outcome| outcome.worst.is_some_and(|worst| protocol::MergePolicy::Normal.rejects(worst))).map(|outcome| outcome.mutation_id.clone());
     assert_eq!((blocked.blocks_finalize(), problem), (true, Some(label.clone())), "the edited count breaks the label operation downstream: {blocked:?}");
@@ -2858,7 +2858,7 @@ async fn an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolv
     let (count, label, children, tail) = (ids[0].clone(), ids[1].clone(), ids[2].clone(), ids[3].clone());
     let mut owners = TimeTravelStoreState::<TestSnapshot, InertLabelOp>::new(|_| LocalizedLabel::data("operation"));
     let lower = protocol::InputReplacement::Input { schema: INERT_SCHEMA.to_string(), payload: ::protocol::OpBinary::encode_op(&InertLabelOp(TestMutation::SetCount(SetCount { value: -2 }))).expect("the edited count encodes") };
-    let mut drafts = BTreeMap::from([(count.clone(), lower)]);
+    let mut drafts = protocol::HistoryInputDrafts::from([(count.clone(), lower)]);
     let outcome_of = |report: &protocol::ReplayReport, id: &MutationId| report.outcomes.iter().find(|outcome| outcome.mutation_id == *id).cloned().expect("an outcome per replayed operation");
     let blocked = replayed_report(&mut owners, &mut document, &drafts, &count).await;
     let refused = outcome_of(&blocked, &children);

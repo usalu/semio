@@ -1,10 +1,9 @@
 syntax = "proto3";
 package stdio.tiff.mutation;
-import "🧭️change-byte-order/🛰️.proto";
 import "📥️insert-ifd/🛰️.proto";
 import "📤️remove-ifd/🛰️.proto";
 import "🏷️replace-tag/🛰️.proto";
 import "🗑️remove-tag/🛰️.proto";
 import "🎨️paint-region/🛰️.proto";
 import "🧮️replace-samples/🛰️.proto";
-message TiffMutation { oneof mutation { ChangeByteOrderMutation change_byte_order = 2; InsertIfdMutation insert_ifd = 3; RemoveIfdMutation remove_ifd = 4; ReplaceTagMutation replace_tag = 5; RemoveTagMutation remove_tag = 6; PaintRegionMutation paint_region = 7; ReplaceSamplesMutation replace_samples = 8; } }
+message TiffMutation { oneof mutation { InsertIfdMutation insert_ifd = 1; RemoveIfdMutation remove_ifd = 2; ReplaceTagMutation replace_tag = 3; RemoveTagMutation remove_tag = 4; PaintRegionMutation paint_region = 5; ReplaceSamplesMutation replace_samples = 6; } }

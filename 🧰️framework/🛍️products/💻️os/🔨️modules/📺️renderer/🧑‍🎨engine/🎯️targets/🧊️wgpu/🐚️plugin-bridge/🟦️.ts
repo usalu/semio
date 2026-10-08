@@ -90,7 +90,6 @@ import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, 
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { WORKER_STEP_BUDGET_MS } from "../⏱️turn-budget/🟦️.ts";
 import { rendererResidentLedger } from "../../../💾️resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
@@ -714,19 +713,11 @@ export async function primeContributionManifest(pluginId: string, moduleUrl: str
   contributionManifests.set(pluginId, manifest);
 }
 
-/** 🎛️ The receiver's `consumes` row from this product's generated registry — the one thing that
- * scopes a contributions pack. An id the catalog does not list consumes nothing, which forwards no
- * foreign contribution. */
-function wgpuConsumedTopics(receiverPluginId: string): readonly string[] {
-  const row = [...PLUGIN_CATALOG.plugins, ...PLUGIN_CATALOG.extensions].find((entry) => entry.pluginId === receiverPluginId);
-  return row?.consumes ?? [];
-}
-
 /** 📦️ One pack-sized contributions payload — the receiver's own contributions plus every topic it consumes. */
 export function wgpuBuildScopedContributionsPack(
   receiverPluginId: string,
-  loadedManifests?: ReadonlyArray<{ readonly pluginId: string; readonly manifest: Pick<PluginManifest, "topicContributions"> }>,
-  consumedTopics: readonly string[] = wgpuConsumedTopics(receiverPluginId),
+  loadedManifests: ReadonlyArray<{ readonly pluginId: string; readonly manifest: Pick<PluginManifest, "topicContributions"> }> | undefined,
+  consumedTopics: readonly string[],
 ): { readonly json: string; readonly bytes: Uint8Array; readonly pluginIds: readonly string[]; readonly chars: number; readonly crossings: 1 } | null {
   const loaded = loadedManifests ?? [...contributionManifests.entries()].map(([pluginId, manifest]) => ({ pluginId, manifest }));
   if (!loaded.length) return null;
@@ -1278,7 +1269,7 @@ export function wgpuEphemeralSnapshot(ephemeral: { readonly presence: readonly n
  * `loadPluginModule` shape). `dispose()` disposes every instance's worker-side actor entry via
  * `ShardClient.dispose` — no shared module lease to refcount any more, one actor belongs to exactly
  * one instance. */
-export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal, admittedDescriptor?: import("@semio-tech/framework").PluginPackageDescriptor): Promise<WgpuPluginHandle> {
+export async function loadPluginModule(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, admittedDescriptor: import("@semio-tech/framework").PluginPackageDescriptor | undefined, consumedTopics: readonly string[]): Promise<WgpuPluginHandle> {
   signal?.throwIfAborted();
   const { manifest, packageId, componentSha256 } = admittedDescriptor ?? await fetchPackageDescriptor(pluginId, moduleUrl, signal);
   signal?.throwIfAborted();
@@ -1747,7 +1738,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     } catch {
       viewState = {};
     }
-    const pack = wgpuBuildScopedContributionsPack(pluginId);
+    const pack = wgpuBuildScopedContributionsPack(pluginId, undefined, consumedTopics);
     if (!pack) {
       return emptyInvocation();
     }

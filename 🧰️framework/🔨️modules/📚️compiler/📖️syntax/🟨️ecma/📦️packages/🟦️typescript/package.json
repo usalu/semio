@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/compiler-syntax-ecma-ts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run @semio-tech/compiler-syntax-ecma-ts:test"
+  },
+  "version": "0.0.0",
+  "nx": {
+    "includedScripts": []
+  }
+}

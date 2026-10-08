@@ -25,4 +25,4 @@ input DocxMutationInput { kind: DocxMutationKind!, payload: MutationPayload! }
 enum DocxPartContentKind { XML BINARY }
 scalar XmlDocument
 input DocxPartContentInput { kind: DocxPartContentKind!, document: XmlDocument, bytes: [Int!] }
-input DocxSetPartInput { path: String!, content_type: String!, payload: DocxPartContentInput!, index: Int }
+input DocxSetPartInput { path: String!, content_type: String!, payload: DocxPartContentInput!, index: Int, override_index: Int }

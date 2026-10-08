@@ -8,5 +8,5 @@ pub fn diff(payload: &InsertWall, base: &En1996Snapshot) -> protocol::MutationOu
     if base.walls.iter().any(|existing| existing.id == payload.wall.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.wall.id), [payload.wall.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::insertion(&base.walls, payload.index, payload.wall.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::insertion(payload.index, payload.wall.clone()), ..Default::default() })
 }

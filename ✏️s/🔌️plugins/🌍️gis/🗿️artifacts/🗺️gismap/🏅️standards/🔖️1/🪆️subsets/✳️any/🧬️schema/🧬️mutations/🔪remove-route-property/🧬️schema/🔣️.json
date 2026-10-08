@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/remove-route-property/schema.json",
+  "title": "RemoveRouteProperty",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feature",
+    "key"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Route",
+          "de": "Route"
+        },
+        "description": {
+          "en": "The route this mutation addresses.",
+          "de": "Die Route, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "route"
+        }
+      }
+    },
+    "key": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "key",
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        }
+      }
+    }
+  }
+}

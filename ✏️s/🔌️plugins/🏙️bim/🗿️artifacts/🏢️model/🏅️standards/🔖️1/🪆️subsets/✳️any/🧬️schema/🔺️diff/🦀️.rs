@@ -7,6 +7,15 @@ use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, Mu
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
+/// ➕️ Later slot wins: `merge_slot!(&mut earlier, later)` writes `later` over `earlier` when it names a value.
+macro_rules! merge_slot {
+    ($slot:expr, $later:expr) => {
+        if let later @ Some(_) = $later {
+            *$slot = later;
+        }
+    };
+}
+
 #[path = "🩹️patches/🦀️.rs"]
 pub mod patches;
 
@@ -18,11 +27,9 @@ pub trait Patch<T>: Clone + Default + PartialEq {
     /// ✍️ The record after the patch is written over `base`.
     fn write(&self, base: &T) -> T;
     /// 🔁️ The patch that restores exactly the fields this patch names to their `base` values.
-    fn negate(&self, base: &T) -> Self;
+    fn restoring(&self, base: &T) -> Self;
     /// ➕️ Composes `later` over `self`: the later value of a field wins.
     fn merge(&mut self, later: Self);
-    /// 🧭️ The patch from `from` to `to`, naming only differing fields (sync and import only).
-    fn between(from: &T, to: &T) -> Self;
     /// ✂️ This patch without the fields that already hold `base`'s value: exactly what really changes.
     fn minimal(&self, base: &T) -> Self;
     /// 📍️ The field names this patch writes.
@@ -62,13 +69,6 @@ pub fn restore<T: Clone>(slot: &Option<T>, base: &T) -> Option<T> {
 /// 🔁️ The restoring slot of an optional field.
 pub fn restore_assigned<T: Clone>(slot: &Option<Assigned<Option<T>>>, base: &Option<T>) -> Option<Assigned<Option<T>>> {
     slot.as_ref().map(|_| Assigned::new(base.clone()))
-}
-
-/// ➕️ Later slot wins.
-pub fn merge_slot<T>(slot: &mut Option<T>, later: Option<T>) {
-    if later.is_some() {
-        *slot = later;
-    }
 }
 
 /// ✂️ The slot of a plain field, dropped when it restates `base`.
@@ -121,7 +121,7 @@ impl Patch<PropertySet> for PropertySetPatch {
         next
     }
 
-    fn negate(&self, base: &PropertySet) -> Self {
+    fn restoring(&self, base: &PropertySet) -> Self {
         let assigned = self.assigned.iter().map(|(set, properties)| (set.clone(), properties.keys().map(|name| (name.clone(), base.get(set).and_then(|group| group.get(name)).cloned())).collect())).collect();
         Self { assigned }
     }
@@ -130,20 +130,6 @@ impl Patch<PropertySet> for PropertySetPatch {
         for (set, properties) in later.assigned {
             self.assigned.entry(set).or_default().extend(properties);
         }
-    }
-
-    fn between(from: &PropertySet, to: &PropertySet) -> Self {
-        let mut assigned: BTreeMap<String, BTreeMap<String, Option<PropertyValue>>> = BTreeMap::new();
-        for set in from.keys().chain(to.keys()) {
-            let (before, after) = (from.get(set), to.get(set));
-            for name in before.into_iter().chain(after).flat_map(BTreeMap::keys) {
-                let (old, new) = (before.and_then(|group| group.get(name)), after.and_then(|group| group.get(name)));
-                if old != new {
-                    assigned.entry(set.clone()).or_default().insert(name.clone(), new.cloned());
-                }
-            }
-        }
-        Self { assigned }
     }
 
     fn minimal(&self, base: &PropertySet) -> Self {
@@ -202,34 +188,26 @@ impl<T: Clone + PartialEq, P: Patch<T>> KeyedDelta<T, P> {
     pub fn write_into(&self, base: &BTreeMap<String, T>) -> Result<BTreeMap<String, T>, MutationApplyError> {
         for (id, entry) in &self.0 {
             match (entry, base.contains_key(id)) {
-                (Entry::Created(_), true) => return Err(MutationApplyError::new("mutation.apply.duplicate-target", "created id already exists").at([id.as_str()])),
+                (Entry::Created(_), true) => return Err(MutationApplyError::new("mutation.apply.duplicate-id", "created id already exists").at([id.as_str()])),
                 (Entry::Deleted | Entry::Replaced(_) | Entry::Patched(_), false) => return Err(MutationApplyError::new("mutation.apply.missing-target", "changed id does not exist").at([id.as_str()])),
                 _ => {}
             }
         }
-        let mut next = base.clone();
-        for (id, entry) in &self.0 {
-            match entry {
-                Entry::Created(record) | Entry::Replaced(record) => {
-                    next.insert(id.clone(), record.clone());
-                }
-                Entry::Deleted => {
-                    next.remove(id);
-                }
-                Entry::Patched(patch) => {
-                    let patched = patch.write(&base[id]);
-                    next.insert(id.clone(), patched);
-                }
-            }
-        }
-        Ok(next)
+        let untouched = base.iter().filter(|(id, _)| !self.0.contains_key(*id)).map(|(id, record)| (id.clone(), record.clone()));
+        let written = self.0.iter().filter_map(|(id, entry)| match entry {
+            Entry::Created(record) | Entry::Replaced(record) => Some((id.clone(), record.clone())),
+            Entry::Deleted => None,
+            Entry::Patched(patch) => Some((id.clone(), patch.write(&base[id]))),
+        });
+        Ok(untouched.chain(written).collect())
     }
 
-    /// ➕️ Sequentially composes `later` after `self`, per key: created∘patched keeps created, created∘deleted cancels,
+    /// ➕️ The sequential composition of `later` after `self`, per key: created∘patched keeps created, created∘deleted cancels,
     /// deleted∘created becomes replaced, replaced∘patched keeps replaced, patched∘patched merges, anything∘deleted deletes.
-    pub fn absorb(&mut self, later: Self) {
+    pub fn then(self, later: Self) -> Self {
+        let mut rows = self.0;
         for (id, entry) in later.0 {
-            let composed = match (self.0.remove(&id), entry) {
+            let composed = match (rows.remove(&id), entry) {
                 (None, entry) => Some(entry),
                 (Some(Entry::Created(_)), Entry::Deleted) => None,
                 (Some(Entry::Created(_)), Entry::Created(record) | Entry::Replaced(record)) => Some(Entry::Created(record)),
@@ -245,9 +223,10 @@ impl<T: Clone + PartialEq, P: Patch<T>> KeyedDelta<T, P> {
                 }
             };
             if let Some(composed) = composed {
-                self.0.insert(id, composed);
+                rows.insert(id, composed);
             }
         }
+        Self(rows)
     }
 
     /// 🔁️ The negative delta against `base`: created → deleted, deleted → created with the base record, replaced → replaced with
@@ -261,7 +240,7 @@ impl<T: Clone + PartialEq, P: Patch<T>> KeyedDelta<T, P> {
                         Entry::Created(_) => Entry::Deleted,
                         Entry::Deleted => Entry::Created(base.get(id)?.clone()),
                         Entry::Replaced(_) => Entry::Replaced(base.get(id)?.clone()),
-                        Entry::Patched(patch) => Entry::Patched(patch.negate(base.get(id)?)),
+                        Entry::Patched(patch) => Entry::Patched(patch.restoring(base.get(id)?)),
                     };
                     Some((id.clone(), inverse))
                 })
@@ -269,37 +248,37 @@ impl<T: Clone + PartialEq, P: Patch<T>> KeyedDelta<T, P> {
         )
     }
 
-    /// 🧭️ The delta from `base` to `other` for sync and import.
-    pub fn between(base: &BTreeMap<String, T>, other: &BTreeMap<String, T>) -> Self {
-        let removed = base.keys().filter(|id| !other.contains_key(*id)).map(|id| (id.clone(), Entry::Deleted));
-        let changed = other.iter().filter_map(|(id, record)| match base.get(id) {
-            None => Some((id.clone(), Entry::Created(record.clone()))),
-            Some(old) if old != record => Some((id.clone(), Entry::Patched(P::between(old, record)))),
-            Some(_) => None,
-        });
-        Self(removed.chain(changed).collect())
-    }
-
     /// 📍️ Region paths of the delta: `<collection>/<id>` for structural entries, `<collection>/<id>/<field>` for patches.
-    pub fn touches(&self, collection: &str, into: &mut Vec<String>) {
-        for (id, entry) in &self.0 {
-            match entry {
-                Entry::Patched(patch) => into.extend(patch.touched().into_iter().map(|field| format!("{collection}/{id}/{field}"))),
-                _ => into.push(format!("{collection}/{id}")),
-            }
-        }
+    pub fn region_paths(&self, collection: &str) -> Vec<String> {
+        self.0
+            .iter()
+            .flat_map(|(id, entry)| match entry {
+                Entry::Patched(patch) => patch.touched().into_iter().map(|field| format!("{collection}/{id}/{field}")).collect::<Vec<_>>(),
+                _ => vec![format!("{collection}/{id}")],
+            })
+            .collect()
     }
 }
 
-fn absorb_delta<T: Clone + PartialEq, P: Patch<T>>(target: &mut Option<KeyedDelta<T, P>>, later: Option<KeyedDelta<T, P>>) {
-    match (target.as_mut(), later) {
-        (Some(prior), Some(later)) => prior.absorb(later),
-        (None, Some(later)) => *target = Some(later),
-        _ => {}
-    }
-    if target.as_ref().is_some_and(KeyedDelta::is_empty) {
-        *target = None;
-    }
+fn combine<T: Clone + PartialEq, P: Patch<T>>(target: Option<KeyedDelta<T, P>>, later: Option<KeyedDelta<T, P>>) -> Option<KeyedDelta<T, P>> {
+    let composed = match (target, later) {
+        (Some(prior), Some(later)) => Some(prior.then(later)),
+        (None, Some(later)) => Some(later),
+        (target, None) => target,
+    };
+    composed.filter(|delta| !delta.is_empty())
+}
+
+fn combine_patch<T, P: Patch<T>>(target: Option<P>, later: Option<P>) -> Option<P> {
+    let composed = match (target, later) {
+        (Some(mut prior), Some(later)) => {
+            prior.merge(later);
+            Some(prior)
+        }
+        (None, Some(later)) => Some(later),
+        (target, None) => target,
+    };
+    composed.filter(|patch| !<P as Patch<T>>::is_empty(patch))
 }
 
 fn non_empty<T: Clone + PartialEq, P: Patch<T>>(delta: KeyedDelta<T, P>) -> Option<KeyedDelta<T, P>> {
@@ -371,30 +350,16 @@ macro_rules! model_diff {
             }
 
             fn absorb(&mut self, other: Self) {
-                match (self.project.as_mut(), other.project) {
-                    (Some(prior), Some(later)) => prior.merge(later),
-                    (None, Some(later)) => self.project = Some(later),
-                    _ => {}
-                }
-                if self.project.as_ref().is_some_and(<ProjectPatch as Patch<Project>>::is_empty) {
-                    self.project = None;
-                }
-                $( absorb_delta(&mut self.$field, other.$field); )*
+                self.project = combine_patch::<Project, ProjectPatch>(self.project.take(), other.project);
+                $( self.$field = combine(self.$field.take(), other.$field); )*
             }
         }
 
         impl DiffAlgebra<ModelSnapshot> for ModelDiff {
             fn inverse(&self, base: &ModelSnapshot) -> Self {
                 Self {
-                    project: self.project.as_ref().map(|patch| patch.negate(&base.project)).filter(|patch| !<ProjectPatch as Patch<Project>>::is_empty(patch)),
+                    project: self.project.as_ref().map(|patch| patch.restoring(&base.project)).filter(|patch| !<ProjectPatch as Patch<Project>>::is_empty(patch)),
                     $( $field: self.$field.as_ref().map(|delta| delta.inverse(&base.$field)).and_then(non_empty), )*
-                }
-            }
-
-            fn between(base: &ModelSnapshot, other: &ModelSnapshot) -> Self {
-                Self {
-                    project: Some(<ProjectPatch as Patch<Project>>::between(&base.project, &other.project)).filter(|patch| !<ProjectPatch as Patch<Project>>::is_empty(patch)),
-                    $( $field: non_empty(KeyedDelta::between(&base.$field, &other.$field)), )*
                 }
             }
 
@@ -409,7 +374,7 @@ macro_rules! model_diff {
                 if let Some(patch) = &self.project {
                     paths.extend(patch.touched().into_iter().map(|field| format!("project/{field}")));
                 }
-                $( if let Some(delta) = &self.$field { delta.touches(stringify!($field), &mut paths); } )*
+                $( if let Some(delta) = &self.$field { paths.extend(delta.region_paths(stringify!($field))); } )*
                 TouchedPaths::new(paths)
             }
         }

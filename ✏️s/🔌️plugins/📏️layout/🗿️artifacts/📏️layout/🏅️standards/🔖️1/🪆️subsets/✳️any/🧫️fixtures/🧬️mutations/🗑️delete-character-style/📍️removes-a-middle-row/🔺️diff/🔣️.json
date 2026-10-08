@@ -4,12 +4,15 @@
   "grid": null,
   "paragraphStyles": null,
   "characterStyles": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "char-b"
+      {
+        "id": "char-b",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "stories": null,
   "links": null,

@@ -1,0 +1,59 @@
+{
+  "qualification": "Candidate column names only, not demonstrated hidden-cell defects",
+  "rows": [
+    {
+      "owner": "BitmapSnapshot",
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 2,
+      "text": "CREATE TABLE wfc_bitmap_input (id INTEGER PRIMARY KEY REFERENCES wfc_bitmap_document(id), width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295), palette_indices BLOB NOT NULL);"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 34,
+      "text": "CREATE TABLE generation_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN('null','boolean','unsigned','integer','float','string','bytes','array','object')), boolean_value INTEGER CHECK(boolean_value IN(0,1)), unsigned_value TEXT, integer_value INTEGER, float_value REAL, string_value TEXT, bytes_value BLOB, float_value_bits INTEGER, float_value_class TEXT);"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 34,
+      "text": "CREATE TABLE generation_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN('null','boolean','unsigned','integer','float','string','bytes','array','object')), boolean_value INTEGER CHECK(boolean_value IN(0,1)), unsigned_value TEXT, integer_value INTEGER, float_value REAL, string_value TEXT, bytes_value BLOB, float_value_bits INTEGER, float_value_class TEXT);"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 15,
+      "text": "CREATE TABLE gis_terrain_bytes (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value BLOB NOT NULL);"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 41,
+      "text": "CREATE TABLE layout_dictionary_bytes (id INTEGER PRIMARY KEY REFERENCES layout_dictionary_value(id), value BLOB NOT NULL);"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 55,
+      "text": "CREATE TABLE iso16757_extension_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, boolean_value INTEGER, integer_value INTEGER, unsigned_high INTEGER, unsigned_low INTEGER, float_value REAL, text_value TEXT, byte_value BLOB, float_value_ieee754_bits INTEGER, float_value_ieee754_class TEXT);"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 7,
+      "text": "CREATE TABLE remodel_durable_chunk (id INTEGER PRIMARY KEY, artifact_id INTEGER NOT NULL REFERENCES remodel_durable_artifact(id), ordinal INTEGER NOT NULL, octets BLOB NOT NULL);"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 28,
+      "text": "CREATE TABLE remodel_byte_buffer (id INTEGER PRIMARY KEY, cloud_id INTEGER NOT NULL REFERENCES remodel_cloud(id), slot TEXT NOT NULL CHECK(slot IN('colors','classification')), octets BLOB NOT NULL);"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "line": 19,
+      "text": "CREATE TABLE raster_bytes(id INTEGER PRIMARY KEY REFERENCES raster_value(id), value BLOB NOT NULL);"
+    }
+  ]
+}

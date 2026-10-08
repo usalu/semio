@@ -604,7 +604,20 @@ function inferHierarchyPath<T>(source: hierarchy.VizHierarchyNode<T>, target: hi
 function groupRows(table: VizTable, columns: readonly string[]): VizRow[][] {
   for (const column of columns) columnName(table, { column });
   if (!columns.length) return [[...table.rows]];
-  return [...group(table.rows, (row) => JSON.stringify(columns.map((column) => row[column]))).values()];
+  type GroupNode = { children: Map<VizRow[string] | undefined, GroupNode>; rows?: VizRow[] };
+  const root: GroupNode = { children: new Map() }, groups: VizRow[][] = [];
+  for (const row of table.rows) {
+    let node = root;
+    for (const column of columns) {
+      const key = row[column];
+      let child = node.children.get(key);
+      if (child === undefined) { child = { children: new Map() }; node.children.set(key, child); }
+      node = child;
+    }
+    if (node.rows === undefined) groups.push(node.rows = []);
+    node.rows.push(row);
+  }
+  return groups;
 }
 
 function inferTransform(spec: VizChartSpecification, table: VizTable, kind: string, options: LayerOptions): VizTable {
@@ -787,7 +800,7 @@ export function inferVizLayerTable(spec: VizChartSpecification, layer: VizLayerS
     else if (algorithm === "pack") hierarchy.vizPack(root, { size, padding: optionNumber(options, "padding", 0) });
     else (algorithm === "tree" ? hierarchy.vizTree : hierarchy.vizCluster)(root, { size, separation: (a, b) => (a.parent === b.parent ? optionNumber(options, "separation", 1) : optionNumber(options, "cousinSeparation", 2)) });
     const nodes = options.leaves === true ? root.leaves() : root.descendants();
-    if (algorithm === "bundling") return result(root.links().map(({ source, target }, i) => ({ detail: i, points: JSON.stringify(inferHierarchyPath(target, source).map((node) => [node.x, node.y])), x: source.x, y: source.y, x2: target.x, y2: target.y })));
+    if (algorithm === "bundling") return result(root.links().flatMap(({ source, target }, detail) => inferHierarchyPath(target, source).map((node, order) => ({ detail, order, x: node.x, y: node.y }))));
     return result(nodes.map((node) => ({ ...node.data, value: node.value ?? 0, depth: node.depth, x: algorithm === "treemap" || algorithm === "partition" ? node.x0 : node.x, y: algorithm === "treemap" || algorithm === "partition" ? node.y0 : node.y, x2: node.x1, y2: node.y1, x0: node.x0, y0: node.y0, x1: node.x1, y1: node.y1, radius: node.r, size: Math.PI * node.r ** 2, parentX: node.parent?.x ?? node.x, parentY: node.parent?.y ?? node.y })));
   }
   if (["arc", "dag", "force", "sankey", "alluvial", "chord"].includes(algorithm)) {
@@ -857,7 +870,7 @@ export function inferVizLayerTable(spec: VizChartSpecification, layer: VizLayerS
     });
     return result(rows);
   }
-  const polygons = (shapes: readonly (readonly VizPoint[])[], values?: readonly number[]) => result(shapes.flatMap((polygon, detail) => { const serialized = JSON.stringify(polygon); return polygon.map(([x, y], order) => ({ x, y, detail, order, value: values?.[detail] ?? detail, points: serialized })); }));
+  const polygons = (shapes: readonly (readonly VizPoint[])[], values?: readonly number[]) => result(shapes.flatMap((polygon, detail) => polygon.map(([x, y], order) => ({ x, y, detail, order, value: values?.[detail] ?? detail }))));
   if (algorithm === "voronoi") return polygons(spatial.vizVoronoi(points, bounds).cells);
   if (algorithm === "delaunay") return polygons(spatial.vizDelaunay(points).triangles.map((triangle) => triangle.map((i) => points[i]!)));
   if (algorithm === "hull") return polygons([spatial.vizConvexHull(points).map((i) => points[i]!)]);

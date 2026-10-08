@@ -1,0 +1,42 @@
+{
+  "artifact": null,
+  "domain": null,
+  "fasteners": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "fast-4",
+        "index": 1
+      }
+    ]
+  },
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "part-a",
+        "patch": {
+          "grips": {
+            "inserted": [],
+            "modified": [],
+            "moved": [],
+            "removed": [
+              {
+                "id": "grip-spare",
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "schema": null,
+  "targetVolumes": null
+}

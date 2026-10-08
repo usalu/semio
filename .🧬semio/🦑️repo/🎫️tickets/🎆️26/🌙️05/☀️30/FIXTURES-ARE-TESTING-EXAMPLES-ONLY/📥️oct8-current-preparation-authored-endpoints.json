@@ -1,0 +1,77 @@
+{
+  "scope": "Exact six authored endpoints edited by resumed native preparation lane; no Git diff or adoption of peer changes",
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "ccaf6dc7d26084591b66c54d409f6751b32fd6d54cc787f47f41ac698f61d0a4",
+      "ownedActions": [
+        "current-preparation-custody-repair"
+      ],
+      "ownershipEvidence": [
+        "📓️oct8-current-preparation-custody-settlement.md"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "39e9d512d4d97e7ce44caf6a6dac7e9d87b35f7cff3ecf8f2710bc7e7aec9b01",
+      "ownedActions": [
+        "current-preparation-custody-repair"
+      ],
+      "ownershipEvidence": [
+        "📓️oct8-current-preparation-custody-settlement.md"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "d84244a2916e6309da797c052bd42e68268427dddc54b90eaa4f95e21b6b9683",
+      "ownedActions": [
+        "current-preparation-custody-repair"
+      ],
+      "ownershipEvidence": [
+        "📓️oct8-current-preparation-custody-settlement.md"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "aff63098ae5cd30a8130465af64f70849192e6fc2b643c25fa13dc6d5c952a34",
+      "ownedActions": [
+        "current-preparation-custody-repair"
+      ],
+      "ownershipEvidence": [
+        "📓️oct8-current-preparation-custody-settlement.md"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "d08f0649c798d81f9ddfb2a5d82db5f17883f5eeea7730febad965fedbdf63c4",
+      "ownedActions": [
+        "current-preparation-custody-repair"
+      ],
+      "ownershipEvidence": [
+        "📓️oct8-current-preparation-custody-settlement.md"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "d3d0e0122ccd89092bc579f4ea59b967f6771db35d3549ae9eb12b7f992458b0",
+      "ownedActions": [
+        "current-preparation-custody-repair"
+      ],
+      "ownershipEvidence": [
+        "📓️oct8-current-preparation-custody-settlement.md"
+      ]
+    }
+  ]
+}

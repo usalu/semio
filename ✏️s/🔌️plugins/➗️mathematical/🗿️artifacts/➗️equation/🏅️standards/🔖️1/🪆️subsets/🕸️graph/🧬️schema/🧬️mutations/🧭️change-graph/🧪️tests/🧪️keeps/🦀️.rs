@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ A no-op emits the artifact's `Default` diff — every sparse slot `null`.
-/// This is the assertion that proves the guard fires BEFORE `crate::equation_state_diff`:
+/// This is the assertion that proves the guard fires BEFORE `EquationDiff::apply`:
 /// a wrong guard would leave a freshly minted triple behind even though nothing changed.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {

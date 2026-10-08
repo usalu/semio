@@ -51,7 +51,7 @@ async fn inverse_restores_the_original_story_body() {
     match &inverse[0] {
         LayoutMutation::EditStory(step) => {
             assert_eq!(step.id, "story-1", "the inverse must address the same story");
-            assert_eq!(step.new_content, "Alpha body.", "the inverse must carry the pre-edit body text");
+            assert_eq!((step.offset, step.delete, step.insert.as_str()), (10, ", revised.".chars().count(), "."), "the inverse splice must restore the deleted base text");
         }
         other => panic!("edit-story must invert to edit-story, got {other:?}"),
     }
@@ -85,14 +85,14 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "edit-story/rewrites-story-1-body: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().stories.as_ref().expect("edit-story fills the stories delta");
-    assert_eq!(delta.patched.len(), 1, "edit-story patches exactly one story");
-    assert_eq!(delta.patched[0].id, "story-1", "edit-story's patch entry addresses story-1");
-    assert_eq!(delta.patched[0].patch.content.as_deref(), Some("Alpha body, revised."), "edit-story fills the patch's `content` field");
+    assert_eq!(delta.modified.len(), 1, "edit-story patches exactly one story");
+    assert_eq!(delta.modified[0].id, "story-1", "edit-story's patch entry addresses story-1");
+    assert_eq!(delta.modified[0].patch.content.as_deref(), Some("Alpha body, revised."), "edit-story fills the patch's `content` field");
 }
 
 /// 🔺️ The sparse delta `edit-story` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here only `stories.patched[0].patch.content` is populated — `TextStoryPatch` cannot express a style-run edit at all.
+/// end state matches. Here only `stories.modified[0].patch.content` is populated — `TextStoryPatch` cannot express a style-run edit at all.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();

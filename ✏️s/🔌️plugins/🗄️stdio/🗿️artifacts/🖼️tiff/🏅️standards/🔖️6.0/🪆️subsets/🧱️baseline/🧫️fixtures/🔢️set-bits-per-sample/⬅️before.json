@@ -1,12 +1,10 @@
 {
   "schema": "stdio.tiff",
-  "byteOrder": "littleEndian",
   "ifds": [
     {
       "entries": [
         {
           "tag": 256,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -16,7 +14,6 @@
         },
         {
           "tag": 257,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -26,94 +23,107 @@
         },
         {
           "tag": 258,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
               8
-            ]
-          }
-        },
-        {
-          "tag": 259,
-          "kind": "short",
-          "values": {
-            "kind": "short",
-            "value": [
-              1
             ]
           }
         },
         {
           "tag": 262,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
               1
-            ]
-          }
-        },
-        {
-          "tag": 273,
-          "kind": "long",
-          "values": {
-            "kind": "long",
-            "value": [
-              8
             ]
           }
         },
         {
           "tag": 277,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
               1
             ]
           }
-        },
-        {
-          "tag": 278,
-          "kind": "long",
-          "values": {
-            "kind": "long",
-            "value": [
-              4
-            ]
-          }
-        },
-        {
-          "tag": 279,
-          "kind": "long",
-          "values": {
-            "kind": "long",
-            "value": [
-              16
-            ]
-          }
         }
       ],
-      "pixels": []
+      "blocks": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 4,
+          "height": 4,
+          "channels": 1,
+          "samples": [
+            {
+              "lo": 0,
+              "hi": 0
+            },
+            {
+              "lo": 1,
+              "hi": 0
+            },
+            {
+              "lo": 2,
+              "hi": 0
+            },
+            {
+              "lo": 3,
+              "hi": 0
+            },
+            {
+              "lo": 4,
+              "hi": 0
+            },
+            {
+              "lo": 5,
+              "hi": 0
+            },
+            {
+              "lo": 6,
+              "hi": 0
+            },
+            {
+              "lo": 7,
+              "hi": 0
+            },
+            {
+              "lo": 8,
+              "hi": 0
+            },
+            {
+              "lo": 9,
+              "hi": 0
+            },
+            {
+              "lo": 10,
+              "hi": 0
+            },
+            {
+              "lo": 11,
+              "hi": 0
+            },
+            {
+              "lo": 12,
+              "hi": 0
+            },
+            {
+              "lo": 13,
+              "hi": 0
+            },
+            {
+              "lo": 14,
+              "hi": 0
+            },
+            {
+              "lo": 15,
+              "hi": 0
+            }
+          ]
+        }
+      ]
     }
-  ],
-  "pixels": [
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15
   ]
 }

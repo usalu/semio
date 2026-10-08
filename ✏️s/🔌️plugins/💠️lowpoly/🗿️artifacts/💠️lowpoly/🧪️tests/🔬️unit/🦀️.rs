@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::{snapshot_from_mesh_json};
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -14,7 +15,7 @@ async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
     assert!(object.smooth_shading);
     assert_eq!(object.transform.position, [1.0, 2.0, 3.0]);
     assert_eq!(object.mesh, Some(new_mesh));
-    let inverse = object.diff_patch(&original).expect("patch changed state");
+    let inverse = LowpolyObjectPatch { name: Some(original.name.clone()), smooth_shading: Some(original.smooth_shading), position: Some(original.transform.position), rotation: None, scale: None, mesh: Some(original.mesh.clone()), mesh_content: None, mesh_state: None };
     object.apply_patch(&inverse);
     assert_eq!(object, original);
 }

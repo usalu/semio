@@ -54,7 +54,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 trait ObjIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
     fn diff_is_empty(d: &Self::Diff) -> bool;
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff;
     fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff;
     fn diff_apply(d: &Self::Diff, item: &mut Self);
     fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
@@ -82,31 +82,12 @@ fn generic_apply<T: ObjIndexElem>(base: &[T], removed: &[usize], modified: &[(us
     items
 }
 
-/// 🧭️ Pairwise-by-position state delta: `modified` over `0..min(len)`, base tail `removed`,
-/// other tail `added` (recipe's "index keys pairwise by position" `between` rule).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> IndexedDiffParts<T::Diff, T> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        let d = T::diff_between(&base[i], &other[i]);
-        if !T::diff_is_empty(&d) {
-            modified.push((i, d));
-        }
-    }
-    let removed: Vec<usize> = if base.len() > other.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<(usize, T)> = if other.len() > base.len() { (base.len()..other.len()).map(|i| (i, other[i].clone())).collect() } else { Vec::new() };
-    (removed, modified, added)
-}
-
 /// ↩️ Negative rows of a `(removed, modified, added)` triple against its BASE items: added rows become removals at their final
 /// index, removed rows return at their base index, and each modified row restores its base fields at the index the row has after
 /// the diff. Every list comes back ascending, the normal form [`generic_absorb_pair`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn generic_inverse<T: ObjIndexElem>(removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)], base: &[T]) -> IndexedDiffParts<T::Diff, T> {
-    let mut removed_sorted = removed.to_vec();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&removed);
     let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -133,8 +114,7 @@ enum Lbl {
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
-    let mut added_sorted = added.to_vec();
-    added_sorted.sort_by_key(|(idx, _)| *idx);
+    let added_sorted = semio_s_artifact_stdio_contract::ordered_by_key(added, |(idx, _)| *idx);
     for (idx, label) in added_sorted {
         let pos = idx.min(survivors.len());
         survivors.insert(pos, label);
@@ -249,7 +229,7 @@ impl ObjIndexElem for ObjVertex {
     fn diff_is_empty(d: &ObjVertexDiff) -> bool {
         d == &ObjVertexDiff::default()
     }
-    fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
+    fn field_changes(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
         ObjVertexDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z), w: (a.w != b.w).then_some(b.w) }
     }
     fn diff_inverse(d: &ObjVertexDiff, base: &ObjVertex) -> ObjVertexDiff {
@@ -332,16 +312,6 @@ impl ObjVerticesDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[ObjVertex], other: &[ObjVertex]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjVertexDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjVertex)> = d1.added.into_iter().map(|a| (a.index, a.vertex)).collect();
@@ -374,7 +344,7 @@ impl ObjIndexElem for ObjTexCoord {
     fn diff_is_empty(d: &ObjTexCoordDiff) -> bool {
         d == &ObjTexCoordDiff::default()
     }
-    fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
+    fn field_changes(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
         ObjTexCoordDiff { u: (a.u != b.u).then_some(b.u), v: (a.v != b.v).then_some(b.v), w: (a.w != b.w).then_some(b.w) }
     }
     fn diff_inverse(d: &ObjTexCoordDiff, base: &ObjTexCoord) -> ObjTexCoordDiff {
@@ -449,16 +419,6 @@ impl ObjTexCoordsDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[ObjTexCoord], other: &[ObjTexCoord]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjTexCoordDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjTexCoord)> = d1.added.into_iter().map(|a| (a.index, a.texcoord)).collect();
@@ -491,7 +451,7 @@ impl ObjIndexElem for ObjNormal {
     fn diff_is_empty(d: &ObjNormalDiff) -> bool {
         d == &ObjNormalDiff::default()
     }
-    fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
+    fn field_changes(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
         ObjNormalDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z) }
     }
     fn diff_inverse(d: &ObjNormalDiff, base: &ObjNormal) -> ObjNormalDiff {
@@ -566,16 +526,6 @@ impl ObjNormalsDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[ObjNormal], other: &[ObjNormal]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjNormalDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjNormal)> = d1.added.into_iter().map(|a| (a.index, a.normal)).collect();
@@ -607,7 +557,7 @@ impl ObjIndexElem for ObjFace {
     fn diff_is_empty(d: &ObjFaceDiff) -> bool {
         d == &ObjFaceDiff::default()
     }
-    fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
+    fn field_changes(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
         ObjFaceDiff { vertices: (a.vertices != b.vertices).then(|| b.vertices.clone()) }
     }
     fn diff_inverse(d: &ObjFaceDiff, base: &ObjFace) -> ObjFaceDiff {
@@ -670,16 +620,6 @@ impl ObjFacesDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[ObjFace], other: &[ObjFace]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjFaceDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjFace)> = d1.added.into_iter().map(|a| (a.index, a.face)).collect();
@@ -728,17 +668,13 @@ impl HasFaces for ObjObject {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn group_between(a_faces: &[u64], b_faces: &[u64]) -> ObjGroupDiff {
-    ObjGroupDiff { faces: (a_faces != b_faces).then(|| b_faces.to_vec()) }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_group_diff<T: HasFaces>(item: &mut T, d: &ObjGroupDiff) {
     if let Some(f) = &d.faces {
         *item.faces_mut() = f.clone();
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_group_diff(base: &mut ObjGroupDiff, other: ObjGroupDiff) {
+fn absorb_group_rows(base: &mut ObjGroupDiff, other: ObjGroupDiff) {
     if other.faces.is_some() {
         base.faces = other.faces;
     }
@@ -843,7 +779,7 @@ fn absorb_named_membership<T: Clone>(
                 continue;
             }
             if let Some(existing) = merged_modified.iter_mut().find(|m| m.name == dm.name) {
-                absorb_group_diff(&mut existing.diff, dm.diff.clone());
+                absorb_group_rows(&mut existing.diff, dm.diff.clone());
             } else {
                 merged_modified.push(ObjGroupModified { name: dm.name.clone(), diff: dm.diff.clone() });
             }
@@ -1178,70 +1114,6 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
         }
     }
 
-    fn between(base: &ObjSnapshot, other: &ObjSnapshot) -> Self {
-        let vertices = ObjVerticesDiff::between(&base.vertices, &other.vertices);
-        let texcoords = ObjTexCoordsDiff::between(&base.texcoords, &other.texcoords);
-        let normals = ObjNormalsDiff::between(&base.normals, &other.normals);
-        let faces = ObjFacesDiff::between(&base.faces, &other.faces);
-
-        let groups = {
-            let base_names: HashSet<&str> = base.groups.iter().map(|g| g.name.as_str()).collect();
-            let other_names: HashSet<&str> = other.groups.iter().map(|g| g.name.as_str()).collect();
-            let removed: Vec<String> = base.groups.iter().filter(|g| !other_names.contains(g.name.as_str())).map(|g| g.name.clone()).collect();
-            let mut modified = Vec::new();
-            for bg in &base.groups {
-                if let Some(og) = other.groups.iter().find(|o| o.name == bg.name) {
-                    let d = group_between(&bg.faces, &og.faces);
-                    if !group_diff_is_empty(&d) {
-                        modified.push(ObjGroupModified { name: bg.name.clone(), diff: d });
-                    }
-                }
-            }
-            let added: Vec<ObjGroupAdded> = other.groups.iter().enumerate().filter(|(_, g)| !base_names.contains(g.name.as_str())).map(|(index, g)| ObjGroupAdded { index, group: g.clone() }).collect();
-            let d = ObjGroupsDiff { removed, modified, added };
-            if d.is_empty() {
-                None
-            } else {
-                Some(d)
-            }
-        };
-
-        let objects = {
-            let base_names: HashSet<&str> = base.objects.iter().map(|o| o.name.as_str()).collect();
-            let other_names: HashSet<&str> = other.objects.iter().map(|o| o.name.as_str()).collect();
-            let removed: Vec<String> = base.objects.iter().filter(|o| !other_names.contains(o.name.as_str())).map(|o| o.name.clone()).collect();
-            let mut modified = Vec::new();
-            for bo in &base.objects {
-                if let Some(oo) = other.objects.iter().find(|o| o.name == bo.name) {
-                    let d = group_between(&bo.faces, &oo.faces);
-                    if !group_diff_is_empty(&d) {
-                        modified.push(ObjGroupModified { name: bo.name.clone(), diff: d });
-                    }
-                }
-            }
-            let added: Vec<ObjObjectAdded> = other.objects.iter().enumerate().filter(|(_, o)| !base_names.contains(o.name.as_str())).map(|(index, o)| ObjObjectAdded { index, object: o.clone() }).collect();
-            let d = ObjObjectsDiff { removed, modified, added };
-            if d.is_empty() {
-                None
-            } else {
-                Some(d)
-            }
-        };
-
-        ObjDiff {
-            vertices,
-            texcoords,
-            normals,
-            faces,
-            groups,
-            objects,
-            mtllib: (base.mtllib != other.mtllib).then(|| other.mtllib.clone()),
-            usemtl: (base.usemtl != other.usemtl).then(|| other.usemtl.clone()),
-            smoothing_groups: (base.smoothing_groups != other.smoothing_groups).then(|| other.smoothing_groups.clone()),
-            unknown_statements: (base.unknown_statements != other.unknown_statements).then(|| other.unknown_statements.clone()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.vertices.as_ref().is_none_or(ObjVerticesDiff::is_empty)
             && self.texcoords.as_ref().is_none_or(ObjTexCoordsDiff::is_empty)
@@ -1438,24 +1310,24 @@ fn sqlite_snapshot_obj_unsigned_source_positions_have_lossless_diff_twins() {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️MutationDiffBuilders
-// 🧮 Item-level `between` wrappers, exposed to `🧬️mutations` so `SetVertex`/`SetTexcoord`/
+// 🧮 Item-level field-change wrappers, exposed to `🧬️mutations` so `SetVertex`/`SetTexcoord`/
 // `SetNormal`/`SetFace`'s `diff()` can compute a sparse per-field patch without the private
 // `ObjIndexElem` trait itself leaving this module.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn vertex_diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
-    <ObjVertex as ObjIndexElem>::diff_between(a, b)
+pub fn vertex_field_changes(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
+    <ObjVertex as ObjIndexElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn texcoord_diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
-    <ObjTexCoord as ObjIndexElem>::diff_between(a, b)
+pub fn texcoord_field_changes(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
+    <ObjTexCoord as ObjIndexElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn normal_diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
-    <ObjNormal as ObjIndexElem>::diff_between(a, b)
+pub fn normal_field_changes(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
+    <ObjNormal as ObjIndexElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn face_diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
-    <ObjFace as ObjIndexElem>::diff_between(a, b)
+pub fn face_field_changes(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
+    <ObjFace as ObjIndexElem>::field_changes(a, b)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1598,19 +1470,22 @@ pub(crate) fn sweep_b() -> ObjSnapshot {
     }
 }
 
-/// 🧪️ P2-FG1: representative `ObjDiff` values (empty, a forward `between`, and its reverse) —
-/// exercises every scalar, both tri-states (`mtllib` at the top level, `texcoords[1].w` inside a
-/// modified item), and all three collection-triple kinds — index-keyed
-/// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`). Single source
-/// of truth reused by `diff_codec_text_binary_roundtrip_law` below AND by
-/// `../../⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
-/// conformance tests, same convention P2-P1's json/zip pilots established.
+/// 🧪️ P2-FG1: representative `ObjDiff` values built declaratively (empty, the scalar and tri-state lanes, and index-keyed row triples) —
+/// single source of truth reused by `diff_codec_text_binary_roundtrip_law` below AND by `../../⚙️engine/🦀️.rs`'s
+/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
-    let a = sweep_a();
-    let b = sweep_b();
-    vec![ObjDiff::default(), <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b), <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a)]
+    vec![
+        ObjDiff::default(),
+        ObjDiff { mtllib: Some(None), usemtl: Some(Vec::new()), smoothing_groups: Some(Vec::new()), unknown_statements: Some(Vec::new()), ..Default::default() },
+        ObjDiff {
+            mtllib: Some(Some("a.mtl".into())),
+            vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }),
+            faces: Some(ObjFacesDiff { removed: vec![1], modified: vec![ObjFaceModified { index: 0, diff: ObjFaceDiff { vertices: Some(Vec::new()) } }], added: Vec::new() }),
+            ..Default::default()
+        },
+    ]
 }
 //#endregion 🔖️DemoCases
 

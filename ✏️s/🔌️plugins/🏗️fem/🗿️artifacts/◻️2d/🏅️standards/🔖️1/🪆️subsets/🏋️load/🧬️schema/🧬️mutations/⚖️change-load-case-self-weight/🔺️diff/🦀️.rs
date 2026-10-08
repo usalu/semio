@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeLoadCaseSelfWeight`.
 use super::ChangeLoadCaseSelfWeight;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesModification};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLoadCaseSelfWeight, base: &Fem2dSnapshot) -> protoco
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load case \"{}\" self-weight is already {}.", payload.case_id, payload.new_self_weight));
     }
     let patch = Fem2dLoadCasePatch { self_weight: Some(payload.new_self_weight), ..Default::default() };
-    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { modified: vec![Fem2dLoadCasesModification { id: payload.case_id.clone(), patch }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

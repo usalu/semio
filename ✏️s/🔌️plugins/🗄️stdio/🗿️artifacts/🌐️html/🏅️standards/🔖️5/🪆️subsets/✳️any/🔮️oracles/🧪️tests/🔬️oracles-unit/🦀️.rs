@@ -61,42 +61,42 @@ mod tests {
             Some(HNode::Element { children, .. }) => assert_eq!(children.len(), 2, "body should now hold the original <p> plus the inserted <span>"),
             other => panic!("unexpected: {other:?}"),
         }
-        let round_tripped = apply_mutation_inverse(input, "insert-node", &obj(vec![("parent", Json::Array(vec![Json::Number(1.0)])), ("index", Json::Number(0.0)), ("node", node())])).unwrap();
+        let round_tripped = apply_then_undo(input, "insert-node", &obj(vec![("parent", Json::Array(vec![Json::Number(1.0)])), ("index", Json::Number(0.0)), ("node", node())])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
     #[test]
     fn set_element_name_and_its_inverse_round_trip() {
         let input = b"<!doctype html>\n<html><body><div>x</div></body></html>";
-        let round_tripped = apply_mutation_inverse(input, "set-element-name", &obj(vec![("path", Json::Array(vec![Json::Number(1.0), Json::Number(0.0)])), ("name", Json::String("section".into()))])).unwrap();
+        let round_tripped = apply_then_undo(input, "set-element-name", &obj(vec![("path", Json::Array(vec![Json::Number(1.0), Json::Number(0.0)])), ("name", Json::String("section".into()))])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
     #[test]
     fn set_attribute_and_its_inverse_round_trip() {
         let input = b"<!doctype html>\n<html><body id=\"a\"></body></html>";
-        let round_tripped = apply_mutation_inverse(input, "set-attribute", &obj(vec![("path", Json::Array(vec![Json::Number(1.0)])), ("name", Json::String("id".into())), ("value", Json::String("b".into()))])).unwrap();
+        let round_tripped = apply_then_undo(input, "set-attribute", &obj(vec![("path", Json::Array(vec![Json::Number(1.0)])), ("name", Json::String("id".into())), ("value", Json::String("b".into()))])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
     #[test]
     fn set_text_and_its_inverse_round_trip() {
         let input = b"<!doctype html>\n<html><body><p>hi</p></body></html>";
-        let round_tripped = apply_mutation_inverse(input, "set-text", &obj(vec![("path", Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)])), ("text", Json::String("bye".into()))])).unwrap();
+        let round_tripped = apply_then_undo(input, "set-text", &obj(vec![("path", Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)])), ("text", Json::String("bye".into()))])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
     #[test]
     fn set_comment_and_its_inverse_round_trip() {
         let input = b"<!doctype html>\n<html><!-- old --><body></body></html>";
-        let round_tripped = apply_mutation_inverse(input, "set-comment", &obj(vec![("path", Json::Array(vec![Json::Number(0.0)])), ("text", Json::String(" new ".into()))])).unwrap();
+        let round_tripped = apply_then_undo(input, "set-comment", &obj(vec![("path", Json::Array(vec![Json::Number(0.0)])), ("text", Json::String(" new ".into()))])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
     #[test]
     fn set_doctype_and_its_inverse_round_trip() {
         let input = b"<!doctype html>\n<html><body></body></html>";
-        let round_tripped = apply_mutation_inverse(input, "set-doctype", &obj(vec![("doctype", Json::String("DOCTYPE htmlWave7".into()))])).unwrap();
+        let round_tripped = apply_then_undo(input, "set-doctype", &obj(vec![("doctype", Json::String("DOCTYPE htmlWave7".into()))])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
@@ -112,7 +112,7 @@ mod tests {
         let HNode::Element { children: script_children, .. } = &head_children[1] else { panic!("script") };
         assert!(matches!(&script_children[0], HNode::RawText { script: true, text } if text.contains("console.log")));
 
-        let round_tripped = apply_mutation_inverse(input, "set-raw-text", &obj(vec![("path", Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)])), ("text", Json::String("console.log(2);".into()))])).unwrap();
+        let round_tripped = apply_then_undo(input, "set-raw-text", &obj(vec![("path", Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)])), ("text", Json::String("console.log(2);".into()))])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), doc);
     }
 
@@ -174,7 +174,7 @@ mod tests {
             let mutated = apply_mutation(REAL_FIXTURE, kind, params).unwrap_or_else(|error| panic!("mutate {kind:?} failed: {error}"));
             let mutated_projection = project(&mutated).unwrap();
             assert_ne!(&mutated_projection, &base_projection, "mutate {kind:?} produced no visible change in the real document");
-            let restored = apply_mutation_inverse(REAL_FIXTURE, kind, params).unwrap_or_else(|error| panic!("inverse {kind:?} failed: {error}"));
+            let restored = apply_then_undo(REAL_FIXTURE, kind, params).unwrap_or_else(|error| panic!("inverse {kind:?} failed: {error}"));
             let restored_projection = project(&restored).unwrap();
             assert_eq!(restored_projection, base_projection, "inverse {kind:?} did not restore the real document's projection");
         }

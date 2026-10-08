@@ -12,14 +12,14 @@ pub mod board_host {
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
-        board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, board_edge_handle_ids_from_object,
+        board_locked_option, board_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, board_edge_handle_ids,
         handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
         normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, region_bounds, region_grip_at, region_grip_drag, rotate_point_about, selection_drag_enclosing, selection_drag_shape,
         snap_region_scalar, snap_transform_angle, transform_pivot_of,
-        transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
+        transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescriptor, EdgeKindDef,
         EdgeStrokePattern, EdgeTipDef, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD, TRANSFORM_RING_HIT_TOLERANCE_PX,
-        EdgeTipGeometry, BoardSnapshotJson, GestureStage, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
-        RegionGrip, SceneDescriptorJson, SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
+        EdgeTipGeometry, BoardSnapshot, GestureStage, GraphPortMode, HandleData, HandleDescriptor, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescriptor, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescriptor,
+        RegionGrip, SceneDescriptor, SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
     };
     use semio_framework_canvas::camera::Camera;
     use semio_framework_canvas::geom_sel::{
@@ -4541,7 +4541,12 @@ pub mod board_host {
                 for row in arr {
                     let eo = row.as_object().ok_or(NormalPortError::RowNotObject("edge tip"))?;
                     let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::IdMissing("edge tip"))?;
-                    let def = EdgeTipDef::from_catalog_row(eo).ok_or_else(|| NormalPortError::EdgeTipRowInvalid(id.to_string()))?;
+                    let geometry=match eo.get("geometry") {
+                        None=>None,
+                        Some(value)=>Some(match value.as_str().map(str::trim){Some("arrow")=>EdgeTipGeometry::Arrow,Some("fine-arrow")=>EdgeTipGeometry::FineArrow,Some("diamond")=>EdgeTipGeometry::Diamond,Some("circle")=>EdgeTipGeometry::Circle,Some("bar")=>EdgeTipGeometry::Bar,_=>return Err(NormalPortError::EdgeTipRowInvalid(id.to_string()))})
+                    };
+                    let entry=crate::infinite::board::ports::directed::EdgeTipCatalogEntry{id:id.to_string(),geometry,filled:eo.get("filled").and_then(|v|v.as_bool()),scale:eo.get("scale").and_then(|v|v.as_f64())};
+                    let def = EdgeTipDef::from_catalog_entry(&entry).ok_or_else(|| NormalPortError::EdgeTipRowInvalid(id.to_string()))?;
                     tips.insert(id.to_string(), def);
                 }
                 self.edge_tips = tips;
@@ -7980,10 +7985,9 @@ pub mod board_host {
             self.selection_screen_preview = points;
         }
 
-        pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
-            self.canvas_theme.merge_from_json(json).map_err(NormalPortError::Theme)?;
+        pub fn set_canvas_palette(&mut self, overlay: &crate::infinite::board::BoardPaletteOverlay) {
+            self.canvas_theme.apply_overlay(overlay);
             self.icon_paint_cache.clear();
-            Ok(())
         }
 
         fn sync_selection_screen_overlay(&mut self, start_screen: Point, screen_points: &[Point]) {
@@ -9971,7 +9975,7 @@ pub mod board_host {
         }
 
         /// 🔗️ Authoring sync: every edge the descriptor adds is announced as an `edgeCreate` event.
-        pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
+        pub fn sync_descriptor(&mut self, desc: &SceneDescriptor) -> Result<(), NormalPortError> {
             self.sync_descriptor_with(desc, true)
         }
 
@@ -9979,7 +9983,7 @@ pub mod board_host {
         /// descriptor ceilings and the handle colours it would have to parse. A sync that fails halfway
         /// leaves a half-built board, and a snapshot parse that clears first leaves an EMPTY one (three
         /// blank panes, 2026-09-17), so both preflight through here and mutate only once it passes.
-        fn descriptor_admission(desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
+        fn descriptor_admission(desc: &SceneDescriptor) -> Result<(), NormalPortError> {
             let entity_count = desc
                 .nodes
                 .len()
@@ -10018,7 +10022,7 @@ pub mod board_host {
         /// creations after each re-parse (fill placements re-committing themselves) and, undrained,
         /// they exhausted the event credits so the next parse of any edged document was refused
         /// (three blank panes after one drag, 2026-09-17).
-        fn sync_descriptor_with(&mut self, desc: &SceneDescriptorJson, announce_new_edges: bool) -> Result<(), NormalPortError> {
+        fn sync_descriptor_with(&mut self, desc: &SceneDescriptor, announce_new_edges: bool) -> Result<(), NormalPortError> {
             Self::descriptor_admission(desc)?;
             if matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) {
                 self.interaction = Interaction::None;
@@ -10051,7 +10055,7 @@ pub mod board_host {
                     NodeShape::Rectangle => (0.0, n.width.unwrap_or(0.0), n.height.unwrap_or(0.0)),
                 };
                 let node_kind = n.node_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
-                let properties = n.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
+                let properties = n.user_data.as_ref().map(|v| property_bag_from_value(v)).unwrap_or_default();
                 self.nodes.insert(
                     n.id.clone(),
                     NodeData {
@@ -10083,7 +10087,7 @@ pub mod board_host {
                     Some(s) => Some(Self::parse_css_color(s).ok_or_else(|| NormalPortError::InvalidHandleColor(h.id.clone(), s.to_string()))?),
                 };
                 let icon_kind = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let properties = h.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
+                let properties = h.user_data.as_ref().map(|v| property_bag_from_value(v)).unwrap_or_default();
                 self.handles.insert(
                     h.id.clone(),
                     HandleData {
@@ -10108,7 +10112,7 @@ pub mod board_host {
                 let edge_kind = e.edge_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
                 let source_tip = Self::parse_catalog_tip_slot(e.source_tip.as_deref());
                 let target_tip = Self::parse_catalog_tip_slot(e.target_tip.as_deref());
-                let properties = e.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
+                let properties = e.user_data.as_ref().map(|v| property_bag_from_value(v)).unwrap_or_default();
                 self.edges.insert(
                     e.id.clone(),
                     EdgeData {
@@ -10156,7 +10160,7 @@ pub mod board_host {
                     .filter(|s| !s.is_empty())
                     .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
                     .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
-                let properties = w.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
+                let properties = w.user_data.as_ref().map(|v| property_bag_from_value(v)).unwrap_or_default();
                 self.wires.insert(
                     w.id.clone(),
                     WireData {
@@ -10277,15 +10281,11 @@ pub mod board_host {
             self.selection_exit_highlight.clear();
         }
 
-        /// 🎲️ Replaces the whole board with `json`, ALL OR NOTHING: the descriptor is built and admitted
+        /// 🎲️ Replaces the whole board with owned snapshot facts, ALL OR NOTHING: the descriptor is built and admitted
         /// first, and only a snapshot that will really paint clears the live scene. Clearing before the
         /// refusal left the panes blank until the next parse — the refusal and "the board went empty"
         /// were the same event (2026-09-17 battery, `16-inspection/inspector-fresh-on-open`).
-        pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
-            let f: BoardSnapshotJson = match serde_json::from_str(json) {
-                Ok(v) => v,
-                Err(_) => return false,
-            };
+        pub fn load_board_snapshot(&mut self, f: BoardSnapshot) -> bool {
             let port_mode = match f.schema.as_str() {
                 "board.normal.undirected.v1" => GraphPortMode::Normal,
                 "board.ports.directed.v1" => GraphPortMode::Ported,
@@ -10316,188 +10316,21 @@ pub mod board_host {
         /// 🎯️ Target regions are optional by construction (the artifact omits an empty collection),
         /// so a malformed row is skipped rather than refusing the whole document: a board that
         /// cannot paint its constraint rectangles must still paint its graph.
-        fn board_snapshot_scene_descriptor(f: BoardSnapshotJson, has_ports: bool) -> Option<SceneDescriptorJson> {
-            let mut desc = SceneDescriptorJson::default();
-            for entry in f.nodes {
-                let Some(obj) = entry.as_object() else {
-                    return None;
-                };
-                let Some(id) = obj.get("id").and_then(|v| v.as_str()) else {
-                    return None;
-                };
-                let Some(x) = obj.get("x").and_then(|v| v.as_f64()) else {
-                    return None;
-                };
-                let Some(y) = obj.get("y").and_then(|v| v.as_f64()) else {
-                    return None;
-                };
-                if !x.is_finite() || !y.is_finite() {
-                    return None;
-                }
-                let text = obj.get("text").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
-                if has_ports {
-                    let Some(handles_arr) = obj.get("handles").and_then(|v| v.as_array()) else {
-                        return None;
-                    };
-                    let mut handles: Vec<HandleDescJson> = Vec::new();
-                    for h in handles_arr {
-                        let Some(ho) = h.as_object() else {
-                            return None;
-                        };
-                        let Some(hid) = ho.get("id").and_then(|v| v.as_str()) else {
-                            return None;
-                        };
-                        let Some(angle) = ho.get("angle").and_then(|v| v.as_f64()) else {
-                            return None;
-                        };
-                        if !angle.is_finite() {
-                            return None;
-                        }
-                        let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map_or_else(|| "port".into(), String::from);
-                        let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
-                        let handle_icon_kind = ho.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                        let handle_scale = ho.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
-                        let handle_radius = ho.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
-                        handles.push(HandleDescJson {
-                            id: hid.into(),
-                            node_id: id.into(),
-                            angle,
-                            radius: handle_radius,
-                            scale: handle_scale,
-                            selected: None,
-                            style: None,
-                            handle_kind: Some(handle_kind),
-                            color: handle_color,
-                            icon_kind: handle_icon_kind,
-                            user_data: None,
-                            visible: board_json_visible_option(ho),
-                            locked: board_json_locked_option(ho),
-                        });
-                    }
-                    desc.handles.extend(handles);
-                } else if obj.get("handles").is_some() {
-                    return None;
-                }
-                let shape_str = obj.get("shape").and_then(|v| v.as_str());
-                let snapshot_node_kind = obj.get("nodeKind").or_else(|| obj.get("node_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let snapshot_node_scale = obj.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
-                if shape_str == Some("rectangle") {
-                    let Some(width) = obj.get("width").and_then(|v| v.as_f64()) else {
-                        return None;
-                    };
-                    let Some(height) = obj.get("height").and_then(|v| v.as_f64()) else {
-                        return None;
-                    };
-                    if width <= 0.0 || height <= 0.0 {
-                        return None;
-                    }
-                    let root = obj.get("root").and_then(|v| v.as_bool());
-                    let icon_kind = obj.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                    desc.nodes.push(NodeDescJson {
-                        id: id.into(),
-                        x,
-                        y,
-                        draggable: None,
-                        selected: None,
-                        style: None,
-                        text,
-                        icon_kind,
-                        node_kind: snapshot_node_kind.clone(),
-                        user_data: None,
-                        visible: board_json_visible_option(obj),
-                        locked: board_json_locked_option(obj),
-                        root,
-                        shape: Some("rectangle".into()),
-                        radius: None,
-                        width: Some(width),
-                        height: Some(height),
-                        scale: snapshot_node_scale,
-                    });
-                } else {
-                    let Some(radius) = obj.get("radius").and_then(|v| v.as_f64()) else {
-                        return None;
-                    };
-                    if radius <= 0.0 {
-                        return None;
-                    }
-                    let root = obj.get("root").and_then(|v| v.as_bool());
-                    let icon_kind = obj.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                    desc.nodes.push(NodeDescJson {
-                        id: id.into(),
-                        x,
-                        y,
-                        draggable: None,
-                        selected: None,
-                        style: None,
-                        text,
-                        icon_kind,
-                        node_kind: snapshot_node_kind.clone(),
-                        user_data: None,
-                        visible: board_json_visible_option(obj),
-                        locked: board_json_locked_option(obj),
-                        root,
-                        shape: Some("circle".into()),
-                        radius: Some(radius),
-                        width: None,
-                        height: None,
-                        scale: snapshot_node_scale,
-                    });
-                }
+        fn board_snapshot_scene_descriptor(f:BoardSnapshot,has_ports:bool)->Option<SceneDescriptor>{
+            let text=|value:Option<String>|value.map(|v|v.trim().to_owned()).filter(|v|!v.is_empty());
+            let positive=|value:Option<f64>|value.filter(|v|v.is_finite()&&*v>0.0);
+            let mut desc=SceneDescriptor::default();
+            for node in f.nodes {
+                let(x,y)=(node.x?,node.y?);if !x.is_finite()||!y.is_finite(){return None;}
+                let visible=board_visible_option(&node.visibility());let locked=board_locked_option(&node.visibility());
+                if has_ports {for h in node.handles? {let angle=h.angle?;if !angle.is_finite(){return None;}let hv=board_visible_option(&h.visibility());let hl=board_locked_option(&h.visibility());desc.handles.push(HandleDescriptor{id:h.id,node_id:node.id.clone(),angle,radius:positive(h.radius),scale:positive(h.scale),selected:None,style:None,handle_kind:Some(text(h.handle_kind).unwrap_or_else(||"port".into())),color:text(h.color),icon_kind:text(h.icon_kind),user_data:None,visible:hv,locked:hl});}}
+                else if node.handles.is_some(){return None;}
+                let (shape,radius,width,height)=if node.shape==Some(crate::infinite::board::ports::directed::schema::snapshot::BoardNodeShape::Rectangle){("rectangle",None,Some(positive(node.width)?),Some(positive(node.height)?))}else{("circle",Some(positive(node.radius)?),None,None)};
+                desc.nodes.push(NodeDescriptor{id:node.id,x,y,draggable:None,selected:None,style:None,text:text(node.text),icon_kind:text(node.icon_kind),node_kind:text(node.node_kind),user_data:None,visible,locked,root:node.root,shape:Some(shape.into()),radius,width,height,scale:positive(node.scale)});
             }
-            for entry in f.edges {
-                let Some(e) = entry.as_object() else {
-                    return None;
-                };
-                let Some(id) = e.get("id").and_then(|v| v.as_str()) else {
-                    return None;
-                };
-                let Some((source, target)) = board_edge_handle_ids_from_object(e) else {
-                    return None;
-                };
-                if !has_ports {
-                    let node_ids: BTreeSet<&str> = desc.nodes.iter().map(|n| n.id.as_str()).collect();
-                    if !node_ids.contains(source) || !node_ids.contains(target) {
-                        return None;
-                    }
-                }
-                let edge_kind = e.get("edgeKind").or_else(|| e.get("edge_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let source_tip = e.get("sourceTip").or_else(|| e.get("source_tip")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let target_tip = e.get("targetTip").or_else(|| e.get("target_tip")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                desc.edges.push(EdgeDescJson {
-                    id: id.into(),
-                    source: source.into(),
-                    target: target.into(),
-                    edge_kind,
-                    source_tip,
-                    target_tip,
-                    selected: None,
-                    style: None,
-                    user_data: None,
-                    visible: board_json_visible_option(e),
-                    locked: board_json_locked_option(e),
-                });
-            }
-            for entry in f.target_regions {
-                let Some(o) = entry.as_object() else {
-                    continue;
-                };
-                let Some(id) = o.get("id").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()) else {
-                    continue;
-                };
-                let read = |key: &str| o.get(key).and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(0.0);
-                desc.regions.push(RegionDescJson {
-                    id: id.into(),
-                    x: read("x"),
-                    y: read("y"),
-                    width: read("width"),
-                    height: read("height"),
-                    label: o.get("label").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string()),
-                    hidden: o.get("hidden").and_then(|v| v.as_bool()),
-                    locked: o.get("locked").and_then(|v| v.as_bool()),
-                    selected: o.get("selected").and_then(|v| v.as_bool()),
-                });
-            }
-            Some(desc)
+            for edge in f.edges {let visible=board_visible_option(&edge.visibility());let locked=board_locked_option(&edge.visibility());let(source,target)=(edge.source?,edge.target?);if !has_ports{let ids:BTreeSet<&str>=desc.nodes.iter().map(|n|n.id.as_str()).collect();if !ids.contains(source.as_str())||!ids.contains(target.as_str()){return None;}}
+                desc.edges.push(EdgeDescriptor{id:edge.id,source,target,edge_kind:text(edge.edge_kind),source_tip:text(edge.source_tip),target_tip:text(edge.target_tip),selected:None,style:None,user_data:None,visible,locked});}
+            for region in f.target_regions {let Some(id)=text(Some(region.id))else{continue;};let finite=|value:Option<f64>|value.filter(|v|v.is_finite()).unwrap_or(0.0);desc.regions.push(RegionDescriptor{id,x:finite(region.x),y:finite(region.y),width:finite(region.width),height:finite(region.height),label:text(region.label),hidden:region.hidden,locked:region.locked,selected:region.selected});}Some(desc)
         }
 
         fn drawable_cull_pad_world(&self) -> f64 {
@@ -13843,10 +13676,7 @@ pub mod board_host {
     // #endregion board_host
 }
 
-pub use crate::infinite::board::normal::undirected::{
-    apply_force_graph_layout_to_board_snapshot_json as apply_undirected_force_graph_layout_to_board_snapshot_json, apply_force_graph_layout_to_board_snapshot_value as apply_undirected_force_graph_layout_to_board_snapshot_value,
-    apply_redraw_layout_to_board_snapshot_json as apply_normal_undirected_redraw_layout_to_board_snapshot_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
-};
+
 pub use crate::infinite::board::ports::directed::*;
 pub use semio_framework_canvas as canvas;
 pub use board_host::*;

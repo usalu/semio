@@ -8,15 +8,17 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "elements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "wall-north",
+        "id": "wall-north",
         "patch": {
           "kind": null,
           "zoneId": null,
@@ -29,7 +31,8 @@
           "deltaUR": 0.005,
           "layers": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           }
         }
@@ -38,7 +41,8 @@
   },
   "thermalBridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

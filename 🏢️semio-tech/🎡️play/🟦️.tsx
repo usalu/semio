@@ -29,7 +29,7 @@ import {
   type LayeredPane,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
+import { composeSpecificOsCatalogV1 } from "../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import { PlayCard } from "./⚛️play-card.tsx";
@@ -105,11 +105,12 @@ const PLAY_INSETS = { top: "calc(var(--size-workbench) * 1.5)" } as const;
 
 /** 🎡️ One app's live shell on its own storage namespace; its own tour only while it is opened. */
 function PlayShell({ pane, opened }: { readonly pane: PlayPaneSpec; readonly opened: boolean }) {
-  const boot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, pane.variant), [pane.variant]);
+  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
+  const boot = useMemo(() => resolvePlaygroundBoot(catalog, pane.variant), [catalog, pane.variant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   return (
-    <FrameworkOsShell
+    <FrameworkOsShell catalog={catalog}
       pluginFilter={pane.variant}
       plugins={boot.plugins}
       surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}

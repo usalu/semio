@@ -1,0 +1,74 @@
+{
+  "goalStatus": "active incomplete",
+  "scope": {
+    "stdio": {
+      "bindings": 89,
+      "concreteTypes": 57,
+      "kinds": 36
+    },
+    "primary": {
+      "heldRoots": 60,
+      "additionalBimRoot": 1,
+      "resolvedMinimumRoots": 61
+    },
+    "frameworkHeldOwners": 7,
+    "printChart": 1,
+    "additionalStandaloneProbeOwners": 2,
+    "aggregateUniqueOwners": null,
+    "noSumReason": "Overlapping inventories and different publication channels"
+  },
+  "actualGaps": [
+    {
+      "owner": "ModelSnapshot",
+      "gap": "Missing handwritten semantic provider, now root implementation underway",
+      "binding": [
+        "s.bim.model",
+        "1",
+        "*",
+        "s.bim.model@1"
+      ]
+    },
+    {
+      "owner": "ProbeSnapshot",
+      "gap": "Provider present, original native public binding/laws missing",
+      "binding": null,
+      "documentSchema": "os.agent.probe/v1"
+    },
+    {
+      "owner": "NativeSocketProbeSnapshot",
+      "gap": "Provider present, original native public binding/laws missing",
+      "binding": null,
+      "documentSchema": "native.socket-grant.probe/v1"
+    }
+  ],
+  "scopedReceipts": [
+    {
+      "scope": "canonical Value floor",
+      "passed": 37,
+      "total": 37,
+      "session": 47268,
+      "authority": "peer owning Markdown readback"
+    },
+    {
+      "scope": "typed Pack prerequisite",
+      "passed": 74,
+      "total": 74,
+      "authority": "coordinator reported, not independent log inspection"
+    },
+    {
+      "scope": "root original erased read",
+      "passed": 2,
+      "total": 2,
+      "session": 65237,
+      "authority": "root owning Markdown readback"
+    },
+    {
+      "scope": "root neutral erased Source",
+      "passed": 1,
+      "expects": 15,
+      "authority": "coordinator reported, not independent log inspection"
+    }
+  ],
+  "wholeKernel": "compiler frontier open, no full native artifact qualification",
+  "bim": "44tableDDL and independently tested CHECK proposal/witnesses only; current provider Source/Native unqualified"
+}

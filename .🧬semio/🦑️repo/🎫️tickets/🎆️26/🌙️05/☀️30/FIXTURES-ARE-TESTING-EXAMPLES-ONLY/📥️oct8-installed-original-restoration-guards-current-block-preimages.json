@@ -1,0 +1,26 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "sha256": "bdd6df214577a579118bf4ed4189757b952b03fa7be54f68cfeee5a36f3a0c0e",
+  "changes": [
+    {
+      "before": "Err((error, original)) => { *self.current = original; Err(error) }",
+      "after": "Err((error, original)) => { self.current = std::mem::ManuallyDrop::new(original); Err(error) }"
+    },
+    {
+      "before": "Err((error, original, snapshots, mutations)) => { *self.envelope = original; drop((snapshots, mutations)); Err(error) }",
+      "after": "Err((error, original, snapshots, mutations)) => { self.envelope = std::mem::ManuallyDrop::new(original); drop((snapshots, mutations)); Err(error) }"
+    },
+    {
+      "before": "                let Some(entry) = self.prefix_ring.pop() else { return Ok((None, structural)); };\n                if Arc::strong_count(&entry.snapshot) > 1 { drop(entry); return Ok((None, structural)); }\n                let factory = self.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"prefix close requires installed factory\"))?;",
+      "after": "                if self.prefix_ring.is_empty() { return Ok((None, structural)); }\n                let factory = self.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"prefix close requires installed factory\"))?;\n                let entry = self.prefix_ring.pop().expect(\"observed original prefix owner\");\n                if Arc::strong_count(&entry.snapshot) > 1 { drop(entry); return Ok((None, structural)); }"
+    },
+    {
+      "before": "                let Some((id, snapshot)) = self.tail_undo_cache.take() else { return Ok((None, structural)); };\n                if Arc::strong_count(&snapshot) > 1 { drop((id, snapshot)); return Ok((None, structural)); }\n                let factory = self.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"tail close requires installed factory\"))?;",
+      "after": "                if self.tail_undo_cache.is_none() { return Ok((None, structural)); }\n                let factory = self.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"tail close requires installed factory\"))?;\n                let (id, snapshot) = self.tail_undo_cache.take().expect(\"observed original tail owner\");\n                if Arc::strong_count(&snapshot) > 1 { drop((id, snapshot)); return Ok((None, structural)); }"
+    },
+    {
+      "before": "self.snapshot_read_leases.next_empty_backing_byte_demand() == 0",
+      "after": "self.snapshot_read_leases.empty_backing_demands().is_ok_and(|demand| demand.release_bytes == 0)"
+    }
+  ]
+}

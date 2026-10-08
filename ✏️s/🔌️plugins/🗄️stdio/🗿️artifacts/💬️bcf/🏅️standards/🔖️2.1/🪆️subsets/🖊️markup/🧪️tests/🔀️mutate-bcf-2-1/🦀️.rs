@@ -7,7 +7,7 @@
 //! fixtures are never written to. The judging oracle is the TypeScript reader (`🟦️.ts`, jszip over the committed
 //! documents); `oracle` here is the cross-semio SUPPLEMENT, the registered independent `zip`+`quick-xml` composition
 //! (`oracle_apply_mutation`/`oracle_apply_mutation_inverse`), asserting its laws in role; `subject` drives this
-//! repository's own `decode_bcf`/`encode_bcf`/`apply_bcf_mutation` over the `BcfMutation` vocabulary and hands its
+//! repository's own `decode_bcf`/`encode_bcf`/`apply_mutation` over the `BcfMutation` vocabulary and hands its
 //! archive to the `bcf-2-1-jszip-compare-v1` pipeline as `actual-bcf`. The subject half is gated behind the generated
 //! host's `sut` feature so the oracle-only run never compiles the local implementation.
 
@@ -128,7 +128,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
+    use semio_s_artifact_stdio_bcf::schema::mutations::{BcfMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_bcf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_bcf::standards::v2_1::subsets::any::io::{decode_bcf, encode_bcf};
@@ -155,7 +155,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(ctx)?;
-        apply_bcf_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
         actual(ctx, &snapshot)
     }
 
@@ -164,9 +164,9 @@ mod subject {
         let mut snapshot = decode(ctx)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
         let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_bcf_mutation(&mut snapshot, &forward);
+        apply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
-            apply_bcf_mutation(&mut snapshot, mutation);
+            apply_mutation(&mut snapshot, mutation);
         }
         actual(ctx, &snapshot)
     }

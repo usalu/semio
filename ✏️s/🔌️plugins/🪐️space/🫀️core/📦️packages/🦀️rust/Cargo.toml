@@ -1,0 +1,39 @@
+[package]
+workspace = "../.."
+name = "semio-s-space-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Shared Space authority independent of concrete artifact implementations"
+
+[package.metadata.semio]
+role = "kernel"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-os", "dep:semio-framework-os-kernel", "dep:semio-framework-plugin"]
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework = { workspace = true, optional = true }
+semio-framework-artifact-space-space = { workspace = true, optional = true }
+semio-framework-os-kernel = { workspace = true, optional = true }
+semio-framework-plugin = { workspace = true, optional = true }
+
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["space-guest"], optional = true }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["os-host-full"], optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde_json = { workspace = true }

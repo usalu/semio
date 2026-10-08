@@ -108,7 +108,7 @@ fn child_leaf_vectors_hold_and_every_edit_undoes_exactly() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-leaves/🔣️.json")).expect("child-leaf vectors");
     let cases = fixture["cases"].as_array().expect("cases");
-    assert_eq!(cases.len(), 9);
+    assert_eq!(cases.len(), 15);
     for case in cases {
         let name = case["name"].as_str().expect("name");
         let base: Vec<PlaybookStep> = serde_json::from_value(case["base"].clone()).expect("base steps");

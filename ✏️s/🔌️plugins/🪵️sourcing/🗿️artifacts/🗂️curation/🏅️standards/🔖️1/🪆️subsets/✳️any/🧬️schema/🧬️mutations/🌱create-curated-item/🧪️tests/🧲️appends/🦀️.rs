@@ -80,8 +80,8 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "create-curated-item/appends-a-steel-plate-to-the-curation: an accepted curation emits no diagnostics");
 }
 
-/// 🔺️ The committed diff pins the sparseness: `curated.added` carries the one new pick, `removed`
-/// and `patched` stay empty, `reordered` stays null, and `catalog`/`stockExtra` — the composed kit
+/// 🔺️ The committed diff pins the sparseness: `curated.inserted` carries the one new pick at its after index, `removed`
+/// `moved` and `modified` stay empty, and `catalog`/`stockExtra` — the composed kit
 /// child and its sourcing-owned overflow — are not in the diff at all.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
@@ -95,7 +95,7 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-curated-item diff decodes");
     let delta = decoded.curated.as_ref().expect("the committed create diff carries a curated delta");
-    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (1, 0, 0), "create-curated-item/appends-a-steel-plate-to-the-curation: a create is one addition and nothing else");
+    assert_eq!((delta.inserted.len(), delta.removed.len(), delta.moved.len(), delta.modified.len()), (1, 0, 0, 0), "create-curated-item/appends-a-steel-plate-to-the-curation: a create is one addition and nothing else");
     assert!(decoded.catalog.is_none(), "create-curated-item/appends-a-steel-plate-to-the-curation: curating must not replace the composed kit catalog handle");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");

@@ -53,7 +53,7 @@ pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";
 //#endregion 🔖️Constants
 
 fn require_session_identity(view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<&semio_framework_plugin::ViewSessionIdentity, Fault> {
-    view_state.and_then(crate::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))
+    view_state.and_then(semio_s_space_core::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))
 }
 
 //#region 🔖️HomeCommand
@@ -436,7 +436,7 @@ impl ArtifactEditor for HomeApp {
 
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        crate::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-home-artifact-retained", HOME_RETAINED_RAW_BYTES)
+        semio_s_space_core::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-home-artifact-retained", HOME_RETAINED_RAW_BYTES)
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {

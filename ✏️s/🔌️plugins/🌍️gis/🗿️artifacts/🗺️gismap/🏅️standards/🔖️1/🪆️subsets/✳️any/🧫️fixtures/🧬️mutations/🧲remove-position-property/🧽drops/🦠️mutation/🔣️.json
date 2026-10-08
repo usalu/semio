@@ -1,0 +1,6 @@
+{
+  "RemovePositionProperty": {
+    "feature": "position-harbor",
+    "key": "label"
+  }
+}

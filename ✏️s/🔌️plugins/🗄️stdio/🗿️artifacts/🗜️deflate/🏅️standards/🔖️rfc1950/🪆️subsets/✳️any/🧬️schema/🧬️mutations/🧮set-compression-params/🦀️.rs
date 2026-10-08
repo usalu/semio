@@ -22,6 +22,9 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompression
 
     fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
         let Self { method, window_bits, level_hint } = self;
+        if *method > 15 || *window_bits > 15 {
+            return protocol::MutationOutcome::refuse(protocol::OutcomeCode::Invariant, "deflate: the method and window size are 4-bit header fields", ["compression-params"]);
+        }
         protocol::MutationOutcome::new( diff_set_compression_params(*method, *window_bits, *level_hint) )
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {

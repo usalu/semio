@@ -99,11 +99,6 @@ impl En1993Artifact {
             crane_runways: snapshot.crane_runways,
         }
     }
-
-    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::En1993Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 //#endregion 🔖️Conversions
 

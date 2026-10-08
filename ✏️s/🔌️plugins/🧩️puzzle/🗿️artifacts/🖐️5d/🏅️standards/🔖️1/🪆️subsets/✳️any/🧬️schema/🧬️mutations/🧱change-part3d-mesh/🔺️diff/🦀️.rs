@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangePart3dMesh` — patches the one addressed part in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::ChangePart3dMesh, base: &Puzzle5dSnapshot) -> proto
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
-        parts: Some(Puzzle5dPartsDelta::patching(payload.id.clone(), patch)),
+        parts: Some(Puzzle5dPartsDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

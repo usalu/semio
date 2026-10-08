@@ -9,6 +9,16 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-output-retirement-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-output-retirement-native"
+      },
+      "outputs": []
+    },
     "test-composed-child-history-source": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -126,7 +136,7 @@
       "outputs": []
     },
     "test": {
-      "metadata": {"semio": {"nativePreparation": "cargo-consumer"}},
+
       "executor": "nx:run-commands",
       "options": {
         "command": "bun 📜️script.ts test",

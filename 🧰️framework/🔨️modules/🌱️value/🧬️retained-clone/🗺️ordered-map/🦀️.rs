@@ -1,7 +1,7 @@
 //! 🗺️ Fixed-page ordered owners with resumable native key comparison and insertion.
 
-use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_close, admit_retained_clone_progress, admit_retained_clone_retirement, admit_retained_clone_scaffold_retirement, close_retained_binding};
-use crate::{SnapshotRetirementStep, retirement::RetireOwned};
+use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_close, admit_retained_clone_progress, close_retained_binding};
+use crate::{retirement::RetireOwned};
 use serde::{Serialize, Serializer, ser::SerializeMap};
 use std::{cmp::Ordering, mem::size_of, sync::Arc};
 
@@ -81,6 +81,8 @@ impl<K: RetireOwned, V: RetireOwned> RetireOwned for RetainedOrderedMap<K, V> {
     fn retirement(self) -> Box<dyn crate::retirement::RetirementCursor> {
         self.pages.retirement()
     }
+    fn retirement_birth_bytes(&self) -> Option<usize> { self.pages.retirement_birth_bytes() }
+    fn controlled_retirement_supported() -> bool { K::controlled_retirement_supported() && V::controlled_retirement_supported() }
 }
 
 pub struct RetainedOrderedMapCloneCursor<K: RetainedClone, V: RetainedClone> {
@@ -124,13 +126,9 @@ impl<K: RetainedClone, V: RetainedClone> Default for RetainedOrderedMapCloneCurs
 }
 
 impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
-    fn progress_from_close(step: SnapshotRetirementStep, terminal_is_empty: bool, grant: RetainedCloneGrant, label: &str) -> Result<RetainedCloneStep, crate::ValueError> {
-        match admit_retained_clone_scaffold_retirement(step, grant.maximum_items, grant.maximum_release_bytes, &format!("retained ordered-map {label} scaffold close"))? {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes })),
-            SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("retained ordered-map {label} scaffold close blocked"))),
-            SnapshotRetirementStep::Complete if terminal_is_empty => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
-            SnapshotRetirementStep::Complete => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("retained ordered-map {label} scaffold completed with a live owner"))),
-        }
+    fn progress_from_close(step: RetainedCloneStep, terminal_is_empty: bool, grant: RetainedCloneGrant, label: &str) -> Result<RetainedCloneStep, crate::ValueError> {
+        let progress = super::admit_retained_clone_close(grant, step, terminal_is_empty, &format!("retained ordered-map {label} scaffold close"))?.progress();
+        Ok(RetainedCloneStep::Progress(progress))
     }
 }
 
@@ -225,7 +223,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             }
             3 => {
                 if !self.key_cursor.terminal_is_empty() {
-                    let step = self.key_cursor.close_step(grant.maximum_items, grant.maximum_release_bytes)?;
+                    let step = self.key_cursor.close_step(grant)?;
                     return Self::progress_from_close(step, self.key_cursor.terminal_is_empty(), grant, "key");
                 }
                 if grant.maximum_items == 0 {
@@ -250,7 +248,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             }
             5 => {
                 if !self.value_cursor.terminal_is_empty() {
-                    let step = self.value_cursor.close_step(grant.maximum_items, grant.maximum_release_bytes)?;
+                    let step = self.value_cursor.close_step(grant)?;
                     return Self::progress_from_close(step, self.value_cursor.terminal_is_empty(), grant, "value");
                 }
                 if grant.maximum_items == 0 {
@@ -293,77 +291,19 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
         true
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if !self.key_cursor.terminal_is_empty() {
-            if self.key_cursor.begin_close() {
-                if maximum_items == 0 {
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            let step = admit_retained_clone_retirement(self.key_cursor.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes, "retained ordered-map key close")?;
-            if step == SnapshotRetirementStep::Complete {
-                if !self.key_cursor.terminal_is_empty() {
-                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map key cursor completed close with a live owner"));
-                }
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(step);
-        }
-        if !self.value_cursor.terminal_is_empty() {
-            if self.value_cursor.begin_close() {
-                if maximum_items == 0 {
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            let step = admit_retained_clone_retirement(self.value_cursor.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes, "retained ordered-map value close")?;
-            if step == SnapshotRetirementStep::Complete {
-                if !self.value_cursor.terminal_is_empty() {
-                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map value cursor completed close with a live owner"));
-                }
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(step);
-        }
-        if !self.close.is_empty() {
-            let step = self.close.step(maximum_items, maximum_bytes)?;
-            return Ok(if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
-        }
-        if let Some(step) = self.close.begin_option(&mut self.key, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.value, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.page_output, maximum_items)? {
-            return Ok(step);
-        }
-        if !self.pages.is_empty() || self.pages.capacity() != 0 {
-            if maximum_items == 0 {
-                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            self.close.begin(std::mem::take(&mut self.pages))?;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(step) = self.close.begin_option(&mut self.output, maximum_items)? {
-            return Ok(step);
-        }
-        self.source = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
+    
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "ordered map must begin close before granted retirement")); }
         if !self.key_cursor.terminal_is_empty() {
             if self.key_cursor.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-            let step = self.key_cursor.close_granted(grant)?;
+            let step = self.key_cursor.close_step(grant)?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained ordered-map key close")?.progress()));
         }
         if !self.value_cursor.terminal_is_empty() {
             if self.value_cursor.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-            let step = self.value_cursor.close_granted(grant)?;
+            let step = self.value_cursor.close_step(grant)?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained ordered-map value close")?.progress()));
         }
         if !self.close.is_empty() { return self.close.step_granted(grant); }
@@ -375,6 +315,36 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
         }
         if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
         close_retained_binding(&mut self.source, grant)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_depth_demand(); }
+        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_depth_demand(); }
+        self.close.next_owner_depth_with_binding(self.key.is_some()||self.value.is_some()||self.page_output.is_some()||self.pages.capacity()!=0||self.output.is_some(),&self.source)
+    }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_copy_byte_demand(); }
+        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_copy_byte_demand(); }
+        self.close.next_copy_with_binding(&self.source)
+    }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_capacity_byte_demand(body); }
+        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_capacity_byte_demand(body); }
+        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(body); }
+        if self.key.is_some() { return self.close.next_owner_capacity_with_binding::<K>(true,body,&self.source); }
+        if self.value.is_some() { return self.close.next_owner_capacity_with_binding::<V>(true,body,&self.source); }
+        if self.page_output.is_some() { return self.close.next_owner_capacity_with_binding::<Vec<(K,V)>>(true,body,&self.source); }
+        if !self.pages.is_empty()||self.pages.capacity()!=0 { return self.close.next_owner_capacity_with_binding::<Vec<Vec<(K,V)>>>(true,body,&self.source); }
+        self.close.next_owner_capacity_with_binding::<RetainedOrderedMap<K,V>>(self.output.is_some(),body,&self.source)
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_release_byte_demand(); }
+        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_release_byte_demand(); }
+        self.close.next_release_with_binding(&self.source)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -428,10 +398,18 @@ pub trait BoundedOrd: Ord + Send + Sync + Sized + 'static {
 }
 
 pub trait BoundedOrdCursor<T: BoundedOrd>: Send {
+    fn begin_close(&mut self)->bool;
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>;
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>;
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>;
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>;
+    fn terminal_is_empty(&self)->bool;
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>;
     fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, crate::ValueError>;
 }
 
 pub struct ScalarBoundedOrdCursor<T> {
+    closing:bool,
     complete: Option<Ordering>,
     left: Option<RetainedCloneBinding>,
     right: Option<RetainedCloneBinding>,
@@ -440,12 +418,21 @@ pub struct ScalarBoundedOrdCursor<T> {
 
 impl<T> Default for ScalarBoundedOrdCursor<T> {
     fn default() -> Self {
-        Self { complete: None, left: None, right: None, marker: std::marker::PhantomData }
+        Self { closing:false, complete: None, left: None, right: None, marker: std::marker::PhantomData }
     }
 }
 
 impl<T: BoundedOrd + Copy> BoundedOrdCursor<T> for ScalarBoundedOrdCursor<T> {
+fn begin_close(&mut self)->bool {let started=!self.closing;self.closing=true;started}
+fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::copy_demand(if self.left.is_some(){&self.left}else{&self.right})}
+fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{RetainedCloneBinding::capacity_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
+fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
+fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
     fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, crate::ValueError> {
+        if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
+        if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
         if let Some(ordering) = self.complete {
             return Ok(BoundedOrdStep::Complete { ordering, progress: BoundedOrdProgress::default() });
         }
@@ -474,6 +461,7 @@ bounded_ord_scalar!(bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i6
 
 #[derive(Default)]
 pub struct StringBoundedOrdCursor {
+    closing:bool,
     left: Option<RetainedCloneBinding>,
     right: Option<RetainedCloneBinding>,
     offset: usize,
@@ -481,17 +469,25 @@ pub struct StringBoundedOrdCursor {
 }
 
 impl BoundedOrdCursor<String> for StringBoundedOrdCursor {
+fn begin_close(&mut self)->bool {let started=!self.closing;self.closing=true;started}
+fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::copy_demand(if self.left.is_some(){&self.left}else{&self.right})}
+fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{RetainedCloneBinding::capacity_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
+fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
+fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
     fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, crate::ValueError> {
+        if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
+        if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
         if let Some(ordering) = self.complete {
             return Ok(BoundedOrdStep::Complete { ordering, progress: BoundedOrdProgress::default() });
         }
         let first = self.left.is_none();
+        if first&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
         left.bind(&mut self.left)?;
         right.bind(&mut self.right)?;
         if first {
             if grant.maximum_items == 0 {
-                self.left = None;
-                self.right = None;
                 return Ok(BoundedOrdStep::Progress(BoundedOrdProgress::default()));
             }
             return Ok(BoundedOrdStep::Progress(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
@@ -545,66 +541,59 @@ pub struct RetainedOrderedMapLookupCursor<K: BoundedOrd> {
     pending: Option<Ordering>,
     source: Option<RetainedCloneBinding>,
     complete: Option<RetainedOrderedMapLookup>,
+    closing:bool,
 }
 
 impl<K: BoundedOrd> Default for RetainedOrderedMapLookupCursor<K> {
     fn default() -> Self {
-        Self { low: 0, high: 0, middle: 0, comparison: None, pending: None, source: None, complete: None }
+        Self { low: 0, high: 0, middle: 0, comparison: None, pending: None, source: None, complete: None, closing:false }
     }
 }
 
-impl<K: BoundedOrd> RetainedOrderedMapLookupCursor<K> {
-    pub fn advance<V>(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, target: RetainedCloneRef<'_, K>, grant: BoundedOrdGrant) -> Result<(Option<RetainedOrderedMapLookup>, BoundedOrdProgress), crate::ValueError> {
-        if let Some(result) = self.complete {
-            return Ok((Some(result), BoundedOrdProgress::default()));
-        }
-        let first = self.source.is_none();
+impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
+    pub fn advance<V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,grant:BoundedOrdGrant,retirement:RetainedCloneGrant)->Result<(Option<RetainedOrderedMapLookup>,BoundedOrdProgress,RetainedCloneProgress),crate::ValueError>{
+        if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup is closing"));}
+        if let Some(result)=self.complete{return Ok((Some(result),Default::default(),Default::default()));}
+        let first=self.source.is_none();
+        if first&&grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
         source.bind(&mut self.source)?;
-        let source_value = source.get();
-        if first {
-            if grant.maximum_items == 0 {
-                self.source = None;
-                return Ok((None, BoundedOrdProgress::default()));
+        let map=source.get();
+        if first{self.high=map.len();return Ok((None,BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));}
+        if let Some(ordering)=self.pending{
+            if let Some(comparison)=self.comparison.as_mut(){
+                comparison.begin_close();let step=comparison.close_step(retirement)?;
+                if comparison.terminal_is_empty(){self.comparison=None;}
+                return Ok((None,Default::default(),step.progress()));
             }
-            self.high = source_value.len();
-            return Ok((None, BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
+            if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
+            self.pending=None;
+            match ordering{Ordering::Less=>self.low=self.middle+1,Ordering::Greater=>self.high=self.middle,Ordering::Equal=>unreachable!()}
+            return Ok((None,BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));
         }
-        if let Some(ordering) = self.pending.take() {
-            if grant.maximum_items == 0 {
-                self.pending = Some(ordering);
-                return Ok((None, BoundedOrdProgress::default()));
-            }
-            match ordering {
-                Ordering::Less => self.low = self.middle + 1,
-                Ordering::Greater => self.high = self.middle,
-                Ordering::Equal => unreachable!(),
-            }
-            self.comparison = None;
-            return Ok((None, BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
+        if self.low==self.high{
+            if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
+            let result=RetainedOrderedMapLookup::Missing(self.low);self.complete=Some(result);
+            return Ok((Some(result),BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));
         }
-        if self.low == self.high {
-            if grant.maximum_items == 0 {
-                return Ok((None, BoundedOrdProgress::default()));
-            }
-            let result = RetainedOrderedMapLookup::Missing(self.low);
-            self.complete = Some(result);
-            return Ok((Some(result), BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
-        }
-        self.middle = self.low + (self.high - self.low) / 2;
-        let comparison = self.comparison.get_or_insert_with(K::bounded_ord_cursor);
-        match comparison.compare(source.project(self.middle + 1, |map| map.get_index(self.middle).expect("validated retained ordered-map ordinal").0), target, grant)? {
-            BoundedOrdStep::Progress(progress) => Ok((None, progress)),
-            BoundedOrdStep::Complete { ordering: Ordering::Equal, progress } => {
-                let result = RetainedOrderedMapLookup::Found(self.middle);
-                self.complete = Some(result);
-                Ok((Some(result), progress))
-            }
-            BoundedOrdStep::Complete { ordering, progress } => {
-                self.pending = Some(ordering);
-                Ok((None, progress))
-            }
+        self.middle=self.low+(self.high-self.low)/2;
+        let comparison=self.comparison.get_or_insert_with(K::bounded_ord_cursor);
+        match comparison.compare(source.project(self.middle+1,|map|map.get_index(self.middle).unwrap().0),target,grant)?{
+            BoundedOrdStep::Progress(p)=>Ok((None,p,Default::default())),
+            BoundedOrdStep::Complete{ordering:Ordering::Equal,progress}=>{let result=RetainedOrderedMapLookup::Found(self.middle);self.complete=Some(result);Ok((Some(result),progress,Default::default()))},
+            BoundedOrdStep::Complete{ordering,progress}=>{self.pending=Some(ordering);Ok((None,progress,Default::default()))}
         }
     }
+    pub fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;if let Some(c)=self.comparison.as_mut(){c.begin_close();}started}
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_copy_byte_demand()}else{RetainedCloneBinding::copy_demand(&self.source)}}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_capacity_byte_demand(body)}else{RetainedCloneBinding::capacity_demand(&self.source,body)}}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_release_byte_demand()}else{RetainedCloneBinding::release_demand(&self.source)}}
+    pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_depth_demand()}else{RetainedCloneBinding::depth_demand(&self.source)}}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{
+        if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close"));}
+        if let Some(c)=self.comparison.as_mut(){let step=c.close_step(grant)?;if c.terminal_is_empty(){self.comparison=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        super::close_retained_binding(&mut self.source,grant)
+    }
+    pub fn terminal_is_empty(&self)->bool{self.comparison.is_none()&&self.source.is_none()}
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -615,6 +604,7 @@ pub enum RetainedOrderedMapInsertStep {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct RetainedOrderedMapInsertGrant {
+    pub retirement:RetainedCloneGrant,
     pub comparison: BoundedOrdGrant,
     pub maximum_moved_items: usize,
     pub maximum_moved_bytes: usize,
@@ -623,6 +613,7 @@ pub struct RetainedOrderedMapInsertGrant {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct RetainedOrderedMapInsertProgress {
+    pub retirement:RetainedCloneProgress,
     pub comparison: BoundedOrdProgress,
     pub moved_items: usize,
     pub moved_bytes: usize,
@@ -631,7 +622,7 @@ pub struct RetainedOrderedMapInsertProgress {
 
 impl RetainedOrderedMapInsertProgress {
     pub fn fits(self, grant: RetainedOrderedMapInsertGrant) -> bool {
-        self.comparison.fits(grant.comparison) && self.moved_items <= grant.maximum_moved_items && self.moved_bytes <= grant.maximum_moved_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes
+        self.retirement.fits(grant.retirement) && self.comparison.fits(grant.comparison) && self.moved_items <= grant.maximum_moved_items && self.moved_bytes <= grant.maximum_moved_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes
     }
 }
 
@@ -642,7 +633,7 @@ pub struct RetainedOrderedMapInsertCursor<K: BoundedOrd + RetireOwned, V: Retire
     key: Option<K>,
     value: Option<V>,
     lookup: RetainedOrderedMapLookupCursor<K>,
-    lookup_lease: Arc<super::RetainedCloneLeaseOwner>,
+    lookup_lease: super::RetainedCloneBorrowAuthority,
     target: Option<usize>,
     shift_page: Option<usize>,
     old_directory: Option<Vec<Vec<(K, V)>>>,
@@ -655,14 +646,17 @@ pub struct RetainedOrderedMapInsertCursor<K: BoundedOrd + RetireOwned, V: Retire
 }
 
 impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor<K, V> {
-    pub fn new(map: RetainedOrderedMap<K, V>, key: K, value: V) -> Self {
-        Self {
+    pub fn constructor_capacity_bytes()->usize{super::RetainedCloneBorrowAuthority::constructor_capacity_bytes::<()>()}
+    pub fn admit(map:RetainedOrderedMap<K,V>,key:K,value:V,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(crate::ValueError,RetainedOrderedMap<K,V>,K,V)>{
+        if grant.maximum_items==0{return Err((crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"insertion constructor requires an item"),map,key,value));}
+        let(lookup_lease,receipt)=match super::RetainedCloneBorrowAuthority::admit((),grant){Ok(v)=>v,Err((e,_))=>return Err((e,map,key,value))};
+        Ok((Self {
             map: Some(map),
             output: None,
             key: Some(key),
             value: Some(value),
             lookup: Default::default(),
-            lookup_lease: super::retained_clone_exclusive_lease(),
+            lookup_lease,
             target: None,
             shift_page: None,
             old_directory: None,
@@ -672,7 +666,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
             spent: false,
             closing: false,
             close: Default::default(),
-        }
+        },receipt))
     }
 
     pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant) -> Result<RetainedOrderedMapInsertStep, crate::ValueError> {
@@ -684,12 +678,14 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
         }
         match self.phase {
             0 => {
+                if self.lookup.closing{let step=self.lookup.close_step(grant.retirement)?;let progress=RetainedOrderedMapInsertProgress{retirement:step.progress(),..Default::default()};if !self.lookup.terminal_is_empty(){return Ok(RetainedOrderedMapInsertStep::Progress(progress));}match self.lookup.complete.unwrap(){RetainedOrderedMapLookup::Found(_)=>{self.phase=255;return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"retained ordered-map insertion refused a duplicate key"));},RetainedOrderedMapLookup::Missing(ordinal)=>{self.target=Some(ordinal);self.phase=1;return Ok(RetainedOrderedMapInsertStep::Progress(progress));}}}
                 let map = self.map.as_ref().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
                 let key = self.key.as_ref().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion key is missing"))?;
-                let map_ref = super::retained_clone_exclusive_ref(map, &self.lookup_lease, 1);
-                let key_ref = super::retained_clone_exclusive_ref(key, &self.lookup_lease, 2);
-                let (result, comparison) = self.lookup.advance(map_ref, key_ref, grant.comparison)?;
-                let progress = RetainedOrderedMapInsertProgress { comparison, ..Default::default() };
+                let map_ref = self.lookup_lease.borrow(map);
+                let key_ref = self.lookup_lease.borrow(key);
+                let (result, comparison, retirement) = self.lookup.advance(map_ref, key_ref, grant.comparison,grant.retirement)?;
+                let progress = RetainedOrderedMapInsertProgress { comparison, retirement, ..Default::default() };
+                if result.is_some(){self.lookup.begin_close();return Ok(RetainedOrderedMapInsertStep::Progress(progress));}
                 match result {
                     None => Ok(RetainedOrderedMapInsertStep::Progress(progress)),
                     Some(RetainedOrderedMapLookup::Found(_)) => {
@@ -875,39 +871,33 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
         true
     }
 
-    /// 🗺️ Observes the insertion's current cold physical frontier independently of comparison work.
-    pub fn next_close_byte_demand(&self) -> Result<usize, crate::ValueError> {
-        Ok(self.close.next_cold_byte_demand()?.max(usize::from(!self.terminal_is_empty())))
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> { if !self.lookup.terminal_is_empty(){self.lookup.next_close_copy_byte_demand()}else{self.close.next_copy_byte_demand()} }
+    pub fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, crate::ValueError> {
+        if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body);}
+        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(body); }
+        if self.key.is_some() { return self.close.next_owner_capacity_byte_demand::<K>(true, body); }
+        if self.value.is_some() { return self.close.next_owner_capacity_byte_demand::<V>(true, body); }
+        if self.old_directory.is_some() || self.new_directory.is_some() { return self.close.next_owner_capacity_byte_demand::<Vec<Vec<(K,V)>>>(true, body); }
+        if self.map.is_some()||self.output.is_some(){self.close.next_owner_capacity_byte_demand::<RetainedOrderedMap<K,V>>(true,body)}else{self.lookup_lease.next_close_capacity_byte_demand(body)}
     }
-
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if !self.close.is_empty() {
-            let step = self.close.step(maximum_items, maximum_bytes)?;
-            return Ok(if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
-        }
-        if let Some(step) = self.close.begin_option(&mut self.key, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.value, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.old_directory, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.new_directory, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.map, maximum_items)? {
-            return Ok(step);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.output, maximum_items)? {
-            return Ok(step);
-        }
-        Ok(SnapshotRetirementStep::Complete)
+    pub fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> { if !self.lookup.terminal_is_empty(){self.lookup.next_close_release_byte_demand()}else if !self.close.is_empty(){self.close.next_release_byte_demand()}else if self.key.is_some()||self.value.is_some()||self.old_directory.is_some()||self.new_directory.is_some()||self.map.is_some()||self.output.is_some(){Ok(0)}else{self.lookup_lease.next_close_release_byte_demand()} }
+    pub fn next_close_depth_demand(&self) -> Result<usize, crate::ValueError> { if !self.lookup.terminal_is_empty(){self.lookup.next_close_depth_demand()}else if !self.close.is_empty(){self.close.next_depth_demand()}else if self.key.is_some()||self.value.is_some()||self.old_directory.is_some()||self.new_directory.is_some()||self.map.is_some()||self.output.is_some(){Ok(1)}else{self.lookup_lease.next_close_depth_demand()} }
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion must begin close before retiring ownership")); }
+        if !self.lookup.terminal_is_empty(){self.lookup.begin_close();return self.lookup.close_step(grant);}
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.key, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.value, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.old_directory, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.new_directory, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.map, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        self.lookup_lease.close_step(grant)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.key.is_none() && self.value.is_none() && self.old_directory.is_none() && self.new_directory.is_none() && self.map.is_none() && self.output.is_none() && self.close.is_empty()
+        self.lookup.terminal_is_empty()&&self.lookup_lease.terminal_is_empty()&&self.closing && self.key.is_none() && self.value.is_none() && self.old_directory.is_none() && self.new_directory.is_none() && self.map.is_none() && self.output.is_none() && self.close.is_empty()
     }
 }
 

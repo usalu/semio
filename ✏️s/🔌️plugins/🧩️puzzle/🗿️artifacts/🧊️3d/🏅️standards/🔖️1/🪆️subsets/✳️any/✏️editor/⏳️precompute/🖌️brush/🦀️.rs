@@ -558,9 +558,7 @@ pub fn apply_brush_placement_to_snapshot(scene_snapshot: &EngineSceneSnapshot, p
     let object_id = brush_object_id(scene_snapshot, payload);
     let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.point, direction: entry.direction }).collect();
     // 🌲️ The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
-    // resolution root. Params start at zero (a bare port-to-port docking); the app's
-    // `puzzle3d_rederive_all_attractions` rederives them from this placement's actual pose right after
-    // merge, so the object never visibly jumps when the directed-attraction resolver runs.
+    // resolution root. Params start at zero (a bare port-to-port docking).
     let attracted = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
     let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_full_id);
     let mut next = scene_snapshot.clone();

@@ -427,7 +427,10 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 pub(super) fn every_command() -> Vec<VcsCommand> {
     vec![
         VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}),
-        VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "title".into(), value: "Renamed".into() }),
+        VcsCommand::RenameVcs(rename_vcs::RenameVcs { title: "Renamed".into() }),
+        VcsCommand::ChangeCounter(change_counter::ChangeCounter { value: 7 }),
+        VcsCommand::ChangeStatus(change_status::ChangeStatus { status: "reviewed".into() }),
+        VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: "Jotted".into() }),
         VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }),
         VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
         VcsCommand::NoMutation(no_operation::NoMutation {}),
@@ -451,13 +454,13 @@ fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
     assert_eq!(tool_ids, VCS_BOUNDED_TOOL_IDS);
     let snapshot = VcsPlayApp::initial_snapshot();
     let interaction = protocol::InteractionState::default();
-    let accepted = VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: String::new(), value: "v".repeat(maximum) });
-    let rejected = VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: String::new(), value: "v".repeat(maximum + additional) });
+    let accepted = VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: "v".repeat(maximum) });
+    let rejected = VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: "v".repeat(maximum + additional) });
     assert_eq!(vcs_bounded_extent(&accepted, &snapshot, &interaction), Some(expected_items));
     assert_eq!(vcs_bounded_extent(&rejected, &snapshot, &interaction), None);
     let factory = VcsBoundedCommandJobFactory::new("s.vcs.vcs@1/*#editor");
     assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-    assert!(VcsPlayApp::command_from_action("patchSnapshot", Some(&action_args([("field", "f".to_string()), ("value", "v".repeat(maximum + additional))]))).is_err());
+    assert!(VcsPlayApp::command_from_action("changeNotes", Some(&action_args([("value", "v".repeat(maximum + additional))]))).is_err());
 }
 
 #[test]
@@ -503,7 +506,10 @@ fn one_item_store_preparation_rejects_non_document_lanes() {
 fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
     let rows = [
         ("incrementCounter", no_args()),
-        ("patchSnapshot", action_args([("field", "title".to_string()), ("value", "next".to_string())])),
+        ("renameVcs", action_args([("value", "next".to_string())])),
+        ("changeCounter", action_args([("value", "3".to_string())])),
+        ("changeStatus", action_args([("value", "next".to_string())])),
+        ("changeNotes", action_args([("value", "next".to_string())])),
         ("textEdit", action_args([("text", "{}".to_string())])),
         ("edit", action_args([("text", "{}".to_string())])),
         ("noMutation", no_args()),
@@ -646,7 +652,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     let run = semio_framework_plugin::artifact_app_laws::typing_run();
     assert!(run.texts.len() > 64 * 10, "the run must outlast the edit ledger many times over");
     let mut instance = app().await;
-    dispatch(&mut instance, VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "notes".into(), value: run.initial.clone() })).await;
+    dispatch(&mut instance, VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: run.initial.clone() })).await;
     let start = instance.snapshot().expect("snapshot");
     assert_eq!(start.notes, run.initial);
     let window = semio_framework_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };

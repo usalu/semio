@@ -46,6 +46,10 @@ fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
     semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 
+/// 📍 An insert's optional `index=` argument: absent appends.
+fn opt_index(args: &std::collections::BTreeMap<String, String>) -> Result<Option<usize>, String> {
+    args.get("index").map_or(Ok(None), |raw| dec_json::<Option<usize>>(raw))
+}
 fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
@@ -121,7 +125,7 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
     match keyword {
         "change-annex" => Ok(En1998Mutation::ChangeAnnex(ChangeAnnex { new_annex: dec_json(&arg("new-annex")?)? })),
         "update-site" => Ok(En1998Mutation::UpdateSite(UpdateSite { site: dec_json(&arg("site")?)? })),
-        "insert-building" => Ok(En1998Mutation::InsertBuilding(InsertBuilding { index: dec_json(&arg("index")?)?, building: dec_json(&arg("building")?)? })),
+        "insert-building" => Ok(En1998Mutation::InsertBuilding(InsertBuilding { index: opt_index(&args)?, building: dec_json(&arg("building")?)? })),
         "remove-building" => Ok(En1998Mutation::RemoveBuilding(RemoveBuilding { index: dec_json(&arg("index")?)? })),
         "change-system-v-rd-n" => Ok(En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN { building_index: dec_json(&arg("building-index")?)?, system_index: dec_json(&arg("system-index")?)?, new_base_shear_resistance_n: dec_json(&arg("new-base-shear-resistance-n")?)? })),
         "change-storey-permanent-gk-n" => Ok(En1998Mutation::ChangeStoreyPermanentGkN(ChangeStoreyPermanentGkN { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_permanent_gk_n: dec_json(&arg("new-permanent-gk-n")?)? })),
@@ -131,15 +135,15 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
         "change-elevation-regular" => Ok(En1998Mutation::ChangeElevationRegular(ChangeElevationRegular { building_index: dec_json(&arg("building-index")?)?, new_elevation_regular: dec_json(&arg("new-elevation-regular")?)? })),
         "change-member-detailing" => Ok(En1998Mutation::ChangeMemberDetailing(ChangeMemberDetailing { building_index: dec_json(&arg("building-index")?)?, member_index: dec_json(&arg("member-index")?)?, new_detailing_compatible_with_q: dec_json(&arg("new-detailing-compatible-with-q")?)? })),
         "change-masonry-wall-ratio" => Ok(En1998Mutation::ChangeMasonryWallRatio(ChangeMasonryWallRatio { building_index: dec_json(&arg("building-index")?)?, new_masonry_wall_area_ratio: dec_json(&arg("new-masonry-wall-area-ratio")?)? })),
-        "insert-bridge" => Ok(En1998Mutation::InsertBridge(InsertBridge { index: dec_json(&arg("index")?)?, bridge: dec_json(&arg("bridge")?)? })),
+        "insert-bridge" => Ok(En1998Mutation::InsertBridge(InsertBridge { index: opt_index(&args)?, bridge: dec_json(&arg("bridge")?)? })),
         "change-bridge-v-rd-n" => Ok(En1998Mutation::ChangeBridgeVRdN(ChangeBridgeVRdN { index: dec_json(&arg("index")?)?, new_v_rd_n: dec_json(&arg("new-v-rd-n")?)? })),
-        "insert-assessment" => Ok(En1998Mutation::InsertAssessment(InsertAssessment { index: dec_json(&arg("index")?)?, assessment: dec_json(&arg("assessment")?)? })),
+        "insert-assessment" => Ok(En1998Mutation::InsertAssessment(InsertAssessment { index: opt_index(&args)?, assessment: dec_json(&arg("assessment")?)? })),
         "change-assessment-rkn" => Ok(En1998Mutation::ChangeAssessmentRKN(ChangeAssessmentRKN { index: dec_json(&arg("index")?)?, new_r_k_n: dec_json(&arg("new-r-k-n")?)? })),
-        "insert-silo" => Ok(En1998Mutation::InsertSilo(InsertSilo { index: dec_json(&arg("index")?)?, silo: dec_json(&arg("silo")?)? })),
-        "insert-tank" => Ok(En1998Mutation::InsertTank(InsertTank { index: dec_json(&arg("index")?)?, tank: dec_json(&arg("tank")?)? })),
-        "insert-foundation" => Ok(En1998Mutation::InsertFoundation(InsertFoundation { index: dec_json(&arg("index")?)?, foundation: dec_json(&arg("foundation")?)? })),
-        "insert-retaining-wall" => Ok(En1998Mutation::InsertRetainingWall(InsertRetainingWall { index: dec_json(&arg("index")?)?, wall: dec_json(&arg("wall")?)? })),
-        "insert-tower" => Ok(En1998Mutation::InsertTower(InsertTower { index: dec_json(&arg("index")?)?, tower: dec_json(&arg("tower")?)? })),
+        "insert-silo" => Ok(En1998Mutation::InsertSilo(InsertSilo { index: opt_index(&args)?, silo: dec_json(&arg("silo")?)? })),
+        "insert-tank" => Ok(En1998Mutation::InsertTank(InsertTank { index: opt_index(&args)?, tank: dec_json(&arg("tank")?)? })),
+        "insert-foundation" => Ok(En1998Mutation::InsertFoundation(InsertFoundation { index: opt_index(&args)?, foundation: dec_json(&arg("foundation")?)? })),
+        "insert-retaining-wall" => Ok(En1998Mutation::InsertRetainingWall(InsertRetainingWall { index: opt_index(&args)?, wall: dec_json(&arg("wall")?)? })),
+        "insert-tower" => Ok(En1998Mutation::InsertTower(InsertTower { index: opt_index(&args)?, tower: dec_json(&arg("tower")?)? })),
         "change-tower-m-rd-nm" => Ok(En1998Mutation::ChangeTowerMRdNm(ChangeTowerMRdNm { index: dec_json(&arg("index")?)?, new_m_rd_nm: dec_json(&arg("new-m-rd-nm")?)? })),
         "remove-bridge" => Ok(En1998Mutation::RemoveBridge(RemoveBridge { index: dec_json(&arg("index")?)? })),
         "remove-assessment" => Ok(En1998Mutation::RemoveAssessment(RemoveAssessment { index: dec_json(&arg("index")?)? })),
@@ -204,7 +208,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
     vec![
         En1998Mutation::ChangeAnnex(ChangeAnnex { new_annex: String::from("en") }),
         En1998Mutation::UpdateSite(UpdateSite { site: snap.site.clone() }),
-        En1998Mutation::InsertBuilding(InsertBuilding { index: 0usize, building: building.clone() }),
+        En1998Mutation::InsertBuilding(InsertBuilding { index: Some(0usize), building: building.clone() }),
         En1998Mutation::RemoveBuilding(RemoveBuilding { index: 0usize }),
         En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN {
             building_index: 0usize,
@@ -244,7 +248,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             new_masonry_wall_area_ratio: 0.05,
         }),
         En1998Mutation::InsertBridge(InsertBridge {
-            index: 0usize,
+            index: Some(0usize),
             bridge: crate::En1998Bridge {
                 id: "br-demo".into(),
                 period_ratio: 2.0,
@@ -258,7 +262,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::ChangeBridgeVRdN(ChangeBridgeVRdN { index: 0usize, new_v_rd_n: 5.0e5 }),
         En1998Mutation::InsertAssessment(InsertAssessment {
-            index: 0usize,
+            index: Some(0usize),
             assessment: crate::En1998Assessment {
                 id: "as-demo".into(),
                 knowledge_level: "kl2".into(),
@@ -270,7 +274,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::ChangeAssessmentRKN(ChangeAssessmentRKN { index: 0usize, new_r_k_n: 4.0e5 }),
         En1998Mutation::InsertSilo(InsertSilo {
-            index: 0usize,
+            index: Some(0usize),
             silo: crate::En1998Silo {
                 id: "si-demo".into(),
                 height_m: 10.0,
@@ -285,7 +289,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             },
         }),
         En1998Mutation::InsertTank(InsertTank {
-            index: 0usize,
+            index: Some(0usize),
             tank: crate::En1998Tank {
                 id: "tk-demo".into(),
                 height_m: 8.0,
@@ -298,7 +302,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             },
         }),
         En1998Mutation::InsertFoundation(InsertFoundation {
-            index: 0usize,
+            index: Some(0usize),
             foundation: crate::En1998Foundation {
                 supported_building_id: String::new(),
                 id: "fd-demo".into(),
@@ -310,7 +314,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             },
         }),
         En1998Mutation::InsertRetainingWall(InsertRetainingWall {
-            index: 0usize,
+            index: Some(0usize),
             wall: crate::En1998RetainingWall {
                 id: "rw-demo".into(),
                 height_m: 4.0,
@@ -321,7 +325,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             },
         }),
         En1998Mutation::InsertTower(InsertTower {
-            index: 0usize,
+            index: Some(0usize),
             tower: crate::En1998Tower {
                 id: "tw-demo".into(),
                 height_m: 40.0,

@@ -2,10 +2,11 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::modes::edit::windows::main::config::current;
-use crate::editor::sequence::sequence_child_emit_from_host_mutation;
+use crate::editor::sequence::{host_from_host_snapshot, sequence_edit_emit, sequence_host_snapshot_from_children, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
-use infinite_board_port_directed_dag::{DagLayoutOptions, DagLayoutOrientation};
+use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions,DagLayoutOrientation};
+use infinite_board_port_directed_dag::{};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -29,10 +30,13 @@ pub mod reorganize {
 
     pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
         let orientation = orientation_from_config(&current(cfg).orientation);
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
-            let _ = host.reorganize(&opts);
-        })
+        let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)?;
+        let mut host = neural_engine::ColdOwner::new(host_from_host_snapshot(&live));
+        let _ = host.reorganize(&DagLayoutOptions { orientation, ..DagLayoutOptions::default() });
+        let positions: Vec<(String, f64, f64)> = host.snapshot.steps.iter().map(|step| (step.id.clone(), step.x, step.y)).collect();
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.move_to(&positions);
+        Ok(sequence_edit_emit(doc, edit))
     }
 }
 //#endregion 🔖️Reorganize

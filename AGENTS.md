@@ -10,6 +10,8 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - You MUST NOT create any other script files other than `📜️script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
+  - You MUST NOT exceed file paths with 256 chars length.
+    - You MUST NOT copy source files to tickets folder which are checked into version control because they exceed the allowed path length.
 - You MUST NOT create runtime dependencies on external libraries.
   - You SHOULD NOT use external libraries for runtime purposes.
     - You SHOULD use existing libraries as possible to test our implementation.

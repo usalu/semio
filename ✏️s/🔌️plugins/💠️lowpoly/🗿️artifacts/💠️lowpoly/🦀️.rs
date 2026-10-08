@@ -153,7 +153,6 @@ impl Identified<String> for LowpolyObject {
 /// paint layers). Non-persistent fields live on [`schema::LowpolyArtifact`](crate::schema::LowpolyArtifact).
 pub use crate::schema::snapshot::LowpolySnapshot;
 
-pub use crate::snapshot::schema::snapshot_from_mesh_json;
 
 /// 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
 /// session so mesh operations know their target vertices/edges/faces.
@@ -238,20 +237,6 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
 
         }
         if let Some(value)=&patch.mesh_state { self.mesh_state=value.clone(); }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
-        let patch = LowpolyObjectPatch {
-            name: (self.name != other.name).then(|| other.name.clone()),
-            smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
-            position: (self.transform.position != other.transform.position).then_some(other.transform.position),
-            rotation: (self.transform.rotation != other.transform.rotation).then_some(other.transform.rotation),
-            scale: (self.transform.scale != other.transform.scale).then_some(other.transform.scale),
-            mesh: (self.mesh != other.mesh).then(|| other.mesh.clone()),
-            mesh_content: (self.mesh_content != other.mesh_content).then(|| other.mesh_content.clone()),
-            mesh_state: (self.mesh_state != other.mesh_state).then(|| other.mesh_state.clone()),
-        };
-        (patch != LowpolyObjectPatch::default()).then_some(patch)
     }
 }
 
@@ -801,6 +786,19 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🫓️flat/🦀️.rs"]
                             mod tests_flat;
+                        }
+                        #[path = "."]
+                        pub mod set_vertex_positions {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🧪️tests/📍️sets/🦀️.rs"]
+                            mod tests_sets;
                         }
                     }
                 }

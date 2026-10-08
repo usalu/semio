@@ -1,0 +1,39 @@
+[
+  {
+    "semantic": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+    "forbidden": [
+      "concrete_forest_left_owned_document",
+      "default_owned_document",
+      "default_snapshot",
+      "default_mesh_workspace"
+    ],
+    "owner": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "required": [
+      "concrete_forest_left_owned_document",
+      "default_owned_document",
+      "default_snapshot",
+      "default_mesh_workspace",
+      "snapshot_from_mesh_json"
+    ]
+  },
+  {
+    "semantic": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+    "forbidden": [
+      "fixture_descriptor"
+    ],
+    "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "required": [
+      "fixture_descriptor"
+    ]
+  },
+  {
+    "semantic": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🧬️schema/🦀️.rs",
+    "forbidden": [
+      "scene_camera_json"
+    ],
+    "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🚪️io/📝️text/🦀️.rs",
+    "required": [
+      "scene_camera_json"
+    ]
+  }
+]

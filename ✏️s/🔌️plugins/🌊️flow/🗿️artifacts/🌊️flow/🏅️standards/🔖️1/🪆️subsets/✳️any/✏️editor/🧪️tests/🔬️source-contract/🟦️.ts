@@ -34,7 +34,7 @@ for (const source of flowEditorSources) {
   assert(!/\bFlowHost::with_fixture\b/.test(source), "scoped flow hosts must use FlowHost::with_host_snapshot");
   assert(!/\bgeneration3d_fixture_operations\b/.test(source), "procedural helpers must use generation3d_host_snapshot_operations");
   assert(!/\bflow_fixture_to_form_spec\b/.test(source), "forms bridge must use flow_host_snapshot_to_form_spec");
-  assert(!/\bflow_fixture_operations\b/.test(source), "flow diff helpers must use flow_host_snapshot_operations");
+  assert(!/\bflow_fixture_operations\b/.test(source), "flow snapshot-to-operations translators are deleted: gesture sites emit concrete leaves");
   assert(!/pub snapshot_json:\s*Option<String>/.test(source), "NodeGraphScene must use host_snapshot_json, not snapshot_json");
   assert(!/\.replace_fixture\s*\(/.test(source), "FlowHost must use replace_host_snapshot");
   assert(!/\bFlowHostDocument\b|\bHostDocument\b|hostDocumentJson|host_document/.test(source), "forbidden host-document vocabulary; use HostSnapshot / host_snapshot");

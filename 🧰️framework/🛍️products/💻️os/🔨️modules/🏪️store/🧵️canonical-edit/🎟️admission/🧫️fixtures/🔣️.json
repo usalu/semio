@@ -1,0 +1,82 @@
+{
+  "editHeaderBytes": 64,
+  "identityCapacityBytes": [
+    256,
+    256,
+    256
+  ],
+  "maximumBytes": 4096,
+  "cases": [
+    {
+      "actor": "Ä🧩",
+      "id": "edit-1",
+      "capacity": 832,
+      "items": 0,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "actor": "Ä🧩",
+      "id": "edit-1",
+      "capacity": 831,
+      "items": 1,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "actor": "Ä🧩",
+      "id": "edit-1",
+      "capacity": 832,
+      "items": 1,
+      "depth": 0,
+      "accepted": false
+    },
+    {
+      "actor": "Ä🧩",
+      "id": "edit-1",
+      "capacity": 832,
+      "items": 1,
+      "depth": 1,
+      "accepted": true
+    }
+  ],
+  "retirement": {
+    "copyGrants": [
+      1,
+      2,
+      7,
+      256,
+      4096
+    ],
+    "stages": [
+      {
+        "name": "frame",
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 2
+      },
+      {
+        "name": "body",
+        "copy": 1,
+        "capacity": 0,
+        "release": 0,
+        "depth": 2
+      },
+      {
+        "name": "backing",
+        "copy": 0,
+        "capacity": 0,
+        "release": 65536,
+        "depth": 1
+      },
+      {
+        "name": "frame-release",
+        "copy": 0,
+        "capacity": 0,
+        "release": 128,
+        "depth": 1
+      }
+    ]
+  }
+}

@@ -18,6 +18,8 @@ pub struct KnotVector {
     pub degree: usize,
 }
 
+semio_framework_value::artifact_retire_struct!(KnotVector {knots,degree});
+
 impl KnotVector {
     /// 🧵️ Builds and validates a knot vector: non-decreasing, correct length for `(n, degree)`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

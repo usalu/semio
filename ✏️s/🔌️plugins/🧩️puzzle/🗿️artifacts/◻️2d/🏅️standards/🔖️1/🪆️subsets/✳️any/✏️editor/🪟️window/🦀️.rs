@@ -313,9 +313,6 @@ impl protocol::DiffAlgebra<Puzzle2dWindowConfig> for Puzzle2dWindowConfigDiff {
     fn inverse(&self, base: &Puzzle2dWindowConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle2dWindowConfig, other: &Puzzle2dWindowConfig) -> Self {
-        Self { camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x), camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y), camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom), lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()), grid_visible: (base.grid_visible != other.grid_visible).then(|| other.grid_visible), grid_snap_enabled: (base.grid_snap_enabled != other.grid_snap_enabled).then(|| other.grid_snap_enabled), grid_factor: (base.grid_factor != other.grid_factor).then(|| other.grid_factor), suggestion_offset: (base.suggestion_offset != other.suggestion_offset).then(|| other.suggestion_offset), proximity_radius: (base.proximity_radius != other.proximity_radius).then(|| other.proximity_radius), area_brush_width: (base.area_brush_width != other.area_brush_width).then(|| other.area_brush_width), area_brush_height: (base.area_brush_height != other.area_brush_height).then(|| other.area_brush_height), transform_move: (base.transform_move != other.transform_move).then(|| other.transform_move), transform_rotate: (base.transform_rotate != other.transform_rotate).then(|| other.transform_rotate), selectable_nodes: (base.selectable_nodes != other.selectable_nodes).then(|| other.selectable_nodes), selectable_handles: (base.selectable_handles != other.selectable_handles).then(|| other.selectable_handles), selectable_edges: (base.selectable_edges != other.selectable_edges).then(|| other.selectable_edges) }
-    }
     fn is_empty(&self) -> bool {
         self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.lod_mode.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.suggestion_offset.is_none() && self.proximity_radius.is_none() && self.area_brush_width.is_none() && self.area_brush_height.is_none() && self.transform_move.is_none() && self.transform_rotate.is_none() && self.selectable_nodes.is_none() && self.selectable_handles.is_none() && self.selectable_edges.is_none()
     }
@@ -474,9 +471,6 @@ impl protocol::DiffAlgebra<Puzzle2dWindowTransient> for Puzzle2dWindowTransientD
     fn inverse(&self, base: &Puzzle2dWindowTransient) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle2dWindowTransient, other: &Puzzle2dWindowTransient) -> Self {
-        Self { engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), brush_candidate_index: (base.brush_candidate_index != other.brush_candidate_index).then(|| other.brush_candidate_index), brush_candidates: (base.brush_candidates != other.brush_candidates).then(|| other.brush_candidates.clone()), brush_candidate_source_handle_id: (base.brush_candidate_source_handle_id != other.brush_candidate_source_handle_id).then(|| other.brush_candidate_source_handle_id.clone()), suggestion_menu: (base.suggestion_menu != other.suggestion_menu).then(|| other.suggestion_menu.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none() && self.brush_candidate_index.is_none() && self.brush_candidates.is_none() && self.brush_candidate_source_handle_id.is_none() && self.suggestion_menu.is_none()
     }
@@ -628,17 +622,17 @@ pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConf
     snapshot.and_then(|value| value.get::<Puzzle2dOverviewWindowConfigOwner>().or_else(|| value.get::<Puzzle2dDetailWindowConfigOwner>()).or_else(|| value.get::<Puzzle2dSelectionWindowConfigOwner>())).cloned().unwrap_or_default()
 }
 
-pub fn document_seed(document: &serde_json::Value) -> Puzzle2dWindowConfig {
+pub fn document_seed(document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
     let mut seed = Puzzle2dWindowConfig::default();
     if let Some(camera) = document.get("camera") {
-        seed.camera_x = camera.get("x").and_then(serde_json::Value::as_f64).unwrap_or(seed.camera_x);
-        seed.camera_y = camera.get("y").and_then(serde_json::Value::as_f64).unwrap_or(seed.camera_y);
-        seed.camera_zoom = camera.get("zoom").and_then(serde_json::Value::as_f64).filter(|zoom| zoom.is_finite() && *zoom > 0.0).unwrap_or(seed.camera_zoom);
+        seed.camera_x = camera.get("x").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(seed.camera_x);
+        seed.camera_y = camera.get("y").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(seed.camera_y);
+        seed.camera_zoom = camera.get("zoom").and_then(semio_framework_pack_json::Value::as_f64).filter(|zoom| zoom.is_finite() && *zoom > 0.0).unwrap_or(seed.camera_zoom);
     }
     seed
 }
 
-pub fn config_from_view_or_document(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>, document: &serde_json::Value) -> Puzzle2dWindowConfig {
+pub fn config_from_view_or_document(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>, document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
     let config = config_from_view(view);
     if view.window.is_some_and(|snapshot| snapshot.generation() == 0) && config == Puzzle2dWindowConfig::default() {
         document_seed(document)
@@ -647,7 +641,7 @@ pub fn config_from_view_or_document(view: &semio_framework_plugin::ConfigView<'_
     }
 }
 
-pub fn config_from_snapshot_or_document(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>, document: &serde_json::Value) -> Puzzle2dWindowConfig {
+pub fn config_from_snapshot_or_document(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>, document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
     let config = config_from_snapshot(snapshot);
     if snapshot.is_some_and(|snapshot| snapshot.generation() == 0) && config == Puzzle2dWindowConfig::default() {
         document_seed(document)

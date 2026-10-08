@@ -8,7 +8,7 @@
 //! ⚠️ The snapshot holds the point cloud INLINE (model (a), design §20.15), so the vectors are forward evidence where their
 //! scenario applies: `insert-point` seeds the empty cloud (its inverse is `remove-point` at the same index), `move-points`
 //! drags two points by an offset and `set-point-positions` puts them back (each the other's exact undo). `remove-point`
-//! carries a REJECTION vector (`mutation.target-missing`) and `replace-points` an `applied`-but-`mutation.no-op` vector; those
+//! carries a REJECTION vector (`mutation.target-missing`) and none an `applied`-but-`mutation.no-op` vector; those
 //! two are listed by name in `UNOBSERVABLE` below.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves
@@ -26,11 +26,11 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["replace-points", "insert-point", "remove-point", "move-points", "set-point-positions"];
+const KINDS: &[&str] = &["insert-point", "remove-point", "move-points", "set-point-positions"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
-const UNOBSERVABLE: &[&str] = &["replace-points", "remove-point"];
+const UNOBSERVABLE: &[&str] = &["remove-point"];
 
 //#endregion 🔖️Kinds
 
@@ -52,13 +52,6 @@ struct Vector {
 
 fn vector(kind: &str) -> Vector {
     match kind {
-        "replace-points" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/🎯️outcome/🔣️.json"),
-        },
         "insert-point" => Vector {
             before: include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-point/🧪️seeds/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-point/🧪️seeds/🦠️mutation/🔣️.json"),

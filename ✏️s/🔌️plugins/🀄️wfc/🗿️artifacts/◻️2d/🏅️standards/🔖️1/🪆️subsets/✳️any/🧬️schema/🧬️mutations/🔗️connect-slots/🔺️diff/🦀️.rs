@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectSlots` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::{Wfc2dDiff, Wfc2dRows};
+use crate::diff::{Wfc2dDiff, Wfc2dRow, Wfc2dEdgesDelta};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::ConnectSlots, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -15,5 +15,5 @@ pub fn diff(payload: &super::ConnectSlots, base: &Wfc2dSnapshot) -> protocol::Mu
     if payload.edge.relation.is_empty() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Edge \"{}\" must name a relation.", payload.edge.id), [payload.edge.id.clone()]);
     }
-    protocol::MutationOutcome::new(Wfc2dDiff { edges: Wfc2dRows { added: vec![payload.edge.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { edges: Wfc2dEdgesDelta::insertion(Wfc2dRow::insert_at(&base.edges, &payload.edge), payload.edge.clone()), ..Default::default() })
 }

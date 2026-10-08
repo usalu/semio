@@ -7,7 +7,8 @@
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -45,7 +46,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "disconnect-kind-compatibility/withdraws-the-tambour-rectangular-pair: inverse did not restore the before-snapshot");

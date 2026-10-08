@@ -11,7 +11,7 @@ import { applyGeneration2dGeneratePreviewWindowConfigMutation } from "../../🎭
 
 type Kind = "generation2d-main" | "generation2d-preview" | "generation2d-generate-preview";
 type Config = Generation2dMainWindowConfig;
-type Mutation = { kind: "snapshot"; config: Config };
+type Mutation = { kind: "set-viewport"; value: Config["viewport"] };
 type Fixture = {
   document: Record<string, unknown>;
   appConfig: Record<string, unknown>;
@@ -80,7 +80,7 @@ export function testGeneration2dWindowCameraOwnershipOracle(): void {
     configs[id] = applyOwned(base, entry.windowKindId, entry.mutation);
     patchOracle[id] = applyPatch(
       structuredClone(patchOracle[id] ?? fixture.baseConfigs[entry.windowKindId]),
-      [{ op: "replace", path: "", value: entry.mutation.config }],
+      [{ op: "replace", path: "", value: { viewport: entry.mutation.value } }],
       false,
       false,
     ).newDocument;

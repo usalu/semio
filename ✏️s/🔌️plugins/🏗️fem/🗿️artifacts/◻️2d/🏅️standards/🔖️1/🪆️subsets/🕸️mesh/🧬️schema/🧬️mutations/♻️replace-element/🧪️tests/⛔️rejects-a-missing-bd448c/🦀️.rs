@@ -13,7 +13,8 @@
 //! ⛔️ `replace-element` validates only that the TARGET exists; it never checks the replacement's own node/material/section references, so a well-addressed replace can introduce dangling ones.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

@@ -102,15 +102,6 @@ async fn absorb_associative_over_a_triple() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn between_roundtrip_synthetic() {
-    let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
-    let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
-    assert_eq!(protocol::apply_diff(&TxtDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&TxtDiff::between(&b, &a), &b).unwrap(), a);
-    assert!(TxtDiff::between(&a, &a).is_empty());
-}
-
-#[semio_framework_async_macros::async_test]
 async fn inverse_diff_level_roundtrip() {
     let base = TxtSnapshot { lines: lines(&["a", "b"]), trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
     let d = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![TxtLineAdded { index: 0, text: "z".into() }] }), trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf) };
@@ -128,8 +119,6 @@ async fn inverse_diff_level_roundtrip() {
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
     use protocol::{DiffBinary,DiffCodec,DiffText};
-    let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
-    let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
     let cases = vec![
         TxtDiff::default(),
         TxtDiff { trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf), lines: None },
@@ -138,7 +127,6 @@ async fn diff_codec_text_binary_roundtrip_law() {
             line_ending: Some(LineEnding::Lf),
             lines: Some(TxtLinesDiff { removed: vec![0, 2], modified: vec![TxtLineModified { index: 1, text: "changed".into() }], added: vec![TxtLineAdded { index: 0, text: "new-head".into() }, TxtLineAdded { index: 3, text: "new-tail".into() }] }),
         },
-        TxtDiff::between(&a, &b),
     ];
     for d in cases {
         let printed = d.print_diff();
@@ -168,8 +156,6 @@ async fn diff_grammar_conformance_law() {
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse diff grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 
-    let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
-    let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
     let cases = vec![
         TxtDiff::default(),
         TxtDiff { trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf), lines: None },
@@ -178,7 +164,6 @@ async fn diff_grammar_conformance_law() {
             line_ending: Some(LineEnding::Lf),
             lines: Some(TxtLinesDiff { removed: vec![0, 2], modified: vec![TxtLineModified { index: 1, text: "changed".into() }], added: vec![TxtLineAdded { index: 0, text: "new-head".into() }, TxtLineAdded { index: 3, text: "new-tail".into() }] }),
         },
-        TxtDiff::between(&a, &b),
     ];
     for d in cases {
         let printed = d.print_diff();

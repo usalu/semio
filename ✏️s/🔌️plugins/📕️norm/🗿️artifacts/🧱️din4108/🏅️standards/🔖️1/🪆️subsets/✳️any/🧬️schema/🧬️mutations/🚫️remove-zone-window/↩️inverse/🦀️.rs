@@ -6,7 +6,7 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 
 pub fn inverse(payload: &RemoveZoneWindow, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.zones.iter().find(|zone| zone.id == payload.zone_id).and_then(|zone| zone.windows.get(payload.index)).map(|window| vec![Din4108Mutation::InsertZoneWindow(InsertZoneWindow { zone_id: payload.zone_id.clone(), index: payload.index, window: window.clone() })]).unwrap_or_default()
+    base.zones.iter().find(|zone| zone.id == payload.zone_id).and_then(|zone| zone.windows.get(payload.index)).map(|window| vec![Din4108Mutation::InsertZoneWindow(InsertZoneWindow { zone_id: payload.zone_id.clone(), index: Some(payload.index), window: window.clone() })]).unwrap_or_default()
 
     })())
 }

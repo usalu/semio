@@ -3,7 +3,7 @@
 //! fill run re-reads through `ToolRunSettingsReads`.
 
 use crate::editor::puzzle2d::{puzzle2d_absolute_or_delta, puzzle2d_window_and_measures_scope, Puzzle2dActionCtx, PUZZLE2D_PLACEMENT_MEASURE_MAX};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn set_brush_placement_overlap_budget(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     if let Some(value) = puzzle2d_absolute_or_delta(args, ctx.scene.runtime.brush_placement_overlap_budget) {

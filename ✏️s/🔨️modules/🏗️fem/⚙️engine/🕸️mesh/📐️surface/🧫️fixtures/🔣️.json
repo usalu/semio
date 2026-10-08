@@ -1,0 +1,825 @@
+{
+  "version": 1,
+  "numericPolicy": {
+    "native": "binary64-exact-coordinates",
+    "earcut": "javascript-number-binary64-area-topology",
+    "objAndStlThree": "float32-projection-only",
+    "f32RelativeTolerance": 1e-05,
+    "signedZero": "binary64-sign-preserved"
+  },
+  "vectors": [
+    {
+      "id": "rectangle",
+      "regions": [
+        {
+          "regionId": "rect",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 0.5,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "rect",
+          "area": 2,
+          "volume": 1,
+          "bounds": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0.5
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4000000000000000",
+              "3ff0000000000000",
+              "3fe0000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hole",
+      "regions": [
+        {
+          "regionId": "with-hole",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                0,
+                4
+              ]
+            ],
+            "holes": [
+              [
+                [
+                  1,
+                  1
+                ],
+                [
+                  3,
+                  1
+                ],
+                [
+                  3,
+                  3
+                ],
+                [
+                  1,
+                  3
+                ]
+              ]
+            ]
+          },
+          "thickness": 1,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "with-hole",
+          "area": 12,
+          "volume": 12,
+          "bounds": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              1
+            ]
+          ],
+          "minimumTriangles": 32,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4010000000000000",
+              "4010000000000000",
+              "3ff0000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reversed-winding",
+      "regions": [
+        {
+          "regionId": "reversed",
+          "domain": {
+            "outer": [
+              [
+                0,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 0.5,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "reversed",
+          "area": 2,
+          "volume": 1,
+          "bounds": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0.5
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4000000000000000",
+              "3ff0000000000000",
+              "3fe0000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multiple-regions",
+      "regions": [
+        {
+          "regionId": "first-ä",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 0.25,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        },
+        {
+          "regionId": "second",
+          "domain": {
+            "outer": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 2,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "first-ä",
+          "area": 2,
+          "volume": 0.5,
+          "bounds": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0.25
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4000000000000000",
+              "3ff0000000000000",
+              "3fd0000000000000"
+            ]
+          ]
+        },
+        {
+          "regionId": "second",
+          "area": 1,
+          "volume": 2,
+          "bounds": [
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              4,
+              1,
+              2
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "4008000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4010000000000000",
+              "3ff0000000000000",
+              "4000000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bars-beams-empty",
+      "regions": [],
+      "elements": [
+        {
+          "kind": "bar",
+          "id": "bar",
+          "start": "n0",
+          "end": "n1"
+        },
+        {
+          "kind": "beam",
+          "id": "beam",
+          "start": "n1",
+          "end": "n2"
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "failed-then-valid",
+      "regions": [
+        {
+          "regionId": "invalid",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 1,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        },
+        {
+          "regionId": "retained",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 0.5,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "retained",
+          "area": 2,
+          "volume": 1,
+          "bounds": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0.5
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4000000000000000",
+              "3ff0000000000000",
+              "3fe0000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zero-thickness",
+      "regions": [
+        {
+          "regionId": "zero",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 0,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "zero",
+          "area": 2,
+          "volume": 0,
+          "bounds": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "0000000000000000"
+            ],
+            [
+              "4000000000000000",
+              "3ff0000000000000",
+              "0000000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negative-thickness",
+      "regions": [
+        {
+          "regionId": "negative",
+          "domain": {
+            "outer": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": -0.5,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "negative",
+          "area": 2,
+          "volume": 1,
+          "bounds": [
+            [
+              0,
+              0,
+              -0.5
+            ],
+            [
+              2,
+              1,
+              -0.0
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "0000000000000000",
+              "0000000000000000",
+              "bfe0000000000000"
+            ],
+            [
+              "4000000000000000",
+              "3ff0000000000000",
+              "8000000000000000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "binary64-sensitive",
+      "regions": [
+        {
+          "regionId": "precision",
+          "domain": {
+            "outer": [
+              [
+                1.0000000000001,
+                2.0000000000003
+              ],
+              [
+                3.0000000000002,
+                2.0000000000003
+              ],
+              [
+                3.0000000000002,
+                3.0000000000004
+              ],
+              [
+                1.0000000000001,
+                3.0000000000004
+              ]
+            ],
+            "holes": []
+          },
+          "thickness": 0.123456789012345,
+          "options": {
+            "maxEdge": 0,
+            "minAngleDeg": 20
+          }
+        }
+      ],
+      "elements": [],
+      "expected": [
+        {
+          "regionId": "precision",
+          "area": 2.0000000000003,
+          "volume": 0.24691357802472702,
+          "bounds": [
+            [
+              1.0000000000001,
+              2.0000000000003,
+              0
+            ],
+            [
+              3.0000000000002,
+              3.0000000000004,
+              0.123456789012345
+            ]
+          ],
+          "minimumTriangles": 12,
+          "boundsBits": [
+            [
+              "3ff00000000001c2",
+              "40000000000002a4",
+              "0000000000000000"
+            ],
+            [
+              "40080000000001c2",
+              "4008000000000385",
+              "3fbf9add3746f62e"
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "referenceSurface": {
+    "regionId": "rect",
+    "points": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0.5
+      ],
+      [
+        2,
+        0,
+        0.5
+      ],
+      [
+        2,
+        1,
+        0.5
+      ],
+      [
+        0,
+        1,
+        0.5
+      ]
+    ],
+    "tetrahedra": [
+      [
+        0,
+        1,
+        2,
+        5
+      ],
+      [
+        0,
+        2,
+        5,
+        6
+      ],
+      [
+        0,
+        4,
+        5,
+        6
+      ],
+      [
+        0,
+        2,
+        3,
+        6
+      ],
+      [
+        0,
+        3,
+        6,
+        7
+      ],
+      [
+        0,
+        4,
+        6,
+        7
+      ]
+    ],
+    "triangles": [
+      [
+        0,
+        2,
+        1
+      ],
+      [
+        0,
+        3,
+        2
+      ],
+      [
+        4,
+        5,
+        6
+      ],
+      [
+        4,
+        6,
+        7
+      ],
+      [
+        0,
+        1,
+        5
+      ],
+      [
+        0,
+        5,
+        4
+      ],
+      [
+        1,
+        2,
+        6
+      ],
+      [
+        1,
+        6,
+        5
+      ],
+      [
+        2,
+        3,
+        7
+      ],
+      [
+        2,
+        7,
+        6
+      ],
+      [
+        3,
+        0,
+        4
+      ],
+      [
+        3,
+        4,
+        7
+      ]
+    ]
+  },
+  "schemaRefusals": [
+    {
+      "id": "foreign-field",
+      "mutation": "foreign"
+    },
+    {
+      "id": "narrowed-coordinate-shape",
+      "mutation": "point-dimension"
+    },
+    {
+      "id": "negative-index",
+      "mutation": "negative-index"
+    }
+  ]
+}

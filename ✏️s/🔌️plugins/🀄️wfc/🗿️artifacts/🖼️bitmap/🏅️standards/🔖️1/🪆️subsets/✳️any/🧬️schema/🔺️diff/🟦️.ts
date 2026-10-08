@@ -19,9 +19,36 @@ export interface BitmapPixelCell {
   value: number;
 }
 
-export type BitmapInputOp = { op: "resize"; width: number; height: number } | { op: "region"; region: BitmapPixelRegion } | { op: "cells"; cells: BitmapPixelCell[] };
+export interface BitmapSize {
+  width: number;
+  height: number;
+}
 
-export type BitmapPaletteOp = { op: "insert"; index: number; color: BitmapColor } | { op: "remove"; index: number } | { op: "recolor"; index: number; color: BitmapColor };
+/** 🖼️ One write into the input index buffer, in the coordinates of the buffer AFTER the patch's resize; writes layer in list order. */
+export type BitmapInputWrite = { op: "region"; region: BitmapPixelRegion } | { op: "cells"; cells: BitmapPixelCell[] };
+
+/** 🖼️ The input patch: an optional coordinate-preserving resize of the base buffer, then the writes. */
+export interface BitmapInputPatch {
+  size: BitmapSize | null;
+  writes: BitmapInputWrite[];
+}
+
+export interface BitmapPaletteInsertion {
+  index: number;
+  color: BitmapColor;
+}
+
+export interface BitmapPaletteRecolor {
+  index: number;
+  color: BitmapColor;
+}
+
+/** 🎨️ The positional palette delta: `removed` are BASE indices, `inserted` carry AFTER indices, `recolored` are BASE indices of surviving colours. */
+export interface BitmapPaletteDelta {
+  removed: number[];
+  inserted: BitmapPaletteInsertion[];
+  recolored: BitmapPaletteRecolor[];
+}
 
 /** 🩹 One patched row, addressed by its identity. */
 export interface BitmapRowPatch<Q> {
@@ -29,34 +56,38 @@ export interface BitmapRowPatch<Q> {
   patch: Q;
 }
 
-/** 📂 Id-keyed row delta: removed identities, added rows (landing at their canonical position) and per-row field patches. */
+/** 📂 Positional row delta (`protocol::list_delta`): removed keys at their BASE index, inserted rows at their AFTER index, moved keys, and key-addressed patches. */
 export interface BitmapRows<T, Q> {
-  removed: string[];
-  added: T[];
-  patched: BitmapRowPatch<Q>[];
+  removed: { id: string; index: number }[];
+  inserted: { index: number; row: T }[];
+  moved: { id: string; from: number; to: number }[];
+  modified: BitmapRowPatch<Q>[];
 }
 
 /** 🕳️ An empty row delta. */
 export function emptyBitmapRows<T, Q>(): BitmapRows<T, Q> {
-  return { removed: [], added: [], patched: [] };
+  return { removed: [], inserted: [], moved: [], modified: [] };
 }
 
-/** 🧬️ One keyed collection's apply — the TS twin of the Rust rows apply: removals first, then canonical-position insertions, then field patches. */
-function applyRows<T, Q>(base: readonly T[], rows: BitmapRows<T, Q>, key: (row: T) => string, before: (existing: T, added: T) => boolean, patched: (row: T, patch: Q) => T): T[] {
-  const items = [...base];
-  for (const id of rows.removed) {
-    const at = items.findIndex((item) => key(item) === id);
-    if (at === -1) throw new RangeError(`removed ${id} does not exist`);
-    items.splice(at, 1);
+/** 🧬️ One keyed collection's apply — the TS twin of the Rust positional list-delta apply: removed and moved keys are checked at their base index, inserted and moved rows take their after slots, survivors fill the rest in base order, then the patches write. */
+function applyRows<T, Q>(base: readonly T[], rows: BitmapRows<T, Q>, key: (row: T) => string, patched: (row: T, patch: Q) => T): T[] {
+  const taken = new Set<number>();
+  for (const entry of [...rows.removed, ...rows.moved.map((move) => ({ id: move.id, index: move.from }))]) {
+    if (base[entry.index] === undefined || key(base[entry.index]!) !== entry.id || taken.has(entry.index)) throw new RangeError(`${entry.id} is not at base index ${entry.index}`);
+    taken.add(entry.index);
   }
-  for (const row of rows.added) {
-    if (items.some((item) => key(item) === key(row))) throw new RangeError(`added ${key(row)} already exists`);
-    const at = items.findIndex((item) => before(item, row));
-    items.splice(at === -1 ? items.length : at, 0, row);
+  const slots: (T | undefined)[] = new Array(base.length - rows.removed.length + rows.inserted.length).fill(undefined);
+  for (const entry of rows.inserted) {
+    if (entry.index >= slots.length || slots[entry.index] !== undefined) throw new RangeError(`inserted ${key(entry.row)} has no free after slot ${entry.index}`);
+    slots[entry.index] = entry.row;
   }
-  for (const entry of rows.patched) {
+  for (const move of rows.moved) slots[move.to] = base[move.from];
+  const survivors = base.filter((_, index) => !taken.has(index));
+  const items = slots.map((slot) => slot ?? survivors.shift()!);
+  if (new Set(items.map(key)).size !== items.length) throw new RangeError("two rows of the after list carry the same key");
+  for (const entry of rows.modified) {
     const at = items.findIndex((item) => key(item) === entry.id);
-    if (at === -1) throw new RangeError(`patched ${entry.id} does not exist`);
+    if (at === -1) throw new RangeError(`modified ${entry.id} does not exist`);
     items[at] = patched(items[at]!, entry.patch);
   }
   return items;
@@ -69,8 +100,8 @@ export interface BitmapPinnedPatch {
 export interface BitmapDiff {
   schema?: string | null;
   seed?: bigint | null;
-  inputOps: BitmapInputOp[];
-  paletteOps: BitmapPaletteOp[];
+  input: BitmapInputPatch;
+  palette: BitmapPaletteDelta;
   output?: BitmapOutputSpec | null;
   model?: BitmapOverlappingModel | null;
   pinned: BitmapRows<BitmapPinnedPixel, BitmapPinnedPatch>;
@@ -85,47 +116,46 @@ export function resizedBuffer(buffer: Uint8Array, fromWidth: number, fromHeight:
   return out;
 }
 
-/** 🩹 Carries `before` to `after`. Input ops replay in order, then palette ops, then the output and model, then the pin rows. */
+/** 🩹 Carries `before` to `after`. The input patch (resize, then writes in order) runs first, then the palette delta, then the output and model, then the pin rows. */
 export function applyBitmapDiff(base: BitmapSnapshot, diff: BitmapDiff): BitmapSnapshot {
   const next: BitmapSnapshot = structuredClone(base);
   if (diff.schema != null) next.schema = diff.schema;
   if (diff.seed != null) next.seed = diff.seed;
 
-  let buffer: Uint8Array = next.input.pixels.slice();
-  if (buffer.length !== next.input.width * next.input.height) throw new Error("the base input pixel buffer is not width * height bytes");
-  let { width, height } = next.input;
-  for (const op of diff.inputOps) {
-    if (op.op === "resize") {
-      if (op.width <= 0 || op.height <= 0) throw new Error("an input bitmap may not have a zero edge");
-      buffer = resizedBuffer(buffer, width, height, op.width, op.height);
-      width = op.width;
-      height = op.height;
-    } else if (op.op === "region") {
-      const { region } = op;
+  const baseBuffer: Uint8Array = next.input.pixels.slice();
+  if (baseBuffer.length !== next.input.width * next.input.height) throw new Error("the base input pixel buffer is not width * height bytes");
+  const width = diff.input.size?.width ?? next.input.width;
+  const height = diff.input.size?.height ?? next.input.height;
+  if (width <= 0 || height <= 0) throw new Error("an input bitmap may not have a zero edge");
+  const buffer = resizedBuffer(baseBuffer, next.input.width, next.input.height, width, height);
+  for (const write of diff.input.writes) {
+    if (write.op === "region") {
+      const { region } = write;
       if (region.width <= 0 || region.height <= 0 || region.pixels.length !== region.width * region.height) throw new Error("a region payload does not match its own extent");
       if (region.x + region.width > width || region.y + region.height > height) throw new Error("a region write falls outside the input bitmap");
       for (let row = 0; row < region.height; row += 1) {
         buffer.set(region.pixels.subarray(row * region.width, (row + 1) * region.width), (region.y + row) * width + region.x);
       }
     } else {
-      for (const cell of op.cells) {
+      for (const cell of write.cells) {
         if (cell.x >= width || cell.y >= height || cell.value > 255) throw new Error("a pixel write falls outside the input bitmap");
         buffer[cell.y * width + cell.x] = cell.value;
       }
     }
   }
-  const palette = next.input.palette.map((color) => ({ ...color }));
-  for (const op of diff.paletteOps) {
-    if (op.op === "insert") {
-      if (op.index > palette.length) throw new Error("a palette edit names an index outside the palette");
-      palette.splice(op.index, 0, { ...op.color });
-    } else if (op.index >= palette.length) {
-      throw new Error("a palette edit names an index outside the palette");
-    } else if (op.op === "remove") {
-      palette.splice(op.index, 1);
-    } else {
-      palette[op.index] = { ...op.color };
-    }
+  const basePalette = next.input.palette;
+  const { removed, inserted, recolored } = diff.palette;
+  if (removed.some((index, at) => index >= basePalette.length || removed.indexOf(index) !== at)) throw new Error("a palette removal names an index outside the palette or twice");
+  if (recolored.some((entry, at) => entry.index >= basePalette.length || removed.includes(entry.index) || recolored.findIndex((prior) => prior.index === entry.index) !== at)) throw new Error("a palette recolour names an index outside the palette, a removed colour or twice");
+  const afterLength = basePalette.length + inserted.length - removed.length;
+  if (afterLength < 0 || inserted.some((entry, at) => entry.index >= afterLength || inserted.findIndex((prior) => prior.index === entry.index) !== at)) throw new Error("a palette insertion lies past the end of the after palette or twice");
+  const survivors = basePalette.map((color, index) => ({ color, index })).filter(({ index }) => !removed.includes(index)).map(({ color, index }) => ({ ...(recolored.find((entry) => entry.index === index)?.color ?? color) }));
+  const palette: BitmapColor[] = [];
+  for (let slot = 0; slot < afterLength; slot += 1) {
+    const entry = inserted.find((candidate) => candidate.index === slot);
+    const color = entry ? { ...entry.color } : survivors.shift();
+    if (!color) throw new Error("the after palette has more free slots than surviving colours");
+    palette.push(color);
   }
   if (palette.length === 0) throw new Error("a palette may not be empty");
   next.input.width = width;
@@ -140,7 +170,6 @@ export function applyBitmapDiff(base: BitmapSnapshot, diff: BitmapDiff): BitmapS
     next.pinned ?? [],
     diff.pinned,
     (pin) => pinKey(pin.x, pin.y),
-    (existing, added) => existing.y > added.y || (existing.y === added.y && existing.x > added.x),
     (row, patch) => ({ ...row, color: patch.color ?? row.color }),
   );
   return next;

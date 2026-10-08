@@ -1,1 +1,4 @@
-type BmpDiff { image: BmpImage }
+type BmpRegion { x: Int! y: Int! width: Int! height: Int! }
+type BmpNativeSample { red: Int! green: Int! blue: Int! alpha: Int! reserved: Int! }
+type BmpSampleRect { region: BmpRegion! indices: [Int!] samples: [BmpNativeSample!] }
+type BmpDiff { image: BmpImage rects: [BmpSampleRect!] }

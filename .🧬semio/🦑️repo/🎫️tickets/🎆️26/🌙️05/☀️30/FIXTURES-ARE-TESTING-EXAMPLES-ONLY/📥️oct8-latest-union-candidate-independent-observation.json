@@ -1,0 +1,243 @@
+{
+  "base": 5976,
+  "preliminary": 139,
+  "publicationCounts": {
+    "authoredEndpoints": 1427,
+    "ticketInputEndpoints": 4,
+    "currentAuthoredFiles": 661,
+    "absentAuthoredEndpoints": 766
+  },
+  "newExplicitEndpointCandidates": [
+    {
+      "path": "✏️s/🧑‍💻dev/📜️script.ts",
+      "evidence": [
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+      "evidence": [
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+      "evidence": [
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "evidence": [
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+      "evidence": [
+        "📥️oct8-wgpu-third-corpus-owned-endpoints.json"
+      ],
+      "exists": false,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+      "evidence": [
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "exists": false,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "evidence": [
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "evidence": [
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+      "evidence": [
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "evidence": [
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+      "evidence": [
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📏️owned-demand/🔣️.json",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧪️tests/📔️registry/🦀️.rs",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧫️fixtures/🔣️.json",
+      "evidence": [
+        "📥️oct8-neural-retirement-current-owned-endpoints.json"
+      ],
+      "exists": true,
+      "role": "explicit-owned-source-or-retained-private-input"
+    }
+  ],
+  "additionalPublicationMasterCandidates": [
+    "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🏷️ownership/🟦️.ts",
+    "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🔄️lifecycle/🟦️.ts",
+    "✏️s/🧑‍💻dev/🧩️service-composition/🧬️schema/🔣️.json"
+  ],
+  "newRetainedTopLevelOct8Candidates": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-bun-import-unicode-representation-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-actual-wgpu-budget-ownership-and-preparation-performance.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-prepared-adjacent-cargo-custody.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-publication-finish-resume-source-reconciliation.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-extraction-owned-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-semantic-source-authored-union-checkpoint.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-three-before.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-pending-response-deadline-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-third-corpus-derived-readonly-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-corpus-three-authorities-independent-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-resumed-corpus-and-domain-authority-repair.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-canonical-preview-and-test-oracle-lock-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-pending-response-deadline-and-cancellation.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-protected-sweep-readiness-before-production.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-resumed-full-red-independent-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-ten-scope-post-session-checkpoint-binding-input.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-semantic-preservation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-runtime-acquisition-census.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-budget-and-producer-input-custody-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-registry-demand-current-preimages.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-preparation-custody-settlement.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-prepared-cargo-pair-custody-draft-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-wgpu-third-corpus-before-edit.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-private-nx-cleanup-consumer-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-private-nx-owned-output-cleanup.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-authored-union-pre-production-input.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-current-copy-result-delta-preimages.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-authored-union-pre-production-role-input.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-mounted-and-three-corpus-independent-settlement-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-owned-roster-candidate-reconciliation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-inline-draft-independent-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-canonical-process-preview-integration.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-adapter-owned-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-and-three-corpus-independent-currentness.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-three-owned-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-third-corpus-derived-independent-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-framework-preview-canonical-route-integration-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-private-cleanup-and-active-deadline-draft-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-s-browser-inventory-corpus-authority-retirement.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-session-taxonomy-readonly-preimage.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-three-routing-before.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-mounted-runtime-composition-adapter.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-plan-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-sweep-final-source-freeze.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-finite-demand-mutation-preimages.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-neural-retirement-current-owned-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-session-owner-extraction-plan-independent-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-existing-policy-independent-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-owned-roster-candidate-reconciliation.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-union-post-control-reconciliation-frontier.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-adapter-launch-before.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-context-source-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-extraction-before.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-pre-neural-source-checkpoint-boundary-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-preparation-duplicate-performance-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-wgpu-third-corpus-retirement.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-semantic-authored-union-independent-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-corpus-complete-current-checkpoint-refusal.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-post-corpus-full-independent-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-session-owner-extraction-settlement.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-mounted-adapter-before.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-owned-roster-candidate-independent-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-final-independent-observation.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-prepared-pair-boundary-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-private-mcp-pre-production-attestation-input.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-document-http-canonical-value-edge-before.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-seven-scope-freeze-readiness-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-session-owner-fresh-before-edit.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-post-corpus-three-retirement.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-private-mcp-pre-production-attestation.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-mounted-context-source-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-resumed-authored-boundary-census.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-owned-native-cancellation-and-repair-coordination.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-session-taxonomy-production-relevance-audit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-authored-union-reconciliation-independent-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-authored-union-historical-output-reconciliation.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-pre-neural-source-checkpoint-boundary-observation.md"
+  ],
+  "policy": "Only explicit owner fields; no embedded producer observers, plain unchanged fixtures, generated outputs or launch wholehash drift promoted"
+}

@@ -65,12 +65,15 @@
   "issues": null,
   "auditEvents": null,
   "templates": {
-    "added": [],
     "removed": [
-      "template-record-a"
+      {
+        "id": "template-record-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "knowledge": null,
   "benchmarks": null,

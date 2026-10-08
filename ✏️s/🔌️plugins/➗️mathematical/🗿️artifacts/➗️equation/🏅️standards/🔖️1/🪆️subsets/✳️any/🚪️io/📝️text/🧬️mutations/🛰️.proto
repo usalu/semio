@@ -40,9 +40,6 @@ message UpdateGraphAlgorithm {
   string new_algorithm = 1;
   optional string new_algorithm_seed = 2;
 }
-message ReplaceGraph {
-  EquationGraph graph = 1;
-}
 message CreateNode {
   string id = 1;
   string label = 2;
@@ -73,9 +70,6 @@ message ConnectNodes {
 }
 message DisconnectNodes {
   string id = 1;
-}
-message ReplacePoints {
-  repeated EquationPoint points = 1;
 }
 message InsertPoint {
   uint64 index = 1;
@@ -111,7 +105,6 @@ message EquationMutation {
   oneof kind {
     ChangeGraphDirected change_graph_directed = 1;
     UpdateGraphAlgorithm update_graph_algorithm = 2;
-    ReplaceGraph replace_graph = 3;
     CreateNode create_node = 4;
     DeleteNode delete_node = 5;
     DeleteNodes delete_nodes = 6;
@@ -119,7 +112,6 @@ message EquationMutation {
     MoveNode move_node = 8;
     ConnectNodes connect_nodes = 9;
     DisconnectNodes disconnect_nodes = 10;
-    ReplacePoints replace_points = 11;
     InsertPoint insert_point = 12;
     RemovePoint remove_point = 13;
     MovePoints move_points = 14;

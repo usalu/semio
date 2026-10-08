@@ -10,6 +10,8 @@ use std::collections::{HashMap, HashSet};
 #[path = "🔗️relationships/🗂️owners/🦀️.rs"]
 mod relationship_owners;
 pub use relationship_owners::OpcRelationshipOwners;
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
 
 use crate::schema::snapshot::ZipEntry;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};

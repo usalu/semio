@@ -3,25 +3,28 @@
   "site": null,
   "buildings": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "bldg-office",
+        "id": "bldg-office",
         "patch": {
           "name": null,
           "planWidthM": null,
           "planLengthM": null,
           "systems": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           },
           "storeys": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": [
               {
-                "key": "s4",
+                "id": "s4",
                 "patch": {
                   "heightM": null,
                   "permanentGkN": null,
@@ -42,7 +45,8 @@
           },
           "members": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           },
           "planRegular": null,
@@ -62,37 +66,44 @@
   },
   "bridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "assessments": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "silos": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "tanks": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "foundations": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "retainingWalls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "towers": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

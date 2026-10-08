@@ -50,7 +50,17 @@ fn op_text_round_trip_change_schema() {
 #[test]
 fn op_text_round_trip_create_generation() {
     let generation = semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: semio_framework_artifact_playbook_playbook::PlaybookValues::new() };
-    test_support::assert_op_line_round_trip(&Generation3dMutation::CreateGeneration(CreateGeneration { generation, index: None }));
+    test_support::assert_op_line_round_trip(&Generation3dMutation::CreateGeneration(CreateGeneration { generation: generation.clone(), index: None }));
+    test_support::assert_op_line_round_trip(&Generation3dMutation::CreateGeneration(CreateGeneration { generation, index: Some(2) }));
+}
+
+#[test]
+fn op_binary_round_trip_create_generation_keeps_its_index() {
+    let generation = semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: semio_framework_artifact_playbook_playbook::PlaybookValues::new() };
+    for index in [None, Some(0), Some(3)] {
+        let mutation = Generation3dMutation::CreateGeneration(CreateGeneration { generation: generation.clone(), index });
+        assert_eq!(decode_op(&encode_op(&mutation).expect("encode")).expect("decode"), mutation);
+    }
 }
 
 #[test]

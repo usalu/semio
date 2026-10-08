@@ -489,6 +489,28 @@
             }
           ],
           "payloadSchema": "../🧬️schema/🧬️mutations/📇️set-idx1-present/🦀️.rs#SetIdx1Present"
+        },
+        {
+          "id": "set-hdrl-extra",
+          "capability": "avi-1-0-movi-mutate",
+          "subset": "movi",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-hdrl-extra",
+            "bridgeVersion": 1,
+            "variant": "SetHdrlExtra"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-movi-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧹remove-unknown-chunk/🦀️.rs#RemoveUnknownChunk"
         }
       ]
     }

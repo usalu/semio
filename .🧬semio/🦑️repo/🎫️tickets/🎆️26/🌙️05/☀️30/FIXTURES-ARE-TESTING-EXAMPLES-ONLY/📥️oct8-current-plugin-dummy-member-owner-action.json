@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs",
+  "old": "    fn member_store_owners() -> store::DocumentStoreOwners<Self, DummyMutation> {\n        crate::app::bounded_document_store_owners::<Self, DummyMutation>()\n    }",
+  "new": "    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, DummyMutation>> {\n        crate::app::bounded_document_store_owners::<Self, DummyMutation>(grant)\n    }"
+}

@@ -1,1 +1,30 @@
-{"version":1,"pageSlots":64,"lanes":["applied","redo","cursorApplied","cursorRedo","appliedRevision","redoRevision"],"grants":["zeroItems","oneBelow","exact"],"expected":{"pagesReleasedPerExactTurn":1,"totalReleasedPages":6,"retainedAfterZeroOrBelow":true,"terminalHeapRelease":0}}
+{
+  "version": 1,
+  "pageSlots": 64,
+  "lanes": [
+    "applied",
+    "redo",
+    "cursorApplied",
+    "cursorRedo",
+    "appliedRevision",
+    "redoRevision"
+  ],
+  "grants": [
+    "zeroItems",
+    "oneBelow",
+    "exact"
+  ],
+  "expected": {
+    "pagesReleasedPerExactTurn": 1,
+    "totalReleasedPages": 6,
+    "retainedAfterZeroOrBelow": true,
+    "terminalHeapRelease": 0
+  },
+  "currencies": {
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "release": "exact-native-page-and-final-directory",
+    "depth": 1,
+    "terminalReceipt": "full-final-page-release"
+  }
+}

@@ -43,7 +43,7 @@ fn svg_import_normalizes_css_blends_and_accepts_exported_isolation() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let nodes:Vec<crate::schema::DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let source=crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any::drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0]).unwrap();
+        let source=crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any::drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0],&Default::default()).unwrap();
         let mut job=super::SvgImportJob::new(&source,"roundtrip").unwrap();while !job.step(3).unwrap().done {}
         let document=job.take().unwrap();
         let output=crate::schema::flatten_drawing_document_to_scene_nodes(&document);

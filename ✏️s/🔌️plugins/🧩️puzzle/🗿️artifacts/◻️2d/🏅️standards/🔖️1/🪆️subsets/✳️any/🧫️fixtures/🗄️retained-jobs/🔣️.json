@@ -99,14 +99,9 @@
       "closeOwner"
     ],
     "setActiveExample": [
-      "clearEdge",
-      "clearNode",
-      "manifest",
-      "clearCompatibility",
-      "addCompatibility",
-      "catalogs",
-      "addNode",
-      "addEdge",
+      "boundedDecode",
+      "loadDocument",
+      "publish",
       "closeOwner"
     ],
     "reorganize": [
@@ -158,19 +153,14 @@
       "expected": "rejected"
     },
     {
-      "id": "setActiveExampleOldReducer",
-      "replace": "Puzzle2dActiveExampleWork::default()",
-      "with": "BoundedFirstStepCommandWork",
+      "id": "setActiveExampleMutationRowsRestored",
+      "replace": "Effect::LoadDocument",
+      "with": "artifact_mutations",
       "expected": "rejected"
     },
     {
-      "id": "setActiveExampleClearCursorRemoved",
-      "remove": "Puzzle2dExampleStage::ClearEdges",
-      "expected": "rejected"
-    },
-    {
-      "id": "setActiveExampleAddCursorRemoved",
-      "remove": "Puzzle2dExampleStage::Nodes",
+      "id": "setActiveExampleUnboundedReducer",
+      "remove": "(command.action_id() == \"setActiveExample\").then_some(1)",
       "expected": "rejected"
     },
     {
@@ -503,14 +493,9 @@
       "id": "setActiveExampleCancelFault",
       "toolId": "setActiveExample",
       "boundaries": [
-        "clearEdge",
-        "clearNode",
-        "manifest",
-        "clearCompatibility",
-        "addCompatibility",
-        "catalogs",
-        "addNode",
-        "addEdge",
+        "boundedDecode",
+        "loadDocument",
+        "publish",
         "closeOwner"
       ],
       "control": "freshCancelAndFreshFaultAtEachBoundaryThenClose",

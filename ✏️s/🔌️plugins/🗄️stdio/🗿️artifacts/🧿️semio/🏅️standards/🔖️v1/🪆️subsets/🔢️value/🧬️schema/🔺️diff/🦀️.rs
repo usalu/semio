@@ -176,13 +176,6 @@ impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
         SemioValueTreeDiff { root: self.root.as_ref().map(|diff| inverse_value_diff(diff, &base.root)), nodes: self.nodes.as_ref().map(|diff| inverse_nodes_diff(diff, &base.nodes)) }
     }
 
-    fn between(base: &SemioValueSnapshot, other: &SemioValueSnapshot) -> Self {
-        let root = value_diff_between(&base.root, &other.root);
-        let nodes_diff = nodes_diff_between(&base.nodes, &other.nodes);
-        let nodes = if is_named_empty(&nodes_diff) { None } else { Some(nodes_diff) };
-        SemioValueTreeDiff { root, nodes }
-    }
-
     fn is_empty(&self) -> bool {
         self.root.is_none() && self.nodes.is_none()
     }
@@ -365,109 +358,6 @@ pub fn apply_nodes_diff(diff: &NamedTripleDiff<ValueId, SemioValueDiff, NamedAdd
     }
     nodes
 }
-//#endregion 🔖️Apply
-
-//#region 🔖️Between
-/// 🧭️ State-delta construction: `None` when nodes are equal; a direct field diff when the KIND is
-/// stable; `Replace` when it changed.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn value_diff_between(a: &SemioValue, b: &SemioValue) -> Option<SemioValueDiff> {
-    if a == b {
-        return None;
-    }
-    match (a, b) {
-        (SemioValue::Bool { .. }, SemioValue::Bool { value }) => Some(SemioValueDiff::Bool { value: *value }),
-        (SemioValue::Int { .. }, SemioValue::Int { lexeme }) => Some(SemioValueDiff::Int { lexeme: lexeme.clone() }),
-        (SemioValue::Float { .. }, SemioValue::Float { lexeme }) => Some(SemioValueDiff::Float { lexeme: lexeme.clone() }),
-        (SemioValue::Str { .. }, SemioValue::Str { value }) => Some(SemioValueDiff::Str { value: value.clone() }),
-        (SemioValue::Bytes { .. }, SemioValue::Bytes { value }) => Some(SemioValueDiff::Bytes { value: value.clone() }),
-        (SemioValue::Ref { .. }, SemioValue::Ref { id }) => Some(SemioValueDiff::Ref { id: id.clone() }),
-        (SemioValue::List { items: av }, SemioValue::List { items: bv }) => {
-            let diff = list_diff_between(av, bv);
-            if is_indexed_empty(&diff) {
-                None
-            } else {
-                Some(SemioValueDiff::List { diff })
-            }
-        }
-        (SemioValue::Map { entries: am }, SemioValue::Map { entries: bm }) => {
-            let diff = map_diff_between(am, bm);
-            if is_named_empty(&diff) {
-                None
-            } else {
-                Some(SemioValueDiff::Map { diff })
-            }
-        }
-        _ => Some(SemioValueDiff::Replace { value: b.clone() }),
-    }
-}
-
-/// 🧭️ Index-pairwise: `modified` compares `0..min(len)`, `removed` is the base tail, `added` is
-/// the other tail (final-state indices, per the normative apply contract).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn list_diff_between(a: &[SemioValue], b: &[SemioValue]) -> IndexedTripleDiff<SemioValueDiff, SemioValue> {
-    let min = a.len().min(b.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        if let Some(diff) = value_diff_between(&a[i], &b[i]) {
-            modified.push(IndexModified { index: i, diff });
-        }
-    }
-    let removed: Vec<usize> = if a.len() > b.len() { (b.len()..a.len()).collect() } else { Vec::new() };
-    let added: Vec<IndexAdded<SemioValue>> = if b.len() > a.len() { (a.len()..b.len()).map(|i| IndexAdded { index: i, item: b[i].clone() }).collect() } else { Vec::new() };
-    IndexedTripleDiff { removed, modified, added }
-}
-
-/// 🧭️ Name-keyed: base members missing from `b` are `removed`; members present in both with a
-/// changed value are `modified`; members only in `b` are `added` AT THEIR `b`-POSITION (see
-/// [`NamedAdded`]'s doc comment — renames are documented as `removed`+`added` — no rename
-/// detection, matching `json`'s own `value_diff_between`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn map_diff_between(a: &[SemioValueEntry], b: &[SemioValueEntry]) -> NamedTripleDiff<String, SemioValueDiff, NamedAdded<SemioValueEntry>> {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for ae in a {
-        match b.iter().find(|be| be.key == ae.key) {
-            Some(be) => {
-                if let Some(diff) = value_diff_between(&ae.value, &be.value) {
-                    modified.push(NamedModified { key: ae.key.clone(), diff });
-                }
-            }
-            None => removed.push(ae.key.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, be) in b.iter().enumerate() {
-        if !a.iter().any(|ae| ae.key == be.key) {
-            added.push(NamedAdded { index: i, item: be.clone() });
-        }
-    }
-    NamedTripleDiff { removed, modified, added }
-}
-
-/// 🧭️ Same shape as [`map_diff_between`], keyed by [`ValueId`] over the top-level value graph.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn nodes_diff_between(a: &[SemioValueNode], b: &[SemioValueNode]) -> NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>> {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for an in a {
-        match b.iter().find(|bn| bn.id == an.id) {
-            Some(bn) => {
-                if let Some(diff) = value_diff_between(&an.value, &bn.value) {
-                    modified.push(NamedModified { key: an.id.clone(), diff });
-                }
-            }
-            None => removed.push(an.id.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, bn) in b.iter().enumerate() {
-        if !a.iter().any(|an| an.id == bn.id) {
-            added.push(NamedAdded { index: i, item: bn.clone() });
-        }
-    }
-    NamedTripleDiff { removed, modified, added }
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn is_indexed_empty<D, T>(d: &IndexedTripleDiff<D, T>) -> bool {
@@ -506,9 +396,6 @@ impl IndexedRow<SemioValue> for SemioValueDiff {
     }
     fn row_is_empty(&self) -> bool {
         is_value_diff_effectively_empty(self)
-    }
-    fn between_row(base: &SemioValue, other: &SemioValue) -> Self {
-        value_diff_between(base, other).unwrap_or(SemioValueDiff::List { diff: IndexedTripleDiff::default() })
     }
 }
 
@@ -857,56 +744,36 @@ fn absorb_named<K: Clone + PartialEq, D, X: Clone>(
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️DemoCases
-/// 🧪️ Representative `SemioValueTreeDiff` values (every `SemioValueDiff` variant incl. the `Replace`
-/// kind-change fallback, nested list/map/nodes-graph collection triples, and the empty/`None`
-/// diff) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` below AND by
-/// `🎹️composer/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
-/// tests, same convention json's own `demo_diff_cases` uses.
+/// 🧪️ Representative `SemioValueTreeDiff` values built declaratively (every scalar `SemioValueDiff` variant incl. the `Replace` kind-change
+/// fallback, nested list/map collection triples, and the empty/`None` diff) — the single source of truth reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `🎹️composer/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same convention json's own `demo_diff_cases` uses.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioValueTreeDiff> {
-    use crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
-        SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn listv(items: Vec<SemioValue>) -> SemioValue {
-        SemioValue::List { items }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {
-        SemioValue::Map { entries: pairs.into_iter().map(|(k, v)| SemioValueEntry { key: k.into(), value: v }).collect() }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn intv(lexeme: &str) -> SemioValue {
-        SemioValue::Int { lexeme: lexeme.into() }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn strv(s: &str) -> SemioValue {
-        SemioValue::Str { value: s.into() }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn node(id: &str, value: SemioValue) -> SemioValueNode {
-        SemioValueNode { id: ValueId::new(id), value }
-    }
-
-    let a = snap(mapv(vec![("keepInt", intv("1")), ("kindChange", intv("1")), ("keepBytes", SemioValue::Bytes { value: vec![1, 2, 3] })]), vec![node("n1", strv("kept")), node("n2", strv("removed-node"))]);
-    let b = snap(mapv(vec![("keepInt", intv("2")), ("kindChange", strv("now a string")), ("keepBytes", SemioValue::Bytes { value: vec![4, 5] })]), vec![node("n1", strv("kept")), node("n3", strv("added-node"))]);
-    let nested = mapv(vec![("tags", listv(vec![strv("x"), strv("y"), strv("z")])), ("meta", mapv(vec![("a", intv("1")), ("b", SemioValue::Null)]))]);
-    let nested2 = mapv(vec![("tags", listv(vec![strv("x"), strv("w")])), ("meta", mapv(vec![("a", intv("9")), ("c", strv("new"))])), ("extra", SemioValue::Bool { value: true })]);
-
+    let root = |diff: SemioValueDiff| SemioValueTreeDiff { root: Some(diff), nodes: None };
+    let int = |lexeme: &str| SemioValue::Int { lexeme: lexeme.into() };
+    let list = IndexedTripleDiff {
+        removed: vec![2],
+        modified: vec![IndexModified { index: 1, diff: SemioValueDiff::Str { value: "w".into() } }],
+        added: vec![IndexAdded { index: 0, item: int("1") }],
+    };
+    let map = NamedTripleDiff {
+        removed: vec!["b".to_string()],
+        modified: vec![NamedModified { key: "a".to_string(), diff: SemioValueDiff::Int { lexeme: "9".into() } }],
+        added: vec![NamedAdded { index: 1, item: SemioValueEntry { key: "extra".into(), value: SemioValue::Bool { value: true } } }],
+    };
     vec![
         SemioValueTreeDiff::default(),
-        SemioValueTreeDiff::between(&a, &b),
-        SemioValueTreeDiff::between(&b, &a),
-        SemioValueTreeDiff::between(&snap(nested.clone(), vec![]), &snap(nested2.clone(), vec![])),
-        SemioValueTreeDiff::between(&snap(nested2, vec![]), &snap(nested, vec![])),
-        SemioValueTreeDiff::between(&snap(intv("1"), vec![]), &snap(strv("1"), vec![])),
-        SemioValueTreeDiff::between(&snap(SemioValue::Null, vec![]), &snap(listv(vec![intv("1"), intv("2")]), vec![])),
-        SemioValueTreeDiff::between(&snap(SemioValue::Null, vec![]), &snap(SemioValue::Null, vec![node("z", SemioValue::Bytes { value: vec![9, 8, 7] })])),
-        SemioValueTreeDiff::between(&snap(SemioValue::Ref { id: ValueId::new("a") }, vec![]), &snap(SemioValue::Ref { id: ValueId::new("b") }, vec![])),
+        root(SemioValueDiff::Bool { value: true }),
+        root(SemioValueDiff::Int { lexeme: "2".into() }),
+        root(SemioValueDiff::Float { lexeme: "2.5e3".into() }),
+        root(SemioValueDiff::Str { value: "now a string".into() }),
+        root(SemioValueDiff::Bytes { value: vec![4, 5] }),
+        root(SemioValueDiff::Ref { id: ValueId::new("b") }),
+        root(SemioValueDiff::Replace { value: SemioValue::Null }),
+        root(SemioValueDiff::List { diff: list }),
+        root(SemioValueDiff::Map { diff: map }),
     ]
 }
 //#endregion 🔖️DemoCases

@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::modes::edit::options::brush::{PUZZLE2D_SUGGESTION_OFFSET_MAX, PUZZLE2D_SUGGESTION_OFFSET_MIN};
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn set_suggestion_offset(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let distance = args.and_then(|value| value.get("distance").or_else(|| value.get("value"))).and_then(|value| value.as_f64());

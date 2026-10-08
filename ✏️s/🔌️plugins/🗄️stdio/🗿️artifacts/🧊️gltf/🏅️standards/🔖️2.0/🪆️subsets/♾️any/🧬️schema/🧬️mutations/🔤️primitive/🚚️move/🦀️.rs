@@ -33,8 +33,8 @@ pub fn plan(p: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Resul
     let Some(index) = base.document.meshes[p.mesh].primitives[p.primitive].attributes.iter().position(|(semantic, _)| semantic == &p.semantic) else {
         return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/attributes", "semantic is not bound"));
     };
-    let value = with_moved(&base.document.meshes[p.mesh].primitives[p.primitive].attributes, index, p.position);
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: (value != base.document.meshes[p.mesh].primitives[p.primitive].attributes).then(|| GltfMorphTarget(value)), ..Default::default() }), ..Default::default() })
+    let rows = GltfAttributesDelta::relocation(&attribute_rows(&base.document.meshes[p.mesh].primitives[p.primitive].attributes), index, p.position);
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

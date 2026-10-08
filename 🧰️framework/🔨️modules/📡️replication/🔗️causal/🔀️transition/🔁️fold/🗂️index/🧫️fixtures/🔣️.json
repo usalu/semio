@@ -1,0 +1,231 @@
+{
+  "schema": "semio.history.owned-index/v1",
+  "operations": [
+    {
+      "set": [
+        "key-16",
+        "value-16"
+      ]
+    },
+    {
+      "set": [
+        "key-08",
+        "value-08"
+      ]
+    },
+    {
+      "set": [
+        "key-24",
+        "value-24"
+      ]
+    },
+    {
+      "set": [
+        "key-04",
+        "value-04"
+      ]
+    },
+    {
+      "set": [
+        "key-12",
+        "value-12"
+      ]
+    },
+    {
+      "set": [
+        "key-20",
+        "value-20"
+      ]
+    },
+    {
+      "set": [
+        "key-28",
+        "value-28"
+      ]
+    },
+    {
+      "set": [
+        "key-02",
+        "value-02"
+      ]
+    },
+    {
+      "set": [
+        "key-06",
+        "value-06"
+      ]
+    },
+    {
+      "set": [
+        "key-10",
+        "value-10"
+      ]
+    },
+    {
+      "set": [
+        "key-14",
+        "value-14"
+      ]
+    },
+    {
+      "set": [
+        "key-18",
+        "value-18"
+      ]
+    },
+    {
+      "set": [
+        "key-22",
+        "value-22"
+      ]
+    },
+    {
+      "set": [
+        "key-26",
+        "value-26"
+      ]
+    },
+    {
+      "set": [
+        "key-30",
+        "value-30"
+      ]
+    },
+    {
+      "set": [
+        "key-01",
+        "value-01"
+      ]
+    },
+    {
+      "set": [
+        "key-03",
+        "value-03"
+      ]
+    },
+    {
+      "set": [
+        "key-05",
+        "value-05"
+      ]
+    },
+    {
+      "set": [
+        "key-07",
+        "value-07"
+      ]
+    },
+    {
+      "set": [
+        "key-09",
+        "value-09"
+      ]
+    },
+    {
+      "set": [
+        "key-11",
+        "value-11"
+      ]
+    },
+    {
+      "set": [
+        "key-13",
+        "value-13"
+      ]
+    },
+    {
+      "set": [
+        "key-15",
+        "value-15"
+      ]
+    },
+    {
+      "set": [
+        "key-17",
+        "value-17"
+      ]
+    },
+    {
+      "set": [
+        "key-19",
+        "value-19"
+      ]
+    },
+    {
+      "set": [
+        "key-21",
+        "value-21"
+      ]
+    },
+    {
+      "set": [
+        "key-23",
+        "value-23"
+      ]
+    },
+    {
+      "set": [
+        "key-25",
+        "value-25"
+      ]
+    },
+    {
+      "set": [
+        "key-27",
+        "value-27"
+      ]
+    },
+    {
+      "set": [
+        "key-29",
+        "value-29"
+      ]
+    },
+    {
+      "set": [
+        "key-31",
+        "value-31"
+      ]
+    },
+    {
+      "set": [
+        "key-00",
+        "value-00"
+      ]
+    },
+    {
+      "set": [
+        "Änderung",
+        "é😀"
+      ]
+    },
+    {
+      "set": [
+        "key-16",
+        "replacement"
+      ]
+    },
+    {
+      "remove": "key-08"
+    },
+    {
+      "remove": "key-24"
+    },
+    {
+      "remove": "key-16"
+    },
+    {
+      "remove": "key-01"
+    },
+    {
+      "remove": "absent"
+    }
+  ],
+  "expected": {
+    "orderedEntries": "independent-json-members",
+    "originalNodeStorage": "retained-until-granted-release",
+    "removedKeys": "owned-until-granted-release",
+    "semanticEquality": "live-entries-only",
+    "tailHandoff": "greatest-first-original-row-with-retained-arena"
+  }
+}

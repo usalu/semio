@@ -1,9 +1,10 @@
 {
   "positions": null,
   "routes": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "route-ferry",
         "patch": {
@@ -14,8 +15,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "regions": null
 }

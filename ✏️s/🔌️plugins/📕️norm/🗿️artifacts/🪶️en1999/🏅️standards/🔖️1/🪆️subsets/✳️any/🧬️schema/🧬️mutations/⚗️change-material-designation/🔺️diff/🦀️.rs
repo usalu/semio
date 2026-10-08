@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeMaterialDesignation, base: &En1999Snapshot) -> proto
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Unknown material {}", payload.material_id), Vec::<String>::new());
     }
     protocol::MutationOutcome::new(En1999Diff {
-        materials: Some(En1999MaterialsRows { modified: vec![En1999MaterialsPatch { id: payload.material_id.clone(), designation: Some(payload.new_designation.clone()), ..Default::default() }], ..Default::default() }),
+        materials: Some(En1999MaterialsRows::modification(&payload.material_id, En1999MaterialsPatch { designation: Some(payload.new_designation.clone()), ..Default::default() })),
         ..Default::default()
     })
 }

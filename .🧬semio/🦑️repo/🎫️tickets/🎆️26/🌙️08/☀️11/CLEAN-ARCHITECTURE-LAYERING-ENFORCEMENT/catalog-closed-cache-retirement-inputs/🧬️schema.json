@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "directory",
+    "budgetMs",
+    "maximumBytes",
+    "maximumFiles",
+    "maximumWork",
+    "receipts"
+  ],
+  "properties": {
+    "directory": {
+      "const": "catalog-composition-nx"
+    },
+    "budgetMs": {
+      "const": 300000
+    },
+    "maximumBytes": {
+      "const": 2147483648
+    },
+    "maximumFiles": {
+      "const": 65536
+    },
+    "maximumWork": {
+      "const": 1048576
+    },
+    "receipts": {
+      "const": [
+        "catalog-preview-current-receiving1/closure.json",
+        "catalog-progress-capacity-green21/closure.json",
+        "catalog-session-routes2/closure.json"
+      ]
+    }
+  }
+}

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateLoadCase`.
 use super::CreateLoadCase;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasesDelta, insertion_order};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCaseInsertion, Fem3dLoadCasesDelta};
 use crate::standards::v1::subsets::any::schema::mutations::resolve_load;
 use crate::Fem3dSnapshot;
 
@@ -14,6 +14,9 @@ pub fn diff(payload: &CreateLoadCase, base: &Fem3dSnapshot) -> protocol::Mutatio
             return refusal;
         }
     }
-    protocol::MutationOutcome::new(Fem3dDiff { load_cases: Some(Fem3dLoadCasesDelta { added: vec![payload.load_case.clone()], reordered: insertion_order(base.load_cases.iter().map(|item| item.id.as_str()), &payload.load_case.id, payload.index), ..Default::default() }), ..Default::default() })
+    if payload.index.is_some_and(|at| at > base.load_cases.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.load_cases.len()), [&payload.load_case.id.to_string()]);
+    }
+    protocol::MutationOutcome::new(Fem3dDiff { load_cases: Some(Fem3dLoadCasesDelta { inserted: vec![Fem3dLoadCaseInsertion { index: payload.index.unwrap_or(base.load_cases.len()), row: payload.load_case.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

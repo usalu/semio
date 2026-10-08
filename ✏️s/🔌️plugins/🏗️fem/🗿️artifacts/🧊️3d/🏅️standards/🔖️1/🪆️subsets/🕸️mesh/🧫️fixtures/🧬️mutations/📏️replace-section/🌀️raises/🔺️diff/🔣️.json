@@ -3,12 +3,13 @@
   "elements": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "hea200",
-        "item": {
+        "patch": {
           "id": "hea200",
           "name": "HEA 200 with warping restraint",
           "area": 0.00538,
@@ -17,8 +18,7 @@
           "j": 6.25e-05
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "solids": null,
   "supports": null,

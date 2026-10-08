@@ -6,7 +6,7 @@
 use crate::BlockCamera3d;
 use crate::Block3dWindowView;
 use protocol::Mutation;
-use semio_s_plugin_block::{block_rows_absorb, block_rows_apply, block_rows_between, block_rows_inverse, block_rows_is_empty, BlockOptionalText, BlockPatch};
+use semio_s_plugin_block::{BlockOptionalText, BlockPatch};
 
 //#region 🔖️Config
 /// 🧮️ `Block3dPlayApp`'s real `ArtifactEditor::Config` — B1 pure-trait conversion. Absorbs every former
@@ -107,8 +107,12 @@ semio_s_plugin_block::block_optional!(test; /// 🎥 The optional camera set to 
     Block3dOptionalCamera(BlockCamera3d));
 semio_s_plugin_block::block_patch!(test; /// 🪟 Field patch over one window view (its window id is the row identity).
     Block3dWindowViewPatch for Block3dWindowView { plain { representation_ids: Vec<String>, arrangement: String, spacing: f64 } optional { } });
-semio_s_plugin_block::block_rows!(test; /// 📂 Row delta over the per-window views.
-    Block3dWindowsDelta, Block3dWindowsPatchEntry, Block3dWindowView, Block3dWindowViewPatch, window_id);
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📂 Row delta over the per-window views.
+    pub Block3dWindowsDelta { removal: Block3dWindowsRemoval, insertion: Block3dWindowsInsertion, relocation: Block3dWindowsRelocation, modification: Block3dWindowsPatchEntry, row: Block3dWindowView, patch: Block3dWindowViewPatch, key: window_id, values_only }
+}
 
 /// 🔺️ Field-sparse diff of [`Block3dConfig`]: each field is an optional absolute value, window views are id-keyed rows.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -118,7 +122,7 @@ semio_s_plugin_block::block_rows!(test; /// 📂 Row delta over the per-window v
 pub struct Block3dConfigDiff {
     pub active_representation_id: Option<BlockOptionalText>,
     pub wanted_tags: Option<Vec<String>>,
-    pub windows: Option<Block3dWindowsDelta>,
+    pub windows: Block3dWindowsDelta,
     pub brush_vortex_kind_id: Option<BlockOptionalText>,
     pub brush_radius: Option<f64>,
     pub brush_flip: Option<bool>,
@@ -132,15 +136,11 @@ fn window_edit(base: &Block3dConfig, window_id: &str, patch: Block3dWindowViewPa
     let next = patch.patched(current.unwrap_or(&default)).unwrap_or_else(|_| default.clone());
     let windows = match (current, next == default) {
         (None, true) => Block3dWindowsDelta::default(),
-        (None, false) => {
-            let slot = base.windows.partition_point(|row| row.window_id.as_str() < window_id);
-            let reordered = semio_s_plugin_block::block_insert_order(base.windows.iter().map(|row| row.window_id.as_str()), window_id, Some(slot as u32));
-            Block3dWindowsDelta { added: vec![next], reordered, ..Default::default() }
-        }
-        (Some(_), true) => Block3dWindowsDelta { removed: vec![window_id.to_string()], ..Default::default() },
-        (Some(row), false) => Block3dWindowsDelta { patched: vec![Block3dWindowsPatchEntry { id: window_id.to_string(), patch: <Block3dWindowViewPatch as BlockPatch>::between(row, &next) }], ..Default::default() },
+        (None, false) => Block3dWindowsDelta::insertion(base.windows.partition_point(|row| row.window_id.as_str() < window_id), next),
+        (Some(_), true) => Block3dWindowsDelta::removal(&base.windows, base.windows.iter().position(|row| row.window_id == window_id).unwrap_or(usize::MAX)),
+        (Some(_), false) => Block3dWindowsDelta { modified: vec![Block3dWindowsPatchEntry { id: window_id.to_string(), patch }], ..Default::default() },
     };
-    Block3dConfigDiff { windows: Some(windows), ..Default::default() }
+    Block3dConfigDiff { windows, ..Default::default() }
 }
 
 fn lift(error: semio_s_plugin_block::BlockPatchError) -> protocol::MutationApplyError {
@@ -148,7 +148,7 @@ fn lift(error: semio_s_plugin_block::BlockPatchError) -> protocol::MutationApply
 }
 
 impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {
-    fn apply(&self, base: &Block3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dConfig> {
+    fn apply(&self, base: &Block3dConfig, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dConfig> {
         let mut next = base.clone();
         if let Some(value) = &self.active_representation_id {
             next.active_representation_id.clone_from(&value.value);
@@ -156,7 +156,7 @@ impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {
         if let Some(tags) = &self.wanted_tags {
             next.wanted_tags.clone_from(tags);
         }
-        next.windows = block_rows_apply(&self.windows, &base.windows, "windows").map_err(lift)?;
+        next.windows = self.windows.commit_onto(&base.windows, capability).map_err(|error| error.under(["windows"]))?;
         if let Some(value) = &self.brush_vortex_kind_id {
             next.brush_vortex_kind_id.clone_from(&value.value);
         }
@@ -178,7 +178,7 @@ impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {
         if later.wanted_tags.is_some() {
             self.wanted_tags = later.wanted_tags;
         }
-        block_rows_absorb(&mut self.windows, later.windows);
+        self.windows.absorb(later.windows);
         if later.brush_vortex_kind_id.is_some() {
             self.brush_vortex_kind_id = later.brush_vortex_kind_id;
         }
@@ -199,26 +199,15 @@ impl protocol::DiffAlgebra<Block3dConfig> for Block3dConfigDiff {
         Self {
             active_representation_id: self.active_representation_id.as_ref().map(|_| BlockOptionalText { value: base.active_representation_id.clone() }),
             wanted_tags: self.wanted_tags.as_ref().map(|_| base.wanted_tags.clone()),
-            windows: block_rows_inverse(&self.windows, &base.windows),
+            windows: self.windows.inverse(&base.windows),
             brush_vortex_kind_id: self.brush_vortex_kind_id.as_ref().map(|_| BlockOptionalText { value: base.brush_vortex_kind_id.clone() }),
             brush_radius: self.brush_radius.map(|_| base.brush_radius),
             brush_flip: self.brush_flip.map(|_| base.brush_flip),
             camera: self.camera.as_ref().map(|_| Block3dOptionalCamera { value: base.camera.clone() }),
         }
     }
-    fn between(base: &Block3dConfig, other: &Block3dConfig) -> Self {
-        Self {
-            active_representation_id: (base.active_representation_id != other.active_representation_id).then(|| BlockOptionalText { value: other.active_representation_id.clone() }),
-            wanted_tags: (base.wanted_tags != other.wanted_tags).then(|| other.wanted_tags.clone()),
-            windows: block_rows_between(&base.windows, &other.windows),
-            brush_vortex_kind_id: (base.brush_vortex_kind_id != other.brush_vortex_kind_id).then(|| BlockOptionalText { value: other.brush_vortex_kind_id.clone() }),
-            brush_radius: (base.brush_radius != other.brush_radius).then_some(other.brush_radius),
-            brush_flip: (base.brush_flip != other.brush_flip).then_some(other.brush_flip),
-            camera: (base.camera != other.camera).then(|| Block3dOptionalCamera { value: other.camera.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
-        self.active_representation_id.is_none() && self.wanted_tags.is_none() && block_rows_is_empty(&self.windows) && self.brush_vortex_kind_id.is_none() && self.brush_radius.is_none() && self.brush_flip.is_none() && self.camera.is_none()
+        self.active_representation_id.is_none() && self.wanted_tags.is_none() && self.windows.is_empty() && self.brush_vortex_kind_id.is_none() && self.brush_radius.is_none() && self.brush_flip.is_none() && self.camera.is_none()
     }
 }
 //#endregion 🔖️ConfigDiff

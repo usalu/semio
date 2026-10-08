@@ -9,7 +9,7 @@ use crate::WriterSnapshot;
 /// An empty splice is a no-op; a splice whose `deleted` run is gone deletes nothing and is reported `mutation.clamped`.
 pub fn diff(payload: &SpliceText, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
     let current = crate::writer_text(base);
-    let applied = payload.splice().apply(&current, semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS);
+    let applied = payload.splice().splice_into(&current, semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS);
     if applied.text == current {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Document text is unchanged.".to_string());
     }

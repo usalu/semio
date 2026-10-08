@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::{puzzle2d_gesture_phase, Puzzle2dActionCtx, Puzzle2dSelectionRecord};
 use semio_framework_tool_machine::GesturePhase;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🚀️ Moves every selected node and target region by `{dx, dy}` (world units; a `step` multiplies both, so the
 /// arrow-key nudges send `{dx: ±1, dy: 0, step: <grid>}`) through the select tool: the `drag-selection` leaf over

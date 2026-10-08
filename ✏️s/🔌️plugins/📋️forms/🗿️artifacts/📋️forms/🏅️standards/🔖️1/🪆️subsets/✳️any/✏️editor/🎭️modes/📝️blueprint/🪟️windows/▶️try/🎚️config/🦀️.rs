@@ -64,7 +64,6 @@ semio_framework_os_kernel::config_record! {
     owner: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try",
     payload_schema: "forms.try-window-config",
     emoji: "🎚️",
-    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Forms Try Window Configuration",
     fields: {
         current_step_index: u32 => SetCurrentStepIndex "set-current-step-index",
         submitted_response_id: Option<String> => SetSubmittedResponseId "set-submitted-response-id",
@@ -98,11 +97,11 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
 
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> FormsTryWindowConfig { from_snapshot(view.window) }
 
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: FormsTryWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &FormsTryWindowConfig, config: FormsTryWindowConfig) -> Result<Vec<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("forms-try-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("forms-try-window-stale"))?;
     if kind != super::FORMS_PLAY_WINDOW_TRY { return Err(semio_framework_plugin::Fault::from("forms-try-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<FormsTryWindowConfigOwner>(id, FormsTryWindowConfigMutation::Snapshot { config }))
+    Ok(FormsTryWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<FormsTryWindowConfigOwner>(id, mutation)).collect())
 }
 
 #[cfg(test)]

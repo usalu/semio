@@ -12,10 +12,11 @@
 //! paint the gesture locally and dispatch it ONCE on release, so every gesture is a one-shot transaction.
 
 use semio_framework_pack_json::json;
+use crate::apply_puzzle3d_mutation;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{derive_attraction_params, puzzle3d_action, puzzle3d_vortex_full_id, PUZZLE3D_PLAY_CONTROLLER_ID};
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,connect_vortices,drag_selection,rotate_selection,scale_selection,Puzzle3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{connect_vortices,drag_selection,rotate_selection,scale_selection,Puzzle3dMutation};
 
 use crate::Puzzle3dSnapshot;
 

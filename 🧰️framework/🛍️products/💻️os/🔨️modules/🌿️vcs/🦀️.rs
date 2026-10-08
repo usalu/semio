@@ -1,5 +1,5 @@
 //! 🗄️ Generic document version-graph algebra — Author/Change/Checkpoint/Alternative/ArtifactVcs,
-//! `VcsError`, content-addressed checkpoint ids, and the raw collection-diff/operation helpers. Pure
+//! `VcsError`, and collection-diff/operation helpers. Pure
 //! data plus pure functions: nothing here touches a live document (that's `store::ArtifactStore`,
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
@@ -17,75 +17,9 @@ use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 #[path = "🌱️genesis/🦀️.rs"]
 mod genesis;
-pub use genesis::{ArtifactGenesis, ArtifactGenesisCodec};
+pub use genesis::{ArtifactGenesis, ArtifactGenesisWitness};
 
-//#region 🆔️Ids
-/// 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
-pub async fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
-    let mut input = prefix.as_bytes().to_vec();
-    input.push(0);
-    input.extend_from_slice(payload);
-    let digest = *semio_framework_hash::hash(&input).as_bytes();
-    let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
-    format!("{prefix}-{hex16}")
-}
 
-/// 🆔️ Deterministic child id scoped to an edit: blake3(`{edit_id}:{ordinal}`).
-pub async fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
-    let digest = semio_framework_hash::hash(format!("{edit_id}:{ordinal}").as_bytes());
-    let hex16: String = digest.as_bytes()[..8].iter().map(|byte| format!("{byte:02x}")).collect();
-    format!("scoped-{hex16}")
-}
-
-/// ✏️ Globally unique edit id from the authoring replica + its sequence + the forwards
-/// fingerprint. `replica` is the Store's per-instance entropy identity (its clock actor), so two
-/// processes, tabs or guest instances that author identical content as their first edit never mint
-/// the same id — an id collision is a silent replay at every ledger that dedupes by id.
-pub async fn mint_edit_id(replica: u64, sequence: i32, forwards_fingerprint: &[u8]) -> String {
-    let mut payload = Vec::with_capacity(14 + forwards_fingerprint.len());
-    payload.extend_from_slice(&replica.to_le_bytes());
-    payload.push(0);
-    payload.extend_from_slice(&sequence.to_le_bytes());
-    payload.push(0);
-    payload.extend_from_slice(forwards_fingerprint);
-    content_addressed_entity_id("edit", &payload).await
-}
-
-/// 📦️ Content-addressed change id from ordered edit ids (+ optional description distinguisher).
-pub async fn mint_change_id(edit_ids: &[String], description: Option<&str>) -> String {
-    let mut payload = edit_ids.join("\0").into_bytes();
-    payload.push(0);
-    payload.extend_from_slice(description.unwrap_or("").as_bytes());
-    content_addressed_entity_id("change", &payload).await
-}
-
-/// 🌿️ Content-addressed alternative id from name + ordered checkpoint ids.
-pub async fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> String {
-    let mut payload = name.as_bytes().to_vec();
-    payload.push(0);
-    payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
-    content_addressed_entity_id("alternative", &payload).await
-}
-
-/// ⚙️ Globally unique operation id from the operation's bytes and the replica clock tick
-/// that stamped it (`actor` is the replica identity, `physical_ms`/`logical` strictly advance per
-/// replica), so identical operations authored twice, or by two replicas, never share an id.
-pub async fn mint_mutation_id(mutation_bytes: &[u8], stamp: (u64, u64, u64)) -> String {
-    let mut payload = Vec::with_capacity(mutation_bytes.len() + 24);
-    payload.extend_from_slice(mutation_bytes);
-    for part in [stamp.0, stamp.1, stamp.2] {
-        payload.extend_from_slice(&part.to_le_bytes());
-    }
-    content_addressed_entity_id("mutation", &payload).await
-}
-
-/// 🆔️ Legacy-compatible prefix-only mint — identical inputs collide.
-/// Prefer [`mint_edit_id`] / [`mint_change_id`] / [`mint_alternative_id`] / [`mint_mutation_id`] /
-/// [`content_addressed_entity_id`] with a distinguishing payload.
-pub async fn create_document_vcs_id(prefix: &str) -> String {
-    content_addressed_entity_id(prefix, prefix.as_bytes()).await
-}
-//#endregion 🆔️Ids
 
 //#region 🔖️Schemas
 // 🎞️ `Serialize`/`Deserialize` DROPPED OUTRIGHT (ticket
@@ -810,8 +744,11 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 }
 
 impl<T> ArtifactHistoryLedger<T> {
+    /// 🪹️ Creates an inline ledger frame without native slot or directory backing.
+    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
+
     pub fn new() -> Self {
-        let mut ledger = Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) };
+        let mut ledger = Self::empty();
         ledger.open_page().expect("history ledger first page");
         ledger
     }
@@ -1299,6 +1236,78 @@ impl<T> ArtifactHistoryLedger<T> {
     pub fn terminal_is_empty(&self) -> bool {
         self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
     }
+
+    /// 🪹️ Observes the original native backing after logical entry ownership has left.
+    pub fn backing_is_empty(&self) -> bool { self.pages.is_none() && self.page_count == 0 }
+
+    /// 🧮️ Observes initialized original headers still retaining their slot visibility leases.
+    pub fn retained_terminal_slot_count(&self) -> usize { self.initialized as usize }
+
+    /// 👁️ Borrows the exact next slot visibility without copying or transferring its Arc.
+    pub fn next_terminal_slot_visibility(&self) -> Result<Option<&std::sync::Arc<ArtifactGroupVisibility>>, ValueError> {
+        if !self.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger still retains logical entry owners")); }
+        if self.initialized == 0 { return Ok(None); }
+        let slot = self.slot(self.initialized - 1);
+        if slot.value.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "terminal history header still contains its original value")); }
+        Ok(slot.visibility.as_ref())
+    }
+
+    /// 🎟️ Transfers at most one original empty slot's visibility after item and depth admission.
+    pub fn retire_terminal_slot(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Option<std::sync::Arc<ArtifactGroupVisibility>>, semio_framework_value::retained_clone::RetainedCloneProgress), ValueError> {
+        self.next_terminal_slot_visibility()?;
+        if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "history slot retirement requires one admitted item")); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history slot retirement requires original owner depth")); }
+        if self.initialized == 0 { return Ok((None, Default::default())); }
+        let index = self.initialized - 1;
+        let visibility = self.slot_mut(index).visibility.take();
+        self.initialized = index;
+        self.free_head = None;
+        self.forget_seek();
+        Ok((visibility, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    }
+
+    /// 📏️ Declares the actual last slot slice, page shell, and separately owned empty directory.
+    pub fn next_empty_page_release_byte_demand(&self) -> Result<usize, ValueError> {
+        if !self.terminal_is_empty() || self.initialized != 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page retains original entry or visibility headers")); }
+        if self.backing_is_empty() { return Ok(0); }
+        let index = self.page_count.checked_sub(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history directory has no corresponding page"))? as usize;
+        let mut chunk = self.pages.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page lost its original directory"))?;
+        for _ in 0..index / ARTIFACT_HISTORY_DIRECTORY_PAGES { chunk = chunk.next.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page directory chain is incomplete"))?; }
+        let offset = index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        if chunk.next.is_some() || usize::from(chunk.count) != offset + 1 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page directory differs from its actual last allocation")); }
+        let page = chunk.pages[offset].as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page slot backing is absent"))?;
+        let slots = std::alloc::Layout::array::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>(page.slots.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history slot backing layout overflow"))?.size();
+        slots.checked_add(std::mem::size_of::<ArtifactHistorySlotPage<T>>()).and_then(|bytes| bytes.checked_add(if offset == 0 { std::mem::size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page whole release extent overflow"))
+    }
+
+    /// ♻️ Releases one real native page only after its visibility owners and full release grant.
+    pub fn release_empty_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let empty = RetainedCloneProgress::default();
+        let demand = self.next_empty_page_release_byte_demand()?;
+        if self.backing_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < demand { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history page release requires original owner depth")); }
+        let index = self.page_count as usize - 1;
+        let directory = index / ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let offset = index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let mut chunk = self.pages.as_mut().unwrap();
+        for _ in 0..directory { chunk = chunk.next.as_mut().unwrap(); }
+        drop(chunk.pages[offset].take());
+        chunk.count -= 1;
+        if offset == 0 {
+            if directory == 0 { drop(self.pages.take()); }
+            else {
+                let mut previous = self.pages.as_mut().unwrap();
+                for _ in 0..directory - 1 { previous = previous.next.as_mut().unwrap(); }
+                drop(previous.next.take());
+            }
+        }
+        self.page_count -= 1;
+        let progress = RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..empty };
+        Ok(if self.backing_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    }
+
 }
 
 impl<T> Drop for ArtifactHistoryLedger<T> {
@@ -1483,21 +1492,21 @@ impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
 // 🎞️ `Serialize`/`Deserialize` dropped — see the docstring above `Change`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactVcs<P, Mutation> {
-    pub genesis: ArtifactGenesis<P>,
+    pub genesis: P,
     pub edits: ArtifactHistoryLedger<Edit<Mutation>>,
     pub changes: ArtifactHistoryLedger<Change>,
     pub checkpoints: ArtifactHistoryLedger<Checkpoint>,
     pub alternatives: ArtifactHistoryLedger<Alternative>,
 }
 
-impl<P: ArtifactGenesisCodec, Mutation: FromValue> FromValue for ArtifactVcs<P, Mutation> {
+impl<P: FromValue, Mutation: FromValue> FromValue for ArtifactVcs<ArtifactGenesis<P>, Mutation> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Object(fields) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS requires an object")); };
         let mut admitted = std::collections::BTreeMap::new();
         for (key, value) in fields { if admitted.insert(key, value).is_some() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS repeats a field")); } }
         let mut fields = admitted;
         let mut take = |key: &str| fields.remove(key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("VCS missing {key}")));
-        let genesis = ArtifactGenesis::from_value(take("initialPack")?)?;
+        let genesis = ArtifactGenesis::from_value(take("genesis")?)?;
         let edits = ArtifactHistoryLedger::from_value(take("edits")?)?;
         let changes = ArtifactHistoryLedger::from_value(take("changes")?)?;
         let checkpoints = ArtifactHistoryLedger::from_value(take("checkpoints")?)?;
@@ -1508,18 +1517,18 @@ impl<P: ArtifactGenesisCodec, Mutation: FromValue> FromValue for ArtifactVcs<P, 
 }
 
 pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
-    genesis: &'a ArtifactGenesis<P>,
+    genesis: &'a P,
     edits: ArtifactHistoryIter<'a, Edit<Mutation>>,
     changes: ArtifactHistoryIter<'a, Change>,
     checkpoints: ArtifactHistoryIter<'a, Checkpoint>,
     alternatives: ArtifactHistoryIter<'a, Alternative>,
 }
 
-/// 🧬️ Serializes immutable Pack genesis and the history decision captured by this read.
-impl<P, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> {
+/// 🧬️ Projects logical admitted genesis facts and the history decision captured by this read.
+impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> where P::Snapshot:ToValue {
     fn to_value(&self) -> DslValue {
         semio_framework_value::DslValue::Object(vec![
-            ("initialPack".to_string(), self.genesis.to_value()),
+            ("genesis".to_string(), self.genesis.genesis_facts().to_value()),
             ("edits".to_string(), self.edits.to_value()),
             ("changes".to_string(), self.changes.to_value()),
             ("checkpoints".to_string(), self.checkpoints.to_value()),
@@ -1557,7 +1566,7 @@ impl<P, Mutation> ArtifactVcs<P, Mutation> {
 /// authority across the four ledgers, or losing the captured decision between the two calls) become
 /// panics here instead — both are "cannot happen" internal-consistency bugs, never a caller input
 /// error, matching this same file's existing `.expect(...)` style for slot-authority invariants.
-impl<P, Mutation: ToValue> ToValue for ArtifactVcs<P, Mutation> {
+impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcs<P, Mutation> where P::Snapshot:ToValue {
     fn to_value(&self) -> DslValue {
         let decision = self.group_visibility().expect("a single ArtifactVcs never spans two different group visibility authorities").map(ArtifactGroupVisibility::capture);
         self.read_group(decision.as_ref()).expect("the just-captured decision remains valid for the immediately following read").to_value()
@@ -1577,6 +1586,7 @@ pub enum VcsError {
     EmptyApply,
     MutationApply(MutationApplyError),
     InverseRefused(semio_framework_value::ValueError),
+    NativeEncoding(semio_framework_value::ValueError),
     NothingToUndo,
     ForeignEdit(String),
     NothingToRedo,
@@ -1669,6 +1679,7 @@ impl std::fmt::Display for VcsError {
             Self::EmptyApply => formatter.write_str("empty apply command"),
             Self::MutationApply(error) => write!(formatter, "mutation diff rejected: {error}"),
             Self::InverseRefused(error) => write!(formatter, "mutation inverse refused: {error}"),
+            Self::NativeEncoding(error) => write!(formatter, "native encoding refused: {error}"),
             Self::NothingToUndo => formatter.write_str("nothing to undo"),
             Self::ForeignEdit(id) => write!(formatter, "cannot undo edit authored by another actor: {id}"),
             Self::NothingToRedo => formatter.write_str("nothing to redo"),
@@ -1701,10 +1712,13 @@ impl std::error::Error for VcsError {
         match self {
             Self::MutationApply(error) => Some(error),
             Self::InverseRefused(error) => Some(error),
+            Self::NativeEncoding(error) => Some(error),
             _ => None,
         }
     }
 }
+
+impl From<semio_framework_value::ValueError> for VcsError {fn from(error:semio_framework_value::ValueError)->Self{Self::NativeEncoding(error)}}
 
 impl From<MutationApplyError> for VcsError {
     fn from(error: MutationApplyError) -> Self {
@@ -1786,10 +1800,9 @@ pub trait Identified<TId> {
     fn id(&self) -> &TId;
 }
 
-/// 🩹️ Applies a patch in place and diffs two states back into a patch.
+/// 🩹️ Applies a patch in place.
 pub trait Patchable<TPatch>: Sized {
     fn apply_patch(&mut self, patch: &TPatch);
-    fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
 //#endregion 🔖️Identified
 //#region 🔖️Mutation
@@ -1815,133 +1828,7 @@ where
 }
 
 //#endregion 🔖️Mutation
-//#region 🔖️MergeStrategy
-// 🎞️ The CRDT-era concurrent-diff merge helper this region used to point at is deleted
-// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`) — concurrent-merge
-// arbitration is now an authority's `MergePolicy`/`📡️spr/⚔️conflict` job. The checkpoint-ancestor/
-// merge-base helpers that used to live in this region moved to `store` along with `ArtifactEnvelope`
-// (`checkpoint_ancestors`/`merge_base`/`reconcile_alternative` all take an envelope) — only the
-// envelope-free id-minting primitive stays here.
 
-/// 🔒️ Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_
-/// hashes || message || authors || timestamp [|| ordered_pin_content]))>`, replacing the old fully-
-/// random counter-string scheme (`create_document_vcs_id("checkpoint")`) — two peers that
-/// independently commit the identical checkpoint content (same parent, same changes in the same
-/// order, same message/authors/timestamp, same composition pins) now converge on the identical id
-/// instead of minting two different ones. `changes` must already contain every entry `change_ids`
-/// references (including one freshly created by this same commit, if any) — callers push a new
-/// `Change` before calling this.
-///
-/// 🎯️ `pins` extension (composition-aware checkpoints): appended to the hash input ONLY when
-/// non-empty, so a non-composite checkpoint (the overwhelming majority, and every checkpoint ever
-/// minted before this ticket) hashes to EXACTLY the pre-existing bytes — this is what keeps old ids
-/// stable, not a version bump. `pins` is re-sorted by `child_ref.to_uri()` (see [`CompositionPin`])
-/// inside this function rather than trusted in caller-supplied order: a caller
-/// building the pin list from a `HashMap`/parallel-dispatch fan-out over owned children has no
-/// natural deterministic order of its own, and two peers committing the identical pin SET must
-/// still converge on the identical id regardless of which order their local dispatch happened to
-/// discover the children in.
-// 🎞️ No derive: `pending_change_ref_json` below hand-builds this type's wire shape (its
-// `serde(rename_all = "camelCase")` field-name convention, kept only as a naming reference now)
-// directly over `pack::json::Value` — `#[derive(Serialize)]` would be dead code.
-struct PendingChangeRef<'a> {
-    id: &'a str,
-    edit_ids: &'a [String],
-    description: Option<&'a str>,
-    saved_at: &'a str,
-}
-
-/// 🧾️ `PendingChangeRef`'s own frozen wire shape — hand-built rather than derived, matching
-/// `#[serde(rename_all = "camelCase")]`'s field order and its (deliberate) lack of any
-/// `skip_serializing_if`: `description: None` serializes as a literal JSON `null`, never an
-/// omitted key. `pack::json`'s float writer is now proven byte-identical to `serde_json`'s (see
-/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-/// 🔍️research/📓️float-format-parity.md`), so this — like `Change`'s own `ToValue` path below — no
-/// longer needs `serde_json` to stay a frozen content-hash input.
-fn pending_change_ref_json(pending: &PendingChangeRef<'_>) -> String {
-    let mut object = semio_framework_pack_json::Object::new();
-    object.insert("id", semio_framework_pack_json::Value::String(pending.id.to_string()));
-    object.insert("editIds", semio_framework_pack_json::Value::Array(pending.edit_ids.iter().map(|id| semio_framework_pack_json::Value::String(id.clone())).collect()));
-    object.insert("description", pending.description.map_or(semio_framework_pack_json::Value::Null, |text| semio_framework_pack_json::Value::String(text.to_string())));
-    object.insert("savedAt", semio_framework_pack_json::Value::String(pending.saved_at.to_string()));
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object))
-}
-
-fn content_addressed_checkpoint_id_core(
-    parent_id: Option<&str>,
-    change_ids: &[String],
-    changes: &ArtifactHistoryLedger<Change>,
-    pending: Option<PendingChangeRef<'_>>,
-    message: Option<&str>,
-    authors: &[Author],
-    timestamp: &str,
-    pins: &[CompositionPin],
-) -> String {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
-
-    let mut input = Vec::new();
-    input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
-    input.push(0);
-    for change_id in change_ids {
-        let change_hash = if let Some(change) = changes.iter().find(|change| change.id == *change_id) {
-            *semio_framework_hash::hash(semio_framework_pack_json::to_json_string(change).as_bytes()).as_bytes()
-        } else if let Some(change) = pending.as_ref().filter(|change| change.id == change_id.as_str()) {
-            *semio_framework_hash::hash(pending_change_ref_json(change).as_bytes()).as_bytes()
-        } else {
-            [0u8; 32]
-        };
-        input.extend_from_slice(&change_hash);
-    }
-    input.push(0);
-    input.extend_from_slice(message.unwrap_or("").as_bytes());
-    input.push(0);
-    for author in authors {
-        input.extend_from_slice(author.id.as_bytes());
-        input.push(0);
-    }
-    input.push(0);
-    input.extend_from_slice(timestamp.as_bytes());
-    if !pins.is_empty() {
-        // 🪡️ `to_uri` (🚪️io, out of this packet's scope) is async — `Iterator::map`'s closure is
-        // sync (E0728), so the await is hoisted into a plain loop before the sort (R10 residue #1).
-        let mut ordered: Vec<(String, &CompositionPin)> = Vec::with_capacity(pins.len());
-        for pin in pins {
-            ordered.push((pin.child_ref.to_uri(), pin));
-        }
-        ordered.sort_by(|(a, _), (b, _)| a.cmp(b));
-        input.push(0);
-        for (uri, pin) in ordered {
-            input.extend_from_slice(uri.as_bytes());
-            input.push(0);
-            input.extend_from_slice(pin.checkpoint_id.as_bytes());
-            input.push(0);
-        }
-    }
-    let digest = *semio_framework_hash::hash(&input).as_bytes();
-    let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
-    format!("ck-{hex16}")
-}
-
-pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &ArtifactHistoryLedger<Change>, message: Option<&str>, authors: &[Author], timestamp: &str, pins: &[CompositionPin]) -> String {
-    content_addressed_checkpoint_id_core(parent_id, change_ids, changes, None, message, authors, timestamp, pins)
-}
-
-pub fn content_addressed_checkpoint_id_with_pending_change(
-    parent_id: Option<&str>,
-    change_ids: &[String],
-    changes: &ArtifactHistoryLedger<Change>,
-    pending_change_id: &str,
-    pending_edit_ids: &[String],
-    pending_description: Option<&str>,
-    pending_saved_at: &str,
-    message: Option<&str>,
-    authors: &[Author],
-    timestamp: &str,
-    pins: &[CompositionPin],
-) -> String {
-    content_addressed_checkpoint_id_core(parent_id, change_ids, changes, Some(PendingChangeRef { id: pending_change_id, edit_ids: pending_edit_ids, description: pending_description, saved_at: pending_saved_at }), message, authors, timestamp, pins)
-}
-//#endregion 🔖️MergeStrategy
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1952,3 +1839,6 @@ mod tests;
 #[path = "🧪️tests/🧪️fault-params/🦀️.rs"]
 mod fault_params_tests;
 //#endregion 🧪️Tests
+
+#[path="🚪️io/🦀️.rs"]
+pub mod io;

@@ -115,13 +115,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din4108WindowRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108WindowAddition"
+            "$ref": "#/$defs/Din4108WindowInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108WindowRelocation"
           }
         },
         "modified": {
@@ -132,26 +138,63 @@
         }
       }
     },
-    "Din4108WindowAddition": {
+    "Din4108WindowRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Din4108WindowInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ZoneWindow"
+        }
+      }
+    },
+    "Din4108WindowRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -159,11 +202,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -234,13 +277,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din4108LayerRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108LayerAddition"
+            "$ref": "#/$defs/Din4108LayerInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108LayerRelocation"
           }
         },
         "modified": {
@@ -251,26 +300,63 @@
         }
       }
     },
-    "Din4108LayerAddition": {
+    "Din4108LayerRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Din4108LayerInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/LayerDocument"
+        }
+      }
+    },
+    "Din4108LayerRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -278,11 +364,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -416,13 +502,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din4108ZoneRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108ZoneAddition"
+            "$ref": "#/$defs/Din4108ZoneInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ZoneRelocation"
           }
         },
         "modified": {
@@ -433,26 +525,63 @@
         }
       }
     },
-    "Din4108ZoneAddition": {
+    "Din4108ZoneRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Din4108ZoneInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ThermalZone"
+        }
+      }
+    },
+    "Din4108ZoneRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -460,11 +589,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -518,13 +647,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din4108ElementRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108ElementAddition"
+            "$ref": "#/$defs/Din4108ElementInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ElementRelocation"
           }
         },
         "modified": {
@@ -535,26 +670,63 @@
         }
       }
     },
-    "Din4108ElementAddition": {
+    "Din4108ElementRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Din4108ElementInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/EnvelopeElement"
+        }
+      }
+    },
+    "Din4108ElementRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -562,11 +734,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -680,13 +852,19 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din4108ThermalBridgeRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108ThermalBridgeAddition"
+            "$ref": "#/$defs/Din4108ThermalBridgeInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ThermalBridgeRelocation"
           }
         },
         "modified": {
@@ -697,26 +875,63 @@
         }
       }
     },
-    "Din4108ThermalBridgeAddition": {
+    "Din4108ThermalBridgeRemoval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Din4108ThermalBridgeInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ThermalBridge"
+        }
+      }
+    },
+    "Din4108ThermalBridgeRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -724,11 +939,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {

@@ -3,7 +3,6 @@
 
 type ChangeGraphDirected { newDirected: Boolean! }
 type UpdateGraphAlgorithm { newAlgorithm: String! newAlgorithmSeed: String }
-type ReplaceGraph { graph: EquationGraph! }
 type CreateNode { id: String! label: String! x: Float! y: Float! index: Int }
 type DeleteNode { id: String! }
 type DeleteNodes { ids: [String!]! }
@@ -11,7 +10,6 @@ type ChangeNodeLabel { id: String! newLabel: String! }
 type MoveNode { id: String! x: Float! y: Float! }
 type ConnectNodes { id: String! source: String! target: String! index: Int }
 type DisconnectNodes { id: String! }
-type ReplacePoints { points: [EquationPoint!]! }
 type InsertPoint { index: Int! x: Float! y: Float! }
 type RemovePoint { index: Int! }
 type MovePoints { indices: [Int!]! dx: Float! dy: Float! }
@@ -22,4 +20,4 @@ type SetNodePositions { positions: [EquationNodePosition!]! }
 type EquationPointPosition { index: Int! x: Float! y: Float! }
 type SetPointPositions { positions: [EquationPointPosition!]! }
 
-union EquationMutation = ChangeGraphDirected | UpdateGraphAlgorithm | ReplaceGraph | CreateNode | DeleteNode | DeleteNodes | ChangeNodeLabel | MoveNode | ConnectNodes | DisconnectNodes | ReplacePoints | InsertPoint | RemovePoint | MovePoints | ChangeCoefficient | MoveNodes | SetNodePositions | SetPointPositions
+union EquationMutation = ChangeGraphDirected | UpdateGraphAlgorithm | CreateNode | DeleteNode | DeleteNodes | ChangeNodeLabel | MoveNode | ConnectNodes | DisconnectNodes | InsertPoint | RemovePoint | MovePoints | ChangeCoefficient | MoveNodes | SetNodePositions | SetPointPositions

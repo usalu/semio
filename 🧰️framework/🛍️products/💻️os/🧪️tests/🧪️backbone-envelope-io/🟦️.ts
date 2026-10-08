@@ -1867,7 +1867,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "descriptorDigestEncodingV1" | "descriptorDigestV1" | "emptyDirectoryReadModel" | "foldAll">, source: TestSource): Promise<void> {
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts"), "descriptorDigestEncodingV1" | "descriptorDigestV1"> & Pick<typeof import("../../🟦️.ts"), "emptyDirectoryReadModel" | "foldAll">, source: TestSource): Promise<void> {
   const { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, foldAll } = dependencies;
   type DirectoryEvent = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryEvent;
   type DirectoryReadModel = import("../../🔨️modules/📇️directory/🟦️.ts").DirectoryReadModel;
@@ -2575,7 +2575,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("carries every directory command across the worker wire back into its declaration order, so the worker can seal it", async () => {
-      const { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } = await import("../../🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts");
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧾️command-receipt-v1.json", source.url), "utf8")) as { readonly requests: readonly { readonly name: string; readonly requestId: string; readonly command: DirectoryCommand; readonly canonical: string }[] };
       const reordered = corpus.requests.filter((row) => Object.keys(row.command).join(",") !== Object.keys(row.command).sort().join(","));
       expect(reordered.map((row) => row.command.kind)).toEqual(expect.arrayContaining(["upsert-member", "rename-space", "create-invite"]));

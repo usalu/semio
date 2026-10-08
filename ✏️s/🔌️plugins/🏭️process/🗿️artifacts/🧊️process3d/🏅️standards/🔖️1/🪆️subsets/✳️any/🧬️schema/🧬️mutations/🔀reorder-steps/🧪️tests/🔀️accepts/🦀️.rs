@@ -1,6 +1,6 @@
 //! 🧪️ `reorder-steps` fixture — `🔀️accepts`.
 //!
-//! `reorder-steps` moves the id-keyed step to its clamped `to_index` in `step_payloads` and re-mints `steps`/`tool_solids` (`process3d_step_timeline_diff`), matching `📐️cad`/`🗄️stdio`'s own `reorder-columns` remove-then-clamped-insert shape — the kernel now replays the permuted order.
+//! `reorder-steps` moves the id-keyed step to its clamped `to_index` in `step_payloads` (`apply` re-derives `steps`/`tool_solids`), matching `📐️cad`/`🗄️stdio`'s own `reorder-columns` remove-then-clamped-insert shape — the kernel now replays the permuted order.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

@@ -148,6 +148,12 @@ pub fn expand_retained_clone(input: &DeriveInput) -> syn::Result<TokenStream> {
 
 fn close_demand_methods<'a>(owner:TokenStream,rows:impl Iterator<Item=(&'a Type,&'a syn::Ident,&'a syn::Ident,bool)>)->TokenStream {
     let rows=rows.collect::<Vec<_>>();
+    let depth_children=rows.iter().map(|(_,cursor,_,_)|quote! {
+        if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
+            return ::semio_framework_value::retained_clone::RetainedCloneCursor::next_close_depth_demand(&self.#cursor);
+        }
+    });
+    let depth_values=rows.iter().map(|(_,_,value,_)|quote!(||self.#value.is_some()));
     let copy_children=rows.iter().map(|(_,cursor,_,_)|quote! {
         if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
             return ::semio_framework_value::retained_clone::RetainedCloneCursor::next_close_copy_byte_demand(&self.#cursor);
@@ -165,25 +171,30 @@ fn close_demand_methods<'a>(owner:TokenStream,rows:impl Iterator<Item=(&'a Type,
     });
     let values=rows.iter().map(|(ty,_,value,boxed)| {
         let ty=if *boxed {quote!(Box<#ty>)} else {quote!(#ty)};
-        quote!(if self.#value.is_some() { return self.close.next_owner_capacity_byte_demand::<#ty>(true,maximum_release_bytes); })
+        quote!(if self.#value.is_some() { return self.close.next_owner_capacity_with_binding::<#ty>(true,maximum_release_bytes,&self.source); })
     });
     quote! {
+        fn next_close_depth_demand(&self)->Result<usize,::semio_framework_value::ValueError> {
+            if !self.closing {return Ok(0);}
+            #(#depth_children)*
+            self.close.next_owner_depth_with_binding(self.output.is_some()#(#depth_values)*,&self.source)
+        }
         fn next_close_copy_byte_demand(&self)->Result<usize,::semio_framework_value::ValueError> {
             if !self.closing {return Ok(0);}
             #(#copy_children)*
-            self.close.next_copy_byte_demand()
+            self.close.next_copy_with_binding(&self.source)
         }
         fn next_close_capacity_byte_demand(&self,maximum_release_bytes:usize)->Result<usize,::semio_framework_value::ValueError> {
             if !self.closing {return Ok(0);}
             #(#capacity_children)*
             if !self.close.is_empty() {return self.close.next_capacity_byte_demand(maximum_release_bytes);}
             #(#values)*
-            self.close.next_owner_capacity_byte_demand::<#owner>(self.output.is_some(),maximum_release_bytes)
+            self.close.next_owner_capacity_with_binding::<#owner>(self.output.is_some(),maximum_release_bytes,&self.source)
         }
         fn next_close_release_byte_demand(&self)->Result<usize,::semio_framework_value::ValueError> {
             if !self.closing {return Ok(0);}
             #(#release_children)*
-            self.close.next_release_byte_demand()
+            self.close.next_release_with_binding(&self.source)
         }
     }
 }
@@ -232,7 +243,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                     if grant.maximum_items == 0 {
                         return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
                     }
-                    let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_granted(&mut self.#cursor, grant)?;
+                    let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, grant)?;
                     let progress = ::semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, ::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor), "retained field scaffold close")?.progress();
                     return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
             }
@@ -243,35 +254,13 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         }
     });
     let construct = construct_fields(name, fields, &field_rows.iter().map(|(_, _, _, value)| value.clone()).collect::<Vec<_>>(), None);
-    let retire_values = field_rows.iter().map(|(_, _, _, value)| quote!(if let Some(step) = self.close.begin_option(&mut self.#value, maximum_items)? { return Ok(step); }));
-    let close_children = field_rows.iter().map(|(_, _, cursor, _)| {
-        quote! {
-            if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
-                if ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor) {
-                    if maximum_items == 0 { return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-                    return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                let step = ::semio_framework_value::retained_clone::admit_retained_clone_retirement(
-                    ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, maximum_items, maximum_bytes)?,
-                    maximum_items,
-                    maximum_bytes,
-                    "retained struct child close",
-                )?;
-                if step == ::semio_framework_value::SnapshotRetirementStep::Complete {
-                    if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct child completed close with a live owner")); }
-                    return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                return Ok(step);
-            }
-        }
-    });
     let controlled_values = field_rows.iter().map(|(_, _, _, value)| quote!(if let Some(step) = self.close.begin_granted(&mut self.#value, grant)? { return Ok(step); }));
     let controlled_children = field_rows.iter().map(|(_, _, cursor, _)| quote! {
         if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
             if ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor) {
                 return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
-            let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_granted(&mut self.#cursor, grant)?;
+            let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, grant)?;
             return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, ::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor), "retained record child close")?.progress()));
         }
     });
@@ -328,18 +317,8 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                 self.closing = true;
                 true
             }
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
-                #(#close_children)*
-                if !self.close.is_empty() {
-                    let step = self.close.step(maximum_items, maximum_bytes)?;
-                    return Ok(if step == ::semio_framework_value::SnapshotRetirementStep::Complete { ::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
-                }
-                #(#retire_values)*
-                if let Some(step) = self.close.begin_option(&mut self.output, maximum_items)? { return Ok(step); }
-                self.source = None;
-                Ok(::semio_framework_value::SnapshotRetirementStep::Complete)
-            }
-            fn close_granted(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
+            
+            fn close_step(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
                 if grant.maximum_items == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                 if !self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained record must begin close before granted retirement")); }
                 #(#controlled_children)*
@@ -431,7 +410,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                     if grant.maximum_items == 0 {
                         return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
                     }
-                    let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_granted(&mut self.#cursor, grant)?;
+                    let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, grant)?;
                     let progress = ::semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, ::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor), "retained field scaffold close")?.progress();
                     return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
                 }
@@ -465,35 +444,13 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
             }
         }
     });
-    let retire_values = rows.iter().map(|(_, _, _, _, value)| quote!(if let Some(step) = self.close.begin_option(&mut self.#value, maximum_items)? { return Ok(step); }));
-    let close_children = rows.iter().map(|(_, _, _, cursor, _)| {
-        quote! {
-            if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
-                if ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor) {
-                    if maximum_items == 0 { return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-                    return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                let step = ::semio_framework_value::retained_clone::admit_retained_clone_retirement(
-                    ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, maximum_items, maximum_bytes)?,
-                    maximum_items,
-                    maximum_bytes,
-                    "retained enum child close",
-                )?;
-                if step == ::semio_framework_value::SnapshotRetirementStep::Complete {
-                    if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum child completed close with a live owner")); }
-                    return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                return Ok(step);
-            }
-        }
-    });
     let controlled_values = rows.iter().map(|(_, _, _, _, value)| quote!(if let Some(step) = self.close.begin_granted(&mut self.#value, grant)? { return Ok(step); }));
     let controlled_children = rows.iter().map(|(_, _, _, cursor, _)| quote! {
         if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
             if ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor) {
                 return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
-            let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_granted(&mut self.#cursor, grant)?;
+            let step = ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, grant)?;
             return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, ::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor), "retained record child close")?.progress()));
         }
     });
@@ -546,18 +503,8 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                 self.closing = true;
                 true
             }
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
-                #(#close_children)*
-                if !self.close.is_empty() {
-                    let step = self.close.step(maximum_items, maximum_bytes)?;
-                    return Ok(if step == ::semio_framework_value::SnapshotRetirementStep::Complete { ::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
-                }
-                #(#retire_values)*
-                if let Some(step) = self.close.begin_option(&mut self.output, maximum_items)? { return Ok(step); }
-                self.source = None;
-                Ok(::semio_framework_value::SnapshotRetirementStep::Complete)
-            }
-            fn close_granted(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
+            
+            fn close_step(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
                 if grant.maximum_items == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                 if !self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained record must begin close before granted retirement")); }
                 #(#controlled_children)*

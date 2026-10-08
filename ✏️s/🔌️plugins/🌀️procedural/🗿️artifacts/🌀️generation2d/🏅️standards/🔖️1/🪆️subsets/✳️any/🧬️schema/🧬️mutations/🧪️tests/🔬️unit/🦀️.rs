@@ -5,6 +5,7 @@ use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law_cold, assert_mutation_inverse_law, assert_mutation_inverse_law_cold};
+use crate::central_apply::{apply_generation2d_mutation};
 
 /// 🧊️ Every owned projection this suite materialises is CLOSED, never dropped — `fixture.layout`
 /// is an `OrderedMap` root and `generation` carries its own retirement ladder.
@@ -29,40 +30,11 @@ fn round_trip(projection: &Generation2dSnapshot, mutation: &Generation2dMutation
 }
 
 #[test]
-fn fixture_ops_ignore_camera() {
-    let before = FlowHostSnapshot::default();
-    let mut after = before.clone();
-    after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
-    let operations = generation2d_host_snapshot_operations(&before, &after);
-    assert!(operations.iter().all(|operation| !matches!(operation, Generation2dMutation::UpdateCamera(_))));
-}
-
-#[test]
 fn delete_and_recreate_widget_round_trips() {
     let base = empty_generation2d_snapshot();
     let removed_id = widget_id(&base.host_snapshot.widgets[0]).to_string();
     let after = round_trip(&base, &delete_widget(removed_id.clone()));
     assert!(!after.host_snapshot.widgets.iter().any(|w| widget_id(w) == removed_id));
-}
-
-#[test]
-fn fixture_ops_capture_widget_creation() {
-    let before = FlowHostSnapshot::default();
-    let mut after = before.clone();
-    after.widgets.push(Widget::InputNote { id: "note-1".into(), text: String::new() });
-    let operations = generation2d_host_snapshot_operations(&before, &after);
-    assert!(operations.iter().any(|operation| matches!(operation, Generation2dMutation::CreateWidget(payload) if widget_id(&payload.widget) == "note-1")));
-}
-
-#[test]
-fn fixture_ops_capture_widget_replacement() {
-    let mut before = FlowHostSnapshot::default();
-    before.widgets.clear();
-    before.widgets.push(Widget::InputNote { id: "note-1".into(), text: "old".into() });
-    let mut after = before.clone();
-    after.widgets[0] = Widget::InputNote { id: "note-1".into(), text: "new".into() };
-    let operations = generation2d_host_snapshot_operations(&before, &after);
-    assert!(operations.iter().any(|operation| matches!(operation, Generation2dMutation::ReplaceWidget(payload) if widget_id(&payload.widget) == "note-1")));
 }
 
 #[test]
@@ -248,32 +220,6 @@ fn dispatch_registers_semantic_descriptors() {
     }
     assert_eq!(Generation2dMutation::kinds().len(), KINDS.len());
 }
-
-//#region 🔖️FixtureOpsTests
-#[test]
-fn fixture_ops_widget_id_matches_every_widget_kind() {
-    let widgets = vec![
-        Widget::Neuron { id: "w-neuron".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
-        Widget::InputSlider { id: "w-slider".into(), label: "Width".into(), value: 1.0, min: 0.0, max: 2.0, step: 0.5 },
-        Widget::InputNote { id: "w-note".into(), text: String::new() },
-        Widget::InputImage { id: "w-image".into(), src: String::new() },
-        Widget::Variable { id: "w-variable".into(), name: "value".into(), schema: "dictionary".into() },
-        Widget::OutputPreview { id: "w-preview".into(), preview: Default::default(), expanded: Default::default() },
-        Widget::OutputAction { id: "w-action".into(), action: String::new() },
-        Widget::OutputExport { id: "w-export".into(), format: "svg".into() },
-        Widget::Cluster { id: "w-cluster".into(), name: String::new(), tree: Default::default(), flow: Default::default() },
-    ];
-    let mut before = FlowHostSnapshot::default();
-    before.widgets.clear();
-    let mut after = before.clone();
-    after.widgets = widgets.clone();
-    let operations = generation2d_host_snapshot_operations(&before, &after);
-    for widget in &widgets {
-        let id = widget_id(widget);
-        assert!(operations.iter().any(|op| matches!(op, Generation2dMutation::CreateWidget(payload) if widget_id(&payload.widget) == id)));
-    }
-}
-//#endregion 🔖️FixtureOpsTests
 
 //#region 🧪️KindsCatalog
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling

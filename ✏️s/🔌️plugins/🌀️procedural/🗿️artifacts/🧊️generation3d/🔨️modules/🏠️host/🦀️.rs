@@ -613,7 +613,8 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             for character in payload.generation.id.chars() {
                 selected.push(character);
             }
-            generation.generations.push(generation3d_copy_generation(&payload.generation)?);
+            let at = payload.index.unwrap_or(generation.generations.len()).min(generation.generations.len());
+            generation.generations.insert(at, generation3d_copy_generation(&payload.generation)?);
             generation.selected_generation_id = Some(selected);
             None
         }
@@ -994,6 +995,7 @@ struct Generation3dRetainedMutationOwner {
     closing_targets: semio_framework_artifact_flow_flow::retained::FlowRetirement,
     numbers: [f64; 4],
     index: usize,
+    index_present: bool,
     widget: Option<semio_framework_artifact_flow_flow::Widget>,
     synapse: Option<semio_framework_artifact_flow_flow::SynapseSpec>,
     layout: Option<semio_framework_artifact_flow_flow::WidgetLayout>,
@@ -1030,6 +1032,7 @@ impl Generation3dRetainedMutationOwner {
             closing_targets: Default::default(),
             numbers: [0.0; 4],
             index: 0,
+            index_present: false,
             widget: None,
             synapse: None,
             layout: None,
@@ -1533,6 +1536,7 @@ impl Generation3dRetainedMutationOwner {
             },
             Token::Unsigned { role: Role::Unsigned, value } if self.json_destination.is_none() && self.dsl_destination.is_none() => {
                 self.index = usize::try_from(value).map_err(|_| "generation3d-mutation.index")?;
+                self.index_present = true;
                 if let Some(Generation3dMutationFrame::Root { field }) = self.stack.last_mut() {
                     *field = None;
                 }
@@ -1742,7 +1746,7 @@ impl Generation3dRetainedMutationOwner {
                     7 => Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: first }),
                     8 => Generation3dMutation::UpdateCamera(UpdateCamera { camera: self.camera.take().ok_or("generation3d-mutation.update-camera")? }),
                     9 => Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: first }),
-                    10 => Generation3dMutation::CreateGeneration(CreateGeneration { generation: self.generation.take().ok_or("generation3d-mutation.create-generation")?, index: None }),
+                    10 => Generation3dMutation::CreateGeneration(CreateGeneration { generation: self.generation.take().ok_or("generation3d-mutation.create-generation")?, index: self.index_present.then_some(self.index) }),
                     11 => Generation3dMutation::DeleteGeneration(DeleteGeneration { id: first }),
                     12 => Generation3dMutation::RenameGeneration(RenameGeneration { id: first, new_name: second }),
                     13 => Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: first, question_id: second, new_value: std::mem::replace(&mut self.json, semio_framework_value::DslValue::Null) }),
@@ -3174,7 +3178,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
         match self.phase {
             Generation3dStoreInitializationPhase::BindGenesis => {
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 self.phase = Generation3dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
                 return semio_framework_job::StepOutcome::Yield;
@@ -3215,7 +3219,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 }
             }
             Generation3dStoreInitializationPhase::CopyInitial => {
-                let source = &self.envelope.as_ref().expect("P3 initializer envelope").vcs.genesis.snapshot();
+                let source = &self.envelope.as_ref().expect("P3 initializer envelope").vcs.genesis.facts().snapshot();
                 match self.copy.as_mut().expect("P3 copy retained").step(source) {
                     Ok(true) => self.phase = Generation3dStoreInitializationPhase::AdoptWorkspace,
                     Ok(false) => {}
@@ -3312,7 +3316,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 };
                 if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
                     self.resume_phase = Some(self.phase);
-                    match Generation3dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return semio_framework_job::StepOutcome::Yield; } }
+                    match Generation3dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return semio_framework_job::StepOutcome::Yield; } }
                     self.phase = Generation3dStoreInitializationPhase::CopyInitial;
                     cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
@@ -3518,7 +3522,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
         Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "retained-a".into() }),
         Generation3dMutation::UpdateCamera(UpdateCamera { camera: semio_framework_artifact_flow_flow::CameraJson { x: 3.0, y: 4.0, zoom: 1.5 } }),
         Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot.retained".into() }),
-        Generation3dMutation::CreateGeneration(CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }, index: None }),
+        Generation3dMutation::CreateGeneration(CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }, index: Some(0) }),
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "retained-generation".into() }),
         Generation3dMutation::RenameGeneration(RenameGeneration { id: "retained-generation".into(), new_name: "Renamed Generation".into() }),
         Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue {

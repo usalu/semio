@@ -96,7 +96,7 @@ async fn resolve_trace_layer_segments_traces_solid_square_png() {
     let mut doc = default_drawing_document("trace-test", None);
     doc.layers.clear();
     let mut assets = semio_framework_value::paged::PagedMap::default();
-    assets.insert("source", DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes).into(), width: None, height: None });
+    assets.insert("source", crate::standards::v1::subsets::any::io::image::drawing_image_from_png(&bytes));
     doc.assets = assets;
     doc.artboard = Some(DrawingArtboard { width: 16.0, height: 16.0 });
     doc.layers.push(create_drawing_trace_layer("Trace", "source"));
@@ -432,31 +432,11 @@ async fn resolve_boolean_layer_segments_returns_empty_for_missing_children_and_i
     assert!(resolve_boolean_layer_segments(&doc, &boolean_invalid).is_empty());
 }
 
-#[semio_framework_async_macros::async_test]
-async fn decode_drawing_image_asset_luma_handles_data_uri_prefix_resize_and_invalid_inputs() {
-    let mut image_buffer = semio_framework_pixels::RasterImage::new(4, 4);
-    for pixel in image_buffer.pixels.chunks_exact_mut(4) {
-        pixel.copy_from_slice(&[255, 255, 255, 255]);
-    }
-    let bytes = semio_framework_pixels::encode_png(&image_buffer).expect("encode png");
-    let encoded = base64_codec::base64_standard_encode(&bytes);
-
-    let data_uri_asset = DrawingImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{encoded}").into(), width: None, height: None };
-    let (w, h, luma) = decode_drawing_image_asset_luma(&data_uri_asset).expect("decode data uri");
-    assert_eq!((w, h), (4, 4));
-    assert_eq!(luma.len(), 16);
-    assert!(luma.iter().all(|&v| v == 255));
-
-    let resized_asset = DrawingImageAsset { mime: "image/png".into(), data: encoded.into(), width: Some(8), height: Some(8) };
-    let (rw, rh, rluma) = decode_drawing_image_asset_luma(&resized_asset).expect("decode resized");
-    assert_eq!((rw, rh), (8, 8));
-    assert_eq!(rluma.len(), 64);
-
-    let invalid_base64 = DrawingImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None };
-    assert!(decode_drawing_image_asset_luma(&invalid_base64).is_none());
-
-    let invalid_image = DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(b"not a png").into(), width: None, height: None };
-    assert!(decode_drawing_image_asset_luma(&invalid_image).is_none());
+#[test]
+fn drawing_image_asset_luma_uses_intrinsic_alpha_weighted_samples_and_refuses_wrong_extent(){
+ let asset=DrawingImageAsset{width:2,height:1,samples:vec![[255,255,255,255],[255,0,0,128]].into()};
+ let (width,height,luma)=drawing_image_asset_luma(&asset).unwrap();assert_eq!((width,height),(2,1));assert_eq!(luma,vec![255,38]);
+ let malformed=DrawingImageAsset{width:3,height:1,samples:asset.samples.clone()};assert!(drawing_image_asset_luma(&malformed).is_none());assert!(drawing_image_samples(&malformed).is_none());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -487,7 +467,7 @@ async fn resolve_trace_layer_segments_returns_empty_without_assets_or_source_or_
     assert!(resolve_trace_layer_segments(&doc, &trace_no_assets).is_empty());
 
     let mut assets = semio_framework_value::paged::PagedMap::default();
-    assets.insert("present", DrawingImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None });
+    assets.insert("present", DrawingImageAsset { width: 1, height: 1, samples: Default::default() });
     doc.assets = assets;
     let trace_missing_key = DrawingTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_drawing_trace_params() };
     assert!(resolve_trace_layer_segments(&doc, &trace_missing_key).is_empty());
@@ -512,18 +492,7 @@ async fn create_layer_by_kind_covers_all_known_kinds_and_fallbacks() {
     assert_eq!(layer_kind_label(&create_layer_by_kind("nonsense")), "path");
 }
 
-#[semio_framework_async_macros::async_test]
-async fn hex_to_rgba_handles_short_and_long_hex_and_invalid_digits() {
-    assert_eq!(hex_to_rgba("#fff", 1.0), [1.0, 1.0, 1.0, 1.0]);
-    assert_eq!(hex_to_rgba("#ff0000", 0.5), [1.0, 0.0, 0.0, 0.5]);
-    assert_eq!(hex_to_rgba("#zzzzzz", 1.0), [0.0, 0.0, 0.0, 1.0]);
-}
 
-#[semio_framework_async_macros::async_test]
-async fn rgba_to_hex_round_trips_and_clamps_out_of_range_channels() {
-    assert_eq!(rgba_to_hex([1.0, 0.0, 0.0, 1.0]), "#ff0000");
-    assert_eq!(rgba_to_hex([-1.0, 2.0, 0.5, 1.0]), "#00ff80");
-}
 
 #[semio_framework_async_macros::async_test]
 async fn find_drawing_layer_location_reports_parent_and_index_or_none_when_missing() {

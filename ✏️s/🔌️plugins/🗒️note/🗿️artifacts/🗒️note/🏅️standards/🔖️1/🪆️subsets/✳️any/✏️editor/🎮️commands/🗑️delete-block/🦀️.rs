@@ -14,7 +14,7 @@ pub struct DeleteBlock {
 }
 
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the deleted block's own removal from
-// the "blocks" domain's selection is now the framework's job (`revalidate_interaction_state_after_document_change`
+// the "blocks" domain's selection is now the framework's job (`revalidate_interaction_on_document_change`
 // prunes stale ids against `interaction_topology` after every document dispatch) — this handler no
 // longer touches selection at all.
 pub fn handle(payload: &DeleteBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {

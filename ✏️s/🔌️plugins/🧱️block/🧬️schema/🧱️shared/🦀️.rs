@@ -191,8 +191,6 @@ pub trait BlockPatch: Clone + Default + PartialEq + Sized {
     type Row: Clone;
     /// 🔑️ The row with this patch's fields set; a nested list that does not fit the row is rejected.
     fn patched(&self, row: &Self::Row) -> Result<Self::Row, BlockPatchError>;
-    /// 🧭️ The patch that turns `from` into `to`.
-    fn between(from: &Self::Row, to: &Self::Row) -> Self;
     /// 🔁️ The patch that, applied after this one to the patched row, restores `base`.
     fn inverse(&self, base: &Self::Row) -> Self;
     /// ➕️ Composes a later patch into this one: the later field wins, nested list rows coalesce.
@@ -201,20 +199,14 @@ pub trait BlockPatch: Clone + Default + PartialEq + Sized {
     fn is_empty(&self) -> bool;
 }
 
-/// 📂 Id-keyed row delta over a list of `R`: removals, appended additions, per-row patches, then an optional full order.
-pub trait BlockRows: Clone + Default + PartialEq + Sized {
-    /// 🧱️ The row type of the list.
-    type Row: Clone;
-    /// 🔑️ The list after the delta; unknown targets and duplicated identities are rejected.
-    fn apply(&self, items: &[Self::Row]) -> Result<Vec<Self::Row>, BlockPatchError>;
-    /// 🔁️ The delta that, applied after this one, restores `base` rows and order exactly.
-    fn inverse(&self, base: &[Self::Row]) -> Self;
-    /// 🧭️ The delta that turns `from` into `to`.
-    fn between(from: &[Self::Row], to: &[Self::Row]) -> Self;
-    /// ➕️ Composes a later delta into this one: create∘delete cancels, patch∘delete drops the patch, patch∘patch coalesces.
-    fn absorb(&mut self, later: Self);
-    /// 🕳️ Whether the delta changes nothing.
-    fn is_empty(&self) -> bool;
+/// 📍️ The after-list slot a new row takes: `index` when it lies inside the base list, the end otherwise.
+pub fn block_insert_index(len: usize, index: Option<u32>) -> usize {
+    index.map_or(len, |index| (index as usize).min(len))
+}
+
+/// 🩹 Lifts a patch rejection into the framework's typed apply error.
+pub fn block_apply_error(error: BlockPatchError) -> protocol::MutationApplyError {
+    protocol::MutationApplyError::new(error.code, error.message).at(error.target)
 }
 
 /// 🔑️ Applies an optional sub-document patch to `row`.
@@ -230,11 +222,6 @@ pub fn block_patch_inverse<P: BlockPatch>(patch: &Option<P>, base: &P::Row) -> O
     patch.as_ref().map(|patch| patch.inverse(base)).filter(|inverse| !inverse.is_empty())
 }
 
-/// 🧭️ The optional patch from `from` to `to`; absent when nothing differs.
-pub fn block_patch_between<P: BlockPatch>(from: &P::Row, to: &P::Row) -> Option<P> {
-    Some(P::between(from, to)).filter(|patch| !patch.is_empty())
-}
-
 /// ➕️ Composes an optional later patch into `target`.
 pub fn block_patch_absorb<P: BlockPatch>(target: &mut Option<P>, later: Option<P>) {
     if let Some(later) = later {
@@ -248,39 +235,6 @@ pub fn block_patch_absorb<P: BlockPatch>(target: &mut Option<P>, later: Option<P
 /// 🕳️ Whether an optional patch sets nothing.
 pub fn block_patch_is_empty<P: BlockPatch>(patch: &Option<P>) -> bool {
     patch.as_ref().is_none_or(P::is_empty)
-}
-
-/// 🔑️ Applies an optional row delta to `items`.
-pub fn block_rows_apply<D: BlockRows>(delta: &Option<D>, items: &[D::Row], field: &str) -> Result<Vec<D::Row>, BlockPatchError> {
-    match delta {
-        Some(delta) => delta.apply(items).map_err(|error| error.under(field)),
-        None => Ok(items.to_vec()),
-    }
-}
-
-/// 🔁️ The optional row delta restoring `base` after `delta`.
-pub fn block_rows_inverse<D: BlockRows>(delta: &Option<D>, base: &[D::Row]) -> Option<D> {
-    delta.as_ref().map(|delta| delta.inverse(base)).filter(|inverse| !inverse.is_empty())
-}
-
-/// 🧭️ The optional row delta from `from` to `to`; absent when nothing differs.
-pub fn block_rows_between<D: BlockRows>(from: &[D::Row], to: &[D::Row]) -> Option<D> {
-    Some(D::between(from, to)).filter(|delta| !delta.is_empty())
-}
-
-/// ➕️ Composes an optional later row delta into `target`.
-pub fn block_rows_absorb<D: BlockRows>(target: &mut Option<D>, later: Option<D>) {
-    if let Some(later) = later {
-        match target {
-            Some(delta) => delta.absorb(later),
-            None => *target = Some(later),
-        }
-    }
-}
-
-/// 🕳️ Whether an optional row delta changes nothing.
-pub fn block_rows_is_empty<D: BlockRows>(delta: &Option<D>) -> bool {
-    delta.as_ref().is_none_or(D::is_empty)
 }
 
 /// 🎚️ One optional scalar field set to a value or cleared — a patch field that must tell "unchanged" from "now absent".
@@ -321,9 +275,6 @@ macro_rules! block_patch {
                 $(if let Some(value) = &self.$ofield { next.$ofield = value.value.clone(); })*
                 Ok(next)
             }
-            fn between(from: &$row, to: &$row) -> Self {
-                Self { $($field: (from.$field != to.$field).then(|| to.$field.clone()),)* $($ofield: (from.$ofield != to.$ofield).then(|| $wrap { value: to.$ofield.clone() }),)* }
-            }
             fn inverse(&self, base: &$row) -> Self {
                 Self { $($field: self.$field.as_ref().map(|_| base.$field.clone()),)* $($ofield: self.$ofield.as_ref().map(|_| $wrap { value: base.$ofield.clone() }),)* }
             }
@@ -335,168 +286,20 @@ macro_rules! block_patch {
                 true $(&& self.$field.is_none())* $(&& self.$ofield.is_none())*
             }
         }
-    };
-}
 
-/// 📍️ The full row order after inserting `new_id` at `index` among `ids`, or `None` when the row is simply appended (no index, or past the end).
-pub fn block_insert_order<'a>(ids: impl IntoIterator<Item = &'a str>, new_id: &str, index: Option<u32>) -> Option<Vec<String>> {
-    let mut order: Vec<String> = ids.into_iter().map(str::to_string).collect();
-    let position = index? as usize;
-    (position < order.len()).then(|| {
-        order.insert(position, new_id.to_string());
-        order
-    })
-}
-
-/// 📂 Declares an id-keyed row delta `$delta` (with its patch entry `$entry`) for rows `$row` keyed by field `$id`, patched by `$patch`, and its [`BlockRows`] impl.
-#[macro_export]
-macro_rules! block_rows {
-    ($serde:meta; $(#[$doc:meta])* $delta:ident, $entry:ident, $row:ty, $patch:ty, $id:ident) => {
-        /// 🩹 One patched row, addressed by its base identity.
-        #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-        #[cfg_attr($serde, derive(serde::Serialize, serde::Deserialize))]
-        #[value(rename_all = "camelCase")]
-        #[cfg_attr($serde, serde(rename_all = "camelCase"))]
-        pub struct $entry {
-            pub id: String,
-            pub patch: $patch,
-        }
-
-        $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-        #[cfg_attr($serde, derive(serde::Serialize, serde::Deserialize))]
-        #[value(rename_all = "camelCase", default)]
-        #[cfg_attr($serde, serde(rename_all = "camelCase", default))]
-        pub struct $delta {
-            pub added: Vec<$row>,
-            pub removed: Vec<String>,
-            pub patched: Vec<$entry>,
-            pub reordered: Option<Vec<String>>,
-        }
-
-        impl $crate::BlockRows for $delta {
-            type Row = $row;
-            fn apply(&self, items: &[$row]) -> Result<Vec<$row>, $crate::BlockPatchError> {
-                use $crate::BlockPatch as _;
-                use $crate::BlockPatchError as Error;
-                let mut next = items.to_vec();
-                let mut seen = std::collections::HashSet::new();
-                for id in &self.removed {
-                    if !seen.insert(id.as_str()) {
-                        return Err(Error::new("mutation.apply.duplicate-target", "item is removed more than once", ["removed", id.as_str()]));
-                    }
-                    let position = next.iter().position(|item| item.$id == *id).ok_or_else(|| Error::new("mutation.apply.missing-target", "removed item does not exist", ["removed", id.as_str()]))?;
-                    next.remove(position);
-                }
-                seen.clear();
-                for item in &self.added {
-                    let id = item.$id.as_str();
-                    if !seen.insert(id) || next.iter().any(|entry| entry.$id == id) {
-                        return Err(Error::new("mutation.apply.duplicate-target", "added item identity already exists", ["added", id]));
-                    }
-                    next.push(item.clone());
-                }
-                seen.clear();
-                for entry in &self.patched {
-                    if !seen.insert(entry.id.as_str()) {
-                        return Err(Error::new("mutation.apply.duplicate-target", "item is patched more than once", ["patched", entry.id.as_str()]));
-                    }
-                    let position = next.iter().position(|row| row.$id == entry.id).ok_or_else(|| Error::new("mutation.apply.missing-target", "patched item does not exist", ["patched", entry.id.as_str()]))?;
-                    let patched = entry.patch.patched(&next[position]).map_err(|error| error.under(entry.id.clone()).under("patched"))?;
-                    next[position] = patched;
-                }
-                if let Some(order) = &self.reordered {
-                    if order.len() != next.len() {
-                        return Err(Error::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len()), ["reordered"]));
-                    }
-                    seen.clear();
-                    let mut ordered = Vec::with_capacity(next.len());
-                    for id in order {
-                        if !seen.insert(id.as_str()) {
-                            return Err(Error::new("mutation.apply.duplicate-target", "item appears more than once in order", ["reordered", id.as_str()]));
-                        }
-                        let position = next.iter().position(|entry| entry.$id == *id).ok_or_else(|| Error::new("mutation.apply.missing-target", "ordered item does not exist", ["reordered", id.as_str()]))?;
-                        ordered.push(next[position].clone());
-                    }
-                    next = ordered;
-                }
-                Ok(next)
+        impl protocol::list_delta::RowPatch<$row> for $name {
+            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                *row = $crate::BlockPatch::patched(self, row).map_err($crate::block_apply_error)?;
+                Ok(())
             }
-
-            fn inverse(&self, base: &[$row]) -> Self {
-                use $crate::BlockPatch as _;
-                let find = |id: &str| base.iter().find(|row| row.$id == id);
-                let removed: Vec<String> = self.added.iter().map(|row| row.$id.clone()).collect();
-                let added: Vec<$row> = self.removed.iter().filter_map(|id| find(id).cloned()).collect();
-                let patched: Vec<$entry> = self
-                    .patched
-                    .iter()
-                    .filter(|entry| !self.removed.contains(&entry.id) && !self.added.iter().any(|row| row.$id == entry.id))
-                    .filter_map(|entry| find(&entry.id).map(|row| $entry { id: entry.id.clone(), patch: entry.patch.inverse(row) }))
-                    .filter(|entry| !entry.patch.is_empty())
-                    .collect();
-                let base_ids: Vec<String> = base.iter().map(|row| row.$id.clone()).collect();
-                let mut order: Vec<String> = match &self.reordered {
-                    Some(order) => order.clone(),
-                    None => base_ids.iter().filter(|id| !self.removed.contains(id)).cloned().chain(self.added.iter().map(|row| row.$id.clone())).collect(),
-                };
-                order.retain(|id| !removed.contains(id));
-                order.extend(added.iter().map(|row| row.$id.clone()));
-                let reordered = (order != base_ids).then_some(base_ids);
-                Self { added, removed, patched, reordered }
-            }
-
-            fn between(from: &[$row], to: &[$row]) -> Self {
-                use $crate::BlockPatch as _;
-                let removed: Vec<String> = from.iter().filter(|row| !to.iter().any(|other| other.$id == row.$id)).map(|row| row.$id.clone()).collect();
-                let added: Vec<$row> = to.iter().filter(|row| !from.iter().any(|other| other.$id == row.$id)).cloned().collect();
-                let patched: Vec<$entry> = from
-                    .iter()
-                    .filter_map(|row| to.iter().find(|other| other.$id == row.$id).filter(|other| *other != row).map(|other| $entry { id: row.$id.clone(), patch: <$patch as $crate::BlockPatch>::between(row, other) }))
-                    .collect();
-                let natural: Vec<&str> = from.iter().filter(|row| !removed.contains(&row.$id)).map(|row| row.$id.as_str()).chain(added.iter().map(|row| row.$id.as_str())).collect();
-                let target: Vec<&str> = to.iter().map(|row| row.$id.as_str()).collect();
-                let reordered = (natural != target).then(|| target.iter().map(|id| (*id).to_string()).collect());
-                Self { added, removed, patched, reordered }
-            }
-
             fn absorb(&mut self, later: Self) {
-                use $crate::BlockPatch as _;
-                for id in later.removed {
-                    if let Some(position) = self.added.iter().position(|row| row.$id == id) {
-                        self.added.remove(position);
-                    } else {
-                        self.patched.retain(|entry| entry.id != id);
-                        self.removed.push(id.clone());
-                    }
-                    if let Some(order) = &mut self.reordered {
-                        order.retain(|entry| *entry != id);
-                    }
-                }
-                for row in later.added {
-                    if let Some(order) = &mut self.reordered {
-                        order.push(row.$id.clone());
-                    }
-                    self.added.push(row);
-                }
-                for entry in later.patched {
-                    if let Some(position) = self.added.iter().position(|row| row.$id == entry.id) {
-                        if let Ok(row) = entry.patch.patched(&self.added[position]) {
-                            self.added[position] = row;
-                        }
-                    } else if let Some(existing) = self.patched.iter_mut().find(|existing| existing.id == entry.id) {
-                        existing.patch.absorb(entry.patch);
-                    } else {
-                        self.patched.push(entry);
-                    }
-                }
-                if later.reordered.is_some() {
-                    self.reordered = later.reordered;
-                }
+                $crate::BlockPatch::absorb(self, later);
             }
-
+            fn inverse(&self, row: &$row) -> Self {
+                $crate::BlockPatch::inverse(self, row)
+            }
             fn is_empty(&self) -> bool {
-                self.added.is_empty() && self.removed.is_empty() && self.patched.is_empty() && self.reordered.is_none()
+                $crate::BlockPatch::is_empty(self)
             }
         }
     };
@@ -526,12 +329,24 @@ block_patch!(any(test, feature = "test-serde"); /// 🎬 Field patch over a [`Bl
 block_patch!(any(test, feature = "test-serde"); /// 📝️ Field patch over a [`BlockMeta`].
     BlockMetaPatch for BlockMeta { plain { description: String } optional { } });
 
-block_rows!(any(test, feature = "test-serde"); /// 📂 Row delta over the attributes of a kind.
-    BlockAttributesDelta, BlockAttributesPatchEntry, BlockAttribute, BlockAttributePatch, key);
-block_rows!(any(test, feature = "test-serde"); /// 📂 Row delta over the credited authors of a kind.
-    BlockAuthorsDelta, BlockAuthorsPatchEntry, BlockAuthor, BlockAuthorPatch, id);
-block_rows!(any(test, feature = "test-serde"); /// 📂 Row delta over the compatibility rules of a kind.
-    BlockCompatibilityDelta, BlockCompatibilityPatchEntry, BlockCompatibilityRule, BlockCompatibilityRulePatch, id);
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
+    /// 📂 Positional row delta over the attributes of a kind.
+    pub BlockAttributesDelta { removal: BlockAttributesRemoval, insertion: BlockAttributesInsertion, relocation: BlockAttributesRelocation, modification: BlockAttributesPatchEntry, row: BlockAttribute, patch: BlockAttributePatch, key: key, values_only }
+}
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
+    /// 📂 Positional row delta over the credited authors of a kind.
+    pub BlockAuthorsDelta { removal: BlockAuthorsRemoval, insertion: BlockAuthorsInsertion, relocation: BlockAuthorsRelocation, modification: BlockAuthorsPatchEntry, row: BlockAuthor, patch: BlockAuthorPatch, key: id, values_only }
+}
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
+    /// 📂 Positional row delta over the compatibility rules of a kind.
+    pub BlockCompatibilityDelta { removal: BlockCompatibilityRemoval, insertion: BlockCompatibilityInsertion, relocation: BlockCompatibilityRelocation, modification: BlockCompatibilityPatchEntry, row: BlockCompatibilityRule, patch: BlockCompatibilityRulePatch, key: id, values_only }
+}
 
 /// 🏷️ Applies an ordered-set delta to `items`: removals by key first, then appended additions; both must fit.
 fn set_apply<T: Clone>(items: &[T], removed: &[String], added: &[T], key: impl Fn(&T) -> &str, field: &str) -> Result<Vec<T>, BlockPatchError> {
@@ -558,16 +373,6 @@ fn set_inverse<T: Clone>(base: &[T], removed: &[String], added: &[T], key: impl 
     let tail = first.map_or(&base[base.len()..], |first| &base[first..]);
     let dropped = tail.iter().filter(|item| !removed.iter().any(|id| id == key(item))).map(|item| key(item).to_string()).chain(added.iter().map(|item| key(item).to_string())).collect();
     (dropped, tail.to_vec())
-}
-
-/// 🧭️ The ordered-set delta turning `from` into `to`; rewrites the whole set when the kept entries are not a prefix of `to`.
-fn set_between<T: Clone + PartialEq>(from: &[T], to: &[T], key: impl Fn(&T) -> &str) -> (Vec<String>, Vec<T>) {
-    let kept: Vec<&T> = from.iter().filter(|item| to.iter().any(|other| key(other) == key(item))).collect();
-    if kept.len() <= to.len() && kept.iter().zip(to).all(|(left, right)| *left == right) {
-        (from.iter().filter(|item| !to.iter().any(|other| key(other) == key(item))).map(|item| key(item).to_string()).collect(), to[kept.len()..].to_vec())
-    } else {
-        (from.iter().map(|item| key(item).to_string()).collect(), to.to_vec())
-    }
 }
 
 /// ➕️ Composes a later ordered-set delta: an entry added then removed cancels, anything else concatenates.
@@ -619,20 +424,6 @@ impl BlockPatch for BlockRepresentationPatch {
         next.attributes = set_apply(&row.attributes, &self.attributes_removed, &self.attributes_added, |attribute| attribute.key.as_str(), "attributes")?;
         Ok(next)
     }
-    fn between(from: &BlockRepresentation, to: &BlockRepresentation) -> Self {
-        let (tags_removed, tags_added) = set_between(&from.tags, &to.tags, String::as_str);
-        let (attributes_removed, attributes_added) = set_between(&from.attributes, &to.attributes, |attribute| attribute.key.as_str());
-        Self {
-            name: (from.name != to.name).then(|| to.name.clone()),
-            mesh_url: (from.mesh_url != to.mesh_url).then(|| BlockOptionalText { value: to.mesh_url.clone() }),
-            lod: (from.lod != to.lod).then(|| BlockOptionalText { value: to.lod.clone() }),
-            description: (from.description != to.description).then(|| to.description.clone()),
-            tags_removed,
-            tags_added,
-            attributes_removed,
-            attributes_added,
-        }
-    }
     fn inverse(&self, base: &BlockRepresentation) -> Self {
         let (tags_removed, tags_added) = set_inverse(&base.tags, &self.tags_removed, &self.tags_added, String::as_str);
         let (attributes_removed, attributes_added) = set_inverse(&base.attributes, &self.attributes_removed, &self.attributes_added, |attribute| attribute.key.as_str());
@@ -668,6 +459,26 @@ impl BlockPatch for BlockRepresentationPatch {
     }
 }
 
-block_rows!(any(test, feature = "test-serde"); /// 📂 Row delta over the representations of a kind.
-    BlockRepresentationsDelta, BlockRepresentationsPatchEntry, BlockRepresentation, BlockRepresentationPatch, id);
+impl protocol::list_delta::RowPatch<BlockRepresentation> for BlockRepresentationPatch {
+    fn commit_into(&self, row: &mut BlockRepresentation, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        *row = BlockPatch::patched(self, row).map_err(block_apply_error)?;
+        Ok(())
+    }
+    fn absorb(&mut self, later: Self) {
+        BlockPatch::absorb(self, later);
+    }
+    fn inverse(&self, row: &BlockRepresentation) -> Self {
+        BlockPatch::inverse(self, row)
+    }
+    fn is_empty(&self) -> bool {
+        BlockPatch::is_empty(self)
+    }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
+    /// 📂 Positional row delta over the representations of a kind.
+    pub BlockRepresentationsDelta { removal: BlockRepresentationsRemoval, insertion: BlockRepresentationsInsertion, relocation: BlockRepresentationsRelocation, modification: BlockRepresentationsPatchEntry, row: BlockRepresentation, patch: BlockRepresentationPatch, key: id, values_only }
+}
 //#endregion 🔖️Patches

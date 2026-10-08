@@ -21,7 +21,7 @@ type NoteAssignedBoolean { value: Boolean }
 type NoteAssignedFloat { value: Float }
 type NoteAssignedLink { value: ArtifactLink }
 enum NoteBlockRowKind { ADD REMOVE MOVE PATCH }
-type NoteBlockRow { row: NoteBlockRowKind! id: String parentId: String index: Int block: NoteBlockNode patch: NoteBlockPatch }
+type NoteBlockRow { row: NoteBlockRowKind! id: String parentId: String index: Int fromParentId: String fromIndex: Int block: NoteBlockNode patch: NoteBlockPatch }
 type NoteBlocksDelta { rows: [NoteBlockRow!]! }
 enum NoteTableEditKind { INSERT_ROW REMOVE_ROW INSERT_COLUMN REMOVE_COLUMN }
 type NoteTableEdit { edit: NoteTableEditKind! index: Int! name: String cells: [NoteTableCell!] }

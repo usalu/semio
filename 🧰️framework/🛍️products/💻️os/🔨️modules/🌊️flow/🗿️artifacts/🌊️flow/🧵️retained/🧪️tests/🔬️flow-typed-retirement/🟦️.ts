@@ -9,9 +9,15 @@ export function flowTypedRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained");
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fields = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧬️fields/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowCamera" });
   if (!validate(fixture.hostSnapshot.camera)) throw new Error("Flow camera violates its semantic contract");
+  const validateOwned = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/OwnedFields" });
+  if (!validateOwned(fields.snapshot)) throw new Error("Flow owned field source violates its production shape");
+  const stable = createRequire(import.meta.url)("fast-json-stable-stringify");
+  if (stable(JSON.parse(JSON.stringify(fields.snapshot))) !== stable(fields.snapshot)) throw new Error("Flow field independent stable wire differs");
+  if (fields.ownedStrings.reduce((bytes: number, text: string) => bytes + Buffer.byteLength(text), 0) !== fields.expectedCopyBytes) throw new Error("Flow field independent UTF8 work census differs");
   
   const document = JSON.parse(JSON.stringify(fixture.hostSnapshot));
   const physical = fixture.physicalRetirement;
@@ -36,22 +42,22 @@ export function flowTypedRetirementSelfTests(): number {
     ...document.synapses.flatMap((value: any) => [value.id, value.from, value.to, value.fromPort, value.toPort]), ...Object.keys(document.layout)];
   if (text.reduce((total, value) => total + Buffer.byteLength(value), 0) !== fixture.expected.releasedBytes) throw new Error("Flow retirement independent JSON byte oracle disagrees");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
-  const exact = (value: string) => value.includes("frontier: ManuallyDrop<PagedList<FlowOwner")
-    && value.includes("pub fn next_allocation_bytes") && value.includes("pub fn reserve_allocation")
-    && value.includes("pub fn next_push_allocation_bytes") && value.includes("pub fn reserve_push_allocation")
-    && value.includes("pub fn push(&mut self, owner: FlowOwner) -> Result<(), FlowOwner>") && value.includes("return Err(owner)")
-    && value.includes("pub fn next_close_byte_demand") && value.includes("release_backing")
-    && value.includes("!std::thread::panicking()") && value.includes("FlowOwner::HostSnapshot(value)")
-    && !value.includes("maximum_bytes.min(bytes.len())") && !value.includes("close_step(1, 4096)")
+  const exact = (value: string) => value.includes("root:Option<ControlledRetirement<FlowOwner>>")
+    && value.includes("queue:RetirementQueue") && value.includes("pub fn step(&mut self,grant:RetainedCloneGrant)")
+    && value.includes("pub fn next_capacity_byte_demand") && value.includes("pub fn next_release_byte_demand")
+    && value.includes("pub fn reserve_push") && value.includes("pub fn admit_owner")
+    && value.includes("pub fn push(&mut self,owner:FlowOwner)->Result<(),FlowOwner>") && value.includes("return Err(owner)")
+    && value.includes("std::thread::panicking()||self.terminal_is_empty()") && value.includes("owned_variant!(Bytes,Strings,Set,Dictionary,Value,HostSnapshot")
+    && !value.includes("maximum_bytes.max") && !value.includes("released_bytes.min")
     && !value.includes("std::mem::forget(owner)") && !/\.clone\(|serde_json::to_/.test(value);
   if (!exact(source)) throw new Error("Flow retirement exact source ownership linkage failed");
   const mutants = [
-    source.replace("frontier: ManuallyDrop<PagedList<FlowOwner", "frontier: ManuallyDrop<Vec<FlowOwner"),
-    source.replace("pub fn next_close_byte_demand", "fn next_close_byte_demand"),
-    source.replace("pub fn next_push_allocation_bytes", "fn next_push_allocation_bytes"),
+    source.replace("root:Option<ControlledRetirement<FlowOwner>>", "root:Vec<FlowOwner>"),
+    source.replace("pub fn next_release_byte_demand", "fn next_release_byte_demand"),
+    source.replace("pub fn reserve_push", "fn reserve_push"),
     source.replace("return Err(owner)", "drop(owner); return Ok(())"),
-    source.replace("!std::thread::panicking()", "true"),
-    source.replace("FlowOwner::HostSnapshot(value)", "FlowOwner::HostSnapshot(_value)"),
+    source.replace("std::thread::panicking()||self.terminal_is_empty()", "true"),
+    source.replace("owned_variant!(Bytes,Strings,Set,Dictionary,Value,HostSnapshot", "owned_variant!(Bytes,Strings,Set,Dictionary,Value"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
   return 2 + mutants.length;

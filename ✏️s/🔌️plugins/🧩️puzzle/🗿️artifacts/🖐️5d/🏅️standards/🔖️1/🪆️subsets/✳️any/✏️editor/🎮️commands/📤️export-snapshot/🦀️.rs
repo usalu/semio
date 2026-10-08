@@ -43,7 +43,7 @@ pub const fn puzzle5d_export_inline_budget_bytes() -> usize {
 
 /// 📤 The exported bytes of one document — the same projection `importSnapshot` round-trips.
 pub fn puzzle5d_export_json(document: &Puzzle5dDocument) -> String {
-    serde_json::to_string(document).unwrap_or_default()
+    semio_framework_pack_json::to_json_string(document)
 }
 
 /// 📤 One inline host download. Only legal at or under [`puzzle5d_export_inline_budget_bytes`].

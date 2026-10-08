@@ -1,170 +1,1972 @@
 {
   "schema": "semio.acceptance.goal-plan/v1",
   "id": "repo-goal-2026-09",
-  "title": { "en": "Repository goal: os s frontend, hub backend, collaboration, AI over the semio MCP", "de": "Repository-Ziel: os-s-Oberfläche, Hub-Backend, Zusammenarbeit, KI über das semio-MCP" },
+  "title": {
+    "en": "Repository goal: os s frontend, hub backend, collaboration, AI over the semio MCP",
+    "de": "Repository-Ziel: os-s-Oberfläche, Hub-Backend, Zusammenarbeit, KI über das semio-MCP"
+  },
   "outcomes": [
-    { "id": "1", "title": { "en": "Working os s frontend with all plugins and artifacts", "de": "Funktionierende os-s-Oberfläche mit allen Plugins und Artefakten" } },
-    { "id": "2", "title": { "en": "Working hub server backend: database, presence, authentication, observability", "de": "Funktionierendes Hub-Server-Backend: Datenbank, Präsenz, Authentifizierung, Beobachtbarkeit" } },
-    { "id": "3", "title": { "en": "Collaboration between users over the hub in the React and wgpu shells", "de": "Zusammenarbeit zwischen Nutzern über den Hub in der React- und der wgpu-Shell" } },
-    { "id": "4", "title": { "en": "AI integration for users over the semio MCP", "de": "KI-Integration für Nutzer über das semio-MCP" } },
-    { "id": "5", "title": { "en": "Cross-cutting AGENTS.md requirements", "de": "Übergreifende AGENTS.md-Anforderungen" } }
+    {
+      "id": "1",
+      "title": {
+        "en": "Working os s frontend with all plugins and artifacts",
+        "de": "Funktionierende os-s-Oberfläche mit allen Plugins und Artefakten"
+      }
+    },
+    {
+      "id": "2",
+      "title": {
+        "en": "Working hub server backend: database, presence, authentication, observability",
+        "de": "Funktionierendes Hub-Server-Backend: Datenbank, Präsenz, Authentifizierung, Beobachtbarkeit"
+      }
+    },
+    {
+      "id": "3",
+      "title": {
+        "en": "Collaboration between users over the hub in the React and wgpu shells",
+        "de": "Zusammenarbeit zwischen Nutzern über den Hub in der React- und der wgpu-Shell"
+      }
+    },
+    {
+      "id": "4",
+      "title": {
+        "en": "AI integration for users over the semio MCP",
+        "de": "KI-Integration für Nutzer über das semio-MCP"
+      }
+    },
+    {
+      "id": "5",
+      "title": {
+        "en": "Cross-cutting AGENTS.md requirements",
+        "de": "Übergreifende AGENTS.md-Anforderungen"
+      }
+    }
   ],
   "providers": {
-    "hub": { "url": "http://127.0.0.1:8787/", "readyPath": "/readyz", "readyBoundMs": 3600000, "project": "os-hub", "target": "local-hub-owner", "args": ["http://127.0.0.1:8787"], "requires": [], "adminCapability": ".🧬semio/🌐hub/hub-dev/admin-capability.json" },
-    "serve": { "url": "http://127.0.0.1:6071/", "readyPath": "/", "readyBoundMs": 600000, "project": "@semio-tech/framework-os-dev", "target": "serve-hold", "args": ["--serve", "http://127.0.0.1:6071/", "--hub", "{hub}"], "requires": ["hub"] },
-    "localServe": { "url": "http://127.0.0.1:6070/", "readyPath": "/", "readyBoundMs": 600000, "project": "@semio-tech/framework-os-dev", "target": "serve-hold", "args": ["--serve", "http://127.0.0.1:6070/"], "requires": [] }
+    "hub": {
+      "url": "http://127.0.0.1:8787/",
+      "readyPath": "/readyz",
+      "readyBoundMs": 3600000,
+      "project": "os-hub",
+      "target": "local-hub-owner",
+      "args": [
+        "http://127.0.0.1:8787"
+      ],
+      "requires": [],
+      "adminCapability": ".🧬semio/🌐hub/hub-dev/admin-capability.json"
+    },
+    "serve": {
+      "url": "http://127.0.0.1:6071/",
+      "readyPath": "/",
+      "readyBoundMs": 600000,
+      "project": "@semio-tech/framework-os-dev",
+      "target": "serve-hold",
+      "args": [
+        "--serve",
+        "http://127.0.0.1:6071/",
+        "--hub",
+        "{hub}"
+      ],
+      "requires": [
+        "hub"
+      ]
+    },
+    "localServe": {
+      "url": "http://127.0.0.1:6070/",
+      "readyPath": "/",
+      "readyBoundMs": 600000,
+      "project": "@semio-tech/framework-os-dev",
+      "target": "serve-hold",
+      "args": [
+        "--serve",
+        "http://127.0.0.1:6070/"
+      ],
+      "requires": []
+    }
   },
   "steps": [
     {
       "id": "hub-fresh",
-      "title": { "en": "The hub under test runs the current tree", "de": "Der geprüfte Hub läuft auf dem aktuellen Stand" },
+      "title": {
+        "en": "The hub under test runs the current tree",
+        "de": "Der geprüfte Hub läuft auf dem aktuellen Stand"
+      },
       "mode": "serial",
       "gatesRest": true,
       "checks": [
-        { "id": "hub-build-freshness", "title": { "en": "Hub build matches the source tree", "de": "Hub-Build entspricht dem Quellstand" }, "criteria": ["1.3", "2.5"], "project": "os-hub-ts", "target": "hub-freshness", "args": ["--hub", "{hub}"], "requires": ["hub"], "browsers": 0 }
+        {
+          "id": "hub-build-freshness",
+          "title": {
+            "en": "Hub build matches the source tree",
+            "de": "Hub-Build entspricht dem Quellstand"
+          },
+          "criteria": [
+            "1.3",
+            "2.5"
+          ],
+          "project": "os-hub-ts",
+          "target": "hub-freshness",
+          "args": [
+            "--hub",
+            "{hub}"
+          ],
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        }
       ]
     },
     {
       "id": "hub-laws",
-      "title": { "en": "Hub launch check and full hub law suite", "de": "Hub-Startprüfung und vollständige Hub-Gesetzessuite" },
+      "title": {
+        "en": "Hub launch check and full hub law suite",
+        "de": "Hub-Startprüfung und vollständige Hub-Gesetzessuite"
+      },
       "mode": "serial",
       "gatesRest": true,
       "checks": [
-        { "id": "hub-launch", "title": { "en": "Local bootstrap launch check", "de": "Prüfung des lokalen Bootstrap-Starts" }, "criteria": ["2.1"], "project": "os-hub", "target": "local-bootstrap-launch-check", "args": [], "requires": [], "browsers": 0 },
-        { "id": "hub-laws-all-features", "title": { "en": "Hub and db laws, all features", "de": "Hub- und DB-Gesetze, alle Features" }, "criteria": ["2.2", "2.3"], "project": "os-hub", "target": "test-all-features", "args": [], "requires": ["backends"], "browsers": 0 },
-        {"id":"hub-hostile-input","title":{"en":"The hub survives hostile and generated input on every route and socket","de":"Der Hub übersteht feindliche und generierte Eingaben auf jeder Route und jedem Socket"},"criteria":["2.13"],"project":"os-hub","target":"hostile-input-check","args":["--locale","en"],"requires":[],"browsers":0}
+        {
+          "id": "hub-launch",
+          "title": {
+            "en": "Local bootstrap launch check",
+            "de": "Prüfung des lokalen Bootstrap-Starts"
+          },
+          "criteria": [
+            "2.1"
+          ],
+          "project": "os-hub",
+          "target": "local-bootstrap-launch-check",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "hub-laws-all-features",
+          "title": {
+            "en": "Hub and db laws, all features",
+            "de": "Hub- und DB-Gesetze, alle Features"
+          },
+          "criteria": [
+            "2.2",
+            "2.3"
+          ],
+          "project": "os-hub",
+          "target": "test-all-features",
+          "args": [],
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "hub-hostile-input",
+          "title": {
+            "en": "The hub survives hostile and generated input on every route and socket",
+            "de": "Der Hub übersteht feindliche und generierte Eingaben auf jeder Route und jedem Socket"
+          },
+          "criteria": [
+            "2.13"
+          ],
+          "project": "os-hub",
+          "target": "hostile-input-check",
+          "args": [
+            "--locale",
+            "en"
+          ],
+          "requires": [],
+          "browsers": 0
+        }
       ]
     },
     {
       "id": "backends-and-boot",
-      "title": { "en": "Group A: postgres and neo4j documents, cold boot of s", "de": "Gruppe A: Dokumente auf postgres und neo4j, Kaltstart von s" },
+      "title": {
+        "en": "Group A: postgres and neo4j documents, cold boot of s",
+        "de": "Gruppe A: Dokumente auf postgres und neo4j, Kaltstart von s"
+      },
       "mode": "parallel",
       "gatesRest": false,
       "checks": [
-        { "id": "two-client-postgres", "title": { "en": "Two clients on one postgres document", "de": "Zwei Clients auf einem postgres-Dokument" }, "criteria": ["2.4", "2.10"], "project": "os-hub-ts", "target": "two-client-e2e", "args": ["postgres"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
-        { "id": "document-growth-postgres", "title": { "en": "Document growth on postgres", "de": "Dokumentwachstum auf postgres" }, "criteria": ["2.4"], "project": "os-hub-ts", "target": "document-growth-e2e", "args": ["postgres"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
-        { "id": "two-client-neo4j", "title": { "en": "Two clients on one neo4j document", "de": "Zwei Clients auf einem neo4j-Dokument" }, "criteria": ["2.4", "2.10"], "project": "os-hub-ts", "target": "two-client-e2e", "args": ["neo4j"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
-        { "id": "document-growth-neo4j", "title": { "en": "Document growth on neo4j", "de": "Dokumentwachstum auf neo4j" }, "criteria": ["2.4"], "project": "os-hub-ts", "target": "document-growth-e2e", "args": ["neo4j"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
-        { "id": "s-cold-boot", "title": { "en": "Cold boot of the s React shell", "de": "Kaltstart der s-React-Shell" }, "criteria": ["1.1"], "project": "@semio-tech/framework-os-dev", "target": "cold-boot-check-s", "args": [], "requires": [], "browsers": 1 }
+        {
+          "id": "two-client-postgres",
+          "title": {
+            "en": "Two clients on one postgres document",
+            "de": "Zwei Clients auf einem postgres-Dokument"
+          },
+          "criteria": [
+            "2.4",
+            "2.10"
+          ],
+          "project": "os-hub-ts",
+          "target": "two-client-e2e",
+          "args": [
+            "postgres"
+          ],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "document-growth-postgres",
+          "title": {
+            "en": "Document growth on postgres",
+            "de": "Dokumentwachstum auf postgres"
+          },
+          "criteria": [
+            "2.4"
+          ],
+          "project": "os-hub-ts",
+          "target": "document-growth-e2e",
+          "args": [
+            "postgres"
+          ],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "two-client-neo4j",
+          "title": {
+            "en": "Two clients on one neo4j document",
+            "de": "Zwei Clients auf einem neo4j-Dokument"
+          },
+          "criteria": [
+            "2.4",
+            "2.10"
+          ],
+          "project": "os-hub-ts",
+          "target": "two-client-e2e",
+          "args": [
+            "neo4j"
+          ],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "document-growth-neo4j",
+          "title": {
+            "en": "Document growth on neo4j",
+            "de": "Dokumentwachstum auf neo4j"
+          },
+          "criteria": [
+            "2.4"
+          ],
+          "project": "os-hub-ts",
+          "target": "document-growth-e2e",
+          "args": [
+            "neo4j"
+          ],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "s-cold-boot",
+          "title": {
+            "en": "Cold boot of the s React shell",
+            "de": "Kaltstart der s-React-Shell"
+          },
+          "criteria": [
+            "1.1"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "cold-boot-check-s",
+          "args": [],
+          "requires": [],
+          "browsers": 1
+        }
       ]
     },
     {
       "id": "frontend",
-      "title": { "en": "Group B: every kind in s, en and de, accessibility, capability texts", "de": "Gruppe B: jede Art in s, en und de, Barrierefreiheit, Fähigkeitstexte" },
+      "title": {
+        "en": "Group B: every kind in s, en and de, accessibility, capability texts",
+        "de": "Gruppe B: jede Art in s, en und de, Barrierefreiheit, Fähigkeitstexte"
+      },
       "mode": "parallel",
       "gatesRest": false,
       "checks": [
-        { "id": "program-matrix-en", "title": { "en": "Editor and viewer matrix, English", "de": "Editor- und Betrachtermatrix, Englisch" }, "criteria": ["1.1", "1.6", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "program-matrix", "args": ["--serve", "{localServe}", "--tag", "goal-en", "--locale", "en", "--roles", "editor,viewer"], "requires": ["localServe"], "browsers": 1 },
-        { "id": "program-matrix-de", "title": { "en": "Editor and viewer matrix, German", "de": "Editor- und Betrachtermatrix, Deutsch" }, "criteria": ["1.6", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "program-matrix", "args": ["--serve", "{localServe}", "--tag", "goal-de", "--locale", "de", "--roles", "editor,viewer"], "requires": ["localServe"], "browsers": 1 },
-        { "id": "foreign-kind", "title": { "en": "Hub documents created, edited, undone and redone per kind", "de": "Hub-Dokumente je Art angelegt, bearbeitet, rückgängig gemacht und wiederholt" }, "criteria": ["1.4", "1.5"], "project": "@semio-tech/framework-os-dev", "target": "s-host-foreign-kind-s", "args": ["{serve}", "--tag", "goal"], "requires": ["serve"], "browsers": 1 },
-        { "id": "pinch-a11y", "title": { "en": "Pinch, diagram contrast and accessibility", "de": "Pinch-Geste, Diagrammkontrast und Barrierefreiheit" }, "criteria": ["5.3"], "project": "@semio-tech/framework-os-dev", "target": "s-host-pinch-diagram-contrast-s", "args": ["{serve}", "--tag", "goal"], "requires": ["serve"], "browsers": 1 },
-        { "id": "connection-budget", "title": { "en": "One stream channel and no idle HTTP holds per origin", "de": "Ein Stromkanal und keine untätig gehaltenen HTTP-Verbindungen je Ursprung" }, "criteria": ["1.1", "5.6"], "project": "@semio-tech/framework-os-dev", "target": "connection-budget", "args": ["{serve}"], "requires": ["serve"], "browsers": 1 },
-        { "id": "tool-run-matrix-en", "title": { "en": "Every tool runs, pauses, commits as declared, undoes and aborts, English", "de": "Jedes Werkzeug läuft, pausiert, schreibt wie deklariert, lässt sich rückgängig machen und abbrechen, Englisch" }, "criteria": ["5.4", "1.5"], "project": "@semio-tech/framework-os-dev", "target": "tool-run-matrix", "args": ["--serve", "{localServe}", "--tag", "goal-en", "--locale", "en"], "requires": ["localServe"], "browsers": 1 },
-        { "id": "tool-run-matrix-de", "title": { "en": "Tool runs, German", "de": "Werkzeugläufe, Deutsch" }, "criteria": ["5.4", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "tool-run-matrix", "args": ["--serve", "{localServe}", "--tag", "goal-de", "--locale", "de"], "requires": ["localServe"], "browsers": 1 },
-        { "id": "hub-document-sweep-en", "title": { "en": "Every hub-creatable kind created, opened and round-tripped inside s, English", "de": "Jede auf dem Hub anlegbare Art in s angelegt, geöffnet und hin und zurück bearbeitet, Englisch" }, "criteria": ["1.4", "1.5", "1.2"], "project": "@semio-tech/framework-os-dev", "target": "hub-document-sweep", "args": ["--serve", "{serve}", "--hub", "{hub}", "--tag", "goal-en", "--locale", "en"], "env": { "OS_HUB_PROBE_EMAIL": "{user1Email}", "OS_HUB_PROBE_PASSWORD": "{user1Password}" }, "requires": ["hub", "serve"], "browsers": 1 },
-        { "id": "hub-document-sweep-de", "title": { "en": "Every hub-creatable kind inside s, German", "de": "Jede auf dem Hub anlegbare Art in s, Deutsch" }, "criteria": ["1.4", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "hub-document-sweep", "args": ["--serve", "{serve}", "--hub", "{hub}", "--tag", "goal-de", "--locale", "de"], "env": { "OS_HUB_PROBE_EMAIL": "{user1Email}", "OS_HUB_PROBE_PASSWORD": "{user1Password}" }, "requires": ["hub", "serve"], "browsers": 1 },
-        { "id": "idle-budget", "title": { "en": "Every program idles below one frame per second", "de": "Jedes Programm bleibt im Leerlauf unter einem Bild pro Sekunde" }, "criteria": ["5.4"], "project": "@semio-tech/framework-os-dev", "target": "idle-budget", "args": ["{localServe}"], "requires": ["localServe"], "browsers": 1 },
-        { "id": "memory-soak", "title": { "en": "Ten open editors hold their memory for 30 minutes", "de": "Zehn offene Editoren halten ihren Speicher 30 Minuten lang" }, "criteria": ["5.4"], "project": "@semio-tech/framework-os-dev", "target": "memory-soak", "args": ["{localServe}"], "requires": ["localServe"], "browsers": 1 },
-        { "id": "capability-audit", "title": { "en": "Every capability carries en and de descriptions", "de": "Jede Fähigkeit trägt Beschreibungen auf Englisch und Deutsch" }, "criteria": ["4.2"], "project": "@semio-tech/framework-os-mcp-rs", "target": "capability-audit-check", "args": [], "requires": [], "browsers": 0 },
-        {"id":"boot-budget","title":{"en":"Boot budget (s React shell)","de":"Startbudget (s-React-Shell)"},"criteria":["1.1","5.4"],"project":"@semio-tech/framework-os-dev","target":"boot-budget","args":["--serve","{localServe}","--locale","en","--tag","goal"],"requires":["localServe"],"browsers":1},
-        {"id":"interaction-latency","title":{"en":"Typing, drag and hover latency within budget (s React shell)","de":"Tipp-, Zieh- und Hover-Latenz im Budget (s-React-Shell)"},"criteria":["1.1","5.4"],"project":"@semio-tech/framework-os-dev","target":"interaction-latency","args":["{localServe}","--tag","goal"],"requires":["localServe"],"browsers":1}
+        {
+          "id": "program-matrix-en",
+          "title": {
+            "en": "Editor and viewer matrix, English",
+            "de": "Editor- und Betrachtermatrix, Englisch"
+          },
+          "criteria": [
+            "1.1",
+            "1.6",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "program-matrix",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--tag",
+            "goal-en",
+            "--locale",
+            "en",
+            "--roles",
+            "editor,viewer"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "program-matrix-de",
+          "title": {
+            "en": "Editor and viewer matrix, German",
+            "de": "Editor- und Betrachtermatrix, Deutsch"
+          },
+          "criteria": [
+            "1.6",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "program-matrix",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--tag",
+            "goal-de",
+            "--locale",
+            "de",
+            "--roles",
+            "editor,viewer"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "foreign-kind",
+          "title": {
+            "en": "Hub documents created, edited, undone and redone per kind",
+            "de": "Hub-Dokumente je Art angelegt, bearbeitet, rückgängig gemacht und wiederholt"
+          },
+          "criteria": [
+            "1.4",
+            "1.5"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "s-host-foreign-kind-s",
+          "args": [
+            "{serve}",
+            "--tag",
+            "goal"
+          ],
+          "requires": [
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "pinch-a11y",
+          "title": {
+            "en": "Pinch, diagram contrast and accessibility",
+            "de": "Pinch-Geste, Diagrammkontrast und Barrierefreiheit"
+          },
+          "criteria": [
+            "5.3"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "s-host-pinch-diagram-contrast-s",
+          "args": [
+            "{serve}",
+            "--tag",
+            "goal"
+          ],
+          "requires": [
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "connection-budget",
+          "title": {
+            "en": "One stream channel and no idle HTTP holds per origin",
+            "de": "Ein Stromkanal und keine untätig gehaltenen HTTP-Verbindungen je Ursprung"
+          },
+          "criteria": [
+            "1.1",
+            "5.6"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "connection-budget",
+          "args": [
+            "{serve}"
+          ],
+          "requires": [
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "tool-run-matrix-en",
+          "title": {
+            "en": "Every tool runs, pauses, commits as declared, undoes and aborts, English",
+            "de": "Jedes Werkzeug läuft, pausiert, schreibt wie deklariert, lässt sich rückgängig machen und abbrechen, Englisch"
+          },
+          "criteria": [
+            "5.4",
+            "1.5"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "tool-run-matrix",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--tag",
+            "goal-en",
+            "--locale",
+            "en"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "tool-run-matrix-de",
+          "title": {
+            "en": "Tool runs, German",
+            "de": "Werkzeugläufe, Deutsch"
+          },
+          "criteria": [
+            "5.4",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "tool-run-matrix",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--tag",
+            "goal-de",
+            "--locale",
+            "de"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "hub-document-sweep-en",
+          "title": {
+            "en": "Every hub-creatable kind created, opened and round-tripped inside s, English",
+            "de": "Jede auf dem Hub anlegbare Art in s angelegt, geöffnet und hin und zurück bearbeitet, Englisch"
+          },
+          "criteria": [
+            "1.4",
+            "1.5",
+            "1.2"
+          ],
+          "project": "os-hub",
+          "target": "hub-document-sweep",
+          "args": [
+            "--serve",
+            "{serve}",
+            "--hub",
+            "{hub}",
+            "--tag",
+            "goal-en",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "OS_HUB_PROBE_EMAIL": "{user1Email}",
+            "OS_HUB_PROBE_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub",
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "hub-document-sweep-de",
+          "title": {
+            "en": "Every hub-creatable kind inside s, German",
+            "de": "Jede auf dem Hub anlegbare Art in s, Deutsch"
+          },
+          "criteria": [
+            "1.4",
+            "5.2"
+          ],
+          "project": "os-hub",
+          "target": "hub-document-sweep",
+          "args": [
+            "--serve",
+            "{serve}",
+            "--hub",
+            "{hub}",
+            "--tag",
+            "goal-de",
+            "--locale",
+            "de"
+          ],
+          "env": {
+            "OS_HUB_PROBE_EMAIL": "{user1Email}",
+            "OS_HUB_PROBE_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub",
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "idle-budget",
+          "title": {
+            "en": "Every program idles below one frame per second",
+            "de": "Jedes Programm bleibt im Leerlauf unter einem Bild pro Sekunde"
+          },
+          "criteria": [
+            "5.4"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "idle-budget",
+          "args": [
+            "{localServe}"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "memory-soak",
+          "title": {
+            "en": "Ten open editors hold their memory for 30 minutes",
+            "de": "Zehn offene Editoren halten ihren Speicher 30 Minuten lang"
+          },
+          "criteria": [
+            "5.4"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "memory-soak",
+          "args": [
+            "{localServe}"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "capability-audit",
+          "title": {
+            "en": "Every capability carries en and de descriptions",
+            "de": "Jede Fähigkeit trägt Beschreibungen auf Englisch und Deutsch"
+          },
+          "criteria": [
+            "4.2"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "capability-audit-check",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "boot-budget",
+          "title": {
+            "en": "Boot budget (s React shell)",
+            "de": "Startbudget (s-React-Shell)"
+          },
+          "criteria": [
+            "1.1",
+            "5.4"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "boot-budget",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--locale",
+            "en",
+            "--tag",
+            "goal"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "interaction-latency",
+          "title": {
+            "en": "Typing, drag and hover latency within budget (s React shell)",
+            "de": "Tipp-, Zieh- und Hover-Latenz im Budget (s-React-Shell)"
+          },
+          "criteria": [
+            "1.1",
+            "5.4"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "interaction-latency",
+          "args": [
+            "{localServe}",
+            "--tag",
+            "goal"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        }
       ]
     },
-    { "id": "frontend-journeys", "title": {"en":"Group B2: export and import per kind, Home studio catalog, en and de","de":"Gruppe B2: Export und Import pro Art, Home-Studiokatalog, en und de"}, "mode": "parallel", "gatesRest": false, "checks": [
-        {"id":"io-matrix-en","title":{"en":"Export and import through s, per kind, English","de":"Export und Import über s, pro Art, Englisch"},"criteria":["1.7","1.8"],"project":"@semio-tech/framework-os-dev","target":"io-matrix","args":["--serve","{localServe}","--locale","en","--tag","goal-en"],"requires":["localServe"],"browsers":1},
-        {"id":"io-matrix-de","title":{"en":"Export and import through s, per kind, German","de":"Export und Import über s, pro Art, Deutsch"},"criteria":["1.7","1.8","5.2"],"project":"@semio-tech/framework-os-dev","target":"io-matrix","args":["--serve","{localServe}","--locale","de","--tag","goal-de"],"requires":["localServe"],"browsers":1},
-        {"id":"home-e2e-en","title":{"en":"Home studio catalog end to end","de":"Home-Studiokatalog Ende zu Ende"},"criteria":["1.1"],"project":"@semio-tech/framework-os-dev","target":"verify-home","args":["--serve","{localServe}","--locale","en"],"requires":["localServe"],"browsers":1},
-        {"id":"home-e2e-de","title":{"en":"Home studio catalog end to end","de":"Home-Studiokatalog Ende zu Ende"},"criteria":["1.1","5.2"],"project":"@semio-tech/framework-os-dev","target":"verify-home","args":["--serve","{localServe}","--locale","de"],"requires":["localServe"],"browsers":1},
-        {"id":"home-e2e-hub-en","title":{"en":"Home studio catalog end to end with a hub space","de":"Home-Studiokatalog Ende zu Ende mit Hub-Raum"},"criteria":["1.1","1.4"],"project":"@semio-tech/framework-os-dev","target":"verify-home","args":["--serve","{serve}","--hub","{hub}","--locale","en"],"env":{"OS_HUB_PROBE_EMAIL":"{user1Email}","OS_HUB_PROBE_PASSWORD":"{user1Password}"},"requires":["serve","hub"],"browsers":1}
+    {
+      "id": "frontend-journeys",
+      "title": {
+        "en": "Group B2: export and import per kind, Home studio catalog, en and de",
+        "de": "Gruppe B2: Export und Import pro Art, Home-Studiokatalog, en und de"
+      },
+      "mode": "parallel",
+      "gatesRest": false,
+      "checks": [
+        {
+          "id": "io-matrix-en",
+          "title": {
+            "en": "Export and import through s, per kind, English",
+            "de": "Export und Import über s, pro Art, Englisch"
+          },
+          "criteria": [
+            "1.7",
+            "1.8"
+          ],
+          "project": "os-hub",
+          "target": "io-matrix",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--locale",
+            "en",
+            "--tag",
+            "goal-en"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "io-matrix-de",
+          "title": {
+            "en": "Export and import through s, per kind, German",
+            "de": "Export und Import über s, pro Art, Deutsch"
+          },
+          "criteria": [
+            "1.7",
+            "1.8",
+            "5.2"
+          ],
+          "project": "os-hub",
+          "target": "io-matrix",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--locale",
+            "de",
+            "--tag",
+            "goal-de"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "home-e2e-en",
+          "title": {
+            "en": "Home studio catalog end to end",
+            "de": "Home-Studiokatalog Ende zu Ende"
+          },
+          "criteria": [
+            "1.1"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "verify-home",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--locale",
+            "en"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "home-e2e-de",
+          "title": {
+            "en": "Home studio catalog end to end",
+            "de": "Home-Studiokatalog Ende zu Ende"
+          },
+          "criteria": [
+            "1.1",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "verify-home",
+          "args": [
+            "--serve",
+            "{localServe}",
+            "--locale",
+            "de"
+          ],
+          "requires": [
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "home-e2e-hub-en",
+          "title": {
+            "en": "Home studio catalog end to end with a hub space",
+            "de": "Home-Studiokatalog Ende zu Ende mit Hub-Raum"
+          },
+          "criteria": [
+            "1.1",
+            "1.4"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "verify-home",
+          "args": [
+            "--serve",
+            "{serve}",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "OS_HUB_PROBE_EMAIL": "{user1Email}",
+            "OS_HUB_PROBE_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "serve",
+            "hub"
+          ],
+          "browsers": 1
+        }
       ]
     },
     {
       "id": "collaboration-react",
-      "title": { "en": "Two humans in the React shell", "de": "Zwei Menschen in der React-Shell" },
+      "title": {
+        "en": "Two humans in the React shell",
+        "de": "Zwei Menschen in der React-Shell"
+      },
       "mode": "serial",
       "gatesRest": false,
       "checks": [
-        { "id": "two-human-en", "title": { "en": "Two browser users on one hub, every creatable kind, English", "de": "Zwei Browser-Nutzer auf einem Hub, jede anlegbare Art, Englisch" }, "criteria": ["3.1", "3.4", "3.9", "3.11"], "project": "@semio-tech/framework-os-dev", "target": "two-human", "args": ["--hub", "{hub}", "--serve", "{serve}", "--locale", "en", "--max-create-to-mounted-ms", "120000", "--max-open-to-mounted-ms", "30000"], "env": { "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}", "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}", "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}", "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}" }, "requires": ["hub", "serve"], "browsers": 2 },
-        { "id": "two-human-de", "title": { "en": "Two browser users on one hub, German", "de": "Zwei Browser-Nutzer auf einem Hub, Deutsch" }, "criteria": ["3.1", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "two-human", "args": ["--hub", "{hub}", "--serve", "{serve}", "--locale", "de", "--max-create-to-mounted-ms", "120000", "--max-open-to-mounted-ms", "30000"], "env": { "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}", "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}", "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}", "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}" }, "requires": ["hub", "serve"], "browsers": 2 },
-        { "id": "react-collaboration-e2e-en", "title": { "en": "React two-human collaboration over the hub", "de": "Zusammenarbeit zweier Menschen in React über den Hub" }, "criteria": ["3.1", "3.2", "3.3", "3.4", "3.9", "3.10", "5.6"], "project": "os-hub", "target": "dev-collaboration", "args": ["--hub", "{hub}", "--locale", "en"], "env": { "S_COLLAB_HUB_URL": "{hub}", "S_COLLAB_USER1_PASSWORD": "{user1Password}", "S_COLLAB_USER2_PASSWORD": "{user2Password}", "S_COLLAB_HUB_ADMIN_CAPABILITY_FILE": "{hubAdminCapability}" }, "requires": ["hub", "backends", "hubAdmin"], "browsers": 1 },
-        { "id": "react-collaboration-e2e-de", "title": { "en": "React two-human collaboration over the hub, German", "de": "Zusammenarbeit zweier Menschen in React über den Hub, Deutsch" }, "criteria": ["3.1", "3.9", "3.10", "5.2", "5.6"], "project": "os-hub", "target": "dev-collaboration", "args": ["--hub", "{hub}", "--locale", "de"], "env": { "S_COLLAB_HUB_URL": "{hub}", "S_COLLAB_USER1_PASSWORD": "{user1Password}", "S_COLLAB_USER2_PASSWORD": "{user2Password}", "S_COLLAB_HUB_ADMIN_CAPABILITY_FILE": "{hubAdminCapability}" }, "requires": ["hub", "backends", "hubAdmin"], "browsers": 1 },
-        {"id":"two-human-viewer","title":{"en":"Two humans: viewer role is read-only","de":"Zwei Personen: Betrachterrolle ist schreibgeschützt"},"criteria":["3.4"],"project":"@semio-tech/framework-os-dev","target":"two-human-viewer","args":["--hub","{hub}","--serve","{serve}","--locale","en","--admin-capability","{hubAdminCapability}"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub","serve","hubAdmin"],"browsers":1},
-        {"id":"two-human-cross-undo","title":{"en":"Two humans: each undo reverts only its own edits","de":"Zwei Personen: jedes Rückgängig nimmt nur eigene Änderungen zurück"},"criteria":["3.11"],"project":"@semio-tech/framework-os-dev","target":"two-human-cross-undo","args":["--hub","{hub}","--serve","{serve}","--locale","en","--admin-capability","{hubAdminCapability}"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub","serve","hubAdmin"],"browsers":1}
+        {
+          "id": "two-human-en",
+          "title": {
+            "en": "Two browser users on one hub, every creatable kind, English",
+            "de": "Zwei Browser-Nutzer auf einem Hub, jede anlegbare Art, Englisch"
+          },
+          "criteria": [
+            "3.1",
+            "3.4",
+            "3.9",
+            "3.11"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "two-human",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--serve",
+            "{serve}",
+            "--locale",
+            "en",
+            "--max-create-to-mounted-ms",
+            "120000",
+            "--max-open-to-mounted-ms",
+            "30000"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "serve"
+          ],
+          "browsers": 2
+        },
+        {
+          "id": "two-human-de",
+          "title": {
+            "en": "Two browser users on one hub, German",
+            "de": "Zwei Browser-Nutzer auf einem Hub, Deutsch"
+          },
+          "criteria": [
+            "3.1",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "two-human",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--serve",
+            "{serve}",
+            "--locale",
+            "de",
+            "--max-create-to-mounted-ms",
+            "120000",
+            "--max-open-to-mounted-ms",
+            "30000"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "serve"
+          ],
+          "browsers": 2
+        },
+        {
+          "id": "react-collaboration-e2e-en",
+          "title": {
+            "en": "React two-human collaboration over the hub",
+            "de": "Zusammenarbeit zweier Menschen in React über den Hub"
+          },
+          "criteria": [
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.9",
+            "3.10",
+            "5.6"
+          ],
+          "project": "os-hub",
+          "target": "dev-collaboration",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "S_COLLAB_HUB_URL": "{hub}",
+            "S_COLLAB_USER1_PASSWORD": "{user1Password}",
+            "S_COLLAB_USER2_PASSWORD": "{user2Password}",
+            "S_COLLAB_HUB_ADMIN_CAPABILITY_FILE": "{hubAdminCapability}"
+          },
+          "requires": [
+            "hub",
+            "backends",
+            "hubAdmin"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "react-collaboration-e2e-de",
+          "title": {
+            "en": "React two-human collaboration over the hub, German",
+            "de": "Zusammenarbeit zweier Menschen in React über den Hub, Deutsch"
+          },
+          "criteria": [
+            "3.1",
+            "3.9",
+            "3.10",
+            "5.2",
+            "5.6"
+          ],
+          "project": "os-hub",
+          "target": "dev-collaboration",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--locale",
+            "de"
+          ],
+          "env": {
+            "S_COLLAB_HUB_URL": "{hub}",
+            "S_COLLAB_USER1_PASSWORD": "{user1Password}",
+            "S_COLLAB_USER2_PASSWORD": "{user2Password}",
+            "S_COLLAB_HUB_ADMIN_CAPABILITY_FILE": "{hubAdminCapability}"
+          },
+          "requires": [
+            "hub",
+            "backends",
+            "hubAdmin"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "two-human-viewer",
+          "title": {
+            "en": "Two humans: viewer role is read-only",
+            "de": "Zwei Personen: Betrachterrolle ist schreibgeschützt"
+          },
+          "criteria": [
+            "3.4"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "two-human-viewer",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--serve",
+            "{serve}",
+            "--locale",
+            "en",
+            "--admin-capability",
+            "{hubAdminCapability}"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "serve",
+            "hubAdmin"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "two-human-cross-undo",
+          "title": {
+            "en": "Two humans: each undo reverts only its own edits",
+            "de": "Zwei Personen: jedes Rückgängig nimmt nur eigene Änderungen zurück"
+          },
+          "criteria": [
+            "3.11"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "two-human-cross-undo",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--serve",
+            "{serve}",
+            "--locale",
+            "en",
+            "--admin-capability",
+            "{hubAdminCapability}"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "serve",
+            "hubAdmin"
+          ],
+          "browsers": 1
+        }
       ]
     },
     {
       "id": "collaboration-wgpu-and-agents",
-      "title": { "en": "Group C: wgpu shells and agents on the hub", "de": "Gruppe C: wgpu-Shells und Agenten auf dem Hub" },
+      "title": {
+        "en": "Group C: wgpu shells and agents on the hub",
+        "de": "Gruppe C: wgpu-Shells und Agenten auf dem Hub"
+      },
       "mode": "parallel",
       "gatesRest": false,
       "checks": [
-        { "id": "wgpu-live-collaboration", "title": { "en": "Two native wgpu shells collaborate", "de": "Zwei native wgpu-Shells arbeiten zusammen" }, "criteria": ["3.5"], "project": "@semio-tech/framework-renderer-wgpu", "target": "hub-live-collaboration-check", "args": [], "env": { "SEMIO_HUB_LIVE_ORIGIN": "{hub}", "SEMIO_HUB_LIVE_EMAIL": "{user1Email}", "SEMIO_HUB_LIVE_PASSWORD": "{user1Password}", "SEMIO_HUB_LIVE_PEER_EMAIL": "{user2Email}", "SEMIO_HUB_LIVE_PEER_PASSWORD": "{user2Password}" }, "requires": ["hub"], "browsers": 0 },
-        { "id": "wgpu-live-journey", "title": { "en": "wgpu shell hub journey", "de": "Hub-Weg der wgpu-Shell" }, "criteria": ["3.2"], "project": "@semio-tech/framework-renderer-wgpu", "target": "hub-live-journey-check", "args": [], "env": { "SEMIO_HUB_LIVE_ORIGIN": "{hub}", "SEMIO_HUB_LIVE_EMAIL": "{user1Email}", "SEMIO_HUB_LIVE_PASSWORD": "{user1Password}" }, "requires": ["hub"], "browsers": 0 },
-        { "id": "mcp-hub-agent-participant", "title": { "en": "A human sees an agent's edit live", "de": "Ein Mensch sieht die Bearbeitung eines Agenten live" }, "criteria": ["3.12"], "project": "@semio-tech/framework-os-mcp-rs", "target": "hub-agent-participant-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub"], "browsers": 1 },
-        { "id": "mcp-agent-reply", "title": { "en": "Agent reply reaches the shell", "de": "Antwort des Agenten erreicht die Shell" }, "criteria": ["4.7"], "project": "@semio-tech/framework-os-mcp-rs", "target": "agent-reply-check", "args": [], "env": { "S_OS_MCP_LIVE_SHELL_URL": "{serve}" }, "requires": ["serve"], "browsers": 1 },
-        {"id":"wgpu-collaboration-wasm32-en","title":{"en":"wgpu wasm32 ↔ wasm32 collaboration over the hub","de":"wgpu-wasm32 ↔ wasm32-Zusammenarbeit über den Hub"},"criteria":["3.2","3.7","3.9","3.10"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","wasm32","--hub","{hub}","--locale","en"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub"],"browsers":1},
-        {"id":"wgpu-collaboration-wasm32-de","title":{"en":"wgpu wasm32 ↔ wasm32 collaboration over the hub","de":"wgpu-wasm32 ↔ wasm32-Zusammenarbeit über den Hub"},"criteria":["3.2","3.7","3.9","3.10","5.2"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","wasm32","--hub","{hub}","--locale","de"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub"],"browsers":1},
-        {"id":"wgpu-collaboration-wasm32-react-en","title":{"en":"wgpu wasm32 ↔ React collaboration","de":"Zusammenarbeit wgpu-wasm32 ↔ React"},"criteria":["3.8"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","wasm32-react","--hub","{hub}","--locale","en","--react-serve","{localServe}"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub","localServe"],"browsers":1},
-        {"id":"wgpu-collaboration-wasm32-native-en","title":{"en":"wgpu wasm32 ↔ native wgpu collaboration","de":"Zusammenarbeit wgpu-wasm32 ↔ natives wgpu"},"criteria":["3.8"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","wasm32-native","--hub","{hub}","--locale","en"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub"],"browsers":1},
-        {"id":"wgpu-collaboration-native-react-en","title":{"en":"native wgpu ↔ React collaboration","de":"Zusammenarbeit natives wgpu ↔ React"},"criteria":["3.5"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","native-react","--hub","{hub}","--locale","en","--react-serve","{localServe}"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub","localServe"],"browsers":1},
-        {"id":"wgpu-peer-cursors-native-react-en","title":{"en":"native wgpu ↔ React peer cursors","de":"Fremdcursor natives wgpu ↔ React"},"criteria":["3.6"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","native-react-cursors","--hub","{hub}","--locale","en","--react-serve","{localServe}"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub","localServe"],"browsers":1},
-        {"id":"wgpu-peer-cursors-en","title":{"en":"wgpu wasm32 peer cursors on one board","de":"wgpu-wasm32-Fremdcursor auf einem Brett"},"criteria":["3.6"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","cursors","--hub","{hub}","--locale","en"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub"],"browsers":1},
-        {"id":"wgpu-agent-reply-pixels-en","title":{"en":"wgpu renders an AI agent's edit (pixel check)","de":"wgpu zeichnet die Bearbeitung eines KI-Agenten (Pixelprüfung)"},"criteria":["3.12","4.10"],"project":"@semio-tech/framework-renderer-wgpu","target":"hub-collaboration-acceptance","args":["--journey","agent-pixels","--hub","{hub}","--locale","en"],"env":{"SEMIO_TWO_HUMAN_USER1_EMAIL":"{user1Email}","SEMIO_TWO_HUMAN_USER1_PASSWORD":"{user1Password}","SEMIO_TWO_HUMAN_USER2_EMAIL":"{user2Email}","SEMIO_TWO_HUMAN_USER2_PASSWORD":"{user2Password}"},"requires":["hub"],"browsers":1}
+        {
+          "id": "wgpu-live-collaboration",
+          "title": {
+            "en": "Two native wgpu shells collaborate",
+            "de": "Zwei native wgpu-Shells arbeiten zusammen"
+          },
+          "criteria": [
+            "3.5"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-live-collaboration-check",
+          "args": [],
+          "env": {
+            "SEMIO_HUB_LIVE_ORIGIN": "{hub}",
+            "SEMIO_HUB_LIVE_EMAIL": "{user1Email}",
+            "SEMIO_HUB_LIVE_PASSWORD": "{user1Password}",
+            "SEMIO_HUB_LIVE_PEER_EMAIL": "{user2Email}",
+            "SEMIO_HUB_LIVE_PEER_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "wgpu-live-journey",
+          "title": {
+            "en": "wgpu shell hub journey",
+            "de": "Hub-Weg der wgpu-Shell"
+          },
+          "criteria": [
+            "3.2"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-live-journey-check",
+          "args": [],
+          "env": {
+            "SEMIO_HUB_LIVE_ORIGIN": "{hub}",
+            "SEMIO_HUB_LIVE_EMAIL": "{user1Email}",
+            "SEMIO_HUB_LIVE_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "mcp-hub-agent-participant",
+          "title": {
+            "en": "A human sees an agent's edit live",
+            "de": "Ein Mensch sieht die Bearbeitung eines Agenten live"
+          },
+          "criteria": [
+            "3.12"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "hub-agent-participant-check",
+          "args": [],
+          "env": {
+            "OS_MCP_HUB_ORIGIN": "{hub}",
+            "OS_MCP_HUB_EMAIL": "{user1Email}",
+            "OS_MCP_HUB_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "mcp-agent-reply",
+          "title": {
+            "en": "Agent reply reaches the shell",
+            "de": "Antwort des Agenten erreicht die Shell"
+          },
+          "criteria": [
+            "4.7"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "agent-reply-check",
+          "args": [],
+          "env": {
+            "S_OS_MCP_LIVE_SHELL_URL": "{serve}"
+          },
+          "requires": [
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-collaboration-wasm32-en",
+          "title": {
+            "en": "wgpu wasm32 ↔ wasm32 collaboration over the hub",
+            "de": "wgpu-wasm32 ↔ wasm32-Zusammenarbeit über den Hub"
+          },
+          "criteria": [
+            "3.2",
+            "3.7",
+            "3.9",
+            "3.10"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "wasm32",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-collaboration-wasm32-de",
+          "title": {
+            "en": "wgpu wasm32 ↔ wasm32 collaboration over the hub",
+            "de": "wgpu-wasm32 ↔ wasm32-Zusammenarbeit über den Hub"
+          },
+          "criteria": [
+            "3.2",
+            "3.7",
+            "3.9",
+            "3.10",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "wasm32",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "de"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-collaboration-wasm32-react-en",
+          "title": {
+            "en": "wgpu wasm32 ↔ React collaboration",
+            "de": "Zusammenarbeit wgpu-wasm32 ↔ React"
+          },
+          "criteria": [
+            "3.8"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "wasm32-react",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en",
+            "--react-serve",
+            "{localServe}"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-collaboration-wasm32-native-en",
+          "title": {
+            "en": "wgpu wasm32 ↔ native wgpu collaboration",
+            "de": "Zusammenarbeit wgpu-wasm32 ↔ natives wgpu"
+          },
+          "criteria": [
+            "3.8"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "wasm32-native",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-collaboration-native-react-en",
+          "title": {
+            "en": "native wgpu ↔ React collaboration",
+            "de": "Zusammenarbeit natives wgpu ↔ React"
+          },
+          "criteria": [
+            "3.5"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "native-react",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en",
+            "--react-serve",
+            "{localServe}"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-peer-cursors-native-react-en",
+          "title": {
+            "en": "native wgpu ↔ React peer cursors",
+            "de": "Fremdcursor natives wgpu ↔ React"
+          },
+          "criteria": [
+            "3.6"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "native-react-cursors",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en",
+            "--react-serve",
+            "{localServe}"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub",
+            "localServe"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-peer-cursors-en",
+          "title": {
+            "en": "wgpu wasm32 peer cursors on one board",
+            "de": "wgpu-wasm32-Fremdcursor auf einem Brett"
+          },
+          "criteria": [
+            "3.6"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "cursors",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "wgpu-agent-reply-pixels-en",
+          "title": {
+            "en": "wgpu renders an AI agent's edit (pixel check)",
+            "de": "wgpu zeichnet die Bearbeitung eines KI-Agenten (Pixelprüfung)"
+          },
+          "criteria": [
+            "3.12",
+            "4.10"
+          ],
+          "project": "@semio-tech/framework-renderer-wgpu",
+          "target": "hub-collaboration-acceptance",
+          "args": [
+            "--journey",
+            "agent-pixels",
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}",
+            "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}",
+            "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}",
+            "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 1
+        }
       ]
     },
     {
       "id": "ai-over-mcp",
-      "title": { "en": "AI over the semio MCP: live agent loop, plugin coverage, user path", "de": "KI über das semio-MCP: Live-Agentenschleife, Plugin-Abdeckung, Nutzerweg" },
+      "title": {
+        "en": "AI over the semio MCP: live agent loop, plugin coverage, user path",
+        "de": "KI über das semio-MCP: Live-Agentenschleife, Plugin-Abdeckung, Nutzerweg"
+      },
       "mode": "serial",
       "gatesRest": false,
       "checks": [
-        { "id": "mcp-live-agent-loop-en", "title": { "en": "Live agent loop, English", "de": "Live-Agentenschleife, Englisch" }, "criteria": ["4.3"], "project": "@semio-tech/framework-os-mcp-rs", "target": "live-agent-loop-check", "args": [], "env": { "S_OS_MCP_LIVE_SHELL_URL": "{serve}" }, "requires": ["serve"], "browsers": 1 },
-        { "id": "mcp-live-agent-loop-de", "title": { "en": "Live agent loop, German", "de": "Live-Agentenschleife, Deutsch" }, "criteria": ["4.3", "5.2"], "project": "@semio-tech/framework-os-mcp-rs", "target": "live-agent-loop-check", "args": [], "env": { "S_OS_MCP_LIVE_SHELL_URL": "{serve}", "S_OS_MCP_LIVE_LOCALE": "de" }, "requires": ["serve"], "browsers": 1 },
-        { "id": "mcp-plugin-coverage", "title": { "en": "Every installed kind created and mutated over the semio MCP", "de": "Jede installierte Art über das semio-MCP angelegt und verändert" }, "criteria": ["4.8"], "project": "@semio-tech/framework-os-mcp-rs", "target": "plugin-coverage-check", "args": [], "requires": [], "browsers": 0 },
-        { "id": "mcp-plugin-coverage-hub", "title": { "en": "Every hub-creatable kind created, opened, mutated, undone, redone and exported over the semio MCP", "de": "Jede am Hub anlegbare Art über das semio-MCP angelegt, geöffnet, verändert, rückgängig gemacht, wiederhergestellt und exportiert" }, "criteria": ["4.8"], "project": "@semio-tech/framework-os-mcp-rs", "target": "plugin-coverage-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub"], "browsers": 0 },
-        { "id": "mcp-hub-edit-durability", "title": { "en": "Agent and human hub edits are durable; fresh agent sessions start at the hub head", "de": "Agenten- und Menschen-Bearbeitungen am Hub sind dauerhaft; frische Agentensitzungen beginnen am Hub-Kopf" }, "criteria": ["3.12", "4.4"], "project": "@semio-tech/framework-os-mcp-rs", "target": "hub-edit-durability-check", "args": [], "requires": [], "browsers": 0 },
-        { "id": "mcp-user-path-en", "title": { "en": "A user's AI-client path over the semio MCP, English", "de": "Der KI-Client-Weg eines Nutzers über das semio-MCP, Englisch" }, "criteria": ["4.4", "4.7"], "project": "@semio-tech/framework-os-mcp-rs", "target": "user-path-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "S_OS_MCP_LIVE_SHELL_URL": "{serve}", "S_OS_MCP_LIVE_LOCALE": "en", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub", "serve"], "browsers": 1 },
-        { "id": "mcp-user-path-de", "title": { "en": "A user's AI-client path over the semio MCP, German", "de": "Der KI-Client-Weg eines Nutzers über das semio-MCP, Deutsch" }, "criteria": ["4.4", "5.2"], "project": "@semio-tech/framework-os-mcp-rs", "target": "user-path-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "S_OS_MCP_LIVE_SHELL_URL": "{serve}", "S_OS_MCP_LIVE_LOCALE": "de", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub", "serve"], "browsers": 1 },
-        { "id": "mcp-security", "title": { "en": "semio MCP security: scopes, audience, rate limit, revocation", "de": "semio-MCP-Sicherheit: Geltungsbereiche, Zielgruppe, Ratenbegrenzung, Widerruf" }, "criteria": ["4.4", "4.5", "4.6"], "project": "@semio-tech/framework-os-mcp-rs", "target": "security-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "OS_MCP_HUB_EMAIL": "{user2Email}", "OS_MCP_HUB_PASSWORD": "{user2Password}", "OS_HUB_ADMIN_CAPABILITY_FILE": "{hubAdminCapability}" }, "requires": ["hub", "hubAdmin"], "browsers": 0 },
-        { "id": "mcp-inference-quartet", "title": { "en": "Generic inference quartet over the semio MCP against the hub", "de": "Generisches Inferenz-Quartett über das semio-MCP gegen den Hub" }, "criteria": ["4.7"], "project": "@semio-tech/framework-os-mcp-rs", "target": "inference-quartet-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub"], "browsers": 0 }
+        {
+          "id": "mcp-live-agent-loop-en",
+          "title": {
+            "en": "Live agent loop, English",
+            "de": "Live-Agentenschleife, Englisch"
+          },
+          "criteria": [
+            "4.3"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "live-agent-loop-check",
+          "args": [],
+          "env": {
+            "S_OS_MCP_LIVE_SHELL_URL": "{serve}"
+          },
+          "requires": [
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "mcp-live-agent-loop-de",
+          "title": {
+            "en": "Live agent loop, German",
+            "de": "Live-Agentenschleife, Deutsch"
+          },
+          "criteria": [
+            "4.3",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "live-agent-loop-check",
+          "args": [],
+          "env": {
+            "S_OS_MCP_LIVE_SHELL_URL": "{serve}",
+            "S_OS_MCP_LIVE_LOCALE": "de"
+          },
+          "requires": [
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "mcp-plugin-coverage",
+          "title": {
+            "en": "Every installed kind created and mutated over the semio MCP",
+            "de": "Jede installierte Art über das semio-MCP angelegt und verändert"
+          },
+          "criteria": [
+            "4.8"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "plugin-coverage-check",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "mcp-plugin-coverage-hub",
+          "title": {
+            "en": "Every hub-creatable kind created, opened, mutated, undone, redone and exported over the semio MCP",
+            "de": "Jede am Hub anlegbare Art über das semio-MCP angelegt, geöffnet, verändert, rückgängig gemacht, wiederhergestellt und exportiert"
+          },
+          "criteria": [
+            "4.8"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "plugin-coverage-check",
+          "args": [],
+          "env": {
+            "OS_MCP_HUB_ORIGIN": "{hub}",
+            "OS_MCP_HUB_EMAIL": "{user1Email}",
+            "OS_MCP_HUB_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "mcp-hub-edit-durability",
+          "title": {
+            "en": "Agent and human hub edits are durable; fresh agent sessions start at the hub head",
+            "de": "Agenten- und Menschen-Bearbeitungen am Hub sind dauerhaft; frische Agentensitzungen beginnen am Hub-Kopf"
+          },
+          "criteria": [
+            "3.12",
+            "4.4"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "hub-edit-durability-check",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "mcp-user-path-en",
+          "title": {
+            "en": "A user's AI-client path over the semio MCP, English",
+            "de": "Der KI-Client-Weg eines Nutzers über das semio-MCP, Englisch"
+          },
+          "criteria": [
+            "4.4",
+            "4.7"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "user-path-check",
+          "args": [],
+          "env": {
+            "OS_MCP_HUB_ORIGIN": "{hub}",
+            "S_OS_MCP_LIVE_SHELL_URL": "{serve}",
+            "S_OS_MCP_LIVE_LOCALE": "en",
+            "OS_MCP_HUB_EMAIL": "{user1Email}",
+            "OS_MCP_HUB_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub",
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "mcp-user-path-de",
+          "title": {
+            "en": "A user's AI-client path over the semio MCP, German",
+            "de": "Der KI-Client-Weg eines Nutzers über das semio-MCP, Deutsch"
+          },
+          "criteria": [
+            "4.4",
+            "5.2"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "user-path-check",
+          "args": [],
+          "env": {
+            "OS_MCP_HUB_ORIGIN": "{hub}",
+            "S_OS_MCP_LIVE_SHELL_URL": "{serve}",
+            "S_OS_MCP_LIVE_LOCALE": "de",
+            "OS_MCP_HUB_EMAIL": "{user1Email}",
+            "OS_MCP_HUB_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub",
+            "serve"
+          ],
+          "browsers": 1
+        },
+        {
+          "id": "mcp-security",
+          "title": {
+            "en": "semio MCP security: scopes, audience, rate limit, revocation",
+            "de": "semio-MCP-Sicherheit: Geltungsbereiche, Zielgruppe, Ratenbegrenzung, Widerruf"
+          },
+          "criteria": [
+            "4.4",
+            "4.5",
+            "4.6"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "security-check",
+          "args": [],
+          "env": {
+            "OS_MCP_HUB_ORIGIN": "{hub}",
+            "OS_MCP_HUB_EMAIL": "{user2Email}",
+            "OS_MCP_HUB_PASSWORD": "{user2Password}",
+            "OS_HUB_ADMIN_CAPABILITY_FILE": "{hubAdminCapability}"
+          },
+          "requires": [
+            "hub",
+            "hubAdmin"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "mcp-inference-quartet",
+          "title": {
+            "en": "Generic inference quartet over the semio MCP against the hub",
+            "de": "Generisches Inferenz-Quartett über das semio-MCP gegen den Hub"
+          },
+          "criteria": [
+            "4.7"
+          ],
+          "project": "@semio-tech/framework-os-mcp-rs",
+          "target": "inference-quartet-check",
+          "args": [],
+          "env": {
+            "OS_MCP_HUB_ORIGIN": "{hub}",
+            "OS_MCP_HUB_EMAIL": "{user1Email}",
+            "OS_MCP_HUB_PASSWORD": "{user1Password}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        }
       ]
     },
     {
       "id": "hub-operations",
-      "title": { "en": "Hub operations: backup and restore, reopen storm, residency", "de": "Hub-Betrieb: Sicherung und Wiederherstellung, Wiederöffnungssturm, Residenz" },
+      "title": {
+        "en": "Hub operations: backup and restore, reopen storm, residency",
+        "de": "Hub-Betrieb: Sicherung und Wiederherstellung, Wiederöffnungssturm, Residenz"
+      },
       "mode": "serial",
       "gatesRest": false,
       "checks": [
-        { "id": "hub-backup-restore", "title": { "en": "Backup and restore drill", "de": "Übung Sicherung und Wiederherstellung" }, "criteria": ["2.11"], "project": "os-hub-ts", "target": "backup-restore-drill", "args": [], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": [], "browsers": 0 },
-        { "id": "hub-reopen-storm", "title": { "en": "Grown documents reopen within the Welcome bound (fs, sqlite, db engine)", "de": "Gewachsene Dokumente öffnen innerhalb der Welcome-Grenze (fs, sqlite, DB-Engine)" }, "criteria": ["2.6"], "project": "@semio-tech/framework-os-kernel", "target": "reopen-storm-check", "args": ["all"], "requires": [], "browsers": 0 },
-        { "id": "hub-reopen-storm-postgres", "title": { "en": "Reopen storm on the shared postgres server", "de": "Wiederöffnungssturm auf dem gemeinsamen postgres-Server" }, "criteria": ["2.6", "2.4"], "project": "os-hub-ts", "target": "backend-run", "args": ["postgres", "--", "bun", "nx", "run", "@semio-tech/framework-os-kernel:reopen-storm-check", "--", "postgres"], "requires": ["backends"], "browsers": 0 },
-        { "id": "hub-reopen-storm-neo4j", "title": { "en": "Reopen storm on the shared neo4j server", "de": "Wiederöffnungssturm auf dem gemeinsamen neo4j-Server" }, "criteria": ["2.6", "2.4"], "project": "os-hub-ts", "target": "backend-run", "args": ["neo4j", "--", "bun", "nx", "run", "@semio-tech/framework-os-kernel:reopen-storm-check", "--", "neo4j"], "requires": ["backends"], "browsers": 0 },
-        { "id": "hub-boot-watch", "title": { "en": "Cold and warm hub boots until every catalog package is pinned", "de": "Kalter und warmer Hub-Start, bis jedes Katalogpaket festgelegt ist" }, "criteria": ["2.12", "2.7"], "project": "os-hub-ts", "target": "boot-watch", "args": ["--restarts", "1"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": [], "browsers": 0 },
-        { "id": "hub-residency", "title": { "en": "Resident memory of the hub under test", "de": "Resident-Speicher des geprüften Hubs" }, "criteria": ["2.7"], "project": "os-hub-ts", "target": "residency-watch", "args": ["--hub", "{hub}"], "requires": ["hub"], "browsers": 0 },
-        {"id":"hub-agent-ceiling","title":{"en":"Agents hold at most their delegation's audience in its one space","de":"Agenten halten höchstens die Zielgruppe ihrer Delegation in deren einem Raum"},"criteria":["2.13"],"project":"os-hub-ts","target":"agent-ceiling-check","args":["--hub","{hub}","--locale","en"],"env":{"OS_HUB_PROBE_EMAIL":"{user1Email}","OS_HUB_PROBE_PASSWORD":"{user1Password}","OS_HUB_PROBE_MEMBER_EMAIL":"{user2Email}"},"requires":["hub"],"browsers":0},
-        {"id":"hub-graceful-shutdown","title":{"en":"Hub graceful-shutdown drill","de":"Hub-Drill: geordnetes Herunterfahren"},"criteria":["2.10"],"project":"os-hub-ts","target":"shutdown-drill","args":["--kind","note","--edits","20","--rounds","1"],"env":{"OS_HUB_BINARY":"{hubBinary}"},"requires":[],"browsers":0}
+        {
+          "id": "hub-backup-restore",
+          "title": {
+            "en": "Backup and restore drill",
+            "de": "Übung Sicherung und Wiederherstellung"
+          },
+          "criteria": [
+            "2.11"
+          ],
+          "project": "os-hub-ts",
+          "target": "backup-restore-drill",
+          "args": [],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "hub-reopen-storm",
+          "title": {
+            "en": "Grown documents reopen within the Welcome bound (fs, sqlite, db engine)",
+            "de": "Gewachsene Dokumente öffnen innerhalb der Welcome-Grenze (fs, sqlite, DB-Engine)"
+          },
+          "criteria": [
+            "2.6"
+          ],
+          "project": "@semio-tech/framework-os-kernel",
+          "target": "reopen-storm-check",
+          "args": [
+            "all"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "hub-reopen-storm-postgres",
+          "title": {
+            "en": "Reopen storm on the shared postgres server",
+            "de": "Wiederöffnungssturm auf dem gemeinsamen postgres-Server"
+          },
+          "criteria": [
+            "2.6",
+            "2.4"
+          ],
+          "project": "os-hub-ts",
+          "target": "backend-run",
+          "args": [
+            "postgres",
+            "--",
+            "bun",
+            "nx",
+            "run",
+            "@semio-tech/framework-os-kernel:reopen-storm-check",
+            "--",
+            "postgres"
+          ],
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "hub-reopen-storm-neo4j",
+          "title": {
+            "en": "Reopen storm on the shared neo4j server",
+            "de": "Wiederöffnungssturm auf dem gemeinsamen neo4j-Server"
+          },
+          "criteria": [
+            "2.6",
+            "2.4"
+          ],
+          "project": "os-hub-ts",
+          "target": "backend-run",
+          "args": [
+            "neo4j",
+            "--",
+            "bun",
+            "nx",
+            "run",
+            "@semio-tech/framework-os-kernel:reopen-storm-check",
+            "--",
+            "neo4j"
+          ],
+          "requires": [
+            "backends"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "hub-boot-watch",
+          "title": {
+            "en": "Cold and warm hub boots until every catalog package is pinned",
+            "de": "Kalter und warmer Hub-Start, bis jedes Katalogpaket festgelegt ist"
+          },
+          "criteria": [
+            "2.12",
+            "2.7"
+          ],
+          "project": "os-hub-ts",
+          "target": "boot-watch",
+          "args": [
+            "--restarts",
+            "1"
+          ],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "hub-residency",
+          "title": {
+            "en": "Resident memory of the hub under test",
+            "de": "Resident-Speicher des geprüften Hubs"
+          },
+          "criteria": [
+            "2.7"
+          ],
+          "project": "os-hub-ts",
+          "target": "residency-watch",
+          "args": [
+            "--hub",
+            "{hub}"
+          ],
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "hub-agent-ceiling",
+          "title": {
+            "en": "Agents hold at most their delegation's audience in its one space",
+            "de": "Agenten halten höchstens die Zielgruppe ihrer Delegation in deren einem Raum"
+          },
+          "criteria": [
+            "2.13"
+          ],
+          "project": "os-hub-ts",
+          "target": "agent-ceiling-check",
+          "args": [
+            "--hub",
+            "{hub}",
+            "--locale",
+            "en"
+          ],
+          "env": {
+            "OS_HUB_PROBE_EMAIL": "{user1Email}",
+            "OS_HUB_PROBE_PASSWORD": "{user1Password}",
+            "OS_HUB_PROBE_MEMBER_EMAIL": "{user2Email}"
+          },
+          "requires": [
+            "hub"
+          ],
+          "browsers": 0
+        },
+        {
+          "id": "hub-graceful-shutdown",
+          "title": {
+            "en": "Hub graceful-shutdown drill",
+            "de": "Hub-Drill: geordnetes Herunterfahren"
+          },
+          "criteria": [
+            "2.10"
+          ],
+          "project": "os-hub-ts",
+          "target": "shutdown-drill",
+          "args": [
+            "--kind",
+            "note",
+            "--edits",
+            "20",
+            "--rounds",
+            "1"
+          ],
+          "env": {
+            "OS_HUB_BINARY": "{hubBinary}"
+          },
+          "requires": [],
+          "browsers": 0
+        }
       ]
     },
-    { "id": "hub-image", "title": {"en":"Hub container image: build and check","de":"Hub-Container-Abbild: bauen und prüfen"}, "mode": "serial", "gatesRest": false, "optional": true, "checks": [
-        {"id":"hub-image-build","title":{"en":"Build the hub container image","de":"Hub-Container-Abbild bauen"},"criteria":["2.8","2.9"],"project":"os-hub-ts","target":"docker-image-build","args":[],"requires":[],"browsers":0},
-        {"id":"hub-image-check","title":{"en":"Check the hub container image","de":"Hub-Container-Abbild prüfen"},"criteria":["2.8","5.1"],"project":"os-hub-ts","target":"docker-image-check","args":[],"env":{"OS_HUB_PROBE_EMAIL":"{user1Email}","OS_HUB_PROBE_PASSWORD":"{user1Password}"},"requires":[],"browsers":0}
+    {
+      "id": "hub-image",
+      "title": {
+        "en": "Hub container image: build and check",
+        "de": "Hub-Container-Abbild: bauen und prüfen"
+      },
+      "mode": "serial",
+      "gatesRest": false,
+      "optional": true,
+      "checks": [
+        {
+          "id": "hub-image-build",
+          "title": {
+            "en": "Build the hub container image",
+            "de": "Hub-Container-Abbild bauen"
+          },
+          "criteria": [
+            "2.8",
+            "2.9"
+          ],
+          "project": "os-hub-ts",
+          "target": "docker-image-build",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "hub-image-check",
+          "title": {
+            "en": "Check the hub container image",
+            "de": "Hub-Container-Abbild prüfen"
+          },
+          "criteria": [
+            "2.8",
+            "5.1"
+          ],
+          "project": "os-hub-ts",
+          "target": "docker-image-check",
+          "args": [],
+          "env": {
+            "OS_HUB_PROBE_EMAIL": "{user1Email}",
+            "OS_HUB_PROBE_PASSWORD": "{user1Password}"
+          },
+          "requires": [],
+          "browsers": 0
+        }
       ]
     },
     {
       "id": "compliance",
-      "title": { "en": "Compliance: dependencies, placeholders, reachable commands", "de": "Konformität: Abhängigkeiten, Platzhalter, erreichbare Befehle" },
+      "title": {
+        "en": "Compliance: dependencies, placeholders, reachable commands",
+        "de": "Konformität: Abhängigkeiten, Platzhalter, erreichbare Befehle"
+      },
       "mode": "serial",
       "gatesRest": false,
       "checks": [
-        { "id": "dependencies-literal-external", "title": { "en": "No production dependency on an external library", "de": "Keine Produktionsabhängigkeit von einer externen Bibliothek" }, "criteria": ["1.10", "5.9"], "project": "workspace", "target": "verify-dependencies-literal-external", "args": [], "requires": [], "browsers": 0 },
-        { "id": "production-placeholders", "title": { "en": "No unimplemented or todo placeholder in production Rust", "de": "Kein unimplemented- oder todo-Platzhalter in produktivem Rust" }, "criteria": ["1.9"], "project": "workspace", "target": "verify", "args": ["production-placeholders"], "requires": [], "browsers": 0 },
-        { "id": "command-reachability", "title": { "en": "Every declared command is reachable from a control", "de": "Jeder deklarierte Befehl ist über ein Bedienelement erreichbar" }, "criteria": ["1.8"], "project": "workspace", "target": "verify", "args": ["interactivity", "commands"], "requires": [], "browsers": 0 },
-        { "id": "docstring-at-emoji", "title": { "en": "No docstring carries the @emoji residue token", "de": "Kein Docstring trägt das @emoji-Restzeichen" }, "criteria": ["5.11"], "project": "workspace", "target": "verify", "args": ["docstrings", "at-emoji"], "requires": [], "browsers": 0 },
-        { "id": "docstring-emoji-first", "title": { "en": "Every docstring starts with its emoji", "de": "Jeder Docstring beginnt mit seinem Emoji" }, "criteria": ["5.11"], "project": "workspace", "target": "verify", "args": ["docstrings", "emoji-first"], "requires": [], "browsers": 0 },
-        { "id": "docstring-emoji-unique", "title": { "en": "No docstring reuses its file's opening emoji", "de": "Kein Docstring wiederholt das Eröffnungs-Emoji seiner Datei" }, "criteria": ["5.11"], "project": "workspace", "target": "verify", "args": ["docstrings", "emoji-unique"], "requires": [], "browsers": 0 },
-        { "id": "debug-tags", "title": { "en": "No temporary-log tag left in tracked sources", "de": "Keine Markierung für temporäre Protokolle in verfolgten Quellen" }, "criteria": ["5.12"], "project": "workspace", "target": "verify", "args": ["debug-tags"], "requires": [], "browsers": 0 },
-        { "id": "interface-owned-imports", "title": { "en": "External libraries only through their interface module", "de": "Externe Bibliotheken nur über ihr Schnittstellenmodul" }, "criteria": ["1.10", "5.9"], "project": "workspace", "target": "verify", "args": ["interface-owners"], "requires": [], "browsers": 0 },
-        {"id":"channel-version-authority","title":{"en":"One wire channel version across hub, kernel and every client","de":"Eine Kanalversion für Hub, Kernel und jeden Client"},"criteria":["2.14"],"project":"@semio-tech/framework-os-dev","target":"channel-version-check","args":[],"requires":[],"browsers":0}
+        {
+          "id": "dependencies-literal-external",
+          "title": {
+            "en": "No production dependency on an external library",
+            "de": "Keine Produktionsabhängigkeit von einer externen Bibliothek"
+          },
+          "criteria": [
+            "1.10",
+            "5.9"
+          ],
+          "project": "workspace",
+          "target": "verify-dependencies-literal-external",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "production-placeholders",
+          "title": {
+            "en": "No unimplemented or todo placeholder in production Rust",
+            "de": "Kein unimplemented- oder todo-Platzhalter in produktivem Rust"
+          },
+          "criteria": [
+            "1.9"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "production-placeholders"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "command-reachability",
+          "title": {
+            "en": "Every declared command is reachable from a control",
+            "de": "Jeder deklarierte Befehl ist über ein Bedienelement erreichbar"
+          },
+          "criteria": [
+            "1.8"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "interactivity",
+            "commands"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "docstring-at-emoji",
+          "title": {
+            "en": "No docstring carries the @emoji residue token",
+            "de": "Kein Docstring trägt das @emoji-Restzeichen"
+          },
+          "criteria": [
+            "5.11"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "docstrings",
+            "at-emoji"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "docstring-emoji-first",
+          "title": {
+            "en": "Every docstring starts with its emoji",
+            "de": "Jeder Docstring beginnt mit seinem Emoji"
+          },
+          "criteria": [
+            "5.11"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "docstrings",
+            "emoji-first"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "docstring-emoji-unique",
+          "title": {
+            "en": "No docstring reuses its file's opening emoji",
+            "de": "Kein Docstring wiederholt das Eröffnungs-Emoji seiner Datei"
+          },
+          "criteria": [
+            "5.11"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "docstrings",
+            "emoji-unique"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "debug-tags",
+          "title": {
+            "en": "No temporary-log tag left in tracked sources",
+            "de": "Keine Markierung für temporäre Protokolle in verfolgten Quellen"
+          },
+          "criteria": [
+            "5.12"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "debug-tags"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "interface-owned-imports",
+          "title": {
+            "en": "External libraries only through their interface module",
+            "de": "Externe Bibliotheken nur über ihr Schnittstellenmodul"
+          },
+          "criteria": [
+            "1.10",
+            "5.9"
+          ],
+          "project": "workspace",
+          "target": "verify",
+          "args": [
+            "interface-owners"
+          ],
+          "requires": [],
+          "browsers": 0
+        },
+        {
+          "id": "channel-version-authority",
+          "title": {
+            "en": "One wire channel version across hub, kernel and every client",
+            "de": "Eine Kanalversion für Hub, Kernel und jeden Client"
+          },
+          "criteria": [
+            "2.14"
+          ],
+          "project": "@semio-tech/framework-os-dev",
+          "target": "channel-version-check",
+          "args": [],
+          "requires": [],
+          "browsers": 0
+        }
       ]
     }
   ]

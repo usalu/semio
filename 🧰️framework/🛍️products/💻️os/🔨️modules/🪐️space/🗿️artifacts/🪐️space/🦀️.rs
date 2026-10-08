@@ -201,8 +201,8 @@ pub enum SpaceMutation {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-/// 🔺️ Sparse space-manifest delta: the scalar fields are present slots, and every member collection is an id-keyed row delta
-/// (`added`/`removed`/`patched`/`reordered`) so any number of users, collections, programs and extensions change in one diff.
+/// 🔺️ Sparse space-manifest delta: the scalar fields are present slots, and every member collection is a positional row delta
+/// (`removed`/`inserted`/`moved`/`patched`, see `protocol::list_delta`) so any number of users, collections, programs and extensions change in one diff.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceDiff {
@@ -233,7 +233,6 @@ pub struct SpaceOptionalAvatar {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceUserPatch {
-    pub id: String,
     pub name: Option<String>,
     pub avatar: Option<SpaceOptionalAvatar>,
     pub role: Option<SpaceRole>,
@@ -243,417 +242,139 @@ pub struct SpaceUserPatch {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceCollectionPatch {
-    pub id: String,
     pub name: Option<String>,
     pub document_id: Option<String>,
 }
 
-/// 🩹 The (always empty) patch of an installed program, which is a bare id.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SpaceProgramPatch {
-    pub id: String,
-}
 
 /// 🩹 Field patch of one installed extension.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceExtensionPatch {
-    pub extension_id: String,
     pub version: Option<String>,
     pub source_uri: Option<String>,
     pub package_hash: Option<String>,
     pub enabled: Option<bool>,
 }
 
-/// 🧩️ Id-keyed row delta of the members.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SpaceUsersDelta {
-    pub added: Vec<SpaceUser>,
-    pub removed: Vec<String>,
-    pub patched: Vec<SpaceUserPatch>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 🧩️ Positional row delta of the members.
+    #[derive(Serialize, Deserialize)]
+    pub SpaceUsersDelta { removal: SpaceUserRemoval, insertion: SpaceUserInsertion, relocation: SpaceUserRelocation, modification: SpaceUsersModification, row: SpaceUser, patch: SpaceUserPatch, key: id, values_only }
 }
 
-/// 🧩️ Id-keyed row delta of the collections.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SpaceCollectionsDelta {
-    pub added: Vec<CollectionRef>,
-    pub removed: Vec<String>,
-    pub patched: Vec<SpaceCollectionPatch>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 🧩️ Positional row delta of the collections.
+    #[derive(Serialize, Deserialize)]
+    pub SpaceCollectionsDelta { removal: SpaceCollectionRemoval, insertion: SpaceCollectionInsertion, relocation: SpaceCollectionRelocation, modification: SpaceCollectionsModification, row: CollectionRef, patch: SpaceCollectionPatch, key: id, values_only }
 }
 
-/// 🧩️ Id-keyed row delta of the installed programs.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SpaceProgramsDelta {
-    pub added: Vec<String>,
-    pub removed: Vec<String>,
-    pub patched: Vec<SpaceProgramPatch>,
-    pub reordered: Option<Vec<String>>,
+protocol::plain_list_delta! {
+    /// 🧩️ Positional row delta of the installed programs (bare ids: a program is installed or uninstalled, never patched).
+    #[derive(Serialize, Deserialize)]
+    pub SpaceProgramsDelta { removal: SpaceProgramRemoval, insertion: SpaceProgramInsertion, relocation: SpaceProgramRelocation, row: String }
 }
 
-/// 🧩️ Extension-keyed row delta of the installed extensions.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SpaceExtensionsDelta {
-    pub added: Vec<InstalledExtension>,
-    pub removed: Vec<String>,
-    pub patched: Vec<SpaceExtensionPatch>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 🧩️ Positional row delta of the installed extensions, keyed by extension id.
+    #[derive(Serialize, Deserialize)]
+    pub SpaceExtensionsDelta { removal: SpaceExtensionRemoval, insertion: SpaceExtensionInsertion, relocation: SpaceExtensionRelocation, modification: SpaceExtensionsModification, row: InstalledExtension, patch: SpaceExtensionPatch, key: extension_id, values_only }
 }
 
-//#region 🧺️KeyedDelta
-/// 🧺️ Id-keyed ordered-collection delta (`added`/`removed`/`patched`/`reordered`) and its algebra: apply, composition (create∘delete
-/// cancels, delete∘create replaces, patch∘patch composes, patch∘create folds), negative delta and state delta.
-pub trait KeyedDelta: Sized {
-    type Row: Clone;
-    type Patch: Clone;
-    fn added(&self) -> &[Self::Row];
-    fn removed(&self) -> &[String];
-    fn patched(&self) -> &[Self::Patch];
-    fn reordered(&self) -> Option<&[String]>;
-    fn assemble(added: Vec<Self::Row>, removed: Vec<String>, patched: Vec<Self::Patch>, reordered: Option<Vec<String>>) -> Self;
-    fn row_key(row: &Self::Row) -> &str;
-    fn patch_key(patch: &Self::Patch) -> &str;
-    fn patch_fold(patch: &Self::Patch, row: &mut Self::Row) -> Result<(), protocol::MutationApplyError>;
-    fn patch_compose(first: &Self::Patch, later: &Self::Patch) -> Self::Patch;
-    fn patch_inverse(patch: &Self::Patch, base: &Self::Row) -> Self::Patch;
-    fn patch_between(base: &Self::Row, other: &Self::Row) -> Option<Self::Patch>;
-    fn patch_is_empty(patch: &Self::Patch) -> bool;
-}
 
-fn keyed_error(code: &str, message: &str, at: [&str; 2]) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new(code, message).at(at)
-}
 
-pub fn keyed_apply<D: KeyedDelta>(rows: &[D::Row], delta: &D) -> Result<Vec<D::Row>, protocol::MutationApplyError> {
-    let key = D::row_key;
-    for (index, id) in delta.removed().iter().enumerate() {
-        if delta.removed()[..index].contains(id) {
-            return Err(keyed_error("mutation.apply.duplicate-target", "row is removed more than once", ["removed", &index.to_string()]));
-        }
-        if !rows.iter().any(|row| key(row) == id) {
-            return Err(keyed_error("mutation.apply.missing-target", "removed row does not exist", ["removed", &index.to_string()]));
-        }
-    }
-    let mut next: Vec<D::Row> = rows.iter().filter(|row| !delta.removed().iter().any(|id| id == key(row))).cloned().collect();
-    for (index, row) in delta.added().iter().enumerate() {
-        if next.iter().any(|existing| key(existing) == key(row)) {
-            return Err(keyed_error("mutation.apply.duplicate-target", "added row identity already exists", ["added", &index.to_string()]));
-        }
-        next.push(row.clone());
-    }
-    for (index, patch) in delta.patched().iter().enumerate() {
-        if delta.patched()[..index].iter().any(|earlier| D::patch_key(earlier) == D::patch_key(patch)) {
-            return Err(keyed_error("mutation.apply.duplicate-target", "row is patched more than once", ["patched", &index.to_string()]));
-        }
-        let row = next.iter_mut().find(|row| key(row) == D::patch_key(patch)).ok_or_else(|| keyed_error("mutation.apply.missing-target", "patched row does not exist", ["patched", &index.to_string()]))?;
-        D::patch_fold(patch, row).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
-    }
-    let Some(order) = delta.reordered() else { return Ok(next) };
-    if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|row| key(row) == id)) {
-        return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered".to_string()]));
-    }
-    Ok(order.iter().filter_map(|id| next.iter().find(|row| key(row) == id).cloned()).collect())
-}
 
-fn canonical<D: KeyedDelta>(mut added: Vec<D::Row>, mut removed: Vec<String>, mut patched: Vec<D::Patch>, reordered: Option<Vec<String>>) -> D {
-    if let Some(order) = &reordered {
-        added.sort_by_key(|row| order.iter().position(|id| id == D::row_key(row)).unwrap_or(usize::MAX));
-    }
-    let reordered = reordered.filter(|order| {
-        let tail = added.len();
-        !(order.len() <= tail + 1 && order.len() >= tail && order[order.len() - tail..].iter().map(String::as_str).eq(added.iter().map(D::row_key)))
-    });
-    removed.sort();
-    removed.dedup();
-    patched.retain(|patch| !D::patch_is_empty(patch));
-    patched.sort_by(|left, right| D::patch_key(left).cmp(D::patch_key(right)));
-    D::assemble(added, removed, patched, reordered)
-}
 
-/// ➕️ Normal form of `first` then `later`: create∘delete cancels, delete∘create replaces, patch∘patch composes, patch∘create folds.
-pub fn keyed_absorb<D: KeyedDelta>(first: &D, later: &D) -> D {
-    let mut added: Vec<D::Row> = first.added().to_vec();
-    let mut removed: Vec<String> = first.removed().to_vec();
-    let mut patched: Vec<D::Patch> = Vec::new();
-    for patch in first.patched() {
-        match added.iter_mut().find(|row| D::row_key(row) == D::patch_key(patch)) {
-            Some(row) => {
-                let _ = D::patch_fold(patch, row);
-            }
-            None => patched.push(patch.clone()),
-        }
-    }
-    for id in later.removed() {
-        if let Some(position) = added.iter().position(|row| D::row_key(row) == id) {
-            added.remove(position);
-        } else {
-            patched.retain(|patch| D::patch_key(patch) != id);
-            if !removed.contains(id) {
-                removed.push(id.clone());
-            }
-        }
-    }
-    added.extend(later.added().iter().cloned());
-    for patch in later.patched() {
-        let key = D::patch_key(patch);
-        if let Some(row) = added.iter_mut().find(|row| D::row_key(row) == key) {
-            let _ = D::patch_fold(patch, row);
-        } else if let Some(existing) = patched.iter_mut().find(|existing| D::patch_key(existing) == key) {
-            *existing = D::patch_compose(existing, patch);
-        } else {
-            patched.push(patch.clone());
-        }
-    }
-    let reordered = match (later.reordered(), first.reordered()) {
-        (Some(order), _) => Some(order.to_vec()),
-        (None, Some(order)) => Some(order.iter().filter(|id| !later.removed().contains(id)).cloned().chain(later.added().iter().map(|row| D::row_key(row).to_string())).collect()),
-        (None, None) => None,
-    };
-    canonical::<D>(added, removed, patched, reordered)
-}
 
-fn ids_after<D: KeyedDelta>(base: &[String], delta: &D) -> Vec<String> {
-    match delta.reordered() {
-        Some(order) => order.to_vec(),
-        None => base.iter().filter(|id| !delta.removed().contains(id)).cloned().chain(delta.added().iter().map(|row| D::row_key(row).to_string())).collect(),
-    }
-}
 
-/// 🔁️ The negative delta: removes what `delta` added, restores what it removed, undoes its patches, restores the base order.
-pub fn keyed_inverse<D: KeyedDelta>(delta: &D, base: &[D::Row]) -> D {
-    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
-    let removed: Vec<String> = delta.added().iter().map(|row| D::row_key(row).to_string()).collect();
-    let added: Vec<D::Row> = delta.removed().iter().filter_map(|id| base.iter().find(|row| D::row_key(row) == id).cloned()).collect();
-    let patched: Vec<D::Patch> = delta
-        .patched()
-        .iter()
-        .filter(|patch| !removed.iter().any(|id| id == D::patch_key(patch)))
-        .filter_map(|patch| base.iter().find(|row| D::row_key(row) == D::patch_key(patch)).map(|row| D::patch_inverse(patch, row)))
-        .collect();
-    let after = ids_after(&base_ids, delta);
-    let natural: Vec<String> = after.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
-    let reordered = (natural != base_ids).then_some(base_ids);
-    canonical::<D>(added, removed, patched, reordered)
-}
 
-/// 🧭️ The delta turning `base` into `other` (sync/import only).
-pub fn keyed_between<D: KeyedDelta>(base: &[D::Row], other: &[D::Row]) -> D {
-    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
-    let other_ids: Vec<String> = other.iter().map(|row| D::row_key(row).to_string()).collect();
-    let removed: Vec<String> = base_ids.iter().filter(|id| !other_ids.contains(id)).cloned().collect();
-    let added: Vec<D::Row> = other.iter().filter(|row| !base_ids.iter().any(|id| id == D::row_key(row))).cloned().collect();
-    let patched: Vec<D::Patch> = other.iter().filter_map(|row| base.iter().find(|candidate| D::row_key(candidate) == D::row_key(row)).and_then(|candidate| D::patch_between(candidate, row))).collect();
-    let natural: Vec<String> = base_ids.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
-    let reordered = (natural != other_ids).then_some(other_ids);
-    canonical::<D>(added, removed, patched, reordered)
-}
 
-pub fn keyed_is_empty<D: KeyedDelta>(delta: &D) -> bool {
-    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().iter().all(D::patch_is_empty) && delta.reordered().is_none()
-}
-//#endregion 🧺️KeyedDelta
 
-macro_rules! keyed_delta_impl {
-    ($delta:ident, $row:ty, $patch:ty, $row_key:ident, $patch_key:ident, $fold:expr, $compose:expr, $inverse:expr, $patch_between:expr, $is_empty:expr) => {
-        impl KeyedDelta for $delta {
-            type Row = $row;
-            type Patch = $patch;
-            fn added(&self) -> &[$row] {
-                &self.added
-            }
-            fn removed(&self) -> &[String] {
-                &self.removed
-            }
-            fn patched(&self) -> &[$patch] {
-                &self.patched
-            }
-            fn reordered(&self) -> Option<&[String]> {
-                self.reordered.as_deref()
-            }
-            fn assemble(added: Vec<$row>, removed: Vec<String>, patched: Vec<$patch>, reordered: Option<Vec<String>>) -> Self {
-                Self { added, removed, patched, reordered }
-            }
-            fn row_key(row: &$row) -> &str {
-                row.$row_key.as_str()
-            }
-            fn patch_key(patch: &$patch) -> &str {
-                patch.$patch_key.as_str()
-            }
-            fn patch_fold(patch: &$patch, row: &mut $row) -> Result<(), protocol::MutationApplyError> {
-                ($fold)(patch, row);
-                Ok(())
-            }
-            fn patch_compose(first: &$patch, later: &$patch) -> $patch {
-                ($compose)(first, later)
-            }
-            fn patch_inverse(patch: &$patch, base: &$row) -> $patch {
-                ($inverse)(patch, base)
-            }
-            fn patch_between(base: &$row, other: &$row) -> Option<$patch> {
-                ($patch_between)(base, other)
-            }
-            fn patch_is_empty(patch: &$patch) -> bool {
-                ($is_empty)(patch)
-            }
-        }
-    };
-}
-
-keyed_delta_impl!(
-    SpaceUsersDelta,
-    SpaceUser,
-    SpaceUserPatch,
-    id,
-    id,
-    |patch: &SpaceUserPatch, row: &mut SpaceUser| {
-        if let Some(name) = &patch.name {
+impl protocol::list_delta::RowPatch<SpaceUser> for SpaceUserPatch {
+    fn commit_into(&self, row: &mut SpaceUser, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        if let Some(name) = &self.name {
             row.name = name.clone();
         }
-        if let Some(avatar) = &patch.avatar {
+        if let Some(avatar) = &self.avatar {
             row.avatar = avatar.value.clone();
         }
-        if let Some(role) = patch.role {
+        if let Some(role) = self.role {
             row.role = role;
         }
-    },
-    |first: &SpaceUserPatch, later: &SpaceUserPatch| SpaceUserPatch { id: first.id.clone(), name: later.name.clone().or_else(|| first.name.clone()), avatar: later.avatar.clone().or_else(|| first.avatar.clone()), role: later.role.or(first.role) },
-    |patch: &SpaceUserPatch, base: &SpaceUser| SpaceUserPatch { id: patch.id.clone(), name: patch.name.as_ref().map(|_| base.name.clone()), avatar: patch.avatar.as_ref().map(|_| SpaceOptionalAvatar { value: base.avatar.clone() }), role: patch.role.map(|_| base.role) },
-    |base: &SpaceUser, other: &SpaceUser| {
-        let patch = SpaceUserPatch { id: other.id.clone(), name: (base.name != other.name).then(|| other.name.clone()), avatar: (base.avatar != other.avatar).then(|| SpaceOptionalAvatar { value: other.avatar.clone() }), role: (base.role != other.role).then_some(other.role) };
-        (patch.name.is_some() || patch.avatar.is_some() || patch.role.is_some()).then_some(patch)
-    },
-    |patch: &SpaceUserPatch| patch.name.is_none() && patch.avatar.is_none() && patch.role.is_none()
-);
-
-keyed_delta_impl!(
-    SpaceCollectionsDelta,
-    CollectionRef,
-    SpaceCollectionPatch,
-    id,
-    id,
-    |patch: &SpaceCollectionPatch, row: &mut CollectionRef| {
-        if let Some(name) = &patch.name {
-            row.name = name.clone();
-        }
-        if let Some(document_id) = &patch.document_id {
-            row.document_id = document_id.clone();
-        }
-    },
-    |first: &SpaceCollectionPatch, later: &SpaceCollectionPatch| SpaceCollectionPatch { id: first.id.clone(), name: later.name.clone().or_else(|| first.name.clone()), document_id: later.document_id.clone().or_else(|| first.document_id.clone()) },
-    |patch: &SpaceCollectionPatch, base: &CollectionRef| SpaceCollectionPatch { id: patch.id.clone(), name: patch.name.as_ref().map(|_| base.name.clone()), document_id: patch.document_id.as_ref().map(|_| base.document_id.clone()) },
-    |base: &CollectionRef, other: &CollectionRef| {
-        let patch = SpaceCollectionPatch { id: other.id.clone(), name: (base.name != other.name).then(|| other.name.clone()), document_id: (base.document_id != other.document_id).then(|| other.document_id.clone()) };
-        (patch.name.is_some() || patch.document_id.is_some()).then_some(patch)
-    },
-    |patch: &SpaceCollectionPatch| patch.name.is_none() && patch.document_id.is_none()
-);
-
-impl KeyedDelta for SpaceProgramsDelta {
-    type Row = String;
-    type Patch = SpaceProgramPatch;
-    fn added(&self) -> &[String] {
-        &self.added
-    }
-    fn removed(&self) -> &[String] {
-        &self.removed
-    }
-    fn patched(&self) -> &[SpaceProgramPatch] {
-        &self.patched
-    }
-    fn reordered(&self) -> Option<&[String]> {
-        self.reordered.as_deref()
-    }
-    fn assemble(added: Vec<String>, removed: Vec<String>, patched: Vec<SpaceProgramPatch>, reordered: Option<Vec<String>>) -> Self {
-        Self { added, removed, patched, reordered }
-    }
-    fn row_key(row: &String) -> &str {
-        row
-    }
-    fn patch_key(patch: &SpaceProgramPatch) -> &str {
-        &patch.id
-    }
-    fn patch_fold(_patch: &SpaceProgramPatch, _row: &mut String) -> Result<(), protocol::MutationApplyError> {
         Ok(())
     }
-    fn patch_compose(first: &SpaceProgramPatch, _later: &SpaceProgramPatch) -> SpaceProgramPatch {
-        first.clone()
+    fn absorb(&mut self, later: Self) {
+        self.name = later.name.or(self.name.take());
+        self.avatar = later.avatar.or(self.avatar.take());
+        self.role = later.role.or(self.role);
     }
-    fn patch_inverse(patch: &SpaceProgramPatch, _base: &String) -> SpaceProgramPatch {
-        patch.clone()
+    fn inverse(&self, row: &SpaceUser) -> Self {
+        Self { name: self.name.as_ref().map(|_| row.name.clone()), avatar: self.avatar.as_ref().map(|_| SpaceOptionalAvatar { value: row.avatar.clone() }), role: self.role.map(|_| row.role) }
     }
-    fn patch_between(_base: &String, _other: &String) -> Option<SpaceProgramPatch> {
-        None
-    }
-    fn patch_is_empty(_patch: &SpaceProgramPatch) -> bool {
-        true
+    fn is_empty(&self) -> bool {
+        self.name.is_none() && self.avatar.is_none() && self.role.is_none()
     }
 }
 
-keyed_delta_impl!(
-    SpaceExtensionsDelta,
-    InstalledExtension,
-    SpaceExtensionPatch,
-    extension_id,
-    extension_id,
-    |patch: &SpaceExtensionPatch, row: &mut InstalledExtension| {
-        if let Some(version) = &patch.version {
+impl protocol::list_delta::RowPatch<CollectionRef> for SpaceCollectionPatch {
+    fn commit_into(&self, row: &mut CollectionRef, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        if let Some(name) = &self.name {
+            row.name = name.clone();
+        }
+        if let Some(document_id) = &self.document_id {
+            row.document_id = document_id.clone();
+        }
+        Ok(())
+    }
+    fn absorb(&mut self, later: Self) {
+        self.name = later.name.or(self.name.take());
+        self.document_id = later.document_id.or(self.document_id.take());
+    }
+    fn inverse(&self, row: &CollectionRef) -> Self {
+        Self { name: self.name.as_ref().map(|_| row.name.clone()), document_id: self.document_id.as_ref().map(|_| row.document_id.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.name.is_none() && self.document_id.is_none()
+    }
+}
+
+impl protocol::list_delta::RowPatch<InstalledExtension> for SpaceExtensionPatch {
+    fn commit_into(&self, row: &mut InstalledExtension, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        if let Some(version) = &self.version {
             row.version = version.clone();
         }
-        if let Some(source_uri) = &patch.source_uri {
+        if let Some(source_uri) = &self.source_uri {
             row.source_uri = source_uri.clone();
         }
-        if let Some(package_hash) = &patch.package_hash {
+        if let Some(package_hash) = &self.package_hash {
             row.package_hash = package_hash.clone();
         }
-        if let Some(enabled) = patch.enabled {
+        if let Some(enabled) = self.enabled {
             row.enabled = enabled;
         }
-    },
-    |first: &SpaceExtensionPatch, later: &SpaceExtensionPatch| SpaceExtensionPatch {
-        extension_id: first.extension_id.clone(),
-        version: later.version.clone().or_else(|| first.version.clone()),
-        source_uri: later.source_uri.clone().or_else(|| first.source_uri.clone()),
-        package_hash: later.package_hash.clone().or_else(|| first.package_hash.clone()),
-        enabled: later.enabled.or(first.enabled),
-    },
-    |patch: &SpaceExtensionPatch, base: &InstalledExtension| SpaceExtensionPatch {
-        extension_id: patch.extension_id.clone(),
-        version: patch.version.as_ref().map(|_| base.version.clone()),
-        source_uri: patch.source_uri.as_ref().map(|_| base.source_uri.clone()),
-        package_hash: patch.package_hash.as_ref().map(|_| base.package_hash.clone()),
-        enabled: patch.enabled.map(|_| base.enabled),
-    },
-    |base: &InstalledExtension, other: &InstalledExtension| {
-        let patch = SpaceExtensionPatch {
-            extension_id: other.extension_id.clone(),
-            version: (base.version != other.version).then(|| other.version.clone()),
-            source_uri: (base.source_uri != other.source_uri).then(|| other.source_uri.clone()),
-            package_hash: (base.package_hash != other.package_hash).then(|| other.package_hash.clone()),
-            enabled: (base.enabled != other.enabled).then_some(other.enabled),
-        };
-        (patch.version.is_some() || patch.source_uri.is_some() || patch.package_hash.is_some() || patch.enabled.is_some()).then_some(patch)
-    },
-    |patch: &SpaceExtensionPatch| patch.version.is_none() && patch.source_uri.is_none() && patch.package_hash.is_none() && patch.enabled.is_none()
-);
-
-/// 📍️ Complete order that places `id` at `index` among `ids`; `None` when the row simply appends.
-fn insertion_order<'a>(ids: impl Iterator<Item = &'a str>, id: &str, index: Option<u32>) -> Option<Vec<String>> {
-    let mut order: Vec<String> = ids.map(str::to_string).collect();
-    let index = index? as usize;
-    (index < order.len()).then(|| {
-        order.insert(index, id.to_string());
-        order
-    })
+        Ok(())
+    }
+    fn absorb(&mut self, later: Self) {
+        self.version = later.version.or(self.version.take());
+        self.source_uri = later.source_uri.or(self.source_uri.take());
+        self.package_hash = later.package_hash.or(self.package_hash.take());
+        self.enabled = later.enabled.or(self.enabled);
+    }
+    fn inverse(&self, row: &InstalledExtension) -> Self {
+        Self {
+                        version: self.version.as_ref().map(|_| row.version.clone()),
+            source_uri: self.source_uri.as_ref().map(|_| row.source_uri.clone()),
+            package_hash: self.package_hash.as_ref().map(|_| row.package_hash.clone()),
+            enabled: self.enabled.map(|_| row.enabled),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.version.is_none() && self.source_uri.is_none() && self.package_hash.is_none() && self.enabled.is_none()
+    }
 }
 
 impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
-    fn apply(&self, base: &SpaceSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SpaceSnapshot> {
+    fn apply(&self, base: &SpaceSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SpaceSnapshot> {
         let mut next = base.clone();
         if let Some(name) = &self.name {
             next.name = name.clone();
@@ -665,16 +386,16 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
             next.visibility = visibility;
         }
         if let Some(delta) = &self.users {
-            next.users = keyed_apply(&next.users, delta).map_err(|error| error.under(["users"]))?;
+            next.users = delta.commit_onto(&next.users, capability).map_err(|error| error.under(["users"]))?;
         }
         if let Some(delta) = &self.collections {
-            next.collections = keyed_apply(&next.collections, delta).map_err(|error| error.under(["collections"]))?;
+            next.collections = delta.commit_onto(&next.collections, capability).map_err(|error| error.under(["collections"]))?;
         }
         if let Some(delta) = &self.programs {
-            next.programs = keyed_apply(&next.programs, delta).map_err(|error| error.under(["programs"]))?;
+            next.programs = delta.commit_onto(&next.programs, capability).map_err(|error| error.under(["programs"]))?;
         }
         if let Some(delta) = &self.extensions {
-            next.extensions = keyed_apply(&next.extensions, delta).map_err(|error| error.under(["extensions"]))?;
+            next.extensions = delta.commit_onto(&next.extensions, capability).map_err(|error| error.under(["extensions"]))?;
         }
         Ok(next)
     }
@@ -690,7 +411,10 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
         macro_rules! compose {
             ($field:ident) => {
                 self.$field = match (self.$field.take(), other.$field) {
-                    (Some(first), Some(later)) => Some(keyed_absorb(&first, &later)),
+                    (Some(mut first), Some(later)) => {
+                        first.absorb(later);
+                        Some(first)
+                    }
                     (first, later) => later.or(first),
                 };
             };
@@ -711,31 +435,15 @@ impl protocol::DiffAlgebra<SpaceSnapshot> for SpaceDiff {
             name: self.name.as_ref().map(|_| base.name.clone()),
             kind: self.kind.map(|_| base.kind),
             visibility: self.visibility.map(|_| base.visibility),
-            users: self.users.as_ref().map(|delta| keyed_inverse(delta, &base.users)),
-            collections: self.collections.as_ref().map(|delta| keyed_inverse(delta, &base.collections)),
-            programs: self.programs.as_ref().map(|delta| keyed_inverse(delta, &base.programs)),
-            extensions: self.extensions.as_ref().map(|delta| keyed_inverse(delta, &base.extensions)),
-        }
-    }
-
-    fn between(base: &SpaceSnapshot, other: &SpaceSnapshot) -> Self {
-        let users = keyed_between::<SpaceUsersDelta>(&base.users, &other.users);
-        let collections = keyed_between::<SpaceCollectionsDelta>(&base.collections, &other.collections);
-        let programs = keyed_between::<SpaceProgramsDelta>(&base.programs, &other.programs);
-        let extensions = keyed_between::<SpaceExtensionsDelta>(&base.extensions, &other.extensions);
-        Self {
-            name: (base.name != other.name).then(|| other.name.clone()),
-            kind: (base.kind != other.kind).then_some(other.kind),
-            visibility: (base.visibility != other.visibility).then_some(other.visibility),
-            users: (!keyed_is_empty(&users)).then_some(users),
-            collections: (!keyed_is_empty(&collections)).then_some(collections),
-            programs: (!keyed_is_empty(&programs)).then_some(programs),
-            extensions: (!keyed_is_empty(&extensions)).then_some(extensions),
+            users: self.users.as_ref().map(|delta| delta.inverse(&base.users)),
+            collections: self.collections.as_ref().map(|delta| delta.inverse(&base.collections)),
+            programs: self.programs.as_ref().map(|delta| delta.inverse(&base.programs)),
+            extensions: self.extensions.as_ref().map(|delta| delta.inverse(&base.extensions)),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.name.is_none() && self.kind.is_none() && self.visibility.is_none() && self.users.as_ref().is_none_or(keyed_is_empty) && self.collections.as_ref().is_none_or(keyed_is_empty) && self.programs.as_ref().is_none_or(keyed_is_empty) && self.extensions.as_ref().is_none_or(keyed_is_empty)
+        self.name.is_none() && self.kind.is_none() && self.visibility.is_none() && self.users.as_ref().is_none_or(SpaceUsersDelta::is_empty) && self.collections.as_ref().is_none_or(SpaceCollectionsDelta::is_empty) && self.programs.as_ref().is_none_or(SpaceProgramsDelta::is_empty) && self.extensions.as_ref().is_none_or(SpaceExtensionsDelta::is_empty)
     }
 }
 
@@ -988,65 +696,56 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
             SpaceMutation::SetVisibility { visibility } => protocol::MutationOutcome::new(SpaceDiff { visibility: Some(*visibility), ..Default::default() }),
             SpaceMutation::UpsertUser { user, index } => {
                 let delta = match base.users.iter().find(|existing| existing.id == user.id) {
-                    Some(existing) => SpaceUsersDelta {
-                        patched: vec![SpaceUserPatch { id: user.id.clone(), name: (existing.name != user.name).then(|| user.name.clone()), avatar: (existing.avatar != user.avatar).then(|| SpaceOptionalAvatar { value: user.avatar.clone() }), role: (existing.role != user.role).then_some(user.role) }],
-                        ..Default::default()
-                    },
-                    None => SpaceUsersDelta { added: vec![user.clone()], reordered: insertion_order(base.users.iter().map(|existing| existing.id.as_str()), &user.id, *index), ..Default::default() },
+                    Some(existing) => SpaceUsersDelta::modification(user.id.clone(), SpaceUserPatch { name: (existing.name != user.name).then(|| user.name.clone()), avatar: (existing.avatar != user.avatar).then(|| SpaceOptionalAvatar { value: user.avatar.clone() }), role: (existing.role != user.role).then_some(user.role) }),
+                    None => SpaceUsersDelta::insertion(index.map_or(base.users.len(), |at| (*at as usize).min(base.users.len())), user.clone()),
                 };
                 protocol::MutationOutcome::new(SpaceDiff { users: Some(delta), ..Default::default() })
             }
-            SpaceMutation::RemoveUser { user_id } if base.users.iter().any(|user| &user.id == user_id) => protocol::MutationOutcome::new(SpaceDiff { users: Some(SpaceUsersDelta { removed: vec![user_id.clone()], ..Default::default() }), ..Default::default() }),
-            SpaceMutation::RemoveUser { user_id } => missing("User", user_id),
+            SpaceMutation::RemoveUser { user_id } => match base.users.iter().position(|user| &user.id == user_id) {
+                Some(at) => protocol::MutationOutcome::new(SpaceDiff { users: Some(SpaceUsersDelta::removal(&base.users, at)), ..Default::default() }),
+                None => missing("User", user_id),
+            },
             SpaceMutation::AddCollection { collection, .. } if base.collections.iter().any(|existing| existing.id == collection.id) => {
                 protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Collection {} already exists.", collection.id), [collection.id.clone()])
             }
             SpaceMutation::AddCollection { collection, index } => protocol::MutationOutcome::new(SpaceDiff {
-                collections: Some(SpaceCollectionsDelta { added: vec![collection.clone()], reordered: insertion_order(base.collections.iter().map(|existing| existing.id.as_str()), &collection.id, *index), ..Default::default() }),
+                collections: Some(SpaceCollectionsDelta::insertion(index.map_or(base.collections.len(), |at| (*at as usize).min(base.collections.len())), collection.clone())),
                 ..Default::default()
             }),
-            SpaceMutation::RemoveCollection { collection_id } if base.collections.iter().any(|collection| &collection.id == collection_id) => {
-                protocol::MutationOutcome::new(SpaceDiff { collections: Some(SpaceCollectionsDelta { removed: vec![collection_id.clone()], ..Default::default() }), ..Default::default() })
-            }
-            SpaceMutation::RemoveCollection { collection_id } => missing("Collection", collection_id),
+            SpaceMutation::RemoveCollection { collection_id } => match base.collections.iter().position(|collection| &collection.id == collection_id) {
+                Some(at) => protocol::MutationOutcome::new(SpaceDiff { collections: Some(SpaceCollectionsDelta::removal(&base.collections, at)), ..Default::default() }),
+                None => missing("Collection", collection_id),
+            },
             SpaceMutation::RenameCollection { collection_id, name } if base.collections.iter().any(|collection| &collection.id == collection_id) => protocol::MutationOutcome::new(SpaceDiff {
-                collections: Some(SpaceCollectionsDelta { patched: vec![SpaceCollectionPatch { id: collection_id.clone(), name: Some(name.clone()), ..Default::default() }], ..Default::default() }),
+                collections: Some(SpaceCollectionsDelta::modification(collection_id.clone(), SpaceCollectionPatch { name: Some(name.clone()), ..Default::default() })),
                 ..Default::default()
             }),
             SpaceMutation::RenameCollection { collection_id, .. } => missing("Collection", collection_id),
             SpaceMutation::InstallProgram { plugin_id, .. } if base.programs.contains(plugin_id) => protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Program {plugin_id} is already installed."), [plugin_id.clone()]),
             SpaceMutation::InstallProgram { plugin_id, index } => protocol::MutationOutcome::new(SpaceDiff {
-                programs: Some(SpaceProgramsDelta { added: vec![plugin_id.clone()], reordered: insertion_order(base.programs.iter().map(String::as_str), plugin_id, *index), ..Default::default() }),
+                programs: Some(SpaceProgramsDelta::insertion(index.map_or(base.programs.len(), |at| (*at as usize).min(base.programs.len())), plugin_id.clone())),
                 ..Default::default()
             }),
-            SpaceMutation::UninstallProgram { plugin_id } if base.programs.contains(plugin_id) => protocol::MutationOutcome::new(SpaceDiff { programs: Some(SpaceProgramsDelta { removed: vec![plugin_id.clone()], ..Default::default() }), ..Default::default() }),
-            SpaceMutation::UninstallProgram { plugin_id } => missing("Program", plugin_id),
+            SpaceMutation::UninstallProgram { plugin_id } => match base.programs.iter().position(|existing| existing == plugin_id) {
+                Some(at) => protocol::MutationOutcome::new(SpaceDiff { programs: Some(SpaceProgramsDelta::removal(&base.programs, at)), ..Default::default() }),
+                None => missing("Program", plugin_id),
+            },
             SpaceMutation::InstallExtension { extension_id, version, source_uri, package_hash, enabled, index } => {
                 let delta = match base.extensions.iter().find(|existing| &existing.extension_id == extension_id) {
-                    Some(existing) => SpaceExtensionsDelta {
-                        patched: vec![SpaceExtensionPatch {
-                            extension_id: extension_id.clone(),
-                            version: (existing.version != *version).then(|| version.clone()),
-                            source_uri: (existing.source_uri != *source_uri).then(|| source_uri.clone()),
-                            package_hash: (existing.package_hash != *package_hash).then(|| package_hash.clone()),
-                            enabled: (existing.enabled != *enabled).then_some(*enabled),
-                        }],
-                        ..Default::default()
-                    },
-                    None => SpaceExtensionsDelta {
-                        added: vec![InstalledExtension { extension_id: extension_id.clone(), version: version.clone(), source_uri: source_uri.clone(), package_hash: package_hash.clone(), enabled: *enabled }],
-                        reordered: insertion_order(base.extensions.iter().map(|existing| existing.extension_id.as_str()), extension_id, *index),
-                        ..Default::default()
-                    },
+                    Some(existing) => SpaceExtensionsDelta::modification(extension_id.clone(), SpaceExtensionPatch { version: (existing.version != *version).then(|| version.clone()), source_uri: (existing.source_uri != *source_uri).then(|| source_uri.clone()), package_hash: (existing.package_hash != *package_hash).then(|| package_hash.clone()), enabled: (existing.enabled != *enabled).then_some(*enabled) }),
+                    None => SpaceExtensionsDelta::insertion(
+                        index.map_or(base.extensions.len(), |at| (*at as usize).min(base.extensions.len())),
+                        InstalledExtension { extension_id: extension_id.clone(), version: version.clone(), source_uri: source_uri.clone(), package_hash: package_hash.clone(), enabled: *enabled },
+                    ),
                 };
                 protocol::MutationOutcome::new(SpaceDiff { extensions: Some(delta), ..Default::default() })
             }
-            SpaceMutation::UninstallExtension { extension_id } if base.extensions.iter().any(|existing| &existing.extension_id == extension_id) => {
-                protocol::MutationOutcome::new(SpaceDiff { extensions: Some(SpaceExtensionsDelta { removed: vec![extension_id.clone()], ..Default::default() }), ..Default::default() })
-            }
-            SpaceMutation::UninstallExtension { extension_id } => missing("Extension", extension_id),
+            SpaceMutation::UninstallExtension { extension_id } => match base.extensions.iter().position(|existing| &existing.extension_id == extension_id) {
+                Some(at) => protocol::MutationOutcome::new(SpaceDiff { extensions: Some(SpaceExtensionsDelta::removal(&base.extensions, at)), ..Default::default() }),
+                None => missing("Extension", extension_id),
+            },
             SpaceMutation::SetExtensionEnabled { extension_id, enabled } if base.extensions.iter().any(|existing| &existing.extension_id == extension_id) => protocol::MutationOutcome::new(SpaceDiff {
-                extensions: Some(SpaceExtensionsDelta { patched: vec![SpaceExtensionPatch { extension_id: extension_id.clone(), enabled: Some(*enabled), ..Default::default() }], ..Default::default() }),
+                extensions: Some(SpaceExtensionsDelta::modification(extension_id.clone(), SpaceExtensionPatch { enabled: Some(*enabled), ..Default::default() })),
                 ..Default::default()
             }),
             SpaceMutation::SetExtensionEnabled { extension_id, .. } => missing("Extension", extension_id),
@@ -1166,64 +865,9 @@ pub fn space_backbone_uri(space_id: &str) -> String {
     format!("space://{space_id}")
 }
 
-#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
-#[value(deny_unknown_fields)]
-struct SpacePackageSource {
-    definition_version: u8,
-    id: String,
-    artifact: String,
-    directory: String,
-    rust_package: String,
-    nx_project: String,
-    dependencies: Vec<String>,
-}
-
-/// 📦️ Validated package identity for the builtin space artifact.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpaceArtifactPackage {
-    pub id: String,
-    pub artifact: String,
-    pub directory: String,
-    pub rust_package: String,
-    pub nx_project: String,
-    pub dependencies: Vec<String>,
-}
-
-/// 🚫️ Invalid builtin space package declaration.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpacePackageSchemaError(pub String);
-
-impl std::fmt::Display for SpacePackageSchemaError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.0)
-    }
-}
-
-impl std::error::Error for SpacePackageSchemaError {}
-
-/// 🧬️ Language-neutral package declaration owned by this artifact.
-pub const SPACE_ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
-
-/// 📦️ Parses and validates the builtin space package declaration.
-pub fn space_package_from_schema(source: &str) -> Result<SpaceArtifactPackage, SpacePackageSchemaError> {
-    let parsed = semio_framework_pack_json::from_json_str::<SpacePackageSource>(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SpacePackageSchemaError(error.to_string()))?;
-    if parsed.definition_version != 1 || parsed.id != "os.space" || parsed.artifact != "space" || parsed.directory != "🪐️space" || parsed.rust_package != "semio-framework-artifact-space-space" || parsed.nx_project != "@semio-tech/framework-space-space-rs" || !parsed.dependencies.is_empty() {
-        return Err(SpacePackageSchemaError("builtin space package identity does not match its canonical declaration".into()));
-    }
-    Ok(SpaceArtifactPackage {
-        id: parsed.id,
-        artifact: parsed.artifact,
-        directory: parsed.directory,
-        rust_package: parsed.rust_package,
-        nx_project: parsed.nx_project,
-        dependencies: parsed.dependencies,
-    })
-}
-
-/// 📦️ Returns this artifact's validated package declaration.
-pub fn package_descriptor() -> Result<SpaceArtifactPackage, SpacePackageSchemaError> {
-    space_package_from_schema(SPACE_ARTIFACT_DEFINITION_SCHEMA)
-}
+#[path = "🧬️schema/📦️package/🦀️.rs"]
+pub mod package;
+pub use package::{admit_space_package_declaration, package_descriptor, SpaceArtifactPackage, SpacePackageDeclaration, SpacePackageError};
 
 #[cfg(test)]
 #[path = "🧪️tests/🪐️space/🦀️.rs"]

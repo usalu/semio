@@ -9,17 +9,19 @@ pub struct InsertSharedString {
     pub(crate) value: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub(crate) index: Option<usize>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) node: Option<XmlNode>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "shared-string", kind: "insert-shared-string", record: "InsertSharedString" };
 
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::insert_shared_string_plan(base, &self.value, self.index))
+        plan_outcome(canonical_edit::insert_shared_string_plan(base, &self.value, self.index, self.node.as_ref()))
     }
 
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::insert_shared_string_plan(base, &self.value, self.index)))
+        Ok(plan_inverse(canonical_edit::insert_shared_string_plan(base, &self.value, self.index, self.node.as_ref())))
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

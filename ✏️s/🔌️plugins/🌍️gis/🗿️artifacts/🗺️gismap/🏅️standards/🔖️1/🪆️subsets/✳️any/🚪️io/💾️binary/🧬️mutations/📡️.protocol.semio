@@ -35,3 +35,15 @@ record replace-region-data tag=10
 field payload bytes
 record reorder-regions tag=11
 field payload bytes
+record set-position-property tag=12
+field payload bytes
+record remove-position-property tag=13
+field payload bytes
+record set-route-property tag=14
+field payload bytes
+record remove-route-property tag=15
+field payload bytes
+record set-region-property tag=16
+field payload bytes
+record remove-region-property tag=17
+field payload bytes

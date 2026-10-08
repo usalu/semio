@@ -28,7 +28,7 @@ fn trusted_browser_actor_metadata_and_generation_match_neutral_corpus() {
     for (actor, expected) in [(serde_json::from_value::<TrustedBundleBrowserActorV1>(fixture["closed"].clone()).unwrap(), &fixture["encodingSha256"]), (TrustedBundleBrowserActorV1::None {}, &fixture["noneEncodingSha256"])] {
         let mut bytes = Vec::new();
         actor.append_generation(&mut bytes).unwrap();
-        assert_eq!(directory::os_directory::hex_lower(&Sha256::digest(&bytes)), expected.as_str().unwrap());
+        assert_eq!(directory::os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&bytes)), expected.as_str().unwrap());
     }
     let raw = serde_json::to_string(&fixture["closed"]).unwrap();
     assert_eq!(raw.matches("\"byteLength\":3").count(), 1);

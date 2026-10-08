@@ -1,0 +1,930 @@
+{
+  "scope": "Read-only actual callsites; conditional paths, tree ancestry and complete returned codecs require reconciliation; no runtime credit",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+          "line": 213,
+          "text": "pub fn artifact<A: WriterApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 18,
+          "text": "codec: store::ArtifactCodec::bare::<WriterSnapshot, WriterMutation>(WRITER_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "EquationSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+          "line": 457,
+          "text": "pub fn artifact<A: EquationApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 71,
+          "text": "codec: store::ArtifactCodec::bare::<EquationSnapshot, EquationMutation>(MATH_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+          "line": 104,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 94,
+          "text": "codec: store::ArtifactCodec::bare::<Wfc2dSnapshot, Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+          "line": 104,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 95,
+          "text": "codec: store::ArtifactCodec::bare::<Grid2dSnapshot, Grid2dMutation>(WFC_GRID2D_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+          "line": 179,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 46,
+          "text": "codec: store::ArtifactCodec::bare::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+          "line": 131,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 86,
+          "text": "codec: store::ArtifactCodec::bare::<Wfc3dSnapshot, Wfc3dMutation>(WFC3D_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+          "line": 109,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 35,
+          "text": "codec: crate::standards::v1::subsets::any::io::native_snapshot_codec(),"
+        }
+      ]
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+          "line": 151,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+          "line": 156,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::generation2d::Generation2dPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+          "line": 147,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+          "line": 153,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::generation3d::Generation3dPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "FlowSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+          "line": 399,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+          "line": 405,
+          "text": ".document_codec::<EditorApp<editor::flow::FlowPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+          "line": 187,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+          "line": 192,
+          "text": ".document_codec_bare::<GisTerrainSnapshot, GisTerrainMutation>(GIS_3D_TERRAIN_SCHEMA, GISTERRAIN_DIALECT)"
+        }
+      ]
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+          "line": 344,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+          "line": 350,
+          "text": ".document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT)"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🦀️.rs",
+          "line": 12,
+          "text": "pub fn declaration() -> DocumentHttpPortDeclarationV1 {"
+        }
+      ]
+    },
+    {
+      "owner": "VcsSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+          "line": 84,
+          "text": "pub fn artifact<A: VcsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 52,
+          "text": "codec: store::ArtifactCodec::bare::<VcsSnapshot, VcsDemoMutation>(VCS_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+          "line": 379,
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 49,
+          "text": "codec: store::ArtifactCodec::bare::<PresentationSnapshot, PresentationMutation>(PRESENTATION_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+          "line": 168,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+          "line": 174,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::shooting::ShootingPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+          "line": 82,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+          "line": 85,
+          "text": ".document_codec_bare::<standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(PLAYGROUND_DOCUMENT_SCHEMA, PLAYGROUND_DIALECT)"
+        }
+      ]
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+          "line": 419,
+          "text": "pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 50,
+          "text": "codec: store::ArtifactCodec::bare::<SequenceSnapshot, SequenceMutation>(SEQUENCE_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+          "line": 419,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🦀️.rs",
+          "line": 113,
+          "text": "codec: store::ArtifactCodec::bare::<Fem2dSnapshot, Fem2dMutation>(FEM_2D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+          "line": 398,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🦀️.rs",
+          "line": 113,
+          "text": "codec: store::ArtifactCodec::bare::<Fem3dSnapshot, Fem3dMutation>(FEM_3D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+          "line": 632,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+          "line": 637,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::architect::ArchitectPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+          "line": 1086,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+          "line": 1091,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::process3d::Process3dPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+          "line": 353,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+          "line": 359,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::lowpoly::LowpolyPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "WiresSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+          "line": 368,
+          "text": "pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 33,
+          "text": "codec: store::ArtifactCodec::bare::<WiresSnapshot, WiresMutation>(MINDMAP_WIRES_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "FormsSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+          "line": 446,
+          "text": "pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 49,
+          "text": "codec: store::ArtifactCodec::bare::<FormsSnapshot, FormMutation>(FORMS_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+          "line": 687,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+          "line": 693,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::layout::LayoutPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "CadSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+          "line": 611,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+          "line": 617,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::cad::CadPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1990Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+          "line": 194,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+          "line": 200,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1990::En1990PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+          "line": 527,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+          "line": 533,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din18599::Din18599PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1997Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+          "line": 249,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+          "line": 255,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1997::En1997PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+          "line": 184,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+          "line": 190,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din16798::Din16798PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1991Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+          "line": 219,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+          "line": 225,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1991::En1991PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1992Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+          "line": 445,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+          "line": 451,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1992::En1992PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+          "line": 2062,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+          "line": 2068,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::vdi3805::Vdi3805PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+          "line": 1169,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+          "line": 1175,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::iso16757::Iso16757PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1993Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+          "line": 398,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+          "line": 404,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1993::En1993PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1994Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+          "line": 481,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+          "line": 487,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1994::En1994PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+          "line": 184,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+          "line": 190,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din4108::Din4108PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1996Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+          "line": 323,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+          "line": 329,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1996::En1996PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1995Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+          "line": 252,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+          "line": 258,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1995::En1995PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1999Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+          "line": 69,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+          "line": 75,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1999::En1999PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "En1998Snapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+          "line": 65,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+          "line": 71,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1998::En1998PlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+          "line": 389,
+          "text": "pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 58,
+          "text": "codec: store::ArtifactCodec::bare::<PlaybookSnapshot, PlaybookMutation>(PLAYBOOK_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+          "line": 367,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+          "line": 374,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::procedure::ImperativePlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+          "line": 115,
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 543,
+          "text": "codec: store::ArtifactCodec::bare::<RemodelingSnapshot, RemodelingMutation>(REMODELING_DOCUMENT_SCHEMA.to_string()),"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 366,
+          "text": "codec: text_or(\"codec\", \"\"),"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🔌️providers/🎥️mp4/🦀️.rs",
+          "line": 53,
+          "text": "codec: Mp4Codec::avc(vec![sps_nal.to_vec()], vec![pps_nal.to_vec()], 4, None),"
+        }
+      ]
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+          "line": 690,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+          "line": 696,
+          "text": ".document_codec_bare::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: \"s.energy.model\", standard: semio_framework_artifact_reference::StandardId(\"1\"), subset: semio_framework_artifact_reference::SubsetId(\"*\") })"
+        }
+      ]
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+          "line": 266,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 48,
+          "text": "codec: store::ArtifactCodec::bare::<RewritingSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "JackSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+          "line": 645,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 55,
+          "text": "codec: store::ArtifactCodec::bare::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "DagSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+          "line": 359,
+          "text": "pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 48,
+          "text": "codec: store::ArtifactCodec::bare::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+          "line": 538,
+          "text": "pub fn artifact<A: DrawingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 177,
+          "text": "codec: store::ArtifactCodec::bare::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "RasterSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+          "line": 908,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+          "line": 914,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::raster::RasterPlayApp>>()"
+        }
+      ]
+    },
+    {
+      "owner": "NoteSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+          "line": 84,
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 427,
+          "text": "codec: store::ArtifactCodec::of::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+          "line": 670,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 57,
+          "text": "codec: store::ArtifactCodec::bare::<Puzzle2dSnapshot, Puzzle2dMutation>(PUZZLE_2D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+          "line": 1204,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 57,
+          "text": "codec: schema::snapshot::native_codec(),"
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+          "line": 849,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 56,
+          "text": "codec: store::ArtifactCodec::bare::<Puzzle3dSnapshot, Puzzle3dMutation>(PUZZLE_3D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+          "line": 184,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 108,
+          "text": "codec: store::ArtifactCodec::bare::<Block2dSnapshot, Block2dMutation>(BLOCK_2D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+          "line": 215,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 108,
+          "text": "codec: store::ArtifactCodec::bare::<Block5dSnapshot, Block5dMutation>(BLOCK_5D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+          "line": 351,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 108,
+          "text": "codec: store::ArtifactCodec::bare::<Block3dSnapshot, Block3dMutation>(BLOCK_3D_SCHEMA.to_string()),"
+        }
+      ]
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+          "line": 104,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::home::HomeApp>>()"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+          "line": 116,
+          "text": ".document_codec_bare::<SHomeSnapshot,SHomeMutation>(S_HOME_DOCUMENT_SCHEMA,HOME_DIALECT)"
+        }
+      ]
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+          "line": 83,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+          "line": 86,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+          "line": 91,
+          "text": "pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_framework_plugin::ArtifactDefinitionError>{"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+          "line": 94,
+          "text": ".document_codec_bare::<SSpaceSnapshot,SSpaceMutation>(S_SPACE_INDEX_DOCUMENT_SCHEMA,SPACE_INDEX_DIALECT)"
+        }
+      ]
+    },
+    {
+      "owner": "CurationSnapshot",
+      "evidence": [
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+          "line": 333,
+          "text": "pub fn artifact<A: SourcingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "line": 57,
+          "text": "codec: store::ArtifactCodec::bare::<CurationSnapshot, SourcingMutation>(SOURCING_CURATION_SCHEMA.to_string()),"
+        }
+      ]
+    }
+  ]
+}

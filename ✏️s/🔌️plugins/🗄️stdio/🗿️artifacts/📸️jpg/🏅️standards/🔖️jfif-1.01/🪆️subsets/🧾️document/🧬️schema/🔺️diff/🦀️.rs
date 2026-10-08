@@ -19,10 +19,10 @@ impl JpgSegmentDiff {
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    fn apply(&self, base: &JpgSegment) -> JpgSegment {
+    fn apply_patch(&self, base: &JpgSegment) -> JpgSegment {
         JpgSegment { marker: self.marker.unwrap_or(base.marker), data: self.data.clone().unwrap_or_else(|| base.data.clone()) }
     }
-    fn between(a: &JpgSegment, b: &JpgSegment) -> Self {
+    fn fields_changed(a: &JpgSegment, b: &JpgSegment) -> Self {
         Self { marker: (a.marker != b.marker).then_some(b.marker), data: (a.data != b.data).then(|| b.data.clone()) }
     }
     fn absorb(&mut self, other: Self) {
@@ -67,9 +67,7 @@ enum Slot {
 
 fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
-    let mut removed_desc = removed.to_vec();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&removed);
     for r in removed_desc {
         if r < slots.len() {
             slots.remove(r);
@@ -91,9 +89,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> JpgOtherSegmentsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
-        let mut r = d1.removed.clone();
-        r.sort_unstable();
-        r.dedup();
+        let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
@@ -123,7 +119,7 @@ fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> 
             }
             Some(Slot::Added(ai)) => {
                 if let Some(a) = added_alive[*ai].as_mut() {
-                    a.item = m2.diff.apply(&a.item);
+                    a.item = m2.diff.apply_patch(&a.item);
                 }
             }
             None => {}
@@ -185,12 +181,10 @@ fn apply_other_segments(base: &[JpgSegment], d: &JpgOtherSegmentsDiff) -> Vec<Jp
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
-            *it = m.diff.apply(it);
+            *it = m.diff.apply_patch(it);
         }
     }
-    let mut removed_desc = d.removed.clone();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&d.removed);
     for idx in removed_desc {
         if idx < items.len() {
             items.remove(idx);
@@ -205,12 +199,12 @@ fn apply_other_segments(base: &[JpgSegment], d: &JpgOtherSegmentsDiff) -> Vec<Jp
     items
 }
 
-fn between_other_segments(a: &[JpgSegment], b: &[JpgSegment]) -> Option<JpgOtherSegmentsDiff> {
+fn changed_other_segments(a: &[JpgSegment], b: &[JpgSegment]) -> Option<JpgOtherSegmentsDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
         if a[i] != b[i] {
-            let d = JpgSegmentDiff::between(&a[i], &b[i]);
+            let d = JpgSegmentDiff::fields_changed(&a[i], &b[i]);
             if !d.is_empty() {
                 modified.push(JpgSegmentModified { index: i, diff: d });
             }
@@ -228,9 +222,7 @@ fn between_other_segments(a: &[JpgSegment], b: &[JpgSegment]) -> Option<JpgOther
 /// ↩️ Negative rows for the other-segment triple against its BASE segments: added rows become removals at their final index, removed rows return at their
 /// base index and each modified row restores its base marker and data at the index the row has after the diff. Every list comes back ascending.
 fn inverse_other_segments(diff: &JpgOtherSegmentsDiff, base: &[JpgSegment]) -> JpgOtherSegmentsDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -380,6 +372,22 @@ where
     Ok(())
 }
 
+/// 🧮️ The sparse diff that carries `base` to `other`: only the fields that differ, and the segment list as a keyed triple.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn jpg_image_diff(base: &crate::schema::snapshot::JpgImage, other: &crate::schema::snapshot::JpgImage) -> JpgDiff {
+    JpgDiff {
+        width: (base.width != other.width).then_some(other.width),
+        height: (base.height != other.height).then_some(other.height),
+        pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()),
+        jfif_version: (base.jfif_version != other.jfif_version).then_some(other.jfif_version),
+        jfif_density_units: (base.jfif_density_units != other.jfif_density_units).then_some(other.jfif_density_units),
+        jfif_x_density: (base.jfif_x_density != other.jfif_x_density).then_some(other.jfif_x_density),
+        jfif_y_density: (base.jfif_y_density != other.jfif_y_density).then_some(other.jfif_y_density),
+        jfif_thumbnail: (base.jfif_thumbnail != other.jfif_thumbnail).then(|| other.jfif_thumbnail.clone()),
+        other_segments: changed_other_segments(&base.other_segments, &other.other_segments),
+    }
+}
+
 impl DiffAlgebra<JpgSnapshot> for JpgDiff {
     /// 🔁️ Concrete diff-level undo: every replaced field takes the value `base` carries, removed segments return at their base index, added ones go away
     /// again and modified ones restore their base marker and data at the index they have after the diff.
@@ -398,36 +406,34 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
         }
     }
 
-    fn between(base: &JpgSnapshot, other: &JpgSnapshot) -> Self {
-        Self {
-            width: (base.image.width != other.image.width).then_some(other.image.width),
-            height: (base.image.height != other.image.height).then_some(other.image.height),
-            pixels: (base.image.pixels != other.image.pixels).then(|| other.image.pixels.clone()),
-            jfif_version: (base.image.jfif_version != other.image.jfif_version).then_some(other.image.jfif_version),
-            jfif_density_units: (base.image.jfif_density_units != other.image.jfif_density_units).then_some(other.image.jfif_density_units),
-            jfif_x_density: (base.image.jfif_x_density != other.image.jfif_x_density).then_some(other.image.jfif_x_density),
-            jfif_y_density: (base.image.jfif_y_density != other.image.jfif_y_density).then_some(other.image.jfif_y_density),
-            jfif_thumbnail: (base.image.jfif_thumbnail != other.image.jfif_thumbnail).then(|| other.image.jfif_thumbnail.clone()),
-            other_segments: between_other_segments(&base.image.other_segments, &other.image.other_segments),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }
 }
 
 #[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
-        JpgSegment { marker, data }
-    }
-
-    let a = JpgSnapshot { schema: "stdio.jpg".into(), image: crate::schema::snapshot::JpgImage { width: 4,height: 4,pixels: vec![0u8; 16],jfif_version: (1, 1),jfif_density_units: JfifDensityUnits::PixelsPerInch,jfif_x_density: 72,jfif_y_density: 72,jfif_thumbnail: Some(JfifThumbnail { width: 2, height: 1, rgb_data: vec![1, 2, 3, 4, 5, 6] }),other_segments: vec![segment(0xFE, vec![1, 2, 3]), segment(0xE1, vec![9, 9])] } };
-    let b = JpgSnapshot { schema: "stdio.jpg".into(), image: crate::schema::snapshot::JpgImage { width: 8,height: 6,pixels: vec![9u8; 12],jfif_version: (1, 2),jfif_density_units: JfifDensityUnits::Aspect,jfif_x_density: 1,jfif_y_density: 1,jfif_thumbnail: None,other_segments: vec![segment(0xFE, vec![4, 5, 6])] } };
-    let c = JpgSnapshot::default();
-
-    vec![JpgDiff::default(), JpgDiff::between(&a, &b), JpgDiff::between(&b, &a), JpgDiff::between(&a, &c), JpgDiff::between(&c, &a)]
+    let segments = JpgOtherSegmentsDiff {
+        removed: vec![1],
+        modified: vec![JpgSegmentModified { index: 0, diff: JpgSegmentDiff { data: Some(vec![4, 5, 6]), ..Default::default() } }],
+        added: vec![JpgSegmentAdded { index: 1, item: JpgSegment { marker: 0xE1, data: vec![9, 9] } }],
+    };
+    vec![
+        JpgDiff::default(),
+        JpgDiff {
+            width: Some(8),
+            height: Some(6),
+            pixels: Some(vec![9u8; 12]),
+            jfif_version: Some((1, 2)),
+            jfif_density_units: Some(JfifDensityUnits::Aspect),
+            jfif_x_density: Some(1),
+            jfif_y_density: Some(1),
+            jfif_thumbnail: Some(None),
+            other_segments: Some(segments),
+        },
+        JpgDiff { jfif_thumbnail: Some(Some(JfifThumbnail { width: 2, height: 1, rgb_data: vec![1, 2, 3, 4, 5, 6] })), ..Default::default() },
+    ]
 }
 
 #[cfg(test)]

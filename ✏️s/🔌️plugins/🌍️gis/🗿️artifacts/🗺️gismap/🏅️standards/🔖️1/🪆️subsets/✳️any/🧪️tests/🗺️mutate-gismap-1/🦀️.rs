@@ -44,6 +44,12 @@ const KINDS: &[&str] = &[
     "delete-region",
     "replace-region-data",
     "reorder-regions",
+    "set-position-property",
+    "remove-position-property",
+    "set-route-property",
+    "remove-route-property",
+    "set-region-property",
+    "remove-region-property",
 ];
 
 /// 🗂️ The three collections `GisMapSnapshot` declares, in schema order — the cross-language projection.
@@ -164,6 +170,48 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-regions/🌳️moves/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-regions/🌳️moves/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-regions/🌳️moves/🎯️outcome/🔣️.json"),
+        },
+        "set-position-property" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/📌set-position-property/🔠relabels/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/📌set-position-property/🔠relabels/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/📌set-position-property/🔠relabels/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/📌set-position-property/🔠relabels/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/📌set-position-property/🔠relabels/🎯️outcome/🔣️.json"),
+        },
+        "remove-position-property" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🎯️outcome/🔣️.json"),
+        },
+        "set-route-property" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🚏set-route-property/🔠relabels/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🚏set-route-property/🔠relabels/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🚏set-route-property/🔠relabels/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🚏set-route-property/🔠relabels/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🚏set-route-property/🔠relabels/🎯️outcome/🔣️.json"),
+        },
+        "remove-route-property" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔪remove-route-property/🧽drops/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔪remove-route-property/🧽drops/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔪remove-route-property/🧽drops/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔪remove-route-property/🧽drops/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔪remove-route-property/🧽drops/🎯️outcome/🔣️.json"),
+        },
+        "set-region-property" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗾set-region-property/🔠relabels/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗾set-region-property/🔠relabels/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗾set-region-property/🔠relabels/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗾set-region-property/🔠relabels/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗾set-region-property/🔠relabels/🎯️outcome/🔣️.json"),
+        },
+        "remove-region-property" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧨remove-region-property/🧽drops/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧨remove-region-property/🧽drops/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧨remove-region-property/🧽drops/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🧨remove-region-property/🧽drops/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧨remove-region-property/🧽drops/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gismap-1: no specification vector registered for kind {other:?}"),
     }

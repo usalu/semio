@@ -8,7 +8,7 @@
 //! `document`/flow's `content` field shape, not lowpoly's optional-slot `Option<Option<_>>`.
 //!
 //! `artifact: Option<Box<DagArtifact>>` (a whole-artifact-replace escape hatch) is also gone — it was
-//! already dead (never constructed anywhere; `DagPlayApp` never overrides `whole_document_operation`)
+//! already dead (never constructed anywhere)
 //! and is exactly the forbidden whole-document-replace-via-diff shape `📌️important.md`'s vocabulary
 //! policy bans. `DagNodesDelta`/`DagEdgesDelta`/`DagNodePatchEntry`/`DagNodeExtraPatch*`/
 //! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagHostSnapshotEdgeList` are all dead with it — confirmed zero
@@ -100,9 +100,6 @@ impl MutationDiff<DagSnapshot> for DagDiff {
 impl protocol::DiffAlgebra<DagSnapshot> for DagDiff {
     fn inverse(&self, base: &DagSnapshot) -> Self {
         Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), content: self.content.as_ref().map(|_| base.content.clone()) }
-    }
-    fn between(base: &DagSnapshot, other: &DagSnapshot) -> Self {
-        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()), content: (base.content != other.content).then(|| other.content.clone()) }
     }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.content.is_none()

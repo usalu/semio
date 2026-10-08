@@ -27,6 +27,8 @@ export interface RasterDiff {
   layers?: RasterLayersDelta;
   /** @state artifact */
   assets?: RasterAssetsDelta;
+  /** @state artifact */
+  pixels?: RasterPixelRegion[];
 }
 
 export interface RasterAssetsDelta {
@@ -34,10 +36,21 @@ export interface RasterAssetsDelta {
 }
 
 export interface RasterLayersDelta {
-  added: RasterLayerInsertion[];
-  removed: string[];
-  patched: RasterLayerPatchEntry[];
-  moved: RasterLayerMove[];
+  removed: RasterLayerRemoval[];
+  inserted: RasterLayerInsertion[];
+  moved: RasterLayerRelocation[];
+  modified: RasterLayerModification[];
+}
+
+export interface RasterLayerAddress {
+  parentId?: string;
+  index: number;
+}
+
+export interface RasterLayerRemoval {
+  id: string;
+  parentId?: string;
+  index: number;
 }
 
 export interface RasterLayerInsertion {
@@ -46,13 +59,23 @@ export interface RasterLayerInsertion {
   layer: RasterLayerNode;
 }
 
-export interface RasterLayerMove {
+export interface RasterLayerRelocation {
   id: string;
-  parentId?: string;
-  index: number;
+  from: RasterLayerAddress;
+  to: RasterLayerAddress;
 }
 
-export interface RasterLayerPatchEntry {
+export interface RasterPixelRegion {
+  layerId: string;
+  target: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  samples: number[];
+}
+
+export interface RasterLayerModification {
   id: string;
   patch: RasterLayerPatch;
 }
@@ -136,6 +159,7 @@ export function parseRasterDiff(value: unknown, at = "$"): RasterDiff {
     ...(Object.hasOwn(row, "title") ? { title: row["title"] == null ? null : rasterRasterDiffGuardString(row["title"], `${at}.title`) } : {}),
     ...(Object.hasOwn(row, "layers") ? { layers: row["layers"] == null ? undefined : parseRasterLayersDelta(row["layers"], `${at}.layers`) } : {}),
     ...(Object.hasOwn(row, "assets") ? { assets: row["assets"] == null ? undefined : parseRasterAssetsDelta(row["assets"], `${at}.assets`) } : {}),
+    ...(Object.hasOwn(row, "pixels") ? { pixels: rasterRasterDiffGuardArray(row["pixels"], `${at}.pixels`).map((item, index) => parseRasterPixelRegion(item, `${at}.pixels[${index}]`)) } : {}),
   };
 }
 
@@ -152,10 +176,27 @@ export function parseRasterAssetsDelta(value: unknown, at = "$"): RasterAssetsDe
 export function parseRasterLayersDelta(value: unknown, at = "$"): RasterLayersDelta {
   const row = rasterRasterDiffGuardObject(value, at);
   return {
-    added: rasterRasterDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseRasterLayerInsertion(item, `${at}.added[${index}]`)),
-    removed: rasterRasterDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => rasterRasterDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: rasterRasterDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseRasterLayerPatchEntry(item, `${at}.patched[${index}]`)),
-    moved: rasterRasterDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseRasterLayerMove(item, `${at}.moved[${index}]`)),
+    removed: rasterRasterDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseRasterLayerRemoval(item, `${at}.removed[${index}]`)),
+    inserted: rasterRasterDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseRasterLayerInsertion(item, `${at}.inserted[${index}]`)),
+    moved: rasterRasterDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseRasterLayerRelocation(item, `${at}.moved[${index}]`)),
+    modified: rasterRasterDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseRasterLayerModification(item, `${at}.modified[${index}]`)),
+  };
+}
+
+export function parseRasterLayerAddress(value: unknown, at = "$"): RasterLayerAddress {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    parentId: row["parentId"] == null ? undefined : rasterRasterDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: rasterRasterDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+  };
+}
+
+export function parseRasterLayerRemoval(value: unknown, at = "$"): RasterLayerRemoval {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    id: rasterRasterDiffGuardString(row["id"], `${at}.id`),
+    parentId: row["parentId"] == null ? undefined : rasterRasterDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: rasterRasterDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
   };
 }
 
@@ -168,16 +209,29 @@ export function parseRasterLayerInsertion(value: unknown, at = "$"): RasterLayer
   };
 }
 
-export function parseRasterLayerMove(value: unknown, at = "$"): RasterLayerMove {
+export function parseRasterLayerRelocation(value: unknown, at = "$"): RasterLayerRelocation {
   const row = rasterRasterDiffGuardObject(value, at);
   return {
     id: rasterRasterDiffGuardString(row["id"], `${at}.id`),
-    parentId: row["parentId"] == null ? undefined : rasterRasterDiffGuardString(row["parentId"], `${at}.parentId`),
-    index: rasterRasterDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+    from: parseRasterLayerAddress(row["from"], `${at}.from`),
+    to: parseRasterLayerAddress(row["to"], `${at}.to`),
   };
 }
 
-export function parseRasterLayerPatchEntry(value: unknown, at = "$"): RasterLayerPatchEntry {
+export function parseRasterPixelRegion(value: unknown, at = "$"): RasterPixelRegion {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    layerId: rasterRasterDiffGuardString(row["layerId"], `${at}.layerId`),
+    target: rasterRasterDiffGuardString(row["target"], `${at}.target`),
+    x: rasterRasterDiffGuardInteger(row["x"], `${at}.x`, { minimum: 0 }),
+    y: rasterRasterDiffGuardInteger(row["y"], `${at}.y`, { minimum: 0 }),
+    width: rasterRasterDiffGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
+    height: rasterRasterDiffGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
+    samples: rasterRasterDiffGuardArray(row["samples"], `${at}.samples`).map((item, index) => rasterRasterDiffGuardInteger(item, `${at}.samples[${index}]`, { minimum: 0, maximum: 255 })),
+  };
+}
+
+export function parseRasterLayerModification(value: unknown, at = "$"): RasterLayerModification {
   const row = rasterRasterDiffGuardObject(value, at);
   return {
     id: rasterRasterDiffGuardString(row["id"], `${at}.id`),

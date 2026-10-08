@@ -34,5 +34,5 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {
     fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]
     }
-, index: None }
+}
 //#endregion 🔖️Mutation

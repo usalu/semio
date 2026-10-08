@@ -100,13 +100,13 @@ fn contribution_plan_matches_direct_leaf() {
     assert_eq!(plan.len(), 1);
     assert!(matches!(&plan[0], protocol::PlanStep::Local(DependencyTestOp::AddValue(AddValue { delta: 5 }))));
     let direct = protocol::apply_diff(operation(5).diff(&base).diff(), &base).expect("direct result");
-    let folded = protocol::apply_diff(protocol::fold_plan_diff(&leaf, &base).diff(), &base).expect("contribution result");
+    let folded = protocol::apply_diff(protocol::os_spr::fold::fold_plan_diff(&leaf, &base).diff(), &base).expect("contribution result");
     assert_eq!(direct, folded);
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS.kind, "add-value");
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
     let minimum = AddValue { delta: i32::MIN };
     let zero = DependencyTestSnapshot { value: 0 };
-    assert_eq!(protocol::fold_plan_inverse(&minimum, &zero).expect("valid retained mutation inverse fixture"), vec![operation(1), operation(i32::MAX)]);
+    assert_eq!(protocol::os_spr::fold::fold_plan_inverse(&minimum, &zero).expect("valid retained mutation inverse fixture"), vec![operation(1), operation(i32::MAX)]);
     assert!(protocol::plan_of::<DependencyTestSnapshot, DependencyTestOp, AddValue>(&AddValue { delta: 1 }, &DependencyTestSnapshot { value: i32::MAX }).is_err());
 }
 

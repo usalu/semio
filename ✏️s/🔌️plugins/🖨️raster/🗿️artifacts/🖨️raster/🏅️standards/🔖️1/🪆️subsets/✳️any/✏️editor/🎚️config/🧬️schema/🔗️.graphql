@@ -27,5 +27,11 @@ type RasterPixelSelection {
   target: String! @state(class: CONFIG)
   width: Int! @state(class: CONFIG)
   height: Int! @state(class: CONFIG)
-  spans: String! @state(class: CONFIG)
+  spans: [RasterSelectionSpan!]! @state(class: CONFIG)
+}
+
+type RasterSelectionSpan {
+  start: Int!
+  length: Int!
+  coverage: Int!
 }

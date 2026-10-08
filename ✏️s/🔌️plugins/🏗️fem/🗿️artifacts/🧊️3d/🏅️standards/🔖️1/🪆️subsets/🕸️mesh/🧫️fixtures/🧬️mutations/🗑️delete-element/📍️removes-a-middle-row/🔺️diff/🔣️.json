@@ -1,12 +1,15 @@
 {
   "nodes": null,
   "elements": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "tie_spare"
+      {
+        "id": "tie_spare",
+        "index": 21
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "materials": null,
   "sections": null,

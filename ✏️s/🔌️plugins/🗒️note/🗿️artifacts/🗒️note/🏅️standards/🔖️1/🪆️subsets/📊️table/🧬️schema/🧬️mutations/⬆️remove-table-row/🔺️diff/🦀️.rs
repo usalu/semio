@@ -15,6 +15,6 @@ pub fn diff(payload: &RemoveTableRow, base: &NoteSnapshot) -> protocol::Mutation
     if rows.len() <= 1 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Table \"{}\" already has the minimum of 1 row.", payload.id));
     }
-    protocol::MutationOutcome::new(NoteDiff::block_patches([(payload.id.clone(), NoteBlockPatch { table: Some(vec![NoteTableEdit::RemoveRow { index: rows.len() - 1 }]), ..Default::default() })]))
+    protocol::MutationOutcome::new(NoteDiff::block_patches([(payload.id.clone(), NoteBlockPatch { table: Some(vec![NoteTableEdit::RemoveRow { index: rows.len() - 1, cells: rows[rows.len() - 1].clone() }]), ..Default::default() })]))
 }
 //#endregion 🔖️Diff

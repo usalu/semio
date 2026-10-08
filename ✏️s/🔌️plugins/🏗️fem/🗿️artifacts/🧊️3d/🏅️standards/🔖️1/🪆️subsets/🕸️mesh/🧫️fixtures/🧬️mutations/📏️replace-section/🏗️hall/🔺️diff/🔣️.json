@@ -3,12 +3,13 @@
   "elements": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "sec_pur",
-        "item": {
+        "patch": {
           "id": "sec_pur",
           "name": "C24 Purlin 100x220",
           "area": 0.022,
@@ -17,8 +18,7 @@
           "j": 5.258e-05
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "solids": null,
   "supports": null,

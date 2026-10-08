@@ -9,32 +9,235 @@
   "deltaUWbWM2k": null,
   "automationClass": null,
   "zones": {
-    "added": [],
-    "removed": [],
-    "modified": [
+    "removed": [
       {
         "id": "zone-living",
-        "labelEn": null,
-        "labelDe": null,
-        "usageProfile": null,
-        "areaM2": 154.0,
-        "volumeM3": null,
-        "thetaIHeatC": null,
-        "thetaICoolC": null,
-        "occupants": null,
-        "internalGainsWM2": null,
-        "lightingPowerWM2": null
+        "index": 0
       }
     ],
-    "order": null
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "zone-living",
+          "labelEn": "Living",
+          "labelDe": "Wohnen",
+          "usageProfile": "WFH",
+          "areaM2": 154.0,
+          "volumeM3": 364.0,
+          "thetaIHeatC": 20.0,
+          "thetaICoolC": 26.0,
+          "occupants": 4,
+          "internalGainsWM2": 3.5,
+          "lightingPowerWM2": 6.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
   },
-  "elements": null,
+  "elements": {
+    "removed": [
+      {
+        "id": "wall-n",
+        "index": 0
+      },
+      {
+        "id": "wall-e",
+        "index": 1
+      },
+      {
+        "id": "wall-s",
+        "index": 2
+      },
+      {
+        "id": "wall-w",
+        "index": 3
+      },
+      {
+        "id": "roof",
+        "index": 4
+      },
+      {
+        "id": "floor",
+        "index": 5
+      },
+      {
+        "id": "win-s",
+        "index": 6
+      },
+      {
+        "id": "win-n",
+        "index": 7
+      },
+      {
+        "id": "door",
+        "index": 8
+      }
+    ],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "wall-n",
+          "labelEn": "North wall",
+          "labelDe": "Nordwand",
+          "kind": "Wall",
+          "zoneId": "zone-living",
+          "areaM2": 42.0,
+          "uValueWM2k": 0.2,
+          "orientationDeg": 0.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 1,
+        "row": {
+          "id": "wall-e",
+          "labelEn": "East wall",
+          "labelDe": "Ostwand",
+          "kind": "Wall",
+          "zoneId": "zone-living",
+          "areaM2": 36.0,
+          "uValueWM2k": 0.2,
+          "orientationDeg": 90.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 2,
+        "row": {
+          "id": "wall-s",
+          "labelEn": "South wall",
+          "labelDe": "Südwand",
+          "kind": "Wall",
+          "zoneId": "zone-living",
+          "areaM2": 42.0,
+          "uValueWM2k": 0.2,
+          "orientationDeg": 180.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 3,
+        "row": {
+          "id": "wall-w",
+          "labelEn": "West wall",
+          "labelDe": "Westwand",
+          "kind": "Wall",
+          "zoneId": "zone-living",
+          "areaM2": 36.0,
+          "uValueWM2k": 0.2,
+          "orientationDeg": 270.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 4,
+        "row": {
+          "id": "roof",
+          "labelEn": "Roof",
+          "labelDe": "Dach",
+          "kind": "Roof",
+          "zoneId": "zone-living",
+          "areaM2": 150.0,
+          "uValueWM2k": 0.14,
+          "orientationDeg": 180.0,
+          "tiltDeg": 35.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 5,
+        "row": {
+          "id": "floor",
+          "labelEn": "Ground floor",
+          "labelDe": "Bodenplatte",
+          "kind": "Floor",
+          "zoneId": "zone-living",
+          "areaM2": 140.0,
+          "uValueWM2k": 0.25,
+          "orientationDeg": 0.0,
+          "tiltDeg": 0.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Ground"
+        }
+      },
+      {
+        "index": 6,
+        "row": {
+          "id": "win-s",
+          "labelEn": "South windows",
+          "labelDe": "Südfenster",
+          "kind": "Window",
+          "zoneId": "zone-living",
+          "areaM2": 18.0,
+          "uValueWM2k": 0.95,
+          "orientationDeg": 180.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.55,
+          "fc": 0.7,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 7,
+        "row": {
+          "id": "win-n",
+          "labelEn": "North windows",
+          "labelDe": "Nordfenster",
+          "kind": "Window",
+          "zoneId": "zone-living",
+          "areaM2": 6.0,
+          "uValueWM2k": 0.95,
+          "orientationDeg": 0.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.55,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      },
+      {
+        "index": 8,
+        "row": {
+          "id": "door",
+          "labelEn": "Entrance door",
+          "labelDe": "Haustür",
+          "kind": "Door",
+          "zoneId": "zone-living",
+          "areaM2": 2.1,
+          "uValueWM2k": 1.3,
+          "orientationDeg": 0.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
   "heating": null,
   "dhw": null,
   "ventilation": null,
   "cooling": null,
   "lighting": null,
   "renewables": null,
-  "climate": null,
-  "climateTable": null
+  "climate": null
 }

@@ -111,7 +111,7 @@ use semio_framework_dsl_record::RecordValue;
         record.fields.insert(MESH_PACK_FIELD_PAINT_TEXTURE, semio_framework_dsl_record::FieldValue::Text(texture.clone()));
     }
     if !mesh.attributes.is_empty() || !mesh.materials.is_empty() || !mesh.textures.is_empty() || !mesh.component_references.is_empty() {
-        let mut cursor=semio_framework::MeshMetadataCursor::default();let mut text=String::from("{");
+        let mut cursor=semio_framework::mesh_io::text::MeshMetadataCursor::default();let mut text=String::from("{");
         while !cursor.step(&mesh.attributes,&mesh.materials,&mesh.textures,Some(&mesh.component_references),None,None,&mut text)? {}text.push('}');
         record.fields.insert(MESH_PACK_FIELD_METADATA,semio_framework_dsl_record::FieldValue::Bytes64(text.into_bytes()));
     }
@@ -125,7 +125,7 @@ pub struct MeshPackEncodingJob {
     cursor: usize,
     bytes: Option<Vec<u8>>,
     cancelled: bool,
-    metadata_cursor:semio_framework::MeshMetadataCursor,
+    metadata_cursor:semio_framework::mesh_io::text::MeshMetadataCursor,
     metadata_text:String,
     metadata_ready:bool,
     maximum_bytes:usize,

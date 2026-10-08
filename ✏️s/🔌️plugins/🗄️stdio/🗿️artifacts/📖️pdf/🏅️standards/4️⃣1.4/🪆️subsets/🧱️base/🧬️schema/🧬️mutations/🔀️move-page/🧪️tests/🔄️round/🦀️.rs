@@ -35,7 +35,7 @@ fn mutation() -> PdfMutation {
 fn applies_to_committed_after() {
     let base = before();
     let mut state = base.clone();
-    let outcome = crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(mutation().diff(&state), &mut state);
+    let outcome = crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_outcome(mutation().diff(&state), &mut state);
     assert!(outcome.messages().is_empty(), "move-page/round-trips-the-concrete-inverse: the committed vector is a clean applied vector");
     assert_eq!(state, expected_after(), "move-page/round-trips-the-concrete-inverse: applied state differs from the committed after-snapshot");
 }
@@ -46,11 +46,11 @@ fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
     let mut state = base.clone();
-    crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(payload.diff(&state), &mut state);
+    crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_outcome(payload.diff(&state), &mut state);
     let inverse = payload.inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "move-page/round-trips-the-concrete-inverse: a mutation that really moved the document must offer an undo");
     for step in &inverse {
-        assert!(crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(step.diff(&state), &mut state).messages().is_empty(), "move-page/round-trips-the-concrete-inverse: an inverse step was refused");
+        assert!(crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_outcome(step.diff(&state), &mut state).messages().is_empty(), "move-page/round-trips-the-concrete-inverse: an inverse step was refused");
     }
     assert_eq!(state, base, "move-page/round-trips-the-concrete-inverse: the undo did not restore the committed before-snapshot");
 }

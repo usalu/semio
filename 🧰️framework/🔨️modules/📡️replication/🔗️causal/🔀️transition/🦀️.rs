@@ -15,6 +15,10 @@
 mod retained_fold;
 pub use retained_fold::*;
 
+#[path = "📝️drafts/🦀️.rs"]
+mod input_drafts;
+pub use input_drafts::HistoryInputDrafts;
+
 use crate::ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
 
 //#region 🔖️Vocabulary
@@ -540,7 +544,7 @@ pub struct HistoryFold {
     pub changes: Vec<FoldChange>,
     pub checkpoints: Vec<FoldCheckpoint>,
     pub alternatives: Vec<FoldAlternative>,
-    pub supersessions: std::collections::BTreeMap<MutationId, EffectiveSupersession>,
+    pub supersessions: HistoryFoldIndex<MutationId, EffectiveSupersession>,
 }
 
 fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
@@ -576,7 +580,7 @@ pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &
 /// edit is visible only at the tip of the line it is tagged to (`FoldEdit::line` absent or the trunk id
 /// means the trunk).
 pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, crate::ProtocolError> {
-    HistoryFoldJob::new(|control| async move { fold_history_for_controlled(document_id, edits, transitions, excluded, head, &control).await }).finish_cold()
+    HistoryFoldJob::new(|control| async move { fold_history_for_controlled(document_id, edits, transitions, &|id| excluded.contains(id), head, &control).await }).finish_cold()
 }
 
 //#endregion 🔖️Fold

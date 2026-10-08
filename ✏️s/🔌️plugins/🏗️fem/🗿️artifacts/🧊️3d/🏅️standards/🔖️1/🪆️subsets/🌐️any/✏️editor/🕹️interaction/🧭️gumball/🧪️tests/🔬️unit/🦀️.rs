@@ -12,7 +12,7 @@ fn ids(values: &[&str]) -> Vec<String> {
 
 fn moved(doc: &Fem3dSnapshot, tick: MoveSelection) -> Fem3dSnapshot {
     let mut snapshot = doc.clone();
-    crate::standards::v1::subsets::any::schema::mutations::apply_fem3d_mutation(&mut snapshot, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
+    crate::central_apply::apply_fem3d_mutation(&mut snapshot, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
     snapshot
 }
 
@@ -184,7 +184,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let fold = |mutations: &[Fem3dMutation]| {
         let mut snapshot = base.clone();
         for mutation in mutations {
-            crate::standards::v1::subsets::any::schema::mutations::apply_fem3d_mutation(&mut snapshot, mutation).expect("the log folds");
+            crate::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("the log folds");
         }
         snapshot
     };

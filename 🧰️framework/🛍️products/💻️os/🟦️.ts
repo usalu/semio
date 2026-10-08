@@ -1,3 +1,11 @@
+import { descriptorDigestEncodingV1, descriptorDigestV1 } from "./🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts";
+import { parseDirectorySessionAuthorityJsonV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
+export { parseDirectorySessionAuthorityJsonV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
+import { canonicalDirectoryCommandV1, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseDirectoryEventV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+export { directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+export { directoryCommandRequestJson } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+export { canonicalDirectoryCommandV1, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import { parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
 import { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1, type InstalledServiceOperationV1, type InstalledServiceStatusV1, type InstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
 export { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
 export type { InstalledServiceOperationV1, InstalledServiceStatusV1, InstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
@@ -21,14 +29,14 @@ import { conflictResolutionAsU8, dialectCoordinate, fetchWithTimeout, mergePolic
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
-import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+import { type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 import { closeHubSocketV1 } from "./🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
-export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+export { type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseInferencePortClosedV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
 import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseDirectoryEventV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryCommandErrorFromStatus } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ExactWireMutationEnvelope, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope } from "@semio-tech/framework-replication";
@@ -587,8 +595,8 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * grant, checkpoint and revalidation. A non-`react` renderer target is admitted only when the
  * worker owns a live private lease that verified those exact bytes. */
 export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { directoryCommandRequestJson } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { DIRECTORY_COMMAND_OUTCOMES_V1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, canonicalDirectoryCommandV1, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandOutcomeV1, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+
+export { DIRECTORY_COMMAND_OUTCOMES_V1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, directoryCommandErrorIsTransient, parseDirectoryCommandOutcomeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 
 export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub", dataClass: "persistedShared"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
@@ -4731,7 +4739,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // `🔨️modules/📇️directory/🟦️.ts`; this region only imports/re-exports and, per this
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
 // `🏪️store/👷️worker/🟦️.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
-import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🟦️.ts";
+import { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
 
 
 export type {
@@ -4787,7 +4795,7 @@ export type {
   SpaceView,
   UserView,
 } from "./🔨️modules/📇️directory/🟦️.ts";
-export { decodeServerFrame, descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, encodeServerFrame, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 };
+export { decodeServerFrame, emptyDirectoryReadModel, encodeServerFrame, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 };
 
 if (import.meta.vitest) {
   const { registerTests3 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
@@ -5731,54 +5739,7 @@ if (import.meta.vitest) {
 /** 🔐️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the browser-facing hub
  * sign-in contract (`POST /auth/sessions`, per that ticket's `📓️au1-hub-auth-sessions-and-rate-limit.md`
  * §1) and the end-user spaces surface contract, both pure and transport-free. Appended only. */
-export {
-  HUB_AUTH_ERROR_SCHEMA_V1,
-  HUB_CONNECTION_BOOK_MAX_ENTRIES,
-  HUB_CONNECTION_BOOK_SCHEMA_V1,
-  HUB_CONNECTION_BOOK_STORAGE_KEY_V1,
-  HUB_SESSION_MINT_PATH_V1,
-  HUB_SESSION_MINT_REQUEST_MAX_BYTES,
-  HUB_SESSION_MINT_RESPONSE_MAX_BYTES,
-  HUB_SESSION_ME_PATH_V1,
-  HUB_SESSION_SIGN_OUT_PATH_V1,
-  HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES,
-  HUB_SIGN_IN_EMAIL_MAX_BYTES,
-  HUB_SIGN_IN_EMAIL_MIN_BYTES,
-  HUB_SIGN_IN_PASSWORD_MAX_BYTES,
-  HUB_SIGN_IN_PASSWORD_MIN_BYTES,
-  HUB_SIGN_IN_RATE_LIMIT_MAX_SECONDS,
-  HUB_SIGN_IN_REQUEST_SCHEMA_V1,
-  HUB_SIGN_IN_TEXT_V1,
-  HUB_SIGN_IN_TIMEOUT_MS,
-  LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1,
-  hubAuthErrorRetryAfterSecondsV1,
-  hubConnectionIdForOriginV1,
-  hubDeviceInstanceIdV1,
-  hubRetryAfterSecondsV1,
-  hubSessionAllowsLocalWorkV1,
-  hubSessionInitialStateV1,
-  hubSessionMintRequestJsonV1,
-  hubSessionNeedsReauthenticationV1,
-  hubSignInErrorFromStatusV1,
-  hubSignInErrorTextV1,
-  hubSignInTextV1,
-  localBootstrapHubConnectionV1,
-  parseHubConnectionBookV1,
-  parseHubOriginV1,
-  parseHubSessionMintResultV1,
-  readHubConnectionBookV1,
-  reduceHubSessionV1,
-  removeHubConnectionV1,
-  runHubSignInV1,
-  runHubSignOutV1,
-  selectHubConnectionV1,
-  selectedHubConnectionV1,
-  serializeHubConnectionBookV1,
-  upsertHubConnectionV1,
-  validHubSignInEmailV1,
-  validHubSignInPasswordV1,
-  writeHubConnectionBookV1,
-} from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
+export { HUB_AUTH_ERROR_SCHEMA_V1, HUB_CONNECTION_BOOK_MAX_ENTRIES, HUB_CONNECTION_BOOK_SCHEMA_V1, HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HUB_SESSION_MINT_PATH_V1, HUB_SESSION_MINT_REQUEST_MAX_BYTES, HUB_SESSION_MINT_RESPONSE_MAX_BYTES, HUB_SESSION_ME_PATH_V1, HUB_SESSION_SIGN_OUT_PATH_V1, HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES, HUB_SIGN_IN_EMAIL_MAX_BYTES, HUB_SIGN_IN_EMAIL_MIN_BYTES, HUB_SIGN_IN_PASSWORD_MAX_BYTES, HUB_SIGN_IN_PASSWORD_MIN_BYTES, HUB_SIGN_IN_RATE_LIMIT_MAX_SECONDS, HUB_SIGN_IN_REQUEST_SCHEMA_V1, HUB_SIGN_IN_TEXT_V1, HUB_SIGN_IN_TIMEOUT_MS, LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1, hubAuthErrorRetryAfterSecondsV1, hubConnectionIdForOriginV1, hubDeviceInstanceIdV1, hubRetryAfterSecondsV1, hubSessionAllowsLocalWorkV1, hubSessionInitialStateV1, hubSessionMintRequestJsonV1, hubSessionNeedsReauthenticationV1, hubSignInErrorFromStatusV1, hubSignInErrorTextV1, hubSignInTextV1, localBootstrapHubConnectionV1, parseHubConnectionBookV1, parseHubOriginV1, parseHubSessionMintResultV1, readHubConnectionBookV1, reduceHubSessionV1, removeHubConnectionV1, runHubSignInV1, runHubSignOutV1, selectHubConnectionV1, selectedHubConnectionV1, serializeHubConnectionBookV1, upsertHubConnectionV1, validHubSignInEmailV1, validHubSignInPasswordV1, writeHubConnectionBookV1 } from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
 export type {
   HubConnectionBookV1,
   HubConnectionKindV1,
@@ -5796,27 +5757,7 @@ export type {
   HubSignInResponseV1,
   HubSignInTransportV1,
 } from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
-export {
-  DIRECTORY_COMMANDS_PATH_V1,
-  DIRECTORY_SPACES_PATH_V1,
-  INVITE_LINK_FRAGMENT_V1,
-  INVITE_TOKEN_MAX_BYTES,
-  INVITE_TTL_CHOICES_SECS_V1,
-  SPACE_NAME_MAX_BYTES,
-  archiveSpaceCommandV1,
-  createInviteCommandV1,
-  createSpaceCommandV1,
-  filterSpaceRowsV1,
-  inviteLinkV1,
-  inviteRedeemPathV1,
-  inviteRedemptionErrorFromStatusV1,
-  parseInviteTokenV1,
-  spaceBrowserRowsUsableV1,
-  spaceMemberPresenceV1,
-  spaceRowInvitableV1,
-  spaceRowWritableV1,
-  spaceRowsV1,
-} from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+export { DIRECTORY_COMMANDS_PATH_V1, DIRECTORY_SPACES_PATH_V1, INVITE_LINK_FRAGMENT_V1, INVITE_TOKEN_MAX_BYTES, INVITE_TTL_CHOICES_SECS_V1, SPACE_NAME_MAX_BYTES, archiveSpaceCommandV1, createInviteCommandV1, createSpaceCommandV1, filterSpaceRowsV1, inviteLinkV1, inviteRedeemPathV1, inviteRedemptionErrorFromStatusV1, parseInviteTokenV1, spaceBrowserRowsUsableV1, spaceMemberPresenceV1, spaceRowInvitableV1, spaceRowWritableV1, spaceRowsV1 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 export type { InviteRedemptionErrorCodeV1, SpaceAccessV1, SpaceBrowserPhaseV1, SpaceMemberPresenceV1, SpaceRowV1 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 //#endregion 🔖️HubSignIn
 
@@ -5825,19 +5766,6 @@ export type { InviteRedemptionErrorCodeV1, SpaceAccessV1, SpaceBrowserPhaseV1, S
  * first-run walkthrough contract: one `IntroductionDefinition` covering sign in → create or join a
  * space → invite, in both owned locales, plus the local-only seen flag. Pure, transport-free, and
  * state-independent apart from the entry step. Appended only. */
-export {
-  HUB_FIRST_RUN_ANCHORS_V1,
-  HUB_FIRST_RUN_SEEN_VALUE_V1,
-  HUB_FIRST_RUN_STAGES_V1,
-  HUB_FIRST_RUN_STORAGE_KEY_V1,
-  HUB_FIRST_RUN_TEXT_V1,
-  hubFirstRunIntroductionV1,
-  hubFirstRunSeenV1,
-  hubFirstRunShouldStartV1,
-  hubFirstRunStageV1,
-  hubFirstRunStepIndexV1,
-  hubFirstRunTextV1,
-  markHubFirstRunSeenV1,
-} from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
+export { HUB_FIRST_RUN_ANCHORS_V1, HUB_FIRST_RUN_SEEN_VALUE_V1, HUB_FIRST_RUN_STAGES_V1, HUB_FIRST_RUN_STORAGE_KEY_V1, HUB_FIRST_RUN_TEXT_V1, hubFirstRunIntroductionV1, hubFirstRunSeenV1, hubFirstRunShouldStartV1, hubFirstRunStageV1, hubFirstRunStepIndexV1, hubFirstRunTextV1, markHubFirstRunSeenV1 } from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
 export type { HubFirstRunLocaleV1, HubFirstRunStageV1, HubFirstRunStateV1 } from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
 //#endregion 🔖️HubFirstRun

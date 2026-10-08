@@ -1,0 +1,77 @@
+{
+  "status": "partial-current-source-only",
+  "logicalActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "b1a256e1b8f98ab2b75a69928315f1bca60c06bad0f35a23bddc4f91a4af0ab3",
+      "before": "    pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {\n        self.owner.as_deref()?.downcast_ref::<T>()\n    }\n",
+      "after": "    pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {\n        self.owner.as_deref()?.downcast_ref::<T>()\n    }\n\n    fn admit_retirement<T: Send + Sync + 'static>(&mut self, registry: &Arc<SnapshotReadLeaseRegistry>, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<T>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), ValueError> {\n        let lease = self.lease.as_ref().filter(|lease| Arc::ptr_eq(&lease.registry, registry)).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, \"read admission requires its original registry\"))?;\n        if self.owner.as_deref().is_none_or(|owner| !owner.is::<T>()) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, \"read admission requires its original concrete owner\")); }\n        let mut state = registry.state.try_lock().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, \"read admission registry is busy\"))?;\n        let index = lease.index as usize;\n        let mask = 1 << (index % 64);\n        if state.occupied[index / 64] & mask == 0 || registry.lease_generations[index].load(std::sync::atomic::Ordering::Acquire) != lease.generation { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, \"read admission generation is stale\")); }\n        let slot = unsafe { state.slots[index].assume_init_ref() };\n        if slot.generation != lease.generation || !Arc::ptr_eq(&slot.owner, self.owner.as_ref().expect(\"validated read owner\")) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, \"read admission must preserve its exact original slot\")); }\n        let original = self.owner.take().expect(\"validated original read\").downcast::<T>().expect(\"validated original type\");\n        let admitted = match ReturnedSnapshotReadRetirement::admit(original, Arc::clone(factory), grant) {\n            Ok(admitted) => admitted,\n            Err((error, original, alias)) => { self.owner = Some(original); drop(alias); return Err(error); }\n        };\n        let slot = unsafe { state.slots[index].assume_init_read() };\n        state.occupied[index / 64] &= !mask;\n        let write = (state.free_read + state.free_len) % SNAPSHOT_READ_LEASE_CAPACITY;\n        state.free[write] = index as u16;\n        state.free_len += 1;\n        registry.lease_generations[index].store(0, std::sync::atomic::Ordering::Release);\n        drop(slot);\n        self.lease.take();\n        Ok(admitted)\n    }\n",
+      "occurrences": 1,
+      "afterSha256": "20dacebd553d9df47e515cd7df943c7b78823fb972b8ad8fbffea9d74db0cbd4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "20dacebd553d9df47e515cd7df943c7b78823fb972b8ad8fbffea9d74db0cbd4",
+      "before": "    fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {\n        let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {\n            return Err(SnapshotRetirementRejected { snapshot, reason: \"child snapshot owned-value retirement factory is not installed\".into() });\n        };\n        let snapshot =\n            snapshot.into_typed::<P>(&self.snapshot_read_leases).map_err(|snapshot| SnapshotRetirementRejected { snapshot, reason: \"child snapshot retirement type, lease registry, or generation does not match its exact member\".into() })?;\n        Ok(Box::new(ReturnedSnapshotReadRetirement::new(snapshot, factory)))\n    }",
+      "after": "    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {\n        let Some(read) = snapshot.as_mut() else { return Ok((None, Default::default())); };\n        if grant.maximum_items == 0 { return Ok((None, Default::default())); }\n        let factory = self.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, \"read admission requires its installed original factory\"))?;\n        let admitted = read.admit_retirement::<P>(&self.snapshot_read_leases, factory, grant)?;\n        snapshot.take();\n        Ok((Some(admitted.0), admitted.1))\n    }",
+      "occurrences": 1,
+      "afterSha256": "5e31dad5977d0506a10bee34af3e0b8d8188d13b8fbd1a591259611a1f20f931"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "5e31dad5977d0506a10bee34af3e0b8d8188d13b8fbd1a591259611a1f20f931",
+      "before": "    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, SnapshotRetirementRejected> {\n        let reject = |snapshot, reason: &str| Err(SnapshotRetirementRejected { snapshot, reason: reason.into() });",
+      "after": "    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> {\n        let reject = |snapshot, reason: &'static str| Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason), snapshot));",
+      "occurrences": 1,
+      "afterSha256": "470c361d9229cab7e024d59a591a5ecce9b7ff94bd0d8ebe4d551c35cd248d7e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "470c361d9229cab7e024d59a591a5ecce9b7ff94bd0d8ebe4d551c35cd248d7e",
+      "before": "Ok(owner) => { drop(owner); Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ErasedSnapshotRead::LEASE_ALLOCATION_BYTES }) }",
+      "after": "Ok(owner) => { drop(owner); Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: ErasedSnapshotRead::LEASE_ALLOCATION_BYTES, ..Default::default() })) }",
+      "occurrences": 1,
+      "afterSha256": "6454817516a00e5fd3fb9ee65026ef33d774388e6de07b5b84a676dd9731aa4c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "6454817516a00e5fd3fb9ee65026ef33d774388e6de07b5b84a676dd9731aa4c",
+      "before": "Result<SnapshotRetirementStep, SnapshotRetirementRejected>",
+      "after": "Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)>",
+      "occurrences": 2,
+      "afterSha256": "93d88afb7ee05073d571b5fba28319f3cf257f697c079d8ff463d0f87e162f73"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "93d88afb7ee05073d571b5fba28319f3cf257f697c079d8ff463d0f87e162f73",
+      "before": "fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>;",
+      "after": "fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;",
+      "occurrences": 1,
+      "afterSha256": "cd1b442d9229dc3adb144196d5e5b590ed42c81f7cb29319ada8549f29af5a80"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "cd1b442d9229dc3adb144196d5e5b590ed42c81f7cb29319ada8549f29af5a80",
+      "before": "fn retire_snapshot_read_erased(&mut self, _snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>",
+      "after": "fn retire_snapshot_read_erased(&mut self, _snapshot: &mut Option<ErasedSnapshotRead>, _grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>",
+      "occurrences": 1,
+      "afterSha256": "d8d222430d5f672aa9bef10515571cac54ea1839b728ce9d5794e2199e158fcf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "d8d222430d5f672aa9bef10515571cac54ea1839b728ce9d5794e2199e158fcf",
+      "before": "Result<$crate::os_store::SnapshotRetirementStep, $crate::os_store::SnapshotRetirementRejected>",
+      "after": "Result<$crate::os_store::RetainedCloneStep, (::semio_framework_value::ValueError, $crate::os_store::ErasedSnapshotRead)>",
+      "occurrences": 1,
+      "afterSha256": "c1e02e0658a9b5cb4847d4fbd3f4f16b3d452d31abf7342b7042929d4d5ad0d3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "c1e02e0658a9b5cb4847d4fbd3f4f16b3d452d31abf7342b7042929d4d5ad0d3",
+      "before": "            fn retire_snapshot_read_erased(&mut self, snapshot: $crate::os_store::ErasedSnapshotRead) -> Result<Box<dyn $crate::os_store::ErasedSnapshotRetirement>, $crate::os_store::SnapshotRetirementRejected> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m.as_mut(), snapshot)),+ }\n            }",
+      "after": "            fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<$crate::os_store::ErasedSnapshotRead>, grant: $crate::os_store::RetainedCloneGrant) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m.as_mut(), snapshot, grant)),+ }\n            }",
+      "occurrences": 1,
+      "afterSha256": "ef3244756ec8785345cd97bce44342193767d25ba90f6bcc91d50ba03a16b6f4"
+    }
+  ]
+}

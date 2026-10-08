@@ -1,36 +1,151 @@
-# 🔺️ wfc3d sparse structural delta — one scalar option per scalar field, one removed/upserted pair
-# per id-keyed collection. `*Upserted` carries the member's insertion index, which is what makes an
-# inverse position-exact.
+# 🔺️ wfc3d diff — scalars are optional absolutes; every list is a positional list delta: removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
+
+type Wfc3dSlotPatch {
+  x: Float
+  y: Float
+  z: Float
+  width: Float
+  height: Float
+  depth: Float
+  pinnedTileId: String
+}
+
+type Wfc3dSlotsRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc3dSlotsInsertion {
+  index: Int!
+  row: Slot3d!
+}
+
+type Wfc3dSlotsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc3dSlotsModification {
+  id: String!
+  patch: Wfc3dSlotPatch!
+}
+
+type Wfc3dSlotsDelta {
+  removed: [Wfc3dSlotsRemoval!]!
+  inserted: [Wfc3dSlotsInsertion!]!
+  moved: [Wfc3dSlotsRelocation!]!
+  modified: [Wfc3dSlotsModification!]!
+}
+
+type Wfc3dEdgePatch {
+  fromSlotId: String
+  toSlotId: String
+  relation: String
+}
+
+type Wfc3dEdgesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc3dEdgesInsertion {
+  index: Int!
+  row: SlotEdge!
+}
+
+type Wfc3dEdgesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc3dEdgesModification {
+  id: String!
+  patch: Wfc3dEdgePatch!
+}
+
+type Wfc3dEdgesDelta {
+  removed: [Wfc3dEdgesRemoval!]!
+  inserted: [Wfc3dEdgesInsertion!]!
+  moved: [Wfc3dEdgesRelocation!]!
+  modified: [Wfc3dEdgesModification!]!
+}
+
+type Wfc3dTilePatch {
+  weight: Float
+  media: TileMedia3d
+  label: String
+}
+
+type Wfc3dTilesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc3dTilesInsertion {
+  index: Int!
+  row: Tile!
+}
+
+type Wfc3dTilesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc3dTilesModification {
+  id: String!
+  patch: Wfc3dTilePatch!
+}
+
+type Wfc3dTilesDelta {
+  removed: [Wfc3dTilesRemoval!]!
+  inserted: [Wfc3dTilesInsertion!]!
+  moved: [Wfc3dTilesRelocation!]!
+  modified: [Wfc3dTilesModification!]!
+}
+
+type Wfc3dRulePatch {
+  tileAId: String
+  tileBId: String
+  allowed: Boolean
+  relation: String
+}
+
+type Wfc3dRulesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc3dRulesInsertion {
+  index: Int!
+  row: GraphRule!
+}
+
+type Wfc3dRulesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc3dRulesModification {
+  id: String!
+  patch: Wfc3dRulePatch!
+}
+
+type Wfc3dRulesDelta {
+  removed: [Wfc3dRulesRemoval!]!
+  inserted: [Wfc3dRulesInsertion!]!
+  moved: [Wfc3dRulesRelocation!]!
+  modified: [Wfc3dRulesModification!]!
+}
 
 type Wfc3dDiff {
   schema: String @state(class: ARTIFACT)
   seed: Float @state(class: ARTIFACT)
-  slotsRemoved: [String!]! @state(class: ARTIFACT)
-  slotsUpserted: [Slot3dUpsert!]! @state(class: ARTIFACT)
-  edgesRemoved: [String!]! @state(class: ARTIFACT)
-  edgesUpserted: [SlotEdgeUpsert!]! @state(class: ARTIFACT)
-  tilesRemoved: [String!]! @state(class: ARTIFACT)
-  tilesUpserted: [TileUpsert!]! @state(class: ARTIFACT)
-  rulesRemoved: [String!]! @state(class: ARTIFACT)
-  rulesUpserted: [GraphRuleUpsert!]! @state(class: ARTIFACT)
-}
-
-type Slot3dUpsert {
-  index: Int!
-  value: Slot3d!
-}
-
-type SlotEdgeUpsert {
-  index: Int!
-  value: SlotEdge!
-}
-
-type TileUpsert {
-  index: Int!
-  value: Tile!
-}
-
-type GraphRuleUpsert {
-  index: Int!
-  value: GraphRule!
+  slots: Wfc3dSlotsDelta! @state(class: ARTIFACT)
+  edges: Wfc3dEdgesDelta! @state(class: ARTIFACT)
+  tiles: Wfc3dTilesDelta! @state(class: ARTIFACT)
+  rules: Wfc3dRulesDelta! @state(class: ARTIFACT)
 }

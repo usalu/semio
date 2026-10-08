@@ -30,11 +30,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for DragElem
             return protocol::MutationOutcome::fatal("mutation.invariant", "a drag offset must be finite", self.targets.clone());
         }
         let [dx, dy, dz] = self.offset;
-        relative_placement_diff(&self.targets, self.identity(), base, |placement| {
-            placement.translation.x += dx;
-            placement.translation.y += dy;
-            placement.translation.z += dz;
-        })
+        relative_placement_diff(&self.targets, self.identity(), base, |placement| SemioTransform { translation: SemioPoint3 { x: placement.translation.x + dx, y: placement.translation.y + dy, z: placement.translation.z + dz }, ..placement })
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.identity() || self.offset.iter().any(|component| !component.is_finite()), base))

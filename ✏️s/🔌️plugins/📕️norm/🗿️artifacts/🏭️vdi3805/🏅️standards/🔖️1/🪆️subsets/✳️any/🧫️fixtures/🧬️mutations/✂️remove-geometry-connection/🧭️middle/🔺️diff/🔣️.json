@@ -5,7 +5,6 @@
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "indexEntries": null,
   "geometry": {
     "added": [],
     "removed": [],
@@ -15,11 +14,15 @@
         "bbox": null,
         "parameters": null,
         "connections": {
-          "added": [],
           "removed": [
-            "out"
+            {
+              "id": "out",
+              "index": 1
+            }
           ],
-          "order": null
+          "inserted": [],
+          "moved": [],
+          "modified": []
         }
       }
     ]

@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "beforeSha256": "6f4637ee71b336fe5e31abf4ae2d5a245f3ddd44b563a14cfed2fb30c0a973e5",
+  "before": "durable_group::ArtifactStoreDurableGroupRootV1<P>",
+  "after": "durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>",
+  "occurrences": 2
+}

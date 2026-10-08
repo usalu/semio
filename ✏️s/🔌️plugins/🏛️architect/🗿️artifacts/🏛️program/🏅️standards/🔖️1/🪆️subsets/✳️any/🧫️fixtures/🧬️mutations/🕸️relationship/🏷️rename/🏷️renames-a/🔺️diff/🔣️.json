@@ -9,9 +9,10 @@
   "elements": null,
   "quantities": null,
   "relationships": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "relationship-a",
         "patch": {
@@ -49,8 +50,7 @@
           "separationRequirements": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "adjacencies": null,
   "processes": null,

@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "bodyBase64",
+          "expected",
+          "budgetMs",
+          "maximumBytes",
+          "maximumWork",
+          "cancelled"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "unicode",
+              "journal",
+              "cancelled",
+              "deadline",
+              "byte-capacity",
+              "work-capacity"
+            ]
+          },
+          "bodyBase64": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "expected": {
+            "enum": [
+              "round-trip",
+              "cancelled",
+              "deadline",
+              "byte-capacity",
+              "work-capacity"
+            ]
+          },
+          "budgetMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "maximumBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1048576
+          },
+          "maximumWork": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "cancelled": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

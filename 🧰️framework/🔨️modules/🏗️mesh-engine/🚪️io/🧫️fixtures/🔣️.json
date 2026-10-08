@@ -1,0 +1,67 @@
+{
+  "rootForbidden": [
+    "ObjSourceCursor",
+    "PolygonSourcePreparation",
+    "MeshMetadataCursor",
+    "mesh_to_obj",
+    "mesh_from_obj",
+    "mesh_to_glb",
+    "mesh_from_glb",
+    "mesh_to_stl",
+    "mesh_from_stl",
+    "MeshExporter",
+    "MeshImporter",
+    "IoError"
+  ],
+  "owners": {
+    "🚪️io/📝️text/🦀️.rs": [
+      "ObjSourceCursor",
+      "MeshMetadataCursor",
+      "PolygonSourcePreparation",
+      "parse_polygon_mesh_source",
+      "encode_polygon_mesh_source",
+      "polygon_mesh_source_from_obj",
+      "mesh_to_obj",
+      "mesh_from_obj"
+    ],
+    "🚪️io/💾️binary/🦀️.rs": [
+      "mesh_to_glb",
+      "mesh_from_glb",
+      "mesh_to_stl",
+      "mesh_from_stl"
+    ],
+    "🚪️io/🦀️.rs": [
+      "MeshExporter",
+      "MeshImporter",
+      "IoError"
+    ]
+  },
+  "source": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ]
+  },
+  "obj": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n",
+  "independentOracle": "serde_json + gltf"
+}

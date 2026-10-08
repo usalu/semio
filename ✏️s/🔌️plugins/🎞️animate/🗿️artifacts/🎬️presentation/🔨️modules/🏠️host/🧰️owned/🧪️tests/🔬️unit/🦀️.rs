@@ -3,7 +3,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{create_tile,replace_tiles};
+use crate::standards::v1::subsets::any::schema::mutations::create_tile;
 
 use store::{os_store::test_support, ArtifactCommand};
 
@@ -152,7 +152,7 @@ async fn retained_presentation_envelope_materializes_populated_history_in_order(
     let snapshot = empty_presentation_snapshot();
     let pack = <PresentationSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
     let hex = pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let mutation_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })));
+    let mutation_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&PresentationMutation::ResizeSourceFrame(crate::standards::v1::subsets::any::schema::mutations::resize_source_frame::ResizeSourceFrame { new_frame: crate::FigureTileFrame { x: 0.1, y: 0.1, width: 0.5, height: 0.5 } })));
     let mutation = semio_framework_pack_json::to_string(&mutation_value);
     let json = format!(
         "{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-history\",\"vcs\":{{\"initialPack\":\"{hex}\",\"edits\":[{{\"id\":\"edit-1\",\"actor\":\"presentation-fixture\",\"forwards\":[{mutation}],\"inverse\":[],\"sequenceNumber\":1,\"startedAt\":\"1\"}}],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}"

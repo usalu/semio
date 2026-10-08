@@ -2248,11 +2248,6 @@ impl ArtifactEditor for CadPlayApp {
         Some(cad_io())
     }
 
-    // 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
-    // document replace has NO mutation-enum representative (`SetSnapshot` is banned outright) — the
-    // `document:in` branch below builds a `reset_document_effect` directly instead of delegating to
-    // this hook.
-
     /// 🎞️ `geometry:in` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): accepts incoming mesh/brep
     /// geometry from any upstream 3D producer and inserts it as one `insert-element` on the Shape pane's composed model
     /// child, through the same brep kernel every other import path shares (design §20.15). Falls through to the default

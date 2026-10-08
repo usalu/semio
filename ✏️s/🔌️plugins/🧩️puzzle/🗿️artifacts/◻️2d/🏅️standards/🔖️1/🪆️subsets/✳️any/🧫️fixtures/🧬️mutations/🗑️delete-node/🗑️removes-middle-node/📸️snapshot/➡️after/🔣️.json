@@ -1,0 +1,150 @@
+{
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "edges": [
+    {
+      "edgeKind": "edge-kind-a",
+      "gap": 1.0,
+      "id": "edge-4",
+      "rise": 0.0,
+      "rotation": 0.0,
+      "shift": 0.0,
+      "source": "handle-spare",
+      "sourceTip": "none",
+      "target": "handle-c2",
+      "targetTip": "arrow",
+      "tilt": 0.0,
+      "turn": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "edgeKind": "edge-kind-a",
+      "gap": 1.0,
+      "id": "edge-3",
+      "rise": 0.0,
+      "rotation": 0.0,
+      "shift": 0.0,
+      "source": "handle-c1",
+      "sourceTip": "none",
+      "target": "handle-1",
+      "targetTip": "arrow",
+      "tilt": 0.0,
+      "turn": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    }
+  ],
+  "meta": {
+    "kindCompatibility": [
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "handle-kind-a",
+        "specificity": "handle",
+        "target": "handle-kind-b"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "handle-kind-b",
+        "specificity": "handle",
+        "target": "handle-kind-c"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "handle-kind-c",
+        "specificity": "handle",
+        "target": "handle-kind-d"
+      }
+    ],
+    "manifestId": "manifest-alpha"
+  },
+  "nodes": [
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 0.0,
+          "handleKind": "handle-kind-a",
+          "id": "handle-1"
+        },
+        {
+          "angle": 1.5,
+          "handleKind": "handle-kind-a",
+          "id": "handle-spare"
+        },
+        {
+          "angle": 0.0,
+          "handleKind": "handle-kind-a",
+          "id": "handle-3"
+        }
+      ],
+      "iconKind": "icon-alpha",
+      "id": "node-a",
+      "nodeKind": "node-kind-a",
+      "radius": 10.0,
+      "shape": "circle",
+      "text": "Alpha",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 0.0,
+          "handleKind": "handle-kind-a",
+          "id": "handle-c1"
+        },
+        {
+          "angle": 0.0,
+          "handleKind": "handle-kind-a",
+          "id": "handle-c2"
+        }
+      ],
+      "iconKind": "icon-alpha",
+      "id": "node-c",
+      "nodeKind": "node-kind-a",
+      "radius": 10.0,
+      "shape": "circle",
+      "text": "Alpha",
+      "x": 80.0,
+      "y": 0.0
+    }
+  ],
+  "schema": "board.ports.directed.v1",
+  "targetRegions": [
+    {
+      "height": 60.5,
+      "hidden": false,
+      "id": "region-1",
+      "locked": false,
+      "width": 80.5,
+      "x": -12.5,
+      "y": -12.5
+    },
+    {
+      "height": 60.5,
+      "hidden": false,
+      "id": "region-2",
+      "locked": false,
+      "width": 80.5,
+      "x": 10.5,
+      "y": -12.5
+    },
+    {
+      "height": 60.5,
+      "hidden": false,
+      "id": "region-3",
+      "locked": false,
+      "width": 80.5,
+      "x": 30.5,
+      "y": -12.5
+    }
+  ]
+}

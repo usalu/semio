@@ -202,7 +202,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`) and the `dsl` wire keyword (the kebab-case `#[dsl(key = ..)]` the codec uses) —
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum SourcingCurationCommand for CurationSnapshot, SourcingMutation, SourcingCurationConfig, SourcingCurationConfigMutation {
-        "setDocument" as "document-json" => set_artifact_json::SetArtifactJson,
+        "loadDocumentJson" as "load-document-json" => load_document_json::LoadDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "stockFromCatalogue" as "stock-from-catalogue" => stock_from_catalogue::StockFromCatalogue,
         "curationAdd" as "curation-add" => curation_add::CurationAdd,
@@ -224,7 +224,7 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::sourcing::commands::set_contributions;
 use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool};
-use crate::editor::sourcing::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
+use crate::editor::sourcing::commands::{set_active_example, load_document_json, stock_from_catalogue};
 use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, set_grid_instance_display, sort_table};
 
 /// 🎯️ Host action id + JSON args → the closed `SourcingCurationCommand` vocabulary — the production
@@ -263,7 +263,7 @@ fn sourcing_curation_command_from_action(action: &str, args: Option<&semio_frame
     };
     let object_id = || str_field("objectId").unwrap_or_default();
     Ok(match action {
-        "setDocument" => SourcingCurationCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: json_field("json") }),
+        "loadDocumentJson" => SourcingCurationCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: json_field("json") }),
         "setActiveExample" => SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
         "stockFromCatalogue" => SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}),
         "curationAdd" => SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id() }),
@@ -298,7 +298,7 @@ pub struct SourcingCurationApp;
 /// whole-document replacements) could not be invoked from the browser at all.
 const SOURCING_CURATION_BOUNDED_TOOL_IDS: &[&str] = &[
     "setActiveExample",
-    "setDocument",
+    "loadDocumentJson",
     "stockFromCatalogue",
     "curationAdd",
     "curationSetCount",
@@ -415,12 +415,12 @@ impl ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
     const TOOL_IDS: &'static [&'static str] = SOURCING_CURATION_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
     /// 🛤️ The lane each tool publishes on. `HostOnly` is a whole-document replacement carried as an
-    /// `Effect::LoadDocument` rather than a store edit (`setDocument`/`stockFromCatalogue` share
+    /// `Effect::LoadDocument` rather than a store edit (`loadDocumentJson`/`stockFromCatalogue` share
     /// `setActiveExample`'s `reset_document_effect` path); `Artifact` is the curated-selection
     /// vocabulary, admitted by `SourcingCurationArtifactPreparationFactory`; `Config` is view state.
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "setDocument", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "stockFromCatalogue", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "curationAdd", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "curationSetCount", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -936,7 +936,7 @@ impl ArtifactEditor for SourcingCurationApp {
         factory_type: SourcingCurationBoundedCommandJobFactory,
         tools: {
             "setActiveExample" => sourcing_curation_bounded_contract(),
-            "setDocument" => sourcing_curation_bounded_contract(),
+            "loadDocumentJson" => sourcing_curation_bounded_contract(),
             "stockFromCatalogue" => sourcing_curation_bounded_contract(),
             "curationAdd" => sourcing_curation_bounded_contract(),
             "curationSetCount" => sourcing_curation_bounded_contract(),
@@ -1021,11 +1021,8 @@ impl ArtifactEditor for SourcingCurationApp {
         }
     }
 
-    /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (the former whole-
-    /// snapshot-replace variant — see `📓️taxonomy.md`'s forbidden vocabulary), so this app does NOT
-    /// override `whole_document_operation`
-    /// (stays at the trait's own `None` default) and instead overrides `import_media` below to build a
-    /// `Effect::LoadDocument` via `reset_document_effect`, outside undo history.
+    /// 🧬️ Whole-document replace has no mutation: `import_media` builds a `Effect::LoadDocument` via `reset_document_effect`,
+    /// outside undo history.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurationSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "artifact:in" {
             return Err(MediaError::NotImplemented);
@@ -1115,7 +1112,7 @@ impl ArtifactEditor for SourcingCurationApp {
 /// example, bulk catalogue restock). Per `📓️taxonomy.md`, the former whole-snapshot-replace variant
 /// is banned outright with NO replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
 /// all. Every former "replace the whole document" gesture in this app (`import_media`'s
-/// `"artifact:in"` above, `commands::document::{set_active_example, set_artifact_json,
+/// `"artifact:in"` above, `commands::document::{set_active_example, load_document_json,
 /// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(document: &CurationSnapshot) -> semio_framework::kernel::Effect {
@@ -1227,8 +1224,8 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
-            .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
-            .action_destructive("setDocument")
+            .action_with(hidden_operation("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden")))
+            .action_destructive("loadDocumentJson")
             .action_with(hidden_operation("curationAdd", LocalizedLabel::native("Curation Add", "Kuratierung hinzufügen")))
             // 🔧️ Palette-reachable Artifact-lane mutation: the curated-table stepper and DnD arms stay
             // window chrome, but outcome 1 needs one Actions-rail row that journals a store edit
@@ -1269,7 +1266,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(sourcing_curation_io())
-            .action_interactive_job("setDocument", InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadDocumentJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("stockFromCatalogue", InteractiveJobClassification::Migrated)
             .action_interactive_job("curationAdd", InteractiveJobClassification::Migrated)
@@ -1297,7 +1294,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             )
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole curation with one of the bundled example stocks or the empty curation, by example id.", "Ersetzt die gesamte Kuratierung durch einen der mitgelieferten Beispielbestände oder die leere Kuratierung, anhand der Beispiel-Id."))
             .action_describe("stockFromCatalogue", LocalizedLabel::native("Adds every object kind the installed sourcing modules (such as beams, slabs and windows) offer to the stock, keeping the existing stock and curated counts.", "Fügt dem Bestand alle Objektarten hinzu, die die installierten Beschaffungsmodule (etwa Träger, Decken und Fenster) anbieten; vorhandener Bestand und kuratierte Anzahlen bleiben erhalten."))
-            .action_describe("setDocument", LocalizedLabel::native("Replaces the whole curation with one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.", "Ersetzt die gesamte Kuratierung durch eine aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."))
+            .action_describe("loadDocumentJson", LocalizedLabel::native("Loads the whole curation, outside history, from one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.", "Lädt die gesamte Kuratierung außerhalb des Verlaufs aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."))
             .action_describe("curationAdd", LocalizedLabel::native("Adds one more of the given stock object to the curated selection, at most up to its available quantity.", "Nimmt ein weiteres Exemplar des angegebenen Bestandsobjekts in die Kuratierung auf, höchstens bis zur verfügbaren Menge."))
             .action_describe("curationSetCount", LocalizedLabel::native("Sets how many of one stock object are curated, by a relative delta or an absolute value clamped to its availability; zero removes it from the curation.", "Legt fest, wie viele Exemplare eines Bestandsobjekts kuratiert sind, per relativer Änderung oder absolutem Wert bis zur Verfügbarkeit; null entfernt es aus der Kuratierung."))
             .action_describe("curationRemove", LocalizedLabel::native("Removes one stock object from the curated selection entirely; the stock itself is unchanged.", "Entfernt ein Bestandsobjekt vollständig aus der Kuratierung; der Bestand selbst bleibt unverändert."))

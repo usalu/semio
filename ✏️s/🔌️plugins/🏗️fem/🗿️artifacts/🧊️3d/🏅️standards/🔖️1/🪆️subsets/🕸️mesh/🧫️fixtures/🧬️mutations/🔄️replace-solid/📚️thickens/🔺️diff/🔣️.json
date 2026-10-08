@@ -4,12 +4,13 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "slab",
-        "item": {
+        "patch": {
           "id": "slab",
           "name": "Roof slab",
           "outline": [
@@ -39,8 +40,7 @@
           "axis": "z"
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "supports": null,
   "loadCases": null,

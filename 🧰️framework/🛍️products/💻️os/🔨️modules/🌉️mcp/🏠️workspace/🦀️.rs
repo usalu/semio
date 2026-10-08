@@ -265,10 +265,6 @@ impl store::DiffAlgebra<ProbeSnapshot> for ProbeDiff {
         ProbeDiff(base.0.clone())
     }
 
-    fn between(_base: &ProbeSnapshot, other: &ProbeSnapshot) -> Self {
-        ProbeDiff(other.0.clone())
-    }
-
     fn is_empty(&self) -> bool {
         false
     }

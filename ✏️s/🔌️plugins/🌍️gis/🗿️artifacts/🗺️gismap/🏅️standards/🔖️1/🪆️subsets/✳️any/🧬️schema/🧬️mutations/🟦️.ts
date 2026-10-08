@@ -78,6 +78,48 @@ export interface ReorderRegions {
   toIndex: number;
 }
 
+/** ✏️ `set-position-property` payload — sets `key` in the payload of the `positions` entry addressed by `feature`; a new key is inserted before `before` (appended without one). */
+export interface SetPositionProperty {
+  feature: string;
+  key: string;
+  value: unknown;
+  before?: string;
+}
+
+/** 🧽 `remove-position-property` payload — removes `key` from the payload of the `positions` entry addressed by `feature`. */
+export interface RemovePositionProperty {
+  feature: string;
+  key: string;
+}
+
+/** ✏️ `set-route-property` payload — sets `key` in the payload of the `routes` entry addressed by `feature`; a new key is inserted before `before` (appended without one). */
+export interface SetRouteProperty {
+  feature: string;
+  key: string;
+  value: unknown;
+  before?: string;
+}
+
+/** 🧽 `remove-route-property` payload — removes `key` from the payload of the `routes` entry addressed by `feature`. */
+export interface RemoveRouteProperty {
+  feature: string;
+  key: string;
+}
+
+/** ✏️ `set-region-property` payload — sets `key` in the payload of the `regions` entry addressed by `feature`; a new key is inserted before `before` (appended without one). */
+export interface SetRegionProperty {
+  feature: string;
+  key: string;
+  value: unknown;
+  before?: string;
+}
+
+/** 🧽 `remove-region-property` payload — removes `key` from the payload of the `regions` entry addressed by `feature`. */
+export interface RemoveRegionProperty {
+  feature: string;
+  key: string;
+}
+
 export type GisMapMutation =
   | { CreatePosition: CreatePosition }
   | { DeletePosition: DeletePosition }
@@ -90,4 +132,10 @@ export type GisMapMutation =
   | { CreateRegion: CreateRegion }
   | { DeleteRegion: DeleteRegion }
   | { ReplaceRegionData: ReplaceRegionData }
-  | { ReorderRegions: ReorderRegions };
+  | { ReorderRegions: ReorderRegions }
+  | { SetPositionProperty: SetPositionProperty }
+  | { RemovePositionProperty: RemovePositionProperty }
+  | { SetRouteProperty: SetRouteProperty }
+  | { RemoveRouteProperty: RemoveRouteProperty }
+  | { SetRegionProperty: SetRegionProperty }
+  | { RemoveRegionProperty: RemoveRegionProperty };

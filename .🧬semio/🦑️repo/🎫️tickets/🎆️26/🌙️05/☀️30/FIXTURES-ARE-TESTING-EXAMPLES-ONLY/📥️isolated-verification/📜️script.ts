@@ -103,7 +103,7 @@ if (command === "root-remaining-corpus") {
     "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
   ];
-  await runBudgetedTestCommand(process.execPath, ["test", ...paths.map(path => join(root, path))], { cwd: root, env: { ...repositoryEnv, SEMIO_TICKET_DIR: dirname(import.meta.dir) }, budgetMs: 180_000, throwOnFailure: true });
+  await runBudgetedTestCommand(process.execPath, ["test", ...paths.map(path => join(root, path)), ...rest], { cwd: root, env: { ...repositoryEnv, SEMIO_TICKET_DIR: dirname(import.meta.dir) }, budgetMs: 180_000, throwOnFailure: true });
   await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts"), "-t", "recursive structural depth"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
   process.exit(0);
 }
@@ -238,7 +238,275 @@ if (command === "runtime-store-corpus-source") {
   await runBudgetedTestCommand(process.execPath, ["test", ...paths.map((path: string) => join(root, path))], { cwd: root, env: { ...repositoryEnv, SEMIO_TICKET_DIR: ticket }, budgetMs: 300_000, throwOnFailure: true });
   process.exit(0);
 }
+if (command === "root-resumed-corpus-tests") {
+  if (rest[0] === "--runtime-schema-only" && rest.length === 1) {
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"), "-t", "^canonical runtime domain schemas"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    process.exit(0);
+  }
+  if (rest[0] === "--current-corpus-only" && rest.length === 1) {
+    const { default: assert } = await import("node:assert/strict");
+    const { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+    const { inventorySchemaScopes } = await import(join(root, library, "🔍️discovery/🟦️.ts"));
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const owners = ["🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source", "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies", "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity", "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody", "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies", "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory"];
+    const retiredWholeLawSchemas = ["✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧫️witness/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧬️schema/🎟️source-authority/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧬️schema/🎟️preparation-birth/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧬️schema/🔣️.json"];
+    retiredWholeLawSchemas.push(...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🎟️admission/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push("🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/♻️retirement/🧬️schema/🔣️.json");
+    retiredWholeLawSchemas.push(...["🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🎯️ray-segment-closest/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🎯️zero-index/🔣️.json"]);
+    retiredWholeLawSchemas.push(...["🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️owned-birth/🔣️.json", "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🔗️authority/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/♻️custody/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push(...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧬️schema/🔣️.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/♻️close/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push(...["✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧊️validation/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🧬️schema/📦️prepared-close/🔣️.json", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push(...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧭️tree/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push(...["🧰️framework/🔨️modules/🖱️ui/♻️retirement/🧬️schema/🖱️physical-job-close/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/♻️retirement/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖼️raster-ownership/♻️retirement/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push(...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪆️child/📐️declaration-query.schema.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/📐️schema.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/📐️schema.json"]);
+    retiredWholeLawSchemas.push(...["🧰️framework/🔨️modules/📐️geometry/🧭️placement/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📐️geometry/➰️loops/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📐️geometry/🕸️mesh/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📐️geometry/🌙️bulge/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📐️geometry/🔪️section/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📐️geometry/🦴️skeleton/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📐️geometry/🔺️triangulation/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/◻️2d/🧱️regions/🧬️schema/🔣️.json"]);
+    retiredWholeLawSchemas.push("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧬️schema/🔣️.json");
+    retiredWholeLawSchemas.push(...["🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧬️schema/🧹️retirement/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🌱️entry/🔣️.json"]);
+    assert.deepEqual(retiredWholeLawSchemas.filter(path => existsSync(join(root, path))), [], "Whole testing laws cannot define separate schema authority");
+    const { default: ts } = await import("typescript");
+    const inlineCorpusOwners = ["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/♻️retirement/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts"];
+    inlineCorpusOwners.push(...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]);
+    inlineCorpusOwners.push("🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/🟦️.ts");
+    inlineCorpusOwners.push("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧪️tests/🟦️.ts");
+    const inlineAuthorities = inlineCorpusOwners.map(path => {
+      const source = ts.createSourceFile(path, readFileSync(join(root, path), "utf8"), ts.ScriptTarget.Latest, true);
+      let count = 0;
+      const inspect = (node: import("typescript").Node): void => {
+        if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "compile" && node.arguments[0] && (path.includes("🧪️tests/📦️prepared-close/") || ts.isObjectLiteralExpression(node.arguments[0]) || (path.includes("📜️space-history/") || path.includes("🧊️generation3d/")) && ts.isIdentifier(node.arguments[0]) && node.arguments[0].text === "contract")) count++;
+        ts.forEachChild(node, inspect);
+      };
+      inspect(source);
+      return { path, count };
+    }).filter(row => row.count > 0);
+    assert.deepEqual(inlineAuthorities, [], "Known whole-corpus validators cannot retain copied inline schema authority");
+    const wholeReaderOwners = ["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧪️tests/🔬️unit/🟦️.ts", "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts", "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts"];
+    wholeReaderOwners.push("🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts");
+    wholeReaderOwners.push(...["🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts"]);
+    const wholeReaderAuthorities = wholeReaderOwners.map(path => {
+      const source = ts.createSourceFile(path, readFileSync(join(root, path), "utf8"), ts.ScriptTarget.Latest, true);
+      let count = 0;
+      const inspect = (node: import("typescript").Node): void => {
+        if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "compile" && node.arguments[0] && (!path.includes("🧊️3d/") || !ts.isObjectLiteralExpression(node.arguments[0]))) count++;
+        ts.forEachChild(node, inspect);
+      };
+      inspect(source);
+      return { path, count };
+    }).filter(row => row.count > 0);
+    assert.deepEqual(wholeReaderAuthorities, [], "Reviewed whole testing examples cannot retain independent validator authority");
+
+    const strokeSource = ts.createSourceFile("stroke.ts", readFileSync(join(root, "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    let strokeWholeAuthorities = 0;
+    const inspectStroke = (node: import("typescript").Node): void => {
+      if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "compile" && node.arguments[0] && ts.isIdentifier(node.arguments[0]) && node.arguments[0].text === "retirementSchema") strokeWholeAuthorities++;
+      ts.forEachChild(node, inspectStroke);
+    };
+    inspectStroke(strokeSource);
+    assert.equal(strokeWholeAuthorities, 0, "Stroke whole trials cannot retain a separate schema; produced input/progress validators remain");
+    const spatialRasterRetired = ["✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧹️retirement/🧬️schema/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️retirement/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️flatten/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️stroke/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️coverage/🔣️.json"];
+    assert.deepEqual(spatialRasterRetired.filter(path => existsSync(join(root, path))), [], "Reviewed Spatial and Raster whole trials cannot own schemas");
+    const rasterReader = ts.createSourceFile("raster.ts", readFileSync(join(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    let rasterWholeAuthorities = 0;
+    const inspectRaster = (node: import("typescript").Node): void => {
+      if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "compile" && node.arguments[0] && ts.isIdentifier(node.arguments[0]) && ["retirementSchema", "flattenSchema", "strokeSchema", "coverageSchema"].includes(node.arguments[0].text)) rasterWholeAuthorities++;
+      ts.forEachChild(node, inspectRaster);
+    };
+    inspectRaster(rasterReader);
+    assert.equal(rasterWholeAuthorities, 0, "Raster trial validators must retire while produced input/progress contracts remain");
+    assert(!readFileSync(join(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🏷️ownership/🟦️.ts"), "utf8").includes("🧫️fixtures/🧹️retirement/🧬️schema/"), "Spatial retirement examples cannot retain separate schema reads");
+    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+    if (!output) throw Error("Explicit ticket output required for physical corpus inventory");
+    mkdirSync(output, { recursive: true });
+    const scopeRoot = mkdtempSync(join(output, "current-corpus-"));
+    try {
+      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });
+      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
+      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
+      const authorities = inventory.modules.filter(row => owned(row.modulePath));
+      const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === "schema-fixture-defines-schema");
+      writeFileSync(join(output, "current-corpus-placement.json"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + "\n");
+      assert.deepEqual(diagnostics, [], "Physical or adjacent test-corpus authority must retire independent of filename");
+      assert.deepEqual(authorities, []);
+    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }
+    const value = JSON.parse(readFileSync(join(root, owners[0]!, "🔣️.json"), "utf8"));
+    const plugin = JSON.parse(readFileSync(join(root, owners[3]!, "🔣️.json"), "utf8"));
+    const payload = Buffer.alloc(value.textBytes, value.textByte);
+    const body = Buffer.concat([Buffer.from(value.bodyPrefix), payload]);
+    const operation = Buffer.concat([Buffer.from(value.operationPrefix), payload]);
+    const frame = Buffer.concat([Buffer.from(plugin.framePrefix), Buffer.alloc(plugin.textBytes, plugin.textByte)]);
+    assert.equal(body.length, value.bodyBytes);
+    assert.equal(operation.length, value.operationBytes);
+    assert.equal(frame.length, plugin.frameBytes);
+    assert.deepEqual(frame, operation);
+    assert.deepEqual(plugin.modes, value.modes);
+    for (const text of value.unicode) {
+      const encoded = Buffer.from(text, "utf8"), crossing = Buffer.from(payload);
+      encoded.copy(crossing, value.maximumBytes - 1);
+      assert.equal(crossing.subarray(value.maximumBytes - 1, value.maximumBytes - 1 + encoded.length).toString("utf8"), text);
+    }
+    const currencies = JSON.parse(readFileSync(join(root, owners[4]!, "🔣️.json"), "utf8"));
+    assert.equal(currencies.sourceBytes, payload.length);
+    assert.equal(currencies.maximumReleaseBytes, value.maximumBytes);
+    const custody = JSON.parse(readFileSync(join(root, owners[6]!, "🔣️.json"), "utf8"));
+    const child = JSON.parse(readFileSync(join(root, owners[10]!, "🔣️.json"), "utf8"));
+    assert.deepEqual(Buffer.concat([Buffer.from(custody.bodyPrefix), Buffer.alloc(custody.sourceBytes, custody.textByte)]), body);
+    assert.deepEqual(Buffer.alloc(child.semanticBytes, child.semanticByte), payload);
+    const metadata = JSON.parse(readFileSync(join(root, owners[7]!, "🔣️.json"), "utf8"));
+    const { BufferGeometry, Float32BufferAttribute } = await import("three");
+    const mesh = new BufferGeometry();
+    try {
+      mesh.setAttribute("position", new Float32BufferAttribute(metadata.mesh.positions, 3));
+      mesh.setAttribute("normal", new Float32BufferAttribute(metadata.mesh.normals, 3));
+      assert.deepEqual(Array.from(mesh.getAttribute("position").array), metadata.mesh.positions);
+      assert.deepEqual(Array.from(mesh.getAttribute("normal").array), metadata.mesh.normals);
+      assert.deepEqual(JSON.parse(JSON.stringify(metadata.mesh.attributes)), metadata.mesh.attributes);
+      assert.deepEqual(JSON.parse(JSON.stringify(metadata.mesh.materials)), metadata.mesh.materials);
+      assert.deepEqual(Array.from(Buffer.from(metadata.mesh.textures.ink.bytes)), metadata.mesh.textures.ink.bytes);
+    } finally { mesh.dispose(); }
+    const cold = JSON.parse(readFileSync(join(root, owners[9]!, "🧫️fixtures/⏱️cold-preview/🔣️.json"), "utf8"));
+    assert.deepEqual(structuredClone(cold), JSON.parse(JSON.stringify(cold)));
+    const identities = JSON.parse(readFileSync(join(root, owners[5]!, "🧫️fixtures/🔣️.json"), "utf8"));
+    const { blake3 } = await import("@noble/hashes/blake3.js");
+    const { blake3Hex } = await import(join(root, "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"));
+    const identityRows = [];
+    for (const row of identities.cases) {
+      const zero = Buffer.alloc(1), text = (input: string) => Buffer.from(input, "utf8");
+      const unsigned = (input: string) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(input)); return bytes; };
+      let bytes: Buffer;
+      switch (row.kind) {
+        case "entity": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.payload)]); break;
+        case "scoped": bytes = text(row.input.editId + ":" + row.input.ordinal); break;
+        case "edit": { const sequence = Buffer.alloc(4); sequence.writeInt32LE(row.input.sequence); bytes = Buffer.concat([text(row.prefix), zero, unsigned(row.input.replica), zero, sequence, zero, Buffer.from(row.input.fingerprint)]); break; }
+        case "change": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.editIds.join("\0")), zero, text(row.input.description ?? "")]); break;
+        case "alternative": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.name), zero, text(row.input.checkpointIds.join("\0"))]); break;
+        case "mutation": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.operation), ...row.input.stamp.map(unsigned)]); break;
+        default: throw Error("Unknown identity specimen");
+      }
+      assert.equal(bytes.toString("hex"), row.preimageHex);
+      const independent = Buffer.from(blake3(bytes)).toString("hex");
+      assert.equal(blake3Hex(bytes), independent);
+      identityRows.push({ kind: row.kind, preimageHex: row.preimageHex, hash: independent });
+    }
+    writeFileSync(join(output, "current-corpus-identity-oracle.json"), JSON.stringify({ rows: identityRows, nativeInvocationCount: 0 }, null, 2) + "\n");
+    writeFileSync(join(output, "current-corpus-neutral-bytes.json"), JSON.stringify({ bodyBytes: body.length, operationBytes: operation.length, frameBytes: frame.length, utf8Crossings: value.unicode.length, plainModes: value.modes, nativeInvocationCount: 0 }, null, 2) + "\n");
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, owners[1]!, "🧪️tests/🟦️.ts"), join(root, owners[2]!, "🧪️tests/🔬️unit/🟦️.ts"), join(root, owners[8]!, "🔬️unit/🟦️.ts"), join(root, owners[11]!, "🧪️tests/🟦️.ts"), ...["✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧪️tests/🎟️source-authority/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🎟️preparation-birth/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧪️tests/🟦️.ts"].map(path => join(root, path)), ...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🎟️admission/🧪️tests/🔬️unit/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts"), "-t", "^(typed read leases|erased read portable|owned source birth|funded read ownership|read closure order)"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", ...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/♻️close/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/♻️retirement/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", ...["✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🎒️mesh-session/🟦️.ts", "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", ...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧭️tree/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", ...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪆️child/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/🧪️tests/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧪️tests/🔬️unit/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    const { testWireRetirementFixture } = await import(join(root, "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts"));
+    testWireRetirementFixture();
+    await runBudgetedTestCommand(process.execPath, ["test", ...["🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    console.log("[DEBUG] current test corpora: physical authorities0; independent Node bytes/UTF8, Three and RFC6902; native invocation0");
+    process.exit(0);
+  }
+  if (rest[0] === "--durable-maintenance-only" && rest.length === 1) {
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    console.log("[DEBUG] durable maintenance source/domain neutral laws; Cargo/native producer invocation0");
+    process.exit(0);
+  }
+  if (rest[0] === "--post-session-corpus-only" && rest.length === 1) {
+    const { default: assert } = await import("node:assert/strict");
+    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+    const { inventorySchemaScopes } = await import(join(root, library, "🔍️discovery/🟦️.ts"));
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const owners = ["✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot", "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands"];
+    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+    if (!output) throw Error("Explicit ticket output required for bounded physical collection inventory");
+    mkdirSync(output, { recursive: true });
+    const scopeRoot = mkdtempSync(join(output, "post-session-corpus-"));
+    try {
+      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });
+      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
+      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
+      const modules = inventory.modules.filter(row => owned(row.modulePath)), diagnostics = inventory.diagnostics.filter(row => owned(row.path));
+      writeFileSync(join(output, "post-session-corpus-placement.json"), JSON.stringify({ owners, modules, diagnostics, observedAncestorModules: inventory.modules.filter(row => !owned(row.modulePath)) }, null, 2) + "\n");
+      assert.deepEqual(diagnostics, [], "All selected collection authorities must retire independent of nested filename or folder");
+      assert.deepEqual(modules, []);
+    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts"), ...["✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    console.log("[DEBUG] Four current corpus authorities retired; normal selected collection placement0; actual SQLite/domain Ajv/command owner laws; Cargo/native producers0");
+    process.exit(0);
+  }
+  if (rest[0] === "--post-corpus-only" && rest.length === 1) {
+    const { default: assert } = await import("node:assert/strict");
+    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+    const { inventorySchemaScopes } = await import(join(root, library, "🔍️discovery/🟦️.ts"));
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const owners = ["✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose"];
+    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+    if (!output) throw Error("Explicit ticket output required for bounded physical corpus inventory");
+    mkdirSync(output, { recursive: true });
+    const scopeRoot = mkdtempSync(join(output, "post-corpus-"));
+    try {
+      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });
+      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
+      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
+      const modules = inventory.modules.filter(row => owned(row.modulePath)), diagnostics = inventory.diagnostics.filter(row => owned(row.path));
+      writeFileSync(join(output, "post-corpus-placement.json"), JSON.stringify({ owners, modules, diagnostics, observedAncestorModules: inventory.modules.filter(row => !owned(row.modulePath)) }, null, 2) + "\n");
+      assert.deepEqual(diagnostics, [], "All selected physical collection authorities must retire independent of nested filename or folder");
+      assert.deepEqual(modules, []);
+    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, owners[0]!, "🧪️tests/🟦️.ts"), join(root, owners[1]!, "🧪️tests/🔬️unit/🟦️.ts"), join(root, owners[2]!, "🧪️tests/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    console.log("[DEBUG] current selected three corpus owners: normal placement modules0 diagnostics0; actual SQLite/Three/JSON/UTF8/RFC6902 laws; Cargo/native producers0");
+    process.exit(0);
+  }
+  const { runMutationInventoryProviderChecksV1 } = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧪️tests/🟦️.ts"));
+  console.log(`[DEBUG] actual mutation inventory provider: ${runMutationInventoryProviderChecksV1()} independent admission/selection/discovery laws`);
+  const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+  await runBudgetedTestCommand(process.execPath, ["test", join(root, "✏️s/🧪️tests/🗂️native-ownership/🟦️.ts"), "-t", "Variable (Neutral Owner|Complete Ownership)"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+  await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🧪️tests/🔬️workspace-contract/🟦️.ts"), "-t", "schema scope catalog"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+  process.exit(0);
+}
 if (command === "root-canonical-process-preview") {
+  if (rest[0] === "--session-only" && rest.length === 1) {
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    process.exit(0);
+  }
+  const { default: mountedAssert } = await import("node:assert/strict");
+  const { readFileSync: readMountedSource } = await import("node:fs");
+  const { default: ts } = await import("typescript");
+  const { default: Ajv } = await import("ajv");
+  const { default: mountedParseArgv } = await import("yargs-parser");
+  const { ensureDevServe, devServeCommandV1 } = await import(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts"));
+  const source = ts.createSourceFile("mounted-owner.ts", readMountedSource(import.meta.filename, "utf8"), ts.ScriptTarget.Latest, true);
+  const calls: import("typescript").CallExpression[] = [];
+  const collect = (node: import("typescript").Node): void => { if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "ensureDevServe" && node.arguments[0]?.getText(source).includes("input.variant")) calls.push(node); ts.forEachChild(node, collect); };
+  collect(source); mountedAssert.equal(calls.length, 1);
+  const mountedOptions = new Function("input", "root", "port", "cancel", "logPath", `return (${calls[0]!.arguments[0]!.getText(source)});`);
+  const dev = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev");
+  const vectors = JSON.parse(readMountedSource(join(dev, "🧫️fixtures/🚀️local-hub.json"), "utf8")).serves.spawns;
+  const schema = JSON.parse(readMountedSource(join(dev, "🧬️schema/🔣️.json"), "utf8"));
+  const admit = new Ajv({ strict: false }).compile({ ...schema, $ref: "#/$defs/DevServeSpawnRequestV1" });
+  for (const row of vectors) {
+    mountedAssert(admit(row.request));
+    mountedAssert.deepEqual(devServeCommandV1(row.request), row.command);
+    let spawned = false, stopped = 0, observed: unknown;
+    const world = { answers: async () => spawned, portInUse: async () => false, spawnServe: (request: Parameters<typeof devServeCommandV1>[0]) => { mountedAssert(admit(request)); observed = devServeCommandV1(request); spawned = true; return { pid: 123, exited: () => false }; }, terminate: () => { stopped++; }, now: () => 0, sleep: async () => {} };
+    const options = mountedOptions(row.request, root, row.request.port, new AbortController(), row.request.logPath);
+    const serve = await ensureDevServe({ ...options, world });
+    mountedAssert.equal(serve.reused, false); await serve.stop(); mountedAssert.equal(stopped, 1);
+    const expected = devServeCommandV1({ ...row.request, hubUrl: null });
+    mountedAssert.deepEqual(observed, expected);
+    const parseOptions = { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } };
+    mountedAssert.deepEqual(mountedParseArgv((observed as typeof expected).args, parseOptions), mountedParseArgv(row.command.args, parseOptions));
+  }
+  mountedAssert.equal(vectors.length, 4);
+  const helper = source.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "mountedRuntimeCompositionPathV1");
+  mountedAssert(helper);
+  const helperJs = new Bun.Transpiler({ loader: "ts" }).transformSync(helper!.getText(source));
+  const admitComposition = new Function("root", "library", "join", helperJs + ";return mountedRuntimeCompositionPathV1;")(root, library, join);
+  const wgpu = vectors.find((row: any) => row.request.renderer === "wgpu").request;
+  mountedAssert.equal(await admitComposition(wgpu), wgpu.compositionConfigPath);
+  for (const compositionConfigPath of [undefined, "../outside.ts", "/absolute.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🚀️local-hub.json"]) await mountedAssert.rejects(() => admitComposition({ ...wgpu, compositionConfigPath }));
+  mountedAssert.equal(await admitComposition({ renderer: "react", variant: "s" }), undefined);
+  mountedAssert.throws(() => devServeCommandV1({ ...vectors.find((row: any) => row.request.renderer === "wgpu").request, compositionConfigPath: undefined }), /explicit bounded composition/u);
+  console.log("[DEBUG] actual mounted ensureDevServe adapter: four canonical spawn vectors, independent Ajv/yargs-parser, owned fake-world stop; servers/native producers=0");
+  if (rest[0] === "--mounted-only" && rest.length === 1) process.exit(0);
   const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
   await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🧪️tests/🔬️workspace-contract/🟦️.ts"), "-t", "routes native generator previews through their declared owner"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
   const { default: assert } = await import("node:assert/strict");
@@ -274,6 +542,23 @@ if (command === "plugin-oct8-hub-provenance-tests") {
   console.log("[DEBUG] actual fresh component, closed actor and trusted catalog provenance laws completed");
   process.exit(0);
 }
+/** 🧊️ Checks the declared physical composition owner before an actual mounted serve starts. */
+async function mountedRuntimeCompositionPathV1(input: { variant: string; renderer: string; compositionConfigPath?: unknown }): Promise<string | undefined> {
+  if (input.renderer !== "wgpu") return undefined;
+  const { playgroundCompositionPathV1 } = await import(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟦️.ts"));
+  const { PLAYGROUND_BUILD_TARGETS } = await import(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts"));
+  const { runtimeFixturePathV1 } = await import(join(root, library, "🔍️discovery/🕸️runtime/🟦️.ts"));
+  const { realpathSync } = await import("node:fs");
+  const { isAbsolute, relative, resolve } = await import("node:path");
+  const path = playgroundCompositionPathV1(input.compositionConfigPath);
+  if (PLAYGROUND_BUILD_TARGETS.find(row => row.variant === input.variant)?.compositionConfigPath !== path) throw Error("Mounted composition must match its current generated playground owner");
+  const lexical = resolve(root, path), physical = realpathSync(lexical);
+  for (const current of [lexical, physical]) {
+    const coordinate = relative(root, current).replaceAll("\\", "/");
+    if (!coordinate || isAbsolute(coordinate) || /^[A-Za-z]:/u.test(coordinate) || coordinate === ".." || coordinate.startsWith("../") || runtimeFixturePathV1(coordinate)) throw Error("Mounted composition must retain a genuine repository production owner");
+  }
+  return path;
+}
 if (command === "mounted-runtime-http") {
   const { createServer } = await import("node:net");
   const { readFileSync, writeFileSync, mkdirSync, realpathSync } = await import("node:fs");
@@ -291,6 +576,7 @@ if (command === "mounted-runtime-http") {
   assert.equal(new Set(contexts.map(input => `${input.variant}/${input.renderer}/${input.profile}`)).size, contexts.length, "Mounted contexts must have distinct receipt owners");
   for (const input of contexts) {
   assert(["react", "wgpu"].includes(input.renderer) && ["dev", "release"].includes(input.profile) && PLAYGROUND_BUILD_TARGETS.some(row => row.variant === input.variant) && Array.isArray(input.mounts) && input.mounts.length > 0);
+  await mountedRuntimeCompositionPathV1(input);
   const allocation = createServer();
   await new Promise<void>((resolve, reject) => { allocation.once("error", reject); allocation.listen(0, "127.0.0.1", resolve); });
   const port = (allocation.address() as { port: number }).port;
@@ -302,7 +588,7 @@ if (command === "mounted-runtime-http") {
   const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
   let serve: Awaited<ReturnType<typeof ensureDevServe>> | undefined;
   try {
-    serve = await ensureDevServe({ repoRoot: root, port, variant: input.variant, renderer: input.renderer, profile: input.profile, locale: "en", signal: cancel.signal, logPath, onProgress: (_status, line) => console.log("[DEBUG] " + line) });
+    serve = await ensureDevServe({ repoRoot: root, port, variant: input.variant, renderer: input.renderer, profile: input.profile, compositionConfigPath: input.compositionConfigPath, locale: "en", signal: cancel.signal, logPath, onProgress: (_status, line) => console.log("[DEBUG] " + line) });
     assert.equal(serve.reused, false, "This verification requires its own freshly selected serve owner");
     const request = async (route: string, bound: number) => {
       assert(route.startsWith("/") && !route.startsWith("//") && bound > 0 && bound <= 128 * 1024 * 1024);

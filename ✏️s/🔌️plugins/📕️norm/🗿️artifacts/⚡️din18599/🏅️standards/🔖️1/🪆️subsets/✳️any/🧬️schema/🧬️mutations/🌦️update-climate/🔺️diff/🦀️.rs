@@ -20,7 +20,6 @@ pub fn diff(payload: &UpdateClimate, base: &Din18599Snapshot) -> protocol::Mutat
             theta_e_c: (old.theta_e_c != new.theta_e_c).then(|| new.theta_e_c.clone()),
             g_h_w_m2: (old.g_h_w_m2 != new.g_h_w_m2).then(|| new.g_h_w_m2.clone()),
         }),
-        climate_table: Some(crate::din18599_climate_table_child(&payload.new_climate)),
         ..Default::default()
     })
 }

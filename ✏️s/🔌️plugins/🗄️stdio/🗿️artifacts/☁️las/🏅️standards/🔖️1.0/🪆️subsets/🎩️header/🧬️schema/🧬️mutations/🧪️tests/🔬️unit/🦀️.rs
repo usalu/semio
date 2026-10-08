@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::diff::{LasPointsDiff, LasVlrsDiff};
 use protocol::command::DiffAlgebra;
@@ -8,8 +9,8 @@ use protocol::{OpBinary, OpText};
 fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
     let expected_diff = mutation.diff(base);
     let mut applied_snapshot = base.clone();
-    let returned_diff = apply_las_mutation(&mut applied_snapshot, &mutation);
-    assert_eq!(returned_diff, expected_diff, "apply_las_mutation must return mutation.diff(base) for {mutation:?}");
+    let returned_diff = apply_mutation(&mut applied_snapshot, &mutation);
+    assert_eq!(returned_diff, expected_diff, "apply_mutation must return mutation.diff(base) for {mutation:?}");
     assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
 }
 
@@ -54,9 +55,9 @@ fn inverse_law() {
     for m in variants {
         // Mutation-level round trip.
         let mut snap = base.clone();
-        apply_las_mutation(&mut snap, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_las_mutation(&mut snap, &inv);
+        apply_mutation(&mut snap, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snap, &inv);
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
@@ -139,27 +140,6 @@ fn absorb_law_associativity() {
 
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
-}
-//#endregion 🔖️absorb_law
-
-//#region 🔖️between_roundtrip_law
-#[test]
-fn between_roundtrip_law() {
-    let a = base_snapshot();
-    let mut b = base_snapshot();
-    b.header.creation_year = 2030;
-    b.vlrs.remove(0);
-    b.vlrs[0].description = "modified".into();
-    b.vlrs.push(vlr("NEW", 300, b"new-vlr"));
-    b.points.remove(0);
-    b.points[0].classification = 250;
-    b.points.push(point(50));
-
-    let d = LasDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
-    let d_rev = LasDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_rev, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
-    assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 }
 //#endregion 🔖️between_roundtrip_law
 
@@ -300,103 +280,19 @@ fn sweep_b() -> LasSnapshot {
     }
 }
 
-#[test]
-fn field_sweep_covers_every_mutable_field() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let forward = LasDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&forward, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
-    let backward = LasDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&backward, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
-    assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-
-    // Every header scalar must be diffed forward.
-    assert!(forward.version_major.is_some());
-    assert!(forward.version_minor.is_some());
-    assert!(forward.system_identifier.is_some());
-    assert!(forward.generating_software.is_some());
-    assert!(forward.creation_day_of_year.is_some());
-    assert!(forward.creation_year.is_some());
-    assert!(forward.header_size.is_some());
-    assert!(forward.offset_to_point_data.is_some());
-    assert!(forward.point_data_format_id.is_some());
-    assert!(forward.point_data_record_length.is_some());
-    assert!(forward.points_by_return.is_some());
-    assert!(forward.x_scale.is_some());
-    assert!(forward.y_scale.is_some());
-    assert!(forward.z_scale.is_some());
-    assert!(forward.x_offset.is_some());
-    assert!(forward.y_offset.is_some());
-    assert!(forward.z_offset.is_some());
-    assert!(forward.max_x.is_some());
-    assert!(forward.min_x.is_some());
-    assert!(forward.max_y.is_some());
-    assert!(forward.min_y.is_some());
-    assert!(forward.max_z.is_some());
-    assert!(forward.min_z.is_some());
-    assert!(forward.number_of_vlrs.is_some(), "number_of_vlrs must be diffed (2 -> 1)");
-    assert!(forward.number_of_point_records.is_some(), "number_of_point_records must be diffed (2 -> 3)");
-
-    // vlrs: a has 2, b has 1 (SHRINKS) -- index 0 modified in every field, index 1 removed.
-    let vd: &LasVlrsDiff = forward.vlrs.as_ref().expect("vlrs diff must be present");
-    assert_eq!(vd.modified.len(), 1, "exactly one VLR must be modified");
-    assert_eq!(vd.modified[0].index, 0);
-    assert_eq!(vd.removed, vec![1], "a->b (shrinking) must show the removed VLR");
-    assert!(vd.added.is_empty(), "a->b (shrinking) must not show an added VLR");
-    let vmd = &vd.modified[0].diff;
-    assert!(vmd.user_id.is_some());
-    assert!(vmd.record_id.is_some());
-    assert!(vmd.description.is_some());
-    assert!(vmd.data.is_some());
-
-    // Backward direction: vlrs GROW 1 -> 2, proving `added` (the tail the forward direction
-    // structurally could not show).
-    let vd_back: &LasVlrsDiff = backward.vlrs.as_ref().expect("vlrs diff must be present");
-    assert_eq!(vd_back.added.len(), 1, "b->a (growing) must show the added (formerly-removed) VLR");
-    assert_eq!(vd_back.added[0].index, 1);
-    assert!(vd_back.removed.is_empty(), "b->a (growing) must not show a removed VLR");
-
-    // points: a has 2, b has 3 -- index 0 modified (incl. both tri-states), index 2 added.
-    let pd: &LasPointsDiff = forward.points.as_ref().expect("points diff must be present");
-    assert_eq!(pd.modified.len(), 1, "exactly one point must be modified");
-    assert_eq!(pd.modified[0].index, 0);
-    assert_eq!(pd.added.len(), 1, "exactly one point must be added");
-    assert!(pd.removed.is_empty(), "a->b (growing) must not show a removed point");
-    let pmd = &pd.modified[0].diff;
-    assert!(pmd.x.is_some());
-    assert!(pmd.y.is_some());
-    assert!(pmd.z.is_some());
-    assert!(pmd.intensity.is_some());
-    assert!(pmd.return_number.is_some());
-    assert!(pmd.number_of_returns.is_some());
-    assert!(pmd.scan_direction_flag.is_some());
-    assert!(pmd.edge_of_flight_line.is_some());
-    assert!(pmd.classification.is_some());
-    assert!(pmd.scan_angle_rank.is_some());
-    assert!(pmd.user_data.is_some());
-    assert!(pmd.point_source_id.is_some());
-    assert_eq!(pmd.gps_time, Some(None), "gps_time tri-state must show a clear (Some(None))");
-    assert_eq!(pmd.rgb, Some(Some((10, 20, 30))), "rgb tri-state must show a set (Some(Some(_)))");
-
-    // Backward direction: points shrink 3 -> 2, proving `removed` (the tail the forward
-    // direction structurally could not show).
-    let pd_back: &LasPointsDiff = backward.points.as_ref().expect("points diff must be present");
-    assert_eq!(pd_back.removed, vec![2], "b->a (shrinking) must show the removed (formerly-added) point");
-}
 //#endregion 🔖️field_sweep
 
 #[test]
 fn out_of_range_index_mutation_is_rejected_without_mutating() {
     let base = base_snapshot();
     let mut snap = base.clone();
-    let outcome = apply_las_mutation(&mut snap, &LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: 99 }));
+    let outcome = apply_mutation(&mut snap, &LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: 99 }));
     assert_eq!(snap, base);
     assert_eq!(outcome.messages()[0].target, vec!["vlrs", "99"]);
-    let outcome = apply_las_mutation(&mut snap, &LasMutation::SetPoint(set_point::SetPoint { index: 99, point: point(1) }));
+    let outcome = apply_mutation(&mut snap, &LasMutation::SetPoint(set_point::SetPoint { index: 99, point: point(1) }));
     assert_eq!(snap, base);
     assert_eq!(outcome.messages()[0].target, vec!["points", "99"]);
-    let outcome = apply_las_mutation(&mut snap, &LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: 99, data: vec![1] }));
+    let outcome = apply_mutation(&mut snap, &LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: 99, data: vec![1] }));
     assert_eq!(snap, base);
     assert_eq!(outcome.messages()[0].target, vec!["vlrs", "99"]);
 }
@@ -521,7 +417,7 @@ fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
     for (scale, offset) in [((0.25, 0.25, 0.25), (1000.0, 2000.0, 5.0)), ((2.0, 2.0, 2.0), (0.0, 0.0, 0.0))] {
         let kind = LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale, offset });
         let mut moved = base.clone();
-        apply_las_mutation(&mut moved, &kind);
+        apply_mutation(&mut moved, &kind);
         assert_eq!(moved.header.x_scale, scale.0, "the header field is written");
         assert_eq!(moved.header.y_offset, offset.1, "the header field is written");
         assert_eq!(records(&moved), before, "the point records must be untouched — only how they are read changed");
@@ -532,7 +428,7 @@ fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
         // re-quantizing reading would round away for good.
         let mut restored = moved;
         for step in &<LasMutation as Mutation<LasSnapshot>>::inverse(&kind, &base).expect("valid retained mutation inverse fixture") {
-            apply_las_mutation(&mut restored, step);
+            apply_mutation(&mut restored, step);
         }
         assert_eq!(restored, base, "putting the old scale and offset back must restore the document exactly");
     }

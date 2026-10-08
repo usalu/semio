@@ -16,7 +16,7 @@ fn text_edits_preserve_content_size_and_history_payload() {
         let crate::DrawingLayerNode::Text(text) = &after.layers[0] else { panic!("Text kind changed") };
         assert_eq!(text.content, edit["content"].as_str().unwrap());
         assert_eq!(text.size, edit["size"].as_f64().unwrap());
-        for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::mutations::apply_drawing_mutation(&mut after, &inverse).unwrap(); }
+        for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after, &inverse).unwrap(); }
         assert_eq!(after, before);
     }
     for size in [0.0, -1.0, f64::NAN, f64::INFINITY] {

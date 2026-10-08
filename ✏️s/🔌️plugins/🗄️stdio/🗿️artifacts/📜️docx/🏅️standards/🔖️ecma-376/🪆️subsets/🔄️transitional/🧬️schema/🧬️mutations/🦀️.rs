@@ -20,11 +20,12 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypesDiff, OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcPartsDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional WordprocessingML main namespace.
@@ -78,6 +79,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
 /// source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_docx_transitional_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxTransitionalMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -155,11 +157,11 @@ pub fn conformance_attribute(base: &DocxSnapshot) -> Option<String> {
 
 //#region 🔖️DiffBuilders
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn opc_diff(parts: Option<DocxOpcPartsDiff>, content_types: Option<DocxOpcContentTypesDiff>, relationships: Option<DocxOpcRelationshipsDiff>) -> DocxDiff {
+fn opc_diff(parts: Option<OpcPartsDelta>, content_types: Option<OpcContentTypesDiff>, relationships: Option<OpcOwnersDelta>) -> DocxDiff {
     if parts.is_none() && content_types.is_none() && relationships.is_none() {
         return DocxDiff::default();
     }
-    DocxDiff { opc: Some(DocxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
+    DocxDiff { opc: Some(OpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
 }
 
 /// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
@@ -177,17 +179,17 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
             if retargeted == current {
                 continue;
             }
-            entries.push(NamedModified { key: relationship.id.to_string_owner(), diff: DocxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } });
+            entries.push(OpcRelationshipModification { id: relationship.id.to_string_owner(), patch: OpcRelationshipPatch { rel_type: Some(retargeted), target: None, target_mode: None } });
         }
         if entries.is_empty() {
             continue;
         }
-        modified.push(NamedModified { key: owner.to_string_owner(), diff: DocxOpcRelListDiff { modified: entries, ..Default::default() } });
+        modified.push(OpcOwnerModification { id: owner.to_string_owner(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta { modified: entries, ..Default::default() } } });
     }
     if modified.is_empty() {
         return DocxDiff::default();
     }
-    opc_diff(None, None, Some(DocxOpcRelationshipsDiff { modified, ..Default::default() }))
+    opc_diff(None, None, Some(OpcOwnersDelta { modified, ..Default::default() }))
 }
 
 /// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.

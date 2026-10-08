@@ -36,10 +36,8 @@
   },
   "leftMutations": {
     "advance": {
-      "kind": "snapshot",
-      "config": {
-        "currentStepIndex": 1
-      }
+      "kind": "set-current-step-index",
+      "value": 1
     },
     "stage": {
       "kind": "snapshot",
@@ -50,10 +48,8 @@
       }
     },
     "resetConfig": {
-      "kind": "snapshot",
-      "config": {
-        "currentStepIndex": 0
-      }
+      "kind": "set-current-step-index",
+      "value": 0
     },
     "resetTransient": {
       "kind": "snapshot",

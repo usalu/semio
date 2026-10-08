@@ -2,7 +2,7 @@
 //!
 //! `change-curated-item-count`'s diff oracle has TWO guards — Error `mutation.target-missing` when
 //! the object is not curated, Warning `mutation.no-op` when the requested count already stands —
-//! and otherwise emits a `CurationCuratedDelta` carrying ONE `patched` entry. `count` is set to a
+//! and otherwise emits a `CurationCuratedDelta` carrying ONE `modified` entry. `count` is set to a
 //! FINAL value, never a delta, and the patch entry addresses the row by `objectId` rather than by
 //! position, so the untouched sibling never appears in the diff.
 //!
@@ -82,8 +82,8 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "change-curated-item-count/raises-the-glulam-beam-count-to-20: an accepted recount emits no diagnostics");
 }
 
-/// 🔺️ The committed diff pins the sparseness: one `patched` entry keyed by `objectId`, `added`/
-/// `removed` empty, `reordered` null — a recount must never be expressed as remove-then-add.
+/// 🔺️ The committed diff pins the sparseness: one `modified` entry keyed by `id`, `inserted`/
+/// `removed`/`moved` empty — a recount must never be expressed as remove-then-add.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(built_outcome().diff())).expect("produced change-curated-item-count diff encodes");
@@ -97,9 +97,9 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-curated-item-count diff decodes");
     let delta = decoded.curated.as_ref().expect("the committed recount diff carries a curated delta");
-    assert_eq!(delta.patched.len(), 1, "change-curated-item-count/raises-the-glulam-beam-count-to-20: exactly one row is patched");
-    assert_eq!((delta.patched[0].object_id.as_str(), delta.patched[0].count), ("beam-glulam-240", Some(20)), "change-curated-item-count/raises-the-glulam-beam-count-to-20: the patch must address the beam and carry its final count");
-    assert!(delta.added.is_empty() && delta.removed.is_empty(), "change-curated-item-count/raises-the-glulam-beam-count-to-20: a recount must not be expressed as remove-then-add");
+    assert_eq!(delta.modified.len(), 1, "change-curated-item-count/raises-the-glulam-beam-count-to-20: exactly one row is patched");
+    assert_eq!((delta.modified[0].id.as_str(), delta.modified[0].patch.count), ("beam-glulam-240", Some(20)), "change-curated-item-count/raises-the-glulam-beam-count-to-20: the patch must address the beam and carry its final count");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "change-curated-item-count/raises-the-glulam-beam-count-to-20: a recount must not be expressed as remove-then-add");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-curated-item-count/raises-the-glulam-beam-count-to-20: committed diff JSON is not canonical");

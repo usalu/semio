@@ -65,9 +65,10 @@
   "issues": null,
   "auditEvents": null,
   "templates": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "template-record-a",
         "patch": {
@@ -100,8 +101,7 @@
           "sourceOrganization": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "knowledge": null,
   "benchmarks": null,

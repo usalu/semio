@@ -68,17 +68,20 @@
   "knowledge": null,
   "benchmarks": null,
   "traces": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "trace-a",
-        "fromId": "requirement-a",
-        "toId": "decision-a",
-        "kind": "requirementToDecision"
+        "index": 0,
+        "row": {
+          "id": "trace-a",
+          "fromId": "requirement-a",
+          "toId": "decision-a",
+          "kind": "requirementToDecision"
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "governance": null
 }

@@ -51,12 +51,15 @@
   "artifacts": null,
   "assumptions": null,
   "constraints": {
-    "added": [],
     "removed": [
-      "constraint-record-a"
+      {
+        "id": "constraint-record-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "complianceRecords": null,
   "approvals": null,

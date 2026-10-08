@@ -1,0 +1,65 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "match": true
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📜️script.ts",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "match": true
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "match": true
+    },
+    {
+      "path": ".vscode/launch.json",
+      "match": false
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "match": false
+    }
+  ],
+  "generalEqual": true,
+  "specificEqual": true,
+  "ordering": true,
+  "sessionContracts": {
+    "playground-session": {
+      "previewArguments": [
+        "playground-session",
+        "preview"
+      ],
+      "ordered": true,
+      "fixtureInputs": []
+    },
+    "s-playground-session": {
+      "previewArguments": [
+        "playground-session",
+        "preview"
+      ],
+      "ordered": true,
+      "fixtureInputs": []
+    }
+  }
+}

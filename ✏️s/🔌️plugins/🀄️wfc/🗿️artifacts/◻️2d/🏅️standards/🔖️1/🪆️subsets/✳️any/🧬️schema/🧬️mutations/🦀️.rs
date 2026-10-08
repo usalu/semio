@@ -97,13 +97,6 @@ pub use super::unpin_slot::unpin_slot;
 pub type Wfc2dEnvelope = store::ArtifactEnvelope<Wfc2dSnapshot, Wfc2dMutation>;
 pub type Wfc2dStore = store::ArtifactStore<Wfc2dSnapshot, Wfc2dMutation>;
 
-/// 🧬️ Applies a mutation to a projection — generic over every variant.
-pub fn apply_wfc2d_mutation(projection: &mut Wfc2dSnapshot, mutation: &Wfc2dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-    *projection = next;
-    Ok(())
-}
-
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
 pub fn inverse_wfc2d_mutation(projection: &Wfc2dSnapshot, mutation: &Wfc2dMutation) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
     Ok({

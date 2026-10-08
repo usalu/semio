@@ -139,8 +139,8 @@ def empty_diff():
     }
 
 
-def diff_for(kind, payload, base):
-    """🔺 The sparse delta one mutation produces — the whole semantics of this artifact, restated."""
+def legacy_diff_for(kind, payload, base):
+    """🔺 The sparse delta one mutation produces in the keyed-rows vocabulary (removed keys, added rows, patches) — the whole semantics of this artifact, restated."""
     diff = empty_diff()
     if kind == "change-seed":
         diff["seed"] = payload["seed"]
@@ -199,23 +199,48 @@ def find(items, predicate):
     raise AssertionError("no member matches")
 
 
+ITEM_KEYS = {"tiles": lambda item: item["id"], "rules": lambda item: item["id"], "pinned": cell_key, "masked": cell_key}
+
+
+def diff_for(kind, payload, base):
+    """📍 The keyed-rows delta as positional list deltas: removals at their base index, insertions at their canonical after index."""
+    legacy = legacy_diff_for(kind, payload, base)
+    out = dict(legacy)
+    for collection, item_key in ITEM_KEYS.items():
+        rows_, original = legacy[collection], base[collection]
+        removed = [{"id": key, "index": next(at for at, item in enumerate(original) if item_key(item) == key)} for key in rows_["removed"] if any(item_key(item) == key for item in original)]
+        gone = {entry["id"] for entry in removed}
+        running = [item for item in original if item_key(item) not in gone]
+        for row in rows_["added"]:
+            running.insert(ordered_index(running, item_key(row), item_key), row)
+        inserted = [{"index": next(at for at, item in enumerate(running) if item_key(item) == item_key(row)), "row": row} for row in rows_["added"]]
+        out[collection] = {"removed": removed, "inserted": inserted, "moved": [], "modified": rows_["patched"]}
+    return out
+
+
 def apply_collection(base, delta, collection, item_key):
-    """📂 Removals first, then canonical-position insertions, then field patches; unknown targets are refused."""
-    items = list(base)
-    for key in delta["removed"]:
-        at = next((slot for slot, item in enumerate(items) if item_key(item) == key), None)
-        if at is None:
-            raise AssertionError(f"removed {key!r} does not exist")
-        del items[at]
-    for row in delta["added"]:
-        if any(item_key(item) == item_key(row) for item in items):
-            raise AssertionError(f"added {item_key(row)!r} already exists")
-        items.insert(ordered_index(items, item_key(row), item_key), row)
+    """📂 The positional list-delta apply: removed and moved keys are checked at their base index, inserted and moved rows take their after slots, survivors fill the rest in base order, then the patches write."""
+    taken = set()
+    for entry in delta["removed"] + [{"id": move["id"], "index": move["from"]} for move in delta["moved"]]:
+        if entry["index"] >= len(base) or item_key(base[entry["index"]]) != entry["id"] or entry["index"] in taken:
+            raise AssertionError(f"{entry['id']!r} is not at base index {entry['index']}")
+        taken.add(entry["index"])
+    slots = [None] * (len(base) - len(delta["removed"]) + len(delta["inserted"]))
+    for entry in delta["inserted"]:
+        if entry["index"] >= len(slots) or slots[entry["index"]] is not None:
+            raise AssertionError(f"inserted {item_key(entry['row'])!r} has no free after slot {entry['index']}")
+        slots[entry["index"]] = entry["row"]
+    for move in delta["moved"]:
+        slots[move["to"]] = base[move["from"]]
+    survivors = iter([item for at, item in enumerate(base) if at not in taken])
+    items = [slot if slot is not None else next(survivors) for slot in slots]
+    if len({item_key(item) for item in items}) != len(items):
+        raise AssertionError("two rows of the after list carry the same key")
     optional = {name for name, wrapped in PATCH_FIELDS[collection] if wrapped}
-    for entry in delta["patched"]:
+    for entry in delta["modified"]:
         at = next((slot for slot, item in enumerate(items) if item_key(item) == entry["id"]), None)
         if at is None:
-            raise AssertionError(f"patched {entry['id']!r} does not exist")
+            raise AssertionError(f"modified {entry['id']!r} does not exist")
         row = dict(items[at])
         for name, value in entry["patch"].items():
             if value is None:

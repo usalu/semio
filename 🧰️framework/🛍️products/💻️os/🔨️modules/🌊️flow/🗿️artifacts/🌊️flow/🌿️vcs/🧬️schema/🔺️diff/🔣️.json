@@ -175,22 +175,6 @@
               }
             }
           }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "delta",
-            "value"
-          ],
-          "properties": {
-            "delta": {
-              "const": "hostSnapshot"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json"
-            }
-          }
         }
       ]
     }

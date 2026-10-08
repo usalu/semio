@@ -5,9 +5,13 @@
   "notes": null,
   "status": null,
   "tags": {
-    "added": [],
     "removed": [
-      "review"
-    ]
+      {
+        "id": "review",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": []
   }
 }

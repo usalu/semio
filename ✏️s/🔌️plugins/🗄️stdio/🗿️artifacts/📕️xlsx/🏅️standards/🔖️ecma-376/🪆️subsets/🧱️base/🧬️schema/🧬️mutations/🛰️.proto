@@ -32,15 +32,19 @@ message XlsxWorksheetAddress {
   string revision = 5;
 }
 message XlsxCellVacancyAddress { XlsxWorksheetAddress worksheet = 1; uint32 row = 2; uint32 column = 3; }
-message InsertSheet { XlsxSheet sheet = 1; optional uint64 index = 2; }
+message InsertSheet { XlsxSheet sheet = 1; optional uint64 index = 2; optional bytes slot = 3; }
 message RemoveSheet { string name = 1; }
 message RenameSheet { string name = 1; string new_name = 2; }
-message SetCell { XlsxCellAddress address = 1; XlsxCellValue value = 2; }
-message InsertCell { XlsxCellVacancyAddress address = 1; XlsxCellValue value = 2; }
+message SetCell { XlsxCellAddress address = 1; XlsxCellValue value = 2; optional bytes node = 3; }
+message InsertCell { XlsxCellVacancyAddress address = 1; XlsxCellValue value = 2; optional bytes node = 3; }
 message RemoveCell { XlsxCellAddress address = 1; }
-message InsertSharedString { string value = 1; optional uint64 index = 2; }
+message InsertSharedString { string value = 1; optional uint64 index = 2; optional bytes node = 3; }
 message RemoveSharedString { uint64 index = 1; }
-message SetSharedString { uint64 index = 1; string value = 2; }
+message SetSharedString { uint64 index = 1; string value = 2; optional bytes node = 3; }
+message SetRelationship { string owner = 1; string id = 2; string rel_type = 3; string target = 4; bool external = 5; optional uint64 index = 6; }
+message RemoveRelationship { string owner = 1; string id = 2; }
+message SetContentType { bool is_override = 1; string name = 2; string content_type = 3; optional uint64 index = 4; }
+message RemoveContentType { bool is_override = 1; string name = 2; }
 message XlsxMutation {
   oneof mutation {
     InsertSheet insert_sheet = 3;
@@ -52,5 +56,9 @@ message XlsxMutation {
     RemoveSharedString remove_shared_string = 9;
     SetSharedString set_shared_string = 10;
     InsertCell insert_cell = 11;
+    SetRelationship set_relationship = 12;
+    RemoveRelationship remove_relationship = 13;
+    SetContentType set_content_type = 14;
+    RemoveContentType remove_content_type = 15;
   }
 }

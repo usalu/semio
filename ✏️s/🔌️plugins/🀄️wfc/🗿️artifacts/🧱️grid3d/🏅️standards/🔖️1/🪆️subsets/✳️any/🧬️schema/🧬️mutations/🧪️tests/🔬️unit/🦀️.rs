@@ -65,11 +65,11 @@ fn every_mutation_and_its_inverse_return_the_document_to_where_it_started() {
     for mutation in every_mutation() {
         let mut snapshot = base.clone();
         let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
-        if apply_grid3d_mutation(&mut snapshot, &mutation).is_err() {
+        if vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).is_err() {
             continue;
         }
         for step in &inverse {
-            apply_grid3d_mutation(&mut snapshot, step).expect("inverse step applies");
+            vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
         }
         assert_eq!(snapshot, base, "inverse did not restore the document for {:?}", protocol::SemanticMutation::<Grid3dSnapshot>::semantics(&mutation).kind);
     }

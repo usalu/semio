@@ -9,5 +9,5 @@ pub fn diff(payload: &InsertAccidentalCases, base: &En1991Snapshot) -> protocol:
     if base.accidental_cases.iter().any(|existing| existing.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1991Diff { accidental_cases: En1991AccidentalCaseDelta::insertion(&base.accidental_cases, payload.index, payload.item.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { accidental_cases: En1991AccidentalCaseDelta::insertion(payload.index, payload.item.clone()), ..Default::default() })
 }

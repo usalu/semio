@@ -90,7 +90,7 @@ impl<V> MapDelta<V> {
 
 impl<V: Clone> MapDelta<V> {
     /// 🛡️ Validates every original key before changing the first entry.
-    pub fn apply_to(&self, target: &mut impl MapDeltaTarget<V>) -> MutationApplyResult<()> {
+    pub fn apply_onto(&self, target: &mut impl MapDeltaTarget<V>) -> MutationApplyResult<()> {
         for (key, entry) in &self.entries {
             if !entry.precondition.accepts(target.contains_key(key)) {
                 let (code, message) = match entry.precondition {

@@ -11,7 +11,7 @@ pub fn diff(payload: &DeleteBlocks, base: &NoteSnapshot) -> protocol::MutationOu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} requested block(s) exist.", payload.ids.len()), payload.ids.clone());
     }
     let missing: Vec<String> = payload.ids.iter().filter(|id| crate::schema::find_block(&base.blocks, id).is_none()).cloned().collect();
-    let outcome = protocol::MutationOutcome::new(NoteDiff::block_rows(roots.iter().map(|(_, _, block)| NoteBlockRow::Remove { id: crate::schema::block_id(block).to_string() }).collect()));
+    let outcome = protocol::MutationOutcome::new(NoteDiff::block_rows(roots.iter().map(|(parent_id, index, block)| NoteBlockRow::Remove { id: crate::schema::block_id(block).to_string(), parent_id: parent_id.clone(), index: *index }).collect()));
     if missing.is_empty() {
         outcome
     } else {

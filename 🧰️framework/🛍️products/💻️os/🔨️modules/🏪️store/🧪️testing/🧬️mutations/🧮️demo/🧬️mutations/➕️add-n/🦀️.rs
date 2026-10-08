@@ -1,4 +1,4 @@
-use super::{DemoDiff, DemoMutation, DemoSnapshot, RestoreN};
+use super::{DemoDiff, DemoMutation, DemoSnapshot, AssignN};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -24,7 +24,7 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for AddN {
         if base.n.is_none() {
             return Vec::new();
         }
-        vec![DemoMutation::RestoreN(RestoreN { n: base.n })]
+        vec![DemoMutation::AssignN(AssignN { n: base.n })]
     
     })())
 }

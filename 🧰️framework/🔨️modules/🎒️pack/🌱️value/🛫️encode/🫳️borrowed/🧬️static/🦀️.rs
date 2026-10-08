@@ -4,6 +4,7 @@ use semio_framework_dsl_record::{BorrowedShape as B,BorrowedRecordSpec as S};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V};
 use super::retained_symbols::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
 use semio_framework_value::list::PagedList;
+use semio_framework_value::paged_text::TextReadView;
 const ORDER_CAPACITY:usize=isize::MAX as usize;
 
 fn mismatch()->PackRefusal{ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Pack source disagrees with declared field").into()}
@@ -53,8 +54,8 @@ impl InlineSymbols{
  }
  fn len(&self)->Result<usize,ValueError>{if self.phase!=InlineSymbolPhase::Ready{return Err(inline_invalid())}if self.spilled{self.overflow.len()}else{Ok(usize::from(self.selected))}}
  fn locator(&self,index:usize)->Result<SourceTextLocator,ValueError>{if index>=self.len()?{return Err(inline_invalid())}if self.spilled{self.overflow.locator(index)}else{self.first.map(|(locator,_)|locator).ok_or_else(inline_invalid)}}
- fn index<T:FieldProjectionSource>(&self,source:&T,text:&str,control:&mut NativeEncodeControl<'_>)->Result<Option<u64>,ValueError>{
-  let length=self.len()?;if self.spilled{return self.overflow.index(source,text,control)}if length==0{return Ok(None)}let original=self.locator(0)?.resolve(source)?;controlled_schema::compare_text(original,text,control).map(|order|(order==Ordering::Equal).then_some(0))
+ fn index<T:FieldProjectionSource>(&self,source:&T,text:TextReadView<'_>,control:&mut NativeEncodeControl<'_>)->Result<Option<u64>,ValueError>{
+  let length=self.len()?;if self.spilled{return self.overflow.index(source,text,control)}if length==0{return Ok(None)}let original=self.locator(0)?.resolve(source)?;super::retained_symbols::compare_text(original,text,control).map(|order|(order==Ordering::Equal).then_some(0))
  }
  fn retire_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<(bool,usize,usize),ValueError>{
   if maximum_items==0||maximum_bytes==0{return Ok((false,0,0))}self.phase=InlineSymbolPhase::Retiring;if self.first.take().is_some(){return Ok((true,1,0))}self.overflow.retire_one(maximum_items,maximum_bytes)
@@ -71,7 +72,7 @@ impl Discover<'_>{
         level_limit(level,maximum.min(64))?;
         control.checkpoint()?;control.step()?;
         match source.projection_view(&path[..depth])?{
-            V::Text(text)=>self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Text)?,forced,control)?,
+            V::Text(_)|V::TextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Text)?,forced,control)?,
             V::Record(ids)=>{let spec=record(shape,control)?;self.projected_fields(source,spec.as_ref(),ids,path,depth,level+1,maximum,control)?;},
             V::List(length)|V::Tuple(length)=>{
                 let table=table_spec_of(shape).map(|producer|read_record(producer,control)).transpose()?;
@@ -80,8 +81,8 @@ impl Discover<'_>{
             V::Block=>{let next=child(path,depth,0,maximum)?;self.projected(source,edge(shape,1,control)?,path,next,level+1,maximum,false,control)?;},
             V::Map(length)=>{for index in 0..length{self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Key(index))?,false,control)?;let next=child(path,depth,index,maximum)?;self.projected(source,edge(shape,2,control)?,path,next,level+1,maximum,false,control)?;}},
             V::Statements(length)=>{for index in 0..length{let keyword=source.projection_key(&path[..depth],index)?;self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Key(index))?,true,control)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|*key==keyword)).map(|(_,producer)|read_record(*producer,control)).transpose()?;let next=child(path,depth,index,maximum)?;let ids=record_ids(source,&path[..next])?;self.projected_fields(source,spec.as_ref(),ids,path,next,level+1,maximum,control)?;}},
-            V::Wire(_)=>{for index in 0..6{let next=child(path,depth,index,maximum)?;match source.projection_view(&path[..next])?{V::Text(text)=>self.scratch.note(source,SourceTextLocator::new(&path[..next],SourceTextKind::Text)?,false,control)?,V::Absent=>{},_=>return Err(mismatch())}}let next=child(path,depth,8,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;},
-            V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
+            V::Wire(_)=>{for index in 0..6{let next=child(path,depth,index,maximum)?;match source.projection_view(&path[..next])?{V::Text(_)|V::TextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..next],SourceTextKind::Text)?,false,control)?,V::Absent=>{},_=>return Err(mismatch())}}let next=child(path,depth,8,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;},
+            V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
             V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
         }Ok(())
     }
@@ -91,16 +92,18 @@ impl Discover<'_>{
     }
     fn projected_dynamic<T:FieldProjectionSource>(&mut self,source:&T,path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
         level_limit(level,maximum)?;control.checkpoint()?;control.step()?;
-        match source.projection_view(&path[..depth])?{V::IntrinsicText(text)=>self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::IntrinsicText)?,false,control)?,V::IntrinsicArray(length)|V::IntrinsicObject(length)=>{for index in 0..length{let next=child(path,depth,index,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;}},V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicBytes(_)=>{},_=>return Err(mismatch())}Ok(())
+        match source.projection_view(&path[..depth])?{V::IntrinsicText(_)|V::IntrinsicTextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::IntrinsicText)?,false,control)?,V::IntrinsicArray(length)|V::IntrinsicObject(length)=>{for index in 0..length{let next=child(path,depth,index,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;}},V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicBytes(_)=>{},_=>return Err(mismatch())}Ok(())
     }
 }
 
 struct BorrowedEncoder<'a,'c,'d,T:FieldProjectionSource>{source:&'a T,symbols:&'a InlineSymbols,options:&'a EncodeOptions,control:&'c mut NativeEncodeControl<'d>,order:&'c mut InlineOrder}
 impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
-    fn text(&mut self,text:&str,inline:bool,output:&mut Output)->Result<(),PackRefusal>{if !inline{if let Some(index)=self.symbols.index(self.source,text,self.control)?{output.byte(TAG_STR,self.control)?;return output.varint(index,self.control)}}output.byte(TAG_STR_INLINE,self.control)?;output.varint(text.len()as u64,self.control)?;output.bytes(text.as_bytes(),self.control)}
-    fn forced(&mut self,text:&str,output:&mut Output)->Result<(),PackRefusal>{let index=self.symbols.index(self.source,text,self.control)?.ok_or_else(mismatch)?;output.varint(index,self.control)}
+    fn source_bytes(&mut self,text:TextReadView<'_>,output:&mut Output)->Result<(),PackRefusal>{for offset in(0..text.len()).step_by(256){self.control.checkpoint()?;let mut buffer=[0;256];let count=text.copy_bytes(offset,&mut buffer)?;output.bytes(&buffer[..count],self.control)?;}Ok(())}
+    fn source_text(&mut self,text:TextReadView<'_>,inline:bool,output:&mut Output)->Result<(),PackRefusal>{if !inline{if let Some(index)=self.symbols.index(self.source,text,self.control)?{output.byte(TAG_STR,self.control)?;return output.varint(index,self.control)}}output.byte(TAG_STR_INLINE,self.control)?;output.varint(text.len()as u64,self.control)?;self.source_bytes(text,output)}
+    fn text(&mut self,text:&str,inline:bool,output:&mut Output)->Result<(),PackRefusal>{self.source_text(TextReadView::from_str(text),inline,output)}
+    fn forced(&mut self,text:&str,output:&mut Output)->Result<(),PackRefusal>{let index=self.symbols.index(self.source,TextReadView::from_str(text),self.control)?.ok_or_else(mismatch)?;output.varint(index,self.control)}
     fn bytes(&mut self,bytes:&[u8],output:&mut Output)->Result<(),PackRefusal>{output.byte(TAG_BYTES,self.control)?;output.varint(bytes.len()as u64,self.control)?;output.bytes(bytes,self.control)}
-    fn symbols(&mut self,output:&mut Output)->Result<(),PackRefusal>{let length=self.symbols.len()?;output.varint(length as u64,self.control)?;for index in 0..length{self.control.checkpoint()?;let text=self.symbols.locator(index)?.resolve(self.source)?;output.varint(text.len()as u64,self.control)?;output.bytes(text.as_bytes(),self.control)?;}Ok(())}
+    fn symbols(&mut self,output:&mut Output)->Result<(),PackRefusal>{let length=self.symbols.len()?;output.varint(length as u64,self.control)?;for index in 0..length{self.control.checkpoint()?;let text=self.symbols.locator(index)?.resolve(self.source)?;output.varint(text.len()as u64,self.control)?;self.source_bytes(text,output)?;}Ok(())}
     fn projected_fields(&mut self,source:&T,spec:Option<&S>,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
         level_limit(level,self.options.limits.max_depth.min(64))?;
         let ids=record_ids(source,&path[..depth])?;let start=self.order.len();
@@ -114,11 +117,11 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
         level_limit(level,self.options.limits.max_depth.min(64))?;
         self.control.checkpoint()?;
         let view=source.projection_view(&path[..depth])?;
-        if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)){output.byte(TAG_VALUE,self.control)?;return self.projected_dynamic(source,path,depth,level+1,output)}
+        if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)){output.byte(TAG_VALUE,self.control)?;return self.projected_dynamic(source,path,depth,level+1,output)}
         match view{
             V::Absent=>output.byte(TAG_ABSENT,self.control),V::Bool(value)=>output.byte(if value{TAG_TRUE}else{TAG_FALSE},self.control),
             V::Int(value)=>{output.byte(TAG_INT,self.control)?;output.signed(value,self.control)},V::UInt(value)=>{output.byte(TAG_UINT,self.control)?;output.varint(value,self.control)},V::Float(value)=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)},V::Enum(value)=>{output.byte(TAG_ENUM,self.control)?;output.varint(u64::from(value),self.control)},
-            V::Text(text)=>self.text(text,false,output),V::Bytes(bytes)=>self.bytes(bytes,output),
+            V::Text(text)=>self.text(text,false,output),V::TextSource(text)=>self.source_text(text,false,output),V::Bytes(bytes)=>self.bytes(bytes,output),
             V::Record(_)=>{let spec=record(shape,self.control)?;output.byte(TAG_RECORD,self.control)?;self.projected_fields(source,spec.as_ref(),path,depth,level+1,output)},
             V::List(length)|V::Tuple(length)=>{if let Some(producer)=table_spec_of(shape){self.projected_table(source,producer,length,path,depth,level,output)}else{{let shape=inner(shape,self.control)?;self.projected_sequence(source,shape,length,matches!(view,V::Tuple(_)),path,depth,level,output)}}},
             V::Block=>{output.byte(TAG_BLOCK,self.control)?;let next=child(path,depth,0,self.options.limits.max_depth.min(64))?;{let shape=edge(shape,1,self.control)?;self.projected(source,shape,path,next,level+1,output)}},
@@ -147,20 +150,20 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
         match source.projection_view(&path[..depth])?{
             V::IntrinsicNull=>output.byte(TAG_NULL,self.control),V::IntrinsicBool(value)=>output.byte(if value{TAG_TRUE}else{TAG_FALSE},self.control),
             V::IntrinsicNumber(Number::UInt(value))=>{output.byte(TAG_UINT,self.control)?;output.varint(value,self.control)},V::IntrinsicNumber(Number::Int(value))=>{output.byte(TAG_INT,self.control)?;output.signed(value,self.control)},V::IntrinsicNumber(Number::Float(value))=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)},
-            V::IntrinsicText(text)=>self.text(text,false,output),V::IntrinsicBytes(bytes)=>self.bytes(bytes,output),
+            V::IntrinsicText(text)=>self.text(text,false,output),V::IntrinsicTextSource(text)=>self.source_text(text,false,output),V::IntrinsicBytes(bytes)=>self.bytes(bytes,output),
             V::IntrinsicArray(length)=>{output.byte(TAG_LIST,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)?;}Ok(())},
             V::IntrinsicObject(length)=>{output.byte(TAG_MAP,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{let key=source.projection_key(&path[..depth],index)?;self.text(key,true,output)?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)?;}Ok(())},
             _=>Err(mismatch()),
         }
     }
-    fn projected_text<'source>(&mut self,source:&'source T,path:&mut[usize;64],depth:usize,index:usize)->Result<Option<&'source str>,PackRefusal>{
-        self.control.checkpoint()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;match source.projection_view(&path[..next])?{V::Absent=>Ok(None),V::Text(text)=>Ok(Some(text)),_=>Err(mismatch())}
+    fn projected_text<'source>(&mut self,source:&'source T,path:&mut[usize;64],depth:usize,index:usize)->Result<Option<TextReadView<'source>>,PackRefusal>{
+        self.control.checkpoint()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;match source.projection_view(&path[..next])?{V::Absent=>Ok(None),V::Text(text)=>Ok(Some(TextReadView::from_str(text))),V::TextSource(text)=>Ok(Some(text)),_=>Err(mismatch())}
     }
     fn projected_node(&mut self,source:&T,path:&mut[usize;64],depth:usize,index:usize,output:&mut Output)->Result<(),PackRefusal>{
-        let id=self.projected_text(source,path,depth,index)?.ok_or_else(mismatch)?;let kind=self.projected_text(source,path,depth,index+1)?;let port=self.projected_text(source,path,depth,index+2)?;output.byte(u8::from(kind.is_some())|(u8::from(port.is_some())<<1),self.control)?;self.text(id,false,output)?;if let Some(kind)=kind{self.text(kind,false,output)?;}if let Some(port)=port{self.text(port,false,output)?;}Ok(())
+        let id=self.projected_text(source,path,depth,index)?.ok_or_else(mismatch)?;let kind=self.projected_text(source,path,depth,index+1)?;let port=self.projected_text(source,path,depth,index+2)?;output.byte(u8::from(kind.is_some())|(u8::from(port.is_some())<<1),self.control)?;self.source_text(id,false,output)?;if let Some(kind)=kind{self.source_text(kind,false,output)?;}if let Some(port)=port{self.source_text(port,false,output)?;}Ok(())
     }
     fn projected_wire(&mut self,source:&T,directed:Option<bool>,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
-        let id=self.projected_text(source,path,depth,6)?;let kind=self.projected_text(source,path,depth,7)?;let label=id.is_some()||kind.is_some();let presence=u8::from(directed.is_some())|(u8::from(directed==Some(true))<<1)|(u8::from(label)<<2);output.byte(presence,self.control)?;self.projected_node(source,path,depth,0,output)?;if directed.is_some(){self.projected_node(source,path,depth,3,output)?;}if label{output.byte(u8::from(id.is_some())|(u8::from(kind.is_some())<<1),self.control)?;if let Some(id)=id{self.text(id,false,output)?;}if let Some(kind)=kind{self.text(kind,false,output)?;}}let next=child(path,depth,8,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)
+        let id=self.projected_text(source,path,depth,6)?;let kind=self.projected_text(source,path,depth,7)?;let label=id.is_some()||kind.is_some();let presence=u8::from(directed.is_some())|(u8::from(directed==Some(true))<<1)|(u8::from(label)<<2);output.byte(presence,self.control)?;self.projected_node(source,path,depth,0,output)?;if directed.is_some(){self.projected_node(source,path,depth,3,output)?;}if label{output.byte(u8::from(id.is_some())|(u8::from(kind.is_some())<<1),self.control)?;if let Some(id)=id{self.source_text(id,false,output)?;}if let Some(kind)=kind{self.source_text(kind,false,output)?;}}let next=child(path,depth,8,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)
     }
     fn projected_cell(&mut self,source:&T,path:&mut[usize;64],depth:usize,row:usize,id:u16)->Result<Option<usize>,PackRefusal>{
         self.control.checkpoint()?;let next=child(path,depth,row,self.options.limits.max_depth.min(64))?;let ids=record_ids(source,&path[..next])?;let Some(column)=ids.iter().position(|actual|*actual==id)else{return Ok(None)};let cell=child(path,next,column,self.options.limits.max_depth.min(64))?;Ok((!matches!(source.projection_view(&path[..cell])?,V::Absent)).then_some(cell))
@@ -171,7 +174,7 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
             if !dense{for start in (0..length).step_by(8){let mut byte=0;for(row,bit)in(start..length.min(start+8)).zip(0..8){if self.projected_cell(source,path,depth,row,field.id)?.is_some(){byte|=1<<bit;}}output.byte(byte,self.control)?;}}
             let tag=element_tag(field.shape);output.byte(tag,self.control)?;
             if tag==ELEM_BOOL{for start in(0..length).step_by(8){let mut byte=0;for(row,bit)in(start..length.min(start+8)).zip(0..8){if let Some(cell)=self.projected_cell(source,path,depth,row,field.id)?{if matches!(source.projection_view(&path[..cell])?,V::Bool(true)){byte|=1<<bit;}}}output.byte(byte,self.control)?;}continue}
-            for row in 0..length{let Some(cell)=self.projected_cell(source,path,depth,row,field.id)?else{continue};match(tag,source.projection_view(&path[..cell])?){(ELEM_F64,V::Float(value))=>output.bytes(&value.to_le_bytes(),self.control)?,(ELEM_INT,V::Int(value))=>output.signed(value,self.control)?,(ELEM_UINT,V::UInt(value))=>output.varint(value,self.control)?,(ELEM_ENUM,V::Enum(value))=>output.varint(u64::from(value),self.control)?,(ELEM_STR,V::Text(text))=>self.forced(text,output)?,(ELEM_F64|ELEM_INT|ELEM_UINT|ELEM_ENUM|ELEM_STR,_)=>{},_=>self.projected(source,Some(field.shape),path,cell,level+1,output)?,}}
+            for row in 0..length{let Some(cell)=self.projected_cell(source,path,depth,row,field.id)?else{continue};match(tag,source.projection_view(&path[..cell])?){(ELEM_F64,V::Float(value))=>output.bytes(&value.to_le_bytes(),self.control)?,(ELEM_INT,V::Int(value))=>output.signed(value,self.control)?,(ELEM_UINT,V::UInt(value))=>output.varint(value,self.control)?,(ELEM_ENUM,V::Enum(value))=>output.varint(u64::from(value),self.control)?,(ELEM_STR,V::Text(text))=>self.forced(text,output)?,(ELEM_STR,V::TextSource(text))=>{let index=self.symbols.index(self.source,text,self.control)?.ok_or_else(mismatch)?;output.varint(index,self.control)?;},(ELEM_F64|ELEM_INT|ELEM_UINT|ELEM_ENUM|ELEM_STR,_)=>{},_=>self.projected(source,Some(field.shape),path,cell,level+1,output)?,}}
         }while self.order.len()>start{self.order.pop();}Ok(())
     }
     fn projected_body(&mut self,source:&T,spec:&S,output:&mut Output)->Result<(),PackRefusal>{self.symbols(output)?;self.projected_fields(source,Some(spec),&mut[0;64],0,0,output)}
@@ -237,18 +240,18 @@ impl<'a,T:FieldProjectionSource> BorrowedProjectedPackOperation<BorrowedPackSour
  /// 🔗️ Binds the exact original immutable record without moving or copying its semantic owner.
  pub const fn from_source(source:&'a T,spec:S)->Self{Self::new(BorrowedPackSource{source},spec)}
 }
-impl<'a,T:semio_framework_dsl_record::DslVariants+semio_framework_dsl_record::BorrowedDslVariants> BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'a,T>>{
+impl<'a,T:semio_framework_dsl_record::BorrowedDslVariants> BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'a,T>>{
  /// 🌿️ Binds the actual original variant and its authored static schema with no metadata factory.
  pub fn from_variant(source:&'a T)->Self{let(keyword,ordinal,spec)=source.projected_borrowed_variant_identity();let mut operation=Self::new(semio_framework_dsl_record::native_encoding::VariantProjection::new(source),spec);operation.variant_identity=Some((keyword,ordinal));operation}
 }
 
 /// 🧬️ Retains the genuinely decoded variant alongside its canonical encoding scratch.
-pub struct OwnedVariantPackSource<T:semio_framework_dsl_record::DslVariants>{source:T}
-impl<T:semio_framework_dsl_record::DslVariants> FieldProjectionSource for OwnedVariantPackSource<T>{
- fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{self.source.projected_variant_view(path)}
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.source.projected_variant_key(path,index)}
+pub struct OwnedVariantPackSource<T:semio_framework_dsl_record::BorrowedDslVariants>{source:T}
+impl<T:semio_framework_dsl_record::BorrowedDslVariants> FieldProjectionSource for OwnedVariantPackSource<T>{
+ fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{self.source.projected_borrowed_variant_view(path)}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.source.projected_borrowed_variant_key(path,index)}
 }
-impl<T:semio_framework_dsl_record::DslVariants+semio_framework_dsl_record::BorrowedDslVariants> BorrowedProjectedPackOperation<OwnedVariantPackSource<T>>{
+impl<T:semio_framework_dsl_record::BorrowedDslVariants> BorrowedProjectedPackOperation<OwnedVariantPackSource<T>>{
  /// 📥️ Takes the actual decoded semantic owner before any canonical reencoding demand.
  pub fn from_owned_variant(source:T)->Self{let(keyword,ordinal,spec)=source.projected_borrowed_variant_identity();let mut operation=Self::new(OwnedVariantPackSource{source},spec);operation.variant_identity=Some((keyword,ordinal));operation}
  /// 🔎️ Borrows the original semantic owner without releasing canonical scratch.

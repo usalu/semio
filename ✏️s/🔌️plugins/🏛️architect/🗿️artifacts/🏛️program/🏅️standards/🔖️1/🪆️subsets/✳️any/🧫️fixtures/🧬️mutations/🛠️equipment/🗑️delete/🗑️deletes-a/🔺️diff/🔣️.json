@@ -15,12 +15,15 @@
   "accessRules": null,
   "operations": null,
   "equipment": {
-    "added": [],
     "removed": [
-      "equipment-a"
+      {
+        "id": "equipment-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "resources": null,
   "storage": null,

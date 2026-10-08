@@ -18,6 +18,7 @@ name = "protocol"
 path = "🦀️.rs"
 
 [features]
+history-index-serde = []
 default = []
 # 🗜️ Deflate segment compression (`CodecId(1)`); off by default so the pure contract stays dependency-light.
 deflate = ["dep:semio-framework-deflate"]

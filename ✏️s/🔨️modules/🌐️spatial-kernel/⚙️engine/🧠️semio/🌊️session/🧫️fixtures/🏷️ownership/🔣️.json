@@ -20,6 +20,7 @@
         "name": "mesh_session"
       },
       "laws": [
+        "original_session_cold_validation_remains_inside_each_granted_turn",
         "a_real_tessellated_sphere_halves_the_wire_at_every_lod",
         "a_finer_cached_mesh_answers_a_coarser_lod_request"
       ],
@@ -46,7 +47,8 @@
       },
       "source": "🦀️.rs",
       "laws": [
-        "retired_analytic_mesh_metadata_obeys_exact_byte_grants"
+        "retired_analytic_mesh_metadata_obeys_exact_byte_grants",
+        "original_session_capture_keeps_same_allocation_until_full_typed_grants"
       ]
     }
   ]

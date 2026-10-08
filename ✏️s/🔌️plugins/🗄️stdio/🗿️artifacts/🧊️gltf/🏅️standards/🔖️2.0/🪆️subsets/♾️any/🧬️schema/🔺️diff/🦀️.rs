@@ -15,7 +15,7 @@
 //! entity, not a shortcut around per-entity semantics.
 
 /// 🧩 Ordered removed keys, modified values, and inserted items.
-pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>, Vec<(usize, D)>);
 
 use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
 use crate::schema::snapshot::{
@@ -83,7 +83,7 @@ use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
 
 //#region 🔖️IndexTransport
-/// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
+/// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`absorb`/
 /// `inverse`) — see `🧬️schema-design.md` §Absorb and the plan's "Absorb" section for the
 /// derivation. `excluded_sorted` must be sorted ascending.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -121,11 +121,12 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
+    amended1: Vec<(usize, D)>,
     removed2: Vec<usize>,
     modified2: Vec<(usize, D)>,
     added2: Vec<(usize, T)>,
+    amended2: Vec<(usize, D)>,
     mut absorb_diff: impl FnMut(&mut D, D),
-    apply_diff_to_item: impl Fn(&D, &T) -> T,
 ) -> IndexedDiffParts<D, T> {
     let mut removed1_sorted = removed1;
     removed1_sorted.sort_unstable();
@@ -136,7 +137,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     let mut added2_index_sorted: Vec<usize> = added2.iter().map(|(i, _)| *i).collect();
     added2_index_sorted.sort_unstable();
 
-    let mut merged_added: Vec<(usize, T)> = added1;
+    let mut merged_added: Vec<(usize, T, Option<D>)> = added1.into_iter().map(|(at, item)| (at, item, amended1.iter().find(|(index, _)| *index == at).map(|(_, patch)| patch.clone()))).collect();
     let mut annihilated: std::collections::HashSet<usize> = Default::default();
 
     //#region Removed
@@ -144,7 +145,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     for &r2 in &removed2_sorted {
         if added1_index_sorted.binary_search(&r2).is_ok() {
             annihilated.insert(r2);
-            merged_added.retain(|(i, _)| *i != r2);
+            merged_added.retain(|(i, _, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
             let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
@@ -165,8 +166,14 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
             continue;
         }
         if added1_index_sorted.binary_search(&mp).is_ok() {
-            if let Some(entry) = merged_added.iter_mut().find(|(i, _)| *i == mp) {
-                entry.1 = apply_diff_to_item(&dd2, &entry.1);
+            if let Some(entry) = merged_added.iter_mut().find(|(i, _, _)| *i == mp) {
+                entry.2 = Some(match entry.2.take() {
+                    Some(mut existing) => {
+                        absorb_diff(&mut existing, dd2);
+                        existing
+                    }
+                    None => dd2,
+                });
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
@@ -181,29 +188,32 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     //#endregion Modified
 
     //#region Added
-    let mut merged_added_final: Vec<(usize, T)> = merged_added
+    let mut merged_added_final: Vec<(usize, T, Option<D>)> = merged_added
         .into_iter()
-        .map(|(mp, item)| {
+        .map(|(mp, item, patch)| {
             let after_pos = if removed2_sorted.binary_search(&mp).is_ok() {
                 mp
             } else {
                 let post_remove_rank = rank_excluding(mp, &removed2_sorted);
                 unrank_excluding(post_remove_rank, &added2_index_sorted)
             };
-            (after_pos, item)
+            (after_pos, item, patch)
         })
         .collect();
-    merged_added_final.extend(added2);
-    merged_added_final.sort_by_key(|(i, _)| *i);
+    merged_added_final.extend(added2.into_iter().map(|(at, item)| (at, item, amended2.iter().find(|(index, _)| *index == at).map(|(_, patch)| patch.clone()))));
+    merged_added_final.sort_by_key(|(i, _, _)| *i);
+    let merged_amended: Vec<(usize, D)> = merged_added_final.iter().filter_map(|(at, _, patch)| patch.clone().map(|patch| (*at, patch))).collect();
+    let merged_added_rows: Vec<(usize, T)> = merged_added_final.into_iter().map(|(at, item, _)| (at, item)).collect();
     //#endregion Added
 
-    (merged_removed_base, merged_modified, merged_added_final)
+    (merged_removed_base, merged_modified, merged_added_rows, merged_amended)
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
-    let mut removed_sorted = removed.to_vec();
+    let mut removed_sorted = Vec::with_capacity(removed.len());
+    removed_sorted.extend_from_slice(removed);
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
     added_index_sorted.sort_unstable();
@@ -224,17 +234,21 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
     }
     inv_removed.sort_unstable();
     inv_added.sort_by_key(|(i, _)| *i);
-    (inv_removed, inv_modified, inv_added)
+    (inv_removed, inv_modified, inv_added, Vec::new())
 }
 //#endregion 🔖️GenericCollectionAlgebra
 
 //#region 🔖️ItemDiffTrait
 /// 🧩️ A per-item diff for collection element type `T` -- implemented by real per-field diff
 /// structs for STRONG entities (`GltfNodeDiff`, `GltfMeshDiff`, …), and by the blanket `T for T`
-/// impl below for WEAK entities (the "diff" IS the whole new value).
+/// impl below for WEAK entities (the "diff" IS the whole new value). `apply` runs only under the received capability, which a
+/// diff forwards to the nested list deltas it owns.
 pub trait ItemDiff<T>: Clone + PartialEq {
-    fn between(base: &T, other: &T) -> Self;
-    fn apply(&self, base: &T) -> T;
+    /// ✍️ The row's record once the diff is committed onto `base`; every implementor overrides it, the default refuses.
+    fn apply(&self, base: &T, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<T> {
+        let _ = (base, capability);
+        Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "this row diff has no apply"))
+    }
     fn inverse(&self, base: &T) -> Self;
     fn absorb_into(&mut self, other: Self);
 }
@@ -242,11 +256,8 @@ pub trait ItemDiff<T>: Clone + PartialEq {
 /// 🍃️ WEAK entities: the diff type IS the item type (whole-value replace), per the recipe's
 /// strong/weak split -- no further sub-structure worth diffing.
 impl<T: Clone + PartialEq> ItemDiff<T> for T {
-    fn between(_base: &T, other: &T) -> Self {
-        other.clone()
-    }
-    fn apply(&self, _base: &T) -> T {
-        self.clone()
+    fn apply(&self, _base: &T, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<T> {
+        Ok(self.clone())
     }
     fn inverse(&self, base: &T) -> Self {
         base.clone()
@@ -275,13 +286,10 @@ pub struct GltfAdded<T> {
     pub item: T,
 }
 
-/// 🔺️ Generic index-keyed collection triple, instantiated once per top-level glTF array. `D =
-/// item::Diff` for strong entities; `D = T` (via the blanket impl) for weak entities. No explicit
-/// `#[value(bound = "...")]` needed — this derive auto-synthesizes a `ToValue`/`FromValue` bound
-/// per own type parameter (see `🌱️value/✨️derive`'s module docs), unlike `serde_derive`'s own
-/// inference, which conservatively adds `T: Default`/`D: Default` purely because `#[serde(default)]`
-/// appears on a field whose type mentions the generic parameter — `Vec<_>` itself is unconditionally
-/// `Default` regardless of its element type, so that extra bound was never actually needed.
+/// 🔺️ Generic index-keyed collection, instantiated once per position-addressed glTF array (the entities other entries refer to by
+/// index, so a position IS the identity): `removed` base positions, `modified` base position plus the row's diff, `added` final
+/// position plus the item, and `amended` the diff of a row this diff itself adds (keyed by its final position, because no base
+/// position exists to key it by). `D = item::Diff` for strong entities; `D = T` (via the blanket impl) for weak entities.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfCollectionDiff<T, D> {
@@ -291,11 +299,13 @@ pub struct GltfCollectionDiff<T, D> {
     pub modified: Vec<GltfModified<D>>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<GltfAdded<T>>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub amended: Vec<GltfModified<D>>,
 }
 
 impl<T, D> Default for GltfCollectionDiff<T, D> {
     fn default() -> Self {
-        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new(), amended: Vec::new() }
     }
 }
 
@@ -303,20 +313,6 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[T], other: &[T]) -> Self {
-        let min = base.len().min(other.len());
-        let mut modified = Vec::new();
-        for i in 0..min {
-            if base[i] != other[i] {
-                modified.push(GltfModified { index: i, diff: D::between(&base[i], &other[i]) });
-            }
-        }
-        let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<GltfAdded<T>> = (min..other.len()).map(|i| GltfAdded { index: i, item: other[i].clone() }).collect();
-        Self { removed, modified, added }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -336,70 +332,157 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         let mut additions: Vec<usize> = self.added.iter().map(|entry| entry.index).collect();
         additions.sort_unstable();
         let mut previous = None;
-        for (length, index) in (base_len - removed.len()..).zip(additions) {
+        for (length, index) in (base_len - removed.len()..).zip(additions.iter().copied()) {
             if index > length || previous == Some(index) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at([target]));
             }
             previous = Some(index);
         }
+        let mut amended = std::collections::BTreeSet::new();
+        for entry in &self.amended {
+            if additions.binary_search(&entry.index).is_err() || !amended.insert(entry.index) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("amend index {} names no added row or is duplicated", entry.index)).at([target]));
+            }
+        }
         Ok(())
     }
 
+    /// ✍️ The list this diff turns `base` into; reached only from a diff type's own `apply`, under the received capability.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn apply(&self, base: &[T]) -> Vec<T> {
+    pub fn apply(&self, base: &[T], target: &str, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Vec<T>> {
+        self.validate_apply(base.len(), target)?;
         let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
-        for m in &self.modified {
-            if let Some(Some(item)) = next.get_mut(m.index) {
-                *item = m.diff.apply(item);
+        for entry in &self.modified {
+            if let Some(item) = next[entry.index].take() {
+                next[entry.index] = Some(entry.diff.apply(&item, capability).map_err(|error| error.under([target.to_string(), entry.index.to_string()]))?);
             }
         }
-        let mut removed_sorted = self.removed.clone();
+        let mut removed_sorted = Vec::with_capacity(self.removed.len());
+        removed_sorted.extend_from_slice(&self.removed);
         removed_sorted.sort_unstable();
-        removed_sorted.reverse();
-        for &r in &removed_sorted {
-            if r < next.len() {
-                next.remove(r);
-            }
+        for &index in removed_sorted.iter().rev() {
+            next.remove(index);
         }
         let mut out: Vec<T> = next.into_iter().flatten().collect();
-        let mut added_sorted = self.added.clone();
-        added_sorted.sort_by_key(|a| a.index);
-        for a in added_sorted {
-            let at = a.index.min(out.len());
-            out.insert(at, a.item);
+        let mut added_sorted = Vec::with_capacity(self.added.len());
+        added_sorted.extend(self.added.iter());
+        added_sorted.sort_by_key(|entry| entry.index);
+        for entry in added_sorted {
+            out.insert(entry.index, entry.item.clone());
         }
-        out
+        for entry in &self.amended {
+            let item = out[entry.index].clone();
+            out[entry.index] = entry.diff.apply(&item, capability).map_err(|error| error.under([target.to_string(), entry.index.to_string()]))?;
+        }
+        Ok(out)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(&mut self, other: Self) {
-        let (removed, modified, added) = absorb_indexed_collection(
+        let (removed, modified, added, amended) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.diff)).collect(),
             std::mem::take(&mut self.added).into_iter().map(|a| (a.index, a.item)).collect(),
+            std::mem::take(&mut self.amended).into_iter().map(|m| (m.index, m.diff)).collect(),
             other.removed,
             other.modified.into_iter().map(|m| (m.index, m.diff)).collect(),
             other.added.into_iter().map(|a| (a.index, a.item)).collect(),
+            other.amended.into_iter().map(|m| (m.index, m.diff)).collect(),
             |d, o| {
                 d.absorb_into(o);
             },
-            |d, item| d.apply(item),
         );
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect();
         self.added = added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect();
+        self.amended = amended.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect();
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base_items: &[T]) -> Self {
-        let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, item| d.inverse(item));
-        Self { removed, modified: modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(), added: added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect() }
+        let (removed, modified, added, amended) =
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, orig| d.inverse(orig));
+        Self {
+            removed,
+            modified: modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(),
+            added: added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect(),
+            amended: amended.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(),
+        }
     }
 }
 
 /// 🍃️ Type alias for a WEAK collection (diff = whole new item).
 pub type GltfWeakCollectionDiff<T> = GltfCollectionDiff<T, T>;
+
+/// 🧷️ A reference to a top-level entry (a node, a mesh, an accessor): its own key in the lists of references an entity owns.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(transparent)]
+pub struct GltfRef(pub usize);
+
+/// 🧷️ One attribute of a primitive or morph target, keyed by its semantic.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfAttribute {
+    pub semantic: String,
+    pub accessor: usize,
+}
+
+protocol::plain_list_delta! { pub GltfRefsDelta { removal: GltfRefRemoval, insertion: GltfRefInsertion, relocation: GltfRefRelocation, row: GltfRef, list: Vec<GltfRef>, key: usize = |reference| reference.0, values_only } }
+protocol::plain_list_delta! { pub GltfStringsDelta { removal: GltfStringRemoval, insertion: GltfStringInsertion, relocation: GltfStringRelocation, row: String, values_only } }
+protocol::plain_list_delta! { pub GltfAttributesDelta { removal: GltfAttributeRemoval, insertion: GltfAttributeInsertion, relocation: GltfAttributeRelocation, row: GltfAttribute, list: Vec<GltfAttribute>, key: String = |attribute| attribute.semantic.clone(), values_only } }
+protocol::plain_list_delta! { pub GltfTargetsDelta { removal: GltfTargetRemoval, insertion: GltfTargetInsertion, relocation: GltfTargetRelocation, row: GltfMorphTarget, list: Vec<GltfMorphTarget>, key: String = |target| format!("{target:?}"), values_only } }
+protocol::plain_list_delta! { pub GltfChannelsDelta { removal: GltfChannelRemoval, insertion: GltfChannelInsertion, relocation: GltfChannelRelocation, row: GltfAnimationChannel, list: Vec<GltfAnimationChannel>, key: String = |channel| format!("{channel:?}"), values_only } }
+protocol::plain_list_delta! { pub GltfAnimationSamplersDelta { removal: GltfAnimationSamplerRemoval, insertion: GltfAnimationSamplerInsertion, relocation: GltfAnimationSamplerRelocation, row: GltfAnimationSampler, list: Vec<GltfAnimationSampler>, key: String = |sampler| format!("{sampler:?}"), values_only } }
+
+/// 🧷️ The plain-row constructor of a macro-generated list delta: removed `(id, base index)`, inserted `(after index, row)` and moved
+/// `(id, base index, after index)`, each read from the base list by the leaf that raises the delta.
+macro_rules! delta_rows {
+    ($delta:ident, $row:ty) => {
+        impl $delta {
+            pub fn rows(removed: Vec<(<$row as protocol::list_delta::Keyed>::Key, usize)>, inserted: Vec<(usize, $row)>, moved: Vec<(<$row as protocol::list_delta::Keyed>::Key, usize, usize)>) -> Self {
+                Self::from_parts(protocol::list_delta::Parts { removed, inserted, moved, modified: Vec::new() })
+            }
+        }
+    };
+}
+delta_rows!(GltfRefsDelta, GltfRef);
+delta_rows!(GltfStringsDelta, String);
+delta_rows!(GltfAttributesDelta, GltfAttribute);
+delta_rows!(GltfTargetsDelta, GltfMorphTarget);
+delta_rows!(GltfChannelsDelta, GltfAnimationChannel);
+delta_rows!(GltfAnimationSamplersDelta, GltfAnimationSampler);
+
+/// 🧷️ Folds `later` into the list delta already held in a slot of a diff.
+macro_rules! absorb_slot {
+    ($slot:expr, $later:expr) => {
+        match (&mut $slot, $later) {
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (slot @ None, Some(theirs)) => *slot = Some(theirs),
+            _ => {}
+        }
+    };
+}
+
+/// 🧷️ The keyed rows of a list of entry references.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn refs(values: &[usize]) -> Vec<GltfRef> {
+    values.iter().copied().map(GltfRef).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrefs(rows: Vec<GltfRef>) -> Vec<usize> {
+    rows.into_iter().map(|reference| reference.0).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn attribute_rows(pairs: &[(String, usize)]) -> Vec<GltfAttribute> {
+    pairs.iter().map(|(semantic, accessor)| GltfAttribute { semantic: semantic.clone(), accessor: *accessor }).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn attribute_pairs(rows: Vec<GltfAttribute>) -> Vec<(String, usize)> {
+    rows.into_iter().map(|attribute| (attribute.semantic, attribute.accessor)).collect()
+}
 //#endregion 🔖️GenericCollectionDiff
 
 //#region 🔖️AssetDiff
@@ -428,18 +511,11 @@ impl GltfAssetDiff {
         self.version.is_none() && self.generator.is_none() && self.copyright.is_none() && self.min_version.is_none() && self.extensions.is_none() && self.extras.is_none()
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &GltfAsset, other: &GltfAsset) -> Self {
-        Self {
-            version: (base.version != other.version).then(|| other.version.clone()),
-            generator: (base.generator != other.generator).then(|| other.generator.clone()),
-            copyright: (base.copyright != other.copyright).then(|| other.copyright.clone()),
-            min_version: (base.min_version != other.min_version).then(|| other.min_version.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
+    pub fn apply(&self, base: &GltfAsset, _capability: protocol::ApplyCapability) -> GltfAsset {
+        self.apply_fields(base)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn apply(&self, base: &GltfAsset) -> GltfAsset {
+    pub fn apply_fields(&self, base: &GltfAsset) -> GltfAsset {
         let mut next = base.clone();
         if let Some(v) = &self.version {
             next.version = v.clone();
@@ -501,7 +577,7 @@ impl GltfAssetDiff {
 #[value(rename_all = "camelCase")]
 pub struct GltfSceneDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub nodes: Option<Vec<usize>>,
+    pub nodes: Option<GltfRefsDelta>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
@@ -511,18 +587,10 @@ pub struct GltfSceneDiff {
 }
 
 impl ItemDiff<GltfScene> for GltfSceneDiff {
-    fn between(base: &GltfScene, other: &GltfScene) -> Self {
-        Self {
-            nodes: (base.nodes != other.nodes).then(|| other.nodes.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfScene) -> GltfScene {
+    fn apply(&self, base: &GltfScene, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfScene> {
         let mut next = base.clone();
         if let Some(v) = &self.nodes {
-            next.nodes = v.clone();
+            next.nodes = unrefs(v.commit_onto(&refs(&base.nodes), capability).map_err(|error| error.under(["nodes"]))?);
         }
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -533,20 +601,18 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfScene) -> Self {
         Self {
-            nodes: self.nodes.as_ref().map(|_| base.nodes.clone()),
+            nodes: self.nodes.as_ref().map(|delta| delta.inverse(&refs(&base.nodes))),
             name: self.name.as_ref().map(|_| base.name.clone()),
             extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.nodes.is_some() {
-            self.nodes = other.nodes;
-        }
+        absorb_slot!(self.nodes, other.nodes);
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -565,7 +631,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
 #[value(rename_all = "camelCase")]
 pub struct GltfNodeDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub children: Option<Vec<usize>>,
+    pub children: Option<GltfRefsDelta>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub mesh: Option<Option<usize>>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
@@ -591,26 +657,10 @@ pub struct GltfNodeDiff {
 }
 
 impl ItemDiff<GltfNode> for GltfNodeDiff {
-    fn between(base: &GltfNode, other: &GltfNode) -> Self {
-        Self {
-            children: (base.children != other.children).then(|| other.children.clone()),
-            mesh: (base.mesh != other.mesh).then_some(other.mesh),
-            camera: (base.camera != other.camera).then_some(other.camera),
-            skin: (base.skin != other.skin).then_some(other.skin),
-            matrix: (base.matrix != other.matrix).then_some(other.matrix),
-            translation: (base.translation != other.translation).then_some(other.translation),
-            rotation: (base.rotation != other.rotation).then_some(other.rotation),
-            scale: (base.scale != other.scale).then_some(other.scale),
-            weights: (base.weights != other.weights).then(|| other.weights.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfNode) -> GltfNode {
+    fn apply(&self, base: &GltfNode, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfNode> {
         let mut next = base.clone();
         if let Some(v) = &self.children {
-            next.children = v.clone();
+            next.children = unrefs(v.commit_onto(&refs(&base.children), capability).map_err(|error| error.under(["children"]))?);
         }
         if let Some(v) = self.mesh {
             next.mesh = v;
@@ -645,11 +695,11 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfNode) -> Self {
         Self {
-            children: self.children.as_ref().map(|_| base.children.clone()),
+            children: self.children.as_ref().map(|delta| delta.inverse(&refs(&base.children))),
             mesh: self.mesh.map(|_| base.mesh),
             camera: self.camera.map(|_| base.camera),
             skin: self.skin.map(|_| base.skin),
@@ -664,9 +714,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.children.is_some() {
-            self.children = other.children;
-        }
+        absorb_slot!(self.children, other.children);
         if other.mesh.is_some() {
             self.mesh = other.mesh;
         }
@@ -721,19 +769,10 @@ pub struct GltfMeshDiff {
 }
 
 impl ItemDiff<GltfMesh> for GltfMeshDiff {
-    fn between(base: &GltfMesh, other: &GltfMesh) -> Self {
-        Self {
-            primitives: Some(GltfPrimitivesDiff::between(&base.primitives, &other.primitives)).filter(|diff| !diff.is_empty()),
-            weights: (base.weights != other.weights).then(|| other.weights.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfMesh) -> GltfMesh {
+    fn apply(&self, base: &GltfMesh, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfMesh> {
         let mut next = base.clone();
         if let Some(v) = &self.primitives {
-            next.primitives = v.apply(&base.primitives);
+            next.primitives = v.apply(&base.primitives, "primitives", capability)?;
         }
         if let Some(v) = &self.weights {
             next.weights = v.clone();
@@ -747,7 +786,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfMesh) -> Self {
         Self {
@@ -811,23 +850,7 @@ pub struct GltfAccessorDiff {
 }
 
 impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
-    fn between(base: &GltfAccessor, other: &GltfAccessor) -> Self {
-        Self {
-            buffer_view: (base.buffer_view != other.buffer_view).then_some(other.buffer_view),
-            byte_offset: (base.byte_offset != other.byte_offset).then_some(other.byte_offset),
-            component_type: (base.component_type != other.component_type).then_some(other.component_type),
-            normalized: (base.normalized != other.normalized).then_some(other.normalized),
-            count: (base.count != other.count).then_some(other.count),
-            kind: (base.kind != other.kind).then_some(other.kind),
-            max: (base.max != other.max).then(|| other.max.clone()),
-            min: (base.min != other.min).then(|| other.min.clone()),
-            sparse: (base.sparse != other.sparse).then(|| other.sparse.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfAccessor) -> GltfAccessor {
+    fn apply(&self, base: &GltfAccessor, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfAccessor> {
         let mut next = base.clone();
         if let Some(v) = self.buffer_view {
             next.buffer_view = v;
@@ -865,7 +888,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfAccessor) -> Self {
         Self {
@@ -953,22 +976,7 @@ pub struct GltfMaterialDiff {
 }
 
 impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
-    fn between(base: &GltfMaterial, other: &GltfMaterial) -> Self {
-        Self {
-            name: (base.name != other.name).then(|| other.name.clone()),
-            pbr_metallic_roughness: (base.pbr_metallic_roughness != other.pbr_metallic_roughness).then(|| other.pbr_metallic_roughness.clone()),
-            normal_texture: (base.normal_texture != other.normal_texture).then(|| other.normal_texture.clone()),
-            occlusion_texture: (base.occlusion_texture != other.occlusion_texture).then(|| other.occlusion_texture.clone()),
-            emissive_texture: (base.emissive_texture != other.emissive_texture).then(|| other.emissive_texture.clone()),
-            emissive_factor: (base.emissive_factor != other.emissive_factor).then_some(other.emissive_factor),
-            alpha_mode: (base.alpha_mode != other.alpha_mode).then_some(other.alpha_mode),
-            alpha_cutoff: (base.alpha_cutoff != other.alpha_cutoff).then_some(other.alpha_cutoff),
-            double_sided: (base.double_sided != other.double_sided).then_some(other.double_sided),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfMaterial) -> GltfMaterial {
+    fn apply(&self, base: &GltfMaterial, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfMaterial> {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -1003,7 +1011,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfMaterial) -> Self {
         Self {
@@ -1080,16 +1088,7 @@ pub struct GltfBufferDiff {
 }
 
 impl ItemDiff<GltfBuffer> for GltfBufferDiff {
-    fn between(base: &GltfBuffer, other: &GltfBuffer) -> Self {
-        Self {
-            byte_length: (base.byte_length != other.byte_length).then_some(other.byte_length),
-            uri: (base.uri != other.uri).then(|| other.uri.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfBuffer) -> GltfBuffer {
+    fn apply(&self, base: &GltfBuffer, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfBuffer> {
         let mut next = base.clone();
         if let Some(v) = self.byte_length {
             next.byte_length = v;
@@ -1106,7 +1105,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfBuffer) -> Self {
         Self {
@@ -1142,7 +1141,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
 #[value(rename_all = "camelCase")]
 pub struct GltfPrimitiveDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub attributes: Option<GltfMorphTarget>,
+    pub attributes: Option<GltfAttributesDelta>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub indices: Option<Option<usize>>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
@@ -1150,7 +1149,7 @@ pub struct GltfPrimitiveDiff {
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub mode: Option<Option<u64>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<GltfMorphTarget>>,
+    pub targets: Option<GltfTargetsDelta>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
@@ -1158,21 +1157,10 @@ pub struct GltfPrimitiveDiff {
 }
 
 impl ItemDiff<GltfPrimitive> for GltfPrimitiveDiff {
-    fn between(base: &GltfPrimitive, other: &GltfPrimitive) -> Self {
-        Self {
-            attributes: (base.attributes != other.attributes).then(|| GltfMorphTarget(other.attributes.clone())),
-            indices: (base.indices != other.indices).then(|| other.indices.clone()),
-            material: (base.material != other.material).then(|| other.material.clone()),
-            mode: (base.mode != other.mode).then(|| other.mode.clone()),
-            targets: (base.targets != other.targets).then(|| other.targets.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfPrimitive) -> GltfPrimitive {
+    fn apply(&self, base: &GltfPrimitive, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfPrimitive> {
         let mut next = base.clone();
         if let Some(v) = &self.attributes {
-            next.attributes = v.0.clone();
+            next.attributes = attribute_pairs(v.commit_onto(&attribute_rows(&base.attributes), capability).map_err(|error| error.under(["attributes"]))?);
         }
         if let Some(v) = &self.indices {
             next.indices = v.clone();
@@ -1184,7 +1172,7 @@ impl ItemDiff<GltfPrimitive> for GltfPrimitiveDiff {
             next.mode = v.clone();
         }
         if let Some(v) = &self.targets {
-            next.targets = v.clone();
+            next.targets = v.commit_onto(&base.targets, capability).map_err(|error| error.under(["targets"]))?;
         }
         if let Some(v) = &self.extensions {
             next.extensions = v.clone();
@@ -1192,23 +1180,21 @@ impl ItemDiff<GltfPrimitive> for GltfPrimitiveDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfPrimitive) -> Self {
         Self {
-            attributes: self.attributes.as_ref().map(|_| GltfMorphTarget(base.attributes.clone())),
+            attributes: self.attributes.as_ref().map(|delta| delta.inverse(&attribute_rows(&base.attributes))),
             indices: self.indices.as_ref().map(|_| base.indices.clone()),
             material: self.material.as_ref().map(|_| base.material.clone()),
             mode: self.mode.as_ref().map(|_| base.mode.clone()),
-            targets: self.targets.as_ref().map(|_| base.targets.clone()),
+            targets: self.targets.as_ref().map(|delta| delta.inverse(&base.targets)),
             extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.attributes.is_some() {
-            self.attributes = other.attributes;
-        }
+        absorb_slot!(self.attributes, other.attributes);
         if other.indices.is_some() {
             self.indices = other.indices;
         }
@@ -1218,9 +1204,7 @@ impl ItemDiff<GltfPrimitive> for GltfPrimitiveDiff {
         if other.mode.is_some() {
             self.mode = other.mode;
         }
-        if other.targets.is_some() {
-            self.targets = other.targets;
-        }
+        absorb_slot!(self.targets, other.targets);
         if other.extensions.is_some() {
             self.extensions = other.extensions;
         }
@@ -1248,16 +1232,7 @@ pub struct GltfTextureDiff {
 }
 
 impl ItemDiff<GltfTexture> for GltfTextureDiff {
-    fn between(base: &GltfTexture, other: &GltfTexture) -> Self {
-        Self {
-            sampler: (base.sampler != other.sampler).then(|| other.sampler.clone()),
-            source: (base.source != other.source).then(|| other.source.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfTexture) -> GltfTexture {
+    fn apply(&self, base: &GltfTexture, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfTexture> {
         let mut next = base.clone();
         if let Some(v) = &self.sampler {
             next.sampler = v.clone();
@@ -1274,7 +1249,7 @@ impl ItemDiff<GltfTexture> for GltfTextureDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfTexture) -> Self {
         Self {
@@ -1324,17 +1299,7 @@ pub struct GltfImageDiff {
 }
 
 impl ItemDiff<GltfImage> for GltfImageDiff {
-    fn between(base: &GltfImage, other: &GltfImage) -> Self {
-        Self {
-            uri: (base.uri != other.uri).then(|| other.uri.clone()),
-            mime_type: (base.mime_type != other.mime_type).then(|| other.mime_type.clone()),
-            buffer_view: (base.buffer_view != other.buffer_view).then(|| other.buffer_view.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfImage) -> GltfImage {
+    fn apply(&self, base: &GltfImage, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfImage> {
         let mut next = base.clone();
         if let Some(v) = &self.uri {
             next.uri = v.clone();
@@ -1354,7 +1319,7 @@ impl ItemDiff<GltfImage> for GltfImageDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfImage) -> Self {
         Self {
@@ -1412,19 +1377,7 @@ pub struct GltfBufferViewDiff {
 }
 
 impl ItemDiff<GltfBufferView> for GltfBufferViewDiff {
-    fn between(base: &GltfBufferView, other: &GltfBufferView) -> Self {
-        Self {
-            buffer: (base.buffer != other.buffer).then(|| other.buffer.clone()),
-            byte_offset: (base.byte_offset != other.byte_offset).then(|| other.byte_offset.clone()),
-            byte_length: (base.byte_length != other.byte_length).then(|| other.byte_length.clone()),
-            byte_stride: (base.byte_stride != other.byte_stride).then(|| other.byte_stride.clone()),
-            target: (base.target != other.target).then(|| other.target.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfBufferView) -> GltfBufferView {
+    fn apply(&self, base: &GltfBufferView, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfBufferView> {
         let mut next = base.clone();
         if let Some(v) = &self.buffer {
             next.buffer = v.clone();
@@ -1450,7 +1403,7 @@ impl ItemDiff<GltfBufferView> for GltfBufferViewDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfBufferView) -> Self {
         Self {
@@ -1502,7 +1455,7 @@ pub struct GltfSkinDiff {
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub skeleton: Option<Option<usize>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub joints: Option<Vec<usize>>,
+    pub joints: Option<GltfRefsDelta>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
@@ -1512,17 +1465,7 @@ pub struct GltfSkinDiff {
 }
 
 impl ItemDiff<GltfSkin> for GltfSkinDiff {
-    fn between(base: &GltfSkin, other: &GltfSkin) -> Self {
-        Self {
-            inverse_bind_matrices: (base.inverse_bind_matrices != other.inverse_bind_matrices).then(|| other.inverse_bind_matrices.clone()),
-            skeleton: (base.skeleton != other.skeleton).then(|| other.skeleton.clone()),
-            joints: (base.joints != other.joints).then(|| other.joints.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfSkin) -> GltfSkin {
+    fn apply(&self, base: &GltfSkin, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfSkin> {
         let mut next = base.clone();
         if let Some(v) = &self.inverse_bind_matrices {
             next.inverse_bind_matrices = v.clone();
@@ -1531,7 +1474,7 @@ impl ItemDiff<GltfSkin> for GltfSkinDiff {
             next.skeleton = v.clone();
         }
         if let Some(v) = &self.joints {
-            next.joints = v.clone();
+            next.joints = unrefs(v.commit_onto(&refs(&base.joints), capability).map_err(|error| error.under(["joints"]))?);
         }
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -1542,13 +1485,13 @@ impl ItemDiff<GltfSkin> for GltfSkinDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfSkin) -> Self {
         Self {
             inverse_bind_matrices: self.inverse_bind_matrices.as_ref().map(|_| base.inverse_bind_matrices.clone()),
             skeleton: self.skeleton.as_ref().map(|_| base.skeleton.clone()),
-            joints: self.joints.as_ref().map(|_| base.joints.clone()),
+            joints: self.joints.as_ref().map(|delta| delta.inverse(&refs(&base.joints))),
             name: self.name.as_ref().map(|_| base.name.clone()),
             extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
@@ -1561,9 +1504,7 @@ impl ItemDiff<GltfSkin> for GltfSkinDiff {
         if other.skeleton.is_some() {
             self.skeleton = other.skeleton;
         }
-        if other.joints.is_some() {
-            self.joints = other.joints;
-        }
+        absorb_slot!(self.joints, other.joints);
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -1582,9 +1523,9 @@ impl ItemDiff<GltfSkin> for GltfSkinDiff {
 #[value(rename_all = "camelCase")]
 pub struct GltfAnimationDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub channels: Option<Vec<GltfAnimationChannel>>,
+    pub channels: Option<GltfChannelsDelta>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub samplers: Option<Vec<GltfAnimationSampler>>,
+    pub samplers: Option<GltfAnimationSamplersDelta>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
@@ -1594,22 +1535,13 @@ pub struct GltfAnimationDiff {
 }
 
 impl ItemDiff<GltfAnimation> for GltfAnimationDiff {
-    fn between(base: &GltfAnimation, other: &GltfAnimation) -> Self {
-        Self {
-            channels: (base.channels != other.channels).then(|| other.channels.clone()),
-            samplers: (base.samplers != other.samplers).then(|| other.samplers.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfAnimation) -> GltfAnimation {
+    fn apply(&self, base: &GltfAnimation, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfAnimation> {
         let mut next = base.clone();
         if let Some(v) = &self.channels {
-            next.channels = v.clone();
+            next.channels = v.commit_onto(&base.channels, capability).map_err(|error| error.under(["channels"]))?;
         }
         if let Some(v) = &self.samplers {
-            next.samplers = v.clone();
+            next.samplers = v.commit_onto(&base.samplers, capability).map_err(|error| error.under(["samplers"]))?;
         }
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -1620,1052 +1552,20 @@ impl ItemDiff<GltfAnimation> for GltfAnimationDiff {
         if let Some(v) = &self.extras {
             next.extras = v.clone();
         }
-        next
+        Ok(next)
     }
     fn inverse(&self, base: &GltfAnimation) -> Self {
         Self {
-            channels: self.channels.as_ref().map(|_| base.channels.clone()),
-            samplers: self.samplers.as_ref().map(|_| base.samplers.clone()),
+            channels: self.channels.as_ref().map(|delta| delta.inverse(&base.channels)),
+            samplers: self.samplers.as_ref().map(|delta| delta.inverse(&base.samplers)),
             name: self.name.as_ref().map(|_| base.name.clone()),
             extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.channels.is_some() {
-            self.channels = other.channels;
-        }
-        if other.samplers.is_some() {
-            self.samplers = other.samplers;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️AnimationDiff
-
-//#region 🔖️PrimitiveDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfPrimitiveDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub attributes: Option<GltfMorphTarget>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub indices: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub material: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub mode: Option<Option<u64>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<GltfMorphTarget>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfPrimitive> for GltfPrimitiveDiff {
-    fn between(base: &GltfPrimitive, other: &GltfPrimitive) -> Self {
-        Self {
-            attributes: (base.attributes != other.attributes).then(|| GltfMorphTarget(other.attributes.clone())),
-            indices: (base.indices != other.indices).then(|| other.indices.clone()),
-            material: (base.material != other.material).then(|| other.material.clone()),
-            mode: (base.mode != other.mode).then(|| other.mode.clone()),
-            targets: (base.targets != other.targets).then(|| other.targets.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfPrimitive) -> GltfPrimitive {
-        let mut next = base.clone();
-        if let Some(v) = &self.attributes {
-            next.attributes = v.0.clone();
-        }
-        if let Some(v) = &self.indices {
-            next.indices = v.clone();
-        }
-        if let Some(v) = &self.material {
-            next.material = v.clone();
-        }
-        if let Some(v) = &self.mode {
-            next.mode = v.clone();
-        }
-        if let Some(v) = &self.targets {
-            next.targets = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfPrimitive) -> Self {
-        Self {
-            attributes: self.attributes.as_ref().map(|_| GltfMorphTarget(base.attributes.clone())),
-            indices: self.indices.as_ref().map(|_| base.indices.clone()),
-            material: self.material.as_ref().map(|_| base.material.clone()),
-            mode: self.mode.as_ref().map(|_| base.mode.clone()),
-            targets: self.targets.as_ref().map(|_| base.targets.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.attributes.is_some() {
-            self.attributes = other.attributes;
-        }
-        if other.indices.is_some() {
-            self.indices = other.indices;
-        }
-        if other.material.is_some() {
-            self.material = other.material;
-        }
-        if other.mode.is_some() {
-            self.mode = other.mode;
-        }
-        if other.targets.is_some() {
-            self.targets = other.targets;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️PrimitiveDiff
-
-//#region 🔖️TextureDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfTextureDiff {
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub sampler: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub source: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfTexture> for GltfTextureDiff {
-    fn between(base: &GltfTexture, other: &GltfTexture) -> Self {
-        Self {
-            sampler: (base.sampler != other.sampler).then(|| other.sampler.clone()),
-            source: (base.source != other.source).then(|| other.source.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfTexture) -> GltfTexture {
-        let mut next = base.clone();
-        if let Some(v) = &self.sampler {
-            next.sampler = v.clone();
-        }
-        if let Some(v) = &self.source {
-            next.source = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfTexture) -> Self {
-        Self {
-            sampler: self.sampler.as_ref().map(|_| base.sampler.clone()),
-            source: self.source.as_ref().map(|_| base.source.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.sampler.is_some() {
-            self.sampler = other.sampler;
-        }
-        if other.source.is_some() {
-            self.source = other.source;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️TextureDiff
-
-//#region 🔖️ImageDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfImageDiff {
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub uri: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub mime_type: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub buffer_view: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfImage> for GltfImageDiff {
-    fn between(base: &GltfImage, other: &GltfImage) -> Self {
-        Self {
-            uri: (base.uri != other.uri).then(|| other.uri.clone()),
-            mime_type: (base.mime_type != other.mime_type).then(|| other.mime_type.clone()),
-            buffer_view: (base.buffer_view != other.buffer_view).then(|| other.buffer_view.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfImage) -> GltfImage {
-        let mut next = base.clone();
-        if let Some(v) = &self.uri {
-            next.uri = v.clone();
-        }
-        if let Some(v) = &self.mime_type {
-            next.mime_type = v.clone();
-        }
-        if let Some(v) = &self.buffer_view {
-            next.buffer_view = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfImage) -> Self {
-        Self {
-            uri: self.uri.as_ref().map(|_| base.uri.clone()),
-            mime_type: self.mime_type.as_ref().map(|_| base.mime_type.clone()),
-            buffer_view: self.buffer_view.as_ref().map(|_| base.buffer_view.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.uri.is_some() {
-            self.uri = other.uri;
-        }
-        if other.mime_type.is_some() {
-            self.mime_type = other.mime_type;
-        }
-        if other.buffer_view.is_some() {
-            self.buffer_view = other.buffer_view;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️ImageDiff
-
-//#region 🔖️BufferViewDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfBufferViewDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub buffer: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub byte_offset: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub byte_length: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub byte_stride: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub target: Option<Option<u64>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfBufferView> for GltfBufferViewDiff {
-    fn between(base: &GltfBufferView, other: &GltfBufferView) -> Self {
-        Self {
-            buffer: (base.buffer != other.buffer).then(|| other.buffer.clone()),
-            byte_offset: (base.byte_offset != other.byte_offset).then(|| other.byte_offset.clone()),
-            byte_length: (base.byte_length != other.byte_length).then(|| other.byte_length.clone()),
-            byte_stride: (base.byte_stride != other.byte_stride).then(|| other.byte_stride.clone()),
-            target: (base.target != other.target).then(|| other.target.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfBufferView) -> GltfBufferView {
-        let mut next = base.clone();
-        if let Some(v) = &self.buffer {
-            next.buffer = v.clone();
-        }
-        if let Some(v) = &self.byte_offset {
-            next.byte_offset = v.clone();
-        }
-        if let Some(v) = &self.byte_length {
-            next.byte_length = v.clone();
-        }
-        if let Some(v) = &self.byte_stride {
-            next.byte_stride = v.clone();
-        }
-        if let Some(v) = &self.target {
-            next.target = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfBufferView) -> Self {
-        Self {
-            buffer: self.buffer.as_ref().map(|_| base.buffer.clone()),
-            byte_offset: self.byte_offset.as_ref().map(|_| base.byte_offset.clone()),
-            byte_length: self.byte_length.as_ref().map(|_| base.byte_length.clone()),
-            byte_stride: self.byte_stride.as_ref().map(|_| base.byte_stride.clone()),
-            target: self.target.as_ref().map(|_| base.target.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.buffer.is_some() {
-            self.buffer = other.buffer;
-        }
-        if other.byte_offset.is_some() {
-            self.byte_offset = other.byte_offset;
-        }
-        if other.byte_length.is_some() {
-            self.byte_length = other.byte_length;
-        }
-        if other.byte_stride.is_some() {
-            self.byte_stride = other.byte_stride;
-        }
-        if other.target.is_some() {
-            self.target = other.target;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️BufferViewDiff
-
-//#region 🔖️SkinDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfSkinDiff {
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub inverse_bind_matrices: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub skeleton: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub joints: Option<Vec<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfSkin> for GltfSkinDiff {
-    fn between(base: &GltfSkin, other: &GltfSkin) -> Self {
-        Self {
-            inverse_bind_matrices: (base.inverse_bind_matrices != other.inverse_bind_matrices).then(|| other.inverse_bind_matrices.clone()),
-            skeleton: (base.skeleton != other.skeleton).then(|| other.skeleton.clone()),
-            joints: (base.joints != other.joints).then(|| other.joints.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfSkin) -> GltfSkin {
-        let mut next = base.clone();
-        if let Some(v) = &self.inverse_bind_matrices {
-            next.inverse_bind_matrices = v.clone();
-        }
-        if let Some(v) = &self.skeleton {
-            next.skeleton = v.clone();
-        }
-        if let Some(v) = &self.joints {
-            next.joints = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfSkin) -> Self {
-        Self {
-            inverse_bind_matrices: self.inverse_bind_matrices.as_ref().map(|_| base.inverse_bind_matrices.clone()),
-            skeleton: self.skeleton.as_ref().map(|_| base.skeleton.clone()),
-            joints: self.joints.as_ref().map(|_| base.joints.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.inverse_bind_matrices.is_some() {
-            self.inverse_bind_matrices = other.inverse_bind_matrices;
-        }
-        if other.skeleton.is_some() {
-            self.skeleton = other.skeleton;
-        }
-        if other.joints.is_some() {
-            self.joints = other.joints;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️SkinDiff
-
-//#region 🔖️AnimationDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfAnimationDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub channels: Option<Vec<GltfAnimationChannel>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub samplers: Option<Vec<GltfAnimationSampler>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfAnimation> for GltfAnimationDiff {
-    fn between(base: &GltfAnimation, other: &GltfAnimation) -> Self {
-        Self {
-            channels: (base.channels != other.channels).then(|| other.channels.clone()),
-            samplers: (base.samplers != other.samplers).then(|| other.samplers.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfAnimation) -> GltfAnimation {
-        let mut next = base.clone();
-        if let Some(v) = &self.channels {
-            next.channels = v.clone();
-        }
-        if let Some(v) = &self.samplers {
-            next.samplers = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfAnimation) -> Self {
-        Self {
-            channels: self.channels.as_ref().map(|_| base.channels.clone()),
-            samplers: self.samplers.as_ref().map(|_| base.samplers.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.channels.is_some() {
-            self.channels = other.channels;
-        }
-        if other.samplers.is_some() {
-            self.samplers = other.samplers;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️AnimationDiff
-
-//#region 🔖️PrimitiveDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfPrimitiveDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub attributes: Option<GltfMorphTarget>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub indices: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub material: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub mode: Option<Option<u64>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<GltfMorphTarget>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfPrimitive> for GltfPrimitiveDiff {
-    fn between(base: &GltfPrimitive, other: &GltfPrimitive) -> Self {
-        Self {
-            attributes: (base.attributes != other.attributes).then(|| GltfMorphTarget(other.attributes.clone())),
-            indices: (base.indices != other.indices).then(|| other.indices.clone()),
-            material: (base.material != other.material).then(|| other.material.clone()),
-            mode: (base.mode != other.mode).then(|| other.mode.clone()),
-            targets: (base.targets != other.targets).then(|| other.targets.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfPrimitive) -> GltfPrimitive {
-        let mut next = base.clone();
-        if let Some(v) = &self.attributes {
-            next.attributes = v.0.clone();
-        }
-        if let Some(v) = &self.indices {
-            next.indices = v.clone();
-        }
-        if let Some(v) = &self.material {
-            next.material = v.clone();
-        }
-        if let Some(v) = &self.mode {
-            next.mode = v.clone();
-        }
-        if let Some(v) = &self.targets {
-            next.targets = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfPrimitive) -> Self {
-        Self {
-            attributes: self.attributes.as_ref().map(|_| GltfMorphTarget(base.attributes.clone())),
-            indices: self.indices.as_ref().map(|_| base.indices.clone()),
-            material: self.material.as_ref().map(|_| base.material.clone()),
-            mode: self.mode.as_ref().map(|_| base.mode.clone()),
-            targets: self.targets.as_ref().map(|_| base.targets.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.attributes.is_some() {
-            self.attributes = other.attributes;
-        }
-        if other.indices.is_some() {
-            self.indices = other.indices;
-        }
-        if other.material.is_some() {
-            self.material = other.material;
-        }
-        if other.mode.is_some() {
-            self.mode = other.mode;
-        }
-        if other.targets.is_some() {
-            self.targets = other.targets;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️PrimitiveDiff
-
-//#region 🔖️TextureDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfTextureDiff {
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub sampler: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub source: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfTexture> for GltfTextureDiff {
-    fn between(base: &GltfTexture, other: &GltfTexture) -> Self {
-        Self {
-            sampler: (base.sampler != other.sampler).then(|| other.sampler.clone()),
-            source: (base.source != other.source).then(|| other.source.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfTexture) -> GltfTexture {
-        let mut next = base.clone();
-        if let Some(v) = &self.sampler {
-            next.sampler = v.clone();
-        }
-        if let Some(v) = &self.source {
-            next.source = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfTexture) -> Self {
-        Self {
-            sampler: self.sampler.as_ref().map(|_| base.sampler.clone()),
-            source: self.source.as_ref().map(|_| base.source.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.sampler.is_some() {
-            self.sampler = other.sampler;
-        }
-        if other.source.is_some() {
-            self.source = other.source;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️TextureDiff
-
-//#region 🔖️ImageDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfImageDiff {
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub uri: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub mime_type: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub buffer_view: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfImage> for GltfImageDiff {
-    fn between(base: &GltfImage, other: &GltfImage) -> Self {
-        Self {
-            uri: (base.uri != other.uri).then(|| other.uri.clone()),
-            mime_type: (base.mime_type != other.mime_type).then(|| other.mime_type.clone()),
-            buffer_view: (base.buffer_view != other.buffer_view).then(|| other.buffer_view.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfImage) -> GltfImage {
-        let mut next = base.clone();
-        if let Some(v) = &self.uri {
-            next.uri = v.clone();
-        }
-        if let Some(v) = &self.mime_type {
-            next.mime_type = v.clone();
-        }
-        if let Some(v) = &self.buffer_view {
-            next.buffer_view = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfImage) -> Self {
-        Self {
-            uri: self.uri.as_ref().map(|_| base.uri.clone()),
-            mime_type: self.mime_type.as_ref().map(|_| base.mime_type.clone()),
-            buffer_view: self.buffer_view.as_ref().map(|_| base.buffer_view.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.uri.is_some() {
-            self.uri = other.uri;
-        }
-        if other.mime_type.is_some() {
-            self.mime_type = other.mime_type;
-        }
-        if other.buffer_view.is_some() {
-            self.buffer_view = other.buffer_view;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️ImageDiff
-
-//#region 🔖️BufferViewDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfBufferViewDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub buffer: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub byte_offset: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub byte_length: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub byte_stride: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub target: Option<Option<u64>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfBufferView> for GltfBufferViewDiff {
-    fn between(base: &GltfBufferView, other: &GltfBufferView) -> Self {
-        Self {
-            buffer: (base.buffer != other.buffer).then(|| other.buffer.clone()),
-            byte_offset: (base.byte_offset != other.byte_offset).then(|| other.byte_offset.clone()),
-            byte_length: (base.byte_length != other.byte_length).then(|| other.byte_length.clone()),
-            byte_stride: (base.byte_stride != other.byte_stride).then(|| other.byte_stride.clone()),
-            target: (base.target != other.target).then(|| other.target.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfBufferView) -> GltfBufferView {
-        let mut next = base.clone();
-        if let Some(v) = &self.buffer {
-            next.buffer = v.clone();
-        }
-        if let Some(v) = &self.byte_offset {
-            next.byte_offset = v.clone();
-        }
-        if let Some(v) = &self.byte_length {
-            next.byte_length = v.clone();
-        }
-        if let Some(v) = &self.byte_stride {
-            next.byte_stride = v.clone();
-        }
-        if let Some(v) = &self.target {
-            next.target = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfBufferView) -> Self {
-        Self {
-            buffer: self.buffer.as_ref().map(|_| base.buffer.clone()),
-            byte_offset: self.byte_offset.as_ref().map(|_| base.byte_offset.clone()),
-            byte_length: self.byte_length.as_ref().map(|_| base.byte_length.clone()),
-            byte_stride: self.byte_stride.as_ref().map(|_| base.byte_stride.clone()),
-            target: self.target.as_ref().map(|_| base.target.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.buffer.is_some() {
-            self.buffer = other.buffer;
-        }
-        if other.byte_offset.is_some() {
-            self.byte_offset = other.byte_offset;
-        }
-        if other.byte_length.is_some() {
-            self.byte_length = other.byte_length;
-        }
-        if other.byte_stride.is_some() {
-            self.byte_stride = other.byte_stride;
-        }
-        if other.target.is_some() {
-            self.target = other.target;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️BufferViewDiff
-
-//#region 🔖️SkinDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfSkinDiff {
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub inverse_bind_matrices: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub skeleton: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub joints: Option<Vec<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfSkin> for GltfSkinDiff {
-    fn between(base: &GltfSkin, other: &GltfSkin) -> Self {
-        Self {
-            inverse_bind_matrices: (base.inverse_bind_matrices != other.inverse_bind_matrices).then(|| other.inverse_bind_matrices.clone()),
-            skeleton: (base.skeleton != other.skeleton).then(|| other.skeleton.clone()),
-            joints: (base.joints != other.joints).then(|| other.joints.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfSkin) -> GltfSkin {
-        let mut next = base.clone();
-        if let Some(v) = &self.inverse_bind_matrices {
-            next.inverse_bind_matrices = v.clone();
-        }
-        if let Some(v) = &self.skeleton {
-            next.skeleton = v.clone();
-        }
-        if let Some(v) = &self.joints {
-            next.joints = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfSkin) -> Self {
-        Self {
-            inverse_bind_matrices: self.inverse_bind_matrices.as_ref().map(|_| base.inverse_bind_matrices.clone()),
-            skeleton: self.skeleton.as_ref().map(|_| base.skeleton.clone()),
-            joints: self.joints.as_ref().map(|_| base.joints.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.inverse_bind_matrices.is_some() {
-            self.inverse_bind_matrices = other.inverse_bind_matrices;
-        }
-        if other.skeleton.is_some() {
-            self.skeleton = other.skeleton;
-        }
-        if other.joints.is_some() {
-            self.joints = other.joints;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-    }
-}
-//#endregion 🔖️SkinDiff
-
-//#region 🔖️AnimationDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct GltfAnimationDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub channels: Option<Vec<GltfAnimationChannel>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub samplers: Option<Vec<GltfAnimationSampler>>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
-    pub extras: Option<Option<GltfJson>>,
-}
-
-impl ItemDiff<GltfAnimation> for GltfAnimationDiff {
-    fn between(base: &GltfAnimation, other: &GltfAnimation) -> Self {
-        Self {
-            channels: (base.channels != other.channels).then(|| other.channels.clone()),
-            samplers: (base.samplers != other.samplers).then(|| other.samplers.clone()),
-            name: (base.name != other.name).then(|| other.name.clone()),
-            extensions: (base.extensions != other.extensions).then(|| other.extensions.clone()),
-            extras: (base.extras != other.extras).then(|| other.extras.clone()),
-        }
-    }
-    fn apply(&self, base: &GltfAnimation) -> GltfAnimation {
-        let mut next = base.clone();
-        if let Some(v) = &self.channels {
-            next.channels = v.clone();
-        }
-        if let Some(v) = &self.samplers {
-            next.samplers = v.clone();
-        }
-        if let Some(v) = &self.name {
-            next.name = v.clone();
-        }
-        if let Some(v) = &self.extensions {
-            next.extensions = v.clone();
-        }
-        if let Some(v) = &self.extras {
-            next.extras = v.clone();
-        }
-        next
-    }
-    fn inverse(&self, base: &GltfAnimation) -> Self {
-        Self {
-            channels: self.channels.as_ref().map(|_| base.channels.clone()),
-            samplers: self.samplers.as_ref().map(|_| base.samplers.clone()),
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            extensions: self.extensions.as_ref().map(|_| base.extensions.clone()),
-            extras: self.extras.as_ref().map(|_| base.extras.clone()),
-        }
-    }
-    fn absorb_into(&mut self, other: Self) {
-        if other.channels.is_some() {
-            self.channels = other.channels;
-        }
-        if other.samplers.is_some() {
-            self.samplers = other.samplers;
-        }
+        absorb_slot!(self.channels, other.channels);
+        absorb_slot!(self.samplers, other.samplers);
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -2753,10 +1653,10 @@ pub struct GltfDiff {
     pub cameras: Option<GltfCamerasDiff>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub extensions_used: Option<Vec<String>>,
+    pub extensions_used: Option<GltfStringsDelta>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub extensions_required: Option<Vec<String>>,
+    pub extensions_required: Option<GltfStringsDelta>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -2787,8 +1687,8 @@ impl GltfDiff {
             && self.skins.as_ref().is_none_or(GltfSkinsDiff::is_empty)
             && self.animations.as_ref().is_none_or(GltfAnimationsDiff::is_empty)
             && self.cameras.as_ref().is_none_or(GltfCamerasDiff::is_empty)
-            && self.extensions_used.is_none()
-            && self.extensions_required.is_none()
+            && self.extensions_used.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.extensions_required.as_ref().is_none_or(|delta| delta.is_empty())
             && self.extensions.is_none()
             && self.extras.is_none()
             && self.source_form.is_none()
@@ -2917,83 +1817,62 @@ impl protocol::DiffRegions for GltfDiff {
 //#endregion 🗺️TouchedRegions
 
 impl MutationDiff<GltfSnapshot> for GltfDiff {
-    fn apply(&self, base: &GltfSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfSnapshot> {
-        macro_rules! validate_collection {
-            ($field:ident, $base:expr, $target:literal) => {
-                if let Some(diff) = &self.$field {
-                    diff.validate_apply($base.len(), $target)?;
-                }
-            };
-        }
-        validate_collection!(scenes, base.document.scenes, "document/scenes");
-        validate_collection!(nodes, base.document.nodes, "document/nodes");
-        validate_collection!(meshes, base.document.meshes, "document/meshes");
-        validate_collection!(accessors, base.document.accessors, "document/accessors");
-        validate_collection!(buffer_views, base.document.buffer_views, "document/bufferViews");
-        validate_collection!(buffers, base.document.buffers, "document/buffers");
-        validate_collection!(buffer_bytes, base.buffers, "buffers");
-        validate_collection!(materials, base.document.materials, "document/materials");
-        validate_collection!(textures, base.document.textures, "document/textures");
-        validate_collection!(images, base.document.images, "document/images");
-        validate_collection!(samplers, base.document.samplers, "document/samplers");
-        validate_collection!(skins, base.document.skins, "document/skins");
-        validate_collection!(animations, base.document.animations, "document/animations");
-        validate_collection!(cameras, base.document.cameras, "document/cameras");
+    fn apply(&self, base: &GltfSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfSnapshot> {
         let mut next = base.clone();
         let doc = &mut next.document;
         if let Some(d) = &self.asset {
-            doc.asset = d.apply(&doc.asset);
+            doc.asset = d.apply(&doc.asset, capability);
         }
         if let Some(v) = self.scene {
             doc.scene = v;
         }
         if let Some(d) = &self.scenes {
-            doc.scenes = d.apply(&doc.scenes);
+            doc.scenes = d.apply(&doc.scenes, "document/scenes", capability)?;
         }
         if let Some(d) = &self.nodes {
-            doc.nodes = d.apply(&doc.nodes);
+            doc.nodes = d.apply(&doc.nodes, "document/nodes", capability)?;
         }
         if let Some(d) = &self.meshes {
-            doc.meshes = d.apply(&doc.meshes);
+            doc.meshes = d.apply(&doc.meshes, "document/meshes", capability)?;
         }
         if let Some(d) = &self.accessors {
-            doc.accessors = d.apply(&doc.accessors);
+            doc.accessors = d.apply(&doc.accessors, "document/accessors", capability)?;
         }
         if let Some(d) = &self.buffer_views {
-            doc.buffer_views = d.apply(&doc.buffer_views);
+            doc.buffer_views = d.apply(&doc.buffer_views, "document/bufferViews", capability)?;
         }
         if let Some(d) = &self.buffers {
-            doc.buffers = d.apply(&doc.buffers);
+            doc.buffers = d.apply(&doc.buffers, "document/buffers", capability)?;
         }
         if let Some(d) = &self.buffer_bytes {
-            next.buffers = d.apply(&next.buffers);
+            next.buffers = d.apply(&next.buffers, "buffers", capability)?;
         }
         if let Some(d) = &self.materials {
-            doc.materials = d.apply(&doc.materials);
+            doc.materials = d.apply(&doc.materials, "document/materials", capability)?;
         }
         if let Some(d) = &self.textures {
-            doc.textures = d.apply(&doc.textures);
+            doc.textures = d.apply(&doc.textures, "document/textures", capability)?;
         }
         if let Some(d) = &self.images {
-            doc.images = d.apply(&doc.images);
+            doc.images = d.apply(&doc.images, "document/images", capability)?;
         }
         if let Some(d) = &self.samplers {
-            doc.samplers = d.apply(&doc.samplers);
+            doc.samplers = d.apply(&doc.samplers, "document/samplers", capability)?;
         }
         if let Some(d) = &self.skins {
-            doc.skins = d.apply(&doc.skins);
+            doc.skins = d.apply(&doc.skins, "document/skins", capability)?;
         }
         if let Some(d) = &self.animations {
-            doc.animations = d.apply(&doc.animations);
+            doc.animations = d.apply(&doc.animations, "document/animations", capability)?;
         }
         if let Some(d) = &self.cameras {
-            doc.cameras = d.apply(&doc.cameras);
+            doc.cameras = d.apply(&doc.cameras, "document/cameras", capability)?;
         }
-        if let Some(v) = &self.extensions_used {
-            doc.extensions_used = v.clone();
+        if let Some(d) = &self.extensions_used {
+            doc.extensions_used = d.commit_onto(&doc.extensions_used, capability).map_err(|error| error.under(["document/extensionsUsed"]))?;
         }
-        if let Some(v) = &self.extensions_required {
-            doc.extensions_required = v.clone();
+        if let Some(d) = &self.extensions_required {
+            doc.extensions_required = d.commit_onto(&doc.extensions_required, capability).map_err(|error| error.under(["document/extensionsRequired"]))?;
         }
         if let Some(v) = &self.extensions {
             doc.extensions = v.clone();
@@ -3044,12 +1923,8 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         absorb_collection!(skins);
         absorb_collection!(animations);
         absorb_collection!(cameras);
-        if other.extensions_used.is_some() {
-            self.extensions_used = other.extensions_used;
-        }
-        if other.extensions_required.is_some() {
-            self.extensions_required = other.extensions_required;
-        }
+        absorb_slot!(self.extensions_used, other.extensions_used);
+        absorb_slot!(self.extensions_required, other.extensions_required);
         if other.extensions.is_some() {
             self.extensions = other.extensions;
         }
@@ -3082,53 +1957,11 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
             skins: self.skins.as_ref().map(|d| d.inverse(&doc.skins)),
             animations: self.animations.as_ref().map(|d| d.inverse(&doc.animations)),
             cameras: self.cameras.as_ref().map(|d| d.inverse(&doc.cameras)),
-            extensions_used: self.extensions_used.as_ref().map(|_| doc.extensions_used.clone()),
-            extensions_required: self.extensions_required.as_ref().map(|_| doc.extensions_required.clone()),
+            extensions_used: self.extensions_used.as_ref().map(|delta| delta.inverse(&doc.extensions_used)),
+            extensions_required: self.extensions_required.as_ref().map(|delta| delta.inverse(&doc.extensions_required)),
             extensions: self.extensions.as_ref().map(|_| doc.extensions.clone()),
             extras: self.extras.as_ref().map(|_| doc.extras.clone()),
             source_form: self.source_form.map(|_| base.source_form),
-        }
-    }
-
-    fn between(base: &GltfSnapshot, other: &GltfSnapshot) -> Self {
-        let (bd, od) = (&base.document, &other.document);
-        let asset_diff = GltfAssetDiff::between(&bd.asset, &od.asset);
-        let scenes_diff = GltfScenesDiff::between(&bd.scenes, &od.scenes);
-        let nodes_diff = GltfNodesDiff::between(&bd.nodes, &od.nodes);
-        let meshes_diff = GltfMeshesDiff::between(&bd.meshes, &od.meshes);
-        let accessors_diff = GltfAccessorsDiff::between(&bd.accessors, &od.accessors);
-        let buffer_views_diff = GltfBufferViewsDiff::between(&bd.buffer_views, &od.buffer_views);
-        let buffers_diff = GltfBuffersDiff::between(&bd.buffers, &od.buffers);
-        let buffer_bytes_diff = GltfBufferBytesDiff::between(&base.buffers, &other.buffers);
-        let materials_diff = GltfMaterialsDiff::between(&bd.materials, &od.materials);
-        let textures_diff = GltfTexturesDiff::between(&bd.textures, &od.textures);
-        let images_diff = GltfImagesDiff::between(&bd.images, &od.images);
-        let samplers_diff = GltfSamplersDiff::between(&bd.samplers, &od.samplers);
-        let skins_diff = GltfSkinsDiff::between(&bd.skins, &od.skins);
-        let animations_diff = GltfAnimationsDiff::between(&bd.animations, &od.animations);
-        let cameras_diff = GltfCamerasDiff::between(&bd.cameras, &od.cameras);
-        Self {
-            asset: (!asset_diff.is_empty()).then_some(asset_diff),
-            scene: (bd.scene != od.scene).then_some(od.scene),
-            scenes: (!scenes_diff.is_empty()).then_some(scenes_diff),
-            nodes: (!nodes_diff.is_empty()).then_some(nodes_diff),
-            meshes: (!meshes_diff.is_empty()).then_some(meshes_diff),
-            accessors: (!accessors_diff.is_empty()).then_some(accessors_diff),
-            buffer_views: (!buffer_views_diff.is_empty()).then_some(buffer_views_diff),
-            buffers: (!buffers_diff.is_empty()).then_some(buffers_diff),
-            buffer_bytes: (!buffer_bytes_diff.is_empty()).then_some(buffer_bytes_diff),
-            materials: (!materials_diff.is_empty()).then_some(materials_diff),
-            textures: (!textures_diff.is_empty()).then_some(textures_diff),
-            images: (!images_diff.is_empty()).then_some(images_diff),
-            samplers: (!samplers_diff.is_empty()).then_some(samplers_diff),
-            skins: (!skins_diff.is_empty()).then_some(skins_diff),
-            animations: (!animations_diff.is_empty()).then_some(animations_diff),
-            cameras: (!cameras_diff.is_empty()).then_some(cameras_diff),
-            extensions_used: (bd.extensions_used != od.extensions_used).then(|| od.extensions_used.clone()),
-            extensions_required: (bd.extensions_required != od.extensions_required).then(|| od.extensions_required.clone()),
-            extensions: (bd.extensions != od.extensions).then(|| od.extensions.clone()),
-            extras: (bd.extras != od.extras).then(|| od.extras.clone()),
-            source_form: (base.source_form != other.source_form).then_some(other.source_form),
         }
     }
 
@@ -3137,42 +1970,54 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
     }
 }
 
-/// 🧪️ P2-FG3: representative `GltfDiff` cases — the empty (`None`-everywhere) diff PLUS one
-/// genuinely rich diff exercising every one of `GltfDiff`'s 21 top-level clauses at once (built
-/// via the real `DiffAlgebra::between` over `demo_gltf_snapshot()` vs. a hand-tweaked variant, so
-/// every collection's `added`/`modified` entries are real, not fabricated) — used by this
-/// artifact's own `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests
-/// (⚙️engine/component.rs), mirroring json's own `demo_diff_cases()` role in its pilot report.
+/// 🧪️ P2-FG3: representative `GltfDiff` cases — the empty (`None`-everywhere) diff PLUS one rich diff that names a row in every one
+/// of `GltfDiff`'s top-level clauses and one positional list row under a scene, a node and the used-extension list, declared
+/// row by row against the lengths of `demo_gltf_snapshot()` — used by this artifact's own
+/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests (⚙️engine/component.rs).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_diff_cases() -> Vec<GltfDiff> {
     let base = crate::engine::demo_gltf_snapshot();
-    let mut other = base.clone();
-    other.document.asset.generator = Some("semio-fg3".into());
-    other.document.scene = Some(1);
-    other.document.scenes.push(GltfScene { nodes: vec![], name: Some("second-scene".into()), ..Default::default() });
-    other.document.nodes[0].name = Some("renamed-node".into());
-    other.document.meshes.push(GltfMesh::default());
-    other.document.accessors[0].count = 6;
-    other.document.buffer_views.push(GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 12, byte_stride: None, target: None, name: None, extensions: None, extras: None });
-    other.document.buffers.push(GltfBuffer { byte_length: 4, uri: None, name: Some("extra".into()), extensions: None, extras: None });
-    other.buffers.push(vec![1, 2, 3, 4]);
-    other.document.materials[0].double_sided = true;
-    other.document.textures.push(GltfTexture { sampler: None, source: None, name: Some("tex2".into()), extensions: None, extras: None });
-    other.document.images.push(GltfImage { uri: Some("second.png".into()), ..Default::default() });
-    other.document.samplers.push(GltfSampler::default());
-    other.document.skins.push(GltfSkin { joints: vec![0], ..Default::default() });
-    other.document.animations.push(GltfAnimation::default());
-    other.document.cameras.push(GltfCamera {
-        projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None }),
-        name: Some("ortho-cam".into()),
-        extensions: None,
-        extras: None,
-    });
-    other.document.extensions_used.push("KHR_texture_transform".into());
-    other.document.extensions = Some(GltfJson::Bool(true));
-    other.document.extras = None;
-    other.source_form = GltfSourceForm::Glb;
-    let rich = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &other);
+    let document = &base.document;
+    fn appended<T, D>(len: usize, item: T) -> GltfCollectionDiff<T, D> {
+        GltfCollectionDiff { removed: Vec::new(), modified: Vec::new(), added: vec![GltfAdded { index: len, item }], amended: Vec::new() }
+    }
+    let rich = GltfDiff {
+        asset: Some(GltfAssetDiff { generator: Some(Some("semio-fg3".into())), ..Default::default() }),
+        scene: Some(Some(1)),
+        scenes: Some(appended(document.scenes.len(), GltfScene { nodes: vec![], name: Some("second-scene".into()), ..Default::default() })),
+        nodes: Some(GltfNodesDiff {
+            modified: vec![GltfModified {
+                index: 0,
+                diff: GltfNodeDiff { name: Some(Some("renamed-node".into())), children: Some(GltfRefsDelta::insertion(0, GltfRef(0))), ..Default::default() },
+            }],
+            ..Default::default()
+        }),
+        meshes: Some(appended(document.meshes.len(), GltfMesh::default())),
+        accessors: Some(GltfAccessorsDiff { modified: vec![GltfModified { index: 0, diff: GltfAccessorDiff { count: Some(6), ..Default::default() } }], ..Default::default() }),
+        buffer_views: Some(appended(document.buffer_views.len(), GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 12, byte_stride: None, target: None, name: None, extensions: None, extras: None })),
+        buffers: Some(appended(document.buffers.len(), GltfBuffer { byte_length: 4, uri: None, name: Some("extra".into()), extensions: None, extras: None })),
+        buffer_bytes: Some(appended(base.buffers.len(), vec![1, 2, 3, 4])),
+        materials: Some(GltfMaterialsDiff { modified: vec![GltfModified { index: 0, diff: GltfMaterialDiff { double_sided: Some(true), ..Default::default() } }], ..Default::default() }),
+        textures: Some(appended(document.textures.len(), GltfTexture { sampler: None, source: None, name: Some("tex2".into()), extensions: None, extras: None })),
+        images: Some(appended(document.images.len(), GltfImage { uri: Some("second.png".into()), ..Default::default() })),
+        samplers: Some(appended(document.samplers.len(), GltfSampler::default())),
+        skins: Some(appended(document.skins.len(), GltfSkin { joints: vec![0], ..Default::default() })),
+        animations: Some(appended(document.animations.len(), GltfAnimation::default())),
+        cameras: Some(appended(
+            document.cameras.len(),
+            GltfCamera {
+                projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None }),
+                name: Some("ortho-cam".into()),
+                extensions: None,
+                extras: None,
+            },
+        )),
+        extensions_used: Some(GltfStringsDelta::insertion(document.extensions_used.len(), "KHR_texture_transform".to_string())),
+        extensions_required: Some(GltfStringsDelta::insertion(document.extensions_required.len(), "KHR_texture_transform".to_string())),
+        extensions: Some(Some(GltfJson::Bool(true))),
+        extras: Some(None),
+        source_form: Some(GltfSourceForm::Glb),
+    };
     vec![GltfDiff::default(), rich]
 }
 

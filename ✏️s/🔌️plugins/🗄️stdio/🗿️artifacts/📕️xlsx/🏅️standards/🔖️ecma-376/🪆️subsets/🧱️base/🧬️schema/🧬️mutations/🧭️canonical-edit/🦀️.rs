@@ -3,12 +3,14 @@
 //! value. Revision-bound addresses an inverse must carry are computed against the state the forward leaves behind.
 
 use super::*;
-use crate::schema::diff::{NamedModified, NamedTripleDiff, XlsxOpcContentTypesDiff, XlsxOpcDiff, XlsxOpcRelListDiff, XlsxXmlPartDiff};
+use crate::schema::diff::{XlsxXmlPartDiff, XlsxXmlPartInsertion, XlsxXmlPartModification, XlsxXmlPartRemoval, XlsxXmlPartsDelta};
+use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 use crate::schema::snapshot::XlsxXmlPart;
 use crate::schema::vocabulary::{attribute_value, column_index, column_letter, column_letters_of, element_matches, expanded_element_name, namespace_scope, REL_TYPE_WORKSHEET, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT, WORKSHEET_CONTENT_TYPE};
 use crate::standards::v_ecma_376::subsets::base::schema::construction::worksheet_to_xml_with_namespace;
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildModified, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use semio_s_artifact_stdio_zip::opc::{fresh_relationship_id, resolve_relationship_target, OpcRelationship, OpcTargetMode};
+use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcOwnerInsertion, OpcOwnerModification, OpcOwnerPatch, OpcOwnerRemoval, OpcOwnerRow, OpcOwnersDelta, OpcRelationshipsDelta};
 
 const SPREADSHEETML_NAMESPACES: [&str; 2] = [SML_NS, SML_NS_STRICT];
 const OFFICE_RELATIONSHIP_NAMESPACES: [&str; 2] = [R_NS, R_NS_STRICT];
@@ -73,17 +75,8 @@ pub(super) fn modified_parts(edits: Vec<(String, XmlDiff)>) -> XlsxDiff {
     if edits.is_empty() {
         return XlsxDiff::default();
     }
-    let modified = edits.into_iter().map(|(key, document)| NamedModified { key, diff: XlsxXmlPartDiff { content_type: None, document: Some(document) } }).collect();
-    XlsxDiff { opc: None, xml_parts: Some(NamedTripleDiff { modified, ..Default::default() }) }
-}
-
-/// 🧭️ The complete final key order of a collection after `key` is inserted at `position` (`None`, or the end, appends, which needs no order).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn insertion_order(existing: Vec<String>, key: String, position: Option<usize>) -> Vec<String> {
-    let Some(position) = position.filter(|position| *position < existing.len()) else { return Vec::new() };
-    let mut order = existing;
-    order.insert(position, key);
-    order
+    let modified = edits.into_iter().map(|(id, document)| XlsxXmlPartModification { id, patch: XlsxXmlPartDiff { content_type: None, document: Some(document) } }).collect();
+    XlsxDiff { opc: None, xml_parts: Some(XlsxXmlPartsDelta { modified, ..Default::default() }) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -193,23 +186,20 @@ fn cell_column(node: &XmlNode, scope: &[(String, String)]) -> Result<Option<u32>
 //#endregion 🔖️CellNodes
 
 //#region 🔖️CellPlans
-/// ✍️ Replaces the value of the addressed cell; the inverse restores the value it held, named by the address the cell carries afterwards.
+/// 🧩️ The cell element `current` becomes when it holds `value`: value children replaced where the old ones stood, every other child and attribute kept.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress, value: &XlsxCellValue) -> Planned {
-    let resolved = cell_address::resolve_xlsx_cell_address(snapshot, address)?;
-    let scope = cell_address::addressed_cell_scope(snapshot, address)?;
-    let XmlNode::Element { name, attrs, children } = resolved.node else { return Err("XLSX cell address resolved a non-element".into()) };
-    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, &address.namespace_uri)?;
-    let (cell_type, replacement) = cell_value_nodes(name, children, &scope, &address.namespace_uri, value)?;
+fn rebuilt_cell(current: &XmlNode, scope: &[(String, String)], namespace: &str, value: &XlsxCellValue) -> Result<XmlNode, String> {
+    let XmlNode::Element { name, attrs, children } = current else { return Err("XLSX cell address resolved a non-element".into()) };
+    let (cell_type, replacement) = cell_value_nodes(name, children, scope, namespace, value)?;
     let mut new_attrs = attrs.clone();
     set_attr(&mut new_attrs, "t", cell_type);
     let mut kept = Vec::new();
     let mut insertion = None;
     for child in children {
-        let child_scope = namespace_scope(&scope, child);
+        let child_scope = namespace_scope(scope, child);
         let mut is_value_child = false;
         for local in ["f", "v", "is"] {
-            is_value_child |= element_matches(child, &child_scope, &[address.namespace_uri.as_str()], local)?;
+            is_value_child |= element_matches(child, &child_scope, &[namespace], local)?;
         }
         if is_value_child {
             insertion.get_or_insert(kept.len());
@@ -219,22 +209,60 @@ pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::Xls
     }
     let insertion = insertion.unwrap_or(kept.len()).min(kept.len());
     kept.splice(insertion..insertion, replacement);
-    let next = XmlNode::Element { name: name.clone(), attrs: new_attrs, children: kept };
+    Ok(XmlNode::Element { name: name.clone(), attrs: new_attrs, children: kept })
+}
+
+/// 🧩️ The cell element a brand-new cell named `cell_name` holding `value` at `reference` is.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn new_cell(cell_name: String, scope: &[(String, String)], namespace: &str, reference: &str, value: &XlsxCellValue) -> Result<XmlNode, String> {
+    let (cell_type, children) = cell_value_nodes(&cell_name, &[], scope, namespace, value)?;
+    let mut attrs = vec![XmlAttr { name: "r".into(), value: reference.to_string() }];
+    if let Some(cell_type) = cell_type {
+        attrs.push(XmlAttr { name: "t".into(), value: cell_type });
+    }
+    Ok(XmlNode::Element { name: cell_name, attrs, children })
+}
+
+/// 🔎️ Admits a verbatim cell element for `reference`: an element whose own `r` names that reference.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn admitted_cell(node: &XmlNode, reference: &str) -> Result<XmlNode, String> {
+    let XmlNode::Element { attrs, .. } = node else { return Err("a verbatim cell must be an element".into()) };
+    if attrs.iter().find(|attr| attr.name == "r").map(|attr| attr.value.as_str()) != Some(reference) {
+        return Err(format!("a verbatim cell for {reference} must carry r=\"{reference}\""));
+    }
+    Ok(node.clone())
+}
+
+/// ✍️ Replaces the addressed cell (by `node` verbatim, or by `value` rebuilt in place); the inverse restores the cell it held, carrying that element verbatim when
+/// rebuilding it from its typed value would lose something, and is named by the address the cell has afterwards.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress, value: &XlsxCellValue, node: Option<&XmlNode>) -> Planned {
+    let resolved = cell_address::resolve_xlsx_cell_address(snapshot, address)?;
+    let scope = cell_address::addressed_cell_scope(snapshot, address)?;
+    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, &address.namespace_uri)?;
+    let next = match node {
+        Some(node) => {
+            let reference = attribute_value(resolved.node, &scope, &[""], "r")?.ok_or_else(|| "cell has no reference".to_string())?;
+            admitted_cell(node, reference)?
+        }
+        None => rebuilt_cell(resolved.node, &scope, &address.namespace_uri, value)?,
+    };
     if next == *resolved.node {
         return Ok(XlsxPlan { diff: XlsxDiff::default(), inverse: Vec::new() });
     }
     let mut after = part_root(snapshot, &address.part_path)?.clone();
     *node_at_mut(&mut after, &address.node_path).ok_or_else(|| "XLSX cell address is stale".to_string())? = next.clone();
     let restored = cell_address::cell_address_in(snapshot, &address.part_path, &after, address.node_path.clone())?;
+    let exact = (rebuilt_cell(&next, &scope, &address.namespace_uri, &old_value)? != *resolved.node).then(|| resolved.node.clone());
     Ok(XlsxPlan {
         diff: part_diff(&address.part_path, &address.node_path, XmlNodeDiff::Replace { node: Some(next) }),
-        inverse: vec![XlsxMutation::SetCell(set_cell::SetCell { address: restored, value: old_value })],
+        inverse: vec![XlsxMutation::SetCell(set_cell::SetCell { address: restored, value: old_value, node: exact })],
     })
 }
 
-/// ➕️ Inserts one cell into a vacancy, creating its row when the row is missing; the inverse removes the cell by the address it carries afterwards.
+/// ➕️ Inserts one cell (`node` verbatim, or `value` built fresh) into a vacancy, creating its row when the row is missing; the inverse removes the cell by the address it carries afterwards.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn insert_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellVacancyAddress, value: &XlsxCellValue) -> Planned {
+pub(super) fn insert_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellVacancyAddress, value: &XlsxCellValue, exact: Option<&XmlNode>) -> Planned {
     let resolved = cell_address::resolve_xlsx_cell_vacancy_address(snapshot, address)?;
     let worksheet = &address.worksheet;
     let namespace = worksheet.namespace_uri.clone();
@@ -244,12 +272,10 @@ pub(super) fn insert_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::
     let sheet_data_scope = cell_address::addressed_worksheet_scope(snapshot, worksheet)?;
     let XmlNode::Element { name: sheet_data_name, children: rows, .. } = resolved.node else { return Err("worksheet address resolved a non-element".into()) };
     let make_cell = |cell_name: String, scope: &[(String, String)]| -> Result<XmlNode, String> {
-        let (cell_type, children) = cell_value_nodes(&cell_name, &[], scope, &namespace, value)?;
-        let mut attrs = vec![XmlAttr { name: "r".into(), value: reference.clone() }];
-        if let Some(cell_type) = cell_type {
-            attrs.push(XmlAttr { name: "t".into(), value: cell_type });
+        match exact {
+            Some(node) => admitted_cell(node, &reference),
+            None => new_cell(cell_name, scope, &namespace, &reference, value),
         }
-        Ok(XmlNode::Element { name: cell_name, attrs, children })
     };
     let mut matching_row = None;
     let mut row_insertion = rows.len();
@@ -312,7 +338,8 @@ pub(super) fn insert_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::
     Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: created })] })
 }
 
-/// ➖️ Removes the addressed cell, dropping its row when the cell was the row's only content; the inverse inserts the value the cell held into the vacancy.
+/// ➖️ Removes the addressed cell, dropping its row when the cell was the row's only content; the inverse inserts the value the cell held into the vacancy, carrying the
+/// element verbatim when rebuilding it from its typed value would lose something.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn remove_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress) -> Planned {
     let resolved = cell_address::resolve_xlsx_cell_address(snapshot, address)?;
@@ -324,7 +351,7 @@ pub(super) fn remove_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::
     let column = column_index(column_letters_of(reference)).ok_or_else(|| format!("cell reference {reference:?} has no valid column"))?;
     let row: u32 = reference.trim_start_matches(|character: char| character.is_ascii_alphabetic()).parse().map_err(|_| format!("cell reference {reference:?} has no valid row"))?;
     let root = part_root(snapshot, &address.part_path)?;
-    let XmlNode::Element { attrs: row_attrs, children: row_children, .. } = node_at(root, row_path).ok_or_else(|| "cell parent path is stale".to_string())? else { return Err("cell parent is not an element".into()) };
+    let XmlNode::Element { name: row_name, attrs: row_attrs, children: row_children } = node_at(root, row_path).ok_or_else(|| "cell parent path is stale".to_string())? else { return Err("cell parent is not an element".into()) };
     let drops_row = row_children.len() == 1 && row_attrs.len() == 1 && row_attrs[0].name == "r";
     let mut after = root.clone();
     let diff = if drops_row {
@@ -337,7 +364,8 @@ pub(super) fn remove_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::
         part_diff(&address.part_path, row_path, children_leaf(vec![cell_index], Vec::new(), Vec::new()))
     };
     let worksheet = cell_address::worksheet_address_in(snapshot, &address.part_path, &after, sheet_data_path.to_vec())?;
-    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address: cell_address::XlsxCellVacancyAddress { worksheet, row, column }, value: old_value })] })
+    let exact = (new_cell(qualified_like(row_name, "c"), &scope, &address.namespace_uri, reference, &old_value)? != *resolved.node).then(|| resolved.node.clone());
+    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address: cell_address::XlsxCellVacancyAddress { worksheet, row, column }, value: old_value, node: exact })] })
 }
 //#endregion 🔖️CellPlans
 
@@ -389,18 +417,6 @@ fn si_text(node: &XmlNode, parent_scope: &[(String, String)], namespace: &str, o
         }
     }
     Ok(())
-}
-
-/// 🌳 The root diff of the shared strings part: `children` plus the `uniqueCount` the table advertises, when it advertises one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shared_strings_root_diff(table: &SharedStrings<'_>, removed: Vec<usize>, modified: Vec<XmlChildModified>, added: Vec<XmlChildAdded>, count: usize) -> XmlNodeDiff {
-    let attributes = table
-        .attrs
-        .iter()
-        .find(|attr| attr.name == "uniqueCount" && attr.value != count.to_string())
-        .map(|_| XmlAttributesDiff { order: table.attrs.iter().map(|attr| attr.name.clone()).collect(), modified: vec![XmlAttrModified { name: "uniqueCount".into(), value: count.to_string() }], ..Default::default() });
-    let children = (!removed.is_empty() || !modified.is_empty() || !added.is_empty()).then_some(XmlChildrenDiff { removed, modified, added });
-    XmlNodeDiff::Element(XmlElementDiff { name: None, attributes, children })
 }
 
 /// 🔢️ Every shared-string index a worksheet cell under `node` refers to.
@@ -488,21 +504,36 @@ fn reference_shifts(snapshot: &XlsxSnapshot, shift: &dyn Fn(usize) -> usize) -> 
     Ok(edits)
 }
 
-/// ✍️ Replaces the text of the shared string at `index`; the inverse restores the text it held.
+/// ✍️ Replaces the shared string at `index` (by `node` verbatim, or its text replaced in place); the inverse restores the entry, carrying it verbatim when
+/// rebuilding it from its text would lose something (rich-text runs, properties).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn set_shared_string_plan(snapshot: &XlsxSnapshot, index: usize, value: &str) -> Planned {
+pub(super) fn set_shared_string_plan(snapshot: &XlsxSnapshot, index: usize, value: &str, node: Option<&XmlNode>) -> Planned {
     let table = shared_strings(snapshot)?;
     let physical = *table.positions.get(index).ok_or_else(|| format!("shared string index {index} is outside the table"))?;
     let current = &table.children[physical];
     let scope = namespace_scope(&table.scope, current);
     let mut old_text = String::new();
     si_text(current, &table.scope, &table.namespace, &mut old_text)?;
-    let mut next = current.clone();
-    replace_text_contributions(&mut next, &scope, &table.namespace, value)?;
+    let next = match node {
+        Some(node) => {
+            if !element_matches(node, &namespace_scope(&table.scope, node), &[table.namespace.as_str()], "si")? {
+                return Err("a verbatim shared string must be an si element".into());
+            }
+            node.clone()
+        }
+        None => {
+            let mut next = current.clone();
+            replace_text_contributions(&mut next, &scope, &table.namespace, value)?;
+            next
+        }
+    };
     if next == *current {
         return Ok(XlsxPlan { diff: XlsxDiff::default(), inverse: Vec::new() });
     }
-    Ok(XlsxPlan { diff: part_diff(&table.path, &[physical], XmlNodeDiff::Replace { node: Some(next) }), inverse: vec![XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value: old_text })] })
+    let mut back = next.clone();
+    replace_text_contributions(&mut back, &namespace_scope(&table.scope, &next), &table.namespace, &old_text)?;
+    let exact = (back != *current).then(|| current.clone());
+    Ok(XlsxPlan { diff: part_diff(&table.path, &[physical], XmlNodeDiff::Replace { node: Some(next) }), inverse: vec![XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value: old_text, node: exact })] })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -538,16 +569,9 @@ fn replace_text_contributions(node: &mut XmlNode, scope: &[(String, String)], na
     Ok(())
 }
 
-/// ➕️ Inserts a shared string at `index` (appended when `None`), renumbering the references behind it; the inverse removes it again.
+/// 🧩️ The `si` element a fresh shared string holding `value` is, named like the table's own entries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn insert_shared_string_plan(snapshot: &XlsxSnapshot, value: &str, index: Option<usize>) -> Planned {
-    let table = shared_strings(snapshot)?;
-    let count = table.positions.len();
-    let at = index.unwrap_or(count);
-    if at > count {
-        return Err(format!("shared string index {at} is outside the table"));
-    }
-    let physical = table.positions.get(at).copied().unwrap_or(table.children.len());
+fn new_shared_string(table: &SharedStrings<'_>, value: &str) -> XmlNode {
     let name = table.positions.first().map_or_else(
         || table.scope.iter().find(|(_, uri)| *uri == table.namespace).map_or_else(|| "si".into(), |(prefix, _)| if prefix.is_empty() { "si".into() } else { format!("{prefix}:si") }),
         |first| match &table.children[*first] {
@@ -555,12 +579,33 @@ pub(super) fn insert_shared_string_plan(snapshot: &XlsxSnapshot, value: &str, in
             _ => unreachable!(),
         },
     );
-    let entry = XmlNode::Element {
+    XmlNode::Element {
         name: name.clone(),
         attrs: Vec::new(),
         children: vec![XmlNode::Element { name: qualified_like(&name, "t"), attrs: vec![XmlAttr { name: "xml:space".into(), value: "preserve".into() }], children: vec![XmlNode::Text { text: value.into() }] }],
+    }
+}
+
+/// ➕️ Inserts a shared string (`node` verbatim, or `value` built fresh) at `index` (appended when `None`), renumbering the references behind it; the inverse removes it again.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn insert_shared_string_plan(snapshot: &XlsxSnapshot, value: &str, index: Option<usize>, node: Option<&XmlNode>) -> Planned {
+    let table = shared_strings(snapshot)?;
+    let count = table.positions.len();
+    let at = index.unwrap_or(count);
+    if at > count {
+        return Err(format!("shared string index {at} is outside the table"));
+    }
+    let physical = table.positions.get(at).copied().unwrap_or(table.children.len());
+    let entry = match node {
+        Some(node) => {
+            if !element_matches(node, &namespace_scope(&table.scope, node), &[table.namespace.as_str()], "si")? {
+                return Err("a verbatim shared string must be an si element".into());
+            }
+            node.clone()
+        }
+        None => new_shared_string(&table, value),
     };
-    let root = shared_strings_root_diff(&table, Vec::new(), Vec::new(), vec![XmlChildAdded { index: physical, item: entry }], count + 1);
+    let root = children_leaf(Vec::new(), Vec::new(), vec![XmlChildAdded { index: physical, item: entry }]);
     let mut edits = vec![(table.path.clone(), diff_at_path(&[], root))];
     if at < count {
         edits.extend(reference_shifts(snapshot, &|reference| if reference >= at { reference + 1 } else { reference })?);
@@ -587,10 +632,11 @@ pub(super) fn remove_shared_string_plan(snapshot: &XlsxSnapshot, index: usize) -
     }
     let mut old_text = String::new();
     si_text(&table.children[physical], &table.scope, &table.namespace, &mut old_text)?;
-    let root = shared_strings_root_diff(&table, vec![physical], Vec::new(), Vec::new(), table.positions.len() - 1);
+    let root = children_leaf(vec![physical], Vec::new(), Vec::new());
     let mut edits = vec![(table.path.clone(), diff_at_path(&[], root))];
     edits.extend(reference_shifts(snapshot, &|reference| if reference > index { reference - 1 } else { reference })?);
-    Ok(XlsxPlan { diff: modified_parts(edits), inverse: vec![XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: old_text, index: Some(index) })] })
+    let exact = (new_shared_string(&table, &old_text) != table.children[physical]).then(|| table.children[physical].clone());
+    Ok(XlsxPlan { diff: modified_parts(edits), inverse: vec![XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: old_text, index: Some(index), node: exact })] })
 }
 //#endregion 🔖️SharedStringPlans
 
@@ -661,20 +707,12 @@ pub(super) fn rename_sheet_plan(snapshot: &XlsxSnapshot, name: &str, new_name: &
     })
 }
 
-/// ➕️ Inserts a sheet at `index` (appended when `None`); the part, relationship and content-type entry follow the position of the sheet it lands before. The inverse removes it.
+/// 🪪️ Mints the slot a typed sheet needs when it is inserted: its `sheet` entry (name, the next free `sheetId`, the relationship id), the next free worksheet part path, its
+/// relationship and content type, and the part document built from the typed cells. The GESTURE that inserts a sheet calls this once and carries the result in the
+/// payload; the insert itself only writes what the payload names.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn insert_sheet_plan(snapshot: &XlsxSnapshot, sheet: &XlsxSheet, index: Option<usize>) -> Planned {
+pub(crate) fn mint_sheet_slot(snapshot: &XlsxSnapshot, sheet: &XlsxSheet) -> Result<insert_sheet::XlsxSheetSlot, String> {
     let sheets = workbook_sheets(snapshot)?;
-    if sheets.entries.iter().any(|entry| entry.name == sheet.name) {
-        return Err(format!("worksheet {:?} already exists", sheet.name));
-    }
-    if sheet.name.is_empty() || sheet.name.chars().count() > 31 || sheet.name.chars().any(|character| matches!(character, ':' | '\\' | '/' | '?' | '*' | '[' | ']')) {
-        return Err("worksheet name is invalid".into());
-    }
-    let position = index.unwrap_or(sheets.entries.len());
-    if position > sheets.entries.len() {
-        return Err(format!("sheet index {position} is outside the workbook"));
-    }
     let workbook_path = sheets.workbook_path.clone();
     let workbook_relationships = snapshot.opc.relationships_for(&workbook_path);
     let relationship_namespace = workbook_relationships
@@ -690,20 +728,46 @@ pub(super) fn insert_sheet_plan(snapshot: &XlsxSnapshot, sheet: &XlsxSheet, inde
         .ok_or_else(|| "workbook has no namespace prefix for worksheet relationship attributes".to_string())?;
     let sheet_id = (1u64..).find(|candidate| sheets.entries.iter().all(|entry| entry.sheet_id != Some(*candidate))).expect("an unbounded range always yields a free sheet id");
     let directory = workbook_path.rsplit_once('/').map_or("", |(directory, _)| directory);
-    let worksheet_path = (1usize..)
+    let part_path = (1usize..)
         .map(|ordinal| if directory.is_empty() { format!("worksheets/sheet{ordinal}.xml") } else { format!("{directory}/worksheets/sheet{ordinal}.xml") })
         .find(|candidate| snapshot.xml_part(candidate).is_none() && snapshot.opc.part(candidate).is_none())
         .expect("an unbounded range always yields a free part path");
-    let target = worksheet_path.strip_prefix(&format!("{directory}/")).unwrap_or(&worksheet_path).to_string();
+    let target = part_path.strip_prefix(&format!("{directory}/")).unwrap_or(&part_path).to_string();
     let mut taken: Vec<String> = workbook_relationships.iter().map(|relationship| relationship.id.clone()).collect();
     let relationship_id = fresh_relationship_id(&mut taken);
     let relationship_type = if relationship_namespace == R_NS_STRICT { format!("{R_NS_STRICT}/worksheet") } else { REL_TYPE_WORKSHEET.into() };
     let relationship = OpcRelationship { id: relationship_id.clone(), rel_type: relationship_type, target, target_mode: OpcTargetMode::Internal };
-    let entry = XmlNode::Element {
-        name: sheets.sheets_name.clone(),
-        attrs: vec![XmlAttr { name: "name".into(), value: sheet.name.clone() }, XmlAttr { name: "sheetId".into(), value: sheet_id.to_string() }, XmlAttr { name: format!("{relationship_prefix}:id"), value: relationship_id.clone() }],
-        children: Vec::new(),
-    };
+    let attrs = vec![XmlAttr { name: "name".into(), value: sheet.name.clone() }, XmlAttr { name: "sheetId".into(), value: sheet_id.to_string() }, XmlAttr { name: format!("{relationship_prefix}:id"), value: relationship_id }];
+    Ok(insert_sheet::XlsxSheetSlot { attrs, relationship, part_path, content_type: WORKSHEET_CONTENT_TYPE.to_string(), document: worksheet_to_xml_with_namespace(sheet, &sheets.namespace), part_relationships: Vec::new() })
+}
+
+/// ➕️ Inserts a sheet at `index` (appended when `None`), written verbatim from the `slot` its gesture minted; the part, relationship and content-type entry follow
+/// the position of the sheet it lands before. The inverse removes it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn insert_sheet_plan(snapshot: &XlsxSnapshot, sheet: &XlsxSheet, index: Option<usize>, slot: Option<&insert_sheet::XlsxSheetSlot>) -> Planned {
+    let slot = slot.ok_or_else(|| "insert-sheet carries the slot its gesture minted (see InsertSheet::minted)".to_string())?;
+    let sheets = workbook_sheets(snapshot)?;
+    if sheets.entries.iter().any(|entry| entry.name == sheet.name) {
+        return Err(format!("worksheet {:?} already exists", sheet.name));
+    }
+    if sheet.name.is_empty() || sheet.name.chars().count() > 31 || sheet.name.chars().any(|character| matches!(character, ':' | '\\' | '/' | '?' | '*' | '[' | ']')) {
+        return Err("worksheet name is invalid".into());
+    }
+    let position = index.unwrap_or(sheets.entries.len());
+    if position > sheets.entries.len() {
+        return Err(format!("sheet index {position} is outside the workbook"));
+    }
+    let workbook_path = sheets.workbook_path.clone();
+    let workbook_relationships = snapshot.opc.relationships_for(&workbook_path);
+    if slot.attrs.iter().find(|attr| attr.name == "name").map(|attr| attr.value.as_str()) != Some(sheet.name.as_str()) {
+        return Err("the sheet entry must carry the sheet's own name".into());
+    }
+    if workbook_relationships.iter().any(|existing| existing.id == slot.relationship.id) || snapshot.xml_part(&slot.part_path).is_some() || snapshot.opc.part(&slot.part_path).is_some() {
+        return Err("the sheet's relationship id or part path is already taken".into());
+    }
+    let worksheet_path = slot.part_path.clone();
+    let relationship = slot.relationship.clone();
+    let entry = XmlNode::Element { name: sheets.sheets_name.clone(), attrs: slot.attrs.clone(), children: Vec::new() };
     let before = sheets.entries.get(position);
     let neighbour = before.or_else(|| sheets.entries.last());
     let place = |found: Option<usize>| found.map(|index| if before.is_some() { index } else { index + 1 });
@@ -712,38 +776,36 @@ pub(super) fn insert_sheet_plan(snapshot: &XlsxSnapshot, sheet: &XlsxSheet, inde
     let neighbour_path = neighbour_relationship.map(|relationship| resolve_relationship_target(&workbook_path, &relationship.target));
     let override_name = format!("/{worksheet_path}");
     let neighbour_override = neighbour_path.as_ref().map(|path| format!("/{path}"));
-    let relationship_order = insertion_order(
-        workbook_relationships.iter().map(|relationship| relationship.id.clone()).collect(),
-        relationship_id,
-        place(neighbour_relationship.and_then(|neighbour| workbook_relationships.iter().position(|relationship| relationship.id == neighbour.id))),
-    );
-    let override_order = insertion_order(
-        snapshot.opc.content_types.overrides.iter().map(|(name, _)| name.clone()).collect(),
-        override_name.clone(),
-        place(neighbour_override.as_ref().and_then(|name| snapshot.opc.content_types.overrides.iter().position(|(existing, _)| existing == name))),
-    );
-    let part_order = insertion_order(snapshot.xml_parts.iter().map(|part| part.path.clone()).collect(), worksheet_path.clone(), place(neighbour_path.as_ref().and_then(|path| snapshot.xml_parts.iter().position(|part| part.path == *path))));
-    let part = XlsxXmlPart { path: worksheet_path, content_type: WORKSHEET_CONTENT_TYPE.into(), document: worksheet_to_xml_with_namespace(sheet, &sheets.namespace) };
+    let relationship_index = insertion_index(workbook_relationships.len(), place(neighbour_relationship.and_then(|neighbour| workbook_relationships.iter().position(|relationship| relationship.id == neighbour.id))));
+    let override_index = insertion_index(snapshot.opc.content_types.overrides.len(), place(neighbour_override.as_ref().and_then(|name| snapshot.opc.content_types.overrides.iter().position(|(existing, _)| existing == name))));
+    let part_index = insertion_index(snapshot.xml_parts.len(), place(neighbour_path.as_ref().and_then(|path| snapshot.xml_parts.iter().position(|part| part.path == *path))));
+    let part = XlsxXmlPart { path: worksheet_path.clone(), content_type: slot.content_type.clone(), document: slot.document.clone() };
+    let owner_rank = snapshot.opc.relationships.groups().take_while(|(owner, _)| owner.as_str() < worksheet_path.as_str()).count();
+    let owners = OpcOwnersDelta {
+        inserted: if slot.part_relationships.is_empty() { Vec::new() } else { vec![OpcOwnerInsertion { index: owner_rank, row: OpcOwnerRow { owner: worksheet_path.clone(), relationships: slot.part_relationships.clone() } }] },
+        modified: vec![OpcOwnerModification { id: workbook_path.clone(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta::insertion(relationship_index, relationship) } }],
+        ..Default::default()
+    };
     let diff = XlsxDiff {
-        opc: Some(XlsxOpcDiff {
-            content_types: Some(XlsxOpcContentTypesDiff { defaults: None, overrides: Some(NamedTripleDiff { added: vec![(override_name, WORKSHEET_CONTENT_TYPE.into())], order: override_order, ..Default::default() }) }),
-            relationships: Some(NamedTripleDiff { modified: vec![NamedModified { key: workbook_path.clone(), diff: XlsxOpcRelListDiff { added: vec![relationship], order: relationship_order, ..Default::default() } }], ..Default::default() }),
+        opc: Some(OpcDiff {
+            content_types: Some(OpcContentTypesDiff { defaults: None, overrides: Some(OpcContentTypeEntriesDelta::insertion(override_index, OpcContentTypeRow { name: override_name, content_type: slot.content_type.clone() })) }),
+            relationships: Some(owners),
             ..Default::default()
         }),
-        xml_parts: Some(NamedTripleDiff {
-            modified: vec![NamedModified {
-                key: workbook_path,
-                diff: XlsxXmlPartDiff { content_type: None, document: Some(diff_at_path(&[sheets.sheets_index], children_leaf(Vec::new(), Vec::new(), vec![XmlChildAdded { index: physical, item: entry }]))) },
+        xml_parts: Some(XlsxXmlPartsDelta {
+            inserted: vec![XlsxXmlPartInsertion { index: part_index, row: part }],
+            modified: vec![XlsxXmlPartModification {
+                id: workbook_path,
+                patch: XlsxXmlPartDiff { content_type: None, document: Some(diff_at_path(&[sheets.sheets_index], children_leaf(Vec::new(), Vec::new(), vec![XmlChildAdded { index: physical, item: entry }]))) },
             }],
-            added: vec![part],
-            order: part_order,
             ..Default::default()
         }),
     };
     Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: sheet.name.clone() })] })
 }
 
-/// ➖️ Removes the sheet `name` together with its part, relationship and content-type entry; the inverse inserts its typed cells back at the position it held.
+/// ➖️ Removes the sheet `name` together with its part, relationships and content-type entry; the inverse inserts it back at the position it held, carrying every
+/// piece of the sheet's slot (entry attributes, relationship, part document and its own relationships) so the sheet returns verbatim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn remove_sheet_plan(snapshot: &XlsxSnapshot, name: &str) -> Planned {
     let sheets = workbook_sheets(snapshot)?;
@@ -753,33 +815,115 @@ pub(super) fn remove_sheet_plan(snapshot: &XlsxSnapshot, name: &str) -> Planned 
     let logical = sheets.entries.iter().position(|entry| entry.name == name).ok_or_else(|| format!("missing worksheet {name:?}"))?;
     let entry = &sheets.entries[logical];
     let relationship_id = entry.relationship_id.clone().ok_or_else(|| format!("worksheet {name:?} has no relationship id"))?;
-    let relationship = snapshot.opc.relationships_for(&sheets.workbook_path).iter().find(|relationship| relationship.id == relationship_id).ok_or_else(|| format!("worksheet {name:?} references an unknown relationship"))?;
+    let workbook_relationships = snapshot.opc.relationships_for(&sheets.workbook_path);
+    let relationship_at = workbook_relationships.iter().position(|relationship| relationship.id == relationship_id).ok_or_else(|| format!("worksheet {name:?} references an unknown relationship"))?;
+    let relationship = &workbook_relationships[relationship_at];
     if relationship.target_mode != OpcTargetMode::Internal {
         return Err("worksheet relationship is external".into());
     }
     let worksheet_path = resolve_relationship_target(&sheets.workbook_path, &relationship.target);
-    let restored = snapshot.project_workbook().map_err(|error| error.to_string())?.sheets.into_iter().find(|candidate| candidate.name == name).ok_or_else(|| format!("missing worksheet {name:?}"))?;
+    let part_at = snapshot.xml_parts.iter().position(|part| part.path == worksheet_path).ok_or_else(|| format!("missing worksheet part {worksheet_path}"))?;
+    let part = &snapshot.xml_parts[part_at];
+    let XmlNode::Element { attrs: entry_attrs, .. } = &sheets.children[entry.physical] else { unreachable!() };
+    let slot = insert_sheet::XlsxSheetSlot {
+        attrs: entry_attrs.clone(),
+        relationship: relationship.clone(),
+        part_path: worksheet_path.clone(),
+        content_type: part.content_type.clone(),
+        document: part.document.clone(),
+        part_relationships: snapshot.opc.relationships_for(&worksheet_path).to_vec(),
+    };
     let override_name = format!("/{worksheet_path}");
-    let owns_relationships = snapshot.opc.relationships.groups().any(|(owner, _)| *owner == worksheet_path);
+    let overrides = &snapshot.opc.content_types.overrides;
+    let owner_at = snapshot.opc.relationships.groups().position(|(owner, _)| *owner == worksheet_path);
+    let owners = OpcOwnersDelta {
+        removed: owner_at.map(|index| OpcOwnerRemoval { id: worksheet_path.clone(), index }).into_iter().collect(),
+        modified: vec![OpcOwnerModification { id: sheets.workbook_path.clone(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta::removal_by_id(relationship_id.clone(), relationship_at) } }],
+        ..Default::default()
+    };
     let diff = XlsxDiff {
-        opc: Some(XlsxOpcDiff {
-            content_types: snapshot.opc.content_types.overrides.iter().any(|(existing, _)| *existing == override_name).then(|| XlsxOpcContentTypesDiff { defaults: None, overrides: Some(NamedTripleDiff { removed: vec![override_name], ..Default::default() }) }),
-            relationships: Some(NamedTripleDiff {
-                removed: if owns_relationships { vec![worksheet_path.clone()] } else { Vec::new() },
-                modified: vec![NamedModified { key: sheets.workbook_path.clone(), diff: XlsxOpcRelListDiff { removed: vec![relationship_id], ..Default::default() } }],
-                ..Default::default()
-            }),
+        opc: Some(OpcDiff {
+            content_types: overrides.iter().position(|(existing, _)| *existing == override_name).map(|index| OpcContentTypesDiff { defaults: None, overrides: Some(OpcContentTypeEntriesDelta::removal_by_id(override_name.clone(), index)) }),
+            relationships: Some(owners),
             ..Default::default()
         }),
-        xml_parts: Some(NamedTripleDiff {
-            removed: vec![worksheet_path],
-            modified: vec![NamedModified {
-                key: sheets.workbook_path.clone(),
-                diff: XlsxXmlPartDiff { content_type: None, document: Some(diff_at_path(&[sheets.sheets_index], children_leaf(vec![entry.physical], Vec::new(), Vec::new()))) },
+        xml_parts: Some(XlsxXmlPartsDelta {
+            removed: vec![XlsxXmlPartRemoval { id: worksheet_path, index: part_at }],
+            modified: vec![XlsxXmlPartModification {
+                id: sheets.workbook_path.clone(),
+                patch: XlsxXmlPartDiff { content_type: None, document: Some(diff_at_path(&[sheets.sheets_index], children_leaf(vec![entry.physical], Vec::new(), Vec::new()))) },
             }],
             ..Default::default()
         }),
     };
-    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: restored, index: Some(logical) })] })
+    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: name.to_string(), cells: Vec::new() }, index: Some(logical), slot: Some(slot) })] })
 }
 //#endregion 🔖️SheetPlans
+
+//#region 🔖️EditResolution
+/// 🧭️ What an XML part is to the workbook: the part of one named worksheet, the shared strings, the workbook itself, or none of them.
+pub(super) enum PartRole {
+    Worksheet(String),
+    SharedStrings,
+    Workbook,
+    Other,
+}
+
+/// 🧭️ The role part `part_path` plays, read from the workbook's own relationships.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn part_role(snapshot: &XlsxSnapshot, part_path: &str) -> Result<PartRole, String> {
+    let sheets = workbook_sheets(snapshot)?;
+    if sheets.workbook_path == part_path {
+        return Ok(PartRole::Workbook);
+    }
+    for entry in &sheets.entries {
+        let Some(relationship_id) = entry.relationship_id.as_deref() else { continue };
+        let Some(relationship) = snapshot.opc.relationships_for(&sheets.workbook_path).iter().find(|relationship| relationship.id == relationship_id) else { continue };
+        if resolve_relationship_target(&sheets.workbook_path, &relationship.target) == part_path {
+            return Ok(PartRole::Worksheet(entry.name.clone()));
+        }
+    }
+    Ok(if shared_strings(snapshot).is_ok_and(|table| table.path == part_path) { PartRole::SharedStrings } else { PartRole::Other })
+}
+
+/// 🔎️ The typed value the cell element `node` (a child of the element at `parent_path`) of worksheet part `part_path` holds, read through the workbook projection.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn node_cell_value(snapshot: &XlsxSnapshot, part_path: &str, parent_path: &[usize], node: &XmlNode) -> Result<XlsxCellValue, String> {
+    let root = part_root(snapshot, part_path)?;
+    let mut scope = namespace_scope(&[], root);
+    let mut cursor = root;
+    for &index in parent_path {
+        let XmlNode::Element { children, .. } = cursor else { return Err("node path descends through non-element".into()) };
+        cursor = children.get(index).ok_or_else(|| format!("node path child {index} is outside {} children", children.len()))?;
+        scope = namespace_scope(&scope, cursor);
+    }
+    let XmlNode::Element { name, .. } = root else { return Err("worksheet root is not an element".into()) };
+    let (namespace, _) = expanded_element_name(name, &namespace_scope(&[], root))?;
+    let cell_scope = namespace_scope(&scope, node);
+    cell_value_of(snapshot, part_path, node, &cell_scope, &namespace)
+}
+
+/// 🔤️ The text a shared-string entry `node` spells.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn shared_string_text(snapshot: &XlsxSnapshot, node: &XmlNode) -> Result<String, String> {
+    let table = shared_strings(snapshot)?;
+    let mut text = String::new();
+    si_text(node, &table.scope, &table.namespace, &mut text)?;
+    Ok(text)
+}
+
+/// 🔢️ The table position of the shared-string entry that is child `physical` of the table part, or the number of entries before that child when it is none.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn shared_string_position(snapshot: &XlsxSnapshot, physical: usize) -> Result<(usize, bool), String> {
+    let table = shared_strings(snapshot)?;
+    let before = table.positions.iter().take_while(|position| **position < physical).count();
+    Ok((before, table.positions.get(before) == Some(&physical)))
+}
+
+/// 📛️ The name a `sheet` element of the workbook carries.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn sheet_element_name(node: &XmlNode) -> Option<&str> {
+    let XmlNode::Element { attrs, .. } = node else { return None };
+    attrs.iter().find(|attr| attr.name == "name").map(|attr| attr.value.as_str())
+}
+//#endregion 🔖️EditResolution

@@ -6,21 +6,23 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "wind",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [],
+            "inserted": [],
             "removed": [],
-            "patched": [
+            "moved": [],
+            "modified": [
               {
                 "id": "lw1",
-                "item": {
+                "patch": {
                   "kind": "nodal",
                   "id": "lw1",
                   "nodeId": "n5",
@@ -28,13 +30,11 @@
                   "value": 16000.0
                 }
               }
-            ],
-            "reordered": null
+            ]
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

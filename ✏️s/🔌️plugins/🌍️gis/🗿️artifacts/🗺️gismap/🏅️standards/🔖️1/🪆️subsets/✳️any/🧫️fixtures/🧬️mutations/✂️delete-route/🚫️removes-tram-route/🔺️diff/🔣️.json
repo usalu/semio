@@ -1,12 +1,15 @@
 {
   "positions": null,
   "routes": {
-    "added": [],
     "removed": [
-      "route-tram"
+      {
+        "id": "route-tram",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "regions": null
 }

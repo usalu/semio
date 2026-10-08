@@ -6,7 +6,7 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 
 pub fn inverse(payload: &InsertThermalBridge, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Din4108Mutation::RemoveThermalBridge(RemoveThermalBridge { index: payload.index.min(base.thermal_bridges.len()) })]
+    vec![Din4108Mutation::RemoveThermalBridge(RemoveThermalBridge { index: payload.index.unwrap_or(usize::MAX).min(base.thermal_bridges.len()) })]
 
     })())
 }

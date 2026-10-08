@@ -7,7 +7,7 @@ export interface IndexModified<D> { index: number; diff: D; }
 export interface IndexAdded<T> { index: number; item: T; }
 export interface IndexedTripleDiff<D, T> { removed: number[]; modified: IndexModified<D>[]; added: IndexAdded<T>[]; }
 export interface NamedModified<K, D> { key: K; diff: D; }
-export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: T[]; }
+export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: NamedAdded<T>[]; }
 
 export interface SlideFrameDiff { origin?: SlideFrame["origin"]; width?: SlideFrame["width"]; height?: SlideFrame["height"]; }
 export interface SlidePictureImageDiff { assetId?: string; mime?: string; bytes?: number[]; }
@@ -40,3 +40,6 @@ export interface SemioPresentationDiff {
   layouts?: NamedTripleDiff<string, SlideLayoutDiff, SlideLayout>;
   slides?: IndexedTripleDiff<SlideDiff, Slide>;
 }
+
+/** 🧩 One positional add: the row and the final index it lands at. */
+export interface NamedAdded<T> { index: number; item: T }

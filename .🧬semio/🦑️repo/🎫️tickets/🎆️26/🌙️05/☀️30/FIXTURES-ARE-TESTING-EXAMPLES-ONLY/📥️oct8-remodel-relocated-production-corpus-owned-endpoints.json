@@ -1,0 +1,143 @@
+{
+  "scope": "fresh actual relocated Remodel whole-corpus retirement and preserved octet law test-domain placement; unrelated Root three untouched",
+  "capturedAt": "2026-10-08T19:17:47.028514+00:00",
+  "sources": [
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🧩️fragments/🔣️.json",
+      "beforeSha256": "55f3853c061881bc26c4e2b5bd5e030b8d57affa6ec652cb324aeb50d35ab780",
+      "afterSha256": null,
+      "action": "retire-relocated-whole-corpus-authority"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🔣️.json",
+      "beforeSha256": "aa9a78bf76e2157c8ef92d35c91710bc12343756bbec0be72c6f55750653bc22",
+      "afterSha256": null,
+      "action": "retire-relocated-whole-corpus-authority"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts",
+      "beforeSha256": "d15ebd501897a152edfdb1c45fce01cc39703175031fdaa058fa31c1b97fa9e9",
+      "afterSha256": null,
+      "action": "retire-false-schema-test-facet-retain-meaningful-law-in-test-domain"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "012470cd4623faeb50586ca799a39785b18beca1555f7995fedbd2359fa9b9c5",
+      "afterSha256": "5e09e687ef2cbe12d9ef937a2de85b8c767d0b11eb22ea864d492baf2fdfc25c",
+      "action": "widen-existing-bounded-collection-facet-to-whole-snapshot-and-current-octet-law"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts",
+      "beforeSha256": null,
+      "afterSha256": "f0c0b7dc20d22c5a2f076463e264fbfa440c290286f23ff24e2177af7d7f569c",
+      "action": "place-preserved-independent-octet-law-in-genuine-test-domain"
+    }
+  ],
+  "preservedObservations": [
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️cells/🦀️.rs",
+      "sha256": "e3bcb4f52b63199777f62ac03118dbad75aecf2ff1d42106dcd658ab7dfd6528",
+      "observedCurrentSha256": "e3bcb4f52b63199777f62ac03118dbad75aecf2ff1d42106dcd658ab7dfd6528",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "sha256": "15e0e0aa0f4ab3bc0d710197ee94e41773f247c257a32efd377d43c12641187b",
+      "observedCurrentSha256": "15e0e0aa0f4ab3bc0d710197ee94e41773f247c257a32efd377d43c12641187b",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️schema/🟦️.ts",
+      "sha256": "fe847fe8f51a9f80c4ab5a0668dcbb94dfa33993582325c21dc8f321587a3277",
+      "observedCurrentSha256": "fe847fe8f51a9f80c4ab5a0668dcbb94dfa33993582325c21dc8f321587a3277",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+      "sha256": "81efa79fbf0f6b535a9555c7484e73e3cfe07605c8b46c5c67b22b101d6129a2",
+      "observedCurrentSha256": "81efa79fbf0f6b535a9555c7484e73e3cfe07605c8b46c5c67b22b101d6129a2",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "sha256": "20ca1473426040ea9421ec70762e9680e32fd330b4617137a91319acca797c42",
+      "observedCurrentSha256": "20ca1473426040ea9421ec70762e9680e32fd330b4617137a91319acca797c42",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "e598194576b3afecc65b6235764324d1432b2eefb1f9354bb45993bb080dc503",
+      "observedCurrentSha256": "e598194576b3afecc65b6235764324d1432b2eefb1f9354bb45993bb080dc503",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "c394e188c384c569cf6d8a7895d068d56fdb6b6db7a52e0c8a646ab72e93b59a",
+      "observedCurrentSha256": "c394e188c384c569cf6d8a7895d068d56fdb6b6db7a52e0c8a646ab72e93b59a",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️owned/🦀️.rs",
+      "sha256": "bdbd6f5070fc15764a4ef97bb935c6b452b30b50a53e84fc6abda4ad2a87b8f6",
+      "observedCurrentSha256": "bdbd6f5070fc15764a4ef97bb935c6b452b30b50a53e84fc6abda4ad2a87b8f6",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json",
+      "sha256": "14e9f059c09c25b47eb052d5d0a6f396ea8e894f06b4287ae7e9a9fcf1d02d33",
+      "observedCurrentSha256": "14e9f059c09c25b47eb052d5d0a6f396ea8e894f06b4287ae7e9a9fcf1d02d33",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🔣️.json",
+      "sha256": "92f2f41d0d6efb4cef14ee9d2898612c2681a0dd9230b19d31a622c9e5233913",
+      "observedCurrentSha256": "92f2f41d0d6efb4cef14ee9d2898612c2681a0dd9230b19d31a622c9e5233913",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🔣️.json",
+      "sha256": "13670cd5e549c74e03f47b26ad636fa039adc4e55c9682ce2e8ed15e2e42c78a",
+      "observedCurrentSha256": "13670cd5e549c74e03f47b26ad636fa039adc4e55c9682ce2e8ed15e2e42c78a",
+      "matches": true,
+      "authored": false
+    }
+  ],
+  "preimages": [
+    "📥️oct8-remodel-relocated-production-corpus-before.json",
+    "📥️oct8-remodel-content-law-test-domain-before.json"
+  ],
+  "red": {
+    "rootFullSession": 54492,
+    "boundedExitCode": 1,
+    "duration": "97ms",
+    "actualDiagnosticCount": 3,
+    "log": "🗑️generated/oct8-remodel-relocated-red.log"
+  },
+  "qualifiedAttempt": {
+    "exitCode": 1,
+    "duration": "106ms",
+    "cause": "remaining meaningful test wrongly in physical schema facet; bounded placement honestly refused until domain relocation"
+  },
+  "green": {
+    "session": 40861,
+    "exitCode": 0,
+    "duration": "2.3s",
+    "tests": 37,
+    "assertions": 1134,
+    "physicalPlacementModules": 0,
+    "physicalPlacementDiagnostics": 0,
+    "log": "🗑️generated/oct8-remodel-relocated-settled-green.log",
+    "productionProducers": 0
+  },
+  "preservation": "all eleven observation hashes match; actual content/octets law byte-identical to guarded post-wrapper source; no plainfixture/producer/schemaAPI edits; no new command or launch row"
+}

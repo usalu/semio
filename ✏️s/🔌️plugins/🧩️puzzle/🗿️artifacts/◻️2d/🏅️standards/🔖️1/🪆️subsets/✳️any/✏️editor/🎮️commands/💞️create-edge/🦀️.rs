@@ -1,13 +1,13 @@
 //! 💞️ `create-edge` command.
 
-use crate::editor::puzzle2d::{new_edge_id, puzzle2d_handle_kind, puzzle2d_kinds_compatible, puzzle2d_occupied_handles, Puzzle2dActionCtx};
+use crate::editor::puzzle2d::{puzzle2d_handle_kind, puzzle2d_kinds_compatible, puzzle2d_occupied_handles, Puzzle2dActionCtx};
 use semio_framework_plugin::kernel::Effect;
-use serde_json::{json, Value};
+use semio_framework_pack_json::Value;
 
 /// 🔗️ Connects two handles into one edge: the pair must resolve to two different handles of the
 /// document, neither already occupied by an edge, whose kinds `meta.kindCompatibility` admits.
 /// Every refusal raises exactly one notice and emits no edit, so an engagement line or a menu row
-/// that cannot connect says why instead of silently doing nothing.
+/// that cannot connect says why instead of silently doing nothing. A connection records one `connect-handles`.
 pub fn create_edge(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let read = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty()).map(str::to_string);
     let (Some(source), Some(target)) = (read("source").or_else(|| read("attracting")), read("target").or_else(|| read("attracted"))) else {
@@ -31,13 +31,7 @@ pub fn create_edge(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         ctx.effects.push(Effect::Notify { message: ctx.labels.connect_kind_incompatible.as_str().to_string() });
         return;
     }
-    let id = new_edge_id(&ctx.scene.board_snapshot);
-    let edge_kind = read("edgeKind");
-    let mut edge = json!({ "id": id, "source": source, "target": target });
-    if let Some(edge_kind) = edge_kind {
-        edge["edgeKind"] = json!(edge_kind);
-    }
-    crate::editor::puzzle2d::puzzle2d_push_edge(&mut ctx.scene.board_snapshot, edge);
+    ctx.recorder.connect(&source, &target, read("edgeKind").as_deref());
 }
 
 //#region 🧪️Tests

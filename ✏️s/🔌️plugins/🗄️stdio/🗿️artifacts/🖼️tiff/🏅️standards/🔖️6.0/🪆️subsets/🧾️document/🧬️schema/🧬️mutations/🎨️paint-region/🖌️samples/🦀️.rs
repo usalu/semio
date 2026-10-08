@@ -58,16 +58,11 @@ pub fn validate_tiff_region_paint(snapshot:&TiffSnapshot,ifd_index:usize,region:
  if region.width==0||region.height==0||region.height>TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS||region.x.checked_add(region.width).is_none_or(|end|end>block.width)||region.y.checked_add(region.height).is_none_or(|end|end>block.height){return Err("tiff: paint region exceeds owned page extent or interactive row limit".into())}
  colors(ifd,color)?;Ok(())
 }
-pub fn paint_tiff_region_runs(snapshot:&TiffSnapshot,revision:&str,ifd_index:usize,region:TiffRegion,color:[u8;4],progress:&mut dyn FnMut(usize,usize)->bool)->Result<Vec<TiffSampleRun>,String>{
+pub fn paint_tiff_region_runs(snapshot:&TiffSnapshot,revision:&str,ifd_index:usize,region:TiffRegion,color:[u8;4],mut progress:impl FnMut(usize,usize)->bool)->Result<Vec<TiffSampleRun>,String>{
  if revision!=tiff_revision(snapshot){return Err("tiff: stale owned revision".into())}validate_tiff_region_paint(snapshot,ifd_index,region,color)?;
  let values=colors(&snapshot.ifds[ifd_index],color)?;let total=region.height as usize;if !progress(0,total){return Err("tiff: paint cancelled".into())}
  let block=&snapshot.ifds[ifd_index].blocks[0];let channels=block.channels as usize;let width=region.width as usize*channels;
  let painted:Vec<TiffWord64>=values.iter().copied().cycle().take(width).collect();let mut runs=Vec::new();
  for row in 0..total{let start=((region.y as usize+row)*block.width as usize+region.x as usize)*channels;runs.extend(differing_runs(0,start,&block.samples[start..start+width],&painted));if !progress(row+1,total){return Err("tiff: paint cancelled".into())}}
  Ok(normalize_runs(runs))
-}
-pub fn paint_tiff_region_controlled(snapshot:&TiffSnapshot,revision:&str,ifd_index:usize,region:TiffRegion,color:[u8;4],progress:&mut dyn FnMut(usize,usize)->bool)->Result<TiffSnapshot,String>{
- let runs=paint_tiff_region_runs(snapshot,revision,ifd_index,region,color,progress)?;let mut next=snapshot.clone();
- for run in &runs{next.ifds[ifd_index].blocks[run.block].samples[run.offset..run.offset+run.samples.len()].copy_from_slice(&run.samples);}
- Ok(next)
 }

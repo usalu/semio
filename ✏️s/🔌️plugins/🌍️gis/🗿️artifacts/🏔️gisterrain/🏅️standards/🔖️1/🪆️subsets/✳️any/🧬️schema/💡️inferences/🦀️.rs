@@ -61,13 +61,6 @@ impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
 /// `crate::schema`'s `🔖️TerrainDescriptor` region — a one-line path
 /// correction, not an engine-dissolution rewrite.
 use crate::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
-/// 🗺️ Bundled scenery enters through the same explicit JSON map boundary as imported media.
-fn fixture_descriptor(exaggeration:f64)->TerrainDescriptorJson{
-    let map=crate::schema::ImportedMap::from_json(include_str!("../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
-    let origin=map.properties.iter().find(|member|member.name=="projectOrigin").map(|member|&member.value);
-    let project_origin=TerrainProjectOrigin{lon:origin.and_then(|value|value.get("lon")).and_then(|value|value.as_f64()).unwrap_or(0.0),lat:origin.and_then(|value|value.get("lat")).and_then(|value|value.as_f64()).unwrap_or(0.0)};
-    TerrainDescriptorJson{schema:crate::GIS_3D_TERRAIN_SCHEMA.into(),project_origin,positions:map_positions(&map),exaggeration}
-}
 /// 📌️ Pin projection requires an identifier; durable map admission remains independent.
 fn map_positions(map:&crate::schema::ImportedMap)->Vec<TerrainPositionData>{
     map.positions.iter().filter_map(|entry|Some(TerrainPositionData{id:entry.get("id")?.as_str()?.to_string(),lon:entry.get("lon")?.as_f64()?,lat:entry.get("lat")?.as_f64()?,label:entry.get("label").and_then(|value|value.as_str()).map(str::to_string),icon:entry.get("icon").and_then(|value|value.as_str()).map(str::to_string)})).collect()
@@ -82,8 +75,10 @@ fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData>
 /// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::schema::default_terrain_document`.
-pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
-    let mut descriptor = fixture_descriptor(document.exaggeration);
+pub fn parse_descriptor(document:&GisTerrainSnapshot,map:&crate::schema::ImportedMap)->TerrainDescriptorJson {
+    let origin=map.properties.iter().find(|member|member.name=="projectOrigin").map(|member|&member.value);
+    let project_origin=TerrainProjectOrigin{lon:origin.and_then(|value|value.get("lon")).and_then(|value|value.as_f64()).unwrap_or(0.0),lat:origin.and_then(|value|value.get("lat")).and_then(|value|value.as_f64()).unwrap_or(0.0)};
+    let mut descriptor=TerrainDescriptorJson{schema:crate::GIS_3D_TERRAIN_SCHEMA.into(),project_origin,positions:map_positions(map),exaggeration:document.exaggeration};
     descriptor.positions.extend(imported_positions(document));
     descriptor
 }

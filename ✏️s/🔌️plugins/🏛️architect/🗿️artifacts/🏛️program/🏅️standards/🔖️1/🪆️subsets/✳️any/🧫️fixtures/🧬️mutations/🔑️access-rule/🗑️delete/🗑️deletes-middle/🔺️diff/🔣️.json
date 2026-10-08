@@ -13,12 +13,15 @@
   "processes": null,
   "flows": null,
   "accessRules": {
-    "added": [],
     "removed": [
-      "access-rule-a"
+      {
+        "id": "access-rule-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "operations": null,
   "equipment": null,

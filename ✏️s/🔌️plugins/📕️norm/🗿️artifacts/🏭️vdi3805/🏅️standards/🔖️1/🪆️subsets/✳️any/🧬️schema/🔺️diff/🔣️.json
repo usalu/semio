@@ -71,17 +71,6 @@
       ],
       "x-semio-state": "artifact"
     },
-    "indexEntries": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Vdi3805IndexEntriesRows"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "geometry": {
       "anyOf": [
         {
@@ -230,39 +219,175 @@
         }
       }
     },
-    "Vdi3805GeometryConnectionsRows": {
+    "Vdi3805GeometryConnectionsInserted": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "order"
+        "index",
+        "row"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint"
-          }
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint"
+        }
+      }
+    },
+    "Vdi3805GeometryConnectionsModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        "order": {
+        "patch": {
+          "$ref": "#/$defs/Vdi3805GeometryConnectionsPatch"
+        }
+      }
+    },
+    "Vdi3805GeometryConnectionsMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Vdi3805GeometryConnectionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "medium",
+        "position",
+        "direction",
+        "diameterMm"
+      ],
+      "properties": {
+        "medium": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint/properties/medium"
             },
             {
               "type": "null"
             }
           ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint/properties/position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint/properties/direction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diameterMm": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vdi3805GeometryConnectionsPatchDiameterMmValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Vdi3805GeometryConnectionsPatchDiameterMmValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint/properties/diameterMm"
+        }
+      }
+    },
+    "Vdi3805GeometryConnectionsRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Vdi3805GeometryConnectionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vdi3805GeometryConnectionsRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vdi3805GeometryConnectionsInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vdi3805GeometryConnectionsMoved"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vdi3805GeometryConnectionsModified"
+          }
         }
       }
     },
@@ -353,95 +478,6 @@
           "items": {
             "$ref": "#/$defs/Vdi3805GeometryPatch"
           }
-        }
-      }
-    },
-    "Vdi3805IndexEntriesPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "dn",
-        "tags"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "dn": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Vdi3805IndexEntriesPatchDnValue"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "tags": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogIndexEntry/properties/tags"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "Vdi3805IndexEntriesPatchDnValue": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogIndexEntry/properties/dn"
-        }
-      }
-    },
-    "Vdi3805IndexEntriesRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "modified",
-        "order"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogIndexEntry"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Vdi3805IndexEntriesPatch"
-          }
-        },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     },
@@ -582,18 +618,69 @@
         }
       }
     },
-    "Vdi3805ProductsPatch": {
+    "Vdi3805ProductsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogueProduct"
+        }
+      }
+    },
+    "Vdi3805ProductsModified": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
-        "title",
-        "configuration"
+        "patch"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
+        "patch": {
+          "$ref": "#/$defs/Vdi3805ProductsPatch"
+        }
+      }
+    },
+    "Vdi3805ProductsMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Vdi3805ProductsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "configuration"
+      ],
+      "properties": {
         "title": {
           "anyOf": [
             {
@@ -616,46 +703,56 @@
         }
       }
     },
+    "Vdi3805ProductsRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "Vdi3805ProductsRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogueProduct"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Vdi3805ProductsRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vdi3805ProductsInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vdi3805ProductsMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Vdi3805ProductsPatch"
+            "$ref": "#/$defs/Vdi3805ProductsModified"
           }
-        },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     }

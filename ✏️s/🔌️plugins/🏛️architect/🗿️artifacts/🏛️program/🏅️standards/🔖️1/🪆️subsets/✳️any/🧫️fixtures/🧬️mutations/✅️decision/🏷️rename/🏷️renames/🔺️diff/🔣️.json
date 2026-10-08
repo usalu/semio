@@ -45,9 +45,10 @@
   "scenarios": null,
   "options": null,
   "decisions": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "decision-a",
         "patch": {
@@ -80,8 +81,7 @@
           "artifactRefs": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "validations": null,
   "performance": null,

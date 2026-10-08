@@ -15,10 +15,19 @@ impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
         let mut parser=super::JsonGrammarCursor::new(policy);parser.limits=limits;Ok(Self{source,parser})
     }
     pub fn source_ref(&self)->&S{&self.source}
+    /// 🪪️ Transfers the original immutable source identity with its native grammar owner.
+    pub fn into_grammar(self)->(S,super::JsonGrammarCursor<V>){(self.source,self.parser)}
+    /// 🪆️ Restores the same source and grammar after a refused ownership handoff.
+    pub fn from_grammar(source:S,parser:super::JsonGrammarCursor<V>)->Self{Self{source,parser}}
     pub fn position(&self)->usize{self.parser.position()}
     pub fn phase(&self)->&'static str{self.parser.phase()}
     pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control)}
-    pub fn into_retirement(self)->Box<dyn semio_framework_value::ErasedSnapshotRetirement>{semio_framework_value::retirement::owned_retirement(self.parser)}
+    /// 🎟️ Admits the native grammar retirement frame before transferring its original owner.
+    pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<super::JsonGrammarCursor<V>>()}
+    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
+        let Self{source,parser}=self;
+        semio_framework_value::admit_owned_retirement(parser,grant).map_err(|(error,parser)|(error,Self{source,parser}))
+    }
 }
 
 impl<'source,S:JsonReadSource+?Sized,V:JsonParsedValue> JsonSourceCursor<&'source S,V>{pub fn source(&self)->&'source S{self.source}}

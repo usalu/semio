@@ -29,7 +29,7 @@ impl Default for GeometryHost {
 
 impl GeometryHost {
     pub fn new(budget_bytes: usize) -> Self {
-        Self { engine: RefCell::new(GeometryEngine::new(Arc::clone(catalogue()), budget_bytes)) }
+        Self { engine: RefCell::new(GeometryEngine::new(Arc::clone(catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), budget_bytes)) }
     }
 
     /// 🔓️ Runs `body` with the engine; a re-entrant call is [`EngineError::Busy`], never a panic.

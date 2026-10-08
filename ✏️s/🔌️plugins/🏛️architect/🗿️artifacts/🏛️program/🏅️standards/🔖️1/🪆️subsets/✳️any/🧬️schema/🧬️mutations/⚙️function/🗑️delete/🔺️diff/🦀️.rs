@@ -6,10 +6,10 @@ use crate::diff::ProgramFunctionsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteFunction, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.functions.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.functions.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No function exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { functions: Some(ProgramFunctionsDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { functions: Some(ProgramFunctionsDelta::removal(&base.functions, position)), ..Default::default() })
 }

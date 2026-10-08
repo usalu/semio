@@ -5,7 +5,7 @@
 
 use crate::editor::tiff_any::modes::edit;
 use crate::editor::tiff_any::modes::edit::windows::main;
-use crate::standards::v6_0::subsets::document::schema::mutations::{InsertIfdMutation, RemoveIfdMutation, RemoveTagMutation, ReplaceTagMutation, TiffMutation};
+use crate::standards::v6_0::subsets::document::schema::mutations::{ReplaceSamplesMutation, TiffMutation};
 use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffIfd, TiffSnapshot, TiffTag};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -135,51 +135,6 @@ fn tiffAnyEditor_retained_reduce(command: &TiffAnyEditCommand, snapshot: &TiffSn
 }
 fn tiffAnyEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
-}
-fn tiffAnyEditor_index(segment: &str, len: usize, insertion: bool) -> Result<usize, Fault> {
-    if insertion && segment == "-" { return Ok(len); }
-    if segment.is_empty() || (segment.len() > 1 && segment.starts_with('0')) || !segment.bytes().all(|byte| byte.is_ascii_digit()) { return Err(tiffAnyEditor_edit_fault("stdio.tiff.invalid-index", format!("'{segment}' is not a canonical index"))); }
-    let index = segment.parse::<usize>().map_err(|error| tiffAnyEditor_edit_fault("stdio.tiff.invalid-index", error.to_string()))?;
-    if index > len || (!insertion && index == len) { return Err(tiffAnyEditor_edit_fault("stdio.tiff.index-out-of-range", format!("index {index} is outside 0..{len}"))); }
-    Ok(index)
-}
-fn tiffAnyEditor_ifd_path(path: &str) -> Option<(&str, Option<&str>)> {
-    let rest = path.strip_prefix("/ifds/")?;
-    Some(rest.split_once('/').map_or((rest, None), |(index, suffix)| (index, Some(suffix))))
-}
-fn tiffAnyEditor_entry_path(path: &str) -> Option<(&str, &str, Option<&str>)> {
-    let (ifd, suffix) = tiffAnyEditor_ifd_path(path)?;
-    let rest = suffix?.strip_prefix("entries/")?;
-    Some(rest.split_once('/').map_or((ifd, rest, None), |(entry, suffix)| (ifd, entry, Some(suffix))))
-}
-fn tiffAnyEditor_direct_mutation(event: &editing::SnapshotEditEvent, snapshot: &TiffSnapshot) -> Result<Option<TiffMutation>, Fault> {
-    match event {
-        editing::SnapshotEditEvent::InsertValue { path, value } => {
-            if let Some((ifd, None)) = tiffAnyEditor_ifd_path(path) {
-                let index = tiffAnyEditor_index(ifd, snapshot.ifds.len(), true)?;
-                let ifd = <TiffIfd as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| tiffAnyEditor_edit_fault("stdio.tiff.invalid-ifd", error.to_string()))?;
-                return Ok(Some(TiffMutation::InsertIfd(InsertIfdMutation { index, ifd })));
-            }
-            if let Some((ifd, _, None)) = tiffAnyEditor_entry_path(path) {
-                let ifd_index = tiffAnyEditor_index(ifd, snapshot.ifds.len(), false)?;
-                let tag = <TiffTag as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| tiffAnyEditor_edit_fault("stdio.tiff.invalid-tag", error.to_string()))?;
-                return Ok(Some(TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index, tag: tag.tag, values: tag.values })));
-            }
-        }
-        editing::SnapshotEditEvent::RemoveValue { path } => {
-            if let Some((ifd, None)) = tiffAnyEditor_ifd_path(path) {
-                let index = tiffAnyEditor_index(ifd, snapshot.ifds.len(), false)?;
-                return Ok(Some(TiffMutation::RemoveIfd(RemoveIfdMutation { index })));
-            }
-            if let Some((ifd, entry, None)) = tiffAnyEditor_entry_path(path) {
-                let ifd_index = tiffAnyEditor_index(ifd, snapshot.ifds.len(), false)?;
-                let entry = tiffAnyEditor_index(entry, snapshot.ifds[ifd_index].entries.len(), false)?;
-                return Ok(Some(TiffMutation::RemoveTag(RemoveTagMutation { ifd_index, tag: snapshot.ifds[ifd_index].entries[entry].tag })));
-            }
-        }
-        _ => {}
-    }
-    Ok(None)
 }
 struct TiffAnyEditorExampleFactory { keys: Vec<ToolFactoryKey> }
 impl TiffAnyEditorExampleFactory { fn new(controller_id: &str) -> Self { Self { keys: STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } } }
@@ -360,11 +315,22 @@ impl editing::SnapshotEditingEditor for TiffAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { TiffAnyEditCommand::EditSnapshot { event } => Some(event), TiffAnyEditCommand::SetActiveExample { .. } | TiffAnyEditCommand::PaintRegion(_) | TiffAnyEditCommand::SelectIfd { .. } => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        if let Some(mutation) = tiffAnyEditor_direct_mutation(event, snapshot)? {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::tiff_any::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v6_0::subsets::document::schema::snapshot::TiffWord64;
+        let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return Ok(None) };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let ["ifds", ifd, "blocks", block, "samples", sample, rest @ ..] = segments.as_slice() else { return Ok(None) };
+        let (Ok(ifd_index), Ok(block_index), Ok(offset)) = (ifd.parse::<usize>(), block.parse::<usize>(), sample.parse::<usize>()) else { return Ok(None) };
+        if rest.len() > 1 {
+            return Ok(None);
         }
-        editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v6_0::subsets::document::schema::mutations::net_mutations)
+        let current = snapshot.ifds.get(ifd_index).and_then(|page| page.blocks.get(block_index)).and_then(|block| block.samples.get(offset)).ok_or_else(|| Fault::from(format!("sample {path} is outside the image")))?;
+        let word = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/ifds/{ifd}/blocks/{block}/samples/{sample}"), event).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))?;
+        let word = <TiffWord64 as semio_framework_value::FromValue>::from_value(word).map_err(|error| tiffAnyEditor_edit_fault("stdio.tiff.invalid-sample", error.to_string()))?;
+        Ok(Some(vec![TiffMutation::ReplaceSamples(ReplaceSamplesMutation { ifd_index, block: block_index, offset, samples: vec![word] })]))
     }
 }
 

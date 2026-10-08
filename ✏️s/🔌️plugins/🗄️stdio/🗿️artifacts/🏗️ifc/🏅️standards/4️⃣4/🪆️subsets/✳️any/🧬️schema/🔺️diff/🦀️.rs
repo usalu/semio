@@ -129,9 +129,8 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
-    let mut removed_sorted = removed.to_vec();
-    removed_sorted.sort_unstable();
+fn rewind_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], rewind_item: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
+    let removed_sorted: Vec<usize> = removed.iter().copied().collect::<std::collections::BTreeSet<usize>>().into_iter().collect();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
     added_index_sorted.sort_unstable();
 
@@ -140,7 +139,7 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index, diff_inverse(d, orig)));
+            inv_modified.push((after_index, rewind_item(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -191,15 +190,6 @@ impl IfcArgsDiff {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[IfcValue], other: &[IfcValue]) -> Self {
-        let min = base.len().min(other.len());
-        let modified = (0..min).filter(|&i| base[i] != other[i]).map(|i| IfcArgModified { index: i, value: other[i].clone() }).collect();
-        let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<IfcArgAdded> = (min..other.len()).map(|i| IfcArgAdded { index: i, value: other[i].clone() }).collect();
-        Self { removed, modified, added }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
@@ -239,7 +229,7 @@ impl IfcArgsDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_args: &[IfcValue]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(), base_args, |_d, item| item.clone());
+            rewind_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(), base_args, |_d, item| item.clone());
         Self { removed, modified: modified.into_iter().map(|(index, value)| IfcArgModified { index, value }).collect(), added: added.into_iter().map(|(index, value)| IfcArgAdded { index, value }).collect() }
     }
 }
@@ -264,12 +254,6 @@ impl IfcEntityDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &IfcEntity, other: &IfcEntity) -> Self {
-        let args_diff = IfcArgsDiff::between(&base.args, &other.args);
-        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -381,39 +365,6 @@ impl IfcEntitiesDiff {
     }
 }
 
-/// 🧭️ State delta (compose `GetXDiff`): id-keyed matching — every base/other entity pair sharing
-/// an `id` is compared field-by-field via [`IfcEntityDiff::between`]; ids present only in `base`
-/// are `removed`, only in `other` are `added` at their final position.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entities_between(base: &[IfcEntity], other: &[IfcEntity]) -> Option<IfcEntitiesDiff> {
-    if base == other {
-        return None;
-    }
-    let base_ids: HashSet<u64> = base.iter().map(|e| e.id).collect();
-    let other_ids: HashSet<u64> = other.iter().map(|e| e.id).collect();
-
-    let removed: Vec<u64> = base.iter().filter(|e| !other_ids.contains(&e.id)).map(|e| e.id).collect();
-
-    let mut modified = Vec::new();
-    for be in base {
-        if let Some(oe) = other.iter().find(|o| o.id == be.id) {
-            let d = IfcEntityDiff::between(be, oe);
-            if !d.is_empty() {
-                modified.push(IfcEntityModified { id: be.id, diff: d });
-            }
-        }
-    }
-
-    let added: Vec<IfcEntityAdded> = other.iter().enumerate().filter(|(_, e)| !base_ids.contains(&e.id)).map(|(index, e)| IfcEntityAdded { index, entity: e.clone() }).collect();
-
-    let d = IfcEntitiesDiff { removed, modified, added };
-    if d.is_empty() {
-        None
-    } else {
-        Some(d)
-    }
-}
-
 /// ➕️ Structural, total, base-free sequential-coalesce absorb of the `entities` triple (`##
 /// Absorb` contract). Simpler than zip's name-keyed entries: `id` is never itself a diffable
 /// field, so no rename-transport map is needed — only the `added[].index` final-position
@@ -474,7 +425,7 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
                 continue; // modified-of-annihilated-add: moot.
             }
             if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
-                a.entity = dm.diff.apply(&a.entity);
+                a.entity = apply_entity_diff_to_added(&dm.diff, &a.entity);
             }
         } else {
             if merged_removed.contains(&dm.id) {
@@ -548,16 +499,14 @@ fn target_error(code: &'static str, message: &'static str, target: Vec<String>) 
 fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
-        let mut target = prefix.to_vec();
-        target.extend(["args".to_string(), index.to_string()]);
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), index.to_string()]).collect();
         if index >= base_len || !removed.insert(index) {
             return Err(target_error("mutation.apply.invalid-remove-index", "argument removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
-        let mut target = prefix.to_vec();
-        target.extend(["args".to_string(), entry.index.to_string()]);
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), entry.index.to_string()]).collect();
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
             return Err(target_error("mutation.apply.invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
         }
@@ -566,8 +515,7 @@ fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) ->
     additions.sort_unstable();
     let mut previous = None;
     for (length, index) in (base_len - removed.len()..).zip(additions) {
-        let mut target = prefix.to_vec();
-        target.extend(["args".to_string(), index.to_string()]);
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), index.to_string()]).collect();
         if index > length || previous == Some(index) {
             return Err(target_error("mutation.apply.invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
         }
@@ -666,16 +614,6 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
         }
     }
 
-    /// 🧭️ State delta (compose `GetXDiff`).
-    fn between(base: &IfcSnapshot, other: &IfcSnapshot) -> Self {
-        Self {
-            file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
-            file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
-            file_schema: (base.header.file_schema != other.header.file_schema).then(|| other.header.file_schema.clone()),
-            entities: entities_between(&base.entities, &other.entities),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().is_none_or(IfcEntitiesDiff::is_empty)
     }
@@ -725,59 +663,22 @@ pub fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
 //#endregion 🔖️MutationDiffBuilders
 //#endregion 🔖️Diff
 
-//#region 🔖️HandcraftedDiffCodec
-/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `IfcDiff` (see the compile-error citation on
-/// [`IfcDiff`] itself). Same grammar style `GifDiff`/`SvgDiff`'s hand-rolled codecs use
-/// (bracket-depth-aware split, hex for strings, `[0]`/`[1,x]` for `Option<T>`, single-uppercase-
-/// letter tag prefix for data-carrying enum variants) — see `f6-recon-report.md` §5 for the
-/// primitive rationale; this file re-derives its own copies since no shared "hand-roll helpers"
-/// module exists yet (flagged there as a future extraction once ≥3 artifacts hand-roll, already the
-/// case — not done here, out of this ticket's single-artifact ownership boundary).
-//#region 🔖️Primitives
-// 🚫️async: EEEEEE EEEE🔖️Primitives
-
-//#region 🔖️BinaryPrimitives
-/// 🧪️ P2-FG1EEE-🔖️BinaryPrimitives
-
-//#region 🔖️IfcValueCodecs
-/// 🔤️ `IfcVaEEE️IfcValueBinaryCodecs
-/// 🧪️ P2-FG1EEE🔖️IfcValueBinaryCodecs
-//#endregion 🔖️IfcValueCodecs
-
-//#region 🔖️EntityCodecs
-
-
-//#endregion 🔖️EntityBinaryCodecs
-//#endregion 🔖️EntityCodecs
-
-//#region 🔖️DiffValueCodecs
-// 🚫️async: EEmeE EE🔖️DiffValueCodecs
-
-//#region 🔖️DiffValueBinaryCodecs
-/// 🧪️ P2-FG1E EE EE🔖️DiffValueBinaryCodecs
-
-//#region 🔖️TopLevel
-// 🚫️async: EEl:🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
 //#region 🔖️DemoCases
-/// 🧪️ P2-FG1: representative `IfcDiff` cases — real `print_diff()`-conformance-law fodder
-/// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
-/// `between()` result exercising every top-level field plus all three `entities`/`args`
-/// collection-triple flavors and `IfcEntityDiff.complex`, and its reverse direction.
+/// 🧪️ Representative `IfcDiff` cases built declaratively — `diff_grammar_conformance_law` and `protocol_walk_law` fodder: the empty
+/// diff, header lanes with an entity row triple (removed/modified args/added), and a header-only diff.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
-    let a = crate::engine::demo_ifc_snapshot();
-    let mut b = a.clone();
-    b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
-    if let Some(first) = b.entities.first_mut() {
-        first.name = "IFCQUANTITYVOLUME".into();
-        first.args = vec![IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }];
-        first.complex = vec![];
-    }
-    b.entities.push(IfcEntity { id: 300, name: "IFCBUILDINGSTOREY".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])], complex: vec![] });
-    vec![IfcDiff::default(), IfcDiff::between(&a, &b), IfcDiff::between(&b, &a)]
+    let entities = IfcEntitiesDiff {
+        removed: vec![2],
+        modified: vec![IfcEntityModified { id: 1, diff: IfcEntityDiff { name: Some("IFCQUANTITYVOLUME".into()), args: Some(IfcArgsDiff { removed: vec![0], ..Default::default() }), complex: Some(Vec::new()) } }],
+        added: vec![IfcEntityAdded { index: 1, entity: IfcEntity { id: 300, name: "IFCBUILDINGSTOREY".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])], complex: vec![] } }],
+    };
+    vec![
+        IfcDiff::default(),
+        IfcDiff { file_name: Some(vec![IfcValue::String("changed.ifc".into())]), entities: Some(entities), ..Default::default() },
+        IfcDiff { file_description: Some(vec![IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }]), ..Default::default() },
+    ]
 }
 //#endregion 🔖️DemoCases
 
@@ -786,3 +687,9 @@ pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
+
+/// 🧩️ The carried value of an entity an earlier diff added, once a later diff modified it (absorb).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_entity_diff_to_added(diff: &IfcEntityDiff, added: &IfcEntity) -> IfcEntity {
+    diff.apply(added)
+}

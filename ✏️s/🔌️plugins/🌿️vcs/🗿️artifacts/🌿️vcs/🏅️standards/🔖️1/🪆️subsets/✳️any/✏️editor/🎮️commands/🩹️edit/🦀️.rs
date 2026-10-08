@@ -5,41 +5,24 @@ use crate::{op::VcsDemoMutation, VcsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-//#region 🔖️Helpers
-fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot) -> Vec<VcsDemoMutation> {
-    use crate::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
-    use std::collections::BTreeSet;
-    let mut operations = Vec::new();
-    if next.title != current.title {
-        operations.push(rename_vcs(next.title.clone()));
-    }
-    if next.counter != current.counter {
-        operations.push(change_counter(next.counter));
-    }
-    if next.status != current.status {
-        operations.push(change_status(next.status.clone()));
-    }
-    if next.notes != current.notes {
-        operations.push(change_notes(next.notes.clone()));
-    }
-    let current_tags = current.tags.iter().map(String::as_str).collect::<BTreeSet<_>>();
-    let next_tags = next.tags.iter().map(String::as_str).collect::<BTreeSet<_>>();
-    for tag in &next.tags {
-        if !current_tags.contains(tag.as_str()) {
-            operations.push(add_tag(tag.clone()));
-        }
-    }
-    for tag in &current.tags {
-        if !next_tags.contains(tag.as_str()) {
-            operations.push(remove_tag(tag.clone()));
-        }
-    }
-    operations
-}
-//#endregion 🔖️Helpers
+//#region 🔖️EditRules
+/// 📐️ One field's edit rule: reads the committed and the edited snapshot and names the concrete kinds that field's edit is.
+type VcsEditRule = fn(&VcsSnapshot, &VcsSnapshot) -> Vec<VcsDemoMutation>;
 
-//#region 🔖️PatchSnapshot
-//#endregion 🔖️PatchSnapshot
+/// 📐️ The per-field edit-rules table (norm's `EDIT_RULES` shape): one rule per snapshot field, in emission order; tag
+/// removals run before position-exact tag insertions so every insertion index is an index of the edited list.
+const VCS_EDIT_RULES: [VcsEditRule; 5] = [
+    |current, next| (next.title != current.title).then(|| crate::mutations::rename_vcs(next.title.clone())).into_iter().collect(),
+    |current, next| (next.counter != current.counter).then(|| crate::mutations::change_counter(next.counter)).into_iter().collect(),
+    |current, next| (next.status != current.status).then(|| crate::mutations::change_status(next.status.clone())).into_iter().collect(),
+    |current, next| (next.notes != current.notes).then(|| crate::mutations::change_notes(next.notes.clone())).into_iter().collect(),
+    |current, next| {
+        let removals = current.tags.iter().filter(|tag| !next.tags.contains(tag)).map(|tag| crate::mutations::remove_tag(tag.clone()));
+        let additions = next.tags.iter().enumerate().filter(|(_, tag)| !current.tags.contains(tag)).map(|(index, tag)| crate::mutations::add_tag_at(tag.clone(), index as u32));
+        removals.chain(additions).collect()
+    },
+];
+//#endregion 🔖️EditRules
 
 //#region 🔖️TextEdit
 //#endregion 🔖️TextEdit
@@ -48,12 +31,12 @@ fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot
 //#endregion 🔖️Edit
 
 /// 🧩️ The former `TextEdit`/`Edit` match arm body, shared by both payload modules: parses the given text as a whole
-/// `VcsSnapshot` and emits its diff against the committed one. A live typing delivery (`typing` argument) folds into its
+/// `VcsSnapshot` and emits the concrete kinds of every edited field. A live typing delivery (`typing` argument) folds into its
 /// window's typing run — a single buffer, so the run's net is the diff of its last text — which commits as ONE edit (design
 /// §13.2); a one-shot dispatch is one edit.
 pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
     match semio_framework_pack_json::from_json_str::<VcsSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-        Ok(next_projection) => Emit::mutations(vcs_demo_projection_diff_operations(current, &next_projection)),
+        Ok(next_projection) => Emit::mutations(VCS_EDIT_RULES.iter().flat_map(|rule| rule(current, &next_projection)).collect()),
         Err(_) => Emit::default(),
     }
 }

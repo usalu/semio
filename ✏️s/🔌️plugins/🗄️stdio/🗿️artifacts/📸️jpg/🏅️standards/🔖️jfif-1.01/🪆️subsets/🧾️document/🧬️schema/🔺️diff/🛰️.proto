@@ -2,43 +2,21 @@ syntax = "proto3";
 package semio.s_stdio_jpg.diff;
 import "snapshot.proto";
 
-
-
-
-
-
-
-
-  Kind change = 1;
-  JpgFrameFieldsDiff modify = 2;
-  semio.s_stdio_jpg.snapshot.JpgFrameHeader replace_frame = 3;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-message JpgSegmentDiff { optional uint32 marker = 1; bytes data = 2; }
+message JpgSegmentDiff { optional uint32 marker = 1; optional bytes data = 2; }
 message JpgSegmentModified { uint32 index = 1; JpgSegmentDiff diff = 2; }
 message JpgSegmentAdded { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgSegment item = 2; }
 message JpgOtherSegmentsDiff { repeated uint32 removed = 1; repeated JpgSegmentModified modified = 2; repeated JpgSegmentAdded added = 3; }
-
+message JfifVersion { uint32 major = 1; uint32 minor = 2; }
+message JfifThumbnailClear {}
+message JfifThumbnailChange { oneof change { semio.s_stdio_jpg.snapshot.JfifThumbnail value = 1; JfifThumbnailClear clear = 2; } }
 message JpgDiff {
   optional uint32 width = 1;
   optional uint32 height = 2;
-  bytes pixels = 3;
-  repeated uint32 jfif_version = 6; // present (len 2) = changed
-  optional semio.s_stdio_jpg.snapshot.JfifDensityUnits jfif_density_units = 7;
-  optional uint32 jfif_x_density = 8;
-  optional uint32 jfif_y_density = 9;
-  semio.s_stdio_jpg.snapshot.JfifThumbnail jfif_thumbnail = 10;
-  bool jfif_thumbnail_cleared = 11;
-  JpgOtherSegmentsDiff other_segments = 19;
+  optional bytes pixels = 3;
+  JfifVersion jfif_version = 4;
+  optional semio.s_stdio_jpg.snapshot.JfifDensityUnits jfif_density_units = 5;
+  optional uint32 jfif_x_density = 6;
+  optional uint32 jfif_y_density = 7;
+  JfifThumbnailChange jfif_thumbnail = 8;
+  JpgOtherSegmentsDiff other_segments = 9;
 }

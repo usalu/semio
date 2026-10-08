@@ -16,6 +16,7 @@
 //! Native lexical choices and encoded stream representations never enter the typed lanes.
 
 use framework_schema::ArtifactSchema;
+use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole;
 use std::fmt;
 
 #[path="🌱️value/🧬️octets/🦀️.rs"]
@@ -399,10 +400,7 @@ pub struct PdfInlineImage {
     pub decode: Vec<f64>,
     #[value(default)]
     pub interpolate: bool,
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub filters: Vec<PdfStreamFilter>,
-    #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")]
-    pub data: Vec<u8>,
+    pub body:PdfImageBody,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra: Vec<PdfDictEntry>,
 }
@@ -530,8 +528,8 @@ pub enum PdfColorSpace {
     CalGray { white_point: [f64; 3], black_point: Option<[f64; 3]>, gamma: Option<f64> },
     CalRgb { white_point: [f64; 3], black_point: Option<[f64; 3]>, gamma: Option<[f64; 3]>, matrix: Option<[f64; 9]> },
     Lab { white_point: [f64; 3], black_point: Option<[f64; 3]>, range: Option<[f64; 4]> },
-    IccBased { components: u32, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] profile: Vec<u8>, alternate: Option<Box<PdfColorSpace>>, range: Option<Vec<f64>> },
-    Indexed { base: Box<PdfColorSpace>, hival: u32, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] lookup: Vec<u8> },
+    IccBased { components: u32, profile: semio_framework_artifact_reference::ArtifactRef, alternate: Option<Box<PdfColorSpace>>, range: Option<Vec<f64>> },
+    Indexed { base: Box<PdfColorSpace>, hival: u32, palette: Vec<u8> },
     Separation { name: String, alternate: Box<PdfColorSpace>, tint_transform: PdfFunction },
     DeviceN { names: Vec<String>, alternate: Box<PdfColorSpace>, tint_transform: PdfFunction, attributes: Option<Vec<PdfDictEntry>> },
     Pattern { base: Option<Box<PdfColorSpace>> },
@@ -607,7 +605,7 @@ pub enum PdfShadingKind {
     FunctionBased { domain: Option<[f64; 4]>, matrix: Option<PdfMatrix>, function: PdfFunction },
     Axial { coords: [f64; 4], domain: Option<[f64; 2]>, function: PdfFunction, extend: [bool; 2] },
     Radial { coords: [f64; 6], domain: Option<[f64; 2]>, function: PdfFunction, extend: [bool; 2] },
-    Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
+    Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, reference: semio_framework_artifact_reference::ArtifactRef },
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -819,16 +817,15 @@ pub struct PdfFontDescriptor {
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFontProgram {
-    /// `FontFile`: Type 1 with its clear-text/encrypted/zeros segment lengths.
-    Type1 { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8>, length1: u32, length2: u32, length3: u32 },
-    /// `FontFile2`: a TrueType (sfnt) program.
-    TrueType { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
-    /// `FontFile3` with `/Subtype /Type1C`.
-    Cff { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
-    /// `FontFile3` with `/Subtype /CIDFontType0C`.
-    CidCff { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
-    /// `FontFile3` with `/Subtype /OpenType`.
-    OpenType { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
+    Type1 { reference: semio_framework_artifact_reference::ArtifactRef },
+    TrueType { reference: semio_framework_artifact_reference::ArtifactRef },
+    Cff { reference: semio_framework_artifact_reference::ArtifactRef },
+    CidCff { reference: semio_framework_artifact_reference::ArtifactRef },
+    OpenType { reference: semio_framework_artifact_reference::ArtifactRef },
+}
+impl PdfFontProgram {
+    /// 🔗️ Borrows the admitted foreign program identity without its physical body.
+    pub fn reference(&self)->&semio_framework_artifact_reference::ArtifactRef {match self {Self::Type1 {reference}|Self::TrueType {reference}|Self::Cff {reference}|Self::CidCff {reference}|Self::OpenType {reference}=>reference}}
 }
 
 /// 🈴 One `ToUnicode` mapping (§9.10.3): a character code (of `byte_width` bytes) to a Unicode
@@ -932,7 +929,7 @@ pub struct PdfCidVerticalRun {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfCidToGid {
     Identity,
-    Map { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
+    Map { glyphs: Vec<u16> },
 }
 
 /// 🔤 A CIDFont (§9.7.4), the descendant of a Type 0 font.
@@ -1022,16 +1019,12 @@ impl PdfFont {
 //#endregion 🔖️Fonts
 
 //#region 🔖️XObjects
-/// 🖼️ How an image XObject's `data` is encoded: raw packed samples (rows padded to byte
-/// boundaries, `bits_per_component` bits each) or a retained image codec bitstream.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
-pub enum PdfImageCodec {
-    Raw,
-    Dct { color_transform: Option<u32> },
-    Jpx,
-    Ccitt { parameters: PdfCcittParameters },
-    Jbig2 { #[value(with="pack::value::bytes::optional", serialize_controlled_with="pack::value::bytes::optional::to_value_controlled", deserialize_controlled_with="pack::value::bytes::optional::from_value_controlled", retire_with="std::mem::drop")] globals: Option<Vec<u8>> },
+/// 🖼️ A logical image body is explicit component samples or an admitted foreign image.
+#[derive(Clone,Debug,PartialEq,Eq,value_derive::ToValue,value_derive::FromValue)]
+#[value(tag="kind",rename_all="camelCase",rename_all_fields="camelCase")]
+pub enum PdfImageBody {
+    Samples { values:Vec<u32> },
+    Artifact { reference:semio_framework_artifact_reference::ArtifactRef },
 }
 
 /// 🎭 An image's explicit mask (§8.9.6): a stencil image id or colour-key ranges.
@@ -1059,10 +1052,7 @@ pub struct PdfImage {
     pub decode: Vec<f64>,
     #[value(default)]
     pub interpolate: bool,
-    #[value(default = "PdfImage::raw")]
-    pub codec: PdfImageCodec,
-    #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")]
-    pub data: Vec<u8>,
+    pub body:PdfImageBody,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub soft_mask: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1082,59 +1072,13 @@ pub struct PdfImage {
 }
 
 impl PdfImage {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn raw() -> PdfImageCodec {
-        PdfImageCodec::Raw
-    }
-    /// 🖼️ An 8-bit RGB image from packed `rgb` rows.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn rgb8(id: impl Into<String>, width: u32, height: u32, rgb: Vec<u8>) -> Self {
-        Self::samples(id, width, height, PdfColorSpace::DeviceRgb, 8, rgb)
-    }
-    /// 🖼️ An 8-bit grayscale image (also the shape of a soft mask) from packed rows.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn gray8(id: impl Into<String>, width: u32, height: u32, gray: Vec<u8>) -> Self {
-        Self::samples(id, width, height, PdfColorSpace::DeviceGray, 8, gray)
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn samples(id: impl Into<String>, width: u32, height: u32, color_space: PdfColorSpace, bits_per_component: u32, data: Vec<u8>) -> Self {
-        Self {
-            id: id.into(),
-            width,
-            height,
-            color_space: Some(color_space),
-            bits_per_component,
-            image_mask: false,
-            decode: Vec::new(),
-            interpolate: false,
-            codec: PdfImageCodec::Raw,
-            data,
-            soft_mask: None,
-            soft_mask_in_data: None,
-            mask: None,
-            matte: None,
-            intent: None,
-            optional_content: None,
-            struct_parent: None,
-            extra: Vec::new(),
-        }
-    }
-    /// 📷 A JPEG (DCT) image whose bitstream is embedded as is.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn jpeg(id: impl Into<String>, width: u32, height: u32, color_space: PdfColorSpace, jpeg: Vec<u8>) -> Self {
-        let mut image = Self::samples(id, width, height, color_space, 8, jpeg);
-        image.codec = PdfImageCodec::Dct { color_transform: None };
-        image
-    }
-    /// 📐 Bytes per row of a raw image (`None` for retained codecs).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn row_bytes(&self) -> Option<usize> {
-        if self.codec != PdfImageCodec::Raw {
-            return None;
-        }
-        let components = if self.image_mask { 1 } else { self.color_space.as_ref().and_then(PdfColorSpace::components).unwrap_or(1) };
-        let bits = if self.image_mask { 1 } else { self.bits_per_component.max(1) };
-        Some((self.width as usize * components as usize * bits as usize).div_ceil(8))
+    /// 🖼️ Creates explicit 8-bit RGB component samples in row order.
+    pub fn rgb8(id:impl Into<String>,width:u32,height:u32,values:Vec<u8>)->Self {Self::samples(id,width,height,PdfColorSpace::DeviceRgb,8,values.into_iter().map(u32::from).collect())}
+    /// 🖼️ Creates explicit 8-bit grayscale component samples in row order.
+    pub fn gray8(id:impl Into<String>,width:u32,height:u32,values:Vec<u8>)->Self {Self::samples(id,width,height,PdfColorSpace::DeviceGray,8,values.into_iter().map(u32::from).collect())}
+    /// 🖼️ Creates an image from logical samples rather than a packed representation.
+    pub fn samples(id:impl Into<String>,width:u32,height:u32,color_space:PdfColorSpace,bits_per_component:u32,values:Vec<u32>)->Self {
+        Self {id:id.into(),width,height,color_space:Some(color_space),bits_per_component,image_mask:false,decode:Vec::new(),interpolate:false,body:PdfImageBody::Samples {values},soft_mask:None,soft_mask_in_data:None,mask:None,matte:None,intent:None,optional_content:None,struct_parent:None,extra:Vec::new()}
     }
 }
 
@@ -1699,8 +1643,7 @@ pub struct PdfOutputIntent {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub info: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    #[value(with="pack::value::bytes::optional", serialize_controlled_with="pack::value::bytes::optional::to_value_controlled", deserialize_controlled_with="pack::value::bytes::optional::from_value_controlled", retire_with="std::mem::drop")]
-    pub profile: Option<Vec<u8>>,
+    pub profile: Option<semio_framework_artifact_reference::ArtifactRef>,
 }
 
 /// 📖 Page layout to use when the document is opened (§12.2, Table 28).
@@ -2019,6 +1962,8 @@ pub struct PdfSnapshot {
     pub objects: Vec<PdfIndirectObject>,
     #[state(artifact)]
     pub trailer: Vec<PdfDictEntry>,
+    #[state(artifact)]
+    pub admitted_stream_roles: Vec<PdfAdmittedStreamRole>,
 }
 
 impl Default for PdfSnapshot {
@@ -2055,6 +2000,7 @@ impl Default for PdfSnapshot {
             catalog_extra: Vec::new(),
             objects: Vec::new(),
             trailer: Vec::new(),
+            admitted_stream_roles: Vec::new(),
         }
     }
 }
@@ -2147,6 +2093,7 @@ impl pack::value::ToValue for PdfSnapshot {
             ("catalogExtra".to_string(), self.catalog_extra.to_value()),
             ("objects".to_string(), self.objects.to_value()),
             ("trailer".to_string(), self.trailer.to_value()),
+            ("admittedStreamRoles".to_string(), self.admitted_stream_roles.to_value()),
         ])
     }
     fn to_value_controlled(&self,control:&mut pack::value::NativeEncodeControl<'_>)->Result<pack::value::DslValue,pack::value::ValueError>{
@@ -2185,6 +2132,7 @@ impl pack::value::ToValue for PdfSnapshot {
             field!("catalogExtra",self.catalog_extra.to_value_controlled(control));
             field!("objects",self.objects.to_value_controlled(control));
             field!("trailer",self.trailer.to_value_controlled(control));
+            field!("admittedStreamRoles",self.admitted_stream_roles.to_value_controlled(control));
             Ok(V::Object(fields.take()))
         }))
     }
@@ -2196,7 +2144,7 @@ impl pack::value::ToValue for PdfSnapshot {
 impl pack::value::FromValue for PdfSnapshot {
     fn retire_decoded(self){
         fn retire<T:pack::value::FromValue>(value:T){T::retire_decoded(value)}
-        retire(self.schema);retire(self.declared_version);retire(self.pages);retire(self.fonts);retire(self.images);retire(self.forms);retire(self.ext_g_states);retire(self.shadings);retire(self.patterns);retire(self.color_spaces);retire(self.properties);retire(self.outlines);retire(self.named_destinations);retire(self.page_labels);retire(self.embedded_files);retire(self.output_intents);retire(self.acro_form);retire(self.optional_content);retire(self.page_layout);retire(self.page_mode);retire(self.viewer_preferences);retire(self.open_action);retire(self.language);retire(self.mark_info);retire(self.metadata);retire(self.document_id);retire(self.encryption);retire(self.info);retire(self.catalog_extra);retire(self.objects);retire(self.trailer);
+        retire(self.schema);retire(self.declared_version);retire(self.pages);retire(self.fonts);retire(self.images);retire(self.forms);retire(self.ext_g_states);retire(self.shadings);retire(self.patterns);retire(self.color_spaces);retire(self.properties);retire(self.outlines);retire(self.named_destinations);retire(self.page_labels);retire(self.embedded_files);retire(self.output_intents);retire(self.acro_form);retire(self.optional_content);retire(self.page_layout);retire(self.page_mode);retire(self.viewer_preferences);retire(self.open_action);retire(self.language);retire(self.mark_info);retire(self.metadata);retire(self.document_id);retire(self.encryption);retire(self.info);retire(self.catalog_extra);retire(self.objects);retire(self.trailer);retire(self.admitted_stream_roles);
     }
     fn edit_value_at_path(&mut self, path: &[&str], edit: pack::value::ValueEdit) -> Result<(), pack::value::ValueError> {
         pack::value::edit_through_value(self, path, edit)
@@ -2213,7 +2161,7 @@ impl pack::value::FromValue for PdfSnapshot {
             }
         }
         let schema = field("schema").ok_or_else(|| pack::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing field `schema`"))?;
-        Ok(Self {
+        let snapshot=Self {
             schema: String::from_value(schema).map_err(|error| error.under("schema"))?,
             declared_version: decode_or_default(field("declaredVersion"), "declaredVersion")?,
             pages: decode_or_default(field("pages"), "pages")?,
@@ -2245,7 +2193,10 @@ impl pack::value::FromValue for PdfSnapshot {
             catalog_extra: decode_or_default(field("catalogExtra"), "catalogExtra")?,
             objects: decode_or_default(field("objects"), "objects")?,
             trailer: decode_or_default(field("trailer"), "trailer")?,
-        })
+            admitted_stream_roles: decode_or_default(field("admittedStreamRoles"), "admittedStreamRoles")?,
+        };
+        super::stream_roles::validate_role_inputs(&snapshot.objects,&snapshot.objects,&[],&snapshot.admitted_stream_roles).map_err(|message|pack::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message).under("admittedStreamRoles"))?;
+        Ok(snapshot)
     }
 }
 

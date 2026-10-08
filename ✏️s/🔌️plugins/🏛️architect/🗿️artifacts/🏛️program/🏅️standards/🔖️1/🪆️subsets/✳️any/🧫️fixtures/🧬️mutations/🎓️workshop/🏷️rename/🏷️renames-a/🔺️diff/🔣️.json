@@ -61,9 +61,10 @@
   "searchFilters": null,
   "statusRecords": null,
   "workshops": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "workshop-a",
         "patch": {
@@ -96,8 +97,7 @@
           "surveyIds": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "surveys": null,
   "issues": null,

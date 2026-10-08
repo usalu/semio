@@ -71,10 +71,6 @@ impl En1992Artifact {
         }
     }
 
-    /// 🔄 Overwrite persistent fields from a snapshot.
-    pub fn set_snapshot(&mut self, snapshot: &En1992Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 //#endregion 🔖️Conversions
 

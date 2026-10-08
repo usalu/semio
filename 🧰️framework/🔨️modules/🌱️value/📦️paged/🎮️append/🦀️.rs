@@ -1,7 +1,7 @@
 //! 🎮️ Admits and fills one native UTF-8 chunk under separate capacity and payload grants.
 
 use super::{PagedUtf8, PAGED_UTF8_CHUNK_BYTES};
-use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ErasedSnapshotRetirement, SnapshotRetirementStep, ValueError, ValueRefusalKind};
+use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ErasedSnapshotRetirement, ValueError, ValueRefusalKind};
 
 #[derive(Default)]
 pub struct PagedUtf8AppendCursor {
@@ -12,7 +12,6 @@ pub struct PagedUtf8AppendCursor {
     pending: Option<String>,
     closing: bool,
     complete: bool,
-    retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
     controlled_close: crate::retained_clone::RetainedCloneClose,
 }
 
@@ -73,24 +72,20 @@ impl PagedUtf8AppendCursor {
     pub fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }
     /// 🧮️ Reads the next pending chunk's payload work without releasing its backing.
     pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if self.retirement.is_some() { return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "cold UTF-8 append retirement has no controlled work demand")); }
         self.controlled_close.next_copy_byte_demand()
     }
     /// 📐️ Reads the next native retirement birth while retaining the pending chunk.
     pub fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if self.retirement.is_some() { return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "cold UTF-8 append retirement has no controlled birth demand")); }
         if !self.controlled_close.is_empty() { return self.controlled_close.next_capacity_byte_demand(maximum_release_bytes); }
         Ok(if self.pending.is_some() { std::mem::size_of::<crate::retirement::controlled::ControlledRetirement<String>>() } else { 0 })
     }
     /// 📐️ Reads the next physical chunk or scaffold release without closing it.
     pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if self.retirement.is_some() { return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "cold UTF-8 append retirement has no controlled release demand")); }
         self.controlled_close.next_release_byte_demand()
     }
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native UTF-8 append must begin close before granted retirement")); }
-        if self.retirement.is_some() { return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "cold UTF-8 append retirement cannot enter granted closure")); }
         if !self.controlled_close.is_empty() { return self.controlled_close.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress())); }
         if let Some(step) = self.controlled_close.begin_granted(&mut self.pending, grant)? { return Ok(step); }
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -98,33 +93,19 @@ impl PagedUtf8AppendCursor {
         self.destination = None;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
-        if !self.closing || maximum_items == 0 { return Ok(SnapshotRetirementStep::Blocked); }
-        if !self.controlled_close.is_empty() { return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "controlled UTF-8 append closure requires its capacity-bearing grant")); }
-        if let Some(owner) = self.retirement.as_mut() {
-            let step = owner.close_step(1, maximum_bytes)?;
-            if step != SnapshotRetirementStep::Complete { return Ok(step); }
-            if !owner.terminal_is_empty() { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native UTF-8 append returned a false retirement terminal")); }
-            self.retirement = None;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(owner) = self.pending.take() { self.retirement = Some(crate::retirement::owned_retirement(owner)); return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
-        self.source = None; self.destination = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.retirement.is_none() && self.controlled_close.is_empty() }
+    
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.controlled_close.is_empty() }
 }
 
 impl ErasedSnapshotRetirement for PagedUtf8AppendCursor {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
-        PagedUtf8AppendCursor::close_step(self, maximum_items, maximum_bytes)
-    }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { PagedUtf8AppendCursor::terminal_is_empty(self) }
-    fn next_close_byte_demand(&self) -> usize {
-        self.retirement.as_ref().map_or_else(|| self.pending.as_ref().map_or(1, |pending| pending.capacity().max(1)), |retirement| retirement.next_close_byte_demand())
-    }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_copy_byte_demand() }
+    fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.next_close_capacity_byte_demand(copy) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_release_byte_demand() }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.controlled_close.next_depth_demand()?.max(usize::from(!self.terminal_is_empty()))) }
 }
 
 impl Drop for PagedUtf8AppendCursor {
-    fn drop(&mut self) { assert!((self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.retirement.is_none() && self.controlled_close.is_empty()) || std::thread::panicking(), "native UTF-8 append cursor dropped before exact closure"); }
+    fn drop(&mut self) { assert!((self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.controlled_close.is_empty()) || std::thread::panicking(), "native UTF-8 append cursor dropped before exact closure"); }
 }

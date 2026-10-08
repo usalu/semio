@@ -1,0 +1,26 @@
+{
+  "owners": [
+    {
+      "num": 500,
+      "gen": 7
+    },
+    {
+      "num": 501,
+      "gen": 8
+    }
+  ],
+  "texts": [
+    "first Ω",
+    "second 😀"
+  ],
+  "law": "pdf_stream_roles_multi_object_reorder_delete_and_path_refusal",
+  "expectedRetainedOwner": {
+    "num": 501,
+    "gen": 8
+  },
+  "physicalByteEditRefused": true,
+  "nativeOperatorNames": [
+    "q",
+    "Q"
+  ]
+}

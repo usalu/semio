@@ -6,7 +6,7 @@
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
 //! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
-//! own `XmlSnapshot::import_utf8`/`export_utf8`/`apply_xml_mutation` over the full 8-kind
+//! own `XmlSnapshot::import_utf8`/`export_utf8`/`apply_mutation` over the full 8-kind
 //! `XmlMutation` vocabulary. Each side hands the document it produced to the `semantic-xml-v1` profile's
 //! `xml-1-0-quick-xml-compare-v1` pipeline — the oracle as `expected-xml`, the subject as `actual-xml` — whose
 //! standalone `quick-xml-oracle-codec` probes read both files independently and compare what they recovered. The
@@ -212,7 +212,7 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, produced};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_xml::schema::mutations::{apply_xml_mutation, XmlMutation};
+    use semio_s_artifact_stdio_xml::schema::mutations::{XmlMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_xml::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_xml::XmlSnapshot;
@@ -236,7 +236,7 @@ mod subject {
         let kind = spec.str("kind");
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
-        apply_xml_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         let bytes = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let projection = project_xml_1_0(&bytes)?;
         if super::projection_divergence(&projection, &project_xml_1_0(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?).is_none() {
@@ -255,8 +255,8 @@ mod subject {
         let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let original = project_xml_1_0(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
-        let forward = apply_xml_mutation(&mut snapshot, &mutation);
-        let backward: Vec<_> = undo.iter().map(|step| apply_xml_mutation(&mut snapshot, step).messages().to_vec()).collect();
+        let forward = apply_mutation(&mut snapshot, &mutation);
+        let backward: Vec<_> = undo.iter().map(|step| apply_mutation(&mut snapshot, step).messages().to_vec()).collect();
         let bytes = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let projection = project_xml_1_0(&bytes)?;
         if let Some(divergence) = super::projection_divergence(&projection, &original) {

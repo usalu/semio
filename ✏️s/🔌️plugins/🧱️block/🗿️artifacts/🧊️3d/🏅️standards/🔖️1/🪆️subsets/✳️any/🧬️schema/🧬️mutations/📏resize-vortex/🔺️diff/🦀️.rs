@@ -13,6 +13,6 @@ pub fn diff(payload: &super::ResizeVortex, base: &Block3dSnapshot) -> protocol::
         return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     let patch = Block3dVortexTemplatePatch { radius: Some(payload.new_radius), ..Default::default() };
-    protocol::MutationOutcome::new(Block3dDiff { vortices: Some(Block3dVorticesDelta { patched: vec![Block3dVorticesPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { vortices: Block3dVorticesDelta { modified: vec![Block3dVorticesPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, ..Default::default() })
 }
 //#endregion 🔖️Diff

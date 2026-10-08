@@ -63,6 +63,7 @@ export function schemaRustWireDependencies(source: string): string[] {
   const words = new Set(owned.filter(token=>token.kind!=="string").map(token=>token.text));
   const code = owned.filter(token=>token.kind!=="string").map(token=>token.text).join("");
   const names = new Set<string>();
+  if(words.has("serde_json"))names.add("serde_json");
   for(const name of["to_uri","parse_uri","parse_uri_controlled","to_coordinate","parse_coordinate"])if(words.has(name))names.add(name);
   if(code.includes("semio_framework_io_schema"))names.add("semio_framework_io_schema");
   for(let at=0;at<owned.length;at++)if(["serialize_controlled_with","deserialize_controlled_with","retire_with"].includes(owned[at]!.text)&&owned[at+1]?.text==="="&&owned[at+2]?.kind==="string"){
@@ -90,8 +91,8 @@ function typeScriptImplementedExports(source: string): string[] {
 
 /** 🧭️ Reads actual TypeScript module dependencies, including type-only declarations. */
 function schemaTypeScriptModules(source:string):string[]{
-  const admitted=source.replace(/\bimport(\s+)type(?=\s*[{*]|\s+\w)/gu,"import$1").replace(/\bexport\s+type(?=\s*[{*])/gu,"export").replace(/\b(?:import|export)\s*\{[^}]*\}\s*from(?=\s*["'])/gu,declaration=>declaration.replace(/\btype\s+(?=\w)/gu,""));
-  const modules=new Bun.Transpiler({loader:"ts"}).scan(admitted).imports.map(row=>{
+  const admitted=source.replace(/^#![^\r\n]*/u,"").replace(/\bimport(\s+)type(?=\s*[{*]|\s+\w)/gu,"import$1").replace(/\bexport\s+type(?=\s*[{*])/gu,"export").replace(/\b(?:import|export)\s*\{[^}]*\}\s*from(?=\s*["'])/gu,declaration=>declaration.replace(/\btype\s+(?=\w)/gu,""));
+  const modules=new Bun.Transpiler({loader:"ts"}).scanImports(admitted).map(row=>{
     if([...row.path].some(scalar=>scalar.charCodeAt(0)>255))return row.path;
     try{return new TextDecoder("utf-8",{fatal:true}).decode(Uint8Array.from(row.path,scalar=>scalar.charCodeAt(0)));}catch{return row.path;}
   });
@@ -152,6 +153,7 @@ export function artifactIoArchitectureBreaches(repoRoot: string, roots: readonly
         modules=schemaTypeScriptModules(source);
       } catch (error) { add(path, "schema-source", `Semantic TypeScript source is invalid: ${String(error)}.`); }
       for (const module of modules) {
+        if (module === "chevrotain" || module.startsWith("@chevrotain/")) add(path, "schema-codec-dependency", `Native lexer and parser dependency belongs to physical I/O: ${module}.`);
         const target = posix.normalize(posix.join(posix.dirname(path), module)), parts = target.split("/"), at = parts.lastIndexOf("🚪️io");
         if (at >= 0) add(path, "schema-codec-dependency", "Canonical schema must depend on semantic value interfaces; physical decoding belongs to I/O.");
       }

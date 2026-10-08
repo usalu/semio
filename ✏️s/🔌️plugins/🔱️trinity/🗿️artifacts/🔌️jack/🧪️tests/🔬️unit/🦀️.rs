@@ -131,10 +131,10 @@ async fn graph_effects_create_a_node_and_its_content_leaf_undoes_it() {
     assert_eq!(leaves.len(), 1);
     let mut child = base.clone();
     let inverse = <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::inverse(&leaves[0], &child).expect("inverse");
-    let _ = <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(&leaves[0], &child).apply_to(&mut child);
+    child = protocol::apply_diff(<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(&leaves[0], &child).diff(), &child).expect("leaf applies");
     assert_eq!(child.nodes.len(), 3);
-    for step in &inverse {
-        let _ = <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(step, &child).apply_to(&mut child);
+    for step in inverse.iter().rev() {
+        child = protocol::apply_diff(<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(step, &child).diff(), &child).expect("inverse step applies");
     }
     assert_eq!(child, base);
 }

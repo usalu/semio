@@ -21,7 +21,7 @@ Feature: Apply every config state-lane mutation of s.architect.program's ✏️e
     Then the applied snapshot, the produced diff and the diagnostics are exactly what the vector commits, and the snapshot moved
     Examples:
       | id |
-      | replace-config |
+      | set-config |
 
   @id-inverse
   @level-exhaustive
@@ -32,7 +32,7 @@ Feature: Apply every config state-lane mutation of s.architect.program's ✏️e
     Then the mutation's own inverse steps apply without refusal and restore the before-snapshot exactly
     Examples:
       | id |
-      | replace-config |
+      | set-config |
 
   @id-keep
   @level-exhaustive
@@ -43,4 +43,4 @@ Feature: Apply every config state-lane mutation of s.architect.program's ✏️e
     Then the snapshot is unchanged and the only diagnostic is mutation.no-op
     Examples:
       | id |
-      | replace-config |
+      | set-config |

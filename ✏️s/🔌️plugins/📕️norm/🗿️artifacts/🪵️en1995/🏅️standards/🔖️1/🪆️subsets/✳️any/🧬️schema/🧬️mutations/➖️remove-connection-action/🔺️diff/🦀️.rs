@@ -9,5 +9,5 @@ pub fn diff(payload: &RemoveConnectionAction, base: &En1995Snapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Connection action index {} out of range.", payload.index), vec![payload.connection_id.clone()]);
     }
     let connection = &base.connections[idx];
-    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { actions: En1995ConnectionActionDelta::removal(&connection.actions[payload.index].id), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { actions: En1995ConnectionActionDelta::removal(&connection.actions, payload.index), ..Default::default() }), ..Default::default() })
 }

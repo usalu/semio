@@ -34,12 +34,41 @@ impl Default for Generation3dPresence {
     }
 }
 
-impl protocol::MutationDiff<Generation3dPresence> for Generation3dPresence {
-    fn apply(&self, _base: &Generation3dPresence) -> protocol::MutationApplyResult<Generation3dPresence> {
-        Ok(self.clone())
+/// 🩹 Owned-field diff of [`Generation3dPresence`]: exactly the fields a leaf sets.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation3dPresencePatch {
+    pub camera: Option<CameraJson>,
+    pub preview_camera: Option<Generation3dPreviewCamera>,
+    pub show_mode: Option<String>,
+}
+
+impl protocol::MutationDiff<Generation3dPresence> for Generation3dPresencePatch {
+    fn apply(&self, base: &Generation3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dPresence> {
+        Ok(Generation3dPresence {
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            ..base.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        self.camera = other.camera.or_else(|| self.camera.take());
+        self.preview_camera = other.preview_camera.or_else(|| self.preview_camera.take());
+        self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
+    }
+}
+
+impl protocol::DiffAlgebra<Generation3dPresence> for Generation3dPresencePatch {
+    fn inverse(&self, base: &Generation3dPresence) -> Self {
+        Self {
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+            preview_camera: self.preview_camera.as_ref().map(|_| base.preview_camera.clone()),
+            show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.preview_camera.is_none() && self.show_mode.is_none()
     }
 }
 
@@ -93,10 +122,19 @@ impl ArtifactPack for Generation3dPresence {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum Generation3dPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set-camera")]
+    SetCamera {
         #[dsl(block)]
-        presence: Generation3dPresence,
+        camera: CameraJson,
+    },
+    #[dsl(key = "set-preview-camera")]
+    SetPreviewCamera {
+        #[dsl(block)]
+        preview_camera: Generation3dPreviewCamera,
+    },
+    #[dsl(key = "set-show-mode")]
+    SetShowMode {
+        show_mode: String,
     },
 }
 
@@ -106,13 +144,14 @@ impl Mutation<Generation3dPresence> for Generation3dPresenceMutation {
     /// shape. One entry per variant, in declaration order. ⚠️ PROVISIONAL: no variant below has an
     /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
     /// the same precedent puzzle3d's own config/presence aggregates set.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+    protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot",
-        semantic_kind: "set-snapshot",
-        display_name: "Set Snapshot",
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-camera",
+        semantic_kind: "set-camera",
+        display_name: "Set Camera",
         emoji: "👥️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetCamera",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -121,28 +160,70 @@ impl Mutation<Generation3dPresence> for Generation3dPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-preview-camera",
+        semantic_kind: "set-preview-camera",
+        display_name: "Set Preview Camera",
+        emoji: "👥️",
+        aggregate_variant: "SetPreviewCamera",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-show-mode",
+        semantic_kind: "set-show-mode",
+        display_name: "Set Show Mode",
+        emoji: "👥️",
+        aggregate_variant: "SetShowMode",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    },
+    ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Generation3dPresenceMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Generation3dPresenceMutation::SetCamera { .. } => &Self::DESCRIPTORS[0],
+            Generation3dPresenceMutation::SetPreviewCamera { .. } => &Self::DESCRIPTORS[1],
+            Generation3dPresenceMutation::SetShowMode { .. } => &Self::DESCRIPTORS[2],
         }
     }
 
-    type Diff = Generation3dPresence;
+    type Diff = Generation3dPresencePatch;
 
-    fn diff(&self, _base: &Generation3dPresence) -> protocol::MutationOutcome<Generation3dPresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
+    fn diff(&self, base: &Generation3dPresence) -> protocol::MutationOutcome<Generation3dPresencePatch> {
+        let patch = match self {
+            Self::SetCamera { camera } => (camera != &base.camera).then(|| Generation3dPresencePatch { camera: Some(camera.clone()), ..Default::default() }),
+            Self::SetPreviewCamera { preview_camera } => (preview_camera != &base.preview_camera).then(|| Generation3dPresencePatch { preview_camera: Some(preview_camera.clone()), ..Default::default() }),
+            Self::SetShowMode { show_mode } => (show_mode != &base.show_mode).then(|| Generation3dPresencePatch { show_mode: Some(show_mode.clone()), ..Default::default() }),
+        };
+        match patch {
+            Some(patch) => protocol::MutationOutcome::new(patch),
+            None => protocol::MutationOutcome::empty().warning("mutation.no-op", "The presence already holds that value."),
         }
     }
 
     fn inverse(&self, base: &Generation3dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetCamera { .. } => Self::SetCamera { camera: base.camera.clone() },
+            Self::SetPreviewCamera { .. } => Self::SetPreviewCamera { preview_camera: base.preview_camera.clone() },
+            Self::SetShowMode { .. } => Self::SetShowMode { show_mode: base.show_mode.clone() },
+        }])
+    }
 }
 
 impl protocol::OpText for Generation3dPresenceMutation {

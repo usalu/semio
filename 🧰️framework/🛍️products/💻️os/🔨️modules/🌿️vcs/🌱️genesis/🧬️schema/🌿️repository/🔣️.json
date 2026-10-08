@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://vcs/repository",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "genesis",
+    "edits",
+    "changes",
+    "checkpoints",
+    "alternatives"
+  ],
+  "properties": {
+    "genesis": {
+      "$ref": "semio://vcs/genesis"
+    },
+    "edits": {
+      "type": "array",
+      "items": {}
+    },
+    "changes": {
+      "type": "array",
+      "items": {}
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {}
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {}
+    }
+  }
+}

@@ -29,8 +29,8 @@ pub fn plan(p: &GltfReorderNodesPayload, base: &GltfSnapshot) -> Result<GltfDiff
     slot.modified.retain(|entry| p.order[entry.index] == entry.index);
     for (new, old) in p.order.iter().enumerate() {
         if new != *old {
-            let mut item = base.document.nodes[*old].clone();
-            item.children = item.children.iter().filter_map(|child| remap(*child)).collect();
+            let source = &base.document.nodes[*old];
+            let item = GltfNode { children: source.children.iter().filter_map(|child| remap(*child)).collect(), ..source.clone() };
             slot.removed.push(*old);
             slot.added.push(GltfAdded { index: new, item });
         }

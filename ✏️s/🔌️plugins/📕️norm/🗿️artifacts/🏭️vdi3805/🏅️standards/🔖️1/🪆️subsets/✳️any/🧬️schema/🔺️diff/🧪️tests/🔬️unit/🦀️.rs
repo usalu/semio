@@ -1,4 +1,4 @@
-//! 🧪️ Keyed-diff algebra of Vdi3805: map-entry coalescing, nested connection rows, lockstep index rows, the negative diff and the state delta.
+//! 🧪️ Keyed-diff algebra of Vdi3805: map-entry coalescing, nested connection rows, the derived index, the negative diff.
 
 use super::Vdi3805Diff;
 use crate::mutations::add_curve::AddCurve;
@@ -59,7 +59,7 @@ async fn add_then_remove_cancels_and_remove_then_add_replaces() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_connection_replaced_twice_keeps_one_added_connection() {
+async fn a_connection_replaced_twice_keeps_one_inserted_connection() {
     let base = Vdi3805Snapshot::default();
     let id = base.geometry.keys().next().expect("geometry").clone();
     let mut connection = base.geometry[&id].connections[0].clone();
@@ -70,7 +70,7 @@ async fn a_connection_replaced_twice_keeps_one_added_connection() {
     let patches = sum.geometry.expect("geometry").modified;
     assert_eq!(patches.len(), 1);
     let rows = patches[0].connections.as_ref().expect("connections");
-    assert_eq!(rows.added.len(), 1);
+    assert_eq!(rows.inserted.len(), 1);
     assert!(rows.removed.is_empty());
 }
 
@@ -86,18 +86,18 @@ async fn a_new_edition_choice_is_added_then_changed_in_place() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn product_rows_and_index_rows_move_in_lockstep() {
+async fn the_derived_index_follows_the_product_rows() {
     let base = Vdi3805Snapshot::default();
     let mut product = base.catalog.products[0].clone();
     product.id = "VLV-50-002".into();
     product.identity.article_number = "VLV-50-002".into();
     let mutation = Vdi3805Mutation::AddProduct(AddProduct { product: product.clone(), index: Some(0) });
     let forward = diff_of(&mutation, &base);
-    assert!(forward.products.is_some() && forward.index_entries.is_some());
+    assert!(forward.products.is_some());
     let after = protocol::apply_diff(&forward, &base).expect("apply");
+    assert_eq!(after.index, crate::CatalogIndex::from_catalog(&after.catalog));
     assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let sum = law(&base, &mutation, |_| Vdi3805Mutation::RemoveProduct(RemoveProduct { id: product.identity.article_number.clone() })).await;
     assert!(sum.is_empty(), "create∘delete must cancel: {sum:?}");
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<Vdi3805Snapshot, Vdi3805Diff>(&base, &after).await;
 }

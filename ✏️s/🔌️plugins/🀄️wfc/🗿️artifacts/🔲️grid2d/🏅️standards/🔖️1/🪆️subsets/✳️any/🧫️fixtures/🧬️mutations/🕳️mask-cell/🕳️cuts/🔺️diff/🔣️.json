@@ -7,22 +7,41 @@
   "cellHeight": null,
   "periodicX": null,
   "periodicY": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [],
-  "rulesRemoved": [],
-  "rulesUpserted": [],
-  "pinnedRemoved": [
-    "0,0"
-  ],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": [
-    [
-      0,
+  "tiles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "rules": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "pinned": {
+    "removed": [
       {
-        "x": 0,
-        "y": 0
+        "id": "0,0",
+        "index": 0
       }
-    ]
-  ]
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "masked": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  }
 }

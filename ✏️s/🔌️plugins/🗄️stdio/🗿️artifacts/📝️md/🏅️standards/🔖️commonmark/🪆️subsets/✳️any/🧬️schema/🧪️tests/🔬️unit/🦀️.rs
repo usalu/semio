@@ -1,7 +1,7 @@
 use super::*;
 use crate::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
 use crate::schema::mutations::MdPathStep;
-use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines};
+use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, splice_source::{SourceSplice, SpliceSource}};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
 use crate::standards::v_commonmark::subsets::any::io::import::deserializers::{parse_inline, parse_markdown_blocks};
@@ -376,6 +376,8 @@ fn sample_mutations() -> Vec<MdMutation> {
         MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }),
         MdMutation::ReplaceBlock(ReplaceBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "replaced".into() }] } }),
         MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "new inlines".into() }] }),
+        MdMutation::SpliceSource(SpliceSource { splices: vec![SourceSplice { offset: 2, delete: 5, insert: "Heading".into() }] }),
+        MdMutation::SpliceSource(SpliceSource { splices: vec![SourceSplice { offset: 9, delete: 5, insert: "world\n\nand more".into() }] }),
     ]
 }
 
@@ -387,7 +389,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
-        let diff_from_apply = crate::schema::mutations::apply_md_mutation(&mut via_apply, &mutation);
+        let diff_from_apply = crate::apply_mutation(&mut via_apply, &mutation);
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -402,9 +404,9 @@ async fn inverse_law() {
         let base = sample_snapshot();
 
         let mut round_tripped = base.clone();
-        crate::schema::mutations::apply_md_mutation(&mut round_tripped, &mutation);
+        crate::apply_mutation(&mut round_tripped, &mutation);
         for inverse_mutation in <MdMutation as Mutation<MdSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            crate::schema::mutations::apply_md_mutation(&mut round_tripped, &inverse_mutation);
+            crate::apply_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -533,29 +535,6 @@ async fn absorb_law() {
         assert_eq!(inner.added.len(), 1);
     }
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&b, &a), &b).unwrap(), a);
-
-    let sample = sample_snapshot();
-    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
-
-    // Real fixture (the demo's `📝️example.md`) diffed against a mutated variant.
-    let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md");
-    let fixture_blocks = parse_markdown_blocks(fixture_text);
-    let fixture = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: fixture_blocks };
-    let mut mutated = fixture.clone();
-    crate::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock(InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak }));
-    assert_ne!(fixture, mutated);
-    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
-    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
-}
 //#endregion 🔖️BetweenRoundtripLaw
 
 //#region 🔖️CodecRetentionLaw
@@ -575,59 +554,6 @@ async fn codec_retention_law() {
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
-}
-//#endregion 🔖️CodecRetentionLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
-/// fixtures' doc comment for exactly how each collection flavor is exercised).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_covers_every_mutable_field() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&diff_ab, &a).unwrap(), b);
-    let diff_ba = <MdDiff as DiffAlgebra<MdSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&diff_ba, &b).unwrap(), a);
-    assert!(<MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &a).is_empty());
-
-    // Direction a->b: top-level `removed` (a's trailing paragraph, beyond b's length) +
-    // `modified` (the shared-prefix `List` in every one of its own fields, AND the shared
-    // `CodeBlock`) are exercised.
-    let blocks_ab = diff_ab.blocks.as_ref().expect("blocks diff present (a->b)");
-    assert!(!blocks_ab.removed.is_empty(), "top-level: removed not exercised (a->b)");
-    assert_eq!(blocks_ab.modified.len(), 2, "expected the List AND the CodeBlock entries modified");
-    let list_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::List { .. })).expect("a List-shaped modified entry must be present");
-    let MdBlockDiff::List { ordered, start, tight, items } = &list_entry.diff else { unreachable!() };
-    assert!(ordered.is_some(), "List.ordered not exercised");
-    assert_eq!(*start, Some(Some(3)), "List.start tri-state (None -> Some(3)) not exercised");
-    assert!(tight.is_some(), "List.tight not exercised");
-    let items_diff: &MdListItemsDiff = items.as_ref().expect("List.items diff present");
-    assert!(!items_diff.removed.is_empty(), "List.items: removed not exercised");
-    assert_eq!(items_diff.modified.len(), 1, "expected exactly one modified item");
-    assert!(!items_diff.modified[0].diff.modified.is_empty(), "modified item's own content not exercised");
-    let code_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::CodeBlock { .. })).expect("a CodeBlock-shaped modified entry must be present");
-    let MdBlockDiff::CodeBlock { info, literal } = &code_entry.diff else { unreachable!() };
-    assert_eq!(*info, Some(None), "CodeBlock.info tri-state (Some -> None) not exercised");
-    assert!(literal.is_some(), "CodeBlock.literal not exercised");
-
-    // Direction b->a: top-level `added` (a's trailing paragraph reappearing) is exercised.
-    let blocks_ba = diff_ba.blocks.as_ref().expect("blocks diff present (b->a)");
-    assert!(!blocks_ba.added.is_empty(), "top-level: added not exercised (b->a)");
-
-    // Sanity: nested list-item content diff and top-level block-kind Replace both exist as
-    // reachable shapes (exercised directly, not just via sweep, since the naive between()
-    // can't surface every shape from one pair -- same rationale as xml's F1 precedent).
-    let leaf = diff_at_path(&[], 0, crate::schema::diff::MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: MdBlock::ThematicBreak }));
-    assert!(leaf.blocks.is_some());
-    let nested = MdListItemsDiff {
-        removed: vec![0],
-        modified: vec![MdListItemModified { index: 1, diff: MdBlocksDiff { removed: vec![], modified: vec![], added: vec![MdBlockAdded { index: 0, item: MdBlock::ThematicBreak }] } }],
-        added: vec![MdListItemAdded { index: 2, item: vec![MdBlock::ThematicBreak] }],
-    };
-    assert!(!nested.removed.is_empty() && !nested.modified.is_empty() && !nested.added.is_empty());
-    let _ = MdBlockModified { index: 0, diff: MdBlockDiff::ThematicBreak };
 }
 //#endregion 🔖️FieldSweep
 

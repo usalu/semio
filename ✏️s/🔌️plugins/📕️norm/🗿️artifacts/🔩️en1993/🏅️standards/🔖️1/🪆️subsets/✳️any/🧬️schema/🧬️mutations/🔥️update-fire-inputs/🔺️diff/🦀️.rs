@@ -8,11 +8,11 @@ pub fn diff(payload: &UpdateFireInputs, base: &En1993Snapshot) -> protocol::Muta
     let delta = match base.fire_exposures.iter().position(|row| row.id == payload.fire_exposure.id) {
         Some(index) if base.fire_exposures[index] == payload.fire_exposure => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
         Some(index) => {
-            let mut replacement = En1993FireExposureDelta::removal(&payload.fire_exposure.id);
-            replacement.absorb(En1993FireExposureDelta::insertion(&base.fire_exposures, index, payload.fire_exposure.clone()));
+            let mut replacement = En1993FireExposureDelta::removal(&base.fire_exposures, index);
+            replacement.absorb(En1993FireExposureDelta::insertion(index, payload.fire_exposure.clone()));
             replacement
         }
-        None => En1993FireExposureDelta::insertion(&base.fire_exposures, base.fire_exposures.len(), payload.fire_exposure.clone()),
+        None => En1993FireExposureDelta::insertion(base.fire_exposures.len(), payload.fire_exposure.clone()),
     };
     protocol::MutationOutcome::new(En1993Diff { fire_exposures: delta, ..Default::default() })
 }

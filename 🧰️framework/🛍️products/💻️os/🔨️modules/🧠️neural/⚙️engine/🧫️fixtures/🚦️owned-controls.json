@@ -16,10 +16,19 @@
       "input-bind-value",
       "input-bind-update",
       "input-bind-retire"
-    ]
+    ],
+    "physical": {
+      "sourceBirthBytes": 0,
+      "sourceReleaseBytes": 0,
+      "headers": "separateAdmittedOriginal",
+      "publication": "frameAndUpdateTerminal"
+    }
   },
   "schema": "neural.owned-controls/v1",
-  "writerSourceRetirement": {"maximumUnits":1,"grantBytes":3},
+  "writerSourceRetirement": {
+    "maximumUnits": 1,
+    "grantBytes": 3
+  },
   "dictionaryText": "{\"z\":{\"first\":null,\"second\":true,\"integer\":-42,\"decimal\":1.25,\"text\":\"owned_日本_β\"},\"a\":{\"minimum\":-9223372036854775808,\"maximum\":9223372036854775807,\"zero\":-0.0}}",
   "acceptedIntegerTexts": [
     "-9223372036854775808",

@@ -6,10 +6,10 @@ use crate::diff::ProgramActivitiesDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteActivity, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.activities.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.activities.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No activity exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { activities: Some(ProgramActivitiesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { activities: Some(ProgramActivitiesDelta::removal(&base.activities, position)), ..Default::default() })
 }

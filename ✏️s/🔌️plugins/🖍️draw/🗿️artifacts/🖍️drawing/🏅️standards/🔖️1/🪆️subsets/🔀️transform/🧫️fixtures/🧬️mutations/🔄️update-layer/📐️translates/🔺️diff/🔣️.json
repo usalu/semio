@@ -3,9 +3,10 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "shape-a",
         "patch": {
@@ -33,8 +34,7 @@
           "layer": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "assets": null,
   "artboard": null

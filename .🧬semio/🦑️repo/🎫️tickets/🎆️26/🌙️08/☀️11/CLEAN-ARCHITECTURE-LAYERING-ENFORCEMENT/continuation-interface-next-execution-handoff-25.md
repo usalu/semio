@@ -1,0 +1,13 @@
+# Interface Next Execution Handoff 25
+
+Current own live handle: none. The root goal remains active and no ticket closure is owned by this lane.
+
+Retirement3 is complete with actual registered process exit0, snapshots12/13 absent, both admitted runtime artifact directories retained with exact inode/device identity, and all238458 full-byte-validated sealed bodies retained with exact post-stat identity. All original admission/terminal/input/late-advance full hashes remain exact. Keep current15, journals, captures, authored inputs, shared Native6, and all peer artifacts. No global cleanup or Git mutation is authorized.
+
+Successor23 receiving red/green, metadata red/test, and stage actualexit0; strict inspection actualexit1 with700frames,0missing,allpostguardstrue, two strict diagnostics. Corrected24 authority fixes both. GUI67 mistakenly retained positional23; registered receiving route actualexit1 before testing on existing23 guard. All original results remain retained.
+
+Owned successor25 contains the complete corrected24 bodies. Frozen producer SHA-256 `3f2104087999bb1e9bb40ac1365d1ddb087445d66a93a3fe5b41953049680052`;202 defining inputs;177 rows;8 retirements;9 companions;all41 original law identities and full controls. Full7-case original imports fixture is recovered from own original authoring journal. Full Root47 production and test-format schemas and closed47-case corpus/assertion remain in candidate only. Current Root async General observation controls and phase rechecks are preserved. Fresh physical/frozen input guards at 2026-10-08T15:27:46.224365+00:00 have0 refusals.
+
+Next: Root must close registration admitting all seven exact GUI68 rows in `cargo-inputs/📥️current-origin/gui-additions-68.json`. Each script and positional epoch is independently checked as25. Then run exact registered receiving-red→receiving-test→metadata-red→metadata-test→stage→inspect, retaining each actual terminal and full diagnostic/capture. Run whole only after strict inspect0 and renewed current guards. Preserve all original long60000/discovery bounds/full isolated runtime controls. No current publication or peer restoration has occurred.
+
+Closed continuation: all six preliminary routes actual0; whole outeractual1 after original cancellation produced child137/cancelled=true. Full143084 sealed-body postguards exact;1017 current source advances qualified; one retained snapshot Cargo.toml advance. No own process live. Full final report is `continuation-interface-whole25-closed-custody.md`. Preserve this rejected predecessor and diagnose all77 original failures before any fresh successor.

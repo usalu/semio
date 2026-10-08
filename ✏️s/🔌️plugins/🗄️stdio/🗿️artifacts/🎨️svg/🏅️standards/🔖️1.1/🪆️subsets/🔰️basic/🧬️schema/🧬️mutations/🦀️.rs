@@ -33,6 +33,8 @@ use protocol::Mutation;
 use crate::schema::snapshot::{SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "➕insert-basic-element/🦀️.rs"]
 pub mod insert_basic_element;
 #[path = "📎insert-clip-path-shape/🦀️.rs"]
@@ -199,39 +201,10 @@ fn remove_child_diff(parent: &[usize], index: usize) -> SvgDiff {
 }
 //#endregion 🔖️AttributeHelper
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`, or `None` when `next` differs in a part no leaf of this vocabulary addresses
-/// (prolog, epilog, declaration, doctype, the root's presence or name). The root's attributes keep their order and the children past the
-/// longest equal prefix are removed and reinserted.
-pub fn net_mutations(base: &SvgSnapshot, next: &SvgSnapshot) -> Option<Vec<SvgBasicMutation>> {
-    if base.doc.prolog != next.doc.prolog || base.doc.epilog != next.doc.epilog || base.doc.declaration != next.doc.declaration || base.doc.doctype != next.doc.doctype {
-        return None;
-    }
-    match (&base.doc.root, &next.doc.root) {
-        (None, None) => Some(Vec::new()),
-        (Some(SvgNode::Element { name: base_name, attrs: base_attrs, children: base_children }), Some(SvgNode::Element { name, attrs, children })) if base_name == name => {
-            let set = |name: &str, value, index| SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: Vec::new(), name: name.to_string(), value, index });
-            let kept_in_order = base_attrs.iter().filter(|attribute| attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| &attribute.name).eq(attrs.iter().filter(|attribute| base_attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| &attribute.name));
-            let mut leaves: Vec<SvgBasicMutation> = base_attrs.iter().filter(|attribute| !kept_in_order || !attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| set(&attribute.name, None, None)).collect();
-            for (index, attribute) in attrs.iter().enumerate() {
-                match base_attrs.iter().find(|other| other.name == attribute.name).filter(|_| kept_in_order) {
-                    Some(current) if current.value == attribute.value => {}
-                    Some(_) => leaves.push(set(&attribute.name, Some(attribute.value.clone()), None)),
-                    None => leaves.push(set(&attribute.name, Some(attribute.value.clone()), Some(index))),
-                }
-            }
-            let common = base_children.iter().zip(children).take_while(|(left, right)| left == right).count();
-            leaves.extend((common..base_children.len()).rev().map(|index| SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index })));
-            leaves.extend(children.iter().enumerate().skip(common).map(|(index, node)| SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: Vec::new(), index, node: node.clone() })));
-            Some(leaves)
-        }
-        _ => None,
-    }
-}
-//#endregion 🔖️Net
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source.
+#[cfg(test)]
 pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

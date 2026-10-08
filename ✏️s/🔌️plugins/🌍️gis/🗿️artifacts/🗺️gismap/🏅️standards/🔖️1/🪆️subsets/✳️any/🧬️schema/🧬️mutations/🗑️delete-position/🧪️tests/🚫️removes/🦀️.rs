@@ -12,7 +12,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-position/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
@@ -126,8 +127,8 @@ async fn removes_exactly_one_position_and_inverts_to_a_base_derived_create() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "delete-position/removes-lighthouse-position: deleting a present id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().positions.as_ref().expect("delete-position writes a positions delta");
-    assert_eq!(delta.removed, vec!["pos-lighthouse".to_string()], "delete-position/removes-lighthouse-position: exactly the payload's own id is removed");
-    assert!(delta.added.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "delete-position/removes-lighthouse-position: a delete must not add, patch or reorder anything, got {delta:?}");
+    assert_eq!(delta.removed.iter().map(|removal| removal.id.as_str()).collect::<Vec<_>>(), vec!["pos-lighthouse"], "delete-position/removes-lighthouse-position: exactly the payload's own id is removed");
+    assert!(delta.inserted.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "delete-position/removes-lighthouse-position: a delete must not add, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().routes.is_none() && produced.diff().regions.is_none(), "delete-position/removes-lighthouse-position: delete-position must never touch the routes or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-position/removes-lighthouse-position: a delete undoes with exactly one step, got {inverse:?}");

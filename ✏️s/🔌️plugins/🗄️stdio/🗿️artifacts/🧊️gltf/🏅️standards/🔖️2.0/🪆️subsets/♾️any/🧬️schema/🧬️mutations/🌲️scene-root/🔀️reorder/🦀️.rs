@@ -32,7 +32,7 @@ pub fn validate(payload: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot)
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { nodes: Some(p.order.clone()), ..Default::default() }), ..Default::default() })
+    Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { nodes: Some(GltfRefsDelta::rows(Vec::new(), Vec::new(), moves_to_keys(&refs(&base.document.scenes[p.scene].nodes), &p.order))), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

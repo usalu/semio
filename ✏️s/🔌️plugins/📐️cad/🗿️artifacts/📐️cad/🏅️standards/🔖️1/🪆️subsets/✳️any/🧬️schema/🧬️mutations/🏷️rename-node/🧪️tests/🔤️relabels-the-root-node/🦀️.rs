@@ -85,10 +85,10 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "rename-node/relabels-the-root-node: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().nodes.as_ref().expect("rename-node fills the nodes delta");
-    assert_eq!(delta.patched.len(), 1, "rename-node patches exactly one node");
-    assert_eq!(delta.patched[0].id, "node-1", "rename-node's patch entry addresses node-1");
-    assert_eq!(delta.patched[0].patch.label.as_deref(), Some("Assembly Root"), "rename-node fills the patch's `label` field — the only field CadNodePatch has");
-    assert!(delta.added.is_empty() && delta.removed.is_empty(), "rename-node touches only the `patched` arm of the nodes delta");
+    assert_eq!(delta.modified.len(), 1, "rename-node patches exactly one node");
+    assert_eq!(delta.modified[0].id, "node-1", "rename-node's patch entry addresses node-1");
+    assert_eq!(delta.modified[0].patch.label.as_deref(), Some("Assembly Root"), "rename-node fills the patch's `label` field — the only field CadNodePatch has");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty(), "rename-node touches only the `patched` arm of the nodes delta");
 }
 
 /// 🔺️ The sparse delta `rename-node` produces is exactly the committed diff — the most load-bearing

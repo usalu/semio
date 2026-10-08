@@ -1,6 +1,6 @@
 //! 📄️ Txt editor — `main` window: a real, directly editable whole-document text buffer, built
 //! from the framework `TextWindowKit` (contract §2.6). `TxtSnapshot.lines` is joined with the
-//! document's own `line_ending` on render, and re-split the same way on `replace-text`.
+//! document's own `line_ending` on render, and receive the ranges of the draft's change set on `textEdit`.
 
 use crate::TxtSnapshot;
 use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
@@ -25,10 +25,10 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// ✏️ Real `TxtSnapshot -> BuiltNode`: `lines` joined by the document's own `line_ending`, with a
 /// trailing terminator when `trailing_newline` is set — the exact same join the artifact's own
-/// codec uses to re-serialize, so what's shown here IS what re-encoding would emit — as the kit's explicit draft from `revision`.
+/// codec uses to re-serialize, so what's shown here IS what re-encoding would emit — as the kit's explicit draft from `revision`, published as the change set the editor made (`splices`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &TxtSnapshot, locale: Locale, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: document.to_body(), language: Some("text".into()), revision: Some(revision.into()), publication_revision }, locale)
+    TextWindowKit::render_editable_by_splices(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: document.to_body(), language: Some("text".into()), revision: Some(revision.into()), publication_revision }, locale)
 }
 //#endregion 🔖️Render
 

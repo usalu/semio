@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use protocol::command::DiffAlgebra;
 
@@ -43,9 +44,9 @@ async fn mutation_diff_law() {
         let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
-        let returned_diff = apply_tsv_mutation(&mut via_apply, &m);
+        let returned_diff = apply_mutation(&mut via_apply, &m);
 
-        assert_eq!(via_apply, expected, "apply_tsv_mutation mismatch for {m:?}");
+        assert_eq!(via_apply, expected, "apply_mutation mismatch for {m:?}");
         assert_eq!(returned_diff, diff, "returned diff mismatch for {m:?}");
     }
 }
@@ -63,9 +64,9 @@ async fn inverse_law() {
     ];
     for m in variants {
         let mut forward = base.clone();
-        apply_tsv_mutation(&mut forward, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_tsv_mutation(&mut forward, &inv);
+        apply_mutation(&mut forward, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
@@ -136,72 +137,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
     assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
-}
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = base_snapshot();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&TsvDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&TsvDiff::between(&b, &a), &b).unwrap(), a);
-
-    let mut c = a.clone();
-    c.records[0] = row(&["only-one-field"]);
-    assert_eq!(protocol::apply_diff(&TsvDiff::between(&a, &c), &a).unwrap(), c);
-    assert_eq!(protocol::apply_diff(&TsvDiff::between(&c, &a), &c).unwrap(), a);
-
-    assert!(TsvDiff::between(&a, &a).is_empty());
-}
-//#endregion 🔖️BetweenRoundtripLaw
-
-//#region 🔖️FieldSweep
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_every_mutable_field_changes() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let d_ab = TsvDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d_ab, &a).unwrap(), b, "between(a,b).apply(a) == b");
-
-    let d_ba = TsvDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_ba, &b).unwrap(), a, "between(b,a).apply(b) == a");
-
-    assert!(d_ab.trailing_newline.is_some(), "trailing_newline must be populated");
-    assert!(d_ab.line_ending.is_some(), "line_ending must be populated");
-    // 🧭️ `TsvDiff::between` is positional (rows have no stable identity beyond position, same
-    // as epw's own `EpwDiff::between`) — `min_len` only compares shared index range, so a
-    // single `between()` call populates `removed` XOR `added` (whichever side is longer),
-    // never both, UNLESS a shared index's row width itself changes (that path emits a
-    // matched removed+added pair at the SAME index, see the `b.len() != o.len()` branch
-    // above). `sweep_a`/`sweep_b` rows are all 2 columns wide, so every index is a same-width
-    // positional comparison: `modified` is what's populated here; `removed`-only/`added`-only
-    // are exercised on their own just below via genuinely shorter/longer row lists.
-    let records = d_ab.records.as_ref().expect("records diff must be populated");
-    assert!(records.removed.is_empty(), "equal-length, equal-width row lists: no positional removal");
-    assert!(!records.modified.is_empty(), "modified must be non-empty (every row differs positionally)");
-    assert!(records.added.is_empty(), "equal-length, equal-width row lists: no positional addition");
-    assert_eq!(records.modified.len(), 3, "all three positions differ between sweep_a and sweep_b");
-    let modified = &records.modified[0];
-    let field_patches = modified.diff.fields.as_ref().expect("row 1's field patch list must be populated");
-    assert!(field_patches.iter().all(|f| f.is_some()), "every column of the modified row must be patched");
-
-    let mut shorter = a.clone();
-    shorter.records.pop();
-    let d_shrink = TsvDiff::between(&a, &shorter);
-    let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
-    assert!(!shrink_records.removed.is_empty(), "a shorter row list must produce a removed entry");
-    assert_eq!(protocol::apply_diff(&d_shrink, &a).unwrap(), shorter);
-
-    let mut longer = a.clone();
-    longer.records.push(row(&["extra", "z"]));
-    let d_grow = TsvDiff::between(&a, &longer);
-    let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
-    assert!(!grow_records.added.is_empty(), "a longer row list must produce an added entry");
-    assert_eq!(protocol::apply_diff(&d_grow, &a).unwrap(), longer);
-
-    assert!(TsvDiff::between(&a, &a).is_empty());
 }
 //#endregion 🔖️FieldSweep
 

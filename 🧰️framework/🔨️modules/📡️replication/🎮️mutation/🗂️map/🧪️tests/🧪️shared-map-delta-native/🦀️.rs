@@ -23,7 +23,7 @@ fn shared_map_delta_neutral_contract() {
         assert_eq!(decode(&encoded), expected);
         let original = base(&row["before"]);
         let mut actual = original.clone();
-        let outcome = expected.apply_to(&mut actual);
+        let outcome = expected.apply_onto(&mut actual);
         if let Some(code) = row["error"].as_str() {
             assert_eq!(outcome.unwrap_err().code, code, "{}", row["name"]);
             assert_eq!(actual, original, "failed map application must be atomic");
@@ -55,9 +55,9 @@ fn shared_map_delta_exhaustive_composition() {
         assert_eq!(left, right);
         for value in [json!({}), json!({"key":"old"}), json!({"key":null})] {
             let mut sequential = base(&value);
-            let sequence = a.apply_to(&mut sequential).and_then(|_| b.apply_to(&mut sequential)).and_then(|_| c.apply_to(&mut sequential));
+            let sequence = a.apply_onto(&mut sequential).and_then(|_| b.apply_onto(&mut sequential)).and_then(|_| c.apply_onto(&mut sequential));
             let mut compact = base(&value);
-            let combined = left.apply_to(&mut compact);
+            let combined = left.apply_onto(&mut compact);
             assert_eq!(combined.is_ok(), sequence.is_ok());
             if combined.is_ok() { assert_eq!(compact, sequential); }
         }

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `MoveReference`.
 use super::MoveReference;
-use crate::diff::{CadDiff, CadReferencePatchEntry, CadReferencesDelta};
+use crate::diff::{CadDiff, CadReferencesDelta};
 use crate::mutations::CadReferencePatch;
 use crate::CadSnapshot;
 use std::collections::BTreeMap;
@@ -18,7 +18,7 @@ pub fn diff(payload: &MoveReference, base: &CadSnapshot) -> protocol::MutationOu
     }
     let patch = CadReferencePatch { origin: Some(payload.new_origin), ..Default::default() };
     protocol::MutationOutcome::new(CadDiff {
-        references_by_model_definition_id: Some(BTreeMap::from([(payload.model_definition_id.clone(), CadReferencesDelta { patched: vec![CadReferencePatchEntry { id: payload.reference_id.clone(), patch }], ..Default::default() })])),
+        references_by_model_definition_id: Some(BTreeMap::from([(payload.model_definition_id.clone(), CadReferencesDelta::modification(payload.reference_id.clone(), patch))])),
         ..Default::default()
     })
 }

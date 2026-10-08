@@ -8,15 +8,15 @@ pub fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapsh
     let Some(object) = base.objects.iter().find(|entry| entry.id == payload.object_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "object-vortex", payload.object_id), vec![payload.object_id.clone()]);
     };
-    if !object.vortices.iter().any(|vortex| vortex.id == payload.vortex_id) {
+    let Some(vortex_at) = object.vortices.iter().position(|vortex| vortex.id == payload.vortex_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Vortex \"{}\" not found on object \"{}\".", payload.vortex_id, payload.object_id), vec![payload.vortex_id.clone()]);
-    }
+    };
     let full_id = format!("{}:{}", payload.object_id, payload.vortex_id);
-    let severed: Vec<String> = base.attractions.iter().filter(|attraction| attraction.attracting == full_id || attraction.attracted == full_id).map(|attraction| attraction.id.clone()).collect();
-    let patch = Puzzle3dObjectPatch { vortices: Some(Puzzle3dVorticesDelta::removing(vec![payload.vortex_id.clone()])), ..Default::default() };
+    let severed: Vec<(String, usize)> = base.attractions.iter().enumerate().filter(|(_, attraction)| attraction.attracting == full_id || attraction.attracted == full_id).map(|(index, attraction)| (attraction.id.clone(), index)).collect();
+    let patch = Puzzle3dObjectPatch { vortices: Some(Puzzle3dVorticesDelta::removal_by_id(payload.vortex_id.clone(), vortex_at)), ..Default::default() };
     protocol::MutationOutcome::new(Puzzle3dDiff {
-        objects: Some(Puzzle3dObjectsDelta::patching(payload.object_id.clone(), patch)),
-        attractions: (!severed.is_empty()).then(|| Puzzle3dAttractionsDelta::removing(severed)),
+        objects: Some(Puzzle3dObjectsDelta::modification(payload.object_id.clone(), patch)),
+        attractions: (!severed.is_empty()).then(|| Puzzle3dAttractionsDelta::removals_by_id(severed)),
         ..Default::default()
     })
 }

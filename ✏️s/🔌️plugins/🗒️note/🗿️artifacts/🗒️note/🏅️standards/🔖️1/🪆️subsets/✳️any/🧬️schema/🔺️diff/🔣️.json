@@ -399,7 +399,9 @@
           "additionalProperties": false,
           "required": [
             "row",
-            "id"
+            "id",
+            "parentId",
+            "index"
           ],
           "properties": {
             "row": {
@@ -407,6 +409,20 @@
             },
             "id": {
               "type": "string"
+            },
+            "parentId": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         },
@@ -416,6 +432,8 @@
           "required": [
             "row",
             "id",
+            "fromParentId",
+            "fromIndex",
             "parentId",
             "index"
           ],
@@ -425,6 +443,20 @@
             },
             "id": {
               "type": "string"
+            },
+            "fromParentId": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "fromIndex": {
+              "type": "integer",
+              "minimum": 0
             },
             "parentId": {
               "anyOf": [
@@ -739,7 +771,8 @@
           "additionalProperties": false,
           "required": [
             "edit",
-            "index"
+            "index",
+            "cells"
           ],
           "properties": {
             "edit": {
@@ -748,6 +781,12 @@
             "index": {
               "type": "integer",
               "minimum": 0
+            },
+            "cells": {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/note/note/artifact.json#/$defs/NoteTableCell"
+              }
             }
           }
         },
@@ -784,7 +823,9 @@
           "additionalProperties": false,
           "required": [
             "edit",
-            "index"
+            "index",
+            "name",
+            "cells"
           ],
           "properties": {
             "edit": {
@@ -793,6 +834,15 @@
             "index": {
               "type": "integer",
               "minimum": 0
+            },
+            "name": {
+              "type": "string"
+            },
+            "cells": {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/note/note/artifact.json#/$defs/NoteTableCell"
+              }
             }
           }
         }

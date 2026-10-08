@@ -99,7 +99,37 @@ export interface GltfCollectionDiff<T, D> {
   removed?: bigint[];
   modified?: GltfModified<D>[];
   added?: GltfAdded<T>[];
+  amended?: GltfModified<D>[];
 }
+
+export interface GltfAttribute {
+  semantic: string;
+  accessor: bigint;
+}
+export interface GltfListRemoval<K> {
+  id: K;
+  index: bigint;
+}
+export interface GltfListInsertion<R> {
+  index: bigint;
+  row: R;
+}
+export interface GltfListRelocation<K> {
+  id: K;
+  from: bigint;
+  to: bigint;
+}
+export interface GltfListDelta<K, R> {
+  removed?: GltfListRemoval<K>[];
+  inserted?: GltfListInsertion<R>[];
+  moved?: GltfListRelocation<K>[];
+}
+export type GltfRefsDelta = GltfListDelta<bigint, bigint>;
+export type GltfStringsDelta = GltfListDelta<string, string>;
+export type GltfAttributesDelta = GltfListDelta<string, GltfAttribute>;
+export type GltfTargetsDelta = GltfListDelta<string, GltfMorphTarget>;
+export type GltfChannelsDelta = GltfListDelta<string, GltfAnimationChannel>;
+export type GltfAnimationSamplersDelta = GltfListDelta<string, GltfAnimationSampler>;
 
 export interface GltfAssetDiff {
   version?: string;
@@ -111,14 +141,14 @@ export interface GltfAssetDiff {
 }
 
 export interface GltfSceneDiff {
-  nodes?: bigint[];
+  nodes?: GltfRefsDelta;
   name?: string | null;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
 }
 
 export interface GltfNodeDiff {
-  children?: bigint[];
+  children?: GltfRefsDelta;
   mesh?: bigint | null;
   camera?: bigint | null;
   skin?: bigint | null;
@@ -178,11 +208,11 @@ export interface GltfBufferDiff {
 }
 
 export interface GltfPrimitiveDiff {
-  attributes?: GltfMorphTarget;
+  attributes?: GltfAttributesDelta;
   indices?: bigint | null;
   material?: bigint | null;
   mode?: bigint | null;
-  targets?: GltfMorphTarget[];
+  targets?: GltfTargetsDelta;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
 }
@@ -218,15 +248,15 @@ export interface GltfBufferViewDiff {
 export interface GltfSkinDiff {
   inverseBindMatrices?: bigint | null;
   skeleton?: bigint | null;
-  joints?: bigint[];
+  joints?: GltfRefsDelta;
   name?: string | null;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
 }
 
 export interface GltfAnimationDiff {
-  channels?: GltfAnimationChannel[];
-  samplers?: GltfAnimationSampler[];
+  channels?: GltfChannelsDelta;
+  samplers?: GltfAnimationSamplersDelta;
   name?: string | null;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
@@ -265,8 +295,8 @@ export interface GltfDiff {
   skins?: GltfSkinsDiff;
   animations?: GltfAnimationsDiff;
   cameras?: GltfCamerasDiff;
-  extensionsUsed?: string[];
-  extensionsRequired?: string[];
+  extensionsUsed?: GltfStringsDelta;
+  extensionsRequired?: GltfStringsDelta;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
   sourceForm?: GltfSourceForm;
@@ -294,8 +324,22 @@ const collection = <T, D>(item: GltfWireReader<T>, diff: GltfWireReader<D>): Glt
     removed: indices,
     modified: gltfWireOptional(gltfWireArray(gltfWireObject<GltfModified<D>>({ index: gltfWireRequired(gltfWireIndex), diff: gltfWireRequired(diff) }))),
     added: gltfWireOptional(gltfWireArray(gltfWireObject<GltfAdded<T>>({ index: gltfWireRequired(gltfWireIndex), item: gltfWireRequired(item) }))),
+    amended: gltfWireOptional(gltfWireArray(gltfWireObject<GltfModified<D>>({ index: gltfWireRequired(gltfWireIndex), diff: gltfWireRequired(diff) }))),
   });
 
+export const parseGltfAttribute = gltfWireObject<GltfAttribute>({ semantic: gltfWireRequired(gltfWireString), accessor: gltfWireRequired(gltfWireIndex) });
+const listDelta = <K, R>(id: GltfWireReader<K>, row: GltfWireReader<R>): GltfWireReader<GltfListDelta<K, R>> =>
+  gltfWireObject<GltfListDelta<K, R>>({
+    removed: gltfWireOptional(gltfWireArray(gltfWireObject<GltfListRemoval<K>>({ id: gltfWireRequired(id), index: gltfWireRequired(gltfWireIndex) }))),
+    inserted: gltfWireOptional(gltfWireArray(gltfWireObject<GltfListInsertion<R>>({ index: gltfWireRequired(gltfWireIndex), row: gltfWireRequired(row) }))),
+    moved: gltfWireOptional(gltfWireArray(gltfWireObject<GltfListRelocation<K>>({ id: gltfWireRequired(id), from: gltfWireRequired(gltfWireIndex), to: gltfWireRequired(gltfWireIndex) }))),
+  });
+export const parseGltfRefsDelta = listDelta(gltfWireIndex, gltfWireIndex);
+export const parseGltfStringsDelta = listDelta(gltfWireString, gltfWireString);
+export const parseGltfAttributesDelta = listDelta(gltfWireString, parseGltfAttribute);
+export const parseGltfTargetsDelta = listDelta(gltfWireString, parseGltfMorphTarget);
+export const parseGltfChannelsDelta = listDelta(gltfWireString, parseGltfAnimationChannel);
+export const parseGltfAnimationSamplersDelta = listDelta(gltfWireString, parseGltfAnimationSampler);
 export const parseGltfAssetDiff = gltfWireObject<GltfAssetDiff>({
   version: gltfWireOptional(gltfWireString),
   generator: nullableName,
@@ -304,9 +348,9 @@ export const parseGltfAssetDiff = gltfWireObject<GltfAssetDiff>({
   extensions: presence,
   extras: presence,
 });
-export const parseGltfSceneDiff = gltfWireObject<GltfSceneDiff>({ nodes: indices, name: nullableName, extensions: presence, extras: presence });
+export const parseGltfSceneDiff = gltfWireObject<GltfSceneDiff>({ nodes: gltfWireOptional(parseGltfRefsDelta), name: nullableName, extensions: presence, extras: presence });
 export const parseGltfNodeDiff = gltfWireObject<GltfNodeDiff>({
-  children: indices,
+  children: gltfWireOptional(parseGltfRefsDelta),
   mesh: nullableIndex,
   camera: nullableIndex,
   skin: nullableIndex,
@@ -319,12 +363,12 @@ export const parseGltfNodeDiff = gltfWireObject<GltfNodeDiff>({
   extensions: presence,
   extras: presence,
 });
-export const parseGltfPrimitiveDiff = gltfWireObject<GltfPrimitiveDiff>({ attributes: gltfWireOptional(parseGltfMorphTarget), indices: nullableIndex, material: nullableIndex, mode: nullableIndex, targets: gltfWireOptional(gltfWireArray(parseGltfMorphTarget)), extensions: presence, extras: presence });
+export const parseGltfPrimitiveDiff = gltfWireObject<GltfPrimitiveDiff>({ attributes: gltfWireOptional(parseGltfAttributesDelta), indices: nullableIndex, material: nullableIndex, mode: nullableIndex, targets: gltfWireOptional(parseGltfTargetsDelta), extensions: presence, extras: presence });
 export const parseGltfTextureDiff = gltfWireObject<GltfTextureDiff>({ sampler: nullableIndex, source: nullableIndex, name: nullableName, extensions: presence, extras: presence });
 export const parseGltfImageDiff = gltfWireObject<GltfImageDiff>({ uri: nullableName, mimeType: nullableName, bufferView: nullableIndex, name: nullableName, extensions: presence, extras: presence });
 export const parseGltfBufferViewDiff = gltfWireObject<GltfBufferViewDiff>({ buffer: gltfWireOptional(gltfWireIndex), byteOffset: gltfWireOptional(gltfWireIndex), byteLength: gltfWireOptional(gltfWireIndex), byteStride: nullableIndex, target: nullableIndex, name: nullableName, extensions: presence, extras: presence });
-export const parseGltfSkinDiff = gltfWireObject<GltfSkinDiff>({ inverseBindMatrices: nullableIndex, skeleton: nullableIndex, joints: indices, name: nullableName, extensions: presence, extras: presence });
-export const parseGltfAnimationDiff = gltfWireObject<GltfAnimationDiff>({ channels: gltfWireOptional(gltfWireArray(parseGltfAnimationChannel)), samplers: gltfWireOptional(gltfWireArray(parseGltfAnimationSampler)), name: nullableName, extensions: presence, extras: presence });
+export const parseGltfSkinDiff = gltfWireObject<GltfSkinDiff>({ inverseBindMatrices: nullableIndex, skeleton: nullableIndex, joints: gltfWireOptional(parseGltfRefsDelta), name: nullableName, extensions: presence, extras: presence });
+export const parseGltfAnimationDiff = gltfWireObject<GltfAnimationDiff>({ channels: gltfWireOptional(parseGltfChannelsDelta), samplers: gltfWireOptional(parseGltfAnimationSamplersDelta), name: nullableName, extensions: presence, extras: presence });
 export const parseGltfPrimitivesDiff = collection(parseGltfPrimitive, parseGltfPrimitiveDiff);
 export const parseGltfMeshDiff = gltfWireObject<GltfMeshDiff>({ primitives: gltfWireOptional(parseGltfPrimitivesDiff), weights: numbers, name: nullableName, extensions: presence, extras: presence });
 export const parseGltfAccessorDiff = gltfWireObject<GltfAccessorDiff>({
@@ -386,8 +430,8 @@ export const parseGltfDiff = gltfWireObject<GltfDiff>({
   skins: gltfWireOptional(parseGltfSkinsDiff),
   animations: gltfWireOptional(parseGltfAnimationsDiff),
   cameras: gltfWireOptional(parseGltfCamerasDiff),
-  extensionsUsed: gltfWireOptional(gltfWireArray(gltfWireString)),
-  extensionsRequired: gltfWireOptional(gltfWireArray(gltfWireString)),
+  extensionsUsed: gltfWireOptional(parseGltfStringsDelta),
+  extensionsRequired: gltfWireOptional(parseGltfStringsDelta),
   extensions: presence,
   extras: presence,
   sourceForm: gltfWireOptional(parseGltfSourceForm),

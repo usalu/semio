@@ -9,7 +9,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -193,6 +193,8 @@ pub mod editor {
         #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
+        pub mod edit_rules;
         #[path = "."]
         pub mod presence {
             #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]

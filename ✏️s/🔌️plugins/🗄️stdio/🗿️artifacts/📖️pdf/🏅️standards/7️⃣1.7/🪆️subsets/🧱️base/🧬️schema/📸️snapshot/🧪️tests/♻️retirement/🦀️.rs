@@ -96,8 +96,8 @@ fn pdf_recursive_retirement_deep_function_and_color_forests_use_bounded_stack() 
             };
             color = match index % 5 {
                 0 => PdfColorSpace::Pattern { base: Some(Box::new(color)) },
-                1 => PdfColorSpace::Indexed { base: Box::new(color), hival: 0, lookup: vec![0] },
-                2 => PdfColorSpace::IccBased { components: 3, profile: vec![0], alternate: Some(Box::new(color)), range: None },
+                1 => PdfColorSpace::Indexed { base: Box::new(color), hival: 0, palette: vec![0] },
+                2 => PdfColorSpace::IccBased { components: 3, profile: semio_framework_artifact_reference::ArtifactRef { artifact_id: "fixture:icc".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into() } }, alternate: Some(Box::new(color)), range: None },
                 3 => PdfColorSpace::Separation { name: "spot".into(), alternate: Box::new(color), tint_transform: exponential() },
                 _ => PdfColorSpace::DeviceN { names: vec!["spot".into()], alternate: Box::new(color), tint_transform: exponential(), attributes: Some(vec![PdfDictEntry { key: "witness".into(), value: PdfObject::Array(vec![PdfObject::Bool(true)]) }]) },
             };

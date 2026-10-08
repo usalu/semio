@@ -4,12 +4,15 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "ipe200_spare"
+      {
+        "id": "ipe200_spare",
+        "index": 4
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "supports": null,
   "loadCases": null,

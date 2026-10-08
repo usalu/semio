@@ -35,7 +35,7 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   🧬️ The vocabulary is `PresentationMutation`'s nine variants in declaration order, and it is genuinely this
   subset's own: a singleton `source` facet gets `resize-source-frame`/`replace-source`, while `tiles` — an
   id-keyed ORDERED collection — gets the per-collection recipe `create`/`delete`/`delete-tiles`/`rename`/
-  `resize-tile-crop`/`reorder`/`replace-tiles`. There is no `no-mutation` and no `set-snapshot`: whole-
+  `resize-tile-crop`/`reorder`. There is no `no-mutation` and no `set-snapshot`: whole-
   document replacement is not expressible as an in-history mutation in this generation of the taxonomy and
   goes through `ArtifactStore::reset` instead. Every `params` cell below is the leaf's own wire
   payload (`payload_value()`, exactly what the leaf schema describes; the aggregate's external variant tag is not part of it) and is chosen to MOVE the projection against that base — an inverse that trivially holds
@@ -67,7 +67,6 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
       | rename-tile         | {"id":"t-hero","newName":"Lead"}                                                                                                |
       | resize-tile-crop    | {"id":"t-hero","newCrop":{"x":0.3,"y":0.3,"width":0.4,"height":0.4}}                                                            |
       | reorder-tiles       | {"id":"t-hero","toIndex":2}                                                                                                     |
-      | replace-tiles       | {"newTiles":[]}                                                                                                                 |
 
   @id-inverse
   @level-exhaustive
@@ -91,7 +90,6 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
       | rename-tile         | {"id":"t-hero","newName":"Lead"}                                                                                                |
       | resize-tile-crop    | {"id":"t-hero","newCrop":{"x":0.3,"y":0.3,"width":0.4,"height":0.4}}                                                            |
       | reorder-tiles       | {"id":"t-hero","toIndex":2}                                                                                                     |
-      | replace-tiles       | {"newTiles":[]}                                                                                                                 |
 
   @id-identity-round-trip
   @level-long

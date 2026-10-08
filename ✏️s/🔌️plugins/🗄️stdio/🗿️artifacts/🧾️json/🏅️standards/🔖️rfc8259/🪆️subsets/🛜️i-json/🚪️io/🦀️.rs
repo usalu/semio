@@ -9,6 +9,7 @@ pub mod derived_composition {
     use crate::standards::v_rfc8259::subsets::base::io::JsonComposer as JsonAnyComposer;
     use crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance;
     use semio_framework_diagnostic::Diagnostic;
+use crate::apply_mutation;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
@@ -99,7 +100,7 @@ pub mod derived_construction {
     use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
     use crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance;
-    use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, JsonIJsonMutation};
+    use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{JsonIJsonMutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -138,7 +139,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = apply_json_i_json_mutation(&mut self.snapshot, &mutation);
+            let outcome = apply_mutation(&mut self.snapshot, &mutation);
             (self, outcome)
         }
 

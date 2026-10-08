@@ -81,7 +81,7 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
     }
     session.begin_close();
     while !session.terminal_is_empty() {
-        let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(session.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("original session demand"));
     }
     result
 }
@@ -111,12 +111,12 @@ fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact() {
     drop(returned);
     let mut job = NativeIoJob::new(NativeIoRequest::Modified(paths));
     job.begin_close();
-    assert_eq!(job.close_step(0, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(job.close_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit));
     let mut released = 0;
     while !job.terminal_is_empty() {
-        if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } = job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-            assert!(released_items <= 1);
-            released += released_items;
+        if let InteractiveJobCloseStep::Pending { progress } = job.close_step(native_io_close_grant()) {
+            assert!(progress.copied_items <= 1);
+            released += progress.copied_items;
         }
     }
     assert!(released >= NATIVE_IO_PATH_CAPACITY);
@@ -144,4 +144,36 @@ fn chunked_read_write_scan_and_modified_round_trip() {
     assert_eq!(modified.len(), 1);
     drop(modified.pop());
     std::fs::remove_dir_all(root).unwrap();
+}
+
+
+#[test]
+fn close_preserves_original_empty_path_and_error_backing_until_exact_release() {
+    let mut path = PathBuf::with_capacity(128);
+    path.push("original"); path.clear();
+    let pointer = path.as_os_str().as_encoded_bytes().as_ptr();
+    let capacity = path.capacity();
+    let mut job = NativeIoJob::new(NativeIoRequest::ReadBytes(path));
+    job.begin_close();
+    assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
+    let granted = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity, maximum_depth: 1, ..RetainedCloneGrant::default() };
+    for denied in [RetainedCloneGrant { maximum_items: 0, ..granted }, RetainedCloneGrant { maximum_release_bytes: capacity - 1, ..granted }, RetainedCloneGrant { maximum_depth: 0, ..granted }] {
+        assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit));
+        assert_eq!(job.retained_request_backing_identity(), Some(pointer));
+        assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
+    }
+    assert_eq!(job.close_step(granted).progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..RetainedCloneProgress::default() });
+    let mut error = String::with_capacity(256);error.push_str("failed");error.clear();
+    let capacity = error.capacity();let pointer = error.as_ptr();
+    job.state = NativeIoState::Finished;job.result = Some(Err(error));
+    let denied = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity - 1, maximum_depth: 1, ..RetainedCloneGrant::default() };
+    assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit));
+    assert_eq!(job.result.as_ref().unwrap().as_ref().unwrap_err().as_ptr(), pointer);
+    let step = job.close_step(RetainedCloneGrant { maximum_release_bytes: capacity, ..denied });
+    assert_eq!(step.progress().released_bytes, capacity);
+    assert_eq!(job.result.as_ref().unwrap().as_ref().unwrap_err().capacity(), 0);
+    assert!(!job.terminal_is_empty());
+    assert_eq!(job.close_step(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..RetainedCloneGrant::default() }).progress().copied_items, 1);
+    assert!(job.terminal_is_empty());
+    println!("[DEBUG] native IO original empty PathBuf/String backing retained on zero item/depth and one-below physical release; exact capacities and separate result terminal turn");
 }

@@ -31,9 +31,10 @@
   "information": null,
   "communication": null,
   "wayfinding": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "wayfinding-requirement-a",
         "patch": {
@@ -66,8 +67,7 @@
           "brandIntegration": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "schedules": null,
   "flexibility": null,

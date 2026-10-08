@@ -17,4 +17,4 @@ type DeleteMeshMutation { DeleteMesh: EmptyRecord! }
 type CreateProperties { child_id: String! target: ArtifactRef! }
 type CreatePropertiesMutation { CreateProperties: CreateProperties! }
 type DeletePropertiesMutation { DeleteProperties: EmptyRecord! }
-union SemioObjectMutation = MoveObjectMutation | RotateObjectMutation | ScaleObjectMutation | CreateBrepMutation | DeleteBrepMutation | CreateMeshMutation | DeleteMeshMutation | CreatePropertiesMutation | DeletePropertiesMutation | SetSnapshotMutation
+union SemioObjectMutation = MoveObjectMutation | RotateObjectMutation | ScaleObjectMutation | CreateBrepMutation | DeleteBrepMutation | CreateMeshMutation | DeleteMeshMutation | CreatePropertiesMutation | DeletePropertiesMutation

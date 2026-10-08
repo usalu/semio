@@ -49,9 +49,10 @@
   "performance": null,
   "quality": null,
   "artifacts": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "document-a",
         "patch": {
@@ -84,8 +85,7 @@
           "sourceSystem": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "assumptions": null,
   "constraints": null,

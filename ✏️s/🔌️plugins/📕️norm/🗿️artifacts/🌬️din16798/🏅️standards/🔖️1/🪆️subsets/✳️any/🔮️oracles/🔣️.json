@@ -184,6 +184,10 @@
             {
               "id": "remove-zone-gone",
               "directoryName": "❓gone"
+            },
+            {
+              "id": "remove-zone-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -427,6 +431,10 @@
             {
               "id": "remove-vent-system-gone",
               "directoryName": "❓gone"
+            },
+            {
+              "id": "remove-vent-system-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

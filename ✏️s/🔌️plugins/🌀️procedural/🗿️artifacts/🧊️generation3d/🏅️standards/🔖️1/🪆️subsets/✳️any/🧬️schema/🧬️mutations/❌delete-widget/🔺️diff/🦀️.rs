@@ -8,8 +8,8 @@ use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta removing one widget by id.
 pub fn diff(payload: &DeleteWidget, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-    if widget_index(&base.host_snapshot, &payload.id).is_none() {
+    let Some(index) = widget_index(&base.host_snapshot, &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(Generation3dWidgetsDelta::removal(&base.host_snapshot.widgets, index)), ..Default::default() })
 }

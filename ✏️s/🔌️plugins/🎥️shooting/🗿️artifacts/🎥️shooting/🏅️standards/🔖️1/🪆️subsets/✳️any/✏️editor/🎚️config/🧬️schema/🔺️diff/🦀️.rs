@@ -56,18 +56,6 @@ impl DiffAlgebra<ShootingConfig> for ShootingConfigDiff {
         }
     }
 
-    fn between(base: &ShootingConfig, other: &ShootingConfig) -> Self {
-        Self {
-            default_shot_format: (base.default_shot_format != other.default_shot_format).then(|| other.default_shot_format.clone()),
-            default_shot_shape: (base.default_shot_shape != other.default_shot_shape).then(|| other.default_shot_shape.clone()),
-            default_asset_format: (base.default_asset_format != other.default_asset_format).then(|| other.default_asset_format.clone()),
-            selected_shot_ids: (base.selected_shot_ids != other.selected_shot_ids).then(|| other.selected_shot_ids.clone()),
-            center_model: (base.center_model != other.center_model).then_some(other.center_model),
-            fit_revision: (base.fit_revision != other.fit_revision).then_some(other.fit_revision),
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }

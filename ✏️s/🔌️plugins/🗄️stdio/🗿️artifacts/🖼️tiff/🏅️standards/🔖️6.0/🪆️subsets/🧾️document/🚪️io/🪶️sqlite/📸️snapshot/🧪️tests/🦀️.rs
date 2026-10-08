@@ -4,7 +4,7 @@ use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
 #[path = "🚦️cohort/🦀️.rs"]
 mod cohort;
 
-fn fixture()->TiffSnapshot{let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️semantic.json")).unwrap();let case=neutral["cases"].as_array().unwrap().iter().find(|case|case["id"]=="metadataAndExactRaster").unwrap();serde_json::from_value(case["input"].clone()).unwrap()}
+fn fixture()->TiffSnapshot{let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️semantic.json")).unwrap();let case=neutral["cases"].as_array().unwrap().iter().find(|case|case["id"]=="metadataAndExactRaster").unwrap();semio_framework_pack_json::from_json_str(&case["input"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 
 fn project(snapshot: &TiffSnapshot) -> SqliteDatabase {
     snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).expect("project")
@@ -73,7 +73,7 @@ fn sqlite_snapshot_tiff_declared_native_factory_matches_live_protocol() {
 #[test]
 fn sqlite_snapshot_tiff_erased_native_preserves_complete_custom_owner() {
     let neutral: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️native-owner/🔣️.json")).expect("closed neutral owner");
-    let snapshot:TiffSnapshot=serde_json::from_value(neutral).unwrap();
+    let snapshot:TiffSnapshot=semio_framework_pack_json::from_json_str(&neutral.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() };
     let codec = TiffSnapshot::sqlite_codec();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
@@ -117,7 +117,7 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
 }
 
-fn norm_complete_source(case:&serde_json::Value)->TiffSnapshot{serde_json::from_value(case["input"].clone()).unwrap()}
+fn norm_complete_source(case:&serde_json::Value)->TiffSnapshot{semio_framework_pack_json::from_json_str(&case["input"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
  fn norm_independent_complete_extent(source:&TiffSnapshot)->serde_json::Value{
  use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::*};use std::{io::Write,process::{Command,Stdio}};let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let script=concat!(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts"),"\nawait Bun.write(Bun.stdout,JSON.stringify(independentSqliteExtent(new Uint8Array(await Bun.stdin.arrayBuffer()))));");let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));serde_json::from_slice(&output.stdout).unwrap()
 }

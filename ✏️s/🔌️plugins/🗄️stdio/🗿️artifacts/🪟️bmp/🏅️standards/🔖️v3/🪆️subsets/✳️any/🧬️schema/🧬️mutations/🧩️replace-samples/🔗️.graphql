@@ -1,0 +1,3 @@
+input BmpRegionInput { x: Int! y: Int! width: Int! height: Int! }
+input BmpNativeSampleInput { red: Int! green: Int! blue: Int! alpha: Int! reserved: Int! }
+input ReplaceSamples { region: BmpRegionInput! indices: [Int!] samples: [BmpNativeSampleInput!] }

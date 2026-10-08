@@ -58,6 +58,13 @@
         }
       ],
       "x-semio-state": "artifact"
+    },
+    "pixels": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RasterPixelRegion"
+      },
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -87,35 +94,71 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "moved"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RasterLayerRemoval"
+          }
+        },
+        "inserted": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/RasterLayerInsertion"
           }
         },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/RasterLayerPatchEntry"
-          }
-        },
         "moved": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/RasterLayerMove"
+            "$ref": "#/$defs/RasterLayerRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RasterLayerModification"
+          }
+        }
+      }
+    },
+    "RasterLayerAddress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "parentId": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RasterLayerRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -128,10 +171,7 @@
       ],
       "properties": {
         "parentId": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": "string"
         },
         "index": {
           "type": "integer",
@@ -142,30 +182,27 @@
         }
       }
     },
-    "RasterLayerMove": {
+    "RasterLayerRelocation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
-        "index"
+        "from",
+        "to"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "parentId": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "from": {
+          "$ref": "#/$defs/RasterLayerAddress"
         },
-        "index": {
-          "type": "integer",
-          "minimum": 0
+        "to": {
+          "$ref": "#/$defs/RasterLayerAddress"
         }
       }
     },
-    "RasterLayerPatchEntry": {
+    "RasterLayerModification": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -393,6 +430,51 @@
           ],
           "minimum": -1,
           "maximum": 1
+        }
+      }
+    },
+    "RasterPixelRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layerId",
+        "target",
+        "x",
+        "y",
+        "width",
+        "height",
+        "samples"
+      ],
+      "properties": {
+        "layerId": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
         }
       }
     }

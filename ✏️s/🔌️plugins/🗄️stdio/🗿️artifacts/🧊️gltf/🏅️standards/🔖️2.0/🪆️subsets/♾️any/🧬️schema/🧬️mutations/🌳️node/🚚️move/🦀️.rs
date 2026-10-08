@@ -26,8 +26,8 @@ pub fn plan(p: &GltfMoveNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, Gl
     validate(p, base)?;
     let mut remap = after_move(p.index, p.position);
     let mut diff = rewire(base, GltfTopLevelFamily::Nodes, &mut remap);
-    let mut item = base.document.nodes[p.index].clone();
-    item.children = item.children.iter().filter_map(|child| remap(*child)).collect();
+    let source = &base.document.nodes[p.index];
+    let item = GltfNode { children: source.children.iter().filter_map(|child| remap(*child)).collect(), ..source.clone() };
     let slot = diff.nodes.get_or_insert_with(Default::default);
     slot.modified.retain(|entry| entry.index != p.index);
     slot.removed.push(p.index);

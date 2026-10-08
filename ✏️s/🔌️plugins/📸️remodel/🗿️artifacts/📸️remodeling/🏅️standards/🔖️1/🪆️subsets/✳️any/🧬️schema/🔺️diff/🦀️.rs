@@ -167,7 +167,7 @@ impl RemodelingOrdered for GcpObservation {
 }
 
 impl<T: RemodelingOrdered> RemodelingMembers<T> {
-    fn write_into(&self, list: &mut Vec<T>) -> Result<(), MutationApplyError> {
+    fn apply_rows(&self, list: &mut Vec<T>) -> Result<(), MutationApplyError> {
         for member in &self.removed {
             let position = list.iter().position(|item| item == member).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "removed member does not exist").at(["removed"]))?;
             list.remove(position);
@@ -246,7 +246,7 @@ impl RemodelingEntity<MediaStreamPatch> for MediaStream {
             self.source = source.value.clone();
         }
         if let Some(frames) = &patch.frames {
-            frames.write_into(&mut self.frames).map_err(|error| error.under(["frames"]))?;
+            frames.apply_rows(&mut self.frames).map_err(|error| error.under(["frames"]))?;
         }
         Ok(())
     }
@@ -277,7 +277,7 @@ impl RemodelingEntity<GroundControlPointPatch> for GroundControlPoint {
 
     fn write_patch(&mut self, patch: &GroundControlPointPatch) -> Result<(), MutationApplyError> {
         if let Some(observations) = &patch.observations {
-            observations.write_into(&mut self.observations).map_err(|error| error.under(["observations"]))?;
+            observations.apply_rows(&mut self.observations).map_err(|error| error.under(["observations"]))?;
         }
         Ok(())
     }
@@ -319,7 +319,7 @@ whole_record_entity!(RemodelingAssetEntry, key);
 //#region 🔖️Rows
 impl<E: RemodelingEntity<P>, P: Clone> RemodelingRows<E, P> {
     /// 🧬️ Runs the rows over `items`; private so that only [`MutationDiff::apply`] (the central applier's entry) reaches it.
-    fn write_into(&self, items: &[E]) -> MutationApplyResult<Vec<E>> {
+    fn apply_rows(&self, items: &[E]) -> MutationApplyResult<Vec<E>> {
         let mut next = items.to_vec();
         for (row, entry) in self.rows.iter().enumerate() {
             let at = |field: &str| ["rows".to_string(), row.to_string(), field.to_string()];
@@ -327,7 +327,7 @@ impl<E: RemodelingEntity<P>, P: Clone> RemodelingRows<E, P> {
                 RemodelingRow::Insert { entity } => {
                     let key = entity.key();
                     if next.iter().any(|item| item.key() == key) {
-                        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "inserted member key already exists").at(at("entity")));
+                        return Err(MutationApplyError::new("mutation.apply.duplicate-id", "inserted member key already exists").at(at("entity")));
                     }
                     let position = next.partition_point(|item| item.key() < key);
                     next.insert(position, entity.clone());
@@ -369,55 +369,21 @@ impl<E: RemodelingEntity<P>, P: Clone> RemodelingRows<E, P> {
         self.rows.sort_by_key(|row| row.key());
     }
 
-    /// 🔁️ The negative delta against `base`: each row undone against the member it displaced, rows kept in key order.
-    pub fn negative(&self, base: &[E]) -> Self {
-        let mut current = base.to_vec();
-        let mut undo = Vec::new();
-        for entry in &self.rows {
-            match entry {
-                RemodelingRow::Insert { entity } => {
-                    undo.push(RemodelingRow::Remove { key: entity.key() });
-                    let key = entity.key();
-                    let position = current.partition_point(|item| item.key() < key);
-                    current.insert(position, entity.clone());
-                }
-                RemodelingRow::Replace { entity } => {
-                    let key = entity.key();
-                    if let Some(position) = current.iter().position(|item| item.key() == key) {
-                        undo.push(RemodelingRow::Replace { entity: std::mem::replace(&mut current[position], entity.clone()) });
-                    }
-                }
-                RemodelingRow::Remove { key } => {
-                    if let Some(position) = current.iter().position(|item| &item.key() == key) {
-                        undo.push(RemodelingRow::Insert { entity: current.remove(position) });
-                    }
-                }
-                RemodelingRow::Patch { key, patch } => {
-                    if let Some(member) = current.iter_mut().find(|item| &item.key() == key) {
-                        undo.push(RemodelingRow::Patch { key: key.clone(), patch: member.restore_patch(patch) });
-                        let _ = member.write_patch(patch);
-                    }
-                }
-            }
-        }
-        undo.reverse();
+    /// 🔁️ The negative delta, read key by key from `base`: an insert is undone by a remove, a replace by replacing the base member back, a remove by re-inserting the base member, a patch by the slots the base member holds; rows kept in key order.
+    pub fn inverse_rows(&self, base: &[E]) -> Self {
+        let held = |key: &str| base.iter().find(|item| item.key() == key);
+        let mut undo: Vec<RemodelingRow<E, P>> = self
+            .rows
+            .iter()
+            .filter_map(|entry| match entry {
+                RemodelingRow::Insert { entity } => Some(RemodelingRow::Remove { key: entity.key() }),
+                RemodelingRow::Replace { entity } => held(&entity.key()).map(|prior| RemodelingRow::Replace { entity: prior.clone() }),
+                RemodelingRow::Remove { key } => held(key).map(|prior| RemodelingRow::Insert { entity: prior.clone() }),
+                RemodelingRow::Patch { key, patch } => held(key).map(|member| RemodelingRow::Patch { key: key.clone(), patch: member.restore_patch(patch) }),
+            })
+            .collect();
         undo.sort_by_key(|row| row.key());
         Self { rows: undo }
-    }
-
-    /// 🧭️ The delta from `base` to `other` for sync and import: absent members are inserted, gone members removed, changed members replaced whole.
-    pub fn between(base: &[E], other: &[E]) -> Self {
-        let mut rows = Vec::new();
-        for item in other {
-            match base.iter().find(|candidate| candidate.key() == item.key()) {
-                None => rows.push(RemodelingRow::Insert { entity: item.clone() }),
-                Some(prior) if prior != item => rows.push(RemodelingRow::Replace { entity: item.clone() }),
-                Some(_) => {}
-            }
-        }
-        rows.extend(base.iter().filter(|item| !other.iter().any(|candidate| candidate.key() == item.key())).map(|item| RemodelingRow::Remove { key: item.key() }));
-        rows.sort_by_key(|row| row.key());
-        Self { rows }
     }
 
     /// 🕳️ Whether the delta names no row.
@@ -488,20 +454,29 @@ pub enum RemodelingContentRow {
     Truncate { id: String, from: u64 },
 }
 
+impl RemodelingContentRow {
+    /// 🪪 The content artifact the row addresses.
+    pub fn id(&self) -> &String {
+        match self {
+            Self::Append { id, .. } | Self::Truncate { id, .. } => id,
+        }
+    }
+}
+
 impl RemodelingContentDelta {
     /// 🏗️ The rows that bring a whole artifact into existence.
     pub fn create(id: &str, artifact: &RemodelingDurableArtifact) -> RemodelingContentRow {
         RemodelingContentRow::Append { id: id.to_string(), header: Some(RemodelingContentHeader { kind: artifact.kind.clone(), mime: artifact.mime.clone(), width: artifact.width, height: artifact.height }), chunks: artifact.chunks.clone() }
     }
 
-    fn write_into(&self, store: &BTreeMap<String, RemodelingDurableArtifact>) -> MutationApplyResult<BTreeMap<String, RemodelingDurableArtifact>> {
+    fn apply_rows(&self, store: &BTreeMap<String, RemodelingDurableArtifact>) -> MutationApplyResult<BTreeMap<String, RemodelingDurableArtifact>> {
         let mut next = store.clone();
         for (row, entry) in self.rows.iter().enumerate() {
             let at = |field: &str| ["rows".to_string(), row.to_string(), field.to_string()];
             match entry {
                 RemodelingContentRow::Append { id, header: Some(header), chunks } => {
                     if next.contains_key(id) {
-                        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "created content already exists").at(at("id")));
+                        return Err(MutationApplyError::new("mutation.apply.duplicate-id", "created content already exists").at(at("id")));
                     }
                     next.insert(id.clone(), RemodelingDurableArtifact { kind: header.kind.clone(), mime: header.mime.clone(), width: header.width, height: header.height, chunks: chunks.clone() });
                 }
@@ -511,7 +486,7 @@ impl RemodelingContentDelta {
                 }
                 RemodelingContentRow::Truncate { id, from } => {
                     let artifact = next.get_mut(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "truncated content does not exist").at(at("id")))?;
-                    let keep = usize::try_from(*from).ok().filter(|keep| *keep < artifact.chunks.len()).ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-index", "truncation point is not inside the stored leaves").at(at("from")))?;
+                    let keep = usize::try_from(*from).ok().filter(|keep| *keep < artifact.chunks.len()).ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-base", "truncation point is not inside the stored leaves").at(at("from")))?;
                     if keep == 0 {
                         next.remove(id);
                     } else {
@@ -534,55 +509,34 @@ impl RemodelingContentDelta {
         }
     }
 
-    /// 🔁️ The negative delta against `base`: each row undone against the leaves it displaced, in reverse order.
-    pub fn negative(&self, base: &BTreeMap<String, RemodelingDurableArtifact>) -> Self {
-        let mut current = base.clone();
-        let mut undo = Vec::new();
-        for entry in &self.rows {
+    /// 🔁️ The negative delta, read row by row: an `append` that creates is undone by truncating to zero, an `append` that extends by truncating to the length it started from, a `truncate` by re-appending the base leaves it cut (or re-creating the base artifact when it removed it); in reverse order. The length a row starts from is the base length for the first row of an artifact and is carried through the earlier rows of the same artifact after that.
+    pub fn inverse_rows(&self, base: &BTreeMap<String, RemodelingDurableArtifact>) -> Self {
+        let mut undo: Vec<RemodelingContentRow> = Vec::new();
+        for (position, entry) in self.rows.iter().enumerate() {
+            let id = entry.id();
+            let earlier = self.rows[..position].iter().filter(|prior| prior.id() == id);
+            let started = earlier.fold(base.get(id).map(|artifact| artifact.chunks.len() as u64), |length, prior| match prior {
+                RemodelingContentRow::Append { header: Some(_), chunks, .. } => Some(chunks.len() as u64),
+                RemodelingContentRow::Append { header: None, chunks, .. } => length.map(|length| length + chunks.len() as u64),
+                RemodelingContentRow::Truncate { from: 0, .. } => None,
+                RemodelingContentRow::Truncate { from, .. } => Some(*from),
+            });
             match entry {
-                RemodelingContentRow::Append { id, header: Some(header), chunks } => {
-                    undo.push(RemodelingContentRow::Truncate { id: id.clone(), from: 0 });
-                    current.insert(id.clone(), RemodelingDurableArtifact { kind: header.kind.clone(), mime: header.mime.clone(), width: header.width, height: header.height, chunks: chunks.clone() });
-                }
-                RemodelingContentRow::Append { id, header: None, chunks } => {
-                    if let Some(artifact) = current.get_mut(id) {
-                        undo.push(RemodelingContentRow::Truncate { id: id.clone(), from: artifact.chunks.len() as u64 });
-                        artifact.chunks.extend(chunks.iter().cloned());
-                    }
-                }
-                RemodelingContentRow::Truncate { id, from } => {
-                    let Some(artifact) = current.get(id).cloned() else { continue };
-                    let keep = usize::try_from(*from).unwrap_or(usize::MAX);
-                    if keep == 0 {
-                        undo.push(Self::create(id, &artifact));
-                        current.remove(id);
-                    } else if keep < artifact.chunks.len() {
-                        undo.push(RemodelingContentRow::Append { id: id.clone(), header: None, chunks: artifact.chunks[keep..].to_vec() });
-                        if let Some(kept) = current.get_mut(id) {
-                            kept.chunks.truncate(keep);
-                        }
+                RemodelingContentRow::Append { header: Some(_), .. } => undo.push(RemodelingContentRow::Truncate { id: id.clone(), from: 0 }),
+                RemodelingContentRow::Append { header: None, .. } => undo.push(RemodelingContentRow::Truncate { id: id.clone(), from: started.unwrap_or_default() }),
+                RemodelingContentRow::Truncate { from, .. } => {
+                    let first = !self.rows[..position].iter().any(|prior| prior.id() == id);
+                    if let (true, Some(artifact)) = (first, base.get(id)) {
+                        undo.push(match *from {
+                            0 => Self::create(id, artifact),
+                            keep => RemodelingContentRow::Append { id: id.clone(), header: None, chunks: artifact.chunks[usize::try_from(keep).unwrap_or(usize::MAX).min(artifact.chunks.len())..].to_vec() },
+                        });
                     }
                 }
             }
         }
         undo.reverse();
         Self { rows: undo }
-    }
-
-    /// 🧭️ The delta from `base` to `other` for sync and import: gone artifacts are truncated away, changed ones are rebuilt, new ones are created.
-    pub fn between(base: &BTreeMap<String, RemodelingDurableArtifact>, other: &BTreeMap<String, RemodelingDurableArtifact>) -> Self {
-        let mut rows = Vec::new();
-        for (id, prior) in base {
-            if other.get(id) != Some(prior) {
-                rows.push(RemodelingContentRow::Truncate { id: id.clone(), from: 0 });
-            }
-        }
-        for (id, artifact) in other {
-            if base.get(id) != Some(artifact) {
-                rows.push(Self::create(id, artifact));
-            }
-        }
-        Self { rows }
     }
 
     /// 🕳️ Whether the delta names no row.
@@ -610,7 +564,7 @@ pub struct RemodelingParamsDiff {
 macro_rules! facet_algebra {
     ($($slot:ident),+) => {
         impl RemodelingParamsDiff {
-            fn write_into(&self, params: &mut crate::ReconstructionParams) {
+            fn apply_rows(&self, params: &mut crate::ReconstructionParams) {
                 $(if let Some(facet) = &self.$slot {
                     params.$slot = facet.clone();
                 })+
@@ -625,11 +579,6 @@ macro_rules! facet_algebra {
             /// 🔁️ The delta that restores `base` for exactly the facets this delta names.
             pub fn restoring(&self, base: &crate::ReconstructionParams) -> Self {
                 Self { $($slot: self.$slot.as_ref().map(|_| base.$slot.clone()),)+ }
-            }
-
-            /// 🧭️ The delta from `base` to `other`.
-            pub fn between(base: &crate::ReconstructionParams, other: &crate::ReconstructionParams) -> Self {
-                Self { $($slot: (base.$slot != other.$slot).then(|| other.$slot.clone()),)+ }
             }
 
             /// 🕳️ Whether the delta names no facet.
@@ -658,7 +607,7 @@ pub struct RemodelingResultsDiff {
 }
 
 impl RemodelingResultsDiff {
-    fn write_into(&self, results: &mut crate::ReconstructionResults) {
+    fn apply_rows(&self, results: &mut crate::ReconstructionResults) {
         if let Some(sparse) = &self.sparse {
             results.sparse = sparse.value.clone();
         }
@@ -703,19 +652,6 @@ impl RemodelingResultsDiff {
             tracks: self.tracks.as_ref().map(|_| base.tracks.clone()),
             geo: self.geo.as_ref().map(|_| RemodelingAssigned::new(base.geo.clone())),
             qc: self.qc.as_ref().map(|_| RemodelingAssigned::new(base.qc.clone())),
-        }
-    }
-
-    /// 🧭️ The delta from `base` to `other`.
-    pub fn between(base: &crate::ReconstructionResults, other: &crate::ReconstructionResults) -> Self {
-        Self {
-            sparse: (base.sparse != other.sparse).then(|| RemodelingAssigned::new(other.sparse.clone())),
-            dense: (base.dense != other.dense).then(|| RemodelingAssigned::new(other.dense.clone())),
-            mesh: (base.mesh != other.mesh).then(|| other.mesh.clone()),
-            trajectory: (base.trajectory != other.trajectory).then(|| RemodelingAssigned::new(other.trajectory.clone())),
-            tracks: (base.tracks != other.tracks).then(|| other.tracks.clone()),
-            geo: (base.geo != other.geo).then(|| RemodelingAssigned::new(other.geo.clone())),
-            qc: (base.qc != other.qc).then(|| RemodelingAssigned::new(other.qc.clone())),
         }
     }
 
@@ -791,26 +727,26 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
             next.id = id.clone();
         }
         if let Some(delta) = &self.streams {
-            next.streams = delta.write_into(&base.streams).map_err(|error| error.under(["streams"]))?;
+            next.streams = delta.apply_rows(&base.streams).map_err(|error| error.under(["streams"]))?;
         }
         if let Some(delta) = &self.assets {
-            next.assets = asset_map(delta.write_into(&asset_entries(&base.assets)).map_err(|error| error.under(["assets"]))?);
+            next.assets = asset_map(delta.apply_rows(&asset_entries(&base.assets)).map_err(|error| error.under(["assets"]))?);
         }
         if let Some(delta) = &self.durable_artifacts {
-            next.durable_artifacts = delta.write_into(&base.durable_artifacts).map_err(|error| error.under(["durableArtifacts"]))?;
+            next.durable_artifacts = delta.apply_rows(&base.durable_artifacts).map_err(|error| error.under(["durableArtifacts"]))?;
         }
         if let Some(delta) = &self.calibration {
-            next.calibration.cameras = delta.cameras.write_into(&base.calibration.cameras).map_err(|error| error.under(["calibration", "cameras"]))?;
-            next.calibration.rig = delta.rig.write_into(&base.calibration.rig).map_err(|error| error.under(["calibration", "rig"]))?;
+            next.calibration.cameras = delta.cameras.apply_rows(&base.calibration.cameras).map_err(|error| error.under(["calibration", "cameras"]))?;
+            next.calibration.rig = delta.rig.apply_rows(&base.calibration.rig).map_err(|error| error.under(["calibration", "rig"]))?;
         }
         if let Some(params) = &self.params {
-            params.write_into(&mut next.params);
+            params.apply_rows(&mut next.params);
         }
         if let Some(delta) = &self.gcps {
-            next.gcps = delta.write_into(&base.gcps).map_err(|error| error.under(["gcps"]))?;
+            next.gcps = delta.apply_rows(&base.gcps).map_err(|error| error.under(["gcps"]))?;
         }
         if let Some(results) = &self.results {
-            results.write_into(&mut next.results);
+            results.apply_rows(&mut next.results);
         }
         Ok(next)
     }
@@ -856,28 +792,13 @@ impl DiffAlgebra<RemodelingSnapshot> for RemodelingDiff {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             id: self.id.as_ref().map(|_| base.id.clone()),
-            streams: self.streams.as_ref().map(|delta| delta.negative(&base.streams)),
-            assets: self.assets.as_ref().map(|delta| delta.negative(&asset_entries(&base.assets))),
-            durable_artifacts: self.durable_artifacts.as_ref().map(|delta| delta.negative(&base.durable_artifacts)),
-            calibration: self.calibration.as_ref().map(|delta| RemodelingCalibrationDelta { cameras: delta.cameras.negative(&base.calibration.cameras), rig: delta.rig.negative(&base.calibration.rig) }),
+            streams: self.streams.as_ref().map(|delta| delta.inverse_rows(&base.streams)),
+            assets: self.assets.as_ref().map(|delta| delta.inverse_rows(&asset_entries(&base.assets))),
+            durable_artifacts: self.durable_artifacts.as_ref().map(|delta| delta.inverse_rows(&base.durable_artifacts)),
+            calibration: self.calibration.as_ref().map(|delta| RemodelingCalibrationDelta { cameras: delta.cameras.inverse_rows(&base.calibration.cameras), rig: delta.rig.inverse_rows(&base.calibration.rig) }),
             params: self.params.as_ref().map(|params| params.restoring(&base.params)),
-            gcps: self.gcps.as_ref().map(|delta| delta.negative(&base.gcps)),
+            gcps: self.gcps.as_ref().map(|delta| delta.inverse_rows(&base.gcps)),
             results: self.results.as_ref().map(|results| results.restoring(&base.results)),
-        }
-    }
-
-    fn between(base: &RemodelingSnapshot, other: &RemodelingSnapshot) -> Self {
-        let calibration = RemodelingCalibrationDelta { cameras: RemodelingRows::between(&base.calibration.cameras, &other.calibration.cameras), rig: RemodelingRows::between(&base.calibration.rig, &other.calibration.rig) };
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            id: (base.id != other.id).then(|| other.id.clone()),
-            streams: nonempty(RemodelingRows::between(&base.streams, &other.streams), RemodelingRows::is_empty),
-            assets: nonempty(RemodelingRows::between(&asset_entries(&base.assets), &asset_entries(&other.assets)), RemodelingRows::is_empty),
-            durable_artifacts: nonempty(RemodelingContentDelta::between(&base.durable_artifacts, &other.durable_artifacts), RemodelingContentDelta::is_empty),
-            calibration: (!calibration.cameras.is_empty() || !calibration.rig.is_empty()).then_some(calibration),
-            params: nonempty(RemodelingParamsDiff::between(&base.params, &other.params), RemodelingParamsDiff::is_empty),
-            gcps: nonempty(RemodelingRows::between(&base.gcps, &other.gcps), RemodelingRows::is_empty),
-            results: nonempty(RemodelingResultsDiff::between(&base.results, &other.results), RemodelingResultsDiff::is_empty),
         }
     }
 

@@ -1,20 +1,7 @@
-//! 🔮️ Mutation oracle for the TIFF 6.0 🧱️baseline conformance-class vocabulary.
-//!
-//! Reference: `tiff-tiff-6-0-baseline-mutate-reader` (`tiff` 0.11, MIT OR Apache-2.0). [`read_axes`]
-//! takes the five Baseline axes of the real document out of IFD 0 with the `tiff` crate's own tag
-//! reader — `Compression` (259), `PhotometricInterpretation` (262), `BitsPerSample` (258),
-//! `TileWidth`/`TileLength` (322/323) and `StripOffsets` (273) — and counts its IFDs by walking the
-//! chain the way that reader does. Each kind is then applied to those axes as Adobe TIFF 6.0 Part 1
-//! defines them, and [`verdict`] re-reads the class from the specification's own tables. This
-//! repository's decoder, snapshot and checker are never consulted.
-//!
-//! The comparison is on axes, not bytes: this repository's encoder regenerates every strip tag from
-//! the raster it writes, so four of the kinds are not byte-observable at all — the vocabulary's own
-//! module says so, and the case measures where the axes live.
-//!
-//! @see https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf — Section 7, Baseline field tables
-//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the vocabulary this module is measured against.
-
+//! 🔮️ Independent native TIFF6 Baseline conformance observations.
+//! The tiff reader admits real tag values and raster data. Profiles alter ephemeral IO facts;
+//! no physical field is claimed as an authored image mutation.
+//! @see https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf
 use semio_repo_test_host::Json;
 
 //#region 🔖️Axes
@@ -22,7 +9,6 @@ use semio_repo_test_host::Json;
 /// order.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Axes {
-    pub tags: Vec<u32>,
     pub ifd_count: usize,
     pub raster: bool,
     pub compression: Option<Vec<u32>>,
@@ -53,22 +39,7 @@ pub fn read_axes(input: &[u8]) -> Result<Axes, String> {
         decoder.next_image().map_err(|error| format!("tiff reader: {error}"))?;
         ifd_count += 1;
     }
-    Ok(Axes { tags: ifd0_tags(input)?, ifd_count, raster, compression, photometric, bits_per_sample, tile_width, tile_length, strip_offsets })
-}
-
-/// 🏷️ IFD 0's tags in entry order, read straight off TIFF 6.0 Section 2: the byte-order mark, the IFD offset at byte 4,
-/// the entry count, then one 12-byte entry per field whose first two bytes are its tag.
-#[cfg(feature = "oracles")]
-fn ifd0_tags(input: &[u8]) -> Result<Vec<u32>, String> {
-    let little = match input.get(..2) {
-        Some(b"II") => true,
-        Some(b"MM") => false,
-        _ => return Err("tiff header carries no byte-order mark".to_string()),
-    };
-    let u16_at = |at: usize| input.get(at..at + 2).map(|bytes| if little { u16::from_le_bytes([bytes[0], bytes[1]]) } else { u16::from_be_bytes([bytes[0], bytes[1]]) });
-    let offset = input.get(4..8).map(|bytes| if little { u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) } else { u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) }).ok_or("tiff header is truncated")? as usize;
-    let count = u16_at(offset).ok_or("IFD 0 is truncated")? as usize;
-    (0..count).map(|entry| u16_at(offset + 2 + entry * 12).map(u32::from).ok_or_else(|| "IFD 0 entry is truncated".to_string())).collect()
+    Ok(Axes { ifd_count, raster, compression, photometric, bits_per_sample, tile_width, tile_length, strip_offsets })
 }
 
 /// 🚫️ Without the `oracles` feature the registered reader is not linked.
@@ -90,25 +61,8 @@ fn number(params: &Json, key: &str) -> Result<u32, String> {
     }
 }
 
-/// 📸️ The axes of a `TiffSnapshot` wire value, read off its IFD 0 entries the way [`read_axes`] reads a file's: each
-/// tag's `TiffValues` as unsigned integers, the IFD count, and a raster present when the snapshot carries the
-/// canonical RGBA8 buffer its `ImageWidth` (256) × `ImageLength` (257) declares.
-fn snapshot_axes(snapshot: &Json) -> Axes {
-    let ifds = snapshot.array("ifds");
-    let entries = ifds.first().map(|ifd| ifd.array("entries")).unwrap_or_default();
-    let tag = |id: u32| -> Option<Vec<u32>> {
-        entries.iter().find(|entry| matches!(entry.get("tag"), Some(Json::Number(value)) if *value as u32 == id)).map(|entry| entry.get("values").map(|values| numbers(values, "value")).unwrap_or_default())
-    };
-    let dimension = |id: u32| tag(id).and_then(|values| values.first().copied()).unwrap_or(0) as usize;
-    let raster = dimension(256) > 0 && dimension(257) > 0 && snapshot.array("pixels").len() == dimension(256) * dimension(257) * 4;
-    let tags = entries.iter().map(|entry| match entry.get("tag") { Some(Json::Number(value)) => *value as u32, _ => 0 }).collect();
-    Axes { tags, ifd_count: ifds.len(), raster, compression: tag(259), photometric: tag(262), bits_per_sample: tag(258), tile_width: tag(322), tile_length: tag(323), strip_offsets: tag(273) }
-}
-
-/// 🦠️ Applies one kind to the axes as TIFF 6.0 defines the field it names: a set writes the field, a removal
-/// deletes it. `params` is the
-/// leaf's wire payload (`payload_value()`).
-pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
+/// 🧮️ Evaluates a native conformance profile against independently read IO observations.
+pub fn profile(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
         "set-compression" => next.compression = Some(vec![number(params, "compression")?]),
@@ -124,7 +78,7 @@ pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
         }
         "set-strip-offsets" => next.strip_offsets = Some(numbers(params, "offsets")),
         "remove-strip-offsets" => next.strip_offsets = None,
-        other => return Err(format!("no TIFF 6.0 Baseline semantics for kind {other:?}")),
+        other => return Err(format!("no TIFF6 native conformance profile {other:?}")),
     }
     Ok(next)
 }

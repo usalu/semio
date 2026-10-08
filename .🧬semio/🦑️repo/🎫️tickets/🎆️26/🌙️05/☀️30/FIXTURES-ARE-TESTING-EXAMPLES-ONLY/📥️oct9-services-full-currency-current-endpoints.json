@@ -1,0 +1,54 @@
+{
+  "status": "source-cohort-held-for-compiler; physical-final-frame-not-settled",
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "0e6116039b94c299286522d9971bf973a5abda8cb02aab281975fceee698e166",
+      "afterSha256": "ac4c330db854fc9a222fe5fc4a0c9a3a433c53098737297401e3689af9a5747c",
+      "scope": "NativeIo close/demand API and actual original-capacity laws"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "f971b974f22391c74fe00888c6c34c8e8c818c8c2d490611ee7dfab22a3189db",
+      "afterSha256": "299db4e2a05ae9276edd82e25c75e24b855257b35dd1fc72e60bffb745411d52",
+      "scope": "Compute retained cleanup logical sections"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "7c994c35f53bb7ff1b14aff5a1c1d9bab91b20a91a350b5df04fe53d3a8455c4",
+      "afterSha256": "1e8c281bd5e134353f6db390391fa28cc20542ee2f8bd9eec614154b88855774",
+      "scope": "NativeIo close/demand API and actual original-capacity laws"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️component-unit/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "6c764792247b7237db86ca55012dea0eb3676d1e65d686eab790401035bc9025",
+      "afterSha256": "609a8895d6b5cba9f3e6e5e906a4fb6c5bbdbc697fb033a781ee88c3e5fcc769",
+      "scope": "specific Services constructor/close test laws"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "action": "updated",
+      "beforeSha256": "263758c92abd78a77a58a0421fbcd6dffefc32e90bcbaf5978178cd4d6583fd3",
+      "afterSha256": "32648d3c2dddb7b7c01201ed4d561d9c4308877edc0d96d3bf246987646daeba",
+      "scope": "Services existing Value domain dependency"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🧪️tests/🧫️fixtures/🔣️.json",
+      "action": "created",
+      "beforeSha256": null,
+      "afterSha256": "a04d60028a74a4e5dc2529eb371fb43187e294a6fda648152866f8e967694cf0",
+      "scope": "NativeIo close/demand API and actual original-capacity laws"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "6ac3c5ed8aa446f1b3ac962eab25173b9f5700e017b6d0ec71eec18eea0fe02c",
+      "afterSha256": "47923d310b7d29cc0094ba9d91a77cd37d83aea32bd90bf9675a18924eb7b04a",
+      "scope": "Services neutral law only; preserve other owner tests"
+    }
+  ]
+}

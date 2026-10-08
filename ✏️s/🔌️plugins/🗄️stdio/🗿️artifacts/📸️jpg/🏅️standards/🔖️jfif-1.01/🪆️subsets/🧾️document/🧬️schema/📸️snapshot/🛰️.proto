@@ -7,16 +7,6 @@ message JfifThumbnail {
   bytes rgb_data = 3;
 }
 
-
-
-
-
-
-
-
-
-
-
 message JpgSegment {
   uint32 marker = 1;
   bytes data = 2;
@@ -44,3 +34,4 @@ message JpgImage {
   optional JfifThumbnail jfif_thumbnail = 9;
   repeated JpgSegment other_segments = 10;
 }
+

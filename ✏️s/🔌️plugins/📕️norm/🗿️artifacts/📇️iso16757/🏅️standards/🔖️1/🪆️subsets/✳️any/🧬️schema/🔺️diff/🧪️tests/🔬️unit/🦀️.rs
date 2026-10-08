@@ -1,4 +1,4 @@
-//! 🧪️ Keyed-diff algebra of Iso16757: id-keyed row coalescing and order tracking, positional constraint rows, map entries, the negative diff and the state delta.
+//! 🧪️ Keyed-diff algebra of Iso16757: id-keyed row coalescing and position tracking, positional constraint rows, map entries and the negative diff.
 
 use super::Iso16757Diff;
 use crate::mutations::add_selection_constraint::mutation::AddSelectionConstraint;
@@ -41,7 +41,7 @@ async fn renames_of_one_group_coalesce_to_the_last_name() {
     let sum = law(&base, &rename("Alpha"), |_| rename("Beta")).await;
     let rows = sum.product_groups.expect("groups");
     assert_eq!(rows.modified.len(), 1);
-    assert_eq!(rows.modified[0].name.as_deref(), Some("Beta"));
+    assert_eq!(rows.modified[0].patch.name.as_deref(), Some("Beta"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,10 +76,9 @@ async fn part_number_inputs_are_added_then_changed_in_place() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn inverse_and_between_follow_the_state() {
+async fn inverse_follows_the_state() {
     let base = Iso16757Snapshot::default();
     let inserted = diff_of(&Iso16757Mutation::IntroduceProductGroup(IntroduceProductGroup { product_group: group(&base), index: Some(0) }), &base);
     let after = protocol::apply_diff(&inserted, &base).expect("insert");
     assert_eq!(protocol::apply_diff(&inserted.inverse(&base), &after).expect("inverse"), base);
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<Iso16757Snapshot, Iso16757Diff>(&base, &after).await;
 }

@@ -19,104 +19,11 @@ fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
     }
 }
 
-/// 🧪️ between_roundtrip_law + field_sweep, real same-kind field change (audio's
-/// `sample_rate`, a genuinely mutable field — not the `schema` identity field every subset's
-/// own diff module explicitly excludes from diffing).
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law_same_kind_real_field_change() {
-    let a = audio_snapshot(44_100);
-    let b = audio_snapshot(48_000);
-    let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-    assert!(matches!(d, SemioDiff::Audio(_)), "same-kind change must nest, not Replace: {d:?}");
-    assert!(!d.is_empty());
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid nested diff"), b);
-    assert!(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &a).is_empty());
-}
-
-/// 🧪️ field_sweep, second real same-kind field change (flow's id-keyed `nodes`
-/// collection) — sweeps a DIFFERENT subset and a DIFFERENT field shape (collection insert,
-/// not a scalar) than the audio case above.
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law_flow_node_insert() {
-    let a = flow_snapshot(&["n1"]);
-    let b = flow_snapshot(&["n1", "n2"]);
-    let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-    assert!(matches!(d, SemioDiff::Flow(_)));
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid nested diff"), b);
-    let inv = d.inverse(&a);
-    assert_eq!(protocol::apply_diff(&inv, &protocol::apply_diff(&d, &a).expect("valid nested diff")).expect("valid inverse"), a);
-}
-
-/// 🧪️ between_roundtrip_law, cross-kind change: no sparse representation exists, must fall
-/// back to `Replace` — and still satisfy the law.
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law_cross_kind_replaces() {
-    let a = audio_snapshot(44_100);
-    let b = flow_snapshot(&["n1"]);
-    let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-    assert!(matches!(d, SemioDiff::Replace(_)), "cross-kind change must Replace: {d:?}");
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid replacement"), b);
-}
-
-/// 🧪️ inverse_law across all 3 shapes: same-kind nested, cross-kind Replace, and NoChange.
-#[semio_framework_async_macros::async_test]
-async fn inverse_law_covers_nested_replace_and_no_change() {
-    for (a, b) in [(audio_snapshot(44_100), audio_snapshot(96_000)), (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])), (audio_snapshot(44_100), audio_snapshot(44_100))] {
-        let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-        let applied = protocol::apply_diff(&d, &a).expect("valid diff");
-        let inv = d.inverse(&a);
-        assert_eq!(protocol::apply_diff(&inv, &applied).expect("valid inverse"), a, "inverse must restore base for {d:?}");
-    }
-}
-
-/// 🧪️ absorb_law: same-kind sequential coalesce delegates to the nested subset's own
-/// (already-proven) `absorb`.
-#[semio_framework_async_macros::async_test]
-async fn absorb_law_same_kind_delegates_to_nested() {
-    let a = audio_snapshot(44_100);
-    let mid = audio_snapshot(48_000);
-    let after = audio_snapshot(96_000);
-    let mut d1 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &mid);
-    let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
-    let applied_before_absorb = protocol::apply_diff(&d1, &a).expect("valid first diff");
-    d1.absorb(d2.clone());
-    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid absorbed diff"), protocol::apply_diff(&d2, &applied_before_absorb).expect("valid second diff"));
-    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid absorbed diff"), after);
-}
-
-/// 🧪️ absorb_law: a later `Replace` always wins outright, whatever preceded it.
-#[semio_framework_async_macros::async_test]
-async fn absorb_law_later_replace_wins() {
-    let a = audio_snapshot(44_100);
-    let mid = audio_snapshot(48_000);
-    let after = flow_snapshot(&["n1"]);
-    let mut d1 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &mid);
-    let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
-    d1.absorb(d2);
-    assert!(matches!(d1, SemioDiff::Replace(_)));
-    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid replacement"), after);
-}
-
-/// 🧪️ absorb_law: an earlier `Replace` absorbing a later same-kind diff folds it into the
-/// replacement snapshot rather than dropping it.
-#[semio_framework_async_macros::async_test]
-async fn absorb_law_replace_then_nested_folds_in() {
-    let a = flow_snapshot(&["n1"]);
-    let replaced = audio_snapshot(44_100);
-    let after = audio_snapshot(48_000);
-    let mut d1 = SemioDiff::Replace(Box::new(replaced.clone()));
-    let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&replaced, &after);
-    d1.absorb(d2);
-    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid absorbed diff"), after);
-}
-
 /// 🧪️ diff_codec_text_binary_roundtrip_law across `NoChange`, a same-kind nested diff (one
 /// per subset kind, proving the dispatch table's all 13 tags), and `Replace`.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = audio_snapshot(44_100);
-    let b = audio_snapshot(48_000);
-    let nested = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
+    let nested = SemioDiff::Audio(crate::standards::v1::subsets::audio::schema::diff::SemioAudioDiff { sample_rate: Some(48_000), ..Default::default() });
     let replace = SemioDiff::Replace(Box::new(flow_snapshot(&["n1"])));
     for d in [SemioDiff::NoChange, nested, replace] {
         let printed = d.print_diff();
@@ -158,7 +65,7 @@ async fn all_eighteen_subset_tags_round_trip_empty_nested_diff() {
     ];
     for subset in subsets {
         let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };
-        let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&snap, &snap);
+        let d = SemioDiff::default();
         assert!(d.is_empty(), "identical snapshot must diff empty: {d:?}");
         let printed = d.print_diff();
         let parsed = SemioDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

@@ -1,17 +1,97 @@
 {
-  "scope": "explicit own preimages plus inherited prior curated plugin endpoint ledger; no Git diff, foreign-owner adoption or generated-output inventory",
+  "scope": "explicit own preimages plus inherited prior curated plugin endpoint ledger; no Git diff, foreign-owner adoption or generated-output inventory; bounded current S browser inventory corpus retirement actions appended; no unrelated source hashes refreshed; bounded genuine descriptor domain contract extraction and3 actual consumer actions appended without injected catalog adoption;15 bounded normal native route integration endpoints appended; no Native core ownership or unrelated hash refresh; five narrow Hub controlled-consumption actions appended, no Native planner/core ownership or unrelated hash refresh; ten exact lease-corpus/injected-identity/entry actions added with narrow field/action attribution, no unrelated source hash refresh or Native endpoint adoption; three bounded third WGPU corpus-retirement/topology actions, no peer directory API fix adoption; current Oct9 mounted/Services/private-member exact partial source action ledgers appended; no source freeze/native positive implied",
   "authoredEndpoints": [
     {
-      "path": ".vscode/🧩️launch.seed.jsonc",
+      "path": ".vscode/launch.json",
       "ownershipEvidence": [
-        "📥️complete-plugin-repository-file-ledger.json"
+        "📥️oct8-native-route-owned-settled-endpoints.json",
+        "📥️oct8-mounted-adapter-owned-endpoints.json",
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
       ],
       "ownedActions": [
-        "prior-curated-owned-endpoint"
+        "bounded-normal-native-route-integration",
+        "register-existing-private-route-mounted-only-facet",
+        "register-bounded-current-physical-collection-and-original-neutral-source-facet",
+        "insert-existing-private-session-facet-in-live-seed",
+        "register-bounded-existing-private-facet"
       ],
       "observedCurrent": "file",
       "role": "authored-source",
-      "observedCurrentSha256": "6b1e7513779b11fe5473ee43d933b834ed104791b0a93f8afc764c9cbd8ab720"
+      "observedCurrentSha256": "b47ca0f47bc6975dc5c27ab5e7d71675222c7b50f398d8a2e310c4e05e5174c6",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": ".vscode/launch.json",
+        "beforeSha256": "a03a192207c013485199dd58ca9678589647f9515e7459252977023414855f25",
+        "afterSha256": "8ca4dc7f2e6812447172641c7c23071edef2869bf5485908f84d1c23a53adada",
+        "action": "insert-existing-private-session-facet-in-live-seed",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      },
+      "boundedCurrentness": "exact own removal/source section only; concurrent launch/private source portions remain peer-owned"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "ownershipEvidence": [
+        "📥️complete-plugin-repository-file-ledger.json",
+        "📥️oct8-native-route-owned-settled-endpoints.json",
+        "📥️oct8-mounted-adapter-owned-endpoints.json",
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "prior-curated-owned-endpoint",
+        "bounded-normal-native-route-integration",
+        "register-existing-private-route-mounted-only-facet",
+        "register-bounded-current-physical-collection-and-original-neutral-source-facet",
+        "insert-existing-private-session-facet-in-live-seed",
+        "register-bounded-existing-private-facet"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "14286cb2fcc138536e18c4762b60c36ebe452db7dada6afd9497770c5944c685",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": ".vscode/🧩️launch.seed.jsonc",
+        "beforeSha256": "33fcde75ba53153d942dbe4d184382961ffa944eb10aa9e2a77d7ff125a384d0",
+        "afterSha256": "27a2d9d0ccf1d28251976c6f99d39862af9688e26ead415b61c664d97d9d0994",
+        "action": "insert-existing-private-session-facet-in-live-seed",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      },
+      "boundedCurrentness": "exact own removal/source section only; concurrent launch/private source portions remain peer-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json",
+        "📥️oct8-remodel-relocated-production-corpus-before.json",
+        "📥️oct8-remodel-content-law-test-domain-before.json",
+        "📥️oct8-remodel-relocated-production-corpus-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "register-bounded-existing-private-facet",
+        "widen-existing-bounded-collection-facet-to-whole-snapshot-and-current-octet-law"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "5e09e687ef2cbe12d9ef937a2de85b8c767d0b11eb22ea864d492baf2fdfc25c",
+      "boundedCurrentness": "only exact own test-domain/corpus action; shared private root facet edits are peer-owned"
     },
     {
       "path": "✏️s/Cargo.toml",
@@ -804,6 +884,18 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "66be91bc0a6c45cd8b35dbefa00906f77e10d605292cf915edaa0e01edeb65b1"
     },
     {
       "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧫️fixtures/🚪️retirement/📐️schema.json",
@@ -1732,6 +1824,18 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "37f89ecd42d34baab0bbfc00a79045ecd11c385f0a4073ef1a7442ac71e99e16"
+    },
+    {
       "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧫️fixtures/⚖️retained-route-laws/📐️schema/🔣️.json",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -2282,6 +2386,18 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "705250cbf07db3458c6c79690dc1d4d6d62cbe3a55ef6715b2973c6dd1c85fcc"
     },
     {
       "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
@@ -3184,6 +3300,52 @@
       "observedCurrentSha256": "06996bc20099d491e98f5af9c42d1fadf31000c0df2fb9a94c6b5ed6fa8d5910"
     },
     {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-corpus-schema-assertions"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "e598194576b3afecc65b6235764324d1432b2eefb1f9354bb45993bb080dc503",
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-remodel-relocated-production-corpus-before.json",
+        "📥️oct8-remodel-content-law-test-domain-before.json",
+        "📥️oct8-remodel-relocated-production-corpus-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-false-schema-test-facet-retain-meaningful-law-in-test-domain"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "only exact own test-domain/corpus action; shared private root facet edits are peer-owned"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-remodel-relocated-production-corpus-before.json",
+        "📥️oct8-remodel-content-law-test-domain-before.json",
+        "📥️oct8-remodel-relocated-production-corpus-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "place-preserved-independent-octet-law-in-genuine-test-domain"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "f0c0b7dc20d22c5a2f076463e264fbfa440c290286f23ff24e2177af7d7f569c",
+      "boundedCurrentness": "only exact own test-domain/corpus action; shared private root facet edits are peer-owned"
+    },
+    {
       "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🦀️.rs",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -3194,6 +3356,100 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧩️fragments/🧾️schema.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-concurrently-relocated-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧱️content/🧾️schema.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-concurrently-relocated-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-remodel-relocated-production-corpus-before.json",
+        "📥️oct8-remodel-content-law-test-domain-before.json",
+        "📥️oct8-remodel-relocated-production-corpus-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-relocated-whole-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "only exact own test-domain/corpus action; shared private root facet edits are peer-owned"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧱️content/🧩️fragments/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-remodel-relocated-production-corpus-before.json",
+        "📥️oct8-remodel-content-law-test-domain-before.json",
+        "📥️oct8-remodel-relocated-production-corpus-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-relocated-whole-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "only exact own test-domain/corpus action; shared private root facet edits are peer-owned"
     },
     {
       "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
@@ -10506,6 +10762,46 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-corpus-validation"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "19ae2d57ff1fd23ab11728bdefee2182d91a8f17e14e9b2a732fbfb9b4a5065a",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+        "beforeSha256": "779d3e19049c8c9afd8e53751df2a356349bb9e51f05f0cb79db38d4c6dcee85",
+        "afterSha256": "19ae2d57ff1fd23ab11728bdefee2182d91a8f17e14e9b2a732fbfb9b4a5065a",
+        "action": "remove-only-corpus-validation",
+        "attribution": "Only exact corpus retirement or routing action; peer production/source move is not adopted."
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-test-corpus-schema"
+      ],
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+        "beforeSha256": "3f5a6c66dec5ecc3ac23a45b785f865b0d4e397c00564f21a5997ddf4c9069d2",
+        "afterSha256": null,
+        "action": "retire-test-corpus-schema",
+        "attribution": "Only exact corpus retirement or routing action; peer production/source move is not adopted."
+      }
+    },
+    {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📸️candidate/🧪️tests/🟦️.ts",
       "ownershipEvidence": [
         "📥️current-plugin-oct8-extended-authored-before.json"
@@ -11359,6 +11655,18 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "b0c1d66f2477d115016ea0e092eadbf5012b62a7622c146a15cd96717ff373c5"
+    },
+    {
       "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧪️tests/🧫️fixtures/📐️schema.json",
       "ownershipEvidence": [
         "📥️current-plugin-oct8-extended-authored-before.json"
@@ -11804,6 +12112,27 @@
       "observedCurrentSha256": "7ac2859f694bc6a5a2f89028dcdbbe899581673f8759e64c05ad76935562245d"
     },
     {
+      "path": "✏️s/🧑‍💻dev/📜️script.ts",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "canonical-semantic-session-owner-route"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "59199d41571b3ab12bdbe89c11c4e0a351f52b0167c27354b06ce486d160b786",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "✏️s/🧑‍💻dev/📜️script.ts",
+        "beforeSha256": "23edb46ea9a410c0f977da78314b81ac09d907473cab1de974e6036b07570de2",
+        "afterSha256": "59199d41571b3ab12bdbe89c11c4e0a351f52b0167c27354b06ce486d160b786",
+        "action": "canonical-semantic-session-owner-route",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
       "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
       "ownershipEvidence": [
         "📥️current-plugin-orphan-canonical-before.json"
@@ -11864,6 +12193,70 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "verify-current-serialized-entry-authority-and-actual-mount"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "050d3338b8587ae3e8dabb8b0c393428069d4dfa116c8dcfca8e689d62ee550b",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": null,
+        "afterSha256": "050d3338b8587ae3e8dabb8b0c393428069d4dfa116c8dcfca8e689d62ee550b",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md",
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "extract-real-browser-inventory-contract",
+        "reference-current-genuine-injected-catalog-authority"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "5da6b929d68c6513de152605011222ff1c4c7b4f33961012b1aff1bf3cebd70d",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "21d8e85278338ce67994bfc7b7c4f9e6d136f3af02e67705d855134c848d975b",
+        "afterSha256": "5da6b929d68c6513de152605011222ff1c4c7b4f33961012b1aff1bf3cebd70d",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "create-genuine-explicit-publication-instance"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "8cfdd3467930ba22b17f78fc9619cbfb089bf92fef16a7ee007ac24f78784c81",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+        "beforeSha256": null,
+        "afterSha256": "8cfdd3467930ba22b17f78fc9619cbfb089bf92fef16a7ee007ac24f78784c81",
+        "action": "create-genuine-explicit-publication-instance",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
       "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🔬️ownership/🟦️.ts",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json",
@@ -11902,6 +12295,42 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🏷️ownership/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md"
+      ],
+      "ownedActions": [
+        "assert-actual-domain-scope-admission"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "5f1560c26d3a37298a3c25fc3e04f0b21bdba8b4dec2f48a34511fe0f689e47b"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🔄️lifecycle/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md",
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "consume-domain-values-with-locked-independent-oracles",
+        "remove-old-URI-registration-alias-and-run-current-domain-values"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "2da2e4390a367a0a68d3f27ef71a6920bda12d2da00e82bc21c258ae080166a3",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "79bb30616faa6458b21ba9283c09cbde10b8d2dae94b117248ff2ed844d8dffa",
+        "afterSha256": "2da2e4390a367a0a68d3f27ef71a6920bda12d2da00e82bc21c258ae080166a3",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
       "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json",
@@ -11914,6 +12343,19 @@
       "observedCurrent": "file",
       "role": "authored-source",
       "observedCurrentSha256": "42d9b3963c0e075d12b9379065e4e6eae5c78a51ff695d9fac9c710d472fe3d6"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-before.json",
+        "📓️oct8-s-browser-inventory-corpus-authority-retirement.md"
+      ],
+      "ownedActions": [
+        "retire-corpus-authority"
+      ],
+      "observedCurrent": "absent",
+      "role": "authored-source",
+      "observedCurrentSha256": null
     },
     {
       "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️ownership/🟦️.ts",
@@ -12009,16 +12451,26 @@
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-actual-cargo-custody-and-actor-capture-before.json",
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-hub-exact-custody-snapshot-before.json",
         "📥️oct8-normal-protected-sweep-before.json",
-        "📥️oct8-protected-sweep-settled-source-inputs.json"
+        "📥️oct8-protected-sweep-settled-source-inputs.json",
+        "📥️oct8-hub-physical-hashbang-syntax-before.json",
+        "📥️oct8-hub-physical-hashbang-syntax-owned-action.json",
+        "📓️oct8-protected-post-identity-actual-neutral-renewal.md"
       ],
       "ownedActions": [
         "edit",
         "prior-curated-owned-endpoint",
-        "updated-normal-protected-sweep-owner"
+        "updated-normal-protected-sweep-owner",
+        "physical-executable-hashbang-order-only-preserve-peer-import-and-rest"
       ],
       "observedCurrent": "file",
       "role": "authored-source",
-      "observedCurrentSha256": "c1f85fbeba8aedbed06636167cb701c79ebd713428faaf0dea730c46ab4943f8"
+      "observedCurrentSha256": "e17a557989703e71b5dd477f286369c52dd7c9b6d04d20a3bc8e68cf0ceb426c",
+      "boundedHeaderAction": {
+        "beforeSha256": "9486877577ef1919600a415853a8cd11401f0b6c21460c57d79cd23d39451805",
+        "afterSha256": "e17a557989703e71b5dd477f286369c52dd7c9b6d04d20a3bc8e68cf0ceb426c",
+        "ledger": "📥️oct8-hub-physical-hashbang-syntax-owned-action.json",
+        "scope": "Only first two lines ordering; peer descriptor-digest import/all remaining bytes preserved, no other current source authorship adopted"
+      }
     },
     {
       "path": "🌎️hub/🔐️auth/🔌️client/🧪️tests/🧬️source/🟦️.ts",
@@ -12396,6 +12848,22 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-corpus-schema-assertions"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "5f647912eb15875537be4fd4139b7da41715120a2466ccf2fb6c2306422e892c",
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
       "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/✏️editor-catalog/🪶️sqlite/🧬️schema/🔣️.json",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -12434,14 +12902,20 @@
     {
       "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
       "ownershipEvidence": [
-        "📥️complete-plugin-repository-file-ledger.json"
+        "📥️complete-plugin-repository-file-ledger.json",
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
       ],
       "ownedActions": [
-        "prior-curated-owned-endpoint"
+        "prior-curated-owned-endpoint",
+        "retire-corpus-authority"
       ],
       "observedCurrent": "absent",
       "role": "authored-source",
-      "observedCurrentSha256": null
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
     },
     {
       "path": "🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
@@ -12502,6 +12976,46 @@
       "observedCurrent": "file",
       "role": "authored-source",
       "observedCurrentSha256": "3c80b198d4bfba20d72a91e5e5c8ea79cdc2eb7a02a13376f72ab9cf06c1eb73"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧩️composition/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-wgpu-third-corpus-before-edit.json",
+        "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+        "📓️oct8-wgpu-third-corpus-retirement.md"
+      ],
+      "ownedActions": [
+        "retire-third-relocated-wgpu-whole-test-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedThirdCorpusAction": {
+        "beforeSha256": "d1cd123f544ba6d59f1216f39cc1ac56355b6e1f1c234805f5c0cd0fb0ccf67b",
+        "afterSha256": null,
+        "ledger": "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+        "attribution": "Only exact named three source actions; preserved peer examples/harness/collaboration/other production APIs are not authored here."
+      }
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-wgpu-third-corpus-before-edit.json",
+        "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+        "📓️oct8-wgpu-third-corpus-retirement.md"
+      ],
+      "ownedActions": [
+        "remove-only-wholecorpus-and-three-wrapper-schema-expectations-preserve-collaboration-laws"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "83e1c3cc83503647af3a4232c7d77fa48b329305b2cc25d4138b81d360d0d08d",
+      "boundedThirdCorpusAction": {
+        "beforeSha256": "317fd57330c6b537099a396f2e7a10c33432f685f63323e3d574b7a2b48009b6",
+        "afterSha256": "83e1c3cc83503647af3a4232c7d77fa48b329305b2cc25d4138b81d360d0d08d",
+        "ledger": "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+        "attribution": "Only exact named three source actions; preserved peer examples/harness/collaboration/other production APIs are not authored here."
+      }
     },
     {
       "path": "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
@@ -12774,6 +13288,86 @@
       "observedCurrentSha256": "945c17f408cc35a3036427784b36b38421c69de171db7db3e26251691b3ef64f"
     },
     {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-corpus-validation"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "4ccf757cc56d7eb94ebaba3a8a5c21c583f1a09344512783485ce0cc956cf7ae",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+        "beforeSha256": "7143697174eeb34395833d1994f113aff5795a26ff666f61247cfc219380b1ac",
+        "afterSha256": "4ccf757cc56d7eb94ebaba3a8a5c21c583f1a09344512783485ce0cc956cf7ae",
+        "action": "remove-only-corpus-validation",
+        "attribution": "Only exact corpus retirement or routing action; peer production/source move is not adopted."
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-unused-top-level-schema-field"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "c5fefdd8b4df2de61f736a76ce5447603b14d23bbe3cdf4156b70601003404fc",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+        "beforeSha256": "203a9f1f5926efacd4023df5ed6e8142376be249d8c00bfdc2f3858c194b337f",
+        "afterSha256": "c5fefdd8b4df2de61f736a76ce5447603b14d23bbe3cdf4156b70601003404fc",
+        "action": "remove-only-unused-top-level-schema-field",
+        "attribution": "Only exact corpus retirement or routing action; peer production/source move is not adopted."
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-corpus-validation"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+        "beforeSha256": "e9f0b7c4d39eddf16a1622c2d575e98734a686b51588eb8f8433d10f05fdad3f",
+        "afterSha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+        "action": "remove-only-corpus-validation",
+        "attribution": "Only exact corpus retirement or routing action; peer production/source move is not adopted."
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-test-corpus-schema"
+      ],
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+        "beforeSha256": "c2b6968ae4f3e1dacf64c6b488be1f165563dda9b84e7aedfbe7de4a77f0e5f9",
+        "afterSha256": null,
+        "action": "retire-test-corpus-schema",
+        "attribution": "Only exact corpus retirement or routing action; peer production/source move is not adopted."
+      }
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️component-target-capacity/🔣️.json",
       "ownershipEvidence": [
         "📥️current-plugin-pack-world-frontier-before.json"
@@ -13027,6 +13621,18 @@
       "observedCurrentSha256": "0030031862b39155d49bf55c5b65dae484167741159581d8183a4dcacdb2ad23"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "f4ea289b0df894e0c3fbefb34df28b854dbf827f0ffde3a93fdb4a39cc80a44f"
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -13109,6 +13715,18 @@
       "observedCurrent": "file",
       "role": "authored-source",
       "observedCurrentSha256": "b5b7cbcbdc66825992d16ef2daea0454ef1ad0a263c74fa50a2b625d87c9bf9d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct8-descriptor-domain-owned-preimages.json"
+      ],
+      "ownedActions": [
+        "bounded-descriptor-domain-contract-repair"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "693b155ed3c6c3d69044bbba85a7d25089d41b203186efa36a05ff7745c0b4e8"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
@@ -13406,6 +14024,62 @@
       "observedCurrentSha256": "3dbd8ea82b0e9ac62a33a4419d592e960ac15cbb07e429566fc5b0e899300967"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-descriptor-domain-owned-preimages.json"
+      ],
+      "ownedActions": [
+        "bounded-descriptor-domain-contract-repair"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "a2a662f30a7434a467eddc9a1d290d84246dad6e95abdd341b136eab122739d4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🧫️fixtures/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-descriptor-domain-owned-preimages.json"
+      ],
+      "ownedActions": [
+        "bounded-descriptor-domain-contract-repair"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "706add6c14b762846d63fc2df4c37a96fa5de88ba63a86892961e2fc00e19874"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-descriptor-domain-owned-preimages.json"
+      ],
+      "ownedActions": [
+        "bounded-descriptor-domain-contract-repair"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "e25829a763f79829b00b51ded56c0892494c02a8f39391d5c943346fbdb842fe"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "bind-two-runtime-policy-accesses-to-canonical-helper-identities"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "2027cb52899aae62200bef69bc590f601a1ba013d826328a0c8d5913e8e87e25",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "74f7f378f64be8f4744d805395db627f269df2084ea20803fbdbedea993f2f0e",
+        "afterSha256": "2027cb52899aae62200bef69bc590f601a1ba013d826328a0c8d5913e8e87e25",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json",
@@ -13422,6 +14096,18 @@
       "observedCurrentSha256": "aa64109fcea10212285259a48482dab75d844c7c88d688ef85bc7fa906830d9e"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-publication/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-descriptor-domain-owned-preimages.json"
+      ],
+      "ownedActions": [
+        "bounded-descriptor-domain-contract-repair"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "d50d656c31af9ccceb33944d386404bc2eef834076ae48d219d94d5bbd1622c9"
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -13434,16 +14120,80 @@
       "observedCurrentSha256": null
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
       "ownershipEvidence": [
-        "📥️complete-plugin-repository-file-ledger.json"
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
       ],
       "ownedActions": [
-        "prior-curated-owned-endpoint"
+        "verify-current-canonical-identities-and-unchanged-runtime-policy-laws"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "1959402491c564dd5a926e77f149827f0dcc9b1105a807f73c5e7da92d80bdd4",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "6eb282bf1e01ce66ff2a12d25e2089d8bc33535686f1cbf5a3e7b5dc06eb4d87",
+        "afterSha256": "1959402491c564dd5a926e77f149827f0dcc9b1105a807f73c5e7da92d80bdd4",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️complete-plugin-repository-file-ledger.json",
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "prior-curated-owned-endpoint",
+        "canonicalize-only-injected-catalog-domain-identity-and-reference-names"
       ],
       "observedCurrent": "file",
       "role": "authored-source",
-      "observedCurrentSha256": "0c328d650dae01c0b4dca647c697bf7734073e6578960001c4556eee394c3110"
+      "observedCurrentSha256": "2657c8dd983a7ee42b3ff49b6f1203d9bbefaf4b3cd8f758dd29efaa1c4e9e73",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "55c93542b1d02f7d5a5deca96924a520c1848f1da5ec178482da704d4d00f28a",
+        "afterSha256": "2657c8dd983a7ee42b3ff49b6f1203d9bbefaf4b3cd8f758dd29efaa1c4e9e73",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-descriptor-domain-owned-preimages.json",
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "bounded-descriptor-domain-contract-repair",
+        "bind-seven-canonical-injected-contract-exports-to-current-production-types"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "d009df574b9e399e5699981663a65e31c41b67eb3c03fc35155c2e14b179c4a7",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "30bd207f614758521ef31afc842518062f5dba1805af4b059948f2c25f216160",
+        "afterSha256": "d009df574b9e399e5699981663a65e31c41b67eb3c03fc35155c2e14b179c4a7",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "eebb931337601334c67d60c05ca31a0d61f28c7dcaf43121d4c5a5231490e47d"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🔣️codec/🧵️send/🧫️fixtures/🔣️.json",
@@ -13621,28 +14371,32 @@
       "ownershipEvidence": [
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-producer-neutral-red-before.json",
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-producer-implementation-before.json",
-        "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-current-package-owner-caller.json"
+        "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-current-package-owner-caller.json",
+        "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json"
       ],
       "ownedActions": [
-        "edit"
+        "edit",
+        "bounded-Hub-controlled-Cargo-consumption"
       ],
       "observedCurrent": "file",
       "role": "authored-source",
-      "observedCurrentSha256": "41e323567f8d22cc7b240cf820287426472f9783ada698234af0489827597cb7"
+      "observedCurrentSha256": "1e25a821f2dd4eef25306149bb414fc224c626dea29042dd6d767ec73f950dcc"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
       "ownershipEvidence": [
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-producer-neutral-red-before.json",
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-actual-cargo-custody-and-actor-capture-before.json",
-        "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-current-package-owner-tests.json"
+        "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-current-package-owner-tests.json",
+        "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json"
       ],
       "ownedActions": [
-        "edit"
+        "edit",
+        "bounded-Hub-controlled-Cargo-consumption"
       ],
       "observedCurrent": "file",
       "role": "authored-source",
-      "observedCurrentSha256": "2beca6ead588a6a3cfb09b9826d6172bf431efaa6d4e61f8861efbfc3b446e99"
+      "observedCurrentSha256": "35e1518bf94b9c921e8ed4c1cee7cec03d678059f4c16f642e3c870e14985ba7"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🧪️canonical-descriptor-pack/🟦️.ts",
@@ -13660,14 +14414,16 @@
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json",
       "ownershipEvidence": [
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-actual-cargo-custody-and-actor-capture-before.json",
-        "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-current-package-owner-tests.json"
+        "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-fresh-current-package-owner-tests.json",
+        "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json"
       ],
       "ownedActions": [
-        "edit"
+        "edit",
+        "bounded-Hub-controlled-Cargo-consumption"
       ],
       "observedCurrent": "file",
       "role": "authored-source",
-      "observedCurrentSha256": "8bdefd4bddd78a5cac288352fd1eb1f9e772b69f6f01ff1704e8bed08319039a"
+      "observedCurrentSha256": "86525d76d9792dadde9bd74c0a63577b11cd58aa6012b8334dd567240b20dffe"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/🔣️.json",
@@ -14762,6 +15518,90 @@
       "observedCurrentSha256": "c27e0e92e7013da4292a2180417725af689d4519d52e56763041fb7c7f5942ce"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "create-genuine-explicit-publication-instance"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "829cce29b8fa21b2633a70c87d4cd4ec2c980156f74aabf42d770a16a1ba78f9",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+        "beforeSha256": null,
+        "afterSha256": "829cce29b8fa21b2633a70c87d4cd4ec2c980156f74aabf42d770a16a1ba78f9",
+        "action": "create-genuine-explicit-publication-instance",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "create-runtime-owner-regression"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "b25573fadb52138bcbb5a83c0add09d207c25d2398b82698ae07e791deb77547",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+        "beforeSha256": null,
+        "afterSha256": "b25573fadb52138bcbb5a83c0add09d207c25d2398b82698ae07e791deb77547",
+        "action": "create-runtime-owner-regression",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "exact-three-semantic-target-commands"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "33e9d3a942c70b6c3e23bd0f278bebed3966d26131a9f77ec8411e5dcac02ce0",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+        "beforeSha256": "2125a76c37583bd9f4d3d607eb82284fa29c3d19a42572722611eaddba89f2df",
+        "afterSha256": "33e9d3a942c70b6c3e23bd0f278bebed3966d26131a9f77ec8411e5dcac02ce0",
+        "action": "exact-three-semantic-target-commands",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "canonical-semantic-session-owner-route"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "435b7e83ba9ad59f65b7f07eb24e9c47e3156e4d391dbf901843e9a31b651462",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "beforeSha256": "a414c3e7e386c2b6720d2454be9d50f50ed52faa8085f3b2abf55832049cca2f",
+        "afterSha256": "435b7e83ba9ad59f65b7f07eb24e9c47e3156e4d391dbf901843e9a31b651462",
+        "action": "canonical-semantic-session-owner-route",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts",
       "ownershipEvidence": [
         "📥️oct8-protected-publication-collection-placement-before.json",
@@ -14813,6 +15653,46 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "retire-whole-corpus-validation-and-admit-actual-production-owner"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "060a9d9502f755f96a3ed4978013117e2c2677a2fc1707ae92d9b20422db8324",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "67cde033bb74eb95131c9557b8c8a6dfb04af4c0ea6562d9065f924022823e9f",
+        "afterSha256": "060a9d9502f755f96a3ed4978013117e2c2677a2fc1707ae92d9b20422db8324",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🔐lease/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
+      ],
+      "ownedActions": [
+        "retire-exact-five-case-lease-corpus-schema"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "b631019a5e9baeaab2690925842bb782db23dbebd7c227622aab5418348c812c",
+        "afterSha256": null,
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🟦️.ts",
@@ -14915,6 +15795,34 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json",
+        "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration",
+        "bounded-Hub-controlled-Cargo-consumption"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "72819ef11f00bd4a410f578e22d10f9ff30d4b373c23f6c99286abb825c31baf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json",
+        "📥️oct8-hub-controlled-fresh-consumption-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration",
+        "bounded-Hub-controlled-Cargo-consumption"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "cc7968981d220eda0bac78d99d40d044b93b6125cb4ebcd10ce90917bc13142f"
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧬️schema/📋️owner-command-policy/🔣️.json",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -14925,6 +15833,38 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "remove-only-corpus-schema-assertions"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "1b5a48839ac4b23f64ab2a1ba34b1c95b25746dd26e942bd564ffad124334bfe",
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🧬️schema/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct8-post-session-four-corpora-before.json",
+        "📥️oct8-post-session-four-corpora-semantic-fresh-before.json",
+        "📥️oct8-post-session-four-corpora-relocated-before.json",
+        "📥️oct8-post-session-four-corpora-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "retire-corpus-authority"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "absent",
+      "observedCurrentSha256": null,
+      "boundedCurrentness": "narrow actual corpus consumer/schema retirement and authored-bit expected projection/locked argv oracle"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧬️schema/🔣️.json",
@@ -15014,6 +15954,39 @@
       "observedCurrentSha256": "b3bd553035de137479e8bca8cfea4d4e0e14749f1bbfa59d15717672ac9c90de"
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "7ffcf47a769a86b57d1f2b1ccdf67bed502e2d902fe409b871650fb967c4f856"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "ownershipEvidence": [
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
+      ],
+      "ownedActions": [
+        "sort-generator-entries-and-two-domain-input-arrays"
+      ],
+      "observedCurrent": "file",
+      "observedCurrentSha256": "11ee365788b1d5f0409117bf590e90d245cdacc1aac80fa5b397ea5807d61ed2",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "beforeSha256": "63921f59a26ed304dd373449fa6e193696525d5d9a1bc24b747a8c6b2a63b269",
+        "afterSha256": "11ee365788b1d5f0409117bf590e90d245cdacc1aac80fa5b397ea5807d61ed2",
+        "action": "sort-generator-entries-and-two-domain-input-arrays",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧬️schema/🔣️.json",
       "ownershipEvidence": [
         "📥️complete-plugin-repository-file-ledger.json"
@@ -15086,6 +16059,30 @@
       "observedCurrentSha256": null
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "d2897bb4e5d94db46ed7a99e2ecc3b00e1093d8829e965eac0ca0f4aa3c7b14c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "656c8f3fb5e7d4dd0a2139d99251f58a55b49299783cf06c494fa0c6cf245b4b"
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
       "ownershipEvidence": [
         "📥️current-plugin-oct8-extended-zzzzzzzzzzzzzzzzzzzzzzzzzzzzz-relay-canonical-manifest-owner-before.json"
@@ -15120,6 +16117,18 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "ownershipEvidence": [
+        "📥️oct8-native-route-owned-settled-endpoints.json"
+      ],
+      "ownedActions": [
+        "bounded-normal-native-route-integration"
+      ],
+      "observedCurrent": "file",
+      "role": "authored-source",
+      "observedCurrentSha256": "85a051368bffa0eb432360857554120d1d879036ffcf5903fd9aa9f0b67d08db"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🌳️kind-only-basename/🟦️.ts",
@@ -15228,6 +16237,26 @@
       "observedCurrent": "file",
       "role": "authored-source",
       "observedCurrentSha256": "4bb4be46ee73d8c074fcb7758374d4f2331c878bb82ee74003509763db87a8b6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct8-wgpu-third-corpus-before-edit.json",
+        "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+        "📓️oct8-wgpu-third-corpus-retirement.md"
+      ],
+      "ownedActions": [
+        "guard-entire-current-wgpu-test-tree-via-normal-taxonomy-inventory-before-consumer-import"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "735ecdacbbc06761a60ba0a18f25e722aa60165e2e7b6c0430f58ba81dd58220",
+      "boundedThirdCorpusAction": {
+        "beforeSha256": "338a2971d16de2df9ef0504a681e937c766c169613a7da2527a595b31d9bb8de",
+        "afterSha256": "735ecdacbbc06761a60ba0a18f25e722aa60165e2e7b6c0430f58ba81dd58220",
+        "ledger": "📥️oct8-wgpu-third-corpus-owned-endpoints.json",
+        "attribution": "Only exact named three source actions; preserved peer examples/harness/collaboration/other production APIs are not authored here."
+      }
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔐️pool-use-ownership/🟦️.ts",
@@ -16728,6 +17757,272 @@
       "observedCurrent": "absent",
       "role": "authored-source",
       "observedCurrentSha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "2639aaea9d09d240cd5867f0d78c32eda4ffbd5aca55c31de4d36c9c59496afa",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "c25961562278866ef67b9a0c8a4279882bd7b42e322fb04f477d25214d6a7a23",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "c575868b624217a29624621647e05b92129848ecea42737275e209c0e3b7ae33",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "7e319e2d8f8177b7473ace63cca5ea27ba01bb63997de7f276dfa66242b28a38",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "0e26e2b77a65f55e3d48b7a5bbf55a98406a3e6317f10a03fd10aba6ea985450",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "4d6ed4056b21dd7f6a30200844325f332f6e019d1d497f349a3185e6208bf572",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📚️members/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "0abcc59a0bc3bd5e2024884e769a7fbe1784be54671d51b1e48ed375dcade0e1",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json",
+        "📥️oct9-private-member-current-grant-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship.",
+        "actual five-field OneItem forwarding / current retired open four-demand closure; unrelated source preserved"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "20aab27e59acaf546a5f92b13413bd0f3b0c4875ea057c08a8d068da374ac88e",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "d8371919a6b326c4becb14e9e1c8f342d94bca26934b03e96812a2677e54d492",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json",
+        "📥️oct9-services-full-currency-current-endpoints.json",
+        "📥️oct9-private-member-current-grant-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship.",
+        "Services neutral law only; preserve other owner tests",
+        "private actual member grant source-neutral law only"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "a1768b02deff7cc2c1578a63594b41e20b88564f24154c344343d3cefcf97d2c",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "4b399563538e31b89bc2ed7169ee6f594711b3563b170eca5e937bdd589d7c57",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "55c5032c647e8e27f5e4f3e557952529b87bc1aed62c2fcec1d9a400c265ab53",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/🧪️tests/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-mounted-full-currency-current-partial-endpoints.json"
+      ],
+      "ownedActions": [
+        "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "8476f2f30e1279c66c172f9b022d9b72f6eecb408ea2b10a7d4ab39ca3f6df29",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-services-full-currency-current-endpoints.json"
+      ],
+      "ownedActions": [
+        "NativeIo close/demand API and actual original-capacity laws"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "ac4c330db854fc9a222fe5fc4a0c9a3a433c53098737297401e3689af9a5747c",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-services-full-currency-current-endpoints.json"
+      ],
+      "ownedActions": [
+        "Compute retained cleanup logical sections"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "299db4e2a05ae9276edd82e25c75e24b855257b35dd1fc72e60bffb745411d52",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-services-full-currency-current-endpoints.json"
+      ],
+      "ownedActions": [
+        "NativeIo close/demand API and actual original-capacity laws"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "1e8c281bd5e134353f6db390391fa28cc20542ee2f8bd9eec614154b88855774",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️component-unit/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-services-full-currency-current-endpoints.json"
+      ],
+      "ownedActions": [
+        "specific Services constructor/close test laws"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "609a8895d6b5cba9f3e6e5e906a4fb6c5bbdbc697fb033a781ee88c3e5fcc769",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "ownershipEvidence": [
+        "📥️oct9-services-full-currency-current-endpoints.json"
+      ],
+      "ownedActions": [
+        "Services existing Value domain dependency"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "32648d3c2dddb7b7c01201ed4d561d9c4308877edc0d96d3bf246987646daeba",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🧪️tests/🧫️fixtures/🔣️.json",
+      "ownershipEvidence": [
+        "📥️oct9-services-full-currency-current-endpoints.json"
+      ],
+      "ownedActions": [
+        "NativeIo close/demand API and actual original-capacity laws"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "a04d60028a74a4e5dc2529eb371fb43187e294a6fda648152866f8e967694cf0",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "ownershipEvidence": [
+        "📥️oct9-private-member-current-grant-endpoints.json"
+      ],
+      "ownedActions": [
+        "actual five-field OneItem forwarding / current retired open four-demand closure; unrelated source preserved"
+      ],
+      "role": "authored-source",
+      "observedCurrent": "file",
+      "observedCurrentSha256": "14b3aa33e74a817d3b9973de30ffd5a616d3441ae31f3f4f194534b62edd2acc",
+      "boundedCurrentness": "New narrow authored actions only; source integration partial and not frozen. Physical/compiler/runtime proof remains explicitly pending."
     }
   ],
   "ticketInputEndpoints": [
@@ -16753,14 +18048,26 @@
         "📥️oct8-plugin-composition-helper-mount-before.json",
         "📥️oct8-plugin-facet-focused-catalog-owner-before.json",
         "📥️oct8-plugin-facet-integrity-json-owner-before.json",
-        "📥️oct8-plugin-facet-mixed-helper-mount-before.json"
+        "📥️oct8-plugin-facet-mixed-helper-mount-before.json",
+        "📥️oct8-descriptor-domain-owned-preimages.json",
+        "📥️oct8-lease-corpus-and-injected-identity-before.json",
+        "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "📓️oct8-lease-corpus-injected-identity-settlement.md"
       ],
       "ownedActions": [
-        "edit"
+        "edit",
+        "bounded-descriptor-domain-contract-repair",
+        "register-bounded-identity-projection-and-current-single-inventory-oracles"
       ],
       "observedCurrent": "file",
       "role": "retained-ticket-input",
-      "observedCurrentSha256": "9af01032fa499fa69dd7beaebd77b2a497ee1440e6981ca32f227bf6ddbfc854"
+      "observedCurrentSha256": "70c0f7cf394c5c13935bd04ad219a43b584e5f75c557f811fd75d76a2e2c03db",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-lease-corpus-injected-identity-owned-endpoints.json",
+        "beforeSha256": "063b5b2864ba822c7f9848cd39a4e20909bb4c913c30d9b8c7fffd9f7509c46f",
+        "afterSha256": "70c0f7cf394c5c13935bd04ad219a43b584e5f75c557f811fd75d76a2e2c03db",
+        "attribution": "Only the exact named identity/ref/type/test action; prior or peer payload rules are not attributed by this whole-file observation."
+      }
     },
     {
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
@@ -16777,14 +18084,33 @@
     {
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
       "ownershipEvidence": [
-        "📥️current-plugin-nx-root-handoff-before.json"
+        "📥️current-plugin-nx-root-handoff-before.json",
+        "📥️oct8-native-route-owned-settled-endpoints.json",
+        "📥️oct8-mounted-adapter-owned-endpoints.json",
+        "📥️oct8-post-corpus-three-before.json",
+        "📥️oct8-post-corpus-three-owned-endpoints.json",
+        "📥️oct8-session-owner-extraction-before.json",
+        "📥️oct8-session-owner-fresh-before-edit.json",
+        "📥️oct8-session-owner-extraction-owned-endpoints.json"
       ],
       "ownedActions": [
-        "edit"
+        "edit",
+        "bounded-normal-native-route-integration",
+        "forward-genuine-composition-and-reuse-registered-neutral-facet",
+        "register-bounded-current-physical-collection-and-original-neutral-source-facet",
+        "canonical-semantic-session-owner-route"
       ],
       "observedCurrent": "file",
       "role": "retained-ticket-input",
-      "observedCurrentSha256": "e7bacfb8cfb3d96c836a8983ac026dbd6efe87481643ed2308646d27581789c2"
+      "observedCurrentSha256": "bf14d82f0e7036349cb06f889352863910297f83e794532920be4de52b28a0d4",
+      "boundedCurrentAction": {
+        "ledger": "📥️oct8-session-owner-extraction-owned-endpoints.json",
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+        "beforeSha256": "acb2f8dc719fca9c3878e7fd243f90ad388f16e6adf2560f6994835edc6e7a4b",
+        "afterSha256": "bf14d82f0e7036349cb06f889352863910297f83e794532920be4de52b28a0d4",
+        "action": "canonical-semantic-session-owner-route",
+        "attribution": "Exact action only; peer text preserved without authorship."
+      }
     }
   ],
   "excludedObservationInputs": [
@@ -16792,10 +18118,10 @@
     "📥️current-plugin-concurrent-publication-observation.json"
   ],
   "counts": {
-    "authoredEndpoints": 1383,
+    "authoredEndpoints": 1460,
     "ticketInputEndpoints": 4,
-    "currentAuthoredFiles": 622,
-    "absentAuthoredEndpoints": 761
+    "currentAuthoredFiles": 671,
+    "absentAuthoredEndpoints": 789
   },
   "retainedHistoricalPathCorrections": [
     {

@@ -3,6 +3,7 @@
 //! weather-file-epw-data-dictionary.html — see `…/schema/snapshot` module doc for the full
 //! rationale) plus composition/registration. 🦑 Codec + registration dissolved out of the former
 //! `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
+use crate::apply_mutation;
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT, STDIO_EPW_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
@@ -258,7 +259,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::energyplus::subsets::any::schema::diff::EpwDiff;
-    use crate::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation,EpwMutation};
+    use crate::standards::energyplus::subsets::any::schema::mutations::{EpwMutation};
 
     use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -285,7 +286,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<EpwSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_epw_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

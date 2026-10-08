@@ -1,0 +1,23 @@
+{
+  "artifact": null,
+  "domain": null,
+  "fasteners": null,
+  "kindCompatibility": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": {
+          "source": "grip-kind-b",
+          "target": "grip-kind-c"
+        },
+        "index": 1
+      }
+    ]
+  },
+  "meta": null,
+  "parts": null,
+  "schema": null,
+  "targetVolumes": null
+}

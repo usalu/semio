@@ -25,7 +25,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetVertex {
         let Self { index, vertex } = self;
         protocol::MutationOutcome::new({
             let old = base.vertices.get(*index).cloned().unwrap_or_default();
-            diff_set_vertex(*index, vertex_diff_between(&old, vertex))
+            diff_set_vertex(*index, vertex_field_changes(&old, vertex))
         })
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {

@@ -3,7 +3,7 @@
 //! triple — removed base indices, modified rows (a sparse per-row diff) and added rows with their final position — while the
 //! single optional `properties` CHILD slot carries its replacement (`Some(None)` clears it). No whole-list slot anywhere.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, between_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
 use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitSnapshot, SemioKitType};
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
@@ -39,9 +39,6 @@ impl IndexedRow<SemioKitType> for SemioKitTypeDiff {
     }
     fn row_is_empty(&self) -> bool {
         self.name.is_none() && self.category.is_none()
-    }
-    fn between_row(base: &SemioKitType, other: &SemioKitType) -> Self {
-        Self { name: (base.name != other.name).then(|| other.name.clone()), category: (base.category != other.category).then(|| other.category.clone()) }
     }
 }
 
@@ -83,13 +80,6 @@ impl IndexedRow<SemioKitDesign> for SemioKitDesignDiff {
     fn row_is_empty(&self) -> bool {
         self.name.is_none() && self.pieces.is_none() && self.connections.is_none()
     }
-    fn between_row(base: &SemioKitDesign, other: &SemioKitDesign) -> Self {
-        Self {
-            name: (base.name != other.name).then(|| other.name.clone()),
-            pieces: (base.pieces != other.pieces).then(|| other.pieces.clone()),
-            connections: (base.connections != other.connections).then(|| other.connections.clone()),
-        }
-    }
 }
 
 /// 🔗️ Sparse diff of one representation link: only its pin ever changes in place.
@@ -114,9 +104,6 @@ impl IndexedRow<store::ArtifactLink> for SemioKitLinkDiff {
     }
     fn row_is_empty(&self) -> bool {
         self.pin.is_none()
-    }
-    fn between_row(base: &store::ArtifactLink, other: &store::ArtifactLink) -> Self {
-        Self { pin: (base.pin != other.pin).then(|| other.pin.clone()) }
     }
 }
 //#endregion 🔖️RowDiffs
@@ -203,20 +190,6 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
 /// keyed rows (the `properties` slot restores the base child); `between` is the positional sync/import delta, never used by
 /// mutation leaves.
 impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
-    fn between(base: &SemioKitSnapshot, other: &SemioKitSnapshot) -> Self {
-        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-        fn slot<D, T>(triple: IndexedTripleDiff<D, T>) -> Option<IndexedTripleDiff<D, T>> {
-            (!triple.is_unchanged()).then_some(triple)
-        }
-        SemioKitDiff {
-            types: slot(between_indexed_rows(&base.types, &other.types)),
-            designs: slot(between_indexed_rows(&base.designs, &other.designs)),
-            objects: slot(between_indexed_rows(&base.objects, &other.objects)),
-            models: slot(between_indexed_rows(&base.models, &other.models)),
-            properties: (base.properties != other.properties).then(|| other.properties.clone()),
-            representations: slot(between_indexed_rows(&base.representations, &other.representations)),
-        }
-    }
     fn inverse(&self, base: &SemioKitSnapshot) -> Self {
         SemioKitDiff {
             types: self.types.as_ref().map(|d| inverse_indexed_rows(d, &base.types)),

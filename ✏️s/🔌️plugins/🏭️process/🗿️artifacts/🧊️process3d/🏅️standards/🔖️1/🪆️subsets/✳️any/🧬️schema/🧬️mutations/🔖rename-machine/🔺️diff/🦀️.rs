@@ -14,6 +14,6 @@ pub fn diff(payload: &super::RenameMachine, base: &Process3dSnapshot) -> protoco
     if existing.label == payload.new_label {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" is already named \"{}\".", payload.id, payload.new_label));
     }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { patched: vec![Process3dMachinePatch { id: payload.id.clone(), label: Some(payload.new_label.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta::modification(payload.id.clone(), Process3dMachinePatch { label: Some(payload.new_label.clone()), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔖️Diff

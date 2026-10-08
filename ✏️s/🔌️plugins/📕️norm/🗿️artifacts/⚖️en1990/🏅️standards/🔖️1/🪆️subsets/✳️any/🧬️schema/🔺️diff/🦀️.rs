@@ -2,71 +2,94 @@
 
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
-use semio_s_artifact_norm_contract::{norm_list_delta, norm_row_patch};
 
 use crate::En1990Snapshot;
 use crate::document::AnnexChoice;
 use crate::MemberEffect;
 
 //#region 🔖️Rows
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `PermanentAction`.
     pub En1990PermanentPatch of crate::PermanentAction { set { kind: String, gk: f64 } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `PermanentAction` list.
-    pub En1990PermanentDelta { addition: En1990PermanentAddition, modification: En1990PermanentModification, row: crate::PermanentAction, patch: En1990PermanentPatch, key: id }
+    pub En1990PermanentDelta { removal: En1990PermanentRemoval, insertion: En1990PermanentInsertion, relocation: En1990PermanentRelocation, modification: En1990PermanentModification, row: crate::PermanentAction, patch: En1990PermanentPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `VariableAction`.
     pub En1990VariablePatch of crate::VariableAction { set { category: String, qk: f64 } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `VariableAction` list.
-    pub En1990VariableDelta { addition: En1990VariableAddition, modification: En1990VariableModification, row: crate::VariableAction, patch: En1990VariablePatch, key: id }
+    pub En1990VariableDelta { removal: En1990VariableRemoval, insertion: En1990VariableInsertion, relocation: En1990VariableRelocation, modification: En1990VariableModification, row: crate::VariableAction, patch: En1990VariablePatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `AccidentalAction`.
     pub En1990AccidentalPatch of crate::AccidentalAction { set { ad: f64 } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `AccidentalAction` list.
-    pub En1990AccidentalDelta { addition: En1990AccidentalAddition, modification: En1990AccidentalModification, row: crate::AccidentalAction, patch: En1990AccidentalPatch, key: id }
+    pub En1990AccidentalDelta { removal: En1990AccidentalRemoval, insertion: En1990AccidentalInsertion, relocation: En1990AccidentalRelocation, modification: En1990AccidentalModification, row: crate::AccidentalAction, patch: En1990AccidentalPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SeismicAction`.
     pub En1990SeismicPatch of crate::SeismicAction { set { a_ek: f64, importance_class: crate::ImportanceClass } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SeismicAction` list.
-    pub En1990SeismicDelta { addition: En1990SeismicAddition, modification: En1990SeismicModification, row: crate::SeismicAction, patch: En1990SeismicPatch, key: id }
+    pub En1990SeismicDelta { removal: En1990SeismicRemoval, insertion: En1990SeismicInsertion, relocation: En1990SeismicRelocation, modification: En1990SeismicModification, row: crate::SeismicAction, patch: En1990SeismicPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `Member`.
     pub En1990MemberPatch of crate::Member { set { label_en: String, label_de: String, rd_str: f64, rd_geo: f64, rd_equ_stab: f64, rd_equ_destab: f64, rd_fat: f64, span: f64, deflection_w: f64, deflection_limit_ratio: f64, vibration_frequency: f64, vibration_frequency_min: f64 } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `Member` list.
-    pub En1990MemberDelta { addition: En1990MemberAddition, modification: En1990MemberModification, row: crate::Member, patch: En1990MemberPatch, key: id }
+    pub En1990MemberDelta { removal: En1990MemberRemoval, insertion: En1990MemberInsertion, relocation: En1990MemberRelocation, modification: En1990MemberModification, row: crate::Member, patch: En1990MemberPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `BridgeSls`.
     pub En1990BridgeSlsPatch of crate::BridgeSls { set { member_id: String, deck_acceleration: f64, deck_acceleration_limit: f64, deck_twist: f64, deck_twist_limit: f64, bridge_deflection: f64, bridge_deflection_limit: f64 } }
 }
 
-norm_list_delta! {
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `BridgeSls` list.
-    pub En1990BridgeSlsDelta { addition: En1990BridgeSlsAddition, modification: En1990BridgeSlsModification, row: crate::BridgeSls, patch: En1990BridgeSlsPatch, key: id }
+    pub En1990BridgeSlsDelta { removal: En1990BridgeSlsRemoval, insertion: En1990BridgeSlsInsertion, relocation: En1990BridgeSlsRelocation, modification: En1990BridgeSlsModification, row: crate::BridgeSls, patch: En1990BridgeSlsPatch, key: id }
 }
 //#endregion 🔖️Rows
 
@@ -188,24 +211,32 @@ fn apply_rows<E: En1990RowEdit>(rows: &mut Vec<E::Row>, edits: &[E]) -> Result<(
 }
 
 fn invert_rows<E: En1990RowEdit>(base: &[E::Row], edits: &[E]) -> Vec<E> {
-    let mut rows = base.to_vec();
+    let mut rows: Vec<std::borrow::Cow<'_, E::Row>> = base.iter().map(std::borrow::Cow::Borrowed).collect();
     let mut inverse = Vec::with_capacity(edits.len());
     for edit in edits {
         let step = match edit.view() {
-            En1990RowView::Insert(index, row) => E::remove(index, E::key(row)),
-            En1990RowView::Remove(index, _) => match rows.get(index) {
-                Some(old) => E::insert(index, old.clone()),
-                None => break,
+            En1990RowView::Insert(index, row) if index <= rows.len() => {
+                rows.insert(index, std::borrow::Cow::Owned(row.clone()));
+                E::remove(index, E::key(row))
+            }
+            En1990RowView::Remove(index, id) => match rows.get(index) {
+                Some(old) if E::key(old) == id => {
+                    let step = E::insert(index, old.clone().into_owned());
+                    rows.remove(index);
+                    step
+                }
+                _ => break,
             },
-            En1990RowView::Replace(index, _, row) => match rows.get(index) {
-                Some(old) => E::replace(index, E::key(row), old.clone()),
-                None => break,
+            En1990RowView::Replace(index, id, row) => match rows.get(index) {
+                Some(old) if E::key(old) == id => {
+                    let step = E::replace(index, E::key(row), old.clone().into_owned());
+                    rows[index] = std::borrow::Cow::Owned(row.clone());
+                    step
+                }
+                _ => break,
             },
-            En1990RowView::Malformed(_) => break,
+            En1990RowView::Insert(..) | En1990RowView::Malformed(_) => break,
         };
-        if apply_rows::<E>(&mut rows, std::slice::from_ref(edit)).is_err() {
-            break;
-        }
         inverse.push(step);
     }
     inverse.reverse();
@@ -251,39 +282,6 @@ fn positional_rows<E: En1990RowEdit>(base: &[E::Row], other: &[E::Row]) -> Vec<E
     removed.chain(inserted).collect()
 }
 
-fn rows_between<E: En1990RowEdit>(base: &[E::Row], other: &[E::Row]) -> Vec<E> {
-    let mut rows = base.to_vec();
-    let mut edits = Vec::new();
-    for index in (0..rows.len()).rev() {
-        if !other.iter().any(|row| E::key(row) == E::key(&rows[index])) {
-            edits.push(E::remove(index, E::key(&rows[index])));
-            rows.remove(index);
-        }
-    }
-    for (index, target) in other.iter().enumerate() {
-        match rows.get(index) {
-            Some(row) if E::key(row) == E::key(target) => {
-                if row != target {
-                    edits.push(E::replace(index, E::key(target), target.clone()));
-                    rows[index] = target.clone();
-                }
-            }
-            _ => {
-                if let Some(at) = rows.iter().position(|row| E::key(row) == E::key(target)) {
-                    edits.push(E::remove(at, E::key(target)));
-                    rows.remove(at);
-                }
-                edits.push(E::insert(index, target.clone()));
-                rows.insert(index.min(rows.len()), target.clone());
-            }
-        }
-    }
-    let mut check = base.to_vec();
-    if apply_rows::<E>(&mut check, &edits).is_ok() && check == other {
-        return edits;
-    }
-    positional_rows::<E>(base, other)
-}
 //#endregion 🔖️RowEdits
 
 /// 🧾️ One ordered-row edit of `effects`.
@@ -328,7 +326,7 @@ impl En1990RowEdit for En1990EffectEdit {
 }
 
 impl MutationDiff<En1990Snapshot> for En1990Diff {
-    fn apply(&self, base: &En1990Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1990Snapshot> {
+    fn apply(&self, base: &En1990Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1990Snapshot> {
         let mut next = base.clone();
         if let Some(value) = self.annex {
             next.annex = value;
@@ -369,12 +367,12 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
         if let Some(value) = self.beta_computed {
             next.beta_computed = value;
         }
-        next.permanents = self.permanents.commit_onto(&base.permanents).map_err(|error| error.under(["permanents"]))?;
-        next.variables = self.variables.commit_onto(&base.variables).map_err(|error| error.under(["variables"]))?;
-        next.accidentals = self.accidentals.commit_onto(&base.accidentals).map_err(|error| error.under(["accidentals"]))?;
-        next.seismics = self.seismics.commit_onto(&base.seismics).map_err(|error| error.under(["seismics"]))?;
-        next.members = self.members.commit_onto(&base.members).map_err(|error| error.under(["members"]))?;
-        next.bridge_sls = self.bridge_sls.commit_onto(&base.bridge_sls).map_err(|error| error.under(["bridgeSls"]))?;
+        next.permanents = self.permanents.commit_onto(&base.permanents, capability).map_err(|error| error.under(["permanents"]))?;
+        next.variables = self.variables.commit_onto(&base.variables, capability).map_err(|error| error.under(["variables"]))?;
+        next.accidentals = self.accidentals.commit_onto(&base.accidentals, capability).map_err(|error| error.under(["accidentals"]))?;
+        next.seismics = self.seismics.commit_onto(&base.seismics, capability).map_err(|error| error.under(["seismics"]))?;
+        next.members = self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
+        next.bridge_sls = self.bridge_sls.commit_onto(&base.bridge_sls, capability).map_err(|error| error.under(["bridgeSls"]))?;
         apply_rows::<En1990EffectEdit>(&mut next.effects, &self.effects).map_err(|error| error.under(["effects"]))?;
         Ok(next)
     }
@@ -454,31 +452,6 @@ impl DiffAlgebra<En1990Snapshot> for En1990Diff {
             members: self.members.inverse(&base.members),
             bridge_sls: self.bridge_sls.inverse(&base.bridge_sls),
             effects: invert_rows::<En1990EffectEdit>(&base.effects, &self.effects),
-        }
-    }
-
-    fn between(base: &En1990Snapshot, other: &En1990Snapshot) -> Self {
-        Self {
-            annex: (base.annex != other.annex).then_some(other.annex),
-            project_id: (base.project_id != other.project_id).then(|| other.project_id.clone()),
-            structure_kind: (base.structure_kind != other.structure_kind).then(|| other.structure_kind.clone()),
-            altitude_m: (base.altitude_m != other.altitude_m).then_some(other.altitude_m),
-            consequence_class: (base.consequence_class != other.consequence_class).then_some(other.consequence_class),
-            reliability_class: (base.reliability_class != other.reliability_class).then_some(other.reliability_class),
-            design_working_life_category: (base.design_working_life_category != other.design_working_life_category).then_some(other.design_working_life_category),
-            design_working_life_years: (base.design_working_life_years != other.design_working_life_years).then_some(other.design_working_life_years),
-            reference_period_years: (base.reference_period_years != other.reference_period_years).then_some(other.reference_period_years),
-            supervision_level: (base.supervision_level != other.supervision_level).then(|| other.supervision_level.clone()),
-            inspection_level: (base.inspection_level != other.inspection_level).then(|| other.inspection_level.clone()),
-            k_fi_declared: (base.k_fi_declared != other.k_fi_declared).then_some(other.k_fi_declared),
-            beta_computed: (base.beta_computed != other.beta_computed).then_some(other.beta_computed),
-            permanents: En1990PermanentDelta::between(&base.permanents, &other.permanents),
-            variables: En1990VariableDelta::between(&base.variables, &other.variables),
-            accidentals: En1990AccidentalDelta::between(&base.accidentals, &other.accidentals),
-            seismics: En1990SeismicDelta::between(&base.seismics, &other.seismics),
-            members: En1990MemberDelta::between(&base.members, &other.members),
-            bridge_sls: En1990BridgeSlsDelta::between(&base.bridge_sls, &other.bridge_sls),
-            effects: rows_between::<En1990EffectEdit>(&base.effects, &other.effects),
         }
     }
 

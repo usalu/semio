@@ -551,7 +551,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(parsed, snapshot);
     assert_exact_export(&parsed, &exact_bytes).await;
 
-    let self_diff = PptxDiff::between(&snapshot, &snapshot);
+    let self_diff = PptxDiff::default();
     assert!(self_diff.is_empty());
     assert_exact_export(&protocol::apply_diff(&self_diff, &snapshot).unwrap(), &exact_bytes).await;
 
@@ -586,16 +586,6 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(protocol::apply_diff(&absorbed, &snapshot).unwrap(), snapshot);
     assert_exact_export(&restored, &exact_bytes).await;
     assert_exact_export(&protocol::apply_diff(&absorbed, &snapshot).unwrap(), &exact_bytes).await;
-
-    let mut without_xml_parts = snapshot.clone();
-    without_xml_parts.xml_parts.clear();
-    let xml_parts_diff = PptxDiff::between(&without_xml_parts, &snapshot);
-    let printed_diff = xml_parts_diff.print_diff();
-    let parsed_diff = PptxDiff::parse_diff(&printed_diff).expect("parse logical XML parts diff");
-    assert_exact_export(&protocol::apply_diff(&parsed_diff, &without_xml_parts).unwrap(), &exact_bytes).await;
-    let encoded_diff = xml_parts_diff.encode_diff().expect("encode logical XML parts diff");
-    let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
-    assert_exact_export(&protocol::apply_diff(&decoded_diff, &without_xml_parts).unwrap(), &exact_bytes).await;
 
     let part = &snapshot.xml_parts[0];
     let replace = PptxMutation::ReplaceXmlNode(crate::schema::mutations::replace_xml_node::ReplaceXmlNode {

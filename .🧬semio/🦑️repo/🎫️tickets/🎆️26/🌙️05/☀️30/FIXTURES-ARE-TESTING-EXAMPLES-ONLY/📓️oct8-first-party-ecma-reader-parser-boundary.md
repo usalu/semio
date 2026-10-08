@@ -1,0 +1,7 @@
+# First Party ECMA Reader Parser Boundary
+
+Current compiler syntax tree exposes Rust token APIs, but no ECMA parser/token API was found. Existing reusable lexical logic is discovery ecmaRouteTokens at 10615. Its token type at 10516 contains kind/text/optional template expressions; it has no original start/end offsets. It skips comments/hashbang and retains raw string/regex/template literal text. Private route AST helpers are routing-specific rather than general static resource-binding APIs.
+
+Runtime runtimeEcmaReferences imports ecmaRouteTokens from parent discovery at line 5. Importing runtime back into discovery for joined reader analysis creates a parent cycle. A clean defining dependency is a genuine compiler syntax ECMA owner exposing first-party tokens with kind/text/start/end UTF16 source offsets. Extract and preserve current lexical semantics, then import that lower owner from both discovery and runtime. Do not reconstruct offsets with indexOf on repeated token text or rewrite source before offsets are captured.
+
+Static import/readFileSync/new URL/JSON.parse/compile binding resolution needs a bounded token structure parser over that defining API; route-private statements are not evidence that such a reusable helper already exists. Resolve named imports by imported symbol and local alias, distinguish literal entire-binding arguments from member projections, retain dynamic unresolved states. Independent TypeScript AST oracle belongs only in tests. No source edits/compiler run.

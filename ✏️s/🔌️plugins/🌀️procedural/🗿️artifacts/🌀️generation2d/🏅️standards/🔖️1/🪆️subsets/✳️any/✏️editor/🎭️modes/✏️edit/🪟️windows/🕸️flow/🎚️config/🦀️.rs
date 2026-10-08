@@ -47,7 +47,6 @@ semio_framework_os_kernel::config_record! {
     owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow",
     payload_schema: "procedural.generation2d.mainwindowconfig",
     emoji: "🎚️",
-    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Generation2d Main Window Configuration",
     fields: {
         viewport: semio_framework_os_kernel::Viewport2d => SetViewport "set-viewport",
     },
@@ -84,9 +83,9 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
     snapshot.filter(|snapshot| snapshot.window_kind_id() == super::GENERATION2D_PLAY_WINDOW_MAIN).and_then(|snapshot| snapshot.get::<Generation2dMainWindowConfigOwner>()).cloned().unwrap_or_default()
 }
 
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Generation2dMainWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &Generation2dMainWindowConfig, config: Generation2dMainWindowConfig) -> Result<Vec<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("generation2d-main-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("generation2d-main-window-stale"))?;
     if kind != super::GENERATION2D_PLAY_WINDOW_MAIN { return Err(semio_framework_plugin::Fault::from("generation2d-main-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Generation2dMainWindowConfigOwner>(id, Generation2dMainWindowConfigMutation::Snapshot { config: Box::new(config) }))
+    Ok(Generation2dMainWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<Generation2dMainWindowConfigOwner>(id, mutation)).collect())
 }

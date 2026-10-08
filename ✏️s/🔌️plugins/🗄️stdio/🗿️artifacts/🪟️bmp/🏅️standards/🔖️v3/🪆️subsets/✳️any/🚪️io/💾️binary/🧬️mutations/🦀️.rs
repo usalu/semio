@@ -12,7 +12,7 @@ pub struct Entry {
     pub encode: BmpMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
-pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::binary::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_direct_region::CODEC];
+pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::binary::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_direct_region::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::replace_image::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::replace_samples::CODEC];
 //#endregion Registry
 
 //#region Framing
@@ -38,3 +38,9 @@ pub mod paint_direct_region;
 
 #[path = "🎨️paint-indexed-region/🦀️.rs"]
 pub mod paint_indexed_region;
+
+#[path = "🔄️replace-image/🦀️.rs"]
+pub mod replace_image;
+
+#[path = "🧩️replace-samples/🦀️.rs"]
+pub mod replace_samples;

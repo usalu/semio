@@ -3,12 +3,15 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [],
     "removed": [
-      "group-a"
+      {
+        "id": "group-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "assets": null,
   "artboard": null

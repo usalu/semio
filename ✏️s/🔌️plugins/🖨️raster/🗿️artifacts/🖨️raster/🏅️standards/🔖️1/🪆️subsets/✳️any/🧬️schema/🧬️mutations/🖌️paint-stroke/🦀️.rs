@@ -7,7 +7,7 @@
 //! else shows it. The canvas — resolving the target image, filing a repainted one and restoring it — is shared with
 //! `🪣️fill-region`. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
-use crate::diff::{RasterAssetsDelta, RasterDiff, RasterLayerPatchEntry, RasterLayersDelta};
+use crate::diff::{RasterAssetsDelta, RasterDiff, RasterLayerModification, RasterLayersDelta, RasterPixelRegion};
 use crate::standards::v1::subsets::any::schema::semio_image_from_rgba8;
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, layer_protection};
 use crate::{RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterMaskContent, RasterMutation, RasterPixelContent, RasterSnapshot, RasterTransform, SemioImageSnapshot};
@@ -44,8 +44,10 @@ pub struct RasterBrush {
 
 /// ✂️ One run of a pixel selection the stroke is clipped to: `length` pixels from row-major pixel index `start`, each
 /// covered `coverage` out of 255.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, schema::ArtifactSchema)]
 #[value(rename_all = "camelCase")]
+#[dsl(keyword="selection-span")]
+#[artifact_schema(id="s.raster.raster.selectionspan")]
 pub struct RasterSelectionSpan {
     pub start: u32,
     pub length: u32,
@@ -286,6 +288,79 @@ fn released(base: &RasterSnapshot, key: &str, layer_id: &str, target: &str) -> b
 }
 //#endregion 🎨️Raster
 
+//#region 🔖️Region
+/// 🧱️ `width × height` RGBA8 samples at `(x, y)` of a row-major `pixels` buffer `image_width` pixels wide; `None` when the
+/// rectangle leaves the buffer.
+pub(crate) fn rect_samples(pixels: &[u8], image_width: u32, x: u32, y: u32, width: u32, height: u32) -> Option<Vec<u8>> {
+    let row_bytes = (width as usize) * 4;
+    let mut samples = Vec::with_capacity(row_bytes * height as usize);
+    for row in 0..height as usize {
+        let at = ((y as usize + row) * image_width as usize + x as usize) * 4;
+        samples.extend_from_slice(pixels.get(at..at + row_bytes)?);
+    }
+    Some(samples)
+}
+
+/// 🧱️ The smallest rectangle holding every pixel that differs between `before` and `after` (same extent), with `after`'s
+/// samples; `None` when nothing differs.
+fn changed_region(image_width: u32, before: &[u8], after: &[u8], layer_id: &str, target: &str) -> Option<RasterPixelRegion> {
+    if before.len() != after.len() || image_width == 0 {
+        return None;
+    }
+    let width = image_width as usize;
+    let mut bounds: Option<(usize, usize, usize, usize)> = None;
+    for (index, (old, new)) in before.chunks_exact(4).zip(after.chunks_exact(4)).enumerate() {
+        if old != new {
+            let (x, y) = (index % width, index / width);
+            bounds = Some(match bounds {
+                Some((left, top, right, bottom)) => (left.min(x), top.min(y), right.max(x), bottom.max(y)),
+                None => (x, y, x, y),
+            });
+        }
+    }
+    let (left, top, right, bottom) = bounds?;
+    let (x, y, region_width, region_height) = (left as u32, top as u32, (right - left + 1) as u32, (bottom - top + 1) as u32);
+    Some(RasterPixelRegion { layer_id: layer_id.to_string(), target: target.to_string(), x, y, width: region_width, height: region_height, samples: rect_samples(after, image_width, x, y, region_width, region_height)? })
+}
+
+/// 🔺️ The diff a repaint makes: one pixel region (the changed rectangle with its new samples) when the layer already shows an
+/// image, otherwise the first image filed whole (`painted_diff`).
+pub(crate) fn repainted_diff(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str) -> protocol::MutationOutcome<RasterDiff> {
+    if painted.canvas.previous.is_some() {
+        if let (Some(before), Some(after)) = (painted.canvas.source.frames.first(), painted.asset.frames.first()) {
+            if let Some(region) = changed_region(painted.canvas.source.width, &before.rgba8, &after.rgba8, layer_id, target) {
+                return protocol::MutationOutcome::new(RasterDiff { pixels: vec![region], ..Default::default() });
+            }
+        }
+    }
+    painted_diff(painted, base, layer_id, target, None)
+}
+
+/// ↩️ The region that restores the rectangle `region` writes, read from `base`'s own samples; `None` when `base` shows no
+/// image there (the layer's pointer and pool are then restored by the whole-image inverse).
+pub(crate) fn inverse_pixel_region(region: &RasterPixelRegion, base: &RasterSnapshot) -> Option<RasterPixelRegion> {
+    let target = canvas(&region.layer_id, &region.target, base).ok()?;
+    target.previous.as_ref()?;
+    let frame = target.source.frames.first()?;
+    Some(RasterPixelRegion { samples: rect_samples(&frame.rgba8, target.source.width, region.x, region.y, region.width, region.height)?, ..region.clone() })
+}
+
+/// ↩️ The steps that undo a repaint: one `write-pixel-region` with `base`'s samples of the changed rectangle when the layer
+/// already showed an image, otherwise the whole-image restoration (`painted_inverse`).
+pub(crate) fn repainted_inverse(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    if painted.canvas.previous.is_some() {
+        if let (Some(before), Some(after)) = (painted.canvas.source.frames.first(), painted.asset.frames.first()) {
+            if let Some(region) = changed_region(painted.canvas.source.width, &before.rgba8, &after.rgba8, layer_id, target) {
+                if let Some(restore) = inverse_pixel_region(&region, base) {
+                    return Ok(vec![RasterMutation::WritePixelRegion(crate::mutations::write_pixel_region::WritePixelRegion { layer_id: restore.layer_id, target: restore.target, x: restore.x, y: restore.y, width: restore.width, height: restore.height, samples: restore.samples })]);
+                }
+            }
+        }
+    }
+    painted_inverse(painted, base, layer_id, target, None)
+}
+//#endregion 🔖️Region
+
 //#region 🔖️Diff
 /// 🔺️ The stroke's diff on `base`: the painted image filed under its content key, the layer (or its mask) pointed at
 /// it, the replaced image released when nothing else shows it.
@@ -294,7 +369,7 @@ pub fn diff(payload: &PaintStroke, base: &RasterSnapshot) -> protocol::MutationO
         return protocol::MutationOutcome::fatal("mutation.invariant", message, [field.to_string()]);
     }
     match paint(payload, base) {
-        Ok(Some(painted)) => painted_diff(painted, base, &payload.layer_id, &payload.target, None),
+        Ok(Some(painted)) => repainted_diff(painted, base, &payload.layer_id, &payload.target),
         Ok(None) => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The stroke changes no pixel of layer \"{}\".", payload.layer_id)),
         Err(refusal) => refused(refusal, &payload.layer_id),
     }
@@ -330,7 +405,7 @@ pub(crate) fn painted_diff(painted: Painted, base: &RasterSnapshot, layer_id: &s
         entries.insert(release, None);
     }
     protocol::MutationOutcome::new(RasterDiff {
-        layers: Some(RasterLayersDelta { patched: vec![RasterLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }),
+        layers: Some(RasterLayersDelta { modified: vec![RasterLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }),
         assets: Some(RasterAssetsDelta { entries }),
         ..Default::default()
     })
@@ -347,7 +422,7 @@ pub fn inverse(payload: &PaintStroke, base: &RasterSnapshot) -> Result<Vec<Raste
         return Ok(Vec::new());
     }
     let Ok(Some(painted)) = paint(payload, base) else { return Ok(Vec::new() )};
-    painted_inverse(painted, base, &payload.layer_id, &payload.target, None)?
+    repainted_inverse(painted, base, &payload.layer_id, &payload.target)?
 
     })
 }

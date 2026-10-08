@@ -6,8 +6,21 @@ use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform
 use crate::PptxSnapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff};
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
+#[path = "🔗opc-layer/🦀️.rs"]
+pub(crate) mod opc_layer;
+#[path = "📎set-relationship/🦀️.rs"]
+pub mod set_relationship;
+#[path = "🧷remove-relationship/🦀️.rs"]
+pub mod remove_relationship;
+#[path = "📇set-content-type/🦀️.rs"]
+pub mod set_content_type;
+#[path = "🧺remove-content-type/🦀️.rs"]
+pub mod remove_content_type;
 #[path = "🔷insert-shape/🦀️.rs"]
 pub mod insert_shape;
 #[path = "➕insert-slide/🦀️.rs"]
@@ -57,6 +70,14 @@ pub enum PptxMutation {
     SetShapePosition(set_shape_position::SetShapePosition),
     /// ↩️ Replaces one canonical XML node exactly; the exact inverse of the node-level edits.
     ReplaceXmlNode(replace_xml_node::ReplaceXmlNode),
+    /// 📎 Writes one relationship of an owner part (inserted at `index`, or changed in place).
+    SetRelationship(set_relationship::SetRelationship),
+    /// 🧷 Removes one relationship of an owner part.
+    RemoveRelationship(remove_relationship::RemoveRelationship),
+    /// 📇 Writes one `[Content_Types].xml` entry (inserted at `index`, or changed in place).
+    SetContentType(set_content_type::SetContentType),
+    /// 🧺 Removes one `[Content_Types].xml` entry.
+    RemoveContentType(remove_content_type::RemoveContentType),
 }
 //#endregion 🔖️Mutations
 
@@ -65,7 +86,7 @@ pub enum PptxMutation {
 /// declares them — this repository's mutation oracle registrations never parse this enum;
 /// `kinds_matches_enum_variants_and_manifest` below is what keeps the two declarations honest
 /// against each other.
-pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position", "replace-xml-node"];
+pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position", "replace-xml-node", "set-relationship", "remove-relationship", "set-content-type", "remove-content-type"];
 
 /// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm),
 /// so a new variant that forgets its kebab spelling here fails to compile rather than failing
@@ -90,6 +111,7 @@ pub fn kind_of(mutation: &PptxMutation) -> &'static str {
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -118,25 +140,6 @@ pub(crate) fn plan_inverse(plan: Result<xml_address::PptxPlan, String>) -> Vec<P
     plan.map(|plan| vec![plan.inverse]).unwrap_or_default()
 }
 
-/// 🧮️ The node-level mutations that carry `base` to `next`: every XML part whose root changed becomes a `replace-xml-node` of that root. `None` when
-/// `next` changes anything else (the schema, the OPC layer, which parts exist), detected by replaying the result against `base`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_mutations(base: &PptxSnapshot, next: &PptxSnapshot) -> Option<Vec<PptxMutation>> {
-    let mut leaves = Vec::new();
-    for part in &next.xml_parts {
-        let before = base.xml_parts.iter().find(|candidate| candidate.path == part.path)?;
-        if before.document.root != part.document.root {
-            leaves.push(PptxMutation::ReplaceXmlNode(replace_xml_node::ReplaceXmlNode { address: xml_address::pptx_xml_address(base, &part.path, Vec::new()).ok()?, node: part.document.root.clone()? }));
-        }
-    }
-    let mut state = base.clone();
-    for leaf in &leaves {
-        if !apply_pptx_mutation(&mut state, leaf).messages().is_empty() {
-            return None;
-        }
-    }
-    (state == *next).then_some(leaves)
-}
 /// 🌳 The XML diff that rewrites every attribute value equal to a member of `from` into `to` anywhere under `node` -- a namespace
 /// declaration is an ordinary attribute, so one walk covers `xmlns`, `xmlns:a` and whatever prefixed alias a deck uses. `None` when
 /// nothing under `node` declares one of `from`.
@@ -159,9 +162,9 @@ pub(crate) fn root_edits_diff(edits: Vec<(String, semio_s_artifact_stdio_xml::sc
     }
     let modified = edits
         .into_iter()
-        .map(|(key, root)| crate::schema::diff::NamedModified { key, diff: crate::schema::diff::PptxXmlPartDiff { content_type: None, document: Some(semio_s_artifact_stdio_xml::schema::diff::XmlDiff { root: Some(root), ..Default::default() }) } })
+        .map(|(id, root)| crate::schema::diff::PptxXmlPartModification { id, patch: crate::schema::diff::PptxXmlPartDiff { content_type: None, document: Some(semio_s_artifact_stdio_xml::schema::diff::XmlDiff { root: Some(root), ..Default::default() }) } })
         .collect();
-    PptxDiff { schema: None, opc: None, xml_parts: Some(crate::schema::diff::NamedTripleDiff { modified, ..Default::default() }) }
+    PptxDiff { schema: None, opc: None, xml_parts: Some(crate::schema::diff::PptxXmlPartsDelta { modified, ..Default::default() }) }
 }
 
 /// 🌿️ The attribute edit that sets (`Some`) or removes (`None`) attribute `name` on the ROOT element of `document`; `None` when nothing changes.
@@ -186,59 +189,58 @@ pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema:
     Some(XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attributes), children: None }))
 }
 
-/// 🌿️ The children edit that appends `node` to (`Some`) or strips every child named `name` from (`None`) the ROOT element of `document`.
+/// 🌿️ The children edit that inserts `insert.1` at final index `insert.0` of, or removes the children at the base indexes `remove` from, the ROOT element of `document`;
+/// `None` when nothing changes. Insertion and removal are never combined in one call.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, append: Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlNode>, strip: Option<&str>) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
+pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, insert: Option<(usize, semio_s_artifact_stdio_xml::schema::snapshot::XmlNode)>, remove: &[usize]) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
-    let Some(XmlNode::Element { children, .. }) = document.root.as_ref() else { return None };
-    let removed: Vec<usize> = strip.map(|name| children.iter().enumerate().filter(|(_, child)| matches!(child, XmlNode::Element { name: actual, .. } if actual == name)).map(|(index, _)| index).collect()).unwrap_or_default();
-    let added: Vec<XmlChildAdded> = append.map(|item| vec![XmlChildAdded { index: children.len(), item }]).unwrap_or_default();
-    (!removed.is_empty() || !added.is_empty()).then(|| XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed, modified: Vec::new(), added }) }))
+    let Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { .. }) = document.root.as_ref() else { return None };
+    let added: Vec<XmlChildAdded> = insert.map(|(index, item)| vec![XmlChildAdded { index, item }]).unwrap_or_default();
+    (!remove.is_empty() || !added.is_empty()).then(|| XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: remove.to_vec(), modified: Vec::new(), added }) }))
 }
 
 /// 🧩️ The diff that adds XML part `path` of `content_type` with `document` at `index` (append when `None`), together with its content-type
 /// override. `None` when a part of that name already exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>) -> Option<PptxDiff> {
-    use crate::schema::diff::{NamedModified, NamedTripleDiff, PptxOpcContentTypesDiff, PptxOpcDiff};
+pub(crate) fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Option<PptxDiff> {
+    use crate::schema::diff::PptxXmlPartsDelta;
+    use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let key = path.trim_start_matches('/');
     if base.xml_parts.iter().any(|part| part.path == key) || base.opc.part(key).is_some() {
         return None;
     }
-    let position = index.map_or(base.xml_parts.len(), |index| index.min(base.xml_parts.len()));
-    let mut order: Vec<String> = base.xml_parts.iter().map(|part| part.path.clone()).collect();
-    order.insert(position, key.to_string());
-    let appended = position == base.xml_parts.len();
     let part = crate::schema::snapshot::PptxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() };
     let name = format!("/{key}");
-    let present = base.opc.content_types.overrides.iter().any(|(existing, _)| *existing == name);
-    let overrides = if present {
-        let current = base.opc.content_types.overrides.iter().find(|(existing, _)| *existing == name).map(|(_, value)| value.clone());
-        (current.as_deref() != Some(content_type)).then(|| NamedTripleDiff { modified: vec![NamedModified { key: name.clone(), diff: content_type.to_string() }], ..Default::default() })
-    } else {
-        Some(NamedTripleDiff { added: vec![(name, content_type.to_string())], ..Default::default() })
+    let list = &base.opc.content_types.overrides;
+    let overrides = match list.iter().position(|(existing, _)| *existing == name) {
+        Some(at) => (list[at].1 != content_type).then(|| OpcContentTypeEntriesDelta::modification(&name, OpcContentTypePatch { content_type: Some(content_type.to_string()) })),
+        None => Some(OpcContentTypeEntriesDelta::insertion(insertion_index(list.len(), override_index), OpcContentTypeRow { name, content_type: content_type.to_string() })),
     };
     Some(PptxDiff {
         schema: None,
-        opc: overrides.map(|overrides| PptxOpcDiff { content_types: Some(PptxOpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }),
-        xml_parts: Some(NamedTripleDiff { added: vec![part], order: if appended { Vec::new() } else { order }, ..Default::default() }),
+        opc: overrides.map(|overrides| OpcDiff { content_types: Some(OpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }),
+        xml_parts: Some(PptxXmlPartsDelta::insertion(insertion_index(base.xml_parts.len(), index), part)),
     })
 }
 
 /// 🧩️ The diff that removes XML part `path` and its content-type override; `None` when no such part exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_xml_part_diff(base: &PptxSnapshot, path: &str) -> Option<PptxDiff> {
-    use crate::schema::diff::{NamedTripleDiff, PptxOpcContentTypesDiff, PptxOpcDiff};
+    use crate::schema::diff::PptxXmlPartsDelta;
     let key = path.trim_start_matches('/');
-    base.xml_parts.iter().find(|part| part.path == key)?;
+    let at = base.xml_parts.iter().position(|part| part.path == key)?;
     let name = format!("/{key}");
-    let has_override = base.opc.content_types.overrides.iter().any(|(existing, _)| *existing == name);
-    Some(PptxDiff {
-        schema: None,
-        opc: has_override.then(|| PptxOpcDiff { content_types: Some(PptxOpcContentTypesDiff { defaults: None, overrides: Some(NamedTripleDiff { removed: vec![name], ..Default::default() }) }), ..Default::default() }),
-        xml_parts: Some(NamedTripleDiff { removed: vec![key.to_string()], ..Default::default() }),
-    })
+    let overrides = &base.opc.content_types.overrides;
+    let content_types = overrides.iter().position(|(existing, _)| *existing == name).map(|position| OpcContentTypesDiff { defaults: None, overrides: Some(OpcContentTypeEntriesDelta::removal_by_id(name.clone(), position)) });
+    Some(PptxDiff { schema: None, opc: content_types.map(|content_types| OpcDiff { content_types: Some(content_types), ..Default::default() }), xml_parts: Some(PptxXmlPartsDelta::removal_by_id(key, at)) })
+}
+/// 🧭️ Where XML part `path` and its explicit content-type override sit in their lists: `(part index, override index)`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xml_part_positions(base: &PptxSnapshot, path: &str) -> Option<(usize, Option<usize>)> {
+    let key = path.trim_start_matches('/');
+    let part = base.xml_parts.iter().position(|part| part.path == key)?;
+    let name = format!("/{key}");
+    Some((part, base.opc.content_types.overrides.iter().position(|(existing, _)| *existing == name)))
 }
 //#endregion 🔖️MutationTrait
 
@@ -251,12 +253,12 @@ pub(crate) fn remove_xml_part_diff(base: &PptxSnapshot, path: &str) -> Option<Pp
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_fixture() -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
+    opc_layer::with_demo_entries(crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
         ],
-    })
+    }))
 }
 
 #[cfg(test)]
@@ -279,6 +281,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
         PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address: first_shape.clone(), position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } }),
         PptxMutation::ReplaceXmlNode(replace_xml_node::ReplaceXmlNode { address: first_shape.node, node: shape_node_for_replace }),
     ]
+    .into_iter()
+    .chain(opc_layer::demo_cases())
+    .collect()
 }
 //#endregion 🔖️DemoCases
 

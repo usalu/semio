@@ -319,7 +319,7 @@ impl semio_framework_job::InteractiveJob for PresentationEnvelopeMaterializeJob 
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if self.materialize_snapshot.is_none() {
-                    *self.materialize_snapshot = Some(envelope.vcs.genesis.snapshot().clone());
+                    *self.materialize_snapshot = Some(envelope.vcs.genesis.facts().snapshot().clone());
                     cx.consume_fuel(PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES as u64);
                     return semio_framework_job::StepOutcome::Yield;
                 }

@@ -10,34 +10,63 @@ message EquationDiff {
   optional EquationNodesDelta nodes = 4;
   optional EquationEdgesDelta edges = 5;
   optional EquationPointsDelta points = 6;
-  optional semio.os.store.ArtifactChild notation = 7;
-  optional semio.os.store.ArtifactChild results = 8;
-  optional semio.os.store.ArtifactChild computed = 9;
   optional EquationExprDiff equation = 10;
 }
 message EquationOptionalSeed { optional string value = 1; }
+message EquationNodeRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message EquationNodeInsertion {
+  uint32 index = 1;
+  semio.s.mathematical.equation.artifact.EquationNode row = 2;
+}
+message EquationNodeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message EquationNodesDelta {
-  repeated semio.s.mathematical.equation.artifact.EquationNode added = 1;
-  repeated string removed = 2;
-  repeated EquationNodePatch patched = 3;
-  repeated string reordered = 4;
+  repeated EquationNodeRemoval removed = 1;
+  repeated EquationNodeInsertion inserted = 2;
+  repeated EquationNodeRelocation moved = 3;
+  repeated EquationNodesModification modified = 4;
+}
+message EquationNodesModification {
+  string id = 1;
+  EquationNodePatch patch = 2;
 }
 message EquationNodePatch {
+  optional string label = 1;
+  optional double x = 2;
+  optional double y = 3;
+}
+message EquationEdgeRemoval {
   string id = 1;
-  optional string label = 2;
-  optional double x = 3;
-  optional double y = 4;
+  uint32 index = 2;
+}
+message EquationEdgeInsertion {
+  uint32 index = 1;
+  semio.s.mathematical.equation.artifact.EquationEdge row = 2;
+}
+message EquationEdgeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
 }
 message EquationEdgesDelta {
-  repeated semio.s.mathematical.equation.artifact.EquationEdge added = 1;
-  repeated string removed = 2;
-  repeated EquationEdgePatch patched = 3;
-  repeated string reordered = 4;
+  repeated EquationEdgeRemoval removed = 1;
+  repeated EquationEdgeInsertion inserted = 2;
+  repeated EquationEdgeRelocation moved = 3;
+  repeated EquationEdgesModification modified = 4;
+}
+message EquationEdgesModification {
+  string id = 1;
+  EquationEdgePatch patch = 2;
 }
 message EquationEdgePatch {
-  string id = 1;
-  optional string source = 2;
-  optional string target = 3;
+  optional string source = 1;
+  optional string target = 2;
 }
 message EquationPointsDelta { repeated EquationPointEdit edits = 1; }
 message EquationPointEdit {

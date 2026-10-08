@@ -86,21 +86,21 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "delete-frame/removes-the-text-frame-and-its-layer-membership: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    let patch = &produced.diff().pages.as_ref().expect("delete-frame fills the pages delta").patched[0].patch;
-    assert_eq!(patch.frame_removed.as_deref(), Some("frame-text"), "delete-frame fills the page patch's `frame_removed` fragment");
-    assert!(patch.frame_added.is_none() && patch.frames_patched.is_empty(), "delete-frame emits only the `frame_removed` fragment");
+    let patch = &produced.diff().pages.as_ref().expect("delete-frame fills the pages delta").modified[0].patch;
+    assert_eq!(patch.frames.removed, vec![crate::diff::PageFrameRemoval { id: "frame-text".to_string(), index: 1 }], "delete-frame fills the page patch's `frames.removed` row");
+    assert!(patch.frames.inserted.is_empty() && patch.frames.moved.is_empty() && patch.frames.modified.is_empty(), "delete-frame emits only the `frames.removed` row");
 }
 
 /// 🔺️ The sparse delta `delete-frame` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here `frame_removed` carries the bare frame id; the layer-membership cascade is apply-side behaviour, not something the diff spells out.
+/// end state matches. Here `frames.removed` carries the frame id and its base index; the layer-membership cascade is apply-side behaviour, not something the diff spells out.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-frame/removes-the-text-frame-and-its-layer-membership: delete-frame must emit a nested `frame_removed` fragment carrying the bare frame id");
+    assert_eq!(produced, committed, "delete-frame/removes-the-text-frame-and-its-layer-membership: delete-frame must emit a nested `frames.removed` row carrying the frame id and base index");
 }
 
 /// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has

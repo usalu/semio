@@ -90,78 +90,12 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Kinds
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
-/// snapshot when an index target is missing or out of range. `InsertVlr`/`RemoveVlr`/
-/// `InsertPoint`/`RemovePoint` keep `header.number_of_vlrs`/
-/// `header.number_of_point_records` in sync with the real collection length (`engine::encode_las`
-/// also independently recomputes both at encode time — see `LasHeader`'s doc comment — so this
-/// sync is a snapshot-level consistency guarantee, not the sole source of correctness).
-pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
-    let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 
 //#endregion 🔖️MutationTrait
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the header groups that moved, then each VLR and point row in place (its
-/// data alone via `set-vlr-data`, a whole point via `set-point`, any other VLR change as remove-then-insert), then the diverging
-/// tails. The snapshot `schema` is a constant of the artifact; header fields the collections keep in sync are never leaves.
-pub fn net_mutations(base: &LasSnapshot, next: &LasSnapshot) -> Vec<LasMutation> {
-    let (old, new) = (&base.header, &next.header);
-    let mut leaves = Vec::new();
-    if (old.version_major, old.version_minor) != (new.version_major, new.version_minor) {
-        leaves.push(LasMutation::SetVersion(set_version::SetVersion { major: new.version_major, minor: new.version_minor }));
-    }
-    if old.system_identifier != new.system_identifier {
-        leaves.push(LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: new.system_identifier.clone() }));
-    }
-    if old.generating_software != new.generating_software {
-        leaves.push(LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: new.generating_software.clone() }));
-    }
-    if (old.creation_day_of_year, old.creation_year) != (new.creation_day_of_year, new.creation_year) {
-        leaves.push(LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: new.creation_day_of_year, year: new.creation_year }));
-    }
-    let scale_and_offset = |header: &LasHeader| ((header.x_scale, header.y_scale, header.z_scale), (header.x_offset, header.y_offset, header.z_offset));
-    if scale_and_offset(old) != scale_and_offset(new) {
-        let (scale, offset) = scale_and_offset(new);
-        leaves.push(LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale, offset }));
-    }
-    let bounds = |header: &LasHeader| ((header.max_x, header.max_y, header.max_z), (header.min_x, header.min_y, header.min_z));
-    if bounds(old) != bounds(new) {
-        let (max, min) = bounds(new);
-        leaves.push(LasMutation::SetBounds(set_bounds::SetBounds { max, min }));
-    }
-    if old.points_by_return != new.points_by_return {
-        leaves.push(LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: new.points_by_return }));
-    }
-    let paired = base.vlrs.len().min(next.vlrs.len());
-    for (index, (before, after)) in base.vlrs.iter().zip(&next.vlrs).enumerate().filter(|(_, (before, after))| before != after) {
-        if (&before.user_id, before.record_id, &before.description) == (&after.user_id, after.record_id, &after.description) {
-            leaves.push(LasMutation::SetVlrData(set_vlr_data::SetVlrData { index, data: after.data.clone() }));
-        } else {
-            leaves.push(LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index }));
-            leaves.push(LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr: after.clone() }));
-        }
-    }
-    leaves.extend((paired..base.vlrs.len()).rev().map(|index| LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index })));
-    leaves.extend(next.vlrs.iter().enumerate().skip(paired).map(|(index, vlr)| LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr: vlr.clone() })));
-    let paired = base.points.len().min(next.points.len());
-    leaves.extend(base.points.iter().zip(&next.points).enumerate().filter(|(_, (before, after))| before != after).map(|(index, (_, after))| LasMutation::SetPoint(set_point::SetPoint { index, point: after.clone() })));
-    leaves.extend((paired..base.points.len()).rev().map(|index| LasMutation::RemovePoint(remove_point::RemovePoint { index })));
-    leaves.extend(next.points.iter().enumerate().skip(paired).map(|(index, point)| LasMutation::InsertPoint(insert_point::InsertPoint { index, point: point.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region OpCodecs
 /// 🧪️ F6 (las, recon-gap-fill): **hand-rolled** `OpText`/`OpBinary` for `LasMutation` — the

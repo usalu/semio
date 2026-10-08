@@ -4,14 +4,21 @@
       {
         "index": 0,
         "diff": {
-          "primitives": [
-            {
-              "attributes": {},
-              "extensions": {
-                "KHR_draco_mesh_compression": {}
+          "primitives": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "extensions": {
+                    "state": "present",
+                    "value": {
+                      "KHR_draco_mesh_compression": {}
+                    }
+                  }
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       }
     ]

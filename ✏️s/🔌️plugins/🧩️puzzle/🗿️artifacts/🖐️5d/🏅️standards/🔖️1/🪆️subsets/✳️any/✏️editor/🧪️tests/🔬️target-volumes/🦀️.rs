@@ -156,7 +156,7 @@ async fn both_panes_paint_the_same_volume() {
 /// places paired parts with — never a second persisted pose.
 #[test]
 fn the_flat_rectangle_is_the_volume_footprint_under_the_shared_board_world_map() {
-    let volume = Puzzle5dTargetVolume { id: "volume-1".into(), origin: [2.0, -3.0, 1.0], orientation: None, scale: Some(serde_json::json!([4.0, 6.0, 2.0])), hidden: false, locked: false };
+    let volume = Puzzle5dTargetVolume { id: "volume-1".into(), origin: [2.0, -3.0, 1.0], orientation: None, scale: Some(semio_framework_pack_json::json!([4.0, 6.0, 2.0])), hidden: false, locked: false };
     let [x, y, width, height] = target_volume_flat_rect(&volume);
     let to_flat = 1.0 / PUZZLE5D_FLAT_TO_WORLD;
     assert_eq!([x, y], [2.0 * to_flat, 3.0 * to_flat], "the board's Y axis points the other way, exactly as add_palette_part reads it");
@@ -169,8 +169,8 @@ fn the_flat_rectangle_is_the_volume_footprint_under_the_shared_board_world_map()
 fn target_volumes_reach_the_planner_snapshot() {
     let mut document = empty_document();
     document.target_volumes = vec![
-        Puzzle5dTargetVolume { id: "volume-1".into(), origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(serde_json::json!(2.0)), hidden: false, locked: false },
-        Puzzle5dTargetVolume { id: "volume-hidden".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!([1.0, 2.0, 3.0])), hidden: true, locked: true },
+        Puzzle5dTargetVolume { id: "volume-1".into(), origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(semio_framework_pack_json::json!(2.0)), hidden: false, locked: false },
+        Puzzle5dTargetVolume { id: "volume-hidden".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(semio_framework_pack_json::json!([1.0, 2.0, 3.0])), hidden: true, locked: true },
     ];
     let snapshot = crate::editor::puzzle5d::precompute::puzzle3d_snapshot(&document, None).expect("planner snapshot");
     let bridged = snapshot.typed().target_volumes.clone();
@@ -195,14 +195,16 @@ fn the_volume_brush_is_bound_to_the_world_window_with_its_three_voxel_sliders() 
     assert_eq!(measures.len(), 3, "width, depth and height");
 }
 
-/// 🧮️ A painted volume is ONE `create-target-volume` in the semantic delta the editor publishes — the
-/// hinge between the command arm (which edits the play document) and the artifact lane.
+/// 🧮️ A painted volume is ONE `create-target-volume` the command arm publishes, grid-snapped and sized by the voxel
+/// dimensions — the hinge between the command arm and the artifact lane.
 #[test]
-fn a_painted_volume_is_one_create_target_volume_in_the_delta() {
-    let before = value_from_document(&empty_document());
-    let mut after = empty_document();
-    after.target_volumes.push(Puzzle5dTargetVolume { id: "volume-1".into(), origin: [1.0, 2.0, 3.0], orientation: None, scale: Some(serde_json::json!([2.0, 2.0, 2.0])), hidden: false, locked: false });
-    let operations = puzzle5d_operations_from_document_change(&before, &after);
-    assert_eq!(operations.len(), 1, "expected exactly one create-target-volume, got {operations:?}");
-    assert!(matches!(operations[0], Puzzle5dMutation::CreateTargetVolume(_)), "got {operations:?}");
+fn a_painted_volume_is_one_create_target_volume() {
+    let mutation = crate::editor::puzzle5d::commands::add_target_volume::add_target_volume_mutation("volume-1".into(), [1.1, 2.0, 2.9], 1.0, [2, 2, 2]);
+    match mutation {
+        Puzzle5dMutation::CreateTargetVolume(created) => {
+            assert_eq!(created.target_volume.origin, [1.0, 2.0, 3.0]);
+            assert_eq!(created.target_volume.scale, Some(crate::Puzzle5dScale::Vec3([2.0, 2.0, 2.0])));
+        }
+        other => panic!("expected one create-target-volume, got {other:?}"),
+    }
 }

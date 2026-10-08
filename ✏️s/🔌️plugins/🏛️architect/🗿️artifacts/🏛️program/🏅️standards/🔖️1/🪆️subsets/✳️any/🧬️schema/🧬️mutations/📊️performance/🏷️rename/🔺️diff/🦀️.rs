@@ -7,7 +7,7 @@ use crate::registers::PerformanceCriterionPatch;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenamePerformanceCriterion, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.performance.iter().find(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No performance criterion exists with this id.", [payload.id.0.clone()]);
@@ -16,5 +16,5 @@ pub fn diff(payload: &RenamePerformanceCriterion, base: &ProgramSnapshot) -> pro
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This performance criterion already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = PerformanceCriterionPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(ProgramDiff { performance: Some(ProgramPerformanceDelta { patched: vec![ProgramPerformancePatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { performance: Some(ProgramPerformanceDelta { modified: vec![ProgramPerformancePatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

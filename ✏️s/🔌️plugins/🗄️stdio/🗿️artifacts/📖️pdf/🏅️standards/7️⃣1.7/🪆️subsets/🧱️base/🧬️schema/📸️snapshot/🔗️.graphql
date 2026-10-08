@@ -41,6 +41,7 @@ type PdfSnapshot {
   catalogExtra: [PdfDictEntry!]!
   objects: [PdfIndirectObject!]!
   trailer: [PdfDictEntry!]!
+  admittedStreamRoles: [PdfAdmittedStreamRole!]!
 }
 
 type PdfDictEntry {
@@ -317,7 +318,7 @@ type PdfOutputIntent {
   condition: String
   registryName: String
   info: String
-  profile: [Int!]
+  profile: PdfArtifactRef
 }
 
 type PdfEmbeddedFile {
@@ -383,11 +384,11 @@ type PdfColorSpace {
   matrix: [Float!]
   range: [Float!]
   components: Int
-  profile: [Int!]
+  profile: PdfArtifactRef
   alternate: PdfColorSpace
   base: PdfColorSpace
   hival: Int
-  lookup: [Int!]
+  palette: [UInt8!]
   name: String
   tintTransform: PdfFunction
   names: [String!]
@@ -504,8 +505,7 @@ type PdfInlineImage {
   imageMask: Boolean
   decode: [Float!]
   interpolate: Boolean
-  filters: [PdfStreamFilter!]
-  data: [Int!]!
+  body: PdfImageBody!
   extra: [PdfDictEntry!]
 }
 
@@ -560,7 +560,7 @@ type PdfShadingKind {
   bitsPerFlag: Int
   verticesPerRow: Int
   decode: [Float!]
-  data: [Int!]
+  reference: PdfArtifactRef
 }
 
 type PdfExtGState {
@@ -621,8 +621,7 @@ type PdfImage {
   imageMask: Boolean
   decode: [Float!]
   interpolate: Boolean
-  codec: PdfImageCodec
-  data: [Int!]!
+  body: PdfImageBody!
   softMask: String
   softMaskInData: Int
   mask: PdfImageMask
@@ -641,11 +640,10 @@ type PdfImageMask {
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
-type PdfImageCodec {
+type PdfImageBody {
   kind: String!
-  colorTransform: Int
-  parameters: PdfCcittParameters
-  globals: [Int!]
+  values: [Int!]
+  reference: PdfArtifactRef
 }
 
 type PdfFont {
@@ -702,16 +700,13 @@ type PdfCidFont {
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 type PdfFontProgram {
   kind: String!
-  data: [Int!]
-  length1: Int
-  length2: Int
-  length3: Int
+  reference: PdfArtifactRef!
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 type PdfCidToGid {
   kind: String!
-  data: [Int!]
+  glyphs: [Int!]
 }
 
 type PdfCidVerticalRun {
@@ -940,8 +935,8 @@ input PdfSnapshotInput {
   outputIntents: [PdfOutputIntentInput!]!
   acroForm: PdfAcroFormInput
   optionalContent: PdfOptionalContentInput
-  pageLayout: PdfPageLayoutInput
-  pageMode: PdfPageModeInput
+  pageLayout: PdfPageLayout
+  pageMode: PdfPageMode
   viewerPreferences: PdfViewerPreferencesInput
   openAction: PdfOpenActionInput
   language: String
@@ -953,6 +948,7 @@ input PdfSnapshotInput {
   catalogExtra: [PdfDictEntryInput!]!
   objects: [PdfIndirectObjectInput!]!
   trailer: [PdfDictEntryInput!]!
+  admittedStreamRoles: [PdfAdmittedStreamRoleInput!]!
 }
 
 input PdfDictEntryInput {
@@ -1047,7 +1043,7 @@ input PdfDateInput {
 }
 
 input PdfEncryptionInput {
-  algorithm: PdfEncryptionAlgorithmInput!
+  algorithm: PdfEncryptionAlgorithm!
   permissions: Int
   userPassword: String
   ownerPassword: String
@@ -1132,7 +1128,7 @@ input PdfViewerPreferencesInput {
   fitWindow: Boolean
   centerWindow: Boolean
   displayDocTitle: Boolean
-  nonFullScreenPageMode: PdfPageModeInput
+  nonFullScreenPageMode: PdfPageMode
   direction: String
   viewArea: String
   viewClip: String
@@ -1206,7 +1202,7 @@ input PdfOutputIntentInput {
   condition: String
   registryName: String
   info: String
-  profile: [Int!]
+  profile: PdfArtifactRefInput
 }
 
 input PdfEmbeddedFileInput {
@@ -1223,7 +1219,7 @@ input PdfEmbeddedFileInput {
 
 input PdfPageLabelRangeInput {
   startIndex: Int!
-  style: PdfPageLabelStyleInput
+  style: PdfPageLabelStyle
   prefix: String
   start: Int
 }
@@ -1264,11 +1260,11 @@ input PdfColorSpaceInput {
   matrix: [Float!]
   range: [Float!]
   components: Int
-  profile: [Int!]
+  profile: PdfArtifactRefInput
   alternate: PdfColorSpaceInput
   base: PdfColorSpaceInput
   hival: Int
-  lookup: [Int!]
+  palette: [UInt8!]
   name: String
   tintTransform: PdfFunctionInput
   names: [String!]
@@ -1318,8 +1314,8 @@ input PdfPatternKindInput {
 input PdfOpInput {
   op: String!
   width: Float
-  cap: PdfLineCapInput
-  join: PdfLineJoinInput
+  cap: PdfLineCap
+  join: PdfLineJoin
   limit: Float
   array: [Float!]
   phase: Float
@@ -1385,8 +1381,7 @@ input PdfInlineImageInput {
   imageMask: Boolean
   decode: [Float!]
   interpolate: Boolean
-  filters: [PdfStreamFilterInput!]
-  data: [Int!]!
+  body: PdfImageBodyInput!
   extra: [PdfDictEntryInput!]
 }
 
@@ -1429,14 +1424,14 @@ input PdfShadingKindInput {
   bitsPerFlag: Int
   verticesPerRow: Int
   decode: [Float!]
-  data: [Int!]
+  reference: PdfArtifactRefInput
 }
 
 input PdfExtGStateInput {
   id: String!
   lineWidth: Float
-  lineCap: PdfLineCapInput
-  lineJoin: PdfLineJoinInput
+  lineCap: PdfLineCap
+  lineJoin: PdfLineJoin
   miterLimit: Float
   dash: [JSON!]
   renderingIntent: String
@@ -1490,8 +1485,7 @@ input PdfImageInput {
   imageMask: Boolean
   decode: [Float!]
   interpolate: Boolean
-  codec: PdfImageCodecInput
-  data: [Int!]!
+  body: PdfImageBodyInput!
   softMask: String
   softMaskInData: Int
   mask: PdfImageMaskInput
@@ -1510,11 +1504,10 @@ input PdfImageMaskInput {
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
-input PdfImageCodecInput {
+input PdfImageBodyInput {
   kind: String!
-  colorTransform: Int
-  parameters: PdfCcittParametersInput
-  globals: [Int!]
+  values: [Int!]
+  reference: PdfArtifactRefInput
 }
 
 input PdfFontInput {
@@ -1571,16 +1564,13 @@ input PdfCidFontInput {
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 input PdfFontProgramInput {
   kind: String!
-  data: [Int!]
-  length1: Int
-  length2: Int
-  length3: Int
+  reference: PdfArtifactRefInput!
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 input PdfCidToGidInput {
   kind: String!
-  data: [Int!]
+  glyphs: [Int!]
 }
 
 input PdfCidVerticalRunInput {
@@ -1657,7 +1647,7 @@ input PdfCharProcInput {
 }
 
 input PdfSimpleEncodingInput {
-  base: PdfBaseEncodingInput
+  base: PdfBaseEncoding
   differences: [PdfEncodingDifferenceInput!]
 }
 
@@ -1781,4 +1771,62 @@ input PdfAnnotationKindInput {
   overlayText: String
   repeat: Boolean
   subtype: String
+}
+
+type PdfGraphIdentity { owner: ObjRef! path: [PdfGraphPath!]! }
+union PdfGraphPath = PdfGraphEntryPath | PdfGraphItemPath
+type PdfGraphEntryPath { key: String! }
+type PdfGraphItemPath { index: Int64! }
+type PdfAdmittedStreamRole { identity: PdfGraphIdentity! dependencies: [PdfGraphIdentity!]! value: PdfStreamRoleValue! }
+union PdfStreamRoleValue = PdfOperatorRole | PdfSampledWordRole | PdfCalculatorProgramRole | PdfUnicodeMapRole | PdfCharacterMapRole | PdfFontProgramRole | PdfImageRole | PdfMetadataTextRole | PdfAttachmentByteRole | PdfPaletteComponentRole | PdfGlyphIdRole | PdfReferenceBodyRole
+type PdfOperatorRole { content: [PdfOp!]! }
+type PdfSampledWordRole { samples: [UInt!]! }
+type PdfCalculatorProgramRole { code: String! }
+type PdfUnicodeMapRole { mapping: PdfToUnicode! }
+type PdfCharacterMapRole { cmap: PdfEmbeddedCMap! }
+type PdfFontProgramRole { program: PdfFontProgram! }
+type PdfImageRole { image: PdfImage! }
+type PdfMetadataTextRole { text: String! }
+type PdfAttachmentByteRole { bytes: [UInt8!]! }
+type PdfPaletteComponentRole { components: [UInt8!]! }
+type PdfGlyphIdRole { glyphs: [UInt16!]! }
+type PdfReferenceBodyRole { reference: PdfArtifactRef! }
+
+type PdfArtifactRef {
+  artifactId: String!
+  dialect: PdfArtifactDialect!
+}
+type PdfArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+input PdfArtifactRefInput {
+  artifactId: String!
+  dialect: PdfArtifactDialectInput!
+}
+input PdfArtifactDialectInput {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+input PdfGraphIdentityInput { owner: ObjRefInput! path: [PdfGraphPathInput!]! }
+input PdfGraphPathInput { kind: String! key: String index: Int64 }
+input PdfAdmittedStreamRoleInput { identity: PdfGraphIdentityInput! dependencies: [PdfGraphIdentityInput!]! value: PdfStreamRoleValueInput! }
+input PdfStreamRoleValueInput {
+  kind: String!
+  content: [PdfOpInput!]
+  samples: [UInt!]
+  code: String
+  mapping: PdfToUnicodeInput
+  cmap: PdfEmbeddedCMapInput
+  program: PdfFontProgramInput
+  image: PdfImageInput
+  text: String
+  bytes: [UInt8!]
+  components: [UInt8!]
+  glyphs: [UInt16!]
+  reference: PdfArtifactRefInput
 }

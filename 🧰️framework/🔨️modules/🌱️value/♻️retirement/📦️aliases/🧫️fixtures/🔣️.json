@@ -1,0 +1,23 @@
+{
+  "counts": [
+    0,
+    1,
+    65,
+    257
+  ],
+  "pauses": [
+    0,
+    1,
+    3,
+    17,
+    129
+  ],
+  "grantBytes": 4096,
+  "lanes": [
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "maximumTurns": 100000
+}

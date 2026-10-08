@@ -129,3 +129,38 @@ mod vector_insert_crane_runway;
 mod vector_insert_crane_runway_dupe;
 #[path = "../../➖️remove-crane-runway/🧪️tests/✅apply/🦀️.rs"]
 mod vector_remove_crane_runway;
+
+//#region 🔬️MiddleRowVectors
+#[path = "../../➖️remove-bridge-fatigue/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_bridge_fatigue;
+#[path = "../../➖️remove-cold-formed-member/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_cold_formed_member;
+#[path = "../../➖️remove-crane-runway/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_crane_runway;
+#[path = "../../➖️remove-fatigue-detail/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_fatigue_detail;
+#[path = "../../➖️remove-fire-exposure/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_fire_exposure;
+#[path = "../../➖️remove-joint/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_joint;
+#[path = "../../➖️remove-load-case/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_load_case;
+#[path = "../../➖️remove-material/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_material;
+#[path = "../../➖️remove-member/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_member;
+#[path = "../../➖️remove-member-action/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_member_action;
+#[path = "../../➖️remove-pile/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_pile;
+#[path = "../../➖️remove-plated-panel/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_plated_panel;
+#[path = "../../➖️remove-section/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_section;
+#[path = "../../➖️remove-silo-shell/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_silo_shell;
+#[path = "../../➖️remove-tension-component/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_tension_component;
+#[path = "../../➖️remove-tower-leg/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_tower_leg;
+//#endregion 🔬️MiddleRowVectors

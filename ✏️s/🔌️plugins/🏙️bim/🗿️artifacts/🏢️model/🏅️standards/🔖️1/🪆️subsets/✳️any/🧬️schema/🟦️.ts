@@ -251,7 +251,7 @@ export interface Storey {
   name: string;
   level: number;
   height: number;
-  cut_height?: number | null;
+  cut_height?: number;
 }
 
 export interface GridLine {
@@ -310,7 +310,7 @@ export interface Slab {
   boundary: Vertex[];
   holes: Vertex[][];
   offset: number;
-  slope?: Slope | null;
+  slope?: Slope;
   name: string;
 }
 
@@ -328,9 +328,9 @@ export interface Opening {
   host: string;
   kind: OpeningKind;
   offset: number;
-  sill_override?: number | null;
-  width?: number | null;
-  height?: number | null;
+  sill_override?: number;
+  width?: number;
+  height?: number;
   flip_hand: boolean;
   flip_facing: boolean;
   name: string;
@@ -360,7 +360,7 @@ export interface Railing {
   post_spacing: number;
   profile: Profile;
   post_profile: Profile;
-  baluster?: Baluster | null;
+  baluster?: Baluster;
   infill: Infill;
   material: string;
   base_offset: number;

@@ -12,7 +12,7 @@ pub mod sampling;
 pub enum FillEdit {
     Type { value: FillType },
     Coordinate { axis: FillAxis, value: f64 },
-    Color { index: Option<usize>, value: String },
+    Color { index: Option<usize>, value: [f64; 4] },
     Alpha { index: Option<usize>, value: f64 },
     Offset { index: usize, value: f64 },
     AddStop { offset: f64 },
@@ -87,10 +87,8 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
             *target = *value;
         }
         FillEdit::Color { index,value } => {
-            let hex = value.strip_prefix('#').ok_or("Choose a hexadecimal color")?;
-            if !matches!(hex.len(),3|6) || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) { return Err("Invalid color"); }
-            let color = color_mut(&mut fill,*index)?;
-            *color = crate::schema::hex_to_rgba(value,color[3]);
+            if value.iter().any(|component|!component.is_finite()||!(0.0..=1.0).contains(component)){return Err("Invalid color components");}
+            *color_mut(&mut fill,*index)? = *value;
         }
         FillEdit::Alpha { index,value } => {
             if !value.is_finite() || !(0.0..=1.0).contains(value) { return Err("Opacity must be between zero and one"); }

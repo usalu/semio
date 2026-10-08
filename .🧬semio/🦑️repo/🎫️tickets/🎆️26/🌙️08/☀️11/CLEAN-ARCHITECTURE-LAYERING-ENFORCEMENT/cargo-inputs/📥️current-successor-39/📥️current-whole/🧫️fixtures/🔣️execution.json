@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "runIds": [
+    {
+      "id": "pid-and-rfc-v4",
+      "value": "123-550e8400-e29b-41d4-a716-446655440000",
+      "accepted": true
+    },
+    {
+      "id": "flattened-uuid-refused",
+      "value": "10-550e8400e29b41d4a716446655440000",
+      "accepted": false
+    },
+    {
+      "id": "zero-owner-refused",
+      "value": "0-550e8400-e29b-41d4-a716-446655440000",
+      "accepted": false
+    },
+    {
+      "id": "non-v4-refused",
+      "value": "123-550e8400-e29b-11d4-a716-446655440000",
+      "accepted": false
+    },
+    {
+      "id": "invalid-variant-refused",
+      "value": "123-550e8400-e29b-41d4-7716-446655440000",
+      "accepted": false
+    },
+    {
+      "id": "extra-suffix-refused",
+      "value": "123-550e8400-e29b-41d4-a716-446655440000-extra",
+      "accepted": false
+    }
+  ],
+  "output": {
+    "ticket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated",
+    "runDirectory": "🧾️runs",
+    "runPrefix": "🔖️"
+  },
+  "withdrawals": [
+    {
+      "id": "unrelated-absent-qualified",
+      "candidate": false,
+      "mandatory": false,
+      "code": "ENOENT",
+      "accepted": true
+    },
+    {
+      "id": "required-source-refused",
+      "candidate": false,
+      "mandatory": true,
+      "code": "ENOENT",
+      "accepted": false
+    },
+    {
+      "id": "candidate-refused",
+      "candidate": true,
+      "mandatory": false,
+      "code": "ENOENT",
+      "accepted": false
+    },
+    {
+      "id": "permission-failure-refused",
+      "candidate": false,
+      "mandatory": false,
+      "code": "EACCES",
+      "accepted": false
+    }
+  ]
+}

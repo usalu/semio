@@ -207,3 +207,33 @@ async fn an_unknown_collection_is_a_no_op_rather_than_a_fault() {
     close(&mut app);
 }
 //#endregion 🗺️FeatureEditingVerbs
+
+/// 🧱️ A payload edit resolves to per-key property kinds — removals first, then changed or new keys, a new key inserted
+/// before the old key that follows it — and never to a whole-payload replacement.
+#[test]
+fn property_edits_resolve_to_per_key_kinds() {
+    let before = DslValue::from(&json!({ "kind": "marker", "label": "a", "lon": 1 }));
+    let after = DslValue::from(&json!({ "kind": "marker", "zone": "x", "label": "b" }));
+    let operations = property_edit_operations("positions", "p", &before, &after);
+    assert_eq!(operations.len(), 3, "{operations:?}");
+    assert!(matches!(&operations[0], GisMapMutation::RemovePositionProperty(removed) if removed.key == "lon"));
+    assert!(matches!(&operations[1], GisMapMutation::SetPositionProperty(added) if added.key == "zone" && added.before.as_deref() == Some("label")));
+    assert!(matches!(&operations[2], GisMapMutation::SetPositionProperty(changed) if changed.key == "label" && changed.before.is_none()));
+    assert!(property_edit_operations("routes", "r", &before, &before).is_empty(), "an unchanged payload emits nothing");
+    let whole = property_edit_operations("regions", "g", &DslValue::Null, &after);
+    assert!(matches!(whole.as_slice(), [GisMapMutation::ReplaceRegionData(_)]), "a non-object payload is replaced whole");
+}
+
+/// 🧱️ A collection patch deletes omitted features, creates new ones at their index and edits present ones by property.
+#[test]
+fn collection_patches_resolve_to_concrete_feature_kinds() {
+    let feature = |id: &str, label: &str| MapFeature { id: id.into(), data: DslValue::from(&json!({ "id": id, "label": label })) };
+    let before = vec![feature("keep", "a"), feature("gone", "b")];
+    let after = vec![feature("keep", "changed"), feature("new", "c")];
+    let operations = collection_patch_operations("positions", &before, &after);
+    assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::DeletePosition(payload) if payload.id == "gone")));
+    assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::SetPositionProperty(payload) if payload.feature == "keep" && payload.key == "label")));
+    assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::CreatePosition(payload) if payload.item.id == "new")));
+    assert!(!operations.iter().any(|operation| matches!(operation, GisMapMutation::ReplacePositionData(_))), "no whole-payload replacement for object payloads");
+    assert!(collection_patch_operations("routes", &before, &before).is_empty(), "an unchanged collection produces no operations");
+}

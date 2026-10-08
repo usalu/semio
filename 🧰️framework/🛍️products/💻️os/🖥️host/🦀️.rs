@@ -375,7 +375,7 @@ use semio_framework_value::ValueError;
         pub schema: String,
         pub id: String,
         pub name: String,
-        pub vcs: ArtifactVcs<P, Op>,
+        pub vcs: ArtifactVcs<protocol::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>, Op>,
         /// 🔀️ The document's history transitions; with `vcs.edits` the complete event log
         /// every position (applied/redo/checkpoint/alternative) is folded from.
         pub transitions: Vec<protocol::MutationEnvelope>,
@@ -393,7 +393,7 @@ use semio_framework_value::ValueError;
                 ("schema".to_string(), self.schema.to_value()),
                 ("id".to_string(), self.id.to_value()),
                 ("name".to_string(), self.name.to_value()),
-                ("vcs".to_string(), self.vcs.to_value()),
+                ("vcs".to_string(), protocol::os_vcs::io::text::vcs::native_vcs_value(&self.vcs)),
                 ("transitions".to_string(), self.transitions.to_value()),
                 ("editMessages".to_string(), self.edit_messages.to_value()),
                 ("conflicts".to_string(), self.conflicts.to_value()),
@@ -409,7 +409,7 @@ use semio_framework_value::ValueError;
     /// `conflicts` decode to empty (matching the old `Deserialize`'s implicit `Vec::default()`
     /// for an absent, non-`Option` field with no `#[serde(default)]` — those two were never
     /// actually optional on the wire in practice, but this preserves exact prior leniency).
-    impl<P: FromValue + protocol::os_vcs::ArtifactGenesisCodec, Op: FromValue> FromValue for BackboneDocument<P, Op> {
+    impl<P: FromValue + protocol::os_vcs::io::binary::genesis::ArtifactGenesisCodec, Op: FromValue> FromValue for BackboneDocument<P, Op> {
         fn from_value(value: DslValue) -> Result<Self, ValueError> {
             let semio_framework_value::DslValue::Object(fields) = value else {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BackboneDocument, found {value:?}")));
@@ -474,7 +474,7 @@ use semio_framework_value::ValueError;
     /// 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
     pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
     where
-        P: Clone + protocol::os_vcs::ArtifactGenesisCodec,
+        P: Clone + protocol::os_vcs::io::binary::genesis::ArtifactGenesisCodec,
         Op: Clone,
     {
         BackboneDocument {
@@ -3136,10 +3136,7 @@ pub mod workflow {
 #[cfg(any(test, feature = "os-host-full", feature = "space-guest"))]
 pub mod codec_abi {
     //#region 🧬️Schema
-    use semio_framework::{
-        AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessageBytes, AbiOperation, AbiPage, AbiPageReader, AbiRejectedPage, AbiReply, AbiRequest, AbiRequestId, AbiStatus,
-        AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_MESSAGE_BYTES, ABI_MAX_PAGES_PER_TRANSFER, ABI_MAX_PAGE_BYTES,
-    };
+    use semio_framework::{AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessageBytes, AbiOperation, AbiPage, AbiPageReader, AbiRejectedPage, AbiReply, AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_MESSAGE_BYTES, ABI_MAX_PAGES_PER_TRANSFER, ABI_MAX_PAGE_BYTES};
 
     pub const OS_HOST_CODEC_SCHEMA_JSON: &str = include_str!("🧬️schema/🔣️.json");
     pub const OS_HOST_CODEC_MAX_INPUT_BYTES: usize = ABI_MAX_BODY_BYTES;

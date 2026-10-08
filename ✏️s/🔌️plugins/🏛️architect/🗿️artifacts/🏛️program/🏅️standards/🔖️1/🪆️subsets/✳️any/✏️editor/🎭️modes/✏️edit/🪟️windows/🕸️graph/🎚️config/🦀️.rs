@@ -41,10 +41,6 @@ impl protocol::DiffAlgebra<ArchitectGraphWindowConfig> for ArchitectGraphWindowC
         Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()) }
     }
 
-    fn between(base: &ArchitectGraphWindowConfig, other: &ArchitectGraphWindowConfig) -> Self {
-        Self { viewport: (base.viewport != other.viewport).then(|| other.viewport.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self.viewport.is_none()
     }

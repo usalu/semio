@@ -1,6 +1,6 @@
-use crate::editor::puzzle2d::engine::{apply_edge_handle_snap_to_board_snapshot_json, apply_force_graph_layout_to_board_snapshot_json, apply_normal_undirected_redraw_layout_to_board_snapshot_json, apply_ported_redraw_layout_to_board_snapshot_json};
+macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(500_000_000,&mut progress);semio_framework_os_infinite::board::io::text::layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
 
-use serde_json::json;
+use semio_framework_pack_json::json;
 use std::collections::HashMap;
 
 #[test]
@@ -34,8 +34,8 @@ fn force_graph_spreads_two_linked_circles_along_x() {
         "gravity": 0.0,
         "randomSeed": 7
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(force_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
     let bx = nodes[1]["x"].as_f64().unwrap();
@@ -74,8 +74,8 @@ fn force_graph_pins_locked_node_positions() {
         "randomSeed": 101,
         "lockedNodeIds": ["a"]
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(force_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
     let ay = nodes[0]["y"].as_f64().unwrap();
@@ -120,8 +120,8 @@ fn redraw_force_graph_top_level_locked_node_ids_pins() {
             "gravity": 0.0
         }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     assert!((nodes[0]["x"].as_f64().unwrap() - 0.0).abs() < 1e-9);
     assert!((nodes[0]["y"].as_f64().unwrap() - 0.0).abs() < 1e-9);
@@ -149,8 +149,8 @@ fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
             "gravity": 0.0
         }
     });
-    let out = apply_normal_undirected_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
     let bx = nodes[1]["x"].as_f64().unwrap();
@@ -176,8 +176,8 @@ fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
         "gravity": 0.0,
         "randomSeed": 7
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(force_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
     let bx = nodes[1]["x"].as_f64().unwrap();
@@ -186,7 +186,7 @@ fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
 
 #[test]
 fn force_graph_rejects_bad_schema() {
-    let err = apply_force_graph_layout_to_board_snapshot_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
+    let err = physical_layout!(force_snapshot_json,r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
     assert!(err.contains("schema"));
 }
 
@@ -228,8 +228,8 @@ fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
         "barnesHutTheta": 0.72,
         "pairwiseRepulsionMaxBodies": 12
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(force_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in parsed["nodes"].as_array().unwrap() {
         let x = row["x"].as_f64().unwrap();
         let y = row["y"].as_f64().unwrap();
@@ -282,8 +282,8 @@ fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
     });
     let s = snapshot.to_string();
     let o = opts.to_string();
-    let out_a = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
-    let out_b = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
+    let out_a = physical_layout!(force_snapshot_json,&s, &o).unwrap();
+    let out_b = physical_layout!(force_snapshot_json,&s, &o).unwrap();
     assert_eq!(out_a, out_b, "BH path must be bitwise reproducible for identical inputs");
 }
 
@@ -313,8 +313,8 @@ fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
     });
     let s = snapshot.to_string();
     let o = opts.to_string();
-    let out_a = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
-    let out_b = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
+    let out_a = physical_layout!(force_snapshot_json,&s, &o).unwrap();
+    let out_b = physical_layout!(force_snapshot_json,&s, &o).unwrap();
     assert_eq!(out_a, out_b);
 }
 
@@ -343,8 +343,8 @@ fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
         "barnesHutTheta": 500.0,
         "pairwiseRepulsionMaxBodies": 2
     });
-    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(force_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in parsed["nodes"].as_array().unwrap() {
         assert!(row["x"].as_f64().unwrap().is_finite());
         assert!(row["y"].as_f64().unwrap().is_finite());
@@ -385,8 +385,8 @@ fn redraw_force_graph_wraps_flat_options() {
             "gravity": 0.0
         }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
     let bx = nodes[1]["x"].as_f64().unwrap();
@@ -416,8 +416,8 @@ fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
         ],
         "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
     });
-    let out = apply_edge_handle_snap_to_board_snapshot_json(&snapshot.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(snap_snapshot_json,&snapshot.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
     let ang_b = nodes[1]["handles"][0]["angle"].as_f64().unwrap();
@@ -460,8 +460,8 @@ fn redraw_force_graph_with_snap_sets_handle_angles() {
             "gravity": 0.0
         }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
     let ang_b = nodes[1]["handles"][0]["angle"].as_f64().unwrap();
@@ -508,8 +508,8 @@ fn force_graph_accepts_logical_nodes_without_xy() {
         "randomSeed": 3,
         "forceGraph": { "iterations": 120, "idealEdgeLength": 160.0, "gravity": 0.0 }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for n in parsed["nodes"].as_array().unwrap() {
         assert!(n["x"].as_f64().unwrap().is_finite());
         assert!(n["y"].as_f64().unwrap().is_finite());
@@ -537,8 +537,8 @@ fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut ys: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
         let id = n["id"].as_str().unwrap().to_string();
@@ -586,8 +586,8 @@ fn hierarchical_tree_stacks_by_depth() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut ys: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
         let id = n["id"].as_str().unwrap().to_string();
@@ -642,8 +642,8 @@ fn hierarchical_tree_pins_locked_root_coordinates() {
         "lockedNodeIds": ["r"],
         "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
         let id = n["id"].as_str().unwrap().to_string();
@@ -692,8 +692,8 @@ fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
             "lockedNodeIds": ["r"]
         }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
         let id = n["id"].as_str().unwrap().to_string();
@@ -729,8 +729,8 @@ fn hierarchical_tree_right_places_children_larger_x_than_root() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "right", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut xs: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
         let id = n["id"].as_str().unwrap().to_string();
@@ -767,8 +767,8 @@ fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "upwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let out = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap();
+    let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut ys: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
         let id = n["id"].as_str().unwrap().to_string();
@@ -798,7 +798,7 @@ fn hierarchical_tree_rejects_unknown_direction() {
         "mode": "hierarchical-tree",
         "hierarchicalTree": { "direction": "sideways" }
     });
-    let err = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap_err();
+    let err = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), &opts.to_string()).unwrap_err();
     assert!(err.contains("unknown hierarchical tree direction"));
 }
 
@@ -810,6 +810,6 @@ fn redraw_rejects_unknown_mode() {
         "nodes": [],
         "edges": []
     });
-    let err = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
+    let err = physical_layout!(redraw_snapshot_json,&snapshot.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
     assert!(err.contains("unknown redraw mode"));
 }

@@ -525,7 +525,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
         ($variant:ident, $module:ident, $field:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramMutation::$variant(leaves::$module::$variant { $field: item }), id)
+            (ProgramMutation::$variant(leaves::$module::$variant { $field: item, index: None }), id)
         }};
     }
     Some(match register {

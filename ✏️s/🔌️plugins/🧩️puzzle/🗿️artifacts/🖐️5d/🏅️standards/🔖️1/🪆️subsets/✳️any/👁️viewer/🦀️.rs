@@ -7,7 +7,7 @@
 //!
 //! 🧬️ `Snapshot`/`Mutation` are the real ARTIFACT-level types (`Puzzle5dSnapshot`/`Puzzle5dMutation`,
 //! shared with the editor per contract §2.2's decode-only rule) — NOT the editor's own
-//! `Puzzle5dPlaySnapshot` newtype (a `serde_json::Value` wrapper the play app's command layer
+//! `Puzzle5dPlaySnapshot` newtype (a `semio_framework_pack_json::Value` wrapper the play app's command layer
 //! mutates); that distinction is this artifact's own pre-existing quirk, not introduced here.
 
 use crate::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DIALECT, PUZZLE_5D_SCHEMA};

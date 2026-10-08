@@ -1,0 +1,22 @@
+{
+  "positions": null,
+  "routes": null,
+  "regions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "region-old-town",
+        "patch": {
+          "data": null,
+          "properties": [
+            {
+              "key": "label"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

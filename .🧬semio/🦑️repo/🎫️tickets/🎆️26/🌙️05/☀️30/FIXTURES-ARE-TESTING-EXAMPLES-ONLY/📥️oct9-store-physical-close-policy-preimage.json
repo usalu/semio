@@ -1,0 +1,12 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json",
+  "beforeSha256": "30bfadf112857aea7789b5bf6f00b231dac537b302e775317459fe963b13532e",
+  "before": "{\n  \"values\": [\n    17,\n    -3,\n    23\n  ],\n  \"expectedAfter\": 23,\n  \"transport\": {\n    \"apply\": \"typed\",\n    \"preview\": \"wire\",\n    \"applyingRequestsWireCodec\": false\n  },\n  \"wrongType\": [\n    7,\n    9\n  ],\n  \"metadata\": {\n    \"actor\": \"owned-actor-β\",\n    \"groupId\": \"owned-group-α\"\n  },\n  \"grant\": {\n    \"maximumItems\": 1,\n    \"maximumCopyBytes\": 64,\n    \"maximumCapacityBytes\": 4096,\n    \"maximumReleaseBytes\": 4096,\n    \"maximumDepth\": 64\n  },\n  \"required\": {\n    \"wrongTypePreservesSource\": true,\n    \"stalePreservesPointerAndOrder\": true,\n    \"zeroCapacityRetainsSource\": true,\n    \"zeroReleaseRetainsPhysicalOwner\": true,\n    \"terminalReleasesEachAllocationOnce\": true\n  },\n  \"copyDemand\": {\n    \"rowCounts\": [\n      0,\n      1,\n      65,\n      257\n    ],\n    \"minimumCopyBytes\": 4,\n    \"zeroCopyReleasesBytes\": 0\n  },\n  \"census\": {\n    \"rowCounts\": [\n      1,\n      3,\n      257\n    ],\n    \"maximumPreflightsPerTurn\": 1,\n    \"maximumCloseBytes\": 262144\n  },\n  \"constructorRefusals\": [\n    {\n      \"id\": \"zero-depth\",\n      \"axis\": \"maximumDepth\",\n      \"value\": 0,\n      \"kind\": \"DepthLimit\"\n    },\n    {\n      \"id\": \"zero-items\",\n      \"axis\": \"maximumItems\",\n      \"value\": 0,\n      \"kind\": \"WorkLimit\"\n    },\n    {\n      \"id\": \"zero-capacity\",\n      \"axis\": \"maximumCapacityBytes\",\n      \"value\": 0,\n      \"kind\": \"AllocationFailed\"\n    }\n  ]\n}\n",
+  "addition": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  }
+}

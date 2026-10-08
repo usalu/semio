@@ -1566,16 +1566,9 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
-    /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
-    /// document replace has no in-history mutation at all (there is no import mutation by locked
-    /// decision — every whole-document gesture below routes through `reset_process3d_document_effect`
-    /// instead, a `Effect::LoadDocument`).
-    ///
-    /// 📥️ `geometry:in` (best-effort STEP-text import) replaces the whole document via a
-    /// `Effect::LoadDocument` (whole-document replace has no in-history mutation); the inherited
-    /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
-    /// unreachable now that `whole_document_operation` is `None`, so `document:in` is simply
-    /// unimplemented here — overriding `import_media` shadows the trait's provided body for every port.
+    /// 📥️ `geometry:in` (best-effort STEP-text import) replaces the whole document via a `Effect::LoadDocument`
+    /// (`reset_process3d_document_effect`, outside undo history); there is no import mutation. Overriding `import_media`
+    /// shadows the trait's provided body for every port, so `document:in` is simply unimplemented here.
     fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {

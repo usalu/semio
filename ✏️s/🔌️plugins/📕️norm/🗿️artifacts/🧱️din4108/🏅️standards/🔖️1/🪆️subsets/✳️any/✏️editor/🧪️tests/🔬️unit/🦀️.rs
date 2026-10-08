@@ -81,10 +81,8 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Din4108Command> {
     vec![
-        Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() }),
         Din4108Command::Evaluate(evaluate::Evaluate {}),
         Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
-        Din4108Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
         Din4108Command::SetField(set_field::SetField { path: "airtightnessN50".into(), value_json: "1.5".into() }),
         Din4108Command::InsertItem(insert_item::InsertItem { path: "zones".into(), index: 0, value_json: None }),
         Din4108Command::RemoveItem(remove_item::RemoveItem { path: "zones".into(), index: 0 }),
@@ -100,14 +98,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]);
+    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example", "set-field", "insert-item", "remove-item", "apply-remedy"];
+    let keywords = ["evaluate", "selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -170,9 +168,8 @@ async fn every_declared_body_key_renders() {
 
 //#region ðï¸Behavior
 #[semio_framework_async_macros::async_test]
-async fn set_snapshot_commits_a_host_backed_report() {
+async fn evaluate_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() })).await;
     context::settle(&mut app).await;
     let mut host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
@@ -198,59 +195,6 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
     let before = app.snapshot().expect("projection");
     context::dispatch(&mut app, Din4108Command::Evaluate(evaluate::Evaluate {})).await;
     assert_eq!(before, app.snapshot().expect("projection"));
-    context::close(&mut app);
-}
-
-/// 🧵️ The migrated route end to end: `dispatch_typed` passes the UI-dispatch classification gate,
-/// `build_norm_tool_job` hands the command to the shared owned factory, and repeated
-/// `maintenance_step` turns stage every `from_snapshot` field mutation into ONE batched Artifact
-/// edit through the exact per-item preparation authority — proving both the wiring and that the
-/// authored bundle order survives the staging. `app_with_registry` + a bound instance id is mandatory:
-/// a registry-less wrapper fails closed with `interactive-job.catalog-authority` once proofs exist.
-#[semio_framework_async_macros::async_test]
-async fn set_snapshot_dispatches_through_the_tool_job_path_and_publishes_the_payload_document() {
-    let mut app = context::app_with_registry().await;
-    let mut target = Din4108Snapshot::default();
-    target.elements.clear(); target.zones.clear();
-    assert_ne!(target, app.snapshot().expect("projection"));
-    context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: target.clone() })).await;
-    context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), target, "setSnapshot did not publish the payload document");
-    context::close(&mut app);
-}
-
-/// 🔬️ The one link inside the artifact-lane preparation that `setSnapshot` cannot be debugged
-/// through the store for: `prepare_norm_one_item` takes the mutation, asks it for a diff and applies
-/// that diff to the base. If any of the three steps refuses, the preparation has already consumed
-/// the mutation and the next `advance` reports the *downstream* `norm-mutation-owner-missing`
-/// instead of the real cause, which is exactly what ticket 26/09/18 slice B2b saw in the shell.
-#[test]
-fn from_snapshot_yields_one_diff_appliable_mutation_for_a_one_field_change() {
-    let base = Din4108Snapshot::default();
-    let mut target = base.clone();
-    target.t_int_c = 22.5;
-    let mutations = Din4108Mutation::from_snapshot(&base, &target);
-    assert_eq!(mutations.len(), 1, "one changed field must decompose into exactly one mutation: {mutations:?}");
-    let diff = ::protocol::Mutation::diff(&mutations[0], &base).into_parts().0;
-    let post = protocol::apply_diff(&diff, &base).expect("the from_snapshot mutation's own diff must apply to the base it was derived from");
-    assert_eq!(post, target);
-}
-
-/// 🌡️ The narrowest `setSnapshot` there is: one field moved, so `Din4108Mutation::from_snapshot`
-/// yields exactly ONE mutation and the artifact lane's one-item preparation authority
-/// (`NormOneItemPreparationFactory`) has exactly one item to stage. Ticket 26/09/18 slice B2b
-/// measured the shell dispatching this verb and the operation failing
-/// `norm-mutation-owner-missing`; this test is the native witness of the same path, and it is the
-/// sibling of `set_snapshot_dispatches_…`, whose target differs in two fields.
-#[semio_framework_async_macros::async_test]
-async fn set_snapshot_publishes_a_one_field_change_through_the_tool_job_path() {
-    let mut app = context::app_with_registry().await;
-    let mut target = app.snapshot().expect("projection");
-    target.t_int_c = 22.5;
-    assert_ne!(target, app.snapshot().expect("projection"));
-    context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: target.clone() })).await;
-    context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), target, "a one-field setSnapshot did not publish");
     context::close(&mut app);
 }
 
@@ -288,12 +232,16 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() })).await;
+    let base = app.snapshot().expect("projection");
+    context::dispatch(&mut app, Din4108Command::SetField(set_field::SetField { path: "usage".into(), value_json: "\"office\"".into() })).await;
+    let edited = app.snapshot().expect("projection");
+    assert_ne!(edited, base, "the concrete setter moved the document");
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), base);
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), Din4108Snapshot::default());
+    assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);
 }
 

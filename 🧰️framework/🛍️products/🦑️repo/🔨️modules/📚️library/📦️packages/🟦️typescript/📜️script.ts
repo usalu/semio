@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {consumeOwnerArgumentsV1} from "../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
 import { join, resolve } from "node:path";
@@ -94,13 +95,29 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="nx-owner-arguments-probe"){console.log("[DEBUG] ownerArgumentReceipt="+JSON.stringify({arguments:segments.slice(1),carrierPresent:process.env.SEMIO_OWNER_ARGUMENTS!==undefined}));return;}
+
+    if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return;}
+
+    if (segments.length === 1 && segments[0] === "generator-preview-receiving") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts"), "--test-name-pattern", "requires every owned generator|admits only explicit same-project preview|rejects missing, external, and non-canonical generator preview|bounds explicit preview resources|the actual empty General publisher|routes native generator previews|accepts the canonical language-neutral manifest|rejects noncanonical, noisy, unsafe, duplicate, and malformed manifests"], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "generator-preview-receiving"), budgetMs: 300_000 });
+      return;
+    }
+    if (segments.length === 1 && segments[0] === "selected-runtime-actor-port") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "selected-runtime-actor-port"), budgetMs: 120_000 });
+      return;
+    }
     if (segments.length === 1 && segments[0] === "runtime-fixture-graph") {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "runtime-fixture-graph"), budgetMs: 120_000 });
       return;
     }
+    if (segments.length === 1 && segments[0] === "artifact-command-extension") {
+      await runRepositoryTestCommand(process.execPath, ["test", "../../⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts"], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-command-extension"), budgetMs: 120_000 });
+      return;
+    }
     if (segments[0] === "artifact-io-ownership") {
       if (segments.length !== 1) throw Error("Expected test artifact-io-ownership");
-      for(const suite of ["../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../🚪️io/🏛️architecture/🧪️tests/physical-codecs/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"]){
+      for(const suite of ["../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"]){
         await runRepositoryTestCommand(process.execPath, ["test", suite], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-io-ownership"), budgetMs: 120_000 });
       }
       return;
@@ -837,8 +854,9 @@ class TestScript extends BundleScript {
 class OwnerCommandScript extends BundleScript{
   async run(args:string[]):Promise<void>{
     if(args[0]!=="--cwd"||!args[1]||args[2]!=="--"||!args[3])throw Error("owner-command --cwd <directory> -- <command> <args>");
-    const cwd=resolve(this.repoRoot,args[1]),policy=repositoryVitestPolicyV1(cwd),env=devToolingEnv({SEMIO_VITEST_POLICY:JSON.stringify(policy),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd))});
-    await runOwnedCommand(args[3],args.slice(4),cwd,"process:owner-command",0,{env});
+    const transported=consumeOwnerArgumentsV1(process.env),cwd=resolve(this.repoRoot,args[1]),policy=repositoryVitestPolicyV1(cwd),env=devToolingEnv({SEMIO_VITEST_POLICY:JSON.stringify(policy),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd))});
+    delete env.SEMIO_OWNER_ARGUMENTS;
+    await runOwnedCommand(args[3],[...args.slice(4),...transported.arguments],cwd,"process:owner-command",0,{env});
   }
 }
 

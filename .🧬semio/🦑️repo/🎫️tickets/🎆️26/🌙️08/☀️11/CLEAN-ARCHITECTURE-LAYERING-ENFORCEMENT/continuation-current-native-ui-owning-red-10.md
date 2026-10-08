@@ -1,0 +1,7 @@
+# Native UI Owning Red 10
+
+The exact UI10 literal owning route physically closed Nx/Bun1 and Cargo101 before runtime. All1,212 selected sources and producer remained exact at terminal. The original native Clipboard schema include was absent; whole authored JSON contract search found no relocation for all three schema owners. Original fixtures and physical/semantic laws remained current.
+
+Former absent paths remain absent. Fresh current schema owners were manually authored at GeneralUI retirement, actual Prepared retirement and actual raster-ownership retirement. Full fields/vectors, exact retained capacity and independent copy/release currencies are preserved. Native Clipboard now binds the new current owner. A peer removed portable AJV/schema bindings; its exact Buffer/RFC6902 laws were preserved and a new current canonical-owner AJV law added, including foreign contract refusal and capacity-collapse refusal. Full current source pairs and absence observations are recorded in native-ui-current-clipboard-schema-full-pair-1.json, native-ui-current-prepared-raster-domain-schema-full-pairs-1.json, native-ui-current-clipboard-schema-binding-full-pair-1.json and native-ui-current-canonical-schema-portable-law-full-pair-1.json.
+
+UI11 and portable5 must genuinely execute current sources; neither is claimed green yet. Flow7 remains qualified failed before runtime with749 actual Store errors.

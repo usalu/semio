@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertFoundation, base: &En1998Snapshot) -> protocol::Muta
     if base.foundations.iter().any(|existing| existing.id == payload.foundation.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Foundation id {} already exists.", payload.foundation.id), [payload.foundation.id.clone()]);
     }
-    let index = payload.index.min(base.foundations.len());
-    protocol::MutationOutcome::new(En1998Diff { foundations: En1998FoundationDelta::insertion(&base.foundations, index, payload.foundation.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.foundations.len());
+    protocol::MutationOutcome::new(En1998Diff { foundations: En1998FoundationDelta::insertion(index, payload.foundation.clone()), ..Default::default() })
 }

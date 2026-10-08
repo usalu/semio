@@ -125,4 +125,5 @@ test("Puzzle3d borrowed Scale and diff metadata preserve the authored neutral re
  expect(owner).toContain("<Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE");
  const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
  for(const name of laws.diffRecordOwners){expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"))}
+ for(const name of laws.deltaOwners)expect(diff).toContain("protocol::list_delta! { pub "+name+" {");
 });

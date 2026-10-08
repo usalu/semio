@@ -136,7 +136,7 @@ mod subject {
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_ply::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation,PlyMutation};
+    use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::mutations::{PlyMutation};
 
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
     use semio_s_artifact_stdio_ply_test_oracle::standards::v1_0::subsets::any::project_ply;
@@ -161,7 +161,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode(&input)?;
-        apply_ply_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
         let bytes = encode_in_declared_format(&snapshot)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -176,9 +176,9 @@ mod subject {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
         let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_ply_mutation(&mut snapshot, &forward);
+        apply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
-            apply_ply_mutation(&mut snapshot, mutation);
+            apply_mutation(&mut snapshot, mutation);
         }
         let restored = encode_in_declared_format(&snapshot)?;
         let projection = project_ply(&restored)?;

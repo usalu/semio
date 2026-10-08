@@ -400,15 +400,66 @@ test("actor component custody requires the exact current package workspace invoc
 });
 
 
-test("ordinary selected Dev actor acquisition refuses an absent production ledger",async()=>{
- const {runtimeSelectedActorsV1}=await import("../🔎️verification/🟦️.ts"),root=process.cwd(),config=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8")),directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,`missing-actor-ledger-${crypto.randomUUID()}`),previous=process.env.OS_HUB_DATA;mkdirSync(join(directory,"trusted-catalog"),{recursive:true});process.env.OS_HUB_DATA=directory;
- try{await expect(runtimeSelectedActorsV1(root,config,{read:path=>{try{return readFileSync(resolve(root,path),"utf8")}catch{return undefined}},current:()=>false,fixtureCollections:["🧫️fixtures"],checkCancellation:()=>{}})).rejects.toThrow("current.json");const {LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES}=await import("../../../../../../../../🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts");expect(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES.split(",")).toHaveLength(6);}finally{if(previous===undefined)delete process.env.OS_HUB_DATA;else process.env.OS_HUB_DATA=previous;}
+
+
+/** 🧬️ Canonical domain records retain schema-first format correspondence and completed compiler identity. */
+test("canonical runtime domain schemas cover complete compiler records and formats", () => {
+  const declarations = ts.createSourceFile("runtime-schema.ts", readFileSync(join(owner, "🧬️schema/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const names = declarations.statements.filter(statement => ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)).map(statement => statement.name.text).sort();
+  expect(names).toEqual(Object.keys(schema.$defs).sort());
+  expect(names.length).toBe(28);
+  const union = (members: unknown[]): unknown => ({ union: members.flatMap(member => typeof member === "object" && member !== null && "union" in member ? (member as { union: unknown[] }).union : [member]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) });
+  const fromJson = (value: any): unknown => {
+    if (value.$ref) return { ref: value.$ref.split("/").at(-1) };
+    if ("const" in value) return { literal: value.const };
+    if (value.enum) return union(value.enum.map((literal: unknown) => ({ literal })));
+    if (value.oneOf || value.anyOf) return union((value.oneOf ?? value.anyOf).map(fromJson));
+    if (Array.isArray(value.type)) return union(value.type.map((type: string) => fromJson({ type })));
+    if (value.type === "object") return { object: Object.entries(value.properties ?? {}).map(([name, field]) => [name, (value.required ?? []).includes(name), fromJson(field)]).sort(([a], [b]) => String(a).localeCompare(String(b))), open: value.additionalProperties !== false };
+    if (value.type === "array") return value.minItems === 2 && value.maxItems === 2 ? { tuple: [fromJson(value.items), fromJson(value.items)] } : { array: fromJson(value.items) };
+    return value.type === "integer" ? "number" : value.type;
+  };
+  const fromType = (node: ts.TypeNode): unknown => {
+    if (ts.isTypeOperatorNode(node) || ts.isParenthesizedTypeNode(node)) return fromType(node.type);
+    if (ts.isUnionTypeNode(node)) return union(node.types.map(fromType));
+    if (ts.isTupleTypeNode(node)) return { tuple: node.elements.map(fromType) };
+    if (ts.isArrayTypeNode(node)) return { array: fromType(node.elementType) };
+    if (ts.isTypeReferenceNode(node)) return node.typeName.getText(declarations) === "ReadonlyArray" ? { array: fromType(node.typeArguments![0]!) } : { ref: node.typeName.getText(declarations) };
+    if (ts.isTypeLiteralNode(node)) return { object: node.members.filter(ts.isPropertySignature).map(field => [field.name.getText(declarations), !field.questionToken, fromType(field.type!)]).sort(([a], [b]) => String(a).localeCompare(String(b))), open: node.members.some(ts.isIndexSignatureDeclaration) };
+    if (ts.isLiteralTypeNode(node)) {
+      const literal = node.literal;
+      if (literal.kind === ts.SyntaxKind.NullKeyword) return "null";
+      if (literal.kind === ts.SyntaxKind.TrueKeyword || literal.kind === ts.SyntaxKind.FalseKeyword) return { literal: literal.kind === ts.SyntaxKind.TrueKeyword };
+      if (ts.isStringLiteral(literal)) return { literal: literal.text };
+      if (ts.isNumericLiteral(literal)) return { literal: Number(literal.text) };
+    }
+    if (node.kind === ts.SyntaxKind.StringKeyword) return "string";
+    if (node.kind === ts.SyntaxKind.NumberKeyword) return "number";
+    if (node.kind === ts.SyntaxKind.BooleanKeyword) return "boolean";
+    throw Error(`Unrecognized canonical type ${node.getText(declarations)}`);
+  };
+  for (const statement of declarations.statements) if (ts.isTypeAliasDeclaration(statement)) expect(fromType(statement.type), statement.name.text).toEqual(fromJson(schema.$defs[statement.name.text]));
+
+  const samples = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).compilerCustody;
+  const ajv = new Ajv({ strict: true }).addSchema(schema);
+  for (const sample of samples) {
+    const validate = ajv.getSchema(`${schema.$id}#/$defs/${sample.name}`)!;
+    expect(typeof validate, sample.name).toBe("function");
+    expect(validate(sample.value), JSON.stringify(validate.errors)).toBe(sample.accepted);
+  }
+  console.log("[DEBUG] canonical runtime domain: 28 matching JSON/TS names; independent Ajv completed records; raw missing custody refused; native producer0");
 });
 
 
-test("read-only current Dev actors use the actual owner and honor cancellation without acquisition",async()=>{
- const {loadCurrentDevelopmentActorsV1}=await import("../🔎️verification/🟦️.ts"),vectors=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).developmentActorReads,previous=process.env.OS_HUB_DATA;
- expect(typeof loadCurrentDevelopmentActorsV1).toBe("function");
- for(const row of vectors){const directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,`read-only-actors-${crypto.randomUUID()}`);mkdirSync(join(directory,"trusted-catalog"),{recursive:true});process.env.OS_HUB_DATA=directory;let checked=0;try{await expect(loadCurrentDevelopmentActorsV1(process.cwd(),()=>{checked++;if(row.cancelled)throw Error(row.expected);})).rejects.toThrow(row.expected);expect(checked).toBeGreaterThan(0);expect(readdirSync(directory)).toEqual(["trusted-catalog"]);expect(readdirSync(join(directory,"trusted-catalog"))).toEqual([]);}finally{if(previous===undefined)delete process.env.OS_HUB_DATA;else process.env.OS_HUB_DATA=previous;}}
- const source=ts.createSourceFile("verification.ts",readFileSync(join(owner,"🔎️verification/🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true),definition=source.statements.find(statement=>ts.isFunctionDeclaration(statement)&&statement.name?.text==="loadCurrentDevelopmentActorsV1")!;expect(!!definition).toBe(true);const calls:string[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(source));ts.forEachChild(node,visit)};visit(definition);expect(calls).toContain("runtimeSelectedActorsV1");expect(calls.some(call=>/runTool|spawn|prepareCargo/u.test(call))).toBe(false);
+test("runtime malformed ECMA source cannot return partial definitive references", () => {
+  const rows = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).malformedEcmaSources;
+  for (const row of rows) {
+    const parsed = ts.createSourceFile("malformed.ts", row.source, ts.ScriptTarget.Latest, true);
+    expect((parsed as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics.length, row.id).toBeGreaterThan(0);
+    expect(() => runtimeEcmaReferencesV1(row.source, "src/main.ts"), row.id).toThrow();
+    const evidence = inspectRuntimeGraphV1(["src/main.ts"], { read: path => path === "src/main.ts" ? row.source : "export {};" });
+    expect(evidence.edges, row.id).toEqual([]);
+    expect(evidence.findings.some(finding => finding.code === "runtime-unresolved-edge"), row.id).toBe(true);
+  }
+  console.log("[DEBUG] malformed original ECMA source retains an unresolved graph and never publishes partial reference authority");
 });

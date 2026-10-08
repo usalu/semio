@@ -7,25 +7,37 @@
   "cellHeight": null,
   "periodicX": null,
   "periodicY": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      0,
+  "tiles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "empty",
-        "label": "Empty",
-        "weight": 5.0,
-        "media": {
-          "kind": "vector",
-          "paths": []
+        "patch": {
+          "weight": 5.0,
+          "media": null,
+          "label": null
         }
       }
     ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+  },
+  "rules": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "pinned": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "masked": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

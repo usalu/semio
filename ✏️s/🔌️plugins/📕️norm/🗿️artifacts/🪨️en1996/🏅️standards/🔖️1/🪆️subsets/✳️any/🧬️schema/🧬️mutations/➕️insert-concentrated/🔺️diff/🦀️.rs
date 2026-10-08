@@ -12,7 +12,7 @@ pub fn diff(payload: &InsertConcentrated, base: &En1996Snapshot) -> protocol::Mu
     }
     protocol::MutationOutcome::new(En1996Diff {
         walls: En1996WallDelta::modification(&wall.id, En1996WallPatch {
-            load_cases: En1996LoadCaseDelta::modification(&load_case.id, En1996LoadCasePatch { concentrated: En1996ConcentratedDelta::insertion(&load_case.concentrated, payload.index, payload.load.clone()), ..Default::default() }),
+            load_cases: En1996LoadCaseDelta::modification(&load_case.id, En1996LoadCasePatch { concentrated: En1996ConcentratedDelta::insertion(payload.index, payload.load.clone()), ..Default::default() }),
             ..Default::default()
         }),
         ..Default::default()

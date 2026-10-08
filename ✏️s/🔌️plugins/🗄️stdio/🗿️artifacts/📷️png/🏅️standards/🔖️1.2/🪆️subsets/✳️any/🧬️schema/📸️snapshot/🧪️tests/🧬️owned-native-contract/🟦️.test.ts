@@ -89,3 +89,12 @@ test("native PNG metadata diffs agree with literal neutral targets and RFC6902",
   console.log(`[DEBUG] native PNG metadata diff neutral=${row.name} path=${row.patch.path} exactMetadata=true inverseExact=true`);
  }
 });
+
+import {readFileSync as readPublicationFixture} from "node:fs";
+import {applyPatch as patchPublicationGrant} from "fast-json-patch";
+test("original image publication close grants preserve physical backing independently",()=>{
+ const fixture=JSON.parse(readPublicationFixture(new URL("../../../../✏️editor/🧬️publication/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),law=fixture.retirement;
+ const backing=Buffer.alloc(law.physicalBytes),grant={items:1,copy:law.copyBytes,capacity:law.capacityBytes,release:backing.byteLength,depth:law.depth};
+ for(const field of ["items","release","depth"]){const denied=patchPublicationGrant(structuredClone(grant),[{op:"replace",path:`/${field}`,value:0}],true).newDocument;expect(denied.items===0||denied.release<backing.byteLength||denied.depth===0).toBe(true);expect(backing.byteLength).toBe(law.physicalBytes);}
+ expect(grant.copy).toBe(3);expect(grant.release).toBe(65536);expect(law.scratchEmptyRetainsCapacity).toBe(true);expect(law.terminalChildReceipt).toBe("Progress");expect(law.terminalOwnerReceipt).toBe("Complete");
+});

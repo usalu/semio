@@ -1,12 +1,13 @@
 {
   "nodes": null,
   "elements": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "e1",
-        "item": {
+        "patch": {
           "kind": "bar",
           "id": "e1",
           "start": "n1",
@@ -15,8 +16,7 @@
           "sectionId": "ipe200"
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "regions": null,
   "materials": null,

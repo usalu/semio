@@ -205,3 +205,20 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: En1990Analyzer,
     composer: En1990Composer,
 );
+
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_en1990_mutation(base: &crate::En1990Snapshot, mutation: &crate::En1990Mutation) -> Result<(crate::En1990Snapshot, Vec<String>), String> {
+    let raised = <crate::En1990Mutation as protocol::Mutation<crate::En1990Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_en1990_mutation(mutation: &crate::En1990Mutation, base: &crate::En1990Snapshot) -> Result<Vec<crate::En1990Mutation>, semio_framework_value::ValueError> {
+    <crate::En1990Mutation as protocol::Mutation<crate::En1990Snapshot>>::inverse(mutation, base)
+}
+}
+pub use mutation_bridge::*;

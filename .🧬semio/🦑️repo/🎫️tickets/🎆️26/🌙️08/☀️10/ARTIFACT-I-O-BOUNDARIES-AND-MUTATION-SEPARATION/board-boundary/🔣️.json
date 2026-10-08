@@ -1,0 +1,813 @@
+{
+  "visibility": [
+    {
+      "flags": {},
+      "visible": true,
+      "option": null,
+      "locked": null
+    },
+    {
+      "flags": {
+        "hidden": true,
+        "visible": true
+      },
+      "visible": false,
+      "option": false,
+      "locked": null
+    },
+    {
+      "flags": {
+        "hidden": false,
+        "visible": false,
+        "locked": false
+      },
+      "visible": true,
+      "option": true,
+      "locked": false
+    },
+    {
+      "flags": {
+        "visible": false,
+        "locked": true
+      },
+      "visible": false,
+      "option": false,
+      "locked": true
+    },
+    {
+      "flags": {
+        "visible": true
+      },
+      "visible": true,
+      "option": true,
+      "locked": null
+    }
+  ],
+  "base": {
+    "rasterClear": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "gridMinorStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "edgeStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "edgeStrokeHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "edgeStrokeSelected": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "edgeStrokeSelectionExit": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "edgeStrokeDisabled": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeFillHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeFillSelected": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeSelected": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeFillSelectionExit": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeSelectionExit": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeFillDisabled": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeDisabled": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeComputing": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeStale": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeError": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "nodeStrokeBlocked": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "indirectHandleFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "indirectHandleStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleFillHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleStrokeHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleFillSelected": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleStrokeSelected": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleFillSelectionExit": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleStrokeSelectionExit": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleFillDisabled": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "handleStrokeDisabled": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "wireStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "wireStrokeHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "wireStrokeSelected": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "wireStrokeHighlighted": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "wireStrokeDisabled": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "selectionPreviewFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "selectionPreviewStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "labelFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "labelFillHovered": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "labelHalo": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "minimapWidgetPanelFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "minimapWidgetPanelStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "minimapWidgetViewportFill": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "minimapWidgetViewportStroke": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "minimapWidgetViewportStrokeHovered": [
+      10,
+      20,
+      30,
+      255
+    ]
+  },
+  "overlays": [
+    {},
+    {
+      "nodeStrokeHovered": [
+        1,
+        2,
+        3,
+        255
+      ],
+      "edgeStrokeHovered": [
+        4,
+        5,
+        6,
+        255
+      ],
+      "handleStrokeHovered": [
+        7,
+        8,
+        9,
+        255
+      ],
+      "wireStrokeHovered": [
+        10,
+        11,
+        12,
+        255
+      ]
+    },
+    {
+      "rasterClear": [
+        0,
+        255,
+        0,
+        1
+      ],
+      "gridMinorStroke": [
+        1,
+        254,
+        3,
+        2
+      ],
+      "edgeStroke": [
+        2,
+        253,
+        6,
+        3
+      ],
+      "edgeStrokeHovered": [
+        3,
+        252,
+        9,
+        4
+      ],
+      "edgeStrokeSelected": [
+        4,
+        251,
+        12,
+        5
+      ],
+      "edgeStrokeSelectionExit": [
+        5,
+        250,
+        15,
+        6
+      ],
+      "edgeStrokeDisabled": [
+        6,
+        249,
+        18,
+        7
+      ],
+      "nodeFill": [
+        7,
+        248,
+        21,
+        8
+      ],
+      "nodeStroke": [
+        8,
+        247,
+        24,
+        9
+      ],
+      "nodeFillHovered": [
+        9,
+        246,
+        27,
+        10
+      ],
+      "nodeStrokeHovered": [
+        10,
+        245,
+        30,
+        11
+      ],
+      "nodeFillSelected": [
+        11,
+        244,
+        33,
+        12
+      ],
+      "nodeStrokeSelected": [
+        12,
+        243,
+        36,
+        13
+      ],
+      "nodeFillSelectionExit": [
+        13,
+        242,
+        39,
+        14
+      ],
+      "nodeStrokeSelectionExit": [
+        14,
+        241,
+        42,
+        15
+      ],
+      "nodeFillDisabled": [
+        15,
+        240,
+        45,
+        16
+      ],
+      "nodeStrokeDisabled": [
+        16,
+        239,
+        48,
+        17
+      ],
+      "nodeStrokeComputing": [
+        17,
+        238,
+        51,
+        18
+      ],
+      "nodeStrokeStale": [
+        18,
+        237,
+        54,
+        19
+      ],
+      "nodeStrokeError": [
+        19,
+        236,
+        57,
+        20
+      ],
+      "nodeStrokeBlocked": [
+        20,
+        235,
+        60,
+        21
+      ],
+      "indirectHandleFill": [
+        21,
+        234,
+        63,
+        22
+      ],
+      "indirectHandleStroke": [
+        22,
+        233,
+        66,
+        23
+      ],
+      "handleFill": [
+        23,
+        232,
+        69,
+        24
+      ],
+      "handleStroke": [
+        24,
+        231,
+        72,
+        25
+      ],
+      "handleFillHovered": [
+        25,
+        230,
+        75,
+        26
+      ],
+      "handleStrokeHovered": [
+        26,
+        229,
+        78,
+        27
+      ],
+      "handleFillSelected": [
+        27,
+        228,
+        81,
+        28
+      ],
+      "handleStrokeSelected": [
+        28,
+        227,
+        84,
+        29
+      ],
+      "handleFillSelectionExit": [
+        29,
+        226,
+        87,
+        30
+      ],
+      "handleStrokeSelectionExit": [
+        30,
+        225,
+        90,
+        31
+      ],
+      "handleFillDisabled": [
+        31,
+        224,
+        93,
+        32
+      ],
+      "handleStrokeDisabled": [
+        32,
+        223,
+        96,
+        33
+      ],
+      "wireStroke": [
+        33,
+        222,
+        99,
+        34
+      ],
+      "wireStrokeHovered": [
+        34,
+        221,
+        102,
+        35
+      ],
+      "wireStrokeSelected": [
+        35,
+        220,
+        105,
+        36
+      ],
+      "wireStrokeHighlighted": [
+        36,
+        219,
+        108,
+        37
+      ],
+      "wireStrokeDisabled": [
+        37,
+        218,
+        111,
+        38
+      ],
+      "selectionPreviewFill": [
+        38,
+        217,
+        114,
+        39
+      ],
+      "selectionPreviewStroke": [
+        39,
+        216,
+        117,
+        40
+      ],
+      "labelFill": [
+        40,
+        215,
+        120,
+        41
+      ],
+      "labelFillHovered": [
+        41,
+        214,
+        123,
+        42
+      ],
+      "labelHalo": [
+        42,
+        213,
+        126,
+        43
+      ],
+      "minimapWidgetPanelFill": [
+        43,
+        212,
+        129,
+        44
+      ],
+      "minimapWidgetPanelStroke": [
+        44,
+        211,
+        132,
+        45
+      ],
+      "minimapWidgetViewportFill": [
+        45,
+        210,
+        135,
+        46
+      ],
+      "minimapWidgetViewportStroke": [
+        46,
+        209,
+        138,
+        47
+      ],
+      "minimapWidgetViewportStrokeHovered": [
+        47,
+        208,
+        141,
+        48
+      ]
+    }
+  ],
+  "invalidOverlays": [
+    {
+      "unknown": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "nodeFill": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "nodeFill": [
+        0,
+        0,
+        0,
+        255,
+        1
+      ]
+    },
+    {
+      "nodeFill": [
+        256,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "nodeFill": [
+        -1,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "nodeFill": [
+        1.5,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "nodeFill": [
+        true,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "nodeFill": null
+    },
+    [],
+    true
+  ],
+  "userdata": {
+    "null": null,
+    "number": 42,
+    "string": "Grüße",
+    "array": [
+      false,
+      1
+    ],
+    "object": {
+      "nested": {
+        "kind": "image"
+      },
+      "flag": true
+    }
+  },
+  "paletteSources": [
+    {
+      "source": "{\"nodeFill\":[1.0,2e0,2.550e2,0e10]}",
+      "expected": {
+        "nodeFill": [
+          1,
+          2,
+          255,
+          0
+        ]
+      }
+    }
+  ],
+  "edgeTips": [
+    {
+      "entry": {
+        "id": "arrow"
+      },
+      "expected": {
+        "geometry": "arrow",
+        "filled": true,
+        "scale": 1
+      }
+    },
+    {
+      "entry": {
+        "id": "fine-arrow"
+      },
+      "expected": {
+        "geometry": "fine-arrow",
+        "filled": false,
+        "scale": 1
+      }
+    },
+    {
+      "entry": {
+        "id": "open-diamond"
+      },
+      "expected": {
+        "geometry": "diamond",
+        "filled": false,
+        "scale": 1
+      }
+    },
+    {
+      "entry": {
+        "id": "custom",
+        "geometry": "circle",
+        "scale": 2
+      },
+      "expected": {
+        "geometry": "circle",
+        "filled": true,
+        "scale": 2
+      }
+    },
+    {
+      "entry": {
+        "id": "custom",
+        "geometry": "bar",
+        "scale": 0
+      },
+      "expected": {
+        "geometry": "bar",
+        "filled": false,
+        "scale": 1
+      }
+    },
+    {
+      "entry": {
+        "id": "open-diamond",
+        "geometry": "diamond"
+      },
+      "expected": {
+        "geometry": "diamond",
+        "filled": false,
+        "scale": 1
+      }
+    }
+  ]
+}

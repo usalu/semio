@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-samples/schema.json",
+  "title": "ReplaceSamples",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "region",
+    "samples"
+  ],
+  "properties": {
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Region",
+          "de": "Bereich"
+        },
+        "group": "region",
+        "order": 10
+      },
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left",
+              "de": "Links"
+            },
+            "group": "position",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top",
+              "de": "Oben"
+            },
+            "group": "position",
+            "order": 20
+          }
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "group": "position",
+            "order": 30
+          }
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "group": "position",
+            "order": 40
+          }
+        }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Native samples",
+          "de": "Native Abtastwerte"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

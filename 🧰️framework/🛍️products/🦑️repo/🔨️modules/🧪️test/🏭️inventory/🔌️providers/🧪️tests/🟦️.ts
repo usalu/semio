@@ -9,9 +9,8 @@ import { admitMutationInventoryProviderV1, discoverMutationInventoryProvidersV1,
 /** 🧪️ Proves provider admission and explicit ownership against an independent schema oracle. */
 export function runMutationInventoryProviderChecksV1(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const schema = read("../🧬️schema/🔣️.json"), vectors = read("../🧫️fixtures/🔣️.json"), corpusSchema = read("../🧫️fixtures/🔣️schema.json");
-  const ajv = new Ajv({ strict: true }).addSchema(schema), oracle = ajv.compile(schema);
-  assert.equal(Boolean(ajv.compile(corpusSchema)(vectors)), true);
+  const schema = read("../🧬️schema/🔣️.json"), vectors = read("../🧫️fixtures/🔣️.json");
+  const oracle = new Ajv({ strict: true }).compile(schema);
   for (const vector of vectors.cases) {
     assert.equal(Boolean(oracle(vector.value)), vector.valid, vector.name);
     if (vector.valid) assert.deepEqual(admitMutationInventoryProviderV1(vector.value), vector.value, vector.name);

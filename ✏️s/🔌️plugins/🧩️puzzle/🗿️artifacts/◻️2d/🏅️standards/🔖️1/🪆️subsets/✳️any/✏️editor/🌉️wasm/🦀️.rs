@@ -13,10 +13,9 @@
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
-use crate::editor::puzzle2d::engine::layout::redraw_layout_snapshot_json;
 use crate::editor::puzzle2d::engine::{
-    apply_edge_handle_snap_to_board_snapshot_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
-    BoardHost, CubicBez, Point, SceneDescriptorJson,
+    apply_edge_handle_snap_to_board_snapshot_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json,
+    BoardHost, CubicBez, Point,
 };
 use crate::Puzzle2dSnapshot;
 
@@ -62,8 +61,15 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 }
 
 #[wasm_bindgen(js_name = boardRedrawLayoutSnapshotJson)]
-pub fn board_redraw_layout_snapshot_json(snapshot_json: &str, options_json: &str) -> Result<String, JsValue> {
-    redraw_layout_snapshot_json(snapshot_json, options_json).map_err(|e| JsValue::from_str(&e))
+pub fn board_redraw_layout_snapshot_json(snapshot_json:&str,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<String,JsValue>{
+ let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|value|value.as_bool().unwrap_or(false)).unwrap_or(false);
+ let mut decode_progress=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);
+ let mut encode_progress=|p:semio_framework_value::NativeEncodeProgress|report("encode",p.completed as u64);
+ let mut layout_progress=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);
+ let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decode_progress);
+ let mut encode=semio_framework_value::NativeEncodeControl::new(maximum_bytes as usize,&mut encode_progress);
+ let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut layout_progress);
+ semio_framework_os_infinite::board::io::text::layout::redraw_snapshot_json(snapshot_json,options_json,&mut decode,&mut work,&mut encode).map_err(|e|JsValue::from_str(&e.to_string()))
 }
 
 #[wasm_bindgen(js_name = boardRedrawHandlesSnapshotJson)]
@@ -189,9 +195,9 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = syncDescriptorJson)]
     pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
-        let mut raw: serde_json::Value = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        normalize_board_descriptor_hidden_to_visible(&mut raw);
-        let desc: SceneDescriptorJson = serde_json::from_value(raw).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut accepted=|_|true;
+        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);
+        let desc=semio_framework_os_infinite::board::io::text::visibility::decode_board_scene_json(json,&mut control).map_err(|error|JsValue::from_str(&error.to_string()))?;
         self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(())
     }
@@ -208,7 +214,9 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
     pub fn set_canvas_theme_json(&mut self, json: &str) {
-        let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
+        let mut accepted=|_|true;
+        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);
+        if let Ok(overlay)=semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.set_canvas_palette(&overlay);}
     }
 
     #[wasm_bindgen(js_name = clearIconVectorCache)]
@@ -218,7 +226,9 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = loadBoardSnapshotJson)]
     pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
-        self.state.borrow_mut().host.load_board_snapshot_json(json)
+        let mut accepted=|_|true;
+        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);
+        semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut self.state.borrow_mut().host,json,&mut control)
     }
 
     #[wasm_bindgen(js_name = setCamera)]
@@ -290,7 +300,7 @@ impl BoardSession {
     #[wasm_bindgen(js_name = cameraJson)]
     pub fn camera_json(&self) -> String {
         let inner = self.state.borrow();
-        serde_json::json!({
+        semio_framework_pack_json::json!({
             "x": inner.host.camera.x,
             "y": inner.host.camera.y,
             "zoom": inner.host.camera.zoom,
@@ -469,28 +479,27 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setSelectionIdsJson)]
     pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
-        let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+        let ids: Vec<String> = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
         self.state.borrow_mut().host.set_selection_ids(&ids);
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setSelectionIdsJsonSilent)]
     pub fn set_selection_ids_json_silent(&mut self, json: &str) -> Result<(), JsValue> {
-        let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+        let ids: Vec<String> = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
         self.state.borrow_mut().host.set_selection_ids_silent(&ids);
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setPreselectStateJsonSilent)]
     pub fn set_preselect_state_json_silent(&mut self, json: &str) -> Result<(), JsValue> {
-        #[derive(value_derive::FromValue, serde::Deserialize)]
+        #[derive(value_derive::FromValue)]
         struct PreselectSync {
             ids: Vec<String>,
-            #[serde(default, rename = "removedIds")]
             #[value(default, rename = "removedIds")]
             removed_ids: Vec<String>,
         }
-        let body: PreselectSync = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+        let body: PreselectSync = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
         self.state.borrow_mut().host.set_preselect_state_silent(&body.ids, &body.removed_ids);
         Ok(())
     }
@@ -503,7 +512,7 @@ impl BoardSession {
     /// 🔗️ Paints the ids a time-travel draft references highlighted (`Board2dScene.highlightedIdsJson`); `[]` clears them.
     #[wasm_bindgen(js_name = setHighlightedIdsJson)]
     pub fn set_highlighted_ids_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+        let ids: Vec<String> = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
         self.state.borrow_mut().host.set_highlighted_ids(ids);
         Ok(())
     }

@@ -15,9 +15,10 @@
   "accessRules": null,
   "operations": null,
   "equipment": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "equipment-a",
         "patch": {
@@ -55,8 +56,7 @@
           "spareParts": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "resources": null,
   "storage": null,

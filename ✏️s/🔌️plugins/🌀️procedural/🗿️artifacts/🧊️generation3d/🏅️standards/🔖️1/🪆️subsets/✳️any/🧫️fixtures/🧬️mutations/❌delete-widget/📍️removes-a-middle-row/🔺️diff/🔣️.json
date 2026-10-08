@@ -2,12 +2,15 @@
   "schema": null,
   "camera": null,
   "widgets": {
-    "added": [],
     "removed": [
-      "node-a"
+      {
+        "id": "node-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "synapses": null,
   "layout": null,

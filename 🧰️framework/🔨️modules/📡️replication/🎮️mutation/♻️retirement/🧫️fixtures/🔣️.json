@@ -1,0 +1,12 @@
+{
+  "contract": "semio.replay.pending-retirement/v1",
+  "constructorHeapBytes": 0,
+  "maximumPendingSnapshots": 1,
+  "maximumPendingInverseLists": 1,
+  "lanes": ["copy", "capacity", "release", "depth"],
+  "cases": [
+    {"snapshot": true, "inverse": true, "order": ["snapshot", "inverse", "factory"]},
+    {"snapshot": true, "inverse": false, "order": ["snapshot", "factory"]},
+    {"snapshot": false, "inverse": true, "order": ["inverse", "factory"]}
+  ]
+}

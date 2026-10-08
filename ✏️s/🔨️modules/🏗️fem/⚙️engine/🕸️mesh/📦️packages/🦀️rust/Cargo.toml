@@ -1,0 +1,28 @@
+[package]
+name = "semio-s-fem-mesh"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+description = "Independent binary64 planar meshing and region volume surfaces"
+
+[workspace]
+resolver = "2"
+
+[package.metadata.semio]
+role = "s-module"
+id = "fem-mesh"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+serde_json = "1.0.149"
+
+[profile.dev]
+debug = false
+incremental = false

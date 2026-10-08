@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stdio.tiff.native-observations",
+  "title": "TIFF Native Observations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ifdCount",
+    "raster",
+    "compression",
+    "photometric",
+    "bitsPerSample",
+    "tileWidth",
+    "tileLength",
+    "stripOffsets"
+  ],
+  "properties": {
+    "ifdCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "raster": {
+      "type": "boolean"
+    },
+    "compression": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "photometric": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "bitsPerSample": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "tileWidth": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "tileLength": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "stripOffsets": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    }
+  }
+}

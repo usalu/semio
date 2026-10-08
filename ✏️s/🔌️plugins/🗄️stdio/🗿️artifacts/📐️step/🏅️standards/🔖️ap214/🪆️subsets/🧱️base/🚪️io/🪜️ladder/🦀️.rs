@@ -4,9 +4,11 @@
 //! `✳️ccN`'s `check_ccN_conformance` calls into these primitives rather than re-deriving the
 //! ladder or the shared base scans independently — one classification, six consumers.
 
-use crate::schema::diff::{StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
 use crate::schema::snapshot::{StepEntity, StepFileSchema, StepValue};
 use crate::StepSnapshot;
+use semio_framework_value::{FromValue, ToValue};
+use semio_s_artifact_stdio_contract::editing::{edited_subtree, SnapshotEditError, SnapshotEditEvent};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 
 //#region 🔖️Ladder
@@ -299,6 +301,20 @@ pub fn identity_rungs(identity: &ProductIdentity) -> Vec<StepEntity> {
     rungs
 }
 
+/// ✏️ The sparse diff that rewrites `existing` into `entity` in place: its name when it differs, each shared argument position whose value differs, the
+/// tail arguments one list has beyond the other, and the complex constituents when they differ.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rewritten_entity_diff(existing: &StepEntity, entity: &StepEntity) -> StepEntityDiff {
+    let shared = existing.args.len().min(entity.args.len());
+    let args = StepArgsDiff {
+        removed: (shared..existing.args.len()).collect(),
+        modified: (0..shared).filter(|index| existing.args[*index] != entity.args[*index]).map(|index| StepArgModified { index, value: entity.args[index].clone() }).collect(),
+        added: (shared..entity.args.len()).map(|index| StepArgAdded { index, value: entity.args[index].clone() }).collect(),
+    };
+    let changed = !(args.removed.is_empty() && args.modified.is_empty() && args.added.is_empty());
+    StepEntityDiff { name: (existing.name != entity.name).then(|| entity.name.clone()), args: changed.then_some(args), complex: (existing.complex != entity.complex).then(|| entity.complex.clone()) }
+}
+
 /// 🧩️ The diff that sets (`Some`, at `index` when new) or removes (`None`) entity `id`: an absent id with `None` is the empty diff, a present id
 /// with `Some` is edited in place name-by-name and argument-by-argument.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -307,7 +323,7 @@ pub fn entity_diff(base: &StepSnapshot, id: u64, entity: Option<&StepEntity>, in
         (None, None) => return StepDiff::default(),
         (Some(existing), Some(entity)) if existing == entity => return StepDiff::default(),
         (Some(_), None) => StepEntitiesDiff { removed: vec![id], ..Default::default() },
-        (Some(existing), Some(entity)) => StepEntitiesDiff { modified: vec![StepEntityModified { id, diff: StepEntityDiff::between(existing, entity) }], ..Default::default() },
+        (Some(existing), Some(entity)) => StepEntitiesDiff { modified: vec![StepEntityModified { id, diff: rewritten_entity_diff(existing, entity) }], ..Default::default() },
         (None, Some(entity)) => StepEntitiesDiff { added: vec![StepEntityAdded { index: index.map_or(base.entities.len(), |at| at.min(base.entities.len())), entity: entity.clone() }], ..Default::default() },
     };
     StepDiff { entities: Some(entities), ..Default::default() }
@@ -400,7 +416,7 @@ pub fn restore_diff(base: &StepSnapshot, rows: &[EntityRestore]) -> Result<StepD
             (Some(_), None) => diff.removed.push(row.id),
             (Some(existing), Some(entity)) => {
                 if existing != entity {
-                    diff.modified.push(StepEntityModified { id: row.id, diff: StepEntityDiff::between(existing, entity) });
+                    diff.modified.push(StepEntityModified { id: row.id, diff: rewritten_entity_diff(existing, entity) });
                 }
             }
             (None, Some(entity)) => match row.index {
@@ -435,24 +451,43 @@ pub fn chain_restore_rows(base: &StepSnapshot, identity: Option<&ProductIdentity
     rows
 }
 
-/// 🧮️ The rows that carry `base` to `next`: added entities at their final position, changed retained entities rewritten in place, removed
-/// entities cleared. `None` when `next` changes the relative order of the retained entities, which no row expresses.
+/// ✏️ The rows one details-pane edit of the entity list names: inserting an entity writes it at that position, removing one clears it, and any
+/// other edit of an entity (its name, an argument, the entity set whole) writes the edited entity in place. `None` for a pointer outside
+/// `/entities/<row>`; the order of retained entities, an entity's id and its complex constituents are not addressable and are refused by
+/// the row's own diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_restore_rows(base: &StepSnapshot, next: &StepSnapshot) -> Option<Vec<EntityRestore>> {
-    let retained: Vec<usize> = base.entities.iter().filter_map(|before| next.entities.iter().position(|after| after.id == before.id)).collect();
-    if retained.windows(2).any(|pair| pair[0] > pair[1]) {
-        return None;
-    }
-    let mut rows: Vec<EntityRestore> = Vec::new();
-    for (at, after) in next.entities.iter().enumerate() {
-        match base.entities.iter().find(|before| before.id == after.id) {
-            None => rows.push(EntityRestore { id: after.id, entity: Some(after.clone()), index: Some(at) }),
-            Some(before) if before != after => rows.push(EntityRestore { id: after.id, entity: Some(after.clone()), index: None }),
-            Some(_) => {}
+pub fn edit_restore_rows(event: &SnapshotEditEvent, snapshot: &StepSnapshot) -> Result<Option<Vec<EntityRestore>>, SnapshotEditError> {
+    let Some(pointer) = (match event {
+        SnapshotEditEvent::SetValue { path, .. } | SnapshotEditEvent::InsertValue { path, .. } | SnapshotEditEvent::RemoveValue { path } | SnapshotEditEvent::RenameKey { path, .. } => Some(path.as_str()),
+        SnapshotEditEvent::MoveValue { .. } | SnapshotEditEvent::ReplaceSource { .. } => None,
+    }) else {
+        return Ok(None);
+    };
+    let segments: Vec<&str> = pointer.split('/').skip(1).collect();
+    let ["entities", position, rest @ ..] = segments.as_slice() else { return Ok(None) };
+    let refusal = |message: String| SnapshotEditError::new("snapshot-edit.schema-invalid", pointer, message);
+    let bounds = |at: usize| SnapshotEditError::new("snapshot-edit.index-out-of-bounds", pointer, format!("position {at} is outside the {} entities", snapshot.entities.len()));
+    let row = |insert: bool| -> Result<usize, SnapshotEditError> {
+        let at = if insert && *position == "-" { snapshot.entities.len() } else { position.parse().map_err(|_| refusal(format!("'{position}' is no entity position")))? };
+        if at > snapshot.entities.len() || (!insert && at == snapshot.entities.len()) {
+            return Err(bounds(at));
+        }
+        Ok(at)
+    };
+    match (rest, event) {
+        ([], SnapshotEditEvent::InsertValue { value, .. }) => {
+            let at = row(true)?;
+            let entity = StepEntity::from_value(value.clone()).map_err(|error| refusal(error.to_string()))?;
+            Ok(Some(vec![EntityRestore { id: entity.id, entity: Some(entity), index: Some(at) }]))
+        }
+        ([], SnapshotEditEvent::RemoveValue { .. }) => Ok(Some(vec![EntityRestore { id: snapshot.entities[row(false)?].id, entity: None, index: None }])),
+        _ => {
+            let at = row(false)?;
+            let current = &snapshot.entities[at];
+            let next = StepEntity::from_value(edited_subtree(&current.to_value(), &format!("/entities/{at}"), event)?).map_err(|error| refusal(error.to_string()))?;
+            Ok(Some(if next == *current { Vec::new() } else { vec![EntityRestore { id: current.id, entity: Some(next), index: None }] }))
         }
     }
-    rows.extend(base.entities.iter().filter(|before| !next.entities.iter().any(|after| after.id == before.id)).map(|before| EntityRestore { id: before.id, entity: None, index: None }));
-    Some(rows)
 }
 //#endregion 🔖️EntityDiffs
 

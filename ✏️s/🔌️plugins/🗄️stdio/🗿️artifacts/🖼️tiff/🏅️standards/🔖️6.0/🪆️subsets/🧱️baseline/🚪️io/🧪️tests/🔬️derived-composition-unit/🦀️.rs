@@ -1,21 +1,10 @@
 mod tests {
     use super::*;
-    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag, TiffValues};
+
     use semio_framework_plugin::io::AnalyzeSource;
 
-    /// 🩹 `TiffSnapshot::default()` has no IFD at all, which the real encoder rejects ("tiff:
-    /// encode requires an ImageWidth tag") -- `encode_pack`'s infallible convenience wrapper
-    /// then panics instead of returning that `Err`. A minimal 1x1 non-degenerate image (real
-    /// IFD with ImageWidth/ImageLength/StripOffsets) is the smallest real fixture the encoder
-    /// accepts.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
-        TiffSnapshot {
-            byte_order: TiffByteOrder::LittleEndian,
-            ifds: vec![TiffIfd { storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: vec![vec![0, 0, 0, 255]], ..TiffStorage::default() }, entries: vec![TiffTag { tag: 256, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 257, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 258, values: TiffValues::Short(vec![8, 8, 8, 8]) }, TiffTag { tag: 259, values: TiffValues::Short(vec![1]) }, TiffTag { tag: 262, values: TiffValues::Short(vec![2]) }, TiffTag { tag: 277, values: TiffValues::Short(vec![4]) }, TiffTag { tag: 278, values: TiffValues::Long(vec![1]) }] }],
-            ..TiffSnapshot::default()
-        }
-    }
+    /// 🌱 Uses one owned exact raster for native composition.
+    fn minimal_non_degenerate_snapshot() -> TiffSnapshot { crate::schema::blank_tiff_snapshot() }
 
     #[semio_framework_async_macros::async_test]
     async fn compose_carries_no_findings_for_a_conformant_document() {

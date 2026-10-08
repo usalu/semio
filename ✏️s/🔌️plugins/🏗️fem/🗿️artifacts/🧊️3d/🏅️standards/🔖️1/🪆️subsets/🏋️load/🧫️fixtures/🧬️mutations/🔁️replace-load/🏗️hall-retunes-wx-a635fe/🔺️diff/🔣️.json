@@ -6,21 +6,23 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "wind_x",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [],
+            "inserted": [],
             "removed": [],
-            "patched": [
+            "moved": [],
+            "modified": [
               {
                 "id": "ld_wx_0",
-                "item": {
+                "patch": {
                   "kind": "nodal",
                   "id": "ld_wx_0",
                   "nodeId": "el_0",
@@ -28,13 +30,11 @@
                   "value": 6750.0
                 }
               }
-            ],
-            "reordered": null
+            ]
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

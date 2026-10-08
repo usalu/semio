@@ -7,7 +7,7 @@
 //! ⚠️ Why every presentation case pins a GUARD branch: `PresentationSnapshot` keeps its `(source, tiles)` in
 //! the composed `s.stdio.semio.presentation` CHILD (`🔖️WorkingScene`), so a committed snapshot
 //! carries a handle, never a deck — and every content-changing diff routes through
-//! `diff_set_presentation`, which mints a fresh handle whose `child_id` is a `DefaultHasher` digest.
+//! `PresentationDiff::apply`, which derives the handle from the resulting `(source, tiles)`.
 //! Hand-authoring such an `➡️after` would mean forging a value from `std`'s deliberately
 //! unspecified default hasher, so this tree pins the branches that mint no handle at all.
 //!

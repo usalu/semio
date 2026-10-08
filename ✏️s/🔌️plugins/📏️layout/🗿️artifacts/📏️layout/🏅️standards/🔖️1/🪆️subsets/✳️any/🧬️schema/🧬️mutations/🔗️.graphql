@@ -191,7 +191,9 @@ type DeleteStory {
 
 type EditStory {
   id: String!
-  newContent: String!
+  offset: Int!
+  delete: Int!
+  insert: String!
 }
 
 type CreateLink {

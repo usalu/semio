@@ -1,0 +1,197 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "logicalActions": [
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(P::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(P::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(retained_demo_member_owners());",
+      "after": ".install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(owners);",
+      "after": ".install_document_store_owners_exact(owners).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(retained_demo_member_owners());",
+      "after": ".install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(retained_demo_member_owners());",
+      "after": ".install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(retained_demo_member_owners());",
+      "after": ".install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(retained_demo_member_owners());",
+      "after": ".install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(retained_demo_member_owners());",
+      "after": ".install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new()))));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new())))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners());",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant())));",
+      "after": ".install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    },
+    {
+      "before": ".install_document_store_owners_exact(demo_closable_store_owners().with_one_item_preparation(Arc::new(factory)));",
+      "after": ".install_document_store_owners_exact(demo_closable_store_owners().with_one_item_preparation(Arc::new(factory))).unwrap_or_else(|(error,_)|panic!(\"funded complete test catalog install refused: {error}\"));"
+    }
+  ]
+}

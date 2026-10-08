@@ -5,6 +5,9 @@ use super::super::*;
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::SetStyleBasedOn, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
+    if style_at(base, &payload.id).is_none() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    }
     let super::SetStyleBasedOn { id, based_on } = payload;
     protocol::MutationOutcome::new(match style_at(base, id) {
         Some(old) if &old.based_on != based_on => SemioDocumentDiff {

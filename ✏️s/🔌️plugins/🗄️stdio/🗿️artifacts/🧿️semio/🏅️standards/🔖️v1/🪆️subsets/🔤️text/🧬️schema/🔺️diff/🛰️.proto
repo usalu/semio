@@ -1,12 +1,13 @@
 syntax = "proto3";
-// 🔺️ SemioTextDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+// 🔺️ SemioTextDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
 package semio.s_stdio_semio_text.diff;
 
-import "../📸️snapshot/🛰️.proto";
-
-message SemioTextRunListDiff {
-  repeated semio.s_stdio_semio_text.snapshot.SemioTextRun values = 1;
-}
-message SemioTextDiff {
-  optional SemioTextRunListDiff runs = 1;
-}
+message ReplaceSemioTextMark { bytes value = 1; }
+message IndexModifiedReplaceSemioTextMark { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioTextMark { uint64 index = 1; bytes item = 2; }
+message IndexedTripleReplaceSemioTextMarkSemioTextMark { repeated uint64 removed = 1; repeated IndexModifiedReplaceSemioTextMark modified = 2; repeated IndexAddedSemioTextMark added = 3; }
+message IndexModifiedSemioTextRunDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioTextRun { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioTextRunDiffSemioTextRun { repeated uint64 removed = 1; repeated IndexModifiedSemioTextRunDiff modified = 2; repeated IndexAddedSemioTextRun added = 3; }
+message SemioTextRunDiff { optional string language = 1; optional string content = 2; optional IndexedTripleReplaceSemioTextMarkSemioTextMark marks = 3; }
+message SemioTextDiff { optional IndexedTripleSemioTextRunDiffSemioTextRun runs = 1; }

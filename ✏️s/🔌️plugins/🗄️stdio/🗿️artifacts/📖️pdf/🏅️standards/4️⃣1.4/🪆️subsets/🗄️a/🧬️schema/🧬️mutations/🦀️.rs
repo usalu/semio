@@ -24,13 +24,6 @@ pub enum PdfA1Mutation {
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Delegation
-/// ▶️ Applies the authoritative leaf diff.
-pub fn apply_a_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfA1Mutation) -> protocol::MutationOutcome<PdfDiff> {
-    use protocol::Mutation;
-    let outcome = mutation.diff(snapshot);
-    crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(outcome, snapshot)
-}
-
 //#endregion 🔖️Delegation
 
 //#region 🧪️Structure

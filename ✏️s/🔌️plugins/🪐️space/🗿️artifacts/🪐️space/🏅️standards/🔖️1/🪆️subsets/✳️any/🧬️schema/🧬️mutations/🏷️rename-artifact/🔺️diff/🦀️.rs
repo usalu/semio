@@ -14,6 +14,6 @@ pub fn diff(payload: &super::RenameArtifact, base: &SSpaceSnapshot) -> protocol:
     if base.artifacts.iter().any(|row| row.id != payload.id && row.name == payload.new_name) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An artifact named \"{}\" already exists.", payload.new_name), [payload.new_name.clone()]);
     }
-    protocol::MutationOutcome::new(SSpaceDiff { artifacts: Some(SSpaceArtifactsDelta { patched: vec![SSpaceArtifactPatch { id: payload.id.clone(), name: Some(payload.new_name.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(SSpaceDiff { artifacts: Some(SSpaceArtifactsDelta::modification(payload.id.clone(), SSpaceArtifactPatch { name: Some(payload.new_name.clone()), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔖️Diff

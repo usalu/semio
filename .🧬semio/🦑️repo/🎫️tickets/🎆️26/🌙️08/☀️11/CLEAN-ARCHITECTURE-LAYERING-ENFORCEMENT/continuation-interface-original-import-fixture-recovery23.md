@@ -1,0 +1,5 @@
+# Exact Original Import Fixture Recovery
+
+The original seven-case corpus and exact serialization were recovered from same-root Interface6 authoring tool record at `/Users/ueli/.codex/sessions/2026/10/08/rollout-2026-10-08T02-14-18-01a118dc-6035-7383-8873-1d45e2cc8444.jsonl`, line11128, timestamp `2026-10-08T10:59:12.931Z`. The full original authoring source is retained under owned successor23/📥️original-import-custody/📸️authoring-observation.json. Only the literal corpus expression was evaluated in a fresh bounded independent Node vm context; the authoring command was not rerun. Python serialization reproduced its exact `JSON.stringify(corpus,null,2)` bytes, independently compared to Node.
+
+Recovered original corpus SHA256 `2c5d34c142e1f10db36c6053d276cba2c705f0554014bf23facbbb1db01b8593`; 1048 bytes; all seven original IDs, exact source strings, expected edges, combining code units and escaped surrogate literals retained. It is mounted only into new owned successor23. No old authored directory or production source was restored. Runtime parser oracle has not yet rerun.

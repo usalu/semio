@@ -27,7 +27,7 @@ fn every_edit_yields_the_fixture_splice_and_round_trips() {
         let expected = if row["splice"].is_null() { None } else { Some(splice(&row["splice"])) };
         assert_eq!(derived, expected, "edit {}", row["id"]);
         if let Some(derived) = derived {
-            assert_eq!(derived.apply(previous, TEXT_SPLICE_CONTEXT_SCALARS).text, next, "edit {} round trip", row["id"]);
+            assert_eq!(derived.splice_into(previous, TEXT_SPLICE_CONTEXT_SCALARS).text, next, "edit {} round trip", row["id"]);
         }
     }
 }
@@ -36,12 +36,12 @@ fn every_edit_yields_the_fixture_splice_and_round_trips() {
 fn every_application_lands_results_and_inverts_like_the_fixture() {
     for row in fixture()["applications"].as_array().unwrap() {
         let (text, id) = (row["text"].as_str().unwrap(), &row["id"]);
-        let applied = splice(&row["splice"]).apply(text, TEXT_SPLICE_CONTEXT_SCALARS);
+        let applied = splice(&row["splice"]).splice_into(text, TEXT_SPLICE_CONTEXT_SCALARS);
         assert_eq!(serde_json::to_value(applied.located).unwrap(), row["located"], "apply {id} located");
         assert_eq!(applied.text, row["result"].as_str().unwrap(), "apply {id} result");
         assert_eq!(applied.inverse, splice(&row["inverse"]), "apply {id} inverse");
         if !applied.located.clamped {
-            assert_eq!(applied.inverse.apply(&applied.text, TEXT_SPLICE_CONTEXT_SCALARS).text, text, "apply {id} undo");
+            assert_eq!(applied.inverse.splice_into(&applied.text, TEXT_SPLICE_CONTEXT_SCALARS).text, text, "apply {id} undo");
         }
     }
 }
@@ -52,11 +52,11 @@ fn every_concurrent_fold_in_hub_order_matches_the_fixture() {
         let mut text = row["base"].as_str().unwrap().to_string();
         let mut clamped = Vec::new();
         for (index, entry) in row["order"].as_array().unwrap().iter().enumerate() {
-            let applied = splice(&entry["splice"]).apply(&text, TEXT_SPLICE_CONTEXT_SCALARS);
+            let applied = splice(&entry["splice"]).splice_into(&text, TEXT_SPLICE_CONTEXT_SCALARS);
             if applied.located.clamped {
                 clamped.push(index);
             } else {
-                assert_eq!(applied.inverse.apply(&applied.text, TEXT_SPLICE_CONTEXT_SCALARS).text, text, "concurrent {} #{index} undo", row["id"]);
+                assert_eq!(applied.inverse.splice_into(&applied.text, TEXT_SPLICE_CONTEXT_SCALARS).text, text, "concurrent {} #{index} undo", row["id"]);
             }
             text = applied.text;
         }
@@ -82,9 +82,9 @@ fn every_composition_joins_its_run_like_the_fixture() {
         let composition = net.then(&next, TEXT_SPLICE_CONTEXT_SCALARS);
         assert_eq!(composition_json(&composition), row["composition"], "compose {}", row["id"]);
         let text = row["text"].as_str().unwrap();
-        let typed = next.apply(&net.apply(text, TEXT_SPLICE_CONTEXT_SCALARS).text, TEXT_SPLICE_CONTEXT_SCALARS).text;
+        let typed = next.splice_into(&net.splice_into(text, TEXT_SPLICE_CONTEXT_SCALARS).text, TEXT_SPLICE_CONTEXT_SCALARS).text;
         match composition {
-            TextSpliceComposition::Composed(splice) => assert_eq!(splice.apply(text, TEXT_SPLICE_CONTEXT_SCALARS).text, typed, "compose {} lands", row["id"]),
+            TextSpliceComposition::Composed(splice) => assert_eq!(splice.splice_into(text, TEXT_SPLICE_CONTEXT_SCALARS).text, typed, "compose {} lands", row["id"]),
             TextSpliceComposition::Cancelled => assert_eq!(typed, text, "compose {} cancels", row["id"]),
             TextSpliceComposition::Disjoint => {}
         }
@@ -113,7 +113,7 @@ fn every_typing_session_folds_into_the_fixture_runs() {
         runs.extend(net);
         let expected: Vec<TextSplice> = row["runs"].as_array().unwrap().iter().map(splice).collect();
         assert_eq!(runs, expected, "typing run {}", row["id"]);
-        assert_eq!(runs.iter().fold(texts[0].to_string(), |text, run| run.apply(&text, TEXT_SPLICE_CONTEXT_SCALARS).text), *texts.last().unwrap(), "typing run {} lands", row["id"]);
+        assert_eq!(runs.iter().fold(texts[0].to_string(), |text, run| run.splice_into(&text, TEXT_SPLICE_CONTEXT_SCALARS).text), *texts.last().unwrap(), "typing run {} lands", row["id"]);
     }
 }
 
@@ -157,5 +157,89 @@ fn utf8_offsets_and_scalar_indices_agree_with_the_fixture() {
         let bytes = row["utf8"].as_u64().unwrap() as usize;
         let scalar = text.char_indices().take_while(|(offset, _)| *offset < bytes).count();
         assert_eq!(scalar as u64, row["scalar"].as_u64().unwrap(), "offset {text:?}@{bytes}");
+    }
+}
+
+#[test]
+fn draft_changes_json_preserves_neutral_ranges_and_matches_independent_serde_oracle() {
+ for row in fixture()["draftJson"].as_array().unwrap() {
+  let changes: Vec<super::DraftChange> = serde_json::from_value(row["changes"].clone()).unwrap();
+  let mut observe=|_|true; let mut control=protocol::value::NativeEncodeControl::new(0,&mut observe); let mut bytes=Vec::new(); super::write_draft_changes_json_into(&changes,1024,3,64,&mut |part:&[u8],_:&mut protocol::value::NativeEncodeControl<'_>|->Result<(),protocol::value::ValueError>{bytes.extend_from_slice(part);Ok(())},&mut control).unwrap(); let actual=String::from_utf8(bytes).unwrap();
+  assert_eq!(actual, row["json"].as_str().unwrap()); assert_eq!(actual, serde_json::to_string(&changes).unwrap());
+  println!("[DEBUG] draft JSON native id={} bytes={} independentSerde=true",row["id"].as_str().unwrap(),actual.len());
+ }
+}
+
+#[test]
+fn draft_wire_borrows_original_changes_and_retains_refusal_prefixes() {
+    use protocol::value::{NativeEncodeControl,ValueError,ValueRefusalKind};
+    let fixture=fixture();
+    for row in fixture["draftJson"].as_array().unwrap() {
+        let changes:Vec<super::DraftChange>=serde_json::from_value(row["changes"].clone()).unwrap();
+        let expected=serde_json::to_string(&changes).unwrap();
+        assert_eq!(expected,row["json"].as_str().unwrap());
+        for maximum in [0,1,expected.len().saturating_sub(1),expected.len(),1024] {
+            let mut callbacks=0;
+            let mut observe=|_|{callbacks+=1;true};
+            let mut control=NativeEncodeControl::new(0,&mut observe);
+            let mut output=Vec::new();
+            let result=super::write_draft_changes_json_into(&changes,maximum as u64,3,64,&mut |bytes:&[u8],_:&mut NativeEncodeControl<'_>|->Result<(),ValueError>{output.extend_from_slice(bytes);Ok(())},&mut control);
+            assert!(expected.as_bytes().starts_with(&output));
+            if maximum>=expected.len() {assert_eq!(result.unwrap(),expected.len() as u64);assert_eq!(output,expected.as_bytes());}
+            else {assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);}
+            assert_eq!(control.owned_bytes(),0);
+            assert!(callbacks>0);
+        }
+        for cancel_at in [0,1,3,9] {
+            let mut callbacks=0;
+            let mut observe=|_|{let admitted=callbacks<cancel_at;callbacks+=1;admitted};
+            let mut control=NativeEncodeControl::new(0,&mut observe);
+            let mut output=Vec::new();
+            let result=super::write_draft_changes_json_into(&changes,1024,3,64,&mut |bytes:&[u8],_:&mut NativeEncodeControl<'_>|->Result<(),ValueError>{output.extend_from_slice(bytes);Ok(())},&mut control);
+            assert!(expected.as_bytes().starts_with(&output));
+            if let Err(fault)=result {assert_eq!(fault.kind,ValueRefusalKind::Canceled);}
+            assert_eq!(control.owned_bytes(),0);
+        }
+        for (depth,items,kind) in [(0,64,ValueRefusalKind::DepthLimit),(3,0,ValueRefusalKind::WorkLimit)] {
+            let mut observe=|_|true;
+            let mut control=NativeEncodeControl::new(0,&mut observe);
+            let result=super::write_draft_changes_json_into(&changes,1024,depth,items,&mut |_:&[u8],_:&mut NativeEncodeControl<'_>|->Result<(),ValueError>{Ok(())},&mut control);
+            if depth==0||!changes.is_empty(){assert_eq!(result.unwrap_err().kind,kind);}
+        }
+        println!("[DEBUG] draft-wire borrowed original={} byte/refusal/cancel/depth/item laws admitted",row["id"]);
+    }
+}
+
+#[test]
+fn draft_wire_incremental_cursor_keeps_original_source_and_cumulative_admission(){
+    use protocol::value::{NativeEncodeControl,ValueError,ValueRefusalKind};
+    for row in fixture()["draftJson"].as_array().unwrap(){
+        for units in [0,1,3,64]{
+            let changes:Vec<super::DraftChange>=serde_json::from_value(row["changes"].clone()).unwrap();
+            let original=(changes.as_ptr(),changes.len(),changes.capacity());
+            let mut cursor=super::DraftChangesJsonCursor::new(changes,64,3).map_err(|(fault,_)|fault).unwrap();
+            let mut callbacks=0;
+            let mut observe=|_|{callbacks+=1;true};
+            let mut control=NativeEncodeControl::new(32768,&mut observe);
+            assert!(cursor.step(0,&mut control).unwrap().is_none());
+            let receipt=control.pause().unwrap();
+            let mut cancel=|_|false;
+            let mut refused=NativeEncodeControl::resume(receipt,&mut cancel).unwrap();
+            assert_eq!(cursor.step(1,&mut refused).unwrap_err().kind,ValueRefusalKind::Canceled);
+            let receipt=refused.pause().unwrap();
+            let mut checkpoints=0;
+            let mut observe=|_|{checkpoints+=1;true};
+            let mut control=NativeEncodeControl::resume(receipt,&mut observe).unwrap();
+            let mut wire=None;
+            for _ in 0..5000 {if let Some(output)=cursor.step(units.max(1),&mut control).unwrap(){wire=Some(output);break;}}
+            let wire=wire.expect("original finite draft wire completes");
+            assert_eq!(wire,row["json"].as_str().unwrap());
+            let changes=cursor.take_changes().expect("original ranges transfer");
+            assert_eq!((changes.as_ptr(),changes.len(),changes.capacity()),original);
+            assert_eq!(wire,serde_json::to_string(&changes).unwrap());
+            assert!(control.owned_bytes()>=wire.capacity());
+            assert!(matches!(cursor.step(1,&mut control),Ok(None)));
+            println!("[DEBUG] draft-wire cursor original={} units={} admitted={} exactPointer=true",row["id"],units,control.owned_bytes());
+        }
     }
 }

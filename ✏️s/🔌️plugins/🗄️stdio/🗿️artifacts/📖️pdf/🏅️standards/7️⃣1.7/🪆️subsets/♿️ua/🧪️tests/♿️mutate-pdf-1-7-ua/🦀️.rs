@@ -137,7 +137,8 @@ mod subject {
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::ua::schema::mutations::{apply_ua_conformance_mutation, PdfUaMutation};
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::ua::io::mutation_bridge::apply_ua_conformance_mutation;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
     use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::ua::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {

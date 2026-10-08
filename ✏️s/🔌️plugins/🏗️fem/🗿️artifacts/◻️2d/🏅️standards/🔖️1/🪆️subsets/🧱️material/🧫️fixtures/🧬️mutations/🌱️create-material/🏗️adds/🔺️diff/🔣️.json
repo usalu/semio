@@ -3,18 +3,21 @@
   "elements": null,
   "regions": null,
   "materials": {
-    "added": [
+    "inserted": [
       {
-        "id": "concrete_c25",
-        "name": "Concrete C25/30",
-        "e": 31000000000.0,
-        "nu": 0.2,
-        "rho": 2500.0
+        "index": 3,
+        "row": {
+          "id": "concrete_c25",
+          "name": "Concrete C25/30",
+          "e": 31000000000.0,
+          "nu": 0.2,
+          "rho": 2500.0
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "sections": null,
   "supports": null,

@@ -14,11 +14,9 @@ pub fn inverse(payload: &super::RemoveNodeHandle, base: &Puzzle2dSnapshot) -> Re
         return Vec::new();
     };
     let index = node.handles.iter().position(|h| h.id == payload.handle_id);
-    let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::add_node_handle::add_node_handle(payload.node_id.clone(), handle.clone(), index)];
-    for (index, edge) in base.edges.iter().enumerate().filter(|(_, edge)| edge.source == payload.handle_id || edge.target == payload.handle_id) {
-        crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index, &mut mutations);
-    }
-    mutations
+    let restored_edges = base.edges.iter().enumerate().filter(|(_, edge)| edge.source == payload.handle_id || edge.target == payload.handle_id).flat_map(|(index, edge)| crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index));
+    let natural: Vec<Puzzle2dMutation> = std::iter::once(crate::standards::v1::subsets::any::schema::mutations::add_node_handle::add_node_handle(payload.node_id.clone(), handle.clone(), index)).chain(restored_edges).collect();
+    natural.into_iter().rev().collect()
 
     })())
 }

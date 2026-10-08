@@ -854,42 +854,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Stakeholder"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramStakeholdersRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStakeholdersInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStakeholdersRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramStakeholdersPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramStakeholdersInsertion": {
+      "title": "ProgramStakeholdersInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Stakeholder"
+        }
+      }
+    },
+    "ProgramStakeholdersRemoval": {
+      "title": "ProgramStakeholdersRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramStakeholdersRelocation": {
+      "title": "ProgramStakeholdersRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -898,42 +950,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/UserProfile"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramUsersRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramUsersInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramUsersRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramUsersPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramUsersInsertion": {
+      "title": "ProgramUsersInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/UserProfile"
+        }
+      }
+    },
+    "ProgramUsersRemoval": {
+      "title": "ProgramUsersRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramUsersRelocation": {
+      "title": "ProgramUsersRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -942,42 +1046,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Activity"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramActivitiesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramActivitiesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramActivitiesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramActivitiesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramActivitiesInsertion": {
+      "title": "ProgramActivitiesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Activity"
+        }
+      }
+    },
+    "ProgramActivitiesRemoval": {
+      "title": "ProgramActivitiesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramActivitiesRelocation": {
+      "title": "ProgramActivitiesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -986,42 +1142,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Function"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramFunctionsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFunctionsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFunctionsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramFunctionsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramFunctionsInsertion": {
+      "title": "ProgramFunctionsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Function"
+        }
+      }
+    },
+    "ProgramFunctionsRemoval": {
+      "title": "ProgramFunctionsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramFunctionsRelocation": {
+      "title": "ProgramFunctionsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1030,42 +1238,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ProgramElement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramElementsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramElementsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramElementsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramElementsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramElementsInsertion": {
+      "title": "ProgramElementsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ProgramElement"
+        }
+      }
+    },
+    "ProgramElementsRemoval": {
+      "title": "ProgramElementsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramElementsRelocation": {
+      "title": "ProgramElementsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1074,42 +1334,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/QuantityRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramQuantitiesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramQuantitiesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramQuantitiesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramQuantitiesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramQuantitiesInsertion": {
+      "title": "ProgramQuantitiesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/QuantityRequirement"
+        }
+      }
+    },
+    "ProgramQuantitiesRemoval": {
+      "title": "ProgramQuantitiesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramQuantitiesRelocation": {
+      "title": "ProgramQuantitiesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1118,42 +1430,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Relationship"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramRelationshipsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRelationshipsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRelationshipsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramRelationshipsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramRelationshipsInsertion": {
+      "title": "ProgramRelationshipsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Relationship"
+        }
+      }
+    },
+    "ProgramRelationshipsRemoval": {
+      "title": "ProgramRelationshipsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramRelationshipsRelocation": {
+      "title": "ProgramRelationshipsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1162,42 +1526,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Adjacency"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramAdjacenciesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAdjacenciesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAdjacenciesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramAdjacenciesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramAdjacenciesInsertion": {
+      "title": "ProgramAdjacenciesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Adjacency"
+        }
+      }
+    },
+    "ProgramAdjacenciesRemoval": {
+      "title": "ProgramAdjacenciesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramAdjacenciesRelocation": {
+      "title": "ProgramAdjacenciesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1206,42 +1622,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Process"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramProcessesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramProcessesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramProcessesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramProcessesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramProcessesInsertion": {
+      "title": "ProgramProcessesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Process"
+        }
+      }
+    },
+    "ProgramProcessesRemoval": {
+      "title": "ProgramProcessesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramProcessesRelocation": {
+      "title": "ProgramProcessesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1250,42 +1718,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/FlowRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramFlowsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFlowsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFlowsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramFlowsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramFlowsInsertion": {
+      "title": "ProgramFlowsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/FlowRequirement"
+        }
+      }
+    },
+    "ProgramFlowsRemoval": {
+      "title": "ProgramFlowsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramFlowsRelocation": {
+      "title": "ProgramFlowsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1294,42 +1814,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AccessRule"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramAccessRulesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAccessRulesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAccessRulesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramAccessRulesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramAccessRulesInsertion": {
+      "title": "ProgramAccessRulesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AccessRule"
+        }
+      }
+    },
+    "ProgramAccessRulesRemoval": {
+      "title": "ProgramAccessRulesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramAccessRulesRelocation": {
+      "title": "ProgramAccessRulesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1338,42 +1910,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/OperationalRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramOperationsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOperationsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOperationsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramOperationsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramOperationsInsertion": {
+      "title": "ProgramOperationsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/OperationalRequirement"
+        }
+      }
+    },
+    "ProgramOperationsRemoval": {
+      "title": "ProgramOperationsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramOperationsRelocation": {
+      "title": "ProgramOperationsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1382,42 +2006,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Equipment"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramEquipmentRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramEquipmentInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramEquipmentRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramEquipmentPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramEquipmentInsertion": {
+      "title": "ProgramEquipmentInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Equipment"
+        }
+      }
+    },
+    "ProgramEquipmentRemoval": {
+      "title": "ProgramEquipmentRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramEquipmentRelocation": {
+      "title": "ProgramEquipmentRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1426,42 +2102,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Resource"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramResourcesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramResourcesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramResourcesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramResourcesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramResourcesInsertion": {
+      "title": "ProgramResourcesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Resource"
+        }
+      }
+    },
+    "ProgramResourcesRemoval": {
+      "title": "ProgramResourcesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramResourcesRelocation": {
+      "title": "ProgramResourcesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1470,42 +2198,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/StorageRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramStorageRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStorageInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStorageRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramStoragePatchEntry"
           }
+        }
+      }
+    },
+    "ProgramStorageInsertion": {
+      "title": "ProgramStorageInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/StorageRequirement"
+        }
+      }
+    },
+    "ProgramStorageRemoval": {
+      "title": "ProgramStorageRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramStorageRelocation": {
+      "title": "ProgramStorageRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1514,42 +2294,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/EnvironmentalRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramEnvironmentalRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramEnvironmentalInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramEnvironmentalRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramEnvironmentalPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramEnvironmentalInsertion": {
+      "title": "ProgramEnvironmentalInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/EnvironmentalRequirement"
+        }
+      }
+    },
+    "ProgramEnvironmentalRemoval": {
+      "title": "ProgramEnvironmentalRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramEnvironmentalRelocation": {
+      "title": "ProgramEnvironmentalRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1558,42 +2390,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/HumanFactorRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramHumanFactorsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramHumanFactorsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramHumanFactorsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramHumanFactorsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramHumanFactorsInsertion": {
+      "title": "ProgramHumanFactorsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/HumanFactorRequirement"
+        }
+      }
+    },
+    "ProgramHumanFactorsRemoval": {
+      "title": "ProgramHumanFactorsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramHumanFactorsRelocation": {
+      "title": "ProgramHumanFactorsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1602,42 +2486,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AccessibilityRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramAccessibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAccessibilityInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAccessibilityRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramAccessibilityPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramAccessibilityInsertion": {
+      "title": "ProgramAccessibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AccessibilityRequirement"
+        }
+      }
+    },
+    "ProgramAccessibilityRemoval": {
+      "title": "ProgramAccessibilityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramAccessibilityRelocation": {
+      "title": "ProgramAccessibilityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1646,42 +2582,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/PrivacyRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramPrivacyRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPrivacyInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPrivacyRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramPrivacyPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramPrivacyInsertion": {
+      "title": "ProgramPrivacyInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/PrivacyRequirement"
+        }
+      }
+    },
+    "ProgramPrivacyRemoval": {
+      "title": "ProgramPrivacyRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramPrivacyRelocation": {
+      "title": "ProgramPrivacyRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1690,42 +2678,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SafetyRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSafetyRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSafetyInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSafetyRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSafetyPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSafetyInsertion": {
+      "title": "ProgramSafetyInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SafetyRequirement"
+        }
+      }
+    },
+    "ProgramSafetyRemoval": {
+      "title": "ProgramSafetyRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSafetyRelocation": {
+      "title": "ProgramSafetyRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1734,42 +2774,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SecurityRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSecurityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSecurityInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSecurityRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSecurityPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSecurityInsertion": {
+      "title": "ProgramSecurityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SecurityRequirement"
+        }
+      }
+    },
+    "ProgramSecurityRemoval": {
+      "title": "ProgramSecurityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSecurityRelocation": {
+      "title": "ProgramSecurityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1778,42 +2870,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/RegulatoryRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramRegulatoryRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRegulatoryInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRegulatoryRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramRegulatoryPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramRegulatoryInsertion": {
+      "title": "ProgramRegulatoryInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/RegulatoryRequirement"
+        }
+      }
+    },
+    "ProgramRegulatoryRemoval": {
+      "title": "ProgramRegulatoryRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramRegulatoryRelocation": {
+      "title": "ProgramRegulatoryRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1822,42 +2966,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SiteContext"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSiteContextRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSiteContextInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSiteContextRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSiteContextPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSiteContextInsertion": {
+      "title": "ProgramSiteContextInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SiteContext"
+        }
+      }
+    },
+    "ProgramSiteContextRemoval": {
+      "title": "ProgramSiteContextRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSiteContextRelocation": {
+      "title": "ProgramSiteContextRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1866,42 +3062,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/OrganizationalRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramOrganizationalRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOrganizationalInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOrganizationalRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramOrganizationalPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramOrganizationalInsertion": {
+      "title": "ProgramOrganizationalInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/OrganizationalRequirement"
+        }
+      }
+    },
+    "ProgramOrganizationalRemoval": {
+      "title": "ProgramOrganizationalRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramOrganizationalRelocation": {
+      "title": "ProgramOrganizationalRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1910,42 +3158,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ServiceRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramServicesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramServicesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramServicesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramServicesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramServicesInsertion": {
+      "title": "ProgramServicesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ServiceRequirement"
+        }
+      }
+    },
+    "ProgramServicesRemoval": {
+      "title": "ProgramServicesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramServicesRelocation": {
+      "title": "ProgramServicesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1954,42 +3254,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/InfrastructureRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramInfrastructureRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramInfrastructureInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramInfrastructureRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramInfrastructurePatchEntry"
           }
+        }
+      }
+    },
+    "ProgramInfrastructureInsertion": {
+      "title": "ProgramInfrastructureInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/InfrastructureRequirement"
+        }
+      }
+    },
+    "ProgramInfrastructureRemoval": {
+      "title": "ProgramInfrastructureRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramInfrastructureRelocation": {
+      "title": "ProgramInfrastructureRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1998,42 +3350,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/InformationRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramInformationRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramInformationInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramInformationRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramInformationPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramInformationInsertion": {
+      "title": "ProgramInformationInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/InformationRequirement"
+        }
+      }
+    },
+    "ProgramInformationRemoval": {
+      "title": "ProgramInformationRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramInformationRelocation": {
+      "title": "ProgramInformationRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2042,42 +3446,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/CommunicationRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramCommunicationRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCommunicationInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCommunicationRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramCommunicationPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramCommunicationInsertion": {
+      "title": "ProgramCommunicationInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/CommunicationRequirement"
+        }
+      }
+    },
+    "ProgramCommunicationRemoval": {
+      "title": "ProgramCommunicationRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramCommunicationRelocation": {
+      "title": "ProgramCommunicationRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2086,42 +3542,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/WayfindingRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramWayfindingRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramWayfindingInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramWayfindingRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramWayfindingPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramWayfindingInsertion": {
+      "title": "ProgramWayfindingInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/WayfindingRequirement"
+        }
+      }
+    },
+    "ProgramWayfindingRemoval": {
+      "title": "ProgramWayfindingRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramWayfindingRelocation": {
+      "title": "ProgramWayfindingRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2130,42 +3638,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ScheduleRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSchedulesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSchedulesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSchedulesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSchedulesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSchedulesInsertion": {
+      "title": "ProgramSchedulesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ScheduleRequirement"
+        }
+      }
+    },
+    "ProgramSchedulesRemoval": {
+      "title": "ProgramSchedulesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSchedulesRelocation": {
+      "title": "ProgramSchedulesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2174,42 +3734,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/FlexibilityRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramFlexibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFlexibilityInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFlexibilityRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramFlexibilityPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramFlexibilityInsertion": {
+      "title": "ProgramFlexibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/FlexibilityRequirement"
+        }
+      }
+    },
+    "ProgramFlexibilityRemoval": {
+      "title": "ProgramFlexibilityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramFlexibilityRelocation": {
+      "title": "ProgramFlexibilityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2218,42 +3830,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/GrowthPlan"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramGrowthRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramGrowthInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramGrowthRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramGrowthPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramGrowthInsertion": {
+      "title": "ProgramGrowthInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/GrowthPlan"
+        }
+      }
+    },
+    "ProgramGrowthRemoval": {
+      "title": "ProgramGrowthRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramGrowthRelocation": {
+      "title": "ProgramGrowthRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2262,42 +3926,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SustainabilityRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSustainabilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSustainabilityInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSustainabilityRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSustainabilityPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSustainabilityInsertion": {
+      "title": "ProgramSustainabilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SustainabilityRequirement"
+        }
+      }
+    },
+    "ProgramSustainabilityRemoval": {
+      "title": "ProgramSustainabilityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSustainabilityRelocation": {
+      "title": "ProgramSustainabilityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2306,42 +4022,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ResilienceRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramResilienceRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramResilienceInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramResilienceRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramResiliencePatchEntry"
           }
+        }
+      }
+    },
+    "ProgramResilienceInsertion": {
+      "title": "ProgramResilienceInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ResilienceRequirement"
+        }
+      }
+    },
+    "ProgramResilienceRemoval": {
+      "title": "ProgramResilienceRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramResilienceRelocation": {
+      "title": "ProgramResilienceRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2350,42 +4118,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/CostRequirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramCostsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCostsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCostsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramCostsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramCostsInsertion": {
+      "title": "ProgramCostsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/CostRequirement"
+        }
+      }
+    },
+    "ProgramCostsRemoval": {
+      "title": "ProgramCostsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramCostsRelocation": {
+      "title": "ProgramCostsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2394,42 +4214,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/DeliveryConstraint"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramDeliveryRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDeliveryInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDeliveryRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramDeliveryPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramDeliveryInsertion": {
+      "title": "ProgramDeliveryInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/DeliveryConstraint"
+        }
+      }
+    },
+    "ProgramDeliveryRemoval": {
+      "title": "ProgramDeliveryRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramDeliveryRelocation": {
+      "title": "ProgramDeliveryRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2438,42 +4310,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Risk"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramRisksRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRisksInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRisksRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramRisksPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramRisksInsertion": {
+      "title": "ProgramRisksInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Risk"
+        }
+      }
+    },
+    "ProgramRisksRemoval": {
+      "title": "ProgramRisksRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramRisksRelocation": {
+      "title": "ProgramRisksRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2482,42 +4406,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Conflict"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramConflictsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramConflictsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramConflictsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramConflictsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramConflictsInsertion": {
+      "title": "ProgramConflictsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Conflict"
+        }
+      }
+    },
+    "ProgramConflictsRemoval": {
+      "title": "ProgramConflictsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramConflictsRelocation": {
+      "title": "ProgramConflictsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2526,42 +4502,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Requirement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramRequirementsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRequirementsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRequirementsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramRequirementsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramRequirementsInsertion": {
+      "title": "ProgramRequirementsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Requirement"
+        }
+      }
+    },
+    "ProgramRequirementsRemoval": {
+      "title": "ProgramRequirementsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramRequirementsRelocation": {
+      "title": "ProgramRequirementsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2570,42 +4598,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/PriorityRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramPrioritiesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPrioritiesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPrioritiesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramPrioritiesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramPrioritiesInsertion": {
+      "title": "ProgramPrioritiesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/PriorityRecord"
+        }
+      }
+    },
+    "ProgramPrioritiesRemoval": {
+      "title": "ProgramPrioritiesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramPrioritiesRelocation": {
+      "title": "ProgramPrioritiesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2614,42 +4694,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Scenario"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramScenariosRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramScenariosInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramScenariosRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramScenariosPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramScenariosInsertion": {
+      "title": "ProgramScenariosInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Scenario"
+        }
+      }
+    },
+    "ProgramScenariosRemoval": {
+      "title": "ProgramScenariosRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramScenariosRelocation": {
+      "title": "ProgramScenariosRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2658,42 +4790,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/OptionEvaluation"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramOptionsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOptionsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOptionsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramOptionsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramOptionsInsertion": {
+      "title": "ProgramOptionsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/OptionEvaluation"
+        }
+      }
+    },
+    "ProgramOptionsRemoval": {
+      "title": "ProgramOptionsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramOptionsRelocation": {
+      "title": "ProgramOptionsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2702,42 +4886,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Decision"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramDecisionsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDecisionsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDecisionsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramDecisionsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramDecisionsInsertion": {
+      "title": "ProgramDecisionsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Decision"
+        }
+      }
+    },
+    "ProgramDecisionsRemoval": {
+      "title": "ProgramDecisionsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramDecisionsRelocation": {
+      "title": "ProgramDecisionsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2746,42 +4982,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ValidationRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramValidationsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramValidationsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramValidationsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramValidationsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramValidationsInsertion": {
+      "title": "ProgramValidationsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ValidationRecord"
+        }
+      }
+    },
+    "ProgramValidationsRemoval": {
+      "title": "ProgramValidationsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramValidationsRelocation": {
+      "title": "ProgramValidationsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2790,42 +5078,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/PerformanceCriterion"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramPerformanceRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPerformanceInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPerformanceRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramPerformancePatchEntry"
           }
+        }
+      }
+    },
+    "ProgramPerformanceInsertion": {
+      "title": "ProgramPerformanceInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/PerformanceCriterion"
+        }
+      }
+    },
+    "ProgramPerformanceRemoval": {
+      "title": "ProgramPerformanceRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramPerformanceRelocation": {
+      "title": "ProgramPerformanceRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2834,42 +5174,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/QualityRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramQualityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramQualityInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramQualityRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramQualityPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramQualityInsertion": {
+      "title": "ProgramQualityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/QualityRecord"
+        }
+      }
+    },
+    "ProgramQualityRemoval": {
+      "title": "ProgramQualityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramQualityRelocation": {
+      "title": "ProgramQualityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2878,42 +5270,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ArtifactRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramArtifactsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramArtifactsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramArtifactsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramArtifactsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramArtifactsInsertion": {
+      "title": "ProgramArtifactsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ArtifactRecord"
+        }
+      }
+    },
+    "ProgramArtifactsRemoval": {
+      "title": "ProgramArtifactsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramArtifactsRelocation": {
+      "title": "ProgramArtifactsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2922,42 +5366,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Assumption"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramAssumptionsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAssumptionsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAssumptionsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramAssumptionsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramAssumptionsInsertion": {
+      "title": "ProgramAssumptionsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Assumption"
+        }
+      }
+    },
+    "ProgramAssumptionsRemoval": {
+      "title": "ProgramAssumptionsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramAssumptionsRelocation": {
+      "title": "ProgramAssumptionsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2966,42 +5462,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ConstraintRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramConstraintsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramConstraintsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramConstraintsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramConstraintsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramConstraintsInsertion": {
+      "title": "ProgramConstraintsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ConstraintRecord"
+        }
+      }
+    },
+    "ProgramConstraintsRemoval": {
+      "title": "ProgramConstraintsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramConstraintsRelocation": {
+      "title": "ProgramConstraintsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3010,42 +5558,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ComplianceRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramComplianceRecordsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramComplianceRecordsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramComplianceRecordsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramComplianceRecordsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramComplianceRecordsInsertion": {
+      "title": "ProgramComplianceRecordsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ComplianceRecord"
+        }
+      }
+    },
+    "ProgramComplianceRecordsRemoval": {
+      "title": "ProgramComplianceRecordsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramComplianceRecordsRelocation": {
+      "title": "ProgramComplianceRecordsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3054,42 +5654,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ApprovalRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramApprovalsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramApprovalsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramApprovalsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramApprovalsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramApprovalsInsertion": {
+      "title": "ProgramApprovalsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ApprovalRecord"
+        }
+      }
+    },
+    "ProgramApprovalsRemoval": {
+      "title": "ProgramApprovalsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramApprovalsRelocation": {
+      "title": "ProgramApprovalsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3098,42 +5750,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/MeetingRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramMeetingsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramMeetingsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramMeetingsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramMeetingsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramMeetingsInsertion": {
+      "title": "ProgramMeetingsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/MeetingRecord"
+        }
+      }
+    },
+    "ProgramMeetingsRemoval": {
+      "title": "ProgramMeetingsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramMeetingsRelocation": {
+      "title": "ProgramMeetingsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3142,42 +5846,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ChangeRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramChangesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramChangesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramChangesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramChangesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramChangesInsertion": {
+      "title": "ProgramChangesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ChangeRecord"
+        }
+      }
+    },
+    "ProgramChangesRemoval": {
+      "title": "ProgramChangesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramChangesRelocation": {
+      "title": "ProgramChangesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3186,42 +5942,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/CollaborationRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramCollaborationRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCollaborationInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCollaborationRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramCollaborationPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramCollaborationInsertion": {
+      "title": "ProgramCollaborationInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/CollaborationRecord"
+        }
+      }
+    },
+    "ProgramCollaborationRemoval": {
+      "title": "ProgramCollaborationRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramCollaborationRelocation": {
+      "title": "ProgramCollaborationRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3230,42 +6038,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AnalysisRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramAnalysesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAnalysesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAnalysesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramAnalysesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramAnalysesInsertion": {
+      "title": "ProgramAnalysesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AnalysisRecord"
+        }
+      }
+    },
+    "ProgramAnalysesRemoval": {
+      "title": "ProgramAnalysesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramAnalysesRelocation": {
+      "title": "ProgramAnalysesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3274,42 +6134,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ReportRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramReportsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramReportsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramReportsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramReportsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramReportsInsertion": {
+      "title": "ProgramReportsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ReportRecord"
+        }
+      }
+    },
+    "ProgramReportsRemoval": {
+      "title": "ProgramReportsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramReportsRelocation": {
+      "title": "ProgramReportsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3318,42 +6230,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SearchFilter"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSearchFiltersRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSearchFiltersInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSearchFiltersRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSearchFiltersPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSearchFiltersInsertion": {
+      "title": "ProgramSearchFiltersInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/SearchFilter"
+        }
+      }
+    },
+    "ProgramSearchFiltersRemoval": {
+      "title": "ProgramSearchFiltersRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSearchFiltersRelocation": {
+      "title": "ProgramSearchFiltersRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3362,42 +6326,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/StatusRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramStatusRecordsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStatusRecordsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStatusRecordsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramStatusRecordsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramStatusRecordsInsertion": {
+      "title": "ProgramStatusRecordsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/StatusRecord"
+        }
+      }
+    },
+    "ProgramStatusRecordsRemoval": {
+      "title": "ProgramStatusRecordsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramStatusRecordsRelocation": {
+      "title": "ProgramStatusRecordsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3406,42 +6422,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Workshop"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramWorkshopsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramWorkshopsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramWorkshopsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramWorkshopsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramWorkshopsInsertion": {
+      "title": "ProgramWorkshopsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Workshop"
+        }
+      }
+    },
+    "ProgramWorkshopsRemoval": {
+      "title": "ProgramWorkshopsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramWorkshopsRelocation": {
+      "title": "ProgramWorkshopsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3450,42 +6518,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Survey"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramSurveysRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSurveysInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSurveysRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramSurveysPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramSurveysInsertion": {
+      "title": "ProgramSurveysInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Survey"
+        }
+      }
+    },
+    "ProgramSurveysRemoval": {
+      "title": "ProgramSurveysRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramSurveysRelocation": {
+      "title": "ProgramSurveysRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3494,42 +6614,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Issue"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramIssuesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramIssuesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramIssuesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramIssuesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramIssuesInsertion": {
+      "title": "ProgramIssuesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Issue"
+        }
+      }
+    },
+    "ProgramIssuesRemoval": {
+      "title": "ProgramIssuesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramIssuesRelocation": {
+      "title": "ProgramIssuesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3538,42 +6710,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AuditEvent"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramAuditEventsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAuditEventsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAuditEventsRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramAuditEventsPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramAuditEventsInsertion": {
+      "title": "ProgramAuditEventsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/AuditEvent"
+        }
+      }
+    },
+    "ProgramAuditEventsRemoval": {
+      "title": "ProgramAuditEventsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramAuditEventsRelocation": {
+      "title": "ProgramAuditEventsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3582,42 +6806,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/TemplateRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramTemplatesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramTemplatesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramTemplatesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramTemplatesPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramTemplatesInsertion": {
+      "title": "ProgramTemplatesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/TemplateRecord"
+        }
+      }
+    },
+    "ProgramTemplatesRemoval": {
+      "title": "ProgramTemplatesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramTemplatesRelocation": {
+      "title": "ProgramTemplatesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -3626,58 +6902,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/TraceLink"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramTracesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramTracesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramTracesRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramTracesPatchEntry"
           }
-        },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     },
-    "ProgramStringList": {
-      "title": "ProgramStringList",
+    "ProgramTracesInsertion": {
+      "title": "ProgramTracesInsertion",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "index",
+        "row"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/TraceLink"
+        }
+      }
+    },
+    "ProgramTracesRemoval": {
+      "title": "ProgramTracesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramTracesRelocation": {
+      "title": "ProgramTracesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -5609,42 +8921,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/KnowledgeRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramKnowledgeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramKnowledgeInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramKnowledgeRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramKnowledgePatchEntry"
           }
+        }
+      }
+    },
+    "ProgramKnowledgeInsertion": {
+      "title": "ProgramKnowledgeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "#/$defs/KnowledgeRecord"
+        }
+      }
+    },
+    "ProgramKnowledgeRemoval": {
+      "title": "ProgramKnowledgeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramKnowledgeRelocation": {
+      "title": "ProgramKnowledgeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -5675,42 +9039,94 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched",
-        "reordered"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/BenchmarkRecord"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ProgramBenchmarksRemoval"
           }
         },
-        "patched": {
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramBenchmarksInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramBenchmarksRelocation"
+          }
+        },
+        "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ProgramBenchmarksPatchEntry"
           }
+        }
+      }
+    },
+    "ProgramBenchmarksInsertion": {
+      "title": "ProgramBenchmarksInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
-        "reordered": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "#/$defs/BenchmarkRecord"
+        }
+      }
+    },
+    "ProgramBenchmarksRemoval": {
+      "title": "ProgramBenchmarksRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ProgramBenchmarksRelocation": {
+      "title": "ProgramBenchmarksRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },

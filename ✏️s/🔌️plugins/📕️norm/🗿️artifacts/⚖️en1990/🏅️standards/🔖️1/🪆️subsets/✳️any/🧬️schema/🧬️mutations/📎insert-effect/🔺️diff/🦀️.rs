@@ -8,10 +8,10 @@ use crate::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(payload: &InsertEffect, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {
-    let index = payload.index.min(base.effects.len());
+    let index = payload.index.unwrap_or(usize::MAX).min(base.effects.len());
     let outcome = MutationOutcome::new(En1990Diff { effects: vec![En1990EffectEdit::insert(index, payload.item.clone())], ..En1990Diff::default() });
-    if index == payload.index {
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the member effect list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the member effect list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

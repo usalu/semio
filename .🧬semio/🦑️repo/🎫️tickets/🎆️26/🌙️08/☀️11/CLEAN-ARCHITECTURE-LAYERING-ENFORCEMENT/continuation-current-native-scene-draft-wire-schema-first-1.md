@@ -1,0 +1,3 @@
+# Scene Draft Wire Schema First
+
+The declared borrowed boundary uses the original four draftJson vectors, independently checked by test-only serde_json. Caller byte/item/depth limits and cancellation preserve the exact accepted prefix and original source. Zero NativeEncodeControl ownership admission is valid because the writer borrows the source and caller sink. Original text-splice laws remain intact. Production is unchanged; the owning red definitions require write_draft_changes_json_into, which does not exist yet. Full before/after bodies are retained in the schema-first journal. Fresh Scene7–9 launch rows preserve the original full owning packages, controls and all-target law roster.

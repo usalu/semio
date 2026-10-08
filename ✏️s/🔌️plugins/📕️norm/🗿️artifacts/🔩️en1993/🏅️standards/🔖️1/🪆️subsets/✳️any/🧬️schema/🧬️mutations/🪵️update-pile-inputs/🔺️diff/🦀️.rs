@@ -8,11 +8,11 @@ pub fn diff(payload: &UpdatePileInputs, base: &En1993Snapshot) -> protocol::Muta
     let delta = match base.piles.iter().position(|row| row.id == payload.pile.id) {
         Some(index) if base.piles[index] == payload.pile => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
         Some(index) => {
-            let mut replacement = En1993PileDelta::removal(&payload.pile.id);
-            replacement.absorb(En1993PileDelta::insertion(&base.piles, index, payload.pile.clone()));
+            let mut replacement = En1993PileDelta::removal(&base.piles, index);
+            replacement.absorb(En1993PileDelta::insertion(index, payload.pile.clone()));
             replacement
         }
-        None => En1993PileDelta::insertion(&base.piles, base.piles.len(), payload.pile.clone()),
+        None => En1993PileDelta::insertion(base.piles.len(), payload.pile.clone()),
     };
     protocol::MutationOutcome::new(En1993Diff { piles: delta, ..Default::default() })
 }

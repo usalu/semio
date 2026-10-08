@@ -1,0 +1,9 @@
+# Lower Job UI Current Interface Independent Audit
+
+Actual30588 member nativeRED is upstream failure before member tests. Current UI prepared3417 and Services native-io445 still implement scalar close plus old Pending fields/unitComplete, incompatible with actual canonical InteractiveJob. Surface51822 Job undefinedprogress errors are historical source epoch: current corresponding2935block is rewritten, so do not copy23diagnostics as current proven set. No compiler rerun in this lane.
+
+Canonical Job close consumes full RetainedCloneGrant. Pending and Complete both preserve full RetainedCloneProgress; admission checks independent axis fit and complete terminal witness. Four fallible next-close copy/capacity(body)/release/depth demands default UnsupportedOwner for live undeclared owner, zero only terminal. Current prepared bool close facade cannot simply wrap releasedbytes0: actual physical prepared buffers/frames must expose birth/backing release and original cancellation ownership. Native IO result/payload/task resources similarly need actual demands and controlled close, not maximumscalar/zero fallback. Preserve existing wake registration, threading ownership and original terminal witnesses.
+
+Possible bounded tests in genuine Job/UI owners: zero each axis retains original candidate; declared depth/capacity fits before move; physical frame/backing release charged separately; pending/wake cancellation retains owner until actual terminal; Complete with live retained bytes refused; full progress survives parent admission unchanged. Use existing language-neutral grant/plain vectors and independent actual allocator/resource oracle, not new corpus schema or compatibility scalarbridge.
+
+Observed three source hashes retained in `📥️oct8-lower-job-ui-current-interface-observation.json` strictly observation. Native/Pub notified immediate interface facts; no source/tests/producers/AGENTS changes.

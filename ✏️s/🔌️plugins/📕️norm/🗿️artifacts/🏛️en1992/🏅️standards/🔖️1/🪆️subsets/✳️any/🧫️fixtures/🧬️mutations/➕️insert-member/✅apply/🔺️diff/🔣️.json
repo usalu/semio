@@ -8,94 +8,97 @@
   "reinforcementGrades": null,
   "prestressSteels": null,
   "members": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "wall-W1-2",
-        "labelEn": "Tank wall W1 (copy)",
-        "labelDe": "Behälterwand W1 (Kopie)",
-        "kind": "LiquidRetaining",
-        "concreteGradeId": "c35",
-        "reinforcementGradeId": "b500",
-        "prestressSteelId": "",
-        "exposure": "Xc4",
-        "width": 0.35,
-        "height": 0.5,
-        "effectiveDepth": 0.45,
-        "cover": 0.04,
-        "span": 7.5,
-        "support": "Continuous",
-        "bucklingLength": 0.0,
-        "longitudinal": [
-          {
-            "id": "vert",
-            "diameter": 0.016,
-            "count": 6,
-            "position": "bottom",
-            "anchorageLength": 0.7,
-            "lapLength": 0.85,
-            "bondCondition": "good",
-            "aggregateSize": 0.016
-          }
-        ],
-        "stirrups": {
-          "diameter": 0.008,
-          "spacing": 0.15,
-          "legs": 2
-        },
-        "punching": null,
-        "prestress": null,
-        "fire": {
-          "rating": "R90",
-          "axisDistance": 0.04,
-          "columnMethod": "",
-          "slabSystem": ""
-        },
-        "actions": [
-          {
-            "id": "G",
-            "kind": "permanent",
-            "category": "self",
-            "source": "external",
-            "gKLine": 0.0,
-            "qKLine": 0.0,
-            "pointForce": 0.0,
-            "mK": 100000.0,
-            "nK": 30000.0,
-            "vK": 50000.0,
-            "tK": 0.0,
-            "vKPunch": 0.0
+        "index": 1,
+        "row": {
+          "id": "wall-W1-2",
+          "labelEn": "Tank wall W1 (copy)",
+          "labelDe": "Behälterwand W1 (Kopie)",
+          "kind": "LiquidRetaining",
+          "concreteGradeId": "c35",
+          "reinforcementGradeId": "b500",
+          "prestressSteelId": "",
+          "exposure": "Xc4",
+          "width": 0.35,
+          "height": 0.5,
+          "effectiveDepth": 0.45,
+          "cover": 0.04,
+          "span": 7.5,
+          "support": "Continuous",
+          "bucklingLength": 0.0,
+          "longitudinal": [
+            {
+              "id": "vert",
+              "diameter": 0.016,
+              "count": 6,
+              "position": "bottom",
+              "anchorageLength": 0.7,
+              "lapLength": 0.85,
+              "bondCondition": "good",
+              "aggregateSize": 0.016
+            }
+          ],
+          "stirrups": {
+            "diameter": 0.008,
+            "spacing": 0.15,
+            "legs": 2
           },
-          {
-            "id": "Q-office",
-            "kind": "imposed",
-            "category": "office",
-            "source": "external",
-            "gKLine": 0.0,
-            "qKLine": 0.0,
-            "pointForce": 0.0,
-            "mK": 50000.0,
-            "nK": 15000.0,
-            "vK": 30000.0,
-            "tK": 0.0,
-            "vKPunch": 0.0
-          }
-        ],
-        "useFem": true,
-        "udl": 24000.0,
-        "deflectionSensitive": false,
-        "tightness": "Tc2",
-        "hdOverH": 8.0,
-        "liquidSigmaS": 280000000.0,
-        "liquidRhoPEff": 0.02,
-        "liquidFCtEff": 3200000.0,
-        "liquidSRMax": 0.22,
-        "bridgeSigmaC": 0.0,
-        "bridgeDeltaSigmaS": 0.0
+          "punching": null,
+          "prestress": null,
+          "fire": {
+            "rating": "R90",
+            "axisDistance": 0.04,
+            "columnMethod": "",
+            "slabSystem": ""
+          },
+          "actions": [
+            {
+              "id": "G",
+              "kind": "permanent",
+              "category": "self",
+              "source": "external",
+              "gKLine": 0.0,
+              "qKLine": 0.0,
+              "pointForce": 0.0,
+              "mK": 100000.0,
+              "nK": 30000.0,
+              "vK": 50000.0,
+              "tK": 0.0,
+              "vKPunch": 0.0
+            },
+            {
+              "id": "Q-office",
+              "kind": "imposed",
+              "category": "office",
+              "source": "external",
+              "gKLine": 0.0,
+              "qKLine": 0.0,
+              "pointForce": 0.0,
+              "mK": 50000.0,
+              "nK": 15000.0,
+              "vK": 30000.0,
+              "tK": 0.0,
+              "vKPunch": 0.0
+            }
+          ],
+          "useFem": true,
+          "udl": 24000.0,
+          "deflectionSensitive": false,
+          "tightness": "Tc2",
+          "hdOverH": 8.0,
+          "liquidSigmaS": 280000000.0,
+          "liquidRhoPEff": 0.02,
+          "liquidFCtEff": 3200000.0,
+          "liquidSRMax": 0.22,
+          "bridgeSigmaC": 0.0,
+          "bridgeDeltaSigmaS": 0.0
+        }
       }
     ],
-    "removed": [],
-    "modified": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "anchors": null
 }

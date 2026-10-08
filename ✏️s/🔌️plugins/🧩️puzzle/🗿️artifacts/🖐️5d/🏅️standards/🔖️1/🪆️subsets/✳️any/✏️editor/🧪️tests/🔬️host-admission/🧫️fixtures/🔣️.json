@@ -1,0 +1,88 @@
+{
+  "before": {
+    "schema": "puzzle5d",
+    "domain": "architecture",
+    "parts": [
+      {
+        "id": "p1",
+        "partKind": "kind",
+        "2d": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "3d": {
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "id": "p2",
+        "partKind": "kind",
+        "2d": {
+          "x": 1.0,
+          "y": 0.0
+        },
+        "3d": {
+          "origin": [
+            1.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    ],
+    "fasteners": []
+  },
+  "after": {
+    "schema": "puzzle5d",
+    "domain": "architecture",
+    "parts": [
+      {
+        "id": "p2",
+        "partKind": "kind",
+        "2d": {
+          "x": 9.0,
+          "y": 0.0
+        },
+        "3d": {
+          "origin": [
+            9.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "id": "p3",
+        "partKind": "kind",
+        "2d": {
+          "x": 2.0,
+          "y": 0.0
+        },
+        "3d": {
+          "origin": [
+            2.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    ],
+    "fasteners": []
+  },
+  "refusedScale": [
+    1.0,
+    2.0
+  ],
+  "refusedAnchor": "unknown",
+  "refusedPosition": [
+    1.0,
+    2.0
+  ],
+  "refusedSchema": "wrong",
+  "refusedMeta": 47,
+  "refusedCatalogs": 47
+}

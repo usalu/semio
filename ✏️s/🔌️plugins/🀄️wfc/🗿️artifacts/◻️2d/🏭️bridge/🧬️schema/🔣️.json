@@ -5,11 +5,18 @@
   "required": [
     "artifact",
     "producedBy",
+    "refusedArtifacts",
     "excludedOwnerSegments",
     "aggregates",
     "coordinates"
   ],
   "properties": {
+    "refusedArtifacts": {
+      "type": "array",
+      "const": ["s.wfc.wfc3d","s.wfc.bitmap","s.wfc.grid2d","s.wfc.grid3d"],
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
     "artifact": {
       "type": "string"
     },

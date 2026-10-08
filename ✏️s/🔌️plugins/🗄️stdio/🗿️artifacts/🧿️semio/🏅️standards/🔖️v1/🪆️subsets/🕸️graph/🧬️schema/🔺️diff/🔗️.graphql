@@ -1,11 +1,15 @@
-# 🔺️ SemioGraphDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
-type SemioGraphNodeListDiff {
-  values: [SemioGraphNode!]!
-}
-type SemioGraphEdgeListDiff {
-  values: [SemioGraphEdge!]!
-}
-type SemioGraphDiff {
-  nodes: SemioGraphNodeListDiff @state(class: ARTIFACT)
-  edges: SemioGraphEdgeListDiff @state(class: ARTIFACT)
-}
+# 🔺️ SemioGraphDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
+type ReplaceSemioGraphPort { value: SemioGraphPort! }
+type IndexModifiedReplaceSemioGraphPort { index: Int! diff: ReplaceSemioGraphPort! }
+type IndexAddedSemioGraphPort { index: Int! item: SemioGraphPort! }
+type IndexedTripleReplaceSemioGraphPortSemioGraphPort { removed: [Int!] modified: [IndexModifiedReplaceSemioGraphPort!] added: [IndexAddedSemioGraphPort!] }
+type IndexModifiedSemioGraphEdgeDiff { index: Int! diff: SemioGraphEdgeDiff! }
+type IndexAddedSemioGraphEdge { index: Int! item: SemioGraphEdge! }
+type IndexedTripleSemioGraphEdgeDiffSemioGraphEdge { removed: [Int!] modified: [IndexModifiedSemioGraphEdgeDiff!] added: [IndexAddedSemioGraphEdge!] }
+type IndexModifiedSemioGraphNodeDiff { index: Int! diff: SemioGraphNodeDiff! }
+type IndexAddedSemioGraphNode { index: Int! item: SemioGraphNode! }
+type IndexedTripleSemioGraphNodeDiffSemioGraphNode { removed: [Int!] modified: [IndexModifiedSemioGraphNodeDiff!] added: [IndexAddedSemioGraphNode!] }
+type SemioGraphEntryDiff { value: SemioValue }
+type SemioGraphNodeDiff { id: GraphNodeId kind: String label: String position: SemioPoint2 width: Float height: Float ports: IndexedTripleReplaceSemioGraphPortSemioGraphPort properties: SemioGraphPropertiesDiff }
+type SemioGraphEdgeDiff { source: GraphNodeId target: GraphNodeId kind: String label: String sourcePort: String targetPort: String properties: SemioGraphPropertiesDiff }
+type SemioGraphDiff { nodes: IndexedTripleSemioGraphNodeDiffSemioGraphNode edges: IndexedTripleSemioGraphEdgeDiffSemioGraphEdge }

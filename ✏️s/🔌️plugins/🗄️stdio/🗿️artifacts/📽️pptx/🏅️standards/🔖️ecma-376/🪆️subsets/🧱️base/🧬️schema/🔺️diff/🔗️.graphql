@@ -1,6 +1,61 @@
-# 🧬️ Sparse replacements of canonical PPTX fields.
+type PptxRemoval { id: String!, index: Int! }
+type PptxRelocation { id: String!, from: Int!, to: Int! }
+type PptxContentTypeEntryPatch { contentType: String }
+type PptxContentTypeRow { name: String!, contentType: String! }
+type PptxContentTypeEntryInsertion { index: Int!, row: PptxContentTypeRow! }
+type PptxContentTypeEntryModification { id: String!, patch: PptxContentTypeEntryPatch! }
+type PptxContentTypeEntriesDiff {
+  removed: [PptxRemoval!]
+  inserted: [PptxContentTypeEntryInsertion!]
+  moved: [PptxRelocation!]
+  modified: [PptxContentTypeEntryModification!]
+}
+type PptxOpcContentTypesDiff { defaults: PptxContentTypeEntriesDiff, overrides: PptxContentTypeEntriesDiff }
+type PptxOpcPartDiff { contentType: String, bytes: [Int!] }
+type PptxOpcPartInsertion { index: Int!, row: PptxOpcPart! }
+type PptxOpcPartModification { id: String!, patch: PptxOpcPartDiff! }
+type PptxOpcPartsDiff {
+  removed: [PptxRemoval!]
+  inserted: [PptxOpcPartInsertion!]
+  moved: [PptxRelocation!]
+  modified: [PptxOpcPartModification!]
+}
+type PptxOpcRelationshipDiff { relType: String, target: String, targetMode: String }
+type PptxOpcRelationshipInsertion { index: Int!, row: PptxOpcRelationship! }
+type PptxOpcRelationshipModification { id: String!, patch: PptxOpcRelationshipDiff! }
+type PptxOpcRelationshipListDiff {
+  removed: [PptxRemoval!]
+  inserted: [PptxOpcRelationshipInsertion!]
+  moved: [PptxRelocation!]
+  modified: [PptxOpcRelationshipModification!]
+}
+type PptxOpcRelationshipOwnerPatch { relationships: PptxOpcRelationshipListDiff! }
+type PptxOpcRelationshipOwnerInsertion { index: Int!, row: PptxOpcRelationshipOwner! }
+type PptxOpcRelationshipOwnerModification { id: String!, patch: PptxOpcRelationshipOwnerPatch! }
+type PptxOpcRelationshipsDiff {
+  removed: [PptxRemoval!]
+  inserted: [PptxOpcRelationshipOwnerInsertion!]
+  moved: [PptxRelocation!]
+  modified: [PptxOpcRelationshipOwnerModification!]
+}
+type PptxOpcDiff {
+  comment: String
+  contentTypes: PptxOpcContentTypesDiff
+  parts: PptxOpcPartsDiff
+  relationships: PptxOpcRelationshipsDiff
+}
+scalar PptxXmlDocumentDiff
+type PptxXmlPartDiff { contentType: String, document: PptxXmlDocumentDiff }
+type PptxXmlPartInsertion { index: Int!, row: PptxXmlPart! }
+type PptxXmlPartModification { id: String!, patch: PptxXmlPartDiff! }
+type PptxXmlPartsDiff {
+  removed: [PptxRemoval!]
+  inserted: [PptxXmlPartInsertion!]
+  moved: [PptxRelocation!]
+  modified: [PptxXmlPartModification!]
+}
 type PptxDiff {
-  schema: String
-  opc: PptxOpcPackage
-  xmlParts: [PptxXmlPart!]
+  schema: String @state(class: ARTIFACT)
+  opc: PptxOpcDiff @state(class: ARTIFACT)
+  xmlParts: PptxXmlPartsDiff @state(class: ARTIFACT)
 }

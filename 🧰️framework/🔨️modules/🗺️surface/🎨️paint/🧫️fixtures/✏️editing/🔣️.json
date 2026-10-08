@@ -282,16 +282,16 @@
           0
         ],
         "spans": [
-          [
-            1,
-            2,
-            255
-          ],
-          [
-            4,
-            1,
-            128
-          ]
+          {
+            "start": 1,
+            "length": 2,
+            "coverage": 255
+          },
+          {
+            "start": 4,
+            "length": 1,
+            "coverage": 128
+          }
         ],
         "bounds": {
           "x": 1,

@@ -7,25 +7,24 @@
   "structureClassicModel": null,
   "drawings": null,
   "breps": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "childId": "brep-middle",
-        "target": {
-          "artifactId": "topology-middle",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "brep"
+        "index": 1,
+        "row": {
+          "childId": "brep-middle",
+          "target": {
+            "artifactId": "topology-middle",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": [
-      "brep-first",
-      "brep-middle",
-      "brep-last"
-    ]
+    "moved": []
   },
   "referencesByModelDefinitionId": null,
   "nodes": null

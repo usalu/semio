@@ -1,0 +1,109 @@
+{
+  "bundle": {
+    "rows": [
+      {
+        "id": "root",
+        "parent": null
+      },
+      {
+        "id": "a",
+        "parent": "root"
+      },
+      {
+        "id": "b",
+        "parent": "root"
+      }
+    ],
+    "expected": [
+      {
+        "detail": 0,
+        "order": 0,
+        "x": 25,
+        "y": 80
+      },
+      {
+        "detail": 0,
+        "order": 1,
+        "x": 50,
+        "y": 0
+      },
+      {
+        "detail": 1,
+        "order": 0,
+        "x": 75,
+        "y": 80
+      },
+      {
+        "detail": 1,
+        "order": 1,
+        "x": 50,
+        "y": 0
+      }
+    ]
+  },
+  "group": {
+    "rows": [
+      {
+        "a": 1,
+        "b": false
+      },
+      {
+        "a": "1",
+        "b": false
+      },
+      {
+        "a": 1,
+        "b": "false"
+      },
+      {
+        "a": 1,
+        "b": false
+      },
+      {
+        "a": null,
+        "b": false
+      }
+    ],
+    "expected": [
+      0,
+      1,
+      2,
+      0,
+      3
+    ]
+  },
+  "polygon": {
+    "rows": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 1
+      }
+    ],
+    "expected": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        4,
+        0
+      ]
+    ]
+  }
+}

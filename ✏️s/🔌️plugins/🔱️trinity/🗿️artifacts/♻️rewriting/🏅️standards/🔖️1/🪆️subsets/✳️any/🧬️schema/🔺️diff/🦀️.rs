@@ -85,7 +85,7 @@ impl PatternPatch {
     pub fn is_empty(&self) -> bool {
         self.left_var.is_none() && self.left_kind.is_none() && self.edge_var.is_none() && self.edge_kind.is_none() && self.right_var.is_none() && self.right_kind.is_none()
     }
-    fn apply_to(&self, item: &mut Pattern) {
+    fn write_into(&self, item: &mut Pattern) {
         if let Some(value) = &self.left_var {
             item.left_var = value.clone();
         }
@@ -135,25 +135,15 @@ impl PatternPatch {
             right_kind: self.right_kind.as_ref().map(|_| base.right_kind.clone()),
         }
     }
-    fn between(base: &Pattern, other: &Pattern) -> Self {
-        Self {
-            left_var: (base.left_var != other.left_var).then(|| other.left_var.clone()),
-            left_kind: (base.left_kind != other.left_kind).then(|| other.left_kind.clone()),
-            edge_var: (base.edge_var != other.edge_var).then(|| other.edge_var.clone()),
-            edge_kind: (base.edge_kind != other.edge_kind).then(|| other.edge_kind.clone()),
-            right_var: (base.right_var != other.right_var).then(|| other.right_var.clone()),
-            right_kind: (base.right_kind != other.right_kind).then(|| other.right_kind.clone()),
-        }
-    }
 }
 
 impl LhsPatch {
     pub fn is_empty(&self) -> bool {
         self.pattern.as_ref().is_none_or(PatternPatch::is_empty) && self.where_clause.is_none()
     }
-    fn apply_to(&self, item: &mut Lhs) {
+    fn write_into(&self, item: &mut Lhs) {
         if let Some(patch) = &self.pattern {
-            patch.apply_to(&mut item.pattern);
+            patch.write_into(&mut item.pattern);
         }
         if let Some(value) = &self.where_clause {
             item.where_clause = value.clone();
@@ -172,16 +162,13 @@ impl LhsPatch {
     fn inverse(&self, base: &Lhs) -> Self {
         Self { pattern: self.pattern.as_ref().map(|patch| patch.inverse(&base.pattern)), where_clause: self.where_clause.as_ref().map(|_| base.where_clause.clone()) }
     }
-    fn between(base: &Lhs, other: &Lhs) -> Self {
-        Self { pattern: Some(PatternPatch::between(&base.pattern, &other.pattern)).filter(|patch| !patch.is_empty()), where_clause: (base.where_clause != other.where_clause).then(|| other.where_clause.clone()) }
-    }
 }
 
 impl RhsPatch {
     pub fn is_empty(&self) -> bool {
         self.create.is_none() && self.delete.is_none() && self.set.is_none() && self.merge.is_none() && self.parameters.is_none()
     }
-    fn apply_to(&self, item: &mut Rhs) {
+    fn write_into(&self, item: &mut Rhs) {
         if let Some(value) = &self.create {
             item.create = value.clone();
         }
@@ -222,15 +209,6 @@ impl RhsPatch {
             set: self.set.as_ref().map(|_| base.set.clone()),
             merge: self.merge.as_ref().map(|_| base.merge.clone()),
             parameters: self.parameters.as_ref().map(|_| base.parameters.clone()),
-        }
-    }
-    fn between(base: &Rhs, other: &Rhs) -> Self {
-        Self {
-            create: (base.create != other.create).then(|| other.create.clone()),
-            delete: (base.delete != other.delete).then(|| other.delete.clone()),
-            set: (base.set != other.set).then(|| other.set.clone()),
-            merge: (base.merge != other.merge).then(|| other.merge.clone()),
-            parameters: (base.parameters != other.parameters).then(|| other.parameters.clone()),
         }
     }
 }
@@ -277,19 +255,6 @@ fn invert_map<V: Clone, M: MapView<V>>(delta: &MapDelta<V>, base: &M) -> MapDelt
     inverse
 }
 
-/// 🧭️ The map delta carrying `base` to `other`: a set for every key that differs, a removal for every key `other` lacks.
-fn between_maps<V: Clone + PartialEq, M: MapView<V>>(base: &M, other: &M) -> Option<MapDelta<V>> {
-    let mut delta = MapDelta::default();
-    for key in other.view_keys() {
-        if let Some(value) = other.view_get(key).filter(|value| base.view_get(key) != Some(*value)) {
-            delta.absorb(MapDelta::set(key.clone(), value.clone()));
-        }
-    }
-    for key in base.view_keys().into_iter().filter(|key| other.view_get(key).is_none()) {
-        delta.absorb(MapDelta::remove(key.clone()));
-    }
-    (!delta.is_empty()).then_some(delta)
-}
 //#endregion 🔖️MapAlgebra
 
 impl MutationDiff<RewritingSnapshot> for RewritingDiff {
@@ -299,16 +264,16 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {
             next.working_graph = MutationDiff::<JackSnapshot>::apply(graph, &snapshot.working_graph, capability).map_err(|error| error.under(["workingGraph"]))?;
         }
         if let Some(patch) = &self.lhs {
-            patch.apply_to(&mut next.lhs);
+            patch.write_into(&mut next.lhs);
         }
         if let Some(patch) = &self.rhs {
-            patch.apply_to(&mut next.rhs);
+            patch.write_into(&mut next.rhs);
         }
         if let Some(bindings) = &self.parameter_bindings {
-            bindings.apply_to(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
+            bindings.write_into(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
         }
         if let Some(layout) = &self.rule_layout {
-            layout.apply_to(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
+            layout.write_into(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
         }
         Ok(next)
     }
@@ -341,15 +306,6 @@ impl DiffAlgebra<RewritingSnapshot> for RewritingDiff {
             rhs: self.rhs.as_ref().map(|patch| patch.inverse(&base.rhs)),
             parameter_bindings: self.parameter_bindings.as_ref().map(|delta| invert_map(delta, &base.parameter_bindings)),
             rule_layout: self.rule_layout.as_ref().map(|delta| invert_map(delta, &base.rule_layout)),
-        }
-    }
-    fn between(base: &RewritingSnapshot, other: &RewritingSnapshot) -> Self {
-        Self {
-            working_graph: Some(<JackDiff as DiffAlgebra<JackSnapshot>>::between(&base.working_graph, &other.working_graph)).filter(|graph| !DiffAlgebra::<JackSnapshot>::is_empty(graph)),
-            lhs: Some(LhsPatch::between(&base.lhs, &other.lhs)).filter(|patch| !patch.is_empty()),
-            rhs: Some(RhsPatch::between(&base.rhs, &other.rhs)).filter(|patch| !patch.is_empty()),
-            parameter_bindings: between_maps(&base.parameter_bindings, &other.parameter_bindings),
-            rule_layout: between_maps(&base.rule_layout, &other.rule_layout),
         }
     }
     fn is_empty(&self) -> bool {

@@ -87,6 +87,19 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
+/// 🌉️ Applies one x conformance mutation through its leaf-owned diff and the base bridge.
+pub mod mutation_bridge {
+    use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+    use crate::standards::v1_4::subsets::x::schema::mutations::PdfX1Mutation;
+
+    /// ▶️ Applies the authoritative leaf diff.
+    pub fn apply_x_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfX1Mutation) -> protocol::MutationOutcome<PdfDiff> {
+        use protocol::Mutation;
+        let outcome = mutation.diff(snapshot);
+        crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_outcome(outcome, snapshot)
+    }
+}
+
 pub mod derived_construction {
     use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
     use crate::standards::v1_4::subsets::x::io::check_pdf_x_conformance;
@@ -121,7 +134,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::standards::v1_4::subsets::base::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 

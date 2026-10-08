@@ -1,0 +1,20 @@
+{
+  "paths": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/paged-origin-source-law-held.rs",
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/📦️operation-pages/🦀️.rs"
+  ],
+  "regions": [
+    [
+      "let(result,encoded)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capsule.write_body(&options,&mut CanceledOutput{inner:&mut output,accepted:&accepted},&mut control));",
+      "let((result,diagnostic),encoded)=semio_framework_trace::observe_heap_allocations_on_this_thread(||match capsule.write_body(&options,&mut CanceledOutput{inner:&mut output,accepted:&accepted},&mut control){Ok(bytes)=>(Ok(bytes),0),Err(error)=>{let error=error.into_value_error();let kind=error.kind;let diagnostic=match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()};drop(error);(Err(kind),diagnostic)}});"
+    ],
+    [
+      "assert_eq!(encoded.requested_bytes-encoded.released_bytes,capsule.allocated_bytes()+output.allocated_bytes());",
+      "assert_eq!(encoded.requested_bytes,capsule.allocated_bytes()+output.allocated_bytes()+diagnostic);assert_eq!(encoded.released_bytes,diagnostic);assert!(encoded.largest_release_bytes<=4096);"
+    ],
+    [
+      "assert!(matches!(step,RetainedCloneStep::Progress(_)));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));",
+      "assert!(matches!(step,RetainedCloneStep::Progress(_)|RetainedCloneStep::Complete(_)));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));"
+    ]
+  ]
+}

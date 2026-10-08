@@ -7,12 +7,15 @@
   "activities": null,
   "functions": null,
   "elements": {
-    "added": [],
     "removed": [
-      "program-element-a"
+      {
+        "id": "program-element-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "quantities": null,
   "relationships": null,

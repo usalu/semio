@@ -4,11 +4,14 @@ use semio_framework_value::retained_clone::RetainedCloneSource;
 use semio_framework_value::retirement::SharedValueRetirementFactory;
 use crate::schema::snapshot::{PngTextChunk,PngTextKind,PngNativePaint};
 
-fn close(cursor:&mut PngPublicationCursor) {
-    cursor.begin_close();
-    for _ in 0..10000 {if cursor.close_step(1,4096).unwrap()==SnapshotRetirementStep::Complete {assert!(cursor.terminal_is_empty());return;}}
-    panic!("retained PNG cursor close did not terminate");
+fn close(cursor:&mut PngPublicationCursor){
+ cursor.begin_close();
+ for _ in 0..100000{
+  let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};
+  let step=cursor.close_step(grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());return;}
+ }panic!("original image publication close did not terminate");
 }
+
 #[test]
 fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
@@ -25,7 +28,7 @@ fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
         let mut cursor=PngPublicationCursor::new();let mut post=snapshot.clone();let mut turns=0;
         loop {turns+=1;assert!(turns<10000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         assert!(turns>case["minimumTurns"].as_u64().unwrap()as usize);assert_eq!(post,expected);
-        let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceImage(ReplaceImage{image:snapshot.image.clone()})]);close(&mut cursor);
+        let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]);close(&mut cursor);
         let mut bytes=Vec::new();{let mut encoder=png::Encoder::new(&mut bytes,post.image.width,post.image.height);encoder.set_color(png::ColorType::Rgba);encoder.set_depth(png::BitDepth::Eight);let mut writer=encoder.write_header().unwrap();writer.write_image_data(&expected.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>()).unwrap();}
         let mut reader=png::Decoder::new(std::io::Cursor::new(bytes)).read_info().unwrap();let mut decoded=vec![0;reader.output_buffer_size().unwrap()];let info=reader.next_frame(&mut decoded).unwrap();assert_eq!(decoded[..info.buffer_size()],post.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>());
         let mut retirement=semio_framework_value::retirement::owned_retirement(inverse);while retirement.close_step(1,4096).unwrap()!=SnapshotRetirementStep::Complete {} assert!(retirement.terminal_is_empty());
@@ -69,7 +72,7 @@ fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         for image in [None,Some(snapshot.image)] {
-            let diff=Arc::new(PngDiff{image});let lifetime=Arc::downgrade(&diff);
+            let diff=Arc::new(PngDiff{image,..PngDiff::default()});let lifetime=Arc::downgrade(&diff);
             let expected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(diff.as_ref())).unwrap();
             let mut reader=store::ArtifactCanonicalJsonReader::new(diff,Arc::new(SharedValueRetirementFactory::<PngDiff>::default()));
             let mut encoded=Vec::new();let mut chunk=[0;17];let mut turns=0;
@@ -98,7 +101,7 @@ fn retained_png_publication_replays_neutral_intent_profiles() {
         let mut cursor=PngPublicationCursor::new();let mut post=snapshot.clone();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut turns=0;
         loop {turns+=1;assert!(turns<100000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         let expected:Vec<u16>=row["expectedSamples"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u16).collect();assert_eq!(post.image.samples,expected);assert!(post.image.same_metadata(&snapshot.image));
-        assert_eq!(cursor.take_inverse().unwrap(),vec![PngMutation::ReplaceImage(ReplaceImage{image:snapshot.image})]);close(&mut cursor);
+        let restores=if post.image.samples==snapshot.image.samples{Vec::new()}else{vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]};assert_eq!(cursor.take_inverse().unwrap(),restores);close(&mut cursor);
         eprintln!("[DEBUG] retained PNG authored intent neutral={} turns={turns} exactSamples={}",row["name"],post.image.samples.len());
     }
 }

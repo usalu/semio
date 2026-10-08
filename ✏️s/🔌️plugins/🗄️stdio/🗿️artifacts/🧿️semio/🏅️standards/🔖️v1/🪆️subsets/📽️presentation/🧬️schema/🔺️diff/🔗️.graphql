@@ -3,7 +3,7 @@ type IndexModified { index: Int!, diffJson: String! }
 type IndexAdded { index: Int!, itemJson: String! }
 type IndexedTripleDiffMeta { removed: [Int!]!, modified: [IndexModified!]!, added: [IndexAdded!]! }
 type NamedModified { key: String!, diffJson: String! }
-type NamedTripleDiffMeta { removed: [String!]!, modified: [NamedModified!]!, added: [String!]! }
+type NamedTripleDiffMeta { removed: [String!]!, modified: [NamedModified!]!, added: [StringAdded!]! }
 
 type SlideFrameDiff { origin: SemioPoint2, width: Float, height: Float }
 type SlideDiff { id: String, layoutId: String, shapesJson: String, notesJson: String }
@@ -13,3 +13,5 @@ type SemioPresentationDiff {
   layoutsJson: String
   slidesJson: String
 }
+
+type StringAdded { index: Int! item: String! }

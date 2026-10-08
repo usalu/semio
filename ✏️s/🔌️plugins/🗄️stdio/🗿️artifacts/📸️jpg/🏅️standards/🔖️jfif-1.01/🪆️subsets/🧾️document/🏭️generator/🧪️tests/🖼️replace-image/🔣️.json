@@ -1,0 +1,16 @@
+{
+  "recipe": "replace-image-applied",
+  "before": {
+    "dimensions": "32x24"
+  },
+  "after": {
+    "dimensions": "16x8",
+    "rasterBytes": 384,
+    "xmp": true,
+    "jfifUnit": 1,
+    "jfifDensity": [
+      300,
+      150
+    ]
+  }
+}

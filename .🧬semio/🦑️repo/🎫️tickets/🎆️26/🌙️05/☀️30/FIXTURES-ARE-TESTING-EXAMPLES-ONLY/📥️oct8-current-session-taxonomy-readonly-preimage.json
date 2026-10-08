@@ -1,0 +1,119 @@
+{
+  "role": "read-only observer, no authorship",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  "sha256": "63921f59a26ed304dd373449fa6e193696525d5d9a1bc24b747a8c6b2a63b269",
+  "generatorContractOrder": [
+    "actor-typegen",
+    "assets-build",
+    "async-typegen",
+    "dev-distribution-bundle",
+    "draw-drawing-graph",
+    "external-cargo-locks",
+    "external-emoji-shortcodes",
+    "external-step-assets",
+    "flow-browser-package",
+    "flow-graph-catalog",
+    "framework-manifest",
+    "graph-catalog",
+    "jco-package-adapter",
+    "mutation-source-authority",
+    "playground-session",
+    "plugin-registry",
+    "print-latex-tokens",
+    "repo-entity-kinds",
+    "report-actor-network",
+    "rewriting-graph-catalog",
+    "s-playground-session",
+    "scale-fixture",
+    "schema-entity-catalog",
+    "semio-s-artifact-puzzle-2d-graph-catalog",
+    "semio-s-artifact-puzzle-3d-graph-catalog",
+    "semio-s-artifact-puzzle-5d-graph-catalog",
+    "semio-s-artifact-reasoning-wires-graph-catalog",
+    "semio-s-artifact-trinity-jack-graph-catalog",
+    "semio-s-artifact-writer-writer-graph-catalog",
+    "shell-typegen",
+    "styling-tokens",
+    "ui-axes",
+    "ui-contract",
+    "wgpu-frame-worker"
+  ],
+  "contracts": {
+    "playground-session": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+      "target": "@semio-tech/framework-os-dev:generate-playground-session",
+      "previewTarget": "@semio-tech/framework-os-dev:preview-playground-session",
+      "previewArguments": [
+        "generate",
+        "playground-session",
+        "playground-session",
+        "",
+        "",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated",
+        "preview"
+      ],
+      "checkTarget": "@semio-tech/framework-os-dev:check-playground-session",
+      "inputPatterns": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The General dev target owns an explicit empty catalog session and its exact byte freshness check"
+    },
+    "s-playground-session": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🧑‍💻dev",
+      "target": "@semio-tech/s-dev-composition:generate-playground-session",
+      "previewTarget": "@semio-tech/s-dev-composition:preview-playground-session",
+      "previewArguments": [
+        "playground-session",
+        "preview"
+      ],
+      "checkTarget": "@semio-tech/s-dev-composition:check-playground-session",
+      "inputPatterns": [
+        "✏️s/🧑‍💻dev/📋️project.json",
+        "✏️s/🧑‍💻dev/📜️script.ts",
+        "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The Specific dev target owns its explicit installed catalog selection and exact session source publication"
+    }
+  }
+}

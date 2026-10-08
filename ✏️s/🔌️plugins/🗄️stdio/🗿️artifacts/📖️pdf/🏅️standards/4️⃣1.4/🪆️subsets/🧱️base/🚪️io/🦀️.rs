@@ -651,6 +651,31 @@ pub mod text;
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
 
+/// 🌉️ Where a builder or a test meets the central applier: a mutation's diff is applied atomically to the working snapshot, and a
+/// rejection becomes a fatal outcome. The schema layer only builds diffs; applying them is an io/store concern.
+pub mod mutation_bridge {
+    use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
+
+    /// 🛡️ Applies `outcome` to `snapshot` atomically through the central applier and converts an apply rejection into a fatal outcome.
+    pub fn apply_outcome(outcome: protocol::MutationOutcome<PdfDiff>, snapshot: &mut PdfSnapshot) -> protocol::MutationOutcome<PdfDiff> {
+        let (diff, messages) = outcome.into_parts();
+        match protocol::apply_diff(&diff, snapshot) {
+            Ok(next) => {
+                *snapshot = next;
+                protocol::MutationOutcome::new(diff).absorb_messages(messages)
+            }
+            Err(error) => protocol::MutationOutcome::new(PdfDiff::default()).absorb_messages(messages).absorb_messages([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]),
+        }
+    }
+
+    /// ▶️ Applies one mutation through its leaf-owned diff.
+    pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+        use protocol::Mutation;
+        let outcome = mutation.diff(snapshot);
+        apply_outcome(outcome, snapshot)
+    }
+}
+
 pub mod derived_construction {
     use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
@@ -680,7 +705,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::standards::v1_4::subsets::base::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

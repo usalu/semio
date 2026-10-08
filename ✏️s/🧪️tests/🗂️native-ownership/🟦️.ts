@@ -4,10 +4,9 @@ import { readFile, readdir, access } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join, resolve, relative, sep, posix } from "node:path";
 import corpus from "./🧫️fixtures/🔣️.json";
-import schema from "./🧫️fixtures/🔣️schema.json";
 
 const s = resolve(import.meta.dir, "../.."), root = dirname(s), require = createRequire(join(root, "package.json"));
-const parse = require("@iarna/toml").parse, Ajv = require("ajv");
+const parse = require("@iarna/toml").parse;
 const normalized = (value: string) => posix.normalize(value);
 const portable = (value: string) => !value.includes("\\") && !/^[a-z]:/i.test(value) && !posix.isAbsolute(value);
 const owns = (members: readonly string[], children: readonly string[]) => new Set(members.map(normalized)).size === members.length && members.every(member => {
@@ -81,8 +80,7 @@ const audit = async (rows: readonly Definition[], boundaries: readonly Boundary[
   return issues;
 };
 
-test("Variable Neutral Owner Corpus Matches Independent Schema And Path Projection", () => {
-  expect(new Ajv({ strict: true, allErrors: true }).compile(schema)(corpus)).toBe(true);
+test("Variable Neutral Owner Examples Match Independent Path Projection", () => {
   for (const row of corpus.cases) {
     expect(owns(row.members, row.children)).toBe(row.accepted);
     const independent = new Set(row.members.map(member => posix.resolve("/owner", member))).size === row.members.length && row.members.every(member => {

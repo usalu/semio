@@ -1,19 +1,9 @@
-//! 🦀️ JFIF 1.01 🧱️baseline conformance-class mutation case — Rust adapter.
-//!
-//! The oracle role reads the real scan's baseline axes with the registered libjpeg-turbo CLIs
-//! (`libjpeg-jpg-jfif-1-01-baseline-marker-cli`: `djpeg -v -v` for the SOFn code, the component sampling
-//! factors, the DHT tables and a DAC segment, `rdjpgcom -verbose` for the sample precision), applies
-//! each kind to those axes as ITU-T T.81 defines the field it names, and reads the class off the
-//! specification's own tables (`../../🔮️oracles/🦀️.rs`); it never consults this repository's decoder,
-//! snapshot or checker. The subject applies the same row to the decoded snapshot through
-//! `JpgBaselineMutation`. Both answer in the same conformance projection, compared field for field.
-//!
-//! The comparison is on axes, not bytes: `encode_jpg` writes a conforming baseline file and nothing
-//! else, so every axis is normalized away on re-serialization. The decode/re-encode law is its own
-//! case, `../🔁️round-trip-jpg-jfif-1-01-baseline`.
+//! 🧾️ Independent native observation profiles exercise the pure JPEG baseline classifier.
+//! The real input is read independently by libjpeg and the first-party native header inspector.
+//! Fixture profiles transform observations only; authored image mutations live in document.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::{apply, project, read_axes, Axes};
+use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::{profile, project, read_axes, Axes};
 
 //#region 🔖️Kinds
 
@@ -29,11 +19,11 @@ fn scan_axes(ctx: &Context) -> Result<Axes, String> {
 }
 
 /// 🎯️ The reference answer for one row: the axes after the kind, which must have moved.
-fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
+fn profile_oracle(ctx: &Context) -> Result<Outcome, String> {
     let row = ctx.doc_json()?;
     let kind = row.str("kind");
     let base = scan_axes(ctx)?;
-    let next = apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?;
+    let next = profile(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?;
     let projection = project(&next);
     if projection == project(&base) {
         return Err(format!("mutate-{kind}: the reference reading of the scan did not move"));
@@ -42,11 +32,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// ↩️ The reference inverse: every axis the kind touched goes back to the value libjpeg-turbo read.
-fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
+fn restore_profile_oracle(ctx: &Context) -> Result<Outcome, String> {
     let row = ctx.doc_json()?;
     let kind = row.str("kind");
     let base = scan_axes(ctx)?;
-    if project(&apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?) == project(&base) {
+    if project(&profile(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?) == project(&base) {
         return Err(format!("inverse-{kind}: the forward kind left the reference reading untouched, so restoring it proves nothing"));
     }
     let restored = project(&base);
@@ -57,7 +47,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
- use semio_repo_test_host::{Context,Json,Outcome,law};
+ use semio_repo_test_host::{Context,Json,Outcome};
  use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::{document::io::{inspect_jpg_native_header,binary::snapshot::observations::{JpgNativeObservations,JpgHuffmanClass,JpgHuffmanTable,JpgFrameComponent}},baseline::schema::conformance::check_baseline_facts};
  fn number(value:&Json,key:&str)->Result<u8,String>{match value.get(key){Some(Json::Number(found)) if found.fract()==0.0 && (0.0..=255.0).contains(found)=>Ok(*found as u8),_=>Err(format!("native profile fixture requires byte {key}"))}}
  fn profile(base:&JpgNativeObservations,row:&Json)->Result<JpgNativeObservations,String>{
@@ -92,19 +82,19 @@ mod subject {
  fn decoded(ctx:&Context)->Result<JpgNativeObservations,String>{
   inspect_jpg_native_header(&ctx.input_bytes(super::SCAN)?).map_err(|error|format!("{error:?}"))
  }
- pub fn mutate(ctx:&Context)->Result<Outcome,String>{
+ pub fn inspect_profile(ctx:&Context)->Result<Outcome,String>{
   let row=ctx.doc_json()?;
   let base=decoded(ctx)?;
   let next=profile(&base,&row)?;
   let now=projection(&next);
-  law::mutation_is_observable(&row.str("kind"),&now,&projection(&base),&[])?;
+  if now==projection(&base){return Err("native profile left its observation unchanged".into());}
   let expected=row.str("code");
   let codes=check_baseline_facts(&next.baseline_facts()).iter().map(|diagnostic|diagnostic.code.to_string()).collect::<Vec<_>>();
   if (expected.is_empty()&&!codes.is_empty())||(!expected.is_empty()&&!codes.contains(&expected)){return Err(format!("native profile verdict {codes:?} disagrees with {expected:?}"));}
   eprintln!("[DEBUG] JPEG owned native profile={} codes={codes:?}",row.str("kind"));
   Ok(Outcome::with_raw(now.to_string().into_bytes(),now))
  }
- pub fn inverse(ctx:&Context)->Result<Outcome,String>{
+ pub fn restore_profile(ctx:&Context)->Result<Outcome,String>{
   let row=ctx.doc_json()?;
   let base=decoded(ctx)?;
   if projection(&profile(&base,&row)?)==projection(&base){return Err("native profile fixture did not move its observation".into());}
@@ -120,10 +110,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    built = built.oracle("profile", profile_oracle).oracle("restore-profile", restore_profile_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
+        built = built.subject("profile", subject::inspect_profile).subject("restore-profile", subject::restore_profile);
     }
     built
 }

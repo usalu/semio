@@ -6,19 +6,23 @@
   "productSeries": null,
   "products": null,
   "productIndexes": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "index-pr600",
-        "productId": "product.pr600",
-        "variantId": null,
-        "searchTags": [
-          "pr600",
-          "panel"
-        ]
+        "index": 0,
+        "row": {
+          "id": "index-pr600",
+          "productId": "product.pr600",
+          "variantId": null,
+          "searchTags": [
+            "pr600",
+            "panel"
+          ]
+        }
       }
     ],
-    "removed": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "propertyDefinitions": null,
   "subjects": null,

@@ -1,0 +1,7 @@
+# Whole25 First Corrective Diagnosis
+
+The complete rejected stream identifies a concrete preparation generation bug. The new `prepareCargoOwners` loop advances the command owner after each actual recipe, then finishes its latest plan in an active successor generation. `prepareCargoWorkspaceInvocation` still inspects its captured predecessor operation and calls `context.advanceWorkspace()` on the already-active successor. That exact path throws `Cargo fresh discovery requires its completed physical phase`, retained in queued preparation, every compiling command, and selected closure laws.
+
+The paired dependency path similarly invokes an unconditional fresh-generation transition before its initial read-only custody check after preparation/publication already advanced. The correction must consume the exact current owner operation and advance only after a genuinely completed physical phase, preserving full update/fetch and source custody. It must not weaken the transition guard or increase original budgets.
+
+Short-budget failures and77 original identities remain genuine, as do browser/compiler and normalization/transaction failures. This diagnosis covers only the exact generation mismatch, not all failures. Frozen25 evidence remains unchanged. A new corrective successor must retain every original full case body/control and fresh Root/Catalog/Native advances. No production restoration or publication is performed.

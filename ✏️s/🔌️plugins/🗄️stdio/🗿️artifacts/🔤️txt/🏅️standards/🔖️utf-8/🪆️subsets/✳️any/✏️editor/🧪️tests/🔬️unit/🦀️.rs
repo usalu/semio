@@ -1,10 +1,12 @@
 use super::*;
 
 #[test]
-fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
+fn text_edit_requires_an_explicit_change_set_and_allows_an_empty_one() {
     assert!(txt_command_from_action(TXT_KIT_ACTION_ID, None).is_err());
-    let args = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("revision".into())), ("text".into(), semio_framework_value::DslValue::String(String::new()))]);
-    assert_eq!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), TxtEditorCommand::ReplaceText { revision: "revision".into(), text: String::new() });
+    let args = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("revision".into())), ("splices".into(), semio_framework_value::DslValue::String("[]".into()))]);
+    assert_eq!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&args)).expect("explicit empty change set"), TxtEditorCommand::SpliceText { revision: "revision".into(), splices: "[]".into() });
+    let whole_draft = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("revision".into())), ("text".into(), semio_framework_value::DslValue::String("whole draft".into()))]);
+    assert!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&whole_draft)).is_err(), "a whole draft is no gesture");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -54,71 +56,86 @@ fn natural_file_route_exports_utf8_and_reopens_the_same_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = TxtEditorCommand::ReplaceText { revision: "revision %20 Grüße 🌍".into(), text: "hello\r\nworld %20 Grüße 🌍".into() };
+    let command = TxtEditorCommand::SpliceText { revision: "revision %20 Grüße 🌍".into(), splices: r#"[{"offset":0,"delete":1,"insert":"hello\r\nworld %20 Grüße 🌍"}]"#.into() };
     let printed = <TxtEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <TxtEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
-    assert!(<TxtEditorCommand as protocol::OpText>::parse_op("replace-text revision=€0 text=00").is_err());
+    assert!(<TxtEditorCommand as protocol::OpText>::parse_op("splice-text revision=€0 splices=00").is_err());
+}
+
+/// 🧪️ The change set JSON of one range.
+fn one_range(offset: usize, delete: usize, insert: &str) -> String {
+    serde_json::json!([{ "offset": offset, "delete": delete, "insert": insert }]).to_string()
 }
 
 #[semio_framework_async_macros::async_test]
 async fn direct_text_edit_is_revision_guarded_and_noop_preserving() {
     let snapshot = TxtSnapshot::from_body("a\r\r\nb\r\n");
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
-    let noop = txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: snapshot.to_body() }, &snapshot, None).expect("same text");
+    let noop = txt_emit(&TxtEditorCommand::SpliceText { revision: revision.clone(), splices: "[]".into() }, &snapshot, None).expect("empty change set");
     assert!(noop.artifact_mutations.is_empty());
-    assert!(txt_emit(&TxtEditorCommand::ReplaceText { revision: "stale".into(), text: String::new() }, &snapshot, None).is_err());
-    let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision, text: "x\r\r\ny\r\n".into() }, &snapshot, None).expect("valid replacement");
+    let unchanged = txt_emit(&TxtEditorCommand::SpliceText { revision: revision.clone(), splices: one_range(0, 1, "a") }, &snapshot, None).expect("a range that changes nothing");
+    assert!(unchanged.artifact_mutations.is_empty());
+    assert!(txt_emit(&TxtEditorCommand::SpliceText { revision: "stale".into(), splices: "[]".into() }, &snapshot, None).is_err());
+    let emit = txt_emit(&TxtEditorCommand::SpliceText { revision, splices: one_range(0, 1, "x") }, &snapshot, None).expect("valid replacement");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [TxtMutation::SpliceText(splice)] if splice.splices == vec![TextSplice { offset: 0, delete: 1, insert: "x".into() }]));
     let mut next = snapshot.clone();
     for mutation in &emit.artifact_mutations {
         let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
         assert!(outcome.messages().is_empty(), "native mutation {mutation:?} refused: {:?}", outcome.messages());
         next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
     }
-    assert_eq!(next.to_body(), "x\r\r\ny\r\n");
+    assert_eq!(next.to_body(), "x\r\r\nb\r\n");
 }
 
-/// ⚖️ LAW: a whole-buffer replacement between ANY two native documents lowers to mutations that each apply without a message
-/// (no refused leaf, no empty diff journaled) and end exactly at the replacement — the text round trip `to_body()` is the
-/// oracle. The corpus crosses LF/CRLF, terminated/unterminated, empty, blank-line and bare-CR bodies.
+/// ⚖️ LAW: for ANY two native documents of one line ending, the one range that carries the first body to the second (its scalars
+/// differing between the shared ends) publishes ONE `splice-text` that applies without a message and ends exactly at the second body;
+/// a range that would switch the line ending or leave the native shape is refused by the editor, never journaled.
 #[test]
-fn every_replacement_lowers_through_native_documents_only() {
+fn every_range_edit_lands_on_native_documents_only() {
     const BODIES: [&str; 19] = ["", "a", "a\n", "a\r\n", "\n", "\r\n", "a\nb", "a\nb\n", "a\r\nb", "a\r\r\nb\r\n", "x\r\r\ny\r\n", "a\r", "a\n\n", "\r\n\r\n", "alpha\nbeta", "Hello, stdio.txt!\n", " ", " \n", "\r"];
     for old_body in BODIES {
         let snapshot = TxtSnapshot::from_body(old_body);
-        assert_eq!(native_snapshot_error(&snapshot), None, "corpus body {old_body:?} is native");
+        assert_eq!(crate::schema::mutation_support::native_snapshot_error(&snapshot), None, "corpus body {old_body:?} is native");
         let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
         for new_body in BODIES {
-            let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: new_body.into() }, &snapshot, None).expect("native replacement lowers");
-            let mut next = snapshot.clone();
-            for mutation in &emit.artifact_mutations {
-                let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
-                assert!(outcome.messages().is_empty(), "{old_body:?} → {new_body:?}: {mutation:?} refused: {:?}", outcome.messages());
-                next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
+            let (before, after): (Vec<char>, Vec<char>) = (old_body.chars().collect(), new_body.chars().collect());
+            let prefix = before.iter().zip(&after).take_while(|(left, right)| left == right).count();
+            let suffix = before[prefix..].iter().rev().zip(after[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
+            let splices = if before == after { "[]".to_string() } else { one_range(prefix, before.len() - prefix - suffix, &after[prefix..after.len() - suffix].iter().collect::<String>()) };
+            let target = TxtSnapshot::from_body(new_body);
+            let reachable = crate::schema::mutation_support::native_snapshot_error(&target).is_none() && (new_body.is_empty() || target.line_ending == snapshot.line_ending || !old_body.contains("\r\n") && !new_body.contains("\r\n"));
+            match txt_emit(&TxtEditorCommand::SpliceText { revision: revision.clone(), splices }, &snapshot, None) {
+                Ok(emit) => {
+                    let mut next = snapshot.clone();
+                    for mutation in &emit.artifact_mutations {
+                        let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
+                        assert!(outcome.messages().is_empty(), "{old_body:?} → {new_body:?}: {mutation:?} refused: {:?}", outcome.messages());
+                        next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
+                    }
+                    assert_eq!(next.to_body(), new_body, "{old_body:?} → {new_body:?}");
+                    assert!(emit.artifact_mutations.len() <= 1, "{old_body:?} → {new_body:?}: one edit is one mutation");
+                }
+                Err(_) => assert!(!reachable || old_body.contains("\r\n") != new_body.contains("\r\n"), "{old_body:?} → {new_body:?} is a native edit of one line ending"),
             }
-            assert_eq!(next.to_body(), new_body, "{old_body:?} → {new_body:?}");
-            let mut expected = TxtSnapshot::from_body(new_body);
-            expected.schema.clone_from(&snapshot.schema);
-            assert_eq!(next, expected, "{old_body:?} → {new_body:?}");
         }
     }
 }
 
-/// ⚖️ LAW: an Apply that keeps the line ending and terminator is ONE edit of exactly the net line leaves — one changed line is ONE
-/// `set-line`, an added line ONE `insert-line`, a dropped line ONE `remove-line` — with no static description, so its history row
-/// is labelled from its leaves; every replacement of the corpus above still lands exactly.
+/// ⚖️ LAW: an Apply is ONE `splice-text` carrying the editor's ranges verbatim, with no static description, so its history row is
+/// labelled from its leaf; ranges in two places stay one mutation.
 #[test]
-fn an_applied_text_is_its_net_line_leaves() {
+fn an_applied_change_set_is_one_splice_text() {
     let snapshot = TxtSnapshot::from_body("alpha\nbeta\ngamma\n");
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
-    let emit = |text: &str| txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: text.into() }, &snapshot, None).expect("a native replacement");
-    let changed = emit("alpha\nBETA\ngamma\n");
-    assert!(matches!(changed.artifact_mutations.as_slice(), [TxtMutation::SetLine(set)] if (set.index, set.text.as_str()) == (1, "BETA")), "{:?}", changed.artifact_mutations);
-    assert_eq!(<TxtMutation as protocol::SemanticMutation<TxtSnapshot>>::label(&changed.artifact_mutations[0]), semio_framework_ui_locale::LocalizedLabel::native("Set Line", "Zeile setzen"), "the history row is labelled from its leaf in every supported locale");
-    let added = emit("alpha\nbeta\ndelta\ngamma\n");
-    assert!(matches!(added.artifact_mutations.as_slice(), [TxtMutation::InsertLine(insert)] if (insert.index, insert.text.as_str()) == (2, "delta")), "{:?}", added.artifact_mutations);
-    let dropped = emit("alpha\ngamma\n");
-    assert!(matches!(dropped.artifact_mutations.as_slice(), [TxtMutation::RemoveLine(remove)] if remove.index == 1), "{:?}", dropped.artifact_mutations);
+    let emit = |splices: String| txt_emit(&TxtEditorCommand::SpliceText { revision: revision.clone(), splices }, &snapshot, None).expect("a native change set");
+    let changed = emit(one_range(6, 4, "BETA"));
+    assert!(matches!(changed.artifact_mutations.as_slice(), [TxtMutation::SpliceText(splice)] if splice.splices == vec![TextSplice { offset: 6, delete: 4, insert: "BETA".into() }]), "{:?}", changed.artifact_mutations);
+    assert_eq!(<TxtMutation as protocol::SemanticMutation<TxtSnapshot>>::label(&changed.artifact_mutations[0]), semio_framework_ui_locale::LocalizedLabel::native("Edit Text", "Text bearbeiten"), "the history row is labelled from its leaf in every supported locale");
+    let two = emit(serde_json::json!([{ "offset": 0, "delete": 1, "insert": "A" }, { "offset": 11, "delete": 5, "insert": "G" }]).to_string());
+    assert!(matches!(two.artifact_mutations.as_slice(), [TxtMutation::SpliceText(splice)] if splice.splices.len() == 2));
+    assert!(txt_emit(&TxtEditorCommand::SpliceText { revision: revision.clone(), splices: serde_json::json!([{ "offset": 3, "delete": 1, "insert": "x" }, { "offset": 2, "delete": 0, "insert": "y" }]).to_string() }, &snapshot, None).is_err(), "unordered ranges are no change set");
+    assert!(txt_emit(&TxtEditorCommand::SpliceText { revision, splices: "not json".into() }, &snapshot, None).is_err());
 }
 
 /// ⚖️ LAW: an invariant refusal is FATAL (the store's contract for `mutation.invariant`), so the bounded preparation refuses the
@@ -207,14 +224,15 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }
 
-/// ⚖️ LAW: `replace-text` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
+/// ⚖️ LAW: `textEdit` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
 /// editor's exact retained factory. Unregistered, the reactor refused it inside `s` with
 /// `interactive-job.missing-factory` (S15, session 11).
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&txt_example_snapshot(crate::examples::demo::ID)).await;
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
-    dispatch_settled(&mut app, "textEdit", &[("revision", &revision), ("text", "alpha\nbeta\n")]).await.expect("replace-text settles");
+    let splices = one_range(0, txt_example_snapshot(crate::examples::demo::ID).to_body().chars().count(), "alpha\nbeta\n");
+    dispatch_settled(&mut app, "textEdit", &[("revision", &revision), ("splices", &splices)]).await.expect("textEdit settles");
     let after = app.snapshot().expect("txt snapshot");
     assert_eq!(after.lines, vec!["alpha".to_string(), "beta".to_string()]);
     assert!(after.trailing_newline);
@@ -222,43 +240,19 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
 }
 //#endregion 🪟️KitVerbLaws
 
-//#region 🧮️NetLeafLaws
-const NET_LEAVES: &str = include_str!("../../../🧫️fixtures/🧫️net-leaves/🔣️.json");
-
-/// 🧾️ A line leaf as the net-leaves corpus names it: kind, index and the line it writes.
-fn net_leaf_summary(leaf: &TxtMutation) -> serde_json::Value {
-    match leaf {
-        TxtMutation::SetLine(set) => serde_json::json!({ "kind": "set-line", "index": set.index, "text": set.text }),
-        TxtMutation::InsertLine(insert) => serde_json::json!({ "kind": "insert-line", "index": insert.index, "text": insert.text }),
-        TxtMutation::RemoveLine(remove) => serde_json::json!({ "kind": "remove-line", "index": remove.index }),
-        other => serde_json::json!({ "kind": format!("{other:?}") }),
-    }
-}
-
-/// ⚖️ LAW (corpus `🧫️fixtures/🧫️net-leaves`, oracle `🧪️tests/🧪️net-leaves/🟦️.ts`): an Apply that keeps the line ending and
-/// terminator is exactly the corpus's net line leaves; one that changes either (`null`) is the whole-buffer lowering; every
-/// leaf applies without a message and the edit lands exactly on the applied text.
-#[test]
-fn an_applied_text_is_exactly_the_corpus_net_line_leaves() {
-    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
-    for case in corpus["cases"].as_array().expect("cases") {
-        let (id, after) = (case["id"].as_str().expect("id"), case["after"].as_str().expect("after"));
-        let snapshot = TxtSnapshot::from_body(case["before"].as_str().expect("before"));
-        let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
-        let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision, text: after.into() }, &snapshot, None).expect("a native replacement");
-        let mut next = snapshot.clone();
-        for mutation in &emit.artifact_mutations {
-            let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
-            assert!(outcome.messages().is_empty(), "{id}: {mutation:?} refused: {:?}", outcome.messages());
-            next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
-        }
-        assert_eq!(next.to_body(), after, "{id}: the edit lands on the applied text");
-        match case["leaves"].as_array() {
-            Some(expected) => assert_eq!(emit.artifact_mutations.iter().map(net_leaf_summary).collect::<Vec<_>>(), *expected, "{id}: the net leaves"),
-            None => assert!(txt_net_mutations(&snapshot, &next).is_none() && !emit.artifact_mutations.is_empty(), "{id}: a change of shape is the whole-buffer lowering"),
-        }
-    }
-}
-//#endregion 🧮️NetLeafLaws
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", TxtEditor, || semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let base = TxtSnapshot::from_body("one\ntwo\n");
+    let emit = |event: SnapshotEditEvent| <TxtEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let line = emit(SnapshotEditEvent::SetValue { path: "/lines/1".into(), value: semio_framework_value::DslValue::String("TWO".into()) }).expect("a line edit resolves");
+    assert!(matches!(line.artifact_mutations.as_slice(), [TxtMutation::SetLine(set)] if (set.index, set.text.as_str()) == (1, "TWO")));
+    let inserted = emit(SnapshotEditEvent::InsertValue { path: "/lines/-".into(), value: semio_framework_value::DslValue::String("three".into()) }).expect("a line insertion resolves");
+    assert!(matches!(inserted.artifact_mutations.as_slice(), [TxtMutation::InsertLine(insert)] if insert.index == 2));
+    let removed = emit(SnapshotEditEvent::RemoveValue { path: "/lines/0".into() }).expect("a line removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [TxtMutation::RemoveLine(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

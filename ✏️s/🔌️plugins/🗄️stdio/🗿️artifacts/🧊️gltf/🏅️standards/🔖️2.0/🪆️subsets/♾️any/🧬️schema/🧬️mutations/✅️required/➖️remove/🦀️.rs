@@ -24,7 +24,7 @@ pub fn plan(p: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Result<Gl
     let Some(index) = base.document.extensions_required.iter().position(|value| value == &p.extension) else {
         return Err(reject("gltf.mutation.extension-absent", "document/extensionsRequired", "extension is not declared"));
     };
-    Ok(GltfDiff { extensions_required: Some(without(&base.document.extensions_required, index)), ..Default::default() })
+    Ok(GltfDiff { extensions_required: Some(GltfStringsDelta::removal(&base.document.extensions_required, index)), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

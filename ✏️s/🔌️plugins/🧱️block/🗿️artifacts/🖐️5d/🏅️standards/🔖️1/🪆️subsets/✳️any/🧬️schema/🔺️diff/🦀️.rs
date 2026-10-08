@@ -2,7 +2,7 @@
 //! removed/added/patched rows (never a whole row, list or sub-document copy). `absorb` coalesces per field and per id, `inverse` restores exact base values.
 
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
-use semio_s_plugin_block::{BlockAttributesDelta, BlockAuthorsDelta, BlockCamera2dPatch, BlockCamera3dPatch, BlockCompatibilityDelta, BlockKindIdentityPatch, BlockMetaPatch, BlockOptionalNumber, BlockOptionalOrientation, BlockOptionalScale, BlockOptionalText, BlockPatchError, BlockRepresentationsDelta, block_patch, block_patch_absorb, block_patch_apply, block_patch_between, block_patch_inverse, block_patch_is_empty, block_rows, block_rows_absorb, block_rows_apply, block_rows_between, block_rows_inverse, block_rows_is_empty};
+use semio_s_plugin_block::{BlockAttributesDelta, BlockAuthorsDelta, BlockCamera2dPatch, BlockCamera3dPatch, BlockCompatibilityDelta, BlockKindIdentityPatch, BlockMetaPatch, BlockOptionalNumber, BlockOptionalOrientation, BlockOptionalScale, BlockOptionalText, BlockPatchError, BlockRepresentationsDelta, block_patch, block_patch_absorb, block_patch_apply, block_patch_inverse, block_patch_is_empty};
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -22,17 +22,17 @@ pub struct Block5dDiff {
     #[state(artifact)]
     pub part_3d: Option<Block5dPart3dPatch>,
     #[state(artifact)]
-    pub representations: Option<BlockRepresentationsDelta>,
+    pub representations: BlockRepresentationsDelta,
     #[state(artifact)]
-    pub grip_kinds: Option<Block5dGripKindsDelta>,
+    pub grip_kinds: Block5dGripKindsDelta,
     #[state(artifact)]
-    pub grips: Option<Block5dGripsDelta>,
+    pub grips: Block5dGripsDelta,
     #[state(artifact)]
-    pub compatibility: Option<BlockCompatibilityDelta>,
+    pub compatibility: BlockCompatibilityDelta,
     #[state(artifact)]
-    pub attributes: Option<BlockAttributesDelta>,
+    pub attributes: BlockAttributesDelta,
     #[state(artifact)]
-    pub authors: Option<BlockAuthorsDelta>,
+    pub authors: BlockAuthorsDelta,
     #[state(artifact)]
     pub camera2d: Option<BlockCamera2dPatch>,
     #[state(artifact)]
@@ -51,10 +51,18 @@ block_patch!(test; /// 🔘️ Field patch over a grip kind (its id is the row i
     Block5dGripKindPatch for Block5dGripKind { plain { name: String, label: String, color: String, default_rope_kind: String } optional {  } });
 block_patch!(test; /// 🌱️ Field patch over a grip template (its id is the row identity).
     Block5dGripTemplatePatch for Block5dGripTemplate { plain { grip_kind: String, angle: f64, radius_2d: f64, position: [f64; 3], direction: [f64; 3], radius_3d: f64 } optional {  } });
-block_rows!(test; /// 📂 Row delta over the grip kinds.
-    Block5dGripKindsDelta, Block5dGripKindsPatchEntry, Block5dGripKind, Block5dGripKindPatch, id);
-block_rows!(test; /// 📂 Row delta over the grip templates.
-    Block5dGripsDelta, Block5dGripsPatchEntry, Block5dGripTemplate, Block5dGripTemplatePatch, id);
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📂 Row delta over the grip kinds.
+    pub Block5dGripKindsDelta { removal: Block5dGripKindsRemoval, insertion: Block5dGripKindsInsertion, relocation: Block5dGripKindsRelocation, modification: Block5dGripKindsPatchEntry, row: Block5dGripKind, patch: Block5dGripKindPatch, key: id, values_only }
+}
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📂 Row delta over the grip templates.
+    pub Block5dGripsDelta { removal: Block5dGripsRemoval, insertion: Block5dGripsInsertion, relocation: Block5dGripsRelocation, modification: Block5dGripsPatchEntry, row: Block5dGripTemplate, patch: Block5dGripTemplatePatch, key: id, values_only }
+}
 //#endregion 🔖️Patches
 
 //#region 🔖️Apply
@@ -64,7 +72,7 @@ fn lift(error: BlockPatchError) -> protocol::MutationApplyError {
 }
 
 impl protocol::MutationDiff<Block5dSnapshot> for Block5dDiff {
-    fn apply(&self, base: &Block5dSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block5dSnapshot> {
+    fn apply(&self, base: &Block5dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block5dSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema.clone_from(schema);
@@ -75,12 +83,12 @@ impl protocol::MutationDiff<Block5dSnapshot> for Block5dDiff {
         next.camera2d = block_patch_apply(&self.camera2d, &base.camera2d, "camera2d").map_err(lift)?;
         next.camera3d = block_patch_apply(&self.camera3d, &base.camera3d, "camera3d").map_err(lift)?;
         next.meta = block_patch_apply(&self.meta, &base.meta, "meta").map_err(lift)?;
-        next.representations = block_rows_apply(&self.representations, &base.representations, "representations").map_err(lift)?;
-        next.grip_kinds = block_rows_apply(&self.grip_kinds, &base.grip_kinds, "gripKinds").map_err(lift)?;
-        next.grips = block_rows_apply(&self.grips, &base.grips, "grips").map_err(lift)?;
-        next.compatibility = block_rows_apply(&self.compatibility, &base.compatibility, "compatibility").map_err(lift)?;
-        next.attributes = block_rows_apply(&self.attributes, &base.attributes, "attributes").map_err(lift)?;
-        next.authors = block_rows_apply(&self.authors, &base.authors, "authors").map_err(lift)?;
+        next.representations = self.representations.commit_onto(&base.representations, capability).map_err(|error| error.under(["representations"]))?;
+        next.grip_kinds = self.grip_kinds.commit_onto(&base.grip_kinds, capability).map_err(|error| error.under(["gripKinds"]))?;
+        next.grips = self.grips.commit_onto(&base.grips, capability).map_err(|error| error.under(["grips"]))?;
+        next.compatibility = self.compatibility.commit_onto(&base.compatibility, capability).map_err(|error| error.under(["compatibility"]))?;
+        next.attributes = self.attributes.commit_onto(&base.attributes, capability).map_err(|error| error.under(["attributes"]))?;
+        next.authors = self.authors.commit_onto(&base.authors, capability).map_err(|error| error.under(["authors"]))?;
         Ok(next)
     }
     fn absorb(&mut self, later: Self) {
@@ -93,12 +101,12 @@ impl protocol::MutationDiff<Block5dSnapshot> for Block5dDiff {
         block_patch_absorb(&mut self.camera2d, later.camera2d);
         block_patch_absorb(&mut self.camera3d, later.camera3d);
         block_patch_absorb(&mut self.meta, later.meta);
-        block_rows_absorb(&mut self.representations, later.representations);
-        block_rows_absorb(&mut self.grip_kinds, later.grip_kinds);
-        block_rows_absorb(&mut self.grips, later.grips);
-        block_rows_absorb(&mut self.compatibility, later.compatibility);
-        block_rows_absorb(&mut self.attributes, later.attributes);
-        block_rows_absorb(&mut self.authors, later.authors);
+        self.representations.absorb(later.representations);
+        self.grip_kinds.absorb(later.grip_kinds);
+        self.grips.absorb(later.grips);
+        self.compatibility.absorb(later.compatibility);
+        self.attributes.absorb(later.attributes);
+        self.authors.absorb(later.authors);
     }
 }
 
@@ -112,29 +120,12 @@ impl protocol::DiffAlgebra<Block5dSnapshot> for Block5dDiff {
             camera2d: block_patch_inverse(&self.camera2d, &base.camera2d),
             camera3d: block_patch_inverse(&self.camera3d, &base.camera3d),
             meta: block_patch_inverse(&self.meta, &base.meta),
-            representations: block_rows_inverse(&self.representations, &base.representations),
-            grip_kinds: block_rows_inverse(&self.grip_kinds, &base.grip_kinds),
-            grips: block_rows_inverse(&self.grips, &base.grips),
-            compatibility: block_rows_inverse(&self.compatibility, &base.compatibility),
-            attributes: block_rows_inverse(&self.attributes, &base.attributes),
-            authors: block_rows_inverse(&self.authors, &base.authors),
-        }
-    }
-    fn between(base: &Block5dSnapshot, other: &Block5dSnapshot) -> Self {
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            part_kind: block_patch_between(&base.part_kind, &other.part_kind),
-            part_2d: block_patch_between(&base.part_2d, &other.part_2d),
-            part_3d: block_patch_between(&base.part_3d, &other.part_3d),
-            camera2d: block_patch_between(&base.camera2d, &other.camera2d),
-            camera3d: block_patch_between(&base.camera3d, &other.camera3d),
-            meta: block_patch_between(&base.meta, &other.meta),
-            representations: block_rows_between(&base.representations, &other.representations),
-            grip_kinds: block_rows_between(&base.grip_kinds, &other.grip_kinds),
-            grips: block_rows_between(&base.grips, &other.grips),
-            compatibility: block_rows_between(&base.compatibility, &other.compatibility),
-            attributes: block_rows_between(&base.attributes, &other.attributes),
-            authors: block_rows_between(&base.authors, &other.authors),
+            representations: self.representations.inverse(&base.representations),
+            grip_kinds: self.grip_kinds.inverse(&base.grip_kinds),
+            grips: self.grips.inverse(&base.grips),
+            compatibility: self.compatibility.inverse(&base.compatibility),
+            attributes: self.attributes.inverse(&base.attributes),
+            authors: self.authors.inverse(&base.authors),
         }
     }
     fn is_empty(&self) -> bool {
@@ -145,12 +136,12 @@ impl protocol::DiffAlgebra<Block5dSnapshot> for Block5dDiff {
             && block_patch_is_empty(&self.camera2d)
             && block_patch_is_empty(&self.camera3d)
             && block_patch_is_empty(&self.meta)
-            && block_rows_is_empty(&self.representations)
-            && block_rows_is_empty(&self.grip_kinds)
-            && block_rows_is_empty(&self.grips)
-            && block_rows_is_empty(&self.compatibility)
-            && block_rows_is_empty(&self.attributes)
-            && block_rows_is_empty(&self.authors)
+            && self.representations.is_empty()
+            && self.grip_kinds.is_empty()
+            && self.grips.is_empty()
+            && self.compatibility.is_empty()
+            && self.attributes.is_empty()
+            && self.authors.is_empty()
     }
 }
 //#endregion 🔖️Apply

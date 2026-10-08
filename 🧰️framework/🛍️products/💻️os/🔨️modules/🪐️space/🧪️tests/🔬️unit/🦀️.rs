@@ -163,13 +163,13 @@ fn space_operation_backwards_restores_pre_state() {
 fn space_diff_print_parse_and_encode_decode_round_trip() {
     let diffs = vec![
         SpaceDiff { name: Some("Renamed".into()), ..Default::default() },
-        SpaceDiff { users: Some(SpaceUsersDelta { added: vec![demo_user("u2", SpaceRole::Author)], ..Default::default() }), ..Default::default() },
-        SpaceDiff { users: Some(SpaceUsersDelta { patched: vec![SpaceUserPatch { id: "u1".into(), avatar: Some(SpaceOptionalAvatar { value: None }), role: Some(SpaceRole::Spectator), ..Default::default() }], ..Default::default() }), ..Default::default() },
-        SpaceDiff { programs: Some(SpaceProgramsDelta { added: vec!["cad".into()], ..Default::default() }), ..Default::default() },
-        SpaceDiff { programs: Some(SpaceProgramsDelta { removed: vec!["cad".into()], ..Default::default() }), ..Default::default() },
-        SpaceDiff { extensions: Some(SpaceExtensionsDelta { added: vec![demo_extension("flow-math", true)], ..Default::default() }), ..Default::default() },
-        SpaceDiff { extensions: Some(SpaceExtensionsDelta { removed: vec!["flow-math".into()], ..Default::default() }), ..Default::default() },
-        SpaceDiff { extensions: Some(SpaceExtensionsDelta { patched: vec![SpaceExtensionPatch { extension_id: "flow-math".into(), enabled: Some(false), ..Default::default() }], ..Default::default() }), ..Default::default() },
+        SpaceDiff { users: Some(SpaceUsersDelta::insertion(1, demo_user("u2", SpaceRole::Author))), ..Default::default() },
+        SpaceDiff { users: Some(SpaceUsersDelta::modification("u1".into(), SpaceUserPatch { avatar: Some(SpaceOptionalAvatar { value: None }), role: Some(SpaceRole::Spectator), ..Default::default() })), ..Default::default() },
+        SpaceDiff { programs: Some(SpaceProgramsDelta::insertion(0, "cad".into())), ..Default::default() },
+        SpaceDiff { programs: Some(SpaceProgramsDelta { removed: vec![SpaceProgramRemoval { id: "cad".into(), index: 0 }], ..Default::default() }), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta::insertion(2, demo_extension("flow-math", true))), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta { removed: vec![SpaceExtensionRemoval { id: "flow-math".into(), index: 1 }], ..Default::default() }), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta::modification("flow-math".into(), SpaceExtensionPatch { enabled: Some(false), ..Default::default() })), ..Default::default() },
         SpaceDiff::default(),
     ];
     for diff in diffs {
@@ -372,9 +372,9 @@ async fn collection_mutations_satisfy_the_inverse_sum_law() {
 fn collection_diff_print_parse_and_encode_decode_round_trip() {
     let diffs = vec![
         CollectionDiff { renamed_collection: Some("Renamed".into()), ..Default::default() },
-        CollectionDiff { entries: Some(CollectionEntriesDelta { removed: vec!["e1".into()], ..Default::default() }), ..Default::default() },
+        CollectionDiff { entries: Some(CollectionEntriesDelta { removed: vec![CollectionEntryRemoval { id: "e1".into(), index: 0 }], ..Default::default() }), ..Default::default() },
         CollectionDiff {
-            folders: Some(CollectionFoldersDelta { patched: vec![CollectionFolderPatch { id: "f1".into(), parent_id: Some(CollectionOptionalLink { value: None }), name: None }], reordered: Some(vec!["f1".into()]), ..Default::default() }),
+            folders: Some(CollectionFoldersDelta { modified: vec![CollectionFoldersModification { id: "f1".into(), patch: CollectionFolderPatch { parent_id: Some(CollectionOptionalLink { value: None }), name: None } }], moved: vec![CollectionFolderRelocation { id: "f1".into(), from: 1, to: 0 }], ..Default::default() }),
             ..Default::default()
         },
         CollectionDiff::default(),
@@ -714,6 +714,33 @@ impl BlobStore for TestBlobStore {
         self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(hash);
         Ok(())
     }
+}
+
+/// 🧪️ Load-repair law (T25): `reconcile_space_atelier_invariant` and `reconcile_collection_integrity` repair a projection the
+/// caller already holds — they own no store handle, so a repair never becomes a history row and never rewrites the document.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+#[test]
+fn load_repair_reconcilers_never_write_history_rows() {
+    let mut atelier = empty_space_snapshot("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
+    atelier.users.push(demo_user("u2", SpaceRole::Author));
+    atelier.users.push(demo_user("u1", SpaceRole::Author));
+    let space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let space_history = space_store.envelope().vcs.clone();
+    let loaded = space_store.snapshot().expect("projection");
+    let (repaired, reports) = reconcile_space_atelier_invariant(loaded.clone());
+    assert!(!reports.is_empty() && repaired != loaded, "the repair changes the projection it was handed");
+    assert_eq!(space_store.envelope().vcs, space_history, "the space repair wrote no history row");
+    assert_eq!(space_store.snapshot().expect("projection"), loaded, "the stored document is untouched");
+
+    let mut collection = empty_collection_snapshot("Demo");
+    collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
+    let collection_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let collection_history = collection_store.envelope().vcs.clone();
+    let loaded = collection_store.snapshot().expect("projection");
+    let (repaired, reports) = reconcile_collection_integrity(loaded.clone());
+    assert!(!reports.is_empty() && repaired != loaded, "the repair changes the projection it was handed");
+    assert_eq!(collection_store.envelope().vcs, collection_history, "the collection repair wrote no history row");
+    assert_eq!(collection_store.snapshot().expect("projection"), loaded, "the stored document is untouched");
 }
 
 /// 🧪️ End-to-end law with REAL `store` types (not the fixture-string readers `zip_fixture_bytes`

@@ -2,7 +2,9 @@ syntax = "proto3";
 package semio.s.gis.gismap;
 import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🛰️.proto";
-message GisMapDiff { optional GisMapArtifact artifact = 1; optional GisMapFeaturesDelta positions = 2; optional GisMapFeaturesDelta routes = 3; optional GisMapFeaturesDelta regions = 4; }
-message GisMapFeatureOrder { repeated string values = 1; }
-message GisMapFeaturesDelta { repeated GisMapFeature added = 1; repeated string removed = 2; repeated GisMapFeaturePatchEntry patched = 3; optional GisMapFeatureOrder reordered = 4; }
-message GisMapFeaturePatchEntry { string id = 1; GisMapFeaturePatch patch = 2; }
+message GisMapDiff { optional GisMapFeaturesDelta positions = 2; optional GisMapFeaturesDelta routes = 3; optional GisMapFeaturesDelta regions = 4; }
+message GisMapFeatureRemoval { string id = 1; uint64 index = 2; }
+message GisMapFeatureInsertion { uint64 index = 1; GisMapFeature row = 2; }
+message GisMapFeatureRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message GisMapFeaturesDelta { repeated GisMapFeatureRemoval removed = 1; repeated GisMapFeatureInsertion inserted = 2; repeated GisMapFeatureRelocation moved = 3; repeated GisMapFeatureModification modified = 4; }
+message GisMapFeatureModification { string id = 1; GisMapFeaturePatch patch = 2; }

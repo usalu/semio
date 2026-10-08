@@ -369,9 +369,6 @@ impl protocol::DiffAlgebra<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowCon
     fn inverse(&self, base: &Puzzle5dBoardWindowConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle5dBoardWindowConfig, other: &Puzzle5dBoardWindowConfig) -> Self {
-        Self { camera2d: (base.camera2d != other.camera2d).then(|| other.camera2d.clone()), lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()), suggestion_offset: (base.suggestion_offset != other.suggestion_offset).then(|| other.suggestion_offset), grid_snap_enabled: (base.grid_snap_enabled != other.grid_snap_enabled).then(|| other.grid_snap_enabled), grid_factor: (base.grid_factor != other.grid_factor).then(|| other.grid_factor), grid_visible: (base.grid_visible != other.grid_visible).then(|| other.grid_visible), selectable_kinds: (base.selectable_kinds != other.selectable_kinds).then(|| other.selectable_kinds.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.camera2d.is_none() && self.lod_mode.is_none() && self.suggestion_offset.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.grid_visible.is_none() && self.selectable_kinds.is_none()
     }
@@ -526,9 +523,6 @@ impl protocol::DiffAlgebra<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowCon
     fn inverse(&self, base: &Puzzle5dWorldWindowConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle5dWorldWindowConfig, other: &Puzzle5dWorldWindowConfig) -> Self {
-        Self { camera3d: (base.camera3d != other.camera3d).then(|| other.camera3d.clone()), sun: (base.sun != other.sun).then(|| other.sun.clone()), grid_visible: (base.grid_visible != other.grid_visible).then(|| other.grid_visible), grid_snap_enabled: (base.grid_snap_enabled != other.grid_snap_enabled).then(|| other.grid_snap_enabled), grid_spacing: (base.grid_spacing != other.grid_spacing).then(|| other.grid_spacing), lod_automatic: (base.lod_automatic != other.lod_automatic).then(|| other.lod_automatic), lod_depth_variable: (base.lod_depth_variable != other.lod_depth_variable).then(|| other.lod_depth_variable), lod_manual: (base.lod_manual != other.lod_manual).then(|| other.lod_manual), selectable_kinds: (base.selectable_kinds != other.selectable_kinds).then(|| other.selectable_kinds.clone()), grip_show: (base.grip_show != other.grip_show).then(|| other.grip_show.clone()), grip_direction: (base.grip_direction != other.grip_direction).then(|| other.grip_direction.clone()), transform_move: (base.transform_move != other.transform_move).then(|| other.transform_move), transform_rotate: (base.transform_rotate != other.transform_rotate).then(|| other.transform_rotate), voxel_dims: (base.voxel_dims != other.voxel_dims).then(|| other.voxel_dims) }
-    }
     fn is_empty(&self) -> bool {
         self.camera3d.is_none() && self.sun.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_spacing.is_none() && self.lod_automatic.is_none() && self.lod_depth_variable.is_none() && self.lod_manual.is_none() && self.selectable_kinds.is_none() && self.grip_show.is_none() && self.grip_direction.is_none() && self.transform_move.is_none() && self.transform_rotate.is_none() && self.voxel_dims.is_none()
     }
@@ -619,9 +613,6 @@ impl protocol::MutationDiff<Puzzle5dWindowTransient> for Puzzle5dWindowTransient
 impl protocol::DiffAlgebra<Puzzle5dWindowTransient> for Puzzle5dWindowTransientDiff {
     fn inverse(&self, base: &Puzzle5dWindowTransient) -> Self {
         self.restoring(base)
-    }
-    fn between(base: &Puzzle5dWindowTransient, other: &Puzzle5dWindowTransient) -> Self {
-        Self { suggestion_menu: (base.suggestion_menu != other.suggestion_menu).then(|| other.suggestion_menu.clone()), engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), brush_candidate_index: (base.brush_candidate_index != other.brush_candidate_index).then(|| other.brush_candidate_index) }
     }
     fn is_empty(&self) -> bool {
         self.suggestion_menu.is_none() && self.engagement_input.is_none() && self.brush_candidate_index.is_none()

@@ -2,7 +2,8 @@
 
 use crate::wgpu::prepared::RasterContentIdentity;
 use std::fmt;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use semio_framework_value::retirement::controlled::RetainedOwnerGate;
 
 pub const SCENE_RASTER_ITEM_BYTES: usize = 64 * 1024 * 1024;
 pub const SCENE_RASTER_POOL_SLOTS: usize = 256;
@@ -106,7 +107,7 @@ impl Default for SceneRasterPoolLimits {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SceneRasterWriteMode {
     Streamed,
-    Moved,
+    Moved { capacity_bytes: usize },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -160,6 +161,7 @@ struct WritingRaster {
     token: SceneRasterWriter,
     descriptor: SceneRasterDescriptor,
     expected_bytes: usize,
+    capacity_bytes: usize,
     pixels: Option<Vec<u8>>,
     content: RasterContentIdentity,
 }
@@ -225,7 +227,39 @@ struct SceneRasterGpuRecord {
 
 struct SceneRasterPoolInner {
     limits: SceneRasterPoolLimits,
-    state: Mutex<SceneRasterPoolState>,
+    state: RetainedOwnerGate<SceneRasterPoolState>,
+}
+
+struct RasterPoolRetirement {state:std::mem::ManuallyDrop<SceneRasterPoolState>}
+impl semio_framework_value::retirement::RetireOwned for SceneRasterPoolInner {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(RasterPoolRetirement{state:std::mem::ManuallyDrop::new(self.state.into_inner())})}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<RasterPoolRetirement>())}
+    fn controlled_retirement_supported()->bool{true}
+}
+impl RasterPoolRetirement {
+    fn pixel_capacity(slot:&RasterSlot)->usize{match &slot.state{RasterSlotState::Vacant=>0,RasterSlotState::Writing(row)=>row.pixels.as_ref().map_or(0,Vec::capacity),RasterSlotState::Ready(row)=>row.pixels.capacity(),RasterSlotState::Retiring(row)=>row.pixels.capacity()}}
+}
+impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetirement {
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::RetirementStep};
+        if self.terminal_is_empty(){return RetirementStep::Complete}
+        if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
+        let bytes=self.next_close_byte_demand().unwrap();
+        if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted}
+        if !self.state.slots.is_empty(){drop(self.state.slots.pop());}
+        else if self.state.slots.capacity()!=0{self.state.slots=Vec::new();}
+        else if !self.state.gpu_residents.is_empty(){self.state.gpu_residents.pop();}
+        else{self.state.gpu_residents=Vec::new();}
+        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()})
+    }
+    fn terminal_is_empty(&self)->bool{self.state.slots.is_empty()&&self.state.slots.capacity()==0&&self.state.gpu_residents.is_empty()&&self.state.gpu_residents.capacity()==0}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*std::mem::size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*std::mem::size_of::<Option<SceneRasterGpuRecord>>()})}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+}
+impl Drop for RasterPoolRetirement {
+    fn drop(&mut self){use semio_framework_value::retirement::RetirementCursor;assert!(std::thread::panicking()||self.terminal_is_empty(),"raster pool abandoned before terminal-empty");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.state)}}}
 }
 
 #[derive(Clone)]
@@ -240,9 +274,10 @@ impl fmt::Debug for SceneRasterPool {
 }
 
 pub struct SceneRasterLease {
-    inner: Arc<SceneRasterPoolInner>,
+    inner: Option<Arc<SceneRasterPoolInner>>,
     token: Option<LeaseToken>,
     identity: SceneRasterIdentity,
+    retirement:Option<semio_framework_value::retirement::shared::SharedControlledRetirement<SceneRasterPoolInner>>,
 }
 
 pub struct SceneRasterReleaseWitness {
@@ -272,7 +307,7 @@ impl SceneRasterReleaseWitness {
     pub fn commit_gpu(self, key: &str) -> Result<SceneRasterGpuWitness, Self> {
         let Some(key) = SceneRasterGpuKey::new(key) else { return Err(self) };
         let inner = Arc::clone(&self.inner);
-        let Ok(mut state) = inner.state.lock() else { return Err(self) };
+        let Ok(mut state) = inner.state.try_lock() else { return Err(self) };
         let source_index = usize::from(self.token.slot);
         let lease_index = state.slots.get(source_index).filter(|slot| slot.epoch == self.token.epoch).and_then(|slot| match &slot.state {
             RasterSlotState::Ready(ready) => ready.leases.iter().position(|lease| lease.live && lease.id == self.token.lease_id),
@@ -319,7 +354,7 @@ impl fmt::Debug for SceneRasterGpuWitness {
 
 impl Drop for SceneRasterGpuWitness {
     fn drop(&mut self) {
-        let Ok(mut state) = self.inner.state.lock() else { return };
+        let Ok(mut state) = self.inner.state.try_lock() else { return };
         let bytes = {
             let Some(slot) = state.gpu_residents.get_mut(usize::from(self.slot)) else { return };
             if !slot.as_ref().is_some_and(|resident| resident.epoch == self.epoch && resident.identity == self.identity) {
@@ -340,6 +375,32 @@ impl fmt::Debug for SceneRasterLease {
 }
 
 impl SceneRasterLease {
+    /// ♻️ Keeps the original pooled pixels and final Arc payload under separately admitted ownership.
+    pub fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+        use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
+        if grant.maximum_items==0||grant.maximum_depth<self.next_close_depth_demand()?{return Ok(RetainedCloneStep::Progress(empty))}
+        if let Some(token)=self.token{
+            let Some(inner)=self.inner.as_ref()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster token lost its pool owner"))};
+            let Ok(mut state)=inner.state.try_lock()else{return Ok(RetainedCloneStep::Progress(empty))};
+            if let Some(slot)=state.slots.get_mut(usize::from(token.slot)).filter(|slot|slot.epoch==token.epoch){if let RasterSlotState::Ready(ready)=&mut slot.state{if let Some(lease)=ready.leases.iter_mut().find(|lease|lease.id==token.lease_id){lease.live=false;}}}
+            self.token=None;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+        }
+        if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(inner));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        let owner=self.retirement.as_mut().unwrap();
+        let step=owner.step(grant)?;
+        if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster close receipt exceeded its grant"))}
+        if owner.terminal_is_empty(){self.retirement=None;}
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+    }
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
+    pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_release_byte_demand())}
+    pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(usize::from(self.inner.is_some()||self.token.is_some())),|owner|owner.next_depth_demand())}
+    pub fn terminal_is_empty(&self)->bool{self.token.is_none()&&self.inner.is_none()&&self.retirement.is_none()}
+
     pub fn identity(&self) -> SceneRasterIdentity {
         self.identity
     }
@@ -349,20 +410,21 @@ impl SceneRasterLease {
     }
 
     pub fn transfer_bytes(&self) -> usize {
-        self.inner.limits.transfer_bytes
+        self.inner.as_ref().map_or(0,|inner|inner.limits.transfer_bytes)
     }
 
     pub fn release_witness(&self) -> Option<SceneRasterReleaseWitness> {
-        self.token.map(|token| SceneRasterReleaseWitness { inner: Arc::clone(&self.inner), token, identity: self.identity })
+        self.token.zip(self.inner.as_ref()).map(|(token,inner)|SceneRasterReleaseWitness{inner:Arc::clone(inner),token,identity:self.identity})
     }
 
     pub fn release_committed(&self) -> bool {
-        self.token.is_some_and(|token| release_token(&self.inner, token))
+        self.token.zip(self.inner.as_ref()).is_some_and(|(token,inner)|release_token(inner,token))
     }
 
     pub fn with_rows<R>(&self, start_row: u32, byte_capacity: usize, read: impl FnOnce(&[u8], u32) -> R) -> Result<R, &'static str> {
         let Some(token) = self.token else { return Err("scene raster lease is released") };
-        let state = self.inner.state.lock().map_err(|_| "scene raster pool lock is poisoned")?;
+        let inner=self.inner.as_ref().ok_or("scene raster lease is closing")?;
+        let state = inner.state.try_lock().map_err(|_| "scene raster pool custody is busy")?;
         let Some(slot) = state.slots.get(usize::from(token.slot)) else { return Err("scene raster lease slot is invalid") };
         if slot.epoch != token.epoch {
             return Err("scene raster lease epoch is stale");
@@ -372,7 +434,7 @@ impl SceneRasterLease {
             return Err("scene raster lease owner is not live");
         }
         let row_bytes = usize::try_from(ready.descriptor.width).ok().and_then(|width| width.checked_mul(4)).ok_or("scene raster row bytes overflowed")?;
-        if row_bytes == 0 || start_row >= ready.descriptor.height || byte_capacity < row_bytes || byte_capacity > self.inner.limits.transfer_bytes {
+        if row_bytes == 0 || start_row >= ready.descriptor.height || byte_capacity < row_bytes || byte_capacity > inner.limits.transfer_bytes {
             return Err("scene raster row request is invalid");
         }
         let rows = (byte_capacity / row_bytes).max(1).min(usize::try_from(ready.descriptor.height - start_row).map_err(|_| "scene raster row count overflowed")?);
@@ -388,13 +450,13 @@ impl SceneRasterLease {
 
     fn release_inner(&mut self) -> bool {
         let Some(token) = self.token.take() else { return false };
-        release_token(&self.inner, token)
+        self.inner.as_ref().is_some_and(|inner|release_token(inner,token))
     }
 }
 
 impl PartialEq for SceneRasterLease {
     fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.inner, &other.inner) && self.token == other.token && self.identity == other.identity
+        (match (&self.inner,&other.inner){(Some(a),Some(b))=>Arc::ptr_eq(a,b),(None,None)=>true,_=>false}) && self.token==other.token && self.identity==other.identity
     }
 }
 
@@ -407,7 +469,7 @@ impl Drop for SceneRasterLease {
 }
 
 fn release_token(inner: &Arc<SceneRasterPoolInner>, token: LeaseToken) -> bool {
-    let Ok(mut state) = inner.state.lock() else { return false };
+    let Ok(mut state) = inner.state.try_lock() else { return false };
     let Some(slot) = state.slots.get_mut(usize::from(token.slot)) else { return false };
     if slot.epoch != token.epoch {
         return false;
@@ -434,7 +496,7 @@ impl SceneRasterPool {
         }
         let slots = (0..limits.slot_capacity).map(|_| RasterSlot { epoch: 0, state: RasterSlotState::Vacant }).collect();
         let gpu_residents = (0..SCENE_RASTER_GPU_RESIDENT_CAPACITY).map(|_| None).collect();
-        Ok(Self { inner: Arc::new(SceneRasterPoolInner { limits, state: Mutex::new(SceneRasterPoolState { slots, next_lease_id: 1, access_clock: 1, reserved_bytes: 0, gpu_residents, gpu_resident_bytes: 0, next_gpu_epoch: 1 }) }) })
+        Ok(Self { inner: Arc::new(SceneRasterPoolInner { limits, state: RetainedOwnerGate::new(SceneRasterPoolState { slots, next_lease_id: 1, access_clock: 1, reserved_bytes: 0, gpu_residents, gpu_resident_bytes: 0, next_gpu_epoch: 1 }) }) })
     }
 
     pub fn new() -> Self {
@@ -453,11 +515,13 @@ impl SceneRasterPool {
             return SceneRasterBegin::Refused("scene raster mesh seal is missing or invalid for its profile");
         }
         let Some(expected_bytes) = descriptor.byte_len() else { return SceneRasterBegin::Refused("scene raster dimensions overflowed") };
+        let capacity_bytes = match mode { SceneRasterWriteMode::Streamed => expected_bytes, SceneRasterWriteMode::Moved { capacity_bytes } => capacity_bytes };
+        if capacity_bytes < expected_bytes { return SceneRasterBegin::Refused("scene raster backing is smaller than its logical pixels"); }
         let row_bytes = usize::try_from(descriptor.width).ok().and_then(|width| width.checked_mul(4));
-        if expected_bytes > self.inner.limits.item_bytes || row_bytes.is_none_or(|bytes| bytes > self.inner.limits.transfer_bytes) {
+        if capacity_bytes > self.inner.limits.item_bytes || row_bytes.is_none_or(|bytes| bytes > self.inner.limits.transfer_bytes) {
             return SceneRasterBegin::Refused("scene raster exceeded fixed item bytes");
         }
-        let Ok(mut state) = self.inner.state.lock() else { return SceneRasterBegin::Backpressure("scene raster pool lock is poisoned") };
+        let Ok(mut state) = self.inner.state.try_lock() else { return SceneRasterBegin::Backpressure("scene raster pool custody is busy") };
         let next_access = state.access_clock.checked_add(1);
         let Some(next_access) = next_access else { return SceneRasterBegin::Backpressure("scene raster access epoch exhausted") };
         if let Some(index) = state.slots.iter().position(|slot| matches!(&slot.state, RasterSlotState::Ready(ready) if ready.descriptor == descriptor)) {
@@ -488,11 +552,11 @@ impl SceneRasterPool {
             let Some(index) = candidate else { return SceneRasterBegin::Backpressure("all scene raster slots are live") };
             let old = std::mem::replace(&mut state.slots[index].state, RasterSlotState::Vacant);
             let RasterSlotState::Ready(ready) = old else { return SceneRasterBegin::Backpressure("scene raster eviction candidate changed") };
-            let reserved_bytes = ready.pixels.len();
+            let reserved_bytes = ready.pixels.capacity();
             state.slots[index].state = RasterSlotState::Retiring(RetiringRaster { pixels: ready.pixels, reserved_bytes });
             return SceneRasterBegin::Backpressure("scene raster retirement is pending");
         };
-        let Some(next_reserved) = state.reserved_bytes.checked_add(expected_bytes) else { return SceneRasterBegin::Backpressure("scene raster pool bytes overflowed") };
+        let Some(next_reserved) = state.reserved_bytes.checked_add(capacity_bytes) else { return SceneRasterBegin::Backpressure("scene raster pool bytes overflowed") };
         if next_reserved > self.inner.limits.pool_bytes {
             return SceneRasterBegin::Backpressure("scene raster pool bytes are exhausted");
         }
@@ -505,7 +569,7 @@ impl SceneRasterPool {
                 }
                 Some(pixels)
             }
-            SceneRasterWriteMode::Moved => None,
+            SceneRasterWriteMode::Moved { .. } => None,
         };
         let Some(mut content) = RasterContentIdentity::pixels(descriptor.width, descriptor.height, expected_bytes) else { return SceneRasterBegin::Refused("scene raster identity overflowed") };
         content.mix_word(descriptor.source_digest[0]);
@@ -525,7 +589,7 @@ impl SceneRasterPool {
         }
         let token = SceneRasterWriter { slot: index as u16, epoch, owner, mode, cursor: 0 };
         state.slots[index].epoch = epoch;
-        state.slots[index].state = RasterSlotState::Writing(WritingRaster { token, descriptor, expected_bytes, pixels, content });
+        state.slots[index].state = RasterSlotState::Writing(WritingRaster { token, descriptor, expected_bytes, capacity_bytes, pixels, content });
         state.reserved_bytes = next_reserved;
         state.access_clock = next_access;
         SceneRasterBegin::Writer(token)
@@ -535,7 +599,7 @@ impl SceneRasterPool {
         if bytes.is_empty() || bytes.len() > self.inner.limits.transfer_bytes {
             return Err("scene raster transfer exceeded chunk credits");
         }
-        let mut state = self.inner.state.lock().map_err(|_| "scene raster pool lock is poisoned")?;
+        let mut state = self.inner.state.try_lock().map_err(|_| "scene raster pool custody is busy")?;
         let writing = exact_writing_mut(&mut state, writer)?;
         if writer.mode != SceneRasterWriteMode::Streamed {
             return Err("moved scene raster writer does not accept copied chunks");
@@ -569,12 +633,12 @@ impl SceneRasterPool {
     }
 
     pub fn prepare_moved(&self, writer: SceneRasterWriter, pixels: Vec<u8>) -> Result<SceneRasterMovedPixels, (Vec<u8>, &'static str)> {
-        if writer.mode != SceneRasterWriteMode::Moved {
+        if !matches!(writer.mode, SceneRasterWriteMode::Moved { .. }) {
             return Err((pixels, "streamed scene raster writer cannot accept moved pixels"));
         }
-        let state = match self.inner.state.lock() {
+        let state = match self.inner.state.try_lock() {
             Ok(state) => state,
-            Err(_) => return Err((pixels, "scene raster pool lock is poisoned")),
+            Err(_) => return Err((pixels, "scene raster pool custody is busy")),
         };
         let index = usize::from(writer.slot);
         let Some(slot) = state.slots.get(index) else { return Err((pixels, "scene raster writer slot is invalid")) };
@@ -582,7 +646,7 @@ impl SceneRasterPool {
             return Err((pixels, "scene raster writer is stale"));
         }
         let RasterSlotState::Writing(writing) = &slot.state else { return Err((pixels, "scene raster writer is stale")) };
-        if pixels.len() != writing.expected_bytes || pixels.capacity() > writing.expected_bytes {
+        if pixels.len() != writing.expected_bytes || pixels.capacity() != writing.capacity_bytes {
             return Err((pixels, "moved scene raster did not match its exact admitted allocation"));
         }
         let mut content = writing.content;
@@ -593,13 +657,13 @@ impl SceneRasterPool {
 
     pub fn seal_prepared_moved(&self, prepared: SceneRasterMovedPixels) -> Result<SceneRasterLease, (Vec<u8>, &'static str)> {
         let SceneRasterMovedPixels { writer, pixels, content } = prepared;
-        let mut state = match self.inner.state.lock() {
+        let mut state = match self.inner.state.try_lock() {
             Ok(state) => state,
-            Err(_) => return Err((pixels, "scene raster pool lock is poisoned")),
+            Err(_) => return Err((pixels, "scene raster pool custody is busy")),
         };
         let index = usize::from(writer.slot);
         let Some(slot) = state.slots.get(index) else { return Err((pixels, "scene raster writer slot is invalid")) };
-        if slot.epoch != writer.epoch || !matches!(&slot.state, RasterSlotState::Writing(writing) if writing.token == writer && writing.expected_bytes == pixels.len()) {
+        if slot.epoch != writer.epoch || !matches!(&slot.state, RasterSlotState::Writing(writing) if writing.token == writer && writing.expected_bytes == pixels.len() && writing.capacity_bytes == pixels.capacity()) {
             return Err((pixels, "scene raster writer changed before moved publication"));
         }
         if state.next_lease_id == u64::MAX {
@@ -613,7 +677,7 @@ impl SceneRasterPool {
     }
 
     fn seal_inner(&self, writer: SceneRasterWriter) -> Result<SceneRasterLease, &'static str> {
-        let mut state = self.inner.state.lock().map_err(|_| "scene raster pool lock is poisoned")?;
+        let mut state = self.inner.state.try_lock().map_err(|_| "scene raster pool custody is busy")?;
         let index = usize::from(writer.slot);
         let old = {
             let slot = state.slots.get_mut(index).ok_or("scene raster writer slot is invalid")?;
@@ -641,7 +705,7 @@ impl SceneRasterPool {
     }
 
     pub fn cancel(&self, writer: SceneRasterWriter) -> bool {
-        let Ok(mut state) = self.inner.state.lock() else { return false };
+        let Ok(mut state) = self.inner.state.try_lock() else { return false };
         let index = usize::from(writer.slot);
         let Some(slot) = state.slots.get_mut(index) else { return false };
         if slot.epoch != writer.epoch || !matches!(&slot.state, RasterSlotState::Writing(writing) if writing.token == writer) {
@@ -650,12 +714,12 @@ impl SceneRasterPool {
         let old = std::mem::replace(&mut slot.state, RasterSlotState::Vacant);
         let RasterSlotState::Writing(mut writing) = old else { return false };
         let pixels = writing.pixels.take().unwrap_or_default();
-        slot.state = RasterSlotState::Retiring(RetiringRaster { pixels, reserved_bytes: writing.expected_bytes });
+        slot.state = RasterSlotState::Retiring(RetiringRaster { pixels, reserved_bytes: writing.capacity_bytes });
         true
     }
 
     pub fn maintenance_step(&self) -> bool {
-        let Ok(mut state) = self.inner.state.lock() else { return false };
+        let Ok(mut state) = self.inner.state.try_lock() else { return false };
         let Some(index) = state.slots.iter().position(|slot| matches!(slot.state, RasterSlotState::Retiring(_))) else { return true };
         let old = std::mem::replace(&mut state.slots[index].state, RasterSlotState::Vacant);
         let RasterSlotState::Retiring(mut retiring) = old else { return false };
@@ -666,11 +730,11 @@ impl SceneRasterPool {
     }
 
     pub fn reserved_bytes(&self) -> usize {
-        self.inner.state.lock().map_or(0, |state| state.reserved_bytes)
+        self.inner.state.try_lock().map_or(0, |state| state.reserved_bytes)
     }
 
     pub fn live_lease_count(&self, descriptor: SceneRasterDescriptor) -> usize {
-        self.inner.state.lock().map_or(0, |state| {
+        self.inner.state.try_lock().map_or(0, |state| {
             state
                 .slots
                 .iter()
@@ -683,7 +747,7 @@ impl SceneRasterPool {
     }
 
     pub fn acquire(&self, identity: SceneRasterIdentity) -> Result<SceneRasterLease, &'static str> {
-        let mut state = self.inner.state.lock().map_err(|_| "scene raster pool lock is poisoned")?;
+        let mut state = self.inner.state.try_lock().map_err(|_| "scene raster pool custody is busy")?;
         let Some(access) = state.access_clock.checked_add(1) else { return Err("scene raster access epoch exhausted") };
         let Some(index) = state.slots.iter().position(|slot| matches!(&slot.state, RasterSlotState::Ready(ready) if ready.descriptor == identity.descriptor && ready.content == identity.content)) else {
             return Err("scene raster identity is not CPU resident");
@@ -694,16 +758,16 @@ impl SceneRasterPool {
     }
 
     pub fn cpu_resident(&self, identity: SceneRasterIdentity) -> bool {
-        self.inner.state.lock().is_ok_and(|state| state.slots.iter().any(|slot| matches!(&slot.state, RasterSlotState::Ready(ready) if ready.descriptor == identity.descriptor && ready.content == identity.content)))
+        self.inner.state.try_lock().is_ok_and(|state| state.slots.iter().any(|slot| matches!(&slot.state, RasterSlotState::Ready(ready) if ready.descriptor == identity.descriptor && ready.content == identity.content)))
     }
 
     pub fn gpu_resident(&self, key: &str, identity: SceneRasterIdentity) -> bool {
         let Some(key) = SceneRasterGpuKey::new(key) else { return false };
-        self.inner.state.lock().is_ok_and(|state| state.gpu_residents.iter().any(|resident| resident.as_ref().is_some_and(|resident| resident.key == key && resident.identity == identity)))
+        self.inner.state.try_lock().is_ok_and(|state| state.gpu_residents.iter().any(|resident| resident.as_ref().is_some_and(|resident| resident.key == key && resident.identity == identity)))
     }
 
     pub fn gpu_resident_bytes(&self) -> usize {
-        self.inner.state.lock().map_or(0, |state| state.gpu_resident_bytes)
+        self.inner.state.try_lock().map_or(0, |state| state.gpu_resident_bytes)
     }
 }
 
@@ -744,7 +808,7 @@ fn mint_lease(inner: &Arc<SceneRasterPoolInner>, state: &mut SceneRasterPoolStat
         (slot.epoch, SceneRasterIdentity { descriptor: ready.descriptor, content: ready.content })
     };
     state.next_lease_id = next_lease_id;
-    Ok(SceneRasterLease { inner: Arc::clone(inner), token: Some(LeaseToken { slot: index as u16, epoch, lease_id }), identity })
+    Ok(SceneRasterLease { inner: Some(Arc::clone(inner)), token: Some(LeaseToken { slot: index as u16, epoch, lease_id }), identity,retirement:None })
 }
 
 #[cfg(test)]

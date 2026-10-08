@@ -120,7 +120,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["blocking-atlas-ledger", 8, "static PREPARED_ATLAS_PROCESS_PERMITS: AtomicU64", "static PREPARED_ATLAS_PROCESS_PERMITS: Mutex<usize>"],
     ["missing-atlas-backing-dimension", 8, "prepared_atlas_field(current, PREPARED_ATLAS_BACKING_SHIFT", "prepared_atlas_field(current, PREPARED_ATLAS_PAYLOAD_SHIFT"],
     ["missing-atlas-drop-recovery", 8, "impl Drop for PreparedAtlasPages", "impl PreparedAtlasPages"],
-    ["unmounted-atlas-abandonment-drain", 0, "PreparedAtlasPages::close_abandoned_step()", "true"],
+    ["unmounted-atlas-abandonment-drain", 0, "PreparedAtlasPages::close_abandoned_step(grant)", "true"],
     ["missing-atlas-interrupted-close-law", 8, "interrupted_atlas_close_rejoins_the_same_abandonment_authority", "interrupted_atlas_close_smoke"],
   ];
   const mutationFailures: string[] = [];

@@ -43,7 +43,7 @@ pub fn validate(space_id: &str, folder_path: &str) -> Result<(), Fault> {
     if folder_path.trim().is_empty() || folder_path.chars().any(char::is_control) {
         return Err(Fault::new(FaultOrigin::App, "s.home.persist-locally.path-invalid", "the folder path is empty or carries control characters"));
     }
-    ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(space_id))
+    ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(space_id))
         .map(|_| ())
         .ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.persist-locally.unknown-studio", format!("no local studio {space_id} exists")))
 }
@@ -55,13 +55,13 @@ pub fn commit(space_id: &str, folder_path: &str, doc: &ArtifactView<'_, SHomeSna
     let refused = |error: semio_framework_os::VcsError| Fault::new(FaultOrigin::App, "s.home.persist-locally.io-failed", format!("persisting {space_id} into {folder_path} failed: {error:?}"));
     let uri = format!("folder://{folder_path}");
     let port = semio_framework_os::open_folder_space_backbone(folder_path).map_err(refused)?;
-    let mut document = ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(space_id)).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.persist-locally.unknown-studio", format!("no local studio {space_id} exists")))?;
+    let mut document = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(space_id)).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.persist-locally.unknown-studio", format!("no local studio {space_id} exists")))?;
     document.backbone = Some(::semio_framework_async::poll::resolve_ready(document_backbone_ref(&uri)));
     port.write(&uri, &encode_backbone_payload(&document).map_err(refused)?).map_err(refused)?;
-    ::semio_framework_async::poll::resolve_ready(crate::register_studio_port(space_id, port));
-    semio_framework_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(crate::catalog_port())).map_err(refused)?;
-    let draft_port = ::semio_framework_async::poll::resolve_ready(crate::draft_backbone_port());
-    ::semio_framework_async::poll::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, space_id);
+    ::semio_framework_async::poll::resolve_ready(semio_s_space_core::register_studio_port(space_id, port));
+    semio_framework_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port())).map_err(refused)?;
+    let draft_port = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::draft_backbone_port());
+    ::semio_framework_async::poll::resolve_ready(semio_s_space_core::ephemeral_draft_catalog()).discard_draft(&draft_port, space_id);
     Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(doc.snapshot.catalog_generation + 1)]))
 }
 

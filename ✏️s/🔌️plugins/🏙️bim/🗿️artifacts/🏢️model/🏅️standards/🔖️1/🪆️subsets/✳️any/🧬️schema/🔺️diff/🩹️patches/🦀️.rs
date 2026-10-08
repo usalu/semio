@@ -22,18 +22,15 @@ impl Patch<Project> for ProjectPatch {
     fn write(&self, base: &Project) -> Project {
         Project { name: take(&self.name, &base.name), description: take(&self.description, &base.description), author: take(&self.author, &base.author), organization: take(&self.organization, &base.organization), phase_names: take(&self.phase_names, &base.phase_names) }
     }
-    fn negate(&self, base: &Project) -> Self {
+    fn restoring(&self, base: &Project) -> Self {
         Self { name: restore(&self.name, &base.name), description: restore(&self.description, &base.description), author: restore(&self.author, &base.author), organization: restore(&self.organization, &base.organization), phase_names: restore(&self.phase_names, &base.phase_names) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.description, later.description);
-        merge_slot(&mut self.author, later.author);
-        merge_slot(&mut self.organization, later.organization);
-        merge_slot(&mut self.phase_names, later.phase_names);
-    }
-    fn between(from: &Project, to: &Project) -> Self {
-        Self { name: differs(&from.name, &to.name), description: differs(&from.description, &to.description), author: differs(&from.author, &to.author), organization: differs(&from.organization, &to.organization), phase_names: differs(&from.phase_names, &to.phase_names) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.description, later.description);
+        merge_slot!(&mut self.author, later.author);
+        merge_slot!(&mut self.organization, later.organization);
+        merge_slot!(&mut self.phase_names, later.phase_names);
     }
     fn minimal(&self, base: &Project) -> Self {
         Self { name: changed(&self.name, &base.name), description: changed(&self.description, &base.description), author: changed(&self.author, &base.author), organization: changed(&self.organization, &base.organization), phase_names: changed(&self.phase_names, &base.phase_names) }
@@ -84,19 +81,16 @@ impl Patch<Material> for MaterialPatch {
     fn write(&self, base: &Material) -> Material {
         Material { name: take(&self.name, &base.name), category: take(&self.category, &base.category), color: take(&self.color, &base.color), density: take(&self.density, &base.density), conductivity: take(&self.conductivity, &base.conductivity), specific_heat: take(&self.specific_heat, &base.specific_heat) }
     }
-    fn negate(&self, base: &Material) -> Self {
+    fn restoring(&self, base: &Material) -> Self {
         Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category), color: restore(&self.color, &base.color), density: restore(&self.density, &base.density), conductivity: restore(&self.conductivity, &base.conductivity), specific_heat: restore(&self.specific_heat, &base.specific_heat) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.category, later.category);
-        merge_slot(&mut self.color, later.color);
-        merge_slot(&mut self.density, later.density);
-        merge_slot(&mut self.conductivity, later.conductivity);
-        merge_slot(&mut self.specific_heat, later.specific_heat);
-    }
-    fn between(from: &Material, to: &Material) -> Self {
-        Self { name: differs(&from.name, &to.name), category: differs(&from.category, &to.category), color: differs(&from.color, &to.color), density: differs(&from.density, &to.density), conductivity: differs(&from.conductivity, &to.conductivity), specific_heat: differs(&from.specific_heat, &to.specific_heat) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.category, later.category);
+        merge_slot!(&mut self.color, later.color);
+        merge_slot!(&mut self.density, later.density);
+        merge_slot!(&mut self.conductivity, later.conductivity);
+        merge_slot!(&mut self.specific_heat, later.specific_heat);
     }
     fn minimal(&self, base: &Material) -> Self {
         Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category), color: changed(&self.color, &base.color), density: changed(&self.density, &base.density), conductivity: changed(&self.conductivity, &base.conductivity), specific_heat: changed(&self.specific_heat, &base.specific_heat) }
@@ -142,15 +136,12 @@ impl Patch<WallType> for WallTypePatch {
     fn write(&self, base: &WallType) -> WallType {
         WallType { name: take(&self.name, &base.name), layers: take(&self.layers, &base.layers) }
     }
-    fn negate(&self, base: &WallType) -> Self {
+    fn restoring(&self, base: &WallType) -> Self {
         Self { name: restore(&self.name, &base.name), layers: restore(&self.layers, &base.layers) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.layers, later.layers);
-    }
-    fn between(from: &WallType, to: &WallType) -> Self {
-        Self { name: differs(&from.name, &to.name), layers: differs(&from.layers, &to.layers) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.layers, later.layers);
     }
     fn minimal(&self, base: &WallType) -> Self {
         Self { name: changed(&self.name, &base.name), layers: changed(&self.layers, &base.layers) }
@@ -184,15 +175,12 @@ impl Patch<SlabType> for SlabTypePatch {
     fn write(&self, base: &SlabType) -> SlabType {
         SlabType { name: take(&self.name, &base.name), layers: take(&self.layers, &base.layers) }
     }
-    fn negate(&self, base: &SlabType) -> Self {
+    fn restoring(&self, base: &SlabType) -> Self {
         Self { name: restore(&self.name, &base.name), layers: restore(&self.layers, &base.layers) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.layers, later.layers);
-    }
-    fn between(from: &SlabType, to: &SlabType) -> Self {
-        Self { name: differs(&from.name, &to.name), layers: differs(&from.layers, &to.layers) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.layers, later.layers);
     }
     fn minimal(&self, base: &SlabType) -> Self {
         Self { name: changed(&self.name, &base.name), layers: changed(&self.layers, &base.layers) }
@@ -226,15 +214,12 @@ impl Patch<RoofType> for RoofTypePatch {
     fn write(&self, base: &RoofType) -> RoofType {
         RoofType { name: take(&self.name, &base.name), layers: take(&self.layers, &base.layers) }
     }
-    fn negate(&self, base: &RoofType) -> Self {
+    fn restoring(&self, base: &RoofType) -> Self {
         Self { name: restore(&self.name, &base.name), layers: restore(&self.layers, &base.layers) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.layers, later.layers);
-    }
-    fn between(from: &RoofType, to: &RoofType) -> Self {
-        Self { name: differs(&from.name, &to.name), layers: differs(&from.layers, &to.layers) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.layers, later.layers);
     }
     fn minimal(&self, base: &RoofType) -> Self {
         Self { name: changed(&self.name, &base.name), layers: changed(&self.layers, &base.layers) }
@@ -270,16 +255,13 @@ impl Patch<ColumnType> for ColumnTypePatch {
     fn write(&self, base: &ColumnType) -> ColumnType {
         ColumnType { name: take(&self.name, &base.name), profile: take(&self.profile, &base.profile), material: take(&self.material, &base.material) }
     }
-    fn negate(&self, base: &ColumnType) -> Self {
+    fn restoring(&self, base: &ColumnType) -> Self {
         Self { name: restore(&self.name, &base.name), profile: restore(&self.profile, &base.profile), material: restore(&self.material, &base.material) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.profile, later.profile);
-        merge_slot(&mut self.material, later.material);
-    }
-    fn between(from: &ColumnType, to: &ColumnType) -> Self {
-        Self { name: differs(&from.name, &to.name), profile: differs(&from.profile, &to.profile), material: differs(&from.material, &to.material) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.profile, later.profile);
+        merge_slot!(&mut self.material, later.material);
     }
     fn minimal(&self, base: &ColumnType) -> Self {
         Self { name: changed(&self.name, &base.name), profile: changed(&self.profile, &base.profile), material: changed(&self.material, &base.material) }
@@ -318,16 +300,13 @@ impl Patch<BeamType> for BeamTypePatch {
     fn write(&self, base: &BeamType) -> BeamType {
         BeamType { name: take(&self.name, &base.name), profile: take(&self.profile, &base.profile), material: take(&self.material, &base.material) }
     }
-    fn negate(&self, base: &BeamType) -> Self {
+    fn restoring(&self, base: &BeamType) -> Self {
         Self { name: restore(&self.name, &base.name), profile: restore(&self.profile, &base.profile), material: restore(&self.material, &base.material) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.profile, later.profile);
-        merge_slot(&mut self.material, later.material);
-    }
-    fn between(from: &BeamType, to: &BeamType) -> Self {
-        Self { name: differs(&from.name, &to.name), profile: differs(&from.profile, &to.profile), material: differs(&from.material, &to.material) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.profile, later.profile);
+        merge_slot!(&mut self.material, later.material);
     }
     fn minimal(&self, base: &BeamType) -> Self {
         Self { name: changed(&self.name, &base.name), profile: changed(&self.profile, &base.profile), material: changed(&self.material, &base.material) }
@@ -376,21 +355,18 @@ impl Patch<WindowType> for WindowTypePatch {
     fn write(&self, base: &WindowType) -> WindowType {
         WindowType { name: take(&self.name, &base.name), width: take(&self.width, &base.width), height: take(&self.height, &base.height), sill: take(&self.sill, &base.sill), frame_width: take(&self.frame_width, &base.frame_width), frame_depth: take(&self.frame_depth, &base.frame_depth), panes: take(&self.panes, &base.panes), material: take(&self.material, &base.material) }
     }
-    fn negate(&self, base: &WindowType) -> Self {
+    fn restoring(&self, base: &WindowType) -> Self {
         Self { name: restore(&self.name, &base.name), width: restore(&self.width, &base.width), height: restore(&self.height, &base.height), sill: restore(&self.sill, &base.sill), frame_width: restore(&self.frame_width, &base.frame_width), frame_depth: restore(&self.frame_depth, &base.frame_depth), panes: restore(&self.panes, &base.panes), material: restore(&self.material, &base.material) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.width, later.width);
-        merge_slot(&mut self.height, later.height);
-        merge_slot(&mut self.sill, later.sill);
-        merge_slot(&mut self.frame_width, later.frame_width);
-        merge_slot(&mut self.frame_depth, later.frame_depth);
-        merge_slot(&mut self.panes, later.panes);
-        merge_slot(&mut self.material, later.material);
-    }
-    fn between(from: &WindowType, to: &WindowType) -> Self {
-        Self { name: differs(&from.name, &to.name), width: differs(&from.width, &to.width), height: differs(&from.height, &to.height), sill: differs(&from.sill, &to.sill), frame_width: differs(&from.frame_width, &to.frame_width), frame_depth: differs(&from.frame_depth, &to.frame_depth), panes: differs(&from.panes, &to.panes), material: differs(&from.material, &to.material) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.width, later.width);
+        merge_slot!(&mut self.height, later.height);
+        merge_slot!(&mut self.sill, later.sill);
+        merge_slot!(&mut self.frame_width, later.frame_width);
+        merge_slot!(&mut self.frame_depth, later.frame_depth);
+        merge_slot!(&mut self.panes, later.panes);
+        merge_slot!(&mut self.material, later.material);
     }
     fn minimal(&self, base: &WindowType) -> Self {
         Self { name: changed(&self.name, &base.name), width: changed(&self.width, &base.width), height: changed(&self.height, &base.height), sill: changed(&self.sill, &base.sill), frame_width: changed(&self.frame_width, &base.frame_width), frame_depth: changed(&self.frame_depth, &base.frame_depth), panes: changed(&self.panes, &base.panes), material: changed(&self.material, &base.material) }
@@ -454,21 +430,18 @@ impl Patch<DoorType> for DoorTypePatch {
     fn write(&self, base: &DoorType) -> DoorType {
         DoorType { name: take(&self.name, &base.name), width: take(&self.width, &base.width), height: take(&self.height, &base.height), frame_width: take(&self.frame_width, &base.frame_width), frame_depth: take(&self.frame_depth, &base.frame_depth), leaves: take(&self.leaves, &base.leaves), swing: take(&self.swing, &base.swing), material: take(&self.material, &base.material) }
     }
-    fn negate(&self, base: &DoorType) -> Self {
+    fn restoring(&self, base: &DoorType) -> Self {
         Self { name: restore(&self.name, &base.name), width: restore(&self.width, &base.width), height: restore(&self.height, &base.height), frame_width: restore(&self.frame_width, &base.frame_width), frame_depth: restore(&self.frame_depth, &base.frame_depth), leaves: restore(&self.leaves, &base.leaves), swing: restore(&self.swing, &base.swing), material: restore(&self.material, &base.material) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.width, later.width);
-        merge_slot(&mut self.height, later.height);
-        merge_slot(&mut self.frame_width, later.frame_width);
-        merge_slot(&mut self.frame_depth, later.frame_depth);
-        merge_slot(&mut self.leaves, later.leaves);
-        merge_slot(&mut self.swing, later.swing);
-        merge_slot(&mut self.material, later.material);
-    }
-    fn between(from: &DoorType, to: &DoorType) -> Self {
-        Self { name: differs(&from.name, &to.name), width: differs(&from.width, &to.width), height: differs(&from.height, &to.height), frame_width: differs(&from.frame_width, &to.frame_width), frame_depth: differs(&from.frame_depth, &to.frame_depth), leaves: differs(&from.leaves, &to.leaves), swing: differs(&from.swing, &to.swing), material: differs(&from.material, &to.material) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.width, later.width);
+        merge_slot!(&mut self.height, later.height);
+        merge_slot!(&mut self.frame_width, later.frame_width);
+        merge_slot!(&mut self.frame_depth, later.frame_depth);
+        merge_slot!(&mut self.leaves, later.leaves);
+        merge_slot!(&mut self.swing, later.swing);
+        merge_slot!(&mut self.material, later.material);
     }
     fn minimal(&self, base: &DoorType) -> Self {
         Self { name: changed(&self.name, &base.name), width: changed(&self.width, &base.width), height: changed(&self.height, &base.height), frame_width: changed(&self.frame_width, &base.frame_width), frame_depth: changed(&self.frame_depth, &base.frame_depth), leaves: changed(&self.leaves, &base.leaves), swing: changed(&self.swing, &base.swing), material: changed(&self.material, &base.material) }
@@ -528,19 +501,16 @@ impl Patch<Site> for SitePatch {
     fn write(&self, base: &Site) -> Site {
         Site { name: take(&self.name, &base.name), latitude: take(&self.latitude, &base.latitude), longitude: take(&self.longitude, &base.longitude), elevation: take(&self.elevation, &base.elevation), true_north: take(&self.true_north, &base.true_north), boundary: take(&self.boundary, &base.boundary) }
     }
-    fn negate(&self, base: &Site) -> Self {
+    fn restoring(&self, base: &Site) -> Self {
         Self { name: restore(&self.name, &base.name), latitude: restore(&self.latitude, &base.latitude), longitude: restore(&self.longitude, &base.longitude), elevation: restore(&self.elevation, &base.elevation), true_north: restore(&self.true_north, &base.true_north), boundary: restore(&self.boundary, &base.boundary) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.latitude, later.latitude);
-        merge_slot(&mut self.longitude, later.longitude);
-        merge_slot(&mut self.elevation, later.elevation);
-        merge_slot(&mut self.true_north, later.true_north);
-        merge_slot(&mut self.boundary, later.boundary);
-    }
-    fn between(from: &Site, to: &Site) -> Self {
-        Self { name: differs(&from.name, &to.name), latitude: differs(&from.latitude, &to.latitude), longitude: differs(&from.longitude, &to.longitude), elevation: differs(&from.elevation, &to.elevation), true_north: differs(&from.true_north, &to.true_north), boundary: differs(&from.boundary, &to.boundary) }
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.latitude, later.latitude);
+        merge_slot!(&mut self.longitude, later.longitude);
+        merge_slot!(&mut self.elevation, later.elevation);
+        merge_slot!(&mut self.true_north, later.true_north);
+        merge_slot!(&mut self.boundary, later.boundary);
     }
     fn minimal(&self, base: &Site) -> Self {
         Self { name: changed(&self.name, &base.name), latitude: changed(&self.latitude, &base.latitude), longitude: changed(&self.longitude, &base.longitude), elevation: changed(&self.elevation, &base.elevation), true_north: changed(&self.true_north, &base.true_north), boundary: changed(&self.boundary, &base.boundary) }
@@ -592,18 +562,15 @@ impl Patch<Building> for BuildingPatch {
     fn write(&self, base: &Building) -> Building {
         Building { site: take(&self.site, &base.site), name: take(&self.name, &base.name), origin: take(&self.origin, &base.origin), rotation: take(&self.rotation, &base.rotation), elevation: take(&self.elevation, &base.elevation) }
     }
-    fn negate(&self, base: &Building) -> Self {
+    fn restoring(&self, base: &Building) -> Self {
         Self { site: restore(&self.site, &base.site), name: restore(&self.name, &base.name), origin: restore(&self.origin, &base.origin), rotation: restore(&self.rotation, &base.rotation), elevation: restore(&self.elevation, &base.elevation) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.site, later.site);
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.origin, later.origin);
-        merge_slot(&mut self.rotation, later.rotation);
-        merge_slot(&mut self.elevation, later.elevation);
-    }
-    fn between(from: &Building, to: &Building) -> Self {
-        Self { site: differs(&from.site, &to.site), name: differs(&from.name, &to.name), origin: differs(&from.origin, &to.origin), rotation: differs(&from.rotation, &to.rotation), elevation: differs(&from.elevation, &to.elevation) }
+        merge_slot!(&mut self.site, later.site);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.origin, later.origin);
+        merge_slot!(&mut self.rotation, later.rotation);
+        merge_slot!(&mut self.elevation, later.elevation);
     }
     fn minimal(&self, base: &Building) -> Self {
         Self { site: changed(&self.site, &base.site), name: changed(&self.name, &base.name), origin: changed(&self.origin, &base.origin), rotation: changed(&self.rotation, &base.rotation), elevation: changed(&self.elevation, &base.elevation) }
@@ -652,18 +619,15 @@ impl Patch<Storey> for StoreyPatch {
     fn write(&self, base: &Storey) -> Storey {
         Storey { building: take(&self.building, &base.building), name: take(&self.name, &base.name), level: take(&self.level, &base.level), height: take(&self.height, &base.height), cut_height: take_assigned(&self.cut_height, &base.cut_height) }
     }
-    fn negate(&self, base: &Storey) -> Self {
+    fn restoring(&self, base: &Storey) -> Self {
         Self { building: restore(&self.building, &base.building), name: restore(&self.name, &base.name), level: restore(&self.level, &base.level), height: restore(&self.height, &base.height), cut_height: restore_assigned(&self.cut_height, &base.cut_height) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.building, later.building);
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.level, later.level);
-        merge_slot(&mut self.height, later.height);
-        merge_slot(&mut self.cut_height, later.cut_height);
-    }
-    fn between(from: &Storey, to: &Storey) -> Self {
-        Self { building: differs(&from.building, &to.building), name: differs(&from.name, &to.name), level: differs(&from.level, &to.level), height: differs(&from.height, &to.height), cut_height: differs_assigned(&from.cut_height, &to.cut_height) }
+        merge_slot!(&mut self.building, later.building);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.level, later.level);
+        merge_slot!(&mut self.height, later.height);
+        merge_slot!(&mut self.cut_height, later.cut_height);
     }
     fn minimal(&self, base: &Storey) -> Self {
         Self { building: changed(&self.building, &base.building), name: changed(&self.name, &base.name), level: changed(&self.level, &base.level), height: changed(&self.height, &base.height), cut_height: changed_assigned(&self.cut_height, &base.cut_height) }
@@ -710,17 +674,14 @@ impl Patch<GridLine> for GridLinePatch {
     fn write(&self, base: &GridLine) -> GridLine {
         GridLine { building: take(&self.building, &base.building), label: take(&self.label, &base.label), start: take(&self.start, &base.start), end: take(&self.end, &base.end) }
     }
-    fn negate(&self, base: &GridLine) -> Self {
+    fn restoring(&self, base: &GridLine) -> Self {
         Self { building: restore(&self.building, &base.building), label: restore(&self.label, &base.label), start: restore(&self.start, &base.start), end: restore(&self.end, &base.end) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.building, later.building);
-        merge_slot(&mut self.label, later.label);
-        merge_slot(&mut self.start, later.start);
-        merge_slot(&mut self.end, later.end);
-    }
-    fn between(from: &GridLine, to: &GridLine) -> Self {
-        Self { building: differs(&from.building, &to.building), label: differs(&from.label, &to.label), start: differs(&from.start, &to.start), end: differs(&from.end, &to.end) }
+        merge_slot!(&mut self.building, later.building);
+        merge_slot!(&mut self.label, later.label);
+        merge_slot!(&mut self.start, later.start);
+        merge_slot!(&mut self.end, later.end);
     }
     fn minimal(&self, base: &GridLine) -> Self {
         Self { building: changed(&self.building, &base.building), label: changed(&self.label, &base.label), start: changed(&self.start, &base.start), end: changed(&self.end, &base.end) }
@@ -772,21 +733,18 @@ impl Patch<Wall> for WallPatch {
     fn write(&self, base: &Wall) -> Wall {
         Wall { storey: take(&self.storey, &base.storey), wall_type: take(&self.wall_type, &base.wall_type), axis: take(&self.axis, &base.axis), location: take(&self.location, &base.location), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Wall) -> Self {
+    fn restoring(&self, base: &Wall) -> Self {
         Self { storey: restore(&self.storey, &base.storey), wall_type: restore(&self.wall_type, &base.wall_type), axis: restore(&self.axis, &base.axis), location: restore(&self.location, &base.location), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.wall_type, later.wall_type);
-        merge_slot(&mut self.axis, later.axis);
-        merge_slot(&mut self.location, later.location);
-        merge_slot(&mut self.base_offset, later.base_offset);
-        merge_slot(&mut self.top, later.top);
-        merge_slot(&mut self.phase, later.phase);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Wall, to: &Wall) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), wall_type: differs(&from.wall_type, &to.wall_type), axis: differs(&from.axis, &to.axis), location: differs(&from.location, &to.location), base_offset: differs(&from.base_offset, &to.base_offset), top: differs(&from.top, &to.top), phase: differs(&from.phase, &to.phase), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.wall_type, later.wall_type);
+        merge_slot!(&mut self.axis, later.axis);
+        merge_slot!(&mut self.location, later.location);
+        merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.top, later.top);
+        merge_slot!(&mut self.phase, later.phase);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Wall) -> Self {
         Self { storey: changed(&self.storey, &base.storey), wall_type: changed(&self.wall_type, &base.wall_type), axis: changed(&self.axis, &base.axis), location: changed(&self.location, &base.location), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
@@ -854,23 +812,20 @@ impl Patch<CurtainWall> for CurtainWallPatch {
     fn write(&self, base: &CurtainWall) -> CurtainWall {
         CurtainWall { storey: take(&self.storey, &base.storey), axis: take(&self.axis, &base.axis), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), u_spacing: take(&self.u_spacing, &base.u_spacing), v_spacing: take(&self.v_spacing, &base.v_spacing), mullion: take(&self.mullion, &base.mullion), panel_material: take(&self.panel_material, &base.panel_material), mullion_material: take(&self.mullion_material, &base.mullion_material), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &CurtainWall) -> Self {
+    fn restoring(&self, base: &CurtainWall) -> Self {
         Self { storey: restore(&self.storey, &base.storey), axis: restore(&self.axis, &base.axis), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), u_spacing: restore(&self.u_spacing, &base.u_spacing), v_spacing: restore(&self.v_spacing, &base.v_spacing), mullion: restore(&self.mullion, &base.mullion), panel_material: restore(&self.panel_material, &base.panel_material), mullion_material: restore(&self.mullion_material, &base.mullion_material), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.axis, later.axis);
-        merge_slot(&mut self.base_offset, later.base_offset);
-        merge_slot(&mut self.top, later.top);
-        merge_slot(&mut self.u_spacing, later.u_spacing);
-        merge_slot(&mut self.v_spacing, later.v_spacing);
-        merge_slot(&mut self.mullion, later.mullion);
-        merge_slot(&mut self.panel_material, later.panel_material);
-        merge_slot(&mut self.mullion_material, later.mullion_material);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &CurtainWall, to: &CurtainWall) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), axis: differs(&from.axis, &to.axis), base_offset: differs(&from.base_offset, &to.base_offset), top: differs(&from.top, &to.top), u_spacing: differs(&from.u_spacing, &to.u_spacing), v_spacing: differs(&from.v_spacing, &to.v_spacing), mullion: differs(&from.mullion, &to.mullion), panel_material: differs(&from.panel_material, &to.panel_material), mullion_material: differs(&from.mullion_material, &to.mullion_material), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.axis, later.axis);
+        merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.top, later.top);
+        merge_slot!(&mut self.u_spacing, later.u_spacing);
+        merge_slot!(&mut self.v_spacing, later.v_spacing);
+        merge_slot!(&mut self.mullion, later.mullion);
+        merge_slot!(&mut self.panel_material, later.panel_material);
+        merge_slot!(&mut self.mullion_material, later.mullion_material);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &CurtainWall) -> Self {
         Self { storey: changed(&self.storey, &base.storey), axis: changed(&self.axis, &base.axis), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), u_spacing: changed(&self.u_spacing, &base.u_spacing), v_spacing: changed(&self.v_spacing, &base.v_spacing), mullion: changed(&self.mullion, &base.mullion), panel_material: changed(&self.panel_material, &base.panel_material), mullion_material: changed(&self.mullion_material, &base.mullion_material), name: changed(&self.name, &base.name) }
@@ -938,20 +893,17 @@ impl Patch<Column> for ColumnPatch {
     fn write(&self, base: &Column) -> Column {
         Column { storey: take(&self.storey, &base.storey), column_type: take(&self.column_type, &base.column_type), position: take(&self.position, &base.position), rotation: take(&self.rotation, &base.rotation), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Column) -> Self {
+    fn restoring(&self, base: &Column) -> Self {
         Self { storey: restore(&self.storey, &base.storey), column_type: restore(&self.column_type, &base.column_type), position: restore(&self.position, &base.position), rotation: restore(&self.rotation, &base.rotation), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.column_type, later.column_type);
-        merge_slot(&mut self.position, later.position);
-        merge_slot(&mut self.rotation, later.rotation);
-        merge_slot(&mut self.base_offset, later.base_offset);
-        merge_slot(&mut self.top, later.top);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Column, to: &Column) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), column_type: differs(&from.column_type, &to.column_type), position: differs(&from.position, &to.position), rotation: differs(&from.rotation, &to.rotation), base_offset: differs(&from.base_offset, &to.base_offset), top: differs(&from.top, &to.top), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.column_type, later.column_type);
+        merge_slot!(&mut self.position, later.position);
+        merge_slot!(&mut self.rotation, later.rotation);
+        merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.top, later.top);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Column) -> Self {
         Self { storey: changed(&self.storey, &base.storey), column_type: changed(&self.column_type, &base.column_type), position: changed(&self.position, &base.position), rotation: changed(&self.rotation, &base.rotation), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), name: changed(&self.name, &base.name) }
@@ -1008,19 +960,16 @@ impl Patch<Beam> for BeamPatch {
     fn write(&self, base: &Beam) -> Beam {
         Beam { storey: take(&self.storey, &base.storey), beam_type: take(&self.beam_type, &base.beam_type), start: take(&self.start, &base.start), end: take(&self.end, &base.end), top_offset: take(&self.top_offset, &base.top_offset), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Beam) -> Self {
+    fn restoring(&self, base: &Beam) -> Self {
         Self { storey: restore(&self.storey, &base.storey), beam_type: restore(&self.beam_type, &base.beam_type), start: restore(&self.start, &base.start), end: restore(&self.end, &base.end), top_offset: restore(&self.top_offset, &base.top_offset), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.beam_type, later.beam_type);
-        merge_slot(&mut self.start, later.start);
-        merge_slot(&mut self.end, later.end);
-        merge_slot(&mut self.top_offset, later.top_offset);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Beam, to: &Beam) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), beam_type: differs(&from.beam_type, &to.beam_type), start: differs(&from.start, &to.start), end: differs(&from.end, &to.end), top_offset: differs(&from.top_offset, &to.top_offset), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.beam_type, later.beam_type);
+        merge_slot!(&mut self.start, later.start);
+        merge_slot!(&mut self.end, later.end);
+        merge_slot!(&mut self.top_offset, later.top_offset);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Beam) -> Self {
         Self { storey: changed(&self.storey, &base.storey), beam_type: changed(&self.beam_type, &base.beam_type), start: changed(&self.start, &base.start), end: changed(&self.end, &base.end), top_offset: changed(&self.top_offset, &base.top_offset), name: changed(&self.name, &base.name) }
@@ -1076,20 +1025,17 @@ impl Patch<Slab> for SlabPatch {
     fn write(&self, base: &Slab) -> Slab {
         Slab { storey: take(&self.storey, &base.storey), slab_type: take(&self.slab_type, &base.slab_type), boundary: take(&self.boundary, &base.boundary), holes: take(&self.holes, &base.holes), offset: take(&self.offset, &base.offset), slope: take_assigned(&self.slope, &base.slope), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Slab) -> Self {
+    fn restoring(&self, base: &Slab) -> Self {
         Self { storey: restore(&self.storey, &base.storey), slab_type: restore(&self.slab_type, &base.slab_type), boundary: restore(&self.boundary, &base.boundary), holes: restore(&self.holes, &base.holes), offset: restore(&self.offset, &base.offset), slope: restore_assigned(&self.slope, &base.slope), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.slab_type, later.slab_type);
-        merge_slot(&mut self.boundary, later.boundary);
-        merge_slot(&mut self.holes, later.holes);
-        merge_slot(&mut self.offset, later.offset);
-        merge_slot(&mut self.slope, later.slope);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Slab, to: &Slab) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), slab_type: differs(&from.slab_type, &to.slab_type), boundary: differs(&from.boundary, &to.boundary), holes: differs(&from.holes, &to.holes), offset: differs(&from.offset, &to.offset), slope: differs_assigned(&from.slope, &to.slope), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.slab_type, later.slab_type);
+        merge_slot!(&mut self.boundary, later.boundary);
+        merge_slot!(&mut self.holes, later.holes);
+        merge_slot!(&mut self.offset, later.offset);
+        merge_slot!(&mut self.slope, later.slope);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Slab) -> Self {
         Self { storey: changed(&self.storey, &base.storey), slab_type: changed(&self.slab_type, &base.slab_type), boundary: changed(&self.boundary, &base.boundary), holes: changed(&self.holes, &base.holes), offset: changed(&self.offset, &base.offset), slope: changed_assigned(&self.slope, &base.slope), name: changed(&self.name, &base.name) }
@@ -1148,20 +1094,17 @@ impl Patch<Roof> for RoofPatch {
     fn write(&self, base: &Roof) -> Roof {
         Roof { storey: take(&self.storey, &base.storey), roof_type: take(&self.roof_type, &base.roof_type), footprint: take(&self.footprint, &base.footprint), shape: take(&self.shape, &base.shape), overhang: take(&self.overhang, &base.overhang), base_offset: take(&self.base_offset, &base.base_offset), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Roof) -> Self {
+    fn restoring(&self, base: &Roof) -> Self {
         Self { storey: restore(&self.storey, &base.storey), roof_type: restore(&self.roof_type, &base.roof_type), footprint: restore(&self.footprint, &base.footprint), shape: restore(&self.shape, &base.shape), overhang: restore(&self.overhang, &base.overhang), base_offset: restore(&self.base_offset, &base.base_offset), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.roof_type, later.roof_type);
-        merge_slot(&mut self.footprint, later.footprint);
-        merge_slot(&mut self.shape, later.shape);
-        merge_slot(&mut self.overhang, later.overhang);
-        merge_slot(&mut self.base_offset, later.base_offset);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Roof, to: &Roof) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), roof_type: differs(&from.roof_type, &to.roof_type), footprint: differs(&from.footprint, &to.footprint), shape: differs(&from.shape, &to.shape), overhang: differs(&from.overhang, &to.overhang), base_offset: differs(&from.base_offset, &to.base_offset), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.roof_type, later.roof_type);
+        merge_slot!(&mut self.footprint, later.footprint);
+        merge_slot!(&mut self.shape, later.shape);
+        merge_slot!(&mut self.overhang, later.overhang);
+        merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Roof) -> Self {
         Self { storey: changed(&self.storey, &base.storey), roof_type: changed(&self.roof_type, &base.roof_type), footprint: changed(&self.footprint, &base.footprint), shape: changed(&self.shape, &base.shape), overhang: changed(&self.overhang, &base.overhang), base_offset: changed(&self.base_offset, &base.base_offset), name: changed(&self.name, &base.name) }
@@ -1224,22 +1167,19 @@ impl Patch<Opening> for OpeningPatch {
     fn write(&self, base: &Opening) -> Opening {
         Opening { host: take(&self.host, &base.host), kind: take(&self.kind, &base.kind), offset: take(&self.offset, &base.offset), sill_override: take_assigned(&self.sill_override, &base.sill_override), width: take_assigned(&self.width, &base.width), height: take_assigned(&self.height, &base.height), flip_hand: take(&self.flip_hand, &base.flip_hand), flip_facing: take(&self.flip_facing, &base.flip_facing), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Opening) -> Self {
+    fn restoring(&self, base: &Opening) -> Self {
         Self { host: restore(&self.host, &base.host), kind: restore(&self.kind, &base.kind), offset: restore(&self.offset, &base.offset), sill_override: restore_assigned(&self.sill_override, &base.sill_override), width: restore_assigned(&self.width, &base.width), height: restore_assigned(&self.height, &base.height), flip_hand: restore(&self.flip_hand, &base.flip_hand), flip_facing: restore(&self.flip_facing, &base.flip_facing), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.host, later.host);
-        merge_slot(&mut self.kind, later.kind);
-        merge_slot(&mut self.offset, later.offset);
-        merge_slot(&mut self.sill_override, later.sill_override);
-        merge_slot(&mut self.width, later.width);
-        merge_slot(&mut self.height, later.height);
-        merge_slot(&mut self.flip_hand, later.flip_hand);
-        merge_slot(&mut self.flip_facing, later.flip_facing);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Opening, to: &Opening) -> Self {
-        Self { host: differs(&from.host, &to.host), kind: differs(&from.kind, &to.kind), offset: differs(&from.offset, &to.offset), sill_override: differs_assigned(&from.sill_override, &to.sill_override), width: differs_assigned(&from.width, &to.width), height: differs_assigned(&from.height, &to.height), flip_hand: differs(&from.flip_hand, &to.flip_hand), flip_facing: differs(&from.flip_facing, &to.flip_facing), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.host, later.host);
+        merge_slot!(&mut self.kind, later.kind);
+        merge_slot!(&mut self.offset, later.offset);
+        merge_slot!(&mut self.sill_override, later.sill_override);
+        merge_slot!(&mut self.width, later.width);
+        merge_slot!(&mut self.height, later.height);
+        merge_slot!(&mut self.flip_hand, later.flip_hand);
+        merge_slot!(&mut self.flip_facing, later.flip_facing);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Opening) -> Self {
         Self { host: changed(&self.host, &base.host), kind: changed(&self.kind, &base.kind), offset: changed(&self.offset, &base.offset), sill_override: changed_assigned(&self.sill_override, &base.sill_override), width: changed_assigned(&self.width, &base.width), height: changed_assigned(&self.height, &base.height), flip_hand: changed(&self.flip_hand, &base.flip_hand), flip_facing: changed(&self.flip_facing, &base.flip_facing), name: changed(&self.name, &base.name) }
@@ -1318,27 +1258,24 @@ impl Patch<Stair> for StairPatch {
     fn write(&self, base: &Stair) -> Stair {
         Stair { storey: take(&self.storey, &base.storey), start: take(&self.start, &base.start), direction: take(&self.direction, &base.direction), width: take(&self.width, &base.width), flight: take(&self.flight, &base.flight), top: take(&self.top, &base.top), max_riser: take(&self.max_riser, &base.max_riser), min_tread: take(&self.min_tread, &base.min_tread), stringer: take(&self.stringer, &base.stringer), nosing: take(&self.nosing, &base.nosing), tread_thickness: take(&self.tread_thickness, &base.tread_thickness), riser: take(&self.riser, &base.riser), landing_depth: take(&self.landing_depth, &base.landing_depth), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Stair) -> Self {
+    fn restoring(&self, base: &Stair) -> Self {
         Self { storey: restore(&self.storey, &base.storey), start: restore(&self.start, &base.start), direction: restore(&self.direction, &base.direction), width: restore(&self.width, &base.width), flight: restore(&self.flight, &base.flight), top: restore(&self.top, &base.top), max_riser: restore(&self.max_riser, &base.max_riser), min_tread: restore(&self.min_tread, &base.min_tread), stringer: restore(&self.stringer, &base.stringer), nosing: restore(&self.nosing, &base.nosing), tread_thickness: restore(&self.tread_thickness, &base.tread_thickness), riser: restore(&self.riser, &base.riser), landing_depth: restore(&self.landing_depth, &base.landing_depth), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.start, later.start);
-        merge_slot(&mut self.direction, later.direction);
-        merge_slot(&mut self.width, later.width);
-        merge_slot(&mut self.flight, later.flight);
-        merge_slot(&mut self.top, later.top);
-        merge_slot(&mut self.max_riser, later.max_riser);
-        merge_slot(&mut self.min_tread, later.min_tread);
-        merge_slot(&mut self.stringer, later.stringer);
-        merge_slot(&mut self.nosing, later.nosing);
-        merge_slot(&mut self.tread_thickness, later.tread_thickness);
-        merge_slot(&mut self.riser, later.riser);
-        merge_slot(&mut self.landing_depth, later.landing_depth);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Stair, to: &Stair) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), start: differs(&from.start, &to.start), direction: differs(&from.direction, &to.direction), width: differs(&from.width, &to.width), flight: differs(&from.flight, &to.flight), top: differs(&from.top, &to.top), max_riser: differs(&from.max_riser, &to.max_riser), min_tread: differs(&from.min_tread, &to.min_tread), stringer: differs(&from.stringer, &to.stringer), nosing: differs(&from.nosing, &to.nosing), tread_thickness: differs(&from.tread_thickness, &to.tread_thickness), riser: differs(&from.riser, &to.riser), landing_depth: differs(&from.landing_depth, &to.landing_depth), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.start, later.start);
+        merge_slot!(&mut self.direction, later.direction);
+        merge_slot!(&mut self.width, later.width);
+        merge_slot!(&mut self.flight, later.flight);
+        merge_slot!(&mut self.top, later.top);
+        merge_slot!(&mut self.max_riser, later.max_riser);
+        merge_slot!(&mut self.min_tread, later.min_tread);
+        merge_slot!(&mut self.stringer, later.stringer);
+        merge_slot!(&mut self.nosing, later.nosing);
+        merge_slot!(&mut self.tread_thickness, later.tread_thickness);
+        merge_slot!(&mut self.riser, later.riser);
+        merge_slot!(&mut self.landing_depth, later.landing_depth);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Stair) -> Self {
         Self { storey: changed(&self.storey, &base.storey), start: changed(&self.start, &base.start), direction: changed(&self.direction, &base.direction), width: changed(&self.width, &base.width), flight: changed(&self.flight, &base.flight), top: changed(&self.top, &base.top), max_riser: changed(&self.max_riser, &base.max_riser), min_tread: changed(&self.min_tread, &base.min_tread), stringer: changed(&self.stringer, &base.stringer), nosing: changed(&self.nosing, &base.nosing), tread_thickness: changed(&self.tread_thickness, &base.tread_thickness), riser: changed(&self.riser, &base.riser), landing_depth: changed(&self.landing_depth, &base.landing_depth), name: changed(&self.name, &base.name) }
@@ -1426,24 +1363,21 @@ impl Patch<Railing> for RailingPatch {
     fn write(&self, base: &Railing) -> Railing {
         Railing { storey: take(&self.storey, &base.storey), path: take(&self.path, &base.path), height: take(&self.height, &base.height), post_spacing: take(&self.post_spacing, &base.post_spacing), profile: take(&self.profile, &base.profile), post_profile: take(&self.post_profile, &base.post_profile), baluster: take_assigned(&self.baluster, &base.baluster), infill: take(&self.infill, &base.infill), material: take(&self.material, &base.material), base_offset: take(&self.base_offset, &base.base_offset), name: take(&self.name, &base.name) }
     }
-    fn negate(&self, base: &Railing) -> Self {
+    fn restoring(&self, base: &Railing) -> Self {
         Self { storey: restore(&self.storey, &base.storey), path: restore(&self.path, &base.path), height: restore(&self.height, &base.height), post_spacing: restore(&self.post_spacing, &base.post_spacing), profile: restore(&self.profile, &base.profile), post_profile: restore(&self.post_profile, &base.post_profile), baluster: restore_assigned(&self.baluster, &base.baluster), infill: restore(&self.infill, &base.infill), material: restore(&self.material, &base.material), base_offset: restore(&self.base_offset, &base.base_offset), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.path, later.path);
-        merge_slot(&mut self.height, later.height);
-        merge_slot(&mut self.post_spacing, later.post_spacing);
-        merge_slot(&mut self.profile, later.profile);
-        merge_slot(&mut self.post_profile, later.post_profile);
-        merge_slot(&mut self.baluster, later.baluster);
-        merge_slot(&mut self.infill, later.infill);
-        merge_slot(&mut self.material, later.material);
-        merge_slot(&mut self.base_offset, later.base_offset);
-        merge_slot(&mut self.name, later.name);
-    }
-    fn between(from: &Railing, to: &Railing) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), path: differs(&from.path, &to.path), height: differs(&from.height, &to.height), post_spacing: differs(&from.post_spacing, &to.post_spacing), profile: differs(&from.profile, &to.profile), post_profile: differs(&from.post_profile, &to.post_profile), baluster: differs_assigned(&from.baluster, &to.baluster), infill: differs(&from.infill, &to.infill), material: differs(&from.material, &to.material), base_offset: differs(&from.base_offset, &to.base_offset), name: differs(&from.name, &to.name) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.path, later.path);
+        merge_slot!(&mut self.height, later.height);
+        merge_slot!(&mut self.post_spacing, later.post_spacing);
+        merge_slot!(&mut self.profile, later.profile);
+        merge_slot!(&mut self.post_profile, later.post_profile);
+        merge_slot!(&mut self.baluster, later.baluster);
+        merge_slot!(&mut self.infill, later.infill);
+        merge_slot!(&mut self.material, later.material);
+        merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Railing) -> Self {
         Self { storey: changed(&self.storey, &base.storey), path: changed(&self.path, &base.path), height: changed(&self.height, &base.height), post_spacing: changed(&self.post_spacing, &base.post_spacing), profile: changed(&self.profile, &base.profile), post_profile: changed(&self.post_profile, &base.post_profile), baluster: changed_assigned(&self.baluster, &base.baluster), infill: changed(&self.infill, &base.infill), material: changed(&self.material, &base.material), base_offset: changed(&self.base_offset, &base.base_offset), name: changed(&self.name, &base.name) }
@@ -1510,18 +1444,15 @@ impl Patch<Space> for SpacePatch {
     fn write(&self, base: &Space) -> Space {
         Space { storey: take(&self.storey, &base.storey), number: take(&self.number, &base.number), name: take(&self.name, &base.name), boundary: take(&self.boundary, &base.boundary), usage: take(&self.usage, &base.usage) }
     }
-    fn negate(&self, base: &Space) -> Self {
+    fn restoring(&self, base: &Space) -> Self {
         Self { storey: restore(&self.storey, &base.storey), number: restore(&self.number, &base.number), name: restore(&self.name, &base.name), boundary: restore(&self.boundary, &base.boundary), usage: restore(&self.usage, &base.usage) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.storey, later.storey);
-        merge_slot(&mut self.number, later.number);
-        merge_slot(&mut self.name, later.name);
-        merge_slot(&mut self.boundary, later.boundary);
-        merge_slot(&mut self.usage, later.usage);
-    }
-    fn between(from: &Space, to: &Space) -> Self {
-        Self { storey: differs(&from.storey, &to.storey), number: differs(&from.number, &to.number), name: differs(&from.name, &to.name), boundary: differs(&from.boundary, &to.boundary), usage: differs(&from.usage, &to.usage) }
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.number, later.number);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.boundary, later.boundary);
+        merge_slot!(&mut self.usage, later.usage);
     }
     fn minimal(&self, base: &Space) -> Self {
         Self { storey: changed(&self.storey, &base.storey), number: changed(&self.number, &base.number), name: changed(&self.name, &base.name), boundary: changed(&self.boundary, &base.boundary), usage: changed(&self.usage, &base.usage) }
@@ -1566,16 +1497,13 @@ impl Patch<Classification> for ClassificationPatch {
     fn write(&self, base: &Classification) -> Classification {
         Classification { system: take(&self.system, &base.system), code: take(&self.code, &base.code), title: take(&self.title, &base.title) }
     }
-    fn negate(&self, base: &Classification) -> Self {
+    fn restoring(&self, base: &Classification) -> Self {
         Self { system: restore(&self.system, &base.system), code: restore(&self.code, &base.code), title: restore(&self.title, &base.title) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot(&mut self.system, later.system);
-        merge_slot(&mut self.code, later.code);
-        merge_slot(&mut self.title, later.title);
-    }
-    fn between(from: &Classification, to: &Classification) -> Self {
-        Self { system: differs(&from.system, &to.system), code: differs(&from.code, &to.code), title: differs(&from.title, &to.title) }
+        merge_slot!(&mut self.system, later.system);
+        merge_slot!(&mut self.code, later.code);
+        merge_slot!(&mut self.title, later.title);
     }
     fn minimal(&self, base: &Classification) -> Self {
         Self { system: changed(&self.system, &base.system), code: changed(&self.code, &base.code), title: changed(&self.title, &base.title) }

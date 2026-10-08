@@ -30,6 +30,8 @@ use semio_s_artifact_stdio_contract::part21::Part21Value;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance};
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "🗑️remove-instance/🦀️.rs"]
 pub mod remove_instance;
 #[path = "📋set-header/🦀️.rs"]
@@ -58,29 +60,11 @@ pub enum Ifc2x3Mutation {
 pub const KINDS: &[&str] = &["upsert-instance", "remove-instance", "set-header"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`, or `None` when `next` differs in a part no leaf addresses (the document `schema` and the
-/// EDM preamble). The header is set when it differs, instances keep their position and are replaced in place while their ids line up, and
-/// the instances past the first diverging id are removed and appended again.
-pub fn net_mutations(base: &Ifc2x3Snapshot, next: &Ifc2x3Snapshot) -> Option<Vec<Ifc2x3Mutation>> {
-    if base.schema != next.schema || base.edm_preamble != next.edm_preamble {
-        return None;
-    }
-    let mut leaves = Vec::new();
-    if base.document.header != next.document.header {
-        leaves.push(Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: next.document.header.clone() }));
-    }
-    let common = base.document.instances.iter().zip(&next.document.instances).take_while(|(left, right)| left.id == right.id).count();
-    leaves.extend(base.document.instances[..common].iter().zip(&next.document.instances).filter(|(left, right)| left != right).map(|(_, right)| Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: right.clone(), index: None })));
-    leaves.extend(base.document.instances[common..].iter().rev().map(|instance| Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: instance.id })));
-    leaves.extend(next.document.instances[common..].iter().map(|instance| Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: instance.clone(), index: None })));
-    Some(leaves)
-}
-//#endregion 🔖️Net
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
+#[cfg(test)]
 pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

@@ -213,6 +213,13 @@
         "command": "bun ./📜️script.ts test-scene-wire-source"
       },
       "outputs": []
+    },
+    "installed-service-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts installed-service-source"
+      }
     }
   }
 }

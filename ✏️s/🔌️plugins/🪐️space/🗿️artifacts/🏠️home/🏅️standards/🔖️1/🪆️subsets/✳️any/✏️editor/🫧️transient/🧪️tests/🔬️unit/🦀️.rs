@@ -1,5 +1,5 @@
 use super::{HomeTransient, HomeTransientRetirementFactory};
-use super::mutations::{ApplyDirectoryPage, HomeTransientMutation};
+use super::mutations::{ApplyDirectoryPage, HomeTransientDiff, HomeTransientMutation};
 use crate::editor::home::transient::component::io::text::mutations::{home_transient_mutation_report_json};
 use protocol::Mutation as _;
 use std::sync::Arc;
@@ -230,7 +230,7 @@ fn the_page_verb_round_trips_text_and_binary() {
     assert!(mutation.inverse(&HomeTransient::default()).expect("valid retained mutation inverse fixture").is_empty(), "a derived projection page is never undone");
     let refused = item("{").diff(&HomeTransient::default());
     assert!(refused.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == semio_framework_diagnostic::Severity::Fatal));
-    assert_eq!(refused.diff(), &HomeTransient::default());
+    assert_eq!(refused.diff(), &HomeTransientDiff::default());
 }
 
 /// 🧹️ A displaced 10 000-space root retires in page grants measured by the projection itself and never encodes it.

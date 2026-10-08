@@ -76,8 +76,8 @@
           "locked": false,
           "objectIds": [
             "frame-rect",
-            "frame-text",
-            "frame-badge"
+            "frame-badge",
+            "frame-text"
           ]
         }
       ],

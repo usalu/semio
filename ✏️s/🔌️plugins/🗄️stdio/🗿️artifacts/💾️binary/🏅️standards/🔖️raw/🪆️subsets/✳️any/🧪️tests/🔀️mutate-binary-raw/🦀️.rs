@@ -2,9 +2,9 @@
 //! `raw-buffer-no-format` (`../../🔮️oracles/🔣️.json`): a raw byte buffer has no format, so `oracle`
 //! here drives this subset's own independently written specification-vector implementation
 //! (`../../🔮️oracles/🦀️.rs`'s `oracle_apply_mutation`, which never touches the subject's own
-//! `BinaryDiff`/`apply_binary_mutation`); `subject` decodes every scenario's `{kind, params}` witness
+//! `BinaryDiff`/`apply_mutation`); `subject` decodes every scenario's `{kind, params}` witness
 //! generically through `Mutation::from_payload_value` — `params` IS the leaf's wire payload — applies
-//! it with this repository's own `apply_binary_mutation`, undoes it with the vocabulary's own
+//! it with this repository's own `apply_mutation`, undoes it with the vocabulary's own
 //! `Mutation::inverse`, and cross-checks each result against that SAME independent reference before
 //! returning. That cross-check is deliberate: the test framework's `oracleDecision` never invokes the
 //! `oracle` role for a `@no-oracle-` feature, so `subject` is the only role that ever discharges this
@@ -145,7 +145,7 @@ fn invalid_replacement_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_obj, mutable_input, projection_of};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::apply_binary_mutation;
+    
     use semio_s_artifact_stdio_binary::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, BinaryMutation, BinarySnapshot};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_binary_test_oracle::standards::v_raw::subsets::any::oracle_apply_mutation;
@@ -172,7 +172,7 @@ mod subject {
 
     /// ▶️ Applies one operation; any message is a rejection (offset/remove_len outside the buffer).
     fn apply(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> Result<(), String> {
-        let outcome = apply_binary_mutation(snapshot, mutation);
+        let outcome = apply_mutation(snapshot, mutation);
         if outcome.messages().is_empty() {
             Ok(())
         } else {
@@ -215,7 +215,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         apply(&mut snapshot, &mutation)?;
-        for step in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut snapshot, &step)?;
         }
         let params = spec.get("params").cloned().unwrap_or(Json::Null);

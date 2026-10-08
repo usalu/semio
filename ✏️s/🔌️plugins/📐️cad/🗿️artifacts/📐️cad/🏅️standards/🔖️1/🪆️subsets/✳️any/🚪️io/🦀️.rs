@@ -139,7 +139,7 @@ pub mod io_registry {
 // to stdio's real semio/mesh + semio/brep codecs is io by definition (rule 5), not artifact-engine
 // compute.
 use semio_framework_value::DslValue;
-use semio_framework::MeshImporter;
+use semio_framework::mesh_io::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;

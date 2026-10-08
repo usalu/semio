@@ -2,7 +2,7 @@ use crate::editor::puzzle2d::config::Puzzle2dConfig;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::unit_tests::context::*;
 use semio_framework_plugin::{PluginApp, ViewModel, WindowMeasure};
-use serde_json::json;
+use semio_framework_pack_json::json;
 
 fn rendered_fill_count(app: &mut Puzzle2dApp) -> f64 {
     let measures = ::semio_framework_async::poll::resolve_ready(app.tool_measures(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));

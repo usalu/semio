@@ -1,0 +1,28 @@
+{
+  "retirement": [
+    {
+      "name": "empty-retained-path",
+      "capacityBytes": 128,
+      "logicalBytes": 0,
+      "copyBytes": 0,
+      "birthBytes": 0,
+      "depth": 1
+    },
+    {
+      "name": "fixed-payload-page",
+      "capacityBytes": 16384,
+      "logicalBytes": 7,
+      "copyBytes": 0,
+      "birthBytes": 0,
+      "depth": 2
+    },
+    {
+      "name": "empty-retained-error",
+      "capacityBytes": 256,
+      "logicalBytes": 0,
+      "copyBytes": 0,
+      "birthBytes": 0,
+      "depth": 1
+    }
+  ]
+}

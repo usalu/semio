@@ -12,7 +12,7 @@ pub fn diff(payload: &ChangeElementU, base: &Din18599Snapshot) -> protocol::Muta
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Element U-value already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff {
-        elements: Some(Din18599ElementsRows { modified: vec![Din18599ElementsPatch { id: payload.element_id.clone(), u_value_w_m2k: Some(payload.new_u_value_w_m2k), ..Default::default() }], ..Default::default() }),
+        elements: Some(Din18599ElementsRows::modification(&payload.element_id, Din18599ElementsPatch { u_value_w_m2k: Some(payload.new_u_value_w_m2k), ..Default::default() })),
         ..Default::default()
     })
 }

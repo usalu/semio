@@ -10,7 +10,31 @@
       "reason": "one scalar semantic mutation"
     },
     {
-      "id": "patchSnapshot",
+      "id": "renameVcs",
+      "execution": "bounded-first-step",
+      "lanes": [
+        "Artifact"
+      ],
+      "reason": "one admitted scalar semantic mutation"
+    },
+    {
+      "id": "changeCounter",
+      "execution": "bounded-first-step",
+      "lanes": [
+        "Artifact"
+      ],
+      "reason": "one admitted scalar semantic mutation"
+    },
+    {
+      "id": "changeStatus",
+      "execution": "bounded-first-step",
+      "lanes": [
+        "Artifact"
+      ],
+      "reason": "one admitted scalar semantic mutation"
+    },
+    {
+      "id": "changeNotes",
       "execution": "bounded-first-step",
       "lanes": [
         "Artifact"

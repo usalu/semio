@@ -33,7 +33,7 @@ use semio_framework_plugin::UiValue;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use semio_framework_ui_contract as ui;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_LAYERS: &str = "puzzle2d.play.layers";

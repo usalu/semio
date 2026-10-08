@@ -169,68 +169,10 @@ fn entity_index(doctype: &XmlDoctype, name: &str) -> Option<usize> {
 }
 //#endregion 🔖️Gate
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source, never a separate
-/// imperative apply path.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_xml_valid_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlValidMutation) -> protocol::MutationOutcome<XmlDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion 🔖️Apply
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to `next`: the document element's rename (which retags the DOCTYPE with it), the DOCTYPE
-/// declaration or its external subset, the internal subset, the declaration's `standalone`, then every text node of an
-/// otherwise identical tree. Structure edits have no leaf in this vocabulary; the exact net refuses an edit that needs one.
-pub fn net_mutations(base: &XmlSnapshot, next: &XmlSnapshot) -> Vec<XmlValidMutation> {
-    let mut leaves = Vec::new();
-    let (before, after) = (&base.doc.root, &next.doc.root);
-    if let (Some(XmlNode::Element { name: old, .. }), Some(XmlNode::Element { name, .. })) = (before, after) {
-        if old != name {
-            leaves.push(XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: name.clone() }));
-        }
-    }
-    match (&base.doc.doctype, &next.doc.doctype) {
-        (None, Some(doctype)) => leaves.push(XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: doctype.external_id.clone() })),
-        (Some(old), Some(doctype)) if old.external_id != doctype.external_id => leaves.push(XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: doctype.external_id.clone() })),
-        _ => {}
-    }
-    if let Some(doctype) = &next.doc.doctype {
-        if base.doc.doctype.as_ref().map(|old| &old.declarations) != Some(&doctype.declarations) {
-            leaves.push(XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: doctype.declarations.clone() }));
-        }
-    }
-    if base.doc.declaration != next.doc.declaration {
-        leaves.push(XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: next.doc.declaration.as_ref().and_then(|declaration| declaration.standalone) }));
-    }
-    if let (Some(before), Some(after)) = (before, after) {
-        net_texts(&mut Vec::new(), before, after, &mut leaves);
-    }
-    leaves
-}
-
-fn net_texts(path: &mut Vec<usize>, before: &XmlNode, after: &XmlNode, leaves: &mut Vec<XmlValidMutation>) {
-    match (before, after) {
-        (XmlNode::Text { text: old }, XmlNode::Text { text }) if old != text => leaves.push(XmlValidMutation::SetText(set_text::SetText { path: XmlNodePath(path.clone()), text: text.clone() })),
-        (XmlNode::Element { children: old, .. }, XmlNode::Element { children, .. }) if old.len() == children.len() => {
-            for (index, (old, new)) in old.iter().zip(children).enumerate() {
-                path.push(index);
-                net_texts(path, old, new, leaves);
-                path.pop();
-            }
-        }
-        _ => {}
-    }
-}
-//#endregion 🔖️Net
 
 //#region 🔖️Helpers
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

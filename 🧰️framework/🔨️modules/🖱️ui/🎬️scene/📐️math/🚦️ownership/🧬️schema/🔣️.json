@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "ownerBusy",
+    "semanticClosing",
+    "retry",
+    "ray"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.ui.scene.mesh3d.owner-refusal"
+    },
+    "ownerBusy": {
+      "const": "Busy"
+    },
+    "semanticClosing": {
+      "const": "Closing"
+    },
+    "retry": {
+      "const": {
+        "maximumAttempts": 4096,
+        "maximumDurationMs": 5000,
+        "constructorCapacityBytes": 65536,
+        "cancellation": "stopBeforeNextAttempt"
+      }
+    },
+    "ray": {
+      "const": {
+        "busy": "refuse",
+        "closing": "refuse",
+        "miss": "successfulNone",
+        "hit": "successfulOriginalDistance"
+      }
+    }
+  }
+}

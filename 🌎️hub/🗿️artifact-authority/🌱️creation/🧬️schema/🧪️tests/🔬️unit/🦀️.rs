@@ -1,3 +1,4 @@
+use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1, decide_artifact_creation_fact_append_v1};
 use super::*;
 
 #[test]
@@ -32,7 +33,7 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
             _ => panic!("unhandled neutral state"),
         };
         facts.push(fact(row["fact"].as_str().unwrap(), facts.len() as u64 + 1));
-        let result = ArtifactCreationOperationV1::fold(&facts);
+        let result = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts);
         assert_eq!(result.is_ok(), !row["next"].is_null(), "{row}: {result:?}");
         if let Ok(operation) = result {
             assert!(operation.status().validate());
@@ -70,7 +71,7 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
             if let Some(next) = next {
                 facts.push(next);
             }
-            let operation = ArtifactCreationOperationV1::fold(&facts).unwrap();
+            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).unwrap();
             assert_eq!(format!("{:?}", operation.phase).to_lowercase(), row["phase"].as_str().unwrap());
         }
     }
@@ -144,6 +145,6 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
             }
             _ => unreachable!(),
         }
-        assert!(ArtifactCreationOperationV1::fold(&facts).is_err(), "{case}");
+        assert!(crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).is_err(), "{case}");
     }
 }

@@ -217,7 +217,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
-        let diff_from_apply = crate::schema::mutations::apply_xml_mutation(&mut via_apply, &mutation);
+        let diff_from_apply = crate::apply_mutation(&mut via_apply, &mutation);
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -233,9 +233,9 @@ async fn inverse_law() {
 
         // Mutation-level round-trip.
         let mut round_tripped = base.clone();
-        crate::schema::mutations::apply_xml_mutation(&mut round_tripped, &mutation);
+        crate::apply_mutation(&mut round_tripped, &mutation);
         for inverse_mutation in <XmlMutation as Mutation<XmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            crate::schema::mutations::apply_xml_mutation(&mut round_tripped, &inverse_mutation);
+            crate::apply_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -372,30 +372,6 @@ async fn absorb_law() {
         assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    // Synthetic pairs.
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&b, &a), &b).unwrap(), a);
-
-    let sample = sample_snapshot();
-    assert_eq!(protocol::apply_diff(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
-
-    // Real fixture (the demo's `🏷️.xml`) diffed against a mutated variant.
-    let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
-    let fixture_doc = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
-    let fixture = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: fixture_doc };
-    let mut mutated = fixture.clone();
-    crate::schema::mutations::apply_xml_mutation(&mut mutated, &XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()), index: None }));
-    assert_ne!(fixture, mutated);
-    assert_eq!(protocol::apply_diff(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
-    assert_eq!(protocol::apply_diff(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
-}
 //#endregion 🔖️BetweenRoundtripLaw
 
 //#region 🔖️CodecRetentionLaw
@@ -413,49 +389,6 @@ async fn codec_retention_law() {
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
-}
-//#endregion 🔖️CodecRetentionLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
-/// fixtures' doc comment for exactly how each collection flavor -- removed/modified/added --
-/// is exercised given the recipe's naive positional `between_children`).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&diff_ab, &a).unwrap(), b);
-    let diff_ba = <XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&diff_ba, &b).unwrap(), a);
-    assert!(<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &a).is_empty());
-
-    // Hand-written per-field assertion: every top-level XmlDiff field is populated, and both
-    // tri-state scalars exercise `Some(None)`.
-    assert_eq!(diff_ab.declaration, Some(None));
-    assert_eq!(diff_ab.doctype, Some(None));
-    assert_eq!(diff_ab.prolog, Some(b.doc.prolog.clone()));
-    assert_eq!(diff_ab.epilog, Some(b.doc.epilog.clone()));
-    assert!(diff_ab.root.is_some());
-
-    let XmlNodeDiff::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };
-    assert!(root_diff.name.is_some());
-    let attrs_diff = root_diff.attributes.as_ref().expect("attrs diff present");
-    assert!(!attrs_diff.removed.is_empty(), "attrs: removed not exercised");
-    assert!(!attrs_diff.modified.is_empty(), "attrs: modified not exercised");
-    assert!(!attrs_diff.added.is_empty(), "attrs: added not exercised");
-
-    let children_diff = root_diff.children.as_ref().expect("children diff present");
-    assert!(!children_diff.removed.is_empty(), "children: removed not exercised");
-    assert_eq!(children_diff.modified.len(), 1);
-    let modified_entry = &children_diff.modified[0];
-    let XmlNodeDiff::Element(modified_element) = &modified_entry.diff else { panic!("expected element diff") };
-    assert!(modified_element.name.is_some(), "modified child: name not exercised");
-    assert!(modified_element.attributes.is_some(), "modified child: attributes not exercised");
-    let nested_children: &crate::schema::diff::XmlChildrenDiff = modified_element.children.as_ref().expect("nested children diff present");
-    let nested_added: &Vec<XmlChildAdded> = &nested_children.added;
-    assert!(!nested_added.is_empty(), "children: added (nested) not exercised");
 }
 //#endregion 🔖️FieldSweep
 

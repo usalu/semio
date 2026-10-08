@@ -11,9 +11,10 @@
   "relationships": null,
   "adjacencies": null,
   "processes": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "process-a",
         "patch": {
@@ -50,8 +51,7 @@
           "qualityGates": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "flows": null,
   "accessRules": null,

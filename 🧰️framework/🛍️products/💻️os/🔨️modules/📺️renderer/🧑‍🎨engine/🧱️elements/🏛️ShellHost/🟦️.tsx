@@ -782,8 +782,7 @@ import { hopTrace, type HopTraceDetail } from "../../../../../../../🔨️modul
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, streamMuxWatchV1, type StreamMuxEndpointV1 } from "../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { liveInstanceWindowFaultV1, type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { createShellRouteLedgerV1 } from "./🧭️route-ledger/🟦️.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalog } from "@semio-tech/framework";
 import { MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
 import { hubCatalogClosureV1, hubCatalogOnlyPluginsV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
@@ -1363,6 +1362,7 @@ export class TutorialRecorder {
  * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
  * co-mounted shells don't share `semio.os.dock`/`ui.chrome.*` state. */
 export interface FrameworkOsShellProps {
+  readonly catalog: PluginCatalog;
   readonly backboneWorkerFactory?: () => Worker;
   readonly documentServices?: readonly InstalledServicePresentationV1[];
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
@@ -2277,6 +2277,7 @@ function tellSyncAttachFailureV1(notice: (message: string, kind?: Severity, code
 type SpawnedRefreshSlotV1 = { viewState: ViewModel; again: boolean; done: Promise<void> };
 
 function FrameworkOsShellInner({
+  catalog,
   pluginFilter,
   plugins,
   surfaceSessionFactories,
@@ -2289,6 +2290,7 @@ function FrameworkOsShellInner({
   brand,
   suppressAutoIntroduction = false,
 }: {
+  readonly catalog: PluginCatalog;
   readonly pluginFilter?: string;
   readonly plugins: readonly PluginRegistryEntry[];
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
@@ -2308,7 +2310,7 @@ function FrameworkOsShellInner({
   // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
   // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
-  const hostConfig = pluginFilter ? resolvePluginHostConfig(PLUGIN_CATALOG, pluginFilter) : undefined;
+  const hostConfig = pluginFilter ? resolvePluginHostConfig(catalog, pluginFilter) : undefined;
   const hostMode = hostConfig !== undefined;
   // 📱️ `measuredDevice` is the THREE-way viewport read (`🖱️ui/📱️device/🟦️.ts`, shared byte-for-byte with
   // the wgpu dock); `mobile` stays the binary flag every panel-collapse call site below already reads.
@@ -4458,16 +4460,16 @@ function FrameworkOsShellInner({
   const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
 
   const registry = useMemo(() => {
-    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(PLUGIN_CATALOG, pluginFilter) : undefined, hostMode);
+    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(catalog, pluginFilter) : undefined, hostMode);
     if (hostMode) return expanded;
     return pluginFilter ? expanded : plugins;
-  }, [pluginFilter, plugins, hostMode]);
+  }, [catalog, pluginFilter, plugins, hostMode]);
 
   //#region 🔌️PluginRuntime
   /** 🔌️ The one registry entry the shell must have loaded before it can create a session — the studio
    * host plugin (`hostConfig.pluginId`) in studio mode, otherwise the resolved single-app variant.
    * Every other registry entry streams in independently and is never fatal to boot. */
-  const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(PLUGIN_CATALOG, pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
+  const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(catalog, pluginFilter) : undefined) ?? registry[0]?.pluginId, [catalog, hostConfig, pluginFilter, registry]);
   const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
     return resolvePluginCanvasStatus(!!session, error, primaryPluginId ? pluginStatusById[primaryPluginId] : undefined, primaryPluginId ? pluginSupervisorById[primaryPluginId] : undefined);
   }, [session, error, primaryPluginId, pluginStatusById, pluginSupervisorById]);
@@ -4495,16 +4497,16 @@ function FrameworkOsShellInner({
    * `snapshot` per tree ({@link createBundledPluginSource}) so dependency contributors install without
    * Vite middleware. The modules staged beside the shell answer first; the hub source answers what this
    * device does not serve — local-first, and only when something opens it: the hub source announces nothing. */
-  const extensionRegistry = useMemo(() => extensionRegistryFromCatalog(PLUGIN_CATALOG), []);
+  const extensionRegistry = useMemo(() => extensionRegistryFromCatalog(catalog), [catalog]);
   const pluginSource: PluginSource = useMemo(() => {
     const local = import.meta.env.PROD
       ? [createBundledPluginSource(registry), createBundledPluginSource(extensionRegistry)]
       : [
           createDevPluginSource(registry, streamMuxWatchV1(announcedPageStreams(), DEV_STREAM_ROUTES.pluginModules)),
-          createExtensionSource(PLUGIN_CATALOG, streamMuxWatchV1(announcedPageStreams(), DEV_STREAM_ROUTES.extensionModules)),
+          createExtensionSource(catalog, streamMuxWatchV1(announcedPageStreams(), DEV_STREAM_ROUTES.extensionModules)),
         ];
     return multiplexPluginSources(...local, ...(hubPluginSource ? [hubPluginSource] : []));
-  }, [extensionRegistry, registry, hubPluginSource]);
+  }, [catalog, extensionRegistry, registry, hubPluginSource]);
 
   /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
    * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
@@ -4557,7 +4559,7 @@ function FrameworkOsShellInner({
       // `resolveBootPrimaryAppV1` — the role of an OPEN session always comes from `session.app.role`,
       // never `appRole` itself. `appId`/`defaultAppId` name the artifact surface; `appRole` picks
       // which of that dialect's surfaces opens.
-      const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(PLUGIN_CATALOG, pluginFilter) : undefined;
+      const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(catalog, pluginFilter) : undefined;
       const primaryApp = resolveBootPrimaryAppV1(manifest.apps, appId, defaultAppId, appRole);
       if (appId !== undefined && primaryApp === undefined) {
         // 🔐️ A pinned app belongs to the selected primary aggregate, never a racing dependency.
@@ -4577,7 +4579,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
       dispatch({ type: "SET_ERROR", value: null });
     },
-    [hostConfig, appId, appRole, pluginFilter, rememberOpenSpaceId],
+    [catalog, hostConfig, appId, appRole, pluginFilter, rememberOpenSpaceId],
   );
 
   /** 🚑️ ONE watchdog kill must not be a fatal boot. Losing the shard that was running the primary
@@ -4983,8 +4985,8 @@ function FrameworkOsShellInner({
   const [extensionLedger, setExtensionLedger] = useState<readonly ExtensionLedgerEntry[]>([]);
   const extensionLedgerRef = useRef(extensionLedger);
   extensionLedgerRef.current = extensionLedger;
-  const extensionTargetById = useMemo(() => new Map(EXTENSION_TARGETS.map((target) => [target.pluginId, target] as const)), []);
-  const extensionIdSet = useMemo(() => new Set(EXTENSION_TARGETS.map((target) => target.pluginId)), []);
+  const extensionTargetById = useMemo(() => new Map(catalog.extensions.map((target) => [target.pluginId, target] as const)), [catalog]);
+  const extensionIdSet = useMemo(() => new Set(catalog.extensions.map((target) => target.pluginId)), [catalog]);
 
   const dispatchSpaceExtensionOp = useCallback(async (action: string, args: Record<string, unknown>) => {
     const active = sessionRef.current;
@@ -6976,7 +6978,7 @@ function FrameworkOsShellInner({
         }
         if ("videoRenderExport" in effect) {
           const { filename, program } = effect.videoRenderExport;
-          const capabilities = PLUGIN_BUILD_TARGETS.find((target) => target.pluginId === baseSession.pluginId)?.capabilities ?? [];
+          const capabilities = catalog.plugins.find((target) => target.pluginId === baseSession.pluginId)?.capabilities ?? [];
           void runVideoRenderExportV1(
             { filename, owner: baseSession.pluginId, program, capabilities },
             {
@@ -7336,7 +7338,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
-    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
+    [catalog,captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
   );
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
   applyHostEffectsRef.current = applyHostEffects;
@@ -9645,7 +9647,7 @@ function FrameworkOsShellInner({
       } catch {
         throw relayError;
       }
-      const owner = artifactKindActivationOwner(PLUGIN_CATALOG, artifactKind) ?? (await hubPluginSource?.ownerOfDialect(artifactKind).catch(() => undefined));
+      const owner = artifactKindActivationOwner(catalog, artifactKind) ?? (await hubPluginSource?.ownerOfDialect(artifactKind).catch(() => undefined));
       if (owner === undefined || loadedPluginsRef.current.some((entry) => entry.handle.pluginId === owner)) throw relayError;
       const outcome = await installPlugin(owner);
       if (outcome !== "loaded" && outcome !== "already-loaded") throw relayError;
@@ -9657,7 +9659,7 @@ function FrameworkOsShellInner({
       })));
       return resolveArtifactOpeningRelay(actionId, args, installed, openingPreferences);
     }
-  }, [installPlugin, installHubDocumentProgram, openingPreferences, hubPluginSource]);
+  }, [catalog, installPlugin, installHubDocumentProgram, openingPreferences, hubPluginSource]);
   resolveArtifactOpeningWithActivationRef.current = installActivationOwnerAndResolve;
 
   /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
@@ -10494,7 +10496,7 @@ function FrameworkOsShellInner({
       }),
       extensions: (() => {
         const byId = new Map<string, MarketplaceExtensionEntry>();
-        for (const target of EXTENSION_TARGETS) {
+        for (const target of catalog.extensions) {
           const ledger = extensionLedger.find((entry) => entry.extensionId === target.pluginId);
           const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === target.pluginId);
           byId.set(target.pluginId, {
@@ -10529,6 +10531,7 @@ function FrameworkOsShellInner({
       setExtensionEnabled: (extensionId, enabled) => void setExtensionEnabled(extensionId, enabled),
     }),
     [
+      catalog,
       registry,
       hubOnlyPlugins,
       extensionIdSet,
@@ -13177,7 +13180,7 @@ function FrameworkOsShellInner({
         delete shellRoot.dataset.shellReady;
         delete shellRoot.dataset.shellNotFound;
       }
-    } else if (session && initialExampleReady) {
+    } else if ((session && initialExampleReady) || (!pluginFilter && registry.length === 0)) {
       root.dataset.semioOsReady = beaconId;
       delete root.dataset.semioOsError;
       delete root.dataset.semioOsNotFound;
@@ -13197,7 +13200,7 @@ function FrameworkOsShellInner({
         delete shellRoot.dataset.shellNotFound;
       }
     };
-  }, [session, initialExampleReady, error, pluginFilter, notFoundPath, hostMode, scope.rootRef]);
+  }, [session, initialExampleReady, error, pluginFilter, registry.length, notFoundPath, hostMode, scope.rootRef]);
   // #endregion 🔖️ReadinessBeacon
 
   // #region 🔖️CatalogSmokeProbe

@@ -269,7 +269,7 @@
           "productionDispatch": {
             "operation": "restore-non-tiny",
             "bridgeVersion": 1,
-            "variant": "RestoreNonTiny"
+            "variant": "ReinstateNonTiny"
           },
           "oracleRequirements": [
             {

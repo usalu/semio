@@ -9,9 +9,10 @@
   "parentPages": null,
   "spreads": null,
   "pages": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "page-1",
         "patch": {
@@ -24,44 +25,52 @@
           "margin_left": null,
           "columns_count": null,
           "columns_gutter": null,
-          "frame_added": null,
-          "frame_removed": null,
-          "frames_patched": [
-            {
-              "frame_id": "frame-rect",
-              "patch": {
-                "x": 35.0,
-                "y": 40.0,
-                "width": 30.0,
-                "height": 20.0,
-                "rotation": null,
-                "fill": null,
-                "stroke": null,
-                "wrap_mode": null,
-                "columns": null,
-                "locked": null,
-                "visible": null,
-                "inset_height": null,
-                "inset_width": null,
-                "inset_x": null,
-                "inset_y": null,
-                "story_id": null,
-                "thread_next": null
-              }
-            }
-          ],
-          "frame_layer": null,
-          "frame_order": null,
+          "parent_page_id": null,
           "guides": null,
-          "layer_added": null,
-          "layer_patched": null,
-          "layer_removed": null,
-          "overrides": null,
-          "parent_page_id": null
+          "overrides": {
+            "removed": [],
+            "inserted": [],
+            "moved": []
+          },
+          "frames": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "frame-rect",
+                "patch": {
+                  "x": 35.0,
+                  "y": 40.0,
+                  "width": 30.0,
+                  "height": 20.0,
+                  "rotation": null,
+                  "fill": null,
+                  "stroke": null,
+                  "wrap_mode": null,
+                  "columns": null,
+                  "locked": null,
+                  "visible": null,
+                  "story_id": null,
+                  "thread_next": null,
+                  "inset_x": null,
+                  "inset_y": null,
+                  "inset_width": null,
+                  "inset_height": null,
+                  "layer_id": null
+                }
+              }
+            ]
+          },
+          "layers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "printTarget": null,
   "backgroundDrawing": null,

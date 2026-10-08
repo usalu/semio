@@ -86,8 +86,7 @@ impl TxtLinesDiff {
     /// base index, and each modified row restores its base text at the index the row has after this diff.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &[String]) -> Self {
-        let mut removed_base = self.removed.clone();
-        removed_base.sort_unstable();
+        let removed_base = semio_s_artifact_stdio_contract::ordered(&self.removed);
         let mut added_final: Vec<usize> = self.added.iter().map(|a| a.index).collect();
         added_final.sort_unstable();
         let after_index = |index: usize| {
@@ -98,23 +97,6 @@ impl TxtLinesDiff {
         modified.sort_by_key(|m| m.index);
         let added = removed_base.iter().filter_map(|index| base.get(*index).map(|text| TxtLineAdded { index: *index, text: text.clone() })).collect();
         Self { removed: added_final, modified, added }
-    }
-
-    /// 🧭️ State delta between two line arrays: pairwise-by-position over `0..min(len)`
-    /// (`modified`), base tail (`removed`), other tail (`added`) -- the recipe's "index keys
-    /// pairwise by position" `between` rule.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[String], next: &[String]) -> Self {
-        let min_len = base.len().min(next.len());
-        let mut modified = Vec::new();
-        for i in 0..min_len {
-            if base[i] != next[i] {
-                modified.push(TxtLineModified { index: i, text: next[i].clone() });
-            }
-        }
-        let removed: Vec<usize> = (next.len()..base.len()).collect();
-        let added: Vec<TxtLineAdded> = (base.len()..next.len()).map(|i| TxtLineAdded { index: i, text: next[i].clone() }).collect();
-        TxtLinesDiff { removed, modified, added }
     }
 }
 
@@ -139,8 +121,7 @@ enum Lbl {
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
-    let mut added_sorted = added.to_vec();
-    added_sorted.sort_by_key(|(idx, _)| *idx);
+    let added_sorted = semio_s_artifact_stdio_contract::ordered_by_key(added, |(idx, _)| *idx);
     for (idx, label) in added_sorted {
         let pos = idx.min(survivors.len());
         survivors.insert(pos, label);
@@ -333,14 +314,6 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     /// 🔁️ The negative diff: each touched scalar restores its base value and the lines triple inverts against the base lines.
     fn inverse(&self, base: &TxtSnapshot) -> Self {
         Self { trailing_newline: self.trailing_newline.map(|_| base.trailing_newline), line_ending: self.line_ending.map(|_| base.line_ending), lines: self.lines.as_ref().map(|lines| lines.inverse(&base.lines)) }
-    }
-
-    fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
-        let trailing_newline = if base.trailing_newline != other.trailing_newline { Some(other.trailing_newline) } else { None };
-        let line_ending = if base.line_ending != other.line_ending { Some(other.line_ending) } else { None };
-        let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines);
-        let lines = if lines_diff.is_empty() { None } else { Some(lines_diff) };
-        TxtDiff { trailing_newline, line_ending, lines }
     }
 
     fn is_empty(&self) -> bool {

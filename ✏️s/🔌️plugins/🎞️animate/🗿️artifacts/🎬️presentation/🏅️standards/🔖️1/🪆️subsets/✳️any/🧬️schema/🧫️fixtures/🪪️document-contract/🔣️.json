@@ -53,32 +53,24 @@
       "pdfPage": null
     },
     "tiles": {
-      "added": [
+      "removed": [],
+      "inserted": [
         {
-          "id": "t1",
-          "name": "A",
-          "crop": {
-            "x": 0.0,
-            "y": 0.0,
-            "width": 0.5,
-            "height": 0.5
+          "index": 0,
+          "row": {
+            "id": "t1",
+            "name": "A",
+            "crop": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 0.5,
+              "height": 0.5
+            }
           }
         }
       ],
-      "removed": [],
-      "patched": [],
-      "reordered": null
-    },
-    "presentation": {
-      "childId": "presentation-fixture",
-      "target": {
-        "artifactId": "presentation-fixture",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "presentation"
-        }
-      }
+      "moved": [],
+      "modified": []
     }
   },
   "invalidDocuments": [

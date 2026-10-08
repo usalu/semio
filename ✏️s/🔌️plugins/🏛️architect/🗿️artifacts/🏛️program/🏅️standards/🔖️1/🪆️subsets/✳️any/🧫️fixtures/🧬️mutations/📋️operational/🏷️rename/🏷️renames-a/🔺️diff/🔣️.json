@@ -14,9 +14,10 @@
   "flows": null,
   "accessRules": null,
   "operations": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "operational-requirement-a",
         "patch": {
@@ -54,8 +55,7 @@
           "escalationContactId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "equipment": null,
   "resources": null,

@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "edge-4",
+        "index": 1
+      }
+    ]
+  },
+  "meta": null,
+  "nodes": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "node-a",
+        "patch": {
+          "handles": {
+            "inserted": [],
+            "modified": [],
+            "moved": [],
+            "removed": [
+              {
+                "id": "handle-spare",
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "schema": null,
+  "targetRegions": null
+}

@@ -48,12 +48,6 @@ pub enum FormMutation {
 }
 //#endregion 🔖️FormMutation
 
-//#region 🔖️CompatDelegates
-/// ⚖️ Whole-document apply — a thin delegation to the derive-generated `Mutation::diff`+`apply`
-/// (see file-level doc for why the free function itself stays, not its old hand-rolled match body).
-pub fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> protocol::MutationApplyResult<FormsSnapshot> {
-    protocol::apply_diff(mutation.diff(spec).diff(), spec)
-}
 
 /// ⚖️ Whole-document inverse — a thin delegation to the derive-generated `Mutation::inverse`.
 pub fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
@@ -81,18 +75,6 @@ pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> semio_framework_artifact_pl
 /// against both the enum and the committed catalog.
 pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-block-field", "change-form-title", "commit-response", "discard-response"];
 
-/// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
-/// diagnostics included — the shape an external conformance host needs, since a committed
-/// `🎯️outcome` vector declares a status AND its diagnostic codes, and the plain apply wrapper
-/// beside this one answers `Result<_, _>` and drops the messages.
-// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn apply_form_mutation_outcome(snapshot: &mut FormsSnapshot, mutation: &FormMutation) -> protocol::MutationOutcome<FormsDiff> {
-    let outcome = <FormMutation as Mutation<FormsSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
-        *snapshot = next;
-    }
-    outcome
-}
 
 /// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`
 /// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the

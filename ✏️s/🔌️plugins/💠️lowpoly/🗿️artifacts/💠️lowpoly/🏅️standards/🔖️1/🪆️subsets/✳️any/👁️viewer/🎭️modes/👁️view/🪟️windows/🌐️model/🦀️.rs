@@ -9,6 +9,7 @@
 //! parity with the editor's CURRENT behavior for that gap, not a regression.
 
 use crate::LowpolySnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::euler_degrees_to_quaternion;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
 // 🚧️ SDK GAP: `MeshWindowKit`/`MeshView`/`WindowKit` (contract §2.6) are declared inside
 // `semio_framework_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`
@@ -38,15 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Read-only twin of the editor's `world_instances_json` — real per-object transform/label,
-/// duplicated (not imported) per `policyViewerPurityBreaches`.
-fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
-    let to_rad = std::f32::consts::PI / 180.0;
-    let (sx, cx) = (rotation[0] * to_rad * 0.5).sin_cos();
-    let (sy, cy) = (rotation[1] * to_rad * 0.5).sin_cos();
-    let (sz, cz) = (rotation[2] * to_rad * 0.5).sin_cos();
-    [(sx * cy * cz + cx * sy * sz) as f64, (cx * sy * cz - sx * cy * sz) as f64, (cx * cy * sz + sx * sy * cz) as f64, (cx * cy * cz - sx * sy * sz) as f64]
-}
+
 
 fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
     let instances: Vec<serde_json::Value> = snapshot

@@ -1,3 +1,4 @@
+use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
 use super::*;
 use {semio_framework::ActionArgControl,semio_framework::ActionKind,semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::CommandDefinition,semio_framework::CommandOwnerAddress,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::PluginManifest,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 

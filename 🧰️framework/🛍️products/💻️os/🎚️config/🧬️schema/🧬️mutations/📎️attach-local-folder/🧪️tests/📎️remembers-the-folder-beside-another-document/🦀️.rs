@@ -84,7 +84,7 @@ fn produces_and_applies_the_committed_diff() {
     let outcome = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &before());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "attach-local-folder: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let decoded: LocalFolderBindings = serde_json::from_str(DIFF).expect("committed diff decodes as bindings");
+    let decoded: LocalFoldersDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after());
 }
 

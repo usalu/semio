@@ -5,7 +5,7 @@ import union from "lodash/union.js";
 import difference from "lodash/difference.js";
 import xor from "lodash/xor.js";
 import uniq from "lodash/uniq.js";
-import { BufferGeometry, Float32BufferAttribute, OrthographicCamera, PerspectiveCamera, Ray, Triangle, Vector3 } from "three";
+import { BufferGeometry, DataTexture, Float32BufferAttribute, OrthographicCamera, PerspectiveCamera, Plane, Line3, Ray, Triangle, Vector3 } from "three";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -16,6 +16,39 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { describe, expect, it } = vitest;
 
   describe("@semio-tech/framework-3d-js", () => {
+    it("preserves raster lease pixels against an independent Three DataTexture", () => {
+      const url=new URL("../🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json",source.url);
+      const fixture=JSON.parse(readFileSync(url,"utf8"));
+      for(const row of fixture.rasters){
+        const pixels=new Uint8Array(row.byteLength).fill(row.fill);
+        const texture=new DataTexture(pixels,row.width,row.height);
+        expect(texture.image.data).toBe(pixels);
+        expect(texture.image.width*texture.image.height*4).toBe(row.byteLength);
+        expect(texture.image.data.every((value:number)=>value===row.fill)).toBe(true);
+        expect(row.capacityBytes).toBeGreaterThanOrEqual(row.byteLength);
+        texture.dispose();
+      }
+    });
+
+    it("retains inline World source geometry against an independent Three oracle", () => {
+      const url = new URL("../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json",source.url);
+      const fixture = JSON.parse(readFileSync(url,"utf8"));
+      for (const row of fixture.cases) {
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position",new Float32BufferAttribute([...row.positions,...row.edgePositions],3));
+        geometry.setIndex(row.indices);
+        geometry.computeBoundingBox();
+        expect([geometry.boundingBox!.min.toArray(),geometry.boundingBox!.max.toArray()]).toEqual(row.bounds);
+        const points = geometry.getAttribute("position");
+        let area = 0;
+        for (let i=0;i<row.indices.length;i+=3) area+=new Triangle(...row.indices.slice(i,i+3).map((index:number)=>new Vector3().fromBufferAttribute(points,index)) as [Vector3,Vector3,Vector3]).getArea();
+        expect(area).toBe(row.surfaceArea);
+        expect(row.positions.length/3).toBe(row.id==="triangle"?3:0);
+        expect(row.edgePositions.length/6).toBe(row.edgeIds.length);
+        geometry.dispose();
+      }
+    });
+
     it("preserves pure analytic wire points and edges with independent Three geometry", () => {
       const fixtureUrl = new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json",source.url);
       const fixture = JSON.parse(readFileSync(fixtureUrl,"utf8"));
@@ -55,6 +88,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const point = new Vector3(...pointFixture.cases.find((row:{kind:string})=>row.kind === "point").points[0]);
       expect(new Ray(point.clone().add(new Vector3(0,0,4)),new Vector3(0,0,-1)).distanceSqToPoint(point)).toBe(0);
       geometry.dispose();
+      const domains=JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json",source.url),"utf8")).zeroIndex;
+      for(const row of domains.accepted){const render=new BufferGeometry().setAttribute("position",new Float32BufferAttribute(row.positions.concat(row.edges.flat()).flat(),3));render.computeBoundingBox();expect(render.boundingBox!.min.toArray()).toEqual(row.bounds[0]);expect(render.boundingBox!.max.toArray()).toEqual(row.bounds[1]);if(row.kind==="zeroVertexWire"){expect(row.positions.length).toBe(0);expect(row.vertexIds.length).toBe(0);expect(row.edges.length).toBeGreaterThan(0);}render.dispose();}
       console.log("[DEBUG] originalAnalyticWire independentThree=true topologyVertices=4 edges=4 triangles=0");
     });
     it("preserves exact multi-object component selection with independent Lodash merges", () => {
@@ -64,6 +99,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const ray = new Ray(new Vector3(...row.origin),new Vector3(...row.direction).normalize());
         expect(ray.distanceSqToSegment(new Vector3(...row.a),new Vector3(...row.b))).toBeCloseTo(row.distance ** 2,12);
       }
+      for(const row of fixture.gumball.raySegmentClosestCases){
+        const rayPoint=new Vector3(),segmentPoint=new Vector3();
+        const ray=new Ray(new Vector3(...row.origin),new Vector3(...row.direction).normalize());
+        expect(ray.distanceSqToSegment(new Vector3(...row.a),new Vector3(...row.b),rayPoint,segmentPoint)).toBeCloseTo(row.distance**2,10);
+        for(let axis=0;axis<3;axis++){expect(rayPoint.toArray()[axis]).toBeCloseTo(row.rayPoint[axis],10);expect(segmentPoint.toArray()[axis]).toBeCloseTo(row.segmentPoint[axis],10);}
+      }
+      const overlapping=fixture.gumball.overlappingWirePick;
+      const closest=overlapping.caseNames.map((name:string)=>fixture.gumball.raySegmentClosestCases.find((row:{name:string})=>row.name===name));
+      expect(overlapping.objects[closest[0].segmentPoint[2]>closest[1].segmentPoint[2]?0:1]).toBe(overlapping.selectedObject);
+      const clipped=fixture.gumball.projectedSegmentCases;
+      const clipCamera=new PerspectiveCamera(clipped.camera.fov,clipped.viewport[0]/clipped.viewport[1],clipped.camera.near,clipped.camera.far);clipCamera.position.set(...clipped.camera.position);clipCamera.up.set(...clipped.camera.up);clipCamera.lookAt(new Vector3(...clipped.camera.target));clipCamera.updateMatrixWorld();
+      for(const row of clipped.cases){
+        const ends=[new Vector3(...row.a),new Vector3(...row.b)];let visible=true;
+        for(const plane of [new Plane(new Vector3(0,0,-1),-clipped.camera.near),new Plane(new Vector3(0,0,1),clipped.camera.far)]){
+          const distances=ends.map(point=>plane.distanceToPoint(point));
+          if(distances.every(distance=>distance<0)){visible=false;break;}
+          if(distances.some(distance=>distance<0)){const point=plane.intersectLine(new Line3(ends[0],ends[1]),new Vector3())!;ends[distances[0]<0?0:1]=point;}
+        }
+        expect(visible).toBe(row.visible);
+        if(visible)for(let index=0;index<2;index++){expect(ends[index].distanceTo(new Vector3(...row.points[index]))).toBeLessThan(1e-10);const expected=new Vector3(...row.points[index]).project(clipCamera),actual=ends[index].clone().project(clipCamera);expect(actual.distanceTo(expected)).toBeLessThan(1e-9);expect((actual.x+1)*clipped.viewport[0]/2).toBeCloseTo(row.screen[index][0],8);expect((1-actual.y)*clipped.viewport[1]/2).toBeCloseTo(row.screen[index][1],8);}
+      }
+      const nearClip=fixture.gumball.clippedWirePick;const intersection=new Plane(new Vector3(0,0,-1),-nearClip.camera.near).intersectLine(new Line3(new Vector3(...nearClip.a),new Vector3(...nearClip.b)),new Vector3())!;
+      expect(-intersection.z).toBeCloseTo(nearClip.closestDepth,10);
+      const nearCamera=new PerspectiveCamera(nearClip.camera.fov,1,nearClip.camera.near,nearClip.camera.far);nearCamera.lookAt(new Vector3(...nearClip.camera.target));nearCamera.updateMatrixWorld();
+      for(const rectangle of nearClip.marquees){const xs=rectangle.points.map((point:number[])=>point[0]),ys=rectangle.points.map((point:number[])=>point[1]);for(const endpoint of [intersection,new Vector3(...nearClip.b)]){const projected=endpoint.clone().project(nearCamera),x=(projected.x+1)*200,y=(1-projected.y)*200;expect(x>=Math.min(...xs)&&x<=Math.max(...xs)&&y>=Math.min(...ys)&&y<=Math.max(...ys)).toBe(true);}}
+      console.log(`[DEBUG] originalClippedSegmentWitness independentThreePlaneLine=true cases=${clipped.cases.length} nearWorldDepth=true clippedMarquees=true`);
       let originalAnchor: Vector3 | undefined;
       for(const row of fixture.gumball.pivotCases){
         const pivot = new Vector3(...row.pivot);

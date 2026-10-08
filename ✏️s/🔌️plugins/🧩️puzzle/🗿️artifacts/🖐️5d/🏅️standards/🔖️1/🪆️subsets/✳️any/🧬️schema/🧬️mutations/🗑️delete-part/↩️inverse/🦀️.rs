@@ -29,6 +29,7 @@ pub fn inverse(payload: &super::DeletePart, base: &Puzzle5dSnapshot) -> Result<V
             fastener.y, Some(at),
         ));
     }
+    mutations.reverse();
     mutations
 
     })())

@@ -1,8 +1,8 @@
 //! 🗄️ `set-page-parent` — assigns or clears the parent page of a page.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -39,7 +39,7 @@ pub fn diff_set_page_parent(payload: &SetPageParent, base: &LayoutSnapshot) -> p
     if page.parent_page_id == payload.parent_page_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Page parent is already set to that value.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { parent_page_id: Some(payload.parent_page_id.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { parent_page_id: Some(payload.parent_page_id.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_set_page_parent(payload: &SetPageParent, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

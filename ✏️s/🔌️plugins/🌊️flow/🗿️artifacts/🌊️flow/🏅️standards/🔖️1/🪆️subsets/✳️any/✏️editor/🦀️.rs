@@ -67,7 +67,7 @@ use semio_framework_plugin::WindowMeasure;
 #[cfg(test)]
 use serde_json::json;
 use semio_framework::kernel::UiDirtyScope;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, remove_node_param, set_edge_endpoints, set_edge_kind, set_node_kind, set_node_label, set_node_param, set_node_position, set_snapshot, SemioFlowMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 #[cfg(test)]
 use serde_json::Value;
@@ -406,7 +406,7 @@ fn flow_direct_store_emit(command: &FlowCommand, config: &FlowMainWindowConfig, 
         }
         _ => return Err(Fault::from("flow-retained-direct-route-mismatch")),
     }
-    Ok(Emit { window_config_mutations: vec![main::config::addressed(view, next)?], ..Default::default() })
+    Ok(Emit { window_config_mutations: main::config::addressed(view, &config, next)?, ..Default::default() })
 }
 
 fn duplicate_widget_id(source: &str, suffix: u64) -> String {
@@ -679,7 +679,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 next.camera = camera;
             }
             self.completed = true;
-            return Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: vec![main::config::addressed(view, next)?], ..Default::default() }));
+            return Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: main::config::addressed(view, &config, next)?, ..Default::default() }));
         }
         if matches!(
             command,
@@ -840,7 +840,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             self.completed = true;
             let mut next = config.clone();
             next.preview_off_node_ids = node_ids;
-            return Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: vec![main::config::addressed(view, next)?], ..Default::default() }));
+            return Ok(ArtifactCommandWorkStep::Complete(Emit { window_config_mutations: main::config::addressed(view, &config, next)?, ..Default::default() }));
         }
         if let FlowCommand::PatchFlowWidgets(payload) = command {
             let input_bytes = payload.widget_ids.iter().map(String::len).fold(payload.field.len().saturating_add(payload.value.len()), usize::saturating_add);
@@ -1524,7 +1524,7 @@ impl FlowGraphOperationWork {
                 FlowCommand::RenameFlowWidget(payload) if !resolved[0] => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("renameFlowWidget found no widget \"{}\"", payload.old_id))),
                 FlowCommand::RenameFlowWidget(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.widget-id-unavailable"), format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim()))),
                 FlowCommand::RunExtensionAction(payload) => run_extension_action::extension_action_result(payload, composed, config, session),
-                FlowCommand::SetActiveExample(payload) => set_active_example::set_active_example_edit(payload, composed),
+                FlowCommand::SetActiveExample(payload) => set_active_example::set_active_example_edit(payload),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
             })?
         })
@@ -2519,63 +2519,10 @@ pub fn with_live_host_snapshot<R>(snapshot: &FlowSnapshot, body: impl FnOnce(&se
     result
 }
 
-/// 🧮️ The intent leaves that turn the content child `base` into `next` (design §12, §13.3), keyed by id so a pure reorder
-/// is no edit: the edges `next` drops, then per node the insert of a new one or its field edits (kind, label, position,
-/// dropped and upserted params), then per edge the insert of a new one or its field edits (endpoints, kind), then the
-/// nodes `next` drops — an order in which no leaf names a node that is not there and no edge ever dangles.
-pub fn flow_content_leaves(base: &SemioFlowSnapshot, next: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
-    let mut leaves: Vec<SemioFlowMutation> = base.edges.iter().filter(|edge| !next.edges.iter().any(|kept| kept.id == edge.id)).map(|edge| SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: edge.id.clone() })).collect();
-    for node in &next.nodes {
-        match base.nodes.iter().find(|known| known.id == node.id) {
-            None => leaves.push(SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node.clone()))),
-            Some(known) => leaves.extend(flow_node_leaves(known, node)),
-        }
-    }
-    for edge in &next.edges {
-        match base.edges.iter().find(|known| known.id == edge.id) {
-            None => leaves.push(SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge.clone()))),
-            Some(known) => {
-                if (&known.from, &known.to) != (&edge.from, &edge.to) {
-                    leaves.push(SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
-                }
-                if known.kind != edge.kind {
-                    leaves.push(SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id: edge.id.clone(), kind: edge.kind.clone() }));
-                }
-            }
-        }
-    }
-    leaves.extend(base.nodes.iter().filter(|node| !next.nodes.iter().any(|kept| kept.id == node.id)).map(|node| SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() })));
-    leaves
-}
-
-/// 🎛️ The field leaves that turn node `known` into `node` (same id): kind, label, position, every param `node` drops, then
-/// every param it adds or changes.
-fn flow_node_leaves(known: &FlowNode, node: &FlowNode) -> Vec<SemioFlowMutation> {
-    let id = || node.id.clone();
-    let mut leaves = Vec::new();
-    if known.kind != node.kind {
-        leaves.push(SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id: id(), kind: node.kind.clone() }));
-    }
-    if known.label != node.label {
-        leaves.push(SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel { id: id(), label: node.label.clone() }));
-    }
-    if known.position != node.position {
-        leaves.push(SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition { id: id(), position: node.position.clone() }));
-    }
-    leaves.extend(known.params.iter().filter(|param| !node.params.iter().any(|kept| kept.key == param.key)).map(|param| SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id: id(), key: param.key.clone() })));
-    leaves.extend(node.params.iter().filter(|param| !known.params.contains(param)).map(|param| SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: id(), key: param.key.clone(), value: param.value.clone() })));
-    leaves
-}
-
-/// 📮️ Publishes an edited scene where it lives: the intent leaves ([`flow_content_leaves`]) that turn the content child
-/// `composed` names into the scene, as ONE group on that child, and nothing when the scene did not change. The parent
-/// coordinate never moves, so the next verb, every window and a reload read the store this edit landed in (see
-/// [`crate::flow_composed_snapshot`]).
-pub fn flow_scene_publication(composed: &FlowSnapshot, widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+/// 🪆️ The content child `composed` names, as the exact scene its working-scene owner carries.
+pub fn flow_composed_content(composed: &FlowSnapshot) -> Result<SemioFlowSnapshot, Fault> {
     let scene = composed.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-edit-scene-owner-missing"))?;
-    let base = crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout);
-    let leaves = flow_content_leaves(&base, &crate::flow_content_snapshot_from_working(widgets, synapses, layout));
-    Ok(flow_content_leaves_emit(&composed.content.child_id, leaves))
+    Ok(crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout))
 }
 
 /// 📮️ `leaves` as ONE group on the content child `child_id`; nothing when there are none.
@@ -2586,31 +2533,12 @@ pub fn flow_content_leaves_emit(child_id: &str, leaves: Vec<SemioFlowMutation>) 
     }
 }
 
-/// 🖼️ Replaces the whole content child `composed` names with the scene — the one genuine whole-content intent (loading an
-/// example) — as ONE `set-snapshot`, and nothing when the content already is that scene.
-pub fn flow_scene_replacement(composed: &FlowSnapshot, widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> Emit<FlowMutation, NoConfigMutation> {
-    let next = crate::flow_content_snapshot_from_working(widgets, synapses, layout);
-    if composed.content.local_owner::<FlowWorkingScene>().is_some_and(|scene| crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout) == next) {
-        return Emit::default();
-    }
-    flow_content_leaves_emit(&composed.content.child_id, vec![SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot::new(next))])
-}
-
 /// 🗑️ The child leaves that delete `node_ids` and `edge_ids` from `child`: every named edge and every edge touching a named
-/// node first (child order, so no edge ever dangles), then every named node — the same order [`flow_content_leaves`] keeps.
+/// node first (child order, so no edge ever dangles), then every named node.
 pub fn flow_removal_leaves(child: &SemioFlowSnapshot, node_ids: &[String], edge_ids: &[String]) -> Vec<SemioFlowMutation> {
-    let severed = child.edges.iter().filter(|edge| edge_ids.contains(&edge.id) || node_ids.contains(&edge.from.node) || node_ids.contains(&edge.to.node));
-    let removed = child.nodes.iter().filter(|node| node_ids.contains(&node.id));
-    severed.map(|edge| SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: edge.id.clone() })).chain(removed.map(|node| SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() }))).collect()
-}
-
-/// ✏️ Runs one atomic `FlowHost` edit over the composed scene and publishes its result on the content child — an
-/// empty emit when `mutate` reports nothing changed, the host's exact refusal otherwise.
-pub fn host_scene_edit(composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> Result<bool, Fault>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let mut host = host_from_snapshot(composed, config, session);
-    let emit = mutate(&mut host).and_then(|changed| if changed { flow_scene_publication(composed, &host.host_snapshot.widgets, &host.host_snapshot.synapses, &host.host_snapshot.layout) } else { Ok(Emit::default()) });
-    host.retire_cold();
-    emit
+    let mut edit = crate::editor::flow::edit_rules::ContentEdit::new(child.clone());
+    edit.remove(node_ids, edge_ids);
+    edit.leaves
 }
 //#endregion 🔖️Host
 
@@ -2624,8 +2552,7 @@ pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges:
         let _ = host.dag.cancel_area_select();
         return;
     }
-    let json = serde_json::json!({ "nodes": nodes, "edges": edges, "handles": handles });
-    host.dag.set_selection_domains_json(&json.to_string());
+    host.dag.set_selection_domains(&infinite_canvas::board::schema::dag_input::DagSelectionDomains {nodes:nodes.to_vec(),edges:edges.to_vec(),handles:handles.to_vec()});
 }
 
 /// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by

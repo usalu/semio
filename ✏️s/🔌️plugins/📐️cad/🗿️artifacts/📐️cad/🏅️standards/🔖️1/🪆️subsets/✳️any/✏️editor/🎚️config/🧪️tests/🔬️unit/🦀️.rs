@@ -73,5 +73,4 @@ async fn cad_config_inverses_sum_to_the_negative_diff() {
     let next = CadConfig { selected_node_ids: vec!["node-1".into(), "node-2".into()], hovered_reference_id: None, active_example_id: Some("example".into()), ..base.clone() };
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadConfigMutation::Set { config: Box::new(next.clone()) }, &base).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadConfigMutation::SetContributions { json: "[]".into() }, &CadConfig { contributions_json: "[{}]".into(), ..base.clone() }).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<CadConfig, CadConfigDiff>(&base, &next).await;
 }

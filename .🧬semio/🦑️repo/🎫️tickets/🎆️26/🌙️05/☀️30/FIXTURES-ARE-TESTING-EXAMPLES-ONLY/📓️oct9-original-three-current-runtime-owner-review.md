@@ -1,0 +1,11 @@
+# Original Three Current Runtime Owner Review
+
+Exact original requested declarations and genuine replacement source/schema/SQL hashes are observed in `📥️oct9-original-three-runtime-owner-observation.json`; all three original declarations are currently absent. This is observation, not authored adoption or runtime execution proof.
+
+Generation2d genuine subset snapshot schema supplies production values. Current SQLite TS imports actual snapshot types and owner-local SQL, delegates physical database conversion to first-party sqlite-snapshot/artifact APIs. Rust owns SQLITE_SCHEMA include of local SQL, invokes caller SqliteSnapshotControl checkpoints and checks actual dialect/host schema. Public examples now reside IO/sqlite/snapshot/fixtures/public; native public test3 reads them. No production literal fixture import/read was found in the bounded SQLite runtime source census.
+
+MP4 genuine ISOBMFF subset snapshot schema supplies Mp4Snapshot/Track/config/edit/sample types. SQLite TS3 imports those types, TS2 local SQL, and physical first-party projection. Rust2 imports genuine snapshot types,49 embeds local SQL, and uses controlled native encode/decode plus semantic cells. Control JSON resides IO/sqlite/snapshot/fixtures/control.json and is read by native test87. Whole control law is not a runtime schema. Existing typed snapshot/native SQLite roundtrip laws remain real domain testing.
+
+Stdio shipped fleet plain examples remain in Hub composition fixtures/sqlite. Native shipped-fleet tests350/398 parse ordinary law;553/606 parse owner cases. Actual extensions register genuine STDIO_REGISTRY_SCHEMA_DOCUMENTS from canonical stdio contract; they do not import the retired shipped-fleet schema. The bounded production source literal census found no shipped-fleet input edge outside test sources/module registrations.
+
+No remaining reference to the three original declaration paths was established in inspected source edges. This is bounded literal/owner review, not a complete executable transitive import proof: computed paths, macro-expanded imports and future concurrent drift require current actual runtime acquisition receipts. No tests, compilers, producer jobs or source edits were run. Genuine individual snapshot/SQL/dialect contracts are preserved, and plain examples remain test-only in this census.

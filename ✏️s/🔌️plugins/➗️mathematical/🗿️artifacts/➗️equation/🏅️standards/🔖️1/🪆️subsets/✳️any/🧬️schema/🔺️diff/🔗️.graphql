@@ -8,37 +8,74 @@ type EquationDiff {
   nodes: EquationNodesDelta @state(class: ARTIFACT)
   edges: EquationEdgesDelta @state(class: ARTIFACT)
   points: EquationPointsDelta @state(class: ARTIFACT)
-  notation: ArtifactChild @state(class: ARTIFACT)
-  results: ArtifactChild @state(class: ARTIFACT)
-  computed: ArtifactChild @state(class: ARTIFACT)
   equation: EquationExprDiff @state(class: ARTIFACT)
 }
 
 type EquationOptionalSeed { value: String }
 
 type EquationNodesDelta {
-  added: [EquationNode!]!
-  removed: [String!]!
-  patched: [EquationNodePatch!]!
-  reordered: [String!]
+  removed: [EquationNodeRemoval!]!
+  inserted: [EquationNodeInsertion!]!
+  moved: [EquationNodeRelocation!]!
+  modified: [EquationNodesModification!]!
+}
+
+type EquationNodesModification {
+  id: String!
+  patch: EquationNodePatch!
+}
+
+type EquationNodeRemoval {
+  id: String!
+  index: Int!
+}
+
+type EquationNodeInsertion {
+  index: Int!
+  row: EquationNode!
+}
+
+type EquationNodeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type EquationNodePatch {
-  id: String!
   label: String
   x: Float
   y: Float
 }
 
 type EquationEdgesDelta {
-  added: [EquationEdge!]!
-  removed: [String!]!
-  patched: [EquationEdgePatch!]!
-  reordered: [String!]
+  removed: [EquationEdgeRemoval!]!
+  inserted: [EquationEdgeInsertion!]!
+  moved: [EquationEdgeRelocation!]!
+  modified: [EquationEdgesModification!]!
+}
+
+type EquationEdgesModification {
+  id: String!
+  patch: EquationEdgePatch!
+}
+
+type EquationEdgeRemoval {
+  id: String!
+  index: Int!
+}
+
+type EquationEdgeInsertion {
+  index: Int!
+  row: EquationEdge!
+}
+
+type EquationEdgeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type EquationEdgePatch {
-  id: String!
   source: String
   target: String
 }

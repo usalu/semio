@@ -161,34 +161,6 @@ pub struct SemioPresentationDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub slides: Option<SlidesDiff>,
 }
-//#endregion 🔖️DiffTypes
-
-//#region 🔖️GenericIndexedEngine
-/// 🧮️ Own copy of the generic index-keyed between/apply/inverse/absorb algorithm (docx precedent
-/// — every hand-rolled artifact re-derives this small engine against the SHARED `IndexedTripleDiff`
-/// type rather than importing a shared algorithm module).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
-where
-    T: Clone + PartialEq,
-{
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = diff_item(&base[i], &other[i]) {
-                modified.push(IndexModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(IndexedTripleDiff { removed, modified, added })
-    }
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -348,44 +320,6 @@ where
     added.sort_by_key(|a| a.index);
 
     IndexedTripleDiff { removed, modified, added }
-}
-//#endregion 🔖️GenericIndexedEngine
-
-//#region 🔖️GenericNamedEngine
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for (index, o) in other.iter().enumerate() {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(NamedAdded { index, item: o.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        return None;
-    }
-    if !reproduces_order(base, other, &removed, &added, &key_of) {
-        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
-    }
-    Some(NamedTripleDiff { removed, modified, added })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -581,7 +515,7 @@ fn apply_doc_block(block: &mut DocBlock, diff: &DocBlock) {
     *block = diff.clone();
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn doc_block_with_diff_applied(_block: &DocBlock, diff: &DocBlock) -> DocBlock {
+fn apply_doc_block_to_copy(_block: &DocBlock, diff: &DocBlock) -> DocBlock {
     diff.clone()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -591,65 +525,6 @@ fn inverse_doc_block(base: &DocBlock, _diff: &DocBlock) -> DocBlock {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_doc_block(_a: DocBlock, b: DocBlock) -> DocBlock {
     b
-}
-//#endregion 🔖️ValueDiffLogic
-
-//#region 🔖️ShapeDiffLogic
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff> {
-    if old == new {
-        return None;
-    }
-    match (old, new) {
-        (SlideShape::TextBox { frame: of, blocks: ob }, SlideShape::TextBox { frame: nf, blocks: nb }) => {
-            let frame = diff_frame(of, nf);
-            let blocks = between_indexed(ob, nb, diff_doc_block);
-            if frame.is_none() && blocks.is_none() {
-                None
-            } else {
-                Some(SlideShapeDiff::TextBox { frame, blocks })
-            }
-        }
-        (SlideShape::Picture { frame: of, image: oi }, SlideShape::Picture { frame: nf, image: ni }) => {
-            let frame = diff_frame(of, nf);
-            let image = diff_image(oi, ni);
-            if frame.is_none() && image.is_none() {
-                None
-            } else {
-                Some(SlideShapeDiff::Picture { frame, image })
-            }
-        }
-        (SlideShape::Table { frame: of, rows: or }, SlideShape::Table { frame: nf, rows: nr }) => {
-            let frame = diff_frame(of, nf);
-            let rows = between_indexed(or, nr, diff_table_row);
-            if frame.is_none() && rows.is_none() {
-                None
-            } else {
-                Some(SlideShapeDiff::Table { frame, rows })
-            }
-        }
-        (SlideShape::Placeholder { frame: of, kind: ok }, SlideShape::Placeholder { frame: nf, kind: nk }) => {
-            let frame = diff_frame(of, nf);
-            let kind = (ok != nk).then(|| nk.clone());
-            if frame.is_none() && kind.is_none() {
-                None
-            } else {
-                Some(SlideShapeDiff::Placeholder { frame, kind })
-            }
-        }
-        _ => Some(SlideShapeDiff::Replace { shape: new.clone() }),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_table_cell(old: &SlideTableCell, new: &SlideTableCell) -> Option<SlideTableCellDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_doc_block);
-    blocks.map(|blocks| SlideTableCellDiff { blocks: Some(blocks) })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_table_row(old: &SlideTableRow, new: &SlideTableRow) -> Option<SlideTableRowDiff> {
-    let cells = between_indexed(&old.cells, &new.cells, diff_table_cell);
-    cells.map(|cells| SlideTableRowDiff { cells: Some(cells) })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -711,13 +586,19 @@ fn apply_table_cell(cell: &mut SlideTableCell, diff: &SlideTableCellDiff) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_with_diff_applied(shape: &SlideShape, diff: &SlideShapeDiff) -> SlideShape {
+fn apply_table_cell_to_copy(cell: &SlideTableCell, diff: &SlideTableCellDiff) -> SlideTableCell {
+    let mut out = cell.clone();
+    apply_table_cell(&mut out, diff);
+    out
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_shape_to_copy(shape: &SlideShape, diff: &SlideShapeDiff) -> SlideShape {
     let mut out = shape.clone();
     apply_shape(&mut out, diff);
     out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_row_with_diff_applied(row: &SlideTableRow, diff: &SlideTableRowDiff) -> SlideTableRow {
+fn apply_table_row_to_copy(row: &SlideTableRow, diff: &SlideTableRowDiff) -> SlideTableRow {
     let mut out = row.clone();
     apply_table_row(&mut out, diff);
     out
@@ -758,13 +639,13 @@ fn inverse_table_cell(base: &SlideTableCell, diff: &SlideTableCellDiff) -> Slide
 fn absorb_shape(a: SlideShapeDiff, b: SlideShapeDiff) -> SlideShapeDiff {
     match (a, b) {
         (_, SlideShapeDiff::Replace { shape }) => SlideShapeDiff::Replace { shape },
-        (SlideShapeDiff::Replace { shape }, b) => SlideShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b) },
+        (SlideShapeDiff::Replace { shape }, b) => SlideShapeDiff::Replace { shape: apply_shape_to_copy(&shape, &b) },
         (SlideShapeDiff::TextBox { frame: fa, blocks: ba }, SlideShapeDiff::TextBox { frame: fb, blocks: bb }) => {
-            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)) }
+            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, apply_doc_block_to_copy)) }
         }
         (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), image: absorb_opt(ia, ib, absorb_image) },
         (SlideShapeDiff::Table { frame: fa, rows: ra }, SlideShapeDiff::Table { frame: fb, rows: rb }) => {
-            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)) }
+            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, apply_table_row_to_copy)) }
         }
         (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), kind: kb.or(ka) },
         (_, b) => b,
@@ -772,49 +653,15 @@ fn absorb_shape(a: SlideShapeDiff, b: SlideShapeDiff) -> SlideShapeDiff {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_table_cell_diff(mut a: SlideTableCellDiff, b: SlideTableCellDiff) -> SlideTableCellDiff {
-    a.blocks = absorb_opt(a.blocks.take(), b.blocks, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied));
+    a.blocks = absorb_opt(a.blocks.take(), b.blocks, |x, y| absorb_indexed(x, y, absorb_doc_block, apply_doc_block_to_copy));
     a
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_table_row_diff(mut a: SlideTableRowDiff, b: SlideTableRowDiff) -> SlideTableRowDiff {
     a.cells = absorb_opt(a.cells.take(), b.cells, |x, y| {
-        absorb_indexed(x, y, absorb_table_cell_diff, |c, d| {
-            let mut out = c.clone();
-            apply_table_cell(&mut out, d);
-            out
-        })
+        absorb_indexed(x, y, absorb_table_cell_diff, apply_table_cell_to_copy)
     });
     a
-}
-//#endregion 🔖️ShapeDiffLogic
-
-//#region 🔖️StructureDiffLogic
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_master(old: &SlideMaster, new: &SlideMaster) -> Option<SlideMasterDiff> {
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
-    shapes.map(|shapes| SlideMasterDiff { shapes: Some(shapes) })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_layout(old: &SlideLayout, new: &SlideLayout) -> Option<SlideLayoutDiff> {
-    let master_id = (old.master_id != new.master_id).then(|| new.master_id.clone());
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
-    if master_id.is_none() && shapes.is_none() {
-        None
-    } else {
-        Some(SlideLayoutDiff { master_id, shapes })
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_slide(old: &Slide, new: &Slide) -> Option<SlideDiff> {
-    let id = (old.id != new.id).then(|| new.id.clone());
-    let layout_id = (old.layout_id != new.layout_id).then(|| new.layout_id.clone());
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
-    let notes = between_indexed(&old.notes, &new.notes, diff_doc_block);
-    if id.is_none() && layout_id.is_none() && shapes.is_none() && notes.is_none() {
-        None
-    } else {
-        Some(SlideDiff { id, layout_id, shapes, notes })
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -848,7 +695,7 @@ fn apply_slide(slide: &mut Slide, diff: &SlideDiff) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn slide_with_diff_applied(slide: &Slide, diff: &SlideDiff) -> Slide {
+fn apply_slide_to_copy(slide: &Slide, diff: &SlideDiff) -> Slide {
     let mut out = slide.clone();
     apply_slide(&mut out, diff);
     out
@@ -874,7 +721,7 @@ fn inverse_slide(base: &Slide, diff: &SlideDiff) -> SlideDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_master_diff(mut a: SlideMasterDiff, b: SlideMasterDiff) -> SlideMasterDiff {
-    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
+    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, apply_shape_to_copy));
     a
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -882,7 +729,7 @@ fn absorb_layout_diff(mut a: SlideLayoutDiff, b: SlideLayoutDiff) -> SlideLayout
     if b.master_id.is_some() {
         a.master_id = b.master_id;
     }
-    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
+    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, apply_shape_to_copy));
     a
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -893,19 +740,11 @@ fn absorb_slide_diff(mut a: SlideDiff, b: SlideDiff) -> SlideDiff {
     if b.layout_id.is_some() {
         a.layout_id = b.layout_id;
     }
-    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
-    a.notes = absorb_opt(a.notes.take(), b.notes, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied));
+    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, apply_shape_to_copy));
+    a.notes = absorb_opt(a.notes.take(), b.notes, |x, y| absorb_indexed(x, y, absorb_doc_block, apply_doc_block_to_copy));
     a
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_snapshot(base: &SemioPresentationSnapshot, other: &SemioPresentationSnapshot) -> SemioPresentationDiff {
-    SemioPresentationDiff {
-        masters: between_named(&base.masters, &other.masters, |m| m.id.clone(), diff_master),
-        layouts: between_named(&base.layouts, &other.layouts, |l| l.id.clone(), diff_layout),
-        slides: between_indexed(&base.slides, &other.slides, diff_slide),
-    }
-}
 //#endregion 🔖️StructureDiffLogic
 
 //#region 🔖️Apply
@@ -930,7 +769,7 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     fn absorb(&mut self, other: Self) {
         self.masters = absorb_opt(self.masters.take(), other.masters, |a, b| absorb_named(a, &b, |m| m.id.clone(), absorb_master_diff, apply_master));
         self.layouts = absorb_opt(self.layouts.take(), other.layouts, |a, b| absorb_named(a, &b, |l| l.id.clone(), absorb_layout_diff, apply_layout));
-        self.slides = absorb_opt(self.slides.take(), other.slides, |a, b| absorb_indexed(a, b, absorb_slide_diff, slide_with_diff_applied));
+        self.slides = absorb_opt(self.slides.take(), other.slides, |a, b| absorb_indexed(a, b, absorb_slide_diff, apply_slide_to_copy));
     }
 }
 //#endregion 🔖️Apply
@@ -943,10 +782,6 @@ impl DiffAlgebra<SemioPresentationSnapshot> for SemioPresentationDiff {
             layouts: self.layouts.as_ref().map(|d| inverse_named(&base.layouts, d, |l| l.id.clone(), inverse_layout)),
             slides: self.slides.as_ref().map(|d| inverse_indexed(&base.slides, d, inverse_slide)),
         }
-    }
-
-    fn between(base: &SemioPresentationSnapshot, other: &SemioPresentationSnapshot) -> Self {
-        diff_snapshot(base, other)
     }
 
     fn is_empty(&self) -> bool {
@@ -972,6 +807,11 @@ fn wrap_shape_diff(slide_index: usize, shape_index: usize, shape_diff: SlideShap
 pub fn diff_insert_slide(index: usize, slide: Slide) -> SemioPresentationDiff {
     SemioPresentationDiff { masters: None, layouts: None, slides: Some(SlidesDiff { added: vec![IndexAdded { index, item: slide }], ..Default::default() }) }
 }
+/// 🧱 The positional rows that replace a whole row list: each base row removed at its index, each payload row added at its final index; none when the lists are equal.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn replace_rows<T: Clone + PartialEq, D>(old: &[T], new: &[T]) -> Option<IndexedTripleDiff<D, T>> {
+    (old != new).then(|| IndexedTripleDiff { removed: (0..old.len()).collect(), modified: Vec::new(), added: new.iter().cloned().enumerate().map(|(index, item)| IndexAdded { index, item }).collect() })
+}
 /// 🧩 Diff for removing the slide at `index` (BASE-state index).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_slide(index: usize) -> SemioPresentationDiff {
@@ -986,11 +826,11 @@ pub fn diff_set_slide_layout(base: &SemioPresentationSnapshot, index: usize, lay
     }
     wrap_slide_diff(index, SlideDiff { id: None, layout_id: Some(layout_id), shapes: None, notes: None })
 }
-/// 🧩 Diff for replacing slide `index`'s `notes`, via a real structural comparison.
+/// 🧩 Diff for replacing slide `index`'s `notes`: every base row is removed and the payload rows are added at their positions.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_slide_notes(base: &SemioPresentationSnapshot, index: usize, notes: &[DocBlock]) -> SemioPresentationDiff {
     let Some(slide) = base.slides.get(index) else { return SemioPresentationDiff::default() };
-    let Some(notes_diff) = between_indexed(&slide.notes, notes, diff_doc_block) else { return SemioPresentationDiff::default() };
+    let Some(notes_diff) = replace_rows(&slide.notes, notes) else { return SemioPresentationDiff::default() };
     wrap_slide_diff(index, SlideDiff { id: None, layout_id: None, shapes: None, notes: Some(notes_diff) })
 }
 /// 🧩 Diff for inserting `shape` at `shape_index` on slide `slide_index`.
@@ -1013,13 +853,13 @@ pub fn diff_set_shape_frame(base: &SemioPresentationSnapshot, slide_index: usize
     let Some(frame_diff) = diff_frame(frame_of(shape), &frame) else { return SemioPresentationDiff::default() };
     wrap_shape_diff(slide_index, shape_index, shape_diff_frame_only(shape, frame_diff))
 }
-/// 🧩 Diff for replacing a `TextBox` shape's `blocks`, via a real structural comparison.
+/// 🧩 Diff for replacing a `TextBox` shape's `blocks`: every base row is removed and the payload rows are added at their positions.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_textbox_blocks(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize, blocks: &[DocBlock]) -> SemioPresentationDiff {
     let Some(SlideShape::TextBox { blocks: old, .. }) = base.slides.get(slide_index).and_then(|s| s.shapes.get(shape_index)) else {
         return SemioPresentationDiff::default();
     };
-    let Some(blocks_diff) = between_indexed(old, blocks, diff_doc_block) else { return SemioPresentationDiff::default() };
+    let Some(blocks_diff) = replace_rows(old, blocks) else { return SemioPresentationDiff::default() };
     wrap_shape_diff(slide_index, shape_index, SlideShapeDiff::TextBox { frame: None, blocks: Some(blocks_diff) })
 }
 /// 🧭️ Read-only accessor: every `SlideShape` variant carries a `frame`.
@@ -1209,18 +1049,12 @@ pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
     }
 }
 
-/// 🌱 Representative `SemioPresentationDiff` cases (empty/no-op, a full masters+layouts+slides
-/// sweep both directions, reusing `snapshot_a`/`snapshot_b`, and a slide reorder whose slots carry
-/// their new identities) — single source of truth for `grammar_conformance_law`/`protocol_walk_law`
-/// in `🎹️composer/🦀️.rs`.
+/// 🌱 Representative `SemioPresentationDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-presentation"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioPresentationDiff> {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    let mut reordered = a.clone();
-    reordered.slides.reverse();
-    vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b), SemioPresentationDiff::between(&b, &a), SemioPresentationDiff::between(&a, &a), SemioPresentationDiff::between(&a, &reordered)]
+    vec![SemioPresentationDiff::default(), SemioPresentationDiff { masters: Some(Default::default()), layouts: Some(Default::default()), slides: Some(Default::default()) }]
 }
 //#endregion 🔖️Demo
 

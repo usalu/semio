@@ -1,0 +1,25 @@
+{
+  "type": "node-terminal",
+  "name": "🪶️ SQLite · STEP IFC BCF MD Current Source",
+  "request": "launch",
+  "command": "bun nx run-many --projects=@semio-tech/stdio-bcf-rs,@semio-tech/stdio-md-rs,@semio-tech/stdio-step-rs,@semio-tech/stdio-ifc-rs --targets=test-snapshot-sqlite-source --parallel=1 --skip-nx-cache --outputStyle=static",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "SEMIO_TEST_LEVEL": "quick",
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "true",
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-data",
+    "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-cache",
+    "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current",
+    "RUST_BACKTRACE": "1",
+    "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "SEMIO_TEST_RETAIN_ARTIFACTS": "true",
+    "NEXTEST_SUCCESS_OUTPUT": "immediate"
+  },
+  "presentation": {
+    "group": "🪶️ Snapshot SQLite",
+    "order": 206.191
+  }
+}

@@ -131,6 +131,30 @@ fn json_bool(params: &Json, key: &str) -> bool {
     matches!(params.get(key), Some(Json::Bool(true)))
 }
 
+
+/// ✂️ The `{offset, delete, insert}` rows of a `splice-text` spec, in the order given.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn splice_rows(params: &Json) -> Result<Vec<(usize, usize, String)>, String> {
+    let Some(Json::Array(rows)) = params.get("splices") else { return Err("mutation spec is missing the `splices` list".to_string()) };
+    rows.iter().map(|row| Ok((json_usize(row, "offset")?, json_usize(row, "delete")?, row.str("insert")))).collect()
+}
+
+/// ✂️ Applies ascending, disjoint scalar ranges to a body read as scalars.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_splices(body: &[char], splices: &[(usize, usize, String)]) -> Result<String, String> {
+    let mut out = String::new();
+    let mut position = 0;
+    for (offset, delete, insert) in splices {
+        if *offset < position || offset + delete > body.len() {
+            return Err("the splices must ascend, never overlap and stay inside the text".to_string());
+        }
+        out.extend(&body[position..*offset]);
+        out.push_str(insert);
+        position = offset + delete;
+    }
+    out.extend(&body[position..]);
+    Ok(out)
+}
 //#endregion 🔖️SpecHelpers
 
 //#region 🔖️Dispatch
@@ -172,6 +196,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             if let Some(slot) = lines.get_mut(index) {
                 *slot = params.str("text");
             }
+        }
+        "splice-text" => {
+            let body: Vec<char> = independent_render(&lines, trailing_newline, is_crlf).chars().collect();
+            let spliced = apply_splices(&body, &splice_rows(&params)?)?;
+            let (next_lines, next_trailing, _) = independent_split(&spliced);
+            (lines, trailing_newline) = (next_lines, next_trailing);
         }
         other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
     }
@@ -222,6 +252,20 @@ pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, Stri
                 Some(text) => Ok(spec("set-line", object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
                 None => Err("set-line inverse has no operation for an absent line".to_string()),
             }
+        }
+        "splice-text" => {
+            let body: Vec<char> = independent_render(&lines, trailing_newline, is_crlf).chars().collect();
+            let mut shift: i64 = 0;
+            let mut undo = Vec::new();
+            for (offset, delete, insert) in splice_rows(&params)? {
+                if offset + delete > body.len() {
+                    return Err("splice-text inverse: a range leaves the text".to_string());
+                }
+                let inserted = insert.chars().count();
+                undo.push(object(vec![("offset", Json::Number((offset as i64 + shift) as f64)), ("delete", Json::Number(inserted as f64)), ("insert", Json::String(body[offset..offset + delete].iter().collect()))]));
+                shift += inserted as i64 - delete as i64;
+            }
+            Ok(spec("splice-text", object(vec![("splices", Json::Array(undo))])))
         }
         other => Err(format!("no inverse rule for kind {other:?}")),
     }

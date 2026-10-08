@@ -1,0 +1,10 @@
+{
+  "owner": 42,
+  "idleDepth": 0,
+  "pendingBirthDepth": 1,
+  "terminalDepth": 0,
+  "copyDemandRefusal": "UnsupportedOwner",
+  "refusedBirth": { "maximumItems": 1, "maximumDepth": 0, "expectedKind": "DepthLimit" },
+  "fundedBirth": { "maximumItems": 1, "maximumDepth": 1 },
+  "maximumTurns": 64
+}

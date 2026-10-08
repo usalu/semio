@@ -77,46 +77,6 @@ fn sweep_b() -> TxtSnapshot {
     TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modified!".into(), "added!".into()], trailing_newline: true, line_ending: LineEnding::CrLf }
 }
 
-/// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, every
-/// diff field is populated (`is_some()`), and `between(a,a)` is empty.
-///
-/// 🧩 `TxtLinesDiff::between`'s own algorithm (pairwise-compare `0..min(len)`, then
-/// "whichever side is longer supplies the tail" — the exact shape the recipe specifies) can
-/// structurally only ever produce a `removed`-tail XOR an `added`-tail from a single
-/// `between()` call, never both at once, since the two tails are complementary by
-/// construction — there is no field-count-mismatch escape hatch here the way there is for
-/// csv's per-record sub-structure, and no name-keying the way there is for xml's attributes
-/// (see those artifacts' own `field_sweep` tests/reports for the same structural note).
-/// `sweep_a`/`sweep_b` are deliberately different lengths so `ab = between(a, b)` exercises
-/// `modified` + `added` (`b` is longer) and `ba = between(b, a)` exercises `modified` +
-/// `removed` (`a` is now the "longer" side) — between the two directions every kind of line
-/// change the diff type can express is proven, exactly matching what `between_roundtrip_law`
-/// already checks in both directions anyway.
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_covers_every_mutable_field() {
-    use protocol::os_spr::command::DiffAlgebra;
-    use protocol::MutationDiff;
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let ab = TxtDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b, "between(a,b).apply(a) must equal b");
-    let ba = TxtDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a, "between(b,a).apply(b) must equal a");
-
-    assert!(ab.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
-    assert!(ab.line_ending.is_some(), "line_ending must be Some in a sweep diff");
-
-    let ab_lines = ab.lines.as_ref().expect("lines diff must be Some in a sweep diff");
-    assert!(!ab_lines.modified.is_empty(), "a->b sweep must exercise a modified line");
-    assert!(!ab_lines.added.is_empty(), "a->b sweep must exercise an added line (b is longer)");
-
-    let ba_lines = ba.lines.as_ref().expect("reverse lines diff must be Some in a sweep diff");
-    assert!(!ba_lines.modified.is_empty(), "b->a sweep must exercise a modified line");
-    assert!(!ba_lines.removed.is_empty(), "b->a sweep must exercise a removed line (a is shorter)");
-
-    assert!(TxtDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-}
 //#endregion 🔖️FieldSweep
 
 //#region 🔖️P2P3GrammarProtocolFixtureLaws
@@ -165,7 +125,7 @@ async fn protocol_walk_law() {
 
     // Diff binary facet.
     let mut before = snap.clone();
-    let diff = crate::schema::mutations::apply_txt_mutation(&mut before, &mutation);
+    let diff = crate::apply_mutation(&mut before, &mutation);
     let diff_bytes = <TxtDiff as protocol::DiffBinary>::encode_diff(diff.diff()).expect("encode_diff");
     let diff_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
     let trace = semio_framework_dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");

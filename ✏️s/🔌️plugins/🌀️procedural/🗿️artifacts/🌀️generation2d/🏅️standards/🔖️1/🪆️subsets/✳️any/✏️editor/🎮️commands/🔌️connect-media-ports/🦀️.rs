@@ -1,7 +1,7 @@
 //! 🕸️ 🕸️ Generation2d play app commands command — `connect-media-ports`.
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::host_operations;
+use crate::standards::v1::subsets::any::schema::{host_connect_ports, with_host};
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
@@ -19,7 +19,5 @@ pub struct ConnectMediaPorts {
 
 pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.host_snapshot;
-    Ok(Emit::mutations(host_operations(fixture, |host| {
-        let _ = host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id);
-    })))
+    Ok(Emit::mutations(with_host(fixture, |host| host_connect_ports(host, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id)).unwrap_or_default()))
 }

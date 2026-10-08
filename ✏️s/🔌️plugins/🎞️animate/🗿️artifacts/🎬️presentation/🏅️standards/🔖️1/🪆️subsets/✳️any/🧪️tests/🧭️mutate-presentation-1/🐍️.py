@@ -41,7 +41,7 @@ from semio_repo_test import Adapter, Context, Outcome
 BASE_URI = "shared://🧭️mutate-presentation-1/🔣️.json"
 
 #: 🏷️ The nine kinds of `PresentationMutation`, in declaration order; each row's `params` is read from its own scenario.
-KINDS = ("resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles")
+KINDS = ("resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles")
 
 SOURCE_SCOPED = {"resize-source-frame", "replace-source"}
 
@@ -111,12 +111,6 @@ def apply_reorder_tiles(graph, payload):
     return after
 
 
-def apply_replace_tiles(graph, payload):
-    after = copy.deepcopy(graph)
-    after["tiles"] = copy.deepcopy(payload["newTiles"])
-    return after
-
-
 APPLIERS = {
     "resize-source-frame": apply_resize_source_frame,
     "replace-source": apply_replace_source,
@@ -126,7 +120,6 @@ APPLIERS = {
     "rename-tile": apply_rename_tile,
     "resize-tile-crop": apply_resize_tile_crop,
     "reorder-tiles": apply_reorder_tiles,
-    "replace-tiles": apply_replace_tiles,
 }
 
 
@@ -164,9 +157,6 @@ def inverse_apply(kind, base_graph, payload, mutated_graph):
         clamped = min(original_index, len(after["tiles"]) - 1)
         item = after["tiles"].pop(current)
         after["tiles"].insert(clamped, item)
-        return after
-    if kind == "replace-tiles":
-        after["tiles"] = copy.deepcopy(base_graph["tiles"])
         return after
     raise AssertionError(f"no inverse rule for kind {kind!r}")
 # endregion 🔖️Vocabulary

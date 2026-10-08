@@ -9,6 +9,22 @@ const ajv=semioSchemaAjvV1({allErrors:true}).addSchema(grantSchema).addSchema(ow
 const validateGrant=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Grant"});
 const validateDemand=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Demand"});
 const typed=await Bun.file(new URL("../../🧫️fixtures/🎮️typed-owners/🔣️.json",import.meta.url)).json();
+const validateFrontier=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Frontier"});
+assert(validateFrontier(typed.frontier));
+assert.deepEqual(typed.frontier.currencies,["items","copy","capacity","release","depth"]);
+for(const field of Object.keys(typed.frontier)) {
+  const denied=structuredClone(typed.frontier);delete denied[field];assert(!validateFrontier(denied));
+}
+assert(!validateFrontier({...typed.frontier,sourceBirthBytes:1}));
+assert(!validateFrontier({...typed.frontier,currencies:["items","bytes"]}));
+assert(!validateFrontier({...typed.frontier,maximumBytes:4096}));
+const validateInput=ajv.compile({$ref:ownerSchema.$id+"#/$defs/InputBinding"});
+const inputReceipt={progress:{copiedItems:1,copiedBytes:0,retainedCapacityBytes:64,releasedBytes:0,complete:false},dictionary:null};
+assert(validateInput(inputReceipt));
+for(const field of Object.keys(inputReceipt.progress)){const refused=structuredClone(inputReceipt);delete refused.progress[field];assert(!validateInput(refused));}
+assert(!validateInput({dictionary:null}));
+assert(!validateInput({...inputReceipt,maximumBytes:4096}));
+assert(validateInput({...inputReceipt,dictionary:{original:{text:"Grüße"}}}));
 for(const row of typed.cases) {
   const value={nested:{value:row.text}};
   assert.deepEqual(JSON.parse(stableStringify(value)),value);
@@ -40,6 +56,16 @@ assert.equal(JSON.parse(stableStringify({ text: ownedDemand.text })).text, owned
 assert.ok(ownedDemand.reservedCapacity > Buffer.byteLength(ownedDemand.text));
 assert.ok(ownedDemand.reservedCapacity > ownedDemand.logicalPage);
 assert.equal(ownedDemand.unsupportedFullGrantKind, "unsupportedOwner");
+assert.deepEqual(ownedDemand.birthRefusals,["zeroItems","zeroDepth","shortCapacity"]);
+assert.equal(ownedDemand.terminalFrameRelease,"separateAdmittedTurn");
+for(const refusal of ownedDemand.birthRefusals) {
+  const grant={maximumItems:1,maximumCopyBytes:0,maximumCapacityBytes:64,maximumReleaseBytes:0,maximumDepth:1};
+  if(refusal==="zeroItems")grant.maximumItems=0;
+  if(refusal==="zeroDepth")grant.maximumDepth=0;
+  if(refusal==="shortCapacity")grant.maximumCapacityBytes=63;
+  assert(validateGrant(grant));
+  assert(!(grant.maximumItems>0&&grant.maximumDepth>0&&grant.maximumCapacityBytes>=64));
+}
 
 
 
@@ -53,9 +79,9 @@ for (const row of fixture.cases) {
   assert.equal(bytes(value), row.expectedBytes);
   assert.deepEqual(JSON.parse(stableStringify(value)), value);
   for (const grant of fixture.grants) {
-    let remaining = row.expectedBytes; let released = 0;
-    while (remaining) { const step = Math.min(grant, remaining); remaining -= step; released += step; }
-    assert.equal(released, row.expectedBytes);
+    let remaining = row.expectedBytes; let copied = 0;
+    while (remaining) { const step = Math.min(grant, remaining); remaining -= step; copied += step; }
+    assert.equal(copied, row.expectedBytes);
   }
 }
 //#endregion 🔣️DomainFixture
@@ -96,3 +122,37 @@ assert.equal(stableStringify({ node: { label: payload } }), JSON.stringify({ nod
 //#endregion 📸️EvaluationOwnership
 
 console.log("[DEBUG] actual Neural retirement independent UTF8/stable JSON, grant accounting, cache ownership and evaluation oracle assertions passed");
+
+const inputPolicy=ajv.compile({$ref:ownerSchema.$id+"#/$defs/InputPolicy"});
+const inputFixture=await Bun.file(new URL("../../../🧫️fixtures/🚦️owned-controls.json",import.meta.url)).json();
+assert(inputPolicy(inputFixture.retainedBinding.physical));
+for(const field of Object.keys(inputFixture.retainedBinding.physical)){const refused=structuredClone(inputFixture.retainedBinding.physical);delete refused[field];assert(!inputPolicy(refused));}
+assert(!inputPolicy({...inputFixture.retainedBinding.physical,sourceBirthBytes:1}));
+const binding={nested:{first:inputFixture.retainedBinding.textUnit.repeat(inputFixture.retainedBinding.textRepeats),second:-3.25}};
+assert.deepEqual(JSON.parse(stableStringify(binding)),binding);
+
+const bodyLaw=ownedDemand.bodyDependentBirth;
+const capacity=bodyLaw.overhead+bodyLaw.minimumBody;
+assert(capacity>bodyLaw.logicalPage);
+assert(bodyLaw.overhead+capacity>capacity);
+assert.equal(bodyLaw.minimumBody,1);
+assert(validateDemand({copyBytes:bodyLaw.minimumBody,capacityBytes:capacity,releaseBytes:0,depth:1}));
+
+assert.equal(ownedDemand.occupiedSlot,"unreservedBackingOwnershipLimit");
+assert.equal(ownedDemand.entryStorage,"sameVectorBackingPopFront");
+assert.deepEqual(Array.from(new Map([["first","雪"],["second",null]])),[["first","雪"],["second",null]]);
+
+const registryLaw=await Bun.file(new URL("../../../📔️registry/🧫️fixtures/🔣️.json",import.meta.url)).json();
+assert(validateSchema(registryLaw.schema),JSON.stringify(validateSchema.errors));
+assert.deepEqual(JSON.parse(stableStringify(registryLaw.schema)),registryLaw.schema);
+assert.equal(registryLaw.executionOwner.maximumRetirementTurns,10000);
+
+const domainClosure=ownedDemand.domainPhysicalClosure;
+assert.equal(domainClosure.payloadOracle,"utf8-content");assert.equal(domainClosure.releaseGrant,"current-owner-demand");
+assert.equal(domainClosure.allocatorClosure,"original-and-frontier");assert.equal(domainClosure.workerClosure,"aggregate-both-threads");
+for(const page of fixture.grants) {
+  const physicalDemands=[56,8193,24];let born=physicalDemands.reduce((sum,value)=>sum+value,0);let freed=0;
+  for(const demand of physicalDemands) {const grant=Math.max(page,demand);assert(validateGrant({maximumItems:1,maximumCopyBytes:grant,maximumCapacityBytes:0,maximumReleaseBytes:grant,maximumDepth:1}));assert(demand<=grant);freed+=demand;}
+  assert.equal(freed,born);assert(physicalDemands.length<domainClosure.maximumTurns);
+}
+console.log("[DEBUG] independent UTF8 content, current physical grants and aggregate ownership closure laws passed");

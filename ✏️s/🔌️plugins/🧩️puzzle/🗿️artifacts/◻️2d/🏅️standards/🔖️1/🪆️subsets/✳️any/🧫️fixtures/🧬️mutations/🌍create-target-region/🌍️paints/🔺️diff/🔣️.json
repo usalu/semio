@@ -6,19 +6,22 @@
   "nodes": null,
   "schema": null,
   "targetRegions": {
-    "added": [
+    "inserted": [
       {
-        "height": 48.5,
-        "hidden": false,
-        "id": "region-seed-left",
-        "locked": false,
-        "width": 48.5,
-        "x": 206.5,
-        "y": 69.5
+        "index": 0,
+        "row": {
+          "height": 48.5,
+          "hidden": false,
+          "id": "region-seed-left",
+          "locked": false,
+          "width": 48.5,
+          "x": 206.5,
+          "y": 69.5
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   }
 }

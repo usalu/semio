@@ -1,0 +1,332 @@
+{
+  "priorCount": 5976,
+  "newAuthoredMemberships": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧫️fixtures/🔣️schema.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-resumed-corpus-and-domain-settled-inputs.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧪️tests/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-resumed-corpus-and-domain-settled-inputs.json"
+      ]
+    },
+    {
+      "path": "✏️s/🧪️tests/🗂️native-ownership/🧫️fixtures/🔣️schema.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-resumed-corpus-and-domain-settled-inputs.json"
+      ]
+    },
+    {
+      "path": "✏️s/🧪️tests/🗂️native-ownership/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-resumed-corpus-and-domain-settled-inputs.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-current-preparation-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-current-preparation-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-current-preparation-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-endpoints.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🚀️entry/🧬️schema/🔣️.json",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-endpoints.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🔄️lifecycle/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-endpoints.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🏷️ownership/🟦️.ts",
+      "role": "authored-source",
+      "evidence": [
+        "📥️oct8-s-browser-inventory-corpus-authority-endpoints.json",
+        "📥️oct8-plugin-all-owned-authored-endpoints.json"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-bun-import-unicode-representation-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-actual-wgpu-budget-ownership-and-preparation-performance.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-prepared-adjacent-cargo-custody.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-publication-finish-resume-source-reconciliation.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-semantic-source-authored-union-checkpoint.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-pending-response-deadline-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-resumed-corpus-and-domain-authority-repair.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-canonical-preview-and-test-oracle-lock-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-pending-response-deadline-and-cancellation.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-protected-sweep-readiness-before-production.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-resumed-full-red-independent-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-runtime-acquisition-census.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-budget-and-producer-input-custody-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-preparation-custody-settlement.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-prepared-cargo-pair-custody-draft-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-private-nx-cleanup-consumer-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-private-nx-owned-output-cleanup.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-canonical-process-preview-integration.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-framework-preview-canonical-route-integration-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-private-cleanup-and-active-deadline-draft-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-s-browser-inventory-corpus-authority-retirement.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-protected-sweep-final-source-freeze.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-native-preparation-duplicate-performance-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-semantic-authored-union-independent-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-prepared-pair-boundary-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-current-seven-scope-freeze-readiness-audit.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-resumed-authored-boundary-census.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-owned-native-cancellation-and-repair-coordination.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-authored-union-reconciliation-independent-review.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-authored-union-historical-output-reconciliation.md",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-preparation-scanner-baseline/📜️script.ts",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-preparation-scanner-baseline/owner/🟦️.ts",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-preparation-scanner-baseline/owner/🧬️schema/🔣️.json",
+      "role": "retained-ticket-input-or-audit",
+      "evidence": [
+        "current ticket retained input/audit"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-authored-union-pre-production-input.json",
+      "role": "retained-ticket-input",
+      "evidence": [
+        "this exact pre-production checkpoint"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-current-authored-union-pre-production-role-input.json",
+      "role": "retained-ticket-input",
+      "evidence": [
+        "this exact classification"
+      ]
+    }
+  ],
+  "scope": "Membership derives only from exact authored endpoints and retained own ticket inputs/audits; embedded source bodies, observations, foreign source drift and outputs are excluded"
+}

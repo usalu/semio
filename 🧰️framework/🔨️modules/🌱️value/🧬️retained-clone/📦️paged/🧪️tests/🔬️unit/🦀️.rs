@@ -1,5 +1,5 @@
 use super::*;
-use crate::{DslValue, FromValue, ToValue, retained_clone::RetainedCloneSource, retirement::owned_retirement};
+use crate::{DslValue, FromValue, ToValue, retained_clone::RetainedCloneSource, retirement::controlled::ControlledRetirement};
 
 #[test]
 fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners() {
@@ -68,13 +68,13 @@ fn paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation() {
         assert!(destination.to_string_owner().starts_with(prefix));
         let (_, allocation) = observe_retirement_allocations(|| cursor.begin_close());
         assert_eq!(allocation, (0, 0));
-        let (zero, allocation) = observe_retirement_allocations(|| cursor.close_granted(RetainedCloneGrant::default()).unwrap());
+        let (zero, allocation) = observe_retirement_allocations(|| cursor.close_step(RetainedCloneGrant::default()).unwrap());
         assert_eq!(zero.progress(), Default::default());
         assert_eq!(allocation, (0, 0));
         let mut closed = false;
         for turn in 0..20000 {
             let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, 64), 1 => RetainedCloneGrant::one_payload_turn(budget, 64), _ => RetainedCloneGrant::one_release_turn(budget, 64) };
-            let (step, allocation) = observe_retirement_allocations(|| cursor.close_granted(grant).unwrap());
+            let (step, allocation) = observe_retirement_allocations(|| cursor.close_step(grant).unwrap());
             let progress = step.progress();
             assert!(progress.fits(grant));
             assert!(allocation.0 <= progress.retained_capacity_bytes && allocation.1 <= progress.released_bytes, "append close: {allocation:?} {progress:?}");
@@ -155,30 +155,22 @@ fn close_cursor<T: RetainedClone>(cursor: &mut T::Cursor, maximum_items: usize, 
     loop {
         turns += 1;
         assert!(turns < 20_000, "retained paged carrier cursor must close");
-        match cursor.close_step(maximum_items, maximum_bytes).expect("retained paged carrier cursor close") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= maximum_items);
-                assert!(released_bytes <= maximum_bytes);
-            }
-            SnapshotRetirementStep::Blocked => panic!("exact retained paged carrier close grant blocked"),
-            SnapshotRetirementStep::Complete => break,
-        }
+        let grant = RetainedCloneGrant { maximum_items, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(maximum_bytes).unwrap(), maximum_release_bytes: cursor.next_close_release_byte_demand().unwrap(), maximum_depth: 64 };
+        let step = cursor.close_step(grant).expect("retained paged carrier cursor close");
+        assert!(step.progress().fits(grant));
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(cursor.terminal_is_empty());
     turns
 }
 
 fn retire_owner<T: RetireOwned>(value: T, maximum_items: usize, maximum_bytes: usize) {
-    let mut retirement = owned_retirement(value);
+    let mut retirement = ControlledRetirement::new(value).map_err(|(error, _)| error).unwrap();
     loop {
-        match retirement.close_step(maximum_items, maximum_bytes).expect("retained paged carrier retirement") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= maximum_items);
-                assert!(released_bytes <= maximum_bytes);
-            }
-            SnapshotRetirementStep::Blocked => panic!("exact retained paged carrier retirement grant blocked"),
-            SnapshotRetirementStep::Complete => break,
-        }
+        let grant = RetainedCloneGrant { maximum_items, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: retirement.next_capacity_byte_demand(maximum_bytes).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap() };
+        let step = retirement.step(grant).expect("retained paged carrier retirement");
+        assert!(step.progress().fits(grant));
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(retirement.terminal_is_empty());
 }
@@ -208,22 +200,32 @@ fn paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants() {
     let copied = cursor.take().expect("paged octet single-item owner");
     assert_eq!(serde_json::to_value(copied.to_vec_owner()).expect("serde octet oracle"), serde_json::to_value(&expected).expect("serde expected octets"));
     assert!(close_cursor::<PagedBytes<8192>>(&mut cursor, grant.maximum_items, grant.maximum_capacity_bytes) <= maximum_turns);
-    let mut retirement = owned_retirement(copied);
+    let mut retirement = ControlledRetirement::new(copied).map_err(|(error, _)| error).unwrap();
     let release_grant = RetainedCloneGrant { maximum_release_bytes: 64, ..grant };
-    let demand = retirement.next_close_byte_demand();
+    let mut preparation_turns = 0;
+    while retirement.next_release_byte_demand().unwrap() <= release_grant.maximum_release_bytes {
+        preparation_turns += 1;
+        assert!(preparation_turns < maximum_turns);
+        let turn = RetainedCloneGrant { maximum_capacity_bytes: retirement.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap(), ..grant };
+        let (step, heap) = crate::value::observe_retirement_allocations(|| retirement.step(turn).unwrap());
+        assert!(step.progress().fits(turn));
+        assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+    }
+    let demand = retirement.next_release_byte_demand().unwrap();
     assert!(demand > release_grant.maximum_release_bytes);
     for _ in 0..3 {
-        let (step, heap) = crate::value::observe_retirement_allocations(|| retirement.close_step(release_grant.maximum_items, release_grant.maximum_release_bytes).expect("paged octet whole physical grant remains pending"));
-        assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let (step, heap) = crate::value::observe_retirement_allocations(|| retirement.step(release_grant).expect("paged octet whole physical grant remains pending"));
+        assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!(heap, (0, 0));
-        assert_eq!(retirement.next_close_byte_demand(), demand);
+        assert_eq!(retirement.next_release_byte_demand().unwrap(), demand);
         assert!(!retirement.terminal_is_empty());
     }
     eprintln!("[DEBUG] paged octet physical frontier demand={demand}; original64 denied with exact owner retained and heap0/0");
-    for turn in 1..=maximum_turns {
-        let demand = retirement.next_close_byte_demand().max(release_grant.maximum_release_bytes);
-        let step = retirement.close_step(grant.maximum_items, demand).expect("paged octet demand-aware retirement");
-        if step == SnapshotRetirementStep::Complete {
+    for turn in preparation_turns + 1..=maximum_turns {
+        let funded = RetainedCloneGrant { maximum_capacity_bytes: retirement.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap(), ..grant };
+        let step = retirement.step(funded).expect("paged octet demand-aware retirement");
+        assert!(step.progress().fits(funded));
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(retirement.terminal_is_empty());
             drop(source);
             return;
@@ -325,22 +327,22 @@ fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
     let bytes = law["bodyBytes"].as_u64().unwrap() as usize;
     assert!(std::mem::size_of::<PagedUtf8BoundedOrdCursor<{usize::MAX}>>() <= bytes);
     for row in law["emptyComparisons"].as_array().unwrap() {
-        let left = RetainedCloneSource::from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(row["left"].as_str().unwrap()).unwrap()), ());
-        let right = RetainedCloneSource::from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(row["right"].as_str().unwrap()).unwrap()), ());
+        let left = RetainedCloneSource::fixture_from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(row["left"].as_str().unwrap()).unwrap()), ());
+        let right = RetainedCloneSource::fixture_from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(row["right"].as_str().unwrap()).unwrap()), ());
         let mut cursor = PagedUtf8::<{usize::MAX}>::bounded_ord_cursor();
         assert!(matches!(cursor.compare(left.borrow(), right.borrow(), BoundedOrdGrant {maximum_items:1,maximum_bytes:0}).unwrap(), BoundedOrdStep::Progress(_)));
         let BoundedOrdStep::Complete {ordering,progress} = cursor.compare(left.borrow(), right.borrow(), BoundedOrdGrant {maximum_items:1,maximum_bytes:0}).unwrap() else { panic!("empty identifier comparison requires no payload bytes"); };
         assert_eq!(progress.compared_bytes, 0);
         assert_eq!(match ordering {std::cmp::Ordering::Less=>-1,std::cmp::Ordering::Equal=>0,std::cmp::Ordering::Greater=>1},row["ordering"].as_i64().unwrap());
         cursor.begin_close();
-        while cursor.close_step(1,0).unwrap()!=SnapshotRetirementStep::Complete {}
+        while !matches!(cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(0).unwrap(),maximum_depth:1,..Default::default()}).unwrap(),RetainedCloneStep::Complete(_)) {}
         assert!(cursor.terminal_is_empty());
     }
     for row in law["comparisons"].as_array().unwrap() {
         let left = format!("{prefix}{}", row["left"].as_str().unwrap());
         let right = format!("{prefix}{}", row["right"].as_str().unwrap());
-        let left = RetainedCloneSource::from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(&left).unwrap()), ());
-        let right = RetainedCloneSource::from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(&right).unwrap()), ());
+        let left = RetainedCloneSource::fixture_from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(&left).unwrap()), ());
+        let right = RetainedCloneSource::fixture_from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(&right).unwrap()), ());
         let mut comparator = PagedUtf8::<{usize::MAX}>::bounded_ord_cursor();
         let mut completed = false;
         for _ in 0..100000 {
@@ -359,13 +361,12 @@ fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
         let close_law = &law["comparatorClose"];
         assert!(comparator.begin_close());
         assert!(!comparator.begin_close());
-        assert_eq!(comparator.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(comparator.close_step(Default::default()).unwrap(), RetainedCloneStep::Progress(Default::default()));
         let mut released = 0;
         loop {
-            match comparator.close_step(close_law["maximumItems"].as_u64().unwrap() as usize, close_law["maximumBytes"].as_u64().unwrap() as usize).unwrap() {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert_eq!(released_items, 1); assert_eq!(released_bytes, 0); released += released_items; }
-                SnapshotRetirementStep::Complete => break,
-                SnapshotRetirementStep::Blocked => panic!("comparator close blocked"),
+            match comparator.close_step(RetainedCloneGrant{maximum_items:close_law["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:close_law["maximumBytes"].as_u64().unwrap() as usize,maximum_release_bytes:comparator.next_close_release_byte_demand().unwrap(),maximum_capacity_bytes:comparator.next_close_capacity_byte_demand(0).unwrap(),maximum_depth:1,..Default::default()}).unwrap() {
+                RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:released_items,released_bytes,..}) => { assert_eq!(released_items, 1); assert_eq!(released_bytes, 0); released += released_items; }
+                RetainedCloneStep::Complete(progress) => {assert_eq!(progress,Default::default());break;},
             }
         }
         assert_eq!(released, close_law["bindings"].as_u64().unwrap() as usize);
@@ -387,7 +388,7 @@ fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
             let mut cancelled = PagedUtf8::<{usize::MAX}>::bounded_ord_cursor();
             for _ in 0..at.as_u64().unwrap() { cancelled.compare(left.borrow(), right.borrow(), BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }).unwrap(); }
             cancelled.begin_close();
-            while cancelled.close_step(1, 0).unwrap() != SnapshotRetirementStep::Complete {}
+            while !matches!(cancelled.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:cancelled.next_close_release_byte_demand().unwrap(),maximum_capacity_bytes:cancelled.next_close_capacity_byte_demand(0).unwrap(),maximum_depth:1,..Default::default()}).unwrap(),RetainedCloneStep::Complete(_)) {}
             assert!(cancelled.terminal_is_empty());
             let mut cursor = PagedUtf8::<{usize::MAX}>::retained_clone_cursor();
             for turn in 0..at.as_u64().unwrap() {

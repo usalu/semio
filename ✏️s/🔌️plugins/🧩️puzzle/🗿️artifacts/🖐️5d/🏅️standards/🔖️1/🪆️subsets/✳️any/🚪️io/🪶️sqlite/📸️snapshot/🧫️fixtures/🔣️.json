@@ -60,7 +60,7 @@
     "fasteners",
     "targetVolumes"
   ],
-  "snapshotAssetCount": 138,
+  "snapshotAssetCount": 148,
   "scaleDsl": {
     "shape": "list",
     "item": "float",
@@ -90,17 +90,24 @@
   },
   "diffRecordOwners": [
     "Puzzle5dDiff",
-    "Puzzle5dKindCompatibilityList",
-    "Puzzle5dStringList",
-    "Puzzle5dPartsDelta",
-    "Puzzle5dPartPatchEntry",
-    "Puzzle5dPartPatch",
-    "Puzzle5dFastenersDelta",
-    "Puzzle5dFastenerPatchEntry",
     "Puzzle5dFastenerPatch",
-    "Puzzle5dTargetVolumesDelta",
-    "Puzzle5dTargetVolumePatchEntry",
+    "Puzzle5dGrip2dPatch",
+    "Puzzle5dGrip3dPatch",
+    "Puzzle5dGripPatch",
+    "Puzzle5dKindCompatibilityKey",
+    "Puzzle5dKindCompatibilityPatch",
+    "Puzzle5dMetaPatch",
+    "Puzzle5dPart2dPatch",
+    "Puzzle5dPart3dPatch",
+    "Puzzle5dPartPatch",
     "Puzzle5dTargetVolumePatch"
   ],
-  "diffEmpty": {}
+  "diffEmpty": {},
+  "deltaOwners": [
+    "Puzzle5dGripsDelta",
+    "Puzzle5dPartsDelta",
+    "Puzzle5dFastenersDelta",
+    "Puzzle5dTargetVolumesDelta",
+    "Puzzle5dKindCompatibilityDelta"
+  ]
 }

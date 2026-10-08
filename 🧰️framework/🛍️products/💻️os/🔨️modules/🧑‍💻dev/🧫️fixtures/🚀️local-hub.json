@@ -817,7 +817,8 @@
           "renderer": "wgpu",
           "profile": "dev",
           "hubUrl": "http://127.0.0.1:7800",
-          "logPath": "/tmp/serve-6550.log"
+          "logPath": "/tmp/serve-6550.log",
+          "compositionConfigPath": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
         },
         "command": {
           "script": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
@@ -826,7 +827,9 @@
             "note",
             "dev",
             "--port",
-            "6550"
+            "6550",
+            "--composition",
+            "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
           ],
           "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
           "env": {
@@ -846,7 +849,8 @@
           "renderer": "wgpu",
           "profile": "release",
           "hubUrl": null,
-          "logPath": "/tmp/serve-6551.log"
+          "logPath": "/tmp/serve-6551.log",
+          "compositionConfigPath": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
         },
         "command": {
           "script": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
@@ -855,7 +859,9 @@
             "s",
             "release",
             "--port",
-            "6551"
+            "6551",
+            "--composition",
+            "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
           ],
           "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
           "env": {

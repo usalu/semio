@@ -18,38 +18,5 @@
         }
       }
     ]
-  },
-  "notation": {
-    "childId": "equation-notation-a23a8a6ecb8faa68",
-    "target": {
-      "artifactId": "equation-notation-a23a8a6ecb8faa68",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "text"
-      }
-    }
-  },
-  "results": {
-    "childId": "equation-results-7d3a7d8749e181a9",
-    "target": {
-      "artifactId": "equation-results-7d3a7d8749e181a9",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "table"
-      }
-    }
-  },
-  "computed": {
-    "childId": "equation-computed-b6b0a64682a99f72",
-    "target": {
-      "artifactId": "equation-computed-b6b0a64682a99f72",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "value"
-      }
-    }
   }
 }

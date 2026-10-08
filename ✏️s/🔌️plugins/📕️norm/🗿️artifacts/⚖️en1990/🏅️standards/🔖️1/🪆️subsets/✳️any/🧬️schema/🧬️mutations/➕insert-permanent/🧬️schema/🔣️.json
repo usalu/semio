@@ -6,7 +6,6 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "index",
     "item"
   ],
   "properties": {
@@ -14,7 +13,10 @@
       "const": "insertPermanent"
     },
     "index": {
-      "type": "integer",
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 0,
       "x-semio-ui": {
         "label": {
@@ -25,8 +27,8 @@
         "step": 1,
         "precision": 0,
         "description": {
-          "en": "Zero-based list position.",
-          "de": "Nullbasierte Listenposition."
+          "en": "Zero-based list position at which the record is inserted. Empty appends; positions past the end append.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird. Ohne Angabe am Ende; Positionen hinter dem Ende hängen an."
         }
       }
     },

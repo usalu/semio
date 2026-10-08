@@ -1185,6 +1185,7 @@ async fn sun_measures_are_exposed_on_preview_windows() {
 /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
 /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
 use semio_framework_ui::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
+use semio_s_artifact_procedural_generation3d::central_apply::{apply_generation3d_mutation};
 fn test_serial() -> crate::test_serial::TestSerialGuard {
     crate::editor_domain::editor_laws::serial_execution::lock()
 }
@@ -2725,7 +2726,7 @@ fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
     if operation == "dissolveVertices" {
         let data = serde_json::json!({"vertices":[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0.5,0.5,0]],"faces":[[0,1,4],[1,2,4],[2,3,4],[3,0,4]]}).to_string();
         let input = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::change_widget_input("extrude", "data", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::Text(data));
-        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut snapshot, &input).unwrap();
+        semio_s_artifact_procedural_generation3d::central_apply::apply_generation3d_mutation(&mut snapshot, &input).unwrap();
         input.retire_cold();
     }
     snapshot
@@ -2747,7 +2748,7 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
         assert!(rows.iter().rev().take(inputs.len()).all(|row| matches!(row, semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(_))), "{operation}: the splice precedes the inputs");
         let mut landed = snapshot.clone();
         for row in rows {
-            semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut landed, &row).unwrap();
+            semio_s_artifact_procedural_generation3d::central_apply::apply_generation3d_mutation(&mut landed, &row).unwrap();
             row.retire_cold();
         }
         let outcome = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&landed.host_snapshot, |host| {
@@ -2839,7 +2840,7 @@ fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
 /// of that operator appends no row.
 #[test]
 fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,change_widget_input::WidgetInputValue,Generation3dMutation};
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{change_widget_input::WidgetInputValue, Generation3dMutation};
 
     let _serial = test_serial();
     let committed = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
@@ -3259,6 +3260,8 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     let feature = live["feature"].as_str().unwrap();
     let selector = live["selector"].as_str().unwrap();
     let mut app = app().await;
+    let opened_actor = app.test_parent_store_mut().local_actor_id().0.clone();
+    assert_eq!(opened_actor, live["openedActor"].as_str().unwrap());
     let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
         host.add_widget(&json!({"kind":"neuron","id":source,"neuronKind":publication["kind"]}).to_string(),0.0,0.0).unwrap();
@@ -3291,6 +3294,22 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     let meshes: Value = serde_json::from_str(&world.meshes_json).unwrap();
     let instance = instances.as_array().unwrap().iter().find(|instance|instance["id"].as_str().is_some_and(|id|id.starts_with(&format!("{source}@")))).expect("the evaluated source reaches the viewport");
     let mesh = meshes.as_array().unwrap().iter().find(|mesh|mesh["id"]==instance["meshId"]).unwrap();
+    let source_extent = |instances: &Value, meshes: &Value| {
+        let instance = instances.as_array().unwrap().iter().find(|instance| instance["id"].as_str().is_some_and(|id| id.starts_with(&format!("{source}@")))).expect("the original source remains in the actual viewport");
+        let mesh = meshes.as_array().unwrap().iter().find(|mesh| mesh["id"] == instance["meshId"]).unwrap();
+        let data = mesh_data_from_json(&mesh["data"]);
+        assert!(data.positions.len() >= 9 && data.indices.len() >= 3);
+        let (min, max) = aabb_of_positions(&data.positions);
+        let vertices = data.positions.chunks_exact(3).map(|point| parry3d::na::Point3::new(point[0], point[1], point[2])).collect();
+        let triangles = data.indices.chunks_exact(3).map(|triangle| [triangle[0], triangle[1], triangle[2]]).collect();
+        let oracle = parry3d::shape::TriMesh::with_flags(vertices, triangles, parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES).local_aabb();
+        assert_eq!(min, [oracle.mins.x, oracle.mins.y, oracle.mins.z]);
+        assert_eq!(max, [oracle.maxs.x, oracle.maxs.y, oracle.maxs.z]);
+        let extent = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
+        for axis in 0..3 { assert!((extent[axis] as f64 - live["sourceExtent"][axis].as_f64().unwrap()).abs() < 1e-6, "the original viewport source extent agrees with the neutral Three oracle: {extent:?}"); }
+        extent
+    };
+    let original_extent = source_extent(&instances, &meshes);
     let granularity = live["componentGranularity"].as_str().unwrap();
     let group = live["group"].as_u64().unwrap();
     let label = mesh["data"]["componentReferences"][granularity][group as usize].as_str().expect("the real tessellation supplies its exact topology label");
@@ -3302,6 +3321,9 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     let view = context::preview_views("procedural-preview-test","procedural-preview-test-other").0;
     let change = context::act_with_view(&mut app,"editMeshSelection",json!({"operation":live["operation"],"amount":live["amount"]}),view.clone()).await.unwrap();
     let committed = context::snapshot(&app);
+    let history_row = PluginApp::history_snapshot(&mut *app).await.expect("original history").upserts.into_iter().filter(|entry| entry.applied && entry.transaction.as_ref().is_some_and(|transaction| transaction.tool == "s.procedural.generation3d@1/*#editor#editMeshSelection")).max_by_key(|entry| entry.seq).expect("the selected edit has its real tool history row");
+    assert_eq!(history_row.author.as_deref(), Some(opened_actor.as_str()));
+    assert_eq!(app.test_parent_store_mut().local_actor_id().0, opened_actor);
     assert_eq!(committed.host_snapshot.widgets.len(),before.host_snapshot.widgets.len()+2);
     let source_row = committed.host_snapshot.widgets.iter().find(|widget|semio_s_artifact_procedural_generation3d::widget_id(widget)==selector).unwrap();
     let literal = |widget: &semio_framework_artifact_flow_flow::Widget,key: &str| match widget {
@@ -3332,6 +3354,15 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
         let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
         let actual = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
         assert!((actual-if verb=="undo" { original } else { edited }).abs()<1e-10,"{verb}: evaluated geometry and consumer restore together");
+        let preview = context::render(&mut app,edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+        let world = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui::wgpu::World3dScene>(&preview).unwrap();
+        let instances: Value = serde_json::from_str(&world.instances_json).unwrap();
+        let meshes: Value = serde_json::from_str(&world.meshes_json).unwrap();
+        assert_eq!(source_extent(&instances, &meshes), original_extent, "{verb}: actual viewport source extent restores through the original history");
+        let restored_row = PluginApp::history_snapshot(&mut *app).await.expect("restored original history").upserts.into_iter().find(|entry| entry.seq == history_row.seq).expect("the original edit remains represented in history");
+        assert_eq!(restored_row.author.as_deref(), Some(opened_actor.as_str()), "{verb}: original history retains the opening actor");
+        assert_eq!(app.test_parent_store_mut().local_actor_id().0, opened_actor);
+        println!("[DEBUG] live BRep history verb={verb} author={opened_actor} sourceExtent={original_extent:?} independentParry=true");
     }
     println!("[DEBUG] live BRep selected shell label={label} handle={handle} revision={revision} volume={original}->{edited} history=undo/redo");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);

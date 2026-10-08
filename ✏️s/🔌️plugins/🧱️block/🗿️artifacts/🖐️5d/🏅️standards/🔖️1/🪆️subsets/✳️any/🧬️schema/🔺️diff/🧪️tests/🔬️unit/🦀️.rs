@@ -1,11 +1,15 @@
-//! 🧪️ `Block5dDiff` — apply, absorb, inverse and between laws over the id-keyed attribute rows and the field-patched kind identity.
+//! 🧪️ `Block5dDiff` — apply, absorb and inverse laws over the positional attribute rows and the field-patched kind identity.
 
 use super::*;
 use protocol::{DiffAlgebra, MutationDiff};
-use semio_s_plugin_block::{BlockAttribute, BlockAttributePatch, BlockAttributesPatchEntry};
+use semio_s_plugin_block::{BlockAttribute, BlockAttributePatch, BlockAttributesInsertion, BlockAttributesPatchEntry, BlockAttributesRelocation, BlockAttributesRemoval};
 
 fn attribute(key: &str, value: &str) -> BlockAttribute {
     BlockAttribute { key: key.into(), value: value.into(), definition: None }
+}
+
+fn list(keys: &[&str]) -> Vec<BlockAttribute> {
+    keys.iter().map(|key| attribute(key, "1")).collect()
 }
 
 fn base() -> Block5dSnapshot {
@@ -13,7 +17,7 @@ fn base() -> Block5dSnapshot {
 }
 
 fn rows(delta: BlockAttributesDelta) -> Block5dDiff {
-    Block5dDiff { attributes: Some(delta), ..Default::default() }
+    Block5dDiff { attributes: delta, ..Default::default() }
 }
 
 fn patch(key: &str, value: &str) -> BlockAttributesPatchEntry {
@@ -46,45 +50,56 @@ fn empty_diff_is_the_identity() {
 #[test]
 fn create_then_delete_cancels() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { added: vec![attribute("c", "3")], ..Default::default() }), &rows(BlockAttributesDelta { removed: vec!["c".into()], ..Default::default() }));
+    let created = attribute("c", "3");
+    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta::insertion(2, created.clone())), &rows(BlockAttributesDelta::removal(&[attribute("a", "1"), attribute("b", "2"), created], 2)));
     assert!(DiffAlgebra::<Block5dSnapshot>::is_empty(&sigma));
 }
 
-/// 🔀 A base row patched and then deleted leaves only the deletion.
+/// 🔀 A base row patched and then deleted leaves only the deletion at its base index.
 #[test]
 fn patch_then_delete_leaves_the_deletion() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { patched: vec![patch("a", "9")], ..Default::default() }), &rows(BlockAttributesDelta { removed: vec!["a".into()], ..Default::default() }));
-    let delta = sigma.attributes.expect("rows survive");
-    assert_eq!(delta.removed, vec!["a".to_string()]);
-    assert!(delta.patched.is_empty() && delta.added.is_empty());
+    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { modified: vec![patch("a", "9")], ..Default::default() }), &rows(BlockAttributesDelta::removal(&[attribute("a", "9"), attribute("b", "2")], 0)));
+    let delta = sigma.attributes;
+    assert_eq!(delta.removed, vec![BlockAttributesRemoval { id: "a".into(), index: 0 }]);
+    assert!(delta.modified.is_empty() && delta.inserted.is_empty());
 }
 
 /// 🔀 Two patches of one row coalesce into one patch holding the later values.
 #[test]
 fn patch_then_patch_coalesces() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { patched: vec![patch("a", "8")], ..Default::default() }), &rows(BlockAttributesDelta { patched: vec![patch("a", "9")], ..Default::default() }));
-    assert_eq!(sigma.attributes.expect("rows survive").patched, vec![patch("a", "9")]);
+    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { modified: vec![patch("a", "8")], ..Default::default() }), &rows(BlockAttributesDelta { modified: vec![patch("a", "9")], ..Default::default() }));
+    assert_eq!(sigma.attributes.modified, vec![patch("a", "9")]);
 }
 
-/// 🔀 A row deleted and created again is one replacement: removed and added together.
+/// 🔀 A row deleted and created again is one replacement: removed at its base index and inserted at its after index.
 #[test]
 fn delete_then_create_replaces() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { removed: vec!["a".into()], ..Default::default() }), &rows(BlockAttributesDelta { added: vec![attribute("a", "9")], ..Default::default() }));
-    let delta = sigma.attributes.expect("rows survive");
-    assert_eq!((delta.removed, delta.added), (vec!["a".to_string()], vec![attribute("a", "9")]));
+    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta::removal(&base.attributes, 0)), &rows(BlockAttributesDelta::insertion(0, attribute("a", "9"))));
+    let delta = sigma.attributes;
+    assert_eq!((delta.removed, delta.inserted), (vec![BlockAttributesRemoval { id: "a".into(), index: 0 }], vec![BlockAttributesInsertion { index: 0, row: attribute("a", "9") }]));
 }
 
 /// 🔀 A row created and then patched is created already patched.
 #[test]
 fn create_then_patch_folds_into_the_row() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta { added: vec![attribute("c", "3")], ..Default::default() }), &rows(BlockAttributesDelta { patched: vec![patch("c", "4")], ..Default::default() }));
-    let delta = sigma.attributes.expect("rows survive");
-    assert_eq!(delta.added, vec![attribute("c", "4")]);
-    assert!(delta.patched.is_empty());
+    let sigma = assert_absorb_law(&base, &rows(BlockAttributesDelta::insertion(2, attribute("c", "3"))), &rows(BlockAttributesDelta { modified: vec![patch("c", "4")], ..Default::default() }));
+    let delta = sigma.attributes;
+    assert_eq!(delta.inserted, vec![BlockAttributesInsertion { index: 2, row: attribute("c", "4") }]);
+    assert!(delta.modified.is_empty());
+}
+
+/// ↕️ Two moves of one row coalesce into one move from its base index to its final index.
+#[test]
+fn move_then_move_is_one_move() {
+    let base = Block5dSnapshot { attributes: list(&["a", "b", "c", "d"]), ..Default::default() };
+    let first = rows(BlockAttributesDelta { moved: vec![BlockAttributesRelocation { id: "a".into(), from: 0, to: 2 }], ..Default::default() });
+    let second = rows(BlockAttributesDelta { moved: vec![BlockAttributesRelocation { id: "a".into(), from: 2, to: 3 }], ..Default::default() });
+    let sigma = assert_absorb_law(&base, &first, &second);
+    assert_eq!(sigma.attributes.moved, vec![BlockAttributesRelocation { id: "a".into(), from: 0, to: 3 }]);
 }
 
 /// 🪪️ Two identity patches coalesce per field.
@@ -97,13 +112,18 @@ fn kind_patches_coalesce_per_field() {
     assert_eq!(sigma.part_kind, Some(BlockKindIdentityPatch { name: Some("n2".into()), label: Some("l1".into()), ..Default::default() }));
 }
 
-/// 🔁️ The inverse diff restores the base exactly — rows, order and fields.
+/// 🔁️ The inverse diff restores the base exactly — rows, positions and fields.
 #[test]
 fn inverse_restores_the_base() {
     let base = base();
     let diff = Block5dDiff {
         part_kind: Some(BlockKindIdentityPatch { name: Some("renamed".into()), ..Default::default() }),
-        attributes: Some(BlockAttributesDelta { removed: vec!["a".into()], added: vec![attribute("c", "3")], patched: vec![patch("b", "7")], ..Default::default() }),
+        attributes: BlockAttributesDelta {
+            removed: vec![BlockAttributesRemoval { id: "a".into(), index: 0 }],
+            inserted: vec![BlockAttributesInsertion { index: 1, row: attribute("c", "3") }],
+            modified: vec![patch("b", "7")],
+            ..Default::default()
+        },
         ..Default::default()
     };
     let after = protocol::apply_diff(&diff, &base).expect("diff applies");
@@ -111,19 +131,25 @@ fn inverse_restores_the_base() {
     assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
 }
 
-/// 🧭️ `between` reaches the other document, and is empty between equal documents.
+/// 🎯️ Removing, inserting and moving a MIDDLE row are each undone by the inverse at the row's original position.
 #[test]
-fn between_reaches_the_other_document() {
-    let base = base();
-    let other = Block5dSnapshot { attributes: vec![attribute("b", "7"), attribute("c", "3"), attribute("a", "1")], ..Default::default() };
-    let delta = <Block5dDiff as DiffAlgebra<Block5dSnapshot>>::between(&base, &other);
-    assert_eq!(protocol::apply_diff(&delta, &base).expect("between applies"), other);
-    assert!(DiffAlgebra::<Block5dSnapshot>::is_empty(&<Block5dDiff as DiffAlgebra<Block5dSnapshot>>::between(&base, &base)));
+fn inverse_restores_middle_rows() {
+    let base = Block5dSnapshot { attributes: list(&["a", "b", "c", "d"]), ..Default::default() };
+    for delta in [
+        BlockAttributesDelta::removal(&base.attributes, 1),
+        BlockAttributesDelta::insertion(2, attribute("x", "1")),
+        BlockAttributesDelta { moved: vec![BlockAttributesRelocation { id: "b".into(), from: 1, to: 3 }], ..Default::default() },
+    ] {
+        let diff = rows(delta);
+        let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+        let inverse = DiffAlgebra::<Block5dSnapshot>::inverse(&diff, &base);
+        assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    }
 }
 
-/// 🚫️ Removing a row the base never held is refused, not silently ignored.
+/// 🚫️ Removing a row that is not at its stated base index is refused, not silently ignored.
 #[test]
 fn apply_refuses_a_missing_removal() {
-    let diff = rows(BlockAttributesDelta { removed: vec!["ghost".into()], ..Default::default() });
+    let diff = rows(BlockAttributesDelta { removed: vec![BlockAttributesRemoval { id: "ghost".into(), index: 0 }], ..Default::default() });
     assert!(protocol::apply_diff(&diff, &base()).is_err());
 }

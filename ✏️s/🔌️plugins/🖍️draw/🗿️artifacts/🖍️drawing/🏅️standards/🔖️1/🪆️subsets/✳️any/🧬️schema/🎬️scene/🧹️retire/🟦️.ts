@@ -19,7 +19,7 @@ export class ScenePlanCloseJob{
    case "nodes":{const value=owner.value.pop();if(value){this.stack.push(owner,{kind:"node",value});return false;}break;}
    case "groups":{const value=owner.value.pop();if(value){this.stack.push(owner,{kind:"group",value});return false;}break;}
    case "strings":{const value=owner.value.pop();if(value!==undefined){this.stack.push(owner,{kind:"leaf",value});return false;}break;}
-   case "asset":{const a=owner.value;this.leaf(a.id);this.leaf(a.mime);this.leaf(a.data);break;}
+   case "asset":{const a=owner.value;this.leaf(a.id);this.leaf(a.image);break;}
    case "node":{const n=owner.value;this.leaf(n.sourcePath);this.leaf(n.id);this.leaf(n.blendMode);this.stack.push({kind:"groups",value:n.groups},{kind:"content",value:n.content});break;}
    case "group":this.leaf(owner.value.id);this.leaf(owner.value.blendMode);break;
    case "content":{const c=owner.value;switch(c.kind){

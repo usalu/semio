@@ -25,7 +25,7 @@ use semio_framework_plugin::{
     WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "puzzle5d-3d";
@@ -127,7 +127,7 @@ pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dI
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    semio_framework_pack_json::to_json_string(&instances)
 }
 
 /// 🎯️ Document IDENTITY for the world's `fit` lane: what this document IS (its schema, its domain,
@@ -208,7 +208,7 @@ pub fn world_grips_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime, 
             }));
         }
     }
-    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+    semio_framework_pack_json::to_json_string(&records)
 }
 
 fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
@@ -221,7 +221,7 @@ fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
             Some(json!({ "id": fastener.id, "from": from, "to": to, "color": "#60a5fa", "interactionGranularityId": PUZZLE5D_GRANULARITY_FASTENER }))
         })
         .collect();
-    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+    semio_framework_pack_json::to_json_string(&records)
 }
 
 /// 🎯️ The host's `WorldSelectionRecord` for this pane: the framework-owned `vortex` domain projected
@@ -234,7 +234,7 @@ pub fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
     let interaction = &envelope.interaction;
     let part_ids = interaction.selected_part_ids();
     let hovered_id = interaction.hovered_part_id(&envelope.document).map(str::to_string);
-    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", part_ids, hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value: Value = semio_framework_pack_json::parse(&world3d_selection_json("pick", part_ids, hovered_id.as_deref()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned world selection admits");
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
@@ -384,7 +384,7 @@ pub fn world_target_volumes_json(document: &Puzzle5dDocument) -> String {
             })
         })
         .collect();
-    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+    semio_framework_pack_json::to_json_string(&records)
 }
 
 //#endregion 🔖️SceneJson

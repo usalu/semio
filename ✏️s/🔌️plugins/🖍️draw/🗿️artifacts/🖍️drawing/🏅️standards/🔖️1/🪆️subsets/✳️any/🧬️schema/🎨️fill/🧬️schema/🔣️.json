@@ -63,8 +63,14 @@
           "minimum": 0
         },
         "value": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$"
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "minItems": 4,
+          "maxItems": 4
         }
       },
       "required": [

@@ -69,10 +69,8 @@ pub use semio_framework_diagnostic::TextSpan;
 // 🔺️ Mesh geometry data, primitive construction, and Obj/Glb/Stl codecs are dissolved into a
 // dedicated engine crate (consumed only from artifact facet code / engine-to-engine callers such
 // as brep tessellation) — no longer part of this framework module's own re-export surface.
-pub use semio_framework_mesh_engine::{
-    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_from_obj, mesh_from_stl, mesh_ico_sphere, mesh_plane, mesh_to_glb, mesh_to_obj, mesh_to_stl, mesh_torus,
-    mesh_uv_sphere, GlbExporter, GlbImporter, IoError, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture, MeshMetadataCursor, PolygonMeshSource, parse_polygon_mesh_source, validate_polygon_mesh_attributes, validate_mesh_surface_assets, validate_mesh_attribute, MeshData, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
-};
+pub use semio_framework_mesh_engine::io as mesh_io;
+pub use semio_framework_mesh_engine::{mesh_box, mesh_cone, mesh_cylinder, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere, mesh_plane, mesh_torus, mesh_uv_sphere, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture, PolygonMeshSource, validate_polygon_mesh_attributes, validate_mesh_surface_assets, validate_mesh_attribute, MeshData};
 // 🚪️ DWG codec (`dwg_to_bytes`/`dwg_from_bytes`/`mesh_to_dwg_drawing`/…) DELETED (ticket 26/08/12/
 // DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP): `🔺️mesh/🦀️.rs`
 // was a misplaced, fully-duplicated copy of stdio's real DWG artifact

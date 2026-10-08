@@ -1,0 +1,22 @@
+{
+  "positions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "position-harbor",
+        "patch": {
+          "data": null,
+          "properties": [
+            {
+              "key": "label"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "routes": null,
+  "regions": null
+}

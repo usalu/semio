@@ -129,16 +129,31 @@ export interface Puzzle5dKindCompatibilityPatch {
 export interface Puzzle5dMetaPatch {
   description?: string;
 }
-export interface Puzzle5dGripsDelta { added: Puzzle5dGrip[]; removed: string[]; patched: Puzzle5dGripPatchEntry[]; reordered?: string[]; }
-export interface Puzzle5dGripPatchEntry { id: string; patch: Puzzle5dGripPatch; }
-export interface Puzzle5dPartsDelta { added: Puzzle5dPart[]; removed: string[]; patched: Puzzle5dPartPatchEntry[]; reordered?: string[]; }
-export interface Puzzle5dPartPatchEntry { id: string; patch: Puzzle5dPartPatch; }
-export interface Puzzle5dFastenersDelta { added: Puzzle5dFastener[]; removed: string[]; patched: Puzzle5dFastenerPatchEntry[]; reordered?: string[]; }
-export interface Puzzle5dFastenerPatchEntry { id: string; patch: Puzzle5dFastenerPatch; }
-export interface Puzzle5dTargetVolumesDelta { added: Puzzle5dTargetVolume[]; removed: string[]; patched: Puzzle5dTargetVolumePatchEntry[]; reordered?: string[]; }
-export interface Puzzle5dTargetVolumePatchEntry { id: string; patch: Puzzle5dTargetVolumePatch; }
-export interface Puzzle5dKindCompatibilityDelta { added: Puzzle5dKindCompatibility[]; removed: Puzzle5dKindCompatibilityKey[]; patched: Puzzle5dKindCompatibilityPatchEntry[]; reordered?: Puzzle5dKindCompatibilityKey[]; }
-export interface Puzzle5dKindCompatibilityPatchEntry { id: Puzzle5dKindCompatibilityKey; patch: Puzzle5dKindCompatibilityPatch; }
+export interface Puzzle5dGripsDelta { removed: Puzzle5dGripRemoval[]; inserted: Puzzle5dGripInsertion[]; moved: Puzzle5dGripRelocation[]; modified: Puzzle5dGripModification[]; }
+export interface Puzzle5dGripRemoval { id: string; index: number; }
+export interface Puzzle5dGripInsertion { index: number; row: Puzzle5dGrip; }
+export interface Puzzle5dGripRelocation { id: string; from: number; to: number; }
+export interface Puzzle5dGripModification { id: string; patch: Puzzle5dGripPatch; }
+export interface Puzzle5dPartsDelta { removed: Puzzle5dPartRemoval[]; inserted: Puzzle5dPartInsertion[]; moved: Puzzle5dPartRelocation[]; modified: Puzzle5dPartModification[]; }
+export interface Puzzle5dPartRemoval { id: string; index: number; }
+export interface Puzzle5dPartInsertion { index: number; row: Puzzle5dPart; }
+export interface Puzzle5dPartRelocation { id: string; from: number; to: number; }
+export interface Puzzle5dPartModification { id: string; patch: Puzzle5dPartPatch; }
+export interface Puzzle5dFastenersDelta { removed: Puzzle5dFastenerRemoval[]; inserted: Puzzle5dFastenerInsertion[]; moved: Puzzle5dFastenerRelocation[]; modified: Puzzle5dFastenerModification[]; }
+export interface Puzzle5dFastenerRemoval { id: string; index: number; }
+export interface Puzzle5dFastenerInsertion { index: number; row: Puzzle5dFastener; }
+export interface Puzzle5dFastenerRelocation { id: string; from: number; to: number; }
+export interface Puzzle5dFastenerModification { id: string; patch: Puzzle5dFastenerPatch; }
+export interface Puzzle5dTargetVolumesDelta { removed: Puzzle5dTargetVolumeRemoval[]; inserted: Puzzle5dTargetVolumeInsertion[]; moved: Puzzle5dTargetVolumeRelocation[]; modified: Puzzle5dTargetVolumeModification[]; }
+export interface Puzzle5dTargetVolumeRemoval { id: string; index: number; }
+export interface Puzzle5dTargetVolumeInsertion { index: number; row: Puzzle5dTargetVolume; }
+export interface Puzzle5dTargetVolumeRelocation { id: string; from: number; to: number; }
+export interface Puzzle5dTargetVolumeModification { id: string; patch: Puzzle5dTargetVolumePatch; }
+export interface Puzzle5dKindCompatibilityDelta { removed: Puzzle5dKindCompatibilityRemoval[]; inserted: Puzzle5dKindCompatibilityInsertion[]; moved: Puzzle5dKindCompatibilityRelocation[]; modified: Puzzle5dKindCompatibilityModification[]; }
+export interface Puzzle5dKindCompatibilityRemoval { id: Puzzle5dKindCompatibilityKey; index: number; }
+export interface Puzzle5dKindCompatibilityInsertion { index: number; row: Puzzle5dKindCompatibility; }
+export interface Puzzle5dKindCompatibilityRelocation { id: Puzzle5dKindCompatibilityKey; from: number; to: number; }
+export interface Puzzle5dKindCompatibilityModification { id: Puzzle5dKindCompatibilityKey; patch: Puzzle5dKindCompatibilityPatch; }
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -214,9 +229,9 @@ export function parsePuzzle5dPart2dPatch(value: unknown, at = "$"): Puzzle5dPart
 export function parsePuzzle5dPart3dPatch(value: unknown, at = "$"): Puzzle5dPart3dPatch {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${at}.origin[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
     meshUrl: row["meshUrl"] === undefined ? undefined : row["meshUrl"] === null ? null : puzzlePuzzle5dDiffGuardString(row["meshUrl"], `${at}.meshUrl`),
-    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${at}.orientation[${index}]`)),
+    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.orientation}[${index}]`)),
     scale: row["scale"] === undefined ? undefined : row["scale"] === null ? null : parsePuzzle5dScale(row["scale"], `${at}.scale`),
     label: row["label"] === undefined ? undefined : row["label"] === null ? null : puzzlePuzzle5dDiffGuardString(row["label"], `${at}.label`),
   };
@@ -234,8 +249,8 @@ export function parsePuzzle5dGrip2dPatch(value: unknown, at = "$"): Puzzle5dGrip
 export function parsePuzzle5dGrip3dPatch(value: unknown, at = "$"): Puzzle5dGrip3dPatch {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    position: row["position"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["position"], `${at}.position`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${at}.position[${index}]`)),
-    direction: row["direction"] === undefined ? undefined : row["direction"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["direction"], `${at}.direction`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${at}.direction[${index}]`)),
+    position: row["position"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["position"], `${at}.position`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.position}[${index}]`)),
+    direction: row["direction"] === undefined ? undefined : row["direction"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["direction"], `${at}.direction`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.direction}[${index}]`)),
     radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardNumber(row["radius"], `${at}.radius`),
     label: row["label"] === undefined ? undefined : row["label"] === null ? null : puzzlePuzzle5dDiffGuardString(row["label"], `${at}.label`),
   };
@@ -281,8 +296,8 @@ export function parsePuzzle5dFastenerPatch(value: unknown, at = "$"): Puzzle5dFa
 export function parsePuzzle5dTargetVolumePatch(value: unknown, at = "$"): Puzzle5dTargetVolumePatch {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${at}.origin[${index}]`)),
-    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${at}.orientation[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
+    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.orientation}[${index}]`)),
     scale: row["scale"] === undefined ? undefined : row["scale"] === null ? null : parsePuzzle5dScale(row["scale"], `${at}.scale`),
     hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBoolean(row["hidden"], `${at}.hidden`),
     locked: row["locked"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBoolean(row["locked"], `${at}.locked`),
@@ -305,7 +320,32 @@ export function parsePuzzle5dMetaPatch(value: unknown, at = "$"): Puzzle5dMetaPa
   };
 }
 
-export function parsePuzzle5dGripPatchEntry(value: unknown, at = "$"): Puzzle5dGripPatchEntry {
+export function parsePuzzle5dGripRemoval(value: unknown, at = "$"): Puzzle5dGripRemoval {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle5dGripInsertion(value: unknown, at = "$"): Puzzle5dGripInsertion {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle5dGrip(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle5dGripRelocation(value: unknown, at = "$"): Puzzle5dGripRelocation {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle5dGripModification(value: unknown, at = "$"): Puzzle5dGripModification {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
@@ -316,14 +356,39 @@ export function parsePuzzle5dGripPatchEntry(value: unknown, at = "$"): Puzzle5dG
 export function parsePuzzle5dGripsDelta(value: unknown, at = "$"): Puzzle5dGripsDelta {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle5dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle5dGrip(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle5dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle5dGripPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle5dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dGripRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dGripInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle5dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle5dGripRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle5dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle5dGripModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle5dPartPatchEntry(value: unknown, at = "$"): Puzzle5dPartPatchEntry {
+export function parsePuzzle5dPartRemoval(value: unknown, at = "$"): Puzzle5dPartRemoval {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle5dPartInsertion(value: unknown, at = "$"): Puzzle5dPartInsertion {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle5dPart(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle5dPartRelocation(value: unknown, at = "$"): Puzzle5dPartRelocation {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle5dPartModification(value: unknown, at = "$"): Puzzle5dPartModification {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
@@ -334,14 +399,39 @@ export function parsePuzzle5dPartPatchEntry(value: unknown, at = "$"): Puzzle5dP
 export function parsePuzzle5dPartsDelta(value: unknown, at = "$"): Puzzle5dPartsDelta {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle5dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle5dPart(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle5dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle5dPartPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle5dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dPartRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dPartInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle5dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle5dPartRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle5dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle5dPartModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle5dFastenerPatchEntry(value: unknown, at = "$"): Puzzle5dFastenerPatchEntry {
+export function parsePuzzle5dFastenerRemoval(value: unknown, at = "$"): Puzzle5dFastenerRemoval {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle5dFastenerInsertion(value: unknown, at = "$"): Puzzle5dFastenerInsertion {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle5dFastener(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle5dFastenerRelocation(value: unknown, at = "$"): Puzzle5dFastenerRelocation {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle5dFastenerModification(value: unknown, at = "$"): Puzzle5dFastenerModification {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
@@ -352,14 +442,39 @@ export function parsePuzzle5dFastenerPatchEntry(value: unknown, at = "$"): Puzzl
 export function parsePuzzle5dFastenersDelta(value: unknown, at = "$"): Puzzle5dFastenersDelta {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle5dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle5dFastener(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle5dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle5dFastenerPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle5dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dFastenerRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dFastenerInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle5dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle5dFastenerRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle5dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle5dFastenerModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle5dTargetVolumePatchEntry(value: unknown, at = "$"): Puzzle5dTargetVolumePatchEntry {
+export function parsePuzzle5dTargetVolumeRemoval(value: unknown, at = "$"): Puzzle5dTargetVolumeRemoval {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle5dTargetVolumeInsertion(value: unknown, at = "$"): Puzzle5dTargetVolumeInsertion {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle5dTargetVolume(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle5dTargetVolumeRelocation(value: unknown, at = "$"): Puzzle5dTargetVolumeRelocation {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle5dTargetVolumeModification(value: unknown, at = "$"): Puzzle5dTargetVolumeModification {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
@@ -370,14 +485,39 @@ export function parsePuzzle5dTargetVolumePatchEntry(value: unknown, at = "$"): P
 export function parsePuzzle5dTargetVolumesDelta(value: unknown, at = "$"): Puzzle5dTargetVolumesDelta {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle5dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle5dTargetVolume(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle5dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle5dTargetVolumePatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle5dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dTargetVolumeRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dTargetVolumeInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle5dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle5dTargetVolumeRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle5dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle5dTargetVolumeModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parsePuzzle5dKindCompatibilityPatchEntry(value: unknown, at = "$"): Puzzle5dKindCompatibilityPatchEntry {
+export function parsePuzzle5dKindCompatibilityRemoval(value: unknown, at = "$"): Puzzle5dKindCompatibilityRemoval {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: parsePuzzle5dKindCompatibilityKey(row["id"], `${at}.id`),
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+  };
+}
+
+export function parsePuzzle5dKindCompatibilityInsertion(value: unknown, at = "$"): Puzzle5dKindCompatibilityInsertion {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    row: parsePuzzle5dKindCompatibility(row["row"], `${at}.row`),
+  };
+}
+
+export function parsePuzzle5dKindCompatibilityRelocation(value: unknown, at = "$"): Puzzle5dKindCompatibilityRelocation {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: parsePuzzle5dKindCompatibilityKey(row["id"], `${at}.id`),
+    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
+    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+  };
+}
+
+export function parsePuzzle5dKindCompatibilityModification(value: unknown, at = "$"): Puzzle5dKindCompatibilityModification {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
     id: parsePuzzle5dKindCompatibilityKey(row["id"], `${at}.id`),
@@ -388,9 +528,9 @@ export function parsePuzzle5dKindCompatibilityPatchEntry(value: unknown, at = "$
 export function parsePuzzle5dKindCompatibilityDelta(value: unknown, at = "$"): Puzzle5dKindCompatibilityDelta {
   const row = puzzlePuzzle5dDiffGuardObject(value, at);
   return {
-    added: puzzlePuzzle5dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePuzzle5dKindCompatibility(item, `${at}.added[${index}]`)),
-    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dKindCompatibilityKey(item, `${at}.removed[${index}]`)),
-    patched: puzzlePuzzle5dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parsePuzzle5dKindCompatibilityPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined || row["reordered"] === null ? undefined : puzzlePuzzle5dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => parsePuzzle5dKindCompatibilityKey(item, `${at}.reordered[${index}]`)),
+    removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dKindCompatibilityRemoval(item, `${at}.removed[${index}]`)),
+    inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dKindCompatibilityInsertion(item, `${at}.inserted[${index}]`)),
+    moved: puzzlePuzzle5dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parsePuzzle5dKindCompatibilityRelocation(item, `${at}.moved[${index}]`)),
+    modified: puzzlePuzzle5dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePuzzle5dKindCompatibilityModification(item, `${at}.modified[${index}]`)),
   };
 }

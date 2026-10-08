@@ -7,14 +7,15 @@
 //!
 //! 🏷️ `change-form-title` is the ONE forms verb whose whole subject is the document's own inline
 //! `title` scalar — it never reads `forms_steps`, never builds a `FormsStepsDelta`, and never calls
-//! `forms_diff_from_delta`. That is exactly why this leaf can carry a REAL applied case while the
+//! `FormsDiff::apply`. That is exactly why this leaf can carry a REAL applied case while the
 //! nine step/block verbs cannot: their diffs regenerate the composed `structure`/`results` handles,
 //! whose `child_id` is a `DefaultHasher` digest of the child content, and hand-forging a value out
 //! of `std`'s deliberately unspecified default hasher is not authorable. Here both handles are
 //! carried through untouched, so `➡️after` differs from `⬅️before` in one key only: `title`.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/📸️snapshot/➡️after/🔣️.json");
@@ -103,8 +104,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-form-title/titles-an-untitled-survey: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff().title, Some(crate::schema::diff::FormsOptionalText { value: Some("Site Survey".to_string()) }), "the diff's optional-text slot title must be an explicit SET, never a clear");
-    assert!(outcome.diff().structure.is_none(), "change-form-title must leave the composed structure slot untouched");
-    assert!(outcome.diff().results.is_none(), "change-form-title must leave the composed results slot untouched");
+    assert!(outcome.diff().steps.is_none() && outcome.diff().responses.is_none(), "change-form-title must leave the step and response rows untouched");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to forms' own diff type. `FormsDiff`

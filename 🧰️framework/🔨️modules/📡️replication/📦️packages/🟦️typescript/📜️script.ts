@@ -13,6 +13,11 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+/** 🌱️ Runs the original fold-index lazy entry neutral oracle. */
+class IndexEntryTestScript extends BundleScript {
+  async run():Promise<void>{await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts");}
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-index-entry",IndexEntryTestScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

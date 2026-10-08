@@ -6,10 +6,10 @@ use crate::diff::ProgramDecisionsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteDecision, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    if !base.decisions.iter().any(|row| row.header.id == payload.id) {
+    let Some(position) = base.decisions.iter().position(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No decision exists with this id.", [payload.id.0.clone()]);
-    }
-    protocol::MutationOutcome::new(ProgramDiff { decisions: Some(ProgramDecisionsDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(ProgramDiff { decisions: Some(ProgramDecisionsDelta::removal(&base.decisions, position)), ..Default::default() })
 }

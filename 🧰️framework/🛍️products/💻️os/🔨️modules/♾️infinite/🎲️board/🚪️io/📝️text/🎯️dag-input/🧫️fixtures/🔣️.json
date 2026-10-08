@@ -1,0 +1,188 @@
+{
+  "schema": "semio.board.dag-input-witness/v1",
+  "accepted": [
+    {
+      "kind": "selection",
+      "value": {
+        "nodes": [],
+        "edges": [],
+        "handles": []
+      }
+    },
+    {
+      "kind": "selection",
+      "value": {
+        "nodes": [
+          "node雪"
+        ],
+        "edges": [
+          "edge-1"
+        ],
+        "handles": [
+          "node雪@a"
+        ]
+      }
+    },
+    {
+      "kind": "channels",
+      "value": []
+    },
+    {
+      "kind": "channels",
+      "value": [
+        {
+          "widgetId": "node雪",
+          "port": "a",
+          "direction": "in"
+        },
+        {
+          "widgetId": "n2",
+          "port": "out",
+          "direction": "out"
+        }
+      ]
+    },
+    {
+      "kind": "statuses",
+      "value": {}
+    },
+    {
+      "kind": "statuses",
+      "value": {
+        "a": {
+          "status": "ok"
+        },
+        "b": {
+          "status": "queued"
+        },
+        "c": {
+          "status": "computing"
+        },
+        "d": {
+          "status": "error",
+          "message": "雪 ☃"
+        },
+        "e": {
+          "status": "blocked",
+          "ports": [
+            "input-1",
+            "雪"
+          ]
+        }
+      }
+    }
+  ],
+  "refused": [
+    {
+      "kind": "selection",
+      "value": [
+        "old-node-array"
+      ]
+    },
+    {
+      "kind": "selection",
+      "value": {
+        "nodes": [],
+        "edges": []
+      }
+    },
+    {
+      "kind": "selection",
+      "value": {
+        "nodes": [
+          ""
+        ],
+        "edges": [],
+        "handles": []
+      }
+    },
+    {
+      "kind": "selection",
+      "value": {
+        "nodes": [],
+        "edges": [],
+        "handles": [],
+        "extra": true
+      }
+    },
+    {
+      "kind": "channels",
+      "value": [
+        {
+          "widgetId": "n",
+          "port": "p",
+          "direction": "side"
+        }
+      ]
+    },
+    {
+      "kind": "channels",
+      "value": [
+        {
+          "widgetId": "n",
+          "port": "p",
+          "direction": "in",
+          "extra": 0
+        }
+      ]
+    },
+    {
+      "kind": "statuses",
+      "value": {
+        "n": {
+          "status": "unknown"
+        }
+      }
+    },
+    {
+      "kind": "statuses",
+      "value": {
+        "n": {
+          "status": "error"
+        }
+      }
+    },
+    {
+      "kind": "statuses",
+      "value": {
+        "n": {
+          "status": "blocked",
+          "ports": [
+            1
+          ]
+        }
+      }
+    },
+    {
+      "kind": "statuses",
+      "value": {
+        "n": {
+          "status": "ok",
+          "extra": true
+        }
+      }
+    },
+    {
+      "kind": "statuses",
+      "value": {
+        "": {
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "kind": "statuses",
+      "value": null
+    }
+  ],
+  "rawRefused": [
+    {
+      "kind": "selection",
+      "text": "{\"nodes\":[],\"nodes\":[],\"edges\":[],\"handles\":[]}"
+    },
+    {
+      "kind": "statuses",
+      "text": "{\"n\":{\"status\":\"ok\"},\"n\":{\"status\":\"queued\"}}"
+    }
+  ]
+}

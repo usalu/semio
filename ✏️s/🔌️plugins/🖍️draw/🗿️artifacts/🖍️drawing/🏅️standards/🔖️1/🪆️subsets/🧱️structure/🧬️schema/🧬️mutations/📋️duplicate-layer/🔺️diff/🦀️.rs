@@ -15,8 +15,8 @@ pub fn diff(payload: &super::mutation::DuplicateLayer, base: &DrawingSnapshot) -
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", new_id), [new_id.to_string()]);
     }
     let diff = match find_drawing_layer_location(base, &payload.layer_id) {
-        Some(location) => diff_create_layer(location.parent_id.as_ref(), location.index + 1, duplicate),
-        None => diff_create_layer(None, base.layers.len(), duplicate),
+        Some(location) => diff_create_layer(&base.layers, location.parent_id.as_ref(), location.index + 1, duplicate),
+        None => diff_create_layer(&base.layers, None, base.layers.len(), duplicate),
     };
     protocol::MutationOutcome::new(diff)
 }

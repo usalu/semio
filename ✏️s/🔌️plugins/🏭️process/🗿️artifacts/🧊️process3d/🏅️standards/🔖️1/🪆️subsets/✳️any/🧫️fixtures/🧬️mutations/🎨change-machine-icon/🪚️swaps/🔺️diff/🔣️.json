@@ -1,23 +1,23 @@
 {
   "workshop": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "saw",
-        "label": null,
-        "iconId": "saw-blade",
-        "capabilities": null
+        "patch": {
+          "label": null,
+          "iconId": "saw-blade",
+          "capabilities": null
+        }
       }
-    ],
-    "reordered": null
+    ]
   },
   "stockId": null,
   "stockLabel": null,
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": null,
-  "stepPayloads": null,
-  "toolSolids": null
+  "stepPayloads": null
 }

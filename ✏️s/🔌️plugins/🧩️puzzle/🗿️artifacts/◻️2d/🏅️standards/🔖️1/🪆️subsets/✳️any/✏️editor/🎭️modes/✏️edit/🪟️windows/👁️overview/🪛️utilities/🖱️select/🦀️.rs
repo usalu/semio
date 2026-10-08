@@ -12,8 +12,9 @@
 #![allow(unexpected_cfgs)]
 
 use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
+use crate::apply_puzzle2d_mutation;
 use crate::editor::puzzle2d::{board_snapshot_nodes, puzzle2d_occupied_handles, puzzle2d_push_edge, PUZZLE2D_PROXIMITY_GESTURE_MAX};
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,connect_handles_in_proximity,drag_selection,puzzle2d_handle_distance,rotate_selection,scale_selection,Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{connect_handles_in_proximity,drag_selection,puzzle2d_handle_distance,rotate_selection,scale_selection,Puzzle2dMutation};
 
 use crate::standards::v1::subsets::any::io::text::mutations::{puzzle2d_declared_precision};
 use crate::Puzzle2dSnapshot;
@@ -22,7 +23,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolMachineRunner, ToolStep, ToolYield};
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json,Value,Object};
 use std::sync::Arc;
 
 pub const UTILITY_ID: &str = "select";
@@ -355,7 +356,7 @@ pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSel
         if record.proximity.is_empty() && !record.connect {
             continue;
         }
-        let mut scratch = Value::from(semio_framework_value::ToValue::to_value(&state));
+        let mut scratch = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(semio_framework_value::ToValue::to_value(&state))));
         let mut pairs: Vec<(String, String)> = Vec::new();
         for (source, target) in &record.proximity {
             if puzzle2d_handles_open(&scratch, source, target) {

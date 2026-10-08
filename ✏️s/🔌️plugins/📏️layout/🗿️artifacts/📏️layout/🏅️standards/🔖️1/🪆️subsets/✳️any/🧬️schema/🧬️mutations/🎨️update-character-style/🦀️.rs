@@ -1,7 +1,7 @@
 //! 🎨 `update-character-style` — replaces one character style.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{CharacterStylePatch, LayoutCharacterStylePatchEntry, LayoutCharacterStylesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{CharacterStylePatch, LayoutCharacterStylesDelta, LayoutCharacterStylesModification};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -45,7 +45,7 @@ pub fn diff_update_character_style(payload: &UpdateCharacterStyle, base: &Layout
     }
     protocol::MutationOutcome::new(LayoutDiff {
         character_styles: Some(LayoutCharacterStylesDelta {
-            patched: vec![LayoutCharacterStylePatchEntry {
+            modified: vec![LayoutCharacterStylesModification {
                 id: payload.id.clone(),
                 patch: CharacterStylePatch {
                     name: Some(payload.name.clone()),

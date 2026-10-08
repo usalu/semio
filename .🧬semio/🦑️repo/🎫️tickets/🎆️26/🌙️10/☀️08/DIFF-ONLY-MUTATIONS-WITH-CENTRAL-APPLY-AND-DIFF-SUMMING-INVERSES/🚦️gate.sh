@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 🚦️ Build gate: blocks until fewer than MAX_RUSTC rustc processes run and swap has headroom, then holds one of 4 slots.
+# 🚦️ Build gate: blocks until fewer than MAX_RUSTC rustc processes run and swap has headroom, then holds one of GATE_SLOTS (default 1) slots — 4 deadlocked wasm checks on fine-grain locking.
 # Usage: "$T/🚦️gate.sh" <label> -- <command...>
 set -u
 label="$1"; shift; [ "${1:-}" = "--" ] && shift
 dir="$(cd "$(dirname "$0")" && pwd)/🗑️generated/gate"; mkdir -p "$dir"
 max_rustc="${MAX_RUSTC:-10}"
 while :; do
-  for slot in 1 2 3 4; do
+  for slot in $(seq 1 "${GATE_SLOTS:-1}"); do
     if mkdir "$dir/slot-$slot" 2>/dev/null; then
       if [ "$(pgrep -x rustc | wc -l | tr -d ' ')" -lt "$max_rustc" ]; then
         echo "$label $$ $(date +%T)" > "$dir/slot-$slot/owner"

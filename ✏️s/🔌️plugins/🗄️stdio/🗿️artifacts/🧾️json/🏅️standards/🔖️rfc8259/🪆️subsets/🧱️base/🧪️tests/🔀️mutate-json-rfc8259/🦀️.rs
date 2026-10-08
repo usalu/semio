@@ -154,7 +154,7 @@ mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{apply_json_mutation, JsonMutation};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{JsonMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_json::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot};
@@ -181,7 +181,7 @@ mod subject {
     }
 
     /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE through the SAME shared
-    /// `⚖️law` helper `super::mutate_oracle` calls. `apply_json_mutation` returns a rejecting
+    /// `⚖️law` helper `super::mutate_oracle` calls. `apply_mutation` returns a rejecting
     /// `MutationOutcome` and leaves the snapshot untouched when a path addresses nothing, so without
     /// this a refused mutation reports a green scenario carrying the unmutated document.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
@@ -189,7 +189,7 @@ mod subject {
         let mut snapshot = decode(&input)?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        apply_json_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         let output = encode(&snapshot);
         let projection = project_json_value(&output)?;
         mutation_is_observable(&spec.str("kind"), &projection, &project_json_value(&input)?, &[])?;
@@ -202,8 +202,8 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
-        apply_json_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_json_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
         let output = encode(&snapshot);
         let projection = project_json_value(&output)?;
         inverse_restores(&spec.str("kind"), &projection, &project_json_value(&input)?)?;

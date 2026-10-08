@@ -3,13 +3,12 @@
 //! buffer is refused.
 
 use super::*;
-use crate::mutations::apply_bitmap_mutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
 
 fn commit(snapshot: &BitmapSnapshot, payload: &PinSolution) -> BitmapSnapshot {
     let mut next = snapshot.clone();
     for mutation in solution_operations(snapshot, payload).expect("the solve commits") {
-        apply_bitmap_mutation(&mut next, &mutation).expect("every pin applies");
+        vcs::apply_mutation(&next, &mutation).map(|(applied_state, _)| { next = applied_state; }).expect("every pin applies");
     }
     next
 }

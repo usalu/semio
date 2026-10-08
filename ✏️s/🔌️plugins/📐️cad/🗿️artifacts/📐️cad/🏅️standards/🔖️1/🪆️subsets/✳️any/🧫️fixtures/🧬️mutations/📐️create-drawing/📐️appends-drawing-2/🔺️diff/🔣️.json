@@ -6,21 +6,24 @@
   "energyModel": null,
   "structureClassicModel": null,
   "drawings": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "childId": "cad-drawing-2",
-        "target": {
-          "artifactId": "cad-drawing-2",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "drawing"
+        "index": 1,
+        "row": {
+          "childId": "cad-drawing-2",
+          "target": {
+            "artifactId": "cad-drawing-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "drawing"
+            }
           }
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": []
   },
   "breps": null,
   "referencesByModelDefinitionId": null,

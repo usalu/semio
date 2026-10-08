@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "index",
-    "new_content"
+    "new_text"
   ],
   "properties": {
     "index": {
@@ -28,7 +28,7 @@
         "order": 10
       }
     },
-    "new_content": {
+    "new_text": {
       "type": "string",
       "x-semio-ui": {
         "widget": "multiline",

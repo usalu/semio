@@ -65,9 +65,6 @@ impl protocol::DiffAlgebra<LayoutWindowConfig> for LayoutWindowConfigPatch {
     fn inverse(&self, base: &LayoutWindowConfig) -> Self {
         Self { active_page_id: self.active_page_id.as_ref().map(|_| base.active_page_id.clone()), active_utility: self.active_utility.as_ref().map(|_| base.active_utility.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
-    fn between(base: &LayoutWindowConfig, other: &LayoutWindowConfig) -> Self {
-        Self::replacing(other).against(base)
-    }
     fn is_empty(&self) -> bool {
         self.active_page_id.is_none() && self.active_utility.is_none() && self.camera.is_none()
     }

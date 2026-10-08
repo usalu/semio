@@ -88,12 +88,26 @@ pub(crate) fn dec_md_snapshot(s: &str) -> Result<MdSnapshot, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_source_splices(s: &str) -> Result<Vec<splice_source::SourceSplice>, String> {
+    split_top_level(strip_brackets(s)?, ',')
+        .into_iter()
+        .map(|item| {
+            let parts = split_top_level(strip_brackets(item)?, ',');
+            let [offset, delete, insert] = parts.as_slice() else { return Err(format!("source splice: expected 3 fields, got {}", parts.len())) };
+            let number = |field: &str| field.parse::<u32>().map_err(|error| error.to_string());
+            Ok(splice_source::SourceSplice { offset: number(offset)?, delete: number(delete)?, insert: dec_str(insert)? })
+        })
+        .collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_md_mutation(m: &MdMutation) -> String {
     match m {
         MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }) => format!("insert-block path={} index={index} block={}", enc_path(path), enc_block(block)),
         MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }) => format!("remove-block path={} index={index}", enc_path(path)),
         MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }) => format!("replace-block path={} index={index} block={}", enc_path(path), enc_block(block)),
         MdMutation::SetInlines(set_inlines::SetInlines { path, index, inlines }) => format!("set-inlines path={} index={index} inlines={}", enc_path(path), enc_inline_list(inlines)),
+        MdMutation::SpliceSource(splice_source::SpliceSource { splices }) => format!("splice-source splices=[{}]", splices.iter().map(|splice| format!("[{},{},{}]", splice.offset, splice.delete, enc_str(&splice.insert))).collect::<Vec<_>>().join(",")),
     }
 }
 
@@ -108,6 +122,7 @@ pub(crate) fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
         "remove-block" => Ok(MdMutation::RemoveBlock(remove_block::RemoveBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")? })),
         "replace-block" => Ok(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? })),
         "set-inlines" => Ok(MdMutation::SetInlines(set_inlines::SetInlines { path: dec_path(arg("path")?)?, index: usize_arg("index")?, inlines: dec_inline_list(arg("inlines")?)? })),
+        "splice-source" => Ok(MdMutation::SpliceSource(splice_source::SpliceSource { splices: dec_source_splices(arg("splices")?)? })),
         other => Err(format!("md mutation: unknown keyword {other:?}")),
     }
 }

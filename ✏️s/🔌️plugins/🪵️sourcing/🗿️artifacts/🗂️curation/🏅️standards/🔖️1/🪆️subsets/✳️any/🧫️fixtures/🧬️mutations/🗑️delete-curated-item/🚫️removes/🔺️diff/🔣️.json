@@ -2,11 +2,14 @@
   "catalog": null,
   "stockExtra": null,
   "curated": {
-    "added": [],
     "removed": [
-      "panel-clt-3000"
+      {
+        "id": "panel-clt-3000",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

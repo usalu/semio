@@ -1,0 +1,424 @@
+[
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "forbidden": [
+      "decode_opening_preferences_json",
+      "encode_opening_preferences_json"
+    ],
+    "required": [
+      "decode_opening_preferences_json",
+      "encode_opening_preferences_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "forbidden": [
+      "decode_opening_config_mutation_json"
+    ],
+    "required": [
+      "decode_opening_config_mutation_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "forbidden": [
+      "decode_ui_preferences_json",
+      "encode_ui_preferences_json"
+    ],
+    "required": [
+      "decode_ui_preferences_json",
+      "encode_ui_preferences_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "forbidden": [
+      "decode_ui_preferences_config_mutation_json"
+    ],
+    "required": [
+      "decode_ui_preferences_config_mutation_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "forbidden": [
+      "decode_identity_setting_json",
+      "encode_identity_setting_json"
+    ],
+    "required": [
+      "decode_identity_setting_json",
+      "encode_identity_setting_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "forbidden": [
+      "decode_identity_config_mutation_json"
+    ],
+    "required": [
+      "decode_identity_config_mutation_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "forbidden": [
+      "decode_merge_policy_setting_json",
+      "encode_merge_policy_setting_json"
+    ],
+    "required": [
+      "decode_merge_policy_setting_json",
+      "encode_merge_policy_setting_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "forbidden": [
+      "decode_merge_policy_config_mutation_json"
+    ],
+    "required": [
+      "decode_merge_policy_config_mutation_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "forbidden": [
+      "decode_local_catalog_json",
+      "encode_local_catalog_json"
+    ],
+    "required": [
+      "decode_local_catalog_json",
+      "encode_local_catalog_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "forbidden": [
+      "decode_local_catalog_config_mutation_json"
+    ],
+    "required": [
+      "decode_local_catalog_config_mutation_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "forbidden": [
+      "decode_local_folder_bindings_json",
+      "encode_local_folder_bindings_json"
+    ],
+    "required": [
+      "decode_local_folder_bindings_json",
+      "encode_local_folder_bindings_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "forbidden": [
+      "decode_local_folders_config_mutation_json"
+    ],
+    "required": [
+      "decode_local_folders_config_mutation_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🦀️.rs",
+    "forbidden": [
+      "valid_user_preference_record_v1",
+      "validate_directory_event_page_event",
+      "directory_command_sha256",
+      "DirectoryEventPageV1::canonical_unsigned_json",
+      "DirectoryEventPageV1::receipt_matches",
+      "DirectoryEventPageV1::validate",
+      "DirectoryEventPageV1::parse_canonical_json",
+      "DirectoryCommandRequestV1::canonical_json",
+      "DirectoryCommandRequestV1::validate",
+      "DirectoryCommandRequestV1::parse_canonical_json",
+      "DirectoryCommandReceiptV1::canonical_unsigned_json",
+      "DirectoryCommandReceiptV1::seal",
+      "DirectoryCommandReceiptV1::receipt_matches",
+      "DirectoryCommandReceiptV1::validate",
+      "DirectoryCommandReceiptV1::parse_canonical_json",
+      "DirectorySpaceAdministrationPageV1::canonical_unsigned_json",
+      "DirectorySpaceAdministrationPageV1::receipt_matches",
+      "DirectorySpaceAdministrationPageV1::validate",
+      "DirectorySpaceAdministrationPageV1::parse_canonical_json"
+    ],
+    "required": [
+      "valid_user_preference_record_v1",
+      "validate_directory_event_page_event",
+      "directory_command_sha256",
+      "DirectoryEventPageV1::canonical_unsigned_json",
+      "DirectoryEventPageV1::receipt_matches",
+      "DirectoryEventPageV1::validate",
+      "DirectoryEventPageV1::parse_canonical_json",
+      "DirectoryCommandRequestV1::canonical_json",
+      "DirectoryCommandRequestV1::validate",
+      "DirectoryCommandRequestV1::parse_canonical_json",
+      "DirectoryCommandReceiptV1::canonical_unsigned_json",
+      "DirectoryCommandReceiptV1::seal",
+      "DirectoryCommandReceiptV1::receipt_matches",
+      "DirectoryCommandReceiptV1::validate",
+      "DirectoryCommandReceiptV1::parse_canonical_json",
+      "DirectorySpaceAdministrationPageV1::canonical_unsigned_json",
+      "DirectorySpaceAdministrationPageV1::receipt_matches",
+      "DirectorySpaceAdministrationPageV1::validate",
+      "DirectorySpaceAdministrationPageV1::parse_canonical_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🦀️.rs",
+    "forbidden": [
+      "DirectorySessionAuthorityV1::canonical_json",
+      "DirectorySessionAuthorityV1::parse_canonical_json"
+    ],
+    "required": [
+      "DirectorySessionAuthorityV1::canonical_json",
+      "DirectorySessionAuthorityV1::parse_canonical_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🦀️.rs",
+    "forbidden": [
+      "SpaceArtifactCreationCatalogV1::canonical_json",
+      "SpaceArtifactCreationCatalogV1::parse_canonical_json",
+      "SpaceArtifactCreateV1::parse_canonical_json",
+      "SpaceArtifactCreationStatusV1::parse_canonical_json"
+    ],
+    "required": [
+      "SpaceArtifactCreationCatalogV1::canonical_json",
+      "SpaceArtifactCreationCatalogV1::parse_canonical_json",
+      "SpaceArtifactCreateV1::parse_canonical_json",
+      "SpaceArtifactCreationStatusV1::parse_canonical_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🦀️.rs",
+    "forbidden": [
+      "DocumentCheckInV1::canonical_json",
+      "DocumentCheckInV1::parse_canonical_json",
+      "DocumentCheckInStatusV1::canonical_json",
+      "DocumentCheckInStatusV1::parse_canonical_json"
+    ],
+    "required": [
+      "DocumentCheckInV1::canonical_json",
+      "DocumentCheckInV1::parse_canonical_json",
+      "DocumentCheckInStatusV1::canonical_json",
+      "DocumentCheckInStatusV1::parse_canonical_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🧬️schema/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🚪️io/📝️text/🦀️.rs",
+    "forbidden": [
+      "DirectoryAccessPolicyV1::parse",
+      "DirectoryAccessPolicyV1::declared"
+    ],
+    "required": [
+      "DirectoryAccessPolicyV1::parse",
+      "DirectoryAccessPolicyV1::declared"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+    "forbidden": [
+      "validUserPreferenceRecordV1",
+      "directoryEventPageEvent",
+      "parseDirectoryEventV1",
+      "directoryEventPageSha256",
+      "parseDirectoryEventPageV1",
+      "canonicalDirectoryCommandV1",
+      "parseDirectoryCommandV1",
+      "directoryCommandSha256",
+      "sealDirectoryCommandRequestV1",
+      "directoryCommandRequestJson",
+      "parseDirectoryCommandRequestV1",
+      "sealDirectoryCommandReceiptV1",
+      "parseDirectoryCommandReceiptV1",
+      "administrationSha256",
+      "parseDirectorySpaceAdministrationPageV1",
+      "directoryAdministrationCommandAllowedV1"
+    ],
+    "required": [
+      "validUserPreferenceRecordV1",
+      "directoryEventPageEvent",
+      "parseDirectoryEventV1",
+      "directoryEventPageSha256",
+      "parseDirectoryEventPageV1",
+      "canonicalDirectoryCommandV1",
+      "parseDirectoryCommandV1",
+      "directoryCommandSha256",
+      "sealDirectoryCommandRequestV1",
+      "directoryCommandRequestJson",
+      "parseDirectoryCommandRequestV1",
+      "sealDirectoryCommandReceiptV1",
+      "parseDirectoryCommandReceiptV1",
+      "administrationSha256",
+      "parseDirectorySpaceAdministrationPageV1",
+      "directoryAdministrationCommandAllowedV1"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+    "forbidden": [
+      "parseDirectorySessionAuthorityJsonV1"
+    ],
+    "required": [
+      "parseDirectorySessionAuthorityJsonV1"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts",
+    "forbidden": [
+      "parseSpaceArtifactCreateJsonV1",
+      "parseSpaceArtifactCreationStatusJsonV1",
+      "parseSpaceArtifactCreationCatalogJsonV1"
+    ],
+    "required": [
+      "parseSpaceArtifactCreateJsonV1",
+      "parseSpaceArtifactCreationStatusJsonV1",
+      "parseSpaceArtifactCreationCatalogJsonV1"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts",
+    "forbidden": [
+      "documentCheckInCanonicalJson",
+      "parseDocumentCheckInV1",
+      "canonicalStatus",
+      "parseDocumentCheckInStatusV1"
+    ],
+    "required": [
+      "documentCheckInCanonicalJson",
+      "parseDocumentCheckInV1",
+      "canonicalStatus",
+      "parseDocumentCheckInStatusV1"
+    ]
+  },
+  {
+    "semantic": "🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs",
+    "owner": "🌎️hub/🗿️artifact-authority/🌱️creation/🚪️io/🦀️.rs",
+    "forbidden": [
+      "artifact_creation_command_digest_v1"
+    ],
+    "forbiddenDependencies": [
+      "Sha256",
+      "semio_framework_pack_json",
+      "descriptor_digest_v1",
+      "checkpoint_id_encoding_v1"
+    ],
+    "required": [
+      "artifact_creation_command_digest_v1",
+      "validate_artifact_creation_intent_v1",
+      "validate_artifact_creation_prepared_v1",
+      "fold_artifact_creation_facts_v1",
+      "decide_artifact_creation_fact_append_v1"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🚪️io/📝️text/🧩️presentation/🦀️.rs",
+    "forbidden": [
+      "render_question_field",
+      "render_generation_form_body",
+      "render_generation_preview_text"
+    ],
+    "required": [
+      "render_question_field",
+      "render_generation_form_body",
+      "render_generation_preview_text"
+    ],
+    "forbiddenDependencies": [
+      "semio_framework_pack_json",
+      "serde_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️checkpoint-identity/🦀️.rs",
+    "forbidden": [
+      "pending_change_ref_json",
+      "content_addressed_checkpoint_id_core",
+      "content_addressed_checkpoint_id",
+      "content_addressed_checkpoint_id_with_pending_change"
+    ],
+    "required": [
+      "pending_change_ref_json",
+      "content_addressed_checkpoint_id_core",
+      "content_addressed_checkpoint_id",
+      "content_addressed_checkpoint_id_with_pending_change"
+    ],
+    "forbiddenDependencies": [
+      "semio_framework_pack_json"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🦀️.rs",
+    "forbidden": [
+      "content_addressed_entity_id",
+      "edit_scoped_id",
+      "mint_edit_id",
+      "mint_change_id",
+      "mint_alternative_id",
+      "mint_mutation_id",
+      "create_document_vcs_id"
+    ],
+    "required": [
+      "content_addressed_entity_id",
+      "edit_scoped_id",
+      "mint_edit_id",
+      "mint_change_id",
+      "mint_alternative_id",
+      "mint_mutation_id"
+    ]
+  },
+  {
+    "semantic": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🦀️.rs",
+    "owner": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🔮️oracle/🦀️.rs",
+    "forbidden": [
+      "ChangeDataFields::serialize",
+      "ChangeDataFields::deserialize"
+    ],
+    "required": [
+      "ChangeDataFields::serialize",
+      "ChangeDataFields::deserialize"
+    ]
+  },
+  {
+    "semantic": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🦀️.rs",
+    "forbidden": [
+      "selection_domains_json",
+      "set_selection_domains_json",
+      "selected_channels_json",
+      "set_selected_channels_json",
+      "set_node_statuses_from_json"
+    ],
+    "required": [
+      "decode_dag_selection_json",
+      "decode_dag_channels_json",
+      "decode_dag_node_statuses_json",
+      "encode_dag_selection_json",
+      "encode_dag_channels_json"
+    ]
+  }
+]

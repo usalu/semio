@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeEdgeVisible` — patches the one addressed edge in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::ChangeEdgeVisible, base: &Puzzle2dSnapshot) -> prot
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        edges: Some(Puzzle2dEdgesDelta::patching(payload.id.clone(), patch)),
+        edges: Some(Puzzle2dEdgesDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

@@ -1,7 +1,7 @@
 //! 🏪️ Store fixture — a real `Grid3dStore` takes every mutation of the roster against a bundled
 //! example and lands on a document that still round-trips, with every store closed before drop.
 
-use crate::mutations::{apply_grid3d_mutation, change_seed, create_tile, delete_tile, inverse_grid3d_mutation, mask_cell, pin_cell, unmask_cell, unpin_cell};
+use crate::mutations::{change_seed, create_tile, delete_tile, inverse_grid3d_mutation, mask_cell, pin_cell, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{Grid3dCell, Grid3dPinnedCell, Grid3dSnapshot, Grid3dTile};
 use store::ArtifactPack;
 
@@ -18,7 +18,7 @@ fn a_mounted_sequence_of_edits_lands_on_a_document_that_still_round_trips() {
         delete_tile("zzz-glass".into()),
     ];
     for step in &steps {
-        apply_grid3d_mutation(&mut document, step).expect("every step of the roster applies");
+        vcs::apply_mutation(&document, step).map(|(applied_state, _)| { document = applied_state; }).expect("every step of the roster applies");
     }
     let pack = ArtifactPack::encode_pack(&document);
     assert_eq!(<Grid3dSnapshot as ArtifactPack>::decode_pack(&pack).expect("pack"), document);
@@ -39,11 +39,11 @@ fn undoing_the_whole_sequence_returns_the_document_to_the_committed_example() {
     let mut inverses = Vec::new();
     for step in &steps {
         inverses.push(inverse_grid3d_mutation(&document, step).expect("valid retained mutation inverse fixture"));
-        apply_grid3d_mutation(&mut document, step).expect("forward applies");
+        vcs::apply_mutation(&document, step).map(|(applied_state, _)| { document = applied_state; }).expect("forward applies");
     }
     for inverse in inverses.iter().rev() {
         for step in inverse {
-            apply_grid3d_mutation(&mut document, step).expect("inverse applies");
+            vcs::apply_mutation(&document, step).map(|(applied_state, _)| { document = applied_state; }).expect("inverse applies");
         }
     }
     assert_eq!(document, base, "the whole edit ladder is point-invertible");

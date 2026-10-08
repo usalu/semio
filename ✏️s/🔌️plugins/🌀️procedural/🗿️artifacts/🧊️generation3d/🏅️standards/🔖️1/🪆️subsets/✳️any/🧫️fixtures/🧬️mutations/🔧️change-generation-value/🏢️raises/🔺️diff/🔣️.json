@@ -5,9 +5,10 @@
   "synapses": null,
   "layout": null,
   "generations": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "gen-1",
         "patch": {
@@ -24,8 +25,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "selectedGeneration": null,
   "previewText": null

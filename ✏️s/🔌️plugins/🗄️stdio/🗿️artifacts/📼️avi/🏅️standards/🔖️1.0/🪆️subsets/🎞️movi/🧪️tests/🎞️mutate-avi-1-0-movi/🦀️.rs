@@ -7,7 +7,7 @@
 //! independent `riff`-composed codec
 //! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
-//! `decode_avi`/`encode_avi`/`apply_avi_mutation` over the full 12-kind `AviMutation` vocabulary.
+//! `decode_avi`/`encode_avi`/`apply_mutation` over the full 12-kind `AviMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_avi_1_0` before the
 //! `semantic-avi-v1` profile compares them. The subject half is gated behind the generated host's
 //! `sut` feature so the oracle-only run never compiles the local implementation.
@@ -91,7 +91,7 @@ mod subject {
     use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::io::{decode_avi, encode_avi};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_avi::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation,AviMutation};
+    use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::mutations::{AviMutation};
 
     use semio_s_artifact_stdio_avi_test_oracle::standards::v1_0::subsets::hdrl::project_avi_1_0;
 
@@ -113,7 +113,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode_avi(&mutable_input(ctx)?).map_err(|error| format!("decode_avi failed: {error}"))?;
-        apply_avi_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_avi(&snapshot);
         let projection = project_avi_1_0(&bytes)?;
         actual(ctx, bytes, projection)
@@ -125,9 +125,9 @@ mod subject {
         let base = decode_avi(&mutable_input(ctx)?).map_err(|error| format!("decode_avi failed: {error}"))?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
-        apply_avi_mutation(&mut snapshot, &mutation);
-        for undo in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_avi_mutation(&mut snapshot, &undo);
+        apply_mutation(&mut snapshot, &mutation);
+        for undo in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_avi(&snapshot);
         let projection = project_avi_1_0(&bytes)?;

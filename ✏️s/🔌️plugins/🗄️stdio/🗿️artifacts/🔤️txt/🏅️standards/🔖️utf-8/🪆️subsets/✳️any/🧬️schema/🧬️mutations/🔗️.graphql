@@ -4,6 +4,7 @@
 # insert-line/InsertLine
 # remove-line/RemoveLine
 # set-line/SetLine
+# splice-text/SpliceText
 scalar TxtMutationUInt32V1
 
 input TxtMutationInput @oneOf {
@@ -12,4 +13,5 @@ input TxtMutationInput @oneOf {
   insertLine: InsertLinePayload
   removeLine: RemoveLinePayload
   setLine: SetLinePayload
+  spliceText: SpliceTextPayload
 }

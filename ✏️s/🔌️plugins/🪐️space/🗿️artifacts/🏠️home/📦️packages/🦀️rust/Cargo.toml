@@ -15,11 +15,19 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[bin]]
+name = "semio-space-home-mutation-bridge"
+path = "../../🏭️bridge/🦀️.rs"
+required-features = ["mutation-inventory"]
+
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:semio-s-artifact-space-space", "semio-s-artifact-space-space/component-app-assembly"]
+mutation-inventory = ["dep:semio-framework-test-mutation-inventory"]
+component-app-assembly = ["semio-s-space-core/component-app-assembly", "semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
+semio-framework-test-mutation-inventory = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust", optional = true, features = ["replication"] }
+semio-s-space-core = { path = "../../../../🫀️core/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -45,7 +53,6 @@ semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
-semio-s-artifact-space-space = { workspace = true, optional = true }
 pack = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-os-infinite = { workspace = true, optional = true }

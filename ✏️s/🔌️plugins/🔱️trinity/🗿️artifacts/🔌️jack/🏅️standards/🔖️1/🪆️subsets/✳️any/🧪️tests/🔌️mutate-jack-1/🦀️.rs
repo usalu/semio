@@ -145,7 +145,7 @@ use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::mutation
                 return Err(format!("inverse-{kind}: the forward mutation left the content handle untouched, so restoring it proves nothing ({})", jack_scene_summary(&current).map_err(|cause| cause.into_message())?));
             }
             let mutated = projection(&current)?;
-            for step in inverse_trinity_graph_mutation_steps(&payload, &base).expect("valid retained mutation inverse fixture") {
+            for step in inverse_trinity_graph_mutation_steps(&payload, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
                 let undone = apply_trinity_graph_mutation_reporting(&mut current, &step);
                 if undone.iter().any(|(code, _)| code != "mutation.no-op") {
                     return Err(format!("inverse-{kind}: an inverse step was rejected: {undone:?}"));

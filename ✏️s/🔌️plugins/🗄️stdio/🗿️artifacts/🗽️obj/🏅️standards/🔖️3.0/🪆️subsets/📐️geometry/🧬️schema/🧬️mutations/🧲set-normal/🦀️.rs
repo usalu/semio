@@ -25,7 +25,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetNormal {
         let Self { index, normal } = self;
         protocol::MutationOutcome::new({
             let old = base.normals.get(*index).cloned().unwrap_or_default();
-            diff_set_normal(*index, normal_diff_between(&old, normal))
+            diff_set_normal(*index, normal_field_changes(&old, normal))
         })
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {

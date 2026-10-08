@@ -3,11 +3,15 @@
   "manufacturerName": null,
   "productGroups": null,
   "productClasses": {
-    "added": [],
     "removed": [
-      "class.panel-radiator"
+      {
+        "id": "class.panel-radiator",
+        "index": 0
+      }
     ],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "productSeries": null,
   "products": null,

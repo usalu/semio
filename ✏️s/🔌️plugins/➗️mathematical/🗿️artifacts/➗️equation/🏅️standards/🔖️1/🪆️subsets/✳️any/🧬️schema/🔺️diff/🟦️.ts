@@ -1,11 +1,10 @@
 /** 🔺️ Sparse Equation document delta: graph scalars, id-keyed node and edge row deltas, positional point edits and label-addressed expression-node kind patches. */
 import {parseEquationExprSnapshot,parseEquationGeometry,parseEquationGraph,type EquationEdge,type EquationNode,type EquationNodeKind,type EquationPoint} from "../🟦️.ts";
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface EquationOptionalSeed { value: string | null }
-export interface RowDelta<Row, Patch> { added: Row[]; removed: string[]; patched: Patch[]; reordered: string[] | null }
-export interface EquationNodePatch { id: string; label?: string; x?: number; y?: number }
-export interface EquationEdgePatch { id: string; source?: string; target?: string }
+export interface RowDelta<Row, Patch> { removed: { id: string; index: number }[]; inserted: { index: number; row: Row }[]; moved: { id: string; from: number; to: number }[]; modified: { id: string; patch: Patch }[] }
+export interface EquationNodePatch { label?: string; x?: number; y?: number }
+export interface EquationEdgePatch { source?: string; target?: string }
 export type EquationPointEdit = { op: "insert"; at: number; point: EquationPoint } | { op: "remove"; at: number } | { op: "set"; at: number; point: EquationPoint };
 export interface EquationPointsDelta { edits: EquationPointEdit[] }
 export interface EquationKindPatch { label: bigint; kind: EquationNodeKind }
@@ -20,9 +19,6 @@ export interface EquationDiff {
   /** @state artifact */ nodes?: EquationNodesDelta;
   /** @state artifact */ edges?: EquationEdgesDelta;
   /** @state artifact */ points?: EquationPointsDelta;
-  /** @state artifact */ notation?: ArtifactChild;
-  /** @state artifact */ results?: ArtifactChild;
-  /** @state artifact */ computed?: ArtifactChild;
   /** @state artifact */ equation?: EquationExprDiff;
 }
 
@@ -51,23 +47,35 @@ const index = (value: unknown, at: string): number => {
 const present = <K extends string, T>(row: Record<string, unknown>, key: K, parse: (value: unknown) => T): Partial<Record<K, T>> => (Object.hasOwn(row, key) ? ({ [key]: parse(row[key]) } as Record<K, T>) : {});
 
 const delta = <Row, Patch>(value: unknown, at: string, row: (value: unknown, at: string) => Row, patch: (value: unknown, at: string) => Patch): RowDelta<Row, Patch> => {
-  const fields = record(value, at, ["added", "removed", "patched", "reordered"]);
+  const fields = record(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
-    added: list(fields.added, `${at}.added`).map((item, position) => row(item, `${at}.added[${position}]`)),
-    removed: list(fields.removed, `${at}.removed`).map((id, position) => text(id, `${at}.removed[${position}]`)),
-    patched: list(fields.patched, `${at}.patched`).map((item, position) => patch(item, `${at}.patched[${position}]`)),
-    reordered: fields.reordered == null ? null : list(fields.reordered, `${at}.reordered`).map((id, position) => text(id, `${at}.reordered[${position}]`)),
+    removed: list(fields.removed, `${at}.removed`).map((item, position) => {
+      const entry = record(item, `${at}.removed[${position}]`, ["id", "index"]);
+      return { id: text(entry.id, `${at}.removed[${position}].id`), index: index(entry.index, `${at}.removed[${position}].index`) };
+    }),
+    inserted: list(fields.inserted, `${at}.inserted`).map((item, position) => {
+      const entry = record(item, `${at}.inserted[${position}]`, ["index", "row"]);
+      return { index: index(entry.index, `${at}.inserted[${position}].index`), row: row(entry.row, `${at}.inserted[${position}].row`) };
+    }),
+    moved: list(fields.moved, `${at}.moved`).map((item, position) => {
+      const entry = record(item, `${at}.moved[${position}]`, ["id", "from", "to"]);
+      return { id: text(entry.id, `${at}.moved[${position}].id`), from: index(entry.from, `${at}.moved[${position}].from`), to: index(entry.to, `${at}.moved[${position}].to`) };
+    }),
+    modified: list(fields.modified, `${at}.modified`).map((item, position) => {
+      const entry = record(item, `${at}.modified[${position}]`, ["id", "patch"]);
+      return { id: text(entry.id, `${at}.modified[${position}].id`), patch: patch(entry.patch, `${at}.modified[${position}].patch`) };
+    }),
   };
 };
 
 export function parseEquationNodePatch(value: unknown, at = "$"): EquationNodePatch {
-  const row = record(value, at, ["id", "label", "x", "y"]);
-  return { id: text(row.id, `${at}.id`), ...present(row, "label", (label) => text(label, `${at}.label`)), ...present(row, "x", (x) => finite(x, `${at}.x`)), ...present(row, "y", (y) => finite(y, `${at}.y`)) };
+  const row = record(value, at, ["label", "x", "y"]);
+  return { ...present(row, "label", (label) => text(label, `${at}.label`)), ...present(row, "x", (x) => finite(x, `${at}.x`)), ...present(row, "y", (y) => finite(y, `${at}.y`)) };
 }
 
 export function parseEquationEdgePatch(value: unknown, at = "$"): EquationEdgePatch {
-  const row = record(value, at, ["id", "source", "target"]);
-  return { id: text(row.id, `${at}.id`), ...present(row, "source", (source) => text(source, `${at}.source`)), ...present(row, "target", (target) => text(target, `${at}.target`)) };
+  const row = record(value, at, ["source", "target"]);
+  return { ...present(row, "source", (source) => text(source, `${at}.source`)), ...present(row, "target", (target) => text(target, `${at}.target`)) };
 }
 
 export function parseEquationPointEdit(value: unknown, at = "$"): EquationPointEdit {
@@ -99,7 +107,7 @@ export function parseEquationExprDiff(value: unknown, at = "$"): EquationExprDif
 
 /** 🪪️ Validates the sparse Equation delta boundary. */
 export function parseEquationDiff(value: unknown, at = "$"): EquationDiff {
-  const row = record(value, at, ["directed", "algorithm", "algorithmSeed", "nodes", "edges", "points", "notation", "results", "computed", "equation"]);
+  const row = record(value, at, ["directed", "algorithm", "algorithmSeed", "nodes", "edges", "points", "equation"]);
   const graph = (nodes: unknown[], edges: unknown[]) => parseEquationGraph({ directed: true, nodes, edges, algorithm: "x" });
   return {
     ...present(row, "directed", (directed) => {
@@ -114,9 +122,6 @@ export function parseEquationDiff(value: unknown, at = "$"): EquationDiff {
     ...present(row, "nodes", (nodes) => delta(nodes, `${at}.nodes`, (item) => graph([item], []).nodes[0]!, parseEquationNodePatch)),
     ...present(row, "edges", (edges) => delta(edges, `${at}.edges`, (item) => graph([], [item]).edges[0]!, parseEquationEdgePatch)),
     ...present(row, "points", (points) => ({ edits: list(record(points, `${at}.points`, ["edits"]).edits, `${at}.points.edits`).map((edit, position) => parseEquationPointEdit(edit, `${at}.points.edits[${position}]`)) })),
-    ...present(row, "notation", (child) => parseArtifactChild(child)),
-    ...present(row, "results", (child) => parseArtifactChild(child)),
-    ...present(row, "computed", (child) => parseArtifactChild(child)),
     ...present(row, "equation", (expr) => parseEquationExprDiff(expr, `${at}.equation`)),
   };
 }

@@ -1,0 +1,67 @@
+{
+  "entries": [
+    {
+      "name": "🔗️ Paged Source Custody · Independent Oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" paged-source-custody-oracle",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.777
+      }
+    },
+    {
+      "name": "🔗️ Paged Source Custody · Original Pack Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" paged-source-custody-demand",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.778
+      }
+    },
+    {
+      "name": "🔗️ Paged Source Custody · Original Pack Native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-pack-record-rs:test-native --skip-nx-cache --excludeTaskDependencies --nxIgnoreCycles -- quick paged_semantic_source_admits_original_owned_custody_and_settles_every_allocation --no-fail-fast -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.779
+      }
+    },
+    {
+      "name": "🔗️ Paged Source Custody · Guarded Provider",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" paged-source-custody-mount",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7800000000001
+      }
+    }
+  ],
+  "registeredBeforeDemandAndNative": true,
+  "seedAndGeneratedLaunch": true,
+  "initialOracleInvocationBeforeSuccessfulRegistration": 95030
+}

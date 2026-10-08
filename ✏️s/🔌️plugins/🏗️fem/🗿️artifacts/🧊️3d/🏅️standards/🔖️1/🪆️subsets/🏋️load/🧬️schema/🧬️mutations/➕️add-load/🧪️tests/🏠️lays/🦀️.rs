@@ -8,7 +8,8 @@
 //! An `Area` load names a solid, not a region — and loads have no collection of their own, so the whole owning case is re-emitted as one patch.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use crate::central_apply::apply_fem3d_mutation;
 
 use crate::Fem3dSnapshot;
 
@@ -92,12 +93,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be one `loadCases.patched` entry whose item carries the pressure — never a nested load delta.
+/// 🔺️ The delta must be one `loadCases.modified` entry whose item carries the pressure — never a nested load delta.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "add-load/lays-an-area-pressure-over-769710: the owning case must be patched exactly once");
+    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "add-load/lays-an-area-pressure-over-769710: the owning case must be patched exactly once");
     assert!(outcome.diff().solids.is_none(), "add-load/lays-an-area-pressure-over-769710: the loaded solid is read-only for this mutation");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -113,7 +114,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-769710: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the loaded case.
+/// 🩹 Replaying the committed `loadCases.modified` entry on `before` must yield the loaded case.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

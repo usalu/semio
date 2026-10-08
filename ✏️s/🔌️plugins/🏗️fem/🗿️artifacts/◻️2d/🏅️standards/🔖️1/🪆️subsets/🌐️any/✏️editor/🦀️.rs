@@ -889,13 +889,9 @@ impl ArtifactEditor for Fem2dPlayApp {
         }
     }
 
-    /// 🧬️ No `whole_document_operation` override on this impl — per `📓️taxonomy.md`, whole-document
-    /// replace (`SetSnapshot`) is banned outright with NO replacement mutation, so this falls back to
-    /// the trait's own default (`None`).
-    ///
     /// 🎞️ `"artifact:in"` swaps the whole live document via `reset_document_effect` (a
     /// `Effect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
-    /// `reset_document_effect`'s own doc comment) instead of routing through `whole_document_operation`.
+    /// `reset_document_effect`'s own doc comment).
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion` via `create-region`, defaulted to the
     /// document's first existing material if any, else an `"unassigned"` placeholder id.

@@ -1,0 +1,7 @@
+# Interface Successor34 Storage Frontier
+
+Successor33 actual metadata guard receives ENOSPC before metadata execution. Fresh observed320Mi Data availability cannot hold an additional full input directory330,731,545 bytes, including producer freeze205,137,307 bytes, before runtime guard/capture bodies. This is an actual capacity failure, not an invented precondition or changed original control. Next-cut source assessment remains read-only; no new epoch has been authored or executed.
+
+The next fresh cut must retain the current typed Directory identity contract plus both actual callers: descriptor-digest test line103 supplies admitted typed selection; canonical-checkpoint test line83 admits transport metadata before pure identity decision. No additional receiver mutation is justified by this static observation; runtime acceptance must come from the unchanged actual strict/law sequence after fresh custody. Root narrow Scene->MeshEngine lock publication is closed and its exact current bodies must be captured, not restored.
+
+All original177 rows/8 retirements/9 companions/41 law identities/full fixtures/cases/controls and Root47 candidate authority remain. All15/25/current bodies/artifact directories/inputs/journals retained. No further cleanup authorization is inferred from disk pressure and no clean skill applied. No own live handles/source write/current whole acceptance. Root full goal remains active.

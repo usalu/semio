@@ -26,6 +26,42 @@
       "properties": {
         "data": {
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GisMapFeaturePropertyEdit"
+          }
+        }
+      }
+    },
+    "GisMapFeaturePropertyEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "set": {
+          "$ref": "#/$defs/GisMapFeaturePropertyValue"
+        }
+      }
+    },
+    "GisMapFeaturePropertyValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json"
         }
       }
     }

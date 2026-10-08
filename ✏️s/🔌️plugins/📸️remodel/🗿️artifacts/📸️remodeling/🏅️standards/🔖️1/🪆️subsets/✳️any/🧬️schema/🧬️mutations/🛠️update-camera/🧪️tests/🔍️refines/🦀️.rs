@@ -1,11 +1,11 @@
-//! 🧪️ `update-camera-calibration` fixture — `🔍️refines-the-cam-0eaef0`.
+//! 🧪️ `update-camera-calibration` fixture — `🔍️refines`.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `update-camera-calibration` is this vector's scenario id in
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `update-camera-calibration-realworld` is this vector's scenario id in
 //! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
 //! this subset's independent Python reference.
 //!
-//! 🏞️ the pre-existing two-stream unit vector, regenerated onto the corrected toy base
+//! 🏞️ a real post-BA refinement: focal length and residual move together
 
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
@@ -36,8 +36,8 @@ fn json_of<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_pack
 #[semio_framework_async_macros::async_test]
 async fn reaches_the_committed_after_document() {
     let applied = apply_remodeling_mutation(&before(), &mutation()).expect("update-camera-calibration applies to its committed before-snapshot");
-    assert_eq!(applied, expected_after(), "update-camera-calibration/refines-the-cam-0eaef0: applied state differs from committed after-snapshot");
-    assert_ne!(applied, before(), "update-camera-calibration/refines-the-cam-0eaef0: an applied vector must move the document");
+    assert_eq!(applied, expected_after(), "update-camera-calibration/refines-the-9fd25a: applied state differs from committed after-snapshot");
+    assert_ne!(applied, before(), "update-camera-calibration/refines-the-9fd25a: an applied vector must move the document");
 }
 
 /// 🔺️ The sparse delta this leaf produces is EXACTLY the committed diff — the load-bearing
@@ -46,9 +46,9 @@ async fn reaches_the_committed_after_document() {
 async fn produces_committed_diff() {
     let outcome = produced();
     let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert_eq!(json_of(outcome.diff()), committed, "update-camera-calibration/refines-the-cam-0eaef0: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(json_of(outcome.diff()), committed, "update-camera-calibration/refines-the-9fd25a: produced diff differs from the committed 🔺️diff/🔣️.json");
     let decoded: RemodelingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the diff type");
-    assert_eq!(json_of(&decoded), committed, "update-camera-calibration/refines-the-cam-0eaef0: committed diff JSON is not canonical");
+    assert_eq!(json_of(&decoded), committed, "update-camera-calibration/refines-the-9fd25a: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the delta is a COMPLETE
@@ -56,22 +56,22 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_carries_before_to_after() {
     let decoded: RemodelingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let applied = <RemodelingDiff as protocol::MutationDiff<RemodelingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(applied, expected_after(), "update-camera-calibration/refines-the-cam-0eaef0: committed diff did not carry before to after");
+    let applied = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(applied, expected_after(), "update-camera-calibration/refines-the-9fd25a: committed diff did not carry before to after");
 }
 
 /// 🎯️ The declared outcome — its status and every diagnostic it names — is what this leaf emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "update-camera-calibration/refines-the-cam-0eaef0 declares an applied outcome");
+    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "update-camera-calibration/refines-the-9fd25a declares an applied outcome");
     let produced = produced();
     let declared_codes: Vec<String> = match declared.get("messages") {
         Some(semio_framework_pack_json::Value::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),
         _ => Vec::new(),
     };
     let emitted: Vec<String> = produced.messages().iter().map(|message| message.code.0.clone()).collect();
-    assert_eq!(emitted, declared_codes, "update-camera-calibration/refines-the-cam-0eaef0: emitted diagnostics differ from the declared ones");
+    assert_eq!(emitted, declared_codes, "update-camera-calibration/refines-the-9fd25a: emitted diagnostics differ from the declared ones");
 }
 
 /// ↩️ Applying the verb and then EVERY step of its own computed inverse restores the committed
@@ -83,7 +83,7 @@ async fn inverse_restores_the_before_document() {
     for step in &inverse_remodeling_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture") {
         snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "update-camera-calibration/refines-the-cam-0eaef0: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "update-camera-calibration/refines-the-9fd25a: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a
@@ -93,8 +93,14 @@ async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: RemodelingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
-        assert_eq!(json_of(&decoded), original, "update-camera-calibration/refines-the-cam-0eaef0: committed {label} JSON is not canonical");
+        assert_eq!(json_of(&decoded), original, "update-camera-calibration/refines-the-9fd25a: committed {label} JSON is not canonical");
     }
     let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
-    assert_eq!(json_of(&mutation()), original, "update-camera-calibration/refines-the-cam-0eaef0: committed mutation JSON is not canonical");
+    assert_eq!(json_of(&mutation()), original, "update-camera-calibration/refines-the-9fd25a: committed mutation JSON is not canonical");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

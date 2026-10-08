@@ -16,12 +16,14 @@ semio_framework_value::artifact_retire_struct!(BimWindowTransient { engagement_i
 semio_framework_plugin::transient_root! {
     state: BimWindowTransient,
     mutation: BimWindowTransientMutation,
+    diff: BimWindowTransientDiff,
     owner: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set BIM Window Transient",
     payload_schema: "bim.window.transient",
     envelope: "s.bim.model.window.transient",
     extension: "bimwindowtransient",
+    fields: { engagement_input: String, pointer_generation: u64, preview: String },
 }
 
 semio_framework_plugin::window_transient_owners! {

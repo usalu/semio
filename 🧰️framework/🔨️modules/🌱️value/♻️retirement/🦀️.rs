@@ -1,6 +1,6 @@
 //! ♻️ Explicit, incremental typed-owner retirement shared by artifact factories and host codecs.
 
-use crate::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
+use crate::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use crate::retained_clone::RetainedCloneGrant;
 use std::{marker::PhantomData, mem::ManuallyDrop, sync::Arc};
 
@@ -13,6 +13,7 @@ pub trait RetireOwned: Send + 'static {
 }
 
 pub enum RetirementStep {
+    Progress(crate::retained_clone::RetainedCloneProgress),
     Child(Box<dyn RetirementCursor>),
     Bytes(usize),
     ProcessedBytes(usize),
@@ -30,7 +31,9 @@ pub trait RetirementCursor: Send {
     fn next_close_byte_demand(&self) -> Option<usize> {
         None
     }
-    fn next_work_byte_demand(&self) -> usize { 0 }
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(0)}
+    /// 🪆️ Declares a separately funded child when a complete inline item exceeds this work grant.
+    fn allows_admitted_narrow_work(&self) -> bool { false }
     fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> { None }
     fn terminal_release_bytes(&self) -> Option<usize> { None }
 }
@@ -71,7 +74,7 @@ impl<T: Copy + Send + 'static> RetirementCursor for Leaf<T> {
     fn terminal_is_empty(&self) -> bool {
         self.value.is_none() && self.remaining == 0
     }
-    fn next_work_byte_demand(&self) -> usize { usize::from(self.remaining != 0) }
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(usize::from(self.remaining != 0))}
     fn next_close_byte_demand(&self) -> Option<usize> { Some(usize::from(self.remaining != 0)) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
@@ -138,7 +141,7 @@ impl RetirementCursor for Bytes {
         RetirementStep::Complete
     }
     fn terminal_is_empty(&self) -> bool { self.1 }
-    fn next_work_byte_demand(&self) -> usize { usize::from(!self.0.is_empty()) }
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(usize::from(!self.0.is_empty()))}
     fn next_close_byte_demand(&self) -> Option<usize> { Some(if self.0.is_empty(){self.0.capacity()}else{1}) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
@@ -185,7 +188,8 @@ impl<T: RetireOwned> RetirementCursor for Collection<T> {
         self.0.is_empty() && (self.0.capacity()==0 || size_of::<T>()==0)
     }
     fn next_close_byte_demand(&self)->Option<usize>{Some(if self.0.is_empty(){self.0.capacity()*size_of::<T>()}else{0})}
-    fn next_work_byte_demand(&self) -> usize { if !std::mem::needs_drop::<T>() && !self.0.is_empty() { T::retirement_element_copy_bytes() } else { 0 } }
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(if !std::mem::needs_drop::<T>()&&!self.0.is_empty(){T::retirement_element_copy_bytes()}else{0})}
+    fn allows_admitted_narrow_work(&self)->bool{!std::mem::needs_drop::<T>()&&!self.0.is_empty()&&T::retirement_element_copy_bytes()!=0}
     fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> {
         if self.0.is_empty() || (!std::mem::needs_drop::<T>() && T::retirement_element_copy_bytes() != 0 && maximum_bytes >= T::retirement_element_copy_bytes()) { Some(0) }
         else { self.0.last()?.retirement_birth_bytes() }
@@ -462,212 +466,59 @@ impl RetireOwned for crate::DslValue {
     fn controlled_retirement_supported() -> bool { true }
 }
 
-struct CursorStack(ManuallyDrop<Vec<Box<dyn RetirementCursor>>>);
-impl CursorStack {
-    fn step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if self.0.is_empty() && self.0.capacity()!=0 {
-            let bytes=self.0.capacity()*size_of::<Box<dyn RetirementCursor>>();
-            if maximum_items==0 || bytes>maximum_bytes { return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0}); }
-            drop(std::mem::take(&mut *self.0));
-            return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:bytes});
-        }
-        let (mut turns, mut released_items, mut released_bytes, mut processed_bytes) = (0, 0, 0, 0);
-        while turns < maximum_items {
-            let Some(cursor) = self.0.last_mut() else { break };
-            if cursor.terminal_is_empty() {
-                let bytes=cursor.terminal_release_bytes().unwrap_or_else(||size_of_val(cursor.as_ref()));
-                if bytes>maximum_bytes-released_bytes-processed_bytes { break; }
-                drop(self.0.pop());
-                released_items+=1;released_bytes+=bytes;turns+=1;
-                continue;
-            }
-            let remaining = maximum_bytes - released_bytes - processed_bytes;
-            match cursor.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: remaining, maximum_capacity_bytes: remaining, maximum_release_bytes: remaining, maximum_depth: usize::MAX }) {
-                RetirementStep::Child(child) => self.0.push(child),
-                RetirementStep::Advanced => {},
-                RetirementStep::Failure(error) => return Err(error),
-                RetirementStep::Bytes(bytes) if bytes <= maximum_bytes - released_bytes - processed_bytes => released_bytes += bytes,
-                RetirementStep::ProcessedBytes(bytes) if bytes <= maximum_bytes - released_bytes - processed_bytes => processed_bytes += bytes,
-                RetirementStep::ProcessedBytes(_) => return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "owned retirement exceeded its exact work byte grant")),
-                RetirementStep::Bytes(_) => return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "owned retirement exceeded its exact byte grant")),
-                RetirementStep::Complete => {
-                    if !cursor.terminal_is_empty() {
-                        return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "owned retirement reported Complete without a terminal-empty witness"));
-                    }
-                    let bytes=cursor.terminal_release_bytes().unwrap_or_else(||size_of_val(cursor.as_ref()));
-                    if bytes>maximum_bytes-released_bytes-processed_bytes { break; }
-                    drop(self.0.pop());
-                    released_items += 1;released_bytes+=bytes;
-                }
-                RetirementStep::BudgetExhausted => {
-                    if maximum_bytes != 0 && released_items == 0 && released_bytes == 0 && processed_bytes == 0 && cursor.next_close_byte_demand().is_some_and(|demand| demand > maximum_bytes) {
-                        return Err(crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "owned retirement byte grant is smaller than its next physical release"));
-                    }
-                    break;
-                }
-            }
-            turns += 1;
-        }
-        Ok(if self.0.is_empty() && released_items == 0 && released_bytes == 0 { SnapshotRetirementStep::Complete } else { SnapshotRetirementStep::Pending { released_items, released_bytes } })
-    }
+/// 🧱️ Borrows the exact erased ownership frame before its original value moves.
+pub const fn owned_retirement_birth_bytes<T: RetireOwned>() -> usize { controlled::controlled_retirement_birth_bytes::<T>() }
 
-    fn next_close_byte_demand(&self) -> usize {
-        self.0.last().map_or_else(||self.0.capacity()*size_of::<Box<dyn RetirementCursor>>(),|cursor|if cursor.terminal_is_empty(){cursor.terminal_release_bytes().unwrap_or_else(||size_of_val(cursor.as_ref()))}else{cursor.next_close_byte_demand().unwrap_or(1).max(usize::from(cursor.next_work_byte_demand()!=0))})
-    }
-}
-impl Drop for CursorStack {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.0.is_empty(), "owned cursor stack retired before terminal-empty");
-        unsafe { ManuallyDrop::drop(&mut self.0) };
-    }
+/// 🎟️ Returns the original owner when its erased frame has not been admitted.
+pub fn admit_owned_retirement<T: RetireOwned>(value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, crate::retained_clone::RetainedCloneProgress), (crate::ValueError, T)> {
+    controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
 }
 
-struct OwnedRetirement<T: RetireOwned> {
-    value: ManuallyDrop<Option<T>>,
-    cursors: CursorStack,
-}
-impl<T: RetireOwned> ErasedSnapshotRetirement for OwnedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if maximum_items == 0 || maximum_bytes < self.next_close_byte_demand() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.value.is_some() {
-            self.cursors.0.try_reserve_exact(1).map_err(|_| crate::ValueError::new(crate::ValueRefusalKind::AllocationFailed, "owned retirement cursor slot allocation failed"))?;
-        }
-        if let Some(value) = self.value.take() {
-            self.cursors.0.push(value.retirement());
-            if self.cursors.0.last().is_some_and(|cursor|cursor.next_birth_bytes(maximum_bytes)==Some(0)) && self.cursors.next_close_byte_demand()<=maximum_bytes {
-                return self.cursors.step(maximum_items,maximum_bytes);
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        self.cursors.step(maximum_items, maximum_bytes)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.cursors.0.is_empty() && self.cursors.0.capacity()==0
-    }
-
-    fn next_close_byte_demand(&self) -> usize {
-        self.value.as_ref().map_or_else(|| self.cursors.next_close_byte_demand(), |value| value.retirement_birth_bytes().unwrap_or(0).saturating_add(size_of::<Box<dyn RetirementCursor>>()).max(1))
-    }
-}
-impl<T: RetireOwned> Drop for OwnedRetirement<T> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.terminal_is_empty(), "owned value retired before terminal-empty");
-    }
-}
-/// 🧱️ Borrows the exact typed erased ownership frame before its original value moves.
-pub const fn owned_retirement_birth_bytes<T: RetireOwned>() -> usize { size_of::<OwnedRetirement<T>>() }
-pub fn owned_retirement<T: RetireOwned>(value: T) -> Box<dyn ErasedSnapshotRetirement> {
-    Box::new(OwnedRetirement { value: ManuallyDrop::new(Some(value)), cursors: CursorStack(ManuallyDrop::new(Vec::new())) })
+/// 🎟️ Keeps the exact original in its caller slot until its installed issuer admits the whole frame.
+pub fn admit_original_owned_retirement<T>(original:&mut Option<T>,factory:&dyn ArtifactOwnedValueRetirementFactory<T>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> {
+    let Some(value)=original.as_ref()else{return Ok(None)};
+    let refusal=if grant.maximum_items==0{Some((crate::ValueRefusalKind::WorkLimit,"owned retirement requires one admitted item"))}else if grant.maximum_depth==0{Some((crate::ValueRefusalKind::DepthLimit,"owned retirement requires admitted depth"))}else if factory.retirement_birth_bytes(value)>grant.maximum_capacity_bytes{Some((crate::ValueRefusalKind::OwnershipLimit,"owned retirement exceeds admitted frame capacity"))}else{None};
+    if let Some((kind,message))=refusal{return Err(crate::ValueError::literal(kind,message));}
+    match factory.retire_owned(original.take().expect("observed exact original owned value"),grant){Ok(admitted)=>Ok(Some(admitted)),Err((error,value))=>{*original=Some(value);Err(error)}}
 }
 
 struct ErasedCursor(Box<dyn ErasedSnapshotRetirement>);
 impl RetirementCursor for ErasedCursor {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}match self.0.close_step(1,grant.maximum_release_bytes){Ok(SnapshotRetirementStep::Pending {released_bytes,..})=>RetirementStep::Bytes(released_bytes),Ok(SnapshotRetirementStep::Complete)=>RetirementStep::Complete,Ok(SnapshotRetirementStep::Blocked)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
+        match self.0.close_step(grant) {
+            Err(error)=>RetirementStep::Failure(error),
+            Ok(crate::retained_clone::RetainedCloneStep::Complete(progress)) if progress==crate::retained_clone::RetainedCloneProgress::default()=>RetirementStep::Complete,
+            Ok(crate::retained_clone::RetainedCloneStep::Progress(progress)|crate::retained_clone::RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),
+        }
+    }
     fn terminal_is_empty(&self)->bool {self.0.terminal_is_empty()}
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.0.next_copy_byte_demand()}
+    fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.0.next_capacity_byte_demand(copy).ok()}
+    fn next_close_byte_demand(&self)->Option<usize> {self.0.next_release_byte_demand().ok()}
+    fn next_depth_demand(&self)->Result<usize,crate::ValueError> {self.0.next_depth_demand()}
+    fn terminal_release_bytes(&self)->Option<usize> {self.0.terminal_is_empty().then_some(size_of::<Self>()+size_of_val(self.0.as_ref()))}
 }
-/// ♻️ Transfers an existing retirement frontier into its typed parent frontier.
+
+/// ♻️ Transfers an existing admitted retirement into its typed parent frontier.
+/// 🧮️ Declares the existing erased cursor shell before its parent admits ownership.
+pub const fn erased_cursor_birth_bytes()->usize {size_of::<ErasedCursor>()}
 pub fn erased_cursor(value:Box<dyn ErasedSnapshotRetirement>)->Box<dyn RetirementCursor> {Box::new(ErasedCursor(value))}
-
-struct SharedRetirement<T: RetireOwned + Sync> {
-    release_lease: bool,
-    value: ManuallyDrop<Option<Arc<T>>>,
-    owned: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-}
-impl<T: RetireOwned + Sync> ErasedSnapshotRetirement for SharedRetirement<T> {
-    fn next_close_byte_demand(&self) -> usize {
-        if let Some(value) = self.value.as_ref() {
-            return if Arc::strong_count(value) == 1 {
-                std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<T>()).expect("shared retirement Arc layout").0.pad_to_align().size().saturating_add(size_of::<OwnedRetirement<T>>())
-            } else { 1 };
-        }
-        self.owned.as_ref().map_or(0, |owned| if owned.terminal_is_empty() { size_of_val(owned.as_ref()) } else { owned.next_close_byte_demand() })
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if maximum_items == 0 || (self.release_lease && maximum_bytes == 0) || maximum_bytes < self.next_close_byte_demand() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.value.take() {
-            let arc_bytes = std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<T>()).expect("shared retirement Arc layout").0.pad_to_align().size();
-            if self.release_lease {
-                let released_bytes = if let Some(value) = Arc::into_inner(value) { *self.owned = Some(owned_retirement(value)); arc_bytes } else { 0 };
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-            }
-            match Arc::try_unwrap(value) {
-                Ok(value) => *self.owned = Some(owned_retirement(value)),
-                Err(shared) => {
-                    *self.value = Some(shared);
-                    return Ok(SnapshotRetirementStep::Blocked);
-                }
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: arc_bytes });
-        }
-        let Some(owned) = self.owned.as_mut() else { return Ok(SnapshotRetirementStep::Complete) };
-        if owned.terminal_is_empty() {
-            let released_bytes = size_of_val(owned.as_ref());
-            drop(self.owned.take());
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        match owned.close_step(maximum_items, maximum_bytes)? {
-            SnapshotRetirementStep::Complete => {
-                if !owned.terminal_is_empty() {
-                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "shared retirement lacks its nested terminal witness"));
-                }
-                Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-            }
-            step => Ok(step),
-        }
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.owned.is_none()
-    }
-}
-impl<T: RetireOwned + Sync> Drop for SharedRetirement<T> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.terminal_is_empty(), "shared value retired before terminal-empty");
-    }
-}
-/// 🧮️ Exact borrowed admission for the shared retirement cursor frame.
-pub fn shared_retirement_birth_bytes<T: RetireOwned + Sync>() -> usize { std::mem::size_of::<SharedRetirement<T>>() }
-
-pub fn shared_retirement<T: RetireOwned + Sync>(value: Arc<T>) -> Box<dyn ErasedSnapshotRetirement> {
-    Box::new(SharedRetirement { release_lease: false, value: ManuallyDrop::new(Some(value)), owned: ManuallyDrop::new(None) })
-}
-
-/// 🔗️ Consumes one immutable lease, transferring only its last payload to bounded owned retirement.
-pub fn shared_lease_retirement<T: RetireOwned + Sync>(value: Arc<T>) -> Box<dyn ErasedSnapshotRetirement> {
-    Box::new(SharedRetirement { release_lease: true, value: ManuallyDrop::new(Some(value)), owned: ManuallyDrop::new(None) })
-}
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct OwnedValueRetirementFactory<T>(PhantomData<fn() -> T>);
-impl<T> Default for OwnedValueRetirementFactory<T> {
-    fn default() -> Self {
-        Self(PhantomData)
-    }
+impl<T> Default for OwnedValueRetirementFactory<T> { fn default()->Self {Self(PhantomData)} }
+impl<T:RetireOwned> ArtifactOwnedValueRetirementFactory<T> for OwnedValueRetirementFactory<T> {
+    fn retirement_birth_bytes(&self,_:&T)->usize {owned_retirement_birth_bytes::<T>()}
+    fn retire_owned(&self,value:T,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,T)> {admit_owned_retirement(value,grant)}
 }
-impl<T: RetireOwned> ArtifactOwnedValueRetirementFactory<T> for OwnedValueRetirementFactory<T> {
-    fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement> {
-        owned_retirement(value)
-    }
-}
+
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SharedValueRetirementFactory<T>(PhantomData<fn() -> T>);
-impl<T> Default for SharedValueRetirementFactory<T> {
-    fn default() -> Self {
-        Self(PhantomData)
-    }
+impl<T> Default for SharedValueRetirementFactory<T> { fn default()->Self {Self(PhantomData)} }
+impl<T:RetireOwned+Sync> SnapshotRetirementFactory<T> for SharedValueRetirementFactory<T> {
+    fn retirement_birth_bytes(&self,_:&Arc<T>)->usize {shared::shared_retirement_birth_bytes::<T>()}
+    fn retire(&self,value:Arc<T>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,Arc<T>)> {shared::admit_shared_retirement(value,grant,false)}
 }
-impl<T: RetireOwned + Sync> SnapshotRetirementFactory<T> for SharedValueRetirementFactory<T> {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { shared_retirement_birth_bytes::<T>() }
-
-    fn retire(&self, value: Arc<T>) -> Box<dyn ErasedSnapshotRetirement> {
-        shared_retirement(value)
-    }
-}
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -679,9 +530,21 @@ pub mod allocation_return;
 #[path = "🎮️controlled/🦀️.rs"]
 pub mod controlled;
 
+#[path="🔗️shared/🦀️.rs"]
+pub mod shared;
+
 #[path="📋️queue/🦀️.rs"]
 pub mod queue;
+
+#[path="🎟️turn/🦀️.rs"]
+pub mod turn;
 
 #[cfg(test)]
 #[path="📋️queue/🧪️tests/🎮️ownership/🦀️.rs"]
 mod queue_tests;
+
+#[path="📦️aliases/🦀️.rs"]
+pub mod aliases;
+
+#[path="🎟️frame/🦀️.rs"]
+pub mod frame;

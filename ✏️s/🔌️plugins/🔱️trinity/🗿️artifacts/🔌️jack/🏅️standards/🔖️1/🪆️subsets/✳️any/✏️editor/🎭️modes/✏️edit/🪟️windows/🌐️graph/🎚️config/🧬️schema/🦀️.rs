@@ -59,9 +59,6 @@ impl protocol::DiffAlgebra<JackGraphWindowConfig> for JackGraphWindowConfigDiff 
     fn inverse(&self, base: &JackGraphWindowConfig) -> Self {
         Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()) }
     }
-    fn between(base: &JackGraphWindowConfig, other: &JackGraphWindowConfig) -> Self {
-        Self { camera: (base.camera != other.camera).then(|| other.camera.clone()), lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none() && self.lod_mode.is_none()
     }

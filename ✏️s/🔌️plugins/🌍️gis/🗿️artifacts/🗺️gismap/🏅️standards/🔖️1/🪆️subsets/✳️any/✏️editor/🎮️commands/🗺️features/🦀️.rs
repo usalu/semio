@@ -2,9 +2,8 @@
 //! `patchRoute` are the bulk import/patch surface; `addFeature`/`moveFeature`/`renameFeature`/
 //! `deleteFeature` are the per-feature editing vocabulary the Actions rail can stage.
 
-use crate::mutations::replace_route_data;
+use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, remove_position_property, remove_region_property, remove_route_property, replace_position_data, set_position_property, set_region_property, set_route_property};
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::schema::{positions_operations, regions_operations, routes_operations};
 use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::{GisMapSnapshot, MapFeature};
 use semio_framework_value::DslValue;
@@ -31,15 +30,46 @@ fn collection_features<'a>(document: &'a GisMapSnapshot, collection: &str) -> Op
     }
 }
 
-/// 🧬️ Diffs one collection's before/after into that collection's own create/replace-data/delete
-/// triplet — the SAME granular path `patchPositions` and `setActiveExample` take, so every editing
-/// verb below inherits the leaves' authored `diff`/`inverse` and is undoable by construction.
-fn collection_operations(collection: &str, before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+/// 🆕️ The collection's own `create-<noun>` kind inserting `item` at `index`; an unknown collection addresses nothing.
+fn create_operation(collection: &str, index: usize, item: MapFeature) -> Option<GisMapMutation> {
     match collection {
-        "positions" => positions_operations(before, after),
-        "routes" => routes_operations(before, after),
-        "regions" => regions_operations(before, after),
-        _ => Vec::new(),
+        "positions" => Some(GisMapMutation::CreatePosition(create_position::CreatePosition { index, item })),
+        "routes" => Some(GisMapMutation::CreateRoute(create_route::CreateRoute { index, item })),
+        "regions" => Some(GisMapMutation::CreateRegion(create_region::CreateRegion { index, item })),
+        _ => None,
+    }
+}
+
+/// ✏️ The collection's own `set-<noun>-property` kind setting one payload property; a new key is inserted before
+/// `before` (appended without one).
+fn set_property_operation(collection: &str, feature: &str, key: &str, value: DslValue, before: Option<String>) -> Option<GisMapMutation> {
+    let (feature, key) = (feature.to_string(), key.to_string());
+    match collection {
+        "positions" => Some(GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature, key, value, before })),
+        "routes" => Some(GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature, key, value, before })),
+        "regions" => Some(GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature, key, value, before })),
+        _ => None,
+    }
+}
+
+/// 🧽 The collection's own `remove-<noun>-property` kind removing one payload property.
+fn remove_property_operation(collection: &str, feature: &str, key: &str) -> Option<GisMapMutation> {
+    let (feature, key) = (feature.to_string(), key.to_string());
+    match collection {
+        "positions" => Some(GisMapMutation::RemovePositionProperty(remove_position_property::RemovePositionProperty { feature, key })),
+        "routes" => Some(GisMapMutation::RemoveRouteProperty(remove_route_property::RemoveRouteProperty { feature, key })),
+        "regions" => Some(GisMapMutation::RemoveRegionProperty(remove_region_property::RemoveRegionProperty { feature, key })),
+        _ => None,
+    }
+}
+
+/// 🗑️ The collection's own `delete-<noun>` kind removing one feature.
+fn delete_operation(collection: &str, id: String) -> Option<GisMapMutation> {
+    match collection {
+        "positions" => Some(GisMapMutation::DeletePosition(delete_position::DeletePosition { id })),
+        "routes" => Some(GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id })),
+        "regions" => Some(GisMapMutation::DeleteRegion(delete_region::DeleteRegion { id })),
+        _ => None,
     }
 }
 
@@ -64,14 +94,6 @@ fn addressed_feature<'a>(features: &'a [MapFeature], feature_id: &str) -> Option
 /// 🧱️ The `data` payload entries of a feature, empty when the payload is not an object.
 fn data_entries(feature: &MapFeature) -> Vec<(String, DslValue)> {
     feature.data.as_object().map(<[(String, DslValue)]>::to_vec).unwrap_or_default()
-}
-
-/// ✏️ Writes one `data` key, appending it when the payload does not carry it yet.
-fn write_entry(entries: &mut Vec<(String, DslValue)>, key: &str, value: DslValue) {
-    match entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
-        Some((_, slot)) => *slot = value,
-        None => entries.push((key.to_string(), value)),
-    }
 }
 
 /// 🧭️ The map anchor of a feature payload: an explicit `lon`/`lat` pair, else the first vertex of a
@@ -111,19 +133,63 @@ fn minted_feature_data(collection: &str, id: &str, label: &str, lon: f64, lat: f
     }
 }
 
-/// 🦠️ Rebuilds one collection with `edit` applied to the addressed feature and diffs it — the shared
-/// body of `moveFeature`/`renameFeature`.
-fn edited_collection_operations(document: &GisMapSnapshot, collection: &str, feature_id: &str, edit: impl Fn(&mut Vec<(String, DslValue)>, &MapFeature)) -> Vec<GisMapMutation> {
-    let Some(before) = collection_features(document, collection) else { return Vec::new() };
-    let Some(target) = addressed_feature(before, feature_id) else { return Vec::new() };
-    let mut entries = data_entries(target);
-    if entries.is_empty() {
-        return Vec::new();
-    }
-    edit(&mut entries, target);
-    let after: Vec<MapFeature> = before.iter().map(|feature| if feature.id == target.id { MapFeature { id: feature.id.clone(), data: semio_framework_value::DslValue::Object(entries.clone()) } } else { feature.clone() }).collect();
-    collection_operations(collection, before, &after)
+/// 🏷️ The current value of one payload entry, if the payload carries it.
+fn entry_value<'a>(entries: &'a [(String, DslValue)], key: &str) -> Option<&'a DslValue> {
+    entries.iter().find(|(entry_key, _)| entry_key == key).map(|(_, value)| value)
 }
+
+/// ✏️ The `set-<noun>-property` operation for `key` when the payload does not already hold `value` there.
+fn changed_property_operation(collection: &str, target: &MapFeature, entries: &[(String, DslValue)], key: &str, value: DslValue) -> Option<GisMapMutation> {
+    if entry_value(entries, key) == Some(&value) {
+        return None;
+    }
+    set_property_operation(collection, &target.id, key, value, None)
+}
+
+/// 🧱️ Per-property edits taking `before` to `after`: removed keys become `remove-<noun>-property`, changed or new keys
+/// `set-<noun>-property` (new keys are inserted before the key that followed them, appended when last). Payloads that are
+/// not both objects are replaced whole.
+fn property_edit_operations(collection: &str, id: &str, before: &DslValue, after: &DslValue) -> Vec<GisMapMutation> {
+    let (Some(old), Some(new)) = (before.as_object(), after.as_object()) else {
+        return replace_data_operation(collection, id.to_string(), after.clone()).into_iter().collect();
+    };
+    let mut operations = Vec::new();
+    for (key, _) in old.iter().filter(|(key, _)| entry_value(new, key).is_none()) {
+        operations.extend(remove_property_operation(collection, id, key));
+    }
+    for (at, (key, value)) in new.iter().enumerate() {
+        if entry_value(old, key) == Some(value) {
+            continue;
+        }
+        let anchor = entry_value(old, key).is_none().then(|| new[at + 1..].iter().map(|(next, _)| next.clone()).find(|next| entry_value(old, next).is_some())).flatten();
+        operations.extend(set_property_operation(collection, id, key, value.clone(), anchor));
+    }
+    operations
+}
+
+/// ✏️ The collection's own `replace-<noun>-data` kind, used only by whole-payload replacement gestures.
+fn replace_data_operation(collection: &str, id: String, new_data: DslValue) -> Option<GisMapMutation> {
+    match collection {
+        "positions" => Some(GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id, new_data })),
+        "routes" => Some(GisMapMutation::ReplaceRouteData(crate::mutations::replace_route_data::ReplaceRouteData { id, new_data })),
+        "regions" => Some(GisMapMutation::ReplaceRegionData(crate::mutations::replace_region_data::ReplaceRegionData { id, new_data })),
+        _ => None,
+    }
+}
+
+/// 🧱️ Concrete per-feature operations taking a collection from `before` to `after` for a patch gesture: features the patch
+/// omits are deleted, new ones created at their index, present ones edited property by property.
+fn collection_patch_operations(collection: &str, before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+    let mut operations: Vec<GisMapMutation> = before.iter().filter(|feature| !after.iter().any(|next| next.id == feature.id)).filter_map(|feature| delete_operation(collection, feature.id.clone())).collect();
+    for (index, feature) in after.iter().enumerate() {
+        match before.iter().find(|entry| entry.id == feature.id) {
+            None => operations.extend(create_operation(collection, index, feature.clone())),
+            Some(previous) => operations.extend(property_edit_operations(collection, &feature.id, &previous.data, &feature.data)),
+        }
+    }
+    operations
+}
+
 //#endregion 🔖️FeatureCollections
 
 //#region 🔖️AddFeature
@@ -150,9 +216,8 @@ pub mod add_feature {
         let id = minted_feature_id(before, prefix);
         let label = if payload.label.is_empty() { id.clone() } else { payload.label.clone() };
         let data = minted_feature_data(&payload.collection, &id, &label, payload.lon, payload.lat, payload.span);
-        let mut after = before.to_vec();
-        after.push(MapFeature { id, data: semio_framework_value::DslValue::from(&data) });
-        Ok(Emit::mutations(collection_operations(&payload.collection, before, &after)))
+        let item = MapFeature { id, data: semio_framework_value::DslValue::from(&data) };
+        Ok(Emit::mutations(create_operation(&payload.collection, before.len(), item).into_iter().collect()))
     }
 }
 //#endregion 🔖️AddFeature
@@ -173,17 +238,19 @@ pub mod move_feature {
     }
 
     pub fn handle(payload: &MoveFeature, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
-        let operations = edited_collection_operations(doc.snapshot, &payload.collection, &payload.feature_id, |entries, _| {
-            let Some((lon, lat)) = feature_anchor(entries) else { return };
-            let (delta_lon, delta_lat) = (payload.lon - lon, payload.lat - lat);
-            if entries.iter().any(|(key, _)| key == "lon") {
-                write_entry(entries, "lon", semio_framework_value::DslValue::float(payload.lon));
-                write_entry(entries, "lat", semio_framework_value::DslValue::float(payload.lat));
-            }
-            if let Some((_, points)) = entries.iter_mut().find(|(key, _)| key == "points") {
-                *points = translate_points(points, delta_lon, delta_lat);
-            }
-        });
+        let Some(before) = collection_features(doc.snapshot, &payload.collection) else { return Ok(Emit::default()) };
+        let Some(target) = addressed_feature(before, &payload.feature_id) else { return Ok(Emit::default()) };
+        let entries = data_entries(target);
+        let Some((lon, lat)) = feature_anchor(&entries) else { return Ok(Emit::default()) };
+        let (delta_lon, delta_lat) = (payload.lon - lon, payload.lat - lat);
+        let mut operations = Vec::new();
+        if entries.iter().any(|(key, _)| key == "lon") {
+            operations.extend(changed_property_operation(&payload.collection, target, &entries, "lon", DslValue::float(payload.lon)));
+            operations.extend(changed_property_operation(&payload.collection, target, &entries, "lat", DslValue::float(payload.lat)));
+        }
+        if let Some(points) = entry_value(&entries, "points") {
+            operations.extend(changed_property_operation(&payload.collection, target, &entries, "points", translate_points(points, delta_lon, delta_lat)));
+        }
         Ok(Emit::mutations(operations))
     }
 }
@@ -207,12 +274,17 @@ pub mod rename_feature {
         if payload.label.is_empty() {
             return Ok(Emit::default());
         }
-        let operations = edited_collection_operations(doc.snapshot, &payload.collection, &payload.feature_id, |entries, _| {
-            write_entry(entries, "label", semio_framework_value::DslValue::String(payload.label.clone()));
-            if entries.iter().any(|(key, _)| key == "name") {
-                write_entry(entries, "name", semio_framework_value::DslValue::String(payload.label.clone()));
-            }
-        });
+        let Some(before) = collection_features(doc.snapshot, &payload.collection) else { return Ok(Emit::default()) };
+        let Some(target) = addressed_feature(before, &payload.feature_id) else { return Ok(Emit::default()) };
+        let entries = data_entries(target);
+        if entries.is_empty() {
+            return Ok(Emit::default());
+        }
+        let mut operations = Vec::new();
+        operations.extend(changed_property_operation(&payload.collection, target, &entries, "label", DslValue::String(payload.label.clone())));
+        if entry_value(&entries, "name").is_some() {
+            operations.extend(changed_property_operation(&payload.collection, target, &entries, "name", DslValue::String(payload.label.clone())));
+        }
         Ok(Emit::mutations(operations))
     }
 }
@@ -233,8 +305,7 @@ pub mod delete_feature {
     pub fn handle(payload: &DeleteFeature, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
         let Some(before) = collection_features(doc.snapshot, &payload.collection) else { return Ok(Emit::default()) };
         let Some(target) = addressed_feature(before, &payload.feature_id) else { return Ok(Emit::default()) };
-        let after: Vec<MapFeature> = before.iter().filter(|feature| feature.id != target.id).cloned().collect();
-        Ok(Emit::mutations(collection_operations(&payload.collection, before, &after)))
+        Ok(Emit::mutations(delete_operation(&payload.collection, target.id.clone()).into_iter().collect()))
     }
 }
 //#endregion 🔖️DeleteFeature
@@ -251,18 +322,8 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
         .routes
         .iter()
         .filter(|route| route_ids.iter().any(|id| id == &route.id))
-        .filter_map(|route| {
-            let mut data = route.data.clone();
-            let semio_framework_value::DslValue::Object(entries) = &mut data else {
-                return None;
-            };
-            if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == field) {
-                *slot = dsl_value.clone();
-            } else {
-                entries.push((field.to_string(), dsl_value.clone()));
-            }
-            Some(GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: route.id.clone(), new_data: data }))
-        })
+        .filter(|route| route.data.as_object().is_some_and(|entries| entry_value(entries, field) != Some(&dsl_value)))
+        .filter_map(|route| set_property_operation("routes", &route.id, field, dsl_value.clone(), None))
         .collect();
     Emit::mutations(operations)
 }
@@ -283,7 +344,7 @@ pub mod patch_positions {
             return Ok(Emit::default());
         };
         let next = gis_map_document_from_descriptor_json(&json!({ "positions": positions }).to_string()).positions;
-        Ok(Emit::mutations(positions_operations(&doc.snapshot.positions, &next)))
+        Ok(Emit::mutations(collection_patch_operations("positions", &doc.snapshot.positions, &next)))
     }
 }
 //#endregion 🔖️PatchPositions

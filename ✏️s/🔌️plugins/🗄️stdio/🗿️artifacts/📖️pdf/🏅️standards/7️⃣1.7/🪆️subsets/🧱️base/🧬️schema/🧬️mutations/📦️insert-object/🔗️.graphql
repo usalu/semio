@@ -3,4 +3,5 @@ input InsertObjectMutationInput {
   id: ObjRefInput
   value: PdfObjectInput
   index: Int
+  admittedStreamRoles: PdfIndexedStreamRoleDiffInput
 }

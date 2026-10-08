@@ -1,0 +1,22 @@
+{
+  "positions": null,
+  "routes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "route-ferry",
+        "patch": {
+          "data": null,
+          "properties": [
+            {
+              "key": "label"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "regions": null
+}

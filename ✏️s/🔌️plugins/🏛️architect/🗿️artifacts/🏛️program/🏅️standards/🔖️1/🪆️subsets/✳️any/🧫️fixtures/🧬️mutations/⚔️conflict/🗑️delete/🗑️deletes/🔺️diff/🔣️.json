@@ -40,12 +40,15 @@
   "delivery": null,
   "risks": null,
   "conflicts": {
-    "added": [],
     "removed": [
-      "conflict-a"
+      {
+        "id": "conflict-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "requirements": null,
   "priorities": null,

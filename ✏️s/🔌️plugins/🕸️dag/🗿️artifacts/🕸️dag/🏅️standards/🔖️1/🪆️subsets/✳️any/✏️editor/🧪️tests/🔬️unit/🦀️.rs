@@ -289,12 +289,6 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     assert!(json.contains("Unknown body"));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
-    let replacement = crate::default_snapshot();
-    assert!(DagPlayApp::whole_document_operation(replacement).is_none(), "whole-document replace goes through ArtifactStore::reset, never a mutation");
-}
-
 /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
 /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
 /// `artifact_app_laws::assert_two_registered_instances_converge` replayed over THIS crate's harness: the

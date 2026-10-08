@@ -1,7 +1,8 @@
 //! 🧪️ `drag-layers` fixture — `✋️drags-a-child`. The committed quintet is computed by an independent Python implementation
 //! (`🧪️w3-t-draw-selection-leaves.py`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`); these laws hold the Rust leaf to it
 //! byte for byte and pin the partial, target-missing, no-op, invariant and label outcomes.
-use crate::mutations::{apply_drawing_mutation, drag_layers, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{drag_layers, inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 

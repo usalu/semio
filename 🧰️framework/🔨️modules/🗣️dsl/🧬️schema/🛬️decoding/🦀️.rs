@@ -13,6 +13,61 @@ use std::mem::size_of;
 #[derive(Clone,Copy)]
 struct Token<'a>{kind:TokenKind,text:&'a str,start:usize,end:usize,span:TextSpan}
 
+#[derive(Default)]
+struct NativeTextDecode {
+    source_identity: Option<(usize,usize)>,
+    position: usize,
+    phase: u8,
+    unicode_word: u32,
+    unicode_digits: u8,
+    output: Option<String>,
+}
+
+semio_framework_value::artifact_retire_struct!(NativeTextDecode{source_identity,position,phase,unicode_word,unicode_digits,output});
+
+impl NativeTextDecode {
+    fn step(&mut self,token:Token<'_>,maximum_units:usize,control:&mut NativeDecodeControl<'_>)->Result<Option<String>,TextError>{
+        use semio_framework_value::ValueRefusalKind;
+        let identity=(token.text.as_ptr()as usize,token.text.len());
+        let invalid=|message|TextError::new(ValueRefusalKind::InvalidValue,message,token.span);
+        if token.kind!=TokenKind::Text{return Err(invalid("expected native Text"))}
+        if self.source_identity.is_some_and(|source|source!=identity){return Err(TextError::new(ValueRefusalKind::InvariantViolated,"native text source changed",token.span))}
+        for _ in 0..maximum_units{
+            control.checkpoint().map_err(|error|TextError::from_value_error(error,token.span))?;
+            if self.phase==0{
+                control.charge(token.text.len()).map_err(|error|TextError::from_value_error(error,token.span))?;
+                let mut output=String::new();output.try_reserve_exact(token.text.len()).map_err(|_|TextError::new(ValueRefusalKind::AllocationFailed,"native text allocation failed",token.span))?;
+                self.source_identity=Some(identity);self.output=Some(output);self.phase=1;continue;
+            }
+            if self.phase==5{return Err(TextError::new(ValueRefusalKind::InvariantViolated,"native text output already transferred",token.span))}
+            let Some(character)=token.text[self.position..].chars().next()else{
+                if self.phase!=1{return Err(invalid(if self.phase==2{"dangling native text escape"}else{"unterminated native Unicode escape"}))}
+                self.phase=5;return Ok(self.output.take());
+            };
+            control.advance(character.len_utf8()).map_err(|error|TextError::from_value_error(error,token.span))?;
+            self.position+=character.len_utf8();
+            match self.phase{
+                1=>if character=='\\'{self.phase=2}else{self.output.as_mut().unwrap().push(character)},
+                2=>{
+                    let decoded=match character{'n'=>Some('\n'),'r'=>Some('\r'),'t'=>Some('\t'),'"'=>Some('"'),'\\'=>Some('\\'),'u'=>{self.phase=3;None},_=>return Err(invalid("unknown native text escape"))};
+                    if let Some(character)=decoded{self.output.as_mut().unwrap().push(character);self.phase=1;}
+                },
+                3=>{if character!='{'{return Err(invalid("invalid native Unicode escape"))}self.unicode_word=0;self.unicode_digits=0;self.phase=4;},
+                4=>if character=='}'{
+                    if self.unicode_digits==0{return Err(invalid("empty native Unicode escape"))}
+                    let character=char::from_u32(self.unicode_word).ok_or_else(||invalid("invalid native Unicode scalar"))?;
+                    self.output.as_mut().unwrap().push(character);self.phase=1;
+                }else{
+                    self.unicode_digits+=1;if self.unicode_digits>6{return Err(invalid("invalid native Unicode escape"))}
+                    self.unicode_word=self.unicode_word.checked_mul(16).and_then(|word|character.to_digit(16).and_then(|digit|word.checked_add(digit))).ok_or_else(||invalid("invalid native Unicode escape"))?;
+                },
+                _=>unreachable!(),
+            }
+        }
+        Ok(None)
+    }
+}
+
 struct Reader<'s,'c,'p>{source:&'s str,position:usize,line:u32,column:u32,lookahead:[Option<Token<'s>>;2],limits:Limits,tokens:usize,nodes:usize,control:&'c mut NativeDecodeControl<'p>}
 
 impl<'s,'c,'p> Reader<'s,'c,'p>{
@@ -70,7 +125,7 @@ impl<'s,'c,'p> Reader<'s,'c,'p>{
     fn insert(&mut self,record:&mut RecordValue,id:u16,value:FieldValue)->Result<(),TextError>{let mut value=super::__rt::DecodedFieldOwner::new(value,super::native_encoding::retire_field);if !record.fields.contains_key(&id)&&record.fields.len()==record.fields.capacity(){let capacity=record.fields.len().checked_mul(2).and_then(|count|count.checked_add(1)).ok_or_else(||self.error(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native field storage overflow"))?;let entries=self.control.allocate_vec::<(u16,FieldValue)>(capacity).map_err(|error|TextError::from_value_error(error,TextSpan::at(self.line,self.column)))?;record.fields.replace_empty_slots(entries);}if let Some(previous)=record.fields.insert(id,value.take()){super::native_encoding::retire_field(previous);}Ok(())}
     fn text(&mut self,token:Token<'s>)->Result<String,TextError>{
         if token.kind==TokenKind::Ident{return self.copy(token.text);}if token.kind!=TokenKind::Text{return Err(self.error(semio_framework_value::ValueRefusalKind::InvalidValue,"expected native Text"));}
-        self.control.scoped_stage(|control|{control.charge(token.text.len()).map_err(|error|TextError::from_value_error(error,token.span))?;control.begin_stage(token.text.len()).map_err(|error|TextError::from_value_error(error,token.span))?;let mut output=String::new();output.try_reserve_exact(token.text.len()).map_err(|_|TextError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"native text allocation failed",token.span))?;let mut chars=token.text.chars();while let Some(c)=chars.next(){control.advance(c.len_utf8()).map_err(|error|TextError::from_value_error(error,token.span))?;if c!='\\'{output.push(c);continue;}let next=chars.next().ok_or_else(||TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"dangling native text escape",token.span))?;control.advance(next.len_utf8()).map_err(|error|TextError::from_value_error(error,token.span))?;match next{'n'=>output.push('\n'),'r'=>output.push('\r'),'t'=>output.push('\t'),'"'=>output.push('"'),'\\'=>output.push('\\'),'u'=>{if chars.next()!=Some('{'){return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid native Unicode escape",token.span));}control.advance(1).map_err(|error|TextError::from_value_error(error,token.span))?;let mut word=0u32;let mut digits=0;loop{let c=chars.next().ok_or_else(||TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"unterminated native Unicode escape",token.span))?;control.advance(c.len_utf8()).map_err(|error|TextError::from_value_error(error,token.span))?;if c=='}'{break;}digits+=1;if digits>6{return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid native Unicode escape",token.span));}word=word.checked_mul(16).and_then(|n|c.to_digit(16).and_then(|d|n.checked_add(d))).ok_or_else(||TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid native Unicode escape",token.span))?;}if digits==0{return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"empty native Unicode escape",token.span));}output.push(char::from_u32(word).ok_or_else(||TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid native Unicode scalar",token.span))?);},_=>return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"unknown native text escape",token.span))}}Ok(output)})
+        self.control.scoped_stage(|control|{control.begin_stage(token.text.len()).map_err(|error|TextError::from_value_error(error,token.span))?;let mut cursor=NativeTextDecode::default();loop{if let Some(output)=cursor.step(token,256,control)?{return Ok(output)}}})
     }
     fn octets(&mut self,token:Token<'s>)->Result<Vec<u8>,TextError>{
         if token.kind!=TokenKind::Text||token.text.len()%4!=0{return Err(self.error(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid native base64"));}
@@ -244,6 +299,7 @@ mod continuation_tests {
     #[test]
     fn original_native_quoted_scanner_retains_unicode_grants_and_exact_source_identity() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+        retained_text_unescape_laws(&fixture);
         let semantic = fixture["textUnit"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
         let source = serde_json::to_string(&semantic).unwrap();
         let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
@@ -295,5 +351,55 @@ mod continuation_tests {
         assert_eq!(reader.scan_quoted_text_step(&mut cursor, 1).err().unwrap().kind, semio_framework_value::ValueRefusalKind::Canceled);
         assert_eq!(reader.position, before);
         eprintln!("[DEBUG] original quoted scanner1/8/256 unicode-scalar grants preserve serde_json text semantics and source identity");
+    }
+
+    fn retained_text_unescape_laws(fixture: &serde_json::Value) {
+        let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
+        for row in fixture["decoding"]["textUnescape"]["cases"].as_array().unwrap() {
+            let body = row["nativeBody"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
+            let expected = row["text"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
+            let reference: String = serde_json::from_str(&format!("\"{}\"", row["jsonBody"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize))).unwrap();
+            assert_eq!(reference, expected);
+            let token = Token { kind: TokenKind::Text, text: &body, start: 0, end: body.len(), span: TextSpan::at(1,1) };
+            for budget in fixture["budgets"].as_array().unwrap() {
+                let units = budget.as_u64().unwrap() as usize;
+                let mut cursor = NativeTextDecode::default();
+                let mut receipt = None;
+                let mut hops = 0;
+                let output = loop {
+                    let mut accepted = |_| true;
+                    let mut control = match receipt.take() { Some(receipt) => NativeDecodeControl::resume(receipt, &mut accepted).unwrap(), None => { let mut control = NativeDecodeControl::new(maximum, &mut accepted);control.begin_stage(body.len()).unwrap();control } };
+                    let before = cursor.position;
+                    assert!(cursor.step(token,0,&mut control).unwrap().is_none());
+                    assert_eq!(cursor.position,before);
+                    let output = cursor.step(token,units,&mut control).unwrap();
+                    assert!(cursor.position-before<=units*4);
+                    assert_eq!(control.owned_bytes(),body.len());
+                    receipt=Some(control.pause().unwrap());hops+=1;
+                    if let Some(output)=output { break output; }
+                    assert!(cursor.output.is_some());
+                    assert!(hops<body.len()+4);
+                };
+                assert_eq!(output,reference);
+                assert_eq!(cursor.position,body.len());assert!(cursor.output.is_none());
+                if body.len()>units*4 { assert!(hops>1); }
+            }
+        }
+        for body in fixture["decoding"]["textUnescape"]["invalid"].as_array().unwrap() {
+            let body=body.as_str().unwrap();let token=Token{kind:TokenKind::Text,text:body,start:0,end:body.len(),span:TextSpan::at(1,1)};
+            let mut cursor=NativeTextDecode::default();let mut accepted=|_|true;let mut control=NativeDecodeControl::new(maximum,&mut accepted);control.begin_stage(body.len()).unwrap();
+            assert_eq!(cursor.step(token,body.len()+2,&mut control).err().unwrap().kind,semio_framework_value::ValueRefusalKind::InvalidValue);
+        }
+        let body="Mesh 😀 \\u{1f600}";let changed=format!("{body} ");let token=Token{kind:TokenKind::Text,text:body,start:0,end:body.len(),span:TextSpan::at(1,1)};
+        let mut cursor=NativeTextDecode::default();let accepted=std::cell::Cell::new(true);let mut callback=|_|accepted.get();let mut control=NativeDecodeControl::new(maximum,&mut callback);control.begin_stage(body.len()).unwrap();
+        assert!(cursor.step(token,1,&mut control).unwrap().is_none());let before=cursor.position;let pointer=cursor.output.as_ref().unwrap().as_ptr();
+        assert_eq!(cursor.step(Token{text:&changed,..token},1,&mut control).err().unwrap().kind,semio_framework_value::ValueRefusalKind::InvariantViolated);
+        assert_eq!(cursor.position,before);assert_eq!(cursor.output.as_ref().unwrap().as_ptr(),pointer);
+        accepted.set(false);assert_eq!(cursor.step(token,1,&mut control).err().unwrap().kind,semio_framework_value::ValueRefusalKind::Canceled);
+        assert_eq!(cursor.position,before);assert_eq!(cursor.output.as_ref().unwrap().as_ptr(),pointer);
+        let mut cursor=NativeTextDecode::default();let mut accepted=|_|true;let mut control=NativeDecodeControl::new(1,&mut accepted);control.begin_stage(body.len()).unwrap();
+        assert_eq!(cursor.step(token,1,&mut control).err().unwrap().kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
+        assert_eq!(cursor.position,0);assert!(cursor.output.is_none());
+        eprintln!("[DEBUG] original text decoder1/8/256 resumes exact borrowed source with cumulative ownership, serde_json Unicode parity and refusal owner retention");
     }
 }

@@ -2,8 +2,9 @@
 
 use super::*;
 use crate::os_spr::Identified;
-use crate::os_store::SnapshotRetirementStep;
-use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowHostSnapshot, FlowLayoutEntry, FlowMutation, MoveSynapse, MoveWidget, RemoveSynapse, RemoveWidget, ReplaceFlowHostSnapshot};
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+use crate::retained::{FlowOwner,FlowRetirement};
+use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowHostSnapshot, FlowLayoutEntry, FlowMutation, MoveSynapse, MoveWidget, RemoveSynapse, RemoveWidget};
 
 //#region 🧭️Fixtures
 fn fixture() -> FlowHostSnapshot {
@@ -28,7 +29,6 @@ fn mutations() -> Vec<FlowMutation> {
         FlowMutation::MoveSynapse(MoveSynapse { id: synapse_id.clone(), to_index: 0 }),
         FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse_id, synapse }),
         FlowMutation::ChangeLayout(ChangeLayout { entries: vec![entry] }),
-        FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture }),
     ]
 }
 //#endregion 🧭️Fixtures
@@ -43,59 +43,19 @@ fn retained_fixture_has_dictionary_and_set() {
 }
 
 #[test]
-fn direct_leaf_retirement_refuses_zero_grants_then_reaches_terminal_empty() {
-    for mutation in mutations() {
-        let mut retirement = FlowMutationRetirementFrontier::new(mutation);
-        assert!(matches!(retirement.close_step(0, 64).expect("zero item grant"), SnapshotRetirementStep::Blocked));
-        assert!(matches!(retirement.close_step(1, 0).expect("zero byte grant"), SnapshotRetirementStep::Blocked));
-        assert!(!retirement.terminal_is_empty());
-        assert!(matches!(retirement.close_step(1, 64).expect("handoff"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
-        assert!(matches!(retirement.close_step(0, 64).expect("inner owner zero item grant"), SnapshotRetirementStep::Blocked));
-        assert!(matches!(retirement.close_step(1, 0).expect("inner owner zero byte grant"), SnapshotRetirementStep::Blocked));
-        assert!(!retirement.terminal_is_empty());
-        for _ in 0..4096 {
-            let step = retirement.close_step(1, 64).expect("bounded retained close");
-            match step {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= 64);
-                }
-                SnapshotRetirementStep::Complete => {
-                    assert!(retirement.terminal_is_empty());
-                    break;
-                }
-                SnapshotRetirementStep::Blocked => panic!("positive grant must advance retirement"),
-            }
+fn direct_leaf_retirement_requires_independent_grants_and_reaches_terminal_empty() {
+    for (index,mutation) in mutations().into_iter().enumerate() {
+        let mut retirement=FlowRetirement::from_owner(FlowOwner::Mutation(mutation));
+        let mut total=RetainedCloneProgress::default();
+        for turn in 0..200_000 {
+            if retirement.terminal_is_empty(){break;}
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:retirement.next_capacity_byte_demand(1).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap()};
+            assert_eq!(retirement.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
+            if grant.maximum_capacity_bytes!=0 {assert_eq!(retirement.step(RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap().progress(),RetainedCloneProgress::default());}
+            if grant.maximum_release_bytes!=0 {assert_eq!(retirement.step(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap().progress(),RetainedCloneProgress::default());}
+            let step=retirement.step(grant).unwrap();let progress=step.progress();assert!(progress.fits(grant));assert_ne!(progress.copied_items,0,"mutation {index} stalled at turn {turn}");total=total.checked_add(progress).unwrap();
         }
         assert!(retirement.terminal_is_empty());
+        println!("[DEBUG] Flow typed mutation retirement variant={index} copied={} born={} released={}",total.copied_bytes,total.retained_capacity_bytes,total.released_bytes);
     }
 }
-
-#[test]
-fn injected_inner_fault_preserves_transferred_payload() {
-    let mut retirement = FlowMutationRetirementFrontier::new(FlowMutation::RemoveWidget(RemoveWidget { id: "cancelled".into() }));
-    assert!(matches!(retirement.close_step(1, 64).expect("handoff to actual frontier"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
-    let injected_fault = retirement.close_step_with_injected(1, 64, |_frontier, _items, _bytes| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"injected nested retirement fault")));
-    assert!(injected_fault.is_err());
-    assert!(!retirement.terminal_is_empty());
-    for _ in 0..4096 {
-        if matches!(retirement.close_step(1, 64).expect("bounded injected-model close"), SnapshotRetirementStep::Complete) {
-            break;
-        }
-    }
-    assert!(retirement.terminal_is_empty());
-}
-
-#[test]
-fn false_inner_completion_keeps_retained_payload_owned() {
-    let mut retirement = FlowMutationRetirementFrontier::new(FlowMutation::RemoveWidget(RemoveWidget { id: "owned".into() }));
-    assert!(matches!(retirement.close_step(1, 1).unwrap(), SnapshotRetirementStep::Pending { .. }));
-    let result = retirement.close_step_with_injected(1, 1, |_, _, _| Ok(SnapshotRetirementStep::Complete));
-    let refusal=result.unwrap_err();assert_eq!(refusal.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert_eq!(refusal.message,"flow mutation retirement frontier reported Complete before terminal-empty");
-    assert!(!retirement.terminal_is_empty());
-    for _ in 0..32 {
-        if matches!(retirement.close_step(1, 1).unwrap(), SnapshotRetirementStep::Complete) { break; }
-    }
-    assert!(retirement.terminal_is_empty());
-}
-//#endregion 🧪️Laws

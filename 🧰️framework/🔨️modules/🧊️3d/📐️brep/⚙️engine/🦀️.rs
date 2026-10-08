@@ -348,9 +348,9 @@ pub trait BrepKernel {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn import_obj(&mut self, data: &str, tolerance: f64) -> Result<GeometryHandle, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn export_mesh(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError>;
+    fn export_mesh(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn import_mesh(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError>;
+    fn import_mesh(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::io::MeshImporter) -> Result<GeometryHandle, BrepError>;
     // #endregion IO
 
     // #region Core
@@ -414,12 +414,44 @@ enum Entity {
     Surface(Surface, PersistentLabel),
 }
 
+impl semio_framework_value::retirement::RetireOwned for Entity {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        match self {
+            Self::Vertex(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::Edge(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::Wire(wire,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(wire),semio_framework_value::retirement::deferred(label)]),
+            Self::Face(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::Shell(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::Solid(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::Compound(solids,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(solids),semio_framework_value::retirement::deferred(label)]),
+            Self::Curve(curve,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(curve),semio_framework_value::retirement::deferred(label)]),
+            Self::Surface(surface,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(surface),semio_framework_value::retirement::deferred(label)]),
+        }
+    }
+    fn retirement_birth_bytes(&self)->Option<usize> {
+        match self {
+            Self::Vertex(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::Edge(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::Wire(wire,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(wire),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
+            Self::Face(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::Shell(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::Solid(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::Compound(solids,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(solids),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
+            Self::Curve(curve,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(curve),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
+            Self::Surface(surface,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(surface),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
+        }
+    }
+    fn controlled_retirement_supported()->bool {true}
+}
+
 /// 🧠 Native B-Rep session.
 pub struct Brep {
     body: Body,
-    live: BTreeMap<String, Entity>,
+    live: semio_framework_mesh_engine::HistoryFoldIndex<String, Entity>,
     pending_mutations: usize,
 }
+
+semio_framework_value::artifact_retire_struct!(Brep {body,live,pending_mutations});
 
 /// ⏱️ A retained resumable boolean plus the operation recorder its whole run accumulates into —
 /// the recorder must outlive every step, which is why the job owns it rather than borrowing the
@@ -491,7 +523,7 @@ impl Brep {
     /// 🏗️ Empty native kernel session.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
-        Self { body: Body::new(), live: BTreeMap::new(), pending_mutations: 0 }
+        Self { body: Body::new(), live: semio_framework_mesh_engine::HistoryFoldIndex::new(), pending_mutations: 0 }
     }
 }
 
@@ -579,15 +611,17 @@ pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> Result<semio_fra
     let mut data = mesh_to_mesh_data(&triangle_mesh_from_transfer(transfer));
     data.edge_positions = transfer.edges.clone();
     data.face_ids=face_ids;data.edge_ids=edge_ids;
-    if !faces.is_empty() {data.component_references.insert("face".into(),faces);}
-    if !edges.is_empty() {data.component_references.insert("edge".into(),edges);}
+    let mut references=Vec::new();
+    if !faces.is_empty() {references.push(("face".into(),faces));}
+    if !edges.is_empty() {references.push(("edge".into(),edges));}
     if !vertices.is_empty() {
         data.vertex_ids=vec![u32::MAX;data.positions.len()/3];
         data.positions.extend_from_slice(&transfer.points);
         data.normals.resize(data.positions.len(),0.0);
         data.vertex_ids.extend(vertex_ids);
-        data.component_references.insert("vertex".into(),vertices);
+        references.push(("vertex".into(),vertices));
     }
+    data.component_references=semio_framework_mesh_engine::ComponentReferenceTable::from_entries(references);
     data.validate_component_references().map_err(BrepError::InvalidInput)?;
     Ok(data)
 }
@@ -698,7 +732,7 @@ impl Brep {
     fn compact_unreachable(&mut self) {
         if self.pending_mutations>0 {return;}
         let body = &self.body;
-        self.live.retain(|_, entity| label_of_entity(body, entity).is_some());
+        for slot in 0..self.live.slot_count() {drop(self.live.extract_slot_if(slot,|_,entity|label_of_entity(body,entity).is_some()));}
         let roots = self.live_roots();
         let keep = self.body.reachable_from(&roots);
         self.body.compact(&keep);
@@ -1427,12 +1461,12 @@ impl Brep {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError> {
+    pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_mesh(&self.body, solid, deflection, exporter).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn import_mesh_sync(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError> {
+    pub fn import_mesh_sync(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::io::MeshImporter) -> Result<GeometryHandle, BrepError> {
         let solid = import_mesh_to_body(&mut self.body, data, tolerance, importer).map_err(|error| map_err(&error))?;
         self.register_import_entity(solid)
     }
@@ -1492,32 +1526,30 @@ impl Brep {
         Ok((positions, face_loops))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn tessellate_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<MeshTransfer, BrepError> {
-        match self.entity(shape)? {
-            Entity::Vertex(id) => TessellationJob::for_vertex(&self.body, *id, deflection).and_then(|job| job.run_to_completion(&self.body)).map(|(mesh, _)| mesh).map_err(|error| map_err(&error)),
-            Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
-            Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
-            Entity::Shell(_)=>{let mut job=self.tessellate_job_sync(shape,deflection)?;loop {match job.step(&self.body,4096).map_err(|error|map_err(&error))? {crate::brep::queries::tessellation::TessellationStep::Done(_)=>return job.into_mesh().map(|(mesh,_)|mesh).ok_or_else(||BrepError::InvalidInput("missing shell tessellation".into())),crate::brep::queries::tessellation::TessellationStep::Cancelled(_)=>return Err(BrepError::InvalidInput("shell tessellation cancelled".into())),_=>{}}}},
-            Entity::Wire(wire, _) => tessellate_wire(&self.body, wire, deflection).map_err(|error| map_err(&error)),
-            Entity::Compound(solids, _) => TessellationJob::for_solids(&self.body, solids, deflection).and_then(|job| job.run_to_completion(&self.body)).map(|(mesh, _)| mesh).map_err(|error| map_err(&error)),
-            other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
-        }
+    pub fn tessellate_sync(&self,shape:&GeometryHandle,deflection:f64)->Result<MeshTransfer,BrepError> {
+        self.tessellate_job_sync(shape,deflection)?.run_to_completion(&self.body,self.tessellation_input(shape)?).map(|(mesh,_)|mesh).map_err(|error|map_err(&error))
     }
     /// ⏱️ A resumable, budgetable tessellation of `shape` — the interactive twin of
-    /// [`Brep::tessellate_sync`]. The caller drives it with `TessellationJob::step(body, budget)`
-    /// (see [`Brep::tessellation_body`]) so no single call outruns an interactive step ceiling,
+    /// [`Brep::tessellate_sync`]. The caller drives [`Brep::step_tessellation_job_sync`]
+    /// with the same original shape and an interactive work grant,
     /// reads `progress()` between steps, and `cancel()`s it when a newer request supersedes it.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_job_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<TessellationJob, BrepError> {
         match self.entity(shape)? {
-            Entity::Vertex(id) => TessellationJob::for_vertex(&self.body, *id, deflection).map_err(|error| map_err(&error)),
-            Entity::Solid(id) => TessellationJob::for_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
-            Entity::Face(id) => TessellationJob::for_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
-            Entity::Shell(id)=>TessellationJob::for_shell(&self.body,*id,deflection).map_err(|error|map_err(&error)),
-            Entity::Wire(wire, _) => Ok(TessellationJob::for_wire(wire, deflection)),
-            Entity::Compound(solids, _) => TessellationJob::for_solids(&self.body, solids, deflection).map_err(|error| map_err(&error)),
-            other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
+            Entity::Vertex(id)=>TessellationJob::for_vertex(&self.body,*id,deflection).map_err(|error|map_err(&error)),
+            Entity::Solid(_)|Entity::Face(_)|Entity::Shell(_)|Entity::Wire(_,_)|Entity::Compound(_,_)=>Ok(TessellationJob::new(deflection)),
+            other=>Err(BrepError::InvalidInput(format!("cannot tessellate {}",entity_tag(other)))),
         }
+    }
+    fn tessellation_input<'a>(&'a self,shape:&GeometryHandle)->Result<crate::brep::queries::tessellation::TessellationInput<'a>,BrepError> {
+        use crate::brep::queries::tessellation::TessellationInput;
+        match self.entity(shape)? {
+            Entity::Vertex(id)=>Ok(TessellationInput::Vertex(*id)),Entity::Solid(id)=>Ok(TessellationInput::Solid(*id)),Entity::Face(id)=>Ok(TessellationInput::Face(*id)),Entity::Shell(id)=>Ok(TessellationInput::Shell(*id)),Entity::Wire(wire,_)=>Ok(TessellationInput::Wire(&wire.members)),Entity::Compound(solids,_)=>Ok(TessellationInput::Solids(solids)),other=>Err(BrepError::InvalidInput(format!("cannot tessellate {}",entity_tag(other)))),
+        }
+    }
+    /// ⏱️ Presents the same original entity to one granted topology/mesh turn.
+    pub fn step_tessellation_job_sync(&self,shape:&GeometryHandle,job:&mut TessellationJob,budget:usize)->Result<crate::brep::queries::tessellation::TessellationStep,BrepError> {
+        job.step(&self.body,self.tessellation_input(shape)?,budget).map_err(|error|map_err(&error))
     }
 
     /// 🧬 The topology a [`TessellationJob`] steps against — the job borrows nothing, so a host can
@@ -2004,11 +2036,11 @@ impl BrepKernel for Brep {
         self.import_obj_sync(data, tolerance)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn export_mesh(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError> {
+    fn export_mesh(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError> {
         self.export_mesh_sync(shapes, deflection, exporter)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn import_mesh(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError> {
+    fn import_mesh(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::io::MeshImporter) -> Result<GeometryHandle, BrepError> {
         self.import_mesh_sync(data, tolerance, importer)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -2027,7 +2059,7 @@ impl BrepKernel for Brep {
     /// [`Brep::compact_unreachable`].
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn retain(&mut self, live: &std::collections::HashSet<String>) {
-        self.live.retain(|k, _| live.contains(k));
+        for slot in 0..self.live.slot_count() {drop(self.live.extract_slot_if(slot,|key,_|live.contains(key)));}
         self.compact_unreachable();
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

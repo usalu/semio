@@ -46,7 +46,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
      drawing has seven — every one of the 39 comparisons diverged on `$.linetypes` alone.
      Confirmed by experiment, not inferred: reordering nothing but those two blocks in the very
      bytes the writer had already produced took the same reader from eight back to seven.
-  2. THE SUBJECT HALF DISCARDED `MutationOutcome`. `apply_dxf_mutation` returns the refusal and
+  2. THE SUBJECT HALF DISCARDED `MutationOutcome`. `apply_mutation` returns the refusal and
      leaves the snapshot untouched, so a rejected mutation re-encoded the input unchanged and the
      scenario reported green. Ten kinds did exactly that. The adapter now fails the scenario with
      the refusal's own code and target.

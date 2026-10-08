@@ -6,6 +6,7 @@ use crate::En1990Snapshot;
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
 pub use edit_rules::EDIT_RULES;
+pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1990_mutation, inverse_en1990_mutation};
 
 //#region 🔖️Leaves
 use super::change_annex;
@@ -111,67 +112,6 @@ pub const KINDS: &[&str] = &[
     "insert-permanent",
 ];
 
-impl En1990Mutation {
-    pub fn from_snapshot(base: &En1990Snapshot, target: &En1990Snapshot) -> Vec<En1990Mutation> {
-        let mut mutations = Vec::new();
-        if base.annex != target.annex {
-            mutations.push(En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex }));
-        }
-        if base.project_id != target.project_id {
-            mutations.push(En1990Mutation::ChangeProjectId(change_project_id::ChangeProjectId { new_project_id: target.project_id.clone() }));
-        }
-        if base.altitude_m != target.altitude_m {
-            mutations.push(En1990Mutation::ChangeAltitudeM(change_altitude_m::ChangeAltitudeM { new_altitude_m: target.altitude_m }));
-        }
-        if base.consequence_class != target.consequence_class {
-            mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: target.consequence_class }));
-        }
-        if base.reliability_class != target.reliability_class {
-            mutations.push(En1990Mutation::ChangeReliabilityClass(change_reliability_class::ChangeReliabilityClass { new_reliability_class: target.reliability_class }));
-        }
-        if base.design_working_life_category != target.design_working_life_category {
-            mutations.push(En1990Mutation::ChangeDesignWorkingLifeCategory(change_design_working_life_category::ChangeDesignWorkingLifeCategory { new_design_working_life_category: target.design_working_life_category }));
-        }
-        if base.design_working_life_years != target.design_working_life_years {
-            mutations.push(En1990Mutation::ChangeDesignWorkingLifeYears(change_design_working_life_years::ChangeDesignWorkingLifeYears { new_design_working_life_years: target.design_working_life_years }));
-        }
-        if base.reference_period_years != target.reference_period_years {
-            mutations.push(En1990Mutation::ChangeReferencePeriodYears(change_reference_period_years::ChangeReferencePeriodYears { new_reference_period_years: target.reference_period_years }));
-        }
-        if base.supervision_level != target.supervision_level {
-            mutations.push(En1990Mutation::ChangeSupervisionLevel(change_supervision_level::ChangeSupervisionLevel { new_supervision_level: target.supervision_level.clone() }));
-        }
-        if base.inspection_level != target.inspection_level {
-            mutations.push(En1990Mutation::ChangeInspectionLevel(change_inspection_level::ChangeInspectionLevel { new_inspection_level: target.inspection_level.clone() }));
-        }
-        if base.beta_computed != target.beta_computed {
-            mutations.push(En1990Mutation::ChangeBetaComputed(change_beta_computed::ChangeBetaComputed { new_beta_computed: target.beta_computed }));
-        }
-        if base.permanents != target.permanents {
-            mutations.push(En1990Mutation::ChangePermanents(change_permanents::ChangePermanents { new_permanents: target.permanents.clone() }));
-        }
-        if base.variables != target.variables {
-            mutations.push(En1990Mutation::ChangeVariables(change_variables::ChangeVariables { new_variables: target.variables.clone() }));
-        }
-        if base.accidentals != target.accidentals {
-            mutations.push(En1990Mutation::ChangeAccidentals(change_accidentals::ChangeAccidentals { new_accidentals: target.accidentals.clone() }));
-        }
-        if base.seismics != target.seismics {
-            mutations.push(En1990Mutation::ChangeSeismics(change_seismics::ChangeSeismics { new_seismics: target.seismics.clone() }));
-        }
-        if base.members != target.members {
-            mutations.push(En1990Mutation::ChangeMembers(change_members::ChangeMembers { new_members: target.members.clone() }));
-        }
-        if base.bridge_sls != target.bridge_sls {
-            mutations.push(En1990Mutation::ChangeBridgeSls(change_bridge_sls::ChangeBridgeSls { new_bridge_sls: target.bridge_sls.clone() }));
-        }
-        if base.effects != target.effects {
-            mutations.push(En1990Mutation::ChangeEffects(change_effects::ChangeEffects { new_effects: target.effects.clone() }));
-        }
-        mutations
-    }
-}
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
@@ -184,20 +124,6 @@ mod fixture_tests;
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
-//#region 🌉️ExternalCodecBridge
-
-/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
-pub fn apply_en1990_mutation(base: &En1990Snapshot, mutation: &En1990Mutation) -> Result<(En1990Snapshot, Vec<String>), String> {
-    let raised = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-pub fn inverse_en1990_mutation(mutation: &En1990Mutation, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <En1990Mutation as protocol::Mutation<En1990Snapshot>>::inverse(mutation, base)?
-
-    })
-}
-//#endregion 🌉️ExternalCodecBridge
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

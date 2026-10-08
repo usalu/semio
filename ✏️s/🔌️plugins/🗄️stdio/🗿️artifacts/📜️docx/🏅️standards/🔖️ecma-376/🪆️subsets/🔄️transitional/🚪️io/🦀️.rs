@@ -96,7 +96,6 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    #[cfg(test)]
     use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
     use crate::standards::v_ecma_376::subsets::base::io::DocxBuilderConstruction as DocxAnyBuilder;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::check_transitional_conformance;

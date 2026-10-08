@@ -7,7 +7,7 @@
 use super::*;
 use crate::editor::wfc3d::modes::edit::windows::graph::WFC_GRAPH_WINDOW;
 use crate::editor::wfc3d::{Wfc3dEditor, Wfc3dEditorCommand, WFC_3D_GRAPH_UNIT};
-use crate::mutations::{apply_wfc3d_mutation, drag_slots, resize_slot};
+use crate::mutations::{drag_slots, resize_slot};
 use crate::{Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
@@ -193,7 +193,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: WFC3D_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
         let mut preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
         assert_eq!(preview, base(), "the preview base is the state right before the edited drag");
-        apply_wfc3d_mutation(&mut preview, &edited).expect("the draft applies to its base");
+        vcs::apply_mutation(&preview, &edited).map(|(applied_state, _)| { preview = applied_state; }).expect("the draft applies to its base");
         let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
         assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
         let result = replay.finish().expect("a finished replay yields its result");
@@ -201,7 +201,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         assert!(!report.blocks_finalize(), "a re-offset drag never blocks finalizing");
         let mut fresh = base();
         for mutation in [edited, log[1].clone(), log[2].clone()] {
-            apply_wfc3d_mutation(&mut fresh, &mutation).expect("the edited log folds");
+            vcs::apply_mutation(&fresh, &mutation).map(|(applied_state, _)| { fresh = applied_state; }).expect("the edited log folds");
         }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
         store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");

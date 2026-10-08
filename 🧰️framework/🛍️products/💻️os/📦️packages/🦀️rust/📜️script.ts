@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type ValidateFunction } from "ajv";
-import {buildBudgetMs} from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { runCargo, runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -2218,8 +2218,36 @@ class AssemblyLifetimeNativeTestScript extends BundleScript {
   }
 }
 
+/** 🪢️ Verifies explicit binary checkpoint ownership and independent digest/framing witnesses. */
+class DirectoryDescriptorDigestSourceScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw new Error("test-directory-descriptor-digest-source accepts no arguments");
+    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🧪️tests/🟦️.ts");
+    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+    await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+  }
+}
+class DirectoryDescriptorDigestNativeScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","os_directory::io::binary::","--no-fail-fast",...rest,"--","--nocapture"]);}
+}
+
+class DirectoryCheckpointPairSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-directory-checkpoint-pair-source accepts no arguments");
+    const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🪢️canonical-checkpoint-pair/🟦️.ts");
+    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
+    await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
+  }
+}
+class DirectoryCheckpointPairNativeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, ["--lib", "os_directory::io::binary::checkpoint_pair::tests::", "--no-fail-fast", ...rest, "--", "--nocapture"]);
+  }
+}
+
 class SpaceHistorySqliteNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest]);}
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest,...(rest.includes("--")?[]:["--","--nocapture"])]);}
 }
 class SpaceHistorySqliteSourceTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -2251,9 +2279,9 @@ class DirectoryRuntimeSourceScript extends BundleScript {
 export async function directorySessionAuthorityOracle(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1");
   const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json"), "utf8"));
   const validate: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
-  const contract = await import("../../🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts");
+  const contract = await import("../../🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts");
   for (const row of fixture.rows) {
     assert.equal(validate(row.value), row.accepted, `${row.id}: ${JSON.stringify(validate.errors)}`);
     let accepted = true;
@@ -2290,7 +2318,8 @@ export async function directorySessionAuthorityOracle(repoRoot: string): Promise
   const rust = readFileSync(join(root, "🦀️.rs"), "utf8");
   const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
   const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
-  assert(rust.includes("pub struct DirectorySessionAuthorityV1") && rust.includes("parse_canonical_json"), "Rust session authority contract missing");
+  const sessionIo = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🦀️.rs"), "utf8");
+  assert(rust.includes("pub struct DirectorySessionAuthorityV1") && sessionIo.includes("parse_canonical_json"), "Rust session authority contract missing");
   assert(client.includes("DirectorySessionAuthorityV1::parse_canonical_json") && client.includes("DIRECTORY_SESSION_AUTHORITY_MAX_BYTES"), "Rust client does not enforce canonical session authority");
   assert(hub.includes("directory_event_page_session_binding_v1(&caller)") && hub.includes("Json<DirectorySessionAuthorityV1>"), "Hub session response is not bound to the existing session digest");
   return fixture.rows.length + fixture.raw.length + fixture.bindingGoldens.length + fixture.authorityLifecycle.length + 3;
@@ -2330,7 +2359,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
   assert(validator(fixture.valid), JSON.stringify(validator.errors));
   assert.equal(new TextEncoder().encode(fixture.canonicalUnsigned).length, 474);
   assert.equal(createHash("sha256").update(fixture.canonicalUnsigned).digest("hex"), fixture.expectedReceiptSha256);
-  const contract = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+  const contract = await import("../../🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts");
   const parsed = await contract.parseDirectoryEventPageV1(JSON.stringify(fixture.valid));
   assert.deepEqual(parsed, fixture.valid);
   const setPath = (value: any, path: string, replacement: unknown): any => {
@@ -2346,7 +2375,8 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
   await assert.rejects(() => contract.parseDirectoryEventPageV1(`${canonical} `), "trailing-byte");
   await assert.rejects(() => contract.parseDirectoryEventPageV1(canonical.replace('{"schema":', '{"schema":"duplicate","schema":')), "duplicate-key");
   const rust = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
-  assert(rust.includes("pub struct DirectoryEventPageV1") && rust.includes("pub fn receipt_matches(&self) -> bool"), "Rust event-page contract missing");
+  const pageIo = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🦀️.rs"), "utf8");
+  assert(rust.includes("pub struct DirectoryEventPageV1") && pageIo.includes("pub fn receipt_matches(&self) -> bool"), "Rust event-page contract missing");
   return 5 + fixture.hostileMutations.length + fixture.rawHostiles.length;
 }
 
@@ -2766,6 +2796,10 @@ const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-
   .register("test-borrowed-key-index-native", BorrowedKeyIndexNativeTestScript)
   .register("test-snapshot-native-admission", SnapshotNativeAdmissionTestScript)
   .register("test-space-history-sqlite-native",SpaceHistorySqliteNativeTestScript)
+  .register("test-directory-descriptor-digest-source",DirectoryDescriptorDigestSourceScript)
+  .register("test-directory-descriptor-digest-native",DirectoryDescriptorDigestNativeScript)
+  .register("test-directory-checkpoint-pair-source",DirectoryCheckpointPairSourceScript)
+  .register("test-directory-checkpoint-pair-native",DirectoryCheckpointPairNativeScript)
   .register("test-space-history-sqlite-source",SpaceHistorySqliteSourceTestScript)
   .register("test-assembly-lifetime-native", AssemblyLifetimeNativeTestScript)
   .register("test-directory-runtime-source", DirectoryRuntimeSourceScript)

@@ -54,12 +54,15 @@
   "complianceRecords": null,
   "approvals": null,
   "meetings": {
-    "added": [],
     "removed": [
-      "meeting-record-a"
+      {
+        "id": "meeting-record-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "changes": null,
   "collaboration": null,

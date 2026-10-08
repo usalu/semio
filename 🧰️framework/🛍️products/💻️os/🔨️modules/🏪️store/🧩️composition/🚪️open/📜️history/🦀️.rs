@@ -7,7 +7,9 @@ pub(crate) mod dictionary;
 #[path = "🏭️factory/🦀️.rs"]
 pub(crate) mod factory;
 
-use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, SnapshotRetirementStep};
+use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest};
+use semio_framework_value::{ValueError, RetirementDemand};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use crate::os_spr::format::retained::{RetainedSprDiagnostic, RetainedSprLimits, RetainedSprVerification, VerifiedSprSpan};
 use semio_framework_job::StepContext;
 use std::mem::ManuallyDrop;
@@ -190,56 +192,59 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
     }
 }
 
-fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-    let Some(retained) = request.as_mut() else {
-        return Ok(SnapshotRetirementStep::Complete);
-    };
-    match retained.close_step(items, bytes)? {
-        SnapshotRetirementStep::Complete if retained.terminal_is_empty() => {
-            request.take();
-            Ok(SnapshotRetirementStep::Complete)
-        }
-        SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member history request returned false terminal")),
-        step => Ok(step),
-    }
+fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    crate::os_store::artifact_retirement_owner_close(request, grant)
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.terminal_is_empty() {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
-        if items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history verification retirement exceeds admitted depth")); }
         self.reject(MemberOpenDiagnostic::Cancelled);
-        self.scanner = None;
-        self.span = None;
-        self.pending = None;
-        close_request(&mut self.request, items, bytes)
+        if self.scanner.is_some() || self.span.is_some() || self.pending.is_some() {
+            self.scanner = None;
+            self.span = None;
+            self.pending = None;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+        }
+        close_request(&mut self.request, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.request.is_none() && self.scanner.is_none() && self.span.is_none() && self.pending.is_none()
+    fn terminal_is_empty(&self) -> bool { self.request.is_none() && self.scanner.is_none() && self.span.is_none() && self.pending.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+}
+impl MemberHistoryVerification {
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.scanner.is_some() || self.span.is_some() || self.pending.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        crate::os_store::artifact_retirement_owner_demands(&self.request, body)
     }
-    fn next_close_byte_demand(&self) -> usize { self.request.as_ref().map_or(0, MemberOpenRequest::next_close_byte_demand) }
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.terminal_is_empty() {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
-        if items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "verified history retirement exceeds admitted depth")); }
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        self.span = None;
-        close_request(&mut self.request, items, bytes)
+        if self.span.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
+        close_request(&mut self.request, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.request.is_none() && self.span.is_none()
+    fn terminal_is_empty(&self) -> bool { self.request.is_none() && self.span.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+}
+impl VerifiedMemberHistoryInput {
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.span.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        crate::os_store::artifact_retirement_owner_demands(&self.request, body)
     }
-    fn next_close_byte_demand(&self) -> usize { self.request.as_ref().map_or(0, MemberOpenRequest::next_close_byte_demand) }
 }
 
 impl Drop for MemberHistoryVerification {

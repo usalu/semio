@@ -113,6 +113,25 @@ pub(crate) mod context {
         }
     }
     
+    /// 📚️ Runs the `setActiveExample` handler and lands its `LoadDocument` effect exactly like the runtime does: an example
+    /// switch is a whole-document load, so the handler must emit no mutation and the app only changes through the load.
+    pub async fn load_example(app: &mut Block3dApp, id: &str) {
+        let snapshot = app.snapshot().expect("snapshot");
+        let config = crate::editor::block3d::config::Block3dConfig::default();
+        let emit = crate::editor::block3d::commands::set_active_example::handle(
+            &crate::editor::block3d::commands::set_active_example::SetActiveExample { id: id.into() },
+            &semio_framework_plugin::ArtifactView::new(&snapshot, &semio_framework_plugin::HistoryView::empty()),
+            &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+        )
+        .expect("example handler");
+        assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
+        for effect in emit.effects {
+            if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
+                semio_framework_plugin::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the example loads");
+            }
+        }
+    }
+
     pub async fn render(app: &mut Block3dApp, body_key: &str) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
@@ -517,7 +536,7 @@ async fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_capsule_fixture() {
     let mut app = new_app().await;
-    context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
+    context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
     let projection = app.snapshot().expect("snapshot");
     // 🪪️ The object kind's ID is this DOCUMENT's identity, and no mutation in the family can change it
     // (there is no `change-object-kind-id`; the same holds for block5d's `part_kind.id`) — an example
@@ -562,7 +581,7 @@ async fn set_active_representation_writes_config_not_document() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
     let mut app = new_app().await;
-    context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
+    context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
     let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
@@ -582,7 +601,7 @@ async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
 #[semio_framework_async_macros::async_test]
 async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
     let mut app = new_app().await;
-    context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
+    context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
     context::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] })).await;
     let projection = app.snapshot().expect("snapshot");
     assert!(!crate::vortex_kinds_of(&projection).is_empty());
@@ -595,7 +614,7 @@ async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
 #[semio_framework_async_macros::async_test]
 async fn a_surface_click_is_one_tool_transaction_of_its_mutations() {
     let mut app = new_app().await;
-    context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
+    context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
     let edits = app.edit_transactions().len();
     let vortices = app.snapshot().expect("snapshot").vortices.len();
     context::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] })).await;
@@ -638,3 +657,27 @@ async fn world_window_measures_collect_all_five_options() {
 //#endregion 🔖️WindowMeasures
 
 semio_framework_plugin::history_edit_acceptance_law!("block", super::Block3dPlayApp, || semio_framework_plugin::App { definition: super::create_block3d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+/// 🗃️ An example switch and a JSON edit answer a whole-document `LoadDocument` effect, never mutation rows: no diff, no history row.
+#[test]
+fn example_switch_and_json_edit_load_a_document_instead_of_editing_one() {
+    let document = crate::standards::v1::subsets::any::schema::empty_block3d_snapshot();
+    let config = crate::editor::block3d::config::Block3dConfig::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let view = semio_framework_plugin::ArtifactView::new(&document, &history);
+    let config_view = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    for id in [set_active_example::BLOCK3D_EXAMPLE_CAPSULE, set_active_example::BLOCK3D_EXAMPLE_FOREST_LEFT] {
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { id: id.into() }, &view, &config_view).expect("every offered example loads");
+        assert!(emit.artifact_mutations.is_empty(), "{id}: an example load is not a document edit");
+        assert!(matches!(emit.effects.first(), Some(semio_framework::kernel::Effect::LoadDocument { .. })), "{id}: an example load is one LoadDocument effect");
+    }
+    let unknown = set_active_example::handle(&set_active_example::SetActiveExample { id: "not-an-example".into() }, &view, &config_view).expect("an unknown example is a no-op");
+    assert!(unknown.artifact_mutations.is_empty() && unknown.effects.is_empty());
+    let mut edited = document.clone();
+    edited.meta.description = "edited through JSON".into();
+    let emit = edit::handle(&edit::Edit { text: semio_framework_pack_json::to_json_string(&edited) }, &view, &config_view).expect("a valid JSON edit loads");
+    assert!(emit.artifact_mutations.is_empty(), "a JSON edit is a load, not a mutation set");
+    assert!(matches!(emit.effects.first(), Some(semio_framework::kernel::Effect::LoadDocument { .. })), "a JSON edit is one LoadDocument effect");
+    let unchanged = edit::handle(&edit::Edit { text: semio_framework_pack_json::to_json_string(&document) }, &view, &config_view).expect("an unchanged document");
+    assert!(unchanged.artifact_mutations.is_empty() && unchanged.effects.is_empty(), "re-sending the open document mints nothing");
+}

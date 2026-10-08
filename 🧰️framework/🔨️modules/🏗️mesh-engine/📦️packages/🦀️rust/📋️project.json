@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/framework-mesh-engine-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🏗️mesh-engine",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*"
+    ]
+  },
+  "targets": {
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    }
+  }
+}

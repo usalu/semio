@@ -1,0 +1,62 @@
+{
+  "beforeSha256": "fb3f742bae1b493aecb5e7551bb11a570414903f3358ce7020fa38c8bb2c0362",
+  "afterSha256": "ba4e9374979a1c4160e998fbd8d2f6acaadcb10f42eb3308091c24df548cbbb8",
+  "edits": [
+    {
+      "before": "                self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin(self.generation, self.source_revision, schema).map_err(|_| WorldDynamicFault::ByteCapacity)?);",
+      "after": "                let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(), 0, 1);\n                let (token, progress) = mesh3d_begin(self.generation, self.source_revision, schema, grant).map_err(|_| WorldDynamicFault::ByteCapacity)?;\n                self.owner = WorldPlaceholderOwner::Writing(token);\n                if !progress.fits(grant) { return Err(WorldDynamicFault::ByteCapacity); }",
+      "count": 1
+    },
+    {
+      "before": "                if mesh3d_allocate_step(self.token()?).map_err(|_| WorldDynamicFault::Closing)? {",
+      "after": "                let token = self.token()?;\n                let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).map_err(|_| WorldDynamicFault::Closing)?, 0, 1);\n                if world_mesh_ownership_complete(grant, mesh3d_allocate_step(token, grant).map_err(|_| WorldDynamicFault::Closing)?).map_err(|_| WorldDynamicFault::Closing)? {",
+      "count": 1
+    },
+    {
+      "before": "        let owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, revision, schema)?);",
+      "after": "        let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(), 0, 1);\n        let (token, progress) = mesh3d_begin(generation, revision, schema, grant)?;\n        let owner = WorldPlaceholderOwner::Writing(token);\n        assert!(progress.fits(grant), \"original mesh constructor exceeded its admitted ownership grant\");",
+      "count": 1
+    },
+    {
+      "before": "                if mesh3d_allocate_step(self.token()?)? {",
+      "after": "                let token = self.token()?;\n                let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token)?, 0, 1);\n                if world_mesh_ownership_complete(grant, mesh3d_allocate_step(token, grant)?)? {",
+      "count": 2
+    },
+    {
+      "before": "                    self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin(self.generation + u64::from(self.bucket), self.revision, Mesh3dSchema::triangle_mesh(vertices, indices))?);",
+      "after": "                    let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(), 0, 1);\n                    let (token, progress) = mesh3d_begin(self.generation + u64::from(self.bucket), self.revision, Mesh3dSchema::triangle_mesh(vertices, indices), grant)?;\n                    self.owner = WorldPlaceholderOwner::Writing(token);\n                    if !progress.fits(grant) { return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity); }",
+      "count": 1
+    },
+    {
+      "before": "                if let WorldMeshSource::Inline(mesh) = &mut self.source { ui_wgpu::wgpu::mesh3d_move_component_references(token, &mut mesh.component_references)?; }",
+      "after": "                if let WorldMeshSource::Inline(mesh) = &mut self.source {\n                    let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_component_capacity_byte_demand(&mesh.component_references)?, 0, 1);\n                    let progress = ui_wgpu::wgpu::mesh3d_move_component_references(token, &mut mesh.component_references, grant)?;\n                    if !progress.fits(grant) { return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity); }\n                }",
+      "count": 1
+    },
+    {
+      "before": "                if ui_wgpu::wgpu::mesh3d_component_admission_step(self.token()?, 1, 4096)?.complete { self.phase = WorldPlaceholderMeshPhase::Seal; }",
+      "after": "                let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, 0, 0, 1);\n                let step = ui_wgpu::wgpu::mesh3d_component_admission_step(self.token()?, grant)?;\n                if !step.ownership.fits(grant) { return Err(ui_wgpu::wgpu::Mesh3dFault::Closing); }\n                if step.complete { self.phase = WorldPlaceholderMeshPhase::Seal; }",
+      "count": 1
+    },
+    {
+      "before": "mesh3d_close_step(self.mesh)",
+      "after": "ui_wgpu::wgpu::mesh3d_close_demands(self.mesh, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(self.mesh, grant)?) })",
+      "count": 1
+    },
+    {
+      "before": "mesh3d_close_step(entry.value)",
+      "after": "ui_wgpu::wgpu::mesh3d_close_demands(entry.value, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(entry.value, grant)?) })",
+      "count": 2
+    },
+    {
+      "before": "mesh3d_close_step(lease)",
+      "after": "ui_wgpu::wgpu::mesh3d_close_demands(lease, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(lease, grant)?) })",
+      "count": 3
+    },
+    {
+      "before": "mesh3d_abort_step(token)",
+      "after": "ui_wgpu::wgpu::mesh3d_abort_demands(token, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_abort_step(token, grant)?) })",
+      "count": 3
+    }
+  ],
+  "nativeQualified": false
+}

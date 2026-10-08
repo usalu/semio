@@ -4,7 +4,7 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
 //! leaf's own `🔺️diff/🦀️.rs`, which reads the live `knowledge` rows off the working-scene cache — which a fresh test process has never populated — finds no `knowledge-record-a`, and rejects with `mutation.target-missing`.
 //!
-//! That leaf's own contract line reads: 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else `removed = [id]` — `apply` re-derives the composed child handle from the remaining rows.
+//! That leaf's own contract line reads: 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else `removed = [{id, index}]` — `apply` re-derives the composed child handle from the remaining rows.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.

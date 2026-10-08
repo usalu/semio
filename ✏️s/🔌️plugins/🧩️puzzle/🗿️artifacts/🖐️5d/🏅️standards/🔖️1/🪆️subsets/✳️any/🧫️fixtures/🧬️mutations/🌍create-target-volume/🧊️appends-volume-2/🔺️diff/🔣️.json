@@ -7,20 +7,23 @@
   "parts": null,
   "schema": null,
   "targetVolumes": {
-    "added": [
+    "inserted": [
       {
-        "hidden": false,
-        "id": "volume-2",
-        "locked": false,
-        "origin": [
-          6.0,
-          0.0,
-          0.0
-        ]
+        "index": 1,
+        "row": {
+          "hidden": false,
+          "id": "volume-2",
+          "locked": false,
+          "origin": [
+            6.0,
+            0.0,
+            0.0
+          ]
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    "modified": [],
+    "moved": [],
+    "removed": []
   }
 }

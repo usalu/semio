@@ -163,6 +163,10 @@ fn decode_clipboard_content(page: &[u8]) -> Option<ClipboardContent> {
 #[path = "../../../🧪️tests/📋️clipboard-content/🦀️.rs"]
 mod clipboard_content_tests;
 
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../../🧪️tests/♻️physical-job-close/🦀️.rs"]
+pub(crate) mod physical_job_close_tests;
+
 #[cfg(not(target_arch = "wasm32"))]
 impl semio_framework_job::InteractiveJob for ClipboardIoJob {
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
@@ -219,16 +223,20 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.operation.is_some() {
-            if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.operation = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
+        if !self.closing{return InteractiveJobCloseStep::Blocked}
+        if self.operation.is_none(){return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
+        let bytes=match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0};
+        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
+        if bytes!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        self.operation=None;
+        InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}}
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0})}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(matches!(self.operation.as_ref(),Some(ClipboardIoOperation::Write(text)) if text.capacity()!=0)))}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.operation.is_none()

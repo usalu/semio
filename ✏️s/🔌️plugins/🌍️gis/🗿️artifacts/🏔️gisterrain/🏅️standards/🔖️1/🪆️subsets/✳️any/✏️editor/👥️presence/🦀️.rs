@@ -60,9 +60,6 @@ impl protocol::DiffAlgebra<Gis3dPresence> for Gis3dPresenceDiff {
     fn inverse(&self, base: &Gis3dPresence) -> Self {
         Self { camera_json: self.camera_json.as_ref().map(|_| base.camera_json.clone()) }
     }
-    fn between(base: &Gis3dPresence, other: &Gis3dPresence) -> Self {
-        Self { camera_json: (base.camera_json != other.camera_json).then(|| other.camera_json.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.camera_json.is_none()
     }

@@ -41,10 +41,6 @@ impl protocol::DiffAlgebra<ArchitectAdjacencyWindowConfig> for ArchitectAdjacenc
         Self { adjacency_kind_filter: self.adjacency_kind_filter.as_ref().map(|_| AdjacencyKindFilterSet { value: base.adjacency_kind_filter.clone() }) }
     }
 
-    fn between(base: &ArchitectAdjacencyWindowConfig, other: &ArchitectAdjacencyWindowConfig) -> Self {
-        Self { adjacency_kind_filter: (base.adjacency_kind_filter != other.adjacency_kind_filter).then(|| AdjacencyKindFilterSet { value: other.adjacency_kind_filter.clone() }) }
-    }
-
     fn is_empty(&self) -> bool {
         self.adjacency_kind_filter.is_none()
     }

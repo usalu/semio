@@ -10,7 +10,6 @@ input EquationPointPositionInput { index: Int! x: Float! y: Float! }
 
 input ChangeGraphDirected { newDirected: Boolean! }
 input UpdateGraphAlgorithm { newAlgorithm: String! newAlgorithmSeed: String }
-input ReplaceGraph { graph: EquationGraphInput! }
 input CreateNode { id: String! label: String! x: Float! y: Float! index: Int }
 input DeleteNode { id: String! }
 input DeleteNodes { ids: [String!]! }
@@ -18,7 +17,6 @@ input ChangeNodeLabel { id: String! newLabel: String! }
 input MoveNode { id: String! x: Float! y: Float! }
 input ConnectNodes { id: String! source: String! target: String! index: Int }
 input DisconnectNodes { id: String! }
-input ReplacePoints { points: [EquationPointInput!]! }
 input InsertPoint { index: Int! x: Float! y: Float! }
 input RemovePoint { index: Int! }
 input MovePoints { indices: [Int!]! dx: Float! dy: Float! }
@@ -27,4 +25,4 @@ input MoveNodes { ids: [String!]! dx: Float! dy: Float! }
 input SetNodePositions { positions: [EquationNodePositionInput!]! }
 input SetPointPositions { positions: [EquationPointPositionInput!]! }
 
-union EquationMutation = ChangeGraphDirected | UpdateGraphAlgorithm | ReplaceGraph | CreateNode | DeleteNode | DeleteNodes | ChangeNodeLabel | MoveNode | ConnectNodes | DisconnectNodes | ReplacePoints | InsertPoint | RemovePoint | MovePoints | ChangeCoefficient | MoveNodes | SetNodePositions | SetPointPositions
+union EquationMutation = ChangeGraphDirected | UpdateGraphAlgorithm | CreateNode | DeleteNode | DeleteNodes | ChangeNodeLabel | MoveNode | ConnectNodes | DisconnectNodes | InsertPoint | RemovePoint | MovePoints | ChangeCoefficient | MoveNodes | SetNodePositions | SetPointPositions

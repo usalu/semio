@@ -5,8 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_vcs_mutation, inverse_vcs_mutation, VcsDemoMutation};
+use crate::mutations::{inverse_vcs_mutation, VcsDemoMutation};
 use crate::VcsSnapshot;
+use crate::central_apply::{apply_vcs_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/➡️after/🔣️.json");
@@ -87,12 +88,12 @@ async fn declared_outcome_holds() {
     let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "remove-tag/detaches-the-review-tag: review IS present in BASE, so target-missing must not fire, got {:?}", produced.messages());
     let delta = produced.diff().tags.clone().expect("remove-tag's diff pins a tags delta");
-    assert_eq!(delta.removed, vec!["review".to_string()], "remove-tag's delta must carry the one removed tag");
-    assert!(delta.added.is_empty(), "remove-tag never adds a tag");
+    assert_eq!(delta.removed.iter().map(|entry| (entry.id.as_str(), entry.index)).collect::<Vec<_>>(), vec![("review", 0)], "remove-tag's delta must carry the one removed tag at its base index");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty(), "remove-tag never inserts or moves a tag");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: a `tags` DELTA carrying one `removed` member
-/// and an empty `added`. The surviving member is absent from the diff entirely — removal is expressed
+/// at its base index and empty `inserted`/`moved`. The surviving member is absent from the diff entirely — removal is expressed
 /// by naming what LEAVES, never by re-sending what stays.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
@@ -101,9 +102,9 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-tag/detaches-the-review-tag: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().tags.clone().expect("remove-tag pins a tags delta");
-    assert_eq!(delta.removed, vec!["review".to_string()], "only the detached member travels in the delta");
-    assert!(delta.added.is_empty(), "a remove never populates the added lane");
-    assert!(!delta.removed.contains(&"urgent".to_string()), "the surviving member must not appear in the delta at all");
+    assert_eq!(delta.removed.iter().map(|entry| entry.id.as_str()).collect::<Vec<_>>(), vec!["review"], "only the detached member travels in the delta");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty(), "a remove never populates the inserted or moved lane");
+    assert!(!delta.removed.iter().any(|entry| entry.id == "urgent"), "the surviving member must not appear in the delta at all");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

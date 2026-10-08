@@ -26,3 +26,4 @@ pub use component::*;
 mod schema_parity;
 
 pub use semio_framework_os_config::opening_config;
+pub use semio_framework_os_config::io as config_io;

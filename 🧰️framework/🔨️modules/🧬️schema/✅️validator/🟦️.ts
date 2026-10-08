@@ -122,6 +122,9 @@ function jsonSchemaSubsetErrors(schema: unknown, value: unknown, path: string, r
   }
   const object = jsonSchemaSubsetObject(value);
   if (object) {
+    const size = Object.keys(object).length;
+    if (typeof contract.minProperties === "number" && size < contract.minProperties) errors.push(`${path} must contain at least ${contract.minProperties} property(s)`);
+    if (typeof contract.maxProperties === "number" && size > contract.maxProperties) errors.push(`${path} must contain at most ${contract.maxProperties} property(s)`);
     const required = Array.isArray(contract.required) ? contract.required.filter((key): key is string => typeof key === "string") : [];
     for (const key of required) if (!(key in object)) errors.push(`${path}/${key} is required`);
     const properties = jsonSchemaSubsetObject(contract.properties) ?? {};

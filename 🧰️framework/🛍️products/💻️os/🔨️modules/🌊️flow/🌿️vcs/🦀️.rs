@@ -281,7 +281,6 @@ enum FlowVcsAction {
     SetLayout(FlowLayoutEntry),
     LayoutRoot(OrderedMap<WidgetLayout>),
     ReplaceDocument(FlowHostSnapshot),
-    ActivateDocument { index: usize },
     Undo,
     Redo,
     Checkpoint,
@@ -374,12 +373,11 @@ impl FlowVcsCursor {
             FlowVcsAction::PatchSynapse { .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::PatchSynapse, 0),
             FlowVcsAction::SetLayout(_) => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::Layout, 0),
             FlowVcsAction::LayoutRoot(_) => (FlowVcsCursorPhase::Mutate, FlowVcsCursorKind::Layout, 0),
-            FlowVcsAction::ActivateDocument { index } => (FlowVcsCursorPhase::Mutate, FlowVcsCursorKind::ReplaceDocument, *index),
         };
         let history_mode = match action {
             FlowVcsAction::Undo => 1,
             FlowVcsAction::Redo => 2,
-            FlowVcsAction::Checkpoint => 3,
+            FlowVcsAction::Checkpoint | FlowVcsAction::ReplaceDocument(_) => 3,
             _ => 0,
         };
         Self {
@@ -651,7 +649,11 @@ impl FlowRetainedVcs {
         self.admit(authority, census, FlowVcsAction::SetLayout(source.take()))
     }
 
+    /// 📥️ Document load: checks a fresh document out of `source` as the active version. It is a base reset, never a history step, so it needs a pristine history and writes no undo row.
     pub fn begin_replace_document(&mut self, authority: FlowVcsAuthority, source: &mut FlowVcsSource<FlowHostSnapshot>) -> Result<FlowVcsHandle, FlowVcsFault> {
+        if !self.undo.is_empty() || !self.redo.is_empty() {
+            return Err(FlowVcsFault::InvalidMutation);
+        }
         let census = flow_vcs_fixture_census(source.get()?);
         self.preflight(census)?;
         self.admit(authority, census, FlowVcsAction::ReplaceDocument(source.take()))
@@ -1156,6 +1158,9 @@ impl FlowRetainedVcs {
             document.edit_owner = Some(operation.handle.operation);
             self.operations[slot].as_mut().expect("validated Flow VCS operation").cursor.owns_edit = true;
         }
+        if phase == FlowVcsCursorPhase::ReserveReplacement && (!self.undo.is_empty() || !self.redo.is_empty()) {
+            return Err(FlowVcsFault::InvalidMutation);
+        }
         if phase == FlowVcsCursorPhase::LoadHistory {
             self.load_history_cursor(slot)?;
             return Ok(self.cursor_progress(slot));
@@ -1550,15 +1555,6 @@ fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVc
             operation.cursor.mutated = true;
             FlowVcsAction::LayoutRoot(std::mem::replace(&mut host_snapshot.layout, layout))
         }
-        FlowVcsAction::ActivateDocument { index } => {
-            if document.versions.get(index).is_none() {
-                return Err(FlowVcsFault::InvalidMutation);
-            }
-            let previous = document.active;
-            document.active = index;
-            operation.cursor.mutated = true;
-            FlowVcsAction::ActivateDocument { index: previous }
-        }
         FlowVcsAction::Checkpoint => FlowVcsAction::Checkpoint,
         action => {
             operation.action = Some(action);
@@ -1644,9 +1640,9 @@ fn flow_vcs_step_document_replacement(document: &mut FlowVcsDocument, operation:
         FlowVcsCursorPhase::ReplaceLayout => {
             let target = document.versions.get_mut(operation.cursor.target).expect("retained replacement slot");
             std::mem::swap(&mut target.layout, &mut source.layout);
-            let previous = document.active;
+            operation.cursor.origin = document.active;
             document.active = operation.cursor.target;
-            operation.action = Some(FlowVcsAction::ActivateDocument { index: previous });
+            operation.action = Some(FlowVcsAction::Checkpoint);
             operation.cursor.mutated = true;
             operation.cursor.phase = FlowVcsCursorPhase::TransferHistory;
         }
@@ -1778,11 +1774,8 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
         }
         FlowVcsCursorKind::ReplaceDocument => {
             if document.active == cursor.target {
-                if let Some(FlowVcsAction::ActivateDocument { index }) = operation.action.take() {
-                    document.active = index;
-                    operation.action = Some(FlowVcsAction::ActivateDocument { index: cursor.target });
-                    return Ok(false);
-                }
+                document.active = cursor.origin;
+                return Ok(false);
             }
             if cursor.target + 1 != document.versions.len() {
                 return Err(FlowVcsFault::ClosePending);

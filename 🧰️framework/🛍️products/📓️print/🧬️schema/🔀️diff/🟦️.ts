@@ -32,12 +32,12 @@ export function applyVizChartDiff(base: VizChartSnapshot, diff: VizChartDiff): V
   const snapshot = structuredClone(base);
   for (const edit of diff.edits) {
     const reject = (code: string, message: string): VizChartApplyOutcome => ({ snapshot: base, messages: [{ code, message, target: edit.path }] });
-    if (!validVizChartPath(edit.path)) return reject("print.chart.path", "invalid chart address");
+    if (!validVizChartPath(edit.path)) return reject("mutation.apply.invalid-path", "invalid chart address");
     const parent = readVizChartPath(snapshot.chart, edit.path.slice(0, -1));
-    if (parent === null || typeof parent !== "object") return reject("print.chart.parent", "chart address parent is missing or scalar");
+    if (parent === null || typeof parent !== "object") return reject("mutation.apply.missing-target", "chart address parent is missing or scalar");
     const key = edit.path.at(-1)!;
-    if (Array.isArray(parent) && (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) > parent.length)) return reject("print.chart.index", "array index must be canonical and in range");
-    if (!equalVizChartValue(readVizChartPath(snapshot.chart, edit.path), edit.before)) return reject("print.chart.precondition", "chart field changed since diff was authored");
+    if (Array.isArray(parent) && (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) > parent.length)) return reject("mutation.apply.invalid-index", "array index must be canonical and in range");
+    if (!equalVizChartValue(readVizChartPath(snapshot.chart, edit.path), edit.before)) return reject("mutation.apply.precondition-drifted", "chart field changed since diff was authored");
     if (Array.isArray(parent)) {
       const items = parent as VizChartValue[];
       if (edit.after === undefined) { if (Number(key) < items.length) items.splice(Number(key), 1); }

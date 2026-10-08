@@ -1,0 +1,70 @@
+{
+  "originalGeometryBeforeSha256": "5b86bee507643f6d47c2e36dc4623cdacc41dd75eaa3cc91300f9165830b8ec9",
+  "originalGeometryBefore": "//! 🌐️ Geometry work is owned by an explicitly supplied host or evaluation-session port.\n#[derive(Clone, Debug, PartialEq)]\npub enum GeometryStep {\n    Working { units_done: usize, units_total: usize, phase: String },\n    Ready(semio_framework::MeshData),\n    Cancelled,\n    Failed(String),\n}\n/// 🔌️ One supplied geometry authority owns its retained jobs and handle claims until explicit close.\npub trait GeometryPort: Send + Sync {\n    fn retain(&self, handles: &[String]);\n    fn tessellate_step(&self, handle: &str, tolerance: f64, units: usize) -> GeometryStep;\n    fn dispose(&self, handle: &str) -> Result<(), String>;\n    fn cancel(&self) -> usize;\n    fn begin_close(&self);\n    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize) -> Result<neural_engine::ValueRetirementStep,String>;\n    fn terminal_is_empty(&self) -> bool;\n    fn next_close_byte_demand(&self) -> usize;\n}\n\n/// 🧹️ Retains the supplied authority until its resources and concrete Box allocation retire.\n#[must_use = \"geometry port retirement requires explicit close\"]\npub struct GeometryPortRetirement { port:std::mem::ManuallyDrop<Option<Box<dyn GeometryPort>>> }\nimpl GeometryPortRetirement {\n    pub fn new(port:Box<dyn GeometryPort>) -> Self { port.begin_close(); Self { port:std::mem::ManuallyDrop::new(Some(port)) } }\n    pub fn terminal_is_empty(&self) -> bool { self.port.is_none() }\n    pub fn next_close_byte_demand(&self) -> usize {\n        self.port.as_ref().map_or(0,|port| if port.terminal_is_empty() { std::mem::size_of_val(port.as_ref()) } else { port.next_close_byte_demand() })\n    }\n    pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize) -> Result<neural_engine::ValueRetirementStep,String> {\n        use neural_engine::ValueRetirementStep as Step;\n        let Some(port) = self.port.as_mut() else { return Ok(Step::Complete) };\n        if maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }\n        if port.terminal_is_empty() {\n            let released_bytes = std::mem::size_of_val(port.as_ref());\n            if maximum_bytes < released_bytes { return Ok(Step::Blocked); }\n            drop(self.port.take());\n            return Ok(Step::Pending { released_items:1,released_bytes });\n        }\n        match port.close_step(maximum_items,maximum_bytes)? {\n            Step::Pending { released_items,released_bytes } if released_items > maximum_items || released_bytes > maximum_bytes => Err(\"flow.geometry-port-close-overspend\".into()),\n            Step::Complete if !port.terminal_is_empty() => Err(\"flow.geometry-port-close-not-empty\".into()),\n            Step::Complete => Ok(Step::Pending { released_items:0,released_bytes:0 }),\n            step => Ok(step),\n        }\n    }\n    pub fn retire_cold(mut self) {\n        while !self.terminal_is_empty() {\n            let step = self.close_step(1,4096.max(self.next_close_byte_demand())).expect(\"cold geometry port retirement\");\n            assert!(!matches!(step,neural_engine::ValueRetirementStep::Blocked),\"cold geometry port retirement is blocked\");\n        }\n    }\n}\nimpl Drop for GeometryPortRetirement {\n    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(),\"geometry port requires explicit terminal retirement before drop\"); } }\n}\n",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🦀️.rs",
+      "sha256": "4bee9693fb6fcee49d9c9f1bc49c53e37f956b2e6d14274156b3cdcd06a7874b",
+      "currentSha256": "4bee9693fb6fcee49d9c9f1bc49c53e37f956b2e6d14274156b3cdcd06a7874b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "6daf7350cd0f88c8622fceb3c9ff737068265d3e65c5377c5484a137ca1deae7",
+      "currentSha256": "6daf7350cd0f88c8622fceb3c9ff737068265d3e65c5377c5484a137ca1deae7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "6505bb5c4a6b05d05491ad6df50f5e91fc6702e5114515350c7b25cb505e6225",
+      "currentSha256": "6505bb5c4a6b05d05491ad6df50f5e91fc6702e5114515350c7b25cb505e6225"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "4be67e6793c351efd413ffc9f119c7a17621c7d5ed297961c4dda46a11a32d71",
+      "currentSha256": "4be67e6793c351efd413ffc9f119c7a17621c7d5ed297961c4dda46a11a32d71"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/♻️ownership/🔣️.json",
+      "sha256": "8d9e5a7b123adfd394a5ca4551dd86435d76d66a8d35a21fd545dd79d398be34",
+      "currentSha256": "8d9e5a7b123adfd394a5ca4551dd86435d76d66a8d35a21fd545dd79d398be34"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "sha256": "4163cb6d495d6c27fb1bc0a519c751e48d4cfd2276638b1efb38c89d41c9943e",
+      "currentSha256": "54a8f482fce0635a2fb4807925a03a83655a449e692e9d96f82eaa8014b5a5dc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🦀️.rs",
+      "sha256": "d1120ec50813bd7bceb178d9af0b12147d11e55f7c20ef29bc90053b84ad5eca",
+      "currentSha256": "2547789d0614b9694bc66939da07a339d7e4a129be0395268001bf1466a9e816"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "sha256": "db50a1d5a0749ecc7904b1176b543dab7d1efc6231e346fbbee801c4f95709a3",
+      "currentSha256": "42a475806b4244e9aa3ea7f9eaae6aa247d4c0ef64d0cac6058f3cae829a213b"
+    }
+  ],
+  "native": "authored unrun at current kernel floor",
+  "oracle": "strict oracle execution qualified; persistent schema custody unresolved",
+  "oracleAttempts": [
+    {
+      "session": 69839,
+      "result": "FAIL",
+      "reason": "Ajv default Draft7 refused authored Draft2020 schema; no assertion success"
+    },
+    {
+      "session": 59209,
+      "result": "GREEN",
+      "qualification": "UTF8/stable JSON only; concurrent removal of schema binding means not strict ownership proof"
+    },
+    {
+      "session": 61224,
+      "result": "GREEN",
+      "exitCode": 0,
+      "strictAjv": true,
+      "negativeContracts": 10,
+      "durationSeconds": 5.8,
+      "sourceCustodyAfterRun": "schema missing again, oracle unchanged; exact raw authority restored"
+    }
+  ],
+  "schemaAuthorityInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/geometry-port-schema-authority-input.json"
+}

@@ -8,8 +8,6 @@ pub mod feature;
 mod document_contract_tests;
 
 
-use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
-use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::ToValue;
@@ -18,7 +16,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geome
 
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_framework_value::{DslValue,Number};
-use std::collections::HashSet;
 
 //#region 🔹Artifact
 /// 🧬️ GIS map document artifact state.
@@ -132,66 +129,6 @@ pub fn gismap_artifact_schema_descriptor() -> ::semio_framework_schema_registry:
 
 //#endregion 🔖️DocumentHelpers
 
-//#region 🔖️CollectionDiffing
-/// 🌉️ Diffs one feature collection before/after an in-place edit into granular id-keyed
-/// create/replace-data/delete operations — used by `patchPositions`, `setActiveExample`, and the
-/// `features:in` import (whole-array replacements still converge per-feature). `create`/`delete`/
-/// `replace` pick which collection's semantic-mutation triplet (positions/routes/regions) the diff
-/// belongs to.
-fn feature_collection_operations(
-    before: &[MapFeature],
-    after: &[MapFeature],
-    create: impl Fn(usize, MapFeature) -> GisMapMutation,
-    delete: impl Fn(String) -> GisMapMutation,
-    replace: impl Fn(String, semio_framework_value::DslValue) -> GisMapMutation,
-) -> Vec<GisMapMutation> {
-    let mut operations = Vec::new();
-    let after_ids: HashSet<&str> = after.iter().map(|feature| feature.id.as_str()).collect();
-    for feature in before {
-        if !after_ids.contains(feature.id.as_str()) {
-            operations.push(delete(feature.id.clone()));
-        }
-    }
-    for (index, feature) in after.iter().enumerate() {
-        match before.iter().find(|entry| entry.id == feature.id) {
-            None => operations.push(create(index, feature.clone())),
-            Some(prev) if prev.data != feature.data => operations.push(replace(feature.id.clone(), feature.data.clone())),
-            Some(_) => {}
-        }
-    }
-    operations
-}
-
-pub fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
-    feature_collection_operations(
-        before,
-        after,
-        |index, item| GisMapMutation::CreatePosition(create_position::CreatePosition { index, item }),
-        |id| GisMapMutation::DeletePosition(delete_position::DeletePosition { id }),
-        |id, new_data| GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id, new_data }),
-    )
-}
-
-pub fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
-    feature_collection_operations(
-        before,
-        after,
-        |index, item| GisMapMutation::CreateRoute(create_route::CreateRoute { index, item }),
-        |id| GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id }),
-        |id, new_data| GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id, new_data }),
-    )
-}
-
-pub fn regions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
-    feature_collection_operations(
-        before,
-        after,
-        |index, item| GisMapMutation::CreateRegion(create_region::CreateRegion { index, item }),
-        |id| GisMapMutation::DeleteRegion(delete_region::DeleteRegion { id }),
-        |id, new_data| GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id, new_data }),
-    )
-}
-//#endregion 🔖️CollectionDiffing
 
 //#region 🔖️DrawingBridge
 /// 🎨️ The two named styles every gis-built `SemioDrawingSnapshot` references: a filled marker for

@@ -45,10 +45,6 @@ impl DiffAlgebra<NotePresence> for NotePresenceDiff {
         Self { camera_x: self.camera_x.map(|_| base.camera_x), camera_y: self.camera_y.map(|_| base.camera_y), camera_zoom: self.camera_zoom.map(|_| base.camera_zoom) }
     }
 
-    fn between(base: &NotePresence, other: &NotePresence) -> Self {
-        Self { camera_x: (base.camera_x != other.camera_x).then_some(other.camera_x), camera_y: (base.camera_y != other.camera_y).then_some(other.camera_y), camera_zoom: (base.camera_zoom != other.camera_zoom).then_some(other.camera_zoom) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
     }

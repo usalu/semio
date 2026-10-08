@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:repo:current-cargo-publication-source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "at",
+    "rows",
+    "retirements",
+    "inputs",
+    "laws",
+    "controls",
+    "driver",
+    "sourceWrites",
+    "publicationReady",
+    "callerPaths"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "at": {
+      "type": "string"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "before",
+          "after",
+          "beforeHash",
+          "afterHash",
+          "origin"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "before": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "after": {
+            "type": "string"
+          },
+          "beforeHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "afterHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "origin": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "retirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "before",
+          "beforeHash",
+          "after",
+          "reason"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "before": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "beforeHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "after": {
+            "type": "null"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "laws": {
+      "type": "array",
+      "minItems": 41,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "controls": {
+      "const": {
+        "testLevel": "long",
+        "bunTimeoutMilliseconds": 60000,
+        "discovery": {
+          "maximumUnits": 8388608,
+          "maximumOwnedBytes": 67108864,
+          "maximumDepth": 64
+        }
+      }
+    },
+    "driver": {
+      "type": "object",
+      "required": [
+        "path",
+        "source",
+        "hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "sourceWrites": {
+      "const": 0
+    },
+    "publicationReady": {
+      "const": false
+    },
+    "callerPaths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

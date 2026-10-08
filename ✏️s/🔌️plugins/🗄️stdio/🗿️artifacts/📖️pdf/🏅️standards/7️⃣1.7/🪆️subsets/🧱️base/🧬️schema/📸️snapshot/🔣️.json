@@ -551,6 +551,12 @@
           "de": "Einträge des Trailer-Wörterbuchs."
         }
       }
+    },
+    "admittedStreamRoles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfAdmittedStreamRole"
+      }
     }
   },
   "required": [
@@ -573,7 +579,8 @@
     "info",
     "catalogExtra",
     "objects",
-    "trailer"
+    "trailer",
+    "admittedStreamRoles"
   ],
   "$defs": {
     "ObjRef": {
@@ -2736,17 +2743,18 @@
             "kind": {
               "const": "map"
             },
-            "data": {
+            "glyphs": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 65535
               }
             }
           },
           "required": [
             "kind",
-            "data"
+            "glyphs"
           ]
         }
       ]
@@ -3022,11 +3030,7 @@
               "minimum": 0
             },
             "profile": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "$ref": "#/$defs/ArtifactRef"
             },
             "alternate": {
               "anyOf": [
@@ -3071,7 +3075,7 @@
               "type": "integer",
               "minimum": 0
             },
-            "lookup": {
+            "palette": {
               "type": "array",
               "items": {
                 "type": "integer",
@@ -3083,7 +3087,7 @@
             "kind",
             "base",
             "hival",
-            "lookup"
+            "palette"
           ]
         },
         {
@@ -4662,113 +4666,83 @@
       "oneOf": [
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "type1"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "length1": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "length2": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "length3": {
-              "type": "integer",
-              "minimum": 0
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data",
-            "length1",
-            "length2",
-            "length3"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "trueType"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "cff"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "cidCff"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "openType"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         }
       ]
     },
@@ -5579,26 +5553,6 @@
             }
           }
         },
-        "codec": {
-          "$ref": "#/$defs/PdfImageCodec",
-          "x-semio-ui": {
-            "label": {
-              "en": "Image encoding",
-              "de": "Bildkodierung"
-            },
-            "description": {
-              "en": "Filter and parameters the image data is stored with.",
-              "de": "Filter und Parameter, mit denen die Bilddaten gespeichert sind."
-            }
-          }
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
         "softMask": {
           "anyOf": [
             {
@@ -5752,101 +5706,16 @@
               "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
             }
           }
+        },
+        "body": {
+          "$ref": "#/$defs/PdfImageBody"
         }
       },
       "required": [
         "id",
         "width",
         "height",
-        "data"
-      ]
-    },
-    "PdfImageCodec": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "raw"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "dct"
-            },
-            "colorTransform": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "jpx"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "ccitt"
-            },
-            "parameters": {
-              "$ref": "#/$defs/PdfCcittParameters"
-            }
-          },
-          "required": [
-            "kind",
-            "parameters"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "jbig2"
-            },
-            "globals": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        }
+        "body"
       ]
     },
     "PdfImageMask": {
@@ -6109,30 +5978,20 @@
         "interpolate": {
           "type": "boolean"
         },
-        "filters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PdfStreamFilter"
-          }
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
           }
+        },
+        "body": {
+          "$ref": "#/$defs/PdfImageBody"
         }
       },
       "required": [
         "width",
         "height",
-        "data"
+        "body"
       ]
     },
     "PdfLineCap": {
@@ -8205,26 +8064,12 @@
         "profile": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "$ref": "#/$defs/ArtifactRef"
             },
             {
               "type": "null"
             }
-          ],
-          "x-semio-ui": {
-            "label": {
-              "en": "ICC output profile",
-              "de": "ICC-Ausgabeprofil"
-            },
-            "description": {
-              "en": "DestOutputProfile bytes.",
-              "de": "Bytes des DestOutputProfile."
-            }
-          }
+          ]
         }
       },
       "required": [
@@ -9175,12 +9020,8 @@
                 }
               ]
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
           "required": [
@@ -9189,7 +9030,7 @@
             "bitsPerCoordinate",
             "bitsPerComponent",
             "decode",
-            "data"
+            "reference"
           ]
         }
       ]
@@ -10004,6 +9845,376 @@
           }
         }
       }
+    },
+    "PdfGraphIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "path"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/ObjRef"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "key"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "entry"
+                  },
+                  "key": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "index"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "item"
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "PdfStreamRoleValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "content"
+          ],
+          "properties": {
+            "kind": {
+              "const": "operators"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfOp"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "samples"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sampledWords"
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "code"
+          ],
+          "properties": {
+            "kind": {
+              "const": "calculatorProgram"
+            },
+            "code": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "mapping"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unicodeMap"
+            },
+            "mapping": {
+              "$ref": "#/$defs/PdfToUnicode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "cmap"
+          ],
+          "properties": {
+            "kind": {
+              "const": "characterMap"
+            },
+            "cmap": {
+              "$ref": "#/$defs/PdfEmbeddedCMap"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "program"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fontProgram"
+            },
+            "program": {
+              "$ref": "#/$defs/PdfFontProgram"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "image"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "image": {
+              "$ref": "#/$defs/PdfImage"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "metadataText"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "attachmentBytes"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "paletteComponents"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "components"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "glyphIds"
+            },
+            "glyphs": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "glyphs"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "referenceBody"
+            },
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
+            }
+          },
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PdfAdmittedStreamRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "dependencies",
+        "value"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/PdfGraphIdentity"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfGraphIdentity"
+          }
+        },
+        "value": {
+          "$ref": "#/$defs/PdfStreamRoleValue"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string"
+            },
+            "standard": {
+              "type": "string"
+            },
+            "subset": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "PdfImageBody": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "samples"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "properties": {
+            "kind": {
+              "const": "artifact"
+            },
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   }
 }

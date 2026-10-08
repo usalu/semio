@@ -968,6 +968,8 @@ export type PluginCatalogTarget = {
   readonly pluginId: string;
   readonly wasmOut: string;
   readonly role: "plugin" | "extension";
+  readonly capabilities?: readonly string[];
+  readonly extends?: string;
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
   /** 🔗️ Direct RUNTIME plugin dependency ids — the sibling plugins whose own actor this one needs

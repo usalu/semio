@@ -1,4 +1,4 @@
-//! 🧪️ Keyed-diff algebra of En1997: same-key coalescing, order tracking, the negative diff and the state delta.
+//! 🧪️ Keyed-diff algebra of En1997: same-key coalescing, position tracking and the negative diff.
 
 use super::En1997Diff;
 use crate::mutations::change_footing_embedment::ChangeFootingEmbedment;
@@ -46,8 +46,8 @@ async fn patches_on_one_row_coalesce_into_one_patch() {
     let sum = law(&base, &En1997Mutation::ChangeFootingWidth(ChangeFootingWidth { id: id.clone(), new_width: 2.9 }), |_| En1997Mutation::ChangeFootingEmbedment(ChangeFootingEmbedment { id: id.clone(), new_embedment: 1.7 })).await;
     let rows = sum.footings.expect("footings");
     assert_eq!(rows.modified.len(), 1);
-    assert_eq!(rows.modified[0].width, Some(2.9));
-    assert_eq!(rows.modified[0].embedment, Some(1.7));
+    assert_eq!(rows.modified[0].patch.width, Some(2.9));
+    assert_eq!(rows.modified[0].patch.embedment, Some(1.7));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -59,8 +59,8 @@ async fn insert_then_remove_cancels_and_a_patch_on_an_added_row_folds_into_it() 
     let sum = law(&base, &En1997Mutation::InsertFooting(InsertFooting { index: 0, footing: created.clone() }), |_| En1997Mutation::ChangeFootingWidth(ChangeFootingWidth { id: created.id.clone(), new_width: 3.3 })).await;
     let rows = sum.footings.expect("footings");
     assert!(rows.modified.is_empty());
-    assert_eq!(rows.added[0].width, 3.3);
-    assert_eq!(rows.order.as_deref(), Some(&["footing-created".to_string(), base.footings[0].id.clone(), base.footings[1].id.clone()][..]));
+    assert_eq!(rows.inserted[0].row.width, 3.3);
+    assert_eq!(rows.inserted[0].index, 0);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -72,7 +72,7 @@ async fn remove_then_insert_replaces_the_row_in_place() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn inverse_and_between_follow_the_state() {
+async fn inverse_follows_the_state() {
     let base = base();
     let inserted = diff_of(&En1997Mutation::InsertFooting(InsertFooting { index: 0, footing: fresh(&base) }), &base);
     let after = protocol::apply_diff(&inserted, &base).expect("insert");
@@ -80,9 +80,4 @@ async fn inverse_and_between_follow_the_state() {
     let removed = diff_of(&En1997Mutation::RemoveFooting(RemoveFooting { index: 0 }), &base);
     let after = protocol::apply_diff(&removed, &base).expect("remove");
     assert_eq!(protocol::apply_diff(&removed.inverse(&base), &after).expect("inverse"), base);
-    let mut other = base.clone();
-    for mutation in [En1997Mutation::InsertFooting(InsertFooting { index: 0, footing: fresh(&base) }), En1997Mutation::ChangeFootingWidth(ChangeFootingWidth { id: base.footings[1].id.clone(), new_width: 4.4 })] {
-        other = protocol::apply_diff(&diff_of(&mutation, &other), &other).expect("apply");
-    }
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<En1997Snapshot, En1997Diff>(&base, &other).await;
 }

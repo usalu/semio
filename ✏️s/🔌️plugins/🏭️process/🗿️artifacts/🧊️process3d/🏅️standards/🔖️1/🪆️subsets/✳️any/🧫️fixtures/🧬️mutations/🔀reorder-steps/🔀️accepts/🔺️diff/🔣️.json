@@ -5,25 +5,16 @@
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": {
-    "childId": "steps-flow-f5f284ceb16ddaf1",
-    "target": {
-      "artifactId": "steps-flow-f5f284ceb16ddaf1",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "flow"
-      }
-    }
-  },
   "stepPayloads": {
-    "added": [],
     "removed": [],
-    "patched": [],
-    "reordered": [
-      "step-2",
-      "step-1"
-    ]
-  },
-  "toolSolids": null
+    "inserted": [],
+    "moved": [
+      {
+        "id": "step-2",
+        "from": 1,
+        "to": 0
+      }
+    ],
+    "modified": []
+  }
 }

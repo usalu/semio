@@ -8,6 +8,6 @@ pub fn diff(payload: &super::CreateVortexKind, base: &Block3dSnapshot) -> protoc
     if crate::vortex_kinds_of(base).iter().any(|item| item.id == payload.vortex_kind.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "vortex-kind", payload.vortex_kind.id), vec![payload.vortex_kind.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block3dDiff { vortex_kinds: Some(Block3dVortexKindsDelta { added: vec![payload.vortex_kind.clone()], reordered: semio_s_plugin_block::block_insert_order(crate::vortex_kinds_of(base).iter().map(|item| item.id.as_str()), &payload.vortex_kind.id, payload.index), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { vortex_kinds: Block3dVortexKindsDelta::insertion(semio_s_plugin_block::block_insert_index(crate::vortex_kinds_of(base).len(), payload.index), payload.vortex_kind.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

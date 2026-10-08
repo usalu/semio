@@ -94,9 +94,6 @@ impl protocol::DiffAlgebra<DummySnapshot> for DummyDiff {
     fn inverse(&self, base: &DummySnapshot) -> Self {
         Self { count: self.count.map(|_| base.count) }
     }
-    fn between(base: &DummySnapshot, other: &DummySnapshot) -> Self {
-        Self { count: (base.count != other.count).then_some(other.count) }
-    }
     fn is_empty(&self) -> bool {
         self.count.is_none()
     }
@@ -468,10 +465,12 @@ impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
     /// additionally demands `RetireOwned`, which the dummy snapshot does not implement.
     type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize { crate::app::bounded_document_store_owners_birth_bytes::<Self, DummyMutation>() }
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        store::bounded_artifact_store_owners_birth_demand::<Self, DummyMutation>()
+    }
 
-    fn member_store_owners() -> store::DocumentStoreOwners<Self, DummyMutation> {
-        crate::app::bounded_document_store_owners::<Self, DummyMutation>()
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, DummyMutation>> {
+        crate::app::bounded_document_store_owners::<Self, DummyMutation>(grant)
     }
 }
 //#endregion 🧬️MembersRoster

@@ -59,16 +59,3 @@ async fn svg_export_of_an_empty_document_still_renders_a_bare_canvas() {
     assert_eq!(width, 256);
     assert_eq!(height, 256);
 }
-
-#[semio_framework_async_macros::async_test]
-async fn feature_collection_diffing_emits_create_replace_and_delete() {
-    let feature = |id: &str, label: &str| MapFeature { id: id.into(), data: value_to_dsl(&serde_json::json!({ "id": id, "label": label })) };
-    let before = vec![feature("keep", "a"), feature("gone", "b")];
-    let after = vec![feature("keep", "changed"), feature("new", "c")];
-    let operations = positions_operations(&before, &after);
-    assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::DeletePosition(payload) if payload.id == "gone")));
-    assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::ReplacePositionData(payload) if payload.id == "keep")));
-    assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::CreatePosition(payload) if payload.item.id == "new")));
-    assert!(routes_operations(&before, &before).is_empty(), "an unchanged collection produces no operations");
-    assert!(regions_operations(&before, &before).is_empty());
-}

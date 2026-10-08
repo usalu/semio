@@ -1,4 +1,4 @@
-use super::super::apply_pdf_mutation;
+use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use super::*;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
@@ -61,6 +61,6 @@ fn an_empty_shading_id_names_nothing_and_applies() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     let (before, after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🧩️set-pattern/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🧩️set-pattern/➡️after.pdf"));
-    let before = support::applied(&before, &PdfMutation::SetShading(crate::standards::v1_7::subsets::base::schema::mutations::SetShading { shading: support::added(&before.shadings, &after.shadings), index: None }));
+    let before = crate::standards::v1_7::subsets::base::io::mutation_bridge::applied(&before, &PdfMutation::SetShading(crate::standards::v1_7::subsets::base::schema::mutations::SetShading { shading: support::added(&before.shadings, &after.shadings), index: None }));
     assert_mutation_inverse_sum_law(&PdfMutation::SetPattern(SetPattern { pattern: support::added(&before.patterns, &after.patterns), index: None }), &before).await;
 }

@@ -1,0 +1,119 @@
+{
+  "at": "2026-10-08T19:51:04.528554+00:00",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody/🧬️schema/🔣️.json",
+      "beforeSha256": "ca57ee529de667c125f30e9f53c00e8172fb6b830a51d5884a1f188e07ea3b11",
+      "afterSha256": null,
+      "action": "retire-exclusive-example-schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🧬️schema.json",
+      "beforeSha256": "606f96ee72a818fd68db28c151b9208d3c3273825f05c3c05e77d00301a87c5d",
+      "afterSha256": null,
+      "action": "retire-exclusive-example-schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🧬️schema.json",
+      "beforeSha256": "047f5e0fbfa2ed103046b4e3c721a79c4893539a1b0de3d2d4dc7820db57d8f0",
+      "afterSha256": null,
+      "action": "retire-exclusive-example-schema"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🧫️fixtures/⏱️cold-preview/🧬️schema.json",
+      "beforeSha256": "da3c1fbda87cbdfb2a02c3fd016e6ace1973a94cfb29344353a9cec0baa3fbaa",
+      "afterSha256": null,
+      "action": "retire-exclusive-example-schema"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️schema/🔣️.json",
+      "beforeSha256": "3d6cad47e451ee7c47667b1686f7e7d7788f31c883395014d18c91fe65f7cca0",
+      "afterSha256": null,
+      "action": "retire-exclusive-example-schema"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🧬️schema/🔣️.json",
+      "beforeSha256": "5b5e7b06b5b27660d3eedd07bc6a99258e7e4bb04761936cb0f0229c06350a84",
+      "afterSha256": null,
+      "action": "retire-exclusive-example-schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "a3d547d4d785453570c2cce7ae83525e5bd96808a8922fa8da0a70ee3657afa3",
+      "afterSha256": "172afcd6211acd013a406f635d8a0221adffbba8863c1c9c1ec87c70eed7ee36",
+      "action": "remove-whole-corpus-validation-preserve-independent-Three-law"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "904181a18840237bd0c901449aaa56ace7fa984c479fb4036581d15febe93d45",
+      "afterSha256": "00765d8996ebcbcc82c3c724bb704eae0597d8719b8ece070bdbcfabfc02dcfe",
+      "action": "extend-existing-current-corpus-facet",
+      "ownedBeforeText": "  if (rest[0] === \"--current-corpus-only\" && rest.length === 1) {\n    const { default: assert } = await import(\"node:assert/strict\");\n    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import(\"node:fs\");\n    const { inventorySchemaScopes } = await import(join(root, library, \"🔍️discovery/🟦️.ts\"));\n    const { runBudgetedTestCommand } = await import(join(root, \"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts\"));\n    const owners = [\"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin\", \"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire\", \"🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source\", \"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity\"];\n    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;\n    if (!output) throw Error(\"Explicit ticket output required for physical corpus inventory\");\n    mkdirSync(output, { recursive: true });\n    const scopeRoot = mkdtempSync(join(output, \"current-corpus-\"));\n    try {\n      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });\n      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, \"🔣️taxonomy.json\"), \"utf8\")));\n      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + \"/\"));\n      const authorities = inventory.modules.filter(row => owned(row.modulePath));\n      const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === \"schema-fixture-defines-schema\");\n      writeFileSync(join(output, \"current-corpus-placement.json\"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + \"\\n\");\n      assert.deepEqual(diagnostics, [], \"Physical or adjacent test-corpus authority must retire independent of filename\");\n      assert.deepEqual(authorities, []);\n    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }\n    const value = JSON.parse(readFileSync(join(root, owners[0]!, \"🔣️.json\"), \"utf8\"));\n    const plugin = JSON.parse(readFileSync(join(root, owners[3]!, \"🔣️.json\"), \"utf8\"));\n    const payload = Buffer.alloc(value.textBytes, value.textByte);\n    const body = Buffer.concat([Buffer.from(value.bodyPrefix), payload]);\n    const operation = Buffer.concat([Buffer.from(value.operationPrefix), payload]);\n    const frame = Buffer.concat([Buffer.from(plugin.framePrefix), Buffer.alloc(plugin.textBytes, plugin.textByte)]);\n    assert.equal(body.length, value.bodyBytes);\n    assert.equal(operation.length, value.operationBytes);\n    assert.equal(frame.length, plugin.frameBytes);\n    assert.deepEqual(frame, operation);\n    assert.deepEqual(plugin.modes, value.modes);\n    for (const text of value.unicode) {\n      const encoded = Buffer.from(text, \"utf8\"), crossing = Buffer.from(payload);\n      encoded.copy(crossing, value.maximumBytes - 1);\n      assert.equal(crossing.subarray(value.maximumBytes - 1, value.maximumBytes - 1 + encoded.length).toString(\"utf8\"), text);\n    }\n    const currencies = JSON.parse(readFileSync(join(root, owners[4]!, \"🔣️.json\"), \"utf8\"));\n    assert.equal(currencies.sourceBytes, payload.length);\n    assert.equal(currencies.maximumReleaseBytes, value.maximumBytes);\n    const identities = JSON.parse(readFileSync(join(root, owners[5]!, \"🧫️fixtures/🔣️.json\"), \"utf8\"));\n    const { blake3 } = await import(\"@noble/hashes/blake3.js\");\n    const { blake3Hex } = await import(join(root, \"🧰️framework/🔨️modules/🔏️hash/🟦️.ts\"));\n    const identityRows = [];\n    for (const row of identities.cases) {\n      const zero = Buffer.alloc(1), text = (input: string) => Buffer.from(input, \"utf8\");\n      const unsigned = (input: string) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(input)); return bytes; };\n      let bytes: Buffer;\n      switch (row.kind) {\n        case \"entity\": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.payload)]); break;\n        case \"scoped\": bytes = text(row.input.editId + \":\" + row.input.ordinal); break;\n        case \"edit\": { const sequence = Buffer.alloc(4); sequence.writeInt32LE(row.input.sequence); bytes = Buffer.concat([text(row.prefix), zero, unsigned(row.input.replica), zero, sequence, zero, Buffer.from(row.input.fingerprint)]); break; }\n        case \"change\": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.editIds.join(\"\\0\")), zero, text(row.input.description ?? \"\")]); break;\n        case \"alternative\": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.name), zero, text(row.input.checkpointIds.join(\"\\0\"))]); break;\n        case \"mutation\": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.operation), ...row.input.stamp.map(unsigned)]); break;\n        default: throw Error(\"Unknown identity specimen\");\n      }\n      assert.equal(bytes.toString(\"hex\"), row.preimageHex);\n      const independent = Buffer.from(blake3(bytes)).toString(\"hex\");\n      assert.equal(blake3Hex(bytes), independent);\n      identityRows.push({ kind: row.kind, preimageHex: row.preimageHex, hash: independent });\n    }\n    writeFileSync(join(output, \"current-corpus-identity-oracle.json\"), JSON.stringify({ rows: identityRows, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    writeFileSync(join(output, \"current-corpus-neutral-bytes.json\"), JSON.stringify({ bodyBytes: body.length, operationBytes: operation.length, frameBytes: frame.length, utf8Crossings: value.unicode.length, plainModes: value.modes, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    await runBudgetedTestCommand(process.execPath, [\"test\", join(root, owners[1]!, \"🧪️tests/🟦️.ts\"), join(root, owners[2]!, \"🧪️tests/🔬️unit/🟦️.ts\")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });\n    console.log(\"[DEBUG] current test corpora: physical authorities0; independent Node bytes/UTF8, Three and RFC6902; native invocation0\");\n    process.exit(0);\n  }\n",
+      "ownedAfterText": "  if (rest[0] === \"--current-corpus-only\" && rest.length === 1) {\n    const { default: assert } = await import(\"node:assert/strict\");\n    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import(\"node:fs\");\n    const { inventorySchemaScopes } = await import(join(root, library, \"🔍️discovery/🟦️.ts\"));\n    const { runBudgetedTestCommand } = await import(join(root, \"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts\"));\n    const owners = [\"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin\", \"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire\", \"🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source\", \"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity\", \"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody\", \"🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata\", \"🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies\"];\n    const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;\n    if (!output) throw Error(\"Explicit ticket output required for physical corpus inventory\");\n    mkdirSync(output, { recursive: true });\n    const scopeRoot = mkdtempSync(join(output, \"current-corpus-\"));\n    try {\n      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });\n      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, \"🔣️taxonomy.json\"), \"utf8\")));\n      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + \"/\"));\n      const authorities = inventory.modules.filter(row => owned(row.modulePath));\n      const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === \"schema-fixture-defines-schema\");\n      writeFileSync(join(output, \"current-corpus-placement.json\"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + \"\\n\");\n      assert.deepEqual(diagnostics, [], \"Physical or adjacent test-corpus authority must retire independent of filename\");\n      assert.deepEqual(authorities, []);\n    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }\n    const value = JSON.parse(readFileSync(join(root, owners[0]!, \"🔣️.json\"), \"utf8\"));\n    const plugin = JSON.parse(readFileSync(join(root, owners[3]!, \"🔣️.json\"), \"utf8\"));\n    const payload = Buffer.alloc(value.textBytes, value.textByte);\n    const body = Buffer.concat([Buffer.from(value.bodyPrefix), payload]);\n    const operation = Buffer.concat([Buffer.from(value.operationPrefix), payload]);\n    const frame = Buffer.concat([Buffer.from(plugin.framePrefix), Buffer.alloc(plugin.textBytes, plugin.textByte)]);\n    assert.equal(body.length, value.bodyBytes);\n    assert.equal(operation.length, value.operationBytes);\n    assert.equal(frame.length, plugin.frameBytes);\n    assert.deepEqual(frame, operation);\n    assert.deepEqual(plugin.modes, value.modes);\n    for (const text of value.unicode) {\n      const encoded = Buffer.from(text, \"utf8\"), crossing = Buffer.from(payload);\n      encoded.copy(crossing, value.maximumBytes - 1);\n      assert.equal(crossing.subarray(value.maximumBytes - 1, value.maximumBytes - 1 + encoded.length).toString(\"utf8\"), text);\n    }\n    const currencies = JSON.parse(readFileSync(join(root, owners[4]!, \"🔣️.json\"), \"utf8\"));\n    assert.equal(currencies.sourceBytes, payload.length);\n    assert.equal(currencies.maximumReleaseBytes, value.maximumBytes);\n    const custody = JSON.parse(readFileSync(join(root, owners[6]!, \"🔣️.json\"), \"utf8\"));\n    const child = JSON.parse(readFileSync(join(root, owners[10]!, \"🔣️.json\"), \"utf8\"));\n    assert.deepEqual(Buffer.concat([Buffer.from(custody.bodyPrefix), Buffer.alloc(custody.sourceBytes, custody.textByte)]), body);\n    assert.deepEqual(Buffer.alloc(child.semanticBytes, child.semanticByte), payload);\n    const metadata = JSON.parse(readFileSync(join(root, owners[7]!, \"🔣️.json\"), \"utf8\"));\n    const { BufferGeometry, Float32BufferAttribute } = await import(\"three\");\n    const mesh = new BufferGeometry();\n    try {\n      mesh.setAttribute(\"position\", new Float32BufferAttribute(metadata.mesh.positions, 3));\n      mesh.setAttribute(\"normal\", new Float32BufferAttribute(metadata.mesh.normals, 3));\n      assert.deepEqual(Array.from(mesh.getAttribute(\"position\").array), metadata.mesh.positions);\n      assert.deepEqual(Array.from(mesh.getAttribute(\"normal\").array), metadata.mesh.normals);\n      assert.deepEqual(JSON.parse(JSON.stringify(metadata.mesh.attributes)), metadata.mesh.attributes);\n      assert.deepEqual(JSON.parse(JSON.stringify(metadata.mesh.materials)), metadata.mesh.materials);\n      assert.deepEqual(Array.from(Buffer.from(metadata.mesh.textures.ink.bytes)), metadata.mesh.textures.ink.bytes);\n    } finally { mesh.dispose(); }\n    const cold = JSON.parse(readFileSync(join(root, owners[9]!, \"🧫️fixtures/⏱️cold-preview/🔣️.json\"), \"utf8\"));\n    assert.deepEqual(structuredClone(cold), JSON.parse(JSON.stringify(cold)));\n    const identities = JSON.parse(readFileSync(join(root, owners[5]!, \"🧫️fixtures/🔣️.json\"), \"utf8\"));\n    const { blake3 } = await import(\"@noble/hashes/blake3.js\");\n    const { blake3Hex } = await import(join(root, \"🧰️framework/🔨️modules/🔏️hash/🟦️.ts\"));\n    const identityRows = [];\n    for (const row of identities.cases) {\n      const zero = Buffer.alloc(1), text = (input: string) => Buffer.from(input, \"utf8\");\n      const unsigned = (input: string) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(input)); return bytes; };\n      let bytes: Buffer;\n      switch (row.kind) {\n        case \"entity\": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.payload)]); break;\n        case \"scoped\": bytes = text(row.input.editId + \":\" + row.input.ordinal); break;\n        case \"edit\": { const sequence = Buffer.alloc(4); sequence.writeInt32LE(row.input.sequence); bytes = Buffer.concat([text(row.prefix), zero, unsigned(row.input.replica), zero, sequence, zero, Buffer.from(row.input.fingerprint)]); break; }\n        case \"change\": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.editIds.join(\"\\0\")), zero, text(row.input.description ?? \"\")]); break;\n        case \"alternative\": bytes = Buffer.concat([text(row.prefix), zero, text(row.input.name), zero, text(row.input.checkpointIds.join(\"\\0\"))]); break;\n        case \"mutation\": bytes = Buffer.concat([text(row.prefix), zero, Buffer.from(row.input.operation), ...row.input.stamp.map(unsigned)]); break;\n        default: throw Error(\"Unknown identity specimen\");\n      }\n      assert.equal(bytes.toString(\"hex\"), row.preimageHex);\n      const independent = Buffer.from(blake3(bytes)).toString(\"hex\");\n      assert.equal(blake3Hex(bytes), independent);\n      identityRows.push({ kind: row.kind, preimageHex: row.preimageHex, hash: independent });\n    }\n    writeFileSync(join(output, \"current-corpus-identity-oracle.json\"), JSON.stringify({ rows: identityRows, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    writeFileSync(join(output, \"current-corpus-neutral-bytes.json\"), JSON.stringify({ bodyBytes: body.length, operationBytes: operation.length, frameBytes: frame.length, utf8Crossings: value.unicode.length, plainModes: value.modes, nativeInvocationCount: 0 }, null, 2) + \"\\n\");\n    await runBudgetedTestCommand(process.execPath, [\"test\", join(root, owners[1]!, \"🧪️tests/🟦️.ts\"), join(root, owners[2]!, \"🧪️tests/🔬️unit/🟦️.ts\"), join(root, owners[8]!, \"🔬️unit/🟦️.ts\")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });\n    console.log(\"[DEBUG] current test corpora: physical authorities0; independent Node bytes/UTF8, Three and RFC6902; native invocation0\");\n    process.exit(0);\n  }\n",
+      "qualification": "Only exact facet owned; other shared sections observed"
+    }
+  ],
+  "plainExampleObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody/🔣️.json",
+      "beforeSha256": "67a6cdfb646481f823e2900db8ab34b9a42f3df856fb4404db1d0906a67f2430",
+      "afterSha256": "67a6cdfb646481f823e2900db8ab34b9a42f3df856fb4404db1d0906a67f2430",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🔣️.json",
+      "beforeSha256": "9d68a42edaea5f623871283659706234108d00c496609d86a8b5abcfb38153a2",
+      "afterSha256": "9d68a42edaea5f623871283659706234108d00c496609d86a8b5abcfb38153a2",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🔣️.json",
+      "beforeSha256": "4921afc2ca861c960020098c59c2813177b9e55131faf0eebd95aa3beb2dd6f8",
+      "afterSha256": "4921afc2ca861c960020098c59c2813177b9e55131faf0eebd95aa3beb2dd6f8",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🧫️fixtures/⏱️cold-preview/🔣️.json",
+      "beforeSha256": "fbde817745299302e5c0994050b15867b0c8903d4d6a78cc23c8409d4f3f5372",
+      "afterSha256": "fbde817745299302e5c0994050b15867b0c8903d4d6a78cc23c8409d4f3f5372",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🔣️.json",
+      "beforeSha256": "647ee0c9247fdac8543c97c3fe52f5a106513bcff6e294c78ecf82c7e932c91c",
+      "afterSha256": "647ee0c9247fdac8543c97c3fe52f5a106513bcff6e294c78ecf82c7e932c91c",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🔣️.json",
+      "beforeSha256": "de05cd07c47fa130adf93252ccf535ee703c3b91a29143e3f91efdfed843c9ca",
+      "afterSha256": "de05cd07c47fa130adf93252ccf535ee703c3b91a29143e3f91efdfed843c9ca",
+      "unchanged": true,
+      "ownMutation": false
+    }
+  ],
+  "red": {
+    "exitCode": 1,
+    "duration": "241ms",
+    "fixtureDiagnostics": 6,
+    "log": "🗑️generated/oct8-root-current-six-corpus-red.log"
+  },
+  "green": {
+    "session": 55679,
+    "exitCode": 0,
+    "duration": "200ms",
+    "tests": 5,
+    "assertions": 51,
+    "placementAuthorities": 0,
+    "fixtureDiagnostics": 0,
+    "nativeInvocationCount": 0,
+    "log": "🗑️generated/oct8-root-current-six-corpus-green.log",
+    "logSha256": "752675f01e16a3331feeb124410d44c5d13ed1e1c30ed63b70df0813f5116f1f"
+  },
+  "authorship": "No genuine Rust/TS production/domain producer changes; exact declarations/test/private facet only"
+}

@@ -1,25 +1,29 @@
 use super::*;
 
 fn retire(index: &mut RetainedDictionaryIndex, grant: usize) -> usize {
-    let mut bytes = 0;
-    let mut pages = 0;
-    let expected = index.allocated_pages();
-    for _ in 0..4096 {
-        match index.close_step(1, grant) {
-            DictionaryIndexClose::Complete => {
-                assert_eq!(pages, expected);
-                assert!(index.terminal_is_empty());
-                return bytes;
-            }
-            DictionaryIndexClose::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= grant);
-                pages += released_items;
-                bytes += released_bytes;
-                assert_eq!(index.lookup(0), Err(DictionaryIndexError::State));
-            }
-        }
+    let empty = RetainedCloneProgress::default();
+    let backing = index.pages[index.allocated.saturating_sub(1)].as_ref().map(|page| page.as_ptr());
+    let pages_before = index.allocated_pages();
+    let attempt = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: grant, maximum_depth: 1, ..Default::default() };
+    let (step, requested, released) = crate::test_allocation::observe_backing(|| index.close_step(attempt).unwrap());
+    assert_eq!(requested, 0);
+    if pages_before != 0 && grant < PAGE_BYTES {
+        assert_eq!(step, RetainedCloneStep::Progress(empty));
+        assert_eq!(released, 0);
+        assert_eq!(index.allocated_pages(), pages_before);
+        assert_eq!(index.pages[index.allocated - 1].as_ref().map(|page| page.as_ptr()), backing);
+    } else { assert_eq!(released, step.progress().released_bytes); }
+    let mut bytes = step.progress().released_bytes;
+    for _ in 0..MAXIMUM_PAGES + 1 {
+        let demand = index.next_release_byte_demand().unwrap();
+        let (step, requested, released) = crate::test_allocation::observe_backing(|| index.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand, maximum_depth: 1, ..Default::default() }).unwrap());
+        assert_eq!(requested, 0);
+        assert_eq!(released, step.progress().released_bytes);
+        assert!(step.progress().copied_items <= 1);
+        bytes += released;
+        if matches!(step, RetainedCloneStep::Complete(_)) { assert!(index.terminal_is_empty()); return bytes; }
     }
-    panic!("bounded range retirement failed to converge");
+    panic!("whole-page dictionary retirement failed to converge");
 }
 
 #[test]
@@ -70,4 +74,23 @@ fn retained_dictionary_range_index_caps_all_deltas_and_retains_late_rejections()
         assert_eq!(index.begin_delta(1, 1), Err(DictionaryIndexError::Malformed));
         assert_eq!(retire(&mut index, grant), 0);
     }
+}
+
+#[test]
+fn dictionary_range_denied_item_depth_and_release_grants_preserve_original_backing() {
+    let mut index = RetainedDictionaryIndex::new(100, 1, 100).unwrap();
+    index.begin_delta(0, 1).unwrap();
+    index.append(DictionaryRange { offset: 1, length: 3 }).unwrap();
+    let pointer = index.pages[0].as_ref().unwrap().as_ptr();
+    for grant in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: PAGE_BYTES, ..Default::default() }, RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, maximum_release_bytes: PAGE_BYTES - 1, ..Default::default() }] {
+        let (result, requested, released) = crate::test_allocation::observe_backing(|| index.close_step(grant));
+        if grant.maximum_items > 0 && grant.maximum_depth == 0 { assert_eq!(result.unwrap_err().kind, ValueRefusalKind::DepthLimit); }
+        else { assert_eq!(result.unwrap().progress(), RetainedCloneProgress::default()); }
+        assert_eq!((requested, released), (0, 0));
+        assert_eq!(index.pages[0].as_ref().unwrap().as_ptr(), pointer);
+        assert_eq!(index.allocated_pages(), 1);
+        assert!(!index.closing);
+    }
+    assert_eq!(retire(&mut index, PAGE_BYTES), PAGE_BYTES);
+    eprintln!("[DEBUG] dictionary index retains original pointer on all refusals and physically releases each whole page exactly");
 }

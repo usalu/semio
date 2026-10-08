@@ -8,11 +8,11 @@ pub fn diff(payload: &UpdateCraneInputs, base: &En1993Snapshot) -> protocol::Mut
     let delta = match base.crane_runways.iter().position(|row| row.id == payload.crane_runway.id) {
         Some(index) if base.crane_runways[index] == payload.crane_runway => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
         Some(index) => {
-            let mut replacement = En1993CraneRunwayDelta::removal(&payload.crane_runway.id);
-            replacement.absorb(En1993CraneRunwayDelta::insertion(&base.crane_runways, index, payload.crane_runway.clone()));
+            let mut replacement = En1993CraneRunwayDelta::removal(&base.crane_runways, index);
+            replacement.absorb(En1993CraneRunwayDelta::insertion(index, payload.crane_runway.clone()));
             replacement
         }
-        None => En1993CraneRunwayDelta::insertion(&base.crane_runways, base.crane_runways.len(), payload.crane_runway.clone()),
+        None => En1993CraneRunwayDelta::insertion(base.crane_runways.len(), payload.crane_runway.clone()),
     };
     protocol::MutationOutcome::new(En1993Diff { crane_runways: delta, ..Default::default() })
 }

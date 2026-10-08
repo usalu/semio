@@ -13,7 +13,7 @@ async fn the_active_registers_rows_become_block_list_steps() {
     let node = render(&sample_plugin(), &config::ArchitectRegisterWindowConfig::default()).expect("register");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("register surface") };
     let scene: BlockListScene = semio_framework_ui_scene::decode(props).expect("packed register");
-    let steps: serde_json::Value = serde_json::from_str(&scene.steps_json).expect("independent step oracle");
+    let steps: serde_json::Value = serde_json::to_value(&scene.steps).expect("independent step oracle");
     assert!(steps.to_string().contains("Reception"));
     crate::editor::architect::unit_tests::context::project_render(Ok(node));
 }

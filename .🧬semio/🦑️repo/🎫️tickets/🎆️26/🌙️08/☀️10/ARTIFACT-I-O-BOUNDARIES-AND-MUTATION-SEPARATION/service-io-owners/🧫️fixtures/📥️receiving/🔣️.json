@@ -1,0 +1,33 @@
+{
+  "schema": "semio.test.artifact-service-io-receiving/v1",
+  "sources": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts",
+    "🌎️hub/🤝️integration-harness/🟦️.ts",
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "🌎️hub/🧪️tests/📌️document-check-in/🟦️.ts",
+    "🌎️hub/🧪️tests/🌱️creation-progress/🟦️.ts",
+    "🌎️hub/🧪️tests/🤖️agent-ceiling/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🟦️.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/🟦️.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/🟦️.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🧪️tests/🌐️preference-lane/🟦️.ts",
+    "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🤝️collaboration/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts"
+  ]
+}

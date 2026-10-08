@@ -85,23 +85,6 @@ async fn removing_a_middle_row_is_restored_at_its_original_index() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &base).await;
 }
 
-/// 🧪️ `net_mutations` carries any retained-order-preserving edit with intermediate snapshots that never dangle.
-#[semio_framework_async_macros::async_test]
-async fn net_mutations_reach_the_next_snapshot_stepwise() {
-    let base = base_snapshot();
-    let mut next = base.clone();
-    next.entities[0].name = "RENAMED".into();
-    next.entities[1].args.push(SV::Integer(7));
-    next.entities.remove(2);
-    next.entities.insert(1, entity(50, "NEW", vec![SV::Reference(1)]));
-    let mut state = base.clone();
-    for leaf in net_mutations(&base, &next).expect("a retained-order edit has a net") {
-        let outcome = apply_step_mutation(&mut state, &leaf);
-        assert!(outcome.messages().is_empty(), "{leaf:?} was rejected: {:?}", outcome.messages());
-    }
-    assert_eq!(state, next);
-}
-
 /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `StepMutation` grammar —
 /// exercises every variant incl. `InsertEntity`'s bare `StepEntity` payload and
 /// `SetEntityArg`/`InsertEntityArg`'s bare `StepValue` payload (every `StepValue` variant,

@@ -43,5 +43,11 @@ message RasterPixelSelection {
   string target = 2;
   uint32 width = 3;
   uint32 height = 4;
-  string spans = 5;
+  repeated RasterSelectionSpan spans = 5;
+}
+
+message RasterSelectionSpan {
+  uint32 start = 1;
+  uint32 length = 2;
+  uint32 coverage = 3;
 }

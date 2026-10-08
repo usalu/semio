@@ -19,6 +19,10 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
+#[cfg(test)]
+#[path="🧪️tests/🔗️source-custody/🦀️.rs"]
+pub(crate) mod test_source_custody;
+
 #[path = "../../🔨️modules/🎲️board/🎬️scene/🦀️.rs"]
 pub mod board_scene;
 
@@ -104,7 +108,7 @@ pub enum Puzzle2dNodeAnchor {
 }
 
 /// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
-/// `🐙️handles` are its rim ports. Mirrors `semio_framework_os_infinite::scene_json::BoardSnapshotJson`'s
+/// `🐙️handles` are its rim ports. Mirrors `semio_framework_os_infinite::schema::BoardSnapshot`'s
 /// per-node fields, the canonical parser this snapshot format round-trips through.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -736,7 +740,7 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dPlaySnapshot;
+pub use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -838,6 +842,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_node_a_and_severs_edge;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🗑️removes-middle-node/🦀️.rs"]
+                            mod tests_removes_the_middle_node_and_severs_its_edges;
                         }
                         #[path = "."]
                         pub mod move_node {
@@ -1075,6 +1082,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes2/🦀️.rs"]
                             mod tests_removes_handle_2_and_severs_edge;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/➖removes-middle-handle/🦀️.rs"]
+                            mod tests_removes_the_middle_handle_and_severs_its_edge;
                         }
                         #[path = "."]
                         pub mod replace_node_handle {
@@ -1129,6 +1139,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️removes-edge-1/🦀️.rs"]
                             mod tests_removes_edge_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs-middle-edge/🦀️.rs"]
+                            mod tests_severs_the_middle_edge;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs/🦀️.rs"]
                             mod tests_severs_a_capsule_from_the_first_storey_tambour;
@@ -1276,6 +1289,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_handle_kind_pair;
                             #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
+                            mod tests_withdraws_the_middle_row;
+                            #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws/🦀️.rs"]
                             mod tests_withdraws_the_tambour_rectangular_pair;
                         }
@@ -1332,6 +1348,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🪦️removes-region-1/🦀️.rs"]
                             mod tests_removes_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🪦️removes-middle-region/🦀️.rs"]
+                            mod tests_removes_the_middle_region;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_region_the_board_never_held;
@@ -1644,6 +1663,13 @@ pub mod standards {
 
 pub use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+
+/// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
+pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+    *projection = next;
+    Ok(())
+}
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 
 #[cfg(feature = "component-app-assembly")]

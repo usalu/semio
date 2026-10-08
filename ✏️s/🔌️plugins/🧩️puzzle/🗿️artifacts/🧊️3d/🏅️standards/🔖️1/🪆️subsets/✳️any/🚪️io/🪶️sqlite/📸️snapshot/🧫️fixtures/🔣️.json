@@ -101,19 +101,18 @@
   },
   "diffRecordOwners": [
     "Puzzle3dDiff",
-    "Puzzle3dStringList",
-    "Puzzle3dObjectsDelta",
-    "Puzzle3dObjectPatchEntry",
     "Puzzle3dObjectPatch",
-    "Puzzle3dAttractionsDelta",
-    "Puzzle3dAttractionPatchEntry",
     "Puzzle3dAttractionPatch",
-    "Puzzle3dTargetVolumesDelta",
-    "Puzzle3dTargetVolumePatchEntry",
     "Puzzle3dTargetVolumePatch",
-    "Puzzle3dReferencesDelta",
-    "Puzzle3dReferencePatchEntry",
     "Puzzle3dReferencePatch"
   ],
-  "diffEmpty": {}
+  "diffEmpty": {},
+  "deltaOwners": [
+    "Puzzle3dVorticesDelta",
+    "Puzzle3dObjectsDelta",
+    "Puzzle3dAttractionsDelta",
+    "Puzzle3dTargetVolumesDelta",
+    "Puzzle3dReferencesDelta",
+    "Puzzle3dKindCompatibilityDelta"
+  ]
 }

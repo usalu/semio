@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "authority",
+    "driver",
+    "controls",
+    "tests",
+    "snapshot",
+    "artifact",
+    "frames",
+    "sourceWrites",
+    "publicationReady",
+    "execution",
+    "inspection",
+    "mandatoryInputs",
+    "withdrawn"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "authority": {
+      "$ref": "#/$defs/reference"
+    },
+    "driver": {
+      "$ref": "#/$defs/reference"
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testLevel",
+        "bunTimeoutMilliseconds",
+        "discovery"
+      ],
+      "properties": {
+        "testLevel": {
+          "const": "long"
+        },
+        "bunTimeoutMilliseconds": {
+          "const": 60000
+        },
+        "discovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumUnits",
+            "maximumOwnedBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumUnits": {
+              "const": 8388608
+            },
+            "maximumOwnedBytes": {
+              "const": 67108864
+            },
+            "maximumDepth": {
+              "const": 64
+            }
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "origin",
+          "sourceHash",
+          "snapshotHash",
+          "fullBody",
+          "bytes",
+          "candidate"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "origin": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceHash": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/hash"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshotHash": {
+            "$ref": "#/$defs/hash"
+          },
+          "fullBody": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "candidate": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "sourceWrites": {
+      "const": 0
+    },
+    "publicationReady": {
+      "const": false
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "argv",
+        "cwd",
+        "environment",
+        "runId",
+        "runRoot"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$"
+        },
+        "runRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "SEMIO_TEST_LEVEL",
+            "SEMIO_NORMALIZATION_LAW_SNAPSHOT",
+            "SEMIO_NORMALIZATION_LAW_OUTPUT",
+            "SEMIO_TEST_ARTIFACT_DIR",
+            "SEMIO_SCOPED_SELECTION_OUTPUT",
+            "SEMIO_TRANSACTION_V2_RUN_ID",
+            "SEMIO_TRANSACTION_V2_RUN_ROOT",
+            "SEMIO_FIXTURE_REPO_ROOT",
+            "NX_WORKSPACE_ROOT",
+            "NX_WORKSPACE_ROOT_PATH",
+            "REPO_ROOT",
+            "GIT_CEILING_DIRECTORIES"
+          ],
+          "properties": {
+            "SEMIO_TEST_LEVEL": {
+              "const": "long"
+            },
+            "SEMIO_NORMALIZATION_LAW_SNAPSHOT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SEMIO_NORMALIZATION_LAW_OUTPUT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SEMIO_TEST_ARTIFACT_DIR": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SEMIO_SCOPED_SELECTION_OUTPUT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SEMIO_TRANSACTION_V2_RUN_ID": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SEMIO_TRANSACTION_V2_RUN_ROOT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SEMIO_FIXTURE_REPO_ROOT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "NX_WORKSPACE_ROOT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "NX_WORKSPACE_ROOT_PATH": {
+              "type": "string",
+              "minLength": 1
+            },
+            "REPO_ROOT": {
+              "type": "string",
+              "minLength": 1
+            },
+            "GIT_CEILING_DIRECTORIES": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "inspection": {
+      "$ref": "#/$defs/reference"
+    },
+    "mandatoryInputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "withdrawn": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/withdrawal"
+      }
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "hash"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hash": {
+          "$ref": "#/$defs/hash"
+        }
+      }
+    },
+    "withdrawal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "origin",
+        "code",
+        "observedAt",
+        "candidate",
+        "mandatory"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "const": "ENOENT"
+        },
+        "observedAt": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$"
+        },
+        "candidate": {
+          "const": false
+        },
+        "mandatory": {
+          "const": false
+        }
+      }
+    }
+  }
+}

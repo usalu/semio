@@ -1,0 +1,28 @@
+{
+  "snapshot": [
+    "schema",
+    "image"
+  ],
+  "image": [
+    "width",
+    "height",
+    "pixels",
+    "jfifVersion",
+    "jfifDensityUnits",
+    "jfifXDensity",
+    "jfifYDensity",
+    "jfifThumbnail",
+    "otherSegments"
+  ],
+  "diff": [
+    "width",
+    "height",
+    "pixels",
+    "jfifVersion",
+    "jfifDensityUnits",
+    "jfifXDensity",
+    "jfifYDensity",
+    "jfifThumbnail",
+    "otherSegments"
+  ]
+}

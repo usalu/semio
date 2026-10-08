@@ -1,3 +1,5 @@
+import type { PluginCatalogRowsV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import { resolveFrameworkOsCatalogConfigurationV1 } from "./🧩️catalog/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🐚️Shell/component.tsx
 /** 🐚️ `🐚️Shell` — the core shell state/types module: boot option/lock/default types, the
@@ -209,6 +211,7 @@ export type FrameworkOsBootExecution = {
 };
 
 export type FrameworkOsBootOptions = {
+  readonly catalog: PluginCatalogRowsV1;
   readonly surfaceSessionFactories?: readonly import("../🪪️WasmSessionLoader/🟦️.tsx").AppSurfaceSessionFactory[];
   readonly rootId?: string;
   readonly plugin?: string;
@@ -1300,7 +1303,8 @@ export function initialShellState(_props: {
 //#endregion 🧮️ShellStore
 
 //#region Boot
-export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}, execution: FrameworkOsBootExecution = {}): Promise<{ dispose(): void }> {
+export async function bootFrameworkOs(options: FrameworkOsBootOptions, execution: FrameworkOsBootExecution = {}): Promise<{ dispose(): void }> {
+  const composition = resolveFrameworkOsCatalogConfigurationV1(options.catalog, options.plugin || undefined, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
   const locks = resolveShellLocks(mergeShellLockSources(options.brand?.locks, options.locks));
@@ -1316,7 +1320,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}, exec
   // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);
   const mounted = createRoot(root);
-  mounted.render(<FrameworkOsShell backboneWorkerFactory={execution.backboneWorkerFactory} documentServices={execution.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  mounted.render(<FrameworkOsShell catalog={composition.catalog} backboneWorkerFactory={execution.backboneWorkerFactory} documentServices={execution.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? composition.boot.plugins} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
   return { dispose: () => mounted.unmount() };
 }
 //#endregion Boot

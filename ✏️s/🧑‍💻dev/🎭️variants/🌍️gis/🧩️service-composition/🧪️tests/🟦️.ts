@@ -1,5 +1,6 @@
+import {gisMapDocumentServiceWireDeclarationV1} from "../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🚪️io/🟦️.ts";
 import { gisMapDocumentServiceDeclarationV1 } from "../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🟦️.ts";
-import { documentServiceRequestV1 } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts";
+import { documentServiceRequestV1 } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts";
 import type { createGisMapInferenceWorkerV1 } from "../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts";
 import { idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1 } from "../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
 type OwnerDriverV1 = ReturnType<typeof createGisMapInferenceWorkerV1>;
@@ -1538,8 +1539,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         sourceHostiles: readonly string[];
         nonclaims: readonly string[];
       }>;
-      const parsed: unknown = JSON.parse(await readFile(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", import.meta.url), "utf8"));
-      const schema = JSON.parse(await readFile(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8")) as { $id: string };
+      const parsed: unknown = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8")) as { $id: string };
       
       
       
@@ -2784,7 +2785,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       testSeams.documentSocketGrantTestIssue = null;
       openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller" });
       const state = artifactState(DOCUMENT, SPACE)!;
-      if (options.lease !== "none") state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(options.lease === "editor"), "http://hub.test", new Uint8Array(1), encodePackValue({ manifest: { topicContributions: [{ topic: "semio.os.document-http-port/v1", payload: gisMapDocumentServiceDeclarationV1() }] } }));
+      if (options.lease !== "none") state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(options.lease === "editor"), "http://hub.test", new Uint8Array(1), encodePackValue({ manifest: { topicContributions: [{ topic: "semio.os.document-http-port/v1", payload: gisMapDocumentServiceWireDeclarationV1() }] } }));
       return {
         posted,
         requests,
@@ -2836,7 +2837,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("accepts the exact current Hub inference receipt and events wire", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const wire = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).wire;
+      const wire = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).wire;
       const schema = JSON.parse(readFileSync(new URL("../../../🌎️hub/💡️inference/🧬️schema/🔣️.json", source.url), "utf8"));
       const production = await import("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts");
       for (const [name, definition, parse] of [
@@ -2853,8 +2854,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("requires verified session authority and never adopts a successor proof for retained inference", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
-      const schema = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       
       
       expect(equal(fixture.retainedClosing.authorityFence.cases, ["absent-authority-refused", "sealed-request-proof-replacement"])).toBe(true);
@@ -2949,7 +2950,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("retains cancellation requested while inference submission is pending", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).cancelBeforeReceipt;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).cancelBeforeReceipt;
       for (const kind of fixture.intents) {
       const harness = await inferenceHarness({ lease: "editor" });
       const projection = () => { const { phase, jobId, cancelRequested } = harness.ports().at(-1)!; return { phase, jobId, cancelRequested }; };
@@ -2972,7 +2973,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("retains the sealed inference owner through uncertain submit and document retirement", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of fixture.cases) {
       const harness = await inferenceHarness({ lease: "editor" });
         const sessionEpoch = testSeams.directorySessionEpoch;
@@ -3041,7 +3042,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("never restores an inference Undo owner after the document closes", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of fixture.approvalClose) {
       const harness = await inferenceHarness({ lease: "editor" });
         try {
@@ -3087,7 +3088,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("preserves the successor broker proof when an old inference owner responds", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const epoch = testSeams.directorySessionEpoch;
       try {
@@ -3132,7 +3133,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authorities = fixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
-      const retained = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const channel = new MessageChannel();
       testSeams.attachHubSessionPort(channel.port1);
@@ -3177,8 +3178,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const authorityFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authorities = authorityFixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
-      const schema = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       
       
       const harness = await inferenceHarness({ lease: "editor" });
@@ -3191,7 +3192,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const successorClientInstanceId = "12345678-1234-4123-8123-123456789abd";
         openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId });
         const successor = artifactState(DOCUMENT, SPACE)!;
-        successor.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(true), "http://hub.test", new Uint8Array(1), encodePackValue({ manifest: { topicContributions: [{ topic: "semio.os.document-http-port/v1", payload: gisMapDocumentServiceDeclarationV1() }] } }));
+        successor.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(true), "http://hub.test", new Uint8Array(1), encodePackValue({ manifest: { topicContributions: [{ topic: "semio.os.document-http-port/v1", payload: gisMapDocumentServiceWireDeclarationV1() }] } }));
         const operationEpoch = fixture.retainedClosing.operationEpoch + 11;
         handleTsRequest({ kind: "service-operation", owner: "gis", serviceId: "s.gis.gismap.inference", action: "open", operationEpoch, payload: { scope: { spaceId: SPACE, documentId: DOCUMENT } } });
         const opening = harness.posted.filter((message) => message.kind === "inference-port-opened").at(-1) as Extract<BackboneWorkerResponse, { kind: "inference-port-opened" }>;
@@ -3216,7 +3217,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
-      const retained = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of retained.directoryPageBinding) {
       const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
@@ -3257,7 +3258,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const value = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
-      const retained = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of retained.authorityRetirement) {
       const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
@@ -3325,7 +3326,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
-      const retained = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const prior = new MessageChannel(), successor = new MessageChannel();
       const body = JSON.stringify(authority);
@@ -3354,7 +3355,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("never dispatches an old queued request under a replacement broker admission", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       let release: () => void = () => undefined;
       try {
@@ -3383,7 +3384,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("does not spend the active broker proof on queued retired inference work", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of fixture.queuedRetirement) {
       const harness = await inferenceHarness({ lease: "editor" });
         const epoch = testSeams.directorySessionEpoch;
@@ -7150,7 +7151,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     };
 
     it("decodes the hub's own framing and accepts the genesis baseline a new document's first checkpoint carries", async () => {
-      const { decodeCanonicalCheckpointPairV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const { decodeCanonicalCheckpointPairV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts");
       const decoded = decodeCanonicalCheckpointPairV1(await body());
       expect(decoded.scope).toEqual({ spaceId: "space-c7", documentId: "artifact-c7" });
       expect(decoded.baselineFrontier).toEqual({ documentId: "artifact-c7", headEditOrdinal: 0, headEditId: "", lastCommitSeq: 0, chainHash: new Array(32).fill(0) });
@@ -7162,7 +7163,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("names every refusal and never half-accepts a body", async () => {
-      const { decodeCanonicalCheckpointPairV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const { decodeCanonicalCheckpointPairV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts");
       const exact = await body();
       const refusals: [string, Uint8Array][] = [
         ["canonical-checkpoint-pair.truncated", exact.subarray(0, exact.length - 1)],

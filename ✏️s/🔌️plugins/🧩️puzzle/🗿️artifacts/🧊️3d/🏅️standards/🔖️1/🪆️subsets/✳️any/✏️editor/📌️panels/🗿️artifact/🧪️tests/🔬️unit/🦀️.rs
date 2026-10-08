@@ -1,4 +1,5 @@
 use super::*;
+use crate::apply_puzzle3d_mutation;
 use crate::editor::puzzle3d::terminology::puzzle3d_labels;
 use crate::editor::puzzle3d::{empty_scene_snapshot, nakagin_scene_snapshot};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
@@ -447,11 +448,11 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
 /// action, re-render, then UN-hide it through the SAME row — for `hidden` and for `locked`. The
 /// sibling law above pins one render's args; this one pins that feeding those args to the reducer the
 /// row names (`setSelectionHidden`/`setSelectionLocked`'s explicit `{entity, ids}` path, i.e.
-/// [`apply_puzzle3d_selection_flag`]) and re-rendering yields the OPPOSITE request, so the second
+/// [`selection_flag_mutations`]) and re-rendering yields the OPPOSITE request, so the second
 /// click undoes the first. With the old hardcoded `value: true` the row asked for `true` on both
 /// passes and the object could never come back.
 ///
-/// [`apply_puzzle3d_selection_flag`]: crate::editor::puzzle3d::apply_puzzle3d_selection_flag
+/// [`selection_flag_mutations`]: crate::editor::puzzle3d::commands::set_selection_flag::selection_flag_mutations
 #[test]
 fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
     let view = opened_everywhere();
@@ -489,7 +490,11 @@ fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
         for expected in [true, false] {
             let asked = requested(&scene_snapshot, flag);
             assert_eq!(asked, expected, "the outliner's {flag} row must ask for {expected} while the object is {}", !expected);
-            crate::editor::puzzle3d::apply_puzzle3d_selection_flag(&mut scene_snapshot, "object", &["object-1".to_string()], flag, asked);
+            let mut document = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("the one-object fixture admits");
+            for mutation in crate::editor::puzzle3d::commands::set_selection_flag::selection_flag_mutations(&document.clone(), "object", &["object-1".to_string()], flag, asked) {
+                crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation(&mut document, &mutation).expect("the flag kind applies");
+            }
+            scene_snapshot = crate::editor::puzzle3d::puzzle3d_scene_snapshot_from_document(&document);
             assert_eq!(state(&scene_snapshot, flag), expected, "clicking the outliner's own {flag} row must reach {expected}");
         }
     }

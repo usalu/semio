@@ -65,15 +65,6 @@ async fn absorb_associative_over_a_triple() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn between_roundtrip_synthetic() {
-    let a = BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() };
-    let b = BinarySnapshot { bytes: vec![1, 9, 9, 4, 5, 6], ..Default::default() };
-    assert_eq!(protocol::apply_diff(&BinaryDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&BinaryDiff::between(&b, &a), &b).unwrap(), a);
-    assert!(BinaryDiff::between(&a, &a).is_empty());
-}
-
-#[semio_framework_async_macros::async_test]
 async fn inverse_diff_level_roundtrip() {
     let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
     let d = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] };

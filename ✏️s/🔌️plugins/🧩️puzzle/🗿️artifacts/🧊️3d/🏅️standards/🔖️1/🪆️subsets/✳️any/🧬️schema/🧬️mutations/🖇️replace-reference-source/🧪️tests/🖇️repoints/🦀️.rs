@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation};
+use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
 
 use crate::Puzzle3dSnapshot;
 
@@ -49,7 +50,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "replace-reference-source/repoints-reference-1-source: inverse did not restore the before-snapshot");
@@ -98,8 +99,8 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-reference-source/repoints-reference-1-source: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["references"]["patched"][0]["patch"]["source"]["url"].as_str(), Some("asset://plan-v2.png"), "replace-reference-source/repoints-reference-1-source: the patch must carry the new source url");
-    assert_eq!(committed["references"]["patched"].as_array().map(Vec::len), Some(1), "replace-reference-source/repoints-reference-1-source: exactly one reference may be patched");
+    assert_eq!(committed["references"]["modified"][0]["patch"]["source"]["url"].as_str(), Some("asset://plan-v2.png"), "replace-reference-source/repoints-reference-1-source: the patch must carry the new source url");
+    assert_eq!(committed["references"]["modified"].as_array().map(Vec::len), Some(1), "replace-reference-source/repoints-reference-1-source: exactly one reference may be patched");
 }
 
 /// 🔣️ The committed `replace-reference-source` diff is itself canonical and decodes to `Puzzle3dDiff`.

@@ -1,6 +1,15 @@
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 
+pub(crate) fn mounted_nested_retirement_demand(mut demand: semio_framework_value::RetirementDemand, layers: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    demand.depth = demand.depth.checked_add(layers).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "mounted receipt retirement depth overflow"))?;
+    Ok(demand)
+}
+
+pub(crate) fn mounted_retirement_grant_funds(demand: semio_framework_value::RetirementDemand, grant: RetainedCloneGrant) -> bool {
+    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
+}
+
 pub(crate) const MOUNTED_RECEIPT_MAXIMUM_BYTES: usize = 1_048_576;
 
 pub(crate) struct MountedReceiptBytes {
@@ -63,11 +72,16 @@ impl MountedReceiptBytes {
     /// 🧳️ Transfers completed original backing without copying or a second allocation.
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if self.closed || self.closing || self.candidate.is_some() || grant.maximum_items == 0 { return None; } self.closed = true; Some(std::mem::take(&mut *self.bytes)) }
     pub(crate) fn next_close_byte_demand(&self) -> usize { self.candidate.as_ref().map_or_else(|| self.bytes.capacity(), Vec::capacity) }
+    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
+    }
     /// ♻️ Retires each original candidate and output allocation under its own whole physical grant.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
         let bytes = self.next_close_byte_demand();
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); }
+        if !mounted_retirement_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
         self.closing = true;
         if self.candidate.is_some() { drop(self.candidate.take()); self.required = None; self.copied = 0; }
         else { drop(std::mem::take(&mut *self.bytes)); self.closed = true; }
@@ -125,18 +139,25 @@ impl MountedPreparedOperationBytes {
     /// 🧳️ Transfers the fully prestaged original operation only after inline codec authority is closed.
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if !self.is_complete() { return None; } self.output.take(grant) }
     pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if self.cursor_closed { Ok(self.output.next_close_byte_demand()) } else { self.cursor.next_close_byte_demand() } }
+    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if !self.cursor_closed { return mounted_nested_retirement_demand(self.cursor.retirement_demands()?, 1); }
+        mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
+    }
     /// 🍂️ Closes inline codec authority before retiring either original output allocation.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !mounted_retirement_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if !self.cursor_closed {
-            let progress = self.cursor.close(grant).map_err(|error| error.reason)?;
+            let progress = self.cursor.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).map_err(|error| error.reason)?;
             self.cursor_closed = progress.complete;
             if self.cursor_closed { self.pending_len = 0; self.pending_offset = 0; }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.processed_items, copied_bytes: progress.copied_bytes, retained_capacity_bytes: progress.retained_capacity_bytes, released_bytes: progress.released_bytes, ..Default::default() }));
         }
-        Ok(self.output.close_step(grant))
+        Ok(self.output.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))
     }
     pub(crate) fn terminal_is_empty(&self) -> bool { self.cursor_closed && self.output.terminal_is_empty() }
 }
@@ -204,19 +225,27 @@ impl MountedPreparedOperationsBytes {
     }
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if !self.is_complete() { return None; } self.output.take(grant) }
     pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if let Some(operation) = self.operation.as_ref() { operation.next_close_byte_demand() } else if let Some(encoded) = self.encoded.as_ref() { Ok(encoded.capacity()) } else { Ok(self.output.next_close_byte_demand()) } }
+    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if let Some(operation) = self.operation.as_ref() { return mounted_nested_retirement_demand(operation.retirement_demands()?, 1); }
+        if let Some(encoded) = self.encoded.as_ref() { return Ok(semio_framework_value::RetirementDemand { release_bytes: encoded.capacity(), depth: 1, ..Default::default() }); }
+        mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
+    }
     /// ♻️ Retains the exact operation, candidate, and framed backing until each original extent is funded.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !mounted_retirement_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
-        if let Some(operation) = self.operation.as_mut() { let step = operation.close_step(grant)?; if operation.terminal_is_empty() { self.operation = None; } return Ok(step); }
+        if let Some(operation) = self.operation.as_mut() { let step = operation.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if operation.terminal_is_empty() { self.operation = None; } return Ok(step); }
         if let Some(encoded) = self.encoded.as_ref() {
             let bytes = encoded.capacity();
             if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
             drop(self.encoded.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
         }
-        Ok(self.output.close_step(grant))
+        Ok(self.output.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))
     }
     pub(crate) fn terminal_is_empty(&self) -> bool { self.operation.is_none() && self.encoded.is_none() && self.output.terminal_is_empty() }
 }
@@ -330,14 +359,23 @@ impl MountedKernelMutationReceipt {
         for dependencies in &self.dependencies { if let Some(id) = dependencies.last() { return id.0.capacity(); } if dependencies.capacity() > 0 { return dependencies.capacity() * std::mem::size_of::<MutationId>(); } }
         0
     }
+    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if !self.forward.terminal_is_empty() { return mounted_nested_retirement_demand(self.forward.retirement_demands()?, 1); }
+        if let Some(bytes) = self.strings.iter().chain(self.inverse.iter()).find(|bytes| !bytes.terminal_is_empty()) { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
+        if let Some(bytes) = self.dependency.as_ref() { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
+        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 2, ..Default::default() })
+    }
     /// 🍂️ Cancels each original payload, field, dependency string, and vector backing under whole physical grants.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
         if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); }
+        if !mounted_retirement_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
         self.closing = true;
-        if !self.forward.terminal_is_empty() { return self.forward.close_step(grant); }
-        if let Some(bytes) = self.strings.iter_mut().chain(self.inverse.iter_mut()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(grant); }
-        if let Some(bytes) = self.dependency.as_mut() { let step = bytes.close_step(grant); if bytes.terminal_is_empty() { self.dependency = None; } return step; }
+        if !self.forward.terminal_is_empty() { return self.forward.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
+        if let Some(bytes) = self.strings.iter_mut().chain(self.inverse.iter_mut()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
+        if let Some(bytes) = self.dependency.as_mut() { let step = bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if bytes.terminal_is_empty() { self.dependency = None; } return step; }
         for dependencies in &mut self.dependencies {
             if let Some(id) = dependencies.last_mut() { let bytes = id.0.capacity(); if grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); } drop(std::mem::take(&mut id.0)); dependencies.pop(); return RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }); }
             let bytes = dependencies.capacity() * std::mem::size_of::<MutationId>();

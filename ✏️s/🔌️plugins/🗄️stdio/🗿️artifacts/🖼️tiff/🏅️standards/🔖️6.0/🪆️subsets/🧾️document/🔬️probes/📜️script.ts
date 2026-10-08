@@ -58,7 +58,7 @@ type TypedValue = { kind: string; value?: unknown; n?: number; d?: number; items
 type Entry = { tag: number; value: TypedValue };
 type Raster = { width: number; height: number; colorType: string; sampleByteLength: number; samplesDigest: string } | null;
 type Ifd = { index: number; entries: Entry[]; raster: Raster };
-type TiffDoc = { format: "tiff"; byteOrder: "little-endian" | "big-endian"; ifdCount: number; ifds: Ifd[] };
+type TiffDoc = { format: "tiff"; ifdCount: number; ifds: Ifd[] };
 //#endregion 📥️Model
 
 //#region 🔓️Read
@@ -119,7 +119,7 @@ const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>
   "tiff-project": async (inputs) => {
     requireInputs(inputs, 1, "tiff-project");
     const doc = readTiff(inputs[0]!);
-    return { status: "ok", measurements: { byteOrder: doc.byteOrder, ifdCount: doc.ifdCount, tagCounts: doc.ifds.map((ifd) => ifd.entries.length), projection: doc } };
+    return { status: "ok", measurements: { ifdCount: doc.ifdCount, tagCounts: doc.ifds.map((ifd) => ifd.entries.length), projection: doc } };
   },
   "tiff-compare": async (inputs) => {
     requireInputs(inputs, 2, "tiff-compare");

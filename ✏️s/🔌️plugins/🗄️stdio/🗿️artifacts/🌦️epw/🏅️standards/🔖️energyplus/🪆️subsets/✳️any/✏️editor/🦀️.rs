@@ -239,8 +239,19 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for EpwEdit
         }
     }
 
-    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::energyplus::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::epw::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path, value } = event else { return Ok(None) };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let ["records", row, column] = segments.as_slice() else { return Ok(None) };
+        let fail = |message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.record-edit"), message);
+        let row = row.parse::<usize>().map_err(|error| fail(error.to_string()))?;
+        snapshot.records.get(row).ok_or_else(|| fail(format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
+        let field_index = main::EPW_TABLE_COLUMNS.iter().position(|candidate| candidate == column).ok_or_else(|| fail(format!("EPW column '{column}' is not an editable record field")))?;
+        let semio_framework_value::DslValue::String(value) = value else { return Err(fail("an EPW record column is text".into())) };
+        Ok(Some(vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: row, field_index, value: value.clone() })]))
     }
 }
 

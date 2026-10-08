@@ -21,10 +21,7 @@ fn snapshot(city: &str) -> EpwSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot("Hannover");
-    let mut b = snapshot("Berlin");
-    b.records[1] = record("2-modified, tricky [value]");
-    let cases = vec![EpwDiff::default(), EpwDiff::between(&a, &b), EpwDiff::between(&b, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

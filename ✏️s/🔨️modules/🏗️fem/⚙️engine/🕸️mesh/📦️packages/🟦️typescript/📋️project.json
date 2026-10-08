@@ -1,0 +1,28 @@
+{
+  "name": "@semio-tech/s-fem-mesh",
+  "tags": [
+    "language:typescript",
+    "role:s-module",
+    "family:fem"
+  ],
+  "targets": {
+    "test-surface-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-surface-contract",
+        "forwardAllArgs": false
+      }
+    },
+    "test-neutral-surface": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-neutral-surface",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

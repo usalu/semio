@@ -92,16 +92,12 @@ impl Mutation<DemoSnapshot> for LawOp {
 impl MemberStoreOwner<LawOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, LawOp>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, LawOp>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, LawOp>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, LawOp> {
-        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, LawOp>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, LawOp>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, LawOp>::new()))
     }
 }
 
@@ -219,7 +215,7 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
     assert_eq!(store.snapshot_ref().n, Some(4));
     let outcome = store.mutation_outcomes().expect("durable outcomes").into_iter().find(|outcome| outcome.mutation_id == ids[1]).expect("the planner's outcome");
     assert_eq!((outcome.worst, outcome.superseded, outcome.withdrawn), (None, true, true), "a withdrawal carries no fault");
-    assert_eq!(store.state_before(&ids[2], &BTreeMap::new()).expect("state before").n, Some(1));
+    assert_eq!(store.state_before(&ids[2], &protocol::HistoryInputDrafts::new()).expect("state before").n, Some(1));
     assert_eq!(materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("materialized").n, Some(4));
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(reloaded(&store).await.snapshot_ref().n, Some(4));
@@ -316,14 +312,14 @@ async fn a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairabl
     apply(&mut store, set(13)).await;
     apply(&mut store, add(3)).await;
     let ids = operation_ids(&store);
-    let finished = |store: &LawStore, drafts: &BTreeMap<MutationId, protocol::InputReplacement>| {
+    let finished = |store: &LawStore, drafts: &protocol::HistoryInputDrafts| {
         let mut replay = store.begin_report_replay(drafts, None).expect("the session replay");
         drive_test_report_replay(&mut replay, store.replay_edits());
         replay.finish().expect("a finished replay yields its result")
     };
     let codes = |outcomes: &[protocol::MutationReplayOutcome], target: &MutationId| outcomes.iter().find(|outcome| outcome.mutation_id == *target).map(|outcome| (outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect::<Vec<_>>())).expect("the mutation's outcome");
     let fatal = (Some(semio_framework_diagnostic::Severity::Fatal), vec!["mutation.inverse-refused".to_string()]);
-    let mut drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(ids[0].clone(), input("demo/v1", &set(500)))].into_iter().collect();
+    let mut drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), input("demo/v1", &set(500)))].into_iter().collect();
     let blocked = finished(&store, &drafts);
     let report = store.replay_report(&blocked).expect("the report");
     assert_eq!(codes(&report.outcomes, &ids[1]), fatal, "the refused inverse is that mutation's fatal outcome");

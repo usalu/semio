@@ -30,46 +30,6 @@ use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge,
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
-//#region 🔖️GenericNamedEngine
-/// 🏷️ Name/key-keyed collection algebra, generic over key `K`, item `T`, per-field diff `D` — this
-/// artifact's own copy of the bcf/docx-established shape (see module doc comment), operating on
-/// the SHARED `NamedTripleDiff` type from `🧰️triples` rather than a locally re-declared one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for (index, o) in other.iter().enumerate() {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(NamedAdded { index, item: o.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        return None;
-    }
-    if !reproduces_order(base, other, &removed, &added, &key_of) {
-        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
-    }
-    Some(NamedTripleDiff { removed, modified, added })
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[NamedAdded<T>], key_of: &impl Fn(&T) -> K) -> bool
 where
@@ -317,71 +277,6 @@ fn apply_solid(s: &mut BrepSolid, d: &BrepSolidDiff) {
         s.shells = v.clone();
     }
 }
-//#endregion 🔖️PerEntityApply
-
-//#region 🔖️PerEntityBetween
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_vertex(a: &BrepVertex, b: &BrepVertex) -> Option<BrepVertexDiff> {
-    let point = if a.point != b.point { Some(b.point) } else { None };
-    let tol = if a.tol != b.tol { Some(b.tol) } else { None };
-    if point.is_none() && tol.is_none() {
-        None
-    } else {
-        Some(BrepVertexDiff { point, tol })
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_edge(a: &BrepEdge, b: &BrepEdge) -> Option<BrepEdgeDiff> {
-    let start_vertex = if a.start_vertex != b.start_vertex { Some(b.start_vertex.clone()) } else { None };
-    let end_vertex = if a.end_vertex != b.end_vertex { Some(b.end_vertex.clone()) } else { None };
-    let curve = if a.curve != b.curve { Some(b.curve.clone()) } else { None };
-    let tol = if a.tol != b.tol { Some(b.tol) } else { None };
-    if start_vertex.is_none() && end_vertex.is_none() && curve.is_none() && tol.is_none() {
-        None
-    } else {
-        Some(BrepEdgeDiff { start_vertex, end_vertex, curve, tol })
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_loop(a: &BrepLoop, b: &BrepLoop) -> Option<BrepLoopDiff> {
-    let edges = if a.edges != b.edges { Some(b.edges.clone()) } else { None };
-    if edges.is_none() {
-        None
-    } else {
-        Some(BrepLoopDiff { edges })
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_face(a: &BrepFace, b: &BrepFace) -> Option<BrepFaceDiff> {
-    let outer_loop = if a.outer_loop != b.outer_loop { Some(b.outer_loop.clone()) } else { None };
-    let inner_loops = if a.inner_loops != b.inner_loops { Some(b.inner_loops.clone()) } else { None };
-    let surface = if a.surface != b.surface { Some(b.surface.clone()) } else { None };
-    let orientation = if a.orientation != b.orientation { Some(b.orientation) } else { None };
-    let tol = if a.tol != b.tol { Some(b.tol) } else { None };
-    if outer_loop.is_none() && inner_loops.is_none() && surface.is_none() && orientation.is_none() && tol.is_none() {
-        None
-    } else {
-        Some(BrepFaceDiff { outer_loop, inner_loops, surface, orientation, tol })
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_shell(a: &BrepShell, b: &BrepShell) -> Option<BrepShellDiff> {
-    let faces = if a.faces != b.faces { Some(b.faces.clone()) } else { None };
-    if faces.is_none() {
-        None
-    } else {
-        Some(BrepShellDiff { faces })
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_solid(a: &BrepSolid, b: &BrepSolid) -> Option<BrepSolidDiff> {
-    let shells = if a.shells != b.shells { Some(b.shells.clone()) } else { None };
-    if shells.is_none() {
-        None
-    } else {
-        Some(BrepSolidDiff { shells })
-    }
-}
 //#endregion 🔖️PerEntityBetween
 
 //#region 🔖️PerEntityInverse
@@ -565,137 +460,20 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
         }
     }
 
-    fn between(base: &SemioBrepSnapshot, other: &SemioBrepSnapshot) -> Self {
-        Self {
-            vertices: between_named(&base.vertices, &other.vertices, |v: &BrepVertex| v.id.clone(), between_vertex),
-            edges: between_named(&base.edges, &other.edges, |e: &BrepEdge| e.id.clone(), between_edge),
-            loops: between_named(&base.loops, &other.loops, |l: &BrepLoop| l.id.clone(), between_loop),
-            faces: between_named(&base.faces, &other.faces, |f: &BrepFace| f.id.clone(), between_face),
-            shells: between_named(&base.shells, &other.shells, |s: &BrepShell| s.id.clone(), between_shell),
-            solids: between_named(&base.solids, &other.solids, |s: &BrepSolid| s.id.clone(), between_solid),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.vertices.is_none() && self.edges.is_none() && self.loops.is_none() && self.faces.is_none() && self.shells.is_none() && self.solids.is_none()
     }
 }
-//#endregion 🔖️DiffAlgebra
-
-//#region 🔖️HandcraftedDiffCodec
-//#region 🔖️Primitives
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueCodecs
-
-//#region 🔖️DiffValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️DiffValueCodecs
-
-//#region 🔖️TopLevel
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
-//#region 🌉️ExternalCodecBridge
-
-//#endregion 🌉️ExternalCodecBridge
-
 //#region 🔖️Demo
-/// 🌱 Representative `SemioBrepDiff` cases (empty/no-op, a full removed/modified/added sweep both
-/// directions across every collection, plus a bare insert) — single source of truth for
-/// `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`. Self-
-/// contained (does not reach into `#[cfg(test)] mod tests`'s own private `sweep_a`/`sweep_b`,
-/// since a private item of a child module is not visible to its parent).
+/// 🌱 Representative `SemioBrepDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-brep"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioBrepDiff> {
-    let mut a = SemioBrepSnapshot::default();
-    a.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { tol: 1e-7, id: "v-removed".into(), point: SemioPoint3::default() }];
-    a.edges = vec![BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
-    a.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }];
-    a.faces = vec![BrepFace { tol: 1e-7, id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
-    a.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
-    a.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
-
-    let mut b = SemioBrepSnapshot::default();
-    b.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }, BrepVertex { tol: 1e-7, id: "v-added".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }];
-    b.edges = vec![BrepEdge {
-        tol: 1e-7,
-        id: "e1".into(),
-        start_vertex: "v1".into(),
-        end_vertex: "v-added".into(),
-        curve: BrepCurve::Nurbs { control_points: vec![SemioPoint3::default(), SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
-    }];
-    b.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] }];
-    b.faces = vec![BrepFace { tol: 1e-7, id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l1".into()], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: false }];
-    b.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] }];
-    b.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] }, BrepSolid { id: "so-added".into(), shells: vec![] }];
-
-    vec![SemioBrepDiff::default(), <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(&a, &b), <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(&b, &a)]
+    vec![
+        SemioBrepDiff::default(),
+        SemioBrepDiff { vertices: Some(Default::default()), edges: Some(Default::default()), loops: Some(Default::default()), faces: Some(Default::default()), shells: Some(Default::default()), solids: Some(Default::default()) },
+    ]
 }
 //#endregion 🔖️Demo
 

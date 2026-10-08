@@ -19,6 +19,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "gis2d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 mcpHost = { cratePath = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-gis-services-native", package = "semio-s-dev-gis-services", binary = "semio-s-gis-services-mcp", target = "mcp-build" }
 nativeHost = { cratePath = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-gis-services-native", package = "semio-s-dev-gis-services", binary = "semio-s-gis-services-native", target = "native-build" }
 aliases = ["gis 2d"]
@@ -28,6 +29,7 @@ engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/�
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 aliases = ["gis 3d"]
 app = "s.gis.gisterrain@1/*#editor"
 ports = { react = 6083, wgpu = 6183 }

@@ -56,9 +56,10 @@
   "meetings": null,
   "changes": null,
   "collaboration": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "collaboration-record-a",
         "patch": {
@@ -90,8 +91,7 @@
           "surveyId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "analyses": null,
   "reports": null,

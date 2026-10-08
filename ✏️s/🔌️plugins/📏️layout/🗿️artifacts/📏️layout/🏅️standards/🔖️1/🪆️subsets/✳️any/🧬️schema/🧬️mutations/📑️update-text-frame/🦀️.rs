@@ -1,8 +1,8 @@
 //! 📑 `update-text-frame` — sets a text frame's story, thread, and inset.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -67,12 +67,10 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.page_id.clone(),
                 patch: PagePatch {
-                    frames_patched: vec![PageFramePatched {
-                        frame_id: payload.frame_id.clone(),
-                        patch: FramePatch {
+                    frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch {
                             story_id: Some(payload.story_id.clone()),
                             thread_next: Some(payload.thread_next.clone()),
                             inset_x: Some(payload.inset_x),
@@ -80,8 +78,7 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
                             inset_width: Some(payload.inset_width),
                             inset_height: Some(payload.inset_height),
                             ..Default::default()
-                        },
-                    }],
+                        }),
                     ..Default::default()
                 },
             }],

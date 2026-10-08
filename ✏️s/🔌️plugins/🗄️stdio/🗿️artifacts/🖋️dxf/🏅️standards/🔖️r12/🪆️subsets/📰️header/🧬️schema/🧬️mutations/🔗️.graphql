@@ -8,12 +8,12 @@ enum DxfMutationKind {
   INSERT_LINETYPE REMOVE_LINETYPE SET_LINETYPE
   INSERT_ENTITY REMOVE_ENTITY SET_ENTITY
   INSERT_BLOCK REMOVE_BLOCK SET_BLOCK
+  SET_OTHER_TABLES
 }
 
 """🧬️ Discriminated on `mutation`; fields relevant to other variants are null."""
 type DxfMutation {
   mutation: DxfMutationKind!
-  snapshot: DxfSnapshot
   name: String
   headerVar: DxfHeaderVar
   index: Int
@@ -22,4 +22,5 @@ type DxfMutation {
   linetype: DxfLinetype
   entity: DxfEntity
   block: DxfBlock
+  otherTables: [DxfOtherTable!]
 }

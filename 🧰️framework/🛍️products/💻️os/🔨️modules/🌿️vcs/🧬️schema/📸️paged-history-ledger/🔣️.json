@@ -1,4 +1,5 @@
 {
+  "retirement": {"maximumItems": 1, "maximumCopyBytes": 0, "maximumCapacityBytes": 0, "slotVisibility": "same-original-arc", "release": "exact-native-slot-slice-page-and-empty-directory", "terminalDropBytes": 0},
   "pushes": 80,
   "removeLogical": 17,
   "replacement": "replacement"

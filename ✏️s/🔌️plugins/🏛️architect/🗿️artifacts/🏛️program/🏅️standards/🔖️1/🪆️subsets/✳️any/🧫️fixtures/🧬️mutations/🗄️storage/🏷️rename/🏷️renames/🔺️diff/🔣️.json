@@ -17,9 +17,10 @@
   "equipment": null,
   "resources": null,
   "storage": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "storage-requirement-a",
         "patch": {
@@ -53,8 +54,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "environmental": null,
   "humanFactors": null,

@@ -4,17 +4,45 @@
       {
         "index": 0,
         "diff": {
-          "primitives": [
-            {
-              "attributes": {},
-              "mode": 5
-            },
-            {
-              "attributes": {
-                "POSITION": 0
+          "primitives": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "mode": 5,
+                  "attributes": {
+                    "removed": [
+                      {
+                        "id": "POSITION",
+                        "index": 0
+                      }
+                    ],
+                    "inserted": [],
+                    "moved": []
+                  }
+                }
+              },
+              {
+                "index": 1,
+                "diff": {
+                  "mode": null,
+                  "attributes": {
+                    "removed": [],
+                    "inserted": [
+                      {
+                        "index": 0,
+                        "row": {
+                          "semantic": "POSITION",
+                          "accessor": 0
+                        }
+                      }
+                    ],
+                    "moved": []
+                  }
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       }
     ]

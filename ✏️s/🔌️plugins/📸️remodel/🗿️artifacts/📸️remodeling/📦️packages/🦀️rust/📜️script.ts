@@ -7,6 +7,7 @@ import { BundleScript } from "../../../../../../../🧰️framework/🔨️modul
 import { join, resolve } from "node:path";
 
 import { prepareCargoCapabilityLinksV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🟦️.ts";
+import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🔌️ Prepares source-owned optional Cargo capabilities. */
 class CompositionScript extends BundleScript {
   run(args: string[]): void {
@@ -19,9 +20,20 @@ class CompositionScript extends BundleScript {
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "physical-codecs") {
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️json/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
+      return;
+    }
+
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const schema=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(schema,"🟦️.ts"),resolve(schema,"📸️snapshot/🟦️.ts"),resolve(schema,"📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"),resolve(schema,"🧬️mutations/🟦️.ts"),resolve(schema,"🔺️diff/🟦️.ts"),resolve(schema,"../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts")],{cwd:this.repoRoot});
+      runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(schema,"🟦️.ts"),resolve(schema,"📸️snapshot/🟦️.ts"),resolve(schema,"🧬️mutations/🟦️.ts"),resolve(schema,"🔺️diff/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts"),resolve(schema,"../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts")],{cwd:this.repoRoot});
+      return;
+    }
+    if (segments.length === 1 && segments[0] === "snapshot-sqlite-native-syntax") {
+      const owner=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot");
+      await runOwnedCommand("rustfmt",["--emit","stdout","--edition","2024",resolve(owner,"🦀️.rs"),resolve(owner,"📏️cells/🦀️.rs"),resolve(owner,"🧪️tests/🧬️owned/🦀️.rs")],this.repoRoot,"owned-sqlite-native-syntax",120_000);
+      console.log("[DEBUG] Remodeling three owning Native SQLite sources parsed without changing files");
       return;
     }
     if (segments[0] === "video-container-providers") {
@@ -50,4 +62,6 @@ class OwnedVerifyScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts"] });
+
+

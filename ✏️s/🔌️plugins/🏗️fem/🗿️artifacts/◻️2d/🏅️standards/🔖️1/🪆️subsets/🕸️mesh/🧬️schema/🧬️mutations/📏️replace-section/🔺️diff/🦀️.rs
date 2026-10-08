@@ -4,7 +4,7 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME positivity bounds
 //! `create-section` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceSection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta, Fem2dSectionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta, Fem2dSectionsModification};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -22,6 +22,6 @@ pub fn diff(payload: &ReplaceSection, base: &Fem2dSnapshot) -> protocol::Mutatio
     if *existing == payload.new_section {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Section \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { patched: vec![Fem2dSectionsPatchEntry { id: payload.id.clone(), item: payload.new_section.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { modified: vec![Fem2dSectionsModification { id: payload.id.clone(), patch: payload.new_section.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

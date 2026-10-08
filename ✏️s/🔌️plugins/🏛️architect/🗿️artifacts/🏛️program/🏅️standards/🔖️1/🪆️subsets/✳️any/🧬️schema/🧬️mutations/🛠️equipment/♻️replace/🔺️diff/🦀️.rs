@@ -6,8 +6,8 @@ use crate::diff::ProgramEquipmentDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
-/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns, in place:
+/// `removed = [{id, index}]` and `inserted = [{index, payload row}]` at the same coordinate, so the new row keeps its position.
 pub fn diff(payload: &ReplaceEquipment, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = &payload.equipment.header.id;
     let Some(position) = base.equipment.iter().position(|row| row.header.id == *id) else {
@@ -16,6 +16,7 @@ pub fn diff(payload: &ReplaceEquipment, base: &ProgramSnapshot) -> protocol::Mut
     if base.equipment[position] == payload.equipment {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This equipment already matches the requested value.").at([id.0.clone()])]);
     }
-    let reordered = (position + 1 != base.equipment.len()).then(|| base.equipment.iter().map(|row| row.header.id.0.clone()).collect());
-    protocol::MutationOutcome::new(ProgramDiff { equipment: Some(ProgramEquipmentDelta { removed: vec![id.0.clone()], added: vec![payload.equipment.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let mut delta = ProgramEquipmentDelta::removal(&base.equipment, position);
+    delta.absorb(ProgramEquipmentDelta::insertion(position, payload.equipment.clone()));
+    protocol::MutationOutcome::new(ProgramDiff { equipment: Some(delta), ..Default::default() })
 }

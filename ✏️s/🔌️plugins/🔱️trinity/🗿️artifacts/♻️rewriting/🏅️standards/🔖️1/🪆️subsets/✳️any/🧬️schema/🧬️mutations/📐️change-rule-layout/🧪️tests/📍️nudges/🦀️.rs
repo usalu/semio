@@ -62,7 +62,7 @@ async fn inverse_restores_before() {
     assert_eq!(undo.new_point, LayoutPoint { x: 12.0, y: -8.0 }, "the inverse restores exactly the point BASE held for that var");
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_rewrite_rule_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-rule-layout-point/nudges-the-capsule-var-off-the-shaft: inverse did not restore the before-snapshot");

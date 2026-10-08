@@ -2,7 +2,7 @@
 async fn cad_imported_geometry_members_install_exact_typed_publication_authority() {
     use semio_framework_os_kernel::{ArtifactStore, MemberStoreOwner, MemberStoreOwnedBatch, MemberStoreOwnedBatchRequest, SpaceMember};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::{model::schema::{snapshot::SemioModelSnapshot, mutations::{SemioModelMutation,insert_element::InsertElement}},brep::schema::{snapshot::SemioBrepSnapshot,mutations::{SemioBrepMutation,set_snapshot::SetSnapshot}}};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::{model::schema::{snapshot::SemioModelSnapshot, mutations::{SemioModelMutation,insert_element::InsertElement}},brep::schema::{snapshot::SemioBrepSnapshot,mutations::{SemioBrepMutation,create_vertex::CreateVertex}}};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
     let imported = crate::standards::v1::subsets::any::io::import_obj_object(text).unwrap();
@@ -41,8 +41,8 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
             println!("[DEBUG] actual installed imported {} member typed birth={} original vector pointer retained, complete bounded owner closure",expected["subset"],admission.unwrap());
         }};
     }
-    member!(SemioModelSnapshot,SemioModelMutation,SemioModelMutation::InsertElement(InsertElement { element:imported.element }),0);
-    member!(SemioBrepSnapshot,SemioBrepMutation,SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot:imported.geometry }),1);
+    member!(SemioModelSnapshot,SemioModelMutation,SemioModelMutation::InsertElement(InsertElement { element:imported.element, at: None }),0);
+    member!(SemioBrepSnapshot,SemioBrepMutation,SemioBrepMutation::CreateVertex(CreateVertex { id:imported.geometry.vertices[0].id.clone(), point:imported.geometry.vertices[0].point, tol:imported.geometry.vertices[0].tol, at:None }),1);
 }
 
 include!("🌱️birth/🦀️.rs");

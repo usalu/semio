@@ -13,10 +13,10 @@ pub struct DeleteBrep {
 impl MutationKind<CadSnapshot, CadMutation> for DeleteBrep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "brep", kind: "delete-brep", record: "DeletedBrep" };
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
-        if !base.breps.iter().any(|child| child.child_id == self.child_id) {
-            return protocol::MutationOutcome::fatal("mutation.missing-id", "topology sibling is absent", [self.child_id.clone()]);
-        }
-        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta { removed: vec![self.child_id.clone()], ..Default::default() }), ..Default::default() })
+        let Some(index) = base.breps.iter().position(|child| child.child_id == self.child_id) else {
+            return protocol::MutationOutcome::error("mutation.target-missing", "topology sibling is absent", [self.child_id.clone()]);
+        };
+        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta::removal(&base.breps, index)), ..Default::default() })
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
         let Some((index, child)) = base.breps.iter().enumerate().find(|(_, child)| child.child_id == self.child_id) else { return Ok(Vec::new()) };

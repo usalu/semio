@@ -6,6 +6,15 @@ fn number<'a>(value:impl Into<u64>)->V<'a>{V::Scalar(N::U64(value.into()))}
 fn signed<'a>(value:i32)->V<'a>{V::Scalar(N::I64(value.into()))}
 fn object<'a,const K:usize>(mut fields:[(&'a str,V<'a>);K])->V<'a>{fields.sort_unstable_by(|a,b|a.0.cmp(b.0));V::Object(O::new(fields.into_iter()))}
 fn array<'a,T:Sync+'a>(value:&'a [T],map:impl Fn(&'a T)->V<'a>+Send+'a)->V<'a>{V::Array(A::new(value.iter().map(map)))}
+fn region(value:&BmpRegion)->V<'_>{object([("x",number(value.x)),("y",number(value.y)),("width",number(value.width)),("height",number(value.height))])}
+fn sample(value:&BmpNativeSample)->V<'_>{object([("red",number(value.red)),("green",number(value.green)),("blue",number(value.blue)),("alpha",number(value.alpha)),("reserved",number(value.reserved))])}
+fn rect(value:&BmpSampleRect)->V<'_>{rect_parts(&value.region,&value.indices,&value.samples)}
+fn rect_parts<'a>(at:&'a BmpRegion,indices:&'a [u8],samples:&'a [BmpNativeSample])->V<'a>{
+    let mut fields:Vec<(&str,V<'a>)>=vec![("region",region(at))];
+    if !indices.is_empty(){fields.push(("indices",array(indices,|v|number(*v))));}
+    if !samples.is_empty(){fields.push(("samples",array(samples,sample)));}
+    fields.sort_unstable_by(|a,b|a.0.cmp(b.0));V::Object(O::new(fields.into_iter()))
+}
 fn snapshot(value:&BmpSnapshot)->V<'_>{object([("schema",text(&value.schema)),("image",image(&value.image))])}
 fn image(value:&BmpImage)->V<'_>{object([
 ("width",number(value.width)),("height",number(value.height)),("rowOrder",text(match value.row_order {BmpRowOrder::BottomUp=>"bottomUp",BmpRowOrder::TopDown=>"topDown"})),("profile",text(value.profile.id())),("masks",array(&value.masks,|v|number(*v))),
@@ -17,6 +26,7 @@ impl store::ArtifactCanonicalJson for BmpMutation {
     fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{
         let (kind,payload)=match self {
             Self::ReplaceImage(v)=>("replace-image",object([("image",image(&v.image))])),
+            Self::ReplaceSamples(v)=>("replace-samples",rect_parts(&v.region,&v.indices,&v.samples)),
             Self::PaintIndexedRegion(v)=>("paint-indexed-region",object([("revision",text(&v.revision)),("x",number(v.x)),("y",number(v.y)),("width",number(v.width)),("height",number(v.height)),("paletteIndex",number(v.palette_index))])),
             Self::PaintDirectRegion(v)=>("paint-direct-region",object([("revision",text(&v.revision)),("x",number(v.x)),("y",number(v.y)),("width",number(v.width)),("height",number(v.height)),("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("alpha",number(v.alpha))])),
         };Ok(Some(object([("mutation",text(kind)),("payload",payload)])))
@@ -26,7 +36,7 @@ impl store::ArtifactCanonicalJson for BmpSnapshot {
     fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(snapshot(self)))}
 }
 impl store::ArtifactCanonicalJson for BmpDiff {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(V::Object(O::new(self.image.as_ref().map(|value|("image",image(value))).into_iter()))))}
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(V::Object(O::new(self.image.as_ref().map(|value|("image",image(value))).into_iter().chain((!self.rects.is_empty()).then(||("rects",array(&self.rects,rect))))))))}
 }
 
 #[cfg(test)]

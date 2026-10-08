@@ -375,9 +375,10 @@ fn generation2d_retained_reduce(
         Generation2dCommand::NodeGraphViewport(payload) => {
             let context = context.ok_or_else(|| Fault::from("generation2d-main-window-context-required"))?;
             let view = context.view_state.as_ref().ok_or_else(|| Fault::from("generation2d-main-window-view-required"))?;
-            let mut next = flow_window::config::from_snapshot(context.window_config.as_ref());
+            let base = flow_window::config::from_snapshot(context.window_config.as_ref());
+            let mut next = base.clone();
             next.viewport = payload.viewport;
-            Ok(Emit { window_config_mutations: vec![flow_window::config::addressed(view, next)?], ..Default::default() })
+            Ok(Emit { window_config_mutations: flow_window::config::addressed(view, &base, next)?, ..Default::default() })
         }
         _ => command.dispatch(&doc, &cfg, session),
     }
@@ -499,7 +500,7 @@ fn generation2d_provisional_snapshot(committed: &Generation2dSnapshot, provision
 /// preview shows only what applies — and its refusal is never lost: the commit that lands the same leaf on the committed
 /// document reports it as the history row's outcome.
 fn generation2d_fold_provisional(overlay: &mut Generation2dSnapshot, leaf: Generation2dMutation) {
-    let _refused_paints_nothing = crate::standards::v1::subsets::any::schema::mutations::apply_generation2d_mutation(overlay, &leaf);
+    let _refused_paints_nothing = crate::central_apply::apply_generation2d_mutation(overlay, &leaf);
     leaf.retire_cold();
 }
 
@@ -974,7 +975,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.take() {
-            crate::standards::v1::subsets::any::schema::mutations::generation2d_retire_mutation_cold(mutation);
+            crate::central_apply::generation2d_retire_mutation_cold(mutation);
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(base) = self.base.take() {
@@ -1311,7 +1312,7 @@ impl ArtifactReservedJob for Generation2dImportJob {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(mutation) = self.mutations.pop() {
-            crate::standards::v1::subsets::any::schema::mutations::generation2d_retire_mutation_cold(mutation);
+            crate::central_apply::generation2d_retire_mutation_cold(mutation);
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.mutations.capacity() > 0 {
@@ -2188,4 +2189,13 @@ fn generation2d_render_body(
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     };
     Ok(semio_framework_plugin::built_to_component_tree(rendered?))
+}
+
+/// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and
+/// never a mutation row. `store::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
+/// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
+pub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <Generation2dSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("generation2d", crate::GENERATION_2D_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }

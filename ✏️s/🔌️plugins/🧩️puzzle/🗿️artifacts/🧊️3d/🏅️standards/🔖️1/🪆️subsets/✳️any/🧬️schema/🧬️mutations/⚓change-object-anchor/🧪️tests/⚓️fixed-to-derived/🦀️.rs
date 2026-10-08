@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation};
+use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
 
 use crate::Puzzle3dSnapshot;
 
@@ -49,7 +50,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-object-anchor/fixed-to-derived: inverse did not restore the before-snapshot");
@@ -98,7 +99,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-object-anchor/fixed-to-derived: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["objects"]["patched"][0]["patch"]["anchor"].as_str(), Some("derived"), "change-object-anchor/fixed-to-derived: the patch must carry the derived anchor");
+    assert_eq!(committed["objects"]["modified"][0]["patch"]["anchor"].as_str(), Some("derived"), "change-object-anchor/fixed-to-derived: the patch must carry the derived anchor");
     assert!(committed["attractions"].is_null(), "change-object-anchor/fixed-to-derived: the anchor flip must not re-solve the attractions here");
 }
 

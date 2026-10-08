@@ -37,7 +37,7 @@ async fn inverse_restores_the_middle_position() {
     let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "delete-frame/removes-a-middle-row: a changing mutation must have a non-empty inverse");
     let mut snapshot = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-frame/removes-a-middle-row: forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-frame/removes-a-middle-row: inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-frame/removes-a-middle-row: inverse did not restore the before-snapshot, row order included");

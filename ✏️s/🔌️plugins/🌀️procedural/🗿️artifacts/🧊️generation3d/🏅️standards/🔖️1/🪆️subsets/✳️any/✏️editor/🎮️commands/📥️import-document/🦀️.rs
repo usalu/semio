@@ -7,15 +7,12 @@
 //! round-trip tested and unreachable from any command, menu or button
 //! (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1).
 //!
-//! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set-active-example` does: as
-//! the ordered unload/load batch of real `Generation3dMutation`s `generation3d_document_replacement` spells, never
-//! an `Effect::LoadDocument`. That keeps the import event-sourced and point-invertible — one `mod+z`
-//! puts the previous graph back — where a whole-document replace effect would be a CRUD write with
-//! no inverse.
+//! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set-active-example` does: as the artifact's
+//! load effect (`reset_generation3d_document_effect`, an `Effect::LoadDocument` outside undo history). A natural-file
+//! import is the load/genesis path, never a mutation row diffed between the old and the imported document.
 //!
-//! 📷️ The camera rides the CONFIG lane (`config_after_document_load`), exactly as an example switch
-//! does, because `generation3d_document_replacement` deliberately does not author it
-//! (`mutations::tests::fixture_ops_ignore_camera`).
+//! 📷️ The camera and the selected generation ride the CONFIG lane (`config_load_mutations`), exactly as an example switch
+//! does: one concrete config leaf per field the loaded document changes.
 //!
 //! ⏳️ Progress and cancellation belong to the transfer: the shell reports chunk progress and cancels
 //! between chunks as a Tasks-window task (`dispatchOpenedFiles`, `🛠️ShellHelpers/🟦️.tsx`), and a
@@ -24,10 +21,10 @@
 //! @see ../../../🚪️io/🦀️.rs — `document_io::import_document_bytes`, the composition point this calls.
 //! @see ../🎨️set/🦀️.rs — the same whole-document replacement, from a bundled example.
 
-use crate::editor::generation3d::commands::set_active_example::config_after_document_load;
+use crate::editor::generation3d::commands::set_active_example::config_load_mutations;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::io::document_io;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_document_replacement, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
@@ -97,14 +94,14 @@ pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapsho
 pub fn apply_complete_payload(
     name: &str,
     payload: &str,
-    doc: &ArtifactView<'_, Generation3dSnapshot>,
+    _doc: &ArtifactView<'_, Generation3dSnapshot>,
     cfg: &ConfigView<'_, Generation3dConfig>,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let imported = document_io::import_document(name, payload).map_err(|error| import_fault("generation3d.io.import", error.to_string()))?;
-    let operations = generation3d_document_replacement(doc.snapshot, &imported);
-    let config = config_after_document_load(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
+    let effect = crate::editor::generation3d::reset_generation3d_document_effect(&imported);
+    let config_mutations = config_load_mutations(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
     imported.retire_cold();
-    Ok(Emit { artifact_mutations: operations, config_mutations: crate::editor::generation3d::config::config_replacement(cfg.snapshot, &config), ..Default::default() })
+    Ok(Emit { effects: vec![effect], config_mutations, ..Default::default() })
 }
 
 /// 🧵️ The session-free entry point: the import needs no evaluation session, only the document and its config.

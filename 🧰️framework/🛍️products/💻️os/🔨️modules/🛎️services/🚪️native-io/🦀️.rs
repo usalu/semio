@@ -1,6 +1,7 @@
 //! 📂️ Native filesystem and process-observation jobs for interactive OS hosts.
 
-use semio_framework_job::{CommitCandidate, InteractiveJob, StepContext, StepOutcome};
+use semio_framework_job::{CommitCandidate, InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress, StepContext, StepOutcome};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::fs::{File, ReadDir};
 use std::io::{Read, Seek};
 use std::path::PathBuf;
@@ -126,30 +127,31 @@ pub enum NativeIoValue {
 }
 
 impl NativeIoValue {
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    pub fn retirement_demands(&self) -> (usize, usize) {
         match self {
-            Self::Bytes(bytes) | Self::Page { bytes, .. } => match bytes.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Complete,
-            },
-            Self::Paths(paths) if !paths.is_empty() => {
-                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_items == 0 || maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(paths.pop());
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
-            }
-            Self::Modified(entries) if !entries.is_empty() => {
-                let released_bytes = entries.entries[entries.length - 1].as_ref().map_or(0, |(path, _)| path.as_os_str().len());
-                if maximum_items == 0 || maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(entries.pop());
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
-            }
-            _ => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Self::Bytes(bytes) | Self::Page { bytes, .. } if !bytes.terminal_is_empty() => (bytes.next_close_byte_demand(), 2),
+            Self::Paths(paths) if !paths.is_empty() => (paths.entries[paths.length - 1].as_ref().expect("original path slot").capacity(), 1),
+            Self::Modified(entries) if !entries.is_empty() => (entries.entries[entries.length - 1].as_ref().expect("original modified slot").0.capacity(), 1),
+            _ => (0, 0),
         }
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let (release, depth) = self.retirement_demands();
+        if self.terminal_is_empty() { return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }; }
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < release || grant.maximum_depth < depth {
+            return InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit);
+        }
+        let progress = match self {
+            Self::Bytes(bytes) | Self::Page { bytes, .. } => match bytes.close_step(1, grant.maximum_release_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, released_bytes, ..RetainedCloneProgress::default() },
+                semio_framework_job::JobPayloadCloseStep::Complete => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+            },
+            Self::Paths(paths) => { drop(paths.pop()); RetainedCloneProgress { copied_items: 1, released_bytes: release, ..RetainedCloneProgress::default() } },
+            Self::Modified(entries) => { drop(entries.pop()); RetainedCloneProgress { copied_items: 1, released_bytes: release, ..RetainedCloneProgress::default() } },
+            Self::ResidentBytes(_) => RetainedCloneProgress::default(),
+        };
+        InteractiveJobCloseStep::Pending { progress }.admit(grant, self.terminal_is_empty())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -163,6 +165,10 @@ impl NativeIoValue {
 }
 
 //#endregion 📂️Schema
+
+fn native_io_close_grant() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 }
+}
 
 //#region 👷️Job
 
@@ -180,6 +186,9 @@ enum NativeIoState {
     Finished,
 }
 
+#[derive(Clone, Copy)]
+enum NativeIoCloseTarget { Writer, Paths, Modified, Path, Extension, RejectedPath, RejectedModified, Error, FinishState, ResultValue, ResultError, ClearResult, Complete }
+
 pub struct NativeIoJob {
     state: NativeIoState,
     result: Option<Result<NativeIoValue, String>>,
@@ -189,6 +198,30 @@ pub struct NativeIoJob {
 impl NativeIoJob {
     pub fn new(request: NativeIoRequest) -> Self {
         Self { state: NativeIoState::Pending(request), result: None, closing: false }
+    }
+
+    fn close_target(&self) -> (NativeIoCloseTarget, usize, usize) {
+        use NativeIoCloseTarget::*;
+        let paths = |paths: &NativePathSet| (Paths, paths.entries[paths.length - 1].as_ref().expect("original path slot").capacity(), 1);
+        let modified = |entries: &NativeModifiedSet| (Modified, entries.entries[entries.length - 1].as_ref().expect("original modified slot").0.capacity(), 1);
+        match &self.state {
+            NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } if !writer.terminal_is_empty() => return (Writer, writer.next_close_byte_demand(), 2),
+            NativeIoState::ClosingScanFault { rejected: Some(path), .. } => return (RejectedPath, path.capacity(), 1),
+            NativeIoState::ClosingModifiedFault { rejected: Some((path, _)), .. } => return (RejectedModified, path.capacity(), 1),
+            NativeIoState::Pending(NativeIoRequest::Modified(owner)) | NativeIoState::Scanning { paths: owner, .. } | NativeIoState::ClosingScanFault { paths: owner, .. } | NativeIoState::ReadingModified { paths: owner, .. } | NativeIoState::ClosingModifiedFault { paths: owner, .. } if !owner.is_empty() => return paths(owner),
+            NativeIoState::ReadingModified { modified: owner, .. } | NativeIoState::ClosingModifiedFault { modified: owner, .. } if !owner.is_empty() => return modified(owner),
+            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension: Some(extension), .. }) | NativeIoState::Scanning { extension: Some(extension), .. } | NativeIoState::ClosingScanFault { extension: Some(extension), .. } => return (Extension, extension.capacity(), 1),
+            NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) if path.capacity() != 0 => return (Path, path.capacity(), 1),
+            NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } if error.capacity() != 0 => return (Error, error.capacity(), 1),
+            NativeIoState::Finished => {},
+            _ => return (FinishState, 0, 1),
+        }
+        match &self.result {
+            Some(Ok(value)) if !value.terminal_is_empty() => { let (release, depth) = value.retirement_demands(); (ResultValue, release, depth + 1) },
+            Some(Err(error)) if error.capacity() != 0 => (ResultError, error.capacity(), 1),
+            Some(_) => (ClearResult, 0, 1),
+            None => (Complete, 0, 0),
+        }
     }
 
     pub fn retained_request_backing_identity(&self) -> Option<*const u8> {
@@ -270,7 +303,7 @@ impl InteractiveJob for NativeIoJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
             self.closing = true;
-            let _ = self.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = self.close_step(native_io_close_grant());
             if matches!(self.state, NativeIoState::Finished) && self.result.is_none() {
                 self.result = Some(Err("native I/O cancelled".into()));
                 return StepOutcome::Cancelled;
@@ -442,197 +475,66 @@ impl InteractiveJob for NativeIoJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return if matches!(self.state, NativeIoState::Finished) && self.result.is_none() {
-                semio_framework_job::InteractiveJobCloseStep::Complete
-            } else {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }
-            };
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target().1) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target().2) }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let (target, release, depth) = self.close_target();
+        if matches!(target, NativeIoCloseTarget::Complete) {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }.admit(grant, self.terminal_is_empty());
         }
-        match &mut self.state {
-            NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } => {
-                match writer.close_step(maximum_items.min(1), maximum_bytes) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-                    }
-                    semio_framework_job::JobPayloadCloseStep::Complete if !writer.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                    semio_framework_job::JobPayloadCloseStep::Complete => {}
-                }
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < release || grant.maximum_depth < depth {
+            return InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit);
+        }
+        self.closing = true;
+        match target {
+            NativeIoCloseTarget::Writer => {
+                let writer = match &mut self.state {
+                    NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } => writer,
+                    _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                };
+                return match writer.close_step(1, grant.maximum_release_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: released_items, released_bytes, ..RetainedCloneProgress::default() } }.admit(grant, false),
+                    semio_framework_job::JobPayloadCloseStep::Complete => InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                };
             }
-            NativeIoState::ClosingWriterFault { writer, error } => match writer.close_step(maximum_items.min(1), maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-                }
-                semio_framework_job::JobPayloadCloseStep::Complete if !writer.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                semio_framework_job::JobPayloadCloseStep::Complete if !error.is_empty() && maximum_bytes >= error.len() => {
-                    let released_bytes = error.len();
-                    drop(std::mem::take(error));
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-                }
-                semio_framework_job::JobPayloadCloseStep::Complete if !error.is_empty() => {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                semio_framework_job::JobPayloadCloseStep::Complete => {}
+            NativeIoCloseTarget::Paths => match &mut self.state {
+                NativeIoState::Pending(NativeIoRequest::Modified(paths)) | NativeIoState::Scanning { paths, .. } | NativeIoState::ClosingScanFault { paths, .. } | NativeIoState::ReadingModified { paths, .. } | NativeIoState::ClosingModifiedFault { paths, .. } => { drop(paths.pop()); },
+                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
             },
-            NativeIoState::Pending(NativeIoRequest::Modified(paths)) if !paths.is_empty() => {
-                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(paths.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            NativeIoCloseTarget::Modified => match &mut self.state {
+                NativeIoState::ReadingModified { modified, .. } | NativeIoState::ClosingModifiedFault { modified, .. } => { drop(modified.pop()); },
+                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+            },
+            NativeIoCloseTarget::Path => match &mut self.state {
+                NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) => drop(std::mem::take(path)),
+                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+            },
+            NativeIoCloseTarget::Extension => match &mut self.state {
+                NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension, .. }) | NativeIoState::Scanning { extension, .. } | NativeIoState::ClosingScanFault { extension, .. } => drop(extension.take()),
+                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+            },
+            NativeIoCloseTarget::RejectedPath => if let NativeIoState::ClosingScanFault { rejected, .. } = &mut self.state { drop(rejected.take()); },
+            NativeIoCloseTarget::RejectedModified => if let NativeIoState::ClosingModifiedFault { rejected, .. } = &mut self.state { drop(rejected.take()); },
+            NativeIoCloseTarget::Error => match &mut self.state {
+                NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } => drop(std::mem::take(error)),
+                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+            },
+            NativeIoCloseTarget::FinishState => self.state = NativeIoState::Finished,
+            NativeIoCloseTarget::ResultValue => {
+                let Some(Ok(value)) = self.result.as_mut() else { return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated) };
+                return match value.close_step(RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant }) {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                }.admit(grant, self.terminal_is_empty());
             }
-            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension, .. }) if extension.is_some() => {
-                let released_bytes = extension.as_ref().map_or(0, String::len);
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(extension.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) if !path.as_os_str().is_empty() => {
-                let released_bytes = path.as_os_str().len();
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(std::mem::take(path));
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::Scanning { paths, extension, .. } if !paths.is_empty() => {
-                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(paths.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::Scanning { extension, .. } if extension.is_some() => {
-                let released_bytes = extension.as_ref().map_or(0, String::len);
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(extension.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingScanFault { rejected, .. } if rejected.is_some() => {
-                let released_bytes = rejected.as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(rejected.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingScanFault { paths, .. } if !paths.is_empty() => {
-                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(paths.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingScanFault { extension, .. } if extension.is_some() => {
-                let released_bytes = extension.as_ref().map_or(0, String::len);
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(extension.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingScanFault { error, .. } if !error.is_empty() => {
-                let released_bytes = error.len();
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                error.clear();
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ReadingModified { paths, .. } if !paths.is_empty() => {
-                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(paths.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ReadingModified { modified, .. } if !modified.is_empty() => {
-                let released_bytes = modified.entries[modified.length - 1].as_ref().map_or(0, |(path, _)| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(modified.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingModifiedFault { rejected, .. } if rejected.is_some() => {
-                let released_bytes = rejected.as_ref().map_or(0, |(path, _)| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(rejected.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingModifiedFault { paths, .. } if !paths.is_empty() => {
-                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(paths.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingModifiedFault { modified, .. } if !modified.is_empty() => {
-                let released_bytes = modified.entries[modified.length - 1].as_ref().map_or(0, |(path, _)| path.as_os_str().len());
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(modified.pop());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::ClosingModifiedFault { error, .. } if !error.is_empty() => {
-                let released_bytes = error.len();
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                error.clear();
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            NativeIoState::Finished => {}
-            _ => {
-                self.state = NativeIoState::Finished;
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
+            NativeIoCloseTarget::ResultError => if let Some(Err(error)) = self.result.as_mut() { drop(std::mem::take(error)); },
+            NativeIoCloseTarget::ClearResult => self.result = None,
+            NativeIoCloseTarget::Complete => unreachable!(),
         }
-        if !matches!(self.state, NativeIoState::Finished) {
-            self.state = NativeIoState::Finished;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(Ok(value)) = self.result.as_mut() {
-            match value.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-                }
-                semio_framework_job::InteractiveJobCloseStep::Blocked => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                semio_framework_job::InteractiveJobCloseStep::Complete if !value.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                semio_framework_job::InteractiveJobCloseStep::Complete => {}
-            }
-        }
-        if let Some(Err(error)) = self.result.as_mut() {
-            if !error.is_empty() {
-                let released_bytes = error.len();
-                if maximum_bytes < released_bytes {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                error.clear();
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-        }
-        if self.result.is_some() {
-            if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.result = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: release, ..RetainedCloneProgress::default() } }.admit(grant, self.terminal_is_empty())
     }
 
     fn terminal_is_empty(&self) -> bool {

@@ -116,7 +116,8 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::schema::mutations::{apply_a_conformance_mutation, PdfA1Mutation};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::io::mutation_bridge::apply_a_conformance_mutation;
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::schema::mutations::PdfA1Mutation;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};

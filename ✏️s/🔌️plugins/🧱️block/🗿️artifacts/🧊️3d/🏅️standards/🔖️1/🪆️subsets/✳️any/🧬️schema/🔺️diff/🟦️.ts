@@ -1,243 +1,252 @@
-import type {Block3dVortexKind,Block3dWindowView} from "../../../../../../🟦️.ts";
-import * as root from "../../../../../../🟦️.ts";
-import type {BlockKindIdentity,BlockRepresentation,Block3dVortexTemplate,BlockCompatibilityRule,BlockAttribute,BlockAuthor,BlockCamera3d,BlockMeta,Block3dArtifact} from "../🟦️.ts";
-import * as model from "../🟦️.ts";
-/** 🧬️ Block3d diff schema — sparse field delta. */
+import type { Block3dVortexTemplate, BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation } from "../🟦️.ts";
+import type { Block3dVortexKind } from "../../../../../../🟦️.ts";
+
+/** 🧬️ Block3d diff schema — a field-sparse, id-keyed delta over the artifact: sub-documents carry field patches, id-keyed lists carry positional rows (`protocol::list_delta`): removed (id at base index), inserted (row at after index), moved (id from base index to after index) and id-keyed modified rows. */
 
 export interface Block3dDiff {
-  /** @state artifact */
-  artifact?: Block3dArtifact;
-  /** @state artifact */
-  schema?: string;
-  /** @state artifact */
-  objectKind?: BlockKindIdentity;
-  /** @state artifact */
-  representations?: Block3dRepresentationsDelta;
-  /** @state artifact */
-  vortexKinds?: Block3dVortexKindsDelta;
-  /** @state artifact */
-  vortices?: Block3dVorticesDelta;
-  /** @state artifact */
-  compatibility?: Block3dCompatibilityDelta;
-  /** @state artifact */
-  attributes?: Block3dAttributesDelta;
-  /** @state artifact */
-  authors?: Block3dAuthorList;
-  /** @state artifact */
-  camera3d?: BlockCamera3d;
-  /** @state artifact */
-  meta?: BlockMeta;
+  schema?: string | null;
+  objectKind?: BlockKindIdentityPatch | null;
+  representations: BlockRepresentationsDelta;
+  vortexKinds: Block3dVortexKindsDelta;
+  vortices: Block3dVorticesDelta;
+  compatibility: BlockCompatibilityDelta;
+  attributes: BlockAttributesDelta;
+  authors: BlockAuthorsDelta;
+  camera3d?: BlockCamera3dPatch | null;
+  meta?: BlockMetaPatch | null;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-export interface Block3dStringList {
-  values: string[];
+export interface BlockOptionalText {
+  value: string | null;
 }
 
-export interface Block3dAuthorList {
-  values: BlockAuthor[];
+export interface BlockKindIdentityPatch {
+  id?: string | null;
+  name?: string | null;
+  label?: string | null;
+  description?: string | null;
+  variant?: BlockOptionalText | null;
+  icon?: BlockOptionalText | null;
+  unit?: BlockOptionalText | null;
 }
 
-export interface Block3dRepresentationsDelta {
-  added: BlockRepresentation[];
-  removed: string[];
-  patched: Block3dRepresentationsPatchEntry[];
-  reordered?: string[];
+export interface BlockRepresentationPatch {
+  name?: string | null;
+  meshUrl?: BlockOptionalText | null;
+  lod?: BlockOptionalText | null;
+  description?: string | null;
+  tagsRemoved?: string[] | null;
+  tagsAdded?: string[] | null;
+  attributesRemoved?: string[] | null;
+  attributesAdded?: BlockAttribute[] | null;
 }
 
-export interface Block3dRepresentationsPatchEntry {
+export interface Block3dVortexKindPatch {
+  name?: string | null;
+  label?: string | null;
+  color?: string | null;
+  defaultCableKind?: string | null;
+}
+
+export interface Block3dVortexTemplatePatch {
+  vortexKind?: string | null;
+  position?: readonly [number, number, number] | null;
+  direction?: readonly [number, number, number] | null;
+  radius?: number | null;
+  label?: BlockOptionalText | null;
+}
+
+export interface BlockCompatibilityRulePatch {
+  source?: string | null;
+  target?: string | null;
+  bidirectional?: boolean | null;
+}
+
+export interface BlockAttributePatch {
+  value?: string | null;
+  definition?: BlockOptionalText | null;
+}
+
+export interface BlockAuthorPatch {
+  name?: string | null;
+  email?: BlockOptionalText | null;
+}
+
+export interface BlockCamera3dPatch {
+  position?: readonly [number, number, number] | null;
+  target?: readonly [number, number, number] | null;
+  zoom?: number | null;
+}
+
+export interface BlockMetaPatch {
+  description?: string | null;
+}
+
+export interface BlockRepresentationsPatchEntry {
   id: string;
-  patch: Block3dRepresentationsPatch;
+  patch: BlockRepresentationPatch;
 }
 
-export interface Block3dRepresentationsPatch {
-  replacement?: BlockRepresentation;
+export interface BlockRepresentationsRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Block3dVortexKindsDelta {
-  added: Block3dVortexKind[];
-  removed: string[];
-  patched: Block3dVortexKindsPatchEntry[];
-  reordered?: string[];
+export interface BlockRepresentationsInsertion {
+  index: number;
+  row: BlockRepresentation;
+}
+
+export interface BlockRepresentationsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface BlockRepresentationsDelta {
+  removed: BlockRepresentationsRemoval[];
+  inserted: BlockRepresentationsInsertion[];
+  moved: BlockRepresentationsRelocation[];
+  modified: BlockRepresentationsPatchEntry[];
 }
 
 export interface Block3dVortexKindsPatchEntry {
   id: string;
-  patch: Block3dVortexKindsPatch;
+  patch: Block3dVortexKindPatch;
 }
 
-export interface Block3dVortexKindsPatch {
-  replacement?: Block3dVortexKind;
+export interface Block3dVortexKindsRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Block3dVorticesDelta {
-  added: Block3dVortexTemplate[];
-  removed: string[];
-  patched: Block3dVorticesPatchEntry[];
-  reordered?: string[];
+export interface Block3dVortexKindsInsertion {
+  index: number;
+  row: Block3dVortexKind;
+}
+
+export interface Block3dVortexKindsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Block3dVortexKindsDelta {
+  removed: Block3dVortexKindsRemoval[];
+  inserted: Block3dVortexKindsInsertion[];
+  moved: Block3dVortexKindsRelocation[];
+  modified: Block3dVortexKindsPatchEntry[];
 }
 
 export interface Block3dVorticesPatchEntry {
   id: string;
-  patch: Block3dVorticesPatch;
+  patch: Block3dVortexTemplatePatch;
 }
 
-export interface Block3dVorticesPatch {
-  replacement?: Block3dVortexTemplate;
-}
-
-export interface Block3dCompatibilityDelta {
-  added: BlockCompatibilityRule[];
-  removed: string[];
-  patched: Block3dCompatibilityPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Block3dCompatibilityPatchEntry {
+export interface Block3dVorticesRemoval {
   id: string;
-  patch: Block3dCompatibilityPatch;
+  index: number;
 }
 
-export interface Block3dCompatibilityPatch {
-  replacement?: BlockCompatibilityRule;
+export interface Block3dVorticesInsertion {
+  index: number;
+  row: Block3dVortexTemplate;
 }
 
-export interface Block3dAttributesDelta {
-  added: BlockAttribute[];
-  removed: string[];
-  patched: Block3dAttributesPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Block3dAttributesPatchEntry {
+export interface Block3dVorticesRelocation {
   id: string;
-  patch: Block3dAttributesPatch;
+  from: number;
+  to: number;
 }
 
-export interface Block3dAttributesPatch {
-  replacement?: BlockAttribute;
+export interface Block3dVorticesDelta {
+  removed: Block3dVorticesRemoval[];
+  inserted: Block3dVorticesInsertion[];
+  moved: Block3dVorticesRelocation[];
+  modified: Block3dVorticesPatchEntry[];
 }
 
-export interface Block3dWindowsList {
-  values: Block3dWindowView[];
+export interface BlockCompatibilityPatchEntry {
+  id: string;
+  patch: BlockCompatibilityRulePatch;
 }
 
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class blockBlock3dDiffGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
+export interface BlockCompatibilityRemoval {
+  id: string;
+  index: number;
 }
 
-const blockBlock3dDiffGuardReject = (at: string, why: string): never => {
-  throw new blockBlock3dDiffGuardRefusal(at, why);
-};
-
-type blockBlock3dDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type blockBlock3dDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type blockBlock3dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const blockBlock3dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : blockBlock3dDiffGuardReject(at, "value is not an object");
-export const blockBlock3dDiffGuardArray = (value: unknown, at: string, bounds: blockBlock3dDiffGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return blockBlock3dDiffGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) blockBlock3dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) blockBlock3dDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const blockBlock3dDiffGuardString = (value: unknown, at: string, bounds: blockBlock3dDiffGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return blockBlock3dDiffGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) blockBlock3dDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) blockBlock3dDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) blockBlock3dDiffGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const blockBlock3dDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : blockBlock3dDiffGuardReject(at, "value is not a boolean"));
-export const blockBlock3dDiffGuardNumber = (value: unknown, at: string, bounds: blockBlock3dDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return blockBlock3dDiffGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) blockBlock3dDiffGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) blockBlock3dDiffGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const blockBlock3dDiffGuardInteger = (value: unknown, at: string, bounds: blockBlock3dDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? blockBlock3dDiffGuardNumber(value, at, bounds) : blockBlock3dDiffGuardReject(at, "value is not an integer");
-export const blockBlock3dDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : blockBlock3dDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const blockBlock3dDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : blockBlock3dDiffGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseBlock3dStringList(value: unknown, at = "$"): Block3dStringList {
-  const row = blockBlock3dDiffGuardObject(value, at);
-  return {
-    values: blockBlock3dDiffGuardArray(row["values"], `${at}.values`).map((item, index) => blockBlock3dDiffGuardString(item, `${at}.values[${index}]`)),
-  };
+export interface BlockCompatibilityInsertion {
+  index: number;
+  row: BlockCompatibilityRule;
 }
 
-export function parseBlock3dRepresentationsPatchEntry(value: unknown, at = "$"): Block3dRepresentationsPatchEntry {
-  const row = blockBlock3dDiffGuardObject(value, at);
-  return {
-    id: blockBlock3dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock3dRepresentationsPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityRelocation {
+  id: string;
+  from: number;
+  to: number;
 }
 
-export function parseBlock3dVortexKindsPatchEntry(value: unknown, at = "$"): Block3dVortexKindsPatchEntry {
-  const row = blockBlock3dDiffGuardObject(value, at);
-  return {
-    id: blockBlock3dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock3dVortexKindsPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockCompatibilityDelta {
+  removed: BlockCompatibilityRemoval[];
+  inserted: BlockCompatibilityInsertion[];
+  moved: BlockCompatibilityRelocation[];
+  modified: BlockCompatibilityPatchEntry[];
 }
 
-export function parseBlock3dVorticesPatchEntry(value: unknown, at = "$"): Block3dVorticesPatchEntry {
-  const row = blockBlock3dDiffGuardObject(value, at);
-  return {
-    id: blockBlock3dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock3dVorticesPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockAttributesPatchEntry {
+  id: string;
+  patch: BlockAttributePatch;
 }
 
-export function parseBlock3dCompatibilityPatchEntry(value: unknown, at = "$"): Block3dCompatibilityPatchEntry {
-  const row = blockBlock3dDiffGuardObject(value, at);
-  return {
-    id: blockBlock3dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock3dCompatibilityPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockAttributesRemoval {
+  id: string;
+  index: number;
 }
 
-export function parseBlock3dAttributesPatchEntry(value: unknown, at = "$"): Block3dAttributesPatchEntry {
-  const row = blockBlock3dDiffGuardObject(value, at);
-  return {
-    id: blockBlock3dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseBlock3dAttributesPatch(row["patch"], `${at}.patch`),
-  };
+export interface BlockAttributesInsertion {
+  index: number;
+  row: BlockAttribute;
 }
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock3dRepresentationsPatch(value:unknown,at="$"):Block3dRepresentationsPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockRepresentation(row.replacement)})}}
+export interface BlockAttributesRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock3dVortexKindsPatch(value:unknown,at="$"):Block3dVortexKindsPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:root.parseBlock3dVortexKind(row.replacement)})}}
+export interface BlockAttributesDelta {
+  removed: BlockAttributesRemoval[];
+  inserted: BlockAttributesInsertion[];
+  moved: BlockAttributesRelocation[];
+  modified: BlockAttributesPatchEntry[];
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock3dVorticesPatch(value:unknown,at="$"):Block3dVorticesPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock3dVortexTemplate(row.replacement)})}}
+export interface BlockAuthorsPatchEntry {
+  id: string;
+  patch: BlockAuthorPatch;
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock3dCompatibilityPatch(value:unknown,at="$"):Block3dCompatibilityPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockCompatibilityRule(row.replacement)})}}
+export interface BlockAuthorsRemoval {
+  id: string;
+  index: number;
+}
 
-/** 🧩️ Admit the canonical literal replacement record. */
-export function parseBlock3dAttributesPatch(value:unknown,at="$"):Block3dAttributesPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockAttribute(row.replacement)})}}
+export interface BlockAuthorsInsertion {
+  index: number;
+  row: BlockAuthor;
+}
+
+export interface BlockAuthorsRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface BlockAuthorsDelta {
+  removed: BlockAuthorsRemoval[];
+  inserted: BlockAuthorsInsertion[];
+  moved: BlockAuthorsRelocation[];
+  modified: BlockAuthorsPatchEntry[];
+}
+

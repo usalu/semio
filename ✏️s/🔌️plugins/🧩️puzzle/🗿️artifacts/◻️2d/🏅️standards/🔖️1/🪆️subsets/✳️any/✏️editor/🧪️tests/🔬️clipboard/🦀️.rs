@@ -16,7 +16,7 @@ fn edge_count(app: &Puzzle2dApp) -> usize {
 /// 🕹️ Selects exactly these ids at node granularity — the multi-select `select_id` has no shape for.
 fn select_ids(app: &mut Puzzle2dApp, ids: &[String]) {
     let targets: Vec<InteractionTarget> = ids.iter().map(|id| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.clone() }).collect();
-    let targets = serde_json::to_string(&targets).expect("serialize targets");
+    let targets = semio_framework_pack_json::to_json_string(&targets);
     dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).expect("select ids");
 }
 
@@ -32,7 +32,7 @@ fn clipboard_fragment(result: &InvocationResult) -> semio_framework_plugin::kern
 }
 
 fn paste_args(fragment: &semio_framework_plugin::kernel::ClipboardFragment) -> Value {
-    json!({ "fragment": serde_json::to_value(fragment).expect("serialize fragment") })
+    json!({ "fragment": semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(fragment))) })
 }
 
 fn notices(result: &InvocationResult) -> Vec<String> {
@@ -158,7 +158,7 @@ fn cut_refuses_a_locked_node_with_a_notice() {
 /// 🚪️ A fragment from another app's media class is refused rather than pasted.
 #[test]
 fn paste_refuses_a_foreign_media_type() {
-    let snapshot = json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [] });
+    let snapshot = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [] }))).expect("typed fixture admits"));
     let foreign = semio_framework_plugin::kernel::ClipboardFragment {
         schema: PUZZLE2D_CLIPBOARD_SCHEMA.into(),
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },

@@ -1,5 +1,32 @@
 use super::*;
 
+#[test]
+fn canonical_sealer_constructor_refusal_keeps_every_original_owner_without_heap_work() {
+    let demand = ArtifactStoreOneItemSealer::<u64, FixtureMutation>::constructor_demand();
+    assert_eq!(demand.capacity_bytes, std::mem::size_of::<Edit<FixtureMutation>>() + 3 * ARTIFACT_STORE_ONE_ITEM_ID_BYTES + ArtifactCanonicalEditEncoder::constructor_capacity_bytes());
+    assert!(demand.capacity_bytes <= 4096);
+    let mut original = (authority(), fixture().0, Arc::new(17u64), Arc::new(FixtureMutationRetirement) as Arc<dyn ArtifactOwnedValueRetirementFactory<FixtureMutation>>, Arc::new(FixtureSnapshotRetirement) as Arc<dyn SnapshotRetirementFactory<u64>>);
+    let authority_address = Arc::as_ptr(&original.0);
+    let post_address = Arc::as_ptr(&original.2);
+    let id_address = original.1.id.as_ptr();
+    for grant in [
+        RetainedCloneGrant { maximum_items: 0, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth, ..Default::default() },
+        RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes - 1, maximum_depth: demand.depth, ..Default::default() },
+        RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: 0, ..Default::default() },
+    ] {
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| ArtifactStoreOneItemSealer::admit(original.0, original.1, original.2, original.3, original.4, grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        original = match result {
+            Err((_, authority, edit, post, mutation, snapshot)) => (authority, edit, post, mutation, snapshot),
+            Ok(_) => panic!("canonical sealer admitted an incomplete constructor grant"),
+        };
+        assert_eq!(Arc::as_ptr(&original.0), authority_address);
+        assert_eq!(Arc::as_ptr(&original.2), post_address);
+        assert_eq!(original.1.id.as_ptr(), id_address);
+    }
+    println!("[DEBUG] canonical sealer zero/one-below/depth refusal preserves exact original edit/post/authority/factory owners with zero heap work");
+}
+
 /// 🔬️ `ScalarBytes::from_node`'s serde-free arms (`Null`/`Bool`/`I64`/`U64`/`I128`/`U128`/
 /// `F64`), byte-for-byte against `serde_json` — the direct proof this ticket's own
 /// `float-format-parity.md` calls for on the second real call site (`F32` intentionally
@@ -50,7 +77,7 @@ fn scalar_bytes_from_node_matches_serde_json_byte_for_byte() {
     }
 }
 
-#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
+#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue, semio_framework_value_derive::RetireOwned)]
 enum FixtureMutation {
     Replace { text: String, nested: Vec<String>, enabled: bool, amount: i64 },
 }
@@ -70,10 +97,10 @@ impl ArtifactCanonicalJson for FixtureMutation {
             _ => return Err(invalid_path()),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<&str, String> {
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
         match path {
-            [] if index == 0 => Ok("Replace"),
-            [0] => ["text", "nested", "enabled", "amount"].get(index).copied().ok_or_else(invalid_path),
+            [] if index == 0 => Ok("Replace".into()),
+            [0] => ["text", "nested", "enabled", "amount"].get(index).copied().map(Into::into).ok_or_else(invalid_path),
             _ => Err(invalid_path()),
         }
     }
@@ -106,67 +133,21 @@ fn canonical_edit_large_unicode_bytes_match_serde_and_language_neutral_oracle() 
     assert_eq!(hex, fixture["expectedDigest"].as_str().unwrap());
 }
 
-struct FixtureRetirement {
-    text: Option<String>,
-    nested: Vec<String>,
-    active: Option<ArtifactStoreStringRetirement>,
-}
-
-impl ErasedSnapshotRetirement for FixtureRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if items == 0 || bytes == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
-        }
-        if let Some(active) = self.active.as_mut() {
-            let step = active.close_step(items, bytes)?;
-            if matches!(step, SnapshotRetirementStep::Complete) {
-                assert!(active.terminal_is_empty());
-                self.active = None;
-            }
-            return Ok(if matches!(step, SnapshotRetirementStep::Complete) { SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
-        }
-        if let Some(text) = self.text.take().or_else(|| self.nested.pop()) {
-            self.active = Some(ArtifactStoreStringRetirement::new(text));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.text.is_none() && self.nested.is_empty() && self.active.is_none()
-    }
-}
-
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FixtureMutationRetirement;
 impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRetirement {
-    fn retire_owned(&self, value: FixtureMutation) -> Box<dyn ErasedSnapshotRetirement> {
-        let FixtureMutation::Replace { text, nested, .. } = value;
-        Box::new(FixtureRetirement { text: Some(text), nested, active: None })
+    fn retirement_birth_bytes(&self, _: &FixtureMutation) -> usize { semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FixtureMutation>() }
+    fn retire_owned(&self, value: FixtureMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, FixtureMutation)> {
+        semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
     }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct FixtureSnapshotRetirement;
-struct FixtureRootRetirement(Option<Arc<u64>>);
 impl SnapshotRetirementFactory<u64> for FixtureSnapshotRetirement {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<u64>) -> usize { std::mem::size_of::<FixtureRootRetirement>() }
-
-    fn retire(&self, snapshot: Arc<u64>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(FixtureRootRetirement(Some(snapshot)))
-    }
-}
-impl ErasedSnapshotRetirement for FixtureRootRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if items == 0 || bytes == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
-        }
-        if self.0.take().is_some() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
+    fn retirement_birth_bytes(&self, _: &Arc<u64>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<u64>() }
+    fn retire(&self, snapshot: Arc<u64>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<u64>)> {
+        semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, false)
     }
 }
 
@@ -185,23 +166,32 @@ pub(super) fn authority() -> Arc<ArtifactStoreOneItemLiveAuthority> {
     })
 }
 
+pub(super) fn admit_sealer<P, M>(authority: Arc<ArtifactStoreOneItemLiveAuthority>, edit: Edit<M>, post: Arc<P>, mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot: Arc<dyn SnapshotRetirementFactory<P>>) -> ArtifactStoreOneItemSealer<P, M> {
+    let demand = ArtifactStoreOneItemSealer::<P, M>::constructor_demand();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth, ..Default::default() };
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| authority.begin_one_item_seal(edit, post, mutation, snapshot, grant));
+    let (owner, receipt) = result.unwrap_or_else(|_| panic!("canonical sealer exact constructor admission"));
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, 0));
+    assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
+    assert!(receipt.fits(grant));
+    owner
+}
+
 fn sealer(authority: &Arc<ArtifactStoreOneItemLiveAuthority>) -> ArtifactStoreOneItemSealer<u64, FixtureMutation> {
-    authority.begin_one_item_seal(fixture().0, Arc::new(17), Arc::new(FixtureMutationRetirement), Arc::new(FixtureSnapshotRetirement))
+    admit_sealer(Arc::clone(authority), fixture().0, Arc::new(17), Arc::new(FixtureMutationRetirement), Arc::new(FixtureSnapshotRetirement))
 }
 
 fn close(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: usize) {
     sealer.begin_close();
-    assert!(matches!(sealer.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }).unwrap(), SnapshotRetirementStep::Blocked));
+    assert_eq!(sealer.close_step(RetainedCloneGrant::default()).unwrap().progress(), RetainedCloneProgress::default());
     for _ in 0..100_000 {
-        match sealer.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap() {
-            SnapshotRetirementStep::Complete => {
-                assert!(sealer.terminal_is_empty());
-                return;
-            }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= bytes);
-            }
-            SnapshotRetirementStep::Blocked => panic!("positive grant failed to retire retained owners"),
+        let demand = sealer.retirement_demands(bytes).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let step = sealer.close_step(grant).unwrap();
+        assert!(step.progress().fits(grant));
+        if matches!(step, RetainedCloneStep::Complete(_)) {
+            assert!(sealer.terminal_is_empty());
+            return;
         }
     }
     panic!("bounded retirement did not terminate");
@@ -210,7 +200,7 @@ fn close(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: u
 fn finish(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: usize) -> [u8; 32] {
     let mut previous = sealer.completed_bytes;
     for _ in 0..100_000 {
-        let step = sealer.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap();
+        let step = sealer.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
         assert!(sealer.completed_bytes - previous <= bytes as u64);
         previous = sealer.completed_bytes;
         if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(_)) {
@@ -226,10 +216,10 @@ fn canonical_sealer_tiny_grants_replay_and_cross_worker_transfer_preserve_exact_
     for bytes in [1, 2, 7, 256, 4096] {
         let authority = authority();
         let mut owner = sealer(&authority);
-        assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: bytes }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
-        owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap();
+        assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
         for _ in 0..19 {
-            owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap();
+            owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
         }
         let checkpoint: ArtifactStoreOneItemSealCheckpoint = serde_json::from_slice(&serde_json::to_vec(&owner.checkpoint()).unwrap()).unwrap();
         let mut replay = sealer(&authority);
@@ -254,7 +244,7 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     let authority = authority();
     let mut owner = sealer(&authority);
     for _ in 0..4 {
-        owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }).unwrap();
+        owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 7, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
     }
     let checkpoint = owner.checkpoint();
     for hostile in 0..5 {
@@ -276,7 +266,7 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     replay.restore_checkpoint(altered).unwrap();
     let mut rejected = false;
     for _ in 0..100 {
-        if replay.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).is_err() {
+        if replay.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).is_err() {
             rejected = true;
             break;
         }
@@ -306,11 +296,11 @@ fn canonical_sealer_cancellation_at_every_phase_retires_exact_owners_and_allows_
     for phase in 0..=6 {
         let mut owner = sealer(&authority);
         while owner.phase < phase {
-            owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 }).unwrap();
+            owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
         }
         owner.cancel();
         let checkpoint = owner.checkpoint();
-        assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         assert_eq!(owner.checkpoint(), checkpoint);
         close(&mut owner, 1);
     }
@@ -357,7 +347,7 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
             assert_eq!(actual, expected);
             let digest = CursorRevisionAccumulator::edit_digest(&edit);
             let authority = authority();
-            let mut owner = authority.begin_one_item_seal(edit, Arc::new(17), Arc::new(FixtureMutationRetirement), Arc::new(FixtureSnapshotRetirement));
+            let mut owner = admit_sealer(Arc::clone(&authority), edit, Arc::new(17), Arc::new(FixtureMutationRetirement), Arc::new(FixtureSnapshotRetirement));
             assert_eq!(finish(&mut owner, 4096), digest);
             close(&mut owner, 4096);
         }
@@ -366,27 +356,41 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
 
 #[test]
 fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
+    use semio_framework_value::{factory_ticket_demands, close_factory_ticket, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
+    let law = &fixture["authorityRetirement"];
     let mut authority = authority();
-    Arc::get_mut(&mut authority).unwrap().actor = "actor-🧵".into();
-    Arc::get_mut(&mut authority).unwrap().group_id = Some("group-✓".into());
-    Arc::get_mut(&mut authority).unwrap().stamped_edit_id = Some("edit-🎟️".into());
-    Arc::get_mut(&mut authority).unwrap().line = Some("alternative-🌿".into());
-    let mut retirement = authority.retire();
-    let mut released = 0;
-    assert!(matches!(retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked));
-    for _ in 0..100 {
-        match retirement.close_step(1, 1).unwrap() {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= 1);
-                released += released_bytes;
-            }
-            SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                assert_eq!(released, "actor-🧵".len() + "group-✓".len() + "edit-🎟️".len() + "alternative-🌿".len());
-                return;
-            }
-            SnapshotRetirementStep::Blocked => panic!("positive retirement grant blocked"),
+    let fields = ["actor", "group", "edit", "line"].map(|name| law[name].as_str().unwrap().to_owned());
+    let payload_bytes = fields.iter().map(String::len).sum::<usize>();
+    let [actor, group, edit, line] = fields;
+    let original = Arc::get_mut(&mut authority).unwrap();
+    original.actor = actor; original.group_id = Some(group); original.stamped_edit_id = Some(edit); original.line = Some(line);
+    let pointer = Arc::as_ptr(&authority);
+    let birth = authority.retirement_birth_demand();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: 0, maximum_depth: birth.depth };
+    for refusal in law["refusals"].as_array().unwrap() {
+        let denied = match refusal.as_str().unwrap() { "items" => RetainedCloneGrant { maximum_items: 0, ..grant }, "capacity" => RetainedCloneGrant { maximum_capacity_bytes: birth.capacity_bytes - 1, ..grant }, "depth" => RetainedCloneGrant { maximum_depth: 0, ..grant }, _ => unreachable!() };
+        let (result, allocated, released) = crate::test_allocation::observe_backing(|| authority.retire(denied));
+        let (_, returned) = result.err().unwrap(); authority = returned;
+        assert_eq!((allocated, released), (0, 0)); assert_eq!(Arc::as_ptr(&authority), pointer);
+    }
+    let (result, allocated, released) = crate::test_allocation::observe_backing(|| authority.retire(grant));
+    let (owner, receipt) = result.unwrap_or_else(|_| panic!("original authority frame admission"));
+    assert_eq!((allocated, released), (receipt.retained_capacity_bytes, 0)); assert!(receipt.fits(grant));
+    let mut owner = Some(owner); let mut physical_release = 0;
+    for _ in 0..1000 {
+        if owner.is_none() { assert!(physical_release >= payload_bytes + birth.capacity_bytes); eprintln!("[DEBUG] original authority birth/refusal preserves Arc custody; one-byte copy and whole physical releases match System"); return; }
+        let demand = factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap();
+        let actual = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_items: 0, ..actual }).unwrap());
+        assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default());
+        if demand.release_bytes > 0 {
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..actual }).unwrap());
+            assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default());
+            assert_eq!(factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap(), demand);
         }
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| close_factory_ticket(&mut owner, actual).unwrap());
+        assert!(step.progress().fits(actual)); assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); physical_release += released;
     }
     panic!("final authority strings did not retire");
 }

@@ -1,0 +1,33 @@
+# Current Artifact IO Audit After Draw
+
+Bounded read-only source audit. Read root, s, and stdio AGENTS.md. Used rg and direct reads; no production changes, native builds, runtime execution, or test claims. Existing Draw and Inference reports and concurrent BlockList, VCS, and Infinite Board work are outside the new findings below. Paths below are relative to `/Users/ueli/Documents/semio`.
+
+## Confirmed MP3 Metadata Representation Replay
+
+Let `M` denote `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any`.
+
+The outstanding trailer field is currently named `Id3v1Tag.raw`, not `raw128`. `M/🧬️schema/📸️snapshot/🦀️.rs:30–38` explicitly declines decoding title, artist, album, year, comment, and genre and exposes a `Vec<u8>`, with native value and DSL derives and base64 DSL annotation. TypeScript exposes `raw:number[]` at its snapshot line 4; `parseId3v1Tag` at line 27 only checks octets, with no 128-byte or TAG structure check. This is stored representation bytes posing as the complete semantic metadata value.
+
+Reachability is concrete: `M/🧬️schema/🧬️mutations/🔖️set-id3v1/🦀️.rs:9,15–20` accepts the raw-bearing tag, clones it into `diff_set_id3v1`, and constructs inverse from base metadata. `M/🧬️schema/🔺️diff/🦀️.rs:23,34–35,54–57,77–78` exposes it publicly, applies it verbatim, compares it as semantic state, and preserves it in inverse/between. These semantic functions do not themselves call binary codecs; the issue is representation replay through their public values. Native `M/🚪️io/🦀️.rs:296–299` captures the trailing 128 bytes; `encode_mp3` lines 322–323 copies them unchanged. The incremental encoder lines 446–452 also emits `tag.raw`; the later retained serializer line 783 moves that same representation into its replay cursor. Moving only the codec functions cannot close this boundary.
+
+ID3v2 repeats the same problem for known textual metadata. `M/🧬️schema/📸️snapshot/🦀️.rs:6–15` exposes every `Id3Frame.data` as uninterpreted bytes, explicitly including text encoding bytes. `Id3v2Tag.frames` lines 22–27 contains those raw-bearing records. TypeScript snapshot lines 2 and 23 mirrors this. `M/🧬️schema/🧬️mutations/🏷️set-id3v2/🦀️.rs` and `Mp3Diff.id3v2` clone and restore the entire value. Native `parse_id3v2` lines 115–141 reads id/flags and copies frame body; `encode_id3v2` lines 148–161 reconstructs frame headers but replays `frame.data`. Incremental encoder lines 420–421 and retained encoder line 810 replay the same body. Thus typed outer records do not mean text metadata is decoded.
+
+The explicit Semio audio import at `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️.rs:36–44` separately interprets ID3v2 bytes through `decode_id3_text` (line 75) and turns ID3v1 into a synthetic `id3v1.raw` hex string. This is explicit IO, excluded as a semantic-codec-call violation, but it demonstrates that the bytes represent metadata which downstream code has to rediscover. It does not provide a canonical typed ID3 metadata contract.
+
+### Required Closure Scope
+
+Define admitted typed ID3v1 metadata and typed known ID3v2 text/content variants in snapshot schema first; choose and validate exact supported versions/frame semantics. Keep genuinely unknown/binary ID3 frame bodies as an explicit opaque variant, rather than calling all metadata opaque. Decode/encode fixed-width text, text encodings, markers, and native framing inside MP3 IO. Mutations/diffs and inverse operations must carry those admitted typed values, and native serialization must reconstruct metadata from them. Do not carry original padding, encoding markers, or complete trailer bytes as semantic state.
+
+Update the Rust and TypeScript snapshot/parser APIs; artifact barrel exports; artifact/snapshot/diff JSON, GraphQL, and protobuf contracts; per-mutation schemas and fixture payloads; native binary protocol (`M/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio:26,46–47` currently has ID3 data/raw bytes); text/binary/JSON/SQLite snapshot/diff/mutation codecs; retained/incremental IO cursors; audio import bridge; and oracles. SQLite currently persists/reconstructs trailer octets (`M/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs:51`), so it is part of the contract update. Language-agnostic vectors should verify semantically equivalent differently encoded metadata produces equal values/diffs and that mutation/inverse replay uses fields rather than original representations, with a third-party ID3 oracle. No such tests were run in this audit.
+
+## Legitimate Opaque Payload Distinction
+
+`Mp3Frame.payload` (`M/🧬️schema/📸️snapshot/🦀️.rs:44,72`) is deliberately compressed MPEG audio content without Huffman/MDCT support. Native decode reads header fields, and duration inference consumes those typed headers; the retained compressed payload is an honest container-level value. This is distinct from title/artist/tag metadata which the current schema claims to represent but retains encoded bytes. Similarly the sampled `Mp4Sample.data` (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:198–207`) explicitly represents compressed AVCC sample payload with typed duration, CTS, and sync data; it is not evidence of the ID3 metadata defect.
+
+`PngAncillaryChunk.data` (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:202`) and `ObjUnknownStatement.raw` (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🦀️.rs:117–126`) were encountered as explicit unknown-content retention. Their existence alone is not proof that admitted known semantic metadata is encoded. No full ancillary/unknown retention reachability audit was performed.
+
+## Excluded Matches and Limit
+
+OBJ diff IO imports are cfg(test) (`…/obj/…/🧬️schema/🔺️diff/🦀️.rs:31–36`) and used by test round trips at lines 1388–1395. glTF `ordered_attr_map` IO import is cfg(test) (`…/gltf/…/🧬️schema/📸️snapshot/🦀️.rs:6–7`), with production custom mapping working on DslValue directly. These are not new production boundary violations. OBJ `demo_obj_snapshot` (`…/obj/…/🧬️schema/🦀️.rs:187–190`) uses native decode/encode to stabilize an example; classified as example/diagnostic construction, not mutation or inference behavior.
+
+The bounded stdio schema scan did not establish another production mutation/diff/inference native codec call after excluding explicit IO, cfg(test), conformance oracles, comments, and examples. This is not an exhaustive monorepo guarantee; public raw/bytes hits in other formats require their own supported-subset and call-reachability inspection before being classified as defects.

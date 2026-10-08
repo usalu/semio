@@ -7,7 +7,7 @@ fn svg_scene_fixture_preserves_paint_geometry_and_text() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let nodes: Vec<DrawingSceneNode> = semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let view_box: [f64;4] = serde_json::from_value(fixture["viewBox"].clone()).unwrap();
-    let output = drawing_scene_to_svg(&nodes,view_box).unwrap();
+    let output = drawing_scene_to_svg(&nodes,view_box,&serde_json::from_value(fixture["assets"].clone()).unwrap()).unwrap();
     let root = svg_document_to_typed(&parse_svg_xml(&output).unwrap()).unwrap();
     let SvgElement::Svg { children,view_box:Some(view_box),.. } = root else { panic!("SVG root") };
     assert_eq!([view_box.min_x,view_box.min_y,view_box.width,view_box.height],[-20.0,-10.0,200.0,100.0]);
@@ -29,8 +29,8 @@ fn svg_scene_fixture_preserves_paint_geometry_and_text() {
 
 #[test]
 fn svg_refuses_invalid_view_box_and_transform() {
-    assert!(drawing_scene_to_svg(&[],[0.0,0.0,0.0,10.0]).is_err());
-    assert!(drawing_scene_to_svg(&[],[f64::NAN,0.0,10.0,10.0]).is_err());
+    assert!(drawing_scene_to_svg(&[],[0.0,0.0,0.0,10.0],&Default::default()).is_err());
+    assert!(drawing_scene_to_svg(&[],[f64::NAN,0.0,10.0,10.0],&Default::default()).is_err());
 }
 
 
@@ -50,7 +50,7 @@ fn svg_refuses_nonfinite_geometry_and_paint() {
             "image" => node.image.as_mut().unwrap().width = value,
             field => panic!("unknown numeric fixture field {field}"),
         }
-        assert!(drawing_scene_to_svg(&nodes,[-20.0,-10.0,200.0,100.0]).unwrap_err().contains("finite"));
+        assert!(drawing_scene_to_svg(&nodes,[-20.0,-10.0,200.0,100.0],&Default::default()).unwrap_err().contains("finite"));
     }
 }
 
@@ -72,7 +72,7 @@ fn svg_preserves_shared_isolated_compositing_hierarchies() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let output=drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0]).unwrap();
+        let output=drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0],&Default::default()).unwrap();
         let root=svg_document_to_typed(&parse_svg_xml(&output).unwrap()).unwrap();
         let mut actual=std::collections::BTreeMap::new();visit(&root,&mut Vec::new(),&mut actual);
         let expected=nodes.iter().map(|node|(node.id.clone(),node.groups.iter().map(|group|group.id.clone()).collect::<Vec<_>>())).collect::<std::collections::BTreeMap<_,_>>();
@@ -122,7 +122,7 @@ fn svg_emits_constant_gradients_as_solid_paint_and_rejects_invalid_paint() {
     for case in cases.as_array().unwrap() {
         let fill:FillStyle=serde_json::from_value(case["fill"].clone()).unwrap();
         nodes[0].fill=Some(fill.clone());
-        let output=drawing_scene_to_svg(&nodes,[0.0,0.0,16.0,16.0]);
+        let output=drawing_scene_to_svg(&nodes,[0.0,0.0,16.0,16.0],&Default::default());
         if case["error"]==true {assert!(output.is_err(),"{}",case["name"]);continue;}
         let constant=match &fill {
             FillStyle::Solid {color}=>Some(*color),

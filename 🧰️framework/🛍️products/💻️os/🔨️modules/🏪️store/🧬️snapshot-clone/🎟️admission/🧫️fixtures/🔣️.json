@@ -1,0 +1,12 @@
+{
+  "capacity": [128, 96, 112, 0],
+  "depth": 1,
+  "maximum": 4096,
+  "grants": [
+    {"items": 0, "capacity": 128, "depth": 1, "accepted": false},
+    {"items": 1, "capacity": 127, "depth": 1, "accepted": false},
+    {"items": 1, "capacity": 128, "depth": 0, "accepted": false},
+    {"items": 1, "capacity": 128, "depth": 1, "accepted": true}
+  ],
+  "closure": ["clone-cursor", "edit-cursor", "sealer", "inverse", "copied", "mutation-source", "snapshot-source", "publication-authority", "mutation-factory", "snapshot-factory"]
+}

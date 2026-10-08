@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "installedTargetIds": [
+    "draw",
+    "puzzle"
+  ],
+  "installedVariants": [
+    "draw",
+    "puzzle2d",
+    "puzzle3d",
+    "puzzle5d"
+  ],
+  "hostFixturePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📖️generated-projection.json",
+  "hostVariant": "s",
+  "missingVariant": "missing-host",
+  "sourceCensus": {
+    "roots": [
+      "🧰️framework",
+      "🌎️hub",
+      "✏️s"
+    ],
+    "componentKinds": [
+      "plugin",
+      "extension"
+    ],
+    "deploymentField": "deployment-directory",
+    "maxFiles": 4096,
+    "maxBytes": 2097152,
+    "maxMs": 30000,
+    "maxWork": 262144
+  }
+}

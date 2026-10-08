@@ -23,7 +23,7 @@ const variant = (value: string): string => value.split("-").map((part) => `${par
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["--configLoader", "runner", ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -31,7 +31,7 @@ class FixtureScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     process.env.CAD_GENERATE_STEP_FIXTURES = "1";
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["--configLoader", "runner", ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

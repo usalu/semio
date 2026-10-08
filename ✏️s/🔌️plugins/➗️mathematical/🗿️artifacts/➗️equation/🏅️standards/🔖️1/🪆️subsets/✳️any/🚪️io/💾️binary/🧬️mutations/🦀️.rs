@@ -40,14 +40,12 @@ use crate::schema::mutations::EquationMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient::ChangeCoefficient,
-    geometry::schema::mutations::{insert_point::InsertPoint, move_points::MovePoints, remove_point::RemovePoint, replace_points::ReplacePoints, set_point_positions::{EquationPointPosition, SetPointPositions}},
+    geometry::schema::mutations::{insert_point::InsertPoint, move_points::MovePoints, remove_point::RemovePoint, set_point_positions::{EquationPointPosition, SetPointPositions}},
     graph::schema::mutations::{
         change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode, delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode,
-        move_nodes::MoveNodes, replace_graph::ReplaceGraph, set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
+        move_nodes::MoveNodes, set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
     },
 };
-use crate::{EquationGraph, EquationPoint};
-use crate::standards::v1::subsets::any::io::text::mutations::{enc_graph,dec_graph};
 fn write_opt_usize_bin(out: &mut Vec<u8>, index: Option<usize>) {
     match index {
         Some(value) => {
@@ -95,24 +93,11 @@ fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>
     }
 }
 
-fn write_points_bin(out: &mut Vec<u8>, points: &[EquationPoint]) {
-    store::pack_rt::write_varint_u64(out, points.len() as u64);
-    for point in points {
-        out.extend_from_slice(&point.x.to_le_bytes());
-        out.extend_from_slice(&point.y.to_le_bytes());
-    }
-}
-
-fn read_points_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<EquationPoint>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    (0..count).map(|_| Ok(EquationPoint { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? })).collect()
-}
 impl protocol::OpBinary for EquationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             EquationMutation::ChangeGraphDirected(_) => 0,
             EquationMutation::UpdateGraphAlgorithm(_) => 1,
-            EquationMutation::ReplaceGraph(_) => 2,
             EquationMutation::CreateNode(_) => 3,
             EquationMutation::DeleteNode(_) => 4,
             EquationMutation::DeleteNodes(_) => 5,
@@ -120,7 +105,6 @@ impl protocol::OpBinary for EquationMutation {
             EquationMutation::MoveNode(_) => 7,
             EquationMutation::ConnectNodes(_) => 8,
             EquationMutation::DisconnectNodes(_) => 9,
-            EquationMutation::ReplacePoints(_) => 10,
             EquationMutation::InsertPoint(_) => 11,
             EquationMutation::RemovePoint(_) => 12,
             EquationMutation::MovePoints(_) => 13,
@@ -136,7 +120,6 @@ impl protocol::OpBinary for EquationMutation {
                 write_str_bin(&mut out, &p.new_algorithm);
                 write_opt_str_bin(&mut out, &p.new_algorithm_seed);
             }
-            EquationMutation::ReplaceGraph(p) => write_str_bin(&mut out, &enc_graph(&p.graph)),
             EquationMutation::CreateNode(p) => {
                 write_str_bin(&mut out, &p.id);
                 write_str_bin(&mut out, &p.label);
@@ -167,7 +150,6 @@ impl protocol::OpBinary for EquationMutation {
                 write_opt_usize_bin(&mut out, p.index);
             }
             EquationMutation::DisconnectNodes(p) => write_str_bin(&mut out, &p.id),
-            EquationMutation::ReplacePoints(p) => write_points_bin(&mut out, &p.points),
             EquationMutation::InsertPoint(p) => {
                 store::pack_rt::write_varint_u64(&mut out, p.index as u64);
                 out.extend_from_slice(&p.x.to_le_bytes());
@@ -227,10 +209,6 @@ impl protocol::OpBinary for EquationMutation {
                 let new_algorithm_seed = read_opt_str_bin(&mut reader).map_err(|e| malformed("new_algorithm_seed", reader.position(), e))?;
                 Ok(EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm, new_algorithm_seed }))
             }
-            2 => {
-                let text = read_str_bin(&mut reader).map_err(|e| malformed("graph", reader.position(), e))?;
-                Ok(EquationMutation::ReplaceGraph(ReplaceGraph { graph: dec_graph(&text).map_err(|e| malformed("graph", reader.position(), e))? }))
-            }
             3 => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let label = read_str_bin(&mut reader).map_err(|e| malformed("label", reader.position(), e))?;
@@ -264,7 +242,6 @@ impl protocol::OpBinary for EquationMutation {
                 Ok(EquationMutation::ConnectNodes(ConnectNodes { id, source, target, index }))
             }
             9 => Ok(EquationMutation::DisconnectNodes(DisconnectNodes { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            10 => Ok(EquationMutation::ReplacePoints(ReplacePoints { points: read_points_bin(&mut reader).map_err(|e| malformed("points", reader.position(), e))? })),
             11 => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("index", reader.position(), e.to_string()))? as usize;
                 let x = reader.read_f64_le().map_err(|e| malformed("x", reader.position(), e.to_string()))?;

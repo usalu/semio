@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutation/set-revision-history/schema.json",
+  "title": "SetRevisionHistory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "revisionHistory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRevisionHistory",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "revisionHistory": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgRevisionHistory",
+      "x-semio-ui": {
+        "label": {
+          "en": "Revision history",
+          "de": "Revisionsverlauf"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

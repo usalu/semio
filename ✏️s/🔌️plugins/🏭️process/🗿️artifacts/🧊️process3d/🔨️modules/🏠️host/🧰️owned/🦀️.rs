@@ -244,7 +244,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
         match self.phase {
             Process3dStoreInitializationPhase::BindGenesis => {
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 drop(self.census.take());
                 self.phase = Process3dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
@@ -268,7 +268,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             Process3dStoreInitializationPhase::CensusHistory { edit, mutation } => {
                 let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    let initial_machines = envelope.vcs.genesis.snapshot().workshop.machines.len();
+                    let initial_machines = envelope.vcs.genesis.facts().snapshot().workshop.machines.len();
                     let machine_capacity = match initial_machines.checked_add(self.machine_growth) {
                         Some(value) if value <= PROCESS3D_MAXIMUM_DOMAIN_ITEMS => value,
                         _ => {
@@ -306,7 +306,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 }
             }
             Process3dStoreInitializationPhase::Census => {
-                let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.snapshot();
+                let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.facts().snapshot();
                 match self.census.as_mut().expect("Process3d census retained").step(source, cx) {
                     Ok(true) => self.phase = Process3dStoreInitializationPhase::BindGenesis,
                     Ok(false) => {}
@@ -314,7 +314,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 }
             }
             Process3dStoreInitializationPhase::CloneInitial => {
-                let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.snapshot();
+                let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.facts().snapshot();
                 let complete = match self.clone_cursor.as_mut().expect("Process3d clone retained").step(source, cx) {
                     Ok(value) => value,
                     Err(code) => {
@@ -413,7 +413,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 };
                 if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
                     self.resume_phase = Some(self.phase);
-                    let capacity = self.envelope.as_ref().expect("retained genesis").vcs.genesis.snapshot().workshop.machines.len() + self.machine_growth;
+                    let capacity = self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot().workshop.machines.len() + self.machine_growth;
                     *self.clone_cursor = Some(Process3dSnapshotCopyCursor::new(capacity));
                     self.phase = Process3dStoreInitializationPhase::CloneInitial;
                     cx.consume_fuel(1);

@@ -78,28 +78,6 @@ pub(crate) fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
-    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
-    text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
-    if !hex.len().is_multiple_of(2) {
-        return Err("setSnapshot: odd hex length".to_string());
-    }
-    let mut bytes = Vec::with_capacity(hex.len() / 2);
-    let mut i = 0usize;
-    while i < hex.len() {
-        let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| format!("setSnapshot: invalid hex: {e}"))?;
-        bytes.push(byte);
-        i += 2;
-    }
-    let text = String::from_utf8(bytes).map_err(|e| format!("setSnapshot: utf8 decode: {e}"))?;
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("setSnapshot: dsl decode: {e}"))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_semio_mutation(m: &SemioMutation) -> String {
     let tag = subset_mutation_tag(m);
     match m {

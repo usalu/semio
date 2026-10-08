@@ -1,0 +1,60 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/♻️retirement/🧬️schema/🖱️physical-job-close/🔣️.json",
+      "beforeSha256": "66ec0d56eb975e45c31c8d84963ae3a8471f613c0351ba005221493215014dd5",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "relocated wholefixture schema or reader"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/♻️retirement/🧬️schema/🔣️.json",
+      "beforeSha256": "cf7ee0da64d5465307ac1f751697ab7d0e6d1d6e1eeed013ce735f06e5c09f2e",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "relocated wholefixture schema or reader"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖼️raster-ownership/♻️retirement/🧬️schema/🔣️.json",
+      "beforeSha256": "9fc53ec2b94c5e90218dd159d37bc569fec307aca7ff1bbbb00fed3020bbf461",
+      "afterSha256": null,
+      "action": "removed",
+      "qualification": "relocated wholefixture schema or reader"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/🟦️.ts",
+      "beforeSha256": "089fd48a5094b54707fd50ffd2575915cbf972c9b0d06a7a346f0154cfbd77c7",
+      "afterSha256": "f8460ae157e33813fac63622765e80e5ddd538b194fa450221e0275b40626d0b",
+      "action": "updated",
+      "qualification": "relocated wholefixture schema or reader"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "beforeSha256": "4e73ef8ec1d2dea8439a45baed8babe116413a78fbf40b764d51f82a194eb332",
+      "afterSha256": "1f004ca7c83d1bc54557ebabe373ef3e44ffaca6648e17373d5f544b8ef3e432",
+      "action": "updated",
+      "qualification": "relocated wholefixture schema or reader"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "969b2b6dc92c305dfa50655dbf8c418fe25bcb2f15b2d66bdcb849df655dcaf3",
+      "afterSha256": "2e412a6bc521387c3e37de08d448790e6988d5c6896ab3d149c257169c96b49d",
+      "action": "updated",
+      "qualification": "Root bounded current-corpus facet only"
+    }
+  ],
+  "plainObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📦️prepared-close/🔣️.json",
+      "sha256": "8b808855e0516c2931b3afcfbfee2f6c24242c100e4506a009df2694b6760a4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json",
+      "sha256": "f3a2b52efecf9f4ef72d06db295140de3d76456a4aa96f967d7d58956c9efdc1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json",
+      "sha256": "d7706f73aacea232ad8aff7ca74f6fb745fd5ca3d8ac2e205b4ae561fc6d6869"
+    }
+  ]
+}

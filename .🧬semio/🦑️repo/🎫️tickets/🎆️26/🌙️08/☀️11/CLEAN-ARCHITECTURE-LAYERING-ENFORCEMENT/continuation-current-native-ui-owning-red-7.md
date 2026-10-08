@@ -1,0 +1,5 @@
+# Native UI Owning Red 7
+
+The literal registered UI7 route physically closed outer Nx/Bun 1 and full owning Cargo 101 before runtime. All 1,219 selected bodies and producer were exact at terminal observation. The actual UI target reported nine compiler errors from raster receiving ports: retained grant/progress/step names used the removed Value root namespace, and with_rows accessed limits on Option<Arc<PoolInner>>.
+
+After terminal closure, the actual current peer bodies already corrected all nine paths to retained_clone and borrowed the retained inner owner before limits access. This lane made zero correction writes for these errors. All nine selected post-terminal peer advances (three raster/Prepared sources plus six Value schema/law files) are preserved with complete captured, terminal and current bodies in native-ui-red-7-post-terminal-peer-full-pairs.json. No restoration or aliases were added. The original raster final-pool allocator law and its genuine full physical demands are preserved for fresh UI8. UI7 did not execute runtime laws and does not accept the physical receiving closure.

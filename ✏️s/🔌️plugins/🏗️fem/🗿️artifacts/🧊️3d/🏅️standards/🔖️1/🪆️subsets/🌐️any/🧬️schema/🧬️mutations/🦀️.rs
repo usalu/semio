@@ -22,7 +22,7 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// analysis-settings facet). Every generic `Set*`/`Remove*` variant this facet used to carry —
 /// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `ArtifactStore::reset` /
-/// `Effect::LoadDocument`, see `Fem3dPlayApp::whole_document_operation` returning `None` now and
+/// `Effect::LoadDocument`, see
 /// `editor::fem3d::reset_document_effect`).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -332,16 +332,6 @@ pub type Fem3dEnvelope = ArtifactEnvelope<Fem3dSnapshot, Fem3dMutation>;
 pub type Fem3dStore = ArtifactStore<Fem3dSnapshot, Fem3dMutation>;
 
 //#region 🔖️GenericDelegates
-/// 🌉️ Thin delegates to the derive-generated `protocol::Mutation` impl — kept because
-/// `🏗️builder/🦀️.rs` (an artifact-generic caller, no per-variant knowledge) and
-/// `📝️text/🦀️.rs`'s re-export both call these by name.
-pub fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshot, mutation: &Fem3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(snapshot, mutation)?;
-
-    *snapshot = next;
-    Ok(())
-}
-
 pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
     Ok({
     mutation.inverse(snapshot)?

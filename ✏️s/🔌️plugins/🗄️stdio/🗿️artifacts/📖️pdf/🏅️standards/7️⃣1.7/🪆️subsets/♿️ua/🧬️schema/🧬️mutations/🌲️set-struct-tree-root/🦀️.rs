@@ -2,7 +2,7 @@
 
 use super::remove_struct_tree_root::RemoveStructTreeRoot;
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -23,12 +23,14 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetStructTreeRoot {
         MutationOutcome::new(diff::graph_edit(support::struct_tree_root_rows(base, &self.placements, self.entry_index)))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![PdfUaMutation::RemoveStructTreeRoot(RemoveStructTreeRoot {})]
-    
-    })())
-}
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+        Ok({
+            match support::catalog_entry(base, "StructTreeRoot") {
+                Some(entry) => vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: entry.as_ref().map(|root| support::placements_of(base, &[root])).unwrap_or_default(), entry_index: None })],
+                None => vec![PdfUaMutation::RemoveStructTreeRoot(RemoveStructTreeRoot {})],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set PDF/UA structure tree root", "PDF/UA-Strukturbaumwurzel setzen")

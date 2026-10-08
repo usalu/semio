@@ -24,7 +24,7 @@ pub(crate) fn fill_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlay
     if request.tool_id != TOOL_ID {
         return Ok(None);
     }
-    let document: Puzzle5dDocument = serde_json::from_value(request.snapshot.value().clone()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;
+    let document: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_document_from_snapshot(request.snapshot.typed()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;
     let provisional = puzzle3d_ops(request.provisional)?;
     let board = Puzzle5dPlannerBoard::new(&document, request.provisional)?;
     let snapshot = Arc::new(puzzle3d_snapshot(&document, puzzle5d_authored_kind_catalogs(&request.snapshot)?)?);
@@ -73,7 +73,7 @@ fn puzzle3d_ops(provisional: &[Puzzle5dMutation]) -> Result<Vec<Puzzle3dMutation
 /// 🧊️ One schema target volume as the editor's own document type — the same `serde_json` hop
 /// `editor_part` takes for a part, so the planner bridge reads one shape whichever side minted it.
 fn editor_target_volume(volume: &crate::Puzzle5dTargetVolume) -> Result<crate::editor::puzzle5d::Puzzle5dTargetVolume, Fault> {
-    serde_json::from_value(serde_json::Value::from(&semio_framework_value::ToValue::to_value(volume))).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
+    <crate::editor::puzzle5d::Puzzle5dTargetVolume as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(volume)).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
 }
 
 /// 📏️ A schema-side `Puzzle5dScale` as the planner's own scale union.

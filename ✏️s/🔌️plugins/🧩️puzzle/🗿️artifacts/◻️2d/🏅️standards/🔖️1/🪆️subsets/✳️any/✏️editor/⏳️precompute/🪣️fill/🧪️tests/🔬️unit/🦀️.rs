@@ -7,13 +7,13 @@ use geo::{coord, Intersects, Rect};
 use semio_framework_job::{drive_step, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
 use semio_framework_plugin::{DslValue, PluginApp};
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp};
-use serde_json::json;
+use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
 
 const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
 
 fn snapshot() -> Value {
-    let snapshot: Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run snapshot parses");
+    let snapshot: Value = semio_framework_pack_json::from_json_str(FILL_RUN_FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fill run snapshot parses");
     assert_eq!(snapshot["schema"], "s.puzzle2d.fill-run.v1");
     snapshot
 }
@@ -44,7 +44,7 @@ fn example(spec: &Value) -> Arc<Puzzle2dPlaySnapshot> {
     if spec["detachEdges"].as_bool() == Some(true) {
         document["edges"] = json!([]);
     }
-    Arc::new(Puzzle2dPlaySnapshot::new(document))
+    Arc::new(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(document))).expect("typed fixture admits")))
 }
 
 fn identity(run: u64, generation: u32) -> ToolRunIdentity {
@@ -178,7 +178,7 @@ fn run(document: &Arc<Puzzle2dPlaySnapshot>, run: u64, requested: u64) -> RunLog
 }
 
 fn verdict_id(verdict: ToolRunVerdict) -> String {
-    serde_json::to_value(verdict).expect("verdict serializes").as_str().unwrap_or_default().to_string()
+    semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(verdict))).as_str().unwrap_or_default().to_string()
 }
 
 fn reason_id(code: u16) -> &'static str {
@@ -260,7 +260,7 @@ fn fill_run_job_places_only_inside_visible_target_regions() {
     let painted = |hidden: bool| {
         let mut document = base.value().clone();
         document["targetRegions"] = json!([{ "id": "region-1", "x": bounds[0], "y": bounds[1], "width": half * 2.0, "height": half * 2.0, "hidden": hidden, "locked": false }]);
-        Arc::new(Puzzle2dPlaySnapshot::new(document))
+        Arc::new(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(document))).expect("typed fixture admits")))
     };
     let (run_id, requested) = (number(&vector["run"]), number(&vector["requested"]));
     let inside = |log: &RunLog| {
@@ -463,7 +463,7 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let Puzzle2dMutation::CreateNode(create) = &provisional[conflicted * FILL_RUN_OPS_PER_PLACEMENT] else { panic!("create_node") };
     let mut head = document.value().clone();
     head["nodes"].as_array_mut().expect("nodes").push(json!({ "id": "intruder", "shape": "circle", "x": create.node.x, "y": create.node.y, "radius": 1.0, "handles": [] }));
-    let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot::new(head)), &provisional, Some(&checkpoint), 0.0);
+    let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(head))).expect("typed fixture admits"))), &provisional, Some(&checkpoint), 0.0);
     let mut conflict = RunLog::continuing(&base.ops);
     run_to_complete(&mut conflict_job, INTERACTIVE_LANE_FUEL, &mut conflict);
     let kept = conflicted * FILL_RUN_OPS_PER_PLACEMENT;

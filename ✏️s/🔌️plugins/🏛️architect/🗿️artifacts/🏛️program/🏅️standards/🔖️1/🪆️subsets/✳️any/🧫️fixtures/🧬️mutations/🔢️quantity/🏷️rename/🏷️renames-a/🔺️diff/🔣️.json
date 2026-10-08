@@ -8,9 +8,10 @@
   "functions": null,
   "elements": null,
   "quantities": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "quantity-requirement-a",
         "patch": {
@@ -44,8 +45,7 @@
           "varianceNotes": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "relationships": null,
   "adjacencies": null,

@@ -137,7 +137,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
+    
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_csv::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::{encode_csv};
@@ -158,7 +158,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        apply_csv_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let output = encode_csv(&snapshot).into_bytes();
         let projection = project_csv_grid(&output, snapshot.has_header)?;
         Ok(Outcome::with_raw(output, projection))
@@ -170,9 +170,9 @@ mod subject {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let undo = mutation_inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_csv_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_csv_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         let output = encode_csv(&snapshot).into_bytes();
         let projection = project_csv_grid(&output, snapshot.has_header)?;

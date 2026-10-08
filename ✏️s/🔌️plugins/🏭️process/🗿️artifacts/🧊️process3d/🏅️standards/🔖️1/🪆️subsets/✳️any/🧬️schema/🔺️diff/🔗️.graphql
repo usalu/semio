@@ -7,34 +7,72 @@ type Process3dDiff {
   stockPose: Pose @state(class: ARTIFACT)
   stockPayload: Stock @state(class: ARTIFACT)
   stockSolid: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
-  steps: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   stepPayloads: Process3dStepsDelta @state(class: ARTIFACT)
-  toolSolids: Process3dToolSolidsDelta @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
 }
 
 type Process3dMachinesDelta {
-  added: [WorkshopMachine!]!
-  removed: [String!]!
-  patched: [Process3dMachinePatch!]!
-  reordered: [String!]
+  removed: [Process3dMachinesRemoval!]!
+  inserted: [Process3dMachinesInsertion!]!
+  moved: [Process3dMachinesRelocation!]!
+  modified: [Process3dMachinesModification!]!
+}
+
+type Process3dMachinesModification {
+  id: String!
+  patch: Process3dMachinePatch!
+}
+
+type Process3dMachinesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Process3dMachinesInsertion {
+  index: Int!
+  row: WorkshopMachine!
+}
+
+type Process3dMachinesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type Process3dMachinePatch {
-  id: String!
   label: String
   iconId: String
   capabilities: [Capability!]
 }
 
 type Process3dStepsDelta {
-  added: [ProcessStep!]!
-  removed: [String!]!
-  patched: [Process3dStepPatch!]!
-  reordered: [String!]
+  removed: [Process3dStepsRemoval!]!
+  inserted: [Process3dStepsInsertion!]!
+  moved: [Process3dStepsRelocation!]!
+  modified: [Process3dStepsModification!]!
+}
+
+type Process3dStepsModification {
+  id: String!
+  patch: Process3dStepPatch!
+}
+
+type Process3dStepsRemoval {
+  id: String!
+  index: Int!
+}
+
+type Process3dStepsInsertion {
+  index: Int!
+  row: ProcessStep!
+}
+
+type Process3dStepsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type Process3dStepPatch {
-  id: String!
   label: String
   enabled: Boolean
   measure: ProcessMeasure
@@ -42,12 +80,3 @@ type Process3dStepPatch {
 }
 
 type Process3dOptionalOrigin { value: StepOrigin }
-
-type Process3dToolSolidsDelta {
-  added: [ArtifactLink!]!
-  removed: [String!]!
-  patched: [Process3dToolSolidPatch!]!
-  reordered: [String!]
-}
-
-type Process3dToolSolidPatch { childId: String! }

@@ -13,4 +13,5 @@ export type BcfMutation =
   | { mutation: 'removeViewpoint'; topicGuid: string; guid: string }
   | { mutation: 'setViewpointCamera'; topicGuid: string; guid: string; camera: unknown | null }
   | { mutation: 'setViewpointComponents'; topicGuid: string; guid: string; components: unknown | null }
-  | { mutation: 'setViewpointSnapshot'; topicGuid: string; guid: string; snapshot: number[] | null };
+  | { mutation: 'setViewpointSnapshot'; topicGuid: string; guid: string; snapshot: number[] | null }
+  | { mutation: 'setParts'; parts: { name: string; data: number[] }[] };

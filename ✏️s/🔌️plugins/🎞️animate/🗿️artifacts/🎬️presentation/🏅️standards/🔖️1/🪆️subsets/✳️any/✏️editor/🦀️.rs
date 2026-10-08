@@ -223,6 +223,14 @@ pub(crate) fn new_tile_id(prefix: &str) -> String {
     format!("{prefix}-{serial}")
 }
 
+/// 🧱️ The concrete rows that make the tile roster `next`: one `delete-tiles` of every tile the deck holds, then one position-exact
+/// `create-tile` per new tile — never a whole-roster replace.
+pub(crate) fn tile_roster_mutations(deck: &PresentationSnapshot, next: Vec<FigureTileDraft>) -> Vec<PresentationMutation> {
+    let (_, held) = crate::presentation_working_scene(deck);
+    let cleared = (!held.is_empty()).then(|| PresentationMutation::DeleteTiles(crate::mutations::delete_tiles::DeleteTiles { ids: held.iter().map(|tile| tile.id.clone()).collect() }));
+    cleared.into_iter().chain(next.into_iter().enumerate().map(|(index, tile)| PresentationMutation::CreateTile(CreateTile { index, tile }))).collect()
+}
+
 /// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
 /// accepts a selection/target id list.
 pub(crate) fn valid_tile_ids(deck: &PresentationSnapshot, ids: Vec<String>) -> Vec<String> {
@@ -327,11 +335,11 @@ const ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS: usize = 1;
 const ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES: usize = 512;
 const ANIMATE_PRESENTATION_CONFIG_BASE_BYTES: usize = 512;
 const ANIMATE_PRESENTATION_CONFIG_STEP_BYTES: usize = 4_096;
-/// 🀄️ The largest tile roster one retained verb may build. A `ReplaceTiles` is a single store row
-/// whatever its length, so nothing downstream bounds it — this constant is the only ceiling.
+/// 🀄️ The largest tile roster one retained verb may build. A roster is staged as one `delete-tiles` row
+/// plus one `create-tile` row per tile, so nothing downstream bounds its length — this constant is the only ceiling.
 const ANIMATE_PRESENTATION_MAXIMUM_TILES: usize = 256;
 /// 📦️ The admission envelope ONE encoded document mutation may occupy on the retained artifact lane.
-/// A `ReplaceTiles` carrying the contract's whole 64-cell work ceiling is the largest row this app
+/// A `create-tile` row is the largest row this app
 /// can stage (id + name + four crop floats per tile), which is an order of magnitude under this.
 const ANIMATE_PRESENTATION_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 65_536;
 const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
@@ -1056,9 +1064,6 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Some(presentation_io())
     }
 
-    /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
-    /// document replace has no in-history mutation at all (there is no import mutation by locked
-    /// decision — see `🎮️commands/📥️set-source::set_active_example`'s `Effect::LoadDocument` instead).
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
     /// deterministic contact-sheet grid (see `next_frame_tile_crop`'s doc comment below for why this
     /// schema's single shared `source` means tiles, not `source`, are the natural insertion point).

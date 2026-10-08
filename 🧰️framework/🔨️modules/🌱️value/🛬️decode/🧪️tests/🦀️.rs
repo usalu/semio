@@ -69,19 +69,25 @@ fn sqlite_snapshot_native_materialization_preserves_caller_budget_and_cancellati
 
 #[test]
 fn native_decode_explicit_one_slot_preserves_success_and_refusal_physical_owners(){
-    use semio_framework_value::{ErasedSnapshotRetirement,SnapshotRetirementStep};
+    use semio_framework_value::{ErasedSnapshotRetirement,retained_clone::RetainedCloneStep};
     use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
     use std::{cell::Cell,io::Write,process::{Command,Stdio}};
     #[repr(C)]
     struct Pages{pages:[Option<Box<[u8;4096]>>;3],next:usize}
     impl ErasedSnapshotRetirement for Pages{
-        fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{
-            if items==0||bytes<4096{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}
-            if self.next==3{return Ok(SnapshotRetirementStep::Complete);}
-            self.pages[self.next].take();self.next+=1;Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:4096})
-        }
+        
         fn terminal_is_empty(&self)->bool{self.pages.iter().all(Option::is_none)}
-        fn next_close_byte_demand(&self)->usize{if self.terminal_is_empty(){0}else{4096}}
+        fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+        fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+        fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{4096})}
+        fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
+        fn close_step(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->Result<crate::retained_clone::RetainedCloneStep,ValueError>{
+            if self.terminal_is_empty(){return Ok(crate::retained_clone::RetainedCloneStep::Complete(Default::default()));}
+            if grant.maximum_items==0||grant.maximum_release_bytes<4096{return Ok(crate::retained_clone::RetainedCloneStep::Progress(Default::default()));}
+            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"page release requires admitted depth"));}
+            self.pages[self.next]=None;self.next+=1;
+            Ok(crate::retained_clone::RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:1,released_bytes:4096,..Default::default()}))
+        }
     }
     impl Drop for Pages{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"actual page owner was dropped");}}
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫴️recipient.json")).unwrap();
@@ -108,8 +114,8 @@ fn native_decode_explicit_one_slot_preserves_success_and_refusal_physical_owners
         let retained=recipient.has_owner();
         assert_eq!(entered.get(),row["entered"].as_u64().unwrap());assert_eq!(error.map(serde_json::Value::from).unwrap_or(serde_json::Value::Null),row["error"]);assert_eq!(retained,row["retained"].as_bool().unwrap());
         if retained{
-            for grant in [(0,4096),(1,4095)]{assert_eq!(recipient.close_step(grant.0,grant.1).unwrap(),SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});assert!(!recipient.terminal_is_empty());}
-            let mut bytes=0;for _ in 0..8{match recipient.close_step(1,4096).unwrap(){SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);bytes+=released_bytes;},SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Blocked=>panic!("actual paid page owner blocked")}}
+            for grant in [(0,4096),(1,4095)]{assert_eq!(recipient.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:grant.0,maximum_copy_bytes:4096,maximum_release_bytes:grant.1,maximum_depth:1,..Default::default()}).unwrap(),RetainedCloneStep::Progress(Default::default()));assert!(!recipient.terminal_is_empty());}
+            let mut bytes=0;for _ in 0..8{match recipient.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap(){RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:released_items,released_bytes,..})=>{assert!(released_items<=1&&released_bytes<=4096);bytes+=released_bytes;},RetainedCloneStep::Complete(progress)=>{assert_eq!(progress,Default::default());break;}}}
             assert!(recipient.terminal_is_empty());assert_eq!(bytes,3*4096+wrapper);assert_eq!(owned,3*4096+wrapper);
         }else{assert!(recipient.terminal_is_empty());assert_eq!(owned,if matches!(mode,"initial-4096"|"canceled-after-wrapper"){wrapper}else{0});}
         actual.push(serde_json::json!({"entered":entered.get(),"error":error,"retained":retained}));
@@ -122,7 +128,7 @@ fn native_decode_explicit_one_slot_preserves_success_and_refusal_physical_owners
 
 #[test]
 fn paged_semantic_text_keeps_actual8194_success_and_partial_cancellation_owners_under4096(){
-    use semio_framework_value::{paged_text::PagedText,native_decoding::NativeDecodeRetirementRecipient,ErasedSnapshotRetirement,SnapshotRetirementStep};
+    use semio_framework_value::{paged_text::PagedText,native_decoding::NativeDecodeRetirementRecipient,ErasedSnapshotRetirement,retained_clone::RetainedCloneStep};
     use std::{cell::Cell,io::Write,process::{Command,Stdio}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📝️paged-text.json")).unwrap();
     
@@ -131,8 +137,8 @@ fn paged_semantic_text_keeps_actual8194_success_and_partial_cancellation_owners_
     assert_eq!(ascii.len(),8194);assert_eq!(unicode.len(),8194);
     let wrapper=std::mem::size_of::<PagedText<131072>>();let mut actual=Vec::new();
     let drain=|recipient:&mut NativeDecodeRetirementRecipient,expected:usize|{
-        assert_eq!(recipient.close_step(0,4096).unwrap(),SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});
-        let mut released=0;for _ in 0..8194+128{match recipient.close_step(1,4096).unwrap(){SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;},SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Blocked=>panic!("paged semantic owner blocked")}}
+        assert_eq!(recipient.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap(),RetainedCloneStep::Progress(Default::default()));
+        let mut released=0;for _ in 0..8194+128{match recipient.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap(){RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:released_items,released_bytes,..})=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;},RetainedCloneStep::Complete(progress)=>{assert_eq!(progress,Default::default());break;}}}
         assert!(recipient.terminal_is_empty());assert_eq!(released,expected);
     };
     for row in fixture["cases"].as_array().unwrap(){
@@ -165,10 +171,10 @@ fn paged_semantic_text_keeps_actual8194_success_and_partial_cancellation_owners_
 
 #[test]
 fn paged_semantic_text_encoding_source_retains_full8194_and_partial4096(){
-    use crate::{NativeEncodeControl,ErasedSnapshotRetirement,SnapshotRetirementStep,paged_text::PagedText};
+    use crate::{NativeEncodeControl,ErasedSnapshotRetirement,retained_clone::RetainedCloneStep,paged_text::PagedText};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧾️semantic-text-retirement/🔣️.json")).unwrap();
     let text=fixture["text"].as_str().unwrap().repeat(fixture["textBytes"].as_u64().unwrap()as usize);assert_eq!(text.len(),8194);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["maximumItems"],1);
-    fn close(owner:&mut PagedText<20000>)->usize{let mut bytes=0;for _ in 0..8194+128{match owner.close_step(1,4096).unwrap(){SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);bytes+=released_bytes;},step=>panic!("real paged text cannot retire its funded original page: {step:?}")}}assert!(owner.terminal_is_empty());bytes}
+    fn close(owner:&mut PagedText<20000>)->usize{let mut bytes=0;for _ in 0..8194+128{match owner.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap(){RetainedCloneStep::Complete(progress)=>{assert_eq!(progress,Default::default());break;},RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:released_items,released_bytes,..})=>{assert!(released_items<=1);assert!(released_bytes<=4096);bytes+=released_bytes;},step=>panic!("real paged text cannot retire its funded original page: {step:?}")}}assert!(owner.terminal_is_empty());bytes}
     let mut owner=PagedText::<20000>::empty();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(65536,&mut allow);owner.read_from_encoding_source(&text.as_str(),&mut encoding).unwrap();assert!(owner.borrow().unwrap().bytes().eq(text.bytes()));assert_eq!(encoding.owned_bytes(),owner.allocated_bytes());let admitted=encoding.owned_bytes();assert_eq!(close(&mut owner),admitted);
     let mut owner=PagedText::<20000>::empty();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(4096,&mut allow);assert!(owner.read_from_encoding_source(&text.as_str(),&mut encoding).is_err());assert_eq!(owner.byte_len(),0);assert!(owner.allocated_bytes()>0);assert_eq!(encoding.owned_bytes(),owner.allocated_bytes());let admitted=encoding.owned_bytes();assert!(admitted<=4096);assert_eq!(close(&mut owner),admitted);
     let mut owner=PagedText::<20000>::empty();let mut stages=0;let mut cancel=|progress:crate::native_encoding::NativeEncodeProgress|{if progress.total==8194&&progress.completed==0{stages+=1;}!(stages>=2&&progress.completed>=256)};let mut encoding=NativeEncodeControl::new(65536,&mut cancel);assert!(owner.read_from_encoding_source(&text.as_str(),&mut encoding).is_err());assert_eq!(owner.byte_len(),256);assert!(owner.allocated_bytes()>=4096);assert!(owner.borrow().is_err());assert_eq!(encoding.owned_bytes(),owner.allocated_bytes());let admitted=encoding.owned_bytes();assert_eq!(close(&mut owner),admitted);
@@ -186,9 +192,9 @@ fn paged_semantic_text_parent_retains_original8194_actual_allocations_until4096_
 
 #[test]
 fn paged_semantic_text_stream_formats_full8194_and_retains_every_refusal(){
-    use crate::{paged_text::{PagedText,write_encoding_format},NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,SnapshotRetirementStep};
+    use crate::{paged_text::{PagedText,write_encoding_format},NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::RetainedCloneStep};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌊️text-stream/🔣️.json")).unwrap();assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["initialAllocationBytes"],4096);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);let payload=std::iter::repeat_n('x',8181).collect::<String>();
-    fn drain<const N:usize>(owner:&mut PagedText<N>)->usize{let mut released=0;for _ in 0..8194+128{match owner.close_step(1,4096).unwrap(){SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;},SnapshotRetirementStep::Blocked=>panic!("stream owner blocked")}}assert!(owner.terminal_is_empty());released}
+    fn drain<const N:usize>(owner:&mut PagedText<N>)->usize{let mut released=0;for _ in 0..8194+128{match owner.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap(){RetainedCloneStep::Complete(progress)=>{assert_eq!(progress,Default::default());break;},RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:released_items,released_bytes,..})=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;}}}assert!(owner.terminal_is_empty());released}
     let mut owner=PagedText::<{isize::MAX as usize}>::empty();let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);owner.encode_with(8194,&mut control,|output|write_encoding_format(output,format_args!("Set label to {}",payload))).unwrap();let view=owner.borrow().unwrap();assert_eq!(view.byte_len(),8194);assert!(view.bytes().eq(b"Set label to ".iter().copied().chain(std::iter::repeat_n(b'x',8181))));assert_eq!(owner.allocated_bytes(),control.owned_bytes());let allocated=owner.allocated_bytes();assert_eq!(drain(&mut owner),allocated);
     for mode in["initial","interior","ignored","producer","segment"]{let mut owner=PagedText::<{isize::MAX as usize}>::empty();let mut callback=|progress:crate::native_encoding::NativeEncodeProgress|mode!="interior"||progress.completed<256;let mut control=NativeEncodeControl::new(if mode=="initial"{4096}else{65536},&mut callback);let result=owner.encode_with(if mode=="segment"{128}else{8194},&mut control,|output|{
         if mode=="ignored"{assert!(output.write_text(&payload).is_ok());assert!(output.write_text("too many octets after real prefix").is_err());return Ok(())}
@@ -199,9 +205,9 @@ fn paged_semantic_text_stream_formats_full8194_and_retains_every_refusal(){
 
 #[test]
 fn paged_semantic_text_inline_stream_preserves128_and_full8194_without_shadow(){
-    use crate::{paged_text::{PagedText,InlineTextBuffer,write_encoding_format},NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,SnapshotRetirementStep};
+    use crate::{paged_text::{PagedText,InlineTextBuffer,write_encoding_format},NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::RetainedCloneStep};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🤏️inline-text-stream/🔣️.json")).unwrap();assert_eq!(fixture["inlineBytes"],128);assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["initialAllocationBytes"],4096);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);let payload=std::iter::repeat_n('x',8181).collect::<String>();
-    fn drain<const N:usize>(paged:&mut PagedText<N>,inline:&mut InlineTextBuffer)->usize{if !inline.terminal_is_empty(){assert!(!inline.close_one(0));assert!(inline.close_one(1));assert!(inline.borrow().is_err());}let mut released=0;for _ in 0..8194+128{match paged.close_step(1,4096).unwrap(){SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;},SnapshotRetirementStep::Blocked=>panic!("intrinsic owner blocked")}}assert!(inline.terminal_is_empty()&&paged.terminal_is_empty());released}
+    fn drain<const N:usize>(paged:&mut PagedText<N>,inline:&mut InlineTextBuffer)->usize{if !inline.terminal_is_empty(){assert!(!inline.close_one(0));assert!(inline.close_one(1));assert!(inline.borrow().is_err());}let mut released=0;for _ in 0..8194+128{match paged.close_step(crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap(){RetainedCloneStep::Complete(progress)=>{assert_eq!(progress,Default::default());break;},RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:released_items,released_bytes,..})=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;}}}assert!(inline.terminal_is_empty()&&paged.terminal_is_empty());released}
     let mut known=InlineTextBuffer::empty();let mut allow=|_|true;let mut decoding=crate::NativeDecodeControl::new(4096,&mut allow);known.read_from_source(&fixture["knownShortText"].as_str().unwrap(),&mut decoding).unwrap();assert_eq!(known.borrow().unwrap(),fixture["knownShortText"].as_str().unwrap());assert_eq!(decoding.owned_bytes(),0);assert!(known.close_one(1));assert!(known.borrow().is_err());let mut known=InlineTextBuffer::empty();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(4096,&mut allow);known.read_from_encoding_source(&fixture["knownShortText"].as_str().unwrap(),&mut encoding).unwrap();assert_eq!(known.borrow().unwrap(),fixture["knownShortText"].as_str().unwrap());assert_eq!(encoding.owned_bytes(),0);assert!(known.close_one(1));assert!(known.borrow().is_err());
     let mut paged=PagedText::<{isize::MAX as usize}>::empty();let mut inline=InlineTextBuffer::empty();let mut active=false;let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);paged.encode_with_inline(&mut inline,&mut active,8194,&mut control,|output|write_encoding_format(output,format_args!("{}","first"))).unwrap();assert!(!active);assert_eq!(inline.borrow().unwrap(),"first");assert!(paged.borrow().is_err());assert_eq!(paged.byte_len(),0);assert_eq!(control.owned_bytes(),0);assert_eq!(drain(&mut paged,&mut inline),0);
     let mut paged=PagedText::<{isize::MAX as usize}>::empty();let mut inline=InlineTextBuffer::empty();let mut active=false;let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);paged.encode_with_inline(&mut inline,&mut active,8194,&mut control,|output|write_encoding_format(output,format_args!("Set label to {}",payload))).unwrap();assert!(active&&inline.terminal_is_empty());assert!(inline.borrow().is_err());assert!(paged.borrow().unwrap().bytes().eq(b"Set label to ".iter().copied().chain(std::iter::repeat_n(b'x',8181))));let allocated=paged.allocated_bytes();assert_eq!(allocated,control.owned_bytes());assert_eq!(drain(&mut paged,&mut inline),allocated);

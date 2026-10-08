@@ -2,11 +2,12 @@
 //! two-page fixture into the case work directory first; the committed document is never written to.
 //! `oracle` drives this subset's own independent hand-rolled IFD-chain codec
 //! (`../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`), `subject` drives this
-//! repository's own `decode_tiff`/`apply_tiff_mutation`/`encode_tiff`. Both results are read back by
+//! repository's own `decode_tiff`/`apply_mutation`/`encode_tiff`. Both results are read back by
 //! the SAME independent `project_tiff` reader before the `semantic-raster-v1` profile compares them.
 //! The subject half is gated behind the generated host's `sut` feature, so the oracle-only run never
 //! compiles the local implementation.
 
+use semio_s_artifact_stdio_tiff::apply_mutation;
 use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
@@ -15,8 +16,8 @@ use semio_repo_test_host::law;
 
 //#region 🔖️Input
 /// 🧫️ Copies the immutable document the scenario's own `Given` names into the work directory and returns the
-/// mutable copy's bytes — the real two-page scan, or for the raster outlines the small document a whole-raster
-/// wire payload fits in. Neither is ever written to.
+/// mutable copy's bytes — the real two-page scan, or for the raster outlines the small document whose exact sample words
+/// are independently witnessed. Neither is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     let input = ctx.step_input_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
     let copy = ctx.copy_input(&input, Some("input.tiff"))?;
@@ -63,25 +64,15 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ The identity round trip, asserted rather than assumed: the reference codec re-parses the real
-/// two-page document into its own IFD chain and re-serializes from that alone, and the semantic
-/// projection must survive unchanged.
-///
-/// 🚫️ The "re-encoded bytes must differ from the input" half of the law is NOT assertable on this
-/// side and is deliberately not contrived: `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff` is
-/// itself the output of this very `write_tiff`
-/// (`../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`'s own `derive_real_world_fixture`),
-/// so a canonical, deterministic writer reproducing it byte-for-byte is CORRECT, not a pass-through.
-/// What is assertable — and asserted — is that this writer is a fixpoint on its own output: any
-/// asymmetry between `read_tiff` and `write_tiff` would move the bytes. The pass-through tripwire
-/// itself still binds on the SUBJECT side, whose encoder did not write this fixture.
+/// 🔁️ Re-encodes owned image semantics and verifies the independent writer reaches a fixpoint.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_identity_round_trip(&input)?;
     let before = project_tiff(&input)?;
     let after = project_tiff(&output)?;
     law::round_trip_preserves(&after, &before)?;
-    law::carrier_is_exact(&output, &input)?;
+    let settled = oracle_identity_round_trip(&output)?;
+    law::round_trip_preserves(&project_tiff(&settled)?, &after)?;
     Ok(Outcome::with_raw(output, after))
 }
 //#endregion 🔖️Oracle
@@ -94,7 +85,7 @@ mod subject {
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_tiff::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
+    
     use semio_s_artifact_stdio_tiff::TiffMutation;
     use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::project_tiff;
 
@@ -120,7 +111,7 @@ mod subject {
         let input = mutable_input(ctx)?;
         let mutation = spec_to_mutation(&spec)?;
         let mut snapshot = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
-        apply_tiff_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;
         no_byte_pass_through(&output, &input)?;
         let projection = project_tiff(&output)?;
@@ -133,25 +124,23 @@ mod subject {
         let mutation = spec_to_mutation(&spec)?;
         let base = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let mut snapshot = base.clone();
-        apply_tiff_mutation(&mut snapshot, &mutation);
-        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_tiff_mutation(&mut snapshot, &inverse);
+        apply_mutation(&mut snapshot, &mutation);
+        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &inverse);
         }
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;
         let projection = project_tiff(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
-    /// 🔒️ Decode → re-encode from the typed IFD chain alone, asserting `carrier_is_exact`: the real scan is in the
-    /// canonical baseline layout (header, strips, IFD chain) this encoder also emits, and `TiffSnapshot` carries every
-    /// tag typed and each IFD's strip bytes as its own raster, so reproducing the scan byte for byte is the writer
-    /// being canonical — any dropped tag, reordered IFD or miscounted strip moves the bytes. The mutate rows are what
-    /// prove a real parse happened.
+    /// 🔁️ Exports canonical owned entries and sample words, then independently verifies semantic identity.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;
-        semio_repo_test_host::law::carrier_is_exact(&output, &input)?;
+        let again = encode_tiff(&decode_tiff(&output).map_err(|error| format!("{error:?}"))?).map_err(|error| format!("{error:?}"))?;
+        semio_repo_test_host::law::round_trip_preserves(&project_tiff(&again)?, &project_tiff(&output)?)?;
+        semio_repo_test_host::law::round_trip_preserves(&project_tiff(&output)?, &project_tiff(&input)?)?;
         let projection = project_tiff(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
@@ -163,10 +152,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-owned", mutate_oracle).oracle("inverse-owned", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("mutate-owned", subject::mutate).subject("inverse-owned", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

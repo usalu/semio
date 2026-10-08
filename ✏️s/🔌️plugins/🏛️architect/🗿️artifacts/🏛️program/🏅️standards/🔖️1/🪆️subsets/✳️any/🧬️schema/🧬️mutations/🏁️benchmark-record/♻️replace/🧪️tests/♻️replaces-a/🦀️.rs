@@ -2,9 +2,9 @@
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
-//! leaf's own `🔺️diff/🦀️.rs`, which replaces the target row wholesale in the composed table's row delta — `removed = [id]`, `added = [payload row]`, `reordered` unless the row was last; the child handle is re-derived by the central applier.
+//! leaf's own `🔺️diff/🦀️.rs`, which replaces the target row in place in the composed table's row delta (`removed` and `inserted` at the same coordinate); the child handle is re-derived by the central applier.
 //!
-//! That leaf's own contract line reads: 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns: `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
+//! That leaf's own contract line reads: 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns, in place: `removed = [{id, index}]` and `inserted = [{index, payload row}]` at the same coordinate, so the new row keeps its position.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.

@@ -48,9 +48,10 @@
   "validations": null,
   "performance": null,
   "quality": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "quality-record-a",
         "patch": {
@@ -83,8 +84,7 @@
           "continuousImprovement": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "artifacts": null,
   "assumptions": null,

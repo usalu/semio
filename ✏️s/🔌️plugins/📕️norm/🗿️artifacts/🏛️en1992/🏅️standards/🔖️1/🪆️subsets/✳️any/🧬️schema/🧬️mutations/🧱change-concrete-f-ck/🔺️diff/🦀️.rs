@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeConcreteFCk, base: &En1992Snapshot) -> protocol::Mut
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        concrete_grades: Some(En1992ConcreteGradesRows { modified: vec![En1992ConcreteGradesPatch { id: payload.grade_id.clone(), f_ck: Some(payload.new_f_ck), ..Default::default() }], ..Default::default() }),
+        concrete_grades: Some(En1992ConcreteGradesRows::modification(&payload.grade_id, En1992ConcreteGradesPatch { f_ck: Some(payload.new_f_ck), ..Default::default() })),
         ..Default::default()
     })
 }

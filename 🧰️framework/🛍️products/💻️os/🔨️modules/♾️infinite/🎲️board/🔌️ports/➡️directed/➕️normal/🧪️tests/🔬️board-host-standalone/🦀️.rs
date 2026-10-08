@@ -351,7 +351,7 @@
         let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️board-ingress.json")).unwrap();
         for fixture in vectors.as_array().unwrap() {
             let mut host = BoardHost::default();
-            assert!(host.load_board_snapshot_json(&fixture.to_string()));
+            assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture.to_string(),&mut control)});
             assert_eq!(host.nodes.len(), fixture["nodes"].as_array().unwrap().len());
             for node in fixture["nodes"].as_array().unwrap() {
                 let actual = &host.nodes[node["id"].as_str().unwrap()];
@@ -359,7 +359,7 @@
                 assert_eq!(actual.y, node["y"].as_f64().unwrap());
             }
             let count = host.nodes.len();
-            assert!(!host.load_board_snapshot_json("{"));
+            assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,"{",&mut control)});
             assert_eq!(host.nodes.len(), count);
         }
     }
@@ -376,7 +376,7 @@
             ],
             "edges": [{ "id": "edge-a-b", "source": node_id, "target": "node-b" }]
         });
-        assert!(host.load_board_snapshot_json(&fixture.to_string()));
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture.to_string(),&mut control)});
         while host.pop_owned_event().is_some() {}
         host.set_selection_ids_silent(&[node_id.to_string()]);
         host
@@ -775,9 +775,9 @@
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": nodes, "edges": [] }).to_string()
         };
         let mut host = BoardHost::default();
-        assert!(host.load_board_snapshot_json(&board(100, 11)), "1 200 entities must parse past the {BOARD_POINTER_ITEM_CAPACITY} pointer credits");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(100, 11),&mut control)}, "1 200 entities must parse past the {BOARD_POINTER_ITEM_CAPACITY} pointer credits");
         let refused = BOARD_DESCRIPTOR_ITEM_CAPACITY / 12 + 1;
-        assert!(!host.load_board_snapshot_json(&board(refused, 11)), "a descriptor past {BOARD_DESCRIPTOR_ITEM_CAPACITY} entities must be refused");
+        assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(refused, 11),&mut control)}, "a descriptor past {BOARD_DESCRIPTOR_ITEM_CAPACITY} entities must be refused");
     }
 
 #[cfg(test)]
@@ -798,7 +798,7 @@
         };
         let mut host = BoardHost::default();
         host.set_size(800, 600, 1.0);
-        assert!(host.load_board_snapshot_json(&board(4)), "the opening parse must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(4),&mut control)}, "the opening parse must be admitted");
         host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions: [("node-0".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None, gesture: GestureStage::default(), delta: Vec2::ZERO };
         let plan = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 10.0, y: 5.0, shift: false, ctrl_or_meta: false, alt: false }).expect("finish drag plan");
         host.begin_pointer_commit(plan).expect("retained drag commit");
@@ -809,8 +809,8 @@
                 break;
             }
         }
-        assert!(host.load_board_snapshot_json(&board(4)), "the re-parse after a drag must be admitted");
-        assert!(host.load_board_snapshot_json(&board(104)), "the re-parse after a hundred-placement fill must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(4),&mut control)}, "the re-parse after a drag must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(104),&mut control)}, "the re-parse after a hundred-placement fill must be admitted");
         host.set_selection_ids_silent(&["node-3".to_string()]);
         host.delete_selection();
         let live = semio_framework_job::root_cancel_token();
@@ -823,8 +823,8 @@
             let _ = host.pop_owned_event();
         }
         assert!(!host.nodes.contains_key("node-3"), "the delete must remove its node");
-        assert!(host.load_board_snapshot_json(&board(103)), "the re-parse after a delete must be admitted");
-        assert!(host.load_board_snapshot_json(&board(103)), "a session may re-parse its board any number of times");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(103),&mut control)}, "the re-parse after a delete must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(103),&mut control)}, "a session may re-parse its board any number of times");
     }
 
 #[cfg(test)]
@@ -847,10 +847,10 @@
         };
         let mut host = BoardHost::default();
         host.set_size(800, 600, 1.0);
-        assert!(host.load_board_snapshot_json(&board(Some(serde_json::json!({ "x": 12.0, "y": -3.0, "zoom": 2.0 })))), "a fixture that names its camera still parses");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(Some(serde_json::json!({ "x": 12.0, "y": -3.0, "zoom": 2.0 }))),&mut control)}, "a fixture that names its camera still parses");
         let framed = (host.camera.x, host.camera.y, host.camera.zoom);
         assert_eq!(framed, (12.0, -3.0, 2.0), "a named camera is adopted");
-        assert!(host.load_board_snapshot_json(&board(None)), "a document with no camera key must parse, not refuse");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board(None),&mut control)}, "a document with no camera key must parse, not refuse");
         assert!(host.nodes.contains_key("node-a"), "the cameraless document paints its nodes");
         assert_eq!((host.camera.x, host.camera.y, host.camera.zoom), framed, "the session keeps the camera it was looking through");
     }
@@ -869,17 +869,17 @@
         })
         .to_string();
         let mut host = BoardHost::default();
-        assert!(host.load_board_snapshot_json(&good), "the opening parse must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&good,&mut control)}, "the opening parse must be admitted");
         for refused in [
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-z", "x": 1.0, "y": 1.0, "shape": "circle" }], "edges": [] }),
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-z", "x": 1.0, "y": 1.0, "shape": "circle", "radius": 10.0, "handles": [{ "id": "node-z:v0", "handleKind": "b-l", "angle": 0.0, "radius": 3.0, "color": "not-a-color" }] }], "edges": [] }),
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-z", "x": 1.0, "y": 1.0, "shape": "rectangle", "width": 0.0, "height": 4.0 }], "edges": [] }),
         ] {
-            assert!(!host.load_board_snapshot_json(&refused.to_string()), "this fixture must be refused: {refused}");
+            assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&refused.to_string(),&mut control)}, "this fixture must be refused: {refused}");
             assert!(host.nodes.contains_key("node-a"), "a refused parse must not empty the board: {refused}");
             assert!(!host.nodes.contains_key("node-z"), "a refused parse must not half-commit its own rows: {refused}");
         }
-        assert!(host.load_board_snapshot_json(&good), "the next real parse still lands");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&good,&mut control)}, "the next real parse still lands");
     }
 
 #[cfg(test)]
@@ -896,13 +896,13 @@
         let edge_rows: Vec<serde_json::Value> = (0..edges).map(|index| serde_json::json!({ "id": format!("edge-{index}"), "source": format!("node-{index}:b"), "target": format!("node-{}:a", index + 1) })).collect();
         let board = serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": nodes, "edges": edge_rows }).to_string();
         let mut host = BoardHost::default();
-        assert!(host.load_board_snapshot_json(&board), "the edged board must parse into a fresh session");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board,&mut control)}, "the edged board must parse into a fresh session");
         let events = host.drain_events_json();
         assert!(!events.contains("edgeCreate"), "a fixture parse must not announce the document's edges as creations: {events}");
         for round in 0..4 {
-            assert!(host.load_board_snapshot_json(&board), "re-parse #{round} of the same edged board must parse in the same session without draining");
+            assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board,&mut control)}, "re-parse #{round} of the same edged board must parse in the same session without draining");
         }
-        assert!(host.sync_descriptor(&SceneDescriptorJson::default()).is_ok(), "an authoring sync still runs after the parses");
+        assert!(host.sync_descriptor(&SceneDescriptor::default()).is_ok(), "an authoring sync still runs after the parses");
     }
 
 #[cfg(test)]
@@ -923,7 +923,7 @@ fn transform_gumball_host() -> BoardHost {
     let mut host = BoardHost::default();
     host.set_size(800, 600, 1.0);
     host.set_camera_silent(0.0, 0.0, 1.0);
-    assert!(host.load_board_snapshot_json(&fixture), "the gumball fixture must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture,&mut control)}, "the gumball fixture must parse");
     host
 }
 
@@ -1108,7 +1108,7 @@ fn the_rotate_ring_outranks_the_nodes_and_handles_under_it() {
         "edges": []
     })
     .to_string();
-    assert!(host.load_board_snapshot_json(&under_ring), "the overlapping board must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&under_ring,&mut control)}, "the overlapping board must parse");
     host.set_selection_ids_silent(&["node-a".into(), "node-b".into()]);
     let _ = host.drain_events_json();
     let grab = transform_ring_screen_at(&host, 0.0);
@@ -1234,7 +1234,7 @@ fn region_host() -> BoardHost {
     let mut host = BoardHost::default();
     host.set_size(800, 600, 1.0);
     host.set_camera_silent(0.0, 0.0, 1.0);
-    assert!(host.load_board_snapshot_json(&fixture), "the region fixture must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture,&mut control)}, "the region fixture must parse");
     host
 }
 
@@ -1454,7 +1454,7 @@ fn regions_count_against_the_descriptor_census_and_never_the_pointer_credits() {
     let region = |index: usize| serde_json::json!({ "id": format!("r{index}"), "x": 0.0, "y": 0.0, "width": 8.0, "height": 8.0 });
     let rows: Vec<serde_json::Value> = (0..BOARD_DESCRIPTOR_ITEM_CAPACITY).map(region).collect();
     let overflowing = serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-a", "x": 0.0, "y": 0.0, "shape": "circle", "radius": 20.0, "handles": [] }], "edges": [], "targetRegions": rows }).to_string();
-    assert!(!host.load_board_snapshot_json(&overflowing), "one node plus a full census of regions overruns the descriptor ceiling");
+    assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&overflowing,&mut control)}, "one node plus a full census of regions overruns the descriptor ceiling");
     assert_eq!(host.regions.len(), 3, "and the refused parse leaves the live board exactly as it was");
 
     let mut host = region_host();
@@ -1503,7 +1503,7 @@ fn dragged_node_icon_stays_on_the_node_while_icon_cache_retirement_is_pending() 
         ],
         "edges": []
     });
-    assert!(host.load_board_snapshot_json(&fixture.to_string()));
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture.to_string(),&mut control)});
     host.set_size(800, 600, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("detail");
@@ -1550,7 +1550,7 @@ fn puzzle2d_edge_starts_at_the_handle_cap() {
     })
     .to_string();
     let mut host = BoardHost::default();
-    assert!(host.load_board_snapshot_json(&board), "the two-node board parses");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&board,&mut control)}, "the two-node board parses");
     let source = host.handles.get("a:h").expect("source handle");
     assert!((host.effective_handle_radius(source) - 3.0).abs() < 1e-9, "the authored cap radius is kept");
     let curve = host.edge_curve(host.edges.get("e").expect("edge")).expect("edge curve");
@@ -1570,7 +1570,7 @@ fn gesture_host() -> BoardHost {
     host.set_size(800, 600, 1.0);
     host.set_camera_silent(0.0, 0.0, 1.0);
     host.set_transform_flags(true, false);
-    assert!(host.load_board_snapshot_json(&fixture), "the gesture fixture must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture,&mut control)}, "the gesture fixture must parse");
     let _ = host.drain_events_json();
     host
 }
@@ -1712,7 +1712,7 @@ fn draft_referenced_ids_paint_highlighted_without_publishing() {
     assert!(host.interaction_overlay_entity_ids().contains("node-a"), "the overlay pass repaints the highlight");
     let node = |id: &str, x: f64| serde_json::json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
     let preview = serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", 0.0), node("node-b", 40.0)], "edges": [] }).to_string();
-    assert!(host.load_board_snapshot_json(&preview), "the preview fixture parses");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&preview,&mut control)}, "the preview fixture parses");
     assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), r#"["node-a","node-b","node-locked"]"#, "a preview repaint keeps what the draft references");
     assert_eq!(style(&host, "node-b"), BoardElementStyleKind::Highlighted, "the re-parse cleared the selection, not the highlight");
     host.set_highlighted_ids(Vec::new());

@@ -11,10 +11,7 @@ fn snapshot(records: Vec<Vec<String>>, trailing_newline: bool) -> TsvSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot(vec![row(&["id", "name"]), row(&["1", "Oak"]), row(&["2", "Steel"])], true);
-    let mut b = snapshot(vec![row(&["id", "name"]), row(&["1", "Oak, tricky [value]"]), row(&["2", "Steel"])], false);
-    b.records.push(row(&["3", "new"]));
-    let cases = vec![TsvDiff::default(), TsvDiff::between(&a, &b), TsvDiff::between(&b, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

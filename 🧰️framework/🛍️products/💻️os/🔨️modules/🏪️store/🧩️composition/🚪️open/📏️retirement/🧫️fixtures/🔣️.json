@@ -2,8 +2,220 @@
   "schema": "semio.member-open.physical-retirement/v1",
   "maximumAdmissionBytes": 262144,
   "cases": [
-    { "id": "ascii-spare-capacity", "text": "actor:member", "capacityBytes": 64 },
-    { "id": "unicode-spare-capacity", "text": "actor:📐雪", "capacityBytes": 8194 },
-    { "id": "empty-retained-capacity", "text": "", "capacityBytes": 65536 }
+    {
+      "id": "ascii-spare-capacity",
+      "text": "actor:member",
+      "capacityBytes": 64
+    },
+    {
+      "id": "unicode-spare-capacity",
+      "text": "actor:📐雪",
+      "capacityBytes": 8194
+    },
+    {
+      "id": "empty-retained-capacity",
+      "text": "",
+      "capacityBytes": 65536
+    }
+  ],
+  "boxGrants": [
+    {
+      "id": "no-item",
+      "items": 0,
+      "release": 64,
+      "depth": 1,
+      "released": 0
+    },
+    {
+      "id": "no-depth",
+      "items": 1,
+      "release": 64,
+      "depth": 0,
+      "released": 0
+    },
+    {
+      "id": "under-shell",
+      "items": 1,
+      "release": 63,
+      "depth": 1,
+      "released": 0
+    },
+    {
+      "id": "paid-shell",
+      "items": 1,
+      "release": 64,
+      "depth": 1,
+      "released": 64
+    }
+  ],
+  "catalogBirthGrants": [
+    {
+      "items": 0,
+      "capacity": 192,
+      "depth": 2,
+      "allocated": 0
+    },
+    {
+      "items": 2,
+      "capacity": 192,
+      "depth": 2,
+      "allocated": 0
+    },
+    {
+      "items": 3,
+      "capacity": 191,
+      "depth": 2,
+      "allocated": 0
+    },
+    {
+      "items": 3,
+      "capacity": 192,
+      "depth": 1,
+      "allocated": 0
+    },
+    {
+      "items": 3,
+      "capacity": 192,
+      "depth": 2,
+      "allocated": 192
+    }
+  ],
+  "catalogPhaseGrants": [
+    {
+      "items": 0,
+      "capacity": 64,
+      "depth": 2,
+      "allocated": 0,
+      "ready": false
+    },
+    {
+      "items": 1,
+      "capacity": 63,
+      "depth": 2,
+      "allocated": 0,
+      "ready": false
+    },
+    {
+      "items": 1,
+      "capacity": 64,
+      "depth": 1,
+      "allocated": 0,
+      "ready": false
+    },
+    {
+      "items": 1,
+      "capacity": 64,
+      "depth": 2,
+      "allocated": 64,
+      "ready": false
+    },
+    {
+      "items": 1,
+      "capacity": 64,
+      "depth": 2,
+      "allocated": 64,
+      "ready": false
+    },
+    {
+      "items": 1,
+      "capacity": 64,
+      "depth": 2,
+      "allocated": 64,
+      "ready": true
+    }
+  ],
+  "sourceBirthGrants": [
+    {
+      "items": 0,
+      "capacity": 256,
+      "depth": 1,
+      "allocated": 0
+    },
+    {
+      "items": 1,
+      "capacity": 255,
+      "depth": 1,
+      "allocated": 0
+    },
+    {
+      "items": 1,
+      "capacity": 256,
+      "depth": 0,
+      "allocated": 0
+    },
+    {
+      "items": 1,
+      "capacity": 256,
+      "depth": 1,
+      "allocated": 256
+    },
+    {
+      "items": 7,
+      "capacity": 512,
+      "depth": 3,
+      "allocated": 256
+    }
+  ],
+  "retainedMemberClose": {
+    "input": "1\n",
+    "actor": "actor:opened-loader",
+    "artifactId": "original-retained-member",
+    "maximumCopyBytes": 1,
+    "terminalDropBytes": 0,
+    "constructorAdmission": "before-original-payload-transfer",
+    "terminalReceipt": "full-final-catalog-release"
+  },
+  "preparationSourceBirthGrants": [
+    {
+      "id": "no-work",
+      "items": 0,
+      "capacity": 320,
+      "depth": 1,
+      "allocated": 0
+    },
+    {
+      "id": "below-original-arcs",
+      "items": 1,
+      "capacity": 319,
+      "depth": 1,
+      "allocated": 0
+    },
+    {
+      "id": "no-original-depth",
+      "items": 1,
+      "capacity": 320,
+      "depth": 0,
+      "allocated": 0
+    },
+    {
+      "id": "funded-originals",
+      "items": 1,
+      "capacity": 320,
+      "depth": 1,
+      "allocated": 320
+    },
+    {
+      "id": "larger-grant",
+      "items": 7,
+      "capacity": 640,
+      "depth": 3,
+      "allocated": 320
+    }
+  ],
+  "sourceTreeBirths": [
+    {
+      "sourceBytes": 64,
+      "sourceDepth": 1,
+      "wrapperBytes": 64,
+      "quotedBytes": 128,
+      "quotedDepth": 2
+    },
+    {
+      "sourceBytes": 128,
+      "sourceDepth": 2,
+      "wrapperBytes": 64,
+      "quotedBytes": 192,
+      "quotedDepth": 3
+    }
   ]
 }

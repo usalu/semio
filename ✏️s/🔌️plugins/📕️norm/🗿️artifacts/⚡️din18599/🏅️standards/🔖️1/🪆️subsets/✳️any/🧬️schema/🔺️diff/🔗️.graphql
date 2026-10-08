@@ -1,7 +1,6 @@
 # 🧬️ Din18599 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
 type Din18599ZonesPatch {
-  id: String!
   labelEn: String
   labelDe: String
   usageProfile: UsageProfile
@@ -14,15 +13,35 @@ type Din18599ZonesPatch {
   lightingPowerWM2: Float
 }
 
+type Din18599ZonesRemoved {
+  id: String!
+  index: Int!
+}
+
+type Din18599ZonesInserted {
+  index: Int!
+  row: ThermalZone!
+}
+
+type Din18599ZonesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Din18599ZonesModified {
+  id: String!
+  patch: Din18599ZonesPatch!
+}
+
 type Din18599ZonesRows {
-  added: [ThermalZone!]!
-  removed: [String!]!
-  modified: [Din18599ZonesPatch!]!
-  order: [String!]
+  removed: [Din18599ZonesRemoved!]!
+  inserted: [Din18599ZonesInserted!]!
+  moved: [Din18599ZonesMoved!]!
+  modified: [Din18599ZonesModified!]!
 }
 
 type Din18599ElementsPatch {
-  id: String!
   labelEn: String
   labelDe: String
   kind: ElementKind
@@ -36,11 +55,32 @@ type Din18599ElementsPatch {
   adjacency: Adjacency
 }
 
+type Din18599ElementsRemoved {
+  id: String!
+  index: Int!
+}
+
+type Din18599ElementsInserted {
+  index: Int!
+  row: EnvelopeElement!
+}
+
+type Din18599ElementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Din18599ElementsModified {
+  id: String!
+  patch: Din18599ElementsPatch!
+}
+
 type Din18599ElementsRows {
-  added: [EnvelopeElement!]!
-  removed: [String!]!
-  modified: [Din18599ElementsPatch!]!
-  order: [String!]
+  removed: [Din18599ElementsRemoved!]!
+  inserted: [Din18599ElementsInserted!]!
+  moved: [Din18599ElementsMoved!]!
+  modified: [Din18599ElementsModified!]!
 }
 
 type Din18599HeatingPatch {
@@ -106,5 +146,4 @@ type Din18599Diff {
   lighting: Din18599LightingPatch @state(class: ARTIFACT)
   renewables: Din18599RenewablesPatch @state(class: ARTIFACT)
   climate: Din18599ClimatePatch @state(class: ARTIFACT)
-  climateTable: Din18599ClimateChild @state(class: ARTIFACT)
 }

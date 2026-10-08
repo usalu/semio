@@ -28,7 +28,7 @@ async fn add_block_into_a_named_step_and_a_missing_one() {
     assert_eq!(steps[1].blocks[0].kind, "number");
 }
 
-/// 🕹️ A deleted block's id, if selected, is pruned by the framework's own `revalidate_interaction_state_after_document_change`
+/// 🕹️ A deleted block's id, if selected, is pruned by the framework's own `revalidate_interaction_on_document_change`
 /// against `interaction_topology` (`interaction_topology_covers_every_step_and_block`).
 #[semio_framework_async_macros::async_test]
 async fn remove_block_action_removes_it_from_the_document() {

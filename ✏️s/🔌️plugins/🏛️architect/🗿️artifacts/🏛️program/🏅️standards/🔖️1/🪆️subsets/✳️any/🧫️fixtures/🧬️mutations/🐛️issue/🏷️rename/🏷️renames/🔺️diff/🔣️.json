@@ -63,9 +63,10 @@
   "workshops": null,
   "surveys": null,
   "issues": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "issue-a",
         "patch": {
@@ -98,8 +99,7 @@
           "escalationLevel": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "auditEvents": null,
   "templates": null,

@@ -123,7 +123,7 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
             assert_eq!(actual.candidate.checkpoint, expected);
             assert_eq!(actual.candidate.pair, codec.pair);
             let encoded = super::super::checkpoint_id_encoding_v1(&actual.candidate.checkpoint).unwrap();
-            assert_eq!(directory::os_directory::hex_lower(&encoded), fixture["expected"]["checkpointEncodingHex"]);
+            assert_eq!(directory::os_directory::io::binary::artifact_hash::hex_lower(&encoded), fixture["expected"]["checkpointEncodingHex"]);
             assert!(encoded.starts_with(fixture["genesisDomain"].as_str().unwrap().as_bytes()));
             let mut parented = actual.candidate.checkpoint;
             parented.parent_checkpoint_id = Some(ArtifactHash([1; 32]));

@@ -175,29 +175,19 @@ impl RetainedToolWireInput {
         self.closing = true;
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    pub fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.pages.capacity().checked_mul(std::mem::size_of::<ToolWirePage>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"wire page backing extent overflow"))}
+    pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.pages.capacity()!=0))}
+    pub fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
         self.begin_close();
-        if self.terminal_is_empty() {
-            return semio_framework_job::InteractiveJobCloseStep::Complete;
-        }
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(page) = self.pages.last_mut() {
-            if !page.is_empty() && maximum_bytes == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
-            }
-            let released_bytes = maximum_bytes.min(page.len);
-            page.len -= released_bytes;
-            self.admitted_bytes = self.admitted_bytes.checked_sub(released_bytes).expect("retained wire byte accounting diverged");
-            let released_items = usize::from(page.is_empty());
-            if released_items != 0 {
-                self.pages.truncate(self.pages.len() - 1);
-            }
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        drop(std::mem::take(&mut self.pages));
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        if self.terminal_is_empty(){return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
+        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return InteractiveJobCloseStep::Refused(error.kind)};
+        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
+        if self.pages.capacity()!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        drop(std::mem::take(&mut self.pages));self.admitted_bytes=0;
+        InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}}
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -320,8 +310,28 @@ impl InteractiveJob for ErasedToolJob {
         self.inner.begin_close();
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.inner.close_step(maximum_items, maximum_bytes)
+    fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.inner.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.inner.next_close_copy_byte_demand()
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        self.inner.next_close_capacity_byte_demand(maximum_copy_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.inner.next_close_release_byte_demand()
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.inner.next_close_depth_demand()
+    }
+
+    fn register_close_wake(&self, waker: &std::task::Waker) -> bool {
+        self.inner.register_close_wake(waker)
     }
 
     fn terminal_is_empty(&self) -> bool {

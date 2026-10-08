@@ -1,0 +1,17 @@
+{
+  "contract": "framework.ui.scene.mesh3d.owner-refusal",
+  "ownerBusy": "Busy",
+  "semanticClosing": "Closing",
+  "retry": {
+    "maximumAttempts": 4096,
+    "maximumDurationMs": 5000,
+    "constructorCapacityBytes": 65536,
+    "cancellation": "stopBeforeNextAttempt"
+  },
+  "ray": {
+    "busy": "refuse",
+    "closing": "refuse",
+    "miss": "successfulNone",
+    "hit": "successfulOriginalDistance"
+  }
+}

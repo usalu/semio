@@ -220,3 +220,29 @@ async fn removals_invert_at_every_position() {
     }
 }
 
+//#region ↩️LeafInverseLaws
+#[path = "../../✂️remove-edge/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_edge;
+#[path = "../../✋️drag-nodes/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_drag_nodes;
+#[path = "../../➕️insert-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_node;
+#[path = "../../🌉️insert-edge/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_edge;
+#[path = "../../🎛️set-node-param/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_node_param;
+#[path = "../../🎨️set-edge-kind/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_edge_kind;
+#[path = "../../🏷️set-node-kind/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_node_kind;
+#[path = "../../📍️set-node-position/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_node_position;
+#[path = "../../🔌️set-edge-endpoints/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_edge_endpoints;
+#[path = "../../🔤️set-node-label/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_node_label;
+#[path = "../../🗑️remove-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_node;
+#[path = "../../🧹️remove-node-param/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_node_param;
+//#endregion ↩️LeafInverseLaws

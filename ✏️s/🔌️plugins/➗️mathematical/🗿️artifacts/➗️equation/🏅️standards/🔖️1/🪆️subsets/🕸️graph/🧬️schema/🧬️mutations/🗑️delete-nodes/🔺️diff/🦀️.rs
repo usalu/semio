@@ -10,12 +10,14 @@ pub fn diff(payload: &super::DeleteNodes, base: &EquationSnapshot) -> protocol::
     }
     let missing: Vec<String> = payload.ids.iter().filter(|id| !existing.contains(id)).cloned().collect();
     let cascaded_edge_ids: Vec<String> = base.graph.edges.iter().filter(|edge| existing.contains(&edge.source) || existing.contains(&edge.target)).map(|edge| edge.id.clone()).collect();
+    let node_indices: Vec<usize> = base.graph.nodes.iter().enumerate().filter(|(_, node)| existing.contains(&node.id)).map(|(index, _)| index).collect();
+    let edge_indices: Vec<usize> = base.graph.edges.iter().enumerate().filter(|(_, edge)| cascaded_edge_ids.contains(&edge.id)).map(|(index, _)| index).collect();
     let diff = EquationDiff {
-        nodes: Some(EquationNodesDelta { removed: existing.clone(), ..Default::default() }),
-        edges: (!cascaded_edge_ids.is_empty()).then(|| EquationEdgesDelta { removed: cascaded_edge_ids.clone(), ..Default::default() }),
+        nodes: Some(EquationNodesDelta::removals(&base.graph.nodes, &node_indices)),
+        edges: (!edge_indices.is_empty()).then(|| EquationEdgesDelta::removals(&base.graph.edges, &edge_indices)),
         ..Default::default()
     };
-    let mut outcome = protocol::MutationOutcome::new(crate::equation_state_diff(diff, base));
+    let mut outcome = protocol::MutationOutcome::new(diff);
     if !missing.is_empty() {
         outcome = outcome.absorb_messages([protocol::MutationMessage::warning("mutation.partial", format!("{} of {} requested node(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing)]);
     }

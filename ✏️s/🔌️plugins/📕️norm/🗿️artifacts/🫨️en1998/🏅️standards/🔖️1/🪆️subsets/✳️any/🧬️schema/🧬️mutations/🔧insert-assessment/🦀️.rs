@@ -8,7 +8,7 @@ use crate::{En1998Mutation, En1998Snapshot};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct InsertAssessment {
-    pub index: usize,
+    pub index: Option<usize>,
     pub assessment: crate::En1998Assessment,
 }
 

@@ -97,23 +97,4 @@ fn derive_real_world_fixture() {
     let tiny_hex: String = tiny_rgb.as_raw().iter().map(|b| format!("{b:02x}")).collect();
     eprintln!("inline 8x8 real thumbnail hex (insert-ifd pixels): {tiny_hex}");
 
-    // A committed `shared://` raster-replacement reference fixture: the SAME real photo's own
-    // pixels, horizontally flipped (still 100% real content, but a genuinely different,
-    // provable raster) — full IFD 0 resolution, so it can only reasonably live as a binary
-    // fixture, not inline JSON hex.
-    let (w, h) = (photo.width(), photo.height());
-    let mut flipped_rgba = Vec::with_capacity(w as usize * h as usize * 4);
-    for y in 0..h {
-        for x in 0..w {
-            let px = photo.get_pixel(w - 1 - x, y);
-            flipped_rgba.extend_from_slice(&[px[0], px[1], px[2], 255]);
-        }
-    }
-    let mut case_fixture_dir = repo_root.clone();
-    case_fixture_dir.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0/🧫️fixtures");
-    std::fs::create_dir_all(&case_fixture_dir).expect("create case fixtures dir");
-    let mut flipped_path = case_fixture_dir.clone();
-    flipped_path.push("🖼️.rgba");
-    std::fs::write(&flipped_path, &flipped_rgba).expect("write shared:// replace-pixels fixture");
-    eprintln!("wrote {} ({} bytes, {w}x{h} RGBA8)", flipped_path.display(), flipped_rgba.len());
 }

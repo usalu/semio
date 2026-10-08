@@ -1,25 +1,25 @@
 syntax = "proto3";
-package semio.s.stdio.semio.v1.kit.diff;
-import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
-message SemioKitTypeList { repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitType values = 1; }
-message SemioKitDesignList { repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitDesign values = 1; }
-message SemioKitObjectChildList { repeated semio.os.store.ArtifactChild values = 1; }
-message SemioKitModelChildList { repeated semio.os.store.ArtifactChild values = 1; }
-message SemioKitLinkList { repeated semio.os.store.ArtifactLink values = 1; }
-message ClearProperties {}
-message SemioKitPropertiesChange {
-  oneof operation {
-    semio.os.store.ArtifactChild value = 1;
-    ClearProperties clear = 2;
-  }
-}
-message SemioKitDiff {
-  SemioKitTypeList types = 1;
-  SemioKitDesignList designs = 2;
-  SemioKitObjectChildList objects = 3;
-  SemioKitModelChildList models = 4;
-  SemioKitPropertiesChange properties = 5;
-  SemioKitLinkList representations = 6;
-}
+// 🔺️ SemioKitDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_kit.diff;
+
+message ReplacestoreArtifactChildSemioModelSnapshot { bytes value = 1; }
+message ReplacestoreArtifactChildSemioObjectSnapshot { bytes value = 1; }
+message IndexModifiedReplacestoreArtifactChildSemioModelSnapshot { uint64 index = 1; bytes diff = 2; }
+message IndexAddedstoreArtifactChildSemioModelSnapshot { uint64 index = 1; bytes item = 2; }
+message IndexedTripleReplacestoreArtifactChildSemioModelSnapshotstoreArtifactChildSemioModelSnapshot { repeated uint64 removed = 1; repeated IndexModifiedReplacestoreArtifactChildSemioModelSnapshot modified = 2; repeated IndexAddedstoreArtifactChildSemioModelSnapshot added = 3; }
+message IndexModifiedReplacestoreArtifactChildSemioObjectSnapshot { uint64 index = 1; bytes diff = 2; }
+message IndexAddedstoreArtifactChildSemioObjectSnapshot { uint64 index = 1; bytes item = 2; }
+message IndexedTripleReplacestoreArtifactChildSemioObjectSnapshotstoreArtifactChildSemioObjectSnapshot { repeated uint64 removed = 1; repeated IndexModifiedReplacestoreArtifactChildSemioObjectSnapshot modified = 2; repeated IndexAddedstoreArtifactChildSemioObjectSnapshot added = 3; }
+message IndexModifiedSemioKitDesignDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioKitDesign { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioKitDesignDiffSemioKitDesign { repeated uint64 removed = 1; repeated IndexModifiedSemioKitDesignDiff modified = 2; repeated IndexAddedSemioKitDesign added = 3; }
+message IndexModifiedSemioKitLinkDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedstoreArtifactLink { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioKitLinkDiffstoreArtifactLink { repeated uint64 removed = 1; repeated IndexModifiedSemioKitLinkDiff modified = 2; repeated IndexAddedstoreArtifactLink added = 3; }
+message IndexModifiedSemioKitTypeDiff { uint64 index = 1; bytes diff = 2; }
+message IndexAddedSemioKitType { uint64 index = 1; bytes item = 2; }
+message IndexedTripleSemioKitTypeDiffSemioKitType { repeated uint64 removed = 1; repeated IndexModifiedSemioKitTypeDiff modified = 2; repeated IndexAddedSemioKitType added = 3; }
+message SemioKitTypeDiff { optional string name = 1; optional string category = 2; }
+message SemioKitDesignDiff { optional string name = 1; optional repeated SemioKitPiece pieces = 2; optional repeated SemioKitConnection connections = 3; }
+message SemioKitLinkDiff { optional bytes pin = 1; }
+message SemioKitDiff { optional IndexedTripleSemioKitTypeDiffSemioKitType types = 1; optional IndexedTripleSemioKitDesignDiffSemioKitDesign designs = 2; optional IndexedTripleReplacestoreArtifactChildSemioObjectSnapshotstoreArtifactChildSemioObjectSnapshot objects = 3; optional IndexedTripleReplacestoreArtifactChildSemioModelSnapshotstoreArtifactChildSemioModelSnapshot models = 4; optional optional bytes properties = 5; optional IndexedTripleSemioKitLinkDiffstoreArtifactLink representations = 6; }

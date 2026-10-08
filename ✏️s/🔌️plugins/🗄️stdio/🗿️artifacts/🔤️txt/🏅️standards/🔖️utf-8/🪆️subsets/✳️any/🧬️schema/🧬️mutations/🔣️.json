@@ -83,6 +83,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/set-line/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "splice-text"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/splice-text/schema.json"
+        }
+      }
     }
   ]
 }

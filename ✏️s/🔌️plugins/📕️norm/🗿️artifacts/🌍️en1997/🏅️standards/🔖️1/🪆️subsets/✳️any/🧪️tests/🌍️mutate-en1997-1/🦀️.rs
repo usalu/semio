@@ -253,7 +253,8 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1997::standards::v1::subsets::any::schema::mutations::{apply_en1997_mutation,inverse_en1997_mutation,En1997Mutation};
+    use semio_s_artifact_norm_en1997::standards::v1::subsets::any::schema::mutations::{En1997Mutation};
+    use semio_s_artifact_norm_en1997::standards::v1::subsets::any::io::{apply_en1997_mutation,inverse_en1997_mutation};
 
     use semio_s_artifact_norm_en1997::standards::v1::subsets::any::io::text::mutations::{decode_en1997_mutation_json};
     use semio_s_artifact_norm_en1997::standards::v1::subsets::any::schema::snapshot::{En1997Snapshot};

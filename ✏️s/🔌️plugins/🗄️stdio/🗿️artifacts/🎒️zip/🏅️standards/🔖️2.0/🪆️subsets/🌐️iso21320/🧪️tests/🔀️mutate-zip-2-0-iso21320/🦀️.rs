@@ -84,7 +84,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, ZipIso21320Mutation};
+    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::{ZipIso21320Mutation};
     use semio_s_artifact_stdio_zip::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, ZipSnapshot};
     use semio_s_artifact_stdio_zip_test_oracle::standards::v2_0::subsets::iso21320::project_zip_iso21320;
     use semio_repo_test_host::law::wire_operation;
@@ -114,7 +114,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = base_snapshot(ctx)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_zip_iso21320_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         outcome_of(&snapshot)
     }
 
@@ -126,9 +126,9 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
-        apply_zip_iso21320_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
-            apply_zip_iso21320_mutation(&mut snapshot, step);
+            apply_mutation(&mut snapshot, step);
         }
         outcome_of(&snapshot)
     }

@@ -5,9 +5,9 @@
   "storeys": null,
   "walls": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "wall-north",
+        "index": 1,
         "row": {
           "id": "wall-south",
           "labelEn": "South load-bearing wall",
@@ -60,6 +60,7 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   }
 }

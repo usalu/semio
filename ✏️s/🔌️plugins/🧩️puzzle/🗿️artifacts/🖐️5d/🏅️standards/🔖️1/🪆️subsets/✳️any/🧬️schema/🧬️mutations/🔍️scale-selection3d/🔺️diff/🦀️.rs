@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `ScaleSelection3d` — every unlocked addressed part and target volume keeps its origin
 //! and multiplies its BASE scale (uniform broadcast, absent reads as one) by the payload's per-axis factors, so the leaf
 //! replays on any base.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumePatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartModification, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumeModification};
+use protocol::list_delta::RowPatch;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_scaled, puzzle5d_selection, puzzle5d_selection_outcome};
 use crate::Puzzle5dSnapshot;
 
@@ -22,7 +23,7 @@ pub fn diff(payload: &super::ScaleSelection3d, base: &Puzzle5dSnapshot) -> proto
         .filter(|_| !identity)
         .map(|part| {
             let world = Puzzle5dPart3dPatch { scale: Some(Some(puzzle5d_scaled(part.part_3d.scale, factors))).filter(|scale| *scale != part.part_3d.scale), ..Default::default() };
-            Puzzle5dPartPatchEntry { id: part.id.clone(), patch: Puzzle5dPartPatch { part_3d: Some(world).filter(|world| !world.is_empty()), ..Default::default() } }
+            Puzzle5dPartModification { id: part.id.clone(), patch: Puzzle5dPartPatch { part_3d: Some(world).filter(|world| !world.is_empty()), ..Default::default() } }
         })
         .filter(|entry| !entry.patch.is_empty())
         .collect();
@@ -30,7 +31,7 @@ pub fn diff(payload: &super::ScaleSelection3d, base: &Puzzle5dSnapshot) -> proto
         .volumes
         .iter()
         .filter(|_| !identity)
-        .map(|volume| Puzzle5dTargetVolumePatchEntry { id: volume.id.clone(), patch: Puzzle5dTargetVolumePatch { scale: Some(Some(puzzle5d_scaled(volume.scale, factors))).filter(|scale| *scale != volume.scale), ..Default::default() } })
+        .map(|volume| Puzzle5dTargetVolumeModification { id: volume.id.clone(), patch: Puzzle5dTargetVolumePatch { scale: Some(Some(puzzle5d_scaled(volume.scale, factors))).filter(|scale| *scale != volume.scale), ..Default::default() } })
         .filter(|entry| !entry.patch.is_empty())
         .collect();
     puzzle5d_selection_outcome(selection, &payload.targets, parts, volumes)

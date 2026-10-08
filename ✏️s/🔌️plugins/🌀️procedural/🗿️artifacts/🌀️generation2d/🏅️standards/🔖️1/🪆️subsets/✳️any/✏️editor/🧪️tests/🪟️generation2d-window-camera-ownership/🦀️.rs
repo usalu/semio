@@ -55,17 +55,17 @@ fn generation2d_window_camera_ownership_matches_neutral_fixture_and_exact_codecs
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral Generation2d window fixture");
     let main_base: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][flow::GENERATION2D_PLAY_WINDOW_MAIN].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main config");
     let main_next: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["main-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main next config");
-    let main_mutation = flow::config::Generation2dMainWindowConfigMutation::Snapshot { config: Box::new(main_next.clone()) };
+    let main_mutation = flow::config::Generation2dMainWindowConfigMutation::SetViewport(main_next.viewport.clone());
     assert_window_config_codecs!(flow::config::Generation2dMainWindowConfig, flow::config::Generation2dMainWindowConfigMutation, main_base, main_next, main_mutation);
 
     let edit_base: edit_preview::config::Generation2dEditPreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral edit-preview config");
     let edit_next: edit_preview::config::Generation2dEditPreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["edit-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral edit-preview next config");
-    let edit_mutation = edit_preview::config::Generation2dEditPreviewWindowConfigMutation::Snapshot { config: Box::new(edit_next.clone()) };
+    let edit_mutation = edit_preview::config::Generation2dEditPreviewWindowConfigMutation::SetViewport(edit_next.viewport.clone());
     assert_window_config_codecs!(edit_preview::config::Generation2dEditPreviewWindowConfig, edit_preview::config::Generation2dEditPreviewWindowConfigMutation, edit_base, edit_next, edit_mutation);
 
     let generate_base: generate_preview::config::Generation2dGeneratePreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral generate-preview config");
     let generate_next: generate_preview::config::Generation2dGeneratePreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["generate-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral generate-preview next config");
-    let generate_mutation = generate_preview::config::Generation2dGeneratePreviewWindowConfigMutation::Snapshot { config: Box::new(generate_next.clone()) };
+    let generate_mutation = generate_preview::config::Generation2dGeneratePreviewWindowConfigMutation::SetViewport(generate_next.viewport.clone());
     assert_window_config_codecs!(generate_preview::config::Generation2dGeneratePreviewWindowConfig, generate_preview::config::Generation2dGeneratePreviewWindowConfigMutation, generate_base, generate_next, generate_mutation);
 
     assert_ne!(<flow::config::Generation2dMainWindowConfig as ArtifactDsl>::envelope_id(), <edit_preview::config::Generation2dEditPreviewWindowConfig as ArtifactDsl>::envelope_id());
@@ -283,9 +283,9 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     if !reopened_terminal_empty { return Err("reopened Generation2d app was not terminal-empty after close".into()); }
 
                     let exact_rejections = [
-                        (flow::config::addressed(&ViewModel { window_id: None, window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, Default::default()), "generation2d-main-window-required"),
-                        (flow::config::addressed(&ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, Default::default()), "generation2d-main-window-stale"),
-                        (flow::config::addressed(&foreign, Default::default()), "generation2d-main-window-kind-required"),
+                        (flow::config::addressed(&ViewModel { window_id: None, window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, &Default::default(), Default::default()), "generation2d-main-window-required"),
+                        (flow::config::addressed(&ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, &Default::default(), Default::default()), "generation2d-main-window-stale"),
+                        (flow::config::addressed(&foreign, &Default::default(), Default::default()), "generation2d-main-window-kind-required"),
                     ];
                     for (observed, expected) in exact_rejections {
                         if observed.is_ok() || !format!("{observed:?}").contains(expected) { return Err(format!("exact address did not reject with {expected}: {observed:?}")); }

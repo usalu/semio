@@ -6,7 +6,7 @@
 //!
 //! ⚠️ Why this leaf pins a REJECTION branch: `FormsSnapshot` keeps its `steps` tree in the composed
 //! `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), so a committed snapshot carries two
-//! handles and never a step. A successful `create-step` routes through `forms_diff_from_delta`,
+//! handles and never a step. A successful `create-step` routes through `FormsDiff::apply`,
 //! which re-mints both handles with a `child_id` that is a `DefaultHasher` digest of the child
 //! content — hand-authoring such an `➡️after` would mean forging a value out of `std`'s
 //! deliberately unspecified default hasher. The Fatal branch below reaches no hash at all.
@@ -16,8 +16,9 @@
 //! committed payload asks to create — nothing here is invented, the seeded step IS the mutation
 //! JSON's own `step` — which is precisely the collision `mutation.duplicate-id` guards against.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{replace_forms_steps, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/📸️snapshot/➡️after/🔣️.json");

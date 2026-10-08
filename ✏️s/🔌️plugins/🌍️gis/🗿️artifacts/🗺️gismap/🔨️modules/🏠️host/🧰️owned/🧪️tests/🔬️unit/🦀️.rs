@@ -1,5 +1,5 @@
 use super::*;
-use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
+use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_document};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_gis_map_snapshot};
 use crate::GIS_MAP_SCHEMA;
@@ -70,7 +70,7 @@ fn gis_map_history_edit_initializer_aliases_genesis_and_publishes_next_generatio
     let operation = semio_framework_job::OperationId(601);
     let generation = semio_framework_job::Generation(21);
     let mut authority = empty_gis_map_initializer(operation, generation);
-    let genesis = authority.envelope.as_ref().expect("retained GisMap envelope").vcs.genesis.share_snapshot();
+    let genesis = authority.envelope.as_ref().expect("retained GisMap envelope").vcs.genesis.facts().share_snapshot();
     assert!(matches!(drive_gis_map_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact GIS candidate");
     assert_eq!(candidate.generation_now(), 22);
@@ -160,6 +160,12 @@ fn gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ow
         GisMapMutation::DeleteRegion(delete_region::DeleteRegion { id: "region".into() }),
         GisMapMutation::ReorderRegions(reorder_regions::ReorderRegions { id: "region".into(), to_index: 1 }),
         GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "region".into(), new_data: semio_framework_value::DslValue::Null }),
+        GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "position".into(), key: "label".into(), value: semio_framework_value::DslValue::Null, before: Some("next".into()) }),
+        GisMapMutation::RemovePositionProperty(remove_position_property::RemovePositionProperty { feature: "position".into(), key: "label".into() }),
+        GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "route".into(), key: "label".into(), value: semio_framework_value::DslValue::Null, before: Some("next".into()) }),
+        GisMapMutation::RemoveRouteProperty(remove_route_property::RemoveRouteProperty { feature: "route".into(), key: "label".into() }),
+        GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "region".into(), key: "label".into(), value: semio_framework_value::DslValue::Null, before: Some("next".into()) }),
+        GisMapMutation::RemoveRegionProperty(remove_region_property::RemoveRegionProperty { feature: "region".into(), key: "label".into() }),
     ];
     for mutation in mutations {
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapMutationRetirementFactory, mutation);

@@ -3,9 +3,10 @@
   "id": null,
   "title": null,
   "layers": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "stamp",
         "patch": {
@@ -21,8 +22,7 @@
           "locked": null
         }
       }
-    ],
-    "moved": []
+    ]
   },
   "assets": null
 }

@@ -20,6 +20,5 @@
     "pvEfficiency": null,
     "solarThermalKwhA": null
   },
-  "climate": null,
-  "climateTable": null
+  "climate": null
 }

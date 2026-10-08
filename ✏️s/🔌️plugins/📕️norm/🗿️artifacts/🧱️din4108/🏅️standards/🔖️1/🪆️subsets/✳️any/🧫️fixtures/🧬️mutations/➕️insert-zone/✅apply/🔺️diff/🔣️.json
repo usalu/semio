@@ -8,9 +8,9 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "zone-utility",
+        "index": 2,
         "row": {
           "id": "zone-extra",
           "floorAreaM2": 40.0,
@@ -20,16 +20,19 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "elements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "thermalBridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

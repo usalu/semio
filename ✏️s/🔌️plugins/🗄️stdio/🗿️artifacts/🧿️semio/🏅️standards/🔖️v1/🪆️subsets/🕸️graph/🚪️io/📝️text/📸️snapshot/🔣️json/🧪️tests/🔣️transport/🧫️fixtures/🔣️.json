@@ -1,0 +1,31 @@
+{
+  "graph": {
+    "schema": "semio.graph",
+    "nodes": [
+      {
+        "id": {
+          "value": "n"
+        },
+        "kind": "literal",
+        "label": "Ω\u0000",
+        "position": {
+          "x": {
+            "bits": "8000000000000000"
+          },
+          "y": {
+            "bits": "0000000000000001"
+          }
+        },
+        "width": {
+          "bits": "7ff8000000000042"
+        },
+        "height": {
+          "bits": "7ff0000000000001"
+        },
+        "ports": [],
+        "properties": []
+      }
+    ],
+    "edges": []
+  }
+}

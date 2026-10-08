@@ -1,3 +1,4 @@
+import { pluginCatalogV1, type PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { FrameworkOsShell } from "../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
@@ -6,6 +7,7 @@ import type { AppSurfaceSessionFactory } from "../../../🧱️elements/🪪️W
 import { activeShellRoot } from "@semio-tech/ui-react";
 
 type EmbeddedReactOptions = {
+  readonly catalog: PluginCatalogRowsV1;
   readonly rootId: string;
   readonly plugin: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -37,7 +39,7 @@ export async function mountEmbeddedReactOracle(options: EmbeddedReactOptions): P
   let retired = false;
   const render = (suppressed: boolean) => {
     if (retired) throw new Error("react-mount-retired");
-    root.render(<FrameworkOsShell shellId={options.rootId} storageNamespace={options.rootId} ownsPage={false} plugins={options.plugins} pluginFilter={options.plugin} surfaceSessionFactories={factories} locks={{ ...EMPTY_SHELL_LOCKS, locale: options.locale }} suppressAutoIntroduction={suppressed} />);
+    root.render(<FrameworkOsShell catalog={pluginCatalogV1(options.catalog)} shellId={options.rootId} storageNamespace={options.rootId} ownsPage={false} plugins={options.plugins} pluginFilter={options.plugin} surfaceSessionFactories={factories} locks={{ ...EMPTY_SHELL_LOCKS, locale: options.locale }} suppressAutoIntroduction={suppressed} />);
   };
   const dispose = Object.assign(async () => {
     if (retired) return;

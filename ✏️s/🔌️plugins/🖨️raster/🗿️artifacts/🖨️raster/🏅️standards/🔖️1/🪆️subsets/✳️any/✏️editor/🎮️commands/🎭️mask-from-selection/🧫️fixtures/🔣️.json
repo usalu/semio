@@ -2,21 +2,21 @@
   "width": 3,
   "height": 2,
   "selection": [
-    [
-      0,
-      1,
-      255
-    ],
-    [
-      2,
-      2,
-      128
-    ],
-    [
-      5,
-      1,
-      64
-    ]
+    {
+      "start": 0,
+      "length": 1,
+      "coverage": 255
+    },
+    {
+      "start": 2,
+      "length": 2,
+      "coverage": 128
+    },
+    {
+      "start": 5,
+      "length": 1,
+      "coverage": 64
+    }
   ],
   "expectedRgba": [
     255,
@@ -46,44 +46,44 @@
   ],
   "invalid": [
     [
-      [
-        0,
-        7,
-        255
-      ]
+      {
+        "start": 0,
+        "length": 7,
+        "coverage": 255
+      }
     ],
     [
-      [
-        0,
-        2,
-        255
-      ],
-      [
-        1,
-        1,
-        255
-      ]
+      {
+        "start": 0,
+        "length": 2,
+        "coverage": 255
+      },
+      {
+        "start": 1,
+        "length": 1,
+        "coverage": 255
+      }
     ],
     [
-      [
-        0,
-        1,
-        256
-      ]
+      {
+        "start": 0,
+        "length": 1,
+        "coverage": 256
+      }
     ],
     [
-      [
-        0,
-        0,
-        255
-      ]
+      {
+        "start": 0,
+        "length": 0,
+        "coverage": 255
+      }
     ],
     [
-      [
-        0.5,
-        1,
-        255
-      ]
+      {
+        "start": 0.5,
+        "length": 1,
+        "coverage": 255
+      }
     ]
   ]
 }

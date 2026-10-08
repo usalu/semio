@@ -1,0 +1,105 @@
+{
+  "owner": "os.space.history",
+  "coordinate": "os.space.history@1/*",
+  "registrationFunction": "space_history::io::sqlite::snapshot::register_sqlite_snapshot",
+  "nativeLaw": "sqlite_snapshot_framework_space_history_explicit_owner_registration_after_create_reload_and_retained",
+  "isolationVariable": "SEMIO_SQLITE_HISTORY_REGISTRATION_CASE",
+  "cases": [
+    {
+      "id": "create-binary",
+      "opening": "create",
+      "encoding": "binary",
+      "envelopeDialect": null,
+      "before": {
+        "export": "UnsupportedOwner",
+        "import": "UnsupportedOwner"
+      },
+      "after": {
+        "export": "completeSnapshot",
+        "import": "completeSnapshot",
+        "metadata": "sameOwnerAndEncoding"
+      },
+      "routeHops": 1
+    },
+    {
+      "id": "create-text",
+      "opening": "create",
+      "encoding": "text",
+      "envelopeDialect": null,
+      "before": {
+        "export": "UnsupportedOwner",
+        "import": "UnsupportedOwner"
+      },
+      "after": {
+        "export": "completeSnapshot",
+        "import": "completeSnapshot",
+        "metadata": "sameOwnerAndEncoding"
+      },
+      "routeHops": 1
+    },
+    {
+      "id": "reload-binary",
+      "opening": "reload",
+      "encoding": "binary",
+      "envelopeDialect": null,
+      "before": {
+        "export": "UnsupportedOwner",
+        "import": "UnsupportedOwner"
+      },
+      "after": {
+        "export": "completeSnapshot",
+        "import": "completeSnapshot",
+        "metadata": "sameOwnerAndEncoding"
+      },
+      "routeHops": 1
+    },
+    {
+      "id": "reload-text",
+      "opening": "reload",
+      "encoding": "text",
+      "envelopeDialect": null,
+      "before": {
+        "export": "UnsupportedOwner",
+        "import": "UnsupportedOwner"
+      },
+      "after": {
+        "export": "completeSnapshot",
+        "import": "completeSnapshot",
+        "metadata": "sameOwnerAndEncoding"
+      },
+      "routeHops": 1
+    },
+    {
+      "id": "retained-binary",
+      "opening": "retained",
+      "encoding": "binary",
+      "envelopeDialect": "os.space.history@1/*",
+      "before": {
+        "export": "UnsupportedOwner",
+        "import": "UnsupportedOwner"
+      },
+      "after": {
+        "export": "completeSnapshot",
+        "import": "completeSnapshot",
+        "metadata": "sameOwnerAndEncoding"
+      },
+      "routeHops": 1
+    },
+    {
+      "id": "retained-text",
+      "opening": "retained",
+      "encoding": "text",
+      "envelopeDialect": "os.space.history@1/*",
+      "before": {
+        "export": "UnsupportedOwner",
+        "import": "UnsupportedOwner"
+      },
+      "after": {
+        "export": "completeSnapshot",
+        "import": "completeSnapshot",
+        "metadata": "sameOwnerAndEncoding"
+      },
+      "routeHops": 1
+    }
+  ]
+}

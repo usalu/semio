@@ -147,6 +147,8 @@ fn world3d_scene_splits_into_the_declared_lanes_and_merges_back() {
     assert_eq!(lanes.len(), expected_texts.len());
     for lane in &lanes {
         assert_eq!(Some(lane.payload.as_str()), expected_texts.get(lane.key).and_then(Value::as_str), "lane {} payload", lane.key);
+        use std::hash::Hasher;
+        let mut oracle=fnv::FnvHasher::default();oracle.write(lane.payload.as_bytes());let expected=spine.lanes.iter().find(|reference|lane.key.ends_with(&reference.lane)).unwrap();assert_eq!(expected.hash,format!("{:016x}",oracle.finish()));assert_eq!(expected.bytes as usize,lane.payload.as_bytes().len());
     }
     assert_eq!(serde_json::to_value(&spine).expect("serialize spine"), round_trip["spine"]);
 
@@ -614,6 +616,8 @@ fn paint2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     assert_eq!(lanes.len(), expected_texts.len());
     for lane in &lanes {
         assert_eq!(Some(lane.payload.as_str()), expected_texts.get(lane.key).and_then(Value::as_str), "lane {} payload", lane.key);
+        use std::hash::Hasher;
+        let mut oracle=fnv::FnvHasher::default();oracle.write(lane.payload.as_bytes());let expected=spine.lanes.iter().find(|reference|lane.key.ends_with(&reference.lane)).unwrap();assert_eq!(expected.hash,format!("{:016x}",oracle.finish()));assert_eq!(expected.bytes as usize,lane.payload.as_bytes().len());
     }
     assert_eq!(serde_json::to_value(&spine).expect("serialize spine"), round_trip["spine"]);
     assert_eq!(Paint2dScene::decode_pack(&spine.encode_pack().expect("spine packs")).expect("spine unpacks"), spine);

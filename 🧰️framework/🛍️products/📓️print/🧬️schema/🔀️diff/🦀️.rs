@@ -66,7 +66,7 @@ pub fn valid_path(path: &[String]) -> bool {
 
 fn write_path(root: &mut DslValue, edit: &ChartEdit) -> MutationApplyResult<()> {
     if !valid_path(&edit.path) {
-        return Err(MutationApplyError::new("print.chart.path", "invalid chart address").at(edit.path.clone()));
+        return Err(MutationApplyError::new("mutation.apply.invalid-path", "invalid chart address").at(edit.path.clone()));
     }
     let mut parent = root;
     for segment in &edit.path[..edit.path.len() - 1] {
@@ -74,14 +74,14 @@ fn write_path(root: &mut DslValue, edit: &ChartEdit) -> MutationApplyResult<()> 
             DslValue::Object(entries) => entries.iter_mut().find(|(key, _)| key == segment).map(|(_, value)| value),
             DslValue::Array(items) => array_index(segment).and_then(|index| items.get_mut(index)),
             _ => None,
-        }.ok_or_else(|| MutationApplyError::new("print.chart.parent", "chart address parent is missing").at(edit.path.clone()))?;
+        }.ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "chart address parent is missing").at(edit.path.clone()))?;
     }
     let segment = &edit.path[edit.path.len() - 1];
     match parent {
         DslValue::Object(entries) => {
             let index = entries.iter().position(|(key, _)| key == segment);
             if !presence_equal(index.map(|index| &entries[index].1),edit.before.as_ref()) {
-                return Err(MutationApplyError::new("print.chart.precondition", "chart field changed since diff was authored").at(edit.path.clone()));
+                return Err(MutationApplyError::new("mutation.apply.precondition-drifted", "chart field changed since diff was authored").at(edit.path.clone()));
             }
             match (index, &edit.after) {
                 (Some(index), Some(value)) => entries[index].1 = value.clone(),
@@ -91,9 +91,9 @@ fn write_path(root: &mut DslValue, edit: &ChartEdit) -> MutationApplyResult<()> 
             }
         },
         DslValue::Array(items) => {
-            let index = array_index(segment).ok_or_else(|| MutationApplyError::new("print.chart.index", "array index must be canonical").at(edit.path.clone()))?;
+            let index = array_index(segment).ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-index", "array index must be canonical").at(edit.path.clone()))?;
             if index > items.len() || !presence_equal(items.get(index),edit.before.as_ref()) {
-                return Err(MutationApplyError::new("print.chart.precondition", "array index or prior value is invalid").at(edit.path.clone()));
+                return Err(MutationApplyError::new("mutation.apply.precondition-drifted", "array index or prior value is invalid").at(edit.path.clone()));
             }
             match &edit.after {
                 Some(value) if index == items.len() => items.push(value.clone()),
@@ -102,7 +102,7 @@ fn write_path(root: &mut DslValue, edit: &ChartEdit) -> MutationApplyResult<()> 
                 None => {},
             }
         },
-        _ => return Err(MutationApplyError::new("print.chart.parent", "chart address parent is scalar").at(edit.path.clone())),
+        _ => return Err(MutationApplyError::new("mutation.apply.missing-target", "chart address parent is scalar").at(edit.path.clone())),
     }
     Ok(())
 }
@@ -111,30 +111,30 @@ impl ChartEdit {
     /// 🧭️ Authors the guarded edit that sets `path` to `value` in `root` by reading `root` only: `None` when the slot already holds `value`.
     pub fn authored(root: &DslValue, path: &[String], value: Option<&DslValue>) -> MutationApplyResult<Option<Self>> {
         if !valid_path(path) {
-            return Err(MutationApplyError::new("print.chart.path", "invalid chart address").at(path.to_vec()));
+            return Err(MutationApplyError::new("mutation.apply.invalid-path", "invalid chart address").at(path.to_vec()));
         }
         let segment = &path[path.len() - 1];
-        let parent = read_path(root, &path[..path.len() - 1]).ok_or_else(|| MutationApplyError::new("print.chart.parent", "chart address parent is missing").at(path.to_vec()))?;
+        let parent = read_path(root, &path[..path.len() - 1]).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "chart address parent is missing").at(path.to_vec()))?;
         let before = match parent {
             DslValue::Object(entries) => entries.iter().find(|(key, _)| key == segment).map(|(_, held)| held),
             DslValue::Array(items) => {
-                let index = array_index(segment).ok_or_else(|| MutationApplyError::new("print.chart.index", "array index must be canonical").at(path.to_vec()))?;
+                let index = array_index(segment).ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-index", "array index must be canonical").at(path.to_vec()))?;
                 if index > items.len() {
-                    return Err(MutationApplyError::new("print.chart.precondition", "array index or prior value is invalid").at(path.to_vec()));
+                    return Err(MutationApplyError::new("mutation.apply.precondition-drifted", "array index or prior value is invalid").at(path.to_vec()));
                 }
                 items.get(index)
             },
-            _ => return Err(MutationApplyError::new("print.chart.parent", "chart address parent is scalar").at(path.to_vec())),
+            _ => return Err(MutationApplyError::new("mutation.apply.missing-target", "chart address parent is scalar").at(path.to_vec())),
         };
         Ok((!presence_equal(before, value)).then(|| Self { path: path.to_vec(), before: before.cloned(), after: value.cloned() }))
     }
 
-    /// ↩️ The edits that undo `self` against `state`, the chart as it stands just before `self` applies, in application order.
-    /// Removing an array element shifts its tail, so its undo restores every shifted slot and re-appends the last one.
-    pub fn negation(&self, state: &DslValue) -> Vec<Self> {
+    /// ↩️ The edits that undo `self`, read from `root`, the chart `self` is authored against, in application order. Removing an
+    /// array element shifts its tail, so its undo restores every shifted slot (read from `root`) and re-appends the last one.
+    pub fn undo_rows(&self, root: &DslValue) -> Vec<Self> {
         let parent_path = &self.path[..self.path.len().saturating_sub(1)];
         if self.before.is_some() && self.after.is_none() {
-            if let (Some(DslValue::Array(items)), Some(index)) = (read_path(state, parent_path), self.path.last().and_then(|segment| array_index(segment))) {
+            if let (Some(DslValue::Array(items)), Some(index)) = (read_path(root, parent_path), self.path.last().and_then(|segment| array_index(segment))) {
                 if index < items.len() {
                     return (index..items.len())
                         .rev()
@@ -155,7 +155,7 @@ impl MutationDiff<ChartSnapshot> for ChartDiff {
     fn apply(&self, base: &ChartSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ChartSnapshot> {
         let mut next = base.clone();
         for edit in &self.edits { write_path(&mut next.chart, edit)?; }
-        if !self.edits.is_empty() { crate::inferences::validate_chart(&next).map_err(|message| MutationApplyError::new("print.chart.schema", message))?; }
+        if !self.edits.is_empty() { crate::inferences::validate_chart(&next).map_err(|message| MutationApplyError::new("mutation.apply.schema-invalid", message))?; }
         Ok(next)
     }
     fn absorb(&mut self, other: Self) {
@@ -172,23 +172,10 @@ impl MutationDiff<ChartSnapshot> for ChartDiff {
 }
 
 impl DiffAlgebra<ChartSnapshot> for ChartDiff {
+    /// ↩️ Reads every edit's undo rows from the base chart, last edit first; the edits of one diff address disjoint slots, and edits that
+    /// share an array are inverted step by step by the store, which absorbs the per-step inverses.
     fn inverse(&self, base: &ChartSnapshot) -> Self {
-        let mut state = base.chart.clone();
-        let mut negations = Vec::with_capacity(self.edits.len());
-        for edit in &self.edits {
-            negations.push(edit.negation(&state));
-            if write_path(&mut state, edit).is_err() { return Self::default(); }
-        }
-        Self { edits: negations.into_iter().rev().flatten().collect() }
-    }
-    fn between(base: &ChartSnapshot, other: &ChartSnapshot) -> Self {
-        let mut names = std::collections::BTreeSet::new();
-        for value in [&base.chart, &other.chart] { if let Some(entries) = value.as_object() { names.extend(entries.iter().map(|(name, _)| name.clone())); } }
-        Self { edits: names.into_iter().filter_map(|name| {
-            let before = base.chart.get(&name).cloned();
-            let after = other.chart.get(&name).cloned();
-            (!presence_equal(before.as_ref(),after.as_ref())).then_some(ChartEdit { path: vec![name], before, after })
-        }).collect() }
+        Self { edits: self.edits.iter().rev().flat_map(|edit| edit.undo_rows(&base.chart)).collect() }
     }
     fn is_empty(&self) -> bool { self.edits.is_empty() }
 }

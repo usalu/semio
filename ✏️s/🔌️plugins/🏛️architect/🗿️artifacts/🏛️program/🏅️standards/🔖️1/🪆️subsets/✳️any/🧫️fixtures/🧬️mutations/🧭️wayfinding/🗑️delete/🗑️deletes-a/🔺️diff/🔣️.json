@@ -31,12 +31,15 @@
   "information": null,
   "communication": null,
   "wayfinding": {
-    "added": [],
     "removed": [
-      "wayfinding-requirement-a"
+      {
+        "id": "wayfinding-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "schedules": null,
   "flexibility": null,

@@ -3,7 +3,7 @@
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select;
 use crate::editor::puzzle2d::Puzzle2dActionCtx;
 use semio_framework_plugin::kernel::Effect;
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn engagement_abort(ctx: &mut Puzzle2dActionCtx<'_>, _args: Option<&Value>) {
     ctx.scene.runtime.engagement_input_by_pane.insert(ctx.window_kind.to_string(), String::new());

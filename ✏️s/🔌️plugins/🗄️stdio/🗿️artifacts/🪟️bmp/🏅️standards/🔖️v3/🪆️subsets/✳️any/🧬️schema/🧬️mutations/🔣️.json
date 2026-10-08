@@ -50,6 +50,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-image/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-samples"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-samples/schema.json"
+        }
+      }
     }
   ]
 }

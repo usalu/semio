@@ -1,0 +1,30 @@
+{
+  "paths": [
+    ".vscode/🧩️launch.seed.jsonc",
+    ".vscode/launch.json"
+  ],
+  "entries": [
+    {
+      "name": "🌱️ Paged Origin · Guarded Source Provider stage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" paged-origin-source-provider-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.763
+      }
+    },
+    {
+      "name": "🌱️ Paged Origin · Guarded Source Provider mount",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" paged-origin-source-provider-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.764
+      }
+    }
+  ]
+}

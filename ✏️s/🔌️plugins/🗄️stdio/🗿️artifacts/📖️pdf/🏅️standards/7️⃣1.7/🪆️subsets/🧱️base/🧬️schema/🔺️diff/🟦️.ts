@@ -1,7 +1,8 @@
+import type { PdfAdmittedStreamRole } from "../🪪️stream-roles/🟦️.ts";
 /** 🧬️ PdfDiff — TypeScript facet of `s.stdio.pdf.1.7` (diff), generated from the Rust model
  *  by 🐍️generate-schema-facets.py (ticket 26/09/18/PDF-ARTIFACT-SPEC-COMPLETE). */
 import type { ObjRef, PdfAcroForm, PdfAction, PdfActionKind, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfCcittParameters, PdfColorSpace, PdfDate, PdfDecimal, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfFileSpecification, PdfFormField, PdfFormFieldKind, PdfFunction, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfMarkInfo, PdfMarkupAnnotation, PdfObject, PdfOp, PdfOpenAction, PdfOptionalContent, PdfOptionalContentGroup, PdfPage, PdfPageLayout, PdfPageMode, PdfPredictor, PdfPropertyList, PdfStreamFilter, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences } from '../📸️snapshot/🟦️.ts';
-import { schema as snapshotSchema, registerSchemaDocument as registerOther, validateAgainst as _validateOther } from '../📸️snapshot/🟦️.ts';
+import { registerSchemaDocument, validateAgainst, SchemaRefusal } from '../📸️snapshot/🟦️.ts';
 
 export interface PdfDiff {
   declaredVersion?: string | null;
@@ -35,6 +36,7 @@ export interface PdfDiff {
   objects?: PdfObjectsDiff | null;
   trailer?: PdfDictDiff | null;
   graphEdit?: boolean;
+  admittedStreamRoles?: { removed?: number[]; modified?: { index: number; value: PdfAdmittedStreamRole }[]; added?: { index: number; value: PdfAdmittedStreamRole }[] } | null;
 }
 
 export interface PdfInfoDiff {
@@ -629,6 +631,66 @@ export const schema = {
     },
     "graphEdit": {
       "type": "boolean"
+    },
+    "admittedStreamRoles": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "value": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAdmittedStreamRole"
+                  }
+                },
+                "required": [
+                  "index",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "added": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "value": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAdmittedStreamRole"
+                  }
+                },
+                "required": [
+                  "index",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "$defs": {
@@ -759,13 +821,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfAnnotation"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfAnnotation"
           }
         }
       }
@@ -783,13 +845,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfNamedDestination"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfNamedDestination"
           }
         }
       }
@@ -807,13 +869,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfOp"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfOp"
           }
         }
       }
@@ -831,13 +893,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfOutlineItem"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfOutlineItem"
           }
         }
       }
@@ -855,13 +917,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfOutputIntent"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfOutputIntent"
           }
         }
       }
@@ -879,18 +941,18 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfPageLabelRange"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfPageLabelRange"
           }
         }
       }
     },
-    "PdfIndexedItemT": {
+    "PdfIndexedItemPdfAnnotation": {
       "type": "object",
       "properties": {
         "index": {
@@ -898,7 +960,231 @@ export const schema = {
           "minimum": 0
         },
         "value": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/T"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAnnotation"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfEmbeddedFile": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfEmbeddedFile"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfExtGState": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfExtGState"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfFont": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfFont"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfFormXObject": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfFormXObject"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfImage": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfImage"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfNamedColorSpace": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedColorSpace"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfNamedDestination": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedDestination"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfNamedProperties": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedProperties"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfOp": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOp"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfOutlineItem": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOutlineItem"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfOutputIntent": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOutputIntent"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfPageLabelRange": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPageLabelRange"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfPattern": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPattern"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfIndexedItemPdfShading": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfShading"
         }
       },
       "required": [
@@ -1026,13 +1312,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfEmbeddedFile"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfEmbeddedFile"
           }
         }
       }
@@ -1049,13 +1335,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfExtGState"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfExtGState"
           }
         }
       }
@@ -1072,13 +1358,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfFont"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfFont"
           }
         }
       }
@@ -1095,13 +1381,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfFormXObject"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfFormXObject"
           }
         }
       }
@@ -1118,13 +1404,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfImage"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfImage"
           }
         }
       }
@@ -1141,13 +1427,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfNamedColorSpace"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfNamedColorSpace"
           }
         }
       }
@@ -1164,13 +1450,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfNamedProperties"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfNamedProperties"
           }
         }
       }
@@ -1187,13 +1473,13 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfPattern"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfPattern"
           }
         }
       }
@@ -1210,25 +1496,145 @@ export const schema = {
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfKeyedItemT"
+            "$ref": "#/$defs/PdfKeyedItemPdfShading"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfIndexedItemT"
+            "$ref": "#/$defs/PdfIndexedItemPdfShading"
           }
         }
       }
     },
-    "PdfKeyedItemT": {
+    "PdfKeyedItemPdfEmbeddedFile": {
       "type": "object",
       "properties": {
         "key": {
           "type": "string"
         },
         "value": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/T"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfEmbeddedFile"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfExtGState": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfExtGState"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfFont": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfFont"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfFormXObject": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfFormXObject"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfImage": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfImage"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfNamedColorSpace": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedColorSpace"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfNamedProperties": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedProperties"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfPattern": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPattern"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "PdfKeyedItemPdfShading": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfShading"
         }
       },
       "required": [
@@ -1327,7 +1733,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -1878,7 +2284,7 @@ export const schema = {
             "value": {
               "type": "array",
               "items": {
-                "type": "number"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -2034,7 +2440,7 @@ export const schema = {
               "const": "set"
             },
             "value": {
-              "type": "number"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -2269,64 +2675,8 @@ export const schema = {
   }
 } as const;
 
-//#region 🚪️Validation
-type Schema = Record<string, unknown>;
-export class SchemaRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-const documents = new Map<string, Schema>();
-export const registerSchemaDocument = (schema: Schema): void => {
-  documents.set(String(schema["$id"]), schema);
-};
-const resolveRef = (ref: string, own: Schema): Schema => {
-  const [documentId, pointer] = ref.split("#");
-  const document = documentId === "" ? own : documents.get(documentId);
-  if (!document) throw new SchemaRefusal("$ref", `unknown schema document ${documentId}`);
-  let node: unknown = document;
-  for (const step of (pointer ?? "").split("/").filter((s) => s.length > 0)) node = (node as Record<string, unknown>)[step];
-  if (!node) throw new SchemaRefusal("$ref", `unresolved pointer ${ref}`);
-  return node as Schema;
-};
-const matches = (schema: Schema, value: unknown, own: Schema, at: string, errors: string[]): boolean => {
-  if (typeof schema["$ref"] === "string") return matches(resolveRef(schema["$ref"] as string, own), value, own, at, errors);
-  if (schema["const"] !== undefined) return value === schema["const"] || (errors.push(`${at}: expected ${JSON.stringify(schema["const"])}`), false);
-  if (Array.isArray(schema["enum"])) return (schema["enum"] as unknown[]).includes(value) || (errors.push(`${at}: not one of ${(schema["enum"] as unknown[]).join(", ")}`), false);
-  if (Array.isArray(schema["anyOf"])) return (schema["anyOf"] as Schema[]).some((s) => matches(s, value, own, at, [])) || (errors.push(`${at}: matches no alternative`), false);
-  if (Array.isArray(schema["oneOf"])) return (schema["oneOf"] as Schema[]).filter((s) => matches(s, value, own, at, [])).length === 1 || (errors.push(`${at}: matches no single alternative`), false);
-  if (Array.isArray(schema["allOf"])) return (schema["allOf"] as Schema[]).every((s) => matches(s, value, own, at, errors));
-  const types = Array.isArray(schema["type"]) ? (schema["type"] as string[]) : typeof schema["type"] === "string" ? [schema["type"] as string] : [];
-  const kind = value === null ? "null" : Array.isArray(value) ? "array" : typeof value === "number" ? (Number.isInteger(value) ? "integer" : "number") : typeof value;
-  if (types.length > 0 && !types.includes(kind) && !(kind === "integer" && types.includes("number"))) return (errors.push(`${at}: expected ${types.join("|")}, found ${kind}`), false);
-  if (kind === "integer" || kind === "number") {
-    if (typeof schema["minimum"] === "number" && (value as number) < (schema["minimum"] as number)) return (errors.push(`${at}: below ${schema["minimum"]}`), false);
-    if (typeof schema["maximum"] === "number" && (value as number) > (schema["maximum"] as number)) return (errors.push(`${at}: above ${schema["maximum"]}`), false);
-  }
-  if (kind === "array") {
-    const items = value as unknown[];
-    if (typeof schema["minItems"] === "number" && items.length < (schema["minItems"] as number)) return (errors.push(`${at}: fewer than ${schema["minItems"]} items`), false);
-    if (typeof schema["maxItems"] === "number" && items.length > (schema["maxItems"] as number)) return (errors.push(`${at}: more than ${schema["maxItems"]} items`), false);
-    if (Array.isArray(schema["items"])) return items.every((item, index) => matches((schema["items"] as Schema[])[index] ?? {}, item, own, `${at}[${index}]`, errors));
-    if (schema["items"]) return items.every((item, index) => matches(schema["items"] as Schema, item, own, `${at}[${index}]`, errors));
-  }
-  if (kind === "object") {
-    const row = value as Record<string, unknown>;
-    for (const key of (schema["required"] as string[] | undefined) ?? []) if (row[key] === undefined) return (errors.push(`${at}.${key}: missing`), false);
-    const properties = (schema["properties"] as Record<string, Schema> | undefined) ?? {};
-    for (const [key, sub] of Object.entries(properties)) if (row[key] !== undefined && !matches(sub, row[key], own, `${at}.${key}`, errors)) return false;
-  }
-  return true;
-};
-export const validateAgainst = <T,>(schema: Schema, pointer: string, value: unknown): T => {
-  const node = pointer === "" ? schema : resolveRef(`#${pointer}`, schema);
-  const errors: string[] = [];
-  if (!matches(node, value, schema, "$", errors)) throw new SchemaRefusal("$", errors[0] ?? "invalid");
-  return value as T;
-};
-//#endregion 🚪️Validation
+export { registerSchemaDocument, validateAgainst, SchemaRefusal };
 registerSchemaDocument(schema);
-registerOther(snapshotSchema);
 export const parsePdfDiff = (value: unknown): PdfDiff => validateAgainst<PdfDiff>(schema, "", value);
 export const parsePdfDictDiff = (value: unknown): PdfDictDiff => validateAgainst<PdfDictDiff>(schema, "/$defs/PdfDictDiff", value);
 export const parsePdfDictAdded = (value: unknown): PdfDictAdded => validateAgainst<PdfDictAdded>(schema, "/$defs/PdfDictAdded", value);

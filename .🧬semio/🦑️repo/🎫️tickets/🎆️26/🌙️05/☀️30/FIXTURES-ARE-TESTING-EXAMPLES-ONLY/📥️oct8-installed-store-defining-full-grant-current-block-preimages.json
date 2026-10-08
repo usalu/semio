@@ -1,0 +1,50 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "beforeSha256": "8806d9208f41a2c2f49b5f25ebe10e6a8827f8d7368037610d1826a8a62fe106",
+  "changes": [
+    {
+      "before": "    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;",
+      "after": "    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;"
+    },
+    {
+      "before": "    fn next_close_byte_demand(&self, store: &ArtifactStore<P, Mutation>) -> usize;",
+      "after": "    fn demands(&self, store: &ArtifactStore<P, Mutation>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;"
+    },
+    {
+      "before": "    pub fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {\n        self.close_owned_store_step(maximum_items, maximum_bytes)\n    }",
+      "after": "    pub fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {\n        self.close_owned_store_step(grant)\n    }"
+    },
+    {
+      "before": "    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;",
+      "after": "    fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;"
+    },
+    {
+      "before": "    fn close_owned_byte_demand(&self) -> usize;",
+      "after": "    fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;"
+    },
+    {
+      "before": "    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {\n        self.close_owned_store_step(maximum_items, maximum_bytes)\n    }",
+      "after": "    fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {\n        self.close_owned_store_step(grant)\n    }"
+    },
+    {
+      "before": "    fn close_owned_byte_demand(&self) -> usize {\n        ArtifactStore::next_close_byte_demand(self)\n    }",
+      "after": "    fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {\n        ArtifactStore::close_owned_demands(self, maximum_body_bytes)\n    }"
+    },
+    {
+      "before": "    fn close_owned_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {",
+      "after": "    fn close_owned_step(&mut self, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {"
+    },
+    {
+      "before": "    fn close_owned_byte_demand(&self) -> usize {\n        match *self {}\n    }",
+      "after": "    fn close_owned_demands(&self, _maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {\n        match *self {}\n    }"
+    },
+    {
+      "before": "            fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, ::semio_framework_value::ValueError> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), maximum_items, maximum_bytes)),+ }\n            }",
+      "after": "            fn close_owned_step(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), grant)),+ }\n            }"
+    },
+    {
+      "before": "            fn close_owned_byte_demand(&self) -> usize {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_byte_demand(m.as_ref())),+ }\n            }",
+      "after": "            fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<::semio_framework_value::RetirementDemand, ::semio_framework_value::ValueError> {\n                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_demands(m.as_ref(), maximum_body_bytes)),+ }\n            }"
+    }
+  ]
+}

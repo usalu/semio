@@ -32,7 +32,7 @@ export interface NamedModified<D> {
 export interface NamedTripleDiff<D, T> {
   removed: string[];
   modified: NamedModified<D>[];
-  added: T[];
+  added: NamedAdded<T>[];
 }
 
 export interface SemioModelDiff {
@@ -40,3 +40,6 @@ export interface SemioModelDiff {
   elements?: NamedTripleDiff<SemioModelElementDiff, unknown>;
   relations?: NamedTripleDiff<ModelRelationDiff, unknown>;
 }
+
+/** 🧩 One positional add: the row and the final index it lands at. */
+export interface NamedAdded<T> { index: number; item: T }

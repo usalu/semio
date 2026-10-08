@@ -1,0 +1,34 @@
+{
+  "schema": "framework.value.factory-owned-retirement",
+  "cases": [
+    {
+      "text": "ä🐚\u0000",
+      "repeat": 16000,
+      "capacity": 128000
+    },
+    {
+      "text": "",
+      "repeat": 1,
+      "capacity": 8192
+    }
+  ],
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "cancelCuts": [
+    0,
+    2,
+    9
+  ],
+  "refusalAxes": [
+    "items",
+    "capacity",
+    "depth"
+  ],
+  "retainOriginalOnProviderRefusal": true,
+  "separateChildFrameRelease": true,
+  "releaseOriginalIssuer": true,
+  "supportsSendOnlyPayload": true
+}

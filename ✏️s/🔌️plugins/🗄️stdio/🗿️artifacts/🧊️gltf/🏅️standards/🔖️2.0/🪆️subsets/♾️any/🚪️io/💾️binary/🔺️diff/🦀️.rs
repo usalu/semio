@@ -114,16 +114,6 @@ pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usiz
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
-    write_bin_vec(w, v, |w, s: &String| write_bin_str(w, s));
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackRefusal> {
-    read_bin_vec(r, read_bin_str)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
     write_bin_vec(w, v, |w, (k, idx): &(String, usize)| {
         write_bin_str(w, k);
@@ -315,7 +305,7 @@ pub(crate) fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, d
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
-    write_bin_option(w, &d.nodes, |w, v| write_bin_usize_vec(w, v));
+    write_bin_option(w, &d.nodes, write_bin_refs_delta);
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
@@ -323,7 +313,7 @@ pub(crate) fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackRefusal> {
-    Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_usize_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
+    Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_refs_delta)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -362,7 +352,7 @@ pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
-    write_bin_option(w, &d.children, |w, v| write_bin_usize_vec(w, v));
+    write_bin_option(w, &d.children, write_bin_refs_delta);
     write_bin_tri(w, &d.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.camera, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.skin, |w, v| w.write_varint_u64(*v as u64));
@@ -379,7 +369,7 @@ pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackRefusal> {
     Ok(GltfNodeDiff {
-        children: read_bin_option(r, read_bin_usize_vec)?,
+        children: read_bin_option(r, read_bin_refs_delta)?,
         mesh: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         camera: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         skin: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -945,6 +935,10 @@ pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollec
         w.write_varint_u64(a.index as u64);
         write_item(w, &a.item);
     });
+    write_bin_vec(w, &c.amended, |w, m: &GltfModified<D>| {
+        w.write_varint_u64(m.index as u64);
+        write_diff(w, &m.diff);
+    });
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -964,16 +958,104 @@ pub(crate) fn read_bin_collection<T, D>(
         let item = read_item(r)?;
         Ok(GltfAdded { index, item })
     })?;
-    Ok(GltfCollectionDiff { removed, modified, added })
+    let amended = read_bin_vec(r, |r| {
+        let index = r.read_varint_u64()? as usize;
+        let diff = read_diff(r)?;
+        Ok(GltfModified { index, diff })
+    })?;
+    Ok(GltfCollectionDiff { removed, modified, added, amended })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_attribute(w: &mut dsl::ByteWriter, attribute: &GltfAttribute) {
+    write_bin_str(w, &attribute.semantic);
+    w.write_varint_u64(attribute.accessor as u64);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_attribute(r: &mut dsl::ByteReader<'_>) -> Result<GltfAttribute, dsl::PackRefusal> {
+    Ok(GltfAttribute { semantic: read_bin_str(r)?, accessor: r.read_varint_u64()? as usize })
+}
+
+/// 🧷️ Binary codec of one positional list delta: removed `(id, base index)`, inserted `(after index, row)`, moved `(id, from, to)`.
+macro_rules! delta_bin_codec {
+    ($write:ident, $read:ident, $delta:ident, $removal:ident, $insertion:ident, $relocation:ident, $write_id:expr, $read_id:expr, $write_row:expr, $read_row:expr) => {
+        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+        pub(crate) fn $write(w: &mut dsl::ByteWriter, delta: &$delta) {
+            write_bin_vec(w, &delta.removed, |w, entry: &$removal| {
+                $write_id(w, &entry.id);
+                w.write_varint_u64(entry.index as u64);
+            });
+            write_bin_vec(w, &delta.inserted, |w, entry: &$insertion| {
+                w.write_varint_u64(entry.index as u64);
+                $write_row(w, &entry.row);
+            });
+            write_bin_vec(w, &delta.moved, |w, entry: &$relocation| {
+                $write_id(w, &entry.id);
+                w.write_varint_u64(entry.from as u64);
+                w.write_varint_u64(entry.to as u64);
+            });
+        }
+
+        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+        pub(crate) fn $read(r: &mut dsl::ByteReader<'_>) -> Result<$delta, dsl::PackRefusal> {
+            let removed = read_bin_vec(r, |r| Ok($removal { id: $read_id(r)?, index: r.read_varint_u64()? as usize }))?;
+            let inserted = read_bin_vec(r, |r| Ok($insertion { index: r.read_varint_u64()? as usize, row: $read_row(r)? }))?;
+            let moved = read_bin_vec(r, |r| Ok($relocation { id: $read_id(r)?, from: r.read_varint_u64()? as usize, to: r.read_varint_u64()? as usize }))?;
+            Ok($delta { removed, inserted, moved })
+        }
+    };
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_position(w: &mut dsl::ByteWriter, value: &usize) {
+    w.write_varint_u64(*value as u64);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_position(r: &mut dsl::ByteReader<'_>) -> Result<usize, dsl::PackRefusal> {
+    Ok(r.read_varint_u64()? as usize)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_reference(w: &mut dsl::ByteWriter, value: &GltfRef) {
+    w.write_varint_u64(value.0 as u64);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_reference(r: &mut dsl::ByteReader<'_>) -> Result<GltfRef, dsl::PackRefusal> {
+    Ok(GltfRef(r.read_varint_u64()? as usize))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_key(w: &mut dsl::ByteWriter, value: &String) {
+    write_bin_str(w, value);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_target_row(w: &mut dsl::ByteWriter, value: &GltfMorphTarget) {
+    write_bin_attr_pairs(w, &value.0);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_target_row(r: &mut dsl::ByteReader<'_>) -> Result<GltfMorphTarget, dsl::PackRefusal> {
+    read_bin_attr_pairs(r).map(GltfMorphTarget)
+}
+
+delta_bin_codec!(write_bin_refs_delta, read_bin_refs_delta, GltfRefsDelta, GltfRefRemoval, GltfRefInsertion, GltfRefRelocation, write_bin_position, read_bin_position, write_bin_reference, read_bin_reference);
+delta_bin_codec!(write_bin_strings_delta, read_bin_strings_delta, GltfStringsDelta, GltfStringRemoval, GltfStringInsertion, GltfStringRelocation, write_bin_key, read_bin_str, write_bin_key, read_bin_str);
+delta_bin_codec!(write_bin_attributes_delta, read_bin_attributes_delta, GltfAttributesDelta, GltfAttributeRemoval, GltfAttributeInsertion, GltfAttributeRelocation, write_bin_key, read_bin_str, write_bin_attribute, read_bin_attribute);
+delta_bin_codec!(write_bin_targets_delta, read_bin_targets_delta, GltfTargetsDelta, GltfTargetRemoval, GltfTargetInsertion, GltfTargetRelocation, write_bin_key, read_bin_str, write_bin_target_row, read_bin_target_row);
+delta_bin_codec!(write_bin_channels_delta, read_bin_channels_delta, GltfChannelsDelta, GltfChannelRemoval, GltfChannelInsertion, GltfChannelRelocation, write_bin_key, read_bin_str, write_bin_animation_channel, read_bin_animation_channel);
+delta_bin_codec!(write_bin_animation_samplers_delta, read_bin_animation_samplers_delta, GltfAnimationSamplersDelta, GltfAnimationSamplerRemoval, GltfAnimationSamplerInsertion, GltfAnimationSamplerRelocation, write_bin_key, read_bin_str, write_bin_animation_sampler, read_bin_animation_sampler);
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_primitive_diff(w: &mut dsl::ByteWriter, d: &GltfPrimitiveDiff) {
-    write_bin_option(w, &d.attributes, |w, v| write_bin_attr_pairs(w, &v.0));
+    write_bin_option(w, &d.attributes, write_bin_attributes_delta);
     write_bin_tri(w, &d.indices, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.material, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.mode, |w, v| w.write_varint_u64(*v));
-    write_bin_option(w, &d.targets, |w, v| write_bin_vec(w, v, |w, target| write_bin_attr_pairs(w, &target.0)));
+    write_bin_option(w, &d.targets, write_bin_targets_delta);
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
@@ -981,11 +1063,11 @@ pub(crate) fn write_bin_primitive_diff(w: &mut dsl::ByteWriter, d: &GltfPrimitiv
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_primitive_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitiveDiff, dsl::PackRefusal> {
     Ok(GltfPrimitiveDiff {
-        attributes: read_bin_option(r, |r| read_bin_attr_pairs(r).map(GltfMorphTarget))?,
+        attributes: read_bin_option(r, read_bin_attributes_delta)?,
         indices: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         material: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         mode: read_bin_tri(r, |r| r.read_varint_u64())?,
-        targets: read_bin_option(r, |r| read_bin_vec(r, |r| read_bin_attr_pairs(r).map(GltfMorphTarget)))?,
+        targets: read_bin_option(r, read_bin_targets_delta)?,
         extensions: read_bin_tri(r, read_bin_json)?,
         extras: read_bin_tri(r, read_bin_json)?,
     })
@@ -1063,7 +1145,7 @@ pub(crate) fn read_bin_buffer_view_diff(r: &mut dsl::ByteReader<'_>) -> Result<G
 pub(crate) fn write_bin_skin_diff(w: &mut dsl::ByteWriter, d: &GltfSkinDiff) {
     write_bin_tri(w, &d.inverse_bind_matrices, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.skeleton, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &d.joints, |w, v| write_bin_usize_vec(w, v));
+    write_bin_option(w, &d.joints, write_bin_refs_delta);
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
@@ -1074,7 +1156,7 @@ pub(crate) fn read_bin_skin_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin
     Ok(GltfSkinDiff {
         inverse_bind_matrices: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         skeleton: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
-        joints: read_bin_option(r, read_bin_usize_vec)?,
+        joints: read_bin_option(r, read_bin_refs_delta)?,
         name: read_bin_tri(r, read_bin_str)?,
         extensions: read_bin_tri(r, read_bin_json)?,
         extras: read_bin_tri(r, read_bin_json)?,
@@ -1083,8 +1165,8 @@ pub(crate) fn read_bin_skin_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_animation_diff(w: &mut dsl::ByteWriter, d: &GltfAnimationDiff) {
-    write_bin_option(w, &d.channels, |w, v| write_bin_vec(w, v, write_bin_animation_channel));
-    write_bin_option(w, &d.samplers, |w, v| write_bin_vec(w, v, write_bin_animation_sampler));
+    write_bin_option(w, &d.channels, write_bin_channels_delta);
+    write_bin_option(w, &d.samplers, write_bin_animation_samplers_delta);
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
@@ -1093,8 +1175,8 @@ pub(crate) fn write_bin_animation_diff(w: &mut dsl::ByteWriter, d: &GltfAnimatio
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_animation_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationDiff, dsl::PackRefusal> {
     Ok(GltfAnimationDiff {
-        channels: read_bin_option(r, |r| read_bin_vec(r, read_bin_animation_channel))?,
-        samplers: read_bin_option(r, |r| read_bin_vec(r, read_bin_animation_sampler))?,
+        channels: read_bin_option(r, read_bin_channels_delta)?,
+        samplers: read_bin_option(r, read_bin_animation_samplers_delta)?,
         name: read_bin_tri(r, read_bin_str)?,
         extensions: read_bin_tri(r, read_bin_json)?,
         extras: read_bin_tri(r, read_bin_json)?,
@@ -1279,14 +1361,14 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     write_bin_option(&mut w, &self.extensions_used, |w, v| {
         write_bin_blob(w, &{
             let mut inner = dsl::ByteWriter::new();
-            write_bin_string_vec(&mut inner, v);
+            write_bin_strings_delta(&mut inner, v);
             inner.into_bytes()
         });
     });
     write_bin_option(&mut w, &self.extensions_required, |w, v| {
         write_bin_blob(w, &{
             let mut inner = dsl::ByteWriter::new();
-            write_bin_string_vec(&mut inner, v);
+            write_bin_strings_delta(&mut inner, v);
             inner.into_bytes()
         });
     });
@@ -1389,13 +1471,13 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     let extensions_used = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
         let mut inner = dsl::ByteReader::new(&b);
-        read_bin_string_vec(&mut inner)
+        read_bin_strings_delta(&mut inner)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let extensions_required = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
         let mut inner = dsl::ByteReader::new(&b);
-        read_bin_string_vec(&mut inner)
+        read_bin_strings_delta(&mut inner)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let extensions = read_bin_tri(&mut r, |r| {

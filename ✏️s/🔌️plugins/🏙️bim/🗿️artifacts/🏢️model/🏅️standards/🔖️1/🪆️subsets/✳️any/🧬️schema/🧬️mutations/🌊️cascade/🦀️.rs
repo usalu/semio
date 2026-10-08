@@ -41,10 +41,10 @@ macro_rules! removal {
                 false $( || self.$field.contains(id) )*
             }
 
-            fn root(&mut self, base: &ModelSnapshot, id: &str) -> bool {
+            fn with_root(mut self, base: &ModelSnapshot, id: &str) -> Option<Self> {
                 let mut found = false;
                 $( if base.$field.contains_key(id) { self.$field.insert(id.to_string()); found = true; } )*
-                found
+                found.then_some(self)
             }
 
             /// 🔺️ The sparse diff that deletes every record of the removal.
@@ -127,9 +127,10 @@ fn pinned(base: &ModelSnapshot, removal: &Removal) -> Option<(String, String)> {
 pub fn closure(base: &ModelSnapshot, roots: &[String]) -> Result<Removal, Refusal> {
     let mut removal = Removal::default();
     for id in roots {
-        if !removal.root(base, id) {
+        let Some(rooted) = removal.with_root(base, id) else {
             return Err(Refusal { code: OutcomeCode::TargetMissing, target: id.clone(), message: format!("Element \"{id}\" does not exist.") });
-        }
+        };
+        removal = rooted;
     }
     removal.buildings.extend(base.buildings.iter().filter(|(_, row)| removal.sites.contains(&row.site)).map(|(id, _)| id.clone()));
     removal.storeys.extend(base.storeys.iter().filter(|(_, row)| removal.buildings.contains(&row.building)).map(|(id, _)| id.clone()));

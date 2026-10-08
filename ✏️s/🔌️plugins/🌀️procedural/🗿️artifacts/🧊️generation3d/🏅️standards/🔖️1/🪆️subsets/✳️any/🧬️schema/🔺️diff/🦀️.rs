@@ -1,4 +1,4 @@
-//! 🧬️ Generation3d diff schema — sparse keyed delta over the artifact.
+//! 🧬️ Generation3d diff schema — sparse keyed and positional delta over the artifact.
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
@@ -32,22 +32,10 @@ pub struct Generation3dDiff {
 //#endregion 🔖️Generation3dDiff
 
 //#region 🔖️DeltaHelpers
-/// 🧩 Id-keyed rows of the widget list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct Generation3dWidgetsDelta {
-    pub added: Vec<Widget>,
-    pub removed: Vec<String>,
-    pub patched: Vec<Generation3dWidgetPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
 
-/// 🩹 One patched widget row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Generation3dWidgetPatchEntry {
-    pub id: String,
-    pub patch: Generation3dWidgetPatch,
+protocol::list_delta! {
+    /// 🧩 Positional rows of the widget list: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
+    pub Generation3dWidgetsDelta { removal: Generation3dWidgetRemoval, insertion: Generation3dWidgetInsertion, relocation: Generation3dWidgetRelocation, modification: Generation3dWidgetModification, row: Widget, patch: Generation3dWidgetPatch, list: Vec<Widget>, key: String = by Generation3dWidgetKeys, values_only }
 }
 
 /// 🩹 How one widget changes: replaced wholesale, or only the numeric fields of an input slider.
@@ -58,22 +46,9 @@ pub enum Generation3dWidgetPatch {
     Slider { value: f64, min: f64, max: f64, step: f64 },
 }
 
-/// 🧩 Id-keyed rows of the synapse list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct Generation3dSynapsesDelta {
-    pub added: Vec<SynapseSpec>,
-    pub removed: Vec<String>,
-    pub patched: Vec<Generation3dSynapsePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched synapse row (whole-synapse replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Generation3dSynapsePatchEntry {
-    pub id: String,
-    pub item: SynapseSpec,
+protocol::list_delta! {
+    /// 🧩 Positional rows of the synapse list: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
+    pub Generation3dSynapsesDelta { removal: Generation3dSynapseRemoval, insertion: Generation3dSynapseInsertion, relocation: Generation3dSynapseRelocation, modification: Generation3dSynapseModification, row: SynapseSpec, patch: Generation3dSynapsePatch, list: Vec<SynapseSpec>, key: String = by Generation3dSynapseKeys, values_only }
 }
 
 /// 📍️ One widget position row.
@@ -93,22 +68,9 @@ pub struct Generation3dLayoutDelta {
     pub patched: Vec<Generation3dLayoutRow>,
 }
 
-/// 🧩 Id-keyed rows of the generation roster.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct Generation3dGenerationsDelta {
-    pub added: Vec<FormGeneration>,
-    pub removed: Vec<String>,
-    pub patched: Vec<Generation3dGenerationPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched generation row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Generation3dGenerationPatchEntry {
-    pub id: String,
-    pub patch: Generation3dGenerationPatch,
+protocol::list_delta! {
+    /// 🧩 Positional rows of the generation roster: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
+    pub Generation3dGenerationsDelta { removal: Generation3dGenerationRemoval, insertion: Generation3dGenerationInsertion, relocation: Generation3dGenerationRelocation, modification: Generation3dGenerationModification, row: FormGeneration, patch: Generation3dGenerationPatch, list: Vec<FormGeneration>, key: String = by Generation3dGenerationKeys, values_only }
 }
 
 /// 🩹 Owned-field patch of one generation: its name and keyed answer rows.
@@ -168,18 +130,6 @@ use crate::Generation3dSnapshot;
 use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
-//#region 🔖️Insertion
-/// 📍 Complete id order that places `id` at `index` among `ids`; `None` when it lands last, because appending is already the natural order of an added row.
-pub fn insertion_order<'a>(ids: impl IntoIterator<Item = &'a str>, id: &str, index: Option<usize>) -> Option<Vec<String>> {
-    let at = index?;
-    let mut order: Vec<String> = ids.into_iter().map(str::to_owned).collect();
-    (at < order.len()).then(|| {
-        order.insert(at, id.to_owned());
-        order
-    })
-}
-//#endregion 🔖️Insertion
-
 //#region 🔖️RowAlgebra
 /// 🧩 One keyed row: its id and how a displaced owned value is closed instead of dropped.
 pub(crate) trait Row: Clone {
@@ -187,33 +137,9 @@ pub(crate) trait Row: Clone {
     fn retire(self) {}
 }
 
-impl Row for Widget {
-    fn id(&self) -> &str {
-        widget_id(self)
-    }
-    fn retire(self) {
-        self.retire_cold();
-    }
-}
-
-impl Row for SynapseSpec {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-
 impl Row for Generation3dLayoutRow {
     fn id(&self) -> &str {
         &self.id
-    }
-}
-
-impl Row for FormGeneration {
-    fn id(&self) -> &str {
-        &self.id
-    }
-    fn retire(self) {
-        semio_framework_value::FromValue::retire_decoded(self);
     }
 }
 
@@ -227,15 +153,14 @@ impl Row for Generation3dValueRow {
 }
 
 /// 🩹 How one patch row edits one item: applied, inverted against a base item, composed with a later row, rebuilt between two items, and closed when displaced.
-pub(crate) trait RowPatch<T>: Clone + Sized {
+pub(crate) trait CellPatch<T>: Clone + Sized {
     fn applied(&self, item: &T) -> MutationApplyResult<T>;
     fn inverse_against(&self, base: &T) -> Self;
     fn composed(self, later: Self) -> Self;
-    fn between(base: &T, other: &T) -> Option<Self>;
     fn retire(self);
 }
 
-impl<T: Row + PartialEq> RowPatch<T> for T {
+impl<T: Row + PartialEq> CellPatch<T> for T {
     fn applied(&self, _item: &T) -> MutationApplyResult<T> {
         Ok(self.clone())
     }
@@ -246,15 +171,72 @@ impl<T: Row + PartialEq> RowPatch<T> for T {
         Row::retire(self);
         later
     }
-    fn between(base: &T, other: &T) -> Option<Self> {
-        (base != other).then(|| other.clone())
-    }
     fn retire(self) {
         Row::retire(self);
     }
 }
 
-impl RowPatch<Widget> for Generation3dWidgetPatch {
+/// 🔑️ The key extractor and cold disposal of the widget rows: a widget owns fail-closed roots, so it is closed, never dropped.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Generation3dWidgetKeys;
+
+impl protocol::list_delta::KeyOf<Widget> for Generation3dWidgetKeys {
+    type Key = String;
+    fn key_of(row: &Widget) -> String {
+        widget_id(row).to_string()
+    }
+    fn retire_cold(row: Widget) {
+        row.retire_cold();
+    }
+}
+
+/// 🔑️ The key extractor of the synapse rows (plain data: a drop is a close).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Generation3dSynapseKeys;
+
+impl protocol::list_delta::KeyOf<SynapseSpec> for Generation3dSynapseKeys {
+    type Key = String;
+    fn key_of(row: &SynapseSpec) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ The key extractor and cold disposal of the generation rows: their answers own fail-closed roots.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Generation3dGenerationKeys;
+
+impl protocol::list_delta::KeyOf<FormGeneration> for Generation3dGenerationKeys {
+    type Key = String;
+    fn key_of(row: &FormGeneration) -> String {
+        row.id.clone()
+    }
+    fn retire_cold(row: FormGeneration) {
+        semio_framework_value::FromValue::retire_decoded(row);
+    }
+}
+
+/// 🩹 A synapse is patched by replacing it wholesale; the wire form is the synapse itself.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(transparent)]
+pub struct Generation3dSynapsePatch(pub SynapseSpec);
+
+impl protocol::list_delta::RowPatch<SynapseSpec> for Generation3dSynapsePatch {
+    fn commit_into(&self, row: &mut SynapseSpec, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        row.clone_from(&self.0);
+        Ok(())
+    }
+    fn absorb(&mut self, later: Self) {
+        *self = later;
+    }
+    fn inverse(&self, row: &SynapseSpec) -> Self {
+        Self(row.clone())
+    }
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
+impl Generation3dWidgetPatch {
     fn applied(&self, item: &Widget) -> MutationApplyResult<Widget> {
         match self {
             Self::Replace { widget } => Ok(widget.clone()),
@@ -264,9 +246,7 @@ impl RowPatch<Widget> for Generation3dWidgetPatch {
             },
         }
     }
-    fn inverse_against(&self, base: &Widget) -> Self {
-        Self::Replace { widget: base.clone() }
-    }
+
     fn composed(self, later: Self) -> Self {
         match (self, later) {
             (Self::Replace { widget }, Self::Slider { value, min, max, step }) => match &widget {
@@ -278,91 +258,81 @@ impl RowPatch<Widget> for Generation3dWidgetPatch {
                 _ => Self::Replace { widget },
             },
             (earlier, later) => {
-                RowPatch::<Widget>::retire(earlier);
+                protocol::list_delta::RowPatch::<Widget>::retire_cold(earlier);
                 later
             }
         }
     }
-    fn between(base: &Widget, other: &Widget) -> Option<Self> {
-        (base != other).then(|| Self::Replace { widget: other.clone() })
+}
+
+impl protocol::list_delta::RowPatch<Widget> for Generation3dWidgetPatch {
+    fn commit_into(&self, row: &mut Widget, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let next = self.applied(row)?;
+        std::mem::replace(row, next).retire_cold();
+        Ok(())
     }
-    fn retire(self) {
+    fn absorb(&mut self, later: Self) {
+        let earlier = std::mem::replace(self, Self::Slider { value: 0.0, min: 0.0, max: 0.0, step: 0.0 });
+        *self = earlier.composed(later);
+    }
+    fn inverse(&self, row: &Widget) -> Self {
+        Self::Replace { widget: row.clone() }
+    }
+    fn is_empty(&self) -> bool {
+        false
+    }
+    fn retire_cold(self) {
         if let Self::Replace { widget } = self {
             widget.retire_cold();
         }
     }
 }
 
-impl RowPatch<FormGeneration> for Generation3dGenerationPatch {
-    fn applied(&self, item: &FormGeneration) -> MutationApplyResult<FormGeneration> {
-        let mut next = item.clone();
+impl protocol::list_delta::RowPatch<FormGeneration> for Generation3dGenerationPatch {
+    fn commit_into(&self, row: &mut FormGeneration, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let mut next = row.clone();
         if let Some(name) = &self.name {
             next.name.clone_from(name);
         }
         if let Some(delta) = &self.values {
-            apply_values(&mut next, delta).map_err(|error| error.under(["values"]))?;
+            if let Err(error) = apply_values(&mut next, delta) {
+                semio_framework_value::FromValue::retire_decoded(next);
+                return Err(error.under(["values"]));
+            }
         }
-        Ok(next)
+        semio_framework_value::FromValue::retire_decoded(std::mem::replace(row, next));
+        Ok(())
     }
-    fn inverse_against(&self, base: &FormGeneration) -> Self {
-        Self { name: self.name.as_ref().map(|_| base.name.clone()), values: self.values.as_ref().map(|delta| inverse_values(delta, base)) }
-    }
-    fn composed(self, later: Self) -> Self {
-        let values = match (self.values, later.values) {
+    fn absorb(&mut self, later: Self) {
+        self.values = match (self.values.take(), later.values) {
             (Some(first), Some(second)) => Some(absorb_delta(first, second)),
             (first, None) => first,
             (None, second) => second,
         };
-        Self { name: later.name.or(self.name), values }
+        self.name = later.name.or(self.name.take());
     }
-    fn between(base: &FormGeneration, other: &FormGeneration) -> Option<Self> {
-        let patch = Self { name: (base.name != other.name).then(|| other.name.clone()), values: between_values(base, other) };
-        (patch != Self::default()).then_some(patch)
+    fn inverse(&self, row: &FormGeneration) -> Self {
+        Self { name: self.name.as_ref().map(|_| row.name.clone()), values: self.values.as_ref().map(|delta| inverse_values(delta, row)) }
     }
-    fn retire(self) {
+    fn is_empty(&self) -> bool {
+        self.name.is_none() && self.values.as_ref().is_none_or(is_empty_delta)
+    }
+    fn retire_cold(self) {
         if let Some(values) = self.values {
             values.retire_cold();
         }
     }
 }
 
-/// 🧩 The shared shape of every keyed collection delta.
+/// 🧩 The shared shape of every unordered keyed collection delta (rows of a map: they carry no position).
 pub(crate) trait Delta: Default + Clone {
     type Item: Row;
-    type Patch: RowPatch<Self::Item>;
+    type Patch: CellPatch<Self::Item>;
     fn added(&self) -> &[Self::Item];
     fn removed(&self) -> &[String];
     fn patched(&self) -> Vec<(&str, &Self::Patch)>;
-    fn reordered(&self) -> Option<&[String]>;
-    fn into_parts(self) -> (Vec<Self::Item>, Vec<String>, Vec<(String, Self::Patch)>, Option<Vec<String>>);
-    fn from_parts(added: Vec<Self::Item>, removed: Vec<String>, patched: Vec<(String, Self::Patch)>, reordered: Option<Vec<String>>) -> Self;
-}
-
-macro_rules! impl_delta {
-    ($delta:ty, $item:ty, $patch:ty, $entry:ident, $field:ident) => {
-        impl Delta for $delta {
-            type Item = $item;
-            type Patch = $patch;
-            fn added(&self) -> &[$item] {
-                &self.added
-            }
-            fn removed(&self) -> &[String] {
-                &self.removed
-            }
-            fn patched(&self) -> Vec<(&str, &$patch)> {
-                self.patched.iter().map(|entry| (entry.id.as_str(), &entry.$field)).collect()
-            }
-            fn reordered(&self) -> Option<&[String]> {
-                self.reordered.as_deref()
-            }
-            fn into_parts(self) -> (Vec<$item>, Vec<String>, Vec<(String, $patch)>, Option<Vec<String>>) {
-                (self.added, self.removed, self.patched.into_iter().map(|entry| (entry.id, entry.$field)).collect(), self.reordered)
-            }
-            fn from_parts(added: Vec<$item>, removed: Vec<String>, patched: Vec<(String, $patch)>, reordered: Option<Vec<String>>) -> Self {
-                Self { added, removed, patched: patched.into_iter().map(|(id, $field)| $entry { id, $field }).collect(), reordered }
-            }
-        }
-    };
+    fn into_parts(self) -> (Vec<Self::Item>, Vec<String>, Vec<(String, Self::Patch)>);
+    fn from_parts(added: Vec<Self::Item>, removed: Vec<String>, patched: Vec<(String, Self::Patch)>) -> Self;
 }
 
 macro_rules! impl_unordered_delta {
@@ -379,47 +349,26 @@ macro_rules! impl_unordered_delta {
             fn patched(&self) -> Vec<(&str, &$item)> {
                 self.patched.iter().map(|row| (Row::id(row), row)).collect()
             }
-            fn reordered(&self) -> Option<&[String]> {
-                None
+            fn into_parts(self) -> (Vec<$item>, Vec<String>, Vec<(String, $item)>) {
+                (self.added, self.removed, self.patched.into_iter().map(|row| (Row::id(&row).to_string(), row)).collect())
             }
-            fn into_parts(self) -> (Vec<$item>, Vec<String>, Vec<(String, $item)>, Option<Vec<String>>) {
-                (self.added, self.removed, self.patched.into_iter().map(|row| (Row::id(&row).to_string(), row)).collect(), None)
-            }
-            fn from_parts(added: Vec<$item>, removed: Vec<String>, patched: Vec<(String, $item)>, _reordered: Option<Vec<String>>) -> Self {
+            fn from_parts(added: Vec<$item>, removed: Vec<String>, patched: Vec<(String, $item)>) -> Self {
                 Self { added, removed, patched: patched.into_iter().map(|(_, row)| row).collect() }
             }
         }
     };
 }
 
-impl_delta!(Generation3dWidgetsDelta, Widget, Generation3dWidgetPatch, Generation3dWidgetPatchEntry, patch);
-impl_delta!(Generation3dSynapsesDelta, SynapseSpec, SynapseSpec, Generation3dSynapsePatchEntry, item);
-impl_delta!(Generation3dGenerationsDelta, FormGeneration, Generation3dGenerationPatch, Generation3dGenerationPatchEntry, patch);
 impl_unordered_delta!(Generation3dLayoutDelta, Generation3dLayoutRow);
 impl_unordered_delta!(Generation3dValuesDelta, Generation3dValueRow);
 
-impl Generation3dGenerationsDelta {
-    fn retire_cold(self) {
-        let (added, _, patched, _) = Delta::into_parts(self);
-        added.into_iter().for_each(Row::retire);
-        patched.into_iter().for_each(|(_, patch)| RowPatch::<FormGeneration>::retire(patch));
-    }
-}
-
 impl Generation3dValuesDelta {
     fn retire_cold(self) {
-        let (added, _, patched, _) = Delta::into_parts(self);
-        added.into_iter().chain(patched.into_iter().map(|(_, row)| row)).for_each(Row::retire);
+        let (added, _, modified) = Delta::into_parts(self);
+        added.into_iter().chain(modified.into_iter().map(|(_, row)| row)).for_each(Row::retire);
     }
 }
 
-impl Generation3dWidgetsDelta {
-    fn retire_cold(self) {
-        let (added, _, patched, _) = Delta::into_parts(self);
-        added.into_iter().for_each(Row::retire);
-        patched.into_iter().for_each(|(_, patch)| RowPatch::<Widget>::retire(patch));
-    }
-}
 //#endregion 🔖️RowAlgebra
 
 //#region 🔖️DeltaAlgebra
@@ -427,57 +376,8 @@ fn rejection(code: &str, message: &str, at: [String; 2]) -> MutationApplyError {
     MutationApplyError::new(code, message).at(at)
 }
 
-fn apply_delta<D: Delta>(items: &[D::Item], delta: &D) -> MutationApplyResult<Vec<D::Item>> {
-    for (index, id) in delta.removed().iter().enumerate() {
-        if !items.iter().any(|item| item.id() == id) {
-            return Err(rejection("mutation.apply.missing-target", "removed item does not exist", ["removed".into(), index.to_string()]));
-        }
-        if delta.removed()[..index].contains(id) {
-            return Err(rejection("mutation.apply.duplicate-target", "item is removed more than once", ["removed".into(), index.to_string()]));
-        }
-    }
-    for (index, item) in delta.added().iter().enumerate() {
-        let survives = items.iter().any(|existing| existing.id() == item.id()) && !delta.removed().iter().any(|id| id == item.id());
-        if survives || delta.added()[..index].iter().any(|existing| existing.id() == item.id()) {
-            return Err(rejection("mutation.apply.duplicate-target", "added item identity already exists", ["added".into(), index.to_string()]));
-        }
-    }
-    let patched = delta.patched();
-    for (index, (id, _)) in patched.iter().enumerate() {
-        if !items.iter().any(|existing| existing.id() == *id) {
-            return Err(rejection("mutation.apply.missing-target", "patched item does not exist", ["patched".into(), index.to_string()]));
-        }
-        if delta.removed().iter().any(|removed| removed == id) {
-            return Err(rejection("mutation.apply.conflicting-target", "item cannot be removed and patched", ["patched".into(), index.to_string()]));
-        }
-        if patched[..index].iter().any(|(prior, _)| prior == id) {
-            return Err(rejection("mutation.apply.duplicate-target", "item is patched more than once", ["patched".into(), index.to_string()]));
-        }
-    }
-    let mut next: Vec<D::Item> = items.iter().filter(|item| !delta.removed().iter().any(|id| id == item.id())).cloned().collect();
-    next.extend(delta.added().iter().cloned());
-    for (id, patch) in patched {
-        if let Some(position) = next.iter().position(|existing| existing.id() == id) {
-            next[position] = patch.applied(&next[position]).map_err(|error| error.under(["patched", id]))?;
-        }
-    }
-    if let Some(order) = delta.reordered() {
-        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|item| item.id() == id)) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered"]));
-        }
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(position) = next.iter().position(|item| item.id() == id) {
-                ordered.push(next.remove(position));
-            }
-        }
-        next = ordered;
-    }
-    Ok(next)
-}
-
 fn is_empty_delta<D: Delta>(delta: &D) -> bool {
-    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().is_empty() && delta.reordered().is_none()
+    delta.added().is_empty() && delta.removed().is_empty() && delta.modified().is_empty()
 }
 
 enum Net<T, P> {
@@ -487,7 +387,7 @@ enum Net<T, P> {
     Replace(T),
 }
 
-impl<T: Row, P: RowPatch<T>> Net<T, P> {
+impl<T: Row, P: CellPatch<T>> Net<T, P> {
     fn retire(self) {
         match self {
             Self::Patch(patch) => patch.retire(),
@@ -497,16 +397,12 @@ impl<T: Row, P: RowPatch<T>> Net<T, P> {
     }
 }
 
-/// ➕️ Composes `first` then `second` per id (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace) in a canonical row order; every displaced owned value is closed.
+/// ➕️ Composes the unordered `first` then `second` per id (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace) in a canonical row order; every displaced owned value is closed.
 fn absorb_delta<D: Delta>(first: D, second: D) -> D {
     let mut nets: std::collections::BTreeMap<String, Net<D::Item, D::Patch>> = std::collections::BTreeMap::new();
     let mut appended: Vec<String> = Vec::new();
-    let second_removed: Vec<String> = second.removed().to_vec();
-    let second_added: Vec<String> = second.added().iter().map(|item| item.id().to_string()).collect();
-    let first_order = first.reordered().map(<[String]>::to_vec);
-    let second_order = second.reordered().map(<[String]>::to_vec);
     for delta in [first, second] {
-        let (added, removed, patched, _) = delta.into_parts();
+        let (added, removed, patched) = delta.into_parts();
         for id in removed {
             match nets.remove(&id) {
                 Some(Net::Add(item)) => {
@@ -575,11 +471,6 @@ fn absorb_delta<D: Delta>(first: D, second: D) -> D {
             nets.insert(id, net);
         }
     }
-    let reordered = match (second_order, first_order) {
-        (Some(order), _) => Some(order),
-        (None, Some(order)) => Some(order.into_iter().filter(|id| !second_removed.contains(id)).chain(second_added.into_iter().filter(|id| nets.contains_key(id))).collect()),
-        (None, None) => None,
-    };
     let mut removed = Vec::new();
     let mut patched = Vec::new();
     let mut adds: std::collections::BTreeMap<String, D::Item> = std::collections::BTreeMap::new();
@@ -597,62 +488,18 @@ fn absorb_delta<D: Delta>(first: D, second: D) -> D {
         }
     }
     let mut added: Vec<D::Item> = Vec::with_capacity(adds.len());
-    if reordered.is_some() {
-        added.extend(adds.into_values());
-    } else {
-        for id in &appended {
-            if let Some(item) = adds.remove(id) {
-                added.push(item);
-            }
+    for id in &appended {
+        if let Some(item) = adds.remove(id) {
+            added.push(item);
         }
     }
-    D::from_parts(added, removed, patched, reordered)
+    D::from_parts(added, removed, patched)
 }
 
 fn absorb_optional<D: Delta>(first: &mut Option<D>, second: Option<D>) {
     let Some(second) = second else { return };
     let merged = absorb_delta(first.take().unwrap_or_default(), second);
     *first = (!is_empty_delta(&merged)).then_some(merged);
-}
-
-fn forward_order<D: Delta>(base_ids: &[String], delta: &D) -> Vec<String> {
-    let mut ids: Vec<String> = base_ids.iter().filter(|id| !delta.removed().contains(id)).cloned().collect();
-    ids.extend(delta.added().iter().map(|item| item.id().to_string()));
-    match delta.reordered() {
-        Some(order) => order.to_vec(),
-        None => ids,
-    }
-}
-
-/// 🔁️ The negative delta against `base`: patches restore base rows, adds become removes, removes re-add base rows.
-fn inverse_delta<D: Delta>(delta: &D, base: &[D::Item]) -> D {
-    let find = |id: &str| base.iter().find(|item| item.id() == id);
-    let removed: Vec<String> = delta.added().iter().map(|item| item.id().to_string()).collect();
-    let added: Vec<D::Item> = delta.removed().iter().filter_map(|id| find(id).cloned()).collect();
-    let patched: Vec<(String, D::Patch)> = delta.patched().into_iter().filter_map(|(id, patch)| find(id).map(|item| (id.to_string(), patch.inverse_against(item)))).collect();
-    let base_ids: Vec<String> = base.iter().map(|item| item.id().to_string()).collect();
-    let mut simulated: Vec<String> = forward_order(&base_ids, delta).into_iter().filter(|id| !removed.contains(id)).collect();
-    simulated.extend(added.iter().map(|item| item.id().to_string()));
-    let reordered = (simulated != base_ids).then_some(base_ids);
-    D::from_parts(added, removed, patched, reordered)
-}
-
-fn inverse_optional<D: Delta>(delta: &Option<D>, base: &[D::Item]) -> Option<D> {
-    delta.as_ref().map(|delta| inverse_delta(delta, base))
-}
-
-fn between_delta<D: Delta>(base: &[D::Item], other: &[D::Item]) -> Option<D> {
-    let removed: Vec<String> = base.iter().filter(|item| !other.iter().any(|candidate| candidate.id() == item.id())).map(|item| item.id().to_string()).collect();
-    let added: Vec<D::Item> = other.iter().filter(|item| !base.iter().any(|candidate| candidate.id() == item.id())).cloned().collect();
-    let patched: Vec<(String, D::Patch)> = base
-        .iter()
-        .filter_map(|item| other.iter().find(|candidate| candidate.id() == item.id()).and_then(|candidate| D::Patch::between(item, candidate)).map(|patch| (item.id().to_string(), patch)))
-        .collect();
-    let mut natural: Vec<String> = base.iter().filter(|item| !removed.iter().any(|id| id == item.id())).map(|item| item.id().to_string()).collect();
-    natural.extend(added.iter().map(|item| item.id().to_string()));
-    let target: Vec<String> = other.iter().map(|item| item.id().to_string()).collect();
-    let reordered = (natural != target).then_some(target);
-    (!(removed.is_empty() && added.is_empty() && patched.is_empty() && reordered.is_none())).then(|| D::from_parts(added, removed, patched, reordered))
 }
 
 fn apply_values(generation: &mut FormGeneration, delta: &Generation3dValuesDelta) -> MutationApplyResult<()> {
@@ -695,10 +542,6 @@ fn inverse_values(delta: &Generation3dValuesDelta, base: &FormGeneration) -> Gen
     }
 }
 
-fn between_values(base: &FormGeneration, other: &FormGeneration) -> Option<Generation3dValuesDelta> {
-    let rows = |generation: &FormGeneration| -> Vec<Generation3dValueRow> { generation.values.iter().map(|(id, value)| Generation3dValueRow { question_id: id.clone(), value: value.clone() }).collect() };
-    between_delta::<Generation3dValuesDelta>(&rows(base), &rows(other))
-}
 //#endregion 🔖️DeltaAlgebra
 
 //#region 🔖️Retirement
@@ -754,6 +597,21 @@ impl std::fmt::Debug for Generation3dDiffRead {
 //#endregion 🔖️Retirement
 
 //#region 🔖️Apply
+/// ➕️ Composes an optional positional delta field with the later one; a delta that cancels out is closed, never dropped.
+macro_rules! absorb_rows {
+    ($field:expr, $later:expr) => {
+        if let Some(later) = $later {
+            let mut merged = $field.take().unwrap_or_default();
+            merged.absorb(later);
+            if merged.is_empty() {
+                merged.retire_cold();
+            } else {
+                $field = Some(merged);
+            }
+        }
+    };
+}
+
 impl Generation3dDiff {
     fn apply_layout(&self, snapshot: &mut Generation3dSnapshot) -> MutationApplyResult<()> {
         let Some(delta) = &self.layout else { return Ok(()) };
@@ -778,13 +636,14 @@ impl Generation3dDiff {
         Ok(())
     }
 
-    fn apply_generation(&self, snapshot: &mut Generation3dSnapshot) -> MutationApplyResult<()> {
+    fn apply_generation(&self, snapshot: &mut Generation3dSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
         if self.generations.is_none() && self.selected_generation.is_none() && self.preview_text.is_none() {
             return Ok(());
         }
         let mut state = (*snapshot.generation).clone();
         if let Some(delta) = &self.generations {
-            state.generations = apply_delta(&state.generations, delta).map_err(|error| error.under(["generations"]))?;
+            let committed = delta.commit_onto(&state.generations, capability).map_err(|error| error.under(["generations"]))?;
+            Generation3dGenerationsDelta::retire_list(std::mem::replace(&mut state.generations, committed));
         }
         if let Some(change) = &self.selected_generation {
             state.selected_generation_id.clone_from(&change.id);
@@ -798,7 +657,7 @@ impl Generation3dDiff {
 }
 
 impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
-    fn apply(&self, snapshot: &Generation3dSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<Generation3dSnapshot> {
+    fn apply(&self, snapshot: &Generation3dSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<Generation3dSnapshot> {
         let mut next = snapshot.clone();
         let applied = (|| {
             if let Some(schema) = &self.schema {
@@ -808,13 +667,15 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
                 next.host_snapshot.camera = camera.clone();
             }
             if let Some(delta) = &self.widgets {
-                next.host_snapshot.widgets = apply_delta(&next.host_snapshot.widgets, delta).map_err(|error| error.under(["widgets"]))?;
+                let committed = delta.commit_onto(&next.host_snapshot.widgets, capability).map_err(|error| error.under(["widgets"]))?;
+                Generation3dWidgetsDelta::retire_list(std::mem::replace(&mut next.host_snapshot.widgets, committed));
             }
             if let Some(delta) = &self.synapses {
-                next.host_snapshot.synapses = apply_delta(&next.host_snapshot.synapses, delta).map_err(|error| error.under(["synapses"]))?;
+                let committed = delta.commit_onto(&next.host_snapshot.synapses, capability).map_err(|error| error.under(["synapses"]))?;
+                Generation3dSynapsesDelta::retire_list(std::mem::replace(&mut next.host_snapshot.synapses, committed));
             }
             self.apply_layout(&mut next)?;
-            self.apply_generation(&mut next)
+            self.apply_generation(&mut next, capability)
         })();
         match applied {
             Ok(()) => Ok(next),
@@ -834,10 +695,10 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
         if other.camera.is_some() {
             self.camera = other.camera;
         }
-        absorb_optional(&mut self.widgets, other.widgets);
-        absorb_optional(&mut self.synapses, other.synapses);
+        absorb_rows!(self.widgets, other.widgets);
+        absorb_rows!(self.synapses, other.synapses);
         absorb_optional(&mut self.layout, other.layout);
-        absorb_optional(&mut self.generations, other.generations);
+        absorb_rows!(self.generations, other.generations);
         if other.selected_generation.is_some() {
             self.selected_generation = other.selected_generation;
         }
@@ -863,34 +724,21 @@ impl DiffAlgebra<Generation3dSnapshot> for Generation3dDiff {
         Self {
             schema: self.schema.as_ref().map(|_| base.host_snapshot.schema.clone()),
             camera: self.camera.as_ref().map(|_| base.host_snapshot.camera.clone()),
-            widgets: inverse_optional(&self.widgets, &base.host_snapshot.widgets),
-            synapses: inverse_optional(&self.synapses, &base.host_snapshot.synapses),
+            widgets: self.widgets.as_ref().map(|delta| delta.inverse(&base.host_snapshot.widgets)),
+            synapses: self.synapses.as_ref().map(|delta| delta.inverse(&base.host_snapshot.synapses)),
             layout: self.layout.as_ref().map(|delta| inverse_layout(delta, base)),
-            generations: inverse_optional(&self.generations, &base.generation.generations),
+            generations: self.generations.as_ref().map(|delta| delta.inverse(&base.generation.generations)),
             selected_generation: self.selected_generation.as_ref().map(|_| Generation3dSelectionChange { id: base.generation.selected_generation_id.clone() }),
             preview_text: self.preview_text.as_ref().map(|_| Generation3dPreviewChange { text: base.generation.preview_text.clone() }),
-        }
-    }
-    fn between(base: &Generation3dSnapshot, other: &Generation3dSnapshot) -> Self {
-        let layout_rows = |snapshot: &Generation3dSnapshot| -> Vec<Generation3dLayoutRow> { snapshot.host_snapshot.layout.iter().map(|(id, layout)| Generation3dLayoutRow { id: id.clone(), layout: layout.clone() }).collect() };
-        Self {
-            schema: (base.host_snapshot.schema != other.host_snapshot.schema).then(|| other.host_snapshot.schema.clone()),
-            camera: (base.host_snapshot.camera != other.host_snapshot.camera).then(|| other.host_snapshot.camera.clone()),
-            widgets: between_delta(&base.host_snapshot.widgets, &other.host_snapshot.widgets),
-            synapses: between_delta(&base.host_snapshot.synapses, &other.host_snapshot.synapses),
-            layout: between_delta(&layout_rows(base), &layout_rows(other)),
-            generations: between_delta(&base.generation.generations, &other.generation.generations),
-            selected_generation: (base.generation.selected_generation_id != other.generation.selected_generation_id).then(|| Generation3dSelectionChange { id: other.generation.selected_generation_id.clone() }),
-            preview_text: (base.generation.preview_text != other.generation.preview_text).then(|| Generation3dPreviewChange { text: other.generation.preview_text.clone() }),
         }
     }
     fn is_empty(&self) -> bool {
         self.schema.is_none()
             && self.camera.is_none()
-            && self.widgets.as_ref().is_none_or(is_empty_delta)
-            && self.synapses.as_ref().is_none_or(is_empty_delta)
+            && self.widgets.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.synapses.as_ref().is_none_or(|delta| delta.is_empty())
             && self.layout.as_ref().is_none_or(is_empty_delta)
-            && self.generations.as_ref().is_none_or(is_empty_delta)
+            && self.generations.as_ref().is_none_or(|delta| delta.is_empty())
             && self.selected_generation.is_none()
             && self.preview_text.is_none()
     }
@@ -914,15 +762,28 @@ fn region_segment(id: &str) -> String {
 
 fn delta_regions<D: Delta>(paths: &mut std::collections::BTreeSet<String>, prefix: &str, delta: &D) {
     paths.extend(delta.added().iter().map(|item| item.id().to_string()).chain(delta.removed().iter().cloned()).chain(delta.patched().into_iter().map(|(id, _)| id.to_string())).map(|id| format!("{prefix}/{}", region_segment(&id))));
-    if delta.reordered().is_some() && delta.added().is_empty() {
-        paths.insert(prefix.to_string());
-    }
+}
+
+macro_rules! ordered_regions {
+    ($paths:expr, $prefix:expr, $delta:expr, $keys:ty, $row:ty) => {{
+        let delta = $delta;
+        $paths.extend(
+            delta
+                .inserted
+                .iter()
+                .map(|entry| <$keys as protocol::list_delta::KeyOf<$row>>::key_of(&entry.row))
+                .chain(delta.removed.iter().map(|entry| entry.id.clone()))
+                .chain(delta.moved.iter().map(|entry| entry.id.clone()))
+                .chain(delta.modified.iter().map(|entry| entry.id.clone()))
+                .map(|id| format!("{}/{}", $prefix, region_segment(&id))),
+        );
+    }};
 }
 
 impl Generation3dDiff {
     /// 🗺️ The regions this delta writes, read off its rows: `hostSnapshot/widgets/<id>`, `hostSnapshot/synapses/<id>`,
-    /// `hostSnapshot/layout/<id>` (the collection path itself when a pure reorder moves the survivors), `hostSnapshot/camera`,
-    /// `hostSnapshot/schema`, `generation/<id>` (the roster path on a pure reorder), `generation/selected` and `generation/previewText`.
+    /// `hostSnapshot/layout/<id>` (a moved row names itself), `hostSnapshot/camera`,
+    /// `hostSnapshot/schema`, `generation/<id>` (a moved row names itself), `generation/selected` and `generation/previewText`.
     pub fn regions(&self) -> std::collections::BTreeSet<String> {
         let mut paths = std::collections::BTreeSet::new();
         if self.schema.is_some() {
@@ -932,16 +793,16 @@ impl Generation3dDiff {
             paths.insert("hostSnapshot/camera".to_string());
         }
         if let Some(delta) = &self.widgets {
-            delta_regions(&mut paths, "hostSnapshot/widgets", delta);
+            ordered_regions!(paths, "hostSnapshot/widgets", delta, Generation3dWidgetKeys, Widget);
         }
         if let Some(delta) = &self.synapses {
-            delta_regions(&mut paths, "hostSnapshot/synapses", delta);
+            ordered_regions!(paths, "hostSnapshot/synapses", delta, Generation3dSynapseKeys, SynapseSpec);
         }
         if let Some(delta) = &self.layout {
             delta_regions(&mut paths, "hostSnapshot/layout", delta);
         }
         if let Some(delta) = &self.generations {
-            delta_regions(&mut paths, "generation", delta);
+            ordered_regions!(paths, "generation", delta, Generation3dGenerationKeys, FormGeneration);
         }
         if self.selected_generation.is_some() {
             paths.insert("generation/selected".to_string());

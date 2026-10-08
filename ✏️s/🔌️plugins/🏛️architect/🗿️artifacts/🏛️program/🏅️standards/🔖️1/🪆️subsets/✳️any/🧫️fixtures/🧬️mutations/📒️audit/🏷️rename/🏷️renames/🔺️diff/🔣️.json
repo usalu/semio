@@ -64,9 +64,10 @@
   "surveys": null,
   "issues": null,
   "auditEvents": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "audit-event-a",
         "patch": {
@@ -98,8 +99,7 @@
           "retentionUntil": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "templates": null,
   "knowledge": null,

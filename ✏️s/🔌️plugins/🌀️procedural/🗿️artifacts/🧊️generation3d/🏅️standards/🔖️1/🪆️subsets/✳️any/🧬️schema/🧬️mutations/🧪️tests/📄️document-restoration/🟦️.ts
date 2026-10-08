@@ -8,6 +8,7 @@ import previewSchema from "../../📝️change-generation-preview/🧬️schema/
 type GenerationState = Omit<typeof fixture.before, "selectedGenerationId" | "previewText"> & {selectedGenerationId: string | null; previewText: string | null};
 
 test("neutral restoration payload schemas preserve required nullable fields with Ajv", () => {
+  expect(fixture.sparseFields).toEqual(["selectedGeneration", "previewText"]);
   const validator = new Ajv({strict: false});
   const select = validator.compile(selectSchema);
   const preview = validator.compile(previewSchema);

@@ -1,16 +1,17 @@
+import type { AssetDeliveryProviderV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
+import type { ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly PlaygroundEntry[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string };
 import { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
-import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import type { ShellBrand } from "@semio-tech/framework";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { DEFAULT_PLAYGROUND_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
@@ -26,8 +27,9 @@ const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 /** 🏗️ Builds a neutral shell using entry points and brands supplied by its owner. */
-export function createFrameworkOsDevConfig(options: { readonly brands: readonly ShellBrand[]; readonly browserEntry: string }) {
+export function createFrameworkOsDevConfig(options: { readonly inventory: FrameworkOsDevBuildInventoryV1; readonly brands: readonly ShellBrand[]; readonly browserEntry: string }) {
 return defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
+const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = options.inventory;
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
@@ -38,7 +40,7 @@ void _semioPlaygroundGraphAnchor;
 void _semioProcessGraphAnchor;
 
 const renderer = process.env.SEMIO_RENDERER ?? "react";
-const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_PLAYGROUND_VARIANT);
+const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? options.inventory.defaultVariant ?? "framework-empty");
 const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
 const rendererModulesDir = path.resolve(playDir, "../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist", `wasm-${profile}`);
 const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
@@ -51,7 +53,7 @@ const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️package
 const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
 const sessionAlias = playgroundSessionViteAlias(sessionRoot, plugin);
 const sessionPath = sessionAlias.replacement;
-const playgroundTarget = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin));
+const playgroundTarget = playgrounds.find((target) => target.variant === plugin || target.aliases.includes(plugin));
 const brandId = process.env.SEMIO_BRAND ?? playgroundTarget?.brand;
 const brand = resolveShellBrandById(options.brands, brandId);
 const playgroundDistDir = playgroundTarget?.distDir;
@@ -78,7 +80,7 @@ function engineNpmPackage(cratePath: string): string {
   return name;
 }
 
-const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin).flatMap((target) => target.engines))].map(engineNpmPackage);
+const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target) => target.variant === plugin).flatMap((target) => target.engines))].map(engineNpmPackage);
 
 /** 🗄️ Isolates dependency-optimizer state for concurrent playground variants, renderers and
  * profiles under the ONE shared cache root, so disk is bounded by build history rather than by
@@ -93,13 +95,13 @@ const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-
 /** 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
  * just the resolved variant's own `assets` row. */
-const resolvedPlaygroundAssets = isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
+const resolvedPlaygroundAssets = isHostPlaygroundFilter(plugin, playgrounds, [...plugins, ...extensions]) ? playgrounds.flatMap((target) => target.assets) : (playgrounds.find((target) => target.variant === plugin)?.assets ?? []);
 
 /** 🔌️ The wasm plugin crate(s) a production build's `dist/🔌️plugin-modules/` needs to actually ship
  * — the "s" studio hub can open any app so it needs every built plugin crate; a single-variant build
  * (e.g. the Aggregator's "aggregator" → `puzzle`) needs only its own, plus the shared `🪞️vendor` shim
  * dependencies. Unknown identities are rejected before selecting physical copy roots. */
-const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.pluginId;
+const resolvedPluginId = playgrounds.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.pluginId;
 // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (wgpu-web-shard): `🧵️shard` is `🟦️.ts`'s
 // generated `🟨️shard-worker.js` bundle — every actor of every plugin now activates through the ONE pooled
 // shard-worker pool (`ShardClient`/`ActivationRegistry`, design-runtime.md §1/§3), not a per-plugin
@@ -107,14 +109,14 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 // `resolvedPluginId` names. Omitting it meant `dist/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js` was never
 // copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
-const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
-const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS]) : undefined;
-const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId, COMPONENT_MODULE_DIRECTORIES))];
+const extensionIds = new Set(extensions.map((target) => target.pluginId));
+const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...plugins, ...extensions]) : undefined;
+const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId, moduleDirectories))];
 
 /** 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
  * target, with the owner tree whose newest source mtime decides whether the staged module is behind
  * (`<cratePath>/../..`, the same owner root `stagePluginDescriptor` publishes descriptors from). */
-const activationComponents = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map((target) => ({
+const activationComponents = [...plugins, ...extensions].map((target) => ({
   pluginId: target.pluginId,
   directoryName: moduleDirectoryName(target.pluginId, [target]),
   role: target.role === "extension" ? ("extension" as const) : ("plugin" as const),
@@ -220,8 +222,8 @@ return {
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioServiceWorkerScopeVitePlugin(),
     semioDescriptorRouteGuardVitePlugin([
-      { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(PLUGIN_BUILD_TARGETS.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId, [target]))) },
-      { route: MODULE_EXTENSION_ROUTE, root: installedExtensionsDir, directoryNames: new Set(EXTENSION_TARGETS.map((target) => moduleDirectoryName(target.pluginId, [target]))) },
+      { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(plugins.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId, [target]))) },
+      { route: MODULE_EXTENSION_ROUTE, root: installedExtensionsDir, directoryNames: new Set(extensions.map((target) => moduleDirectoryName(target.pluginId, [target]))) },
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
@@ -239,7 +241,7 @@ return {
     // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
-    ...createAssetBuildPluginsV1(repoRoot, resolvedPlaygroundAssets, PLAYGROUND_ASSET_PROVIDERS_V1, resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE)),
+    ...createAssetBuildPluginsV1(repoRoot, resolvedPlaygroundAssets, assetProviders, resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE)),
     ...(renderer === "wgpu" ? uiTailwindBuildPlugins() : [uiReactBuildPlugin(), semioPlaygroundReactRefreshCoherenceVitePlugin(), ...uiTailwindBuildPlugins()]),
   ],
   optimizeDeps: {
@@ -262,4 +264,4 @@ return {
 
 }
 
-export default createFrameworkOsDevConfig({ brands: [], browserEntry: "/🚀️entry/🟦️.ts" });
+export default createFrameworkOsDevConfig({ inventory: { plugins: [], extensions: [], playgrounds: [], moduleDirectories: [], assetProviders: [] }, brands: [], browserEntry: "/🚀️entry/🟦️.ts" });

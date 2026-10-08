@@ -61,10 +61,6 @@ impl Iso16757Artifact {
             exchange_process: snapshot.exchange_process,
         }
     }
-    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::Iso16757Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 
 //#endregion 🔖️Conversions

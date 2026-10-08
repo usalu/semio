@@ -1,7 +1,7 @@
 //! 🔺️ `update-synapse` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dSynapsePatchEntry, Generation3dSynapsesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dSynapseModification, Generation3dSynapsesDelta, Generation3dSynapsePatch};
 use crate::standards::v1::subsets::any::schema::mutations::synapse_index;
 use crate::standards::v1::subsets::any::schema::mutations::update_synapse::UpdateSynapse;
 use crate::Generation3dSnapshot;
@@ -16,5 +16,5 @@ pub fn diff(payload: &UpdateSynapse, base: &Generation3dSnapshot) -> protocol::M
     if base.host_snapshot.synapses[index] == payload.synapse {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Synapse \"{id}\" is already in the requested state."));
     }
-    protocol::MutationOutcome::new(Generation3dDiff { synapses: Some(Generation3dSynapsesDelta { patched: vec![Generation3dSynapsePatchEntry { id: id.clone(), item: payload.synapse.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Generation3dDiff { synapses: Some(Generation3dSynapsesDelta { modified: vec![Generation3dSynapseModification { id: id.clone(), patch: Generation3dSynapsePatch(payload.synapse.clone()) }], ..Default::default() }), ..Default::default() })
 }

@@ -1,5 +1,7 @@
 import { existsSync, lstatSync, readdirSync, rmdirSync, rmSync, unlinkSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
+import {acquireResourceLease} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-incremental-session" | "cargo-target-file" | "directory";
 /** 📦️ One independently deletable slice of a cache area: a compilation unit, an incremental crate dir, a stale finalized incremental session, an uplifted file, or a whole scratch directory. */
@@ -192,6 +194,20 @@ export function scanCargoIncrementalUnits(buildDir: string, signal: AbortSignal,
     }
   }
   return { units, staleSessions };
+}
+
+/** 🔒️ Compacts only superseded finalized sessions after admitting their exact compiler profile. */
+export async function compactCargoIncrementalSessionsV1(options:Readonly<{buildDirectory:string;leaseDirectory:string;profile:string;signal:AbortSignal;dryRun:boolean;onUnit?:(unit:CacheUnit)=>void}>):Promise<Readonly<{profile:string;paths:readonly string[];bytes:number;dryRun:boolean}>>{
+ const identity=cargoBuildLeaseIdentityV1(options.buildDirectory,["--profile",options.profile]),prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal:options.signal});
+ let compiler:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
+ try{
+  compiler=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:options.signal});
+  const scan=scanCargoIncrementalUnits(identity.buildDirectory,options.signal),working=new Set(scan.units.filter(unit=>unit.lockHeld).map(unit=>unit.path));
+  const candidates=scan.staleSessions.filter(unit=>{const parts=unit.path.split("/"),index=parts.indexOf("incremental");return index>0&&parts[index-1]===identity.profile&&!working.has(parts.slice(0,-1).join("/"));}).sort((left,right)=>left.path.localeCompare(right.path));
+  let bytes=0;const paths:string[]=[];
+  for(const unit of candidates){options.signal.throwIfAborted();options.onUnit?.(unit);if(!options.dryRun)deleteUnit(identity.buildDirectory,unit);paths.push(unit.path);bytes+=unit.bytes;}
+  return {profile:identity.profile,paths,bytes,dryRun:options.dryRun};
+ }finally{compiler?.release();prune.release();}
 }
 
 const CARGO_SENTINEL_NAMES = new Set(["CACHEDIR.TAG"]);

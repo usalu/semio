@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceMaterial`.
 use super::ReplaceMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, Fem3dMaterialsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, Fem3dMaterialsModification};
 use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,material_breach};
 
 use crate::Fem3dSnapshot;
@@ -19,6 +19,6 @@ pub fn diff(payload: &ReplaceMaterial, base: &Fem3dSnapshot) -> protocol::Mutati
     if let Some(breach) = material_breach(&payload.new_material) {
         return invariant(breach, vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { materials: Some(Fem3dMaterialsDelta { patched: vec![Fem3dMaterialsPatchEntry { id: payload.id.clone(), item: payload.new_material.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { materials: Some(Fem3dMaterialsDelta { modified: vec![Fem3dMaterialsModification { id: payload.id.clone(), patch: payload.new_material.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,23 @@
+# Enduser Current Readonly Audit
+
+Read-only source/report/process audit; no test, build, production, configuration or test mutation. Existing generated directory is absent, so historical generated logs cannot independently supply new runtime receipts.
+
+## Runtime Receipt Boundaries
+
+Latest inspector and G2 prerequisite reports end at selected-shell17505 dispatch. No terminal is recorded there. Current process readback has only the separate neural-engine native lane; selected-shell17505 is not live. Its outcome is unknown, not GREEN or a retained process. G2 original Diff5 remains registered and runtime-pending in those reports. Metadata16 is authoritative PREASSERT Cargo101 on five CommonMark owned_pack callers; their exact same-owner source repair is documented, but metadata status/eval payload has no subsequent qualifying runtime receipt. Mounted original combined gate79682 is documented actual31/31, two files, zero skip, including live refreshed gumball and twelve primary point/wire styles; browser/GPU paint and Native source-refresh qualification do not follow from that proof.
+
+Parent-provided World11 actual254/4 and three capture laws GREEN are prior receipts, not rerun here. New Native law stopped at unit6563's view-revision expectation according to the interruption handoff; no surviving log was available to independently reconstruct that terminal.
+
+## Exact Caller and Production Ownership
+
+Renderer original World3dSnapshot phase at renderer15969 drives scene bridge,15980 draw rebuild,15993 snapshot apply, then camera-fit. Bridge snapshot publication World13377 creates lease revision current+1. Snapshot apply World11981 adopts max(current,lease), and World12000 installs view revision. Scene sync/bridge alone therefore is insufficient to prove revision advancement. Test-only closure must drive the existing draw-rebuild and snapshot-apply owners after sealing the actual bridge, then drain original superseded draw/bridge retirement. Do not manually increment revision or weaken the assertion.
+
+Current helper unit4551 already contains precisely that closure: bounded bridge seal, sync, draw-rebuild/snapshot apply until Complete/Idle, bounded draw/bridge retirement, runtime draw flags. Thus the original missing caller stage has already been externally repaired in source; no audit edit is needed. Current live-refresh law6530 retains revision advancement6577, actual replacement, retirement, captured targets, and unchanged-source Idle/nonincrement checks.
+
+Current production also already contains source-refresh ownership work: snapshot publication12001 rebases only live+streamed captured gumball revisions; update_step6082 retains general stale revision refusal, while6091 accepts live+streamed captured targets across a changed source token. Authority6819 still closes gestures with an unmatched revision. These are current source facts, not runtime proof. Remaining qualification must demonstrate the actual refreshed captured gesture completes its exact original start addresses and incremental stream/stream/commit deltas, while ordinary stale picks remain refused. Preserve original object-registry epoch and bounded publication/retirement authority; no new evaluator/cache/registry is required.
+
+## Original Registered High Execution
+
+Launch entry ⚖️test-live-selected-solid📐️brep🦀️ remains order900.036405: bun nx run @semio-tech/s-composition-laws-rs:test -- --test generation3d-app-laws --law-filter mesh_brep_live_scoped_selection_. It retains fresh graph/daemon/plugin flags, Cargo2, immediate output and ticket exact-artifact path. Focused G2 command remains the original procedural-generation2d-rs target with exact generation2d_original_diff_record_preserves_sparse_domain_fields_and_serde_oracle law.
+
+Original composition law3249 imports the neutral source box, evaluates through contributed extensions, derives actual full face label/handle/revision from viewport tessellation, selects that source, executes the real edit/packaged inference, checks selector/feature/consumer connections and status, then requires positive changed volume. History3323 uses genuine framework settle_history_verb and compares exact before/committed snapshots plus evaluated consumer volume after undo/redo. It does not explicitly inspect opened ActorId/history authors or measure viewport face-source extent after undo/redo. Those are separate coverage gaps if the next High scope requires actor attribution and restored source geometry extent; the existing volume/history expectations must remain intact. No actor fallback or alternate history engine should be added.

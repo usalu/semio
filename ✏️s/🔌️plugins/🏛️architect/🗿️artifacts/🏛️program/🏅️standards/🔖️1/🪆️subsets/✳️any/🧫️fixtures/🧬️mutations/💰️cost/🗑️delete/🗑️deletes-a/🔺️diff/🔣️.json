@@ -37,12 +37,15 @@
   "sustainability": null,
   "resilience": null,
   "costs": {
-    "added": [],
     "removed": [
-      "cost-requirement-a"
+      {
+        "id": "cost-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "delivery": null,
   "risks": null,

@@ -1,0 +1,9 @@
+# Admitted Source Custody Compile Frontier27
+
+Registered General27 completed Nx1/Cargo101 before runtime with four parsing errors: three tuple generic qualifications in demand propagation and one exclusive lease constructor punctuation. Those four and an equivalent tuple macro qualification are now corrected. All243 selected sources, full producer and Root lock were exact. No owned handle is live after session34436.
+
+The source constructor is now typed and granted, and the surviving binding carries inline shared custody through Arc::into_inner. Private typed payload access begins only after unique Arc transfer; shared metadata exposes immutable identity. Source/binding Close preserves zero-item refusals, checked depth and initial whole Arc release refusal before moving readable aliases. Production source Drop requires terminal-empty. Fixture-only sources are genuine admitted Source objects whose fixture driver queries actual demands and asserts allocator receipts; no production Drop scheduler or public old from_authority API remains.
+
+The projection fixture preserves its original Weak liveness check through every original projection action, then explicitly closes that weak alias while the source still retains the original root (observed0 physical), transfers the same original root Arc, and retires it through full SharedControlledRetirement. Final witness covers the closed weak descriptor and actual terminal root custody. This resolves the earlier unbudgeted Arc::try_unwrap shell release rather than assuming logical owner release equals physical backing.
+
+Remaining: original runtime laws are unaccepted after this implementation; insertion/comparator metadata still needs a complete granted constructor/close boundary; Store Snapshot and all Flow/Neural real receivers still require propagation. WFC/Space remain parked.

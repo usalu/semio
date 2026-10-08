@@ -9,10 +9,11 @@
   "nightSetbackK": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "zone-office",
+        "id": "zone-office",
         "patch": {
           "name": null,
           "usageType": "meeting",
@@ -40,7 +41,8 @@
   },
   "ventSystems": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

@@ -761,7 +761,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             plugin.manifest.hosted_artifact_kinds.extend(rows);
         }
         for declaration in artifacts.into_iter().chain(hosted_artifacts) {
-            plugin = declaration.apply_to(plugin);
+            plugin = declaration.install_into(plugin);
         }
         for capability in capabilities {
             plugin = plugin.capability(capability);

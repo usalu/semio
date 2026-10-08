@@ -202,17 +202,6 @@
         }
       ],
       "x-semio-state": "artifact"
-    },
-    "climateTable": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/climateTable"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -329,11 +318,65 @@
         }
       }
     },
-    "Din18599ElementsPatch": {
+    "Din18599ElementsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement"
+        }
+      }
+    },
+    "Din18599ElementsModified": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Din18599ElementsPatch"
+        }
+      }
+    },
+    "Din18599ElementsMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Din18599ElementsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "labelEn",
         "labelDe",
         "kind",
@@ -347,9 +390,6 @@
         "adjacency"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "labelEn": {
           "anyOf": [
             {
@@ -462,46 +502,56 @@
         }
       }
     },
+    "Din18599ElementsRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "Din18599ElementsRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din18599ElementsRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din18599ElementsInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din18599ElementsMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din18599ElementsPatch"
+            "$ref": "#/$defs/Din18599ElementsModified"
           }
-        },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     },
@@ -669,11 +719,65 @@
         }
       }
     },
-    "Din18599ZonesPatch": {
+    "Din18599ZonesInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone"
+        }
+      }
+    },
+    "Din18599ZonesModified": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Din18599ZonesPatch"
+        }
+      }
+    },
+    "Din18599ZonesMoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Din18599ZonesPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "labelEn",
         "labelDe",
         "usageProfile",
@@ -686,9 +790,6 @@
         "lightingPowerWM2"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "labelEn": {
           "anyOf": [
             {
@@ -791,46 +892,56 @@
         }
       }
     },
+    "Din18599ZonesRemoved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "Din18599ZonesRows": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "modified",
-        "order"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Din18599ZonesRemoved"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din18599ZonesInserted"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din18599ZonesMoved"
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din18599ZonesPatch"
+            "$ref": "#/$defs/Din18599ZonesModified"
           }
-        },
-        "order": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     }

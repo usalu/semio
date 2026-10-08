@@ -63,8 +63,8 @@ pub(crate) mod context {
     }
     
     /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
-    /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
-    /// see `reset_document_effect`'s doc comment), so `setActiveExample` no longer lands via
+    /// 🌱️ Whole-document replace is not an in-history mutation
+    /// (see `reset_document_effect`'s doc comment), so `setActiveExample` no longer lands via
     /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
     /// command's `Effect::LoadDocument`, through the stepped archive load (`artifact_app_laws::load_document`) — the same
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
@@ -250,9 +250,7 @@ fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
         WriterCommand::SetTabSize(set_tab_size::SetTabSize { value: 4 }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "Format".into() }),
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
-        WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: snapshot_json.clone() }),
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://brief.md".into(), text: "# Brief".into() }),
-        WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: snapshot_json.clone() }),
         WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: snapshot_json }),
         WriterCommand::FormatDocument(format_document::FormatDocument {}),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
@@ -398,8 +396,6 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         WriterCommand::TextEdit(text_edit::TextEdit { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::SetText(set_text::SetText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "x".repeat(MAX_WRITER_EXAMPLE_ID_BYTES) }),
-        WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
-        WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
@@ -413,8 +409,6 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         WriterCommand::TextEdit(text_edit::TextEdit { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::SetText(set_text::SetText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "x".repeat(MAX_WRITER_EXAMPLE_ID_BYTES + 1) }),
-        WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
-        WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
@@ -526,10 +520,8 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
     let expectations: Vec<(&str, WriterCommand)> = vec![
         ("text-edit", WriterCommand::TextEdit(text_edit::TextEdit { text: "x".into() })),
         ("set-text", WriterCommand::SetText(set_text::SetText { text: "x".into() })),
-        ("set-snapshot", WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "{}".into() })),
         ("open-document", WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: "x".into() })),
-        ("document-json", WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() })),
-        ("document-json", WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() })),
+        ("load-document-json", WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() })),
         ("active-example", WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() })),
         ("format-document", WriterCommand::FormatDocument(format_document::FormatDocument {})),
         ("commit-rename", WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".into() })),
@@ -561,9 +553,7 @@ pub(super) fn every_command() -> Vec<WriterCommand> {
     vec![
         WriterCommand::TextEdit(text_edit::TextEdit { text: "hello".into() }),
         WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }),
-        WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "{}".into() }),
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: String::new() }),
-        WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() }),
         WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() }),
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
         WriterCommand::FormatDocument(format_document::FormatDocument {}),
@@ -741,16 +731,6 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     use crate::editor::writer::unit_tests::context::{new_app, render};
     let mut app = new_app().await;
     assert!(render(&mut app, "writer.play.nope").await.contains("Unknown body"));
-}
-
-/// 🌱️ `SetSnapshot` is banned outright (see `whole_document_operation`'s doc comment) — the
-/// trait default correctly returns `None`; whole-document replace goes through
-/// `reset_document_effect` instead, exercised by `📚️examples/🎬️demo-session`'s own command
-/// tests and by `commands::text`'s `set_active_example`/`open_document` tests.
-#[semio_framework_async_macros::async_test]
-async fn whole_document_operation_stays_the_trait_default_none() {
-    let replacement = jack_snapshot();
-    assert_eq!(WriterPlayApp::whole_document_operation(replacement), None);
 }
 
 #[semio_framework_async_macros::async_test]

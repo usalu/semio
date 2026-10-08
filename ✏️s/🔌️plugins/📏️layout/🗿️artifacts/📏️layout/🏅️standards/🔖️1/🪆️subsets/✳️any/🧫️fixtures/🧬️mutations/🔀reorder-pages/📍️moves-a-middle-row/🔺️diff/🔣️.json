@@ -9,14 +9,16 @@
   "parentPages": null,
   "spreads": null,
   "pages": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [],
-    "reordered": [
-      "page-0",
-      "page-2",
-      "page-1"
-    ]
+    "moved": [
+      {
+        "id": "page-1",
+        "from": 1,
+        "to": 2
+      }
+    ],
+    "modified": []
   },
   "printTarget": null,
   "backgroundDrawing": null,

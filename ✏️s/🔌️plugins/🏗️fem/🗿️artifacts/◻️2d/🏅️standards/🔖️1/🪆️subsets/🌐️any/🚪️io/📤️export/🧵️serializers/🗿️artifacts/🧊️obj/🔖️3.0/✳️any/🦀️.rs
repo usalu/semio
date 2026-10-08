@@ -1,7 +1,7 @@
 //! 🚪️ fem2d → obj — foreign `Serializer<Fem2dSnapshot>` on the framework's `io_mechanism` channel,
 //! and REAL geometry: every `FemRegion` footprint is triangulated and extruded by its own real
 //! `thickness` into a `SemioMeshSnapshot`
-//! (`crate::fem2d_engine::meshing::build_semio_mesh_snapshot`, the same kernel the
+//! (`crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot`, the same kernel the
 //! `🕸️mesh/🧫️fixtures/**/🗿️expected.obj` fixtures pin), then handed to stdio's own tested
 //! `SemioMeshToObj` bridge and `encode_obj` grammar — never hand-rolled bytes.
 //!
@@ -24,7 +24,7 @@ pub const OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standar
 
 /// 🧊️ The extruded region mesh as real `.obj` text.
 pub fn obj_text(from: &Fem2dSnapshot) -> Result<String, IoError> {
-    let mesh = crate::fem2d_engine::meshing::build_semio_mesh_snapshot(from);
+    let mesh = crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot(from);
     let obj = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&mesh)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("fem2d→obj: {error}"))))?;
     Ok(encode_obj(&obj))
 }

@@ -1,4 +1,5 @@
-use crate::schema::mutations::{apply_bmp_mutation, BmpMutation, PaintDirectRegion, PaintIndexedRegion};
+use crate::apply_mutation;
+use crate::schema::mutations::{BmpMutation, PaintDirectRegion, PaintIndexedRegion};
 use protocol::Mutation;
 
 fn direct() -> crate::BmpSnapshot {
@@ -25,16 +26,19 @@ fn direct_region_mutation_is_revision_guarded_and_exactly_invertible() {
     });
     let inverse = mutation.inverse(&original).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
+    assert!(matches!(&inverse[0], BmpMutation::ReplaceSamples(restore) if restore.region == crate::schema::snapshot::BmpRegion { x: 1, y: 0, width: 1, height: 1 }));
     let mut edited = original.clone();
-    let outcome = apply_bmp_mutation(&mut edited, &mutation);
-    assert!(!outcome.diff().image.is_none());
+    let outcome = apply_mutation(&mut edited, &mutation);
+    assert!(outcome.diff().image.is_none());
+    assert_eq!(outcome.diff().rects.len(), 1);
     assert_ne!(edited, original);
-    apply_bmp_mutation(&mut edited, &inverse[0]);
+    apply_mutation(&mut edited, &inverse[0]);
     assert_eq!(edited, original);
 
     let stale = BmpMutation::PaintDirectRegion(PaintDirectRegion { revision: "stale".into(), ..match mutation { BmpMutation::PaintDirectRegion(payload) => payload, _ => unreachable!() } });
     let mut unchanged = original.clone();
-    assert!(apply_bmp_mutation(&mut unchanged, &stale).diff().image.is_none());
+    let refused = apply_mutation(&mut unchanged, &stale);
+    assert!(refused.diff().image.is_none() && refused.diff().rects.is_empty());
     assert_eq!(unchanged, original);
 }
 
@@ -55,8 +59,8 @@ fn indexed_region_mutation_round_trips_text_binary_and_undo() {
     assert_eq!(<BmpMutation as protocol::OpBinary>::decode_op(&binary).unwrap(), mutation);
     let inverse = mutation.inverse(&original).expect("valid retained mutation inverse fixture");
     let mut edited = original.clone();
-    apply_bmp_mutation(&mut edited, &mutation);
+    apply_mutation(&mut edited, &mutation);
     assert_ne!(edited, original);
-    apply_bmp_mutation(&mut edited, &inverse[0]);
+    apply_mutation(&mut edited, &inverse[0]);
     assert_eq!(edited, original);
 }

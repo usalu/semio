@@ -1,60 +1,79 @@
-//! 🧬️ EN1991 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
+//! 🧬️ EN1991 diff schema — sparse scalar fields plus positional row deltas for every list the document owns.
 
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
-use semio_s_artifact_norm_contract::{norm_list_delta, norm_row_patch};
 
 use crate::En1991Snapshot;
 
 //#region 🔖️Rows
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `FloorArea`.
     pub En1991FloorPatch of crate::FloorArea { set { category: String, area: f64, assumed_qk: f64, assumed_qk_concentrated: f64, assumed_partitions: f64 } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `FloorArea` list.
-    pub En1991FloorDelta { addition: En1991FloorAddition, modification: En1991FloorModification, row: crate::FloorArea, patch: En1991FloorPatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `FloorArea` list.
+    pub En1991FloorDelta { removal: En1991FloorRemoval, insertion: En1991FloorInsertion, relocation: En1991FloorRelocation, modification: En1991FloorModification, row: crate::FloorArea, patch: En1991FloorPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SelfWeightElement`.
     pub En1991SelfWeightElementPatch of crate::SelfWeightElement { set { material: String, thickness: f64, assumed_gk: f64 } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `SelfWeightElement` list.
-    pub En1991SelfWeightElementDelta { addition: En1991SelfWeightElementAddition, modification: En1991SelfWeightElementModification, row: crate::SelfWeightElement, patch: En1991SelfWeightElementPatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `SelfWeightElement` list.
+    pub En1991SelfWeightElementDelta { removal: En1991SelfWeightElementRemoval, insertion: En1991SelfWeightElementInsertion, relocation: En1991SelfWeightElementRelocation, modification: En1991SelfWeightElementModification, row: crate::SelfWeightElement, patch: En1991SelfWeightElementPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `RoofArea`.
     pub En1991RoofPatch of crate::RoofArea { set { roof_type: String, pitch_deg: f64, c_e: f64, c_t: f64, has_parapet: bool, parapet_height: f64, drift_obstruction_height: f64, multi_span: bool, assumed_sk: f64 } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `RoofArea` list.
-    pub En1991RoofDelta { addition: En1991RoofAddition, modification: En1991RoofModification, row: crate::RoofArea, patch: En1991RoofPatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `RoofArea` list.
+    pub En1991RoofDelta { removal: En1991RoofRemoval, insertion: En1991RoofInsertion, relocation: En1991RoofRelocation, modification: En1991RoofModification, row: crate::RoofArea, patch: En1991RoofPatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `WindFace`.
     pub En1991WindFacePatch of crate::WindFace { set { zone: String, z: f64, c_pe10: f64, c_pe1: f64, c_pi: f64, c_s: f64, c_d: f64, loaded_area: f64, assumed_wp: f64 } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `WindFace` list.
-    pub En1991WindFaceDelta { addition: En1991WindFaceAddition, modification: En1991WindFaceModification, row: crate::WindFace, patch: En1991WindFacePatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `WindFace` list.
+    pub En1991WindFaceDelta { removal: En1991WindFaceRemoval, insertion: En1991WindFaceInsertion, relocation: En1991WindFaceRelocation, modification: En1991WindFaceModification, row: crate::WindFace, patch: En1991WindFacePatch, key: id }
 }
 
-norm_row_patch! {
+protocol::row_patch! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `AccidentalCase`.
     pub En1991AccidentalCasePatch of crate::AccidentalCase { set { impact: Vec<crate::AccidentalImpact>, explosion: Vec<crate::AccidentalExplosion> } }
 }
 
-norm_list_delta! {
-    /// 📋️ Keyed row delta of one `AccidentalCase` list.
-    pub En1991AccidentalCaseDelta { addition: En1991AccidentalCaseAddition, modification: En1991AccidentalCaseModification, row: crate::AccidentalCase, patch: En1991AccidentalCasePatch, key: id }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of one `AccidentalCase` list.
+    pub En1991AccidentalCaseDelta { removal: En1991AccidentalCaseRemoval, insertion: En1991AccidentalCaseInsertion, relocation: En1991AccidentalCaseRelocation, modification: En1991AccidentalCaseModification, row: crate::AccidentalCase, patch: En1991AccidentalCasePatch, key: id }
 }
 
 //#endregion 🔖️Rows
@@ -211,7 +230,7 @@ pub struct En1991Diff {
 //#endregion 🔖️Diff
 
 impl MutationDiff<En1991Snapshot> for En1991Diff {
-    fn apply(&self, base: &En1991Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1991Snapshot> {
+    fn apply(&self, base: &En1991Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1991Snapshot> {
         Ok(En1991Snapshot {
             annex: self.annex.unwrap_or(base.annex),
             snow_zone: self.snow_zone.clone().unwrap_or_else(|| base.snow_zone.clone()),
@@ -278,11 +297,11 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
             assumed_silo_pressure: self.assumed_silo_pressure.unwrap_or(base.assumed_silo_pressure),
             assumed_silo_patch: self.assumed_silo_patch.unwrap_or(base.assumed_silo_patch),
             assumed_silo_wall_friction: self.assumed_silo_wall_friction.unwrap_or(base.assumed_silo_wall_friction),
-            floors: self.floors.commit_onto(&base.floors).map_err(|error| error.under(["floors"]))?,
-            self_weight_elements: self.self_weight_elements.commit_onto(&base.self_weight_elements).map_err(|error| error.under(["self_weight_elements"]))?,
-            roofs: self.roofs.commit_onto(&base.roofs).map_err(|error| error.under(["roofs"]))?,
-            wind_faces: self.wind_faces.commit_onto(&base.wind_faces).map_err(|error| error.under(["wind_faces"]))?,
-            accidental_cases: self.accidental_cases.commit_onto(&base.accidental_cases).map_err(|error| error.under(["accidental_cases"]))?,
+            floors: self.floors.commit_onto(&base.floors, capability).map_err(|error| error.under(["floors"]))?,
+            self_weight_elements: self.self_weight_elements.commit_onto(&base.self_weight_elements, capability).map_err(|error| error.under(["self_weight_elements"]))?,
+            roofs: self.roofs.commit_onto(&base.roofs, capability).map_err(|error| error.under(["roofs"]))?,
+            wind_faces: self.wind_faces.commit_onto(&base.wind_faces, capability).map_err(|error| error.under(["wind_faces"]))?,
+            accidental_cases: self.accidental_cases.commit_onto(&base.accidental_cases, capability).map_err(|error| error.under(["accidental_cases"]))?,
         })
     }
 
@@ -563,81 +582,6 @@ impl DiffAlgebra<En1991Snapshot> for En1991Diff {
             roofs: self.roofs.inverse(&base.roofs),
             wind_faces: self.wind_faces.inverse(&base.wind_faces),
             accidental_cases: self.accidental_cases.inverse(&base.accidental_cases),
-        }
-    }
-
-    fn between(base: &En1991Snapshot, other: &En1991Snapshot) -> Self {
-        Self {
-            annex: (base.annex != other.annex).then(|| other.annex),
-            snow_zone: (base.snow_zone != other.snow_zone).then(|| other.snow_zone.clone()),
-            altitude: (base.altitude != other.altitude).then(|| other.altitude),
-            en_sk: (base.en_sk != other.en_sk).then(|| other.en_sk),
-            north_german_lowland_snow: (base.north_german_lowland_snow != other.north_german_lowland_snow).then(|| other.north_german_lowland_snow),
-            wind_zone: (base.wind_zone != other.wind_zone).then(|| other.wind_zone),
-            en_vb: (base.en_vb != other.en_vb).then(|| other.en_vb),
-            terrain_category: (base.terrain_category != other.terrain_category).then(|| other.terrain_category),
-            mixed_terrain_upwind: (base.mixed_terrain_upwind != other.mixed_terrain_upwind).then(|| other.mixed_terrain_upwind),
-            mixed_terrain_distance: (base.mixed_terrain_distance != other.mixed_terrain_distance).then(|| other.mixed_terrain_distance),
-            orography_factor: (base.orography_factor != other.orography_factor).then(|| other.orography_factor),
-            coast_or_island: (base.coast_or_island != other.coast_or_island).then(|| other.coast_or_island),
-            air_density: (base.air_density != other.air_density).then(|| other.air_density),
-            height: (base.height != other.height).then(|| other.height),
-            width: (base.width != other.width).then(|| other.width),
-            depth: (base.depth != other.depth).then(|| other.depth),
-            assumed_delta_t: (base.assumed_delta_t != other.assumed_delta_t).then(|| other.assumed_delta_t),
-            t_max: (base.t_max != other.t_max).then(|| other.t_max),
-            t_min: (base.t_min != other.t_min).then(|| other.t_min),
-            t_0: (base.t_0 != other.t_0).then(|| other.t_0),
-            thermal_element_type: (base.thermal_element_type != other.thermal_element_type).then(|| other.thermal_element_type.clone()),
-            thermal_bridge_type: (base.thermal_bridge_type != other.thermal_bridge_type).then(|| other.thermal_bridge_type),
-            delta_t_m: (base.delta_t_m != other.delta_t_m).then(|| other.delta_t_m),
-            storey_count: (base.storey_count != other.storey_count).then(|| other.storey_count),
-            fire_mode: (base.fire_mode != other.fire_mode).then(|| other.fire_mode),
-            fire_curve: (base.fire_curve != other.fire_curve).then(|| other.fire_curve),
-            fire_duration: (base.fire_duration != other.fire_duration).then(|| other.fire_duration),
-            assumed_gas_temperature: (base.assumed_gas_temperature != other.assumed_gas_temperature).then(|| other.assumed_gas_temperature),
-            assumed_h_net: (base.assumed_h_net != other.assumed_h_net).then(|| other.assumed_h_net),
-            fire_compartment_area: (base.fire_compartment_area != other.fire_compartment_area).then(|| other.fire_compartment_area),
-            fire_compartment_height: (base.fire_compartment_height != other.fire_compartment_height).then(|| other.fire_compartment_height),
-            fire_opening_factor: (base.fire_opening_factor != other.fire_opening_factor).then(|| other.fire_opening_factor),
-            fire_thermal_inertia: (base.fire_thermal_inertia != other.fire_thermal_inertia).then(|| other.fire_thermal_inertia),
-            fire_occupancy: (base.fire_occupancy != other.fire_occupancy).then(|| other.fire_occupancy.clone()),
-            fire_load_density_qf: (base.fire_load_density_qf != other.fire_load_density_qf).then(|| other.fire_load_density_qf),
-            assumed_qf_d: (base.assumed_qf_d != other.assumed_qf_d).then(|| other.assumed_qf_d),
-            construction_activity: (base.construction_activity != other.construction_activity).then(|| other.construction_activity.clone()),
-            assumed_construction_qk: (base.assumed_construction_qk != other.assumed_construction_qk).then(|| other.assumed_construction_qk),
-            structure_kind: (base.structure_kind != other.structure_kind).then(|| other.structure_kind),
-            bridge_lane: (base.bridge_lane != other.bridge_lane).then(|| other.bridge_lane),
-            bridge_span: (base.bridge_span != other.bridge_span).then(|| other.bridge_span),
-            bridge_lane_width: (base.bridge_lane_width != other.bridge_lane_width).then(|| other.bridge_lane_width),
-            assumed_bridge_tandem: (base.assumed_bridge_tandem != other.assumed_bridge_tandem).then(|| other.assumed_bridge_tandem),
-            assumed_bridge_udl: (base.assumed_bridge_udl != other.assumed_bridge_udl).then(|| other.assumed_bridge_udl),
-            assumed_bridge_lm2: (base.assumed_bridge_lm2 != other.assumed_bridge_lm2).then(|| other.assumed_bridge_lm2),
-            assumed_bridge_footway: (base.assumed_bridge_footway != other.assumed_bridge_footway).then(|| other.assumed_bridge_footway),
-            assumed_bridge_lm3: (base.assumed_bridge_lm3 != other.assumed_bridge_lm3).then(|| other.assumed_bridge_lm3),
-            assumed_bridge_lm4: (base.assumed_bridge_lm4 != other.assumed_bridge_lm4).then(|| other.assumed_bridge_lm4),
-            bridge_load_group: (base.bridge_load_group != other.bridge_load_group).then(|| other.bridge_load_group.clone()),
-            crane_claimed: (base.crane_claimed != other.crane_claimed).then(|| other.crane_claimed),
-            crane_class: (base.crane_class != other.crane_class).then(|| other.crane_class.clone()),
-            hoist_class: (base.hoist_class != other.hoist_class).then(|| other.hoist_class.clone()),
-            hoisting_speed: (base.hoisting_speed != other.hoisting_speed).then(|| other.hoisting_speed),
-            assumed_crane_wheel: (base.assumed_crane_wheel != other.assumed_crane_wheel).then(|| other.assumed_crane_wheel),
-            assumed_crane_horizontal: (base.assumed_crane_horizontal != other.assumed_crane_horizontal).then(|| other.assumed_crane_horizontal),
-            silo_claimed: (base.silo_claimed != other.silo_claimed).then(|| other.silo_claimed),
-            silo_kind: (base.silo_kind != other.silo_kind).then(|| other.silo_kind.clone()),
-            silo_bulk_density: (base.silo_bulk_density != other.silo_bulk_density).then(|| other.silo_bulk_density),
-            silo_height: (base.silo_height != other.silo_height).then(|| other.silo_height),
-            silo_hydraulic_radius: (base.silo_hydraulic_radius != other.silo_hydraulic_radius).then(|| other.silo_hydraulic_radius),
-            silo_mu: (base.silo_mu != other.silo_mu).then(|| other.silo_mu),
-            silo_k: (base.silo_k != other.silo_k).then(|| other.silo_k),
-            assumed_silo_pressure: (base.assumed_silo_pressure != other.assumed_silo_pressure).then(|| other.assumed_silo_pressure),
-            assumed_silo_patch: (base.assumed_silo_patch != other.assumed_silo_patch).then(|| other.assumed_silo_patch),
-            assumed_silo_wall_friction: (base.assumed_silo_wall_friction != other.assumed_silo_wall_friction).then(|| other.assumed_silo_wall_friction),
-            floors: En1991FloorDelta::between(&base.floors, &other.floors),
-            self_weight_elements: En1991SelfWeightElementDelta::between(&base.self_weight_elements, &other.self_weight_elements),
-            roofs: En1991RoofDelta::between(&base.roofs, &other.roofs),
-            wind_faces: En1991WindFaceDelta::between(&base.wind_faces, &other.wind_faces),
-            accidental_cases: En1991AccidentalCaseDelta::between(&base.accidental_cases, &other.accidental_cases),
         }
     }
 

@@ -1,6 +1,17 @@
 use super::*;
 use crate::{DagHostSnapshotEdge, DagScene};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{apply_semio_graph_mutation, inverse_semio_graph_mutation};
+use semio_s_artifact_stdio_semio::apply_diff;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{diff_semio_graph_mutation, inverse_semio_graph_mutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+
+/// 🧬️ Applies one graph leaf through its diff and the central applier, returning how many messages it raised.
+// 🚫️async: E1 pure test helper (file verified I/O-free).
+fn apply_leaf(content: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) -> usize {
+    let outcome = diff_semio_graph_mutation(leaf, content);
+    let raised = outcome.messages().len();
+    *content = apply_diff(outcome.diff(), content).expect("a leaf diff applies to the content it was computed from");
+    raised
+}
 
 fn demo() -> DagScene {
     crate::examples::demo::scene()
@@ -43,7 +54,7 @@ async fn node_field_leaves_set_the_slider_value_on_the_child_content() {
     assert!(matches!(leaves.first(), Some(SemioGraphMutation::SetNodeProperty(set)) if set.key == "value"), "{leaves:?}");
     let mut content = crate::dag_content_snapshot(&DagScene { nodes: vec![node], edges: Vec::new() });
     for leaf in &leaves {
-        assert!(apply_semio_graph_mutation(&mut content, leaf).messages().is_empty(), "{leaf:?}");
+        assert_eq!(apply_leaf(&mut content, leaf), 0, "{leaf:?}");
     }
     assert!(matches!(crate::dag_scene_of_content(&content).nodes[0].kind, DagNodeKind::Slider { value, .. } if value == 5.0));
 }
@@ -74,10 +85,10 @@ async fn remove_nodes_leaves_delete_incident_edges_first_and_undo_exactly() {
     for leaf in &leaves {
         undo.push(inverse_semio_graph_mutation(leaf, &content).expect("inverse"));
         assert_eq!(undo.last().map(Vec::len), Some(1), "each row is point-invertible");
-        apply_semio_graph_mutation(&mut content, leaf);
+        apply_leaf(&mut content, leaf);
     }
-    for step in undo.into_iter().rev().flatten() {
-        apply_semio_graph_mutation(&mut content, &step);
+    for step in undo.into_iter().rev().flat_map(|rows| rows.into_iter().rev()) {
+        apply_leaf(&mut content, &step);
     }
     assert_eq!(content.encode_pack(), base.encode_pack(), "undo restores the content bytes");
 }

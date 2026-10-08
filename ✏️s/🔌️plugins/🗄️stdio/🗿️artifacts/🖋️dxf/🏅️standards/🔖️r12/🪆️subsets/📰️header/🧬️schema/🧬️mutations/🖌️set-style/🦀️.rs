@@ -17,7 +17,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetStyle {
         let Self { name, style } = self;
         protocol::MutationOutcome::new({
             let old = base.tables.styles.iter().find(|s| &s.name == name).cloned().unwrap_or_default();
-            diff_set_style(name, style_diff_between(&old, style))
+            diff_set_style(name, style_field_changes(&old, style))
         })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {

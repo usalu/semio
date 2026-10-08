@@ -181,3 +181,24 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: En1992Analyzer,
     composer: En1992Composer,
 );
+
+//#region 🌉️ExternalCodecBridge
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::{En1992Mutation, En1992Snapshot};
+
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_en1992_mutation(base: &En1992Snapshot, mutation: &En1992Mutation) -> Result<(En1992Snapshot, Vec<String>), String> {
+        let raised = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+        <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use mutation_bridge::*;
+//#endregion 🌉️ExternalCodecBridge

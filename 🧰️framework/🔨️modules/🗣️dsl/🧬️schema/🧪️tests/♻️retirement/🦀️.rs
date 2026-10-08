@@ -24,7 +24,7 @@ fn shape(kind:&str)->Shape{match kind{
 fn run<T:RetireOwned>(value:T,name:&str,law:&serde_json::Value){
     let (result,heap)=observe(||ControlledRetirement::new(value));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut owner=result.unwrap_or_else(|_|panic!("finite Record authority absent: {name}"));
     let mut born=0;let mut released=0;
-    let demands=|owner:&ControlledRetirement<T>|{let copy=owner.next_copy_byte_demand();let release=owner.next_release_byte_demand().unwrap();(copy,owner.next_capacity_byte_demand(if copy==0{release}else{law["maximumCopyBytes"].as_u64().unwrap()as usize}).unwrap(),release)};
+    let demands=|owner:&ControlledRetirement<T>|{let copy=owner.next_copy_byte_demand().unwrap().unwrap();let release=owner.next_release_byte_demand().unwrap();(copy,owner.next_capacity_byte_demand(if copy==0{release}else{law["maximumCopyBytes"].as_u64().unwrap()as usize}).unwrap(),release)};
     for _ in 0..law["maximumTurns"].as_u64().unwrap(){
         let ((copy,capacity,release),heap)=observe(||demands(&owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let grant=RetainedCloneGrant{maximum_items:law["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:law["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:law["maximumDepth"].as_u64().unwrap()as usize};assert!(copy<=grant.maximum_copy_bytes);

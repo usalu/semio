@@ -55,6 +55,25 @@
         "group": "value",
         "order": 30
       }
+    },
+    "override_index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Override position",
+          "de": "Position des Inhaltstyp-Eintrags"
+        },
+        "description": {
+          "en": "Position the content-type override takes among the overrides; the last position when absent.",
+          "de": "Position, die der Inhaltstyp-Eintrag unter den Einträgen einnimmt; ohne Angabe die letzte."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

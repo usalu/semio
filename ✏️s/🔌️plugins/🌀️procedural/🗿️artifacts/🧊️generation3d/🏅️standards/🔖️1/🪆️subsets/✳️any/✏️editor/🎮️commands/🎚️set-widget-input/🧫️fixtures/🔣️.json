@@ -4821,6 +4821,8 @@
     "feature": "solid__shell",
     "selector": "solid__selected",
     "consumer": "volume",
+    "openedActor": "local",
+    "sourceExtent": [2, 1.5, 1],
     "sourceHandle": "from rendered componentSource",
     "label": "from rendered componentReferences",
     "revision": "from rendered componentSource",

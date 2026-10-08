@@ -201,14 +201,14 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
                 }
             }
             let frontier = RetainedGisMapApprovalCommitterV1::publication_frontier(&request.scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
-            let pack_hash = directory::os_directory::ArtifactHash::parse_hex(&sha256(&request.pair.pack)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
-            let spr_hash = directory::os_directory::ArtifactHash::parse_hex(&sha256(&request.pair.spr)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
+            let pack_hash = directory::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(&sha256(&request.pair.pack)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
+            let spr_hash = directory::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(&sha256(&request.pair.spr)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
             self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("public-checkpoint-ack");
             Ok(directory::os_directory::PublishedArtifactCheckpoint {
                 scope: request.scope,
                 checkpoint_id: directory::os_directory::ArtifactHash([0x45; 32]),
                 parent_checkpoint_id: None,
-                descriptor_digest_v1: directory::os_directory::ArtifactHash::parse_hex(&request.descriptor_digest).ok_or(GisMapApprovalCommitErrorV1::Storage)?,
+                descriptor_digest_v1: directory::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(&request.descriptor_digest).ok_or(GisMapApprovalCommitErrorV1::Storage)?,
                 baseline_frontier: frontier,
                 pack: directory::os_directory::PublishedArtifactBlob { sha256: pack_hash, byte_length: u64::try_from(request.pair.pack.len()).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)? },
                 spr: directory::os_directory::PublishedArtifactBlob { sha256: spr_hash, byte_length: u64::try_from(request.pair.spr.len()).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)? },
@@ -713,7 +713,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             head_edit_ordinal: terminal.frontier.head_edit_ordinal,
             head_edit_id: terminal.frontier.head_edit_id.clone(),
             last_commit_seq: terminal.frontier.last_commit_seq,
-            chain_hash: directory::os_directory::ArtifactHash::parse_hex(&terminal.frontier.chain_sha256).expect("approved chain hash"),
+            chain_hash: directory::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(&terminal.frontier.chain_sha256).expect("approved chain hash"),
         },
         descriptor_digest: identity.descriptor_digest.clone(),
         pack: InferencePrivateBytesV1::new(after_pack, INPUT_MAX_BYTES).expect("bounded approved Map pack"),
@@ -726,7 +726,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert_eq!(inverses.len(), 1, "the retained approval owns one exact parent inverse");
     let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(after_base.pack.as_slice()).expect("approved Map snapshot");
     let mut before = current.clone();
-    semio_s_artifact_gis_gismap::mutations::apply_gis_map_mutation(&mut before, &inverses[0]).expect("server inverse applies to the exact current Map");
+    semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation(&mut before, &inverses[0]).expect("server inverse applies to the exact current Map");
     use directory::Inference as _;
     let work = semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).expect("server reconstructs the original fixed-three work");
     let undo_diff = semio_framework_pack_json::to_json_string(&inverses[0]).into_bytes();

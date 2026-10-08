@@ -29,18 +29,6 @@
       "$ref": "#/$defs/EquationPointsDelta",
       "x-semio-state": "artifact"
     },
-    "notation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
-      "x-semio-state": "artifact"
-    },
-    "results": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
-      "x-semio-state": "artifact"
-    },
-    "computed": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
-      "x-semio-state": "artifact"
-    },
     "equation": {
       "$ref": "#/$defs/EquationExprDiff",
       "x-semio-state": "artifact"
@@ -65,48 +53,118 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/node"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/EquationNodeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/EquationNodePatch"
+            "$ref": "#/$defs/EquationNodeInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/EquationNodeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquationNodesModification"
           }
         }
       },
+      "required": []
+    },
+    "EquationNodesModification": {
+      "title": "EquationNodesModification",
+      "type": "object",
+      "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
-      ]
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/EquationNodePatch"
+        }
+      }
+    },
+    "EquationNodeRemoval": {
+      "title": "EquationNodeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "EquationNodeInsertion": {
+      "title": "EquationNodeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/node"
+        }
+      }
+    },
+    "EquationNodeRelocation": {
+      "title": "EquationNodeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     },
     "EquationNodePatch": {
       "title": "EquationNodePatch",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "label": {
           "type": "string"
         },
@@ -117,57 +175,125 @@
           "type": "number"
         }
       },
-      "required": [
-        "id"
-      ]
+      "required": []
     },
     "EquationEdgesDelta": {
       "title": "EquationEdgesDelta",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/edge"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/EquationEdgeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/EquationEdgePatch"
+            "$ref": "#/$defs/EquationEdgeInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/EquationEdgeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquationEdgesModification"
           }
         }
       },
+      "required": []
+    },
+    "EquationEdgesModification": {
+      "title": "EquationEdgesModification",
+      "type": "object",
+      "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
-      ]
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/EquationEdgePatch"
+        }
+      }
+    },
+    "EquationEdgeRemoval": {
+      "title": "EquationEdgeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "EquationEdgeInsertion": {
+      "title": "EquationEdgeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/edge"
+        }
+      }
+    },
+    "EquationEdgeRelocation": {
+      "title": "EquationEdgeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     },
     "EquationEdgePatch": {
       "title": "EquationEdgePatch",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "source": {
           "type": "string"
         },
@@ -175,9 +301,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "id"
-      ]
+      "required": []
     },
     "EquationPointsDelta": {
       "title": "EquationPointsDelta",

@@ -149,13 +149,13 @@ pub(crate) fn edit_mesh_source(text: &str, payload: &SetWidgetInput) -> Result<O
     let mut source = json::parse(text, json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     if matches!(path[0].as_str(), "materials" | "textures") {
         let original = source.to_string(); edit_mesh_asset(&mut source, payload)?; let text = source.to_string();
-        semio_framework::parse_polygon_mesh_source(&text)?; return Ok((text != original).then_some(text));
+        semio_framework::mesh_io::text::parse_polygon_mesh_source(&text)?; return Ok((text != original).then_some(text));
     }
     if path[0] == "attributes" && ((path.len() == 2 && matches!(payload.operation.as_deref(), Some("add" | "remove"))) || path.len() == 3 && path[2] == "name") {
         if path.len() == 3 && payload.operation.as_deref().unwrap_or("set") == "set" && payload.value.trim() == path[1] && source.get("attributes").and_then(|attributes| attributes.get(&path[1])).is_some() { return Ok(None); }
-        edit_mesh_attribute(&mut source, payload)?; let text = source.to_string(); semio_framework::parse_polygon_mesh_source(&text)?; return Ok(Some(text));
+        edit_mesh_attribute(&mut source, payload)?; let text = source.to_string(); semio_framework::mesh_io::text::parse_polygon_mesh_source(&text)?; return Ok(Some(text));
     }
-    if payload.operation.as_deref().unwrap_or("set") != "set" { edit_mesh_array(&mut source, payload)?; let text = source.to_string(); semio_framework::parse_polygon_mesh_source(&text)?; return Ok(Some(text)); }
+    if payload.operation.as_deref().unwrap_or("set") != "set" { edit_mesh_array(&mut source, payload)?; let text = source.to_string(); semio_framework::mesh_io::text::parse_polygon_mesh_source(&text)?; return Ok(Some(text)); }
     if payload.destination.is_some() { return Err("Choose a primitive mesh field to edit".into()); }
     let node = mesh_field_mut(&mut source, path)?;
     let next = if node.as_bool().is_some() { json::Value::from(match payload.value.as_str() { "true" => true, "false" => false, _ => return Err("Choose a boolean value".into()) }) }
@@ -165,7 +165,7 @@ pub(crate) fn edit_mesh_source(text: &str, payload: &SetWidgetInput) -> Result<O
     if node == &next || node.as_f64().is_some() && node.as_f64() == next.as_f64() { return Ok(None); }
     *node = next;
     let text = source.to_string();
-    semio_framework::parse_polygon_mesh_source(&text)?;
+    semio_framework::mesh_io::text::parse_polygon_mesh_source(&text)?;
     Ok(Some(text))
 }
 
@@ -177,14 +177,14 @@ pub(crate) fn import_mesh_texture(text: &str, name: &str, payload: &str) -> Resu
     let bytes = crate::standards::v1::subsets::any::io::mesh_bridge::base64_decode(encoded).map_err(|error| error.to_string())?;
     let signature = if mime == "image/png" { bytes.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]) } else { bytes.starts_with(&[255, 216, 255]) && bytes.ends_with(&[255, 217]) };
     if bytes.len() > 16_777_216 || !signature { return Err("Choose a PNG or JPEG texture".into()); }
-    semio_framework::parse_polygon_mesh_source(text)?;
+    semio_framework::mesh_io::text::parse_polygon_mesh_source(text)?;
     let mut source = semio_framework_pack_json::parse(text, JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let root = source.as_object_mut().ok_or("Choose a mesh source")?;
     if !root.contains_key("textures") { root.insert("textures", Value::Object(Object::new())); }
     let textures = root.get_mut("textures").and_then(Value::as_object_mut).ok_or("Choose a texture table")?;
     let mut texture = Object::new(); texture.insert("mime", Value::from(mime)); texture.insert("bytes", Value::Array(bytes.into_iter().map(|byte| Value::from(byte as u32)).collect()));
     textures.insert(name, Value::Object(texture));
-    let encoded = source.to_string(); semio_framework::parse_polygon_mesh_source(&encoded)?; Ok(encoded)
+    let encoded = source.to_string(); semio_framework::mesh_io::text::parse_polygon_mesh_source(&encoded)?; Ok(encoded)
 }
 
 /// 🎨️ Asset names and references publish atomically in the canonical source value.

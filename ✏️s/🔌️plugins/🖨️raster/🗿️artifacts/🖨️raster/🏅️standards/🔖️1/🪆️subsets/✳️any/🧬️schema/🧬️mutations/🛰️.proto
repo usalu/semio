@@ -95,6 +95,7 @@ message FillRegion { string layer_id = 1; string target = 2; RasterSeed seed = 3
 message ApplyFilter { string layer_id = 1; string filter = 2; double amount = 3; optional RasterSelection selection = 4; }
 message TransformImage { string layer_id = 1; string operation = 2; uint32 x = 3; uint32 y = 4; uint32 width = 5; uint32 height = 6; bool bilinear = 7; }
 message FillSelection { string layer_id = 1; string target = 2; repeated double color = 3; optional RasterSelection selection = 4; }
+message WritePixelRegion { string layer_id = 1; string target = 2; uint32 x = 3; uint32 y = 4; uint32 width = 5; uint32 height = 6; bytes samples = 7; }
 message RasterMutation {
   oneof mutation {
     CreateLayer create_layer = 1;
@@ -119,5 +120,6 @@ message RasterMutation {
     ApplyFilter apply_filter = 20;
     TransformImage transform_image = 21;
     FillSelection fill_selection = 22;
+    WritePixelRegion write_pixel_region = 23;
   }
 }

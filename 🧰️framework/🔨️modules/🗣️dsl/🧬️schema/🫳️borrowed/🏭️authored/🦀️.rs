@@ -10,6 +10,8 @@ pub trait BorrowedDslRecord {
 pub trait BorrowedDslVariants {
     const VARIANTS:&'static[(&'static str,fn()->crate::BorrowedRecordSpec)];
     fn projected_borrowed_variant_identity(&self)->(&'static str,usize,crate::BorrowedRecordSpec);
+    fn projected_borrowed_variant_view(&self,path:&[usize])->Result<crate::native_encoding::FieldProjectionView<'_>,crate::ValueError>;
+    fn projected_borrowed_variant_key(&self,_path:&[usize],_index:usize)->Result<&str,crate::ValueError>{Err(crate::native_encoding::projection_path_error())}
 }
 
 /// 🏭️ A finite static producer returns original borrowed metadata under the caller control.

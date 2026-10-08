@@ -1,7 +1,7 @@
 //! 📡️ `set-proximity-radius` command.
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_RADIUS_MAX};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 📡️ Retargets the board units within which a dropped node auto-connects. An absolute `value`
 /// (or `radius`) sets it, a `delta` nudges the live one — the shape the settings stepper sends.

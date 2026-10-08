@@ -33,16 +33,16 @@ fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {
         }
         assert_eq!(sequence, row["turns"].as_u64().unwrap());
         for (items, bytes) in [(0, extent), (1, 0), (1, extent - 1)] {
-            let (step, heap) = observe(|| owner.close_step(items, bytes));
-            assert_eq!(step, InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            let (step, heap) = observe(|| owner.close_step(RetainedCloneGrant{maximum_items:items,maximum_release_bytes:bytes,maximum_depth:64,..RetainedCloneGrant::default()}));
+            assert_eq!(step, InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            assert_eq!(owner.next_close_byte_demand(), extent);
+            assert_eq!(owner.next_close_release_byte_demand().unwrap(), extent);
         }
-        let (step, heap) = observe(|| owner.close_step(1, extent));
-        assert_eq!(step, InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: extent });
+        let (step, heap) = observe(|| owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:extent,maximum_depth:64,..RetainedCloneGrant::default()}));
+        assert_eq!(step, InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress{copied_items:1,released_bytes:extent,..RetainedCloneProgress::default()}});
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
         assert!(owner.terminal_is_empty());
-        assert_eq!(owner.close_step(1, 0), InteractiveJobCloseStep::Complete);
+        assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
         assert_eq!(observe(|| drop(owner)).1.released_bytes, 0);
         println!("[DEBUG] retained context original ledger op={} turns={} exact birth/release={extent} turn heap=0/0", operation.0, sequence);
     }
@@ -69,10 +69,10 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
             assert_eq!(held.and_then(|payload| payload.ledger.as_ref()).map(Arc::as_ptr), Some(identity));
             drop(context.take());
         }
-        let (step, heap) = observe(|| owner.close_step(1, extent));
+        let (step, heap) = observe(|| owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:extent,maximum_depth:64,..RetainedCloneGrant::default()}));
         assert_eq!(step, InteractiveJobCloseStep::Blocked);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        assert_eq!(owner.next_close_byte_demand(), extent);
+        assert_eq!(owner.next_close_release_byte_demand().unwrap(), extent);
         let mut refused_sequence = 0;
         assert!(owner.context(StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut refused_sequence).is_none());
         if kind == 0 { drop(context.take()); }
@@ -81,8 +81,8 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
             while !payload.terminal_is_empty() { payload.close_step(1, payload.next_close_byte_demand()); }
         }
         while !writer.terminal_is_empty() { writer.close_step(1, writer.next_close_byte_demand()); }
-        let (step, heap) = observe(|| owner.close_step(1, extent));
-        assert_eq!(step, InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: extent });
+        let (step, heap) = observe(|| owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:extent,maximum_depth:64,..RetainedCloneGrant::default()}));
+        assert_eq!(step, InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress{copied_items:1,released_bytes:extent,..RetainedCloneProgress::default()}});
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
         assert!(owner.terminal_is_empty());
         println!("[DEBUG] retained context ledger alias kind={kind} blocked then exact frame release={extent}");

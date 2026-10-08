@@ -21,6 +21,8 @@ use protocol::value::native_decoding::NativeDecodeControl;
 #[path="🛫️encoding/🦀️.rs"]
 mod controlled_encoding;
 pub use controlled_encoding::ControlledPackWriter;
+#[path = "🏷️symbols/🎮️decode/🦀️.rs"]
+pub mod retained_inline_symbols;
 
 fn check_allocation_layout<T>(count:usize,limit:&'static str)->Result<(),PackRefusal>{
     count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit})?;

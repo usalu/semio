@@ -59,6 +59,14 @@ const ROWS: &[&str] = &[
     "insert-foundation-dupe",
     "insert-retaining-wall-dupe",
     "insert-tower-dupe",
+    "remove-assessment-middle-row",
+    "remove-bridge-middle-row",
+    "remove-building-middle-row",
+    "remove-foundation-middle-row",
+    "remove-retaining-wall-middle-row",
+    "remove-silo-middle-row",
+    "remove-tank-middle-row",
+    "remove-tower-middle-row",
 ];
 
 /// 🗣️ The real committed EN 1998 document, read where the domain already keeps it.

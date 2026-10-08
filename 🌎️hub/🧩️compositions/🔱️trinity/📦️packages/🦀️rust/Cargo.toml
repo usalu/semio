@@ -19,12 +19,14 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "trinity-jack"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.trinity.jack@1/*#editor"
 aliases = ["trinity jack"]
 ports = { react = 6054, wgpu = 6154 }
 
 [[package.metadata.semio.playground]]
 variant = "trinity-rewriting"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.trinity.rewriting@1/*#editor"
 aliases = ["trinity rewriting"]
 ports = { react = 6056, wgpu = 6156 }

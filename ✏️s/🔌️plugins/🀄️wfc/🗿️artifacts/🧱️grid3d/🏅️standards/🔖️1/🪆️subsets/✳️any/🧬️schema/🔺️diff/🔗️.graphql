@@ -1,44 +1,152 @@
-# 🔺 s.wfc.grid3d diff facet — a sparse, key-keyed delta. An indexed upsert is a pair of the FINAL
-# state index and the member itself, which GraphQL models as a two-field type rather than a tuple.
+# 🔺️ grid3d diff — scalars are optional absolutes; every list is a positional list delta: removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
 
-type Grid3dTileUpsert {
-  index: Int!
-  tile: Grid3dTile!
+type Grid3dTilePatch {
+  weight: Float
+  media: Grid3dTileMedia
+  label: String
 }
 
-type Grid3dRuleUpsert {
+type Grid3dTilesRemoval {
+  id: String!
   index: Int!
-  rule: Grid3dRule!
 }
 
-type Grid3dPinnedUpsert {
+type Grid3dTilesInsertion {
   index: Int!
-  pinned: Grid3dPinnedCell!
+  row: Grid3dTile!
 }
 
-type Grid3dMaskedUpsert {
+type Grid3dTilesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid3dTilesModification {
+  id: String!
+  patch: Grid3dTilePatch!
+}
+
+type Grid3dTilesDelta {
+  removed: [Grid3dTilesRemoval!]!
+  inserted: [Grid3dTilesInsertion!]!
+  moved: [Grid3dTilesRelocation!]!
+  modified: [Grid3dTilesModification!]!
+}
+
+type Grid3dRulePatch {
+  tileAId: String
+  tileBId: String
+  direction: Grid3dDirection
+  allowed: Boolean
+}
+
+type Grid3dRulesRemoval {
+  id: String!
   index: Int!
-  cell: Grid3dCell!
+}
+
+type Grid3dRulesInsertion {
+  index: Int!
+  row: Grid3dRule!
+}
+
+type Grid3dRulesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid3dRulesModification {
+  id: String!
+  patch: Grid3dRulePatch!
+}
+
+type Grid3dRulesDelta {
+  removed: [Grid3dRulesRemoval!]!
+  inserted: [Grid3dRulesInsertion!]!
+  moved: [Grid3dRulesRelocation!]!
+  modified: [Grid3dRulesModification!]!
+}
+
+type Grid3dPinnedPatch {
+  tileId: String
+}
+
+type Grid3dPinnedRemoval {
+  id: String!
+  index: Int!
+}
+
+type Grid3dPinnedInsertion {
+  index: Int!
+  row: Grid3dPinnedCell!
+}
+
+type Grid3dPinnedRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid3dPinnedModification {
+  id: String!
+  patch: Grid3dPinnedPatch!
+}
+
+type Grid3dPinnedDelta {
+  removed: [Grid3dPinnedRemoval!]!
+  inserted: [Grid3dPinnedInsertion!]!
+  moved: [Grid3dPinnedRelocation!]!
+  modified: [Grid3dPinnedModification!]!
+}
+
+type Grid3dMaskedPatch {
+  _empty: Boolean
+}
+
+type Grid3dMaskedRemoval {
+  id: String!
+  index: Int!
+}
+
+type Grid3dMaskedInsertion {
+  index: Int!
+  row: Grid3dCell!
+}
+
+type Grid3dMaskedRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid3dMaskedModification {
+  id: String!
+  patch: Grid3dMaskedPatch!
+}
+
+type Grid3dMaskedDelta {
+  removed: [Grid3dMaskedRemoval!]!
+  inserted: [Grid3dMaskedInsertion!]!
+  moved: [Grid3dMaskedRelocation!]!
+  modified: [Grid3dMaskedModification!]!
 }
 
 type Grid3dDiff {
-  schema: String
-  seed: Int
-  width: Int
-  height: Int
-  depth: Int
-  cellSizesX: [Float!]
-  cellSizesY: [Float!]
-  cellSizesZ: [Float!]
-  periodicX: Boolean
-  periodicY: Boolean
-  periodicZ: Boolean
-  tilesRemoved: [String!]!
-  tilesUpserted: [Grid3dTileUpsert!]!
-  rulesRemoved: [String!]!
-  rulesUpserted: [Grid3dRuleUpsert!]!
-  pinnedRemoved: [String!]!
-  pinnedUpserted: [Grid3dPinnedUpsert!]!
-  maskedRemoved: [String!]!
-  maskedUpserted: [Grid3dMaskedUpsert!]!
+  schema: String @state(class: ARTIFACT)
+  seed: Float @state(class: ARTIFACT)
+  width: Int @state(class: ARTIFACT)
+  height: Int @state(class: ARTIFACT)
+  depth: Int @state(class: ARTIFACT)
+  cellSizesX: Grid3dAxisPatch @state(class: ARTIFACT)
+  cellSizesY: Grid3dAxisPatch @state(class: ARTIFACT)
+  cellSizesZ: Grid3dAxisPatch @state(class: ARTIFACT)
+  periodicX: Boolean @state(class: ARTIFACT)
+  periodicY: Boolean @state(class: ARTIFACT)
+  periodicZ: Boolean @state(class: ARTIFACT)
+  tiles: Grid3dTilesDelta! @state(class: ARTIFACT)
+  rules: Grid3dRulesDelta! @state(class: ARTIFACT)
+  pinned: Grid3dPinnedDelta! @state(class: ARTIFACT)
+  masked: Grid3dMaskedDelta! @state(class: ARTIFACT)
 }

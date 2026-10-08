@@ -37,11 +37,11 @@ message StrokeStyle {
 enum FillRule { FILL_RULE_EVENODD = 0; FILL_RULE_NONZERO = 1; }
 message DrawingAttributes { optional StrokeStyle stroke = 1; FillRule fill_rule = 2; }
 
+message DrawingImageSample { uint32 red = 1; uint32 green = 2; uint32 blue = 3; uint32 alpha = 4; }
 message DrawingImageAsset {
-  string mime = 1;
-  string data = 2;
-  optional uint32 width = 3;
-  optional uint32 height = 4;
+  uint32 width = 1;
+  uint32 height = 2;
+  repeated DrawingImageSample samples = 3;
 }
 
 message DrawingArtboard {

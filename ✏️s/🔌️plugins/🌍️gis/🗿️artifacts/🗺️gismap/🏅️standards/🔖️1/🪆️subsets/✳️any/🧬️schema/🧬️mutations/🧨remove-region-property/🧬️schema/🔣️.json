@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/remove-region-property/schema.json",
+  "title": "RemoveRegionProperty",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feature",
+    "key"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Region",
+          "de": "Region"
+        },
+        "description": {
+          "en": "The region this mutation addresses.",
+          "de": "Die Region, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "region"
+        }
+      }
+    },
+    "key": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "key",
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        }
+      }
+    }
+  }
+}

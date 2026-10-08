@@ -2,22 +2,35 @@
   "annex": null,
   "materials": null,
   "sections": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "sec-i120",
-        "elements": {
-          "modified": [
-            {
-              "id": "flange-top",
-              "thickness": 0.0125
-            }
-          ]
+        "patch": {
+          "kind": null,
+          "height": null,
+          "width": null,
+          "flangeThickness": null,
+          "webThickness": null,
+          "outerDiameter": null,
+          "elements": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "flange-top",
+                "patch": {
+                  "thickness": 0.0125
+                }
+              }
+            ]
+          }
         }
       }
-    ],
-    "order": null
+    ]
   },
   "members": null,
   "connections": null,

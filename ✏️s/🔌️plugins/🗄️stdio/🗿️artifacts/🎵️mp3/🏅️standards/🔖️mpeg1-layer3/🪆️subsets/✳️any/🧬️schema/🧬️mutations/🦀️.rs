@@ -30,38 +30,10 @@ pub enum Mp3Mutation {
     SetId3v1(set_id3v1::SetId3v1),
 }
 
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
-/// semantics source — never apply-and-capture).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
-    let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion 🔖️Mutation
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: each of the three top-level fields that moved.
-pub fn net_mutations(base: &Mp3Snapshot, next: &Mp3Snapshot) -> Vec<Mp3Mutation> {
-    let mut leaves = Vec::new();
-    if base.id3v2 != next.id3v2 {
-        leaves.push(Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: next.id3v2.clone() }));
-    }
-    if base.frames != next.frames {
-        leaves.push(Mp3Mutation::SetFrames(set_frames::SetFrames { frames: next.frames.clone() }));
-    }
-    if base.id3v1 != next.id3v1 {
-        leaves.push(Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: next.id3v1.clone() }));
-    }
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region 🔖️Kinds
 impl Mp3Mutation {

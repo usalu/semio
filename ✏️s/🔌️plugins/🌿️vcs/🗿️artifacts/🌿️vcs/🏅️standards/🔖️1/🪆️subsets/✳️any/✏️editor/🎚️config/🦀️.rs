@@ -85,9 +85,6 @@ impl protocol::DiffAlgebra<VcsDemoConfig> for VcsDemoConfigDiff {
     fn inverse(&self, _base: &VcsDemoConfig) -> Self {
         Self {}
     }
-    fn between(_base: &VcsDemoConfig, _other: &VcsDemoConfig) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

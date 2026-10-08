@@ -303,7 +303,7 @@ impl semio_framework_value::retirement::RetirementCursor for EvaluationInputReti
         match step {neural_engine::ValueRetirementStep::Pending {released_bytes,..}=>RetirementStep::ProcessedBytes(released_bytes),_=>RetirementStep::BudgetExhausted}
     }
     fn terminal_is_empty(&self)->bool {self.0.terminal_is_empty()}
-    fn next_work_byte_demand(&self)->usize {usize::from(!self.terminal_is_empty())}
+    fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.terminal_is_empty()))}
 }
 impl semio_framework_value::retirement::RetireOwned for EvaluationInputPreparation {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {Box::new(EvaluationInputRetirement(self))}
@@ -517,6 +517,11 @@ pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegis
 }
 
 /// 🧹️ Reports whether acknowledged cancellation still owns parked resources.
+pub fn evaluation_retirement_next_close_byte_demand(owner:&neural_engine::SharedRegistry)->usize {
+    let registry=evaluation_jobs().lock().expect("existing evaluation demand");
+    registry.jobs.values().find(|retained|retained.registry.owner_identity()==owner.owner_identity()&&retained.cancelled).map_or(0,|retained|retained.retirement.next_close_byte_demand().expect("existing retained value demand").max(retained.job.as_ref().map_or(0,|job|job.next_close_byte_demand())))
+}
+
 pub fn evaluation_retirement_pending(owner:&neural_engine::SharedRegistry)->bool {evaluation_jobs().lock().map_or(true,|registry|registry.jobs.values().any(|retained|retained.registry.owner_identity()==owner.owner_identity()&&retained.cancelled))}
 
 /// 📈️ Progress of the parked evaluation of `operator_id` at `node_hash`, if one is retained.
@@ -533,7 +538,7 @@ impl ExtensionEvaluationResources {
     pub fn registry(&self)->&neural_engine::SharedRegistry {self.registry.as_ref().expect("open extension evaluation owner")}
 }
 impl semio_framework_plugin::ExtensionResourceOwner for ExtensionEvaluationResources {
-    fn next_close_byte_demand(&self)->usize {self.retirement.next_close_byte_demand().max(1)}
+    fn next_close_byte_demand(&self)->usize {self.retirement.next_close_byte_demand().max(self.registry.as_ref().map_or(0,evaluation_retirement_next_close_byte_demand)).max(1)}
     fn invoke(&self,capability:&str,request:&[u8])->Result<Vec<u8>,semio_framework::Fault> {
         match capability {"evaluate"=>evaluate_invoke_json(self.registry(),request).map_err(|message|semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.evaluate.bad-request"),message)),_=>Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.unknown-capability"),"unknown flow evaluation capability"))}
     }

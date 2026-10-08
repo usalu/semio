@@ -59,12 +59,7 @@ impl Drop for OwnedRewriteRuleStore {
 //#endregion 🔖️Store
 
 //#region 🔖️BatchHelpers
-pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
-    let outcome = protocol::Mutation::diff(mutation, snapshot);
-    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
-    *snapshot = next;
-    Ok(())
-}
+pub use crate::apply_rewrite_rule_mutation;
 
 pub fn inverse_rewrite_rule_mutation(snapshot: &RewritingSnapshot, mutation: &RewriteRuleMutation) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
     Ok({

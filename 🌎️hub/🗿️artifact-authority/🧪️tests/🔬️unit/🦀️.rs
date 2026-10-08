@@ -1,3 +1,4 @@
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 
 use super::adapters::{AUTHORITY_MAX_DIAGNOSTIC_BYTES, LivePluginPackageBinding, PluginHostTrustedArtifactCatalog, bounded_message};
 use super::*;

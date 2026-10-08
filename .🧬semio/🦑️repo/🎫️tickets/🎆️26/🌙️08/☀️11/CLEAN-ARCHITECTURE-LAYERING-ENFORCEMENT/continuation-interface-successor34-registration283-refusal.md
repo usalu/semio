@@ -1,0 +1,5 @@
+# Interface Successor34 Registration283 Refusal
+
+Root reports actual registration283 outer Nx/Bun1 physically closed: launch seed peer advance before first write, complete prepared journal retained and no283 publication accepted. Successor34 producer/frozen authored inputs remain unchanged and no34 receiving/metadata/stage/strict/diagnosis/whole ran. Fresh registration284/current159 retries exactly the same9 GUI77 desired rows with Root live handle67377. Dispatch requires fresh closed physical publication plus independent producer/input/schema/endpoints equality; no283 closure or desired admission is inferred from its prepared journal.
+
+Root separately physically closed the narrow General FNV Scene lock publication with complete body/Iarna/scoped-text custody; Root lock unchanged. Both old/current lock bodies remain joined by canonical full physical qualification, then exact current capture/postguards. No defining-source exemption or original control change. Root reports current11Gi free; actual write/run receipts remain required.

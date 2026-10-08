@@ -48,10 +48,6 @@ impl protocol::DiffAlgebra<ArchitectReportWindowConfig> for ArchitectReportWindo
         Self { selected_report_id: self.selected_report_id.as_ref().map(|_| ReportSelectionSet { value: base.selected_report_id.clone() }) }
     }
 
-    fn between(base: &ArchitectReportWindowConfig, other: &ArchitectReportWindowConfig) -> Self {
-        Self { selected_report_id: (base.selected_report_id != other.selected_report_id).then(|| ReportSelectionSet { value: other.selected_report_id.clone() }) }
-    }
-
     fn is_empty(&self) -> bool {
         self.selected_report_id.is_none()
     }

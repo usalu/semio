@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceAttractionGeometry` — patches the one addressed attraction in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dAttractionPatch, Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
@@ -22,7 +23,7 @@ pub fn diff(payload: &super::mutation::ReplaceAttractionGeometry, base: &Puzzle3
         return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
-        attractions: Some(Puzzle3dAttractionsDelta::patching(payload.id.clone(), patch)),
+        attractions: Some(Puzzle3dAttractionsDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

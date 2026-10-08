@@ -12,12 +12,8 @@ pub fn diff(payload: &super::CreateNode, base: &Puzzle2dSnapshot) -> protocol::M
     if base.nodes.iter().any(|entry| entry.id == payload.node.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "node"), vec![payload.node.id.to_string_owner()]);
     }
-    let reordered = payload.index.filter(|index| *index < base.nodes.len()).map(|index| {
-        let mut order: Vec<semio_framework_value::paged::PagedUtf8<{ usize::MAX }>> = base.nodes.iter().map(|entry| entry.id.clone()).collect();
-        order.insert(index, payload.node.id.clone());
-        order
-    });
-    let delta = Puzzle2dNodesDelta::adding(payload.node.clone(), reordered);
+    let index = payload.index.map_or(base.nodes.len(), |index| index.min(base.nodes.len()));
+    let delta = Puzzle2dNodesDelta::insertion(index, payload.node.clone());
     protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

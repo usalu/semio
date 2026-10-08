@@ -1,5 +1,5 @@
 ; Direct binary frame: version, descriptor tag, leaf-owned payload.
-; change-gamma=5=17, patch-pixels=18=19, paint-native-samples=20
+; change-gamma=5=17, patch-pixels=18=19, paint-native-samples=20, set-gamma=21, replace-samples=22
 mutation = %x01 tag *OCTET
-tag = %x05 / %x11 / %x12 / %x13 / %x14
+tag = %x05 / %x11 / %x12 / %x13 / %x14 / %x15 / %x16
 OCTET = %x00-FF

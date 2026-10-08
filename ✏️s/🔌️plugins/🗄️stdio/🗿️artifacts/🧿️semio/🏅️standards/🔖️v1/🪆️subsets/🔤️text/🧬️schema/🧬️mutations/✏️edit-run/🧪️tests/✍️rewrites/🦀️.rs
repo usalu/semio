@@ -2,7 +2,7 @@
 //!
 //! Transcribed from `../../🔺️diff/🦀️.rs`: `edit-run` rejects an out-of-range BASE index
 //! with `mutation.target-missing`, warns `mutation.no-op` when the content already equals
-//! `new_content`, and otherwise assigns ONLY `runs[index].content` on a clone of `base.runs`.
+//! `new_text`, and otherwise assigns ONLY `runs[index].content` on a clone of `base.runs`.
 //! Run #1 here carries a bold mark, which the edit must leave untouched — that is the point of
 //! this case.
 
@@ -34,7 +34,7 @@ async fn rewrites_only_the_content_of_run_one() {
     let produced = protocol::apply_diff(edit_run().diff(&base).diff(), &base).expect("edit-run applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "edit-run/rewrites-the-marked-runs-content: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len(), "edit-run must never change how many runs there are");
-    assert_eq!(produced.runs[1].content, "planet", "run #1's authored body must be replaced by new_content");
+    assert_eq!(produced.runs[1].content, "planet", "run #1's authored body must be replaced by new_text");
     assert_eq!(produced.runs[1].language, base.runs[1].language, "edit-run must not touch the run's BCP-47 tag");
     assert_eq!(produced.runs[1].marks, base.runs[1].marks, "edit-run must not touch the run's inline marks");
     assert_eq!(produced.runs[0], base.runs[0], "the untargeted run #0 must be byte-identical");
@@ -55,8 +55,8 @@ async fn the_undo_edit_run_restores_the_original_body() {
     assert_eq!(current, base, "edit-run/rewrites-the-marked-runs-content: the undo did not restore the before-snapshot");
 }
 
-/// 🔣️ Snapshots and the `{"EditRun":{"index":1,"new_content":"planet"}}` payload are canonical —
-/// `EditRun` carries no `rename_all`, so the field stays snake_case `new_content` on the wire.
+/// 🔣️ Snapshots and the `{"EditRun":{"index":1,"new_text":"planet"}}` payload are canonical —
+/// `EditRun` carries no `rename_all`, so the field stays snake_case `new_text` on the wire.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

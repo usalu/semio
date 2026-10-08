@@ -1,7 +1,7 @@
 //! 🎚️ `update-link` — replaces the print size, resolution, and color profile of one image link.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutLinkPatchEntry, LayoutLinksDelta};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutLinksDelta, LayoutLinksModification};
 use crate::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -56,7 +56,7 @@ pub fn diff_update_link(payload: &UpdateLink, base: &LayoutSnapshot) -> protocol
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Link print details are already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        links: Some(LayoutLinksDelta { patched: vec![LayoutLinkPatchEntry { id: payload.id.clone(), patch: ImageLinkPatch { width: Some(payload.width), height: Some(payload.height), dpi: Some(payload.dpi), color_profile: Some(payload.color_profile.clone().unwrap_or_default()), ..Default::default() } }], ..Default::default() }),
+        links: Some(LayoutLinksDelta { modified: vec![LayoutLinksModification { id: payload.id.clone(), patch: ImageLinkPatch { width: Some(payload.width), height: Some(payload.height), dpi: Some(payload.dpi), color_profile: Some(payload.color_profile.clone().unwrap_or_default()), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

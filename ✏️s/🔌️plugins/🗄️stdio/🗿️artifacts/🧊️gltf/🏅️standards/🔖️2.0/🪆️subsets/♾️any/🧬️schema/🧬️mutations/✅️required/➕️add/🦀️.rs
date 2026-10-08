@@ -31,7 +31,7 @@ pub fn validate(payload: &GltfRequireExtensionPayload, base: &GltfSnapshot) -> R
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfRequireExtensionPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    Ok(GltfDiff { extensions_required: Some(with_inserted(&base.document.extensions_required, p.position, p.extension.clone())), ..Default::default() })
+    Ok(GltfDiff { extensions_required: Some(GltfStringsDelta::insertion(p.position, p.extension.clone())), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfRequireExtensionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

@@ -29,3 +29,11 @@ record set-shared-string tag=9
 field payload bytes
 record insert-cell tag=11
 field payload bytes
+record set-relationship tag=12
+field payload bytes
+record remove-relationship tag=13
+field payload bytes
+record set-content-type tag=14
+field payload bytes
+record remove-content-type tag=15
+field payload bytes

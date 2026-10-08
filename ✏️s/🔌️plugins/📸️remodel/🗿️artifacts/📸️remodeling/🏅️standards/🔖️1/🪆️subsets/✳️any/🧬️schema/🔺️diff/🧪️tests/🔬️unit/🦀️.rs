@@ -1,7 +1,7 @@
 use super::*;
 use crate::default_remodeling_scene;
 use crate::{FrameRef, MediaKind};
-use protocol::os_spr::protocol_laws::{assert_diff_algebra_between_law, assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
+use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
 
 fn stream(id: &str) -> MediaStream {
     MediaStream { id: id.into(), name: id.into(), kind: MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 30.0, frames: vec![FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "a1".into() }], source: None }
@@ -130,13 +130,3 @@ async fn the_negative_delta_restores_the_base() {
     assert_diff_algebra_inverse_law::<RemodelingSnapshot, RemodelingDiff>(&base, &diff).await;
 }
 
-/// 🧭️ LAW: `between(a, b)` carries `a` to `b` and `between(a, a)` is empty.
-#[semio_framework_async_macros::async_test]
-async fn between_reaches_the_other_snapshot() {
-    let a = scene_with_streams(&["a", "b", "c"]);
-    let mut b = scene_with_streams(&["b", "d"]);
-    b.streams[0].sync_offset_ms = 4.0;
-    b.params.ingest.max_frames = 77;
-    b.durable_artifacts.insert("fresh".into(), crate::RemodelingDurableArtifact { kind: "sparse".into(), mime: None, width: 0, height: 0, chunks: vec![ByteBuffer::from_u8_slice(b"x")] });
-    assert_diff_algebra_between_law::<RemodelingSnapshot, RemodelingDiff>(&a, &b).await;
-}

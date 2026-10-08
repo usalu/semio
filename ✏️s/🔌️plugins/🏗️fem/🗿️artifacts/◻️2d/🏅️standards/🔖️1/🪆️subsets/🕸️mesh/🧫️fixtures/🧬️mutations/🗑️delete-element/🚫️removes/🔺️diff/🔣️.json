@@ -1,12 +1,15 @@
 {
   "nodes": null,
   "elements": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "e2"
+      {
+        "id": "e2",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "regions": null,
   "materials": null,

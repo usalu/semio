@@ -4559,7 +4559,6 @@ dependencies = [
 name = "semio-framework-dsl"
 version = "0.1.0"
 dependencies = [
- "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-value",
 ]
@@ -4665,6 +4664,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-trace",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -4705,6 +4705,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-replication",
  "semio-framework-value-derive",
 ]
 
@@ -4794,6 +4795,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-replication",
+ "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-backend-webgpu",
  "semio-framework-ui-contract",
@@ -5044,6 +5046,7 @@ dependencies = [
  "semio-framework-ui-styling",
  "semio-framework-ui-viewport",
  "semio-framework-value",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "tiny-skia",
@@ -5095,6 +5098,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-job",
+ "semio-framework-value",
  "serde_json",
  "tokio",
 ]
@@ -5389,7 +5393,6 @@ dependencies = [
 name = "semio-framework-repo-dashboard"
 version = "0.1.0"
 dependencies = [
- "semio-framework-dispatch-macros",
  "semio-framework-repo-codebase",
  "semio-framework-repo-events",
  "semio-framework-repo-goals",
@@ -5864,6 +5867,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-ui-contract",

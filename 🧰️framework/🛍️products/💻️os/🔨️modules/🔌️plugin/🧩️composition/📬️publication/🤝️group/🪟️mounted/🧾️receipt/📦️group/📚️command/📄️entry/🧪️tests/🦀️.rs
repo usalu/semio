@@ -36,7 +36,7 @@ fn command_entry_retire_record(mut record: CommandLogEntry) {
     for field in 0..8 {
         for _ in 0..16 {
             let bytes = PagedCommandLog::record_demand(&record, field).unwrap();
-            let (done, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PagedCommandLog::record_close_one(&mut record, field));
+            let (done, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PagedCommandLog::record_close_one(&mut record, field, bytes).unwrap());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0,bytes));
             if done { break; }
         }

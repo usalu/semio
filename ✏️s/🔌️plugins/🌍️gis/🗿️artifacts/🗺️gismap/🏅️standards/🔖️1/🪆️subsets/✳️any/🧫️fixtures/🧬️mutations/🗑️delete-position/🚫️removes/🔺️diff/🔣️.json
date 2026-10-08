@@ -1,11 +1,14 @@
 {
   "positions": {
-    "added": [],
     "removed": [
-      "pos-lighthouse"
+      {
+        "id": "pos-lighthouse",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "routes": null,
   "regions": null

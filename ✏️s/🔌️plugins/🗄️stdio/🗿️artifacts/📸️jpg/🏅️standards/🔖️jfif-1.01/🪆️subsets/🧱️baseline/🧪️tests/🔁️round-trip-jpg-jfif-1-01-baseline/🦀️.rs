@@ -1,5 +1,14 @@
 //! 🔁️ Native JPEG export preserves logical metadata and admits independent baseline facts.
-use semio_repo_test_host::Adapter;
+use semio_repo_test_host::{Adapter,Context,Json,Outcome};
+
+fn independent_round_trip(ctx:&Context)->Result<Outcome,String>{
+ let input=ctx.input_bytes("shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg")?;
+ let bytes=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_identity_round_trip(&input)?;
+ let path=ctx.artifact("oracle","baseline-reference.jpg")?;std::fs::write(&path,&bytes).map_err(|error|error.to_string())?;
+ let axes=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::read_axes(&path)?;let codes=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::verdict(&axes);if !codes.is_empty(){return Err(format!("independent native export baseline codes: {codes:?}"));}
+ let projection=Json::Object(vec![("format".into(),Json::String("jpg-baseline".into())),("sofMarker".into(),Json::String(format!("{:02x}",axes.sof_marker))),("precision".into(),Json::Number(f64::from(axes.precision))),("conformance".into(),Json::Array(Vec::new()))]);
+ eprintln!("[DEBUG] independent JPEG baseline export reopened through libjpeg");Ok(Outcome::with_raw(bytes,projection))
+}
 #[cfg(feature="sut")]
 mod subject {
  use semio_repo_test_host::{Context,Json,Outcome,law};
@@ -25,7 +34,7 @@ mod subject {
 /// 🧭️ Registers the physical round-trip law.
 pub fn adapter()->Adapter{
  #[allow(unused_mut)]
- let mut built=Adapter::new("rust");
+ let mut built=Adapter::new("rust").oracle("identity-round-trip",independent_round_trip);
  #[cfg(feature="sut")]
  {built=built.subject("identity-round-trip",subject::round_trip);}
  built

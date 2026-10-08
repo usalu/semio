@@ -762,40 +762,6 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParagraphStyleP
             self.alignment = alignment.clone();
         }
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch> {
-        let mut patch = crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch::default();
-        let mut changed = false;
-        if self.name != other.name {
-            patch.name = Some(other.name.clone());
-            changed = true;
-        }
-        if self.font_family != other.font_family {
-            patch.font_family = Some(other.font_family.clone());
-            changed = true;
-        }
-        if self.font_size != other.font_size {
-            patch.font_size = Some(other.font_size);
-            changed = true;
-        }
-        if self.font_weight != other.font_weight {
-            patch.font_weight = Some(other.font_weight);
-            changed = true;
-        }
-        if self.leading != other.leading {
-            patch.leading = Some(other.leading);
-            changed = true;
-        }
-        if self.tracking != other.tracking {
-            patch.tracking = Some(other.tracking);
-            changed = true;
-        }
-        if self.alignment != other.alignment {
-            patch.alignment = Some(other.alignment.clone());
-            changed = true;
-        }
-        changed.then_some(patch)
-    }
 }
 
 impl Patchable<crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch> for CharacterStyle {
@@ -822,40 +788,6 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::CharacterStyleP
             self.tracking = *tracking;
         }
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch> {
-        let mut patch = crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch::default();
-        let mut changed = false;
-        if self.name != other.name {
-            patch.name = Some(other.name.clone());
-            changed = true;
-        }
-        if self.font_family != other.font_family {
-            patch.font_family = Some(other.font_family.clone());
-            changed = true;
-        }
-        if self.font_size != other.font_size {
-            patch.font_size = Some(other.font_size);
-            changed = true;
-        }
-        if self.font_weight != other.font_weight {
-            patch.font_weight = Some(other.font_weight);
-            changed = true;
-        }
-        if self.italic != other.italic {
-            patch.italic = Some(other.italic);
-            changed = true;
-        }
-        if self.color != other.color {
-            patch.color = Some(other.color);
-            changed = true;
-        }
-        if self.tracking != other.tracking {
-            patch.tracking = Some(other.tracking);
-            changed = true;
-        }
-        changed.then_some(patch)
-    }
 }
 
 impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch> for ParentPage {
@@ -870,24 +802,6 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch
             self.height = height;
         }
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch> {
-        let mut patch = crate::standards::v1::subsets::any::schema::diff::ParentPagePatch::default();
-        let mut changed = false;
-        if self.name != other.name {
-            patch.name = Some(other.name.clone());
-            changed = true;
-        }
-        if self.width != other.width {
-            patch.width = Some(other.width);
-            changed = true;
-        }
-        if self.height != other.height {
-            patch.height = Some(other.height);
-            changed = true;
-        }
-        changed.then_some(patch)
-    }
 }
 
 impl Patchable<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> for Spread {
@@ -896,97 +810,21 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> fo
             self.name = name.clone();
         }
     }
+}
 
-    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> {
-        (self.name != other.name).then(|| crate::standards::v1::subsets::any::schema::diff::SpreadPatch { name: Some(other.name.clone()) })
+/// 🗂️ Re-derives what a page's frames and layers fix: the layer id list and every layer's frames in paint order.
+pub fn derive_page_layers(page: &mut Page) {
+    page.layer_ids = page.layers.iter().map(|layer| layer.id.clone()).collect();
+    for layer in &mut page.layers {
+        layer.object_ids = page.frames.iter().filter(|frame| frame.layer_id() == layer.id).map(|frame| frame.id().to_string()).collect();
     }
 }
 
-/// 🌱️ Sparse "one frame was inserted into this page" fragment of a {@link PagePatch} — carries the
-/// `create-frame` semantic mutation's payload verbatim plus the FINAL-state insertion index.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
-pub struct PageFrameAdded {
-    #[dsl(statements)]
-    pub frame: Frame,
-    pub index: Option<usize>,
-    pub layer_id: Option<String>,
-}
-
-/// 🩹️ Sparse "one frame inside this page was field-patched" fragment of a {@link PagePatch} — carries
-/// the `move-frame`/`resize-frame`/`change-frame-*` semantic mutations' shared payload shape, and one entry per
-/// frame a frame-selection leaf (`drag-frames`/`rotate-frames`/`scale-frames`) moves.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
-pub struct PageFramePatched {
-    pub frame_id: String,
-    pub patch: FramePatch,
-}
-
-/// 🩹 One layer on a page changed its name or flags.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
-pub struct PageLayerPatched {
-    pub layer_id: String,
-    pub name: Option<String>,
-    pub visible: Option<bool>,
-    pub locked: Option<bool>,
-}
-
-/// 🌱️ Sparse "one layer was inserted into this page" fragment of a {@link PagePatch}: the layer plus its FINAL-state stacking index (`None` appends).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
-pub struct PageLayerAdded {
-    #[dsl(statements)]
-    pub layer: Layer,
-    pub index: Option<usize>,
-}
-
-/// 📄️ Sparse page patch with borrowed nested roles and unchanged, cleared or replaced optional fields.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
-pub struct PagePatch {
-    pub name: Option<String>,
-    pub width: Option<f64>,
-    pub height: Option<f64>,
-    pub margin_top: Option<f64>,
-    pub margin_right: Option<f64>,
-    pub margin_bottom: Option<f64>,
-    pub margin_left: Option<f64>,
-    pub columns_count: Option<u32>,
-    pub columns_gutter: Option<f64>,
-    pub frame_added: Option<PageFrameAdded>,
-    pub frame_removed: Option<String>,
-    pub frames_patched: Vec<PageFramePatched>,
-    #[value(default)]
-    pub layer_patched: Option<PageLayerPatched>,
-    #[value(default)]
-    pub parent_page_id: Option<Option<String>>,
-    #[value(default)]
-    pub guides: Option<crate::standards::v1::subsets::any::schema::diff::PageGuidesDelta>,
-    #[value(default)]
-    pub overrides: Option<crate::standards::v1::subsets::any::schema::diff::PageOverridesDelta>,
-    #[value(default)]
-    pub layer_added: Option<PageLayerAdded>,
-    #[value(default)]
-    pub layer_removed: Option<String>,
-    #[value(default)]
-    pub frame_layer: Option<PageFrameLayer>,
-    #[value(default)]
-    pub frame_order: Option<Vec<String>>,
-}
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
-pub struct PageFrameLayer {
-    pub frame_id: String,
-    pub layer_id: String,
+/// 🗂️ The frame placed on `layer_id`.
+pub fn frame_in_layer(frame: &Frame, layer_id: &str) -> Frame {
+    let mut next = frame.clone();
+    set_frame_layer(&mut next, layer_id);
+    next
 }
 
 pub fn set_frame_layer(frame: &mut Frame, layer_id: &str) {
@@ -997,7 +835,10 @@ pub fn set_frame_layer(frame: &mut Frame, layer_id: &str) {
 
 /// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
 /// semantic mutation computes its own inverse from `base` directly; see `↩️inverse` triad leaves).
-fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
+pub fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
+    if let Some(layer_id) = &patch.layer_id {
+        set_frame_layer(frame, layer_id);
+    }
     {
         let bounds = match frame {
             Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
@@ -1068,168 +909,6 @@ fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
     }
 }
 
-impl Patchable<PagePatch> for Page {
-    fn apply_patch(&mut self, patch: &PagePatch) {
-        if let Some(name) = &patch.name {
-            self.name = name.clone();
-        }
-        if let Some(value) = patch.width {
-            self.width = value;
-        }
-        if let Some(value) = patch.height {
-            self.height = value;
-        }
-        if let Some(value) = patch.margin_top {
-            self.margins.top = value;
-        }
-        if let Some(value) = patch.margin_right {
-            self.margins.right = value;
-        }
-        if let Some(value) = patch.margin_bottom {
-            self.margins.bottom = value;
-        }
-        if let Some(value) = patch.margin_left {
-            self.margins.left = value;
-        }
-        if let Some(value) = patch.columns_count {
-            self.columns.count = value;
-        }
-        if let Some(value) = patch.columns_gutter {
-            self.columns.gutter = value;
-        }
-        if let Some(added) = &patch.frame_added {
-            let at = added.index.unwrap_or(self.frames.len()).min(self.frames.len());
-            self.frames.insert(at, added.frame.clone());
-            if let Some(layer_id) = &added.layer_id {
-                if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == *layer_id) {
-                    layer.object_ids.push(added.frame.id().to_string());
-                }
-            }
-        }
-        if let Some(frame_id) = &patch.frame_removed {
-            self.frames.retain(|frame| frame.id() != frame_id);
-            for layer in &mut self.layers {
-                layer.object_ids.retain(|id| id != frame_id);
-            }
-        }
-        for entry in &patch.frames_patched {
-            if let Some(frame) = self.frames.iter_mut().find(|frame| frame.id() == entry.frame_id) {
-                apply_frame_field_patch(frame, &entry.patch);
-            }
-        }
-        if let Some(parent) = &patch.parent_page_id {
-            self.parent_page_id = parent.clone();
-        }
-        if let Some(guides) = patch.guides.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_page_guides(&self.guides, delta).ok()) {
-            self.guides = guides;
-        }
-        if let Some(overrides) = patch.overrides.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_page_overrides(&self.overrides, delta).ok()) {
-            self.overrides = overrides;
-        }
-        if let Some(added) = &patch.layer_added {
-            if self.layers.iter().all(|item| item.id != added.layer.id) {
-                let at = added.index.unwrap_or(self.layers.len()).min(self.layers.len());
-                self.layer_ids.insert(at.min(self.layer_ids.len()), added.layer.id.clone());
-                self.layers.insert(at, added.layer.clone());
-            }
-        }
-        if let Some(layer_id) = &patch.layer_removed {
-            self.layer_ids.retain(|id| id != layer_id);
-            self.layers.retain(|layer| layer.id != *layer_id);
-        }
-        if let Some(order) = &patch.frame_order {
-            let mut next = Vec::new();
-            for id in order {
-                if let Some(pos) = self.frames.iter().position(|frame| frame.id() == id) {
-                    next.push(self.frames.remove(pos));
-                }
-            }
-            next.append(&mut self.frames);
-            self.frames = next;
-            for layer in &mut self.layers {
-                let rank = |id: &String| order.iter().position(|item| item == id).unwrap_or(usize::MAX);
-                layer.object_ids.sort_by_key(rank);
-            }
-        }
-        if let Some(change) = &patch.frame_layer {
-            if let Some(frame) = self.frames.iter_mut().find(|frame| frame.id() == change.frame_id) {
-                set_frame_layer(frame, &change.layer_id);
-            }
-            for layer in &mut self.layers {
-                layer.object_ids.retain(|id| id != &change.frame_id);
-            }
-            if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == change.layer_id) {
-                layer.object_ids.push(change.frame_id.clone());
-            }
-        }
-        if let Some(entry) = &patch.layer_patched {
-            if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == entry.layer_id) {
-                if let Some(name) = &entry.name {
-                    layer.name = name.clone();
-                }
-                if let Some(visible) = entry.visible {
-                    layer.visible = visible;
-                }
-                if let Some(locked) = entry.locked {
-                    layer.locked = locked;
-                }
-            }
-        }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
-        let mut patch = PagePatch::default();
-        let mut changed = false;
-        if self.name != other.name {
-            patch.name = Some(other.name.clone());
-            changed = true;
-        }
-        if self.width != other.width {
-            patch.width = Some(other.width);
-            changed = true;
-        }
-        if self.height != other.height {
-            patch.height = Some(other.height);
-            changed = true;
-        }
-        if self.margins.top != other.margins.top {
-            patch.margin_top = Some(other.margins.top);
-            changed = true;
-        }
-        if self.margins.right != other.margins.right {
-            patch.margin_right = Some(other.margins.right);
-            changed = true;
-        }
-        if self.margins.bottom != other.margins.bottom {
-            patch.margin_bottom = Some(other.margins.bottom);
-            changed = true;
-        }
-        if self.margins.left != other.margins.left {
-            patch.margin_left = Some(other.margins.left);
-            changed = true;
-        }
-        if self.columns.count != other.columns.count {
-            patch.columns_count = Some(other.columns.count);
-            changed = true;
-        }
-        if self.columns.gutter != other.columns.gutter {
-            patch.columns_gutter = Some(other.columns.gutter);
-            changed = true;
-        }
-        if let Some(delta) = crate::standards::v1::subsets::any::schema::diff::between_delta::<crate::standards::v1::subsets::any::schema::diff::PageOverridesDelta>(&self.overrides, &other.overrides) {
-            patch.overrides = Some(delta);
-            changed = true;
-        }
-        let self_ids: Vec<String> = self.frames.iter().map(|frame| frame.id().to_string()).collect();
-        let other_ids: Vec<String> = other.frames.iter().map(|frame| frame.id().to_string()).collect();
-        if self_ids != other_ids {
-            patch.frame_order = Some(other_ids);
-            changed = true;
-        }
-        changed.then_some(patch)
-    }
-}
-
 /// 📝️ Sparse patch for a {@link TextStory}'s body content.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -1248,12 +927,6 @@ impl Patchable<TextStoryPatch> for TextStory {
         if let Some(style_runs) = patch.style_runs.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_story_runs(&self.style_runs, delta).ok()) {
             self.style_runs = style_runs;
         }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
-        let content = (self.content != other.content).then(|| other.content.clone());
-        let style_runs = crate::standards::v1::subsets::any::schema::diff::between_positional::<crate::standards::v1::subsets::any::schema::diff::TextStyleRunsDelta>(&self.style_runs, &other.style_runs);
-        (content.is_some() || style_runs.is_some()).then(|| TextStoryPatch { content, style_runs })
     }
 }
 
@@ -1290,15 +963,6 @@ impl Patchable<ImageLinkPatch> for ImageLink {
         if let Some(color_profile) = &patch.color_profile {
             self.color_profile = (!color_profile.is_empty()).then(|| color_profile.clone());
         }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
-        let path = (self.path != other.path).then(|| other.path.clone());
-        let width = (self.width != other.width).then_some(other.width);
-        let height = (self.height != other.height).then_some(other.height);
-        let dpi = (self.dpi != other.dpi).then_some(other.dpi);
-        let color_profile = (self.color_profile != other.color_profile).then(|| other.color_profile.clone().unwrap_or_default());
-        (path.is_some() || width.is_some() || height.is_some() || dpi.is_some() || color_profile.is_some()).then(|| ImageLinkPatch { path, width, height, dpi, color_profile })
     }
 }
 
@@ -1338,6 +1002,8 @@ pub struct FramePatch {
     pub inset_width: Option<f64>,
     #[value(default)]
     pub inset_height: Option<f64>,
+    #[value(default)]
+    pub layer_id: Option<String>,
 }
 //#endregion 🔖️CollectionSupport
 

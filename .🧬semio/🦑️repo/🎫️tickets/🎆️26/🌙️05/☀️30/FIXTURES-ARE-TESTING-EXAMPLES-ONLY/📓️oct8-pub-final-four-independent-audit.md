@@ -1,0 +1,5 @@
+# Publication Final Four Independent Audit
+
+Current12 action endpoint ledger10matches; onlysharedlive/seed whole-file hashes later drift, no authored promotion. Six schema absences (including fresh Remodel directory relocation) and three actual test sources/private facet match. Actual raw48513 footer confirms36tests1032assertions/Nx0/2.5s, selectedplacement0/nativeproducer0. Remodel bit expectation uses explicit little-endian UInt32/Float32 Buffer decoding, preserving authored IEEE bits including negative zero rather than JSON numeric sign assumptions. Command test retains six actual executeCommand invocations and locked yargs-parser positional comparison; no whole-case wrapper schema reconstructed. Genuine domain Ajv/SQLite/roundtrip/raw-octet laws remain. Plain fixture bytes and peer production/native drift stay separately observed.
+
+Current union actual6022 base plus229 candidates misses exactly7latest Pub1436 authored paths; earlier4false alarm used5976preimage and was withdrawn. Exact observations in `📥️oct8-pub-final-four-independent-observation.json`. No source edits/tests/producers; global gate/normalruntime still pending.

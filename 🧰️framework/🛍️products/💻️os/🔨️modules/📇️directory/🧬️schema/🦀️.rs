@@ -48,7 +48,7 @@ pub use document_check_in::{
 #[path = "🪢️canonical-checkpoint-pair-v1/🦀️.rs"]
 pub mod canonical_checkpoint_pair;
 pub use canonical_checkpoint_pair::{
-    decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
+    AdmittedCheckpointSelectionV1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1,
 };
 
 #[path = "🌐️browser-actor/🦀️.rs"]
@@ -56,9 +56,6 @@ pub mod browser_actor;
 pub use browser_actor::{
     DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1,
 };
-
-/// 🔐️ Domain prefix for the one canonical descriptor digest encoding.
-pub const DESCRIPTOR_DIGEST_V1_DOMAIN: &[u8] = b"semio.document-descriptor.digest.v1\0";
 
 //#region 🔖️Vocabulary
 /// 🏛️ Mirrors `🪐️space::SpaceKind` string-identically (see this file's header).
@@ -116,22 +113,7 @@ impl ArtifactHash {
         &self.0
     }
 
-    /// 🔤️ Parses one canonical lowercase hexadecimal artifact hash.
-    pub fn parse_hex(value: &str) -> Option<Self> {
-        if !valid_document_open_hash(value) {
-            return None;
-        }
-        let mut bytes = [0u8; 32];
-        for (index, slot) in bytes.iter_mut().enumerate() {
-            *slot = u8::from_str_radix(&value[index * 2..index * 2 + 2], 16).ok()?;
-        }
-        Some(Self(bytes))
-    }
 
-    /// 🔡️ Renders canonical lowercase hexadecimal without exposing a storage locator.
-    pub fn hex(&self) -> String {
-        hex_lower(&self.0)
-    }
 }
 
 impl crate::ToValue for ArtifactHash {
@@ -261,33 +243,9 @@ pub const DIRECTORY_PREFERENCE_PAGE_PATH_V1: &str = "/directory/preference-page/
 pub const USER_PREFERENCE_SCHEMA_ID_MAX_BYTES: usize = 128;
 pub const USER_PREFERENCE_MUTATION_MAX_BYTES: usize = 4096;
 
-/// 🛡️ A preference vocabulary id (1..=128 bytes of `[a-z0-9.-]`, alphanumeric at both ends) and one JSON object text of
-/// at most 4096 bytes — the TypeScript twin's `validUserPreferenceRecordV1`, both pinned by
-/// `🧫️fixtures/🎚️user-preference-record/🔣️.json`.
-pub fn valid_user_preference_record_v1(schema: &str, mutation: &str) -> bool {
-    let edge = |byte: Option<&u8>| byte.is_some_and(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit());
-    let schema_ok = !schema.is_empty()
-        && schema.len() <= USER_PREFERENCE_SCHEMA_ID_MAX_BYTES
-        && schema.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'.' || byte == b'-')
-        && edge(schema.as_bytes().first())
-        && edge(schema.as_bytes().last());
-    schema_ok
-        && mutation.len() >= 2
-        && mutation.len() <= USER_PREFERENCE_MUTATION_MAX_BYTES
-        && matches!(semio_framework_pack_json::from_json_str::<crate::DslValue>(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject), Ok(crate::DslValue::Object(_)))
-}
 
-#[derive(Clone, Debug, PartialEq, ToValue)]
-#[value(rename_all = "camelCase")]
-struct DirectoryEventPageReceiptV1 {
-    schema: String,
-    session_binding_sha256: String,
-    authorization_generation: u64,
-    after_seq_exclusive: u64,
-    through_seq_inclusive: u64,
-    has_more: bool,
-    events: Vec<DirectoryEvent>,
-}
+
+
 
 /// 📄️ One authenticated, receipt-bound bounded scan of the durable directory log.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -311,7 +269,7 @@ pub enum DirectoryEventPageErrorV1 {
     ReceiptMismatch,
 }
 
-fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
+pub(crate) fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
     match value {
         crate::DslValue::String(value) => value.chars().any(char::is_control),
         crate::DslValue::Bytes(_) => true,
@@ -321,89 +279,8 @@ fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
     }
 }
 
-/// 🛡️ Admits one fully assigned event into the durable directory log and bounded page protocol.
-pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(), DirectoryEventPageErrorV1> {
-    let encoded = semio_framework_pack_json::to_json_string(event);
-    if let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1, entry } = &event.body {
-        if !entry.validate() || descriptor_digest_v1.0 == [0; 32] || event.space_id.as_deref() != Some(scope.space_id.as_str()) || event.user_id.as_ref().is_none_or(|author| author.is_empty() || author.len() > 256) {
-            return Err(DirectoryEventPageErrorV1::Invalid);
-        }
-    }
-    if let DirectoryEventBody::UserPreferenceRecorded { user_id, schema, mutation } = &event.body {
-        if user_id.is_empty() || event.space_id.is_some() || event.user_id.as_deref() != Some(user_id.as_str()) || !valid_user_preference_record_v1(schema, mutation) {
-            return Err(DirectoryEventPageErrorV1::Invalid);
-        }
-    }
-    if event.seq == 0 || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES || directory_event_page_has_control(&crate::ToValue::to_value(event)) {
-        Err(DirectoryEventPageErrorV1::Invalid)
-    } else {
-        Ok(())
-    }
-}
 
-impl DirectoryEventPageV1 {
-    /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
-    pub fn canonical_unsigned_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(&DirectoryEventPageReceiptV1 {
-            schema: self.schema.clone(),
-            session_binding_sha256: self.session_binding_sha256.clone(),
-            authorization_generation: self.authorization_generation,
-            after_seq_exclusive: self.after_seq_exclusive,
-            through_seq_inclusive: self.through_seq_inclusive,
-            has_more: self.has_more,
-            events: self.events.clone(),
-        })
-    }
 
-    /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned page.
-    pub fn receipt_matches(&self) -> bool {
-        self.receipt_sha256 == semio_framework_hash::sha256_hex(self.canonical_unsigned_json().as_bytes())
-    }
-
-    /// ✅️ Checks bounded range, canonical digest, event ordering, and cross-runtime integer laws.
-    pub fn validate(&self) -> Result<(), DirectoryEventPageErrorV1> {
-        if self.schema != "semio.directory.event-page.v1"
-            || !valid_document_open_hash(&self.session_binding_sha256)
-            || self.authorization_generation == 0
-            || self.authorization_generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            || self.after_seq_exclusive > DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            || self.through_seq_inclusive > DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            || self.after_seq_exclusive > self.through_seq_inclusive
-            || self.events.len() > DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS
-            || self.receipt_sha256.len() != 64
-            || !self.receipt_sha256.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
-        {
-            return Err(DirectoryEventPageErrorV1::Invalid);
-        }
-        let mut previous = self.after_seq_exclusive;
-        for event in &self.events {
-            if event.seq <= previous || event.seq > self.through_seq_inclusive || validate_directory_event_page_event(event).is_err() {
-                return Err(DirectoryEventPageErrorV1::Invalid);
-            }
-            previous = event.seq;
-        }
-        if !self.receipt_matches() {
-            return Err(DirectoryEventPageErrorV1::ReceiptMismatch);
-        }
-        if semio_framework_pack_json::to_json_string(self).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
-            return Err(DirectoryEventPageErrorV1::TooLarge);
-        }
-        Ok(())
-    }
-
-    /// 📥️ Parses exactly one canonical page, rejecting whitespace, trailing bytes, and duplicate or unknown fields.
-    pub fn parse_canonical_json(json: &str) -> Result<Self, DirectoryEventPageErrorV1> {
-        if json.len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
-            return Err(DirectoryEventPageErrorV1::TooLarge);
-        }
-        let page: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectoryEventPageErrorV1::Invalid)?;
-        if semio_framework_pack_json::to_json_string(&page) != json {
-            return Err(DirectoryEventPageErrorV1::Invalid);
-        }
-        page.validate()?;
-        Ok(page)
-    }
-}
 //#endregion 🔖️Event
 
 //#region 🔖️Command
@@ -452,31 +329,7 @@ impl EditedArtifactFrontierV1 {
             && valid_document_open_hash(&self.chain_sha256)
     }
 
-    /// 🧬️ Converts the validated public grammar into the directory authority frontier.
-    pub fn artifact_frontier(&self) -> Option<ArtifactFrontier> {
-        if !self.validate() {
-            return None;
-        }
-        Some(ArtifactFrontier {
-            document_id: self.document_id.clone(),
-            head_edit_ordinal: self.head_edit_ordinal,
-            head_edit_id: self.head_edit_id.clone(),
-            last_commit_seq: self.last_commit_seq,
-            chain_hash: ArtifactHash::parse_hex(&self.chain_sha256)?,
-        })
-    }
 
-    /// 🔁️ The wire grammar of an edited directory frontier; `None` for genesis.
-    pub fn of_artifact_frontier(frontier: &ArtifactFrontier) -> Option<Self> {
-        let wire = Self {
-            document_id: frontier.document_id.clone(),
-            head_edit_ordinal: frontier.head_edit_ordinal,
-            head_edit_id: frontier.head_edit_id.clone(),
-            last_commit_seq: frontier.last_commit_seq,
-            chain_sha256: frontier.chain_hash.hex(),
-        };
-        wire.validate().then_some(wire)
-    }
 }
 //#endregion 🌊️EditedArtifactFrontier
 
@@ -535,16 +388,7 @@ pub struct DirectoryCommandReceiptV1 {
     pub receipt_sha256: String,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue)]
-#[value(rename_all = "camelCase")]
-struct DirectoryCommandReceiptUnsignedV1 {
-    schema: String,
-    request_id: String,
-    command_sha256: String,
-    outcome: DirectoryCommandOutcomeV1,
-    events: Vec<DirectoryEvent>,
-    result: DirectoryCommandResultV1,
-}
+
 
 /// 🚫️ Closed command-transport denial classes shared by the hub route and both clients. The first
 /// six are the only codes the hub ever puts on the wire; the rest are client-owned terminal or
@@ -602,7 +446,7 @@ impl DirectoryCommandErrorCodeV1 {
     }
 }
 
-fn valid_directory_command_request_id(value: &str) -> bool {
+pub(crate) fn valid_directory_command_request_id(value: &str) -> bool {
     value.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN && !value.as_bytes().iter().all(|byte| *byte == b'0') && value.as_bytes().iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
@@ -612,10 +456,7 @@ pub fn mint_directory_command_request_id() -> String {
     crate::os_identity::time_ordered_id().chars().filter(|character| *character != '-').collect()
 }
 
-/// 🔐️ The one canonical command digest both the hub and every client derive independently.
-pub fn directory_command_sha256(command: &DirectoryCommand) -> String {
-    semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(command).as_bytes())
-}
+
 
 impl DirectoryCommandRequestV1 {
     /// 🆕️ Seals one request around an already-minted correlation id.
@@ -623,109 +464,13 @@ impl DirectoryCommandRequestV1 {
         Self { schema: "semio.directory.command-request.v1".into(), request_id: request_id.into(), command }
     }
 
-    /// 🧾️ Returns the canonical UTF-8 JSON that both peers hash and count bytes over.
-    pub fn canonical_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(self)
-    }
+    
 
-    /// ✅️ Checks the closed envelope, the correlation grammar, and the request byte ceiling.
-    pub fn validate(&self) -> Result<(), DirectoryCommandErrorCodeV1> {
-        if self.schema != "semio.directory.command-request.v1" || !valid_directory_command_request_id(&self.request_id) {
-            return Err(DirectoryCommandErrorCodeV1::Invalid);
-        }
-        if self.canonical_json().len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
-            return Err(DirectoryCommandErrorCodeV1::TooLarge);
-        }
-        Ok(())
-    }
+    
 
-    /// 📥️ Parses exactly one canonical request, rejecting padding, unknown fields, and oversize bodies.
-    pub fn parse_canonical_json(json: &str) -> Result<Self, DirectoryCommandErrorCodeV1> {
-        if json.len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
-            return Err(DirectoryCommandErrorCodeV1::TooLarge);
-        }
-        let request: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
-        if request.canonical_json() != json {
-            return Err(DirectoryCommandErrorCodeV1::Invalid);
-        }
-        request.validate()?;
-        Ok(request)
-    }
+    
 }
 
-impl DirectoryCommandReceiptV1 {
-    /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
-    pub fn canonical_unsigned_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(&DirectoryCommandReceiptUnsignedV1 {
-            schema: self.schema.clone(),
-            request_id: self.request_id.clone(),
-            command_sha256: self.command_sha256.clone(),
-            outcome: self.outcome,
-            events: self.events.clone(),
-            result: self.result.clone(),
-        })
-    }
-
-    /// 🔐️ Seals one completion by hashing its declaration-ordered unsigned canonical JSON.
-    pub fn seal(request_id: impl Into<String>, command_sha256: impl Into<String>, outcome: DirectoryCommandOutcomeV1, events: Vec<DirectoryEvent>, result: DirectoryCommandResultV1) -> Self {
-        let mut receipt = Self { schema: "semio.directory.command-receipt.v1".into(), request_id: request_id.into(), command_sha256: command_sha256.into(), outcome, events, result, receipt_sha256: String::new() };
-        receipt.receipt_sha256 = semio_framework_hash::sha256_hex(receipt.canonical_unsigned_json().as_bytes());
-        receipt
-    }
-
-    /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned completion.
-    pub fn receipt_matches(&self) -> bool {
-        self.receipt_sha256 == semio_framework_hash::sha256_hex(self.canonical_unsigned_json().as_bytes())
-    }
-
-    /// ✅️ Checks the closed envelope, the secret-result rule, event laws, digest, and byte ceiling.
-    pub fn validate(&self) -> Result<(), DirectoryCommandErrorCodeV1> {
-        let token = match &self.result {
-            DirectoryCommandResultV1::None => None,
-            DirectoryCommandResultV1::Invite { invite_token } => Some(invite_token.as_str()),
-        };
-        if self.schema != "semio.directory.command-receipt.v1"
-            || !valid_directory_command_request_id(&self.request_id)
-            || !valid_document_open_hash(&self.command_sha256)
-            || !valid_document_open_hash(&self.receipt_sha256)
-            || self.events.len() > DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS
-            || token.is_some_and(|token| token.is_empty() || token.len() > DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES || token.chars().any(char::is_control))
-            || (self.outcome != DirectoryCommandOutcomeV1::Accepted && token.is_some())
-        {
-            return Err(DirectoryCommandErrorCodeV1::Invalid);
-        }
-        let mut previous = 0;
-        for event in &self.events {
-            if event.seq <= previous || validate_directory_event_page_event(event).is_err() {
-                return Err(DirectoryCommandErrorCodeV1::Invalid);
-            }
-            previous = event.seq;
-        }
-        if self.outcome != DirectoryCommandOutcomeV1::Accepted && !self.events.is_empty() {
-            return Err(DirectoryCommandErrorCodeV1::Invalid);
-        }
-        if !self.receipt_matches() {
-            return Err(DirectoryCommandErrorCodeV1::Invalid);
-        }
-        if semio_framework_pack_json::to_json_string(self).len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
-            return Err(DirectoryCommandErrorCodeV1::TooLarge);
-        }
-        Ok(())
-    }
-
-    /// 📥️ Parses exactly one canonical receipt bound to the request that asked for it.
-    pub fn parse_canonical_json(json: &str, request: &DirectoryCommandRequestV1) -> Result<Self, DirectoryCommandErrorCodeV1> {
-        if json.len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
-            return Err(DirectoryCommandErrorCodeV1::TooLarge);
-        }
-        let receipt: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
-        if semio_framework_pack_json::to_json_string(&receipt) != json || receipt.request_id != request.request_id || receipt.command_sha256 != directory_command_sha256(&request.command) {
-            return Err(DirectoryCommandErrorCodeV1::Invalid);
-        }
-        receipt.validate()?;
-        Ok(receipt)
-    }
-}
 //#endregion 🔖️CommandReceipt
 
 //#region 🔖️Admin
@@ -1116,38 +861,7 @@ pub struct DirectorySpaceAdministrationCapabilitiesV1 {
     pub revoke_invite: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue)]
-#[value(tag = "access", rename_all = "lowercase", rename_all_fields = "camelCase")]
-enum DirectorySpaceAdministrationReceiptV1 {
-    Public {
-        schema: String,
-        session_binding_sha256: String,
-        authorization_generation: u64,
-        space_id: String,
-        space: PublicSpaceViewV1,
-        documents: DirectorySpaceAdministrationPublicDocumentWindowV1,
-    },
-    Member {
-        schema: String,
-        session_binding_sha256: String,
-        authorization_generation: u64,
-        space_id: String,
-        space: MemberSpaceViewV1,
-        members: DirectorySpaceAdministrationMemberWindowV1,
-        documents: DirectorySpaceAdministrationDocumentWindowV1,
-    },
-    Author {
-        schema: String,
-        session_binding_sha256: String,
-        authorization_generation: u64,
-        space_id: String,
-        space: MemberSpaceViewV1,
-        members: DirectorySpaceAdministrationMemberWindowV1,
-        documents: DirectorySpaceAdministrationDocumentWindowV1,
-        invites: DirectorySpaceAdministrationInviteWindowV1,
-        capabilities: DirectorySpaceAdministrationCapabilitiesV1,
-    },
-}
+
 
 /// 🏛️ One authenticated, receipt-bound bounded administration projection of exactly one space.
 /// Only the `author` shape carries invites and capability flags; `member`/`public` omit them
@@ -1196,14 +910,14 @@ pub enum DirectorySpaceAdministrationPageErrorV1 {
     ReceiptMismatch,
 }
 
-fn directory_space_administration_cursor_valid(cursor: &Option<String>) -> bool {
+pub(crate) fn directory_space_administration_cursor_valid(cursor: &Option<String>) -> bool {
     match cursor {
         None => true,
         Some(cursor) => !cursor.is_empty() && cursor.len() <= DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES && cursor.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.')),
     }
 }
 
-fn directory_space_administration_text_valid(value: &str) -> bool {
+pub(crate) fn directory_space_administration_text_valid(value: &str) -> bool {
     !value.is_empty() && value.len() <= DOCUMENT_OPEN_ID_MAX_BYTES && !value.chars().any(char::is_control)
 }
 
@@ -1212,45 +926,9 @@ fn directory_space_administration_time_valid(value: i64) -> bool {
 }
 
 impl DirectorySpaceAdministrationPageV1 {
-    /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
-    pub fn canonical_unsigned_json(&self) -> String {
-        let receipt = match self {
-            Self::Public { schema, session_binding_sha256, authorization_generation, space_id, space, documents, .. } => DirectorySpaceAdministrationReceiptV1::Public {
-                schema: schema.clone(),
-                session_binding_sha256: session_binding_sha256.clone(),
-                authorization_generation: *authorization_generation,
-                space_id: space_id.clone(),
-                space: space.clone(),
-                documents: documents.clone(),
-            },
-            Self::Member { schema, session_binding_sha256, authorization_generation, space_id, space, members, documents, .. } => DirectorySpaceAdministrationReceiptV1::Member {
-                schema: schema.clone(),
-                session_binding_sha256: session_binding_sha256.clone(),
-                authorization_generation: *authorization_generation,
-                space_id: space_id.clone(),
-                space: space.clone(),
-                members: members.clone(),
-                documents: documents.clone(),
-            },
-            Self::Author { schema, session_binding_sha256, authorization_generation, space_id, space, members, documents, invites, capabilities, .. } => DirectorySpaceAdministrationReceiptV1::Author {
-                schema: schema.clone(),
-                session_binding_sha256: session_binding_sha256.clone(),
-                authorization_generation: *authorization_generation,
-                space_id: space_id.clone(),
-                space: space.clone(),
-                members: members.clone(),
-                documents: documents.clone(),
-                invites: invites.clone(),
-                capabilities: *capabilities,
-            },
-        };
-        semio_framework_pack_json::to_json_string(&receipt)
-    }
+    
 
-    /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned page.
-    pub fn receipt_matches(&self) -> bool {
-        self.receipt_sha256() == semio_framework_hash::sha256_hex(self.canonical_unsigned_json().as_bytes())
-    }
+    
 
     /// 🧾️ The receipt digest of whichever access shape this page carries.
     pub fn receipt_sha256(&self) -> &str {
@@ -1274,78 +952,12 @@ impl DirectorySpaceAdministrationPageV1 {
         }
     }
 
-    /// ✅️ Checks schema, binding, window bounds, ordering, canonical digest, and byte ceiling.
-    pub fn validate(&self) -> Result<(), DirectorySpaceAdministrationPageErrorV1> {
-        let (schema, binding, generation, space_id) = match self {
-            Self::Public { schema, session_binding_sha256, authorization_generation, space_id, .. }
-            | Self::Member { schema, session_binding_sha256, authorization_generation, space_id, .. }
-            | Self::Author { schema, session_binding_sha256, authorization_generation, space_id, .. } => (schema, session_binding_sha256, *authorization_generation, space_id),
-        };
-        let anonymous = generation == 0 && binding.bytes().all(|byte| byte == b'0');
-        let bound = (1..=DOCUMENT_OPEN_MAX_SAFE_INTEGER).contains(&generation) && !binding.bytes().all(|byte| byte == b'0');
-        // 🔓️ The anonymous binding IS the all-zero word (`space_administration_session_binding_v1`
-        // returns `[0u8; 32]` when there is no caller), and `valid_document_open_hash` rejects exactly
-        // that word — so requiring it here made every anonymous read of a PUBLIC space unconstructible
-        // and the route answered 500. The shape is checked here; whether an all-zero or a real digest is
-        // the admissible one is already decided by `anonymous || bound` below, and `Member`/`Author` still
-        // demand `bound`.
-        let binding_is_hex = binding.len() == 64 && binding.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'));
-        if schema != DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA
-            || !binding_is_hex
-            || !valid_document_open_hash(self.receipt_sha256())
-            || !directory_space_administration_text_valid(space_id)
-            || !(anonymous || bound)
-            || (!matches!(self, Self::Public { .. }) && !bound)
-        {
-            return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
-        }
-        let ok = match self {
-            Self::Public { space, documents, .. } => {
-                space.id == *space_id && space.visibility == DirectorySpaceVisibility::Public && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS && directory_space_administration_cursor_valid(&documents.next_cursor)
-            }
-            Self::Member { space, members, documents, .. } => {
-                space.id == *space_id
-                    && space.role == DirectorySpaceRole::Spectator
-                    && directory_space_administration_members_valid(members)
-                    && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS
-                    && directory_space_administration_cursor_valid(&documents.next_cursor)
-            }
-            Self::Author { space, members, documents, invites, .. } => {
-                space.id == *space_id
-                    && space.role == DirectorySpaceRole::Author
-                    && directory_space_administration_members_valid(members)
-                    && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS
-                    && directory_space_administration_cursor_valid(&documents.next_cursor)
-                    && directory_space_administration_invites_valid(invites)
-            }
-        };
-        if !ok {
-            return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
-        }
-        if !self.receipt_matches() {
-            return Err(DirectorySpaceAdministrationPageErrorV1::ReceiptMismatch);
-        }
-        if semio_framework_pack_json::to_json_string(self).len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
-            return Err(DirectorySpaceAdministrationPageErrorV1::TooLarge);
-        }
-        Ok(())
-    }
+    
 
-    /// 📥️ Parses exactly one canonical page, rejecting whitespace, trailing bytes, and unknown fields.
-    pub fn parse_canonical_json(json: &str) -> Result<Self, DirectorySpaceAdministrationPageErrorV1> {
-        if json.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
-            return Err(DirectorySpaceAdministrationPageErrorV1::TooLarge);
-        }
-        let page: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectorySpaceAdministrationPageErrorV1::Invalid)?;
-        if semio_framework_pack_json::to_json_string(&page) != json {
-            return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
-        }
-        page.validate()?;
-        Ok(page)
-    }
+    
 }
 
-fn directory_space_administration_members_valid(window: &DirectorySpaceAdministrationMemberWindowV1) -> bool {
+pub(crate) fn directory_space_administration_members_valid(window: &DirectorySpaceAdministrationMemberWindowV1) -> bool {
     if window.rows.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS || !directory_space_administration_cursor_valid(&window.next_cursor) {
         return false;
     }
@@ -1365,7 +977,7 @@ fn directory_space_administration_members_valid(window: &DirectorySpaceAdministr
     true
 }
 
-fn directory_space_administration_invites_valid(window: &DirectorySpaceAdministrationInviteWindowV1) -> bool {
+pub(crate) fn directory_space_administration_invites_valid(window: &DirectorySpaceAdministrationInviteWindowV1) -> bool {
     if window.rows.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS || !directory_space_administration_cursor_valid(&window.next_cursor) {
         return false;
     }
@@ -1648,7 +1260,7 @@ fn valid_document_open_text(value: &str, max_bytes: usize) -> bool {
     !value.is_empty() && value.len() <= max_bytes && !value.chars().any(char::is_control)
 }
 
-fn valid_document_open_hash(value: &str) -> bool {
+pub(crate) fn valid_document_open_hash(value: &str) -> bool {
     value.len() == 64 && !value.as_bytes().iter().all(|byte| *byte == b'0') && value.as_bytes().iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
@@ -2005,84 +1617,35 @@ impl std::fmt::Display for DescriptorDigestError {
 
 impl std::error::Error for DescriptorDigestError {}
 
-fn decode_descriptor_hash(field: &'static str, value: &str) -> Result<[u8; 32], DescriptorDigestError> {
-    if value.len() != 64 || value.as_bytes().iter().any(|byte| !matches!(byte, b'0'..=b'9' | b'a'..=b'f')) {
-        return Err(DescriptorDigestError::InvalidHash(field));
-    }
-    let mut output = [0u8; 32];
-    for (index, pair) in value.as_bytes().as_chunks::<2>().0.iter().enumerate() {
-        let digit = |byte| match byte {
-            b'0'..=b'9' => byte - b'0',
-            b'a'..=b'f' => byte - b'a' + 10,
-            _ => unreachable!(),
-        };
-        output[index] = digit(pair[0]) << 4 | digit(pair[1]);
-    }
-    if output == [0; 32] {
-        return Err(DescriptorDigestError::InvalidHash(field));
-    }
-    Ok(output)
-}
-
-fn append_descriptor_field(output: &mut Vec<u8>, field: &'static str, bytes: &[u8]) -> Result<(), DescriptorDigestError> {
-    let length = u64::try_from(bytes.len()).map_err(|_| DescriptorDigestError::LengthOverflow(field))?;
-    output.extend_from_slice(&length.to_be_bytes());
-    output.extend_from_slice(bytes);
-    Ok(())
-}
-
-fn append_descriptor_text(output: &mut Vec<u8>, field: &'static str, value: &str) -> Result<(), DescriptorDigestError> {
-    if value.is_empty() {
-        return Err(DescriptorDigestError::EmptyField(field));
-    }
-    append_descriptor_field(output, field, value.as_bytes())
-}
-
-/// 🧬️ Encodes every immutable descriptor leaf after `DESCRIPTOR_DIGEST_V1_DOMAIN`, in declaration
-/// order, as `u64_be(payload byte length) || payload`. Text is UTF-8, unsigned integers are fixed-
-/// width big-endian payloads, and the three SHA-256 strings are decoded to their 32 bytes. Owner
-/// leaves remain nested-order `plugin_id, package_id, version, package_hash`; frontier leaves remain
-/// `head_seq, commit_seq, epoch`. JSON serialization never participates.
-pub fn descriptor_digest_encoding_v1(descriptor: &DocumentDescriptor) -> Result<Vec<u8>, DescriptorDigestError> {
+/// 🪪️ Validates immutable descriptor authority metadata without encoding or hashing.
+pub fn validate_document_descriptor_v1(descriptor: &DocumentDescriptor) -> Result<(), DescriptorDigestError> {
     if descriptor.bootstrap_version == 0 {
         return Err(DescriptorDigestError::InvalidBootstrapVersion);
     }
     if descriptor.bootstrap_frontier.commit_seq > descriptor.bootstrap_frontier.head_seq {
         return Err(DescriptorDigestError::InvalidFrontier);
     }
-    let mut output = Vec::with_capacity(DESCRIPTOR_DIGEST_V1_DOMAIN.len() + 384);
-    output.extend_from_slice(DESCRIPTOR_DIGEST_V1_DOMAIN);
-    append_descriptor_text(&mut output, "space_id", &descriptor.space_id)?;
-    append_descriptor_text(&mut output, "document_id", &descriptor.document_id)?;
-    append_descriptor_text(&mut output, "artifact_kind", &descriptor.artifact_kind)?;
-    append_descriptor_text(&mut output, "artifact_schema", &descriptor.artifact_schema)?;
-    append_descriptor_text(&mut output, "owner.plugin_id", &descriptor.owner.plugin_id)?;
-    append_descriptor_text(&mut output, "owner.package_id", &descriptor.owner.package_id)?;
-    append_descriptor_text(&mut output, "owner.version", &descriptor.owner.version)?;
-    append_descriptor_field(&mut output, "owner.package_hash", &decode_descriptor_hash("owner.package_hash", &descriptor.owner.package_hash)?)?;
-    append_descriptor_field(&mut output, "pack_schema_hash", &decode_descriptor_hash("pack_schema_hash", &descriptor.pack_schema_hash)?)?;
-    append_descriptor_field(&mut output, "bootstrap_version", &descriptor.bootstrap_version.to_be_bytes())?;
-    append_descriptor_field(&mut output, "bootstrap_frontier.head_seq", &descriptor.bootstrap_frontier.head_seq.to_be_bytes())?;
-    append_descriptor_field(&mut output, "bootstrap_frontier.commit_seq", &descriptor.bootstrap_frontier.commit_seq.to_be_bytes())?;
-    append_descriptor_field(&mut output, "bootstrap_frontier.epoch", &descriptor.bootstrap_frontier.epoch.to_be_bytes())?;
-    append_descriptor_field(&mut output, "bootstrap_snapshot_hash", &decode_descriptor_hash("bootstrap_snapshot_hash", &descriptor.bootstrap_snapshot_hash)?)?;
-    Ok(output)
-}
-
-/// 🔐️ SHA-256 of [`descriptor_digest_encoding_v1`] through the repository-owned hash primitive.
-pub fn descriptor_digest_v1(descriptor: &DocumentDescriptor) -> Result<ArtifactHash, DescriptorDigestError> {
-    Ok(ArtifactHash(semio_framework_hash::Sha256::digest(&descriptor_digest_encoding_v1(descriptor)?)))
-}
-
-/// 🔡️ Renders canonical lowercase hexadecimal bytes for fixtures and private storage keys.
-pub fn hex_lower(bytes: &[u8]) -> String {
-    const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    let mut output = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        output.push(DIGITS[(byte >> 4) as usize] as char);
-        output.push(DIGITS[(byte & 0x0f) as usize] as char);
+    for (field, value) in [
+        ("space_id", descriptor.space_id.as_str()),
+        ("document_id", descriptor.document_id.as_str()),
+        ("artifact_kind", descriptor.artifact_kind.as_str()),
+        ("artifact_schema", descriptor.artifact_schema.as_str()),
+        ("owner.plugin_id", descriptor.owner.plugin_id.as_str()),
+        ("owner.package_id", descriptor.owner.package_id.as_str()),
+        ("owner.version", descriptor.owner.version.as_str()),
+    ] {
+        if value.is_empty() { return Err(DescriptorDigestError::EmptyField(field)); }
     }
-    output
+    for (field, value) in [
+        ("owner.package_hash", descriptor.owner.package_hash.as_str()),
+        ("pack_schema_hash", descriptor.pack_schema_hash.as_str()),
+        ("bootstrap_snapshot_hash", descriptor.bootstrap_snapshot_hash.as_str()),
+    ] {
+        if value.len() != 64 || !value.chars().all(|digit| matches!(digit, '0'..='9' | 'a'..='f')) || value.chars().all(|digit| digit == '0') {
+            return Err(DescriptorDigestError::InvalidHash(field));
+        }
+    }
+    Ok(())
 }
 
 /// 🏔️ Exact public checkpoint frontier, structurally identical to the replication wire frontier.

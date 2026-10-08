@@ -56,17 +56,35 @@
         "schema": null,
         "camera": null,
         "widgets": {
-          "added": [
+          "removed": [
             {
-              "kind": "inputNote",
-              "id": "note",
-              "text": "é😀"
+              "id": "old",
+              "index": 0
             }
           ],
-          "removed": [
-            "old"
+          "inserted": [
+            {
+              "index": 0,
+              "row": {
+                "kind": "inputNote",
+                "id": "note",
+                "text": "é😀"
+              }
+            }
           ],
-          "patched": [
+          "moved": [
+            {
+              "id": "note",
+              "from": 1,
+              "to": 0
+            },
+            {
+              "id": "slider",
+              "from": 2,
+              "to": 1
+            }
+          ],
+          "modified": [
             {
               "id": "slider",
               "patch": {
@@ -77,10 +95,6 @@
                 "step": 0.5
               }
             }
-          ],
-          "reordered": [
-            "note",
-            "slider"
           ]
         },
         "synapses": null,
@@ -97,20 +111,26 @@
         "camera": null,
         "widgets": null,
         "synapses": {
-          "added": [
+          "removed": [
             {
-              "id": "s9",
-              "from": "note",
-              "to": "slider",
-              "fromPort": "out",
-              "toPort": "in"
+              "id": "s1",
+              "index": 0
             }
           ],
-          "removed": [
-            "s1"
+          "inserted": [
+            {
+              "index": 0,
+              "row": {
+                "id": "s9",
+                "from": "note",
+                "to": "slider",
+                "fromPort": "out",
+                "toPort": "in"
+              }
+            }
           ],
-          "patched": [],
-          "reordered": null
+          "moved": [],
+          "modified": []
         },
         "layout": null,
         "generations": null,
@@ -162,26 +182,33 @@
         "synapses": null,
         "layout": null,
         "generations": {
-          "added": [
+          "removed": [
             {
-              "id": "original-é-🌀",
-              "name": "Original 😀",
-              "values": {
-                "answer": {
-                  "nested": [
-                    "é😀",
-                    true,
-                    null
-                  ],
-                  "number": 42
+              "id": "gone",
+              "index": 0
+            }
+          ],
+          "inserted": [
+            {
+              "index": 0,
+              "row": {
+                "id": "original-é-🌀",
+                "name": "Original 😀",
+                "values": {
+                  "answer": {
+                    "nested": [
+                      "é😀",
+                      true,
+                      null
+                    ],
+                    "number": 42
+                  }
                 }
               }
             }
           ],
-          "removed": [
-            "gone"
-          ],
-          "patched": [
+          "moved": [],
+          "modified": [
             {
               "id": "kept",
               "patch": {
@@ -212,8 +239,7 @@
                 }
               }
             }
-          ],
-          "reordered": null
+          ]
         },
         "selectedGeneration": {
           "id": "original-é-🌀"
@@ -233,17 +259,35 @@
           "zoom": 0.875
         },
         "widgets": {
-          "added": [
+          "removed": [
             {
-              "kind": "inputNote",
-              "id": "note",
-              "text": "é😀"
+              "id": "old",
+              "index": 0
             }
           ],
-          "removed": [
-            "old"
+          "inserted": [
+            {
+              "index": 0,
+              "row": {
+                "kind": "inputNote",
+                "id": "note",
+                "text": "é😀"
+              }
+            }
           ],
-          "patched": [
+          "moved": [
+            {
+              "id": "note",
+              "from": 1,
+              "to": 0
+            },
+            {
+              "id": "slider",
+              "from": 2,
+              "to": 1
+            }
+          ],
+          "modified": [
             {
               "id": "slider",
               "patch": {
@@ -254,27 +298,29 @@
                 "step": 0.5
               }
             }
-          ],
-          "reordered": [
-            "note",
-            "slider"
           ]
         },
         "synapses": {
-          "added": [
+          "removed": [
             {
-              "id": "s9",
-              "from": "note",
-              "to": "slider",
-              "fromPort": "out",
-              "toPort": "in"
+              "id": "s1",
+              "index": 0
             }
           ],
-          "removed": [
-            "s1"
+          "inserted": [
+            {
+              "index": 0,
+              "row": {
+                "id": "s9",
+                "from": "note",
+                "to": "slider",
+                "fromPort": "out",
+                "toPort": "in"
+              }
+            }
           ],
-          "patched": [],
-          "reordered": null
+          "moved": [],
+          "modified": []
         },
         "layout": {
           "added": [
@@ -300,26 +346,33 @@
           ]
         },
         "generations": {
-          "added": [
+          "removed": [
             {
-              "id": "original-é-🌀",
-              "name": "Original 😀",
-              "values": {
-                "answer": {
-                  "nested": [
-                    "é😀",
-                    true,
-                    null
-                  ],
-                  "number": 42
+              "id": "gone",
+              "index": 0
+            }
+          ],
+          "inserted": [
+            {
+              "index": 0,
+              "row": {
+                "id": "original-é-🌀",
+                "name": "Original 😀",
+                "values": {
+                  "answer": {
+                    "nested": [
+                      "é😀",
+                      true,
+                      null
+                    ],
+                    "number": 42
+                  }
                 }
               }
             }
           ],
-          "removed": [
-            "gone"
-          ],
-          "patched": [
+          "moved": [],
+          "modified": [
             {
               "id": "kept",
               "patch": {
@@ -350,8 +403,7 @@
                 }
               }
             }
-          ],
-          "reordered": null
+          ]
         },
         "selectedGeneration": {
           "id": null

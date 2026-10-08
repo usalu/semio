@@ -14,6 +14,7 @@ impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetId3v2 {
 
     fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<<Mp3Mutation as Mutation<Mp3Snapshot>>::Diff> {
         let Self { id3v2 } = self;
+        if let Some(tag)=id3v2{for frame in &tag.frames{if let Err(message)=crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3_frame(frame){return protocol::MutationOutcome::refuse(protocol::OutcomeCode::Invariant,message,["id3v2"]);}}}
         protocol::MutationOutcome::new(diff_set_id3v2(id3v2.clone()))
     }
     fn inverse(&self, base: &Mp3Snapshot) -> Result<Vec<Mp3Mutation>, semio_framework_value::ValueError> {

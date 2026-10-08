@@ -65,13 +65,6 @@ impl protocol::DiffAlgebra<TestConfig> for TestConfigDiff {
             (_, Some(value)) => Self::Set(value.clone()),
         }
     }
-    fn between(base: &TestConfig, other: &TestConfig) -> Self {
-        match (&base.selected == &other.selected, &other.selected) {
-            (true, _) => Self::Identity,
-            (false, None) => Self::Clear,
-            (false, Some(value)) => Self::Set(value.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         matches!(self, Self::Identity)
     }

@@ -1,0 +1,12 @@
+{
+  "directory": "catalog-composition-nx",
+  "budgetMs": 300000,
+  "maximumBytes": 2147483648,
+  "maximumFiles": 65536,
+  "maximumWork": 1048576,
+  "receipts": [
+    "catalog-preview-current-receiving1/closure.json",
+    "catalog-progress-capacity-green21/closure.json",
+    "catalog-session-routes2/closure.json"
+  ]
+}

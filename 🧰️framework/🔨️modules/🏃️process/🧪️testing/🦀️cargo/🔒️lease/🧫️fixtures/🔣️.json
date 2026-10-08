@@ -1,0 +1,18 @@
+{
+  "identities": [
+    {"id":"nextest-long-default","nextest":true,"coverage":false,"args":[],"profile":"debug"},
+    {"id":"nextest-config-is-not-cargo","nextest":true,"coverage":false,"args":["--profile","long"],"profile":"debug"},
+    {"id":"nextest-custom-cargo","nextest":true,"coverage":false,"args":["--cargo-profile","preview"],"profile":"preview"},
+    {"id":"nextest-cargo-test-alias","nextest":true,"coverage":false,"args":["--cargo-profile=test"],"profile":"debug"},
+    {"id":"nextest-release","nextest":true,"coverage":false,"args":["--release"],"profile":"release"},
+    {"id":"cargo-custom-profile","nextest":false,"coverage":false,"args":["--profile","preview"],"profile":"preview"},
+    {"id":"cargo-test-alias","nextest":false,"coverage":false,"args":["--profile=test"],"profile":"debug"},
+    {"id":"coverage-release","nextest":true,"coverage":true,"args":[],"profile":"release"}
+  ],
+  "invalid": [["--cargo-profile"],["--cargo-profile="],["--release","--cargo-profile","preview"]],
+  "phases": ["list","run"],
+  "readinessMs":10000,
+  "cancelAfterMs":100,
+  "timeoutMs":250,
+  "maximumProcessMs":10000
+}

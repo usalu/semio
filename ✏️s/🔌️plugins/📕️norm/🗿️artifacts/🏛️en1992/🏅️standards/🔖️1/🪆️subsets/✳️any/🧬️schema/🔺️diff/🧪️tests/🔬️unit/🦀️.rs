@@ -1,4 +1,4 @@
-//! 🧪️ Keyed-diff algebra of En1992: same-key coalescing, the negative diff and the state delta, over real mutation diffs.
+//! 🧪️ Keyed-diff algebra of En1992: same-key coalescing and the negative diff, over real mutation diffs.
 
 use super::En1992Diff;
 use crate::mutations::change_action_vk::ChangeActionVk;
@@ -46,7 +46,7 @@ async fn nested_action_patches_coalesce_by_action_id() {
     sum.absorb(second.clone());
     let patches = &sum.members.as_ref().expect("members").modified;
     assert_eq!(patches.len(), 1);
-    assert_eq!(patches[0].actions.as_ref().expect("actions").modified.len(), 1);
+    assert_eq!(patches[0].patch.actions.as_ref().expect("actions").modified.len(), 1);
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
 }
 
@@ -82,15 +82,4 @@ async fn reorder_and_inverse_follow_the_negative_diff() {
     let after = protocol::apply_diff(&moved, &base).expect("reorder");
     assert_ne!(after, base);
     assert_eq!(protocol::apply_diff(&moved.inverse(&base), &after).expect("inverse"), base);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn between_reaches_the_other_document() {
-    let base = En1992Snapshot::default();
-    let mut other = base.clone();
-    for mutation in [width(&base, 0.55), En1992Mutation::ReorderMembers(ReorderMembers { from_index: 0, to_index: 1 })] {
-        let next = protocol::apply_diff(&diff_of(&mutation, &other), &other).expect("apply");
-        other = next;
-    }
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<En1992Snapshot, En1992Diff>(&base, &other).await;
 }

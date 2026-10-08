@@ -1,3 +1,4 @@
+const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Array.isArray(value)?value.map(neutral):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,neutral(item)])):value;
 /** 🪪️ Exact source identity, validated independently by JSON Schema. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
@@ -21,7 +22,7 @@ test("mounted geometry requires every source identity field",()=>{const validate
 import invalids from "../../🧫️fixtures/⚠️invalid/🔣️.json";
 import type {SceneIdentity} from "../../🟦️.ts";
 test("source authority refuses numeric lanes, noncanonical decimals and invalid identity widths",()=>{
- const validate=new Ajv({strict:true}).compile(schema);for(const row of invalids){const value={...cases[0]!.captured,...row.patch}as unknown as SceneIdentity;expect(validate(value),row.name).toBe(false);expect(sceneIdentityMatches(value,value),row.name).toBe(false);expect(sceneIdentityMatches(value,cases[0]!.captured),row.name).toBe(false);expect(sceneIdentityMatches(cases[0]!.captured,value),row.name).toBe(false);}
+ const validate=new Ajv({strict:true}).compile(schema);for(const row of invalids){const value={...cases[0]!.captured,...row.patch}as unknown as SceneIdentity;expect(validate(neutral(value)),row.name).toBe(false);expect(sceneIdentityMatches(value,value),row.name).toBe(false);expect(sceneIdentityMatches(value,cases[0]!.captured),row.name).toBe(false);expect(sceneIdentityMatches(cases[0]!.captured,value),row.name).toBe(false);}
  const sparse={...cases[0]!.captured,revision:Array<number>(32)};expect(validate(sparse)).toBe(false);expect(sceneIdentityMatches(sparse,sparse)).toBe(false);
  console.log("[DEBUG] Exact source identity rejects twenty-two malformed identities and sparse hashes without accepting legacy numeric lanes");
 });

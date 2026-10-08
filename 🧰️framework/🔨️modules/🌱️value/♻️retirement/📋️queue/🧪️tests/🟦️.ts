@@ -1,11 +1,22 @@
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import stableStringify from"fast-json-stable-stringify";
+import{Database}from"bun:sqlite";
+import{readFileSync}from"node:fs";
 
 type Corpus={ownerCounts:number[],copyGrants:number[],cases:{text:string,reservedCapacity:number}[],cancelCuts:number[]};
 const fixture:Corpus=await Bun.file(new URL("../🧫️fixtures/🔣️.json",import.meta.url)).json();
 const schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();
 const grants=await Bun.file(new URL("../../../🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const sharedSchema=await Bun.file(new URL("../../🧬️contract/🧬️schema/🔣️.json",import.meta.url)).json();
+const sharedFixture=await Bun.file(new URL("../../🧫️fixtures/📏️shared-physical/🔣️.json",import.meta.url)).json();
+test("shared retirement independently pins strong and weak ownership before physical backing release",()=>{
+    const ajv=new Ajv({strict:true});ajv.addSchema(grants).addSchema(sharedSchema);const custody=ajv.compile({$ref:sharedSchema.$id+"#/$defs/SharedCustody"});
+    for(const row of sharedFixture.cases)for(const copy of sharedFixture.workBytes){
+        const wire=stableStringify({text:row.text});expect(JSON.parse(wire)).toEqual({text:row.text});expect(Buffer.byteLength(row.text)).toBe(new TextEncoder().encode(row.text).length);
+        const state={strongLeases:2,weakLeases:1,leaseOnly:false,demand:{copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1}};expect(custody(state)).toBe(true);state.strongLeases=1;expect(custody(state)).toBe(true);state.weakLeases=0;state.demand.copyBytes=Math.min(copy,Buffer.byteLength(row.text));expect(custody(state)).toBe(true);expect(custody({...state,weakLeases:-1})).toBe(false);
+    }
+});
 test("typed retirement queue independently separates reservations, original frames, work and physical releases",()=>{
     const ajv=new Ajv({strict:true});ajv.addSchema(grants).addSchema(schema);
     const grant=ajv.compile({$ref:schema.$id+"#/$defs/Grant"});const admission=ajv.compile({$ref:schema.$id+"#/$defs/Admission"});const demand=ajv.compile({$ref:schema.$id+"#/$defs/Demand"});
@@ -17,4 +28,16 @@ test("typed retirement queue independently separates reservations, original fram
         let bytes=0;for(const source of queue){let remaining=Buffer.byteLength(source);while(remaining>0){const processed=Math.min(copy,remaining);remaining-=processed;bytes+=processed;}}
         expect(bytes).toBe(new TextEncoder().encode(row.text).length*count);
     }
+});
+
+
+test("original snapshot frames enter reserved custody without another allocation or premature parent completion",async()=>{
+    const corpus=await Bun.file(new URL("../🧫️fixtures/🔣️.json",import.meta.url)).json();const ajv=new Ajv({strict:true});ajv.addSchema(grants).addSchema(schema);const transfer=ajv.compile({$ref:schema.$id+"#/$defs/Transfer"});
+    const db=new Database(":memory:");db.run("CREATE TABLE owners(ordinal INTEGER PRIMARY KEY, kind TEXT NOT NULL, terminal INTEGER NOT NULL)");
+    for(const row of corpus.transfers){expect(transfer(row)).toBe(true);expect(row.accepted).toBe(row.reservedSlot&&row.items>0&&row.depth>0);}
+    for(const [ordinal,kind]of corpus.frameKinds.entries())db.query("INSERT INTO owners VALUES(?,?,0)").run(ordinal,kind);
+    expect(db.query("SELECT kind FROM owners ORDER BY ordinal DESC").all()).toEqual([...corpus.frameKinds].reverse().map(kind=>({kind})));
+    db.run("UPDATE owners SET terminal=1 WHERE ordinal=(SELECT MAX(ordinal) FROM owners)");expect(db.query("SELECT COUNT(*) AS pending FROM owners WHERE terminal=0").get()).toEqual({pending:1});
+    expect(JSON.parse(stableStringify(corpus.snapshotCase))).toEqual(corpus.snapshotCase);expect(corpus.snapshotCase.reservedCapacity).toBeGreaterThan(Buffer.byteLength(corpus.snapshotCase.text));db.close();
+    const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("pub fn admit_retirement(");expect(source).toContain("PagedList<Box<dyn ErasedSnapshotRetirement>");expect(source).toContain("size_of_val(owner.as_ref())");expect(source).toContain("RetainedCloneStep::Progress(progress)");expect(source).not.toContain("ErasedControlledRetirement");
 });

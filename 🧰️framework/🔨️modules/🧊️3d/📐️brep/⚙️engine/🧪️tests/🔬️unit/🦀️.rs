@@ -882,16 +882,16 @@ fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
             assert_eq!(transfer.points.len(), 3);
             let mut job = kernel.tessellate_job_sync(&shape, 0.1).unwrap();
             assert_eq!(job.progress().units_total, 1);
-            assert!(matches!(job.step(kernel.tessellation_body(), 0).unwrap(), crate::brep::queries::tessellation::TessellationStep::Working(_)));
+            assert!(matches!(kernel.step_tessellation_job_sync(&shape,&mut job,0).unwrap(), crate::brep::queries::tessellation::TessellationStep::Working(_)));
             assert_eq!(job.progress().units_done, 0);
-            assert!(matches!(job.step(kernel.tessellation_body(), 1).unwrap(), crate::brep::queries::tessellation::TessellationStep::Done(_)));
+            assert!(matches!(kernel.step_tessellation_job_sync(&shape,&mut job,1).unwrap(), crate::brep::queries::tessellation::TessellationStep::Done(_)));
             assert_eq!(job.progress().units_done, 1);
             let (budgeted, _) = job.into_mesh().unwrap();
             assert_eq!(budgeted.points, transfer.points);
             assert_eq!(budgeted.vertex_groups[0].entity_id, transfer.vertex_groups[0].entity_id);
             let mut cancelled = kernel.tessellate_job_sync(&shape, 0.1).unwrap();
             cancelled.cancel();
-            assert!(matches!(cancelled.step(kernel.tessellation_body(), 1).unwrap(), crate::brep::queries::tessellation::TessellationStep::Cancelled(_)));
+            assert!(matches!(kernel.step_tessellation_job_sync(&shape,&mut cancelled,1).unwrap(), crate::brep::queries::tessellation::TessellationStep::Cancelled(_)));
             assert!(cancelled.into_mesh().is_none());
         }
         let labels = mesh.component_references.get("vertex").expect("original topology vertex references");

@@ -13,37 +13,6 @@ fn snap(tracks: Vec<Mp4Track>) -> Mp4Snapshot {
     Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![] }, movie: Mp4Movie::default(), tracks }
 }
 
-//#region field_sweep + between_roundtrip_law
-#[test]
-fn field_sweep_covers_every_mutable_field() {
-    let a = snap(vec![track(1, vec![sample(1), sample(2)]), track(2, vec![sample(3)])]);
-    let mut b = a.clone();
-    b.ftyp.major_brand = "mp42".into();
-    b.tracks[0].width = 128;
-    b.tracks[0].samples.remove(0);
-    b.tracks[0].samples.push(sample(9));
-    b.tracks.remove(1);
-    b.tracks.push(track(3, vec![sample(5)]));
-    let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
-    assert!(d.ftyp.is_some(), "ftyp field must be covered by the sweep");
-    assert!(d.tracks.is_some(), "tracks field must be covered by the sweep");
-    assert_eq!(protocol::apply_diff(&d, &a).unwrap(), b);
-    assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>protocol::apply_diff(&::between(&b, &a), &b).unwrap(), a);
-    assert!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &a).is_empty());
-}
-
-#[test]
-fn inverse_law_round_trips_through_apply() {
-    let a = snap(vec![track(1, vec![sample(1), sample(2)])]);
-    let mut b = a.clone();
-    b.tracks[0].samples[0].duration = 999;
-    b.tracks[0].samples[0].sync = !b.tracks[0].samples[0].sync;
-    let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
-    let after = protocol::apply_diff(&d, &a).unwrap();
-    assert_eq!(after, b);
-    let inv = d.inverse(&a);
-    assert_eq!(protocol::apply_diff(&inv, &after).unwrap(), a);
-}
 //#endregion
 
 //#region absorb_law — canonical index-transport cases (schema-design.md)
@@ -59,7 +28,7 @@ fn absorb_insert_then_remove_before_matches_sequential() {
     let after = apply_indexed(&mid, &d2, apply_sample_diff);
     let sequential = after.clone();
 
-    absorb_indexed(&mut d1, d2, absorb_sample_diff, apply_sample_diff_mut);
+    absorb_indexed(&mut d1, d2, absorb_sample_rows, apply_sample_diff_mut);
     let combined = apply_indexed(&base, &d1, apply_sample_diff);
     assert_eq!(combined, sequential, "absorb(d1,d2).apply(base) must equal d2.apply(d1.apply(base))");
     assert_eq!(d1.removed, vec![0], "the real base removal must transport through");
@@ -77,7 +46,7 @@ fn absorb_insert_insert_same_index_both_survive() {
     let after = apply_indexed(&mid, &d2, apply_sample_diff);
     let sequential = after.clone();
 
-    absorb_indexed(&mut d1, d2, absorb_sample_diff, apply_sample_diff_mut);
+    absorb_indexed(&mut d1, d2, absorb_sample_rows, apply_sample_diff_mut);
     let combined = apply_indexed(&base, &d1, apply_sample_diff);
     assert_eq!(combined, sequential);
     assert_eq!(combined.len(), 3, "both inserts at the same nominal index must survive (fixes the gif-style LWW-slot bug)");
@@ -94,7 +63,7 @@ fn absorb_modify_patches_into_added_payload() {
     let after = apply_indexed(&mid, &d2, apply_sample_diff);
     let sequential = after.clone();
 
-    absorb_indexed(&mut d1, d2, absorb_sample_diff, apply_sample_diff_mut);
+    absorb_indexed(&mut d1, d2, absorb_sample_rows, apply_sample_diff_mut);
     let combined = apply_indexed(&base, &d1, apply_sample_diff);
     assert_eq!(combined, sequential);
     assert_eq!(combined[1].duration, 42);
@@ -111,38 +80,10 @@ fn absorb_modify_then_remove_drops_the_modification() {
     let after = apply_indexed(&mid, &d2, apply_sample_diff);
     let sequential = after.clone();
 
-    absorb_indexed(&mut d1, d2, absorb_sample_diff, apply_sample_diff_mut);
+    absorb_indexed(&mut d1, d2, absorb_sample_rows, apply_sample_diff_mut);
     let combined = apply_indexed(&base, &d1, apply_sample_diff);
     assert_eq!(combined, sequential);
     assert!(d1.modified.is_empty(), "a merged-removed key's modified entry must be dropped");
-}
-
-#[test]
-fn absorb_associativity_over_three_diffs() {
-    let a = snap(vec![track(1, vec![sample(1), sample(2)])]);
-    let mut mid1 = a.clone();
-    mid1.tracks[0].samples[0].duration = 11;
-    let mut mid2 = mid1.clone();
-    mid2.tracks.push(track(2, vec![sample(5)]));
-    let mut after = mid2.clone();
-    after.tracks[0].width = 999;
-
-    let d1 = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &mid1);
-    let d2 = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&mid1, &mid2);
-    let d3 = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&mid2, &after);
-
-    let mut left = d1.clone();
-    left.absorb(d2.clone());
-    left.absorb(d3.clone());
-
-    let mut d23 = d2.clone();
-    d23.absorb(d3.clone());
-    let mut right = d1.clone();
-    right.absorb(d23);
-
-    assert_eq!(protocol::apply_diff(&left, &a).unwrap(), after);
-    assert_eq!(protocol::apply_diff(&right, &a).unwrap(), after);
-    assert_eq!(protocol::apply_diff(&left, &a).unwrap(), protocol::apply_diff(&right, &a).unwrap(), "absorb must be associative");
 }
 
 #[test]
@@ -154,9 +95,8 @@ fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
     assert!(empty.is_empty());
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&empty, &base).unwrap()), bytes);
 
-    let mut changed = base.clone();
-    changed.tracks[0].width += 1;
-    let diff = Mp4Diff::between(&base, &changed);
+    let track = Mp4TrackDiff { width: Some(base.tracks[0].width + 1), ..Default::default() };
+    let diff = Mp4Diff { tracks: Some(IndexedDiff { removed: Vec::new(), modified: vec![IndexedModified { index: 0, diff: track }], added: Vec::new() }), ..Default::default() };
     let after = protocol::apply_diff(&diff, &base).unwrap();
     let inverse = diff.inverse(&base);
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&inverse, &after).unwrap()), bytes);

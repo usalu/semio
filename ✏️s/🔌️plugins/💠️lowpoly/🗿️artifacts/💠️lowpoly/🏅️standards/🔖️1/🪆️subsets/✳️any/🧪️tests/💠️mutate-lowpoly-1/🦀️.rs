@@ -61,6 +61,7 @@ const KINDS: &[&str] = &[
     "move-selection",
     "rotate-selection",
     "scale-selection",
+    "set-vertex-positions",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `LowpolyDiff` mirrors `LowpolySnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🀄️wfc` and `🖐️5d`/`🧊️3d` block subsets, whose diffs split, rename or FOLD their fields, carry real rows here.

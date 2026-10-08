@@ -6,7 +6,7 @@
 //! load id. The middle guard is what makes the two doors into `loads` agree: the same nodal load on
 //! a missing node is now refused whether it arrives inside a new case or is attached to an old one.
 use super::AddLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry, Fem2dLoadsDelta, insertion_order};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesModification, Fem2dLoadInsertion, Fem2dLoadsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::{load_id, Fem2dSnapshot};
 
@@ -22,9 +22,12 @@ pub fn diff(payload: &AddLoad, base: &Fem2dSnapshot) -> protocol::MutationOutcom
     if existing.loads.iter().any(|load| load_id(load) == new_load_id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" already exists in case \"{}\".", new_load_id, payload.case_id));
     }
-    let loads = Fem2dLoadsDelta { added: vec![(*payload.load).clone()], reordered: insertion_order(existing.loads.iter().map(|load| load_id(load)), new_load_id, payload.index), ..Default::default() };
+    if payload.index.is_some_and(|at| at > existing.loads.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), existing.loads.len()), [new_load_id.to_string()]);
+    }
+    let loads = Fem2dLoadsDelta { inserted: vec![Fem2dLoadInsertion { index: payload.index.unwrap_or(existing.loads.len()), row: (*payload.load).clone() }], ..Default::default() };
     protocol::MutationOutcome::new(Fem2dDiff {
-        load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), patch: Fem2dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
+        load_cases: Some(Fem2dLoadCasesDelta { modified: vec![Fem2dLoadCasesModification { id: payload.case_id.clone(), patch: Fem2dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

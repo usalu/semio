@@ -1,6 +1,8 @@
 {
   "EditStory": {
     "id": "story-1",
-    "newContent": "Alpha body, revised."
+    "offset": 10,
+    "delete": 1,
+    "insert": ", revised."
   }
 }

@@ -2,10 +2,11 @@
   "annex": null,
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "beam-B1",
+        "id": "beam-B1",
         "patch": {
           "labelEn": null,
           "labelDe": null,
@@ -36,9 +37,9 @@
           "bridgeCrowdPerM2": null,
           "actions": {
             "removed": [],
-            "added": [
+            "inserted": [
               {
-                "after": "q",
+                "index": 2,
                 "row": {
                   "id": "w",
                   "kind": "permanent",
@@ -54,6 +55,7 @@
                 }
               }
             ],
+            "moved": [],
             "modified": []
           }
         }
@@ -62,7 +64,8 @@
   },
   "connections": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

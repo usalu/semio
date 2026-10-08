@@ -85,15 +85,15 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "rename-page/renames-page-1: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().pages.as_ref().expect("rename-page fills the pages delta");
-    assert_eq!(delta.patched.len(), 1, "rename-page patches exactly one page");
-    assert_eq!(delta.patched[0].id, "page-1", "rename-page's patch entry addresses page-1");
-    assert_eq!(delta.patched[0].patch.name.as_deref(), Some("Title Page"), "rename-page fills only the patch's `name` field");
-    assert!(delta.patched[0].patch.width.is_none() && delta.patched[0].patch.height.is_none(), "rename-page must not emit a size patch");
+    assert_eq!(delta.modified.len(), 1, "rename-page patches exactly one page");
+    assert_eq!(delta.modified[0].id, "page-1", "rename-page's patch entry addresses page-1");
+    assert_eq!(delta.modified[0].patch.name.as_deref(), Some("Title Page"), "rename-page fills only the patch's `name` field");
+    assert!(delta.modified[0].patch.width.is_none() && delta.modified[0].patch.height.is_none(), "rename-page must not emit a size patch");
 }
 
 /// 🔺️ The sparse delta `rename-page` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here only `pages.patched[0].patch.name` is populated — every geometry field of the page patch stays null.
+/// end state matches. Here only `pages.modified[0].patch.name` is populated — every geometry field of the page patch stays null.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();

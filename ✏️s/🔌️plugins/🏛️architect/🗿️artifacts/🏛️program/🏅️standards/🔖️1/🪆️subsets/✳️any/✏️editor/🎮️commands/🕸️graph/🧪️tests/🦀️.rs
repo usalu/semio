@@ -32,7 +32,7 @@ fn graph_tools_follow_the_language_neutral_transaction_law() {
         let expected = case.get("mutations").unwrap().as_array().unwrap().iter().map(|kind| kind.as_str().unwrap()).collect::<Vec<_>>();
         assert_eq!(kinds, expected, "{}", case.get("name").unwrap());
         for leaf in &emit.artifact_mutations {
-            let (next, outcome) = crate::schema::mutations::apply_program_mutation_outcome(&program, leaf);
+            let (next, outcome) = crate::standards::v1::subsets::any::io::apply_program_mutation_outcome(&program, leaf);
             program = next;
             assert!(!outcome.messages().iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal), "a graph tool leaf applies on its ordered base");
         }

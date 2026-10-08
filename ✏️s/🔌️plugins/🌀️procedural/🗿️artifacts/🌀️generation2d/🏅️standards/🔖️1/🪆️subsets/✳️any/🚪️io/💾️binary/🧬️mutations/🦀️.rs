@@ -8,10 +8,10 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{GENERATION2D_OWNER_BYTES,GENERATION2D_RETAINED_STACK_CAPACITY,GENERATION2D_MAXIMUM_DOMAIN_ITEMS,generation2d_close_flow_frontier,generation2d_apply_initialization_mutation,generation2d_copy_string,generation2d_copy_widget,generation2d_copy_synapse,generation2d_copy_generation};
+
 
 #[cfg(test)]
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_retire_mutations_cold,generation2d_apply_retained_mutations_for_test};
+
 
 use crate::standards::v1::subsets::any::io::text::snapshot::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
@@ -316,12 +316,13 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
         clear_widget_layout("retained-a".into()),
         update_camera(semio_framework_artifact_flow_flow::CameraJson { x: 3.0, y: 4.0, zoom: 1.5 }),
         change_schema("flow.host_snapshot.retained".into()),
-        create_generation(semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }),
+        Generation2dMutation::CreateGeneration(crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }, index: Some(0) }),
         delete_generation("retained-generation".into()),
         rename_generation("retained-generation".into(), "Renamed Generation".into()),
         change_generation_value("retained-generation".into(), "deep-answer".into(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"object": {"array": [1.0, false, "value"]}}))),
         change_slider_value("retained-slider", 7.25),
         move_nodes(vec!["retained-a".into(), "retained-b".into()], 12.5, -4.0),
+        crate::standards::v1::subsets::any::schema::mutations::select_generation("retained-generation".to_string().into()),
     ]
 }
 
@@ -330,3 +331,4 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
 
 
 use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
+use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_apply_retained_mutations_for_test, generation2d_close_flow_frontier, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget, generation2d_retire_mutations_cold};

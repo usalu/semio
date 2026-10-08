@@ -5,7 +5,7 @@
 //! (Error) when none of the named nodes and regions exist; `mutation.no-op` (Warning) when the transform moves none
 //! of them; and `mutation.partial` (Warning), addressed at the absent ones, when some are missing.
 use super::MoveSelection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodesPatchEntry, Fem2dRegionsDelta, Fem2dRegionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodesModification, Fem2dRegionsDelta, Fem2dRegionsModification};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
@@ -19,14 +19,14 @@ pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshot) -> protocol::Mutation
     if nodes.is_empty() && regions.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named node(s) and region(s) exist.", targets.len()), targets);
     }
-    let patched_nodes: Vec<Fem2dNodesPatchEntry> = nodes.iter().filter_map(|node| payload.moved_node(node)).map(|item| Fem2dNodesPatchEntry { id: item.id.clone(), item }).collect();
-    let patched_regions: Vec<Fem2dRegionsPatchEntry> = regions.iter().filter_map(|region| payload.moved_region(region)).map(|item| Fem2dRegionsPatchEntry { id: item.id.clone(), item }).collect();
+    let patched_nodes: Vec<Fem2dNodesModification> = nodes.iter().filter_map(|node| payload.moved_node(node)).map(|item| Fem2dNodesModification { id: item.id.clone(), patch: item }).collect();
+    let patched_regions: Vec<Fem2dRegionsModification> = regions.iter().filter_map(|region| payload.moved_region(region)).map(|item| Fem2dRegionsModification { id: item.id.clone(), patch: item }).collect();
     if patched_nodes.is_empty() && patched_regions.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The transform moves none of the {} named node(s) and region(s).", targets.len()));
     }
     let outcome = protocol::MutationOutcome::new(Fem2dDiff {
-        nodes: (!patched_nodes.is_empty()).then(|| Fem2dNodesDelta { patched: patched_nodes, ..Default::default() }),
-        regions: (!patched_regions.is_empty()).then(|| Fem2dRegionsDelta { patched: patched_regions, ..Default::default() }),
+        nodes: (!patched_nodes.is_empty()).then(|| Fem2dNodesDelta { modified: patched_nodes, ..Default::default() }),
+        regions: (!patched_regions.is_empty()).then(|| Fem2dRegionsDelta { modified: patched_regions, ..Default::default() }),
         ..Default::default()
     });
     let missing: Vec<String> = payload.node_ids.iter().filter(|id| !nodes.iter().any(|node| &node.id == *id)).chain(payload.region_ids.iter().filter(|id| !regions.iter().any(|region| &region.id == *id))).cloned().collect();

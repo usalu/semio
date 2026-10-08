@@ -489,6 +489,22 @@ pub(crate) mod context {
             .collect()
     }
     
+    /// 📂️ How many whole-document loads (`Effect::LoadDocument`) one settle published — the only shape a natural-file
+    /// import takes, since a load is a genesis of the document, never a history row.
+    pub fn loads_in(settled: &Puzzle3dSettled) -> usize {
+        settled.effects.iter().filter(|effect| matches!(effect, Effect::LoadDocument { .. })).count()
+    }
+
+    /// 📂️ The projection of the one document a settle's `Effect::LoadDocument` carries, decoded from its pack bytes.
+    pub fn imported_projection(settled: &Puzzle3dSettled) -> Value {
+        let pack = settled.effects.iter().find_map(|effect| match effect {
+            Effect::LoadDocument { pack, .. } => Some(pack.clone()),
+            _ => None,
+        });
+        let document = <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
+        semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&document))
+    }
+
     /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
@@ -833,7 +849,7 @@ pub(crate) mod context {
     }
     
     pub fn projection_of(app: &Puzzle3dApp) -> Value {
-        parse(&app.snapshot().expect("projection").value().to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot JSON")
+        semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(app.snapshot().expect("projection").typed()))
     }
 
     pub fn object_count(app: &Puzzle3dApp) -> usize {
@@ -1056,7 +1072,7 @@ pub(crate) mod context {
 
     /// 📄️ The committed document, as the exact text the store holds.
     pub fn committed_document(app: &Puzzle3dApp) -> String {
-        app.snapshot().expect("committed snapshot").value().to_string()
+        semio_framework_pack_json::to_json_string(app.snapshot().expect("committed snapshot").typed())
     }
 
     /// 🪞️ How many objects the main window renders — committed ⊕ provisional while a run holds placements.
@@ -1601,7 +1617,7 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
@@ -1615,7 +1631,7 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1649,7 +1665,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
 #[test]
 fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1677,7 +1693,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn create_attraction_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
     let work = Puzzle3dCreateAttractionWork::default();
@@ -1696,7 +1712,7 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1733,7 +1749,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
     let work = Puzzle3dAcceptSuggestionWork::default();
@@ -1749,7 +1765,7 @@ fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1794,7 +1810,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
     let work = Puzzle3dPatchInspectorWork::default();
@@ -1820,7 +1836,7 @@ fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -2120,14 +2136,14 @@ async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
     use store::{ArtifactDsl, ArtifactPack};
     let app = app().await;
     let snapshot = app.snapshot().expect("projection");
-    let objects = snapshot.value().get("objects").and_then(serde_json::Value::as_array).map(Vec::len).unwrap_or(0);
+    let objects = snapshot.value().get("objects").and_then(semio_framework_value::DslValue::as_array).map(Vec::len).unwrap_or(0);
     assert!(objects > 0, "the boot scene_snapshot ships objects");
     assert_eq!(snapshot.typed().objects.len(), objects, "the live snapshot's typed authority must carry the projection's objects");
     let via_pack = Puzzle3dPlaySnapshot::decode_pack(&snapshot.encode_pack()).expect("pack decode");
     assert_eq!(via_pack.typed().objects.len(), objects, "a store pack round trip must not empty the typed authority");
     let via_dsl = Puzzle3dPlaySnapshot::parse_dsl(&snapshot.print_dsl()).expect("dsl parse");
     assert_eq!(via_dsl.typed().objects.len(), objects, "a dsl round trip must not empty the typed authority");
-    let via_value = Puzzle3dPlaySnapshot::new(snapshot.value().clone());
+    let via_value = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(snapshot.value().clone()).expect("typed fixture admits"));
     assert_eq!(via_value.typed().objects.len(), objects, "rebuilding from the projection must not empty the typed authority");
 }
 
@@ -2145,7 +2161,7 @@ fn an_absent_fixture_meta_member_never_empties_the_typed_authority() {
     let meta = projection.get("meta").expect("the projection carries a meta object");
     assert!(!meta.get("kindCatalogs").is_some_and(serde_json::Value::is_null), "an absent kind catalog must be absent, not null: {meta}");
     assert!(!meta.get("kindCompatibility").is_some_and(serde_json::Value::is_null), "an absent compatibility table must be absent, not null: {meta}");
-    let snapshot = Puzzle3dPlaySnapshot::new(projection);
+    let snapshot = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&(projection))).expect("typed fixture admits"));
     assert_eq!(snapshot.typed().objects.len(), seeded.objects.len(), "both halves of one snapshot must describe the same document");
 }
 
@@ -2159,8 +2175,10 @@ fn interaction_topology_names_every_id_the_world_lane_paints() {
     divergent.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.objects);
     divergent.meta.kind_compatibility = Some(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("target".to_string(), semio_framework_value::DslValue::String("b-l".to_string()))])]));
     let projection: serde_json::Value = (&semio_framework_value::ToValue::to_value(&divergent)).into();
-    let snapshot = Puzzle3dPlaySnapshot::new(projection);
-    assert!(snapshot.typed().objects.is_empty(), "this law needs the typed authority to have refused the document");
+    let refusal=<crate::Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&projection));
+    assert!(refusal.is_err(),"invalid catalogs must refuse rather than discard objects");
+    divergent.meta.kind_compatibility=None;
+    let snapshot=Puzzle3dPlaySnapshot::new(puzzle3d_snapshot_from_host_snapshot(&divergent).expect("valid host admits"));
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Puzzle3dConfig::default();
@@ -5170,7 +5188,7 @@ async fn a_gumball_drag_carries_its_attracted_objects_in_the_same_transaction() 
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
     dispatch(&mut app, "createAttraction", Some(&json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).await.expect("attract the compatible door pair");
-    let scene_snapshot = puzzle3d_scene_snapshot_from_projection(&projection_of(&app));
+    let scene_snapshot = puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed());
     let owner = |full_id: &str| full_id.split(':').next().unwrap_or_default().to_string();
     let (parent, child) = scene_snapshot
         .attractions
@@ -5305,12 +5323,12 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
     let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
     assert!(!emit.artifact_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
 
-    let mut next_projection = projection.value().clone();
+    let mut next_projection = projection.typed().clone();
     for operation in &emit.artifact_mutations {
-        next_projection = protocol::apply_diff(protocol::Mutation::<serde_json::Value>::diff(operation, &next_projection).diff(), &next_projection).expect("valid mutation diff");
+        next_projection = protocol::apply_diff(protocol::Mutation::<crate::Puzzle3dSnapshot>::diff(operation, &next_projection).diff(), &next_projection).expect("valid mutation diff");
     }
 
-    let next_projection = parse(&next_projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutated snapshot JSON");
+    let next_projection = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&next_projection));
     let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
     assert!(objects.iter().any(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")), "the imported object kind must appear in meta.kind_catalogs.objects");
     let capsule = objects.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).unwrap();
@@ -5330,7 +5348,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
 async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
     let projection = Puzzle3dPlayApp::initial_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
-    let mut current = projection.value().clone();
+    let mut current = projection.typed().clone();
 
     let fragment = json!({
         "objectKinds": [{ "id": "capsule", "name": "capsule", "label": "Capsule", "meshUrl": "/mesh/capsule.glb", "vortices": [] }],
@@ -5346,11 +5364,11 @@ async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let doc = ArtifactView::new(&doc_projection, &history);
         let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
         for operation in &emit.artifact_mutations {
-            current = protocol::apply_diff(protocol::Mutation::<serde_json::Value>::diff(operation, &current).diff(), &current).expect("valid mutation diff");
+            current = protocol::apply_diff(protocol::Mutation::<crate::Puzzle3dSnapshot>::diff(operation, &current).diff(), &current).expect("valid mutation diff");
         }
     }
 
-    let current = parse(&current.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutated snapshot JSON");
+    let current = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&current));
     let objects = current.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
     assert_eq!(objects.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
 }
@@ -5612,7 +5630,7 @@ fn measured_view_state() -> semio_framework_plugin::ViewModel {
 }
 
 fn measured_nakagin_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into())
+    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END: `openVortexSuggestions` syncs the whole precompute session
@@ -5644,7 +5662,7 @@ fn accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin(
 }
 
 fn measured_concrete_forest_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone())).into())
+    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3: swapping the Concrete Forest document for the
@@ -5705,9 +5723,9 @@ fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
 #[test]
 fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
     for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone())] {
-        let seed = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&scene_snapshot)).into());
-        let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(seed.typed())).into());
-        let bridged = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), Puzzle3dRuntime::default(), "utility");
+        let seed = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("typed fixture admits"));
+        let snapshot = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(seed.typed())).expect("typed fixture admits"));
+        let bridged = Puzzle3dScene { scene_snapshot: semio_framework_value::FromValue::from_value(snapshot.value().clone()).expect("native fixture view admits"), runtime: Puzzle3dRuntime::default(), active_utility: "utility".into() };
         let typed = scene_from_snapshot(snapshot.typed(), Puzzle3dRuntime::default(), "utility");
         assert_eq!(typed.scene_snapshot.schema, bridged.scene_snapshot.schema, "{label}: schema disagrees");
         assert_eq!(typed.scene_snapshot.domain, bridged.scene_snapshot.domain, "{label}: domain disagrees");
@@ -6529,10 +6547,9 @@ async fn import_snapshot_reproduces_the_exported_document() {
     assert_eq!(object_count(&app), 0);
     let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&source) })), None).await;
     imported.expect("import");
-    assert_eq!(history_rows(&settled), 1, "import must be one mutation edit");
-    assert_eq!(object_cores(&projection_of(&app)), object_cores(&source), "import reproduces the exported objects");
-    dispatch(&mut app, "undo", None, None).await.expect("undo");
-    assert_eq!(object_count(&app), 0, "one undo restores the empty document");
+    assert_eq!(loads_in(&settled), 1, "import is one whole-document load");
+    assert!(history_row_labels(&settled).iter().all(|row| row.contains("applied=false") && row.contains("ops=0")), "a whole-document load journals no applied history row: {:?}", history_row_labels(&settled));
+    assert_eq!(object_cores(&imported_projection(&settled)), object_cores(&source), "import reproduces the exported objects");
 }
 
 /// 📥️ Wave W-AB: workspace Import is `openImportSnapshot` (file picker). `importSnapshot` stays
@@ -6574,8 +6591,8 @@ async fn open_import_snapshot_requests_file_open_then_import_applies_payload() {
     assert_eq!(object_count(&app), 0);
     let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&source) })), None).await;
     imported.expect("import");
-    assert_eq!(history_rows(&settled), 1, "import must be one mutation edit");
-    assert_eq!(object_cores(&projection_of(&app)), object_cores(&source), "picked payload reproduces the exported objects");
+    assert_eq!(loads_in(&settled), 1, "import is one whole-document load");
+    assert_eq!(object_cores(&imported_projection(&settled)), object_cores(&source), "picked payload reproduces the exported objects");
 }
 
 /// 📥️ Wave W-AB: re-importing the live scene_snapshot is a store identity, not a guest payload dedupe.
@@ -6608,19 +6625,15 @@ async fn import_snapshot_of_a_distinct_two_object_json_against_a_one_object_live
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [0.0, 0.0, 0.0] })), None).await.expect("seed");
     assert_eq!(object_count(&app), 1, "live scene_snapshot must start as one object");
     let live_id = first_object_id(&app);
-    let one = projection_of(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("distinct");
     let two = projection_of(&app);
     let cores = object_cores(&two);
     assert_eq!(cores.len(), 2, "distinct payload must carry two objects");
     let distinct_id = cores.iter().map(|row| row.0.as_str()).find(|id| *id != live_id).expect("distinct object id").to_string();
-    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&one) })), None).await.expect("restore one-object live scene_snapshot");
-    assert_eq!(object_count(&app), 1, "live scene_snapshot is one object before import");
-    assert_eq!(first_object_id(&app), live_id);
     let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&two) })), None).await;
     imported.expect("import distinct");
-    assert_eq!(history_rows(&settled), 1, "distinct two-object import must emit operations");
-    let after = object_cores(&projection_of(&app));
+    assert_eq!(loads_in(&settled), 1, "distinct two-object import is one whole-document load");
+    let after = object_cores(&imported_projection(&settled));
     assert_eq!(after.len(), 2, "after-snapshot must contain both objects");
     assert!(after.iter().any(|row| row.0 == distinct_id), "after-snapshot must contain the distinct object id {distinct_id}");
 }
@@ -6658,18 +6671,20 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("seed a second object");
     let two_objects = exported(&dispatch(&mut app, "exportSnapshot", None, None).await.expect("export the distinct document"));
     assert_ne!(one_object, two_objects, "the two exports must be distinct files");
-    let restored = dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": one_object.as_str(), "name": "puzzle-3d.json" })), None).await.expect("restore the one-object document");
+    let (restored, restored_settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": one_object.as_str(), "name": "puzzle-3d.json" })), None).await;
+    let restored = restored.expect("restore the one-object document");
     assert!(notices(&restored).is_empty(), "restoring an exported file must not refuse: {:?}", notices(&restored));
-    assert_eq!(object_count(&app), 1, "the live document is one object before the distinct import");
+    assert_eq!(object_cores(&imported_projection(&restored_settled)).len(), 1, "the restored file is the one-object document");
     let (distinct, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await;
     let distinct = distinct.expect("import the distinct file");
     assert!(notices(&distinct).is_empty(), "a distinct exported file must not refuse: {:?}", notices(&distinct));
-    assert_eq!(history_rows(&settled), 1, "a distinct exported file must record one history row");
-    assert_eq!(object_count(&app), 2, "a distinct exported file must upsert its objects");
-    let after_distinct = object_cores(&projection_of(&app));
-    let again = dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await.expect("re-import the same file");
+    assert_eq!(loads_in(&settled), 1, "a distinct exported file is one whole-document load");
+    let after_distinct = object_cores(&imported_projection(&settled));
+    assert_eq!(after_distinct.len(), 2, "a distinct exported file must carry its objects");
+    let (again, again_settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await;
+    let again = again.expect("re-import the same file");
     assert!(notices(&again).is_empty(), "re-importing the same file must not refuse: {:?}", notices(&again));
-    assert_eq!(object_cores(&projection_of(&app)), after_distinct, "re-importing the file the document already IS is an identity on the document");
+    assert_eq!(object_cores(&imported_projection(&again_settled)), after_distinct, "re-importing the same file loads the same document");
 }
 
 /// 🔢️ The payload an import actually receives was written by a BROWSER, not by this crate's own writer:
@@ -6695,8 +6710,8 @@ async fn a_browser_serialized_fixture_payload_imports_every_json_number_spelling
         })
         .collect();
     assert!(notices.is_empty(), "a browser-serialized payload must not be refused: {notices:?}");
-    assert_eq!(history_rows(&settled), 1, "a browser-serialized payload must record one history row");
-    let objects = object_cores(&projection_of(&app));
+    assert_eq!(loads_in(&settled), 1, "a browser-serialized payload is one whole-document load");
+    let objects = object_cores(&imported_projection(&settled));
     assert_eq!(objects.len(), 1, "the imported document is exactly the payload's objects: {objects:?}");
     assert_eq!(objects.first().map(|(id, ..)| id.as_str()), Some("browser-clone"), "the payload's own object id survives the import: {objects:?}");
 }
@@ -6715,7 +6730,7 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
-    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_projection(&projection_of(&app)));
+    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed()));
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     assert_eq!(object_count(&app), seeded, "the document is back at the example census before the import");
     assert!(distinct.len() > 140_000, "the payload under test must be the product's own size class; observed {} B", distinct.len());
@@ -6730,9 +6745,8 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
         })
         .collect();
     assert!(notices.is_empty(), "a payload inside the declared import budget must not be refused: {notices:?}");
-    let rows = history_row_labels(&settled);
-    assert_eq!(rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count(), 1, "the whole import records exactly one applied history row: {rows:?}");
-    assert_eq!(object_count(&app), seeded + 1, "a product-sized distinct payload must replace the document it was imported over");
+    assert_eq!(loads_in(&settled), 1, "the whole import is exactly one whole-document load");
+    assert_eq!(object_cores(&imported_projection(&settled)).len(), seeded + 1, "a product-sized distinct payload must carry the document it replaces");
 }
 
 /// 🧩️ The framework half of an import, end to end for this app: the host's chunk envelope
@@ -6745,11 +6759,11 @@ async fn a_chunked_pick_reaches_import_snapshot_as_one_whole_file_through_the_fr
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
-    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_projection(&projection_of(&app)));
+    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed()));
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     let chunks = semio_framework::kernel::import_payload_chunks(&distinct);
     assert!(chunks.len() > 1, "a product-sized payload spans several host chunks; observed {}", chunks.len());
-    let mut applied = 0usize;
+    let mut loaded = None;
     for chunk in &chunks {
         let args = semio_framework::kernel::import_chunk_arguments("nakagin-capsule-tower-distinct.json", chunk, None);
         let (result, settled) = dispatch_action_reporting(&mut app, "importSnapshot", &args).await;
@@ -6759,10 +6773,13 @@ async fn a_chunked_pick_reaches_import_snapshot_as_one_whole_file_through_the_fr
             assert!(rows.is_empty(), "a staged chunk is no command and no edit; chunk {}: {rows:?}", chunk.chunk);
             assert_eq!(object_count(&app), seeded, "a staged chunk must not move the document; chunk {}", chunk.chunk);
         }
-        applied += rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count();
+        if loads_in(&settled) == 1 {
+            assert!(loaded.is_none(), "the whole chunked pick is exactly one whole-document load");
+            loaded = Some(imported_projection(&settled));
+        }
     }
-    assert_eq!(applied, 1, "the whole chunked pick records exactly one applied history row");
-    assert_eq!(object_count(&app), seeded + 1, "the reassembled file replaced the document it was imported over");
+    let loaded = loaded.expect("the closing chunk publishes the whole-document load");
+    assert_eq!(object_cores(&loaded).len(), seeded + 1, "the reassembled file carries the document it replaces");
 }
 
 /// 🧯️ An import above the budget one export may stream is REFUSED with a notice, never silently dropped
@@ -6976,8 +6993,8 @@ async fn leftover_import_snapshot_replaces_live_document_with_distinct_two_objec
     assert_eq!(object_count(&app), 1, "live scene_snapshot is one object before import");
     let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&two), "name": "puzzle-3d-distinct.json" })), None).await;
     imported.expect("leftover distinct import");
-    assert_eq!(history_rows(&settled), 1, "distinct leftover import must upsert history");
-    assert_eq!(object_count(&app), 2, "distinct leftover import must replace objects after_objects=2");
+    assert_eq!(loads_in(&settled), 1, "distinct leftover import is one whole-document load");
+    assert_eq!(object_cores(&imported_projection(&settled)).len(), 2, "distinct leftover import must carry both objects");
 }
 
 /// 🖱️ Wave W-Y: a selected-object context menu is puzzle-owned — never the shell fallback vocabulary.
@@ -7044,7 +7061,7 @@ fn leftover_copy_paste_clones_selected_object() {
     assert_eq!(objects[0].id, "seed-left-001");
     assert_eq!(objects[0].origin, [1.0, 2.0, 3.0]);
     let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations_on(&scene_snapshot, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let mutations = puzzle3d_paste_operations(&fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -7093,7 +7110,7 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
     assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
     let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations_on(&scene_snapshot, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let mutations = puzzle3d_paste_operations(&fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -7453,7 +7470,7 @@ async fn the_settings_panel_renders_the_focused_panes_own_value_not_a_default() 
 /// (`inspection-object-fields id=null`, `locked-flag-row lockChrome=false`,
 /// `gumball-scene-delta sceneDelta=false`, `relocate-pose-delta`), and the law is GREEN — the guest
 /// keeps the pick across both routes and both mutating dispatches, including the
-/// `revalidate_interaction_state_after_document_change` pass every artifact-intent dispatch runs.
+/// `revalidate_interaction_on_document_change` pass every artifact-intent dispatch runs.
 /// What the browser has and this law cannot reach is the surface-context route
 /// (`plugin_mount_surface` → `SurfaceContexts` → `plugin_render_surface`): every test context render
 /// helper calls `PluginApp::render` directly with a hand-built `ViewModel`, so a body that is never
@@ -7481,7 +7498,7 @@ async fn a_browser_shaped_pick_survives_every_render_route_and_both_mutating_dis
     assert_ne!(before, after, "a translate taken on the SECOND mutating dispatch after the pick must still change the world lane the pane renders");
     assert!(
         !render_panel_body(&mut app, inspection::BODY_KEY, Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.to_string().contains("puzzle3d-play-inspector.empty"),
-        "two artifact-intent dispatches run two `revalidate_interaction_state_after_document_change` passes; neither may eat the pick"
+        "two artifact-intent dispatches run two `revalidate_interaction_on_document_change` passes; neither may eat the pick"
     );
 }
 
@@ -7537,9 +7554,20 @@ fn the_initial_snapshot_costs_only_its_document() {
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&default_scene_snapshot())).into())));
+    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("typed fixture admits"))));
     let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::initial_snapshot()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
 }
 //#endregion 🔖️InitialSnapshotCost
+
+/// 🛡️ The host twin carries every object of the typed document and refuses a scale the typed record cannot admit.
+#[test]
+fn puzzle3d_host_twin_round_trips_its_vocabulary_and_refuses_bad_scale() {
+    let document=crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored fixture admits");
+    let mut host=puzzle3d_scene_snapshot_from_document(&document);
+    let admitted=crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&host).expect("the twin readmits");
+    assert_eq!(admitted.objects.iter().map(|object|object.id.as_str()).collect::<Vec<_>>(),document.objects.iter().map(|object|object.id.as_str()).collect::<Vec<_>>());
+    host.objects[0].scale=Some(semio_framework_value::DslValue::String("invalid".into()));
+    assert!(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&host).is_err());
+}

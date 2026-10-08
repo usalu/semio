@@ -24,7 +24,7 @@ use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiValue;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json,Value,Object};
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_CATALOGUE: &str = "puzzle2d.play.catalogue";
@@ -91,8 +91,8 @@ fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_fram
     if slice == "nodes" {
         let drag_data = puzzle2d_catalog_item_drag_data(slice, kind_id, entry);
         // 🌉️ `tree_item_with_action_draggable` (framework-owned) is typed against `semio_framework_pack_json::Value`;
-        // bridges this panel's own `serde_json::Value` drag payload through `DslValue` at this one call.
-        let drag_data = semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(&drag_data));
+        // bridges this panel's own `semio_framework_pack_json::Value` drag payload through `DslValue` at this one call.
+        let drag_data = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&drag_data));
         tree_item_with_action_draggable(id, ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action, &drag_data)
     } else {
         tree_item_with_action(id, ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action)

@@ -21,6 +21,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "reasoning-wires"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 aliases = ["wires"]
 ports = { react = 6015, wgpu = 6115 }
 

@@ -5,14 +5,15 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, never here.
 //!
 //! 🔄 `replace-region-data` swaps the region's whole opaque payload. The replacement keeps the region's
-//! `kind` and only grows its area and a new flag — proving the delta is a single `patched` entry carrying the
+//! `kind` and only grows its area and a new flag — proving the delta is a single `modified` entry carrying the
 //! ENTIRE new payload, not a per-key delta over the parts that happened to change.
 //!
 //! 🧩️ Committed snapshots preserve the stable drawing and value child identities across edits.
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄replace-region-data/🏘️rewrites/📸️snapshot/⬅️before/🔣️.json");
@@ -118,7 +119,7 @@ async fn committed_diff_applies_to_after() {
 }
 
 /// 🔄 `replace-region-data` swaps the region's whole opaque payload. The replacement keeps the region's
-/// `kind` and only grows its area and a new flag — proving the delta is a single `patched` entry carrying the
+/// `kind` and only grows its area and a new flag — proving the delta is a single `modified` entry carrying the
 /// ENTIRE new payload, not a per-key delta over the parts that happened to change.
 #[semio_framework_async_macros::async_test]
 async fn patches_only_the_harbor_district_payload_and_inverts_to_the_base_payload() {
@@ -127,15 +128,15 @@ async fn patches_only_the_harbor_district_payload_and_inverts_to_the_base_payloa
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "replace-region-data/rewrites-harbor-district-region-payload: a genuinely different payload must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().regions.as_ref().expect("replace-region-data writes a regions delta");
-    assert_eq!(delta.patched.len(), 1, "replace-region-data/rewrites-harbor-district-region-payload: exactly one feature is patched, got {delta:?}");
-    assert_eq!(delta.patched[0].id, "region-harbor-district", "replace-region-data/rewrites-harbor-district-region-payload: the patch is addressed by the payload's own id");
-    assert_eq!(delta.patched[0].patch.data.as_ref(), Some(&after.regions[0].data), "replace-region-data/rewrites-harbor-district-region-payload: the patch carries the committed replacement payload verbatim");
+    assert_eq!(delta.modified.len(), 1, "replace-region-data/rewrites-harbor-district-region-payload: exactly one feature is patched, got {delta:?}");
+    assert_eq!(delta.modified[0].id, "region-harbor-district", "replace-region-data/rewrites-harbor-district-region-payload: the patch is addressed by the payload's own id");
+    assert_eq!(delta.modified[0].patch.data.as_ref(), Some(&after.regions[0].data), "replace-region-data/rewrites-harbor-district-region-payload: the patch carries the committed replacement payload verbatim");
     assert_eq!(
-        delta.patched[0].patch.data.as_ref().and_then(|data| data.get("kind")).and_then(|kind| kind.as_str()),
+        delta.modified[0].patch.data.as_ref().and_then(|data| data.get("kind")).and_then(|kind| kind.as_str()),
         Some("district"),
         "replace-region-data/rewrites-harbor-district-region-payload: an unchanged key is still carried — the patch is a whole payload, not a per-key delta"
     );
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.reordered.is_none(), "replace-region-data/rewrites-harbor-district-region-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "replace-region-data/rewrites-harbor-district-region-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "replace-region-data/rewrites-harbor-district-region-payload: replace-region-data must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "replace-region-data/rewrites-harbor-district-region-payload: a payload swap undoes with exactly one step, got {inverse:?}");

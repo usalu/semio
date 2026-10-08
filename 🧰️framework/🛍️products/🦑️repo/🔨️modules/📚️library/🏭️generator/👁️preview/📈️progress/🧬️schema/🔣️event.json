@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/generator/preview/progress/event.json",
+  "title": "GeneratorPreviewProgressEventV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "sourceIndex",
+    "bytes",
+    "totalBytes",
+    "work",
+    "elapsedMs"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "physical-file-progress-v1"
+    },
+    "sourceIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 127
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2097152
+    },
+    "totalBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2097152
+    },
+    "work": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "elapsedMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 30000
+    }
+  }
+}

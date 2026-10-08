@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "⚖️gate🔐️hub-auth🧊️wgpu-live-journey",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-renderer-wgpu:journey-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🔐️hub-auth🧊️wgpu-live-creation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-renderer-wgpu:creation-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🔐️hub-auth🧊️wgpu-live-collaboration",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-renderer-wgpu:collaboration-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🧊️wgpu⏯️native-guest-journey",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-renderer-wgpu:native-guest-journey-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "▶️hub-collaboration-acceptance🧊️wgpu🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-renderer-wgpu:collaboration-acceptance",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 950.0064
+      }
+    }
+  ],
+  "retireNames": []
+}

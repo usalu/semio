@@ -1,6 +1,6 @@
 //! ⚡️ Block5d artifact — OpText/OpBinary codecs + grammar for `Block5dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block5d_mutation,inverse_block5d_mutation,Block5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_block5d_mutation, Block5dMutation};
 
 
 //#region 📖️SemioGrammar

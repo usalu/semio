@@ -80,39 +80,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dHandle"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dHandleRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dHandlePatchEntry"
+            "$ref": "#/$defs/Puzzle2dHandleInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dHandleRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dHandleModification"
           }
         }
       }
     },
-    "Puzzle2dHandlePatchEntry": {
-      "title": "Puzzle2dHandlePatchEntry",
+    "Puzzle2dHandleRemoval": {
+      "title": "Puzzle2dHandleRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dHandleInsertion": {
+      "title": "Puzzle2dHandleInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dHandle"
+        }
+      }
+    },
+    "Puzzle2dHandleRelocation": {
+      "title": "Puzzle2dHandleRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dHandleModification": {
+      "title": "Puzzle2dHandleModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -214,39 +274,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dNodeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dNodePatchEntry"
+            "$ref": "#/$defs/Puzzle2dNodeInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dNodeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dNodeModification"
           }
         }
       }
     },
-    "Puzzle2dNodePatchEntry": {
-      "title": "Puzzle2dNodePatchEntry",
+    "Puzzle2dNodeRemoval": {
+      "title": "Puzzle2dNodeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dNodeInsertion": {
+      "title": "Puzzle2dNodeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
+        }
+      }
+    },
+    "Puzzle2dNodeRelocation": {
+      "title": "Puzzle2dNodeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dNodeModification": {
+      "title": "Puzzle2dNodeModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -385,7 +505,7 @@
           ]
         },
         "anchor": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNodeAnchor"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json/$defs/Puzzle2dNodeAnchor"
         },
         "handles": {
           "$ref": "#/$defs/Puzzle2dHandlesDelta"
@@ -397,39 +517,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dEdgeRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dEdgePatchEntry"
+            "$ref": "#/$defs/Puzzle2dEdgeInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dEdgeRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dEdgeModification"
           }
         }
       }
     },
-    "Puzzle2dEdgePatchEntry": {
-      "title": "Puzzle2dEdgePatchEntry",
+    "Puzzle2dEdgeRemoval": {
+      "title": "Puzzle2dEdgeRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dEdgeInsertion": {
+      "title": "Puzzle2dEdgeInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
+        }
+      }
+    },
+    "Puzzle2dEdgeRelocation": {
+      "title": "Puzzle2dEdgeRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dEdgeModification": {
+      "title": "Puzzle2dEdgeModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -538,39 +718,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dTargetRegion"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dTargetRegionRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dTargetRegionPatchEntry"
+            "$ref": "#/$defs/Puzzle2dTargetRegionInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Puzzle2dTargetRegionRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dTargetRegionModification"
           }
         }
       }
     },
-    "Puzzle2dTargetRegionPatchEntry": {
-      "title": "Puzzle2dTargetRegionPatchEntry",
+    "Puzzle2dTargetRegionRemoval": {
+      "title": "Puzzle2dTargetRegionRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dTargetRegionInsertion": {
+      "title": "Puzzle2dTargetRegionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dTargetRegion"
+        }
+      }
+    },
+    "Puzzle2dTargetRegionRelocation": {
+      "title": "Puzzle2dTargetRegionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dTargetRegionModification": {
+      "title": "Puzzle2dTargetRegionModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -627,39 +867,99 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dKindCompatibility"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dKindCompatibilityKey"
+            "$ref": "#/$defs/Puzzle2dKindCompatibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dKindCompatibilityPatchEntry"
+            "$ref": "#/$defs/Puzzle2dKindCompatibilityInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Puzzle2dKindCompatibilityKey"
+            "$ref": "#/$defs/Puzzle2dKindCompatibilityRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dKindCompatibilityModification"
           }
         }
       }
     },
-    "Puzzle2dKindCompatibilityPatchEntry": {
-      "title": "Puzzle2dKindCompatibilityPatchEntry",
+    "Puzzle2dKindCompatibilityRemoval": {
+      "title": "Puzzle2dKindCompatibilityRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle2dKindCompatibilityKey"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dKindCompatibilityInsertion": {
+      "title": "Puzzle2dKindCompatibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dKindCompatibility"
+        }
+      }
+    },
+    "Puzzle2dKindCompatibilityRelocation": {
+      "title": "Puzzle2dKindCompatibilityRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle2dKindCompatibilityKey"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle2dKindCompatibilityModification": {
+      "title": "Puzzle2dKindCompatibilityModification",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -688,7 +988,7 @@
           "type": "boolean"
         },
         "specificity": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dCompatSpecificity"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json/$defs/Puzzle2dCompatSpecificity"
         }
       }
     },
@@ -714,7 +1014,7 @@
         "kindCatalogs": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dKindCatalogs"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json/$defs/Puzzle2dKindCatalogs"
             },
             {
               "type": "null"

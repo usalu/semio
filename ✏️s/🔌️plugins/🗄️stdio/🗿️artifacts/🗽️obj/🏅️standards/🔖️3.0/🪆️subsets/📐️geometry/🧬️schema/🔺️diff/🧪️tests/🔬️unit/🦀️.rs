@@ -14,18 +14,10 @@ fn invalid_collection_targets_are_rejected_before_mutation() {
 /// exercises every scalar, both tri-states (`mtllib` at the top level, `texcoords[1].w`
 /// inside a modified item), and all three collection-triple kinds — index-keyed
 /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`).await — via a real
-/// `between()` result in both directions.
+/// declared case list.
 #[test]
 fn diff_codec_text_binary_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let ab = <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b);
-    assert_eq!(ab.mtllib, Some(None), "mtllib tri-state must exercise Some(None)");
-    let td = ab.texcoords.as_ref().expect("texcoords diff populated");
-    assert_eq!(td.modified[0].diff.w, Some(None), "texcoord w tri-state must exercise Some(None)");
-    assert!(!ab.groups.as_ref().unwrap().removed.is_empty() && !ab.groups.as_ref().unwrap().modified.is_empty() && !ab.groups.as_ref().unwrap().added.is_empty(), "groups triple must exercise all 3 kinds");
-
-    let cases = vec![ObjDiff::default(), ab, <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

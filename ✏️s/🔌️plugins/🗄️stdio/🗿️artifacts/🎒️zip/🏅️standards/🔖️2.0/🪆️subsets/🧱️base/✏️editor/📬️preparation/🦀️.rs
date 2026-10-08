@@ -145,6 +145,9 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
                 Ok(self.progress(bytes))
             }
             2 => {
+                if app_store::ArtifactStoreOneItemSealer::<ZipSnapshot, ZipMutation>::constructor_demand().admit(grant.retained_grant()).is_err() {
+                    return Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked);
+                }
                 let post = self.post_copy.take().ok_or_else(|| format!("{}-post-copy", self.prefix))?;
                 crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(&post).map_err(|error| format!("{}-post-validation-{error}", self.prefix))?;
                 let post = Arc::new(post);
@@ -152,7 +155,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
                 let inverse = self.inverse.take().ok_or_else(|| format!("{}-inverse-owner", self.prefix))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-owner", self.prefix))?;
                 let edit = authority.next_edit(mutation, vec![inverse]);
-                self.sealer = Some(authority.begin_one_item_seal(edit, post, Arc::new(ZipMutationRetirementFactory), Arc::new(ZipSnapshotRetirementFactory)));
+                self.sealer = Some(Arc::clone(authority).begin_one_item_seal(edit, post, Arc::new(ZipMutationRetirementFactory), Arc::new(ZipSnapshotRetirementFactory), grant.retained_grant()).unwrap_or_else(|_| unreachable!("pre-admitted exact Zip sealer birth")).0);
                 self.seal_base_checkpoint = Some(self.checkpoint);
                 self.phase = 3;
                 Ok(self.progress(0))

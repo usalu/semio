@@ -2,6 +2,10 @@
   "schema": "job-close-demand.v1",
   "admissionBytes": 262144,
   "pageBytes": 16384,
+  "grant": { "maximumItems": 1, "maximumCopyBytes": 3, "maximumCapacityBytes": 128, "maximumReleaseBytes": 65536, "maximumDepth": 2 },
+  "progress": { "copiedItems": 1, "copiedBytes": 3, "retainedCapacityBytes": 128, "releasedBytes": 65536 },
+  "close": { "receipt": "same-progress-on-pending-and-complete", "terminal": "original-owner-empty", "blocked": "registered-wake", "refusal": "original-owner-retained", "demand": "result-for-copy-capacity-release-depth" },
+  "deniedCredits": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
   "cases": [
     { "name": "One Byte", "physicalBytes": 1, "callerBytes": 0, "releasedBytes": 0 },
     { "name": "One Page Refused", "physicalBytes": 16384, "callerBytes": 16383, "releasedBytes": 0 },

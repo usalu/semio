@@ -7,13 +7,14 @@ use super::colour::{lift_colour_space_inline, lower_colour_space_inline};
 use super::filters::{decode_stream, encode_stream};
 use super::fonts::FontCodec;
 use super::lexer::{is_ws, number_text, write_object, Lexer, PResult, PdfEngineError, Token};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 use std::collections::HashMap;
 
 //#region 🔖️FontTable
 /// 🔤 The fonts a content stream may select, by resource name.
 pub trait FontTable {
     fn font(&self, name: &str) -> Option<&FontCodec>;
+    fn content_artifact(&self,_reference:&semio_framework_artifact_reference::ArtifactRef)->PResult<PdfObject>{Err(PdfEngineError::Unsupported("content artifact resolution is unavailable".into()))}
 }
 
 impl FontTable for HashMap<String, FontCodec> {
@@ -200,7 +201,7 @@ fn inline_image_body<'a>(data: &'a [u8], start: usize, dict: &[PdfDictEntry]) ->
 
 /// 📖 Parses a content stream into typed operators.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_content(data: &[u8], fonts: &dyn FontTable) -> Vec<PdfOp> {
+pub fn parse_content(data: &[u8], fonts: &dyn FontTable,resources:&mut dyn crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort) -> PResult<Vec<PdfOp>> {
     let mut ops = Vec::new();
     let mut lexer = Lexer::new(data);
     let mut operands: Vec<PdfObject> = Vec::new();
@@ -322,9 +323,9 @@ pub fn parse_content(data: &[u8], fonts: &dyn FontTable) -> Vec<PdfOp> {
                 let body_start = (lexer.pos + 1).min(data.len());
                 let (raw, resume) = inline_image_body(data, body_start, &entries);
                 lexer.pos = resume;
-                let (decoded, filters) = decode_stream(&entries, raw).unwrap_or_else(|_| (raw.to_vec(), Vec::new()));
+                let (decoded, filters) = decode_stream(&entries, raw)?;
                 let int = |k: &str| entries.iter().find(|e| e.key == k).and_then(|e| e.value.as_i64()).unwrap_or(0).max(0) as u32;
-                let image = PdfInlineImage {
+                let mut image = PdfInlineImage {
                     width: int("Width"),
                     height: int("Height"),
                     bits_per_component: int("BitsPerComponent"),
@@ -332,10 +333,11 @@ pub fn parse_content(data: &[u8], fonts: &dyn FontTable) -> Vec<PdfOp> {
                     image_mask: entries.iter().any(|e| e.key == "ImageMask" && e.value.as_bool() == Some(true)),
                     decode: entries.iter().find(|e| e.key == "Decode").and_then(|e| e.value.as_array()).map(nums).unwrap_or_default(),
                     interpolate: entries.iter().any(|e| e.key == "Interpolate" && e.value.as_bool() == Some(true)),
-                    filters,
-                    data: decoded,
+                    body:PdfImageBody::Samples {values:Vec::new()},
                     extra: entries.into_iter().filter(|e| !matches!(e.key.as_str(), "Width" | "Height" | "BitsPerComponent" | "ColorSpace" | "ImageMask" | "Decode" | "Interpolate" | "Filter" | "DecodeParms" | "Length")).collect(),
                 };
+                let components=if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)};
+                image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:decoded,filters})?}}else{PdfImageBody::Samples {values:super::images::unpack_image_samples(image.width,image.height,components,if image.image_mask{1}else{image.bits_per_component},&decoded)?}};
                 operands.clear();
                 ops.push(PdfOp::InlineImage { image });
                 continue;
@@ -352,7 +354,7 @@ pub fn parse_content(data: &[u8], fonts: &dyn FontTable) -> Vec<PdfOp> {
         operands.clear();
         ops.push(op);
     }
-    ops
+    Ok(ops)
 }
 //#endregion 🔖️Parse
 
@@ -661,7 +663,8 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                 if image.interpolate {
                     out.extend_from_slice(b" /I true");
                 }
-                let (encoded, filter_entries) = encode_stream(&image.data, &image.filters);
+                let (data,filters)=match &image.body {PdfImageBody::Samples {values}=>(super::images::pack_image_samples(image.width,image.height,if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)},if image.image_mask{1}else{image.bits_per_component},values)?,Vec::new()),PdfImageBody::Artifact {reference}=>{let PdfObject::Stream {data,filters,..}=fonts.content_artifact(reference)? else {return Err(PdfEngineError::Unsupported("inline image artifact is not a native stream".into()));};if !filters.iter().any(|filter|filter.is_image_codec()){return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));}(data,filters)}};
+                let (encoded, filter_entries) = encode_stream(&data, &filters);
                 for entry in filter_entries.iter().chain(image.extra.iter()) {
                     out.push(b' ');
                     super::lexer::write_name(&mut out, &entry.key);

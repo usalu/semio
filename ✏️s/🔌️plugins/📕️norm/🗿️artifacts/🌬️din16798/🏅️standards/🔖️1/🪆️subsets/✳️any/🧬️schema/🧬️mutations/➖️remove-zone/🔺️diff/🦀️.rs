@@ -5,8 +5,8 @@ use crate::diff::{Din16798Diff, Din16798ZoneDelta};
 use crate::Din16798Snapshot;
 
 pub fn diff(payload: &RemoveZone, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
-    let Some(row) = base.zones.iter().find(|row| row.id == payload.zone_id) else {
+    let Some(index) = base.zones.iter().position(|row| row.id == payload.zone_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("No zone has id '{}'.", payload.zone_id), [payload.zone_id.clone()]);
     };
-    protocol::MutationOutcome::new(Din16798Diff { zones: Din16798ZoneDelta::removal(&row.id), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { zones: Din16798ZoneDelta::removal(&base.zones, index), ..Default::default() })
 }

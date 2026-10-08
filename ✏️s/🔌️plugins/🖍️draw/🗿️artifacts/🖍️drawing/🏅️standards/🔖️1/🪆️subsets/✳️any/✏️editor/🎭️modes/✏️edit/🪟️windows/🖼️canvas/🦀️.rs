@@ -97,7 +97,7 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
     records.push(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String("meta:utility".to_string())), ("role".to_string(), semio_framework_value::DslValue::String("meta".to_string())), ("utility".to_string(), semio_framework_value::DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
-        records.push(semio_framework_value::ToValue::to_value(node));
+        records.push(crate::standards::v1::subsets::any::io::image::prepared_scene_node_value(node,document).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.image-output",error))?);
     }
     if active_utility=="editNodes" {
         let zoom=config.viewport.zoom.max(1e-6);

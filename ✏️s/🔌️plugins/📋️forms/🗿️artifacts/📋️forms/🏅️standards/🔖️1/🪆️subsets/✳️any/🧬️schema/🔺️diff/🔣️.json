@@ -28,16 +28,6 @@
     "responses": {
       "$ref": "#/$defs/FormsResponsesDelta",
       "x-semio-state": "artifact"
-    },
-    "structure": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/value",
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
-    },
-    "results": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/table",
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
     }
   },
   "$defs": {
@@ -74,9 +64,6 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "kind": {
           "type": [
             "string",
@@ -91,7 +78,6 @@
         }
       },
       "required": [
-        "id",
         "changes"
       ]
     },
@@ -100,48 +86,118 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FormsQuestionRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FormsQuestionPatch"
+            "$ref": "#/$defs/FormsQuestionInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FormsQuestionRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormsQuestionsModification"
           }
         }
       },
+      "required": []
+    },
+    "FormsQuestionsModification": {
+      "title": "FormsQuestionsModification",
+      "type": "object",
+      "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
-      ]
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FormsQuestionPatch"
+        }
+      }
+    },
+    "FormsQuestionRemoval": {
+      "title": "FormsQuestionRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "FormsQuestionInsertion": {
+      "title": "FormsQuestionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question"
+        }
+      }
+    },
+    "FormsQuestionRelocation": {
+      "title": "FormsQuestionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     },
     "FormsStepPatch": {
       "title": "FormsStepPatch",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "title": {
           "type": [
             "string",
@@ -169,100 +225,208 @@
           ]
         }
       },
-      "required": [
-        "id"
-      ]
+      "required": []
     },
     "FormsStepsDelta": {
       "title": "FormsStepsDelta",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Step"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FormsStepRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FormsStepPatch"
+            "$ref": "#/$defs/FormsStepInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FormsStepRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormsStepsModification"
           }
         }
       },
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ]
+      "required": []
     },
-    "FormsResponsePatch": {
-      "title": "FormsResponsePatch",
+    "FormsStepsModification": {
+      "title": "FormsStepsModification",
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
       "properties": {
         "id": {
           "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FormsStepPatch"
         }
-      },
+      }
+    },
+    "FormsStepRemoval": {
+      "title": "FormsStepRemoval",
+      "type": "object",
+      "additionalProperties": false,
       "required": [
-        "id"
-      ]
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "FormsStepInsertion": {
+      "title": "FormsStepInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Step"
+        }
+      }
+    },
+    "FormsStepRelocation": {
+      "title": "FormsStepRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     },
     "FormsResponsesDelta": {
       "title": "FormsResponsesDelta",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FormsResponseRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FormsResponsePatch"
+            "$ref": "#/$defs/FormsResponseInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FormsResponseRelocation"
           }
         }
       },
+      "required": []
+    },
+    "FormsResponseRemoval": {
+      "title": "FormsResponseRemoval",
+      "type": "object",
+      "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
-      ]
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "FormsResponseInsertion": {
+      "title": "FormsResponseInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
+        }
+      }
+    },
+    "FormsResponseRelocation": {
+      "title": "FormsResponseRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     }
   }
 }

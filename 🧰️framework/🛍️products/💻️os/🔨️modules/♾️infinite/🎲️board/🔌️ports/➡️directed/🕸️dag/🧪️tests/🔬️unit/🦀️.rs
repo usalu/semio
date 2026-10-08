@@ -150,42 +150,36 @@ fn cycle_detection_blocks_back_edge() {
 }
 
 /// 🧪️ Two-node/one-edge `dag.hostDocument` literal shared by the layout tests below.
-fn ab_edge_layout_fixture() -> Value {
-    let node = |id: &str| semio_framework_pack_json::object([("id".to_string(), Value::from(id)), ("x".to_string(), Value::from(0)), ("y".to_string(), Value::from(0)), ("handles".to_string(), Value::Array(vec![]))]);
-    semio_framework_pack_json::object([
-        ("schema".to_string(), Value::from("dag.hostDocument")),
-        ("nodes".to_string(), Value::Array(vec![node("a"), node("b")])),
-        ("edges".to_string(), Value::Array(vec![semio_framework_pack_json::object([("id".to_string(), Value::from("e1")), ("source".to_string(), Value::from("a")), ("target".to_string(), Value::from("b"))])])),
-    ])
-}
+fn ab_edge_layout_fixture()->DagHostSnapshot{DagHostSnapshot{schema:"dag.hostDocument".into(),nodes:["a","b"].into_iter().map(|id|DagNodeSpec{id:id.into(),..Default::default()}).collect(),edges:vec![DagHostSnapshotEdge{id:"e1".into(),source:"a".into(),target:"b".into(),..Default::default()}],camera:DagCamera{x:0.0,y:0.0,zoom:1.0}}}
+macro_rules! dag_layout {($snapshot:expr,$options:expr)=>{{let mut progress=|_|true;let mut control=crate::infinite::board::schema::layout::LayoutControl::new(1_000_000,&mut progress);apply_dag_layout($snapshot,$options,&mut control)}};}
 
 #[test]
 fn dag_layout_left_right_orders_depth_on_x() {
-    let mut fixture: Value = ab_edge_layout_fixture();
-    apply_dag_layout_to_host_snapshot_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
-    let a_x = fixture["nodes"][0]["x"].as_f64().unwrap();
-    let b_x = fixture["nodes"][1]["x"].as_f64().unwrap();
+    let mut fixture = ab_edge_layout_fixture();
+    dag_layout!(&mut fixture, &DagLayoutOptions::default()).unwrap();
+    let a_x = fixture.nodes[0].x;
+    let b_x = fixture.nodes[1].x;
     assert!(b_x > a_x + 1.0);
 }
 
 #[test]
 fn dag_layout_top_bottom_orders_depth_on_y() {
-    let mut fixture: Value = ab_edge_layout_fixture();
+    let mut fixture = ab_edge_layout_fixture();
     let opts = DagLayoutOptions { orientation: DagLayoutOrientation::TopBottom, ..DagLayoutOptions::default() };
-    apply_dag_layout_to_host_snapshot_v1_value(&mut fixture, &opts).unwrap();
-    let a_y = fixture["nodes"][0]["y"].as_f64().unwrap();
-    let b_y = fixture["nodes"][1]["y"].as_f64().unwrap();
+    dag_layout!(&mut fixture, &opts).unwrap();
+    let a_y = fixture.nodes[0].y;
+    let b_y = fixture.nodes[1].y;
     assert!(b_y > a_y + 1.0);
 }
 
 #[test]
 fn dag_layout_spacing_scales_coordinates() {
-    let mut fixture: Value = ab_edge_layout_fixture();
-    apply_dag_layout_to_host_snapshot_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
-    let default_gap = (fixture["nodes"][1]["x"].as_f64().unwrap() - fixture["nodes"][0]["x"].as_f64().unwrap()).abs();
-    let mut wide: Value = fixture.clone();
-    apply_dag_layout_to_host_snapshot_v1_value(&mut wide, &DagLayoutOptions { layer_spacing: 240.0, sibling_gap: 80.0, ..DagLayoutOptions::default() }).unwrap();
-    let wide_gap = (wide["nodes"][1]["x"].as_f64().unwrap() - wide["nodes"][0]["x"].as_f64().unwrap()).abs();
+    let mut fixture = ab_edge_layout_fixture();
+    dag_layout!(&mut fixture, &DagLayoutOptions::default()).unwrap();
+    let default_gap = (fixture.nodes[1].x - fixture.nodes[0].x).abs();
+    let mut wide = fixture.clone();
+    dag_layout!(&mut wide, &DagLayoutOptions { layer_spacing: 240.0, sibling_gap: 80.0, ..DagLayoutOptions::default() }).unwrap();
+    let wide_gap = (wide.nodes[1].x - wide.nodes[0].x).abs();
     assert!(wide_gap > default_gap * 1.5);
 }
 
@@ -419,7 +413,7 @@ fn dag_host_reorganize_updates_engine_positions() {
         ],
         edges: vec![DagHostSnapshotEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }],
     });
-    host.reorganize(&DagLayoutOptions::default()).unwrap();
+    let mut progress=|_|true;let mut control=crate::infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);host.reorganize(&DagLayoutOptions::default(),&mut control).unwrap();
     let a = host.host_snapshot.nodes.iter().find(|n| n.id == "a").expect("a");
     let b = host.host_snapshot.nodes.iter().find(|n| n.id == "b").expect("b");
     assert!(b.x > a.x);

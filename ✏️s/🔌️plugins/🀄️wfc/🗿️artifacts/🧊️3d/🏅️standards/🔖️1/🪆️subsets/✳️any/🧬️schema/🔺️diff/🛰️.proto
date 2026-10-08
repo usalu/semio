@@ -3,35 +3,154 @@ package semio.s.wfc.wfc3d.diff;
 
 import "📸️snapshot/🛰️.proto";
 
-message Slot3dUpsert {
-  uint64 index = 1;
-  semio.s.wfc.wfc3d.snapshot.Slot3d value = 2;
+// 🔺️ wfc3d diff — scalars are optional absolutes; every list is a positional list delta (`protocol::list_delta`): removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
+
+message Wfc3dSlotPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double width = 4;
+  optional double height = 5;
+  optional double depth = 6;
+  optional string pinned_tile_id = 7; // set or clear
 }
 
-message SlotEdgeUpsert {
-  uint64 index = 1;
-  semio.s.wfc.wfc3d.snapshot.SlotEdge value = 2;
+message Wfc3dSlotsRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
 
-message TileUpsert {
-  uint64 index = 1;
-  semio.s.wfc.wfc3d.snapshot.Tile value = 2;
+message Wfc3dSlotsInsertion {
+  uint32 index = 1;
+  Slot3d row = 2;
 }
 
-message GraphRuleUpsert {
-  uint64 index = 1;
-  semio.s.wfc.wfc3d.snapshot.GraphRule value = 2;
+message Wfc3dSlotsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc3dSlotsModification {
+  string id = 1;
+  Wfc3dSlotPatch patch = 2;
+}
+
+message Wfc3dSlotsDelta {
+  repeated Wfc3dSlotsRemoval removed = 1;
+  repeated Wfc3dSlotsInsertion inserted = 2;
+  repeated Wfc3dSlotsRelocation moved = 3;
+  repeated Wfc3dSlotsModification modified = 4;
+}
+
+message Wfc3dEdgePatch {
+  optional string from_slot_id = 1;
+  optional string to_slot_id = 2;
+  optional string relation = 3;
+}
+
+message Wfc3dEdgesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Wfc3dEdgesInsertion {
+  uint32 index = 1;
+  SlotEdge row = 2;
+}
+
+message Wfc3dEdgesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc3dEdgesModification {
+  string id = 1;
+  Wfc3dEdgePatch patch = 2;
+}
+
+message Wfc3dEdgesDelta {
+  repeated Wfc3dEdgesRemoval removed = 1;
+  repeated Wfc3dEdgesInsertion inserted = 2;
+  repeated Wfc3dEdgesRelocation moved = 3;
+  repeated Wfc3dEdgesModification modified = 4;
+}
+
+message Wfc3dTilePatch {
+  optional double weight = 1;
+  optional TileMedia3d media = 2;
+  optional string label = 3; // set or clear
+}
+
+message Wfc3dTilesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Wfc3dTilesInsertion {
+  uint32 index = 1;
+  Tile row = 2;
+}
+
+message Wfc3dTilesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc3dTilesModification {
+  string id = 1;
+  Wfc3dTilePatch patch = 2;
+}
+
+message Wfc3dTilesDelta {
+  repeated Wfc3dTilesRemoval removed = 1;
+  repeated Wfc3dTilesInsertion inserted = 2;
+  repeated Wfc3dTilesRelocation moved = 3;
+  repeated Wfc3dTilesModification modified = 4;
+}
+
+message Wfc3dRulePatch {
+  optional string tile_a_id = 1;
+  optional string tile_b_id = 2;
+  optional bool allowed = 3;
+  optional string relation = 4; // set or clear
+}
+
+message Wfc3dRulesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Wfc3dRulesInsertion {
+  uint32 index = 1;
+  GraphRule row = 2;
+}
+
+message Wfc3dRulesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Wfc3dRulesModification {
+  string id = 1;
+  Wfc3dRulePatch patch = 2;
+}
+
+message Wfc3dRulesDelta {
+  repeated Wfc3dRulesRemoval removed = 1;
+  repeated Wfc3dRulesInsertion inserted = 2;
+  repeated Wfc3dRulesRelocation moved = 3;
+  repeated Wfc3dRulesModification modified = 4;
 }
 
 message Wfc3dDiff {
   optional string schema = 1;
   optional uint64 seed = 2;
-  repeated string slots_removed = 3;
-  repeated Slot3dUpsert slots_upserted = 4;
-  repeated string edges_removed = 5;
-  repeated SlotEdgeUpsert edges_upserted = 6;
-  repeated string tiles_removed = 7;
-  repeated TileUpsert tiles_upserted = 8;
-  repeated string rules_removed = 9;
-  repeated GraphRuleUpsert rules_upserted = 10;
+  Wfc3dSlotsDelta slots = 3;
+  Wfc3dEdgesDelta edges = 4;
+  Wfc3dTilesDelta tiles = 5;
+  Wfc3dRulesDelta rules = 6;
 }

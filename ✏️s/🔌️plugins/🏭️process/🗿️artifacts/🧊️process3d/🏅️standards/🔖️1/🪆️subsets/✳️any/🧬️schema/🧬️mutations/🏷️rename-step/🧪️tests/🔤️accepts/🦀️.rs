@@ -1,6 +1,6 @@
 //! 🧪️ `rename-step` fixture — `🔤️accepts`.
 //!
-//! `rename-step` sets the id-keyed step's `label` in `step_payloads` and re-mints `steps`/`tool_solids` (`process3d_step_timeline_diff`) — the flow node's `label` param changes, so the child re-mints with a fresh content-addressed id; the stock label, a real adjacent scalar, is untouched.
+//! `rename-step` sets the id-keyed step's `label` in `step_payloads` (`apply` re-derives `steps`/`tool_solids`) — the flow node's `label` param changes, so the child re-mints with a fresh content-addressed id; the stock label, a real adjacent scalar, is untouched.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

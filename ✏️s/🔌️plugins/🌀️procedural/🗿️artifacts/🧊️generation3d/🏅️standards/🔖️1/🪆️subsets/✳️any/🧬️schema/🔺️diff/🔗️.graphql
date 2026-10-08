@@ -11,17 +11,26 @@ type Generation3dDiff {
   previewText: Generation3dPreviewChange @state(class: ARTIFACT)
 }
 
-type Generation3dWidgetsDelta { added: [Widget!]! removed: [String!]! patched: [Generation3dWidgetPatchEntry!]! reordered: [String!] }
-type Generation3dWidgetPatchEntry { id: String! patch: Generation3dWidgetPatch! }
+type Generation3dWidgetsDelta { removed: [Generation3dWidgetRemoval!]! inserted: [Generation3dWidgetInsertion!]! moved: [Generation3dWidgetRelocation!]! patched: [Generation3dWidgetModification!]! }
+type Generation3dWidgetRemoval { id: String! index: Int! }
+type Generation3dWidgetInsertion { index: Int! row: Widget! }
+type Generation3dWidgetRelocation { id: String! from: Int! to: Int! }
+type Generation3dWidgetModification { id: String! patch: Generation3dWidgetPatch! }
 union Generation3dWidgetPatch = Generation3dWidgetReplace | Generation3dWidgetSlider
 type Generation3dWidgetReplace { kind: String! widget: Widget! }
 type Generation3dWidgetSlider { kind: String! value: Float! min: Float! max: Float! step: Float! }
-type Generation3dSynapsesDelta { added: [SynapseSpec!]! removed: [String!]! patched: [Generation3dSynapsePatchEntry!]! reordered: [String!] }
-type Generation3dSynapsePatchEntry { id: String! item: SynapseSpec! }
+type Generation3dSynapsesDelta { removed: [Generation3dSynapseRemoval!]! inserted: [Generation3dSynapseInsertion!]! moved: [Generation3dSynapseRelocation!]! patched: [Generation3dSynapseModification!]! }
+type Generation3dSynapseRemoval { id: String! index: Int! }
+type Generation3dSynapseInsertion { index: Int! row: SynapseSpec! }
+type Generation3dSynapseRelocation { id: String! from: Int! to: Int! }
+type Generation3dSynapseModification { id: String! patch: SynapseSpec! }
 type Generation3dLayoutRow { id: String! layout: WidgetLayout! }
 type Generation3dLayoutDelta { added: [Generation3dLayoutRow!]! removed: [String!]! patched: [Generation3dLayoutRow!]! }
-type Generation3dGenerationsDelta { added: [FormGeneration!]! removed: [String!]! patched: [Generation3dGenerationPatchEntry!]! reordered: [String!] }
-type Generation3dGenerationPatchEntry { id: String! patch: Generation3dGenerationPatch! }
+type Generation3dGenerationsDelta { removed: [Generation3dGenerationRemoval!]! inserted: [Generation3dGenerationInsertion!]! moved: [Generation3dGenerationRelocation!]! modified: [Generation3dGenerationModification!]! }
+type Generation3dGenerationRemoval { id: String! index: Int! }
+type Generation3dGenerationInsertion { index: Int! row: FormGeneration! }
+type Generation3dGenerationRelocation { id: String! from: Int! to: Int! }
+type Generation3dGenerationModification { id: String! patch: Generation3dGenerationPatch! }
 type Generation3dGenerationPatch { name: String values: Generation3dValuesDelta }
 type Generation3dValueRow { questionId: String! value: JSON }
 type Generation3dValuesDelta { added: [Generation3dValueRow!]! removed: [String!]! patched: [Generation3dValueRow!]! }

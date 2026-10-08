@@ -20,9 +20,8 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 /// grip-kind/grip create/delete/rename/change/move (grips split into `-2d`/`-3d` movement since a
 /// grip is placed in both projections at once), set-like compatibility-rule/attribute/author
 /// add/remove, both cameras' pan/zoom, and the session meta description. The old whole-document-
-/// replace and no-op sentinel variants are gone — whole-document loads now decompose into this
-/// vocabulary (see `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs`'s
-/// `replace_document_operations`).
+/// replace and no-op sentinel variants are gone — whole-document loads are the `LoadDocument`
+/// effect, never mutations (see the editor's `🎮️commands/🎬️set-active-example/🦀️.rs`).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -164,14 +163,6 @@ pub use super::scale_camera2d::{scale_camera2d, ScaleCamera2d};
 pub use super::scale_camera3d::{scale_camera3d, ScaleCamera3d};
 pub use super::update_part_2d::{update_part_2d, UpdatePart2d};
 pub use super::update_part_3d::{update_part_3d, UpdatePart3d};
-
-/// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-
-    *projection = next;
-    Ok(())
-}
 
 pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
     Ok({

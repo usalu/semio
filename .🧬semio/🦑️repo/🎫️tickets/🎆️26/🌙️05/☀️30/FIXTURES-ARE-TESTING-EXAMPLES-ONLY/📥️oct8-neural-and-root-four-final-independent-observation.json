@@ -1,0 +1,99 @@
+{
+  "📥️oct8-neural-retirement-current-owned-endpoints.json": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📏️owned-demand/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧪️tests/📔️registry/🦀️.rs",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🧫️fixtures/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧊️cold/🦀️.rs",
+      "match": true
+    }
+  ],
+  "📥️oct8-root-four-corpus-owned-endpoints.json": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin/🧬️schema/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧬️schema/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source/🧬️schema/🔣️.json",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🟦️.ts",
+      "match": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "match": true
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "match": true
+    },
+    {
+      "path": ".vscode/launch.json",
+      "match": false
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "match": false
+    }
+  ],
+  "logs": [
+    {
+      "path": "oct8-neural-current-domain-demand-rust.log",
+      "sha256": "7c1cacc00989295f9d51bfa7b452b6bd2b449da47a7e00ec24f98630d594026c",
+      "bytes": 452015
+    },
+    {
+      "path": "oct8-neural-current-domain-demand-source.log",
+      "sha256": "981e1dbafc78733678031fac07a7ffa3a261ebf30367ea183ff803448238c2c8",
+      "bytes": 3529
+    },
+    {
+      "path": "oct8-root-current-four-corpus-settled-green.log",
+      "sha256": "cb6565db81695efda47d67fb55928996a8c758b5ca167a9fec132536dc9a7371",
+      "bytes": 3068
+    }
+  ]
+}

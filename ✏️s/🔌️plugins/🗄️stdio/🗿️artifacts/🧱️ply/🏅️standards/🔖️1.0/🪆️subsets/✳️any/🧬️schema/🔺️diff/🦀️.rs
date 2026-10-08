@@ -119,23 +119,6 @@ fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: i
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            let d = between_item(&base[i], &other[i]);
-            if !item_is_empty(&d) {
-                modified.push(IndexedModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
-    IndexedDiff { removed, modified, added }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
@@ -159,12 +142,10 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
 /// (identical algorithm, adapted from gif 89a's `absorb_indexed_collection`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
-    let mut removed1_sorted = d1.removed.clone();
-    removed1_sorted.sort_unstable();
+    let removed1_sorted = semio_s_artifact_stdio_contract::ordered(&d1.removed);
     let mut added1_index_sorted: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = d2.removed.clone();
-    removed2_sorted.sort_unstable();
+    let removed2_sorted = semio_s_artifact_stdio_contract::ordered(&d2.removed);
     let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     added2_index_sorted.sort_unstable();
 
@@ -237,9 +218,7 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 /// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -303,21 +282,6 @@ fn apply_row_diff(properties: &[PlyProperty], row: &mut PlyRow, diff: &PlyRowDif
     }
 }
 
-/// 🧭️ Field-by-field state delta between two rows of the SAME element (same `properties`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn row_between(properties: &[PlyProperty], a: &PlyRow, b: &PlyRow) -> PlyRowDiff {
-    let mut fields = Vec::new();
-    for (i, prop) in properties.iter().enumerate() {
-        let av = a.values.get(i);
-        let bv = b.values.get(i);
-        if av != bv {
-            if let Some(bv) = bv {
-                fields.push(PlyRowFieldChange { name: prop.name().to_string(), value: bv.clone() });
-            }
-        }
-    }
-    PlyRowDiff { fields }
-}
 //#endregion 🔖️RowFieldDiff
 
 //#region 🔖️RowsTriple
@@ -377,32 +341,6 @@ fn apply_rows_diff(properties: &[PlyProperty], rows: &mut Vec<PlyRow>, diff: &Pl
     }
 }
 
-/// 🧭️ Index-pairwise state delta between two same-element row lists: `0..min(len)` compared
-/// positionally (modified), the longer side's tail supplies removed (base longer) or added
-/// (other longer) — never both from one call (see `field_sweep`'s two-direction test).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rows_between(properties: &[PlyProperty], a: &[PlyRow], b: &[PlyRow]) -> Option<PlyRowsDiff> {
-    let min_len = a.len().min(b.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if a[i] == b[i] {
-            continue;
-        }
-        let d = row_between(properties, &a[i], &b[i]);
-        if !d.fields.is_empty() {
-            modified.push(PlyRowModified { index: i, diff: d });
-        }
-    }
-    let removed: Vec<usize> = (min_len..a.len()).collect();
-    let added: Vec<PlyRowAdded> = (min_len..b.len()).map(|i| PlyRowAdded { index: i, row: b[i].clone() }).collect();
-    let d = PlyRowsDiff { removed, modified, added };
-    if d.is_empty() {
-        None
-    } else {
-        Some(d)
-    }
-}
-
 //#region 🔖️RowsAbsorb
 /// 🎰 One slot of a simulated post-removal/insertion row array (index-transport for absorb,
 /// mirrors csv's `records` absorb — duplicated locally per-artifact, not shared, per the
@@ -416,9 +354,7 @@ enum RowSlot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn row_simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<RowSlot> {
     let mut slots: Vec<RowSlot> = (0..len).map(RowSlot::Base).collect();
-    let mut removed_desc = removed.to_vec();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&removed);
     for r in removed_desc {
         if r < slots.len() {
             slots.remove(r);
@@ -445,9 +381,7 @@ fn row_base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = u
 fn absorb_rows(d1: PlyRowsDiff, d2: PlyRowsDiff) -> PlyRowsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
-        let mut r = d1.removed.clone();
-        r.sort_unstable();
-        r.dedup();
+        let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
@@ -585,7 +519,7 @@ fn apply_element_diff(element: &mut PlyElement, diff: &PlyElementDiff) {
 
 /// ➕️ Recursive per-field absorb of one element's patch into another.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_element_diff(base: &mut PlyElementDiff, other: PlyElementDiff) {
+fn absorb_element_rows(base: &mut PlyElementDiff, other: PlyElementDiff) {
     if other.count.is_some() { base.count=other.count; }
     if other.properties.is_some() {
         base.properties = other.properties;
@@ -598,22 +532,6 @@ fn absorb_element_diff(base: &mut PlyElementDiff, other: PlyElementDiff) {
     };
 }
 
-/// 🧭️ Field-by-field state delta between two elements sharing the same NAME. If `properties`
-/// itself differs (a genuine schema change — there is no `ChangeElementProperties` mutation, so
-/// this only arises from hand-built `between()` calls), row-level positional
-/// diffing is meaningless across two different schemas: fall back to a whole-rows replace
-/// (documented scope cut — see `deviations`), matching the recipe's "trees recursive with
-/// Replace fallback on node-kind change" rule.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn element_between(a: &PlyElement, b: &PlyElement) -> PlyElementDiff {
-    if a.properties != b.properties {
-        let removed: Vec<usize> = (0..a.rows.len()).collect();
-        let added: Vec<PlyRowAdded> = b.rows.iter().enumerate().map(|(i, r)| PlyRowAdded { index: i, row: r.clone() }).collect();
-        let rd = PlyRowsDiff { removed, modified: vec![], added };
-        return PlyElementDiff { count: (a.count != b.count).then_some(b.count), properties: Some(b.properties.clone()), rows: if rd.is_empty() { None } else { Some(rd) } };
-    }
-    PlyElementDiff { count: (a.count != b.count).then_some(b.count), properties: None, rows: rows_between(&a.properties, &a.rows, &b.rows) }
-}
 //#endregion 🔖️ElementDiff
 
 //#region 🔖️ElementsTriple
@@ -703,7 +621,7 @@ fn absorb_elements(d1: Option<PlyElementsDiff>, d2: Option<PlyElementsDiff>) -> 
                 continue;
             }
             if let Some(existing) = merged_modified.iter_mut().find(|m| m.name == dm.name) {
-                absorb_element_diff(&mut existing.diff, dm.diff.clone());
+                absorb_element_rows(&mut existing.diff, dm.diff.clone());
             } else {
                 merged_modified.push(PlyElementModified { name: dm.name.clone(), diff: dm.diff.clone() });
             }
@@ -750,30 +668,26 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
     let mut property_positions = BTreeMap::new();
     for (index, property) in properties.iter().enumerate() {
         if property_positions.insert(property.name(), index).is_some() {
-            let mut target = prefix.to_vec();
-            target.extend(["properties".to_string(), property.name().to_string()]);
+            let target = [prefix, &["properties".to_string(), property.name().to_string()][..]].concat();
             return Err(target_error("mutation.apply.duplicate-base-target", "property names must be unique", target));
         }
     }
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
-        let mut target = prefix.to_vec();
-        target.extend(["rows".to_string(), index.to_string()]);
+        let target = [prefix, &["rows".to_string(), index.to_string()][..]].concat();
         if index >= rows.len() || !removed.insert(index) {
             return Err(target_error("mutation.apply.invalid-remove-index", "row removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
-        let mut row_target = prefix.to_vec();
-        row_target.extend(["rows".to_string(), entry.index.to_string()]);
+        let row_target = [prefix, &["rows".to_string(), entry.index.to_string()][..]].concat();
         if entry.index >= rows.len() || removed.contains(&entry.index) || !modified.insert(entry.index) {
             return Err(target_error("mutation.apply.invalid-modify-index", "row modification target must exist exactly once and remain present", row_target));
         }
         let mut fields = BTreeSet::new();
         for field in &entry.diff.fields {
-            let mut target = prefix.to_vec();
-            target.extend(["rows".to_string(), entry.index.to_string(), "fields".to_string(), field.name.clone()]);
+            let target = [prefix, &["rows".to_string(), entry.index.to_string(), "fields".to_string(), field.name.clone()][..]].concat();
             let position = property_positions.get(field.name.as_str()).copied();
             if !fields.insert(field.name.as_str()) || position.is_none() || position.is_some_and(|value| value >= rows[entry.index].values.len()) {
                 return Err(target_error("invalid-field-target", "row field target must be unique and resolve to an existing cell", target));
@@ -784,8 +698,7 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
     additions.sort_unstable();
     let mut previous = None;
     for (length, index) in (rows.len() - removed.len()..).zip(additions) {
-        let mut target = prefix.to_vec();
-        target.extend(["rows".to_string(), index.to_string()]);
+        let target = [prefix, &["rows".to_string(), index.to_string()][..]].concat();
         if index > length || previous == Some(index) {
             return Err(target_error("mutation.apply.invalid-add-index", "row addition target must be unique and within the evolving sequence", target));
         }
@@ -891,9 +804,7 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
 /// at their base index, and each modified row restores its base cells at the index the row has after the diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_rows(properties: &[PlyProperty], diff: &PlyRowsDiff, base: &[PlyRow]) -> PlyRowsDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -941,41 +852,6 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
             comments: self.comments.as_ref().map(|comments| inverse_indexed(comments, &base.comments, |_, text: &String| text.clone())).filter(|comments| !comments.is_empty()),
             elements: self.elements.as_ref().map(|elements| inverse_elements(elements, &base.elements)).filter(|elements| !elements.is_empty()),
         }
-    }
-
-    /// 🧭️ State delta (compose `GetXDiff`): name-keyed matching over `elements`, each modified
-    /// element recursing into `element_between`.
-    fn between(base: &PlySnapshot, other: &PlySnapshot) -> Self {
-        let format = (base.format != other.format).then_some(other.format);
-        let comments = Some(between_indexed(&base.comments, &other.comments, |_, replacement: &String| replacement.clone(), |_| false)).filter(|comments| !comments.is_empty());
-        let elements = if base.elements == other.elements {
-            None
-        } else {
-            let base_names: HashSet<&str> = base.elements.iter().map(|e| e.name.as_str()).collect();
-            let other_names: HashSet<&str> = other.elements.iter().map(|e| e.name.as_str()).collect();
-
-            let removed: Vec<String> = base.elements.iter().filter(|e| !other_names.contains(e.name.as_str())).map(|e| e.name.clone()).collect();
-
-            let mut modified = Vec::new();
-            for be in &base.elements {
-                if let Some(oe) = other.elements.iter().find(|o| o.name == be.name) {
-                    let d = element_between(be, oe);
-                    if !d.is_empty() {
-                        modified.push(PlyElementModified { name: be.name.clone(), diff: d });
-                    }
-                }
-            }
-
-            let added: Vec<PlyElementAdded> = other.elements.iter().enumerate().filter(|(_, e)| !base_names.contains(e.name.as_str())).map(|(index, e)| PlyElementAdded { index, element: e.clone() }).collect();
-
-            let d = PlyElementsDiff { removed, modified, added };
-            if d.is_empty() {
-                None
-            } else {
-                Some(d)
-            }
-        };
-        PlyDiff { format, comments, elements }
     }
 
     fn is_empty(&self) -> bool {
@@ -1209,9 +1085,19 @@ fn sweep_b() -> PlySnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<PlyDiff> {
-    let a = sweep_a();
-    let b = sweep_b();
-    vec![PlyDiff::default(), <PlyDiff as DiffAlgebra<PlySnapshot>>::between(&a, &b), <PlyDiff as DiffAlgebra<PlySnapshot>>::between(&b, &a)]
+    vec![
+        PlyDiff::default(),
+        PlyDiff {
+            format: Some(PlyFormat::BinaryLittleEndian),
+            comments: Some(PlyCommentsDiff {
+                removed: vec![0],
+                modified: vec![IndexedModified { index: 1, diff: "changed".to_string() }],
+                added: vec![IndexedAdded { index: 0, item: "added".to_string() }],
+            }),
+            elements: Some(PlyElementsDiff { removed: vec!["face".into()], ..Default::default() }),
+        },
+        PlyDiff { format: Some(PlyFormat::Ascii), ..Default::default() },
+    ]
 }
 //#endregion 🔖️DemoDiffCases
 

@@ -157,7 +157,7 @@ pub use crate::snapshot::schema::{EquationExprSnapshot, EquationCarrierSnapshot}
 /// (`EquationSnapshot::graph`/`geometry`); the three composed children — `notation` (node labels as `s.stdio.semio` text
 /// runs), `results` (the node table) and `computed` (direction, algorithm, edges and points as one value map) — are DERIVED
 /// outputs of that state, addressed by their own content. Every parent leaf decides from `base.graph`/`base.geometry` and
-/// re-mints the handles of the outputs it changes ([`equation_state_diff`]); the runtime then opens the newly addressed child
+/// has its handles re-derived by `EquationDiff::apply`; the runtime then opens the newly addressed child
 /// from the parent's own state (`follow_derivable_children` → [`genesis_equation_child_pack`]) and retires the old one. A
 /// derived child is never edited and no parent leaf ever reads it. The converters below are the one-way derivation.
 //#region 🔖️ChildTypes
@@ -255,18 +255,6 @@ pub fn equation_children(graph: &EquationGraph, geometry: &EquationGeometry) -> 
     let handle = |slot: &str| equation_derived_pack(slot, graph, geometry).expect("a derived slot");
     let ((notation_prefix, notation_subset, notation), (results_prefix, results_subset, results), (computed_prefix, computed_subset, computed)) = (handle("notation"), handle("results"), handle("computed"));
     (equation_derived_child(notation_prefix, notation_subset, &notation), equation_derived_child(results_prefix, results_subset, &results), equation_derived_child(computed_prefix, computed_subset, &computed))
-}
-
-/// 🔺️ The diff a parent leaf yields for its next state: the leaf's sparse graph/point slots plus the derived handles re-minted from
-/// the state they leave behind `base` (a handle whose derived content did not change keeps its address).
-pub fn equation_state_diff(diff: EquationDiff, base: &EquationSnapshot) -> EquationDiff {
-    match diff.state_after(base) {
-        Ok((graph, geometry)) => {
-            let (notation, results, computed) = equation_children(&graph, &geometry);
-            EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..diff }
-        }
-        Err(_) => diff,
-    }
 }
 
 /// 🌱️ `ArtifactApp::genesis_child_pack`: the derived content of the composed member `slot` a document names, minted from the
@@ -707,19 +695,6 @@ pub mod standards {
                             mod tests_restates_the_unset_algorithm_and_its_absent_seed;
                         }
                         #[path = "."]
-                        pub mod replace_graph {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🧪️tests/🧪️replays/🦀️.rs"]
-                            mod tests_replays_the_identical_empty_graph;
-                        }
-                        #[path = "."]
                         pub mod create_node {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🦀️.rs"]
                             mod component;
@@ -839,19 +814,6 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "."]
-                        pub mod replace_points {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace/🧪️tests/🧪️replays/🦀️.rs"]
-                            mod tests_replays_the_identical_empty_point_cloud;
-                        }
                         #[path = "."]
                         pub mod insert_point {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➕️insert-point/🦀️.rs"]
@@ -994,12 +956,12 @@ pub mod editor {
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-algorithm/🦀️.rs"]
             pub mod set_algorithm;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️set-artifact/🦀️.rs"]
-            pub mod set_artifact;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧾️edit-equation/🦀️.rs"]
+            pub mod edit_equation;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-directed/🦀️.rs"]
             pub mod set_directed;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-points/🦀️.rs"]
-            pub mod set_points;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️edit-points/🦀️.rs"]
+            pub mod edit_points;
         }
 
         #[path = "."]

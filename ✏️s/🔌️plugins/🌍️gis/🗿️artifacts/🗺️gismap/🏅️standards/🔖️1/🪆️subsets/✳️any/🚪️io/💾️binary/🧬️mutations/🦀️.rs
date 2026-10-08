@@ -43,7 +43,7 @@ mod tests;
 
 mod native_codec {
 use super::*;
-use crate::schema::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::schema::mutations::{inverse_gis_map_mutation, GisMapMutation};
 
 impl protocol::OpBinary for GisMapMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

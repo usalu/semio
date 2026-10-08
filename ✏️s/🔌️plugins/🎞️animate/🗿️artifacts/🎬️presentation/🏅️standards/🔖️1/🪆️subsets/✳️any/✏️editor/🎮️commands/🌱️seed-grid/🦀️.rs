@@ -3,8 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
-use crate::mutations::replace_tiles::ReplaceTiles;
+use crate::editor::animate::{interaction_select_effect, tile_roster_mutations, PresentationDispatchCtx};
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::PresentationSnapshot;
@@ -23,7 +22,7 @@ pub fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentationSnapshot>, 
     let (deck_source, _) = crate::presentation_working_scene(deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
     let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-    let mut emit = Emit::mutations(vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })]);
+    let mut emit = Emit::mutations(tile_roster_mutations(deck, tiles));
     emit.effects.push(interaction_select_effect(&selected, "replace"));
     Ok(emit)
 }

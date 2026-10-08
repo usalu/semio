@@ -3,30 +3,37 @@
   "seed": null,
   "slots": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "edges": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "tiles": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "id": "rule-room-room",
-        "tileAId": "room",
-        "tileBId": "room",
-        "relation": "beside",
-        "allowed": false
+        "index": 1,
+        "row": {
+          "id": "rule-room-room",
+          "tileAId": "room",
+          "tileBId": "room",
+          "relation": "beside",
+          "allowed": false
+        }
       }
     ],
-    "patched": []
+    "moved": [],
+    "modified": []
   }
 }

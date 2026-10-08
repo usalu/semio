@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/repo/dashboard/launch",
+  "type": "object",
+  "required": [
+    "version",
+    "configurations",
+    "inputs"
+  ],
+  "properties": {
+    "version": {
+      "const": "0.2.0"
+    },
+    "configurations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "request"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "presentation"
+              ],
+              "properties": {
+                "presentation": {
+                  "required": [
+                    "group"
+                  ],
+                  "properties": {
+                    "group": {
+                      "type": "string",
+                      "pattern": "^semio\\.dashboard\\."
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "$ref": "#/$defs/OwnedConfiguration"
+            }
+          }
+        ]
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "promptString",
+              "pickString",
+              "command"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "OwnedConfiguration": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "request",
+        "command",
+        "cwd",
+        "presentation"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "node-terminal"
+        },
+        "request": {
+          "const": "launch"
+        },
+        "command": {
+          "type": "string",
+          "pattern": "^bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:[0-9]{2}/[0-9]{2}/[0-9]{2}/[A-Z0-9]+(?:-[A-Z0-9]+)*/[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+        },
+        "cwd": {
+          "const": "${workspaceFolder}"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^\\$\\{input:semio-dashboard-"
+          }
+        },
+        "presentation": {
+          "type": "object",
+          "required": [
+            "group",
+            "order"
+          ],
+          "properties": {
+            "group": {
+              "type": "string",
+              "pattern": "^semio\\.dashboard\\.[0-9]{2}/[0-9]{2}/[0-9]{2}/[A-Z0-9-]+\\.(1_en|2_de)\\.[a-z]+$"
+            },
+            "order": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

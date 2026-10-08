@@ -1,0 +1,58 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, FlowMutation> {\n        DocumentStoreOwners::new(Arc::new(FlowSnapshotRetirementFactory), Arc::new(FlowOwnedHostSnapshotRetirementFactory), Arc::new(FlowMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+    "body": "fn member_store_owners() -> store::DocumentStoreOwners<Self, RecursiveFixtureMutation> {\n                bounded_document_store_owners().with_one_item_preparation(bounded_config_store_one_item_preparation_factory(\"recursive-member\", 4096))\n            }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+    "body": "fn member_store_owners() -> store::DocumentStoreOwners<Self, TestMutation> {\n            store::DocumentStoreOwners::new(\n                std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),\n                std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestSnapshot>(std::marker::PhantomData)),\n                std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),\n                Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),\n            ).with_one_item_preparation(test_document_preparation_factory())\n        }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs",
+    "body": "fn member_store_owners() -> store::DocumentStoreOwners<Self, DummyMutation> {\n        crate::app::bounded_document_store_owners::<Self, DummyMutation>()\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+    "body": "fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {\n        store::DocumentStoreOwners::new(\n            Arc::new(HashSnapshotRetirementFactory),\n            Arc::new(HashOwnedRetirementFactory),\n            Arc::new(HashOwnedRetirementFactory),\n            Box::new(store::ArtifactStoreCursorDisposer::<HashProjection, HashMutation>::new()),\n        )\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, Mutation>;\n}\n//#endregion 🧬️OpaqueSnapshotRead\n\n// 🗃️ `store`'s facade over `vcs`'s version-graph algebra — apps that depend on `store` reach\n// `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through\n// `vcs` directly (see the crate doc comment above).\n#[path=\"🚪️io/💾️binary/🪪️operation-identity/🦀️.rs\"]\nmod operation_identity;\nuse crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;\nuse crate::os_vcs::io::binary::entity_identity::{content_addressed_entity_id,edit_scoped_id,mint_alternative_id,mint_change_id,mint_edit_id,mint_mutation_id,mint_child_id,mint_invocation_id,operation_list_fingerprint,mint_space_checkpoint_id,mint_space_alternative_id}"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, LawOp> {\n        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, LawOp>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, DemoMutation> {\n        demo_closable_store_owners()\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, SeverityMutation> {\n        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, SeverityMutation>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, ValidatedMutation> {\n        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, ValidatedMutation>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, TimestampedMutation> {\n        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, TimestampedMutation>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, CountedOp> {\n        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, CountedOp>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️replay-retirement/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, FailClosedOp> {\n        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, FailClosedOp>::new()))\n    }"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧵️retained/🦀️.rs",
+    "body": "fn member_store_owners() -> DocumentStoreOwners<Self, DagMutation> {\n        DocumentStoreOwners::new(Arc::new(DagSnapshotRetirementFactory), Arc::new(DagOwnedSnapshotRetirementFactory), Arc::new(DagMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DagSnapshot, DagMutation>::new()))\n    }"
+  }
+]

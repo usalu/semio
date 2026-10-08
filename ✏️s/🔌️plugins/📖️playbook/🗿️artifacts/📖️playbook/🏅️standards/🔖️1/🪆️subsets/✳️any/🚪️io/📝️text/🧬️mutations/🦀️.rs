@@ -2,7 +2,7 @@
 //! Mutation diff/inverse live in the `🧬️mutations/<slug>/` triad leaves; this facet only
 //! handcrafts the op wire forms.
 
-pub use crate::mutations::{apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, ChangeTitle, PlaybookMutation};
+pub use crate::mutations::{change_title_operation, inverse_playbook_mutation, ChangeTitle, PlaybookMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

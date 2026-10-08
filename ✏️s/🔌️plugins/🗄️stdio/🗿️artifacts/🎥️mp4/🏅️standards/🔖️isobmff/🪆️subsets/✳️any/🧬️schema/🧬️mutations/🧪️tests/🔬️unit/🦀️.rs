@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 use protocol::MutationDiff;
@@ -39,14 +40,14 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         let mut snap = base.clone();
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
         let expected = protocol::apply_diff(diff.diff(), &snap).unwrap();
-        let returned = apply_mp4_mutation(&mut snap, &m);
-        assert_eq!(returned, diff, "apply_mp4_mutation must return the SAME diff as Mutation::diff for {m:?}");
+        let returned = apply_mutation(&mut snap, &m);
+        assert_eq!(returned, diff, "apply_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
         let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
         let mut round = snap.clone();
-        apply_mp4_mutation(&mut round, &inv[0]);
+        apply_mutation(&mut round, &inv[0]);
         assert_eq!(round, base, "inverse_law failed for {m:?}");
     }
 }
@@ -58,12 +59,12 @@ async fn remove_track_then_insert_track_round_trips() {
     let m = Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: 0 });
     let mut snap = base.clone();
     let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
-    apply_mp4_mutation(&mut snap, &m);
+    apply_mutation(&mut snap, &m);
     assert_eq!(snap, protocol::apply_diff(diff.diff(), &base).unwrap());
     assert_eq!(snap.tracks.len(), 1);
     let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
-    apply_mp4_mutation(&mut round, &inv[0]);
+    apply_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
 }
 
@@ -74,11 +75,11 @@ async fn remove_sample_then_insert_sample_round_trips() {
     *base.tracks[0].chunk_sample_counts.last_mut().expect("the base track has a chunk") += 1;
     let m = Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: 0, index: 0 });
     let mut snap = base.clone();
-    apply_mp4_mutation(&mut snap, &m);
+    apply_mutation(&mut snap, &m);
     assert_eq!(snap.tracks[0].samples.len(), 1);
     let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
-    apply_mp4_mutation(&mut round, &inv[0]);
+    apply_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
 }
 
@@ -143,14 +144,14 @@ async fn exact_fixture_no_mutation_inverse_and_set_movie_binary_codec_preserve_s
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let mut unchanged = base.clone();
-    apply_mp4_mutation(&mut unchanged, &Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() }));
+    apply_mutation(&mut unchanged, &Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() }));
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
 
     let mutation = Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: !base.tracks[0].samples[0].sync });
     let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut round_trip = base.clone();
-    apply_mp4_mutation(&mut round_trip, &mutation);
-    apply_mp4_mutation(&mut round_trip, &inverse[0]);
+    apply_mutation(&mut round_trip, &mutation);
+    apply_mutation(&mut round_trip, &inverse[0]);
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&round_trip), bytes);
 
     let set_movie = Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() });

@@ -275,6 +275,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-material-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -301,6 +305,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-section-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -327,6 +335,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-member-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -353,6 +365,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-load-case-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -379,6 +395,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-member-action-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -405,6 +425,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-joint-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -431,6 +455,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-fatigue-detail-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -457,6 +485,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-fire-exposure-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -483,6 +515,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-cold-formed-member-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -509,6 +545,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-plated-panel-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -535,6 +575,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-silo-shell-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -561,6 +605,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-tension-component-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -587,6 +635,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-bridge-fatigue-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -613,6 +665,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-tower-leg-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -639,6 +695,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-pile-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -665,6 +725,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-crane-runway-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         }

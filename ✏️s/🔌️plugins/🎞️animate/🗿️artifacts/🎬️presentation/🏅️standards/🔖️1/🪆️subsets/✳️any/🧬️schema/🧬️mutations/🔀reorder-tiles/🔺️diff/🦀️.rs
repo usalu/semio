@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `reorder-tiles`.
 use super::ReorderTiles;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -16,7 +16,6 @@ pub fn diff(payload: &ReorderTiles, base: &PresentationSnapshot) -> protocol::Mu
     if to == from {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" is already at index {to}.", payload.id));
     }
-    let order: Vec<String> = others[..to].iter().map(|id| id.to_string()).chain([payload.id.clone()]).chain(others[to..].iter().map(|id| id.to_string())).collect();
-    protocol::MutationOutcome::new(diff_set_presentation(base, None, Some(PresentationTilesDelta { reordered: Some(order), ..Default::default() })))
+    protocol::MutationOutcome::new(PresentationDiff { tiles: Some(PresentationTilesDelta::relocation(&base.tiles, from, to)), ..Default::default() })
 }
 //#endregion 🔹Diff

@@ -29,9 +29,8 @@ pub fn validate(payload: &GltfReorderMorphTargetAttributesPayload, base: &GltfSn
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfReorderMorphTargetAttributesPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let order: Vec<(String, usize)> = p.order.iter().filter_map(|semantic| base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().find(|(key, _)| key == semantic).cloned()).collect();
-    let value = with_replaced(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, GltfMorphTarget(order));
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+    let rows = target_replacement(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, GltfMorphTarget(p.order.iter().filter_map(|semantic| base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().find(|(key, _)| key == semantic).cloned()).collect()));
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfReorderMorphTargetAttributesPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

@@ -41,19 +41,24 @@ message SemioTextureDiff {
 }
 
 message SemioMeshModified { string key = 1; SemioMeshItemDiff diff = 2; }
-message SemioMeshesDiff { repeated string removed = 1; repeated SemioMeshModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioMesh added = 3; }
+message SemioMeshesDiff { repeated string removed = 1; repeated SemioMeshModified modified = 2; repeated SemioMeshAdded added = 3; }
 
 message SemioPrimitiveModified { string key = 1; SemioPrimitiveDiff diff = 2; }
-message SemioPrimitivesDiff { repeated string removed = 1; repeated SemioPrimitiveModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioPrimitive added = 3; }
+message SemioPrimitivesDiff { repeated string removed = 1; repeated SemioPrimitiveModified modified = 2; repeated SemioPrimitiveAdded added = 3; }
 
 message SemioMaterialModified { string key = 1; SemioMaterialDiff diff = 2; }
-message SemioMaterialsDiff { repeated string removed = 1; repeated SemioMaterialModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioMaterial added = 3; }
+message SemioMaterialsDiff { repeated string removed = 1; repeated SemioMaterialModified modified = 2; repeated SemioMaterialAdded added = 3; }
 
 message SemioTextureModified { string key = 1; SemioTextureDiff diff = 2; }
-message SemioTexturesDiff { repeated string removed = 1; repeated SemioTextureModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioTexture added = 3; }
+message SemioTexturesDiff { repeated string removed = 1; repeated SemioTextureModified modified = 2; repeated SemioTextureAdded added = 3; }
 
 message SemioMeshDiff {
   SemioMeshesDiff meshes = 1;
   SemioMaterialsDiff materials = 2;
   SemioTexturesDiff textures = 3;
 }
+
+message SemioMeshAdded { uint64 index = 1; semio.s_stdio_semio_mesh.snapshot.SemioMesh item = 2; }
+message SemioPrimitiveAdded { uint64 index = 1; semio.s_stdio_semio_mesh.snapshot.SemioPrimitive item = 2; }
+message SemioMaterialAdded { uint64 index = 1; semio.s_stdio_semio_mesh.snapshot.SemioMaterial item = 2; }
+message SemioTextureAdded { uint64 index = 1; semio.s_stdio_semio_mesh.snapshot.SemioTexture item = 2; }

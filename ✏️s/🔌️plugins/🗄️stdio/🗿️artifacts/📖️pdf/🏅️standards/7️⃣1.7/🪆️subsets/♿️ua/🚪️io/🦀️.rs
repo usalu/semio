@@ -97,9 +97,23 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
+/// 🌉️ Applies one ua conformance mutation through its leaf-owned diff and the base bridge.
+pub mod mutation_bridge {
+    use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+    use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
+
+    /// ▶️ Applies the authoritative leaf diff.
+    pub fn apply_ua_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfUaMutation) -> protocol::MutationOutcome<PdfDiff> {
+        use protocol::Mutation;
+        let outcome = mutation.diff(snapshot);
+        crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_outcome(outcome, snapshot)
+    }
+}
+
 pub mod derived_construction {
     use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-    use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
+    use crate::standards::v1_7::subsets::base::schema::mutations::{InsertPage, PdfMutation, SetInfo};
     use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfMarkInfo, PdfObject, PdfPage, PdfSnapshot, PdfViewerPreferences};
     use crate::standards::v1_7::subsets::ua::io::check_ua_conformance;
     use semio_framework_diagnostic::Diagnostic;

@@ -63,6 +63,7 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
+use crate::apply_mutation;
 use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
 
 //#region 🔖️Riff
@@ -1215,7 +1216,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::v1_0::subsets::any::schema::diff::AviDiff;
-    use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation,AviMutation};
+    use crate::standards::v1_0::subsets::any::schema::mutations::{AviMutation};
 
     use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -1242,7 +1243,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<AviSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_avi_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

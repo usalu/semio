@@ -1,30 +1,8 @@
-# 🔺️ JpgDiff schema facet — mirrors 🦀️.rs field-for-field. No full-replace slot.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# 🔺️ Sparse authored JPEG image fields; absent members preserve their current value.
 type JpgSegmentDiff { marker: Int, data: [Int!] }
 type JpgSegmentModified { index: Int!, diff: JpgSegmentDiff! }
 type JpgSegmentAdded { index: Int!, item: JpgSegment! }
 type JpgOtherSegmentsDiff { removed: [Int!], modified: [JpgSegmentModified!], added: [JpgSegmentAdded!] }
-
-use an explicit null to mean cleared, vs. the field being absent meaning unchanged."
 type JpgDiff {
   width: Int @state(class: ARTIFACT)
   height: Int @state(class: ARTIFACT)

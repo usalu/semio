@@ -12,6 +12,31 @@
 pub mod map;
 pub use map::{MapDelta, MapDeltaTarget, MapEntryDelta, MapEntryOperation, MapPresence};
 
+/// 📏️ Portable visible diagnostic envelope independent of machine pointer width.
+pub const MUTATION_MESSAGE_ENTRY_BYTES: usize = 4096;
+/// 🧳️ Normative owned diagnostic row charge shared by bounded history ledgers.
+pub const MUTATION_MESSAGE_OWNER_BYTES: usize = 96;
+/// 🧭️ Every target segment consumes normative owner credit, including empty text.
+pub const MUTATION_MESSAGE_TARGET_BYTES: usize = 24;
+#[path = "📨️messages/🧵️compose/🦀️.rs"]
+mod message_composition;
+pub use message_composition::{ArtifactMessageComposeCursor, ArtifactMessageComposeRefusal, ArtifactMessageFragment, ArtifactMessageSource};
+#[path = "📨️messages/♻️retire/🦀️.rs"]
+mod message_ledger_retirement;
+pub use message_ledger_retirement::{EditMessageLedgerRetirement, MutationMessageLedgerRetirement};
+#[path = "📨️messages/📦️accumulate/🦀️.rs"]
+mod message_accumulation;
+pub use message_accumulation::{MutationMessageRetirement, OperationMessageDrain, ReplayMessageAccumulator};
+#[path = "📨️messages/✂️clamp/🦀️.rs"]
+mod message_selection;
+pub use message_selection::FinalMessageSelection;
+#[path = "📨️messages/📋️copy/🦀️.rs"]
+mod message_copy;
+pub use message_copy::MessageCopyCursor;
+#[path = "♻️retirement/🦀️.rs"]
+mod replay_retirement;
+pub use replay_retirement::{ArtifactReplayRetirementFactory, ReplayRetirement, registered_replay_retirement_factory};
+
 //#region 🔖️Mutation
 /// 🚫️ Structured rejection of a diff that cannot be applied to its supplied base.
 /// The shape is protocol-owned and wire-safe: callers never need a technology crate's error type
@@ -102,7 +127,17 @@ pub struct ApplyCapability {
 /// snapshot. Store lanes, replay, merge, backbone, plugin transaction folds, tool folds, the db and composite planners all
 /// route through it; mutation leaves never call [`MutationDiff::apply`].
 pub fn apply_diff<P, D: MutationDiff<P>>(diff: &D, base: &P) -> MutationApplyResult<P> {
-    diff.apply(base, ApplyCapability { _sealed: () })
+    apply_with(diff, base, mint_capability())
+}
+
+/// 🔑️ The one place the sealed capability is constructed; private, so only [`apply_diff`] reaches it.
+fn mint_capability() -> ApplyCapability {
+    ApplyCapability { _sealed: () }
+}
+
+/// ▶️ Hands the capability to the diff's own step; every caller above this function holds the capability only through [`apply_diff`].
+fn apply_with<P, D: MutationDiff<P>>(diff: &D, base: &P, capability: ApplyCapability) -> MutationApplyResult<P> {
+    diff.apply(base, capability)
 }
 
 /// 📦️ Centralized snapshot mutation — one fallible `apply` per technology. A
@@ -159,20 +194,13 @@ pub trait MutationDiff<P>: Clone + Default + PartialEq + crate::value::ToValue +
     }
 }
 
-/// 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: inverse, state-delta
-/// construction, and emptiness. Deliberately a SEPARATE trait from `MutationDiff` (not new
-/// methods added to it) — `MutationDiff` already has 51+ repo-wide implementors, so a breaking
-/// method addition there would break all of them at once. Follows this crate's own `DiffCodec`
-/// precedent below: land the trait standalone in a spine wave, adopt it per-type in later waves
-/// via a seeded shrink-only policy allowlist (`POLICY_DIFF_ALGEBRA`), never as a hard bound on
-/// `MutationDiff` itself until every implementor is covered.
-/// LAWS (for valid diffs): `d.inverse(base).await.apply(&d.apply(base).await?).await == Ok(*base)`;
-/// `Self::between(a, b).await.apply(a).await == Ok(*b)`; `Self::between(a, a).await.is_empty().await`.
+/// 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: the concrete negative diff and emptiness.
+/// There is deliberately no snapshot-differencing constructor: import, example switch and load are load paths, and sync
+/// travels its own frontier delta.
+/// LAW (for valid diffs): `d.inverse(base).apply(&d.apply(base)) == Ok(*base)`.
 pub trait DiffAlgebra<P>: Sized {
     /// 🔁️ Diff-level undo: the diff that, applied after `self`, restores `base`.
     fn inverse(&self, base: &P) -> Self;
-    /// 🧭️ State delta: the diff that, applied to `base`, yields `other`.
-    fn between(base: &P, other: &P) -> Self;
     /// 🕳️ Whether this diff changes nothing relative to whatever base it was built against.
     fn is_empty(&self) -> bool;
 }
@@ -1865,3 +1893,10 @@ impl crate::value::FromValue for MutationOrigin {
     }
 }
 //#endregion 🔖️Origin
+
+#[path="🚫️error/♻️retirement/🦀️.rs"]
+mod apply_error_retirement;
+
+#[path="🧳️prepared/🦀️.rs"]
+mod prepared;
+pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};

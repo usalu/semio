@@ -8,7 +8,8 @@
 //! Loads are members of their case, so removing the case removes them with it — no separate load delta appears.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -91,7 +92,7 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").removed, vec!["live".to_string()], "delete-load-case/removes-the-live-06415d: exactly the live case may be removed");
-    assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.is_empty(), "delete-load-case/removes-the-live-06415d: member loads are never itemised as patches");
+    assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.is_empty(), "delete-load-case/removes-the-live-06415d: member loads are never itemised as patches");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-load-case/removes-the-live-06415d: produced diff differs from the committed 🔺️diff/🔣️.json");

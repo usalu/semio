@@ -1,65 +1,7 @@
-//! jpeg-jfif-codec — standalone JFIF 1.01 fixture codec on top of the `image` 0.25 crate's own
-//! public JPEG encoder/decoder. Zero dependencies beyond `image` itself (see this crate's own
-//! Cargo.toml — its own `[workspace]`, isolated from the repository's root workspace and Cargo.lock).
-//!
-//! This binary is the code `../../🔣️oracle.json`'s reader oracle registration
-//! (`image-jpeg-jfif-1-01-mutate-reader`) points at. It never links against, calls, or copies
-//! logic from this subset's own `🚪️io/🦀️.rs` (the production JFIF codec) or its
-//! `🦀️oracle.rs` (the reclassified `cross-semio-implementation` oracle, which COMPUTES
-//! mutation results and therefore shares a spec reading with production) — every recipe below is a
-//! literal, hand-picked byte value written directly by `image`'s own encoder, never a mutation
-//! applied to a document.
-//!
-//! Two subcommands:
-//!   build   <recipe-id> <out-dir> <directory-name> — writes the handpicked fixture directory
-//!   project <path-to-jpg>           — decodes a real JPEG file and prints a typed JSON projection
-//!                                     on stdout, using ONLY `image`'s public `ImageDecoder` surface.
-//!
-//! # Investigated: what `image` 0.25.10 (zune-jpeg 0.5.15) can actually witness
-//!
-//! `image::codecs::jpeg::JpegDecoder`'s `ImageDecoder` impl exposes `dimensions`, `color_type`,
-//! `icc_profile`, `exif_metadata`, `xmp_metadata`, `iptc_metadata`, `orientation` and the decoded
-//! raster (`read_image`) — nothing else. Confirmed by reading the vendored crate source directly
-//! (`~/.cargo/registry/src/…/image-0.25.10/src/codecs/jpeg/decoder.rs` and
-//! `zune-jpeg-0.5.15/src/decoder.rs`/`headers.rs`), not assumed:
-//!
-//!   - No DQT/DHT/DRI accessor exists anywhere in either crate's public API — `zune_jpeg::decoder`
-//!     has no `pub fn` returning quantization tables, Huffman tables or the restart interval at all.
-//!   - `zune_jpeg::decoder::ImageInfo` DECLARES `pub x_density: u16` / `pub y_density: u16` fields
-//!     documented "Found in the APP(0) marker" — but the setters `set_x`/`set_y` that would
-//!     populate them from a real APP0 segment are never called anywhere in the crate (`grep -rn
-//!     "set_x(\|set_y("` finds only the dead `pub(crate) fn` definitions, zero call sites), so
-//!     these fields always read back their `#[derive(Default)]` zero regardless of the file's real
-//!     density. `ImageInfo.pixel_density` is a different, misleadingly-named field entirely — it is
-//!     set from the SOF sample precision byte (`headers.rs::parse_start_of_frame`,
-//!     `img.info.set_density(dt_precision)`), not from the APP0 density UNIT byte. There is no
-//!     working JFIF-header read path in this crate version.
-//!   - `exif`/`xmp`/`iptc` ARE real, populated reads: `zune-jpeg-0.5.15/src/headers.rs::parse_app1`
-//!     recognizes the literal APP1 payload prefixes `b"Exif\x00\x00"` and
-//!     `b"http://ns.adobe.com/xap/1.0/\0"`, and `headers.rs::parse_app13` (Photoshop 3.0 IPTC)
-//!     likewise — these are genuinely third-party, spec-shaped reads, not something this binary
-//!     invents.
-//!
-//! This governs which of the 10 declared mutation kinds this reader can honestly be registered
-//! against: `insert-other-segment`/`remove-other-segment` are built here using an XMP APP1 payload
-//! specifically (the one generic-segment shape `image` can actually see — a COM or an
-//! unrecognized APPn would not be); `change-jfif-header` gets a real, `image`-encoder-written
-//! density difference between before/after (via the encoder's own `set_pixel_density`, a real
-//! public API) that this reader still cannot read back, so it is registered `-uncarried` rather
-//! than falsely claimed; `replace-pixels` and `change-re-encode-quality` are witnessed through the
-//! decoded raster digest.
-//!
-//! # Why the other five kinds are `-uncarried` for a SECOND, independent reason
-//!
-//! `replace-quant-table`, `remove-quant-table`, `replace-huffman-table`, `remove-huffman-table` and
-//! `change-restart-interval` are not just unreadable through `image` — this subset's OWN production
-//! encoder (`../../🚪️io/🦀️.rs::encode_jpg`) provably never carries them into the bytes at
-//! all: it regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` on every encode
-//! and never emits a DRI/restart marker (confirmed directly in that file, and independently
-//! documented in this subset's own `🦀️oracle.rs` module docstring). A perfect reader
-//! would still have nothing to witness, so these five recipes below hand-author `before == after`
-//! byte-identically — the literal truth of what production does with them — rather than fabricate a
-//! difference no encoder in this repository can produce.
+//! 🏭️ Independent JPEG fixture codec using image-rs public encoder and decoder APIs.
+//! Five recipes cover the authored image mutation vocabulary. ReplaceImage changes dimensions,
+//! pixels, JFIF density and XMP metadata together. The reader witnesses dimensions, pixels and XMP;
+//! Pillow independently witnesses JFIF density. Native tables and compression are IO observations.
 
 use image::codecs::jpeg::{JpegEncoder, PixelDensity, PixelDensityUnit};
 use image::{ExtendedColorType, ImageDecoder, ImageEncoder, RgbImage};
@@ -141,11 +83,8 @@ fn splice_xmp(jpg: &[u8], xmp: &[u8]) -> Vec<u8> {
 
 //#region 🔖️Recipes
 const DEFAULT_QUALITY: u8 = 90;
-const LOW_QUALITY: u8 = 20;
 
-/// 🧪 One recipe: `before` always, `after` for this catalog's own `applied`-only vocabulary (this
-/// subset registers no `rejected` outcomes — see `../../🔣️oracle.json`). See the module
-/// docstring for exactly why each of the ten kinds is shaped the way it is below.
+/// 🧪️ Builds independent before and after JPEG images for one authored mutation kind.
 fn recipe(id: &str) -> Option<(Vec<u8>, Vec<u8>)> {
     let base = base_image();
     match id {
@@ -155,14 +94,6 @@ fn recipe(id: &str) -> Option<(Vec<u8>, Vec<u8>)> {
             let before = encode(&base, DEFAULT_QUALITY, None);
             let after = encode(&base, DEFAULT_QUALITY, Some((300, 300, PixelDensityUnit::Inches)));
             Some((before, after))
-        }
-
-        // 🫥️ Carrier-uncarried: this subset's own production encoder regenerates DQT/DHT fresh
-        // from `re_encode_quality` and never emits DRI — none of these five survive ANY encoder,
-        // so `before == after` is the literal truth, not a shortcut.
-        "replace-quant-table-applied" | "remove-quant-table-applied" | "replace-huffman-table-applied" | "remove-huffman-table-applied" | "change-restart-interval-applied" => {
-            let bytes = encode(&base, DEFAULT_QUALITY, None);
-            Some((bytes.clone(), bytes))
         }
 
         // 👁️ Witnessable: `xmp_metadata()` reads exactly this APP1 shape.
@@ -184,31 +115,17 @@ fn recipe(id: &str) -> Option<(Vec<u8>, Vec<u8>)> {
             Some((before, after))
         }
 
-        // 👁️ Witnessable: same source raster, two quality settings — quantization noise on this
-        // textured base moves decoded sample bytes measurably (unlike a flat fill, see
-        // `replace_pixels_and_re_encode_quality_recipes_change_the_decoded_raster` below).
-        "change-re-encode-quality-applied" => {
+        "replace-image-applied" => {
             let before = encode(&base, DEFAULT_QUALITY, None);
-            let after = encode(&base, LOW_QUALITY, None);
-            Some((before, after))
+            let replacement = encode(&solid_image(16, 8, [24, 96, 192]), DEFAULT_QUALITY, Some((300, 150, PixelDensityUnit::Inches)));
+            Some((before, splice_xmp(&replacement, &xmp_packet())))
         }
 
         _ => None,
     }
 }
 
-const RECIPE_IDS: &[&str] = &[
-    "change-jfif-header-applied",
-    "replace-quant-table-applied",
-    "remove-quant-table-applied",
-    "replace-huffman-table-applied",
-    "remove-huffman-table-applied",
-    "change-restart-interval-applied",
-    "insert-other-segment-applied",
-    "remove-other-segment-applied",
-    "replace-pixels-applied",
-    "change-re-encode-quality-applied",
-];
+const RECIPE_IDS: &[&str] = &["change-jfif-header-applied", "insert-other-segment-applied", "remove-other-segment-applied", "replace-pixels-applied", "replace-image-applied"];
 //#endregion 🔖️Recipes
 
 //#region 🔖️Project

@@ -9,7 +9,7 @@ window_config! {
     extension: "bimworldwindowcfg",
     owner_path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️world/🎚️config",
     display: "Set BIM World Window Configuration",
-    type BimWorldWindowConfig, BimWorldWindowConfigMutation, BimWorldWindowConfigOwner;
+    type BimWorldWindowConfig, BimWorldWindowConfigDiff, BimWorldWindowConfigMutation, BimWorldWindowConfigOwner;
     #[dsl(block)]
     camera: store::Viewport3dOrbit = super::INITIAL_CAMERA;
     #[dsl(block)]

@@ -58,6 +58,7 @@ define_id!(SolidId, "solid");
 define_id!(Curve3Id, "curve3");
 define_id!(Curve2Id, "curve2");
 define_id!(SurfaceId, "surface");
+semio_framework_value::artifact_retire_leaf!(VertexId, EdgeId, CoedgeId, LoopId, FaceId, ShellId, SolidId, Curve3Id, Curve2Id, SurfaceId);
 
 // #endregion 🔖️Ids
 
@@ -68,6 +69,12 @@ define_id!(SurfaceId, "surface");
 struct Slot<T> {
     generation: u32,
     value: Option<T>,
+}
+
+impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Slot<T> {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.generation),semio_framework_value::retirement::deferred(self.value)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.generation),semio_framework_value::retirement::deferred_birth_bytes_for(&self.value)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 
 /// 🗄️ A generational arena: O(1) insert/get/remove, a LIFO free list so freed slots are reused
@@ -81,6 +88,12 @@ pub struct Store<T, Id> {
     slots: Vec<Slot<T>>,
     free: Vec<u32>,
     _marker: std::marker::PhantomData<fn() -> Id>,
+}
+
+impl<T:semio_framework_value::retirement::RetireOwned,Id:ArenaId+'static> semio_framework_value::retirement::RetireOwned for Store<T,Id> {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.slots),semio_framework_value::retirement::deferred(self.free)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.slots),semio_framework_value::retirement::deferred_birth_bytes_for(&self.free)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 
 impl<T, Id: ArenaId> Default for Store<T, Id> {
@@ -168,6 +181,13 @@ impl<T, Id: ArenaId> Store<T, Id> {
         assert!(self.slots.is_empty());
         retirement.empty_allocation(std::mem::take(&mut self.slots));
         retirement.pod(std::mem::take(&mut self.free));
+    }
+    /// 🎟️ The original arena slot count, including holes, without a live-entry scan.
+    pub(crate) fn slot_count(&self) -> usize { self.slots.len() }
+    /// 🎟️ Borrows one original slot; a hole consumes its caller's scan turn.
+    pub(crate) fn slot_at(&self, index: usize) -> Option<(Id, &T)> {
+        let slot = self.slots.get(index)?;
+        slot.value.as_ref().map(|value| (Id::from_raw(index as u32, slot.generation), value))
     }
     /// 🗄️ Deterministic index-order iteration over live entries.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

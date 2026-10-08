@@ -1,0 +1,7 @@
+# Four Current Corpus Authority Retirements
+
+Actual7210 Nx1/747ms exercised the normal directory-independent inventory and refused all four physical test-corpus declarations. Four files were removed, as were their exact empty declaration directories; the first green candidate correctly refused the remaining empty adjacent Replication module, rather than weakening the inventory.
+
+Final bounded original route now Nx0: normal inventory has no physical/adjacent authority; independent Node Buffer body8200/operation8202/typed frame8202 and UTF8 crossings agree with the preserved plain Value/typed Plugin examples. Original RFC6902 three retirement laws and independent Three area6/volume1/triangles12 execute unchanged apart from whole-test-wrapper schema reads/validators. Actual native invocation count0; this does not claim current Rust runtime success for those original producers. Plain four example hashes are unchanged.
+
+Nine narrow actions in 📥️oct8-root-four-corpus-owned-endpoints.json: four declarations, two test consumers, one existing private facet, and exact live/seed900.2985 registrations. Shared private/launch text is current observation except our exact facet; Pub900.2984 is preserved and excluded from own credit. Fresh preimages remain retained. No corpus schema was copied, relocated, inlined, declared inert or replaced with a DTO. The full repository checkpoint and normal fixture gate remain pending; new peer authority appearances must be classified from current source.

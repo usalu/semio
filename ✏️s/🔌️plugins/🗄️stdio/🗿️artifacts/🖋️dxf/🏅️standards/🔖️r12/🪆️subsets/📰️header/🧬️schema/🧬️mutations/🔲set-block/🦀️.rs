@@ -16,7 +16,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetBlock {
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { index, block } = self;
         protocol::MutationOutcome::new(match base.blocks.get(*index) {
-            Some(old) => diff_set_block(*index, block_diff_between(old, block)),
+            Some(old) => diff_set_block(*index, block_field_changes(old, block)),
             None => diff_insert_block(*index, block.clone()),
         })
     }

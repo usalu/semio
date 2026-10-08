@@ -60,6 +60,30 @@
       "comparisonProfiles": [
         "semantic-spreadsheet-v1"
       ]
+    },
+    {
+      "id": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "jszip",
+        "implementation": "jszip + fast-xml-parser reader",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "capabilities": [
+        "xlsx-ecma-376-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://openpyxl.readthedocs.io",
+      "rationale": "📖️ A third-party implementation of the OPC package layer: jszip opens the container and fast-xml-parser reads and writes `[Content_Types].xml` and every `*.rels` part. The `before`/`after` pairs of the plumbing kinds are authored from the artifact's committed real package by this pairing -- each pair states its effect once as an XML edit and once as a model-level expectation and is refused unless both agree -- so nothing in this repository predicts the answer the pairs are judged against.",
+      "comparisonProfiles": [
+        "semantic-spreadsheet-v1"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -90,7 +114,11 @@
         "remove-cell",
         "insert-shared-string",
         "remove-shared-string",
-        "set-shared-string"
+        "set-shared-string",
+        "set-relationship",
+        "remove-relationship",
+        "set-content-type",
+        "remove-content-type"
       ]
     }
   ],
@@ -297,6 +325,89 @@
               "capability": "xlsx-ecma-376-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-relationship",
+          "capability": "xlsx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-relationship",
+            "bridgeVersion": 1,
+            "variant": "SetRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xlsx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-relationship",
+          "capability": "xlsx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-relationship",
+            "bridgeVersion": 1,
+            "variant": "RemoveRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xlsx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-content-type",
+          "capability": "xlsx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-content-type",
+            "bridgeVersion": 1,
+            "variant": "SetContentType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xlsx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-content-type",
+          "capability": "xlsx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-content-type",
+            "bridgeVersion": 1,
+            "variant": "RemoveContentType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xlsx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader"
             }
           ]
         }
@@ -679,6 +790,635 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The shared-strings table entry at index 0 replaced, Hello -> World, same cell A1."
+    },
+    {
+      "id": "set-relationship-inserts-an-external-hyperlink-first",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:5808fec706060663bb87e8d71e31a01a66ef48effdd745c8173b5f77b0cbf579",
+          "bytes": 10300
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-inserts-an-external-hyperlink-first",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new external relationship is inserted at position 0 of the package root's relationships."
+    },
+    {
+      "id": "set-relationship-appends-an-external-hyperlink",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:eb70172d50911dd57f70cbde3f9bbff43f48ca8a0450b04acee9431e5a9a4385",
+          "bytes": 10302
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-appends-an-external-hyperlink",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new external relationship without a position is appended after the last relationship of the package root."
+    },
+    {
+      "id": "set-relationship-retypes-the-last-root-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:a5e044ae10f09c31cb3be2dc0790d9bfb0e5ff8af40946f57e34f49b977509c1",
+          "bytes": 10266
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-retypes-the-last-root-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An existing id is changed in place: the last root relationship keeps its id, target and position and takes another type."
+    },
+    {
+      "id": "set-relationship-no-op-identical-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:0552b7d411a80f266366b1891bdf10063b35e8f56c2bb5bc55dff4fbcbd93e55",
+          "bytes": 10253
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-no-op-identical-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Writing a relationship identical to the stored one changes nothing."
+    },
+    {
+      "id": "remove-relationship-drops-the-last-root-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:a8302729b430b722f511388ea0c57122d84d835a0251c24191e58ffed4435d3d",
+          "bytes": 10237
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-relationship-drops-the-last-root-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The last relationship of the package root is removed; the others keep their order."
+    },
+    {
+      "id": "remove-relationship-drops-an-added-hyperlink",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:5808fec706060663bb87e8d71e31a01a66ef48effdd745c8173b5f77b0cbf579",
+          "bytes": 10300
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:0552b7d411a80f266366b1891bdf10063b35e8f56c2bb5bc55dff4fbcbd93e55",
+          "bytes": 10253
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-relationship-drops-an-added-hyperlink",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The relationship added at position 0 is removed again; the package root is back to its original relationships."
+    },
+    {
+      "id": "remove-relationship-rejected-missing-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-relationship-rejected-missing-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The package root owns no relationship rIdNothing. Before-only."
+    },
+    {
+      "id": "set-content-type-inserts-a-default-first",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e637447a403b27b5c1f78e57401e2f67f2eac2d16001cce247cd7d968149e9ad",
+          "bytes": 10268
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-inserts-a-default-first",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new extension default is inserted at position 0 of the content-types defaults."
+    },
+    {
+      "id": "set-content-type-retypes-an-existing-default",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:537eaeac3c71c6db11408a067f3525ee56609a52cefedc82e7807ba309a4c14a",
+          "bytes": 10266
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-retypes-an-existing-default",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An existing default keeps its position and takes another content type."
+    },
+    {
+      "id": "set-content-type-no-op-identical-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:1f3cbdd70d9579b986946bb76cf0b3e54bae32bb36bbda25d353aaf2ea9c6aa2",
+          "bytes": 10256
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-no-op-identical-entry",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Writing the stored content type again changes nothing."
+    },
+    {
+      "id": "set-content-type-rejected-default-in-another-case",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e637447a403b27b5c1f78e57401e2f67f2eac2d16001cce247cd7d968149e9ad",
+          "bytes": 10268
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-rejected-default-in-another-case",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The extension default zzoracle exists in lower case; ZZORACLE would be a second default in another letter case. Before-only."
+    },
+    {
+      "id": "remove-content-type-drops-an-added-default",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e637447a403b27b5c1f78e57401e2f67f2eac2d16001cce247cd7d968149e9ad",
+          "bytes": 10268
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:1f3cbdd70d9579b986946bb76cf0b3e54bae32bb36bbda25d353aaf2ea9c6aa2",
+          "bytes": 10256
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-content-type-drops-an-added-default",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The default added at position 0 is removed again."
+    },
+    {
+      "id": "remove-content-type-rejected-missing-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-content-type",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
+          "bytes": 10257
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-content-type-rejected-missing-entry",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-spreadsheet-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The content types hold no default for the extension nothing. Before-only."
     }
   ],
   "oracleHostPackages": []

@@ -26,30 +26,35 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-gltf"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.gltf@2.0/*#editor"
 aliases = ["stdio gltf"]
 ports = { react = 6251, wgpu = 6351 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-obj"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.obj@3.0/*#editor"
 aliases = ["stdio obj"]
 ports = { react = 6252, wgpu = 6352 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-stl"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.stl@ascii/*#editor"
 aliases = ["stdio stl"]
 ports = { react = 6253, wgpu = 6353 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-ply"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.ply@1.0/*#editor"
 aliases = ["stdio ply"]
 ports = { react = 6254, wgpu = 6354 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-las"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.las@1.0/*#editor"
 aliases = ["stdio las"]
 ports = { react = 6255, wgpu = 6355 }

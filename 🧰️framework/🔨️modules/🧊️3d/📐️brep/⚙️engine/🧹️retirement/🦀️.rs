@@ -1,13 +1,17 @@
 //! 🧹️ Typed native ownership frontiers with explicit item and payload-byte grants.
 use super::{Brep, Entity, MeshTransfer};
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep};
 use crate::brep::representation::{arena::{ArenaId, Store}, curve::{Curve2, Curve3}, surface::Surface, topology::Body};
-use std::{collections::{BTreeMap, LinkedList}, mem::{size_of, ManuallyDrop}};
+use std::{collections::LinkedList, mem::{size_of, ManuallyDrop}};
 
 /// 🎟️ Work charged by one native resource retirement turn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NativeRetirementStep { Blocked, Pending { released_items: usize, released_bytes: usize }, Complete }
 /// 🧵️ One typed structural frontier, transferring at most one collection entry per turn.
-pub trait RetirementFrontier: Send { fn advance(&mut self, payloads: &mut PayloadRetirement) -> bool; }
+pub trait RetirementFrontier: Send {
+    fn advance(&mut self,payloads:&mut PayloadRetirement,grant:RetainedCloneGrant)->bool;
+    fn next_close_byte_demand(&self)->usize {0}
+}
 trait Allocation: Send {}
 impl<T: Send> Allocation for Vec<T> {}
 enum Owner { Allocation { values: Box<dyn Allocation>, remaining: usize }, Frontier(Box<dyn RetirementFrontier>), Owned(Box<dyn semio_framework_value::ErasedSnapshotRetirement>) }
@@ -18,7 +22,18 @@ impl Default for PayloadRetirement { fn default() -> Self { Self { owners: Manua
 impl PayloadRetirement {
     pub fn terminal_is_empty(&self) -> bool { self.owners.is_empty() }
     pub fn frontier(&mut self, frontier: impl RetirementFrontier + 'static) { self.owners.push_back(Owner::Frontier(Box::new(frontier))); }
-    pub fn owned<T: semio_framework_value::retirement::RetireOwned>(&mut self, value: T) { self.owners.push_back(Owner::Owned(semio_framework_value::retirement::owned_retirement(value))); }
+    pub fn owned<T:semio_framework_value::retirement::RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneProgress,(semio_framework_value::ValueError,T)> {
+        let (owner,progress)=semio_framework_value::retirement::admit_owned_retirement(value,grant)?;
+        self.owners.push_back(Owner::Owned(owner));Ok(progress)
+    }
+    pub fn next_close_byte_demand(&self)->usize {
+        match self.owners.front() {
+            Some(Owner::Allocation {remaining,..})=>*remaining,
+            Some(Owner::Frontier(frontier))=>frontier.next_close_byte_demand(),
+            Some(Owner::Owned(owned))=>{let copy=owned.next_copy_byte_demand().expect("native copy demand");let release=owned.next_release_byte_demand().expect("native release demand");owned.next_capacity_byte_demand(copy.max(release)).expect("native capacity demand").max(release).max(copy)},
+            None=>0,
+        }
+    }
     pub fn pod<T: Copy + Send + 'static>(&mut self, values: Vec<T>) { self.allocation(values); }
     pub fn empty_allocation<T: Send + 'static>(&mut self, values: Vec<T>) { assert!(values.is_empty()); self.allocation(values); }
     fn allocation<T: Send + 'static>(&mut self, values: Vec<T>) {
@@ -30,23 +45,25 @@ impl PayloadRetirement {
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> NativeRetirementStep {
         if self.owners.is_empty() { return NativeRetirementStep::Complete; }
         if maximum_items == 0 || maximum_bytes == 0 { return NativeRetirementStep::Blocked; }
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:maximum_bytes,maximum_depth:256};
         let mut released_bytes = 0;
         match self.owners.pop_front().expect("native retirement owner") {
             Owner::Allocation { values, remaining } => {
-                released_bytes = maximum_bytes.min(remaining);
-                let remaining = remaining - released_bytes;
-                if remaining != 0 { self.owners.push_front(Owner::Allocation { values, remaining }); }
+                if remaining>maximum_bytes {self.owners.push_front(Owner::Allocation {values,remaining});return NativeRetirementStep::Blocked;}
+                released_bytes=remaining;
             }
-            Owner::Frontier(mut frontier) => if !frontier.advance(self) { self.owners.push_front(Owner::Frontier(frontier)); },
+            Owner::Frontier(mut frontier) => if !frontier.advance(self,grant) { self.owners.push_front(Owner::Frontier(frontier)); },
             Owner::Owned(mut owned) => {
-                use semio_framework_value::SnapshotRetirementStep as Step;
-                match owned.close_step(1,maximum_bytes).expect("native owned retirement invariant") {
-                    Step::Pending { released_items,released_bytes:bytes } => {
-                        assert!(released_items<=1 && bytes<=maximum_bytes,"native owned retirement exceeded its grant");
-                        released_bytes=bytes;self.owners.push_front(Owner::Owned(owned));
+                let copy=owned.next_copy_byte_demand();let release=owned.next_release_byte_demand();let depth=owned.next_depth_demand();
+                let admissible=copy.and_then(|copy|release.and_then(|release|owned.next_capacity_byte_demand(copy.max(release)).map(|capacity|copy<=maximum_bytes&&release<=maximum_bytes&&capacity<=maximum_bytes))).and_then(|bytes|depth.map(|depth|bytes&&depth<=grant.maximum_depth));
+                if !matches!(admissible,Ok(true)) {self.owners.push_front(Owner::Owned(owned));return NativeRetirementStep::Blocked;}
+                let step=match owned.close_step(grant) {Ok(step)=>step,Err(_)=>{self.owners.push_front(Owner::Owned(owned));return NativeRetirementStep::Blocked;}};
+                match step {
+                    RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>{
+                        assert!(progress.copied_items<=1 && progress.released_bytes<=maximum_bytes,"native owned retirement exceeded its grant");
+                        released_bytes=progress.released_bytes;
+                        if !owned.terminal_is_empty() {self.owners.push_front(Owner::Owned(owned));}
                     }
-                    Step::Blocked => { self.owners.push_front(Owner::Owned(owned));return NativeRetirementStep::Blocked; }
-                    Step::Complete => assert!(owned.terminal_is_empty(),"native owned retirement lacks a terminal witness"),
                 }
             }
         }
@@ -58,13 +75,13 @@ impl Drop for PayloadRetirement {
 }
 struct Rows<T>(Vec<Vec<T>>);
 impl<T: Copy + Send + 'static> RetirementFrontier for Rows<T> {
-    fn advance(&mut self, payloads: &mut PayloadRetirement) -> bool {
+    fn advance(&mut self, payloads: &mut PayloadRetirement,_grant:RetainedCloneGrant) -> bool {
         if let Some(row) = self.0.pop() { payloads.pod(row); false } else { payloads.empty_allocation(std::mem::take(&mut self.0)); true }
     }
 }
 struct Arena<T, Id> { values: Store<T, Id>, transfer: fn(T, &mut PayloadRetirement) }
 impl<T: Send + 'static, Id: ArenaId + 'static> RetirementFrontier for Arena<T, Id> {
-    fn advance(&mut self, payloads: &mut PayloadRetirement) -> bool {
+    fn advance(&mut self, payloads: &mut PayloadRetirement,_grant:RetainedCloneGrant) -> bool {
         if let Some(slot) = self.values.retirement_pop() { if let Some(value) = slot { (self.transfer)(value,payloads); } false }
         else { self.values.retirement_backing(payloads); true }
     }
@@ -73,9 +90,9 @@ fn arena<T: Send + 'static, Id: ArenaId + 'static>(values: Store<T,Id>, transfer
 fn curve3(curve: Curve3, payloads: &mut PayloadRetirement) { if let Curve3::Nurbs { knots, controls, weights } = curve { payloads.pod(knots.knots); payloads.pod(controls); payloads.pod(weights); } }
 fn curve2(curve: Curve2, payloads: &mut PayloadRetirement) { if let Curve2::Nurbs { knots, controls, weights } = curve { payloads.pod(knots.knots); payloads.pod(controls); payloads.pod(weights); } }
 fn surface(surface: Surface, payloads: &mut PayloadRetirement) { if let Surface::Nurbs { u_knots, v_knots, controls, weights } = surface { payloads.pod(u_knots.knots); payloads.pod(v_knots.knots); payloads.rows(controls); payloads.rows(weights); } }
-struct Live(BTreeMap<String,Entity>);
+struct Live(semio_framework_mesh_engine::HistoryFoldIndex<String,Entity>);
 impl RetirementFrontier for Live {
-    fn advance(&mut self, payloads: &mut PayloadRetirement) -> bool {
+    fn advance(&mut self, payloads: &mut PayloadRetirement,_grant:RetainedCloneGrant) -> bool {
         let Some((handle,entity)) = self.0.pop_first() else { return true };
         payloads.text(handle);
         match entity {
@@ -97,7 +114,7 @@ impl Brep {
 }
 struct Metadata<T> { values: Vec<T>, text: fn(T) -> String }
 impl<T: Send + 'static> RetirementFrontier for Metadata<T> {
-    fn advance(&mut self, payloads: &mut PayloadRetirement) -> bool {
+    fn advance(&mut self, payloads: &mut PayloadRetirement,_grant:RetainedCloneGrant) -> bool {
         if let Some(value) = self.values.pop() { payloads.text((self.text)(value)); false }
         else { payloads.empty_allocation(std::mem::take(&mut self.values)); true }
     }

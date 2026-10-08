@@ -64,6 +64,14 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "cache": true
+    },
+    "verify-physical-codecs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify physical-codecs"
+      }
     }
   }
 }

@@ -122,7 +122,7 @@ async fn stories_create_edit_delete_round_trip() {
     let with_story = round_trip(&doc, &create);
     assert_eq!(with_story.stories.len(), 2);
 
-    let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), new_content: "Edited".into() });
+    let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), offset: 0, delete: 5, insert: "Edited".into() });
     let edited = round_trip(&with_story, &edit);
     assert_eq!(edited.stories.iter().find(|story| story.id == "story-1").unwrap().content, "Edited");
 
@@ -321,7 +321,7 @@ async fn change_frame_fill_obeys_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn edit_story_and_create_link_obey_the_inverse_law() {
     let base = sample_doc();
-    let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), new_content: "Edited.".into() });
+    let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), offset: 0, delete: 5, insert: "Edited.".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &edit).await;
     let link = LayoutMutation::CreateLink(create_link::CreateLink {
         link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
@@ -386,7 +386,7 @@ async fn change_page_height_missing_target_is_error() {
 #[semio_framework_async_macros::async_test]
 async fn edit_story_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(edit_story::EditStory { id: "ghost".into(), new_content: "x".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(edit_story::EditStory { id: "ghost".into(), offset: 0, delete: 0, insert: "x".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]

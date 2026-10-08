@@ -32,9 +32,10 @@
   "communication": null,
   "wayfinding": null,
   "schedules": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "schedule-requirement-a",
         "patch": {
@@ -68,8 +69,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "flexibility": null,
   "growth": null,

@@ -3,6 +3,7 @@
 //! board, a gesture that moves nothing leaves zero trace.
 
 use super::*;
+use crate::apply_puzzle5d_mutation;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
 use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 use crate::{Puzzle5dGrip, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dTargetVolume};

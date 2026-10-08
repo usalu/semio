@@ -5,6 +5,8 @@ use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use std::sync::Arc;
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
@@ -176,9 +178,14 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         }
     }
     fn begin_close(&mut self) {}
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, _grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
+        InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand_without_owner()}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError>{self.close_demand_without_owner()}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.close_demand_without_owner()}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.close_demand_without_owner()}
+    fn close_demand_without_owner(&self)->Result<usize,ValueError>{if self.terminal_is_empty(){Ok(0)}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"artifact command retained close demand is undeclared"))}}
     fn terminal_is_empty(&self) -> bool {
         true
     }

@@ -1,6 +1,6 @@
 //! 🔄️ Replace Config in the WFC 2D config facet.
 
-use super::{Wfc2dConfig, Wfc2dConfigDiff, Wfc2dConfigMutation};
+use super::{ChangeActiveTile, ChangeCamera, Wfc2dConfig, Wfc2dConfigDiff, Wfc2dConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -16,11 +16,20 @@ pub struct ReplaceConfig {
 impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
-        protocol::MutationOutcome::new(<Wfc2dConfigDiff as protocol::DiffAlgebra<Wfc2dConfig>>::between(base, &self.config))
+        let config = &self.config;
+        protocol::MutationOutcome::new(Wfc2dConfigDiff {
+            camera_x: (base.camera_x != config.camera_x).then_some(config.camera_x),
+            camera_y: (base.camera_y != config.camera_y).then_some(config.camera_y),
+            camera_zoom: (base.camera_zoom != config.camera_zoom).then_some(config.camera_zoom),
+            active_tile_id: (base.active_tile_id != config.active_tile_id).then(|| config.active_tile_id.clone()),
+        })
     }
     fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Wfc2dConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![Wfc2dConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
+        vec![
+            Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: base.active_tile_id.clone() }),
+            Wfc2dConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }),
+        ]
     
     })())
 }

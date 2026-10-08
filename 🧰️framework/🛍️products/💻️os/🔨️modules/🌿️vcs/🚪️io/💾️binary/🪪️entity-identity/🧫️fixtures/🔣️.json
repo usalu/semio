@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "entity",
+      "prefix": "x",
+      "input": {
+        "payload": [
+          0,
+          255,
+          10,
+          195,
+          164
+        ]
+      },
+      "preimageHex": "780000ff0ac3a4"
+    },
+    {
+      "kind": "entity",
+      "prefix": "🧬️",
+      "input": {
+        "payload": []
+      },
+      "preimageHex": "f09fa7acefb88f00"
+    },
+    {
+      "kind": "scoped",
+      "prefix": "scoped",
+      "input": {
+        "editId": "edit:🧬️",
+        "ordinal": 0
+      },
+      "preimageHex": "656469743af09fa7acefb88f3a30"
+    },
+    {
+      "kind": "scoped",
+      "prefix": "scoped",
+      "input": {
+        "editId": "edit:🧬️",
+        "ordinal": 4294967295
+      },
+      "preimageHex": "656469743af09fa7acefb88f3a34323934393637323935"
+    },
+    {
+      "kind": "edit",
+      "prefix": "edit",
+      "input": {
+        "replica": "18446744073709551615",
+        "sequence": -2147483648,
+        "fingerprint": [
+          0,
+          255,
+          10
+        ]
+      },
+      "preimageHex": "6564697400ffffffffffffffff00000000800000ff0a"
+    },
+    {
+      "kind": "edit",
+      "prefix": "edit",
+      "input": {
+        "replica": "7",
+        "sequence": 3,
+        "fingerprint": []
+      },
+      "preimageHex": "65646974000700000000000000000300000000"
+    },
+    {
+      "kind": "change",
+      "prefix": "change",
+      "input": {
+        "editIds": [
+          "edit-2",
+          "edit-1"
+        ],
+        "description": null
+      },
+      "preimageHex": "6368616e676500656469742d3200656469742d3100"
+    },
+    {
+      "kind": "change",
+      "prefix": "change",
+      "input": {
+        "editIds": [
+          "edit-2",
+          "edit-1"
+        ],
+        "description": ""
+      },
+      "preimageHex": "6368616e676500656469742d3200656469742d3100"
+    },
+    {
+      "kind": "change",
+      "prefix": "change",
+      "input": {
+        "editIds": [
+          "edit-2",
+          "edit-1"
+        ],
+        "description": "🧬️\nquoted\""
+      },
+      "preimageHex": "6368616e676500656469742d3200656469742d3100f09fa7acefb88f0a71756f74656422"
+    },
+    {
+      "kind": "change",
+      "prefix": "change",
+      "input": {
+        "editIds": [],
+        "description": null
+      },
+      "preimageHex": "6368616e67650000"
+    },
+    {
+      "kind": "alternative",
+      "prefix": "alternative",
+      "input": {
+        "name": "main🧬️",
+        "checkpointIds": [
+          "ck-2",
+          "ck-1"
+        ]
+      },
+      "preimageHex": "616c7465726e6174697665006d61696ef09fa7acefb88f00636b2d3200636b2d31"
+    },
+    {
+      "kind": "mutation",
+      "prefix": "mutation",
+      "input": {
+        "operation": [
+          0,
+          255,
+          10
+        ],
+        "stamp": [
+          "7",
+          "65536",
+          "18446744073709551615"
+        ]
+      },
+      "preimageHex": "6d75746174696f6e0000ff0a07000000000000000000010000000000ffffffffffffffff"
+    }
+  ],
+  "control": {
+    "spanBytes": 256,
+    "outputSuffixBytes": 17,
+    "cancellation": "every-observed-boundary",
+    "zeroCeiling": "refuse-before-hash",
+    "payloadBytes": 4097,
+    "idCount": 513,
+    "priorOwnedBytes": 7,
+    "priorCeilingBytes": 64,
+    "priorIdentityPrefix": "x",
+    "continuation": "preserve-on-refusal"
+  }
+}

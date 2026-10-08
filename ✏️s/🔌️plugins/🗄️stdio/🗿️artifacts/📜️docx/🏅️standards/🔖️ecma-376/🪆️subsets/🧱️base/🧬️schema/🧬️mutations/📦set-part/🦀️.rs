@@ -19,13 +19,15 @@ pub struct SetPart {
     pub(crate) payload: DocxPartContent,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub(crate) index: Option<usize>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) override_index: Option<usize>,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "part", kind: "set-part", record: "SetPart" };
 
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        part_outcome(set_part_diff(base, &self.path, &self.content_type, &self.payload, self.index))
+        part_outcome(set_part_diff(base, &self.path, &self.content_type, &self.payload, self.index, self.override_index))
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {

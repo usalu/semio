@@ -10,6 +10,7 @@ pub mod derived_composition {
     use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance;
     use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_wire_conformance;
     use semio_framework_diagnostic::Diagnostic;
+use crate::apply_mutation;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
@@ -120,7 +121,7 @@ pub mod derived_construction {
     use crate::standards::v2_0::subsets::base::schema::diff::ZipDiff;
     use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
     use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance;
-    use crate::standards::v2_0::subsets::iso21320::schema::mutations::{add_deflated_entry, add_stored_entry, apply_zip_iso21320_mutation, ZipIso21320Mutation};
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::{add_deflated_entry, add_stored_entry, ZipIso21320Mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -140,14 +141,14 @@ use semio_framework_diagnostic::Severity;
         /// ➕️ Adds a member this profile declares uncompressed (ISO/IEC 21320-1 §4.4 method 0).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: ZipEntry { name: name.into(), data, ..Default::default() }, before: None }));
+            apply_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: ZipEntry { name: name.into(), data, ..Default::default() }, before: None }));
             self
         }
 
         /// ➕️ Adds a member this profile declares Deflate-compressed (ISO/IEC 21320-1 §4.4 method 8).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: ZipEntry { name: name.into(), data, ..Default::default() }, before: None }));
+            apply_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: ZipEntry { name: name.into(), data, ..Default::default() }, before: None }));
             self
         }
 
@@ -181,7 +182,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_zip_iso21320_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 

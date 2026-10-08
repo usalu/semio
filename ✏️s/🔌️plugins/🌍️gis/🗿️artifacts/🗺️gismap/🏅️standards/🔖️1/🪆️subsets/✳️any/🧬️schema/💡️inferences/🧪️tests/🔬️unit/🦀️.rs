@@ -16,11 +16,19 @@ async fn inference_default_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_image() {
-    use crate::mutations::apply_gis_map_mutation;
+    use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
     use crate::schema::gis_map_snapshot_to_drawing;
 use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::{mutations::{diff_semio_drawing_mutation, SemioDrawingMutation as AppliedDrawingMutation}, snapshot::SemioDrawingSnapshot as AppliedDrawingSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::{mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, snapshot::SemioValueSnapshot as AppliedValueSnapshot};
+        let apply_semio_drawing_mutation = |content: &mut AppliedDrawingSnapshot, mutation: &AppliedDrawingMutation| {
+            let outcome = diff_semio_drawing_mutation(mutation, content);
+            *content = semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), content).expect("a drawing diff applies to the snapshot it was computed from");
+        };
+        let apply_semio_value_mutation = |content: &mut AppliedValueSnapshot, mutation: &AppliedValueMutation| {
+            let outcome = diff_semio_value_mutation(mutation, content);
+            *content = semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), content).expect("a value diff applies to the snapshot it was computed from");
+        };
 
     let feature = |id: &str, data: serde_json::Value| MapFeature { id: id.into(), data: semio_framework_value::DslValue::from(data) };
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot {
@@ -43,7 +51,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
     let mut projected_drawing = before_drawing.clone();
     apply_semio_drawing_mutation(&mut projected_drawing, &work.drawing);
     assert_eq!(projected_drawing, after_drawing);
-    for inverse in &work.drawing_inverse {
+    for inverse in work.drawing_inverse.iter().rev() {
         apply_semio_drawing_mutation(&mut projected_drawing, inverse);
     }
     assert_eq!(projected_drawing, before_drawing);
@@ -53,7 +61,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
     let mut projected_value = before_value.clone();
     apply_semio_value_mutation(&mut projected_value, &work.value);
     assert_eq!(projected_value, after_value);
-    for inverse in &work.value_inverse {
+    for inverse in work.value_inverse.iter().rev() {
         apply_semio_value_mutation(&mut projected_value, inverse);
     }
     assert_eq!(projected_value, before_value);

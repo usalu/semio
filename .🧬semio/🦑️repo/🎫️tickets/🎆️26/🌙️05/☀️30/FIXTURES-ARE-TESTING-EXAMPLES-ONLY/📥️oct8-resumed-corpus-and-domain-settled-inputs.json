@@ -1,0 +1,101 @@
+{
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧫️fixtures/🔣️schema.json",
+      "action": "removed",
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "sha256": "21d568f8b066fd087c68875ebe26156d826a082d6341eeb3cb6766335dabc489"
+    },
+    {
+      "path": "✏️s/🧪️tests/🗂️native-ownership/🧫️fixtures/🔣️schema.json",
+      "action": "removed",
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🧪️tests/🗂️native-ownership/🟦️.ts",
+      "action": "updated",
+      "sha256": "743d1d0a765c2c728459133e459b165e9551306b81fb3bb864ab3657c34962f5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "action": "updated",
+      "sha256": "2ff04273b1ef6a9efbfd3da3c734445e7c7a4dfa567a947530bd3072a8b8cf51"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "action": "updated",
+      "sha256": "8f409ea18ddf4e54fbc4609c5a4f301c39f73707b4b2d7b539b511d19ee70754"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+      "action": "updated",
+      "sha256": "ad5e239eb7bb7e09138e35d583152efc1d0d740d862e3b0d54dbd49313fd5508"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "action": "updated",
+      "sha256": "9aa9a465bc2d030816a320f0e35654e479e035efcfc72958a8312cee72c54ac4"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "action": "updated",
+      "sha256": "114cdbca6e746f5fc44f39987596c17bb62ac634579eadef5fa001296f2be0f7"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "action": "updated",
+      "sha256": "5fed27f70b5fdc03b96c15f4902fc86293adb0c6ef0cde2e7218f052bff54073"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "action": "updated",
+      "sha256": "74880f6073256b8cc97b1048df0359deddc7a553cd7050b17ec777164c5e1e1d"
+    }
+  ],
+  "excludedObservationInputs": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧫️fixtures/🔣️.json",
+      "sha256": "72c2b94d033b35ae92b24e71aaf763fdd7b629a08e8474fd74ac55781bbfac54",
+      "reason": "unchanged original plain example bytes; no Root authorship"
+    },
+    {
+      "path": "✏️s/🧪️tests/🗂️native-ownership/🧫️fixtures/🔣️.json",
+      "sha256": "38580f20cca1386f1a2aba5e86dd36cd84f0fc96071c5a545c9f83f8efb3d996",
+      "reason": "unchanged original plain example bytes; no Root authorship"
+    }
+  ],
+  "logs": [
+    {
+      "label": "Actual full RED",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-resumed-corpus-authority-red-full.log",
+      "sha256": "fa02686fa972806afc9ce1e0809312c9098ae39ec47d8fb678bb57331626b4eb",
+      "byteLength": 6060355,
+      "reportedDuration": "54.2s"
+    },
+    {
+      "label": "Meaningful domain-data RED",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-domain-empty-properties-red.log",
+      "sha256": "4ac2dc1e29a48a2a0fa4800d43326628944d236e056f8b9f49505d4b2f8710be",
+      "byteLength": 13825,
+      "reportedDuration": "2.5s"
+    },
+    {
+      "label": "First incomplete GREEN: oracle failure",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-resumed-corpus-and-domain-green.log",
+      "sha256": "6a018659c6114aca1ba1134f23b4a45740d38dc3389bf59f706dc3c4dde1147b",
+      "byteLength": 17489,
+      "reportedDuration": "1.9s"
+    },
+    {
+      "label": "Final locked-oracle GREEN",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-resumed-corpus-and-domain-locked-oracle-green.log",
+      "sha256": "75da9905fe335a00f2122122122a356d348c532b68937805ede2150be4a1b197",
+      "byteLength": 14395,
+      "reportedDuration": "1.9s"
+    }
+  ]
+}

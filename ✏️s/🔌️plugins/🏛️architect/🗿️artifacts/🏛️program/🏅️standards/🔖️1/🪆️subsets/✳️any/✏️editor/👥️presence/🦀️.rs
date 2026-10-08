@@ -103,16 +103,6 @@ impl protocol::DiffAlgebra<ArchitectPresence> for ArchitectPresenceDiff {
         }
     }
 
-    fn between(base: &ArchitectPresence, other: &ArchitectPresence) -> Self {
-        Self {
-            active_register: (base.active_register != other.active_register).then(|| other.active_register.clone()),
-            adjacency_kind_filter: (base.adjacency_kind_filter != other.adjacency_kind_filter).then(|| AdjacencyKindFilterSet { value: other.adjacency_kind_filter.clone() }),
-            graph_camera_x: (base.graph_camera_x != other.graph_camera_x).then_some(other.graph_camera_x),
-            graph_camera_y: (base.graph_camera_y != other.graph_camera_y).then_some(other.graph_camera_y),
-            graph_camera_zoom: (base.graph_camera_zoom != other.graph_camera_zoom).then_some(other.graph_camera_zoom),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

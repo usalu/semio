@@ -103,7 +103,7 @@ export class DocumentBooleanJob{
  }
  private publish():void{
   const source=this.input.plan.nodes[this.publishAt];
-  if(!source){const a=this.input.plan.assets[this.publishAssetAt++];if(a){this.output.assets.push({id:a.id,mime:a.mime,data:a.data});return;}if(this.cleanup())this.phase="complete";return;}
+  if(!source){const a=this.input.plan.assets[this.publishAssetAt++];if(a){this.output.assets.push({id:a.id,image:a.image});return;}if(this.cleanup())this.phase="complete";return;}
   if(!this.copyNode){this.copyNode=new SceneNodeCopyJob(source,source.content.kind==="boolean"?this.local.get(this.publishAt)!:null);if(source.content.kind==="boolean")this.local.delete(this.publishAt);return;}
   if(this.copyNode.advanceOne()){this.output.nodes.push(this.copyNode.take());this.copyNode=null;this.publishAt++;}
  }

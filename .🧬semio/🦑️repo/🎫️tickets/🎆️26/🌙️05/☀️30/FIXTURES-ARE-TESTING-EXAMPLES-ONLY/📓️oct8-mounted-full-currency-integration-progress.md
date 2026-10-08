@@ -1,0 +1,15 @@
+# Mounted Full Currency Integration Progress
+
+The current mounted inner owner, receipt chain and actual codec symbol frontier now publish independent retirement demand currencies. This is partial source integration, not a frozen source or native production proof.
+
+The meaningful registered source RED ran with the existing private `root-resumed-corpus-tests --durable-maintenance-only` route: session34608 terminated Nx1,6.3s,6 passing and3 failing laws. The intended mounted assertion failed because the actual owner had no full demand query. Two independent rustfmt subprocesses also refused the huge shared Store/Plugin roots at their unchanged2s limits; the blank stderr is not a grammar-error diagnosis.
+
+The changed-source renewal terminated Nx1,5.4s:7 passing,2 failing laws,343 expectations. The new mounted law passed against genuine canonical Demand JSON/Ajv, independent Int32Array/Buffer bytes and installed rustfmt grammar for the actual mounted owner. The two unchanged-budget large-root grammar refusals remain unresolved. Logs are generated/oct8-mounted-owner-full-demand-source-red.log and generated/oct8-mounted-owner-full-demand-current-source.log, under the ticket generated folder.
+
+Exact actual owners and paths are recorded in 📥️oct8-mounted-full-currency-partial-endpoints.json. New allocation-free PagedList tail/release depth observers follow the actual retained node path; Pack closes only inline symbol locators or funded whole symbol pages, with no payload-copy/capacity credit. Operation-wire forwards the same canonical close demand and depth-debits its actual inline Pack owner. Receipt fields remain genuine fixed causal/payload owners; active encoder currency and depth follow the actual retained codec. Completed receipt Box shells remain distinct paid releases.
+
+The original mounted frame law now checks zero item/depth and one-below every nonzero currency, original stable pointer and exact physical heap receipts. It has not run in Rust. Original plain fixture bytes were not changed. StepContextOwner's actual complete progress is preserved rather than replaced with an invented one-item/zero-byte receipt. Its live-borrower Blocked case currently remains explicit typed `mounted-publication.retirement-blocked` Fault; outer canonical PluginApp blocked scheduling is still pending.
+
+Current operation and registry close APIs accept the complete supplied grant and return complete retained progress. Internal publication cancellation uses its existing64copy/64depth and262144 physical admission ceilings, selecting exact demanded capacity/release without widening them. Shared PluginApp scalar defining API/direct consumers are still pending authorized propagation; no synthetic scalar-to-full compatibility method was added, and no native compilation success is claimed for this incomplete source epoch. Production commit/creation and other publication/presence/durable integration remain ongoing.
+
+Root's UI baseline and Native's Kernel baseline own serial Cargo custody. No Cargo/native/server/guest/Registry/Dev/Hub producer was launched in this lane.

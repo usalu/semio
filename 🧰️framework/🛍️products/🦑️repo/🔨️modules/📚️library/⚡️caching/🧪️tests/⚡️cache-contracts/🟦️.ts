@@ -110,8 +110,10 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testServiceReadiness(workspace, output);
   await testBunDependencies(workspace, output);
   await testNativePreparation(workspace, output);
-  const { testGeneratorOwnership, testWgpuGeneratorOwnership, testWgpuGeneratorPublication } = await import("../🧬️generator-ownership/🟦️.ts");
+  const { testGeneratorOwnership, testWgpuGeneratorOwnership, testWgpuGeneratorPublication, testBrowserTransportOwnership, testBrowserInputClosure } = await import("../🧬️generator-ownership/🟦️.ts");
   await testGeneratorOwnership(workspace, output);
+  await testBrowserTransportOwnership(workspace);
+  await testBrowserInputClosure(workspace);
   await testWgpuGeneratorOwnership(workspace);
   await testWgpuGeneratorPublication(workspace, output);
   const { testNativeRendererOutputs } = await import("../🧊️native-renderer-outputs/🟦️.ts");
@@ -867,7 +869,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         if (!hostLauncher) throw new Error(`${playground.variant}: host plugin must launch`);
         const materializeDeps = preparation.dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`));
         assert.ok(materializeDeps.includes(`${hostLauncher.project}:materialize-${profile}`), `${targetName}: boot prepare must materialize the host`);
-        const fullSession = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
+        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated"))).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
         assert.ok(materializeDeps.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
         // Host fanout playgrounds (no app-scoped row) previously pulled every crate; boot prepare must stay smaller.
         if (fullSession.length > materializeDeps.length + 5) {

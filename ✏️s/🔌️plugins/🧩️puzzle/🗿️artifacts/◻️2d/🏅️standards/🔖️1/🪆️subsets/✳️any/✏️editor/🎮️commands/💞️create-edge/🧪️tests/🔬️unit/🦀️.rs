@@ -5,7 +5,7 @@ use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::InvocationResult;
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json, Value};
 
 fn notices(result: &InvocationResult) -> Vec<String> {
     result

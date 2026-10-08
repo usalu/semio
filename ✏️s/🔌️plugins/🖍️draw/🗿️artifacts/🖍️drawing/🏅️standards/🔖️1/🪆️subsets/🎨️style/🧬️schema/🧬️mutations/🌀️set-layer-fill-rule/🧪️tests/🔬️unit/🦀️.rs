@@ -19,7 +19,7 @@ fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
     let mut restored=after;
     let inverse=mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(),1);
-    for step in inverse {crate::mutations::apply_drawing_mutation(&mut restored,&step).unwrap();}
+    for step in inverse {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut restored,&step).unwrap();}
     assert_eq!(restored,before);
     for (snapshot,text) in [(&before,BEFORE),(&restored,BEFORE)] {assert_eq!(serde_json::to_value(snapshot).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());}
     store::os_store::test_support::assert_op_line_round_trip(&mutation);

@@ -6,6 +6,8 @@ import { readFileSync } from "node:fs";
 import { getWorkspaceRoot, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import {resolve} from "node:path";
+import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
 type OraclePreview = { schema: "semio.hub.gis-map-inference-preview/v1"; jobId: string; proposalHash: string; regionId: string; ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]] };
@@ -404,6 +406,14 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
   return { ajv: 1, hostileCorpora: hostileCorpora.length, transitions, strings, twinStrings, crossFixture: 3, ...Object.fromEntries(Object.entries(history).map(([key, value]) => [`history${key[0]!.toUpperCase()}${key.slice(1)}`, value])) };
 }
 
+/** 📥 Replays the actual current Store/GIS service receiver against the bounded authenticated fake transport. */
+class InferenceServiceReceivingCheckScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    const {rest}=resolveTestLevel(segments);
+    await runVitest(this.root,["--testNamePattern","gis map inference port",...rest],"../../💡️inference/🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 /** ⚖️ `os:gis-map-inference-port-check` — the neutral corpus, its independent oracle, and the
  * browser port's own vitest laws. `--browser` additionally runs the worker suite. */
 class GisMapInferencePortCheckScript extends BundleScript {
@@ -596,8 +606,23 @@ class TilePrefetchScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("tiles-check", TileCheckScript).register("tiles-prefetch", TilePrefetchScript).register("inference-check", GisMapInferencePortCheckScript).register("inference-bridge-check",InferenceBridgeCheckScript).register("cold-document-pair-check", ColdDocumentPairBrowserCheckScript);
+/** 🧪️ Runs the artifact-owned original physical transport corpus with cancellation and progress. */
+class OwnedVerifyScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "physical-codecs") {
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️hub/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
+      return;
+    }
+    throw Error("verify physical-codecs");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript).register("tiles-check", TileCheckScript).register("tiles-prefetch", TilePrefetchScript).register("inference-service-receiving-check",InferenceServiceReceivingCheckScript).register("inference-check", GisMapInferencePortCheckScript).register("inference-bridge-check",InferenceBridgeCheckScript).register("cold-document-pair-check", ColdDocumentPairBrowserCheckScript);
 if(["build","check","test"].includes(process.argv[2]??"")){
  const{runArtifactTypeScriptPackageMain}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts");
- await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gismap-js",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts"]});
+ await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gismap-js",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️hub/🧪️tests/🔣️transport/🟦️.ts"]});
 }else await runScriptMain(router,{defaultCommand:"inference-check"});
+
+
+
+

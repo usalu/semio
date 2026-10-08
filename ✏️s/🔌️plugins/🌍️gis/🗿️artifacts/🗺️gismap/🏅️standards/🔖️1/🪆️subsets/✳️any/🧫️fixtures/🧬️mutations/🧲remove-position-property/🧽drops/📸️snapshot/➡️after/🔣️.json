@@ -1,0 +1,35 @@
+{
+  "positions": [
+    {
+      "id": "position-harbor",
+      "data": {
+        "kind": "marker",
+        "note": "Quay 4"
+      }
+    }
+  ],
+  "routes": [],
+  "regions": [],
+  "drawing": {
+    "childId": "gismap-drawing",
+    "target": {
+      "artifactId": "gismap-drawing",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "drawing"
+      }
+    }
+  },
+  "value": {
+    "childId": "gismap-value",
+    "target": {
+      "artifactId": "gismap-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
+}

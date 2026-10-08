@@ -8,27 +8,59 @@ import "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/
 message CurationStringList { repeated string values = 1; }
 
 message CurationObjectKindExtraPatchEntry {
-  string id = 1;
-  semio.s.sourcing.curation.artifact.ObjectKindExtra extra = 2;
+  semio.s.sourcing.curation.artifact.ObjectKindExtra extra = 1;
 }
 
+message CurationStockExtraRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message CurationStockExtraInsertion {
+  uint32 index = 1;
+  semio.s.sourcing.curation.artifact.ObjectKindExtra row = 2;
+}
+message CurationStockExtraRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message CurationStockExtraDelta {
-  repeated semio.s.sourcing.curation.artifact.ObjectKindExtra added = 1;
-  repeated string removed = 2;
-  repeated CurationObjectKindExtraPatchEntry patched = 3;
-  optional CurationStringList reordered = 4;
+  repeated CurationStockExtraRemoval removed = 1;
+  repeated CurationStockExtraInsertion inserted = 2;
+  repeated CurationStockExtraRelocation moved = 3;
+  repeated CurationStockExtraModification modified = 4;
+}
+message CurationStockExtraModification {
+  string id = 1;
+  CurationObjectKindExtraPatchEntry patch = 2;
 }
 
 message CurationCuratedPatchEntry {
-  string object_id = 1;
-  optional uint32 count = 2;
+  optional uint32 count = 1;
 }
 
+message CurationCuratedRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message CurationCuratedInsertion {
+  uint32 index = 1;
+  semio.s.sourcing.curation.artifact.CuratedItem row = 2;
+}
+message CurationCuratedRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message CurationCuratedDelta {
-  repeated semio.s.sourcing.curation.artifact.CuratedItem added = 1;
-  repeated string removed = 2;
-  repeated CurationCuratedPatchEntry patched = 3;
-  optional CurationStringList reordered = 4;
+  repeated CurationCuratedRemoval removed = 1;
+  repeated CurationCuratedInsertion inserted = 2;
+  repeated CurationCuratedRelocation moved = 3;
+  repeated CurationCuratedModification modified = 4;
+}
+message CurationCuratedModification {
+  string id = 1;
+  CurationCuratedPatchEntry patch = 2;
 }
 
 message CurationDiff {

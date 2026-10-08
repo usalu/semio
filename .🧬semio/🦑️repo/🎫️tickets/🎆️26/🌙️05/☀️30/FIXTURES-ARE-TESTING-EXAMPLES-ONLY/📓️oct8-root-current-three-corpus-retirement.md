@@ -1,0 +1,7 @@
+# Current Three Corpus Authority Retirements
+
+Current normal inventory RED Nx1/93ms refused new Value source-currency, recreated BREP ownership and VCS identity witness schemas. Three exact declarations and empty declaration directories were retired. All three fresh plain examples remain byte-identical, including peer BREP callerProbeTurns8; no native/domain producer was edited.
+
+Final44118 Nx0/358ms exercises4original RFC6902/Three laws with47assertions, all six selected owners have no authority, Node Buffer paged/body/typed-frame/UTF8 and12 VCS identity preimages agree with neutral examples. Genuine first-party TS BLAKE3 equals existing locked noble BLAKE3 for all12 preimages. These are neutral/source proofs with nativeInvocation0, not current native retirement or VCS Rust runtime success.
+
+Intermediate3574 Nx1/207ms preserved a stale Store parent reexport assertion; current peer canonical command-subdomain owner was inspected and the test now requires that exact owner path, retaining all laws and avoiding large Source dumps. Producer Source is read-only evidence. Seven narrow actions in 📥️oct8-root-current-three-corpus-owned-endpoints.json; existing current corpus route and exact900.2985 live/seed entries are updated, with no legacy route or duplicate script. Shared outer contents/peer work are excluded from authored credit. Full repository derive/docs/full/gate remains pending.

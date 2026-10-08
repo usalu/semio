@@ -432,6 +432,12 @@ mod retained_window_input_tests;
 /// requested root differs from the base) and inverse (the root before), JSON op text and binary, and the state's DSL and pack in the semio envelope
 /// `$envelope` (`$extension`). The state stays the plugin's own type: `Clone + Default + PartialEq + ToValue + FromValue`. An
 /// artifact-level transient stops here; a window transient adds [`window_transient_owners!`].
+///
+/// 🎯️ The one exception to "no whole-record mutations": a transient root keeps its single `Snapshot { transient }` mutation. The
+/// root is ephemeral and published through the ephemeral ownership transfer ([`window_transient_transfer!`]), which moves a whole
+/// root (`footprint` sizes it, `into_state` moves it out), so per-field set variants cannot be transferred. Its diff is still the
+/// sparse `$diff::changing(base, root)`, and its inverse restores the base root, whose diff sums to exactly the negative diff.
+/// Persisted configs have no such variant (`config_record!` generates per-field set mutations only).
 #[macro_export]
 macro_rules! transient_root {
     (

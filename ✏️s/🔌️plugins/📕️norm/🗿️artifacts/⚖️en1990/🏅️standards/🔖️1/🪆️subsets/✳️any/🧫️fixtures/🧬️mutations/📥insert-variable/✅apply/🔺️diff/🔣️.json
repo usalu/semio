@@ -14,14 +14,15 @@
   "betaComputed": null,
   "permanents": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "variables": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "Q-wind",
+        "index": 2,
         "row": {
           "id": "Q-snow",
           "category": "snow",
@@ -29,26 +30,31 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "accidentals": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "seismics": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridgeSls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "effects": []

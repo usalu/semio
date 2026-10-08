@@ -13,7 +13,8 @@
 //! 💨️ Raising the roof-level wind point load to 16 kN rewrites one entry of the wind case in place, leaving its area load and its ordering exactly where they were.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -109,8 +110,8 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     let delta = outcome.diff().load_cases.as_ref().expect("loadCases delta");
-    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (0, 0, 1), "replace-load/💨️strengthens: the delta must be exactly one patched entry");
-    assert!(delta.reordered.is_none(), "replace-load/💨️strengthens: no verb in this vocabulary re-orders a collection");
+    assert_eq!((delta.inserted.len(), delta.removed.len(), delta.modified.len()), (0, 0, 1), "replace-load/💨️strengthens: the delta must be exactly one patched entry");
+    assert!(delta.moved.is_empty(), "replace-load/💨️strengthens: no verb in this vocabulary re-orders a collection");
     assert!(outcome.diff().nodes.is_none(), "replace-load/💨️strengthens: no nodes delta may be opened by this verb");
     assert!(outcome.diff().elements.is_none(), "replace-load/💨️strengthens: no elements delta may be opened by this verb");
     assert!(outcome.diff().regions.is_none(), "replace-load/💨️strengthens: no regions delta may be opened by this verb");

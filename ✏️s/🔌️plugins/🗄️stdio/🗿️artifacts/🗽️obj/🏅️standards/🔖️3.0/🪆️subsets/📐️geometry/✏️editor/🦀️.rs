@@ -288,8 +288,27 @@ impl editing::SnapshotEditingEditor for ObjAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { ObjAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v3_0::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::obj::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v3_0::subsets::any::schema::mutations::{remove_group, remove_object, set_group, set_object};
+        let editing::SnapshotEditEvent::SetValue { path, value: semio_framework_value::DslValue::String(name) } = event else { return Ok(None) };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let fail = |message: String| Fault::from(message);
+        match segments.as_slice() {
+            ["groups", index, "name"] => {
+                let index = index.parse::<usize>().map_err(|e| fail(e.to_string()))?;
+                let group = snapshot.groups.get(index).ok_or_else(|| fail(format!("group {index} does not exist")))?;
+                Ok(Some(vec![ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: group.name.clone() }), ObjMutation::SetGroup(set_group::SetGroup { name: name.clone(), faces: group.faces.clone(), index: Some(index) })]))
+            }
+            ["objects", index, "name"] => {
+                let index = index.parse::<usize>().map_err(|e| fail(e.to_string()))?;
+                let object = snapshot.objects.get(index).ok_or_else(|| fail(format!("object {index} does not exist")))?;
+                Ok(Some(vec![ObjMutation::RemoveObject(remove_object::RemoveObject { name: object.name.clone() }), ObjMutation::SetObject(set_object::SetObject { name: name.clone(), faces: object.faces.clone(), index: Some(index) })]))
+            }
+            _ => Ok(None),
+        }
     }
 }
 

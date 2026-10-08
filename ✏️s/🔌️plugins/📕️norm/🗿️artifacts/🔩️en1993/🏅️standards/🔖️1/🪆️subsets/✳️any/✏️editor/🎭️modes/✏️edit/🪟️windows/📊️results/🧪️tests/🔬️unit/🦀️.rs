@@ -1,8 +1,7 @@
 use super::*;
-use crate::editor::en1993::commands::{evaluate, set_snapshot};
+use crate::editor::en1993::commands::evaluate;
 use crate::editor::en1993::unit_tests::context;
 use crate::editor::en1993::En1993Command;
-use crate::En1993Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {
@@ -13,13 +12,6 @@ async fn definition_declares_this_windows_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_the_computed_checks() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(
-        &mut app,
-        En1993Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot {
-            snapshot: En1993Snapshot::default(),
-        }),
-    )
-    .await;
     context::dispatch(&mut app, En1993Command::Evaluate(evaluate::Evaluate {})).await;
     let rendered = context::render(&mut app, BODY_RESULTS).await;
     assert!(

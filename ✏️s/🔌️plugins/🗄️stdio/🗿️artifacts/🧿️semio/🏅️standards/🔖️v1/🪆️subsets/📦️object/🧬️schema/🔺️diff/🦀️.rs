@@ -103,14 +103,6 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
 
 /// 🧮️ `object`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
-    fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
-        SemioObjectDiff {
-            transform: (base.transform != other.transform).then_some(other.transform),
-            brep: (base.brep != other.brep).then(|| other.brep.clone()),
-            mesh: (base.mesh != other.mesh).then(|| other.mesh.clone()),
-            properties: (base.properties != other.properties).then(|| other.properties.clone()),
-        }
-    }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
             transform: self.transform.as_ref().map(|_| base.transform),

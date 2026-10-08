@@ -8,12 +8,8 @@ pub fn diff(payload: &super::CreatePart, base: &Puzzle5dSnapshot) -> protocol::M
     if base.parts.iter().any(|entry| entry.id == payload.part.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "part"), vec![payload.part.id.clone()]);
     }
-    let reordered = payload.index.filter(|index| *index < base.parts.len()).map(|index| {
-        let mut order: Vec<String> = base.parts.iter().map(|entry| entry.id.clone()).collect();
-        order.insert(index, payload.part.id.clone());
-        order
-    });
-    let delta = Puzzle5dPartsDelta::adding(payload.part.clone(), reordered);
+    let index = payload.index.map_or(base.parts.len(), |index| index.min(base.parts.len()));
+    let delta = Puzzle5dPartsDelta::insertion(index, payload.part.clone());
     protocol::MutationOutcome::new(Puzzle5dDiff { parts: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

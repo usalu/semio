@@ -1,0 +1,1 @@
+{"cases":[{"id":"missing-owner","expected":"refused"},{"id":"live-owner","expected":"accepted"},{"id":"foreign-owner-url","expected":"refused"}],"port":8877,"url":"http://127.0.0.1:8877","limits":{"maxBytes":1048576,"maxWork":65536,"chunkBytes":1048576,"budgetMs":60000}}

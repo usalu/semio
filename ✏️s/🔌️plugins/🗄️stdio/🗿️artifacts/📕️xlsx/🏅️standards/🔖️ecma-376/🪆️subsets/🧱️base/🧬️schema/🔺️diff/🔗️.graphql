@@ -1,33 +1,42 @@
-type XlsxStringModified { key: String!, diff: String! }
+type XlsxRemoval { id: String!, index: Int! }
+type XlsxRelocation { id: String!, from: Int!, to: Int! }
+type XlsxContentTypeEntryPatch { contentType: String }
+type XlsxContentTypeRow { name: String!, contentType: String! }
+type XlsxContentTypeEntryInsertion { index: Int!, row: XlsxContentTypeRow! }
+type XlsxContentTypeEntryModification { id: String!, patch: XlsxContentTypeEntryPatch! }
 type XlsxContentTypeEntriesDiff {
-  removed: [String!]
-  modified: [XlsxStringModified!]
-  added: [XlsxNameValue!]
-  order: [String!]
+  removed: [XlsxRemoval!]
+  inserted: [XlsxContentTypeEntryInsertion!]
+  moved: [XlsxRelocation!]
+  modified: [XlsxContentTypeEntryModification!]
 }
 type XlsxOpcContentTypesDiff { defaults: XlsxContentTypeEntriesDiff, overrides: XlsxContentTypeEntriesDiff }
 type XlsxOpcPartDiff { contentType: String, bytes: [Int!] }
-type XlsxOpcPartModified { key: String!, diff: XlsxOpcPartDiff! }
+type XlsxOpcPartInsertion { index: Int!, row: XlsxOpcPart! }
+type XlsxOpcPartModification { id: String!, patch: XlsxOpcPartDiff! }
 type XlsxOpcPartsDiff {
-  removed: [String!]
-  modified: [XlsxOpcPartModified!]
-  added: [XlsxOpcPart!]
-  order: [String!]
+  removed: [XlsxRemoval!]
+  inserted: [XlsxOpcPartInsertion!]
+  moved: [XlsxRelocation!]
+  modified: [XlsxOpcPartModification!]
 }
 type XlsxOpcRelationshipDiff { relType: String, target: String, targetMode: XlsxOpcTargetMode }
-type XlsxOpcRelationshipModified { key: String!, diff: XlsxOpcRelationshipDiff! }
+type XlsxOpcRelationshipInsertion { index: Int!, row: XlsxOpcRelationship! }
+type XlsxOpcRelationshipModification { id: String!, patch: XlsxOpcRelationshipDiff! }
 type XlsxOpcRelationshipListDiff {
-  removed: [String!]
-  modified: [XlsxOpcRelationshipModified!]
-  added: [XlsxOpcRelationship!]
-  order: [String!]
+  removed: [XlsxRemoval!]
+  inserted: [XlsxOpcRelationshipInsertion!]
+  moved: [XlsxRelocation!]
+  modified: [XlsxOpcRelationshipModification!]
 }
-type XlsxOpcRelationshipOwnerModified { key: String!, diff: XlsxOpcRelationshipListDiff! }
+type XlsxOpcRelationshipOwnerPatch { relationships: XlsxOpcRelationshipListDiff! }
+type XlsxOpcRelationshipOwnerInsertion { index: Int!, row: XlsxOpcRelationshipOwner! }
+type XlsxOpcRelationshipOwnerModification { id: String!, patch: XlsxOpcRelationshipOwnerPatch! }
 type XlsxOpcRelationshipsDiff {
-  removed: [String!]
-  modified: [XlsxOpcRelationshipOwnerModified!]
-  added: [XlsxOpcRelationshipOwner!]
-  order: [String!]
+  removed: [XlsxRemoval!]
+  inserted: [XlsxOpcRelationshipOwnerInsertion!]
+  moved: [XlsxRelocation!]
+  modified: [XlsxOpcRelationshipOwnerModification!]
 }
 type XlsxOpcDiff {
   comment: String
@@ -37,12 +46,13 @@ type XlsxOpcDiff {
 }
 scalar XlsxXmlDocumentDiff
 type XlsxXmlPartDiff { contentType: String, document: XlsxXmlDocumentDiff }
-type XlsxXmlPartModified { key: String!, diff: XlsxXmlPartDiff! }
+type XlsxXmlPartInsertion { index: Int!, row: XlsxXmlPart! }
+type XlsxXmlPartModification { id: String!, patch: XlsxXmlPartDiff! }
 type XlsxXmlPartsDiff {
-  removed: [String!]
-  modified: [XlsxXmlPartModified!]
-  added: [XlsxXmlPart!]
-  order: [String!]
+  removed: [XlsxRemoval!]
+  inserted: [XlsxXmlPartInsertion!]
+  moved: [XlsxRelocation!]
+  modified: [XlsxXmlPartModification!]
 }
 type XlsxDiff {
   opc: XlsxOpcDiff @state(class: ARTIFACT)

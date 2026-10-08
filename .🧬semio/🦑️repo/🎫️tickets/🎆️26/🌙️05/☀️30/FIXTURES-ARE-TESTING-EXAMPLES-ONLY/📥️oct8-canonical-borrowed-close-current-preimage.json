@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🦀️.rs",
+  "sha256": "46b7e1cf1776fd319117b8510b75f48e1eac3a74cbcdc3f12d80034d47d76f0d",
+  "block": "    pub(super) fn close_step(&mut self) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {\n        if self.depth != 0 {\n            self.depth -= 1;\n            self.frames[self.depth] = None;\n            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });\n        }\n        self.reset()?;\n        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })\n    }"
+}

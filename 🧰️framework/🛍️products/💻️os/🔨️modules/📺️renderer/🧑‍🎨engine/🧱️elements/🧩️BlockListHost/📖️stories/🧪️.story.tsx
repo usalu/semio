@@ -117,7 +117,7 @@ function BlockListStoryHost({ initialSteps }: { readonly initialSteps: readonly 
     setState((current) => reduceStoryBlockListAction(current, descriptor));
   }, []);
 
-  const scene: BlockListScene = useMemo(() => ({ stepsJson: JSON.stringify(state.steps), paletteJson: JSON.stringify(state.palette) }), [state]);
+  const scene: BlockListScene = useMemo(() => ({ steps: state.steps, palette: state.palette }), [state]);
   const node: UiComponentSceneNode = useMemo(() => ({ type: "componentScene", surfaceId: "block-list.story.overview", controllerId: STORY_BLOCK_LIST_CONTROLLER_ID, componentKind: "block-list", blockList: scene }), [scene]);
   const debug = useMemo(() => JSON.stringify({ steps: state.steps.map((step) => ({ id: step.id, blocks: step.blocks.map((block) => block.id) })) }), [state]);
 

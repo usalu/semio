@@ -7,7 +7,8 @@
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -57,7 +58,7 @@ fn inverse_is_payload_derived_and_does_not_restore() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 1, "connect-handles/keeps-an-edge-the-tower-already-holds: this kind undoes in exactly one step, got {inverse:?}");
     let mut snapshot = base.clone();
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_ne!(snapshot, base, "connect-handles/keeps-an-edge-the-tower-already-holds: undoing a no-op removes the record the board already held — that asymmetry is the point of this vector");

@@ -1,0 +1,169 @@
+{
+  "scope": "Ten exact publication instances/semantic routes/three project commands/two contract metadata/regression/private/live-seed actions",
+  "capturedAt": "2026-10-08T18:49:55.222696+00:00",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "beforeSha256": "a414c3e7e386c2b6720d2454be9d50f50ed52faa8085f3b2abf55832049cca2f",
+      "afterSha256": "435b7e83ba9ad59f65b7f07eb24e9c47e3156e4d391dbf901843e9a31b651462",
+      "action": "canonical-semantic-session-owner-route"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📜️script.ts",
+      "beforeSha256": "23edb46ea9a410c0f977da78314b81ac09d907473cab1de974e6036b07570de2",
+      "afterSha256": "59199d41571b3ab12bdbe89c11c4e0a351f52b0167c27354b06ce486d160b786",
+      "action": "canonical-semantic-session-owner-route"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "2125a76c37583bd9f4d3d607eb82284fa29c3d19a42572722611eaddba89f2df",
+      "afterSha256": "33e9d3a942c70b6c3e23bd0f278bebed3966d26131a9f77ec8411e5dcac02ce0",
+      "action": "exact-three-semantic-target-commands"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "beforeSha256": "63921f59a26ed304dd373449fa6e193696525d5d9a1bc24b747a8c6b2a63b269",
+      "afterSha256": "11ee365788b1d5f0409117bf590e90d245cdacc1aac80fa5b397ea5807d61ed2",
+      "action": "sort-generator-entries-and-two-domain-input-arrays"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🔣️.json",
+      "beforeSha256": null,
+      "afterSha256": "829cce29b8fa21b2633a70c87d4cd4ec2c980156f74aabf42d770a16a1ba78f9",
+      "action": "create-genuine-explicit-publication-instance"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+      "beforeSha256": null,
+      "afterSha256": "8cfdd3467930ba22b17f78fc9619cbfb089bf92fef16a7ee007ac24f78784c81",
+      "action": "create-genuine-explicit-publication-instance"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "beforeSha256": null,
+      "afterSha256": "b25573fadb52138bcbb5a83c0add09d207c25d2398b82698ae07e791deb77547",
+      "action": "create-runtime-owner-regression"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "acb2f8dc719fca9c3878e7fd243f90ad388f16e6adf2560f6994835edc6e7a4b",
+      "afterSha256": "bf14d82f0e7036349cb06f889352863910297f83e794532920be4de52b28a0d4",
+      "action": "canonical-semantic-session-owner-route"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "a03a192207c013485199dd58ca9678589647f9515e7459252977023414855f25",
+      "afterSha256": "8ca4dc7f2e6812447172641c7c23071edef2869bf5485908f84d1c23a53adada",
+      "action": "insert-existing-private-session-facet-in-live-seed"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "33fcde75ba53153d942dbe4d184382961ffa944eb10aa9e2a77d7ff125a384d0",
+      "afterSha256": "27a2d9d0ccf1d28251976c6f99d39862af9688e26ead415b61c664d97d9d0994",
+      "action": "insert-existing-private-session-facet-in-live-seed"
+    }
+  ],
+  "preservedObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧫️fixtures/🔣️.json",
+      "beforeSha256": "365c29fc7087ba840ebc3c8233ca39b523b62cf49043e129dfabaa83486db24f",
+      "afterSha256": "365c29fc7087ba840ebc3c8233ca39b523b62cf49043e129dfabaa83486db24f",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧫️fixtures/🔣️.json",
+      "beforeSha256": "0b92e4f5ef2090ebed5c039a5ee08c171aa3cd73e66d54f2ef13a0b44da6a919",
+      "afterSha256": "0b92e4f5ef2090ebed5c039a5ee08c171aa3cd73e66d54f2ef13a0b44da6a919",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+      "beforeSha256": "20a8912b5468a909f170a513069ea77c14f3cd4524dc95db96f91a4db4c88489",
+      "afterSha256": "20a8912b5468a909f170a513069ea77c14f3cd4524dc95db96f91a4db4c88489",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+      "beforeSha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "afterSha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+      "beforeSha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+      "afterSha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+      "unchanged": true,
+      "ownMutation": false
+    }
+  ],
+  "policyObservation": {
+    "schemaId": "https://json.schemas.assets.semio-tech.com/os/dev/playground-session/component.json",
+    "export": "PlaygroundSessionPublicationRequestV1",
+    "json": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
+      "beforeSha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "afterSha256": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    "typeScript": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts",
+      "beforeSha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+      "afterSha256": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81",
+      "unchanged": true,
+      "ownMutation": false
+    },
+    "role": "Original production policy observation only, not authored action",
+    "limits": {
+      "maxBytes": 2097152,
+      "maxRows": 128,
+      "maxDurationMs": 30000
+    }
+  },
+  "red": {
+    "nx": 1,
+    "duration": "165ms",
+    "log": "🗑️generated/oct8-session-owner/red-current.log",
+    "reason": "Actual Specific fixture publication import and General semantic preview absence"
+  },
+  "qualifiedAttempts": [
+    {
+      "session": 98927,
+      "nx": 1,
+      "log": "🗑️generated/oct8-session-owner/red.log",
+      "reason": "new test root-coordinate error, no runtime RED credit"
+    },
+    {
+      "session": 45885,
+      "nx": 1,
+      "log": "🗑️generated/oct8-session-owner/green.log",
+      "reason": "ownership/policy/taxonomy passed; new assertion incorrectly expected plugins on deliberately undefined General empty session; corrected"
+    }
+  ],
+  "green": {
+    "session": 52566,
+    "nx": 0,
+    "duration": "1.3s",
+    "log": "🗑️generated/oct8-session-owner/settled-green.log",
+    "tests": 2,
+    "assertions": 67,
+    "actualReadOnlyGeneralPreviews": 2,
+    "generatedWrites": 0,
+    "CargoNativeServers": 0
+  },
+  "originalMetadataGreen": {
+    "session": 24570,
+    "nx": 0,
+    "duration": "1.3s",
+    "log": "🗑️generated/oct8-session-owner/original-preview-settled-green.log",
+    "lawTests": 1,
+    "assertions": 22,
+    "mountedVectors": 4,
+    "historicalRed": 64367
+  },
+  "authorshipQualification": "Specific CatalogScript peer budget full-to-long change captured afresh and preserved, not authored. Only own live/seed facet insertion is authored, all other shared text observed."
+}

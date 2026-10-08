@@ -89,15 +89,19 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
       | create-widget           | 🌱️create-widget/📝️inserts                            |
       | update-widget           | 🩹update-widget/🎚️retunes                        |
       | delete-widget           | ❌delete-widget/🚫️removes           |
+      | delete-widget          | ❌delete-widget/📍️removes-a-middle-row |
       | connect-synapse         | 🔗️connect-synapse/🔌️wires                  |
       | update-synapse          | 🔄️update-synapse/📡️repoints                  |
       | disconnect-synapse      | ✂️disconnect-synapse/✂️cuts                |
+      | disconnect-synapse     | ✂️disconnect-synapse/📍️removes-a-middle-row |
       | move-widget             | 📍️move-widget/📍️repositions                        |
       | delete-widget-position  | 🧹️delete-widget-position/🧹️unpins                  |
       | update-camera           | 📷️update-camera/🔍️frames                      |
       | change-schema           | 🔤️change-schema/🏷️restamps                       |
       | create-generation       | ➕create-generation/🌱️appends     |
       | delete-generation       | 🗑️delete-generation/🚫️removes |
+      | delete-generation      | 🗑️delete-generation/📍️removes-a-middle-row |
+      | delete-generation      | 🗑️delete-generation/🔓️removes-an-unselected-middle-row |
       | rename-generation       | 🏷️rename-generation/🏷️retitles               |
       | change-generation-value | 🔧️change-generation-value/🏢️raises  |
       | change-slider-value     | 🎚️change-slider-value/🎚️sets |
@@ -131,15 +135,19 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
       | create-widget           | 🌱️create-widget/📝️inserts                            |
       | update-widget           | 🩹update-widget/🎚️retunes                        |
       | delete-widget           | ❌delete-widget/🚫️removes           |
+      | delete-widget          | ❌delete-widget/📍️removes-a-middle-row |
       | connect-synapse         | 🔗️connect-synapse/🔌️wires                  |
       | update-synapse          | 🔄️update-synapse/📡️repoints                  |
       | disconnect-synapse      | ✂️disconnect-synapse/✂️cuts                |
+      | disconnect-synapse     | ✂️disconnect-synapse/📍️removes-a-middle-row |
       | move-widget             | 📍️move-widget/📍️repositions                        |
       | delete-widget-position  | 🧹️delete-widget-position/🧹️unpins                  |
       | update-camera           | 📷️update-camera/🔍️frames                      |
       | change-schema           | 🔤️change-schema/🏷️restamps                       |
       | create-generation       | ➕create-generation/🌱️appends     |
       | delete-generation       | 🗑️delete-generation/🚫️removes |
+      | delete-generation      | 🗑️delete-generation/📍️removes-a-middle-row |
+      | delete-generation      | 🗑️delete-generation/🔓️removes-an-unselected-middle-row |
       | rename-generation       | 🏷️rename-generation/🏷️retitles               |
       | change-generation-value | 🔧️change-generation-value/🏢️raises  |
       | change-slider-value     | 🎚️change-slider-value/🎚️sets |

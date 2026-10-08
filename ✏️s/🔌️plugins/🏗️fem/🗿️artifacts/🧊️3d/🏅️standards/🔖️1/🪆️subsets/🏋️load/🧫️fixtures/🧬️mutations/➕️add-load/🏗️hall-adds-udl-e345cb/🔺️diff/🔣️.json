@@ -6,33 +6,36 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "dead",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [
+            "inserted": [
               {
-                "kind": "memberUdl",
-                "id": "ld_services",
-                "elementId": "pur_a_0",
-                "wx": 0.0,
-                "wy": 0.0,
-                "wz": -300.0
+                "index": 2,
+                "row": {
+                  "kind": "memberUdl",
+                  "id": "ld_services",
+                  "elementId": "pur_a_0",
+                  "wx": 0.0,
+                  "wy": 0.0,
+                  "wz": -300.0
+                }
               }
             ],
             "removed": [],
-            "patched": [],
-            "reordered": null
+            "moved": [],
+            "modified": []
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

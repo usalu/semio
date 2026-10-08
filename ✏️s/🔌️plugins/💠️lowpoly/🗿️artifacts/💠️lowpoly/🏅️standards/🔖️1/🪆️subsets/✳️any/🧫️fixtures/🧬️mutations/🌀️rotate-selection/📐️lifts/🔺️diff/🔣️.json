@@ -1,53 +1,37 @@
 {
   "objects": {
-    "added": [],
-    "patched": [
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "obj-plane",
-        "paintLayers": null,
         "patch": {
-          "mesh": {
-            "childId": "mesh-9f1b3acee6ab2169",
-            "target": {
-              "artifactId": "obj-plane-mesh",
-              "dialect": {
-                "artifactKind": "s.stdio.semio",
-                "standard": "v1",
-                "subset": "mesh"
-              }
-            }
+          "paintLayers": null,
+          "patch": {
+            "mesh": null,
+            "meshContent": null,
+            "name": null,
+            "smoothShading": null,
+            "meshState": null,
+            "position": null,
+            "rotation": null,
+            "scale": null
           },
-          "meshContent": "{\"vertices\":[{\"position\":[-1.0,0.0,-1.0],\"normal\":[0.1217925,-0.9850549,0.1217925],\"halfedge\":0},{\"position\":[1.0,0.0,-1.0],\"normal\":[0.1217925,-0.9850549,0.1217925],\"halfedge\":1},{\"position\":[0.87758255,0.47942555,1.0],\"normal\":[0.1217925,-0.9850549,0.1217925],\"halfedge\":2},{\"position\":[-1.0,0.0,1.0],\"normal\":[0.1217925,-0.9850549,0.1217925],\"halfedge\":3}],\"halfedges\":[{\"vertex\":0,\"twin\":null,\"next\":1,\"face\":0,\"uv\":[0.0,0.0]},{\"vertex\":1,\"twin\":null,\"next\":2,\"face\":0,\"uv\":[1.0,0.0]},{\"vertex\":2,\"twin\":null,\"next\":3,\"face\":0,\"uv\":[1.0,1.0]},{\"vertex\":3,\"twin\":null,\"next\":0,\"face\":0,\"uv\":[0.0,1.0]}],\"faces\":[{\"halfedge\":0,\"smooth\":false,\"flipped\":false}],\"uv_seams\":[]}",
-          "name": null,
-          "smoothShading": null,
-          "meshState": null,
-          "position": null,
-          "rotation": null,
-          "scale": null
-        },
-        "meshMotions": [
-          {
-            "motion": "turn",
-            "vertexIds": [
-              2
-            ],
-            "pivot": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "axis": [
-              0.0,
-              0.0,
-              1.0
-            ],
-            "angle": 0.5
-          }
-        ]
+          "meshVertices": [
+            {
+              "vertex": 2,
+              "position": [
+                0.87758255,
+                0.47942555,
+                1.0
+              ]
+            }
+          ],
+          "meshAttributes": []
+        }
       }
-    ],
-    "removed": [],
-    "reordered": null
+    ]
   },
   "schema": null
 }

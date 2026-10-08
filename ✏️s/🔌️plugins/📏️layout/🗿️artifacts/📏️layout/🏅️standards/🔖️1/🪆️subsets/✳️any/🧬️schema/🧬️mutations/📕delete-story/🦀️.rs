@@ -1,7 +1,7 @@
 //! 🗑️ `delete-story` — removes a {@link TextStory} by id; inverse recreates it via `create-story`.
 
 use crate::mutations::{create_story, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesDelta;
+use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoryRemoval};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -38,10 +38,10 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
 
 //#region 🗑️DeleteStory
 pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
-    if !base.stories.iter().any(|story| story.id == payload.id) {
+    let Some(at) = base.stories.iter().position(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { removed: vec![LayoutStoryRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeleteStory
 

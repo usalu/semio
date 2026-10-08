@@ -2,12 +2,15 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "gl32c"
+      {
+        "id": "gl32c",
+        "index": 4
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "sections": null,
   "solids": null,

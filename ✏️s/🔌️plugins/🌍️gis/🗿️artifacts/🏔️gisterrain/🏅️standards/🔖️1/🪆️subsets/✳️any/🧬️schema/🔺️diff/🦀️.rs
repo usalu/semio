@@ -54,9 +54,6 @@ impl protocol::DiffAlgebra<GisTerrainSnapshot> for GisTerrainDiff {
     fn inverse(&self, base: &GisTerrainSnapshot) -> Self {
         Self { exaggeration: self.exaggeration.map(|_| base.exaggeration), imported_map: self.imported_map.as_ref().map(|_| ImportedMapChange { value: base.imported_map.clone() }) }
     }
-    fn between(base: &GisTerrainSnapshot, other: &GisTerrainSnapshot) -> Self {
-        Self { exaggeration: (base.exaggeration != other.exaggeration).then_some(other.exaggeration), imported_map: (base.imported_map != other.imported_map).then(|| ImportedMapChange { value: other.imported_map.clone() }) }
-    }
     fn is_empty(&self) -> bool {
         self.exaggeration.is_none() && self.imported_map.is_none()
     }

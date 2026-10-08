@@ -1404,6 +1404,104 @@
           "target": "component-release"
         }
       ]
+    },
+    "hub-document-sweep": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6071/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-document-sweep",
+        "forwardAllArgs": true
+      }
+    },
+    "io-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts io-matrix",
+        "forwardAllArgs": true
+      }
     }
   }
 }

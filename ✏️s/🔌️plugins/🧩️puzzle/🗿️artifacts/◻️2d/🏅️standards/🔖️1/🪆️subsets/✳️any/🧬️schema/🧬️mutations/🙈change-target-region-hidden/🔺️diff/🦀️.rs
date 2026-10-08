@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeTargetRegionHidden` — patches the one addressed target region in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionsDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::ChangeTargetRegionHidden, base: &Puzzle2dSnapshot) 
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        target_regions: Some(Puzzle2dTargetRegionsDelta::patching(payload.id.clone(), patch)),
+        target_regions: Some(Puzzle2dTargetRegionsDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

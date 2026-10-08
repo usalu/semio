@@ -8,7 +8,7 @@ pub fn diff(payload: &InsertLayer, base: &Din4108Snapshot) -> protocol::Mutation
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "element not found", Vec::<String>::new());
     };
-    let index = payload.index.min(element.layers.len());
-    let nested = Din4108LayerDelta::insertion(&element.layers, index, payload.layer.clone());
+    let index = payload.index.unwrap_or(usize::MAX).min(element.layers.len());
+    let nested = Din4108LayerDelta::insertion(index, payload.layer.clone());
     protocol::MutationOutcome::new(Din4108Diff { elements: Din4108ElementDelta::modification(&element.id, Din4108ElementPatch { layers: nested, ..Default::default() }), ..Default::default() })
 }

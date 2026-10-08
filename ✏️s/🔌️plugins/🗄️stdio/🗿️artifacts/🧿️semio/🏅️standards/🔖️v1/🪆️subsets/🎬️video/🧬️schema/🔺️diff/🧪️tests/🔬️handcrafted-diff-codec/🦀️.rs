@@ -45,9 +45,7 @@ pub(crate) fn snapshot_b() -> SemioVideoSnapshot {
 /// change, and every stream-level scalar field.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    let cases = vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a), SemioVideoDiff::between(&a, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -59,21 +57,4 @@ async fn diff_codec_text_binary_roundtrip_law() {
         assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
     }
 
-    // Field sweep proof: confirm every collection flavor actually got exercised above.
-    let diff_ab = SemioVideoDiff::between(&a, &b);
-    let streams_diff = diff_ab.streams.as_ref().expect("streams diff present");
-    assert!(!streams_diff.removed.is_empty(), "streams: removed not exercised");
-    assert_eq!(streams_diff.modified.len(), 1);
-    let stream_mod = &streams_diff.modified[0].diff;
-    assert!(stream_mod.kind.is_some() && stream_mod.codec.is_some() && stream_mod.width.is_some() && stream_mod.height.is_some() && stream_mod.rate.is_some(), "modified stream: not every scalar field exercised");
-    let samples_diff = stream_mod.samples.as_ref().expect("nested samples diff present");
-    assert!(!samples_diff.removed.is_empty(), "samples: removed not exercised");
-    assert!(!samples_diff.modified.is_empty(), "samples: modified not exercised");
-
-    let diff_ba = SemioVideoDiff::between(&b, &a);
-    let streams_diff_ba = diff_ba.streams.as_ref().expect("streams diff (b->a) present");
-    assert!(!streams_diff_ba.added.is_empty(), "streams (b->a): added not exercised");
-    let stream_mod_ba = &streams_diff_ba.modified[0].diff;
-    let samples_diff_ba = stream_mod_ba.samples.as_ref().expect("nested samples diff (b->a) present");
-    assert!(!samples_diff_ba.added.is_empty(), "samples (b->a): added not exercised");
 }

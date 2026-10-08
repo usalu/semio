@@ -1,0 +1,17 @@
+[
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+    "sha256": "74a36ee1ea40b8194f3bd7dc7e6e59e6aa8dc4c50dd2315fb743ef2530207a90",
+    "bytes": 872408
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "cf9e276ecde926aca1db832af157274f87dd41ca80a6bd5ff3443b73ed4e1113",
+    "bytes": 479451
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs",
+    "sha256": "cc364f057fe10d2ce57a20ff040ef135fda39fa9203e5d6307d0c61afa4465c2",
+    "bytes": 302189
+  }
+]

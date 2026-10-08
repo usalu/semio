@@ -35,7 +35,8 @@ mod semio_protocol_conformance;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation,Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation,Fem2dMutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 impl protocol::OpBinary for Fem2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

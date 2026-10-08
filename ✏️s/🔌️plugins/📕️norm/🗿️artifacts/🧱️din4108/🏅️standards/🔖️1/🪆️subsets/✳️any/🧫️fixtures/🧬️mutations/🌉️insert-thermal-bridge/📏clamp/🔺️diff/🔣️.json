@@ -8,19 +8,21 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "elements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "thermalBridges": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "tb-eaves",
+        "index": 2,
         "row": {
           "id": "tb-extra",
           "psi": 0.08,
@@ -29,6 +31,7 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   }
 }

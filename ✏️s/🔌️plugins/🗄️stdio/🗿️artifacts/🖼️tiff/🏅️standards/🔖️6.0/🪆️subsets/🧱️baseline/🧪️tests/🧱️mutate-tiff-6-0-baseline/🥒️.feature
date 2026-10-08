@@ -1,79 +1,22 @@
-@capability-tiff-6-0-baseline-mutate
-@oracle-tiff-tiff-6-0-baseline-mutate-reader
+@capability-tiff-6-0-baseline-native-conformance
+@oracle-tiff-tiff-6-0-baseline-native-reader
 @comparison-ordered-json-v1
-@mutations-tiff-6-0-baseline
-Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseline class
-  This is a CONFORMANCE-CLASS vocabulary, not a document one. The sibling `✳️any` subset owns the
-  generic IFD chain — `set-byte-order`, `insert-ifd`, `remove-ifd`, `set-tag`, `remove-tag`,
-  `set-pixels` — and its `set-tag` can write any of the 65 536 tag numbers with any field type,
-  which is the right vocabulary for editing a TIFF and the wrong one for moving a document between
-  conformance classes. A Baseline class is a property of five specific fields of IFD 0, and
-  `../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🦀️component.rs`'s
-  `check_tiff_baseline_conformance` reads exactly those: `Compression` (259) restricted to
-  {1 none, 2 CCITT G3 1-D, 32773 PackBits}, `PhotometricInterpretation` (262) to 0..=3,
-  `BitsPerSample` (258) to {1, 4, 8}, `TileWidth`/`TileLength` (322/323) absent because Baseline is
-  strip-organized, and `StripOffsets` (273) present when the IFD is not tiled. One kind per axis,
-  plus the two every vocabulary carries, plus the insert/remove pairings the two structural axes
-  need to be reachable in both directions.
+Feature: Classify native TIFF storage observations at IO
+  Compression, strip offsets and tile organization are ephemeral native observations.
+  The independent tiff reader and the paid first-party native reader inspect the real scan.
+  Each profile alters observations and evaluates the exact ordered Baseline diagnostic codes.
+  No profile is an authored image mutation or an instruction to rewrite carrier bytes.
 
-  ⚠️ WHAT THIS CASE DOES NOT CLAIM. It makes no byte-level claim for `set-compression`,
-  `set-photometric-interpretation`, `set-bits-per-sample` or `set-strip-offsets`, and that is
-  deliberate: `encode_tiff` REGENERATES every one of `CORE_STRIP_TAGS` from the raster it is about
-  to write, so those four are normalized away on re-serialization — correctly, because each of them
-  describes the strip the encoder emits. Only the two tile kinds survive a re-encode, because
-  `TileWidth`/`TileLength` sit outside that set and travel verbatim. A byte-level exhaustive case
-  built on this catalog would therefore report four of its nine rows green while the mutation never
-  reached a byte, which is the shape of shallow green this ticket exists to remove. The vocabulary
-  is measured where its axes live instead. The subject applies each row to the DECODED SNAPSHOT and
-  reads its own checker's verdict. The reference, the registered `tiff` crate reader, reads the same
-  five axes out of the real scan's IFD 0, applies the row as TIFF 6.0 defines the field it names, and
-  reads the class off the specification's own tables; the two projections must agree field for
-  field. The decode/re-encode law is its own case, `🔁️round-trip-tiff-6-0-baseline`.
-
-  The input is the real scanned TIFF the `✳️any` case reads, shared by both subsets rather than
-  copied. The `code` column names the diagnostic each kind must raise on it, and it is empty for
-  the two rows that move their axis in the direction that stays INSIDE the class: `remove-tile-tags`
-  restores strip organization and `set-strip-offsets` rewrites a pointer list the IFD already carries. `remove-tile-tags` is the one row that cannot be
-  exercised against the committed document as it stands — a strip-organized scan has no tile tags to
-  remove — so its `setup` column names the mutation that makes the removal meaningful, and its
-  observability is measured from THAT state rather than from the untouched file. Every other row's
-  `setup` is empty.
-
-  Every `params` cell — and the `setup` column's own `params` — is exactly the leaf's wire payload:
-  its `payload_value()`, camelCase, no aggregate tag, decoded by the subject through the
-  derive-generated `from_payload_value` and read by the reference by the same field names.
-  The reference reads the mutated document's axes off its IFD 0 exactly as it reads the scan's.
-
-  @id-mutate
+  @id-classify
   @level-exhaustive
   @mode-conformance
-  Scenario Outline: Apply <id> to the real scan and read the class verdict back
+  Scenario Outline: Classify the <id> native observation profile
     Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
-    When the <id> mutation is applied to the decoded snapshot
+    When the IO conformance profile changes the native observations
       """
-      {"kind": "<id>", "code": "<code>", "setup": <setup>, "params": <params>}
+      {"kind":"<id>","code":"<code>","setup":<setup>,"params":<params>}
       """
-    Then the conformance verdict gains exactly <code>, and the projection moves on this kind's own axis
-    Examples:
-      | id | code | setup | params |
-      | set-compression | stdio.tiff.baseline.unsupported-compression | {} | {"compression":5} |
-      | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric | {} | {"photometric":6} |
-      | set-bits-per-sample | stdio.tiff.baseline.unsupported-bits-per-sample | {} | {"bits":[16,16,16]} |
-      | insert-tile-tags | stdio.tiff.baseline.tiled-not-baseline | {} | {"tileWidth":256,"tileLength":256} |
-      | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
-      | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
-      | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
-
-  @id-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> puts the real scan back where it started
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
-    When <id> is applied to the decoded snapshot and then its own computed inverse steps are applied
-      """
-      {"kind": "<id>", "code": "<code>", "setup": <setup>, "params": <params>}
-      """
-    Then the conformance projection is the pre-mutation one again, tag for tag
+    Then the exact ordered codes match <code> and the named observation moves
     Examples:
       | id | code | setup | params |
       | set-compression | stdio.tiff.baseline.unsupported-compression | {} | {"compression":5} |

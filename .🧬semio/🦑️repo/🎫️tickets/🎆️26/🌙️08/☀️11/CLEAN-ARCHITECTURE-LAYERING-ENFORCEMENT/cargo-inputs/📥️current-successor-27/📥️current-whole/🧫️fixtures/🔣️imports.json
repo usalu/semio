@@ -1,0 +1,51 @@
+[
+  {
+    "id": "actual-inference-astral",
+    "source": "import \"../../💡️inference/🔌️service/🟦️.ts\";",
+    "expected": [
+      "../../💡️inference/🔌️service/🟦️.ts"
+    ]
+  },
+  {
+    "id": "escaped-code-units",
+    "source": "import \"./\\ud83d\\udca1/file.ts\";",
+    "expected": [
+      "./💡/file.ts"
+    ]
+  },
+  {
+    "id": "bmp",
+    "source": "export * from \"./ä/ß.ts\";",
+    "expected": [
+      "./ä/ß.ts"
+    ]
+  },
+  {
+    "id": "combining",
+    "source": "import \"./é/file.ts\";",
+    "expected": [
+      "./é/file.ts"
+    ]
+  },
+  {
+    "id": "cjk",
+    "source": "import \"./資料/file.ts\";",
+    "expected": [
+      "./資料/file.ts"
+    ]
+  },
+  {
+    "id": "syntax-only",
+    "source": "const text='import \"./absent.ts\";'; /* import \"./also-absent.ts\"; */ import \"./live.ts\";",
+    "expected": [
+      "./live.ts"
+    ]
+  },
+  {
+    "id": "duplicate-edge",
+    "source": "import \"./shared.ts\"; export * from \"./shared.ts\";",
+    "expected": [
+      "./shared.ts"
+    ]
+  }
+]

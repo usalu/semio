@@ -33,11 +33,13 @@ fn schema_owned_bmp_canonical_sealing_preserves_neutral_snapshot_and_diff() {
     for case in fixture["cases"].as_array().unwrap(){
         let expected=case["snapshot"].clone();
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(expected.to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
-        verify_cancel(BmpDiff{image:Some(snapshot.image.clone())});verify_cancel(snapshot.clone());
-        verify(BmpDiff{image:Some(snapshot.image.clone())},serde_json::json!({"image":expected["image"]}));
+        verify_cancel(BmpDiff{image:Some(snapshot.image.clone()),rects:Vec::new()});verify_cancel(snapshot.clone());
+        verify(BmpDiff{image:Some(snapshot.image.clone()),rects:Vec::new()},serde_json::json!({"image":expected["image"]}));
         verify(snapshot,expected);
     }
     verify(BmpDiff::default(),serde_json::json!({}));
+    let rect=BmpSampleRect{region:BmpRegion{x:1,y:2,width:1,height:1},indices:vec![3],samples:Vec::new()};
+    verify(BmpDiff{image:None,rects:vec![rect]},serde_json::json!({"rects":[{"region":{"x":1,"y":2,"width":1,"height":1},"indices":[3]}]}));
 }
 #[test]
 fn schema_owned_bmp_replacement_diff_and_inverse_preserve_neutral_native_words(){
@@ -51,7 +53,7 @@ fn schema_owned_bmp_replacement_diff_and_inverse_preserve_neutral_native_words()
         let binary=protocol::OpBinary::encode_op(&mutation).unwrap();assert_eq!(<BmpMutation as protocol::OpBinary>::decode_op(&binary).unwrap(),mutation);
         verify(mutation.clone(),serde_json::json!({"mutation":"replace-image","payload":{"image":case["snapshot"]["image"]}}));
         let actual=protocol::apply_diff(mutation.diff(&base).diff(),&base).unwrap();assert_eq!(actual,target);
-        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
+        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap().into_iter().rev(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
         let bytes=crate::standards::v_v3::subsets::any::io::encode_bmp(&actual).unwrap();assert_eq!(crate::standards::v_v3::subsets::any::io::decode_bmp(&bytes).unwrap(),actual);
         if case["name"]=="bitfields32-ten-bit-513-exact-image-replacement"{let(offset_width,offset_height,visual)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&bytes).unwrap();assert_eq!((offset_width,offset_height),(actual.image.width,actual.image.height));assert_eq!(visual,crate::schema::operations::bmp_rgba8_preview(&actual).unwrap());let offset=u32::from_le_bytes(bytes[10..14].try_into().unwrap())as usize;let word=u32::from_le_bytes(bytes[offset..offset+4].try_into().unwrap());assert_eq!((word&1072693248)>>20,513);}
         eprintln!("[DEBUG] Bmp typed replacement neutral={} nativeWordsExact=true inverseExact=true",case["name"]);

@@ -59,42 +59,35 @@ const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../.
 fn fold(base: &semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot {
     let mut state = base.clone();
     for leaf in leaves {
-        let outcome = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::apply_semio_flow_mutation(&mut state, leaf);
+        let outcome = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::diff_semio_flow_mutation(leaf, &state);
         assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
+        state = semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
     }
     state
 }
 
-/// ⚖️ LAW: every editor edit publishes child INTENT leaves, never a whole `set-snapshot`, and folding them onto the base
-/// content reproduces the content the editor host left behind — a drag of two steps is ONE relative `drag-nodes`.
+/// ⚖️ LAW: a node-graph gesture publishes the concrete child INTENT leaves its rows resolve to — a drag of two steps is ONE relative `drag-nodes` — and folding them onto the
+/// base content reproduces the content the gesture's working scene holds.
 #[semio_framework_async_macros::async_test]
 async fn child_intent_leaves_reproduce_the_edited_content() {
-    use crate::editor::sequence::{sequence_content_leaves, sequence_scene_leaves};
+    use crate::editor::sequence::edit_rules::SceneEdit;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
     let app = new_app().await;
     let live = live_host_snapshot(&app).await;
     let base = neural_engine::ColdOwner::new(crate::SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
     let base_content = crate::sequence_content_snapshot_from_working(&base.steps, &base.edges);
     let ids: Vec<String> = base.steps.iter().take(2).map(|step| step.id.clone()).collect();
-    let mut dragged = neural_engine::ColdOwner::new(crate::SequenceWorkingScene::clone(&base));
-    for step in dragged.steps.iter_mut().filter(|step| ids.contains(&step.id)) {
-        step.x += 40.0;
-        step.y -= 12.5;
+    let mut edit = SceneEdit::new(crate::SequenceWorkingScene::clone(&base));
+    assert!(edit.drag(&ids, 40.0, -12.5));
+    assert!(matches!(edit.leaves.as_slice(), [SemioFlowMutation::DragNodes(drag)] if drag.targets == ids && drag.dx == 40.0 && drag.dy == -12.5), "{:?}", edit.leaves);
+    let last = base.steps.last().map(|step| step.id.clone()).expect("a step");
+    edit.remove_steps(std::slice::from_ref(&last));
+    let edges: Vec<String> = edit.scene.edges.iter().map(|edge| edge.id.clone()).collect();
+    for edge in &edges {
+        edit.disconnect_edge(edge);
     }
-    let leaves = sequence_scene_leaves(&base, &dragged);
-    assert!(matches!(leaves.as_slice(), [SemioFlowMutation::DragNodes(drag)] if drag.targets == ids && drag.dx == 40.0 && drag.dy == -12.5), "{leaves:?}");
-    let mut edited = neural_engine::ColdOwner::new(crate::SequenceWorkingScene::clone(&dragged));
-    edited.edges.clear();
-    if let Some(first) = edited.steps.first_mut() {
-        first.kind = "log".into();
-    }
-    let removed = edited.steps.pop().map(neural_engine::ColdOwner::new);
-    let next_content = crate::sequence_content_snapshot_from_working(&edited.steps, &edited.edges);
-    let leaves = sequence_content_leaves(&base_content, &next_content);
-    assert!(!leaves.iter().any(|leaf| matches!(leaf, SemioFlowMutation::SetSnapshot(_))), "{leaves:?}");
-    assert_eq!(fold(&base_content, &leaves), next_content);
-    assert!(sequence_content_leaves(&base_content, &base_content).is_empty(), "no change, no leaf");
-    drop(removed);
+    assert_eq!(fold(&base_content, &edit.leaves), crate::sequence_content_snapshot_from_working(&edit.scene.steps, &edit.scene.edges));
+    assert!(SceneEdit::new(crate::SequenceWorkingScene::clone(&base)).leaves.is_empty(), "no gesture, no leaf");
 }
 
 /// ⚖️ LAW: a released node drag (the node-graph gesture record) moves its steps by the ONE offset and lands as ONE

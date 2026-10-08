@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "before": "include_str!(\"../../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json\")",
+  "after": "include_str!(\"../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json\")"
+}

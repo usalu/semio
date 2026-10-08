@@ -7,7 +7,7 @@
 //! ⚠️ Why this leaf pins a REJECTION branch: `FormsSnapshot` keeps its `steps` tree in the composed
 //! `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), so this committed snapshot decodes
 //! to an UNRESOLVED handle and `forms_steps` fails soft to an empty scene — no step, therefore no
-//! container for a block. A successful `create-block` would route through `forms_diff_from_delta`
+//! container for a block. A successful `create-block` would route through `FormsDiff::apply`
 //! and re-mint both handles with a `child_id` that is a `DefaultHasher` digest of the child
 //! content; forging a value out of `std`'s deliberately unspecified default hasher is not
 //! authorable, and this branch reaches no hash at all.
@@ -18,8 +18,9 @@
 //! guard, a colliding block id, is Fatal `mutation.duplicate-id` with a TWO-segment address. This
 //! case pins the first of the two.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕create-block/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕create-block/🧪️rejects/📸️snapshot/➡️after/🔣️.json");

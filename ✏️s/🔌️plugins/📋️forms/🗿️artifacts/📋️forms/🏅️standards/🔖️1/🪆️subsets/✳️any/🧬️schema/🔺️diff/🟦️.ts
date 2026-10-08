@@ -1,6 +1,5 @@
-/** 🔺️ Forms sparse durable delta: scalar slots, id-keyed step and response row deltas (steps carry nested id-keyed question deltas) and the owned-child handles; omitted slots are untouched. */
+/** 🔺️ Forms sparse durable delta: scalar slots, positional step and response row deltas (steps carry nested positional question deltas); the derived child handles are re-derived by the central applier, and omitted slots are untouched. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseSemioChild, type ArtifactChild } from "../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
 import { parseFormsArtifact, type FormsArtifact } from "../🟦️.ts";
 import { parseFormsDefinition } from "../📝️definition/🟦️.ts";
 import { parseFormsResponse, type FormsResponse } from "../📨️response/🟦️.ts";
@@ -8,13 +7,16 @@ import type { FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
 import { applyBlockField, parseChangeBlockField, type BlockField } from "../🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts";
 
 export interface FormsOptionalText { value: string | null }
-export interface RowDelta<Row, Patch> { added: Row[]; removed: string[]; patched: Patch[]; reordered: string[] | null }
-export interface FormsQuestionPatch { id: string; kind: string | null; changes: BlockField[] }
+export interface RowRemoval { id: string; index: number }
+export interface RowInsertion<Row> { index: number; row: Row }
+export interface RowRelocation { id: string; from: number; to: number }
+export interface RowModification<Patch> { id: string; patch: Patch }
+export interface RowDelta<Row, Patch> { removed: RowRemoval[]; inserted: RowInsertion<Row>[]; moved: RowRelocation[]; modified: RowModification<Patch>[] }
+export interface FormsQuestionPatch { kind: string | null; changes: BlockField[] }
 export type FormsQuestionsDelta = RowDelta<FormQuestion, FormsQuestionPatch>;
-export interface FormsStepPatch { id: string; title: string | null; description: FormsOptionalText | null; blocks: FormsQuestionsDelta | null }
-export interface FormsResponsePatch { id: string }
+export interface FormsStepPatch { title: string | null; description: FormsOptionalText | null; blocks: FormsQuestionsDelta | null }
 export type FormsStepsDelta = RowDelta<FormStep, FormsStepPatch>;
-export type FormsResponsesDelta = RowDelta<FormsResponse, FormsResponsePatch>;
+export type FormsResponsesDelta = Omit<RowDelta<FormsResponse, never>, "modified">;
 
 export interface FormsDiff {
   /** @state artifact */ schema?: "forms.form";
@@ -23,8 +25,6 @@ export interface FormsDiff {
   /** @state artifact */ title?: FormsOptionalText;
   /** @state artifact */ steps?: FormsStepsDelta;
   /** @state artifact */ responses?: FormsResponsesDelta;
-  /** @state artifact @child kind=s.stdio.semio */ structure?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ results?: ArtifactChild;
 }
 
 const record = (value: unknown, at: string, keys: readonly string[]): Record<string, unknown> => parseSchemaRecord(value, keys, at) as Record<string, unknown>;
@@ -38,13 +38,34 @@ const list = (value: unknown, at: string): unknown[] => {
 };
 const optional = <T>(value: unknown, parse: (value: unknown) => T): T | null => (value == null ? null : parse(value));
 
+const count = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 4294967295) throw new Error(`${at}: value must be a uint32`);
+  return value;
+};
+
+const positions = <Row>(fields: Record<string, unknown>, at: string, row: (value: unknown, at: string) => Row): Omit<RowDelta<Row, never>, "modified"> => ({
+  removed: list(fields.removed, `${at}.removed`).map((item, position) => {
+    const entry = record(item, `${at}.removed[${position}]`, ["id", "index"]);
+    return { id: text(entry.id, `${at}.removed[${position}].id`), index: count(entry.index, `${at}.removed[${position}].index`) };
+  }),
+  inserted: list(fields.inserted, `${at}.inserted`).map((item, position) => {
+    const entry = record(item, `${at}.inserted[${position}]`, ["index", "row"]);
+    return { index: count(entry.index, `${at}.inserted[${position}].index`), row: row(entry.row, `${at}.inserted[${position}].row`) };
+  }),
+  moved: list(fields.moved, `${at}.moved`).map((item, position) => {
+    const entry = record(item, `${at}.moved[${position}]`, ["id", "from", "to"]);
+    return { id: text(entry.id, `${at}.moved[${position}].id`), from: count(entry.from, `${at}.moved[${position}].from`), to: count(entry.to, `${at}.moved[${position}].to`) };
+  }),
+});
+
 const delta = <Row, Patch>(value: unknown, at: string, row: (value: unknown, at: string) => Row, patch: (value: unknown, at: string) => Patch): RowDelta<Row, Patch> => {
-  const fields = record(value, at, ["added", "removed", "patched", "reordered"]);
+  const fields = record(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
-    added: list(fields.added, `${at}.added`).map((item, position) => row(item, `${at}.added[${position}]`)),
-    removed: list(fields.removed, `${at}.removed`).map((id, position) => text(id, `${at}.removed[${position}]`)),
-    patched: list(fields.patched, `${at}.patched`).map((item, position) => patch(item, `${at}.patched[${position}]`)),
-    reordered: optional(fields.reordered, (order) => list(order, `${at}.reordered`).map((id, position) => text(id, `${at}.reordered[${position}]`))),
+    ...positions(fields, at, row),
+    modified: list(fields.modified, `${at}.modified`).map((item, position) => {
+      const entry = record(item, `${at}.modified[${position}]`, ["id", "patch"]);
+      return { id: text(entry.id, `${at}.modified[${position}].id`), patch: patch(entry.patch, `${at}.modified[${position}].patch`) };
+    }),
   };
 };
 
@@ -54,13 +75,12 @@ const optionalText = (value: unknown, at: string): FormsOptionalText => {
 };
 
 export function parseFormsQuestionPatch(value: unknown, at = "$"): FormsQuestionPatch {
-  const row = record(value, at, ["id", "kind", "changes"]);
-  const id = text(row.id, `${at}.id`);
+  const row = record(value, at, ["kind", "changes"]);
   const changes = list(row.changes, `${at}.changes`).map((change, position) => {
-    const { blockId: _blockId, ...field } = parseChangeBlockField({ mutation: "changeBlockField", blockId: id, ...record(change, `${at}.changes[${position}]`, ["field", "value"]) }, `${at}.changes[${position}]`);
+    const { blockId: _blockId, ...field } = parseChangeBlockField({ mutation: "changeBlockField", blockId: "row", ...record(change, `${at}.changes[${position}]`, ["field", "value"]) }, `${at}.changes[${position}]`);
     return field as BlockField;
   });
-  return { id, kind: row.kind == null ? null : text(row.kind, `${at}.kind`), changes };
+  return { kind: row.kind == null ? null : text(row.kind, `${at}.kind`), changes };
 }
 
 const questionRow = (value: unknown, at: string): FormQuestion => parseFormsDefinition({ steps: [{ id: "row", title: at, blocks: [value] }] }).steps[0]!.blocks[0]!;
@@ -75,9 +95,8 @@ export function parseFormsQuestionsDelta(value: unknown, at = "$"): FormsQuestio
 }
 
 export function parseFormsStepPatch(value: unknown, at = "$"): FormsStepPatch {
-  const row = record(value, at, ["id", "title", "description", "blocks"]);
+  const row = record(value, at, ["title", "description", "blocks"]);
   return {
-    id: text(row.id, `${at}.id`),
     title: row.title == null ? null : text(row.title, `${at}.title`),
     description: optional(row.description, (description) => optionalText(description, `${at}.description`)),
     blocks: optional(row.blocks, (blocks) => parseFormsQuestionsDelta(blocks, `${at}.blocks`)),
@@ -89,12 +108,12 @@ export function parseFormsStepsDelta(value: unknown, at = "$"): FormsStepsDelta 
 }
 
 export function parseFormsResponsesDelta(value: unknown, at = "$"): FormsResponsesDelta {
-  return delta(value, at, (response) => parseFormsResponse(response), (patch, patchAt) => ({ id: text(record(patch, patchAt, ["id"]).id, `${patchAt}.id`) }));
+  return positions(record(value, at, ["removed", "inserted", "moved"]), at, (response) => parseFormsResponse(response));
 }
 
 /** 🔎️ Keeps absent, set and clear operations distinct at the wire boundary. */
 export function parseFormsDiff(value: unknown, at = "$"): FormsDiff {
-  const row = parseSchemaRecord(value, ["schema", "id", "version", "title", "steps", "responses", "structure", "results"], at);
+  const row = parseSchemaRecord(value, ["schema", "id", "version", "title", "steps", "responses"], at);
   const diff: FormsDiff = {};
   if (Object.hasOwn(row, "schema")) {
     if (row.schema !== "forms.form") throw new Error(`${at}.schema: invalid Forms marker`);
@@ -104,28 +123,34 @@ export function parseFormsDiff(value: unknown, at = "$"): FormsDiff {
   if (Object.hasOwn(row, "title")) diff.title = optionalText(row.title, `${at}.title`);
   if (Object.hasOwn(row, "steps")) diff.steps = parseFormsStepsDelta(row.steps, `${at}.steps`);
   if (Object.hasOwn(row, "responses")) diff.responses = parseFormsResponsesDelta(row.responses, `${at}.responses`);
-  if (Object.hasOwn(row, "structure")) diff.structure = parseSemioChild(row.structure, "value", `${at}.structure`);
-  if (Object.hasOwn(row, "results")) diff.results = parseSemioChild(row.results, "table", `${at}.results`);
   return diff;
 }
 
-/** 🧺️ Applies an id-keyed row delta: removed rows leave, added rows append, patched rows fold, then the optional complete order is imposed. */
-function applyRows<Row extends { id: string }, Patch extends { id: string }>(rows: readonly Row[], rowDelta: RowDelta<Row, Patch>, fold: (row: Row, patch: Patch) => Row): Row[] {
-  for (const id of rowDelta.removed) if (!rows.some((row) => row.id === id)) throw new Error(`removed row ${id} does not exist`);
-  let next = rows.filter((row) => !rowDelta.removed.includes(row.id));
-  for (const row of rowDelta.added) {
-    if (next.some((existing) => existing.id === row.id)) throw new Error(`added row ${row.id} already exists`);
-    next = [...next, row];
+/** 🧺️ Commits a positional row delta onto the base list: every removed or moved id is checked at its base index, inserted and moved rows take their after slots, unmoved survivors fill the rest in base order, then patches fold. */
+function applyRows<Row extends { id: string }, Patch>(rows: readonly Row[], rowDelta: Omit<RowDelta<Row, Patch>, "modified"> & { modified?: RowModification<Patch>[] }, fold: (row: Row, patch: Patch) => Row): Row[] {
+  const gone = new Set<number>();
+  for (const { id, index } of [...rowDelta.removed, ...rowDelta.moved.map(({ id, from }) => ({ id, index: from }))]) {
+    if (rows[index]?.id !== id) throw new Error(`row ${id} is not at base index ${index}`);
+    if (gone.has(index)) throw new Error(`row ${id} is named twice`);
+    gone.add(index);
   }
-  for (const patch of rowDelta.patched) {
-    const target = next.find((row) => row.id === patch.id);
-    if (!target) throw new Error(`patched row ${patch.id} does not exist`);
+  const slots: (Row | undefined)[] = Array.from({ length: rows.length - rowDelta.removed.length + rowDelta.inserted.length }, () => undefined);
+  const place = (index: number, row: Row) => {
+    if (index >= slots.length) throw new Error(`after index ${index} lies past the end`);
+    if (slots[index] !== undefined) throw new Error(`two rows take after index ${index}`);
+    slots[index] = row;
+  };
+  for (const { index, row } of rowDelta.inserted) place(index, row);
+  for (const { from, to } of rowDelta.moved) place(to, rows[from]!);
+  const survivors = rows.filter((_, index) => !gone.has(index));
+  let next: Row[] = slots.map((slot) => slot ?? survivors.shift()!);
+  if (new Set(next.map((row) => row.id)).size !== next.length) throw new Error("two rows of the after list carry the same id");
+  for (const { id, patch } of rowDelta.modified ?? []) {
+    const target = next.find((row) => row.id === id);
+    if (!target) throw new Error(`modified row ${id} does not exist`);
     next = next.map((row) => (row === target ? fold(row, patch) : row));
   }
-  if (rowDelta.reordered === null) return next;
-  const order = rowDelta.reordered;
-  if (order.length !== next.length || new Set(order).size !== order.length || next.some((row) => !order.includes(row.id))) throw new Error("reorder must be a complete unique permutation");
-  return order.map((id) => next.find((row) => row.id === id)!);
+  return next;
 }
 
 const foldQuestion = (question: FormQuestion, patch: FormsQuestionPatch): FormQuestion => patch.changes.reduce<FormQuestion>((current, change) => applyBlockField(current, change), patch.kind === null ? question : { ...question, kind: patch.kind });
@@ -146,6 +171,6 @@ export function applyFormsDiff(base: FormsArtifact, value: unknown): FormsArtifa
     else next.title = title.value;
   }
   if (steps !== undefined) next.definition = { ...base.definition, steps: applyRows(base.definition.steps, steps, foldStep) };
-  if (responses !== undefined) next.responses = applyRows(base.responses, responses, (row) => row);
+  if (responses !== undefined) next.responses = applyRows(base.responses, responses, (row: FormsResponse) => row);
   return parseFormsArtifact(next);
 }

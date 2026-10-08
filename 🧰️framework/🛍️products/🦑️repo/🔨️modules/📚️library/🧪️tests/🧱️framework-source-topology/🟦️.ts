@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, posix, resolve } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import ts from "typescript";
-import { semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { inventorySchemaScopes, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
 type Fixture = Readonly<{
   moves: readonly Readonly<{ source: string; owner: string; kind: string; anchor: string }>[];
@@ -176,4 +176,32 @@ describe("framework source topology", () => {
     const expectedFrames = readdirSync(keyframeRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && /^[1-6]/.test(entry.name)).map((entry) => resolve(keyframeRoot, entry.name, "🖋️vector.svg")).sort();
     expect(logo.logoKeyframePaths(logoRoot)).toEqual(expectedFrames);
   });
+});
+
+test("Hub WGPU command vectors retain source laws without corpus schema authority", async () => {
+  const owner = "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu", path = resolve(repoRoot, owner), source = readFileSync(resolve(path, "📜️script.ts"), "utf8"), vectors = JSON.parse(readFileSync(resolve(path, "🧫️fixtures/🔣️.json"), "utf8"));
+  const parsed = ts.createSourceFile("📜️script.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), classes = new Map(parsed.statements.filter(ts.isClassDeclaration).map(node => [node.name?.text, node.getText(parsed)]));
+  const routes = new Map<string, string>();
+  const visit = (node: ts.Node): void => { if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments.length === 2 && ts.isStringLiteral(node.arguments[0]!) && ts.isIdentifier(node.arguments[1]!)) routes.set(node.arguments[0]!.text, node.arguments[1]!.text); ts.forEachChild(node, visit); };
+  visit(parsed);
+  expect(new Set(vectors.commands.map(row => row.generalCommand)).size).toBe(vectors.commands.length);
+  expect(vectors.commands).toHaveLength(5);
+  for (const row of vectors.commands) {
+    expect(routes.get(row.command)).toBe(row.className);
+    expect(source).toContain(`.register("${row.command}", ${row.className})`);
+    expect(classes.has(row.className)).toBe(true);
+    for (const law of row.laws) expect(classes.get(row.className)).toContain(law.split("::").at(-1)!);
+  }
+  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!output) throw Error("Explicit artifact directory required for bounded Hub WGPU inventory");
+  mkdirSync(output, { recursive: true });
+  const root = mkdtempSync(resolve(output, "hub-wgpu-corpus-"));
+  try {
+    cpSync(path, resolve(root, owner), { recursive: true });
+    const inventory = inventorySchemaScopes(root, JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️taxonomy.json"), "utf8"))), findings = inventory.diagnostics.filter(row => row.path.startsWith(owner)), scopes = inventory.modules.filter(row => row.modulePath.startsWith(owner));
+    writeFileSync(resolve(output, "hub-wgpu-corpus-inventory.json"), JSON.stringify({ owner, scopes, diagnostics: findings, vectors: vectors.commands.length, routes: [...routes] }, null, 2) + "\n");
+    expect(findings, "every nested collection schema authority must be absent independent of directory relocation").toEqual([]);
+    expect(scopes).toEqual([]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+  await (await import(resolve(path, "🧪️tests/🟦️.ts"))).proveHubRendererCommandOwnershipV1(repoRoot);
 });

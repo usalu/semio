@@ -92,7 +92,7 @@ fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&transient)).expect("transient JSON"), case.transient);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&transient);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::Snapshot { config });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::SetCamera { camera: config.camera.clone() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowTransientMutation::Snapshot { transient });
     }
 }

@@ -47,6 +47,22 @@
         "group": "value",
         "order": 30
       }
+    },
+    "slot": {
+      "$ref": "#/$defs/XlsxSheetSlot",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Verbatim slot",
+          "de": "Unveränderter Platz"
+        },
+        "description": {
+          "en": "Everything the workbook holds for the sheet beyond its typed cells, written verbatim; carried when the sheet comes back after a removal.",
+          "de": "Alles, was die Arbeitsmappe über die typisierten Zellen hinaus für das Arbeitsblatt hält, unverändert geschrieben; wird mitgeführt, wenn das Arbeitsblatt nach einer Entfernung zurückkehrt."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   },
   "$defs": {
@@ -230,6 +246,71 @@
           }
         }
       ]
+    },
+    "OpcRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "relType",
+        "target",
+        "targetMode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "enum": [
+            "internal",
+            "external"
+          ]
+        }
+      }
+    },
+    "XlsxSheetSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attrs",
+        "relationship",
+        "part_path",
+        "content_type",
+        "document",
+        "part_relationships"
+      ],
+      "properties": {
+        "attrs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlAttr"
+          }
+        },
+        "relationship": {
+          "$ref": "#/$defs/OpcRelationship"
+        },
+        "part_path": {
+          "type": "string"
+        },
+        "content_type": {
+          "type": "string"
+        },
+        "document": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
+        },
+        "part_relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcRelationship"
+          }
+        }
+      }
     }
   }
 }

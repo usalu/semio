@@ -914,9 +914,6 @@ mod bridge {
         fn inverse(&self, _base: &Counter) -> Self {
             Self { amount: -self.amount }
         }
-        fn between(base: &Counter, other: &Counter) -> Self {
-            Self { amount: other.value - base.value }
-        }
         fn is_empty(&self) -> bool {
             self.amount == 0
         }
@@ -1594,9 +1591,6 @@ impl protocol::DiffAlgebra<HashProjection> for HashDiff {
     fn inverse(&self, base: &HashProjection) -> Self {
         Self { hash: self.hash.map(|_| base.latest_hash) }
     }
-    fn between(base: &HashProjection, other: &HashProjection) -> Self {
-        Self { hash: (base.latest_hash != other.latest_hash).then_some(other.latest_hash) }
-    }
     fn is_empty(&self) -> bool {
         self.hash.is_none()
     }
@@ -1844,21 +1838,12 @@ impl store::MemberStoreOwner<HashMutation> for HashProjection {
     /// 📦️ The fixture projection opens as an owned member through its own `ArtifactPack` codec.
     type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        store::document_store_owners_constructor_birth_bytes::<store::ArtifactStoreCursorDisposer<Self, HashMutation>>([
-            semio_framework_value::factory_constructor_birth_bytes::<HashSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<HashOwnedRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<HashOwnedRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::DocumentStoreOwners::<Self, HashMutation>::source_birth_bytes::<HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer<Self, HashMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {
-        store::DocumentStoreOwners::new(
-            Arc::new(HashSnapshotRetirementFactory),
-            Arc::new(HashOwnedRetirementFactory),
-            Arc::new(HashOwnedRetirementFactory),
-            Box::new(store::ArtifactStoreCursorDisposer::<HashProjection, HashMutation>::new()),
-        )
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, HashMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, HashMutation>> {
+        store::DocumentStoreOwners::admit_source_constructor(grant, || (HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer::<Self, HashMutation>::new()))
     }
 }
 //#endregion 🔖️RecoveryFixtureStore

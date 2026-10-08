@@ -1,4 +1,4 @@
-import { DEFAULT_PLAYGROUND_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { admitPluginCatalogV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { documentBootMetaReader, resolveWgpuBootDescriptor, stripBootBrokerProof, wgpuReadinessBeacon, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost } from "../🌐️browser-host/🟦️.ts";
 import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/🟦️.ts";
@@ -12,10 +12,14 @@ await new Promise<void>(resolve => {
 const root = document.getElementById("root");
 if (!root) throw new Error("missing-root: #root is unavailable");
 try {
-  const descriptor = resolveWgpuBootDescriptor({ search: window.location.search, hash: window.location.hash, meta: documentBootMetaReader(document), defaultVariant: DEFAULT_PLAYGROUND_VARIANT });
+  const inventory = document.getElementById("semio-plugin-catalog");
+  const text = inventory?.textContent;
+  if (!text || text.length > 2097152) throw new Error("plugin-catalog-invalid: missing or oversized supplied inventory");
+  const catalog = admitPluginCatalogV1(JSON.parse(text), { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
+  const descriptor = resolveWgpuBootDescriptor({ search: window.location.search, hash: window.location.hash, meta: documentBootMetaReader(document), defaultVariant: "" });
   stripBootBrokerProof(window.location, window.history);
   const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
-  await mountWgpuBrowserHost(root, { descriptor, locale, mountId: "root", pageBindings: true });
+  await mountWgpuBrowserHost(root, { catalog, descriptor, pluginRegistrySelection: descriptor.pluginVariant ? "variant" : "all", locale, mountId: "root", pageBindings: true });
 } catch (error) {
   const detail = error instanceof Error ? error.message : String(error);
   wgpuReadinessBeacon(document.documentElement, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN).error();

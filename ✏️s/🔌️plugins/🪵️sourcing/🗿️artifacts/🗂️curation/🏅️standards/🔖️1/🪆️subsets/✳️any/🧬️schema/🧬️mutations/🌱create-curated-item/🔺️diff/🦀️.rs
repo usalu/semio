@@ -8,14 +8,7 @@ pub fn diff(payload: &super::CreateCuratedItem, base: &CurationSnapshot) -> prot
     if base.curated.iter().any(|item| item.object_id == payload.item.object_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("\"{}\" is already curated.", payload.item.object_id), [payload.item.object_id.clone()]);
     }
-    protocol::MutationOutcome::new(CurationDiff { curated: Some(CurationCuratedDelta {
-            added: vec![payload.item.clone()],
-            reordered: payload.index.filter(|index| (*index as usize) < base.curated.len()).map(|index| {
-                let mut order: Vec<String> = base.curated.iter().map(|item| item.object_id.clone()).collect();
-                order.insert(index as usize, payload.item.object_id.clone());
-                order
-            }),
-            ..Default::default()
-        }), ..Default::default() })
+    let at = payload.index.map_or(base.curated.len(), |index| (index as usize).min(base.curated.len()));
+    protocol::MutationOutcome::new(CurationDiff { curated: Some(CurationCuratedDelta::insertion(at, payload.item.clone())), ..Default::default() })
 }
 //#endregion 🔖️Diff

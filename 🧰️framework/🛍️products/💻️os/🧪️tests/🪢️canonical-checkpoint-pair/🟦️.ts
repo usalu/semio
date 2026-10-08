@@ -2,22 +2,18 @@
  * replayed from the language-agnostic fixture `🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json`, the same
  * rows the kernel's Rust law (`📇️directory/🧬️schema/🪢️canonical-checkpoint-pair-v1`) replays. Ajv validates decoded scope and frontier payloads; `node:crypto` is the independent digest oracle (the TypeScript decoder leaves digests to the bootstrap
  * assembler, so this runner verifies them the way the Rust decoder does). */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import {
-  CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES,
-  CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES,
-  CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS,
-  CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
-  CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES,
   admitCanonicalCheckpointPairForRebootstrapV1,
   admitCanonicalCheckpointPairV1,
-  decodeCanonicalCheckpointPairV1,
   type CanonicalCheckpointPairV1,
 } from "../../🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+
+import { admitCheckpointSelectionV1, CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES, decodeCanonicalCheckpointPairV1 } from "../../🔨️modules/📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json");
@@ -45,13 +41,7 @@ describe("🪢️ canonical checkpoint pair", () => {
   });
 
   it("the fixture limits are the TypeScript wire constants", () => {
-    expect([fixture.mediaType, fixture.limits.headerBytes, fixture.limits.recordBytes, fixture.limits.records, fixture.limits.pairBytes]).toEqual([
-      CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
-      CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES,
-      CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES,
-      CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS,
-      CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES,
-    ]);
+    expect([fixture.mediaType, fixture.limits.headerBytes, fixture.limits.recordBytes, fixture.limits.records, fixture.limits.pairBytes]).toEqual([CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES, CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES]);
   });
 
   for (const pair of fixture.pairs) {
@@ -90,9 +80,30 @@ describe("🪢️ canonical checkpoint pair", () => {
     it(`${admission.id} is ${admission.refusal ?? "admitted"}`, () => {
       const pair = fixture.pairs.find((candidate: { id: string }) => candidate.id === admission.pair);
       const decoded = decodeCanonicalCheckpointPairV1(hexBytes(pair.bodyHex));
-      const admit = () => admitCanonicalCheckpointPairV1(decoded, admission.scope, admission.expected);
+      const admit = () => admitCanonicalCheckpointPairV1(decoded, admission.scope, admitCheckpointSelectionV1(admission.expected));
       if (admission.refusal === null) expect(admit).not.toThrow();
       else expect(admit).toThrow(admission.refusal);
     });
   }
+});
+
+
+it("canonical checkpoint pair framing has an explicit IO owner", () => {
+  const owner = here("../../🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json");
+  const directory = new URL("../../🔨️modules/📇️directory/", import.meta.url);
+  const semanticRust = readFileSync(new URL("🧬️schema/🪢️canonical-checkpoint-pair-v1/🦀️.rs", directory), "utf8");
+  const semanticTs = readFileSync(new URL("🧬️schema/🟦️.ts", directory), "utf8");
+  for (const body of owner.physicalBodies) expect(semanticRust).not.toContain(body);
+  for (const body of owner.typescriptBodies) expect(semanticTs).not.toContain(body);
+  const native = readFileSync(new URL("🚪️io/🧱️binary/🪢️checkpoint-pair/🦀️.rs", directory), "utf8");
+  const wire = readFileSync(new URL("🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts", directory), "utf8");
+  for (const body of owner.physicalBodies) expect(native).toContain(body);
+  for (const body of owner.typescriptBodies) expect(wire).toContain(body);
+  const law = readFileSync(new URL("🚪️io/🧱️binary/🪢️checkpoint-pair/🧪️tests/🔬️unit/🦀️.rs", directory), "utf8");
+  expect(law).toContain(`fn ${owner.nativeLaw}()`);
+  expect(law).toContain("module_path!()");
+  const ajv = semioSchemaAjvV1({ allErrors: true, strict: true });
+  expect(ajv.validate({ type: "object", additionalProperties: false, required: ["schema", "owner", "nativeLaw", "semanticMethods", "physicalBodies", "typescriptBodies"], properties: { schema: {const: "directory.checkpoint-pair.io-owner/v1"}, owner: {const: "os_directory::io::binary::checkpoint_pair"}, nativeLaw: {type: "string", minLength: 1}, semanticMethods: {type: "array", items: {type: "string"}, minItems: 2}, physicalBodies: {type: "array", items: {type: "string"}, minItems: 2}, typescriptBodies: {type: "array", items: {type: "string"}, minItems: 2} } }, owner)).toBe(true);
+  for (const method of owner.semanticMethods) expect(semanticRust).toContain(`pub fn ${method}(`);
+  console.log("[DEBUG] Directory neutral IO owner separates binary framing from pure checkpoint admission; independent crypto framing corpus retained");
 });

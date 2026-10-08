@@ -15,6 +15,8 @@ record paint-indexed-region tag=9
 field payload bytes
 record paint-direct-region tag=10
 field payload bytes
+record replace-samples tag=13
+field payload bytes
 
 record replace-image tag=12
 field payload bytes

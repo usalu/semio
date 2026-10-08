@@ -136,16 +136,10 @@ pub struct XmlChildrenDiff {
 }
 
 impl XmlChildrenDiff {
-    /// 🌱️ Diffs an embedded ordered XML fragment using the XML artifact's recursive algebra.
-    pub fn between(base: &[XmlNode], other: &[XmlNode]) -> Option<Self> {
-        between_children(base, other)
-    }
-
-    /// 🧩️ Validates all addressed children before changing an embedded XML fragment.
-    pub fn apply_to(&self, children: &mut Vec<XmlNode>) -> MutationApplyResult<()> {
+    /// 🧩️ Validates all addressed children, then returns the edited copy of an embedded XML fragment; `children` is never touched.
+    pub fn apply_children(&self, children: &[XmlNode]) -> MutationApplyResult<Vec<XmlNode>> {
         validate_xml_children(children, self)?;
-        *children = apply_children_diff(children, self);
-        Ok(())
+        Ok(apply_children_diff(children, self))
     }
 
     /// ↩️ Restores the exact previous fragment after this diff is applied.
@@ -155,7 +149,7 @@ impl XmlChildrenDiff {
 
     /// 🔗️ Composes the next fragment edit into this edit.
     pub fn absorb(&mut self, next: Self) {
-        *self = absorb_children_diff(std::mem::take(self), &next);
+        *self = absorb_children_rows(std::mem::take(self), &next);
     }
 
 
@@ -234,7 +228,7 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
         self.root = match (self.root.take(), other.root) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_node_rows(a, b)),
         };
     }
 }
@@ -393,9 +387,7 @@ fn apply_children_diff(children: &[XmlNode], diff: &XmlChildrenDiff) -> Vec<XmlN
             slots[m.index] = Some(patched);
         }
     }
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique_descending(&diff.removed);
     for idx in removed_sorted {
         if idx < slots.len() {
             slots.remove(idx);
@@ -421,16 +413,6 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
-        }
-    }
-
-    fn between(base: &XmlSnapshot, other: &XmlSnapshot) -> Self {
-        XmlDiff {
-            prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
-            epilog: if base.doc.epilog != other.doc.epilog { Some(other.doc.epilog.clone()) } else { None },
-            declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
-            doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
-            root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
         }
     }
 
@@ -499,84 +481,6 @@ fn inverse_children_diff(base_children: &[XmlNode], diff: &XmlChildrenDiff) -> X
     XmlChildrenDiff { removed, modified, added }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_root(base: Option<&XmlNode>, other: Option<&XmlNode>) -> Option<XmlNodeDiff> {
-    match (base, other) {
-        (None, None) => None,
-        (None, Some(n)) => Some(XmlNodeDiff::Replace { node: Some(n.clone()) }),
-        (Some(_), None) => Some(XmlNodeDiff::Replace { node: None }),
-        (Some(b), Some(o)) => between_node(b, o),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_node(base: &XmlNode, other: &XmlNode) -> Option<XmlNodeDiff> {
-    if base == other {
-        return None;
-    }
-    match (base, other) {
-        (XmlNode::Text { .. }, XmlNode::Text { text: ot }) => Some(XmlNodeDiff::Text { text: Some(ot.clone()) }),
-        (XmlNode::Element { name: bn, attrs: ba, children: bc }, XmlNode::Element { name: on, attrs: oa, children: oc }) => {
-            let name = if bn != on { Some(on.clone()) } else { None };
-            let attributes = between_attrs(ba, oa);
-            let children = between_children(bc, oc);
-            if name.is_none() && attributes.is_none() && children.is_none() {
-                None
-            } else {
-                Some(XmlNodeDiff::Element(XmlElementDiff { name, attributes, children }))
-            }
-        }
-        _ => Some(XmlNodeDiff::Replace { node: Some(other.clone()) }),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<XmlAttributesDiff> {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        match other.iter().find(|o| o.name == b.name) {
-            Some(o) if o.value != b.value => modified.push(XmlAttrModified { name: b.name.clone(), value: o.value.clone() }),
-            Some(_) => {}
-            None => removed.push(b.name.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for o in other {
-        if !base.iter().any(|b| b.name == o.name) {
-            added.push(XmlAttrAdded { name: o.name.clone(), value: o.value.clone() });
-        }
-    }
-    if base == other {
-        None
-    } else {
-        Some(XmlAttributesDiff { removed, modified, added, order: other.iter().map(|attr| attr.name.clone()).collect() })
-    }
-}
-
-/// 🧮️ Naive positional child diff per the recipe's "between matching" rule for index-keyed
-/// collections: pairwise-compare `0..min(base.len(), other.len())` as `modified`, the base tail
-/// as `removed`, the other tail as `added`. Not an LCS-based diff (no move/reorder detection) --
-/// deliberately simple, matching every other stdio artifact's `between` for index-keyed children.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<XmlChildrenDiff> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = between_node(&base[i], &other[i]) {
-                modified.push(XmlChildModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<XmlChildAdded> = (min_len..other.len()).map(|i| XmlChildAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(XmlChildrenDiff { removed, modified, added })
-    }
-}
 //#endregion 🔖️DiffAlgebra
 
 //#region 🔖️Absorb
@@ -603,7 +507,7 @@ fn transform_index(idx: usize, removed: &[usize], added: &[XmlChildAdded]) -> us
 }
 
 /// 🏷️ Which base position (survivor) or which `d1.added` slot a mid-array position originated
-/// from -- built by `simulate_mid_origins` so `absorb_children_diff` can classify `d2`'s indices.
+/// from -- built by `simulate_mid_origins` so `absorb_children_rows` can classify `d2`'s indices.
 enum ChildOrigin {
     Base(usize),
     Added(usize),
@@ -627,38 +531,38 @@ fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[XmlChildAdd
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_node_diff(a: XmlNodeDiff, b: XmlNodeDiff) -> XmlNodeDiff {
+fn absorb_node_rows(a: XmlNodeDiff, b: XmlNodeDiff) -> XmlNodeDiff {
     match (a, b) {
         (_, XmlNodeDiff::Replace { node: Some(n) }) => XmlNodeDiff::Replace { node: Some(n) },
         (XmlNodeDiff::Replace { node: Some(n) }, b) => XmlNodeDiff::Replace { node: Some(apply_node_diff(&n, &b)) },
         (_, XmlNodeDiff::Replace { node: None }) => XmlNodeDiff::Replace { node: None },
         (XmlNodeDiff::Replace { node: None }, _) => XmlNodeDiff::Replace { node: None },
         (XmlNodeDiff::Text { text: ta }, XmlNodeDiff::Text { text: tb }) => XmlNodeDiff::Text { text: tb.or(ta) },
-        (XmlNodeDiff::Element(ea), XmlNodeDiff::Element(eb)) => XmlNodeDiff::Element(absorb_element_diff(ea, eb)),
+        (XmlNodeDiff::Element(ea), XmlNodeDiff::Element(eb)) => XmlNodeDiff::Element(absorb_element_rows(ea, eb)),
         (_, b) => b,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_element_diff(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlElementDiff {
+fn absorb_element_rows(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlElementDiff {
     if b.name.is_some() {
         a.name = b.name;
     }
     a.attributes = match (a.attributes.take(), b.attributes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, &bd)),
+        (Some(ad), Some(bd)) => Some(absorb_attrs_rows(ad, &bd)),
     };
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, &bd)),
+        (Some(ad), Some(bd)) => Some(absorb_children_rows(ad, &bd)),
     };
     a
 }
 
 /// 🔗️ Composes attribute identity changes and retains the last complete final order.
-fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: &XmlAttributesDiff) -> XmlAttributesDiff {
+fn absorb_attrs_rows(mut a: XmlAttributesDiff, b: &XmlAttributesDiff) -> XmlAttributesDiff {
     if b.removed.is_empty() && b.modified.is_empty() && b.added.is_empty() && b.order.is_empty() {
         return a;
     }
@@ -700,7 +604,7 @@ fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: &XmlAttributesDiff) -> XmlAttr
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_children_diff(d1: XmlChildrenDiff, d2: &XmlChildrenDiff) -> XmlChildrenDiff {
+fn absorb_children_rows(d1: XmlChildrenDiff, d2: &XmlChildrenDiff) -> XmlChildrenDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -741,7 +645,7 @@ fn absorb_children_diff(d1: XmlChildrenDiff, d2: &XmlChildrenDiff) -> XmlChildre
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_node_diff(existing.diff.clone(), m2.diff.clone()),
+                    Some(existing) => existing.diff = absorb_node_rows(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(XmlChildModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -864,36 +768,38 @@ fn absorb_children_diff(d1: XmlChildrenDiff, d2: &XmlChildrenDiff) -> XmlChildre
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️DemoCases
-/// 🧪️ P2-FG1: representative `XmlDiff` values (both top-level tri-states, the recursive
-/// `Element`/`Text`/`Replace` `XmlNodeDiff` tree, attribute add/remove/modify, nested child
-/// add/remove/modify) — the single prolog of truth reused by `diff_codec_text_binary_roundtrip_law`
-/// below AND by `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
+/// 🧪️ P2-FG1: representative `XmlDiff` values built declaratively (both top-level tri-states, the recursive `Element`/`Text`/`Replace`
+/// `XmlNodeDiff` tree, attribute add/remove/modify, nested child add/remove/modify) — the single source of truth reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
-    use crate::schema::snapshot::XmlDocument;
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
-        XmlNode::Element { name: name.to_string(), attrs: attrs.into_iter().map(|(n, v)| XmlAttr { name: n.to_string(), value: v.to_string() }).collect(), children }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn snapshot(doc: XmlDocument) -> XmlSnapshot {
-        XmlSnapshot { doc, ..Default::default() }
-    }
-
-    let a = snapshot(XmlDocument {
-        root: Some(elem("root", vec![("width", "10")], vec![elem("child", vec![("x", "0")], vec![])])),
-        doctype: Some("<!DOCTYPE root>".into()),
-        declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single }),
-        prolog: Vec::new(),
-        epilog: Vec::new(),
-    });
-    let b = snapshot(XmlDocument { root: Some(elem("root", vec![("width", "20"), ("height", "30")], vec![elem("other", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
-    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
-
-    vec![XmlDiff::default(), XmlDiff::between(&a, &b), XmlDiff::between(&b, &a), XmlDiff::between(&a, &c), XmlDiff::between(&c, &a)]
+    let element = XmlElementDiff {
+        name: Some("root2".into()),
+        attributes: Some(XmlAttributesDiff {
+            order: vec!["height".into(), "x".into()],
+            removed: vec!["width".into()],
+            modified: vec![XmlAttrModified { name: "x".into(), value: "1".into() }],
+            added: vec![XmlAttrAdded { name: "height".into(), value: "30".into() }],
+        }),
+        children: Some(XmlChildrenDiff {
+            removed: vec![0],
+            modified: vec![XmlChildModified { index: 1, diff: XmlNodeDiff::Text { text: Some("hi".into()) } }],
+            added: vec![XmlChildAdded { index: 0, item: XmlNode::CData { text: "raw".into() } }],
+        }),
+    };
+    vec![
+        XmlDiff::default(),
+        XmlDiff {
+            prolog: Some(vec![XmlNode::Comment { text: " c ".into() }]),
+            epilog: Some(Vec::new()),
+            declaration: Some(Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single })),
+            doctype: Some(Some(XmlDoctype { name: "root".into(), ..Default::default() })),
+            root: Some(XmlNodeDiff::Element(element)),
+        },
+        XmlDiff { doctype: Some(None), root: Some(XmlNodeDiff::Replace { node: None }), ..Default::default() },
+    ]
 }
 //#endregion 🔖️DemoCases
 

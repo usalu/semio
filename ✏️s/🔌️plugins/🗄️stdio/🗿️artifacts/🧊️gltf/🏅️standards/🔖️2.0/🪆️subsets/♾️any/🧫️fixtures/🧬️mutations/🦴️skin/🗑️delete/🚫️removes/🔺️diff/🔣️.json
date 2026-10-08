@@ -17,9 +17,21 @@
       {
         "index": 0,
         "diff": {
-          "joints": [
-            1
-          ]
+          "joints": {
+            "removed": [
+              {
+                "id": 0,
+                "index": 0
+              }
+            ],
+            "inserted": [
+              {
+                "index": 0,
+                "row": 1
+              }
+            ],
+            "moved": []
+          }
         }
       }
     ]

@@ -313,16 +313,12 @@ impl Mutation<DemoSnapshot> for CountedOp {
 impl MemberStoreOwner<CountedOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, CountedOp>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, CountedOp>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, CountedOp>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, CountedOp> {
-        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, CountedOp>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, CountedOp>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, CountedOp>::new()))
     }
 }
 

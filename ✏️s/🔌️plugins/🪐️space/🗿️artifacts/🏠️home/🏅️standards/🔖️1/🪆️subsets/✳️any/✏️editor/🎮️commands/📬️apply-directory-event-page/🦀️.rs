@@ -81,7 +81,7 @@ where
         }
         self.consumed = true;
         let context = input.context.ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.directory-event-page.context-missing", "a directory page needs the job's captured transient projection"))?;
-        context.view_state.as_ref().and_then(crate::home_session_identity).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.session-identity-required", "a directory page needs a signed-in session"))?;
+        context.view_state.as_ref().and_then(semio_s_space_core::home_session_identity).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.session-identity-required", "a directory page needs a signed-in session"))?;
         let page_json = (self.page_json)(input.command).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.directory-event-page-input-missing", "the command carries no page"))?;
         let answer = directory_page_answer(page_json, context.transient.directory())?;
         let event = AppEvent { kind: DirectoryProjectionReceiptV1::SCHEMA.into(), payload: semio_framework_value::ToValue::to_value(&answer.receipt) };

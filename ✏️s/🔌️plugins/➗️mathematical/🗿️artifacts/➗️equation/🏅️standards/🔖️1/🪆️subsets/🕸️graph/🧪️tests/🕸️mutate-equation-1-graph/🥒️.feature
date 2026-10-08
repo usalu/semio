@@ -19,7 +19,7 @@ Feature: Apply every typed s.mathematical.equation graph mutation to its committ
   `create-node`, `delete-node`, `delete-nodes`, `change-node-label`, `move-node`, `connect-nodes`,
   `disconnect-nodes` — carry REJECTION vectors whose declared outcome is `mutation.target-missing` or
   `mutation.duplicate-id` with the offending address in `path`. Three more —
-  `change-graph-directed`, `update-graph-algorithm`, `replace-graph` — carry `applied`-but-
+  `change-graph-directed`, `update-graph-algorithm` — carry `applied`-but-
   `mutation.no-op` vectors that restate a value the document already holds. Those ten vectors are
   real, handcrafted and worth asserting: a rejection vector pins the exact fault code AND that the
   document was left untouched, which is where the frozen outcome contract's law 2 lives, and this
@@ -44,7 +44,6 @@ Feature: Apply every typed s.mathematical.equation graph mutation to its committ
       | id                     |
       | change-graph-directed  |
       | update-graph-algorithm |
-      | replace-graph          |
       | create-node            |
       | delete-node            |
       | delete-nodes           |
@@ -64,7 +63,6 @@ Feature: Apply every typed s.mathematical.equation graph mutation to its committ
       | id                     |
       | change-graph-directed  |
       | update-graph-algorithm |
-      | replace-graph          |
       | create-node            |
       | delete-node            |
       | delete-nodes           |

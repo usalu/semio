@@ -76,13 +76,6 @@ pub enum PdfAMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Delegation
-/// ▶️ Applies one conformance mutation through its leaf-owned diff.
-pub fn apply_a_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfAMutation) -> protocol::MutationOutcome<PdfDiff> {
-    use protocol::Mutation;
-    let outcome = mutation.diff(snapshot);
-    crate::standards::v1_7::subsets::base::schema::mutations::apply_outcome(outcome, snapshot)
-}
-
 /// 🧾️ Returns the derive-owned semantic catalog in declaration order.
 pub fn pdf_a_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
     use protocol::SemanticMutation;

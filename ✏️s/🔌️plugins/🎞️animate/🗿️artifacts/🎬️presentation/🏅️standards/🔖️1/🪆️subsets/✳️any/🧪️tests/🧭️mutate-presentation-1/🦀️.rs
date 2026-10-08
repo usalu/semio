@@ -22,7 +22,7 @@ use semio_repo_test_host::Adapter;
 /// than imported so the oracle-only build never links the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
-const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"];
+const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles"];
 
 /// 📄️ The plugin's own committed real deck artifact, read where the domain already keeps it.
 const DECK_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";

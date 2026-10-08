@@ -75,7 +75,7 @@ fn archive_diffs_preserve_explicit_member_order_and_exact_inverse() {
     let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut reversed = snapshot.clone();
     reversed.entries.reverse();
-    let diff = crate::schema::diff::ZipDiff::between(&snapshot, &reversed);
+    let diff = crate::schema::diff::ZipDiff { entries: Some(crate::schema::diff::ZipEntriesDiff { order: Some(reversed.entries.iter().map(|entry| entry.name.clone()).collect()), ..Default::default() }), ..Default::default() };
     assert_eq!(protocol::apply_diff(&diff, &snapshot).unwrap(), reversed);
     assert_eq!(protocol::apply_diff(&diff.inverse(&snapshot), &reversed).unwrap(), snapshot);
     let rename = crate::schema::diff::diff_rename_entry(&reversed.entries[0].name, "renamed.txt");

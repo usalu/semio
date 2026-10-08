@@ -8,13 +8,15 @@ use super::*;
 pub struct SetWorksheetContentType {
     pub(crate) path: String,
     pub(crate) content_type: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) override_index: Option<usize>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetWorksheetContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "worksheet-content-type", kind: "set-worksheet-content-type", record: "SetWorksheetContentType" };
 
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        protocol::MutationOutcome::new(diff_set_content_type(base, &self.path, &self.content_type))
+        protocol::MutationOutcome::new(diff_set_content_type(base, &self.path, &self.content_type, self.override_index))
     }
 
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {

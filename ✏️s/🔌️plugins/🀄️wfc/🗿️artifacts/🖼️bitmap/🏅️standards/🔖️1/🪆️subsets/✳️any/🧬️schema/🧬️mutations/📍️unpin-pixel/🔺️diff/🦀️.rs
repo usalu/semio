@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `UnpinPixel` — one id-keyed removal from `pinned`.
 
-use crate::diff::{BitmapDiff, BitmapRows};
+use crate::diff::{BitmapDiff, BitmapPinnedDelta};
 use crate::schema::snapshot::{pin_index, pin_key, BitmapSnapshot};
 
 pub fn diff(payload: &super::UnpinPixel, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -8,5 +8,5 @@ pub fn diff(payload: &super::UnpinPixel, base: &BitmapSnapshot) -> protocol::Mut
     if pin_index(base, payload.x, payload.y).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("({}, {}) carries no pin.", payload.x, payload.y), [key]);
     }
-    protocol::MutationOutcome::new(BitmapDiff { pinned: BitmapRows { removed: vec![key], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(BitmapDiff { pinned: BitmapPinnedDelta::removal(&base.pinned, base.pinned.iter().position(|row| protocol::list_delta::Keyed::key(row) == key).unwrap_or(usize::MAX)), ..Default::default() })
 }

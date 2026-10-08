@@ -74,6 +74,12 @@ KINDS = (
     "delete-region",
     "replace-region-data",
     "reorder-regions",
+    "set-position-property",
+    "remove-position-property",
+    "set-route-property",
+    "remove-route-property",
+    "set-region-property",
+    "remove-region-property",
 )
 """🏷️ Every kind the catalog declares, spelled as the feature's expanded scenario ids spell them."""
 
@@ -90,6 +96,12 @@ TAGS = {
     "delete-region": "DeleteRegion",
     "replace-region-data": "ReplaceRegionData",
     "reorder-regions": "ReorderRegions",
+    "set-position-property": "SetPositionProperty",
+    "remove-position-property": "RemovePositionProperty",
+    "set-route-property": "SetRouteProperty",
+    "remove-route-property": "RemoveRouteProperty",
+    "set-region-property": "SetRegionProperty",
+    "remove-region-property": "RemoveRegionProperty",
 }
 """🔤️ The externally tagged wire name of each kind, as the committed vectors spell it."""
 
@@ -203,6 +215,10 @@ def split(kind):
             return collection, "replace"
         if kind == "reorder-%ss" % noun:
             return collection, "reorder"
+        if kind == "set-%s-property" % noun:
+            return collection, "set"
+        if kind == "remove-%s-property" % noun:
+            return collection, "remove"
     raise AssertionError("no such kind in this vocabulary: %r" % kind)
 
 
@@ -245,6 +261,24 @@ def apply_mutation(document, mutation):
         if at is None:
             raise AssertionError("%s: %r is not in %s" % (kind, payload["id"], collection))
         members[at] = {"id": payload["id"], "data": json.loads(json.dumps(payload["newData"]))}
+    elif verb in ("set", "remove"):
+        at = index_of(members, payload["feature"])
+        if at is None:
+            raise AssertionError("%s: %r is not in %s" % (kind, payload["feature"], collection))
+        entries = list(members[at]["data"].items())
+        names = [name for name, _ in entries]
+        if verb == "set":
+            value = json.loads(json.dumps(payload["value"]))
+            if payload["key"] in names:
+                entries[names.index(payload["key"])] = (payload["key"], value)
+            else:
+                anchor = payload.get("before")
+                entries.insert(names.index(anchor) if anchor in names else len(entries), (payload["key"], value))
+        else:
+            if payload["key"] not in names:
+                raise AssertionError("%s: %r has no property %r" % (kind, payload["feature"], payload["key"]))
+            entries.pop(names.index(payload["key"]))
+        members[at] = {"id": payload["feature"], "data": dict(entries)}
     else:
         at = index_of(members, payload["id"])
         if at is None:
@@ -277,6 +311,19 @@ def inverse_mutation(document, mutation):
         if at is None:
             raise AssertionError("inverse of %s: %r is not in %s" % (kind, payload["id"], collection))
         return {TAGS["replace-%s-data" % singular(collection)]: {"id": payload["id"], "newData": json.loads(json.dumps(members[at]["data"]))}}
+    if verb in ("set", "remove"):
+        at = index_of(members, payload["feature"])
+        if at is None:
+            raise AssertionError("inverse of %s: %r is not in %s" % (kind, payload["feature"], collection))
+        names = list(members[at]["data"].keys())
+        noun = singular(collection)
+        if verb == "set" and payload["key"] not in names:
+            return {TAGS["remove-%s-property" % noun]: {"feature": payload["feature"], "key": payload["key"]}}
+        position = names.index(payload["key"])
+        restored = {"feature": payload["feature"], "key": payload["key"], "value": json.loads(json.dumps(members[at]["data"][payload["key"]]))}
+        if verb == "remove" and position + 1 < len(names):
+            restored["before"] = names[position + 1]
+        return {TAGS["set-%s-property" % noun]: restored}
     at = index_of(members, payload["id"])
     if at is None:
         raise AssertionError("inverse of %s: %r is not in %s" % (kind, payload["id"], collection))

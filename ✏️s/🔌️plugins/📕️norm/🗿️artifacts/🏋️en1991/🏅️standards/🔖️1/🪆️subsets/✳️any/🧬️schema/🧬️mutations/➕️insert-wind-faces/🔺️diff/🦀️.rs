@@ -9,5 +9,5 @@ pub fn diff(payload: &InsertWindFaces, base: &En1991Snapshot) -> protocol::Mutat
     if base.wind_faces.iter().any(|existing| existing.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1991Diff { wind_faces: En1991WindFaceDelta::insertion(&base.wind_faces, payload.index, payload.item.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { wind_faces: En1991WindFaceDelta::insertion(payload.index, payload.item.clone()), ..Default::default() })
 }

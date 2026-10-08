@@ -101,10 +101,24 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
+/// 🌉️ Applies one a conformance mutation through its leaf-owned diff and the base bridge.
+pub mod mutation_bridge {
+    use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+    use crate::standards::v1_7::subsets::a::schema::mutations::PdfAMutation;
+
+    /// ▶️ Applies the authoritative leaf diff.
+    pub fn apply_a_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfAMutation) -> protocol::MutationOutcome<PdfDiff> {
+        use protocol::Mutation;
+        let outcome = mutation.diff(snapshot);
+        crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_outcome(outcome, snapshot)
+    }
+}
+
 pub mod derived_construction {
     use crate::standards::v1_7::subsets::a::io::check_pdf_a_conformance;
     use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-    use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
+    use crate::standards::v1_7::subsets::base::schema::mutations::{InsertPage, PdfMutation, SetInfo};
     use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;

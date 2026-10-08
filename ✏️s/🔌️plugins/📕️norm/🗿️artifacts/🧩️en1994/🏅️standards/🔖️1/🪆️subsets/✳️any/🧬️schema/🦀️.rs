@@ -65,10 +65,6 @@ impl En1994Artifact {
             fatigue_detail: snapshot.fatigue_detail,
         }
     }
-    /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::En1994Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 
 //#endregion 🔖️Conversions

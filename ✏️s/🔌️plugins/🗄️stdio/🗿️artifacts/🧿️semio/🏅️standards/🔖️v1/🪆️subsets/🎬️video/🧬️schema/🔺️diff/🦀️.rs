@@ -69,36 +69,6 @@ pub struct SemioVideoDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub streams: Option<SemioVideoStreamsDiff>,
 }
-//#endregion 🔖️Diff
-
-//#region 🔖️GenericIndexedEngine
-/// 🧮️ `between`/`apply`/`inverse`/`absorb` over `IndexedTripleDiff<D,T>`, generic over item `T`
-/// and per-field diff `D` — ported verbatim (same algorithm) from docx's own hand-rolled indexed
-/// engine, this subset's own instance since no shared generic ALGORITHM exists yet (only the
-/// shared struct does). Reused twice below: once for `streams`, once (nested, inside a modified
-/// stream) for `samples`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
-where
-    T: Clone + PartialEq,
-{
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        if base[i] != other[i] {
-            if let Some(d) = diff_item(&base[i], &other[i]) {
-                modified.push(IndexModified { index: i, diff: d });
-            }
-        }
-    }
-    let removed: Vec<usize> = (other.len()..base.len()).collect();
-    let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(IndexedTripleDiff { removed, modified, added })
-    }
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -278,27 +248,6 @@ fn diff_sample(old: &SemioVideoSample, new: &SemioVideoSample) -> Option<SemioVi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_stream(old: &SemioVideoStream, new: &SemioVideoStream) -> Option<SemioVideoStreamDiff> {
-    if old == new {
-        return None;
-    }
-    let samples = between_indexed(&old.samples, &new.samples, diff_sample);
-    Some(SemioVideoStreamDiff {
-        kind: (old.kind != new.kind).then_some(new.kind),
-        codec: (old.codec != new.codec).then(|| new.codec.clone()),
-        width: (old.width != new.width).then_some(new.width),
-        height: (old.height != new.height).then_some(new.height),
-        rate: (old.rate != new.rate).then_some(new.rate),
-        samples,
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_video(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> SemioVideoDiff {
-    SemioVideoDiff { streams: between_indexed(&base.streams, &other.streams, diff_stream) }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_sample(sample: &mut SemioVideoSample, diff: &SemioVideoSampleDiff) {
     if let Some(v) = diff.pts {
         sample.pts = v;
@@ -334,14 +283,14 @@ fn apply_stream(stream: &mut SemioVideoStream, diff: &SemioVideoStreamDiff) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn sample_with_diff_applied(sample: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSample {
+fn apply_sample_to_copy(sample: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSample {
     let mut out = sample.clone();
     apply_sample(&mut out, diff);
     out
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn stream_with_diff_applied(stream: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStream {
+fn apply_stream_to_copy(stream: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStream {
     let mut out = stream.clone();
     apply_stream(&mut out, diff);
     out
@@ -398,7 +347,7 @@ fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> S
     a.samples = match (a.samples.take(), b.samples) {
         (None, x) => x,
         (x, None) => x,
-        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, &sb, absorb_sample_diff, sample_with_diff_applied)),
+        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, &sb, absorb_sample_diff, apply_sample_to_copy)),
     };
     a
 }
@@ -419,7 +368,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
         self.streams = match (self.streams.take(), other.streams) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_indexed(a, &b, absorb_stream_diff, stream_with_diff_applied)),
+            (Some(a), Some(b)) => Some(absorb_indexed(a, &b, absorb_stream_diff, apply_stream_to_copy)),
         };
     }
 }
@@ -429,10 +378,6 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
 impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
     fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
         SemioVideoDiff { streams: self.streams.as_ref().map(|d| inverse_indexed(&base.streams, d, inverse_stream)) }
-    }
-
-    fn between(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> Self {
-        diff_video(base, other)
     }
 
     fn is_empty(&self) -> bool {
@@ -515,78 +460,13 @@ pub fn diff_set_sample_flags(old: &SemioVideoSample, stream_index: usize, index:
 fn wrap_stream_diff(stream_index: usize, diff: SemioVideoStreamDiff) -> SemioVideoDiff {
     SemioVideoDiff { streams: Some(SemioVideoStreamsDiff { modified: vec![IndexModified { index: stream_index, diff }], ..Default::default() }) }
 }
-//#endregion 🔖️SetSnapshot
-
-//#region 🔖️HandcraftedDiffCodec
-/// 🎙️ Hand-rolled `protocol::DiffCodec` — same grammar style `GifDiff`/`SvgDiff`/`DocxDiff`'s
-/// hand-rolled codecs use (bracket-depth-aware split via the shared `engine::triples` helpers,
-/// hex for strings/bytes, `[0]`/`[1,x]` for `Option<T>`). This file's own `enc_indexed_triple`/
-/// `dec_indexed_triple` (reused from `engine::triples`, NOT redefined) let the codec stay generic
-/// over BOTH nesting levels (`streams`, and within a modified stream, `samples`) — one generic
-/// pair, reused twice, instead of two bespoke per-collection encoders.
-//#region 🔖️Primitives
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueCodecs
-
-//#region 🔖️DiffValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️DiffValueCodecs
-
-//#region 🔖️TopLevel
-
-
-
-
-
-
-
-
 //#region 🔖️Demo
-/// 🌱 Representative `SemioVideoDiff` cases — the empty (no-op) diff, `a→b`, and `b→a` over
-/// `snapshot_a()`/`snapshot_b()` — covering `streams.removed`/`.modified`/`.added` AND, within a
-/// modified stream, nested `samples.removed`/`.modified`/`.added` (both directions combined).
-/// `pub(crate)` module-scope so `🎹️composer/🦀️.rs`'s conformance-law tests can reuse it —
-/// same convention flow's/mesh's own `demo_diff_cases()` use.
+/// 🌱 Representative `SemioVideoDiff` cases built declaratively (empty/no-op and a removed stream row) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-video"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioVideoDiff> {
-    let a = handcrafted_diff_codec_tests::snapshot_a();
-    let b = handcrafted_diff_codec_tests::snapshot_b();
-    vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a)]
+    vec![SemioVideoDiff::default(), SemioVideoDiff { streams: Some(IndexedTripleDiff { removed: vec![0], ..Default::default() }) }]
 }
 //#endregion 🔖️Demo
 //#endregion 🔖️TopLevel

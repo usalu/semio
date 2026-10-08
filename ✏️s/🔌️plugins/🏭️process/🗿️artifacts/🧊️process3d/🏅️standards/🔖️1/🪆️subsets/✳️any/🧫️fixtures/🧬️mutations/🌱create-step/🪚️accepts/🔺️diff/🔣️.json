@@ -5,71 +5,45 @@
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": {
-    "childId": "steps-flow-1356790bd31dfe28",
-    "target": {
-      "artifactId": "steps-flow-1356790bd31dfe28",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "flow"
-      }
-    }
-  },
   "stepPayloads": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "step-1",
-        "label": "Rip Cut",
-        "enabled": true,
-        "origin": {
-          "machineId": "saw",
-          "capabilityId": "cut"
-        },
-        "measure": {
-          "measure": "cut",
-          "tool": {
-            "kind": "box",
-            "width": 0.5,
-            "depth": 0.006,
-            "height": 0.1
+        "index": 0,
+        "row": {
+          "id": "step-1",
+          "label": "Rip Cut",
+          "enabled": true,
+          "origin": {
+            "machineId": "saw",
+            "capabilityId": "cut"
           },
-          "pose": {
-            "position": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "axis": [
-              0.0,
-              0.0,
-              1.0
-            ],
-            "angle": 0.0
+          "measure": {
+            "measure": "cut",
+            "tool": {
+              "kind": "box",
+              "width": 0.5,
+              "depth": 0.006,
+              "height": 0.1
+            },
+            "pose": {
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "axis": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "angle": 0.0
+            }
           }
         }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
-  },
-  "toolSolids": {
-    "added": [
-      {
-        "childId": "tool-step-1-brep-6195cae6ebec0800",
-        "target": {
-          "artifactId": "tool-step-1-brep-6195cae6ebec0800",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "brep"
-          }
-        }
-      }
-    ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   }
 }

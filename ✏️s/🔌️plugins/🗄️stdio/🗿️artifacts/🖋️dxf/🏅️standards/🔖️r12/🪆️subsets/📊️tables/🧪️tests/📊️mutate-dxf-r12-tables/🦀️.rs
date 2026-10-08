@@ -5,7 +5,7 @@
 //! directory first; the committed asset is never written to. `oracle` drives the registered `dxf`
 //! 0.6 reference implementation (`../../🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🦀️.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
-//! own `parse_dxf_document`/`print_dxf_document`/`apply_dxf_mutation` over the full 19-kind
+//! own `parse_dxf_document`/`print_dxf_document`/`apply_mutation` over the full 19-kind
 //! `DxfMutation` vocabulary. Each side hands the drawing it produced to the `semantic-dxf-r12-v1`
 //! profile's `dxf-r12-reader-compare-v1` pipeline — the oracle's as `expected-dxf`, the subject's as
 //! `actual-dxf` — whose `dxf` 0.6 probes read both files independently. The subject half is gated
@@ -135,7 +135,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, produced};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation,DxfMutation};
+    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{DxfMutation};
 
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_dxf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
@@ -160,11 +160,11 @@ mod subject {
         produced(ctx, "actual-dxf", output, projection)
     }
 
-    /// 🚫️ A REFUSED mutation is a failure, never a silent no-op. `apply_dxf_mutation` leaves the snapshot untouched and
+    /// 🚫️ A REFUSED mutation is a failure, never a silent no-op. `apply_mutation` leaves the snapshot untouched and
     /// reports the refusal as the outcome's only messages — every `DxfMutation::diff` arm builds its outcome without one —
     /// so a non-empty message list IS a refusal.
     fn applied(snapshot: &mut DxfSnapshot, mutation: &DxfMutation, kind: &str) -> Result<(), String> {
-        match apply_dxf_mutation(snapshot, mutation).messages().first() {
+        match apply_mutation(snapshot, mutation).messages().first() {
             Some(refusal) => Err(format!("{kind}: the mutation was REFUSED and the document left untouched — {refusal:?}")),
             None => Ok(()),
         }

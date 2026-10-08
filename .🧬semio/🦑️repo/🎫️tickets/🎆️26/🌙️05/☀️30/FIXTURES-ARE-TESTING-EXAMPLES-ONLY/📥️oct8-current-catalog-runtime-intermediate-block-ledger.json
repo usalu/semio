@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-08T20:47:45.259499+00:00",
+  "state": "INTERMEDIATE; callers and actual Rust proof pending",
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "blocks": [
+    {
+      "start": "pub struct DocumentStoreOwnersAdmissionError",
+      "end": "    /// 🏭️ Prices",
+      "sha256": "c038ca6610b27909f3dd505f650fb39841e0e9e391fa728e3e2320fce959d3fd",
+      "bytes": 6452
+    },
+    {
+      "start": "    pub fn with_replay_preparation",
+      "end": "    /// 🧹️ Bounded retirement for a whole envelope",
+      "sha256": "30e06e6c81c68691157d97fb313f0761671fcb7532e0702cd4a9366b7b496621",
+      "bytes": 1928
+    },
+    {
+      "start": "    pub fn uninstalled_owners_demands",
+      "end": "    pub fn uninstalled_owners_terminal_is_empty",
+      "sha256": "6cc3652b5413bd102670dd9d805a2fa82211977f5ee1336f6e4f07e66ddf6c52",
+      "bytes": 4966
+    },
+    {
+      "start": "    pub fn initialization_retirement_demands",
+      "end": "    fn replace_current_alias",
+      "sha256": "40ad6f04a73e25ccbd94a3b96e9be141e7f73e732ae1d19bdccd7f2b1ae40d37",
+      "bytes": 2340
+    },
+    {
+      "start": "    /// 🧹️ Admits original whole storage",
+      "end": "    #[allow(clippy::type_complexity)]",
+      "sha256": "41df1f1ee525130e7887022a4d20421258cdfb1fd0f5f48e48b5492fb5d6e7dd",
+      "bytes": 7993
+    }
+  ]
+}

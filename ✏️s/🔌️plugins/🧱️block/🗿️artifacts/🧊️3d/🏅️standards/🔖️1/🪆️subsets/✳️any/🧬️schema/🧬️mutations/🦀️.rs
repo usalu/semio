@@ -20,8 +20,8 @@ pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 /// id-keyed vortex-kind/vortex create/delete/rename/change/move/resize, set-like compatibility-rule/
 /// attribute/author add/remove, the world camera's pan/zoom, and the session meta description. The
 /// old whole-document-replace and no-op sentinel variants are gone — whole-document loads (examples,
-/// DSL text edit) now decompose into this vocabulary (see
-/// `🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs`'s `replace_document_operations`).
+/// JSON text edit) are the `LoadDocument` effect, never mutations (see the editor's
+/// `🎮️commands/🎬️set-active-example/🦀️.rs`).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -151,14 +151,6 @@ pub use super::rename_representation::{rename_representation, RenameRepresentati
 pub use super::rename_vortex_kind::{rename_vortex_kind, RenameVortexKind};
 pub use super::resize_vortex::{resize_vortex, ResizeVortex};
 pub use super::scale_camera3d::{scale_camera3d, ScaleCamera3d};
-
-/// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-
-    *projection = next;
-    Ok(())
-}
 
 pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
     Ok({

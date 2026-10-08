@@ -63,12 +63,15 @@
   "workshops": null,
   "surveys": null,
   "issues": {
-    "added": [],
     "removed": [
-      "issue-a"
+      {
+        "id": "issue-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "auditEvents": null,
   "templates": null,

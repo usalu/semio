@@ -33,8 +33,8 @@ fn schema_owned_png_canonical_sealing_preserves_neutral_snapshot_and_diff() {
     for case in fixture["cases"].as_array().unwrap(){
         let expected=case["snapshot"].clone();
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(expected.to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
-        verify_cancel(PngDiff{image:Some(snapshot.image.clone())});verify_cancel(snapshot.clone());
-        verify(PngDiff{image:Some(snapshot.image.clone())},serde_json::json!({"image":expected["image"]}));
+        verify_cancel(PngDiff{image:Some(snapshot.image.clone()),..PngDiff::default()});verify_cancel(snapshot.clone());
+        verify(PngDiff{image:Some(snapshot.image.clone()),..PngDiff::default()},serde_json::json!({"image":expected["image"]}));
         verify(snapshot,expected);
     }
     verify(PngDiff::default(),serde_json::json!({}));
@@ -51,7 +51,7 @@ fn schema_owned_png_replacement_diff_and_inverse_preserve_neutral_native_words()
         let binary=protocol::OpBinary::encode_op(&mutation).unwrap();assert_eq!(<PngMutation as protocol::OpBinary>::decode_op(&binary).unwrap(),mutation);
         verify(mutation.clone(),serde_json::json!({"mutation":"replace-image","payload":{"image":case["snapshot"]["image"]}}));
         let actual=protocol::apply_diff(mutation.diff(&base).diff(),&base).unwrap();assert_eq!(actual,target);
-        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
+        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap().into_iter().rev(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
         let bytes=crate::standards::v1_2::subsets::any::io::encode_png(&actual).unwrap();assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&bytes).unwrap(),actual);
         let mut independent=png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().unwrap();let mut samples=vec![0;independent.output_buffer_size().unwrap()];let frame=independent.next_frame(&mut samples).unwrap();assert_eq!((frame.width,frame.height),(actual.image.width,actual.image.height));
         if actual.image.bit_depth==16{let words:Vec<u16>=samples[..frame.buffer_size()].chunks_exact(2).map(|word|u16::from_be_bytes([word[0],word[1]])).collect();assert_eq!(words,actual.image.samples);}

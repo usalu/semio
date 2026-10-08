@@ -63,3 +63,67 @@ fn segmented_download_slot_table_retires_every_chunk_as_it_is_taken() {
     assert_eq!(chunks.bytes_remaining(), 0, "a fully drained output retains no byte authority");
     assert_eq!(drained, payload);
 }
+
+#[test]
+fn segmented_output_original_full_grant_physical_retirement() {
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneStep};
+    use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement};
+    let contract = contract();
+    let chunk_bytes = contract["chunkBytes"].as_u64().unwrap() as usize;
+    for copy in [1, 8, 256] {
+        let chunks = ArtifactOutputChunks::new(chunk_bytes * 2);
+        for capacity in [chunk_bytes, chunk_bytes * 2] {
+            let mut bytes = Vec::with_capacity(capacity);
+            bytes.extend_from_slice(&[7; 33]);
+            chunks.push(bytes).unwrap();
+        }
+        chunks.seal().unwrap();
+        let alias = chunks.clone();
+        let download = crate::app::ArtifactDownloadOutput::new("original.semio", "text/plain", None, chunks).unwrap();
+        assert!(<crate::app::ArtifactDownloadOutput as RetireOwned>::controlled_retirement_supported());
+        let mut owner = match ControlledRetirement::new(download) { Ok(owner) => owner, Err((error, _)) => panic!("original download owner refused: {error}") };
+        let birth = owner.next_capacity_byte_demand(copy).unwrap();
+        assert_ne!(birth, 0);
+        for grant in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: birth - 1, maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() }] {
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(grant).unwrap());
+            assert_eq!(step.progress(), Default::default());
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert_eq!(alias.chunks_remaining(), 2);
+            assert_eq!(alias.bytes_remaining(), 66);
+        }
+        for _ in 0..65_536 {
+            let ((capacity, release, depth), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| (owner.next_capacity_byte_demand(copy).unwrap(), owner.next_release_byte_demand().unwrap(), owner.next_depth_demand().unwrap()));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth };
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(grant).unwrap());
+            assert!(step.progress().fits(grant));
+            assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
+            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+        }
+        assert!(owner.terminal_is_empty());
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(alias.chunks_remaining(), 2);
+        let mut owner = match ControlledRetirement::new(alias) { Ok(owner) => owner, Err((error, _)) => panic!("original final queue owner refused: {error}") };
+        let mut released = 0;
+        for _ in 0..65_536 {
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
+            if grant.maximum_release_bytes != 0 {
+                let denied = RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes - 1, ..grant };
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(denied).unwrap());
+                assert_eq!(step.progress(), Default::default());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            }
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(grant).unwrap());
+            assert!(step.progress().fits(grant));
+            assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
+            released += heap.released_bytes;
+            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+        }
+        assert!(owner.terminal_is_empty());
+        assert!(released >= chunk_bytes * 3);
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        println!("[DEBUG] original segmented output copy={copy} physicalRelease={released} aliasCustody=retained terminalDrop=0");
+    }
+}

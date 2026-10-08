@@ -53,14 +53,6 @@ pub use super::unpin_pixel::unpin_pixel;
 pub type BitmapEnvelope = store::ArtifactEnvelope<BitmapSnapshot, BitmapMutation>;
 pub type BitmapStore = store::ArtifactStore<BitmapSnapshot, BitmapMutation>;
 
-/// 🧬️ Applies a mutation to a projection — generic over every variant.
-pub fn apply_bitmap_mutation(projection: &mut BitmapSnapshot, mutation: &BitmapMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-
-    *projection = next;
-    Ok(())
-}
-
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
 pub fn inverse_bitmap_mutation(projection: &BitmapSnapshot, mutation: &BitmapMutation) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
     Ok({

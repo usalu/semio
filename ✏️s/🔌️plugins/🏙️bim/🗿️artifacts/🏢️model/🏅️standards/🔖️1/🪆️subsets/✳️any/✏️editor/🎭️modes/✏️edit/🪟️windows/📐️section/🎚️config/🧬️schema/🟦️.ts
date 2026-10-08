@@ -21,8 +21,10 @@ export interface BimSectionWindowConfig {
   framed: boolean;
   viewport: Viewport2d;
 }
-/** 🧬️ The one `snapshot` mutation of BimSectionWindowConfig: the whole configuration replaces the previous one. */
-export type BimSectionWindowConfigMutation = { kind: "snapshot"; config: BimSectionWindowConfig };
+/** 🧬️ The one `replace` mutation of BimSectionWindowConfig: its payload is the window's whole configuration; its diff names only the fields that differ from the base. */
+export type BimSectionWindowConfigMutation = { kind: "replace"; config: BimSectionWindowConfig };
+/** 🔺️ Sparse diff of BimSectionWindowConfig: exactly the fields a mutation changes. */
+export type BimSectionWindowConfigDiff = Partial<BimSectionWindowConfig>;
 /** 🚪️ Parses one exact BimSectionWindowConfig. */
 export function parseBimSectionWindowConfig(value: unknown): BimSectionWindowConfig {
   const row = exact(value, "$", ["startX", "startY", "endX", "endY", "depth", "framed", "viewport"]);
@@ -36,7 +38,14 @@ export function parseBimSectionWindowConfig(value: unknown): BimSectionWindowCon
     viewport: parseViewport2d(row.viewport),
   };
 }
-/** 🔁️ Applies one exact BimSectionWindowConfig mutation. */
-export function applyBimSectionWindowConfigMutation(_base: BimSectionWindowConfig, mutation: BimSectionWindowConfigMutation): BimSectionWindowConfig {
-  return parseBimSectionWindowConfig(mutation.config);
+/** 🔺️ The sparse diff one exact BimSectionWindowConfig mutation produces over `base`. */
+export function diffBimSectionWindowConfigMutation(base: BimSectionWindowConfig, mutation: BimSectionWindowConfigMutation): BimSectionWindowConfigDiff {
+  const next = parseBimSectionWindowConfig(mutation.config);
+  const diff: Record<string, unknown> = {};
+  for (const key of Object.keys(next) as (keyof BimSectionWindowConfig)[]) if (JSON.stringify(next[key]) !== JSON.stringify(base[key])) diff[key] = next[key];
+  return diff as BimSectionWindowConfigDiff;
+}
+/** 🔁️ Applies one exact BimSectionWindowConfig mutation through its sparse diff. */
+export function applyBimSectionWindowConfigMutation(base: BimSectionWindowConfig, mutation: BimSectionWindowConfigMutation): BimSectionWindowConfig {
+  return { ...base, ...diffBimSectionWindowConfigMutation(base, mutation) };
 }

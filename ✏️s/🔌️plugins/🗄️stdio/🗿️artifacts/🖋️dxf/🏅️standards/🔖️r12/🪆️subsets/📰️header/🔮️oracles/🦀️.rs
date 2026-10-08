@@ -46,7 +46,7 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
 /// subset's own codec.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    imp::oracle_apply_mutation_inverse(input, spec)
+    imp::oracle_apply_then_undo(input, spec)
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
@@ -420,7 +420,7 @@ mod imp {
 
     /// ↩️ `DxfMutation::inverse`'s own per-variant contract, transplanted onto `dxf::Drawing`: reads whatever pre-state it
     /// needs from `base` (name/index-aware) and answers the undo as leaf wire params.
-    fn inverse_of(base: &Drawing, kind: &str, params: &Json) -> Result<Undo, String> {
+    fn undo_for(base: &Drawing, kind: &str, params: &Json) -> Result<Undo, String> {
         let apply = |kind: &str, params: Json| Ok(Undo::Apply(kind.to_string(), params));
         let name = params.str("name");
         let index = index_of(params, "index");
@@ -492,11 +492,11 @@ mod imp {
         save(&load(input)?)
     }
 
-    pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    pub fn oracle_apply_then_undo(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let base = load(input)?;
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let undo = inverse_of(&base, &kind, &params)?;
+        let undo = undo_for(&base, &kind, &params)?;
         let mut drawing = load(input)?;
         apply_kind(&mut drawing, &kind, &params)?;
         match undo {

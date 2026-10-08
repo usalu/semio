@@ -12,6 +12,7 @@ pub struct ChangeJfifHeaderMutation {
     pub density_units: JfifDensityUnits,
     pub x_density: u16,
     pub y_density: u16,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<JfifThumbnail>,
 }
 //#endregion Payload

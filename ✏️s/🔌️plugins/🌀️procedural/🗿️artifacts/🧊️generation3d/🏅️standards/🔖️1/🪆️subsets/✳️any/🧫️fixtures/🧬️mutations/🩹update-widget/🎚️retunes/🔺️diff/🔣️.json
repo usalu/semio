@@ -2,9 +2,10 @@
   "schema": null,
   "camera": null,
   "widgets": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "knob",
         "patch": {
@@ -20,8 +21,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "synapses": null,
   "layout": null,

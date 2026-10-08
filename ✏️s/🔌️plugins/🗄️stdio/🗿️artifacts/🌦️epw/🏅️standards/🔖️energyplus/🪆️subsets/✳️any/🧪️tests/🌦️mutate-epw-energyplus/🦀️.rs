@@ -134,7 +134,7 @@ mod subject {
     use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_epw::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
+    
     use semio_s_artifact_stdio_epw::{EpwMutation, EpwSnapshot};
     use semio_s_artifact_stdio_epw_test_oracle::standards::v_energyplus::subsets::any::project_epw;
 
@@ -157,7 +157,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        apply_epw_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
+        apply_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
         outcome(&snapshot)
     }
 
@@ -166,9 +166,9 @@ mod subject {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
         let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_epw_mutation(&mut snapshot, &forward);
+        apply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
-            apply_epw_mutation(&mut snapshot, mutation);
+            apply_mutation(&mut snapshot, mutation);
         }
         outcome(&snapshot)
     }

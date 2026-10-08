@@ -84,20 +84,20 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "reorder-pages/moves-page-1-behind-page-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().pages.as_ref().expect("reorder-pages fills the pages delta");
-    assert_eq!(delta.reordered.as_deref(), Some(["page-2".to_string(), "page-1".to_string()].as_slice()), "reorder-pages emits the complete final id order");
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-pages touches only the `reordered` arm of the pages delta");
+    assert_eq!(delta.moved, vec![crate::diff::LayoutPageRelocation { id: "page-1".to_string(), from: 0, to: 1 }], "reorder-pages emits one positional relocation row");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.modified.is_empty(), "reorder-pages touches only the `moved` arm of the pages delta");
 }
 
 /// 🔺️ The sparse delta `reorder-pages` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here only `pages.reordered` is populated, and it is the COMPLETE final id order — never a from/to index pair.
+/// end state matches. Here only `pages.moved` is populated, with one `{id, from, to}` row.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "reorder-pages/moves-page-1-behind-page-2: reorder-pages must emit a pages delta whose only populated arm is `reordered`, holding the complete final order");
+    assert_eq!(produced, committed, "reorder-pages/moves-page-1-behind-page-2: reorder-pages must emit a pages delta whose only populated arm is `moved`, holding one positional relocation row");
 }
 
 /// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has

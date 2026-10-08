@@ -7,9 +7,9 @@ use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
-    if !base.objects.iter().any(|object| object.id == payload.id) {
+    let Some(index) = base.objects.iter().position(|object| object.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(diff_objects_remove(payload.id.clone()))
+    };
+    protocol::MutationOutcome::new(diff_objects_remove(index, base))
 }
 //#endregion 🔖️Diff

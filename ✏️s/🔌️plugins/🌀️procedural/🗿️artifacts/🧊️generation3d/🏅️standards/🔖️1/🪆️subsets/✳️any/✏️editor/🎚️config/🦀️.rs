@@ -178,29 +178,6 @@ impl Generation3dConfig {
 
 impl store::ConfigRecord for Generation3dConfig {}
 
-/// 🧭️ The leaf mutations that carry `base` to `next`, one per field that differs.
-pub fn config_replacement(base: &Generation3dConfig, next: &Generation3dConfig) -> Vec<Generation3dConfigMutation> {
-    let mut steps = Vec::new();
-    if base.lod_mode != next.lod_mode {
-        steps.push(Generation3dConfigMutation::SetLodMode(SetLodMode { value: next.lod_mode.clone() }));
-    }
-    if base.show_mode != next.show_mode {
-        steps.push(Generation3dConfigMutation::SetShowMode(SetShowMode { value: next.show_mode.clone() }));
-    }
-    if base.camera != next.camera {
-        steps.push(Generation3dConfigMutation::SetCamera(SetCamera { camera: next.camera.clone() }));
-    }
-    if base.preview_camera != next.preview_camera {
-        steps.push(Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: next.preview_camera.clone() }));
-    }
-    if base.sun_json != next.sun_json {
-        steps.push(Generation3dConfigMutation::SetSun(SetSun { json: next.sun_json.clone() }));
-    }
-    if base.selected_generation_id != next.selected_generation_id {
-        steps.push(Generation3dConfigMutation::SetSelectedGeneration(SetSelectedGeneration { selected_generation_id: next.selected_generation_id.clone() }));
-    }
-    steps
-}
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
@@ -266,16 +243,6 @@ impl protocol::DiffAlgebra<Generation3dConfig> for Generation3dConfigPatch {
             preview_camera: self.preview_camera.as_ref().map(|_| base.preview_camera.clone()),
             sun_json: self.sun_json.as_ref().map(|_| base.sun_json.clone()),
             selected_generation_id: self.selected_generation_id.as_ref().map(|_| Generation3dSelectedGenerationChange { id: base.selected_generation_id.clone() }),
-        }
-    }
-    fn between(base: &Generation3dConfig, other: &Generation3dConfig) -> Self {
-        Self {
-            lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()),
-            show_mode: (base.show_mode != other.show_mode).then(|| other.show_mode.clone()),
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-            preview_camera: (base.preview_camera != other.preview_camera).then(|| other.preview_camera.clone()),
-            sun_json: (base.sun_json != other.sun_json).then(|| other.sun_json.clone()),
-            selected_generation_id: (base.selected_generation_id != other.selected_generation_id).then(|| Generation3dSelectedGenerationChange { id: other.selected_generation_id.clone() }),
         }
     }
     fn is_empty(&self) -> bool {

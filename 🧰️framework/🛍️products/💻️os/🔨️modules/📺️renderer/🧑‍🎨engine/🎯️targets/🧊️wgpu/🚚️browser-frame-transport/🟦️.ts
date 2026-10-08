@@ -1,3 +1,4 @@
+import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { BROWSER_MEDIA_CAPACITY, mediaSlotAuthorityKey, parsePresentedMediaSlots, type BrowserMediaCommand, type BrowserMediaOperation, type BrowserMediaResult, type BrowserMediaRelease, type BrowserMediaValue, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
 import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
@@ -234,6 +235,7 @@ export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEve
 }
 
 export type BrowserFrameWorkerBoot = {
+  readonly catalog: PluginCatalogRowsV1;
   readonly plugins?: readonly WgpuPluginModule[];
   readonly pluginRegistrySelection?: WgpuPluginRegistrySelection;
   readonly kind: "boot";

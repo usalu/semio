@@ -1,37 +1,149 @@
-"""🔺️ One indexed slot upsert."""
-type Wfc2dSlotUpsert {
-  index: Int!
-  value: Wfc2dSlot!
+# 🔺️ wfc2d diff — scalars are optional absolutes; every list is a positional list delta: removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
+
+type Wfc2dSlotPatch {
+  x: Float
+  y: Float
+  width: Float
+  height: Float
+  pinnedTileId: String
 }
 
-"""🔺️ One indexed edge upsert."""
-type Wfc2dSlotEdgeUpsert {
+type Wfc2dSlotsRemoval {
+  id: String!
   index: Int!
-  value: Wfc2dSlotEdge!
 }
 
-"""🔺️ One indexed tile upsert."""
-type Wfc2dTileUpsert {
+type Wfc2dSlotsInsertion {
   index: Int!
-  value: Wfc2dTile!
+  row: Wfc2dSlot!
 }
 
-"""🔺️ One indexed rule upsert."""
-type Wfc2dRuleUpsert {
-  index: Int!
-  value: Wfc2dRule!
+type Wfc2dSlotsRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
-"""🔺️ A sparse, id-keyed structural delta over Wfc2dSnapshot."""
+type Wfc2dSlotsModification {
+  id: String!
+  patch: Wfc2dSlotPatch!
+}
+
+type Wfc2dSlotsDelta {
+  removed: [Wfc2dSlotsRemoval!]!
+  inserted: [Wfc2dSlotsInsertion!]!
+  moved: [Wfc2dSlotsRelocation!]!
+  modified: [Wfc2dSlotsModification!]!
+}
+
+type Wfc2dEdgePatch {
+  fromSlotId: String
+  toSlotId: String
+  relation: String
+}
+
+type Wfc2dEdgesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc2dEdgesInsertion {
+  index: Int!
+  row: Wfc2dSlotEdge!
+}
+
+type Wfc2dEdgesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc2dEdgesModification {
+  id: String!
+  patch: Wfc2dEdgePatch!
+}
+
+type Wfc2dEdgesDelta {
+  removed: [Wfc2dEdgesRemoval!]!
+  inserted: [Wfc2dEdgesInsertion!]!
+  moved: [Wfc2dEdgesRelocation!]!
+  modified: [Wfc2dEdgesModification!]!
+}
+
+type Wfc2dTilePatch {
+  weight: Float
+  media: Wfc2dTileMedia
+  label: String
+}
+
+type Wfc2dTilesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc2dTilesInsertion {
+  index: Int!
+  row: Wfc2dTile!
+}
+
+type Wfc2dTilesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc2dTilesModification {
+  id: String!
+  patch: Wfc2dTilePatch!
+}
+
+type Wfc2dTilesDelta {
+  removed: [Wfc2dTilesRemoval!]!
+  inserted: [Wfc2dTilesInsertion!]!
+  moved: [Wfc2dTilesRelocation!]!
+  modified: [Wfc2dTilesModification!]!
+}
+
+type Wfc2dRulePatch {
+  tileAId: String
+  tileBId: String
+  allowed: Boolean
+  relation: String
+}
+
+type Wfc2dRulesRemoval {
+  id: String!
+  index: Int!
+}
+
+type Wfc2dRulesInsertion {
+  index: Int!
+  row: Wfc2dRule!
+}
+
+type Wfc2dRulesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Wfc2dRulesModification {
+  id: String!
+  patch: Wfc2dRulePatch!
+}
+
+type Wfc2dRulesDelta {
+  removed: [Wfc2dRulesRemoval!]!
+  inserted: [Wfc2dRulesInsertion!]!
+  moved: [Wfc2dRulesRelocation!]!
+  modified: [Wfc2dRulesModification!]!
+}
+
 type Wfc2dDiff {
-  schema: String
-  seed: Float
-  slotsRemoved: [String!]!
-  slotsUpserted: [Wfc2dSlotUpsert!]!
-  edgesRemoved: [String!]!
-  edgesUpserted: [Wfc2dSlotEdgeUpsert!]!
-  tilesRemoved: [String!]!
-  tilesUpserted: [Wfc2dTileUpsert!]!
-  rulesRemoved: [String!]!
-  rulesUpserted: [Wfc2dRuleUpsert!]!
+  schema: String @state(class: ARTIFACT)
+  seed: Float @state(class: ARTIFACT)
+  slots: Wfc2dSlotsDelta! @state(class: ARTIFACT)
+  edges: Wfc2dEdgesDelta! @state(class: ARTIFACT)
+  tiles: Wfc2dTilesDelta! @state(class: ARTIFACT)
+  rules: Wfc2dRulesDelta! @state(class: ARTIFACT)
 }

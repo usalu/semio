@@ -187,3 +187,10 @@ mod insert_vent_system_clamp;
 #[path = "../../🗑️remove-vent-system/🧪️tests/❓gone/🦀️.rs"]
 mod remove_vent_system_gone;
 //#endregion 🧫️CanonicalVectorTests
+
+//#region 🔬️MiddleRowVectors
+#[path = "../../➖️remove-zone/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_zone;
+#[path = "../../🗑️remove-vent-system/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_vent_system;
+//#endregion 🔬️MiddleRowVectors

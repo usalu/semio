@@ -10,47 +10,50 @@
   "quantities": null,
   "relationships": null,
   "adjacencies": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "adjacency-a",
-        "name": "Reception To Waiting",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "elementAId": "element-a",
-        "elementBId": "element-b",
-        "kind": "required",
-        "connection": "direct",
-        "separations": [],
-        "weight": 0.0,
-        "rationale": null,
-        "distanceMaxM": null,
-        "distanceMinM": null,
-        "levelConstraint": null,
-        "accessPath": null,
-        "sharedWall": false,
-        "sharedEntry": false,
-        "trafficIsolation": false,
-        "circulationOverlap": false,
-        "conflictIds": [],
-        "normalized": true,
-        "verificationStatus": "pending",
-        "sourceRelationshipId": null,
-        "internalExternalAccess": null
+        "index": 0,
+        "row": {
+          "id": "adjacency-a",
+          "name": "Reception To Waiting",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "elementAId": "element-a",
+          "elementBId": "element-b",
+          "kind": "required",
+          "connection": "direct",
+          "separations": [],
+          "weight": 0.0,
+          "rationale": null,
+          "distanceMaxM": null,
+          "distanceMinM": null,
+          "levelConstraint": null,
+          "accessPath": null,
+          "sharedWall": false,
+          "sharedEntry": false,
+          "trafficIsolation": false,
+          "circulationOverlap": false,
+          "conflictIds": [],
+          "normalized": true,
+          "verificationStatus": "pending",
+          "sourceRelationshipId": null,
+          "internalExternalAccess": null
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "processes": null,
   "flows": null,

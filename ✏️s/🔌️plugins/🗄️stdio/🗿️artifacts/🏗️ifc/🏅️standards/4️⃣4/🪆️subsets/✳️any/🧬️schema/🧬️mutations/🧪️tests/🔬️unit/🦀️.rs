@@ -159,24 +159,6 @@ fn absorb_law_associativity() {
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
-//#endregion 🔖️absorb_law
-
-//#region 🔖️between_roundtrip_law
-#[test]
-fn between_roundtrip_law() {
-    let a = base_snapshot();
-    let mut b = base_snapshot();
-    b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
-    b.entities.remove(0); // remove IFCPROJECT (id 1)
-    b.entities[0].name = "IFCOWNERHISTORY2".into(); // modify id 2 (now index 0)
-    b.entities.push(entity(200, "IFCBUILDINGSTOREY", vec![IfcValue::Real(3.0)])); // add id 200
-
-    let d = IfcDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
-    let d_rev = IfcDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_rev, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
-    assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-}
 //#endregion 🔖️between_roundtrip_law
 
 //#region 🔖️codec_retention_law
@@ -230,40 +212,6 @@ fn sweep_b() -> IfcSnapshot {
     }
 }
 
-#[test]
-fn field_sweep_covers_every_mutable_field() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let forward = IfcDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&forward, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
-    let backward = IfcDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&backward, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
-    assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-
-    assert!(forward.file_description.is_some(), "file_description must be diffed");
-    assert!(forward.file_name.is_some(), "file_name must be diffed");
-    assert!(forward.file_schema.is_some(), "file_schema must be diffed");
-
-    let ed: &IfcEntitiesDiff = forward.entities.as_ref().expect("entities diff must be present");
-    assert_eq!(ed.removed, vec![1u64], "the removed entity (id 1) must be tracked");
-    assert_eq!(ed.added.len(), 1, "exactly one entity must be added");
-    assert_eq!(ed.added[0].entity.id, 300);
-    assert_eq!(ed.modified.len(), 1, "exactly one entity must be modified");
-    assert_eq!(ed.modified[0].id, 2);
-    let md = &ed.modified[0].diff;
-    assert!(md.name.is_some(), "name must be diffed");
-    assert!(md.complex.is_some(), "complex must be diffed (non-empty -> empty)");
-    let ad = md.args.as_ref().expect("args diff must be present");
-    assert!(!ad.modified.is_empty(), "an arg must be modified (index 0)");
-    assert!(!ad.removed.is_empty(), "an arg must be removed (a is longer)");
-
-    let backward_ed = backward.entities.as_ref().expect("entities diff must be present");
-    assert!(!backward_ed.added.is_empty(), "reverse direction must exercise an added entity (id 1 comes back)");
-    let back_md = &backward_ed.modified[0].diff;
-    let back_ad = back_md.args.as_ref().expect("args diff must be present");
-    assert!(!back_ad.added.is_empty(), "reverse direction must exercise an added arg");
-}
 //#endregion 🔖️field_sweep
 
 #[test]

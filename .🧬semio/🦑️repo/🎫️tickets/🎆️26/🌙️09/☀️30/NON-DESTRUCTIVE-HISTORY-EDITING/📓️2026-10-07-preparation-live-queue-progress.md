@@ -23,3 +23,8 @@ The first managed source capture10366 ended13:36:15.632Z before the test body: N
 ## Executed Feature RED and Producer
 
 Corrected Nx source11384 actually executed the protected SQLite lease scenario: 0/1, one Ajv expectation, 8.82s. Its sole failure was no live stderr lease-wait observation while the child remained blocked by the retained parent lease. Only after this actual feature RED, PreparationScript gained an opt-in onWait callback using the existing diagnostic logger and monotonic elapsed time from request admission. The shared diagnostic phase union gained lease-wait. The callback observes each existing waiter progress event; it changes no queue or lease algorithm. When the timing flag is absent, the original stdout wait behavior remains intact. The full current Cargo/TOML/fast-glob/Ajv suite is the successor rather than only the new law.
+
+
+## Completed Current Contract Suite
+
+Source14730 actuallyGREEN18/18,501 expectations,16.82s completed2026-10-07T13:50:12.096Z. New protected-operation wait law ran487.84ms and emitted visible DEBUG lease-wait while child remained incomplete; existing Cargo-tree/TOML/Ajv/membership/default-quiet laws passed unchanged. Subsequent actual native12973 console demonstrated inherited stderr wait observations followed by closure/publication; it still reached the original30-minute deadline before selected native assertions. Thus live progress is established without claiming throughput improvement or native semantics.

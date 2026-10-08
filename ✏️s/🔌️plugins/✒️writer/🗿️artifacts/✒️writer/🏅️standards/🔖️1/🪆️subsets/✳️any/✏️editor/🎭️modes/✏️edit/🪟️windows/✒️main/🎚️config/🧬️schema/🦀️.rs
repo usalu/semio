@@ -101,12 +101,6 @@ impl protocol::DiffAlgebra<WriterMainWindowConfig> for WriterMainWindowConfigDif
             editor_settings: self.editor_settings.as_ref().map(|_| base.editor_settings.clone()),
         }
     }
-    fn between(base: &WriterMainWindowConfig, other: &WriterMainWindowConfig) -> Self {
-        Self {
-            camera: (base.camera != other.camera).then(|| other.camera.clone()),
-            editor_settings: (base.editor_settings != other.editor_settings).then(|| other.editor_settings.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none() && self.editor_settings.is_none()
     }

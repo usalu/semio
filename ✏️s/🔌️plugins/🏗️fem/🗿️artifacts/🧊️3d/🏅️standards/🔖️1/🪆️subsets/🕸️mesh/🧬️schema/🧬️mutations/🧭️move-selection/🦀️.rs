@@ -170,7 +170,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for MoveSelection {
 #[cfg(test)]
 pub mod laws {
     use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-    use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation,Fem3dMutation};
+    use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation,Fem3dMutation};
+    use crate::central_apply::apply_fem3d_mutation;
 
     use crate::Fem3dSnapshot;
 
@@ -202,9 +203,14 @@ pub mod laws {
         assert_eq!(<Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&operation).kind, "move-selection");
     }
 
-    /// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
-    pub async fn inverse_sum(before: &str, operation: &str) {
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(operation), &snapshot(before)).await;
+    /// 🔣️ The committed snapshot, decoded.
+    pub fn decoded_snapshot(text: &str) -> Fem3dSnapshot {
+        snapshot(text)
+    }
+
+    /// 🔣️ The committed mutation, decoded.
+    pub fn decoded_mutation(text: &str) -> Fem3dMutation {
+        mutation(text)
     }
 
     /// ↩️ The inverse restores `before` exactly, one whole-record replacement per moved node and solid.
@@ -214,7 +220,7 @@ pub mod laws {
         let moved = applied(&base, &operation);
         let changed = moved.nodes.iter().filter(|node| !base.nodes.contains(node)).count() + moved.solids.iter().filter(|solid| !base.solids.contains(solid)).count();
         assert_eq!(inverse.len(), changed, "one inverse step per moved record: {inverse:?}");
-        let restored = inverse.iter().fold(moved, |state, step| applied(&state, step));
+        let restored = inverse.iter().rev().fold(moved, |state, step| applied(&state, step));
         assert_eq!(restored, base, "the inverse restores the before-snapshot exactly");
     }
 

@@ -368,15 +368,15 @@
         ],
         "actions": [
           {
-            "id": "setDocument",
+            "id": "editEquation",
             "label": {
               "native": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
+                "en": "Edit Equation",
+                "de": "Gleichung bearbeiten"
               },
               "reuse": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
+                "en": "Edit Equation",
+                "de": "Gleichung bearbeiten"
               }
             },
             "kind": "mutation",
@@ -389,7 +389,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": true,
+                "destructive": false,
                 "reversible": true
               },
               "policy": {
@@ -411,12 +411,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Replaces the equation's whole graph and point geometry with the supplied ones; parts that differ are overwritten.",
-                  "de": "Ersetzt den gesamten Graphen und die Punktgeometrie der Gleichung durch die übergebenen; abweichende Teile werden überschrieben."
+                  "en": "Applies the supplied graph and point geometry as the concrete node, edge and point changes that differ from the equation; nothing else is touched.",
+                  "de": "Wendet den übergebenen Graphen und die Punktgeometrie als die konkreten Knoten-, Kanten- und Punktänderungen an, die von der Gleichung abweichen; sonst wird nichts angefasst."
                 },
                 "reuse": {
-                  "en": "Replaces the equation's whole graph and point geometry with the supplied ones; parts that differ are overwritten.",
-                  "de": "Ersetzt den gesamten Graphen und die Punktgeometrie der Gleichung durch die übergebenen; abweichende Teile werden überschrieben."
+                  "en": "Applies the supplied graph and point geometry as the concrete node, edge and point changes that differ from the equation; nothing else is touched.",
+                  "de": "Wendet den übergebenen Graphen und die Punktgeometrie als die konkreten Knoten-, Kanten- und Punktänderungen an, die von der Gleichung abweichen; sonst wird nichts angefasst."
                 }
               }
             }
@@ -743,15 +743,15 @@
             }
           },
           {
-            "id": "setPoints",
+            "id": "editPoints",
             "label": {
               "native": {
-                "en": "Set Points",
-                "de": "Punkte festlegen"
+                "en": "Edit Points",
+                "de": "Punkte bearbeiten"
               },
               "reuse": {
-                "en": "Set Points",
-                "de": "Punkte festlegen"
+                "en": "Edit Points",
+                "de": "Punkte bearbeiten"
               }
             },
             "kind": "mutation",
@@ -764,7 +764,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": true,
+                "destructive": false,
                 "reversible": true
               },
               "policy": {
@@ -786,12 +786,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Replaces the point set of the equation's geometry with the supplied points.",
-                  "de": "Ersetzt die Punktmenge der Geometrie der Gleichung durch die übergebenen Punkte."
+                  "en": "Applies the supplied points as the point repositionings, insertions and removals that differ from the equation's geometry.",
+                  "de": "Wendet die übergebenen Punkte als die Punktverschiebungen, -einfügungen und -entfernungen an, die von der Geometrie der Gleichung abweichen."
                 },
                 "reuse": {
-                  "en": "Replaces the point set of the equation's geometry with the supplied points.",
-                  "de": "Ersetzt die Punktmenge der Geometrie der Gleichung durch die übergebenen Punkte."
+                  "en": "Applies the supplied points as the point repositionings, insertions and removals that differ from the equation's geometry.",
+                  "de": "Wendet die übergebenen Punkte als die Punktverschiebungen, -einfügungen und -entfernungen an, die von der Geometrie der Gleichung abweichen."
                 }
               }
             }

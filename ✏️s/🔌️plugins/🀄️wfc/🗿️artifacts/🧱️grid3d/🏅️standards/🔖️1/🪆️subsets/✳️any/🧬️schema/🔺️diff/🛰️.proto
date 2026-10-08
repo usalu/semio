@@ -1,29 +1,148 @@
-// 🧬 s.wfc.grid3d — Protobuf mirror of the normative JSON Schema. Field numbers are stable and
-// follow the declaration order of the Rust records the schema is transcribed from.
 syntax = "proto3";
+package semio.s.wfc.grid3d.diff;
 
-package semio.s.wfc.grid3d.v1;
+// 🔺️ grid3d diff — scalars are optional absolutes; every list is a positional list delta (`protocol::list_delta`): removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
 
-import "snapshot.proto";
-
-message Grid3dTileUpsert {
+message Grid3dAxisSize {
   uint32 index = 1;
-  Grid3dTile tile = 2;
+  double size = 2;
 }
 
-message Grid3dRuleUpsert {
-  uint32 index = 1;
-  Grid3dRule rule = 2;
+message Grid3dAxisPatch {
+  optional uint32 length = 1;
+  repeated Grid3dAxisSize sizes = 2;
 }
 
-message Grid3dPinnedUpsert {
-  uint32 index = 1;
-  Grid3dPinnedCell pinned = 2;
+message Grid3dTilePatch {
+  optional double weight = 1;
+  optional Grid3dTileMedia media = 2;
+  optional string label = 3; // set or clear
 }
 
-message Grid3dMaskedUpsert {
+message Grid3dTilesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid3dTilesInsertion {
   uint32 index = 1;
-  Grid3dCell cell = 2;
+  Grid3dTile row = 2;
+}
+
+message Grid3dTilesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid3dTilesModification {
+  string id = 1;
+  Grid3dTilePatch patch = 2;
+}
+
+message Grid3dTilesDelta {
+  repeated Grid3dTilesRemoval removed = 1;
+  repeated Grid3dTilesInsertion inserted = 2;
+  repeated Grid3dTilesRelocation moved = 3;
+  repeated Grid3dTilesModification modified = 4;
+}
+
+message Grid3dRulePatch {
+  optional string tile_a_id = 1;
+  optional string tile_b_id = 2;
+  optional Grid3dDirection direction = 3;
+  optional bool allowed = 4;
+}
+
+message Grid3dRulesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid3dRulesInsertion {
+  uint32 index = 1;
+  Grid3dRule row = 2;
+}
+
+message Grid3dRulesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid3dRulesModification {
+  string id = 1;
+  Grid3dRulePatch patch = 2;
+}
+
+message Grid3dRulesDelta {
+  repeated Grid3dRulesRemoval removed = 1;
+  repeated Grid3dRulesInsertion inserted = 2;
+  repeated Grid3dRulesRelocation moved = 3;
+  repeated Grid3dRulesModification modified = 4;
+}
+
+message Grid3dPinnedPatch {
+  optional string tile_id = 1;
+}
+
+message Grid3dPinnedRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid3dPinnedInsertion {
+  uint32 index = 1;
+  Grid3dPinnedCell row = 2;
+}
+
+message Grid3dPinnedRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid3dPinnedModification {
+  string id = 1;
+  Grid3dPinnedPatch patch = 2;
+}
+
+message Grid3dPinnedDelta {
+  repeated Grid3dPinnedRemoval removed = 1;
+  repeated Grid3dPinnedInsertion inserted = 2;
+  repeated Grid3dPinnedRelocation moved = 3;
+  repeated Grid3dPinnedModification modified = 4;
+}
+
+message Grid3dMaskedPatch {
+}
+
+message Grid3dMaskedRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message Grid3dMaskedInsertion {
+  uint32 index = 1;
+  Grid3dCell row = 2;
+}
+
+message Grid3dMaskedRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message Grid3dMaskedModification {
+  string id = 1;
+  Grid3dMaskedPatch patch = 2;
+}
+
+message Grid3dMaskedDelta {
+  repeated Grid3dMaskedRemoval removed = 1;
+  repeated Grid3dMaskedInsertion inserted = 2;
+  repeated Grid3dMaskedRelocation moved = 3;
+  repeated Grid3dMaskedModification modified = 4;
 }
 
 message Grid3dDiff {
@@ -32,18 +151,14 @@ message Grid3dDiff {
   optional uint32 width = 3;
   optional uint32 height = 4;
   optional uint32 depth = 5;
-  repeated double cell_sizes_x = 6;
-  repeated double cell_sizes_y = 7;
-  repeated double cell_sizes_z = 8;
+  optional Grid3dAxisPatch cell_sizes_x = 6;
+  optional Grid3dAxisPatch cell_sizes_y = 7;
+  optional Grid3dAxisPatch cell_sizes_z = 8;
   optional bool periodic_x = 9;
   optional bool periodic_y = 10;
   optional bool periodic_z = 11;
-  repeated string tiles_removed = 12;
-  repeated Grid3dTileUpsert tiles_upserted = 13;
-  repeated string rules_removed = 14;
-  repeated Grid3dRuleUpsert rules_upserted = 15;
-  repeated string pinned_removed = 16;
-  repeated Grid3dPinnedUpsert pinned_upserted = 17;
-  repeated string masked_removed = 18;
-  repeated Grid3dMaskedUpsert masked_upserted = 19;
+  Grid3dTilesDelta tiles = 12;
+  Grid3dRulesDelta rules = 13;
+  Grid3dPinnedDelta pinned = 14;
+  Grid3dMaskedDelta masked = 15;
 }

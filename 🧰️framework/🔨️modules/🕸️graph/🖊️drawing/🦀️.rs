@@ -74,10 +74,13 @@ pub mod force {
     }
 
     /// 🕸️ Run force-directed layout on abstract 2d positions.
-    pub fn run_force_layout(positions: &mut [Vec2], radii: &[f64], edge_pairs: &[(usize, usize)], pin: &[Option<Vec2>], opts: &ForceLayoutOptions) {
+    pub fn run_force_layout(positions:&mut [Vec2],radii:&[f64],edge_pairs:&[(usize,usize)],pin:&[Option<Vec2>],opts:&ForceLayoutOptions){let _=run_force_layout_controlled(positions,radii,edge_pairs,pin,opts,&mut |_|true);}
+
+    /// 📶️ Executes the original force iterations with caller cancellation before each iteration.
+    pub fn run_force_layout_controlled(positions: &mut [Vec2], radii: &[f64], edge_pairs: &[(usize, usize)], pin: &[Option<Vec2>], opts: &ForceLayoutOptions,progress:&mut dyn FnMut(u32)->bool) ->bool {
         let n = positions.len();
         if n == 0 {
-            return;
+            return progress(0);
         }
         let mut velocities = vec![Vec2::ZERO; n];
         let gx = opts.center_x;
@@ -85,6 +88,7 @@ pub mod force {
         let k = opts.ideal_edge_length.max(1e-6);
         let iters = opts.iterations.max(1);
         for iter in 0..iters {
+            if !progress(iter){return false;}
             let cool = (1.0 - iter as f64 / iters as f64).max(0.08);
             let mut forces = vec![Vec2::ZERO; n];
             let _theta = opts.barnes_hut_theta;
@@ -127,6 +131,7 @@ pub mod force {
                 }
             }
         }
+        true
     }
 
     /// 🎲️ Scatter missing positions around anchor with deterministic jitter.

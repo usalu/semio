@@ -11,12 +11,15 @@
   "relationships": null,
   "adjacencies": null,
   "processes": {
-    "added": [],
     "removed": [
-      "process-a"
+      {
+        "id": "process-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "flows": null,
   "accessRules": null,

@@ -13,10 +13,8 @@ use super::{
     blob_reference, checkpoint_id_encoding_v1, validate_pair_budget, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, CheckpointCandidate, OperationContext,
     TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec, ValidatingCanonicalArtifactAuthority, AUTHORITY_MAX_OPERATION_BYTES,
 };
-use ::directory::os_directory::{
-    descriptor_digest_v1, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentDescriptor, DocumentScope,
-    EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
-};
+use ::directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentDescriptor, DocumentScope, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1};
+use ::directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use ::directory::os_store::canonical_check_in_line;
 use semio_framework_hash::Sha256;
 use std::collections::BTreeMap;
@@ -231,7 +229,7 @@ impl DocumentCheckInJob {
         }
         state.phase = DocumentCheckInPhaseV1::Ready;
         state.completed_units = DOCUMENT_CHECK_IN_TOTAL_UNITS;
-        state.ready = Some(DocumentCheckInReadyV1 { checkpoint_id: checkpoint_id.hex(), parent_checkpoint_id: parent_checkpoint_id.hex(), baseline });
+        state.ready = Some(DocumentCheckInReadyV1 { checkpoint_id: directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint_id), parent_checkpoint_id: directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&parent_checkpoint_id), baseline });
     }
 
     /// ⛔️ Ends the job with a refusal; a revoked author's job always reads `authority-changed`, and a

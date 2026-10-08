@@ -25,25 +25,28 @@ type Puzzle5dFastenerPatch { source: String target: String fastenerKind: String 
 type Puzzle5dTargetVolumePatch { origin: [Float!] orientation: [Float!] scale: Puzzle5dScale hidden: Boolean locked: Boolean }
 type Puzzle5dKindCompatibilityPatch { bidirectional: Boolean important: Boolean specificity: Puzzle5dCompatSpecificity }
 type Puzzle5dMetaPatch { description: String }
-type Puzzle5dGripsDelta { added: [Puzzle5dGrip!]! removed: [String!]! patched: [Puzzle5dGripPatchEntry!]! reordered: [String!] }
-type Puzzle5dGripPatchEntry { id: String! patch: Puzzle5dGripPatch! }
-type Puzzle5dPartsDelta { added: [Puzzle5dPart!]! removed: [String!]! patched: [Puzzle5dPartPatchEntry!]! reordered: [String!] }
-type Puzzle5dPartPatchEntry { id: String! patch: Puzzle5dPartPatch! }
-type Puzzle5dFastenersDelta { added: [Puzzle5dFastener!]! removed: [String!]! patched: [Puzzle5dFastenerPatchEntry!]! reordered: [String!] }
-type Puzzle5dFastenerPatchEntry { id: String! patch: Puzzle5dFastenerPatch! }
-type Puzzle5dTargetVolumesDelta { added: [Puzzle5dTargetVolume!]! removed: [String!]! patched: [Puzzle5dTargetVolumePatchEntry!]! reordered: [String!] }
-type Puzzle5dTargetVolumePatchEntry { id: String! patch: Puzzle5dTargetVolumePatch! }
-type Puzzle5dKindCompatibilityDelta { added: [Puzzle5dKindCompatibility!]! removed: [Puzzle5dKindCompatibilityKey!]! patched: [Puzzle5dKindCompatibilityPatchEntry!]! reordered: [Puzzle5dKindCompatibilityKey!] }
-type Puzzle5dKindCompatibilityPatchEntry { id: Puzzle5dKindCompatibilityKey! patch: Puzzle5dKindCompatibilityPatch! }
-
-type Puzzle5dPart { id: String! partKind: String anchor: Puzzle5dPartAnchor }
-type Puzzle5dFastener { id: String! source: String target: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
-type Puzzle5dTargetVolume { id: String! origin: [Float!] orientation: [Float!] scale: [Float!] hidden: Boolean locked: Boolean }
-type Puzzle5dKindCompatibility { source: String target: String bidirectional: Boolean important: Boolean specificity: Puzzle5dCompatSpecificity }
-type Puzzle5dMeta { _placeholder: Boolean }
-type Puzzle5dKindCatalogs { _placeholder: Boolean }
-type Puzzle5dKindCatalogsExtra { _placeholder: Boolean }
-
-
-enum Puzzle5dPartAnchor { FIXED DERIVED }
-enum Puzzle5dCompatSpecificity { GENERAL PART FASTENER GRIP ROPE }
+type Puzzle5dGripsDelta { removed: [Puzzle5dGripRemoval!]! inserted: [Puzzle5dGripInsertion!]! moved: [Puzzle5dGripRelocation!]! modified: [Puzzle5dGripModification!]! }
+type Puzzle5dGripRemoval { id: String! index: Int! }
+type Puzzle5dGripInsertion { index: Int! row: Puzzle5dGrip! }
+type Puzzle5dGripRelocation { id: String! from: Int! to: Int! }
+type Puzzle5dGripModification { id: String! patch: Puzzle5dGripPatch! }
+type Puzzle5dPartsDelta { removed: [Puzzle5dPartRemoval!]! inserted: [Puzzle5dPartInsertion!]! moved: [Puzzle5dPartRelocation!]! modified: [Puzzle5dPartModification!]! }
+type Puzzle5dPartRemoval { id: String! index: Int! }
+type Puzzle5dPartInsertion { index: Int! row: Puzzle5dPart! }
+type Puzzle5dPartRelocation { id: String! from: Int! to: Int! }
+type Puzzle5dPartModification { id: String! patch: Puzzle5dPartPatch! }
+type Puzzle5dFastenersDelta { removed: [Puzzle5dFastenerRemoval!]! inserted: [Puzzle5dFastenerInsertion!]! moved: [Puzzle5dFastenerRelocation!]! modified: [Puzzle5dFastenerModification!]! }
+type Puzzle5dFastenerRemoval { id: String! index: Int! }
+type Puzzle5dFastenerInsertion { index: Int! row: Puzzle5dFastener! }
+type Puzzle5dFastenerRelocation { id: String! from: Int! to: Int! }
+type Puzzle5dFastenerModification { id: String! patch: Puzzle5dFastenerPatch! }
+type Puzzle5dTargetVolumesDelta { removed: [Puzzle5dTargetVolumeRemoval!]! inserted: [Puzzle5dTargetVolumeInsertion!]! moved: [Puzzle5dTargetVolumeRelocation!]! modified: [Puzzle5dTargetVolumeModification!]! }
+type Puzzle5dTargetVolumeRemoval { id: String! index: Int! }
+type Puzzle5dTargetVolumeInsertion { index: Int! row: Puzzle5dTargetVolume! }
+type Puzzle5dTargetVolumeRelocation { id: String! from: Int! to: Int! }
+type Puzzle5dTargetVolumeModification { id: String! patch: Puzzle5dTargetVolumePatch! }
+type Puzzle5dKindCompatibilityDelta { removed: [Puzzle5dKindCompatibilityRemoval!]! inserted: [Puzzle5dKindCompatibilityInsertion!]! moved: [Puzzle5dKindCompatibilityRelocation!]! modified: [Puzzle5dKindCompatibilityModification!]! }
+type Puzzle5dKindCompatibilityRemoval { id: Puzzle5dKindCompatibilityKey! index: Int! }
+type Puzzle5dKindCompatibilityInsertion { index: Int! row: Puzzle5dKindCompatibility! }
+type Puzzle5dKindCompatibilityRelocation { id: Puzzle5dKindCompatibilityKey! from: Int! to: Int! }
+type Puzzle5dKindCompatibilityModification { id: Puzzle5dKindCompatibilityKey! patch: Puzzle5dKindCompatibilityPatch! }

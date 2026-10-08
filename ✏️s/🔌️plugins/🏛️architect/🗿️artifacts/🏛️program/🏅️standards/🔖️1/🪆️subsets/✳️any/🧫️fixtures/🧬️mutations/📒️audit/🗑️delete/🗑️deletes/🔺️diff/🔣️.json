@@ -64,12 +64,15 @@
   "surveys": null,
   "issues": null,
   "auditEvents": {
-    "added": [],
     "removed": [
-      "audit-event-a"
+      {
+        "id": "audit-event-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "templates": null,
   "knowledge": null,

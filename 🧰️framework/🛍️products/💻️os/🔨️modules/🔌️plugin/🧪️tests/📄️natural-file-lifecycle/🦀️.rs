@@ -98,5 +98,5 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
     assert_eq!(fixture.lifecycle.expected.save_instance_id, fixture.lifecycle.current_instance_id);
     assert_eq!(fixture.lifecycle.expected.preserved_instance_id, fixture.lifecycle.current_instance_id);
     assert_eq!(fixture.lifecycle.expected.opened_instance_id, fixture.lifecycle.opened_instance_id);
-    assert_eq!(fixture.lifecycle.expected.opened_history_entries, 1);
+    assert_eq!(fixture.lifecycle.expected.opened_history_entries, 0);
 }

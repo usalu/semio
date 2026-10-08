@@ -2,7 +2,8 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::host_scene_edit;
+use crate::editor::flow::edit_rules::ContentEdit;
+use crate::editor::flow::{flow_composed_content, flow_content_leaves_emit, host_from_snapshot};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -23,15 +24,24 @@ pub struct ConnectMediaPorts {
 /// 🔗️ Connects two ports of the composed scene through the host's own compatibility rules and publishes the new
 /// synapse on the content child — refused by name when the host adds none.
 pub fn connect_edit(payload: &ConnectMediaPorts, composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let emit = host_scene_edit(composed, config, session, |host| Ok(host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id).is_ok()))?;
-    if emit.child_emits.is_empty() && emit.child_preparations.is_empty() {
+    let mut host = host_from_snapshot(composed, config, session);
+    let connected = host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id);
+    host.retire_cold();
+    let Ok(id) = connected else {
         return Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("flow.connect-incompatible"),
             format!("connectMediaPorts cannot connect {}@{} to {}@{}", payload.source_node_id, payload.source_port_id, payload.target_node_id, payload.target_port_id),
         ));
-    }
-    Ok(emit)
+    };
+    let mut edit = ContentEdit::new(flow_composed_content(composed)?);
+    edit.connect(semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowEdge {
+        id,
+        from: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: payload.source_node_id.clone(), port: payload.source_port_id.clone() },
+        to: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: payload.target_node_id.clone(), port: payload.target_port_id.clone() },
+        kind: "data".into(),
+    });
+    Ok(flow_content_leaves_emit(&composed.content.child_id, edit.leaves))
 }
 
 pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {

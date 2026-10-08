@@ -7,11 +7,14 @@
   "structureClassicModel": null,
   "drawings": null,
   "breps": {
-    "added": [],
     "removed": [
-      "brep-middle"
+      {
+        "id": "brep-middle",
+        "index": 1
+      }
     ],
-    "reordered": null
+    "inserted": [],
+    "moved": []
   },
   "referencesByModelDefinitionId": null,
   "nodes": null

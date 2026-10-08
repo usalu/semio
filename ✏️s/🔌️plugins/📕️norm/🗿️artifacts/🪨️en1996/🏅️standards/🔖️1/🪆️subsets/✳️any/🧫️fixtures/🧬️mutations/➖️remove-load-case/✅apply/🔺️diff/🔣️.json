@@ -5,10 +5,11 @@
   "storeys": null,
   "walls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "wall-north",
+        "id": "wall-north",
         "patch": {
           "labelEn": null,
           "labelDe": null,
@@ -42,14 +43,19 @@
           "isBasement": null,
           "openings": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           },
           "loadCases": {
             "removed": [
-              "uls-snow"
+              {
+                "id": "uls-snow",
+                "index": 1
+              }
             ],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           }
         }

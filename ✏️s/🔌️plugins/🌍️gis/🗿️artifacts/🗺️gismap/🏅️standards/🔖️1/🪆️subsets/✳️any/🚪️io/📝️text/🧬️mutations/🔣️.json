@@ -218,6 +218,147 @@
         "id",
         "toIndex"
       ]
+    },
+    {
+      "type": "object",
+      "title": "SetPositionProperty",
+      "properties": {
+        "kind": {
+          "const": "set-position-property"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object"
+        },
+        "before": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "feature",
+        "key",
+        "value"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "RemovePositionProperty",
+      "properties": {
+        "kind": {
+          "const": "remove-position-property"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "feature",
+        "key"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetRouteProperty",
+      "properties": {
+        "kind": {
+          "const": "set-route-property"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object"
+        },
+        "before": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "feature",
+        "key",
+        "value"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "RemoveRouteProperty",
+      "properties": {
+        "kind": {
+          "const": "remove-route-property"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "feature",
+        "key"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetRegionProperty",
+      "properties": {
+        "kind": {
+          "const": "set-region-property"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object"
+        },
+        "before": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "feature",
+        "key",
+        "value"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "RemoveRegionProperty",
+      "properties": {
+        "kind": {
+          "const": "remove-region-property"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "feature",
+        "key"
+      ]
     }
   ],
   "x-semio-formats": [

@@ -17,8 +17,8 @@ function pieceFixture(value:any):any{return value!==null&&typeof value==="object
 function designFixture(value:any):any{return value!==null&&typeof value==="object"&&Array.isArray(value.pieces)?{...value,pieces:value.pieces.map(pieceFixture)}:value;}
 function linkFixture(value:any):any{return value!==null&&typeof value==="object"&&Object.hasOwn(value,"pin")?{...value,pin:pinFixture(value.pin)}:value;}
 function snapshotFixture(value:any):any{return value!==null&&typeof value==="object"?{...value,...(Array.isArray(value.designs)?{designs:value.designs.map(designFixture)}:{}),...(Array.isArray(value.representations)?{representations:value.representations.map(linkFixture)}:{})}:value;}
-function diffFixture(value:any):any{return value!==null&&typeof value==="object"?{...value,...(Array.isArray(value.designs?.values)?{designs:{...value.designs,values:value.designs.values.map(designFixture)}}:{}),...(Array.isArray(value.representations?.values)?{representations:{...value.representations,values:value.representations.values.map(linkFixture)}}:{})}:value;}
-function mutationFixture(value:any):any{if(value?.SetSnapshot)return{...value,SetSnapshot:{...value.SetSnapshot,snapshot:snapshotFixture(value.SetSnapshot.snapshot)}};if(value?.EditDesign)return{...value,EditDesign:{...value.EditDesign,...(Array.isArray(value.EditDesign.pieces)?{pieces:value.EditDesign.pieces.map(pieceFixture)}:{})}};if(value?.BindRepresentation)return{...value,BindRepresentation:linkFixture(value.BindRepresentation)};if(value?.ChangeRepresentationPin)return{...value,ChangeRepresentationPin:linkFixture(value.ChangeRepresentationPin)};return value;}
+function diffFixture(value:any):any{if(value===null||typeof value!=="object")return value;const rows=(list:any,fix:(row:any)=>any)=>list&&Array.isArray(list.added)?{...list,added:list.added.map((entry:any)=>({...entry,item:fix(entry.item)}))}:list;return{...value,...(value.designs?{designs:rows(value.designs,designFixture)}:{}),...(value.representations?{representations:rows(value.representations,linkFixture)}:{})};}
+function mutationFixture(value:any):any{if(value?.EditDesign)return{...value,EditDesign:{...value.EditDesign,...(Array.isArray(value.EditDesign.pieces)?{pieces:value.EditDesign.pieces.map(pieceFixture)}:{})}};if(value?.BindRepresentation)return{...value,BindRepresentation:linkFixture(value.BindRepresentation)};if(value?.ChangeRepresentationPin)return{...value,ChangeRepresentationPin:linkFixture(value.ChangeRepresentationPin)};return value;}
 
 function referenceIntegrity(value: any): boolean {
   const typeIds = new Set(value.types.map((entry: any) => entry.id));
@@ -81,7 +81,7 @@ export function testSemioKitDocumentContract(): void {
     }
   }
   for (const entry of fixtures.diffCases) {
-    assert.equal(diffSchema(entry.input) && childIdentity({ types: [], designs: [], objects: entry.input.objects?.values ?? [], models: entry.input.models?.values ?? [], properties: entry.input.properties, representations: [] }), entry.valid, "independent diff oracle");
+    assert.equal(diffSchema(entry.input) && childIdentity({ types: [], designs: [], objects: (entry.input.objects?.added ?? []).map((row: any) => row.item), models: (entry.input.models?.added ?? []).map((row: any) => row.item), properties: entry.input.properties, representations: [] }), entry.valid, "independent diff oracle");
     if (entry.valid) assert.deepEqual(parseDiff(diffFixture(entry.input)), diffFixture(entry.input));
     else assert.throws(() => parseDiff(diffFixture(entry.input)), JSON.stringify(entry.input));
   }
@@ -136,8 +136,8 @@ export function testSemioKitDocumentContract(): void {
   }
   assert.equal(snapshots, 30, "every committed Kit snapshot");
   assert.equal(diffs, 15, "every committed Kit diff");
-  assert.equal(mutations, 16, "every committed Kit mutation, the set-snapshot wire witness included");
-  assert.equal(mutationVariants.size, 16, "every typed mutation variant");
+  assert.equal(mutations, 15, "every committed Kit mutation");
+  assert.equal(mutationVariants.size, 15, "every typed mutation variant");
   assert(!mutationSchema({ Unknown: {} }), "unknown mutation variant schema oracle");
   assert.throws(() => parseMutation({ Unknown: {} }), "unknown mutation variant parser");
 }

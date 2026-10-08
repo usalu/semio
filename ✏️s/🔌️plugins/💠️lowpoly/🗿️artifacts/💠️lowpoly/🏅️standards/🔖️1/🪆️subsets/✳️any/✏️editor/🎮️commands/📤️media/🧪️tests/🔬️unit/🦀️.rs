@@ -47,7 +47,7 @@ async fn opened_file_bytes_reads_raw_text_and_base64_data_urls() {
 #[semio_framework_async_macros::async_test]
 async fn import_mesh_file_emits_a_load_document_effect() {
     let obj = "o Quad\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nf 1 2 3 4\n";
-    let projection = crate::schema::default_snapshot();
+    let projection = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let cfg = ConfigView { snapshot: &LowpolyConfig::default(), window: None };

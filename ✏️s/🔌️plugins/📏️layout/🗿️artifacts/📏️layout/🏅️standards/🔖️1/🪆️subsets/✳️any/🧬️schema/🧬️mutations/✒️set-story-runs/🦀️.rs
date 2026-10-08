@@ -1,7 +1,7 @@
 //! ✒️ `set-story-runs` — replaces the style runs on one story.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoryPatchEntry, TextStyleRunRow, TextStyleRunsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoriesModification, TextStyleRunRow, TextStyleRunsDelta};
 use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch, TextStyleRun};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -49,7 +49,7 @@ pub fn diff_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> pro
     let rows: Vec<TextStyleRunRow> = payload.runs.iter().enumerate().filter(|(index, run)| story.style_runs.get(*index) != Some(*run)).map(|(index, run)| TextStyleRunRow { index, run: run.clone() }).collect();
     let len = (payload.runs.len() != story.style_runs.len()).then_some(payload.runs.len());
     protocol::MutationOutcome::new(LayoutDiff {
-        stories: Some(LayoutStoriesDelta { patched: vec![LayoutStoryPatchEntry { id: payload.id.clone(), patch: TextStoryPatch { content: None, style_runs: Some(TextStyleRunsDelta { len, rows }) } }], ..Default::default() }),
+        stories: Some(LayoutStoriesDelta { modified: vec![LayoutStoriesModification { id: payload.id.clone(), patch: TextStoryPatch { content: None, style_runs: Some(TextStyleRunsDelta { len, rows }) } }], ..Default::default() }),
         ..Default::default()
     })
 }

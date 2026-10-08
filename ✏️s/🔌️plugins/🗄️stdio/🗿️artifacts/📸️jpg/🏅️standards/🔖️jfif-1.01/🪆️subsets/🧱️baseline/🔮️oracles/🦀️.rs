@@ -1,15 +1,5 @@
-//! 🔮️ Mutation oracle for the JFIF 1.01 🧱️baseline conformance-class vocabulary.
-//!
-//! Reference: `libjpeg-jpg-jfif-1-01-baseline-marker-cli` (libjpeg-turbo, IJG AND BSD-3-Clause AND
-//! Zlib), run as separate processes. [`read_axes`] takes the frame header and entropy-coding axes of the
-//! real scan out of `djpeg -v -v`'s marker trace — the SOFn code, each frame component's sampling
-//! factors, every DHT table's class and id, and whether a DAC segment is present — and the sample
-//! precision out of `rdjpgcom -verbose`. Each kind is then applied to those axes as ITU-T T.81 defines
-//! the field it names, and [`verdict`] reads the class off the specification's own tables. This
-//! repository's decoder, snapshot and checker are never consulted.
-//!
-//! @see https://www.w3.org/Graphics/JPEG/itu-t81.pdf — Table B.1, §4.2, Annex F, §B.2.2, §B.2.4.2
-//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the vocabulary this module is measured against.
+//! 🔮️ Independent native JPEG baseline conformance observations from libjpeg-turbo.
+//! SOFn, sample precision, Huffman tables, DAC and component sampling remain IO facts.
 
 use semio_repo_test_host::Json;
 
@@ -83,23 +73,10 @@ fn table_key(table: &Json) -> Result<(String, u32), String> {
     Ok((table.str("class"), number(table, "id")?))
 }
 
-/// 📸️ The axes of a `JpgSnapshot` wire value, read off its frame header, entropy-coding flags and table list the
-/// way [`read_axes`] reads a file's markers.
-fn snapshot_axes(snapshot: &Json) -> Result<Axes, String> {
-    let frame = snapshot.get("frame").filter(|frame| !matches!(frame, Json::Null)).ok_or("the snapshot carries no frame header, so it has no baseline axes")?;
-    Ok(Axes {
-        sof_marker: number(snapshot, "sofMarker")? as u8,
-        precision: number(frame, "precision")?,
-        arithmetic: flag(snapshot, "arithmetic"),
-        huffman_tables: snapshot.array("huffmanTables").iter().map(table_key).collect::<Result<_, _>>()?,
-        components: frame.array("components").iter().map(|component| Ok((number(component, "id")?, number(component, "hSampling")?, number(component, "vSampling")?))).collect::<Result<_, String>>()?,
-    })
-}
-
-/// 🦠️ Applies one kind to the axes as T.81 defines the field it names; `params` is the leaf's wire payload
-/// (`payload_value()`). An insertion of a table or a component that is already there, a removal of one that is
+/// 🧾️ Constructs one explicit native observation profile; `params` is fixture data
+/// for a native field. An insertion of a table or a component that is already there, a removal of one that is
 /// not, and a sampling change of an absent component change nothing; an index past the end appends.
-pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
+pub fn profile(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
         "set-sof-marker" => next.sof_marker = number(params, "marker")? as u8,

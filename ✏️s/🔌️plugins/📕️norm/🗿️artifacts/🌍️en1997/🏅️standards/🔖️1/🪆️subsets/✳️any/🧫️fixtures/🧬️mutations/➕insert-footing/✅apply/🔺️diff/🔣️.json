@@ -8,31 +8,34 @@
   "investigationDepth": null,
   "layers": null,
   "footings": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "footing-F1-2",
-        "width": 2.5,
-        "length": 2.5,
-        "embedment": 1.5,
-        "baseInclinationDeg": 0.0,
-        "settlementLimit": 0.025,
-        "loadCases": [
-          {
-            "id": "lc-bsP",
-            "designSituation": "bsP",
-            "verticalPermanent": 400000.0,
-            "verticalVariable": 150000.0,
-            "horizontalPermanent": 20000.0,
-            "horizontalVariable": 40000.0,
-            "momentPermanent": 30000.0,
-            "momentVariable": 50000.0
-          }
-        ]
+        "index": 1,
+        "row": {
+          "id": "footing-F1-2",
+          "width": 2.5,
+          "length": 2.5,
+          "embedment": 1.5,
+          "baseInclinationDeg": 0.0,
+          "settlementLimit": 0.025,
+          "loadCases": [
+            {
+              "id": "lc-bsP",
+              "designSituation": "bsP",
+              "verticalPermanent": 400000.0,
+              "verticalVariable": 150000.0,
+              "horizontalPermanent": 20000.0,
+              "horizontalVariable": 40000.0,
+              "momentPermanent": 30000.0,
+              "momentVariable": 50000.0
+            }
+          ]
+        }
       }
     ],
-    "removed": [],
-    "modified": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "piles": null,
   "retainingWalls": null,

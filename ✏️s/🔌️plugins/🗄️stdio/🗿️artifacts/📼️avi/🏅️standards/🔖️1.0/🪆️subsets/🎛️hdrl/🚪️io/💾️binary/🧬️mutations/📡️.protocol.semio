@@ -33,3 +33,5 @@ record add-unknown-chunk tag=10
 field payload bytes
 record remove-unknown-chunk tag=11
 field payload bytes
+record set-hdrl-extra tag=12
+field payload bytes

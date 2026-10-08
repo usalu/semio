@@ -1,3 +1,6 @@
+import {stripVTControlCharacters} from "node:util";
+import {cargoPreparationRuntimeV1,observedCargoPreparationV1} from "./🧰️runtime/🟦️.ts";
+import {pathToFileURL} from "node:url";
 import { fileURLToPath } from "node:url";
 import { test, expect, spyOn } from "bun:test";
 import Ajv from "ajv";
@@ -5,7 +8,7 @@ import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join, relative } from "node:path";
-import { acquireResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -62,7 +65,7 @@ test("closed discovery admission requires authored regular-file recipes and port
  }
  expect(validate({schemaVersion:1,members:["C:/owned"],exclude:[]})).toBe(false);
 });
-test("selected Cargo refresh removes deleted artifact and plugin manifests while ghost directories remain", () => {
+test("selected Cargo refresh removes deleted artifact and plugin manifests while ghost directories remain", async () => {
  for(const deleted of ["artifact","plugin"]) {
   const root=mkdtempSync(join(artifactRoot!,"workspace-ghost-"));
   put(root,"Cargo.toml",workspace(["framework/kernel","specific/artifact","specific/plugin"]).replace('member-manifests=["framework/kernel/Cargo.toml","specific/artifact/Cargo.toml","specific/plugin/Cargo.toml"]','member-manifests=["*/*/Cargo.toml"]'));
@@ -71,7 +74,7 @@ test("selected Cargo refresh removes deleted artifact and plugin manifests while
   unlinkSync(join(root,"specific",deleted,"Cargo.toml"));put(root,"specific/"+deleted+"/target/retained","source absence is explicit");
   expect(cargo(root,"Cargo.toml").status).not.toBe(0);
   expect(()=>publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toThrow();
-  prepareCargoWorkspaceInvocation(root,["metadata","--manifest-path","Cargo.toml"],root);
+  const owned=await import(pathToFileURL(cargoPreparationRuntimeV1(root)).href);owned.prepareCargoWorkspaceInvocation(root,["metadata","--manifest-path","Cargo.toml"],root);
   const native=cargo(root,"Cargo.toml");expect(native.status).toBe(0);expect(JSON.parse(native.text).workspace_members.length).toBe(2);
   expect(Bun.TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")));
   expect(publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toBe(false);
@@ -103,8 +106,9 @@ test("every compiling native command prepares owners and keeps diagnostics off m
  const root=mkdtempSync(join(artifactRoot!,"cargo-machine-output-"));
  put(root,"Cargo.toml",workspace(["framework/*"]));
  put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel",'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["publish"]\n'));
- put(root,"📜️script.ts",'console.log("[preparation] owned input refreshed");');
- const api=fileURLToPath(new URL("../🟦️.ts",import.meta.url));
+ put(root,"framework/kernel/🦀️.rs","");
+ put(root,"📜️script.ts",observedCargoPreparationV1(root,'console.log("[preparation] owned input refreshed");'));
+ const api=cargoPreparationRuntimeV1(root);
  put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)});console.log(JSON.stringify({machine:"retained"}));`);
  const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
  if(child.exitCode!==0)throw new Error(Buffer.from(child.stderr).toString());
@@ -239,13 +243,13 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
   expect([...new Set(records.map(row=>row.phase))].sort()).toEqual([...law.phases].sort());
   for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
   expect(records.filter(row=>row.phase==="recipe").map(row=>TOML.parse(readFileSync(join(root,row.owner),"utf8")).package!.name).sort()).toEqual(reached);
-  expect(records.filter(row=>row.phase==="inventory")).toHaveLength(1);
+  expect(records.filter(row=>row.phase==="inventory")).toHaveLength(law.inventoryEpochs);
   expect(records.filter(row=>row.phase==="finished").map(row=>row.items)).toEqual([reached.length]);
  }finally{logger.mockRestore();if(old===undefined)delete process.env.SEMIO_CARGO_PREPARATION_TIMING;else process.env.SEMIO_CARGO_PREPARATION_TIMING=old;}
  const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
  const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
  expect(child.exitCode,child.stderr.toString()).toBe(0);
- const records=child.stderr.toString().split("\n").filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
+ const records=stripVTControlCharacters(child.stderr.toString()).split("\n").filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
  expect(records.filter(row=>law.scriptPhases.includes(row.phase)).map(row=>row.phase)).toEqual(law.scriptPhases);
  for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
  expect((TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")).workspace as {members:string[]}).members.sort()).toEqual(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).map(path=>path.slice(0,-"/Cargo.toml".length)).sort());
@@ -257,12 +261,12 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
  put(root,"Cargo.toml",workspace(["packages/*"]));put(root,"packages/a/Cargo.toml",pkg("a"));put(root,"packages/a/🦀️.rs","pub fn law() {}\n");
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8")));
  expect(validate({phase:law.waiting.phase,owner:law.waiting.owner,elapsedMs:0,items:law.waiting.items})).toBe(true);
- const lease=await acquireResourceLease({directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
+ const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
  const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
  const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
  const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
  try{
-  const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.find(line=>line.startsWith("[DEBUG] cargo-preparation "));if(line)return line;}};
+  const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.map(line=>stripVTControlCharacters(line)).find(line=>line.startsWith("[DEBUG] cargo-preparation "));if(line)return line;}};
   const observed=await Promise.race([observation(),new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(Error("No live stderr lease-wait observation")),law.waiting.maximumObservationMs);})]);
   const record=JSON.parse(observed.slice("[DEBUG] cargo-preparation ".length));
   expect(validate(record),JSON.stringify(validate.errors)).toBe(true);expect(record.phase).toBe(law.waiting.phase);expect(record.owner).toBe(law.waiting.owner);expect(record.items).toBe(law.waiting.items);expect(child.exitCode).toBe(null);
@@ -283,14 +287,14 @@ test("selected package preparation follows the Cargo resolved local closure with
   put(root,"specific/models/b/Cargo.toml",pkg("model-b",recipe("model-b")));
   for(const path of ["framework/kernel","framework/bridge","specific/models/a","specific/models/b"])put(root,path+"/🦀️.rs","pub fn law() {}\n");
   const source='import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.NX_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");';
-  put(root,"📜️script.ts",source);put(root,"specific/📜️script.ts",source);
+  put(root,"📜️script.ts",observedCargoPreparationV1(root,source));put(root,"specific/📜️script.ts",observedCargoPreparationV1(root,source));
   const metadata=Bun.spawnSync(["cargo","metadata","--offline","--format-version","1","--manifest-path",join(root,row.manifest)],{cwd:root,stdout:"pipe",stderr:"pipe"});
   expect(metadata.exitCode,metadata.stderr.toString()).toBe(0);
   const oracle=JSON.parse(metadata.stdout.toString()),packages=new Map(oracle.packages.map((value:any)=>[value.id,value])),nodes=new Map(oracle.resolve.nodes.map((value:any)=>[value.id,value]));
   const seeds=row.packages.length?oracle.packages.filter((value:any)=>row.packages.includes(value.name)).map((value:any)=>value.id):row.manifest.endsWith("models/a/Cargo.toml")?[oracle.resolve.root]:oracle.workspace_members;
   const reached=new Set<string>(seeds);for(const id of reached)for(const dependency of (nodes.get(id) as any).dependencies)reached.add(dependency);
   expect([...reached].map(id=>(packages.get(id) as any).name).sort()).toEqual(row.expected);
-  const api=fileURLToPath(new URL("../🟦️.ts",import.meta.url));
+  const api=cargoPreparationRuntimeV1(root);
   const args=["test","--manifest-path",row.manifest,...row.packages.flatMap((name:string)=>["-p",name])];
   put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)});`);
   const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});

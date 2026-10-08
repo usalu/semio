@@ -1,0 +1,81 @@
+{
+  "entries": [
+    {
+      "name": "♻️ Child Candidate Currencies · Independent Oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-plugin --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" child-retirement-currencies-oracle",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.781
+      }
+    },
+    {
+      "name": "♻️ Child Candidate Currencies · Original Plugin Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-plugin --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" child-retirement-currencies-demand",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7819999999999
+      }
+    },
+    {
+      "name": "♻️ Child Candidate Currencies · Guarded Provider Stage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-plugin --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" child-retirement-currencies-stage",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7829999999999
+      }
+    },
+    {
+      "name": "♻️ Child Candidate Currencies · Original Plugin Native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --excludeTaskDependencies --nxIgnoreCycles --args=\"quick child_complete_candidate_retirement_keeps_currencies_independent --no-fail-fast -- --nocapture\"",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.784
+      }
+    },
+    {
+      "name": "♻️ Child Candidate Currencies · Guarded Provider Mount",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-plugin --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" child-retirement-currencies-mount",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_ARTIFACTS_ROOT": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.785
+      }
+    }
+  ],
+  "registeredBeforeExecution": true,
+  "seedAndGeneratedLaunch": true
+}

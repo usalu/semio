@@ -73,9 +73,6 @@ impl protocol::DiffAlgebra<Block3dPresence> for Block3dPresenceDiff {
     fn inverse(&self, _base: &Block3dPresence) -> Self {
         Self {}
     }
-    fn between(_base: &Block3dPresence, _other: &Block3dPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

@@ -45,7 +45,7 @@ async fn a_re_seeded_question_is_one_whole_replace_block() {
 }
 
 fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
-    crate::op::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
+    crate::central_apply::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
 }
 
 #[semio_framework_async_macros::async_test]

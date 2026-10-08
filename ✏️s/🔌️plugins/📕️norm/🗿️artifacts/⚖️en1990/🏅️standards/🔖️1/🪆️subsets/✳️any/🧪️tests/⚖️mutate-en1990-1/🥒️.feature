@@ -87,11 +87,17 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
       | change-bridge-sls                   | 🌉change-bridge-sls                   | ✅apply  |
       | change-effects                      | 🔗change-effects                      | ✅apply  |
       | remove-effect                       | ✂️remove-effect                      | ✅apply  |
+      | remove-effect-middle-row            | ✂️remove-effect                      | 🔬️middle-row |
       | remove-member                       | 🪚remove-member                       | ✅apply  |
+      | remove-member-middle-row            | 🪚remove-member                       | 🔬️middle-row |
       | remove-seismic                      | 🕳️remove-seismic                     | ✅apply  |
+      | remove-seismic-middle-row           | 🕳️remove-seismic                     | 🔬️middle-row |
       | remove-accidental                   | 🧯remove-accidental                   | ✅apply  |
+      | remove-accidental-middle-row        | 🧯remove-accidental                   | 🔬️middle-row |
       | remove-variable                     | 📤remove-variable                     | ✅apply  |
+      | remove-variable-middle-row          | 📤remove-variable                     | 🔬️middle-row |
       | remove-permanent                    | ➖remove-permanent                    | ✅apply  |
+      | remove-permanent-middle-row         | ➖remove-permanent                    | 🔬️middle-row |
       | insert-effect                       | 📎insert-effect                       | ✅apply  |
       | insert-effect-clamp                 | 📎insert-effect                       | 📏clamp  |
       | insert-member                       | 🔩insert-member                       | ✅apply  |

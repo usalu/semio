@@ -8,10 +8,11 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dDiffRead};
-use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,inverse_generation3d_mutation,Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation, Generation3dMutation};
 
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::Generation3dSnapshot;
+use crate::central_apply::{apply_generation3d_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes/📸️snapshot/➡️after/🔣️.json");

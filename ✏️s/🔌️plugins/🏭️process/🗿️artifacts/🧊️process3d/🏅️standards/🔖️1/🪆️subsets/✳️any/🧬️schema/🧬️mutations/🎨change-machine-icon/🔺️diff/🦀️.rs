@@ -13,6 +13,6 @@ pub fn diff(payload: &super::ChangeMachineIcon, base: &Process3dSnapshot) -> pro
     if existing.icon_id == payload.new_icon_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" icon is already \"{}\".", payload.id, payload.new_icon_id));
     }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { patched: vec![Process3dMachinePatch { id: payload.id.clone(), icon_id: Some(payload.new_icon_id.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta::modification(payload.id.clone(), Process3dMachinePatch { icon_id: Some(payload.new_icon_id.clone()), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔖️Diff

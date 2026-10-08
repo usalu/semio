@@ -112,3 +112,86 @@ the children's concrete inverses.
   replaces many fields becomes the concrete kinds it consists of.
 - **Shared keyed list delta.** Norm's `📇️registry/🧬️contract/🪡️list-delta` (keyed added/removed/modified, coalescing absorb,
   randomized sequence test) is the reference shape for keyed collection diffs.
+
+## Rulings (wave 3)
+
+- **Inverse row order.** `inverse(base)` returns rows in the framework's existing store order: replay applies them
+  LAST-TO-FIRST (`.rev()`), exactly as `assert_mutation_inverse_law`/`assert_mutation_inverse_sum_law` and the store's
+  undo fold do. Every adapter, validator (incl. stdio's shared `validate_snapshot_edit_publication`) and test replays
+  inverse rows reversed; nothing replays them in listed order.
+- **No feature loss.** Removing snapshot kinds must not remove features: natural-file import is the load/genesis path,
+  a details-pane field edit dispatches the concrete kind for that field.
+- **Build gate.** `🚦️gate.sh` holds at most `GATE_SLOTS` (default 1) concurrent cargo — 2 and 4 parallel wasm checks both
+  deadlocked on fine-grain locking. Never kill another executor's cargo.
+- **Foundation status.** The coordinator runs `🔁️foundation-watch.sh` (framework value/replication/os-kernel/plugin, native +
+  wasm32-wasip2, every 10 min) → `🗑️generated/coord/foundation.status` (`GREEN <time>` or `RED <time>` + first errors).
+  Before any plugin cargo call: `until head -1 "$T/🗑️generated/coord/foundation.status" | grep -q '^GREEN'; do sleep 60; done`
+  (foreground, at most 60 min, then report "blocked on foundation"). Never fix a RED foundation yourself unless the errors
+  are in files your executor changed.
+- **Frozen outcome codes only.** Outcome messages use ONLY the 11 codes in
+  `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code` (no per-plugin codes). An insert index past the
+  end → `mutation.target-missing`; a duplicate id → `mutation.duplicate-id`; payload invariant → `mutation.invariant`.
+  `MutationApplyError` codes match `^mutation\.apply\.[a-z0-9-]+$` (e.g. `mutation.apply.missing-target`,
+  `mutation.apply.invalid-add-index`, `mutation.apply.order-mismatch`, `mutation.apply.duplicate-id`) — never `diff.*`.
+- **Gate is the burn-down list.** `bun ./📜️script.ts verify mutation-outcome-law` (≈ 10 min) — latest run:
+  `🗑️generated/coord/gate-run-2.log`, 999 breaches (from 4152). grep it for your plugin path; every executor ends at 0.
+- **Ephemeral roots.** Presence (`👥️presence`) and window transient (`🫧️transient`) lanes are ephemeral and travel by
+  whole-root transfer (`ArtifactEphemeralTransferPreparationFactory`). They may keep ONE whole-root setter kind whose diff
+  is still sparse (only slots that differ from base) and whose inverse is the same setter carrying the base root — the
+  replace-kind ruling. Persisted config/document lanes may not. Gate R13/R14 exempt only files under those two lanes.
+- **Snapshot-to-kinds translators are deleted.** Helpers that derive concrete kinds by differencing two snapshots
+  (`puzzleNd_snapshot_mutations`, `puzzleNd_document_delta_operations`, norm `replacement`, …) are snapshot differencing
+  and are removed; their callers dispatch the concrete kinds of the user action or go through load/genesis.
+- **Host-scene reconciliation is a translator.** A renderer/host that reports a whole scene which the plugin diffs against
+  the document (puzzle 3d/5d, puzzle 2d `board_snapshot` editing) is snapshot differencing. Hosts report gestures as
+  concrete kinds (or gesture events the tool machine turns into concrete kinds); no translator is kept "until migrated".
+- **Re-verify before reporting.** The repo's auto-sync (fast-forward merges of `origin/🐙ueli/⛳wip`, `reset: moving to HEAD`)
+  has reverted fw-os-leaves' RestoreN→AssignN rename once. Before a final report, re-check with rg that your key changes
+  are still on disk and re-run `bun ./📜️script.ts verify mutation-outcome-law` for your paths.
+
+## Rulings (wave 4 — translators, `🔍️audit-translators.md`)
+
+- **Example switch / JSON load / import = load.** `set-active-example`, `load-document-json`, `import-document`, exchange
+  import and dev injectors (`set-snapshot`, `set-snapshot-json`) become the artifact's load/genesis effect
+  (`Effect::LoadDocument` / reset-document effect): no mutation rows, no history row, no before/after diffing. Delete
+  every `replace_document_operations`, `*_document_replacement`, `config_replacement`, `flow_scene_replacement` used for it.
+- **Edit gestures emit concrete kinds.** Text edits, details-pane edits (incl. stdio's JSON-pointer
+  `setSnapshotValue`/`insertSnapshotValue`/`removeSnapshotValue`/`moveSnapshotValue`/`renameSnapshotKey`), host gestures
+  and closure edits resolve the addressed field/entity to ONE concrete kind (or the concrete kinds of the gesture) via a
+  per-artifact edit-rules table (norm's `EDIT_RULES`/`NormEditRules` is the reference shape). Deleted: the stdio
+  snapshot-edit lane (`snapshot_edit_emit`, `generic_snapshot_edit_expected`, `apply_snapshot_edit`, `snapshot_edit_net(_exact)`,
+  `validate_snapshot_edit_publication`), every `net_mutations(base, next)` / `*_net_mutations` / `binary_net_replacement`,
+  `host_operations(mutate-then-diff)`, `generation2d_host_snapshot_operations`, `edited_collection_operations`,
+  `playbook_edit_blocks_leaves`, `vcs_demo_projection_diff_operations`, docx `xml_replace_document` inside part diffs.
+- **Framework.** `whole_document_operation` (plugin trait method) is deleted; flow VCS `begin_replace_document` is a
+  load/checkout path, never a history version row.
+
+## Rulings (wave 5 — `🔍️audit-adversarial.md`)
+
+- **AMB-1 positional rows, not order lists.** A diff never carries a whole `order`/`reordered` id list built from the base
+  list. Ordered collections use positional rows: `{id, index}` on insert, `{id, from, to}` on move, `{id, index}` on remove
+  (the index the inverse reinserts at). Applies to norm `🪡️list-delta`, architect, and every other `order` field.
+- **AMB-2 derived data is central.** Derived handles, caches and computed children (mesh handles, tool solids, notation/
+  results, presentation minting) are never minted inside a leaf diff. The artifact's `MutationDiff::apply` (the central
+  applier's per-artifact step) re-derives them from the applied primary state; diffs carry primary rows only.
+- **AMB-3 negative diffs read base.** `DiffAlgebra::inverse` is built by reading base values row by row; it never applies or
+  simulates the diff on a copy, never calls `negative`/`state_after`-style simulators.
+- **D-01 enforcement.** Rust cannot hide a `pub fn` from crates that depend on it, so L5 is enforced by the gate: no
+  `apply_diff`/`ApplyCapability`/`.apply(` on a diff anywhere under `🧬️schema/**` or `🧬️mutations/**` (incl. diff-type
+  modules and helpers), in any fn regardless of name; editors/io/store may call `apply_diff`. The gate scans ALL fns and
+  helper modules (no name filter, no diff-impl exclusion except the diff type's own `apply` forwarding a received
+  capability) and treats renamed `*between*`/`*_replacing`/`negative`/`state_after`/`value_diff*` as R10/R11.
+- **`DiffAlgebra::between` is deleted.** Import/example/load are load paths (no diffing) and the framework has no production
+  caller, so snapshot differencing has no legitimate seat left. The trait keeps `inverse` + `is_empty`; every `fn between`
+  impl and its private helpers (`*Delta::between`, `Patch::between`, `Rows::between`, …) are removed. Sync uses its own
+  `FrontierDelta`. Any remaining caller is a translator and becomes concrete kinds or a load.
+- **Buffer edits carry their splice.** Text/byte buffer editors (txt, md, binary, wav data, dxf/ply raw text, …) send the edit
+  gesture as splices (`{offset, delete, insert}` in the buffer's own unit) taken from the editor's change set; the kind
+  carries them verbatim and its inverse is the splice restoring the deleted base bytes. Diffing a whole draft against the
+  base buffer is a translator. Loading/importing a new buffer is a load.
+- **No compatibility re-exports.** Moving a function means updating every caller; re-exporting it at the old path/name
+  (`mutations::apply_*`, `os_spr::fold_*`, old `apply_*_mutation` names) is a compatibility layer and is not allowed.
+- **One positional list delta.** The positional keyed list delta (norm-a's `🪡️list-delta`, removed/inserted/moved/modified,
+  coalescing absorb, base-reading inverse, randomized sequence test) is promoted ONCE into the framework protocol
+  (`protocol::list_delta`); plugin copies (norm registry contract, puzzle 3d `🔨️modules/🪡️list-delta`, any other) are
+  deleted and every plugin uses the framework module. API in `📓️exec-fw-spine.md` "List-delta API".

@@ -334,9 +334,6 @@ impl protocol::DiffAlgebra<Puzzle2dConfig> for Puzzle2dConfigDiff {
     fn inverse(&self, base: &Puzzle2dConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle2dConfig, other: &Puzzle2dConfig) -> Self {
-        Self { node_kind_weights: (base.node_kind_weights != other.node_kind_weights).then(|| other.node_kind_weights.clone()), handle_kind_weights: (base.handle_kind_weights != other.handle_kind_weights).then(|| other.handle_kind_weights.clone()), fill_count: (base.fill_count != other.fill_count).then(|| other.fill_count), contact_tolerance: (base.contact_tolerance != other.contact_tolerance).then(|| other.contact_tolerance), brush_placement_overlap_budget: (base.brush_placement_overlap_budget != other.brush_placement_overlap_budget).then(|| other.brush_placement_overlap_budget) }
-    }
     fn is_empty(&self) -> bool {
         self.node_kind_weights.is_none() && self.handle_kind_weights.is_none() && self.fill_count.is_none() && self.contact_tolerance.is_none() && self.brush_placement_overlap_budget.is_none()
     }

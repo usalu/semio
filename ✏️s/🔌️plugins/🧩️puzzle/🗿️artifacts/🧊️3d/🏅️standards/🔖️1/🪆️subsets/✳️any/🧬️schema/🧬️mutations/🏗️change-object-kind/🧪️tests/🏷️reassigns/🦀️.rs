@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation};
+use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
 
 use crate::Puzzle3dSnapshot;
 
@@ -49,7 +50,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-object-kind/reassigns-object-a-kind: inverse did not restore the before-snapshot");
@@ -98,7 +99,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-object-kind/reassigns-object-a-kind: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["objects"]["patched"][0]["patch"]["objectKind"].as_str(), Some("object-kind-c"), "change-object-kind/reassigns-object-a-kind: the patch must carry the new kind");
+    assert_eq!(committed["objects"]["modified"][0]["patch"]["objectKind"].as_str(), Some("object-kind-c"), "change-object-kind/reassigns-object-a-kind: the patch must carry the new kind");
     assert!(committed["meta"].is_null(), "change-object-kind/reassigns-object-a-kind: pointing at a catalog row must not rewrite the catalog itself");
 }
 

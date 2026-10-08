@@ -9,7 +9,7 @@ use store::ArtifactDsl;
 
 fn representative_drawing_document() -> DrawingSnapshot {
     let mut assets = semio_framework_value::paged::PagedMap::default();
-    assets.insert("src-1", DrawingImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
+    assets.insert("src-1", DrawingImageAsset { width: 8, height: 8, samples: vec![[0,0,0,0];64].into() });
 
     let mut rect_shape = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect_shape {

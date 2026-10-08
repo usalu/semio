@@ -73,35 +73,6 @@ fn apply_tags(base: &[TiffTag], d: &TiffTagsDiff) -> Vec<TiffTag> {
     items
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_tags(a: &[TiffTag], b: &[TiffTag]) -> Option<TiffTagsDiff> {
-    let a_map: BTreeMap<u16, &TiffTag> = a.iter().map(|t| (t.tag, t)).collect();
-    let b_map: BTreeMap<u16, &TiffTag> = b.iter().map(|t| (t.tag, t)).collect();
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    let mut added = Vec::new();
-    for (tag, at) in &a_map {
-        match b_map.get(tag) {
-            None => removed.push(*tag),
-            Some(bt) => {
-                if at.values != bt.values {
-                    modified.push(TiffTagModified { tag: *tag, values: bt.values.clone() });
-                }
-            }
-        }
-    }
-    for (tag, bt) in &b_map {
-        if !a_map.contains_key(tag) {
-            added.push(TiffTagAdded { tag: *tag, values: bt.values.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(TiffTagsDiff { removed, modified, added })
-    }
-}
-
 /// ➕️ Structural, total, base-free absorb for a TAG-ID-keyed triple. Simpler than an
 /// index-keyed collection's transport: tag ids are stable identity, never renumbered by
 /// insert/remove, so no position-simulation is needed — a plain keyed union/override algebra.
@@ -294,9 +265,7 @@ enum Slot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
-    let mut removed_desc = removed.to_vec();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&removed);
     for r in removed_desc {
         if r < slots.len() {
             slots.remove(r);
@@ -320,9 +289,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
-        let mut r = d1.removed.clone();
-        r.sort_unstable();
-        r.dedup();
+        let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
@@ -421,9 +388,7 @@ fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
             write_runs(&mut it.blocks, &m.diff.runs);
         }
     }
-    let mut removed_desc = d.removed.clone();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&d.removed);
     for idx in removed_desc {
         if idx < items.len() {
             items.remove(idx);
@@ -444,18 +409,6 @@ pub fn same_block_shape(a: &[TiffSampleBlock], b: &[TiffSampleBlock]) -> bool {
     a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x.x, x.y, x.width, x.height, x.channels, x.samples.len()) == (y.x, y.y, y.width, y.height, y.channels, y.samples.len()))
 }
 
-/// 🧭️ The block delta from `a` to `b`: sparse runs when the block geometry is untouched, the whole new block list otherwise.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_blocks(a: &[TiffSampleBlock], b: &[TiffSampleBlock]) -> (Option<Vec<TiffSampleBlock>>, Vec<TiffSampleRun>) {
-    if a == b {
-        return (None, Vec::new());
-    }
-    if !same_block_shape(a, b) {
-        return (Some(b.to_vec()), Vec::new());
-    }
-    (None, normalize_runs(a.iter().zip(b).enumerate().flat_map(|(index, (x, y))| differing_runs(index, 0, &x.samples, &y.samples)).collect()))
-}
-
 /// ➕️ Folds `later`'s block delta into an earlier one: a replacement block list wins and discards earlier runs, runs land in an owned block list or overlay earlier runs.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_blocks(blocks: &mut Option<Vec<TiffSampleBlock>>, runs: &mut Vec<TiffSampleRun>, later: &TiffIfdDiff) {
@@ -468,26 +421,6 @@ fn absorb_blocks(blocks: &mut Option<Vec<TiffSampleBlock>>, runs: &mut Vec<TiffS
             write_runs(owned, &later.runs);
         }
         None => *runs = overlay_runs(std::mem::take(runs), later.runs.clone()),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
-    let min = a.len().min(b.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        let (blocks, runs) = between_blocks(&a[i].blocks, &b[i].blocks);
-        let diff = TiffIfdDiff { entries: between_tags(&a[i].entries, &b[i].entries).unwrap_or_default(), blocks, runs };
-        if !diff.is_empty() {
-            modified.push(TiffIfdModified { index: i, diff });
-        }
-    }
-    let removed: Vec<usize> = (min..a.len()).collect();
-    let added: Vec<TiffIfdAdded> = (min..b.len()).map(|i| TiffIfdAdded { index: i, ifd: b[i].clone() }).collect();
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(TiffIfdsDiff { removed, modified, added })
     }
 }
 
@@ -516,9 +449,7 @@ fn inverse_ifd_diff(diff: &TiffIfdDiff, base: &TiffIfd) -> TiffIfdDiff {
 /// base index, and each modified row restores its base value at the index the row has after the diff. Every list comes back ascending.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_ifds(diff: &TiffIfdsDiff, base: &[TiffIfd]) -> TiffIfdsDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -567,8 +498,7 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract).
-    /// `byte_order` is LWW; `ifds` uses an index-transported merge with nested tag-id-keyed and
-    /// canonical-storage replacement for modified entries.
+    /// `ifds` uses an index-transported merge with nested tag-id-keyed entries and owned sample-block replacement.
     fn absorb(&mut self, other: Self) {
         absorb_ifds_opt(&mut self.ifds, other.ifds);
     }
@@ -637,12 +567,6 @@ impl DiffAlgebra<TiffSnapshot> for TiffDiff {
         Self { ifds: self.ifds.as_ref().map(|diff| inverse_ifds(diff, &base.ifds)).filter(|diff| !diff.removed.is_empty() || !diff.modified.is_empty() || !diff.added.is_empty()) }
     }
 
-    /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
-    /// `ifds`, recursive tag-id-keyed matching within each surviving IFD pair.
-    fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
-        Self { ifds: between_ifds(&base.ifds, &other.ifds) }
-    }
-
     fn is_empty(&self) -> bool {
         self.ifds.is_none()
     }
@@ -651,13 +575,16 @@ impl DiffAlgebra<TiffSnapshot> for TiffDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DemoCases
-/// 🧪️ P2-FG2: representative `TiffDiff` values (byte order, IFD tags, and storage exercised; IFD-level
-/// index-keyed removed/modified/added AND nested tag-id-keyed removed/modified/added, every
-/// `TiffValues` field-type family) — the single source of truth reused by
-/// `diff_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️.rs`).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases()->Vec<TiffDiff>{let a=crate::schema::demo_tiff_snapshot();let mut b=a.clone();b.ifds[0].blocks[0].samples[0].lo=9;b.ifds[0].entries.push(TiffTag{tag:50000,values:TiffValues::Double(vec![TiffWord64{lo:17,hi:0x7ff80000}])});let c=TiffSnapshot::default();vec![TiffDiff::default(),TiffDiff::between(&a,&b),TiffDiff::between(&b,&a),TiffDiff::between(&a,&c),TiffDiff::between(&c,&a)]}
+pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
+    let nan = || TiffValues::Double(vec![TiffWord64 { lo: 17, hi: 0x7ff80000 }]);
+    let entries = TiffTagsDiff { removed: vec![256], modified: vec![TiffTagModified { tag: 257, values: nan() }], added: vec![TiffTagAdded { tag: 50000, values: nan() }] };
+    vec![
+        TiffDiff::default(),
+        TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![1], modified: vec![TiffIfdModified { index: 0, diff: TiffIfdDiff { entries, ..Default::default() } }], added: Vec::new() }) },
+    ]
+}
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests

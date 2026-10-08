@@ -1,3 +1,4 @@
+use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
 use super::sqlite::SqliteDirectory;
 use super::*;
 use crate::artifact_authority::chunk_cas::{
@@ -187,7 +188,7 @@ async fn publish_reserved(service: &DirectoryService, actor: DirectoryActor, che
 const FIXTURE_PARENT_DIALECT_KIND: &str = "s.gis.gismap";
 
 async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &DirectoryService, user_id: &str, mut descriptor: DocumentDescriptor, storage: Arc<S>, context: &OperationContext<'_>) -> (DocumentDescriptor, ArtifactCheckpoint) {
-    use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
+    use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
     let mut intent = ArtifactCreationIntentV1::from_value(DslValue::from(fixture["intent"].clone())).expect("creation intent");
     let mut prepared = ArtifactCreationPreparedV1::from_value(DslValue::from(fixture["prepared"].clone())).expect("creation pair");
@@ -228,9 +229,9 @@ async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &Directory
     let pair = ArtifactPair { pack: prepared.pack.clone(), spr: prepared.spr.clone() };
     let checkpoint = materialized_checkpoint(public, &pair);
     prepared.checkpoint = checkpoint.clone();
-    prepared.checkpoint.pack.storage_key = format!("sha256/{}", checkpoint.pack.sha256.hex());
-    prepared.checkpoint.spr.storage_key = format!("sha256/{}", checkpoint.spr.sha256.hex());
-    prepared.validate(&intent).expect("exact prepared genesis");
+    prepared.checkpoint.pack.storage_key = format!("sha256/{}", directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint.pack.sha256));
+    prepared.checkpoint.spr.storage_key = format!("sha256/{}", directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint.spr.sha256));
+    crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).expect("exact prepared genesis");
     assert!(matches!(service.dir.claim_artifact_creation(&intent).await.expect("claim genesis"), ArtifactCreationClaimV1::Accepted(_)));
     service
         .dir
@@ -1519,7 +1520,7 @@ async fn invite_archive_projection_serializes_independent_service_decisions() {
         let claim = NewDirectoryCommandReceipt {
             actor_user_id: "seed".into(),
             request_id: "a00102030405060708090a0b0c0d0e0f".into(),
-            command_sha256: directory::os_directory::directory_command_sha256(&command),
+            command_sha256: directory::os_directory::io::text::directory_command_sha256(&command),
             result_kind: directory_command_result_kind(&command),
             claimed_at: now_ms(),
         };
@@ -1595,7 +1596,7 @@ async fn directory_command_uncertain_commit_retains_claim_and_never_reexecutes()
     let claim = NewDirectoryCommandReceipt {
         actor_user_id: "seed".into(),
         request_id: "b00102030405060708090a0b0c0d0e0f".into(),
-        command_sha256: directory::os_directory::directory_command_sha256(&command),
+        command_sha256: directory::os_directory::io::text::directory_command_sha256(&command),
         result_kind: directory_command_result_kind(&command),
         claimed_at: now_ms(),
     };

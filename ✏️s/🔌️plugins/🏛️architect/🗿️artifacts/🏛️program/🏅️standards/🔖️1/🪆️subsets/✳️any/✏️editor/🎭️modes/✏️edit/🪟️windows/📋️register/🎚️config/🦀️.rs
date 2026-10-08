@@ -45,10 +45,6 @@ impl protocol::DiffAlgebra<ArchitectRegisterWindowConfig> for ArchitectRegisterW
         Self { active_register: self.active_register.as_ref().map(|_| base.active_register.clone()) }
     }
 
-    fn between(base: &ArchitectRegisterWindowConfig, other: &ArchitectRegisterWindowConfig) -> Self {
-        Self { active_register: (base.active_register != other.active_register).then(|| other.active_register.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self.active_register.is_none()
     }

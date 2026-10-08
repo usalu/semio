@@ -1,0 +1,9 @@
+# Normal Gate and Dev Launch Independent Audit
+
+Independently read normal gate bytes: 3,457 bytes, SHA-256 `b48f11c3af43a6cd56762458ecd672ecde25149d32b75123b3183d19660d8d31`. Literal normal target is `workspace:schema-fixture-boundary`, routed through native owner-command before root `schema check --fixture-boundary`. Actual terminal is Nx0/106 seconds; footer 4,478 modules, 3,631 scopes, zero findings, 46 shared/zero unshared codes. No positive compiler build credit is inferred.
+
+All seven physical policy schema hashes independently match both checkpoint identities and current actual catalog hashes. Current own-scope schema bindings remain intact.
+
+Read-only process observation independently found actual shell10056 → Bun10058 → bootstrap10060 → Nx10061 executing unchanged `bun nx run @semio-tech/framework-renderer-wgpu:wasm --skip-nx-cache --outputStyle=static`. Its shell launch explicitly sets approved durable target/build/compiler-resource roots and ticket-owned Nx cache/data, with daemon/plugin isolation disabled. No budget override appears in that launch command. The Native owner reports that the four ambient build/command/orchestrator/daemon overrides and test budget are absent; this report did not dump process environments or host secrets. Shared process budget source declares all four defaults zero. No target/profile/feature/roster weakening is visible in the sourced handoff.
+
+The actual dev stream is running and records normal Nx wasm dependency graph start. Native also observed the existing eager NativeScript preparation before adjacent dependency synchronization; this is a concrete performance observation, not a custody bypass or completed compiler result. Actual Cargo/Trunk/source/resource/profile/staged witnesses and terminal remain pending; release/publication/HTTP evidence remain pending. No source edits or process/cache mutations were performed by this audit lane.

@@ -20,6 +20,10 @@ if(process.argv[2]==="source-oracle"){
 }
 const { runRepositoryCargoTests, runRepositoryTestCommand } = await import(join(repository, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts"));
 const { runRepositoryCommand } = await import(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts"));
+if(process.argv[2]==="snapshot-clone-native"){
+  await runRepositoryCargoTests(["semio-framework-os-kernel"],repository,["--lib",...process.argv.slice(3)],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  process.exit(0);
+}
 if(process.argv[2]==="puzzle-domain-native"){
   const {runArtifactRustTests}=await import(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts"));
   await runArtifactRustTests("semio-s-artifact-puzzle-2d",repository,process.argv.slice(3),["component-app-assembly"]);

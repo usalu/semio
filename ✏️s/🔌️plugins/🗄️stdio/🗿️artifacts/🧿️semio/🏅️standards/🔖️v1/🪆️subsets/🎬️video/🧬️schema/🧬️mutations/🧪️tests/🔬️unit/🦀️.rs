@@ -252,27 +252,6 @@ async fn absorb_law() {
         assert_eq!(apply_valid(&right, &base), sequential, "absorb associativity (right) failed");
     }
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &b), &a), b);
-    assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&b, &a), &b), a);
-
-    let sample = fixture();
-    assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&sample, &sample), &sample), sample);
-
-    // "Real" fixture leg: a realistic 2-stream snapshot diffed against a mutated variant.
-    let real = fixture();
-    let mut mutated = real.clone();
-    mutated = crate::applied(&mutated, &SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: 0, index: 0, pts: 1_000, key: true })).0;
-    assert_ne!(real, mutated);
-    assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&real, &mutated), &real), mutated);
-    assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&mutated, &real), &mutated), real);
-}
 //#endregion 🔖️BetweenRoundtripLaw
 
 //#region 🔖️CodecRetentionLaw
@@ -282,49 +261,6 @@ async fn codec_retention_law() {
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
-}
-//#endregion 🔖️CodecRetentionLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field at both
-/// nesting levels (see the fixtures' own doc comment for exactly how removed/modified/added
-/// is exercised at each level, and why the two directions of `between()` are both asserted).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &b);
-    assert_eq!(apply_valid(&diff_ab, &a), b);
-    let diff_ba = <SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&b, &a);
-    assert_eq!(apply_valid(&diff_ba, &b), a);
-    assert!(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &a).is_empty());
-
-    // a -> b: streams.removed (dropped subtitle stream) + streams.modified[0] (every scalar
-    // field changed, incl. the SemioVideoStreamKind enum) whose OWN nested samples diff shows
-    // removed + modified simultaneously.
-    let streams_diff_ab = diff_ab.streams.as_ref().expect("streams diff present");
-    assert!(!streams_diff_ab.removed.is_empty(), "streams: removed not exercised");
-    assert_eq!(streams_diff_ab.modified.len(), 1);
-    let stream_mod = &streams_diff_ab.modified[0].diff;
-    assert!(stream_mod.kind.is_some(), "modified stream: kind (enum) not exercised");
-    assert!(stream_mod.codec.is_some(), "modified stream: codec not exercised");
-    assert!(stream_mod.width.is_some(), "modified stream: width not exercised");
-    assert!(stream_mod.height.is_some(), "modified stream: height not exercised");
-    assert!(stream_mod.rate.is_some(), "modified stream: rate not exercised");
-    let samples_diff = stream_mod.samples.as_ref().expect("modified stream: samples diff not exercised");
-    assert!(!samples_diff.removed.is_empty(), "samples: removed not exercised");
-    assert!(!samples_diff.modified.is_empty(), "samples: modified not exercised");
-    let sample_mod = &samples_diff.modified[0].diff;
-    assert!(sample_mod.pts.is_some() && sample_mod.key.is_some() && sample_mod.data.is_some(), "modified sample: not every field exercised");
-
-    // b -> a: the OTHER direction's top-level `added` (the very same dropped subtitle stream)
-    // plus that same stream's nested `samples.added`.
-    let streams_diff_ba = diff_ba.streams.as_ref().expect("streams diff (b->a) present");
-    assert!(!streams_diff_ba.added.is_empty(), "streams (b->a): added not exercised");
-    let stream_mod_ba = &streams_diff_ba.modified[0].diff;
-    let samples_diff_ba = stream_mod_ba.samples.as_ref().expect("samples diff (b->a) present");
-    assert!(!samples_diff_ba.added.is_empty(), "samples (b->a): added not exercised");
 }
 //#endregion 🔖️FieldSweep
 
@@ -357,3 +293,20 @@ async fn op_text_binary_roundtrip_law() {
     }
 }
 //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+//#region ↩️LeafInverseLaws
+#[path = "../../➕️insert-sample/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_sample;
+#[path = "../../🎥insert-stream/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_stream;
+#[path = "../../📀set-sample-data/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_sample_data;
+#[path = "../../📋set-stream-meta/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_stream_meta;
+#[path = "../../🗑️remove-stream/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_stream;
+#[path = "../../🚩set-sample-flags/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_sample_flags;
+#[path = "../../🚮remove-sample/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_sample;
+//#endregion ↩️LeafInverseLaws

@@ -49,50 +49,6 @@ fn sweep_b() -> SemioCadSnapshot {
         ],
     }
 }
-//#endregion Fixtures
-
-//#region 🧪️Law6_FieldSweep
-/// ⚖️ Law 6 — `field_sweep`: `sweep_a`/`sweep_b` differ in every mutable field, incl. per
-/// collection one removed/one modified-in-every-field/one added, at BOTH the top level and the
-/// nested `blocks[].entities` level.
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let forward = SemioCadDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&forward, &a).expect("apply must succeed for a well-formed fixture"), b, "between(a,b).apply(a) must equal b");
-    let backward = SemioCadDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&backward, &b).expect("apply must succeed for a well-formed fixture"), a, "between(b,a).apply(b) must equal a");
-    assert!(SemioCadDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-
-    let layers_diff = forward.layers.as_ref().expect("layers diff present");
-    assert!(!layers_diff.removed.is_empty(), "layers.removed not swept");
-    assert!(!layers_diff.added.is_empty(), "layers.added not swept");
-    let keep_layer_diff = &layers_diff.modified.iter().find(|m| m.key == "keep").expect("keep layer modified").diff;
-    assert!(keep_layer_diff.color_index.is_some(), "layer.color_index not swept");
-    assert!(keep_layer_diff.line_type.is_some(), "layer.line_type not swept");
-    assert!(keep_layer_diff.visible.is_some(), "layer.visible not swept");
-
-    let blocks_diff = forward.blocks.as_ref().expect("blocks diff present");
-    assert!(!blocks_diff.removed.is_empty(), "blocks.removed not swept");
-    assert!(!blocks_diff.added.is_empty(), "blocks.added not swept");
-    let keep_block_diff = &blocks_diff.modified.iter().find(|m| m.key == "keep-block").expect("keep-block modified").diff;
-    assert!(keep_block_diff.base_point.is_some(), "block.base_point not swept");
-    let nested_entities_diff = keep_block_diff.entities.as_ref().expect("nested block entities diff present");
-    assert!(!nested_entities_diff.removed.is_empty(), "block.entities.removed not swept");
-    assert!(!nested_entities_diff.added.is_empty(), "block.entities.added not swept");
-    let be_keep_diff = &nested_entities_diff.modified.iter().find(|m| m.key == "be-keep").expect("be-keep modified").diff;
-    assert!(be_keep_diff.layer.is_some(), "block entity.layer not swept");
-    assert!(be_keep_diff.entity.is_some(), "block entity.entity not swept");
-
-    let entities_diff = forward.entities.as_ref().expect("entities diff present");
-    assert!(!entities_diff.removed.is_empty(), "entities.removed not swept");
-    assert!(!entities_diff.added.is_empty(), "entities.added not swept");
-    let e_keep_diff = &entities_diff.modified.iter().find(|m| m.key == "e-keep").expect("e-keep modified").diff;
-    assert!(e_keep_diff.layer.is_some(), "entity.layer not swept");
-    assert!(e_keep_diff.entity.is_some(), "entity.entity not swept");
-}
 //#endregion
 
 //#region 🧪️Law3_AbsorbLaw
@@ -157,29 +113,13 @@ fn assert_absorb_matches_sequential(base: &SemioCadSnapshot, d1: SemioCadDiff, d
 }
 //#endregion
 
-//#region 🧪️Law4_BetweenRoundtripLaw
-/// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on fixtures.
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let d = SemioCadDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture"), b);
-    let d_back = SemioCadDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_back, &b).expect("apply must succeed for a well-formed fixture"), a);
-    assert!(SemioCadDiff::between(&a, &a).is_empty());
-}
-//#endregion
-
 //#region 🧪️Law8_DiffCodecTextBinaryRoundtripLaw
 /// ⚖️ Law 8 — `diff_codec_text_binary_roundtrip_law`: hand-rolled `DiffCodec` text/binary
 /// round-trip, exercising every collection triple (top-level AND the nested
 /// `blocks[].entities`) plus all 9 `CadEntity` variants across `between()` results.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let mut cases = vec![SemioCadDiff::default(), SemioCadDiff::between(&a, &b), SemioCadDiff::between(&b, &a), SemioCadDiff::between(&a, &a)];
+    let mut cases = demo_diff_cases();
     // Exercise every remaining CadEntity variant not already covered by sweep_a/sweep_b.
     cases.push(wrap_entity_diff("h", CadEntityRecordDiff { layer: None, entity: Some(CadEntity::Polyline { vertices: vec![SemioPoint2 { x: 0.0, y: 0.0 }, SemioPoint2 { x: 1.0, y: 1.0 }], closed: true }) }));
     cases.push(wrap_entity_diff(

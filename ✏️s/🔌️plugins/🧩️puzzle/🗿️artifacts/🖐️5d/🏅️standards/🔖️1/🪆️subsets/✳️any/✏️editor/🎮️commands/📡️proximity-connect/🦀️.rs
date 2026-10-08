@@ -1,16 +1,8 @@
-//! 📡️ `proximity-connect` command, and the proximity search `world-relocate` shares with it.
+//! 📡️ The proximity search `world-relocate` and the `proximityConnect` work share.
 
 use crate::editor::puzzle5d::precompute::geometry::distance_squared;
-use crate::editor::puzzle5d::{engine_grip_kind, puzzle5d_grip_full_id, world_grip_position, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dFreshIds, Puzzle5dGrip, Puzzle5dPart, PUZZLE5D_PROXIMITY_RADIUS};
-use semio_framework_pack_json::Value;
+use crate::editor::puzzle5d::{engine_grip_kind, puzzle5d_grip_full_id, world_grip_position, Puzzle5dDocument, Puzzle5dGrip, Puzzle5dPart};
 use std::collections::HashSet;
-
-fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
-    args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())
-}
-fn arg_f64(args: Option<&Value>, key: &str) -> Option<f64> {
-    args.and_then(|value| value.get(key)).and_then(Value::as_f64)
-}
 
 /// 🧲️ One grip the proximity search found next to a part's first grip.
 #[derive(Clone, Debug, PartialEq)]
@@ -58,7 +50,7 @@ pub fn puzzle5d_proximity_peers(document: &Puzzle5dDocument, part_id: &str, radi
     let moved_kind = engine_grip_kind(moved_grip);
     let connected: HashSet<(&str, &str)> = document.fasteners.iter().flat_map(|fastener| [(fastener.source.as_str(), fastener.target.as_str()), (fastener.target.as_str(), fastener.source.as_str())]).collect();
     let rules: Vec<(&str, &str, bool)> = if gated {
-        document.kind_compatibility.as_ref().and_then(serde_json::Value::as_array).into_iter().flatten().map(|entry| (entry.get("source").and_then(serde_json::Value::as_str).unwrap_or(""), entry.get("target").and_then(serde_json::Value::as_str).unwrap_or(""), entry.get("bidirectional").and_then(serde_json::Value::as_bool).unwrap_or(false))).collect()
+        document.kind_compatibility.as_ref().and_then(semio_framework_pack_json::Value::as_array).into_iter().flatten().map(|entry| (entry.get("source").and_then(semio_framework_pack_json::Value::as_str).unwrap_or(""), entry.get("target").and_then(semio_framework_pack_json::Value::as_str).unwrap_or(""), entry.get("bidirectional").and_then(semio_framework_pack_json::Value::as_bool).unwrap_or(false))).collect()
     } else {
         Vec::new()
     };
@@ -69,38 +61,6 @@ pub fn puzzle5d_proximity_peers(document: &Puzzle5dDocument, part_id: &str, radi
         .filter(|peer| peer.grip != moved_id && !connected.contains(&(peer.grip.as_str(), moved_id.as_str())) && admits(&peer.kind))
         .collect();
     Some((moved_id, peers))
-}
-
-/// 🚚️ Proximity-connect (3d relocate auto-attract twin): for one part, fasten its first grip as `target` onto
-/// every other grip inside `radius` (default [`PUZZLE5D_PROXIMITY_RADIUS`]) that is not already connected and
-/// that passes kind compatibility. The stationary peer stays `source` so flatten keeps the pre-existing
-/// structure as the resolution root.
-pub fn proximity_connect(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
-    let Some(part_id) = arg_str(args, "partId").or_else(|| arg_str(args, "objectId")) else { return };
-    let radius = arg_f64(args, "radius").unwrap_or(PUZZLE5D_PROXIMITY_RADIUS);
-    let Some((moved_id, peers)) = puzzle5d_proximity_peers(&ctx.scene.document, part_id, radius, true) else { return };
-    if peers.is_empty() {
-        return;
-    }
-    let mut fresh_ids = Puzzle5dFreshIds::from_document(&ctx.scene.document);
-    let fresh: Vec<Puzzle5dFastener> = peers
-        .into_iter()
-        .map(|peer| Puzzle5dFastener {
-            id: fresh_ids.next_fastener(),
-            source: peer.grip,
-            target: moved_id.clone(),
-            fastener_kind: arg_str(args, "fastenerKind").or_else(|| arg_str(args, "edgeKind")).map(str::to_string),
-            gap: arg_f64(args, "gap").unwrap_or(0.0),
-            shift: arg_f64(args, "shift").unwrap_or(0.0),
-            rise: arg_f64(args, "rise").unwrap_or(0.0),
-            rotation: arg_f64(args, "rotation").unwrap_or(0.0),
-            turn: arg_f64(args, "turn").unwrap_or(0.0),
-            tilt: arg_f64(args, "tilt").unwrap_or(0.0),
-            x: arg_f64(args, "x").unwrap_or(0.0),
-            y: arg_f64(args, "y").unwrap_or(0.0),
-        })
-        .collect();
-    ctx.scene.document.fasteners.extend(fresh);
 }
 
 //#region 🧪️Tests

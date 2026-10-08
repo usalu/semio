@@ -137,27 +137,70 @@
         "🟦️typescript"
       ]
     },
-    "En1995MemberActionAddition": {
-      "title": "En1995MemberActionAddition",
+    "En1995MemberActionRemoval": {
+      "title": "En1995MemberActionRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberActionInsertion": {
+      "title": "En1995MemberActionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberActionRelocation": {
+      "title": "En1995MemberActionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -170,11 +213,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -192,20 +235,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1995MemberActionRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1995MemberActionAddition"
+            "$ref": "#/$defs/En1995MemberActionInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995MemberActionRelocation"
           }
         },
         "modified": {
@@ -261,27 +311,70 @@
         "🟦️typescript"
       ]
     },
-    "En1995ConnectionActionAddition": {
-      "title": "En1995ConnectionActionAddition",
+    "En1995ConnectionActionRemoval": {
+      "title": "En1995ConnectionActionRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionActionInsertion": {
+      "title": "En1995ConnectionActionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/ConnectionAction"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionActionRelocation": {
+      "title": "En1995ConnectionActionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -294,11 +387,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -316,20 +409,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1995ConnectionActionRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1995ConnectionActionAddition"
+            "$ref": "#/$defs/En1995ConnectionActionInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995ConnectionActionRelocation"
           }
         },
         "modified": {
@@ -628,27 +728,70 @@
         "🟦️typescript"
       ]
     },
-    "En1995MemberAddition": {
-      "title": "En1995MemberAddition",
+    "En1995MemberRemoval": {
+      "title": "En1995MemberRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberInsertion": {
+      "title": "En1995MemberInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberRelocation": {
+      "title": "En1995MemberRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -661,11 +804,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -683,20 +826,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1995MemberRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1995MemberAddition"
+            "$ref": "#/$defs/En1995MemberInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995MemberRelocation"
           }
         },
         "modified": {
@@ -895,27 +1045,70 @@
         "🟦️typescript"
       ]
     },
-    "En1995ConnectionAddition": {
-      "title": "En1995ConnectionAddition",
+    "En1995ConnectionRemoval": {
+      "title": "En1995ConnectionRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionInsertion": {
+      "title": "En1995ConnectionInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionRelocation": {
+      "title": "En1995ConnectionRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -928,11 +1121,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -950,20 +1143,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1995ConnectionRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1995ConnectionAddition"
+            "$ref": "#/$defs/En1995ConnectionInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995ConnectionRelocation"
           }
         },
         "modified": {

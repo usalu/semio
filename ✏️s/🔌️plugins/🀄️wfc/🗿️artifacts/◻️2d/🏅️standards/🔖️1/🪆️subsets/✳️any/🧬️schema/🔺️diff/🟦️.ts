@@ -1,5 +1,5 @@
 // 🔺️ WFC 2D diff — the TypeScript twin of `🦀️.rs`, ported field by field (never generated): a field-sparse, id-keyed delta whose rows
-// are removed identities, added rows (landing at their canonical position) and per-row field patches.
+// are positional: removed ids at their base index, inserted rows at their after index, moved ids, and per-row field patches.
 
 import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import { orderedIndex, type Wfc2dRule, type Wfc2dSlot, type Wfc2dSlotEdge, type Wfc2dSnapshot, type Wfc2dTile, type Wfc2dTileMedia } from "../📸️snapshot/🟦️.ts";
@@ -10,8 +10,13 @@ export type Wfc2dOptional<T> = { readonly value: T | null };
 /** 🩹 One patched row, addressed by its identity. */
 export type Wfc2dRowPatch<P> = { readonly id: string; readonly patch: P };
 
-/** 📂 Id-keyed row delta: removed identities, added rows and per-row field patches. */
-export type Wfc2dRows<T, P> = { readonly removed: readonly string[]; readonly added: readonly T[]; readonly patched: readonly Wfc2dRowPatch<P>[] };
+/** 📂 Positional row delta (`protocol::list_delta`): removed ids at their BASE index, inserted rows at their AFTER index, moved ids from a base to an after index, and id-keyed patches. */
+export type Wfc2dRows<T, P> = {
+  readonly removed: readonly { readonly id: string; readonly index: number }[];
+  readonly inserted: readonly { readonly index: number; readonly row: T }[];
+  readonly moved: readonly { readonly id: string; readonly from: number; readonly to: number }[];
+  readonly modified: readonly Wfc2dRowPatch<P>[];
+};
 
 /** 🩹 Field patch over a slot: `null` leaves a field alone. */
 export type Wfc2dSlotPatch = { readonly x: Binary64 | null; readonly y: Binary64 | null; readonly width: Binary64 | null; readonly height: Binary64 | null; readonly pinnedTileId: Wfc2dOptional<string> | null };
@@ -35,14 +40,26 @@ export type Wfc2dDiff = {
   readonly rules: Wfc2dRows<Wfc2dRule, Wfc2dRulePatch>;
 };
 
-/** 📂 One collection's delta with the named lanes filled in. */
-export function wfc2dRows<T, P>(lanes: Partial<Wfc2dRows<T, P>> = {}): Wfc2dRows<T, P> {
-  return { removed: lanes.removed ?? [], added: lanes.added ?? [], patched: lanes.patched ?? [] };
+/** 📂 One collection's positional delta built from payload and base reads: removals take their base index, insertions the canonical id position of the running list. */
+export function wfc2dRows<T extends { readonly id: string }, P>(base: readonly T[], lanes: { readonly removed?: readonly string[]; readonly added?: readonly T[]; readonly patched?: readonly Wfc2dRowPatch<P>[] } = {}): Wfc2dRows<T, P> {
+  const removed = (lanes.removed ?? []).flatMap((id) => {
+    const index = base.findIndex((item) => item.id === id);
+    return index === -1 ? [] : [{ id, index }];
+  });
+  const running = base.filter((item) => !removed.some((entry) => entry.id === item.id));
+  for (const row of lanes.added ?? []) running.splice(orderedIndex(running, row.id, (item) => item.id), 0, row);
+  const inserted = (lanes.added ?? []).map((row) => ({ index: running.findIndex((item) => item.id === row.id), row }));
+  return { removed, inserted, moved: [], modified: lanes.patched ?? [] };
+}
+
+/** 📂 An empty positional delta. */
+export function emptyWfc2dRows<T, P>(): Wfc2dRows<T, P> {
+  return { removed: [], inserted: [], moved: [], modified: [] };
 }
 
 /** 🕳️ The identity delta — every lane present and empty, never an omitted key. */
 export function emptyWfc2dDiff(): Wfc2dDiff {
-  return { schema: null, seed: null, slots: wfc2dRows(), edges: wfc2dRows(), tiles: wfc2dRows(), rules: wfc2dRows() };
+  return { schema: null, seed: null, slots: emptyWfc2dRows(), edges: emptyWfc2dRows(), tiles: emptyWfc2dRows(), rules: emptyWfc2dRows() };
 }
 
 /** 🩹 A slot patch setting only the named fields. */
@@ -81,19 +98,23 @@ function patchedRule(row: Wfc2dRule, patch: Wfc2dRulePatch): Wfc2dRule {
 }
 
 function applyRows<T extends { readonly id: string }, P>(base: readonly T[], rows: Wfc2dRows<T, P>, patched: (row: T, patch: P) => T): T[] {
-  const items = [...base];
-  for (const id of rows.removed) {
-    const at = items.findIndex((item) => item.id === id);
-    if (at === -1) throw new RangeError(`removed ${id} does not exist`);
-    items.splice(at, 1);
+  const taken = new Set<number>();
+  for (const entry of [...rows.removed, ...rows.moved.map((move) => ({ id: move.id, index: move.from }))]) {
+    if (base[entry.index]?.id !== entry.id || taken.has(entry.index)) throw new RangeError(`${entry.id} is not at base index ${entry.index}`);
+    taken.add(entry.index);
   }
-  for (const row of rows.added) {
-    if (items.some((item) => item.id === row.id)) throw new RangeError(`added ${row.id} already exists`);
-    items.splice(orderedIndex(items, row.id, (item) => item.id), 0, row);
+  const slots: (T | undefined)[] = new Array(base.length - rows.removed.length + rows.inserted.length).fill(undefined);
+  for (const entry of rows.inserted) {
+    if (entry.index >= slots.length || slots[entry.index] !== undefined) throw new RangeError(`inserted ${entry.row.id} has no free after slot ${entry.index}`);
+    slots[entry.index] = entry.row;
   }
-  for (const entry of rows.patched) {
+  for (const move of rows.moved) slots[move.to] = base[move.from];
+  const survivors = base.filter((_, index) => !taken.has(index));
+  const items = slots.map((slot) => slot ?? survivors.shift()!);
+  if (new Set(items.map((item) => item.id)).size !== items.length) throw new RangeError("two rows of the after list carry the same id");
+  for (const entry of rows.modified) {
     const at = items.findIndex((item) => item.id === entry.id);
-    if (at === -1) throw new RangeError(`patched ${entry.id} does not exist`);
+    if (at === -1) throw new RangeError(`modified ${entry.id} does not exist`);
     items[at] = patched(items[at]!, entry.patch);
   }
   return items;

@@ -6,26 +6,29 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "dead",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [],
+            "inserted": [],
             "removed": [
-              "g2"
+              {
+                "id": "g2",
+                "index": 2
+              }
             ],
-            "patched": [],
-            "reordered": null
+            "moved": [],
+            "modified": []
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

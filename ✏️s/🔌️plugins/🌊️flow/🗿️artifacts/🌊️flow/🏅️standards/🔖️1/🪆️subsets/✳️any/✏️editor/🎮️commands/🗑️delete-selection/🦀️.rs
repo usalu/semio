@@ -2,7 +2,8 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::{flow_graph_selection_domains, host_scene_edit, sync_host_selection_domains, FLOW_INTERACTION_GRAPH};
+use crate::editor::flow::edit_rules::ContentEdit;
+use crate::editor::flow::{flow_composed_content, flow_content_leaves_emit, flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -26,17 +27,14 @@ pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>,
 /// `interaction_topology`. `app_commands!`'s generated `dispatch(doc, cfg, session)` is framework-fixed
 /// at that 3-arg shape (no `interaction` slot), so `FlowPlayApp::handle` routes this command through
 /// `apply` directly instead (mirrors `space`'s `delete_selection::apply`).
-pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let (nodes, edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
     let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children)?;
-    let emit = host_scene_edit(&composed, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| {
-        sync_host_selection_domains(host, &nodes, &edges, &[]);
-        Ok(host.has_selection() && host.delete_selection().is_ok())
-    })?;
-    if emit.child_emits.is_empty() && emit.child_preparations.is_empty() {
+    let mut edit = ContentEdit::new(flow_composed_content(&composed)?);
+    if !edit.remove(&nodes, &edges) {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
     }
-    Ok(emit)
+    Ok(flow_content_leaves_emit(&composed.content.child_id, edit.leaves))
 }
 
 //#region 🧪️Tests

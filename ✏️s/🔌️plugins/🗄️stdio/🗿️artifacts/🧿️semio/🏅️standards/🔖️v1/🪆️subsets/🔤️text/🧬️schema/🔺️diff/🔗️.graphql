@@ -1,7 +1,10 @@
-# 🔺️ SemioTextDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
-type SemioTextRunListDiff {
-  values: [SemioTextRun!]!
-}
-type SemioTextDiff {
-  runs: SemioTextRunListDiff @state(class: ARTIFACT)
-}
+# 🔺️ SemioTextDiff schema — keyed-row diff mirror of the Rust `🦀️.rs` sibling.
+type ReplaceSemioTextMark { value: SemioTextMark! }
+type IndexModifiedReplaceSemioTextMark { index: Int! diff: ReplaceSemioTextMark! }
+type IndexAddedSemioTextMark { index: Int! item: SemioTextMark! }
+type IndexedTripleReplaceSemioTextMarkSemioTextMark { removed: [Int!] modified: [IndexModifiedReplaceSemioTextMark!] added: [IndexAddedSemioTextMark!] }
+type IndexModifiedSemioTextRunDiff { index: Int! diff: SemioTextRunDiff! }
+type IndexAddedSemioTextRun { index: Int! item: SemioTextRun! }
+type IndexedTripleSemioTextRunDiffSemioTextRun { removed: [Int!] modified: [IndexModifiedSemioTextRunDiff!] added: [IndexAddedSemioTextRun!] }
+type SemioTextRunDiff { language: String content: String marks: IndexedTripleReplaceSemioTextMarkSemioTextMark }
+type SemioTextDiff { runs: IndexedTripleSemioTextRunDiffSemioTextRun }

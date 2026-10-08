@@ -26,7 +26,7 @@ impl<'a> NativeDecodeControl<'a> {
         self.charge(wrapper_bytes)?;self.checkpoint()?;
         self.retirement.as_mut().unwrap().reserved=true;
         let(result,owner)=operation(self);
-        let recipient=self.retirement.as_mut().unwrap();recipient.owner=owner;recipient.reserved=false;
+        let recipient=self.retirement.as_mut().unwrap();*recipient.owner=owner;recipient.reserved=false;
         result
     }
 

@@ -39,12 +39,15 @@
   "costs": null,
   "delivery": null,
   "risks": {
-    "added": [],
     "removed": [
-      "risk-a"
+      {
+        "id": "risk-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "conflicts": null,
   "requirements": null,

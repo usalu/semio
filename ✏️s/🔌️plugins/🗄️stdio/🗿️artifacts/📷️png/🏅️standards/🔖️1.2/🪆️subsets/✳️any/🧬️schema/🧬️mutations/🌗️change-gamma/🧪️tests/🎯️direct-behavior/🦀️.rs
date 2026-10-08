@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
     let mut current = protocol::apply_diff(&payload.diff(&base).diff(), &base).expect("forward change-gamma applies");
-    for step in payload.inverse(&base).expect("valid retained mutation inverse fixture") {
+    for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         current = protocol::apply_diff(&step.diff(&current).diff(), &current).expect("the change-gamma inverse step applies");
     }
     assert_eq!(current, base, "change-gamma/direct-behavior: the undo did not restore the committed before-snapshot");

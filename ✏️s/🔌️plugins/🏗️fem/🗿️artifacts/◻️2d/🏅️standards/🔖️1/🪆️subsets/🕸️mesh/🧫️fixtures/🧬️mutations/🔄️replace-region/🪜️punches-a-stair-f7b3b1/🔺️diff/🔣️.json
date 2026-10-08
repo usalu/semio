@@ -2,12 +2,13 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "slab",
-        "item": {
+        "patch": {
           "id": "slab",
           "name": "Floor slab with stair opening",
           "outline": [
@@ -53,8 +54,7 @@
           "meshSize": 0.25
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "materials": null,
   "sections": null,

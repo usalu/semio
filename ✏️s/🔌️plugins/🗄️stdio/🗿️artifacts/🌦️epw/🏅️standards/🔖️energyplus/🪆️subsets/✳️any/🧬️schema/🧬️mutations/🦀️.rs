@@ -97,70 +97,12 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
-/// d.apply(snapshot); d` — the diff is the single semantics source.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
-    let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 
 //#endregion 🔖️MutationTrait
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: each header line that moved, then every record row in place (one
-/// `set-record-field` per differing column) and the diverging tail (surplus rows removed last first, missing rows inserted). The
-/// snapshot `schema` is a constant of the artifact and never a leaf.
-pub fn net_mutations(base: &EpwSnapshot, next: &EpwSnapshot) -> Vec<EpwMutation> {
-    let mut leaves = Vec::new();
-    if base.location != next.location {
-        leaves.push(EpwMutation::SetLocation(set_location::SetLocation { location: next.location.clone() }));
-    }
-    if base.design_conditions != next.design_conditions {
-        leaves.push(EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: next.design_conditions.clone() }));
-    }
-    if base.typical_extreme_periods != next.typical_extreme_periods {
-        leaves.push(EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: next.typical_extreme_periods.clone() }));
-    }
-    if base.ground_temperatures != next.ground_temperatures {
-        leaves.push(EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: next.ground_temperatures.clone() }));
-    }
-    if base.holidays_dst != next.holidays_dst {
-        leaves.push(EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: next.holidays_dst.clone() }));
-    }
-    if base.comments_1 != next.comments_1 {
-        leaves.push(EpwMutation::SetComments1(set_comments1::SetComments1 { value: next.comments_1.clone() }));
-    }
-    if base.comments_2 != next.comments_2 {
-        leaves.push(EpwMutation::SetComments2(set_comments2::SetComments2 { value: next.comments_2.clone() }));
-    }
-    if base.data_periods != next.data_periods {
-        leaves.push(EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: next.data_periods.clone() }));
-    }
-    let paired = base.records.len().min(next.records.len());
-    for (record_index, (before, after)) in base.records.iter().zip(&next.records).enumerate().filter(|(_, (before, after))| before != after) {
-        for field_index in 0..crate::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
-            if let (Some(old), Some(new)) = (before.field_at(field_index), after.field_at(field_index)) {
-                if old != new {
-                    leaves.push(EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, value: new.to_string() }));
-                }
-            }
-        }
-    }
-    leaves.extend((paired..base.records.len()).rev().map(|index| EpwMutation::RemoveRecord(remove_record::RemoveRecord { index })));
-    leaves.extend(next.records.iter().enumerate().skip(paired).map(|(index, record)| EpwMutation::InsertRecord(insert_record::InsertRecord { index, record: Box::new(record.clone()) })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region OpCodecs
 

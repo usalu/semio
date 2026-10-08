@@ -1,0 +1,71 @@
+{
+  "role": "proposed plain examples, not schema or executed evidence",
+  "context": "schema.json trial envelope except domain-snapshot/runtime-request which have genuine production contract and runtime consumers",
+  "cases": [
+    {
+      "id": "static-whole",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);",
+      "expectedClassification": "whole-trial"
+    },
+    {
+      "id": "validator-alias",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; const check=new Ajv().compile(schema);const original=fixture;check(original);",
+      "expectedClassification": "whole-trial"
+    },
+    {
+      "id": "file-url",
+      "source": "import Ajv from \"ajv\"; import {readFileSync} from \"node:fs\"; const read=p=>JSON.parse(readFileSync(new URL(p,import.meta.url),\"utf8\"));const schema=read(\"./schema.json\"),law=read(\"./examples.json\");new Ajv().compile(schema)(law);",
+      "expectedClassification": "whole-trial"
+    },
+    {
+      "id": "escaped-reader-alias",
+      "source": "import Ajv from \"ajv\";import {readFileSync as \\u0072ead} from \"node:fs\";const law=JSON.parse(read(new URL(\"./examples.json\",import.meta.url),\"utf8\"));import schema from \"./schema.json\";new Ajv().compile(schema)(law);",
+      "expectedClassification": "whole-trial"
+    },
+    {
+      "id": "projected-scene",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture.scene);",
+      "expectedClassification": "domain-projection"
+    },
+    {
+      "id": "loop-row",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; for(const row of fixture.cases)new Ajv().compile(schema)(row.value);",
+      "expectedClassification": "domain-projection"
+    },
+    {
+      "id": "domain-snapshot",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);",
+      "expectedClassification": "genuine-domain-whole"
+    },
+    {
+      "id": "runtime-request",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; export const validateRequest=new Ajv().compile(schema);validateRequest(fixture);",
+      "expectedClassification": "genuine-domain-whole"
+    },
+    {
+      "id": "shadowed-validator",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; function run(Ajv){new Ajv().compile(schema)(fixture)}",
+      "expectedClassification": "unresolved"
+    },
+    {
+      "id": "reassigned",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; let value=fixture;value=getValue();new Ajv().compile(schema)(value);",
+      "expectedClassification": "unresolved"
+    },
+    {
+      "id": "computed-source",
+      "source": "import Ajv from \"ajv\";const schema=await import(path);const fixture=await load(path);new Ajv().compile(schema)(fixture);",
+      "expectedClassification": "unresolved"
+    },
+    {
+      "id": "fake-comments",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; /* new Ajv().compile(schema)(fixture) */ const text=\"compile(schema)(fixture)\";",
+      "expectedClassification": "no-validator-edge"
+    },
+    {
+      "id": "inline-trial",
+      "source": "import Ajv from \"ajv\";import fixture from \"./examples.json\";new Ajv().compile({type:\"object\",required:[\"cases\",\"copyGrants\",\"expected\"],properties:{cases:{type:\"array\"},copyGrants:{type:\"array\"},expected:{type:\"object\"}}})(fixture);",
+      "expectedClassification": "inline-whole-trial"
+    }
+  ]
+}

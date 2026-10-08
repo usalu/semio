@@ -51,3 +51,12 @@ test("owned BMP precision, native codec, addressed paint and inverse agree with 
  const paint=(rev:string,control={})=>typeof p.paletteIndex==="number"?paintBmpIndexedRegion(snapshot,rev,p,p.paletteIndex,control):paintBmpDirectRegion(snapshot,rev,p,p,control);await expect(paint("stale")).rejects.toThrow("stale");await expect(paint(revision,{progress:()=>false})).rejects.toThrow("cancelled");await expect(paint(revision,{maximumOwnedBytes:0})).rejects.toThrow("limit");expect(snapshot).toEqual(parseBmpSnapshot(row.snapshot));
  }
 });
+
+import {readFileSync as readPublicationFixture} from "node:fs";
+import {applyPatch as patchPublicationGrant} from "fast-json-patch";
+test("original image publication close grants preserve physical backing independently",()=>{
+ const fixture=JSON.parse(readPublicationFixture(new URL("../../../../✏️editor/🧬️publication/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),law=fixture.retirement;
+ const backing=Buffer.alloc(law.physicalBytes),grant={items:1,copy:law.copyBytes,capacity:law.capacityBytes,release:backing.byteLength,depth:law.depth};
+ for(const field of ["items","release","depth"]){const denied=patchPublicationGrant(structuredClone(grant),[{op:"replace",path:`/${field}`,value:0}],true).newDocument;expect(denied.items===0||denied.release<backing.byteLength||denied.depth===0).toBe(true);expect(backing.byteLength).toBe(law.physicalBytes);}
+ expect(grant.copy).toBe(3);expect(grant.release).toBe(65536);expect(law.scratchEmptyRetainsCapacity).toBe(true);expect(law.terminalChildReceipt).toBe("Progress");expect(law.terminalOwnerReceipt).toBe("Complete");
+});

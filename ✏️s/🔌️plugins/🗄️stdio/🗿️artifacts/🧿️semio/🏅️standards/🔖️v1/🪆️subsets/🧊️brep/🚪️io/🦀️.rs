@@ -140,7 +140,7 @@ pub use derived_composition::*;
 pub mod dwg {
     use semio_framework_3d::brep::engine::{BrepError, BrepKernel, GeometryHandle};
     struct DwgExporter;
-    impl semio_framework_mesh_engine::MeshExporter for DwgExporter {
+    impl semio_framework_mesh_engine::io::MeshExporter for DwgExporter {
         fn format_kind(&self) -> &'static str {
             "dwg"
         }
@@ -150,7 +150,7 @@ pub mod dwg {
         }
     }
     struct DwgImporter;
-    impl semio_framework_mesh_engine::MeshImporter for DwgImporter {
+    impl semio_framework_mesh_engine::io::MeshImporter for DwgImporter {
         fn format_kind(&self) -> &'static str {
             "dwg"
         }

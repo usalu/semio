@@ -1,0 +1,7 @@
+# Current Authored Union Before Production
+
+This is an intermediate membership checkpoint. The exact retained prior list and bounded new role classifications are in `📥️oct8-current-authored-union-pre-production-input.json` and `📥️oct8-current-authored-union-pre-production-role-input.json`. The prior 5,976 paths grew by 46 own authored endpoints and retained ticket inputs/audits to 6,022 unique canonical paths; 1,503 endpoints are currently absent and are preserved as authored removals. The observed list SHA-256 was `6411b22fac65047e0d96aede92dc7e8f1e5b400abe42077bfa28f8178e6c7e96`.
+
+Membership uses exact authored endpoint ledgers and retained inputs/audits under this ticket. Embedded source bodies, observation-only plain fixtures, peer source drift, virtual schema nodes, generated logs/caches/runtime artifacts and AGENTS files supply no writer attribution. The runtime endpoint ledger uses its actual `currentEndpoints` field and the preview ledger its actual `sources` field; every one of those endpoint paths already belongs to the current union, so no missing attribution was skipped. Source hashes in older receipts retain their historical context; this list does not reattest peer current bytes.
+
+The final union still needs the final native/publication/HTTP/checkpoint reports, bounded output cleanup and actual ticket-close summary. No completion or native producer credit is asserted here.

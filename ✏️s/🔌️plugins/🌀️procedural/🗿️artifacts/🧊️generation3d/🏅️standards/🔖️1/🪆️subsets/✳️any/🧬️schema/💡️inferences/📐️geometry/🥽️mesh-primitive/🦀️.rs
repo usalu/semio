@@ -1,11 +1,11 @@
-//! 🥽️ `mesh.primitive` computes: box, plane, cylinder, cone, ico sphere, torus, uv sphere and a mesh built from JSON text, all as stepped kernel mesh jobs.
+//! 🥽️ `mesh.primitive` computes: box, plane, cylinder, cone, ico sphere, torus, uv sphere all as stepped kernel mesh jobs.
 //!
 //! Torus and uv sphere are generated as indexed polygon sources by the mesh engine and reconstructed by the kernel's polygon source job.
 
-use super::mesh_support::{capacity_fault, count, from_source, import_fault, modeling, scalar, KernelResult, Parse, BATCH};
+use super::mesh_support::{capacity_fault, count, import_fault, modeling, scalar, KernelResult};
 use super::super::prelude::*;
 use semio_framework_3d::mesh::HalfedgeMesh;
-use semio_framework_mesh_engine::{PolygonMeshSource, PolygonSourcePreparation};
+use semio_framework_mesh_engine::{PolygonMeshSource};
 
 const FACE_LIMIT: usize = 100_000;
 
@@ -56,17 +56,8 @@ fn uv_sphere(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
-fn construct(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    from_source(kind, move || {
-        let text = inputs.text("data")?.to_string();
-        let mut preparation = PolygonSourcePreparation::new();
-        Ok(Box::new(move |fuel: usize| preparation.step(&text, fuel.saturating_mul(BATCH), fuel.saturating_mul(4096)).map_err(import_fault)) as Parse)
-    })
-}
-
 /// 🗃️ The `mesh.primitive` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
-    ComputeEntry { id: "mesh.primitive.construct", start: construct },
     ComputeEntry { id: "mesh.primitive.box", start: box_ },
     ComputeEntry { id: "mesh.primitive.plane", start: plane },
     ComputeEntry { id: "mesh.primitive.sphere", start: sphere },

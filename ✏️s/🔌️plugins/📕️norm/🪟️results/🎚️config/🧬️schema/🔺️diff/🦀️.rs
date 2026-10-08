@@ -37,10 +37,6 @@ impl protocol::DiffAlgebra<NormResultsWindowConfig> for NormResultsWindowConfigD
         Self { selected_check: self.selected_check.as_ref().map(|_| SelectedCheck { index: base.selected_check_index }) }
     }
 
-    fn between(base: &NormResultsWindowConfig, other: &NormResultsWindowConfig) -> Self {
-        Self { selected_check: (base.selected_check_index != other.selected_check_index).then_some(SelectedCheck { index: other.selected_check_index }) }
-    }
-
     fn is_empty(&self) -> bool {
         self.selected_check.is_none()
     }

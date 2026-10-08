@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeMemberExposure, base: &En1992Snapshot) -> protocol::
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        members: Some(En1992MembersRows { modified: vec![En1992MembersPatch { id: payload.member_id.clone(), exposure: Some(payload.new_exposure), ..Default::default() }], ..Default::default() }),
+        members: Some(En1992MembersRows::modification(&payload.member_id, En1992MembersPatch { exposure: Some(payload.new_exposure), ..Default::default() })),
         ..Default::default()
     })
 }

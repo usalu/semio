@@ -1,11 +1,11 @@
 use super::*;
-use crate::{EquationGeometry, EquationGraph, EquationPoint};
+use crate::EquationPoint;
 
-/// ⚖️ LAW: a state diff carries the sparse slots and the re-minted derived handles, and applies to exactly the snapshot built from the new state.
+/// ⚖️ LAW: a state diff carries the sparse slots only, and applying it re-derives the handles — exactly the snapshot built from the new state.
 #[semio_framework_async_macros::async_test]
 async fn a_state_diff_round_trips_through_apply() {
     let base = EquationSnapshot::default();
-    let diff = crate::equation_state_diff(EquationDiff { algorithm: Some("components".into()), ..Default::default() }, &base);
+    let diff = EquationDiff { algorithm: Some("components".into()), ..Default::default() };
     let applied = protocol::apply_diff(&diff, &base).expect("valid mutation diff");
     let mut graph = base.graph.clone();
     graph.algorithm = "components".into();
@@ -17,13 +17,10 @@ async fn a_state_diff_round_trips_through_apply() {
 /// ⚖️ LAW: absorb keeps the incoming slots and the earlier ones it does not replace.
 #[semio_framework_async_macros::async_test]
 async fn absorb_prefers_the_incoming_slots_when_present() {
-    let (notation_a, _, _) = crate::equation_children(&EquationGraph::default(), &EquationGeometry::default());
-    let mut first = EquationDiff { notation: Some(notation_a), ..Default::default() };
-    let (_, results_b, _) = crate::equation_children(&EquationGraph::default(), &EquationGeometry { points: Vec::new() });
-    let second = EquationDiff { results: Some(results_b.clone()), ..Default::default() };
-    first.absorb(second);
-    assert!(first.notation.is_some());
-    assert_eq!(first.results, Some(results_b));
+    let mut first = EquationDiff { directed: Some(true), algorithm: Some("bfs".into()), ..Default::default() };
+    first.absorb(EquationDiff { algorithm: Some("components".into()), ..Default::default() });
+    assert_eq!(first.directed, Some(true));
+    assert_eq!(first.algorithm.as_deref(), Some("components"));
 }
 
 /// ⚖️ LAW: positional point edits fold adjacent same-index edits and the negative diff restores the cloud.
@@ -39,4 +36,26 @@ async fn point_edits_fold_and_invert() {
     assert_eq!(inserted.geometry.points[2], point(9.0));
     let restored = protocol::apply_diff(&protocol::DiffAlgebra::inverse(&insert, &base), &inserted).expect("negative diff applies");
     assert_eq!(restored, base);
+}
+
+/// ⚖️ LAW: a positional node delta inserts, moves and removes at middle rows, sums, and inverts row by row.
+#[semio_framework_async_macros::async_test]
+async fn positional_node_delta_sums_and_inverts_at_middle_rows() {
+    let node = |id: &str| crate::EquationNode { id: id.into(), label: id.into(), x: 0.0, y: 0.0 };
+    let mut base = EquationSnapshot::default();
+    base.graph.nodes = vec![node("a"), node("b"), node("c")];
+    let order = |snapshot: &EquationSnapshot| snapshot.graph.nodes.iter().map(|row| row.id.clone()).collect::<Vec<_>>();
+    let diff = |delta: EquationNodesDelta| EquationDiff { nodes: Some(delta), ..Default::default() };
+    let insert = diff(EquationNodesDelta::insertion(1, node("x")));
+    let inserted = protocol::apply_diff(&insert, &base).expect("valid insertion");
+    let remove = diff(EquationNodesDelta::removal(&inserted.graph.nodes, 3));
+    let removed = protocol::apply_diff(&remove, &inserted).expect("valid removal");
+    let relocate = diff(EquationNodesDelta::relocation(&removed.graph.nodes, 0, 2));
+    let moved = protocol::apply_diff(&relocate, &removed).expect("valid relocation");
+    assert_eq!(order(&moved), ["x", "b", "a"]);
+    let mut sum = insert;
+    sum.absorb(remove);
+    sum.absorb(relocate);
+    assert_eq!(protocol::apply_diff(&sum, &base).expect("valid sum"), moved);
+    assert_eq!(protocol::apply_diff(&protocol::DiffAlgebra::inverse(&sum, &base), &moved).expect("valid inverse"), base);
 }

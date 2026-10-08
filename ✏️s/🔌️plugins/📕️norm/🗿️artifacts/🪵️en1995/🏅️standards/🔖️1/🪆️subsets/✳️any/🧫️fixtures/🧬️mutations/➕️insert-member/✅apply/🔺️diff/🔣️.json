@@ -2,9 +2,9 @@
   "annex": null,
   "members": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "beam-B1",
+        "index": 1,
         "row": {
           "id": "beam-B9",
           "labelEn": "Main glulam floor beam B1",
@@ -65,11 +65,13 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "connections": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

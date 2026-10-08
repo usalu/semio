@@ -1,0 +1,5 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+// canonical splice-text/SpliceText
+message TextSplice { optional uint32 offset = 1; optional uint32 delete = 2; optional string insert = 3; }
+message SpliceTextPayload { repeated TextSplice splices = 1; }

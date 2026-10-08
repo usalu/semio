@@ -20,7 +20,7 @@ fn submission_routes_errors_and_prevents_duplicate_responses() {
             continue;
         }
         assert_eq!(emit.artifact_mutations.len(), 1);
-        emit.artifact_mutations[0].diff(&spec).apply_to(&mut spec);
+        spec = protocol::apply_diff(emit.artifact_mutations[0].diff(&spec).diff(), &spec).expect("valid mutation diff");
         assert_eq!(spec.responses.len(), 1);
         assert_eq!(next.submitted_response_id.as_deref(), Some(spec.responses[0].id.as_str()));
         let answers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&spec.responses[0].answers)).unwrap();

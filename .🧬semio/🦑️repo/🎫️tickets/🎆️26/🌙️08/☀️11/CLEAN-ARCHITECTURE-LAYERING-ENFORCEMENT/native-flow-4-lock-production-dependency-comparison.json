@@ -1,0 +1,34 @@
+{
+  "deltas": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework-job",
+      "missing": [
+        "semio-framework-value"
+      ],
+      "locked": [
+        "semio-framework-async",
+        "semio-framework-trace"
+      ],
+      "manifest": "[package]\nworkspace = \"../../../..\"\nname = \"semio-framework-job\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"The universal resumable InteractiveJob protocol: a synchronous, explicitly-resumable step(&mut StepContext) -> StepOutcome every interactive operation implements instead of running to completion in one call. Operation/Generation identity and commit validation, structured child jobs on top of the async crate's CancelToken parent-chain, the ten-event progress-stream vocabulary with its channel-policy matrix, direct semio-framework-trace watchdog/record_* integration (no duplicated instrumentation), a batch adapter so CLI/headless paths reuse the same job impl as the interactive path, and the synthetic torture-job conformance test. Design ticket 26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR, packet P2a.\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"job\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_job\"\npath = \"🦀️.rs\"\n\n[features]\n# 🧪️ Turns on `semio_framework_async::testkit::ManualRuntime` for this crate's own scope/runtime\n# integration tests — same shape as `semio-framework-async`'s own `testkit` feature, always\n# available under `cfg(test)` regardless of this flag.\ntestkit = [\"semio-framework-async/testkit\"]\n\n[dependencies]\nsemio-framework-trace = { workspace = true }\nsemio-framework-async = { workspace = true }\nsemio-framework-value = { workspace = true }\n\n[dev-dependencies]\nsemio-framework-async = { workspace = true, features = [\"testkit\"] }\nserde_json = { workspace = true }\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework-pack",
+      "missing": [
+        "ureq"
+      ],
+      "locked": [
+        "semio-framework-async",
+        "semio-framework-diagnostic",
+        "semio-framework-dsl-record",
+        "semio-framework-hash",
+        "semio-framework-pack-error",
+        "semio-framework-pack-json",
+        "semio-framework-replication",
+        "semio-framework-value"
+      ],
+      "manifest": "[package]\nworkspace = \"../../../..\"\nname = \"semio-framework-pack\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"The .spk binary document container: header/footer/segment/manifest/chunk-table framing, the value codec, recovery, and native/async/http sources. A file format, product-neutral like the .spr record format it shares a codec with.\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"pack\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"pack\"\npath = \"🦀️.rs\"\n\n[[test]]\nname = \"pack_schema_hash\"\npath = \"../../🌱️value/🧪️tests/🔬️schema-hash/🦀️.rs\"\n\n[features]\ndefault = [\"deflate\"]\ndeflate = [\"semio-framework-replication/deflate\"]\nureq = [\"dep:ureq\"]\ncorruption-testing = []\n\n[dependencies]\nsemio-framework-diagnostic = { path = \"../../../⚠️diagnostic/📦️packages/🦀️rust\" }\nsemio-framework-pack-error = { path = \"../../⚠️error/📦️packages/🦀️rust\" }\nsemio-framework-dsl-record = { path = \"../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust\" }\nsemio-framework-pack-json = { path = \"../../🔤️json/📦️packages/🦀️rust\" }\nsemio-framework-replication = { workspace = true }\nsemio-framework-value = { path = \"../../../🌱️value/📦️packages/🦀️rust\" }\n# 🔌️ Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`): `UreqRangeTransport`'s blocking HTTP\n# call dispatches onto the process-wide `WorkerPool` (`Lane::Io`) instead of a per-request\n# `std::thread::spawn`. Workspace-internal, not a new third-party dependency.\nsemio-framework-async = { workspace = true, features = [\"entrypoint\"] }\nsemio-framework-hash = { path = \"../../../🔏️hash/📦️packages/🦀️rust\" }\nureq = { version = \"2\", optional = true }\n\n[dev-dependencies]\nblake3 = \"1.8.2\"\nsemio-framework-dsl-record-derive = { path = \"../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust\" }\nserde = { version = \"1.0.228\", features = [\"derive\"] }\nsemio-framework-trace = { path = \"../../../⏱️trace/📦️packages/🦀️rust\" }\nsemio-framework-dsl = { path = \"../../../🗣️dsl/📦️packages/🦀️rust\" }\nsemio-framework-async-macros = { path = \"../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }\nserde_json = { version = \"1.0.140\", features = [\"float_roundtrip\"] }\n"
+    }
+  ]
+}

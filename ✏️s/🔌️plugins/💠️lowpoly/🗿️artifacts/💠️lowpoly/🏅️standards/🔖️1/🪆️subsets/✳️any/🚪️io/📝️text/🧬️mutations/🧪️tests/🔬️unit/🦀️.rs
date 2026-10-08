@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::mutations::*;
 use crate::mutations::{create_mesh, create_object, delete_mesh, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
-use crate::schema::default_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use protocol::{OpBinary, OpText};
 
 fn tiny_mesh_json() -> String {

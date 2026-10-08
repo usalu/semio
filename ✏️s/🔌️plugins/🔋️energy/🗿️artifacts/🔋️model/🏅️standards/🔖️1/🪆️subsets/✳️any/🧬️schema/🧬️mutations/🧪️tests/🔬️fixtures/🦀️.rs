@@ -207,6 +207,12 @@ pub fn write_when_requested(case: &Case) {
     write_file(root.join("🎯️outcome/🔣️.json"), &json(document));
 }
 
+/// 📖️ The committed before-snapshot and mutation of one vector, decoded — the inputs a leaf hands the framework's inverse-sum law.
+pub fn committed(case: &Case) -> (EnergyModelSnapshot, EnergyModelMutation) {
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
+    (decode(case, "before-snapshot", case.before), mutation)
+}
+
 /// ▶️ Applying the committed mutation to the committed before-snapshot reproduces the committed
 /// after-snapshot exactly, composed child handles included.
 pub fn assert_forward(case: &Case) {

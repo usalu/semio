@@ -22,9 +22,33 @@
       ]
     },
     "selection": {
-      "type": "string",
-      "maxLength": 40000,
-      "contentMediaType": "application/json"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "length",
+          "coverage"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16777215
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16777216
+          },
+          "coverage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
     }
   }
 }

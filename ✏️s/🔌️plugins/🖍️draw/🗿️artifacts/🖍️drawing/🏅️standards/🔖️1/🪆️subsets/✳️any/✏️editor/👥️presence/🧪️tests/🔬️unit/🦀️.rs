@@ -1,6 +1,6 @@
 //! 🧪️ Drawing presence — the sparse `Set` mutation's concrete inverse sums to exactly the negative diff.
 use super::{DrawingPresence, DrawingPresenceDiff, DrawingPresenceMutation};
-use protocol::os_spr::protocol_laws::{assert_diff_algebra_between_law, assert_mutation_inverse_sum_law};
+use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::Mutation;
 
 fn peer() -> DrawingPresence {
@@ -23,8 +23,3 @@ async fn setting_one_field_carries_only_that_field() {
     assert_mutation_inverse_sum_law(&mutation, &peer()).await;
 }
 
-/// 🧭️ The state delta between two presences applies back onto the base, and equal presences differ by nothing.
-#[semio_framework_async_macros::async_test]
-async fn between_is_the_state_delta() {
-    assert_diff_algebra_between_law::<DrawingPresence, DrawingPresenceDiff>(&peer(), &DrawingPresence::default()).await;
-}

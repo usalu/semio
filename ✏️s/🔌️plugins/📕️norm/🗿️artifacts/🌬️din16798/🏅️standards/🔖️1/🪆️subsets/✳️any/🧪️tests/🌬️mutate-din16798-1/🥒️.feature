@@ -66,6 +66,7 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | insert-zone-dupe             | ➕️insert-zone                  | ⛔dupe   |
       | insert-zone-clamp            | ➕️insert-zone                  | 📏clamp  |
       | remove-zone                  | ➖️remove-zone                  | ✅apply  |
+      | remove-zone-middle-row       | ➖️remove-zone                  | 🔬️middle-row |
       | remove-zone-gone             | ➖️remove-zone                  | ❓gone   |
       | change-zone-usage-type       | 🏢️change-zone-usage-type       | ✅apply  |
       | change-zone-floor-area       | 📐️change-zone-floor-area       | ✅apply  |
@@ -90,6 +91,7 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | insert-vent-system-dupe      | 🆕️insert-vent-system           | ⛔dupe   |
       | insert-vent-system-clamp     | 🆕️insert-vent-system           | 📏clamp  |
       | remove-vent-system           | 🗑️remove-vent-system           | ✅apply  |
+      | remove-vent-system-middle-row | 🗑️remove-vent-system           | 🔬️middle-row |
       | remove-vent-system-gone      | 🗑️remove-vent-system           | ❓gone   |
       | change-vent-system-type      | ⚙️change-vent-system-type      | ✅apply  |
       | change-vent-sfp              | 🌀️change-vent-sfp              | ✅apply  |

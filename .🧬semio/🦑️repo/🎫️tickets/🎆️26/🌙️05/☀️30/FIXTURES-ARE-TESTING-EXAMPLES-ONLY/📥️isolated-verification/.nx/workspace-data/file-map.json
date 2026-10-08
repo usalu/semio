@@ -1,0 +1,27 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.2.0",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "ticket-fixture-verification": [
+        {
+          "file": "nx.json",
+          "hash": "11456308450696003903"
+        },
+        {
+          "file": "project.json",
+          "hash": "12873127716807628156"
+        },
+        {
+          "file": "📜️script.ts",
+          "hash": "1131283609486498728"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  },
+  "externalNodesHash": "3244421341483603138",
+  "dependencyResolutionAuthority": null
+}

@@ -33,7 +33,7 @@
       }
     },
     "test": {
-      "metadata": {"semio": {"nativePreparation": "cargo-consumer"}},
+
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",

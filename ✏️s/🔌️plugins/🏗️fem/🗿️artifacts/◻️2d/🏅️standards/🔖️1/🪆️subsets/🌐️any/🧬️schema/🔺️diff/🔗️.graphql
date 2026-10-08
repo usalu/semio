@@ -12,88 +12,200 @@ type Fem2dDiff {
   analysis: Fem2dAnalysisPatch @state(class: ARTIFACT)
 }
 
-type Fem2dNodesDelta {
-  added: [FemNode!]!
-  removed: [String!]!
-  patched: [Fem2dNodesPatchEntry!]!
-  reordered: [String!]
+type Fem2dNodeRemoval {
+  id: String!
+  index: Int!
 }
 
-type Fem2dNodesPatchEntry {
+type Fem2dNodeInsertion {
+  index: Int!
+  row: FemNode!
+}
+
+type Fem2dNodeRelocation {
   id: String!
-  item: FemNode!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dNodesModification {
+  id: String!
+  patch: FemNode!
+}
+
+type Fem2dNodesDelta {
+  removed: [Fem2dNodeRemoval!]!
+  inserted: [Fem2dNodeInsertion!]!
+  moved: [Fem2dNodeRelocation!]!
+  modified: [Fem2dNodesModification!]!
+}
+
+type Fem2dElementRemoval {
+  id: String!
+  index: Int!
+}
+
+type Fem2dElementInsertion {
+  index: Int!
+  row: FemElement!
+}
+
+type Fem2dElementRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dElementsModification {
+  id: String!
+  patch: FemElement!
 }
 
 type Fem2dElementsDelta {
-  added: [FemElement!]!
-  removed: [String!]!
-  patched: [Fem2dElementsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem2dElementRemoval!]!
+  inserted: [Fem2dElementInsertion!]!
+  moved: [Fem2dElementRelocation!]!
+  modified: [Fem2dElementsModification!]!
 }
 
-type Fem2dElementsPatchEntry {
+type Fem2dRegionRemoval {
   id: String!
-  item: FemElement!
+  index: Int!
+}
+
+type Fem2dRegionInsertion {
+  index: Int!
+  row: FemRegion!
+}
+
+type Fem2dRegionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dRegionsModification {
+  id: String!
+  patch: FemRegion!
 }
 
 type Fem2dRegionsDelta {
-  added: [FemRegion!]!
-  removed: [String!]!
-  patched: [Fem2dRegionsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem2dRegionRemoval!]!
+  inserted: [Fem2dRegionInsertion!]!
+  moved: [Fem2dRegionRelocation!]!
+  modified: [Fem2dRegionsModification!]!
 }
 
-type Fem2dRegionsPatchEntry {
+type Fem2dMaterialRemoval {
   id: String!
-  item: FemRegion!
+  index: Int!
+}
+
+type Fem2dMaterialInsertion {
+  index: Int!
+  row: FemMaterial!
+}
+
+type Fem2dMaterialRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dMaterialsModification {
+  id: String!
+  patch: FemMaterial!
 }
 
 type Fem2dMaterialsDelta {
-  added: [FemMaterial!]!
-  removed: [String!]!
-  patched: [Fem2dMaterialsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem2dMaterialRemoval!]!
+  inserted: [Fem2dMaterialInsertion!]!
+  moved: [Fem2dMaterialRelocation!]!
+  modified: [Fem2dMaterialsModification!]!
 }
 
-type Fem2dMaterialsPatchEntry {
+type Fem2dSectionRemoval {
   id: String!
-  item: FemMaterial!
+  index: Int!
+}
+
+type Fem2dSectionInsertion {
+  index: Int!
+  row: FemSection!
+}
+
+type Fem2dSectionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dSectionsModification {
+  id: String!
+  patch: FemSection!
 }
 
 type Fem2dSectionsDelta {
-  added: [FemSection!]!
-  removed: [String!]!
-  patched: [Fem2dSectionsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem2dSectionRemoval!]!
+  inserted: [Fem2dSectionInsertion!]!
+  moved: [Fem2dSectionRelocation!]!
+  modified: [Fem2dSectionsModification!]!
 }
 
-type Fem2dSectionsPatchEntry {
+type Fem2dSupportRemoval {
   id: String!
-  item: FemSection!
+  index: Int!
+}
+
+type Fem2dSupportInsertion {
+  index: Int!
+  row: FemSupport!
+}
+
+type Fem2dSupportRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dSupportsModification {
+  id: String!
+  patch: FemSupport!
 }
 
 type Fem2dSupportsDelta {
-  added: [FemSupport!]!
-  removed: [String!]!
-  patched: [Fem2dSupportsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem2dSupportRemoval!]!
+  inserted: [Fem2dSupportInsertion!]!
+  moved: [Fem2dSupportRelocation!]!
+  modified: [Fem2dSupportsModification!]!
 }
 
-type Fem2dSupportsPatchEntry {
+type Fem2dLoadCaseRemoval {
   id: String!
-  item: FemSupport!
+  index: Int!
+}
+
+type Fem2dLoadCaseInsertion {
+  index: Int!
+  row: FemLoadCase!
+}
+
+type Fem2dLoadCaseRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dLoadCasesModification {
+  id: String!
+  patch: Fem2dLoadCasePatch!
 }
 
 type Fem2dLoadCasesDelta {
-  added: [FemLoadCase!]!
-  removed: [String!]!
-  patched: [Fem2dLoadCasesPatchEntry!]!
-  reordered: [String!]
-}
-
-type Fem2dLoadCasesPatchEntry {
-  id: String!
-  patch: Fem2dLoadCasePatch!
+  removed: [Fem2dLoadCaseRemoval!]!
+  inserted: [Fem2dLoadCaseInsertion!]!
+  moved: [Fem2dLoadCaseRelocation!]!
+  modified: [Fem2dLoadCasesModification!]!
 }
 
 type Fem2dLoadCasePatch {
@@ -102,28 +214,60 @@ type Fem2dLoadCasePatch {
   loads: Fem2dLoadsDelta
 }
 
-type Fem2dLoadsDelta {
-  added: [FemLoad!]!
-  removed: [String!]!
-  patched: [Fem2dLoadsPatchEntry!]!
-  reordered: [String!]
+type Fem2dLoadRemoval {
+  id: String!
+  index: Int!
 }
 
-type Fem2dLoadsPatchEntry {
+type Fem2dLoadInsertion {
+  index: Int!
+  row: FemLoad!
+}
+
+type Fem2dLoadRelocation {
   id: String!
-  item: FemLoad!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dLoadsModification {
+  id: String!
+  patch: FemLoad!
+}
+
+type Fem2dLoadsDelta {
+  removed: [Fem2dLoadRemoval!]!
+  inserted: [Fem2dLoadInsertion!]!
+  moved: [Fem2dLoadRelocation!]!
+  modified: [Fem2dLoadsModification!]!
+}
+
+type Fem2dCombinationRemoval {
+  id: String!
+  index: Int!
+}
+
+type Fem2dCombinationInsertion {
+  index: Int!
+  row: FemCombination!
+}
+
+type Fem2dCombinationRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem2dCombinationsModification {
+  id: String!
+  patch: FemCombination!
 }
 
 type Fem2dCombinationsDelta {
-  added: [FemCombination!]!
-  removed: [String!]!
-  patched: [Fem2dCombinationsPatchEntry!]!
-  reordered: [String!]
-}
-
-type Fem2dCombinationsPatchEntry {
-  id: String!
-  item: FemCombination!
+  removed: [Fem2dCombinationRemoval!]!
+  inserted: [Fem2dCombinationInsertion!]!
+  moved: [Fem2dCombinationRelocation!]!
+  modified: [Fem2dCombinationsModification!]!
 }
 
 type Fem2dAnalysisPatch {

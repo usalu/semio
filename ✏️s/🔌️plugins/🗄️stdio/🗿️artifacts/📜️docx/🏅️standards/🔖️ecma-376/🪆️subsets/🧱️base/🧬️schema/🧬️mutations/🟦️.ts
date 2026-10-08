@@ -24,8 +24,12 @@ export type DocxMutation =
   | { readonly mutation: 'removeStyle'; readonly id: string }
   | { readonly mutation: 'setStyleName'; readonly id: string; readonly name: string }
   | { readonly mutation: 'setStyleBasedOn'; readonly id: string; readonly based_on: string | null }
-  | { readonly mutation: 'setPart'; readonly path: string; readonly content_type: string; readonly payload: DocxPartContent; readonly index?: number }
-  | { readonly mutation: 'removePart'; readonly path: string };
+  | { readonly mutation: 'setPart'; readonly path: string; readonly content_type: string; readonly payload: DocxPartContent; readonly index?: number; readonly override_index?: number }
+  | { readonly mutation: 'removePart'; readonly path: string }
+  | { readonly mutation: 'setRelationship'; readonly owner: string; readonly id: string; readonly relType: string; readonly target: string; readonly external?: boolean; readonly index?: number }
+  | { readonly mutation: 'removeRelationship'; readonly owner: string; readonly id: string }
+  | { readonly mutation: 'setContentType'; readonly isOverride?: boolean; readonly name: string; readonly contentType: string; readonly index?: number }
+  | { readonly mutation: 'removeContentType'; readonly isOverride?: boolean; readonly name: string };
 
 /** 📦️ Authoritative part content independent of physical XML parsing. */
 export type DocxPartContent = {readonly kind:"xml";readonly document:import("../📸️snapshot/🟦️.ts").XmlDocument}|{readonly kind:"binary";readonly bytes:readonly number[]};

@@ -13,7 +13,7 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
         let mutation=RasterMutation::ChangeLayerTransform(payload.clone());
         let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());let after=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(layer_transform(&after.layers[0]),&transform);
         for horizontal in [false,true] {
-            let mut ambiguous=diff.clone();let patch=&mut ambiguous.layers.as_mut().unwrap().patched[0].patch;
+            let mut ambiguous=diff.clone();let patch=&mut ambiguous.layers.as_mut().unwrap().modified[0].patch;
             if horizontal {patch.transform_x=Some(0.0);}else{patch.transform_y=Some(0.0);}
             assert!(protocol::apply_diff(&ambiguous, &base).is_err());ambiguous.retire_cold();
         }

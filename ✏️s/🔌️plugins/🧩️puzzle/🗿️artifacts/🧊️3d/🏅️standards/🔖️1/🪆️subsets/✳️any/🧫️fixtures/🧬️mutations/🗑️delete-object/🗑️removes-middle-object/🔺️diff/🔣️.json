@@ -1,0 +1,34 @@
+{
+  "artifact": null,
+  "attractions": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "attraction-1",
+        "index": 0
+      },
+      {
+        "id": "attraction-2",
+        "index": 2
+      }
+    ]
+  },
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "object-b",
+        "index": 1
+      }
+    ]
+  },
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
+}

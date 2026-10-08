@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::snapshot::CsvField;
 use protocol::command::DiffAlgebra;
@@ -49,9 +50,9 @@ async fn mutation_diff_law() {
         let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
-        let returned_diff = apply_csv_mutation(&mut via_apply, &m);
+        let returned_diff = apply_mutation(&mut via_apply, &m);
 
-        assert_eq!(via_apply, expected, "apply_csv_mutation mismatch for {m:?}");
+        assert_eq!(via_apply, expected, "apply_mutation mismatch for {m:?}");
         assert_eq!(returned_diff, diff, "returned diff mismatch for {m:?}");
     }
 }
@@ -70,9 +71,9 @@ async fn inverse_law() {
     for m in variants {
         // 🔁️ mutation-level round trip
         let mut forward = base.clone();
-        apply_csv_mutation(&mut forward, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_csv_mutation(&mut forward, &inv);
+        apply_mutation(&mut forward, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
@@ -149,53 +150,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
     assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
-}
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = base_snapshot();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&CsvDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&CsvDiff::between(&b, &a), &b).unwrap(), a);
-
-    // synthetic: differing field counts within an overlapping index (record replace path).
-    let mut c = a.clone();
-    c.records[0] = record(&[("only-one-field", false)]);
-    assert_eq!(protocol::apply_diff(&CsvDiff::between(&a, &c), &a).unwrap(), c);
-    assert_eq!(protocol::apply_diff(&CsvDiff::between(&c, &a), &c).unwrap(), a);
-
-    assert!(CsvDiff::between(&a, &a).is_empty());
-}
-//#endregion 🔖️BetweenRoundtripLaw
-
-//#region 🔖️FieldSweep
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_every_mutable_field_changes() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let d_ab = CsvDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d_ab, &a).unwrap(), b, "between(a,b).apply(a) == b");
-
-    let d_ba = CsvDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_ba, &b).unwrap(), a, "between(b,a).apply(b) == a");
-
-    // 🔍 Hand-written per-field assertion: every field of `CsvDiff` is populated.
-    assert!(d_ab.has_header.is_some(), "has_header must be populated");
-    let records = d_ab.records.as_ref().expect("records diff must be populated");
-    assert!(!records.removed.is_empty(), "removed must be non-empty (record 0 dropped)");
-    assert!(!records.modified.is_empty(), "modified must be non-empty (record 1 changed in every field)");
-    assert!(!records.added.is_empty(), "added must be non-empty (brand-new record)");
-    let modified = &records.modified[0];
-    let field_patches = modified.diff.fields.as_ref().expect("record 1's field patch list must be populated");
-    assert!(field_patches.iter().all(|f| f.is_some()), "every field of the modified record must be patched");
-    for patch in field_patches.iter().flatten() {
-        assert!(patch.value.is_some() && patch.quoted.is_some(), "every field patch must set BOTH value and quoted");
-    }
-
-    assert!(CsvDiff::between(&a, &a).is_empty());
 }
 //#endregion 🔖️FieldSweep
 

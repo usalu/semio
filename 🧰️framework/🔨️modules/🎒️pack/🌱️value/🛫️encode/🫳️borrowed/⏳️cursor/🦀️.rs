@@ -347,10 +347,18 @@ impl BorrowedProjectedPackCursor {
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.phase == Phase::Complete && self.pending_offset == self.pending_length })
     }
 
+    /// 📏️ Quotes the original symbol frontier with separate release and structural depth.
+    pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.phase == Phase::Closed { return Ok(Default::default()); }
+        let depth = if !self.symbols.is_empty() { self.symbols.next_pop_depth_demand() } else { self.symbols.next_release_depth_demand() }.map_err(page_error)?;
+        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth: depth.checked_add(1).ok_or_else(|| invalid("Pack retirement depth overflow"))?, ..Default::default() })
+    }
+
     /// 🍂️ Retires one inline locator or one whole paid symbol allocation without source disposal.
     pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
         if self.phase == Phase::Closed { return Ok(BorrowedProjectedPackProgress { complete: true, ..Default::default() }); }
-        if grant.maximum_items == 0 { return Ok(Default::default()); }
+        let demand = self.retirement_demands()?;
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(Default::default()); }
         self.phase = Phase::Closing; self.note = None;
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if !self.symbols.is_empty() { self.symbols.pop(); }

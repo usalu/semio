@@ -1,0 +1,17 @@
+{
+  "role": "observer only",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🌱️entry/🔣️.json",
+      "sha256": "c495264de2521909cac44df57fc68fa892bdff7f6b852592504a9148ee32d3fe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts",
+      "sha256": "6786ae7e85091bfb653e71b09dce5b47082d98adf93ebf9624c64c3f1a0a0173"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🌱️entry/🔣️.json",
+      "sha256": "1093fb7ec2fb79ac4beb820304c395a919959655ec2fa567ea667e141d5e697b"
+    }
+  ]
+}

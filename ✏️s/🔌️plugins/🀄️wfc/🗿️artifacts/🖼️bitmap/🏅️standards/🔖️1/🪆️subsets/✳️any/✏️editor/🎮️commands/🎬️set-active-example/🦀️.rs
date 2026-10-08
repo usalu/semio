@@ -3,18 +3,10 @@
 //! without it every bitmap playground boot dropped the action on the undeclared-action gate and the
 //! picker was inert.
 //!
-//! The replay is a DECLARED-STATE DIFF, not a whole-document replace: `BitmapMutation` carries no
-//! replace variant on purpose, and a document that already IS the requested example must answer an
-//! EMPTY mutation set so the boot announcement and a re-selection write no edit at all
-//! (`canUndo=false`).
-//!
-//! Mutation ORDER is the whole difficulty. `remove-palette-color` is fatal while the colour is still
-//! painted or pinned, and `set-input-pixels` is fatal on an index the palette does not hold, so the
-//! sequence is: release the pins that do not survive → GROW the palette → recolour the shared prefix
-//! → resize the sample → rewrite the whole buffer → SHRINK the palette (now provably unused) → output
-//! spec → model → seed → the example's own pins.
+//! An example switch is a whole-document LOAD (`Effect::LoadDocument`), never a mutation set: it carries
+//! no diff and no history row, and a document that already IS the requested example answers nothing at
+//! all, so the boot announcement and a re-selection write no edit (`canUndo=false`).
 
-use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel};
 use crate::schema::snapshot::{BitmapSnapshot};
 use crate::BitmapMutation;
 use semio_framework_plugin::{ArtifactView, Emit, Fault};
@@ -46,65 +38,24 @@ pub fn example_snapshot(example_id: &str) -> Option<BitmapSnapshot> {
 //#endregion 🔖️Registry
 
 //#region 🔖️Handler
-/// 🎬️ Replaces the open document's declared state with the named example's.
+/// 🗃️ The whole-document load an example switch answers with: a freshly packed snapshot and an edit-free op log. It is NOT an
+/// edit, so no mutation row, no diff and no history row exists for it.
+pub fn load_document_effect(document: &BitmapSnapshot) -> semio_framework::kernel::Effect {
+    let pack = <BitmapSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc-bitmap", crate::WFC_BITMAP_DOCUMENT_SCHEMA));
+    semio_framework::kernel::Effect::LoadDocument { pack, spr }
+}
+
+/// 🎬️ Loads the named example as the open document; an unknown id or the already-open example answers nothing.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, BitmapSnapshot>) -> Result<Emit<BitmapMutation>, Fault> {
     let example_id = match payload.example_id.trim() {
         "" => BITMAP_EXAMPLE_BOOT_ID,
         id => id,
     };
-    let Some(next) = example_snapshot(example_id) else { return Ok(Emit::default()) };
-    let mutations = replace_document_operations(doc.snapshot, &next);
-    match mutations.is_empty() {
-        true => Ok(Emit::default()),
-        false => Ok(Emit::mutations(mutations)),
+    match example_snapshot(example_id) {
+        Some(next) if &next != doc.snapshot => Ok(Emit::effect(load_document_effect(&next))),
+        _ => Ok(Emit::default()),
     }
-}
-
-/// 🔁️ The field-granular diff between the open document's declared state and the example's, in the
-/// only order every leaf's own refusal law admits. A document that already equals the example answers
-/// an EMPTY set.
-pub fn replace_document_operations(current: &BitmapSnapshot, next: &BitmapSnapshot) -> Vec<BitmapMutation> {
-    let mut mutations = Vec::new();
-    for pin in &current.pinned {
-        if !next.pinned.contains(pin) {
-            mutations.push(unpin_pixel(pin.x, pin.y));
-        }
-    }
-    for index in current.input.palette.len()..next.input.palette.len() {
-        mutations.push(add_palette_color(index, next.input.palette[index]));
-    }
-    for index in 0..current.input.palette.len().min(next.input.palette.len()) {
-        if current.input.palette[index] != next.input.palette[index] {
-            mutations.push(change_palette_color(index, next.input.palette[index]));
-        }
-    }
-    if current.input.width != next.input.width || current.input.height != next.input.height {
-        mutations.push(resize_input(next.input.width, next.input.height));
-    }
-    if let Some(indices) = next.input.indices() {
-        let resized = current.input.width == next.input.width && current.input.height == next.input.height;
-        if !resized || current.input.pixels != next.input.pixels {
-            mutations.push(set_input_pixels(0, 0, next.input.width, next.input.height, (indices).to_vec()));
-        }
-    }
-    for index in (next.input.palette.len()..current.input.palette.len()).rev() {
-        mutations.push(remove_palette_color(index));
-    }
-    if current.output != next.output {
-        mutations.push(resize_output(next.output.width, next.output.height, next.output.periodic));
-    }
-    if current.model != next.model {
-        mutations.push(change_model(next.model.pattern_size, next.model.symmetry, next.model.periodic_input, next.model.ground));
-    }
-    if current.seed != next.seed {
-        mutations.push(change_seed(next.seed));
-    }
-    for pin in &next.pinned {
-        if !current.pinned.contains(pin) {
-            mutations.push(pin_pixel(pin.x, pin.y, pin.color));
-        }
-    }
-    mutations
 }
 //#endregion 🔖️Handler
 

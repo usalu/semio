@@ -9,11 +9,14 @@
   "breps": null,
   "referencesByModelDefinitionId": null,
   "nodes": {
-    "added": [],
     "removed": [
-      "node-2"
+      {
+        "id": "node-2",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

@@ -28,6 +28,6 @@ pub fn diff(payload: &MoveBlockToContainer, base: &NoteSnapshot) -> protocol::Mu
     if origin_parent == payload.new_parent_id && origin_index == index {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" is already at that position.", payload.id));
     }
-    protocol::MutationOutcome::new(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: payload.id.clone(), parent_id: payload.new_parent_id.clone(), index }]))
+    protocol::MutationOutcome::new(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: payload.id.clone(), from_parent_id: origin_parent, from_index: origin_index, parent_id: payload.new_parent_id.clone(), index }]))
 }
 //#endregion 🔖️Diff

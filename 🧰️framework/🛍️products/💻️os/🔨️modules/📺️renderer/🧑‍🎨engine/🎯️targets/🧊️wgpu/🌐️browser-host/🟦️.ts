@@ -1,5 +1,7 @@
+import { admitPluginCatalogV1, type PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 /** 🪆️ Owns one independently rooted browser renderer and its frame Worker lifetime. */
 export type WgpuBrowserHostOptions = {
+    readonly catalog: PluginCatalogRowsV1;
     readonly descriptor: WgpuBootDescriptor;
     readonly locale: "en" | "de";
     readonly mountId: string;
@@ -235,7 +237,7 @@ const mountedRoots = new WeakMap<HTMLElement, RootOwner>();
 /** 🧵️ Cancels prior pending ownership and serializes replacement through complete retirement. */
 export function mountWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHostOptions): Promise<WgpuBrowserMount> {
     if (options.signal?.aborted) return Promise.reject(options.signal.reason);
-    try { options = { ...options, pluginRegistrySelection: admitWgpuPluginRegistrySelection(options.pluginRegistrySelection), plugins: options.plugins === undefined ? undefined : admitWgpuPluginModules(options.plugins, window.location.href) }; }
+    try { options = { ...options, catalog: admitPluginCatalogV1(options.catalog, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => options.signal?.aborted === true, progress: () => {} }), pluginRegistrySelection: admitWgpuPluginRegistrySelection(options.pluginRegistrySelection), plugins: options.plugins === undefined ? undefined : admitWgpuPluginModules(options.plugins, window.location.href) }; }
     catch (error) { return Promise.reject(error); }
     const abort = new AbortController();
     const relay = () => abort.abort(options.signal?.reason);
@@ -307,7 +309,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
     let mediaOverlay: ReturnType<typeof createBrowserMediaOverlay> | undefined;
     const transport = new BrowserFrameTransport({
         worker,
-        boot: { bindingsModuleUrl: options.rendererModuleUrl ?? RENDERER_MODULE_URL, bindingsWasmUrl: options.rendererWasmUrl ?? RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, plugins, pluginRegistrySelection: options.pluginRegistrySelection, locale: options.locale, introductionSuppressed: introductionSuppressed(options.suppressAutoIntroduction === true), descriptor, appearance: hostAppearance(), platform: hostPlatform(), storage: hostStorage() },
+        boot: { catalog: options.catalog, bindingsModuleUrl: options.rendererModuleUrl ?? RENDERER_MODULE_URL, bindingsWasmUrl: options.rendererWasmUrl ?? RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, plugins, pluginRegistrySelection: options.pluginRegistrySelection, locale: options.locale, introductionSuppressed: introductionSuppressed(options.suppressAutoIntroduction === true), descriptor, appearance: hostAppearance(), platform: hostPlatform(), storage: hostStorage() },
         requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
         cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
         hostIo: createWgpuPageHostIo(),

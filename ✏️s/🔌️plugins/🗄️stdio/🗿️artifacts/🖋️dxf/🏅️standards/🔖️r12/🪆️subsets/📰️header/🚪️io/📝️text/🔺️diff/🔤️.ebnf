@@ -4,7 +4,9 @@ diff = "{", [ member, { ",", member } ], "}" ;
 member = '"headerVars"', ":", named diff
        | '"tables"', ":", tables diff
        | '"blocks"', ":", indexed diff
-       | '"entities"', ":", indexed diff ;
+       | '"entities"', ":", indexed diff
+       | '"otherTables"', ":", other tables ;
+other tables = "[", [ json member, { ",", json member } ], "]" ;  (* whole replacement list *)
 tables diff = "{", [ tmember, { ",", tmember } ], "}" ;
 tmember = '"layers"', ":", named diff | '"styles"', ":", named diff | '"linetypes"', ":", named diff ;
 named diff = "{", [ json member, { ",", json member } ], "}" ;    (* removed/modified/added, string-keyed *)

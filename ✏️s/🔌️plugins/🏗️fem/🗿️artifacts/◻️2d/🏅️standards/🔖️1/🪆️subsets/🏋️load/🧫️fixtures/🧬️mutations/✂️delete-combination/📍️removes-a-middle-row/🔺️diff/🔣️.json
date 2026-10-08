@@ -7,12 +7,15 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "uls"
+      {
+        "id": "uls",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "analysis": null
 }

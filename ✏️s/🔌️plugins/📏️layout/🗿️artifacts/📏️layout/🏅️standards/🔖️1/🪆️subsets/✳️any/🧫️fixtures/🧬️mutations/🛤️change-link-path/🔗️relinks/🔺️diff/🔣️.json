@@ -6,9 +6,10 @@
   "characterStyles": null,
   "stories": null,
   "links": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "link-1",
         "patch": {
@@ -19,8 +20,7 @@
           "width": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "parentPages": null,
   "spreads": null,

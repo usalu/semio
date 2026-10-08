@@ -43,7 +43,6 @@ fn a_representation_patch_edits_its_tag_and_attribute_sets_in_place() {
     assert_eq!(after.attributes.len(), 2);
     let inverse = patch.inverse(&base);
     assert_eq!(inverse.patched(&after).expect("the inverse fits the patched row"), base, "the inverse restores values AND positions");
-    assert_eq!(BlockRepresentationPatch::between(&base, &after).patched(&base).expect("between fits"), after);
 }
 
 #[test]
@@ -84,30 +83,23 @@ fn a_kind_identity_patch_sets_and_clears_optional_fields() {
 }
 
 #[test]
-fn id_keyed_rows_cancel_replace_and_restore_order() {
-    let author = |id: &str| BlockAuthor { id: id.into(), name: id.to_uppercase(), email: None };
-    let base = vec![author("a"), author("b"), author("c")];
-    let mut created_then_deleted = BlockAuthorsDelta { added: vec![author("x")], ..Default::default() };
-    created_then_deleted.absorb(BlockAuthorsDelta { removed: vec!["x".into()], ..Default::default() });
-    assert!(created_then_deleted.is_empty());
-    let removed_middle = BlockAuthorsDelta { removed: vec!["b".into()], ..Default::default() };
-    let after = removed_middle.apply(&base).expect("removal fits");
-    assert_eq!(removed_middle.inverse(&base).apply(&after).expect("inverse fits"), base, "the inverse puts the row back into its slot through a full order");
-    let target = vec![author("c"), author("a"), author("d")];
-    assert_eq!(BlockAuthorsDelta::between(&base, &target).apply(&base).expect("between fits"), target);
+fn inserting_at_an_index_takes_the_slot_inside_the_list() {
+    assert_eq!(block_insert_index(3, None), 3);
+    assert_eq!(block_insert_index(3, Some(3)), 3);
+    assert_eq!(block_insert_index(3, Some(9)), 3);
+    assert_eq!(block_insert_index(3, Some(1)), 1);
 }
 
 #[test]
-fn inserting_at_an_index_reorders_only_inside_the_list() {
-    assert_eq!(crate::block_insert_order(["a", "b", "c"], "x", None), None);
-    assert_eq!(crate::block_insert_order(["a", "b", "c"], "x", Some(3)), None);
-    assert_eq!(crate::block_insert_order(["a", "b", "c"], "x", Some(9)), None);
-    assert_eq!(crate::block_insert_order(["a", "b", "c"], "x", Some(1)), Some(vec!["a".to_string(), "x".into(), "b".into(), "c".into()]));
+fn row_deltas_build_positional_rows_from_reads_of_the_base() {
     let author = |id: &str| BlockAuthor { id: id.into(), name: id.to_uppercase(), email: None };
     let base = vec![author("a"), author("b"), author("c")];
-    let without_middle = vec![author("a"), author("c")];
-    let delete_middle = BlockAuthorsDelta { removed: vec!["b".into()], ..Default::default() };
-    let recreate_middle = BlockAuthorsDelta { added: vec![author("b")], reordered: crate::block_insert_order(["a", "c"], "b", Some(1)), ..Default::default() };
-    assert_eq!(recreate_middle.apply(&without_middle).expect("insertion fits"), base);
-    assert_eq!(delete_middle.inverse(&base), recreate_middle, "the inverse of deleting a middle row is its insertion at the original index");
+    let removal = BlockAuthorsDelta::removal(&base, 1);
+    assert_eq!(removal.removed, vec![BlockAuthorsRemoval { id: "b".into(), index: 1 }]);
+    let inverse = removal.inverse(&base);
+    assert_eq!(inverse.inserted, vec![BlockAuthorsInsertion { index: 1, row: author("b") }], "the inverse of deleting a middle row is its insertion at the original index");
+    assert!(BlockAuthorsDelta::removal(&base, 9).is_empty(), "a position the base does not hold removes nothing");
+    let mut created_then_deleted = BlockAuthorsDelta::insertion(3, author("x"));
+    created_then_deleted.absorb(BlockAuthorsDelta::removal(&[author("a"), author("b"), author("c"), author("x")], 3));
+    assert!(created_then_deleted.is_empty());
 }

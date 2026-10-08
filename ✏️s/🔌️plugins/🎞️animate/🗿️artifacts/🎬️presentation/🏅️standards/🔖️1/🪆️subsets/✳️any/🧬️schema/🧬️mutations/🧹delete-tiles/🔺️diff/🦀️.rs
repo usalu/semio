@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `delete-tiles`.
 use super::DeleteTiles;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -17,8 +17,8 @@ pub fn diff(payload: &DeleteTiles, base: &PresentationSnapshot) -> protocol::Mut
             target
         });
     }
-    let removed: Vec<String> = base.tiles.iter().filter(|tile| payload.ids.contains(&tile.id)).map(|tile| tile.id.clone()).collect();
-    let outcome = protocol::MutationOutcome::new(diff_set_presentation(base, None, Some(PresentationTilesDelta { removed, ..Default::default() })));
+    let indices: Vec<usize> = base.tiles.iter().enumerate().filter(|(_, tile)| payload.ids.contains(&tile.id)).map(|(index, _)| index).collect();
+    let outcome = protocol::MutationOutcome::new(PresentationDiff { tiles: Some(PresentationTilesDelta::removals(&base.tiles, &indices)), ..Default::default() });
     if missing.is_empty() {
         outcome
     } else {

@@ -55,7 +55,9 @@ message DeleteStory {
 }
 message EditStory {
   string id = 1;
-  string new_content = 2;
+  uint32 offset = 2;
+  uint32 delete = 3;
+  string insert = 4;
 }
 message CreateLink {
   bytes link = 1;

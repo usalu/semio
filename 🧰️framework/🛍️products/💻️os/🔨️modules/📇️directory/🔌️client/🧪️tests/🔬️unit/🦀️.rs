@@ -1,6 +1,8 @@
+use crate::os_directory::io::text::directory_command_sha256;
 use super::*;
-use crate::os_directory::{directory_command_sha256, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
-use crate::os_directory::schema::{DocumentOpenCheckpointV1, DocumentScope, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
+use crate::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
+use crate::os_directory::schema::{DocumentOpenCheckpointV1, DocumentScope};
+use crate::os_directory::io::binary::checkpoint_pair::CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1;
 use semio_framework_async::{CancelToken, TraceId};
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -1262,7 +1264,7 @@ async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
         let text = pair["bodyHex"].as_str().unwrap();
         let body: Vec<u8> = (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap()).collect();
         let raw = &case["control"];
-        let hash = |value: &serde_json::Value| crate::os_directory::ArtifactHash::parse_hex(value.as_str().unwrap()).unwrap();
+        let hash = |value: &serde_json::Value| crate::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(value.as_str().unwrap()).unwrap();
         let control = crate::os_directory::RebootstrapRequired {
             scope: DocumentScope::new(raw["scope"]["spaceId"].as_str().unwrap(), raw["scope"]["documentId"].as_str().unwrap()),
             checkpoint_id: hash(&raw["checkpointId"]),

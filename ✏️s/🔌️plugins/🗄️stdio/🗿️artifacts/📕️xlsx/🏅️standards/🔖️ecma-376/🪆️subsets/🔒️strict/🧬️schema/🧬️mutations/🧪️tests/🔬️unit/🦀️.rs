@@ -26,9 +26,9 @@ fn kinds_match_enum_and_catalog() {
         XlsxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
         XlsxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default(), index: None }),
+        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default(), index: None, override_index: None }),
         XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: String::new() }),
-        XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: String::new(), content_type: String::new() }),
+        XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: String::new(), content_type: String::new(), override_index: None }),
     ];
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every XlsxStrictMutation variant, in declaration order");
@@ -74,12 +74,12 @@ async fn every_stamp_kind_satisfies_the_inverse_sum_law_and_stamping_round_trips
 async fn the_vml_and_content_type_kinds_satisfy_the_inverse_sum_law_at_a_middle_position() {
     let base = stampable();
     let document: XmlDocument = semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(r#"<xml xmlns:v="urn:schemas-microsoft-com:vml"><v:shape/></xml>"#).expect("valid XML");
-    let insert = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: "xl/drawings/vmlDrawing1.vml".into(), document, index: Some(3) });
+    let insert = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: "xl/drawings/vmlDrawing1.vml".into(), document, index: Some(3), override_index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;
     let mut with_part = base.clone();
     apply_xlsx_strict_mutation(&mut with_part, &insert);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: "xl/drawings/vmlDrawing1.vml".into() }), &with_part).await;
-    let retype = XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: "xl/worksheets/sheet2.xml".into(), content_type: "application/xml".into() });
+    let retype = XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: "xl/worksheets/sheet2.xml".into(), content_type: "application/xml".into(), override_index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&retype, &base).await;
 }
 //#endregion 🔖️StampLaw
@@ -106,7 +106,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️mutations/✒️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
     let path = fixture["path"].as_str().unwrap().to_string();
     let document: XmlDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mutation = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None });
+    let mutation = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None, override_index: None });
     assert_eq!(XlsxStrictMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     let encoded = mutation.encode_op().unwrap();
     assert_ne!(encoded, mutation.print_op().into_bytes());
@@ -135,7 +135,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(carrier, fixture["document"]);
     let removal = XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path });
     let inverse = removal.inverse(&inserted).unwrap();
-    assert_eq!(inverse, vec![XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(inserted.xml_parts.len() - 1) })]);
+    assert_eq!(inverse, vec![XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(inserted.xml_parts.len() - 1), override_index: None })]);
     let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
 }

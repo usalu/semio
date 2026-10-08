@@ -9,12 +9,24 @@
               {
                 "index": 0,
                 "diff": {
-                  "targets": [
-                    {
-                      "POSITION": 0,
-                      "TANGENT": 2
-                    }
-                  ]
+                  "targets": {
+                    "removed": [
+                      {
+                        "id": "GltfMorphTarget([(\"POSITION\", 0), (\"NORMAL\", 1), (\"TANGENT\", 2)])",
+                        "index": 0
+                      }
+                    ],
+                    "inserted": [
+                      {
+                        "index": 0,
+                        "row": {
+                          "POSITION": 0,
+                          "TANGENT": 2
+                        }
+                      }
+                    ],
+                    "moved": []
+                  }
                 }
               }
             ]

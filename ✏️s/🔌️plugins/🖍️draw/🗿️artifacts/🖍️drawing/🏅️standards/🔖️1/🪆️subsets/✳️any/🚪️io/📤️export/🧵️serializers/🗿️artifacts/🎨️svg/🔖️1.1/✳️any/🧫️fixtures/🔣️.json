@@ -170,9 +170,9 @@
       ],
       "segments": [],
       "image": {
-        "src": "data:image/png;base64,aGVsbG8=",
         "width": 40,
-        "height": 30
+        "height": 30,
+        "assetId": "admitted-svg-image"
       },
       "opacity": 0.5,
       "blendMode": "screen",
@@ -240,5 +240,19 @@
       "field": "image",
       "value": "NaN"
     }
-  ]
+  ],
+  "assets": {
+    "admitted-svg-image": {
+      "width": 1,
+      "height": 1,
+      "samples": [
+        [
+          255,
+          0,
+          0,
+          255
+        ]
+      ]
+    }
+  }
 }

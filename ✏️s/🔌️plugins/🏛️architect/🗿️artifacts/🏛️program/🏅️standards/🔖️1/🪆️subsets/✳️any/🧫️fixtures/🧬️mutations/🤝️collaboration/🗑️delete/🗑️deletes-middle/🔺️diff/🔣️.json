@@ -56,12 +56,15 @@
   "meetings": null,
   "changes": null,
   "collaboration": {
-    "added": [],
     "removed": [
-      "collaboration-record-a"
+      {
+        "id": "collaboration-record-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "analyses": null,
   "reports": null,

@@ -7,25 +7,41 @@
   "cellHeight": null,
   "periodicX": null,
   "periodicY": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      0,
+  "tiles": {
+    "removed": [],
+    "inserted": [
       {
-        "id": "corner",
-        "label": "Corner",
-        "weight": 1.0,
-        "media": {
-          "kind": "vector",
-          "paths": []
+        "index": 0,
+        "row": {
+          "id": "corner",
+          "label": "Corner",
+          "weight": 1.0,
+          "media": {
+            "kind": "vector",
+            "paths": []
+          }
         }
       }
-    ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "rules": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "pinned": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "masked": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

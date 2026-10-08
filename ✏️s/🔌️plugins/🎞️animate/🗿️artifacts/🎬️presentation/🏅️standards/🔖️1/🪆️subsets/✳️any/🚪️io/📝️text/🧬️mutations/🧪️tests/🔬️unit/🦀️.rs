@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::text::mutations::*;
-use crate::standards::v1::subsets::any::schema::mutations::{create_tile,delete_tile,delete_tiles,rename_tile,reorder_tiles,replace_source,replace_tiles,resize_source_frame,resize_tile_crop};
+use crate::standards::v1::subsets::any::schema::mutations::{create_tile,delete_tile,delete_tiles,rename_tile,reorder_tiles,replace_source,resize_source_frame,resize_tile_crop};
 
 use crate::standards::v1::subsets::any::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::{default_figure_tile_source, default_presentation_snapshot, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
@@ -17,13 +17,16 @@ async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutatio
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replace_tiles_and_clear_round_trip() {
+async fn seeding_tiles_and_clearing_them_round_trip() {
     let deck = default_presentation_snapshot();
     let (source, _) = crate::presentation_working_scene(&deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-    let seeded = round_trip(&deck, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: tiles })).await;
+    let mut seeded = deck.clone();
+    for (index, tile) in tiles.iter().cloned().enumerate() {
+        seeded = round_trip(&seeded, &PresentationMutation::CreateTile(create_tile::CreateTile { index, tile })).await;
+    }
     assert_eq!(crate::presentation_working_scene(&seeded).1.len(), 4);
-    let cleared = round_trip(&seeded, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })).await;
+    let cleared = round_trip(&seeded, &PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: tiles.iter().map(|tile| tile.id.clone()).collect() })).await;
     assert!(crate::presentation_working_scene(&cleared).1.is_empty());
 }
 
@@ -85,9 +88,10 @@ async fn op_text_round_trip_resize_source_frame() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_replace_tiles() {
+async fn op_text_round_trip_create_tile_and_delete_tiles() {
     let source = default_figure_tile_source();
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-    test_support::assert_op_line_round_trip(&PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: tiles }));
+    test_support::assert_op_line_round_trip(&PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: tiles[0].clone() }));
+    test_support::assert_op_line_round_trip(&PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: tiles.iter().map(|tile| tile.id.clone()).collect() }));
 }
 //#endregion 🔖️OpTextTests

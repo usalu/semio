@@ -16,9 +16,10 @@
   "operations": null,
   "equipment": null,
   "resources": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "resource-a",
         "patch": {
@@ -55,8 +56,7 @@
           "sharingRatio": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "storage": null,
   "environmental": null,

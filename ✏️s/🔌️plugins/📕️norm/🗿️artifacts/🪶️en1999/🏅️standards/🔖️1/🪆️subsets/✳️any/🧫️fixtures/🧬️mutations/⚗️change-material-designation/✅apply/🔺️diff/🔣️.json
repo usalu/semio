@@ -1,15 +1,17 @@
 {
   "annex": null,
   "materials": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "mat-6082",
-        "designation": "EN AW-6082 T6"
+        "patch": {
+          "designation": "EN AW-6082 T6"
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "sections": null,
   "members": null,

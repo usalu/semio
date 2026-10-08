@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceSolid`.
 use super::ReplaceSolid;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsModification};
 use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,solid_breach};
 
 use crate::Fem3dSnapshot;
@@ -22,6 +22,6 @@ pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationO
     if let Some(breach) = solid_breach(&payload.new_solid) {
         return invariant(breach, vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { patched: vec![Fem3dSolidsPatchEntry { id: payload.id.clone(), item: payload.new_solid.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { modified: vec![Fem3dSolidsModification { id: payload.id.clone(), patch: payload.new_solid.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

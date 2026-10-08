@@ -11,12 +11,8 @@ pub fn diff(payload: &super::mutation::AddObjectVortex, base: &Puzzle3dSnapshot)
     if object.vortices.iter().any(|vortex| vortex.id == payload.vortex.id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Vortex \"{}\" already exists on object \"{}\".", payload.vortex.id, payload.object_id));
     }
-    let reordered = payload.index.filter(|index| *index < object.vortices.len()).map(|index| {
-        let mut order: Vec<String> = object.vortices.iter().map(|vortex| vortex.id.clone()).collect();
-        order.insert(index, payload.vortex.id.clone());
-        order
-    });
-    let patch = Puzzle3dObjectPatch { vortices: Some(Puzzle3dVorticesDelta::adding(payload.vortex.clone(), reordered)), ..Default::default() };
-    protocol::MutationOutcome::new(Puzzle3dDiff { objects: Some(Puzzle3dObjectsDelta::patching(payload.object_id.clone(), patch)), ..Default::default() })
+    let index = payload.index.map_or(object.vortices.len(), |index| index.min(object.vortices.len()));
+    let patch = Puzzle3dObjectPatch { vortices: Some(Puzzle3dVorticesDelta::insertion(index, payload.vortex.clone())), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle3dDiff { objects: Some(Puzzle3dObjectsDelta::modification(payload.object_id.clone(), patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

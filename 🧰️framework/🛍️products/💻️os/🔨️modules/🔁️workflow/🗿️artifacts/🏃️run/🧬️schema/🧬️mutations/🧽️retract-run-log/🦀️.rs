@@ -14,7 +14,7 @@ pub struct RetractRunLog {
 
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for RetractRunLog {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "retract", entity: "run-log", kind: "retract-run-log", record: "RetractedRunLog" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "run-log", kind: "retract-run-log", record: "RemovedRunLog" };
     fn diff(&self, base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         if self.count == 0 {
             return protocol::MutationOutcome::empty();

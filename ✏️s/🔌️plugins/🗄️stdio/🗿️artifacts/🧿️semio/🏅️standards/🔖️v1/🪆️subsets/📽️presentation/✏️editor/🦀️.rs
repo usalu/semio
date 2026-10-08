@@ -166,8 +166,8 @@ impl ArtifactOwnedToolJobFactory for SemioPresentationEditorExampleFactory {
     const DOCUMENT_SCHEMA: &'static str = SEMIO_PRESENTATION_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
-#[path = "🧮️net/🦀️.rs"]
-pub(crate) mod net;
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub(crate) mod edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -290,8 +290,8 @@ impl editing::SnapshotEditingEditor for SemioPresentationEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { SemioPresentationEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net(event, snapshot, net::net)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &edit_rules::EDIT_RULES
     }
 }
 

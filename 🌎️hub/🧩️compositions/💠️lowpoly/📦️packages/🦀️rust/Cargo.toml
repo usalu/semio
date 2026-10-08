@@ -19,6 +19,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "lowpoly"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.lowpoly.lowpoly@1/*#editor"
 ports = { react = 6078, wgpu = 6178 }
 

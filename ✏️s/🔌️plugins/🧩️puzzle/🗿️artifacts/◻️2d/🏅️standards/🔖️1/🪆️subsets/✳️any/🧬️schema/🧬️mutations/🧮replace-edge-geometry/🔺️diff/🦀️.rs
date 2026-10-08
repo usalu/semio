@@ -1,6 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceEdgeGeometry` — patches the one addressed edge's connection
 //! pose.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_finite;
 
@@ -27,7 +28,7 @@ pub fn diff(payload: &super::ReplaceEdgeGeometry, base: &Puzzle2dSnapshot) -> pr
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        edges: Some(Puzzle2dEdgesDelta::patching(payload.id.clone(), patch)),
+        edges: Some(Puzzle2dEdgesDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

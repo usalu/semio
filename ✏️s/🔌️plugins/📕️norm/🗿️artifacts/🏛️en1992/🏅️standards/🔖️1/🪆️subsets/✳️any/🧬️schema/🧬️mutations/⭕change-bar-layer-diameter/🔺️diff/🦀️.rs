@@ -13,14 +13,10 @@ pub fn diff(payload: &ChangeBarLayerDiameter, base: &En1992Snapshot) -> protocol
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        members: Some(En1992MembersRows {
-            modified: vec![En1992MembersPatch {
-                id: payload.member_id.clone(),
-                longitudinal: Some(En1992MembersLongitudinalRows { modified: vec![En1992MembersLongitudinalPatch { id: payload.layer_id.clone(), diameter: Some(payload.new_diameter), ..Default::default() }] }),
-                ..Default::default()
-            }],
+        members: Some(En1992MembersRows::modification(&payload.member_id, En1992MembersPatch {
+            longitudinal: Some(En1992MembersLongitudinalRows::modification(&payload.layer_id, En1992MembersLongitudinalPatch { diameter: Some(payload.new_diameter), ..Default::default() })),
             ..Default::default()
-        }),
+        })),
         ..Default::default()
     })
 }

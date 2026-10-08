@@ -1,27 +1,28 @@
 {
   "nodes": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "n7",
-        "item": {
+        "patch": {
           "id": "n7",
           "x": 10.0,
           "y": 7.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "elements": null,
   "regions": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "panel_spare",
-        "item": {
+        "patch": {
           "id": "panel_spare",
           "name": "Spare Side Panel",
           "outline": [
@@ -48,8 +49,7 @@
           "meshSize": 0.5
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "materials": null,
   "sections": null,

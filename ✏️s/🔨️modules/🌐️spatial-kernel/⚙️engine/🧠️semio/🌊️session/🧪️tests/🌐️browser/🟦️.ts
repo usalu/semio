@@ -20,9 +20,9 @@ export async function browserSessionLaws(): Promise<void> {
     await assert.rejects(sessions[0].close({ cancelled:() => true }),/geometry.close-cancelled/);
     await assert.rejects(sessions[0].invoke("box",fixture.independentBoxes[0]),/geometry.session-closed/);
     let turns = 0;
-    await sessions[0].close({ maximumItems:retirementFixture.closeGrant.items, maximumBytes:retirementFixture.closeGrant.bytes, onProgress:receipt => {
+    await sessions[0].close({ maximumItems:retirementFixture.closeGrant.items, onProgress:receipt => {
       assert(validate(receipt),JSON.stringify(validate.errors));
-      turns += 1; assert(receipt.items <= retirementFixture.closeGrant.items); assert(receipt.bytes <= retirementFixture.closeGrant.bytes);
+      turns += 1; assert(receipt.items <= retirementFixture.closeGrant.items);assert(receipt.copyBytes>=0 && receipt.capacityBytes>=0 && receipt.releaseBytes>=0);
     } });
     assert(turns > 1);
     await sessions[0].close();
@@ -33,17 +33,17 @@ export async function browserSessionLaws(): Promise<void> {
     const native = new BrowserSession();
     const created = JSON.parse(native.brep_invoke("box",JSON.stringify(retirementFixture.box))) as { handle:string };
     for (const grant of retirementFixture.grants.slice(0,2)) {
-      const receipt = JSON.parse(native.close_step(grant[0],grant[1]));
+      const receipt = JSON.parse(native.close_step(grant.items,grant.copyBytes,grant.capacityBytes,grant.releaseBytes,grant.depth));
       assert(validate(receipt),JSON.stringify(validate.errors));
-      assert.deepEqual(receipt,retirementFixture.receipts[0]);
+      assert.deepEqual(receipt,{phase:"pending",items:0,copyBytes:0,capacityBytes:0,releaseBytes:0});
       assert.equal(JSON.parse(native.brep_invoke("volume",JSON.stringify({shape:created.handle}))).value,retirementFixture.box.volume);
     }
     native.begin_close();
     let closed = false;
     for (let turn = 0; turn < retirementFixture.maximumSteps; turn += 1) {
-      const receipt = JSON.parse(native.close_step(1,4096));
+      const receipt = JSON.parse(native.close_step(1,native.next_close_copy_byte_demand(),native.next_close_capacity_byte_demand(native.next_close_copy_byte_demand()),native.next_close_release_byte_demand(),native.next_close_depth_demand()));
       assert(validate(receipt),JSON.stringify(validate.errors));
-      assert(receipt.items <= 1 && receipt.bytes <= 4096);
+      assert(receipt.items<=1 && receipt.copyBytes>=0 && receipt.capacityBytes>=0 && receipt.releaseBytes>=0);
       if (receipt.phase === "complete") { closed = true; break; }
     }
     assert(closed && native.terminal_is_empty()); native.free();

@@ -12,41 +12,48 @@
   "periodicZ": null,
   "tiles": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "id": "roof",
-        "label": "Roof",
-        "weight": 1.5,
-        "media": {
-          "kind": "mesh",
-          "mesh": {
-            "positions": [],
-            "indices": [],
-            "color": {
-              "r": 172,
-              "g": 84,
-              "b": 62,
-              "a": 255
+        "index": 2,
+        "row": {
+          "id": "roof",
+          "label": "Roof",
+          "weight": 1.5,
+          "media": {
+            "kind": "mesh",
+            "mesh": {
+              "positions": [],
+              "indices": [],
+              "color": {
+                "r": 172,
+                "g": 84,
+                "b": 62,
+                "a": 255
+              }
             }
           }
         }
       }
     ],
-    "patched": []
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "pinned": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "masked": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

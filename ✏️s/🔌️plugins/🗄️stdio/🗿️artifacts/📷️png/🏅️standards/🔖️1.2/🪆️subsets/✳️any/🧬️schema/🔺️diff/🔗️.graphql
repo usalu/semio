@@ -1,1 +1,4 @@
-type PngDiff { image: PngImage }
+type PngRegion { x: Int! y: Int! width: Int! height: Int! }
+type PngSampleRect { region: PngRegion! samples: [Int!]! }
+type PngGammaValue { gama: Int }
+type PngDiff { image: PngImage gamma: PngGammaValue rects: [PngSampleRect!] }

@@ -5,7 +5,7 @@ use crate::artifact_authority::{AuthorityError,AuthorityLimits,AuthorityOperatio
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_framework_plugin_host::{GuestRuntime,OwnedRuntime,CompiledHandle,PackageRef,PackageId,PackageHash,Budget};
 use semio_framework_hash::{Hasher,Sha256};
-use directory::{os_directory::hex_lower,os_store};
+use directory::{os_directory::io::binary::artifact_hash::hex_lower,os_store};
 const KIND:&str="fixture.neutral-host-fixture.counter";
 const PROFILE:&str="count-real-component-lease";
 const ACTOR:&[u8]=b"test-owned-never-executed-count-browser-actor";

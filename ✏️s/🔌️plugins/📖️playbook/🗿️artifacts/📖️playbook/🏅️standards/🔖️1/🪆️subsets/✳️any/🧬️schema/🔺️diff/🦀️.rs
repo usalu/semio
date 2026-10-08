@@ -121,15 +121,6 @@ impl protocol::DiffAlgebra<PlaybookSnapshot> for PlaybookDiff {
             flow: self.flow.as_ref().map(|_| base.flow.clone()),
         }
     }
-    fn between(base: &PlaybookSnapshot, other: &PlaybookSnapshot) -> Self {
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            id: (base.id != other.id).then(|| other.id.clone()),
-            version: (base.version != other.version).then(|| other.version.clone()),
-            title: (base.title != other.title).then(|| other.title.clone()),
-            flow: (base.flow != other.flow).then(|| other.flow.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.id.is_none() && self.version.is_none() && self.title.is_none() && self.flow.is_none()
     }

@@ -24,48 +24,39 @@ async fn node_collection_diffs_absorb_into_one_apply() {
 async fn malformed_named_diff_rejects_without_changing_the_base() {
     let base = sample_scene();
     let original = base.clone();
-    let diff = CadDiff { nodes: Some(CadNodesDelta { removed: vec!["missing-node".into()], ..Default::default() }), ..Default::default() };
+    let diff = CadDiff { nodes: Some(CadNodesDelta { removed: vec![CadNodeRemoval { id: "missing-node".into(), index: 0 }], ..Default::default() }), ..Default::default() };
     let error = protocol::apply_diff(&diff, &base).expect_err("missing named target must reject");
     assert_eq!(error.code, "mutation.apply.missing-target");
     assert_eq!(error.target, ["nodes", "removed", "0"]);
     assert_eq!(base, original);
 }
 
-/// ➕️ create∘delete of the same node cancels, patch∘create folds into the added row, and the rest keeps its order.
+/// ➕️ create∘delete of the same node cancels, patch∘create stays its own modification, and the rest keeps its order.
 #[semio_framework_async_macros::async_test]
 async fn absorb_coalesces_same_key_rows() {
-    let created = CadDiff { nodes: Some(CadNodesDelta { added: vec![row("fresh", "Fresh"), row("keep", "Keep")], ..Default::default() }), ..Default::default() };
+    let created = CadDiff { nodes: Some(CadNodesDelta { inserted: vec![CadNodeInsertion { index: 0, row: row("fresh", "Fresh") }, CadNodeInsertion { index: 1, row: row("keep", "Keep") }], ..Default::default() }), ..Default::default() };
     let mut sum = created.clone();
-    sum.absorb(CadDiff { nodes: Some(CadNodesDelta { patched: vec![CadNodePatchEntry { id: "fresh".into(), patch: CadNodePatch { label: Some("Renamed".into()) } }], ..Default::default() }), ..Default::default() });
-    assert_eq!(sum.nodes.as_ref().expect("nodes").added[0].label, "Renamed");
-    sum.absorb(CadDiff { nodes: Some(CadNodesDelta { removed: vec!["fresh".into()], ..Default::default() }), ..Default::default() });
+    sum.absorb(CadDiff { nodes: Some(CadNodesDelta::modification("fresh", CadNodePatch { label: Some("Renamed".into()) })), ..Default::default() });
+    assert_eq!(sum.nodes.as_ref().expect("nodes").inserted[0].row.label, "Fresh", "the framework keeps a patch of an inserted row as its own modified entry");
+    assert_eq!(sum.nodes.as_ref().expect("nodes").modified.len(), 1);
+    assert_eq!(protocol::apply_diff(&sum, &sample_scene()).expect("composed diff applies").nodes[0].label, "Renamed", "inserted then patched applies in order");
+    sum.absorb(CadDiff { nodes: Some(CadNodesDelta { removed: vec![CadNodeRemoval { id: "fresh".into(), index: 0 }], ..Default::default() }), ..Default::default() });
     let nodes = sum.nodes.as_ref().expect("nodes");
-    assert_eq!(nodes.added, vec![row("keep", "Keep")]);
-    assert!(nodes.removed.is_empty() && nodes.patched.is_empty());
+    assert_eq!(nodes.inserted.iter().map(|insertion| (insertion.index, insertion.row.clone())).collect::<Vec<_>>(), vec![(0, row("keep", "Keep"))]);
+    assert!(nodes.removed.is_empty() && nodes.modified.is_empty());
     let mut cancelled = created;
-    cancelled.absorb(CadDiff { nodes: Some(CadNodesDelta { removed: vec!["fresh".into(), "keep".into()], ..Default::default() }), ..Default::default() });
+    cancelled.absorb(CadDiff { nodes: Some(CadNodesDelta { removed: vec![CadNodeRemoval { id: "fresh".into(), index: 0 }, CadNodeRemoval { id: "keep".into(), index: 1 }], ..Default::default() }), ..Default::default() });
     assert!(cancelled.nodes.is_none(), "create∘delete leaves nothing");
 }
 
-/// ➕️ delete∘create of one id keeps the removal and appends the replacement.
+/// ➕️ remove∘insert of one id keeps the removal and the insertion at its slot: a replacement.
 #[semio_framework_async_macros::async_test]
 async fn absorb_turns_delete_then_create_into_a_replacement() {
     let base = sample_scene();
     let id = base.nodes[0].id.clone();
-    let mut sum = CadDiff { nodes: Some(CadNodesDelta { removed: vec![id.clone()], ..Default::default() }), ..Default::default() };
-    sum.absorb(CadDiff { nodes: Some(CadNodesDelta { added: vec![row(&id, "Again")], ..Default::default() }), ..Default::default() });
+    let mut sum = CadDiff { nodes: Some(CadNodesDelta::removal(&base.nodes, 0)), ..Default::default() };
+    sum.absorb(CadDiff { nodes: Some(CadNodesDelta::insertion(0, row(&id, "Again"))), ..Default::default() });
     let next = protocol::apply_diff(&sum, &base).expect("replacement applies");
-    assert_eq!(next.nodes.last().map(|node| node.label.as_str()), Some("Again"));
+    assert_eq!(next.nodes.first().map(|node| node.label.as_str()), Some("Again"));
 }
 
-/// ↩️ The negative diff restores a removed node at its base position and `between` is the state delta.
-#[semio_framework_async_macros::async_test]
-async fn inverse_and_between_restore_the_base() {
-    let base = sample_scene();
-    let removed = CadMutation::DeleteNode(DeleteNode { node_id: base.nodes[0].id.clone() }).diff(&base).diff().clone();
-    let after = protocol::apply_diff(&removed, &base).expect("delete applies");
-    let restored = protocol::apply_diff(&removed.inverse(&base), &after).expect("negative diff applies");
-    assert_eq!(restored, base);
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<CadSnapshot, CadDiff>(&base, &after).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<CadSnapshot, CadDiff>(&after, &base).await;
-}

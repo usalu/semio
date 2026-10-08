@@ -38,7 +38,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_const_matches_enum_variants_in_declaration_order` proves enum, constant
 /// and manifest never drift apart. Declared here rather than in the case adapter so the adapter,
 /// this module's own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
+pub const KINDS: &[&str] = &["insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part", "set-relationship", "remove-relationship", "set-content-type", "remove-content-type"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]
@@ -793,6 +793,14 @@ mod oracles {
         Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
     }
 
+    /// 📍️ The optional insertion `index` of a wire payload (`None` appends).
+    fn optional_index(value: &Json) -> Option<usize> {
+        match value.get("index") {
+            Some(Json::Number(number)) if *number >= 0.0 => Some(*number as usize),
+            _ => None,
+        }
+    }
+
     fn non_empty(value: &Json, key: &str) -> Option<String> {
         match value.get(key) {
             Some(Json::String(text)) if !text.is_empty() => Some(text.clone()),
@@ -1049,6 +1057,51 @@ mod oracles {
                 let path = params.str("path").trim_start_matches('/').to_string();
                 pkg.opc.parts.retain(|part| part.path != path);
             }
+            "set-relationship" => {
+                let owner = params.str("owner");
+                let relationship = ORel { id: params.str("id"), rel_type: params.str("relType"), target: params.str("target"), external: bool_field(params, "external") };
+                let list = pkg.opc.relationships.entry(owner).or_default();
+                match list.iter().position(|existing| existing.id == relationship.id) {
+                    Some(at) => list[at] = relationship,
+                    None => {
+                        let at = optional_index(params).map_or(list.len(), |at| at.min(list.len()));
+                        list.insert(at, relationship);
+                    }
+                }
+            }
+            "remove-relationship" => {
+                let owner = params.str("owner");
+                let id = params.str("id");
+                let list = pkg.opc.relationships.get_mut(&owner).ok_or_else(|| format!("remove-relationship: no relationships are owned by {owner:?}"))?;
+                let at = list.iter().position(|existing| existing.id == id).ok_or_else(|| format!("remove-relationship: {owner:?} owns no relationship {id:?}"))?;
+                list.remove(at);
+                if list.is_empty() {
+                    pkg.opc.relationships.remove(&owner);
+                }
+            }
+            "set-content-type" => {
+                let is_override = bool_field(params, "isOverride");
+                let name = params.str("name");
+                let content_type = params.str("contentType");
+                let entries = if is_override { &mut pkg.opc.content_types.overrides } else { &mut pkg.opc.content_types.defaults };
+                if !is_override && entries.iter().any(|(key, _)| *key != name && key.eq_ignore_ascii_case(&name)) {
+                    return Err(format!("set-content-type: default extension {name:?} already exists in another letter case"));
+                }
+                match entries.iter().position(|(key, _)| *key == name) {
+                    Some(at) => entries[at].1 = content_type,
+                    None => {
+                        let at = optional_index(params).map_or(entries.len(), |at| at.min(entries.len()));
+                        entries.insert(at, (name, content_type));
+                    }
+                }
+            }
+            "remove-content-type" => {
+                let is_override = bool_field(params, "isOverride");
+                let name = params.str("name");
+                let entries = if is_override { &mut pkg.opc.content_types.overrides } else { &mut pkg.opc.content_types.defaults };
+                let at = entries.iter().position(|(key, _)| *key == name).ok_or_else(|| format!("remove-content-type: the content types hold no {} {name:?}", if is_override { "override" } else { "default" }))?;
+                entries.remove(at);
+            }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
@@ -1056,6 +1109,30 @@ mod oracles {
     //#endregion 🔖️Forward
 
     //#region 🔖️Inverse
+    /// 🔗️ The wire payload that writes `relationship` into `owner` at `index`.
+    fn relationship_params(owner: &str, relationship: &ORel, index: Option<usize>) -> Json {
+        let mut entries = vec![
+            ("owner".to_string(), Json::String(owner.to_string())),
+            ("id".to_string(), Json::String(relationship.id.clone())),
+            ("relType".to_string(), Json::String(relationship.rel_type.clone())),
+            ("target".to_string(), Json::String(relationship.target.clone())),
+            ("external".to_string(), Json::Bool(relationship.external)),
+        ];
+        if let Some(at) = index {
+            entries.push(("index".to_string(), Json::Number(at as f64)));
+        }
+        Json::Object(entries)
+    }
+
+    /// 📇️ The wire payload that gives the `[Content_Types].xml` entry `name` the content type `content_type` at `index`.
+    fn content_type_params(is_override: bool, name: &str, content_type: &str, index: Option<usize>) -> Json {
+        let mut entries = vec![("isOverride".to_string(), Json::Bool(is_override)), ("name".to_string(), Json::String(name.to_string())), ("contentType".to_string(), Json::String(content_type.to_string()))];
+        if let Some(at) = index {
+            entries.push(("index".to_string(), Json::Number(at as f64)));
+        }
+        Json::Object(entries)
+    }
+
     /// ↩️ Reads `base` (the CURRENT, pre-mutation package) to build the wire specs that undo `{kind, params}` — none when
     /// there is nothing to undo — the same law `DocxMutation::inverse` proves at the Rust-model level, computed here
     /// against the reference libraries instead.
@@ -1155,6 +1232,40 @@ mod oracles {
                     None => Vec::new(),
                 }
             }
+            "set-relationship" => {
+                let owner = params.str("owner");
+                let id = params.str("id");
+                match base.opc.relationships.get(&owner).and_then(|list| list.iter().position(|existing| existing.id == id).map(|at| (at, &list[at]))) {
+                    Some((at, previous)) => spec("set-relationship", relationship_params(&owner, previous, Some(at))),
+                    None => spec("remove-relationship", obj(vec![("owner", Json::String(owner)), ("id", Json::String(id))])),
+                }
+            }
+            "remove-relationship" => {
+                let owner = params.str("owner");
+                let id = params.str("id");
+                match base.opc.relationships.get(&owner).and_then(|list| list.iter().position(|existing| existing.id == id).map(|at| (at, &list[at]))) {
+                    Some((at, previous)) => spec("set-relationship", relationship_params(&owner, previous, Some(at))),
+                    None => Vec::new(),
+                }
+            }
+            "set-content-type" => {
+                let is_override = bool_field(params, "isOverride");
+                let name = params.str("name");
+                let entries = if is_override { &base.opc.content_types.overrides } else { &base.opc.content_types.defaults };
+                match entries.iter().position(|(key, _)| *key == name) {
+                    Some(at) => spec("set-content-type", content_type_params(is_override, &name, &entries[at].1, Some(at))),
+                    None => spec("remove-content-type", obj(vec![("isOverride", Json::Bool(is_override)), ("name", Json::String(name))])),
+                }
+            }
+            "remove-content-type" => {
+                let is_override = bool_field(params, "isOverride");
+                let name = params.str("name");
+                let entries = if is_override { &base.opc.content_types.overrides } else { &base.opc.content_types.defaults };
+                match entries.iter().position(|(key, _)| *key == name) {
+                    Some(at) => spec("set-content-type", content_type_params(is_override, &name, &entries[at].1, Some(at))),
+                    None => Vec::new(),
+                }
+            }
             other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
         })
     }
@@ -1184,6 +1295,25 @@ mod oracles {
     }
 
     //#region 🔖️Projection
+    /// 🪢️ The package plumbing in the order the package states it: the `[Content_Types].xml` defaults and overrides as ordered pairs, and every owner's relationships
+    /// as ordered `{id, type, target, external}` rows (owners sorted by part name). The positions the OPC-layer kinds write are part of what is compared.
+    fn plumbing_json(opc: &OPackage) -> Json {
+        let pairs = |entries: &[(String, String)]| Json::Array(entries.iter().map(|(key, value)| Json::Array(vec![Json::String(key.clone()), Json::String(value.clone())])).collect());
+        let mut owners: Vec<&String> = opc.relationships.keys().collect();
+        owners.sort();
+        let relationships = owners
+            .into_iter()
+            .map(|owner| {
+                let rows = opc.relationships[owner]
+                    .iter()
+                    .map(|rel| Json::Object(vec![("id".to_string(), Json::String(rel.id.clone())), ("type".to_string(), Json::String(rel.rel_type.clone())), ("target".to_string(), Json::String(rel.target.clone())), ("external".to_string(), Json::Bool(rel.external))]))
+                    .collect();
+                (owner.clone(), Json::Array(rows))
+            })
+            .collect();
+        Json::Object(vec![("defaults".to_string(), pairs(&opc.content_types.defaults)), ("overrides".to_string(), pairs(&opc.content_types.overrides)), ("relationships".to_string(), Json::Object(relationships))])
+    }
+
     /// 🌿️ An XML part's logical content — element names, attributes by name, text, in document order — as one
     /// canonical string, so a digest over it moves with the content and never with a writer's layout of it (line ends,
     /// whitespace inside a start tag, attribute order, quote style).
@@ -1239,7 +1369,12 @@ mod oracles {
             .map(|part| (part.path.clone(), Json::Object(vec![("contentType".to_string(), Json::String(part.content_type.clone())), ("digest".to_string(), Json::String(part_digest(part)))])))
             .collect();
         part_entries.sort_by(|a, b| a.0.cmp(&b.0));
-        Ok(Json::Object(vec![("body".to_string(), Json::Array(pkg.body.iter().map(block_to_json).collect())), ("styles".to_string(), Json::Array(pkg.styles.iter().map(style_to_json).collect())), ("parts".to_string(), Json::Object(part_entries))]))
+        Ok(Json::Object(vec![
+            ("body".to_string(), Json::Array(pkg.body.iter().map(block_to_json).collect())),
+            ("styles".to_string(), Json::Array(pkg.styles.iter().map(style_to_json).collect())),
+            ("parts".to_string(), Json::Object(part_entries)),
+            ("plumbing".to_string(), plumbing_json(&pkg.opc)),
+        ]))
     }
     //#endregion 🔖️Projection
     //#endregion 🔖️Routing

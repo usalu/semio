@@ -26,54 +26,63 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-docx"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.docx@ecma-376/*#editor"
 aliases = ["stdio docx"]
 ports = { react = 6266, wgpu = 6366 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-docx-strict"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.docx@ecma-376/strict#editor"
 aliases = ["stdio docx strict"]
 ports = { react = 6267, wgpu = 6367 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-docx-transitional"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.docx@ecma-376/transitional#editor"
 aliases = ["stdio docx transitional"]
 ports = { react = 6268, wgpu = 6368 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pptx"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pptx@ecma-376/*#editor"
 aliases = ["stdio pptx"]
 ports = { react = 6269, wgpu = 6369 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pptx-strict"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pptx@ecma-376/strict#editor"
 aliases = ["stdio pptx strict"]
 ports = { react = 6270, wgpu = 6370 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pptx-transitional"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.pptx@ecma-376/transitional#editor"
 aliases = ["stdio pptx transitional"]
 ports = { react = 6271, wgpu = 6371 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-xlsx"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.xlsx@ecma-376/*#editor"
 aliases = ["stdio xlsx"]
 ports = { react = 6272, wgpu = 6372 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-xlsx-strict"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.xlsx@ecma-376/strict#editor"
 aliases = ["stdio xlsx strict"]
 ports = { react = 6273, wgpu = 6373 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-xlsx-transitional"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.xlsx@ecma-376/transitional#editor"
 aliases = ["stdio xlsx transitional"]
 ports = { react = 6275, wgpu = 6375 }

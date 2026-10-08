@@ -649,6 +649,7 @@ pub mod document_io {
         pub mime_type: String,
         pub encoding: Option<String>,
     }
+    semio_framework_value::artifact_retire_struct!(Generation3dDocumentExport { filename, data, mime_type, encoding });
 
     /// 🗣️ Reports a real format limitation through the app's localized inspector.
     pub struct Generation3dIoDiagnostic {
@@ -789,7 +790,9 @@ pub mod document_io {
     }
 
     impl semio_framework_value::retirement::RetireOwned for Generation3dDocumentEnvelope {
-        fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::artifact_retirement_sequence!(self.bytes, self.filename, self.mime_type, self.data) }
+        fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.bytes),deferred(self.filename),deferred(self.mime_type),deferred(self.data)]) }
+        fn retirement_birth_bytes(&self) -> Option<usize> { use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.bytes),deferred_birth_bytes_for(&self.filename),deferred_birth_bytes_for(&self.mime_type),deferred_birth_bytes_for(&self.data)]) }
+        fn controlled_retirement_supported() -> bool { true }
     }
 
     /// 📦️ Wraps raw export bytes in the wire envelope `Effect::DownloadMediaExport` expects: the
@@ -830,13 +833,13 @@ pub mod document_io {
     /// 📦️ Decodes what `Effect::RequestFileOpen { read_as: Some("dataUrl") }` hands back. A shell
     /// that answers with the raw text instead (the `read_as: None` case, and every test harness) is
     /// read as its own UTF-8 bytes.
-    pub fn import_payload_bytes(payload: &str) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    pub fn import_payload_bytes(payload: &str) -> Result<std::borrow::Cow<'_, [u8]>, semio_framework_diagnostic::TextError> {
         if let Some((header, encoded)) = payload.split_once(',') {
             if header.starts_with("data:") {
-                return if header.ends_with(";base64") { super::mesh_bridge::base64_decode(encoded) } else { Ok(encoded.as_bytes().to_vec()) };
+                return if header.ends_with(";base64") { super::mesh_bridge::base64_decode(encoded).map(std::borrow::Cow::Owned) } else { Ok(std::borrow::Cow::Borrowed(encoded.as_bytes())) };
             }
         }
-        Ok(payload.as_bytes().to_vec())
+        Ok(std::borrow::Cow::Borrowed(payload.as_bytes()))
     }
 
     /// 🏷️ The roster row a picked file's name resolves to, by the owning artifact's OWN extension
@@ -1162,3 +1165,6 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Generation3dAnalyzer,
     composer: Generation3dComposer,
 );
+
+#[path="📐️geometry/🦀️.rs"]
+pub mod geometry;

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `SetSlotPositions` — one field patch per slot whose position changes.
 
-use crate::diff::{Wfc3dDiff, Wfc3dRowPatch, Wfc3dRows, Wfc3dSlotPatch};
+use crate::diff::{Wfc3dDiff, Wfc3dSlotPatch, Wfc3dSlotsDelta, Wfc3dSlotsModification};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::SetSlotPositions, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -13,16 +13,16 @@ pub fn diff(payload: &super::SetSlotPositions, base: &Wfc3dSnapshot) -> protocol
     }
     let partial: Vec<protocol::MutationMessage> =
         (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} position(s) skipped (not in this document): {}", missing.len(), payload.positions.len(), missing.join(", "))).at(missing)).into_iter().collect();
-    let patched: Vec<Wfc3dRowPatch<Wfc3dSlotPatch>> = base
+    let patched: Vec<Wfc3dSlotsModification> = base
         .slots
         .iter()
         .filter_map(|slot| {
             let position = payload.positions.iter().find(|position| position.id == slot.id)?;
-            ((position.x, position.y, position.z) != (slot.x, slot.y, slot.z)).then(|| Wfc3dRowPatch { id: slot.id.clone(), patch: Wfc3dSlotPatch { x: Some(position.x), y: Some(position.y), z: Some(position.z), ..Default::default() } })
+            ((position.x, position.y, position.z) != (slot.x, slot.y, slot.z)).then(|| Wfc3dSlotsModification { id: slot.id.clone(), patch: Wfc3dSlotPatch { x: Some(position.x), y: Some(position.y), z: Some(position.z), ..Default::default() } })
         })
         .collect();
     if patched.is_empty() {
         return protocol::MutationOutcome::new(Wfc3dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "every positioned slot already sits there").at(payload.ids())]));
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dRows { patched, ..Default::default() }, ..Default::default() }).absorb_messages(partial)
+    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dSlotsDelta { modified: patched, ..Default::default() }, ..Default::default() }).absorb_messages(partial)
 }

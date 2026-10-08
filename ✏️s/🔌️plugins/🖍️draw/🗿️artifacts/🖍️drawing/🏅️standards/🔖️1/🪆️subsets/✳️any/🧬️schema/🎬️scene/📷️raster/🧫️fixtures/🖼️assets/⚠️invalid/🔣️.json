@@ -1,6 +1,6 @@
 [
   {
-    "name": "unsupported declared MIME",
+    "name": "missing identity",
     "input": {
       "width": 1,
       "height": 1,
@@ -27,1130 +27,32 @@
           "visible": true,
           "content": {
             "kind": "image",
-            "asset": "shared-image",
+            "asset": "missing",
             "width": 1,
             "height": 1
           }
         }
       ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
+      "maxSourceBytes": 268439552,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/jpeg",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "MIME mismatch",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
+          "image": {
             "width": 1,
-            "height": 1
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
           }
         }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
       ]
     }
   },
   {
-    "name": "missing data URL comma",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64"
-        }
-      ]
-    }
-  },
-  {
-    "name": "duplicate base64 flag",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "base64 flag before parameter",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64;name=a,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "empty media type",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "non-parameter metadata",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;what,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "header limit",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;name=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,"
-        }
-      ]
-    }
-  },
-  {
-    "name": "source limit",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 8,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "binary limit",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 8,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "pixel limit",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACAQAAAAC1D1u3AAAAD0lEQVR4AQEEAPv/AEAAwAGEAQGIxRNmAAAAAElFTkSuQmCC"
-        }
-      ]
-    }
-  },
-  {
-    "name": "chunk limit",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 2,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "padding in the middle",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBOYQ==Rw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "invalid alphabet",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "!VBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "length not multiple of four",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg="
-        }
-      ]
-    }
-  },
-  {
-    "name": "noncanonical bits",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "Zh=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "whitespace",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBO\nRw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "URL alphabet",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH_e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "malformed percent escape",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,%Q0iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "truncated percent escape",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%"
-        }
-      ]
-    }
-  },
-  {
-    "name": "escaped whitespace",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,%0AiVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "fragment in binary URL",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,#"
-        }
-      ]
-    }
-  },
-  {
-    "name": "raw non-ASCII",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,é"
-        }
-      ]
-    }
-  },
-  {
-    "name": "PNG MIME with other bytes",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "aGVsbG8="
-        }
-      ]
-    }
-  },
-  {
-    "name": "PNG Adler mismatch",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 1048576,
-      "maxBytes": 1048576,
-      "maxChunks": 4096,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH+DO6OeQAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "missing asset reference",
+    "name": "duplicate identity",
     "input": {
       "width": 1,
       "height": 1,
@@ -1184,64 +86,38 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
-      "assets": []
-    }
-  },
-  {
-    "name": "duplicate asset identity",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         },
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "empty asset identity",
+    "name": "empty identity",
     "input": {
       "width": 1,
       "height": 1,
@@ -1275,19 +151,25 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "empty source bytes",
+    "name": "zero intrinsic extent",
     "input": {
       "width": 1,
       "height": 1,
@@ -1321,19 +203,25 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": ""
+          "image": {
+            "width": 0,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "empty media declaration",
+    "name": "mismatched components",
     "input": {
       "width": 1,
       "height": 1,
@@ -1367,19 +255,22 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "authored zero width",
+    "name": "zero authored width",
     "input": {
       "width": 1,
       "height": 1,
@@ -1413,19 +304,25 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "authored negative height",
+    "name": "negative authored height",
     "input": {
       "width": 1,
       "height": 1,
@@ -1459,19 +356,25 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "authored width exceeds coordinate bound",
+    "name": "oversized authored width",
     "input": {
       "width": 1,
       "height": 1,
@@ -1499,65 +402,31 @@
           "content": {
             "kind": "image",
             "asset": "shared-image",
-            "width": 1000000001,
+            "width": 10000000000.0,
             "height": 1
           }
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "hidden missing asset still fails",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": false,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
-      "assets": []
-    }
-  },
-  {
-    "name": "aggregate source bytes exceed shared cap",
+    "name": "sample byte budget",
     "input": {
       "width": 1,
       "height": 1,
@@ -1590,97 +459,26 @@
           }
         }
       ],
-      "maxSourceBytes": 100,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
+      "maxSourceBytes": 3,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        },
-        {
-          "id": "unused",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     }
   },
   {
-    "name": "distinct decoded identities exceed aggregate pixel cap",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        },
-        {
-          "id": "second",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "second",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        },
-        {
-          "id": "second",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "scene contract maxSourceBytes 0",
+    "name": "zero sample byte contract",
     "input": {
       "width": 1,
       "height": 1,
@@ -1714,74 +512,34 @@
         }
       ],
       "maxSourceBytes": 0,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "scene contract maxSourceBytes 268439553",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
+          "image": {
             "width": 1,
-            "height": 1
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
           }
         }
-      ],
-      "maxSourceBytes": 268439553,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        }
       ]
     }
   },
   {
-    "name": "scene contract maxBytes 7",
+    "name": "aggregate admitted pixel cap",
     "input": {
-      "width": 1,
+      "width": 2,
       "height": 1,
       "origin": [
         0,
         0
       ],
       "tolerance": 0.01,
-      "maxPixels": 1024,
+      "maxPixels": 1,
       "nodes": [
         {
           "id": "image",
@@ -1806,151 +564,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 7,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "scene contract maxBytes 67108865",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
+          "image": {
             "width": 1,
-            "height": 1
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
           }
-        }
-      ],
-      "maxSourceBytes": 268439552,
-      "maxBytes": 67108865,
-      "maxChunks": 65536,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "scene contract maxChunks 0",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 0,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  },
-  {
-    "name": "scene contract maxChunks 65537",
-    "input": {
-      "width": 1,
-      "height": 1,
-      "origin": [
-        0,
-        0
-      ],
-      "tolerance": 0.01,
-      "maxPixels": 1024,
-      "nodes": [
-        {
-          "id": "image",
-          "groups": [],
-          "transform": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "opacity": 1,
-          "blendMode": "normal",
-          "visible": true,
-          "content": {
-            "kind": "image",
-            "asset": "shared-image",
-            "width": 1,
-            "height": 1
-          }
-        }
-      ],
-      "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65537,
-      "assets": [
-        {
-          "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
         }
       ]
     }

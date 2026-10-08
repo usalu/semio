@@ -1,40 +1,39 @@
 {
   "objects": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "obj-mast",
-        "mesh": null,
-        "meshContent": "",
-        "name": "Mast",
-        "paintLayers": [],
-        "smoothShading": false,
-        "transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "meshState": null
+        "index": 1,
+        "row": {
+          "id": "obj-mast",
+          "mesh": null,
+          "meshContent": "",
+          "name": "Mast",
+          "paintLayers": [],
+          "smoothShading": false,
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "meshState": null
+        }
       }
     ],
-    "patched": [],
-    "removed": [],
-    "reordered": [
-      "obj-hull",
-      "obj-mast",
-      "obj-fin"
-    ]
+    "moved": [],
+    "modified": []
   },
   "schema": null
 }

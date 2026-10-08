@@ -471,17 +471,29 @@ fn a_windowed_rows_lead_pitches_the_unmaterialised_rows_before_it_in_both_flows(
 
 #[test]
 fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
+    use semio_framework_job::{InteractiveJobCloseStep as Step, RetainedCloneGrant, RetainedCloneProgress};
     let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
     let mut flex = FlexTree::new();
     for index in 0..4 {
         assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None));
     }
+    let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 1 };
     for step in (1..=4).rev() {
         assert_eq!(flex.len(), step);
-        assert!(!flex.release_one(), "a grant that released an owner is never terminal");
+        assert!(matches!(flex.close_granted(grant(0)), Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == 0), "each granted logical owner advances exactly once");
     }
     assert!(flex.is_empty());
-    assert!(flex.release_one(), "an already-empty tree reports terminal without releasing anything");
+    assert!(!flex.close_is_empty(), "logical emptiness retains physical backing");
+    let backings = [flex.flows.capacity(), flex.grids.capacity(), flex.intrinsic.capacity(), flex.resolved.capacity(), flex.main.capacity(), flex.cross.capacity()].into_iter().filter(|capacity| *capacity != 0).count();
+    for _ in 0..backings {
+        let bytes = flex.next_close_release_byte_demand().unwrap();
+        assert!(bytes > 0);
+        assert!(matches!(flex.close_granted(grant(bytes - 1)), Step::Pending { progress } if progress == RetainedCloneProgress::default()));
+        let result = flex.close_granted(grant(bytes));
+        assert!(matches!(result, Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == bytes && progress.fits(grant(bytes))));
+    }
+    assert!(flex.close_is_empty());
+    assert!(matches!(flex.close_granted(grant(0)), Step::Complete { progress } if progress == RetainedCloneProgress::default()), "physically empty repeated close releases nothing");
 }
 
 #[test]

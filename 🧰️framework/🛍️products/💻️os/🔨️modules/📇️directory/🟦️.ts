@@ -1,3 +1,4 @@
+export { parseDirectorySpaceAdministrationPageV1 } from "./🚪️io/📝️text/🟦️.ts";
 /** 📇️ Directory read model — pure fold over `DirectoryEvent` (ticket 26/08/16/HUB-SPACES-LIVE-
  * PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1). TypeScript twin of `🦀️.rs` — byte-
  * identical projection over the golden fixture `../../🧫️fixtures/📇️directory/⚡️events.json` (parity
@@ -73,7 +74,7 @@ export type {
   UserView,
 } from "./🧬️schema/🟦️.ts";
 
-export { descriptorDigestEncodingV1, descriptorDigestV1, parseDirectorySpaceAdministrationPageV1, DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA } from "./🧬️schema/🟦️.ts";
+export { validateDocumentDescriptorV1, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA } from "./🧬️schema/🟦️.ts";
 
 import type { DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectoryStreamMessage, DocumentDescriptor, MemberView, SpaceView, UserView } from "./🧬️schema/🟦️.ts";
 import { validDocumentIndexEntryV1, type DirectoryIndexedDocumentViewV1 } from "./🧬️schema/🟦️.ts";

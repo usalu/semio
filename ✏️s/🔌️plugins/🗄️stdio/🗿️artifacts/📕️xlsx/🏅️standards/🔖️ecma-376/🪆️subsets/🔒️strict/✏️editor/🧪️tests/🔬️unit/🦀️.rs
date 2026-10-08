@@ -32,7 +32,7 @@ async fn strict_cell_edit_uses_the_canonical_lineage_revision() {
     let address = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
     let command = XlsxStrictEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: address.revision.clone(), value: "false".into() };
     let emit = xlsx_set_cell_emit(&snapshot, &command).unwrap();
-    assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(false) })]);
+    assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(false), node: None })]);
     assert!(xlsx_set_cell_emit(&snapshot, &XlsxStrictEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: "stale".into(), value: "false".into() }).is_err());
     assert!(xlsx_set_cell_emit(&snapshot, &XlsxStrictEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 99, column: 0, revision: command_revision(&command), value: "false".into() }).is_err());
 }

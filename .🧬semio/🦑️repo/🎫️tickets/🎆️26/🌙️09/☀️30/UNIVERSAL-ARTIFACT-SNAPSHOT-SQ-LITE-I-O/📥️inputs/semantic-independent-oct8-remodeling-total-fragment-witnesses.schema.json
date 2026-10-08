@@ -1,0 +1,601 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy",
+    "cases"
+  ],
+  "properties": {
+    "policy": {
+      "const": "total-snapshot-explicit-fragments-v1"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "chunks"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "sparse-partial-one-two-three",
+              "sparse-fullword-and-three-tail",
+              "sparse-ieee-nonfinite-and-negativezero",
+              "mesh-empty-header",
+              "mesh-unknown-255-payload",
+              "mesh-descending-and-repeated-fields",
+              "mesh-tagged-empty-known-fields",
+              "mesh-known-float-and-integer-partial",
+              "mesh-seam255",
+              "mesh-text-bom-nul-multibyte",
+              "mesh-invalid-utf8"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "sparse",
+              "mesh"
+            ]
+          },
+          "chunks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sourceOctets",
+                "expected"
+              ],
+              "properties": {
+                "sourceOctets": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "expected": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ordinal",
+                    "field",
+                    "fieldTag",
+                    "elementType",
+                    "elementCount",
+                    "floatRows",
+                    "integerRows",
+                    "byteRows",
+                    "textRow",
+                    "octetsIsNull"
+                  ],
+                  "properties": {
+                    "ordinal": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "field": {
+                      "enum": [
+                        "samples",
+                        "absent",
+                        "unknown",
+                        "positions",
+                        "normals",
+                        "colors",
+                        "indices",
+                        "uvs",
+                        "face_ids",
+                        "vertex_ids",
+                        "edge_positions",
+                        "edge_ids",
+                        "edge_uvs",
+                        "edge_is_seam",
+                        "paint_texture_base64"
+                      ]
+                    },
+                    "fieldTag": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "elementType": {
+                      "enum": [
+                        "f32",
+                        "u32",
+                        "u8",
+                        "text",
+                        "invalid-text"
+                      ]
+                    },
+                    "elementCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "floatRows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "ordinal",
+                          "sample",
+                          "sampleBits",
+                          "sampleClass"
+                        ],
+                        "properties": {
+                          "ordinal": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "sample": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "sampleBits": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295
+                          },
+                          "sampleClass": {
+                            "enum": [
+                              "finite",
+                              "nan",
+                              "positiveInfinity",
+                              "negativeInfinity"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "integerRows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "ordinal",
+                          "value"
+                        ],
+                        "properties": {
+                          "ordinal": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "value": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295
+                          }
+                        }
+                      }
+                    },
+                    "byteRows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "ordinal",
+                          "role",
+                          "value"
+                        ],
+                        "properties": {
+                          "ordinal": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "role": {
+                            "enum": [
+                              "payload",
+                              "trailing-word"
+                            ]
+                          },
+                          "value": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          }
+                        }
+                      }
+                    },
+                    "textRow": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "content"
+                          ],
+                          "properties": {
+                            "content": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "octetsIsNull": {
+                      "const": true
+                    }
+                  },
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "samples"
+                        },
+                        "fieldTag": {
+                          "const": null
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "absent"
+                        },
+                        "fieldTag": {
+                          "const": null
+                        },
+                        "elementType": {
+                          "const": "u8"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "positions"
+                        },
+                        "fieldTag": {
+                          "const": 0
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "normals"
+                        },
+                        "fieldTag": {
+                          "const": 1
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "colors"
+                        },
+                        "fieldTag": {
+                          "const": 2
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "indices"
+                        },
+                        "fieldTag": {
+                          "const": 3
+                        },
+                        "elementType": {
+                          "const": "u32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "uvs"
+                        },
+                        "fieldTag": {
+                          "const": 4
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "face_ids"
+                        },
+                        "fieldTag": {
+                          "const": 5
+                        },
+                        "elementType": {
+                          "const": "u32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "vertex_ids"
+                        },
+                        "fieldTag": {
+                          "const": 6
+                        },
+                        "elementType": {
+                          "const": "u32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "edge_positions"
+                        },
+                        "fieldTag": {
+                          "const": 7
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "edge_ids"
+                        },
+                        "fieldTag": {
+                          "const": 8
+                        },
+                        "elementType": {
+                          "const": "u32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "edge_uvs"
+                        },
+                        "fieldTag": {
+                          "const": 9
+                        },
+                        "elementType": {
+                          "const": "f32"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "edge_is_seam"
+                        },
+                        "fieldTag": {
+                          "const": 10
+                        },
+                        "elementType": {
+                          "const": "u8"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "paint_texture_base64"
+                        },
+                        "fieldTag": {
+                          "const": 11
+                        },
+                        "elementType": {
+                          "const": "text"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "paint_texture_base64"
+                        },
+                        "fieldTag": {
+                          "const": 11
+                        },
+                        "elementType": {
+                          "const": "invalid-text"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "field": {
+                          "const": "unknown"
+                        },
+                        "fieldTag": {
+                          "type": "integer",
+                          "minimum": 12,
+                          "maximum": 255
+                        },
+                        "elementType": {
+                          "const": "u8"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  ],
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "elementType": {
+                            "const": "f32"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "then": {
+                        "properties": {
+                          "integerRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "textRow": {
+                            "type": "null"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "elementType": {
+                            "const": "u32"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "then": {
+                        "properties": {
+                          "floatRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "textRow": {
+                            "type": "null"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "elementType": {
+                            "const": "u8"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "then": {
+                        "properties": {
+                          "floatRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "integerRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "textRow": {
+                            "type": "null"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "elementType": {
+                            "const": "text"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "then": {
+                        "properties": {
+                          "floatRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "integerRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "byteRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "elementType": {
+                            "const": "invalid-text"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "then": {
+                        "properties": {
+                          "floatRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "integerRows": {
+                            "maxItems": 0,
+                            "type": "array"
+                          },
+                          "textRow": {
+                            "type": "null"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Remodeling Total Snapshot Fragment Witnesses"
+}

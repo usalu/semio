@@ -1,0 +1,5 @@
+/** 🔺️ Authored edge tip facts independent of catalog serialization. */
+export type EdgeTipGeometry="arrow"|"fine-arrow"|"diamond"|"circle"|"bar";
+export interface EdgeTipCatalogEntry {id:string;geometry?:EdgeTipGeometry|null;filled?:boolean|null;scale?:number|null}
+export interface EdgeTipDefinition {geometry:EdgeTipGeometry;filled:boolean;scale:number}
+export function edgeTipFromCatalogEntry(entry:EdgeTipCatalogEntry):EdgeTipDefinition|undefined{if(entry.geometry==null){switch(entry.id){case "arrow":case "filled-arrow":return {geometry:"arrow",filled:true,scale:1};case "fine-arrow":return {geometry:"fine-arrow",filled:false,scale:1};case "filled-diamond":return {geometry:"diamond",filled:true,scale:1};case "open-diamond":return {geometry:"diamond",filled:false,scale:1};default:return undefined;}}const geometry=entry.geometry;const filled=entry.filled??(geometry==="fine-arrow"||geometry==="bar"?false:geometry==="diamond"?!entry.id.includes("open"):true);return {geometry,filled,scale:entry.scale!=null&&Number.isFinite(entry.scale)&&entry.scale>0?entry.scale:1};}

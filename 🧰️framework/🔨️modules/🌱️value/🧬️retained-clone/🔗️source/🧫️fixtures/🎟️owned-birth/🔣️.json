@@ -1,0 +1,14 @@
+{
+  "owner": "original mutation",
+  "ownerCapacity": 64,
+  "authority": "original publication authority",
+  "authorityCapacity": 96,
+  "sharedAuthorityRetainsAlias": true,
+  "birth": { "items": 1, "depth": 1, "copyBytes": 0, "releaseBytes": 0 },
+  "refusals": [
+    { "currency": "items", "shortBy": 1, "kind": "WorkLimit" },
+    { "currency": "capacity", "shortBy": 1, "kind": "OwnershipLimit" },
+    { "currency": "depth", "shortBy": 1, "kind": "DepthLimit" }
+  ],
+  "maximumTurns": 256
+}

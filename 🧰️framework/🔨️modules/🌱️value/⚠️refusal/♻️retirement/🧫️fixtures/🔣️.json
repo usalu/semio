@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "id": "static",
+      "ownership": "borrowed",
+      "text": "immutable refusal",
+      "capacity": 0
+    },
+    {
+      "id": "empty-owned",
+      "ownership": "owned",
+      "text": "",
+      "capacity": 8192
+    },
+    {
+      "id": "unicode-unused-capacity",
+      "ownership": "owned",
+      "text": "Ä界🧬\u0000quoted \"value\"",
+      "capacity": 65536
+    }
+  ],
+  "copyGrants": [
+    1,
+    17,
+    4096
+  ],
+  "cancelCuts": [
+    0,
+    3
+  ],
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

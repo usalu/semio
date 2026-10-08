@@ -13,15 +13,14 @@ fn request_for(bytes: &[u8]) -> MemberOpenRequest {
 
 fn retire_request(request: &mut MemberOpenRequest) {
     for _ in 0..100_000 {
-        let grant = request.next_close_byte_demand().max(7);
+        let grant = request.next_release_byte_demand().unwrap().max(7);
         assert!(grant <= retirement_admission());
-        match request.close_step(1, grant).unwrap() {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= grant),
-            SnapshotRetirementStep::Complete => {
+        match request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: grant, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap() {
+            RetainedCloneStep::Progress(progress) => assert!(progress.copied_items <= 1 && progress.released_bytes <= grant),
+            RetainedCloneStep::Complete(_) => {
                 assert!(request.terminal_is_empty());
                 return;
             }
-            SnapshotRetirementStep::Blocked => panic!("inline pages have no shared owner"),
         }
     }
     panic!("request retirement did not converge");
@@ -157,7 +156,7 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
         assert_eq!(serde_json::to_value(request.actor()).unwrap(), row["openedActor"]);
         assert_eq!(request.owner(), owner.as_ref());
         assert_eq!(request.retained_input_bytes(), bytes);
-        assert!(matches!(request.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(request.close_step(RetainedCloneGrant { maximum_items: 0, maximum_release_bytes: 0, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap(), RetainedCloneStep::Progress(Default::default()));
         assert_eq!(request.retained_input_bytes(), bytes);
         let identity_bytes = row["openedActor"].as_str().unwrap().len() + expected.artifact_id.len()
             + expected.dialect.artifact_kind.len()
@@ -170,28 +169,28 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
         let identity_capacity = request_identity_capacity(&request);
         for _ in 0..100_000 {
             let frame = next_request_frame_bytes(&request);
-            let demand = request.next_close_byte_demand();
+            let demand = request.next_release_byte_demand().unwrap();
             if demand > 1 {
                 if frame != 0 { assert_eq!(demand, frame); }
                 let identity_pointer = request.identity_string_mut().map(|field| field.as_ptr());
                 let pages_pointer = request.pages.as_ref().map(|pages| pages as *const OwnedSchemaDecodePages);
                 let before = request_logical_retained_bytes(&request);
-                let (denied, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, demand - 1).unwrap());
-                assert_eq!(denied, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                let (denied, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand - 1, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+                assert_eq!(denied, RetainedCloneStep::Progress(Default::default()));
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
                 assert_eq!(request_logical_retained_bytes(&request), before);
                 if let Some(pointer) = identity_pointer { assert_eq!(pointer, request.identity_string_mut().unwrap().as_ptr()); }
                 if let Some(pointer) = pages_pointer { assert!(std::ptr::eq(pointer, request.pages.as_ref().unwrap() as *const OwnedSchemaDecodePages)); }
-                assert_eq!(request.next_close_byte_demand(), demand);
+                assert_eq!(request.next_release_byte_demand().unwrap(), demand);
             }
             let grant = demand.max(7);
             assert!(grant <= retirement_admission());
             let before = request_logical_retained_bytes(&request);
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, grant).unwrap());
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: grant, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
             logical += before - request_logical_retained_bytes(&request);
             assert_eq!(events.requested_bytes, 0);
             match step {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                RetainedCloneStep::Progress(progress) => { let released_items = progress.copied_items; let released_bytes = progress.released_bytes;
                     assert!(released_items <= 1 && released_bytes <= grant);
                     assert_eq!(events.released_bytes, released_bytes);
                     if frame != 0 {
@@ -200,8 +199,7 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
                     }
                     released += released_bytes;
                 }
-                SnapshotRetirementStep::Complete => { assert_eq!(events.released_bytes, 0); break; }
-                SnapshotRetirementStep::Blocked => panic!("request owns no shared root"),
+                RetainedCloneStep::Complete(_) => { assert_eq!(events.released_bytes, 0); break; }
             }
         }
         assert!(request.terminal_is_empty());
@@ -222,15 +220,14 @@ fn member_open_request_every_report_is_same_turn_physical_release_without_new_cl
         let mut reported = 0;
         let mut physical = 0;
         for _ in 0..100_000 {
-            let grant = request.next_close_byte_demand().max(7);
+            let grant = request.next_release_byte_demand().unwrap().max(7);
             assert!(grant <= retirement_admission());
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, grant).unwrap());
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: grant, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
             births += events.requested_bytes;
             physical += events.released_bytes;
             let released = match step {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= grant); released_bytes },
-                SnapshotRetirementStep::Complete => { assert!(request.terminal_is_empty()); 0 },
-                SnapshotRetirementStep::Blocked => panic!("unshared exact request cannot block"),
+                RetainedCloneStep::Progress(progress) => { let released_items = progress.copied_items; let released_bytes = progress.released_bytes; assert!(released_items <= 1 && released_bytes <= grant); released_bytes },
+                RetainedCloneStep::Complete(_) => { assert!(request.terminal_is_empty()); 0 },
             };
             reported += released;
             if events.requested_bytes != 0 || events.released_bytes != released {
@@ -257,27 +254,27 @@ fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty
         request.actor.0 = actor;
         assert_eq!(request.actor.0.capacity(), capacity);
         while request.pages.is_some() {
-            let grant = request.next_close_byte_demand().max(7);
+            let grant = request.next_release_byte_demand().unwrap().max(7);
             assert!(grant <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, grant).unwrap());
-            let SnapshotRetirementStep::Pending { released_bytes, .. } = step else { panic!("page retirement cannot complete the original request") };
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: grant, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+            let RetainedCloneStep::Progress(progress) = step else { panic!("page retirement cannot complete the original request") }; let released_bytes = progress.released_bytes;
             assert_eq!((events.requested_bytes, events.released_bytes), (0, released_bytes));
         }
         let pointer = request.actor.0.as_ptr();
         let text_bytes = request.actor.0.len();
-        let (demand, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.next_close_byte_demand());
+        let (demand, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.next_release_byte_demand().unwrap());
         assert_eq!(demand, capacity);
         assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
         for (items, grant) in [(0, capacity), (1, capacity - 1)] {
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(items, grant).unwrap());
-            assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: items, maximum_release_bytes: grant, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+            assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
             assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
             assert_eq!(request.actor.0.as_ptr(), pointer);
             assert_eq!(request.actor.0.len(), text_bytes);
-            assert_eq!(request.next_close_byte_demand(), capacity);
+            assert_eq!(request.next_release_byte_demand().unwrap(), capacity);
         }
-        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, capacity).unwrap());
-        assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 1, released_bytes: capacity });
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+        assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..Default::default() }));
         assert_eq!((events.requested_bytes, events.released_bytes), (0, capacity));
         assert_eq!(request.actor.0.capacity(), 0);
         retire_request(&mut request);
@@ -297,31 +294,31 @@ fn member_open_request_inline_pages_retire_one_item_without_physical_payload_cre
         assert_eq!(backing, page_count * fixture["slotBytes"].as_u64().unwrap() as usize);
         for _ in 0..page_count {
             let before = request.retained_input_bytes();
-            let (demand, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.next_close_byte_demand());
+            let (demand, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.next_release_byte_demand().unwrap());
             assert_eq!(demand, 0);
             assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
-            let (denied, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(0, backing).unwrap());
-            assert_eq!(denied, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            let (denied, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 0, maximum_release_bytes: backing, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+            assert_eq!(denied, RetainedCloneStep::Progress(Default::default()));
             assert_eq!(request.retained_input_bytes(), before);
             assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, 0).unwrap());
-            assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: 0, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+            assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: 0, ..Default::default() }));
             assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
             let tail = before % OWNED_SCHEMA_DECODE_PAGE_BYTES;
             assert_eq!(before - request.retained_input_bytes(), if tail == 0 { OWNED_SCHEMA_DECODE_PAGE_BYTES } else { tail });
             assert_eq!(request.pages.as_ref().unwrap().allocation_byte_demand(), backing);
         }
         assert_eq!(request.retained_input_bytes(), 0);
-        assert_eq!(request.next_close_byte_demand(), backing);
+        assert_eq!(request.next_release_byte_demand().unwrap(), backing);
         for (items, grant) in [(0, backing), (1, 0), (1, backing - 1)] {
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(items, grant).unwrap());
-            assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: items, maximum_release_bytes: grant, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+            assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
             assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
-            assert_eq!(request.next_close_byte_demand(), backing);
+            assert_eq!(request.next_release_byte_demand().unwrap(), backing);
         }
         assert!(backing <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, backing).unwrap());
-        assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 1, released_bytes: backing });
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: backing, maximum_depth: request.next_depth_demand().unwrap(), ..Default::default() }).unwrap());
+        assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: backing, ..Default::default() }));
         assert_eq!((events.requested_bytes, events.released_bytes), (0, backing));
         retire_request(&mut request);
         println!("[DEBUG] inline request={} input={length} page-items={page_count} payload-physical-free=0 whole-backing={backing} zero-item-and-one-below-retained=true", row["id"]);

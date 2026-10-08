@@ -67,6 +67,21 @@
         "group": "value",
         "order": 30
       }
+    },
+    "instance": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Instance",
+      "x-semio-ui": {
+        "label": {
+          "en": "Exact instance",
+          "de": "Exakte Instanz"
+        },
+        "description": {
+          "en": "The instance written verbatim instead of one rebuilt from the row; carried when the row cannot express every attribute.",
+          "de": "Die Instanz, die unverändert geschrieben wird statt einer aus der Zeile aufgebauten; wird mitgeführt, wenn die Zeile nicht jedes Attribut ausdrücken kann."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

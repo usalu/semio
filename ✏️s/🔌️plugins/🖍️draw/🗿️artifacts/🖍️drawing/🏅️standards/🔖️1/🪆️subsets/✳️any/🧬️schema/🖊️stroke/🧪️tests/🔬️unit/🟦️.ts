@@ -1,7 +1,8 @@
 /** 🧪️ Dash input matches the language-neutral cases and independent Ajv grammar. */
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import { parseStrokeCap, parseStrokeJoin, parseStrokeDash } from "../../🟦️.ts";
+import { parseStrokeCap, parseStrokeJoin } from "../../🟦️.ts";
+import {decodeDashText} from "../../../../🚪️io/📝️text/🖊️dash/🟦️.ts";
 import enumCases from "../../🧫️fixtures/🎚️enums/🔣️.json";
 import strokeSchema from "../../🧬️schema/🔣️.json";
 import artifactSchema from "../../../🔣️.json";
@@ -11,8 +12,8 @@ test("stroke dashes accept editable patterns and reject invalid input", () => {
   
   for (const entry of cases) {
     
-    if (entry.error) expect(() => parseStrokeDash(entry.value)).toThrow();
-    else expect(parseStrokeDash(entry.value)).toEqual(entry.dash);
+    if (entry.error) expect(() => decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toThrow();
+    else expect(decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toEqual(entry.dash);
   }
 });
 

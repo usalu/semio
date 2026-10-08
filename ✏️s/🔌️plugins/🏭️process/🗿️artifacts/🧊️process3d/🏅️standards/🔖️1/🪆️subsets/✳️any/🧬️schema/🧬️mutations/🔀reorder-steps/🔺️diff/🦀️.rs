@@ -1,12 +1,10 @@
-//! 🔺️ `reorder-steps` sparse diff construction — repositions an id-keyed [`ProcessStep`] within
-//! the durable `step_payloads` timeline and re-mints `steps`/`tool_solids` via
-//! [`process3d_step_timeline_diff`](crate::process3d_step_timeline_diff),
+//! 🔺️ `reorder-steps` sparse diff construction — repositions an id-keyed [`ProcessStep`] within the durable `step_payloads` timeline,
 //! matching `📥️insert-array-element`/`🔀reorder-columns`'s own remove-then-clamped-insert shape.
 //! Error `target-missing` when the step is absent, Warning `no-op` when already at that position.
 
 use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
 use crate::diff::Process3dDiff;
-use crate::{process3d_step_timeline_diff, Process3dSnapshot};
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
@@ -16,9 +14,10 @@ pub fn diff(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> protocol
     if from == payload.to_index {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already at position #{}.", payload.id, payload.to_index));
     }
-    let others: Vec<&str> = base.step_payloads.iter().map(|step| step.id.as_str()).filter(|id| *id != payload.id).collect();
-    let to = payload.to_index.min(others.len());
-    let order: Vec<String> = others[..to].iter().map(|id| id.to_string()).chain([payload.id.clone()]).chain(others[to..].iter().map(|id| id.to_string())).collect();
-    protocol::MutationOutcome::new(process3d_step_timeline_diff(base, Process3dStepsDelta { reordered: Some(order), ..Default::default() }))
+    let to = payload.to_index.min(base.step_payloads.len() - 1);
+    if to == from {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already at position #{}.", payload.id, to));
+    }
+    protocol::MutationOutcome::new(Process3dDiff { step_payloads: Some(Process3dStepsDelta::relocation(&base.step_payloads, from, to)), ..Default::default() })
 }
 //#endregion 🔖️Diff

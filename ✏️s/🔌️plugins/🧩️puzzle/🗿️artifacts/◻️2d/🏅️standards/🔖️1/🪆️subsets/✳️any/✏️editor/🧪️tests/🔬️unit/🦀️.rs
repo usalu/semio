@@ -215,13 +215,19 @@ pub(crate) mod context {
         result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).map(|entry| entry.seq).collect::<std::collections::BTreeSet<_>>().len())
     }
 
-    /// 🧵️ Drives the same host-owned `DispatchAction` continuation used in production until the example is complete.
-    /// 🛍️ One dispatch is the whole load: `setActiveExample` drives `Puzzle2dActiveExampleWork` to its
-    /// terminal emit (retained job and batch path alike), so no `DispatchAction` continuation ladder
-    /// remains to pump. Returns the mutation count the load committed.
+    /// 🛍️ One dispatch is the whole switch: `setActiveExample` answers one `Effect::LoadDocument` (no mutation row, no history
+    /// row), which this helper loads into the app as the host does. Returns the number of document edits the switch
+    /// committed — always zero.
     pub fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
         let result = dispatch(app, "setActiveExample", Some(&json!({ "exampleId": example_id })), None).expect("load example");
-        assert!(result.requested_effects.is_empty(), "the example load must not request a continuation effect");
+        let mut loaded = 0;
+        for effect in &result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() })).expect("the example loads");
+                loaded += 1;
+            }
+        }
+        assert_eq!(loaded, 1, "an example switch is exactly one whole-document load");
         committed_edits(&result)
     }
     
@@ -229,7 +235,7 @@ pub(crate) mod context {
     /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
     /// deleted `setSelection` action.
     pub fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
-        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+        let targets = semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
         dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
     
@@ -267,7 +273,7 @@ pub(crate) mod context {
                 if surface.doc_schema.as_str() == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
                     // 🚚️ The snapshot rides an out-of-doc lane (`Board2dSceneLane::Snapshot`) — a bare decode reads an empty `snapshot_json`.
                     let scene: semio_framework_ui_scene::Board2dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("decode board scene with lanes");
-                    return serde_json::to_string(&json!({ "schema": surface.doc_schema, "board2d": scene })).expect("serialize board scene");
+                    return semio_framework_pack_json::to_json_string(&json!({ "schema": surface.doc_schema, "board2d": scene }));
                 }
             }
             stack.extend(node.children.iter());
@@ -305,6 +311,62 @@ pub(crate) mod context {
         Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
     }
     
+    /// 📼️ A recorder over the typed document a host fixture states.
+    pub fn recorder_of(snapshot: Value) -> Puzzle2dRecorder {
+        let typed: crate::Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&snapshot)).expect("typed fixture admits");
+        Puzzle2dRecorder::from_typed(std::sync::Arc::new(typed))
+    }
+
+    /// 🌱️ The concrete kinds that build `board` from an empty document — manifest, kind relations, catalogs, a `create-node` per
+    /// node, a `connect-handles` per edge (with its flags) and a `create-target-region` per region. A fixture's
+    /// authoring script, recorded through the same recorder the editor uses; nothing here differences two boards.
+    pub fn board_genesis_kinds(board: &crate::Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+        use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id, connect_kind_compatibility, create_node, create_target_region, replace_kind_catalogs};
+        let mut recorder = Puzzle2dRecorder::from_typed(std::sync::Arc::new(crate::Puzzle2dSnapshot::default()));
+        if board.meta.manifest_id.is_some() {
+            recorder.record(change_manifest_id(board.meta.manifest_id.clone()));
+        }
+        for row in board.meta.kind_compatibility.iter() {
+            recorder.record(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
+        }
+        if board.meta.kind_catalogs.is_some() {
+            recorder.record(replace_kind_catalogs(board.meta.kind_catalogs.clone()));
+        }
+        for node in board.nodes.iter() {
+            recorder.record(create_node(node.clone(), None));
+        }
+        for edge in board.edges.iter() {
+            recorder.connect_edge(edge.clone());
+        }
+        for region in board.target_regions.iter() {
+            recorder.record(create_target_region(region.clone(), None));
+        }
+        recorder.into_rows()
+    }
+
+    /// 🧱️ Seeds `board` into a fresh app as the concrete kinds that build it, ingested as one authored operation log.
+    pub fn seed_board(app: &mut Puzzle2dApp, board: &Value) {
+        use protocol::OpText as _;
+        let typed: crate::Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(board)).expect("the seed board admits");
+        let text = board_genesis_kinds(&typed).iter().map(|kind| kind.print_op()).collect::<Vec<_>>().join("\n");
+        block_on(app.ingest_operations_text(&text)).expect("seed the board");
+    }
+
+    /// 📥️ Dispatches `importSnapshot` for `board` and loads the whole document it requests, as the host does with an
+    /// `Effect::LoadDocument`.
+    pub fn import_board(app: &mut Puzzle2dApp, board: &Value) {
+        let result = dispatch(app, "importSnapshot", Some(&json!({ "payload": board })), None).expect("import the board");
+        assert!(result.mutations.is_empty(), "an import states no mutation: {:?}", result.mutations);
+        let mut loaded = 0;
+        for effect in result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() })).expect("the import loads");
+                loaded += 1;
+            }
+        }
+        assert_eq!(loaded, 1, "an import is exactly one whole-document load");
+    }
+
     pub fn fixture_of(app: &Puzzle2dApp) -> Value {
         app.snapshot().expect("projection").value().clone()
     }
@@ -315,6 +377,7 @@ pub(crate) mod context {
 }
 
 use context::*;
+use crate::apply_puzzle2d_mutation;
 use super::*;
 use crate::Puzzle2dSnapshot;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
@@ -324,7 +387,8 @@ use store::{Backbone, BackboneMessage, MemoryBackbone};
 fn cohort_routes_are_cursorized(source: &str) -> bool {
     [
         r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#,
-        r#""setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default())"#,
+        r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent))"#,
+        "Effect::LoadDocument",
         "Puzzle2dForceStage::Nodes",
         "Puzzle2dForceStage::Handles",
         "Puzzle2dForceStage::Edges",
@@ -332,17 +396,12 @@ fn cohort_routes_are_cursorized(source: &str) -> bool {
         "Puzzle2dForceStage::Springs",
         "Puzzle2dForceStage::Integrate",
         "Puzzle2dForceStage::Emit",
-        "Puzzle2dExampleStage::ClearEdges",
-        "Puzzle2dExampleStage::ClearNodes",
-        "Puzzle2dExampleStage::AddCompatibility",
-        "Puzzle2dExampleStage::Nodes",
-        "Puzzle2dExampleStage::Edges",
         r#"matches!(command.action_id(), "addNode").then_some(1)"#,
     ]
     .into_iter()
     .all(|marker| source.contains(marker))
         && !source.contains(r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !source.contains("Puzzle2dActiveExampleWork")
 }
 
 #[test]
@@ -351,7 +410,7 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
     assert!(cohort_routes_are_cursorized(source));
     for (retained, direct) in [
         (r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
-        (r#""setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default())"#, r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
+        (r#"Effect::LoadDocument { pack, spr }"#, r#"Effect::LoadDocument { pack, spr }; Puzzle2dActiveExampleWork::default()"#),
     ] {
         assert!(!cohort_routes_are_cursorized(&source.replace(retained, direct)));
     }
@@ -363,11 +422,6 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
         "Puzzle2dForceStage::Springs",
         "Puzzle2dForceStage::Integrate",
         "Puzzle2dForceStage::Emit",
-        "Puzzle2dExampleStage::ClearEdges",
-        "Puzzle2dExampleStage::ClearNodes",
-        "Puzzle2dExampleStage::AddCompatibility",
-        "Puzzle2dExampleStage::Nodes",
-        "Puzzle2dExampleStage::Edges",
     ] {
         // 🧨️ EVERY occurrence, not the first: a stage marker like `Puzzle2dForceStage::Nodes` appears
         // more than once in the source (its declaration and each arm that advances to it), so
@@ -391,9 +445,9 @@ fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
             _ => None,
         }
     }
-    let value: Value = serde_json::from_str(rendered).expect("rendered node parses");
+    let value: Value = semio_framework_pack_json::from_json_str(rendered, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered node parses");
     let camera_json = find_camera_json(&value).expect("rendered scene must carry cameraJson");
-    let camera: Value = serde_json::from_str(&camera_json).expect("cameraJson parses");
+    let camera: Value = semio_framework_pack_json::from_json_str(&camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cameraJson parses");
     (camera.get("x").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("y").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("zoom").and_then(Value::as_f64).unwrap_or(f64::NAN))
 }
 
@@ -407,21 +461,17 @@ async fn add_node_action_emits_upsert_op_and_appends_node() {
     close_app(&mut app);
 }
 
-/// 🛍️ The example load commits granular operations from ONE dispatch — the retained
-/// `Puzzle2dActiveExampleWork` state machine, driven to its terminal emit, with no
-/// `Effect::DispatchAction` continuation ladder left to pump.
+/// 🛍️ The example switch is a LOAD: one dispatch answers one `Effect::LoadDocument` carrying the example, commits no document
+/// edit and leaves no history row.
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_loads_concrete_forest_via_operations() {
+async fn set_active_example_loads_concrete_forest_through_the_load_path() {
     let mut app = app();
-    let result = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
-    assert!(result.requested_effects.is_empty(), "the example load must not request a continuation effect");
-    assert!(committed_edits(&result) > 0, "the example load must commit granular operations");
+    assert_eq!(load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID), 0, "an example switch commits no document edit");
     assert!(!board_snapshot_nodes(&fixture_of(&app)).is_empty());
     close_app(&mut app);
 }
 
-/// 🔁️ Loading a second example clears the first one out of the document rather than merging into
-/// it — the work's `ClearEdges`/`ClearNodes` stages run against the live snapshot every time.
+/// 🔁️ Loading a second example replaces the first one rather than merging into it.
 #[semio_framework_async_macros::async_test]
 async fn a_newer_example_load_replaces_the_previous_document() {
     let mut app = app();
@@ -433,33 +483,24 @@ async fn a_newer_example_load_replaces_the_previous_document() {
     close_app(&mut app);
 }
 
-/// 🤫️ An example load publishes no no-op mutation: reloading the example the document already holds leaves its kind
-/// catalogs and manifest id alone instead of re-stating them, so history never shows a "No change" warning row.
+/// 🤫️ The switch states no mutation at all, whatever document it replaces: its emit carries one load of exactly the example
+/// and nothing else, so history never shows a row — not even a "No change" warning — for it.
 #[test]
-fn an_example_reload_publishes_no_no_op_mutation() {
-    use protocol::Mutation as _;
+fn an_example_switch_emits_one_load_and_no_mutation() {
     let command = Puzzle2dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None);
-    let empty = Puzzle2dPlaySnapshot::new(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] }));
-    let first = puzzle2d_active_example_emit(&command, &empty, &Puzzle2dConfig::default()).expect("first load");
-    let mut state = empty.typed().clone();
-    for mutation in &first.artifact_mutations {
-        crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut state, mutation).expect("the first load applies");
-    }
-    assert!(first.artifact_mutations.iter().any(|mutation| matches!(mutation, Puzzle2dMutation::ReplaceKindCatalogs(_))) || state.meta.kind_catalogs.is_none(), "a first load states the example's catalogs");
-    let loaded = Puzzle2dPlaySnapshot::new(Value::from(semio_framework_value::ToValue::to_value(&state)));
-    let reload = puzzle2d_active_example_emit(&command, &loaded, &Puzzle2dConfig::default()).expect("reload");
-    assert!(!reload.artifact_mutations.iter().any(|mutation| matches!(mutation, Puzzle2dMutation::ReplaceKindCatalogs(_) | Puzzle2dMutation::ChangeManifestId(_))), "a reload re-states nothing the document already holds");
-    let mut running = loaded.typed().clone();
-    for mutation in &reload.artifact_mutations {
-        let outcome = mutation.diff(&running);
-        assert!(!outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "{mutation:?} is a no-op: {:?}", outcome.messages());
-        crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut running, mutation).expect("the reload applies");
+    let empty = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] })))).expect("typed fixture admits"));
+    for base in [&empty, &Puzzle2dPlaySnapshot::new(set_active_example::target(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID).clone())] {
+        let emit = puzzle2d_active_example_emit(&command, base, &Puzzle2dConfig::default()).expect("the switch emits");
+        assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty(), "no mutation row: {:?}", emit.artifact_mutations);
+        let [Effect::LoadDocument { pack, .. }] = emit.effects.as_slice() else { panic!("one whole-document load: {:?}", emit.effects) };
+        let loaded = <crate::Puzzle2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the loaded pack decodes");
+        assert_eq!(&loaded, set_active_example::target(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID), "the load carries exactly the example");
     }
 }
 
 /// 📦️ `Puzzle2dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
 /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
-/// `serde_json::Value` bridge impls).
+/// `semio_framework_pack_json::Value` bridge impls).
 #[semio_framework_async_macros::async_test]
 async fn puzzle2d_play_projection_pack_round_trips() {
     let mut app = concrete_forest_app();
@@ -543,7 +584,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 //#region 🔖️CommandEnvelopeTests
 /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`). Deliberately
 /// dispatches through a standalone typed `Puzzle2dStore` — NOT through `Puzzle2dPlayApp`/
-/// `Puzzle2dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app still uses)
+/// `Puzzle2dPlaySnapshot` (the `🔖️ValueBridge` `semio_framework_pack_json::Value` wrapper this app still uses)
 /// — since `Puzzle2dMutation`'s canonical `Mutation<Puzzle2dSnapshot>` impl (not its
 /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
@@ -1005,13 +1046,13 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
 #[semio_framework_async_macros::async_test]
 async fn shipped_examples_parse_in_the_board_engine() {
     for (name, json) in [("concrete-forest", concrete_forest_example_json()), ("nakagin", nakagin_example_json())] {
-        let snapshot: Value = serde_json::from_str(&json).expect("example json");
+        let snapshot: Value = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("example json");
         let mut host = BoardHost::default();
-        let parsed = host.load_board_snapshot_json(&snapshot.to_string());
+        let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&snapshot.to_string(),&mut control)};
         if !parsed {
             let nodes = board_snapshot_nodes(&snapshot).to_vec();
             let edges = board_snapshot_edges(&snapshot).to_vec();
-            let probe = |nodes: &[Value], edges: &[Value]| BoardHost::default().load_board_snapshot_json(&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string());
+            let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
             let bad_node = (1..=nodes.len()).find(|count| !probe(&nodes[..*count], &[])).map(|count| nodes[count - 1].clone());
             let bad_edge = (1..=edges.len()).find(|count| !probe(&nodes, &edges[..*count])).map(|count| edges[count - 1].clone());
             panic!("{name}: the board engine refused the example snapshot; first refused node = {bad_node:?}; first refused edge = {bad_edge:?}");
@@ -1022,15 +1063,15 @@ async fn shipped_examples_parse_in_the_board_engine() {
 /// 🎯️ What the host paints after a gesture: the overview scene's snapshot lane, re-parsed by the
 /// engine, with the first refused node/edge named when it refuses (the runtime only logs a length).
 fn painted_fixture_parses(app: &mut Puzzle2dApp, what: &str) {
-    let body: Value = serde_json::from_str(&render_body(app, overview::BODY_KEY)).expect("overview body json");
+    let body: Value = semio_framework_pack_json::from_json_str(&render_body(app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("overview body json");
     let snapshot_json = body.get("board2d").and_then(|scene| scene.get("snapshotJson")).and_then(Value::as_str).expect("painted snapshot lane").to_string();
-    if BoardHost::default().load_board_snapshot_json(&snapshot_json) {
+    if {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&snapshot_json,&mut control)} {
         return;
     }
-    let snapshot: Value = serde_json::from_str(&snapshot_json).expect("painted snapshot json");
+    let snapshot: Value = semio_framework_pack_json::from_json_str(&snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("painted snapshot json");
     let nodes = board_snapshot_nodes(&snapshot).to_vec();
     let edges = board_snapshot_edges(&snapshot).to_vec();
-    let probe = |nodes: &[Value], edges: &[Value]| BoardHost::default().load_board_snapshot_json(&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string());
+    let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
     let bad_node = (1..=nodes.len()).find(|count| !probe(&nodes[..*count], &[])).map(|count| nodes[count - 1].clone());
     let bad_edge = (1..=edges.len()).find(|count| !probe(&nodes, &edges[..*count])).map(|count| edges[count - 1].clone());
     let head: String = snapshot_json.chars().take(400).collect();
@@ -1092,7 +1133,7 @@ async fn deleting_an_edged_handle_keeps_the_board_parseable() {
     let after = fixture_of(&app);
     assert!(!board_snapshot_edges(&after).iter().any(|edge| edge.get("id").and_then(Value::as_str) == Some(edge_id.as_str())), "the edge on the deleted handle must go with it");
     let mut host = BoardHost::default();
-    let parsed = host.load_board_snapshot_json(&after.to_string());
+    let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&after.to_string(),&mut control)};
     close_app(&mut app);
     assert!(parsed, "the board engine must still parse the document after a handle delete");
 }
@@ -1143,7 +1184,7 @@ fn first_free_handle_id(snapshot: &Value) -> Option<String> {
 #[test]
 fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
     let snapshot = crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json().to_string();
-    let snapshot: Value = serde_json::from_str(&snapshot).expect("nakagin json");
+    let snapshot: Value = semio_framework_pack_json::from_json_str(&snapshot, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin json");
     let node_id = board_snapshot_nodes(&snapshot)[0].get("id").and_then(Value::as_str).expect("node id").to_string();
     let handle_id = board_snapshot_nodes(&snapshot).iter().filter_map(|node| node.get("handles").and_then(Value::as_array)).flatten().filter_map(|handle| handle.get("id").and_then(Value::as_str)).next().expect("handle id").to_string();
     let edge_id = board_snapshot_edges(&snapshot)[0].get("id").and_then(Value::as_str).expect("edge id").to_string();
@@ -1165,18 +1206,18 @@ fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
 /// previewed index is the shared slot index — one mechanism, not two.
 #[test]
 fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index() {
-    let snapshot: Value = serde_json::from_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest json");
+    let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let handle_id = first_free_handle_id(&snapshot).expect("concrete forest offers a free handle");
     let runtime = crate::editor::puzzle2d::config::Puzzle2dPlayRuntime {
         suggestion_menu: Some(crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu { x: 12.0, y: 34.0, window_id: overview::WINDOW_KIND_ID.into(), handle_id: handle_id.clone() }),
         brush_candidate_source_handle_id: handle_id.clone(),
         brush_candidate_index: 1,
-        brush_candidates: vec![semio_framework_value::DslValue::from(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 })), semio_framework_value::DslValue::from(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 }))],
+        brush_candidates: vec![semio_framework_value::ToValue::to_value(&(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 }))), semio_framework_value::ToValue::to_value(&(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 })))],
         ..Default::default()
     };
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
     let scene = edit::puzzle2d_board_scene("{}", &envelope, overview::WINDOW_KIND_ID);
-    let menu: Value = serde_json::from_str(&scene.suggestion_menu_json.expect("an open popup must reach the client")).expect("menu json");
+    let menu: Value = semio_framework_pack_json::from_json_str(&scene.suggestion_menu_json.expect("an open popup must reach the client"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("menu json");
     assert_eq!(menu["open"], json!(true));
     assert_eq!((menu["x"].as_f64(), menu["y"].as_f64()), (Some(12.0), Some(34.0)));
     assert_eq!(menu["handleId"].as_str(), Some(handle_id.as_str()));
@@ -1191,7 +1232,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
 /// 💡️ LAW: a closed popup publishes nothing, so no pane renders a stale menu.
 #[test]
 fn a_closed_suggestion_popup_publishes_no_menu() {
-    let snapshot: Value = serde_json::from_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest json");
+    let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
     assert!(edit::puzzle2d_board_scene("{}", &envelope, overview::WINDOW_KIND_ID).suggestion_menu_json.is_none());
 }
@@ -1308,7 +1349,7 @@ fn labelled_fixture(rows: &[(&str, &str, Option<&str>)]) -> Value {
             None => json!({ "id": id, "nodeKind": kind, "x": 0.0, "y": 0.0 }),
         })
         .collect();
-    json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": nodes, "edges": [], "meta": { "kindCatalogs": { "nodes": [{ "id": "capsule", "name": "Capsule" }] } } })
+    json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": nodes, "edges": [], "meta": { "kindCatalogs": { "nodes": [{ "id": "capsule", "name": "Capsule", "label": "Capsule", "description": "", "icon": "", "image": "", "unit": "" }] } } })
 }
 
 /// 🏷️ LAW: the display label follows 3d's precedence exactly (`puzzle3d_object_display_label`) —
@@ -1342,48 +1383,54 @@ fn the_next_node_label_numbers_duplicates_of_one_kind() {
 }
 
 /// 🏷️ LAW: `addNode` stamps the label at creation — a second node of the same kind reads ` 2`, never
-/// its own raw id.
+/// its own raw id — and each is ONE `create-node`.
 #[test]
 fn adding_nodes_stamps_the_next_display_label() {
-    let mut snapshot = labelled_fixture(&[]);
-    add_node_to_host_snapshot(&mut snapshot, Some("capsule"), None);
-    add_node_to_host_snapshot(&mut snapshot, Some("capsule"), None);
-    let labels: Vec<String> = board_snapshot_nodes(&snapshot).iter().map(|node| puzzle2d_node_display_label(node, &snapshot)).collect();
+    let mut recorder = recorder_of(labelled_fixture(&[]));
+    recorder.add_node(Some("capsule"), None);
+    recorder.add_node(Some("capsule"), None);
+    let view = recorder.value();
+    let labels: Vec<String> = board_snapshot_nodes(view).iter().map(|node| puzzle2d_node_display_label(node, view)).collect();
     assert_eq!(labels, vec!["Capsule".to_string(), "Capsule 2".to_string()]);
+    assert!(recorder.rows().iter().all(|row| matches!(row, Puzzle2dMutation::CreateNode(_))) && recorder.rows().len() == 2, "{:?}", recorder.rows());
 }
 
-/// 🏷️ LAW: a batch of fresh ids is re-labelled in order, each seeing what the earlier ones were just
-/// given — the one seam duplicate and paste share.
+/// 🏷️ LAW: a batch of clones is labelled in order, each seeing what the earlier ones were just given — the one seam
+/// duplicate and paste share.
 #[test]
-fn relabelling_a_batch_numbers_each_new_node_in_order() {
-    let mut snapshot = labelled_fixture(&[("node-a", "capsule", Some("Capsule")), ("node-b", "capsule", Some("Capsule")), ("node-c", "capsule", Some("Capsule"))]);
-    puzzle2d_relabel_nodes(&mut snapshot, &["node-b".to_string(), "node-c".to_string()]);
-    let labels: Vec<String> = board_snapshot_nodes(&snapshot).iter().map(|node| puzzle2d_node_display_label(node, &snapshot)).collect();
-    assert_eq!(labels, vec!["Capsule".to_string(), "Capsule 2".to_string(), "Capsule 3".to_string()]);
+fn cloning_a_batch_numbers_each_new_node_in_order() {
+    let mut recorder = recorder_of(labelled_fixture(&[("node-a", "capsule", Some("Capsule")), ("node-b", "capsule", Some("Capsule 2"))]));
+    let clones = recorder.duplicate(&["node-a".to_string(), "node-b".to_string()]);
+    assert_eq!(clones.len(), 2);
+    let view = recorder.value();
+    let labels: Vec<String> = board_snapshot_nodes(view).iter().map(|node| puzzle2d_node_display_label(node, view)).collect();
+    assert_eq!(labels, vec!["Capsule".to_string(), "Capsule 2".to_string(), "Capsule 3".to_string(), "Capsule 4".to_string()]);
 }
 //#endregion 🏷️DisplayLabels
 
 //#region 🩹️InspectorEdits
 /// 📐️ LAW: `patchInspectorNodes` reaches a node's own numeric field by id — the verb the inspector's
-/// editable steppers dispatch.
+/// editable steppers dispatch — and records exactly the one concrete kind that owns the field.
 #[test]
 fn patching_an_addressed_node_field_writes_only_that_node() {
-    let mut snapshot = json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [{ "id": "a", "x": 1.0 }, { "id": "b", "x": 2.0 }], "edges": [] });
-    patch_inspector_nodes(&mut snapshot, &["a".to_string()], "x", Some(&json!(9.0)), None);
-    assert_eq!(board_snapshot_nodes(&snapshot)[0].get("x").and_then(Value::as_f64), Some(9.0));
-    assert_eq!(board_snapshot_nodes(&snapshot)[1].get("x").and_then(Value::as_f64), Some(2.0), "an addressed patch leaves every other node alone");
+    let mut recorder = recorder_of(json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [{ "id": "a", "x": 1.0, "y": 0.0 }, { "id": "b", "x": 2.0, "y": 0.0 }], "edges": [] }));
+    recorder.patch_fields(&["a".to_string()], "x", Some(&json!(9.0)), None);
+    let rows = recorder.rows();
+    assert!(matches!(rows, [Puzzle2dMutation::MoveNode(row)] if row.id.eq_str("a") && row.new_x == 9.0 && row.new_y == 0.0), "{rows:?}");
+    assert_eq!(board_snapshot_nodes(recorder.value())[1].get("x").and_then(Value::as_f64), Some(2.0), "an addressed patch leaves every other node alone");
 }
 
 /// 📐️ LAW: an id naming a HANDLE patches that handle inside its node — how the inspector's handle
-/// angle/radius steppers reach nested geometry through the same one verb.
+/// angle/radius steppers reach nested geometry through the same one verb — as one `replace-node-handle`.
 #[test]
 fn patching_an_addressed_handle_field_writes_the_nested_handle() {
-    let mut snapshot = json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [{ "id": "a", "x": 1.0, "handles": [{ "id": "a:v0", "angle": 0.0 }, { "id": "a:v1", "angle": 1.0 }] }], "edges": [] });
-    patch_inspector_nodes(&mut snapshot, &["a:v1".to_string()], "angle", None, Some(&json!(0.5)));
-    let handles = board_snapshot_nodes(&snapshot)[0].get("handles").and_then(Value::as_array).expect("handles");
+    let mut recorder = recorder_of(json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [{ "id": "a", "x": 1.0, "y": 0.0, "handles": [{ "id": "a:v0", "angle": 0.0 }, { "id": "a:v1", "angle": 1.0 }] }], "edges": [] }));
+    recorder.patch_fields(&["a:v1".to_string()], "angle", None, Some(&json!(0.5)));
+    let rows = recorder.rows();
+    assert!(matches!(rows, [Puzzle2dMutation::ReplaceNodeHandle(row)] if row.node_id.eq_str("a") && row.handle_id.eq_str("a:v1") && row.new_handle.angle == 1.5), "a delta rides on the handle's own current value: {rows:?}");
+    let handles = board_snapshot_nodes(recorder.value())[0].get("handles").and_then(Value::as_array).expect("handles");
     assert_eq!(handles[0].get("angle").and_then(Value::as_f64), Some(0.0), "a sibling handle is untouched");
-    assert_eq!(handles[1].get("angle").and_then(Value::as_f64), Some(1.5), "a delta rides on the handle's own current value");
-    assert_eq!(board_snapshot_nodes(&snapshot)[0].get("x").and_then(Value::as_f64), Some(1.0), "the owning node is not patched by a handle-addressed edit");
+    assert_eq!(board_snapshot_nodes(recorder.value())[0].get("x").and_then(Value::as_f64), Some(1.0), "the owning node is not patched by a handle-addressed edit");
 }
 //#endregion 🩹️InspectorEdits
 
@@ -1501,9 +1548,9 @@ fn transform_law_node<'a>(snapshot: &'a Value, id: &str) -> &'a Value {
 
 /// 🕹️ Reads the `(move, rotate)` pair out of a rendered board surface's `transformFlags` carrier.
 fn rendered_transform_flags(scene_json: &str) -> (bool, bool) {
-    let rendered: Value = serde_json::from_str(scene_json).expect("rendered board surface parses");
+    let rendered: Value = semio_framework_pack_json::from_json_str(scene_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered board surface parses");
     let encoded = rendered.get("board2d").and_then(|board| board.get("transformFlags")).and_then(Value::as_str).expect("the board scene declares transformFlags");
-    let flags: Value = serde_json::from_str(encoded).expect("transformFlags is a JSON object");
+    let flags: Value = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("transformFlags is a JSON object");
     (flags.get("move").and_then(Value::as_bool).expect("move flag"), flags.get("rotate").and_then(Value::as_bool).expect("rotate flag"))
 }
 
@@ -1561,7 +1608,7 @@ fn a_rotate_record_orbits_a_two_node_selection_about_its_recorded_pivot() {
         ],
         "edges": []
     });
-    let base = Puzzle2dPlaySnapshot::new(snapshot).typed().clone();
+    let base = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(snapshot))).expect("typed fixture admits")).typed().clone();
     let targets = vec!["node-a".to_string(), "node-b".to_string(), "node-locked".to_string()];
     let (pivot_x, pivot_y) = puzzle2d_selection_pivot(&base, &targets, false).expect("pivot");
     let record = Puzzle2dSelectionRecord { targets, motion: Puzzle2dSelectionMotion::Rotate { pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 }, proximity: Vec::new(), connect: false };
@@ -1569,7 +1616,7 @@ fn a_rotate_record_orbits_a_two_node_selection_about_its_recorded_pivot() {
     assert_eq!(yields.len(), 1, "a rotate yields its one leaf and no connection");
     let mut after = base.clone();
     crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
-    let snapshot = Value::from(semio_framework_value::ToValue::to_value(&after));
+    let snapshot = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(semio_framework_value::ToValue::to_value(&after))));
     let a = transform_law_node(&snapshot, "node-a");
     assert!(a.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (a.get("y").and_then(Value::as_f64).expect("y") + 40.0).abs() < 1e-6, "node-a orbits to (0,-40): {a}");
     let b = transform_law_node(&snapshot, "node-b");
@@ -1627,10 +1674,10 @@ async fn board_region_events_commit_one_edit_each_through_the_target_region_verb
 async fn the_board_scene_carries_the_area_brush_extent_and_the_regions_ride_the_fixture() {
     let mut app = concrete_forest_app();
     dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("region create");
-    let rendered: Value = serde_json::from_str(&render_body(&mut app, overview::BODY_KEY)).expect("rendered board surface parses");
+    let rendered: Value = semio_framework_pack_json::from_json_str(&render_body(&mut app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered board surface parses");
     let board = rendered.get("board2d").expect("board scene");
     let encoded = board.get("areaBrushSize").and_then(Value::as_str).expect("the board scene declares areaBrushSize");
-    let size: Value = serde_json::from_str(encoded).expect("areaBrushSize is a JSON object");
+    let size: Value = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("areaBrushSize is a JSON object");
     assert!(size.get("width").and_then(Value::as_f64).is_some_and(|width| width > 0.0), "the brush extent is a positive world width: {encoded}");
     assert!(size.get("height").and_then(Value::as_f64).is_some_and(|height| height > 0.0), "and a positive world height: {encoded}");
     let snapshot_json = board.get("snapshotJson").and_then(Value::as_str).expect("the board scene carries the snapshot");
@@ -1655,7 +1702,7 @@ fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         ("setTargetRegionHidden", "hidden", json!({ "id": region.clone() })),
         ("setTargetRegionLocked", "locked", json!({ "id": region.clone() })),
     ] {
-        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_value::DslValue::from(&args))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args)))).is_err(), "{verb} without its {flag} value must be refused");
         args[flag] = json!(true);
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(committed_edits(&first), 1, "{verb} commits exactly one document edit");
@@ -1680,7 +1727,7 @@ fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
 async fn shipped_node_kinds_are_the_two_examples_own_catalog_rows() {
     let mut derived: Vec<(String, String)> = Vec::new();
     for json in [concrete_forest_example_json(), nakagin_example_json()] {
-        let Ok(snapshot) = serde_json::from_str::<Value>(&json) else { continue };
+        let Ok(snapshot) = semio_framework_pack_json::from_json_str::<Value>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { continue };
         for row in puzzle2d_node_kind_rows(&snapshot) {
             if derived.len() >= PUZZLE2D_NODE_KIND_OPTIONS_MAX {
                 break;
@@ -1713,7 +1760,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle2dPlaySnapshot::new(serde_json::to_value(empty_board_snapshot()).unwrap_or(Value::Null))));
+    let document = peak_of(&|| drop(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(empty_board_snapshot())))))).expect("typed fixture admits"))));
     let snapshot = peak_of(&|| drop(<Puzzle2dPlayApp as ArtifactEditor>::initial_snapshot()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
@@ -1723,14 +1770,16 @@ fn the_initial_snapshot_costs_only_its_document() {
 #[test]
 fn snapshot_import_requires_the_explicit_payload_contract() {
     use crate::editor::puzzle2d::commands::import_snapshot::puzzle2d_import_value;
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🎮️commands/📥️import-snapshot/🧫️fixtures/📄️payload-input/🔣️.json")).expect("plain input examples");
+    let vectors: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(include_str!("../../🎮️commands/📥️import-snapshot/🧫️fixtures/📄️payload-input/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("plain input examples");
     for case in vectors["cases"].as_array().expect("input cases") {
         let result = puzzle2d_import_value(&case["args"]);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().expect("acceptance"));
         if let Ok(snapshot) = result {
             let input = &case["args"]["payload"];
-            let oracle = input.as_str().map(|text| serde_json::from_str::<serde_json::Value>(text).expect("JSON oracle")).unwrap_or_else(|| input.clone());
-            assert_eq!(snapshot, oracle);
+            let source = input.as_str().map(str::to_string).unwrap_or_else(|| semio_framework_pack_json::to_string(input));
+            let oracle: serde_json::Value = serde_json::from_str(&source).expect("third-party JSON oracle");
+            let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&snapshot)).expect("native output oracle");
+            assert_eq!(actual, oracle);
         }
     }
 }

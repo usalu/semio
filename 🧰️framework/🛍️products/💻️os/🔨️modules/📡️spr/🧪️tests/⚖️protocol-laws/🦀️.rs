@@ -686,16 +686,69 @@ where
     assert!(matches_negative, "the summed inverse diffs must equal the negative of the forward diff, d.inverse(base); {report}");
 }
 
-/// ✅️ LAW: `D::between(a, b).apply(a) == b`, and `D::between(a, a).is_empty()` —
-/// [`crate::os_spr::DiffAlgebra`]'s state-delta contract.
-pub async fn assert_diff_algebra_between_law<P, D>(a: &P, b: &P)
+/// 🧊️ Cold twin of [`assert_mutation_inverse_sum_law`] for a projection whose owned form rejects a bare drop (an `OrderedMap`
+/// root, a retirement ladder): every intermediate projection is CLOSED through `retire` and every diff this law raises through
+/// `retire_diff`, and the minted inverse operations through `Mutation::retire_cold`, so the law itself never plain-drops a fail-closed
+/// owner. The assertions are the same four as the plain law; they run after everything is retired.
+pub async fn assert_mutation_inverse_sum_law_cold<P, Op>(mutation: &Op, base: &P, retire: impl Fn(P), retire_diff: impl Fn(Op::Diff))
 where
     P: Clone + PartialEq + std::fmt::Debug,
-    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
+    Op: crate::os_spr::Mutation<P>,
 {
-    let delta = D::between(a, b);
-    assert_eq!(crate::os_spr::apply_diff(&delta, a).as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
-    assert!(D::between(a, a).is_empty(), "DiffAlgebra::between(a, a) must be empty");
+    use crate::os_spr::{DiffAlgebra, MutationDiff};
+    use semio_framework_value::ToValue;
+    fn canon<P, D: MutationDiff<P>>(diff: D) -> D {
+        let mut canonical = D::default();
+        canonical.absorb(diff);
+        canonical
+    }
+    let (forward, messages) = mutation.diff(base).into_parts();
+    let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
+    if rejected {
+        retire_diff(forward);
+        panic!("a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
+    }
+    let after = crate::os_spr::apply_diff(&forward, base).expect("valid forward diff must apply");
+    let changed = after != *base;
+    let negative = forward.inverse(base);
+    retire_diff(forward);
+    let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
+    let non_empty = !backward.is_empty();
+    backward.reverse();
+    let mut state = None;
+    let mut sum = <Op::Diff as Default>::default();
+    for undo in &backward {
+        let current = state.as_ref().unwrap_or(&after);
+        let (step, _) = undo.diff(current).into_parts();
+        let next = crate::os_spr::apply_diff(&step, current).expect("valid inverse diff must apply");
+        sum.absorb(step);
+        if let Some(displaced) = state.replace(next) {
+            retire(displaced);
+        }
+    }
+    for undo in backward {
+        Op::retire_cold(undo);
+    }
+    let restored = state.unwrap_or_else(|| after.clone());
+    let replayed = restored == *base;
+    let report_state = format!("{restored:?}");
+    retire(restored);
+    let summed = crate::os_spr::apply_diff(&sum, &after);
+    let summed_restores = summed.as_ref() == Ok(base);
+    if let Ok(projection) = summed {
+        retire(projection);
+    }
+    retire(after);
+    let canonical_sum = canon::<P, Op::Diff>(sum);
+    let canonical_negative = canon::<P, Op::Diff>(negative);
+    let matches_negative = !changed || canonical_sum == canonical_negative;
+    let report = format!("sum={:?} negative={:?} restored={report_state} base={base:?}", canonical_sum.to_value(), canonical_negative.to_value());
+    retire_diff(canonical_sum);
+    retire_diff(canonical_negative);
+    assert!(!changed || non_empty, "mutation.inverse(base) must not be empty for a mutation that changes state; base={base:?}");
+    assert!(replayed, "applying mutation.inverse(base) (reversed) after mutation must restore base; {report}");
+    assert!(summed_restores, "the summed inverse diffs must restore base from the applied state; {report}");
+    assert!(matches_negative, "the summed inverse diffs must equal the negative of the forward diff, d.inverse(base); {report}");
 }
 
 /// ✅️ LAW: `d.inverse(base).apply(&d.apply(base)) == *base` — [`crate::os_spr::DiffAlgebra`]'s

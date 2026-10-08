@@ -6,7 +6,8 @@ use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGra
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::{apply_canvas_options, flow_content_leaves, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains, FLOW_GRAPH_OPERATION_RAW_BYTES};
+use crate::editor::flow::edit_rules::ContentEdit;
+use crate::editor::flow::{apply_canvas_options, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains, FLOW_GRAPH_OPERATION_RAW_BYTES};
 use crate::{FlowMutation, FlowSnapshot};
 use flow::{neural::ColdRetire, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -91,8 +92,8 @@ pub fn node_graph_edit_slider_leaves(content: &SemioFlowSnapshot, operations: &[
 /// a drag's release (the node-graph gesture record), committed through the node-drag machine as relative `drag-nodes`
 /// leaves, in ONE tool transaction after whatever the rest of the batch lands (a wire the same gesture drew). `setSlider`
 /// rows never touch it either: they land as absolute `set-node-param` leaves ([`node_graph_edit_slider_leaves`]). Every
-/// other row edits the working host by the ids it names, and the change lands as the intent leaves that turn the content
-/// child into the edited scene ([`flow_content_leaves`]) — never a whole-content `set-snapshot`.
+/// other row edits the working host by the ids it names, and each of them lands as the concrete leaves of its own rule
+/// ([`ContentEdit`]) — never a whole-content `set-snapshot`.
 pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp]) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let child_id = &doc.snapshot.content.child_id;
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
@@ -104,45 +105,53 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
     apply_canvas_options(&mut host, config);
     let drags = node_graph_edit_drags(operations);
     let sliders = node_graph_edit_slider_leaves(&content, operations);
+    let mut edit = ContentEdit::new((*content).clone());
     let edited = (|| {
-        let mut edited = false;
         for sub_operation in operations {
             match sub_operation {
                 FlowNodeGraphEditOp::Delete { node_ids, synapse_ids } => {
                     sync_host_selection_domains(&mut host, node_ids, synapse_ids, &[]);
                     host.delete_selection().map_err(|error| Fault::from(format!("nodeGraphEdit delete refusal: {error}")))?;
+                    edit.remove(node_ids, synapse_ids);
                 }
                 FlowNodeGraphEditOp::InsertPort { node_id, side, index } => {
                     let index = *index as usize;
-                    match side.as_str() {
-                        "input" => host.add_input_port(node_id, index),
-                        "output" => host.add_output_port(node_id, index),
+                    let input = match side.as_str() {
+                        "input" => true,
+                        "output" => false,
                         other => return Err(Fault::from(format!("nodeGraphEdit insertPort.side is input or output, not {other:?}"))),
-                    }
-                    .map_err(|error| Fault::from(format!("nodeGraphEdit insertPort refusal: {error}")))?;
+                    };
+                    if input { host.add_input_port(node_id, index) } else { host.add_output_port(node_id, index) }.map_err(|error| Fault::from(format!("nodeGraphEdit insertPort refusal: {error}")))?;
+                    let ports = host.host_snapshot.widgets.iter().find_map(|widget| match widget {
+                        semio_framework_artifact_flow_flow::Widget::Neuron { id, input_ports, output_ports, .. } if id == node_id => Some(if input { input_ports.clone() } else { output_ports.clone() }),
+                        _ => None,
+                    });
+                    edit.insert_port(node_id, input, index, &ports.unwrap_or_default());
                 }
                 FlowNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                    host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map_err(|error| Fault::from(format!("nodeGraphEdit connect refusal: {error}")))?;
+                    let id = host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map_err(|error| Fault::from(format!("nodeGraphEdit connect refusal: {error}")))?;
+                    edit.connect(semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowEdge {
+                        id,
+                        from: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: source_node_id.clone(), port: source_port_id.clone() },
+                        to: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: target_node_id.clone(), port: target_port_id.clone() },
+                        kind: "data".into(),
+                    });
                 }
                 FlowNodeGraphEditOp::Disconnect { synapse_id } => {
                     host.disconnect(synapse_id).map_err(|error| Fault::from(format!("nodeGraphEdit disconnect refusal: {error}")))?;
+                    edit.remove_edge(synapse_id);
                 }
                 FlowNodeGraphEditOp::Move { .. } | FlowNodeGraphEditOp::SetSlider { .. } => continue,
             }
-            edited = true;
         }
-        Ok::<bool, Fault>(edited)
+        Ok::<(), Fault>(())
     })();
-    let edits = match edited {
-        Ok(true) => flow_content_leaves(&content, &crate::flow_content_snapshot_from_working(&host.host_snapshot.widgets, &host.host_snapshot.synapses, &host.host_snapshot.layout)),
-        Ok(false) => Vec::new(),
-        Err(error) => {
-            host.retire_cold();
-            return Err(error);
-        }
-    };
+    if let Err(error) = edited {
+        host.retire_cold();
+        return Err(error);
+    }
     host.retire_cold();
-    let leaves: Vec<SemioFlowMutation> = edits.into_iter().chain(sliders).collect();
+    let leaves: Vec<SemioFlowMutation> = edit.leaves.into_iter().chain(sliders).collect();
     if !drags.is_empty() {
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         return Ok(flow_drag_tool_emit(child_id, NODE_GRAPH_EDIT_VERB, authoring_seed, &content, leaves, &drags));

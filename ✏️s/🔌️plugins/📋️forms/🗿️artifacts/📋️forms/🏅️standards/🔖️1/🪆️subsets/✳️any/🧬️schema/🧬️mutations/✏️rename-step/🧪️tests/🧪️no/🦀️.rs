@@ -8,7 +8,7 @@
 //! ⚠️ Why this leaf pins the NO-OP branch: `FormsSnapshot` keeps its whole `steps` tree in the
 //! composed `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), so a committed snapshot
 //! carries two handles and never a step. Every content-changing forms diff routes through
-//! `forms_diff_from_delta`, which re-mints both handles with a `child_id` that is a
+//! `FormsDiff::apply`, which re-derives both handles with a `child_id` that is a
 //! `DefaultHasher` digest of the child content — hand-authoring such an `➡️after` would mean
 //! forging a value from `std`'s deliberately unspecified default hasher. `rename-step`'s guard
 //! returns BEFORE that call, so it mints nothing and `➡️after == ⬅️before`; the case is applied
@@ -17,8 +17,9 @@
 //! ✏️ Nothing in the seeded scene is invented: the one step it holds takes its `id` AND its `title`
 //! straight from the committed payload — that identity is precisely the collision the guard tests.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-step/🧪️no/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-step/🧪️no/📸️snapshot/➡️after/🔣️.json");
@@ -110,7 +111,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The delta a refused rename produces is exactly the committed all-null `FormsDiff` — the guard
-/// returns before `forms_diff_from_delta` is ever reached, so no half-built handle escapes.
+/// returns before `FormsDiff::apply` is ever reached, so no half-built handle escapes.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());

@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 import { PlaygroundBootPlanner, PLUGIN_GRAPH_CHUNK_ROWS, resolvePlaygroundBoot } from "@semio-tech/framework";
 import { SUSTAINED_TURN_OVERRUN_TURNS, TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
 import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../../🎯️targets/🧊️wgpu/🧵️frame-turn-scheduler/🟦️.ts";
-import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import catalogFixture from "../../../../🔌️plugin/📇️registry/🧫️fixtures/🧩️composition/🔣️.json";
+const catalog = pluginCatalogV1(admitPluginCatalogV1(catalogFixture.cases[1].input, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }));
 
 const ENGINE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const FRAME_WORKER_TS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🎞️frame-worker", "🟦️.ts");
@@ -658,7 +660,7 @@ describe("wgpu frame-Worker step budget", () => {
   });
 
   it("chunks the plugin graph so no single chunk needs the ceiling, and answers exactly what the one-turn resolver answers", () => {
-    const planner = new PlaygroundBootPlanner(PLUGIN_CATALOG, "generation3d");
+    const planner = new PlaygroundBootPlanner(catalog, "canvas");
     const chunks: { readonly stage: string; readonly executingMs: number }[] = [];
     for (;;) {
       const stage = planner.stage();
@@ -674,8 +676,8 @@ describe("wgpu frame-Worker step budget", () => {
     expect(chunks.some((chunk) => chunk.stage === "plugin-graph:order")).toBe(true);
     for (const chunk of chunks) expect(chunk.executingMs).toBeLessThan(WORKER_STEP_BUDGET_MS);
     expect(PLUGIN_GRAPH_CHUNK_ROWS).toBeGreaterThan(0);
-    expect(chunks.filter((chunk) => chunk.stage.startsWith("plugin-graph:rows"))).toHaveLength(Math.ceil((PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length) / PLUGIN_GRAPH_CHUNK_ROWS));
-    const reference = resolvePlaygroundBoot(PLUGIN_CATALOG, "generation3d");
+    expect(chunks.filter((chunk) => chunk.stage.startsWith("plugin-graph:rows"))).toHaveLength(Math.ceil((catalog.plugins.length + catalog.extensions.length) / PLUGIN_GRAPH_CHUNK_ROWS));
+    const reference = resolvePlaygroundBoot(catalog, "canvas");
     expect(plan.plugins.map((entry) => entry.pluginId)).toEqual(reference.plugins.map((entry) => entry.pluginId));
     expect(plan.defaultAppId).toBe(reference.defaultAppId);
     expect(plan.dependencyErrors).toEqual(reference.dependencyErrors);

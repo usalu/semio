@@ -2959,7 +2959,7 @@ describe("loadTaxonomy", () => {
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(selected.join("\n") + "\nreturn invokeGeneratorPreview;"), ts.transpileModule(selected.join("\n") + "\nreturn invokeGeneratorPreview;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       let command = "bun ./📜️script.ts browser preview", cwd = "compiler";
       const invocations: unknown[] = [];
-      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd, command } }), requireRecord, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
+      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd, command } }), requireRecord, discovery.generatorPreviewExecution, (discovery.generatorPreviewResourceLimits), (await import("../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
       expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
       command = fixture.ownerExecutionRoutes.find((row: { id: string }) => row.id === "native-owner").command.replace("preview-generated", "browser preview");
@@ -2971,6 +2971,26 @@ describe("loadTaxonomy", () => {
       expect(invocations).toHaveLength(2);
     }
   });
+
+  test("the actual empty General publisher passes the strict normalization receiver", async () => {
+    const workspace = getWorkspaceRoot(), discovery = await import("../../🔍️discovery/🟦️.ts"), progress = await import("../../🏭️generator/👁️preview/📈️progress/🟦️.ts"), ts = await import("typescript"), esbuild = await import("esbuild");
+    const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8"), syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), names = ["assertGeneratorPreviewTarget", "invokeGeneratorPreview"], functions = names.map(name => syntax.statements.find(statement => ts.isFunctionDeclaration(statement) && statement.name?.text === name)?.getText(syntax));
+    expect(functions.every(Boolean)).toBe(true);
+    const contract = discovery.loadCatalogTaxonomy().generatorContracts["playground-session"]!, target = JSON.parse(readFileSync(join(workspace, contract.ownerPath!, "📋️project.json"), "utf8")).targets[contract.previewTarget!.slice(contract.previewTarget!.lastIndexOf(":") + 1)], output = join(workspace, contract.outputRoots[0].path), before = readFileSync(output), code = functions.join("\n") + "\nreturn invokeGeneratorPreview;";
+    expect(contract.previewProgress).toBeUndefined();
+    for (const javascript of [ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, (await esbuild.transform(code, { loader: "ts", target: "es2022" })).code]) {
+      const controller = new AbortController();
+      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => target, requireRecord, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, progress.receiveGeneratorPreviewProgressV1, () => { if (controller.signal.aborted) throw new Error("owned test cancellation"); }, join, spawnSync, parseGeneratorPreviewManifest, (left: string, right: string) => Buffer.from(left).compare(Buffer.from(right)), (text: string) => createHash("sha256").update(text).digest("hex"));
+      const actual = invoke({ repoRoot: workspace }, "playground-session", contract, { exclusions: [] });
+      expect(actual.manifest.contractId).toBe("playground-session");
+      expect(actual.manifest.nodes).toHaveLength(1);
+      expect(Buffer.from(actual.manifest.nodes[0].bytesBase64, "base64")).toEqual(before);
+      expect(readFileSync(output)).toEqual(before);
+      controller.abort();expect(() => invoke({ repoRoot: workspace }, "playground-session", contract, { exclusions: [] })).toThrow("owned test cancellation");
+      expect(controller.signal.aborted).toBe(true);
+    }
+    console.log("[DEBUG] actual empty General publisher passed strict undeclared-empty-stderr receiver without changing its owned output");
+  }, 120000);
 
   test("routes native generator previews through their declared owner", async () => {
     const root = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
@@ -7440,7 +7460,7 @@ describe("schema scope catalog", () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
     const casesPath = join(import.meta.dir, "../../🧫️fixtures/🧬️schema-scope-catalog/🔣️.json");
-    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean> }[] };
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean>; schemaCompile?: Record<string, boolean> }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧬️schema-scope-catalog/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     const admitScope = ajv.compile(authority);
@@ -7454,6 +7474,11 @@ describe("schema scope catalog", () => {
           writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
         }
         for (const [path, expected] of Object.entries(row.schemaGrammar ?? {})) expect(new Ajv({ strict: false }).validateSchema(row.files[path]), row.id).toBe(expected);
+        for (const [path, expected] of Object.entries(row.schemaCompile ?? {})) {
+          let accepted = true;
+          try { new Ajv({ strict: true, strictTypes: false }).compile(row.files[path]); } catch { accepted = false; }
+          expect(accepted, row.id).toBe(expected);
+        }
         const inventory = library.inventorySchemaScopes(root, taxonomy);
         const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: scope.exports, dependsOn: [...scope.dependsOn] }]));
         for (const scope of Object.values(scopes)) expect(admitScope(scope), JSON.stringify(admitScope.errors)).toBe(true);

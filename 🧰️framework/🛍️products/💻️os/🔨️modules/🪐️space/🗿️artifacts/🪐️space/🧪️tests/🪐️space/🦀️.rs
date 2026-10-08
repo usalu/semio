@@ -1,6 +1,7 @@
 //! 🧪️ Space package identity, codec, mutation, and collaboration laws.
 
 use crate::*;
+use crate::io::text::package::{SPACE_PACKAGE_DECLARATION_JSON, decode_space_package_json, read_builtin_space_package};
 use protocol::Mutation as _;
 use store::ArtifactDsl as _;
 
@@ -17,12 +18,13 @@ fn demo_space() -> SpaceSnapshot {
 
 #[test]
 fn package_declaration_matches_serde_json_oracle() {
-    let ours = package_descriptor().expect("first-party package parser");
-    let oracle: serde_json::Value = serde_json::from_str(SPACE_ARTIFACT_DEFINITION_SCHEMA).expect("third-party package parser");
+    let ours = read_builtin_space_package().expect("first-party explicit package IO");
+    assert_eq!(ours,package_descriptor().expect("typed canonical package"));
+    let oracle: serde_json::Value = serde_json::from_str(SPACE_PACKAGE_DECLARATION_JSON).expect("third-party package parser");
     assert_eq!(ours.id, oracle["id"].as_str().expect("oracle id"));
     assert_eq!(ours.rust_package, oracle["rust_package"].as_str().expect("oracle package"));
-    let invalid = SPACE_ARTIFACT_DEFINITION_SCHEMA.replace("\"os.space\"", "\"os.collection\"");
-    assert!(space_package_from_schema(&invalid).is_err());
+    let invalid = SPACE_PACKAGE_DECLARATION_JSON.replace("\"os.space\"", "\"os.collection\"");
+    assert!(decode_space_package_json(&invalid).is_err());
     assert!(serde_json::from_str::<serde_json::Value>(&invalid).is_ok());
 }
 

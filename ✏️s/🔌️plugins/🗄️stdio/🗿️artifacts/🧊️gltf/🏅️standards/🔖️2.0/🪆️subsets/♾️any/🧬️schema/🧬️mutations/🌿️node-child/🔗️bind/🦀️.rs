@@ -39,7 +39,7 @@ pub fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Resu
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    Ok(GltfDiff { nodes: patch(p.parent, GltfNodeDiff { children: Some(with_inserted(&base.document.nodes[p.parent].children, p.position, p.child)), ..Default::default() }), ..Default::default() })
+    Ok(GltfDiff { nodes: patch(p.parent, GltfNodeDiff { children: Some(GltfRefsDelta::insertion(p.position, GltfRef(p.child))), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

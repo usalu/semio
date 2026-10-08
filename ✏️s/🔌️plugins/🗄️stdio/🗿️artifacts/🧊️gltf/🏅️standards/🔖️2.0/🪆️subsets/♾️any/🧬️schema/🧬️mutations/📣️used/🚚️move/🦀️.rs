@@ -29,7 +29,7 @@ pub fn plan(p: &GltfMoveUsedExtensionPayload, base: &GltfSnapshot) -> Result<Glt
     let Some(index) = base.document.extensions_used.iter().position(|value| value == &p.extension) else {
         return Err(reject("gltf.mutation.extension-absent", "document/extensionsUsed", "extension is not declared"));
     };
-    Ok(GltfDiff { extensions_used: Some(with_moved(&base.document.extensions_used, index, p.position)), ..Default::default() })
+    Ok(GltfDiff { extensions_used: Some(GltfStringsDelta::relocation(&base.document.extensions_used, index, p.position)), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfMoveUsedExtensionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

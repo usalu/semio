@@ -1,6 +1,7 @@
 use crate::standards::v1::subsets::any::io::text::mutations::encode_en1995_mutation_json;
 use crate::standards::v1::subsets::any::io::text::mutations::decode_en1995_mutation_json;
 use super::*;
+use crate::standards::v1::subsets::any::io::{apply_en1995_mutation, inverse_en1995_mutation};
 use protocol::SemanticMutation;
 
 fn every_mutation() -> Vec<En1995Mutation> {

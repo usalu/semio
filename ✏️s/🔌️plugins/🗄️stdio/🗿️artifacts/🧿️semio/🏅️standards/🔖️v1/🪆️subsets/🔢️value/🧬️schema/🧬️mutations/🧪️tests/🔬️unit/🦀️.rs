@@ -206,3 +206,19 @@ async fn removals_invert_at_every_position() {
     }
 }
 
+//#region ↩️LeafInverseLaws
+#[path = "../../✂️remove-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_node;
+#[path = "../../✖️remove-map-entry/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_map_entry;
+#[path = "../../➕insert-list-item/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_list_item;
+#[path = "../../➖remove-list-item/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_list_item;
+#[path = "../../🔁set-value/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_value;
+#[path = "../../🗝️set-map-entry/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_map_entry;
+#[path = "../../🧷set-node/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_node;
+//#endregion ↩️LeafInverseLaws

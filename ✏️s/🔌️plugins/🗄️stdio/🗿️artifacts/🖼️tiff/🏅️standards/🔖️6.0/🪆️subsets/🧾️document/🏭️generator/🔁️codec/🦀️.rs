@@ -17,18 +17,6 @@
 //! backs `image`'s own TIFF support, gives full IFD/tag/byte-order visibility on both the read
 //! and the write side, so there is nothing left for a second, higher-level layer to add.
 //!
-//! One real limitation this investigation also confirmed (documented in this session's own
-//! written report, ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING): `tiff`
-//! 0.11.3's ENCODER hardcodes the byte-order mark to the compiling target's native endianness at
-//! compile time (`#[cfg(target_endian = "little"|"big")]` in `src/encoder/writer.rs`
-//! `write_tiff_header`/`write_bigtiff_header`), never runtime-selectable. Every platform this
-//! oracle is registered for (`darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`,
-//! `win32-x64`) is little-endian, so this library can only ever WRITE `II` (little-endian) TIFF
-//! files — it cannot produce a `MM` (big-endian) "after" fixture for `change-byte-order` on any
-//! of them. `cmd_build("change-byte-order-applied", ..)` below documents this and refuses rather
-//! than hand-rolling a byte-swapped file outside the library (which this ticket's fixture rule
-//! forbids: fixtures must be built BY the library).
-//!
 //! Every recipe's BEFORE and (where the library can actually produce it) AFTER `.tiff` bytes are
 //! built DIRECTLY by this binary's own typed `IfdSpec`/`write_doc` below, handed straight to
 //! `tiff::encoder::TiffEncoder` — never by "applying" this repository's own `TiffMutation`
@@ -52,7 +40,7 @@ use tiff::decoder::ifd::Value;
 use tiff::decoder::Decoder;
 use tiff::encoder::colortype::RGB8;
 use tiff::encoder::TiffEncoder;
-use tiff::tags::{ByteOrder, Tag};
+use tiff::tags::Tag;
 
 //#region 🔖️Json
 fn json_str(s: &str) -> String {
@@ -176,11 +164,6 @@ fn write_doc(ifds: &[IfdSpec]) -> Vec<u8> {
 fn project(path: &str) -> Result<String, String> {
     let bytes = fs::read(path).map_err(|e| format!("cannot read {path}: {e}"))?;
     let mut dec = Decoder::new(Cursor::new(bytes)).map_err(|e| format!("tiff::decoder::Decoder::new: {e}"))?;
-    let byte_order = match dec.byte_order() {
-        ByteOrder::LittleEndian => "little-endian",
-        ByteOrder::BigEndian => "big-endian",
-    };
-
     let mut ifds_json: Vec<String> = Vec::new();
     let mut index = 0usize;
     loop {
@@ -188,7 +171,7 @@ fn project(path: &str) -> Result<String, String> {
         for item in dec.tag_iter() {
             let (tag, value) = item.map_err(|e| format!("tag_iter ifd {index}: {e}"))?;
             let id = tag.to_u16();
-            if id == Tag::StripOffsets.to_u16() || id == Tag::StripByteCounts.to_u16() {
+            if matches!(id,259|266|273|278|279|284|317|322|323|324|325|292|293|347|512|513|514|515|517|518|519|520|521|530) {
                 continue;
             }
             entries.push((id, value));
@@ -219,8 +202,7 @@ fn project(path: &str) -> Result<String, String> {
     }
 
     Ok(format!(
-        "{{\"format\":\"tiff\",\"byteOrder\":{},\"ifdCount\":{},\"ifds\":[{}]}}",
-        json_str(byte_order),
+        "{{\"format\":\"tiff\",\"ifdCount\":{},\"ifds\":[{}]}}",
         ifds_json.len(),
         ifds_json.join(",")
     ))
@@ -251,41 +233,25 @@ fn recipe(id: &str) -> Option<(Vec<IfdSpec>, Vec<IfdSpec>)> {
             vec![IfdSpec { width: 3, height: 2, pixels: fill(3, 2, 0), description: Some("scan notes") }],
             vec![IfdSpec { width: 3, height: 2, pixels: fill(3, 2, 0), description: None }],
         )),
-        "replace-pixels-applied" => Some((
-            vec![IfdSpec { width: 4, height: 4, pixels: fill(4, 4, 0), description: None }],
-            vec![IfdSpec { width: 4, height: 4, pixels: fill(4, 4, 200), description: None }],
-        )),
+        "paint-region-applied" => { let before=fill(4,4,0);let mut after=fill(4,4,0);after[15..18].copy_from_slice(&[9,8,7]);Some((vec![IfdSpec{width:4,height:4,pixels:before,description:None}],vec![IfdSpec{width:4,height:4,pixels:after,description:None}])) },
+        "replace-samples-applied" => { let before=fill(4,4,0);let mut after=fill(4,4,0);after[..3].copy_from_slice(&[24,96,192]);Some((vec![IfdSpec{width:4,height:4,pixels:before,description:None}],vec![IfdSpec{width:4,height:4,pixels:after,description:None}])) },
         _ => None,
     }
 }
 
-const RECIPE_IDS: &[&str] = &["change-byte-order-applied", "insert-ifd-applied", "remove-ifd-applied", "replace-tag-applied", "remove-tag-applied", "replace-pixels-applied"];
+const RECIPE_IDS: &[&str] = &["insert-ifd-applied", "remove-ifd-applied", "replace-tag-applied", "remove-tag-applied", "paint-region-applied", "replace-samples-applied"];
 //#endregion 🔖️Recipes
 
 //#region 🔖️Entry
-fn cmd_build(id: &str, out_dir: &str) -> i32 {
-    if id == "change-byte-order-applied" {
-        eprintln!(
-            "[tiff-ifd-codec] {id}: REFUSED — tiff 0.11.3's encoder hardcodes the byte-order mark \
-             to the compiling target's native endianness at compile time \
-             (#[cfg(target_endian=\"little\"|\"big\")] in src/encoder/writer.rs write_tiff_header/ \
-             write_bigtiff_header), never runtime-selectable. Every platform this oracle targets \
-             (darwin-arm64, darwin-x64, linux-x64, linux-arm64, win32-x64) is little-endian, so \
-             this library can only ever WRITE II (little-endian) TIFF bytes on them — it cannot \
-             produce an MM (big-endian) after.tiff without this binary hand-swapping bytes outside \
-             the library, which this ticket's fixture-authoring rule forbids. No before.tiff or \
-             after.tiff written for this recipe."
-        );
-        return 1;
-    }
+fn cmd_build(id: &str, out_dir: &str, directory_name: &str) -> i32 {
     let Some((before, after)) = recipe(id) else {
         eprintln!("[tiff-ifd-codec] unknown recipe {id:?} — known: {}", RECIPE_IDS.join(", "));
         return 1;
     };
-    let dir = Path::new(out_dir).join(id);
+    let dir = Path::new(out_dir).join(directory_name);
     fs::create_dir_all(&dir).expect("create fixture recipe directory");
-    fs::write(dir.join("before.tiff"), write_doc(&before)).expect("write before.tiff");
-    fs::write(dir.join("after.tiff"), write_doc(&after)).expect("write after.tiff");
+    fs::write(dir.join("⬅️before.tiff"), write_doc(&before)).expect("write before.tiff");
+    fs::write(dir.join("➡️after.tiff"), write_doc(&after)).expect("write after.tiff");
     eprintln!("[tiff-ifd-codec] {id}: before.tiff + after.tiff -> {}", dir.display());
     0
 }
@@ -311,7 +277,7 @@ fn main() {
                 eprintln!("usage: tiff-ifd-codec build <recipe-id> <out-dir>");
                 std::process::exit(2);
             };
-            cmd_build(id, out_dir)
+            cmd_build(id, out_dir, args.get(4).map(String::as_str).unwrap_or(id))
         }
         Some("project") => {
             let Some(path) = args.get(2) else {

@@ -47,7 +47,7 @@ pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, 
         return Err(Fault::from("flow-eval-resolve-window-required"));
     }
     let given_up = match session.resolve_preview_eval(payload.node_hash, &payload.output_json) {
-        flow::PreviewEvalOutcome::Complete { output_json } => session.seed_node_cache(payload.node_hash, &output_json).is_err(),
+        flow::PreviewEvalOutcome::Complete { output_json } => flow::host::io::evaluation_response::decode_flow_node_output_json(&output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
         flow::PreviewEvalOutcome::Cancelled => true,
         flow::PreviewEvalOutcome::Working => false,
     };

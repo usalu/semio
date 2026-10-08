@@ -13,7 +13,6 @@ pub fn diff(payload: &super::CreateMachine, base: &Process3dSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A machine with id \"{}\" already exists.", payload.machine.id), [payload.machine.id.clone()]);
     }
     let at = payload.index.min(base.workshop.machines.len());
-    let reordered = (at < base.workshop.machines.len()).then(|| base.workshop.machines[..at].iter().map(|machine| machine.id.clone()).chain([payload.machine.id.clone()]).chain(base.workshop.machines[at..].iter().map(|machine| machine.id.clone())).collect());
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { added: vec![payload.machine.clone()], reordered, ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta::insertion(at, payload.machine.clone())), ..Default::default() })
 }
 //#endregion 🔖️Diff

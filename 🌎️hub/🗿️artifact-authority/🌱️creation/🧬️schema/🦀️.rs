@@ -6,7 +6,6 @@ use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCrea
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DocumentDescriptor, DocumentOwner, DocumentScope};
 use semio_framework_artifact_reference::ArtifactDialect;
 use directory::{FromValue, ToValue};
-use semio_framework_hash::Sha256;
 
 //#region 🔖️ScopeSchemaExports
 use semio_framework_schema_registry::{register_scope_schema_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};
@@ -186,9 +185,35 @@ pub enum DocumentGenesisCommitV1 {
     Indeterminate,
 }
 
+/// 🛂️ Immutable facts whose physical commitments were admitted before semantic decisions.
+pub struct AdmittedArtifactCreationFactsV1<'a> {
+    facts: &'a [ArtifactCreationFactV1],
+}
+
+impl<'a> AdmittedArtifactCreationFactsV1<'a> {
+    /// 🔒️ The physical owner constructs the witness while its source remains immutably borrowed.
+    pub(super) fn new(facts: &'a [ArtifactCreationFactV1]) -> Self { Self { facts } }
+}
+
+/// 🪢️ An admitted append remains borrowed together with the exact accepted intent it binds.
+pub struct AdmittedArtifactCreationAppendV1<'a> {
+    append: &'a ArtifactCreationFactAppendV1,
+    intent: &'a ArtifactCreationIntentV1,
+}
+
+impl<'a> AdmittedArtifactCreationAppendV1<'a> {
+    /// 🔐️ Construction is confined to the creation owner after physical preparation admission.
+    pub(super) fn new(append: &'a ArtifactCreationFactAppendV1, intent: &'a ArtifactCreationIntentV1) -> Self { Self { append, intent } }
+}
+
 /// 🔀️ A transition appends at most one immutable fact; retries never erase or reopen prior facts.
-pub(crate) fn decide_artifact_creation_fact_append_v1(facts: &[ArtifactCreationFactV1], append: &ArtifactCreationFactAppendV1, observed_now_ms: u64) -> DirectoryResult<Option<ArtifactCreationFactV1>> {
-    let operation = ArtifactCreationOperationV1::fold(facts)?;
+pub(super) fn decide_admitted_artifact_creation_fact_append_v1(admitted: &AdmittedArtifactCreationFactsV1<'_>, admitted_append: &AdmittedArtifactCreationAppendV1<'_>, observed_now_ms: u64) -> DirectoryResult<Option<ArtifactCreationFactV1>> {
+    let facts = admitted.facts;
+    let append = admitted_append.append;
+    let operation = ArtifactCreationOperationV1::fold(admitted)?;
+    if !std::ptr::eq(admitted_append.intent, match &facts[0].body { ArtifactCreationFactBodyV1::Accepted { intent } => intent, _ => return Err(rejected("artifact creation append admission has no intent")) }) {
+        return Err(rejected("artifact creation append admission belongs to another intent"));
+    }
     if append.actor.user_id != operation.intent.actor.user_id || append.space_id != operation.intent.scope.space_id || append.request_id != operation.intent.request.request_id || append.command_sha256 != operation.intent.command_sha256 {
         return Err(rejected("artifact creation transition belongs to another intent"));
     }
@@ -202,7 +227,7 @@ pub(crate) fn decide_artifact_creation_fact_append_v1(facts: &[ArtifactCreationF
             if append.actor != operation.intent.actor {
                 return Err(rejected("artifact creation preparation session differs"));
             }
-            candidate.validate(&operation.intent)?;
+            candidate.validate_fields(&operation.intent)?;
             if let Some(previous) = operation.prepared.as_ref() {
                 return if previous == candidate { Ok(None) } else { Err(rejected("artifact creation prepared bytes cannot be replaced")) };
             }
@@ -219,36 +244,24 @@ pub(crate) fn decide_artifact_creation_fact_append_v1(facts: &[ArtifactCreationF
     let next = ArtifactCreationFactV1 { actor_user_id: append.actor.user_id.clone(), request_id: append.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now_ms, body: append.body.clone() };
     let mut proposed = facts.to_vec();
     proposed.push(next.clone());
-    ArtifactCreationOperationV1::fold(&proposed)?;
+    ArtifactCreationOperationV1::fold_checked(&proposed)?;
     Ok(Some(next))
 }
 
-fn rejected(message: &'static str) -> DirectoryError {
+pub(super) fn rejected(message: &'static str) -> DirectoryError {
     DirectoryError::Conflict(message.into())
 }
 
-fn text(value: &str) -> bool {
+pub(super) fn text(value: &str) -> bool {
     !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control)
 }
 
 fn hash(value: &str) -> bool {
-    ArtifactHash::parse_hex(value).is_some_and(|digest| digest.0 != [0; 32] && digest.hex() == value)
+    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) && value.bytes().any(|byte| byte != b'0')
 }
 
 /// 🔏️ Scope is length-prefixed before the canonical client intent; no route alias can collide.
-pub fn artifact_creation_command_digest_v1(space_id: &str, request: &SpaceArtifactCreateV1) -> DirectoryResult<String> {
-    if !text(space_id) || !request.validate() {
-        return Err(rejected("artifact creation intent is invalid"));
-    }
-    let canonical = semio_framework_pack_json::to_json_string(request);
-    let mut digest = Sha256::new();
-    digest.update(b"semio.hub.artifact-creation-intent.v1\0");
-    for bytes in [space_id.as_bytes(), canonical.as_bytes()] {
-        digest.update(&(bytes.len() as u64).to_be_bytes());
-        digest.update(bytes);
-    }
-    Ok(directory::os_directory::hex_lower(&digest.finalize()))
-}
+
 
 impl ArtifactCreationIntentV1 {
     /// 🚪️ Coordinates are derived from the accepted catalog binding, not supplied as a ready reply.
@@ -262,7 +275,7 @@ impl ArtifactCreationIntentV1 {
     }
 
     /// 🛡️ A stored intent is bounded, exact, and names one server-minted artifact.
-    pub fn validate(&self) -> DirectoryResult<()> {
+    pub fn validate_fields(&self) -> DirectoryResult<()> {
         let descriptor = DocumentDescriptor {
             space_id: self.scope.space_id.clone(),
             document_id: self.scope.document_id.clone(),
@@ -274,7 +287,9 @@ impl ArtifactCreationIntentV1 {
             bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
             bootstrap_snapshot_hash: "01".repeat(32),
         };
-        if !text(&self.actor.user_id)
+        if !self.request.validate()
+            || !hash(&self.command_sha256)
+            || !text(&self.actor.user_id)
             || !text(&self.actor.session_id)
             || self.actor.authorization_generation == 0
             || self.actor.authorization_generation > directory::os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER
@@ -291,10 +306,9 @@ impl ArtifactCreationIntentV1 {
             || !self.ready().validate()
             || !hash(&self.catalog_generation)
             || self.request.expected_catalog_generation_id != self.catalog_generation
-            || self.command_sha256 != artifact_creation_command_digest_v1(&self.scope.space_id, &self.request)?
             || self.accepted_at_ms.checked_add(ARTIFACT_CREATION_DEADLINE_MS) != Some(self.deadline_ms)
             || self.deadline_ms > directory::os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            || directory::os_directory::descriptor_digest_v1(&descriptor).is_err()
+            || directory::os_directory::validate_document_descriptor_v1(&descriptor).is_err()
         {
             return Err(rejected("artifact creation accepted identity is invalid"));
         }
@@ -310,8 +324,8 @@ impl ArtifactCreationPreparedV1 {
     /// genesis the guest had already completed, which is a decision about a bound and not about
     /// identity, and it belongs to the live operation's stall bound (ticket 26/09/18 slice HC1).
     /// `published_at_ms < accepted_at_ms` stays, because a checkpoint cannot predate its own intent.
-    pub fn validate(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<()> {
-        intent.validate()?;
+    pub fn validate_fields(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<()> {
+        intent.validate_fields()?;
         let d = &self.descriptor;
         let c = &self.checkpoint;
         if self.pack.is_empty()
@@ -325,26 +339,14 @@ impl ArtifactCreationPreparedV1 {
             || d.pack_schema_hash != intent.pack_schema_hash
             || d.bootstrap_version != 1
             || d.bootstrap_frontier != (directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 })
-            || d.bootstrap_snapshot_hash != directory::os_directory::hex_lower(&Sha256::digest(&self.pack))
             || c.scope != intent.scope
             || !c.baseline_frontier.is_genesis_for(&intent.scope)
             || c.parent_checkpoint_id.is_some()
             || c.published_at_ms < intent.accepted_at_ms
-            || directory::os_directory::descriptor_digest_v1(d).ok() != Some(c.descriptor_digest_v1)
-            || c.pack.sha256 != ArtifactHash(Sha256::digest(&self.pack))
             || c.pack.byte_length != self.pack.len() as u64
-            || c.spr.sha256 != ArtifactHash(Sha256::digest(&self.spr))
             || c.spr.byte_length != self.spr.len() as u64
-            || c.pack.storage_key != format!("sha256/{}", c.pack.sha256.hex())
-            || c.spr.storage_key != format!("sha256/{}", c.spr.sha256.hex())
         {
             return Err(rejected("artifact creation prepared pair differs from its accepted intent"));
-        }
-        let mut aggregate = Sha256::new();
-        aggregate.update(&self.pack);
-        aggregate.update(&self.spr);
-        if c.aggregate_sha256 != ArtifactHash(aggregate.finalize()) || super::super::checkpoint_id_encoding_v1(c).ok().map(|bytes| ArtifactHash(Sha256::digest(&bytes))) != Some(c.checkpoint_id) {
-            return Err(rejected("artifact creation prepared integrity differs"));
         }
         Ok(())
     }
@@ -362,14 +364,18 @@ impl ArtifactCreationOperationV1 {
     /// only accepts Prepared on a key still in `Accepted`, and a key the recovery
     /// sweep closed is already terminal, so a late preparation on an abandoned key is
     /// refused by the transition itself.
-    pub fn fold(facts: &[ArtifactCreationFactV1]) -> DirectoryResult<Self> {
+    pub fn fold(admitted: &AdmittedArtifactCreationFactsV1<'_>) -> DirectoryResult<Self> {
+        Self::fold_checked(admitted.facts)
+    }
+
+    fn fold_checked(facts: &[ArtifactCreationFactV1]) -> DirectoryResult<Self> {
         if facts.is_empty() || facts.len() > ARTIFACT_CREATION_FACTS_MAX {
             return Err(rejected("artifact creation fact count is invalid"));
         }
         let ArtifactCreationFactBodyV1::Accepted { intent } = &facts[0].body else {
             return Err(rejected("artifact creation history has no accepted intent"));
         };
-        intent.validate()?;
+        intent.validate_fields()?;
         let mut result = Self { intent: intent.clone(), prepared: None, receipt: None, phase: SpaceArtifactCreationPhaseV1::Accepted, revision: 0 };
         let mut timestamp = intent.accepted_at_ms;
         for (index, fact) in facts.iter().enumerate() {
@@ -384,7 +390,7 @@ impl ArtifactCreationOperationV1 {
             match (&fact.body, result.phase, index) {
                 (ArtifactCreationFactBodyV1::Accepted { .. }, _, 0) if fact.recorded_at_ms == intent.accepted_at_ms => {}
                 (ArtifactCreationFactBodyV1::Prepared { candidate }, SpaceArtifactCreationPhaseV1::Accepted, _) => {
-                    candidate.validate(intent)?;
+                    candidate.validate_fields(intent)?;
                     if fact.recorded_at_ms < candidate.checkpoint.published_at_ms {
                         return Err(rejected("artifact creation preparation predates its checkpoint"));
                     }

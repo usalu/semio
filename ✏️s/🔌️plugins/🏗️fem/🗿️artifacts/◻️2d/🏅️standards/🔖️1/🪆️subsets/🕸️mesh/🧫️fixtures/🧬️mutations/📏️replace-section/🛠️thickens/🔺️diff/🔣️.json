@@ -4,20 +4,20 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "chs889",
-        "item": {
+        "patch": {
           "id": "chs889",
           "name": "CHS 88.9x5.0",
           "area": 0.001318,
           "iy": 1.16376e-06
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "supports": null,
   "loadCases": null,

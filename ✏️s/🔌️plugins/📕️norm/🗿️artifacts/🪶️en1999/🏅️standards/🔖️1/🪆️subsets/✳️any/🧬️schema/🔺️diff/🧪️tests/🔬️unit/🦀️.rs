@@ -1,4 +1,4 @@
-//! 🧪️ Keyed-diff algebra of En1999: nested-key coalescing, list-setter row diffs, the negative diff and the state delta.
+//! 🧪️ Keyed-diff algebra of En1999: nested-key coalescing, list-setter rows and the negative diff.
 
 use super::En1999Diff;
 use crate::mutations::add_member::AddMember;
@@ -36,8 +36,8 @@ async fn buckling_patches_on_one_member_coalesce_into_one_patch() {
     let sum = law(&base, &buckling(&base, "y", 2.5), |mid| buckling(mid, "z", 3.5)).await;
     let rows = sum.members.expect("members");
     assert_eq!(rows.modified.len(), 1);
-    assert_eq!(rows.modified[0].buckling_length_y, Some(2.5));
-    assert_eq!(rows.modified[0].buckling_length_z, Some(3.5));
+    assert_eq!(rows.modified[0].patch.buckling_length_y, Some(2.5));
+    assert_eq!(rows.modified[0].patch.buckling_length_z, Some(3.5));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -48,7 +48,7 @@ async fn nested_element_patches_coalesce_by_element_id() {
     let sum = law(&base, &set(0.004), |_| set(0.006)).await;
     let patches = sum.sections.expect("sections").modified;
     assert_eq!(patches.len(), 1);
-    assert_eq!(patches[0].elements.as_ref().expect("elements").modified.len(), 1);
+    assert_eq!(patches[0].patch.elements.as_ref().expect("elements").modified.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -64,7 +64,7 @@ async fn add_then_remove_cancels_and_remove_then_add_replaces() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_list_setter_diffs_rows_by_identity_and_inverts() {
+async fn a_list_setter_names_every_row_and_inverts() {
     let base = En1999Snapshot::default();
     let mut members = base.members.clone();
     members[0].length += 1.0;
@@ -78,5 +78,4 @@ async fn a_list_setter_diffs_rows_by_identity_and_inverts() {
     assert_eq!(after.members, members);
     assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<En1999Snapshot, En1999Diff>(&base, &after).await;
 }

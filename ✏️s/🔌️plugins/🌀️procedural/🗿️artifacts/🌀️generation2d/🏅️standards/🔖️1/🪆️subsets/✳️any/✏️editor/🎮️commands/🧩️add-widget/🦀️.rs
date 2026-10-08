@@ -1,10 +1,8 @@
 //! 🧩️ 🧩️ Generation2d play app commands command — `add-widget`.
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::with_host;
+use crate::standards::v1::subsets::any::schema::{host_add_widget, with_host};
 use crate::standards::v1::subsets::any::schema::mutations::{Generation2dMutation};
-
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_host_snapshot_operations};
 
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
@@ -51,13 +49,8 @@ fn add_widget_descriptor(payload: &AddWidget) -> String {
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.host_snapshot;
     let descriptor = add_widget_descriptor(payload);
-    with_host(fixture, |host| {
-        let baseline = host.host_snapshot.clone();
-        let added = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok();
-        let emit = if added { Emit { artifact_mutations: generation2d_host_snapshot_operations(&baseline, &host.host_snapshot), ..Default::default() } } else { Emit::default() };
-        baseline.retire_cold();
-        Ok(emit)
-    })
+    let operations = with_host(fixture, |host| host_add_widget(host, &descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0))).unwrap_or_default();
+    Ok(Emit { artifact_mutations: operations, ..Default::default() })
 }
 
 //#region 🧪️Tests

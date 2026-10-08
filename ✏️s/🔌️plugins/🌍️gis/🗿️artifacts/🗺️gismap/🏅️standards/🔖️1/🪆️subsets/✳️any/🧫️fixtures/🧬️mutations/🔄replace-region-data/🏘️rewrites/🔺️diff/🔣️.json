@@ -2,9 +2,10 @@
   "positions": null,
   "routes": null,
   "regions": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "region-harbor-district",
         "patch": {
@@ -15,7 +16,6 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   }
 }

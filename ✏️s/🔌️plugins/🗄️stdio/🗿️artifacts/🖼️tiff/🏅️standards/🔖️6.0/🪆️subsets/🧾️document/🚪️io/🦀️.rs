@@ -594,7 +594,7 @@ fn write_native(snapshot: &NativeSnapshot,c:&mut semio_framework_value::NativeEn
 
 /// 📖️ Admits native TIFF once into exact owned sample identities.
 pub fn decode_tiff(data:&[u8])->Result<TiffSnapshot,String>{
- controlled_decoding::decode_tiff_controlled(data,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).map_err(|error|error.message)
+ controlled_decoding::decode_tiff_controlled(data,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).map_err(|error|error.message.into_owned())
 }
 /// 📤️ Emits an owned TIFF page under explicit physical policy.
 pub fn encode_tiff_with(snapshot:&TiffSnapshot,options:TiffNativeOptions)->Result<Vec<u8>,String>{let mut progress=|_|true;let mut c=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut progress);let native=owned_samples::lower(snapshot,options,&mut c).map_err(|e|e.to_string())?;write_native(&native,&mut c)}
@@ -694,7 +694,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -813,3 +813,6 @@ semio_framework_plugin::derive_artifact_facets!(
 
 #[path="💾️binary/📸️snapshot/📠️fax/🦀️.rs"]
 mod fax;
+
+#[path="💾️binary/📸️snapshot/👁️observations/🦀️.rs"]
+pub mod native_observations;

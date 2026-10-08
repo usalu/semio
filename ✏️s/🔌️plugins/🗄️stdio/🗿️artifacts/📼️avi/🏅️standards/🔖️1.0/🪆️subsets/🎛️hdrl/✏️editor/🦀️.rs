@@ -345,8 +345,32 @@ impl editing::SnapshotEditingEditor for AviEditor {
             _ => None,
         }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_0::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::avi::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v1_0::subsets::any::schema::mutations::{add_unknown_chunk, insert_chunk, remove_chunk, remove_unknown_chunk};
+        use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, RiffChunk};
+        let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return Ok(None) };
+        let fail = |message: String| Fault::from(message);
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        match segments.as_slice() {
+            ["streams", stream, "chunks", chunk, field, ..] if *field != "keyframe" => {
+                let (stream, chunk) = (stream.parse::<usize>().map_err(|e| fail(e.to_string()))?, chunk.parse::<usize>().map_err(|e| fail(e.to_string()))?);
+                let current = snapshot.streams.get(stream).and_then(|stream| stream.chunks.get(chunk)).ok_or_else(|| fail(format!("chunk {chunk} of stream {stream} does not exist")))?;
+                let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/streams/{stream}/chunks/{chunk}"), event).map_err(|error| fail(error.to_string()))?;
+                let chunk_value = <AviChunk as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                Ok(Some(vec![AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index: stream, index: chunk }), AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index: stream, index: chunk, chunk: chunk_value })]))
+            }
+            ["unknownChunks", index, ..] => {
+                let index = index.parse::<usize>().map_err(|e| fail(e.to_string()))?;
+                let current = snapshot.unknown_chunks.get(index).ok_or_else(|| fail(format!("unknown chunk {index} does not exist")))?;
+                let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/unknownChunks/{index}"), event).map_err(|error| fail(error.to_string()))?;
+                let item = <RiffChunk as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                Ok(Some(vec![AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index }), AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, item })]))
+            }
+            _ => Ok(None),
+        }
     }
 }
 

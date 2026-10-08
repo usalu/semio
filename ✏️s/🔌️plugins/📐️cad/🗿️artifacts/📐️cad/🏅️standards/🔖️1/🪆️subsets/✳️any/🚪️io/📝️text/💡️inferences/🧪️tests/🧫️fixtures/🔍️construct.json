@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "id": "escaped-literals",
+      "text": "RETURN \"line\\n\\u03bb\" AS label, 2.5 AS count",
+      "ast": {
+        "clauses": [],
+        "returnClause": {
+          "kind": "return",
+          "projections": [
+            {
+              "expr": {
+                "kind": "const",
+                "value": "line\nλ"
+              },
+              "alias": "label"
+            },
+            {
+              "expr": {
+                "kind": "const",
+                "value": 2.5
+              },
+              "alias": "count"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "yield-path-alias",
+      "text": "CALL primitive.createBoxFromCorners({ height: 4 }) YIELD data.solid AS solid",
+      "ast": {
+        "clauses": [
+          {
+            "kind": "call",
+            "actionId": "primitive.createBoxFromCorners",
+            "args": {
+              "height": 4
+            },
+            "yieldItems": [
+              {
+                "key": "data.solid",
+                "alias": "solid"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "refusals": [
+    "RETURN \"unterminated",
+    "MATCH (",
+    "CALL ("
+  ]
+}

@@ -1,8 +1,9 @@
 //! 📥️ Bounded hydration of an exact persisted config history into a fresh config store.
 
-use super::{ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, SnapshotRetirementStep, ToValue, mutation_meta_from_history_op_meta};
+use super::{ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, ToValue, mutation_meta_from_history_op_meta};
 use crate::os_spr::io::{binary::OpBinary, text::OpText};
 use std::mem::ManuallyDrop;
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConfigStoreHydrationDiagnostic {
@@ -57,7 +58,7 @@ where
     P: Clone + ToValue + FromValue,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
-    initial: ManuallyDrop<Option<crate::os_store::ArtifactGenesis<P>>>,
+    initial: ManuallyDrop<Option<crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>>>,
     validation: ManuallyDrop<Option<P>>,
     current: ManuallyDrop<Option<P>>,
     history: ManuallyDrop<Option<std::sync::Arc<crate::os_spr::HistoryLog>>>,
@@ -66,10 +67,14 @@ where
     normalized_transitions: ManuallyDrop<Option<Vec<crate::os_spr::MutationEnvelope>>>,
     fold_completed: u64,
     progress_high_water: std::cell::Cell<u64>,
-    source_edits: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::HistoryEdit>>>,
-    source_forwards: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::OpPayload>>>,
-    source_inverse: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::OpPayload>>>,
-    source_metadata: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::HistoryOpMeta>>>,
+    source_edits: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::HistoryEdit>>>,
+    source_forwards: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::OpPayload>>>,
+    source_inverse: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::OpPayload>>>,
+    source_metadata: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::HistoryOpMeta>>>,
+    pending_source_lane: ManuallyDrop<Option<String>>,
+    pending_snapshot: ManuallyDrop<Option<P>>,
+    pending_source_edit: ManuallyDrop<Option<crate::os_spr::HistoryEdit>>,
+    pending_retired_payload: ManuallyDrop<Option<crate::os_spr::OpPayload>>,
     pending_payload: ManuallyDrop<Option<crate::os_spr::OpPayload>>,
     pending_metadata: ManuallyDrop<Option<crate::os_spr::HistoryOpMeta>>,
     expected_id: ManuallyDrop<Option<String>>,
@@ -79,7 +84,8 @@ where
     owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
     pending_edit: ManuallyDrop<Option<Edit<M>>>,
     pending_messages: ManuallyDrop<Option<crate::os_spr::EditMessages>>,
-    edit_lookup: ManuallyDrop<Option<std::collections::BTreeMap<String, usize>>>,
+    retired_messages: ManuallyDrop<Option<crate::os_spr::EditMessages>>,
+    edit_lookup: ManuallyDrop<Option<protocol::HistoryFoldIndex<String, usize>>>,
     active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     actor: ManuallyDrop<crate::os_spr::ActorId>,
     initial_digest: [u8; 32],
@@ -90,6 +96,7 @@ where
     operation_index: usize,
     record_index: usize,
     diagnostic: Option<ConfigStoreHydrationDiagnostic>,
+    last_retirement_progress: RetainedCloneProgress,
     terminal: bool,
 }
 
@@ -99,7 +106,7 @@ where
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn from_snapshots(
-        initial: crate::os_store::ArtifactGenesis<P>,
+        initial: crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>,
         validation: P,
         current: P,
         history: crate::os_spr::HistoryLog,
@@ -110,7 +117,7 @@ where
         maximum_value_bytes: usize,
         actor: crate::os_spr::ActorId,
     ) -> Self {
-        let initial_digest = initial.digest();
+        let initial_digest = initial.facts().digest();
         Self {
             actor: ManuallyDrop::new(actor),
             initial: ManuallyDrop::new(Some(initial)),
@@ -126,6 +133,10 @@ where
             source_forwards: ManuallyDrop::new(None),
             source_inverse: ManuallyDrop::new(None),
             source_metadata: ManuallyDrop::new(None),
+            pending_source_lane: ManuallyDrop::new(None),
+            pending_snapshot: ManuallyDrop::new(None),
+            pending_source_edit: ManuallyDrop::new(None),
+            pending_retired_payload: ManuallyDrop::new(None),
             pending_payload: ManuallyDrop::new(None),
             pending_metadata: ManuallyDrop::new(None),
             expected_id: ManuallyDrop::new(Some(expected_id)),
@@ -135,7 +146,8 @@ where
             owners: ManuallyDrop::new(Some(owners)),
             pending_edit: ManuallyDrop::new(None),
             pending_messages: ManuallyDrop::new(None),
-            edit_lookup: ManuallyDrop::new(Some(std::collections::BTreeMap::new())),
+            retired_messages: ManuallyDrop::new(None),
+            edit_lookup: ManuallyDrop::new(Some(protocol::HistoryFoldIndex::new())),
             active: ManuallyDrop::new(None),
             initial_digest,
             generation,
@@ -145,6 +157,7 @@ where
             operation_index: 0,
             record_index: 0,
             diagnostic: None,
+            last_retirement_progress: Default::default(),
             terminal: false,
         }
     }
@@ -183,19 +196,41 @@ where
     }
 
     fn retire_edit(&mut self, edit: Edit<M>) {
-        *self.active = Some(self.owners.as_ref().expect("config hydration owner catalog remains retained").retire_decoded_edit(edit));
+        assert!(self.pending_edit.is_none(), "rejected original config edit retains its sole custody slot");
+        *self.pending_edit = Some(edit);
     }
 
-    fn drive_active(&mut self, maximum_bytes: usize) -> Result<bool, ConfigStoreHydrationDiagnostic> {
-        let Some(active) = self.active.as_mut() else { return Ok(false) };
-        match active.close_step(1, maximum_bytes) {
-            Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => Ok(true),
-            Ok(SnapshotRetirementStep::Complete) if active.terminal_is_empty() => {
-                self.active.take();
-                Ok(true)
-            }
-            _ => Err(ConfigStoreHydrationDiagnostic::Initialization),
+    fn drive_active(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ConfigStoreHydrationDiagnostic> {
+        if self.active.is_none() { return Ok(None); }
+        super::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization)
+    }
+
+    fn admit_input<T: semio_framework_value::retirement::RetireOwned>(source: &mut Option<T>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)>, ValueError> {
+        if source.is_none() || grant.maximum_items == 0 { return Ok(None); }
+        if grant.maximum_depth < 2 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "config retained input requires its original cursor depth")); }
+        let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<T>();
+        if grant.maximum_capacity_bytes < capacity { return Ok(None); }
+        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+        let value = source.take().expect("observed original config input");
+        match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, child) {
+            Ok((owner, progress)) => Ok(Some((owner, progress))),
+            Err((error, value)) => { *source = Some(value); Err(error) }
         }
+    }
+
+    pub fn last_retirement_progress(&self) -> RetainedCloneProgress { self.last_retirement_progress }
+
+    fn close_source<T: semio_framework_value::retirement::RetireOwned>(source: &mut Option<super::resident_backing::SourceIterator<T>>, grant: RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), ValueError> {
+        let Some(owner) = source.as_mut() else { return Ok((true, Default::default())); };
+        let depth = owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "config source parent depth overflow"))?;
+        if grant.maximum_items == 0 { return Ok((false, Default::default())); }
+        if grant.maximum_depth < depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "config source depth refused")); }
+        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+        let step = owner.close_step(child)?;
+        let terminal = owner.terminal_is_empty();
+        semio_framework_value::retained_clone::admit_retained_clone_close(child, step, terminal, "config original source iterator")?;
+        if terminal { drop(source.take()); }
+        Ok((terminal, step.progress()))
     }
 
     pub fn request_cancel(&mut self) {
@@ -205,28 +240,76 @@ where
 
     /// 🎟️ The exact byte grant the next `advance` turn gates on: the schema-bounded value ceiling to begin, then each
     /// retained record's own admission; zero once no turn gates on bytes.
-    pub fn demand_bytes(&self) -> usize {
-        match self.phase {
-            Phase::Fold => self.fold_job.as_ref().map_or(1, |job| job.next_step_byte_demand(1)),
+    pub fn demand_bytes(&self) -> Result<usize, ValueError> {
+        if self.phase == Phase::Fold { return self.fold_job.as_ref().map_or(Ok(0), |job| job.next_copy_byte_demand()); }
+        Ok(match self.phase {
             Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.as_slice().first()).map_or(0, |edit| edit.id.len().saturating_mul(2)),
             Phase::DecodeForward | Phase::DecodeInverse => self.pending_payload.as_ref().map_or(0, Self::payload_bytes).max(size_of::<M>()),
             Phase::DecodeMetadata => size_of::<crate::os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
             Phase::FinishEdit => self.pending_edit.as_ref().map_or(0, |edit| edit.id.len()),
             _ => 0,
-        }
+        })
     }
 
-    pub fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> ConfigStoreHydrationStep<P, M> {
+    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> {
+        self.last_retirement_progress = Default::default();
+        let maximum_items = grant.maximum_items;
+        let maximum_bytes = grant.maximum_copy_bytes;
         if let Some(diagnostic) = self.diagnostic {
             return ConfigStoreHydrationStep::Rejected(diagnostic);
         }
         if maximum_items == 0 {
             return ConfigStoreHydrationStep::Pending(self.progress());
         }
-        match self.drive_active(maximum_bytes) {
-            Ok(true) => return ConfigStoreHydrationStep::Pending(self.progress()),
-            Ok(false) => {}
+        match self.drive_active(grant) {
+            Ok(Some(progress)) => { self.last_retirement_progress = progress; return ConfigStoreHydrationStep::Pending(self.progress()); }
+            Ok(None) => {}
             Err(diagnostic) => return self.reject(diagnostic),
+        }
+        if self.retired_messages.is_some() {
+            let capacity = std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>();
+            if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            if grant.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
+            let messages = self.retired_messages.take().expect("original exhausted messages retain their edit identity");
+            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+            match super::admit_artifact_retirement(messages, child, |messages| super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+                Ok((owner, progress)) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                Err((_, messages)) => { *self.retired_messages = Some(messages); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            }
+            return ConfigStoreHydrationStep::Pending(self.progress());
+        }
+        if self.pending_source_lane.is_some() {
+            match Self::admit_input(&mut self.pending_source_lane, grant) {
+                Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                Ok(None) => {}
+                Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+            }
+            return ConfigStoreHydrationStep::Pending(self.progress());
+        }
+        if let Some(snapshot) = self.pending_snapshot.as_ref() {
+            let owners = self.owners.as_ref().expect("config pending snapshot retains its exact factory");
+            let capacity = owners.initial_snapshot_retirement.retirement_birth_bytes(snapshot);
+            if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            if grant.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
+            let snapshot = self.pending_snapshot.take().expect("observed exact pending config snapshot");
+            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+            match owners.retire_initial_snapshot_owned(snapshot, child) {
+                Ok((owner, progress)) if progress.fits(child) && progress.retained_capacity_bytes == capacity => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                Ok((owner, _)) => { *self.active = Some(owner); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+                Err((_, snapshot)) => { *self.pending_snapshot = Some(snapshot); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            }
+            return ConfigStoreHydrationStep::Pending(self.progress());
+        }
+        if self.pending_retired_payload.is_some() {
+            if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+            let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<crate::os_spr::OpPayload>();
+            if child.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
+            let payload = self.pending_retired_payload.take().expect("decoded original payload retains its custody slot");
+            match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(payload, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); self.last_retirement_progress = progress; return ConfigStoreHydrationStep::Pending(self.progress()); }
+                Err((_, payload)) => { *self.pending_retired_payload = Some(payload); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            }
         }
         match self.phase {
             Phase::Begin => {
@@ -243,11 +326,10 @@ where
             }
             Phase::Fold => {
                 let job = self.fold_job.as_mut().expect("config fold job remains retained");
-                if job.next_step_byte_demand(1) > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return self.reject(ConfigStoreHydrationDiagnostic::Capacity); }
-                let result = job.step(1, maximum_bytes, &mut || false);
+                let result = job.step(grant, &mut || false);
                 self.fold_completed = job.completed();
                 match result {
-                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { released_bytes, .. }) if released_bytes <= maximum_bytes => {}
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(grant) => { self.last_retirement_progress = progress; }
                     Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
                         self.fold_job.take();
                         assert!(conflicts.is_empty(), "config histories do not admit conflict owners");
@@ -271,8 +353,10 @@ where
                 envelope.history_shape = crate::os_spr::HistoryShape::Config;
                 envelope.cursor = Some(crate::os_store::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
                 envelope.transitions = self.normalized_transitions.take().expect("normalized config transitions remain retained");
-                *self.source_edits = Some(std::mem::take(&mut history.edits).into_iter());
+                *self.source_edits = Some(super::resident_backing::SourceIterator::new(std::mem::take(&mut history.edits)));
                 *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0))));
+                *self.expected_id = Some(expected_id);
+                *self.schema = Some(schema);
                 *self.envelope = Some(envelope);
                 self.operation_index = 0;
                 self.phase = Phase::BuildAppliedCursor;
@@ -294,28 +378,32 @@ where
             }
             Phase::BeginEdit => {
                 let Some(source) = self.source_edits.as_mut().expect("config source edits remain retained").next() else {
-                    self.source_edits.take();
+                    match Self::close_source(&mut self.source_edits, grant) {
+                        Ok((terminal, progress)) => { self.last_retirement_progress = progress; if !terminal { return ConfigStoreHydrationStep::Pending(self.progress()); } }
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     self.record_index = 0;
                     self.operation_index = 0;
                     self.phase = Phase::ValidateReplay;
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 };
                 if source.actor.as_deref().is_none_or(|actor| actor.trim().is_empty()) {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(source));
+                    *self.pending_source_edit = Some(source);
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
                 if source.id.is_empty() || source.id.len() > self.maximum_value_bytes || maximum_bytes < source.id.len().saturating_mul(2) {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(source));
+                    *self.pending_source_edit = Some(source);
                     return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                 }
                 let Some(metadata) = source.meta else {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: None, ..source }));
+                    *self.pending_source_edit = Some(crate::os_spr::HistoryEdit { meta: None, ..source });
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 };
                 if metadata.len() != source.ops.len() {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: Some(metadata), ..source }));
+                    *self.pending_source_edit = Some(crate::os_spr::HistoryEdit { meta: Some(metadata), ..source });
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
+                *self.pending_source_lane = source.lane;
                 let edit = Edit {
                     line: source.line,
                     id: source.id,
@@ -328,9 +416,9 @@ where
                     started_at: source.started_at,
                     finished_at: source.finished_at,
                 };
-                *self.source_forwards = Some(source.ops.into_iter());
-                *self.source_inverse = Some(source.inverse.into_iter());
-                *self.source_metadata = Some(metadata.into_iter());
+                *self.source_forwards = Some(super::resident_backing::SourceIterator::new(source.ops));
+                *self.source_inverse = Some(super::resident_backing::SourceIterator::new(source.inverse));
+                *self.source_metadata = Some(super::resident_backing::SourceIterator::new(metadata));
                 let runtime = self.runtime.as_mut().expect("config hydration runtime remains retained");
                 if runtime.seed_mutation(crate::os_spr::MutationId(edit.id.clone())).is_err() {
                     self.retire_edit(edit);
@@ -379,13 +467,19 @@ where
                         edit.inverse.push_reserved(operation).unwrap_or_else(|_| panic!("funded config inverse slot"));
                     }
                     let payload = self.pending_payload.take().expect("decoded config payload remains retained");
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(payload));
+                    *self.pending_retired_payload = Some(payload);
                     self.operation_index += 1;
                 } else {
                     if self.phase == Phase::DecodeForward {
-                        self.source_forwards.take();
+                        match Self::close_source(&mut self.source_forwards, grant) {
+                        Ok((terminal, progress)) => { self.last_retirement_progress = progress; if !terminal { return ConfigStoreHydrationStep::Pending(self.progress()); } }
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     } else {
-                        self.source_inverse.take();
+                        match Self::close_source(&mut self.source_inverse, grant) {
+                        Ok((terminal, progress)) => { self.last_retirement_progress = progress; if !terminal { return ConfigStoreHydrationStep::Pending(self.progress()); } }
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     }
                     self.operation_index = 0;
                     self.phase = if self.phase == Phase::DecodeForward { Phase::DecodeInverse } else { Phase::DecodeMetadata };
@@ -429,7 +523,10 @@ where
                     pending_messages.messages.extend(messages);
                     self.operation_index += 1;
                 } else {
-                    self.source_metadata.take();
+                    match Self::close_source(&mut self.source_metadata, grant) {
+                        Ok((terminal, progress)) => { self.last_retirement_progress = progress; if !terminal { return ConfigStoreHydrationStep::Pending(self.progress()); } }
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     self.operation_index = 0;
                     self.phase = Phase::FinishEdit;
                 }
@@ -452,11 +549,11 @@ where
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
                 let messages = self.pending_messages.take().expect("completed message owner remains retained");
-                if !messages.messages.is_empty() {
-                    if let Err(messages) = self.envelope.as_mut().expect("config envelope remains retained").edit_messages.admit(messages) {
-                        *self.active = Some(Box::new(super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)));
-                        return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
-                    }
+                if messages.messages.is_empty() {
+                    *self.retired_messages = Some(messages);
+                } else if let Err(messages) = self.envelope.as_mut().expect("config envelope remains retained").edit_messages.admit(messages) {
+                    *self.pending_messages = Some(messages);
+                    return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                 }
                 self.edit_index += 1;
                 self.record_index += 1;
@@ -473,7 +570,7 @@ where
                             Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                         };
                         let displaced = std::mem::replace(validation, next);
-                        *self.active = Some(self.owners.as_ref().expect("config hydration owners remain retained").initial_snapshot_retirement.retire_owned(displaced));
+                        *self.pending_snapshot = Some(displaced);
                         self.operation_index += 1;
                     } else {
                         self.record_index += 1;
@@ -481,7 +578,7 @@ where
                     }
                 } else {
                     let validation = self.validation.take().expect("completed config validation projection remains retained");
-                    *self.active = Some(self.owners.as_ref().expect("config hydration owners remain retained").initial_snapshot_retirement.retire_owned(validation));
+                    *self.pending_snapshot = Some(validation);
                     self.phase = Phase::RetireValidation;
                 }
                 ConfigStoreHydrationStep::Pending(self.progress())
@@ -505,7 +602,7 @@ where
                             Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                         };
                         let displaced = std::mem::replace(current, next);
-                        *self.active = Some(self.owners.as_ref().expect("config hydration owners remain retained").initial_snapshot_retirement.retire_owned(displaced));
+                        *self.pending_snapshot = Some(displaced);
                         self.operation_index += 1;
                     } else {
                         self.record_index += 1;
@@ -541,16 +638,44 @@ where
                 ConfigStoreHydrationStep::Pending(self.progress())
             }
             Phase::RetireHistory => {
-                if let Some(history) = self.history.take() {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(history).expect("config fold aliases close before history retirement")));
+                if self.history.is_some() {
+                    match Self::admit_input(&mut self.history, grant) {
+                        Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 }
-                if let Some(fold) = self.fold.take() {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(fold));
+                if self.fold.is_some() {
+                    match Self::admit_input(&mut self.fold, grant) {
+                        Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 }
-                if let Some(index) = self.edit_lookup.take() {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
+                if self.edit_lookup.is_some() {
+                    match Self::admit_input(&mut self.edit_lookup, grant) {
+                        Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
+                    return ConfigStoreHydrationStep::Pending(self.progress());
+                }
+                if self.expected_id.is_some() {
+                    match Self::admit_input(&mut self.expected_id, grant) {
+                        Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
+                    return ConfigStoreHydrationStep::Pending(self.progress());
+                }
+                if self.schema.is_some() {
+                    match Self::admit_input(&mut self.schema, grant) {
+                        Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                    }
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 }
                 self.phase = Phase::Finish;
@@ -570,144 +695,198 @@ where
     }
 }
 
+impl<P, M> RetainedConfigStoreHydration<P, M>
+where
+    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+        use semio_framework_value::retirement::RetireOwned;
+        if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
+        fn controlled<T: RetireOwned>(_: &T) -> Result<RetirementDemand, ValueError> {
+            if !T::controlled_retirement_supported() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original config retained value has no controlled retirement declaration")); }
+            Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
+        }
+        fn child(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "original config owner depth overflow"))?;
+            Ok(demand)
+        }
+        if let Some(owner) = self.active.as_ref() { return super::artifact_retirement_box_demands(owner, copy); }
+        if let Some(owner) = self.fold_job.as_ref() { return child(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(copy)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
+        if let Some(value) = self.normalized_transitions.as_ref() { return controlled(value); }
+        if let Some(value) = self.fold.as_ref() { return controlled(value); }
+        if let Some(value) = self.source_edits.as_ref() { return child(value.demands(copy)?); }
+        if let Some(value) = self.source_forwards.as_ref() { return child(value.demands(copy)?); }
+        if let Some(value) = self.source_inverse.as_ref() { return child(value.demands(copy)?); }
+        if let Some(value) = self.source_metadata.as_ref() { return child(value.demands(copy)?); }
+        if let Some(value) = self.pending_source_lane.as_ref() { return controlled(value); }
+        if let Some(value) = self.pending_source_edit.as_ref() { return controlled(value); }
+        if let Some(value) = self.pending_retired_payload.as_ref() { return controlled(value); }
+        if let Some(value) = self.pending_payload.as_ref() { return controlled(value); }
+        if let Some(value) = self.pending_metadata.as_ref() { return controlled(value); }
+        let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+        if let Some(owner) = self.runtime.as_ref() { return child(owner.initialization_retirement_demands(copy)?); }
+        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+        if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
+        if let Some(value) = self.pending_snapshot.as_ref().or_else(|| self.validation.as_ref()).or_else(|| self.current.as_ref()) { return Ok(RetirementDemand { capacity_bytes: owners.initial_snapshot_retirement.retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
+        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
+        if self.initial.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactGenesisRetirement<P>>(), depth: 2, ..Default::default() }); }
+        if let Some(value) = self.history.as_ref() { return controlled(value); }
+        if let Some(value) = self.edit_lookup.as_ref() { return controlled(value); }
+        if let Some(value) = self.expected_id.as_ref() { return controlled(value); }
+        if self.actor.0.capacity() != 0 { return controlled(&self.actor.0); }
+        if let Some(value) = self.schema.as_ref() { return controlled(value); }
+        child(owners.uninstalled_owners_demands(copy)?)
+    }
+}
+
 impl<P, M> ErasedSnapshotRetirement for RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn next_close_byte_demand(&self) -> usize {
-        if self.terminal { return 0; }
-        if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_byte_demand(active); }
-        if let Some(job) = self.fold_job.as_ref() { return job.next_close_byte_demand(); }
-        if let Some(runtime) = self.runtime.as_ref() { return runtime.next_close_byte_demand(); }
-        self.owners.as_ref().map_or(1, DocumentStoreOwners::next_close_byte_demand)
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(0).map(|demand| demand.copy_bytes) }
+    fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(0).map(|demand| demand.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(0).map(|demand| demand.depth) }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close}};
+        use semio_framework_value::retirement::controlled::admit_typed_controlled_retirement;
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "original config hydration depth refused")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.request_cancel();
-        if self.terminal {
-            return Ok(SnapshotRetirementStep::Complete);
+        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(owner) = self.fold_job.as_mut() {
+            let step = owner.close_step(child)?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original config fold")?;
+            if terminal { drop(self.fold_job.take()); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                    self.active.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+        macro_rules! controlled {
+            ($field:ident) => {
+                if let Some(value) = self.$field.take() {
+                    match admit_typed_controlled_retirement(value, child) {
+                        Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                        Err((error, value)) => { *self.$field = Some(value); return Err(error); }
+                    }
                 }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration nested owner reported false terminal")),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
-                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration nested owner exceeded close grant"))
-                }
-                step => Ok(step),
             };
         }
-        if let Some(job) = self.fold_job.as_mut() {
-            match job.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if job.terminal_is_empty() => { self.fold_job.take(); }
-                step => return Ok(step),
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        controlled!(normalized_transitions);
+        controlled!(fold);
+        if let Some(owner) = self.source_edits.as_mut() {
+            let step = owner.close_step(child)?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original config source_edits")?;
+            if terminal { drop(self.source_edits.take()); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(transitions) = self.normalized_transitions.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(transitions));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if let Some(owner) = self.source_forwards.as_mut() {
+            let step = owner.close_step(child)?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original config source_forwards")?;
+            if terminal { drop(self.source_forwards.take()); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(fold) = self.fold.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(fold));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if let Some(owner) = self.source_inverse.as_mut() {
+            let step = owner.close_step(child)?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original config source_inverse")?;
+            if terminal { drop(self.source_inverse.take()); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(value) = self.source_edits.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if let Some(owner) = self.source_metadata.as_mut() {
+            let step = owner.close_step(child)?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original config source_metadata")?;
+            if terminal { drop(self.source_metadata.take()); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(value) = self.source_forwards.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.source_inverse.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.source_metadata.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.pending_payload.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.pending_metadata.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let owners = self.owners.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration lost its owner catalog"))?;
-        if let Some(runtime) = self.runtime.as_mut() {
-            return match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
-                    self.runtime.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration runtime reported false terminal")),
-                step => Ok(step),
-            };
+        controlled!(pending_source_lane);
+        controlled!(pending_source_edit);
+        controlled!(pending_retired_payload);
+        controlled!(pending_payload);
+        controlled!(pending_metadata);
+        let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+        if let Some(owner) = self.runtime.as_mut() {
+            let step = owner.close_step(&owners.initial_snapshot_retirement, child)?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original config initialization")?;
+            if terminal { drop(self.runtime.take()); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(edit) = self.pending_edit.take() {
-            *self.active = Some(owners.retire_decoded_edit(edit));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            match owners.retire_decoded_edit(edit, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, edit)) => { *self.pending_edit = Some(edit); return Err(error); }
+            }
+        }
+        if let Some(messages) = self.retired_messages.take() {
+            match super::admit_artifact_retirement(messages, child, |messages| super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, messages)) => { *self.retired_messages = Some(messages); return Err(error); }
+            }
         }
         if let Some(messages) = self.pending_messages.take() {
-            *self.active = Some(Box::new(super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(validation) = self.validation.take() {
-            *self.active = Some(owners.initial_snapshot_retirement.retire_owned(validation));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(current) = self.current.take() {
-            *self.active = Some(owners.retire_initial_snapshot_owned(current));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(envelope) = self.envelope.take() {
-            *self.active = Some(owners.retire_decoded_envelope(envelope));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(initial) = self.initial.take() {
-            *self.active = Some(owners.retire_genesis_owned(initial));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(history) = self.history.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(history).expect("config fold aliases close before history retirement")));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(index) = self.edit_lookup.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(expected_id) = self.expected_id.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(expected_id));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if !self.actor.0.is_empty() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.actor.0)));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(schema) = self.schema.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(schema));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let owners = self.owners.as_mut().expect("config hydration owner catalog remains retained");
-        match owners.close_uninstalled_owners_step(1, maximum_bytes)? {
-            SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
-                self.owners.take();
-                self.terminal = true;
-                Ok(SnapshotRetirementStep::Complete)
+            match super::admit_artifact_retirement(messages, child, |messages| super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, messages)) => { *self.pending_messages = Some(messages); return Err(error); }
             }
-            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration uninstalled disposer reported false terminal")),
-            step => Ok(step),
         }
+        if let Some(value) = self.pending_snapshot.take() {
+            match owners.retire_initial_snapshot_owned(value, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, value)) => { *self.pending_snapshot = Some(value); return Err(error); }
+            }
+        }
+        if let Some(value) = self.validation.take() {
+            match owners.retire_initial_snapshot_owned(value, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, value)) => { *self.validation = Some(value); return Err(error); }
+            }
+        }
+        if let Some(value) = self.current.take() {
+            match owners.retire_initial_snapshot_owned(value, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, value)) => { *self.current = Some(value); return Err(error); }
+            }
+        }
+        if let Some(value) = self.envelope.take() {
+            match owners.retire_decoded_envelope(value, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, value)) => { *self.envelope = Some(value); return Err(error); }
+            }
+        }
+        if let Some(value) = self.initial.take() {
+            match owners.retire_genesis_owned(value, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, value)) => { *self.initial = Some(value); return Err(error); }
+            }
+        }
+        controlled!(history);
+        controlled!(edit_lookup);
+        controlled!(expected_id);
+        if self.actor.0.capacity() != 0 {
+            let value = std::mem::take(&mut self.actor.0);
+            match admit_typed_controlled_retirement(value, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                Err((error, value)) => { self.actor.0 = value; return Err(error); }
+            }
+        }
+        controlled!(schema);
+        let owners = self.owners.as_mut().expect("original config catalog remains retained");
+        let step = owners.close_uninstalled_owners_step(child)?;
+        let terminal = owners.uninstalled_owners_terminal_is_empty();
+        admit_retained_clone_close(child, step, terminal, "original config catalog")?;
+        if terminal { drop(self.owners.take()); self.terminal = true; }
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -724,6 +903,10 @@ where
             && self.source_forwards.is_none()
             && self.source_inverse.is_none()
             && self.source_metadata.is_none()
+            && self.pending_source_lane.is_none()
+            && self.pending_snapshot.is_none()
+            && self.pending_source_edit.is_none()
+            && self.pending_retired_payload.is_none()
             && self.pending_payload.is_none()
             && self.pending_metadata.is_none()
             && self.expected_id.is_none()
@@ -733,6 +916,7 @@ where
             && self.owners.is_none()
             && self.pending_edit.is_none()
             && self.pending_messages.is_none()
+            && self.retired_messages.is_none()
             && self.edit_lookup.is_none()
             && self.active.is_none()
     }
@@ -767,6 +951,10 @@ where
             && self.source_forwards.is_none()
             && self.source_inverse.is_none()
             && self.source_metadata.is_none()
+            && self.pending_source_lane.is_none()
+            && self.pending_snapshot.is_none()
+            && self.pending_source_edit.is_none()
+            && self.pending_retired_payload.is_none()
             && self.pending_payload.is_none()
             && self.pending_metadata.is_none()
             && self.expected_id.is_none()
@@ -776,6 +964,7 @@ where
             && self.owners.is_none()
             && self.pending_edit.is_none()
             && self.pending_messages.is_none()
+            && self.retired_messages.is_none()
             && self.edit_lookup.is_none()
             && self.active.is_none()
     }

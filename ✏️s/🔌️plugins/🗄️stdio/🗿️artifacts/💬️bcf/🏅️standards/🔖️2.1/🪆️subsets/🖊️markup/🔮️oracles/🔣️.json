@@ -566,6 +566,28 @@
             }
           ],
           "payloadSchema": "../🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
+        },
+        {
+          "id": "set-parts",
+          "capability": "bcf-2-1-snapshot-mutate",
+          "subset": "snapshot",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-parts",
+            "bridgeVersion": 1,
+            "variant": "SetParts"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-snapshot-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
         }
       ]
     }

@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -193,7 +194,7 @@ fn blank_tsv_can_build_edit_and_remove_a_table_through_structural_mutations() {
         let emitted = tsv_emit(&command, snapshot).expect("structural edit");
         assert!(!emitted.artifact_mutations.is_empty());
         for mutation in &emitted.artifact_mutations {
-            crate::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation(snapshot, mutation);
+            crate::apply_mutation(snapshot, mutation);
         }
     }
     let mut snapshot = TsvSnapshot::default();
@@ -215,3 +216,25 @@ fn blank_tsv_can_build_edit_and_remove_a_table_through_structural_mutations() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", TsvEditor, || semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_cell() {
+    
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let base = TsvSnapshot { records: vec![vec!["a".into(), "b".into()], vec!["c".into(), "d".into()]], ..TsvSnapshot::default() };
+    let emit = |event: SnapshotEditEvent| <TsvEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let cell = emit(SnapshotEditEvent::SetValue { path: "/records/1/0".into(), value: semio_framework_value::DslValue::String("z".into()) }).expect("a cell edit resolves");
+    let [mutation @ TsvMutation::SetCell(_)] = cell.artifact_mutations.as_slice() else { panic!("a cell edit raises set-cell") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.records[1][0], "z");
+    let widened = emit(SnapshotEditEvent::InsertValue { path: "/records/0/2".into(), value: semio_framework_value::DslValue::String("x".into()) }).expect("a cell insertion resolves");
+    let mut state = base.clone();
+    widened.artifact_mutations.iter().for_each(|mutation| {
+        apply_mutation(&mut state, mutation);
+    });
+    assert_eq!(state.records[0].len(), 3);
+    let dropped = emit(SnapshotEditEvent::RemoveValue { path: "/records/0".into() }).expect("a row removal resolves");
+    assert!(matches!(dropped.artifact_mutations.as_slice(), [TsvMutation::RemoveRow(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

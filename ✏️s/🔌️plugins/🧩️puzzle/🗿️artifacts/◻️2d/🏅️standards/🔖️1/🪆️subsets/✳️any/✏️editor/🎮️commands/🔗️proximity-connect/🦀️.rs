@@ -1,9 +1,12 @@
 //! 🔗️ `proximity-connect` command, and the proximity search the node drop and `translateSelection` share.
 
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::puzzle2d_minted_edge_id;
+use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
 use crate::editor::puzzle2d::{
-    board_snapshot_nodes, new_edge_id, puzzle2d_entity_hidden, puzzle2d_handle_world_position, puzzle2d_kinds_compatible, puzzle2d_node_reach, puzzle2d_occupied_handles, puzzle2d_push_edge, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_CONNECT_MAX, PUZZLE2D_PROXIMITY_GESTURE_MAX,
+    board_snapshot_nodes, puzzle2d_entity_hidden, puzzle2d_handle_world_position, puzzle2d_kinds_compatible, puzzle2d_node_reach, puzzle2d_occupied_handles, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_CONNECT_MAX, PUZZLE2D_PROXIMITY_GESTURE_MAX,
 };
-use serde_json::{json, Value};
+use crate::standards::v1::subsets::any::schema::mutations::{connect_handles_in_proximity, puzzle2d_handle_distance};
+use semio_framework_pack_json::Value;
 use std::collections::HashSet;
 
 /// 🧲️ One admitted proximity pair: an open handle of the moved node and the stationary open handle
@@ -97,25 +100,28 @@ pub fn puzzle2d_proximity_pairs(snapshot: &Value, node_id: &str, radius: f64) ->
     pairs
 }
 
-/// 🧲️ Applies [`puzzle2d_proximity_pairs`] for every id in `node_ids`, splicing one edge per pair
-/// until the gesture's [`PUZZLE2D_PROXIMITY_GESTURE_MAX`] budget is spent — the fixed figure
-/// `extent` prices, so a whole-selection move never claims more work than a single-node drop. The
-/// stationary peer stays `source`, so the pre-existing structure remains the resolution root exactly
-/// as puzzle3d's relocate auto-attract keeps it. Returns the number of edges created.
-pub fn puzzle2d_proximity_connect(snapshot: &mut Value, node_ids: &[String], radius: f64) -> usize {
+/// 🧲️ Records [`puzzle2d_proximity_pairs`] for every id in `node_ids` as one `connect-handles` per pair — each stating the
+/// tolerance it was recorded under — until the gesture's [`PUZZLE2D_PROXIMITY_GESTURE_MAX`] budget is spent: the fixed
+/// figure `extent` prices, so a whole-selection move never claims more work than a single-node drop. The stationary peer
+/// stays `source`, so the pre-existing structure remains the resolution root exactly as puzzle3d's relocate auto-attract
+/// keeps it. Returns the number of edges created.
+pub fn puzzle2d_proximity_connect(recorder: &mut Puzzle2dRecorder, node_ids: &[String], radius: f64) -> usize {
     let mut created = 0usize;
     let mut seen: HashSet<String> = HashSet::new();
     for node_id in node_ids {
         if !seen.insert(node_id.clone()) {
             continue;
         }
-        for pair in puzzle2d_proximity_pairs(snapshot, node_id, radius) {
+        for pair in puzzle2d_proximity_pairs(recorder.value(), node_id, radius) {
             if created >= PUZZLE2D_PROXIMITY_GESTURE_MAX {
                 return created;
             }
-            let id = new_edge_id(snapshot);
-            puzzle2d_push_edge(snapshot, json!({ "id": id, "source": pair.peer, "target": pair.moved }));
-            created += 1;
+            let id = puzzle2d_minted_edge_id(recorder.typed(), &pair.peer, &pair.moved);
+            let (source, target) = (semio_framework_value::paged::PagedUtf8::from(pair.peer), semio_framework_value::paged::PagedUtf8::from(pair.moved));
+            let tolerance = puzzle2d_handle_distance(recorder.typed(), &source, &target).map_or(radius.max(0.0), |distance| distance.max(radius));
+            if recorder.record(connect_handles_in_proximity(id.as_str().into(), source, target, tolerance)) {
+                created += 1;
+            }
         }
     }
     created
@@ -134,7 +140,7 @@ pub fn proximity_connect(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
         return;
     }
     let radius = args.and_then(|value| value.get("radius")).and_then(Value::as_f64).filter(|radius| radius.is_finite()).unwrap_or(ctx.scene.runtime.proximity_radius);
-    puzzle2d_proximity_connect(&mut ctx.scene.board_snapshot, &node_ids, radius);
+    puzzle2d_proximity_connect(ctx.recorder, &node_ids, radius);
 }
 
 //#region 🧪️Tests

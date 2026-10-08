@@ -121,6 +121,7 @@ impl protocol::OpBinary for BcfMutation {
             BcfMutation::SetViewpointCamera(_) => TAG_SET_VIEWPOINT_CAMERA,
             BcfMutation::SetViewpointComponents(_) => TAG_SET_VIEWPOINT_COMPONENTS,
             BcfMutation::SetViewpointSnapshot(_) => TAG_SET_VIEWPOINT_SNAPSHOT,
+            BcfMutation::SetParts(_) => TAG_SET_PARTS,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -194,6 +195,13 @@ impl protocol::OpBinary for BcfMutation {
                 out.push(if snapshot.is_some() { 1 } else { 0 });
                 if let Some(b) = snapshot {
                     write_bytes_lp(&mut out, b);
+                }
+            }
+            BcfMutation::SetParts(set_parts::SetParts { parts }) => {
+                store::pack_rt::write_varint_u64(&mut out, parts.len() as u64);
+                for part in parts {
+                    write_str_lp(&mut out, &part.name);
+                    write_bytes_lp(&mut out, &part.data);
                 }
             }
         }
@@ -278,6 +286,16 @@ impl protocol::OpBinary for BcfMutation {
                 let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", reader.position(), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid, guid, snapshot }))
             }
+            TAG_SET_PARTS => {
+                let count = reader.read_varint_u64().map_err(|e| malformed("op parts count", reader.position(), e.to_string()))?;
+                let mut parts = Vec::new();
+                for _ in 0..count {
+                    let name = read_str_lp(&mut reader).map_err(|e| malformed("op part name", reader.position(), e))?;
+                    let data = read_bytes_lp(&mut reader).map_err(|e| malformed("op part data", reader.position(), e))?;
+                    parts.push(crate::schema::snapshot::BcfRawPart { name, data });
+                }
+                Ok(BcfMutation::SetParts(set_parts::SetParts { parts }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown BcfMutation tag {other}"))),
         }
     }
@@ -299,5 +317,6 @@ const TAG_INSERT_VIEWPOINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "in
 const TAG_REMOVE_VIEWPOINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-viewpoint");
 const TAG_SET_VIEWPOINT_CAMERA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-viewpoint-camera");
 const TAG_SET_VIEWPOINT_COMPONENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-viewpoint-components");
+const TAG_SET_PARTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-parts");
 const TAG_SET_VIEWPOINT_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-viewpoint-snapshot");
 //#endregion 🏷️WireTags

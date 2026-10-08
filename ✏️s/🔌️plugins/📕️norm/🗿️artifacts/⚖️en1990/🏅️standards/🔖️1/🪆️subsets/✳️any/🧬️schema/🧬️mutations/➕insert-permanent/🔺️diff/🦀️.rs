@@ -11,10 +11,10 @@ pub fn diff(payload: &InsertPermanent, base: &En1990Snapshot) -> MutationOutcome
         let key = payload.item.id.clone();
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The permanent action '{key}' already exists."), [key]);
     }
-    let index = payload.index.min(base.permanents.len());
-    let outcome = MutationOutcome::new(En1990Diff { permanents: En1990PermanentDelta::insertion(&base.permanents, index, payload.item.clone()), ..En1990Diff::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.permanents.len());
+    let outcome = MutationOutcome::new(En1990Diff { permanents: En1990PermanentDelta::insertion(index, payload.item.clone()), ..En1990Diff::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the permanent action list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the permanent action list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

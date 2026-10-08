@@ -1342,60 +1342,6 @@
             }
           },
           {
-            "id": "setSnapshot",
-            "label": {
-              "native": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
-              },
-              "reuse": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
-              }
-            },
-            "kind": "mutation",
-            "iconId": "sparkles",
-            "args": [],
-            "inPalette": false,
-            "semantics": {
-              "effects": {
-                "writes": [
-                  "artifact:{self}"
-                ],
-                "external": false,
-                "destructive": true,
-                "reversible": true
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "whenDestructive"
-              },
-              "execution": {
-                "preview": "diff",
-                "undo": {
-                  "kind": "inverse"
-                },
-                "idempotency": "none",
-                "expectedRevision": true,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.",
-                  "de": "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."
-                },
-                "reuse": {
-                  "en": "Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.",
-                  "de": "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."
-                }
-              }
-            }
-          },
-          {
             "id": "openDocument",
             "label": {
               "native": {
@@ -1445,78 +1391,6 @@
                 "reuse": {
                   "en": "Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.",
                   "de": "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."
-                }
-              }
-            }
-          },
-          {
-            "id": "setSnapshotJson",
-            "label": {
-              "native": {
-                "en": "Set Document JSON",
-                "de": "Dokument-JSON festlegen"
-              },
-              "reuse": {
-                "en": "Set Document JSON",
-                "de": "Dokument-JSON festlegen"
-              }
-            },
-            "kind": "mutation",
-            "iconId": "sparkles",
-            "args": [
-              {
-                "id": "json",
-                "label": {
-                  "native": {
-                    "en": "Document JSON",
-                    "de": "Dokument-JSON"
-                  },
-                  "reuse": {
-                    "en": "Document JSON",
-                    "de": "Dokument-JSON"
-                  }
-                },
-                "schema": {
-                  "kind": "string"
-                },
-                "required": false
-              }
-            ],
-            "inPalette": false,
-            "semantics": {
-              "effects": {
-                "writes": [
-                  "artifact:{self}"
-                ],
-                "external": false,
-                "destructive": true,
-                "reversible": true
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "whenDestructive"
-              },
-              "execution": {
-                "preview": "diff",
-                "undo": {
-                  "kind": "inverse"
-                },
-                "idempotency": "none",
-                "expectedRevision": true,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.",
-                  "de": "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."
-                },
-                "reuse": {
-                  "en": "Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.",
-                  "de": "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."
                 }
               }
             }

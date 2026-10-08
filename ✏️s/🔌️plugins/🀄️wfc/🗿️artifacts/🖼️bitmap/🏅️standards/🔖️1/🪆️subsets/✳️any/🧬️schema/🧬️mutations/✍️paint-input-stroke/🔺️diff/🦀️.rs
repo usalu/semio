@@ -3,7 +3,7 @@
 //! smaller sample no longer holds are skipped (`mutation.partial`), and a stroke with none left is an error.
 
 use super::{stroke_cells, stroke_extent, BITMAP_STROKE_MAXIMUM_POINTS};
-use crate::diff::{BitmapDiff, BitmapInputOp, BitmapPixelRegion};
+use crate::diff::{BitmapDiff, BitmapInputPatch, BitmapInputWrite, BitmapPixelRegion};
 use crate::schema::snapshot::{read_region, BitmapSnapshot};
 
 pub fn diff(payload: &super::PaintInputStroke, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -29,7 +29,7 @@ pub fn diff(payload: &super::PaintInputStroke, base: &BitmapSnapshot) -> protoco
     if region == prior {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Every stroke cell already holds this colour.".to_string());
     }
-    let outcome = protocol::MutationOutcome::new(BitmapDiff { input_ops: vec![BitmapInputOp::Region { region: BitmapPixelRegion { x, y, width, height, pixels: region.to_vec() } }], ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(BitmapDiff { input: BitmapInputPatch { writes: vec![BitmapInputWrite::Region { region: BitmapPixelRegion { x, y, width, height, pixels: region.to_vec() } }], ..Default::default() }, ..Default::default() });
     let total = stroke_cells(&payload.points).len();
     if inside.len() < total {
         return outcome.warning("mutation.partial", format!("{} of {total} stroke cells lie outside the {}×{} input sample and are skipped.", total - inside.len(), base.input.width, base.input.height));

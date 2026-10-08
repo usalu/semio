@@ -9,7 +9,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
 #[cfg(feature = "component-app-assembly")]
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
@@ -280,6 +280,10 @@ pub mod standards {
                         pub mod paint_native_samples;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-image/🦀️.rs"]
                         pub mod replace_image;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-gamma/🦀️.rs"]
+                        pub mod set_gamma;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️replace-samples/🦀️.rs"]
+                        pub mod replace_samples;
                     }
                     #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
                     pub mod operations;
@@ -386,6 +390,8 @@ pub mod editor {
         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
+        pub mod edit_rules;
         #[path = "."]
         pub mod presence {
             #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]

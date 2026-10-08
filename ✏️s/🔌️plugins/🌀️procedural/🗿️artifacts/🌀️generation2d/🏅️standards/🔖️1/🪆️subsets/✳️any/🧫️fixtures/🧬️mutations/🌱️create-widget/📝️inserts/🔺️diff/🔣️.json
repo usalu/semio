@@ -2,16 +2,19 @@
   "schema": null,
   "camera": null,
   "widgets": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "kind": "inputNote",
-        "id": "note-c",
-        "text": "Gamma"
+        "index": 2,
+        "row": {
+          "kind": "inputNote",
+          "id": "note-c",
+          "text": "Gamma"
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "synapses": null,
   "layout": null,

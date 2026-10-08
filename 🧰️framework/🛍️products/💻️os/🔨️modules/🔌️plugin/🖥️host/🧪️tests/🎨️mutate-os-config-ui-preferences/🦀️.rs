@@ -55,8 +55,11 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
+    use semio_framework_plugin_host::config_io::text::mutations::{decode_ui_preferences_config_mutation_json};
+    use semio_framework_plugin_host::config_io::text::snapshot::{decode_ui_preferences_json, encode_ui_preferences_json};
+
     use semio_framework_plugin_host::opening_config::mutations::UiPreferencesConfigMutation;
-    use semio_framework_plugin_host::opening_config::{apply_ui_preferences_config_mutation_reporting, decode_ui_preferences_config_mutation_json, decode_ui_preferences_json, encode_ui_preferences_json, inverse_ui_preferences_config_mutation_steps, UiLocale, UiPreferences};
+    use semio_framework_plugin_host::opening_config::{apply_ui_preferences_config_mutation_reporting, inverse_ui_preferences_config_mutation_steps, UiLocale, UiPreferences};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
 
     //#region 🔖️FixtureDecode

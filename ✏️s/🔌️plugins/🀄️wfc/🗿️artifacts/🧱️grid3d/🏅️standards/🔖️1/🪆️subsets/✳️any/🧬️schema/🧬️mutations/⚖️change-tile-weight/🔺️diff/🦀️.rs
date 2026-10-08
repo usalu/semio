@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeTileWeight` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::{Grid3dDiff, Grid3dRowPatch, Grid3dRows, Grid3dTilePatch};
+use crate::diff::{Grid3dDiff, Grid3dTilePatch, Grid3dTilesDelta, Grid3dTilesModification};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::ChangeTileWeight, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -14,5 +14,5 @@ pub fn diff(payload: &super::ChangeTileWeight, base: &Grid3dSnapshot) -> protoco
     if base.tiles[index].weight == payload.weight {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already carries that weight.", payload.tile_id));
     }
-    protocol::MutationOutcome::new(Grid3dDiff { tiles: Grid3dRows { patched: vec![Grid3dRowPatch { id: payload.tile_id.clone(), patch: Grid3dTilePatch { weight: Some(payload.weight), ..Default::default() } }], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Grid3dDiff { tiles: Grid3dTilesDelta { modified: vec![Grid3dTilesModification { id: payload.tile_id.clone(), patch: Grid3dTilePatch { weight: Some(payload.weight), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

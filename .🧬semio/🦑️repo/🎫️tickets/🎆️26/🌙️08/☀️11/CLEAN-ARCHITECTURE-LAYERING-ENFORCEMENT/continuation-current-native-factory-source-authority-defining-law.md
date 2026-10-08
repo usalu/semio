@@ -1,0 +1,5 @@
+# Factory source authority defining law
+
+General32 all192 accepted the concrete source and comparator ownership contract. Actual Store and Flow factories carry trait-object factory authority whose complete typed payload may outlive its scene source. New portable schema and actual allocator law declare that retained factory authority owns its original Arc across source constructor refusal, source closes before canceled cursor, and work1/3/64 keeps copy/birth/release independent. AJV and TextEncoder validate schema and payload bytes. The first red asks for missing FactoryAuthority: a typed owner of the original object-safe first-party FactoryRetirement authority and its explicit admitted ticket. This is needed directly by actual retained source factories; no arbitrary Any destructor authority or implicit Drop scheduler is admitted.
+
+General33-35 exact launch rows prepared. Full OS closure remains pending; Flow2 actual first blockers are Scene Mesh3d old retirement factory/byte APIs. Root assigns full Scene propagation to this lane until a new slot rotates; necessary Mesh node ownership cannot retain an opaque BTreeMap retirement estimate.

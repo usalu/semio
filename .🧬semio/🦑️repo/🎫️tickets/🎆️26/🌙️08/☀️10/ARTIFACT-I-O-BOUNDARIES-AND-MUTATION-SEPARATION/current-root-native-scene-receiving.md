@@ -1,0 +1,6 @@
+# Current Full Native Scene Receiving
+
+
+Full Scene receiving current4 session73973 actually exits1 after all195owning native laws execute:192passed,3failed,0skipped. Original all-target/no-filter/original budgets preserved; no-fail-fast exposes all three math failures: constructor refusal allocates64unreceipted bytes; original component birth observes8256vs8192bytes; nonempty zero-index wire/point domain returns Schema. These are genuine receiving failures and are not waived or repaired with warmed hidden state. Selected BlockList law also executes successfully inside this full run. Current Board48792 native9/9 and source8859 strict8/184+38Rust grammar are independently GREEN. Genesis87459 native2/2 and source98760 strict4/19+31Rust grammar are independently GREEN; VCS/Store full native remains unexecuted beyond Kernel512. Light now audits current Board/camera corrections and remaining semantic/IO boundaries; High executes remaining semantic Board layout/physical wrappers.
+
+Actual exact output is retained in 🗑️generated/block-list-native-receiving-current4.log. No production math/retirement source was modified in this Root lane. The selected BlockList admission/roundtrip law is independently passing, while full Scene remains RED.

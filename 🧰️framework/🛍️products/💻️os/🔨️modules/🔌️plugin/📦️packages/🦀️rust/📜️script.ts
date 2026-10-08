@@ -108,6 +108,25 @@ class ComposedChildHistorySourceScript extends BundleScript {
   }
 }
 
+/** ♻️ Executes the original segmented-output owner through its actual allocator receipt law. */
+class OutputRetirementNativeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-output-retirement-native accepts no arguments");
+    if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+    const receipts = await runRepositoryExactCargoLaws({
+      cwd: this.repoRoot,
+      env: process.env,
+      groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws: ["segmented_download_contract::segmented_output_original_full_grant_physical_retirement"] }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`[DEBUG] original-output-retirement ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    for (const receipt of receipts) console.log(`[DEBUG] original-output-retirement-receipt ${JSON.stringify(receipt)}`);
+  }
+}
+
 class CodecSendSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-codec-send-source accepts no arguments");
@@ -420,6 +439,7 @@ const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite-
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("test-composed-child-history-source", ComposedChildHistorySourceScript)
+  .register("test-output-retirement-native", OutputRetirementNativeScript)
   .register("test-fixture-channel-interfaces", FixtureChannelInterfacesScript)
   .register("test-codec-send-source", CodecSendSourceScript)
   .register("artifact-admission-check", ArtifactAdmissionCheckScript)

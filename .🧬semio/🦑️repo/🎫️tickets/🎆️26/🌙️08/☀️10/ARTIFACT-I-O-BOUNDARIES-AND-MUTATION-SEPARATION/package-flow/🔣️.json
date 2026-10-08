@@ -1,0 +1,52 @@
+{
+  "packages": [
+    {
+      "owner": "space",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space",
+      "declaration": {
+        "definition_version": 1,
+        "id": "os.space",
+        "artifact": "space",
+        "directory": "🪐️space",
+        "rust_package": "semio-framework-artifact-space-space",
+        "nx_project": "@semio-tech/framework-space-space-rs",
+        "dependencies": []
+      }
+    },
+    {
+      "owner": "collection",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection",
+      "declaration": {
+        "definition_version": 1,
+        "id": "os.collection",
+        "artifact": "collection",
+        "directory": "🗂️collection",
+        "rust_package": "semio-framework-artifact-space-collection",
+        "nx_project": "@semio-tech/framework-space-collection-rs",
+        "dependencies": []
+      }
+    }
+  ],
+  "flow": {
+    "nodeHash": 17,
+    "outputs": [
+      {
+        "schema": "number",
+        "value": 42.0
+      },
+      {
+        "schema": "exact",
+        "large": 9223372036854775807,
+        "nested": {
+          "text": "Grüße",
+          "flag": true
+        }
+      }
+    ],
+    "reject": [
+      "[1,2]",
+      "{",
+      "{\"schema\":\"number\",\"value\":42,\"value\":43}"
+    ]
+  }
+}

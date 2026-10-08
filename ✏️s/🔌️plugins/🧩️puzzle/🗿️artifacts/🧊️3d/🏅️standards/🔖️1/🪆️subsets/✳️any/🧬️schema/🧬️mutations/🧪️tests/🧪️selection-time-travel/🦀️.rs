@@ -8,6 +8,7 @@
 //! (`🧪️w3-t-puzzle-oracle-selfcheck.py` in ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`).
 
 use super::*;
+use crate::apply_puzzle3d_mutation;
 use protocol::OpBinary;
 
 const CORPUS: &str = include_str!("../../../../🧫️fixtures/🧫️selection-time-travel/🔣️.json");

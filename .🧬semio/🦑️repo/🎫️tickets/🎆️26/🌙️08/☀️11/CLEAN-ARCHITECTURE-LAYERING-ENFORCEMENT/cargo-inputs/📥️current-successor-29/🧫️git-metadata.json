@@ -1,0 +1,52 @@
+{
+  "paths": [
+    {
+      "path": "HEAD",
+      "accepted": true
+    },
+    {
+      "path": "objects/ab/deadbeef",
+      "accepted": true
+    },
+    {
+      "path": "refs/heads/main",
+      "accepted": true
+    },
+    {
+      "path": "info/exclude",
+      "accepted": true
+    },
+    {
+      "path": "config.worktree",
+      "accepted": true
+    },
+    {
+      "path": "cursor/session.json",
+      "accepted": false
+    },
+    {
+      "path": "lost-found/other/hash",
+      "accepted": false
+    },
+    {
+      "path": "modules/inactive/index",
+      "accepted": false
+    },
+    {
+      "path": "worktrees/unused/HEAD",
+      "accepted": false
+    },
+    {
+      "path": "../config",
+      "accepted": false
+    },
+    {
+      "path": "objects/../config",
+      "accepted": false
+    },
+    {
+      "path": "/objects/a",
+      "accepted": false
+    }
+  ]
+}

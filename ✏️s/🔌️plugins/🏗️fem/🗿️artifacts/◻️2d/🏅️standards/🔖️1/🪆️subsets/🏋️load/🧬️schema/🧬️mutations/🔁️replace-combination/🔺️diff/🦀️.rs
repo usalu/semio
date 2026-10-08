@@ -6,7 +6,7 @@
 //! `mutation.invariant` on a term weighting the combination itself), the finite-factor bound
 //! (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dCombinationsPatchEntry, Fem2dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dCombinationsModification, Fem2dDiff};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -27,6 +27,6 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshot) -> protocol::Mut
     if *existing == payload.new_combination {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { patched: vec![Fem2dCombinationsPatchEntry { id: payload.id.clone(), item: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { modified: vec![Fem2dCombinationsModification { id: payload.id.clone(), patch: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

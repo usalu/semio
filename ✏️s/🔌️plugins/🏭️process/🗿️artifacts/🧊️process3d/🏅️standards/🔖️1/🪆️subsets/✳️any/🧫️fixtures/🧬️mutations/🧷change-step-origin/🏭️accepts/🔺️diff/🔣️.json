@@ -5,35 +5,25 @@
   "stockPose": null,
   "stockPayload": null,
   "stockSolid": null,
-  "steps": {
-    "childId": "steps-flow-1356790bd31dfe28",
-    "target": {
-      "artifactId": "steps-flow-1356790bd31dfe28",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "flow"
-      }
-    }
-  },
   "stepPayloads": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "step-1",
-        "label": null,
-        "enabled": null,
-        "measure": null,
-        "origin": {
-          "value": {
-            "machineId": "saw",
-            "capabilityId": "cut"
+        "patch": {
+          "label": null,
+          "enabled": null,
+          "measure": null,
+          "origin": {
+            "value": {
+              "machineId": "saw",
+              "capabilityId": "cut"
+            }
           }
         }
       }
-    ],
-    "reordered": null
-  },
-  "toolSolids": null
+    ]
+  }
 }

@@ -1,8 +1,8 @@
 //! 🗂 `update-layer` — sets a page layer's name, visibility, and lock.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PageLayerPatched, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayerPatch, LayoutPagesDelta, LayoutPagesModification, PageLayersDelta, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -53,10 +53,10 @@ pub fn diff_update_layer(payload: &UpdateLayer, base: &LayoutSnapshot) -> protoc
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.page_id.clone(),
                 patch: PagePatch {
-                    layer_patched: Some(PageLayerPatched { layer_id: payload.layer_id.clone(), name: Some(payload.name.clone()), visible: Some(payload.visible), locked: Some(payload.locked) }),
+                    layers: PageLayersDelta::modification(payload.layer_id.clone(), LayerPatch { name: Some(payload.name.clone()), visible: Some(payload.visible), locked: Some(payload.locked) }),
                     ..Default::default()
                 },
             }],

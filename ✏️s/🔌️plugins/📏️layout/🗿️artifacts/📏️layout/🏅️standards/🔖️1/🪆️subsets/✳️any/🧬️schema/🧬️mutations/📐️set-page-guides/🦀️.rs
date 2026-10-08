@@ -1,8 +1,8 @@
 //! 📐 `set-page-guides` — replaces the guides on one page.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta, PageGuideRow, PageGuidesDelta};
-use crate::{LayoutDiff, LayoutRect, LayoutSnapshot, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageGuideRow, PageGuidesDelta, PagePatch};
+use crate::{LayoutDiff, LayoutRect, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -43,7 +43,7 @@ pub fn diff_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> p
     }
     let rows: Vec<PageGuideRow> = payload.guides.iter().enumerate().filter(|(index, guide)| page.guides.get(*index) != Some(*guide)).map(|(index, guide)| PageGuideRow { index, guide: guide.clone() }).collect();
     let len = (payload.guides.len() != page.guides.len()).then_some(payload.guides.len());
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { guides: Some(PageGuidesDelta { len, rows }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { guides: Some(PageGuidesDelta { len, rows }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

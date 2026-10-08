@@ -143,7 +143,6 @@ store::config_diff! {
     record: SpaceConfig,
     diff: SpaceConfigDiff,
     fields: {
-        camera: BTreeMap<String, SpaceWindowCamera>,
         collapsed_node_ids: Vec<String>,
         preview_off_node_ids: Vec<String>,
         active_node_id: Option<String>,
@@ -156,28 +155,15 @@ store::config_diff! {
         active_panel_tab: String,
         space_id: Option<String>,
     },
+    keyed: { camera: SpaceWindowCamera },
 }
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, plus a generic
-/// `Snapshot` every variant's `backwards()` returns: a config-only dispatch is a plain `Apply`, so each tick is its own
-/// distinct, real config edit and "undo this tick" is exactly
-/// "restore the whole-config snapshot from just before it". `Mutation::Diff` is the WHOLE `SpaceConfig`,
-/// not a granular patch type.
-// 🧯️ `large_enum_variant`: `Snapshot` deliberately carries the WHOLE `SpaceConfig` while every other row
-// carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
-// `backwards()` returns. Boxing it would change the derived `semio_framework_dsl_record_derive::DslEnum` wire encoding, which this
-// migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as
-// block3d's `Block3dConfigMutation`/gis's `Gis2dConfigMutation`).
-#[allow(clippy::large_enum_variant)]
+/// 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, each setting only the slots (or keyed camera rows) of
+/// the fields it owns, with the same variant carrying the base values as its inverse. There is no whole-config variant.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum SpaceConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: SpaceConfig,
-    },
     #[dsl(key = "active-node")]
     SetActiveNode { node_id: Option<String> },
     #[dsl(key = "focused-node")]
@@ -195,6 +181,9 @@ pub enum SpaceConfigMutation {
         #[dsl(block)]
         camera: SpaceWindowCamera,
     },
+    /// 🎥️ Removes one window's workflow camera row — the inverse of the first `SetCamera` of a window.
+    #[dsl(key = "remove-camera")]
+    RemoveCamera { window_id: String },
     #[dsl(key = "workflow-engagement-input")]
     SetWorkflowEngagementInput { value: String },
     #[dsl(key = "compiled-dag-engagement-input")]
@@ -267,22 +256,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
     /// entry per variant, in declaration order. ⚠️ PROVISIONAL: no variant below has an authored leaf
     /// directory on disk yet, same precedent the sibling generation2d config aggregate sets.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set",
-            semantic_kind: "set-snapshot",
-            display_name: "Set Snapshot",
-            emoji: "⚙️",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
             owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set-active-node",
@@ -381,6 +354,22 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
         },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
+            owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️remove-camera",
+            semantic_kind: "remove-camera",
+            display_name: "Remove Camera",
+            emoji: "⚙️",
+            aggregate_variant: "RemoveCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
             owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set-workflow-engagement-input",
             semantic_kind: "set-workflow-engagement-input",
             display_name: "Set Workflow Engagement Input",
@@ -463,13 +452,13 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            SpaceConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            SpaceConfigMutation::SetActiveNode { .. } => &Self::DESCRIPTORS[1],
-            SpaceConfigMutation::SetFocusedNode { .. } => &Self::DESCRIPTORS[2],
-            SpaceConfigMutation::SetClipboard { .. } => &Self::DESCRIPTORS[3],
-            SpaceConfigMutation::SetCollapsed { .. } => &Self::DESCRIPTORS[4],
-            SpaceConfigMutation::SetPreviewOff { .. } => &Self::DESCRIPTORS[5],
-            SpaceConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[6],
+            SpaceConfigMutation::SetActiveNode { .. } => &Self::DESCRIPTORS[0],
+            SpaceConfigMutation::SetFocusedNode { .. } => &Self::DESCRIPTORS[1],
+            SpaceConfigMutation::SetClipboard { .. } => &Self::DESCRIPTORS[2],
+            SpaceConfigMutation::SetCollapsed { .. } => &Self::DESCRIPTORS[3],
+            SpaceConfigMutation::SetPreviewOff { .. } => &Self::DESCRIPTORS[4],
+            SpaceConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[5],
+            SpaceConfigMutation::RemoveCamera { .. } => &Self::DESCRIPTORS[6],
             SpaceConfigMutation::SetWorkflowEngagementInput { .. } => &Self::DESCRIPTORS[7],
             SpaceConfigMutation::SetCompiledDagEngagementInput { .. } => &Self::DESCRIPTORS[8],
             SpaceConfigMutation::SetPendingImport { .. } => &Self::DESCRIPTORS[9],
@@ -482,28 +471,36 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
 
     fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            SpaceConfigMutation::Snapshot { config } => SpaceConfigDiff::changing(base, config),
-            SpaceConfigMutation::SetActiveNode { node_id } => SpaceConfigDiff { active_node_id: Some(node_id.clone()), ..Default::default() },
-            SpaceConfigMutation::SetFocusedNode { node_id } => SpaceConfigDiff { focused_node_id: Some(node_id.clone()), ..Default::default() },
-            SpaceConfigMutation::SetClipboard { node_ids } => SpaceConfigDiff { clipboard_node_ids: Some(node_ids.clone()), ..Default::default() },
-            SpaceConfigMutation::SetCollapsed { node_ids } => SpaceConfigDiff { collapsed_node_ids: Some(node_ids.clone()), ..Default::default() },
-            SpaceConfigMutation::SetPreviewOff { node_ids } => SpaceConfigDiff { preview_off_node_ids: Some(node_ids.clone()), ..Default::default() },
-            SpaceConfigMutation::SetCamera { window_id, camera } => {
-                let mut cameras = base.camera.clone();
-                cameras.insert(window_id.clone(), *camera);
-                SpaceConfigDiff { camera: Some(cameras), ..Default::default() }
+            SpaceConfigMutation::SetActiveNode { node_id } => SpaceConfigDiff { active_node_id: (base.active_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetFocusedNode { node_id } => SpaceConfigDiff { focused_node_id: (base.focused_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetClipboard { node_ids } => SpaceConfigDiff { clipboard_node_ids: (base.clipboard_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCollapsed { node_ids } => SpaceConfigDiff { collapsed_node_ids: (base.collapsed_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetPreviewOff { node_ids } => SpaceConfigDiff { preview_off_node_ids: (base.preview_off_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCamera { window_id, camera } => match base.camera.get(window_id) {
+                Some(prior) if prior == camera => SpaceConfigDiff::default(),
+                Some(_) => SpaceConfigDiff { camera: [(window_id.clone(), protocol::KeyedRow::Replace(*camera))].into(), ..Default::default() },
+                None => SpaceConfigDiff { camera: [(window_id.clone(), protocol::KeyedRow::Insert(*camera))].into(), ..Default::default() },
+            },
+            SpaceConfigMutation::RemoveCamera { window_id } => {
+                if !base.camera.contains_key(window_id) {
+                    return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMissing, "the window has no camera row", ["camera", window_id.as_str()]);
+                }
+                SpaceConfigDiff { camera: [(window_id.clone(), protocol::KeyedRow::Remove)].into(), ..Default::default() }
             }
-            SpaceConfigMutation::SetWorkflowEngagementInput { value } => SpaceConfigDiff { workflow_engagement_input: Some(value.clone()), ..Default::default() },
-            SpaceConfigMutation::SetCompiledDagEngagementInput { value } => SpaceConfigDiff { compiled_dag_engagement_input: Some(value.clone()), ..Default::default() },
-            SpaceConfigMutation::SetPendingImport { node_id, format } => SpaceConfigDiff { pending_import_node_id: Some(node_id.clone()), pending_import_format: Some(format.clone()), ..Default::default() },
-            SpaceConfigMutation::SetSpaceId { space_id } => SpaceConfigDiff { space_id: Some(space_id.clone()), ..Default::default() },
-            SpaceConfigMutation::SetActivePanelTab { tab_id } => SpaceConfigDiff { active_panel_tab: Some(tab_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetWorkflowEngagementInput { value } => SpaceConfigDiff { workflow_engagement_input: (base.workflow_engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCompiledDagEngagementInput { value } => SpaceConfigDiff { compiled_dag_engagement_input: (base.compiled_dag_engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            SpaceConfigMutation::SetPendingImport { node_id, format } => SpaceConfigDiff {
+                pending_import_node_id: (base.pending_import_node_id != *node_id).then(|| node_id.clone()),
+                pending_import_format: (base.pending_import_format != *format).then(|| format.clone()),
+                ..Default::default()
+            },
+            SpaceConfigMutation::SetSpaceId { space_id } => SpaceConfigDiff { space_id: (base.space_id != *space_id).then(|| space_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetActivePanelTab { tab_id } => SpaceConfigDiff { active_panel_tab: (base.active_panel_tab != *tab_id).then(|| tab_id.clone()), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            SpaceConfigMutation::Snapshot { .. } => SpaceConfigMutation::Snapshot { config: base.clone() },
             SpaceConfigMutation::SetActiveNode { .. } => SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() },
             SpaceConfigMutation::SetFocusedNode { .. } => SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() },
             SpaceConfigMutation::SetClipboard { .. } => SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() },
@@ -511,7 +508,11 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
             SpaceConfigMutation::SetPreviewOff { .. } => SpaceConfigMutation::SetPreviewOff { node_ids: base.preview_off_node_ids.clone() },
             SpaceConfigMutation::SetCamera { window_id, .. } => match base.camera.get(window_id) {
                 Some(camera) => SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera },
-                None => SpaceConfigMutation::Snapshot { config: base.clone() },
+                None => SpaceConfigMutation::RemoveCamera { window_id: window_id.clone() },
+            },
+            SpaceConfigMutation::RemoveCamera { window_id } => match base.camera.get(window_id) {
+                Some(camera) => SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera },
+                None => return Ok(Vec::new()),
             },
             SpaceConfigMutation::SetWorkflowEngagementInput { .. } => SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() },
             SpaceConfigMutation::SetCompiledDagEngagementInput { .. } => SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() },

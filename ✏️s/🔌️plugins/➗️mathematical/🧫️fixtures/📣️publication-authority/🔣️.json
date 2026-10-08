@@ -4,7 +4,7 @@
   "source": "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "routes": [
     {
-      "id": "setDocument",
+      "id": "editEquation",
       "lane": "Artifact"
     },
     {
@@ -24,7 +24,7 @@
       "lane": "WindowConfig"
     },
     {
-      "id": "setPoints",
+      "id": "editPoints",
       "lane": "Artifact"
     },
     {

@@ -103,14 +103,14 @@ mod tests {
         crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
         let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
         let bytes = base64_codec::base64_standard_decode(result.data).expect("decode base64");
-        let mesh = semio_framework::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
+        let mesh = semio_framework::mesh_io::binary::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
         assert!(mesh.vertex_count() > 0);
     }
 
     #[test]
     fn mesh_importer_registrar_round_trips_a_box_through_obj() {
         crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework_plugin::ObjImporter));
-        let obj_bytes = semio_framework::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
+        let obj_bytes = semio_framework::mesh_io::text::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers.get(&os_media_handler_key("3d.__mesh_importer_test", "obj")).expect("obj handler registered");
         let document = handler(&obj_bytes).expect("import obj");

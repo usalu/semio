@@ -5,6 +5,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 
 import Ajv from "ajv";
+import { Database } from "bun:sqlite";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
@@ -12,7 +13,7 @@ import { applyPatch, type Operation } from "fast-json-patch";
 
 //#region 🧮️DemoOracle
 type Snapshot = { n: number | null };
-type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "restoreN"; n?: number | null };
+type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "assignN"; n?: number | null };
 type Level = "info" | "warning" | "error" | "fatal";
 type Message = { level: Level; code: string };
 type Outcome = { edit: number; op: number; worst: Level | null; codes: string[]; superseded: boolean; withdrawn: boolean };
@@ -46,7 +47,7 @@ function diff(operation: DemoOperation, state: Snapshot): { patch: Operation[]; 
       return state.n === null ? { patch: [], messages: [missing] } : { patch: [{ op: "replace", path: "/n", value: saturate(state.n + operation.delta) }], messages: [{ level: "info", code: "mutation.cascade" }] };
     case "deleteN":
       return { patch: state.n === null ? [] : [{ op: "replace", path: "/n", value: null }], messages: [] };
-    case "restoreN":
+    case "assignN":
       return { patch: [{ op: "replace", path: "/n", value: operation.n ?? null }], messages: [] };
   }
 }
@@ -82,8 +83,38 @@ function replay(testCase: Case): Case["expected"] {
 //#region 🧪️Corpus
 const corpus = read("../../🧫️fixtures/🧫️supersede-replay/🔣️.json");
 
+test("cold history fixtures declare finite caller identity admission", () => {
+  const law = corpus.identityAdmission;
+  const database = new Database(":memory:");
+  try { expect(database.query<{ ceiling: number }, number[]>("SELECT ?1 * ?2 + ?3 AS ceiling").get(law.maximumOperations, law.bodyBytesPerOperation, law.commandScaffoldBytes)?.ceiling).toBe(law.maximumOwnedBytes); }
+  finally { database.close(); }
+  const source = readFileSync(new URL("./🦀️.rs", import.meta.url), "utf8");
+  expect(source).toContain("EntityIdentityAuthority::new(FIXTURE_IDENTITY_BYTE_CEILING");
+  expect(source).toContain("const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES");
+});
+
+test("🎟️ semantic preparation validates independent physical currencies", () => {
+  const law = read("../../🔁️replay/🎮️operation/🧫️fixtures/🔣️.json").turnReceipts;
+  const database = new Database(":memory:");
+  try {
+    const query = database.query<{ accepted: number }, number[]>("SELECT (?1 <= 1 AND ?2 <= ?3 AND ?4 <= ?5 AND ?6 <= ?7 AND ?2 + ?4 <= ?8) AS accepted");
+    for (const row of law.cases) expect(Boolean(query.get(row.items, row.copy, row.copyGrant, row.capacity, row.capacityGrant, row.release, row.releaseGrant, law.maximumBodyCapacityBytes)?.accepted)).toBe(row.accepted);
+  } finally { database.close(); }
+  const source = readFileSync(new URL("../../🔁️replay/🎮️operation/🦀️.rs", import.meta.url), "utf8");
+  expect(source).toContain("Pending(RetainedCloneProgress)");
+  expect(source).toContain("progress.fits(grant.retained_grant())");
+  for (const lane of ["copy", "capacity", "release", "depth"]) expect(source).toContain(`next_advance_${lane}_demand`);
+});
+
+test("📨️ selected diagnostic copy belongs to the neutral message owner", () => {
+  const base = "../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/";
+  const law = read(`${base}🧫️fixtures/🔣️.json`);
+  for (const row of law.cases) for (const text of [row.code, row.message, ...row.target]) expect(new TextDecoder("utf-8", { fatal: true }).decode(new TextEncoder().encode(text))).toBe(text);
+  expect(readFileSync(new URL(`${base}🦀️.rs`, import.meta.url), "utf8").includes("pub struct MessageCopyCursor")).toBe(true);
+});
+
 test("📨️ cooperative message copy matches independent UTF-8 and JSON Patch owners", () => {
-  const base = "../../🔁️replay/🎮️operation/📨️messages/";
+  const base = "../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/";
   const law = read(`${base}🧫️fixtures/🔣️.json`);
   for (const row of law.cases) {
     for (const bytes of law.byteGrants) {
@@ -104,7 +135,7 @@ test("📨️ cooperative message copy matches independent UTF-8 and JSON Patch 
 });
 
 test("📨️ copied diagnostic closure admits each actual backing release", () => {
-  const base = "../../🔁️replay/🎮️operation/📨️messages/";
+  const base = "../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/";
   const law = read(`${base}🧫️fixtures/🔣️.json`);
   for (const row of law.cases) {
     const owners = [row.code, row.message, ...row.target].map((value: string) => Buffer.byteLength(value, "utf8")).filter((bytes: number) => bytes > 0);
@@ -120,7 +151,7 @@ test("📨️ copied diagnostic closure admits each actual backing release", () 
     }
   }
   const producer = readFileSync(new URL(`${base}🦀️.rs`, import.meta.url), "utf8");
-  expect(producer.includes("pub fn next_close_byte_demand")).toBe(true);
+  for (const axis of ["copy", "capacity", "release", "depth"]) expect(producer.includes(`pub fn next_close_${axis}_byte_demand`) || (axis === "depth" && producer.includes("pub fn next_close_depth_demand"))).toBe(true);
   expect(producer.includes("vec![output]")).toBe(false);
   console.log("[DEBUG] diagnostic closure independent UTF-8 allocation ledger removes one exact backing after full grant");
 });

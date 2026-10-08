@@ -1,4 +1,4 @@
-//! 📥 Replaces the document with an imported scene_snapshot JSON file. The host's chunked inbound lane
+//! 📥 Loads an imported scene_snapshot JSON file as the whole document (`Effect::LoadDocument`, outside history). The host's chunked inbound lane
 //! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per `IMPORT_CHUNK_BYTES` page)
 //! is reassembled by the framework before this action runs (`semio_framework::kernel::ImportStaging`, admitted in the
 //! SDK's `dispatch_action`), so the action reads ONE whole `payload`; an agent may hand the scene_snapshot inline as a
@@ -8,10 +8,11 @@
 //! wire ladder spent one host step per byte, `PUZZLE_COMMAND_WIRE_SCAN_STRIDE_BYTES`), so every refusal here answers
 //! with a named, localized notice.
 
-use crate::editor::puzzle3d::{Puzzle3dActionCtx, Puzzle3dSceneSnapshot, PUZZLE3D_SCENE_SNAPSHOT_SCHEMA};
+use crate::editor::puzzle3d::{puzzle3d_snapshot_from_host_snapshot, Puzzle3dActionCtx, Puzzle3dSceneSnapshot, PUZZLE3D_SCENE_SNAPSHOT_SCHEMA};
 use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
 
 use semio_framework_pack_json::{parse, Value};
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_value::FromValue;
 use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;
 
@@ -54,7 +55,15 @@ fn refuse(ctx: &mut Puzzle3dActionCtx<'_>, fault: Puzzle3dImportFault) {
     ctx.abort = true;
 }
 
-/// 📥 Replaces the live scene_snapshot with the imported document as one document edit.
+/// 🌱️ The sanctioned whole-document replacement: the imported `document` as a pack plus a fresh, edit-free op log. A
+/// natural-file import is the load path, not a mutation — it carries no inverse and journals no history row.
+pub fn puzzle3d_load_document_effect(document: &crate::Puzzle3dSnapshot) -> Effect {
+    let pack = <crate::Puzzle3dSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(crate::editor::puzzle3d::PUZZLE3D_PLAY_APP_ID, crate::PUZZLE_3D_SCHEMA));
+    Effect::LoadDocument { pack, spr }
+}
+
+/// 📥 Loads the imported scene_snapshot as the whole document.
 pub fn import_snapshot(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let value = match args.ok_or(Puzzle3dImportFault::Payload).and_then(puzzle3d_import_value) {
         Ok(value) => value,
@@ -66,5 +75,8 @@ pub fn import_snapshot(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     if scene_snapshot.schema.is_empty() {
         scene_snapshot.schema = PUZZLE3D_SCENE_SNAPSHOT_SCHEMA.into();
     }
-    ctx.scene.scene_snapshot = scene_snapshot;
+    let Ok(document) = puzzle3d_snapshot_from_host_snapshot(&scene_snapshot) else {
+        return refuse(ctx, Puzzle3dImportFault::Payload);
+    };
+    ctx.effects.push(puzzle3d_load_document_effect(&document));
 }

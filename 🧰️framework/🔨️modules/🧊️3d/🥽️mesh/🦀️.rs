@@ -143,7 +143,7 @@ pub enum WeldMode {
     ByDistance,
 }
 
-pub use semio_framework_mesh_engine::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture};
+pub use semio_framework_mesh_engine::{HistoryFoldIndex, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
@@ -232,13 +232,13 @@ pub struct MeshTransfer {
     pub colors: Vec<f32>,
     #[value(default)]
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
-    pub attributes: std::collections::BTreeMap<String,MeshAttribute>,
+    pub attributes: HistoryFoldIndex<String,MeshAttribute>,
     #[value(default)]
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
-    pub materials: std::collections::BTreeMap<String,protocol::value::DslValue>,
+    pub materials: HistoryFoldIndex<String,protocol::value::DslValue>,
     #[value(default)]
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
-    pub textures: std::collections::BTreeMap<String,MeshTexture>,
+    pub textures: HistoryFoldIndex<String,MeshTexture>,
     pub positions: Vec<f32>,
     pub normals: Vec<f32>,
     pub indices: Vec<u32>,
@@ -279,53 +279,61 @@ pub struct HalfedgeMesh {
     uv_seams: HashSet<u32>,
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     #[value(default)]
-    attributes: BTreeMap<String, MeshAttribute>,
+    attributes: HistoryFoldIndex<String,MeshAttribute>,
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     #[value(default)]
-    materials: BTreeMap<String,protocol::value::DslValue>,
+    materials: HistoryFoldIndex<String,protocol::value::DslValue>,
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     #[value(default)]
-    textures: BTreeMap<String,MeshTexture>,
+    textures: HistoryFoldIndex<String,MeshTexture>,
 }
 
-impl protocol::value::retirement::RetireOwned for Vec3 {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::RetireOwned::retirement(self.0)}
-}
+protocol::value::artifact_retire_leaf!(Vec3);
 impl protocol::value::retirement::RetireOwned for HalfedgeMesh {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures]}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.vertices),protocol::value::retirement::deferred(self.halfedges),protocol::value::retirement::deferred(self.faces),protocol::value::retirement::deferred(self.uv_seams),protocol::value::retirement::deferred(self.attributes),protocol::value::retirement::deferred(self.materials),protocol::value::retirement::deferred(self.textures)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.vertices),protocol::value::retirement::deferred_birth_bytes_for(&self.halfedges),protocol::value::retirement::deferred_birth_bytes_for(&self.faces),protocol::value::retirement::deferred_birth_bytes_for(&self.uv_seams),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes),protocol::value::retirement::deferred_birth_bytes_for(&self.materials),protocol::value::retirement::deferred_birth_bytes_for(&self.textures)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for MeshVertex {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.position,self.normal,self.halfedge]}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.position),protocol::value::retirement::deferred(self.normal),protocol::value::retirement::deferred(self.halfedge)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.position),protocol::value::retirement::deferred_birth_bytes_for(&self.normal),protocol::value::retirement::deferred_birth_bytes_for(&self.halfedge)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for HalfEdge {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.vertex,self.twin,self.next,self.face,self.uv]}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.vertex),protocol::value::retirement::deferred(self.twin),protocol::value::retirement::deferred(self.next),protocol::value::retirement::deferred(self.face),protocol::value::retirement::deferred(self.uv)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.vertex),protocol::value::retirement::deferred_birth_bytes_for(&self.twin),protocol::value::retirement::deferred_birth_bytes_for(&self.next),protocol::value::retirement::deferred_birth_bytes_for(&self.face),protocol::value::retirement::deferred_birth_bytes_for(&self.uv)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for MeshFace {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.halfedge,self.smooth,self.flipped]}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.halfedge),protocol::value::retirement::deferred(self.smooth),protocol::value::retirement::deferred(self.flipped)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.halfedge),protocol::value::retirement::deferred_birth_bytes_for(&self.smooth),protocol::value::retirement::deferred_birth_bytes_for(&self.flipped)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for MeshTransfer {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.positions,self.normals,self.colors,self.indices,self.uvs,self.face_ids,self.vertex_ids,self.edge_positions,self.edge_ids,self.edge_uvs,self.edge_is_seam,self.attributes,self.materials,self.textures]}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.positions),protocol::value::retirement::deferred(self.normals),protocol::value::retirement::deferred(self.colors),protocol::value::retirement::deferred(self.indices),protocol::value::retirement::deferred(self.uvs),protocol::value::retirement::deferred(self.face_ids),protocol::value::retirement::deferred(self.vertex_ids),protocol::value::retirement::deferred(self.edge_positions),protocol::value::retirement::deferred(self.edge_ids),protocol::value::retirement::deferred(self.edge_uvs),protocol::value::retirement::deferred(self.edge_is_seam),protocol::value::retirement::deferred(self.attributes),protocol::value::retirement::deferred(self.materials),protocol::value::retirement::deferred(self.textures)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.positions),protocol::value::retirement::deferred_birth_bytes_for(&self.normals),protocol::value::retirement::deferred_birth_bytes_for(&self.colors),protocol::value::retirement::deferred_birth_bytes_for(&self.indices),protocol::value::retirement::deferred_birth_bytes_for(&self.uvs),protocol::value::retirement::deferred_birth_bytes_for(&self.face_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.vertex_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_positions),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_uvs),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_is_seam),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes),protocol::value::retirement::deferred_birth_bytes_for(&self.materials),protocol::value::retirement::deferred_birth_bytes_for(&self.textures)])}
+    fn controlled_retirement_supported()->bool {true}
 }
 
 impl HalfedgeMesh {
     /// 🧩️ Transfer all seven kernel owners directly to an individually typed persisted model.
-    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HashSet<u32>,BTreeMap<String,MeshAttribute>,BTreeMap<String,protocol::value::DslValue>,BTreeMap<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
+    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HashSet<u32>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,protocol::value::DslValue>,HistoryFoldIndex<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
     /// 🥽️ Editable literal topology enters the kernel without a serialized mesh document.
-    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HashSet<u32>,attributes:BTreeMap<String,MeshAttribute>,materials:BTreeMap<String,protocol::value::DslValue>,textures:BTreeMap<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
+    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HashSet<u32>,attributes:HistoryFoldIndex<String,MeshAttribute>,materials:HistoryFoldIndex<String,protocol::value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
     pub fn empty() -> Self {
-        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HashSet::new(), attributes: BTreeMap::new(), materials:BTreeMap::new(),textures:BTreeMap::new() }
+        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HashSet::new(), attributes: HistoryFoldIndex::new(), materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new() }
     }
 
     /// 🏷️ Authored channels are read from the same mesh value consumed by retained jobs.
-    pub fn attributes(&self) -> &BTreeMap<String, MeshAttribute> { &self.attributes }
+    pub fn attributes(&self) -> &HistoryFoldIndex<String,MeshAttribute> { &self.attributes }
 
     /// 🎨️ Material references and texture bytes belong to this same owned mesh payload.
-    pub fn materials(&self)->&BTreeMap<String,protocol::value::DslValue> { &self.materials }
+    pub fn materials(&self)->&HistoryFoldIndex<String,protocol::value::DslValue> { &self.materials }
     /// 🖼️ Authored texture records are retained without external resource ownership.
-    pub fn textures(&self)->&BTreeMap<String,MeshTexture> { &self.textures }
+    pub fn textures(&self)->&HistoryFoldIndex<String,MeshTexture> { &self.textures }
 
     /// 📦️ Admits material and texture records before dependent face channels.
-    pub fn set_surface_assets(&mut self,materials:BTreeMap<String,protocol::value::DslValue>,textures:BTreeMap<String,MeshTexture>)->MeshResult<()> {
+    pub fn set_surface_assets(&mut self,materials:HistoryFoldIndex<String,protocol::value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->MeshResult<()> {
         semio_framework_mesh_engine::validate_mesh_surface_assets(&materials,&textures).map_err(MeshKernelError::InvalidInput)?;
         if self.attributes.values().filter(|attribute|attribute.semantic==MeshAttributeSemantic::Material).flat_map(|attribute|&attribute.values).any(|value|value.as_str().is_none_or(|name|!materials.contains_key(name))) { return Err(MeshKernelError::InvalidInput("undefined mesh face material".into())); }
         self.materials=materials;self.textures=textures;
@@ -1135,8 +1143,9 @@ impl MeshTessellationJob {
     pub fn with_preview_capacity(mesh: HalfedgeMesh, maximum_preview_bytes: usize) -> Self { let mut job = Self::new(mesh); job.maximum_preview_bytes = maximum_preview_bytes; job }
     pub(super) fn selected(mesh: HalfedgeMesh, faces: HashSet<u32>) -> Self { let mut job = Self::new(mesh); job.selected_faces = Some(faces); job }
     /// 🧹️ Transfers the existing tessellation payload to its shared typed retirement authority.
-    pub fn into_retirement(self)->Box<dyn protocol::value::ErasedSnapshotRetirement> {
-        protocol::value::retirement::owned_retirement(self)
+    pub fn retirement_birth_bytes(&self)->usize {protocol::value::retirement::owned_retirement_birth_bytes::<Self>()}
+    pub fn into_retirement(self,grant:protocol::value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn protocol::value::ErasedSnapshotRetirement>,protocol::value::retained_clone::RetainedCloneProgress),(protocol::value::ValueError,Self)> {
+        protocol::value::retirement::admit_owned_retirement(self,grant)
     }
     pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
     pub(super) fn into_source(self)->HalfedgeMesh { self.mesh }
@@ -1313,7 +1322,7 @@ impl HalfedgeMesh {
             }
         }
         let mut attributes = self.attributes.clone();
-        for attribute in attributes.values_mut() {
+        for attribute in attributes.slot_values_mut() {
             let ids = match attribute.domain {
                 MeshAttributeDomain::Corner => Some(&corner_ids),
                 MeshAttributeDomain::Edge => Some(&edge_ids),
@@ -1462,5 +1471,7 @@ mod modeling_tests;
 
 protocol::value::artifact_retire_leaf!(VertexId,EdgeId,FaceId);
 impl protocol::value::retirement::RetireOwned for MeshTessellationJob {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.mesh,self.output,self.hes,self.points,self.projected,self.links,self.edge_seen,self.selected_faces,self.corner_ids,self.attribute_name,self.attribute_indices]}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.mesh),protocol::value::retirement::deferred(self.output),protocol::value::retirement::deferred(self.hes),protocol::value::retirement::deferred(self.points),protocol::value::retirement::deferred(self.projected),protocol::value::retirement::deferred(self.links),protocol::value::retirement::deferred(self.edge_seen),protocol::value::retirement::deferred(self.selected_faces),protocol::value::retirement::deferred(self.corner_ids),protocol::value::retirement::deferred(self.attribute_name),protocol::value::retirement::deferred(self.attribute_indices)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.mesh),protocol::value::retirement::deferred_birth_bytes_for(&self.output),protocol::value::retirement::deferred_birth_bytes_for(&self.hes),protocol::value::retirement::deferred_birth_bytes_for(&self.points),protocol::value::retirement::deferred_birth_bytes_for(&self.projected),protocol::value::retirement::deferred_birth_bytes_for(&self.links),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_seen),protocol::value::retirement::deferred_birth_bytes_for(&self.selected_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.corner_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_name),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_indices)])}
+    fn controlled_retirement_supported()->bool {true}
 }

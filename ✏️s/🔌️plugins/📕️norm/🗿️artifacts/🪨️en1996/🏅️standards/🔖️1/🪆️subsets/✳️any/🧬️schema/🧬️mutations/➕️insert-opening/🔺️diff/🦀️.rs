@@ -9,5 +9,5 @@ pub fn diff(payload: &InsertOpening, base: &En1996Snapshot) -> protocol::Mutatio
     if wall.openings.iter().any(|existing| existing.id == payload.opening.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.opening.id), [payload.opening.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { openings: En1996OpeningDelta::insertion(&wall.openings, payload.index, payload.opening.clone()), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { openings: En1996OpeningDelta::insertion(payload.index, payload.opening.clone()), ..Default::default() }), ..Default::default() })
 }

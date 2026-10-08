@@ -28,6 +28,7 @@ pub fn inverse(payload: &super::mutation::DeleteObject, base: &Puzzle3dSnapshot)
             attraction.y, Some(at),
         ));
     }
+    mutations.reverse();
     mutations
 
     })())

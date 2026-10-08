@@ -5,6 +5,8 @@
 
 use super::lexer::{dict_f64, dict_get, dict_i64, dict_name,PResult,PdfEngineError};
 use super::xref::ObjectSink;
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources, PdfArtifactResourcePort};
+use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleValue;
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfDictEntry, PdfExtGState, PdfFunction, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfShading, PdfShadingKind, PdfSoftMask};
 
@@ -89,6 +91,7 @@ pub fn lift_function(value: &PdfObject, source: &mut dyn ObjectSource) -> Option
             let size:Vec<u32>=dict_get(dict,"Size")?.as_array()?.iter().map(|value|u32::try_from(value.as_i64()?).ok().filter(|value|*value>0)).collect::<Option<_>>()?;
             let bits_per_sample=u32::try_from(dict_i64(dict,"BitsPerSample")?).ok()?;if range.is_empty()||range.len()%2!=0{return None;}let count=size.iter().try_fold(range.len()/2,|count,size|count.checked_mul(*size as usize))?;
             let samples=unpack_sample_words(data,bits_per_sample,count).ok()?;
+            source.record_role(value, PdfStreamRoleValue::SampledWords { samples: samples.clone() });
             Some(PdfFunction::Sampled {
                 domain,
                 range,
@@ -107,7 +110,9 @@ pub fn lift_function(value: &PdfObject, source: &mut dyn ObjectSource) -> Option
         }
         4 => {
             let PdfObject::Stream { data, .. } = &resolved else { return None };
-            Some(PdfFunction::PostScript { domain, range, code: String::from_utf8_lossy(data).into_owned() })
+            let code = String::from_utf8_lossy(data).into_owned();
+            source.record_role(value, PdfStreamRoleValue::CalculatorProgram { code: code.clone() });
+            Some(PdfFunction::PostScript { domain, range, code })
         }
         _ => None,
     }
@@ -171,21 +176,21 @@ pub fn lift_colour_space(value: &PdfObject, source: &mut dyn ObjectSource) -> Pd
                 "CalRGB" => PdfColorSpace::CalRgb { white_point: dict.and_then(|d| array_n::<3>(dict_get(d, "WhitePoint"))).unwrap_or([0.9505, 1.0, 1.089]), black_point: dict.and_then(|d| array_n::<3>(dict_get(d, "BlackPoint"))), gamma: dict.and_then(|d| array_n::<3>(dict_get(d, "Gamma"))), matrix: dict.and_then(|d| array_n::<9>(dict_get(d, "Matrix"))) },
                 "Lab" => PdfColorSpace::Lab { white_point: dict.and_then(|d| array_n::<3>(dict_get(d, "WhitePoint"))).unwrap_or([0.9505, 1.0, 1.089]), black_point: dict.and_then(|d| array_n::<3>(dict_get(d, "BlackPoint"))), range: dict.and_then(|d| array_n::<4>(dict_get(d, "Range"))) },
                 "ICCBased" => {
-                    let (profile, dict_entries) = match &param {
-                        Some(PdfObject::Stream { dict, data, .. }) => (data.clone(), dict.clone()),
-                        _ => (Vec::new(), Vec::new()),
-                    };
+                    let Some(PdfObject::Stream { dict: dict_entries, .. }) = &param else { return PdfColorSpace::DeviceRgb; };
+                    let Some(profile) = param.as_ref().and_then(|object| NativePdfArtifactResources::default().admit("s.stdio.icc", object.clone()).ok()) else { return PdfColorSpace::DeviceRgb; };
+                    if let Some(value) = items.get(1) { source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: profile.clone() }); }
                     PdfColorSpace::IccBased { components: dict_i64(&dict_entries, "N").unwrap_or(3) as u32, profile, alternate: dict_get(&dict_entries, "Alternate").map(|alt| Box::new(lift_colour_space(alt, source))), range: dict_get(&dict_entries, "Range").map(|v| numbers_of(Some(v))) }
                 }
                 "Indexed" | "I" => {
                     let base = items.get(1).map(|b| lift_colour_space(b, source)).unwrap_or(PdfColorSpace::DeviceRgb);
                     let hival = items.get(2).and_then(PdfObject::as_i64).unwrap_or(0).max(0) as u32;
-                    let lookup = match items.get(3).map(|v| source.deref(v)) {
+                    let palette = match items.get(3).map(|v| source.deref(v)) {
                         Some(PdfObject::Str(bytes)) => bytes,
                         Some(PdfObject::Stream { data, .. }) => data,
                         _ => Vec::new(),
                     };
-                    PdfColorSpace::Indexed { base: Box::new(base), hival, lookup }
+                    if let Some(value) = items.get(3) { source.record_role(value, PdfStreamRoleValue::PaletteComponents { components: palette.clone() }); }
+                    PdfColorSpace::Indexed { base: Box::new(base), hival, palette }
                 }
                 "Separation" => PdfColorSpace::Separation { name: items.get(1).and_then(PdfObject::as_name).unwrap_or("All").to_string(), alternate: Box::new(items.get(2).map(|a| lift_colour_space(a, source)).unwrap_or(PdfColorSpace::DeviceGray)), tint_transform: items.get(3).and_then(|f| lift_function(f, source)).unwrap_or(PdfFunction::Exponential { domain: vec![0.0, 1.0], range: None, c0: vec![1.0], c1: vec![0.0], n: 1.0 }) },
                 "DeviceN" => {
@@ -244,9 +249,9 @@ pub fn lower_colour_space(space: &PdfColorSpace, sink: &mut dyn ObjectSink) -> P
             let mut dict = vec![entry("N", PdfObject::Int(*components as i64))];
             push_opt(&mut dict, "Alternate", alternate.as_ref().map(|alt| lower_colour_space(alt, sink)).transpose()?);
             push_opt(&mut dict, "Range", range.as_ref().map(|v| PdfObject::numbers(v)));
-            PdfObject::Array(vec![PdfObject::name("ICCBased"), PdfObject::Ref(sink.add(stream(dict, profile.clone())))])
+            PdfObject::Array(vec![PdfObject::name("ICCBased"), PdfObject::Ref(sink.add(match sink.resolve_artifact(profile)? { PdfObject::Stream { data, filters, .. } => PdfObject::Stream { dict, data, filters }, _ => return Err(PdfEngineError::Malformed("ICC artifact did not resolve to a native stream".into())) }))])
         }
-        PdfColorSpace::Indexed { base, hival, lookup } => PdfObject::Array(vec![PdfObject::name("Indexed"), lower_colour_space(base, sink)?, PdfObject::Int(*hival as i64), PdfObject::Str(lookup.clone())]),
+        PdfColorSpace::Indexed { base, hival, palette } => PdfObject::Array(vec![PdfObject::name("Indexed"), lower_colour_space(base, sink)?, PdfObject::Int(*hival as i64), PdfObject::Str(palette.clone())]),
         PdfColorSpace::Separation { name, alternate, tint_transform } => PdfObject::Array(vec![PdfObject::name("Separation"), PdfObject::name(name), lower_colour_space(alternate, sink)?, lower_function(tint_transform, sink)?]),
         PdfColorSpace::DeviceN { names, alternate, tint_transform, attributes } => {
             let mut items = vec![PdfObject::name("DeviceN"), PdfObject::Array(names.iter().map(PdfObject::name).collect()), lower_colour_space(alternate, sink)?, lower_function(tint_transform, sink)?];
@@ -274,7 +279,7 @@ pub fn lower_colour_space_inline(space: &PdfColorSpace) -> PResult<PdfObject> {
         PdfColorSpace::DeviceGray => PdfObject::name("G"),
         PdfColorSpace::DeviceRgb => PdfObject::name("RGB"),
         PdfColorSpace::DeviceCmyk => PdfObject::name("CMYK"),
-        PdfColorSpace::Indexed { base, hival, lookup } => PdfObject::Array(vec![PdfObject::name("I"), lower_colour_space_inline(base)?, PdfObject::Int(*hival as i64), PdfObject::Str(lookup.clone())]),
+        PdfColorSpace::Indexed { base, hival, palette } => PdfObject::Array(vec![PdfObject::name("I"), lower_colour_space_inline(base)?, PdfObject::Int(*hival as i64), PdfObject::Str(palette.clone())]),
         other => lower_colour_space(other, &mut Inline)?,
     })
 }
@@ -296,7 +301,9 @@ pub fn lift_shading(id: &str, value: &PdfObject, source: &mut dyn ObjectSource) 
         3 => PdfShadingKind::Radial { coords: array_n::<6>(dict_get(&dict, "Coords"))?, domain: array_n::<2>(dict_get(&dict, "Domain")), function: function?, extend },
         4..=7 => {
             let PdfObject::Stream { data, .. } = &resolved else { return None };
-            PdfShadingKind::Mesh { shading_type, bits_per_coordinate: dict_i64(&dict, "BitsPerCoordinate").unwrap_or(16) as u32, bits_per_component: dict_i64(&dict, "BitsPerComponent").unwrap_or(16) as u32, bits_per_flag: dict_i64(&dict, "BitsPerFlag").map(|v| v as u32), vertices_per_row: dict_i64(&dict, "VerticesPerRow").map(|v| v as u32), decode: numbers_of(dict_get(&dict, "Decode")), function, data: data.clone() }
+            let reference = NativePdfArtifactResources::default().admit("s.stdio.pdf-mesh", resolved.clone()).ok()?;
+            source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() });
+            PdfShadingKind::Mesh { shading_type, bits_per_coordinate: dict_i64(&dict, "BitsPerCoordinate").unwrap_or(16) as u32, bits_per_component: dict_i64(&dict, "BitsPerComponent").unwrap_or(16) as u32, bits_per_flag: dict_i64(&dict, "BitsPerFlag").map(|v| v as u32), vertices_per_row: dict_i64(&dict, "VerticesPerRow").map(|v| v as u32), decode: numbers_of(dict_get(&dict, "Decode")), function, reference }
         }
         _ => return None,
     };
@@ -336,7 +343,7 @@ pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PResult
             }
             None
         }
-        PdfShadingKind::Mesh { shading_type, bits_per_coordinate, bits_per_component, bits_per_flag, vertices_per_row, decode, function, data } => {
+        PdfShadingKind::Mesh { shading_type, bits_per_coordinate, bits_per_component, bits_per_flag, vertices_per_row, decode, function, reference } => {
             dict.insert(0, entry("ShadingType", PdfObject::Int(*shading_type as i64)));
             dict.push(entry("BitsPerCoordinate", PdfObject::Int(*bits_per_coordinate as i64)));
             dict.push(entry("BitsPerComponent", PdfObject::Int(*bits_per_component as i64)));
@@ -344,7 +351,8 @@ pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PResult
             push_opt(&mut dict, "VerticesPerRow", vertices_per_row.map(|v| PdfObject::Int(v as i64)));
             dict.push(entry("Decode", PdfObject::numbers(decode)));
             push_opt(&mut dict, "Function", function.as_ref().map(|f| lower_function(f, sink)).transpose()?);
-            Some(data.clone())
+            let PdfObject::Stream { data, filters, .. } = sink.resolve_artifact(reference)? else { return Err(PdfEngineError::Malformed("mesh artifact did not resolve to a native stream".into())); };
+            Some((data, filters))
         }
     };
     push_opt(&mut dict, "Background", shading.background.as_ref().map(|v| PdfObject::numbers(v)));
@@ -354,7 +362,7 @@ pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PResult
     }
     dict.extend(shading.extra.iter().cloned());
     Ok(match object {
-        Some(data) => PdfObject::Ref(sink.add(stream(dict, data))),
+        Some((data, filters)) => PdfObject::Ref(sink.add(PdfObject::Stream { dict, data, filters })),
         None => PdfObject::Ref(sink.add(PdfObject::Dict(dict))),
     })
 }

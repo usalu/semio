@@ -2,12 +2,13 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "gl24h",
-        "item": {
+        "patch": {
           "id": "gl24h",
           "name": "GL24h Glulam (5-percentile)",
           "e": 9600000000.0,
@@ -16,8 +17,7 @@
           "rho": 385.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "sections": null,
   "solids": null,

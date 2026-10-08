@@ -94,6 +94,7 @@ KINDS = (
     "move-selection",
     "rotate-selection",
     "scale-selection",
+    "set-vertex-positions",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -220,8 +221,11 @@ def selection_moved(content, payload, kind):
         getattr(libm, name).argtypes = [ctypes.c_double] * arity
     mesh = json.loads(content, object_pairs_hook=collections.OrderedDict)
     count = len(mesh["vertices"])
-    present = sorted({vertex for vertex in (payload["vertexIds"] or range(count)) if vertex < count})
-    if kind == "move-selection":
+    rows = {row["vertex"]: row["position"] for row in payload["positions"] if row["vertex"] < count} if kind == "set-vertex-positions" else {}
+    present = sorted(rows) if kind == "set-vertex-positions" else sorted({vertex for vertex in (payload["vertexIds"] or range(count)) if vertex < count})
+    if kind == "set-vertex-positions":
+        transform = None
+    elif kind == "move-selection":
         transform = lambda point: [point[axis] + float(payload["offset"][axis]) for axis in range(3)]
     elif kind == "rotate-selection":
         pivot, axis = [float(value) for value in payload["pivot"]], [float(value) for value in payload["axis"]]
@@ -236,8 +240,14 @@ def selection_moved(content, payload, kind):
     else:
         pivot, factor = [float(value) for value in payload["pivot"]], [float(value) for value in payload["factor"]]
         transform = lambda point: [pivot[axis] + (point[axis] - pivot[axis]) * factor[axis] for axis in range(3)]
+    moved = []
     for vertex in present:
-        mesh["vertices"][vertex]["position"] = [f32(value) for value in transform([float(value) for value in mesh["vertices"][vertex]["position"]])]
+        old = [float(value) for value in mesh["vertices"][vertex]["position"]]
+        new = [f32(value) for value in (rows[vertex] if kind == "set-vertex-positions" else transform(old))]
+        if [f32(value) for value in old] != new:
+            moved.append({"vertex": vertex, "position": [f32(value) for value in old]})
+        mesh["vertices"][vertex]["position"] = new
+    selection_moved.last = moved
     normalised = lambda vector, length: [0.0, 0.0, 0.0] if length == 0.0 else [f32(float(value) / length) for value in vector]
     flat = [None] * count
     for face in mesh["faces"]:
@@ -352,7 +362,7 @@ def apply_mutation(document, kind, payload):
         record = document["objects"][object_at(document, payload["objectId"], kind, "mutate")]
         layer = layer_at(record, payload["layerIndex"], kind, "mutate")
         layer["pixels"] = base64.b64encode(stroked(pixels(layer, "mutate-%s" % kind), payload)).decode("ascii")
-    elif kind in ("move-selection", "rotate-selection", "scale-selection"):
+    elif kind in ("move-selection", "rotate-selection", "scale-selection", "set-vertex-positions"):
         record = document["objects"][object_at(document, payload["objectId"], kind, "mutate")]
         if record["mesh"] is None or not record["meshContent"]:
             raise AssertionError("mutate-%s: object %r carries no mesh" % (kind, payload["objectId"]))
@@ -421,9 +431,10 @@ def inverse_mutation(document, kind, payload):
                 pixel += 1
             runs.append({"offset": start * 4, "bytes": base64.b64encode(buffer[start * 4:pixel * 4]).decode("ascii")})
         return [("edit-paint-layer", {"objectId": payload["objectId"], "layerIndex": payload["layerIndex"], "runs": runs})]
-    if kind in ("move-selection", "rotate-selection", "scale-selection"):
+    if kind in ("move-selection", "rotate-selection", "scale-selection", "set-vertex-positions"):
         record = document["objects"][object_at(document, payload["objectId"], kind, "inverse")]
-        return [("create-mesh", {"id": payload["objectId"], "childId": record["mesh"]["childId"], "target": copy.deepcopy(record["mesh"]["target"]), "meshWorkspace": record["meshContent"]})]
+        selection_moved(record["meshContent"], payload, kind)
+        return [("set-vertex-positions", {"objectId": payload["objectId"], "positions": list(selection_moved.last)})] if selection_moved.last else []
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 # endregion 🔖️Verbs
 

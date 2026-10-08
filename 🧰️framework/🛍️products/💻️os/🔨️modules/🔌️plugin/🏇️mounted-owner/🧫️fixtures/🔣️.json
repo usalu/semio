@@ -1,0 +1,1449 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "id": "exact-independent-receipt",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "progress"
+    },
+    {
+      "id": "short-maximumItems",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 0,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "short-maximumCopyBytes",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "short-maximumCapacityBytes",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 0,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "short-maximumReleaseBytes",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 0,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "short-maximumDepth",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 0
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "stale-instanceId",
+      "observation": {
+        "identity": {
+          "instanceId": 2,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "stale-operationId",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "2",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "stale-generation",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "2"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "cancelled-before-owner",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": true,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "cancelled"
+    },
+    {
+      "id": "expired-before-owner",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "20",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "missing-real-clock",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": false,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "exhausted-fuel",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 0
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "held"
+    },
+    {
+      "id": "receipt-exceeds-copiedItems",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 2,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "receipt-exceeds-copiedBytes",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 17,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "receipt-exceeds-retainedCapacityBytes",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 33,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "receipt-exceeds-releasedBytes",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 65
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "false-complete",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "complete",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "terminal-complete",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "complete",
+        "terminalIsEmpty": true,
+        "wakeOwned": false
+      },
+      "expected": "complete"
+    },
+    {
+      "id": "blocked-original-wake",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "blocked",
+        "terminalIsEmpty": false,
+        "wakeOwned": true
+      },
+      "expected": "blocked"
+    },
+    {
+      "id": "blocked-lost-wake",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "blocked",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "awaiting-input-original-owner",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "awaiting-input",
+        "terminalIsEmpty": false,
+        "wakeOwned": true
+      },
+      "expected": "awaiting-input"
+    },
+    {
+      "id": "awaiting-input-lost-owner",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "awaiting-input",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "original-refusal",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "refused",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "preparation-actual-capacity",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "preparation",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "progress"
+    },
+    {
+      "id": "close-actual-release",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "close",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "progress"
+    },
+    {
+      "id": "actual-cleanup-u64-identity-and-clock",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "4611686018427387911",
+          "generation": "18446744073709551615"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "4611686018427387911",
+          "generation": "18446744073709551615"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "9223372036854775825",
+          "deadlineUs": "9223372036854775826",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "progress"
+    }
+  ],
+  "invalid": [
+    {
+      "id": "missing-copy",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    },
+    {
+      "id": "negative-capacity",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": -1,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    },
+    {
+      "id": "floating-items",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1.25,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    },
+    {
+      "id": "uncontrolled-grant",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 4294967296,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    }
+  ],
+  "runtimeReceiving": {
+    "phases": [
+      "preparation",
+      "maintenance",
+      "close"
+    ],
+    "requiredChain": [
+      "RuntimeLiveCleanupJob",
+      "RuntimeCloseCleanupJob",
+      "PluginApp",
+      "VcsArtifactApp",
+      "ArtifactEditor",
+      "ArtifactViewer",
+      "EditorApp",
+      "ViewerApp",
+      "FEM2D MountedState",
+      "FEM3D MountedState",
+      "MeshJob"
+    ],
+    "noScalarMountedHooks": true
+  }
+}

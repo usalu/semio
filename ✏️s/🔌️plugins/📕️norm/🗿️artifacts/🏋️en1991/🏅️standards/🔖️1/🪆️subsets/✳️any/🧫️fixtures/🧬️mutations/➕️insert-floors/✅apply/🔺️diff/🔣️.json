@@ -66,9 +66,9 @@
   "assumedSiloWallFriction": null,
   "floors": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "office-l1",
+        "index": 1,
         "row": {
           "id": "archive-l2",
           "category": "E1",
@@ -79,26 +79,31 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "selfWeightElements": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "roofs": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "windFaces": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "accidentalCases": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

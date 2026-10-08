@@ -150,6 +150,14 @@
         "command": "bun ./📜️script.ts test-snapshot-sqlite-source-profile",
         "forwardAllArgs": false
       }
+    },
+    "verify-physical-codecs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify physical-codecs"
+      }
     }
   }
 }

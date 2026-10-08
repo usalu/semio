@@ -9,7 +9,8 @@
 //! is exactly what makes the committed diff load-bearing here — the end state alone could not tell
 //! a cascading removal apart from three separate ones.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
 use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
@@ -97,8 +98,8 @@ async fn produces_committed_diff() {
     let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "delete-layer/deletes-the-frame-group-and-its-nested-children: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("delete-layer writes a layers delta");
-    assert_eq!(delta.removed, vec!["frame".to_string()], "delete-layer/deletes-the-frame-group-and-its-nested-children: the cascade must NOT be spelled out — only the addressed group id is removed");
-    assert!(delta.added.is_empty() && delta.patched.is_empty() && delta.moved.is_empty(), "delete-layer/deletes-the-frame-group-and-its-nested-children: a deletion must not add, patch or move anything");
+    assert_eq!(delta.removed, vec![crate::diff::RasterLayerRemoval { id: "frame".to_string(), parent_id: None, index: 1 }], "delete-layer/deletes-the-frame-group-and-its-nested-children: the cascade must NOT be spelled out — only the addressed group is removed, at its base address");
+    assert!(delta.inserted.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "delete-layer/deletes-the-frame-group-and-its-nested-children: a deletion must not add, patch or move anything");
     assert!(produced.diff().assets.is_none(), "delete-layer/deletes-the-frame-group-and-its-nested-children: deleting a layer never garbage-collects the asset map");
 }
 
@@ -123,5 +124,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

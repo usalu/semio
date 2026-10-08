@@ -22,8 +22,8 @@ async function cases(): Promise<{ functions: PdfFunction[]; colors: PdfColorSpac
     { kind: "calGray", whitePoint: white, blackPoint: null, gamma: values[5]! },
     { kind: "calRgb", whitePoint: white, blackPoint: white, gamma: white, matrix: [values[0]!, values[1]!, values[2]!, values[3]!, values[4]!, values[5]!, values[6]!, values[0]!, values[1]!] },
     { kind: "lab", whitePoint: white, blackPoint: null, range: [values[3]!, values[4]!, values[5]!, values[6]!] },
-    { kind: "iccBased", components: 4, profile: input.profileBytes, alternate: null, range: [] },
-    { kind: "indexed", base: { kind: "deviceRgb" }, hival: 255, lookup: input.sampleBytes },
+    { kind: "iccBased", components: 4, profile: {artifactId:"fixture:icc",dialect:{artifactKind:"s.stdio.binary",standard:"raw",subset:"*"}}, alternate: null, range: [] },
+    { kind: "indexed", base: { kind: "deviceRgb" }, hival: 255, palette: input.sampleBytes },
     { kind: "separation", name: input.names[0], alternate: { kind: "deviceGray" }, tintTransform: exponent },
     { kind: "deviceN", names: input.names, alternate: { kind: "deviceCmyk" }, tintTransform: exponent, attributes: [{ key: "Owner", value: { kind: "int", value: 9223372036854775807n } }] },
     { kind: "pattern", base: null }, { kind: "named", name: input.names[1] }

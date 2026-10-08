@@ -65,13 +65,6 @@ impl protocol::DiffAlgebra<JackResultsWindowTransient> for JackResultsWindowTran
             query_error: self.query_error.as_ref().map(|_| base.query_error.clone()),
         }
     }
-    fn between(base: &JackResultsWindowTransient, other: &JackResultsWindowTransient) -> Self {
-        Self {
-            query_execution_id: (base.query_execution_id != other.query_execution_id).then(|| other.query_execution_id.clone()),
-            result: (base.result != other.result).then(|| other.result.clone()),
-            query_error: (base.query_error != other.query_error).then(|| other.query_error.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.query_execution_id.is_none() && self.result.is_none() && self.query_error.is_none()
     }

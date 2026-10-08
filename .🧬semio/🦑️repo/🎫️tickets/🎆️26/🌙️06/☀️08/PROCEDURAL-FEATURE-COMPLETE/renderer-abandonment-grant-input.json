@@ -1,0 +1,34 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+  "beforeSha256": "effc3ec31fdff7a4568c40a34ea864c8c9861838af70030ec0035fea80e211ef",
+  "afterSha256": "7b45aff4af939adbe03ed089a1d7bf901aa63fcf75c001d5ca329424912079b2",
+  "splices": [
+    {
+      "owner": "PreparedAtlasPages",
+      "before": "                if !ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step() {\n                    return FrameBuildBoundaryStep::Pending;\n                }\n                cursor.phase = FrameBuildPhase::PreparedGpuAbandonment;",
+      "after": "                let grant = match ui_wgpu::wgpu::PreparedAtlasPages::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault(\"prepared abandonment demand refused\") };\n                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step(grant)) {\n                    Ok(true) => cursor.phase = FrameBuildPhase::PreparedGpuAbandonment,\n                    Ok(false) => return FrameBuildBoundaryStep::Pending,\n                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),\n                }"
+    },
+    {
+      "owner": "PreparedRenderInput",
+      "before": "                if !ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step() {\n                    return FrameBuildBoundaryStep::Pending;\n                }\n                cursor.phase = FrameBuildPhase::PreparedJobAbandonment;",
+      "after": "                let grant = match ui_wgpu::wgpu::PreparedRenderInput::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault(\"prepared abandonment demand refused\") };\n                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step(grant)) {\n                    Ok(true) => cursor.phase = FrameBuildPhase::PreparedJobAbandonment,\n                    Ok(false) => return FrameBuildBoundaryStep::Pending,\n                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),\n                }"
+    },
+    {
+      "owner": "PreparedRenderJob",
+      "before": "                if !ui_wgpu::wgpu::PreparedRenderJob::close_abandoned_step() {\n                    return FrameBuildBoundaryStep::Pending;\n                }\n                cursor.phase = FrameBuildPhase::PreparedAbandonment;",
+      "after": "                let grant = match ui_wgpu::wgpu::PreparedRenderJob::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault(\"prepared abandonment demand refused\") };\n                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderJob::close_abandoned_step(grant)) {\n                    Ok(true) => cursor.phase = FrameBuildPhase::PreparedAbandonment,\n                    Ok(false) => return FrameBuildBoundaryStep::Pending,\n                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),\n                }"
+    },
+    {
+      "owner": "PreparedRenderReceiver",
+      "before": "                if !ui_wgpu::wgpu::PreparedRenderReceiver::close_abandoned_step() {\n                    return FrameBuildBoundaryStep::Pending;\n                }\n                cursor.phase = FrameBuildPhase::PacketAbandonment;",
+      "after": "                let grant = match ui_wgpu::wgpu::PreparedRenderReceiver::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault(\"prepared abandonment demand refused\") };\n                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderReceiver::close_abandoned_step(grant)) {\n                    Ok(true) => cursor.phase = FrameBuildPhase::PacketAbandonment,\n                    Ok(false) => return FrameBuildBoundaryStep::Pending,\n                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),\n                }"
+    },
+    {
+      "owner": "PreparedRenderPacket",
+      "before": "                if !ui_wgpu::wgpu::PreparedRenderPacket::close_abandoned_step() {\n                    return FrameBuildBoundaryStep::Pending;\n                }\n                cursor.phase = FrameBuildPhase::Text;",
+      "after": "                let grant = match ui_wgpu::wgpu::PreparedRenderPacket::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault(\"prepared abandonment demand refused\") };\n                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderPacket::close_abandoned_step(grant)) {\n                    Ok(true) => cursor.phase = FrameBuildPhase::Text,\n                    Ok(false) => return FrameBuildBoundaryStep::Pending,\n                    Err(fault) => return FrameBuildBoundaryStep::Fault(fault),\n                }"
+    }
+  ],
+  "helper": "/// 🧾️ Validates the original recovered frame owner's full close receipt before advancing.\nfn frame_prepared_abandonment_complete(grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: semio_framework_job::InteractiveJobCloseStep) -> Result<bool, &'static str> {\n    use semio_framework_job::InteractiveJobCloseStep;\n    match step {\n        InteractiveJobCloseStep::Complete { progress } if progress.fits(grant) => Ok(true),\n        InteractiveJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(false),\n        InteractiveJobCloseStep::Blocked => Ok(false),\n        InteractiveJobCloseStep::Refused(_) => Err(\"prepared abandonment ownership refused\"),\n        _ => Err(\"prepared abandonment receipt exceeded its grant\"),\n    }\n}\n\n",
+  "runtime": "unqualified until original kernel and renderer compiler floor"
+}

@@ -1106,7 +1106,8 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn preflight_undo(request: &GisMapApprovalUndoCommitRequestV1<'_>) -> Result<(GisMapCommitIdentityV1, GisMapParentSnapshotV1), GisMapApprovalCommitErrorV1> {
         use directory::Inference as _;
-        use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
+        use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(request.base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let actor = request.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:"));
@@ -1614,7 +1615,8 @@ impl RetainedGisMapApprovalCommitterV1 {
         let work = match &identity.operation {
             GisMapCommitOperationV1::Approval => GisMapInference::infer(snapshot).create_region_group_work(snapshot, &identity.job_id),
             GisMapCommitOperationV1::Undo { original_job_id, original_command, .. } => {
-                use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
+                use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
                 let command = match CanonicalInferenceCommandV1::decode(original_command.as_slice()) {
                     Ok(command) => command,
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
@@ -2159,7 +2161,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             head_edit_ordinal: frontier.head_edit_ordinal,
             head_edit_id: frontier.head_edit_id.clone(),
             last_commit_seq: frontier.last_commit_seq,
-            chain_sha256: frontier.chain_hash.hex(),
+            chain_sha256: directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&frontier.chain_hash),
         }
     }
 
@@ -2223,10 +2225,10 @@ impl RetainedGisMapApprovalCommitterV1 {
         let expected_spr_hash = sha256(&request.pair.spr);
         let published = self.publisher.publish(request, document_write, attempt_lifetime_ms, decision_now_ms).await?;
         if published.scope != expected_scope
-            || published.descriptor_digest_v1.hex() != expected_descriptor
+            || directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&published.descriptor_digest_v1) != expected_descriptor
             || published.baseline_frontier != expected_frontier
-            || published.pack.sha256.hex() != expected_pack_hash
-            || published.spr.sha256.hex() != expected_spr_hash
+            || directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&published.pack.sha256) != expected_pack_hash
+            || directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&published.spr.sha256) != expected_spr_hash
         {
             return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishResponseDiffers));
         }
@@ -2292,7 +2294,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         };
         let published = if already_published { None } else { Some(self.publish_checkpoint(key, identity, generation, &receipt, attempt_lifetime_ms, decision_now_ms).await?) };
         let (after_frontier, after_base_digest) = if let Some(checkpoint) = published.as_ref() {
-            (Self::publication_wire_frontier(&checkpoint.baseline_frontier), checkpoint.pack.sha256.hex())
+            (Self::publication_wire_frontier(&checkpoint.baseline_frontier), directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint.pack.sha256))
         } else {
             let (handle, after_base_digest) = {
                 let documents = self.documents.lock().await;
@@ -3257,7 +3259,8 @@ impl HubInferenceRuntimeV1 {
     /// ↩️ Rebuilds the original fixed-three work and stamps only its exact typed inverse.
     fn server_stamped_undo_command(&self, target: &super::sqlite::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
         use directory::Inference as _;
-        use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
+        use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
 
         if sha256(target.original_command.as_slice()) != target.original_command_hash {
@@ -3530,7 +3533,7 @@ pub async fn map_base(rebootstrap: &Arc<crate::lag_rebootstrap::VerifiedRebootst
     let selection = &pair.selection;
     Ok(InferenceMapBaseV1 {
         frontier: selection.baseline_frontier.clone(),
-        descriptor_digest: directory::os_directory::hex_lower(&selection.descriptor_digest_v1.0),
+        descriptor_digest: directory::os_directory::io::binary::artifact_hash::hex_lower(&selection.descriptor_digest_v1.0),
         pack: InferencePrivateBytesV1::new(pair.pair().pack.clone(), super::schema::INPUT_MAX_BYTES)?,
     })
 }
@@ -3863,7 +3866,7 @@ pub async fn undo_gis_map_approval(context: InferenceApprovalRouteContextV1<'_>,
         head_edit_ordinal: base.frontier.head_edit_ordinal,
         head_edit_id: base.frontier.head_edit_id.clone(),
         last_commit_seq: base.frontier.last_commit_seq,
-        chain_sha256: base.frontier.chain_hash.hex(),
+        chain_sha256: directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&base.frontier.chain_hash),
     };
     if current != request.expected_current || base.descriptor_digest != identity.descriptor_digest || base.digest() != target.after_base_digest {
         return Err(InferenceRouteErrorV1::Conflict);

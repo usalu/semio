@@ -38,43 +38,111 @@
       "title": "LowpolyObjectsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched",
-        "reordered"
-      ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/LowpolyObjectRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/LowpolyObjectPatchEntry"
+            "$ref": "#/$defs/LowpolyObjectInsertion"
           }
         },
-        "reordered": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyObjectRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyObjectsModification"
+          }
+        }
+      },
+      "required": []
+    },
+    "LowpolyObjectsModification": {
+      "title": "LowpolyObjectsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/LowpolyObjectPatchEntry"
+        }
+      }
+    },
+    "LowpolyObjectRemoval": {
+      "title": "LowpolyObjectRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "LowpolyObjectInsertion": {
+      "title": "LowpolyObjectInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject"
+        }
+      }
+    },
+    "LowpolyObjectRelocation": {
+      "title": "LowpolyObjectRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -83,15 +151,12 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "patch",
         "paintLayers",
-        "meshMotions"
+        "meshVertices",
+        "meshAttributes"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "patch": {
           "$ref": "#/$defs/LowpolyObjectPatch"
         },
@@ -105,10 +170,16 @@
             }
           ]
         },
-        "meshMotions": {
+        "meshVertices": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/LowpolyMeshMotion"
+            "$ref": "#/$defs/LowpolyVertexPosition"
+          }
+        },
+        "meshAttributes": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mesh/schema.json#/properties/attributes/items"
           }
         }
       }
@@ -438,118 +509,28 @@
         }
       ]
     },
-    "LowpolyMeshMotion": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "motion",
-            "vertexIds",
-            "offset"
-          ],
-          "properties": {
-            "motion": {
-              "const": "offset"
-            },
-            "vertexIds": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "offset": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            }
-          }
+    "LowpolyVertexPosition": {
+      "title": "LowpolyVertexPosition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertex",
+        "position"
+      ],
+      "properties": {
+        "vertex": {
+          "type": "integer",
+          "minimum": 0
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "motion",
-            "vertexIds",
-            "pivot",
-            "axis",
-            "angle"
-          ],
-          "properties": {
-            "motion": {
-              "const": "turn"
-            },
-            "vertexIds": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "pivot": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            },
-            "axis": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            },
-            "angle": {
-              "type": "number"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "motion",
-            "vertexIds",
-            "pivot",
-            "factor"
-          ],
-          "properties": {
-            "motion": {
-              "const": "stretch"
-            },
-            "vertexIds": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "pivot": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            },
-            "factor": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            }
-          }
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
         }
-      ]
+      }
     }
   }
 }

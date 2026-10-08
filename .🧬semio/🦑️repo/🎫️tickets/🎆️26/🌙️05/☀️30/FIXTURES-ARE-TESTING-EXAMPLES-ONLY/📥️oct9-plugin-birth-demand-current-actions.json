@@ -1,0 +1,54 @@
+{
+  "status": "partial-source-integration-no-native-credit",
+  "logicalActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeSha256": "fc4799365adedf7db4b1275bffd63d977b4fe6879ae894a5b119c462a26df060",
+      "before": "        fn member_open_birth_bytes(&self) -> Result<usize, store::MemberOpenDiagnostic> {\n            if self.active_member_open.is_some() { return Ok(0); }\n            let ingress = if let Some(ingress) = self.active_member_ingress.as_ref() { Some(ingress) } else {\n                self.member_ingress.as_ref().and_then(|registry| registry.entry(self.next_member_ordinal))\n            };\n            let Some(request) = ingress.and_then(|ingress| ingress.request.as_ref()) else { return Ok(0); };\n            let bytes = M::open_birth_bytes(request)?;\n            if bytes > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(store::MemberOpenDiagnostic::Capacity); }\n            Ok(bytes)\n        }",
+      "after": "        fn member_open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, store::MemberOpenDiagnostic> {\n            if self.active_member_open.is_some() { return Ok(Default::default()); }\n            let ingress = if let Some(ingress) = self.active_member_ingress.as_ref() { Some(ingress) } else {\n                self.member_ingress.as_ref().and_then(|registry| registry.entry(self.next_member_ordinal))\n            };\n            let Some(request) = ingress.and_then(|ingress| ingress.request.as_ref()) else { return Ok(Default::default()); };\n            let demand = M::open_birth_demand(request)?;\n            if demand.capacity_bytes > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || demand.depth > 64 { return Err(store::MemberOpenDiagnostic::Capacity); }\n            Ok(demand)\n        }",
+      "afterSha256": "250a68f326bac4ed5d558b70b578d1f7a2d9a68b84f2a1457e3c52c781e269e0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeSha256": "250a68f326bac4ed5d558b70b578d1f7a2d9a68b84f2a1457e3c52c781e269e0",
+      "before": "let capacity = match active.member_open_birth_bytes() {\n                    Ok(capacity) => capacity,",
+      "after": "let birth = match active.member_open_birth_demand() {\n                    Ok(birth) => birth,",
+      "afterSha256": "781cb689dc2fc51472ca5b1203d8fa528d881b5e150ea81415d5100cee65c270"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeSha256": "781cb689dc2fc51472ca5b1203d8fa528d881b5e150ea81415d5100cee65c270",
+      "before": "maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };\n                return active.drive_member_open",
+      "after": "maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: release, maximum_depth: 64 };\n                return active.drive_member_open",
+      "afterSha256": "430599f8772df74a5a732e4ee638b7d6b42e36d12fcdb049eb85a957d5a18d9f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "14b3aa33e74a817d3b9973de30ffd5a616d3441ae31f3f4f194534b62edd2acc",
+      "before": "    fn open_capacity(&self) -> Result<usize, Fault> {\n        self.request.as_ref().map_or(Ok(0), |request| M::open_birth_bytes(request).map_err(|_| plugin_sdk_fault(\"private child factory refused its original request birth\")))\n    }",
+      "after": "    fn open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {\n        self.request.as_ref().map_or(Ok(Default::default()), |request| M::open_birth_demand(request).map_err(|_| plugin_sdk_fault(\"private child factory refused its original request birth\")))\n    }",
+      "afterSha256": "4e96a68b791b0287860261fdb9df50fc57d0f4a943b4aaa424b1e460d26aa41e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "4e96a68b791b0287860261fdb9df50fc57d0f4a943b4aaa424b1e460d26aa41e",
+      "before": "    pub(crate) fn next_open_capacity_byte_demand(&self) -> Result<usize, Fault> { self.rows.get(self.open_cursor).and_then(Option::as_ref).map_or(Ok(0), |row| row.open_capacity()) }",
+      "after": "    pub(crate) fn next_open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {\n        let Some(row) = self.rows.get(self.open_cursor).and_then(Option::as_ref) else { return Ok(Default::default()); };\n        let mut birth = row.open_birth_demand()?;\n        if row.request.is_some() { birth.depth = birth.depth.checked_add(2).ok_or_else(|| plugin_sdk_fault(\"original open birth row/group depth overflow\"))?; }\n        Ok(birth)\n    }",
+      "afterSha256": "0d1982bb00057119cae3351b02ec3648a377ff2873765019d25b6ed78ecce5dc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "beforeSha256": "0d1982bb00057119cae3351b02ec3648a377ff2873765019d25b6ed78ecce5dc",
+      "before": "        if row.advance_open(cx, grant, begin)? { self.open_cursor += 1; return Ok(group_structural()); }",
+      "after": "        let birth = row.open_birth_demand()?;\n        let depth = birth.depth.checked_add(2).ok_or_else(|| plugin_sdk_fault(\"original open birth row/group depth overflow\"))?;\n        if grant.maximum_depth < depth { return Err(plugin_sdk_fault(\"original open birth exceeds supplied row/group depth\")); }\n        if grant.maximum_capacity_bytes < birth.capacity_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        if row.advance_open(cx, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant }, begin)? { self.open_cursor += 1; return Ok(group_structural()); }",
+      "afterSha256": "92209d81b610aabdb41eb2d4604f486202c2e737a536ef086a8959694dc565a5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+      "beforeSha256": "20aab27e59acaf546a5f92b13413bd0f3b0c4875ea057c08a8d068da374ac88e",
+      "before": "let capacity=group.next_open_capacity_byte_demand()?.max(demand.capacity_bytes);",
+      "after": "let birth=group.next_open_birth_demand()?;if birth.depth>64{return Err(plugin_sdk_fault(\"private open birth exceeds its original depth admission\"));}let capacity=birth.capacity_bytes.max(demand.capacity_bytes);",
+      "afterSha256": "85fd20e8aeba344df6542ccc98a067eed1a59cc04cdbdd6a4fc2bea0d506c573"
+    }
+  ]
+}

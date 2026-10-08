@@ -1,0 +1,134 @@
+{
+  "schema": "semio.puzzle.3d.typed-mutation.v1",
+  "cases": [
+    {
+      "name": "move-create-delete",
+      "before": {
+        "schema": "scene.ports.directed.v1",
+        "domain": "architecture",
+        "meta": {},
+        "objects": [
+          {
+            "id": "a",
+            "anchor": "fixed",
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "vortices": []
+          },
+          {
+            "id": "b",
+            "anchor": "fixed",
+            "origin": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "vortices": []
+          }
+        ],
+        "attractions": [],
+        "targetVolumes": [],
+        "references": []
+      },
+      "after": {
+        "schema": "scene.ports.directed.v1",
+        "domain": "architecture",
+        "meta": {},
+        "objects": [
+          {
+            "id": "b",
+            "anchor": "fixed",
+            "origin": [
+              9.0,
+              0.0,
+              0.0
+            ],
+            "vortices": []
+          },
+          {
+            "id": "c",
+            "anchor": "fixed",
+            "origin": [
+              2.0,
+              0.0,
+              0.0
+            ],
+            "vortices": []
+          }
+        ],
+        "attractions": [],
+        "targetVolumes": [],
+        "references": []
+      },
+      "minimumOperations": 3,
+      "operations": [
+        {
+          "mutation": "deleteObject",
+          "id": "a"
+        },
+        {
+          "mutation": "moveObject",
+          "id": "b",
+          "newOrigin": [
+            9.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "mutation": "createObject",
+          "object": {
+            "id": "c",
+            "anchor": "fixed",
+            "origin": [
+              2.0,
+              0.0,
+              0.0
+            ],
+            "vortices": []
+          },
+          "index": null
+        }
+      ]
+    },
+    {
+      "name": "unchanged",
+      "before": {
+        "schema": "scene.ports.directed.v1",
+        "domain": "architecture",
+        "meta": {},
+        "objects": [],
+        "attractions": [],
+        "targetVolumes": [],
+        "references": []
+      },
+      "after": {
+        "schema": "scene.ports.directed.v1",
+        "domain": "architecture",
+        "meta": {},
+        "objects": [],
+        "attractions": [],
+        "targetVolumes": [],
+        "references": []
+      },
+      "minimumOperations": 0,
+      "operations": []
+    }
+  ],
+  "invalid": [
+    null,
+    {
+      "schema": "scene.ports.directed.v1",
+      "objects": [
+        {
+          "id": "invalid",
+          "anchor": "unknown",
+          "origin": false
+        }
+      ]
+    }
+  ]
+}

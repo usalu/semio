@@ -72,13 +72,6 @@ impl protocol::DiffAlgebra<SourcingCurationPresence> for SourcingCurationPresenc
             world_camera_fov: self.world_camera_fov.as_ref().map(|_| base.world_camera_fov.clone()),
         }
     }
-    fn between(base: &SourcingCurationPresence, other: &SourcingCurationPresence) -> Self {
-        Self {
-            world_camera_position: (base.world_camera_position != other.world_camera_position).then(|| other.world_camera_position.clone()),
-            world_camera_target: (base.world_camera_target != other.world_camera_target).then(|| other.world_camera_target.clone()),
-            world_camera_fov: (base.world_camera_fov != other.world_camera_fov).then(|| other.world_camera_fov.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none()
     }

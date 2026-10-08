@@ -52,9 +52,9 @@ for(const action of fixture.actions) test("selection survives focus moving to "+
   expect(call).toBeDefined();
   if(action==="Apply")expect(call![1]).toEqual({layerId:"p",filter:"invert",amount:0});
   const published=dispatch.mock.calls.filter(call=>call[0]==="setPixelSelection").at(-1);
-  const spans=JSON.parse(action==="Apply"?published![1].selection.spans:call![1].selection) as number[][];
+  const spans=(action==="Apply"?published![1].selection.spans:call![1].selection) as {start:number;length:number;coverage:number}[];
   const coverage=new Uint8Array(fixture.width*fixture.height);
-  for(const [offset,length,value] of spans)coverage.fill(value!,offset!,offset!+length!);
+  for(const {start:offset,length,coverage:value} of spans)coverage.fill(value,offset,offset+length);
   const b=fixture.pixelBounds;
   const {data}=await sharp(Buffer.from(`<svg width="${fixture.width}" height="${fixture.height}"><rect x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" fill="white"/></svg>`)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   expect([...coverage]).toEqual(Array.from({length:coverage.length},(_,i)=>data[i*4+3]));
@@ -109,7 +109,7 @@ for(const kind of ["pixel","group"]) test(kind+" mask target sends coverage stro
   await waitFor(()=>expect((view.getByRole("button",{name:"Select all pixels"}) as HTMLButtonElement).disabled).toBe(false));
   fireEvent.change(view.getByRole("spinbutton",{name:"Mask value"}),{target:{value:"64"}});
   expect(dispatch).toHaveBeenCalledWith("setMaskValue",{value:64});
-  expect(dispatch.mock.calls.filter(call=>call[0]==="setPixelSelection").at(-1)![1].selection).toEqual({layerId:"p",target:"mask",width:3,height:1,spans:"[[0,3,255]]"});
+  expect(dispatch.mock.calls.filter(call=>call[0]==="setPixelSelection").at(-1)![1].selection).toEqual({layerId:"p",target:"mask",width:3,height:1,spans:[{"start":0,"length":3,"coverage":255}]});
   fireEvent.click(view.getByRole("button",{name:"Fill mask",exact:true}));
   await waitFor(()=>expect(dispatch.mock.calls.filter(call=>call[0]==="fillSelection")).toEqual([["fillSelection",{layerId:"p"}]]),10_000);
 });
@@ -163,7 +163,7 @@ for(const action of fixture.selectionControls.actions)for(const cancellation of 
   await waitFor(()=>expect(editCalls(dispatch)).toHaveLength(1));
   expect(editCalls(dispatch)[0]).toEqual(["applyFilter",{layerId:"p",filter:"brightness",amount:0}]);
   const published=dispatch.mock.calls.filter(call=>call[0]==="setPixelSelection").at(-1)?.[1].selection;
-  expect(published?published.spans:null).toBe(cancellation==="Deselect"?null:JSON.stringify([[0,width*height,255]]));
+  expect(published?published.spans:null).toEqual(cancellation==="Deselect"?null:[{start:0,length:width*height,coverage:255}]);
 });
 
 for(const modifier of fixture.selectionControls.keyboardModifiers)test(modifier+"+D cancels a pending keyboard Select All",async()=>{
@@ -212,7 +212,7 @@ for(const cancellation of fixture.combinationCancellation.actions)test("selectio
   await waitFor(()=>expect(editCalls(dispatch)).toHaveLength(1));
   expect(editCalls(dispatch)[0]).toEqual(["applyFilter",{layerId:"p",filter:"brightness",amount:0}]);
   const published=dispatch.mock.calls.filter(call=>call[0]==="setPixelSelection").at(-1)?.[1].selection;
-  expect(published?published.spans:null).toBe(cancellation==="Deselect"?null:JSON.stringify([[0,width*height,255]]));
+  expect(published?published.spans:null).toEqual(cancellation==="Deselect"?null:[{start:0,length:width*height,coverage:255}]);
 });
 
 for(const inherited of [false,true])test((inherited?"Inherited":"Own")+" layer protection preserves selection and refuses pixel and mask edits",async()=>{
@@ -303,7 +303,7 @@ for(const row of revisions.cases)test("active stroke handles target revision "+r
   else await waitFor(()=>expect(dispatch.mock.calls.filter(call=>call[0]==="paintStroke")).toHaveLength(1));
 });
 
-for(const spans of ["[]","[[1,2,128]]"])test("restores shared selection "+spans+" across image content updates",async()=>{
+for(const spans of [[],[{start:1,length:2,coverage:128}]])test("restores shared selection "+spans+" across image content updates",async()=>{
   vi.stubGlobal("ResizeObserver",class{observe(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   const props={documentJson:JSON.stringify({layers:[{kind:"pixel",id:"p",width:3,height:2}]}),assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',pixelSelectionJson:JSON.stringify({layerId:"p",target:"pixels",width:3,height:2,spans}),activeUtility:"select",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
@@ -342,7 +342,7 @@ test("refused completed selection does not replace authoritative coverage",{time
   const host=document.createElement("div"),dispatch=vi.fn(async()=>({kind:"refused"}));
   const view=render(<ControlledPixelEditingOverlay documentJson='{"layers":[{"kind":"pixel","id":"p","width":3,"height":2}]}' assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="select" brushSize={1} brushOpacity={1} brushColor="#2878dc" brushHardness={1} paintTarget="pixels" maskValue={255} fillTolerance={24} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   fireEvent.click(view.getByRole("button",{name:"Select all pixels"}));
-  await waitFor(()=>expect(dispatch).toHaveBeenCalledWith("setPixelSelection",{selection:{layerId:"p",target:"pixels",width:3,height:2,spans:"[[0,6,255]]"},expectedImageKey:null}));
+  await waitFor(()=>expect(dispatch).toHaveBeenCalledWith("setPixelSelection",{selection:{layerId:"p",target:"pixels",width:3,height:2,spans:[{"start":0,"length":6,"coverage":255}]},expectedImageKey:null}));
   expect((view.getByRole("button",{name:"Deselect"}) as HTMLButtonElement).disabled).toBe(true);
   expect(view.getByRole("alert").textContent).toContain("could not be applied");
 });
@@ -354,7 +354,7 @@ test("incoming shared coverage cancels an in-flight brush stroke",async()=>{
   const view=render(<ControlledPixelEditingOverlay {...props}/>),canvas=view.getByRole("application",{name:"Image tools"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));});
-  view.rerender(<ControlledPixelEditingOverlay {...props} pixelSelectionJson='{"layerId":"p","target":"pixels","width":3,"height":2,"spans":"[]"}'/>);
+  view.rerender(<ControlledPixelEditingOverlay {...props} pixelSelectionJson='{"layerId":"p","target":"pixels","width":3,"height":2,"spans":[]}'/>);
   act(()=>{canvas.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));});
   await act(async()=>{await new Promise(resolve=>setTimeout(resolve,20));});
   expect(editCalls(dispatch)).toEqual([]);

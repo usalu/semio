@@ -1,6 +1,7 @@
 /** 🎨️ Painted query grants match independent SVG cap, dash, join and affine regions. */
 import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import sharp from "sharp";
 import cases from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
@@ -58,7 +59,7 @@ test("failed painted query retains its genuine child until cancellation retires 
  const moved=job.intoRetirement();expect(moved.output).toBeNull();let work=0;while(!moved.job.terminalIsEmpty()){const p=moved.job.advance(1);expect(p.work-work).toBe(1);work=p.work;}expect(state.flatten).toBeNull();expect(state.flattenRetirement).toBeNull();expect(state.segments).toHaveLength(0);process.stderr.write(`[DEBUG] Failed painted query retired its real flatten child in ${work} structural units\n`);
 });
 test("painted queries borrow actual resolved Boolean and encoded trace geometry",async()=>{
- expect(resolvedRows.every(row=>new Ajv({strict:true}).compile(pointSchema)(row.point))).toBe(true);let comparisons=0;
+ expect(resolvedRows.every(row=>new Ajv2020({strict:true}).compile(pointSchema)(row.point))).toBe(true);let comparisons=0;
  const lift=(value:any):any=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,value])=>[key,lift(value)])):value;
  for(const row of resolvedRows){const fixture=vectorRows.find(source=>source.name===row.source)!,document={...fixture.document,layers:lift(fixture.document.layers)} as DrawingArtifact,producer=new DocumentVectorJob(document,fixture.limits,fixture.algorithms);while(!producer.advance(4096).done){}const moved=producer.intoRetirement();while(!moved.job.advance(4096).done){}const plan=moved.output!,node=plan.nodes.find(node=>node.id==="result")!;expect(node.content.kind).toBe("path");if(node.content.kind!=="path")throw Error("resolved leaf required");const source=node.content.segments,before=structuredClone(source);
   for(const grant of [1,7,4096]){const query=PaintedPathHitJob.fromPrepared(node,row.point as [number,number],0,.001);while(!query.advance(grant,index=>source[index]).done){}expect(query.result().contains).toBe(row.expected);const retired=query.intoRetirement();while(!retired.job.advance(grant).done){}expect(retired.job.terminalIsEmpty()).toBe(true);expect(node.content.segments).toBe(source);expect(source).toEqual(before);

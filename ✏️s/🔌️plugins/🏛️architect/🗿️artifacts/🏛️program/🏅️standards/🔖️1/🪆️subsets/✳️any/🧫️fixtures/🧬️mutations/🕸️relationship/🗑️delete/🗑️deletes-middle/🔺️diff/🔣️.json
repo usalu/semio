@@ -9,12 +9,15 @@
   "elements": null,
   "quantities": null,
   "relationships": {
-    "added": [],
     "removed": [
-      "relationship-a"
+      {
+        "id": "relationship-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "adjacencies": null,
   "processes": null,

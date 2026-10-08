@@ -12,7 +12,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹delete-region/🚫️removes-old-town-region/📸️snapshot/⬅️before/🔣️.json");
@@ -127,13 +128,13 @@ async fn removes_exactly_the_addressed_region_and_leaves_its_kind_sibling() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "delete-region/removes-old-town-region: deleting a present id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().regions.as_ref().expect("delete-region writes a regions delta");
-    assert_eq!(delta.removed, vec!["region-old-town".to_string()], "delete-region/removes-old-town-region: exactly the payload's own id is removed");
+    assert_eq!(delta.removed.iter().map(|removal| removal.id.as_str()).collect::<Vec<_>>(), vec!["region-old-town"], "delete-region/removes-old-town-region: exactly the payload's own id is removed");
     assert_eq!(
         after.regions.iter().map(|feature| feature.id.clone()).collect::<Vec<_>>(),
         vec!["region-harbor-district".to_string()],
         "delete-region/removes-old-town-region: the sibling region of the same kind must survive — deletion is by id, never by payload"
     );
-    assert!(delta.added.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "delete-region/removes-old-town-region: a delete must not add, patch or reorder anything, got {delta:?}");
+    assert!(delta.inserted.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "delete-region/removes-old-town-region: a delete must not add, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "delete-region/removes-old-town-region: delete-region must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-region/removes-old-town-region: a delete undoes with exactly one step, got {inverse:?}");

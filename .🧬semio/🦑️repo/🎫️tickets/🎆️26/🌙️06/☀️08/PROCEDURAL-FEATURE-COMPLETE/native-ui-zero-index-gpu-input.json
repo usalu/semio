@@ -1,0 +1,178 @@
+{
+  "fixture": {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json",
+    "before": "{\n  \"schema\": \"ui.mesh-component-source.v1\",\n  \"source\": {\n    \"handle\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"revision\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n  },\n  \"references\": {\n    \"face\": [\n      \"9007199254740993\",\n      \"18446744073709551615\"\n    ],\n    \"edge\": [\n      \"17\"\n    ],\n    \"vertex\": [\n      \"23\"\n    ]\n  },\n  \"cases\": [\n    {\n      \"kind\": \"face\",\n      \"group\": 0,\n      \"label\": \"9007199254740993\"\n    },\n    {\n      \"kind\": \"face\",\n      \"group\": 1,\n      \"label\": \"18446744073709551615\"\n    },\n    {\n      \"kind\": \"edge\",\n      \"group\": 0,\n      \"label\": \"17\"\n    },\n    {\n      \"kind\": \"vertex\",\n      \"group\": 0,\n      \"label\": \"23\"\n    }\n  ],\n  \"invalidLabels\": [\n    \"0\",\n    \"01\",\n    \"-1\",\n    \"nan\",\n    \"18446744073709551616\"\n  ],\n  \"admission\": {\n    \"references\": {\n      \"face\": [\n        \"17\",\n        \"17\",\n        \"18446744073709551615\",\n        \"18446744073709551616\",\n        \"-1\",\n        \"0\",\n        \"01\",\n        \"nan\"\n      ],\n      \"edge\": [\n        \"17\"\n      ],\n      \"vertex\": [\n        \"23\"\n      ]\n    },\n    \"cases\": [\n      {\n        \"kind\": \"face\",\n        \"group\": 0,\n        \"label\": \"17\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 1,\n        \"label\": \"17\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 2,\n        \"label\": \"18446744073709551615\",\n        \"eligible\": true\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 3,\n        \"label\": \"18446744073709551616\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 4,\n        \"label\": \"-1\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 5,\n        \"label\": \"0\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 6,\n        \"label\": \"01\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 7,\n        \"label\": \"nan\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"edge\",\n        \"group\": 0,\n        \"label\": \"17\",\n        \"eligible\": true\n      },\n      {\n        \"kind\": \"vertex\",\n        \"group\": 0,\n        \"label\": \"23\",\n        \"eligible\": true\n      }\n    ],\n    \"oversizedSource\": {\n      \"labelBytes\": 16777217,\n      \"fault\": \"byteCapacity\"\n    },\n    \"grant\": {\n      \"items\": 1,\n      \"bytes\": 16384\n    },\n    \"maximumTurns\": 100000,\n    \"zeroGrant\": {\n      \"items\": 0,\n      \"bytes\": 0,\n      \"complete\": false,\n      \"processedItems\": 0,\n      \"processedBytes\": 0,\n      \"retiredItems\": 0,\n      \"retiredBytes\": 0\n    },\n    \"maximumLabelsPerDomain\": 600000,\n    \"insufficientGrant\": {\n      \"items\": 1,\n      \"bytes\": 1,\n      \"complete\": false,\n      \"processedItems\": 0,\n      \"processedBytes\": 0,\n      \"retiredItems\": 0,\n      \"retiredBytes\": 0\n    },\n    \"scratchEntryBytes\": 12,\n    \"cancelAfterItems\": 2,\n    \"authorityBudget\": {\n      \"filledOwners\": 4,\n      \"geometryPages\": 1023,\n      \"pageBytes\": 16384,\n      \"ceilingPages\": 4096,\n      \"labelBytes\": 50000,\n      \"fault\": \"pageCapacity\"\n    }\n  },\n  \"zeroIndex\": {\n    \"accepted\": [\n      {\n        \"kind\": \"wire\",\n        \"positions\": [\n          [\n            0,\n            0,\n            0\n          ],\n          [\n            1,\n            0,\n            0\n          ],\n          [\n            1,\n            1,\n            0\n          ],\n          [\n            0,\n            1,\n            0\n          ]\n        ],\n        \"vertexIds\": [\n          0,\n          1,\n          2,\n          3\n        ],\n        \"edges\": [\n          [\n            [\n              0,\n              0,\n              0\n            ],\n            [\n              1,\n              0,\n              0\n            ]\n          ],\n          [\n            [\n              1,\n              0,\n              0\n            ],\n            [\n              1,\n              1,\n              0\n            ]\n          ],\n          [\n            [\n              1,\n              1,\n              0\n            ],\n            [\n              0,\n              1,\n              0\n            ]\n          ],\n          [\n            [\n              0,\n              1,\n              0\n            ],\n            [\n              0,\n              0,\n              0\n            ]\n          ]\n        ],\n        \"edgeIds\": [\n          0,\n          1,\n          2,\n          3\n        ],\n        \"bounds\": [\n          [\n            0,\n            0,\n            0\n          ],\n          [\n            1,\n            1,\n            0\n          ]\n        ]\n      },\n      {\n        \"kind\": \"point\",\n        \"positions\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ],\n        \"vertexIds\": [\n          0,\n          1\n        ],\n        \"edges\": [],\n        \"edgeIds\": [],\n        \"bounds\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ]\n      },\n      {\n        \"kind\": \"edgeOnlyWire\",\n        \"positions\": [\n          [\n            -2,\n            0,\n            1\n          ],\n          [\n            3,\n            0,\n            1\n          ]\n        ],\n        \"vertexIds\": [],\n        \"edges\": [\n          [\n            [\n              -2,\n              0,\n              1\n            ],\n            [\n              3,\n              0,\n              1\n            ]\n          ]\n        ],\n        \"edgeIds\": [\n          0\n        ],\n        \"bounds\": [\n          [\n            -2,\n            0,\n            1\n          ],\n          [\n            3,\n            0,\n            1\n          ]\n        ]\n      }\n    ],\n    \"refused\": [\n      {\n        \"vertices\": 0,\n        \"indices\": 0,\n        \"vertexIds\": 0,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      },\n      {\n        \"vertices\": 3,\n        \"indices\": 0,\n        \"vertexIds\": 0,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      },\n      {\n        \"vertices\": 2,\n        \"indices\": 0,\n        \"vertexIds\": 1,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      },\n      {\n        \"vertices\": 2,\n        \"indices\": 1,\n        \"vertexIds\": 2,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      }\n    ],\n    \"vertexSentinel\": 4294967295,\n    \"sentinelCases\": [\n      {\n        \"kind\": \"sentinelOnlyPoint\",\n        \"positions\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ],\n        \"vertexIds\": [\n          4294967295,\n          4294967295\n        ],\n        \"indices\": [],\n        \"edges\": [],\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"mixedTriangle\",\n        \"positions\": [\n          [\n            0,\n            0,\n            0\n          ],\n          [\n            1,\n            0,\n            0\n          ],\n          [\n            0,\n            1,\n            0\n          ]\n        ],\n        \"vertexIds\": [\n          17,\n          4294967295,\n          23\n        ],\n        \"indices\": [\n          0,\n          1,\n          2\n        ],\n        \"edges\": [],\n        \"eligible\": true\n      },\n      {\n        \"kind\": \"mixedEdge\",\n        \"positions\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ],\n        \"vertexIds\": [\n          4294967295,\n          23\n        ],\n        \"indices\": [],\n        \"edges\": [\n          [\n            [\n              2,\n              3,\n              4\n            ],\n            [\n              5,\n              6,\n              7\n            ]\n          ]\n        ],\n        \"eligible\": true\n      }\n    ]\n  }\n}\n",
+    "beforeSha256": "aef780618ea171bf462abf15d18a31dfb47b55744268d7f0a787e53caa43de89",
+    "afterSha256": "00d08b4f5a22b602d8ea071942cc849e9cdf22bba7b41d6a1795197f95de7b80"
+  },
+  "test": {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-engine-unit/🦀️.rs",
+    "added": "/// 🧵️ Original wire and point leases submit empty surface domains without fabricating triangles or requesting another mesh.\n#[cfg(not(target_arch = \"wasm32\"))]\n#[test]\nfn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_mesh() {\n    let _guard = prepared_process_guard();\n    use crate::wgpu::kernel_3d_scene::*;\n    use semio_framework_value::retained_clone::RetainedCloneGrant;\n    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json\")).unwrap();\n    let law = &fixture[\"zeroIndex\"][\"gpuSubmission\"];\n    let width = law[\"size\"][0].as_u64().unwrap() as u32;\n    let height = law[\"size\"][1].as_u64().unwrap() as u32;\n    let revision = law[\"sceneRevision\"].as_u64().unwrap();\n    let generation = law[\"previewGeneration\"].as_u64().unwrap();\n    let limit = law[\"retirementTurns\"].as_u64().unwrap() as usize;\n    let mut gpu = match semio_framework_async::block_on(crate::wgpu::gpu::GpuContext::headless(width, height)) {\n        Ok(gpu) => gpu,\n        Err(error) => { assert!(error.starts_with(\"offscreen adapter:\"), \"{error}\"); eprintln!(\"[DEBUG] originalZeroIndexGpu adapterUnavailable=true runtimeQualified=false\"); return; }\n    };\n    let reference = tiny_skia::Pixmap::new(width, height).unwrap();\n    let rgba: [u8; 4] = serde_json::from_value(law[\"rgba\"].clone()).unwrap();\n    assert!(reference.data().chunks_exact(4).all(|pixel| pixel == rgba));\n    let grant = |capacity, release, work, depth| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: work, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth };\n    for (case_index, row) in fixture[\"zeroIndex\"][\"accepted\"].as_array().unwrap().iter().enumerate() {\n        let positions: Vec<[f32; 3]> = serde_json::from_value(row[\"positions\"].clone()).unwrap();\n        let vertex_ids: Vec<u32> = serde_json::from_value(row[\"vertexIds\"].clone()).unwrap();\n        let edges: Vec<[[f32; 3]; 2]> = serde_json::from_value(row[\"edges\"].clone()).unwrap();\n        let edge_ids: Vec<u32> = serde_json::from_value(row[\"edgeIds\"].clone()).unwrap();\n        let schema = Mesh3dSchema { vertex_ids: vertex_ids.len() as u32, edges: edges.len() as u32, edge_ids: edge_ids.len() as u32, ..Mesh3dSchema::triangle_mesh(positions.len() as u32, 0) };\n        let birth = grant(mesh3d_begin_capacity_byte_demand(), 0, 0, 1);\n        let (token, progress) = mesh3d_begin(generation, revision, schema, birth).unwrap();\n        assert!(progress.fits(birth));\n        let mut allocated = false;\n        for _ in 0..limit { let credits = grant(mesh3d_allocate_capacity_byte_demand(token).unwrap(), 0, 0, 1); let step = mesh3d_allocate_step(token, credits).unwrap(); assert!(step.progress.fits(credits)); if step.complete { allocated = true; break; } }\n        assert!(allocated);\n        for position in positions { mesh3d_write_vec3(token, Mesh3dField::Positions, position).unwrap(); mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap(); }\n        for id in vertex_ids { mesh3d_write_u32(token, Mesh3dField::VertexIds, id).unwrap(); }\n        for edge in edges { mesh3d_write_edge(token, edge).unwrap(); }\n        for id in edge_ids { mesh3d_write_u32(token, Mesh3dField::EdgeIds, id).unwrap(); }\n        let lease = mesh3d_seal(token).unwrap();\n        let key = row[\"kind\"].as_str().unwrap();\n        let mut uploaded = false;\n        for _ in 0..limit { if gpu.ensure_mesh_step(key, revision, lease).unwrap() { uploaded = true; break; } }\n        assert!(uploaded);\n        assert_eq!(gpu.mesh_store_mut().get_versioned(key, revision).unwrap().index_count, law[\"indexCount\"].as_u64().unwrap() as u32);\n        let mut draw = DrawList::default();\n        draw.push_scene_pass(ScenePass3d { viewport: [0.0, 0.0, width as f32, height as f32], view_proj: Mat4::identity().to_cols_array_m(), draws: vec![SceneDraw3d { mesh_key: key.into(), mesh_version: revision, instances: vec![Instance3d { component_source: None, id: key.into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], ..Default::default() }], ..Default::default() });\n        let mut job = PreparedRenderJob::new(PreparedRenderInput::new(revision, generation, draw, None, 0.0), 1);\n        let outcome = drive_preparation_until_terminal(&mut job);\n        assert!(matches!(outcome, StepOutcome::Complete(_)));\n        let mut packet = job.take_packet().unwrap();\n        let witness = crate::wgpu::draw::RasterTextureWitness { scene_revision: revision, preview_generation: generation, operation: case_index as u64 + 1 };\n        gpu.begin_raster_ownership(witness).unwrap();\n        gpu.seal_raster_ownership(witness).unwrap();\n        let mut cursor = gpu.begin_prepared_present(&packet, witness).unwrap();\n        let rendered = (|| -> Result<Vec<u8>, String> {\n            let mut complete = false;\n            for _ in 0..limit { if gpu.prepared_present_step(&packet, &mut cursor)? { complete = true; break; } }\n            if !complete { return Err(\"original GPU presentation exceeded bounded turns\".into()); }\n            let mut readback = gpu.begin_prepared_readback(&cursor)?;\n            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);\n            while std::time::Instant::now() < deadline { if gpu.prepared_readback_step(&mut readback)? { return readback.take_rgba().ok_or_else(|| \"original GPU readback was absent\".into()); } std::thread::yield_now(); }\n            readback.cancel();\n            Err(\"original GPU readback deadline expired\".into())\n        })();\n        let missing = gpu.take_missing_world_mesh();\n        for _ in 0..limit { if gpu.commit_presented_rasters_step(witness).unwrap() { break; } }\n        for _ in 0..limit { if cursor.close_step() { break; } }\n        assert!(cursor.terminal_is_empty());\n        for _ in 0..limit { if packet.retire_step() { break; } }\n        for _ in 0..limit { if job.close_step() { break; } }\n        assert!(job.terminal_is_empty());\n        for _ in 0..limit { if gpu.close_mesh_upload_step() { break; } }\n        assert!(gpu.mesh_upload_terminal_is_empty());\n        let mut retired = false;\n        for _ in 0..limit { if gpu.retire_mesh_exact_step(key, revision).unwrap() { retired = true; break; } }\n        assert!(retired);\n        mesh3d_begin_close(lease).unwrap();\n        for _ in 0..limit { let demand = mesh3d_close_demands(lease, MESH3D_PAGE_BYTES).unwrap(); let credits = grant(demand.capacity_bytes, demand.release_bytes, MESH3D_PAGE_BYTES, demand.depth); let step = mesh3d_close_step(lease, credits).unwrap(); assert!(step.progress.fits(credits)); if step.complete { break; } }\n        assert!(mesh3d_terminal_is_empty(lease));\n        assert_eq!(rendered.unwrap(), reference.data(), \"{key}: actual submitted pixels match independent tiny-skia empty surface\");\n        assert_eq!(missing.is_some(), law[\"missingMesh\"].as_bool().unwrap(), \"{key}: an uploaded original zero-index domain remains resident\");\n    }\n    for _ in 0..limit { if gpu.close_mesh_table_step() { break; } }\n    assert!(gpu.mesh_table_terminal_is_empty());\n    for _ in 0..limit { if gpu.close_raster_table_step().unwrap() { break; } }\n    assert!(gpu.raster_table_terminal_is_empty());\n    eprintln!(\"[DEBUG] originalZeroIndexGpu actualDevice=true uploaded=3 submitted=3 readbackTinySkia=true noFabricatedTriangles=true noMissingMesh=true exactOwnersClosed=true\");\n}\n\n",
+    "afterSha256": "d943ee40ab1e78baff21da8ce7ea1f6e2b5b4071422db2230865235ed8949094"
+  },
+  "command": "bun nx run @semio-tech/ui-rs:test-wgpu-engine --skip-nx-cache --excludeTaskDependencies --args=\"long --offline original_zero_index_geometry_submits_without_fabricated_surface_or_missing_mesh --success-output immediate\"",
+  "launch": [
+    {
+      "path": ".vscode/launch.json",
+      "addedRow": {
+        "name": "⚖️test-original-zero-index-gpu🧊️wgpu🖱️ui",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/ui-rs:test-wgpu-engine --skip-nx-cache --excludeTaskDependencies --args=\"long --offline -E test(original_zero_index_geometry_submits_without_fabricated_surface_or_missing_mesh) --success-output immediate\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NX_CACHE_PROJECT_GRAPH": "false",
+          "NX_DAEMON": "false",
+          "NX_ISOLATE_PLUGINS": "false",
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ui-gpu"
+        },
+        "presentation": {
+          "group": "4_build",
+          "order": 206.14805
+        }
+      }
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "addedRow": {
+        "name": "⚖️test-original-zero-index-gpu🧊️wgpu🖱️ui",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/ui-rs:test-wgpu-engine --skip-nx-cache --excludeTaskDependencies --args=\"long --offline -E test(original_zero_index_geometry_submits_without_fabricated_surface_or_missing_mesh) --success-output immediate\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NX_CACHE_PROJECT_GRAPH": "false",
+          "NX_DAEMON": "false",
+          "NX_ISOLATE_PLUGINS": "false",
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ui-gpu"
+        },
+        "presentation": {
+          "group": "4_build",
+          "order": 206.14805
+        }
+      }
+    }
+  ],
+  "firstAdmission": {
+    "result": "PREASSERT shell syntax error at unquoted Nextest expression forwarded by Nx; no compilation",
+    "fix": "Use original positional name filter without shell metacharacters"
+  },
+  "productionRepair": {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs",
+    "beforeSha256": "cc364f057fe10d2ce57a20ff040ef135fda39fa9203e5d6307d0c61afa4465c2",
+    "splices": [
+      {
+        "function": "encode_prepared_world_instance",
+        "before": "        if mesh.index_count == 0 { return Ok(false); }",
+        "after": "        if mesh.index_count == 0 { return Ok(true); }"
+      },
+      {
+        "function": "encode_prepared_world_material",
+        "before": "        if mesh.index_count == 0 { return Ok(false); }",
+        "after": "        if mesh.index_count == 0 { return Ok(true); }"
+      }
+    ],
+    "reason": "Actual resident wire GPU baseline returns false/missing for an empty accepted surface domain",
+    "afterSha256": "1237393119554000395e51f12733667b722831998f6632a9c82d782d416db3ca"
+  },
+  "auditStrengthening": {
+    "testPath": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-engine-unit/🦀️.rs",
+    "testSha256": "8f014b8c070cc960a5a84504770319d15957e3adf459855118acea7fea4ffc8c",
+    "versions": [
+      "resident",
+      "absent-version"
+    ],
+    "drawPaths": [
+      "opaque",
+      "translucent",
+      "material"
+    ],
+    "boundedPacketAndRasterCommitCompletionAsserted": true
+  },
+  "trueZeroVertexWire": {
+    "fixtureBefore": "{\n  \"schema\": \"ui.mesh-component-source.v1\",\n  \"source\": {\n    \"handle\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"revision\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n  },\n  \"references\": {\n    \"face\": [\n      \"9007199254740993\",\n      \"18446744073709551615\"\n    ],\n    \"edge\": [\n      \"17\"\n    ],\n    \"vertex\": [\n      \"23\"\n    ]\n  },\n  \"cases\": [\n    {\n      \"kind\": \"face\",\n      \"group\": 0,\n      \"label\": \"9007199254740993\"\n    },\n    {\n      \"kind\": \"face\",\n      \"group\": 1,\n      \"label\": \"18446744073709551615\"\n    },\n    {\n      \"kind\": \"edge\",\n      \"group\": 0,\n      \"label\": \"17\"\n    },\n    {\n      \"kind\": \"vertex\",\n      \"group\": 0,\n      \"label\": \"23\"\n    }\n  ],\n  \"invalidLabels\": [\n    \"0\",\n    \"01\",\n    \"-1\",\n    \"nan\",\n    \"18446744073709551616\"\n  ],\n  \"admission\": {\n    \"references\": {\n      \"face\": [\n        \"17\",\n        \"17\",\n        \"18446744073709551615\",\n        \"18446744073709551616\",\n        \"-1\",\n        \"0\",\n        \"01\",\n        \"nan\"\n      ],\n      \"edge\": [\n        \"17\"\n      ],\n      \"vertex\": [\n        \"23\"\n      ]\n    },\n    \"cases\": [\n      {\n        \"kind\": \"face\",\n        \"group\": 0,\n        \"label\": \"17\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 1,\n        \"label\": \"17\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 2,\n        \"label\": \"18446744073709551615\",\n        \"eligible\": true\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 3,\n        \"label\": \"18446744073709551616\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 4,\n        \"label\": \"-1\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 5,\n        \"label\": \"0\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 6,\n        \"label\": \"01\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"face\",\n        \"group\": 7,\n        \"label\": \"nan\",\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"edge\",\n        \"group\": 0,\n        \"label\": \"17\",\n        \"eligible\": true\n      },\n      {\n        \"kind\": \"vertex\",\n        \"group\": 0,\n        \"label\": \"23\",\n        \"eligible\": true\n      }\n    ],\n    \"oversizedSource\": {\n      \"labelBytes\": 16777217,\n      \"fault\": \"byteCapacity\"\n    },\n    \"grant\": {\n      \"items\": 1,\n      \"bytes\": 16384\n    },\n    \"maximumTurns\": 100000,\n    \"zeroGrant\": {\n      \"items\": 0,\n      \"bytes\": 0,\n      \"complete\": false,\n      \"processedItems\": 0,\n      \"processedBytes\": 0,\n      \"retiredItems\": 0,\n      \"retiredBytes\": 0\n    },\n    \"maximumLabelsPerDomain\": 600000,\n    \"insufficientGrant\": {\n      \"items\": 1,\n      \"bytes\": 1,\n      \"complete\": false,\n      \"processedItems\": 0,\n      \"processedBytes\": 0,\n      \"retiredItems\": 0,\n      \"retiredBytes\": 0\n    },\n    \"scratchEntryBytes\": 12,\n    \"cancelAfterItems\": 2,\n    \"authorityBudget\": {\n      \"filledOwners\": 4,\n      \"geometryPages\": 1023,\n      \"pageBytes\": 16384,\n      \"ceilingPages\": 4096,\n      \"labelBytes\": 50000,\n      \"fault\": \"pageCapacity\"\n    }\n  },\n  \"zeroIndex\": {\n    \"accepted\": [\n      {\n        \"kind\": \"wire\",\n        \"positions\": [\n          [\n            0,\n            0,\n            0\n          ],\n          [\n            1,\n            0,\n            0\n          ],\n          [\n            1,\n            1,\n            0\n          ],\n          [\n            0,\n            1,\n            0\n          ]\n        ],\n        \"vertexIds\": [\n          0,\n          1,\n          2,\n          3\n        ],\n        \"edges\": [\n          [\n            [\n              0,\n              0,\n              0\n            ],\n            [\n              1,\n              0,\n              0\n            ]\n          ],\n          [\n            [\n              1,\n              0,\n              0\n            ],\n            [\n              1,\n              1,\n              0\n            ]\n          ],\n          [\n            [\n              1,\n              1,\n              0\n            ],\n            [\n              0,\n              1,\n              0\n            ]\n          ],\n          [\n            [\n              0,\n              1,\n              0\n            ],\n            [\n              0,\n              0,\n              0\n            ]\n          ]\n        ],\n        \"edgeIds\": [\n          0,\n          1,\n          2,\n          3\n        ],\n        \"bounds\": [\n          [\n            0,\n            0,\n            0\n          ],\n          [\n            1,\n            1,\n            0\n          ]\n        ]\n      },\n      {\n        \"kind\": \"point\",\n        \"positions\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ],\n        \"vertexIds\": [\n          0,\n          1\n        ],\n        \"edges\": [],\n        \"edgeIds\": [],\n        \"bounds\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ]\n      },\n      {\n        \"kind\": \"edgeOnlyWire\",\n        \"positions\": [\n          [\n            -2,\n            0,\n            1\n          ],\n          [\n            3,\n            0,\n            1\n          ]\n        ],\n        \"vertexIds\": [],\n        \"edges\": [\n          [\n            [\n              -2,\n              0,\n              1\n            ],\n            [\n              3,\n              0,\n              1\n            ]\n          ]\n        ],\n        \"edgeIds\": [\n          0\n        ],\n        \"bounds\": [\n          [\n            -2,\n            0,\n            1\n          ],\n          [\n            3,\n            0,\n            1\n          ]\n        ]\n      }\n    ],\n    \"refused\": [\n      {\n        \"vertices\": 0,\n        \"indices\": 0,\n        \"vertexIds\": 0,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      },\n      {\n        \"vertices\": 3,\n        \"indices\": 0,\n        \"vertexIds\": 0,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      },\n      {\n        \"vertices\": 2,\n        \"indices\": 0,\n        \"vertexIds\": 1,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      },\n      {\n        \"vertices\": 2,\n        \"indices\": 1,\n        \"vertexIds\": 2,\n        \"edges\": 0,\n        \"edgeIds\": 0\n      }\n    ],\n    \"vertexSentinel\": 4294967295,\n    \"sentinelCases\": [\n      {\n        \"kind\": \"sentinelOnlyPoint\",\n        \"positions\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ],\n        \"vertexIds\": [\n          4294967295,\n          4294967295\n        ],\n        \"indices\": [],\n        \"edges\": [],\n        \"eligible\": false\n      },\n      {\n        \"kind\": \"mixedTriangle\",\n        \"positions\": [\n          [\n            0,\n            0,\n            0\n          ],\n          [\n            1,\n            0,\n            0\n          ],\n          [\n            0,\n            1,\n            0\n          ]\n        ],\n        \"vertexIds\": [\n          17,\n          4294967295,\n          23\n        ],\n        \"indices\": [\n          0,\n          1,\n          2\n        ],\n        \"edges\": [],\n        \"eligible\": true\n      },\n      {\n        \"kind\": \"mixedEdge\",\n        \"positions\": [\n          [\n            2,\n            3,\n            4\n          ],\n          [\n            5,\n            6,\n            7\n          ]\n        ],\n        \"vertexIds\": [\n          4294967295,\n          23\n        ],\n        \"indices\": [],\n        \"edges\": [\n          [\n            [\n              2,\n              3,\n              4\n            ],\n            [\n              5,\n              6,\n              7\n            ]\n          ]\n        ],\n        \"eligible\": true\n      }\n    ],\n    \"gpuSubmission\": {\n      \"size\": [\n        32,\n        32\n      ],\n      \"sceneRevision\": 7,\n      \"previewGeneration\": 3,\n      \"indexCount\": 0,\n      \"rgba\": [\n        0,\n        0,\n        0,\n        0\n      ],\n      \"missingMesh\": false,\n      \"retirementTurns\": 4096,\n      \"drawPaths\": [\n        \"opaque\",\n        \"translucent\",\n        \"material\"\n      ],\n      \"versions\": [\n        {\n          \"name\": \"resident\",\n          \"offset\": 0,\n          \"missing\": false\n        },\n        {\n          \"name\": \"absent-version\",\n          \"offset\": 1,\n          \"missing\": true\n        }\n      ]\n    }\n  }\n}\n",
+    "fixtureBeforeSha256": "d88db958bfc74d9d75dd1047d06c65ae88359fbfd3262e3d669b6067d39c4a89",
+    "fixtureAfterSha256": "a27d1c3318bfced1f4f53d59ef9f411bc9e83f32af326bb1821514ffb7a4fd37",
+    "row": {
+      "kind": "zeroVertexWire",
+      "positions": [],
+      "vertexIds": [],
+      "edges": [
+        [
+          [
+            -2,
+            0,
+            1
+          ],
+          [
+            3,
+            0,
+            1
+          ]
+        ]
+      ],
+      "edgeIds": [
+        0
+      ],
+      "bounds": [
+        [
+          -2,
+          0,
+          1
+        ],
+        [
+          3,
+          0,
+          1
+        ]
+      ]
+    },
+    "nativeQualified": false
+  },
+  "originalCpuLeaseLaunch": {
+    "name": "⚖️test-original-zero-index-native🎬️scene🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/ui-scene-rs:test --skip-nx-cache --excludeTaskDependencies --args=\"long --offline --lib mesh3d_original_zero_index --success-output immediate\"",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_CACHE_PROJECT_GRAPH": "false",
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "CARGO_BUILD_JOBS": "2",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/zero-index-native"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0364089198
+    }
+  },
+  "trueZeroVertexNativeBaseline": {
+    "session": 56299,
+    "exit": 1,
+    "assertionsRun": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 194,
+    "reason": "original nonempty typed zero-index domain: Schema",
+    "beforeSchemaGuard": "if self.vertices == 0",
+    "sourceBeforeSha256": "9f671a32cd6cfa82714a9eb1b376ff763a084297ee8ae3724ab6641c3034b791"
+  },
+  "trueZeroVertexNativeRepair": {
+    "source": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs",
+    "afterGuard": "if (self.vertices == 0 && (self.edges == 0 || self.indices != 0))",
+    "sha256": "398ef2a0dbf0136ffa719c3526285b1af79d0236f89d59ecc82efb8b8af40d7b",
+    "fixtureSha256": "6d62c47ed1a2830a03a229bfc83d4dfa2af572dc068c2ea7e5da0acf749b0f9d",
+    "acceptedDomains": 4,
+    "refusedDomains": 6,
+    "session": 4624,
+    "exit": 0,
+    "passed": 1,
+    "skipped": 194,
+    "nextestMilliseconds": 51,
+    "nxSeconds": 25.7,
+    "qualification": "original CPU constructor/lease/buffers/AABB/controlled close; GPU/World not qualified"
+  }
+}

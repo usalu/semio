@@ -1,3 +1,4 @@
+import { receiveGeneratorPreviewProgressV1 } from "../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
@@ -5088,11 +5089,12 @@ function invokeGeneratorPreview(inventory: TaxonomyInventory, id: string, contra
   const input = projection ? canonicalJson(projection) + "\n" : undefined;
   if (input && (!protocol || Buffer.byteLength(input) > protocol.maxBytes)) throw new Error(`Generator ${id} projected input exceeds its declared byte limit`);
   const cancellationPath = cancelFile ? assertLexicalInputOutsideOpaque(inventory.repoRoot, cancelFile, "Generator preview cancellation", true) : "";
-  const limits = generatorPreviewResourceLimits(contract);
-  const result = spawnSync(execution.command, execution.args, { cwd: absolutePath(inventory.repoRoot, execution.cwd), encoding: "utf8", input, maxBuffer: limits.maxOutputBytes, timeout: limits.timeoutMs, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
+  const limits = generatorPreviewResourceLimits(contract), started = performance.now(), duration = contract.previewProgress ? Math.min(limits.timeoutMs, contract.previewProgress.maxDurationMs) : limits.timeoutMs;
+  const result = spawnSync(execution.command, execution.args, { cwd: absolutePath(inventory.repoRoot, execution.cwd), encoding: "utf8", input, maxBuffer: limits.maxOutputBytes, timeout: duration, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW_PROGRESS: contract.previewProgress ? JSON.stringify(contract.previewProgress) : "", SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
   checkCancellation(inventory.repoRoot, cancelFile);
   const stdout = result.stdout ?? "", stderr = result.stderr ?? "";
-  if (result.error || result.status !== 0 || result.signal !== null || stderr !== "") throw new Error(`Generator preview command failed for ${id}: status=${result.status ?? -1}, stdout=${sha256(stdout)}, stderr=${sha256(stderr)}`);
+  if (result.error || result.status !== 0 || result.signal !== null) throw new Error(`Generator preview command failed for ${id}: status=${result.status ?? -1}, stdout=${sha256(stdout)}, stderr=${sha256(stderr)}`);
+  receiveGeneratorPreviewProgressV1(stderr, contract.previewProgress, { cancelled: () => { try { checkCancellation(inventory.repoRoot, cancelFile); return false; } catch { return true; } }, remainingMs: () => duration - (performance.now() - started) });
   const roots = contract.outputRoots.map((root) => root.path).sort(generatorPathCompare);
   const manifest = parseGeneratorPreviewManifest(stdout, id, roots, taxonomy.exclusions.map((entry) => entry.path));
   return { manifest, digest: sha256(stdout) };

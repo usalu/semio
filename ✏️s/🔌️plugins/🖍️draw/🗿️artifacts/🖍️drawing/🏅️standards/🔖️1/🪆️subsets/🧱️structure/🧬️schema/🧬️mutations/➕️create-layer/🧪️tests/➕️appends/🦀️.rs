@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_id};
 use crate::DrawingSnapshot;
 
@@ -86,14 +87,14 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "create-layer/appends-shape-b-at-the-root: shape-b is a fresh id and no parent is named, so neither guard may fire, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("create-layer's diff pins a layers delta");
-    assert_eq!(delta.added.len(), 1, "create-layer adds exactly one layer");
-    assert_eq!(delta.added[0].parent_id, None, "an omitted parent_id stays None — a root insert");
-    assert_eq!(delta.added[0].index, 1, "the resolved append index is BASE's own root length");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty(), "create-layer is a pure insert");
+    assert_eq!(delta.inserted.len(), 1, "create-layer inserts exactly one layer");
+    assert_eq!(delta.inserted[0].parent_id, None, "an omitted parent_id stays None — a root insert");
+    assert_eq!(delta.inserted[0].index, 1, "an append lands at the AFTER index one past BASE's last root layer");
+    assert!(delta.removed.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "create-layer is a pure insert");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: a single `added` entry carrying the whole new
-/// layer plus its resolved ADDRESS. `DrawingLayerAddition.parent_id` is the one field in this diff
+/// 🔺️ The produced diff is EXACTLY the committed one: a single `inserted` row carrying the whole new
+/// layer plus its resolved ADDRESS. `DrawingLayerInsertion.parent_id` is the one field in this diff
 /// family with `skip_serializing_if`, so a root insert omits the key entirely rather than writing
 /// `null` — and the pre-existing `shape-a` appears nowhere, because an insert is not a rewrite.
 #[semio_framework_async_macros::async_test]
@@ -103,11 +104,11 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-layer/appends-shape-b-at-the-root: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("create-layer pins a layers delta");
-    assert_eq!(delta.added.len(), 1, "exactly one layer is inserted");
-    assert_eq!(delta.added[0].parent_id, None, "an omitted parent stays a root insert");
-    assert_eq!(delta.added[0].index, 1, "the append index was resolved from BASE's own root length");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty(), "a create touches neither existing layer");
-    assert!(!DIFF.contains("shape-a"), "the untouched sibling must not appear anywhere in the committed diff");
+    assert_eq!(delta.inserted.len(), 1, "exactly one layer is inserted");
+    assert_eq!(delta.inserted[0].parent_id, None, "an omitted parent stays a root insert");
+    assert_eq!(delta.inserted[0].index, 1, "the append index was resolved from BASE's root length");
+    assert!(delta.removed.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "a create touches neither existing layer");
+    assert_eq!(DIFF.matches("shape-a").count(), 0, "the untouched sibling is not mentioned at all");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

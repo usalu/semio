@@ -8,14 +8,15 @@
   "bb2DetailsConform": null,
   "zones": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "elements": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "floor-ground",
+        "index": 3,
         "row": {
           "id": "wall-extra",
           "kind": "wall",
@@ -88,11 +89,13 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "thermalBridges": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   }
 }

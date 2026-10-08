@@ -1,8 +1,8 @@
 //! 🗂️ `set-selection-flag` command, and the two set-verbs an outliner row names (`setSelectionHidden`,
 //! `setSelectionLocked`).
 
-use crate::editor::puzzle2d::{apply_selection_flag, Puzzle2dActionCtx};
-use serde_json::Value;
+use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use semio_framework_pack_json::Value;
 
 /// 🙈️ An explicit `ids` list (the outliner tree's inline row toggles) patches exactly those; without
 /// one the whole live selection is flagged at once (the context menu's and the inspector's path).
@@ -28,5 +28,5 @@ fn apply(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>, flag: &str, valu
         .map(|ids| ids.iter().filter_map(|id| id.as_str().map(str::to_string)).collect::<Vec<String>>())
         .filter(|ids| !ids.is_empty());
     let ids = explicit.unwrap_or_else(|| ctx.selected_ids());
-    apply_selection_flag(&mut ctx.scene.board_snapshot, &ids, flag, value);
+    ctx.recorder.set_flag(&ids, flag, value);
 }

@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation};
+use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
 
 use crate::Puzzle3dSnapshot;
 
@@ -48,7 +49,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "disconnect-kind-compatibility/removes-vortex-kind-pair: inverse did not restore the before-snapshot");

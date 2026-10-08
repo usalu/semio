@@ -33,7 +33,31 @@ class SourceWatchCheckScript extends BundleScript {
   }
 }
 
+/** 🔐️ Runs the permanent complete publication and lease custody laws in an owned cancellable worker. */
+class PublicationCheckScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-check accepts no arguments");const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),{cmdBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts"),{join}=await import("node:path"),{readProcessOwnerContextV1}=await import("../../../../../../🔨️modules/🏃️process/📋️context/🟦️.ts"),context=readProcessOwnerContextV1(process.env,process.cwd());await runOwnedCommand(process.execPath,[join(this.root,"📜️script.ts"),"publication-worker"],this.repoRoot,"publication-law",cmdBudgetMs(),{env:{...process.env,SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify({...context,cwd:this.repoRoot})}});}
+}
+/** 🧪️ Executes every original publication law and portable lease custody case with declared artifact ownership. */
+class PublicationWorkerScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-worker accepts no arguments");const {readProcessOwnerContextV1,processCacheDirectoryV1}=await import("../../../../../../🔨️modules/🏃️process/📋️context/🟦️.ts"),{mkdir}=await import("node:fs/promises"),context=readProcessOwnerContextV1(process.env,process.cwd()),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??processCacheDirectoryV1(context,"publication-law");await mkdir(artifacts,{recursive:true});process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;const {testProtectedActorPublicationV1}=await import("../../🔎️verification/🧾️publication/🧪️tests/🟦️.ts");await testProtectedActorPublicationV1(this.repoRoot);}
+}
+
+/** 🎮️ Publishes the General owner's explicit catalog-free session instance. */
+class PlaygroundSessionScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length > 1 || (args[0] !== undefined && args[0] !== "check" && args[0] !== "preview")) throw new Error("General session accepts check or preview");
+    const { default: owning } = await import("../../🎮️playground-session/🔣️.json");
+    const { parsePlaygroundSessionPublicationRequestV1 } = await import("../../🎮️playground-session/🧬️schema/🟦️.ts");
+    const { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } = await import("../../🎮️playground-session/🏃️execution/🟦️.ts");
+    const request = parsePlaygroundSessionPublicationRequestV1(owning);
+    if (args[0] === "preview") await new PlaygroundSessionPreviewScript(this.root, request).run([]);
+    else await new PlaygroundSessionGenerateScript(this.root, request).run(args);
+  }
+}
 const router = new ScriptRouter(import.meta.dir)
+  .register("playground-session", PlaygroundSessionScript)
+  .register("publication-check", PublicationCheckScript)
+  .register("publication-worker", PublicationWorkerScript)
   .register("source-watch-check", SourceWatchCheckScript)
   .register("distribution-output-check", DistributionOutputCheckScript)
   .registerLazy("prepare", async () => (await import("../../♻️activation/🧰️preparation/🟦️.ts")).PreparationScript)
@@ -80,12 +104,8 @@ const router = new ScriptRouter(import.meta.dir)
   })
   .register("generate", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "playground-session") {
-        const { PlaygroundSessionPreviewScript, PlaygroundSessionGenerateScript } = await import("../../🎮️playground-session/🏃️execution/🟦️.ts");
-        return segments[1] === "preview" ? new PlaygroundSessionPreviewScript(this.root).run() : new PlaygroundSessionGenerateScript(this.root).run(segments.slice(1));
-      }
       if (segments[0] === "scale-fixture") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot).run(segments.slice(1));
-      throw new Error(`unknown generate subcommand: ${segments[0]} (expected playground-session|scale-fixture)`);
+      throw new Error(`unknown generate subcommand: ${segments[0]} (expected scale-fixture)`);
     }
   })
   .register("scale-fixture", class extends BundleScript {

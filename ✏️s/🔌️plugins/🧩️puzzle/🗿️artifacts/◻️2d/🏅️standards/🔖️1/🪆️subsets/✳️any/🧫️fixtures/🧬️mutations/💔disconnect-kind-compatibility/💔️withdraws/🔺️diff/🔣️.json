@@ -4,15 +4,18 @@
   "edges": null,
   "meta": {
     "kindCompatibility": {
-      "added": [],
-      "patched": [],
+      "inserted": [],
+      "modified": [],
+      "moved": [],
       "removed": [
         {
-          "source": "tambour rectangular bottom",
-          "target": "tambour rectangular top"
+          "id": {
+            "source": "tambour rectangular bottom",
+            "target": "tambour rectangular top"
+          },
+          "index": 13
         }
-      ],
-      "reordered": null
+      ]
     }
   },
   "nodes": null,

@@ -4,15 +4,18 @@
   "domain": null,
   "meta": {
     "kindCompatibility": {
-      "added": [],
-      "patched": [],
+      "inserted": [],
+      "modified": [],
+      "moved": [],
       "removed": [
         {
-          "source": "vortex-kind-a",
-          "target": "vortex-kind-b"
+          "id": {
+            "source": "vortex-kind-a",
+            "target": "vortex-kind-b"
+          },
+          "index": 0
         }
-      ],
-      "reordered": null
+      ]
     }
   },
   "objects": null,

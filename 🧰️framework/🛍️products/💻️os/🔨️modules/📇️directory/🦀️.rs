@@ -14,6 +14,7 @@
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
 
+
 // 🎫️ Lane 1-D (ticket §A ownership: "none" before this wave, ours per `📋️ownership-and-handoffs.md`
 // row `🔨️modules/📇️directory/**`): the hub client + native identity mint/restore helper. Both are
 // additive sub-modules beside `schema`, consuming `fold`/the wire types below without touching them.
@@ -29,7 +30,7 @@ pub mod access_policy;
 use std::collections::BTreeMap;
 
 pub use schema::{
-    descriptor_digest_encoding_v1, descriptor_digest_v1, directory_command_sha256, hex_lower, lease_fields_from_plan_v1, mint_directory_command_request_id, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1,
+    validate_document_descriptor_v1, lease_fields_from_plan_v1, mint_directory_command_request_id, same_lease_fields_v1, AdminConnectionSnapshotV1,
     AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1,
     ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
     DirectoryAccessChange, DirectoryCommandResultV1, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
@@ -39,15 +40,15 @@ pub use schema::{
     DocumentFrontier, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1,
     DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView,
     Hlc, InviteView, MemberSpaceViewV1, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactBlob, PublishedArtifactCheckpoint, RebootstrapRequired,
-    DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES,
+    DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES,
     DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS, DIRECTORY_COMMAND_REQUEST_ID_LEN, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
     DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
     DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
-pub use schema::{valid_user_preference_record_v1, DIRECTORY_PREFERENCE_PAGE_PATH_V1, USER_PREFERENCE_MUTATION_MAX_BYTES, USER_PREFERENCE_SCHEMA_ID_MAX_BYTES};
-pub use schema::{decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
+pub use schema::{DIRECTORY_PREFERENCE_PAGE_PATH_V1, USER_PREFERENCE_MUTATION_MAX_BYTES, USER_PREFERENCE_SCHEMA_ID_MAX_BYTES};
+pub use schema::{CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
 
 //#region 🔖️ReadModel
 /// 🏠️ One projected space: its `SpaceView` plus the current member roster.
@@ -222,3 +223,6 @@ pub async fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> D
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

@@ -8,12 +8,15 @@
   "investigationDepth": null,
   "layers": null,
   "footings": {
-    "added": [],
     "removed": [
-      "footing-F1"
+      {
+        "id": "footing-F1",
+        "index": 0
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "piles": null,
   "retainingWalls": null,

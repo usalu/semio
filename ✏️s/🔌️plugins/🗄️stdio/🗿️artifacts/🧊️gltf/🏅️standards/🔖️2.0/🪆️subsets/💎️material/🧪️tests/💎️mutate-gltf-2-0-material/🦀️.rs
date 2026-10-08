@@ -129,7 +129,8 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,change_material_alpha_mode,change_material_double_sided,create_image,create_material,create_sampler,create_texture,delete_image,delete_material,delete_sampler,delete_texture,move_image,move_material,move_sampler,move_texture,reorder_images,reorder_materials,reorder_samplers,reorder_textures};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation;
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{change_material_alpha_mode,change_material_double_sided,create_image,create_material,create_sampler,create_texture,delete_image,delete_material,delete_sampler,delete_texture,move_image,move_material,move_sampler,move_texture,reorder_images,reorder_materials,reorder_samplers,reorder_textures};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfAlphaMode, GltfSnapshot};
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;

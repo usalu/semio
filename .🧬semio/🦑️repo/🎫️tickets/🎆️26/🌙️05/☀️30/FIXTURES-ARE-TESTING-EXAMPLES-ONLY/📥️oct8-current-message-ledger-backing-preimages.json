@@ -1,0 +1,6 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "terminalBlock": "    fn terminal_is_empty(&self) -> bool {\n        self.len == 0 && self.free_len == ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY\n    }\n}",
+  "anchor": "pub struct ArtifactEditMessageLedgerIter<'a>",
+  "definition": "pub struct ArtifactEditMessageLedger {\n    slots: Box<[std::mem::MaybeUninit<crate::os_spr::EditMessages>]>,\n    generations: Box<[u64]>,\n    occupied: Box<[bool]>,\n    next: Box<[u16]>,\n    previous: Box<[u16]>,\n    buckets: Box<[u16]>,\n    free: Box<[u16]>,\n    free_len: usize,\n    head: u16,\n    tail: u16,\n    len: usize,\n}\n\n"
+}

@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -48,7 +49,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "disconnect-handles/removes-edge-1: inverse did not restore the before-snapshot");
@@ -97,7 +98,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "disconnect-handles/removes-edge-1: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["edges"]["removed"][0].as_str(), Some("edge-1"), "disconnect-handles/removes-edge-1: the diff must remove edge-1 by id");
+    assert_eq!(committed["edges"]["removed"][0]["id"].as_str(), Some("edge-1"), "disconnect-handles/removes-edge-1: the diff must remove edge-1 by id");
     assert!(committed["nodes"].is_null(), "disconnect-handles/removes-edge-1: a disconnect must not touch the nodes delta");
 }
 

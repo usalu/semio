@@ -2,6 +2,7 @@
 //! inverse diffs sum to the negative of the forward diff, for every list the document owns.
 
 use super::*;
+use crate::standards::v1::subsets::any::io::{apply_en1991_mutation, inverse_en1991_mutation};
 use crate::AccidentalCase;
 
 fn three_row_document() -> En1991Snapshot {

@@ -14,8 +14,9 @@ const TEXT_CODECS: &[TextCodec] = &[
     TextCodec { opcode: insert_line::TEXT_OPCODE, try_encode: insert_line::try_encode, decode: insert_line::decode_mutation },
     TextCodec { opcode: remove_line::TEXT_OPCODE, try_encode: remove_line::try_encode, decode: remove_line::decode_mutation },
     TextCodec { opcode: set_line::TEXT_OPCODE, try_encode: set_line::try_encode, decode: set_line::decode_mutation },
+    TextCodec { opcode: splice_text::TEXT_OPCODE, try_encode: splice_text::try_encode, decode: splice_text::decode_mutation },
 ];
-pub const TEXT_OPCODES: &[&str] = &[set_trailing_newline::TEXT_OPCODE, set_line_ending::TEXT_OPCODE, insert_line::TEXT_OPCODE, remove_line::TEXT_OPCODE, set_line::TEXT_OPCODE];
+pub const TEXT_OPCODES: &[&str] = &[set_trailing_newline::TEXT_OPCODE, set_line_ending::TEXT_OPCODE, insert_line::TEXT_OPCODE, remove_line::TEXT_OPCODE, set_line::TEXT_OPCODE, splice_text::TEXT_OPCODE];
 //#endregion 🔖️Registry
 
 //#region 🔖️Framing
@@ -86,3 +87,6 @@ pub mod remove_line;
 
 #[path = "↩️set-trailing-newline/🦀️.rs"]
 pub mod set_trailing_newline;
+
+#[path = "✂️splice-text/🦀️.rs"]
+pub mod splice_text;

@@ -1459,7 +1459,7 @@ fn clipboard_verbs_cover_every_part_of_the_largest_example() {
     let offset = fixture["pasteOffset"].as_array().expect("offset").iter().map(|axis| axis.as_f64().expect("axis")).collect::<Vec<_>>();
     let document = capsule_dream_example_document();
     assert_eq!(document.parts.len() as u64, fixture["parts"].as_u64().expect("parts"));
-    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(&document).expect("document serializes"));
+    let snapshot = Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::puzzle5d_snapshot_from_document(&document).expect("typed host document admits"));
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&snapshot, &history);
     let part_ids: Vec<String> = document.parts.iter().map(|part| part.id.clone()).collect();
@@ -1983,7 +1983,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
         dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
         assert_eq!(part_count(&app), document.parts.len(), "setActiveExample {example_id} really replaced the document");
     }
-    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(concrete_forest_example_document()).expect("document serializes"));
+    let snapshot = Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::puzzle5d_snapshot_from_document(&concrete_forest_example_document()).expect("authored document admits"));
     let interaction = protocol::InteractionState::default();
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
@@ -2236,7 +2236,7 @@ fn export_import_round_trips_every_shipped_example_byte_for_byte() {
         assert!(!document.parts.is_empty(), "a round trip over an empty document proves nothing");
         let exported = export_snapshot::puzzle5d_export_json(&document);
         let root = import_snapshot::puzzle5d_decode_document(&exported).expect("the whole export decodes as a puzzle 5d document");
-        let reimported: Puzzle5dDocument = serde_json::from_value(root).expect("the decoded root is a puzzle 5d document");
+        let reimported: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_record_from_projection(root).expect("the decoded root is a puzzle 5d document");
         assert_eq!(export_snapshot::puzzle5d_export_json(&reimported), exported, "{} did not round-trip byte-for-byte", document.label.clone().unwrap_or_default());
     }
 }
@@ -2284,14 +2284,12 @@ fn export_filename_follows_the_document_label() {
 
 /// 📥️ LAW: a chunked pick goes through the SDK's own action dispatch: every chunk but the last is staged by
 /// the framework (`semio_framework::kernel::ImportStaging`) and edits nothing, and the closing chunk hands
-/// `importSnapshot` the whole file, which lands as ONE undoable edit.
+/// `importSnapshot` the whole file, which lands as ONE whole-document load (no mutation, no history row).
 #[semio_framework_async_macros::async_test]
-async fn a_chunked_pick_lands_as_one_undoable_edit_through_the_framework_staging() {
+async fn a_chunked_pick_lands_as_one_whole_document_load_through_the_framework_staging() {
     let mut app = app_with_registry();
     dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty document");
     assert_eq!(part_count(&app), 0);
-    // 📄️ The law needs a document that really chunks — the first shipped one whose export spans more
-    // than one host chunk, so it keeps holding whichever example grows past the chunk next.
     let (target, chunks) = [concrete_forest_example_document(), nakagin_example_document()]
         .into_iter()
         .find_map(|document| {
@@ -2299,16 +2297,22 @@ async fn a_chunked_pick_lands_as_one_undoable_edit_through_the_framework_staging
             (chunks.len() > 1).then_some((document, chunks))
         })
         .expect("a shipped document whose export spans more than one host chunk");
+    let mut loaded = None;
     for chunk in &chunks {
         let result = dispatch_through_action(&mut app, "importSnapshot", &semio_framework::kernel::import_chunk_arguments("chunked.json", chunk, None)).expect("import chunk");
+        assert!(result.mutations.is_empty(), "chunk {} of {} publishes no mutation", chunk.chunk, chunk.chunk_count);
         if chunk.chunk + 1 < chunk.chunk_count {
-            assert!(result.mutations.is_empty(), "chunk {} of {} staged and must edit nothing", chunk.chunk, chunk.chunk_count);
             assert_eq!(part_count(&app), 0, "chunk {} of {} must leave the document untouched", chunk.chunk, chunk.chunk_count);
+        } else {
+            loaded = result.requested_effects.iter().find_map(|effect| match effect {
+                Effect::LoadDocument { pack, .. } => Some(pack.clone()),
+                _ => None,
+            });
         }
     }
-    assert_eq!(part_count(&app), target.parts.len(), "the closing chunk landed the whole document");
-    dispatch(&mut app, "undo", None, None).expect("undo");
-    assert_eq!(part_count(&app), 0, "the whole import is ONE undoable edit");
+    let pack = loaded.expect("the closing chunk publishes the whole-document load");
+    let document = <crate::Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("the load carries a puzzle 5d document");
+    assert_eq!(document.parts.len(), target.parts.len(), "the closing chunk loaded the whole document");
     close_app(&mut app);
 }
 
@@ -2439,8 +2443,8 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
                 .kind_catalogs
                 .as_ref()
                 .and_then(|catalogs| catalogs.get("parts"))
-                .and_then(serde_json::Value::as_array)
-                .map(|entries| entries.iter().filter_map(|entry| entry.get("id").and_then(serde_json::Value::as_str).map(str::to_string)).collect::<Vec<_>>())
+                .and_then(semio_framework_pack_json::Value::as_array)
+                .map(|entries| entries.iter().filter_map(|entry| entry.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string)).collect::<Vec<_>>())
                 .unwrap_or_default()
         })
         .chain(
@@ -2604,7 +2608,7 @@ fn a_cut_copies_a_locked_part_but_never_removes_it() {
     let locked_id = document.parts[0].id.clone();
     let free_id = document.parts[1].id.clone();
     document.parts[0].part_2d.locked = Some(true);
-    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(&document).expect("document serializes"));
+    let snapshot = Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::puzzle5d_snapshot_from_document(&document).expect("typed host document admits"));
     let ids = vec![locked_id.clone(), free_id.clone()];
     let fragment = puzzle5d_copy_fragment(&snapshot, &ids, &[]).expect("copy both parts");
     assert!(fragment.dsl_text.contains(locked_id.as_str()), "the locked part is still COPIED");
@@ -2674,13 +2678,13 @@ fn puzzle5d_part_kind_rows(document: &Puzzle5dDocument) -> Vec<(String, String)>
         .kind_catalogs
         .as_ref()
         .and_then(|catalogs| catalogs.get("parts"))
-        .and_then(serde_json::Value::as_array)
+        .and_then(semio_framework_pack_json::Value::as_array)
         .map(|entries| {
             entries
                 .iter()
                 .filter_map(|entry| {
-                    let id = entry.get("id").and_then(serde_json::Value::as_str)?;
-                    let label = ["label", "name"].iter().find_map(|key| entry.get(*key).and_then(serde_json::Value::as_str)).filter(|label| !label.is_empty()).unwrap_or(id);
+                    let id = entry.get("id").and_then(semio_framework_pack_json::Value::as_str)?;
+                    let label = ["label", "name"].iter().find_map(|key| entry.get(*key).and_then(semio_framework_pack_json::Value::as_str)).filter(|label| !label.is_empty()).unwrap_or(id);
                     Some((id.to_string(), label.to_string()))
                 })
                 .collect()

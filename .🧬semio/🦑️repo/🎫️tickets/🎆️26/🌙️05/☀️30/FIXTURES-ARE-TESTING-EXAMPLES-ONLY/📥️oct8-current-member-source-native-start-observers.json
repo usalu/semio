@@ -1,0 +1,36 @@
+{
+  "time": "2026-10-08T21:52:15.824995+00:00",
+  "kind": "whole-endpoint-observers-not-authored-attribution",
+  "observers": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "0332ee8ed5ad42e36ee52fb22cb49156f754f66553e63ed72614a9dda9bba40e",
+      "bytes": 1850150
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "cc9bcb59178ba87c3582deda4ac0b600fe2378dcaacbf4cb44d3df5cddecb0ed",
+      "bytes": 57209
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "f7ea5bf8bc96bd9448a629afdc3396de768f3f445a876cf245c0967ca7e1912b",
+      "bytes": 31458
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "201cda290aabbf1f4e4aa6347d9323f811dd808cb9e0789c2ffc404e39d13a30",
+      "bytes": 74233
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8080c67b41531e7b03a5e63abebd08fef5f8e15083b1ae9469f84e07a9c2c08f",
+      "bytes": 773257
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "8c27201ccb488c898a27390440faa04389e4e50b0730f0fa266c01ab435fb4da",
+      "bytes": 27044
+    }
+  ]
+}

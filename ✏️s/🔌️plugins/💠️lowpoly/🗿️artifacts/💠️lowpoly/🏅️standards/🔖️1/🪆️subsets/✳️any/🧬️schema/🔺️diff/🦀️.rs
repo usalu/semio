@@ -1,4 +1,4 @@
-//! 🧬️ Lowpoly diff schema — sparse edits over the artifact: an id-keyed object row delta whose patches carry the object's own
+//! 🧬️ Lowpoly diff schema — sparse edits over the artifact: a positional object row delta whose patches carry the object's own
 //! field patch, an ordered list of paint-layer edits and an ordered list of selection motions applied to its mesh.
 
 use crate::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySnapshot};
@@ -7,7 +7,7 @@ use protocol::{MutationDiff, Patchable};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the lowpoly artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff). There is no
-/// whole-document slot: objects are an id-keyed row delta and every object patch is field-sparse.
+/// whole-document slot: objects are a positional row delta and every object patch is field-sparse.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
@@ -20,24 +20,19 @@ pub struct LowpolyDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-/// 🧩 Identified-collection delta for `objects`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct LowpolyObjectsDelta {
-    pub added: Vec<LowpolyObject>,
-    pub removed: Vec<String>,
-    pub patched: Vec<LowpolyObjectPatchEntry>,
-    pub reordered: Option<Vec<String>>,
+protocol::list_delta! {
+    /// 🧩 Positional row delta for `objects`.
+    pub LowpolyObjectsDelta { removal: LowpolyObjectRemoval, insertion: LowpolyObjectInsertion, relocation: LowpolyObjectRelocation, modification: LowpolyObjectsModification, row: LowpolyObject, patch: LowpolyObjectPatchEntry, key: id, values_only }
 }
 
-/// 🩹 One patched object entry: the object's own field patch, then its paint-layer edits, then its mesh motions, in that order.
+/// 🩹 One patched object entry: the object's own field patch, then its paint-layer edits, then its mesh vertex positions and the Normal channels they rewrote, in that order.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct LowpolyObjectPatchEntry {
-    pub id: String,
     pub patch: LowpolyObjectPatch,
     pub paint_layers: Option<LowpolyPaintLayersDelta>,
-    pub mesh_motions: Vec<LowpolyMeshMotion>,
+    pub mesh_vertices: Vec<LowpolyVertexPosition>,
+    pub mesh_attributes: Vec<crate::LowpolyMeshAttribute>,
 }
 
 /// 🖌️ Ordered paint-layer edits under an object patch (layers are addressed by index and carry no identity).
@@ -58,13 +53,13 @@ pub enum LowpolyPaintEdit {
     Stroke { index: u32, runs: Vec<PixelRun> },
 }
 
-/// 🧲️ One selection motion applied to the named vertices of an object's mesh, replayed by the central applier.
+/// 📍️ One vertex of an object's managed mesh at an absolute position; the central applier writes it, recomputes the normals and
+/// re-derives the mesh handle.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "motion", rename_all = "camelCase")]
-pub enum LowpolyMeshMotion {
-    Offset { vertex_ids: Vec<u32>, offset: [f32; 3] },
-    Turn { vertex_ids: Vec<u32>, pivot: [f32; 3], axis: [f32; 3], angle: f32 },
-    Stretch { vertex_ids: Vec<u32>, pivot: [f32; 3], factor: [f32; 3] },
+#[value(rename_all = "camelCase")]
+pub struct LowpolyVertexPosition {
+    pub vertex: u32,
+    pub position: [f32; 3],
 }
 
 /// 🩹 Paint-layer metadata patch.
@@ -83,233 +78,69 @@ pub struct LowpolyPaintLayerPatch {
 pub use crate::LowpolyObjectPatch;
 //#endregion 🔁️Re-exports
 
-//#region 🧺️KeyedDelta
-/// 🧺️ Id-keyed ordered-collection delta (`added`/`removed`/`patched`/`reordered`) and its algebra: apply, composition (create∘delete
-/// cancels, delete∘create replaces, patch∘patch composes, patch∘create folds), negative delta and state delta.
-pub trait KeyedDelta: Sized {
-    type Row: Clone;
-    type Patch: Clone;
-    fn added(&self) -> &[Self::Row];
-    fn removed(&self) -> &[String];
-    fn patched(&self) -> &[Self::Patch];
-    fn reordered(&self) -> Option<&[String]>;
-    fn assemble(added: Vec<Self::Row>, removed: Vec<String>, patched: Vec<Self::Patch>, reordered: Option<Vec<String>>) -> Self;
-    fn row_key(row: &Self::Row) -> &str;
-    fn patch_key(patch: &Self::Patch) -> &str;
-    fn patch_fold(patch: &Self::Patch, row: &mut Self::Row) -> Result<(), protocol::MutationApplyError>;
-    fn patch_compose(first: &Self::Patch, later: &Self::Patch) -> Self::Patch;
-    fn patch_inverse(patch: &Self::Patch, base: &Self::Row) -> Self::Patch;
-    fn patch_between(base: &Self::Row, other: &Self::Row) -> Option<Self::Patch>;
-    fn patch_is_empty(patch: &Self::Patch) -> bool;
-}
 
-fn keyed_error(code: &str, message: &str, at: [&str; 2]) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new(code, message).at(at)
-}
-
-pub fn keyed_apply<D: KeyedDelta>(rows: &[D::Row], delta: &D) -> Result<Vec<D::Row>, protocol::MutationApplyError> {
-    let key = D::row_key;
-    for (index, id) in delta.removed().iter().enumerate() {
-        if delta.removed()[..index].contains(id) {
-            return Err(keyed_error("mutation.apply.duplicate-target", "row is removed more than once", ["removed", &index.to_string()]));
-        }
-        if !rows.iter().any(|row| key(row) == id) {
-            return Err(keyed_error("mutation.apply.missing-target", "removed row does not exist", ["removed", &index.to_string()]));
-        }
-    }
-    let mut next: Vec<D::Row> = rows.iter().filter(|row| !delta.removed().iter().any(|id| id == key(row))).cloned().collect();
-    for (index, row) in delta.added().iter().enumerate() {
-        if next.iter().any(|existing| key(existing) == key(row)) {
-            return Err(keyed_error("mutation.apply.duplicate-target", "added row identity already exists", ["added", &index.to_string()]));
-        }
-        next.push(row.clone());
-    }
-    for (index, patch) in delta.patched().iter().enumerate() {
-        if delta.patched()[..index].iter().any(|earlier| D::patch_key(earlier) == D::patch_key(patch)) {
-            return Err(keyed_error("mutation.apply.duplicate-target", "row is patched more than once", ["patched", &index.to_string()]));
-        }
-        let row = next.iter_mut().find(|row| key(row) == D::patch_key(patch)).ok_or_else(|| keyed_error("mutation.apply.missing-target", "patched row does not exist", ["patched", &index.to_string()]))?;
-        D::patch_fold(patch, row).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
-    }
-    let Some(order) = delta.reordered() else { return Ok(next) };
-    if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|row| key(row) == id)) {
-        return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered".to_string()]));
-    }
-    Ok(order.iter().filter_map(|id| next.iter().find(|row| key(row) == id).cloned()).collect())
-}
-
-fn canonical<D: KeyedDelta>(mut added: Vec<D::Row>, mut removed: Vec<String>, mut patched: Vec<D::Patch>, reordered: Option<Vec<String>>) -> D {
-    if let Some(order) = &reordered {
-        added.sort_by_key(|row| order.iter().position(|id| id == D::row_key(row)).unwrap_or(usize::MAX));
-    }
-    let reordered = reordered.filter(|order| {
-        let tail = added.len();
-        !(order.len() <= tail + 1 && order.len() >= tail && order[order.len() - tail..].iter().map(String::as_str).eq(added.iter().map(D::row_key)))
-    });
-    removed.sort();
-    removed.dedup();
-    patched.retain(|patch| !D::patch_is_empty(patch));
-    patched.sort_by(|left, right| D::patch_key(left).cmp(D::patch_key(right)));
-    D::assemble(added, removed, patched, reordered)
-}
-
-/// ➕️ Normal form of `first` then `later`: create∘delete cancels, delete∘create replaces, patch∘patch composes, patch∘create folds.
-pub fn keyed_absorb<D: KeyedDelta>(first: &D, later: &D) -> D {
-    let mut added: Vec<D::Row> = first.added().to_vec();
-    let mut removed: Vec<String> = first.removed().to_vec();
-    let mut patched: Vec<D::Patch> = Vec::new();
-    for patch in first.patched() {
-        match added.iter_mut().find(|row| D::row_key(row) == D::patch_key(patch)) {
-            Some(row) => {
-                let _ = D::patch_fold(patch, row);
-            }
-            None => patched.push(patch.clone()),
-        }
-    }
-    for id in later.removed() {
-        if let Some(position) = added.iter().position(|row| D::row_key(row) == id) {
-            added.remove(position);
-        } else {
-            patched.retain(|patch| D::patch_key(patch) != id);
-            if !removed.contains(id) {
-                removed.push(id.clone());
-            }
-        }
-    }
-    added.extend(later.added().iter().cloned());
-    for patch in later.patched() {
-        let key = D::patch_key(patch);
-        if let Some(row) = added.iter_mut().find(|row| D::row_key(row) == key) {
-            let _ = D::patch_fold(patch, row);
-        } else if let Some(existing) = patched.iter_mut().find(|existing| D::patch_key(existing) == key) {
-            *existing = D::patch_compose(existing, patch);
-        } else {
-            patched.push(patch.clone());
-        }
-    }
-    let reordered = match (later.reordered(), first.reordered()) {
-        (Some(order), _) => Some(order.to_vec()),
-        (None, Some(order)) => Some(order.iter().filter(|id| !later.removed().contains(id)).cloned().chain(later.added().iter().map(|row| D::row_key(row).to_string())).collect()),
-        (None, None) => None,
-    };
-    canonical::<D>(added, removed, patched, reordered)
-}
-
-fn ids_after<D: KeyedDelta>(base: &[String], delta: &D) -> Vec<String> {
-    match delta.reordered() {
-        Some(order) => order.to_vec(),
-        None => base.iter().filter(|id| !delta.removed().contains(id)).cloned().chain(delta.added().iter().map(|row| D::row_key(row).to_string())).collect(),
-    }
-}
-
-/// 🔁️ The negative delta: removes what `delta` added, restores what it removed, undoes its patches, restores the base order.
-pub fn keyed_inverse<D: KeyedDelta>(delta: &D, base: &[D::Row]) -> D {
-    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
-    let removed: Vec<String> = delta.added().iter().map(|row| D::row_key(row).to_string()).collect();
-    let added: Vec<D::Row> = delta.removed().iter().filter_map(|id| base.iter().find(|row| D::row_key(row) == id).cloned()).collect();
-    let patched: Vec<D::Patch> = delta
-        .patched()
-        .iter()
-        .filter(|patch| !removed.iter().any(|id| id == D::patch_key(patch)))
-        .filter_map(|patch| base.iter().find(|row| D::row_key(row) == D::patch_key(patch)).map(|row| D::patch_inverse(patch, row)))
-        .collect();
-    let after = ids_after(&base_ids, delta);
-    let natural: Vec<String> = after.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
-    let reordered = (natural != base_ids).then_some(base_ids);
-    canonical::<D>(added, removed, patched, reordered)
-}
-
-/// 🧭️ The delta turning `base` into `other` (sync/import only).
-pub fn keyed_between<D: KeyedDelta>(base: &[D::Row], other: &[D::Row]) -> D {
-    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
-    let other_ids: Vec<String> = other.iter().map(|row| D::row_key(row).to_string()).collect();
-    let removed: Vec<String> = base_ids.iter().filter(|id| !other_ids.contains(id)).cloned().collect();
-    let added: Vec<D::Row> = other.iter().filter(|row| !base_ids.iter().any(|id| id == D::row_key(row))).cloned().collect();
-    let patched: Vec<D::Patch> = other.iter().filter_map(|row| base.iter().find(|candidate| D::row_key(candidate) == D::row_key(row)).and_then(|candidate| D::patch_between(candidate, row))).collect();
-    let natural: Vec<String> = base_ids.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
-    let reordered = (natural != other_ids).then_some(other_ids);
-    canonical::<D>(added, removed, patched, reordered)
-}
-
-pub fn keyed_is_empty<D: KeyedDelta>(delta: &D) -> bool {
-    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().iter().all(D::patch_is_empty) && delta.reordered().is_none()
-}
-//#endregion 🧺️KeyedDelta
-
-impl KeyedDelta for LowpolyObjectsDelta {
-    type Row = LowpolyObject;
-    type Patch = LowpolyObjectPatchEntry;
-    fn added(&self) -> &[LowpolyObject] {
-        &self.added
-    }
-    fn removed(&self) -> &[String] {
-        &self.removed
-    }
-    fn patched(&self) -> &[LowpolyObjectPatchEntry] {
-        &self.patched
-    }
-    fn reordered(&self) -> Option<&[String]> {
-        self.reordered.as_deref()
-    }
-    fn assemble(added: Vec<LowpolyObject>, removed: Vec<String>, patched: Vec<LowpolyObjectPatchEntry>, reordered: Option<Vec<String>>) -> Self {
-        Self { added, removed, patched, reordered }
-    }
-    fn row_key(row: &LowpolyObject) -> &str {
-        &row.id
-    }
-    fn patch_key(patch: &LowpolyObjectPatchEntry) -> &str {
-        &patch.id
-    }
-    fn patch_fold(patch: &LowpolyObjectPatchEntry, row: &mut LowpolyObject) -> Result<(), protocol::MutationApplyError> {
-        row.apply_patch(&patch.patch);
-        if let Some(paint) = &patch.paint_layers {
+impl protocol::list_delta::RowPatch<LowpolyObject> for LowpolyObjectPatchEntry {
+    fn commit_into(&self, row: &mut LowpolyObject, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        row.apply_patch(&self.patch);
+        if let Some(paint) = &self.paint_layers {
             row.paint_layers = paint_edits_after(&row.paint_layers, &paint.edits).map_err(|error| error.under(["paintLayers"]))?;
         }
-        if !patch.mesh_motions.is_empty() {
-            let state = row.mesh_state.clone().ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "mesh motion needs the object's managed mesh").at(["meshMotions"]))?;
-            let mut mesh = state.into_mesh().map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-base", "the object's managed mesh does not decode").at(["meshMotions"]))?;
-            for (index, motion) in patch.mesh_motions.iter().enumerate() {
-                protocol::apply_diff(&motion, &mut mesh).map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-motion", "the selection motion degenerates the mesh").at(["meshMotions".to_string(), index.to_string()]))?;
+        if !self.mesh_vertices.is_empty() || !self.mesh_attributes.is_empty() {
+            let state = row.mesh_state.clone().ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "mesh vertex positions need the object's managed mesh").at(["meshVertices"]))?;
+            let mut mesh = state.into_mesh().map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-base", "the object's managed mesh does not decode").at(["meshVertices"]))?;
+            for (index, vertex) in self.mesh_vertices.iter().enumerate() {
+                mesh.set_vertex_position(semio_framework_3d::mesh::VertexId(vertex.vertex), semio_framework_3d::mesh::Vec3(vertex.position)).map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-index", "the mesh vertex does not exist").at(["meshVertices".to_string(), index.to_string()]))?;
             }
-            row.mesh_state = Some(crate::LowpolyMeshState::from_mesh(mesh));
+            for (index, channel) in self.mesh_attributes.iter().enumerate() {
+                let attribute = semio_framework_3d::mesh::MeshAttribute { domain: channel.domain, semantic: channel.semantic, interpolation: channel.interpolation, values: channel.values.clone(), indices: channel.indices.clone() };
+                mesh.set_attribute(channel.name.clone(), attribute).map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-target", "the mesh attribute channel does not fit the mesh").at(["meshAttributes".to_string(), index.to_string()]))?;
+            }
+            mesh.recompute_normals().map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-motion", "the vertex positions degenerate the mesh").at(["meshVertices"]))?;
+            let state = crate::LowpolyMeshState::from_mesh(mesh);
+            if self.patch.mesh.is_none() {
+                row.mesh = Some(crate::managed_mesh_child_handle(&row.id, &state));
+            }
+            row.mesh_state = Some(state);
         }
         Ok(())
     }
-    fn patch_compose(first: &LowpolyObjectPatchEntry, later: &LowpolyObjectPatchEntry) -> LowpolyObjectPatchEntry {
-        let patch = compose_object_patch(&first.patch, &later.patch);
-        let mut mesh_motions = if later.patch.mesh_state.is_some() { Vec::new() } else { first.mesh_motions.clone() };
-        mesh_motions.extend(later.mesh_motions.iter().cloned());
-        let paint_layers = match (&first.paint_layers, &later.paint_layers) {
+    fn absorb(&mut self, later: Self) {
+        let patch = compose_object_patch(&self.patch, &later.patch);
+        let replaced = later.patch.mesh_state.is_some();
+        let mut mesh_vertices: Vec<LowpolyVertexPosition> = if replaced { Vec::new() } else { self.mesh_vertices.iter().filter(|row| later.mesh_vertices.iter().all(|overwritten| overwritten.vertex != row.vertex)).cloned().collect() };
+        mesh_vertices.extend(later.mesh_vertices.iter().cloned());
+        mesh_vertices.sort_by_key(|row| row.vertex);
+        let mut mesh_attributes: Vec<crate::LowpolyMeshAttribute> = if replaced { Vec::new() } else { self.mesh_attributes.iter().filter(|row| later.mesh_attributes.iter().all(|overwritten| overwritten.name != row.name)).cloned().collect() };
+        mesh_attributes.extend(later.mesh_attributes.iter().cloned());
+        mesh_attributes.sort_by(|left, right| left.name.cmp(&right.name));
+        let paint_layers = match (self.paint_layers.take(), later.paint_layers) {
             (None, None) => None,
             (first, later) => Some(LowpolyPaintLayersDelta { edits: canonical_paint_edits(first.iter().chain(later.iter()).flat_map(|delta| delta.edits.iter().cloned()).collect()) }),
         };
-        LowpolyObjectPatchEntry { id: first.id.clone(), patch, paint_layers, mesh_motions }
+        *self = Self { patch, paint_layers, mesh_vertices, mesh_attributes };
     }
-    fn patch_inverse(patch: &LowpolyObjectPatchEntry, base: &LowpolyObject) -> LowpolyObjectPatchEntry {
-        let restores_mesh = !patch.mesh_motions.is_empty();
-        LowpolyObjectPatchEntry {
-            id: patch.id.clone(),
-            patch: LowpolyObjectPatch {
-                name: patch.patch.name.as_ref().map(|_| base.name.clone()),
-                smooth_shading: patch.patch.smooth_shading.map(|_| base.smooth_shading),
-                position: patch.patch.position.map(|_| base.transform.position),
-                rotation: patch.patch.rotation.map(|_| base.transform.rotation),
-                scale: patch.patch.scale.map(|_| base.transform.scale),
-                mesh: (restores_mesh || patch.patch.mesh.is_some()).then(|| base.mesh.clone()),
-                mesh_content: (restores_mesh || patch.patch.mesh_content.is_some()).then(|| base.mesh_content.clone()),
-                mesh_state: (restores_mesh || patch.patch.mesh_state.is_some()).then(|| base.mesh_state.clone()),
+    fn inverse(&self, row: &LowpolyObject) -> Self {
+        let restores_mesh = (!self.mesh_vertices.is_empty() || !self.mesh_attributes.is_empty()) && self.patch.mesh_state.is_none();
+        let base_state = row.mesh_state.as_ref();
+        let base_vertices = base_state.map(|state| state.vertices.as_slice()).unwrap_or_default();
+        Self {
+                        patch: LowpolyObjectPatch {
+                name: self.patch.name.as_ref().map(|_| row.name.clone()),
+                smooth_shading: self.patch.smooth_shading.map(|_| row.smooth_shading),
+                position: self.patch.position.map(|_| row.transform.position),
+                rotation: self.patch.rotation.map(|_| row.transform.rotation),
+                scale: self.patch.scale.map(|_| row.transform.scale),
+                mesh: (restores_mesh || self.patch.mesh.is_some()).then(|| row.mesh.clone()),
+                mesh_content: self.patch.mesh_content.as_ref().map(|_| row.mesh_content.clone()),
+                mesh_state: self.patch.mesh_state.as_ref().map(|_| row.mesh_state.clone()),
             },
-            paint_layers: patch.paint_layers.as_ref().map(|paint| LowpolyPaintLayersDelta { edits: paint_edits_inverse(&base.paint_layers, &paint.edits) }),
-            mesh_motions: Vec::new(),
+            paint_layers: self.paint_layers.as_ref().map(|paint| LowpolyPaintLayersDelta { edits: paint_edits_inverse(&row.paint_layers, &paint.edits) }),
+            mesh_vertices: if restores_mesh { self.mesh_vertices.iter().filter_map(|vertex| base_vertices.get(vertex.vertex as usize).map(|held| LowpolyVertexPosition { vertex: vertex.vertex, position: held.position })).collect() } else { Vec::new() },
+            mesh_attributes: if restores_mesh { self.mesh_attributes.iter().filter_map(|channel| base_state.and_then(|state| state.attributes.iter().find(|held| held.name == channel.name)).cloned()).collect() } else { Vec::new() },
         }
     }
-    fn patch_between(base: &LowpolyObject, other: &LowpolyObject) -> Option<LowpolyObjectPatchEntry> {
-        let edits = paint_edits_replacing(&base.paint_layers, &other.paint_layers);
-        let entry = LowpolyObjectPatchEntry { id: other.id.clone(), patch: base.diff_patch(other).unwrap_or_default(), paint_layers: (!edits.is_empty()).then_some(LowpolyPaintLayersDelta { edits }), mesh_motions: Vec::new() };
-        (!Self::patch_is_empty(&entry)).then_some(entry)
-    }
-    fn patch_is_empty(patch: &LowpolyObjectPatchEntry) -> bool {
-        patch.patch == LowpolyObjectPatch::default() && patch.paint_layers.as_ref().is_none_or(|paint| paint.edits.is_empty()) && patch.mesh_motions.is_empty()
+    fn is_empty(&self) -> bool {
+        self.patch == LowpolyObjectPatch::default() && self.paint_layers.as_ref().is_none_or(|paint| paint.edits.is_empty()) && self.mesh_vertices.is_empty() && self.mesh_attributes.is_empty()
     }
 }
 
@@ -326,21 +157,6 @@ fn compose_object_patch(first: &LowpolyObjectPatch, later: &LowpolyObjectPatch) 
         mesh_state: later.mesh_state.clone().or_else(|| first.mesh_state.clone()),
     }
 }
-
-//#region 🔖️MeshMotions
-impl LowpolyMeshMotion {
-    /// 🧲️ Applies the motion to the vertices it names through the mesh kernel.
-    pub fn apply(&self, mesh: &mut semio_framework_3d::mesh::HalfedgeMesh) -> semio_framework_3d::mesh::MeshResult<()> {
-        use semio_framework_3d::mesh::{Vec3, VertexId};
-        let ids = |vertex_ids: &[u32]| vertex_ids.iter().map(|id| VertexId(*id)).collect::<Vec<_>>();
-        match self {
-            Self::Offset { vertex_ids, offset } => mesh.move_vertices(&ids(vertex_ids), Vec3(*offset)),
-            Self::Turn { vertex_ids, pivot, axis, angle } => mesh.rotate_vertices(&ids(vertex_ids), Vec3(*axis), *angle, Vec3(*pivot)),
-            Self::Stretch { vertex_ids, pivot, factor } => mesh.scale_vertices(&ids(vertex_ids), Vec3(*factor), Vec3(*pivot)),
-        }
-    }
-}
-//#endregion 🔖️MeshMotions
 
 //#region 🔖️PaintEdits
 fn paint_edit_error(code: &str, message: &str, index: usize) -> protocol::MutationApplyError {
@@ -378,7 +194,8 @@ fn stroke_layer(layer: &mut LowpolyPaintLayer, runs: &[PixelRun]) -> Option<()> 
 
 /// ▶️ Applies the paint-layer edits in order onto `layers`.
 pub fn paint_edits_after(layers: &[LowpolyPaintLayer], edits: &[LowpolyPaintEdit]) -> Result<Vec<LowpolyPaintLayer>, protocol::MutationApplyError> {
-    let mut next = layers.to_vec();
+    let mut next: Vec<LowpolyPaintLayer> = Vec::new();
+    next.extend_from_slice(layers);
     for (position, edit) in edits.iter().enumerate() {
         match edit {
             LowpolyPaintEdit::Insert { index, layer } if *index as usize <= next.len() => next.insert(*index as usize, layer.clone()),
@@ -445,78 +262,78 @@ pub fn canonical_paint_edits(edits: Vec<LowpolyPaintEdit>) -> Vec<LowpolyPaintEd
     stack
 }
 
+/// ↩️ The edits that turn the layer list `edits` leaves behind back into `base`, read row by row off `base`: layers the edits
+/// inserted are removed (highest index first), layers they removed are reinserted at their base index (lowest first), and every
+/// surviving base layer they touched is written back — replaced whole, or only the metadata fields and pixel runs they touched.
 fn paint_edits_inverse(base: &[LowpolyPaintLayer], edits: &[LowpolyPaintEdit]) -> Vec<LowpolyPaintEdit> {
-    let mut state = base.to_vec();
-    let mut inverse = Vec::new();
+    #[derive(Default)]
+    struct Touch {
+        replaced: bool,
+        name: bool,
+        visible: bool,
+        opacity: bool,
+        blend_mode: bool,
+        runs: Vec<(u32, usize)>,
+    }
+    let mut slots: Vec<Option<usize>> = (0..base.len()).map(Some).collect();
+    let mut touched: std::collections::BTreeMap<usize, Touch> = std::collections::BTreeMap::new();
     for edit in edits {
         match edit {
-            LowpolyPaintEdit::Insert { index, layer } if *index as usize <= state.len() => {
-                state.insert(*index as usize, layer.clone());
-                inverse.push(LowpolyPaintEdit::Remove { index: *index });
+            LowpolyPaintEdit::Insert { index, .. } if *index as usize <= slots.len() => slots.insert(*index as usize, None),
+            LowpolyPaintEdit::Remove { index } if (*index as usize) < slots.len() => {
+                slots.remove(*index as usize);
             }
-            LowpolyPaintEdit::Remove { index } if (*index as usize) < state.len() => {
-                let old = state.remove(*index as usize);
-                inverse.push(LowpolyPaintEdit::Insert { index: *index, layer: old });
+            LowpolyPaintEdit::Replace { index, .. } => {
+                if let Some(Some(origin)) = slots.get(*index as usize) {
+                    touched.entry(*origin).or_default().replaced = true;
+                }
             }
-            LowpolyPaintEdit::Replace { index, layer } if (*index as usize) < state.len() => {
-                let old = std::mem::replace(&mut state[*index as usize], layer.clone());
-                inverse.push(LowpolyPaintEdit::Replace { index: *index, layer: old });
+            LowpolyPaintEdit::Patch { index, patch } => {
+                if let Some(Some(origin)) = slots.get(*index as usize) {
+                    let touch = touched.entry(*origin).or_default();
+                    touch.name |= patch.name.is_some();
+                    touch.visible |= patch.visible.is_some();
+                    touch.opacity |= patch.opacity.is_some();
+                    touch.blend_mode |= patch.blend_mode.is_some();
+                }
             }
-            LowpolyPaintEdit::Patch { index, patch } if (*index as usize) < state.len() => {
-                let old = &mut state[*index as usize];
-                inverse.push(LowpolyPaintEdit::Patch {
-                    index: *index,
-                    patch: LowpolyPaintLayerPatch { name: patch.name.as_ref().map(|_| old.name.clone()), visible: patch.visible.map(|_| old.visible), opacity: patch.opacity.map(|_| old.opacity), blend_mode: patch.blend_mode.as_ref().map(|_| old.blend_mode.clone()) },
-                });
-                patch_layer(old, patch);
-            }
-            LowpolyPaintEdit::Stroke { index, runs } if (*index as usize) < state.len() => {
-                let layer = &mut state[*index as usize];
-                let pixels = layer.materialized_pixels();
-                let restored = runs.iter().map(|run| PixelRun { offset: run.offset, bytes: pixels.get(run.offset as usize..run.offset as usize + run.bytes.len()).map(<[u8]>::to_vec).unwrap_or_default() }).collect();
-                inverse.push(LowpolyPaintEdit::Stroke { index: *index, runs: restored });
-                let _ = stroke_layer(layer, runs);
+            LowpolyPaintEdit::Stroke { index, runs } => {
+                if let Some(Some(origin)) = slots.get(*index as usize) {
+                    touched.entry(*origin).or_default().runs.extend(runs.iter().map(|run| (run.offset, run.bytes.len())));
+                }
             }
             _ => {}
         }
     }
-    inverse.reverse();
-    canonical_paint_edits(inverse)
-}
-
-/// 🧭️ The edits turning the layer list `base` into `replacement`: layers set pairwise (metadata as a patch, pixels as a replace),
-/// the surplus removed or appended.
-pub fn paint_edits_replacing(base: &[LowpolyPaintLayer], replacement: &[LowpolyPaintLayer]) -> Vec<LowpolyPaintEdit> {
-    let common = base.len().min(replacement.len());
-    let mut edits = Vec::new();
-    for index in 0..common {
-        let (old, new) = (&base[index], &replacement[index]);
-        if old == new {
-            continue;
-        }
-        if old.pixels == new.pixels {
-            edits.push(LowpolyPaintEdit::Patch {
-                index: index as u32,
-                patch: LowpolyPaintLayerPatch { name: (old.name != new.name).then(|| new.name.clone()), visible: (old.visible != new.visible).then_some(new.visible), opacity: (old.opacity != new.opacity).then_some(new.opacity), blend_mode: (old.blend_mode != new.blend_mode).then(|| new.blend_mode.clone()) },
-            });
+    let survivors: Vec<usize> = slots.iter().flatten().copied().collect();
+    let removals = slots.iter().enumerate().rev().filter(|(_, origin)| origin.is_none()).map(|(index, _)| LowpolyPaintEdit::Remove { index: index as u32 });
+    let reinserts = base.iter().enumerate().filter(|(index, _)| !survivors.contains(index)).map(|(index, layer)| LowpolyPaintEdit::Insert { index: index as u32, layer: layer.clone() });
+    let restores = touched.iter().filter(|(origin, _)| survivors.contains(origin)).flat_map(|(origin, touch)| {
+        let layer = &base[*origin];
+        let index = *origin as u32;
+        let rows: Vec<LowpolyPaintEdit> = if touch.replaced {
+            vec![LowpolyPaintEdit::Replace { index, layer: layer.clone() }]
         } else {
-            edits.push(LowpolyPaintEdit::Replace { index: index as u32, layer: new.clone() });
-        }
-    }
-    edits.extend((common..base.len()).map(|_| LowpolyPaintEdit::Remove { index: common as u32 }));
-    edits.extend((common..replacement.len()).map(|index| LowpolyPaintEdit::Insert { index: index as u32, layer: replacement[index].clone() }));
-    canonical_paint_edits(edits)
+            let patch = LowpolyPaintLayerPatch { name: touch.name.then(|| layer.name.clone()), visible: touch.visible.then_some(layer.visible), opacity: touch.opacity.then_some(layer.opacity), blend_mode: touch.blend_mode.then(|| layer.blend_mode.clone()) };
+            let metadata = (patch != LowpolyPaintLayerPatch::default()).then_some(LowpolyPaintEdit::Patch { index, patch });
+            let pixels = layer.materialized_pixels();
+            let runs: Vec<PixelRun> = touch.runs.iter().map(|(offset, length)| PixelRun { offset: *offset, bytes: pixels.get(*offset as usize..*offset as usize + *length).map(<[u8]>::to_vec).unwrap_or_default() }).collect();
+            metadata.into_iter().chain((!runs.is_empty()).then_some(LowpolyPaintEdit::Stroke { index, runs })).collect()
+        };
+        rows
+    });
+    canonical_paint_edits(removals.chain(reinserts).chain(restores).collect())
 }
 //#endregion 🔖️PaintEdits
 
 impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
-    fn apply(&self, snapshot: &LowpolySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LowpolySnapshot> {
+    fn apply(&self, snapshot: &LowpolySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LowpolySnapshot> {
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
         if let Some(delta) = &self.objects {
-            next.objects = keyed_apply(&next.objects, delta).map_err(|error| error.under(["objects"]))?;
+            next.objects = delta.commit_onto(&next.objects, capability).map_err(|error| error.under(["objects"]))?;
         }
         Ok(next)
     }
@@ -526,7 +343,10 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
             self.schema = other.schema;
         }
         self.objects = match (self.objects.take(), other.objects) {
-            (Some(first), Some(later)) => Some(keyed_absorb(&first, &later)),
+            (Some(mut first), Some(later)) => {
+                first.absorb(later);
+                Some(first)
+            }
             (first, later) => later.or(first),
         };
     }
@@ -534,56 +354,45 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
 
 impl protocol::DiffAlgebra<LowpolySnapshot> for LowpolyDiff {
     fn inverse(&self, base: &LowpolySnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), objects: self.objects.as_ref().map(|delta| keyed_inverse(delta, &base.objects)) }
-    }
-
-    fn between(base: &LowpolySnapshot, other: &LowpolySnapshot) -> Self {
-        let objects = keyed_between::<LowpolyObjectsDelta>(&base.objects, &other.objects);
-        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()), objects: (!keyed_is_empty(&objects)).then_some(objects) }
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), objects: self.objects.as_ref().map(|delta| delta.inverse(&base.objects)) }
     }
 
     fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.objects.as_ref().is_none_or(keyed_is_empty)
+        self.schema.is_none() && self.objects.as_ref().is_none_or(LowpolyObjectsDelta::is_empty)
     }
 }
 
 //#region 🔖️Builders
 /// 🏗️ Objects-add field delta (inserted at `index`, or appended when `index` is past the end).
 pub fn diff_objects_add(index: usize, item: LowpolyObject, base: &LowpolySnapshot) -> LowpolyDiff {
-    let reordered = (index < base.objects.len()).then(|| {
-        let mut order: Vec<String> = base.objects.iter().map(|object| object.id.clone()).collect();
-        order.insert(index, item.id.clone());
-        order
-    });
-    LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: vec![item], reordered, ..Default::default() }), ..LowpolyDiff::default() }
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta::insertion(index.min(base.objects.len()), item)), ..LowpolyDiff::default() }
 }
 
-/// 🏗️ Objects-remove field delta.
-pub fn diff_objects_remove(id: String) -> LowpolyDiff {
-    LowpolyDiff { objects: Some(LowpolyObjectsDelta { removed: vec![id], ..Default::default() }), ..LowpolyDiff::default() }
+/// 🏗️ Objects-remove field delta: the object at `index` of `base`.
+pub fn diff_objects_remove(index: usize, base: &LowpolySnapshot) -> LowpolyDiff {
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta::removal(&base.objects, index)), ..LowpolyDiff::default() }
 }
 
-/// 🏗️ Objects-move field delta.
+/// 🏗️ Objects-move field delta: the object `id` moves to position `to_index` of the after list (clamped).
 pub fn diff_objects_move(id: &str, to_index: usize, base: &LowpolySnapshot) -> LowpolyDiff {
-    let mut order: Vec<String> = base.objects.iter().map(|object| object.id.clone()).collect();
-    if let Some(from) = order.iter().position(|existing| existing == id) {
-        let moved = order.remove(from);
-        order.insert(to_index.min(order.len()), moved);
-    }
-    LowpolyDiff { objects: Some(LowpolyObjectsDelta { reordered: Some(order), ..Default::default() }), ..LowpolyDiff::default() }
+    let objects = match base.objects.iter().position(|existing| existing.id == id) {
+        Some(from) => LowpolyObjectsDelta::relocation(&base.objects, from, to_index.min(base.objects.len() - 1)),
+        None => LowpolyObjectsDelta::default(),
+    };
+    LowpolyDiff { objects: Some(objects), ..LowpolyDiff::default() }
 }
 
-fn diff_object_entry(entry: LowpolyObjectPatchEntry) -> LowpolyDiff {
-    LowpolyDiff { objects: Some(LowpolyObjectsDelta { patched: vec![entry], ..Default::default() }), ..LowpolyDiff::default() }
+fn diff_object_entry(id: String, entry: LowpolyObjectPatchEntry) -> LowpolyDiff {
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta::modification(id, entry)), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Objects-patch field delta.
 pub fn diff_objects_patch(id: String, patch: LowpolyObjectPatch) -> LowpolyDiff {
-    diff_object_entry(LowpolyObjectPatchEntry { id, patch, ..Default::default() })
+    diff_object_entry(id, LowpolyObjectPatchEntry { patch, ..Default::default() })
 }
 
 fn diff_paint_edit(object_id: String, edit: LowpolyPaintEdit) -> LowpolyDiff {
-    diff_object_entry(LowpolyObjectPatchEntry { id: object_id, paint_layers: Some(LowpolyPaintLayersDelta { edits: vec![edit] }), ..Default::default() })
+    diff_object_entry(object_id, LowpolyObjectPatchEntry { paint_layers: Some(LowpolyPaintLayersDelta { edits: vec![edit] }), ..Default::default() })
 }
 
 /// 🏗️ Add-paint-layer field delta.
@@ -606,9 +415,10 @@ pub fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<PixelR
     diff_paint_edit(object_id, LowpolyPaintEdit::Stroke { index: layer_index as u32, runs })
 }
 
-/// 🏗️ Mesh-motion field delta: the motion plus the content-addressed handle of the mesh it leaves behind.
-pub fn diff_mesh_motion(object_id: String, handle: store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>, motion: LowpolyMeshMotion) -> LowpolyDiff {
-    diff_object_entry(LowpolyObjectPatchEntry { id: object_id, patch: LowpolyObjectPatch { mesh: Some(Some(handle)), ..LowpolyObjectPatch::default() }, mesh_motions: vec![motion], ..Default::default() })
+/// 🏗️ Mesh-vertex field delta: the absolute positions the named vertices of the object's managed mesh move to, and the absolute
+/// content of the Normal channels the same motion rewrote.
+pub fn diff_mesh_vertices(object_id: String, mesh_vertices: Vec<LowpolyVertexPosition>, mesh_attributes: Vec<crate::LowpolyMeshAttribute>) -> LowpolyDiff {
+    diff_object_entry(object_id, LowpolyObjectPatchEntry { mesh_vertices, mesh_attributes, ..Default::default() })
 }
 //#endregion 🔖️Builders
 

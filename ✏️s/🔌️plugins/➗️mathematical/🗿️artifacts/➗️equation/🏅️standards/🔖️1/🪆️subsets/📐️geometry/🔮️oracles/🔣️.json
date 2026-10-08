@@ -12,17 +12,6 @@
       "subsetDirectoryName": "📐️geometry",
       "vectors": [
         {
-          "mutationId": "replace-points",
-          "sourceMutationDirectoryName": "🔄️replace",
-          "mutationDirectoryName": "🔄️replace",
-          "scenarios": [
-            {
-              "id": "replays-the-identical-empty-point-cloud",
-              "directoryName": "🧪️replays"
-            }
-          ]
-        },
-        {
           "mutationId": "insert-point",
           "sourceMutationDirectoryName": "➕️insert-point",
           "mutationDirectoryName": "➕️insert-point",
@@ -68,7 +57,6 @@
         }
       ],
       "kinds": [
-        "replace-points",
         "insert-point",
         "remove-point",
         "move-points",
@@ -89,34 +77,6 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "📐️geometry",
       "mutations": [
-        {
-          "id": "replace-points",
-          "capability": "equation-1-geometry-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "replace-points",
-            "bridgeVersion": 1,
-            "variant": "ReplacePoints"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "equation-1-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
-            }
-          ],
-          "invariants": {
-            "local": [
-              "not-encoded-by-any-exported-carrier"
-            ],
-            "enclosing": [
-              "node-identity-preserved-across-untouched-rows"
-            ]
-          }
-        },
         {
           "id": "insert-point",
           "capability": "equation-1-geometry-mutate",

@@ -165,7 +165,7 @@ impl semio_framework_value::retirement::RetirementCursor for SharedTextRetiremen
         semio_framework_value::retirement::RetirementStep::Complete
     }
     fn terminal_is_empty(&self) -> bool { self.value.is_none() && self.remaining == 0 }
-    fn next_work_byte_demand(&self) -> usize { usize::from(self.remaining != 0) }
+    fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(self.remaining != 0))}
 }
 
 impl Drop for SharedTextRetirement {

@@ -71,7 +71,7 @@ async fn stable_cell_edit_targets_identity_and_rejects_a_stale_revision() {
     let address = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 41, 7).unwrap();
     let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: address.revision.clone(), value: "2".into() };
     let emit = xlsx_set_cell_emit(&snapshot, &command).expect("matching revision emits a mutation");
-    assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Number(2.0) })]);
+    assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Number(2.0), node: None })]);
     let stale = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: "stale".into(), value: "2".into() };
     assert!(xlsx_set_cell_emit(&snapshot, &stale).is_err());
 }
@@ -88,7 +88,7 @@ async fn blank_cell_command_inserts_canonical_xml_saves_for_calamine_and_inverts
     let vacancy = xlsx_cell_vacancy_address(&base, "Blank", 1, 0).unwrap();
     let command = XlsxEditorCommand::SetCell { sheet_name: "Blank".into(), row: 1, column: 0, revision: vacancy.worksheet.revision.clone(), value: "42".into() };
     let emitted = xlsx_set_cell_emit(&base, &command).unwrap();
-    let mutation = XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::Number(42.0) });
+    let mutation = XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::Number(42.0), node: None });
     assert_eq!(emitted.artifact_mutations, vec![mutation.clone()]);
     let mut edited = base.clone();
     apply_xlsx_mutation(&mut edited, &mutation);
@@ -119,7 +119,7 @@ async fn sparse_row_insertion_preserves_formula_neighbors_and_stales_prior_vacan
     });
     let old_vacancy = xlsx_cell_vacancy_address(&snapshot, "Sparse", 2, 0).unwrap();
     let middle = xlsx_cell_vacancy_address(&snapshot, "Sparse", 1, 1).unwrap();
-    apply_xlsx_mutation(&mut snapshot, &XlsxMutation::InsertCell(insert_cell::InsertCell { address: middle, value: XlsxCellValue::InlineString("middle".into()) }));
+    apply_xlsx_mutation(&mut snapshot, &XlsxMutation::InsertCell(insert_cell::InsertCell { address: middle, value: XlsxCellValue::InlineString("middle".into()), node: None }));
     let projected = snapshot.project_workbook().unwrap();
     assert_eq!(projected.sheets[0].cells.iter().map(|cell| (cell.row, cell.col)).collect::<Vec<_>>(), [(1, 0), (1, 1), (1, 2)]);
     assert_eq!(projected.sheets[0].cells[0].value, XlsxCellValue::Formula { expr: "2+3".into(), cached: Some(Box::new(XlsxCellValue::Number(5.0))) });
@@ -152,12 +152,12 @@ async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
     let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: conflict["draft"].as_str().unwrap().into() };
     crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(
         &mut snapshot,
-        &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: 1, value: "unrelated change".into() }),
+        &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: 1, value: "unrelated change".into(), node: None }),
     );
     assert!(xlsx_set_cell_emit(&snapshot, &command).is_ok(), "unrelated shared strings do not invalidate this cell");
     crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(
         &mut snapshot,
-        &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into() }),
+        &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into(), node: None }),
     );
     assert!(xlsx_set_cell_emit(&snapshot, &command).is_err(), "referenced text changes invalidate the draft");
 }

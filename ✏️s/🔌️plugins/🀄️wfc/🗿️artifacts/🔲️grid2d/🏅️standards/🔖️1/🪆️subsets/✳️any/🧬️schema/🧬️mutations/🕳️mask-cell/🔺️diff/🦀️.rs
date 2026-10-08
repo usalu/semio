@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `MaskCell` — a row-major upsert into `masked` that also cascades the
 //! cell's pin away: a cell outside the problem can carry no pre-assignment.
 
-use crate::diff::{cell_id, Grid2dDiff, Grid2dRows};
+use crate::diff::{cell_id, Grid2dDiff, Grid2dRow, Grid2dMaskedDelta, Grid2dPinnedDelta};
 use crate::schema::snapshot::{in_bounds, Grid2dSnapshot, WfcCell2d};
 
 pub fn diff(payload: &super::MaskCell, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
@@ -14,7 +14,7 @@ pub fn diff(payload: &super::MaskCell, base: &Grid2dSnapshot) -> protocol::Mutat
     }
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|cell| cell.x == payload.x && cell.y == payload.y).map(|cell| cell_id(cell.x, cell.y)).collect();
     let cascaded = !pinned_removed.is_empty();
-    let outcome = protocol::MutationOutcome::new(Grid2dDiff { masked: Grid2dRows { added: vec![WfcCell2d { x: payload.x, y: payload.y }], ..Default::default() }, pinned: Grid2dRows { removed: pinned_removed, ..Default::default() }, ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Grid2dDiff { masked: Grid2dMaskedDelta::insertion(Grid2dRow::insert_at(&base.masked, &WfcCell2d { x: payload.x, y: payload.y }), WfcCell2d { x: payload.x, y: payload.y }), pinned: Grid2dPinnedDelta::removals(&base.pinned, &base.pinned.iter().enumerate().filter(|(_, row)| pinned_removed.contains(&protocol::list_delta::Keyed::key(*row))).map(|(index, _)| index).collect::<Vec<_>>()), ..Default::default() });
     if cascaded {
         outcome.info("mutation.cascade", format!("Masking cell ({}, {}) also dropped its pin.", payload.x, payload.y))
     } else {

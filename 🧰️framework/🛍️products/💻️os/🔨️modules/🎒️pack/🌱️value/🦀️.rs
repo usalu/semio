@@ -18,8 +18,7 @@ use std::collections::{HashMap, HashSet};
 #[path = "🛫️encode/🦀️.rs"]
 mod controlled_encoding;
 
-#[path = "🏷️symbols/🎮️decode/🦀️.rs"]
-pub mod retained_inline_symbols;
+pub use pack::format::retained_inline_symbols;
 
 /// 🛫️ Emits a terminal record under caller-owned allocation and interior cancellation.
 pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::record_body(spec,record,options,control)}

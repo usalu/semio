@@ -1,0 +1,9 @@
+{
+  "registeredLaunch": "♻️ Typed Source · Original Owning Physical Demand Before And After",
+  "registeredPath": ".vscode/launch.json",
+  "selector": "child_complete_actual_authored_typed_source_",
+  "date": "2026-10-08",
+  "scope": "Two unchanged mounted owning demand laws; providers unchanged",
+  "command": "bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --args=\"quick child_complete_actual_authored_typed_source_ --no-fail-fast -- --nocapture\"",
+  "missingPreviousLog": true
+}

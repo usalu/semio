@@ -1,5 +1,5 @@
-//! 🚮️ Playbook play app command — `remove-block`: removes one block from its step (one absolute `blocksJson` set on the `flow`
-//! child). A selection naming it is pruned by the framework's `revalidate_interaction_state_after_document_change`.
+//! 🚮️ Playbook play app command — `remove-block`: removes one block from its step (one concrete `remove-node-param` row on the `flow`
+//! child). A selection naming it is pruned by the framework's `revalidate_interaction_on_document_change`.
 
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::playbook_child_leaves_emit;

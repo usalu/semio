@@ -1,0 +1,344 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "receiving-red-0",
+      "phase": "receiving-red",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "receiving-red-1",
+      "phase": "receiving-red",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "receiving-red-2",
+      "phase": "receiving-red",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "receiving-red-3",
+      "phase": "receiving-red",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "receiving-test-4",
+      "phase": "receiving-test",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "receiving-test-5",
+      "phase": "receiving-test",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "receiving-test-6",
+      "phase": "receiving-test",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "receiving-test-7",
+      "phase": "receiving-test",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "metadata-red-8",
+      "phase": "metadata-red",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "metadata-red-9",
+      "phase": "metadata-red",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "metadata-red-10",
+      "phase": "metadata-red",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "metadata-red-11",
+      "phase": "metadata-red",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "metadata-test-12",
+      "phase": "metadata-test",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "metadata-test-13",
+      "phase": "metadata-test",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "metadata-test-14",
+      "phase": "metadata-test",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "metadata-test-15",
+      "phase": "metadata-test",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "stage-16",
+      "phase": "stage",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "stage-17",
+      "phase": "stage",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "stage-18",
+      "phase": "stage",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "stage-19",
+      "phase": "stage",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "inspect-20",
+      "phase": "inspect",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "inspect-21",
+      "phase": "inspect",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "inspect-22",
+      "phase": "inspect",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "inspect-23",
+      "phase": "inspect",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "whole-24",
+      "phase": "whole",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "whole-25",
+      "phase": "whole",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "whole-26",
+      "phase": "whole",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "whole-27",
+      "phase": "whole",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "preparation-test-28",
+      "phase": "preparation-test",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "preparation-test-29",
+      "phase": "preparation-test",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "preparation-test-30",
+      "phase": "preparation-test",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "preparation-test-31",
+      "phase": "preparation-test",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    },
+    {
+      "id": "preparation-worker-32",
+      "phase": "preparation-worker",
+      "owned": true,
+      "selected": false,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "preparation-worker-33",
+      "phase": "preparation-worker",
+      "owned": false,
+      "selected": true,
+      "current": false,
+      "expected": "refused"
+    },
+    {
+      "id": "preparation-worker-34",
+      "phase": "preparation-worker",
+      "owned": false,
+      "selected": false,
+      "current": false,
+      "expected": "qualified"
+    },
+    {
+      "id": "preparation-worker-35",
+      "phase": "preparation-worker",
+      "owned": false,
+      "selected": true,
+      "current": true,
+      "expected": "current"
+    }
+  ],
+  "requiredPaths": [
+    "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️literal-command.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧫️fixtures/🔣️.json",
+    "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+    "🌎️hub/🧫️fixtures/🧱️foundation-source/🎭️actors/🔣️.json",
+    "🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts",
+    "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+    "🌎️hub/🧪️tests/🗂️document-sweep/🟦️.ts",
+    "🌎️hub/🧪️tests/🚪️io-matrix/🟦️.ts",
+    "🌎️hub/🧫️fixtures/🚪️io-matrix.json",
+    "📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json"
+  ],
+  "receivingTests": [
+    "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts"
+  ]
+}

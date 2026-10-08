@@ -1,0 +1,51 @@
+{
+  "branches": [
+    {
+      "inverse": "owned",
+      "owners": [
+        "snapshot",
+        "inverse",
+        "messages",
+        "applyRefusal",
+        "inputRefusal"
+      ]
+    },
+    {
+      "inverse": "refusal",
+      "owners": [
+        "snapshot",
+        "inverseRefusal",
+        "messages",
+        "applyRefusal",
+        "inputRefusal"
+      ]
+    }
+  ],
+  "grants": [
+    {
+      "items": 0,
+      "capacity": 65536,
+      "release": 65536,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "capacity": 0,
+      "release": 65536,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "capacity": 65536,
+      "release": 65535,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "capacity": 65536,
+      "release": 65536,
+      "accepted": true
+    }
+  ],
+  "originalCapacity": 65536
+}

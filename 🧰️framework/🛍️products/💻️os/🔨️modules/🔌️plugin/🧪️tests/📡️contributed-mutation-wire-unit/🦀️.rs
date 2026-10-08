@@ -90,7 +90,7 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
     let plan = protocol::plan_of::<WireTestSnapshot, WireTestMutation, AddValue>(&AddValue { delta: 5 }, &base).expect("plan");
     assert_eq!(plan.len(), 1);
     assert!(matches!(&plan[0], protocol::PlanStep::Local(WireTestMutation::AddValue(AddValue { delta: 5 }))));
-    assert_eq!(protocol::apply_diff(protocol::fold_plan_diff(&AddValue { delta: 5 }, &base).diff(), &base).expect("planned diff"), protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("direct diff"));
+    assert_eq!(protocol::apply_diff(protocol::os_spr::fold::fold_plan_diff(&AddValue { delta: 5 }, &base).diff(), &base).expect("planned diff"), protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("direct diff"));
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::SEMANTICS.kind, "add-value");
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
 }

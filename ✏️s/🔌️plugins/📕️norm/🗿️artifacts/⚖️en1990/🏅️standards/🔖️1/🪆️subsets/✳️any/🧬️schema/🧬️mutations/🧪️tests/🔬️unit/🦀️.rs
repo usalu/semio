@@ -29,12 +29,12 @@ fn every_mutation() -> Vec<En1990Mutation> {
         En1990Mutation::RemoveAccidental(remove_accidental::RemoveAccidental { index: 0 }),
         En1990Mutation::RemoveVariable(remove_variable::RemoveVariable { index: 0 }),
         En1990Mutation::RemovePermanent(remove_permanent::RemovePermanent { index: 0 }),
-        En1990Mutation::InsertEffect(insert_effect::InsertEffect { index: 0, item: base.effects[0].clone() }),
-        En1990Mutation::InsertMember(insert_member::InsertMember { index: 0, item: base.members[0].clone() }),
-        En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: 0, item: crate::SeismicAction { id: "A-ek".into(), a_ek: 0.0, importance_class: crate::ImportanceClass::II } }),
-        En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: 0, item: crate::AccidentalAction { id: "A-d".into(), ad: 0.0 } }),
-        En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: 0, item: crate::VariableAction { id: "Q-x".into(), category: "other".into(), qk: 0.0} }),
-        En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: 0, item: crate::PermanentAction { id: "G-x".into(), kind: "g_sup".into(), gk: 0.0 } }),
+        En1990Mutation::InsertEffect(insert_effect::InsertEffect { index: Some(0), item: base.effects[0].clone() }),
+        En1990Mutation::InsertMember(insert_member::InsertMember { index: Some(0), item: base.members[0].clone() }),
+        En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: Some(0), item: crate::SeismicAction { id: "A-ek".into(), a_ek: 0.0, importance_class: crate::ImportanceClass::II } }),
+        En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: Some(0), item: crate::AccidentalAction { id: "A-d".into(), ad: 0.0 } }),
+        En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: Some(0), item: crate::VariableAction { id: "Q-x".into(), category: "other".into(), qk: 0.0} }),
+        En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: Some(0), item: crate::PermanentAction { id: "G-x".into(), kind: "g_sup".into(), gk: 0.0 } }),
     ]
 }
 
@@ -89,17 +89,6 @@ async fn change_consequence_class_and_beta_absorb() {
     protocol::MutationDiff::<En1990Snapshot>::absorb(&mut absorbed, d2.clone());
     assert_eq!(absorbed.consequence_class, Some(3));
     assert_eq!(absorbed.beta_computed, Some(4.3));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn from_snapshot_decomposes_scalar_and_list_changes() {
-    let base = En1990Snapshot::default();
-    let mut target = base.clone();
-    target.consequence_class = 3;
-    target.variables = vec![];
-    let mutations = En1990Mutation::from_snapshot(&base, &target);
-    assert!(mutations.iter().any(|m| matches!(m, En1990Mutation::ChangeConsequenceClass(_))));
-    assert!(mutations.iter().any(|m| matches!(m, En1990Mutation::ChangeVariables(_))));
 }
 
 #[semio_framework_async_macros::async_test]

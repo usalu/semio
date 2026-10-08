@@ -9,15 +9,17 @@
   "prestressSteels": null,
   "members": null,
   "anchors": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "anc-1",
-        "hEf": 0.125,
-        "aS": null
+        "patch": {
+          "hEf": 0.125,
+          "aS": null
+        }
       }
-    ],
-    "order": null
+    ]
   }
 }

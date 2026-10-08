@@ -121,7 +121,8 @@ pub use mutations_codec::*;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation,inverse_puzzle5d_mutation,puzzle5d_document_delta_operations,Puzzle5dMutation,Puzzle5dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mutation,Puzzle5dMutation};
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 pub use mutations_codec::*;
 
 impl protocol::OpBinary for Puzzle5dMutation {

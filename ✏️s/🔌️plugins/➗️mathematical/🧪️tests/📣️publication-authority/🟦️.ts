@@ -32,7 +32,7 @@ export async function verifyMathematicalPublicationAuthority(repoRoot: string, p
   const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
   const source = await Bun.file(resolve(plugin, fixture.source)).text();
   if (!oracle(fixture, source)) throw new Error("Mathematical publication-authority oracle rejected production");
-  const hostileSource = [source.replace('ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },', ""), source.replace("            || request.generation != request.authority.generation()\n", ""), source.replace('.action_interactive_job("setPoints", InteractiveJobClassification::Migrated)', "")];
+  const hostileSource = [source.replace('ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },', ""), source.replace("            || request.generation != request.authority.generation()\n", ""), source.replace('.action_interactive_job("editPoints", InteractiveJobClassification::Migrated)', "")];
   if (hostileSource.some((candidate) => oracle(fixture, candidate))) throw new Error("Mathematical oracle accepted a hostile source mutation");
   console.error(`validated Mathematical publication authority; routes=${fixture.routes.length}; WindowConfig=1; oracle=owned; hostile=3`);
   const subset = resolve(plugin, "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any");

@@ -28,7 +28,7 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
 pub(super) fn painted_host_of(snapshot: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
     host.set_size(800, 600, 1.0);
-    assert!(host.load_board_snapshot_json(&snapshot.to_string()), "the engine paints the document");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&snapshot.to_string(),&mut control)}, "the engine paints the document");
     host.set_camera_silent(0.0, 0.0, 1.0);
     host.set_transform_flags(true, false);
     let _ = drain_board_events_json(&mut host);
@@ -37,7 +37,7 @@ pub(super) fn painted_host_of(snapshot: &Value) -> BoardHost {
 
 /// 📬️ The rows a host dispatches after draining: every transient row dropped (live-preview frames, chrome, hover).
 pub(super) fn dispatched_rows(host: &mut BoardHost) -> Vec<Value> {
-    let rows: Vec<Value> = serde_json::from_str(&drain_board_events_json(host)).expect("drained rows parse");
+    let rows: Vec<Value> = semio_framework_pack_json::from_json_str(&drain_board_events_json(host), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drained rows parse");
     rows.into_iter().filter(|row| !matches!(row["name"].as_str(), Some("nodeMove" | "transformPreview" | "preselect" | "hover" | "brushPreview" | "linkCompatibleNodes" | "linkTargetRing"))).collect()
 }
 
@@ -57,7 +57,7 @@ pub(super) fn release(host: &mut BoardHost, x: f64, y: f64) {
 }
 
 pub(super) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
-    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": serde_json::to_string(rows).expect("rows serialize") })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
+    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(rows) })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
 fn node_at(app: &Puzzle2dApp, id: &str) -> (f64, f64) {
@@ -205,7 +205,7 @@ fn a_streamed_ring_rotation_is_one_transaction() {
     let mut host = painted_host(&app);
     host.set_transform_flags(true, true);
     host.set_selection_ids_silent(&["left".to_string(), "mid".to_string()]);
-    let gumball: Value = serde_json::from_str(&host.transform_gumball_json()).expect("gumball vitals parse");
+    let gumball: Value = semio_framework_pack_json::from_json_str(&host.transform_gumball_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("gumball vitals parse");
     assert_eq!(gumball["ringVisible"], true, "the ring is armed: {gumball}");
     let (pivot, radius) = (Point::new(gumball["pivot"]["x"].as_f64().expect("pivot x"), gumball["pivot"]["y"].as_f64().expect("pivot y")), gumball["radius"].as_f64().expect("radius"));
     let ring = |degrees: f64| Point::new(pivot.x + radius * degrees.to_radians().cos(), pivot.y + radius * degrees.to_radians().sin());
@@ -253,7 +253,7 @@ fn three_nudges_are_three_transactions() {
 fn the_rotate_and_scale_verbs_each_commit_one_parametric_transaction() {
     let mut app = board_app();
     select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, "left").expect("select left");
-    dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "left".into() }, InteractionTarget { granularity: "node".into(), id: "mid".into() }]).expect("targets"), "merge": "replace", "method": "pick" })), None).expect("select pair");
+    dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: "node".into(), id: "left".into() }, InteractionTarget { granularity: "node".into(), id: "mid".into() }]), "merge": "replace", "method": "pick" })), None).expect("select pair");
     for (verb, args, leaf) in [("rotateSelection", json!({ "angle": 90.0 }), "rotate-selection"), ("scaleSelection", json!({ "factor": 2.0 }), "scale-selection")] {
         let result = dispatch(&mut app, verb, Some(&args), None).expect(verb);
         assert_eq!(committed_edits(&result), 1, "{verb} is one edit");
@@ -283,7 +283,7 @@ fn the_hud_move_and_an_inspector_delta_yield_the_drag_leaf() {
 #[test]
 fn a_mixed_lock_selection_commits_and_moves_only_the_unlocked_target() {
     let mut app = board_app();
-    dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "mid".into() }, InteractionTarget { granularity: "node".into(), id: "pin".into() }]).expect("targets"), "merge": "replace", "method": "pick" })), None).expect("select mid and pin");
+    dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: "node".into(), id: "mid".into() }, InteractionTarget { granularity: "node".into(), id: "pin".into() }]), "merge": "replace", "method": "pick" })), None).expect("select mid and pin");
     let result = dispatch(&mut app, "translateSelection", Some(&json!({ "dx": 10.0, "dy": 0.0 })), None).expect("translate");
     assert_eq!(committed_edits(&result), 1, "the movable target commits");
     assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "no refusal for a partially locked selection");
@@ -303,8 +303,8 @@ fn phase(app: &mut Puzzle2dApp, args: Value) -> InvocationResult {
 
 /// 👁️ Where the overview window PAINTS a node — its board snapshot lane, which previews the window's open gesture.
 fn painted_x(app: &mut Puzzle2dApp, id: &str) -> f64 {
-    let body: Value = serde_json::from_str(&render_body(app, overview::BODY_KEY)).expect("board body");
-    let snapshot: Value = serde_json::from_str(body["board2d"]["snapshotJson"].as_str().expect("painted snapshot lane")).expect("snapshot parses");
+    let body: Value = semio_framework_pack_json::from_json_str(&render_body(app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("board body");
+    let snapshot: Value = semio_framework_pack_json::from_json_str(body["board2d"]["snapshotJson"].as_str().expect("painted snapshot lane"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot parses");
     board_snapshot_nodes(&snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).and_then(|node| node.get("x")).and_then(Value::as_f64).expect("painted node")
 }
 
@@ -419,11 +419,11 @@ fn a_document_moved_under_an_open_gesture_aborts_it() {
 //#region 🔁️DispatchThreading
 /// 🧱️ One node `left` at the origin, the document every threaded dispatch reads.
 fn threading_snapshot() -> Puzzle2dPlaySnapshot {
-    Puzzle2dPlaySnapshot::new(json!({
+    Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(json!({
         "schema": "board.ports.directed.v1",
         "nodes": [{ "id": "left", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [] }],
         "edges": []
-    }))
+    })))).expect("typed fixture admits"))
 }
 
 /// 🧹️ A selection that repeats an id drags each target once: the leaf's target set is unique, so the leaf never
@@ -445,11 +445,11 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
 /// coalesce key, under a ref minted from the admission's seed on the host clock.
 #[test]
 fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
-    let snapshot = Puzzle2dPlaySnapshot::new(json!({
+    let snapshot = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(json!({
         "schema": "board.ports.directed.v1",
         "nodes": [{ "id": "left", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [] }],
         "edges": []
-    }));
+    })))).expect("typed fixture admits"));
     let events = json!([
         { "name": "select", "payload": { "ids": ["left"], "exitHighlightIds": [], "gestureId": "gesture-1" } },
         { "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": ["left"], "dx": 3.0, "dy": 4.0, "proximity": [] } }

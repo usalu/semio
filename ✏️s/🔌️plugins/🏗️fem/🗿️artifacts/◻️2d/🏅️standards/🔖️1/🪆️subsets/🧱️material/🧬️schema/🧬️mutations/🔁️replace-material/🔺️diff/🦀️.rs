@@ -4,7 +4,7 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME elasticity bounds
 //! `create-material` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMaterialsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMaterialsModification};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -22,6 +22,6 @@ pub fn diff(payload: &ReplaceMaterial, base: &Fem2dSnapshot) -> protocol::Mutati
     if *existing == payload.new_material {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { materials: Some(Fem2dMaterialsDelta { patched: vec![Fem2dMaterialsPatchEntry { id: payload.id.clone(), item: payload.new_material.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { materials: Some(Fem2dMaterialsDelta { modified: vec![Fem2dMaterialsModification { id: payload.id.clone(), patch: payload.new_material.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

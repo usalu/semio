@@ -21,7 +21,8 @@ test("retained context owns one ledger and uses atomic unique teardown", () => {
   expect(existsSync(path)).toBe(true);
   if (!existsSync(path)) return;
   const source = readFileSync(path, "utf8");
-  for (const method of ["birth_bytes", "context", "next_close_byte_demand", "close_step", "terminal_is_empty"]) expect(source).toContain(method);
+  for (const method of ["birth_bytes", "context", "next_close_copy_byte_demand", "next_close_capacity_byte_demand", "next_close_release_byte_demand", "next_close_depth_demand", "close_step", "terminal_is_empty"]) expect(source).toContain(method);
+  expect(fixture.closeGrant).toEqual({copyBytes:0,capacityBytes:0,release:"exact-original-ledger-birth",depth:1,terminalReceipt:"complete-original-progress"});
   expect(source).toContain("Arc::try_unwrap");
   expect(source).toContain("StepContext::with_payload_ledger");
   expect(source).not.toContain("Arc::strong_count");

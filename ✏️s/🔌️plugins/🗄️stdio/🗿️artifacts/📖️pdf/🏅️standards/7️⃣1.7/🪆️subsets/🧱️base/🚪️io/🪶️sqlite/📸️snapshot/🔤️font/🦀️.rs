@@ -29,21 +29,10 @@ fn read_descriptor(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFontD
     Ok(PdfFontDescriptor { font_name: reader.text(row,1)?, flags: integer(row, 2)?, font_bbox: [row.real(3)?, row.real(4)?, row.real(5)?, row.real(6)?], italic_angle: row.real(7)?, ascent: row.real(8)?, descent: row.real(9)?, cap_height: row.real(10)?, stem_v: row.real(11)?, stem_h: optional_real(row, 12)?, x_height: optional_real(row, 13)?, leading: optional_real(row, 14)?, avg_width: optional_real(row, 15)?, max_width: optional_real(row, 16)?, missing_width: optional_real(row, 17)?, font_family: reader.optional_text(row,18)?, font_stretch: reader.optional_text(row,19)?, font_weight: optional_real(row, 20)?, char_set: reader.optional_text(row,21)?, extra: cos::read_dictionary(reader, row.integer(22)?)? })
 }
 
-fn write_program(out: &mut Projection<'_, '_>, program: &PdfFontProgram) -> Result<i64,ValueError> {
-    let (kind, data, lengths) = match program {
-        PdfFontProgram::Type1 { data, length1, length2, length3 } => ("type1", data, [C::Integer(i64::from(*length1)), C::Integer(i64::from(*length2)), C::Integer(i64::from(*length3))]),
-        PdfFontProgram::TrueType { data } => ("trueType", data, [C::Null; 3]), PdfFontProgram::Cff { data } => ("cff", data, [C::Null; 3]), PdfFontProgram::CidCff { data } => ("cidCff", data, [C::Null; 3]), PdfFontProgram::OpenType { data } => ("openType", data, [C::Null; 3]),
-    };
-    let mut cells = vec![C::Text(kind), C::Blob(data)]; cells.extend(lengths); out.insert("pdf_font_program", &cells)
-}
+pub(super) fn write_program(out:&mut Projection<'_, '_>,program:&PdfFontProgram)->Result<i64,ValueError>{let kind=match program {PdfFontProgram::Type1 {..}=>"type1",PdfFontProgram::TrueType {..}=>"trueType",PdfFontProgram::Cff {..}=>"cff",PdfFontProgram::CidCff {..}=>"cidCff",PdfFontProgram::OpenType {..}=>"openType"};let reference=artifact_reference::write(out,program.reference())?;out.insert("pdf_font_program",&[C::Text(kind),C::Integer(reference)])}
+pub(super) fn read_program(reader:&mut Reader<'_, '_, '_>,key:i64)->Result<PdfFontProgram,ValueError>{let row=reader.take("pdf_font_program",key,3)?;let reference=artifact_reference::read(reader,row.integer(2)?)?;Ok(match row.text(1)? {"type1"=>PdfFontProgram::Type1 {reference},"trueType"=>PdfFontProgram::TrueType {reference},"cff"=>PdfFontProgram::Cff {reference},"cidCff"=>PdfFontProgram::CidCff {reference},"openType"=>PdfFontProgram::OpenType {reference},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF font program kind"))})}
 
-fn read_program(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFontProgram,ValueError> {
-    let row = reader.take("pdf_font_program", key, 6)?; let data = reader.blob(row,2)?;
-    if row.text(1)? != "type1" { null_except(row, 3..6, &[])?; }
-    Ok(match row.text(1)? { "type1" => PdfFontProgram::Type1 { data, length1: integer(row, 3)?, length2: integer(row, 4)?, length3: integer(row, 5)? }, "trueType" => PdfFontProgram::TrueType { data }, "cff" => PdfFontProgram::Cff { data }, "cidCff" => PdfFontProgram::CidCff { data }, "openType" => PdfFontProgram::OpenType { data }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF font program kind")) })
-}
-
-fn write_unicode(out: &mut Projection<'_, '_>, cmap: &PdfToUnicode) -> Result<i64,ValueError> {
+pub(super) fn write_unicode(out: &mut Projection<'_, '_>, cmap: &PdfToUnicode) -> Result<i64,ValueError> {
     let key = out.insert("pdf_to_unicode", &[C::Integer(i64::from(cmap.byte_width))])?;
     for (ordinal, mapping) in cmap.mappings.iter().enumerate() {
         let (kind, code, low, high, text) = match mapping { PdfToUnicodeMapping::Char { code, text } => ("char", C::Integer(i64::from(*code)), C::Null, C::Null, text), PdfToUnicodeMapping::Range { low, high, text } => ("range", C::Null, C::Integer(i64::from(*low)), C::Integer(i64::from(*high)), text) };
@@ -52,13 +41,13 @@ fn write_unicode(out: &mut Projection<'_, '_>, cmap: &PdfToUnicode) -> Result<i6
     Ok(key)
 }
 
-fn read_unicode(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfToUnicode,ValueError> {
+pub(super) fn read_unicode(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfToUnicode,ValueError> {
     let row = reader.take("pdf_to_unicode", key, 2)?; let mut mappings = Vec::new();
     for value in reader.children("pdf_unicode_mapping", 1, 2, key)? { let value = reader.take("pdf_unicode_mapping", value.rowid, 8)?; let text = reader.text(value,7)?; mappings.push(match value.text(3)? { "char" => { null_except(value, 4..7, &[4])?; PdfToUnicodeMapping::Char { code: integer(value, 4)?, text } }, "range" => { null_except(value, 4..7, &[5, 6])?; PdfToUnicodeMapping::Range { low: integer(value, 5)?, high: integer(value, 6)?, text } }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF Unicode mapping kind")) }); }
     Ok(PdfToUnicode { byte_width: integer(row, 1)?, mappings })
 }
 
-fn write_cmap(out: &mut Projection<'_, '_>, cmap: &PdfCMap) -> Result<i64,ValueError> {
+pub(super) fn write_cmap(out: &mut Projection<'_, '_>, cmap: &PdfCMap) -> Result<i64,ValueError> {
     match cmap {
         PdfCMap::Predefined { name } => out.insert("pdf_cmap", &[C::Text("predefined"), C::Text(name), C::Null, C::Null]),
         PdfCMap::Embedded { cmap } => {
@@ -70,7 +59,7 @@ fn write_cmap(out: &mut Projection<'_, '_>, cmap: &PdfCMap) -> Result<i64,ValueE
     }
 }
 
-fn read_cmap(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCMap,ValueError> {
+pub(super) fn read_cmap(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCMap,ValueError> {
     let row = reader.take("pdf_cmap", key, 5)?; let name = reader.text(row,2)?;
     match row.text(1)? {
         "predefined" => { null_except(row, 3..5, &[])?; Ok(PdfCMap::Predefined { name }) },
@@ -84,8 +73,9 @@ fn read_cmap(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCMap,ValueE
 
 fn write_cid_font(out: &mut Projection<'_, '_>, font: &PdfCidFont) -> Result<i64,ValueError> {
     let descriptor = write_descriptor(out, &font.descriptor)?; let program = font.program.as_ref().map(|value| write_program(out, value)).transpose()?; let extra = cos::write_dictionary(out, &font.extra)?;
-    let (gid_kind, gid_data) = match &font.cid_to_gid { None => (C::Null, C::Null), Some(PdfCidToGid::Identity) => (C::Text("identity"), C::Null), Some(PdfCidToGid::Map { data }) => (C::Text("map"), C::Blob(data)) };
+    let (gid_kind, gid_data) = match &font.cid_to_gid { None => (C::Null, C::Null), Some(PdfCidToGid::Identity) => (C::Text("identity"), C::Null), Some(PdfCidToGid::Map { glyphs }) => (C::Text("map"), C::Integer(glyphs.len() as i64)) };
     let key = out.insert("pdf_cid_font", &[C::Integer(i64::from(font.true_type)), C::Text(&font.base_font), C::Text(&font.system_info.registry), C::Text(&font.system_info.ordering), C::Integer(i64::from(font.system_info.supplement)), C::Integer(descriptor), C::Real(font.default_width), font.default_vertical.map_or(C::Null, |value| C::Real(value[0])), font.default_vertical.map_or(C::Null, |value| C::Real(value[1])), gid_kind, gid_data, program.map_or(C::Null, C::Integer), C::Integer(extra)])?;
+    if let Some(PdfCidToGid::Map {glyphs})=&font.cid_to_gid {for (ordinal,glyph) in glyphs.iter().enumerate(){out.insert("pdf_cid_glyph",&[C::Integer(key),C::Integer(ordinal as i64),C::Integer(i64::from(*glyph))])?;}}
     for (ordinal, run) in font.widths.iter().enumerate() { let run_key = out.insert("pdf_cid_width_run", &[C::Integer(key), C::Integer(ordinal as i64), C::Integer(i64::from(run.start_cid))])?; for (ordinal, width) in run.widths.iter().enumerate() { out.insert("pdf_cid_width", &[C::Integer(run_key), C::Integer(ordinal as i64), C::Real(*width)])?; } }
     for (ordinal, run) in font.vertical_metrics.iter().enumerate() { let run_key = out.insert("pdf_cid_vertical_run", &[C::Integer(key), C::Integer(ordinal as i64), C::Integer(i64::from(run.start_cid))])?; for (ordinal, metric) in run.metrics.iter().enumerate() { out.insert("pdf_cid_vertical_metric", &[C::Integer(run_key), C::Integer(ordinal as i64), C::Real(metric[0]), C::Real(metric[1]), C::Real(metric[2])])?; } }
     Ok(key)
@@ -94,7 +84,7 @@ fn write_cid_font(out: &mut Projection<'_, '_>, font: &PdfCidFont) -> Result<i64
 fn read_cid_font(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCidFont,ValueError> {
     let row = reader.take("pdf_cid_font", key, 14)?;
     let default_vertical = match (optional_real(row, 8)?, optional_real(row, 9)?) { (None, None) => None, (Some(y), Some(width)) => Some([y, width]), _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF vertical defaults require both metric components")) };
-    let cid_to_gid = match row.optional_text(10)? { None => { null_except(row, 11..12, &[])?; None }, Some("identity") => { null_except(row, 11..12, &[])?; Some(PdfCidToGid::Identity) }, Some("map") => Some(PdfCidToGid::Map { data: reader.blob(row,11)? }), _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF CID to glyph mapping kind")) };
+    let cid_to_gid = match row.optional_text(10)? { None => { null_except(row, 11..12, &[])?; None }, Some("identity") => { null_except(row, 11..12, &[])?; Some(PdfCidToGid::Identity) }, Some("map") => {let count=integer::<usize>(row,11)?;let mut glyphs=Vec::new();for child in reader.children("pdf_cid_glyph",1,2,key)? {let child=reader.take("pdf_cid_glyph",child.rowid,4)?;glyphs.push(integer(child,3)?);}if glyphs.len()!=count{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF CID glyph count mismatch"));}Some(PdfCidToGid::Map {glyphs})}, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF CID to glyph mapping kind")) };
     let mut widths = Vec::new(); for run in reader.children("pdf_cid_width_run", 1, 2, key)? { let run = reader.take("pdf_cid_width_run", run.rowid, 4)?; let mut values = Vec::new(); for width in reader.children("pdf_cid_width", 1, 2, run.rowid)? { let width = reader.take("pdf_cid_width", width.rowid, 4)?; values.push(width.real(3)?); } widths.push(PdfCidWidthRun { start_cid: integer(run, 3)?, widths: values }); }
     let mut vertical_metrics = Vec::new(); for run in reader.children("pdf_cid_vertical_run", 1, 2, key)? { let run = reader.take("pdf_cid_vertical_run", run.rowid, 4)?; let mut metrics = Vec::new(); for metric in reader.children("pdf_cid_vertical_metric", 1, 2, run.rowid)? { let metric = reader.take("pdf_cid_vertical_metric", metric.rowid, 6)?; metrics.push([metric.real(3)?, metric.real(4)?, metric.real(5)?]); } vertical_metrics.push(PdfCidVerticalRun { start_cid: integer(run, 3)?, metrics }); }
     Ok(PdfCidFont { true_type: boolean(row, 1)?, base_font: reader.text(row,2)?, system_info: PdfCidSystemInfo { registry: reader.text(row,3)?, ordering: reader.text(row,4)?, supplement: integer(row, 5)? }, descriptor: read_descriptor(reader, row.integer(6)?)?, default_width: row.real(7)?, widths, default_vertical, vertical_metrics, cid_to_gid, program: optional_integer(row, 12)?.map(|value| read_program(reader, value)).transpose()?, extra: cos::read_dictionary(reader, row.integer(13)?)? })

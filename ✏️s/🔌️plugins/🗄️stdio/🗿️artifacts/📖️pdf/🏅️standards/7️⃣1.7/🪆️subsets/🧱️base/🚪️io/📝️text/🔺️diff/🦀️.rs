@@ -14,7 +14,6 @@ mod diff_codec {
 use super::*;
 use crate::standards::v1_7::subsets::base::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1_7::subsets::base::io::carry_graph_edit;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

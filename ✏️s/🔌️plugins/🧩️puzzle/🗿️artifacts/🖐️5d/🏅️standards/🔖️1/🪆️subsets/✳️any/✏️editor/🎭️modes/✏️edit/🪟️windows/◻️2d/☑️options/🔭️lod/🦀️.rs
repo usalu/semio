@@ -6,10 +6,10 @@ use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_LOD_MODE_AUTOMATIC, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 fn puzzle5d_lod_tier_ids() -> Vec<String> {
-    serde_json::from_str::<Vec<Value>>(&semio_framework_os_infinite::puzzle_2d_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
+    semio_framework_pack_json::from_json_str::<Vec<Value>>(&semio_framework_os_infinite::puzzle_2d_lod_scale_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned LOD options admit").into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
 /// 📶️ The LOD select measure, persisted via `setLodMode`.

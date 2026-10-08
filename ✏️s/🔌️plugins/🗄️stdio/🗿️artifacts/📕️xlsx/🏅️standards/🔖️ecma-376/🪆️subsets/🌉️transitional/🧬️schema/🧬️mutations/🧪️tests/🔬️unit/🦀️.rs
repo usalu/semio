@@ -24,7 +24,7 @@ fn kinds_match_enum_and_catalog() {
         XlsxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
         XlsxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-        XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: String::new(), content_type: String::new() }),
+        XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: String::new(), content_type: String::new(), override_index: None }),
     ];
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every XlsxTransitionalMutation variant, in declaration order");

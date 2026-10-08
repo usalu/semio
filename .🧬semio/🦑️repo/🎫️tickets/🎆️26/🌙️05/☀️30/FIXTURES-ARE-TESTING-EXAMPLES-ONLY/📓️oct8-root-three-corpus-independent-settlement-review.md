@@ -1,0 +1,5 @@
+# Root Three Corpus Independent Settlement Review
+
+Current Root7 endpoint ledger has4exact aftermatches: three schema absences and existing Replication retirement test. Private ticket script/live/seed shared files have later wholehash changes and require own-facet qualification, no authored peer adoption. Value source-currency/BREP/VCS plain examples remain preserved observers; neutral final44118Nx0/358ms4/47 plus12independent Node-preimage/current firstparty BLAKE3 versus locked Noble does not claim native Rust execution. Existing retirement canonical owner assertion now follows actual command subdomain; no Rust source action.
+
+Current ten progress-policy observer input must preserve old884041 snapshot and current938113 peer policy separately; do not reclassify existing Session schema as authored. Cross-agent genericbox/current Pub owner audit awaits exact authored draft paths to avoid guessing ownership. FrameworkJob23 before member tests and neutral71187 oldAPI refusal remain meaningful qualified RED; no runtime positive. No source/tests/producers in this lane.

@@ -67,9 +67,10 @@
   "templates": null,
   "knowledge": null,
   "benchmarks": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "benchmark-record-a",
         "patch": {
@@ -102,8 +103,7 @@
           "lastVerified": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "traces": null,
   "governance": null

@@ -1,14 +1,11 @@
+import type { RuntimeGraphEdgeV1, RuntimeGraphFindingV1, RuntimeGraphEvidenceV1, RuntimeDynamicImportOwnerV1, RuntimeResourceReadInputV1, RuntimeResourceReadOwnerV1 } from "./🧬️schema/🟦️.ts";
+export type { RuntimeGraphEdgeV1, RuntimeGraphFindingV1, RuntimeGraphEvidenceV1, RuntimeDynamicImportOwnerV1, RuntimeResourceReadInputV1, RuntimeResourceReadOwnerV1 } from "./🧬️schema/🟦️.ts";
 import { posix } from "node:path";
 import { createHash } from "node:crypto";
-import { ecmaRouteTokens, scanRegistryCompilerImports } from "../../🟦️.ts";
+import { scanRegistryCompilerImports } from "../../🟦️.ts";
+import { ecmaTokens, ecmaStringValue } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
 import { rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
-export interface RuntimeGraphEdgeV1 { readonly from: string; readonly to: string; readonly kind: "module" | "import" | "resource" | "dependency" | "generated" }
-export interface RuntimeGraphFindingV1 { readonly code: "runtime-fixture-edge" | "runtime-unresolved-edge" | "runtime-input-mismatch"; readonly path: string; readonly detail: string }
-export interface RuntimeGraphEvidenceV1 { readonly roots: readonly string[]; readonly nodes: readonly string[]; readonly edges: readonly RuntimeGraphEdgeV1[]; readonly findings: readonly RuntimeGraphFindingV1[] }
-export interface RuntimeDynamicImportOwnerV1 { readonly path: string; readonly sha256: string; readonly sourceSha256: string; readonly callsiteIndex: number }
-export interface RuntimeResourceReadInputV1 { readonly path: string; readonly sha256: string; readonly kind: "file" | "directory" }
-export interface RuntimeResourceReadOwnerV1 { readonly sourceSha256: string; readonly callsiteOffset: number; readonly inputs: readonly RuntimeResourceReadInputV1[] }
 export interface RuntimeGraphContextV1 {
   readonly read: (path: string) => string | undefined;
   readonly features?: readonly string[];
@@ -165,20 +162,14 @@ export function runtimeEcmaReferencesV1(source: string, path: string, context: R
     const decoded = Buffer.from(row.path, "latin1").toString("utf8");
     return { path: decoded !== row.path && !decoded.includes("\ufffd") && (source.includes(decoded) || physicalSource.includes(decoded)) ? decoded : row.path, kind: "import" };
   });
-  const tokens = ecmaRouteTokens(source);
+  const tokens = ecmaTokens(source, 0, context.checkCancellation);
   const sourceSha256 = createHash("sha256").update(source).digest("hex");
   let callsiteIndex = 0;
   const readers = new Set(["readFileSync", "readFile"]);
   for (let index = 0; index < tokens.length; index++) {
     if (readers.has(tokens[index]!.text) && ["as", ":"].includes(tokens[index + 1]?.text ?? "") && tokens[index + 2]?.kind === "identifier") readers.add(tokens[index + 2]!.text);
   }
-  const literal = (index: number): string | null => {
-    const token = tokens[index];
-    if (token?.kind !== "string") return null;
-    const body = token.text.slice(1, -1);
-    if (!body.includes("\\")) return body;
-    try { return JSON.parse('"' + body.replaceAll('"', '\\"').replaceAll("\\'", "'") + '"'); } catch { return null; }
-  };
+  const literal = (index: number): string | null => ecmaStringValue(tokens[index], context.checkCancellation);
   for (let index = 0; index < tokens.length; index++) {
     const name = tokens[index]?.text;
     if ((name === "import" || name === "require") && tokens[index + 1]?.text === "(") {

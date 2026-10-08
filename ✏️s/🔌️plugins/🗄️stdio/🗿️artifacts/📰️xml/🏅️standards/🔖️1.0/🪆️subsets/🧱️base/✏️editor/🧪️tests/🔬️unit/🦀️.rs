@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[test]
@@ -124,7 +125,7 @@ fn the_natural_source_draft_applies_what_it_shows() {
     assert!(matches!(emit.artifact_mutations.as_slice(), [XmlMutation::SetText(_)]), "a source text change is one net set-text leaf: {:?}", emit.artifact_mutations);
     let mut applied = snapshot.clone();
     for leaf in &emit.artifact_mutations {
-        crate::schema::mutations::apply_xml_mutation(&mut applied, leaf);
+        crate::apply_mutation(&mut applied, leaf);
     }
     let printed = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked(&applied.doc).expect("the applied document prints");
     let mut reader = quick_xml::reader::Reader::from_str(&printed);
@@ -203,3 +204,25 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
 //#endregion 🪟️KitVerbLaws
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", XmlAnyEditor, || semio_framework_plugin::App { definition: create_xml_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_node() {
+    
+    use crate::schema::snapshot::{XmlAttr, XmlNode};
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let mut base = XmlSnapshot::default();
+    base.doc.root = Some(XmlNode::Element { name: "r".into(), attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }], children: vec![XmlNode::Text { text: "hi".into() }, XmlNode::Element { name: "c".into(), attrs: vec![], children: vec![] }] });
+    let emit = |event: SnapshotEditEvent| <XmlAnyEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let text = emit(SnapshotEditEvent::SetValue { path: "/doc/root/children/0/text".into(), value: semio_framework_value::DslValue::String("bye".into()) }).expect("a text edit resolves");
+    let [mutation @ XmlMutation::SetText(_)] = text.artifact_mutations.as_slice() else { panic!("a text edit raises set-text") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert!(matches!(&state.doc.root, Some(XmlNode::Element { children, .. }) if children[0] == XmlNode::Text { text: "bye".into() }));
+    let attribute = emit(SnapshotEditEvent::SetValue { path: "/doc/root/attrs/0/value".into(), value: semio_framework_value::DslValue::String("2".into()) }).expect("an attribute edit resolves");
+    assert!(matches!(attribute.artifact_mutations.as_slice(), [XmlMutation::SetAttribute(_)]));
+    let removed = emit(SnapshotEditEvent::RemoveValue { path: "/doc/root/children/1".into() }).expect("an element removal resolves");
+    assert!(matches!(removed.artifact_mutations.as_slice(), [XmlMutation::RemoveElement(_)]));
+    let renamed = emit(SnapshotEditEvent::SetValue { path: "/doc/root/children/1/name".into(), value: semio_framework_value::DslValue::String("d".into()) }).expect("an element rename resolves");
+    assert!(matches!(renamed.artifact_mutations.as_slice(), [XmlMutation::RemoveElement(_), XmlMutation::InsertElement(_)]));
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

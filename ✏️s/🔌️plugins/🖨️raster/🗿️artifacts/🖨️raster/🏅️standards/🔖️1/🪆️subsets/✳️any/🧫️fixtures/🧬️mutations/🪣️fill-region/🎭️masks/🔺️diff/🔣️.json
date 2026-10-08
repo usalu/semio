@@ -117,9 +117,10 @@
   },
   "id": null,
   "layers": {
-    "added": [],
+    "removed": [],
+    "inserted": [],
     "moved": [],
-    "patched": [
+    "modified": [
       {
         "id": "paint",
         "patch": {
@@ -153,8 +154,7 @@
           "width": null
         }
       }
-    ],
-    "removed": []
+    ]
   },
   "schema": null,
   "title": null

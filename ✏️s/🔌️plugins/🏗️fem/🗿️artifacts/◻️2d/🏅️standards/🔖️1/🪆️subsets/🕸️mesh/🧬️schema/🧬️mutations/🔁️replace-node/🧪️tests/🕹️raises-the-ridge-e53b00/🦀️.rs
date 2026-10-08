@@ -13,7 +13,8 @@
 //! 🕹️ Raising the ridge by 600 mm re-pitches both rafters without touching a single element, support or load — every referrer names the node by an id a replacement may not change.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -109,8 +110,8 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     let delta = outcome.diff().nodes.as_ref().expect("nodes delta");
-    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (0, 0, 1), "replace-node/🕹️raises-the-ridge-e53b00: the delta must be exactly one patched entry");
-    assert!(delta.reordered.is_none(), "replace-node/🕹️raises-the-ridge-e53b00: no verb in this vocabulary re-orders a collection");
+    assert_eq!((delta.inserted.len(), delta.removed.len(), delta.modified.len()), (0, 0, 1), "replace-node/🕹️raises-the-ridge-e53b00: the delta must be exactly one patched entry");
+    assert!(delta.moved.is_empty(), "replace-node/🕹️raises-the-ridge-e53b00: no verb in this vocabulary re-orders a collection");
     assert!(outcome.diff().elements.is_none(), "replace-node/🕹️raises-the-ridge-e53b00: no elements delta may be opened by this verb");
     assert!(outcome.diff().regions.is_none(), "replace-node/🕹️raises-the-ridge-e53b00: no regions delta may be opened by this verb");
     assert!(outcome.diff().materials.is_none(), "replace-node/🕹️raises-the-ridge-e53b00: no materials delta may be opened by this verb");

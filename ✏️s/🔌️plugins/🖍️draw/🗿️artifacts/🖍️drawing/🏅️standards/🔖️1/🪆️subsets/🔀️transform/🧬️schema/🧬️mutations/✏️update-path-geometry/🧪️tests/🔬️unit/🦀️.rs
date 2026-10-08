@@ -13,7 +13,7 @@ fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     assert_eq!(*result.diff(), serde_json::from_value::<crate::DrawingDiff>(expected).unwrap());
     assert_eq!(protocol::apply_diff(result.diff(), &before).unwrap(), after);
     let mut restored = after;
-    for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
+    for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
     assert_eq!(restored, before);
 }
 
@@ -33,10 +33,10 @@ fn path_geometry_mutation_roundtrip_fixture() {
     assert_eq!(decoded, after);
     let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");
     let mut edited = document.clone();
-    crate::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap();
+    crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap();
     let DrawingLayerNode::Path(path) = &edited.layers[0] else { panic!("Expected a path") };
     assert_eq!(path.segments, after.into());
-    for mutation in inverse { crate::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
+    for mutation in inverse { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
     assert_eq!(edited, document);
 }
 

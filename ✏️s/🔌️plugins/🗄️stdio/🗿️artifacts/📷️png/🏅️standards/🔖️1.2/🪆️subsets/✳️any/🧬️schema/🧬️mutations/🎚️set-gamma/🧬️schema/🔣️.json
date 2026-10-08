@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/set-gamma/schema.json",
+  "title": "SetGamma",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "gama": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "PNG gamma",
+          "de": "PNG-Gamma"
+        },
+        "group": "metadata",
+        "order": 10,
+        "step": 1,
+        "precision": 0,
+        "snaps": [
+          45455,
+          55556,
+          100000
+        ]
+      }
+    }
+  }
+}

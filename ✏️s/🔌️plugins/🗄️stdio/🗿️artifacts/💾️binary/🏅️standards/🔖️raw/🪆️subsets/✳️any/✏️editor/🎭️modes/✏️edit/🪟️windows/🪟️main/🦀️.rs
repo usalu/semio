@@ -26,13 +26,13 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// ✏️ Real `BinarySnapshot -> BuiltNode`: every byte as contiguous lowercase hex, plus a trailing informational byte-count
-/// comment, as the kit's explicit draft (structured text: edited locally, ONE `textEdit` on Apply).
+/// comment, as the kit's explicit draft (structured text: edited locally, ONE `textEdit` on Apply carrying the change set the editor made).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &BinarySnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let total = document.bytes.len();
     let hex: String = document.bytes.iter().map(|byte| format!("{byte:02x}")).collect();
     let text = format!("{hex}\n# total bytes: {total}");
-    TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text, language: Some("hex".into()), revision: None, publication_revision }, locale)
+    TextWindowKit::render_editable_by_splices(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text, language: Some("hex".into()), revision: None, publication_revision }, locale)
 }
 //#endregion 🔖️Render
 

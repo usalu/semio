@@ -97,7 +97,7 @@ fn the_board_publishes_the_open_grip_suggestion_menu() {
     assert_eq!(board_suggestion_menu_json(&closed, labels, None), None, "no menu, no record");
     let menu = crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu { x: 3.0, y: 4.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "teil-ä:g1".into(), submenu: true };
     let open = Puzzle5dScene { runtime: Puzzle5dRuntime { suggestion_menu: Some(menu), brush_candidate_index: 2, ..Puzzle5dRuntime::default() }, ..closed };
-    let record: Value = serde_json::from_str(&board_suggestion_menu_json(&open, labels, None).expect("an open menu publishes")).expect("board suggestion json");
+    let record: Value = semio_framework_pack_json::from_json_str(&board_suggestion_menu_json(&open, labels, None, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("an open menu publishes")).expect("board suggestion json");
     assert_eq!(
         record,
         serde_json::json!({ "open": true, "x": 3.0, "y": 4.0, "windowId": WINDOW_KIND_ID, "handleId": "teil-ä:g1", "hoveredIndex": 2, "submenu": true, "pending": true, "candidates": [] })

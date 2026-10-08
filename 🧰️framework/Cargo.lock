@@ -4084,6 +4084,8 @@ name = "semio-framework-geometry"
 version = "0.1.0"
 dependencies = [
  "kurbo 0.13.1",
+ "parry3d",
+ "serde_json",
 ]
 
 [[package]]
@@ -4183,6 +4185,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-trace",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -4227,6 +4230,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-replication",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -4501,6 +4505,8 @@ dependencies = [
  "swash",
  "taffy",
  "tiny-skia",
+ "unicode-segmentation",
+ "unicode-width",
  "wasm-bindgen",
  "web-sys",
  "wgpu",
@@ -4617,7 +4623,9 @@ dependencies = [
 name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
+ "fnv",
  "semio-framework-geometry",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-ui-contract",

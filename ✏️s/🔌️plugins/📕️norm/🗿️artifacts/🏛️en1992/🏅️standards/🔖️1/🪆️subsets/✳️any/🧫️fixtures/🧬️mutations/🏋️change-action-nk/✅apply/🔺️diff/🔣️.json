@@ -8,34 +8,41 @@
   "reinforcementGrades": null,
   "prestressSteels": null,
   "members": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "wall-W1",
-        "exposure": null,
-        "width": null,
-        "height": null,
-        "effectiveDepth": null,
-        "cover": null,
-        "span": null,
-        "fireRating": null,
-        "fireAxisDistance": null,
-        "stirrupsSpacing": null,
-        "longitudinal": null,
-        "actions": {
-          "modified": [
-            {
-              "id": "G",
-              "mK": null,
-              "nK": 37500.0,
-              "vK": null
-            }
-          ]
+        "patch": {
+          "exposure": null,
+          "width": null,
+          "height": null,
+          "effectiveDepth": null,
+          "cover": null,
+          "span": null,
+          "fireRating": null,
+          "fireAxisDistance": null,
+          "stirrupsSpacing": null,
+          "longitudinal": null,
+          "actions": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "G",
+                "patch": {
+                  "mK": null,
+                  "nK": 37500.0,
+                  "vK": null
+                }
+              }
+            ]
+          }
         }
       }
-    ],
-    "order": null
+    ]
   },
   "anchors": null
 }

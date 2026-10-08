@@ -1710,16 +1710,22 @@
     {
       "input": {
         "types": {
-          "values": [
+          "added": [
             {
-              "id": "t1",
-              "name": "Girder",
-              "category": "structure"
+              "index": 0,
+              "item": {
+                "id": "t1",
+                "name": "Girder",
+                "category": "structure"
+              }
             },
             {
-              "id": "t2",
-              "name": "Column",
-              "category": "structure"
+              "index": 1,
+              "item": {
+                "id": "t2",
+                "name": "Column",
+                "category": "structure"
+              }
             }
           ]
         }
@@ -1729,15 +1735,18 @@
     {
       "input": {
         "objects": {
-          "values": [
+          "added": [
             {
-              "childId": "obj-2",
-              "target": {
-                "artifactId": "obj-2",
-                "dialect": {
-                  "artifactKind": "s.stdio.semio",
-                  "standard": "v1",
-                  "subset": "object"
+              "index": 0,
+              "item": {
+                "childId": "obj-2",
+                "target": {
+                  "artifactId": "obj-2",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
                 }
               }
             }
@@ -1755,21 +1764,24 @@
     {
       "input": {
         "representations": {
-          "values": [
+          "added": [
             {
-              "target": {
-                "artifactId": "drawing-2",
-                "dialect": {
-                  "artifactKind": "s.stdio.semio",
-                  "standard": "v1",
-                  "subset": "drawing"
-                }
-              },
-              "pin": {
-                "kind": "checkpoint",
-                "id": "v2"
-              },
-              "role": "t1"
+              "index": 0,
+              "item": {
+                "target": {
+                  "artifactId": "drawing-2",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "drawing"
+                  }
+                },
+                "pin": {
+                  "kind": "checkpoint",
+                  "id": "v2"
+                },
+                "role": "t1"
+              }
             }
           ]
         }
@@ -1803,15 +1815,18 @@
     {
       "input": {
         "objects": {
-          "values": [
+          "added": [
             {
-              "childId": "wrong",
-              "target": {
-                "artifactId": "wrong",
-                "dialect": {
-                  "artifactKind": "s.stdio.semio",
-                  "standard": "v1",
-                  "subset": "object"
+              "index": 0,
+              "item": {
+                "childId": "wrong",
+                "target": {
+                  "artifactId": "wrong",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
                 }
               }
             }
@@ -1823,15 +1838,18 @@
     {
       "input": {
         "objects": {
-          "values": [
+          "added": [
             {
-              "childId": "wrong",
-              "target": {
-                "artifactId": "obj-2",
-                "dialect": {
-                  "artifactKind": "s.stdio.semio",
-                  "standard": "v1",
-                  "subset": "object"
+              "index": 0,
+              "item": {
+                "childId": "wrong",
+                "target": {
+                  "artifactId": "obj-2",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
                 }
               }
             }
@@ -1843,13 +1861,16 @@
     {
       "input": {
         "representations": {
-          "values": [
+          "added": [
             {
-              "target": "drawing-2",
-              "pin": {
-                "kind": "head"
-              },
-              "role": "t1"
+              "index": 0,
+              "item": {
+                "target": "drawing-2",
+                "pin": {
+                  "kind": "head"
+                },
+                "role": "t1"
+              }
             }
           ]
         }
@@ -2252,16 +2273,12 @@
       },
       "diff": {
         "types": {
-          "values": [
+          "modified": [
             {
-              "id": "t1",
-              "name": "Girder",
-              "category": "structure"
-            },
-            {
-              "id": "t2",
-              "name": "Column",
-              "category": "structure"
+              "index": 0,
+              "diff": {
+                "name": "Girder"
+              }
             }
           ]
         }
@@ -2804,15 +2821,21 @@
       },
       "diff": {
         "objects": {
-          "values": [
+          "removed": [
+            0
+          ],
+          "added": [
             {
-              "childId": "obj-2",
-              "target": {
-                "artifactId": "obj-2",
-                "dialect": {
-                  "artifactKind": "s.stdio.semio",
-                  "standard": "v1",
-                  "subset": "object"
+              "index": 0,
+              "item": {
+                "childId": "obj-2",
+                "target": {
+                  "artifactId": "obj-2",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
                 }
               }
             }

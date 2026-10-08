@@ -100,6 +100,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
       | insert-line | {"index": 20, "text": "Eingefügte Randnotiz zu Bauhütte 4.0"} |
       | remove-line | {"index": 100} |
       | set-line | {"index": 50, "text": "Ersetzte Zeile: Stakeholder-Interessen verbinden"} |
+      | splice-text | {"splices": [{"offset": 100, "delete": 0, "insert": "Eingefügt "}, {"offset": 200, "delete": 6, "insert": "ersetzt\nzweizeilig"}]} |
 
   @id-inverse
   @level-exhaustive
@@ -119,6 +120,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
       | insert-line | {"index": 20, "text": "Eingefügte Randnotiz zu Bauhütte 4.0"} |
       | remove-line | {"index": 100} |
       | set-line | {"index": 50, "text": "Ersetzte Zeile: Stakeholder-Interessen verbinden"} |
+      | splice-text | {"splices": [{"offset": 100, "delete": 0, "insert": "Eingefügt "}, {"offset": 200, "delete": 6, "insert": "ersetzt\nzweizeilig"}]} |
 
   @id-identity-round-trip
   @level-long

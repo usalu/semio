@@ -4,9 +4,10 @@
   "project": null,
   "stakeholders": null,
   "users": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "user-profile-a",
         "patch": {
@@ -44,8 +45,7 @@
           "stakeholderIds": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "activities": null,
   "functions": null,

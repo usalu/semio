@@ -27,12 +27,15 @@
   "siteContext": null,
   "organizational": null,
   "services": {
-    "added": [],
     "removed": [
-      "service-requirement-a"
+      {
+        "id": "service-requirement-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "infrastructure": null,
   "information": null,

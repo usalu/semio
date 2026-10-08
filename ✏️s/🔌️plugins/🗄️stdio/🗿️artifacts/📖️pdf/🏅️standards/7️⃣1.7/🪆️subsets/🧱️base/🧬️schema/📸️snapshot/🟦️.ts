@@ -1,3 +1,5 @@
+import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { validateRoleInputs, type PdfAdmittedStreamRole } from "../🪪️stream-roles/🟦️.ts";
 /** 🧬️ Canonical owned PDF1.7 domain with explicit admission from its native JSON schema. */
 import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type { Binary64 };
@@ -34,6 +36,7 @@ export interface PdfSnapshot {
   catalogExtra: PdfDictEntry[];
   objects: PdfIndirectObject[];
   trailer: PdfDictEntry[];
+  admittedStreamRoles: PdfAdmittedStreamRole[];
 }
 
 export interface PdfDictEntry {
@@ -284,7 +287,7 @@ export interface PdfOutputIntent {
   condition?: string | null;
   registryName?: string | null;
   info?: string | null;
-  profile?: number[] | null;
+  profile?: ArtifactRef | null;
 }
 
 export interface PdfEmbeddedFile {
@@ -347,8 +350,8 @@ export type PdfColorSpace =
   | { kind: "calGray"; whitePoint: [Binary64, Binary64, Binary64]; blackPoint?: [Binary64, Binary64, Binary64] | null; gamma?: Binary64 | null }
   | { kind: "calRgb"; whitePoint: [Binary64, Binary64, Binary64]; blackPoint?: [Binary64, Binary64, Binary64] | null; gamma?: [Binary64, Binary64, Binary64] | null; matrix?: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64, Binary64, Binary64, Binary64] | null }
   | { kind: "lab"; whitePoint: [Binary64, Binary64, Binary64]; blackPoint?: [Binary64, Binary64, Binary64] | null; range?: [Binary64, Binary64, Binary64, Binary64] | null }
-  | { kind: "iccBased"; components: number; profile: number[]; alternate?: PdfColorSpace | null; range?: Binary64[] | null }
-  | { kind: "indexed"; base: PdfColorSpace; hival: number; lookup: number[] }
+  | { kind: "iccBased"; components: number; profile: ArtifactRef; alternate?: PdfColorSpace | null; range?: Binary64[] | null }
+  | { kind: "indexed"; base: PdfColorSpace; hival: number; palette: number[] }
   | { kind: "separation"; name: string; alternate: PdfColorSpace; tintTransform: PdfFunction }
   | { kind: "deviceN"; names: string[]; alternate: PdfColorSpace; tintTransform: PdfFunction; attributes?: PdfDictEntry[] | null }
   | { kind: "pattern"; base?: PdfColorSpace | null }
@@ -457,8 +460,7 @@ export interface PdfInlineImage {
   imageMask?: boolean;
   decode?: Binary64[];
   interpolate?: boolean;
-  filters?: PdfStreamFilter[];
-  data: number[];
+  body: PdfImageBody;
   extra?: PdfDictEntry[];
 }
 
@@ -495,7 +497,7 @@ export type PdfShadingKind =
   | { kind: "functionBased"; domain?: [Binary64, Binary64, Binary64, Binary64] | null; matrix?: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64] | null; function: PdfFunction }
   | { kind: "axial"; coords: [Binary64, Binary64, Binary64, Binary64]; domain?: [Binary64, Binary64] | null; function: PdfFunction; extend: [boolean, boolean] }
   | { kind: "radial"; coords: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64]; domain?: [Binary64, Binary64] | null; function: PdfFunction; extend: [boolean, boolean] }
-  | { kind: "mesh"; shadingType: number; bitsPerCoordinate: number; bitsPerComponent: number; bitsPerFlag?: number | null; verticesPerRow?: number | null; decode: Binary64[]; function?: PdfFunction | null; data: number[] };
+  | { kind: "mesh"; shadingType: number; bitsPerCoordinate: number; bitsPerComponent: number; bitsPerFlag?: number | null; verticesPerRow?: number | null; decode: Binary64[]; function?: PdfFunction | null; reference: ArtifactRef };
 
 export interface PdfExtGState {
   id: string;
@@ -552,8 +554,7 @@ export interface PdfImage {
   imageMask?: boolean;
   decode?: Binary64[];
   interpolate?: boolean;
-  codec?: PdfImageCodec;
-  data: number[];
+  body: PdfImageBody;
   softMask?: string | null;
   softMaskInData?: number | null;
   mask?: PdfImageMask | null;
@@ -568,12 +569,7 @@ export type PdfImageMask =
   | { kind: "stencil"; image: string }
   | { kind: "colorKey"; ranges: number[] };
 
-export type PdfImageCodec =
-  | { kind: "raw" }
-  | { kind: "dct"; colorTransform?: number | null }
-  | { kind: "jpx" }
-  | { kind: "ccitt"; parameters: PdfCcittParameters }
-  | { kind: "jbig2"; globals?: number[] | null };
+export type PdfImageBody = { kind: "samples"; values: number[] } | { kind: "artifact"; reference: ArtifactRef };
 
 export interface PdfFont {
   id: string;
@@ -612,15 +608,15 @@ export interface PdfCidFont {
 }
 
 export type PdfFontProgram =
-  | { kind: "type1"; data: number[]; length1: number; length2: number; length3: number }
-  | { kind: "trueType"; data: number[] }
-  | { kind: "cff"; data: number[] }
-  | { kind: "cidCff"; data: number[] }
-  | { kind: "openType"; data: number[] };
+  { kind: "type1"; reference: ArtifactRef }
+  | { kind: "trueType"; reference: ArtifactRef }
+  | { kind: "cff"; reference: ArtifactRef }
+  | { kind: "cidCff"; reference: ArtifactRef }
+  | { kind: "openType"; reference: ArtifactRef };
 
 export type PdfCidToGid =
   | { kind: "identity" }
-  | { kind: "map"; data: number[] };
+  | { kind: "map"; glyphs: number[] };
 
 export interface PdfCidVerticalRun {
   startCid: number;
@@ -1357,6 +1353,12 @@ export const schema = {
           "de": "Einträge des Trailer-Wörterbuchs."
         }
       }
+    },
+    "admittedStreamRoles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfAdmittedStreamRole"
+      }
     }
   },
   "required": [
@@ -1379,7 +1381,8 @@ export const schema = {
     "info",
     "catalogExtra",
     "objects",
-    "trailer"
+    "trailer",
+    "admittedStreamRoles"
   ],
   "$defs": {
     "ObjRef": {
@@ -1710,18 +1713,7 @@ export const schema = {
             "volume": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -2000,18 +1992,7 @@ export const schema = {
         "rect": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4,
@@ -2113,18 +2094,7 @@ export const schema = {
         "color": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           }
         },
         "appearance": {
@@ -2325,18 +2295,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2363,18 +2322,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2418,18 +2366,7 @@ export const schema = {
             "points": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -2454,18 +2391,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2476,18 +2402,7 @@ export const schema = {
             "leaderLength": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -2515,18 +2430,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2539,18 +2443,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2576,18 +2469,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2600,18 +2482,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2635,18 +2506,7 @@ export const schema = {
             "vertices": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "interiorColor": {
@@ -2654,18 +2514,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2688,18 +2537,7 @@ export const schema = {
             "vertices": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "lineEndings": {
@@ -2722,18 +2560,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2756,18 +2583,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2785,18 +2601,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2814,18 +2619,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2843,18 +2637,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2895,18 +2678,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2942,18 +2714,7 @@ export const schema = {
               "items": {
                 "type": "array",
                 "items": {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 }
               }
             }
@@ -3282,18 +3043,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "interiorColor": {
@@ -3301,18 +3051,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -3487,18 +3226,7 @@ export const schema = {
       "type": "object",
       "properties": {
         "width": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "style": {
           "anyOf": [
@@ -3515,18 +3243,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             {
@@ -3549,18 +3266,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 2,
               "maxItems": 2
@@ -3687,18 +3393,7 @@ export const schema = {
           "$ref": "#/$defs/PdfFontDescriptor"
         },
         "defaultWidth": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "widths": {
           "type": "array",
@@ -3711,18 +3406,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 2,
               "maxItems": 2
@@ -3861,17 +3545,18 @@ export const schema = {
             "kind": {
               "const": "map"
             },
-            "data": {
+            "glyphs": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 65535
               }
             }
           },
           "required": [
             "kind",
-            "data"
+            "glyphs"
           ]
         }
       ]
@@ -3888,18 +3573,7 @@ export const schema = {
           "items": {
             "type": "array",
             "items": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "minItems": 3,
             "maxItems": 3
@@ -3921,18 +3595,7 @@ export const schema = {
         "widths": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           }
         }
       },
@@ -4007,18 +3670,7 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -4028,18 +3680,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -4052,18 +3693,7 @@ export const schema = {
             "gamma": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4085,18 +3715,7 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -4106,18 +3725,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -4132,18 +3740,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -4158,18 +3755,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 9,
                   "maxItems": 9
@@ -4194,18 +3780,7 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -4215,18 +3790,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -4241,18 +3805,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -4279,11 +3832,7 @@ export const schema = {
               "minimum": 0
             },
             "profile": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "$ref": "#/$defs/ArtifactRef"
             },
             "alternate": {
               "anyOf": [
@@ -4300,18 +3849,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -4339,7 +3877,7 @@ export const schema = {
               "type": "integer",
               "minimum": 0
             },
-            "lookup": {
+            "palette": {
               "type": "array",
               "items": {
                 "type": "integer",
@@ -4351,7 +3889,7 @@ export const schema = {
             "kind",
             "base",
             "hival",
-            "lookup"
+            "palette"
           ]
         },
         {
@@ -4632,18 +4170,7 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4653,18 +4180,7 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4674,18 +4190,7 @@ export const schema = {
             "zoom": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4717,18 +4222,7 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4749,18 +4243,7 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4781,18 +4264,7 @@ export const schema = {
             "rect": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -4823,18 +4295,7 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4855,18 +4316,7 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -5162,18 +4612,7 @@ export const schema = {
         "lineWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5256,18 +4695,7 @@ export const schema = {
         "miterLimit": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5289,33 +4717,11 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 }
               ],
               "minItems": 2,
@@ -5418,18 +4824,7 @@ export const schema = {
                   "type": "string"
                 },
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 }
               ],
               "minItems": 2,
@@ -5492,18 +4887,7 @@ export const schema = {
         "strokeAlpha": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5524,18 +4908,7 @@ export const schema = {
         "fillAlpha": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5594,18 +4967,7 @@ export const schema = {
         "flatness": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5626,18 +4988,7 @@ export const schema = {
         "smoothness": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5791,107 +5142,30 @@ export const schema = {
         "fontBbox": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4
         },
         "italicAngle": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "ascent": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "descent": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "capHeight": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "stemV": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "stemH": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5901,18 +5175,7 @@ export const schema = {
         "xHeight": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5922,18 +5185,7 @@ export const schema = {
         "leading": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5943,18 +5195,7 @@ export const schema = {
         "avgWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5964,18 +5205,7 @@ export const schema = {
         "maxWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5985,18 +5215,7 @@ export const schema = {
         "missingWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6026,18 +5245,7 @@ export const schema = {
         "fontWeight": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6086,18 +5294,7 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "descriptor": {
@@ -6148,18 +5345,7 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "descriptor": {
@@ -6200,18 +5386,7 @@ export const schema = {
             "fontMatrix": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -6219,18 +5394,7 @@ export const schema = {
             "fontBbox": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -6245,18 +5409,7 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "charProcs": {
@@ -6315,113 +5468,83 @@ export const schema = {
       "oneOf": [
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "type1"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "length1": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "length2": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "length3": {
-              "type": "integer",
-              "minimum": 0
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data",
-            "length1",
-            "length2",
-            "length3"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "trueType"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "cff"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "cidCff"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         },
         {
           "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
           "properties": {
             "kind": {
               "const": "openType"
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
-          "required": [
-            "kind",
-            "data"
-          ]
+          "additionalProperties": false
         }
       ]
     },
@@ -6793,18 +5916,7 @@ export const schema = {
         "bbox": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4,
@@ -6823,18 +5935,7 @@ export const schema = {
         "matrix": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 6,
           "maxItems": 6,
@@ -6947,35 +6048,13 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "size": {
@@ -7005,18 +6084,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -7029,18 +6097,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -7075,18 +6132,7 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
@@ -7094,18 +6140,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -7116,50 +6151,17 @@ export const schema = {
             "c0": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "c1": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "n": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -7179,18 +6181,7 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
@@ -7198,18 +6189,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -7226,35 +6206,13 @@ export const schema = {
             "bounds": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "encode": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -7275,35 +6233,13 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "code": {
@@ -7396,18 +6332,7 @@ export const schema = {
         "decode": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "x-semio-ui": {
             "label": {
@@ -7428,26 +6353,6 @@ export const schema = {
               "en": "Interpolate",
               "de": "Interpolieren"
             }
-          }
-        },
-        "codec": {
-          "$ref": "#/$defs/PdfImageCodec",
-          "x-semio-ui": {
-            "label": {
-              "en": "Image encoding",
-              "de": "Bildkodierung"
-            },
-            "description": {
-              "en": "Filter and parameters the image data is stored with.",
-              "de": "Filter und Parameter, mit denen die Bilddaten gespeichert sind."
-            }
-          }
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "softMask": {
@@ -7510,18 +6415,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             {
@@ -7614,101 +6508,16 @@ export const schema = {
               "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
             }
           }
+        },
+        "body": {
+          "$ref": "#/$defs/PdfImageBody"
         }
       },
       "required": [
         "id",
         "width",
         "height",
-        "data"
-      ]
-    },
-    "PdfImageCodec": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "raw"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "dct"
-            },
-            "colorTransform": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "jpx"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "ccitt"
-            },
-            "parameters": {
-              "$ref": "#/$defs/PdfCcittParameters"
-            }
-          },
-          "required": [
-            "kind",
-            "parameters"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "jbig2"
-            },
-            "globals": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        }
+        "body"
       ]
     },
     "PdfImageMask": {
@@ -7965,47 +6774,26 @@ export const schema = {
         "decode": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           }
         },
         "interpolate": {
           "type": "boolean"
-        },
-        "filters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PdfStreamFilter"
-          }
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
           }
+        },
+        "body": {
+          "$ref": "#/$defs/PdfImageBody"
         }
       },
       "required": [
         "width",
         "height",
-        "data"
+        "body"
       ]
     },
     "PdfLineCap": {
@@ -8107,18 +6895,7 @@ export const schema = {
         "opacity": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8541,18 +7318,7 @@ export const schema = {
               "const": "setLineWidth"
             },
             "width": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8597,18 +7363,7 @@ export const schema = {
               "const": "setMiterLimit"
             },
             "limit": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8625,33 +7380,11 @@ export const schema = {
             "array": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "phase": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8682,18 +7415,7 @@ export const schema = {
               "const": "setFlatness"
             },
             "flatness": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8747,18 +7469,7 @@ export const schema = {
             "matrix": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -8776,32 +7487,10 @@ export const schema = {
               "const": "moveTo"
             },
             "x": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8817,32 +7506,10 @@ export const schema = {
               "const": "lineTo"
             },
             "x": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8858,88 +7525,22 @@ export const schema = {
               "const": "curveTo"
             },
             "x1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8959,60 +7560,16 @@ export const schema = {
               "const": "curveToInitial"
             },
             "x2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9030,60 +7587,16 @@ export const schema = {
               "const": "curveToFinal"
             },
             "x1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9112,60 +7625,16 @@ export const schema = {
               "const": "rectangle"
             },
             "x": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "width": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "height": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9326,18 +7795,7 @@ export const schema = {
               "const": "setCharSpacing"
             },
             "spacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9352,18 +7810,7 @@ export const schema = {
               "const": "setWordSpacing"
             },
             "spacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9378,18 +7825,7 @@ export const schema = {
               "const": "setHorizontalScale"
             },
             "scale": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9404,18 +7840,7 @@ export const schema = {
               "const": "setLeading"
             },
             "leading": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9433,18 +7858,7 @@ export const schema = {
               "type": "string"
             },
             "size": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9476,18 +7890,7 @@ export const schema = {
               "const": "setTextRise"
             },
             "rise": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9502,32 +7905,10 @@ export const schema = {
               "const": "moveText"
             },
             "tx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "ty": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9543,32 +7924,10 @@ export const schema = {
               "const": "moveTextSetLeading"
             },
             "tx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "ty": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9586,18 +7945,7 @@ export const schema = {
             "matrix": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -9674,32 +8022,10 @@ export const schema = {
               "const": "nextLineShowTextSpaced"
             },
             "wordSpacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "charSpacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "text": {
               "$ref": "#/$defs/PdfTextString"
@@ -9719,32 +8045,10 @@ export const schema = {
               "const": "setGlyphWidth"
             },
             "wx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "wy": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9760,88 +8064,22 @@ export const schema = {
               "const": "setGlyphWidthAndBox"
             },
             "wx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "wy": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "llx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "lly": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "urx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "ury": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9893,18 +8131,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -9922,18 +8149,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "pattern": {
@@ -9961,18 +8177,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -9990,18 +8195,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "pattern": {
@@ -10027,18 +8221,7 @@ export const schema = {
               "const": "setStrokeGray"
             },
             "gray": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -10053,18 +8236,7 @@ export const schema = {
               "const": "setFillGray"
             },
             "gray": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -10079,46 +8251,13 @@ export const schema = {
               "const": "setStrokeRgb"
             },
             "r": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "g": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "b": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -10135,46 +8274,13 @@ export const schema = {
               "const": "setFillRgb"
             },
             "r": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "g": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "b": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -10191,60 +8297,16 @@ export const schema = {
               "const": "setStrokeCmyk"
             },
             "c": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "m": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "k": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -10262,60 +8324,16 @@ export const schema = {
               "const": "setFillCmyk"
             },
             "c": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "m": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "k": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -10697,18 +8715,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -10859,26 +8866,12 @@ export const schema = {
         "profile": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "$ref": "#/$defs/ArtifactRef"
             },
             {
               "type": "null"
             }
-          ],
-          "x-semio-ui": {
-            "label": {
-              "en": "ICC output profile",
-              "de": "ICC-Ausgabeprofil"
-            },
-            "description": {
-              "en": "DestOutputProfile bytes.",
-              "de": "Bytes des DestOutputProfile."
-            }
-          }
+          ]
         }
       },
       "required": [
@@ -10892,18 +8885,7 @@ export const schema = {
         "mediaBox": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4,
@@ -10925,18 +8907,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -10963,18 +8934,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -11001,18 +8961,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -11039,18 +8988,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -11091,18 +9029,7 @@ export const schema = {
         "userUnit": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -11215,18 +9142,7 @@ export const schema = {
         "duration": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -11429,18 +9345,7 @@ export const schema = {
         "matrix": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 6,
           "maxItems": 6,
@@ -11499,49 +9404,16 @@ export const schema = {
             "bbox": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
             },
             "xStep": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "yStep": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "content": {
               "type": "array",
@@ -11674,18 +9546,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             {
@@ -11708,18 +9569,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -11786,18 +9636,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -11812,18 +9651,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 6,
                   "maxItems": 6
@@ -11851,18 +9679,7 @@ export const schema = {
             "coords": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -11872,18 +9689,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -11921,18 +9727,7 @@ export const schema = {
             "coords": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -11942,18 +9737,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -12025,18 +9809,7 @@ export const schema = {
             "decode": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "function": {
@@ -12049,12 +9822,8 @@ export const schema = {
                 }
               ]
             },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
             }
           },
           "required": [
@@ -12063,7 +9832,7 @@ export const schema = {
             "bitsPerCoordinate",
             "bitsPerComponent",
             "decode",
-            "data"
+            "reference"
           ]
         }
       ]
@@ -12141,18 +9910,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -12399,18 +10157,7 @@ export const schema = {
               "const": "adjust"
             },
             "amount": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -12900,6 +10647,376 @@ export const schema = {
           }
         }
       }
+    },
+    "PdfGraphIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "path"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/ObjRef"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "key"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "entry"
+                  },
+                  "key": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "index"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "item"
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "PdfStreamRoleValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "content"
+          ],
+          "properties": {
+            "kind": {
+              "const": "operators"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfOp"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "samples"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sampledWords"
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "code"
+          ],
+          "properties": {
+            "kind": {
+              "const": "calculatorProgram"
+            },
+            "code": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "mapping"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unicodeMap"
+            },
+            "mapping": {
+              "$ref": "#/$defs/PdfToUnicode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "cmap"
+          ],
+          "properties": {
+            "kind": {
+              "const": "characterMap"
+            },
+            "cmap": {
+              "$ref": "#/$defs/PdfEmbeddedCMap"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "program"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fontProgram"
+            },
+            "program": {
+              "$ref": "#/$defs/PdfFontProgram"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "image"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "image": {
+              "$ref": "#/$defs/PdfImage"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "metadataText"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "attachmentBytes"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "paletteComponents"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "components"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "glyphIds"
+            },
+            "glyphs": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "glyphs"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "referenceBody"
+            },
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
+            }
+          },
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PdfAdmittedStreamRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "dependencies",
+        "value"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/PdfGraphIdentity"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfGraphIdentity"
+          }
+        },
+        "value": {
+          "$ref": "#/$defs/PdfStreamRoleValue"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string"
+            },
+            "standard": {
+              "type": "string"
+            },
+            "subset": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "PdfImageBody": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "samples"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "properties": {
+            "kind": {
+              "const": "artifact"
+            },
+            "reference": {
+              "$ref": "#/$defs/ArtifactRef"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   }
 } as const;
@@ -12915,19 +11032,19 @@ const documents = new Map<string, Schema>();
 export const registerSchemaDocument = (schema: Schema): void => {
   documents.set(String(schema["$id"]), schema);
 };
-const resolveRef = (ref: string, own: Schema): Schema => {
+const resolveRef = (ref: string, own: Schema): { node: Schema; document: Schema } => {
   const [documentId, pointer] = ref.split("#");
   const document = documentId === "" ? own : documents.get(documentId);
   if (!document) throw new SchemaRefusal("$ref", `unknown schema document ${documentId}`);
   let node: unknown = document;
   for (const step of (pointer ?? "").split("/").filter((s) => s.length > 0)) node = (node as Record<string, unknown>)[step];
   if (!node) throw new SchemaRefusal("$ref", `unresolved pointer ${ref}`);
-  return node as Schema;
+  return { node: node as Schema, document };
 };
 const matches = (schema: Schema, value: unknown, own: Schema, at: string, errors: string[]): boolean => {
-  if (schema.semioPrimitive === "binary64") { try { parseBinary64(value); return true; } catch { return (errors.push(`${at}: expected owned binary64`), false); } }
+  if (schema.semioPrimitive === "binary64" || schema["$ref"] === "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport" || schema["$ref"] === "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64") { try { parseBinary64(value); return true; } catch { return (errors.push(`${at}: expected owned binary64`), false); } }
   if (schema.semioPrimitive === "i64" || schema.semioPrimitive === "u64") return typeof value === "bigint" && value >= (schema.semioPrimitive === "i64" ? -9223372036854775808n : 0n) && value <= (schema.semioPrimitive === "i64" ? 9223372036854775807n : 18446744073709551615n) || (errors.push(`${at}: expected owned integer word`), false);
-  if (typeof schema["$ref"] === "string") return matches(resolveRef(schema["$ref"] as string, own), value, own, at, errors);
+  if (typeof schema["$ref"] === "string") { const resolved = resolveRef(schema["$ref"] as string, own); return matches(resolved.node, value, resolved.document, at, errors); }
   if (schema["const"] !== undefined) return value === schema["const"] || (errors.push(`${at}: expected ${JSON.stringify(schema["const"])}`), false);
   if (Array.isArray(schema["enum"])) return (schema["enum"] as unknown[]).includes(value) || (errors.push(`${at}: not one of ${(schema["enum"] as unknown[]).join(", ")}`), false);
   if (Array.isArray(schema["anyOf"])) return (schema["anyOf"] as Schema[]).some((s) => matches(s, value, own, at, [])) || (errors.push(`${at}: matches no alternative`), false);
@@ -12951,19 +11068,20 @@ const matches = (schema: Schema, value: unknown, own: Schema, at: string, errors
     const row = value as Record<string, unknown>;
     for (const key of (schema["required"] as string[] | undefined) ?? []) if (row[key] === undefined) return (errors.push(`${at}.${key}: missing`), false);
     const properties = (schema["properties"] as Record<string, Schema> | undefined) ?? {};
+    if(schema["additionalProperties"]===false && Object.keys(row).some(key=>!(key in properties)))return (errors.push(`${at}: unexpected field`),false);
     for (const [key, sub] of Object.entries(properties)) if (row[key] !== undefined && !matches(sub, row[key], own, `${at}.${key}`, errors)) return false;
   }
   return true;
 };
 export const validateAgainst = <T,>(schema: Schema, pointer: string, value: unknown): T => {
-  const node = pointer === "" ? schema : resolveRef(`#${pointer}`, schema);
+  const node = pointer === "" ? schema : resolveRef(`#${pointer}`, schema).node;
   const errors: string[] = [];
   if (!matches(node, value, schema, "$", errors)) throw new SchemaRefusal("$", errors[0] ?? "invalid");
   return value as T;
 };
 //#endregion 🚪️Validation
 registerSchemaDocument(schema);
-export const parsePdfSnapshot = (value: unknown): PdfSnapshot => validateAgainst<PdfSnapshot>(schema, "", value);
+export const parsePdfSnapshot = (value: unknown): PdfSnapshot => {const snapshot=validateAgainst<PdfSnapshot>(schema,"",value);validateRoleInputs(snapshot.objects,snapshot.objects,[],snapshot.admittedStreamRoles);return snapshot;};
 export const parsePdfDictEntry = (value: unknown): PdfDictEntry => validateAgainst<PdfDictEntry>(schema, "/$defs/PdfDictEntry", value);
 export const parsePdfObject = (value: unknown): PdfObject => validateAgainst<PdfObject>(schema, "/$defs/PdfObject", value);
 export const parsePdfStreamFilter = (value: unknown): PdfStreamFilter => validateAgainst<PdfStreamFilter>(schema, "/$defs/PdfStreamFilter", value);
@@ -13018,7 +11136,6 @@ export const parsePdfFormXObject = (value: unknown): PdfFormXObject => validateA
 export const parsePdfTransparencyGroup = (value: unknown): PdfTransparencyGroup => validateAgainst<PdfTransparencyGroup>(schema, "/$defs/PdfTransparencyGroup", value);
 export const parsePdfImage = (value: unknown): PdfImage => validateAgainst<PdfImage>(schema, "/$defs/PdfImage", value);
 export const parsePdfImageMask = (value: unknown): PdfImageMask => validateAgainst<PdfImageMask>(schema, "/$defs/PdfImageMask", value);
-export const parsePdfImageCodec = (value: unknown): PdfImageCodec => validateAgainst<PdfImageCodec>(schema, "/$defs/PdfImageCodec", value);
 export const parsePdfFont = (value: unknown): PdfFont => validateAgainst<PdfFont>(schema, "/$defs/PdfFont", value);
 export const parsePdfToUnicode = (value: unknown): PdfToUnicode => validateAgainst<PdfToUnicode>(schema, "/$defs/PdfToUnicode", value);
 export const parsePdfToUnicodeMapping = (value: unknown): PdfToUnicodeMapping => validateAgainst<PdfToUnicodeMapping>(schema, "/$defs/PdfToUnicodeMapping", value);
@@ -13046,3 +11163,5 @@ export const parsePdfAppearanceEntry = (value: unknown): PdfAppearanceEntry => v
 export const parsePdfAppearanceState = (value: unknown): PdfAppearanceState => validateAgainst<PdfAppearanceState>(schema, "/$defs/PdfAppearanceState", value);
 export const parsePdfBorderStyle = (value: unknown): PdfBorderStyle => validateAgainst<PdfBorderStyle>(schema, "/$defs/PdfBorderStyle", value);
 export const parsePdfAnnotationKind = (value: unknown): PdfAnnotationKind => validateAgainst<PdfAnnotationKind>(schema, "/$defs/PdfAnnotationKind", value);
+
+export const parsePdfImageBody = (value: unknown): PdfImageBody => validateAgainst<PdfImageBody>(schema, "/$defs/PdfImageBody", value);

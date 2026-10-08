@@ -1,0 +1,31 @@
+{
+  "samples": [
+    null,
+    false,
+    true,
+    "literal\u0000😀",
+    0,
+    9007199254740993,
+    18446744073709551615,
+    -9223372036854775808,
+    1.25,
+    [],
+    {},
+    [
+      null,
+      true,
+      "nested",
+      {
+        "axis": "hover",
+        "values": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  ],
+  "driverId": "own-driver",
+  "themeId": "own-theme",
+  "label": "Owned custom value"
+}

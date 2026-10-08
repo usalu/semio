@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
+import { applyPatch, compare } from "fast-json-patch";
 import { Document, NodeIO } from "@gltf-transform/core";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -66,6 +67,12 @@ interface ArtifactSurfaceFixture {
   readonly faultCodes: Record<string, string>;
   readonly dataUrl: { readonly cases: readonly { readonly id: string; readonly payload: string; readonly bytes: string }[] };
 }
+interface DocumentContinuationFixture {
+  readonly documentContinuation: { readonly importContinuation: { readonly snapshotParity: string; readonly rawSourceCopies: number; readonly restoration: { readonly publication: string; readonly openedActor: string; readonly sourceBytes: string; readonly history: string; readonly inference: string; readonly cameraLane: string; readonly selectionLanes: readonly string[] } } };
+}
+interface DocumentCapacityFixture {
+  readonly documentContinuation: { readonly capacity: { readonly wireBytes: number; readonly sourceAllocationBytes: number; readonly ownershipSourceMultiples: number; readonly downloadBytes: number; readonly scaffoldBytes: number; readonly sourceDemand: { readonly text: string; readonly utf8BytesPerRepeat: number; readonly quotedJsonBytesPerRepeat: number; readonly widgetIdPrefix: string; readonly generationIdPrefix: string; readonly openedActor: string; readonly selection: string; readonly rosterValues: string; readonly rawSourceCopies: number; readonly cases: readonly { readonly id: string; readonly widgets: number; readonly generations: number; readonly textRepeats: number; readonly previewRepeats: number; readonly minimumJsonBytes: number }[]; readonly admissionCases: readonly { readonly id: string; readonly sourceBytes: number; readonly admitted: boolean }[] } } };
+}
 //#endregion 🧫️Fixture
 
 //#region 🗄️OwningArtifacts
@@ -117,6 +124,7 @@ export function testGeneration3dDocumentIoSurface(): void {
   testGeneration3dMeshSurface();
   testGeneration3dPolygonImport();
   testGeneration3dGltfSceneImport();
+  testGeneration3dDocumentCapacity();
 
   const representations = stdioRepresentations(`${here}/../../../../../../../../../../🗄️stdio/🗿️artifacts`);
   assert.ok(representations.size > 0, "the stdio artifacts' own definitions were found on disk");
@@ -158,6 +166,17 @@ export function testGeneration3dDocumentIoSurface(): void {
   assert.deepEqual(fixture.publicationLanes.editor.importDocument, ["Artifact", "Config"]);
   assert.deepEqual(fixture.publicationLanes.editor.exportDocument, ["HostOnly"]);
   assert.deepEqual(fixture.publicationLanes.editor.importDocumentRequest, ["HostOnly"]);
+  const documentFixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🎨️surface/🔣️.json`, "utf8")) as DocumentContinuationFixture;
+  const restoration = documentFixture.documentContinuation.importContinuation.restoration;
+  assert.equal(restoration.publication, "canonical-load-genesis");
+  assert.equal(restoration.sourceBytes, "exact-original-pack");
+  assert.equal(restoration.history, "empty-genesis");
+  assert.equal(restoration.inference, "original-imported-shapes");
+  assert.ok(restoration.openedActor.length > 0);
+  assert.equal(restoration.cameraLane, "config");
+  assert.deepEqual(restoration.selectionLanes, ["artifact", "config"]);
+  assert.equal(documentFixture.documentContinuation.importContinuation.snapshotParity, "all-semantic-fields");
+  assert.equal(documentFixture.documentContinuation.importContinuation.rawSourceCopies, 0);
 
   // 📏️ An import refuses by size only, with one stable code: the framework hands the whole picked file.
   assert.deepEqual(Object.keys(fixture.faultCodes), ["capacity"], "the import's one refusal is its size budget");
@@ -171,6 +190,63 @@ export function testGeneration3dDocumentIoSurface(): void {
       `editorActions=${fixture.editorActions.length} viewerActions=${fixture.viewerActions.length} faultCodes=${Object.keys(fixture.faultCodes).join(",")} ` +
       `accept=${fixture.acceptFilter}`,
   );
+}
+
+/** 📏️ Qualifies neutral source-demand recipes with independent schema, UTF-8 and inverse oracles. */
+export function testGeneration3dDocumentCapacity(): number {
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8")) as DocumentCapacityFixture;
+  const capacity = fixture.documentContinuation.capacity;
+  const demand = capacity.sourceDemand;
+  const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const validate = new Ajv({ strict: false, validateFormats: false }).compile(schema);
+  assert.equal(demand.selection, "last-generation");
+  assert.equal(demand.rosterValues, "nested-original-dsl");
+  assert.equal(demand.rawSourceCopies, 0);
+  assert.ok(demand.openedActor.length > 0);
+  assert.equal(Buffer.byteLength(demand.text), demand.utf8BytesPerRepeat);
+  assert.equal(Buffer.byteLength(JSON.stringify(demand.text)) - 2, demand.quotedJsonBytesPerRepeat);
+  const word = (value: number) => ({ bits: binary64(value).bits.toString(16).padStart(16, "0") });
+  for (const row of demand.cases) {
+    const text = demand.text.repeat(row.textRepeats);
+    const snapshot = {
+      hostSnapshot: {
+        schema: "flow@1",
+        camera: { x: word(13.5), y: word(-4.25), zoom: word(0.875) },
+        widgets: Array.from({ length: row.widgets }, (_, index) => ({ kind: "inputNote", id: `${demand.widgetIdPrefix}${index}`, text: index === 0 ? text : demand.text })),
+        synapses: [],
+        layout: Object.fromEntries(Array.from({ length: row.widgets }, (_, index) => [`${demand.widgetIdPrefix}${index}`, { x: word(index), y: word(-index) }])),
+      },
+      generation: {
+        generations: Array.from({ length: row.generations }, (_, index) => ({ id: `${demand.generationIdPrefix}${index}`, name: `Generation ${index} 😀`, values: { "original-é-🧊": { nested: [demand.text, { enabled: true, nothing: null }], numbers: [0, 42, -7, 1.5] } } })),
+        selectedGenerationId: `${demand.generationIdPrefix}${row.generations - 1}`,
+        previewText: demand.text.repeat(row.previewRepeats),
+      },
+    };
+    assert.ok(validate(snapshot), `${row.id}: ${JSON.stringify(validate.errors)}`);
+    const wire = JSON.stringify(snapshot);
+    const bytes = new TextEncoder().encode(wire).length;
+    assert.equal(bytes, Buffer.byteLength(wire));
+    assert.ok(bytes >= row.minimumJsonBytes, `${row.id}: ${bytes} source bytes cover the declared boundary`);
+    assert.ok(bytes > capacity.wireBytes);
+    assert.equal(new TextEncoder().encode(text).length, demand.utf8BytesPerRepeat * row.textRepeats);
+    assert.equal(Buffer.byteLength(JSON.stringify(text)), demand.quotedJsonBytesPerRepeat * row.textRepeats + 2);
+    assert.deepEqual(JSON.parse(wire), snapshot);
+    const changed = applyPatch(snapshot, [{ op: "remove", path: "/generation/selectedGenerationId" }, { op: "replace", path: "/generation/previewText", value: demand.text }], true, false).newDocument;
+    assert.deepEqual(changed.hostSnapshot, snapshot.hostSnapshot);
+    assert.deepEqual(changed.generation.generations, snapshot.generation.generations);
+    assert.deepEqual(applyPatch(changed, compare(changed, snapshot), true, false).newDocument, snapshot);
+    assert.deepEqual(compare(snapshot, JSON.parse(wire)), []);
+    console.log(`[DEBUG] document capacity recipe=${row.id} widgets=${row.widgets} generations=${row.generations} sourceJsonBytes=${bytes} exactUtf8=true schema=true inverse=true`);
+  }
+  for (const row of demand.admissionCases) {
+    const source = BigInt(row.sourceBytes);
+    const allowance = source * BigInt(capacity.ownershipSourceMultiples) + BigInt(capacity.scaffoldBytes);
+    assert.equal(source <= BigInt(capacity.sourceAllocationBytes), row.admitted, row.id);
+    assert.ok(allowance >= source);
+    assert.ok(allowance <= BigInt(Number.MAX_SAFE_INTEGER));
+  }
+  assert.equal(capacity.sourceAllocationBytes * capacity.ownershipSourceMultiples, capacity.downloadBytes);
+  return demand.cases.length + demand.admissionCases.length;
 }
 
 /** 🚪️ Validates the neutral document/prepared-geometry contract against the independent schema oracle. */

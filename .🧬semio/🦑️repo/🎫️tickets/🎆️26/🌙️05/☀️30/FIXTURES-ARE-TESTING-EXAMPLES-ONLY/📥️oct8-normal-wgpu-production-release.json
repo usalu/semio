@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-08T19:13:38.797868+00:00",
+  "release": true,
+  "scope": "Only original normal WGPU development producer; release/activation remain held",
+  "conditionRevision": "Original native compilation is independent of the still-refused repository corpus inventory; run fresh canonical selected consumption before original compiler. No schema gate/global/runtime publication pass is implied.",
+  "nativeProof": {
+    "completeRustSession": 96913,
+    "exitCode": 0,
+    "passed": 78,
+    "failed": 0,
+    "sourceSession": 24501,
+    "sourceExitCode": 0,
+    "ownedSourceEndpoints": 10,
+    "valueSchemaObservers": 6,
+    "independentReview": "📓️oct8-neural-and-root-four-final-independent-audit.md"
+  },
+  "currentNativeReadiness": "🗑️generated/oct8-post-neural-normal-wgpu-readonly-readiness.json",
+  "globalFixtureCheckpoint": {
+    "fullSession": 54492,
+    "exitCode": 1,
+    "fixtureCorpusFindings": 4,
+    "status": "REFUSED; concurrent Root/Pub repair continues",
+    "receipt": "🗑️generated/oct8-root-post-eight-corpus-full-diagnostic-receipt.json"
+  },
+  "executionRequirements": [
+    "Exact original @semio-tech/framework-renderer-wgpu:wasm Nx vector",
+    "Fresh canonical selected Cargo/recipe consumption; exact current lexical+real testing-collection admission",
+    "Original locked/offline/frozen dev compiler/query/resource/staging",
+    "Durable production Cargo/build/compiler resource paths; all original budget defaults0",
+    "No other native/fourguest/Registry producer concurrently",
+    "Hold all release/activation after actual terminal dev; report real failures without inferred pass"
+  ]
+}

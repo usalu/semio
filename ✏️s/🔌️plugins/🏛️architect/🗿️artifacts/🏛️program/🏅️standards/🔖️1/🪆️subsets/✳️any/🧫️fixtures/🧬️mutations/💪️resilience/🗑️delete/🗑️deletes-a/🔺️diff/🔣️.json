@@ -36,12 +36,15 @@
   "growth": null,
   "sustainability": null,
   "resilience": {
-    "added": [],
     "removed": [
-      "resilience-requirement-a"
+      {
+        "id": "resilience-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "costs": null,
   "delivery": null,

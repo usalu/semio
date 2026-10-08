@@ -1,6 +1,9 @@
 //! 🧬️ Transparent PDF 1.4/ANY mutation registry and delegation.
 
-use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::{PageDoc, PdfSnapshot}};
+use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_framework_value::{DslValue, FromValue};
+use semio_s_artifact_stdio_contract::editing::{Carried, EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
 
 //#region 🔖️Leaves
 #[path = "📥️insert-page/🦀️.rs"]
@@ -34,67 +37,88 @@ pub enum PdfMutation {
 
 //#endregion 🔖️Aggregate
 
-//#region 🔖️Net
-/// 🧮️ The concrete leaves carrying `base` to `next`: a single moved page as one move, the pages that changed in place as a resize
-/// and/or a text replacement each, then the surplus pages removed from the end or inserted at their final positions. Replaying
-/// them through the central applier is the proof the net is exact; a change to the schema marker is left out, so the replay then
-/// refuses the edit.
+//#region 🔖️Edit
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_mutations(base: &PdfSnapshot, next: &PdfSnapshot) -> Vec<PdfMutation> {
-    let (before, after) = (&base.pages, &next.pages);
-    let prefix = before.iter().zip(after).take_while(|(left, right)| left == right).count();
-    let suffix = before[prefix..].iter().rev().zip(after[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
-    let (old, new) = (&before[prefix..before.len() - suffix], &after[prefix..after.len() - suffix]);
-    if old.len() == new.len() && old.len() >= 2 {
-        let last = old.len() - 1;
-        if old[1..] == new[..last] && old[0] == new[last] {
-            return vec![PdfMutation::MovePage(MovePage { from: prefix, to: prefix + last })];
-        }
-        if old[..last] == new[1..] && old[last] == new[0] {
-            return vec![PdfMutation::MovePage(MovePage { from: prefix + last, to: prefix })];
-        }
+fn refused(code: &'static str, message: impl Into<String>) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new(code), message)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pointer_segments(path: &str) -> Result<Vec<String>, Fault> {
+    if path.is_empty() {
+        return Ok(Vec::new());
     }
+    let Some(rest) = path.strip_prefix('/') else { return Err(refused("pdf-edit.invalid-pointer", format!("'{path}' is not an RFC 6901 pointer"))) };
+    Ok(rest.split('/').map(|raw| raw.replace("~1", "/").replace("~0", "~")).collect())
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn page_position(segment: &str, length: usize, insert: bool) -> Result<usize, Fault> {
+    if insert && segment == "-" {
+        return Ok(length);
+    }
+    match segment.parse::<usize>() {
+        Ok(index) if index < length || (insert && index == length) => Ok(index),
+        _ => Err(refused("pdf-edit.invalid-index", format!("'{segment}' addresses no page of a document of {length}"))),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode<T: FromValue>(value: &DslValue) -> Result<T, Fault> {
+    T::from_value(value.clone()).map_err(|error| refused("pdf-edit.schema-invalid", error.to_string()))
+}
+
+/// 📄️ The leaves turning page `index` into `next`: a resize for changed geometry, a text replacement for changed text.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn page_leaves(previous: &PageDoc, index: usize, next: &PageDoc) -> Vec<PdfMutation> {
     let mut leaves = Vec::new();
-    let paired = old.len().min(new.len());
-    for offset in 0..paired {
-        let (previous, page) = (&old[offset], &new[offset]);
-        if previous.width.to_bits() != page.width.to_bits() || previous.height.to_bits() != page.height.to_bits() {
-            leaves.push(PdfMutation::ResizePage(ResizePage { index: prefix + offset, width: page.width, height: page.height }));
-        }
-        if previous.text != page.text {
-            leaves.push(PdfMutation::ReplacePageText(ReplacePageText { index: prefix + offset, text: page.text.clone() }));
-        }
+    if previous.width.to_bits() != next.width.to_bits() || previous.height.to_bits() != next.height.to_bits() {
+        leaves.push(PdfMutation::ResizePage(ResizePage { index, width: next.width, height: next.height }));
     }
-    for index in (prefix + paired..prefix + old.len()).rev() {
-        leaves.push(PdfMutation::RemovePage(RemovePage { index }));
-    }
-    for offset in paired..new.len() {
-        leaves.push(PdfMutation::InsertPage(InsertPage { index: prefix + offset, page: new[offset].clone() }));
+    if previous.text != next.text {
+        leaves.push(PdfMutation::ReplacePageText(ReplacePageText { index, text: next.text.clone() }));
     }
     leaves
 }
-//#endregion 🔖️Net
 
-//#region 🔖️Delegation
-/// 🛡️ Applies `outcome` to `snapshot` atomically through the central applier and converts an apply rejection into a fatal outcome.
-pub fn apply_outcome(outcome: protocol::MutationOutcome<PdfDiff>, snapshot: &mut PdfSnapshot) -> protocol::MutationOutcome<PdfDiff> {
-    let (diff, messages) = outcome.into_parts();
-    match protocol::apply_diff(&diff, snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            protocol::MutationOutcome::new(diff).absorb_messages(messages)
-        }
-        Err(error) => protocol::MutationOutcome::new(PdfDiff::default()).absorb_messages(messages).absorb_messages([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]),
+/// 🧭️ The details-pane edit table: which JSON-pointer edit raises which ONE concrete kind. A page's text or one side of its size raises
+/// the matching page kind carrying the current other side; an insert into `/pages` raises `insert-page` at the position, a remove
+/// raises `remove-page` by position. A whole page set and a page move are answered by [`special_edit`].
+pub static EDIT_RULES: EditRules = EditRules {
+    entities: &[
+        EntityRule::new("/pages/*/text", "replace-page-text", "text").selecting(&[Selector::Index("index")]),
+        EntityRule::new("/pages/*/width", "resize-page", "width").selecting(&[Selector::Index("index")]).carrying(&[Carried { payload: "height", pointer: "/pages/*/height" }]),
+        EntityRule::new("/pages/*/height", "resize-page", "height").selecting(&[Selector::Index("index")]).carrying(&[Carried { payload: "width", pointer: "/pages/*/width" }]),
+    ],
+    inserts: &[InsertRule::new("/pages", "insert-page", "page").at("index")],
+    removes: &[RemoveRule::by_index("/pages", "remove-page", "index")],
+};
+
+/// 🎯️ The edits the table cannot express: a whole page set (a resize and/or a text replacement) and a page moved to another position.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn special_edit(event: &SnapshotEditEvent, snapshot: &PdfSnapshot) -> Result<Option<Vec<PdfMutation>>, Fault> {
+    let pages = &snapshot.pages;
+    match event {
+        SnapshotEditEvent::SetValue { path, value } => match pointer_segments(path)?.as_slice() {
+            [lane, page] if lane == "pages" => {
+                let index = page_position(page, pages.len(), false)?;
+                Ok(Some(page_leaves(&pages[index], index, &decode::<PageDoc>(value)?)))
+            }
+            _ => Ok(None),
+        },
+        SnapshotEditEvent::MoveValue { from, path } => match (pointer_segments(from)?.as_slice(), pointer_segments(path)?.as_slice()) {
+            ([lane_from, source], [lane_to, destination]) if lane_from == "pages" && lane_to == "pages" => {
+                let (from, to) = (page_position(source, pages.len(), false)?, page_position(destination, pages.len(), true)?.min(pages.len().saturating_sub(1)));
+                Ok(Some((from != to).then(|| PdfMutation::MovePage(MovePage { from, to })).into_iter().collect()))
+            }
+            _ => Ok(None),
+        },
+        _ => Ok(None),
     }
 }
+//#endregion 🔖️Edit
 
-/// ▶️ Applies the authoritative leaf diff.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
-    use protocol::Mutation;
-    let outcome = mutation.diff(snapshot);
-    apply_outcome(outcome, snapshot)
-}
-
+//#region 🔖️Delegation
 //#endregion 🔖️Delegation
 
 //#region 🔖️Codecs

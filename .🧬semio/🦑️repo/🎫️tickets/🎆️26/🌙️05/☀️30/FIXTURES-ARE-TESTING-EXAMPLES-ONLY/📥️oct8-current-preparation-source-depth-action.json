@@ -1,0 +1,37 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "Self::source_constructor_capacity::<F1, F2, F3, D>(grant, 0)?",
+    "new": "Self::source_constructor_capacity::<F1, F2, F3, D>(grant, semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 })?"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "preparation_birth_bytes: usize, construct: impl FnOnce()",
+    "new": "preparation_birth: semio_framework_value::retained_clone::RetainedCloneBirthDemand, construct: impl FnOnce()"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "Self::source_constructor_capacity::<F1, F2, F3, D>(grant, preparation_birth_bytes)?",
+    "new": "Self::source_constructor_capacity::<F1, F2, F3, D>(grant, preparation_birth)?"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "additional_birth: usize) -> Result<usize, DocumentStoreOwnersAdmissionError",
+    "new": "additional_birth: semio_framework_value::retained_clone::RetainedCloneBirthDemand) -> Result<usize, DocumentStoreOwnersAdmissionError"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "capacity.checked_add(additional_birth).ok_or_else",
+    "new": "capacity.checked_add(additional_birth.capacity_bytes).ok_or_else"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "        let refusal = if grant.maximum_items == 0 { Some((semio_framework_value::ValueRefusalKind::WorkLimit, \"catalog source constructor requires one admitted item\")) }",
+    "new": "        let depth = additional_birth.depth.max(1);\n        let refusal = if grant.maximum_items == 0 { Some((semio_framework_value::ValueRefusalKind::WorkLimit, \"catalog source constructor requires one admitted item\")) }"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "old": "else if grant.maximum_depth == 0 { Some((semio_framework_value::ValueRefusalKind::DepthLimit, \"catalog source constructor requires original owner depth\")) }",
+    "new": "else if grant.maximum_depth < depth { Some((semio_framework_value::ValueRefusalKind::DepthLimit, \"catalog source constructor requires its original source tree depth\")) }"
+  }
+]

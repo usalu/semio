@@ -1,3 +1,4 @@
+import {parseArtifactRef} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 /** 🔤️ Explicit native font JSON admission into the same owned PDF relational domain. */
 import type { PdfFont, PdfFontKind, PdfFontProgram, PdfFontDescriptor, PdfCidFont, PdfCidWidthRun, PdfCidVerticalRun, PdfSimpleEncoding, PdfBaseEncoding, PdfCMap, PdfToUnicode, PdfToUnicodeMapping, PdfCidMapping, PdfCidToGid, PdfCharProc } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { record, array, text, boolean, integer, integers, real, reals, three, four, pdfDictionaryFromNativeJson } from "../🟦️.ts";
@@ -9,7 +10,7 @@ export function pdfDescriptorFromNativeJson(input: unknown): PdfFontDescriptor {
   return {fontName:text(row.fontName),flags:integer(row.flags??0),fontBbox:four(row.fontBbox??[0,0,0,0]),italicAngle:real(row.italicAngle??0),ascent:real(row.ascent??0),descent:real(row.descent??0),capHeight:real(row.capHeight??0),stemV:real(row.stemV??0),stemH:optional(row.stemH),xHeight:optional(row.xHeight),leading:optional(row.leading),avgWidth:optional(row.avgWidth),maxWidth:optional(row.maxWidth),missingWidth:optional(row.missingWidth),fontFamily:optionalText(row.fontFamily),fontStretch:optionalText(row.fontStretch),fontWeight:optional(row.fontWeight),charSet:optionalText(row.charSet),extra:pdfDictionaryFromNativeJson(row.extra??[])};
 }
 /** 🅰️ Admit every native font program and its intrinsic bytes. */
-export function pdfProgramFromNativeJson(input: unknown): PdfFontProgram { const row=record(input);const kind=text(row.kind);const data=integers(row.data);switch(kind){case "type1":return {kind,data,length1:integer(row.length1),length2:integer(row.length2),length3:integer(row.length3)};case "trueType":case "cff":case "cidCff":case "openType":return {kind,data};default:throw new Error("Unknown PDF program");} }
+export function pdfProgramFromNativeJson(input:unknown):PdfFontProgram{const row=record(input);const kind=text(row.kind);const reference=parseArtifactRef(row.reference);switch(kind){case "type1":case "trueType":case "cff":case "cidCff":case "openType":return {kind,reference};default:throw new Error("Unknown PDF font program");}}
 /** 🔡️ Admit optional base encodings and ordered differences. */
 export function pdfEncodingFromNativeJson(input: unknown): PdfSimpleEncoding { const row=record(input);const value=row.base;let base:PdfBaseEncoding|null;switch(value){case null:case undefined:base=null;break;case "standard":case "winAnsi":case "macRoman":case "macExpert":base=value;break;default:throw new Error("Unknown PDF encoding");}return {base,differences:array(row.differences??[]).map(input=>{const row=record(input);return {code:integer(row.code),glyph:text(row.glyph)};})}; }
 /** 🈴️ Admit ordered Unicode char and range mappings. */
@@ -21,7 +22,7 @@ export function pdfCidMappingFromNativeJson(input: unknown): PdfCidMapping { con
 /** 🗺️ Admit predefined and embedded native CMaps. */
 export function pdfCMapFromNativeJson(input: unknown): PdfCMap {const row=record(input);const kind=text(row.kind);switch(kind){case "predefined":return {kind,name:text(row.name)};case "embedded":{const cmap=record(row.cmap);return {kind,cmap:{name:text(cmap.name),vertical:boolean(cmap.vertical??false),codespace:array(cmap.codespace??[]).map(input=>{const row=record(input);return {byteWidth:integer(row.byteWidth),low:integer(row.low),high:integer(row.high)};}),mappings:array(cmap.mappings??[]).map(pdfCidMappingFromNativeJson),useCmap:cmap.useCmap==null?null:text(cmap.useCmap)}};}default:throw new Error("Unknown PDF CMap");} }
 /** 🔗️ Admit native CID glyph-map ownership. */
-export function pdfGidFromNativeJson(input: unknown): PdfCidToGid {const row=record(input);const kind=text(row.kind);switch(kind){case "identity":return {kind};case "map":return {kind,data:integers(row.data)};default:throw new Error("Unknown PDF glyph map");} }
+export function pdfGidFromNativeJson(input: unknown): PdfCidToGid {const row=record(input);const kind=text(row.kind);switch(kind){case "identity":return {kind};case "map":return {kind,glyphs:integers(row.glyphs)};default:throw new Error("Unknown PDF glyph map");} }
 /** 📐️ Admit every native CID width-run word. */
 export function pdfWidthRunFromNativeJson(input: unknown): PdfCidWidthRun {const row=record(input);return {startCid:integer(row.startCid),widths:reals(row.widths)};}
 /** 📐️ Admit every native CID vertical triple. */

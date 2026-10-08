@@ -6,25 +6,28 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "added": [
+    "inserted": [
       {
-        "id": "snow",
-        "name": "Snow",
-        "loads": [
-          {
-            "kind": "memberUdl",
-            "id": "lsn1",
-            "elementId": "b2",
-            "wx": 0.0,
-            "wy": -3600.0
-          }
-        ],
-        "selfWeight": false
+        "index": 4,
+        "row": {
+          "id": "snow",
+          "name": "Snow",
+          "loads": [
+            {
+              "kind": "memberUdl",
+              "id": "lsn1",
+              "elementId": "b2",
+              "wx": 0.0,
+              "wy": -3600.0
+            }
+          ],
+          "selfWeight": false
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "combinations": null,
   "analysis": null

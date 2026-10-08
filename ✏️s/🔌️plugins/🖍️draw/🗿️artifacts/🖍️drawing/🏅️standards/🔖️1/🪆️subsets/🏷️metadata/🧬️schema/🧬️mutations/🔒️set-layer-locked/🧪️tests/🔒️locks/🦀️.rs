@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
@@ -86,12 +87,12 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "set-layer-locked/locks-shape-a: the flag really flips, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("set-layer-locked's diff pins a layers delta");
-    assert_eq!(delta.patched.len(), 1, "set-layer-locked patches exactly one layer");
-    assert_eq!(delta.patched[0].patch.locked, Some(true), "the patch pins the locked field");
-    assert_eq!(delta.patched[0].patch.visible, None, "set-layer-locked must not smuggle a visibility change into its patch");
+    assert_eq!(delta.modified.len(), 1, "set-layer-locked patches exactly one layer");
+    assert_eq!(delta.modified[0].patch.locked, Some(true), "the patch pins the locked field");
+    assert_eq!(delta.modified[0].patch.visible, None, "set-layer-locked must not smuggle a visibility change into its patch");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: one `patched` entry setting `locked` alone.
+/// 🔺️ The produced diff is EXACTLY the committed one: one `modified` entry setting `locked` alone.
 /// The committed `"visible": null` beside it is the load-bearing part — locking is an editability
 /// change, and a diff that also carried a visibility flag would be a different mutation.
 #[semio_framework_async_macros::async_test]
@@ -101,7 +102,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-layer-locked/locks-shape-a: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("set-layer-locked pins a layers delta");
-    let patch = &delta.patched[0].patch;
+    let patch = &delta.modified[0].patch;
     assert_eq!(patch.locked, Some(true), "the locked lane carries the new flag");
     assert!(patch.visible.is_none(), "locking must not smuggle a hide into the same patch");
     assert!(patch.opacity.is_none() && patch.name.is_none(), "no other base lane is written");

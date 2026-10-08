@@ -1,7 +1,9 @@
 //! 📔️ Exact shared registry ownership and incremental retirement.
 
-use super::{Operator, OperatorImpl, Registry, ValueRetirement, ValueRetirementStep};
-use std::collections::BTreeSet;
+use super::{Operator,Registry,ValueRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,RetirementStep};
+use semio_framework_value::retained_clone::admit_retained_clone_close;
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
 use std::sync::{Arc, OnceLock};
@@ -36,19 +38,13 @@ pub struct RegistryIdentity(usize);
 #[derive(Clone)]
 pub struct SharedRegistry { root: Option<Arc<Registry,RegistryAllocator>>, final_root: FinalRoot }
 impl SharedRegistry {
+    pub fn into_retirement(self)->RegistryLeaseRetirement {RegistryLeaseRetirement {source:Some(self)}}
     /// 🪪️ Borrows execution identity from this original source lease without allocating or hashing metadata.
     pub fn owner_identity(&self)->RegistryIdentity {RegistryIdentity(Arc::as_ptr(self.root.as_ref().expect("open registry reader")) as usize)}
     /// 🎟️ Creates readers and their unique retirement authority before any shared alias can escape.
     pub fn new(registry: Registry) -> (Self, RegistryRetirement) {
         let final_root=Arc::new_in(FinalRootSlot {registry:OnceLock::new(),shell:OnceLock::new()},ShellAllocator::default());
-        let retirement = RegistryRetirement {
-            final_root: ManuallyDrop::new(Some(Arc::clone(&final_root))),
-            registry: ManuallyDrop::new(None),
-            values: ValueRetirement::default(),
-            implementations: ManuallyDrop::new(None),
-            operator: ManuallyDrop::new(None),
-            providers: ManuallyDrop::new(None),
-        };
+        let retirement=RegistryRetirement {final_root:ManuallyDrop::new(Some(Arc::clone(&final_root))),registry:None};
         let root=Arc::new_in(registry,RegistryAllocator {final_root:Arc::as_ptr(&final_root)as usize});
         (Self { root: Some(root), final_root }, retirement)
     }
@@ -65,93 +61,127 @@ impl Drop for SharedRegistry {
 //#endregion 🔗️SharedOwnership
 
 //#region 🧹️RegistryRetirement
-/// 🧹️ Owns every collection, metadata/default domain and dynamic implementation until terminal-empty.
-/// 🛟️ Supervising state must retain this cursor outside worker unwind boundaries; a live cursor Drop is not a recovery handoff.
-#[must_use = "registry retirement must be driven to terminal-empty"]
-pub struct RegistryRetirement {
-    final_root: ManuallyDrop<Option<FinalRoot>>,
-    registry: ManuallyDrop<Option<Registry>>,
-    values: ValueRetirement,
-    implementations: ManuallyDrop<Option<Vec<OperatorImpl>>>,
-    operator: ManuallyDrop<Option<Box<dyn Operator>>>,
-    providers: ManuallyDrop<Option<BTreeSet<String>>>,
-}
+/// 🧹️ Preserves the original registry payload and both allocator-recorded shells until funded closure.
+#[must_use="registry retirement must reach terminal-empty"]
+pub struct RegistryRetirement {final_root:ManuallyDrop<Option<FinalRoot>>,registry:Option<ControlledRetirement<Registry>>}
 impl RegistryRetirement {
-    /// 🎫️ Reports the actual allocator shell demand of the existing final-owner frontier.
-    pub fn next_close_byte_demand(&self)->usize {
+    pub fn terminal_is_empty(&self)->bool {self.final_root.is_none()&&self.registry.is_none()}
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(0)}else{self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(0)}else{self.registry.as_ref().map_or(Ok(0),|value|value.next_capacity_byte_demand(copy))}}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {
         if let Some(root)=self.final_root.as_ref() {
-            if Arc::strong_count(root)!=1 {return 1;}
-            if let Some(shell)=root.shell.get(){return shell.layout.size();}
-            if root.registry.get().is_some(){return 1;}
-            return Arc::allocator(root).0.load(Ordering::Acquire);
+            if Arc::strong_count(root)!=1 {return Ok(0);}
+            if let Some(shell)=root.shell.get(){return Ok(shell.layout.size());}
+            if root.registry.get().is_some(){return Ok(0);}
+            return Ok(Arc::allocator(root).0.load(Ordering::Acquire));
         }
-        usize::from(!self.terminal_is_empty())
+        self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)
     }
-    pub fn terminal_is_empty(&self) -> bool {
-        self.final_root.is_none() && self.registry.is_none() && self.values.terminal_is_empty() && self.implementations.is_none() && self.operator.is_none() && self.providers.is_none()
-    }
-
-    /// 🎫️ Advances one owned structural frontier or a granted byte slice; waiting readers are never forced closed.
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<ValueRetirementStep, &'static str> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(ValueRetirementStep::Blocked); }
-        let progress = ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 };
-        if let Some(final_root)=self.final_root.as_mut() {
-            let Some(slot)=Arc::get_mut(final_root) else {return Ok(ValueRetirementStep::Blocked);};
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(1)}else{self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_depth_demand)}}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry retained ownership exceeds admitted depth"));}
+        if let Some(root)=self.final_root.as_mut() {
+            let Some(slot)=Arc::get_mut(root) else {return Ok(RetainedCloneStep::Progress(empty));};
             if let Some(shell)=slot.shell.get() {
-                if shell.layout.size()>maximum_bytes {return Ok(ValueRetirementStep::Blocked);}
-                let shell=slot.shell.take().unwrap();unsafe {Global.deallocate(NonNull::new_unchecked(shell.address as *mut u8),shell.layout)};
-                return Ok(ValueRetirementStep::Pending {released_items:1,released_bytes:shell.layout.size()});
+                if shell.layout.size()>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+                let shell=slot.shell.take().unwrap();
+                unsafe {Global.deallocate(NonNull::new_unchecked(shell.address as *mut u8),shell.layout)};
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:shell.layout.size(),..empty}));
             }
-            if let Some(registry)=slot.registry.take(){*self.registry=Some(ManuallyDrop::into_inner(registry));return Ok(progress);}
-            if self.registry.is_none(){return Err("neural.registry-final-root-missing");}
-            let bytes=Arc::allocator(final_root).0.load(Ordering::Acquire);if bytes>maximum_bytes{return Ok(ValueRetirementStep::Blocked);}
-            drop(self.final_root.take());return Ok(ValueRetirementStep::Pending {released_items:1,released_bytes:bytes});
-        }
-        if !self.values.terminal_is_empty() { return Ok(self.values.close_step(1, maximum_bytes)); }
-        if let Some(operator) = self.operator.as_mut() {
-            if operator.retirement_is_empty() {
-                drop(self.operator.take());
-                return Ok(progress);
+            if let Some(value)=slot.registry.take() {
+                self.registry=Some(ControlledRetirement::new(ManuallyDrop::into_inner(value)).unwrap_or_else(|(error,_)|panic!("original registry typed ownership refused: {error}")));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
             }
-            let step = operator.retire_step(1, maximum_bytes, &mut self.values)?;
-            match step {
-                ValueRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => return Err("neural.operator-retirement-grant-exceeded"),
-                ValueRetirementStep::Complete if !operator.retirement_is_empty() => return Err("neural.operator-retirement-not-empty"),
-                ValueRetirementStep::Complete => return Ok(progress),
-                _ => return Ok(step),
-            }
+            if self.registry.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"registry final-root payload is missing"));}
+            let bytes=Arc::allocator(root).0.load(Ordering::Acquire);
+            if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+            drop(self.final_root.take());
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
         }
-        if let Some(implementations) = self.implementations.as_mut() {
-            if let Some(implementation) = implementations.pop() {
-                self.values.push_strings(implementation.schemas);
-                *self.operator = Some(implementation.operator);
-            } else { drop(self.implementations.take()); }
-            return Ok(progress);
-        }
-        if let Some(providers) = self.providers.as_mut() {
-            if let Some(provider) = providers.pop_first() { self.values.text(provider); }
-            else { drop(self.providers.take()); }
-            return Ok(progress);
-        }
-        if let Some(registry) = self.registry.as_mut() {
-            if let Some((key, schema)) = registry.schemas.pop_first() {
-                self.values.text(key); self.values.push_schema(schema);
-            } else if let Some((key, record)) = registry.operators.pop_first() {
-                self.values.text(key); self.values.push_operator(record.info);
-                *self.implementations = Some(record.implementations);
-            } else if let Some((key, schemas)) = registry.operator_produces.pop_first() {
-                self.values.text(key); self.values.push_strings(schemas);
-            } else if let Some((key, providers)) = registry.schema_providers.pop_first() {
-                self.values.text(key); *self.providers = Some(providers);
-            } else { drop(self.registry.take()); }
-            return Ok(progress);
-        }
-        Ok(ValueRetirementStep::Complete)
+        let value=self.registry.as_mut().unwrap();
+        let step=value.step(grant)?;
+        let progress=admit_retained_clone_close(grant,step,value.terminal_is_empty(),"original registry fields")?.progress();
+        if value.terminal_is_empty(){self.registry=None;}
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 }
-impl Drop for RegistryRetirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(), "registry must finish explicit domain retirement before drop"); } }
+impl Drop for RegistryRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"registry must finish explicit retirement before drop");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.final_root);}}}}
+
+/// 🔗️ A reader transfers only its actual lease; the original external authority keeps every final shell.
+#[must_use="registry lease must reach terminal-empty"]
+pub struct RegistryLeaseRetirement {source:Option<SharedRegistry>}
+impl RegistryLeaseRetirement {
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
+    pub fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError> {Ok(0)}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(usize::from(self.source.is_some()))}
+    pub fn terminal_is_empty(&self)->bool {self.source.is_none()}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let empty=RetainedCloneProgress::default();
+        let Some(source)=self.source.as_ref() else {return Ok(RetainedCloneStep::Complete(empty));};
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry reader handoff requires admitted depth"));}
+        if Arc::strong_count(&source.final_root)<2{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"registry reader has no retained external shell authority"));}
+        drop(self.source.take());
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..empty}))
+    }
 }
+impl Drop for RegistryLeaseRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"registry source lease abandoned before explicit handoff");}}
+impl RetireOwned for SharedRegistry {
+    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self.into_retirement())}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(std::mem::size_of::<RegistryLeaseRetirement>())}
+    fn controlled_retirement_supported()->bool {true}
+}
+
+struct OperatorRetirement {operator:Option<Box<dyn Operator>>,values:ValueRetirement}
+impl OperatorRetirement {
+    fn terminal_is_empty(&self)->bool {self.operator.is_none()&&self.values.terminal_is_empty()}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_copy_byte_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_copy_byte_demand())}}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_capacity_byte_demand(copy)}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_capacity_byte_demand(copy))}}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError> {
+        if !self.values.terminal_is_empty(){return self.values.next_release_byte_demand();}
+        self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(std::mem::size_of_val(value.as_ref()))}else{value.next_retire_release_byte_demand()})
+    }
+    fn next_depth_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_depth_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(1)}else{value.next_retire_depth_demand()})}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
+        if !self.values.terminal_is_empty(){return self.values.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"operator retained ownership exceeds admitted depth"));}
+        let value=self.operator.as_mut().unwrap();
+        if value.retirement_is_empty() {
+            let bytes=std::mem::size_of_val(value.as_ref());
+            if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+            drop(self.operator.take());
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
+        }
+        let step=value.retire_step(grant,&mut self.values)?;
+        Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant,step,value.retirement_is_empty(),"original operator fields")?.progress()))
+    }
+}
+impl Drop for OperatorRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"operator abandoned before physical shell closure");}}
+impl RetireOwned for Box<dyn Operator> {
+    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(OperatorRetirement {operator:Some(self),values:ValueRetirement::default()})}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(std::mem::size_of::<OperatorRetirement>())}
+    fn controlled_retirement_supported()->bool {true}
+}
+macro_rules! original_retirement_cursor {
+    ($type:ty) => {impl RetirementCursor for $type {
+        fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match Self::close_step(self,grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+        fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
+        fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
+        fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
+        fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}
+        fn next_depth_demand(&self)->Result<usize,ValueError> {Self::next_depth_demand(self)}
+        fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    }};
+}
+original_retirement_cursor!(RegistryLeaseRetirement);
+original_retirement_cursor!(OperatorRetirement);
 //#endregion 🧹️RegistryRetirement
 
 #[cfg(test)]

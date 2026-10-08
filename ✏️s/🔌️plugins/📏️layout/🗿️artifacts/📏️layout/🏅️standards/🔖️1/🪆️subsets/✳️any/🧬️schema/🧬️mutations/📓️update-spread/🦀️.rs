@@ -1,7 +1,7 @@
 //! 📓 `update-spread` — renames a spread.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutSpreadPatchEntry, LayoutSpreadsDelta, SpreadPatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutSpreadsDelta, LayoutSpreadsModification, SpreadPatch};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -37,7 +37,7 @@ pub fn diff_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> prot
     if spread.name == payload.name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Spread is already named that.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { spreads: Some(LayoutSpreadsDelta { patched: vec![LayoutSpreadPatchEntry { id: payload.id.clone(), patch: SpreadPatch { name: Some(payload.name.clone()) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { spreads: Some(LayoutSpreadsDelta { modified: vec![LayoutSpreadsModification { id: payload.id.clone(), patch: SpreadPatch { name: Some(payload.name.clone()) } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

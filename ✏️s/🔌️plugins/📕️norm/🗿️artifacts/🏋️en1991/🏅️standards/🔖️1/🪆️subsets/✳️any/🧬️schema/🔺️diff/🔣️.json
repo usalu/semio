@@ -803,27 +803,70 @@
         "🟦️typescript"
       ]
     },
-    "En1991FloorAddition": {
-      "title": "En1991FloorAddition",
+    "En1991FloorRemoval": {
+      "title": "En1991FloorRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991FloorInsertion": {
+      "title": "En1991FloorInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991FloorRelocation": {
+      "title": "En1991FloorRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -836,11 +879,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -858,20 +901,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1991FloorRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1991FloorAddition"
+            "$ref": "#/$defs/En1991FloorInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991FloorRelocation"
           }
         },
         "modified": {
@@ -927,27 +977,70 @@
         "🟦️typescript"
       ]
     },
-    "En1991SelfWeightElementAddition": {
-      "title": "En1991SelfWeightElementAddition",
+    "En1991SelfWeightElementRemoval": {
+      "title": "En1991SelfWeightElementRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991SelfWeightElementInsertion": {
+      "title": "En1991SelfWeightElementInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991SelfWeightElementRelocation": {
+      "title": "En1991SelfWeightElementRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -960,11 +1053,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -982,20 +1075,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1991SelfWeightElementRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1991SelfWeightElementAddition"
+            "$ref": "#/$defs/En1991SelfWeightElementInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991SelfWeightElementRelocation"
           }
         },
         "modified": {
@@ -1111,27 +1211,70 @@
         "🟦️typescript"
       ]
     },
-    "En1991RoofAddition": {
-      "title": "En1991RoofAddition",
+    "En1991RoofRemoval": {
+      "title": "En1991RoofRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991RoofInsertion": {
+      "title": "En1991RoofInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991RoofRelocation": {
+      "title": "En1991RoofRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -1144,11 +1287,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1166,20 +1309,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1991RoofRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1991RoofAddition"
+            "$ref": "#/$defs/En1991RoofInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991RoofRelocation"
           }
         },
         "modified": {
@@ -1295,27 +1445,70 @@
         "🟦️typescript"
       ]
     },
-    "En1991WindFaceAddition": {
-      "title": "En1991WindFaceAddition",
+    "En1991WindFaceRemoval": {
+      "title": "En1991WindFaceRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991WindFaceInsertion": {
+      "title": "En1991WindFaceInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991WindFaceRelocation": {
+      "title": "En1991WindFaceRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -1328,11 +1521,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1350,20 +1543,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1991WindFaceRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1991WindFaceAddition"
+            "$ref": "#/$defs/En1991WindFaceInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991WindFaceRelocation"
           }
         },
         "modified": {
@@ -1409,27 +1609,70 @@
         "🟦️typescript"
       ]
     },
-    "En1991AccidentalCaseAddition": {
-      "title": "En1991AccidentalCaseAddition",
+    "En1991AccidentalCaseRemoval": {
+      "title": "En1991AccidentalCaseRemoval",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "after",
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991AccidentalCaseInsertion": {
+      "title": "En1991AccidentalCaseInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
         "row"
       ],
       "properties": {
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991AccidentalCaseRelocation": {
+      "title": "En1991AccidentalCaseRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "x-semio-formats": [
@@ -1442,11 +1685,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
+        "id",
         "patch"
       ],
       "properties": {
-        "key": {
+        "id": {
           "type": "string"
         },
         "patch": {
@@ -1464,20 +1707,27 @@
       "additionalProperties": false,
       "required": [
         "removed",
-        "added",
+        "inserted",
+        "moved",
         "modified"
       ],
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/En1991AccidentalCaseRemoval"
           }
         },
-        "added": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1991AccidentalCaseAddition"
+            "$ref": "#/$defs/En1991AccidentalCaseInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991AccidentalCaseRelocation"
           }
         },
         "modified": {

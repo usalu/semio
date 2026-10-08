@@ -181,3 +181,20 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Din16798Analyzer,
     composer: Din16798Composer,
 );
+
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_din16798_mutation(base: &crate::Din16798Snapshot, mutation: &crate::Din16798Mutation) -> Result<(crate::Din16798Snapshot, Vec<String>), String> {
+    let raised = <crate::Din16798Mutation as protocol::Mutation<crate::Din16798Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|m| format!("{:?}:{}", m.level, m.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|e| format!("{e:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_din16798_mutation(mutation: &crate::Din16798Mutation, base: &crate::Din16798Snapshot) -> Result<Vec<crate::Din16798Mutation>, semio_framework_value::ValueError> {
+    <crate::Din16798Mutation as protocol::Mutation<crate::Din16798Snapshot>>::inverse(mutation, base)
+}
+}
+pub use mutation_bridge::*;

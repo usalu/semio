@@ -25,30 +25,14 @@
 //! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`, `ChartGesture`).
 
 use super::*;
+pub(crate) use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_tool_machine::{
     GestureHostEvent, GestureLedger, GesturePhase, GestureState, GestureTool, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingCommit, TypingInput, TypingLedger, TypingPhase, SCRUB_ABORT_ARG, SCRUB_COMMIT_ARG, SCRUB_GESTURE_ARG,
     TYPING_BUFFER_ARG, TYPING_COMMIT_ARG,
 };
 use std::collections::BTreeMap;
 use std::sync::Arc;
-
-/// 🧹️ The grant of one retirement step of a displaced overlay alias and the turns a refold spends; a refold retires its
-/// aliases to their terminal-empty witness, the cost a plain drop would have paid (a step that hands the last alias to its
-/// owned-value disposer releases nothing yet, so a zero step is progress, never the end).
-const TOOL_OVERLAY_RETIREMENT_ITEMS: usize = 4_096;
-const TOOL_OVERLAY_RETIREMENT_BYTES: usize = 1 << 24;
-const TOOL_OVERLAY_RETIREMENT_TURNS: usize = 1 << 20;
-
-/// ♻️ Steps the retirement of one displaced overlay alias to its terminal-empty witness — the cost a plain drop would have
-/// paid; a store that cannot retire the alias leaves nothing to step.
-pub(crate) fn retire_overlay_alias<E>(retirement: Result<Box<dyn store::ErasedSnapshotRetirement>, E>) {
-    let Ok(mut retirement) = retirement else { return };
-    for _ in 0..TOOL_OVERLAY_RETIREMENT_TURNS {
-        if retirement.terminal_is_empty() || retirement.close_step(TOOL_OVERLAY_RETIREMENT_ITEMS, retirement.next_close_byte_demand().max(TOOL_OVERLAY_RETIREMENT_BYTES)).is_err() {
-            break;
-        }
-    }
-}
+use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 /// 🧮️ Folds the provisional `leaf` onto `running` (else `committed`) and answers whether it applied (a leaf its base refuses
 /// is skipped); the displaced intermediate joins `displaced`, which the caller retires through its store, never plainly.
@@ -268,6 +252,11 @@ pub struct ToolMachineRuntime<P, M, C = NoConfig, CM = NoConfigMutation> {
     provisional_generation: u64,
     config_overlay: Option<Arc<C>>,
     config_overlay_generation: u64,
+    pending_overlay_aliases: Option<Vec<Arc<P>>>,
+    overlay_alias_retirement: Option<ToolOriginalAliasBatch<P>>,
+    pending_config_aliases: Option<Vec<Arc<C>>>,
+    config_alias_retirement: Option<ToolOriginalAliasBatch<C>>,
+    refold_owed: bool,
     window_overlays: BTreeMap<String, WindowConfigSnapshot>,
     pub(super) ingress: Option<ToolTag>,
     operations: Vec<(u64, ToolTag)>,
@@ -289,6 +278,11 @@ impl<P, M, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
             provisional_generation: 0,
             config_overlay: None,
             config_overlay_generation: 0,
+            pending_overlay_aliases: None,
+            overlay_alias_retirement: None,
+            pending_config_aliases: None,
+            config_alias_retirement: None,
+            refold_owed: false,
             window_overlays: BTreeMap::new(),
             ingress: None,
             operations: Vec::new(),
@@ -640,6 +634,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// window config on its window's committed partition — retires every displaced alias through its store (a snapshot with
     /// retire-owned roots panics on a plain drop of its last owner), and drops every run the moved head conflicts with.
     pub(super) fn follow_tool_machines(&mut self, changed: bool) {
+        if self.tool_overlay_retirement_pending(){self.tool_machines.refold_owed=true;return;}
+        self.tool_machines.refold_owed=false;
         let machines = &self.tool_machines;
         if machines.presses.is_empty() && machines.gestures.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_overlay.is_none() && machines.window_overlays.is_empty() {
             return;
@@ -647,13 +643,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let committed = self.store.snapshot_owner();
         let generation = self.store.generation();
         let (displaced, _aborted) = self.tool_machines.follow(&committed, generation, changed);
-        for alias in displaced {
-            retire_overlay_alias(self.store.retire_snapshot_alias(alias));
-        }
+        if !displaced.is_empty()||displaced.capacity()!=0{self.tool_machines.pending_overlay_aliases=Some(displaced);}
         let committed_config = self.config_store.snapshot_owner();
-        for alias in self.tool_machines.follow_config(&committed_config, self.config_store.generation(), changed) {
-            retire_overlay_alias(self.config_store.retire_snapshot_alias(alias));
-        }
+        let config_displaced=self.tool_machines.follow_config(&committed_config,self.config_store.generation(),changed);
+        if !config_displaced.is_empty()||config_displaced.capacity()!=0{self.tool_machines.pending_config_aliases=Some(config_displaced);}
         let mut targets: BTreeMap<String, (String, Vec<&WindowConfigMutation>)> = BTreeMap::new();
         for mutation in self.tool_machines.presses.provisional().filter_map(PressLeaf::window_config) {
             targets.entry(mutation.window_id().to_string()).or_insert_with(|| (mutation.window_kind_id().to_string(), Vec::new())).1.push(mutation);
@@ -661,7 +654,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let stale: Vec<String> = self.tool_machines.window_overlays.keys().filter(|window| !targets.contains_key(*window)).cloned().collect();
         for window in stale {
             if let Some(overlay) = self.tool_machines.window_overlays.remove(&window) {
-                self.window_config_store.retire_preview(overlay);
+                let mut original=Some(overlay);
+                if !self.window_config_store.retire_preview(&mut original){self.tool_machines.window_overlays.insert(window,original.expect("refused original preview remains"));self.tool_machines.refold_owed=true;}
             }
         }
         for (window, (kind, mutations)) in targets {
@@ -670,15 +664,49 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             if !changed && current.is_some() && current == committed_generation {
                 continue;
             }
+            if !self.window_config_store.preview_available(&kind,&window)||self.tool_machines.window_overlays.get(&window).is_some_and(|original|!self.window_config_store.can_retire_preview(original)){self.tool_machines.refold_owed=true;continue;}
             let preview = self.window_config_store.preview(&kind, &window, &mutations);
             let displaced = match preview {
                 Some(preview) => self.tool_machines.window_overlays.insert(window, preview),
                 None => self.tool_machines.window_overlays.remove(&window),
             };
             if let Some(displaced) = displaced {
-                self.window_config_store.retire_preview(displaced);
+                let mut original=Some(displaced);
+                assert!(self.window_config_store.retire_preview(&mut original),"prevalidated original window preview remains admissible in its unchanged native partition");
             }
         }
+    }
+
+    pub(crate) fn tool_overlay_retirement_pending(&self)->bool{
+        self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()||self.window_config_store.preview_retirement_pending()
+    }
+    pub(crate) fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
+    pub(crate) fn tool_overlay_retirement_demand(&self)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ToolOriginalAliasBatch<A::Snapshot>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes())};}
+        if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}
+        if let Some(owner)=self.tool_machines.config_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ToolOriginalAliasBatch<A::Config>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes())};}
+        if self.tool_machines.pending_config_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Config>::constructor_demand());}
+        self.window_config_store.preview_retirement_demand()
+    }
+    /// 🎟️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
+    pub(crate) fn tool_overlay_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if !self.tool_overlay_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let demand=self.tool_overlay_retirement_demand()?;
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_mut(){
+            if owner.terminal_is_empty(){drop(self.tool_machines.overlay_alias_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            return owner.advance(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes(),grant,|alias,child|self.store.retire_snapshot_alias(alias,child));
+        }
+        if self.tool_machines.pending_overlay_aliases.is_some(){
+            let(owner,progress)=ToolOriginalAliasBatch::admit_original(&mut self.tool_machines.pending_overlay_aliases,grant)?.expect("admitted original overlay batch");self.tool_machines.overlay_alias_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if let Some(owner)=self.tool_machines.config_alias_retirement.as_mut(){
+            if owner.terminal_is_empty(){drop(self.tool_machines.config_alias_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            return owner.advance(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes(),grant,|alias,child|self.config_store.retire_snapshot_alias(alias,child));
+        }
+        if self.tool_machines.pending_config_aliases.is_some(){let(owner,progress)=ToolOriginalAliasBatch::admit_original(&mut self.tool_machines.pending_config_aliases,grant)?.expect("admitted original config overlay batch");self.tool_machines.config_alias_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));}
+        self.window_config_store.preview_retirement_step(grant)
     }
 
     /// 🎚️ Rides every lane of `emit` — its artifact leaves, its owned children's shares (design §12), its app-config and

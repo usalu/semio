@@ -9,7 +9,7 @@ fn dictionary_owned_cursor_preserves_order_and_nested_ownership() {
     let alias = dictionary.clone();
     let after = alias.get("a").unwrap().as_dictionary().unwrap().get("nested").and_then(Value::as_atom).and_then(Atom::as_str).unwrap().as_ptr();
     assert_eq!(before, after);
-    drop(alias);
+    retirement::retire_value_cold(alias.into_retirement());
     retirement::retire_value_cold(dictionary.into_retirement());
 }
 
@@ -159,7 +159,7 @@ fn a_wire_shadows_the_literal_its_neuron_records_for_that_port() {
         neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(2.0)), Neuron::with_kind("wired", "double", recorded()), Neuron::with_kind("unwired", "double", recorded())],
         synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "wired".into(), from_port: "x".into(), to_port: "number".into() }],
     };
-    let doubled = |outputs: &BTreeMap<String, Dictionary>, id: &str| outputs.get(id).and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
+    let doubled = |outputs: &HistoryFoldIndex<String, Dictionary>, id: &str| outputs.get(id).and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
     let parallel = Evaluator::new(&reg).evaluate(&tree, &HashMap::new()).unwrap();
     assert_eq!((doubled(&parallel, "wired"), doubled(&parallel, "unwired")), (Some(4.0), Some(20.0)), "the parallel walk evaluates the wire, and the literal only where nothing is wired");
     let infos = HashMap::new();
@@ -197,7 +197,7 @@ fn collect_routes_fixed_port_by_key() {
             Synapse { id: "s2".into(), from: "note".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() },
         ],
     };
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     outputs.insert("slider".into(), channel_output("number", number_dictionary(2.0)));
     outputs.insert("note".into(), channel_output("number", number_dictionary(3.0)));
     let input = collect_neuron_input(&tree, &outputs, "add", None).unwrap();
@@ -229,7 +229,7 @@ fn collect_routes_variadic_slots_in_order() {
             Synapse { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "dictionary".into(), to_port: "1".into() },
         ],
     };
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     outputs.insert("a".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
     outputs.insert("b".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
     let input = collect_neuron_input(&tree, &outputs, "merge", Some(&operator)).unwrap();
@@ -381,7 +381,7 @@ fn collect_injects_declared_defaults_for_unconnected_inputs() {
         ..Default::default()
     };
     let tree = Tree { neurons: vec![Neuron::with_kind("get", "list.get", Dictionary::new())], synapses: vec![] };
-    let input = collect_neuron_input(&tree, &BTreeMap::new(), "get", Some(&operator)).unwrap();
+    let input = collect_neuron_input(&tree, &HistoryFoldIndex::new(), "get", Some(&operator)).unwrap();
     assert_eq!(input.get("index").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
     assert_eq!(input.get("wrap").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(false));
     input.retire_cold();
@@ -467,7 +467,7 @@ fn cached_evaluate_recomputes_only_changed_branch() {
     evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
     assert_eq!(calls.load(Ordering::Relaxed), 3);
     let mut tree_changed = tree.clone();
-    tree_changed.neurons[0] = Neuron::with_kind("a", "echo", number_dictionary(3.0));
+    std::mem::replace(&mut tree_changed.neurons[0], Neuron::with_kind("a", "echo", number_dictionary(3.0))).retire_cold();
     cache.begin_epoch();
     evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
     assert_eq!(calls.load(Ordering::Relaxed), 5);
@@ -790,7 +790,7 @@ fn heterogeneous_list_input_is_rejected() {
         ..Default::default()
     };
     let tree = Tree { neurons: vec![Neuron::with_kind("size", "list.size", Dictionary::new())], synapses: vec![Synapse { id: "s1".into(), from: "src".into(), to: "size".into(), from_port: "list".into(), to_port: "list".into() }] };
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     outputs.insert(
         "src".into(),
         channel_output("list", Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String("x".into())))))),
@@ -1088,11 +1088,21 @@ fn dictionary_writer_source_retirement_uses_the_existing_exact_domain_authority(
     assert!(released>0);println!("[DEBUG] Dictionary writer source preserved independent serde identity and explicit physical retirement, bytes={released}, turns={turns}");
 }
 
+fn close_original_writer(writer:semio_framework_pack_json::JsonWriteCursor<Dictionary>) {
+    let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(writer).map_err(|(error,_)|error).unwrap();
+    for _ in 0..250000 {
+        if owner.terminal_is_empty(){return;}
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:owner.next_capacity_byte_demand(3).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+        let (step,born,freed)=crate::registry::tests::observe_ownership(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
+    }
+    panic!("original writer allocations did not close");
+}
+
 #[test]
 fn dictionary_writer_source_preserves_original_text_and_independent_json_bytes() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap();let text=fixture["compactPending"]["textUnit"].as_str().unwrap().repeat(fixture["compactPending"]["textRepeats"].as_u64().unwrap()as usize);let oracle=serde_json::json!({"a":null,"b":true,"c":-42,"d":1.25,"z":{"text":text}});let input=serde_json::to_string(&oracle).unwrap();
     let source:Dictionary=semio_framework_pack_json::from_json_str(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let pointer=source.get("z").unwrap().as_dictionary().unwrap().get("text").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr();let mut writer=semio_framework_pack_json::JsonWriteCursor::new(source);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(4*1024*1024,&mut admitted);let mut turns=0;
-    let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control).unwrap().is_none());assert_eq!(before,writer.progress());assert!(writer.take_source().is_none());turns+=1;assert!(turns<250000);if let Some(output)=writer.step(1,&mut control).unwrap(){break output;}};assert_eq!(output,input);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),oracle);let original=writer.take_source().unwrap();assert_eq!(original.get("z").unwrap().as_dictionary().unwrap().get("text").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr(),pointer);assert!(writer.take_source().is_none());let mut cleanup=ValueRetirement::from_dictionary(original);cleanup.push_owned(writer);while !cleanup.terminal_is_empty(){if let ValueRetirementStep::Pending {released_bytes,..}=cleanup.close_step(1,3){assert!(released_bytes<=3);}}
-    for cutoff in [0,1,64,4096] {let source:Dictionary=semio_framework_pack_json::from_json_str(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut writer=semio_framework_pack_json::JsonWriteCursor::new(source);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(4*1024*1024,&mut admitted);for _ in 0..cutoff{assert!(writer.step(1,&mut control).unwrap().is_none());}let mut cleanup=ValueRetirement::default();cleanup.push_owned(writer);let mut closes=0;while !cleanup.terminal_is_empty(){closes+=1;assert!(closes<250000);if let ValueRetirementStep::Pending {released_bytes,..}=cleanup.close_step(1,3){assert!(released_bytes<=3);}}}
+    let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control).unwrap().is_none());assert_eq!(before,writer.progress());assert!(writer.take_source().is_none());turns+=1;assert!(turns<250000);if let Some(output)=writer.step(1,&mut control).unwrap(){break output;}};assert_eq!(output,input);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),oracle);let original=writer.take_source().unwrap();assert_eq!(original.get("z").unwrap().as_dictionary().unwrap().get("text").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr(),pointer);assert!(writer.take_source().is_none());crate::retirement::retire_value_cold(ValueRetirement::from_dictionary(original));close_original_writer(writer);
+    for cutoff in [0,1,64,4096] {let source:Dictionary=semio_framework_pack_json::from_json_str(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut writer=semio_framework_pack_json::JsonWriteCursor::new(source);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(4*1024*1024,&mut admitted);for _ in 0..cutoff{assert!(writer.step(1,&mut control).unwrap().is_none());}close_original_writer(writer);}
     println!("[DEBUG] Same JSON writer borrowed original typed Dictionary text, turns={turns}, bytes={}",output.len());
 }

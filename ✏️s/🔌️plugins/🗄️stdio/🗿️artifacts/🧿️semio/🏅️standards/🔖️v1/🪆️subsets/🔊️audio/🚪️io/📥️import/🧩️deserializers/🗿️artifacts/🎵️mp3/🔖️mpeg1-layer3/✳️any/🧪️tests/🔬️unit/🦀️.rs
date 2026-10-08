@@ -6,24 +6,16 @@ fn real_world_mp3() -> Mp3Snapshot {
     Mp3Snapshot {
         schema: "stdio.mp3".into(),
         id3v2: Some(Id3v2Tag {
-            major_version: 3,
-            minor_version: 0,
-            flags: 0,
             frames: vec![Id3Frame {
                 id: "TIT2".into(),
-                flags: 0,
-                data: {
-                    let mut d = vec![0u8]; // ISO-8859-1
-                    d.extend_from_slice(b"Test Tone");
-                    d
-                },
+                content:Id3Content::Text{values:vec!["Test Tone".into()]},
             }],
         }),
         frames: vec![Mp3Frame {
             header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 0, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
             payload: vec![0u8; 100],
         }],
-        id3v1: Some(Id3v1Tag { raw: vec![0u8; 128] }),
+        id3v1: Some(Id3v1Tag { title:"V1 title".into(),..Default::default() }),
     }
 }
 
@@ -41,7 +33,7 @@ async fn deserialize_derives_real_sample_rate_and_channel_count_leaves_samples_e
 async fn deserialize_carries_real_id3v2_title_and_id3v1_presence_as_tags() {
     let audio = ::semio_framework_async::poll::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
     assert!(audio.tags.iter().any(|t| t.key == "TIT2" && t.value == "Test Tone"));
-    assert!(audio.tags.iter().any(|t| t.key == "id3v1.raw"));
+    assert!(audio.tags.iter().any(|t| t.key == "id3v1.title" && t.value=="V1 title"));
 }
 
 #[semio_framework_async_macros::async_test]

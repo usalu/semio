@@ -1979,6 +1979,7 @@ struct TextEditorDeliveryInFlight {
 
 struct TextEditorDraftPublication {
     source: String,
+    restore: Option<String>,
     action: ui_wgpu::wgpu::RetainedStringAction,
 }
 
@@ -2000,6 +2001,7 @@ struct TextEditorDeliveryState {
     selection_undeclared: bool,
     explicit_dirty: bool,
     explicit_base: Option<String>,
+    explicit_changes: Option<String>,
     explicit_conflict: bool,
     explicit_past: VecDeque<String>,
     explicit_future: VecDeque<String>,
@@ -2110,6 +2112,10 @@ impl TextEditorDeliveryState {
             return false;
         }
         self.explicit_base = None;
+        if self.explicit_changes.as_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.explicit_changes = None;
         self.explicit_conflict = false;
         if self.explicit_past.back_mut().is_some_and(Self::close_string) || self.explicit_future.back_mut().is_some_and(Self::close_string) {
             return false;
@@ -2865,9 +2871,13 @@ fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGrap
     }
     if cache.status_json.as_deref() != graph.status_json.as_deref() {
         if let Some(json) = graph.status_json.as_deref() {
-            match engine {
-                NodeGraphEngine::Flow(host) => host.set_node_statuses_from_json(json),
-                NodeGraphEngine::Dag(host) => host.dag.set_node_statuses_from_json(json),
+            let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
+            let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
+            if let Ok(statuses)=crate::infinite::board::io::text::dag_input::decode_dag_node_statuses_json(json,&mut control){
+                match engine {
+                    NodeGraphEngine::Flow(host)=>host.set_node_statuses(&statuses),
+                    NodeGraphEngine::Dag(host)=>host.dag.set_node_statuses(&statuses),
+                }
             }
         }
         cache.status_json = graph.status_json.clone();
@@ -3111,7 +3121,7 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
     }
     let snapshot_applied = cache.snapshot_json.as_deref() != Some(board.snapshot_json.as_str());
     if snapshot_applied {
-        host.load_board_snapshot_json(&board.snapshot_json);
+        {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(host,&board.snapshot_json,&mut control)};
         cache.granularity_by_id = board2d_granularity_by_id(&board.snapshot_json);
         cache.snapshot_json = Some(board.snapshot_json.clone());
         changed = true;
@@ -3523,6 +3533,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
                 if editor.buffer == host.text() {
                     entry.editor_delivery.explicit_dirty = false;
                     entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
+                    entry.editor_delivery.explicit_changes = None;
                     entry.editor_delivery.explicit_conflict = false;
                     entry.editor_delivery.explicit_past.clear();
                     entry.editor_delivery.explicit_future.clear();
@@ -3539,6 +3550,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
                 }
             } else if explicit {
                 entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
+                entry.editor_delivery.explicit_changes = None;
                 entry.editor_delivery.explicit_conflict = false;
                 entry.editor_delivery.explicit_snapshot = Some(editor.buffer.clone());
                 entry.editor_delivery.explicit_error = None;
@@ -6233,10 +6245,10 @@ pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Ve
             let map = cell.borrow();
             let engine = map.get(surface_id)?.node_graph.as_ref()?;
             let (picks, domains) = match engine {
-                NodeGraphEngine::Flow(host) => (host.pick_targets_at_screen_json(sx, sy), host.selection_domains_json()),
-                NodeGraphEngine::Dag(host) => (host.pick_targets_at_screen_json(sx, sy), host.dag.selection_domains_json()),
+                NodeGraphEngine::Flow(host) => (host.pick_targets_at_screen_json(sx, sy), host.selection_domains()),
+                NodeGraphEngine::Dag(host) => (host.pick_targets_at_screen_json(sx, sy), host.dag.selection_domains()),
             };
-            let (nodes, edges, handles) = selection_domains(&domains);
+            let (nodes,edges,handles)=(domains.nodes,domains.edges,domains.handles);
             let mut selection = Vec::new();
             for (domain, ids) in [("node", nodes), ("edge", edges), ("handle", handles)] {
                 if !ids.is_empty() {
@@ -6839,6 +6851,8 @@ fn emit_text_editor_actions(
             mutate(host);
             if edited {
                 if before.as_deref() != Some(host.text()) {
+                    let changes = entry.editor_delivery.explicit_changes.as_deref().and_then(|json| serde_json::from_str::<Vec<ui_wgpu::wgpu::DraftChange>>(json).ok()).unwrap_or_default();
+                    entry.editor_delivery.explicit_changes = Some(ui_wgpu::wgpu::draft_changes_json(&ui_wgpu::wgpu::compose_draft_step(&changes, before.as_deref().unwrap_or_default(), host.text())));
                     if entry.editor_delivery.explicit_past.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
                         entry.editor_delivery.explicit_past.pop_front();
                     }
@@ -7171,18 +7185,19 @@ pub(crate) fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode
             return Ok(true);
         }
         let Some(host) = entry.editor.as_ref() else { return Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
-        let source = entry.editor_delivery.explicit_snapshot.take().unwrap_or_else(|| host.text().to_owned());
+        let text = entry.editor_delivery.explicit_snapshot.take().unwrap_or_else(|| host.text().to_owned());
+        let (source, restore) = if settings.edit_argument == ui_wgpu::wgpu::DRAFT_SPLICES_ARGUMENT { (entry.editor_delivery.explicit_changes.clone().unwrap_or_else(|| "[]".to_owned()), Some(text)) } else { (text, None) };
         let args = settings.edit_arguments.iter().map(|(key, value)| (key.clone(), semio_framework::DslValue::from(value))).collect();
         let descriptor = ActionDescriptor { controller_id: scene.controller_id.clone(), action: settings.edit_action.clone(), args: Some(semio_framework::DslValue::Object(args)) };
         let action = match ui_wgpu::wgpu::RetainedStringAction::new(descriptor, settings.edit_argument.clone(), source.len()) {
             Ok(action) => action,
             Err(fault) => {
-                entry.editor_delivery.explicit_snapshot = Some(source);
+                entry.editor_delivery.explicit_snapshot = Some(restore.unwrap_or(source));
                 entry.editor_delivery.explicit_error = Some(format!("{fault:?}"));
                 return Err(fault);
             }
         };
-        entry.editor_delivery.explicit_publication = Some(TextEditorDraftPublication { source, action });
+        entry.editor_delivery.explicit_publication = Some(TextEditorDraftPublication { source, restore, action });
         entry.editor_delivery.explicit_error = None;
         Ok(true)
     })
@@ -7276,7 +7291,7 @@ pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetai
             return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
         }
         let surface = slot.value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-        surface.editor_delivery.explicit_snapshot = Some(publication.source);
+        surface.editor_delivery.explicit_snapshot = Some(publication.restore.unwrap_or(publication.source));
         surface.editor_delivery.explicit_active = Some(token);
         registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
         Ok(TextEditorRetainedActionStep::Ready(TextEditorRetainedActionBatch { first: descriptor, second: None }))
@@ -7288,7 +7303,7 @@ pub(crate) fn text_editor_cancel_explicit_publication(scene: &UiComponentSceneNo
         let mut registry = cell.borrow_mut();
         let Some(surface) = registry.get_mut(&scene.host_id) else { return false };
         let Some(publication) = surface.editor_delivery.explicit_publication.take() else { return false };
-        surface.editor_delivery.explicit_snapshot = Some(publication.source);
+        surface.editor_delivery.explicit_snapshot = Some(publication.restore.unwrap_or(publication.source));
         surface.editor_delivery.explicit_error = None;
         true
     })
@@ -7333,6 +7348,7 @@ pub(crate) fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -
         }
         entry.editor_delivery.explicit_dirty = false;
         entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
+        entry.editor_delivery.explicit_changes = None;
         entry.editor_delivery.explicit_conflict = false;
         entry.editor_delivery.explicit_past.clear();
         entry.editor_delivery.explicit_future.clear();
@@ -7360,6 +7376,8 @@ pub(crate) fn text_editor_move_explicit_draft_history(scene: &UiComponentSceneNo
         } else {
             entry.editor_delivery.explicit_future.push_back(current);
         }
+        let changes = entry.editor_delivery.explicit_changes.as_deref().and_then(|json| serde_json::from_str::<Vec<ui_wgpu::wgpu::DraftChange>>(json).ok()).unwrap_or_default();
+        entry.editor_delivery.explicit_changes = Some(ui_wgpu::wgpu::draft_changes_json(&ui_wgpu::wgpu::compose_draft_step(&changes, host.text(), &next)));
         host.set_text(next.clone());
         entry.editor_delivery.explicit_dirty = entry.editor_delivery.explicit_base.as_deref().is_some_and(|base| next != base);
         entry.editor_delivery.explicit_snapshot = Some(next);

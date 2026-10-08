@@ -73,20 +73,22 @@ async fn genesis_answers_only_the_derived_coordinate() {
     assert!(genesis_equation_child_pack(&snapshot, "absent", &snapshot.notation.child_id).is_none(), "an unknown slot derives nothing");
 }
 
-/// 🔺️ LAW: a state diff carries the new state together with its re-minted handles, and applying it yields exactly the snapshot
-/// built from that state.
+/// 🔺️ LAW: a state diff carries only the sparse slots, and applying it re-derives the handles — the result is exactly the snapshot
+/// built from the new state.
 #[semio_framework_async_macros::async_test]
-async fn a_state_diff_carries_the_state_and_its_handles() {
+async fn applying_a_state_diff_re_derives_the_handles() {
     let base = EquationSnapshot::default();
-    let diff = equation_state_diff(EquationDiff { points: Some(crate::diff::points_replacing(&base.geometry.points, &moved_geometry().points)), ..Default::default() }, &base);
+    let moved = moved_geometry();
+    let edits = vec![crate::diff::EquationPointEdit::Set { at: 0, point: moved.points[0].clone() }];
+    let diff = EquationDiff { points: Some(crate::diff::EquationPointsDelta { edits }), ..Default::default() };
     let applied = protocol::apply_diff(&diff, &base).expect("a state diff applies");
-    let mut expected = equation_snapshot_with_state(&base.graph, &moved_geometry());
+    let mut expected = equation_snapshot_with_state(&base.graph, &moved);
     expected.equation = base.equation.clone();
     assert_eq!(applied, expected);
 }
 
 /// 🖋️ LAW (fixture writer): every committed mutation fixture snapshot and applied diff of this artifact carries the content
-/// addresses of its own `graph`/`geometry`, and the committed demo document is the default snapshot. With
+/// addresses of its own `graph`/`geometry` (a committed diff carries sparse slots only, never a handle), and the committed demo document is the default snapshot. With
 /// `SEMIO_EQUATION_WRITE_FIXTURES=1` the law rewrites them in place (canonical two-space JSON / DSL text) instead of asserting.
 #[test]
 fn committed_fixtures_carry_their_derived_handles() {
@@ -115,15 +117,7 @@ fn committed_fixtures_carry_their_derived_handles() {
             (snapshot.notation, snapshot.results, snapshot.computed) = equation_children(&snapshot.graph, &snapshot.geometry);
             semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))
         } else if diff_side {
-            let mut diff: EquationDiff = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-            let before_path = path.parent().and_then(std::path::Path::parent).expect("fixture directory").join("📸️snapshot/⬅️before/🔣️.json");
-            if diff.notation.is_some() || diff.results.is_some() || diff.computed.is_some() {
-                let before_text = std::fs::read_to_string(&before_path).expect("the before snapshot beside a handle-carrying diff reads");
-                let before: EquationSnapshot = semio_framework_pack_json::from_json_str(&before_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed before snapshot decodes");
-                let (graph, geometry) = diff.state_after(&before).expect("committed diff applies to its before snapshot");
-                let (notation, results, computed) = equation_children(&graph, &geometry);
-                (diff.notation, diff.results, diff.computed) = (Some(notation), Some(results), Some(computed));
-            }
+            let diff: EquationDiff = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
             semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&diff.to_value()))
         } else {
             continue;

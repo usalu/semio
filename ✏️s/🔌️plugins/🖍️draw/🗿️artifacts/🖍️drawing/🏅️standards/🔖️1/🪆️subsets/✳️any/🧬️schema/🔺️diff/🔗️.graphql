@@ -34,24 +34,43 @@ type DrawingStringList {
   values: [String!]!
 }
 
-# 🧩 Mirrors Rust `DrawingLayersDelta` — identified-collection delta for `layers`.
+# 🧩 Mirrors Rust `DrawingLayersDelta` — positional delta for the layer tree (per container, no order list, no anchor).
 type DrawingLayersDelta {
-  added: [DrawingLayerAddition!]!
-  removed: [String!]!
-  patched: [DrawingLayerPatchEntry!]!
-  reordered: [String!]
+  removed: [DrawingLayerRemoval!]!
+  inserted: [DrawingLayerInsertion!]!
+  moved: [DrawingLayerRelocation!]!
+  modified: [DrawingLayerModification!]!
 }
 
-# ➕️ Mirrors Rust `DrawingLayerAddition` — one inserted layer with its real (parent, index) target
-# location.
-type DrawingLayerAddition {
+# 📍️ Mirrors Rust `DrawingLayerAddress` — the child list of `parentId` (root when absent) at `index`.
+type DrawingLayerAddress {
+  parentId: String
+  index: Int!
+}
+
+# ➖️ Mirrors Rust `DrawingLayerRemoval` — one removed layer subtree at its BASE address.
+type DrawingLayerRemoval {
+  id: String!
+  parentId: String
+  index: Int!
+}
+
+# ➕️ Mirrors Rust `DrawingLayerInsertion` — one inserted layer subtree at its AFTER address.
+type DrawingLayerInsertion {
   parentId: String
   index: Int!
   layer: DrawingLayerNode!
 }
 
-# 🩹 Mirrors Rust `DrawingLayerPatchEntry` — one patched layer entry.
-type DrawingLayerPatchEntry {
+# ↕️ Mirrors Rust `DrawingLayerRelocation` — one repositioned layer subtree: its BASE and its AFTER address.
+type DrawingLayerRelocation {
+  id: String!
+  from: DrawingLayerAddress!
+  to: DrawingLayerAddress!
+}
+
+# 🩹 Mirrors Rust `DrawingLayerModification` — one modified layer entry.
+type DrawingLayerModification {
   id: String!
   patch: DrawingLayerPatch!
 }

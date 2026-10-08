@@ -4,10 +4,9 @@ fn optional(c:&mut Census<'_,'_>,v:&D,visit:fn(&mut Census<'_,'_>,&D)->Result<()
 fn array<'a>(v:&'a D,n:usize)->Result<Cells<'a>,ValueError>{if matches!(v,D::Null){Ok(Cells::from(&[Null;16][..n]))}else{let a=list(v)?;if a.len()!=n{return Err(invalid())}{let mut cells=Cells::new();for value in a{cells.push(real(value)?);}Ok(cells)}}}
 pub(super) fn group(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{let color=optional(c,field(v,"colorSpace")?,colors::color)?;c.row("pdf_transparency_group",&[color,Int,Int])}
 pub(super) fn image(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
- let color=optional(c,field(v,"colorSpace")?,colors::color)?;let codec=field(v,"codec")?;let tag=kind(codec)?;let transform=if tag=="dct"{integer(field(codec,"colorTransform")?)?}else{Null};let globals=if tag=="jbig2"{c.blob(field(codec,"globals")?)?}else{Null};c.row("pdf_image_codec",&[Text(tag),transform,globals])?;
- if tag=="ccitt"{c.row("pdf_image_ccitt",&[Int;8])?;}
- objects::dictionary(c,field(v,"extra")?)?;let mask=field(v,"mask")?;let (mask_kind,stencil)=if matches!(mask,D::Null){(Null,Null)}else{let k=kind(mask)?;(Text(k),if k=="stencil"{Text(text(field(mask,"image")?)?)}else{Null})};let data=c.blob(field(v,"data")?)?;
- c.row("pdf_image",&[Text(text(field(v,"id")?)?),Int,Int,color,Int,Int,Int,Int,data,optional_text(field(v,"softMask")?)?,integer(field(v,"softMaskInData")?)?,mask_kind,stencil,Int,optional_text(field(v,"intent")?)?,optional_text(field(v,"optionalContent")?)?,integer(field(v,"structParent")?)?,Int])?;
+ let color=optional(c,field(v,"colorSpace")?,colors::color)?;let body=field(v,"body")?;let tag=kind(body)?;let reference=match tag {"artifact"=>{artifact_reference(c,field(body,"reference")?)?;Int},"samples"=>{for value in list(field(body,"values")?)? {c.row("pdf_image_sample",&[Int,Int,integer(value)?])?;}Null},_=>return Err(invalid())};
+ objects::dictionary(c,field(v,"extra")?)?;let mask=field(v,"mask")?;let (mask_kind,stencil)=if matches!(mask,D::Null){(Null,Null)}else{let k=kind(mask)?;(Text(k),if k=="stencil"{Text(text(field(mask,"image")?)?)}else{Null})};
+ c.row("pdf_image",&[Text(text(field(v,"id")?)?),Int,Int,color,Int,Int,Int,Text(tag),reference,optional_text(field(v,"softMask")?)?,integer(field(v,"softMaskInData")?)?,mask_kind,stencil,Int,optional_text(field(v,"intent")?)?,optional_text(field(v,"optionalContent")?)?,integer(field(v,"structParent")?)?,Int])?;
  colors::reals(c,"pdf_image_real","decode",field(v,"decode")?)?;colors::reals(c,"pdf_image_real","matte",field(v,"matte")?)?;
  if matches!(mask_kind,Text("colorKey")){for value in list(field(mask,"ranges")?)?{c.row("pdf_image_color_key",&[Int,Int,integer(value)?])?;}}Ok(())
 }
@@ -26,7 +25,7 @@ pub(super) fn shading(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  match tag{
  "functionBased"=>{let mut f=array(field(k,"domain")?,4)?;f.extend(array(field(k,"matrix")?,6)?);f.push(func);c.row("pdf_function_shading",&f)?;},
  "axial"|"radial"=>{let mut f=array(field(k,"coords")?,if tag=="axial"{4}else{6})?;f.extend(array(field(k,"domain")?,2)?);f.extend([func,Int,Int]);c.row(if tag=="axial"{"pdf_axial_shading"}else{"pdf_radial_shading"},&f)?;},
- "mesh"=>{let data=c.blob(field(k,"data")?)?;c.row("pdf_mesh_shading",&[Int,Int,Int,integer(field(k,"bitsPerFlag")?)?,integer(field(k,"verticesPerRow")?)?,func,data])?;colors::sequence(c,"pdf_mesh_decode",field(k,"decode")?)?;},_=>return Err(invalid())
+ "mesh"=>{artifact_reference(c,field(k,"reference")?)?;let data=Int;c.row("pdf_mesh_shading",&[Int,Int,Int,integer(field(k,"bitsPerFlag")?)?,integer(field(k,"verticesPerRow")?)?,func,data])?;colors::sequence(c,"pdf_mesh_decode",field(k,"decode")?)?;},_=>return Err(invalid())
  }Ok(())
 }
 pub(super) fn pattern(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{

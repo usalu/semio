@@ -2,18 +2,25 @@ import type { XlsxXmlPart, OpcPart, OpcRelationship } from '../📸️snapshot/�
 import { parseXmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
 import { parseXmlDiff, type XmlDiff } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 
-export interface NamedModified<K, D> { key: K; diff: D }
-export interface NamedTripleDiff<K, D, T> { removed?: K[]; modified?: NamedModified<K, D>[]; added?: T[]; order?: K[] }
-export type XlsxOpcCtEntriesDiff = NamedTripleDiff<string, string, [string, string]>;
+export interface OpcContentTypeRow { name: string; contentType: string }
+export interface OpcOwnerRow { owner: string; relationships: OpcRelationship[] }
+export interface Removal { id: string; index: number }
+export interface Insertion<R> { index: number; row: R }
+export interface Relocation { id: string; from: number; to: number }
+export interface Modification<Q> { id: string; patch: Q }
+export interface ListDelta<R, Q> { removed?: Removal[]; inserted?: Insertion<R>[]; moved?: Relocation[]; modified?: Modification<Q>[] }
+export interface XlsxOpcCtEntryPatch { contentType?: string }
+export interface XlsxOpcOwnerPatch { relationships?: XlsxOpcRelListDiff }
+export type XlsxOpcCtEntriesDiff = ListDelta<OpcContentTypeRow, XlsxOpcCtEntryPatch>;
 export interface XlsxOpcPartDiff { contentType?: string; bytes?: number[] }
-export type XlsxOpcPartsDiff = NamedTripleDiff<string, XlsxOpcPartDiff, OpcPart>;
+export type XlsxOpcPartsDiff = ListDelta<OpcPart, XlsxOpcPartDiff>;
 export interface XlsxOpcRelDiff { relType?: string; target?: string; targetMode?: 'internal' | 'external' }
-export type XlsxOpcRelListDiff = NamedTripleDiff<string, XlsxOpcRelDiff, OpcRelationship>;
-export type XlsxOpcRelationshipsDiff = NamedTripleDiff<string, XlsxOpcRelListDiff, [string, OpcRelationship[]]>;
+export type XlsxOpcRelListDiff = ListDelta<OpcRelationship, XlsxOpcRelDiff>;
+export type XlsxOpcRelationshipsDiff = ListDelta<OpcOwnerRow, XlsxOpcOwnerPatch>;
 export interface XlsxOpcContentTypesDiff { defaults?: XlsxOpcCtEntriesDiff; overrides?: XlsxOpcCtEntriesDiff }
 export interface XlsxOpcDiff { comment?: string; contentTypes?: XlsxOpcContentTypesDiff; parts?: XlsxOpcPartsDiff; relationships?: XlsxOpcRelationshipsDiff }
 export interface XlsxXmlPartDiff { contentType?: string; document?: XmlDiff }
-export type XlsxXmlPartsDiff = NamedTripleDiff<string, XlsxXmlPartDiff, XlsxXmlPart>;
+export type XlsxXmlPartsDiff = ListDelta<XlsxXmlPart, XlsxXmlPartDiff>;
 export interface XlsxDiff { opc?: XlsxOpcDiff; xmlParts?: XlsxXmlPartsDiff }
 
 /** 🚪️ A precise position and reason for refusing a malformed XLSX diff. */
@@ -28,32 +35,29 @@ const integer = (value: unknown, at: string, maximum = Number.MAX_SAFE_INTEGER):
 const byte = (value: unknown, at: string): number => integer(value, at, 255);
 const optional = <T>(value: unknown, at: string, parse: (value: unknown, at: string) => T): T | undefined => value === undefined ? undefined : parse(value, at);
 const targetMode = (value: unknown, at: string): 'internal' | 'external' => { const mode = text(value, at); return mode === 'internal' ? mode : mode === 'external' ? mode : reject(at, 'unknown OPC target mode'); };
-const pair = <A, B>(value: unknown, at: string, left: (value: unknown, at: string) => A, right: (value: unknown, at: string) => B): [A, B] => {
-  const values = array(value, at);
-  if (values.length !== 2) reject(at, 'tuple does not contain exactly two items');
-  return [left(values[0], `${at}[0]`), right(values[1], `${at}[1]`)];
-};
-function named<K, D, T>(value: unknown, at: string, parseKey: (value: unknown, at: string) => K, parseDiff: (value: unknown, at: string) => D, parseItem: (value: unknown, at: string) => T): NamedTripleDiff<K, D, T> {
-  const row = object(value, at);
+function delta<R, Q>(value: unknown, at: string, parseId: (value: unknown, at: string) => string, parseRow: (value: unknown, at: string) => R, parsePatch: (value: unknown, at: string) => Q): ListDelta<R, Q> {
+  const row = object(value, at), list = <T>(items: unknown, itemAt: string, parse: (entry: Readonly<Record<string, unknown>>, entryAt: string) => T): T[] => array(items, itemAt).map((item, index) => parse(object(item, `${itemAt}[${index}]`), `${itemAt}[${index}]`));
   return {
-    removed: optional(row.removed, `${at}.removed`, (items, itemAt) => array(items, itemAt).map((item, index) => parseKey(item, `${itemAt}[${index}]`))),
-    modified: optional(row.modified, `${at}.modified`, (items, itemAt) => array(items, itemAt).map((item, index) => { const entryAt = `${itemAt}[${index}]`, entry = object(item, entryAt); return { key: parseKey(entry.key, `${entryAt}.key`), diff: parseDiff(entry.diff, `${entryAt}.diff`) }; })),
-    added: optional(row.added, `${at}.added`, (items, itemAt) => array(items, itemAt).map((item, index) => parseItem(item, `${itemAt}[${index}]`))),
-    order: optional(row.order, `${at}.order`, (items, itemAt) => array(items, itemAt).map((item, index) => parseKey(item, `${itemAt}[${index}]`))),
+    removed: optional(row.removed, `${at}.removed`, (items, itemAt) => list(items, itemAt, (entry, entryAt) => ({ id: parseId(entry.id, `${entryAt}.id`), index: integer(entry.index, `${entryAt}.index`) }))),
+    inserted: optional(row.inserted, `${at}.inserted`, (items, itemAt) => list(items, itemAt, (entry, entryAt) => ({ index: integer(entry.index, `${entryAt}.index`), row: parseRow(entry.row, `${entryAt}.row`) }))),
+    moved: optional(row.moved, `${at}.moved`, (items, itemAt) => list(items, itemAt, (entry, entryAt) => ({ id: parseId(entry.id, `${entryAt}.id`), from: integer(entry.from, `${entryAt}.from`), to: integer(entry.to, `${entryAt}.to`) }))),
+    modified: optional(row.modified, `${at}.modified`, (items, itemAt) => list(items, itemAt, (entry, entryAt) => ({ id: parseId(entry.id, `${entryAt}.id`), patch: parsePatch(entry.patch, `${entryAt}.patch`) }))),
   };
 }
 function parseOpcPart(value: unknown, at: string): OpcPart { const row = object(value, at); return { path: text(row.path, `${at}.path`), contentType: text(row.contentType, `${at}.contentType`), bytes: array(row.bytes, `${at}.bytes`).map((item, index) => byte(item, `${at}.bytes[${index}]`)) }; }
 function parseOpcRelationship(value: unknown, at: string): OpcRelationship { const row = object(value, at); return { id: text(row.id, `${at}.id`), relType: text(row.relType, `${at}.relType`), target: text(row.target, `${at}.target`), targetMode: targetMode(row.targetMode, `${at}.targetMode`) }; }
 function parseOpcPartDiff(value: unknown, at: string): XlsxOpcPartDiff { const row = object(value, at); return { contentType: optional(row.contentType, `${at}.contentType`, text), bytes: optional(row.bytes, `${at}.bytes`, (items, itemAt) => array(items, itemAt).map((item, index) => byte(item, `${itemAt}[${index}]`))) }; }
 function parseOpcRelDiff(value: unknown, at: string): XlsxOpcRelDiff { const row = object(value, at); return { relType: optional(row.relType, `${at}.relType`, text), target: optional(row.target, `${at}.target`, text), targetMode: optional(row.targetMode, `${at}.targetMode`, targetMode) }; }
-function parseOpcRelListDiff(value: unknown, at: string): XlsxOpcRelListDiff { return named(value, at, text, parseOpcRelDiff, parseOpcRelationship); }
+function parseOpcRelListDiff(value: unknown, at: string): XlsxOpcRelListDiff { return delta(value, at, text, parseOpcRelationship, parseOpcRelDiff); }
+function parseOpcOwnerPatch(value: unknown, at: string): XlsxOpcOwnerPatch { const row = object(value, at); return { relationships: optional(row.relationships, `${at}.relationships`, parseOpcRelListDiff) }; }
+function parseOpcCtEntryPatch(value: unknown, at: string): XlsxOpcCtEntryPatch { const row = object(value, at); return { contentType: optional(row.contentType, `${at}.contentType`, text) }; }
 function parseOpcDiff(value: unknown, at: string): XlsxOpcDiff {
-  const row = object(value, at), parseEntry = (item: unknown, itemAt: string) => pair(item, itemAt, text, text), parseRelationships = (item: unknown, itemAt: string) => pair(item, itemAt, text, (rels, relsAt) => array(rels, relsAt).map((rel, index) => parseOpcRelationship(rel, `${relsAt}[${index}]`)));
+  const row = object(value, at), parseEntry = (item: unknown, itemAt: string): OpcContentTypeRow => { const entry = object(item, itemAt); return { name: text(entry.name, `${itemAt}.name`), contentType: text(entry.contentType, `${itemAt}.contentType`) }; }, parseRelationships = (item: unknown, itemAt: string): OpcOwnerRow => { const entry = object(item, itemAt); return { owner: text(entry.owner, `${itemAt}.owner`), relationships: array(entry.relationships, `${itemAt}.relationships`).map((rel, index) => parseOpcRelationship(rel, `${itemAt}.relationships[${index}]`)) }; };
   return {
     comment: optional(row.comment, `${at}.comment`, text),
-    contentTypes: optional(row.contentTypes, `${at}.contentTypes`, (item, itemAt) => { const entry = object(item, itemAt); return { defaults: optional(entry.defaults, `${itemAt}.defaults`, (part, partAt) => named(part, partAt, text, text, parseEntry)), overrides: optional(entry.overrides, `${itemAt}.overrides`, (part, partAt) => named(part, partAt, text, text, parseEntry)) }; }),
-    parts: optional(row.parts, `${at}.parts`, (item, itemAt) => named(item, itemAt, text, parseOpcPartDiff, parseOpcPart)),
-    relationships: optional(row.relationships, `${at}.relationships`, (item, itemAt) => named(item, itemAt, text, parseOpcRelListDiff, parseRelationships)),
+    contentTypes: optional(row.contentTypes, `${at}.contentTypes`, (item, itemAt) => { const entry = object(item, itemAt); return { defaults: optional(entry.defaults, `${itemAt}.defaults`, (part, partAt) => delta(part, partAt, text, parseEntry, parseOpcCtEntryPatch)), overrides: optional(entry.overrides, `${itemAt}.overrides`, (part, partAt) => delta(part, partAt, text, parseEntry, parseOpcCtEntryPatch)) }; }),
+    parts: optional(row.parts, `${at}.parts`, (item, itemAt) => delta(item, itemAt, text, parseOpcPart, parseOpcPartDiff)),
+    relationships: optional(row.relationships, `${at}.relationships`, (item, itemAt) => delta(item, itemAt, text, parseRelationships, parseOpcOwnerPatch)),
   };
 }
 function parseXlsxXmlPart(value: unknown, at: string): XlsxXmlPart {
@@ -69,6 +73,6 @@ export function parseXlsxDiff(value: unknown, at = '$'): XlsxDiff {
   const row = object(value, at);
   return {
     opc: optional(row.opc, `${at}.opc`, parseOpcDiff),
-    xmlParts: optional(row.xmlParts, `${at}.xmlParts`, (item, itemAt) => named(item, itemAt, text, parseXlsxXmlPartDiff, parseXlsxXmlPart)),
+    xmlParts: optional(row.xmlParts, `${at}.xmlParts`, (item, itemAt) => delta(item, itemAt, text, parseXlsxXmlPart, parseXlsxXmlPartDiff)),
   };
 }

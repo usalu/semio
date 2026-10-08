@@ -1,8 +1,9 @@
 //! ⏸️ `change-block-field` fixture — `🧪️no-ops-when-the-field-already-holds-the-value`: setting `required` to the value the
 //! question already holds is an untargeted Warning `mutation.no-op` and moves nothing.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️no/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️no/📸️snapshot/➡️after/🔣️.json");

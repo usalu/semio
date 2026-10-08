@@ -26,5 +26,5 @@ export function testPresentationDocumentContractOracle(): void {
     committed: { snapshots: 18, diffs: 5 },
   });
   assert.deepEqual(parsePresentationDiff(vectors.diff), vectors.diff);
-  assert.deepEqual(parsePresentationDiff({}), { schema: null, source: null, tiles: null, presentation: null });
+  assert.deepEqual(parsePresentationDiff({}), { schema: null, source: null, tiles: null });
 }

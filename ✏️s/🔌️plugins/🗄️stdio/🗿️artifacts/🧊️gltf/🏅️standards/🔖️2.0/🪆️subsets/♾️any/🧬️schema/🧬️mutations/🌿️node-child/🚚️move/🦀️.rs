@@ -30,7 +30,7 @@ pub fn plan(p: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Result<GltfDif
     let Some(index) = base.document.nodes[p.parent].children.iter().position(|child| *child == p.child) else {
         return Err(reject("gltf.mutation.relation-absent", "document/nodes/children", "child is not linked to parent"));
     };
-    Ok(GltfDiff { nodes: patch(p.parent, GltfNodeDiff { children: Some(with_moved(&base.document.nodes[p.parent].children, index, p.position)), ..Default::default() }), ..Default::default() })
+    Ok(GltfDiff { nodes: patch(p.parent, GltfNodeDiff { children: Some(GltfRefsDelta::relocation(&refs(&base.document.nodes[p.parent].children), index, p.position)), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

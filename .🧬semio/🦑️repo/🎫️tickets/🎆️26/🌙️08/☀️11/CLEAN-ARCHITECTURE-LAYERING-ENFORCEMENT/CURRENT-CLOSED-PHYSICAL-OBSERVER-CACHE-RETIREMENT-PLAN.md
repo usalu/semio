@@ -1,0 +1,3 @@
+# Closed Physical Observer Cache Retirement Plan
+
+Seven exact Root-owned leaves from read-only audit17, 1,147,201,822 bytes. Fresh input schema is verified by the first-party subset validator and strict Ajv. Before deletion, exact audited directory identities, whole regular-file claims, live process/open-file census, immutable admission/terminal/command/producer/source receipts and seven exact file/byte counts must join. Preserve full receipt bodies and all reports/inputs. No whole Nx-directory assumption or peer/shared deletion. Operational native census acceptance remains observed only on this host.

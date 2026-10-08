@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expected",
+          "code",
+          "livenessQueries"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "cancel-before-read",
+              "byte-one-short",
+              "nonregular",
+              "semantic-claim-swap",
+              "same-owner"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "refused",
+              "accepted"
+            ]
+          },
+          "code": {
+            "enum": [
+              null,
+              "cancelled",
+              "byte-capacity",
+              "not-regular"
+            ]
+          },
+          "livenessQueries": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,8 +2,8 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "modified": [
       {
         "id": "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
         "patch": {
@@ -12,8 +12,8 @@
         }
       }
     ],
-    "removed": [],
-    "reordered": null
+    "moved": [],
+    "removed": []
   },
   "meta": null,
   "nodes": null,

@@ -90,16 +90,6 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
         }
     }
 
-    fn between(base: &DeflateSnapshot, other: &DeflateSnapshot) -> Self {
-        DeflateDiff {
-            compression_method: (base.compression_method != other.compression_method).then_some(other.compression_method),
-            window_bits: (base.window_bits != other.window_bits).then_some(other.window_bits),
-            compression_level_hint: (base.compression_level_hint != other.compression_level_hint).then_some(other.compression_level_hint),
-            dict_id: (base.dict_id != other.dict_id).then_some(other.dict_id),
-            payload: (base.payload != other.payload).then_some(other.payload.clone()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.compression_method.is_none() && self.window_bits.is_none() && self.compression_level_hint.is_none() && self.dict_id.is_none() && self.payload.is_none()
     }
@@ -123,26 +113,18 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DemoCases
-/// 🧪️ P2-FG2: representative `DeflateDiff` values -- covers every field, incl. `dict_id`'s
-/// tri-state (`Some(None)` = cleared, `Some(Some(_))` = set/changed) and the empty diff. Single
-/// source of truth reused by `diff_codec_text_binary_roundtrip_law` (below) AND by
-/// `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
-/// tests.
+/// 🧪️ Representative `DeflateDiff` cases built declaratively: the empty diff, every field (incl. the `dict_id` tri-state both ways), and the
+/// payload and preset-dictionary builders.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
-    use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
-
-    let a = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"demo-cases-a-payload".to_vec() };
-    let b = DeflateSnapshot {
-        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        compression_method: 9,
-        window_bits: 6,
-        compression_level_hint: DeflateLevelHint::Maximum,
-        dict_id: Some(0xDEAD_BEEF),
-        payload: b"demo-cases-b-different-longer-payload".to_vec(),
-    };
-    vec![DeflateDiff::default(), DeflateDiff::between(&a, &b), DeflateDiff::between(&b, &a), diff_set_preset_dictionary(None), diff_set_payload(Vec::new())]
+    vec![
+        DeflateDiff::default(),
+        DeflateDiff { compression_method: Some(9), window_bits: Some(6), compression_level_hint: Some(DeflateLevelHint::Maximum), dict_id: Some(Some(0xDEAD_BEEF)), payload: Some(b"demo-cases-b-different-longer-payload".to_vec()) },
+        DeflateDiff { compression_level_hint: Some(DeflateLevelHint::Fastest), dict_id: Some(None), ..Default::default() },
+        diff_set_preset_dictionary(None),
+        diff_set_payload(Vec::new()),
+    ]
 }
 //#endregion 🔖️DemoCases
 

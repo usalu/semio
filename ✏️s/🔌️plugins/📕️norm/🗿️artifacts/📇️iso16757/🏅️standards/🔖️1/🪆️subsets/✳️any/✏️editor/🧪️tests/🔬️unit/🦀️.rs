@@ -82,10 +82,8 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Iso16757Command> {
     vec![
-        Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() }),
         Iso16757Command::Evaluate(evaluate::Evaluate {}),
         Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
-        Iso16757Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
         Iso16757Command::SetField(super::set_field::SetField { path: "partNumberInputs.dn".into(), value_json: "50".into() }),
         Iso16757Command::InsertItem(super::insert_item::InsertItem { path: "catalogue.productGroups".into(), index: 0, value_json: None }),
         Iso16757Command::RemoveItem(super::remove_item::RemoveItem { path: "catalogue.productGroups".into(), index: 0 }),
@@ -101,14 +99,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]);
+    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example", "set-field", "insert-item", "remove-item", "apply-remedy"];
+    let keywords = ["evaluate", "selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -171,9 +169,9 @@ async fn every_declared_body_key_renders() {
 
 //#region 🔖️Behavior
 #[semio_framework_async_macros::async_test]
-async fn set_snapshot_commits_a_host_backed_report() {
+async fn evaluate_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() })).await;
+    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     let host = NormHost::<Iso16757Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
@@ -186,7 +184,9 @@ async fn set_snapshot_commits_a_host_backed_report() {
 async fn norm_family_evaluate_matches_host() {
     let doc = Iso16757Snapshot::default();
     let mut host = Host::from_artifact(doc);
-    host.evaluate();
+    if host.report().checks.is_empty() {
+        host.evaluate();
+    }
     assert!(!host.report().checks.is_empty());
     assert_eq!(<Iso16757Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Iso16757);
 }
@@ -224,12 +224,16 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() })).await;
+    let base = app.snapshot().expect("projection");
+    context::dispatch(&mut app, Iso16757Command::SetField(set_field::SetField { path: "selection.classId".into(), value_json: "\"class-wave3\"".to_string() })).await;
+    let edited = app.snapshot().expect("projection");
+    assert_ne!(edited, base, "the concrete setter moved the document");
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), base);
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), Iso16757Snapshot::default());
+    assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);
 }
 

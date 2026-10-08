@@ -9,16 +9,16 @@
   "breps": null,
   "referencesByModelDefinitionId": null,
   "nodes": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "node-1",
         "patch": {
           "label": "Assembly Root"
         }
       }
-    ],
-    "reordered": null
+    ]
   }
 }

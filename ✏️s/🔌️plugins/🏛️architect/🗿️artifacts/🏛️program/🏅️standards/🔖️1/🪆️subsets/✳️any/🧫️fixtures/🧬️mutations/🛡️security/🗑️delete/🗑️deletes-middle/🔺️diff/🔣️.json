@@ -23,12 +23,15 @@
   "privacy": null,
   "safety": null,
   "security": {
-    "added": [],
     "removed": [
-      "security-requirement-a"
+      {
+        "id": "security-requirement-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "regulatory": null,
   "siteContext": null,

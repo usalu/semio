@@ -86,26 +86,35 @@ impl IconExportPreparedScene {
         self.closing = true;
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub(crate) fn close_step(&mut self) -> Result<bool,infinite_world::world::WorldDynamicFault> {
         self.closing = true;
         if let Some(packet) = self.packet.as_mut() {
             if !packet.retire_step() {
-                return false;
+                return Ok(false);
             }
             self.packet = None;
-            return false;
+            return Ok(false);
         }
-        let Some(state) = self.state.as_mut() else { return true };
+        let Some(state) = self.state.as_mut() else { return Ok(true) };
         if state.dynamic_retirement_is_idle() && !world3d_dynamic_retirement_terminal_is_empty(state) {
             begin_world3d_dynamic_retirement(state);
-            return false;
+            return Ok(false);
         }
         let mut context = scene_step_context(PREVIEW_GENERATION, 1, &mut self.sequence);
+
+        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
+        if !terrain.ownership.fits(terrain_grant) {return Err(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
+        match terrain.step {
+            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
+            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>return Err(fault),
+        }
         if !step_world3d_dynamic_retirement(state, &mut context) {
-            return false;
+            return Ok(false);
         }
         self.state = None;
-        true
+        Ok(true)
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
@@ -131,7 +140,7 @@ pub(crate) struct IconExportScenePreparation {
     shadow_profile: infinite_world::world::World3dShadowProfile,
     scene_revision: u64,
     sequence: u64,
-    fault: Option<String>,
+    fault: Option<super::IconExportFault>,
     cancelled: bool,
 }
 
@@ -216,17 +225,17 @@ impl IconExportScenePreparation {
         }
     }
 
-    pub(crate) fn advance(&mut self) -> Result<bool, String> {
+    pub(crate) fn advance(&mut self) -> Result<bool, super::IconExportFault> {
         if self.phase == Phase::Complete {
             return Ok(true);
         }
         if self.phase == Phase::Close {
-            return self.close_step();
+            return self.close_step().map_err(super::IconExportFault::World);
         }
         if let Err(fault) = self.advance_one() {
-            self.fault = Some(fault.clone());
+            self.fault = Some(super::IconExportFault::Message(fault.clone()));
             self.phase = Phase::Close;
-            return Err(fault);
+            return Err(super::IconExportFault::Message(fault));
         }
         Ok(self.phase == Phase::Complete)
     }
@@ -396,7 +405,7 @@ impl IconExportScenePreparation {
         self.phase == Phase::Complete || (self.phase == Phase::Close && self.terminal_is_empty())
     }
 
-    fn close_step(&mut self) -> Result<bool, String> {
+    fn close_step(&mut self) -> Result<bool,infinite_world::world::WorldDynamicFault> {
         if let Some(outcome) = self.job_outcome.as_mut() {
             if outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) != semio_framework_job::JobPayloadCloseStep::Complete {
                 return Ok(false);
@@ -456,6 +465,15 @@ impl IconExportScenePreparation {
             return Ok(false);
         }
         let mut context = scene_step_context(PREVIEW_GENERATION, 1, &mut self.sequence);
+
+        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
+        if !terrain.ownership.fits(terrain_grant) {return Err(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
+        match terrain.step {
+            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
+            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>return Err(fault),
+        }
         if !step_world3d_dynamic_retirement(state, &mut context) {
             return Ok(false);
         }

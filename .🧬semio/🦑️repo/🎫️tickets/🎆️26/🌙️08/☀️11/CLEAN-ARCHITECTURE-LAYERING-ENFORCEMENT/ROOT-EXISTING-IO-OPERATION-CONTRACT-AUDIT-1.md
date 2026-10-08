@@ -1,0 +1,12 @@
+# Root Existing IO Operation Contract Audit 1
+
+This read-only audit captures the complete current OS IO producer in `🗑️generated/root-io-operation-contract-audit-1/source.json` and independently compares its complete bytes after observation. No source, compiler or runtime behavior is changed or accepted.
+
+The IO module already declares first-party CancellationToken, CodecLimits, DecodePolicy, EncodePolicy, CodecConsumption and CodecBudget. The budget checks cancellation and finite read, write, work, logical allocation and recursion usage. DecodeContext and EncodeContext own it and expose bounded generic sources, sinks and host resource resolvers. These existing contracts must be part of the receiving authority; saying that all General IO has no operation control would be inaccurate.
+
+The actual io_mechanism::Serializer at line2000 still receives only snapshot and ArchiveChildren. IoEntry.run at line2136 is a synchronous function pointer. The actual resolve_run at line2618 calls it directly, while serializer_entry and serializer_entry_text at lines2758 and2779 force the future through resolve_ready. Deserializer/sniff constructors also synchronously resolve futures. These actual receiving edges neither transport the existing codec budget nor admit suspension and caller progress. Current source comments explicitly describe additive coexistence with the previous registry; this audit does not endorse that as the final API.
+
+CodecBudget is not a canonical physical owner: its logical allocation counter does not independently admit retained capacity, copy, release, items and depth. It also lacks Generic Job scheduling fuel/deadline/progress. The clean receiving design must preserve the existing codec consumption semantics, bind actual Job StepContext and RetainedClone currencies, and make caller authority mandatory through typed and erased stages. It must port all real callers coherently and remove the uncontrolled dispatch API, with no fallback, demand-funded grant or no-op progress callback.
+
+Catalogue was informed of the existing finite codec contracts. Its82 Serializer implementation files and broader133 direct/erased call candidates remain qualified candidates rather than a certified complete compiler closure. Required future proof includes portable schema/third-party laws, actual suspension and cancellation through erased dispatch, exact original payload/declaration oracles and physical retirement on every refusal. No such proof is claimed here.
+

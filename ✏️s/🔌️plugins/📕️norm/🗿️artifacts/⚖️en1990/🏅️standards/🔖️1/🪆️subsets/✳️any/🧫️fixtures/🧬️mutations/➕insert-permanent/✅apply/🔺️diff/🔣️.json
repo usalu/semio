@@ -14,9 +14,9 @@
   "betaComputed": null,
   "permanents": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "G-inf",
+        "index": 2,
         "row": {
           "id": "G-finish",
           "kind": "g_sup",
@@ -24,31 +24,37 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "variables": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "accidentals": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "seismics": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridgeSls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "effects": []

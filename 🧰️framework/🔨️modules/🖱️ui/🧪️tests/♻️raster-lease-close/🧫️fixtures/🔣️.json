@@ -1,0 +1,40 @@
+{
+  "contract": "ui.scene-raster.close-owner.v1",
+  "rasters": [
+    {
+      "width": 2,
+      "height": 2,
+      "byteLength": 16,
+      "capacityBytes": 32,
+      "fill": 17
+    },
+    {
+      "width": 64,
+      "height": 256,
+      "byteLength": 65536,
+      "capacityBytes": 65536,
+      "fill": 41
+    }
+  ],
+  "copyGrants": [
+    0,
+    1,
+    8,
+    4096
+  ],
+  "grants": {
+    "zeroItemsPreservesOwner": true,
+    "zeroDepthPreservesOwner": true,
+    "shortCapacityPreservesOwner": true,
+    "shortReleasePreservesOwner": true,
+    "independentCurrencies": true,
+    "physicalReceipts": true,
+    "terminalEmpty": true
+  },
+  "admission": {
+    "logicalBytes": "descriptorByteLength",
+    "backingBytes": "callerCapacity",
+    "exactPointer": true,
+    "noRefusalAllocation": true
+  }
+}

@@ -57,9 +57,6 @@ impl protocol::DiffAlgebra<RasterPresence> for RasterPresenceDiff {
     fn inverse(&self, base: &RasterPresence) -> Self {
         Self { brush_size: self.brush_size.map(|_| base.brush_size), brush_opacity: self.brush_opacity.map(|_| base.brush_opacity), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
-    fn between(base: &RasterPresence, other: &RasterPresence) -> Self {
-        Self { brush_size: (base.brush_size != other.brush_size).then_some(other.brush_size), brush_opacity: (base.brush_opacity != other.brush_opacity).then_some(other.brush_opacity), camera: (base.camera != other.camera).then(|| other.camera.clone()) }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }

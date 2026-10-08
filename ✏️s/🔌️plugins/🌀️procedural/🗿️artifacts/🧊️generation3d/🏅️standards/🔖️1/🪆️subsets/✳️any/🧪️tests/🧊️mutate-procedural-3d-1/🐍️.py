@@ -283,7 +283,8 @@ def apply_mutation(document, kind, payload):
     elif kind == "change-schema":
         fixture["schema"] = payload[ARGUMENTS["schema"]]
     elif kind == "create-generation":
-        generation["generations"].append(copy.deepcopy(payload["generation"]))
+        index = payload.get("index")
+        generation["generations"].insert(len(generation["generations"]) if index is None else index, copy.deepcopy(payload["generation"]))
         generation["selectedGenerationId"] = payload["generation"]["id"]
     elif kind == "delete-generation":
         at = index_in(generation["generations"], payload["id"], "generation", kind, "mutate")
@@ -347,9 +348,9 @@ def apply_mutation(document, kind, payload):
 
 def inverse_mutation(document, kind, payload):
     """↩️ The kind's OWN inverse, expressed in this same closed vocabulary, computed against the
-    pre-mutation document. `delete-generation` inverts to `create-generation`, which APPENDS and
-    SELECTS — exact only when the removed generation was trailing and selected, which is a property of
-    the closed vocabulary rather than of an implementation, and is exactly what the committed vector
+    pre-mutation document. `delete-generation` inverts to `create-generation` at the removed
+    generation's original index (rows listed in store order, replayed LAST-TO-FIRST), preceded by a
+    `select-generation` of the previous selection when another generation was selected; this is what the committed vector
     exercises."""
     fixture, generation = document["hostSnapshot"], document["generation"]
     if kind == "create-widget":
@@ -381,7 +382,10 @@ def inverse_mutation(document, kind, payload):
         return [("delete-generation", {"id": payload["generation"]["id"]})]
     if kind == "delete-generation":
         at = index_in(generation["generations"], payload["id"], "generation", kind, "inverse")
-        return [("create-generation", {"generation": copy.deepcopy(generation["generations"][at])})]
+        restore = [("create-generation", {"generation": copy.deepcopy(generation["generations"][at]), "index": at})]
+        if generation["selectedGenerationId"] != payload["id"]:
+            restore.insert(0, ("select-generation", {"generationId": generation["selectedGenerationId"]}))
+        return restore
     if kind == "rename-generation":
         return [(kind, {"id": payload["id"], ARGUMENTS["name"]: generation["generations"][index_in(generation["generations"], payload["id"], "generation", kind, "inverse")]["name"]})]
     if kind == "change-generation-value":
@@ -516,7 +520,7 @@ def inverse_handler(kind):
         payload = payload_of(leaf(ctx, spec, "mutation"), kind)
         validate(before, "inverse-%s" % kind)
         current = apply_mutation(before, kind, payload)
-        for step_kind, step_payload in inverse_mutation(before, kind, payload):
+        for step_kind, step_payload in reversed(inverse_mutation(before, kind, payload)):
             current = apply_mutation(current, step_kind, step_payload)
         restores(kind, current, before)
         return outcome_of(current)

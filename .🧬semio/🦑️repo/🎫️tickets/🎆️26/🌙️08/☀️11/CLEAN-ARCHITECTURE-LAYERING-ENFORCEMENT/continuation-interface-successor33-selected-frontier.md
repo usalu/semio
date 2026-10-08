@@ -1,0 +1,5 @@
+# Interface Successor33 Selected Frontier
+
+After authoring65476 closed0, an independent read finds current Directory defining schema changed from the exact frozen body. Full preimage and current body are retained in successor33 peer custody. Current SHA63b09631683d5b739c95ff5356d50f8555e37a5523715736510979eaf109a612. The new pure identity contract admits typed ArtifactHash metadata through AdmittedCheckpointSelectionV1 instead of the transport DocumentOpenCheckpointV1 strings. Current source is preserved; no owner is guessed and no historical implementation restored.
+
+The mandatory Directory3 source roles require this defining body exactly for stage, strict inspection, bounded diagnosis, worker and whole. Successor33 must retain its genuine stage refusal when physically admitted; receiving/metadata routes keep their exact relevant closures and qualify unrelated advances. Root Hub Rust script current advance and already absent duplicate lease test schema are also retained full prior/current observations and remain qualified under their actual declared role. No own runtime handle, no source write, no publication or acceptance promotion.

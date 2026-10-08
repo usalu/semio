@@ -74,9 +74,37 @@ pub(super) fn borrowed(record:&semio_framework_dsl_record::RecordValue,native:&m
  let acro=optional(&mut c,value(17)?,forms::acro).map_err(|error|error.under("acroForm"))?;let oc=optional(&mut c,value(18)?,forms::optional).map_err(|error|error.under("optionalContent"))?;let prefs=optional(&mut c,value(21)?,meta::preferences).map_err(|error|error.under("viewerPreferences"))?;let open=optional(&mut c,value(22)?,nav::open).map_err(|error|error.under("openAction"))?;let mark=optional(&mut c,value(24)?,meta::mark).map_err(|error|error.under("markInfo"))?;let enc=optional(&mut c,value(27)?,meta::encryption).map_err(|error|error.under("encryption"))?;meta::info(&mut c,value(28)?)?;objects::dictionary(&mut c,value(29)?)?;objects::dictionary(&mut c,value(31)?)?;
  let ids=list(value(26)?)?;let (first,second)=if ids.is_empty(){(Null,Null)}else{if ids.len()!=2{return Err(invalid())}(c.blob(&ids[0])?,c.blob(&ids[1])?)};
  c.row("pdf_document",&[Text(root_text(1)?),Text(root_text(2)?),acro,oc,optional_text(value(19)?)?,optional_text(value(20)?)?,prefs,open,optional_text(value(23)?)?,mark,optional_text(value(25)?)?,first,second,enc,Int,Int,Int])?;
- let collections:[(u16,&str,fn(&mut Census<'_,'_>,&D)->Result<(),ValueError>);15]=[
- (3,"pdf_document_page",page),(4,"pdf_document_font",glyphs::font),(5,"pdf_document_image",resources::image),(6,"pdf_document_form",resources::form),(7,"pdf_document_state",resources::state),(8,"pdf_document_shading",resources::shading),(9,"pdf_document_pattern",resources::pattern),(10,"pdf_document_color",named_color),(11,"pdf_document_properties",properties),(12,"pdf_document_outline",nav::outline),(13,"pdf_document_destination",nav::named),(14,"pdf_document_label",nav::label),(15,"pdf_document_file",meta::file),(16,"pdf_document_intent",meta::intent),(30,"pdf_document_object",indirect)];
+ let collections:[(u16,&str,fn(&mut Census<'_,'_>,&D)->Result<(),ValueError>);16]=[
+ (3,"pdf_document_page",page),(4,"pdf_document_font",glyphs::font),(5,"pdf_document_image",resources::image),(6,"pdf_document_form",resources::form),(7,"pdf_document_state",resources::state),(8,"pdf_document_shading",resources::shading),(9,"pdf_document_pattern",resources::pattern),(10,"pdf_document_color",named_color),(11,"pdf_document_properties",properties),(12,"pdf_document_outline",nav::outline),(13,"pdf_document_destination",nav::named),(14,"pdf_document_label",nav::label),(15,"pdf_document_file",meta::file),(16,"pdf_document_intent",meta::intent),(30,"pdf_document_object",indirect),(32,"pdf_document_role",stream_role)];
  for(id,table,visit)in collections{for child in list(value(id)?)?{visit(&mut c,child).map_err(|error|error.under(table))?;c.relation(table)?;}}
  Ok(())
  })
 }
+
+fn graph_identity(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
+ let owner=field(v,"owner")?;for(key,max)in[("num",u32::MAX as u64),("gen",u16::MAX as u64)]{if !field(owner,key)?.as_u64().is_some_and(|n|n<=max){return Err(invalid())}}
+ c.row("pdf_graph_identity",&[Int,Int])?;
+ for part in list(field(v,"path")?)?{let tag=kind(part)?;let(key,index)=match tag{"entry"=>(Text(text(field(part,"key")?)?),Null),"item"=>{if !field(part,"index")?.as_u64().is_some_and(|n|n<=9_007_199_254_740_991){return Err(invalid())}(Null,Int)},_=>return Err(invalid())};c.row("pdf_graph_path",&[Int,Int,Text(tag),key,index])?;}Ok(())
+}
+fn stream_role(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
+ graph_identity(c,field(v,"identity")?)?;let value=field(v,"value")?;let tag=kind(value)?;let mut cells=[Null;14];cells[0]=Int;cells[1]=Text(tag);
+ match tag{
+ "operators"=>{render::ops(c,field(value,"content")?)?;cells[2]=Int;},
+ "sampledWords"=>{let samples=list(field(value,"samples")?)?;cells[3]=Int;for word in samples{if !word.as_u64().is_some_and(|n|n<=u32::MAX as u64){return Err(invalid())}c.row("pdf_stream_role_sample",&[Int;3])?;}},
+ "calculatorProgram"=>cells[4]=Text(text(field(value,"code")?)?),
+ "unicodeMap"=>{glyphs::unicode(c,field(value,"mapping")?)?;cells[5]=Int;},
+ "characterMap"=>{glyphs::embedded_cmap(c,field(value,"cmap")?)?;cells[6]=Int;},
+ "fontProgram"=>{glyphs::program(c,field(value,"program")?)?;cells[7]=Int;},
+ "image"=>{resources::image(c,field(value,"image")?)?;cells[8]=Int;},
+ "metadataText"=>cells[9]=Text(text(field(value,"text")?)?),
+ "attachmentBytes"=>cells[10]=c.blob(field(value,"bytes")?)?,
+ "paletteComponents"=>cells[11]=c.blob(field(value,"components")?)?,
+ "glyphIds"=>{cells[12]=Int;for glyph in list(field(value,"glyphs")?)? {if !glyph.as_u64().is_some_and(|n|n<=u16::MAX as u64){return Err(invalid())}c.row("pdf_stream_role_glyph",&[Int;3])?;}},
+ "referenceBody"=>{artifact_reference(c,field(value,"reference")?)?;cells[13]=Int;},
+ _=>return Err(invalid())
+ }
+ c.row("pdf_stream_role",&cells)?;
+ for dependency in list(field(v,"dependencies")?)?{graph_identity(c,dependency)?;c.row("pdf_stream_role_dependency",&[Int;3])?;}Ok(())
+}
+
+fn artifact_reference(c:&mut Census<'_ ,'_>,v:&D)->Result<(),ValueError>{let dialect=field(v,"dialect")?;c.row("pdf_artifact_reference",&[Text(text(field(v,"artifactId")?)?),Text(text(field(dialect,"artifactKind")?)?),Text(text(field(dialect,"standard")?)?),Text(text(field(dialect,"subset")?)?)])}

@@ -394,9 +394,6 @@ impl protocol::DiffAlgebra<Puzzle5dConfig> for Puzzle5dConfigDiff {
     fn inverse(&self, base: &Puzzle5dConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle5dConfig, other: &Puzzle5dConfig) -> Self {
-        Self { fill_count: (base.fill_count != other.fill_count).then(|| other.fill_count), contact_tolerance: (base.contact_tolerance != other.contact_tolerance).then(|| other.contact_tolerance), proximity_radius: (base.proximity_radius != other.proximity_radius).then(|| other.proximity_radius), chunk_size: (base.chunk_size != other.chunk_size).then(|| other.chunk_size), object_kind_weights: (base.object_kind_weights != other.object_kind_weights).then(|| other.object_kind_weights.clone()), vortex_kind_weights: (base.vortex_kind_weights != other.vortex_kind_weights).then(|| other.vortex_kind_weights.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.fill_count.is_none() && self.contact_tolerance.is_none() && self.proximity_radius.is_none() && self.chunk_size.is_none() && self.object_kind_weights.is_none() && self.vortex_kind_weights.is_none()
     }

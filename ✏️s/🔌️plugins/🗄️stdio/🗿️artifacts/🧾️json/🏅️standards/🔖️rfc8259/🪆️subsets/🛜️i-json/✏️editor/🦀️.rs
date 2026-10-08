@@ -569,8 +569,11 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for JsonIJs
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::json_i_json::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        crate::editor::json_i_json::edit_rules::resolve(snapshot, event)
     }
 }
 //#endregion 🔖️Editor

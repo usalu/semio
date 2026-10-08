@@ -28,8 +28,7 @@ fn lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
 }
 
 fn applied(base: &PdfSnapshot, mutation: &PdfMutation) -> PdfSnapshot {
-    let outcome = mutation.diff(base);
-    protocol::apply_diff(outcome.diff(), base).unwrap_or_else(|error| panic!("{mutation:?} must apply: {error:?}"))
+    crate::standards::v1_7::subsets::base::io::mutation_bridge::applied(base, mutation)
 }
 
 /// 💾️ Writes the snapshot with this subset's writer and reads the bytes back.
@@ -157,7 +156,7 @@ lopdf_vector!(set_page_mode, "🖥️set-page-mode", |_, a| PdfMutation::SetPage
 lopdf_vector!(set_viewer_preferences, "🛠️set-viewer-preferences", |_, a| PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: a.viewer_preferences.clone() }));
 lopdf_vector!(set_open_action, "🚪️set-open-action", |_, a| PdfMutation::SetOpenAction(SetOpenAction { action: a.open_action.clone() }));
 lopdf_vector!(set_language, "🗣️set-language", |_, a| PdfMutation::SetLanguage(SetLanguage { language: a.language.clone() }));
-lopdf_vector!(set_mark_info, "🔏️set-mark-info", |_, a| PdfMutation::SetMarkInfo(SetMarkInfo { info: a.mark_info.clone(), entry_index: None }));
+lopdf_vector!(set_mark_info, "🔏️set-mark-info", |_, a| PdfMutation::SetMarkInfo(SetMarkInfo { info: a.mark_info.clone() }));
 lopdf_vector!(set_metadata, "🧾️set-metadata", |_, a| PdfMutation::SetMetadata(SetMetadata { xmp: a.metadata.clone() }));
 lopdf_vector!(set_catalog_entry, "🗂️set-catalog-entry", |b, a| {
     let entry = added(&b.catalog_extra, &a.catalog_extra);

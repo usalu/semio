@@ -7,25 +7,28 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "added": [
+    "inserted": [
       {
-        "id": "uls",
-        "name": "ULS fundamental",
-        "terms": [
-          {
-            "caseId": "dead",
-            "factor": 1.25
-          },
-          {
-            "caseId": "live",
-            "factor": 1.5
-          }
-        ]
+        "index": 0,
+        "row": {
+          "id": "uls",
+          "name": "ULS fundamental",
+          "terms": [
+            {
+              "caseId": "dead",
+              "factor": 1.25
+            },
+            {
+              "caseId": "live",
+              "factor": 1.5
+            }
+          ]
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "analysis": null
 }

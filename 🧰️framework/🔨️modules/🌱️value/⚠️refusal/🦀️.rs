@@ -34,3 +34,6 @@ mod controlled_codec_tests;
 
 #[path = "🔤️utf8/🦀️.rs"]
 mod utf8;
+
+#[path="♻️retirement/🦀️.rs"]
+mod retirement;

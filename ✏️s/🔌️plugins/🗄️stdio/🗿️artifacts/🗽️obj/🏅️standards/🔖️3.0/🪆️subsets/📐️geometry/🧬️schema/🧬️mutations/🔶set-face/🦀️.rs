@@ -25,7 +25,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetFace {
         let Self { index, face } = self;
         protocol::MutationOutcome::new({
             let old = base.faces.get(*index).cloned().unwrap_or_default();
-            diff_set_face(*index, face_diff_between(&old, face))
+            diff_set_face(*index, face_field_changes(&old, face))
         })
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {

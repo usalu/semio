@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "bytes": 757054,
+  "tail": " assert!(!cursor.terminal_is_empty());\n        }\n        let mut copied = 0;\n        for _ in 0..8 {\n            let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(grant));\n            assert_eq!((allocated, released), (0, 0));\n            match step { RetirementStep::ProcessedBytes(bytes) => { assert!(bytes <= 1); copied += bytes; }, RetirementStep::Complete => break, _ => panic!(\"atomic-only owner has no hidden heap work\") }\n        }\n        assert_eq!(copied, std::mem::size_of::<crate::os_vcs::ArtifactGroupVisibility>());\n        assert!(cursor.terminal_is_empty());\n        assert_eq!(cursor.terminal_release_bytes(), Some(extent));\n        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(cursor));\n        assert_eq!((allocated, released), (0, extent));\n        eprintln!(\"[DEBUG] original group atomic state={} bounded copy={copied} actual terminal frame={extent} no Copy projection\", row[\"committed\"]);\n    }\n}\n"
+}

@@ -74,3 +74,28 @@ async fn op_text_binary_roundtrip_law() {
         assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
     }
 }
+
+//#region ↩️LeafInverseLaws
+#[path = "../../🎬insert-timeline/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_timeline;
+#[path = "../../🎯set-channel-target/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_channel_target;
+#[path = "../../🏷️set-timeline-name/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_timeline_name;
+#[path = "../../📈set-channel-interpolation/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_channel_interpolation;
+#[path = "../../📻insert-channel/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_channel;
+#[path = "../../🔑insert-keyframe/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_keyframe;
+#[path = "../../🔓remove-keyframe/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_keyframe;
+#[path = "../../🔢set-keyframe-value/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_keyframe_value;
+#[path = "../../🕐set-keyframe-time/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_keyframe_time;
+#[path = "../../🗑️remove-channel/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_channel;
+#[path = "../../🧹remove-timeline/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_timeline;
+//#endregion ↩️LeafInverseLaws

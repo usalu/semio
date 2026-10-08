@@ -96,14 +96,6 @@ impl protocol::DiffAlgebra<Wfc2dConfig> for Wfc2dConfigDiff {
             active_tile_id: self.active_tile_id.as_ref().map(|_| base.active_tile_id.clone()),
         }
     }
-    fn between(base: &Wfc2dConfig, other: &Wfc2dConfig) -> Self {
-        Self {
-            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
-            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
-            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
-            active_tile_id: (base.active_tile_id != other.active_tile_id).then(|| other.active_tile_id.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.active_tile_id.is_none()
     }

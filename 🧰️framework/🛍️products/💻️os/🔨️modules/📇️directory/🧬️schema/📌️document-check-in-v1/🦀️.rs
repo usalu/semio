@@ -35,23 +35,9 @@ impl DocumentCheckInV1 {
         self.schema == DOCUMENT_CHECK_IN_SCHEMA_V1 && request_id(&self.request_id) && self.head.validate()
     }
 
-    /// 📦️ Rejects duplicate fields, unknown inputs, padding, and noncanonical JSON.
-    pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > DOCUMENT_CHECK_IN_MAX_BYTES {
-            return None;
-        }
-        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
-    }
+    
 
-    /// 📤️ Emits only a canonical bounded request.
-    pub fn canonical_json(&self) -> Option<String> {
-        if !self.validate() {
-            return None;
-        }
-        let source = semio_framework_pack_json::to_json_string(self);
-        (source.len() <= DOCUMENT_CHECK_IN_MAX_BYTES).then_some(source)
-    }
+    
 }
 
 /// 🚦️ A Check In is ready only once its checkpoint is the document's active checkpoint.
@@ -140,23 +126,9 @@ impl DocumentCheckInStatusV1 {
             }
     }
 
-    /// 📤️ Emits only a canonical bounded status.
-    pub fn canonical_json(&self) -> Option<String> {
-        if !self.validate() {
-            return None;
-        }
-        let source = semio_framework_pack_json::to_json_string(self);
-        (source.len() <= DOCUMENT_CHECK_IN_MAX_BYTES).then_some(source)
-    }
+    
 
-    /// 🧾️ Reads one exact status, withholding malformed or overposted results.
-    pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > DOCUMENT_CHECK_IN_MAX_BYTES {
-            return None;
-        }
-        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
-    }
+    
 }
 
 #[cfg(test)]

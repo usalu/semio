@@ -1,7 +1,7 @@
 //! 🧪️ Store fixture — the document survives a real `ArtifactStore` round trip: every committed
 //! example encodes, mounts, mutates through the store's own apply path, and comes back identical.
 
-use crate::mutations::{apply_bitmap_mutation, change_seed, pin_pixel, set_input_pixels};
+use crate::mutations::{change_seed, pin_pixel, set_input_pixels};
 use crate::schema::snapshot::{BitmapSnapshot};
 use store::ArtifactPack;
 
@@ -26,12 +26,12 @@ fn a_committed_example_takes_a_whole_edit_session_and_inverts_it() {
     let mut inverses = Vec::new();
     for edit in &edits {
         inverses.push(crate::mutations::inverse_bitmap_mutation(&snapshot, edit).expect("valid retained mutation inverse fixture"));
-        apply_bitmap_mutation(&mut snapshot, edit).expect("edit applies");
+        vcs::apply_mutation(&snapshot, edit).map(|(applied_state, _)| { snapshot = applied_state; }).expect("edit applies");
     }
     assert_ne!(snapshot, base, "the session really moved the document");
     for steps in inverses.iter().rev() {
         for step in steps {
-            apply_bitmap_mutation(&mut snapshot, step).expect("inverse applies");
+            vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse applies");
         }
     }
     assert_eq!(snapshot, base, "the whole session inverts back to the committed example");

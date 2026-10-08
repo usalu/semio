@@ -4,7 +4,7 @@
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
 use semio_framework_plugin::kernel::Effect;
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json,Value,Object};
 
 /// 📨️ Routes a programmatic count request (the engagement bar's repeat-last) through the declared
 /// public command rather than writing the config behind the tool-run driver's back.

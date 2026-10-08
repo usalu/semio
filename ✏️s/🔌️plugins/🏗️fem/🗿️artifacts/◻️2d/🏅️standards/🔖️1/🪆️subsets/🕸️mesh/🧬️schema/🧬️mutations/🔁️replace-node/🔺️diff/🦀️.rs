@@ -4,7 +4,7 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `node_geometry` bound
 //! `create-node` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodesModification};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -22,6 +22,6 @@ pub fn diff(payload: &ReplaceNode, base: &Fem2dSnapshot) -> protocol::MutationOu
     if *existing == payload.new_node {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { nodes: Some(Fem2dNodesDelta { patched: vec![Fem2dNodesPatchEntry { id: payload.id.clone(), item: payload.new_node.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { nodes: Some(Fem2dNodesDelta { modified: vec![Fem2dNodesModification { id: payload.id.clone(), patch: payload.new_node.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

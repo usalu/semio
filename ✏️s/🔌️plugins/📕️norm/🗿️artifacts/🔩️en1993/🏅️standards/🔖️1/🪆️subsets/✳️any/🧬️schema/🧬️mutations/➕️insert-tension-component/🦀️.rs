@@ -5,7 +5,7 @@ use crate::{TensionComponent, En1993Mutation, En1993Snapshot};
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct InsertTensionComponent { pub index: usize, pub tension_component: TensionComponent }
+pub struct InsertTensionComponent { pub index: Option<usize>, pub tension_component: TensionComponent }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertTensionComponent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tension-component", kind: "insert-tension-component", record: "InsertedTensionComponent" };
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> { super::diff::diff(self, base) }

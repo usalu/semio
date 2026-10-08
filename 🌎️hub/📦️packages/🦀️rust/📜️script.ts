@@ -1,6 +1,10 @@
 #!/usr/bin/env bun
-import { trustedCatalogByteClaimV1, trustedCatalogPhysicalClaimV1, createTrustedCatalogProvenanceDirectoryV1, trustedCatalogDataRootV1, retainTrustedCargoInvocationV1, writeTrustedCatalogPublicationProvenanceV1, type ActorProducerV1, type PackageProducerV1, type GenerationProducerV1 } from "../../🏗️bootstrap/🧾️provenance/🟦️.ts";
-import {captureOwnedProcess} from "../../../🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import { descriptorDigestEncodingV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts";
+import { directoryCommandRequestJson, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import { parseSpaceArtifactCreateJsonV1, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts";
+import { trustedCatalogByteClaimV1, createTrustedCatalogProvenanceDirectoryV1, trustedCatalogDataRootV1, retainTrustedCargoInvocationV1, writeTrustedCatalogPublicationProvenanceV1, type ActorProducerV1, type PackageProducerV1, type GenerationProducerV1 } from "../../🏗️bootstrap/🧾️provenance/🟦️.ts";
+import { observePhysicalFileV1, type FileObservationControlV1 } from "../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import { captureOwnedProcess } from "../../../🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
@@ -23,58 +27,17 @@ import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../�
 import { packageNativeRelease, signExecutableForDistribution } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
-import {
-  decodeClientFrame,
-  decodePresencePeer,
-  decodeServerFrame,
-  encodeClientFrame,
-  encodePresencePeer,
-  encodeServerFrame,
-  PRESENCE_PRINCIPAL_KINDS,
-  type ArtifactPresencePeer,
-  type ArtifactPresencePrincipalKind,
-  type WireFrontierSummary,
-  type WireMutationEnvelope,
-} from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame, PRESENCE_PRINCIPAL_KINDS, type ArtifactPresencePeer, type ArtifactPresencePrincipalKind, type WireFrontierSummary, type WireMutationEnvelope } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson, parseDocumentSocketGrantReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import {
-  DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
-  DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
-  DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1,
-  type DocumentExecutionProtocolV1,
-  type ArtifactFrontier,
-  documentCheckInCanonicalJson,
-  parseDocumentCheckInStatusV1,
-  parseDocumentCheckInV1,
-  type DocumentCheckInStatusV1,
-  parseDocumentOpenIntentV1,
-  parseDocumentOpenPlanV1,
-  parseDocumentPlanSocketGrantIntentV1,
-  parseDocumentExecutionTargetLeaseFieldsV1,
-  leaseFieldsFromPlanV1,
-  sameLeaseFieldsV1,
-} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import {
-  DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
-  parseDocumentOpenBrowserActorV1,
-  documentBrowserActorLeaseFromPlanV1,
-  type DocumentBrowserActorSourceV1,
-  type DocumentClosedBrowserActorV1,
-} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import {
-  directoryCommandErrorFromStatus,
-  directoryCommandErrorIsTransient,
-  directoryCommandRequestJson,
-  directoryCommandSha256,
-  parseDirectoryCommandReceiptV1,
-  parseDirectoryCommandRequestV1,
-  sealDirectoryCommandRequestV1,
-} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocumentCheckInV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, type DocumentExecutionProtocolV1, type ArtifactFrontier, type DocumentCheckInStatusV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, parseDocumentExecutionTargetLeaseFieldsV1, leaseFieldsFromPlanV1, sameLeaseFieldsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES, parseDocumentOpenBrowserActorV1, documentBrowserActorLeaseFromPlanV1, type DocumentBrowserActorSourceV1, type DocumentClosedBrowserActorV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
+import { directoryCommandErrorFromStatus, directoryCommandErrorIsTransient } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1, parseSpaceArtifactCreateJsonV1, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts";
-import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, descriptorDigestEncodingV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
 import { stageTestBrowserHostV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
 import { pluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
@@ -110,6 +73,13 @@ import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️i
 
 //#region 🧱️SourceGateRunners
 /** 🧱️ Runs the bounded Hub foundation source contract through the shared owned-process boundary. */
+class HubDocumentSweepScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");await runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments);}
+}
+class HubIoMatrixScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{const {runIoMatrixCli}=await import("../../🧪️tests/🚪️io-matrix/🟦️.ts");await runIoMatrixCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🚪️io-matrix"),segments);}
+}
+
 class HubFoundationSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("foundation-source-check accepts no arguments");
@@ -882,6 +852,7 @@ async function commitCheckInProcessEdit(
       timestamp: { actor: 1, physical_ms: physicalMs, logical: index + 1 },
       transaction: null,
       verb: null,
+      line: null,
     }));
     socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: wire } }, "command"));
     const ack = await waitForDocumentSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
@@ -5921,7 +5892,7 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
         { url: "/@fs" + join(this.repoRoot, ownerPath, "🟦️.ts"), modules, limits: fixture.limits, laws: fixture.laws, wireRows: fixture.wireRows, ownerFaults: fixture.ownerFaults },
       );
       if(segments[0]==="--publication-neutral"){
-        const {testProtectedActorChildExecutionV1}=await import(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🟦️.ts"));
+        const {testProtectedActorChildExecutionV1}=await import(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧪️tests/🟦️.ts"));
         await testProtectedActorChildExecutionV1(this.repoRoot,page,vite.resolvedUrls!.local[0]!);
       }
       if (!diagnostics.includes("log:[browser actor stdout] AB") || !diagnostics.includes("warning:[browser actor stderr] CD") || diagnostics.some((value) => value.includes("[browser actor stdout] ZZ")))
@@ -10049,6 +10020,9 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
  * admits neither a zero nor an infinite deadline. */
 const UNLIMITED_TRUSTED_BUILD_DEADLINE_MS = 86_400_000;
 
+/** 🔍️ Supplies bounded physical observation from the actual existing build owner. */
+function trustedBootstrapFileObservationControlV1(control:FreshBuildControlV1):FileObservationControlV1{return{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>control.cancelled(),remainingMs:()=>control.remainingMs(),onProgress:step=>control.checkpoint("observe-file:"+step.phase,step.bytes,step.totalBytes)};}
+
 /** ⏳️ Owns interrupt and progress observation for a bounded catalog build, reading a zero deadline as the
  * repository-wide unlimited budget rather than as one that already expired. */
 function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuildControlV1; close(): void } {
@@ -10390,6 +10364,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
   const checkBuild = () => {
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled");
   };
+  const observationControl=trustedBootstrapFileObservationControlV1(control);
   try {
     const { codecs: linkedCodecs, gisVersion } = captureTrustedBootstrapCodecsV1(repoRoot, () => {
       if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted codec capture cancelled");
@@ -10498,9 +10473,9 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           const compilerRoot = join(observationStage, "compilers"); mkdirSync(compilerRoot, {recursive:true,mode:0o700});
           const compilerPath = join(compilerRoot,compilerName);
           if (!existsSync(compilerPath)) trustedBootstrapWriteNew(compilerPath,derivedActor.producer.compiler.bytes,checkBuild);
-          const compilerClaim = trustedCatalogPhysicalClaimV1(compilerPath);
+          const compilerClaim = await observePhysicalFileV1(compilerPath,observationControl);
           if (compilerClaim.sha256 !== derivedActor.producer.compiler.sha256 || compilerClaim.byteLength !== derivedActor.producer.compiler.byteLength) throw new Error("trusted actor retained compiler changed");
-          actorProducers.set(request.pluginId,{schema:"semio.os.closed-browser-actor-producer/v1",actor:trustedCatalogByteClaimV1(stageRoot,join(stage,"browser","closed-actor.mjs")),component:trustedCatalogByteClaimV1(stageRoot,join(stage,"component.wasm")),descriptor:trustedCatalogByteClaimV1(stageRoot,join(stage,"descriptor.semio")),policyCanonical:derivedActor.policyCanonical,policySha256:derivedActor.policySha256,runtime:derivedActor.producer.runtime,inputs:derivedActor.producer.inputs,compilerName});
+          actorProducers.set(request.pluginId,{schema:"semio.os.closed-browser-actor-producer/v1",actor:await trustedCatalogByteClaimV1(stageRoot,join(stage,"browser","closed-actor.mjs"),observationControl),component:await trustedCatalogByteClaimV1(stageRoot,join(stage,"component.wasm"),observationControl),descriptor:await trustedCatalogByteClaimV1(stageRoot,join(stage,"descriptor.semio"),observationControl),policyCanonical:derivedActor.policyCanonical,policySha256:derivedActor.policySha256,runtime:derivedActor.producer.runtime,inputs:derivedActor.producer.inputs,compilerName});
 
         }
         browserActors.set(request.pluginId, actor);
@@ -10611,13 +10586,13 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
       const request=requests.find(row=>row.pluginId===identity.pluginId)!,target=join(buildRoot,`${identity.pluginId}-target`),packageRoot=join(generationRoot,"packages",identity.pluginId),metadataRoot=join(observationRoot,"packages",identity.pluginId);
       const originalComponent=join(target,"wasm32-wasip2",request.componentProfile,request.outputName),originalEmitter=join(target,"debug",process.platform==="win32"?"semio-framework-plugin-describe.exe":"semio-framework-plugin-describe");
       const invocations=compilerInvocations.get(identity.pluginId)!;
-      const cargoInvocations=invocations.map((source,index)=>retainTrustedCargoInvocationV1(source,join(metadataRoot,"cargo",basename(source)),new Map(index===0?[[originalComponent,join(packageRoot,"component.wasm")]]:[[originalEmitter,join(metadataRoot,"tooling",basename(originalEmitter))]]),checkBuild));
+      const cargoInvocations=[];for(const [index,source]of invocations.entries())cargoInvocations.push(await retainTrustedCargoInvocationV1(source,join(metadataRoot,"cargo",basename(source)),new Map(index===0?[[originalComponent,join(packageRoot,"component.wasm")]]:[[originalEmitter,join(metadataRoot,"tooling",basename(originalEmitter))]]),observationControl));
       let browserActor: PackageProducerV1["browserActor"] = null;
       const actor=actorProducers.get(identity.pluginId);
-      if(actor){const {compilerName,...record}=actor;const actorRecord:ActorProducerV1={...record,compiler:trustedCatalogPhysicalClaimV1(join(observationRoot,"compilers",compilerName))};const actorPath=join(metadataRoot,"browser-producer.json");trustedBootstrapWriteNew(actorPath,Buffer.from(JSON.stringify(actorRecord)+"\n"),checkBuild);browserActor=trustedCatalogPhysicalClaimV1(actorPath);}
-      packageProducers.push({pluginId:identity.pluginId,packageId:identity.packageId,cargoPackage:request.cargoPackage,component:trustedCatalogByteClaimV1(generationRoot,join(packageRoot,"component.wasm")),descriptor:trustedCatalogByteClaimV1(generationRoot,join(packageRoot,"descriptor.semio")),cargoInvocations,browserActor});
+      if(actor){const {compilerName,...record}=actor;const actorRecord:ActorProducerV1={...record,compiler:await observePhysicalFileV1(join(observationRoot,"compilers",compilerName),observationControl)};const actorPath=join(metadataRoot,"browser-producer.json");trustedBootstrapWriteNew(actorPath,Buffer.from(JSON.stringify(actorRecord)+"\n"),checkBuild);browserActor=await observePhysicalFileV1(actorPath,observationControl);}
+      packageProducers.push({pluginId:identity.pluginId,packageId:identity.packageId,cargoPackage:request.cargoPackage,component:await trustedCatalogByteClaimV1(generationRoot,join(packageRoot,"component.wasm"),observationControl),descriptor:await trustedCatalogByteClaimV1(generationRoot,join(packageRoot,"descriptor.semio"),observationControl),cargoInvocations,browserActor});
     }
-    const producer:GenerationProducerV1={schema:"semio.hub.trusted-catalog-producer/v1",profileId:profileSummary.id,generationId,bundle:trustedCatalogByteClaimV1(generationRoot,join(generationRoot,"trusted-catalog.json")),packages:packageProducers};
+    const producer:GenerationProducerV1={schema:"semio.hub.trusted-catalog-producer/v1",profileId:profileSummary.id,generationId,bundle:await trustedCatalogByteClaimV1(generationRoot,join(generationRoot,"trusted-catalog.json"),observationControl),packages:packageProducers};
     const producerPath=join(observationRoot,"producer.json");trustedBootstrapWriteNew(producerPath,Buffer.from(JSON.stringify(producer)+"\n"),checkBuild);trustedBootstrapFsyncDirectory(observationRoot);
     return { profileId: profileSummary.id, generationId, bundleSha256, bundlePath: join(generationRoot, "trusted-catalog.json"), producerPath };
   } catch (error) {
@@ -11239,7 +11214,7 @@ async function publishTrustedBootstrapCurrent(dataRoot: string, receipt: Trusted
     const published = trustedPublicationChildReceipt(processResult, command, publicationRevision, evidenceRoot);
     const current = trustedBootstrapCurrent(dataRoot);
     if (!current || current.currentSha256 !== published.currentSha256) throw new Error("trusted current changed after native publication; do not activate the candidate plan");
-    if (receipt.producerPath) writeTrustedCatalogPublicationProvenanceV1(dataRoot,receipt.producerPath);
+    if (receipt.producerPath) await writeTrustedCatalogPublicationProvenanceV1(dataRoot,receipt.producerPath,trustedBootstrapFileObservationControlV1(owner.control));
     return current;
   } finally {
     processResult?.bytes.fill(0);
@@ -17767,6 +17742,8 @@ class DevCollaborationScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("setup", SetupScript)
+  .register("hub-document-sweep", HubDocumentSweepScript)
+  .register("io-matrix", HubIoMatrixScript)
   .register("foundation-source-check", HubFoundationSourceScript)
   .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
   .register("component-codec-check", ComponentCodecCheckScript)

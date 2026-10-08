@@ -872,6 +872,7 @@ impl BooleanJob {
                     let after = validation.step(body, budget - spent).units_done;
                     let advanced = after.saturating_sub(before).max(1);
                     self.units_done += advanced;
+                    self.units_total = self.units_total.max(self.units_done.saturating_add(validation.progress().units_total.saturating_sub(after)));
                     spent += advanced;
                     continue;
                 }

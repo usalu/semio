@@ -1,6 +1,7 @@
 {
   "artifact": "s.wfc.grid2d",
   "producedBy": "semio-wfc-mutation-bridge",
+  "refusedArtifacts": ["s.wfc.wfc2d","s.wfc.wfc3d","s.wfc.bitmap","s.wfc.grid3d"],
   "excludedOwnerSegments": [
     "👁️viewer",
     "✏️editor"

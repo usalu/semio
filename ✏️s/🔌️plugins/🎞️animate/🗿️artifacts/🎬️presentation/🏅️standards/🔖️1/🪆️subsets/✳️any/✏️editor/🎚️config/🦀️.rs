@@ -101,11 +101,6 @@ impl protocol::DiffAlgebra<PresentationConfig> for PresentationConfigDiff {
             engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
         }
     }
-    fn between(base: &PresentationConfig, other: &PresentationConfig) -> Self {
-        Self {
-            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none()
     }

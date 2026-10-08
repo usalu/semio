@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::mutations::rename_object;
-use crate::schema::default_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use crate::LOWPOLY_DOCUMENT_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
@@ -15,7 +15,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_after_applying_an_operation() {
-    let projection = crate::schema::snapshot::snapshot_from_mesh_json(r#"{"vertices":[],"faces":[]}"#, "obj-1", "Fixture");
+    let projection = crate::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json(r#"{"vertices":[],"faces":[]}"#, "obj-1", "Fixture");
     let object_id = projection.objects[0].id.clone();
     let envelope = store::create_document_envelope::<crate::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");

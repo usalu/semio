@@ -26,6 +26,6 @@ pub fn diff(payload: &super::mutation::CreateLayer, base: &DrawingSnapshot) -> p
         }
     }
     let index = payload.index.unwrap_or_else(|| append_index(base, payload.parent_id.as_ref()));
-    protocol::MutationOutcome::new(diff_create_layer(payload.parent_id.as_ref(), index, (*payload.layer).clone()))
+    protocol::MutationOutcome::new(diff_create_layer(&base.layers, payload.parent_id.as_ref(), index, (*payload.layer).clone()))
 }
 //#endregion 🔖️Diff

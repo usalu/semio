@@ -1,0 +1,24 @@
+use super::*;
+fn fixture()->Json{semio_repo_test_host::parse_json(include_str!("🔣️.json")).unwrap()}
+#[test]fn oracle_owned_ifd_params_independently_preserve_raster(){let fixture=fixture();let ifd=parse_ifd_json(fixture.get("ifd").unwrap()).unwrap();assert_eq!(decode_raster(&ifd).unwrap().2,wire_bytes(fixture.get("rgba").unwrap()).unwrap());let doc=OracleDoc{little_endian:true,ifds:vec![ifd]};let bytes=write_tiff(&doc);let mut decoder=tiff::decoder::Decoder::new(std::io::Cursor::new(bytes)).unwrap();let tiff::decoder::DecodingResult::U8(words)=decoder.read_image().unwrap()else{panic!("independent RGB words")};assert_eq!(words,[1,2,3,4,5,6]);}
+#[test]fn oracle_owned_scalar_payloads_preserve_exact_native_words(){let fixture=fixture();let ifd=parse_ifd_json(fixture.get("ifd").unwrap()).unwrap();let doc=OracleDoc{little_endian:false,ifds:vec![ifd]};let bytes=write_tiff(&doc);let decoded=read_tiff(&bytes).unwrap();for tag in [315,65000,65001]{assert_eq!(decoded.ifds[0].get(tag).unwrap().value.bytes(true),doc.ifds[0].get(tag).unwrap().value.bytes(true));}let mut decoder=tiff::decoder::Decoder::new(std::io::Cursor::new(bytes)).unwrap();assert_eq!(decoder.get_tag(tiff::tags::Tag::Unknown(65000)).unwrap().into_f32().unwrap().to_bits(),2143289345);assert_eq!(decoder.get_tag(tiff::tags::Tag::Unknown(65001)).unwrap().into_f64().unwrap().to_bits(),0x7ff8000000000001);eprintln!("[DEBUG] independent TIFF tag reader retains IEEE32/64 NaN payload bits");}
+
+#[test]fn oracle_owned_paint_and_sample_edits_have_independent_native_witness(){let fixture=fixture();let ifd=parse_ifd_json(fixture.get("ifd").unwrap()).unwrap();let doc=OracleDoc{little_endian:true,ifds:vec![ifd]};let before=write_tiff(&doc);for case in fixture.get("mutations").and_then(j_arr).unwrap(){let kind=case.str("kind");let mut params=case.get("params").unwrap().clone();if kind=="paint-region"{let Json::Object(fields)=&mut params else{panic!("object")};fields.push(("revision".into(),Json::String(oracle_revision(&doc).unwrap())));}let spec=Json::Object(vec![("kind".into(),Json::String(kind)),("params".into(),params)]);let after=oracle_apply_mutation(&before,&spec).unwrap();let mut decoder=tiff::decoder::Decoder::new(std::io::Cursor::new(&after)).unwrap();let tiff::decoder::DecodingResult::U8(words)=decoder.read_image().unwrap()else{panic!("independent native RGB")};assert_eq!(words,wire_bytes(case.get("expected").unwrap()).unwrap());let restored=oracle_apply_mutation_inverse(&before,&spec,&after).unwrap();assert_eq!(project_tiff(&restored).unwrap().to_string(),project_tiff(&before).unwrap().to_string());}eprintln!("[DEBUG] independent TIFF decoder witnesses authored paint/sample operations and concrete inverse");}
+#[test]fn oracle_owned_params_refuse_physical_authority_and_invalid_word(){let fixture=fixture();let Json::Object(fields)=fixture.get("ifd").unwrap().clone()else{panic!("object")};let mut physical=fields;physical.push(("storage".into(),Json::Object(vec![])));assert!(parse_ifd_json(&Json::Object(physical)).is_err());assert!(wire_word(&semio_repo_test_host::parse_json(r#"{"lo":4294967296,"hi":0}"#).unwrap()).is_err());let ifd=parse_ifd_json(fixture.get("ifd").unwrap()).unwrap();let before=write_tiff(&OracleDoc{little_endian:true,ifds:vec![ifd]});let spec=semio_repo_test_host::parse_json(r#"{"kind":"paint-region","params":{"revision":"stale"}}"#).unwrap();assert!(oracle_apply_mutation(&before,&spec).is_err());}
+
+#[test]
+fn oracle_owned_recipe_pairs_match_independently_generated_samples(){
+ let before=include_bytes!("../../../🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff");
+ let revision=oracle_revision(&read_tiff(before).unwrap()).unwrap();
+ for(kind,params,expected)in[
+  ("paint-region",format!(r#"{{"revision":"{revision}","ifdIndex":0,"x":1,"y":1,"width":1,"height":1,"red":9,"green":8,"blue":7,"alpha":255}}"#),include_bytes!("../../../🧫️fixtures/🎨️paint-region-applied/➡️after.tiff").as_slice()),
+  ("replace-samples",r#"{"ifdIndex":0,"block":0,"offset":0,"samples":[{"lo":24,"hi":0},{"lo":96,"hi":0},{"lo":192,"hi":0}]}"#.into(),include_bytes!("../../../🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff").as_slice())
+ ]{
+  let spec=Json::Object(vec![("kind".into(),Json::String(kind.into())),("params".into(),semio_repo_test_host::parse_json(&params).unwrap())]);
+  let after=oracle_apply_mutation(before,&spec).unwrap();
+  assert_eq!(project_tiff(&after).unwrap(),project_tiff(expected).unwrap());
+  let mut independent=tiff::decoder::Decoder::new(std::io::Cursor::new(&after)).unwrap();assert!(independent.read_image().is_ok());
+  let restored=oracle_apply_mutation_inverse(before,&spec,&after).unwrap();assert_eq!(project_tiff(&restored).unwrap(),project_tiff(before).unwrap());
+ }
+ eprintln!("[DEBUG] authentic 4x4 TIFF recipe owned revision {revision}; independent paint/sample pairs agree exactly");
+}

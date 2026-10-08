@@ -1,7 +1,7 @@
 //! ✅️ `accept-suggestion` command.
 
 use crate::editor::puzzle5d::precompute::brush::puzzle5d_brush_placement;
-use crate::editor::puzzle5d::{Puzzle5dActionCtx, Puzzle5dFreshIds, PUZZLE5D_GRANULARITY_PART};
+use crate::editor::puzzle5d::{puzzle5d_paste_mutations, Puzzle5dActionCtx, Puzzle5dFreshIds, PUZZLE5D_GRANULARITY_PART};
 use semio_framework_pack_json::Value;
 
 /// ✅️ Places the `index`-th (else the hovered) free candidate the brush suggestions run found for the menu's
@@ -35,9 +35,13 @@ pub fn accept_suggestion(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
     match puzzle5d_brush_placement(ctx.snapshot, &ctx.scene.document, &found, None, index, part_id, fastener_id) {
         Ok(Some((part, fastener))) => {
             let placed = part.id.clone();
-            ctx.scene.document.parts.push(part);
-            ctx.scene.document.fasteners.push(fastener);
-            ctx.replace_selection(PUZZLE5D_GRANULARITY_PART, [placed]);
+            match puzzle5d_paste_mutations(vec![part], vec![fastener]) {
+                Ok(mutations) => {
+                    ctx.artifact_mutations.extend(mutations);
+                    ctx.replace_selection(PUZZLE5D_GRANULARITY_PART, [placed]);
+                }
+                Err(_) => ctx.abort = true,
+            }
         }
         Ok(None) => ctx.notice(|labels| labels.placement_unavailable.as_str()),
         Err(_) => ctx.abort = true,

@@ -4,13 +4,11 @@
       {
         "index": 0,
         "diff": {
-          "primitives": [
-            {
-              "attributes": {
-                "POSITION": 0
-              }
-            }
-          ]
+          "primitives": {
+            "removed": [
+              1
+            ]
+          }
         }
       }
     ]

@@ -58,7 +58,12 @@
   {
     "patch": {
       "field": "fillColor",
-      "value": "#abc"
+      "value": [
+        0.6666666666666666,
+        0.7333333333333333,
+        0.8,
+        1
+      ]
     },
     "accepted": true
   },
@@ -79,7 +84,12 @@
   {
     "patch": {
       "field": "fillColor",
-      "value": "#112233"
+      "value": [
+        0.06666666666666667,
+        0.13333333333333333,
+        0.2,
+        1
+      ]
     },
     "accepted": true
   },
@@ -142,7 +152,12 @@
   {
     "patch": {
       "field": "strokeColor",
-      "value": "#123456"
+      "value": [
+        0.07058823529411765,
+        0.20392156862745098,
+        0.33725490196078434,
+        1
+      ]
     },
     "accepted": true
   },
@@ -226,28 +241,35 @@
   {
     "patch": {
       "field": "strokeDash",
-      "value": "8 4"
+      "value": [
+        8.0,
+        4.0
+      ]
     },
     "accepted": true
   },
   {
     "patch": {
       "field": "strokeDash",
-      "value": ""
+      "value": null
     },
     "accepted": true
   },
   {
     "patch": {
       "field": "strokeDash",
-      "value": "0 0"
+      "value": null
     },
     "accepted": true
   },
   {
     "patch": {
       "field": "strokeDash",
-      "value": ".5 2.5 1"
+      "value": [
+        0.5,
+        2.5,
+        1.0
+      ]
     },
     "accepted": true
   },

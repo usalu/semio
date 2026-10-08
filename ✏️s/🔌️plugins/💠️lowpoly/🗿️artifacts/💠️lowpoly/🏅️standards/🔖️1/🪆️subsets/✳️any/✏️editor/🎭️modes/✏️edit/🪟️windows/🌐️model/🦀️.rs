@@ -5,7 +5,7 @@
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{document_object_row_id, euler_degrees_to_quaternion, is_paint_utility, LowpolyView, LowpolyWorldSelection, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
+use crate::editor::lowpoly::view::{document_object_row_id, is_paint_utility, LowpolyView, LowpolyWorldSelection, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use crate::schema::mesh_data_from_transfer;
@@ -281,3 +281,5 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+use crate::standards::v1::subsets::any::schema::inferences::euler_degrees_to_quaternion;

@@ -249,6 +249,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-zone-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -304,6 +308,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-zone-window-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -367,6 +375,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-element-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -422,6 +434,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-layer-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -433,6 +449,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "reorder-layers-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -507,6 +527,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-thermal-bridge-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

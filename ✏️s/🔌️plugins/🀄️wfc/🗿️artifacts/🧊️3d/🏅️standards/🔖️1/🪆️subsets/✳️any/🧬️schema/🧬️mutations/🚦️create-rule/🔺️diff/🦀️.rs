@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateRule` — a real id-keyed upsert into `rules`.
 
-use crate::diff::{Wfc3dDiff, Wfc3dRows};
+use crate::diff::{Wfc3dDiff, Wfc3dRow, Wfc3dRulesDelta};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::CreateRule, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -17,5 +17,5 @@ pub fn diff(payload: &super::CreateRule, base: &Wfc3dSnapshot) -> protocol::Muta
     if payload.index != canonical {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rule \"{}\" must be inserted at its canonical position {canonical}, not {}.", payload.rule.id, payload.index), [payload.rule.id.clone()]);
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { rules: Wfc3dRows { added: vec![payload.rule.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Wfc3dDiff { rules: Wfc3dRulesDelta::insertion(Wfc3dRow::insert_at(&base.rules, &payload.rule), payload.rule.clone()), ..Default::default() })
 }

@@ -2,9 +2,32 @@
   "enabled": "1",
   "disabled": "0",
   "stream": "stderr",
-  "waiting": {"phase": "lease-wait", "owner": "Cargo.toml", "items": 1, "maximumObservationMs": 5000},
-  "phases": ["discovery", "inventory", "closure", "recipe", "finished"],
-  "scriptPhases": ["lease", "publication"],
-  "roots": ["neutral-app"],
-  "expected": ["bridge", "builder", "kernel", "neutral-app", "root-test"]
+  "waiting": {
+    "phase": "lease-wait",
+    "owner": "Cargo.toml",
+    "items": 1,
+    "maximumObservationMs": 5000
+  },
+  "phases": [
+    "discovery",
+    "inventory",
+    "closure",
+    "recipe",
+    "finished"
+  ],
+  "scriptPhases": [
+    "lease",
+    "publication"
+  ],
+  "roots": [
+    "neutral-app"
+  ],
+  "expected": [
+    "bridge",
+    "builder",
+    "kernel",
+    "neutral-app",
+    "root-test"
+  ],
+  "inventoryEpochs": 7
 }

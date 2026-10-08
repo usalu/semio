@@ -11,8 +11,6 @@
     "maxPixels",
     "nodes",
     "maxSourceBytes",
-    "maxBytes",
-    "maxChunks",
     "assets"
   ],
   "additionalProperties": false,
@@ -51,16 +49,6 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 268439552
-    },
-    "maxBytes": {
-      "type": "integer",
-      "minimum": 8,
-      "maximum": 67108864
-    },
-    "maxChunks": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 65536
     },
     "assets": {
       "type": "array",
@@ -261,27 +249,46 @@
     },
     "asset": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "id",
-        "mime",
-        "data"
+        "image"
       ],
-      "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 4096
-        },
-        "mime": {
-          "type": "string",
-          "minLength": 1,
           "maxLength": 128
         },
-        "data": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 268439552
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "height",
+            "pixels"
+          ],
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            },
+            "pixels": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "description": "Admitted row-major RGBA components; exactly four times width×height pixels."
         }
       }
     },
@@ -295,8 +302,7 @@
         "assets",
         "totalAssets",
         "sourceBytes",
-        "decodes",
-        "decoding",
+        "admittedImages",
         "work",
         "done"
       ],
@@ -306,7 +312,6 @@
           "enum": [
             "assets",
             "nodes",
-            "source",
             "bounds",
             "path",
             "pathCleanup",
@@ -347,21 +352,6 @@
           "minimum": 0,
           "maximum": 268439552
         },
-        "decodes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 1024
-        },
-        "decoding": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "https://semio.tech/framework/pixels/image-decoding#/definitions/progress"
-            }
-          ]
-        },
         "work": {
           "type": "integer",
           "minimum": 0,
@@ -369,6 +359,11 @@
         },
         "done": {
           "type": "boolean"
+        },
+        "admittedImages": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
         }
       }
     }

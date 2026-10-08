@@ -5,8 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_vcs_mutation, inverse_vcs_mutation, VcsDemoMutation};
+use crate::mutations::{inverse_vcs_mutation, VcsDemoMutation};
 use crate::VcsSnapshot;
+use crate::central_apply::{apply_vcs_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️add-tag/🧪️appends-urgent-tag/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️add-tag/🧪️appends-urgent-tag/📸️snapshot/➡️after/🔣️.json");
@@ -84,12 +85,12 @@ async fn declared_outcome_holds() {
     let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "add-tag/appends-urgent-tag: urgent is absent from BASE, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().tags.clone().expect("add-tag's diff pins a tags delta");
-    assert_eq!(delta.added, vec!["urgent".to_string()], "add-tag's delta must carry the one added tag");
-    assert!(delta.removed.is_empty(), "add-tag never removes a tag");
+    assert_eq!(delta.inserted.iter().map(|entry| (entry.index, entry.row.as_str())).collect::<Vec<_>>(), vec![(1, "urgent")], "add-tag's delta must carry the one inserted tag at its after index");
+    assert!(delta.removed.is_empty() && delta.moved.is_empty(), "add-tag never removes or moves a tag");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: a `tags` DELTA carrying one `added` member and
-/// an empty `removed`. The member BASE already held never appears — the delta describes the CHANGE,
+/// 🔺️ The produced diff is EXACTLY the committed one: a `tags` DELTA carrying one `inserted` member at its after index and
+/// empty `removed`/`moved`. The member BASE already held never appears — the delta describes the CHANGE,
 /// not the resulting list, which is precisely what a whole-collection rewrite would get wrong.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
@@ -98,9 +99,9 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "add-tag/appends-urgent-tag: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().tags.clone().expect("add-tag pins a tags delta");
-    assert_eq!(delta.added, vec!["urgent".to_string()], "only the new member travels in the delta");
-    assert!(delta.removed.is_empty(), "an add never populates the removed lane");
-    assert!(!delta.added.contains(&"review".to_string()), "the member BASE already carried must not be re-sent");
+    assert_eq!(delta.inserted.iter().map(|entry| entry.row.as_str()).collect::<Vec<_>>(), vec!["urgent"], "only the new member travels in the delta");
+    assert!(delta.removed.is_empty() && delta.moved.is_empty(), "an add never populates the removed or moved lane");
+    assert!(!delta.inserted.iter().any(|entry| entry.row == "review"), "the member BASE already carried must not be re-sent");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

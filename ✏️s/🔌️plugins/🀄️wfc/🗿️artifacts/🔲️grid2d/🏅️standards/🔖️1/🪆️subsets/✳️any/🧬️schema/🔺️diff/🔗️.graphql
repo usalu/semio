@@ -1,41 +1,149 @@
-# 🔺️ s.wfc.grid2d diff facet — a sparse, key-addressed structural delta, never a whole-snapshot
-# capture. Collection rows carry their FINAL-state index so applying restores position and value.
+# 🔺️ grid2d diff — scalars are optional absolutes; every list is a positional list delta: removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
 
-type Grid2dTileRow {
-  index: Int!
-  tile: WfcTile2d!
+type Grid2dTilePatch {
+  weight: Float
+  media: WfcTileMedia2d
+  label: String
 }
 
-type Grid2dRuleRow {
+type Grid2dTilesRemoval {
+  id: String!
   index: Int!
-  rule: WfcAdjacencyRule2d!
 }
 
-type Grid2dPinnedRow {
+type Grid2dTilesInsertion {
   index: Int!
-  cell: WfcPinnedCell2d!
+  row: WfcTile2d!
 }
 
-type Grid2dMaskedRow {
+type Grid2dTilesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid2dTilesModification {
+  id: String!
+  patch: Grid2dTilePatch!
+}
+
+type Grid2dTilesDelta {
+  removed: [Grid2dTilesRemoval!]!
+  inserted: [Grid2dTilesInsertion!]!
+  moved: [Grid2dTilesRelocation!]!
+  modified: [Grid2dTilesModification!]!
+}
+
+type Grid2dRulePatch {
+  tileAId: String
+  tileBId: String
+  direction: WfcDirection2d
+  allowed: Boolean
+}
+
+type Grid2dRulesRemoval {
+  id: String!
   index: Int!
-  cell: WfcCell2d!
+}
+
+type Grid2dRulesInsertion {
+  index: Int!
+  row: WfcAdjacencyRule2d!
+}
+
+type Grid2dRulesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid2dRulesModification {
+  id: String!
+  patch: Grid2dRulePatch!
+}
+
+type Grid2dRulesDelta {
+  removed: [Grid2dRulesRemoval!]!
+  inserted: [Grid2dRulesInsertion!]!
+  moved: [Grid2dRulesRelocation!]!
+  modified: [Grid2dRulesModification!]!
+}
+
+type Grid2dPinnedPatch {
+  tileId: String
+}
+
+type Grid2dPinnedRemoval {
+  id: String!
+  index: Int!
+}
+
+type Grid2dPinnedInsertion {
+  index: Int!
+  row: WfcPinnedCell2d!
+}
+
+type Grid2dPinnedRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid2dPinnedModification {
+  id: String!
+  patch: Grid2dPinnedPatch!
+}
+
+type Grid2dPinnedDelta {
+  removed: [Grid2dPinnedRemoval!]!
+  inserted: [Grid2dPinnedInsertion!]!
+  moved: [Grid2dPinnedRelocation!]!
+  modified: [Grid2dPinnedModification!]!
+}
+
+type Grid2dMaskedPatch {
+  _empty: Boolean
+}
+
+type Grid2dMaskedRemoval {
+  id: String!
+  index: Int!
+}
+
+type Grid2dMaskedInsertion {
+  index: Int!
+  row: WfcCell2d!
+}
+
+type Grid2dMaskedRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Grid2dMaskedModification {
+  id: String!
+  patch: Grid2dMaskedPatch!
+}
+
+type Grid2dMaskedDelta {
+  removed: [Grid2dMaskedRemoval!]!
+  inserted: [Grid2dMaskedInsertion!]!
+  moved: [Grid2dMaskedRelocation!]!
+  modified: [Grid2dMaskedModification!]!
 }
 
 type Grid2dDiff {
-  schema: String
-  seed: Int
-  width: Int
-  height: Int
-  cellWidth: Float
-  cellHeight: Float
-  periodicX: Boolean
-  periodicY: Boolean
-  tilesRemoved: [String!]!
-  tilesUpserted: [Grid2dTileRow!]!
-  rulesRemoved: [String!]!
-  rulesUpserted: [Grid2dRuleRow!]!
-  pinnedRemoved: [String!]!
-  pinnedUpserted: [Grid2dPinnedRow!]!
-  maskedRemoved: [String!]!
-  maskedUpserted: [Grid2dMaskedRow!]!
+  schema: String @state(class: ARTIFACT)
+  seed: Float @state(class: ARTIFACT)
+  width: Int @state(class: ARTIFACT)
+  height: Int @state(class: ARTIFACT)
+  cellWidth: Float @state(class: ARTIFACT)
+  cellHeight: Float @state(class: ARTIFACT)
+  periodicX: Boolean @state(class: ARTIFACT)
+  periodicY: Boolean @state(class: ARTIFACT)
+  tiles: Grid2dTilesDelta! @state(class: ARTIFACT)
+  rules: Grid2dRulesDelta! @state(class: ARTIFACT)
+  pinned: Grid2dPinnedDelta! @state(class: ARTIFACT)
+  masked: Grid2dMaskedDelta! @state(class: ARTIFACT)
 }

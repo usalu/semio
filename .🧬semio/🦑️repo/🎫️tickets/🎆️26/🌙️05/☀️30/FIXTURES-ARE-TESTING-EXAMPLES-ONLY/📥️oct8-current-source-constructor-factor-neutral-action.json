@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+  "old": "  expect(body.indexOf(\"grant.maximum_capacity_bytes < capacity\")).toBeLessThan(body.indexOf(\"Arc::new(\"));",
+  "new": "  expect(body.indexOf(\"grant.maximum_capacity_bytes < capacity\")).toBeLessThan(body.indexOf(\"Self::from_sources(\"));\n  const sources = body.slice(body.indexOf(\"fn from_sources<\"));\n  expect(sources).toContain(\"Arc::new(snapshots)\");\n  expect(sources).toContain(\"Box::new(disposer)\");"
+}

@@ -1,6 +1,12 @@
 {
-  "extensionsUsed": [
-    "KHR_a",
-    "KHR_c"
-  ]
+  "extensionsUsed": {
+    "removed": [
+      {
+        "id": "KHR_b",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": []
+  }
 }

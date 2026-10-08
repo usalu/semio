@@ -1,0 +1,16 @@
+{
+  "values": [
+    { "kind": "null" },
+    { "kind": "bool", "value": true },
+    { "kind": "number", "value": { "bits": "8000000000000000" } },
+    { "kind": "string", "value": "original\u0000文字" },
+    { "kind": "array", "values": [{ "kind": "string", "value": "first" }, { "kind": "object", "values": { "unicode🔑": { "kind": "array", "values": [{ "kind": "bool", "value": false }] } } }] },
+    { "kind": "object", "values": { "empty": { "kind": "array", "values": [] }, "text": { "kind": "string", "value": "last" } } }
+  ],
+  "expectedNodes": 12,
+  "deepProfiles": [
+    { "depth": 20000, "alternating": false },
+    { "depth": 20000, "alternating": true }
+  ],
+  "stackBytes": 131072
+}

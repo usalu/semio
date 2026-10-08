@@ -6,14 +6,15 @@
 //!
 //! 🔀️ `reorder-positions` is the only positions verb whose delta is a COMPLETE id permutation: the diff
 //! builder recomputes the entire order from `base` by lifting `id` out and re-inserting it at
-//! `to_index.min(len)`, so `added`/`removed`/`patched` all stay empty and no feature payload is ever copied
+//! `to_index.min(len)`, so `added`/`removed`/`modified` all stay empty and no feature payload is ever copied
 //! into the diff.
 //!
 //! 🧩️ Committed snapshots preserve the stable drawing and value child identities across edits.
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-positions/⚓️moves/📸️snapshot/⬅️before/🔣️.json");
@@ -118,9 +119,8 @@ async fn committed_diff_applies_to_after() {
     assert_eq!(produced, expected_after(), "reorder-positions/moves-harbor-position-to-end: committed diff did not carry before to after");
 }
 
-/// 🔀️ `reorder-positions` is the only positions verb whose delta is a COMPLETE id permutation: the diff
-/// builder recomputes the entire order from `base` by lifting `id` out and re-inserting it at
-/// `to_index.min(len)`, so `added`/`removed`/`patched` all stay empty and no feature payload is ever copied
+/// 🔀️ `reorder-positions` carries ONE positional move row `{id, from, to}`: the base index of `id` and `to_index.min(len - 1)`,
+/// so `inserted`/`removed`/`modified` all stay empty and no feature payload and no order list is ever copied
 /// into the diff.
 #[semio_framework_async_macros::async_test]
 async fn permutes_the_whole_position_order_without_touching_any_payload() {
@@ -128,8 +128,8 @@ async fn permutes_the_whole_position_order_without_touching_any_payload() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "reorder-positions/moves-harbor-position-to-end: a genuine move must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().positions.as_ref().expect("reorder-positions writes a positions delta");
-    assert_eq!(delta.reordered.as_deref(), Some(["pos-lighthouse".to_string(), "pos-quay".to_string(), "pos-harbor".to_string()].as_slice()), "reorder-positions/moves-harbor-position-to-end: the delta is the full recomputed id order");
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-positions/moves-harbor-position-to-end: a reorder must not add, remove or patch anything, got {delta:?}");
+    assert_eq!(delta.moved.iter().map(|moved| (moved.id.as_str(), moved.from, moved.to)).collect::<Vec<_>>(), vec![("pos-harbor", 0, 2)], "reorder-positions/moves-harbor-position-to-end: the delta is one positional move row");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.modified.is_empty(), "reorder-positions/moves-harbor-position-to-end: a reorder must not add, remove or patch anything, got {delta:?}");
     assert!(produced.diff().routes.is_none() && produced.diff().regions.is_none(), "reorder-positions/moves-harbor-position-to-end: reorder-positions must never touch the routes or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "reorder-positions/moves-harbor-position-to-end: a reorder undoes with exactly one step, got {inverse:?}");

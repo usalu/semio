@@ -661,6 +661,38 @@
               "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
             ]
           }
+        },
+        {
+          "id": "set-other-tables",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📑set-other-tables/🦀️.rs#SetOtherTables",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-other-tables",
+            "bridgeVersion": 1,
+            "variant": "SetOtherTables"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "raw-retained-tables-agree-for-the-named-rows"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
         }
       ]
     }

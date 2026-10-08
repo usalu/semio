@@ -3,18 +3,21 @@
   "camera": null,
   "widgets": null,
   "synapses": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "link-bc",
-        "from": "note-b",
-        "to": "note-c",
-        "fromPort": "out",
-        "toPort": "in"
+        "index": 1,
+        "row": {
+          "id": "link-bc",
+          "from": "note-b",
+          "to": "note-c",
+          "fromPort": "out",
+          "toPort": "in"
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "layout": null,
   "generations": null,

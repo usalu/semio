@@ -232,6 +232,7 @@ export default defineConfig({
       { find: "@semio-tech/assets", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
       { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: "@semio-tech/framework-os-node-graph-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-surface-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-editor-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },

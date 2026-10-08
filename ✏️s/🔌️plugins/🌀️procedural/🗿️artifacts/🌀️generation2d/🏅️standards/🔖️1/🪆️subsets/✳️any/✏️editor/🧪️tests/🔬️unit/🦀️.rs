@@ -268,9 +268,9 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
         mutation_hex.push(production_hex(&crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("P2 production mutation encoding")));
     }
     let mut expected = production_initial_snapshot(label);
-    crate::standards::v1::subsets::any::schema::mutations::generation2d_apply_retained_mutations_for_test(&mut expected, &mutations);
+    crate::central_apply::generation2d_apply_retained_mutations_for_test(&mut expected, &mutations);
     let expected_digest = production_semantic_digest(&expected);
-    crate::standards::v1::subsets::any::schema::mutations::generation2d_retire_mutations_cold(mutations);
+    crate::central_apply::generation2d_retire_mutations_cold(mutations);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": GENERATION_2D_SCHEMA,
         "id": "generation2d-production-mounted-law",

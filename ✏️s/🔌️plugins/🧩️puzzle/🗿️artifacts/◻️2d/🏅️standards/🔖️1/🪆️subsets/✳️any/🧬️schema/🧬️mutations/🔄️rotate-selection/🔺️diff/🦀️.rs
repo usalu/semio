@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `RotateSelection` — every unlocked addressed node turns about the pivot (its
 //! position and each of its handle angles), read off the BASE, so the leaf replays on any base. Target
 //! regions are axis-aligned rectangles and are skipped.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dHandlePatch, Puzzle2dHandlePatchEntry, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodePatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlePatch, Puzzle2dHandleModification, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodeModification};
+use protocol::list_delta::RowPatch;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_rotated, puzzle2d_selection, puzzle2d_selection_outcome};
 use crate::Puzzle2dSnapshot;
 
@@ -21,19 +22,19 @@ pub fn diff(payload: &super::RotateSelection, base: &Puzzle2dSnapshot) -> protoc
         .iter()
         .map(|node| {
             let (x, y) = puzzle2d_rotated((node.x, node.y), pivot, sin, cos);
-            let turned: Vec<Puzzle2dHandlePatchEntry> = node
+            let turned: Vec<Puzzle2dHandleModification> = node
                 .handles
                 .iter()
-                .map(|handle| Puzzle2dHandlePatchEntry { id: handle.id.clone(), patch: Puzzle2dHandlePatch { angle: Some(handle.angle + radians).filter(|angle| *angle != handle.angle), ..Default::default() } })
+                .map(|handle| Puzzle2dHandleModification { id: handle.id.clone(), patch: Puzzle2dHandlePatch { angle: Some(handle.angle + radians).filter(|angle| *angle != handle.angle), ..Default::default() } })
                 .filter(|entry| !entry.patch.is_empty())
                 .collect();
             let patch = Puzzle2dNodePatch {
                 x: Some(x).filter(|x| *x != node.x),
                 y: Some(y).filter(|y| *y != node.y),
-                handles: (!turned.is_empty()).then(|| Puzzle2dHandlesDelta { patched: turned, ..Default::default() }),
+                handles: (!turned.is_empty()).then(|| Puzzle2dHandlesDelta { modified: turned, ..Default::default() }),
                 ..Default::default()
             };
-            Puzzle2dNodePatchEntry { id: node.id.clone(), patch }
+            Puzzle2dNodeModification { id: node.id.clone(), patch }
         })
         .filter(|entry| !entry.patch.is_empty())
         .collect();

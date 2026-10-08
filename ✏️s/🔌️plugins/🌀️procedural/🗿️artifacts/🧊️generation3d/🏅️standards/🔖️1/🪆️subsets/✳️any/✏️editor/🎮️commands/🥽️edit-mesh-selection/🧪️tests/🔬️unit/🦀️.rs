@@ -56,7 +56,7 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             let mut inverses = Vec::new();
             for row in &rows {
                 inverses.push(crate::standards::v1::subsets::any::schema::mutations::inverse_generation3d_mutation(&actual, row).unwrap());
-                crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut actual, row).unwrap();
+                crate::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap();
             }
             let consumer = actual.host_snapshot.synapses.iter().find(|wire| wire.to == "consumer").unwrap();
             if case["collection"] == true {
@@ -75,9 +75,9 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             }
             assert!(!actual.host_snapshot.synapses.iter().any(|wire| wire.from == feature && wire.to == selected.from));
             let committed = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new((*actual).clone());
-            for inverse in inverses.iter().rev() { for row in inverse { crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut actual, row).unwrap(); } }
+            for inverse in inverses.iter().rev() { for row in inverse { crate::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap(); } }
             assert_eq!(actual, before);
-            for row in &rows { crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut actual, row).unwrap(); }
+            for row in &rows { crate::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap(); }
             assert_eq!(actual, committed);
             for inverse in inverses { for row in inverse { row.retire_cold(); } }
             for row in rows { row.retire_cold(); }

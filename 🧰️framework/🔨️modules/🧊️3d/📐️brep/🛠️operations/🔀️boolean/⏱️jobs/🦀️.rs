@@ -133,7 +133,7 @@ impl SplitJob {
         require_tol(tol)?;
         require_solid(body, solid)?;
         let normal = plane_normal(normal)?;
-        let tessellation = TessellationJob::for_solid(body, solid, tol.max(1e-3))?;
+        let tessellation = TessellationJob::new(tol.max(1e-3));
         let plan = Plan::new(&[("tessellate", tessellation.progress().units_total.max(1)), ("classify", 0), ("positive", 1), ("negative", 1)]);
         Ok(Self { solid, origin, normal, tol, tessellation: Some(tessellation), mesh: None, positive: Side::default(), negative: Side::default(), hull_only: false, first: None, plan })
     }
@@ -198,7 +198,9 @@ impl StagedOperation for SplitJob {
         match unit.phase {
             TESSELLATE => {
                 let job = self.tessellation.as_mut().ok_or_else(|| KernelError::Operation("split: tessellation already finished".into()))?;
-                if let TessellationStep::Done(_) = job.step(body, 1)? {
+                let step=job.step(body,crate::brep::queries::tessellation::TessellationInput::Solid(self.solid),1)?;
+                if matches!(step,TessellationStep::Working(_)) {self.plan.grow(TESSELLATE,1);}
+                if let TessellationStep::Done(_) = step {
                     let (mesh, _) = self.tessellation.take().and_then(TessellationJob::into_mesh).ok_or_else(|| KernelError::Operation("split: tessellation produced no mesh".into()))?;
                     if mesh.index.len() % 3 != 0 {
                         return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));

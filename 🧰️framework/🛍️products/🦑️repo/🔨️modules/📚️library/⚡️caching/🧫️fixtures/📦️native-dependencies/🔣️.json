@@ -276,5 +276,147 @@
     "metadata": "\n[package.metadata.semio.preparation]\nscript=\"📜️script.ts\"\ncommand=[\"prepare\"]\n",
     "script": "import {writeFileSync} from \"node:fs\";\nimport {resolve} from \"node:path\";\nimport {observeCargoPreparationSourceV1,observeCargoPreparationOutputV1,completeCargoPreparationObservationV1} from \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts\";\nif(process.argv[2]!==\"prepare\")throw Error(\"Unexpected child preparation\");observeCargoPreparationSourceV1(import.meta.path);const output=resolve(process.cwd(),\"child-output.txt\");writeFileSync(output,\"7\");observeCargoPreparationOutputV1(output,\"7\");completeCargoPreparationObservationV1();\n",
     "parentRead": "const child=resolve(process.cwd(),\"generated/child-output.txt\");const childBytes=readFileSync(child);observeCargoPreparationInputV1(child,\"file\",childBytes);if(childBytes.toString()!==\"7\")throw Error(\"Dependency preparation output is not current\");\n"
+  },
+  "programImports": [
+    {
+      "path": "./🧬️module.ts",
+      "literal": "\"./🧬️module.ts\""
+    },
+    {
+      "path": "./é.ts",
+      "literal": "\"./é.ts\""
+    },
+    {
+      "path": "./🧬️escaped.ts",
+      "literal": "\"./\\u{1F9EC}\\uFE0Fescaped.ts\""
+    },
+    {
+      "path": "./ð.ts",
+      "literal": "\"./ð.ts\""
+    },
+    {
+      "path": "./ð§¬.ts",
+      "literal": "\"./ð§¬.ts\"",
+      "shadow": "./🧬.ts"
+    }
+  ],
+  "generatedPreparation": {
+    "rootManifest": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\", \"additional/new\", \"generated\"] \nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nexclude-patterns = []\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\", \"generated/Cargo.toml\", \"additional/*/Cargo.toml\"]\n\n[dependencies]\ngenerated-dependency = { path = \"generated\" }\n\n[package.metadata.semio.preparation]\nscript=\"owned/📜️script.ts\"\ncommand=[\"prepare\"]\n",
+    "manifest": "[package]\nname=\"new-preparation-member\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[package.metadata.semio.preparation]\nscript=\"📜️script.ts\"\ncommand=[\"prepare\"]\n",
+    "script": "import {writeFileSync} from \"node:fs\";\nimport {resolve} from \"node:path\";\nimport {observeCargoPreparationSourceV1,observeCargoPreparationOutputV1,completeCargoPreparationObservationV1} from \"../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts\";\nif(process.argv[2]!==\"prepare\")throw Error(\"Unexpected child preparation\");observeCargoPreparationSourceV1(import.meta.path);const output=resolve(process.cwd(),\"child-output.txt\");writeFileSync(output,\"7\");observeCargoPreparationOutputV1(output,\"7\");completeCargoPreparationObservationV1();\n",
+    "expectedPackages": [
+      "generated-dependency",
+      "native-dependency-fixture",
+      "new-preparation-member"
+    ]
+  },
+  "ancestorPreparation": {
+    "rootManifest": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\", \"additional/new\", \"generated\"] \nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nexclude-patterns = []\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\", \"generated/Cargo.toml\", \"additional/*/Cargo.toml\"]\n\n[dependencies]\ngenerated-dependency = { path = \"generated\" }\nnew-preparation-member = { path = \"additional/new\" }\n\n[package.metadata.semio.preparation]\nscript=\"owned/📜️script.ts\"\ncommand=[\"prepare\"]\n",
+    "parentRead": "const child=resolve(process.cwd(),\"additional/new/child-output.txt\");const childBytes=readFileSync(child);observeCargoPreparationInputV1(child,\"file\",childBytes);if(childBytes.toString()!==\"7\")throw Error(\"Dependency preparation output is not current\");\n"
+  },
+  "changedPreparation": {
+    "command": [
+      "different"
+    ],
+    "expected": "Prepared recipe closure changed"
+  },
+  "selectedPreparation": {
+    "selection": {
+      "manifest": "selected/Cargo.toml",
+      "packages": [
+        "selected-main"
+      ]
+    },
+    "unusedName": "unrelated-member",
+    "unusedManifest": "[package]\nname=\"unrelated-member\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[package.metadata.semio.preparation]\nscript=\"📜️script.ts\"\ncommand=[\"prepare\"]\n",
+    "unusedScript": "throw Error(\"Unrelated owner recipe must remain inert\");\n",
+    "expectedPackages": [
+      "selected-main",
+      "unused-selected"
+    ],
+    "expectedTreePackages": [
+      "foreign-child",
+      "generated-dependency",
+      "selected-main"
+    ],
+    "rejectedSelections": [
+      {
+        "manifest": "../Cargo.toml",
+        "packages": []
+      },
+      {
+        "manifest": "Cargo.toml",
+        "packages": [
+          "same",
+          "same"
+        ]
+      },
+      {
+        "manifest": "Cargo.toml",
+        "packages": [
+          ""
+        ]
+      },
+      {
+        "manifest": "Cargo.toml",
+        "packages": [],
+        "skip": true
+      },
+      {
+        "manifest": "fooCargo.toml",
+        "packages": []
+      },
+      {
+        "manifest": "/Cargo.toml",
+        "packages": []
+      },
+      {
+        "manifest": "C:/Cargo.toml",
+        "packages": []
+      },
+      {
+        "manifest": "sub\\Cargo.toml",
+        "packages": []
+      },
+      {
+        "manifest": "Cargo.toml"
+      },
+      {
+        "packages": []
+      }
+    ],
+    "foreignLock": "This independent workspace lock is not consumed.\n",
+    "foreignFiles": {
+      "foreign/Cargo.toml": "[workspace]\nresolver=\"2\"\nmembers=[\"child\",\"unused\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=[]\nmember-manifests=[\"child/Cargo.toml\",\"unused/Cargo.toml\"]\n[workspace.package]\nedition=\"2021\"\n",
+      "foreign/child/Cargo.toml": "[package]\nname=\"foreign-child\"\nversion=\"0.1.0\"\nworkspace=\"..\"\nedition.workspace=true\n[lib]\npath=\"lib.rs\"\n",
+      "foreign/child/lib.rs": "pub fn foreign() {}\n",
+      "foreign/unused/Cargo.toml": "[package]\nname=\"unused-foreign\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[package.metadata.semio.preparation]\nscript=\"📜️script.ts\"\ncommand=[\"prepare\"]\n",
+      "foreign/unused/lib.rs": "",
+      "foreign/unused/📜️script.ts": "throw Error(\"Unrelated owner recipe must remain inert\");\n",
+      "selected/Cargo.toml": "[workspace]\nresolver=\"2\"\nmembers=[\"main\",\"unused\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=[]\nmember-manifests=[\"main/Cargo.toml\",\"unused/Cargo.toml\"]\n[workspace.package]\nedition=\"2021\"\n",
+      "selected/main/Cargo.toml": "[package]\nname=\"selected-main\"\nversion=\"0.1.0\"\nworkspace=\"..\"\nedition.workspace=true\n[lib]\npath=\"lib.rs\"\n[dependencies]\nforeign-child={path=\"../../foreign/child\"}\ngenerated-dependency={path=\"../../generated\"}\n",
+      "selected/main/lib.rs": "",
+      "selected/unused/Cargo.toml": "[package]\nname=\"unused-selected\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[package.metadata.semio.preparation]\nscript=\"📜️script.ts\"\ncommand=[\"prepare\"]\n",
+      "selected/unused/lib.rs": "",
+      "selected/unused/📜️script.ts": "throw Error(\"Unrelated owner recipe must remain inert\");\n"
+    },
+    "invocation": {
+      "args": [
+        "metadata",
+        "--locked",
+        "--offline",
+        "--manifest-path",
+        "selected/main/Cargo.toml"
+      ],
+      "packages": [
+        "selected-main"
+      ],
+      "environment": {
+        "CARGO_TARGET_DIR": "{root}/durable-target",
+        "CARGO_BUILD_BUILD_DIR": "{root}/durable-build",
+        "SEMIO_COMPILER_RESOURCE_ROOT": "{root}/durable-build/semio-compiler-resources"
+      },
+      "rejectedCommand": "install"
+    }
   }
 }

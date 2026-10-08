@@ -1,0 +1,30 @@
+[
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts",
+    "realPath": "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts",
+    "sha256": "77aa99b940cc009a13dd8fae67474f593fad038b37d4556926319908cac922f4",
+    "byteLength": 1239,
+    "role": "read-only observation"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+    "realPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+    "sha256": "61b876cf69214dc4e32d8eeb5a011c3efb11b083a68d5ce6ebdf34d93274da3e",
+    "byteLength": 132801,
+    "role": "read-only observation"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json",
+    "realPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json",
+    "sha256": "6c1967652c4ccc90d787f630f0ff8d5b9da2ad392b5e79f96301ce533eb68906",
+    "byteLength": 424392,
+    "role": "read-only observation"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/✏️sketch/🖼️.png",
+    "realPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/✏️sketch/🖼️.png",
+    "sha256": "cb1c934dff7b26101b3126ac1d63ab0865f96ccb319faa72a85e791f3ec079ad",
+    "byteLength": 82648,
+    "role": "read-only observation"
+  }
+]

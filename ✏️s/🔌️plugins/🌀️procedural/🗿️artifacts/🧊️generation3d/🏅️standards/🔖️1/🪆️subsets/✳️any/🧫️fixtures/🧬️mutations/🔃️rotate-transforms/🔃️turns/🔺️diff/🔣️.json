@@ -2,9 +2,10 @@
   "schema": null,
   "camera": null,
   "widgets": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "extrude__gumball_rotate",
         "patch": {
@@ -31,8 +32,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "synapses": null,
   "layout": null,

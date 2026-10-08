@@ -348,25 +348,26 @@ def moved_lanes(before, after):
 
 
 def declared_lanes(diff):
-    """🧭️ The lanes a committed diff declares: ordered input ops (a resize moves the extent AND relays the pixels), ordered palette ops, scalar lanes and pin rows."""
+    """🧭️ The lanes a committed diff declares: the input patch (a resize moves the extent AND relays the pixels), the positional palette delta, scalar lanes and pin rows."""
     lanes = set()
     if diff.get("schema") is not None:
         lanes.add("schema")
     if diff.get("seed") is not None:
         lanes.add("seed")
-    for operation in diff.get("inputOps", []):
-        if operation["op"] == "resize":
-            lanes.update(("inputExtent", "inputPixels"))
-        else:
-            lanes.add("inputPixels")
-    if diff.get("paletteOps"):
+    inputs = diff.get("input") or {}
+    if inputs.get("size") is not None:
+        lanes.update(("inputExtent", "inputPixels"))
+    if inputs.get("writes"):
+        lanes.add("inputPixels")
+    palette = diff.get("palette") or {}
+    if palette.get("removed") or palette.get("inserted") or palette.get("recolored"):
         lanes.add("palette")
     if diff.get("output") is not None:
         lanes.add("output")
     if diff.get("model") is not None:
         lanes.add("model")
     pinned = diff.get("pinned", {})
-    if pinned.get("removed") or pinned.get("added") or pinned.get("patched"):
+    if pinned.get("removed") or pinned.get("inserted") or pinned.get("modified"):
         lanes.add("pinned")
     return lanes
 

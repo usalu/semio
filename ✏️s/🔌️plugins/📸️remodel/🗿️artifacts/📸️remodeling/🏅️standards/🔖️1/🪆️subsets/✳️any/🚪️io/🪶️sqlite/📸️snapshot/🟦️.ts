@@ -15,16 +15,39 @@ const signed=(value:bigint):bigint=>typeof value==="bigint"&&value>=-92233720368
 const unsigned=(value:bigint):Cells=>typeof value==="bigint"&&value>=0n&&value<=18446744073709551615n?[value.toString(),BigInt.asIntN(64,value)]:fail("requires unsigned64");
 function float(value:Binary64|Binary32,width:32|64):Cells{const word=width===64?parseBinary64(value).bits:BigInt(parseBinary32(value).bits),query=width===64?binary64Value(value as Binary64):binary32Value(value as Binary32),kind=Number.isNaN(query)?"nan":query===Infinity?"positiveInfinity":query===-Infinity?"negativeInfinity":"finite";return[Number.isNaN(query)?null:query,width===64?BigInt.asIntN(64,word):word,kind]}
 const f32=(value:Binary32):Cells=>float(value,32);
+const durableFloat=(bits:number):Cells=>{const value={bits},query=binary32Value(value),cells=f32(value);return[Number.isFinite(query)?query:null,cells[1]!,cells[2]!]};
 const f64=(value:Binary64):Cells=>float(value,64);
 const optionalFloat=<T>(value:T|null,encode:(value:T)=>Cells):Cells=>value===null?[null,null,null]:encode(value);
 const optionalText=(value:string|null):SqliteValue=>value===null?null:text(value);
 const child=(value:model.ArtifactChild):Cells=>[text(value.childId),text(value.target.artifactId),text(value.target.dialect.artifactKind),text(value.target.dialect.standard),text(value.target.dialect.subset)];
 
+const meshFields=["positions","normals","colors","indices","uvs","face_ids","vertex_ids","edge_positions","edge_ids","edge_uvs","edge_is_seam","paint_texture_base64"] as const;
+const meshTypes=["f32","f32","f32","u32","f32","u32","u32","f32","u32","f32","u8","text"] as const;
+type DurableShape={field:string|null;tag:number|null;type:"raw"|"f32"|"u32"|"u8"|"text"|"invalid-text";count:number;offset:number;tail:number};
+async function validUtf8(bytes:Uint8Array,offset:number,checkpoint:()=>Promise<void>):Promise<boolean>{
+ let checkpointAt=offset;for(let i=offset;i<bytes.length;){if(i>=checkpointAt){await checkpoint();checkpointAt=i+4096}const first=bytes[i++]!;if(first<128)continue;const width=first>=194&&first<=223?1:first>=224&&first<=239?2:first>=240&&first<=244?3:0;if(width===0||i+width>bytes.length)return false;const second=bytes[i]!;if(second<128||second>191||first===224&&second<160||first===237&&second>159||first===240&&second<144||first===244&&second>143)return false;for(let j=1;j<width;j++)if(bytes[i+j]!<128||bytes[i+j]!>191)return false;i+=width}return true;
+}
+async function durableShape(kind:string,bytes:Uint8Array,checkpoint:()=>Promise<void>):Promise<DurableShape>{
+ if(!(bytes instanceof Uint8Array))return fail("durable chunk requires octets");
+ if(kind!=="sparse"&&kind!=="mesh")return{field:null,tag:null,type:"raw",count:bytes.length,offset:0,tail:0};
+ if(kind==="mesh"&&bytes.length===0)return{field:"absent",tag:null,type:"u8",count:0,offset:0,tail:0};
+ const tag=kind==="mesh"?bytes[0]!:null,type=tag===null?"f32":tag>11?"u8":meshTypes[tag]!,offset=tag===null?0:1,length=bytes.length-offset,word=type==="f32"||type==="u32";
+ return{field:tag===null?"samples":tag>11?"unknown":meshFields[tag]!,tag,type:type==="text"&&!await validUtf8(bytes,offset,checkpoint)?"invalid-text":type,count:word?Math.floor(length/4):length,offset,tail:word?length%4:0};
+}
+async function projectDurableChunk(p:ArtifactSqliteProjection,parent:bigint,ordinal:number,shape:DurableShape,bytes:Uint8Array):Promise<void>{
+ const id=await p.insert("remodel_durable_chunk",[parent,BigInt(ordinal),shape.field,shape.tag===null?null:BigInt(shape.tag),shape.type,BigInt(shape.count),shape.type==="raw"?bytes:null]);
+ if(shape.type==="raw")return;
+ if(shape.type==="text"){p.checkValueBytesAdditional(shape.count);const decoder=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}),parts:string[]=[];for(let i=shape.offset;i<bytes.length;i+=4096){await p.checkpoint();parts.push(decoder.decode(bytes.subarray(i,Math.min(i+4096,bytes.length)),{stream:true}))}parts.push(decoder.decode());await p.insert("remodel_durable_text",[id,parts.join("")]);return}
+ const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+ for(let i=0;i<shape.count;i++){const byte=shape.type==="u8"||shape.type==="invalid-text",offset=shape.offset+i*(byte?1:4);await p.insert(shape.type==="f32"?"remodel_durable_float":shape.type==="u32"?"remodel_durable_integer":"remodel_durable_byte",[id,BigInt(i),...(shape.type==="f32"?durableFloat(view.getUint32(offset,true)):byte?["payload",BigInt(view.getUint8(offset))]:[BigInt(view.getUint32(offset,true))])])}
+ for(let i=0;i<shape.tail;i++)await p.insert("remodel_durable_byte",[id,BigInt(i),"trailing-word",BigInt(bytes[shape.offset+shape.count*4+i]!)])
+}
+
 async function forecast(value:model.RemodelingSnapshot,options:ArtifactSqliteOptions):Promise<number>{
  let rows=13,work=0;const add=async(count:number)=>{rows+=count;if(!Number.isSafeInteger(rows)||rows>(options.maxRows??1_000_000))fail("row limit");if(++work%256===0)await artifactSqliteCheckpoint(options,"projectSnapshot",work,0)};
  await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
  await add(Object.keys(value.assets).length);
- for(const artifact of Object.values(value.durableArtifacts))await add(1+artifact.chunks.length);
+ for(const artifact of Object.values(value.durableArtifacts)){await add(1);for(const bytes of artifact.chunks){const shape=await durableShape(artifact.kind,bytes,()=>artifactSqliteCheckpoint(options,"projectSnapshot",work,0));await add(1+(shape.type==="raw"?0:shape.type==="text"?1:shape.count+shape.tail))}}
  for(const stream of value.streams)await add(1+stream.frames.length+(stream.source===null?0:1));
  for(const camera of value.calibration.cameras)await add(1+camera.distortion.length);
  await add(value.calibration.rig.length);
@@ -43,7 +66,7 @@ export async function remodelingSnapshotToSqliteDatabase(snapshot:model.Remodeli
  const rows=await forecast(snapshot,options),p=await ArtifactSqliteProjection.create(REMODELING_SQLITE_SCHEMA,options);p.checkRowsAdditional(rows);
  const doc=await p.insert("remodel_document",[text(snapshot.schema),text(snapshot.id)]),calibration=await p.insert("remodel_calibration",[doc]),parameters=await p.insert("remodel_parameters",[doc]),results=await p.insert("remodel_results",[doc]);
  let ordinal=0;for(const [key,value]of Object.entries(snapshot.assets).sort(([a],[b])=>a<b?-1:a>b?1:0))await p.insert("remodel_asset",[doc,BigInt(ordinal++),text(key),...child(value)]);
- ordinal=0;for(const [key,value]of Object.entries(snapshot.durableArtifacts).sort(([a],[b])=>a<b?-1:a>b?1:0)){const id=await p.insert("remodel_durable_artifact",[doc,BigInt(ordinal++),text(key),text(value.kind),optionalText(value.mime),uint(value.width),uint(value.height)]);for(let i=0;i<value.chunks.length;i++)await p.insert("remodel_durable_chunk",[id,BigInt(i),value.chunks[i]!])}
+ ordinal=0;for(const [key,value]of Object.entries(snapshot.durableArtifacts).sort(([a],[b])=>a<b?-1:a>b?1:0)){const id=await p.insert("remodel_durable_artifact",[doc,BigInt(ordinal++),text(key),text(value.kind),optionalText(value.mime),uint(value.width),uint(value.height)]);for(let i=0;i<value.chunks.length;i++){const bytes=value.chunks[i]!,shape=await durableShape(value.kind,bytes,()=>p.checkpoint());await projectDurableChunk(p,id,i,shape,bytes)}}
  for(let i=0;i<snapshot.streams.length;i++){const v=snapshot.streams[i]!,id=await p.insert("remodel_stream",[doc,BigInt(i),text(v.id),text(v.name),text(v.kind),optionalText(v.cameraId),...f64(v.syncOffsetMs),...f64(v.fpsHint)]);for(let j=0;j<v.frames.length;j++){const f=v.frames[j]!;await p.insert("remodel_frame",[id,BigInt(j),uint(f.index),...f64(f.timestampMs),text(f.assetId)])}if(v.source!==null){const s=v.source;await p.insert("remodel_video_source",[id,text(s.name),text(s.container),text(s.codec),...f64(s.durationMs),uint(s.frameCount),uint(s.width),uint(s.height)])}}
  for(let i=0;i<snapshot.calibration.cameras.length;i++){const v=snapshot.calibration.cameras[i]!,id=await p.insert("remodel_camera",[calibration,BigInt(i),text(v.id),text(v.label),text(v.model),...f64(v.fx),...f64(v.fy),...f64(v.cx),...f64(v.cy),...f64(v.skew),...optionalFloat(v.rmsReprojectionPx,f32),bool(v.locked)]);if(v.distortion.length!==5)fail("distortion width");for(let j=0;j<5;j++)await p.insert("remodel_camera_distortion",[id,BigInt(j),...f32(v.distortion[j]!)])}
  for(let i=0;i<snapshot.calibration.rig.length;i++){const v=snapshot.calibration.rig[i]!;if(v.rotationWxyz.length!==4||v.translationM.length!==3)fail("rig vector width");await p.insert("remodel_rig_extrinsic",[calibration,BigInt(i),text(v.cameraId),...f32(v.rotationWxyz[0]),...f32(v.rotationWxyz[1]),...f32(v.rotationWxyz[2]),...f32(v.rotationWxyz[3]),...f32(v.translationM[0]),...f32(v.translationM[1]),...f32(v.translationM[2])])}
@@ -85,6 +108,7 @@ class Cursor{
  expect(v:SqliteValue):void{if(this.next()!==v)fail("ownership or unused scalar differs")}
  float(width:32|64):Binary64|Binary32{const query=this.next(),integer=this.integer(),kind=this.text();if(width===32&&(integer<0n||integer>4294967295n))fail("binary32 word width");const v=width===32?{bits:Number(integer)}:{bits:BigInt.asUintN(64,integer)},expected=width===32?binary32Value(v as Binary32):binary64Value(v as Binary64),classification=Number.isNaN(expected)?"nan":expected===Infinity?"positiveInfinity":expected===-Infinity?"negativeInfinity":"finite";if(kind!==classification)fail("IEEE class differs");if(Number.isNaN(expected)){if(query!==null)fail("NaN query must be NULL")}else if(typeof query==="bigint"){if(!Number.isFinite(expected)||!Number.isInteger(expected)||BigInt(expected)!==query)fail("IEEE INTEGER query differs")}else if(typeof query!=="number"||query!==expected)fail("IEEE REAL query differs");return v}
  f32():Binary32{return this.float(32) as Binary32}
+ durableFloat():Binary32{const query=this.next(),bits=this.uint(),kind=this.text(),expected=durableFloat(bits);if(query!==expected[0]&&!(typeof query==="bigint"&&typeof expected[0]==="number"&&Number.isInteger(expected[0])&&query===BigInt(expected[0]))||kind!==expected[2])return fail("durable IEEE query or class differs");return{bits}}
  f64():Binary64{return this.float(64) as Binary64}
  optionalFloat(width:32|64):Binary32|Binary64|null{if(this.row.values[this.index+1]===null){this.expect(null);this.expect(null);this.expect(null);return null}return this.float(width)}
  child():model.ArtifactChild{return{childId:this.text(),target:{artifactId:this.text(),dialect:{artifactKind:this.text(),standard:this.text(),subset:this.text()}}}}
@@ -107,6 +131,26 @@ class Reader{
  async finish():Promise<void>{await this.control.scopedStage(async control=>{let total=0;for(const rows of this.tables.values())total+=rows.length;await control.beginStage(total);for(const rows of this.tables.values())for(const row of rows){if(!this.used.has(row))fail("unowned entity");await control.step()}await control.checkpoint()})}
 }
 
+async function restoreDurableChunk(r:Reader,row:SqliteRow,kind:string):Promise<Uint8Array>{
+ const c=await r.take(row,3),field=c.optionalText(),tagWord=c.optionalInteger(),type=c.symbol(["raw","f32","u32","u8","text","invalid-text"] as const),count=c.integer(),raw=c.next();c.done();
+ if(count<0n||count>BigInt(Number.MAX_SAFE_INTEGER))return fail("durable element count");
+ if(type==="raw"){if(kind==="sparse"||kind==="mesh"||field!==null||tagWord!==null||!(raw instanceof Uint8Array)||count!==BigInt(raw.length))return fail("raw durable boundary");return r.control.copyBytes(raw)}
+ if(raw!==null||kind!=="sparse"&&kind!=="mesh"||tagWord!==null&&(tagWord<0n||tagWord>255n))return fail("structured durable field");
+ const tag=tagWord===null?null:Number(tagWord),offset=tag===null?0:1,verify=async(bytes:Uint8Array)=>{const shape=await durableShape(kind,bytes,()=>r.control.checkpoint());if(shape.field!==field||shape.tag!==tag||shape.type!==type||BigInt(shape.count)!==count)return fail("structured durable boundary differs");return bytes};
+ if(type==="text"){
+  const leaf=await r.one("remodel_durable_text",row.rowid),c=await r.take(leaf!,2),content=c.text();c.done();
+  const length=Number(count)+offset;if(!Number.isSafeInteger(length))return fail("texture byte width");await r.control.charge(length);const bytes=new Uint8Array(length),encoder=new TextEncoder();let written=offset;
+  for(let i=0;i<content.length;){await r.control.checkpoint();let end=Math.min(i+4096,content.length);if(end<content.length&&content.charCodeAt(end-1)>=55296&&content.charCodeAt(end-1)<=56319)end--;const part=content.slice(i,end),result=encoder.encodeInto(part,bytes.subarray(written));if(result.read!==part.length)return fail("texture UTF8 byte count");written+=result.written;i=end}
+  if(BigInt(written-offset)!==count)return fail("texture UTF8 byte count");if(offset)bytes[0]=tag!;return verify(bytes);
+ }
+ const word=type==="f32"||type==="u32",rows=await r.group(type==="f32"?"remodel_durable_float":type==="u32"?"remodel_durable_integer":"remodel_durable_byte",row.rowid),tail=word?await r.group("remodel_durable_byte",row.rowid):[];
+ if(BigInt(rows.length)!==count)return fail("durable element cardinality");
+ if(tail.length>3)return fail("partial word width");const length=Number(count)*(word?4:1)+tail.length+offset;if(!Number.isSafeInteger(length))return fail("durable byte width");await r.control.charge(length);const bytes=new Uint8Array(length),view=new DataView(bytes.buffer);if(offset)bytes[0]=tag!;
+ for(let i=0;i<rows.length;i++){const c=await r.take(rows[i]!,3);if(!word)c.expect("payload");const value=type==="f32"?c.durableFloat().bits:c.uint();if(!word&&value>255)return fail("durable byte width");if(word)view.setUint32(i*4+offset,value,true);else view.setUint8(i+offset,value);c.done()}
+ for(let i=0;i<tail.length;i++){const c=await r.take(tail[i]!,3);c.expect("trailing-word");const value=c.uint();if(value>255)return fail("partial word byte width");bytes[offset+Number(count)*4+i]=value;c.done()}
+ return verify(bytes);
+}
+
 /** 📥️ Restore every owned field while checking complete relation ownership. */
 export async function remodelingSnapshotFromSqliteDatabase(database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<model.RemodelingSnapshot>{
  const r=await Reader.create(database,options),docs=r.all("remodel_document");if(docs.length!==1)fail("one document required");const doc=docs[0]!,d=await r.take(doc),schema=d.text(),id=d.text();d.done();
@@ -115,7 +159,7 @@ export async function remodelingSnapshotFromSqliteDatabase(database:SqliteDataba
  let prior:string|null=null;
  for(const row of await r.group("remodel_asset",doc.rowid)){const c=await r.take(row,3),key=c.text();if(prior!==null&&prior>=key)fail("map keys not unique and ordered");prior=key;Object.defineProperty(assets,key,{value:c.child(),enumerable:true,writable:true,configurable:true});c.done()}
  prior=null;
- for(const row of await r.group("remodel_durable_artifact",doc.rowid)){const c=await r.take(row,3),key=c.text();if(prior!==null&&prior>=key)fail("content keys not unique and ordered");prior=key;const kind=c.text(),mime=c.optionalText(),width=c.uint(),height=c.uint();c.done();const chunks:Uint8Array[]=[];for(const leaf of await r.group("remodel_durable_chunk",row.rowid)){const c=await r.take(leaf,3),bytes=c.next();if(!(bytes instanceof Uint8Array))fail("literal octets required");chunks.push(await r.control.copyBytes(bytes as Uint8Array));c.done()}Object.defineProperty(durableArtifacts,key,{value:{kind,mime,width,height,chunks},enumerable:true,writable:true,configurable:true})}
+ for(const row of await r.group("remodel_durable_artifact",doc.rowid)){const c=await r.take(row,3),key=c.text();if(prior!==null&&prior>=key)fail("content keys not unique and ordered");prior=key;const kind=c.text(),mime=c.optionalText(),width=c.uint(),height=c.uint();c.done();const chunks:Uint8Array[]=[];for(const leaf of await r.group("remodel_durable_chunk",row.rowid))chunks.push(await restoreDurableChunk(r,leaf,kind));Object.defineProperty(durableArtifacts,key,{value:{kind,mime,width,height,chunks},enumerable:true,writable:true,configurable:true})}
  const streams:model.MediaStream[]=[];
  for(const row of await r.group("remodel_stream",doc.rowid)){const c=await r.take(row,3),id=c.text(),name=c.text(),kind=c.symbol(model.MEDIA_KINDS),cameraId=c.optionalText(),syncOffsetMs=c.f64(),fpsHint=c.f64();c.done();const frames:model.FrameRef[]=[];for(const frame of await r.group("remodel_frame",row.rowid)){const c=await r.take(frame,3);frames.push({index:c.uint(),timestampMs:c.f64(),assetId:c.text()});c.done()}const sourceRow=await r.one("remodel_video_source",row.rowid,1,false);let source:model.VideoSource|null=null;if(sourceRow!==null){const c=await r.take(sourceRow,2);source={name:c.text(),container:c.text(),codec:c.symbol(model.VIDEO_CODECS),durationMs:c.f64(),frameCount:c.uint(),width:c.uint(),height:c.uint()};c.done()}streams.push({id,name,kind,cameraId,syncOffsetMs,fpsHint,frames,source})}
  const cameras:model.CameraCalibration[]=[],rig:model.RigExtrinsic[]=[];

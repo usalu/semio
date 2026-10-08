@@ -99,7 +99,7 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
         }
     }
     fn terminal_is_empty(&self)->bool{self.root.is_empty()&&self.payload.is_none()}
-    fn next_work_byte_demand(&self)->usize{self.payload.as_ref().map_or_else(||self.root.copy_demand(),ControlledRetirement::next_copy_byte_demand)}
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.payload.as_ref().map_or_else(||Ok(self.root.copy_demand()),ControlledRetirement::next_copy_byte_demand)}
     fn next_close_byte_demand(&self)->Option<usize>{self.payload.as_ref().map_or_else(||self.root.release_demand().ok(),|owner|owner.next_release_byte_demand().ok())}
     fn next_birth_bytes(&self,maximum_bytes:usize)->Option<usize>{self.payload.as_ref().map_or(Some(0),|owner|owner.next_capacity_byte_demand(maximum_bytes).ok())}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.payload.as_ref().map_or(Ok(self.root.depth_demand()),|owner|self.root.retained_depth().checked_add(owner.next_depth_demand()?).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered nested retirement depth overflow")))}

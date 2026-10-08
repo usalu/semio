@@ -1,0 +1,52 @@
+{
+  "logicalActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "beforeSha256": "eea3294d958268b365d70273839e9be8b6668823d9828be04f749723f70800fc",
+      "before": "expect(source.includes(\"read.owner = Some(original)\")).toBe(true)",
+      "after": "expect(source.includes(\"self.owner = Some(original)\")).toBe(true)",
+      "occurrences": 1,
+      "afterSha256": "ec66d0c834b4b8dcee589d8ccde7f0cd5b8f0b853886f14416fd52fd0c495977"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "8e447e8219694642a811e1e4495b42aaea6258350d09b7f0cc36168d993bed42",
+      "before": "Result<SnapshotRetirementStep, SnapshotRetirementRejected> {\n        SpaceMember::return_prepared_snapshot_read_erased",
+      "after": "Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> {\n        SpaceMember::return_prepared_snapshot_read_erased",
+      "occurrences": 1,
+      "afterSha256": "64bdac5a22c261ff3b8f6ef8eb8f6ed8421415642da55743c58f54b85ad3cb73"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "64bdac5a22c261ff3b8f6ef8eb8f6ed8421415642da55743c58f54b85ad3cb73",
+      "before": "    fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {\n        SpaceMember::retire_snapshot_read_erased(&mut self.0, snapshot)\n    }",
+      "after": "    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {\n        SpaceMember::retire_snapshot_read_erased(&mut self.0, snapshot, grant)\n    }",
+      "occurrences": 1,
+      "afterSha256": "92e3795ec2c836b94a3eab8d5a836922afcbd9a56ea56daf164e9b5588ee4f6f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "92e3795ec2c836b94a3eab8d5a836922afcbd9a56ea56daf164e9b5588ee4f6f",
+      "before": "    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {\n        SpaceMember::close_owned_step(&mut self.0, maximum_items, maximum_bytes)\n    }",
+      "after": "    fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {\n        SpaceMember::close_owned_step(&mut self.0, grant)\n    }",
+      "occurrences": 1,
+      "afterSha256": "6cdf543c000d9f67f23e9faec9e81a2275b22afc41dcf721be76f9ff7caddd63"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "6cdf543c000d9f67f23e9faec9e81a2275b22afc41dcf721be76f9ff7caddd63",
+      "before": "    fn close_owned_byte_demand(&self) -> usize {\n        SpaceMember::close_owned_byte_demand(&self.0)\n    }",
+      "after": "    fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {\n        SpaceMember::close_owned_demands(&self.0, maximum_body_bytes)\n    }",
+      "occurrences": 1,
+      "afterSha256": "39abda8c9e5ec4ea6dc67ed09f0c7531cf8e1233a697fdc17951f4be9afdfd87"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "39abda8c9e5ec4ea6dc67ed09f0c7531cf8e1233a697fdc17951f4be9afdfd87",
+      "before": "    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {\n        SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)\n    }",
+      "after": "    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {\n        SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)\n    }",
+      "occurrences": 1,
+      "afterSha256": "ff15ce86922ca1f621cf616538a69f7bcbb0f22b2062ff17ee2584baf1cae028"
+    }
+  ]
+}

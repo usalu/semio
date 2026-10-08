@@ -1,0 +1,17 @@
+# Current Phased Catalog and Initialization Admission
+
+Status: intermediate source integration; no current native or production success.
+
+The catalog now receives the actual five-axis RetainedCloneGrant. DocumentStoreOwners.new and with_* return an owner plus completed RetainedCloneProgress; admission refusal retains original typed factory Arcs, original disposer and any completed tickets in DocumentStoreOwnersAdmissionError. No late failure drops those owners. admit_constructor consumes at most the supplied structural item count and available capacity, constructor_is_complete exposes readiness, and constructor_demands borrows the next original factory requirement. The uninstalled retirement route births at most one missing ticket before any original aliases retire, propagates the four child currencies and parent depth, and separately pays the terminal disposer Box.
+
+Initialization rejection now hands original shared roots, page catalogs, causal owner, supersession index and revision accumulator to current genuine retirement owners as whole values. The granted frame exists before ownership leaves each original field; refusal restores the same original value. Empty original history backing moves into the genuine StringVector retirement rather than disappearing when logical entries are popped. A shared root uses the current FactorySharedRetirement admitted constructor and preserves its exact original Arc on refusal. Original producer bodies are observers and were preserved.
+
+True source RED receipts: oct8-current-uninstalled-catalog-red.log (Nx1,1.3s), oct8-current-catalog-constructor-red.log (Nx1,586ms), oct8-phased-catalog-constructor-red.log (Nx1), and oct8-current-initialization-retirement-red.log (Nx1,726ms). Final current focused source receipt oct8-phased-catalog-initialization-green.log is Nx0. Independent Node Buffer/fast-json-patch traces and Ajv validation reference genuine Value Grant/Demand contracts; fixtures remain plain vectors, and original payload cases remain present.
+
+The complete atomic catalog admission source receipt was superseded by Root-authorized phased semantics. Actual current one-item grants must make finite three-turn ticket progress without synthesized items or capacity. The prior complete-constructor rows remain a total-capacity pricing oracle; added phase rows describe per-turn ownership.
+
+Current defining/caller work remains: MemberStoreOwner controlled admission, Initial/member advancement supplied grant propagation, hydration/config hot and cold retirement, and genuine current Sealer Build assembly coordination. Current public constructor signatures are authored integration; callers still require propagation. Source freeze is not claimed.
+
+Actual member native baseline30588 remains Nx1 before these tests at current UI6 trait errors. No unchanged native repeat or original WGPU producer was dispatched. Runtime allocator/pointer laws remain pending actual Cargo, and the independent allocation equalities are unchanged.
+
+Exact narrow preimages: oct8-current-uninstalled-catalog-admission-preimages.json, oct8-current-catalog-constructor-api-preimages.json, oct8-catalog-phased-constructor-preimages.json, oct8-current-initialization-runtime-retirement-preimages.json. Current block SHA observations are in oct8-current-catalog-runtime-intermediate-block-ledger.json. Peers and durable output/caches/leases were preserved.

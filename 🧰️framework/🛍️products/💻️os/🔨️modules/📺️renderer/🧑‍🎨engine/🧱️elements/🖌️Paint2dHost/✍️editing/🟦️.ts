@@ -1,3 +1,4 @@
+import type { PixelSelectionSpanV1 } from "../../../../../../../../🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
 /** 🧭️ Paint surface coordinates and compact selection transport. */
 export type PixelLayer = { id: string; name: string; visible: boolean; locked:boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[]; target:"pixels"|"mask"; maskRevision?:string };
 /** 🖌️ Captures only the target properties that keep an in-flight gesture valid. */
@@ -78,20 +79,18 @@ async function scanSelection(mask:Uint8Array,visit:(index:number,value:number)=>
   }
   checkSelectionScan(options);
 }
-export async function selectionSpans(mask:Uint8Array|undefined,options:SelectionScanOptions={}):Promise<string|null> {
+export async function selectionSpans(mask:Uint8Array|undefined,options:SelectionScanOptions={}):Promise<PixelSelectionSpanV1[]|null> {
   checkSelectionScan(options);
   if(!mask) return null;
-  const spans:string[]=[];let start=0,value=0,length=2;
+  const spans:PixelSelectionSpanV1[]=[];let start=0,value=0;
   const append=(end:number)=>{
     if(!value) return;
-    const span=JSON.stringify([start,end-start,value]);length+=span.length+(spans.length?1:0);
-    if(length>40000) throw new Error("Selection is too detailed for one edit; simplify the selection");
-    spans.push(span);
+    spans.push({start,length:end-start,coverage:value});
   };
   await scanSelection(mask,(index,next)=>{if(next!==value){append(index);start=index;value=next;}},options);
   checkSelectionScan(options);
   append(mask.length);
-  return "["+spans.join(",")+"]";
+  return spans;
 }
 export async function selectionBounds(mask:Uint8Array,width:number,options:SelectionScanOptions={}):Promise<{x:number;y:number;width:number;height:number}|null> {
   checkSelectionScan(options);
@@ -107,23 +106,21 @@ export async function selectionBounds(mask:Uint8Array,width:number,options:Selec
 }
 
 /** 🎯️ Restores validated span coverage in cancellable, bounded pixel grants. */
-export async function restoreSelection(json:string,count:number,options:SelectionScanOptions={}):Promise<Uint8Array>{
+export async function restoreSelection(spans:readonly PixelSelectionSpanV1[],count:number,options:SelectionScanOptions={}):Promise<Uint8Array>{
   checkSelectionScan(options);
   if(!Number.isInteger(count)||count<1||count>16777216)throw new Error("Selection dimensions are invalid");
-  if(new TextEncoder().encode(json).length>40000)throw new Error("Selection exceeds the transport budget");
-  const spans:unknown=JSON.parse(json);
   if(!Array.isArray(spans))throw new Error("Selection must contain spans");
   let previous=0;
   for(const span of spans){
-    if(!Array.isArray(span)||span.length!==3||!span.every(Number.isSafeInteger))throw new Error("Invalid selection span");
-    const [start,length,value]=span as [number,number,number];
+    if(!span||typeof span!=="object"||Object.keys(span).some(key=>!["start","length","coverage"].includes(key))||![span.start,span.length,span.coverage].every(Number.isSafeInteger))throw new Error("Invalid selection span");
+    const {start,length,coverage:value}=span;
     if(start<previous||length<1||start+length>count||value<0||value>255)throw new Error("Selection spans overlap or exceed image");
     previous=start+length;
   }
   const result=new Uint8Array(count);let cursor=0;
   await scanSelection(result,index=>{
-    while(cursor<spans.length&&index>=spans[cursor][0]+spans[cursor][1])cursor++;
-    if(cursor<spans.length&&index>=spans[cursor][0])result[index]=spans[cursor][2];
+    while(cursor<spans.length&&index>=spans[cursor]!.start+spans[cursor]!.length)cursor++;
+    if(cursor<spans.length&&index>=spans[cursor]!.start)result[index]=spans[cursor]!.coverage;
   },options);
   return result;
 }

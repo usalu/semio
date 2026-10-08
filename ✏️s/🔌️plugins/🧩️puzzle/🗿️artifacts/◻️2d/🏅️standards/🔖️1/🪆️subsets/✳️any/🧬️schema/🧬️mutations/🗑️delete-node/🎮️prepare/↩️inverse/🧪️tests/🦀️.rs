@@ -1,8 +1,9 @@
 //! 🧪️ Native cascade inverse heap, exact semantics, cancellation, and source authority laws.
 
 use super::*;
-use semio_framework_value::retained_clone::RetainedCloneBorrowAuthority;
-use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{delete_node,inverse_puzzle2d_mutation,apply_puzzle2d_mutation}};
+use crate::apply_puzzle2d_mutation;
+use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{delete_node,inverse_puzzle2d_mutation}};
 
 fn grant(turn:usize)->RetainedCloneGrant {match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096,64), 1 => RetainedCloneGrant::one_payload_turn(4096,64), _ => RetainedCloneGrant::one_release_turn(4096,64) }}
 fn observed(grant:RetainedCloneGrant,action:impl FnOnce()->Result<RetainedCloneStep,ValueError>)->RetainedCloneStep {
@@ -16,11 +17,10 @@ fn observed(grant:RetainedCloneGrant,action:impl FnOnce()->Result<RetainedCloneS
 }
 fn close(cursor:&mut Puzzle2dDeleteNodeInverseCursor) {
     cursor.begin_close();
-    for turn in 0..2_000_000 {
-        if cursor.terminal_is_empty(){return;}
-        let permit=grant(turn);observed(permit,||cursor.close_step(permit));
-    }
-    panic!("delete inverse retained native ownership after closure");
+    test_source_custody::close_cursor(cursor,2_000_000,|cursor|{
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
+    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
 }
 fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ControlledRetirement::new(inverse));
@@ -39,8 +39,8 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
     assert!(size_of::<<Puzzle2dEdge as RetainedClone>::Cursor>()<=4096);
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let text=|value:&serde_json::Value|{let value=value.as_str().unwrap();match value.strip_prefix("$large:"){Some(suffix)=>PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))),None=>value.into()}};
-    let source=RetainedCloneBorrowAuthority::new("immutable native deletion snapshot");
-    let mutation=RetainedCloneBorrowAuthority::new("immutable original native deletion payload");
+    let mut source=test_source_custody::admit();
+    let mut mutation=test_source_custody::admit();
     for case in corpus["cases"].as_array().unwrap() {
         let mut base=empty_puzzle2d_snapshot();
         for (index,node) in case["nodes"].as_array().unwrap().iter().enumerate() {
@@ -66,7 +66,7 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         close(&mut cursor);
         if case["id"]!="first-duplicate" && case["node"].as_u64().is_some() {
             let mut after=base.clone();apply_puzzle2d_mutation(&mut after,&delete_node(payload.id.clone())).unwrap();
-            for step in &inverse{apply_puzzle2d_mutation(&mut after,step).unwrap();}
+            for step in inverse.iter().rev() {apply_puzzle2d_mutation(&mut after,step).unwrap();}
             assert_eq!(after,base,"all complete native owners restored {}",case["id"]);
         }
         retire(inverse);
@@ -80,4 +80,5 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         assert_eq!(serde_json::to_value(&base).unwrap(),original);assert_eq!(serde_json::to_value(&payload).unwrap(),original_payload);
         eprintln!("[DEBUG] Puzzle2d DeleteNode inverse {} preserves literal native Node/Edge records, original ordinals and optional flags with zero-heap constructor and admitted close/cancellation",case["id"].as_str().unwrap());
     }
+    test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
 }

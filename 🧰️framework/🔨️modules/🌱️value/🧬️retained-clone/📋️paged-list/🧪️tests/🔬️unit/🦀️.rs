@@ -8,6 +8,20 @@ use std::{
     },
 };
 
+fn close_fixture<T: RetainedClone>(cursor: &mut impl RetainedCloneCursor<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
+    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: work, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(work)?, maximum_release_bytes: cursor.next_close_release_byte_demand()?, maximum_depth: 64 };
+    let step = cursor.close_step(grant)?;
+    assert!(step.progress().fits(grant));
+    Ok(step)
+}
+
+fn retire_fixture<T: RetireOwned>(owner: &mut crate::retirement::controlled::ControlledRetirement<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
+    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: work, maximum_capacity_bytes: owner.next_capacity_byte_demand(work)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()? };
+    let step = owner.step(grant)?;
+    assert!(step.progress().fits(grant));
+    Ok(step)
+}
+
 struct DropProbe {
     drops: Arc<AtomicUsize>,
 }
@@ -26,21 +40,21 @@ struct DropProbeRetirement {
 impl RetirementCursor for DropProbeRetirement {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        let maximum_bytes = grant.maximum_release_bytes;
         if self.released {
             return RetirementStep::Complete;
         }
-        if maximum_bytes < size_of::<DropProbe>() {
-            return RetirementStep::BudgetExhausted;
-        }
+        if self.value.as_ref().is_some_and(|value|Arc::strong_count(&value.drops)<=1){return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"fixture drop counter requires its original external observer"));}
         drop(self.value.take());
         self.released = true;
-        RetirementStep::Bytes(size_of::<DropProbe>())
+        RetirementStep::Advanced
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.released
     }
+    fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 
 impl Drop for DropProbeRetirement {
@@ -53,6 +67,8 @@ impl RetireOwned for DropProbe {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         Box::new(DropProbeRetirement { value: ManuallyDrop::new(Some(self)), released: false })
     }
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<DropProbeRetirement>())}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 struct DropProbeCursor {
@@ -86,22 +102,17 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
         started
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if !self.close.is_empty() {
-            return self.close.step(maximum_items, maximum_bytes);
-        }
-        if let Some(step) = self.close.begin_option(&mut self.output, maximum_items)? {
-            return Ok(step);
-        }
-        self.source = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
+    
 
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{self.close.next_owner_depth_with_binding(self.output.is_some(),&self.source)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{super::super::RetainedCloneBinding::copy_demand(&self.source)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{super::super::RetainedCloneBinding::capacity_demand(&self.source,body)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{super::super::RetainedCloneBinding::release_demand(&self.source)}
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.output.is_none() && self.source.is_none() && self.close.is_empty()
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "drop probe close must begin")); }
         if !self.close.is_empty() { return self.close.step_granted(grant); }
         if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
@@ -121,9 +132,9 @@ impl RetainedClone for DropProbe {
 struct NonconformingChild;
 
 impl RetireOwned for NonconformingChild {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        crate::retirement::leaf(self)
-    }
+    fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(crate::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 struct NonconformingChildCursor {
@@ -147,11 +158,13 @@ impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
         started
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        self.source = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
+    
 
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(&self.source)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::copy_demand(&self.source)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{RetainedCloneBinding::capacity_demand(&self.source,body)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(&self.source)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{super::super::close_retained_binding(&mut self.source,grant)}
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.source.is_none()
     }
@@ -169,9 +182,9 @@ impl RetainedClone for NonconformingChild {
 struct NonconformingRetirementChild;
 
 impl RetireOwned for NonconformingRetirementChild {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        crate::retirement::leaf(self)
-    }
+    fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(crate::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 struct NonconformingRetirementChildCursor {
@@ -198,20 +211,17 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
         started
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if !self.reported {
-            self.reported = true;
-            return Ok(SnapshotRetirementStep::Pending { released_items: maximum_items.saturating_add(1), released_bytes: maximum_bytes.saturating_add(1) });
-        }
-        self.source = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
+    
 
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(&self.source)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::copy_demand(&self.source)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{RetainedCloneBinding::capacity_demand(&self.source,body)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(&self.source)}
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.reported && self.source.is_none() && self.output.is_none()
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if !self.reported {
             self.reported = true;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: 0, retained_capacity_bytes: grant.maximum_capacity_bytes.saturating_add(1), released_bytes: grant.maximum_release_bytes.saturating_add(1) }));
@@ -264,8 +274,9 @@ impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
         Some(ReleaseProbe(std::mem::take(&mut self.0[2])))
     }
     fn begin_close(&mut self) -> bool { let started=self.0[1]==0; self.0[1]=1; started }
-    fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, crate::ValueError> { Ok(SnapshotRetirementStep::Complete) }
-    fn close_granted(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    
+    fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(0)}
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, crate::ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> { Ok(0) }
     fn terminal_is_empty(&self) -> bool { self.0[1]==1 && self.0[0]==0 }
@@ -286,15 +297,18 @@ fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
     let (before,allocation)=observe_retirement_allocations(||(cursor.next_close_capacity_byte_demand(0).unwrap(),cursor.next_close_release_byte_demand().unwrap()));
     assert_eq!(allocation,(0,0));assert_eq!(before,(0,0));
     cursor.begin_close();
-    let (metadata,allocation)=observe_retirement_allocations(||cursor.close_granted(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap());
+    let (metadata,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_depth:1,..Default::default()}).unwrap());
     assert_eq!(metadata.progress().copied_items,1);assert_eq!(allocation,(0,0));
     let (demand,allocation)=observe_retirement_allocations(||(cursor.next_close_capacity_byte_demand(0).unwrap(),cursor.next_close_release_byte_demand().unwrap()));
     assert_eq!(allocation,(0,0));assert_eq!(demand,(0,fixture["physicalCursorBytes"].as_u64().unwrap() as usize));
-    let (below,allocation)=observe_retirement_allocations(||cursor.close_granted(RetainedCloneGrant {maximum_release_bytes:127,..grant}).unwrap());
+    let (below,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_release_bytes:127,..grant}).unwrap());
     assert_eq!(below.progress(),Default::default());assert_eq!(allocation,(0,0));
-    let (exact,allocation)=observe_retirement_allocations(||cursor.close_granted(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:128,..Default::default()}).unwrap());
+    let depth=cursor.next_close_depth_demand().unwrap();assert_eq!(depth,fixture["physicalScaffoldDepth"].as_u64().unwrap()as usize);
+    let (denied_depth,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:128,..Default::default()}));
+    assert_eq!(allocation,(0,0));assert_eq!(denied_depth.unwrap_err().kind,crate::ValueRefusalKind::DepthLimit);assert_eq!(cursor.next_close_release_byte_demand().unwrap(),128);
+    let (exact,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:128,maximum_depth:depth,..Default::default()}).unwrap());
     assert_eq!(allocation,(0,128));assert_eq!(exact.progress().released_bytes,128);assert_eq!(exact.progress().copied_bytes,0);
-    cursor.close_granted(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap();assert!(cursor.terminal_is_empty());
+    cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:1,..Default::default()}).unwrap();assert!(cursor.terminal_is_empty());
     assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
     println!("[DEBUG] Typed child exact demand observation0heap; metadata preserves128-byte backing, below127 retains, release-only128 frees exactly once");
 }
@@ -314,17 +328,17 @@ fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_
     assert_eq!(copy.copied_bytes,1);
     assert_eq!(cursor.take().unwrap().0,17);
     cursor.begin_close();
-    assert_eq!(cursor.close_granted(grant).unwrap().progress().copied_items,1);
+    assert_eq!(cursor.close_step(grant).unwrap().progress().copied_items,1);
     let below=RetainedCloneGrant { maximum_release_bytes:fixture["oneBelowReleaseBytes"].as_u64().unwrap() as usize, ..grant };
-    assert_eq!(cursor.close_granted(below).unwrap().progress(),RetainedCloneProgress::default());
+    assert_eq!(cursor.close_step(below).unwrap().progress(),RetainedCloneProgress::default());
     assert_eq!(RELEASE_PROBE_DROPS.load(Ordering::SeqCst),0);
     assert!(!cursor.terminal_is_empty());
-    let released=cursor.close_granted(RetainedCloneGrant { maximum_release_bytes:128, ..grant }).unwrap().progress();
+    let released=cursor.close_step(RetainedCloneGrant { maximum_release_bytes:128, ..grant }).unwrap().progress();
     assert_eq!(released.released_bytes,128);
     assert_eq!(released.copied_bytes,0);
     assert_eq!(released.retained_capacity_bytes,0);
     assert_eq!(RELEASE_PROBE_DROPS.load(Ordering::SeqCst),1);
-    for _ in 0..4 { if cursor.terminal_is_empty() { break; } cursor.close_granted(grant).unwrap(); }
+    for _ in 0..4 { if cursor.terminal_is_empty() { break; } cursor.close_step(grant).unwrap(); }
     assert!(cursor.terminal_is_empty());
     println!("[DEBUG] Independent retained authority copy64/release4096 preserves128-byte owner below127, exact128 releases once without copying");
 }
@@ -333,9 +347,9 @@ fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_
 struct InsufficientScaffoldChild;
 
 impl RetireOwned for InsufficientScaffoldChild {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        crate::retirement::leaf(self)
-    }
+    fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(crate::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 struct InsufficientScaffoldChildCursor {
@@ -367,19 +381,17 @@ impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChil
         started
     }
 
-    fn close_step(&mut self, _maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
-        if maximum_bytes < 128 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        self.source = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
+    
 
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{if !self.closing{Ok(0)}else{RetainedCloneBinding::depth_demand(&self.source)}}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,crate::ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(128)}
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.output.is_none() && self.source.is_none()
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_release_bytes < 128 {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "fixture scaffold cannot progress under its declared 128-byte release grant"));
@@ -467,25 +479,24 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
     let mut close_turns = 0usize;
     while !cursor.terminal_is_empty() {
         close_turns += 1;
-        let step = cursor.close_step(1, fixture.grant.maximum_capacity_bytes).expect("spent cursor close");
-        if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+        let step = close_fixture(&mut cursor, 1, fixture.grant.maximum_capacity_bytes).expect("spent cursor close");
+        if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
             assert!(released_items <= 1);
             assert!(released_bytes <= fixture.grant.maximum_capacity_bytes);
         }
         assert!(close_turns < 100_000, "spent cursor close terminates");
     }
     assert_eq!(close_turns, 1, "a spent cursor whose output was taken holds only its source binding and closes in one step");
-    let mut retirement = crate::retirement::owned_retirement(copied);
+    let mut retirement = crate::retirement::controlled::ControlledRetirement::new(copied).map_err(|(error,_)|error).unwrap();
     let mut retirement_turns = 0usize;
     while !retirement.terminal_is_empty() {
         retirement_turns += 1;
-        match retirement.close_step(1, fixture.grant.maximum_capacity_bytes).expect("production paged retirement scheduler") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+        match retire_fixture(&mut retirement, 1, fixture.grant.maximum_capacity_bytes).expect("production paged retirement scheduler") {
+            RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) => {
                 assert!(released_items <= 1);
                 assert!(released_bytes <= fixture.grant.maximum_capacity_bytes);
             }
-            SnapshotRetirementStep::Blocked => panic!("exact page grant must progress"),
-            SnapshotRetirementStep::Complete => assert!(retirement.terminal_is_empty()),
+            RetainedCloneStep::Complete(progress) => {assert_eq!(progress,Default::default());assert!(retirement.terminal_is_empty());},
         }
         assert!(retirement_turns < 100_000, "paged retirement terminates");
     }
@@ -514,11 +525,11 @@ fn retained_paged_list_adopts_completed_owner_larger_than_copy_budget() {
     assert_eq!(copied.get(0), Some(&OversizedOwner { first: "alpha".into(), second: "beta".into(), third: "gamma".into() }));
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        cursor.close_step(8, 4096).expect("oversized owner cursor close");
+        close_fixture(&mut cursor, 8, 4096).expect("oversized owner cursor close");
     }
-    let mut retirement = crate::retirement::owned_retirement(copied);
+    let mut retirement = crate::retirement::controlled::ControlledRetirement::new(copied).map_err(|(error,_)|error).unwrap();
     while !retirement.terminal_is_empty() {
-        retirement.close_step(8, 4096).expect("oversized owner retirement");
+        retire_fixture(&mut retirement, 8, 4096).expect("oversized owner retirement");
     }
     drop(source);
 }
@@ -545,7 +556,7 @@ fn retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner() {
     assert!(error.message.contains("cannot progress"));
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        cursor.close_step(8, 4096).expect("insufficient scaffold cursor close");
+        close_fixture(&mut cursor, 8, 4096).expect("insufficient scaffold cursor close");
     }
     drop(source);
 }
@@ -566,7 +577,7 @@ fn retained_derive_refuses_scaffold_grant_that_cannot_release_field() {
     assert!(error.message.contains("cannot progress"));
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        cursor.close_step(8, 4096).expect("derived insufficient scaffold cursor close");
+        close_fixture(&mut cursor, 8, 4096).expect("derived insufficient scaffold cursor close");
     }
     drop(source);
 }
@@ -591,8 +602,8 @@ fn retained_paged_list_cancellation_preserves_source_and_retires_partial_pages()
     let mut close_turns = 0usize;
     while !cursor.terminal_is_empty() {
         close_turns += 1;
-        let step = cursor.close_step(1, fixture.grant.maximum_capacity_bytes).expect("partial paged close");
-        if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+        let step = close_fixture(&mut cursor, 1, fixture.grant.maximum_capacity_bytes).expect("partial paged close");
+        if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
             assert!(released_items <= 1);
             assert!(released_bytes <= fixture.grant.maximum_capacity_bytes);
         }
@@ -626,8 +637,8 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
     assert!(cursor.child_value.is_none());
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        let step = cursor.close_step(1, 4096).expect("nonconforming child close");
-        if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+        let step = close_fixture(&mut cursor, 1, 4096).expect("nonconforming child close");
+        if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
             assert!(released_items <= 1);
             assert!(released_bytes <= 4096);
         }
@@ -660,8 +671,8 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
     assert!(cursor.child_value.is_some());
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        let step = cursor.close_step(1, 4096).expect("nonconforming retirement child closes after its refused report");
-        if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+        let step = close_fixture(&mut cursor, 1, 4096).expect("nonconforming retirement child closes after its refused report");
+        if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
             assert!(released_items <= 1);
             assert!(released_bytes <= 4096);
         }

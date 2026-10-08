@@ -504,3 +504,5 @@ impl Frame3 {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 // #endregion 🔖️Tests
+
+semio_framework_value::artifact_retire_leaf!(Frame3);

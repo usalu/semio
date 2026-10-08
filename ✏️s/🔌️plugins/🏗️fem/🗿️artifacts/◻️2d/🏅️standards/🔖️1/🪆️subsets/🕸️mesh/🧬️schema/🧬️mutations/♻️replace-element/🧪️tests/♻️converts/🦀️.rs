@@ -8,7 +8,8 @@
 //! A whole-value swap that changes the element's *variant* (bending `Beam` → axial `Bar`) while keeping its id and slot.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -85,12 +86,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be a single `elements.patched` entry — a replacement never removes-then-adds.
+/// 🔺️ The delta must be a single `elements.modified` entry — a replacement never removes-then-adds.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").patched.len(), 1, "replace-element/converts-beam-e1-into-a-5d21f5: exactly one element may be patched");
+    assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").modified.len(), 1, "replace-element/converts-beam-e1-into-a-5d21f5: exactly one element may be patched");
     assert!(outcome.diff().elements.as_ref().expect("elements delta").removed.is_empty(), "replace-element/converts-beam-e1-into-a-5d21f5: a replacement must never be encoded as a remove-then-add");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -106,7 +107,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "replace-element/converts-beam-e1-into-a-5d21f5: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `elements.patched` entry on `before` must leave the bar in `e1`'s original slot.
+/// 🩹 Replaying the committed `elements.modified` entry on `before` must leave the bar in `e1`'s original slot.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

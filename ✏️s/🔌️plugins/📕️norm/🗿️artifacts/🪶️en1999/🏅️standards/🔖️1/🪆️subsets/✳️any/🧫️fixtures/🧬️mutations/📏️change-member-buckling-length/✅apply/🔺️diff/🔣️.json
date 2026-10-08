@@ -3,19 +3,21 @@
   "materials": null,
   "sections": null,
   "members": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "purlin-1",
-        "bucklingLengthY": null,
-        "bucklingLengthZ": 0.75,
-        "bucklingLengthT": null,
-        "ltbLength": null,
-        "actions": null
+        "patch": {
+          "bucklingLengthY": null,
+          "bucklingLengthZ": 0.75,
+          "bucklingLengthT": null,
+          "ltbLength": null,
+          "actions": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "connections": null,
   "fireScenarios": null,

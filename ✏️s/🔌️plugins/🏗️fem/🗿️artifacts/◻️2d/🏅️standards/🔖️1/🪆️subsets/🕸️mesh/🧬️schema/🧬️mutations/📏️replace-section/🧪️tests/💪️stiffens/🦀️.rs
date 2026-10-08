@@ -8,7 +8,8 @@
 //! Area and inertia both grow under the same section id, so every element already pointing at it is silently stiffened.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 
@@ -85,12 +86,12 @@ fn declared_outcome_holds() {
     }
 }
 
-/// 🔺️ The delta must be a single `sections.patched` entry keyed by `ipe200`.
+/// 🔺️ The delta must be a single `sections.modified` entry keyed by `ipe200`.
 #[test]
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().sections.as_ref().expect("sections delta").patched.len(), 1, "replace-section/stiffens-ipe200-with-5e9c08: exactly one profile may be patched");
+    assert_eq!(outcome.diff().sections.as_ref().expect("sections delta").modified.len(), 1, "replace-section/stiffens-ipe200-with-5e9c08: exactly one profile may be patched");
     assert!(outcome.diff().sections.as_ref().expect("sections delta").removed.is_empty(), "replace-section/stiffens-ipe200-with-5e9c08: a replacement is never a removal");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -106,7 +107,7 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "replace-section/stiffens-ipe200-with-5e9c08: committed diff JSON is not canonical");
 }
 
-/// 🩹 Replaying the committed `sections.patched` entry on `before` must stiffen the profile in place.
+/// 🩹 Replaying the committed `sections.modified` entry on `before` must stiffen the profile in place.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

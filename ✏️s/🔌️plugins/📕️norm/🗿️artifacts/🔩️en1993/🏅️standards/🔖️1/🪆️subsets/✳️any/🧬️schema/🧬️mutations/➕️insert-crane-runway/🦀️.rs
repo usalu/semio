@@ -5,7 +5,7 @@ use crate::{CraneRunway, En1993Mutation, En1993Snapshot};
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct InsertCraneRunway { pub index: usize, pub crane_runway: CraneRunway }
+pub struct InsertCraneRunway { pub index: Option<usize>, pub crane_runway: CraneRunway }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertCraneRunway {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "crane-runway", kind: "insert-crane-runway", record: "InsertedCraneRunway" };
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> { super::diff::diff(self, base) }

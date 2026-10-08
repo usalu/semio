@@ -6,134 +6,9 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Rows
-/// 🔑️ A row of an id-keyed list kept in canonical order: `row_key` addresses it, `insert_at` is where a new row lands.
+/// 📍️ The canonical position a new row of a list lands at in the after list.
 pub trait Wfc3dRow: Clone + PartialEq {
-    fn row_key(&self) -> String;
     fn insert_at(items: &[Self], row: &Self) -> usize;
-}
-
-/// 🩹 Field-sparse patch over one row: names the fields it sets with the values they take.
-pub trait Wfc3dPatch: Clone + Default + PartialEq {
-    type Row;
-    fn patched(&self, row: &Self::Row) -> Self::Row;
-    fn between(from: &Self::Row, to: &Self::Row) -> Self;
-    fn inverse(&self, base: &Self::Row) -> Self;
-    fn absorb(&mut self, later: Self);
-    fn is_empty(&self) -> bool;
-}
-
-/// 🩹 One patched row, addressed by its identity.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Wfc3dRowPatch<Q> {
-    pub id: String,
-    pub patch: Q,
-}
-
-/// 📂 Id-keyed row delta: removed identities, added rows (landing at their canonical position) and per-row field patches.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Wfc3dRows<T, Q> {
-    #[value(default)]
-    pub removed: Vec<String>,
-    #[value(default)]
-    pub added: Vec<T>,
-    #[value(default)]
-    pub patched: Vec<Wfc3dRowPatch<Q>>,
-}
-
-impl<T, Q> Default for Wfc3dRows<T, Q> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), added: Vec::new(), patched: Vec::new() }
-    }
-}
-
-fn rejection(code: &'static str, message: &'static str, lane: &str, id: &str) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new(code, message).at([lane, id])
-}
-
-impl<T: Wfc3dRow, Q: Wfc3dPatch<Row = T>> Wfc3dRows<T, Q> {
-    /// 🕳️ Whether the delta changes nothing.
-    pub fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.added.is_empty() && self.patched.is_empty()
-    }
-
-    /// 🔑️ The list after the delta: removals first, then canonical-position insertions, then field patches; unknown targets and duplicated identities are rejected.
-    pub fn apply(&self, items: &[T]) -> protocol::MutationApplyResult<Vec<T>> {
-        let mut next = items.to_vec();
-        for (position, id) in self.removed.iter().enumerate() {
-            if self.removed[..position].contains(id) {
-                return Err(rejection("mutation.apply.duplicate-target", "item is removed more than once", "removed", id));
-            }
-            let at = next.iter().position(|item| item.row_key() == *id).ok_or_else(|| rejection("mutation.apply.missing-target", "removed item does not exist", "removed", id))?;
-            next.remove(at);
-        }
-        for (position, row) in self.added.iter().enumerate() {
-            let key = row.row_key();
-            if self.added[..position].iter().any(|prior| prior.row_key() == key) || next.iter().any(|item| item.row_key() == key) {
-                return Err(rejection("mutation.apply.duplicate-target", "added item identity already exists", "added", &key));
-            }
-            let at = T::insert_at(&next, row);
-            next.insert(at, row.clone());
-        }
-        for (position, entry) in self.patched.iter().enumerate() {
-            if self.patched[..position].iter().any(|prior| prior.id == entry.id) {
-                return Err(rejection("mutation.apply.duplicate-target", "item is patched more than once", "patched", &entry.id));
-            }
-            let at = next.iter().position(|item| item.row_key() == entry.id).ok_or_else(|| rejection("mutation.apply.missing-target", "patched item does not exist", "patched", &entry.id))?;
-            let patched = entry.patch.patched(&next[at]);
-            next[at] = patched;
-        }
-        Ok(next)
-    }
-
-    /// ➕️ Composes a later delta: create∘delete cancels, patch∘delete leaves the deletion, patch∘patch coalesces, delete∘create replaces.
-    pub fn absorb(&mut self, later: Self) {
-        for id in later.removed {
-            if let Some(position) = self.added.iter().position(|row| row.row_key() == id) {
-                self.added.remove(position);
-            } else {
-                self.patched.retain(|entry| entry.id != id);
-                self.removed.push(id);
-            }
-        }
-        self.added.extend(later.added);
-        for entry in later.patched {
-            if let Some(row) = self.added.iter_mut().find(|row| row.row_key() == entry.id) {
-                *row = entry.patch.patched(row);
-            } else if let Some(existing) = self.patched.iter_mut().find(|existing| existing.id == entry.id) {
-                existing.patch.absorb(entry.patch);
-            } else {
-                self.patched.push(entry);
-            }
-        }
-    }
-
-    /// 🔁️ The delta that, applied after this one, restores `base` rows and positions exactly.
-    pub fn inverse(&self, base: &[T]) -> Self {
-        let find = |id: &str| base.iter().find(|row| row.row_key() == id);
-        let removed: Vec<String> = self.added.iter().map(T::row_key).collect();
-        let added: Vec<T> = self.removed.iter().filter_map(|id| find(id).cloned()).collect();
-        let patched: Vec<Wfc3dRowPatch<Q>> = self
-            .patched
-            .iter()
-            .filter(|entry| !self.removed.contains(&entry.id) && !self.added.iter().any(|row| row.row_key() == entry.id))
-            .filter_map(|entry| find(&entry.id).map(|row| Wfc3dRowPatch { id: entry.id.clone(), patch: entry.patch.inverse(row) }))
-            .filter(|entry| !entry.patch.is_empty())
-            .collect();
-        Self { removed, added, patched }
-    }
-
-    /// 🧭️ The delta that turns `from` into `to`.
-    pub fn between(from: &[T], to: &[T]) -> Self {
-        let removed: Vec<String> = from.iter().map(T::row_key).filter(|key| !to.iter().any(|row| row.row_key() == *key)).collect();
-        let added: Vec<T> = to.iter().filter(|row| !from.iter().any(|other| other.row_key() == row.row_key())).cloned().collect();
-        let patched: Vec<Wfc3dRowPatch<Q>> = from
-            .iter()
-            .filter_map(|row| to.iter().find(|other| other.row_key() == row.row_key()).filter(|other| *other != row).map(|other| Wfc3dRowPatch { id: row.row_key(), patch: Q::between(row, other) }))
-            .collect();
-        Self { removed, added, patched }
-    }
 }
 //#endregion 🔖️Rows
 
@@ -147,7 +22,7 @@ pub struct Wfc3dOptionalText {
 //#endregion 🔖️Optionals
 
 //#region 🔖️PatchMacro
-/// 🩹 Declares a field-sparse patch struct for `$row` and its [`Wfc3dPatch`] impl: `plain` fields set a value, `optional` fields set or clear an `Option` through their wrapper.
+/// 🩹 Declares a field-sparse patch struct for `$row` and its `protocol::list_delta::RowPatch` impl: `plain` fields set a value, `optional` fields set or clear an `Option` through their wrapper.
 macro_rules! wfc_patch {
     ($(#[$doc:meta])* $name:ident for $row:ty { plain { $($field:ident : $ty:ty),* } optional { $($ofield:ident : $wrap:ident),* } }) => {
         $(#[$doc])*
@@ -158,20 +33,14 @@ macro_rules! wfc_patch {
             $(pub $ofield: Option<$wrap>,)*
         }
 
-        impl Wfc3dPatch for $name {
-            type Row = $row;
-            fn patched(&self, row: &$row) -> $row {
-                #[allow(unused_mut)]
-                let mut next = row.clone();
-                $(if let Some(value) = &self.$field { next.$field = value.clone(); })*
-                $(if let Some(value) = &self.$ofield { next.$ofield = value.value.clone(); })*
-                next
+        impl protocol::list_delta::RowPatch<$row> for $name {
+            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $(if let Some(value) = &self.$field { row.$field = value.clone(); })*
+                $(if let Some(value) = &self.$ofield { row.$ofield = value.value.clone(); })*
+                Ok(())
             }
-            fn between(from: &$row, to: &$row) -> Self {
-                Self { $($field: (from.$field != to.$field).then(|| to.$field.clone()),)* $($ofield: (from.$ofield != to.$ofield).then(|| $wrap { value: to.$ofield.clone() }),)* }
-            }
-            fn inverse(&self, base: &$row) -> Self {
-                Self { $($field: self.$field.as_ref().map(|_| base.$field.clone()),)* $($ofield: self.$ofield.as_ref().map(|_| $wrap { value: base.$ofield.clone() }),)* }
+            fn inverse(&self, row: &$row) -> Self {
+                Self { $($field: self.$field.as_ref().map(|_| row.$field.clone()),)* $($ofield: self.$ofield.as_ref().map(|_| $wrap { value: row.$ofield.clone() }),)* }
             }
             fn absorb(&mut self, later: Self) {
                 $(if later.$field.is_some() { self.$field = later.$field; })*
@@ -187,9 +56,6 @@ macro_rules! wfc_patch {
 
 //#region 🔖️RowTypes
 impl Wfc3dRow for Slot3d {
-    fn row_key(&self) -> String {
-        self.id.clone()
-    }
     fn insert_at(items: &[Self], row: &Self) -> usize {
         items.iter().position(|item| item.id > row.id).unwrap_or(items.len())
     }
@@ -198,13 +64,12 @@ impl Wfc3dRow for Slot3d {
 wfc_patch!(/// 📍 Field patch over a slot (its id is the row identity).
     Wfc3dSlotPatch for Slot3d { plain { x: f64, y: f64, z: f64, width: f64, height: f64, depth: f64 } optional { pinned_tile_id: Wfc3dOptionalText } });
 
-/// 📂 Row delta over the slots.
-pub type Wfc3dSlotsDelta = Wfc3dRows<Slot3d, Wfc3dSlotPatch>;
+protocol::list_delta! {
+    /// 📂 Row delta over the slots.
+    pub Wfc3dSlotsDelta { removal: Wfc3dSlotsRemoval, insertion: Wfc3dSlotsInsertion, relocation: Wfc3dSlotsRelocation, modification: Wfc3dSlotsModification, row: Slot3d, patch: Wfc3dSlotPatch, key: id, values_only }
+}
 
 impl Wfc3dRow for SlotEdge {
-    fn row_key(&self) -> String {
-        self.id.clone()
-    }
     fn insert_at(items: &[Self], row: &Self) -> usize {
         items.iter().position(|item| item.id > row.id).unwrap_or(items.len())
     }
@@ -213,13 +78,12 @@ impl Wfc3dRow for SlotEdge {
 wfc_patch!(/// 🔗 Field patch over an adjacency edge (its id is the row identity).
     Wfc3dEdgePatch for SlotEdge { plain { from_slot_id: String, to_slot_id: String, relation: String } optional {  } });
 
-/// 📂 Row delta over the edges.
-pub type Wfc3dEdgesDelta = Wfc3dRows<SlotEdge, Wfc3dEdgePatch>;
+protocol::list_delta! {
+    /// 📂 Row delta over the edges.
+    pub Wfc3dEdgesDelta { removal: Wfc3dEdgesRemoval, insertion: Wfc3dEdgesInsertion, relocation: Wfc3dEdgesRelocation, modification: Wfc3dEdgesModification, row: SlotEdge, patch: Wfc3dEdgePatch, key: id, values_only }
+}
 
 impl Wfc3dRow for Tile {
-    fn row_key(&self) -> String {
-        self.id.clone()
-    }
     fn insert_at(items: &[Self], row: &Self) -> usize {
         items.iter().position(|item| item.id > row.id).unwrap_or(items.len())
     }
@@ -228,13 +92,12 @@ impl Wfc3dRow for Tile {
 wfc_patch!(/// 🀄️ Field patch over a tile (its id is the row identity).
     Wfc3dTilePatch for Tile { plain { weight: f64, media: TileMedia3d } optional { label: Wfc3dOptionalText } });
 
-/// 📂 Row delta over the tiles.
-pub type Wfc3dTilesDelta = Wfc3dRows<Tile, Wfc3dTilePatch>;
+protocol::list_delta! {
+    /// 📂 Row delta over the tiles.
+    pub Wfc3dTilesDelta { removal: Wfc3dTilesRemoval, insertion: Wfc3dTilesInsertion, relocation: Wfc3dTilesRelocation, modification: Wfc3dTilesModification, row: Tile, patch: Wfc3dTilePatch, key: id, values_only }
+}
 
 impl Wfc3dRow for GraphRule {
-    fn row_key(&self) -> String {
-        self.id.clone()
-    }
     fn insert_at(items: &[Self], row: &Self) -> usize {
         items.iter().position(|item| item.id > row.id).unwrap_or(items.len())
     }
@@ -243,8 +106,10 @@ impl Wfc3dRow for GraphRule {
 wfc_patch!(/// ⛓️ Field patch over an adjacency rule (its id is the row identity).
     Wfc3dRulePatch for GraphRule { plain { tile_a_id: String, tile_b_id: String, allowed: bool } optional { relation: Wfc3dOptionalText } });
 
-/// 📂 Row delta over the rules.
-pub type Wfc3dRulesDelta = Wfc3dRows<GraphRule, Wfc3dRulePatch>;
+protocol::list_delta! {
+    /// 📂 Row delta over the rules.
+    pub Wfc3dRulesDelta { removal: Wfc3dRulesRemoval, insertion: Wfc3dRulesInsertion, relocation: Wfc3dRulesRelocation, modification: Wfc3dRulesModification, row: GraphRule, patch: Wfc3dRulePatch, key: id, values_only }
+}
 
 //#endregion 🔖️RowTypes
 
@@ -270,7 +135,7 @@ pub struct Wfc3dDiff {
 
 //#region 🔖️Apply
 impl protocol::MutationDiff<Wfc3dSnapshot> for Wfc3dDiff {
-    fn apply(&self, base: &Wfc3dSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Wfc3dSnapshot> {
+    fn apply(&self, base: &Wfc3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Wfc3dSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema.clone_from(schema);
@@ -278,10 +143,10 @@ impl protocol::MutationDiff<Wfc3dSnapshot> for Wfc3dDiff {
         if let Some(seed) = self.seed {
             next.seed = seed;
         }
-        next.slots = self.slots.apply(&base.slots).map_err(|error| error.under(["slots"]))?;
-        next.edges = self.edges.apply(&base.edges).map_err(|error| error.under(["edges"]))?;
-        next.tiles = self.tiles.apply(&base.tiles).map_err(|error| error.under(["tiles"]))?;
-        next.rules = self.rules.apply(&base.rules).map_err(|error| error.under(["rules"]))?;
+        next.slots = self.slots.commit_onto(&base.slots, capability).map_err(|error| error.under(["slots"]))?;
+        next.edges = self.edges.commit_onto(&base.edges, capability).map_err(|error| error.under(["edges"]))?;
+        next.tiles = self.tiles.commit_onto(&base.tiles, capability).map_err(|error| error.under(["tiles"]))?;
+        next.rules = self.rules.commit_onto(&base.rules, capability).map_err(|error| error.under(["rules"]))?;
         Ok(next)
     }
     fn absorb(&mut self, later: Self) {
@@ -307,16 +172,6 @@ impl protocol::DiffAlgebra<Wfc3dSnapshot> for Wfc3dDiff {
             edges: self.edges.inverse(&base.edges),
             tiles: self.tiles.inverse(&base.tiles),
             rules: self.rules.inverse(&base.rules),
-        }
-    }
-    fn between(base: &Wfc3dSnapshot, other: &Wfc3dSnapshot) -> Self {
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            seed: (base.seed != other.seed).then_some(other.seed),
-            slots: Wfc3dRows::between(&base.slots, &other.slots),
-            edges: Wfc3dRows::between(&base.edges, &other.edges),
-            tiles: Wfc3dRows::between(&base.tiles, &other.tiles),
-            rules: Wfc3dRows::between(&base.rules, &other.rules),
         }
     }
     fn is_empty(&self) -> bool {

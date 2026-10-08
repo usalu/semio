@@ -1,7 +1,7 @@
 //! 🎥️ `focus-selection` command.
 
 use crate::editor::puzzle2d::{board_snapshot_nodes, set_runtime_camera, Puzzle2dActionCtx};
-use serde_json::json;
+use semio_framework_pack_json::json;
 
 /// 🎯️ Centres the camera on the selection's bounding box (session state only — never the snapshot).
 pub fn focus_selection(ctx: &mut Puzzle2dActionCtx<'_>) {

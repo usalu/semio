@@ -13,16 +13,17 @@ fn member_owned_batch_copy_query_preserves_zero_work_and_exact_physical_receipts
         let mut work = 0;
         let mut released = 0;
         for _ in 0..count * 8 + 32 {
-            let copy = owner.next_copy_byte_demand();
-            let (capacity, release) = owner.next_demands().unwrap();
+            let copy = owner.next_copy_byte_demand().unwrap();
+            let demand = owner.next_demands(copy).unwrap();
+            let (capacity, release) = (demand.capacity_bytes, demand.release_bytes);
             assert!(copy <= 64 && capacity <= 4096 && release <= 4096);
             if copy != 0 {
                 assert_eq!(copy, fixture["copyDemand"]["minimumCopyBytes"].as_u64().unwrap() as usize);
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_granted(RetainedCloneGrant { maximum_copy_bytes: 0, maximum_capacity_bytes: capacity, maximum_release_bytes: release, ..grant }).unwrap());
                 assert_eq!(step.progress(), RetainedCloneProgress::default());
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
-                assert_eq!(owner.next_copy_byte_demand(), copy);
-                assert_eq!(owner.next_demands().unwrap(), (capacity, release));
+                assert_eq!(owner.next_copy_byte_demand().unwrap(), copy);
+                assert_eq!(owner.next_demands(copy).unwrap(), demand);
             }
             let exact = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, ..grant };
             let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_granted(exact).unwrap());
@@ -69,7 +70,8 @@ fn member_owned_batch_phase_queries_fund_actual_scalar_retirement_births() {
     let (mut batch, _) = MemberStoreOwnedBatch::try_new(values, grant).unwrap_or_else(|_| panic!("funded scalar owner"));
     for _ in 0..1024 {
         if batch.terminal_is_empty() { break; }
-        let (capacity, release) = batch.next_demands().unwrap();
+        let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
+        let (capacity, release) = (demand.capacity_bytes, demand.release_bytes);
         let exact = RetainedCloneGrant { maximum_capacity_bytes: capacity, maximum_release_bytes: release.max(1), ..grant };
         let progress = batch.close_granted(exact).unwrap().progress();
         assert!(progress.fits(exact));
@@ -100,14 +102,16 @@ fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
     assert_eq!(source.as_ptr(), pointer);
     batch.restore_mutations(source);
     assert_eq!(batch.mutations::<i32>().unwrap().as_ptr(), pointer);
-    let (capacity, release) = batch.next_demands().unwrap();
+    let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
+        let (capacity, release) = (demand.capacity_bytes, demand.release_bytes);
     assert!(capacity > 0 && release == 0);
     assert_eq!(batch.close_granted(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress(), RetainedCloneProgress::default());
     assert_eq!(batch.mutations::<i32>().unwrap().as_ptr(), pointer);
     let mut released = 0;
     for _ in 0..1000 {
         if batch.terminal_is_empty() { break; }
-        let (capacity, release) = batch.next_demands().unwrap();
+        let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
+        let (capacity, release) = (demand.capacity_bytes, demand.release_bytes);
         assert!(capacity <= grant.maximum_capacity_bytes && release <= grant.maximum_release_bytes);
         if batch.owner.as_ref().is_some_and(|owner| owner.terminal_is_empty()) {
             assert!(release > 0);
@@ -115,7 +119,7 @@ fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
             assert_eq!(zero.progress(), RetainedCloneProgress::default());
             let refused = batch.close_granted(RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }).unwrap();
             assert_eq!(refused.progress(), RetainedCloneProgress::default());
-            assert_eq!(batch.next_demands().unwrap(), (capacity, release));
+            assert_eq!(batch.next_demands(grant.maximum_copy_bytes).unwrap(), demand);
         }
         let step = batch.close_granted(grant).unwrap();
         assert!(step.progress().fits(grant));
@@ -123,6 +127,51 @@ fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
     }
     assert!(batch.terminal_is_empty());
     assert!(released >= birth.retained_capacity_bytes);
-    assert_eq!(batch.next_demands().unwrap(), (0, 0));
+    assert_eq!(batch.next_demands(0).unwrap(), semio_framework_value::RetirementDemand::default());
     println!("[DEBUG] Owned member batch exact pointer/type/order retained across zero capacity, wrong type, restore, zero work and one-below physical release; born={} released={released}", birth.retained_capacity_bytes);
+}
+
+#[test]
+fn member_owned_batch_constructor_refusals_preserve_exact_original_allocation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["constructorRefusals"].as_array().unwrap() {
+        let source: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
+        let pointer = source.as_ptr();
+        let capacity = source.capacity();
+        let mut grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+        let value = row["value"].as_u64().unwrap() as usize;
+        match row["axis"].as_str().unwrap() { "maximumDepth" => grant.maximum_depth = value, "maximumItems" => grant.maximum_items = value, "maximumCapacityBytes" => grant.maximum_capacity_bytes = value, _ => panic!("authored grant axis") }
+        let (refusal, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| MemberStoreOwnedBatch::try_new(source, grant));
+        let (error, source) = match refusal { Err(refusal) => refusal, Ok(_) => panic!("{}: denied constructor allocated an owner", row["id"]) };
+        assert_eq!(format!("{:?}", error.kind), row["kind"].as_str().unwrap());
+        assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
+        assert_eq!(source.as_ptr(), pointer);
+        assert_eq!(source.capacity(), capacity);
+        assert_eq!(serde_json::to_value(&source).unwrap(), fixture["values"]);
+    }
+}
+
+#[test]
+fn member_owned_batch_child_depth_refusal_keeps_original_before_allocating_retirement() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let values: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
+    let pointer = values.as_ptr();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+    let (mut batch, _) = MemberStoreOwnedBatch::try_new(values, grant).unwrap_or_else(|_| panic!("admitted original batch"));
+    let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
+    assert_eq!(demand.depth, 2);
+    let (refusal, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| batch.close_granted(RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }));
+    assert_eq!(refusal.unwrap_err().kind, ValueRefusalKind::DepthLimit);
+    assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
+    assert_eq!(batch.mutations::<i32>().unwrap().as_ptr(), pointer);
+    assert_eq!(serde_json::to_value(batch.mutations::<i32>().unwrap()).unwrap(), fixture["values"]);
+    for _ in 0..1024 {
+        if batch.terminal_is_empty() { break; }
+        let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
+        let exact = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| batch.close_granted(exact).unwrap());
+        assert!(step.progress().fits(exact));
+        assert_eq!((events.requested_bytes, events.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+    }
+    assert!(batch.terminal_is_empty());
 }

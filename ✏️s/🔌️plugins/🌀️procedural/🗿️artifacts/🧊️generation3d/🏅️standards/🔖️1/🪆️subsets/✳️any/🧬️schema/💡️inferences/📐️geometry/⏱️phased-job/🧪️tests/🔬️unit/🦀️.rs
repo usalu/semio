@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue
 use semio_framework_3d::brep::queries::analysis::{edge_table, face_table, ShapeScope};
 use semio_framework_3d::brep::engine::ShapeRoot;
 
-#[path = "../../🧰️test-support/🦀️.rs"]
+#[path = "../🧰️support/🦀️.rs"]
 mod support;
 
 fn kind() -> &'static Kind {

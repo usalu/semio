@@ -5,7 +5,7 @@
 //! reference implementation through this subset's own oracle module (`oracle_apply_mutation`,
 //! `oracle_apply_mutation_inverse`, `project_md`), whose answer is the projection of the AST it edited; `subject`
 //! drives this repository's own
-//! `MdMutation`/`apply_md_mutation`/`MdSnapshot::from_text`/`MdSnapshot::to_text` — the real, typed,
+//! `MdMutation`/`apply_mutation`/`MdSnapshot::from_text`/`MdSnapshot::to_text` — the real, typed,
 //! event-sourced mutation pipeline, not an ad hoc text edit. Both results are read back by the
 //! INDEPENDENT `comrak`-backed `project_md` before the `ordered-json-v1` profile compares them. The
 //! subject half is gated behind the generated host's `sut` feature so the oracle-only run never
@@ -102,7 +102,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_md::schema::mutations::apply_md_mutation;
+    
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_md::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_md::{MdMutation, MdSnapshot};
@@ -123,7 +123,7 @@ mod subject {
         let input = mutable_input(ctx, INPUT, "input.md")?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
         let mut snapshot = MdSnapshot::from_text(&text);
-        apply_md_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
+        apply_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
         let bytes = snapshot.to_text().into_bytes();
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -144,12 +144,12 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let undo = mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture");
         let mut restored = original;
-        apply_md_mutation(&mut restored, &mutation);
+        apply_mutation(&mut restored, &mutation);
         if restored.to_text().into_bytes() == input {
             return Err("byte pass-through: mutated output is bit-identical to the input".to_string());
         }
         for step in &undo {
-            apply_md_mutation(&mut restored, step);
+            apply_mutation(&mut restored, step);
         }
         let restored_bytes = restored.to_text().into_bytes();
         let projection = project_md(&restored_bytes)?;

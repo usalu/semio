@@ -30,7 +30,7 @@ export function testLayoutDocumentContractOracle(): void {
   const missingDrawingTexts = structuredClone(vectors.diff) as Record<string, unknown>;
   delete missingDrawingTexts.drawingTexts;
   const invalidEntry = structuredClone(vectors.diff);
-  invalidEntry.dataFields.entries.added[0] = { questionId: "unsigned", value: { kind: "unsigned", high: -1, low: 0 } } as typeof invalidEntry.dataFields.entries.added[0];
+  invalidEntry.dataFields.entries.inserted[0].row = { questionId: "unsigned", value: { kind: "unsigned", high: -1, low: 0 } } as typeof invalidEntry.dataFields.entries.inserted[0].row;
   assertDocumentContractOracle({
     name: "Layout",
     dependencies: [ioSchema, blobSchema, childSchema, linkSchema, drawingSchema, dictionarySchema,artifactReferenceSchema],
@@ -49,10 +49,10 @@ export function testLayoutDocumentContractOracle(): void {
   assert.deepEqual(Object.keys(diffSchema.properties), [...fields.slice(0,-1), "drawingTexts", fields.at(-1)]);
   assert.deepEqual(layoutDiffNativeJson(layoutDiffFromNativeJson(vectors.diff)), vectors.diff);
   const data = layoutDiffFromNativeJson(vectors.diff).dataFields!.entries!;
-  assert.deepEqual(data.added[0].value, { kind: "unsigned", value: (2n ** 64n) - 1n });
-  assert.deepEqual(data.added[1].value, { kind: "bytes", value: Uint8Array.of(0, 128, 255) });
-  assert.deepEqual(data.patched[0].item.value, { kind: "signed", value: -1n });
-  assert.deepEqual(data.patched[1].item.value, { kind: "float", value: { bits: 1n << 63n } });
+  assert.deepEqual(data.inserted[0].row.value, { kind: "unsigned", value: (2n ** 64n) - 1n });
+  assert.deepEqual(data.inserted[1].row.value, { kind: "bytes", value: Uint8Array.of(0, 128, 255) });
+  assert.deepEqual(data.inserted[2].row.value, { kind: "signed", value: -1n });
+  assert.deepEqual(data.inserted[3].row.value, { kind: "float", value: { bits: 1n << 63n } });
   console.log("[DEBUG] Layout granular native diff retained unsigned64, signed64, negative-zero words and original octets; snapshots=102 diffs=45");
   const child = layoutArtifactFromNativeJson(document).backgroundDrawing!;
   assert.equal(child.handle.childId, child.handle.target.artifactId);

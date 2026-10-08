@@ -19,14 +19,14 @@ use replication::MapDelta;
 
 /// 📤️ Renders the sparse typed delta using its declared word and property roles.
 pub fn encode_rewriting_diff_json(value:&RewritingDiff)->Result<String,semio_framework_value::ValueError>{
- let value=crate::standards::v1::subsets::any::schema::snapshot::json::diff(semio_framework_value::ToValue::to_value(value),false)?;
+ let value=crate::standards::v1::subsets::any::schema::snapshot::json::patch_form(semio_framework_value::ToValue::to_value(value),false)?;
  Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))
 }
 
 /// 📥️ Binds the sparse typed delta from its closed declared JSON fields.
 pub fn decode_rewriting_diff_json(text:&str)->Result<RewritingDiff,semio_framework_value::ValueError>{
  let parsed=semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?;
- let value=crate::standards::v1::subsets::any::schema::snapshot::json::diff(semio_framework_pack_json::to_dsl_value(&parsed),true)?;
+ let value=crate::standards::v1::subsets::any::schema::snapshot::json::patch_form(semio_framework_pack_json::to_dsl_value(&parsed),true)?;
  semio_framework_value::FromValue::from_value(value)
 }
 }

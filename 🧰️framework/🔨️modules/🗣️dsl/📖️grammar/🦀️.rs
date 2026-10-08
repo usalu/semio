@@ -99,6 +99,7 @@ pub enum Framing {
 /// EARLIER-decoded field's value — bmp's BITFIELDS masks (`if compression eq 3`), palette
 /// (`if bits_per_pixel le 8`). Evaluated against the walk-wide field env (item 3), so the guarded
 /// field can reference a value decoded in ANY earlier block, not just the same one.
+/// `bits` requires a nonzero unsigned mask and admits a field when `(value & mask) == mask`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Cond {
     pub field: String,

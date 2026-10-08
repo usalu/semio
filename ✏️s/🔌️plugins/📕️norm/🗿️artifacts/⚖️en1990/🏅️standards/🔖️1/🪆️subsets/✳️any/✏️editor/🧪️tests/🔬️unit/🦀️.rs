@@ -83,10 +83,8 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<En1990Command> {
     vec![
-        En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) }),
         En1990Command::Evaluate(evaluate::Evaluate {}),
         En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
-        En1990Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
         En1990Command::SetField(set_field::SetField { path: "consequenceClass".into(), value_json: "2".into() }),
         En1990Command::InsertItem(insert_item::InsertItem { path: "variables".into(), index: 0, value_json: None }),
         En1990Command::RemoveItem(remove_item::RemoveItem { path: "variables".into(), index: 0 }),
@@ -102,14 +100,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]);
+    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example", "set-field", "insert-item", "remove-item", "apply-remedy"];
+    let keywords = ["evaluate", "selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -172,9 +170,8 @@ async fn every_declared_body_key_renders() {
 
 //#region ðï¸Behavior
 #[semio_framework_async_macros::async_test]
-async fn set_snapshot_commits_a_host_backed_report() {
+async fn evaluate_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) })).await;
     let mut host = NormHost::<En1990Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
     assert!(!host.report().checks.is_empty());
@@ -214,12 +211,16 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) })).await;
+    let base = app.snapshot().expect("projection");
+    context::dispatch(&mut app, En1990Command::SetField(set_field::SetField { path: "annex".into(), value_json: "\"En\"".into() })).await;
+    let edited = app.snapshot().expect("projection");
+    assert_ne!(edited, base, "the concrete setter moved the document");
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), base);
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), En1990Snapshot::default());
+    assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);
 }
 
@@ -238,17 +239,3 @@ async fn report_out_exports_the_computed_check_report() {
     context::close(&mut app);
 }
 
-/// âš–ï¸ LAW (S15 matrix, 2026-09-25): `setSnapshot`'s declared argument is `snapshot`, the document's camelCase JSON.
-/// The rail delivered the committed âž¡ï¸after fixture and the editor handed that JSON to its DSL-text parser
-/// (`expected Float, found Absent at 1:1`). The argument now reaches the handler as the same document.
-#[semio_framework_async_macros::async_test]
-async fn the_declared_snapshot_argument_carries_the_documents_json() {
-    let expected = En1990Snapshot::default();
-    let after = crate::standards::v1::subsets::any::io::text::snapshot::encode_en1990_snapshot_json(&expected);
-    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&format!("{{\"snapshot\":{after}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rail arguments");
-    let command = <En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
-    let En1990Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };
-    let carried = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&crate::document::unescape_op_text_field(&payload.text)).expect("the payload carries the document's own DSL text");
-    assert_eq!(carried, expected, "the rail's JSON document must reach the handler unchanged");
-    assert!(<En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"text":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).is_err(), "only the declared `snapshot` argument is read");
-}

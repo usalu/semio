@@ -2,9 +2,9 @@
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
-//! leaf's own `🔺️diff/🦀️.rs`, which adds the payload row to the composed table's row delta (`added`); the child handle is re-derived by the central applier, never carried in the diff.
+//! leaf's own `🔺️diff/🦀️.rs`, which inserts the payload row into the composed table's row delta (`inserted = [{index, row}]`); the child handle is re-derived by the central applier, never carried in the diff.
 //!
-//! That leaf's own contract line reads: 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff); else `added = [payload row]` — `apply` re-derives the composed child handle from the rows.
+//! That leaf's own contract line reads: 🌱️ Fatal `mutation.duplicate-id` if the id already exists, Error `mutation.target-missing` if `index` lies past the end (both empty diff); else `inserted = [{index, payload row}]`, appended when `index` is absent.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.

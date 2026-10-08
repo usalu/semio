@@ -1,5 +1,5 @@
 /** 🪪️ Owned semantic artifact identity and dialect values. */
-import contract from "./🔣️.json";
+import contract from "./🔣️.json" with { type: "json" };
 
 const artifactKindPattern = new RegExp(contract.$defs.ArtifactKindId.pattern, "u");
 
@@ -31,4 +31,3 @@ export function parseArtifactRef(value: unknown): ArtifactRef {
   if (typeof row.artifactId !== "string") throw new Error("artifact identifier must be a string");
   return { artifactId: row.artifactId, dialect: parseArtifactDialect(row.dialect) };
 }
-

@@ -22,6 +22,9 @@ pub mod details;
 pub mod patch;
 #[path = "🖼️raster/🦀️.rs"]
 pub mod raster;
+#[path = "🧭️rules/🦀️.rs"]
+pub mod rules;
+pub use rules::{edited_subtree, Carried, EditPlan, EditRules, EntityRule, InsertRule, ItemField, RemoveRule, RowKey, Selector};
 pub use details::{
     render_file_source_editor, render_snapshot_details, render_snapshot_details_provider_revisioned, snapshot_details_split_layout, snapshot_details_window_definition, DslSnapshotDetailsProvider,
     SnapshotDetailPathSegment, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailsProvider, SNAPSHOT_DETAILS_BODY_KEY, SNAPSHOT_DETAILS_WINDOW_KIND_ID,
@@ -447,70 +450,6 @@ pub fn snapshot_from_edit_source<S: FromValue + ToValue>(source: &str) -> Result
     Ok(decoded)
 }
 
-pub fn apply_snapshot_edit<S>(snapshot: &S, event: &SnapshotEditEvent) -> Result<S, SnapshotEditError>
-where
-    S: ArtifactDsl + ToValue + FromValue,
-{
-    let original = snapshot.to_value();
-    let next = apply_snapshot_edit_unvalidated(snapshot, event)?;
-    validate_registered_snapshot_schema(&original, &next.to_value())?;
-    Ok(next)
-}
-
-/// 🛡️ Applies one edit and atomically enforces an explicitly supplied snapshot schema.
-pub fn apply_snapshot_edit_with_schema<S>(snapshot: &S, event: &SnapshotEditEvent, schema: &str) -> Result<S, SnapshotEditError>
-where
-    S: ArtifactDsl + ToValue + FromValue,
-{
-    let next = apply_snapshot_edit_unvalidated(snapshot, event)?;
-    validate_snapshot_value_against_schema(&next.to_value(), schema)?;
-    Ok(next)
-}
-
-/// 🧬️ Applies one edit against the exact schema selected by the editor dialect.
-pub fn apply_snapshot_edit_for_dialect<S>(snapshot: &S, event: &SnapshotEditEvent, dialect: Dialect, document_schema: &str) -> Result<S, SnapshotEditError>
-where
-    S: ArtifactDsl + ToValue + FromValue,
-{
-    let original = snapshot.to_value();
-    validate_snapshot_schema_for_dialect(&original, dialect, document_schema)?;
-    let next = apply_snapshot_edit_unvalidated(snapshot, event)?;
-    let value = next.to_value();
-    if snapshot_schema_id(&value) != snapshot_schema_id(&original) {
-        return Err(SnapshotEditError::new("snapshot-edit.schema-identity", "$.schema", "an edit cannot change the registered snapshot schema identity"));
-    }
-    let descriptor_id = snapshot_schema_descriptor_for_dialect(dialect, document_schema)?;
-    let validator = semio_framework_schema::structural_validator_for(&descriptor_id, "snapshot").map_err(|error| SnapshotEditError::new("snapshot-edit.invalid-schema-contract", "", format!("{descriptor_id}: {error}")))?;
-    validate_snapshot_value_with_validator(&value, &validator)?;
-    Ok(next)
-}
-
-fn apply_snapshot_edit_unvalidated<S>(snapshot: &S, event: &SnapshotEditEvent) -> Result<S, SnapshotEditError>
-where
-    S: ArtifactDsl + ToValue + FromValue,
-{
-    if let SnapshotEditEvent::ReplaceSource { source } = event {
-        return snapshot_from_edit_source(source);
-    }
-    let mut value = snapshot.to_value();
-    match event {
-        SnapshotEditEvent::SetValue { path, value: next } => set_value(&mut value, path, next.clone())?,
-        SnapshotEditEvent::InsertValue { path, value: next } => insert_value(&mut value, path, next.clone())?,
-        SnapshotEditEvent::RemoveValue { path } => {
-            remove_value(&mut value, path)?;
-        }
-        SnapshotEditEvent::MoveValue { from, path } => move_value(&mut value, from, path)?,
-        SnapshotEditEvent::RenameKey { path, key } => rename_key(&mut value, path, key)?,
-        SnapshotEditEvent::ReplaceSource { .. } => unreachable!(),
-    }
-    validate_value(&value, "")?;
-    let next = S::from_value(value.clone()).map_err(|error| SnapshotEditError::new("snapshot-edit.schema-invalid", "", error.to_string()))?;
-    if !values_equivalent(&next.to_value(), &value) {
-        return Err(SnapshotEditError::new("snapshot-edit.lossy-conversion", "", "the typed snapshot would normalize or discard part of the edit"));
-    }
-    Ok(next)
-}
-
 /// ✅ Validates a typed snapshot projection against its normative JSON Schema constraints.
 pub fn validate_snapshot_value_against_schema(value: &DslValue, schema: &str) -> Result<(), SnapshotEditError> {
     let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(schema).map_err(|error| SnapshotEditError::new("snapshot-edit.invalid-schema-contract", "", error.to_string()))?;
@@ -807,30 +746,29 @@ pub trait SnapshotEditingEditor: ArtifactEditor {
     fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
         snapshot_edit_value_is_admitted(event, snapshot)
     }
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
+    /// 🧭️ The pointer → kind table of this artifact's details pane: which JSON-pointer edit raises which ONE concrete kind.
+    fn snapshot_edit_rules() -> &'static EditRules;
 
-    /// 🎯️ The document an edit must publish, which the emitted mutations are checked against: the generic in-place snapshot
-    /// patch. An editor whose document has typed edits the generic path refuses by design (switching a tagged union's variant)
-    /// answers those itself and delegates every other edit to [`generic_snapshot_edit_expected`].
-    fn snapshot_edit_expected(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Self::Snapshot, Fault> {
-        generic_snapshot_edit_expected::<Self>(event, snapshot)
+    /// 🎯️ Edits the table cannot express because the kind's payload is computed from the edit rather than carried by it (a byte
+    /// splice, a text range): answered here with the concrete kind of the gesture; `None` falls through to [`Self::snapshot_edit_rules`].
+    fn snapshot_edit_special(_event: &SnapshotEditEvent, _snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        Ok(None)
     }
 
+    /// ⚖️ What one snapshot edit publishes: replacing the whole source loads the document (no history row, no differencing), every other
+    /// edit resolves to the concrete kind its pointer names or is refused naming the unsupported path.
     fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let expected = Self::snapshot_edit_expected(event, snapshot)?;
-        if &expected == snapshot {
-            return Ok(Emit::default());
+        if let SnapshotEditEvent::ReplaceSource { source } = event {
+            let next = snapshot_from_edit_source::<Self::Snapshot>(source).map_err(snapshot_edit_fault)?;
+            return Ok(Emit { effects: vec![crate::load_example_effect(&next, Self::DOCUMENT_SCHEMA)], ..Default::default() });
         }
-        let emit = Self::snapshot_edit_mutations(event, snapshot)?;
-        validate_snapshot_edit_publication(snapshot, &expected, &emit.artifact_mutations)?;
-        Ok(emit)
+        let mutations = match Self::snapshot_edit_special(event, snapshot)? {
+            Some(mutations) => mutations,
+            None => Self::snapshot_edit_rules().resolve::<Self::Snapshot, Self::Mutation>(snapshot, event).map_err(snapshot_edit_fault)?,
+        };
+        check_publication_limits(snapshot, &mutations)?;
+        Ok(Emit { artifact_mutations: mutations, ..Default::default() })
     }
-}
-
-/// 🎯️ The generic in-place snapshot patch of one edit — the default of [`SnapshotEditingEditor::snapshot_edit_expected`].
-pub fn generic_snapshot_edit_expected<E: SnapshotEditingEditor>(event: &SnapshotEditEvent, snapshot: &E::Snapshot) -> Result<E::Snapshot, Fault> {
-    let patch = prepare_snapshot_patch(snapshot, event).map_err(snapshot_edit_fault)?;
-    apply_snapshot_patch_for_dialect(snapshot, &patch, E::DIALECT, E::DOCUMENT_SCHEMA).map_err(snapshot_edit_fault)
 }
 
 /// 🧵️ Supplies native mutations to the same retained, cancelable execution lane as snapshot edits.
@@ -1347,74 +1285,6 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
     }
 }
 
-/// 📸️ The whole-source replacement edit as the replaced snapshot itself (the `ReplaceSource` branch of [`snapshot_edit_patch`]).
-fn snapshot_edit_set_snapshot<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, wrap: fn(S) -> M) -> Result<Emit<M, C, D>, Fault>
-where
-    S: ArtifactDsl + ToValue + FromValue,
-{
-    let next = apply_snapshot_edit(snapshot, event).map_err(snapshot_edit_fault)?;
-    Ok(Emit { artifact_mutations: vec![wrap(next)], ..Default::default() })
-}
-
-/// 🧮️ One snapshot edit as the artifact's own domain leaves (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
-/// event applies to `snapshot`, `net` answers the leaves that carry `snapshot` to exactly that result, and they publish with no
-/// description, so every history row is labelled from its leaves and time travel edits the leaf that changed; an edit that
-/// changes nothing publishes nothing.
-pub fn snapshot_edit_net<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, net: fn(&S, &S) -> Vec<M>) -> Result<Emit<M, C, D>, Fault>
-where
-    S: ArtifactDsl + ToValue + FromValue,
-{
-    let next = apply_snapshot_edit(snapshot, event).map_err(snapshot_edit_fault)?;
-    Ok(Emit { artifact_mutations: net(snapshot, &next), ..Default::default() })
-}
-
-/// 🧮️ [`snapshot_edit_net`] whose leaves are replayed on `snapshot` through the central applier and must land exactly on the edited
-/// snapshot: an edit that changes a field no leaf addresses, or whose leaves a guard refuses, is rejected rather than dropped.
-pub fn snapshot_edit_net_exact<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, net: fn(&S, &S) -> Vec<M>) -> Result<Emit<M, C, D>, Fault>
-where
-    S: ArtifactDsl + ToValue + FromValue + Clone + PartialEq,
-    M: Mutation<S>,
-{
-    let next = apply_snapshot_edit(snapshot, event).map_err(snapshot_edit_fault)?;
-    Ok(Emit { artifact_mutations: net_leaves_exact(snapshot, &next, net)?, ..Default::default() })
-}
-
-/// 🧮️ The leaves `net` answers for `snapshot` → `next`, replayed through the central applier; they must land exactly on `next`.
-pub fn net_leaves_exact<S, M>(snapshot: &S, next: &S, net: fn(&S, &S) -> Vec<M>) -> Result<Vec<M>, Fault>
-where
-    S: Clone + PartialEq,
-    M: Mutation<S>,
-{
-    let leaves = net(snapshot, next);
-    let mut running = snapshot.clone();
-    for leaf in &leaves {
-        let (diff, messages) = leaf.diff(&running).into_parts();
-        if let Some(message) = messages.iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("snapshot-edit.leaf-refused"), format!("{}: {}", message.code.0, message.message)));
-        }
-        running = kernel::apply_diff(&diff, &running).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("snapshot-edit.leaf-unapplicable"), error.to_string()))?;
-    }
-    if running != *next {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("snapshot-edit.unaddressed"), "the edit changes a field no mutation addresses"));
-    }
-    Ok(leaves)
-}
-
-/// 🩹️ One snapshot edit as the artifact's leaves (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every path-scoped
-/// event publishes ONE `patch-snapshot` leaf (`patch`) — its row is labelled by the leaf and time travel edits the value at its pointer
-/// through the snapshot sub-schema there. A whole-source replacement, the one genuine whole-document intent, publishes the replaced
-/// snapshot through `replace` when the aggregate has a whole-snapshot leaf (no path-patch item bound caps it), else a root `set` patch.
-pub fn snapshot_edit_patch<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, patch: fn(SnapshotPatch) -> M, replace: Option<fn(S) -> M>) -> Result<Emit<M, C, D>, Fault>
-where
-    S: ArtifactDsl + ToValue + FromValue + Clone,
-{
-    if let (SnapshotEditEvent::ReplaceSource { .. }, Some(replace)) = (event, replace) {
-        return snapshot_edit_set_snapshot(event, snapshot, replace);
-    }
-    let prepared = prepare_snapshot_patch(snapshot, event).map_err(snapshot_edit_fault)?;
-    Ok(Emit { artifact_mutations: vec![patch(prepared)], ..Default::default() })
-}
-
 pub fn snapshot_edit_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, 4_096, 1, SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, 7_500)
 }
@@ -1489,30 +1359,15 @@ fn snapshot_edit_extent<E: SnapshotEditingEditor>(command: &E::Command, _snapsho
     E::snapshot_edit_is_admitted(event, _snapshot).then(|| SNAPSHOT_EDIT_WORK_CAPACITY.rows_for_items(1)).flatten()
 }
 
-fn validate_snapshot_edit_publication<S: Clone + PartialEq, M: Mutation<S> + OpBinary>(snapshot: &S, expected: &S, mutations: &[M]) -> Result<(), Fault> {
-    let mut base = snapshot.clone();
-    for mutation in mutations {
-        let inverses = mutation.inverse(&base).map_err(|error| edit_fault("snapshot-edit.inverse-refused", error.into_message()))?;
-        for operation in std::iter::once(mutation).chain(inverses.iter()) {
+/// 📏️ Refuses a resolved edit whose mutation or exact undo cannot be carried as one native publication item.
+fn check_publication_limits<S, M: Mutation<S> + OpBinary>(snapshot: &S, mutations: &[M]) -> Result<(), Fault> {
+    mutations.iter().try_for_each(|mutation| {
+        let inverses = mutation.inverse(snapshot).map_err(|error| edit_fault("snapshot-edit.inverse-refused", error.into_message()))?;
+        std::iter::once(mutation).chain(inverses.iter()).try_for_each(|operation| {
             let bytes = operation.encode_op().map_err(|error| edit_fault("snapshot-edit.publication-codec", error.to_string()))?;
-            if bytes.len() > kernel::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
-                return Err(edit_fault("snapshot-edit.publication-limit", "the edit or its exact undo exceeds the native publication item limit"));
-            }
-        }
-        let next = kernel::apply_diff(mutation.diff(&base).diff(), &base).map_err(|error| edit_fault("snapshot-edit.publication-invalid", error.message))?;
-        let mut restored = next.clone();
-        for inverse in inverses {
-            restored = kernel::apply_diff(inverse.diff(&restored).diff(), &restored).map_err(|error| edit_fault("snapshot-edit.inverse-invalid", error.message))?;
-        }
-        if restored != base {
-            return Err(edit_fault("snapshot-edit.inverse-mismatch", "the native inverse does not restore the exact prior document"));
-        }
-        base = next;
-    }
-    if &base != expected {
-        return Err(edit_fault("snapshot-edit.publication-mismatch", "the native mutation does not preserve the exact requested edit"));
-    }
-    Ok(())
+            (bytes.len() <= kernel::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).then_some(()).ok_or_else(|| edit_fault("snapshot-edit.publication-limit", "the edit or its exact undo exceeds the native publication item limit"))
+        })
+    })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]

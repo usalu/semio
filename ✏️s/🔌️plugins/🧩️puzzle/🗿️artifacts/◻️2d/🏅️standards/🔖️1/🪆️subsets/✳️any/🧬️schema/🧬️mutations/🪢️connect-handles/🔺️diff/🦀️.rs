@@ -35,12 +35,8 @@ pub fn diff(payload: &super::ConnectHandles, base: &Puzzle2dSnapshot) -> protoco
         visible: None,
         locked: None,
     };
-    let reordered = payload.index.filter(|index| *index < base.edges.len()).map(|index| {
-        let mut order: Vec<_> = base.edges.iter().map(|edge| edge.id.clone()).collect();
-        order.insert(index, payload.id.clone());
-        order
-    });
-    let delta = Puzzle2dEdgesDelta::adding(edge, reordered);
+    let index = payload.index.map_or(base.edges.len(), |index| index.min(base.edges.len()));
+    let delta = Puzzle2dEdgesDelta::insertion(index, edge);
     protocol::MutationOutcome::new(Puzzle2dDiff { edges: Some(delta), ..Default::default() }).absorb_messages(drift(payload, base))
 }
 

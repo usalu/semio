@@ -4,7 +4,7 @@ use super::SetProjectInfo;
 use crate::{ModelMutation, ModelSnapshot, Patch};
 
 pub fn inverse(payload: &SetProjectInfo, base: &ModelSnapshot) -> Vec<ModelMutation> {
-    let restore = payload.patch().minimal(&base.project).negate(&base.project);
+    let restore = payload.patch().minimal(&base.project).restoring(&base.project);
     if restore.is_empty() {
         return Vec::new();
     }

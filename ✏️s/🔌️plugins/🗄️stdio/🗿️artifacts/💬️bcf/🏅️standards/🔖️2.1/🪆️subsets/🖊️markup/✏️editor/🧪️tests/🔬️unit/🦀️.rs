@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -75,3 +76,24 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", BcfAnyEditor, || semio_framework_plugin::App { definition: create_bcf_any_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
+    
+    use crate::standards::v2_1::subsets::any::schema::snapshot::{BcfComment, BcfTopic};
+    let topic = BcfTopic { guid: "t1".into(), title: "old".into(), status: "Open".into(), comments: vec![BcfComment { guid: "c1".into(), date: "d".into(), author: "a".into(), text: "hello".into(), viewpoint_ref: None }], ..BcfTopic::default() };
+    let base = BcfSnapshot { topics: vec![topic], ..BcfSnapshot::default() };
+    let emit = |event: editing::SnapshotEditEvent| <BcfAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let retitled = emit(editing::SnapshotEditEvent::SetValue { path: "/topics/0/title".into(), value: semio_framework_value::DslValue::String("new".into()) }).expect("a topic field edit resolves");
+    let [mutation @ BcfMutation::SetTopicMarkup(_)] = retitled.artifact_mutations.as_slice() else { panic!("a topic field raises the topic-markup kind") };
+    let mut state = base.clone();
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.topics[0].title, "new");
+    let worded = emit(editing::SnapshotEditEvent::SetValue { path: "/topics/0/comments/0/text".into(), value: semio_framework_value::DslValue::String("bye".into()) }).expect("a comment field edit resolves");
+    let [mutation @ BcfMutation::SetComment(_)] = worded.artifact_mutations.as_slice() else { panic!("a comment field raises the comment kind") };
+    apply_mutation(&mut state, mutation);
+    assert_eq!(state.topics[0].comments[0].text, "bye");
+    let dropped = emit(editing::SnapshotEditEvent::RemoveValue { path: "/topics/0/comments/0".into() }).expect("a comment removal resolves");
+    assert!(matches!(dropped.artifact_mutations.as_slice(), [BcfMutation::RemoveComment(_)]));
+    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+}

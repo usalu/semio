@@ -50,6 +50,7 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | insert-building              | ➕️insert-building              | ✅apply  |
       | insert-building-dupe         | ➕️insert-building              | ⛔dupe   |
       | remove-building              | ➖️remove-building              | ✅apply  |
+      | remove-building-middle-row   | ➖️remove-building              | 🔬️middle-row |
       | change-system-v-rd-n         | 💪️change-system-v-rd-n         | ✅apply  |
       | change-storey-permanent-gk-n | ⚖️change-storey-permanent-gk-n | ✅apply  |
       | change-storey-stiffness-x    | 📐️change-storey-stiffness-x    | ✅apply  |
@@ -76,12 +77,19 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | insert-tower-dupe            | 🗼insert-tower                  | ⛔dupe   |
       | change-tower-m-rd-nm         | ↪️change-tower-m-rd-nm         | ✅apply  |
       | remove-bridge                | ➖️remove-bridge                | ✅apply  |
+      | remove-bridge-middle-row     | ➖️remove-bridge                | 🔬️middle-row |
       | remove-assessment            | ➖️remove-assessment            | ✅apply  |
+      | remove-assessment-middle-row | ➖️remove-assessment            | 🔬️middle-row |
       | remove-silo                  | ➖️remove-silo                  | ✅apply  |
+      | remove-silo-middle-row       | ➖️remove-silo                  | 🔬️middle-row |
       | remove-tank                  | ➖️remove-tank                  | ✅apply  |
+      | remove-tank-middle-row       | ➖️remove-tank                  | 🔬️middle-row |
       | remove-foundation            | ➖️remove-foundation            | ✅apply  |
+      | remove-foundation-middle-row | ➖️remove-foundation            | 🔬️middle-row |
       | remove-retaining-wall        | ➖️remove-retaining-wall        | ✅apply  |
+      | remove-retaining-wall-middle-row | ➖️remove-retaining-wall        | 🔬️middle-row |
       | remove-tower                 | ➖️remove-tower                 | ✅apply  |
+      | remove-tower-middle-row      | ➖️remove-tower                 | 🔬️middle-row |
 
   @id-inverse
   @level-exhaustive

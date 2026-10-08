@@ -18,46 +18,6 @@ use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, Geome
 use protocol::command::DiffAlgebra;
 use protocol::{DiffCodec, MutationDiff};
 
-//#region 🔖️GenericNamedEngine
-/// 🧮️ Generic name/id-keyed collection glue — `between`/`apply`/`inverse`/`absorb` over the
-/// shared `NamedTripleDiff<K,D,T>` container, written once and instantiated per collection below
-/// (mirrors bcf's own local copy, `💬️bcf/…/🔺️diff/🦀️.rs` §GenericNamedEngine).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for (index, o) in other.iter().enumerate() {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(NamedAdded { index, item: o.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        return None;
-    }
-    if !reproduces_order(base, other, &removed, &added, &key_of) {
-        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
-    }
-    Some(NamedTripleDiff { removed, modified, added })
-}
-
 /// 🧮️ Whether the sparse triple can reproduce `other`'s ORDER. [`apply_named`] keeps every surviving
 /// member where it already stood and pushes `added` onto the tail, so the key sequence it produces is
 /// exactly `survivors(base order) ++ added(other order)`. When `other` orders its members any other
@@ -328,14 +288,6 @@ impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
         }
     }
 
-    fn between(base: &SemioModelSnapshot, other: &SemioModelSnapshot) -> Self {
-        SemioModelDiff {
-            spatial: between_named(&base.spatial, &other.spatial, |n: &SpatialNode| n.id.clone(), between_spatial),
-            elements: between_named(&base.elements, &other.elements, |e: &SemioModelElement| e.id.clone(), between_element),
-            relations: between_named(&base.relations, &other.relations, |r: &ModelRelation| r.id.clone(), between_relation),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.spatial.is_none() && self.elements.is_none() && self.relations.is_none()
     }
@@ -360,45 +312,6 @@ fn inverse_element(base: &SemioModelElement, diff: &SemioModelElementDiff) -> Se
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_relation(base: &ModelRelation, diff: &ModelRelationDiff) -> ModelRelationDiff {
     ModelRelationDiff { kind: diff.kind.as_ref().map(|_| base.kind.clone()), from: diff.from.as_ref().map(|_| base.from.clone()), to: diff.to.as_ref().map(|_| base.to.clone()) }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_spatial(base: &SpatialNode, other: &SpatialNode) -> Option<SpatialNodeDiff> {
-    let kind = if base.kind != other.kind { Some(other.kind) } else { None };
-    let name = if base.name != other.name { Some(other.name.clone()) } else { None };
-    let parent_id = if base.parent_id != other.parent_id { Some(other.parent_id.clone()) } else { None };
-    let placement = if base.placement != other.placement { Some(other.placement) } else { None };
-    if kind.is_none() && name.is_none() && parent_id.is_none() && placement.is_none() {
-        None
-    } else {
-        Some(SpatialNodeDiff { kind, name, parent_id, placement })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_element(base: &SemioModelElement, other: &SemioModelElement) -> Option<SemioModelElementDiff> {
-    let class = if base.class != other.class { Some(other.class.clone()) } else { None };
-    let placement = if base.placement != other.placement { Some(other.placement) } else { None };
-    let geometry = if base.geometry != other.geometry { Some(other.geometry.clone()) } else { None };
-    let spatial_id = if base.spatial_id != other.spatial_id { Some(other.spatial_id.clone()) } else { None };
-    let psets = if base.psets != other.psets { Some(other.psets.clone()) } else { None };
-    if class.is_none() && placement.is_none() && geometry.is_none() && spatial_id.is_none() && psets.is_none() {
-        None
-    } else {
-        Some(SemioModelElementDiff { class, placement, geometry, spatial_id, psets })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_relation(base: &ModelRelation, other: &ModelRelation) -> Option<ModelRelationDiff> {
-    let kind = if base.kind != other.kind { Some(other.kind.clone()) } else { None };
-    let from = if base.from != other.from { Some(other.from.clone()) } else { None };
-    let to = if base.to != other.to { Some(other.to.clone()) } else { None };
-    if kind.is_none() && from.is_none() && to.is_none() {
-        None
-    } else {
-        Some(ModelRelationDiff { kind, from, to })
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -549,7 +462,7 @@ fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> Model
 /// one that gets removed. `keep-spatial`'s `parent_id` starts `Some(..)` so `sweep_b` can exercise
 /// the `Some(None)` tri-state transition; `keep-element`'s `spatial_id` starts `None` so `sweep_b`
 /// exercises the opposite transition (None -> Some). Module-scope (not nested in `mod tests`) so
-/// `demo_diff_cases` below and the composer's `conformance_laws` can both reuse it — single source
+/// `between_demo_cases` below and the composer's `conformance_laws` can both reuse it — single source
 /// of truth, same convention `stdio.semio.flow`'s own diff facet demo cases use.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -603,31 +516,28 @@ pub(crate) fn sweep_b() -> SemioModelSnapshot {
     }
 }
 
-/// 🌱 Representative `SemioModelDiff` cases (empty/no-op, a full spatial+element+relation sweep
-/// both directions, a bare spatial-node insert, a bare element insert, a bare relation insert) —
-/// single source of truth for `grammar_conformance_law`/`protocol_walk_law` in
+/// 🌱 Representative `SemioModelDiff` cases built declaratively (empty/no-op, a bare spatial-node insert, a bare element insert, a bare relation insert) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-model"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
-    let a = sweep_a();
-    let b = sweep_b();
-    let mut cases = vec![SemioModelDiff::default(), <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&a, &b), <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&b, &a)];
-    cases.push(SemioModelDiff {
-        spatial: Some(NamedTripleDiff { added: vec![NamedAdded { index: 0, item: SpatialNode { id: "demo-spatial".into(), kind: SpatialKind::Space, name: "Demo".into(), parent_id: None, placement: SemioTransform::identity() } }], ..Default::default() }),
-        elements: None,
-        relations: None,
-    });
-    cases.push(SemioModelDiff {
-        spatial: None,
-        elements: Some(NamedTripleDiff {
-            added: vec![NamedAdded { index: 0, item: SemioModelElement { id: "demo-element".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] } }],
-            ..Default::default()
-        }),
-        relations: None,
-    });
-    cases.push(SemioModelDiff { spatial: None, elements: None, relations: Some(NamedTripleDiff { added: vec![NamedAdded { index: 0, item: ModelRelation { id: "demo-relation".into(), kind: RelationKind::ConnectsTo, from: "a".into(), to: "b".into() } }], ..Default::default() }) });
-    cases
+    vec![
+        SemioModelDiff::default(),
+        SemioModelDiff {
+            spatial: Some(NamedTripleDiff { added: vec![NamedAdded { index: 0, item: SpatialNode { id: "demo-spatial".into(), kind: SpatialKind::Space, name: "Demo".into(), parent_id: None, placement: SemioTransform::identity() } }], ..Default::default() }),
+            elements: None,
+            relations: None,
+        },
+        SemioModelDiff {
+            spatial: None,
+            elements: Some(NamedTripleDiff {
+                added: vec![NamedAdded { index: 0, item: SemioModelElement { id: "demo-element".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] } }],
+                ..Default::default()
+            }),
+            relations: None,
+        },
+        SemioModelDiff { spatial: None, elements: None, relations: Some(NamedTripleDiff { added: vec![NamedAdded { index: 0, item: ModelRelation { id: "demo-relation".into(), kind: RelationKind::ConnectsTo, from: "a".into(), to: "b".into() } }], ..Default::default() }) },
+    ]
 }
 //#endregion 🔖️Demo
 

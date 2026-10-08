@@ -21,7 +21,7 @@ async fn applies_insert_vent_system() {
 }
 
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
-    Din16798Mutation::InsertVentSystem(insert_vent_system::InsertVentSystem { index: base.vent_systems.len(), vent: { let mut v = crate::VentSystemDocument::default(); v.id = "vent-inserted".into(); v } })
+    Din16798Mutation::InsertVentSystem(insert_vent_system::InsertVentSystem { index: Some(base.vent_systems.len()), vent: { let mut v = crate::VentSystemDocument::default(); v.id = "vent-inserted".into(); v } })
 }
 
 #[semio_framework_async_macros::async_test]

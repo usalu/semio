@@ -11,7 +11,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
 use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_xml_node_bin, enc_xml_node_bin};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{parse_usize};
-use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
+use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff};
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;
 use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
@@ -119,6 +119,10 @@ impl OpBinary for DocxMutation {
             DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { .. }) => TAG_SET_STYLE_BASED_ON,
             DocxMutation::SetPart(set_part::SetPart { .. }) => TAG_SET_PART,
             DocxMutation::RemovePart(remove_part::RemovePart { .. }) => TAG_REMOVE_PART,
+            DocxMutation::SetRelationship(_) => TAG_SET_RELATIONSHIP,
+            DocxMutation::RemoveRelationship(_) => TAG_REMOVE_RELATIONSHIP,
+            DocxMutation::SetContentType(_) => TAG_SET_CONTENT_TYPE,
+            DocxMutation::RemoveContentType(_) => TAG_REMOVE_CONTENT_TYPE,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -188,13 +192,36 @@ impl OpBinary for DocxMutation {
                     write_str_lp(&mut out, based_on);
                 }
             }
-            DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index }) => {
+            DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index, override_index }) => {
                 write_str_lp(&mut out, path);
                 write_str_lp(&mut out, content_type);
                 write_bytes_lp(&mut out, &store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(payload)));
                 store::pack_rt::write_varint_u64(&mut out, index.map_or(0, |index| index as u64 + 1));
+                store::pack_rt::write_varint_u64(&mut out, override_index.map_or(0, |index| index as u64 + 1));
             }
             DocxMutation::RemovePart(remove_part::RemovePart { path }) => write_str_lp(&mut out, path),
+            DocxMutation::SetRelationship(set_relationship::SetRelationship { owner, id, rel_type, target, external, index }) => {
+                write_str_lp(&mut out, owner);
+                write_str_lp(&mut out, id);
+                write_str_lp(&mut out, rel_type);
+                write_str_lp(&mut out, target);
+                out.push(u8::from(*external));
+                store::pack_rt::write_varint_u64(&mut out, index.map_or(0, |index| index as u64 + 1));
+            }
+            DocxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner, id }) => {
+                write_str_lp(&mut out, owner);
+                write_str_lp(&mut out, id);
+            }
+            DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name, content_type, index }) => {
+                out.push(u8::from(*is_override));
+                write_str_lp(&mut out, name);
+                write_str_lp(&mut out, content_type);
+                store::pack_rt::write_varint_u64(&mut out, index.map_or(0, |index| index as u64 + 1));
+            }
+            DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name }) => {
+                out.push(u8::from(*is_override));
+                write_str_lp(&mut out, name);
+            }
         }
         Ok(out)
     }
@@ -299,11 +326,41 @@ impl OpBinary for DocxMutation {
                     0 => None,
                     index => Some(index as usize - 1),
                 };
-                Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index }))
+                let override_index = match reader.read_varint_u64().map_err(|e| malformed("op override index", reader.position(), e.to_string()))? {
+                    0 => None,
+                    index => Some(index as usize - 1),
+                };
+                Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index, override_index }))
             }
             TAG_REMOVE_PART => {
                 let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 Ok(DocxMutation::RemovePart(remove_part::RemovePart { path }))
+            }
+            TAG_SET_RELATIONSHIP => {
+                let owner = read_str_lp(&mut reader).map_err(|e| malformed("op owner", reader.position(), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let rel_type = read_str_lp(&mut reader).map_err(|e| malformed("op rel_type", reader.position(), e))?;
+                let target = read_str_lp(&mut reader).map_err(|e| malformed("op target", reader.position(), e))?;
+                let external = reader.read_u8().map_err(|e| malformed("op external", reader.position(), e.to_string()))? != 0;
+                let index = match reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? { 0 => None, index => Some(index as usize - 1) };
+                Ok(DocxMutation::SetRelationship(set_relationship::SetRelationship { owner, id, rel_type, target, external, index }))
+            }
+            TAG_REMOVE_RELATIONSHIP => {
+                let owner = read_str_lp(&mut reader).map_err(|e| malformed("op owner", reader.position(), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                Ok(DocxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner, id }))
+            }
+            TAG_SET_CONTENT_TYPE => {
+                let is_override = reader.read_u8().map_err(|e| malformed("op override", reader.position(), e.to_string()))? != 0;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", reader.position(), e))?;
+                let index = match reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? { 0 => None, index => Some(index as usize - 1) };
+                Ok(DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name, content_type, index }))
+            }
+            TAG_REMOVE_CONTENT_TYPE => {
+                let is_override = reader.read_u8().map_err(|e| malformed("op override", reader.position(), e.to_string()))? != 0;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name }))
             }
             other => Err(malformed("op tag", 1, format!("unknown DocxMutation tag {other}"))),
         }
@@ -332,4 +389,8 @@ const TAG_INSERT_TABLE_ROW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "in
 const TAG_REMOVE_TABLE_ROW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-table-row");
 const TAG_INSERT_XML_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-xml-node");
 const TAG_REMOVE_XML_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-xml-node");
+const TAG_SET_RELATIONSHIP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-relationship");
+const TAG_REMOVE_RELATIONSHIP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-relationship");
+const TAG_SET_CONTENT_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-content-type");
+const TAG_REMOVE_CONTENT_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-content-type");
 //#endregion 🏷️WireTags

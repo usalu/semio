@@ -67,7 +67,7 @@ fn value(input: &serde_json::Value) -> DslValue {
 }
 
 #[test]
-fn retained_publication_checks_exact_forward_inverse_and_requested_result() {
+fn retained_publication_refuses_a_forward_or_exact_inverse_over_the_native_item_limit() {
     let fixture = fixture();
     let rows = &fixture["publication"];
     let before = value(&rows["before"]);
@@ -91,7 +91,7 @@ fn retained_publication_checks_exact_forward_inverse_and_requested_result() {
         };
         assert_eq!(mutation.encode_op().unwrap().len(), emitted_bytes + mutation.padding);
         assert_eq!(PublicationMutation::decode_op(&mutation.encode_op().unwrap()).unwrap().snapshot, mutation.snapshot);
-        let result = super::super::validate_snapshot_edit_publication(&before, &expected, &[mutation]);
+        let result = super::super::check_publication_limits(&before, &[mutation]);
         match row["error"].as_str() {
             Some(code) => assert_eq!(result.expect_err(row["id"].as_str().unwrap()).code.0, code),
             None => result.unwrap_or_else(|error| panic!("{}: {error:?}", row["id"])),
@@ -619,7 +619,7 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
         reader.admit_patch(&mut decode).unwrap();assert_eq!(decode.owned_bytes(),paid);let patch=reader.take_patch().unwrap();assert!(reader.take_patch().is_none());assert_eq!(patch,SnapshotPatch::decode_op(text.as_bytes()).unwrap());
         if let Some(pointer)=value_pointer{let (SnapshotPatch::Set{value:DslValue::String(value),..}|SnapshotPatch::Insert{value:DslValue::String(value),..})= &patch else{panic!("original text value moved")};assert_eq!(value.as_ptr(),pointer);}
         assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());assert_eq!(span.get(0).unwrap()as *const u8,pointer);
-        let mut close=reader.into_retirement();while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}
+        close_original_patch_reader(reader,cleanup);
         let mut canonical=kernel::codec::PackEncodeOptions::default();canonical.limits.max_file_len=patch.encode_op().unwrap().len()as u64;let canonical_text=patch.encode_op().unwrap();let mut comparison=OperationByteComparison::new(kernel::codec::ByteSpan::from_slice(&canonical_text));let mut allowed=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allowed);patch.encode_op_into(&canonical,&mut comparison,&mut encoding).unwrap();comparison.finish().unwrap();
         let mut close=semio_framework_value::retirement::owned_retirement(patch);while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}close_source(&mut source);
     }
@@ -627,7 +627,15 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
         let text=row["source"].as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(text).is_ok());assert!(SnapshotPatch::decode_op(text.as_bytes()).is_err());
         let mut options=kernel::codec::PackDecodeOptions::default();options.limits.max_file_len=text.len()as u64;options.limits.max_total_alloc=allocation as u64;let mut reader=SnapshotPatchReadCursor::new(kernel::codec::ByteSpan::from_slice(text.as_bytes()),&options).unwrap();let mut allowed=|_|true;let mut decode=NativeDecodeControl::new(allocation,&mut allowed);while !reader.step(1,&mut decode).unwrap(){}let paid=decode.owned_bytes();
         assert_eq!(reader.admit_patch(&mut decode).unwrap_err().kind,ValueRefusalKind::InvalidValue);assert!(reader.candidate().is_some());assert!(reader.take_patch().is_none());assert_eq!(decode.owned_bytes(),paid);
-        assert_eq!(serde_json::Value::from(reader.candidate().unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());let mut close=reader.into_retirement();while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}
+        assert_eq!(serde_json::Value::from(reader.candidate().unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());close_original_patch_reader(reader,cleanup);
     }
     eprintln!("[DEBUG] original six-kind Patch reader retains paged source, cancellation/refused candidate and semantic pointer through typed admission;8194 value moves once with no paid mirror");
+}
+
+fn close_original_patch_reader(reader:SnapshotPatchReadCursor<'_>,maximum_bytes:usize){
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,close_factory_ticket};
+    let grant=RetainedCloneGrant::one_capacity_turn(reader.retirement_birth_bytes(),256);
+    let(owner,birth)=reader.into_retirement(grant).map_err(|(error,_)|error).unwrap();assert!(birth.fits(grant));let mut owner=Some(owner);
+    for _ in 0..100000{let Some(cursor)=owner.as_ref()else{return;};let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(close_factory_ticket(&mut owner,grant).unwrap().progress().fits(grant));}
+    panic!("original patch reader failed to retire");
 }

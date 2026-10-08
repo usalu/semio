@@ -139,6 +139,10 @@ pub mod os_pack {
     pub mod value;
 }
 
+/// 🪡️ Generic positional list deltas — `{removed, inserted, moved, patched}` rows with base/after coordinates, never an id order list.
+#[path = "../../🔨️modules/🪡️list-delta/🦀️.rs"]
+pub mod list_delta;
+
 #[path = "."]
 pub mod os_spr {
     #[path = "../../🔨️modules/📡️spr/🦀️.rs"]
@@ -169,6 +173,10 @@ pub mod os_spr {
     // so `os_spr::command::Mutation` and friends still resolve here.
     #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️.rs"]
     pub mod command;
+
+    // 🧮️ Composite-plan folding and the fold-footprint law, kept apart from the command layer's leaf-facing kit.
+    #[path = "../../🔨️modules/📡️spr/🧮️fold/🦀️.rs"]
+    pub mod fold;
 
     pub use self::crypto::*;
     pub use self::dictionary::*;
@@ -301,6 +309,10 @@ pub use semio_framework_diagnostic as __diagnostic;
 pub use semio_framework_pack_json as __pack_json;
 #[doc(hidden)]
 pub use semio_framework_value as __value;
+#[doc(hidden)]
+pub use semio_framework_value_derive as __value_derive;
+#[doc(hidden)]
+pub use semio_framework_dsl_record_derive as __dsl_record_derive;
 
 /// 🌿️ Publishes the canonical retained ownership derives beside their owned value traits.
 

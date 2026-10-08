@@ -61,6 +61,7 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     | id              | mutation                                                                                                |
     | create-support  | {"mutation":"createSupport","support":{"id":"s5","nodeId":"rc2","fixed":["Ty"]}}                        |
     | delete-support  | {"mutation":"deleteSupport","id":"s_spare"}                                                             |
+    | delete-support  | {"mutation":"deleteSupport","id":"s2"}                                                             |
     | replace-support | {"mutation":"replaceSupport","id":"s1","newSupport":{"id":"s1","nodeId":"n1","fixed":["Tx","Ty","Rz"]}} |
 
   @id-inverse
@@ -77,4 +78,5 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     | id              | mutation                                                                                                |
     | create-support  | {"mutation":"createSupport","support":{"id":"s5","nodeId":"rc2","fixed":["Ty"]}}                        |
     | delete-support  | {"mutation":"deleteSupport","id":"s_spare"}                                                             |
+    | delete-support  | {"mutation":"deleteSupport","id":"s2"}                                                             |
     | replace-support | {"mutation":"replaceSupport","id":"s1","newSupport":{"id":"s1","nodeId":"n1","fixed":["Tx","Ty","Rz"]}} |

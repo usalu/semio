@@ -245,15 +245,6 @@ impl protocol::DiffAlgebra<Generation3dViewConfig> for Generation3dViewConfigPat
             active_example_id: self.active_example_id.as_ref().map(|_| Generation3dActiveExampleChange { id: base.active_example_id.clone() }),
         }
     }
-    fn between(base: &Generation3dViewConfig, other: &Generation3dViewConfig) -> Self {
-        Self {
-            lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()),
-            show_mode: (base.show_mode != other.show_mode).then(|| other.show_mode.clone()),
-            preview_camera: (base.preview_camera != other.preview_camera).then(|| other.preview_camera.clone()),
-            sun_json: (base.sun_json != other.sun_json).then(|| other.sun_json.clone()),
-            active_example_id: (base.active_example_id != other.active_example_id).then(|| Generation3dActiveExampleChange { id: other.active_example_id.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.lod_mode.is_none() && self.show_mode.is_none() && self.preview_camera.is_none() && self.sun_json.is_none() && self.active_example_id.is_none()
     }

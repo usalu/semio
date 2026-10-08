@@ -27,6 +27,6 @@ export function repositoryCargoArtifactBuildPolicyV1(cwd: string, root = getWork
 /** 🦀️ Composes selected repository preparation with the neutral compiler capture port. */
 export async function buildRepositoryCargoArtifacts(manifest: string, args: string[] = [], root = getWorkspaceRoot(), options: CargoArtifactBuildOptionsV1 = {}): Promise<void> {
   const path = resolve(root, manifest);
-  prepareCargoWorkspaceInvocation(root, [options.command ?? "build", "--manifest-path", path], root);
+  prepareCargoWorkspaceInvocation(root, [options.command ?? "build", "--manifest-path", path,...args], root,options.environment??process.env);
   await buildCargoArtifacts(path, args, { ...repositoryCargoArtifactBuildPolicyV1(root, root), captureDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : resolve(dirname(path), "dist") }, options);
 }

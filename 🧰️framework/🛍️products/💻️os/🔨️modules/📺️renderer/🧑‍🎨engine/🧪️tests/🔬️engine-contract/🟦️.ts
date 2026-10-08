@@ -6192,7 +6192,6 @@ it("keeps hover out of the board-events batch — it travels on the framework in
       create: async () => naturalFileLifecycleFixture.lifecycle.openedInstanceId,
       importBytes: async (instanceId) => {
         expect(instanceId).toBe(naturalFileLifecycleFixture.lifecycle.openedInstanceId);
-        openedHistory.push("set-snapshot");
       },
       retire: async (instanceId) => {
         retired.push(instanceId);
@@ -12586,7 +12585,7 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
       })) as unknown as typeof window.matchMedia;
     }
     const backboneWorkerFactory = () => Object.assign(new EventTarget(), { onmessage: null, postMessage: vi.fn(), terminate: vi.fn() }) as unknown as Worker;
-    const { container } = render(createElement(FrameworkOsShell, { plugins: [], appId: "test", backboneWorkerFactory }));
+    const { container } = render(createElement(FrameworkOsShell, { catalog: { plugins: [], extensions: [], hosts: [], playgrounds: [], moduleUrl: () => { throw new Error("absent supplied module"); }, extensionModuleUrl: () => { throw new Error("absent supplied extension"); } }, plugins: [], appId: "test", backboneWorkerFactory }));
     const portalLayer = container.querySelector("[data-semio-portal-layer]");
     expect(portalLayer).toBeTruthy();
     expect(portalLayer?.className).not.toContain("z-tutorial");
@@ -14222,8 +14221,8 @@ describe("🎫️ the shell says what it holds", () => {
       surfaceId: fixture.blockList.surfaceId,
       controllerId: "controller.block-list",
       blockList: {
-        stepsJson: JSON.stringify(fixture.blockList.steps),
-        paletteJson: JSON.stringify(fixture.blockList.palette),
+        steps: fixture.blockList.steps,
+        palette: fixture.blockList.palette,
       },
     };
     for (const driverCase of fixture.drivers) {

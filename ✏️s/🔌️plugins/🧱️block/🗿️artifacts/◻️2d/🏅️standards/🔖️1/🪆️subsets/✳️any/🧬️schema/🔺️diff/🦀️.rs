@@ -2,7 +2,7 @@
 //! removed/added/patched rows (never a whole row, list or sub-document copy). `absorb` coalesces per field and per id, `inverse` restores exact base values.
 
 use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
-use semio_s_plugin_block::{BlockAttributesDelta, BlockAuthorsDelta, BlockCamera2dPatch, BlockCompatibilityDelta, BlockKindIdentityPatch, BlockMetaPatch, BlockOptionalNumber, BlockOptionalText, BlockPatchError, block_patch, block_patch_absorb, block_patch_apply, block_patch_between, block_patch_inverse, block_patch_is_empty, block_rows, block_rows_absorb, block_rows_apply, block_rows_between, block_rows_inverse, block_rows_is_empty};
+use semio_s_plugin_block::{BlockAttributesDelta, BlockAuthorsDelta, BlockCamera2dPatch, BlockCompatibilityDelta, BlockKindIdentityPatch, BlockMetaPatch, BlockOptionalNumber, BlockOptionalText, BlockPatchError, block_patch, block_patch_absorb, block_patch_apply, block_patch_inverse, block_patch_is_empty};
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -20,15 +20,15 @@ pub struct Block2dDiff {
     #[state(artifact)]
     pub presentation: Option<Block2dPresentationPatch>,
     #[state(artifact)]
-    pub handle_kinds: Option<Block2dHandleKindsDelta>,
+    pub handle_kinds: Block2dHandleKindsDelta,
     #[state(artifact)]
-    pub handles: Option<Block2dHandlesDelta>,
+    pub handles: Block2dHandlesDelta,
     #[state(artifact)]
-    pub compatibility: Option<BlockCompatibilityDelta>,
+    pub compatibility: BlockCompatibilityDelta,
     #[state(artifact)]
-    pub attributes: Option<BlockAttributesDelta>,
+    pub attributes: BlockAttributesDelta,
     #[state(artifact)]
-    pub authors: Option<BlockAuthorsDelta>,
+    pub authors: BlockAuthorsDelta,
     #[state(artifact)]
     pub camera2d: Option<BlockCamera2dPatch>,
     #[state(artifact)]
@@ -43,10 +43,18 @@ block_patch!(test; /// 🔘️ Field patch over a handle kind (its id is the row
     Block2dHandleKindPatch for Block2dHandleKind { plain { name: String, label: String, color: String, default_wire_kind: String } optional {  } });
 block_patch!(test; /// 🌱️ Field patch over a handle template (its id is the row identity).
     Block2dHandleTemplatePatch for Block2dHandleTemplate { plain { handle_kind: String, angle: f64, radius: f64 } optional {  } });
-block_rows!(test; /// 📂 Row delta over the handle kinds.
-    Block2dHandleKindsDelta, Block2dHandleKindsPatchEntry, Block2dHandleKind, Block2dHandleKindPatch, id);
-block_rows!(test; /// 📂 Row delta over the handle templates.
-    Block2dHandlesDelta, Block2dHandlesPatchEntry, Block2dHandleTemplate, Block2dHandleTemplatePatch, id);
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📂 Row delta over the handle kinds.
+    pub Block2dHandleKindsDelta { removal: Block2dHandleKindsRemoval, insertion: Block2dHandleKindsInsertion, relocation: Block2dHandleKindsRelocation, modification: Block2dHandleKindsPatchEntry, row: Block2dHandleKind, patch: Block2dHandleKindPatch, key: id, values_only }
+}
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📂 Row delta over the handle templates.
+    pub Block2dHandlesDelta { removal: Block2dHandlesRemoval, insertion: Block2dHandlesInsertion, relocation: Block2dHandlesRelocation, modification: Block2dHandlesPatchEntry, row: Block2dHandleTemplate, patch: Block2dHandleTemplatePatch, key: id, values_only }
+}
 //#endregion 🔖️Patches
 
 //#region 🔖️Apply
@@ -56,7 +64,7 @@ fn lift(error: BlockPatchError) -> protocol::MutationApplyError {
 }
 
 impl protocol::MutationDiff<Block2dSnapshot> for Block2dDiff {
-    fn apply(&self, base: &Block2dSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block2dSnapshot> {
+    fn apply(&self, base: &Block2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block2dSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema.clone_from(schema);
@@ -65,11 +73,11 @@ impl protocol::MutationDiff<Block2dSnapshot> for Block2dDiff {
         next.presentation = block_patch_apply(&self.presentation, &base.presentation, "presentation").map_err(lift)?;
         next.camera2d = block_patch_apply(&self.camera2d, &base.camera2d, "camera2d").map_err(lift)?;
         next.meta = block_patch_apply(&self.meta, &base.meta, "meta").map_err(lift)?;
-        next.handle_kinds = block_rows_apply(&self.handle_kinds, &base.handle_kinds, "handleKinds").map_err(lift)?;
-        next.handles = block_rows_apply(&self.handles, &base.handles, "handles").map_err(lift)?;
-        next.compatibility = block_rows_apply(&self.compatibility, &base.compatibility, "compatibility").map_err(lift)?;
-        next.attributes = block_rows_apply(&self.attributes, &base.attributes, "attributes").map_err(lift)?;
-        next.authors = block_rows_apply(&self.authors, &base.authors, "authors").map_err(lift)?;
+        next.handle_kinds = self.handle_kinds.commit_onto(&base.handle_kinds, capability).map_err(|error| error.under(["handleKinds"]))?;
+        next.handles = self.handles.commit_onto(&base.handles, capability).map_err(|error| error.under(["handles"]))?;
+        next.compatibility = self.compatibility.commit_onto(&base.compatibility, capability).map_err(|error| error.under(["compatibility"]))?;
+        next.attributes = self.attributes.commit_onto(&base.attributes, capability).map_err(|error| error.under(["attributes"]))?;
+        next.authors = self.authors.commit_onto(&base.authors, capability).map_err(|error| error.under(["authors"]))?;
         Ok(next)
     }
     fn absorb(&mut self, later: Self) {
@@ -80,11 +88,11 @@ impl protocol::MutationDiff<Block2dSnapshot> for Block2dDiff {
         block_patch_absorb(&mut self.presentation, later.presentation);
         block_patch_absorb(&mut self.camera2d, later.camera2d);
         block_patch_absorb(&mut self.meta, later.meta);
-        block_rows_absorb(&mut self.handle_kinds, later.handle_kinds);
-        block_rows_absorb(&mut self.handles, later.handles);
-        block_rows_absorb(&mut self.compatibility, later.compatibility);
-        block_rows_absorb(&mut self.attributes, later.attributes);
-        block_rows_absorb(&mut self.authors, later.authors);
+        self.handle_kinds.absorb(later.handle_kinds);
+        self.handles.absorb(later.handles);
+        self.compatibility.absorb(later.compatibility);
+        self.attributes.absorb(later.attributes);
+        self.authors.absorb(later.authors);
     }
 }
 
@@ -96,25 +104,11 @@ impl protocol::DiffAlgebra<Block2dSnapshot> for Block2dDiff {
             presentation: block_patch_inverse(&self.presentation, &base.presentation),
             camera2d: block_patch_inverse(&self.camera2d, &base.camera2d),
             meta: block_patch_inverse(&self.meta, &base.meta),
-            handle_kinds: block_rows_inverse(&self.handle_kinds, &base.handle_kinds),
-            handles: block_rows_inverse(&self.handles, &base.handles),
-            compatibility: block_rows_inverse(&self.compatibility, &base.compatibility),
-            attributes: block_rows_inverse(&self.attributes, &base.attributes),
-            authors: block_rows_inverse(&self.authors, &base.authors),
-        }
-    }
-    fn between(base: &Block2dSnapshot, other: &Block2dSnapshot) -> Self {
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            node_kind: block_patch_between(&base.node_kind, &other.node_kind),
-            presentation: block_patch_between(&base.presentation, &other.presentation),
-            camera2d: block_patch_between(&base.camera2d, &other.camera2d),
-            meta: block_patch_between(&base.meta, &other.meta),
-            handle_kinds: block_rows_between(&base.handle_kinds, &other.handle_kinds),
-            handles: block_rows_between(&base.handles, &other.handles),
-            compatibility: block_rows_between(&base.compatibility, &other.compatibility),
-            attributes: block_rows_between(&base.attributes, &other.attributes),
-            authors: block_rows_between(&base.authors, &other.authors),
+            handle_kinds: self.handle_kinds.inverse(&base.handle_kinds),
+            handles: self.handles.inverse(&base.handles),
+            compatibility: self.compatibility.inverse(&base.compatibility),
+            attributes: self.attributes.inverse(&base.attributes),
+            authors: self.authors.inverse(&base.authors),
         }
     }
     fn is_empty(&self) -> bool {
@@ -123,11 +117,11 @@ impl protocol::DiffAlgebra<Block2dSnapshot> for Block2dDiff {
             && block_patch_is_empty(&self.presentation)
             && block_patch_is_empty(&self.camera2d)
             && block_patch_is_empty(&self.meta)
-            && block_rows_is_empty(&self.handle_kinds)
-            && block_rows_is_empty(&self.handles)
-            && block_rows_is_empty(&self.compatibility)
-            && block_rows_is_empty(&self.attributes)
-            && block_rows_is_empty(&self.authors)
+            && self.handle_kinds.is_empty()
+            && self.handles.is_empty()
+            && self.compatibility.is_empty()
+            && self.attributes.is_empty()
+            && self.authors.is_empty()
     }
 }
 //#endregion 🔖️Apply

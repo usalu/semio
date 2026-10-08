@@ -1,8 +1,5 @@
 syntax = "proto3";
 package semio.s_stdio_mp3.snapshot;
-message Id3Frame { string id = 1; uint32 flags = 2; bytes data = 3; }
-message Id3v2Tag { uint32 major_version = 1; uint32 minor_version = 2; uint32 flags = 3; repeated Id3Frame frames = 4; }
-message Id3v1Tag { bytes raw = 1; }
 message Mp3FrameHeader {
  uint32 mpeg_version_id = 1;
  uint32 layer = 2;
@@ -19,3 +16,16 @@ message Mp3FrameHeader {
 }
 message Mp3Frame { Mp3FrameHeader header = 1; bytes payload = 2; }
 message Mp3Snapshot { string schema = 1; Id3v2Tag id3v2 = 2; repeated Mp3Frame frames = 3; Id3v1Tag id3v1 = 4; }
+
+message Id3Text { repeated string values = 1; }
+message Id3UserText { string description = 1; repeated string values = 2; }
+message Id3Comment { string language = 1; string description = 2; string text = 3; }
+message Id3Lyrics { string language = 1; string description = 2; string text = 3; }
+message Id3Url { string url = 1; }
+message Id3UserUrl { string description = 1; string url = 2; }
+message Id3Picture { string mime = 1; uint32 picture_type = 2; string description = 3; bytes payload = 4; }
+message Id3Opaque { bytes bytes = 1; }
+message Id3Content { oneof content { Id3Text text = 1; Id3UserText user_text = 2; Id3Comment comment = 3; Id3Lyrics lyrics = 4; Id3Url url = 5; Id3UserUrl user_url = 6; Id3Picture picture = 7; Id3Opaque opaque = 8; } }
+message Id3Frame { string id = 1; Id3Content content = 2; }
+message Id3v2Tag { repeated Id3Frame frames = 1; }
+message Id3v1Tag { string title = 1; string artist = 2; string album = 3; string year = 4; string comment = 5; optional uint32 track = 6; optional uint32 genre = 7; }

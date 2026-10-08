@@ -282,14 +282,22 @@
         "id": {
           "type": "string"
         },
-        "newContent": {
+        "offset": {
+          "type": "integer"
+        },
+        "delete": {
+          "type": "integer"
+        },
+        "insert": {
           "type": "string"
         }
       },
       "required": [
         "kind",
         "id",
-        "newContent"
+        "offset",
+        "delete",
+        "insert"
       ]
     },
     {

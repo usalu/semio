@@ -205,21 +205,7 @@ fn delegated(step: Result<JsonMutation, Refusal>, base: &JsonSnapshot) -> protoc
 }
 //#endregion 🔖️Delegation
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: computed once from
-/// the pre-mutation state, applied to produce the new state, and returned — the same shape
-/// `apply_json_mutation` uses for the ✳️any subset.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_json_i_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonIJsonMutation) -> protocol::MutationOutcome<JsonDiff> {
-    let outcome = <JsonIJsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 
 //#endregion 🔖️Apply
 

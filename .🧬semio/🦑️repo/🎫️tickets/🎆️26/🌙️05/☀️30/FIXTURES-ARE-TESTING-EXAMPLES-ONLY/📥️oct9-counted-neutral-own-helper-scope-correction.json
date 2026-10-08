@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+  "before": "expect(source.includes(\"maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth\")).toBe(false);",
+  "after": "const close=source.slice(source.indexOf(\"fn close_test_store<\"),source.indexOf(\"impl<P, Mutation> Drop\",source.indexOf(\"fn close_test_store<\")));const driver=source.slice(source.indexOf(\"fn drive_retirement_terminal(\"),source.indexOf(\"#[semio_framework_async_macros::async_test]\",source.indexOf(\"fn drive_retirement_terminal(\")));for(const helper of [close,driver]){expect(helper.includes(\"maximum_capacity_bytes: demand.capacity_bytes\")).toBe(false);expect(helper.includes(\"physical_test_close_grant()\")).toBe(true);}",
+  "reason": "whole unit source contains separately Native-owned query-priced test laws; constrain actual law to both owned explicit-policy drivers without adopting peer blocks"
+}

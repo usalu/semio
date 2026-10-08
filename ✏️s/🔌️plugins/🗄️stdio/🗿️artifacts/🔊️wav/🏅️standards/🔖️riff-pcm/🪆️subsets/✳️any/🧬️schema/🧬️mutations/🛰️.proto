@@ -8,11 +8,13 @@ message WavMutationSetFmt { WavMutationFmt fmt = 1; }
 message WavMutationSetData { WavMutationData data = 1; }
 message WavMutationPatchData { uint64 index = 1; uint64 remove_count = 2; WavMutationData data = 3; optional uint64 move_to = 4; }
 message WavMutationSetOtherChunks { repeated WavMutationRiffChunk chunks = 1; repeated WavMutationChunkRef chunk_order = 2; }
+message WavMutationSetPadBytes { uint32 fmt_pad_byte = 1; uint32 data_pad_byte = 2; }
 message WavMutation {
   oneof payload {
     WavMutationSetFmt set_fmt = 3;
     WavMutationSetData set_data = 4;
     WavMutationPatchData patch_data = 5;
     WavMutationSetOtherChunks set_other_chunks = 6;
+    WavMutationSetPadBytes set_pad_bytes = 7;
   }
 }

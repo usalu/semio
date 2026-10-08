@@ -8,17 +8,44 @@ pub(crate) fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+Membe
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_eq!(app.private_child_groups.get(operation).is_some(),row["admitted"].as_bool().unwrap());
         if !row["admitted"].as_bool().unwrap(){assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));continue;}
         assert_eq!(heap.requested_bytes,frame);let original=app.private_child_groups.get(operation).unwrap().as_ref()as *const _;
+        let context_extent=semio_framework_job::StepContextOwner::birth_bytes();
+        let(context,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::StepContextOwner::new(semio_framework_job::OperationId(operation),semio_framework_job::Generation(1),1,context_extent));
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(context_extent,0));
+        app.private_child_groups.get_mut(operation).unwrap().context=context;
+        let mut sequence=0;
+        let context=app.private_child_groups.get(operation).unwrap().context.as_ref().unwrap().context(semio_framework_job::StepBudget::new(1,semio_framework_job::default_now_us().unwrap().saturating_add(INTERACTIVE_TURN_WORKER_WALL_US)),semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut sequence).unwrap();
+        let demand=app.private_child_group_operation_close_demands(operation,64).unwrap();assert_eq!(demand.release_bytes,context_extent);
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_operation_step(operation,grant).unwrap());
+        assert_eq!(step,semio_framework_job::InteractiveJobCloseStep::Blocked);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
+        drop(context);
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_operation_step(operation,grant).unwrap());
+        assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,context_extent);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,context_extent));
+        assert!(app.private_child_groups.get(operation).unwrap().context.is_none());
+        assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
         for _ in 0..100000{
             if app.private_child_groups.get(operation).is_none(){break;}
             assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
-            let demand=app.private_child_group_close_byte_demand();assert!(demand<=262_144);
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(0,demand).unwrap());assert_eq!(step,PluginCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-            if demand>0{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(1,demand-1).unwrap());assert_eq!(step,PluginCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(1,demand).unwrap());let(released_items,released_bytes)=match step{PluginCloseStep::Pending{released_items,released_bytes}=>(released_items,released_bytes),_=>panic!("one funded original mounted frame step remains pending until its registry backing closes")};assert!(released_items<=1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,released_bytes));if released_bytes>0{assert_eq!(released_bytes,frame);}
+            let demand=app.private_child_group_close_demands(64).unwrap();assert!(demand.capacity_bytes<=262_144&&demand.release_bytes<=262_144&&demand.copy_bytes<=64&&demand.depth<=64);
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];
+            if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}
+            if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}
+            if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}
+            for denied in denied{
+                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(denied).unwrap());
+                assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+                assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
+            }
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(grant).unwrap());
+            assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+            if step.progress().released_bytes>0{assert_eq!(step.progress().released_bytes,frame);}
         }
         assert!(app.private_child_groups.get(operation).is_none());println!("[DEBUG] Mounted private frame={} originalStablePointer/fundedbirth; bothinlineissuers terminal beforewholeframefree; zero/onebelow retain",frame);
     }
-    assert!(app.private_child_groups.is_empty());assert_eq!(app.private_child_group_close_byte_demand(),backing);
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(1,backing-1).unwrap());assert_eq!(step,PluginCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(1,backing).unwrap());assert_eq!(step,PluginCloseStep::Pending{released_items:1,released_bytes:backing});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert!(app.private_child_groups_terminal_is_empty());
+    assert!(app.private_child_groups.is_empty());assert_eq!(app.private_child_group_close_demands(64).unwrap().release_bytes,backing);
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:backing,maximum_depth:1};
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(RetainedCloneGrant{maximum_release_bytes:backing-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(grant).unwrap());assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,backing);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert!(app.private_child_groups_terminal_is_empty());
 }

@@ -290,9 +290,41 @@ mod live {
                     append_inlines(arena, target, &as_array(Some(inlines_json)))?;
                 }
             }
+            "splice-source" => {
+                let mut rendered = String::new();
+                format_commonmark(root, &Options::default(), &mut rendered).map_err(|error| format!("comrak could not format the document: {error}"))?;
+                let source: Vec<char> = rendered.trim_end_matches('\n').chars().collect();
+                let rows = as_array(params.get("splices"));
+                let mut text = String::new();
+                let mut position = 0usize;
+                for row in &rows {
+                    let (offset, delete) = (json_usize(row, "offset")?, json_usize(row, "delete")?);
+                    if offset < position || offset + delete > source.len() {
+                        return Err("splice-source: the ranges must ascend, never overlap and stay inside the source".to_string());
+                    }
+                    text.extend(&source[position..offset]);
+                    text.push_str(&row.str("insert"));
+                    position = offset + delete;
+                }
+                text.extend(&source[position..]);
+                replace_document(arena, root, &text);
+            }
+            "restore-source" => replace_document(arena, root, &params.str("source")),
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
+    }
+
+    /// ♻️ Replaces every top-level block of `root` with the blocks `comrak` reads from `text`.
+    fn replace_document<'a>(arena: &'a Arena<'a>, root: &'a AstNode<'a>, text: &str) {
+        let parsed = parse_document(arena, text, &Options::default());
+        for child in root.children().collect::<Vec<_>>() {
+            child.detach();
+        }
+        for child in parsed.children().collect::<Vec<_>>() {
+            child.detach();
+            root.append(child);
+        }
     }
 
     /// 🖨️ `comrak`'s CommonMark rendering of `root` — the raw bytes a result carries, never what it is judged by.
@@ -494,6 +526,10 @@ mod live {
                 let index = json_usize(&params, "index")?;
                 let inlines = block_at(&original, &path, index)?.get("inlines").cloned().ok_or("set-inlines inverse: the original block carries no inlines")?;
                 ("set-inlines".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("inlines".to_string(), inlines)]))
+            }
+            "splice-source" => {
+                let source = std::str::from_utf8(original_input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
+                ("restore-source".to_string(), Json::Object(vec![("source".to_string(), Json::String(source.to_string()))]))
             }
             other => return Err(format!("mutation kind {other:?} has no inverse spec")),
         };

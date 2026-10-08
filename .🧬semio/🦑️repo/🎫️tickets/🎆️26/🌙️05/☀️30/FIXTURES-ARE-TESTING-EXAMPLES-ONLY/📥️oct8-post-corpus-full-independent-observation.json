@@ -1,0 +1,46 @@
+{
+  "bytes": 5454147,
+  "sha256": "2f23f83bc42f52fedb777572bdc3fe06a620c8f0c6cfbc243d34184f00456078",
+  "validJSON": 12355,
+  "malformed": [],
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+      "detail": "Puzzle2d Optional Text Diagnostic Cases defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.",
+      "physicalSha256": "3f5a6c66dec5ecc3ac23a45b785f865b0d4e397c00564f21a5997ddf4c9069d2"
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "detail": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json defines schema authority inside examples; contract identity cannot be declared inert.",
+      "physicalSha256": "c2b6968ae4f3e1dacf64c6b488be1f165563dda9b84e7aedfbe7de4a77f0e5f9"
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/🧵️compose/🧫️fixtures/🔣️.json defines schema authority inside examples. Ordinary parser specimens require an explicit inert data declaration.",
+      "physicalSha256": "203a9f1f5926efacd4023df5ed6e8142376be249d8c00bfdc2f3858c194b337f"
+    }
+  ],
+  "footer": [
+    "[schema check] modules=4500 scopes=3644 findings=12355",
+    "[schema check] schema-dialect-not-draft-07=83",
+    "[schema check] schema-document-id-duplicate=366",
+    "[schema check] schema-document-id-unaddressable=134",
+    "[schema check] schema-export-id-duplicate=284",
+    "[schema check] schema-export-id-invalid=255",
+    "[schema check] schema-export-incomplete=9386",
+    "[schema check] schema-fixture-defines-schema=3",
+    "[schema check] schema-module-id-inconsistent=10",
+    "[schema check] schema-module-id-missing=264",
+    "[schema check] schema-mutation-aggregate-id=6",
+    "[schema check] schema-mutation-leaf-id=75",
+    "[schema check] schema-owner-ineligible=531",
+    "[schema check] schema-placement-forbidden-filename=4",
+    "[schema check] schema-ref-unresolved=807",
+    "[schema check] schema-scope-ambiguous=147",
+    "[schema check] shared-code-table=46 unshared-codes=0",
+    "  Run duration:      52.9s"
+  ]
+}

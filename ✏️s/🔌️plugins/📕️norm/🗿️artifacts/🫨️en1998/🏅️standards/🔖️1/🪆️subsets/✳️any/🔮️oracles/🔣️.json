@@ -114,6 +114,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-building-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -351,6 +355,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-bridge-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -362,6 +370,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-assessment-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -373,6 +385,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-silo-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -384,6 +400,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-tank-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -395,6 +415,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-foundation-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -406,6 +430,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-retaining-wall-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -417,6 +445,10 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-tower-middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         }

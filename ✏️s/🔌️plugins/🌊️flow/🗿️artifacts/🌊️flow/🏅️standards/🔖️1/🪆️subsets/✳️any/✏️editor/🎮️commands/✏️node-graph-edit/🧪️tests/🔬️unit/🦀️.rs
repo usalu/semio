@@ -582,7 +582,7 @@ fn fold_leaves(base: &SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio:
     leaves.iter().fold(base.clone(), |state, leaf| {
         let (diff, messages) = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
         assert!(messages.is_empty(), "{leaf:?}: {messages:?}");
-        <<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff as protocol::MutationDiff<SemioFlowSnapshot>>::apply(&diff, &state).unwrap_or_else(|error| panic!("{leaf:?}: {error:?}"))
+        protocol::apply_diff(&diff, &state).unwrap_or_else(|error| panic!("{leaf:?}: {error:?}"))
     })
 }
 
@@ -594,37 +594,33 @@ fn by_id(mut snapshot: SemioFlowSnapshot) -> SemioFlowSnapshot {
     snapshot
 }
 
-/// ⚖️ LAW (design §12, §20.3): a host edit lands as the intent leaves that turn the content child into the edited scene —
-/// folding them reproduces the scene by id, no leaf ever dangles, each edit is the leaf kinds its intent names, and a pure
-/// reorder is no edit.
+/// ⚖️ LAW (design §12, §20.3): every graph gesture is the concrete leaf kinds its rule names — folding them reproduces the gesture's working content by id, no leaf ever dangles.
 #[test]
-fn host_edits_land_as_the_intent_leaves_that_reproduce_the_scene() {
+fn graph_gestures_land_as_the_concrete_leaves_their_rules_name() {
+    use crate::editor::flow::edit_rules::ContentEdit;
     let base = SemioFlowSnapshot { nodes: vec![flow_node("a", "inputSlider", &[("value", "1"), ("min", "0")], 0.0), flow_node("b", "math.add", &[], 100.0), flow_node("c", "outputPreview", &[], 200.0)], edges: vec![flow_edge("e1", "a", "b"), flow_edge("e2", "b", "c")], ..SemioFlowSnapshot::default() };
     let kinds = |leaves: &[semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation]| -> Vec<String> { leaves.iter().map(|leaf| protocol::OpText::print_op(leaf).split(' ').next().unwrap_or_default().to_string()).collect() };
-    let mut deleted = base.clone();
-    deleted.nodes.retain(|node| node.id != "b");
-    deleted.edges.clear();
-    let mut renamed = base.clone();
-    renamed.nodes[1].id = "sum".into();
-    renamed.edges = vec![flow_edge("e1", "a", "sum"), flow_edge("e2", "sum", "c")];
-    let mut edited = base.clone();
-    edited.nodes[0] = flow_node("a", "inputSlider", &[("value", "6"), ("max", "9")], 40.0);
-    edited.nodes[2].kind = "outputExport".into();
-    edited.nodes.push(flow_node("d", "inputNote", &[("text", "hi")], 300.0));
-    edited.edges.push(flow_edge("e3", "d", "c"));
-    let mut reordered = base.clone();
-    reordered.nodes.reverse();
-    reordered.edges.reverse();
-    let cases: [(&str, &SemioFlowSnapshot, Vec<&str>); 4] = [
-        ("delete a node with its wires", &deleted, vec!["remove-edge", "remove-edge", "remove-node"]),
-        ("rename a wired node", &renamed, vec!["insert-node", "set-edge-endpoints", "set-edge-endpoints", "remove-node"]),
-        ("edit fields, add a wired node", &edited, vec!["set-node-position", "remove-node-param", "set-node-param", "set-node-param", "set-node-kind", "insert-node", "insert-edge"]),
-        ("reorder", &reordered, Vec::new()),
-    ];
-    for (what, next, expected) in cases {
-        let leaves = crate::editor::flow::flow_content_leaves(&base, next);
-        assert_eq!(kinds(&leaves), expected, "{what}");
-        assert_eq!(by_id(fold_leaves(&base, &leaves)), by_id(next.clone()), "{what}");
-    }
+    let check = |what: &str, edit: ContentEdit, expected: Vec<&str>| {
+        assert_eq!(kinds(&edit.leaves), expected, "{what}");
+        assert_eq!(by_id(fold_leaves(&base, &edit.leaves)), by_id(edit.content.clone()), "{what}");
+    };
+    let mut deleted = ContentEdit::new(base.clone());
+    assert!(deleted.remove(&["b".to_string()], &[]));
+    check("delete a node with its wires", deleted, vec!["remove-edge", "remove-edge", "remove-node"]);
+    let mut renamed = ContentEdit::new(base.clone());
+    assert!(renamed.rename_node("b", "sum"));
+    assert!(!renamed.rename_node("a", "c") && !renamed.rename_node("a", "") && !renamed.rename_node("absent", "x"));
+    check("rename a wired node", renamed, vec!["insert-node", "set-edge-endpoints", "set-edge-endpoints", "remove-node"]);
+    let mut laid_out = ContentEdit::new(base.clone());
+    assert!(laid_out.set_position("a", 40.0, 0.0) && !laid_out.set_position("a", 40.0, 0.0) && !laid_out.set_position("absent", 1.0, 1.0));
+    check("lay a node out", laid_out, vec!["set-node-position"]);
+    let mut connected = ContentEdit::new(base.clone());
+    connected.connect(flow_edge("e3", "a", "c"));
+    connected.connect(flow_edge("e4", "b", "c"));
+    check("connect, replacing the wire entering the same port", connected, vec!["remove-edge", "insert-edge", "remove-edge", "insert-edge"]);
+    let mut disconnected = ContentEdit::new(base.clone());
+    assert!(disconnected.remove_edge("e1") && !disconnected.remove_edge("e1"));
+    check("disconnect", disconnected, vec!["remove-edge"]);
 }
+
 //#endregion 🔖️IntentRows

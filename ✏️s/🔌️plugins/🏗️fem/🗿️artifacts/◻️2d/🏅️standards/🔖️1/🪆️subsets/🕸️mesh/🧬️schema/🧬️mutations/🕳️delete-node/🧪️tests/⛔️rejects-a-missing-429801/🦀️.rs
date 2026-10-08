@@ -13,7 +13,8 @@
 //! ⛔️ `delete-node` guards only the target's EXISTENCE. It has no cascade and no referential guard at all — deleting a node an element still names is accepted (see the sibling `🚫️removes` vector); only a node that is not there at all is refused.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

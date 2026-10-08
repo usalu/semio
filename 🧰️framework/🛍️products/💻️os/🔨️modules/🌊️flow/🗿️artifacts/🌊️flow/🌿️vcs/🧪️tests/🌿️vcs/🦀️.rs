@@ -8,7 +8,7 @@ use semio_framework_value::ToValue;
 //#region 🧪️FixtureOwnership
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral Flow cases") }
 /// 🧾️ The committed wire witness of each roster row: the Rust `ToValue` of one aggregate operation, in roster order.
-const WITNESSES: [&str; 10] = [
+const WITNESSES: [&str; 9] = [
     include_str!("../../🧫️fixtures/🧬️mutations/➕️add-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
     include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
     include_str!("../../🧫️fixtures/🧬️mutations/↔️move-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
@@ -18,7 +18,6 @@ const WITNESSES: [&str; 10] = [
     include_str!("../../🧫️fixtures/🧬️mutations/🔀️move-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
     include_str!("../../🧫️fixtures/🧬️mutations/🔄change-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
     include_str!("../../🧫️fixtures/🧬️mutations/📐️change-layout/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/♻️replace-flow-host-snapshot/🧾️wire-witness/🦠️mutation/🔣️.json"),
 ];
 fn witness(index: usize) -> serde_json::Value { serde_json::from_str(WITNESSES[index]).expect("committed Flow wire witness") }
 fn positive(index: usize) -> serde_json::Value {
@@ -40,7 +39,6 @@ fn retire_diff(diff: FlowDiff) {
                 for (_, widget) in delta.inserted { widget.retire_cold(); }
                 for (_, widget) in delta.replaced { widget.retire_cold(); }
             }
-            FlowDelta::HostSnapshot(fixture) => fixture.retire_cold(),
             _ => {}
         }
     }
@@ -55,7 +53,6 @@ fn retire_mutation(mutation: FlowMutation) {
     match mutation {
         FlowMutation::AddWidget(leaf) => leaf.widget.retire_cold(),
         FlowMutation::ChangeWidget(leaf) => leaf.widget.retire_cold(),
-        FlowMutation::ReplaceFlowHostSnapshot(leaf) => leaf.host_snapshot.retire_cold(),
         _ => {}
     }
 }
@@ -115,9 +112,9 @@ where T: MutationLeaf + ToValue + FromValue {
 
 //#region 🧪️Laws
 #[test]
-fn all_ten_codecs_and_descriptors() {
-    assert_eq!(<FlowMutation as Mutation<FlowHostSnapshot>>::DESCRIPTORS.len(), 10);
-    for index in 0..10 {
+fn all_nine_codecs_and_descriptors() {
+    assert_eq!(<FlowMutation as Mutation<FlowHostSnapshot>>::DESCRIPTORS.len(), 9);
+    for index in 0..9 {
         let mutation = operation(index);
         assert_eq!(third_party_json(&mutation), witness(index), "the committed wire witness is the canonical Rust wire");
         assert_codecs(&mutation);
@@ -133,7 +130,7 @@ fn all_ten_codecs_and_descriptors() {
             assert!(FlowMutation::from_value(semio_framework_value::DslValue::from(&payload)).is_err());
         }
     }
-    assert!(FlowMutation::decode_op(&[1, 10]).is_err());
+    assert!(FlowMutation::decode_op(&[1, 9]).is_err());
     assert!(FlowMutation::decode_op(&[2, 0]).is_err());
 }
 
@@ -150,7 +147,7 @@ fn index_codecs_reject_overflow() {
         let spec = (<FlowMutation as semio_framework_dsl_record::DslVariants>::variants()[index].1.ordinary)();
         let text = semio_framework_dsl_record::print(&record, &spec, semio_framework_dsl_record::JoinMode::Inline);
         assert!(FlowMutation::parse_op(&text).is_err());
-        let mut bytes = vec![1, u8::try_from(index).expect("ten leaves")];
+        let mut bytes = vec![1, u8::try_from(index).expect("nine leaves")];
         bytes.extend(crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("wide UInt body"));
         assert!(FlowMutation::decode_op(&bytes).is_err());
         retire_mutation(mutation);
@@ -203,7 +200,7 @@ fn structural_composition_is_ordered() {
     let before = base();
     let mut current = before.clone();
     let mut combined = FlowDiff::default();
-    for index in [0, 2, 4, 6, 9, 8] {
+    for index in [0, 2, 4, 6, 8] {
         let mutation = operation(index);
         let (diff, _) = mutation.diff(&current).into_parts();
         retire_mutation(mutation);
@@ -214,7 +211,7 @@ fn structural_composition_is_ordered() {
     }
     let result = crate::os_spr::apply_diff(&combined, &before).expect("composed diff");
     assert_eq!(result, current);
-    assert_eq!(combined.deltas.len(), 6);
+    assert_eq!(combined.deltas.len(), 5);
     assert!(third_party_json(&combined).get("operations").is_none());
     result.retire_cold();
     current.retire_cold();

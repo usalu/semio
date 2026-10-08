@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { agree, casesOf, fixtureDisagreements, loadFixture, measure } from "../../../⏱️phased-job/🧰️test-support/🟦️.ts";
+import { agree, casesOf, fixtureDisagreements, loadFixture, measure } from "../../../⏱️phased-job/🧪️tests/🧰️support/🟦️.ts";
 
 const fixture = loadFixture(import.meta.url);
 type Counted = { count: number };

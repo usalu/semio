@@ -1,0 +1,5 @@
+{
+  "mutation": "removeObjectVortex",
+  "objectId": "object-a",
+  "vortexId": "vortex-spare"
+}

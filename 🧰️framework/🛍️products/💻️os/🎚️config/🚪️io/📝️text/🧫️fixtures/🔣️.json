@@ -1,0 +1,82 @@
+{
+  "schema": "semio.os.config.io-law/v1",
+  "cases": [
+    {
+      "kind": "opening",
+      "snapshot": {
+        "defaults": []
+      },
+      "mutation": {
+        "mutation": "clearDefaultApp",
+        "dialect": {
+          "artifactKind": "s.note.note",
+          "standard": "1",
+          "subset": "*"
+        },
+        "role": "editor"
+      }
+    },
+    {
+      "kind": "ui-preferences",
+      "snapshot": {
+        "appearance": null,
+        "layout": null,
+        "driverId": null,
+        "customDrivers": {},
+        "locale": null,
+        "terminology": null,
+        "themeId": null,
+        "customThemes": {},
+        "keybindingOverrides": {},
+        "namedLayouts": {}
+      },
+      "mutation": {
+        "mutation": "setAppearance",
+        "appearance": "dark"
+      }
+    },
+    {
+      "kind": "identity",
+      "snapshot": {
+        "userId": "user.a",
+        "email": "a@example.test",
+        "displayName": "A",
+        "hubBaseUrl": "https://example.test",
+        "issuedAtMs": 7
+      },
+      "mutation": {
+        "mutation": "signOut"
+      }
+    },
+    {
+      "kind": "merge-policy",
+      "snapshot": {
+        "policy": "preferLocal"
+      },
+      "mutation": {
+        "mutation": "changeMergePolicy",
+        "policy": "manual"
+      }
+    },
+    {
+      "kind": "local-catalog",
+      "snapshot": {
+        "documents": []
+      },
+      "mutation": {
+        "mutation": "retireLocalDocument",
+        "documentId": "doc.a"
+      }
+    },
+    {
+      "kind": "local-folders",
+      "snapshot": {
+        "bindings": []
+      },
+      "mutation": {
+        "mutation": "detachLocalFolder",
+        "documentId": "doc.a"
+      }
+    }
+  ]
+}

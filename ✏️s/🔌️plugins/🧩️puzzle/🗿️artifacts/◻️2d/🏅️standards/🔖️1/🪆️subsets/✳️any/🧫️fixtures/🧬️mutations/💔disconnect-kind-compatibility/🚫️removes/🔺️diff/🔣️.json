@@ -4,15 +4,18 @@
   "edges": null,
   "meta": {
     "kindCompatibility": {
-      "added": [],
-      "patched": [],
+      "inserted": [],
+      "modified": [],
+      "moved": [],
       "removed": [
         {
-          "source": "handle-kind-a",
-          "target": "handle-kind-b"
+          "id": {
+            "source": "handle-kind-a",
+            "target": "handle-kind-b"
+          },
+          "index": 0
         }
-      ],
-      "reordered": null
+      ]
     }
   },
   "nodes": null,

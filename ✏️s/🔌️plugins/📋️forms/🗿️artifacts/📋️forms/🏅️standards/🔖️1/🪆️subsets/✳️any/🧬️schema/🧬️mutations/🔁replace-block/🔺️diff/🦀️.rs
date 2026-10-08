@@ -1,7 +1,6 @@
 //! 🔺️ `replace-block` — sparse diff construction: the question's differing fields as one field patch.
 
 use super::mutation::ReplaceBlock;
-use crate::schema::diff::forms_diff_from_delta;
 use crate::schema::diff::{FormsQuestionPatch, FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::schema::mutations::change_block_field::mutation::BlockField;
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
@@ -18,8 +17,8 @@ pub fn diff_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> proto
     if existing == &payload.block {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" is already unchanged.", payload.block.id));
     }
-    let question = FormsQuestionPatch { id: payload.block.id.clone(), kind: (existing.kind != payload.block.kind).then(|| payload.block.kind.clone()), changes: BlockField::changes(existing, &payload.block) };
-    let blocks = FormsQuestionsDelta { patched: vec![question], ..Default::default() };
-    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatch { id: payload.step_id.clone(), blocks: Some(blocks), ..Default::default() }], ..Default::default() }, base))
+    let question = FormsQuestionPatch { kind: (existing.kind != payload.block.kind).then(|| payload.block.kind.clone()), changes: BlockField::changes(existing, &payload.block) };
+    let blocks = FormsQuestionsDelta::modification(payload.block.id.clone(), question);
+    protocol::MutationOutcome::new(FormsDiff { steps: Some(FormsStepsDelta::modification(payload.step_id.clone(), FormsStepPatch { blocks: Some(blocks), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,9 +1,9 @@
 /** ➗️ EquationMutation — closed semantic mutation vocabulary for the equation document,
- *  mirrors `🧬️mutations/🦀️.rs`'s `EquationMutation` enum and its 18 per-verb leaf structs. The enum
+ *  mirrors `🧬️mutations/🦀️.rs`'s `EquationMutation` enum and its 16 per-verb leaf structs. The enum
  *  carries no `#[value(tag)]`, so it wires EXTERNALLY TAGGED: `{ "<PascalCaseVariantName>": { ...leaf
  *  fields } }`. Every leaf struct carries `#[value(rename_all = "camelCase")]`, so its fields wire
  *  camelCase (`{"ChangeNodeLabel":{"id":"n-alpha","newLabel":"Alpha"}}`), like the referenced
- *  `EquationGraph`/`EquationPoint` records (`ReplaceGraph.graph.algorithmSeed`). */
+ *  `EquationGraph`/`EquationPoint` records. */
 import type {EquationGraph,EquationPoint} from "../🟦️.ts";
 export type {EquationGraph,EquationGraphNode as EquationNode,EquationEdge,EquationPoint} from "../🟦️.ts";
 
@@ -19,11 +19,6 @@ export interface ChangeGraphDirected {
 export interface UpdateGraphAlgorithm {
   newAlgorithm: string;
   newAlgorithmSeed: string | null;
-}
-
-/** 🔁️ `replace-graph` payload — whole-value swap of the graph playground's structured payload. */
-export interface ReplaceGraph {
-  graph: EquationGraph;
 }
 
 /** 🟢️ `create-node` payload. */
@@ -69,11 +64,6 @@ export interface ConnectNodes {
 /** ✂️ `disconnect-nodes` payload. */
 export interface DisconnectNodes {
   id: string;
-}
-
-/** 🌀️ `replace-points` payload — whole-value swap of the geometry playground's point cloud. */
-export interface ReplacePoints {
-  points: EquationPoint[];
 }
 
 /** ➕️ `insert-point` payload. */
@@ -194,7 +184,6 @@ export interface ChangeCoefficient {
 export type EquationMutation =
   | { ChangeGraphDirected: ChangeGraphDirected }
   | { UpdateGraphAlgorithm: UpdateGraphAlgorithm }
-  | { ReplaceGraph: ReplaceGraph }
   | { CreateNode: CreateNode }
   | { DeleteNode: DeleteNode }
   | { DeleteNodes: DeleteNodes }
@@ -202,7 +191,6 @@ export type EquationMutation =
   | { MoveNode: MoveNode }
   | { ConnectNodes: ConnectNodes }
   | { DisconnectNodes: DisconnectNodes }
-  | { ReplacePoints: ReplacePoints }
   | { InsertPoint: InsertPoint }
   | { RemovePoint: RemovePoint }
   | { MovePoints: MovePoints }

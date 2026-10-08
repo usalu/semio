@@ -21,12 +21,13 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, XlsxDiff, XlsxOpcDiff, XlsxOpcRelDiff, XlsxOpcRelListDiff, XlsxOpcRelationshipsDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{retarget_attribute_values_diff, retype_xml_part_diff, root_attribute_diff, root_edits_diff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional SpreadsheetML main namespace.
@@ -86,6 +87,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationships-namespace"
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
 /// source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_xlsx_transitional_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxTransitionalMutation) -> protocol::MutationOutcome<XlsxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -172,22 +174,22 @@ fn diff_retarget_namespace(base: &XlsxSnapshot, from: [&str; 2], to: &str) -> Xl
 fn diff_retarget_relationship_base(base: &XlsxSnapshot, from: [&str; 2], to: &str) -> XlsxDiff {
     let mut modified = Vec::new();
     for (owner, relationships) in base.opc.relationships.groups() {
-        let entries: Vec<NamedModified<String, XlsxOpcRelDiff>> = relationships
+        let entries: Vec<OpcRelationshipModification> = relationships
             .iter()
             .filter_map(|relationship| {
                 let prefix = from.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix))?;
                 let retargeted = format!("{to}{}", &relationship.rel_type[prefix.len()..]);
-                (retargeted != relationship.rel_type).then(|| NamedModified { key: relationship.id.clone(), diff: XlsxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } })
+                (retargeted != relationship.rel_type).then(|| OpcRelationshipModification { id: relationship.id.clone(), patch: OpcRelationshipPatch { rel_type: Some(retargeted), target: None, target_mode: None } })
             })
             .collect();
         if !entries.is_empty() {
-            modified.push(NamedModified { key: owner.clone(), diff: XlsxOpcRelListDiff { modified: entries, ..Default::default() } });
+            modified.push(OpcOwnerModification { id: owner.clone(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta { modified: entries, ..Default::default() } } });
         }
     }
     if modified.is_empty() {
         return XlsxDiff::default();
     }
-    XlsxDiff { opc: Some(XlsxOpcDiff { relationships: Some(XlsxOpcRelationshipsDiff { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
+    XlsxDiff { opc: Some(OpcDiff { relationships: Some(OpcOwnersDelta { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
@@ -201,8 +203,8 @@ fn diff_conformance_attribute(base: &XlsxSnapshot, value: Option<&str>) -> XlsxD
 /// 🔺️ The diff of retyping one part: the logical XML part's own `content_type` and its `[Content_Types].xml` override move together, because the two can
 /// never be allowed to drift apart.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_set_content_type(base: &XlsxSnapshot, path: &str, content_type: &str) -> XlsxDiff {
-    retype_xml_part_diff(base, path, content_type)
+fn diff_set_content_type(base: &XlsxSnapshot, path: &str, content_type: &str, override_index: Option<usize>) -> XlsxDiff {
+    retype_xml_part_diff(base, path, content_type, override_index)
 }
 //#endregion 🔖️DiffBuilders
 
@@ -235,10 +237,12 @@ pub(crate) fn conformance_attribute_inverse(base: &XlsxSnapshot, forward_changes
     }
 }
 
-/// ↩️ The mutation that restores the content type the part resolved to.
+/// ↩️ The mutation that restores the content type the part resolved to, with its explicit override at the position it held.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn worksheet_content_type_inverse(base: &XlsxSnapshot, path: &str) -> Vec<XlsxTransitionalMutation> {
-    resolved_content_type(base, path).map(|content_type| XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: path.to_string(), content_type })).into_iter().collect()
+    let name = format!("/{}", path.trim_start_matches('/'));
+    let override_index = base.opc.content_types.overrides.iter().position(|(existing, _)| *existing == name);
+    resolved_content_type(base, path).map(|content_type| XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: path.to_string(), content_type, override_index })).into_iter().collect()
 }
 //#endregion 🔖️Inverses
 

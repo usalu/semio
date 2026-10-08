@@ -5,7 +5,7 @@
 //! `material_id`, `section_id` (`mutation.target-missing`, Error). `replace-element` calls the
 //! SAME guard, so the twins cannot drift apart.
 use super::CreateElement;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dElementsDelta, insertion_order};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dElementInsertion, Fem2dElementsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::{element_id, Fem2dSnapshot};
 
@@ -18,6 +18,9 @@ pub fn diff(payload: &CreateElement, base: &Fem2dSnapshot) -> protocol::Mutation
     if let Some(rejection) = guards::element_references(base, &payload.element) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { added: vec![(*payload.element).clone()], reordered: insertion_order(base.elements.iter().map(|item| element_id(item)), new_id, payload.index), ..Default::default() }), ..Default::default() })
+    if payload.index.is_some_and(|at| at > base.elements.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.elements.len()), [new_id.to_string()]);
+    }
+    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { inserted: vec![Fem2dElementInsertion { index: payload.index.unwrap_or(base.elements.len()), row: (*payload.element).clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -83,8 +83,8 @@ impl InteractiveJob for StagedStep {
         self.closing = true;
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, _grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
+        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
     }
 
     fn terminal_is_empty(&self) -> bool {

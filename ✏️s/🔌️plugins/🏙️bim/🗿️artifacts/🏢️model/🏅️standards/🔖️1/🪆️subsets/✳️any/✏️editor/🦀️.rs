@@ -388,6 +388,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         ctx.gestures = Some(self.owner.clone());
         ctx.window_transient = crate::editor::bim::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let emit = input.command.dispatch(&doc, &cfg, &mut ctx)?;
+        crate::editor::bim::inference::record_mutations(doc.operation_optional().map(|operation| operation.app_instance_id), input.snapshot, &emit.artifact_mutations);
         self.completed = true;
         let window_transient = match (ctx.transient_out.take(), view) {
             (Some(transient), Some(view)) => vec![crate::editor::bim::transient::addressed(view, transient)?],

@@ -11,13 +11,12 @@ pub fn diff(payload: &ChangeMemberBucklingLength, base: &En1999Snapshot) -> prot
     if !base.members.iter().any(|member| member.id == payload.member_id) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Unknown member {}", payload.member_id), Vec::<String>::new());
     }
-    let id = payload.member_id.clone();
     let value = Some(payload.new_length);
     let patch = match payload.axis.as_str() {
-        "z" => En1999MembersPatch { id, buckling_length_z: value, ..Default::default() },
-        "t" => En1999MembersPatch { id, buckling_length_t: value, ..Default::default() },
-        "ltb" => En1999MembersPatch { id, ltb_length: value, ..Default::default() },
-        _ => En1999MembersPatch { id, buckling_length_y: value, ..Default::default() },
+        "z" => En1999MembersPatch { buckling_length_z: value, ..Default::default() },
+        "t" => En1999MembersPatch { buckling_length_t: value, ..Default::default() },
+        "ltb" => En1999MembersPatch { ltb_length: value, ..Default::default() },
+        _ => En1999MembersPatch { buckling_length_y: value, ..Default::default() },
     };
-    protocol::MutationOutcome::new(En1999Diff { members: Some(En1999MembersRows { modified: vec![patch], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { members: Some(En1999MembersRows::modification(&payload.member_id, patch)), ..Default::default() })
 }

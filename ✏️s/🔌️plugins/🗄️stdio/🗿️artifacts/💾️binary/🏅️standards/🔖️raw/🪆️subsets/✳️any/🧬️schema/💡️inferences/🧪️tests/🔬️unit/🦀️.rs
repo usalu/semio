@@ -67,35 +67,6 @@ fn sweep_b() -> BinarySnapshot {
     BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 100, 5, 6, 7, 88] }
 }
 
-/// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, the
-/// splice list is non-empty (the only "field" a splice-list diff has), and `between(a,a)`
-/// is empty.
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_covers_every_byte_level_change() {
-    use crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
-    use protocol::os_spr::command::DiffAlgebra;
-    use protocol::MutationDiff;
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let ab = BinaryDiff::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b, "between(a,b).apply(a) must equal b");
-    let ba = BinaryDiff::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a, "between(b,a).apply(b) must equal a");
-    assert!(!ab.splices.is_empty(), "sweep diff must carry at least one splice");
-
-    // 🔬️ Exercise insert/remove/replace explicitly via hand-built splices (not just the
-    // minimal `between` form) to prove the mechanism itself, not just this one pair.
-    let hand_built = BinaryDiff {
-        splices: vec![
-            crate::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 2, remove_len: 2, insert: vec![100] }, // replace+shrink
-            crate::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
-        ],
-    };
-    assert_eq!(protocol::apply_diff(&hand_built, &a).unwrap(), b);
-
-    assert!(BinaryDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
-}
 //#endregion 🔖️FieldSweep
 
 #[semio_framework_async_macros::async_test]

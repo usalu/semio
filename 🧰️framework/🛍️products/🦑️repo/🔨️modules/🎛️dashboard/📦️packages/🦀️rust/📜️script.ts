@@ -3,13 +3,40 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { buildRepositoryCargoArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (nx bridge for `repo/dashboard/rs`). */
 import { join } from "node:path";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments } from "../../🌳️command-tree/🚀️launch/🟦️.ts";
 import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard } from "../../📦️installation/🟦️.ts";
 import { devToolingEnv, runRepositoryCargoTests, runCmd, runCmdStatus } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const crate = "semio-framework-repo-dashboard";
+
+/** 🧭️ Publishes scoped owner controls and runs their native registry identities. */
+class LaunchScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    const [action,selection,...rest]=segments;
+    if(action==="test"){runCmd("bun",["test",join(this.root,"../../🧪️tests/🚀️launch/🟦️.ts")],{cwd:this.repoRoot,env:devToolingEnv()});return;}
+    const ticket=action==="run"?selection?.slice(7).split("/").slice(0,4).join("/"):selection;
+    if(!ticket||!/^\d{2}\/\d{2}\/\d{2}\/[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(ticket)||rest.length)throw new Error("launch generate|check <YY/MM/DD/TICKET> or launch run <ticket-command-id>");
+    const [year,month,day,name]=ticket.split("/");
+    const file=join(this.repoRoot,`.🧬semio/🦑️repo/🎫️tickets/🎆️${year}/🌙️${month}/☀️${day}/${name}/🎮️commands.json`);
+    const declaration=JSON.parse(await readFile(file,"utf8"));
+    const commands=ticketLaunchCommands(ticket,declaration);
+    if(action==="run"){
+      const command=commands.find(command=>command.id===selection);
+      if(!command)throw new Error(`Dashboard command is not declared: ${selection}`);
+      const status=runCmdStatus(await dashboardExecutable(this.root,this.repoRoot),["run",command.id,...launchParameterArguments(command,process.env)],{cwd:this.repoRoot,env:devToolingEnv()});
+      process.exit(status);
+    }
+    if(action!=="generate"&&action!=="check")throw new Error(`Unknown dashboard launch action ${action}`);
+    const output=join(this.repoRoot,".vscode/launch.json"),current=JSON.parse(await readFile(output,"utf8"));
+    const projected=projectDashboardLaunch(current,commands,ticket);
+    if(action==="check"&&JSON.stringify(current)!==JSON.stringify(projected))throw new Error("Dashboard launch projection is stale");
+    if(action==="generate")await writeFile(output,JSON.stringify(projected,null,2)+"\n");
+    console.log(`[DEBUG] dashboard launch ${action} owner=${ticket} commands=${commands.length} locales=en,de unrelatedPreserved=true`);
+  }
+}
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> { await buildAndInstallDashboard(this.root, this.repoRoot); }
@@ -108,6 +135,6 @@ export async function dashboardExecutable(packageRoot: string, workspace: string
 }
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
+  const router = new ScriptRouter(import.meta.dir).register("launch", LaunchScript).register("build", BuildScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
   await runScriptMain(router);
 }

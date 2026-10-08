@@ -15,6 +15,12 @@ line = create-position
      / delete-region
      / replace-region-data
      / reorder-regions
+     / set-position-property
+     / remove-position-property
+     / set-route-property
+     / remove-route-property
+     / set-region-property
+     / remove-region-property
 
 create-position = "create-position" SP number
 delete-position = "delete-position" SP id
@@ -28,6 +34,12 @@ create-region = "create-region" SP number
 delete-region = "delete-region" SP id
 replace-region-data = "replace-region-data" SP id SP block
 reorder-regions = "reorder-regions" SP id SP number
+set-position-property = "set-position-property" SP id SP id SP block (SP id)?
+remove-position-property = "remove-position-property" SP id SP id
+set-route-property = "set-route-property" SP id SP id SP block (SP id)?
+remove-route-property = "remove-route-property" SP id SP id
+set-region-property = "set-region-property" SP id SP id SP block (SP id)?
+remove-region-property = "remove-region-property" SP id SP id
 
 id = OCTET+
 number = OCTET+

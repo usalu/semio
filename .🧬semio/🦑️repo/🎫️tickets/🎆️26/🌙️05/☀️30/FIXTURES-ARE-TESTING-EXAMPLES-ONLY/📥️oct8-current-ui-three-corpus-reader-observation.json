@@ -1,0 +1,55 @@
+{
+  "role": "read-only observation, not authored endpoints",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/♻️retirement/🧬️schema/🖱️physical-job-close/🔣️.json",
+      "exists": true,
+      "sha256": "66ec0d56eb975e45c31c8d84963ae3a8471f613c0351ba005221493215014dd5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖼️raster-ownership/♻️retirement/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "9fc53ec2b94c5e90218dd159d37bc569fec307aca7ff1bbbb00fed3020bbf461"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/♻️retirement/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "cf7ee0da64d5465307ac1f751697ab7d0e6d1d6e1eeed013ce735f06e5c09f2e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/🟦️.ts",
+      "exists": true,
+      "sha256": "089fd48a5094b54707fd50ffd2575915cbf972c9b0d06a7a346f0154cfbd77c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "exists": true,
+      "sha256": "4e73ef8ec1d2dea8439a45baed8babe116413a78fbf40b764d51f82a194eb332"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📦️prepared-close/🔣️.json",
+      "exists": true,
+      "sha256": "8b808855e0516c2931b3afcfbfee2f6c24242c100e4506a009df2694b6760a4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "f3a2b52efecf9f4ef72d06db295140de3d76456a4aa96f967d7d58956c9efdc1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "d7706f73aacea232ad8aff7ca74f6fb745fd5ca3d8ac2e205b4ae561fc6d6869"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs",
+      "exists": true,
+      "sha256": "15490a04e073ae399ef1a3e8fdd384d4d2f46af4cb3eb9f980e413f4bcac667b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-raster-ownership-unit/🦀️.rs",
+      "exists": true,
+      "sha256": "a5a99c140a3c575e23dc9b65f80cd45f3b253a7c1b5511df5923d2a535370af3"
+    }
+  ]
+}

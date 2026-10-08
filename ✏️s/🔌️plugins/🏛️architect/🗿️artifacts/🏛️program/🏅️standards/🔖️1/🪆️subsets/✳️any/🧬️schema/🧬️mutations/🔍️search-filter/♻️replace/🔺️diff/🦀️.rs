@@ -6,8 +6,8 @@ use crate::diff::ProgramSearchFiltersDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
-/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns, in place:
+/// `removed = [{id, index}]` and `inserted = [{index, payload row}]` at the same coordinate, so the new row keeps its position.
 pub fn diff(payload: &ReplaceSearchFilter, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = &payload.search_filter.header.id;
     let Some(position) = base.search_filters.iter().position(|row| row.header.id == *id) else {
@@ -16,6 +16,7 @@ pub fn diff(payload: &ReplaceSearchFilter, base: &ProgramSnapshot) -> protocol::
     if base.search_filters[position] == payload.search_filter {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This search filter already matches the requested value.").at([id.0.clone()])]);
     }
-    let reordered = (position + 1 != base.search_filters.len()).then(|| base.search_filters.iter().map(|row| row.header.id.0.clone()).collect());
-    protocol::MutationOutcome::new(ProgramDiff { search_filters: Some(ProgramSearchFiltersDelta { removed: vec![id.0.clone()], added: vec![payload.search_filter.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let mut delta = ProgramSearchFiltersDelta::removal(&base.search_filters, position);
+    delta.absorb(ProgramSearchFiltersDelta::insertion(position, payload.search_filter.clone()));
+    protocol::MutationOutcome::new(ProgramDiff { search_filters: Some(delta), ..Default::default() })
 }

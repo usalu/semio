@@ -8,7 +8,8 @@
       {
         "edit": "move",
         "id": "shot-close",
-        "index": 0
+        "from": 1,
+        "to": 0
       }
     ],
     "patched": []

@@ -60,7 +60,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         match self.phase {
             GisMapStoreInitializationPhase::BindGenesis => {
                 let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 self.phase = GisMapStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -89,7 +89,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                 semio_framework_job::StepOutcome::Yield
             }
             GisMapStoreInitializationPhase::CloneInitial => {
-                let source = &self.envelope.as_ref().expect("GIS envelope remains retained during initial clone").vcs.genesis.snapshot();
+                let source = &self.envelope.as_ref().expect("GIS envelope remains retained during initial clone").vcs.genesis.facts().snapshot();
                 let clone = self.clone.as_mut().expect("GIS initial clone authority remains retained");
                 let complete = match clone.step(source, cx) {
                     Ok(complete) => complete,
@@ -852,6 +852,12 @@ impl GisMapOwnedRetirement {
                     ReplacePositionData(payload) => GisMapMutationFields::Value { id: payload.id, value: Some(payload.new_data) },
                     ReplaceRouteData(payload) => GisMapMutationFields::Value { id: payload.id, value: Some(payload.new_data) },
                     ReplaceRegionData(payload) => GisMapMutationFields::Value { id: payload.id, value: Some(payload.new_data) },
+                    SetPositionProperty(payload) => GisMapMutationFields::Value { id: payload.feature, value: Some(payload.value) },
+                    RemovePositionProperty(payload) => GisMapMutationFields::String(payload.feature),
+                    SetRouteProperty(payload) => GisMapMutationFields::Value { id: payload.feature, value: Some(payload.value) },
+                    RemoveRouteProperty(payload) => GisMapMutationFields::String(payload.feature),
+                    SetRegionProperty(payload) => GisMapMutationFields::Value { id: payload.feature, value: Some(payload.value) },
+                    RemoveRegionProperty(payload) => GisMapMutationFields::String(payload.feature),
                 };
                 *self.owner = Some(GisMapRetirementOwner::MutationFields(fields));
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })

@@ -58,7 +58,7 @@ fn fill_inputs_override_the_rendered_edit_with_their_typed_value() {
     use crate::schema::fill::{FillEdit,FillType,FillAxis};
     for (json,edit) in [
         (r#"{"layerId":"a","edit":{"kind":"type","value":"solid"},"value":"radialGradient"}"#,FillEdit::Type { value:FillType::RadialGradient }),
-        (r##"{"layerId":"a","edit":{"kind":"color","index":1,"value":"#000"},"value":"#abc"}"##,FillEdit::Color { index:Some(1),value:"#abc".into() }),
+        (r##"{"layerId":"a","edit":{"kind":"color","index":1,"value":[0,0,0,1]},"value":"#abc"}"##,FillEdit::Color { index:Some(1),value:[170.0/255.0,187.0/255.0,204.0/255.0,1.0] }),
         (r#"{"layerId":"a","edit":{"kind":"coordinate","axis":"r","value":50},"value":"24.5"}"#,FillEdit::Coordinate { axis:FillAxis::R,value:24.5 }),
     ] {
         let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());

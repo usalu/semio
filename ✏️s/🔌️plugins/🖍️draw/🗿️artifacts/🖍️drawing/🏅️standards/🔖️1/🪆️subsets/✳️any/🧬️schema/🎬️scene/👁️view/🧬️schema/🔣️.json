@@ -71,19 +71,19 @@
       "image": {
         "type": "object",
         "required": [
-          "src",
+          "assetId",
           "width",
           "height"
         ],
         "properties": {
-          "src": {
-            "type": "string"
-          },
           "width": {
             "type": "number"
           },
           "height": {
             "type": "number"
+          },
+          "assetId": {
+            "type": "string"
           }
         }
       }

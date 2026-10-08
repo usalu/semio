@@ -6,6 +6,9 @@ async fn demo_source_nonempty() {
     let literal = <crate::TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("current handcrafted TIFF literal fixture");
     let native = crate::standards::v6_0::subsets::document::io::decode_tiff(NATIVE_BYTES).expect("genuine authored TIFF native fixture");
     assert_eq!(literal, native, "handcrafted demo text retains the complete genuine native owner");
+    let demo=crate::schema::demo_tiff_snapshot();assert_eq!(literal,demo);
+    let packed=include_bytes!("../../🖼️assets/🎒️.pack.semio");assert_eq!(store::ArtifactPack::encode_pack(&demo),packed,"shipped TIFF Pack must represent the authored demo owner");
+    assert_eq!(<crate::TiffSnapshot as store::ArtifactPack>::decode_pack(packed).expect("current authored TIFF Pack fixture"),demo);
     eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={}", literal.ifds.len());
 }
 
@@ -67,17 +70,9 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
     }
 
     async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-        use crate::schema::snapshot::{TiffFieldType, TiffValues, TAG_IMAGE_WIDTH};
-        let width = snapshot
-            .ifds
-            .first()
-            .and_then(|ifd| ifd.entries.iter().find(|t| t.tag == TAG_IMAGE_WIDTH))
-            .and_then(|t| match &t.values {
-                TiffValues::Long(v) => v.first().copied(),
-                _ => None,
-            })
-            .unwrap_or(1);
-        vec![crate::TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: TAG_IMAGE_WIDTH, values: TiffValues::Long(vec![width + 1]) })]
+        use crate::schema::snapshot::TiffValues;
+        if snapshot.ifds.is_empty(){return Vec::new();}
+        vec![crate::TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, values: TiffValues::Ascii(vec!["Edited demo artist".into()]) })]
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

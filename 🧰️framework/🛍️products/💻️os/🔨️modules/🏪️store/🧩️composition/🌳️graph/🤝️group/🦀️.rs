@@ -1,5 +1,6 @@
 use crate::os_vcs::ArtifactGroupVisibility;
-use super::{ArtifactStoreOneItemGrant, CompositionGraph, SnapshotRetirementStep, OWNED_DOCUMENT_MAXIMUM_MEMBERS};
+use super::{ArtifactStoreOneItemGrant, CompositionGraph, OWNED_DOCUMENT_MAXIMUM_MEMBERS};
+use semio_framework_value::{ValueError, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::Arc;
 
 type Row = (String, (String, String));
@@ -63,38 +64,53 @@ pub struct GroupOwnsPreparation {
 fn row_bytes(row: &Row) -> usize { row.0.len().saturating_add(row.1.0.len()).saturating_add(row.1.1.len()) }
 fn row_release(row: &Row) -> usize { if row.0.capacity() != 0 { row.0.capacity() } else if row.1.0.capacity() != 0 { row.1.0.capacity() } else { row.1.1.capacity() } }
 fn arc_release<T>(owner: &Option<Arc<T>>) -> usize {
-    owner.as_ref().filter(|arc| Arc::strong_count(arc) == 1).map_or(0, |_| std::alloc::Layout::new::<[std::sync::atomic::AtomicUsize; 2]>().extend(std::alloc::Layout::new::<T>()).expect("Arc layout").0.pad_to_align().size())
+    owner.as_ref().filter(|arc| Arc::strong_count(arc) == 1 && Arc::weak_count(arc) == 0).map_or(0, |_| std::alloc::Layout::new::<[std::sync::atomic::AtomicUsize; 2]>().extend(std::alloc::Layout::new::<T>()).expect("Arc layout").0.pad_to_align().size())
 }
 
 impl GroupOwnsPreparation {
     pub fn completed_edges(&self) -> usize { self.accepted }
     pub fn matches_visibility(&self, visibility: &Arc<ArtifactGroupVisibility>) -> bool { self.visibility.as_ref().is_some_and(|own| Arc::ptr_eq(own, visibility)) }
     pub fn terminal_is_empty(&self) -> bool { self.phase == Phase::Closed }
-    pub fn next_byte_demand(&self, graph: &CompositionGraph) -> usize {
-        match self.phase {
-            Phase::Reserve => self.expected.saturating_mul(std::mem::size_of::<Option<Row>>()),
-            Phase::MergeReserve => graph.owns.len().saturating_add(self.additions.len()).saturating_mul(std::mem::size_of::<Row>()),
+    pub fn next_preparation_demands(&self, graph: &CompositionGraph) -> RetirementDemand {
+        let (copy_bytes, capacity_bytes) = match self.phase {
+            Phase::Reserve if self.expected != 0 => (std::mem::size_of::<Vec<Option<Row>>>(), self.expected.saturating_mul(std::mem::size_of::<Option<Row>>())),
+            Phase::Reserve | Phase::Edges | Phase::MergeReserve => (std::mem::size_of::<OwnsRoot>(), graph.owns.len().saturating_add(self.additions.len()).saturating_mul(std::mem::size_of::<Row>())),
             Phase::Merge => {
-                if self.original_index < graph.owns.len() && (self.addition_index == self.additions.len() || graph.owns.0[self.original_index].0 < self.additions[self.addition_index].as_ref().expect("retained addition").0) { row_bytes(&graph.owns.0[self.original_index]) } else { 0 }
+                if self.original_index < graph.owns.len() && (self.addition_index == self.additions.len() || graph.owns.0[self.original_index].0 < self.additions[self.addition_index].as_ref().expect("retained addition").0) { let bytes = row_bytes(&graph.owns.0[self.original_index]); (std::mem::size_of::<Row>().saturating_add(bytes), bytes) }
+                else if self.addition_index < self.additions.len() { (std::mem::size_of::<Row>(), 0) } else { (0, 0) }
             }
-            Phase::Closing => self.next_close_byte_demand(),
-            _ => 0,
-        }
+            _ => (0, 0),
+        };
+        RetirementDemand { copy_bytes, capacity_bytes, release_bytes: 0, depth: 1 }
     }
-    /// 📏️ Borrows the exact active edge to report only its next metadata or backing allocation.
-    pub fn next_edge_byte_demand(&self, graph: &CompositionGraph, parent: &str, slot: &str, child: &str) -> Result<usize, GroupOwnsError> {
+    /// 📏️ Borrows the active edge and distinguishes original word copies from new native backing.
+    pub fn next_edge_demands(&self, graph: &CompositionGraph, parent: &str, slot: &str, child: &str) -> Result<RetirementDemand, GroupOwnsError> {
         graph.check_owns_group(self)?;
-        if self.phase == Phase::Reserve { return Ok(self.next_byte_demand(graph)); }
+        if self.expected == 0 { return Err(GroupOwnsError::Incomplete); }
+        if self.phase == Phase::Reserve { return Ok(self.next_preparation_demands(graph)); }
         if self.phase != Phase::Edges || self.refused { return Err(GroupOwnsError::Incomplete); }
-        let active = self.active.as_ref().or_else(|| self.insertion.map(|index| self.additions[index].as_ref().expect("moving edge")));
-        if let Some(row) = active {
-            return if row.0 == child && row.1.0 == parent && row.1.1 == slot { Ok(0) } else { Err(GroupOwnsError::EdgeChanged) };
+        let empty = RetirementDemand { copy_bytes: 0, capacity_bytes: 0, release_bytes: 0, depth: 1 };
+        if let Some(index) = self.insertion {
+            let row = self.additions[index].as_ref().expect("moving edge");
+            if row.0 != child || row.1.0 != parent || row.1.1 != slot { return Err(GroupOwnsError::EdgeChanged); }
+            let swapping = index != 0 && self.additions[index - 1].as_ref().expect("sorted neighbor").0 > row.0;
+            return Ok(RetirementDemand { copy_bytes: usize::from(swapping) * std::mem::size_of::<Option<Row>>() * 2, ..empty });
+        }
+        if let Some(row) = &self.active {
+            if row.0 != child || row.1.0 != parent || row.1.1 != slot { return Err(GroupOwnsError::EdgeChanged); }
+            return Ok(RetirementDemand { copy_bytes: if self.ancestor.is_none() { std::mem::size_of::<Row>() } else { 0 }, ..empty });
         }
         let prior = graph.owns.get(child).or_else(|| self.additions.binary_search_by(|row| row.as_ref().expect("retained edge").0.as_str().cmp(child)).ok().map(|index| &self.additions[index].as_ref().expect("retained edge").1));
-        if let Some((owner, owner_slot)) = prior { return if owner == parent && owner_slot == slot { Ok(0) } else { Err(GroupOwnsError::AlreadyOwned) }; }
-        Self::edge_birth_bytes(parent, slot, child).ok_or(GroupOwnsError::Capacity)
+        if let Some((owner, owner_slot)) = prior { return if owner == parent && owner_slot == slot { Ok(empty) } else { Err(GroupOwnsError::AlreadyOwned) }; }
+        let bytes = Self::edge_birth_bytes(parent, slot, child).ok_or(GroupOwnsError::Capacity)?;
+        Ok(RetirementDemand { copy_bytes: bytes.saturating_add(std::mem::size_of::<Row>()), capacity_bytes: bytes, ..empty })
     }
-    pub fn next_close_byte_demand(&self) -> usize {
+    pub fn next_close_copy_byte_demand(&self) -> usize {
+        if self.retired.is_none() && (self.active.is_some() || !self.replacement.is_empty() || !self.additions.is_empty()) { std::mem::size_of::<Row>() } else { 0 }
+    }
+    pub fn next_close_capacity_byte_demand(&self, _: usize) -> usize { 0 }
+    pub fn next_close_depth_demand(&self) -> usize { usize::from(self.phase != Phase::Closed) }
+    pub fn next_close_release_byte_demand(&self) -> usize {
         if let Some(row) = &self.retired { return row_release(row); }
         if self.active.is_some() || !self.replacement.is_empty() || !self.additions.is_empty() { return 0; }
         if self.replacement.capacity() != 0 { return self.replacement.capacity().saturating_mul(std::mem::size_of::<Row>()); }
@@ -111,7 +127,7 @@ impl Drop for GroupOwnsPreparation {
 
 impl CompositionGraph {
     fn check_owns_group(&self, preparation: &GroupOwnsPreparation) -> Result<(), GroupOwnsError> {
-        if !preparation.authority.as_ref().is_some_and(|authority| Arc::ptr_eq(authority, &self.owns_authority)) { return Err(GroupOwnsError::Foreign); }
+        if !preparation.authority.as_ref().is_some_and(|authority| self.owns_authority.as_ref().is_some_and(|own| Arc::ptr_eq(authority, own))) { return Err(GroupOwnsError::Foreign); }
         if self.owns_generation != preparation.generation { return Err(GroupOwnsError::Stale); }
         if self.owns_group != preparation.visibility.as_ref().map(|visibility| Arc::as_ptr(visibility) as usize) { return Err(GroupOwnsError::Foreign); }
         if !preparation.visibility.as_ref().is_some_and(|visibility| visibility.pending()) { return Err(GroupOwnsError::Visibility); }
@@ -124,18 +140,18 @@ impl CompositionGraph {
         if !visibility.pending() { return Err(GroupOwnsError::Visibility); }
         if self.owns.len().checked_add(edge_count).is_none_or(|count| count > OWNED_DOCUMENT_MAXIMUM_MEMBERS) { return Err(GroupOwnsError::Capacity); }
         self.owns_generation.checked_add(1).ok_or(GroupOwnsError::Capacity)?;
+        let authority = Arc::clone(self.owns_authority.as_ref().ok_or(GroupOwnsError::Terminal)?);
         self.owns_group = Some(Arc::as_ptr(visibility) as usize);
-        Ok(GroupOwnsPreparation { authority: Some(Arc::clone(&self.owns_authority)), visibility: Some(Arc::clone(visibility)), generation: self.owns_generation, expected: edge_count, accepted: 0, phase: Phase::Reserve, additions: Vec::new(), active: None, ancestor: None, hops: 0, insertion: None, original_index: 0, addition_index: 0, replacement: OwnsRoot::default(), retired: None, refused: false, committed: false })
+        Ok(GroupOwnsPreparation { authority: Some(authority), visibility: Some(Arc::clone(visibility)), generation: self.owns_generation, expected: edge_count, accepted: 0, phase: Phase::Reserve, additions: Vec::new(), active: None, ancestor: None, hops: 0, insertion: None, original_index: 0, addition_index: 0, replacement: OwnsRoot::default(), retired: None, refused: false, committed: false })
     }
 
     /// 🪜️ Funds one metadata birth, ancestor hop or sorted-row move while all live roots remain unchanged.
     pub fn prepare_owns_group_edge(&self, preparation: &mut GroupOwnsPreparation, parent: &str, slot: &str, child: &str, grant: ArtifactStoreOneItemGrant) -> Result<GroupOwnsStep, GroupOwnsError> {
         self.check_owns_group(preparation)?;
         if preparation.refused { return Err(GroupOwnsError::Terminal); }
-        if grant.maximum_items == 0 { return Ok(GroupOwnsStep::Blocked); }
+        let demand = preparation.next_edge_demands(self, parent, slot, child)?;
+        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(GroupOwnsStep::Blocked); }
         if preparation.phase == Phase::Reserve {
-            let demand = preparation.next_byte_demand(self);
-            if grant.maximum_bytes < demand { return Ok(GroupOwnsStep::Blocked); }
             preparation.additions.try_reserve_exact(preparation.expected).map_err(|_| GroupOwnsError::Allocation)?;
             preparation.phase = Phase::Edges;
             return Ok(GroupOwnsStep::Progress);
@@ -162,8 +178,6 @@ impl CompositionGraph {
                 preparation.accepted += 1;
                 return Ok(GroupOwnsStep::EdgePrepared);
             }
-            let demand = GroupOwnsPreparation::edge_birth_bytes(parent, slot, child).ok_or(GroupOwnsError::Capacity)?;
-            if grant.maximum_bytes < demand { return Ok(GroupOwnsStep::Blocked); }
             preparation.active = Some((child.into(), (parent.into(), slot.into())));
             preparation.ancestor = Some(Ancestor::Edge);
             preparation.hops = 0;
@@ -185,11 +199,11 @@ impl CompositionGraph {
     pub fn seal_owns_group(&self, preparation: &mut GroupOwnsPreparation, grant: ArtifactStoreOneItemGrant) -> Result<GroupOwnsStep, GroupOwnsError> {
         self.check_owns_group(preparation)?;
         if preparation.refused || preparation.active.is_some() || preparation.insertion.is_some() || preparation.accepted != preparation.expected { return Err(GroupOwnsError::Incomplete); }
-        if grant.maximum_items == 0 { return Ok(GroupOwnsStep::Blocked); }
+        let demand = preparation.next_preparation_demands(self);
+        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(GroupOwnsStep::Blocked); }
         if preparation.phase == Phase::Reserve && preparation.expected == 0 { preparation.phase = Phase::Edges; }
         if preparation.phase == Phase::Edges { preparation.phase = Phase::MergeReserve; }
         if preparation.phase == Phase::MergeReserve {
-            if grant.maximum_bytes < preparation.next_byte_demand(self) { return Ok(GroupOwnsStep::Blocked); }
             preparation.replacement.0.try_reserve_exact(self.owns.len() + preparation.additions.len()).map_err(|_| GroupOwnsError::Allocation)?;
             preparation.phase = Phase::Merge;
             return Ok(GroupOwnsStep::Progress);
@@ -197,7 +211,6 @@ impl CompositionGraph {
         if preparation.phase == Phase::Ready { return Ok(GroupOwnsStep::RootPrepared); }
         if preparation.phase != Phase::Merge { return Err(GroupOwnsError::Incomplete); }
         if preparation.original_index == self.owns.len() && preparation.addition_index == preparation.additions.len() { preparation.phase = Phase::Ready; return Ok(GroupOwnsStep::RootPrepared); }
-        if grant.maximum_bytes < preparation.next_byte_demand(self) { return Ok(GroupOwnsStep::Blocked); }
         let row = if preparation.original_index < self.owns.len() && (preparation.addition_index == preparation.additions.len() || self.owns.0[preparation.original_index].0 < preparation.additions[preparation.addition_index].as_ref().expect("retained addition").0) {
             let row = self.owns.0[preparation.original_index].clone(); preparation.original_index += 1; row
         } else { let row = preparation.additions[preparation.addition_index].take().expect("owned pending row"); preparation.addition_index += 1; row };
@@ -211,7 +224,7 @@ impl CompositionGraph {
     /// ⚡️ Moves the complete sorted root and advances its generation once, with no post-flip allocation.
     pub fn commit_owns_group(&mut self, preparation: &mut GroupOwnsPreparation) -> Result<(), GroupOwnsError> {
         if preparation.phase != Phase::Ready || preparation.refused { return Err(GroupOwnsError::Incomplete); }
-        if !preparation.authority.as_ref().is_some_and(|authority| Arc::ptr_eq(authority, &self.owns_authority)) { return Err(GroupOwnsError::Foreign); }
+        if !preparation.authority.as_ref().is_some_and(|authority| self.owns_authority.as_ref().is_some_and(|own| Arc::ptr_eq(authority, own))) { return Err(GroupOwnsError::Foreign); }
         if self.owns_generation != preparation.generation { return Err(GroupOwnsError::Stale); }
         if self.owns_group != preparation.visibility.as_ref().map(|visibility| Arc::as_ptr(visibility) as usize) { return Err(GroupOwnsError::Foreign); }
         if !preparation.visibility.as_ref().is_some_and(|visibility| visibility.committed()) { return Err(GroupOwnsError::Visibility); }
@@ -224,14 +237,16 @@ impl CompositionGraph {
     }
 
     /// 🧹️ Cancels a private cursor or retires its displaced root under whole-allocation grants.
-    pub fn close_owns_group(&mut self, preparation: &mut GroupOwnsPreparation, grant: ArtifactStoreOneItemGrant) -> SnapshotRetirementStep {
-        if preparation.phase == Phase::Closed { return SnapshotRetirementStep::Complete; }
-        if grant.maximum_items == 0 { return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }; }
-        if !preparation.committed && preparation.visibility.as_ref().is_some_and(|visibility| visibility.committed()) { return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }; }
-        if preparation.authority.as_ref().is_some_and(|authority| Arc::ptr_eq(authority, &self.owns_authority)) && self.owns_group == preparation.visibility.as_ref().map(|visibility| Arc::as_ptr(visibility) as usize) { self.owns_group = None; }
+    pub fn close_owns_group(&mut self, preparation: &mut GroupOwnsPreparation, grant: RetainedCloneGrant) -> RetainedCloneStep {
+        let empty = RetainedCloneProgress::default();
+        if preparation.phase == Phase::Closed { return RetainedCloneStep::Complete(empty); }
+        if grant.maximum_items == 0 || grant.maximum_depth < preparation.next_close_depth_demand() { return RetainedCloneStep::Progress(empty); }
+        if !preparation.committed && preparation.visibility.as_ref().is_some_and(|visibility| visibility.committed()) { return RetainedCloneStep::Progress(empty); }
+        let copied_bytes = preparation.next_close_copy_byte_demand();
+        let released_bytes = preparation.next_close_release_byte_demand();
+        if grant.maximum_copy_bytes < copied_bytes || grant.maximum_release_bytes < released_bytes { return RetainedCloneStep::Progress(empty); }
+        if preparation.authority.as_ref().is_some_and(|authority| self.owns_authority.as_ref().is_some_and(|own| Arc::ptr_eq(authority, own))) && self.owns_group == preparation.visibility.as_ref().map(|visibility| Arc::as_ptr(visibility) as usize) { self.owns_group = None; }
         preparation.phase = Phase::Closing;
-        let demand = preparation.next_close_byte_demand();
-        if grant.maximum_bytes < demand { return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }; }
         if let Some(row) = &mut preparation.retired {
             if row.0.capacity() != 0 { drop(std::mem::take(&mut row.0)); }
             else if row.1.0.capacity() != 0 { drop(std::mem::take(&mut row.1.0)); }
@@ -244,40 +259,40 @@ impl CompositionGraph {
         else if preparation.additions.capacity() != 0 { drop(std::mem::take(&mut preparation.additions)); }
         else if preparation.authority.is_some() { preparation.authority.take(); }
         else if preparation.visibility.is_some() { preparation.visibility.take(); }
-        else { preparation.phase = Phase::Closed; return SnapshotRetirementStep::Complete; }
-        SnapshotRetirementStep::Pending { released_items: 1, released_bytes: demand }
+        else { preparation.phase = Phase::Closed; return RetainedCloneStep::Complete(empty); }
+        RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, released_bytes, ..empty })
     }
 }
 
 impl CompositionGraph {
-    /// 📏️ Exact next owned-row or root backing release; link identifiers retain their separate logical receipt.
-    pub fn next_close_byte_demand(&self) -> usize {
-        if self.owns_group.is_some() { return 0; }
-        if let Some(row) = self.owns_retiring.as_ref() { return row_release(row); }
-        if !self.owns.is_empty() { return 0; }
-        if self.owns.capacity() != 0 { return self.owns.capacity().saturating_mul(std::mem::size_of::<Row>()); }
-        self.retiring.last().map_or(0, |identifier| usize::from(!identifier.is_empty()))
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(if self.owns_group.is_none() && self.owns_retiring.is_none() && !self.owns.is_empty() { std::mem::size_of::<Row>() } else if self.owns_retiring.is_none() && self.owns.capacity() == 0 && self.owns_authority.is_none() { self.links.copy_demand() } else { 0 })
     }
-    pub(super) fn close_owned_root(&mut self, maximum_bytes: usize) -> Option<SnapshotRetirementStep> {
+    pub fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
+    pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
+    pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        if self.owns_group.is_some() { return Ok(0); }
+        if let Some(row) = self.owns_retiring.as_ref() { return Ok(row_release(row)); }
+        if !self.owns.is_empty() { return Ok(0); }
+        if self.owns.capacity() != 0 { return Ok(self.owns.capacity().saturating_mul(std::mem::size_of::<Row>())); }
+        if self.owns_authority.is_some() { return Ok(arc_release(&self.owns_authority)); }
+        Ok(self.links.release_demand())
+    }
+    pub(super) fn close_owned_root(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        let copied_bytes = self.next_close_copy_byte_demand()?;
+        let released_bytes = self.next_close_release_byte_demand()?;
+        if grant.maximum_copy_bytes < copied_bytes || grant.maximum_release_bytes < released_bytes { return Ok(Some(RetainedCloneStep::Progress(empty))); }
         if let Some(row) = self.owns_retiring.as_mut() {
-            let demand = row_release(row);
-            if maximum_bytes < demand { return Some(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
             let owner = if row.0.capacity() != 0 { &mut row.0 } else if row.1.0.capacity() != 0 { &mut row.1.0 } else { &mut row.1.1 };
             drop(std::mem::take(owner));
             if row_release(row) == 0 { self.owns_retiring = None; }
-            return Some(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: demand });
-        }
-        if let Some(row) = self.owns.0.pop() {
+        } else if let Some(row) = self.owns.0.pop() {
             self.owns_retiring = Some(row);
             self.owns_generation = self.owns_generation.checked_add(1).expect("ownership generation exhausted");
-            return Some(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        let demand = self.owns.capacity().saturating_mul(std::mem::size_of::<Row>());
-        if demand != 0 {
-            if maximum_bytes < demand { return Some(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-            drop(std::mem::take(&mut self.owns));
-            return Some(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: demand });
-        }
-        None
+        } else if self.owns.capacity() != 0 { drop(std::mem::take(&mut self.owns)); }
+        else if self.owns_authority.is_some() { self.owns_authority.take(); }
+        else { return Ok(None); }
+        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, released_bytes, ..empty })))
     }
 }

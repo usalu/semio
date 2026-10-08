@@ -1,0 +1,6 @@
+{
+  "RemoveRouteProperty": {
+    "feature": "route-ferry",
+    "key": "label"
+  }
+}

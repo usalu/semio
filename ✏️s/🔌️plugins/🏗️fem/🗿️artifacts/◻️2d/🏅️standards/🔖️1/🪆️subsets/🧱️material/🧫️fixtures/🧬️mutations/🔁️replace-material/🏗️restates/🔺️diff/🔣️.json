@@ -3,12 +3,13 @@
   "elements": null,
   "regions": null,
   "materials": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "steel",
-        "item": {
+        "patch": {
           "id": "steel",
           "name": "Steel S355",
           "e": 205000000000.0,
@@ -16,8 +17,7 @@
           "rho": 7900.0
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "sections": null,
   "supports": null,

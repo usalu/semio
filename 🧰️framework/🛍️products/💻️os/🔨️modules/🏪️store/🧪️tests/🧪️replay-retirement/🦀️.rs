@@ -6,6 +6,7 @@
 //! owner's discipline whose technology counts every projection it produces and every scratch projection retired through it;
 //! the cases are the language-agnostic corpus `🧫️fixtures/🧫️replay-retirement`.
 use super::*;
+use super::supersede_replay_tests::fixture_author;
 
 //#region 🧰️Fixture
 std::thread_local! {
@@ -118,9 +119,6 @@ impl crate::os_spr::DiffAlgebra<DemoSnapshot> for FailClosedDiff {
     fn inverse(&self, base: &DemoSnapshot) -> Self {
         Self { inner: crate::os_spr::DiffAlgebra::inverse(&self.inner, base), refuse: false }
     }
-    fn between(base: &DemoSnapshot, other: &DemoSnapshot) -> Self {
-        Self { inner: <DemoDiff as crate::os_spr::DiffAlgebra<DemoSnapshot>>::between(base, other), refuse: false }
-    }
     fn is_empty(&self) -> bool {
         !self.refuse && crate::os_spr::DiffAlgebra::<DemoSnapshot>::is_empty(&self.inner)
     }
@@ -129,7 +127,7 @@ impl crate::os_spr::DiffAlgebra<DemoSnapshot> for FailClosedDiff {
 impl MutationDiff<DemoSnapshot> for FailClosedDiff {
     fn apply(&self, base: &DemoSnapshot, capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
         if self.refuse {
-            return Err(crate::os_spr::MutationApplyError { code: "fixture.refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
+            return Err(crate::os_spr::MutationApplyError { code: "mutation.apply.fixture-refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
         }
         count(&PROJECTIONS_APPLIED);
         self.inner.apply(base, capability)
@@ -156,7 +154,7 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
 
     fn diff(&self, base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<Self::Diff> {
         if self.fault == Fault::Message {
-            return crate::os_spr::MutationOutcome::error("fixture.refused", "the fixture reports an error for this operation", ["n"]);
+            return crate::os_spr::MutationOutcome::error("mutation.target-missing", "the fixture reports an error for this operation", ["n"]);
         }
         crate::os_spr::MutationOutcome::new(FailClosedDiff { inner: self.operation.diff(base).into_parts().0, refuse: self.fault == Fault::Apply })
     }
@@ -184,16 +182,12 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
 impl MemberStoreOwner<FailClosedOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
-    fn member_store_owners_birth_bytes() -> usize {
-        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, FailClosedOp>>([
-            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
-            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
-        ])
+    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, FailClosedOp>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, FailClosedOp>>()?, depth: 1 })
     }
 
-    fn member_store_owners() -> DocumentStoreOwners<Self, FailClosedOp> {
-        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, FailClosedOp>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, FailClosedOp>> {
+        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, FailClosedOp>::new()))
     }
 }
 //#endregion 🧰️Fixture
@@ -210,7 +204,7 @@ async fn a_refused_apply_retires_everything_its_replay_built() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️replay-retirement/🔣️.json")).expect("the corpus parses");
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, FailClosedOp>("demo/v1", "replay-retirement", DemoSnapshot { n: Some(0) }, None)).await;
     store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 1 }), Fault::None)], transaction: None }).await.expect("a clean edit applies");
+    fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 1 }), Fault::None)], transaction: None }).await.expect("a clean edit applies");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");
         let operations = usize::try_from(case["operations"].as_u64().expect("an operation count")).expect("a usize");
@@ -225,7 +219,7 @@ async fn a_refused_apply_retires_everything_its_replay_built() {
         let mutations: Vec<FailClosedOp> = (0..operations).map(|index| FailClosedOp::of(DemoMutation::SetN(SetN { n: 10 + index as i32 }), if index == at { fault } else { Fault::None })).collect();
         let shown = (store.snapshot_ref().n, store.applied_edit_ids().len(), store.content_revision_now());
         let before = tally();
-        let refusal = match store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await {
+        let refusal = match fixture_author(&mut store, ArtifactCommand::Apply { mutations, transaction: None }).await {
             Ok(_) => panic!("{name}: the command is refused"),
             Err(VcsError::ValidationFailed(_)) => "validation-failed",
             Err(VcsError::InverseRefused(_)) => "inverse-refused",
@@ -242,7 +236,7 @@ async fn a_refused_apply_retires_everything_its_replay_built() {
         assert_eq!(projections, applied + 1, "{name}: the working projection and every projection an operation produced retired through the technology");
         assert_eq!((store.snapshot_ref().n, store.applied_edit_ids().len(), store.content_revision_now()), shown, "{name}: the store shows what it showed");
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 2 }), Fault::None)], transaction: None }).await.expect("the store still applies an edit");
+    fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 2 }), Fault::None)], transaction: None }).await.expect("the store still applies an edit");
     assert_eq!((store.snapshot_ref().n, store.applied_edit_ids().len()), (Some(2), 2));
 }
 //#endregion 🧪️Laws

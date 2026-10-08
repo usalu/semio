@@ -28,9 +28,6 @@ impl protocol::DiffAlgebra<HomePresence> for HomePresenceDiff {
     fn inverse(&self, _base: &HomePresence) -> Self {
         Self {}
     }
-    fn between(_base: &HomePresence, _other: &HomePresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

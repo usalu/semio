@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "positions": {
       "anyOf": [
         {
@@ -55,36 +44,33 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/GisMapFeatureRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/GisMapFeaturePatchEntry"
+            "$ref": "#/$defs/GisMapFeatureInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/GisMapFeatureRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GisMapFeatureModification"
           }
         }
       }
     },
-    "GisMapFeaturePatchEntry": {
+    "GisMapFeatureModification": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -99,6 +85,62 @@
         "id",
         "patch"
       ]
+    },
+    "GisMapFeatureRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "GisMapFeatureInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json"
+        }
+      }
+    },
+    "GisMapFeatureRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

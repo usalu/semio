@@ -1,6 +1,5 @@
 use protocol::{OpText, OpBinary};
 use super::*;
-use crate::schema::diff::XlsxOpcPartDiff;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -16,7 +15,7 @@ fn address(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32) -> cell_add
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn set_cell_at(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32, value: XlsxCellValue) -> XlsxMutation {
-    XlsxMutation::SetCell(set_cell::SetCell { address: address(snapshot, sheet, row, col), value })
+    XlsxMutation::SetCell(set_cell::SetCell { address: address(snapshot, sheet, row, col), value, node: None })
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -27,7 +26,7 @@ fn remove_cell_at(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32) -> X
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_sheet_apply_and_inverse() {
     let base = fixture();
-    let insert = XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "New".into(), cells: vec![] }, index: None });
+    let insert = XlsxMutation::InsertSheet(insert_sheet::InsertSheet::minted(&base, XlsxSheet { name: "New".into(), cells: vec![] }, None).expect("the gesture mints the sheet slot"));
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &insert);
     let sheets = workbook(&after).sheets;
@@ -98,7 +97,7 @@ async fn set_and_remove_cell_apply_and_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn shared_string_mutations_apply_and_inverse() {
     let base = fixture();
-    let insert = XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "world".into(), index: None });
+    let insert = XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "world".into(), index: None, node: None });
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &insert);
     assert_eq!(workbook(&after).shared_strings, vec!["hello".to_string(), "world".to_string()]);
@@ -107,7 +106,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     }
     assert_eq!(after, base);
 
-    let set = XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "changed".into() });
+    let set = XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "changed".into(), node: None });
     let mut after2 = base.clone();
     apply_xlsx_mutation(&mut after2, &set);
     assert_eq!(workbook(&after2).shared_strings, vec!["changed".to_string()]);
@@ -277,30 +276,6 @@ async fn absorb_law() {
         assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a), &b).unwrap(), a);
-
-    let sample = fixture();
-    assert_eq!(protocol::apply_diff(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
-
-    // "Real" fixture leg: a realistic multi-sheet workbook diffed against a mutated variant.
-    let real = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
-        sheets: vec![XlsxSheet { name: "Data".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] }],
-        shared_strings: vec!["Chapter One".into()],
-    });
-    let mut mutated = real.clone();
-    apply_xlsx_mutation(&mut mutated, &XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "Chapter Two".into() }));
-    assert_ne!(real, mutated);
-    assert_eq!(protocol::apply_diff(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&real, &mutated), &real).unwrap(), mutated);
-    assert_eq!(protocol::apply_diff(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&mutated, &real), &mutated).unwrap(), real);
-}
 //#endregion 🔖️BetweenRoundtripLaw
 
 //#region 🔖️CodecRetentionLaw
@@ -323,61 +298,6 @@ async fn codec_retention_law() {
     let decoded = <XlsxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
-//#endregion 🔖️CodecRetentionLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every lane the snapshot carries (see the fixtures'
-/// doc comment) — the lossless OPC lane (binary parts, content types, part-owned relationships) and the
-/// authoritative XML parts (workbook, worksheet, shared strings) — and the projected workbook follows exactly.
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{SHARED_STRINGS_PART, WORKBOOK_PART};
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&diff_ab, &a).unwrap(), b);
-    let diff_ba = <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&diff_ba, &b).unwrap(), a);
-    assert!(<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &a).is_empty());
-
-    let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
-    let ct = opc_diff.content_types.as_ref().expect("content_types diff present");
-    assert!(!ct.defaults.as_ref().expect("defaults diff present").added.is_empty(), "content_types.defaults: added not exercised");
-    let overrides = ct.overrides.as_ref().expect("overrides diff present");
-    assert!(!overrides.modified.is_empty(), "content_types.overrides: modified not exercised");
-    let parts = opc_diff.parts.as_ref().expect("parts diff present");
-    assert!(!parts.removed.is_empty(), "opc.parts: removed not exercised");
-    assert!(!parts.modified.is_empty(), "opc.parts: modified not exercised");
-    assert!(!parts.added.is_empty(), "opc.parts: added not exercised");
-    assert!(matches!(&parts.modified[0].diff, XlsxOpcPartDiff { bytes: Some(_), content_type: Some(_) }), "the modified binary part changes bytes and content type");
-    let rels = opc_diff.relationships.as_ref().expect("relationships diff present");
-    assert!(!rels.removed.is_empty(), "opc.relationships: removed (owner) not exercised");
-    assert!(!rels.modified.is_empty(), "opc.relationships: modified (owner) not exercised");
-    assert!(!rels.added.is_empty(), "opc.relationships: added (owner) not exercised");
-
-    let xml = diff_ab.xml_parts.as_ref().expect("xml parts diff present");
-    let modified = xml.modified.iter().map(|part| part.key.as_str()).collect::<Vec<_>>();
-    for part in [WORKBOOK_PART, SHARED_STRINGS_PART] {
-        assert!(modified.contains(&part), "xml part {part} not modified: {modified:?}");
-    }
-    assert!(modified.iter().any(|part| part.starts_with("xl/worksheets/")), "no worksheet part modified: {modified:?}");
-
-    let (before, after) = (workbook(&a), workbook(&b));
-    assert_eq!(workbook(&protocol::apply_diff(&diff_ab, &a).unwrap()), after, "the projected workbook follows the diff");
-    assert_eq!(before.sheets.iter().map(|sheet| sheet.name.as_str()).collect::<Vec<_>>(), ["toModify", "stay", "toDrop"]);
-    assert_eq!(after.sheets.iter().map(|sheet| sheet.name.as_str()).collect::<Vec<_>>(), ["toModify", "stay", "added"]);
-    let cells = |workbook: &XlsxWorkbook| workbook.sheets[0].cells.iter().map(|cell| (cell.row, cell.col, cell.value.clone())).collect::<Vec<_>>();
-    assert_eq!(cells(&before), vec![(1, 0, XlsxCellValue::Number(1.0)), (2, 0, XlsxCellValue::Boolean(false))]);
-    assert_eq!(
-        cells(&after),
-        vec![(1, 0, XlsxCellValue::Number(2.0)), (3, 0, XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) })],
-        "toModify: (2,0) removed, (1,0) modified, (3,0) added as a formula"
-    );
-    assert_eq!((before.shared_strings.len(), after.shared_strings.len()), (3, 2), "shared strings: one removed a -> b, re-added b -> a");
-    assert_eq!(after.shared_strings[1], "toModify-changed");
-    assert_eq!(workbook(&protocol::apply_diff(&diff_ba, &b).unwrap()), before, "the reverse diff restores the dropped sheet and the removed shared string");
-}
 //#endregion 🔖️FieldSweep
 
 //#region 🔖️OpTextBinaryRoundtripLaw
@@ -391,21 +311,21 @@ async fn op_text_binary_roundtrip_law() {
     let cell = || address(&base, "Sheet1", 1, 0);
 
     let mutations = vec![
-        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "New, odd: [name]".into(), cells: vec![XlsxCell { row: 1, col: 2, value: XlsxCellValue::Empty }] }, index: None }),
-        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "Placed".into(), cells: vec![] }, index: Some(1) }),
+        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "New, odd: [name]".into(), cells: vec![XlsxCell { row: 1, col: 2, value: XlsxCellValue::Empty }] }, index: None, slot: None }),
+        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "Placed".into(), cells: vec![] }, index: Some(1), slot: None }),
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Sheet2".into() }),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Number(-2.5) }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::SharedString(3) }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Boolean(false) }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::InlineString("has, weird: [chars]".into()) }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) } }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "NA()".into(), cached: None } }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Number(-2.5), node: None }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::SharedString(3), node: None }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Boolean(false), node: None }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::InlineString("has, weird: [chars]".into()), node: None }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) }, node: None }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "NA()".into(), cached: None }, node: None }),
         XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell() }),
-        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: None }),
-        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: Some(0) }),
+        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: None, node: None }),
+        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: Some(0), node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
-        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "y".into() }),
+        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "y".into(), node: None }),
     ];
     for mutation in mutations {
         let printed = mutation.print_op();
@@ -442,15 +362,15 @@ async fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet::default(), index: None }),
+        XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet::default(), index: None, slot: None }),
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: String::new() }),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: String::new(), new_name: String::new() }),
-        XlsxMutation::SetCell(set_cell::SetCell { address: address(&fixture(), "Sheet1", 1, 0), value: XlsxCellValue::Empty }),
-        XlsxMutation::InsertCell(insert_cell::InsertCell { address: cell_address::xlsx_cell_vacancy_address(&fixture(), "Sheet1", 2, 1).unwrap(), value: XlsxCellValue::Empty }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: address(&fixture(), "Sheet1", 1, 0), value: XlsxCellValue::Empty, node: None }),
+        XlsxMutation::InsertCell(insert_cell::InsertCell { address: cell_address::xlsx_cell_vacancy_address(&fixture(), "Sheet1", 2, 1).unwrap(), value: XlsxCellValue::Empty, node: None }),
         XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(&fixture(), "Sheet1", 1, 0) }),
-        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: String::new(), index: None }),
+        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: String::new(), index: None, node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
-        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: String::new() }),
+        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: String::new(), node: None }),
     ];
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every XlsxMutation variant, in declaration order");
@@ -499,13 +419,13 @@ async fn removing_a_middle_member_is_restored_at_its_original_position() {
     laws(&remove_cell_at(&base, "First", 2, 0), &base).await;
     laws(&set_cell_at(&base, "First", 1, 1, XlsxCellValue::Boolean(true)), &base).await;
     laws(&XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 1 }), &base).await;
-    laws(&XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 1, value: "changed".into() }), &base).await;
-    laws(&XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "placed".into(), index: Some(1) }), &base).await;
-    laws(&XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "Placed".into(), cells: vec![] }, index: Some(1) }), &base).await;
+    laws(&XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 1, value: "changed".into(), node: None }), &base).await;
+    laws(&XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "placed".into(), index: Some(1), node: None }), &base).await;
+    laws(&XlsxMutation::InsertSheet(insert_sheet::InsertSheet::minted(&base, XlsxSheet { name: "Placed".into(), cells: vec![] }, Some(1)).expect("the gesture mints the sheet slot")), &base).await;
     let vacancy = cell_address::xlsx_cell_vacancy_address(&base, "First", 1, 5).expect("a vacancy after the last cell of row 1");
-    laws(&XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::Number(9.0) }), &base).await;
+    laws(&XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::Number(9.0), node: None }), &base).await;
     let between = cell_address::xlsx_cell_vacancy_address(&base, "Middle", 1, 3).expect("a vacancy in the middle sheet");
-    laws(&XlsxMutation::InsertCell(insert_cell::InsertCell { address: between, value: XlsxCellValue::Number(9.0) }), &base).await;
+    laws(&XlsxMutation::InsertCell(insert_cell::InsertCell { address: between, value: XlsxCellValue::Number(9.0), node: None }), &base).await;
 }
 
 /// ⚖️ The reference renumbering of a removed shared string follows the diff and is undone by its inverse.
@@ -521,3 +441,54 @@ async fn removing_a_middle_shared_string_renumbers_the_references_behind_it() {
     assert!(!apply_xlsx_mutation(&mut base.clone(), &referenced).messages().is_empty(), "a referenced shared string cannot be removed");
 }
 //#endregion 🔖️InverseSumLaw
+
+/// 🧮️ The ordered workbook with a styled cell (`s="3"`), a rich-text shared string (two runs) and a sheet entry that carries an extra attribute, so every verbatim carrier is exercised.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rich_base() -> XlsxSnapshot {
+    let mut base = ordered_base();
+    let sheet_path = cell_address::xlsx_cell_address(&base, "First", 1, 1).expect("cell address").part_path;
+    {
+        let root = base.xml_part_mut(&sheet_path).and_then(|part| part.document.root.as_mut()).expect("worksheet root");
+        let XmlNode::Element { children, .. } = root else { panic!("worksheet element") };
+        let XmlNode::Element { children: rows, .. } = &mut children[0] else { panic!("sheetData") };
+        let XmlNode::Element { children: cells, .. } = &mut rows[0] else { panic!("row") };
+        let XmlNode::Element { attrs, .. } = &mut cells[1] else { panic!("cell") };
+        attrs.insert(1, XmlAttr { name: "s".into(), value: "3".into() });
+    }
+    {
+        let shared_path = shared_strings_path_of(&base);
+        let root = base.xml_part_mut(&shared_path).and_then(|part| part.document.root.as_mut()).expect("shared strings root");
+        let XmlNode::Element { children, .. } = root else { panic!("sst element") };
+        let run = |text: &str| XmlNode::Element { name: "r".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![], children: vec![XmlNode::Text { text: text.into() }] }] };
+        children[1] = XmlNode::Element { name: "si".into(), attrs: vec![], children: vec![run("o"), run("ne")] };
+    }
+    {
+        let workbook = base.workbook_part_path().expect("workbook path");
+        let root = base.xml_part_mut(&workbook).and_then(|part| part.document.root.as_mut()).expect("workbook root");
+        let XmlNode::Element { children, .. } = root else { panic!("workbook element") };
+        let XmlNode::Element { children: sheets, .. } = &mut children[0] else { panic!("sheets") };
+        let XmlNode::Element { attrs, .. } = &mut sheets[1] else { panic!("sheet") };
+        attrs.push(XmlAttr { name: "state".into(), value: "hidden".into() });
+    }
+    base.validate_authority().expect("rich fixture authority");
+    base
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shared_strings_path_of(base: &XlsxSnapshot) -> String {
+    let workbook = base.workbook_part_path().expect("workbook path");
+    let relationship = base.opc.relationships_for(&workbook).iter().find(|relationship| relationship.rel_type.ends_with("/sharedStrings")).expect("shared strings relationship");
+    semio_s_artifact_stdio_zip::opc::resolve_relationship_target(&workbook, &relationship.target)
+}
+
+/// ⚖️ Cells, shared strings and sheets that rebuilding from their typed value would flatten return verbatim through their inverses.
+#[semio_framework_async_macros::async_test]
+async fn inverses_restore_what_the_typed_value_cannot_express() {
+    let base = rich_base();
+    let laws = protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
+    laws(&remove_cell_at(&base, "First", 1, 1), &base).await;
+    laws(&set_cell_at(&base, "First", 1, 1, XlsxCellValue::Boolean(true)), &base).await;
+    laws(&XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 1 }), &base).await;
+    laws(&XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 1, value: "flat".into(), node: None }), &base).await;
+    laws(&XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Middle".into() }), &base).await;
+}

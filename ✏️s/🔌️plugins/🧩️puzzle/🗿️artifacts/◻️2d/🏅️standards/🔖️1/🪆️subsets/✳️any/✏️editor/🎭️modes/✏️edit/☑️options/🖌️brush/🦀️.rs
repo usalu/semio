@@ -6,7 +6,7 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_action, puzzle2d_kind_ids, Puzzle2dScene, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
-use serde_json::json;
+use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
 
 //#region 🔖️Constants

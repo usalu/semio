@@ -7,15 +7,13 @@
   },
   "cases": [
     {
-      "kind": "replace-config",
+      "kind": "set-config",
       "mutation": {
-        "ReplaceConfig": {
-          "config": {
-            "searchQuery": "Überblick",
-            "searchHistoryJson": "[]",
-            "lastResultJson": "[]",
-            "lastAnalysisJson": "{}"
-          }
+        "SetConfig": {
+          "searchQuery": "Überblick",
+          "searchHistoryJson": "[]",
+          "lastResultJson": "[]",
+          "lastAnalysisJson": "{}"
         }
       },
       "expected": {

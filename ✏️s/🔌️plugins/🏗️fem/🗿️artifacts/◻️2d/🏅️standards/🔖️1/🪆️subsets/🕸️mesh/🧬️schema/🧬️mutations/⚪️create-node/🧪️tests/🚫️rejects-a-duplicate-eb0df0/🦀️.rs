@@ -13,7 +13,8 @@
 //! 🚫️ A colliding node id is FATAL `mutation.duplicate-id`, not the Error-level `target-missing` the delete/replace verbs raise — a duplicate identity is an invariant breach, not a miss.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

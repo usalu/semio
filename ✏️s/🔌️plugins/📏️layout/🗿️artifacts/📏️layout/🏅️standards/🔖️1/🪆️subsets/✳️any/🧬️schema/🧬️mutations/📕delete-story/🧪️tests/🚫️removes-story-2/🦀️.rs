@@ -85,8 +85,8 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "delete-story/removes-story-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().stories.as_ref().expect("delete-story fills the stories delta");
-    assert_eq!(delta.removed, vec!["story-2".to_string()], "delete-story's diff carries the id in `removed`");
-    assert!(delta.added.is_empty() && delta.patched.is_empty(), "delete-story touches only the `removed` arm of the stories delta");
+    assert_eq!(delta.removed, vec![crate::diff::LayoutStoryRemoval { id: "story-2".to_string(), index: 1 }], "delete-story's diff carries the id and base index in `removed`");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-story touches only the `removed` arm of the stories delta");
 }
 
 /// 🔺️ The sparse delta `delete-story` produces is exactly the committed diff — the most load-bearing

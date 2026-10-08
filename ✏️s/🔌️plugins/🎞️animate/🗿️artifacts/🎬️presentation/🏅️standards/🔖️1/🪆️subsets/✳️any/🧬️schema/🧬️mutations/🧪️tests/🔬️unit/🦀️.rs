@@ -64,11 +64,12 @@ async fn middle_tile_edits_restore_their_original_index() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
+async fn tile_roster_replace_source_and_resize_source_frame_round_trip() {
     let base = default_presentation_snapshot();
-    let seeded = round_trip(&base, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: vec![tile("t1"), tile("t2")] })).await;
+    let seeded = round_trip(&base, &PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: tile("t1") })).await;
+    let seeded = round_trip(&seeded, &PresentationMutation::CreateTile(create_tile::CreateTile { index: 1, tile: tile("t2") })).await;
     assert_eq!(presentation_working_scene(&seeded).1.len(), 2);
-    let cleared = round_trip(&seeded, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })).await;
+    let cleared = round_trip(&seeded, &PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["t1".into(), "t2".into()] })).await;
     assert!(presentation_working_scene(&cleared).1.is_empty());
     let (base_source, _) = presentation_working_scene(&base);
     let mut next_source = base_source.clone();
@@ -130,7 +131,7 @@ async fn replace_source_obeys_the_inverse_and_diff_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
     let kinds: Vec<&str> = PresentationMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
-    for expected in ["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"] {
+    for expected in ["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles"] {
         assert!(kinds.contains(&expected), "missing semantic kind {expected}");
     }
 }
@@ -139,7 +140,7 @@ async fn semantic_kinds_cover_every_variant() {
 // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
 // family presentation in this facet (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
 // landed in `📡️spr/🧪️tests/⚖️protocol-laws`). `replace` has no addressable target here (whole-collection
-// `replace-tiles` / singleton `replace-source`), so it has no missing-target case to exercise.
+// singleton `replace-source`), so it has no missing-target case to exercise.
 // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
 // `assert_policy_matrix` exists) — see this ticket's report.
 #[semio_framework_async_macros::async_test]

@@ -5,8 +5,8 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::mutations::{apply_filter,transform_image,fill_selection,fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
-pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
+use crate::mutations::{write_pixel_region,apply_filter,transform_image,fill_selection,fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
+pub use crate::mutations::{inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
 use crate::{SemioImageSnapshot, RasterLayerNode};
 use protocol::OpText;
 
@@ -220,6 +220,16 @@ pub(crate) enum RasterMutationDsl {
         color: Vec<f64>,
         selection: Option<String>,
     },
+    WritePixelRegion {
+        #[dsl(key = "id")]
+        layer_id: String,
+        target: String,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        samples: String,
+    },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -308,6 +318,15 @@ pub(crate) fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutatio
             color: payload.color.clone(),
             selection: payload.selection.as_ref().map(semio_framework_pack_json::to_json_string),
         },
+        RasterMutation::WritePixelRegion(payload) => RasterMutationDsl::WritePixelRegion {
+            layer_id: payload.layer_id.clone(),
+            target: payload.target.clone(),
+            x: payload.x,
+            y: payload.y,
+            width: payload.width,
+            height: payload.height,
+            samples: payload.samples.iter().map(|byte| format!("{byte:02x}")).collect(),
+        },
     }
 }
 
@@ -358,6 +377,15 @@ pub(crate) fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMut
             target,
             color,
             selection: selection.and_then(|spans| semio_framework_pack_json::from_json_str(&spans, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()),
+        }),
+        RasterMutationDsl::WritePixelRegion { layer_id, target, x, y, width, height, samples } => RasterMutation::WritePixelRegion(write_pixel_region::WritePixelRegion {
+            layer_id,
+            target,
+            x,
+            y,
+            width,
+            height,
+            samples: (0..samples.len() / 2).filter_map(|at| samples.get(at * 2..at * 2 + 2).and_then(|pair| u8::from_str_radix(pair, 16).ok())).collect(),
         }),
     }
 }
@@ -530,7 +558,36 @@ pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
     Ok(rendered)
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::{bridge_step,retire_bridge_mutations};
+use crate::standards::v1::subsets::any::schema::mutations::retire_bridge_mutations;
 
 
 use crate::RasterSnapshot;
+
+//#region 🌉️Apply
+// The central-apply entry points of the native bridge live here, outside the schema tree: only editors, io and stores call
+// `protocol::apply_diff`.
+/// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,
+/// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
+/// `Mutation`/`MutationDiff` impls instead of a hand-written match.
+pub fn apply_raster_mutation(snapshot: &crate::RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<crate::RasterSnapshot> {
+    protocol::apply_diff(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
+}
+
+
+/// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
+/// no-op kind is a RESULT this bridge reports, never an error it swallows.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn bridge_step(snapshot: &crate::RasterSnapshot, mutation: &RasterMutation) -> Result<(crate::RasterSnapshot, Vec<String>), String> {
+    use protocol::Mutation;
+    // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
+    // insertion carries), so it is cold-retired here rather than dropped.
+    let (diff, raised) = <RasterMutation as Mutation<crate::RasterSnapshot>>::diff(mutation, snapshot).into_parts();
+    let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
+    let applied = protocol::apply_diff(&diff, snapshot);
+    <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold(diff);
+    match applied {
+        Ok(next) => Ok((next, messages)),
+        Err(error) => Err(format!("{error:?}")),
+    }
+}
+//#endregion 🌉️Apply

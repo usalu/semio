@@ -1,5 +1,6 @@
 
 use super::*;
+use crate::apply_puzzle5d_mutation;
 
 #[test]
 fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
@@ -21,25 +22,25 @@ fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
         ],
         "fasteners": [],
     });
-    let canonical = |value: &Value| {
-        let snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed puzzle5d fixture");
-        serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("canonical puzzle5d JSON")
-    };
-    let operations = puzzle5d_document_delta_operations(&before, &after);
+    let before: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&before.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed before fixture");
+    let after: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&after.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed after fixture");
+    let created = after.parts[1].clone();
+    let operations = vec![delete_part("p1".into()), move_part_2d("p2".into(), 9.0, 0.0), move_part_3d("p2".into(), [9.0, 0.0, 0.0]), create_part(created, None)];
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::MovePart2d(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::DeletePart(_))));
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse fixture"));
-        forward = protocol::apply_diff(Mutation::<Value>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
+        inverses.extend(Mutation::<Puzzle5dSnapshot>::inverse(operation, &forward).expect("typed inverse"));
+        forward = protocol::apply_diff(Mutation::<Puzzle5dSnapshot>::diff(operation, &forward).diff(), &forward).expect("typed diff");
     }
-    assert_eq!(forward, canonical(&after));
+    assert_eq!(forward, after);
     for inverse in inverses.iter().rev() {
-        forward = protocol::apply_diff(Mutation::<Value>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
+        forward = protocol::apply_diff(Mutation::<Puzzle5dSnapshot>::diff(inverse, &forward).diff(), &forward).expect("typed inverse diff");
     }
-    assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
+    assert_eq!(forward, before);
+
 }
 
 //#region 🔖️MutationLaws
@@ -292,19 +293,20 @@ fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
 /// inverse diffs sum to the negative diff.
 #[semio_framework_async_macros::async_test]
 async fn middle_row_removals_restore_their_position() {
-    use crate::{Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dPart};
+    use crate::{Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume};
     use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     let step = |base: Puzzle5dSnapshot, mutation: Puzzle5dMutation| protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     let grip = |id: &str| Puzzle5dGrip { id: id.into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() };
     let mut base = empty();
     for id in ["a", "b", "c"] {
         base = step(base, create_part(Puzzle5dPart { id: id.into(), grips: vec![grip("g1"), grip("g2"), grip("g3")], ..Default::default() }, None));
+        base = step(base, create_target_volume(Puzzle5dTargetVolume { id: id.into(), ..Default::default() }, None));
         base = step(base, connect_kind_compatibility(id.into(), "z".into(), false, false, Puzzle5dCompatSpecificity::General, None));
     }
     for (id, source, target) in [("f1", "a:g1", "b:g1"), ("f2", "b:g2", "c:g2"), ("f3", "a:g3", "c:g3")] {
         base = step(base, connect_grips(id.into(), source.into(), target.into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None));
     }
-    let removals = [delete_part("b".into()), remove_part_grip("b".into(), "g2".into()), disconnect_grips("f2".into()), disconnect_kind_compatibility("b".into(), "z".into())];
+    let removals = [delete_part("b".into()), remove_part_grip("b".into(), "g2".into()), disconnect_grips("f2".into()), disconnect_kind_compatibility("b".into(), "z".into()), delete_target_volume("b".into())];
     for mutation in &removals {
         assert_mutation_inverse_law(&base, mutation).await;
         assert_mutation_inverse_sum_law(mutation, &base).await;

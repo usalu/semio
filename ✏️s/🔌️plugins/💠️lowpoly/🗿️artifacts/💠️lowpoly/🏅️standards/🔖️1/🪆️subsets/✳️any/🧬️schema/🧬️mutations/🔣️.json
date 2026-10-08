@@ -255,6 +255,18 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/scale-selection/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetVertexPositions"
+      ],
+      "properties": {
+        "SetVertexPositions": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/set-vertex-positions/schema.json"
+        }
+      }
     }
   ]
 }

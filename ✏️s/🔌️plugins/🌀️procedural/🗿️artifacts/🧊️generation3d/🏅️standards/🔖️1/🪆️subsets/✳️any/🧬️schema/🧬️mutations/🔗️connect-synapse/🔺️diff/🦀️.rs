@@ -19,6 +19,6 @@ pub fn diff(payload: &ConnectSynapse, base: &Generation3dSnapshot) -> protocol::
     if widget_index(&base.host_snapshot, &payload.synapse.to).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse endpoint widget \"{}\" does not exist.", payload.synapse.to), [payload.synapse.to.clone()]);
     }
-    let reordered = ((payload.index) < base.host_snapshot.synapses.len()).then(|| { let mut order: Vec<String> = base.host_snapshot.synapses.iter().map(|entry| entry.id.to_string()).collect(); order.insert(payload.index, payload.synapse.id.to_string()); order });
-    protocol::MutationOutcome::new(Generation3dDiff { synapses: Some(Generation3dSynapsesDelta { added: vec![payload.synapse.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let at = payload.index.min(base.host_snapshot.synapses.len());
+    protocol::MutationOutcome::new(Generation3dDiff { synapses: Some(Generation3dSynapsesDelta::insertion(at, payload.synapse.clone())), ..Default::default() })
 }

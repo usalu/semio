@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "math.number",
+      "owner": "semantic"
+    },
+    {
+      "id": "mesh.primitive.box",
+      "owner": "semantic"
+    },
+    {
+      "id": "mesh.primitive.construct",
+      "owner": "native"
+    },
+    {
+      "id": "mesh.interchange.exportObj",
+      "owner": "native"
+    },
+    {
+      "id": "mesh.interchange.importGlb",
+      "owner": "native"
+    },
+    {
+      "id": "brep.interchange.exportStep",
+      "owner": "native"
+    }
+  ]
+}

@@ -36,48 +36,54 @@
   "growth": null,
   "sustainability": null,
   "resilience": {
-    "added": [
+    "removed": [
       {
         "id": "resilience-requirement-a",
-        "name": "Resilience Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "hazard": "Replaced Resilience Requirement A",
-        "riskLevel": "negligible",
-        "scenario": null,
-        "recoveryTime": null,
-        "recoveryPoint": null,
-        "redundancy": [],
-        "hardeningMeasures": [],
-        "backupSystems": [],
-        "alternateSites": [],
-        "supplyChain": [],
-        "communicationPlan": [],
-        "drillRequirements": [],
-        "elementIds": [],
-        "infrastructureIds": [],
-        "standards": [],
-        "insuranceImplications": [],
-        "climateAdaptation": [],
-        "ownerId": null,
-        "verificationPlan": null
+        "index": 0
       }
     ],
-    "removed": [
-      "resilience-requirement-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "resilience-requirement-a",
+          "name": "Resilience Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "hazard": "Replaced Resilience Requirement A",
+          "riskLevel": "negligible",
+          "scenario": null,
+          "recoveryTime": null,
+          "recoveryPoint": null,
+          "redundancy": [],
+          "hardeningMeasures": [],
+          "backupSystems": [],
+          "alternateSites": [],
+          "supplyChain": [],
+          "communicationPlan": [],
+          "drillRequirements": [],
+          "elementIds": [],
+          "infrastructureIds": [],
+          "standards": [],
+          "insuranceImplications": [],
+          "climateAdaptation": [],
+          "ownerId": null,
+          "verificationPlan": null
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "costs": null,
   "delivery": null,

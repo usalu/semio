@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { relativeSourceInputs, readSourceInputContract } from "../../../🕸️dependencies/🟦️typescript/🟨️.mjs";
 
@@ -88,6 +88,7 @@ export async function testWgpuGeneratorOwnership(workspace: string): Promise<voi
     if (source.includes("/🤖️generated/")) assert.ok(project.targets["generate-frame-worker"].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/" + source.split("/🤖️generated/")[1]));
     else assert.ok(project.namedInputs.frameWorkerSources.includes("{workspaceRoot}/" + source) || browserSources.has(source), source);
   }
+  console.log(`[DEBUG] WGPU browser ownership modules=${observed.size} producers=${new Set(contract.outputRoots.map((output: any) => output.producer?.target ?? contract.target)).size} NxInputs=complete`);
 }
 
 /** 📦️ Exercises real WGPU bytes through native Nx cold publication, reuse, restoration and source invalidation. */
@@ -141,4 +142,40 @@ appendFileSync(join(root, ".runs"), name + "\\n");
   put(entry, readFileSync(join(root, entry), "utf8") + '\nconsole.log("wgpu-publication-source-change");\n');
   await run(); assert.deepEqual(runs().slice(cold.length), ["worker", "package"]);
   for (const [path, bytes] of expected) if (!path.includes("/🎞️frame-worker/")) assert.equal(readFileSync(join(root, path), "utf8"), bytes, path);
+}
+
+/** 🚪️ Verifies authored browser transport ownership against TypeScript's emitted import graph. */
+export async function testBrowserTransportOwnership(workspace: string): Promise<void> {
+  const ts = (await import("typescript")).default;
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧬️generator-ownership/🔣️.json"), "utf8")).browserTransport;
+  const taxonomy = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
+  const contract = taxonomy.generatorContracts["wgpu-frame-worker"], owned = new Set(contract.packageGeneration.browserProfile.sourceModulePaths);
+  for (const row of fixture.imports) {
+    const output = ts.transpileModule(readFileSync(join(workspace, row.source), "utf8"), { compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).outputText;
+    const tree = ts.createSourceFile(row.source, output, ts.ScriptTarget.Latest, true);
+    const imports = tree.statements.flatMap((node: any) => (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) ? [relative(workspace, resolve(workspace, dirname(row.source), node.moduleSpecifier.text)).replaceAll("\\", "/")] : []);
+    assert.ok(imports.includes(row.target), `${row.source} must consume ${row.target}`);
+    if (row.scope === "browser") {
+      assert.ok(owned.has(row.source), `Missing browser source: ${row.source}`);
+      assert.ok(owned.has(row.target), `Missing browser transport owner: ${row.target}`);
+      assert.ok(contract.inputPatterns.includes(row.target), `Missing generator input: ${row.target}`);
+    }
+    console.log(`[DEBUG] Browser transport import scope=${row.scope} source=${row.source} target=${row.target}`);
+  }
+  assert.ok(!owned.has(fixture.retiredInput));
+  assert.ok(!contract.inputPatterns.includes(fixture.retiredInput));
+}
+
+/** 🌐️ Verifies every current browser input through Bun's independent compiler file reader. */
+export async function testBrowserInputClosure(workspace: string): Promise<void> {
+  const taxonomy = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
+  const profile = taxonomy.generatorContracts["wgpu-frame-worker"].packageGeneration.browserProfile, observed = new Set<string>();
+  for (const entry of profile.entries) {
+    const result = await Bun.build({ entrypoints: [join(workspace, profile.ownerPath, entry.sourceRelativePath)], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, plugins: [{ name: "browser-transport-inputs", setup(build) { build.onLoad({ filter: /.*/ }, args => { observed.add(relative(workspace, args.path).replaceAll("\\", "/")); return undefined; }); } }] });
+    assert.equal(result.success, true, result.logs.map(String).join("\n"));
+  }
+  const expected = new Set<string>(profile.sourceModulePaths), missing = [...observed].filter(path => !expected.has(path)).sort(), unused = [...expected].filter(path => !observed.has(path)).sort();
+  console.log(`[DEBUG] Browser input compiler closure modules=${observed.size} missing=${JSON.stringify(missing)} unused=${JSON.stringify(unused)}`);
+  assert.deepEqual(missing, []);
+  assert.deepEqual(unused, []);
 }

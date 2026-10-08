@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use protocol::{Mutation as _, MutationDiff as _, OpBinary as _, OpText as _};
 
@@ -11,7 +12,7 @@ async fn logical_mutations_diff_and_codecs_round_trip() {
         assert_eq!(ZipMutation::decode_op(&bytes).expect("binary operation"), mutation);
         assert_eq!(protocol::apply_diff(&mutation.diff(&base).diff(), &base).unwrap(), {
             let mut next = base.clone();
-            apply_zip_mutation(&mut next, &mutation);
+            apply_mutation(&mut next, &mutation);
             next
         });
     }

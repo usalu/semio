@@ -51,7 +51,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
 //#endregion 🔖️Mutation
 
 /// 🧭️ The current `(x, y)` of every block a drag moves — each addressed block and its whole subtree, each once — and the addressed ids that do not exist.
-fn dragged_positions(payload: &DragBlocks, base: &NoteSnapshot) -> (std::collections::BTreeMap<String, (f64, f64)>, Vec<String>) {
+pub fn dragged_positions(payload: &DragBlocks, base: &NoteSnapshot) -> (std::collections::BTreeMap<String, (f64, f64)>, Vec<String>) {
     let mut moved = std::collections::BTreeMap::new();
     let mut missing = Vec::new();
     for id in &payload.ids {

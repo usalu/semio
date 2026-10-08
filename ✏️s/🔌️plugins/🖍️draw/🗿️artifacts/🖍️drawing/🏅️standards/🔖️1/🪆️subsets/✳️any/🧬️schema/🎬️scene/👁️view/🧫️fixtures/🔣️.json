@@ -81,9 +81,9 @@
         "visible": true,
         "segments": [],
         "image": {
-          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
           "width": 2,
-          "height": 1
+          "height": 1,
+          "assetId": "shared"
         }
       },
       {
@@ -102,9 +102,9 @@
         "visible": true,
         "segments": [],
         "image": {
-          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
           "width": 0.25,
-          "height": 0.5
+          "height": 0.5,
+          "assetId": "shared"
         }
       }
     ]

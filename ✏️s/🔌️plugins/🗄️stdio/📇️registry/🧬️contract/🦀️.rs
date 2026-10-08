@@ -23,6 +23,9 @@ pub mod registry;
 
 #[path = "✏️editing/🦀️.rs"]
 pub mod editing;
+/// 🪡️ Positional list deltas shared by the keyed lists of the Office packages.
+#[path = "🪡️list-delta/🦀️.rs"]
+pub mod list_delta;
 /// 🎬️ Bounded live-media exporters shared by retained Stdio artifact apps.
 #[path = "🎬️media-export/🦀️.rs"]
 pub mod media_export;
@@ -75,6 +78,137 @@ pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, opera
     *snapshot = kernel::apply_diff(outcome.diff(), snapshot).map_err(|error| MutationRefusal { code: error.code.to_string(), message: error.message.to_string() })?;
     Ok(())
 }
+
+/// ▶️ The central apply for a caller that holds a snapshot (an io drain, an editor, an oracle, a test): the mutation's sparse diff goes through
+/// [`kernel::apply_diff`], the only applier, and a rejected apply leaves `snapshot` untouched and answers a fatal outcome carrying the apply error.
+/// Artifacts re-export it under their own `apply_<artifact>_mutation` name; no schema module applies a diff itself.
+pub fn apply_mutation<P, M: kernel::Mutation<P>>(snapshot: &mut P, mutation: &M) -> kernel::MutationOutcome<M::Diff> {
+    let outcome = mutation.diff(snapshot);
+    match kernel::apply_diff(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => kernel::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
+}
+
+//#region ✂️DraftSplices
+/// ✂️ One range of an explicit text draft's change set as the window publishes it: `delete` scalars at `offset` of the text the draft
+/// started from were replaced by `insert`. Ranges ascend and never overlap; offsets and lengths count Unicode scalar values (`char`s).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DraftSplice {
+    pub offset: usize,
+    pub delete: usize,
+    pub insert: String,
+}
+
+fn splice_fault(code: &'static str, message: impl Into<String>) -> semio_framework_plugin::Fault {
+    semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+}
+
+/// 📥️ Reads the change set a text window published under the `splices` edit argument (JSON list of `{offset, delete, insert}`):
+/// the gesture, verbatim. Refuses a malformed list, an unknown member, and ranges that are not ascending and disjoint.
+pub fn window_kit_splices_argument(args: Option<&semio_framework_value::DslValue>) -> Result<Vec<DraftSplice>, semio_framework_plugin::Fault> {
+    draft_splices_from_json(&window_kit_required_text_argument(args, "splices")?)
+}
+
+/// 📥️ Reads a change set from its JSON text (the same list [`window_kit_splices_argument`] reads from the staged arguments).
+pub fn draft_splices_from_json(text: &str) -> Result<Vec<DraftSplice>, semio_framework_plugin::Fault> {
+    let parsed = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| splice_fault("stdio.window-kit.splices-json", format!("the change set is not JSON: {error}")))?;
+    let semio_framework_value::DslValue::Array(rows) = semio_framework_pack_json::to_dsl_value(&parsed) else {
+        return Err(splice_fault("stdio.window-kit.splices-shape", "the change set must be a list of ranges"));
+    };
+    let number = |value: &semio_framework_value::DslValue| match value {
+        semio_framework_value::DslValue::Number(number) => number.as_u64().and_then(|value| usize::try_from(value).ok()),
+        _ => None,
+    };
+    let mut splices = Vec::with_capacity(rows.len());
+    for row in &rows {
+        let semio_framework_value::DslValue::Object(members) = row else { return Err(splice_fault("stdio.window-kit.splices-shape", "every range must be an object")) };
+        let field = |name: &str| members.iter().find(|(key, _)| key == name).map(|(_, value)| value);
+        if members.iter().any(|(key, _)| !matches!(key.as_str(), "offset" | "delete" | "insert")) {
+            return Err(splice_fault("stdio.window-kit.splices-shape", "a range names only offset, delete and insert"));
+        }
+        let (Some(offset), Some(delete), Some(semio_framework_value::DslValue::String(insert))) = (field("offset").and_then(number), field("delete").and_then(number), field("insert")) else {
+            return Err(splice_fault("stdio.window-kit.splices-shape", "a range needs integer offset and delete and text insert"));
+        };
+        splices.push(DraftSplice { offset, delete, insert: insert.clone() });
+    }
+    if splices.windows(2).any(|pair| pair[1].offset < pair[0].offset.saturating_add(pair[0].delete)) {
+        return Err(splice_fault("stdio.window-kit.splices-order", "the ranges of a change set ascend and never overlap"));
+    }
+    Ok(splices)
+}
+
+/// ✂️ Applies a change set to `text` (ranges in the coordinates of `text`, counted in scalars); `None` when a range leaves the text.
+pub fn apply_draft_splices(text: &str, splices: &[DraftSplice]) -> Option<String> {
+    let scalars: Vec<char> = text.chars().collect();
+    let mut result = String::with_capacity(text.len());
+    let mut position = 0usize;
+    for splice in splices {
+        let end = splice.offset.checked_add(splice.delete)?;
+        if splice.offset < position || end > scalars.len() {
+            return None;
+        }
+        result.extend(&scalars[position..splice.offset]);
+        result.push_str(&splice.insert);
+        position = end;
+    }
+    result.extend(&scalars[position..]);
+    Some(result)
+}
+
+/// ↩️ The change set that undoes `splices` on the text they were taken from: every range puts back the scalars its forward range
+/// deleted (read from `text`) in place of the ones it inserted, at its place in the edited text. `None` when a range leaves `text`.
+pub fn invert_draft_splices(text: &str, splices: &[DraftSplice]) -> Option<Vec<DraftSplice>> {
+    let scalars: Vec<char> = text.chars().collect();
+    let mut shift: isize = 0;
+    let mut inverse = Vec::with_capacity(splices.len());
+    for splice in splices {
+        let end = splice.offset.checked_add(splice.delete)?;
+        if end > scalars.len() {
+            return None;
+        }
+        let offset = usize::try_from(isize::try_from(splice.offset).ok()?.checked_add(shift)?).ok()?;
+        inverse.push(DraftSplice { offset, delete: splice.insert.chars().count(), insert: scalars[splice.offset..end].iter().collect() });
+        shift = shift.checked_add(isize::try_from(splice.insert.chars().count()).ok()?)?.checked_sub(isize::try_from(splice.delete).ok()?)?;
+    }
+    Some(inverse)
+}
+//#endregion ✂️DraftSplices
+
+//#region 🔢️OrderedRows
+/// 🔢️ The index/key rows of a diff in ascending order — a new ordered list built from the read-only input, never an edited copy of a snapshot.
+pub fn ordered<T: Clone + Ord>(rows: &[T]) -> Vec<T> {
+    let mut sorted = Vec::with_capacity(rows.len());
+    sorted.extend_from_slice(rows);
+    sorted.sort_unstable();
+    sorted
+}
+
+/// 🔢️ The rows ascending with duplicates dropped.
+pub fn ordered_unique<T: Clone + Ord>(rows: &[T]) -> Vec<T> {
+    let mut sorted = ordered(rows);
+    sorted.dedup();
+    sorted
+}
+
+/// 🔢️ The rows descending with duplicates dropped (the order removals replay in so earlier indices stay valid).
+pub fn ordered_unique_descending<T: Clone + Ord>(rows: &[T]) -> Vec<T> {
+    let mut sorted = ordered_unique(rows);
+    sorted.reverse();
+    sorted
+}
+
+/// 🔢️ The rows stably ordered by `key` (the insertion order of positional additions).
+pub fn ordered_by_key<T: Clone, K: Ord>(rows: &[T], key: impl Fn(&T) -> K) -> Vec<T> {
+    let mut sorted = Vec::with_capacity(rows.len());
+    sorted.extend_from_slice(rows);
+    sorted.sort_by_key(key);
+    sorted
+}
+//#endregion 🔢️OrderedRows
 
 /// ↩️ [`kernel::Mutation::inverse`] against `base`, reachable from a crate that cannot name the kernel trait — the
 /// production inverse itself, never a copy of its rules.

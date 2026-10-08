@@ -17,7 +17,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLinetype {
         let Self { name, linetype } = self;
         protocol::MutationOutcome::new({
             let old = base.tables.linetypes.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
-            diff_set_linetype(name, linetype_diff_between(&old, linetype))
+            diff_set_linetype(name, linetype_field_changes(&old, linetype))
         })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {

@@ -1,0 +1,1531 @@
+{
+  "version": 1,
+  "audit": "🗑️generated/root-lossless-archive-audit-20/finite-proposed-subset.json",
+  "cases": [
+    {
+      "epoch": 127,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-127.json",
+      "bytes": 19745594,
+      "sha256": "4811291cf1dba8619ebf68c680013bc0d8aaa1f677e0baab5f243ec996f2738b",
+      "device": 16777233,
+      "inode": 318628603,
+      "phase": "completed"
+    },
+    {
+      "epoch": 128,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-128.json",
+      "bytes": 19769592,
+      "sha256": "1256cfbc852e9efd15b69e7ce9bb71b7409d4d7695c8129d16a26394c1e7ed6d",
+      "device": 16777233,
+      "inode": 318635095,
+      "phase": "completed"
+    },
+    {
+      "epoch": 129,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-129.json",
+      "bytes": 19832257,
+      "sha256": "e189d4abebcf69e60e45d4a32b95bac287fefa51464ae68bcf3679a1329cf9b5",
+      "device": 16777233,
+      "inode": 318646081,
+      "phase": "prepared"
+    },
+    {
+      "epoch": 130,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-130.json",
+      "bytes": 19835761,
+      "sha256": "1b912df3d8f7a0d757fcd5e325c799279266e79f5813ab4e9dccef4bf05c6faf",
+      "device": 16777233,
+      "inode": 318680705,
+      "phase": "completed"
+    },
+    {
+      "epoch": 131,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-131.json",
+      "bytes": 19912362,
+      "sha256": "eea5fc1e50cb02a115f5fba6c13382e124e4d27f2f00ce11e049f4738de9939c",
+      "device": 16777233,
+      "inode": 318711033,
+      "phase": "completed"
+    },
+    {
+      "epoch": 132,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-132.json",
+      "bytes": 19944136,
+      "sha256": "82eb3e1043ddc906db50fe69bfd5f54289464810bd716f9f50329538d03d5037",
+      "device": 16777233,
+      "inode": 318721313,
+      "phase": "completed"
+    },
+    {
+      "epoch": 133,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-133.json",
+      "bytes": 20021925,
+      "sha256": "c65394403277d66a43e28e152973b750aecb4944888aa9ee874b2291a23d452c",
+      "device": 16777233,
+      "inode": 318773957,
+      "phase": "completed"
+    },
+    {
+      "epoch": 134,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-134.json",
+      "bytes": 20065220,
+      "sha256": "e4f396ae180f428b9f91848a8eb592661e262156b2d6953c65c7db025ab29ca4",
+      "device": 16777233,
+      "inode": 318793760,
+      "phase": "completed"
+    },
+    {
+      "epoch": 135,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-135.json",
+      "bytes": 20113824,
+      "sha256": "87aff6d3f54bb1e5645c5bc7fbc1258988369685898a193c953dcf736e59cc72",
+      "device": 16777233,
+      "inode": 318796948,
+      "phase": "completed"
+    },
+    {
+      "epoch": 136,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-136.json",
+      "bytes": 20142498,
+      "sha256": "453d91aef1421f7c4d1bff46e0fdc22eb0b19b4c8bfb9d06fc73250cb56ac3c2",
+      "device": 16777233,
+      "inode": 318797898,
+      "phase": "completed"
+    },
+    {
+      "epoch": 137,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-137.json",
+      "bytes": 20199482,
+      "sha256": "0dee165205b151c75843728121a2fde9e2e1987abbb97a3a477be55bd7ca4726",
+      "device": 16777233,
+      "inode": 318813087,
+      "phase": "completed"
+    },
+    {
+      "epoch": 138,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-138.json",
+      "bytes": 20316465,
+      "sha256": "5ad7a48429fa20df76bd03726a061323bdd834d48f03f3d9979d19eae4483ec7",
+      "device": 16777233,
+      "inode": 318833773,
+      "phase": "completed"
+    },
+    {
+      "epoch": 139,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-139.json",
+      "bytes": 20417723,
+      "sha256": "e1e911430e64deb47766a252d7208f0c2b11b05dc2cfe26bcbd35c6907600f7e",
+      "device": 16777233,
+      "inode": 318851907,
+      "phase": "completed"
+    },
+    {
+      "epoch": 140,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-140.json",
+      "bytes": 20482235,
+      "sha256": "3ef1b5ff5f6bd7db275b9c47f80e58565e82e1cf78feef8e68ed3860b8e35d96",
+      "device": 16777233,
+      "inode": 318875850,
+      "phase": "completed"
+    },
+    {
+      "epoch": 141,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-141.json",
+      "bytes": 20519477,
+      "sha256": "629f65814833c91029d99a0665c61aa606283257d62aca5883d03869efb1c4fe",
+      "device": 16777233,
+      "inode": 319143731,
+      "phase": "completed"
+    },
+    {
+      "epoch": 142,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-142.json",
+      "bytes": 20574061,
+      "sha256": "a0a12717c57dcb260afaa79232bb09f534f6dcd828dc26d1600eb65ae2c14397",
+      "device": 16777233,
+      "inode": 319192172,
+      "phase": "completed"
+    },
+    {
+      "epoch": 143,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-143.json",
+      "bytes": 20607381,
+      "sha256": "698007fbe9686ed1300395aba3c5dbcbe6c2660766569cfaf5cd1ecf177e79c9",
+      "device": 16777233,
+      "inode": 319521028,
+      "phase": "completed"
+    },
+    {
+      "epoch": 144,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-144.json",
+      "bytes": 20847269,
+      "sha256": "7653bfded9e3a65a5ffbf2122587a55eae0636b72b72d2736015ceefabd07f1b",
+      "device": 16777233,
+      "inode": 319525018,
+      "phase": "completed"
+    },
+    {
+      "epoch": 145,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-145.json",
+      "bytes": 20885923,
+      "sha256": "a4e65bb174c6580ab7ecda980969987576150f7c5e2fb689c807af4ae1d49d44",
+      "device": 16777233,
+      "inode": 319873744,
+      "phase": "completed"
+    },
+    {
+      "epoch": 146,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-146.json",
+      "bytes": 20914517,
+      "sha256": "e4552fbe9e1e966c71ce5ec6738f02c25f0b1e3921c4830cf1e15f657e2ff5a4",
+      "device": 16777233,
+      "inode": 319874754,
+      "phase": "completed"
+    },
+    {
+      "epoch": 147,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-147.json",
+      "bytes": 20933317,
+      "sha256": "187fc733f6c904f90ced243d92a89273c0e3aa15d415310d4e4076580c8b81d9",
+      "device": 16777233,
+      "inode": 319931235,
+      "phase": "completed"
+    },
+    {
+      "epoch": 148,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-148.json",
+      "bytes": 20941966,
+      "sha256": "d481b01a024923283e381b9009acb8705045949e95dc410aa7a62dcaf967178f",
+      "device": 16777233,
+      "inode": 319932440,
+      "phase": "prepared"
+    },
+    {
+      "epoch": 149,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-149.json",
+      "bytes": 20958771,
+      "sha256": "f77e2f742f9f991c4dfcb7462c2144ac2922f4cef0f626d8569644968b117a94",
+      "device": 16777233,
+      "inode": 319934036,
+      "phase": "completed"
+    },
+    {
+      "epoch": 150,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-150.json",
+      "bytes": 20977124,
+      "sha256": "fb1ddd02dc7d19a98252ec50712772f47f14c5cf7f0a04cc61a7320704f584bb",
+      "device": 16777233,
+      "inode": 319939633,
+      "phase": "completed"
+    },
+    {
+      "epoch": 151,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-151.json",
+      "bytes": 20997536,
+      "sha256": "45d033498a6523e87ce154fb62dab962fc8fdc4cfd5e0b4c850eae135e1c5fd0",
+      "device": 16777233,
+      "inode": 319941870,
+      "phase": "completed"
+    },
+    {
+      "epoch": 152,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-152.json",
+      "bytes": 21016676,
+      "sha256": "78f74dcf028d36a3123a3bec74afb7906f6b6ae15748777cc9b24f01a460cefc",
+      "device": 16777233,
+      "inode": 319945730,
+      "phase": "completed"
+    },
+    {
+      "epoch": 153,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-153.json",
+      "bytes": 21025542,
+      "sha256": "da7dc1d3fd26ec281f4406aeef5ed884a6320fcde740b548e3ab7b5e559926d8",
+      "device": 16777233,
+      "inode": 319950442,
+      "phase": "completed"
+    },
+    {
+      "epoch": 154,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-154.json",
+      "bytes": 21047778,
+      "sha256": "8dc088a06f095937507cbf9a102107420b977ff790cca2a4f0e89343b0e3b096",
+      "device": 16777233,
+      "inode": 319951181,
+      "phase": "completed"
+    },
+    {
+      "epoch": 155,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-155.json",
+      "bytes": 21086045,
+      "sha256": "54d26aa679d2baa52c5b78ba1756a4d7133b86accb88100434e9a96609a757c5",
+      "device": 16777233,
+      "inode": 319961198,
+      "phase": "completed"
+    },
+    {
+      "epoch": 156,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-156.json",
+      "bytes": 21095389,
+      "sha256": "b6cc261261e8e5ceb1302551832113c4fc90d42729f42d4bf111779e831a1c83",
+      "device": 16777233,
+      "inode": 319963419,
+      "phase": "completed"
+    },
+    {
+      "epoch": 157,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-157.json",
+      "bytes": 21109007,
+      "sha256": "aa17d62639a77d604a59d5e95be8ff0c70b90eec6d7d3492868d76781c8bf2d9",
+      "device": 16777233,
+      "inode": 319963736,
+      "phase": "completed"
+    },
+    {
+      "epoch": 158,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-158.json",
+      "bytes": 21137853,
+      "sha256": "f690d9b5ae60c77b4d1355aaf6d4a39039514d037ec7b648520cc55d61ffb342",
+      "device": 16777233,
+      "inode": 319963834,
+      "phase": "completed"
+    },
+    {
+      "epoch": 159,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-159.json",
+      "bytes": 21233594,
+      "sha256": "f62103296bae0d3af5a8400f0943734f04c25af4ae31d5ce6585e22e6b7fb10e",
+      "device": 16777233,
+      "inode": 319980257,
+      "phase": "completed"
+    },
+    {
+      "epoch": 160,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-160.json",
+      "bytes": 21282350,
+      "sha256": "f85492284d64195a4f06bfa769f4c2106b84fae71dac09359e047b7b6695c961",
+      "device": 16777233,
+      "inode": 319985948,
+      "phase": "completed"
+    },
+    {
+      "epoch": 161,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-161.json",
+      "bytes": 21302302,
+      "sha256": "467d1fb1b608c2a53f06abd8dff961fe186efda0b645571b54cdaba581b4875b",
+      "device": 16777233,
+      "inode": 320187580,
+      "phase": "completed"
+    },
+    {
+      "epoch": 162,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-162.json",
+      "bytes": 21334682,
+      "sha256": "f8c6c40ccbfe29ecb71cc9202955de464e0fa421157667f6d90bc551d0a4a031",
+      "device": 16777233,
+      "inode": 320366234,
+      "phase": "completed"
+    },
+    {
+      "epoch": 163,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-163.json",
+      "bytes": 21335610,
+      "sha256": "247b247afc56ec4d9118c0bb66ca80cf7447abb760331dfa587acac51e868555",
+      "device": 16777233,
+      "inode": 320413922,
+      "phase": "completed"
+    },
+    {
+      "epoch": 164,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-164.json",
+      "bytes": 21350066,
+      "sha256": "6d83319f153e5646821ccbb75311a660edff36f085a5198e758009dd1d422174",
+      "device": 16777233,
+      "inode": 320416230,
+      "phase": "completed"
+    },
+    {
+      "epoch": 165,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-165.json",
+      "bytes": 21355394,
+      "sha256": "9325e06e85c2dd1948985e74562daace3e42594b999ec71a9468acdfaf843411",
+      "device": 16777233,
+      "inode": 320418328,
+      "phase": "completed"
+    },
+    {
+      "epoch": 166,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-166.json",
+      "bytes": 21361602,
+      "sha256": "11523184233b494ac020d398470e867ae500c606afcdee84adb7f65df5b6a8c0",
+      "device": 16777233,
+      "inode": 320418828,
+      "phase": "completed"
+    },
+    {
+      "epoch": 167,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-167.json",
+      "bytes": 21383036,
+      "sha256": "22f977613c980ab0d1232d30daa6274813e05b33ffd5acf46dcb588e0aeace78",
+      "device": 16777233,
+      "inode": 320419431,
+      "phase": "completed"
+    },
+    {
+      "epoch": 168,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-168.json",
+      "bytes": 21383036,
+      "sha256": "690ed0e5fd8cf16e2ceb9ba8f4cfa5e5d6deaad6be46113f94df21625a21b7d5",
+      "device": 16777233,
+      "inode": 320420778,
+      "phase": "completed"
+    },
+    {
+      "epoch": 169,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-169.json",
+      "bytes": 21389244,
+      "sha256": "0f9364c94eb5614afe109f9801676ab4e11f8d887d86d5409c33021962886886",
+      "device": 16777233,
+      "inode": 320420858,
+      "phase": "completed"
+    },
+    {
+      "epoch": 170,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-170.json",
+      "bytes": 21419816,
+      "sha256": "2d0519bb71e437fe90a1131871deab2f50868c2251f731457e32ebd5ad2a968a",
+      "device": 16777233,
+      "inode": 320425412,
+      "phase": "completed"
+    },
+    {
+      "epoch": 171,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-171.json",
+      "bytes": 21447446,
+      "sha256": "9922af3470f49bac0d5717157a803592de52f27ee1444e11ff6b58fdb06e88f6",
+      "device": 16777233,
+      "inode": 320431102,
+      "phase": "completed"
+    },
+    {
+      "epoch": 172,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-172.json",
+      "bytes": 21461522,
+      "sha256": "b265a2f5a195930c5a0eeaa03b51483e480f02a0ab5dfde29640d5fcb0030511",
+      "device": 16777233,
+      "inode": 320431430,
+      "phase": "completed"
+    },
+    {
+      "epoch": 173,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-173.json",
+      "bytes": 21476540,
+      "sha256": "527ed11e94bbb91560b94705c96c7bb6defa7191439f2d1576afd1d5bf5e87fa",
+      "device": 16777233,
+      "inode": 320432289,
+      "phase": "completed"
+    },
+    {
+      "epoch": 174,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-174.json",
+      "bytes": 21486140,
+      "sha256": "e0c593cb68a903bd5373595fd149331b646b2ecfec4f9552d0c8b11f50586be4",
+      "device": 16777233,
+      "inode": 320432896,
+      "phase": "completed"
+    },
+    {
+      "epoch": 175,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-175.json",
+      "bytes": 21516392,
+      "sha256": "d631e412a4eb5b1aaca1c992b2cc477020aaed7139b79e4225a04656680bf5a0",
+      "device": 16777233,
+      "inode": 320434767,
+      "phase": "completed"
+    },
+    {
+      "epoch": 176,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-176.json",
+      "bytes": 21545458,
+      "sha256": "3a31d51a911e2be3364d238b2f5e51d946bccd1831ce56c34a446c46c60291f6",
+      "device": 16777233,
+      "inode": 320436517,
+      "phase": "completed"
+    },
+    {
+      "epoch": 177,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-177.json",
+      "bytes": 21589492,
+      "sha256": "311eb2f80f7681b90c08bb6379c29150dedabfd2420516f931c29f149bba55fc",
+      "device": 16777233,
+      "inode": 320440868,
+      "phase": "completed"
+    },
+    {
+      "epoch": 178,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-178.json",
+      "bytes": 21601342,
+      "sha256": "d67e0771a81895806995afc0dd7fe170e21a5602dc85a16310556a9b1490f242",
+      "device": 16777233,
+      "inode": 320443707,
+      "phase": "completed"
+    },
+    {
+      "epoch": 179,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-179.json",
+      "bytes": 21686445,
+      "sha256": "c98fe70259cc7f2bf59b1ef73be1152df5079e32ef7513ec20d686174b7fd0d6",
+      "device": 16777233,
+      "inode": 320452951,
+      "phase": "completed"
+    },
+    {
+      "epoch": 180,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-180.json",
+      "bytes": 21756857,
+      "sha256": "81c7ad4ef310910f934d8bae1503756874d4a6d2101c044f5f7bab9b1e1bff76",
+      "device": 16777233,
+      "inode": 320453779,
+      "phase": "completed"
+    },
+    {
+      "epoch": 181,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-181.json",
+      "bytes": 21776626,
+      "sha256": "712259ca7939e17a65a74b0e778f45786bf41fc35a35403c064469a804270674",
+      "device": 16777233,
+      "inode": 320460485,
+      "phase": "completed"
+    },
+    {
+      "epoch": 182,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-182.json",
+      "bytes": 21797161,
+      "sha256": "93e75c3f3e6e6f9ee2ecb534548671afb88d806e6464450075735278ae1c6a87",
+      "device": 16777233,
+      "inode": 320474291,
+      "phase": "completed"
+    },
+    {
+      "epoch": 183,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-183.json",
+      "bytes": 21835541,
+      "sha256": "1e20fc5b5c5e75cc254f2d423b10992599506f18ddc2a0657f294df58627d0f1",
+      "device": 16777233,
+      "inode": 320482932,
+      "phase": "completed"
+    },
+    {
+      "epoch": 184,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-184.json",
+      "bytes": 21847036,
+      "sha256": "8cd57bd7f0c70a2cf45164e8272b5f7340f2145e35ff492e3d39c2d9c488b707",
+      "device": 16777233,
+      "inode": 320486211,
+      "phase": "completed"
+    },
+    {
+      "epoch": 185,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-185.json",
+      "bytes": 21889875,
+      "sha256": "c4ce20ad45a121094c8bc1c2aa792923a314df8fb43300153bdb7208ea49a765",
+      "device": 16777233,
+      "inode": 320488871,
+      "phase": "completed"
+    },
+    {
+      "epoch": 186,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-186.json",
+      "bytes": 21982953,
+      "sha256": "387f55869c545d9c94202fe9beb8a903cb6ade39f04b1a00dda8c4753e2fbda2",
+      "device": 16777233,
+      "inode": 320509415,
+      "phase": "completed"
+    },
+    {
+      "epoch": 187,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-187.json",
+      "bytes": 21980417,
+      "sha256": "7de5e3c5154276adb26bd7d504aec4b27e17cc7545b6434db30787b253cabf73",
+      "device": 16777233,
+      "inode": 320524583,
+      "phase": "completed"
+    },
+    {
+      "epoch": 188,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-188.json",
+      "bytes": 21993261,
+      "sha256": "b183d8354d281790639fcd9d7d627e72051244f902c755b985de9fa7caa90e3c",
+      "device": 16777233,
+      "inode": 320528314,
+      "phase": "completed"
+    },
+    {
+      "epoch": 189,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-189.json",
+      "bytes": 22024621,
+      "sha256": "99b698e5f788d094c014d9b16069ef6d9eb79630e40c2c09617be03bfb8f3c94",
+      "device": 16777233,
+      "inode": 320538673,
+      "phase": "completed"
+    },
+    {
+      "epoch": 190,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-190.json",
+      "bytes": 22069578,
+      "sha256": "477fcf3f78f65c444960d891a107b0d3acaa22e2000b06dc431a914b0c4507d9",
+      "device": 16777233,
+      "inode": 320548926,
+      "phase": "completed"
+    },
+    {
+      "epoch": 191,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-191.json",
+      "bytes": 22088854,
+      "sha256": "8043e151c4e06e27078fe1d5b9938f3177e20b88405e2de8d123c8c668a64e4b",
+      "device": 16777233,
+      "inode": 320553377,
+      "phase": "completed"
+    },
+    {
+      "epoch": 192,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-192.json",
+      "bytes": 22110982,
+      "sha256": "e8c70cb6d34b667f5eca170fc77ea2d031c281d5b3b59737e37785afbe4ffc41",
+      "device": 16777233,
+      "inode": 320562063,
+      "phase": "completed"
+    },
+    {
+      "epoch": 193,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-193.json",
+      "bytes": 22119510,
+      "sha256": "fdbcd9e7ad9ee04d2a170d51f733f4459c1a5cb0757d7b583e7674d310cd1c6e",
+      "device": 16777233,
+      "inode": 320574059,
+      "phase": "completed"
+    },
+    {
+      "epoch": 194,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-194.json",
+      "bytes": 22127946,
+      "sha256": "c3f40fe079184fec3850556d05ca76f517cd2342d41af7104ea81d6e38d04f7e",
+      "device": 16777233,
+      "inode": 320592512,
+      "phase": "completed"
+    },
+    {
+      "epoch": 195,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-195.json",
+      "bytes": 22128194,
+      "sha256": "9976857617605b4d6231b5fe30b199e8ea0c94115aaaabaedbe9b3d4088e35a6",
+      "device": 16777233,
+      "inode": 320594148,
+      "phase": "completed"
+    },
+    {
+      "epoch": 196,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-196.json",
+      "bytes": 22173522,
+      "sha256": "c7e8bf8d54e96022ff521b16f043b4dad413f3d2b808ef9e66ccf18d71754fe9",
+      "device": 16777233,
+      "inode": 320594810,
+      "phase": "completed"
+    },
+    {
+      "epoch": 197,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-197.json",
+      "bytes": 22225760,
+      "sha256": "86e54f5cd04199a5508e191e122e664ece13250bb356c10ab58cbbdde8181447",
+      "device": 16777233,
+      "inode": 320595205,
+      "phase": "completed"
+    },
+    {
+      "epoch": 198,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-198.json",
+      "bytes": 22249542,
+      "sha256": "19d6cc3b46b80e41de14d6d92953cd5297122084ce8a95ec06fc6b9f4507b18c",
+      "device": 16777233,
+      "inode": 320606801,
+      "phase": "completed"
+    },
+    {
+      "epoch": 199,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-199.json",
+      "bytes": 22266922,
+      "sha256": "66e799a0a89e114c967fc81fafe7202a828a79665e806c84658eccf9298059f2",
+      "device": 16777233,
+      "inode": 320607193,
+      "phase": "completed"
+    },
+    {
+      "epoch": 200,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-200.json",
+      "bytes": 22290102,
+      "sha256": "3702e20efd9207b84954d8531c0db60aff044741d4219eee4c23f3f4f050f423",
+      "device": 16777233,
+      "inode": 320607350,
+      "phase": "completed"
+    },
+    {
+      "epoch": 201,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-201.json",
+      "bytes": 22309484,
+      "sha256": "9debbbf8f3f6b1a685c6f023193867269a561d0fc9356231a4804688c2eea7e6",
+      "device": 16777233,
+      "inode": 320622731,
+      "phase": "completed"
+    },
+    {
+      "epoch": 202,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-202.json",
+      "bytes": 22359326,
+      "sha256": "e81a5efc2394661131a2d4086fe3e7566569b0ca573fe3137d79b794c2cf6abe",
+      "device": 16777233,
+      "inode": 320623483,
+      "phase": "completed"
+    },
+    {
+      "epoch": 203,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-203.json",
+      "bytes": 22385848,
+      "sha256": "6220710df3bd6d6bbcbeba1c9b1808bcb3836f88366bc561de7131dbe9ee6e7b",
+      "device": 16777233,
+      "inode": 320638904,
+      "phase": "completed"
+    },
+    {
+      "epoch": 204,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-204.json",
+      "bytes": 22390022,
+      "sha256": "4e918b3ed0ee85292e9b4a870270db8022a6eede3e6f68c424d8e7e3c58555c0",
+      "device": 16777233,
+      "inode": 320639379,
+      "phase": "completed"
+    },
+    {
+      "epoch": 205,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-205.json",
+      "bytes": 22411128,
+      "sha256": "74940c4a2a6985081f2ef7413ddac6b81cefba3f335c857608b1815833e66002",
+      "device": 16777233,
+      "inode": 320639551,
+      "phase": "completed"
+    },
+    {
+      "epoch": 206,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-206.json",
+      "bytes": 22427914,
+      "sha256": "a25c462c0d97f966ce1f4ebabfe036c97267cbc4f6891819c7e6add5c39b8738",
+      "device": 16777233,
+      "inode": 320641152,
+      "phase": "completed"
+    },
+    {
+      "epoch": 207,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-207.json",
+      "bytes": 22439012,
+      "sha256": "0f8c5282bf494cd887fa40446997ce82a2a202a9e5a79a74d1debebc0fedb48d",
+      "device": 16777233,
+      "inode": 320643278,
+      "phase": "completed"
+    },
+    {
+      "epoch": 208,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-208.json",
+      "bytes": 22464936,
+      "sha256": "61e93cdab64e597945dba8b27327df7b29c930ae577d65f6191377b30c34a453",
+      "device": 16777233,
+      "inode": 320644860,
+      "phase": "completed"
+    },
+    {
+      "epoch": 209,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-209.json",
+      "bytes": 22551227,
+      "sha256": "809a8fe7ea31b75bd288dc80ad1a23d5f027fe6f56bda1474c8864de40cc0df8",
+      "device": 16777233,
+      "inode": 320649376,
+      "phase": "completed"
+    },
+    {
+      "epoch": 210,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-210.json",
+      "bytes": 22621619,
+      "sha256": "c42e37d36d707fc1b9e3e84c2fbbeace26174bfcb1af1e40a5768c8213afb942",
+      "device": 16777233,
+      "inode": 320651534,
+      "phase": "completed"
+    },
+    {
+      "epoch": 211,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-211.json",
+      "bytes": 22678861,
+      "sha256": "55873913af64f78b75da2cf8c9a3f45079875dd0d503a2082f4bf580f19b6bdf",
+      "device": 16777233,
+      "inode": 320663433,
+      "phase": "completed"
+    },
+    {
+      "epoch": 212,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-212.json",
+      "bytes": 22729357,
+      "sha256": "464b8101dea302086fa05de2c81734fb92281968926b75cf6a9ae9f481a2d50f",
+      "device": 16777233,
+      "inode": 320694122,
+      "phase": "completed"
+    },
+    {
+      "epoch": 213,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-213.json",
+      "bytes": 22787563,
+      "sha256": "260dbc4b3e5a12587e428e29719be723948fabf7ffb618e1649565cafc2f6cc2",
+      "device": 16777233,
+      "inode": 321047366,
+      "phase": "completed"
+    },
+    {
+      "epoch": 214,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-214.json",
+      "bytes": 22823587,
+      "sha256": "d4e2841fcf5464e5c9f36a55d9ac34a1b7887d68427e6d5423b25a650a8473d5",
+      "device": 16777233,
+      "inode": 321099191,
+      "phase": "completed"
+    },
+    {
+      "epoch": 215,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-215.json",
+      "bytes": 22855927,
+      "sha256": "8fa0ca0d05ffe990fac098b8779224959e87288193abb277689c1abeed95f49d",
+      "device": 16777233,
+      "inode": 321166805,
+      "phase": "completed"
+    },
+    {
+      "epoch": 216,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-216.json",
+      "bytes": 22903153,
+      "sha256": "20cd679dfbfeee3e16d0dfe7b43319264a75e05a1c88815c22202c30de577c90",
+      "device": 16777233,
+      "inode": 321193356,
+      "phase": "completed"
+    },
+    {
+      "epoch": 217,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-217.json",
+      "bytes": 22939763,
+      "sha256": "4cfbc315911ff5a42dbc0083f98911d0337cd1526c8f23a816fe16196c3b9bee",
+      "device": 16777233,
+      "inode": 321201958,
+      "phase": "completed"
+    },
+    {
+      "epoch": 218,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-218.json",
+      "bytes": 22966567,
+      "sha256": "93ad2621f7d7ebf30f824165dc82ad0a30e4c92ca51fd7ca0709b1d83853b3c5",
+      "device": 16777233,
+      "inode": 321217143,
+      "phase": "completed"
+    },
+    {
+      "epoch": 219,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-219.json",
+      "bytes": 23001865,
+      "sha256": "1472651aa1ac7d5415ec8fff24266cdd8f806e97d3304327f4d673290bfbd4c9",
+      "device": 16777233,
+      "inode": 321227377,
+      "phase": "completed"
+    },
+    {
+      "epoch": 220,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-220.json",
+      "bytes": 23065680,
+      "sha256": "1b0b5798834dbe9330c688c70723de4688d4146c160bd1f9b9f441558e8dbd2c",
+      "device": 16777233,
+      "inode": 321230315,
+      "phase": "completed"
+    },
+    {
+      "epoch": 221,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-221.json",
+      "bytes": 23110418,
+      "sha256": "19d07adf28ce9d83069518b504302a619ae1704b07c6b83b392137a589c15c09",
+      "device": 16777233,
+      "inode": 321232599,
+      "phase": "completed"
+    },
+    {
+      "epoch": 222,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-222.json",
+      "bytes": 23137264,
+      "sha256": "3a7756a74d8595309a5f558c63d8b366d1250edf99ace9383b1ac0c15703c127",
+      "device": 16777233,
+      "inode": 321236749,
+      "phase": "completed"
+    },
+    {
+      "epoch": 223,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-223.json",
+      "bytes": 23167379,
+      "sha256": "492b2ce25d9b548a910af726d27ae098e499538857ef001c2f1beae606cd0dbb",
+      "device": 16777233,
+      "inode": 321241665,
+      "phase": "completed"
+    },
+    {
+      "epoch": 224,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-224.json",
+      "bytes": 23204956,
+      "sha256": "e17b586b6f0e291e25622b68e21d10b603a55768ae1bcf7a621e00932e602e21",
+      "device": 16777233,
+      "inode": 321243814,
+      "phase": "completed"
+    },
+    {
+      "epoch": 226,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-226.json",
+      "bytes": 23412915,
+      "sha256": "211e64d97444b80e51795ef0656e782307d43e837efc757492e37078b177d6e3",
+      "device": 16777233,
+      "inode": 321246669,
+      "phase": "completed"
+    },
+    {
+      "epoch": 227,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-227.json",
+      "bytes": 23491375,
+      "sha256": "40ee59e1b6164d86d7d3734ce9f3eb5ac44a2c67961938888acb5c3a5946a7cb",
+      "device": 16777233,
+      "inode": 321262665,
+      "phase": "completed"
+    },
+    {
+      "epoch": 228,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-228.json",
+      "bytes": 23568313,
+      "sha256": "826e90f4508a08524cdf37a1fe4ee330d92382bed56d381ba22e63eb3ad8e599",
+      "device": 16777233,
+      "inode": 321270837,
+      "phase": "completed"
+    },
+    {
+      "epoch": 229,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-229.json",
+      "bytes": 23612963,
+      "sha256": "8d0931d99d887e838f4cccf8fc4f3a8c8c6dfeec6568737c0245e2130a13365e",
+      "device": 16777233,
+      "inode": 321274282,
+      "phase": "completed"
+    },
+    {
+      "epoch": 230,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-230.json",
+      "bytes": 23675374,
+      "sha256": "c0939fc06b8013583fc66f47a623c2bfbaba4a35210f0265a92cb0da51c4b215",
+      "device": 16777233,
+      "inode": 321276667,
+      "phase": "prepared"
+    },
+    {
+      "epoch": 231,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-231.json",
+      "bytes": 23693969,
+      "sha256": "fce61a8bf8205a17fd5ef7301cffd43f85086306d89d475fe9cf99b9b5380d71",
+      "device": 16777233,
+      "inode": 321278463,
+      "phase": "completed"
+    },
+    {
+      "epoch": 232,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-232.json",
+      "bytes": 23964975,
+      "sha256": "8189d97dd2695b913cc28221531520debf1c3c5628640b7968c007474672bc8e",
+      "device": 16777233,
+      "inode": 321279403,
+      "phase": "completed"
+    },
+    {
+      "epoch": 233,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-233.json",
+      "bytes": 24168557,
+      "sha256": "10a6da01386c0a4a91adc4bbe03cf7b4377581b71eadc3608a474311fe83dce7",
+      "device": 16777233,
+      "inode": 321279792,
+      "phase": "completed"
+    },
+    {
+      "epoch": 234,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-234.json",
+      "bytes": 24222809,
+      "sha256": "c10c8ca9f0608cce245a2bba476e32c4678686f2c922986416a3e3138df9bc0a",
+      "device": 16777233,
+      "inode": 321295064,
+      "phase": "completed"
+    },
+    {
+      "epoch": 235,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-235.json",
+      "bytes": 24257677,
+      "sha256": "e9fefd085cb1cc33b682abe78f67f6b296f512ae4eca46d98d41949cef54c9dc",
+      "device": 16777233,
+      "inode": 321311656,
+      "phase": "completed"
+    },
+    {
+      "epoch": 236,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-236.json",
+      "bytes": 24350217,
+      "sha256": "75090ff16a98b4c00070182fadca5845dc6351f547ac89a31f434f403fae81e5",
+      "device": 16777233,
+      "inode": 321321433,
+      "phase": "completed"
+    },
+    {
+      "epoch": 237,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-237.json",
+      "bytes": 24533775,
+      "sha256": "b0b5ad34b848fb737fa1fa57e15556f48cf00c1897bc294999645bdefd19c74a",
+      "device": 16777233,
+      "inode": 321325730,
+      "phase": "completed"
+    },
+    {
+      "epoch": 238,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-238.json",
+      "bytes": 24652745,
+      "sha256": "e33305fdf7267b6f1f73ccbab8c7736f8bb10fc3770861a300159bfd9dcb8022",
+      "device": 16777233,
+      "inode": 321460082,
+      "phase": "completed"
+    },
+    {
+      "epoch": 239,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-239.json",
+      "bytes": 24603303,
+      "sha256": "b9c0c1954b249bd223189faf6eed37b7c658decf674252e26ecb8e36c158a7bd",
+      "device": 16777233,
+      "inode": 321565034,
+      "phase": "completed"
+    },
+    {
+      "epoch": 240,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-240.json",
+      "bytes": 24628923,
+      "sha256": "20a10732d883fe9b7ca6edbffe65fba932c40a205650f1aa17c7742ec03f9f3a",
+      "device": 16777233,
+      "inode": 321573302,
+      "phase": "completed"
+    },
+    {
+      "epoch": 241,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-241.json",
+      "bytes": 24734467,
+      "sha256": "32fd22aec2c256530943a53eb989d48e18ecf13d9420906c894bfc866ce36c2b",
+      "device": 16777233,
+      "inode": 321585506,
+      "phase": "completed"
+    },
+    {
+      "epoch": 242,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-242.json",
+      "bytes": 24882901,
+      "sha256": "e15c3ba674b05e84ecc5912f2333ab3380fb426718297ebd1f00d3ffa3e9f1ae",
+      "device": 16777233,
+      "inode": 321610533,
+      "phase": "completed"
+    },
+    {
+      "epoch": 243,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-243.json",
+      "bytes": 24968215,
+      "sha256": "4a91a842177d54792194332e64f5caa2faacdeeb31700dedd66826ef64fedd16",
+      "device": 16777233,
+      "inode": 321627554,
+      "phase": "completed"
+    },
+    {
+      "epoch": 244,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-244.json",
+      "bytes": 25240260,
+      "sha256": "7714071c93c1af88fb43ec7efa295cb12276e0723437918dc2a0edf9518d2823",
+      "device": 16777233,
+      "inode": 321636132,
+      "phase": "completed"
+    },
+    {
+      "epoch": 245,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-245.json",
+      "bytes": 25457853,
+      "sha256": "aedff012253fb863b9078c924646b82decdf9e1eea84289b12bc7fd281856733",
+      "device": 16777233,
+      "inode": 321654011,
+      "phase": "completed"
+    },
+    {
+      "epoch": 246,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-246.json",
+      "bytes": 25509297,
+      "sha256": "2326ce10d003a9265b6b223091df6dcf5faa4c90f8bba3f2835bc7ab4c9b622d",
+      "device": 16777233,
+      "inode": 321670450,
+      "phase": "completed"
+    },
+    {
+      "epoch": 247,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-247.json",
+      "bytes": 25543131,
+      "sha256": "5d82d7dddfaf8783c81bab16d8c9b626c21481c2e4071f3668f269e6b1d9f137",
+      "device": 16777233,
+      "inode": 322058922,
+      "phase": "completed"
+    },
+    {
+      "epoch": 248,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-248.json",
+      "bytes": 25578987,
+      "sha256": "fe6d4f3efe55e8d7fef43e0a1c00826f27b22742b4718559ce3f7e7e77569567",
+      "device": 16777233,
+      "inode": 322104148,
+      "phase": "completed"
+    },
+    {
+      "epoch": 249,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-249.json",
+      "bytes": 25638271,
+      "sha256": "32cdd6c5cc5e9efd9c9a19a2d0a8e0dc9f7969b85c49772ab3a259d8a214e206",
+      "device": 16777233,
+      "inode": 322144060,
+      "phase": "completed"
+    },
+    {
+      "epoch": 250,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-250.json",
+      "bytes": 25673233,
+      "sha256": "3e2d77db47809927963fe26f7bf7e91aceb2c97bc0ea863dc7bc6a490d0ea304",
+      "device": 16777233,
+      "inode": 322147146,
+      "phase": "completed"
+    },
+    {
+      "epoch": 251,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-251.json",
+      "bytes": 25720921,
+      "sha256": "697dcf0f902223a9088eacdb177fd74bf706bf9872dff6fa3f1cc11114376d5d",
+      "device": 16777233,
+      "inode": 322198098,
+      "phase": "completed"
+    },
+    {
+      "epoch": 252,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-252.json",
+      "bytes": 25808419,
+      "sha256": "9ef353eb3ccd5f2e43c5e98a19264d9c4921493b8e1770c3b0952cb934edd3c4",
+      "device": 16777233,
+      "inode": 322206926,
+      "phase": "completed"
+    },
+    {
+      "epoch": 253,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-253.json",
+      "bytes": 25987833,
+      "sha256": "f40300646d35610d39468481cb714ceb034a2cda820c752c34329141bfbf651d",
+      "device": 16777233,
+      "inode": 322284632,
+      "phase": "completed"
+    },
+    {
+      "epoch": 254,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-254.json",
+      "bytes": 26060373,
+      "sha256": "d0f7d48e7adb70e5beadfd716daa8de7d33382c407c99fe868a4fae15dbe8f6a",
+      "device": 16777233,
+      "inode": 322291313,
+      "phase": "completed"
+    },
+    {
+      "epoch": 256,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-256.json",
+      "bytes": 26162823,
+      "sha256": "596139d8c517bb3c42a4521cf8b0ff1048c410a00e7c5ec7f02dab0e81da83b1",
+      "device": 16777233,
+      "inode": 322301459,
+      "phase": "completed"
+    },
+    {
+      "epoch": 257,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-257.json",
+      "bytes": 26220036,
+      "sha256": "711a660bf4487ba85b5ba01fd940f261d16258f5dd01f0a4bf0318b80dc20cfc",
+      "device": 16777233,
+      "inode": 322303947,
+      "phase": "completed"
+    },
+    {
+      "epoch": 258,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-258.json",
+      "bytes": 26241234,
+      "sha256": "6bb1c8e550f14b128c466da6bfeb4b3731ae19432e4f1f1d60ae1144608871f7",
+      "device": 16777233,
+      "inode": 322328946,
+      "phase": "completed"
+    },
+    {
+      "epoch": 259,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-259.json",
+      "bytes": 26315104,
+      "sha256": "2df851c134afe38e493f78a90eefc1f08bf64be81db035f7a8e394d3ddb5d7a0",
+      "device": 16777233,
+      "inode": 322354540,
+      "phase": "completed"
+    },
+    {
+      "epoch": 261,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-261.json",
+      "bytes": 26361848,
+      "sha256": "fa73d932b1ea4593bf83ee2737d761b1926aa1a5830383c9405fb86b8d2d010a",
+      "device": 16777233,
+      "inode": 322356315,
+      "phase": "completed"
+    },
+    {
+      "epoch": 262,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-262.json",
+      "bytes": 26391700,
+      "sha256": "702f12b8f29c811a2f2b4463dde5377df164960e526977cf55b0c7ac599ca0bc",
+      "device": 16777233,
+      "inode": 322387818,
+      "phase": "completed"
+    },
+    {
+      "epoch": 263,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-263.json",
+      "bytes": 26421800,
+      "sha256": "8d5d8e43bb0f78535f6062d4186a1f919a9f75cc7289b287faa32e0831773fa7",
+      "device": 16777233,
+      "inode": 322389664,
+      "phase": "completed"
+    },
+    {
+      "epoch": 264,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-264.json",
+      "bytes": 26446629,
+      "sha256": "47557d5b5076bf8fec1eebb1719052edd2169135c58fd9518bba8ed887fee058",
+      "device": 16777233,
+      "inode": 322417346,
+      "phase": "completed"
+    },
+    {
+      "epoch": 265,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-265.json",
+      "bytes": 26514673,
+      "sha256": "e9c90b6cecf183163d8a9674bc7717fa3d037b93cfa353a5c6d2c506178ef201",
+      "device": 16777233,
+      "inode": 322417753,
+      "phase": "completed"
+    },
+    {
+      "epoch": 266,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-266.json",
+      "bytes": 26564325,
+      "sha256": "6360de65120bf1e82c765984dc7fd46bdbc1d5a11c34f9f687e60bfc72ecccd1",
+      "device": 16777233,
+      "inode": 322448652,
+      "phase": "completed"
+    },
+    {
+      "epoch": 267,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-267.json",
+      "bytes": 26638279,
+      "sha256": "b9b69cb4720d8ab5e9a8b5a3c622220aa41bd9946f314691bbbf196c493b74d6",
+      "device": 16777233,
+      "inode": 322451629,
+      "phase": "completed"
+    },
+    {
+      "epoch": 268,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-268.json",
+      "bytes": 26679173,
+      "sha256": "19de009c30da1075239ce064e712dd6540e217d4ee92bea7b7e55e941fd138da",
+      "device": 16777233,
+      "inode": 322452538,
+      "phase": "completed"
+    },
+    {
+      "epoch": 269,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-269.json",
+      "bytes": 26693713,
+      "sha256": "68021f7691386c3c692ab63d5796ce2361bc08679b30a96a8d517ff1aa8aef0a",
+      "device": 16777233,
+      "inode": 322455568,
+      "phase": "completed"
+    },
+    {
+      "epoch": 270,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-270.json",
+      "bytes": 26717523,
+      "sha256": "a2676358b129c8f0cac862e49cf1053f4b368a3d12c1f42415cfba92e6e20f85",
+      "device": 16777233,
+      "inode": 322461895,
+      "phase": "completed"
+    },
+    {
+      "epoch": 271,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-271.json",
+      "bytes": 26791375,
+      "sha256": "dccfd83160e3ac5c53ed2448d164a9f7088f0abe04babfcf3cd20a55b91bf07b",
+      "device": 16777233,
+      "inode": 322489354,
+      "phase": "completed"
+    },
+    {
+      "epoch": 272,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-272.json",
+      "bytes": 26832269,
+      "sha256": "e1ae731ab924cefcd630ef58df41771bacd58a9284feee9a31072834f5155c9f",
+      "device": 16777233,
+      "inode": 322489817,
+      "phase": "completed"
+    },
+    {
+      "epoch": 273,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-273.json",
+      "bytes": 26846771,
+      "sha256": "06fdb0aabd76c342236d6b73114dc434fcdb9e02160c0572fe838e49b88b4234",
+      "device": 16777233,
+      "inode": 322496258,
+      "phase": "completed"
+    },
+    {
+      "epoch": 274,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-274.json",
+      "bytes": 26921731,
+      "sha256": "8ac519f54e683c0d122e13b3fb697a5cd3c56a107cbd34ed97ce628a6b796f4f",
+      "device": 16777233,
+      "inode": 322498613,
+      "phase": "completed"
+    },
+    {
+      "epoch": 275,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-275.json",
+      "bytes": 26962625,
+      "sha256": "1e1b32fda7e3fc44ba6364a3b706ec984a96b7b3f51e6c4b17ad2ff332aea404",
+      "device": 16777233,
+      "inode": 322499762,
+      "phase": "completed"
+    },
+    {
+      "epoch": 277,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-277.json",
+      "bytes": 26998704,
+      "sha256": "f43651b64faccaf39f0a742a7bd97f508497b39421a6e1ebf13650409b19bdc0",
+      "device": 16777233,
+      "inode": 322507676,
+      "phase": "completed"
+    },
+    {
+      "epoch": 278,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-278.json",
+      "bytes": 27054692,
+      "sha256": "e5eda78d62b2704c8b1cf1e704aec550b37044e08905ca2ed812022763f8a4f8",
+      "device": 16777233,
+      "inode": 322511923,
+      "phase": "completed"
+    },
+    {
+      "epoch": 280,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-280.json",
+      "bytes": 27082294,
+      "sha256": "25c79454f1b7de3afe9c7b5194bd65e895923334cca0509960c2ab4ed835b6c8",
+      "device": 16777233,
+      "inode": 322563569,
+      "phase": "completed"
+    },
+    {
+      "epoch": 281,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-281.json",
+      "bytes": 27175370,
+      "sha256": "1878c24a7c9c1252a8f1094862e74101cca9ecc1073ff16630443983be7f5a35",
+      "device": 16777233,
+      "inode": 322571455,
+      "phase": "completed"
+    },
+    {
+      "epoch": 282,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-282.json",
+      "bytes": 27250084,
+      "sha256": "277e568ac7bf36acd9e01c6d05a5ee606740cf18dcbdbeff99f189578ddce042",
+      "device": 16777233,
+      "inode": 322586353,
+      "phase": "completed"
+    },
+    {
+      "epoch": 283,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-283.json",
+      "bytes": 27374997,
+      "sha256": "3dd36a779b7e9aae1702bb2bbf606ac08facada7707b398eaedafb252371aef9",
+      "device": 16777233,
+      "inode": 322598129,
+      "phase": "prepared"
+    },
+    {
+      "epoch": 284,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-284.json",
+      "bytes": 27381147,
+      "sha256": "ee66b927818cc471f85b314cd08844861ce298feff32461b8c164309fda8ba0a",
+      "device": 16777233,
+      "inode": 322604850,
+      "phase": "prepared"
+    },
+    {
+      "epoch": 285,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-285.json",
+      "bytes": 27440041,
+      "sha256": "b91a6d31cfd40fa84353ed361957dca8634d08b91910074dbe3c189889286fa2",
+      "device": 16777233,
+      "inode": 322612251,
+      "phase": "completed"
+    },
+    {
+      "epoch": 286,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-286.json",
+      "bytes": 27554613,
+      "sha256": "045cb5519e6d71f8242e8154dcef86ce1c3ef8ee24b981312f328640cf93fc6a",
+      "device": 16777233,
+      "inode": 322621289,
+      "phase": "completed"
+    },
+    {
+      "epoch": 287,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-287.json",
+      "bytes": 27679428,
+      "sha256": "5396547b3dc7ac04ac6f4d716be1192a08de7fb9b874803b9c08e324cfa60aed",
+      "device": 16777233,
+      "inode": 322632654,
+      "phase": "completed"
+    },
+    {
+      "epoch": 288,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-288.json",
+      "bytes": 27741192,
+      "sha256": "9342b31e8fc283471ab016bfd9b3312664429c5b225de36b7f28d0067ac32537",
+      "device": 16777233,
+      "inode": 322635088,
+      "phase": "completed"
+    },
+    {
+      "epoch": 289,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-289.json",
+      "bytes": 27822048,
+      "sha256": "8ae90026f8feac5b7d33df1f478ea1ecad217a11dd3709ee89371232d5547955",
+      "device": 16777233,
+      "inode": 322662461,
+      "phase": "completed"
+    },
+    {
+      "epoch": 290,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-290.json",
+      "bytes": 27865304,
+      "sha256": "9802216239a43e68432fd4ab0767dd809a77b66606e8ea498011a416ca9be53a",
+      "device": 16777233,
+      "inode": 322663269,
+      "phase": "completed"
+    },
+    {
+      "epoch": 292,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-292.json",
+      "bytes": 27948591,
+      "sha256": "a4bdb2ea291c9c32278e7ce5ce7a83ff9bf01d0c00326f9e995538e0e034f9c2",
+      "device": 16777233,
+      "inode": 322703290,
+      "phase": "completed"
+    },
+    {
+      "epoch": 293,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-293.json",
+      "bytes": 27984063,
+      "sha256": "bd373ea523e4b02dd7bf862742525437674f4d0e0a5f7b4aa9d9ac4400609a11",
+      "device": 16777233,
+      "inode": 322703557,
+      "phase": "completed"
+    },
+    {
+      "epoch": 294,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-294.json",
+      "bytes": 27999555,
+      "sha256": "58121f2af460582a54259e3c095f28adcdd540805b950c1178cb2e8989e4d048",
+      "device": 16777233,
+      "inode": 322703940,
+      "phase": "completed"
+    },
+    {
+      "epoch": 295,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-295.json",
+      "bytes": 28104673,
+      "sha256": "6594c32515725b2a835895619830be97013ccdf669d166494953354785312e74",
+      "device": 16777233,
+      "inode": 322711336,
+      "phase": "completed"
+    },
+    {
+      "epoch": 296,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-296.json",
+      "bytes": 28159832,
+      "sha256": "5dbdbae0bbe59249c8bfa0983241539b708ddcbe41fe6036ac4d7ec647999509",
+      "device": 16777233,
+      "inode": 322712568,
+      "phase": "completed"
+    },
+    {
+      "epoch": 297,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-297.json",
+      "bytes": 28245352,
+      "sha256": "4889e68f16837d014afa74da6e7191f7b3ac2d3ee1b3f79dc2c87b0cc1e9e7ff",
+      "device": 16777233,
+      "inode": 322727618,
+      "phase": "completed"
+    },
+    {
+      "epoch": 298,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-298.json",
+      "bytes": 28269578,
+      "sha256": "a50656ca76bbb139176814db58daadcc82062d345151d1e648a6a399f816ebd3",
+      "device": 16777233,
+      "inode": 322728679,
+      "phase": "completed"
+    },
+    {
+      "epoch": 301,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-301.json",
+      "bytes": 28277875,
+      "sha256": "c7cc0a3e3024bdffd99afacdcfafea72bb2c2d690501784736b3f978f043d5c6",
+      "device": 16777233,
+      "inode": 322732463,
+      "phase": "completed"
+    },
+    {
+      "epoch": 302,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-302.json",
+      "bytes": 28297656,
+      "sha256": "e1553ecdf21b10f953224491169b4a753a6f63ecde531e7d349f232633a19666",
+      "device": 16777233,
+      "inode": 322746154,
+      "phase": "completed"
+    },
+    {
+      "epoch": 303,
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/root-launch-seed/registration-303.json",
+      "bytes": 28385117,
+      "sha256": "854e3c1e86c6a4fe3d26a48d74d0315c402ef9fb3f18ec837e40e59c13991ae4",
+      "device": 16777233,
+      "inode": 322747423,
+      "phase": "completed"
+    }
+  ],
+  "maximumBytes": 34359738368,
+  "maximumWork": 262144,
+  "budgetMs": 300000,
+  "chunkBytes": 1048576
+}

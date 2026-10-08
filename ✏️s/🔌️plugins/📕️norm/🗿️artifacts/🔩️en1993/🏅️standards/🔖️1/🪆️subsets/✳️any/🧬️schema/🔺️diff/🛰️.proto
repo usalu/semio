@@ -2,20 +2,32 @@
 syntax = "proto3";
 package semio.s.norm.en1993.diff;
 
-message En1993MaterialAddition {
-  optional string after = 1;
+message En1993MaterialRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993MaterialInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993MaterialRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993MaterialModification {
-  string key = 1;
+  string id = 1;
   En1993MaterialPatch patch = 2;
 }
 
 message En1993MaterialDelta {
-  repeated string removed = 1;
-  repeated En1993MaterialAddition added = 2;
-  repeated En1993MaterialModification modified = 3;
+  repeated En1993MaterialRemoval removed = 1;
+  repeated En1993MaterialInsertion inserted = 2;
+  repeated En1993MaterialRelocation moved = 3;
+  repeated En1993MaterialModification modified = 4;
 }
 
 message En1993MaterialPatch {
@@ -28,20 +40,32 @@ message En1993MaterialPatch {
   optional string kind = 7;
 }
 
-message En1993SectionAddition {
-  optional string after = 1;
+message En1993SectionRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993SectionInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993SectionRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993SectionModification {
-  string key = 1;
+  string id = 1;
   En1993SectionPatch patch = 2;
 }
 
 message En1993SectionDelta {
-  repeated string removed = 1;
-  repeated En1993SectionAddition added = 2;
-  repeated En1993SectionModification modified = 3;
+  repeated En1993SectionRemoval removed = 1;
+  repeated En1993SectionInsertion inserted = 2;
+  repeated En1993SectionRelocation moved = 3;
+  repeated En1993SectionModification modified = 4;
 }
 
 message En1993SectionPatch {
@@ -66,20 +90,32 @@ message En1993SectionPatch {
   optional double area_net = 19;
 }
 
-message En1993MemberAddition {
-  optional string after = 1;
+message En1993MemberRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993MemberInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993MemberRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993MemberModification {
-  string key = 1;
+  string id = 1;
   En1993MemberPatch patch = 2;
 }
 
 message En1993MemberDelta {
-  repeated string removed = 1;
-  repeated En1993MemberAddition added = 2;
-  repeated En1993MemberModification modified = 3;
+  repeated En1993MemberRemoval removed = 1;
+  repeated En1993MemberInsertion inserted = 2;
+  repeated En1993MemberRelocation moved = 3;
+  repeated En1993MemberModification modified = 4;
 }
 
 message En1993MemberPatch {
@@ -99,20 +135,32 @@ message En1993MemberPatch {
   optional string analysis = 14;
 }
 
-message En1993LoadCaseAddition {
-  optional string after = 1;
+message En1993LoadCaseRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993LoadCaseInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993LoadCaseRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993LoadCaseModification {
-  string key = 1;
+  string id = 1;
   En1993LoadCasePatch patch = 2;
 }
 
 message En1993LoadCaseDelta {
-  repeated string removed = 1;
-  repeated En1993LoadCaseAddition added = 2;
-  repeated En1993LoadCaseModification modified = 3;
+  repeated En1993LoadCaseRemoval removed = 1;
+  repeated En1993LoadCaseInsertion inserted = 2;
+  repeated En1993LoadCaseRelocation moved = 3;
+  repeated En1993LoadCaseModification modified = 4;
 }
 
 message En1993LoadCasePatch {
@@ -121,20 +169,32 @@ message En1993LoadCasePatch {
   optional string category = 3;
 }
 
-message En1993MemberActionAddition {
-  optional string after = 1;
+message En1993MemberActionRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993MemberActionInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993MemberActionRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993MemberActionModification {
-  string key = 1;
+  string id = 1;
   En1993MemberActionPatch patch = 2;
 }
 
 message En1993MemberActionDelta {
-  repeated string removed = 1;
-  repeated En1993MemberActionAddition added = 2;
-  repeated En1993MemberActionModification modified = 3;
+  repeated En1993MemberActionRemoval removed = 1;
+  repeated En1993MemberActionInsertion inserted = 2;
+  repeated En1993MemberActionRelocation moved = 3;
+  repeated En1993MemberActionModification modified = 4;
 }
 
 message En1993MemberActionPatch {
@@ -143,20 +203,32 @@ message En1993MemberActionPatch {
   optional bytes action = 3;
 }
 
-message En1993JointAddition {
-  optional string after = 1;
+message En1993JointRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993JointInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993JointRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993JointModification {
-  string key = 1;
+  string id = 1;
   En1993JointPatch patch = 2;
 }
 
 message En1993JointDelta {
-  repeated string removed = 1;
-  repeated En1993JointAddition added = 2;
-  repeated En1993JointModification modified = 3;
+  repeated En1993JointRemoval removed = 1;
+  repeated En1993JointInsertion inserted = 2;
+  repeated En1993JointRelocation moved = 3;
+  repeated En1993JointModification modified = 4;
 }
 
 message En1993JointPatch {
@@ -185,20 +257,32 @@ message En1993JointPatch {
   optional uint32 friction_surfaces = 23;
 }
 
-message En1993FatigueDetailAddition {
-  optional string after = 1;
+message En1993FatigueDetailRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993FatigueDetailInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993FatigueDetailRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993FatigueDetailModification {
-  string key = 1;
+  string id = 1;
   En1993FatigueDetailPatch patch = 2;
 }
 
 message En1993FatigueDetailDelta {
-  repeated string removed = 1;
-  repeated En1993FatigueDetailAddition added = 2;
-  repeated En1993FatigueDetailModification modified = 3;
+  repeated En1993FatigueDetailRemoval removed = 1;
+  repeated En1993FatigueDetailInsertion inserted = 2;
+  repeated En1993FatigueDetailRelocation moved = 3;
+  repeated En1993FatigueDetailModification modified = 4;
 }
 
 message En1993FatigueDetailPatch {
@@ -208,20 +292,32 @@ message En1993FatigueDetailPatch {
   optional bytes spectrum = 4;
 }
 
-message En1993FireExposureAddition {
-  optional string after = 1;
+message En1993FireExposureRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993FireExposureInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993FireExposureRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993FireExposureModification {
-  string key = 1;
+  string id = 1;
   En1993FireExposurePatch patch = 2;
 }
 
 message En1993FireExposureDelta {
-  repeated string removed = 1;
-  repeated En1993FireExposureAddition added = 2;
-  repeated En1993FireExposureModification modified = 3;
+  repeated En1993FireExposureRemoval removed = 1;
+  repeated En1993FireExposureInsertion inserted = 2;
+  repeated En1993FireExposureRelocation moved = 3;
+  repeated En1993FireExposureModification modified = 4;
 }
 
 message En1993FireExposurePatch {
@@ -236,20 +332,32 @@ message En1993FireExposurePatch {
   optional double protection_specific_heat = 9;
 }
 
-message En1993ColdFormedMemberAddition {
-  optional string after = 1;
+message En1993ColdFormedMemberRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993ColdFormedMemberInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993ColdFormedMemberRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993ColdFormedMemberModification {
-  string key = 1;
+  string id = 1;
   En1993ColdFormedMemberPatch patch = 2;
 }
 
 message En1993ColdFormedMemberDelta {
-  repeated string removed = 1;
-  repeated En1993ColdFormedMemberAddition added = 2;
-  repeated En1993ColdFormedMemberModification modified = 3;
+  repeated En1993ColdFormedMemberRemoval removed = 1;
+  repeated En1993ColdFormedMemberInsertion inserted = 2;
+  repeated En1993ColdFormedMemberRelocation moved = 3;
+  repeated En1993ColdFormedMemberModification modified = 4;
 }
 
 message En1993ColdFormedMemberPatch {
@@ -262,20 +370,32 @@ message En1993ColdFormedMemberPatch {
   optional bytes actions = 7;
 }
 
-message En1993PlatedPanelAddition {
-  optional string after = 1;
+message En1993PlatedPanelRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993PlatedPanelInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993PlatedPanelRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993PlatedPanelModification {
-  string key = 1;
+  string id = 1;
   En1993PlatedPanelPatch patch = 2;
 }
 
 message En1993PlatedPanelDelta {
-  repeated string removed = 1;
-  repeated En1993PlatedPanelAddition added = 2;
-  repeated En1993PlatedPanelModification modified = 3;
+  repeated En1993PlatedPanelRemoval removed = 1;
+  repeated En1993PlatedPanelInsertion inserted = 2;
+  repeated En1993PlatedPanelRelocation moved = 3;
+  repeated En1993PlatedPanelModification modified = 4;
 }
 
 message En1993PlatedPanelPatch {
@@ -287,20 +407,32 @@ message En1993PlatedPanelPatch {
   optional bytes actions = 6;
 }
 
-message En1993SiloShellAddition {
-  optional string after = 1;
+message En1993SiloShellRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993SiloShellInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993SiloShellRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993SiloShellModification {
-  string key = 1;
+  string id = 1;
   En1993SiloShellPatch patch = 2;
 }
 
 message En1993SiloShellDelta {
-  repeated string removed = 1;
-  repeated En1993SiloShellAddition added = 2;
-  repeated En1993SiloShellModification modified = 3;
+  repeated En1993SiloShellRemoval removed = 1;
+  repeated En1993SiloShellInsertion inserted = 2;
+  repeated En1993SiloShellRelocation moved = 3;
+  repeated En1993SiloShellModification modified = 4;
 }
 
 message En1993SiloShellPatch {
@@ -312,20 +444,32 @@ message En1993SiloShellPatch {
   optional double fy = 6;
 }
 
-message En1993TensionComponentAddition {
-  optional string after = 1;
+message En1993TensionComponentRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993TensionComponentInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993TensionComponentRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993TensionComponentModification {
-  string key = 1;
+  string id = 1;
   En1993TensionComponentPatch patch = 2;
 }
 
 message En1993TensionComponentDelta {
-  repeated string removed = 1;
-  repeated En1993TensionComponentAddition added = 2;
-  repeated En1993TensionComponentModification modified = 3;
+  repeated En1993TensionComponentRemoval removed = 1;
+  repeated En1993TensionComponentInsertion inserted = 2;
+  repeated En1993TensionComponentRelocation moved = 3;
+  repeated En1993TensionComponentModification modified = 4;
 }
 
 message En1993TensionComponentPatch {
@@ -334,20 +478,32 @@ message En1993TensionComponentPatch {
   optional bytes actions = 3;
 }
 
-message En1993BridgeFatigueAddition {
-  optional string after = 1;
+message En1993BridgeFatigueRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993BridgeFatigueInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993BridgeFatigueRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993BridgeFatigueModification {
-  string key = 1;
+  string id = 1;
   En1993BridgeFatiguePatch patch = 2;
 }
 
 message En1993BridgeFatigueDelta {
-  repeated string removed = 1;
-  repeated En1993BridgeFatigueAddition added = 2;
-  repeated En1993BridgeFatigueModification modified = 3;
+  repeated En1993BridgeFatigueRemoval removed = 1;
+  repeated En1993BridgeFatigueInsertion inserted = 2;
+  repeated En1993BridgeFatigueRelocation moved = 3;
+  repeated En1993BridgeFatigueModification modified = 4;
 }
 
 message En1993BridgeFatiguePatch {
@@ -359,20 +515,32 @@ message En1993BridgeFatiguePatch {
   optional string method = 6;
 }
 
-message En1993TowerLegAddition {
-  optional string after = 1;
+message En1993TowerLegRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993TowerLegInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993TowerLegRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993TowerLegModification {
-  string key = 1;
+  string id = 1;
   En1993TowerLegPatch patch = 2;
 }
 
 message En1993TowerLegDelta {
-  repeated string removed = 1;
-  repeated En1993TowerLegAddition added = 2;
-  repeated En1993TowerLegModification modified = 3;
+  repeated En1993TowerLegRemoval removed = 1;
+  repeated En1993TowerLegInsertion inserted = 2;
+  repeated En1993TowerLegRelocation moved = 3;
+  repeated En1993TowerLegModification modified = 4;
 }
 
 message En1993TowerLegPatch {
@@ -382,20 +550,32 @@ message En1993TowerLegPatch {
   optional bytes actions = 4;
 }
 
-message En1993PileAddition {
-  optional string after = 1;
+message En1993PileRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993PileInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993PileRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993PileModification {
-  string key = 1;
+  string id = 1;
   En1993PilePatch patch = 2;
 }
 
 message En1993PileDelta {
-  repeated string removed = 1;
-  repeated En1993PileAddition added = 2;
-  repeated En1993PileModification modified = 3;
+  repeated En1993PileRemoval removed = 1;
+  repeated En1993PileInsertion inserted = 2;
+  repeated En1993PileRelocation moved = 3;
+  repeated En1993PileModification modified = 4;
 }
 
 message En1993PilePatch {
@@ -407,20 +587,32 @@ message En1993PilePatch {
   optional bytes actions = 6;
 }
 
-message En1993CraneRunwayAddition {
-  optional string after = 1;
+message En1993CraneRunwayRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1993CraneRunwayInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1993CraneRunwayRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1993CraneRunwayModification {
-  string key = 1;
+  string id = 1;
   En1993CraneRunwayPatch patch = 2;
 }
 
 message En1993CraneRunwayDelta {
-  repeated string removed = 1;
-  repeated En1993CraneRunwayAddition added = 2;
-  repeated En1993CraneRunwayModification modified = 3;
+  repeated En1993CraneRunwayRemoval removed = 1;
+  repeated En1993CraneRunwayInsertion inserted = 2;
+  repeated En1993CraneRunwayRelocation moved = 3;
+  repeated En1993CraneRunwayModification modified = 4;
 }
 
 message En1993CraneRunwayPatch {

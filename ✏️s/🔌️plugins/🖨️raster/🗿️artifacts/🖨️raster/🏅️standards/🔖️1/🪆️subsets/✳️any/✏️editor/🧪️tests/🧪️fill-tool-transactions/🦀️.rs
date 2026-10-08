@@ -6,7 +6,7 @@
 
 use super::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixture};
 use super::*;
-use crate::mutations::apply_raster_mutation;
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::{RasterMutation, RasterSnapshot};
 use crate::mutations::fill_region::{FillRegion as FillRegionLeaf, RasterSeed};
 use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravelStage};

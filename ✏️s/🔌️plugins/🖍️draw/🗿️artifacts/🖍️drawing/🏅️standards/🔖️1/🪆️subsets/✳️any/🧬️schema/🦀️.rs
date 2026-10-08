@@ -201,7 +201,7 @@ pub struct DrawingSceneText {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingSceneImage {
-    pub src: String,
+    pub asset_id: String,
     pub width: f64,
     pub height: f64,
 }
@@ -623,7 +623,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                     image: None,
                 }),
                 DrawingLayerNode::Image(image) => {
-                    let src = doc.assets.get(&image.image_key).map(|asset| if asset.data.bytes().take(5).eq(b"data:".iter().copied()) { asset.data.to_string_owner() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
+                    let asset_id = image.image_key.to_string_owner();
                     out.push(DrawingSceneNode {
                         id: image.base.id.to_string_owner(),
                         groups:Vec::new(),
@@ -636,7 +636,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                         visible: image.base.visible,
                         fill_rule: None,
                         text: None,
-                        image: Some(DrawingSceneImage { src, width: image.width, height: image.height }),
+                        image: Some(DrawingSceneImage { asset_id, width: image.width, height: image.height }),
                     });
                 }
                 _ => {
@@ -841,17 +841,7 @@ pub fn create_layer_by_kind(kind: &str) -> DrawingLayerNode {
     }
 }
 
-pub fn hex_to_rgba(hex: &str, alpha: f64) -> [f64; 4] {
-    let normalized = hex.trim_start_matches('#');
-    let value = if normalized.len() == 3 { normalized.chars().map(|c| format!("{c}{c}")).collect::<String>() } else { normalized.to_string() };
-    let parse = |start: usize| u8::from_str_radix(&value[start..start + 2], 16).unwrap_or(0) as f64 / 255.0;
-    [parse(0), parse(2), parse(4), alpha]
-}
 
-pub fn rgba_to_hex(color: [f64; 4]) -> String {
-    let channel = |value: f64| format!("{:02x}", (value.clamp(0.0, 1.0) * 255.0).round() as u8);
-    format!("#{}{}{}", channel(color[0]), channel(color[1]), channel(color[2]))
-}
 //#endregion 🔖️Tree
 
 //#region 🔖️SegmentGeometry
@@ -1134,24 +1124,20 @@ fn resolve_boolean_layer_segments(doc: &DrawingSnapshot, boolean: &DrawingBoolea
     }
 }
 
-/// 🖼️ Decodes a (possibly resized) PNG asset into an 8-bit luma buffer, matching the premigration canvas-based decode.
-fn decode_drawing_image_asset_luma(asset: &DrawingImageAsset) -> Option<(u32, u32, Vec<u8>)> {
-    let data = asset.data.to_string_owner();
-    let base64_data = match data.strip_prefix("data:") {
-        Some(rest) => rest.split_once(',').map_or(rest, |(_, data)| data),
-        None => data.as_str(),
-    };
-    let bytes = base64_codec::base64_standard_decode(base64_data).ok()?;
-    let decoded = semio_framework_pixels::decode_png(&bytes).ok()?;
-    let target_width = asset.width.unwrap_or(decoded.width);
-    let target_height = asset.height.unwrap_or(decoded.height);
-    let rgba = if target_width == decoded.width && target_height == decoded.height { decoded } else { semio_framework_pixels::resize_bilinear(&decoded, target_width, target_height) };
-    let mut luma = vec![0u8; (target_width as usize) * (target_height as usize)];
-    for (index, pixel) in rgba.pixels.as_chunks::<4>().0.iter().enumerate() {
-        let [r, g, b, a] = [pixel[0], pixel[1], pixel[2], pixel[3]];
-        luma[index] = ((r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) * (a as f64 / 255.0)).round() as u8;
-    }
-    Some((target_width, target_height, luma))
+/// 🖼️ Project intrinsic ordered RGBA samples into the first-party raster vocabulary.
+pub fn drawing_image_samples(asset: &DrawingImageAsset) -> Option<semio_framework_pixels::RasterImage> {
+    let count=(asset.width as usize).checked_mul(asset.height as usize)?;
+    if count==0||count>16_777_216||asset.samples.len()!=count{return None;}
+    let pixels=asset.samples.iter().flat_map(|sample|sample.iter().copied()).collect();
+    Some(semio_framework_pixels::RasterImage{width:asset.width,height:asset.height,pixels})
+}
+
+/// 🌗️ Alpha-weighted luminance is pure sample algebra independent of physical admission.
+fn drawing_image_asset_luma(asset: &DrawingImageAsset) -> Option<(u32,u32,Vec<u8>)> {
+    let count=(asset.width as usize).checked_mul(asset.height as usize)?;
+    if count==0||count>16_777_216||asset.samples.len()!=count{return None;}
+    let luma=asset.samples.iter().map(|[r,g,b,a]|((299.0*(*r as f64)+587.0*(*g as f64)+114.0*(*b as f64))*(*a as f64)/255000.0).round()as u8).collect();
+    Some((asset.width,asset.height,luma))
 }
 
 /// 📐️ Premigration artboard resolution: explicit artboard wins, else layer bounds excluding group/boolean/trace kinds.
@@ -1185,7 +1171,7 @@ fn resolve_trace_layer_segments(doc: &DrawingSnapshot, trace: &DrawingTraceBody)
         return Vec::new();
     };
     let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
-    let Some((width, height, luma)) = decode_drawing_image_asset_luma(asset) else { return Vec::new() };
+    let Some((width, height, luma)) = drawing_image_asset_luma(asset) else { return Vec::new() };
     let traced = match semio_framework_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
         Ok(segments) => from_kernel_segments(&segments),
         Err(_) => return Vec::new(),

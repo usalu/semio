@@ -69,16 +69,16 @@ pub struct NoteBlocksDelta {
     pub rows: Vec<NoteBlockRow>,
 }
 
-/// 🧱️ One block-tree row. `parent_id` is `None` for the document root; `index` is the destination position in the container as it stands when the row runs (for a move: after the block left its old container).
+/// 🧱️ One positional block-tree row. `parent_id` is `None` for the document root; every index is a position in the container as it stands when the row runs, so a row is its own inverse recipe: `add` names where the block lands, `remove` where it stood, `move` where it came from and where it goes (the destination index counts after the block left its origin).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "row", rename_all = "camelCase")]
 pub enum NoteBlockRow {
     #[value(rename = "add", rename_all = "camelCase")]
     Add { parent_id: Option<String>, index: usize, block: NoteBlockNode },
     #[value(rename = "remove", rename_all = "camelCase")]
-    Remove { id: String },
+    Remove { id: String, parent_id: Option<String>, index: usize },
     #[value(rename = "move", rename_all = "camelCase")]
-    Move { id: String, parent_id: Option<String>, index: usize },
+    Move { id: String, from_parent_id: Option<String>, from_index: usize, parent_id: Option<String>, index: usize },
     #[value(rename = "patch", rename_all = "camelCase")]
     Patch { id: String, patch: NoteBlockPatch },
 }
@@ -108,18 +108,18 @@ pub struct NoteBlockPatch {
     pub color: Option<[f64; 4]>,
 }
 
-/// 📊️ One ordered structural edit of a table block's grid.
+/// 📊️ One ordered structural edit of a table block's grid; a removal carries what it removed, so an edit is its own inverse recipe.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "edit", rename_all = "camelCase")]
 pub enum NoteTableEdit {
     #[value(rename = "insertRow", rename_all = "camelCase")]
     InsertRow { index: usize, cells: Vec<NoteTableCell> },
     #[value(rename = "removeRow", rename_all = "camelCase")]
-    RemoveRow { index: usize },
+    RemoveRow { index: usize, cells: Vec<NoteTableCell> },
     #[value(rename = "insertColumn", rename_all = "camelCase")]
     InsertColumn { index: usize, name: String, cells: Vec<NoteTableCell> },
     #[value(rename = "removeColumn", rename_all = "camelCase")]
-    RemoveColumn { index: usize },
+    RemoveColumn { index: usize, name: String, cells: Vec<NoteTableCell> },
 }
 
 /// 🗂️ Keyed asset delta: at most one row per key (a replace is one `replace` row), rows kept in key order.
@@ -186,7 +186,7 @@ fn common_values(block: &NoteBlockNode) -> NoteBlockPatch {
 }
 
 fn mismatch(slot: &str) -> MutationApplyError {
-    MutationApplyError::new("mutation.apply.invalid-target", format!("block kind has no `{slot}` slot")).at([slot.to_string()])
+    MutationApplyError::new("mutation.apply.invalid-base", format!("block kind has no `{slot}` slot")).at([slot.to_string()])
 }
 
 fn write_table(columns: &mut Vec<String>, rows: &mut Vec<Vec<NoteTableCell>>, edits: &[NoteTableEdit]) -> Result<(), MutationApplyError> {
@@ -195,28 +195,29 @@ fn write_table(columns: &mut Vec<String>, rows: &mut Vec<Vec<NoteTableCell>>, ed
         match edit {
             NoteTableEdit::InsertRow { index, cells } => {
                 if *index > rows.len() || cells.len() != columns.len() {
-                    return Err(MutationApplyError::new("mutation.apply.invalid-index", "table row insertion is out of range or does not span the columns").at(at(row)));
+                    return Err(MutationApplyError::new("mutation.apply.invalid-add-index", "table row insertion is out of range or does not span the columns").at(at(row)));
                 }
                 rows.insert(*index, cells.clone());
             }
-            NoteTableEdit::RemoveRow { index } => {
-                if *index >= rows.len() {
-                    return Err(MutationApplyError::new("mutation.apply.missing-target", "removed table row does not exist").at(at(row)));
+            NoteTableEdit::RemoveRow { index, cells } => {
+                if rows.get(*index) != Some(cells) {
+                    return Err(MutationApplyError::new("mutation.apply.order-mismatch", "removed table row is not the recorded row at that index").at(at(row)));
                 }
                 rows.remove(*index);
             }
             NoteTableEdit::InsertColumn { index, name, cells } => {
                 if *index > columns.len() || cells.len() != rows.len() {
-                    return Err(MutationApplyError::new("mutation.apply.invalid-index", "table column insertion is out of range or does not span the rows").at(at(row)));
+                    return Err(MutationApplyError::new("mutation.apply.invalid-add-index", "table column insertion is out of range or does not span the rows").at(at(row)));
                 }
                 columns.insert(*index, name.clone());
                 for (line, cell) in rows.iter_mut().zip(cells) {
                     line.insert(*index, cell.clone());
                 }
             }
-            NoteTableEdit::RemoveColumn { index } => {
-                if *index >= columns.len() {
-                    return Err(MutationApplyError::new("mutation.apply.missing-target", "removed table column does not exist").at(at(row)));
+            NoteTableEdit::RemoveColumn { index, name, cells } => {
+                let held: Vec<NoteTableCell> = rows.iter().filter_map(|line| line.get(*index).cloned()).collect();
+                if columns.get(*index) != Some(name) || &held != cells {
+                    return Err(MutationApplyError::new("mutation.apply.order-mismatch", "removed table column is not the recorded column at that index").at(at(row)));
                 }
                 columns.remove(*index);
                 for line in rows.iter_mut() {
@@ -228,31 +229,17 @@ fn write_table(columns: &mut Vec<String>, rows: &mut Vec<Vec<NoteTableCell>>, ed
     Ok(())
 }
 
-fn undo_table(columns: &[String], rows: &[Vec<NoteTableCell>], edits: &[NoteTableEdit]) -> Vec<NoteTableEdit> {
-    let mut columns = columns.to_vec();
-    let mut rows = rows.to_vec();
-    let mut undo = Vec::new();
-    for edit in edits {
-        match edit {
-            NoteTableEdit::InsertRow { index, .. } => undo.push(NoteTableEdit::RemoveRow { index: *index }),
-            NoteTableEdit::RemoveRow { index } => {
-                if let Some(cells) = rows.get(*index) {
-                    undo.push(NoteTableEdit::InsertRow { index: *index, cells: cells.clone() });
-                }
-            }
-            NoteTableEdit::InsertColumn { index, .. } => undo.push(NoteTableEdit::RemoveColumn { index: *index }),
-            NoteTableEdit::RemoveColumn { index } => {
-                if let Some(name) = columns.get(*index) {
-                    undo.push(NoteTableEdit::InsertColumn { index: *index, name: name.clone(), cells: rows.iter().filter_map(|line| line.get(*index).cloned()).collect() });
-                }
-            }
-        }
-        if write_table(&mut columns, &mut rows, std::slice::from_ref(edit)).is_err() {
-            break;
-        }
-    }
-    undo.reverse();
-    undo
+fn undo_table(edits: &[NoteTableEdit]) -> Vec<NoteTableEdit> {
+    edits
+        .iter()
+        .rev()
+        .map(|edit| match edit {
+            NoteTableEdit::InsertRow { index, cells } => NoteTableEdit::RemoveRow { index: *index, cells: cells.clone() },
+            NoteTableEdit::RemoveRow { index, cells } => NoteTableEdit::InsertRow { index: *index, cells: cells.clone() },
+            NoteTableEdit::InsertColumn { index, name, cells } => NoteTableEdit::RemoveColumn { index: *index, name: name.clone(), cells: cells.clone() },
+            NoteTableEdit::RemoveColumn { index, name, cells } => NoteTableEdit::InsertColumn { index: *index, name: name.clone(), cells: cells.clone() },
+        })
+        .collect()
 }
 
 fn write_patch(block: &mut NoteBlockNode, patch: &NoteBlockPatch) -> Result<(), MutationApplyError> {
@@ -309,7 +296,7 @@ impl NoteBlockPatch {
             let table = self.table.get_or_insert_with(Vec::new);
             for edit in edits {
                 let cancels = match (table.last(), &edit) {
-                    (Some(NoteTableEdit::InsertRow { index, .. }), NoteTableEdit::RemoveRow { index: removed }) | (Some(NoteTableEdit::InsertColumn { index, .. }), NoteTableEdit::RemoveColumn { index: removed }) => index == removed,
+                    (Some(NoteTableEdit::InsertRow { index, .. }), NoteTableEdit::RemoveRow { index: removed, .. }) | (Some(NoteTableEdit::InsertColumn { index, .. }), NoteTableEdit::RemoveColumn { index: removed, .. }) => index == removed,
                     _ => false,
                 };
                 if cancels {
@@ -346,7 +333,7 @@ impl NoteBlockPatch {
                 restore.align = self.align.as_ref().map(|_| align.clone());
             }
             NoteBlockNode::Image { image_key, .. } => restore.image_key = self.image_key.as_ref().map(|_| image_key.clone()),
-            NoteBlockNode::Table { columns, rows, .. } => restore.table = self.table.as_ref().map(|edits| undo_table(columns, rows, edits)),
+            NoteBlockNode::Table { .. } => restore.table = self.table.as_ref().map(|edits| undo_table(edits)),
             NoteBlockNode::Math { tex, display_mode, .. } => {
                 restore.tex = self.tex.as_ref().map(|_| tex.clone());
                 restore.display_mode = self.display_mode.map(|_| *display_mode);
@@ -396,14 +383,14 @@ fn container_mut<'a>(blocks: &'a mut Vec<NoteBlockNode>, parent: Option<&str>) -
     let path = path_to(blocks, parent).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "block parent does not exist").at(["parentId"]))?;
     match node_at_mut(blocks, &path) {
         Some(NoteBlockNode::Group { children, .. }) => Ok(children),
-        _ => Err(MutationApplyError::new("mutation.apply.invalid-target", "block parent is not a group").at(["parentId"])),
+        _ => Err(MutationApplyError::new("mutation.apply.invalid-base", "block parent is not a group").at(["parentId"])),
     }
 }
 
 fn insert_row(blocks: &mut Vec<NoteBlockNode>, parent: Option<&str>, index: usize, block: NoteBlockNode) -> Result<(), MutationApplyError> {
     let container = container_mut(blocks, parent)?;
     if index > container.len() {
-        return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("block insertion index {index} exceeds length {}", container.len())).at(["index"]));
+        return Err(MutationApplyError::new("mutation.apply.invalid-add-index", format!("block insertion index {index} exceeds length {}", container.len())).at(["index"]));
     }
     container.insert(index, block);
     Ok(())
@@ -417,7 +404,7 @@ fn take_row(blocks: &mut Vec<NoteBlockNode>, id: &str) -> Result<NoteBlockNode, 
     } else {
         match node_at_mut(blocks, parent) {
             Some(NoteBlockNode::Group { children, .. }) => children,
-            _ => return Err(MutationApplyError::new("mutation.apply.invalid-target", "block container is not a group").at([id.to_string()])),
+            _ => return Err(MutationApplyError::new("mutation.apply.invalid-base", "block container is not a group").at([id.to_string()])),
         }
     };
     Ok(container.remove(*last))
@@ -425,24 +412,30 @@ fn take_row(blocks: &mut Vec<NoteBlockNode>, id: &str) -> Result<NoteBlockNode, 
 
 impl NoteBlocksDelta {
     /// 🧬️ Runs the rows over `blocks`; private so that only [`MutationDiff::apply`] (the central applier's entry) reaches it.
-    fn write_into(&self, blocks: &[NoteBlockNode]) -> MutationApplyResult<Vec<NoteBlockNode>> {
+    fn apply_rows(&self, blocks: &[NoteBlockNode]) -> MutationApplyResult<Vec<NoteBlockNode>> {
         let mut next = blocks.to_vec();
         for (row, entry) in self.rows.iter().enumerate() {
             let under = |error: MutationApplyError| error.under(["rows".to_string(), row.to_string()]);
             match entry {
                 NoteBlockRow::Add { parent_id, index, block } => {
                     if flatten_blocks(std::slice::from_ref(block)).into_iter().any(|added| find_block(&next, block_id(added)).is_some()) {
-                        return Err(under(MutationApplyError::new("mutation.apply.duplicate-target", "added block tree contains an existing identity")));
+                        return Err(under(MutationApplyError::new("mutation.apply.duplicate-id", "added block tree contains an existing identity")));
                     }
                     insert_row(&mut next, parent_id.as_deref(), *index, block.clone()).map_err(under)?;
                 }
-                NoteBlockRow::Remove { id } => {
+                NoteBlockRow::Remove { id, parent_id, index } => {
+                    if find_block_location(&next, id).is_some_and(|stood| stood != (parent_id.clone(), *index)) {
+                        return Err(under(MutationApplyError::new("mutation.apply.order-mismatch", "removed block does not stand at its recorded position")));
+                    }
                     take_row(&mut next, id).map_err(under)?;
                 }
-                NoteBlockRow::Move { id, parent_id, index } => {
+                NoteBlockRow::Move { id, from_parent_id, from_index, parent_id, index } => {
+                    if find_block_location(&next, id).is_some_and(|stood| stood != (from_parent_id.clone(), *from_index)) {
+                        return Err(under(MutationApplyError::new("mutation.apply.order-mismatch", "moved block does not stand at its recorded origin")));
+                    }
                     let moved = take_row(&mut next, id).map_err(under)?;
                     if parent_id.as_deref().is_some_and(|parent| find_block(std::slice::from_ref(&moved), parent).is_some()) {
-                        return Err(under(MutationApplyError::new("mutation.apply.invalid-target", "a block cannot move into its own subtree")));
+                        return Err(under(MutationApplyError::new("mutation.apply.invalid-base", "a block cannot move into its own subtree")));
                     }
                     insert_row(&mut next, parent_id.as_deref(), *index, moved).map_err(under)?;
                 }
@@ -455,7 +448,7 @@ impl NoteBlocksDelta {
         }
         let ids: Vec<&str> = flatten_blocks(&next).into_iter().map(block_id).collect();
         if ids.iter().enumerate().any(|(index, id)| ids[..index].contains(id)) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "resulting block tree contains duplicate identities").at(["identities"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-id", "resulting block tree contains duplicate identities").at(["identities"]));
         }
         Ok(next)
     }
@@ -470,7 +463,7 @@ impl NoteBlocksDelta {
 
     fn push(&mut self, row: NoteBlockRow) {
         match row {
-            NoteBlockRow::Remove { id } => {
+            NoteBlockRow::Remove { id, parent_id, index } => {
                 while matches!(self.rows.last(), Some(NoteBlockRow::Patch { id: patched, .. }) if patched == &id) {
                     self.rows.pop();
                 }
@@ -478,23 +471,27 @@ impl NoteBlocksDelta {
                     Some(NoteBlockRow::Add { block, .. }) if block_id(block) == id => {
                         self.rows.pop();
                     }
-                    Some(NoteBlockRow::Move { id: moved, .. }) if moved == &id => {
+                    Some(NoteBlockRow::Move { id: moved, from_parent_id, from_index, .. }) if moved == &id => {
+                        let (parent_id, index) = (from_parent_id.clone(), *from_index);
                         self.rows.pop();
-                        self.rows.push(NoteBlockRow::Remove { id });
+                        self.rows.push(NoteBlockRow::Remove { id, parent_id, index });
                     }
-                    _ => self.rows.push(NoteBlockRow::Remove { id }),
+                    _ => self.rows.push(NoteBlockRow::Remove { id, parent_id, index }),
                 }
             }
-            NoteBlockRow::Move { id, parent_id, index } => match self.rows.last_mut() {
+            NoteBlockRow::Move { id, from_parent_id, from_index, parent_id, index } => match self.rows.last_mut() {
                 Some(NoteBlockRow::Add { block, parent_id: parent, index: at }) if block_id(block) == id => {
                     *parent = parent_id;
                     *at = index;
                 }
-                Some(NoteBlockRow::Move { id: moved, parent_id: parent, index: at }) if moved == &id => {
-                    *parent = parent_id;
-                    *at = index;
+                Some(NoteBlockRow::Move { id: moved, from_parent_id: origin, from_index: origin_index, .. }) if moved == &id => {
+                    let (origin, origin_index) = (origin.clone(), *origin_index);
+                    self.rows.pop();
+                    if (origin.clone(), origin_index) != (parent_id.clone(), index) {
+                        self.rows.push(NoteBlockRow::Move { id, from_parent_id: origin, from_index: origin_index, parent_id, index });
+                    }
                 }
-                _ => self.rows.push(NoteBlockRow::Move { id, parent_id, index }),
+                _ => self.rows.push(NoteBlockRow::Move { id, from_parent_id, from_index, parent_id, index }),
             },
             NoteBlockRow::Patch { id, patch } => {
                 let mut cursor = self.rows.len();
@@ -514,74 +511,31 @@ impl NoteBlocksDelta {
         }
     }
 
-    /// 🔁️ The negative delta against `base`: the reversed rows that put every block back where it was, patches restoring the pre-patch values.
-    pub fn negative(&self, base: &[NoteBlockNode]) -> Self {
-        let mut current = base.to_vec();
-        let mut undo = Vec::new();
-        for row in &self.rows {
-            match row {
-                NoteBlockRow::Add { parent_id, index, block } => {
-                    undo.push(NoteBlockRow::Remove { id: block_id(block).to_string() });
-                    let _ = insert_row(&mut current, parent_id.as_deref(), *index, block.clone());
-                }
-                NoteBlockRow::Remove { id } => {
-                    if let Some((parent_id, index)) = find_block_location(&current, id) {
-                        if let Ok(block) = take_row(&mut current, id) {
-                            undo.push(NoteBlockRow::Add { parent_id, index, block });
-                        }
-                    }
-                }
-                NoteBlockRow::Move { id, parent_id, index } => {
-                    if let Some((origin, position)) = find_block_location(&current, id) {
-                        undo.push(NoteBlockRow::Move { id: id.clone(), parent_id: origin, index: position });
-                        if let Ok(block) = take_row(&mut current, id) {
-                            let _ = insert_row(&mut current, parent_id.as_deref(), *index, block);
-                        }
-                    }
-                }
-                NoteBlockRow::Patch { id, patch } => {
-                    if let Some(path) = path_to(&current, id) {
-                        if let Some(block) = node_at_mut(&mut current, &path) {
-                            undo.push(NoteBlockRow::Patch { id: id.clone(), patch: patch.restoring(block) });
-                            let _ = write_patch(block, patch);
-                        }
-                    }
-                }
-            }
-        }
+    /// 🔁️ The negative delta, read row by row: an `add` is undone by a `remove` at its position, a `remove` by re-adding the base block at its position, a `move` by the move between its swapped ends, a `patch` by the slots the base block holds; in reverse order.
+    pub fn inverse_rows(&self, base: &[NoteBlockNode]) -> Self {
+        let mut undo: Vec<NoteBlockRow> = self
+            .rows
+            .iter()
+            .filter_map(|row| match row {
+                NoteBlockRow::Add { parent_id, index, block } => Some(NoteBlockRow::Remove { id: block_id(block).to_string(), parent_id: parent_id.clone(), index: *index }),
+                NoteBlockRow::Remove { id, parent_id, index } => find_block(base, id).map(|block| NoteBlockRow::Add { parent_id: parent_id.clone(), index: *index, block: block.clone() }),
+                NoteBlockRow::Move { id, from_parent_id, from_index, parent_id, index } => Some(NoteBlockRow::Move { id: id.clone(), from_parent_id: parent_id.clone(), from_index: *index, parent_id: from_parent_id.clone(), index: *from_index }),
+                NoteBlockRow::Patch { id, patch } => find_block(base, id).map(|block| NoteBlockRow::Patch { id: id.clone(), patch: patch.restoring(block) }),
+            })
+            .collect();
         undo.reverse();
-        sort_patch_runs(&mut undo);
-        Self { rows: undo }
-    }
-
-    /// 🧭️ The delta from `base` to `other` for sync and import: root blocks that differ are removed and re-added, kept ones are moved into `other`'s root order.
-    pub fn between(base: &[NoteBlockNode], other: &[NoteBlockNode]) -> Self {
-        let kept = |block: &NoteBlockNode| other.iter().any(|candidate| candidate == block);
-        let mut rows: Vec<NoteBlockRow> = base.iter().filter(|block| !kept(block)).map(|block| NoteBlockRow::Remove { id: block_id(block).to_string() }).collect();
-        let mut order: Vec<&str> = base.iter().filter(|block| kept(block)).map(block_id).collect();
-        for (index, target) in other.iter().enumerate() {
-            if order.get(index) == Some(&block_id(target)) {
-                continue;
-            }
-            match order.iter().position(|id| *id == block_id(target)) {
-                Some(position) => {
-                    let id = order.remove(position);
-                    order.insert(index, id);
-                    rows.push(NoteBlockRow::Move { id: id.to_string(), parent_id: None, index });
-                }
-                None => {
-                    order.insert(index, block_id(target));
-                    rows.push(NoteBlockRow::Add { parent_id: None, index, block: target.clone() });
-                }
-            }
-        }
-        Self { rows }
+        Self { rows: sorted_patch_runs(undo) }
     }
 
     /// 🕳️ Whether the delta names no row.
     pub fn is_empty(&self) -> bool {
         self.rows.is_empty()
     }
+}
+
+fn sorted_patch_runs(mut rows: Vec<NoteBlockRow>) -> Vec<NoteBlockRow> {
+    sort_patch_runs(&mut rows);
+    rows
 }
 
 fn sort_patch_runs(rows: &mut [NoteBlockRow]) {
@@ -618,14 +572,14 @@ fn coalesce_asset_rows(earlier: &NoteAssetRow, later: NoteAssetRow) -> Result<Op
 }
 
 impl NoteAssetsDelta {
-    fn write_into(&self, assets: &BTreeMap<String, NoteImageAsset>) -> MutationApplyResult<BTreeMap<String, NoteImageAsset>> {
+    fn apply_rows(&self, assets: &BTreeMap<String, NoteImageAsset>) -> MutationApplyResult<BTreeMap<String, NoteImageAsset>> {
         let mut next = assets.clone();
         for (row, entry) in self.rows.iter().enumerate() {
             let at = ["rows".to_string(), row.to_string(), entry.key().to_string()];
             match entry {
                 NoteAssetRow::Insert { key, asset } => {
                     if next.insert(key.clone(), asset.clone()).is_some() {
-                        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "inserted asset key already exists").at(at));
+                        return Err(MutationApplyError::new("mutation.apply.duplicate-id", "inserted asset key already exists").at(at));
                     }
                 }
                 NoteAssetRow::Replace { key, asset } => {
@@ -661,46 +615,19 @@ impl NoteAssetsDelta {
         self.rows.sort_by(|a, b| a.key().cmp(b.key()));
     }
 
-    /// 🔁️ The negative delta against `base`: each row undone against the value it displaced, rows kept in key order.
-    pub fn negative(&self, base: &BTreeMap<String, NoteImageAsset>) -> Self {
-        let mut current = base.clone();
-        let mut undo = Vec::new();
-        for entry in &self.rows {
-            match entry {
-                NoteAssetRow::Insert { key, asset } => {
-                    undo.push(NoteAssetRow::Remove { key: key.clone() });
-                    current.insert(key.clone(), asset.clone());
-                }
-                NoteAssetRow::Replace { key, asset } => {
-                    if let Some(prior) = current.insert(key.clone(), asset.clone()) {
-                        undo.push(NoteAssetRow::Replace { key: key.clone(), asset: prior });
-                    }
-                }
-                NoteAssetRow::Remove { key } => {
-                    if let Some(prior) = current.remove(key) {
-                        undo.push(NoteAssetRow::Insert { key: key.clone(), asset: prior });
-                    }
-                }
-            }
-        }
-        undo.reverse();
+    /// 🔁️ The negative delta, read key by key from `base`: an insert is undone by a remove, a replace by replacing back the base asset, a remove by re-inserting the base asset; rows kept in key order.
+    pub fn inverse_rows(&self, base: &BTreeMap<String, NoteImageAsset>) -> Self {
+        let mut undo: Vec<NoteAssetRow> = self
+            .rows
+            .iter()
+            .filter_map(|entry| match entry {
+                NoteAssetRow::Insert { key, .. } => Some(NoteAssetRow::Remove { key: key.clone() }),
+                NoteAssetRow::Replace { key, .. } => base.get(key).map(|prior| NoteAssetRow::Replace { key: key.clone(), asset: prior.clone() }),
+                NoteAssetRow::Remove { key } => base.get(key).map(|prior| NoteAssetRow::Insert { key: key.clone(), asset: prior.clone() }),
+            })
+            .collect();
         undo.sort_by(|a, b| a.key().cmp(b.key()));
         Self { rows: undo }
-    }
-
-    /// 🧭️ The delta from `base` to `other` for sync and import.
-    pub fn between(base: &BTreeMap<String, NoteImageAsset>, other: &BTreeMap<String, NoteImageAsset>) -> Self {
-        let mut rows = Vec::new();
-        for (key, asset) in other {
-            match base.get(key) {
-                None => rows.push(NoteAssetRow::Insert { key: key.clone(), asset: asset.clone() }),
-                Some(prior) if prior != asset => rows.push(NoteAssetRow::Replace { key: key.clone(), asset: asset.clone() }),
-                Some(_) => {}
-            }
-        }
-        rows.extend(base.keys().filter(|key| !other.contains_key(*key)).map(|key| NoteAssetRow::Remove { key: key.clone() }));
-        rows.sort_by(|a, b| a.key().cmp(b.key()));
-        Self { rows }
     }
 
     /// 🕳️ Whether the delta names no row.
@@ -745,7 +672,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
             next.title = title.value.clone();
         }
         if let Some(delta) = &self.blocks {
-            next.blocks = delta.write_into(&base.blocks).map_err(|error| error.under(["blocks"]))?;
+            next.blocks = delta.apply_rows(&base.blocks).map_err(|error| error.under(["blocks"]))?;
         }
         macro_rules! assign {
             ($($field:ident),+) => {
@@ -756,7 +683,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
         }
         assign!(grid_visible, grid_spacing, grid_subdivisions, grid_opacity, snap_enabled, snap_grid_spacing, pencil_width, eraser_radius);
         if let Some(delta) = &self.assets {
-            next.assets = delta.write_into(&base.assets).map_err(|error| error.under(["assets"]))?;
+            next.assets = delta.apply_rows(&base.assets).map_err(|error| error.under(["assets"]))?;
         }
         if let Some(link) = &self.linked_artifact {
             next.linked_artifact = link.value.clone();
@@ -792,7 +719,7 @@ impl DiffAlgebra<NoteSnapshot> for NoteDiff {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             id: self.id.as_ref().map(|_| base.id.clone()),
             title: self.title.as_ref().map(|_| NoteAssigned::new(base.title.clone())),
-            blocks: self.blocks.as_ref().map(|delta| delta.negative(&base.blocks)),
+            blocks: self.blocks.as_ref().map(|delta| delta.inverse_rows(&base.blocks)),
             grid_visible: self.grid_visible.as_ref().map(|_| NoteAssigned::new(base.grid_visible)),
             grid_spacing: self.grid_spacing.as_ref().map(|_| NoteAssigned::new(base.grid_spacing)),
             grid_subdivisions: self.grid_subdivisions.as_ref().map(|_| NoteAssigned::new(base.grid_subdivisions)),
@@ -801,34 +728,8 @@ impl DiffAlgebra<NoteSnapshot> for NoteDiff {
             snap_grid_spacing: self.snap_grid_spacing.as_ref().map(|_| NoteAssigned::new(base.snap_grid_spacing)),
             pencil_width: self.pencil_width.as_ref().map(|_| NoteAssigned::new(base.pencil_width)),
             eraser_radius: self.eraser_radius.as_ref().map(|_| NoteAssigned::new(base.eraser_radius)),
-            assets: self.assets.as_ref().map(|delta| delta.negative(&base.assets)),
+            assets: self.assets.as_ref().map(|delta| delta.inverse_rows(&base.assets)),
             linked_artifact: self.linked_artifact.as_ref().map(|_| NoteAssigned::new(base.linked_artifact.clone())),
-        }
-    }
-
-    fn between(base: &NoteSnapshot, other: &NoteSnapshot) -> Self {
-        let blocks = NoteBlocksDelta::between(&base.blocks, &other.blocks);
-        let assets = NoteAssetsDelta::between(&base.assets, &other.assets);
-        macro_rules! differs {
-            ($field:ident) => {
-                (base.$field != other.$field).then(|| NoteAssigned::new(other.$field.clone()))
-            };
-        }
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            id: (base.id != other.id).then(|| other.id.clone()),
-            title: differs!(title),
-            blocks: (!blocks.is_empty()).then_some(blocks),
-            grid_visible: differs!(grid_visible),
-            grid_spacing: differs!(grid_spacing),
-            grid_subdivisions: differs!(grid_subdivisions),
-            grid_opacity: differs!(grid_opacity),
-            snap_enabled: differs!(snap_enabled),
-            snap_grid_spacing: differs!(snap_grid_spacing),
-            pencil_width: differs!(pencil_width),
-            eraser_radius: differs!(eraser_radius),
-            assets: (!assets.is_empty()).then_some(assets),
-            linked_artifact: differs!(linked_artifact),
         }
     }
 

@@ -5,7 +5,7 @@
 //! per-variant target resolution `add-load` runs (`mutation.target-missing`, Error), the finite
 //! magnitude bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasePatch, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry, Fem3dLoadsDelta, Fem3dLoadsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasePatch, Fem3dLoadCasesDelta, Fem3dLoadCasesModification, Fem3dLoadsDelta, Fem3dLoadsModification};
 use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,load_breach,resolve_load};
 
 use crate::{load_id, Fem3dSnapshot};
@@ -30,9 +30,9 @@ pub fn diff(payload: &ReplaceLoad, base: &Fem3dSnapshot) -> protocol::MutationOu
     if *held == *payload.new_load {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" in case \"{}\" already has that value.", payload.load_id, payload.case_id));
     }
-    let loads = Fem3dLoadsDelta { patched: vec![Fem3dLoadsPatchEntry { id: payload.load_id.clone(), item: payload.new_load.clone() }], ..Default::default() };
+    let loads = Fem3dLoadsDelta { modified: vec![Fem3dLoadsModification { id: payload.load_id.clone(), patch: payload.new_load.clone() }], ..Default::default() };
     protocol::MutationOutcome::new(Fem3dDiff {
-        load_cases: Some(Fem3dLoadCasesDelta { patched: vec![Fem3dLoadCasesPatchEntry { id: payload.case_id.clone(), patch: Fem3dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
+        load_cases: Some(Fem3dLoadCasesDelta { modified: vec![Fem3dLoadCasesModification { id: payload.case_id.clone(), patch: Fem3dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

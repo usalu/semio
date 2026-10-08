@@ -66,12 +66,15 @@
   "auditEvents": null,
   "templates": null,
   "knowledge": {
-    "added": [],
     "removed": [
-      "knowledge-record-a"
+      {
+        "id": "knowledge-record-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "benchmarks": null,
   "traces": null,

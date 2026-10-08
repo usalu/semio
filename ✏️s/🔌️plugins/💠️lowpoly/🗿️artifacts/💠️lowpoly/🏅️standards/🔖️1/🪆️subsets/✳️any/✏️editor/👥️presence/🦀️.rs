@@ -78,14 +78,6 @@ impl protocol::DiffAlgebra<LowpolyPresence> for LowpolyPresenceDiff {
             paint_utility: self.paint_utility.as_ref().map(|_| base.paint_utility.clone()),
         }
     }
-    fn between(base: &LowpolyPresence, other: &LowpolyPresence) -> Self {
-        Self {
-            world_camera_position: (base.world_camera_position != other.world_camera_position).then(|| other.world_camera_position.clone()),
-            world_camera_target: (base.world_camera_target != other.world_camera_target).then(|| other.world_camera_target.clone()),
-            world_camera_fov: (base.world_camera_fov != other.world_camera_fov).then(|| other.world_camera_fov.clone()),
-            paint_utility: (base.paint_utility != other.paint_utility).then(|| other.paint_utility.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none() && self.paint_utility.is_none()
     }
@@ -176,8 +168,7 @@ impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }]
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+    }, protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-paint-utility",
         semantic_kind: "set-paint-utility",
@@ -192,7 +183,7 @@ impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }]
+    }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {

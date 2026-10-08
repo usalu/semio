@@ -7,7 +7,7 @@
 //! missing from the round-trip law.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::{apply_wfc3d_mutation, Wfc3dMutation};
+use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-tile-weight/⚖️raises/📸️snapshot/⬅️before/🔣️.json");
@@ -32,7 +32,7 @@ fn mutation() -> Wfc3dMutation {
 #[test]
 fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_wfc3d_mutation(&mut snapshot, &mutation()).expect("the committed mutation applies");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("the committed mutation applies");
     assert_eq!(snapshot, expected_after(), "⚖️raises: applying the mutation must reach the committed ➡️after");
 }
 
@@ -41,9 +41,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mut snapshot = base.clone();
-    apply_wfc3d_mutation(&mut snapshot, &mutation()).expect("the committed mutation applies");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("the committed mutation applies");
     for back in <Wfc3dMutation as protocol::Mutation<Wfc3dSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
-        apply_wfc3d_mutation(&mut snapshot, &back).expect("the inverse applies");
+        vcs::apply_mutation(&snapshot, &back).map(|(applied_state, _)| { snapshot = applied_state; }).expect("the inverse applies");
     }
     assert_eq!(snapshot, base, "⚖️raises: inverse() must restore the pre-mutation document");
 }
@@ -80,7 +80,7 @@ fn declared_outcome_holds() {
         .collect();
     assert_eq!(produced, declared, "⚖️raises: raised diagnostics differ from the committed 🎯️outcome messages");
     let mut snapshot = before();
-    let applied = apply_wfc3d_mutation(&mut snapshot, &mutation()).is_ok();
+    let applied = vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).is_ok();
     match status {
         "applied" => {
             assert!(applied, "⚖️raises: an applied outcome must apply");

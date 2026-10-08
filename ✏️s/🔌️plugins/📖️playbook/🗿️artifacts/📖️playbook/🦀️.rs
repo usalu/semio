@@ -12,6 +12,8 @@ extern crate semio_framework as semio_framework;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[path = "🌉️apply/🦀️.rs"]
+pub mod central_apply;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
@@ -22,7 +24,7 @@ use semio_framework_artifact_playbook_playbook as playbook;
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, set_node_param, SemioFlowMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, remove_node_param, set_node_param, SemioFlowMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -61,7 +63,7 @@ pub const PLAYBOOK_STEP_NODE_KIND: &str = "step";
 /// 🔗️ The edge kind chaining one step to the next.
 pub const PLAYBOOK_SEQUENCE_EDGE_KIND: &str = "sequence";
 const PLAYBOOK_FLOW_SLOT: &str = "flow";
-const PLAYBOOK_BLOCKS_PARAM: &str = "blocksJson";
+const PLAYBOOK_BLOCK_PARAM_PREFIX: &str = "block.";
 const PLAYBOOK_DESCRIPTION_PARAM: &str = "description";
 const PLAYBOOK_NEXT_PORT: &str = "next";
 const PLAYBOOK_PREV_PORT: &str = "prev";
@@ -74,11 +76,15 @@ pub fn playbook_flow_child(child_id: &str) -> PlaybookFlowChild {
     store::ArtifactChild::new(child_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect })
 }
 
-/// 🧱️ One step as its flow node at chain position `index`: `label` = title, `blocks` JSON-encoded wholesale into the
-/// `blocksJson` param (the "honest string boundary" flow's own widget converter established), `description` its own param, present
-/// only when `Some`.
+/// 🗝️ The param key of block `block_id`: one param per block, so a block is inserted, removed and moved as one concrete param row.
+fn playbook_block_param_key(block_id: &str) -> String {
+    format!("{PLAYBOOK_BLOCK_PARAM_PREFIX}{block_id}")
+}
+
+/// 🧱️ One step as its flow node at chain position `index`: `label` = title, one `block.<id>` param per block (JSON of that block, in
+/// block order), `description` its own param, present only when `Some`.
 pub fn playbook_step_node(step: &PlaybookStep, index: usize) -> SemioFlowNode {
-    let mut params = vec![SemioFlowParam { key: PLAYBOOK_BLOCKS_PARAM.into(), value: semio_framework_pack_json::to_json_string(&step.blocks) }];
+    let mut params: Vec<SemioFlowParam> = step.blocks.iter().map(|block| SemioFlowParam { key: playbook_block_param_key(&block.id), value: semio_framework_pack_json::to_json_string(block) }).collect();
     if let Some(description) = &step.description {
         params.push(SemioFlowParam { key: PLAYBOOK_DESCRIPTION_PARAM.into(), value: description.clone() });
     }
@@ -127,10 +133,15 @@ fn playbook_chain(content: &SemioFlowSnapshot) -> impl Iterator<Item = &SemioFlo
 }
 
 /// 🔓️ One step node → its step, losslessly: every `PlaybookStep` field (the full `blocks` vocabulary included) round-trips through
-/// `blocksJson`/`description`; a `blocksJson` that does not decode is refused with the node named.
+/// its `block.<id>` params (in param order) and `description`; a block param that does not decode is refused with the node named.
 pub fn playbook_step_from_node(node: &SemioFlowNode) -> Result<PlaybookStep, String> {
     let param = |key: &str| node.params.iter().find(|param| param.key == key).map(|param| param.value.as_str());
-    let blocks = semio_framework_pack_json::from_json_str(param(PLAYBOOK_BLOCKS_PARAM).unwrap_or("[]"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("step {:?}: {error}", node.id))?;
+    let blocks = node
+        .params
+        .iter()
+        .filter(|param| param.key.starts_with(PLAYBOOK_BLOCK_PARAM_PREFIX))
+        .map(|param| semio_framework_pack_json::from_json_str(&param.value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("step {:?}: {error}", node.id)))
+        .collect::<Result<Vec<PlaybookBlock>, String>>()?;
     Ok(PlaybookStep { id: node.id.clone(), title: node.label.clone(), description: param(PLAYBOOK_DESCRIPTION_PARAM).map(str::to_string), blocks })
 }
 
@@ -149,6 +160,7 @@ const PLAYBOOK_FLOW_PROJECTION: &str = "playbook.flow.projection";
 const PLAYBOOK_STEP_MISSING: &str = "playbook.step.missing";
 const PLAYBOOK_STEP_DUPLICATE: &str = "playbook.step.duplicate";
 const PLAYBOOK_BLOCK_MISSING: &str = "playbook.block.missing";
+const PLAYBOOK_BLOCK_DUPLICATE: &str = "playbook.block.duplicate";
 
 fn playbook_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message)
@@ -157,7 +169,7 @@ fn playbook_fault(code: &'static str, message: impl Into<String>) -> Fault {
 /// 📣️ The localized notice of every refusal this artifact raises (design §20.12), declared by its editor and viewer.
 pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
     use semio_framework_ui_locale::LocalizedLabel;
-    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 7]> = std::sync::LazyLock::new(|| {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
         [
             (PLAYBOOK_FLOW_UNAVAILABLE, LocalizedLabel::native("The playbook's steps are not loaded yet.", "Die Schritte des Playbooks sind noch nicht geladen.")),
             (PLAYBOOK_FLOW_DIALECT, LocalizedLabel::native("The playbook's steps are stored in an unsupported format.", "Die Schritte des Playbooks liegen in einem nicht unterstützten Format vor.")),
@@ -166,6 +178,7 @@ pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_l
             (PLAYBOOK_STEP_MISSING, LocalizedLabel::native("The step no longer exists.", "Der Schritt existiert nicht mehr.")),
             (PLAYBOOK_STEP_DUPLICATE, LocalizedLabel::native("A step with this id already exists.", "Ein Schritt mit dieser Id existiert bereits.")),
             (PLAYBOOK_BLOCK_MISSING, LocalizedLabel::native("The block no longer exists.", "Der Baustein existiert nicht mehr.")),
+            (PLAYBOOK_BLOCK_DUPLICATE, LocalizedLabel::native("A block with this id already exists in the step.", "Ein Baustein mit dieser Id existiert im Schritt bereits.")),
         ]
     });
     &*NOTICES
@@ -235,14 +248,28 @@ fn playbook_step_node_of<'a>(content: &'a SemioFlowSnapshot, step_id: &str) -> R
     content.nodes.iter().find(|node| node.id == step_id && node.kind == PLAYBOOK_STEP_NODE_KIND).ok_or_else(|| playbook_fault(PLAYBOOK_STEP_MISSING, format!("Step \"{step_id}\" does not exist.")))
 }
 
-/// 📋️ Step `step_id` of `content`, decoded; a missing step or an undecodable `blocksJson` is a named fault.
+/// 📋️ Step `step_id` of `content`, decoded; a missing step or an undecodable block param is a named fault.
 pub fn playbook_step_of(content: &SemioFlowSnapshot, step_id: &str) -> Result<PlaybookStep, Fault> {
     playbook_step_from_node(playbook_step_node_of(content, step_id)?).map_err(|message| playbook_fault(PLAYBOOK_FLOW_CONTENT, message))
 }
 
-/// 🎛️ The ONE absolute leaf that sets step `step_id`'s blocks to `blocks`.
-pub fn playbook_blocks_leaf(step_id: &str, blocks: Vec<PlaybookBlock>) -> SemioFlowMutation {
-    SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: step_id.into(), key: PLAYBOOK_BLOCKS_PARAM.into(), value: semio_framework_pack_json::to_json_string(&blocks) })
+/// 🗝️ Step node `step_id`'s block params as `(param position, block id)` rows, in block order.
+fn playbook_block_rows<'a>(node: &'a SemioFlowNode) -> Vec<(usize, &'a str)> {
+    node.params.iter().enumerate().filter_map(|(position, param)| param.key.strip_prefix(PLAYBOOK_BLOCK_PARAM_PREFIX).map(|id| (position, id))).collect()
+}
+
+/// 🆕️ The concrete leaf that inserts `block` into step `step_id` at block position `index` (appended when `None` or past the
+/// end); the param position it lands at is exact, so the inverse removal and every replay agree on the order.
+fn playbook_insert_block_leaf(rows: &[(usize, &str)], step_id: &str, block: &PlaybookBlock, index: Option<usize>) -> Result<SemioFlowMutation, Fault> {
+    if rows.iter().any(|(_, id)| *id == block.id) {
+        return Err(playbook_fault(PLAYBOOK_BLOCK_DUPLICATE, format!("Block \"{}\" is already in step \"{step_id}\".", block.id)));
+    }
+    let at = index.and_then(|index| rows.get(index)).map(|(position, _)| *position);
+    Ok(SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: step_id.into(), key: playbook_block_param_key(&block.id), value: semio_framework_pack_json::to_json_string(block), at }))
+}
+
+fn playbook_remove_block_leaf(step_id: &str, block_id: &str) -> SemioFlowMutation {
+    SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id: step_id.into(), key: playbook_block_param_key(block_id) })
 }
 
 /// ➕️ Appends `step`: its node, then its chain edge; a step id already present is refused.
@@ -271,47 +298,40 @@ pub fn playbook_move_step_leaves(content: &SemioFlowSnapshot, step_id: &str, ind
     Ok(playbook_chain_leaves(content, &order))
 }
 
-/// ✍️ Step `step_id`'s blocks as `edit` leaves them: ONE absolute `blocksJson` set (none when `edit` changes nothing).
-pub fn playbook_edit_blocks_leaves(content: &SemioFlowSnapshot, step_id: &str, edit: impl FnOnce(&mut Vec<PlaybookBlock>) -> Result<(), Fault>) -> Result<Vec<SemioFlowMutation>, Fault> {
-    let step = playbook_step_of(content, step_id)?;
-    let mut blocks = step.blocks.clone();
-    edit(&mut blocks)?;
-    Ok(if blocks == step.blocks { Vec::new() } else { vec![playbook_blocks_leaf(step_id, blocks)] })
-}
-
-/// 🆕️ Inserts `block` into step `step_id` at `index` (appended when `None` or past the end).
+/// 🆕️ Inserts `block` into step `step_id` at `index` (appended when `None` or past the end): ONE `set-node-param` row.
 pub fn playbook_add_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block: PlaybookBlock, index: Option<usize>) -> Result<Vec<SemioFlowMutation>, Fault> {
-    playbook_edit_blocks_leaves(content, step_id, |blocks| {
-        blocks.insert(index.unwrap_or(blocks.len()).min(blocks.len()), block);
-        Ok(())
-    })
+    let node = playbook_step_node_of(content, step_id)?;
+    Ok(vec![playbook_insert_block_leaf(&playbook_block_rows(node), step_id, &block, index)?])
 }
 
-/// 🚮️ Removes block `block_id` from step `step_id`; a block the step does not hold is a named fault.
+/// 🚮️ Removes block `block_id` from step `step_id`: ONE `remove-node-param` row; a block the step does not hold is a named fault.
 pub fn playbook_remove_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block_id: &str) -> Result<Vec<SemioFlowMutation>, Fault> {
-    playbook_edit_blocks_leaves(content, step_id, |blocks| {
-        let position = blocks.iter().position(|block| block.id == block_id).ok_or_else(|| playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{step_id}\".")))?;
-        blocks.remove(position);
-        Ok(())
-    })
+    let node = playbook_step_node_of(content, step_id)?;
+    if !playbook_block_rows(node).iter().any(|(_, id)| *id == block_id) {
+        return Err(playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{step_id}\".")));
+    }
+    Ok(vec![playbook_remove_block_leaf(step_id, block_id)])
 }
 
-/// 🚚️ Moves block `block_id` from step `from` to position `index` (clamped) of step `to`: one leaf within a step, one per step
-/// across two.
+/// 🚚️ Moves block `block_id` from step `from` to block position `index` (clamped) of step `to`: a remove row then an insert row at
+/// the exact target position, in the same step or across two; a block already there yields no row.
 pub fn playbook_move_block_leaves(content: &SemioFlowSnapshot, block_id: &str, from: &str, to: &str, index: usize) -> Result<Vec<SemioFlowMutation>, Fault> {
-    let mut source = playbook_step_of(content, from)?.blocks;
-    let position = source.iter().position(|block| block.id == block_id).ok_or_else(|| playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{from}\".")))?;
-    let block = source.remove(position);
-    if from == to {
-        return playbook_edit_blocks_leaves(content, from, |blocks| {
-            *blocks = source;
-            blocks.insert(index.min(blocks.len()), block);
-            Ok(())
-        });
+    let source = playbook_step_node_of(content, from)?;
+    let source_rows = playbook_block_rows(source);
+    let position = source_rows.iter().position(|(_, id)| *id == block_id).ok_or_else(|| playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{from}\".")))?;
+    let block: PlaybookBlock = semio_framework_pack_json::from_json_str(&source.params[source_rows[position].0].value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| playbook_fault(PLAYBOOK_FLOW_CONTENT, format!("step {from:?}: {error}")))?;
+    let target = playbook_step_node_of(content, to)?;
+    let remaining: Vec<(usize, &str)> = if from == to {
+        let removed = source_rows[position].0;
+        source_rows.iter().filter(|(row, _)| *row != removed).map(|(row, id)| (if *row > removed { row - 1 } else { *row }, *id)).collect()
+    } else {
+        playbook_block_rows(target)
+    };
+    let index = index.min(remaining.len());
+    if from == to && index == position {
+        return Ok(Vec::new());
     }
-    let mut target = playbook_step_of(content, to)?.blocks;
-    target.insert(index.min(target.len()), block);
-    Ok(vec![playbook_blocks_leaf(from, source), playbook_blocks_leaf(to, target)])
+    Ok(vec![playbook_remove_block_leaf(from, block_id), playbook_insert_block_leaf(&remaining, to, &block, Some(index))?])
 }
 //#endregion 🔖️ChildLane
 
@@ -629,7 +649,7 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation,PlaybookMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{PlaybookMutation};
 
 }
 

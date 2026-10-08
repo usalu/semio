@@ -2,10 +2,10 @@
 //!
 //! `apply` is the only snapshot writer and is reachable solely through `protocol::apply_diff`, which mints the `ApplyCapability`.
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
-//! diff. `DiffAlgebra::between` covers the modelled vocabulary only and exists for sync tooling, never for mutation leaves.
+//! diff, read row by row from the base.
 
 fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new("diff.target-missing", format!("{what} does not exist"))
+    protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
 }
 
 /// 🩹️ Sparse patch of the `actions` row at base position `index`.
@@ -66,9 +66,9 @@ impl En1994BeamsActionsRows {
     }
 
     fn apply_rows(&self, base: &[crate::CharacteristicAction]) -> Result<Vec<crate::CharacteristicAction>, protocol::MutationApplyError> {
-        let out_of_range = |index: usize| protocol::MutationApplyError::new("diff.index-out-of-range", format!("row position {index} is out of range")).at([index.to_string()]);
+        let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
-            return Err(protocol::MutationApplyError::new("diff.index-order", "row positions must be strictly ascending"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
         }
         if let Some(patch) = self.modified.iter().find(|patch| patch.index >= base.len()) {
             return Err(out_of_range(patch.index));
@@ -240,9 +240,9 @@ impl En1994BeamsRows {
     }
 
     fn apply_rows(&self, base: &[crate::CompositeBeam]) -> Result<Vec<crate::CompositeBeam>, protocol::MutationApplyError> {
-        let out_of_range = |index: usize| protocol::MutationApplyError::new("diff.index-out-of-range", format!("row position {index} is out of range")).at([index.to_string()]);
+        let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index)) && Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
-            return Err(protocol::MutationApplyError::new("diff.index-order", "row positions must be strictly ascending"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
         }
         if let Some(index) = self.removed.iter().find(|index| **index >= base.len()) {
             return Err(out_of_range(*index));
@@ -355,15 +355,6 @@ impl En1994BeamsRows {
         self.modified.sort_by_key(|patch| patch.index);
     }
 
-    fn between_rows(base: &[crate::CompositeBeam], other: &[crate::CompositeBeam]) -> Self {
-        let prefix = base.iter().zip(other).take_while(|(left, right)| left == right).count();
-        let suffix = base[prefix..].iter().rev().zip(other[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
-        Self {
-            removed: (prefix..base.len() - suffix).collect(),
-            inserted: (prefix..other.len() - suffix).map(|index| En1994BeamsInserted { index, row: other[index].clone() }).collect(),
-            modified: Vec::new(),
-        }
-    }
 }
 
 /// 🩹️ Sparse patch of the `actions` row at base position `index`.
@@ -424,9 +415,9 @@ impl En1994ColumnsActionsRows {
     }
 
     fn apply_rows(&self, base: &[crate::ColumnAction]) -> Result<Vec<crate::ColumnAction>, protocol::MutationApplyError> {
-        let out_of_range = |index: usize| protocol::MutationApplyError::new("diff.index-out-of-range", format!("row position {index} is out of range")).at([index.to_string()]);
+        let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
-            return Err(protocol::MutationApplyError::new("diff.index-order", "row positions must be strictly ascending"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
         }
         if let Some(patch) = self.modified.iter().find(|patch| patch.index >= base.len()) {
             return Err(out_of_range(patch.index));
@@ -542,9 +533,9 @@ impl En1994ColumnsRows {
     }
 
     fn apply_rows(&self, base: &[crate::CompositeColumn]) -> Result<Vec<crate::CompositeColumn>, protocol::MutationApplyError> {
-        let out_of_range = |index: usize| protocol::MutationApplyError::new("diff.index-out-of-range", format!("row position {index} is out of range")).at([index.to_string()]);
+        let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index)) && Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
-            return Err(protocol::MutationApplyError::new("diff.index-order", "row positions must be strictly ascending"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
         }
         if let Some(index) = self.removed.iter().find(|index| **index >= base.len()) {
             return Err(out_of_range(*index));
@@ -657,15 +648,6 @@ impl En1994ColumnsRows {
         self.modified.sort_by_key(|patch| patch.index);
     }
 
-    fn between_rows(base: &[crate::CompositeColumn], other: &[crate::CompositeColumn]) -> Self {
-        let prefix = base.iter().zip(other).take_while(|(left, right)| left == right).count();
-        let suffix = base[prefix..].iter().rev().zip(other[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
-        Self {
-            removed: (prefix..base.len() - suffix).collect(),
-            inserted: (prefix..other.len() - suffix).map(|index| En1994ColumnsInserted { index, row: other[index].clone() }).collect(),
-            modified: Vec::new(),
-        }
-    }
 }
 
 /// 🩹️ Sparse patch of the `actions` row at base position `index`.
@@ -726,9 +708,9 @@ impl En1994SlabsActionsRows {
     }
 
     fn apply_rows(&self, base: &[crate::CharacteristicAction]) -> Result<Vec<crate::CharacteristicAction>, protocol::MutationApplyError> {
-        let out_of_range = |index: usize| protocol::MutationApplyError::new("diff.index-out-of-range", format!("row position {index} is out of range")).at([index.to_string()]);
+        let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
-            return Err(protocol::MutationApplyError::new("diff.index-order", "row positions must be strictly ascending"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
         }
         if let Some(patch) = self.modified.iter().find(|patch| patch.index >= base.len()) {
             return Err(out_of_range(patch.index));
@@ -844,9 +826,9 @@ impl En1994SlabsRows {
     }
 
     fn apply_rows(&self, base: &[crate::CompositeSlab]) -> Result<Vec<crate::CompositeSlab>, protocol::MutationApplyError> {
-        let out_of_range = |index: usize| protocol::MutationApplyError::new("diff.index-out-of-range", format!("row position {index} is out of range")).at([index.to_string()]);
+        let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index)) && Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
-            return Err(protocol::MutationApplyError::new("diff.index-order", "row positions must be strictly ascending"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
         }
         if let Some(index) = self.removed.iter().find(|index| **index >= base.len()) {
             return Err(out_of_range(*index));
@@ -959,15 +941,6 @@ impl En1994SlabsRows {
         self.modified.sort_by_key(|patch| patch.index);
     }
 
-    fn between_rows(base: &[crate::CompositeSlab], other: &[crate::CompositeSlab]) -> Self {
-        let prefix = base.iter().zip(other).take_while(|(left, right)| left == right).count();
-        let suffix = base[prefix..].iter().rev().zip(other[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
-        Self {
-            removed: (prefix..base.len() - suffix).collect(),
-            inserted: (prefix..other.len() - suffix).map(|index| En1994SlabsInserted { index, row: other[index].clone() }).collect(),
-            modified: Vec::new(),
-        }
-    }
 }
 
 /// 🔺️ Keyed sparse diff of the En1994 artifact: scalar setters, keyed row diffs and per-field section patches.
@@ -1085,20 +1058,6 @@ impl protocol::DiffAlgebra<En1994Snapshot> for En1994Diff {
             fire_rating: self.fire_rating.as_ref().map(|_| base.fire_rating.clone()),
             insulation_thickness_m: self.insulation_thickness_m.as_ref().map(|_| base.insulation_thickness_m.clone()),
             fatigue_detail: self.fatigue_detail.as_ref().map(|_| base.fatigue_detail.clone()),
-        }
-    }
-
-    fn between(base: &En1994Snapshot, other: &En1994Snapshot) -> Self {
-        Self {
-            annex: (base.annex != other.annex).then(|| other.annex.clone()),
-            structure_kind: (base.structure_kind != other.structure_kind).then(|| other.structure_kind.clone()),
-            steel_f_y_pa: (base.steel_f_y_pa != other.steel_f_y_pa).then(|| other.steel_f_y_pa.clone()),
-            beams: Some(En1994BeamsRows::between_rows(&base.beams, &other.beams)).filter(|rows| !rows.is_empty()),
-            columns: Some(En1994ColumnsRows::between_rows(&base.columns, &other.columns)).filter(|rows| !rows.is_empty()),
-            slabs: Some(En1994SlabsRows::between_rows(&base.slabs, &other.slabs)).filter(|rows| !rows.is_empty()),
-            fire_rating: (base.fire_rating != other.fire_rating).then(|| other.fire_rating.clone()),
-            insulation_thickness_m: (base.insulation_thickness_m != other.insulation_thickness_m).then(|| other.insulation_thickness_m.clone()),
-            fatigue_detail: (base.fatigue_detail != other.fatigue_detail).then(|| other.fatigue_detail.clone()),
         }
     }
 

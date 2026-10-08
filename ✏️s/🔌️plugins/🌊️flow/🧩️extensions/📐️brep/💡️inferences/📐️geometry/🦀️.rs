@@ -12,7 +12,7 @@ impl GeometryInferenceContext {
     pub fn new(session:SessionCapture)->Self {let evaluation=flow_extension_sdk::ExtensionEvaluationResources::new(module_registry(&session));Self {session,evaluation}}
     pub fn registry(&self)->&neural_engine::SharedRegistry {self.evaluation.registry()}
     pub fn session(&self)->&SessionCapture {&self.session}
-    pub fn next_close_byte_demand(&self)->usize {use semio_framework_plugin::ExtensionResourceOwner;self.evaluation.next_close_byte_demand().max(self.session.shell_byte_requirement()).max(1)}
+    pub fn next_close_byte_demand(&self)->usize {use semio_framework_plugin::ExtensionResourceOwner;self.evaluation.next_close_byte_demand().max(self.session.shell_byte_requirement()).max(self.session.next_close_byte_demand()).max(1)}
     pub fn begin_close(&mut self) {semio_framework_plugin::ExtensionResourceOwner::begin_close(&mut self.evaluation);}
     pub fn close_step(&mut self,items:usize,bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,semio_framework::Fault> {
         use semio_framework_plugin::{ExtensionResourceOwner,PluginCloseStep as Step};

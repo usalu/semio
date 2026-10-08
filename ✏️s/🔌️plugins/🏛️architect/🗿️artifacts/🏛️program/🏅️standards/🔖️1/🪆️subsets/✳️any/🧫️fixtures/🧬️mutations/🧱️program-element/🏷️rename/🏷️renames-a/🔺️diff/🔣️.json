@@ -7,9 +7,10 @@
   "activities": null,
   "functions": null,
   "elements": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "program-element-a",
         "patch": {
@@ -48,8 +49,7 @@
           "environmentalZone": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "quantities": null,
   "relationships": null,

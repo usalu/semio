@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "old": "expect(Buffer.allocUnsafeSlow(256).byteLength).toBe(row.allocated || 256);",
+    "new": "expect(accepted ? Buffer.allocUnsafeSlow(256).byteLength : 0).toBe(row.allocated);"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "old": "expect(operation).toContain(\"P::member_store_owners(grant)\");",
+    "new": "expect(operation).toContain(\"P::member_store_owners(source_grant)\");\n  expect(operation).toContain(\"maximum_capacity_bytes: source_capacity\");\n  expect(operation).toContain(\"progress.fits(source_grant)\");\n  expect(operation).toContain(\"genesis_request: ManuallyDrop::new(genesis_request)\");"
+  }
+]

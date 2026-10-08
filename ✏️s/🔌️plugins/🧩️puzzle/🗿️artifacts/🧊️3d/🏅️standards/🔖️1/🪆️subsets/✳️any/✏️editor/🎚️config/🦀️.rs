@@ -394,9 +394,6 @@ impl protocol::DiffAlgebra<Puzzle3dConfig> for Puzzle3dConfigDiff {
     fn inverse(&self, base: &Puzzle3dConfig) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle3dConfig, other: &Puzzle3dConfig) -> Self {
-        Self { fill_count: (base.fill_count != other.fill_count).then(|| other.fill_count), contact_tolerance: (base.contact_tolerance != other.contact_tolerance).then(|| other.contact_tolerance), object_kind_weights: (base.object_kind_weights != other.object_kind_weights).then(|| other.object_kind_weights.clone()), vortex_kind_weights: (base.vortex_kind_weights != other.vortex_kind_weights).then(|| other.vortex_kind_weights.clone()), active_example_id: (base.active_example_id != other.active_example_id).then(|| other.active_example_id.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.fill_count.is_none() && self.contact_tolerance.is_none() && self.object_kind_weights.is_none() && self.vortex_kind_weights.is_none() && self.active_example_id.is_none()
     }

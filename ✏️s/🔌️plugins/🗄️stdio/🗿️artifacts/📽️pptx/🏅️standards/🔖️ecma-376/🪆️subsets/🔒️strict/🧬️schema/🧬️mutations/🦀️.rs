@@ -17,12 +17,13 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, PptxDiff, PptxOpcDiff, PptxOpcRelDiff, PptxOpcRelListDiff, PptxOpcRelationshipsDiff};
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{retarget_attribute_values_diff, root_attribute_diff, root_children_diff, root_edits_diff, insert_xml_part_diff, remove_xml_part_diff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{insert_xml_part_diff, remove_xml_part_diff, retarget_attribute_values_diff, root_attribute_diff, root_children_diff, root_edits_diff, xml_part_positions};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional PresentationML main namespace.
@@ -108,6 +109,7 @@ pub const KINDS: &[&str] =
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
 /// source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_pptx_strict_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxStrictMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -194,22 +196,22 @@ fn diff_retarget_namespace(base: &PptxSnapshot, from: [&str; 2], to: &str) -> Pp
 fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &str) -> PptxDiff {
     let mut modified = Vec::new();
     for (owner, relationships) in base.opc.relationships.groups() {
-        let entries: Vec<NamedModified<String, PptxOpcRelDiff>> = relationships
+        let entries: Vec<OpcRelationshipModification> = relationships
             .iter()
             .filter_map(|relationship| {
                 let prefix = from.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix))?;
                 let retargeted = format!("{to}{}", &relationship.rel_type[prefix.len()..]);
-                (retargeted != relationship.rel_type).then(|| NamedModified { key: relationship.id.clone(), diff: PptxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } })
+                (retargeted != relationship.rel_type).then(|| OpcRelationshipModification { id: relationship.id.clone(), patch: OpcRelationshipPatch { rel_type: Some(retargeted), target: None, target_mode: None } })
             })
             .collect();
         if !entries.is_empty() {
-            modified.push(NamedModified { key: owner.clone(), diff: PptxOpcRelListDiff { modified: entries, ..Default::default() } });
+            modified.push(OpcOwnerModification { id: owner.clone(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta { modified: entries, ..Default::default() } } });
         }
     }
     if modified.is_empty() {
         return PptxDiff::default();
     }
-    PptxDiff { schema: None, opc: Some(PptxOpcDiff { relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
+    PptxDiff { schema: None, opc: Some(OpcDiff { relationships: Some(OpcOwnersDelta { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
@@ -219,10 +221,10 @@ fn diff_conformance_attribute(base: &PptxSnapshot, value: Option<&str>) -> PptxD
     let Some(part) = xml_part(base, &path) else { return PptxDiff::default() };
     root_attribute_diff(&part.document, "conformance", value).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
 }
-/// 🔺️ The diff of adding a legacy VML drawing part, at `index` (appended when `None`), together with its content-type override.
+/// 🔺️ The diff of adding a legacy VML drawing part, at `index` among the XML parts and with its override at `override_index` (each appended when `None`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_insert_vml_part(base: &PptxSnapshot, path: &str, document: &XmlDocument, index: Option<usize>) -> PptxDiff {
-    insert_xml_part_diff(base, path, VML_CONTENT_TYPE, document, index).unwrap_or_default()
+fn diff_insert_vml_part(base: &PptxSnapshot, path: &str, document: &XmlDocument, index: Option<usize>, override_index: Option<usize>) -> PptxDiff {
+    insert_xml_part_diff(base, path, VML_CONTENT_TYPE, document, index, override_index).unwrap_or_default()
 }
 
 /// 🔺️ The diff of removing a legacy VML drawing part and its content-type override.
@@ -241,18 +243,37 @@ pub fn alternate_content_node() -> XmlNode {
     }
 }
 
-/// 🔺️ The diff of appending one markup-compatibility fallback to a part's root element.
+/// 🧭️ The root children of `document` that are markup-compatibility fallbacks, optionally only the one at `only`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_append_alternate_content(base: &PptxSnapshot, path: &str) -> PptxDiff {
-    let Some(part) = xml_part(base, path) else { return PptxDiff::default() };
-    root_children_diff(&part.document, Some(alternate_content_node()), None).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
+fn alternate_content_positions(document: &XmlDocument, only: Option<usize>) -> Vec<(usize, XmlNode)> {
+    let Some(XmlNode::Element { children, .. }) = document.root.as_ref() else { return Vec::new() };
+    children.iter().enumerate().filter(|(index, child)| only.is_none_or(|only| only == *index) && matches!(child, XmlNode::Element { name, .. } if name == ALTERNATE_CONTENT_ELEMENT)).map(|(index, child)| (index, child.clone())).collect()
 }
 
-/// 🔺️ The diff of stripping every markup-compatibility fallback from a part's root element.
+/// 🧭️ The final index a fallback inserted at `index` lands on in the root of `document`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_strip_alternate_content(base: &PptxSnapshot, path: &str) -> PptxDiff {
+fn alternate_content_landing(document: &XmlDocument, index: Option<usize>) -> usize {
+    let length = match document.root.as_ref() {
+        Some(XmlNode::Element { children, .. }) => children.len(),
+        _ => 0,
+    };
+    index.map_or(length, |index| index.min(length))
+}
+
+/// 🔺️ The diff of inserting one markup-compatibility fallback (`node`, canonical by default) into a part's root element at `index` (appended when `None`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_insert_alternate_content(base: &PptxSnapshot, path: &str, node: Option<&XmlNode>, index: Option<usize>) -> PptxDiff {
     let Some(part) = xml_part(base, path) else { return PptxDiff::default() };
-    root_children_diff(&part.document, None, Some(ALTERNATE_CONTENT_ELEMENT)).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
+    let landing = alternate_content_landing(&part.document, index);
+    root_children_diff(&part.document, Some((landing, node.cloned().unwrap_or_else(alternate_content_node))), &[]).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
+}
+
+/// 🔺️ The diff of stripping the markup-compatibility fallbacks from a part's root element: every one, or only the one at `index`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_remove_alternate_content(base: &PptxSnapshot, path: &str, index: Option<usize>) -> PptxDiff {
+    let Some(part) = xml_part(base, path) else { return PptxDiff::default() };
+    let removed: Vec<usize> = alternate_content_positions(&part.document, index).into_iter().map(|(position, _)| position).collect();
+    root_children_diff(&part.document, None, &removed).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
 }
 //#endregion 🔖️DiffBuilders
 
@@ -283,6 +304,41 @@ pub(crate) fn conformance_attribute_inverse(base: &PptxSnapshot, forward_changes
         None if forward_changes => vec![PptxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {})],
         None => Vec::new(),
     }
+}
+
+/// ↩️ The mutation that undoes inserting a VML part: its removal, unless the part already existed.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn insert_vml_part_inverse(base: &PptxSnapshot, path: &str) -> Vec<PptxStrictMutation> {
+    let key = path.trim_start_matches('/');
+    if base.xml_parts.iter().any(|part| part.path == key) || base.opc.part(key).is_some() {
+        return Vec::new();
+    }
+    vec![PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.to_string() })]
+}
+
+/// ↩️ The mutation that undoes removing a VML part: its insertion at the part and override positions it held.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn remove_vml_part_inverse(base: &PptxSnapshot, path: &str) -> Vec<PptxStrictMutation> {
+    let (Some(part), Some((index, override_index))) = (xml_part(base, path), xml_part_positions(base, path)) else { return Vec::new() };
+    vec![PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.to_string(), document: part.document.clone(), index: Some(index), override_index })]
+}
+
+/// ↩️ The mutation that undoes inserting a fallback: removing exactly the child it landed on.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn insert_alternate_content_inverse(base: &PptxSnapshot, path: &str, index: Option<usize>) -> Vec<PptxStrictMutation> {
+    let Some(part) = xml_part(base, path) else { return Vec::new() };
+    vec![PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.to_string(), index: Some(alternate_content_landing(&part.document, index)) })]
+}
+
+/// ↩️ The mutations that undo removing fallbacks: one insertion of each removed node at its index, listed last-to-first because replay applies them in reverse.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn remove_alternate_content_inverse(base: &PptxSnapshot, path: &str, index: Option<usize>) -> Vec<PptxStrictMutation> {
+    let Some(part) = xml_part(base, path) else { return Vec::new() };
+    alternate_content_positions(&part.document, index)
+        .into_iter()
+        .rev()
+        .map(|(position, node)| PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.to_string(), node: Some(node), index: Some(position) }))
+        .collect()
 }
 //#endregion 🔖️Inverses
 

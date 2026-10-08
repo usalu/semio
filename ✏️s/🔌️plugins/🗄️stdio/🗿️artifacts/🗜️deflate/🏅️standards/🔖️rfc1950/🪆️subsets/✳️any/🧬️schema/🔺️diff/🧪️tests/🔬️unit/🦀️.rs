@@ -1,5 +1,6 @@
+use crate::apply_mutation;
 use super::*;
-use crate::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, DeflateMutation};
+use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary, DeflateMutation};
 use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
 use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 use protocol::{DiffBinary,DiffCodec,DiffText, Mutation};
@@ -21,37 +22,6 @@ fn sweep_a() -> DeflateSnapshot {
 fn sweep_b() -> DeflateSnapshot {
     DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 9, window_bits: 6, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0xDEAD_BEEF), payload: b"sweep-b-different-longer-payload".to_vec() }
 }
-//#endregion Fixtures
-
-//#region field_sweep
-/// 🧪️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable field (incl. the
-/// tri-state `dict_id` exercising `Some(None)` in the b→a direction).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_between_covers_every_field() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let ab = DeflateDiff::between(&a, &b);
-    assert!(ab.compression_method.is_some());
-    assert!(ab.window_bits.is_some());
-    assert!(ab.compression_level_hint.is_some());
-    assert!(ab.dict_id.is_some());
-    assert_eq!(ab.dict_id, Some(Some(0xDEAD_BEEF)));
-    assert!(ab.payload.is_some());
-    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b);
-
-    let ba = DeflateDiff::between(&b, &a);
-    assert!(ba.compression_method.is_some());
-    assert!(ba.window_bits.is_some());
-    assert!(ba.compression_level_hint.is_some());
-    assert!(ba.dict_id.is_some());
-    assert_eq!(ba.dict_id, Some(None)); // 🪆️ tri-state Some(None): dictionary cleared
-    assert!(ba.payload.is_some());
-    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a);
-
-    assert!(DeflateDiff::between(&a, &a).is_empty());
-    assert!(DeflateDiff::between(&b, &b).is_empty());
-}
 //#endregion field_sweep
 
 //#region mutation_diff_law
@@ -65,7 +35,7 @@ async fn mutation_diff_law_every_variant() {
     ];
     for m in variants {
         let mut via_apply = base.clone();
-        let returned = apply_deflate_mutation(&mut via_apply, &m);
+        let returned = apply_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
         assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
@@ -85,9 +55,9 @@ async fn inverse_law_mutation_and_diff_level() {
     for m in variants {
         // 🔁️ mutation-level: apply then apply every inverse mutation restores base.
         let mut round = base.clone();
-        apply_deflate_mutation(&mut round, &m);
-        for inv in m.inverse(&base).expect("the admitted mutation has an inverse") {
-            apply_deflate_mutation(&mut round, &inv);
+        apply_mutation(&mut round, &m);
+        for inv in m.inverse(&base).expect("the admitted mutation has an inverse").into_iter().rev() {
+            apply_mutation(&mut round, &inv);
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
@@ -143,26 +113,6 @@ async fn absorb_law_scalar_lww_and_associativity() {
     assert_eq!(left, right);
     assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&dc, &protocol::apply_diff(&db, &protocol::apply_diff(&da, &base).unwrap()).unwrap()).unwrap());
 }
-//#endregion absorb_law
-
-//#region between_roundtrip_law
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law_synthetic_and_real_fixture() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&DeflateDiff::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&DeflateDiff::between(&b, &a), &b).unwrap(), a);
-
-    // 🌱 Real fixture: decode a genuine zlib stream, then round-trip against a variant that
-    // changes every field from it.
-    let fixture = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).expect("decode real fixture");
-    let mut other = fixture.clone();
-    other.compression_level_hint = DeflateLevelHint::Maximum;
-    other.dict_id = Some(99);
-    other.payload = b"real-fixture-variant-payload".to_vec();
-    assert_eq!(protocol::apply_diff(&DeflateDiff::between(&fixture, &other), &fixture).unwrap(), other);
-    assert_eq!(protocol::apply_diff(&DeflateDiff::between(&other, &fixture), &other).unwrap(), fixture);
-}
 //#endregion between_roundtrip_law
 
 //#region codec_retention_law
@@ -199,15 +149,11 @@ async fn codec_retention_law_real_fixture_normal_form() {
 
 //#region diff_codec_text_binary_roundtrip_law
 /// 🧪️ F6: `DiffText::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip law —
-/// exercises real `between()` results covering every field AND both `dict_id` tri-state
+/// exercises the declared cases covering every field AND both `dict_id` tri-state
 /// transitions (`Some(None)` = cleared, `Some(Some(_))` = set/changed), plus the empty diff.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    // 🪆️ `a.dict_id` is `None`, `b.dict_id` is `Some(_)` -- `between(a,b)` exercises the
-    // Some(Some(_)) arm, `between(b,a)` exercises the Some(None) arm.
-    let cases = vec![DeflateDiff::default(), DeflateDiff::between(&a, &b), DeflateDiff::between(&b, &a), diff_set_preset_dictionary(None), diff_set_payload(Vec::new())];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

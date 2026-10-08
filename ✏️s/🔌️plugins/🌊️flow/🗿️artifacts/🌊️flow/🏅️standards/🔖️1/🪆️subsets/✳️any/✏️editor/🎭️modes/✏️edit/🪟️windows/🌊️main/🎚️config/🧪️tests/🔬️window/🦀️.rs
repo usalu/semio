@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::flow::modes::edit::windows::main::transient::{FlowGenerationsWindowTransientOwner, FlowWindowTransient, FlowWindowTransientMutation};
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 fn block_on_flow_window_ownership<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -165,9 +165,9 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                     if reopened_left != left_viewport || reopened_right != right_viewport { return Err("Flow persisted window config changed during restore".into()); }
                     let stale = ViewModel { window_id: Some("lost-flow-window".into()), window_instances: view.window_instances.clone(), ..semio_framework_plugin::ViewModel::new(view.locale, view.terminology) };
-                    if addressed(&stale, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted stale window identity".into()); }
+                    if addressed(&stale, &FlowMainWindowConfig::default(), FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted stale window identity".into()); }
                     let wrong = ViewModel { window_id: Some(generation_id.into()), window_instances: view.window_instances.clone(), ..semio_framework_plugin::ViewModel::new(view.locale, view.terminology) };
-                    if addressed(&wrong, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted wrong-kind window identity".into()); }
+                    if addressed(&wrong, &FlowMainWindowConfig::default(), FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted wrong-kind window identity".into()); }
                     Ok(())
                 }.await;
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -272,24 +272,26 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
         .expect("Flow one-turn window config law thread");
 }
 
-#[test]
-fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
+#[semio_framework_async_macros::async_test]
+async fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: FlowMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: FlowWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {
         let mutation: FlowMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let after = mutation.diff(&base_config).diff().apply(&base_config).unwrap();
-        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let after = protocol::apply_diff(mutation.diff(&base_config).diff(), &base_config).unwrap();
+        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_config);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base_config).await;
         assert_eq!(FlowMainWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(FlowMainWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
     for row in fixture["transientMutations"].as_array().unwrap() {
         let mutation: FlowWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let after = mutation.diff(&base_transient).diff().apply(&base_transient).unwrap();
-        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let after = protocol::apply_diff(mutation.diff(&base_transient).diff(), &base_transient).unwrap();
+        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_transient);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base_transient).await;
         assert_eq!(FlowWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(FlowWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }

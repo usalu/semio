@@ -21,6 +21,7 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "writer"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6062, wgpu = 6162 }
 
 [lib]

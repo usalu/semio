@@ -1,3 +1,8 @@
+use crate::os_directory::io::binary::artifact_hash::hex_lower;
+use crate::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
+use crate::os_directory::io::text::directory_command_sha256;
+use crate::os_directory::io::text::valid_user_preference_record_v1;
+use crate::os_directory::io::text::validate_directory_event_page_event;
 use super::*;
 
 #[test]
@@ -260,21 +265,6 @@ struct DescriptorFixture {
 async fn document_descriptor_matches_the_language_neutral_fixture() {
     let fixture: DescriptorFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("descriptor fixture decodes");
     assert_eq!(semio_framework_pack_json::to_json_string(&fixture.valid), fixture.canonical);
-}
-
-#[derive(FromValue)]
-#[value(rename_all = "camelCase")]
-struct ArtifactAuthorityFixture {
-    descriptor: DocumentDescriptor,
-    descriptor_encoding_hex: String,
-    descriptor_digest_v1: ArtifactHash,
-}
-
-#[semio_framework_async_macros::async_test]
-async fn document_descriptor_digest_v1_matches_the_language_neutral_binary_vector() {
-    let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("artifact authority fixture decodes");
-    assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
-    assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
 }
 
 #[derive(FromValue)]

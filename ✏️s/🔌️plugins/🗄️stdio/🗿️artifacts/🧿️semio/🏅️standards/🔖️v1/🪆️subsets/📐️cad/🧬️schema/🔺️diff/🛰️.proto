@@ -19,7 +19,7 @@ message CadEntitiesDiff {
   message Modified { string key = 1; CadEntityRecordDiff diff = 2; }
   repeated string removed = 1;
   repeated Modified modified = 2;
-  repeated semio.s_stdio_semio_cad.snapshot.CadEntityRecord added = 3;
+  repeated CadEntityRecordAdded added = 3;
 }
 
 message CadBlockDiff {
@@ -31,14 +31,14 @@ message CadLayersDiff {
   message Modified { string key = 1; CadLayerDiff diff = 2; }
   repeated string removed = 1;
   repeated Modified modified = 2;
-  repeated semio.s_stdio_semio_cad.snapshot.CadLayer added = 3;
+  repeated CadLayerAdded added = 3;
 }
 
 message CadBlocksDiff {
   message Modified { string key = 1; CadBlockDiff diff = 2; }
   repeated string removed = 1;
   repeated Modified modified = 2;
-  repeated semio.s_stdio_semio_cad.snapshot.CadBlock added = 3;
+  repeated CadBlockAdded added = 3;
 }
 
 message SemioCadDiff {
@@ -46,3 +46,7 @@ message SemioCadDiff {
   optional CadBlocksDiff blocks = 2;
   optional CadEntitiesDiff entities = 3;
 }
+
+message CadEntityRecordAdded { uint64 index = 1; semio.s_stdio_semio_cad.snapshot.CadEntityRecord item = 2; }
+message CadLayerAdded { uint64 index = 1; semio.s_stdio_semio_cad.snapshot.CadLayer item = 2; }
+message CadBlockAdded { uint64 index = 1; semio.s_stdio_semio_cad.snapshot.CadBlock item = 2; }

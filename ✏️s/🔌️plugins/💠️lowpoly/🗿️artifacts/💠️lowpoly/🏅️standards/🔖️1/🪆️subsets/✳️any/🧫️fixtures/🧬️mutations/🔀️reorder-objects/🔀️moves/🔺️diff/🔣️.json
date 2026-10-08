@@ -1,12 +1,15 @@
 {
   "objects": {
-    "added": [],
-    "patched": [],
     "removed": [],
-    "reordered": [
-      "obj-fin",
-      "obj-hull"
-    ]
+    "inserted": [],
+    "moved": [
+      {
+        "id": "obj-fin",
+        "from": 1,
+        "to": 0
+      }
+    ],
+    "modified": []
   },
   "schema": null
 }

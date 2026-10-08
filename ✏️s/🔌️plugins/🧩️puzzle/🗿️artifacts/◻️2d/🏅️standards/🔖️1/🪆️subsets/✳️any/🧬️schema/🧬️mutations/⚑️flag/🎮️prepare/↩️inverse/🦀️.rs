@@ -1,8 +1,9 @@
 //! ⚑️ Grants actual native prior-flag inverse ownership without copying the original payload.
 
+use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::{Puzzle2dCloseAxis,close_child_demand,close_demand_methods};
 use super::{Puzzle2dFlagIntent,Puzzle2dFlagPlan,Puzzle2dFlagPreparationCursor,Puzzle2dFlagPreparationStep,Puzzle2dSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_value::{SnapshotRetirementStep, ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ordered_map::BoundedOrdGrant}};
+use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct Puzzle2dFlagInverseCursor<T:Puzzle2dFlagIntent> { state: ManuallyDrop<Puzzle2dFlagInverseState<T>> }
@@ -34,21 +35,21 @@ impl<T:Puzzle2dFlagIntent> Default for Puzzle2dFlagInverseCursor<T> {
 impl<T:Puzzle2dFlagIntent> Puzzle2dFlagInverseCursor<T> {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 8 { return Err(refusal("owned flag inverse is closing or spent")); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         mutation.bind(&mut self.mutation)?;
         match self.phase {
             0 => {
-                let step = self.preparation.advance(source, mutation, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes })?;
+                let step = self.preparation.advance(source, mutation, grant)?;
                 let progress = match step {
                     Puzzle2dFlagPreparationStep::Pending(progress) => progress,
                     Puzzle2dFlagPreparationStep::Complete { plan, progress } => { self.plan = self.preparation.take(); self.preparation.begin_close(); self.phase = 1; if self.plan != Some(plan) { return Err(refusal("flag inverse lost its scalar plan")); } progress },
                 };
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, retained_capacity_bytes: 0, released_bytes: 0 }))
+                Ok(RetainedCloneStep::Progress(progress))
             }
             1 => {
-                let step = self.preparation.close_step(1, grant.maximum_release_bytes)?;
-                if step == SnapshotRetirementStep::Complete { self.phase = if self.plan.and_then(|plan| plan.previous).is_some() { 2 } else { 6 }; }
+                let step = self.preparation.close_step(grant)?;
+                if self.preparation.terminal_is_empty() { self.phase = if self.plan.and_then(|plan| plan.previous).is_some() { 2 } else { 6 }; }
                 Ok(close_progress(step))
             }
             2 => {
@@ -67,7 +68,7 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagInverseCursor<T> {
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Puzzle2dMutation>(), retained_capacity_bytes: 0, released_bytes: 0 }))
             }
             4 => {
-                let step = self.identifier.close_granted(grant)?;
+                let step = self.identifier.close_step(grant)?;
                 if self.identifier.terminal_is_empty() { self.phase = 5; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -102,11 +103,24 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagInverseCursor<T> {
 
     pub fn begin_close(&mut self) { self.closing = true; self.preparation.begin_close(); self.identifier.begin_close(); }
 
+    fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
+        if !self.preparation.terminal_is_empty(){return close_child_demand!(axis,self.preparation)}
+        if !self.identifier.terminal_is_empty(){return axis.retained::<PagedUtf8<{usize::MAX}>,_>(&self.identifier)}
+        if let Some(owner)=self.pending_close.as_ref(){return axis.retirement(owner)}
+        if self.pending.is_some(){return axis.inline::<Puzzle2dMutation>()}
+        if let Some(owner)=self.inverse_close.as_ref(){return axis.retirement(owner)}
+        if !self.inverse.terminal_is_empty(){return axis.inline::<PagedList<Puzzle2dMutation,{usize::MAX}>>()}
+        if self.plan.is_some(){return axis.inline::<Option<Puzzle2dFlagPlan>>()}
+        axis.binding(if self.source.is_some(){&self.source}else{&self.mutation})
+    }
+
+    close_demand_methods!(next_close_copy_byte_demand,next_close_capacity_byte_demand,next_close_release_byte_demand,next_close_depth_demand);
+
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(refusal("flag inverse closure was not started")); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.preparation.terminal_is_empty() { return self.preparation.close_step(1, grant.maximum_release_bytes).map(close_progress); }
-        if !self.identifier.terminal_is_empty() { return self.identifier.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.preparation.terminal_is_empty() { return self.preparation.close_step(grant).map(close_progress); }
+        if !self.identifier.terminal_is_empty() { return self.identifier.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.pending_close.as_mut() {
             let step = owner.step(grant)?;
             if owner.terminal_is_empty() { self.pending_close = None; }
@@ -127,11 +141,9 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagInverseCursor<T> {
             match ControlledRetirement::new(std::mem::take(&mut self.inverse)) { Ok(owner) => self.inverse_close = Some(owner), Err((error, owner)) => { self.inverse = owner; return Err(error); } }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<PagedList<Puzzle2dMutation, {usize::MAX}>>(), retained_capacity_bytes: 0 , released_bytes: 0 }));
         }
-        if self.plan.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-        let step = RetainedCloneBinding::close_one(&mut self.source, 1)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(close_progress(step)); }
-        let step = RetainedCloneBinding::close_one(&mut self.mutation, 1)?;
-        Ok(if step == SnapshotRetirementStep::Complete { RetainedCloneStep::Complete(Default::default()) } else { close_progress(step) })
+        if self.plan.is_some() {let bytes=size_of::<Option<Puzzle2dFlagPlan>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.plan=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:bytes,..Default::default()}));}
+        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant)?;
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{close_progress(step)})
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.preparation.terminal_is_empty() && self.identifier.terminal_is_empty() && self.plan.is_none() && self.pending.is_none() && self.inverse.terminal_is_empty() && self.pending_close.is_none() && self.inverse_close.is_none() && self.source.is_none() && self.mutation.is_none() }
@@ -141,9 +153,7 @@ impl<T:Puzzle2dFlagIntent> Drop for Puzzle2dFlagInverseCursor<T> {
     fn drop(&mut self) { let empty = self.terminal_is_empty(); assert!(std::thread::panicking() || empty, "owned flag inverse abandoned before controlled closure"); if empty { unsafe { ManuallyDrop::drop(&mut self.state); } } }
 }
 
-fn close_progress(step: SnapshotRetirementStep) -> RetainedCloneStep {
-    RetainedCloneStep::Progress(match step { SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes }, _ => Default::default() })
-}
+fn close_progress(step: RetainedCloneStep) -> RetainedCloneStep { RetainedCloneStep::Progress(step.progress()) }
 
 fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
 

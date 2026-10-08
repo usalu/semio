@@ -9,18 +9,19 @@ pub struct SetLoadGroup {
     pub id: u64,
     pub group: Option<SavLoadGroup>,
     pub index: Option<usize>,
+    pub instance: Option<semio_s_artifact_stdio_contract::part21::Part21Instance>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetLoadGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "load-group", kind: "set-load-group", record: "SetLoadGroup" };
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        let Self { id, group, index } = self;
+        let Self { id, group, index, instance: exact } = self;
         let instance = match group {
             None => None,
             Some(row) => {
 
-                Some(mvd::simple_instance(*id, LOAD_GROUP, load_group_args(row)))
+                Some(exact.clone().unwrap_or_else(|| mvd::simple_instance(*id, LOAD_GROUP, load_group_args(row))))
             }
         };
         match mvd::entity_diff(base, *id, &[LOAD_GROUP], instance, *index) {
@@ -33,10 +34,13 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetLoadGroup 
         let Self { id, group, .. } = self;
         Ok(match mvd::standing(base, *id, &[LOAD_GROUP]) {
             mvd::Standing::Foreign => Vec::new(),
-            mvd::Standing::Absent if group.is_some() => vec![Ifc2x3SavMutation::SetLoadGroup(SetLoadGroup { id: *id, group: None, index: None })],
+            mvd::Standing::Absent if group.is_some() => vec![Ifc2x3SavMutation::SetLoadGroup(SetLoadGroup { id: *id, group: None, index: None, instance: None })],
             mvd::Standing::Absent => Vec::new(),
             mvd::Standing::Present { index } => match load_group_row(base, *id) {
-                Some(row) => vec![Ifc2x3SavMutation::SetLoadGroup(SetLoadGroup { id: *id, group: Some(row), index: Some(index) })],
+                Some(row) => {
+                    let instance = mvd::exact_instance_if_lossy(base, mvd::simple_instance(*id, LOAD_GROUP, load_group_args(&row)));
+                    vec![Ifc2x3SavMutation::SetLoadGroup(SetLoadGroup { id: *id, group: Some(row), index: Some(index), instance })]
+                }
                 None => Vec::new(),
             },
         })

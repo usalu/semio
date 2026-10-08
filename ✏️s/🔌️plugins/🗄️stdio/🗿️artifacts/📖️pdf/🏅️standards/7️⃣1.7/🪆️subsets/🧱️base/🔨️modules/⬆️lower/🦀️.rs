@@ -12,6 +12,7 @@ use super::lexer::{PResult, PdfEngineError};
 use super::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort};
 
 //#region 🔖️Options
 /// 🎛️ Writer choices that do not change the typed model (so the default keeps `lift ∘ lower`
@@ -45,10 +46,12 @@ pub struct Lowering<'a> {
     pub field_refs: Vec<ObjRef>,
     pub widget_parents: HashMap<[u32; 2], ObjRef>,
     codecs: HashMap<String, FontCodec>,
+    artifacts:NativePdfArtifactResources<'a>,
     used_glyphs: HashMap<String, BTreeSet<u16>>,
 }
 
 impl ObjectSink for Lowering<'_> {
+    fn resolve_artifact(&self,reference:&semio_framework_artifact_reference::ArtifactRef)->PResult<PdfObject> {self.artifacts.resolve(reference)}
     fn add(&mut self, value: PdfObject) -> ObjRef {
         let reference = self.reserve();
         self.objects.push(PdfIndirectObject { id: reference, value });
@@ -57,6 +60,7 @@ impl ObjectSink for Lowering<'_> {
 }
 
 impl FontTable for Lowering<'_> {
+    fn content_artifact(&self,reference:&semio_framework_artifact_reference::ArtifactRef)->PResult<PdfObject>{self.artifacts.resolve(reference)}
     fn font(&self, name: &str) -> Option<&FontCodec> {
         self.codecs.get(name)
     }
@@ -76,9 +80,10 @@ pub struct LoweredDocument {
 
 impl<'a> Lowering<'a> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn new(snapshot: &'a PdfSnapshot, first_number: u32, options: LowerOptions) -> Self {
-        let codecs = snapshot.fonts.iter().map(|font| (font.id.clone(), FontCodec::new(font))).collect();
-        Self { snapshot, options, objects: Vec::new(), next: first_number.max(1), refs: HashMap::new(), annotation_refs: Vec::new(), field_refs: Vec::new(), widget_parents: HashMap::new(), codecs, used_glyphs: HashMap::new() }
+    pub fn new(snapshot: &'a PdfSnapshot, first_number: u32, options: LowerOptions) -> PResult<Self> {
+        let artifacts=NativePdfArtifactResources::from_objects(&snapshot.objects);
+        let codecs = snapshot.fonts.iter().map(|font| Ok((font.id.clone(), FontCodec::new(font,&artifacts)?))).collect::<PResult<_>>()?;
+        Ok(Self { snapshot, options, objects: Vec::new(), next: first_number.max(1), refs: HashMap::new(), annotation_refs: Vec::new(), field_refs: Vec::new(), widget_parents: HashMap::new(), codecs, artifacts, used_glyphs: HashMap::new() })
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -175,7 +180,7 @@ impl<'a> Lowering<'a> {
 /// tree root, `page_ref` the reserved reference of this page. Returns the page's own objects.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lower_page_standalone(snapshot: &PdfSnapshot, page: &PdfPage, page_index: usize, page_ref: ObjRef, pages_ref: ObjRef, first_number: u32, options: LowerOptions, refs: &HashMap<(Category, String), ObjRef>, widget_parents: &HashMap<[u32; 2], ObjRef>) -> PResult<(Vec<PdfIndirectObject>, Vec<ObjRef>)> {
-    let mut lowering = Lowering::new(snapshot, first_number, options);
+    let mut lowering = Lowering::new(snapshot, first_number, options)?;
     lowering.refs = refs.clone();
     lowering.widget_parents = widget_parents.clone();
     lowering.refs.insert((Category::Page, page_index.to_string()), page_ref);
@@ -192,7 +197,7 @@ pub fn lower_page_standalone(snapshot: &PdfSnapshot, page: &PdfPage, page_index:
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lower_acro_form_standalone(snapshot: &PdfSnapshot, first_number: u32, options: LowerOptions, refs: &HashMap<(Category, String), ObjRef>, annotation_refs: Vec<Vec<ObjRef>>, field_refs: Vec<ObjRef>) -> PResult<Option<(Vec<PdfIndirectObject>, ObjRef)>> {
     let Some(form) = &snapshot.acro_form else { return Ok(None) };
-    let mut lowering = Lowering::new(snapshot, first_number, options);
+    let mut lowering = Lowering::new(snapshot, first_number, options)?;
     lowering.refs = refs.clone();
     lowering.annotation_refs = annotation_refs;
     lowering.field_refs = field_refs;
@@ -208,7 +213,7 @@ pub fn lower_acro_form_standalone(snapshot: &PdfSnapshot, first_number: u32, opt
 /// `first_number` — the raw material a reconciling write grafts the moved catalog lanes from.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lower_catalog_standalone(snapshot: &PdfSnapshot, first_number: u32, options: LowerOptions, refs: &HashMap<(Category, String), ObjRef>, pages_ref: ObjRef) -> PResult<(Vec<PdfDictEntry>, Vec<PdfIndirectObject>)> {
-    let mut lowering = Lowering::new(snapshot, first_number, options);
+    let mut lowering = Lowering::new(snapshot, first_number, options)?;
     lowering.refs = refs.clone();
     let catalog = lowering.lower_catalog(pages_ref, false)?;
     Ok((catalog, lowering.objects))
@@ -220,7 +225,7 @@ pub fn lower_catalog_standalone(snapshot: &PdfSnapshot, first_number: u32, optio
 pub fn lower_document_headless(snapshot: &PdfSnapshot, expected_pages: usize, options: LowerOptions) -> PResult<(LoweredDocument, ObjRef, Vec<ObjRef>, PdfObject)> {
     let mut headless = snapshot.clone();
     headless.pages.clear();
-    let mut lowering = Lowering::new(&headless, 1, options);
+    let mut lowering = Lowering::new(&headless, 1, options)?;
     let catalog_ref = lowering.reserve();
     let pages_ref = lowering.reserve();
     let info_ref = if headless.info.is_empty() { None } else { Some(lowering.reserve()) };
@@ -318,7 +323,7 @@ impl Lowering<'_> {
 /// ⬆️ Lowers the whole typed document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lower_document(snapshot: &PdfSnapshot, first_number: u32, options: LowerOptions) -> PResult<LoweredDocument> {
-    let mut lowering = Lowering::new(snapshot, first_number, options);
+    let mut lowering = Lowering::new(snapshot, first_number, options)?;
     let catalog_ref = lowering.reserve();
     let pages_ref = lowering.reserve();
     let info_ref = if snapshot.info.is_empty() { None } else { Some(lowering.reserve()) };
@@ -400,25 +405,16 @@ impl Lowering<'_> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_program(&mut self, program: &PdfFontProgram, glyphs: Option<&BTreeSet<u16>>) -> (&'static str, PdfObject) {
-        match program {
-            PdfFontProgram::Type1 { data, length1, length2, length3 } => ("FontFile", PdfObject::Ref(self.add(stream(vec![entry("Length1", PdfObject::Int(*length1 as i64)), entry("Length2", PdfObject::Int(*length2 as i64)), entry("Length3", PdfObject::Int(*length3 as i64))], data.clone())))),
-            PdfFontProgram::TrueType { data } => {
-                let data = match (glyphs, self.options.subset_fonts) {
-                    (Some(glyphs), true) => super::fonts::TrueTypeFont::parse(data).map(|font| font.subset(glyphs)).unwrap_or_else(|_| data.clone()),
-                    _ => data.clone(),
-                };
-                let length = data.len() as i64;
-                ("FontFile2", PdfObject::Ref(self.add(stream(vec![entry("Length1", PdfObject::Int(length))], data))))
-            }
-            PdfFontProgram::Cff { data } => ("FontFile3", PdfObject::Ref(self.add(stream(vec![entry("Subtype", PdfObject::name("Type1C"))], data.clone())))),
-            PdfFontProgram::CidCff { data } => ("FontFile3", PdfObject::Ref(self.add(stream(vec![entry("Subtype", PdfObject::name("CIDFontType0C"))], data.clone())))),
-            PdfFontProgram::OpenType { data } => ("FontFile3", PdfObject::Ref(self.add(stream(vec![entry("Subtype", PdfObject::name("OpenType"))], data.clone())))),
-        }
+    fn lower_program(&mut self,program:&PdfFontProgram,glyphs:Option<&BTreeSet<u16>>)->PResult<(&'static str,PdfObject)> {
+        crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;
+        let mut object=self.artifacts.resolve(program.reference())?;
+        let PdfObject::Stream {dict,data,filters}=&mut object else {return Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()));};
+        let key=match program {PdfFontProgram::Type1 {..}=>"FontFile",PdfFontProgram::TrueType {..}=>{if let (Some(glyphs),true)=(glyphs,self.options.subset_fonts) {*data=super::fonts::TrueTypeFont::parse(data).map_err(PdfEngineError::Malformed)?.subset(glyphs);filters.clear();dict.retain(|entry|entry.key!="Length1");dict.push(entry("Length1",PdfObject::Int(data.len() as i64)));}"FontFile2"},_=>"FontFile3"};
+        Ok((key,PdfObject::Ref(self.add(object))))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_descriptor(&mut self, descriptor: &PdfFontDescriptor, program: Option<&PdfFontProgram>, glyphs: Option<&BTreeSet<u16>>) -> PdfObject {
+    fn lower_descriptor(&mut self, descriptor: &PdfFontDescriptor, program: Option<&PdfFontProgram>, glyphs: Option<&BTreeSet<u16>>) -> PResult<PdfObject> {
         let mut dict = vec![
             entry("Type", PdfObject::name("FontDescriptor")),
             entry("FontName", PdfObject::name(&descriptor.font_name)),
@@ -441,11 +437,11 @@ impl Lowering<'_> {
         push_opt(&mut dict, "FontWeight", descriptor.font_weight.map(PdfObject::number));
         push_opt(&mut dict, "CharSet", descriptor.char_set.as_ref().map(|v| PdfObject::Str(encode_text_string(v))));
         if let Some(program) = program {
-            let (key, value) = self.lower_program(program, glyphs);
+            let (key, value) = self.lower_program(program, glyphs)?;
             dict.push(entry(key, value));
         }
         dict.extend(descriptor.extra.iter().cloned());
-        PdfObject::Ref(self.add(PdfObject::Dict(dict)))
+        Ok(PdfObject::Ref(self.add(PdfObject::Dict(dict))))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -463,7 +459,7 @@ impl Lowering<'_> {
                 }
                 push_opt(&mut dict, "Encoding", Self::lower_simple_encoding(encoding));
                 if let Some(descriptor) = descriptor {
-                    let value = self.lower_descriptor(descriptor, program.as_ref(), glyphs.as_ref());
+                    let value = self.lower_descriptor(descriptor, program.as_ref(), glyphs.as_ref())?;
                     dict.push(entry("FontDescriptor", value));
                 }
             }
@@ -487,7 +483,7 @@ impl Lowering<'_> {
                 let resources = self.resources_for(&all_ops);
                 dict.push(entry("Resources", resources));
                 if let Some(descriptor) = descriptor {
-                    let value = self.lower_descriptor(descriptor, None, None);
+                    let value = self.lower_descriptor(descriptor, None, None)?;
                     dict.push(entry("FontDescriptor", value));
                 }
             }
@@ -506,7 +502,7 @@ impl Lowering<'_> {
                     }
                 };
                 dict.push(entry("Encoding", encoding_value));
-                let descendant_ref = self.lower_cid_font(descendant, glyphs.as_ref());
+                let descendant_ref = self.lower_cid_font(descendant, glyphs.as_ref())?;
                 dict.push(entry("DescendantFonts", PdfObject::Array(vec![PdfObject::Ref(descendant_ref)])));
             }
         }
@@ -519,9 +515,9 @@ impl Lowering<'_> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_cid_font(&mut self, cid: &PdfCidFont, glyphs: Option<&BTreeSet<u16>>) -> ObjRef {
+    fn lower_cid_font(&mut self, cid: &PdfCidFont, glyphs: Option<&BTreeSet<u16>>) -> PResult<ObjRef> {
         let mut dict = vec![entry("Type", PdfObject::name("Font")), entry("Subtype", PdfObject::name(if cid.true_type { "CIDFontType2" } else { "CIDFontType0" })), entry("BaseFont", PdfObject::name(&cid.base_font)), entry("CIDSystemInfo", cid_system_info(&cid.system_info))];
-        let descriptor = self.lower_descriptor(&cid.descriptor, cid.program.as_ref(), glyphs);
+        let descriptor = self.lower_descriptor(&cid.descriptor, cid.program.as_ref(), glyphs)?;
         dict.push(entry("FontDescriptor", descriptor));
         if cid.default_width != 1000.0 {
             dict.push(entry("DW", PdfObject::number(cid.default_width)));
@@ -545,14 +541,14 @@ impl Lowering<'_> {
         }
         match &cid.cid_to_gid {
             Some(PdfCidToGid::Identity) => dict.push(entry("CIDToGIDMap", PdfObject::name("Identity"))),
-            Some(PdfCidToGid::Map { data }) => {
-                let reference = self.add(stream(Vec::new(), data.clone()));
+            Some(PdfCidToGid::Map { glyphs }) => {
+                let reference = self.add(stream(Vec::new(),glyphs.iter().flat_map(|value|value.to_be_bytes()).collect()));
                 dict.push(entry("CIDToGIDMap", PdfObject::Ref(reference)));
             }
             None => {}
         }
         dict.extend(cid.extra.iter().cloned());
-        self.add(PdfObject::Dict(dict))
+        Ok(self.add(PdfObject::Dict(dict)))
     }
 }
 
@@ -1269,7 +1265,7 @@ impl Lowering<'_> {
                 push_opt(&mut d, "RegistryName", intent.registry_name.as_ref().map(|v| PdfObject::Str(encode_text_string(v))));
                 push_opt(&mut d, "Info", intent.info.as_ref().map(|v| PdfObject::Str(encode_text_string(v))));
                 if let Some(profile) = &intent.profile {
-                    let reference = self.add(stream(vec![entry("N", PdfObject::Int(if profile.len() > 20 && &profile[16..20] == b"GRAY" { 1 } else if profile.len() > 20 && &profile[16..20] == b"CMYK" { 4 } else { 3 }))], profile.clone()));
+                    let reference = self.add(self.resolve_artifact(profile)?);
                     d.push(entry("DestOutputProfile", PdfObject::Ref(reference)));
                 }
                 intents.push(PdfObject::Ref(self.add(PdfObject::Dict(d))));

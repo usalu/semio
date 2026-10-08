@@ -1,6 +1,15 @@
-type Id3Frame { id: String! flags: Int! data: [Int!]! }
-type Id3v2Tag { majorVersion: Int! minorVersion: Int! flags: Int! frames: [Id3Frame!]! }
-type Id3v1Tag { raw: [Int!]! }
+type Id3Text { kind: String! values: [String!]! }
+type Id3UserText { kind: String! description: String! values: [String!]! }
+type Id3Comment { kind: String! language: String! description: String! text: String! }
+type Id3Lyrics { kind: String! language: String! description: String! text: String! }
+type Id3Url { kind: String! url: String! }
+type Id3UserUrl { kind: String! description: String! url: String! }
+type Id3Picture { kind: String! mime: String! pictureType: Int! description: String! payload: [Int!]! }
+type Id3Opaque { kind: String! bytes: [Int!]! }
+union Id3Content = Id3Text | Id3UserText | Id3Comment | Id3Lyrics | Id3Url | Id3UserUrl | Id3Picture | Id3Opaque
+type Id3Frame { id: String! content: Id3Content! }
+type Id3v2Tag { frames: [Id3Frame!]! }
+type Id3v1Tag { title: String! artist: String! album: String! year: String! comment: String! track: Int genre: Int }
 type Mp3FrameHeader {
  mpegVersionId: Int!
  layer: Int!

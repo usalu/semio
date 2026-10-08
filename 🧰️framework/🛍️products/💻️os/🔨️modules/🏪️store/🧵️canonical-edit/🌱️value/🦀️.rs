@@ -1,6 +1,6 @@
 //! 🌱️ Indexed framework dynamic-value projection for Store canonical JSON encoding.
 
-use super::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonNode};
+use super::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText};
 use crate::DslValue;
 use protocol::value::DslValueSource;
 
@@ -46,11 +46,11 @@ impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<
         })
     }
 
-    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<&str, String> {
+    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
         let DslValue::Object(values) = indexed_value(self.value(), object_path)? else {
             return Err(super::invalid_path());
         };
-        values.get(index).map(|(key, _)| key.as_str()).ok_or_else(super::invalid_path)
+        values.get(index).map(|(key, _)| key.as_str().into()).ok_or_else(super::invalid_path)
     }
 }
 

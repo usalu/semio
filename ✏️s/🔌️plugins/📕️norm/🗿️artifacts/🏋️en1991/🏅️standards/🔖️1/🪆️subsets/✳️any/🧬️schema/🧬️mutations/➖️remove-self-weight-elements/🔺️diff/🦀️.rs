@@ -6,5 +6,5 @@ pub fn diff(payload: &RemoveSelfWeightElements, base: &En1991Snapshot) -> protoc
     if payload.index >= base.self_weight_elements.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1991Diff { self_weight_elements: En1991SelfWeightElementDelta::removal(&base.self_weight_elements[payload.index].id), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { self_weight_elements: En1991SelfWeightElementDelta::removal(&base.self_weight_elements, payload.index), ..Default::default() })
 }

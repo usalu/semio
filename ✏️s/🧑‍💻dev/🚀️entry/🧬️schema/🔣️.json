@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dev/entry/component.json",
+  "title": "SDevBrowserInventoryV1",
+  "type": "object",
+  "required": [
+    "catalog",
+    "plugins",
+    "documentServices",
+    "surfaceSessionFactories"
+  ],
+  "properties": {
+    "plugins": {
+      "type": "array"
+    },
+    "documentServices": {
+      "type": "array"
+    },
+    "surfaceSessionFactories": {
+      "type": "array"
+    },
+    "catalog": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json"
+    }
+  }
+}

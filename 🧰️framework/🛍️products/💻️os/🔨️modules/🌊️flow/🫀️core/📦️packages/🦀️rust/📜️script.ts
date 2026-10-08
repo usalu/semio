@@ -78,6 +78,11 @@ class SourceTestScript extends BundleScript {
   }
 }
 
+/** 🌐️ Runs the independent neutral supplied geometry ownership oracle. */
+class GeometryOwnershipTestScript extends BundleScript {
+  async run():Promise<void>{await import("../../../🌐️geometry/🧪️tests/♻️ownership/🟦️.ts");}
+}
+
 class BrowserTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../../🕸️wasm/🧪️tests/🖥️host/🟨️.js");
@@ -96,6 +101,6 @@ class BrowserClockTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
 
 await runScriptMain(router, { defaultCommand: "wasm" });

@@ -1,5 +1,5 @@
 use super::*;
-use protocol::os_spr::protocol_laws::{assert_diff_algebra_between_law, assert_mutation_inverse_sum_law};
+use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::{Mutation, OpBinary, OpText};
 use store::{ArtifactDsl, ArtifactPack};
 
@@ -19,11 +19,6 @@ async fn the_mutation_changes_only_the_fields_that_differ() {
 async fn the_inverse_sums_to_the_negative_diff() {
     assert_mutation_inverse_sum_law(&busy().looking_through(store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }), &busy()).await;
     assert_mutation_inverse_sum_law(&BimPresence::default().on_storey("st-ground"), &busy()).await;
-}
-
-#[semio_framework_async_macros::async_test]
-async fn between_is_the_state_delta() {
-    assert_diff_algebra_between_law::<BimPresence, BimPresenceDiff>(&busy(), &BimPresence::default()).await;
 }
 
 #[semio_framework_async_macros::async_test]

@@ -601,6 +601,33 @@ impl<T, const N: usize> PagedList<T, N> {
         next(&self.root, self.root.capacity())
     }
 
+    /// 📏️ Quotes the actual node path followed by the next retained tail removal.
+    pub fn next_pop_depth_demand(&self) -> Result<usize, PagedListError> {
+        if self.is_empty() { return Ok(0); }
+        self.height().checked_add(3).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list tail depth overflow" })
+    }
+
+    /// 📏️ Quotes the actual retained node path of the next whole empty backing release.
+    pub fn next_release_depth_demand(&self) -> Result<usize, PagedListError> {
+        fn next<T>(link: &[Page<T>], capacity: usize, depth: usize) -> Result<usize, PagedListError> {
+            let Some(node) = link.first() else { return Ok(if capacity == 0 { 0 } else { depth }); };
+            match node {
+                Page::Branch { children, .. } => {
+                    if let Some(child) = children.iter().rfind(|child| !child.is_empty()) {
+                        let depth = depth.checked_add(1).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list release depth overflow" })?;
+                        return next(child, child.capacity(), depth);
+                    }
+                }
+                Page::Leaf { items, slots } => {
+                    if !items.is_empty() { return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload must retire before its page" }); }
+                    if *slots != 0 { return depth.checked_add(1).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list leaf release depth overflow" }); }
+                }
+            }
+            Ok(depth)
+        }
+        next(&self.root, self.root.capacity(), 2)
+    }
+
     pub fn truncate_retired_last(&mut self) -> Result<(), PagedListError> {
         let index = self.length.checked_sub(1).ok_or(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list has no retired payload" })?;
         let items = self.leaf_mut(index).ok_or(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload page is missing" })?;

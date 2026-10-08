@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "grant",
+    "control",
+    "laws",
+    "receiving"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.os.infinite.terrain-mesh.ownership"
+    },
+    "grant": {
+      "const": {
+        "maximum_items": 1,
+        "maximum_copy_bytes": 4096,
+        "maximum_capacity_bytes": 65536,
+        "maximum_release_bytes": 16777216,
+        "maximum_depth": 64
+      }
+    },
+    "control": {
+      "const": {
+        "authority": "FrameTransaction.StepContext",
+        "busy": "retainOwnerAndPhase",
+        "closing": "typedSemanticRefusal",
+        "cancellation": "retainThenRetireUnderFreshControl",
+        "yield": "retainOwnerAndPhase",
+        "demand": "observeOnly",
+        "retirement": "callerGrantAndTypedReceipt",
+        "receiving": "typedWorldFaultUntilPresentation",
+        "componentClose": {
+          "grant": "OsHost.RetainedCloneGrant",
+          "context": "OsHost.StepContext",
+          "receipt": "RetainedCloneStep",
+          "residual": "UnsupportedOwnerRetainsExactPayload"
+        }
+      }
+    },
+    "laws": {
+      "const": [
+        {
+          "phase": "Begin",
+          "fault": "Busy",
+          "next": "Begin",
+          "terminal": false
+        },
+        {
+          "phase": "Allocate",
+          "fault": "Busy",
+          "next": "Allocate",
+          "terminal": false
+        },
+        {
+          "phase": "Seal",
+          "fault": "Busy",
+          "next": "Seal",
+          "terminal": false
+        },
+        {
+          "phase": "Allocate",
+          "fault": "Closing",
+          "next": "Retire",
+          "terminal": false
+        },
+        {
+          "phase": "Positions",
+          "fault": "Schema",
+          "next": "Retire",
+          "terminal": false
+        },
+        {
+          "phase": "Begin",
+          "fault": "Canceled",
+          "next": "Retire",
+          "terminal": false
+        }
+      ]
+    },
+    "receiving": {
+      "const": [
+        {
+          "fault": "Busy",
+          "kind": "Mesh",
+          "code": "Busy"
+        },
+        {
+          "fault": "Closing",
+          "kind": "Mesh",
+          "code": "Closing"
+        },
+        {
+          "fault": "InvariantViolated",
+          "kind": "Ownership",
+          "code": "InvariantViolated"
+        },
+        {
+          "fault": "StaleToken",
+          "kind": "World",
+          "code": "StaleToken"
+        }
+      ]
+    }
+  }
+}

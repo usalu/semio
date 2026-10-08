@@ -9,13 +9,14 @@ pub struct SetTypeAssignment {
     pub id: u64,
     pub assignment: Option<CobieTypeAssignment>,
     pub index: Option<usize>,
+    pub instance: Option<semio_s_artifact_stdio_contract::part21::Part21Instance>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "type-assignment", kind: "set-type-assignment", record: "SetTypeAssignment" };
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        let Self { id, assignment, index } = self;
+        let Self { id, assignment, index, instance: exact } = self;
         let instance = match assignment {
             None => None,
             Some(row) => {
@@ -28,7 +29,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssi
                 if let Some(object) = row.related_objects.iter().find(|object| base.document.instance(**object).is_none()) {
                     return rejected(format!("no instance #{object} to relate to the type"));
                 }
-                Some(mvd::simple_instance(*id, TYPE_ASSIGNMENT, type_assignment_args(row)))
+                Some(exact.clone().unwrap_or_else(|| mvd::simple_instance(*id, TYPE_ASSIGNMENT, type_assignment_args(row))))
             }
         };
         match mvd::entity_diff(base, *id, &[TYPE_ASSIGNMENT], instance, *index) {
@@ -41,10 +42,13 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssi
         let Self { id, assignment, .. } = self;
         Ok(match mvd::standing(base, *id, &[TYPE_ASSIGNMENT]) {
             mvd::Standing::Foreign => Vec::new(),
-            mvd::Standing::Absent if assignment.is_some() => vec![Ifc2x3CobieMutation::SetTypeAssignment(SetTypeAssignment { id: *id, assignment: None, index: None })],
+            mvd::Standing::Absent if assignment.is_some() => vec![Ifc2x3CobieMutation::SetTypeAssignment(SetTypeAssignment { id: *id, assignment: None, index: None, instance: None })],
             mvd::Standing::Absent => Vec::new(),
             mvd::Standing::Present { index } => match type_assignment_row(base, *id) {
-                Some(row) => vec![Ifc2x3CobieMutation::SetTypeAssignment(SetTypeAssignment { id: *id, assignment: Some(row), index: Some(index) })],
+                Some(row) => {
+                    let instance = mvd::exact_instance_if_lossy(base, mvd::simple_instance(*id, TYPE_ASSIGNMENT, type_assignment_args(&row)));
+                    vec![Ifc2x3CobieMutation::SetTypeAssignment(SetTypeAssignment { id: *id, assignment: Some(row), index: Some(index), instance })]
+                }
                 None => Vec::new(),
             },
         })

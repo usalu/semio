@@ -30,12 +30,10 @@ fn diff_absorb_prefers_incoming_camera_and_preserves_other_rows() {
 fn diff_apply_updates_widget_rows_and_inverts() {
     let snapshot = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     let existing_id = widget_id(&snapshot.host_snapshot.widgets[1]).to_string();
-    let order: Vec<String> = [widget_id(&snapshot.host_snapshot.widgets[0]).to_string(), "fresh".to_string()].into_iter().chain(snapshot.host_snapshot.widgets[1..].iter().map(|widget| widget_id(widget).to_string())).collect();
     let diff = Generation2dDiffRead::new(Generation2dDiff {
         widgets: Some(Generation2dWidgetsDelta {
-            added: vec![Widget::InputNote { id: "fresh".into(), text: "fresh".into() }],
-            patched: vec![Generation2dWidgetPatchEntry { id: existing_id.clone(), patch: Generation2dWidgetPatch::Replace { widget: Widget::InputNote { id: existing_id.clone(), text: "replaced".into() } } }],
-            reordered: Some(order),
+            inserted: vec![Generation2dWidgetInsertion { index: 1, row: Widget::InputNote { id: "fresh".into(), text: "fresh".into() } }],
+            modified: vec![Generation2dWidgetModification { id: existing_id.clone(), patch: Generation2dWidgetPatch::Replace { widget: Widget::InputNote { id: existing_id.clone(), text: "replaced".into() } } }],
             ..Default::default()
         }),
         ..Default::default()
@@ -55,14 +53,15 @@ fn diff_apply_updates_widget_rows_and_inverts() {
 fn absorb_cancels_add_then_remove_and_turns_remove_then_add_into_replace() {
     let base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     let note = Widget::InputNote { id: "note".into(), text: "n".into() };
-    let added = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { added: vec![note.clone()], ..Default::default() }), ..Default::default() };
-    let removed = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { removed: vec!["note".into()], ..Default::default() }), ..Default::default() };
+    let tail = base.host_snapshot.widgets.len();
+    let added = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { inserted: vec![Generation2dWidgetInsertion { index: tail, row: note.clone() }], ..Default::default() }), ..Default::default() };
+    let removed = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { removed: vec![Generation2dWidgetRemoval { id: "note".into(), index: tail }], ..Default::default() }), ..Default::default() };
     let mut cancelled = added.clone();
     MutationDiff::absorb(&mut cancelled, removed);
     assert_eq!(cancelled.widgets, None);
     let existing = widget_id(&base.host_snapshot.widgets[0]).to_string();
-    let drop_existing = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { removed: vec![existing.clone()], ..Default::default() }), ..Default::default() };
-    let bring_back = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { added: vec![Widget::InputNote { id: existing.clone(), text: "again".into() }], ..Default::default() }), ..Default::default() };
+    let drop_existing = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { removed: vec![Generation2dWidgetRemoval { id: existing.clone(), index: 0 }], ..Default::default() }), ..Default::default() };
+    let bring_back = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { inserted: vec![Generation2dWidgetInsertion { index: 0, row: Widget::InputNote { id: existing.clone(), text: "again".into() } }], ..Default::default() }), ..Default::default() };
     let mut replaced = drop_existing.clone();
     MutationDiff::absorb(&mut replaced, bring_back.clone());
     let sequential = Generation2dSnapshotRead::new(protocol::apply_diff(&bring_back, &Generation2dSnapshotRead::new(protocol::apply_diff(&drop_existing, &base).expect("drop applies"))).expect("bring back applies"));
@@ -86,4 +85,26 @@ fn the_mutation_diff_contract_retires_an_inhabited_layout_delta_and_its_scratch_
     <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::retire_projection(scratch);
     <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::retire_cold(diff);
     base.retire_cold();
+}
+
+/// ⚖️ A positional widget delta moves a middle row, sums with an insertion, and inverts row by row; applied through the central applier.
+#[test]
+fn positional_widget_delta_moves_sums_and_inverts_at_middle_rows() {
+    let base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
+    let length = base.host_snapshot.widgets.len();
+    assert!(length >= 2, "the empty snapshot seeds at least two widgets");
+    let note = || Widget::InputNote { id: "fresh".into(), text: "fresh".into() };
+    let insert = Generation2dDiffRead::new(Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::insertion(1, note())), ..Default::default() });
+    let inserted = Generation2dSnapshotRead::new(protocol::apply_diff(&*insert, &base).expect("valid insertion"));
+    let relocate = Generation2dDiffRead::new(Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::relocation(&inserted.host_snapshot.widgets, length, 0)), ..Default::default() });
+    let moved = Generation2dSnapshotRead::new(protocol::apply_diff(&*relocate, &inserted).expect("valid relocation"));
+    assert_eq!(widget_id(&moved.host_snapshot.widgets[0]), widget_id(&inserted.host_snapshot.widgets[length]));
+    let mut sum = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::insertion(1, note())), ..Default::default() };
+    MutationDiff::absorb(&mut sum, Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::relocation(&inserted.host_snapshot.widgets, length, 0)), ..Default::default() });
+    let sum = Generation2dDiffRead::new(sum);
+    let summed = Generation2dSnapshotRead::new(protocol::apply_diff(&*sum, &base).expect("valid sum"));
+    assert_eq!(summed.host_snapshot.widgets, moved.host_snapshot.widgets);
+    let inverse = Generation2dDiffRead::new(DiffAlgebra::inverse(&*sum, &base));
+    let restored = Generation2dSnapshotRead::new(protocol::apply_diff(&*inverse, &moved).expect("valid inverse"));
+    assert_eq!(restored.host_snapshot.widgets, base.host_snapshot.widgets);
 }

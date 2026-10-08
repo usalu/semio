@@ -6,7 +6,7 @@
 //!
 //! ⚠️ Why this leaf pins a REJECTION branch: `FormsSnapshot` keeps its `steps` tree in the composed
 //! `s.stdio.semio.value`/`table` CHILD pair (`🔖️WorkingScene`), and a successful `delete-step`
-//! routes through `forms_diff_from_delta`, which re-mints both handles with a `child_id` that is a
+//! routes through `FormsDiff::apply`, which re-derives both handles with a `child_id` that is a
 //! `DefaultHasher` digest of the child content — hand-authoring such an `➡️after` would mean
 //! forging a value out of `std`'s deliberately unspecified default hasher. `delete-step` has no
 //! no-op guard, so a rejection is its only branch that mints nothing.
@@ -17,8 +17,9 @@
 //! diagnostic it returns is that id alone, one segment, with no cascade note about the blocks a
 //! real delete would have carried away with it.
 
-use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::central_apply::{apply_form_edit_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects/📸️snapshot/➡️after/🔣️.json");

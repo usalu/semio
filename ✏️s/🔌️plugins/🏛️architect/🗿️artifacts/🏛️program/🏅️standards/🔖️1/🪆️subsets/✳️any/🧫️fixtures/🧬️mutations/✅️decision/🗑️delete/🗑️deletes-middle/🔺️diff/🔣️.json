@@ -45,12 +45,15 @@
   "scenarios": null,
   "options": null,
   "decisions": {
-    "added": [],
     "removed": [
-      "decision-a"
+      {
+        "id": "decision-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "validations": null,
   "performance": null,

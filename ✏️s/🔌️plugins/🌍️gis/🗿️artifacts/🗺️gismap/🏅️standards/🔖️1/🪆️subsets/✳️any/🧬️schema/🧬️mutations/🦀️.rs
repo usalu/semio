@@ -3,7 +3,7 @@
 //#endregion 📖️SemioGrammar
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
+use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::GisMapSnapshot;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -32,6 +32,12 @@ pub enum GisMapMutation {
     DeleteRegion(delete_region::DeleteRegion),
     ReplaceRegionData(replace_region_data::ReplaceRegionData),
     ReorderRegions(reorder_regions::ReorderRegions),
+    SetPositionProperty(set_position_property::SetPositionProperty),
+    RemovePositionProperty(remove_position_property::RemovePositionProperty),
+    SetRouteProperty(set_route_property::SetRouteProperty),
+    RemoveRouteProperty(remove_route_property::RemoveRouteProperty),
+    SetRegionProperty(set_region_property::SetRegionProperty),
+    RemoveRegionProperty(remove_region_property::RemoveRegionProperty),
 }
 
 pub type GisMapEnvelope = ArtifactEnvelope<GisMapSnapshot, GisMapMutation>;
@@ -43,13 +49,6 @@ pub type GisMapStore = ArtifactStore<GisMapSnapshot, GisMapMutation>;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔹Tests
-
-/// 🕸️ Applies one parent mutation while preserving the stable drawing/value member coordinates.
-pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
-    *snapshot = next;
-    Ok(())
-}
 
 pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -64,7 +63,7 @@ pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMuta
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
 pub const KINDS: &[&str] =
-    &["create-position", "delete-position", "replace-position-data", "reorder-positions", "create-route", "delete-route", "replace-route-data", "reorder-routes", "create-region", "delete-region", "replace-region-data", "reorder-regions"];
+    &["create-position", "delete-position", "replace-position-data", "reorder-positions", "create-route", "delete-route", "replace-route-data", "reorder-routes", "create-region", "delete-region", "replace-region-data", "reorder-regions", "set-position-property", "remove-position-property", "set-route-property", "remove-route-property", "set-region-property", "remove-region-property"];
 //#endregion 🔖️Kinds
 
 //#region 🌉️TestBridge

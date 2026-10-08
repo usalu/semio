@@ -3,7 +3,7 @@
 use super::*;
 use semio_framework_value::paged::PagedUtf8;
 use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeRoot;
-use semio_framework_value::retained_clone::RetainedCloneBorrowAuthority;
+use crate::test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -19,8 +19,10 @@ fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<Retained
 
 fn close<T:Puzzle2dFlagIntent>(cursor: &mut Puzzle2dFlagCandidateCursor<T>) {
     cursor.begin_close();
-    for turn in 0..1_000_000 { if cursor.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || cursor.close_step(permit)); }
-    panic!("candidate retained a native owner after bounded cancellation");
+    test_source_custody::close_cursor(cursor,1_000_000,|cursor|{
+        let copy=cursor.next_close_copy_byte_demand().unwrap();
+        (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
+    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
 }
 
 fn retire(snapshot: Puzzle2dSnapshot) {
@@ -34,11 +36,11 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 
 
 fn law<T:Puzzle2dFlagIntent+Clone>(snapshot:&Puzzle2dSnapshot,payload:T,row:&serde_json::Value,expected:Option<&Puzzle2dSnapshot>){
- assert!(size_of::<Puzzle2dFlagCandidateCursor<T>>()<=4096);let original=serde_json::to_value(snapshot).unwrap();let source=RetainedCloneBorrowAuthority::new("native flag candidate snapshot");let mutation=RetainedCloneBorrowAuthority::new("native flag candidate original intent");let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dFlagCandidateCursor::<T>::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);assert_eq!(observed(RetainedCloneGrant::default(),||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),RetainedCloneGrant::default())).progress(),RetainedCloneProgress::default());
+ assert!(size_of::<Puzzle2dFlagCandidateCursor<T>>()<=4096);let original=serde_json::to_value(snapshot).unwrap();let mut source=test_source_custody::admit();let mut mutation=test_source_custody::admit();let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dFlagCandidateCursor::<T>::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);assert_eq!(observed(RetainedCloneGrant::default(),||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),RetainedCloneGrant::default())).progress(),RetainedCloneProgress::default());
  let mut completed=false;for turn in 0..1000000{let permit=grant(turn);if matches!(observed(permit,||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),permit)),RetainedCloneStep::Complete(_)){completed=true;break}}assert!(completed);let output=cursor.take().unwrap();let status=match output.plan.disposition{Puzzle2dFlagDisposition::Changed=>"changed",Puzzle2dFlagDisposition::NoOp=>"no-op",Puzzle2dFlagDisposition::TargetMissing=>"target-missing"};assert_eq!(status,row["status"].as_str().unwrap());assert_eq!(serde_json::to_value(output.plan.index).unwrap(),row["index"]);assert_eq!(output.snapshot.as_ref().map(|value|serde_json::to_value(value).unwrap()),expected.map(|value|serde_json::to_value(value).unwrap()));assert!(cursor.take().is_none());close(&mut cursor);if let Some(snapshot)=output.snapshot{retire(snapshot)}
  for pause in [0,1,3,17,100]{let mut cursor=Puzzle2dFlagCandidateCursor::<T>::default();for turn in 0..pause{let permit=grant(turn);if matches!(observed(permit,||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),permit)),RetainedCloneStep::Complete(_)){break}}close(&mut cursor);assert!(cursor.take().is_none());}
  if expected.is_some(){let mut cursor=Puzzle2dFlagCandidateCursor::<T>::default();let mut reached=false;for turn in 0..1000000{let copying=cursor.phase==2;let permit=grant(turn);let step=observed(permit,||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),permit));assert!(!matches!(step,RetainedCloneStep::Complete(_)));if copying&&step.progress().copied_bytes>0{reached=true;break}}assert!(reached);close(&mut cursor);}
- let mut cursor=Puzzle2dFlagCandidateCursor::<T>::default();observed(grant(1),||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),grant(1)));let swapped=payload.clone();assert!(cursor.advance(source.borrow(snapshot),mutation.borrow(&swapped),grant(1)).is_err());close(&mut cursor);assert_eq!(serde_json::to_value(snapshot).unwrap(),original);
+ let mut cursor=Puzzle2dFlagCandidateCursor::<T>::default();observed(grant(1),||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),grant(1)));let swapped=payload.clone();assert!(cursor.advance(source.borrow(snapshot),mutation.borrow(&swapped),grant(1)).is_err());close(&mut cursor);assert_eq!(serde_json::to_value(snapshot).unwrap(),original);test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
 }
 #[test]
 fn history_edit_puzzle2d_native_optional_flag_candidate_preserves_full_native_owners_and_three_lane_cancel(){

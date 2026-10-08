@@ -18,6 +18,6 @@ pub fn diff(payload: &super::ConnectSynapse, base: &Generation2dSnapshot) -> pro
     if base.host_snapshot.synapses.iter().any(|entry| entry.from == synapse.from && entry.from_port == synapse.from_port && entry.to == synapse.to && entry.to_port == synapse.to_port) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("\"{}\" is already connected to \"{}\"; parallel synapses are not allowed.", synapse.from, synapse.to));
     }
-    let reordered = ((payload.index) < base.host_snapshot.synapses.len()).then(|| { let mut order: Vec<String> = base.host_snapshot.synapses.iter().map(|entry| entry.id.to_string()).collect(); order.insert(payload.index, synapse.id.to_string()); order });
-    protocol::MutationOutcome::new(Generation2dDiff { synapses: Some(Generation2dSynapsesDelta { added: vec![synapse.clone()], reordered, ..Default::default() }), ..Default::default() })
+    let at = payload.index.min(base.host_snapshot.synapses.len());
+    protocol::MutationOutcome::new(Generation2dDiff { synapses: Some(Generation2dSynapsesDelta::insertion(at, synapse.clone())), ..Default::default() })
 }

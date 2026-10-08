@@ -20,11 +20,12 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypesDiff, OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcPartsDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional WordprocessingML main namespace.
@@ -100,6 +101,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
 /// source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxStrictMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -177,11 +179,11 @@ pub fn conformance_attribute(base: &DocxSnapshot) -> Option<String> {
 
 //#region 🔖️DiffBuilders
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn opc_diff(parts: Option<DocxOpcPartsDiff>, content_types: Option<DocxOpcContentTypesDiff>, relationships: Option<DocxOpcRelationshipsDiff>) -> DocxDiff {
+fn opc_diff(parts: Option<OpcPartsDelta>, content_types: Option<OpcContentTypesDiff>, relationships: Option<OpcOwnersDelta>) -> DocxDiff {
     if parts.is_none() && content_types.is_none() && relationships.is_none() {
         return DocxDiff::default();
     }
-    DocxDiff { opc: Some(DocxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
+    DocxDiff { opc: Some(OpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
 }
 
 /// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
@@ -199,17 +201,17 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
             if retargeted == current {
                 continue;
             }
-            entries.push(NamedModified { key: relationship.id.to_string_owner(), diff: DocxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } });
+            entries.push(OpcRelationshipModification { id: relationship.id.to_string_owner(), patch: OpcRelationshipPatch { rel_type: Some(retargeted), target: None, target_mode: None } });
         }
         if entries.is_empty() {
             continue;
         }
-        modified.push(NamedModified { key: owner.to_string_owner(), diff: DocxOpcRelListDiff { modified: entries, ..Default::default() } });
+        modified.push(OpcOwnerModification { id: owner.to_string_owner(), patch: OpcOwnerPatch { relationships: OpcRelationshipsDelta { modified: entries, ..Default::default() } } });
     }
     if modified.is_empty() {
         return DocxDiff::default();
     }
-    opc_diff(None, None, Some(DocxOpcRelationshipsDiff { modified, ..Default::default() }))
+    opc_diff(None, None, Some(OpcOwnersDelta { modified, ..Default::default() }))
 }
 
 /// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.
@@ -229,29 +231,16 @@ fn diff_conformance_attribute(base: &DocxSnapshot, value: Option<&str>) -> DocxD
     crate::standards::v_ecma_376::subsets::base::schema::mutations::root_attribute_diff(&document, "conformance", value).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path, edit)])).unwrap_or_default()
 }
 
-/// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.
+/// 🔺️ The diff of adding a legacy VML drawing part, at `index` among the XML parts and with its override at `override_index` (each appended when `None`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, document: &XmlDocument) -> DocxDiff {
-    let path = path.trim_start_matches('/');
-    if base.xml_part(path).is_some() || base.opc.part(path).is_some() {
-        return DocxDiff::default();
-    }
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::set_part_diff(base, path, VML_CONTENT_TYPE, &crate::standards::v_ecma_376::subsets::base::schema::mutations::set_part::DocxPartContent::Xml { document: document.clone() }, None).unwrap_or_default()
+fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, document: &XmlDocument, index: Option<usize>, override_index: Option<usize>) -> DocxDiff {
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::insert_xml_part_diff(base, path, VML_CONTENT_TYPE, document, index, override_index).unwrap_or_default()
 }
 
 /// 🔺️ The diff of removing a legacy VML drawing part and its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_remove_vml_part(base: &DocxSnapshot, path: &str) -> DocxDiff {
-    let path = path.trim_start_matches('/');
-    if base.xml_part(path).is_none() {
-        return DocxDiff::default();
-    }
-    let name = format!("/{path}");
-    let has_override = base.opc.materialize_package_exact().is_ok_and(|opc| opc.content_types.overrides.iter().any(|(existing, _)| *existing == name));
-    DocxDiff {
-        xml_parts: Some(NamedTripleDiff { removed: vec![path.to_string()], ..Default::default() }),
-        opc: has_override.then(|| DocxOpcDiff { content_types: Some(DocxOpcContentTypesDiff { defaults: None, overrides: Some(NamedTripleDiff { removed: vec![name], ..Default::default() }) }), ..Default::default() }),
-    }
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::remove_xml_part_diff(base, path)
 }
 
 /// 🧩️ The canonical markup-compatibility fallback this vocabulary inserts.
@@ -265,18 +254,37 @@ pub fn alternate_content_node() -> XmlNode {
 }
 
 
-/// 🔺️ The diff of appending one markup-compatibility fallback to a part's root element.
+/// 🧭️ The root children of `document` that are markup-compatibility fallbacks, optionally only the one at `only`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_append_alternate_content(base: &DocxSnapshot, path: &str) -> DocxDiff {
-    let Some(document) = base.xml_part(path).and_then(parse_part) else { return DocxDiff::default() };
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff(&document, Some(alternate_content_node()), None).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path.to_string(), edit)])).unwrap_or_default()
+fn alternate_content_positions(document: &XmlDocument, only: Option<usize>) -> Vec<(usize, XmlNode)> {
+    let Some(XmlNode::Element { children, .. }) = document.root.as_ref() else { return Vec::new() };
+    children.iter().enumerate().filter(|(index, child)| only.is_none_or(|only| only == *index) && matches!(child, XmlNode::Element { name, .. } if name == ALTERNATE_CONTENT_ELEMENT)).map(|(index, child)| (index, child.clone())).collect()
 }
 
-/// 🔺️ The diff of stripping every markup-compatibility fallback from a part's root element.
+/// 🧭️ The final index a fallback inserted at `index` lands on in the root of `document`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_strip_alternate_content(base: &DocxSnapshot, path: &str) -> DocxDiff {
+fn alternate_content_landing(document: &XmlDocument, index: Option<usize>) -> usize {
+    let length = match document.root.as_ref() {
+        Some(XmlNode::Element { children, .. }) => children.len(),
+        _ => 0,
+    };
+    index.map_or(length, |index| index.min(length))
+}
+
+/// 🔺️ The diff of inserting one markup-compatibility fallback (`node`, canonical by default) into a part's root element at `index` (appended when `None`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_insert_alternate_content(base: &DocxSnapshot, path: &str, node: Option<&XmlNode>, index: Option<usize>) -> DocxDiff {
     let Some(document) = base.xml_part(path).and_then(parse_part) else { return DocxDiff::default() };
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff(&document, None, Some(ALTERNATE_CONTENT_ELEMENT)).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path.to_string(), edit)])).unwrap_or_default()
+    let landing = alternate_content_landing(&document, index);
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff(&document, Some((landing, node.cloned().unwrap_or_else(alternate_content_node))), &[]).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path.to_string(), edit)])).unwrap_or_default()
+}
+
+/// 🔺️ The diff of stripping the markup-compatibility fallbacks from a part's root element: every one, or only the one at `index`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_remove_alternate_content(base: &DocxSnapshot, path: &str, index: Option<usize>) -> DocxDiff {
+    let Some(document) = base.xml_part(path).and_then(parse_part) else { return DocxDiff::default() };
+    let removed: Vec<usize> = alternate_content_positions(&document, index).into_iter().map(|(position, _)| position).collect();
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff(&document, None, &removed).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path.to_string(), edit)])).unwrap_or_default()
 }
 //#endregion 🔖️DiffBuilders
 
@@ -301,6 +309,41 @@ pub(crate) fn conformance_attribute_inverse(base: &DocxSnapshot, forward_changes
         None if forward_changes => vec![DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {})],
         None => Vec::new(),
     }
+}
+/// ↩️ The mutation that undoes inserting a VML part: its removal, unless the part already existed.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn insert_vml_part_inverse(base: &DocxSnapshot, path: &str) -> Vec<DocxStrictMutation> {
+    let key = path.trim_start_matches('/');
+    if base.xml_part(key).is_some() || base.opc.part(key).is_some() {
+        return Vec::new();
+    }
+    vec![DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.to_string() })]
+}
+
+/// ↩️ The mutation that undoes removing a VML part: its insertion at the part and override positions it held.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn remove_vml_part_inverse(base: &DocxSnapshot, path: &str) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+    let key = path.trim_start_matches('/');
+    let (Some(part), Some((index, override_index))) = (base.xml_part(key), crate::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(base, key)) else { return Ok(Vec::new()) };
+    Ok(vec![DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.to_string(), document: part.materialize_document_exact()?, index: Some(index), override_index })])
+}
+
+/// ↩️ The mutation that undoes inserting a fallback: removing exactly the child it landed on.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn insert_alternate_content_inverse(base: &DocxSnapshot, path: &str, index: Option<usize>) -> Vec<DocxStrictMutation> {
+    let Some(document) = base.xml_part(path).and_then(parse_part) else { return Vec::new() };
+    vec![DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.to_string(), index: Some(alternate_content_landing(&document, index)) })]
+}
+
+/// ↩️ The mutations that undo removing fallbacks: one insertion of each removed node at its index, listed last-to-first because replay applies them in reverse.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn remove_alternate_content_inverse(base: &DocxSnapshot, path: &str, index: Option<usize>) -> Vec<DocxStrictMutation> {
+    let Some(document) = base.xml_part(path).and_then(parse_part) else { return Vec::new() };
+    alternate_content_positions(&document, index)
+        .into_iter()
+        .rev()
+        .map(|(position, node)| DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.to_string(), node: Some(node), index: Some(position) }))
+        .collect()
 }
 //#endregion 🔖️Inverses
 

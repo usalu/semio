@@ -5,8 +5,8 @@
     "xmlParts": {
       "modified": [
         {
-          "key": "word/document.xml",
-          "diff": {
+          "id": "word/document.xml",
+          "patch": {
             "document": {
               "declaration": null
             }

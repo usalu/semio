@@ -106,6 +106,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | rotate-selection              | 🌀️rotate-selection/📐️lifts |
       | scale-selection               | 🔍️scale-selection/🔍️wides |
       | scale-selection               | 🔍️scale-selection/🧩️part |
+      | set-vertex-positions          | 📍️set-vertex-positions/📍️sets |
 
   @id-inverse
   @level-exhaustive
@@ -152,6 +153,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | rotate-selection              | 🌀️rotate-selection/📐️lifts |
       | scale-selection               | 🔍️scale-selection/🔍️wides |
       | scale-selection               | 🔍️scale-selection/🧩️part |
+      | set-vertex-positions          | 📍️set-vertex-positions/📍️sets |
 
   @id-identity-round-trip
   @level-long

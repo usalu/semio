@@ -1,0 +1,9 @@
+# Current Private MCP Attestation Readiness Audit
+
+Independent read-only hash validation finds all 12 `build.json` input sources unchanged and the actual private executable unchanged at SHA-256 `9dd829350d2bc9d46355a91cfa76b349bdff61fbe99fdec74c574537c2cdeb50`. There are zero source/executable drift keys. These are attestation observations, not new authorship.
+
+Current close input `📥️oct8-current-ticket-close-input.json` remains absent. No prepare, probe, close or MCP mutation was run. The script's close-current branch rehashes executable and all attested inputs, requires fixed ticket path `26/05/30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY`, `no_management=true`, absent replacement title, current open ticket and nonempty summary/files. It rejects absolute/Windows-drive/backslash/empty/dot/dot-dot/AGENTS/generated path segments and duplicate file paths. The current 6,022-member reconciliation union satisfies those path/uniqueness constraints.
+
+A UTF-8 serialization estimate for the current file roster plus small placeholder summary is 966,664 bytes, well below the private 32-MiB transport policy. This is a size estimate, not authored close input or final summary. The prepare source explicitly creates the larger private transport policy and preserves report/input retention in its private build. Source hashes bind that recipe; no build was performed by this audit.
+
+The actual MCP repository forwards no_management to ToolTicketClose; the current close lifecycle excludes ComputeTicketFiles and issue management when no_management is true. This audit issued no Git operation. The exact current roster still needs final actual native/publication/HTTP/checkpoint reports and final audits before closure. Native and Publication remain uncredited until actual producer terminals and retained witnesses are validated. This is closure-readiness inspection only; ticket/goal completion is not claimed.

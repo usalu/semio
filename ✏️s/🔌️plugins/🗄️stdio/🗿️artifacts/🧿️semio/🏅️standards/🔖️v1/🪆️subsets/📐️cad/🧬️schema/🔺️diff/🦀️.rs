@@ -95,42 +95,6 @@ where
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for (index, o) in other.iter().enumerate() {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(NamedAdded { index, item: o.clone() });
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        return None;
-    }
-    if !reproduces_order(base, other, &removed, &added, &key_of) {
-        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
-    }
-    Some(NamedTripleDiff { removed, modified, added })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[NamedAdded<T>], key_of: &impl Fn(&T) -> K) -> bool
 where
     K: PartialEq,
@@ -355,14 +319,6 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
         }
     }
 
-    fn between(base: &SemioCadSnapshot, other: &SemioCadSnapshot) -> Self {
-        SemioCadDiff {
-            layers: between_named(&base.layers, &other.layers, |l| l.name.clone(), between_layer),
-            blocks: between_named(&base.blocks, &other.blocks, |b| b.name.clone(), between_block),
-            entities: between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.layers.is_none() && self.blocks.is_none() && self.entities.is_none()
     }
@@ -383,148 +339,13 @@ fn inverse_entity_record(base: &CadEntityRecord, diff: &CadEntityRecordDiff) -> 
     CadEntityRecordDiff { layer: diff.layer.as_ref().map(|_| base.layer.clone()), entity: diff.entity.as_ref().map(|_| base.entity.clone()) }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_layer(base: &CadLayer, other: &CadLayer) -> Option<CadLayerDiff> {
-    let color_index = if base.color_index != other.color_index { Some(other.color_index) } else { None };
-    let line_type = if base.line_type != other.line_type { Some(other.line_type.clone()) } else { None };
-    let visible = if base.visible != other.visible { Some(other.visible) } else { None };
-    if color_index.is_none() && line_type.is_none() && visible.is_none() {
-        None
-    } else {
-        Some(CadLayerDiff { color_index, line_type, visible })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_block(base: &CadBlock, other: &CadBlock) -> Option<CadBlockDiff> {
-    let base_point = if base.base_point != other.base_point { Some(other.base_point) } else { None };
-    let entities = between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record);
-    if base_point.is_none() && entities.is_none() {
-        None
-    } else {
-        Some(CadBlockDiff { base_point, entities })
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_entity_record(base: &CadEntityRecord, other: &CadEntityRecord) -> Option<CadEntityRecordDiff> {
-    let layer = if base.layer != other.layer { Some(other.layer.clone()) } else { None };
-    let entity = if base.entity != other.entity { Some(other.entity.clone()) } else { None };
-    if layer.is_none() && entity.is_none() {
-        None
-    } else {
-        Some(CadEntityRecordDiff { layer, entity })
-    }
-}
-//#endregion 🔖️DiffAlgebra
-
-
-//#endregion 🔖️SetSnapshot
-
-//#region 🔖️HandcraftedDiffCodec
-/// 🎙️ Hand-rolled `protocol::DiffCodec` — no `dsl::DslDiff` derive attempted: `CadEntity` is a
-/// data-carrying enum reached through `entities`/`blocks[].entities` (§3a family), and
-/// `CadLayersDiff`/`CadBlocksDiff`/`CadEntitiesDiff` are all instances of the generic
-/// `NamedTripleDiff<K,D,T>` (§4.4 family, `dsl` has no `DslField` bridge for generic collection
-/// wrappers — f6-final-summary.md §4.4). Grammar: bracket-depth-aware split, hex for strings,
-/// `[0]`/`[1,x]` for `Option<T>`, single-letter tag prefix for `CadEntity`'s 9-variant `xs:choice`
-/// — same primitive set gif/svg/bcf established.
-//#region 🔖️Primitives
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️ValueCodecs
-
-//#region 🔖️DiffValueCodecs
-
-
-
-
-
-
-
-
-//#endregion 🔖️DiffValueCodecs
-
-//#region 🔖️TopLevel
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
-
 //#region 🔖️Demo
-/// 🌱 Representative `SemioCadDiff` cases (empty/no-op, a full removed/modified/added sweep both
-/// directions across every collection incl. the nested `blocks[].entities`, exercising 7 of the 9
-/// `CadEntity` variants) — single source of truth for `diff_grammar_conformance_law`/
-/// `protocol_walk_law` in `🎹️composer/🦀️.rs`. Self-contained (does not reach into
-/// `#[cfg(test)] mod tests`'s own private `sweep_a`/`sweep_b`, since a private item of a child
-/// module is not visible to its parent).
+/// 🌱 Representative `SemioCadDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-cad"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
-    let a = SemioCadSnapshot {
-        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-        layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-removed".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
-        blocks: vec![CadBlock {
-            name: "keep-block".into(),
-            base_point: SemioPoint2 { x: 0.0, y: 0.0 },
-            entities: vec![CadEntityRecord { handle: "be1".into(), layer: "keep".into(), entity: CadEntity::Line { a: SemioPoint2 { x: 0.0, y: 0.0 }, b: SemioPoint2 { x: 1.0, y: 1.0 } } }],
-        }],
-        entities: vec![
-            CadEntityRecord { handle: "e1".into(), layer: "keep".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0 } },
-            CadEntityRecord { handle: "e-removed".into(), layer: "keep".into(), entity: CadEntity::Polyline { vertices: vec![SemioPoint2 { x: 0.0, y: 0.0 }], closed: false } },
-        ],
-    };
-    let b = SemioCadSnapshot {
-        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-        layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-added".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
-        blocks: vec![CadBlock {
-            name: "keep-block".into(),
-            base_point: SemioPoint2 { x: 5.0, y: 5.0 },
-            entities: vec![
-                CadEntityRecord { handle: "be1".into(), layer: "layer-added".into(), entity: CadEntity::Arc { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0, start_angle: 0.0, end_angle: 90.0 } },
-                CadEntityRecord { handle: "be-added".into(), layer: "keep".into(), entity: CadEntity::Dimension { def_point: SemioPoint2 { x: 0.0, y: 0.0 }, text_position: SemioPoint2 { x: 1.0, y: 1.0 }, measurement: 3.3, text: "3.3m".into() } },
-            ],
-        }],
-        entities: vec![
-            CadEntityRecord { handle: "e1".into(), layer: "layer-added".into(), entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 } },
-            CadEntityRecord { handle: "e-added".into(), layer: "keep".into(), entity: CadEntity::Insert { block_name: "keep-block".into(), insertion_point: SemioPoint2 { x: 0.0, y: 0.0 }, scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 0.0 } },
-        ],
-    };
-
-    vec![SemioCadDiff::default(), <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&a, &b), <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&b, &a)]
+    vec![SemioCadDiff::default(), SemioCadDiff { layers: Some(Default::default()), blocks: Some(Default::default()), entities: Some(Default::default()) }]
 }
 //#endregion 🔖️Demo
 

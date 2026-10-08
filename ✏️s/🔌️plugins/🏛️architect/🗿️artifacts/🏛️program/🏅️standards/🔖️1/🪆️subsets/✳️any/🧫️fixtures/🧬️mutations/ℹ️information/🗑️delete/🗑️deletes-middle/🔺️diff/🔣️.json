@@ -29,12 +29,15 @@
   "services": null,
   "infrastructure": null,
   "information": {
-    "added": [],
     "removed": [
-      "information-requirement-a"
+      {
+        "id": "information-requirement-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "communication": null,
   "wayfinding": null,

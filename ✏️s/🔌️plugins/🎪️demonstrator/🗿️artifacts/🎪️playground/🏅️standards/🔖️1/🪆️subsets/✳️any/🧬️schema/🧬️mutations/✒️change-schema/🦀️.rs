@@ -40,12 +40,6 @@ pub const KINDS: &[&str] = &["change-schema"];
 //#region 🌉️ExternalCodecBridge
 
 
-pub(crate) fn bridge_step(snapshot: &PlaygroundSnapshot, mutation: &PlaygroundMutation) -> Result<(PlaygroundSnapshot, Vec<String>), String> {
-    use protocol::Mutation;
-    let outcome = <PlaygroundMutation as Mutation<PlaygroundSnapshot>>::diff(mutation, snapshot);
-    let messages = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    protocol::apply_diff(outcome.diff(), snapshot).map(|next| (next, messages)).map_err(|error| format!("{error:?}"))
-}
 
 
 

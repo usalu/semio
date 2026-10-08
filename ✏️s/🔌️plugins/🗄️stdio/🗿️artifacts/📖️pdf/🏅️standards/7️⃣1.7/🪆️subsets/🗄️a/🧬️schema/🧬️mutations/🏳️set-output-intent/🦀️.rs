@@ -30,7 +30,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetOutputIntent {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
         Ok({
             match support::output_intent_identifier(base) {
-                Some(identifier) => vec![PdfAMutation::SetOutputIntent(SetOutputIntent { identifier, placements: Vec::new(), entry_index: None })],
+                Some(identifier) => vec![PdfAMutation::SetOutputIntent(SetOutputIntent { identifier, placements: support::placements_of(base, &support::output_intent_creation_ids(base)), entry_index: None })],
                 None => vec![PdfAMutation::RemoveOutputIntent(RemoveOutputIntent {})],
             }
         })

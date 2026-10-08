@@ -1,71 +1,58 @@
 {
   "manufacturerFile": null,
   "products": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "VLV-80-002",
-        "identity": {
-          "manufacturerCode": "DEMO",
-          "productGroup": "HV",
-          "articleNumber": "VLV-80-002"
-        },
-        "title": [
-          {
-            "locale": "de",
-            "text": "Stellventil DN80"
+        "index": 1,
+        "row": {
+          "id": "VLV-80-002",
+          "identity": {
+            "manufacturerCode": "DEMO",
+            "productGroup": "HV",
+            "articleNumber": "VLV-80-002"
           },
-          {
-            "locale": "en",
-            "text": "Control valve DN80"
+          "title": [
+            {
+              "locale": "de",
+              "text": "Stellventil DN80"
+            },
+            {
+              "locale": "en",
+              "text": "Control valve DN80"
+            }
+          ],
+          "sheet": 2,
+          "records": [],
+          "configuration": {
+            "id": "cfg.VLV-80-002",
+            "attributes": {
+              "kind": "valveHeating",
+              "dn": 80,
+              "kvsM3S": 0.00125,
+              "pressureClass": "PN16",
+              "connectionType": "flange",
+              "authorityMin": 0.3,
+              "authorityMax": 0.7
+            },
+            "geometryRef": null,
+            "functionRefs": []
+          },
+          "accessories": [],
+          "components": [],
+          "extensions": {
+            "fields": {}
           }
-        ],
-        "sheet": 2,
-        "records": [],
-        "configuration": {
-          "id": "cfg.VLV-80-002",
-          "attributes": {
-            "kind": "valveHeating",
-            "dn": 80,
-            "kvsM3S": 0.00125,
-            "pressureClass": "PN16",
-            "connectionType": "flange",
-            "authorityMin": 0.3,
-            "authorityMax": 0.7
-          },
-          "geometryRef": null,
-          "functionRefs": []
-        },
-        "accessories": [],
-        "components": [],
-        "extensions": {
-          "fields": {}
         }
       }
     ],
-    "removed": [],
-    "modified": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "indexEntries": {
-    "added": [
-      {
-        "productId": "VLV-80-002",
-        "sheet": 2,
-        "tags": [
-          "Stellventil DN80",
-          "Control valve DN80"
-        ],
-        "dn": 80
-      }
-    ],
-    "removed": [],
-    "modified": [],
-    "order": null
-  },
   "geometry": null,
   "curves": null,
   "limits": null

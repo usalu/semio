@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation",
+  "title": "Physical File Observation",
+  "definitions": {
+    "retained": {"type":"object","additionalProperties":false,"required":["claim","bytes"],"properties":{"claim":{"$ref":"#/definitions/claim"},"bytes":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}}},
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "byteLength": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxBytes", "maxWork", "chunkBytes"],
+      "properties": {
+        "maxBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "maxWork": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "chunkBytes": {"type": "integer", "minimum": 1, "maximum": 1048576}
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "bytes", "totalBytes", "work"],
+      "properties": {
+        "phase": {"enum": ["admit", "opened", "read", "complete"]},
+        "bytes": {"type": "integer", "minimum": 0},
+        "totalBytes": {"type": "integer", "minimum": 0},
+        "work": {"type": "integer", "minimum": 0}
+      }
+    },
+    "refusal": {"enum": ["invalid-control", "not-regular", "byte-capacity", "work-capacity", "cancelled", "deadline", "changed", "io"]}
+  }
+}

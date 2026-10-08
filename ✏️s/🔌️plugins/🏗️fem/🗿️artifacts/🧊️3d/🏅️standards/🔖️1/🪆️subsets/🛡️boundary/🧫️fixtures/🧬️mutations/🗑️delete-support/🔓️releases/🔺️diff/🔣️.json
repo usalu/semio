@@ -5,12 +5,15 @@
   "sections": null,
   "solids": null,
   "supports": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "s2"
+      {
+        "id": "s2",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "loadCases": null,
   "combinations": null,

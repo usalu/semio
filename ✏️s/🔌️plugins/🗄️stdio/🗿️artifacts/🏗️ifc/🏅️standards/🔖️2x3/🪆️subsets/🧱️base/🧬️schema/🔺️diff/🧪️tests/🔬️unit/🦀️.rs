@@ -22,26 +22,6 @@ fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> I
     Ifc2x3Snapshot { schema: schema.into(), document, edm_preamble: None }
 }
 
-/// 🧪️ THE acceptance criterion for "diff can change every field": schema, header, and
-/// instance add/remove/modify all round-trip through `between`+`apply`.
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_between_covers_every_field() {
-    let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
-    let mut next_header = Part21Header::default();
-    next_header.file_schema = vec![Part21Value::Str("IFC2X3".into())];
-    let next = snap(
-        "stdio.ifc.2x3.v2",
-        next_header,
-        vec![inst(1, "IFCWALLSTANDARDCASE"), inst(3, "IFCWINDOW")], // 1 modified, 2 removed, 3 added
-    );
-    let d = Ifc2x3Diff::between(&base, &next);
-    assert!(d.schema.is_some());
-    assert!(d.header.is_some());
-    assert_eq!(d.removed_instances, vec![2]);
-    assert_eq!(d.upserted_instances.len(), 2);
-    assert_eq!(protocol::apply_diff(&d, &base).expect("valid between diff"), next);
-}
-
 #[semio_framework_async_macros::async_test]
 async fn absorb_upsert_then_remove_same_id_cancels_to_removed_only() {
     let mut d1 = Ifc2x3Diff { upserted_instances: vec![inst(5, "IFCSLAB")], ..Default::default() };
@@ -81,12 +61,6 @@ async fn inverse_diff_level_roundtrip() {
     let next = protocol::apply_diff(&d, &base).expect("valid forward diff");
     let inv = d.inverse(&base);
     assert_eq!(protocol::apply_diff(&inv, &next).expect("valid inverse diff"), base);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn between_self_is_empty() {
-    let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL")]);
-    assert!(Ifc2x3Diff::between(&base, &base).is_empty());
 }
 
 //#region 🔖️diff_codec_text_binary_roundtrip_law

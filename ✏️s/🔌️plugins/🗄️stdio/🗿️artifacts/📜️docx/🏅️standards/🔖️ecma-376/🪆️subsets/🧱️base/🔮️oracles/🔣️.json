@@ -113,7 +113,8 @@
       "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture. `jszip` 3.10.1 then parses the ECMA-376 OPC package on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.",
       "comparisonProfiles": [
         "semantic-docx-ecma-376-mutate-v1",
-        "semantic-docx-ecma-376-jszip-v1"
+        "semantic-docx-ecma-376-jszip-v1",
+        "semantic-docx-ecma-376-opc-jszip-v1"
       ]
     }
   ],
@@ -128,6 +129,11 @@
       "id": "semantic-docx-ecma-376-jszip-v1",
       "description": "Bundle-style comparison for the jszip+fast-xml-parser oracle: delegates to the docx-ecma-376-jszip-compare-v1 pipeline rather than a single-projection diff.",
       "pipeline": "docx-ecma-376-jszip-compare-v1"
+    },
+    {
+      "id": "semantic-docx-ecma-376-opc-jszip-v1",
+      "description": "Bundle-style comparison for the OPC-plumbing kinds: delegates to the docx-ecma-376-jszip-opc-compare-v1 pipeline, which compares everything the semantic-docx-ecma-376-jszip-v1 pipeline does plus the ordered `[Content_Types].xml` defaults and overrides and every owner's ordered relationships.",
+      "pipeline": "docx-ecma-376-jszip-opc-compare-v1"
     }
   ],
   "mutationCatalogs": [
@@ -149,7 +155,11 @@
         "set-style-name",
         "set-style-based-on",
         "set-part",
-        "remove-part"
+        "remove-part",
+        "set-relationship",
+        "remove-relationship",
+        "set-content-type",
+        "remove-content-type"
       ]
     }
   ],
@@ -172,6 +182,34 @@
         {
           "probe": "docx-compare",
           "description": "Order-sensitive body/styles structural equality plus unordered other-parts digest equality — the operative equality.",
+          "inputs": [
+            "expected-docx",
+            "actual-docx"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-ecma-376-jszip-opc-compare-v1",
+      "description": "Reads the subject's produced docx and the fixture's own expected docx with an independent jszip+fast-xml-parser composition, then compares their typed body/styles projections, the unordered other-parts digest map AND the ordered package plumbing. GATING for the OPC-plumbing kinds.",
+      "stages": [
+        {
+          "probe": "docx-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-docx",
+            "actual-docx"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "docx-compare-opc",
+          "description": "Order-sensitive body/styles, unordered other-parts digests and ordered package plumbing structural equality -- the operative equality.",
           "inputs": [
             "expected-docx",
             "actual-docx"
@@ -302,6 +340,50 @@
         "status": "qualified",
         "evidence": "Validated BOTH ways this session with real measured numbers: no-mutation-no-op's identical before/after pair -> {equal:true, diffCount:0}; that same before against a deliberately corrupted copy (word/styles.xml's Heading1 name replaced with \"CORRUPTED HEADING\") -> {equal:false, diffCount:1, diffs:[\"$.styles[0].name: \\\"heading 1\\\" \\u2260 \\\"CORRUPTED HEADING\\\"\"]}. Also exercised on a genuine applied mutation: bolds-the-tower-run-of-the-opening-paragraph's before/after -> {equal:false, diffCount:1, diffs:[\"$.body[0].runs[1].bold: false \\u2260 true\"]}.",
         "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "equal:false, diffCount:1, exact field named"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "docx-compare-opc",
+      "capabilities": [
+        "docx.zip.compare-opc"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
+        "docx-compare-opc"
+      ],
+      "rationale": "The same comparison as docx-compare plus the ORDERED package plumbing -- the `[Content_Types].xml` defaults and overrides and every owner's relationships in the order the package states them -- for the kinds that write that plumbing (set-relationship, remove-relationship, set-content-type, remove-content-type). A separate probe because the other kinds' python-docx afters rewrite the plumbing in a writer's own order.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against every plumbing evidence pair (13 recipes, 25 files): the plumbing of each after-package equals its recipe's model-level expectation (the generator refuses to write a pair otherwise).",
+        "checkedAt": "2026-10-09",
         "criteria": [
           {
             "id": "accepts-a-known-good-pair",
@@ -556,6 +638,85 @@
             "operation": "remove-part",
             "bridgeVersion": 1,
             "variant": "RemovePart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-relationship",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-relationship",
+            "bridgeVersion": 1,
+            "variant": "SetRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-relationship",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-relationship",
+            "bridgeVersion": 1,
+            "variant": "RemoveRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-content-type",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-content-type",
+            "bridgeVersion": 1,
+            "variant": "SetContentType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-content-type",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-content-type",
+            "bridgeVersion": 1,
+            "variant": "RemoveContentType"
           },
           "oracleRequirements": [
             {
@@ -2267,6 +2428,635 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The package relationship to docProps/core.xml dropped, so the part is no longer written."
+    },
+    {
+      "id": "set-relationship-inserts-an-external-hyperlink-first",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:13af8f457518c12efc37574ed08b3d26c16dcccff751a9994531ad6532865b89",
+          "bytes": 17065
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-inserts-an-external-hyperlink-first",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new external relationship is inserted at position 0 of the package root's relationships."
+    },
+    {
+      "id": "set-relationship-appends-an-external-hyperlink",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:3c5852cc207abf3d046ea109d5c01870ea7173b52f4aeda6df33b80c5ac97d84",
+          "bytes": 17067
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-appends-an-external-hyperlink",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new external relationship without a position is appended after the last relationship of the package root."
+    },
+    {
+      "id": "set-relationship-retypes-the-last-root-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4a8173a60dcf0fda264e703ecea866d5457316fe0c05c2bfaf7330a4947238a5",
+          "bytes": 17031
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-retypes-the-last-root-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An existing id is changed in place: the last root relationship keeps its id, target and position and takes another type."
+    },
+    {
+      "id": "set-relationship-no-op-identical-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:11ff63d63a55be7cfc3d4c314195630879b4bca0abc0700e8aecc20ed5ac5b84",
+          "bytes": 17018
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-no-op-identical-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Writing a relationship identical to the stored one changes nothing."
+    },
+    {
+      "id": "remove-relationship-drops-the-last-root-relationship",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:cbfdd7c695abd1bc1a9f73188cd6583c8ba566270057c7783f7328d8f00158db",
+          "bytes": 17001
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-drops-the-last-root-relationship",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The last relationship of the package root is removed; the others keep their order."
+    },
+    {
+      "id": "remove-relationship-drops-an-added-hyperlink",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:13af8f457518c12efc37574ed08b3d26c16dcccff751a9994531ad6532865b89",
+          "bytes": 17065
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:11ff63d63a55be7cfc3d4c314195630879b4bca0abc0700e8aecc20ed5ac5b84",
+          "bytes": 17018
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-drops-an-added-hyperlink",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The relationship added at position 0 is removed again; the package root is back to its original relationships."
+    },
+    {
+      "id": "remove-relationship-rejected-missing-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-relationship",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-rejected-missing-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The package root owns no relationship rIdNothing. Before-only."
+    },
+    {
+      "id": "set-content-type-inserts-a-default-first",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:0dcc582badd6213235c377f6f32767950e352db5f441259c5b6b1063faa93191",
+          "bytes": 17032
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-inserts-a-default-first",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new extension default is inserted at position 0 of the content-types defaults."
+    },
+    {
+      "id": "set-content-type-retypes-an-existing-default",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e4481669430ff1a0bbea9befe382a876f489412f49eb40911beebee21acb1e6",
+          "bytes": 17030
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-retypes-an-existing-default",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An existing default keeps its position and takes another content type."
+    },
+    {
+      "id": "set-content-type-no-op-identical-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:56438f8b2c474202319fe7456559b4f1b3389128ba91c32073c0caed1ca0f0f1",
+          "bytes": 17020
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-no-op-identical-entry",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Writing the stored content type again changes nothing."
+    },
+    {
+      "id": "set-content-type-rejected-default-in-another-case",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-content-type",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:0dcc582badd6213235c377f6f32767950e352db5f441259c5b6b1063faa93191",
+          "bytes": 17032
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-rejected-default-in-another-case",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The extension default zzoracle exists in lower case; ZZORACLE would be a second default in another letter case. Before-only."
+    },
+    {
+      "id": "remove-content-type-drops-an-added-default",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:0dcc582badd6213235c377f6f32767950e352db5f441259c5b6b1063faa93191",
+          "bytes": 17032
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:56438f8b2c474202319fe7456559b4f1b3389128ba91c32073c0caed1ca0f0f1",
+          "bytes": 17020
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-content-type-drops-an-added-default",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The default added at position 0 is removed again."
+    },
+    {
+      "id": "remove-content-type-rejected-missing-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-content-type",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ffbaa6d9d0a53672e712212a815d62ec561c4f3d9e524fc127c9ca5127635588",
+          "bytes": 17024
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-content-type-rejected-missing-entry",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT) from the artifact's committed real package",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-opc-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The content types hold no default for the extension nothing. Before-only."
     }
   ],
   "oracleHostPackages": []

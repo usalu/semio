@@ -1,3 +1,4 @@
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
 // #region Header
 /**
  * 🌎️ `os-hub-ts` — a Bun integration-test harness for the real `os-hub` binary (ticket
@@ -21,7 +22,7 @@ import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/�
 import { decodeServerFrame, encodeClientFrame } from "../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { parseDocumentSocketGrantReceiptV1 } from "../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import { createSpaceCommandV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+
 import { sealSpaceArtifactCreateV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 

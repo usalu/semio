@@ -6,12 +6,15 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "snow_spare"
+      {
+        "id": "snow_spare",
+        "index": 4
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "combinations": null,
   "analysis": null

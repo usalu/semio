@@ -184,7 +184,21 @@
         },
         "added": {
           "type": "array",
-          "items": {}
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {}
+            }
+          }
         }
       }
     }

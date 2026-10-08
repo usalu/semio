@@ -11,9 +11,6 @@ record UpdateGraphAlgorithm tag 1
   field new_algorithm utf8
   field new_algorithm_seed utf8 optional
 
-record ReplaceGraph tag 2
-  field graph utf8
-
 record CreateNode tag 3
   field id utf8
   field label utf8
@@ -44,9 +41,6 @@ record ConnectNodes tag 8
 
 record DisconnectNodes tag 9
   field id utf8
-
-record ReplacePoints tag 10
-  field points f64 varint
 
 record InsertPoint tag 11
   field index varint

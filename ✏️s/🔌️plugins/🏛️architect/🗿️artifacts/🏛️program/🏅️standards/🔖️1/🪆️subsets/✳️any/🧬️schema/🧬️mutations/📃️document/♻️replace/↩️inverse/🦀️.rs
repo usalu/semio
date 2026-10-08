@@ -5,11 +5,14 @@
 use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
-/// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
+/// ↩️ Undo a replace by deleting the replacement row and recreating the pre-state row at its original index (rows replay last-to-first, so the create is listed first). Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::ReplaceDocument, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.artifacts.iter().find(|row| row.header.id == payload.document.header.id) {
-        Some(existing) => vec![ProgramMutation::ReplaceDocument(super::ReplaceDocument { document: existing.clone() })],
+    match base.artifacts.iter().position(|row| row.header.id == payload.document.header.id) {
+        Some(position) => vec![
+            ProgramMutation::CreateDocument(super::super::create_document::CreateDocument { document: base.artifacts[position].clone(), index: Some(position) }),
+            ProgramMutation::DeleteDocument(super::super::delete_document::DeleteDocument { id: payload.document.header.id.clone() }),
+        ],
         None => Vec::new(),
     }
 

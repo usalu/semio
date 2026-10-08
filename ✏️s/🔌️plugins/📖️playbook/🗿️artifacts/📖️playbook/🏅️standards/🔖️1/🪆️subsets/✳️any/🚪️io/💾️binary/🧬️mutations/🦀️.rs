@@ -36,7 +36,7 @@ mod tests;
 
 mod native_codec {
 use super::*;
-pub use crate::mutations::{apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, ChangeTitle, PlaybookMutation};
+pub use crate::mutations::{change_title_operation, inverse_playbook_mutation, ChangeTitle, PlaybookMutation};
 
 impl protocol::OpBinary for PlaybookMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

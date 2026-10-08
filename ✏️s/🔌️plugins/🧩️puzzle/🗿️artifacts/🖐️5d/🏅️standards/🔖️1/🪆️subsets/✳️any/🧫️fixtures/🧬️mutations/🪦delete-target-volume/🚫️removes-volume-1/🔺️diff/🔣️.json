@@ -7,11 +7,14 @@
   "parts": null,
   "schema": null,
   "targetVolumes": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "volume-1"
-    ],
-    "reordered": null
+      {
+        "id": "volume-1",
+        "index": 0
+      }
+    ]
   }
 }

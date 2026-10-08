@@ -36,6 +36,26 @@ fn write_optional_index(out: &mut Vec<u8>, index: Option<usize>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_optional_json<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &Option<T>) {
+    match value {
+        Some(value) => {
+            out.push(1);
+            write_str_lp(out, &semio_framework_pack_json::to_json_string(value));
+        }
+        None => out.push(0),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_optional_json<T: semio_framework_value::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<Option<T>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        1 => semio_framework_pack_json::from_json_str(&read_str_lp(reader)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Some).map_err(|error| error.to_string()),
+        other => Err(format!("optional payload flag {other} is neither 0 nor 1")),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_optional_index(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
@@ -61,35 +81,66 @@ impl OpBinary for XlsxMutation {
             XlsxMutation::InsertSharedString(_) => TAG_INSERT_SHARED_STRING,
             XlsxMutation::RemoveSharedString(_) => TAG_REMOVE_SHARED_STRING,
             XlsxMutation::SetSharedString(_) => TAG_SET_SHARED_STRING,
+            XlsxMutation::SetRelationship(_) => TAG_SET_RELATIONSHIP,
+            XlsxMutation::RemoveRelationship(_) => TAG_REMOVE_RELATIONSHIP,
+            XlsxMutation::SetContentType(_) => TAG_SET_CONTENT_TYPE,
+            XlsxMutation::RemoveContentType(_) => TAG_REMOVE_CONTENT_TYPE,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet, index }) => {
+            XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet, index, slot }) => {
                 enc_sheet_bin(sheet, &mut out);
                 write_optional_index(&mut out, *index);
+                write_optional_json(&mut out, slot);
             }
             XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name }) => write_str_lp(&mut out, name),
             XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }) => {
                 write_str_lp(&mut out, name);
                 write_str_lp(&mut out, new_name);
             }
-            XlsxMutation::SetCell(set_cell::SetCell { address, value }) => {
+            XlsxMutation::SetCell(set_cell::SetCell { address, value, node }) => {
                 write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address));
                 enc_cell_value_bin(value, &mut out);
+                write_optional_json(&mut out, node);
             }
-            XlsxMutation::InsertCell(insert_cell::InsertCell { address, value }) => {
+            XlsxMutation::InsertCell(insert_cell::InsertCell { address, value, node }) => {
                 write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address));
                 enc_cell_value_bin(value, &mut out);
+                write_optional_json(&mut out, node);
             }
             XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address)),
-            XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index }) => {
+            XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index, node }) => {
                 write_str_lp(&mut out, value);
                 write_optional_index(&mut out, *index);
+                write_optional_json(&mut out, node);
             }
             XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index }) => store::pack_rt::write_varint_u64(&mut out, *index as u64),
-            XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }) => {
+            XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value, node }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 write_str_lp(&mut out, value);
+                write_optional_json(&mut out, node);
+            }
+            XlsxMutation::SetRelationship(set_relationship::SetRelationship { owner, id, rel_type, target, external, index }) => {
+                write_str_lp(&mut out, owner);
+                write_str_lp(&mut out, id);
+                write_str_lp(&mut out, rel_type);
+                write_str_lp(&mut out, target);
+                out.push(u8::from(*external));
+                write_optional_index(&mut out, *index);
+            }
+            XlsxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner, id }) => {
+                write_str_lp(&mut out, owner);
+                write_str_lp(&mut out, id);
+            }
+            XlsxMutation::SetContentType(set_content_type::SetContentType { is_override, name, content_type, index }) => {
+                out.push(u8::from(*is_override));
+                write_str_lp(&mut out, name);
+                write_str_lp(&mut out, content_type);
+                write_optional_index(&mut out, *index);
+            }
+            XlsxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name }) => {
+                out.push(u8::from(*is_override));
+                write_str_lp(&mut out, name);
             }
         }
         Ok(out)
@@ -104,7 +155,8 @@ impl OpBinary for XlsxMutation {
             TAG_INSERT_SHEET => {
                 let sheet = dec_sheet_bin(&mut reader).map_err(|e| malformed("op sheet", reader.position(), e))?;
                 let index = read_optional_index(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
-                Ok(XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet, index }))
+                let slot = read_optional_json(&mut reader).map_err(|e| malformed("op slot", reader.position(), e))?;
+                Ok(XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet, index, slot }))
             }
             TAG_REMOVE_SHEET => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
@@ -119,13 +171,15 @@ impl OpBinary for XlsxMutation {
                 let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
                     .map_err(|error| malformed("op address", reader.position(), error.to_string()))?;
                 let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
-                Ok(XlsxMutation::SetCell(set_cell::SetCell { address, value }))
+                let node = read_optional_json(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
+                Ok(XlsxMutation::SetCell(set_cell::SetCell { address, value, node }))
             }
             TAG_INSERT_CELL => {
                 let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op vacancy address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
                     .map_err(|error| malformed("op vacancy address", reader.position(), error.to_string()))?;
                 let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
-                Ok(XlsxMutation::InsertCell(insert_cell::InsertCell { address, value }))
+                let node = read_optional_json(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
+                Ok(XlsxMutation::InsertCell(insert_cell::InsertCell { address, value, node }))
             }
             TAG_REMOVE_CELL => {
                 let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
@@ -135,7 +189,8 @@ impl OpBinary for XlsxMutation {
             TAG_INSERT_SHARED_STRING => {
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 let index = read_optional_index(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
-                Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index }))
+                let node = read_optional_json(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
+                Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index, node }))
             }
             TAG_REMOVE_SHARED_STRING => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
@@ -144,7 +199,34 @@ impl OpBinary for XlsxMutation {
             TAG_SET_SHARED_STRING => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
-                Ok(XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }))
+                let node = read_optional_json(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
+                Ok(XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value, node }))
+            }
+            TAG_SET_RELATIONSHIP => {
+                let owner = read_str_lp(&mut reader).map_err(|e| malformed("op owner", reader.position(), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let rel_type = read_str_lp(&mut reader).map_err(|e| malformed("op rel_type", reader.position(), e))?;
+                let target = read_str_lp(&mut reader).map_err(|e| malformed("op target", reader.position(), e))?;
+                let external = reader.read_u8().map_err(|e| malformed("op external", reader.position(), e.to_string()))? != 0;
+                let index = read_optional_index(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(XlsxMutation::SetRelationship(set_relationship::SetRelationship { owner, id, rel_type, target, external, index }))
+            }
+            TAG_REMOVE_RELATIONSHIP => {
+                let owner = read_str_lp(&mut reader).map_err(|e| malformed("op owner", reader.position(), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                Ok(XlsxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner, id }))
+            }
+            TAG_SET_CONTENT_TYPE => {
+                let is_override = reader.read_u8().map_err(|e| malformed("op override", reader.position(), e.to_string()))? != 0;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", reader.position(), e))?;
+                let index = read_optional_index(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(XlsxMutation::SetContentType(set_content_type::SetContentType { is_override, name, content_type, index }))
+            }
+            TAG_REMOVE_CONTENT_TYPE => {
+                let is_override = reader.read_u8().map_err(|e| malformed("op override", reader.position(), e.to_string()))? != 0;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(XlsxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name }))
             }
             other => Err(malformed("op tag", 1, format!("unknown XlsxMutation tag {other}"))),
         }
@@ -165,4 +247,8 @@ const TAG_REMOVE_CELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-
 const TAG_INSERT_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-shared-string");
 const TAG_REMOVE_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-shared-string");
 const TAG_SET_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-shared-string");
+const TAG_SET_RELATIONSHIP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-relationship");
+const TAG_REMOVE_RELATIONSHIP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-relationship");
+const TAG_SET_CONTENT_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-content-type");
+const TAG_REMOVE_CONTENT_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-content-type");
 //#endregion 🏷️WireTags

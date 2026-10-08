@@ -170,6 +170,35 @@ async fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curv
     assert!(issues.iter().any(|i| i.code == "same-parameter-violated"), "expected a same-parameter issue, got {issues:?}");
 }
 
+#[test]
+fn validation_same_parameter_retains_all_original_adaptive_passes_and_verdict() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let probe = &fixture["sameParameterProbe"];
+    let mut body = Body::new();
+    let solid = build_tetrahedron(&mut body, &mut OpRecorder::new());
+    let face = body.solid_faces(solid)[probe["face"].as_u64().unwrap() as usize];
+    let coedge = body.face_coedges(face)[probe["coedge"].as_u64().unwrap() as usize];
+    let pcurve = body.coedges.get(coedge).unwrap().pcurve.unwrap();
+    let crate::brep::representation::curve::Curve2::Line { dir, .. } = body.curves2.get_mut(pcurve).unwrap() else { panic!("neutral original planar edge"); };
+    *dir = crate::brep::representation::vector::Vec2::new(0.0, 0.0);
+    let mut job = BodyValidationJob::new(&body);
+    let mut samples = 0;
+    while !job.is_complete() {
+        SAME_PARAMETER_SAMPLES.with(|value| value.set(0));
+        job.step(&body, fixture["budget"]["turn"].as_u64().unwrap() as usize);
+        let actual = SAME_PARAMETER_SAMPLES.with(std::cell::Cell::get);
+        assert!(actual <= fixture["budget"]["maximumSameParameterSamples"].as_u64().unwrap() as usize);
+        samples += actual;
+    }
+    let issues = job.into_issues();
+    let verdict = issues.iter().find(|issue| issue.code == "same-parameter-violated" && issue.entity == format!("coedge-{}", coedge.raw_index())).expect("original adaptive verdict");
+    let deviation = probe["maximumDeviation"].as_f64().unwrap();
+    let parameter = probe["worstParameter"].as_f64().unwrap();
+    assert!(verdict.message.starts_with(&format!("pcurve and 3D curve disagree by {deviation} at s={parameter} ")), "{verdict:?}");
+    assert_eq!(samples, probe["totalBodySamples"].as_u64().unwrap() as usize);
+    eprintln!("[DEBUG] original adaptive same-parameter samples={samples} worstDeviation={deviation} worstParameter={parameter} maximumPerTurn=1");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn missing_pcurve_is_an_error_not_a_skip() {
     let mut body = Body::new();
@@ -251,4 +280,155 @@ async fn self_intersection_probe_warns_on_overlapping_non_adjacent_faces() {
     add_solid(&mut body, shell, vec![], &mut rec);
     let issues = validate_body(&body);
     assert!(issues.iter().any(|i| i.code == "warning-possible-self-intersection"), "expected a self-intersection warning, got {issues:?}");
+}
+
+
+#[test]
+fn validation_cold_planning_collects_original_ids_only_after_grants() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let faces: [[usize; 3]; 4] = serde_json::from_value(fixture["faces"].clone()).unwrap();
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    let solid = build_tetrahedron_with_windings(&mut body, &mut recorder, faces);
+    let mut job = BodyValidationJob::new(&body);
+    let collected = |job: &BodyValidationJob| job.edges.len() + job.faces.len() + job.shells.iter().map(|shell| 1 + shell.faces.len()).sum::<usize>();
+    assert_eq!(collected(&job), fixture["initialCollectedIds"].as_u64().unwrap() as usize);
+    let initial = job.progress();
+    assert_eq!(job.step(&body, fixture["budget"]["probe"].as_u64().unwrap() as usize), initial);
+    assert_eq!(collected(&job), 0);
+    for _ in 0..fixture["budget"]["planningTurns"].as_u64().unwrap() {
+        let before = collected(&job);
+        let progress = job.step(&body, fixture["budget"]["turn"].as_u64().unwrap() as usize);
+        assert!(collected(&job).saturating_sub(before) <= 1, "one grant collected multiple original ids");
+        assert!(!job.is_complete());
+        assert!(progress.units_done <= progress.units_total);
+    }
+    let issues = job.run_to_completion(&body);
+    let codes: Vec<_> = issues.iter().map(|issue| issue.code).collect();
+    assert_eq!(serde_json::to_value(&codes).unwrap(), fixture["expected"]["issueCodes"]);
+    let volume = mass_properties::solid_signed_volume(&body, solid, 1e-3).unwrap();
+    assert!((volume - fixture["expected"]["volume"].as_f64().unwrap()).abs() < 1e-10);
+    eprintln!("[DEBUG] cold validation original volume={volume} issues={}", issues.len());
+}
+
+
+#[test]
+fn validation_loop_probe_spends_only_the_original_granted_coedge_work() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    build_tetrahedron_with_windings(&mut body, &mut recorder, serde_json::from_value(fixture["faces"].clone()).unwrap());
+    let mut job = BodyValidationJob::new(&body);
+    while job.progress().phase == BodyValidationPhase::CollectingTopology { job.step(&body, 1); }
+    let maximum = fixture["budget"]["maximumCoedgeProbes"].as_u64().unwrap() as usize;
+    let mut probes = 0;
+    while job.progress().phase == BodyValidationPhase::LoopRings {
+        LOOP_PROBES.with(|value| value.set(0));
+        job.step(&body, 0);
+        assert_eq!(LOOP_PROBES.with(std::cell::Cell::get), 0);
+        job.step(&body, 1);
+        let actual = LOOP_PROBES.with(std::cell::Cell::get);
+        assert!(actual <= maximum, "one original grant performed {actual} coedge probes");
+        probes += actual;
+    }
+    assert_eq!(probes, fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
+    assert!(job.run_to_completion(&body).is_empty());
+    eprintln!("[DEBUG] original validation loop probes={probes} maximumPerTurn={maximum}");
+}
+
+#[test]
+fn validation_valence_spends_only_the_original_granted_coedge_work() {
+    use crate::brep::representation::topology::EDGE_USE_PROBES;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    build_tetrahedron_with_windings(&mut body, &mut recorder, serde_json::from_value(fixture["faces"].clone()).unwrap());
+    let mut job = BodyValidationJob::new(&body);
+    while matches!(job.progress().phase, BodyValidationPhase::CollectingTopology | BodyValidationPhase::LoopRings) { job.step(&body, 1); }
+    let maximum = fixture["budget"]["maximumValenceProbes"].as_u64().unwrap() as usize;
+    let mut probes = 0;
+    while job.progress().phase == BodyValidationPhase::EdgeValence {
+        EDGE_USE_PROBES.with(|value| value.set(0));
+        job.step(&body, 0);
+        assert_eq!(EDGE_USE_PROBES.with(std::cell::Cell::get), 0);
+        job.step(&body, 1);
+        let actual = EDGE_USE_PROBES.with(std::cell::Cell::get);
+        assert!(actual <= maximum, "one original grant performed {actual} edge-use probes");
+        probes += actual;
+    }
+    assert_eq!(probes, fixture["expected"]["edges"].as_u64().unwrap() as usize * fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
+    assert!(job.run_to_completion(&body).is_empty());
+    eprintln!("[DEBUG] original validation valence probes={probes} maximumPerTurn={maximum}");
+}
+
+#[test]
+fn validation_pcurve_presence_spends_only_the_original_granted_coedge_work() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    build_tetrahedron_with_windings(&mut body, &mut recorder, serde_json::from_value(fixture["faces"].clone()).unwrap());
+    let mut job = BodyValidationJob::new(&body);
+    while job.progress().phase != BodyValidationPhase::MissingPcurves { job.step(&body, 1); }
+    let maximum = fixture["budget"]["maximumPCurveProbes"].as_u64().unwrap() as usize;
+    let mut probes = 0;
+    while job.progress().phase == BodyValidationPhase::MissingPcurves {
+        PCURVE_PROBES.with(|value| value.set(0));
+        job.step(&body, 0);
+        assert_eq!(PCURVE_PROBES.with(std::cell::Cell::get), 0);
+        job.step(&body, 1);
+        let actual = PCURVE_PROBES.with(std::cell::Cell::get);
+        assert!(actual <= maximum, "one original grant performed {actual} pcurve-presence probes");
+        probes += actual;
+    }
+    assert_eq!(probes, fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
+    assert!(job.run_to_completion(&body).is_empty());
+    eprintln!("[DEBUG] original validation pcurve presence probes={probes} maximumPerTurn={maximum}");
+}
+
+#[test]
+fn validation_tolerance_spends_only_the_original_granted_containment_work() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    build_tetrahedron_with_windings(&mut body, &mut recorder, serde_json::from_value(fixture["faces"].clone()).unwrap());
+    let mut job = BodyValidationJob::new(&body);
+    while job.progress().phase != BodyValidationPhase::ToleranceContainment { job.step(&body, 1); }
+    let maximum = fixture["budget"]["maximumToleranceProbes"].as_u64().unwrap() as usize;
+    let mut probes = 0;
+    while job.progress().phase == BodyValidationPhase::ToleranceContainment {
+        TOLERANCE_PROBES.with(|value| value.set(0));
+        job.step(&body, 0);
+        assert_eq!(TOLERANCE_PROBES.with(std::cell::Cell::get), 0);
+        job.step(&body, 1);
+        let actual = TOLERANCE_PROBES.with(std::cell::Cell::get);
+        assert!(actual <= maximum, "one original grant performed {actual} tolerance-containment probes");
+        probes += actual;
+    }
+    assert_eq!(probes, fixture["expected"]["edges"].as_u64().unwrap() as usize * 2 + fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
+    assert!(job.run_to_completion(&body).is_empty());
+    eprintln!("[DEBUG] original validation tolerance probes={probes} maximumPerTurn={maximum}");
+}
+
+#[test]
+fn validation_same_parameter_spends_only_the_original_granted_geometry_sample() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    build_tetrahedron_with_windings(&mut body, &mut recorder, serde_json::from_value(fixture["faces"].clone()).unwrap());
+    let mut job = BodyValidationJob::new(&body);
+    while job.progress().phase != BodyValidationPhase::SameParameter { job.step(&body, 1); }
+    let maximum = fixture["budget"]["maximumSameParameterSamples"].as_u64().unwrap() as usize;
+    let mut samples = 0;
+    while job.progress().phase == BodyValidationPhase::SameParameter {
+        SAME_PARAMETER_SAMPLES.with(|value| value.set(0));
+        job.step(&body, 0);
+        assert_eq!(SAME_PARAMETER_SAMPLES.with(std::cell::Cell::get), 0);
+        job.step(&body, 1);
+        let actual = SAME_PARAMETER_SAMPLES.with(std::cell::Cell::get);
+        assert!(actual <= maximum, "one original grant performed {actual} same-parameter geometry samples");
+        samples += actual;
+    }
+    assert_eq!(samples, fixture["expected"]["faces"].as_u64().unwrap() as usize * 3 * (fixture["budget"]["sameParameterBaseSamples"].as_u64().unwrap() as usize + 1));
+    assert!(job.run_to_completion(&body).is_empty());
+    eprintln!("[DEBUG] original validation same-parameter samples={samples} maximumPerTurn={maximum}");
 }

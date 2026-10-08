@@ -6,22 +6,25 @@
   "characterStyles": null,
   "stories": null,
   "links": {
-    "added": [
+    "inserted": [
       {
-        "id": "link-3",
-        "path": "caption.png",
-        "hash": "hash-caption",
-        "width": 200,
-        "height": 150,
-        "dpi": 144,
-        "colorProfile": null,
-        "state": null,
-        "proxyDataUrl": null
+        "index": 2,
+        "row": {
+          "id": "link-3",
+          "path": "caption.png",
+          "hash": "hash-caption",
+          "width": 200,
+          "height": 150,
+          "dpi": 144,
+          "colorProfile": null,
+          "state": null,
+          "proxyDataUrl": null
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "parentPages": null,
   "spreads": null,

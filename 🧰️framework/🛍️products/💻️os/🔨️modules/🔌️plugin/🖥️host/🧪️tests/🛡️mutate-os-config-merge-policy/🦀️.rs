@@ -83,8 +83,11 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
+    use semio_framework_plugin_host::config_io::text::mutations::{decode_merge_policy_config_mutation_json};
+    use semio_framework_plugin_host::config_io::text::snapshot::{decode_merge_policy_setting_json, encode_merge_policy_setting_json};
+
     use semio_framework_plugin_host::opening_config::mutations::{
-        apply_merge_policy_config_mutation_reporting, decode_merge_policy_config_mutation_json, decode_merge_policy_setting_json, encode_merge_policy_setting_json, inverse_merge_policy_config_mutation_steps, ChangeMergePolicy,
+        apply_merge_policy_config_mutation_reporting, inverse_merge_policy_config_mutation_steps, ChangeMergePolicy,
         MergePolicyConfigMutation, MergePolicySetting,
     };
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};

@@ -4,7 +4,7 @@
 
 use crate::editor::ifc4_any::modes::edit;
 use crate::editor::ifc4_any::modes::edit::windows::main;
-use crate::standards::v4::subsets::any::schema::mutations::{net_mutations, IfcMutation};
+use crate::standards::v4::subsets::any::schema::mutations::{edit_rules, IfcMutation};
 
 use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -194,6 +194,11 @@ impl ArtifactEditor for Ifc4AnyEditor {
     const DIALECT: Dialect = IFC4_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC4_ANY_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<Ifc4AnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -291,8 +296,8 @@ impl editing::SnapshotEditingEditor for Ifc4AnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { Ifc4AnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net(event, snapshot, net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &edit_rules::EDIT_RULES
     }
 }
 

@@ -6,6 +6,6 @@ pub fn diff(payload: &super::ChangeGraphDirected, base: &EquationSnapshot) -> pr
     if base.graph.directed == payload.new_directed {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Graph is already {}.", if payload.new_directed { "directed" } else { "undirected" }));
     }
-    protocol::MutationOutcome::new(crate::equation_state_diff(EquationDiff { directed: Some(payload.new_directed), ..Default::default() }, base))
+    protocol::MutationOutcome::new(EquationDiff { directed: Some(payload.new_directed), ..Default::default() })
 }
 //#endregion 🔖️Diff

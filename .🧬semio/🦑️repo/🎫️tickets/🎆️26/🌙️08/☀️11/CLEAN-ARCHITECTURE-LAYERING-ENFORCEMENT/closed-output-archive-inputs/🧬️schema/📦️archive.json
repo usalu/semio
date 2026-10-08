@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "originalPath",
+    "custodyPhase",
+    "epoch",
+    "producerPath",
+    "producerSha256",
+    "closureReport",
+    "originalIdentity",
+    "decodedBytes",
+    "decodedSha256",
+    "payloadPath",
+    "encodedBytes",
+    "encodedSha256",
+    "verificationReceipt",
+    "atomicBatchClaimed"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "root-closed-json-gzip"
+    },
+    "originalPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "custodyPhase": {
+      "enum": [
+        "completed",
+        "prepared"
+      ]
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producerPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "producerSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "closureReport": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "originalIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device",
+        "inode",
+        "bytes",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "device": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "inode": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "bytes": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "decodedBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 268435456
+    },
+    "decodedSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "payloadPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "encodedBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 268435456
+    },
+    "encodedSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "verificationReceipt": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "atomicBatchClaimed": {
+      "const": false
+    }
+  }
+}

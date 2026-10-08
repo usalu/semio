@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertTensionComponent, base: &En1993Snapshot) -> protocol
     if base.tension_components.iter().any(|existing| existing.id == payload.tension_component.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Tension component id {} already exists.", payload.tension_component.id), [payload.tension_component.id.clone()]);
     }
-    let index = payload.index.min(base.tension_components.len());
-    protocol::MutationOutcome::new(En1993Diff { tension_components: En1993TensionComponentDelta::insertion(&base.tension_components, index, payload.tension_component.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.tension_components.len());
+    protocol::MutationOutcome::new(En1993Diff { tension_components: En1993TensionComponentDelta::insertion(index, payload.tension_component.clone()), ..Default::default() })
 }

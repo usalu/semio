@@ -87,11 +87,6 @@ impl protocol::DiffAlgebra<Block3dWorldWindowTransient> for Block3dWorldWindowTr
             brush_preview: self.brush_preview.as_ref().map(|_| Block3dBrushPreviewSet { value: base.brush_preview.clone() }),
         }
     }
-    fn between(base: &Block3dWorldWindowTransient, other: &Block3dWorldWindowTransient) -> Self {
-        Self {
-            brush_preview: (base.brush_preview != other.brush_preview).then(|| Block3dBrushPreviewSet { value: other.brush_preview.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.brush_preview.is_none()
     }

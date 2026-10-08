@@ -1,0 +1,629 @@
+[
+  {
+    "name": "⚖️space-child-home-check🦀️",
+    "artifact": "home",
+    "mode": "check",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/📜️script.ts",
+        "check"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  },
+  {
+    "name": "⚖️space-child-home-test🦀️",
+    "artifact": "home",
+    "mode": "test",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/📜️script.ts",
+        "test"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  },
+  {
+    "name": "⚖️space-child-home-inventory🦀️",
+    "artifact": "home",
+    "mode": "inventory",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/📜️script.ts",
+        "list-mutations",
+        "s.space.home",
+        "1",
+        "any",
+        "--maximum-units",
+        "1000000000",
+        "--maximum-owned-bytes",
+        "16777216",
+        "--budget-ms",
+        "1800000"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/home/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  },
+  {
+    "name": "⚖️space-child-space-check🦀️",
+    "artifact": "space",
+    "mode": "check",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/📜️script.ts",
+        "check"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  },
+  {
+    "name": "⚖️space-child-space-test🦀️",
+    "artifact": "space",
+    "mode": "test",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/📜️script.ts",
+        "test"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  },
+  {
+    "name": "⚖️space-child-space-inventory🦀️",
+    "artifact": "space",
+    "mode": "inventory",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/📜️script.ts",
+        "list-mutations",
+        "s.space.space",
+        "1",
+        "any",
+        "--maximum-units",
+        "1000000000",
+        "--maximum-owned-bytes",
+        "16777216",
+        "--budget-ms",
+        "1800000"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/space/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  },
+  {
+    "name": "⚖️space-child-core-test🦀️",
+    "artifact": "core",
+    "mode": "test",
+    "request": {
+      "version": 1,
+      "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "command": "bun",
+      "args": [
+        "/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js",
+        "exec",
+        "--projects=ticket-fixed-slots",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+        "test"
+      ],
+      "manifests": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "preparation": "none"
+    },
+    "policy": {
+      "version": 1,
+      "context": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/cache",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases"
+      },
+      "budgetMs": 1800000,
+      "maximumOutputBytes": 67108864,
+      "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/commands",
+      "retainArtifacts": true,
+      "cargoPolicies": [
+        {
+          "version": 1,
+          "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust/Cargo.toml",
+          "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+          "nextest": false,
+          "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+          "level": "long",
+          "assertionBudgets": {
+            "fundamental": 60000,
+            "quick": 60000,
+            "long": 60000,
+            "exhaustive": 60000
+          },
+          "buildBudgetMs": 1800000,
+          "assertionThreads": 1,
+          "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/cargo-captures",
+          "retainArtifacts": true,
+          "coverageEnabled": false,
+          "coveragePath": null,
+          "rustMinStack": "67108864"
+        }
+      ],
+      "vitestPolicy": null,
+      "cargoArtifactPolicy": {
+        "version": 1,
+        "cwd": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+        "leaseDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases",
+        "captureDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/captures",
+        "budgetMs": 1800000
+      }
+    },
+    "environment": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/nx-data",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"captureDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target\",\"nextest\":false,\"configPath\":\"/Users/ueli/Documents/semio/.config/nextest.toml\",\"level\":\"long\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx\",\"cacheRoot\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/space-child-inventory/core/cache\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/umbrella-native/leases\"}",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_BUILD_JOBS": "2",
+      "RUST_MIN_STACK": "67108864",
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_COVERAGE": "0",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx"
+    }
+  }
+]

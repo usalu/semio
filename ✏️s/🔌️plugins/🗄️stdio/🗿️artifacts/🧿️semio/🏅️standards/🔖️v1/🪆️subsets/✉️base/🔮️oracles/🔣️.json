@@ -926,7 +926,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "Applies {\"EditRun\": {\"index\": 0, \"new_content\": \"F1 mutated run content\"}} to the real `text` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Text(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('text') matches the base snapshot's own arm threads through to a real, observable content change.",
+      "notes": "Applies {\"EditRun\": {\"index\": 0, \"new_text\": \"F1 mutated run content\"}} to the real `text` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Text(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('text') matches the base snapshot's own arm threads through to a real, observable content change.",
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {

@@ -144,6 +144,17 @@ message ScaleSelection {
   repeated float factor = 4;
 }
 
+message LowpolyVertexPositionRow {
+  uint32 vertex = 1;
+  repeated float position = 2;
+}
+
+message SetVertexPositions {
+  string object_id = 1;
+  repeated LowpolyVertexPositionRow positions = 2;
+  repeated semio.s.lowpoly.lowpoly.artifact.LowpolyMeshAttribute channels = 3;
+}
+
 // 🎛️ Dispatch envelope — exactly one payload set, matching the Rust `LowpolyMutation` enum's
 // declaration order and spelling (`🦀️.rs`'s `KINDS`).
 message LowpolyMutation {
@@ -169,5 +180,6 @@ message LowpolyMutation {
     MoveSelection move_selection = 19;
     RotateSelection rotate_selection = 20;
     ScaleSelection scale_selection = 21;
+    SetVertexPositions set_vertex_positions = 22;
   }
 }

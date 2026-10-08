@@ -31,4 +31,4 @@ type RemoveDesign { id: String! }
 type RemoveDesignMutation { RemoveDesign: RemoveDesign! }
 type EditDesign { id: String! pieces: [SemioKitPiece!]! connections: [SemioKitConnection!]! }
 type EditDesignMutation { EditDesign: EditDesign! }
-union SemioKitMutation = CreateObjectMutation | DeleteObjectMutation | CreateModelMutation | DeleteModelMutation | CreatePropertiesMutation | DeletePropertiesMutation | BindRepresentationMutation | UnbindRepresentationMutation | ChangeRepresentationPinMutation | AddTypeMutation | RemoveTypeMutation | RenameTypeMutation | AddDesignMutation | RemoveDesignMutation | EditDesignMutation | SetSnapshotMutation
+union SemioKitMutation = CreateObjectMutation | DeleteObjectMutation | CreateModelMutation | DeleteModelMutation | CreatePropertiesMutation | DeletePropertiesMutation | BindRepresentationMutation | UnbindRepresentationMutation | ChangeRepresentationPinMutation | AddTypeMutation | RemoveTypeMutation | RenameTypeMutation | AddDesignMutation | RemoveDesignMutation | EditDesignMutation

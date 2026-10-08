@@ -12,6 +12,13 @@ pub struct SetViewpointSnapshot {
     pub(crate) snapshot: Option<Vec<u8>>,
 }
 
+impl SetViewpointSnapshot {
+    /// 📸️ This setter as the aggregate mutation that carries it.
+    fn into_mutation(self) -> BcfMutation {
+        BcfMutation::SetViewpointSnapshot(self)
+    }
+}
+
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-snapshot", kind: "set-viewpoint-snapshot", record: "SetViewpointSnapshot" };
 
@@ -23,7 +30,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointSnapshot {
         let Self { topic_guid, guid, .. } = self;
         Ok({
             match find_viewpoint(base, topic_guid, guid) {
-                Some(v) => vec![BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: topic_guid.clone(), guid: guid.clone(), snapshot: v.snapshot.clone() })],
+                Some(v) => vec![Self { topic_guid: topic_guid.clone(), guid: guid.clone(), snapshot: v.snapshot.clone() }.into_mutation()],
                 None => Vec::new(),
             }
         })

@@ -5,6 +5,9 @@ use super::super::*;
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::SetElement, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
+    if !base.elements.iter().any(|e| e.id == payload.id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    }
     let super::SetElement { id, class, placement, geometry, spatial_id, psets } = payload;
     protocol::MutationOutcome::new(SemioModelDiff {
         elements: Some(NamedTripleDiff {

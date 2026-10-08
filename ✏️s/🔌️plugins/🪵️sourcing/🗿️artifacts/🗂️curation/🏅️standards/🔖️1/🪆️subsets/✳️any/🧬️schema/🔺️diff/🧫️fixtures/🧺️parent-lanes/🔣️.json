@@ -1,0 +1,5 @@
+{
+  "initial": [],
+  "middle": [{"objectId":"beam-1","count":2}],
+  "final": [{"objectId":"beam-1","count":5},{"objectId":"slab-1","count":1}]
+}

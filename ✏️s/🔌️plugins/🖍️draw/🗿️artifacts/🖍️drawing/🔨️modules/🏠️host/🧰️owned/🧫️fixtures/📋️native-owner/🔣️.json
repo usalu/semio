@@ -48,12 +48,11 @@
       "title"
     ],
     "assetTexts": [
-      "key",
-      "mime",
-      "data"
+      "key"
     ],
     "nestedLayerFieldsIncluded": false,
-    "inlineBytesCountedByParent": true
+    "inlineBytesCountedByParent": true,
+    "assetSampleComponents": 4
   },
   "textDigest": {
     "tag": 382,
@@ -309,7 +308,12 @@
     "material": "originalIdThenSuffix",
     "nameSuffixOnlyOnRoot": true,
     "internalReferencesRemapped": true,
-    "ids": ["", "shape-a", "a\u0000b", "🧬ö"]
+    "ids": [
+      "",
+      "shape-a",
+      "a\u0000b",
+      "🧬ö"
+    ]
   },
   "decodedFieldClose": {
     "retirementBirthGranted": true,
@@ -317,10 +321,20 @@
     "zeroItemGrantInert": true,
     "zeroByteGrantInert": true,
     "originalFieldMovedOnce": true,
-    "physicalBackingCapacities": [0, 7, 1024, 4096]
+    "physicalBackingCapacities": [
+      0,
+      7,
+      1024,
+      4096
+    ]
   },
   "duplicateClose": {
-    "grants": [0, 1, 7, 4096],
+    "grants": [
+      0,
+      1,
+      7,
+      4096
+    ],
     "callerGrantPreserved": true,
     "capacityCopyReleaseSeparate": true,
     "ownerMoveCopyBytes": true,

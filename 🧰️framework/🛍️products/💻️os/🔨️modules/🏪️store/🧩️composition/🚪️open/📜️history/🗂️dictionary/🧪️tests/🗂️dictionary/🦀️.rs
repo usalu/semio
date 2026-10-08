@@ -172,7 +172,7 @@ impl RequestRetirementCensus for VerifiedMemberHistoryDictionary {
 }
 
 fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usize) -> usize {
-    assert!(matches!(owner.close_step(0, payload_grant).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+    assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: payload_grant, ..Default::default() }).unwrap(), RetainedCloneStep::Progress(Default::default()));
     super::super::tests::retire(owner, payload_grant)
 }
 

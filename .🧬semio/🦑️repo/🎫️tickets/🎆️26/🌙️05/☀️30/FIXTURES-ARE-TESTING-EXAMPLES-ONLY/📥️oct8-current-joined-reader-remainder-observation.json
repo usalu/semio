@@ -1,0 +1,17 @@
+{
+  "role": "observed source only",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🎟️admission/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "3cce3747b7b1a1193524805164c5c49d2a892f0528078d403cca53e500784328"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts",
+      "sha256": "8f0690d94e79280f7c9a073fe3c92d5a5e04aaf9e53cdf75cfcd5776c6966960"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+      "sha256": "61796e2195a1f2849ee706a91f8a3c9c7348dbf3547c88f82b026ec93ee9c453"
+    }
+  ]
+}

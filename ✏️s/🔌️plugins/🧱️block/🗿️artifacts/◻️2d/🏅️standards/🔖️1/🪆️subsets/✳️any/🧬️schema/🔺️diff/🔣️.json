@@ -6,118 +6,492 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "Block2dArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "nodeKind": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockKindIdentity",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockKindIdentityPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "presentation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dPresentation",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Block2dPresentationPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "handleKinds": {
-      "$ref": "#/$defs/Block2dHandleKindsDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/Block2dHandleKindsDelta"
     },
     "handles": {
-      "$ref": "#/$defs/Block2dHandlesDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/Block2dHandlesDelta"
     },
     "compatibility": {
-      "$ref": "#/$defs/Block2dCompatibilityDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockCompatibilityDelta"
     },
     "attributes": {
-      "$ref": "#/$defs/Block2dAttributesDelta",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockAttributesDelta"
     },
     "authors": {
-      "$ref": "#/$defs/Block2dAuthorList",
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/BlockAuthorsDelta"
     },
     "camera2d": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCamera2d",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockCamera2dPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "meta": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockMeta",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BlockMetaPatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "$defs": {
-    "Block2dStringList": {
-      "title": "Block2dStringList",
+    "BlockOptionalText": {
+      "title": "BlockOptionalText",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "value"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
-    "Block2dAuthorList": {
-      "title": "Block2dAuthorList",
+    "BlockOptionalNumber": {
+      "title": "BlockOptionalNumber",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "value"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAuthor"
-          }
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
-    "Block2dHandleKindsDelta": {
-      "title": "Block2dHandleKindsDelta",
+    "BlockKindIdentityPatch": {
+      "title": "BlockKindIdentityPatch",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
+      "required": [],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
-          }
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Block2dHandleKindsPatchEntry"
-          }
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block2dPresentationPatch": {
+      "title": "Block2dPresentationPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "shape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iconKind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block2dHandleKindPatch": {
+      "title": "Block2dHandleKindPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defaultWireKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Block2dHandleTemplatePatch": {
+      "title": "Block2dHandleTemplatePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "handleKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "angle": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockCompatibilityRulePatch": {
+      "title": "BlockCompatibilityRulePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bidirectional": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockAttributePatch": {
+      "title": "BlockAttributePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockAuthorPatch": {
+      "title": "BlockAuthorPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "email": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockOptionalText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockCamera2dPatch": {
+      "title": "BlockCamera2dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "y": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zoom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BlockMetaPatch": {
+      "title": "BlockMetaPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -134,53 +508,102 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block2dHandleKindsPatch"
+          "$ref": "#/$defs/Block2dHandleKindPatch"
         }
       }
     },
-    "Block2dHandleKindsPatch": {
-      "title": "Block2dHandleKindsPatch",
+    "Block2dHandleKindsRemoval": {
+      "title": "Block2dHandleKindsRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block2dHandleKindsInsertion": {
+      "title": "Block2dHandleKindsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
         }
       }
     },
-    "Block2dHandlesDelta": {
-      "title": "Block2dHandlesDelta",
+    "Block2dHandleKindsRelocation": {
+      "title": "Block2dHandleKindsRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block2dHandleKindsDelta": {
+      "title": "Block2dHandleKindsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block2dHandleKindsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block2dHandlesPatchEntry"
+            "$ref": "#/$defs/Block2dHandleKindsInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block2dHandleKindsRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dHandleKindsPatchEntry"
           }
         }
       }
@@ -198,59 +621,108 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block2dHandlesPatch"
+          "$ref": "#/$defs/Block2dHandleTemplatePatch"
         }
       }
     },
-    "Block2dHandlesPatch": {
-      "title": "Block2dHandlesPatch",
+    "Block2dHandlesRemoval": {
+      "title": "Block2dHandlesRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block2dHandlesInsertion": {
+      "title": "Block2dHandlesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
         }
       }
     },
-    "Block2dCompatibilityDelta": {
-      "title": "Block2dCompatibilityDelta",
+    "Block2dHandlesRelocation": {
+      "title": "Block2dHandlesRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Block2dHandlesDelta": {
+      "title": "Block2dHandlesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block2dHandlesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block2dCompatibilityPatchEntry"
+            "$ref": "#/$defs/Block2dHandlesInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Block2dHandlesRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dHandlesPatchEntry"
           }
         }
       }
     },
-    "Block2dCompatibilityPatchEntry": {
-      "title": "Block2dCompatibilityPatchEntry",
+    "BlockCompatibilityPatchEntry": {
+      "title": "BlockCompatibilityPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -262,59 +734,108 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block2dCompatibilityPatch"
+          "$ref": "#/$defs/BlockCompatibilityRulePatch"
         }
       }
     },
-    "Block2dCompatibilityPatch": {
-      "title": "Block2dCompatibilityPatch",
+    "BlockCompatibilityRemoval": {
+      "title": "BlockCompatibilityRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockCompatibilityInsertion": {
+      "title": "BlockCompatibilityInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
         }
       }
     },
-    "Block2dAttributesDelta": {
-      "title": "Block2dAttributesDelta",
+    "BlockCompatibilityRelocation": {
+      "title": "BlockCompatibilityRelocation",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
-        "patched"
+        "id",
+        "from",
+        "to"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAttribute"
-          }
+        "id": {
+          "type": "string"
         },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockCompatibilityDelta": {
+      "title": "BlockCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/BlockCompatibilityRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block2dAttributesPatchEntry"
+            "$ref": "#/$defs/BlockCompatibilityInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/BlockCompatibilityRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockCompatibilityPatchEntry"
           }
         }
       }
     },
-    "Block2dAttributesPatchEntry": {
-      "title": "Block2dAttributesPatchEntry",
+    "BlockAttributesPatchEntry": {
+      "title": "BlockAttributesPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -326,18 +847,216 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Block2dAttributesPatch"
+          "$ref": "#/$defs/BlockAttributePatch"
         }
       }
     },
-    "Block2dAttributesPatch": {
-      "title": "Block2dAttributesPatch",
+    "BlockAttributesRemoval": {
+      "title": "BlockAttributesRemoval",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "index"
+      ],
       "properties": {
-        "replacement": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAttributesInsertion": {
+      "title": "BlockAttributesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAttribute"
+        }
+      }
+    },
+    "BlockAttributesRelocation": {
+      "title": "BlockAttributesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAttributesDelta": {
+      "title": "BlockAttributesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttributesPatchEntry"
+          }
+        }
+      }
+    },
+    "BlockAuthorsPatchEntry": {
+      "title": "BlockAuthorsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/BlockAuthorPatch"
+        }
+      }
+    },
+    "BlockAuthorsRemoval": {
+      "title": "BlockAuthorsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAuthorsInsertion": {
+      "title": "BlockAuthorsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAuthor"
+        }
+      }
+    },
+    "BlockAuthorsRelocation": {
+      "title": "BlockAuthorsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlockAuthorsDelta": {
+      "title": "BlockAuthorsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthorsPatchEntry"
+          }
         }
       }
     }

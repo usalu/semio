@@ -1,5 +1,6 @@
 {
   "copyBytes": 64,
+  "closeGrant": { "copyBytes": 0, "capacityBytes": 0, "release": "exact-original-ledger-birth", "depth": 1, "terminalReceipt": "complete-original-progress" },
   "cases": [
     {
       "operation": 91001,

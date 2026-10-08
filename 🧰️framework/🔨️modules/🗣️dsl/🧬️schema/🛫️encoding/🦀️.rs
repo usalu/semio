@@ -74,7 +74,7 @@ impl RetainedRecordWriter {
         for _ in 0..maximum_units {control.checkpoint()?;if self.phase==3{return Ok(None)}if self.advance_unit(control)?{return Ok(self.emitter.output.take())}control.step()?;}Ok(None)
     }
     fn advance_unit(&mut self,control:&mut NativeEncodeControl<'_>)->Result<bool,ValueError>{
-        if let Some(retirement)=self.retiring.as_mut(){if retirement.terminal_is_empty(){self.retiring.take();}else{let copy=retirement.next_copy_byte_demand();let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{copy})?;control.charge(capacity)?;retirement.step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64})?;}return Ok(false)}
+        if let Some(retirement)=self.retiring.as_mut(){if retirement.terminal_is_empty(){self.retiring.take();}else{let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{copy})?;let depth=retirement.next_depth_demand()?;control.charge(capacity)?;retirement.step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth})?;}return Ok(false)}
         if self.nested.is_some(){let child=self.nested.as_mut().unwrap();child.advance_unit(control)?;if child.phase==3{self.finish_nested(control)?;}return Ok(false)}
         if self.phase==0{self.plan(control)?;return Ok(false)}
         if self.advance_record(control)?{

@@ -1,72 +1,202 @@
 # 🧬️ En1997 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
 type En1997LayersPatch {
-  id: String!
   oedometricModulus: Float
   phiPrimeDeg: Float
 }
 
+type En1997LayersRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1997LayersInserted {
+  index: Int!
+  row: SoilLayer!
+}
+
+type En1997LayersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1997LayersModified {
+  id: String!
+  patch: En1997LayersPatch!
+}
+
 type En1997LayersRows {
-  added: [SoilLayer!]!
-  removed: [String!]!
-  modified: [En1997LayersPatch!]!
-  order: [String!]
+  removed: [En1997LayersRemoved!]!
+  inserted: [En1997LayersInserted!]!
+  moved: [En1997LayersMoved!]!
+  modified: [En1997LayersModified!]!
 }
 
 type En1997FootingsPatch {
-  id: String!
   width: Float
   embedment: Float
 }
 
+type En1997FootingsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1997FootingsInserted {
+  index: Int!
+  row: SpreadFoundation!
+}
+
+type En1997FootingsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1997FootingsModified {
+  id: String!
+  patch: En1997FootingsPatch!
+}
+
 type En1997FootingsRows {
-  added: [SpreadFoundation!]!
-  removed: [String!]!
-  modified: [En1997FootingsPatch!]!
-  order: [String!]
+  removed: [En1997FootingsRemoved!]!
+  inserted: [En1997FootingsInserted!]!
+  moved: [En1997FootingsMoved!]!
+  modified: [En1997FootingsModified!]!
 }
 
 type En1997PilesPatch {
-  id: String!
   length: Float
   count: Int
 }
 
+type En1997PilesRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1997PilesInserted {
+  index: Int!
+  row: Pile!
+}
+
+type En1997PilesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1997PilesModified {
+  id: String!
+  patch: En1997PilesPatch!
+}
+
 type En1997PilesRows {
-  added: [Pile!]!
-  removed: [String!]!
-  modified: [En1997PilesPatch!]!
-  order: [String!]
+  removed: [En1997PilesRemoved!]!
+  inserted: [En1997PilesInserted!]!
+  moved: [En1997PilesMoved!]!
+  modified: [En1997PilesModified!]!
 }
 
 type En1997RetainingWallsPatch {
-  id: String!
   baseWidth: Float
 }
 
+type En1997RetainingWallsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1997RetainingWallsInserted {
+  index: Int!
+  row: RetainingWall!
+}
+
+type En1997RetainingWallsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1997RetainingWallsModified {
+  id: String!
+  patch: En1997RetainingWallsPatch!
+}
+
 type En1997RetainingWallsRows {
-  added: [RetainingWall!]!
-  removed: [String!]!
-  modified: [En1997RetainingWallsPatch!]!
-  order: [String!]
+  removed: [En1997RetainingWallsRemoved!]!
+  inserted: [En1997RetainingWallsInserted!]!
+  moved: [En1997RetainingWallsMoved!]!
+  modified: [En1997RetainingWallsModified!]!
 }
 
 type En1997SlopesPatch {
-  id: String!
   angleDeg: Float
 }
 
+type En1997SlopesRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1997SlopesInserted {
+  index: Int!
+  row: Slope!
+}
+
+type En1997SlopesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1997SlopesModified {
+  id: String!
+  patch: En1997SlopesPatch!
+}
+
 type En1997SlopesRows {
-  added: [Slope!]!
-  removed: [String!]!
-  modified: [En1997SlopesPatch!]!
-  order: [String!]
+  removed: [En1997SlopesRemoved!]!
+  inserted: [En1997SlopesInserted!]!
+  moved: [En1997SlopesMoved!]!
+  modified: [En1997SlopesModified!]!
+}
+
+type En1997UpliftCasesPatch {
+  permanentStabilizing: Float
+  permanentDestabilizing: Float
+  variableDestabilizing: Float
+  porePressure: Float
+  totalStress: Float
+}
+
+type En1997UpliftCasesRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1997UpliftCasesInserted {
+  index: Int!
+  row: UpliftCase!
+}
+
+type En1997UpliftCasesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1997UpliftCasesModified {
+  id: String!
+  patch: En1997UpliftCasesPatch!
 }
 
 type En1997UpliftCasesRows {
-  added: [UpliftCase!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [En1997UpliftCasesRemoved!]!
+  inserted: [En1997UpliftCasesInserted!]!
+  moved: [En1997UpliftCasesMoved!]!
+  modified: [En1997UpliftCasesModified!]!
 }
 
 type En1997Diff {

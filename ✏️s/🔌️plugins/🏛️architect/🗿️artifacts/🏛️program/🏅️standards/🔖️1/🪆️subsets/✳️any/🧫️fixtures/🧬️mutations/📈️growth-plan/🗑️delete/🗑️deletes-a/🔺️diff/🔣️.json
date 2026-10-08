@@ -34,12 +34,15 @@
   "schedules": null,
   "flexibility": null,
   "growth": {
-    "added": [],
     "removed": [
-      "growth-plan-a"
+      {
+        "id": "growth-plan-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "sustainability": null,
   "resilience": null,

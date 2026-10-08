@@ -14,7 +14,7 @@ input UpdatePageColumns { id: String! count: Float! gutter: Float! }
 input ReorderPages { id: String! toIndex: Float! }
 input CreateStory { story: Bytes! index: Float }
 input DeleteStory { id: String! }
-input EditStory { id: String! newContent: String! }
+input EditStory { id: String! offset: Int! delete: Int! insert: String! }
 input CreateLink { link: Bytes! index: Float }
 input DeleteLink { id: String! }
 input ChangeLinkPath { id: String! newPath: String! }

@@ -11,10 +11,10 @@ pub fn diff(payload: &InsertSeismic, base: &En1990Snapshot) -> MutationOutcome<E
         let key = payload.item.id.clone();
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The seismic action '{key}' already exists."), [key]);
     }
-    let index = payload.index.min(base.seismics.len());
-    let outcome = MutationOutcome::new(En1990Diff { seismics: En1990SeismicDelta::insertion(&base.seismics, index, payload.item.clone()), ..En1990Diff::default() });
-    if index == payload.index {
+    let index = payload.index.unwrap_or(usize::MAX).min(base.seismics.len());
+    let outcome = MutationOutcome::new(En1990Diff { seismics: En1990SeismicDelta::insertion(index, payload.item.clone()), ..En1990Diff::default() });
+    if payload.index.is_none_or(|requested| requested == index) {
         return outcome;
     }
-    outcome.warning("mutation.clamped", format!("Position {} is past the end of the seismic action list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the seismic action list; inserted at {index}.", payload.index.unwrap_or(index)))
 }

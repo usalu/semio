@@ -19,6 +19,13 @@ import { dirname, extname, join, relative } from "node:path";
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "geometry-context") {
+      const testRoot=join(this.repoRoot,"✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any");
+      runCmd("bun",["test",`${testRoot}/🚪️io/📐️geometry/🧪️tests/🟦️.ts`,`${testRoot}/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🧪️tests/🔬️oracle/🟦️.ts`],{cwd:this.repoRoot});
+      runCmd("bun",[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--skipLibCheck",`${testRoot}/🚪️io/📐️geometry/🧪️tests/🟦️.ts`],{cwd:this.repoRoot});
+      if(segments[1]==="native")await runArtifactRustTests("semio-s-artifact-procedural-generation3d",this.repoRoot,["--lib","geometry_compute_context_","--","--nocapture"],["component-app-assembly"]);
+      return;
+    }
     if (segments[0] === "document-restoration-oracle") {
       const test = join(this.repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/📄️document-restoration/🟦️.ts");
       runCmd("bun", ["test", test], {cwd: this.repoRoot});

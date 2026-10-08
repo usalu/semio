@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DragSlots` — every addressed slot moved by the offset read off its BASE position,
 //! one field patch of its coordinates.
 
-use crate::diff::{Wfc2dDiff, Wfc2dRowPatch, Wfc2dRows, Wfc2dSlotPatch};
+use crate::diff::{Wfc2dDiff, Wfc2dSlotPatch, Wfc2dSlotsDelta, Wfc2dSlotsModification};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::DragSlots, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -17,11 +17,11 @@ pub fn diff(payload: &super::DragSlots, base: &Wfc2dSnapshot) -> protocol::Mutat
     if (payload.dx, payload.dy) == (0.0, 0.0) {
         return protocol::MutationOutcome::new(Wfc2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
     }
-    let patched: Vec<Wfc2dRowPatch<Wfc2dSlotPatch>> = base
+    let patched: Vec<Wfc2dSlotsModification> = base
         .slots
         .iter()
         .filter(|slot| payload.targets.contains(&slot.id))
-        .map(|slot| Wfc2dRowPatch { id: slot.id.clone(), patch: Wfc2dSlotPatch { x: Some(slot.x + payload.dx), y: Some(slot.y + payload.dy), ..Default::default() } })
+        .map(|slot| Wfc2dSlotsModification { id: slot.id.clone(), patch: Wfc2dSlotPatch { x: Some(slot.x + payload.dx), y: Some(slot.y + payload.dy), ..Default::default() } })
         .collect();
-    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dRows { patched, ..Default::default() }, ..Default::default() }).absorb_messages(partial)
+    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dSlotsDelta { modified: patched, ..Default::default() }, ..Default::default() }).absorb_messages(partial)
 }

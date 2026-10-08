@@ -2,21 +2,27 @@
   "artifact": null,
   "camera": null,
   "edges": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "edge-1"
-    ],
-    "reordered": null
+      {
+        "id": "edge-1",
+        "index": 0
+      }
+    ]
   },
   "meta": null,
   "nodes": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "node-a"
-    ],
-    "reordered": null
+      {
+        "id": "node-a",
+        "index": 0
+      }
+    ]
   },
   "schema": null,
   "targetRegions": null

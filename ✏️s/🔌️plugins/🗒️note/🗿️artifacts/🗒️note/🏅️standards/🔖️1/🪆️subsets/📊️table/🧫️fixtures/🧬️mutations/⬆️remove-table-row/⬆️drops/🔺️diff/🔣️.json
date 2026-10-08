@@ -24,7 +24,15 @@
           "table": [
             {
               "edit": "removeRow",
-              "index": 1
+              "index": 1,
+              "cells": [
+                {
+                  "content": ""
+                },
+                {
+                  "content": ""
+                }
+              ]
             }
           ],
           "tex": null,

@@ -8,9 +8,10 @@
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
-use crate::schema::mutations::{apply_writer_mutation, inverse_writer_mutation, WriterMutation};
+use crate::schema::mutations::{inverse_writer_mutation, WriterMutation};
 use crate::WriterDiff;
 use crate::WriterSnapshot;
+use crate::central_apply::{apply_writer_mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-writer/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-writer/🏷️renames/📸️snapshot/➡️after/🔣️.json");

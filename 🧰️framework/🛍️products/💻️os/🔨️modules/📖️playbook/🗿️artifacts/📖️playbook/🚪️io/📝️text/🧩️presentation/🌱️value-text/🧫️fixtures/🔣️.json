@@ -1,0 +1,28 @@
+{
+  "values": [
+    null,
+    true,
+    false,
+    42,
+    -5,
+    0.125,
+    "A quote \" and \\ and \n and 🧬️",
+    [
+      "first",
+      3
+    ],
+    {
+      "label": "Öl",
+      "value": [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "maximumBytes": 65536,
+  "refusals": [
+    "cancelled",
+    "ownership"
+  ]
+}

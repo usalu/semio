@@ -1,4 +1,4 @@
-/** 🖍️ Handwritten Draw layer forests, geometry, paint and literal asset entities. */
+/** 🖍️ Handwritten Draw layer forests, geometry, paint and logical sample entities. */
 import sql from "./🗄️.sql" with {type:"text"};
 import type {DrawingSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {DrawingLayerNode,DrawingLayerBase,DrawingColor,DrawingAttributes,DrawingFill,DrawingStroke,DrawingPathSegment,DrawingPoint} from "../../../🧬️schema/🟦️.ts";
@@ -12,7 +12,7 @@ const object=(value:unknown):Record<string,unknown>=>{if(value===null||typeof va
 const array=(value:unknown):readonly unknown[]=>{if(!Array.isArray(value))throw Error("Draw ordered array required");return value;};
 const text=(value:unknown):string=>{if(typeof value!=="string")throw Error("Draw text required");return value;};
 const bool=(value:unknown):bigint=>{if(typeof value!=="boolean")throw Error("Draw boolean required");return value?1n:0n;};
-const u32=(value:unknown):bigint|null=>{if(value===undefined)return null;if(typeof value!=="number"||!Number.isInteger(value)||value<0||value>0xffffffff)throw Error("Draw unsigned32 required");return BigInt(value);};
+const u32=(value:unknown):bigint=>{if(typeof value!=="number"||!Number.isInteger(value)||value<0||value>0xffffffff)throw Error("Draw unsigned32 required");return BigInt(value);};
 const member=(value:unknown,choices:readonly string[]):string=>{const result=text(value);if(!choices.includes(result))throw Error("Draw enum value outside declared domain");return result;};
 /** 📤️ Project each actual layer variant without serializing a native document or reflective tree. */
 export async function drawSnapshotToSqliteDatabase(s:DrawingSnapshot,options:ArtifactSqliteOptions={}):Promise<SqliteDatabase>{
@@ -23,7 +23,16 @@ export async function drawSnapshotToSqliteDatabase(s:DrawingSnapshot,options:Art
  await put("document",[text(s.schema),text(s.id),s.title===undefined?null:text(s.title)],1n);
  if(s.artboard!==undefined)await fields("artboard",1n,s.artboard,["width","height"]);
  const assets=Object.entries(s.assets);p.checkRowsAdditional(assets.length);await artifactSqliteOrderKeyEntries(assets,options);
- for(let i=0;i<assets.length;i++){const[key,value]=assets[i]!;await put("asset",[1n,BigInt(i),key,text(value.mime),text(value.data),u32(value.width),u32(value.height)]);}
+ for(let i=0;i<assets.length;i++){
+  const[key,value]=assets[i]!,width=u32(value.width),height=u32(value.height),samples=array(value.samples);
+  if(BigInt(samples.length)!==width*height)throw Error("Draw image sample count");
+  p.checkRowsAdditional(samples.length);const asset=await put("asset",[1n,BigInt(i),key,width,height]);
+  for(let ordinal=0;ordinal<samples.length;ordinal++){
+   const sample=array(samples[ordinal]);if(sample.length!==4)throw Error("Draw RGBA width");
+   const parts=sample.map(component=>{const v=u32(component);if(v>255n)throw Error("Draw sample component");return v;});
+   await put("asset_sample",[asset,BigInt(ordinal),...parts]);
+  }
+ }
  const paint=async(id:bigint,value:unknown)=>{const attributes=object(value??{fillRule:"evenodd"});const fill=attributes.fill;if(fill!==undefined){const v=object(fill),kind=member(v.kind,["solid","linearGradient","radialGradient"]);await put("fill",[kind],id);if(kind==="solid")await put("fill_solid",await vector(v.color,4),id);else{await fields(kind==="linearGradient"?"fill_linear":"fill_radial",id,v,kind==="linearGradient"?["x1","y1","x2","y2"]:["cx","cy","r"]);const stops=array(v.stops);p.checkRowsAdditional(stops.length);for(let i=0;i<stops.length;i++){const stop=object(stops[i]);await put("gradient_stop",[id,BigInt(i),await scalar(stop.offset),...await vector(stop.color,4)]);}}}
   if(attributes.stroke!==undefined){const v=object(attributes.stroke);await put("stroke",[...await vector(v.color,4),await scalar(v.width),member(v.cap,["butt","round","square"]),member(v.join,["miter","round","bevel"]),bool(v.dash!==undefined)],id);if(v.dash!==undefined){const dash=array(v.dash);p.checkRowsAdditional(dash.length);for(let i=0;i<dash.length;i++)await put("stroke_dash",[id,BigInt(i),await scalar(dash[i])]);}}
  };
@@ -45,7 +54,7 @@ export async function drawSnapshotToSqliteDatabase(s:DrawingSnapshot,options:Art
 }
 /** 📥️ Reconstruct authored entities with contiguous owned edges and literal identity checks. */
 export async function drawSnapshotFromSqliteDatabase(database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<DrawingSnapshot>{
- const rows=await artifactSqliteTables(database,DRAW_SQLITE_SCHEMA,options),names=["document","scalar","artboard","asset","layer","transform","shape","rect","ellipse","circle","line","polygon","polygon_point","path","segment","segment_to","segment_quad","segment_cubic","segment_arc","text","image","group","boolean","boolean_child","trace","fill","fill_solid","fill_linear","fill_radial","gradient_stop","stroke","stroke_dash"],widths=[4,4,3,8,12,7,2,5,5,4,5,1,5,1,4,3,3,5,6,5,4,2,2,4,4,2,5,5,4,8,9,4],tables=new Map<string,Map<bigint,SqliteRow>>();
+ const rows=await artifactSqliteTables(database,DRAW_SQLITE_SCHEMA,options),names=["document","scalar","artboard","asset","asset_sample","layer","transform","shape","rect","ellipse","circle","line","polygon","polygon_point","path","segment","segment_to","segment_quad","segment_cubic","segment_arc","text","image","group","boolean","boolean_child","trace","fill","fill_solid","fill_linear","fill_radial","gradient_stop","stroke","stroke_dash"],widths=[4,4,3,6,7,12,7,2,5,5,4,5,1,5,1,4,3,3,5,6,5,4,2,2,4,4,2,5,5,4,8,9,4],tables=new Map<string,Map<bigint,SqliteRow>>();
  for(let i=0;i<names.length;i++){const map=new Map<bigint,SqliteRow>();for(let j=0;j<rows[i]!.length;j++){const row=rows[i]![j]!;if(row.rowid<=0n||row.values.length!==widths[i]||artifactSqliteInteger(row,0)!==row.rowid||map.has(row.rowid))throw Error("Draw row identity or fields");map.set(row.rowid,row);if(j%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",j,rows[i]!.length);}tables.set(names[i]!,map);}
  const table=(name:string)=>{const result=tables.get(name);if(result===undefined)throw Error("unknown Draw table");return result;},take=(name:string,id:bigint)=>{const map=table(name),row=map.get(id);if(row===undefined)throw Error("dangling or multiply owned Draw entity");map.delete(id);return row;},has=(name:string,id:bigint)=>table(name).has(id),integer=artifactSqliteInteger,string=artifactSqliteText,boolean=artifactSqliteBoolean;
  const scalar=(row:SqliteRow,index:number)=>readBinary64(take("scalar",integer(row,index)),1,[{index:1,width:64}]);
@@ -56,7 +65,14 @@ export async function drawSnapshotFromSqliteDatabase(database:SqliteDatabase,opt
  const paint=async(id:bigint,rule:string):Promise<DrawingAttributes>=>{const attributes:DrawingAttributes={fillRule:member(rule,["evenodd","nonzero"]) as DrawingAttributes["fillRule"]};if(has("fill",id)){const row=take("fill",id),kind=string(row,1);let fill:DrawingFill;switch(kind){case"solid":fill={kind,color:color(take("fill_solid",id),1)};break;case"linearGradient":fill={kind,...fields("fill_linear",id,["x1","y1","x2","y2"]),stops:[]};break;case"radialGradient":fill={kind,...fields("fill_radial",id,["cx","cy","r"]),stops:[]};break;default:throw Error("unknown Draw fill");}if(fill.kind!=="solid"){const stops:Extract<DrawingFill,{kind:"linearGradient"}>["stops"]=[];for(const row of await list("gradient_stop",id))stops.push({offset:scalar(row,3),color:color(row,4)});fill.stops=stops;}attributes.fill=fill;}
   if(has("stroke",id)){const row=take("stroke",id),stroke:DrawingStroke={color:color(row,1),width:scalar(row,5),cap:member(string(row,6),["butt","round","square"]) as DrawingStroke["cap"],join:member(string(row,7),["miter","round","bevel"]) as DrawingStroke["join"]};if(boolean(row,8)){const dash=[];for(const row of await list("stroke_dash",id))dash.push(scalar(row,3));stroke.dash=dash;}attributes.stroke=stroke;}return attributes;};
  const document=take("document",1n),result:DrawingSnapshot={schema:string(document,1),id:string(document,2),layers:[],assets:{}};if(document.values[3]!==null)result.title=string(document,3);if(has("artboard",1n)){const row=take("artboard",1n);result.artboard={width:scalar(row,1),height:scalar(row,2)};}
- for(const row of await list("asset",1n)){const key=string(row,3);if(Object.hasOwn(result.assets,key))throw Error("duplicate Draw asset key");const asset:DrawingSnapshot['assets'][string]={mime:string(row,4),data:string(row,5)};for(const[index,name]of [[6,"width"],[7,"height"]] as const)if(row.values[index]!==null){const value=integer(row,index);if(value<0n||value>0xffffffffn)throw Error("Draw unsigned32 range");asset[name]=Number(value);}Object.defineProperty(result.assets,key,{value:asset,writable:true,enumerable:true,configurable:true});}
+ for(const row of await list("asset",1n)){
+  const key=string(row,3);if(Object.hasOwn(result.assets,key))throw Error("duplicate Draw asset key");
+  const width=integer(row,4),height=integer(row,5);if(width<0n||width>0xffffffffn||height<0n||height>0xffffffffn)throw Error("Draw unsigned32 range");
+  const samples:DrawingSnapshot['assets'][string]['samples']=[],source=await list("asset_sample",row.rowid);
+  if(BigInt(source.length)!==width*height)throw Error("Draw image sample count");
+  for(const sample of source){const parts=[];for(let index=3;index<7;index++){const value=integer(sample,index);if(value<0n||value>255n)throw Error("Draw sample component");parts.push(Number(value));}samples.push(parts as [number,number,number,number]);}
+  Object.defineProperty(result.assets,key,{value:{width:Number(width),height:Number(height),samples},writable:true,enumerable:true,configurable:true});
+ }
  type Pending={row:SqliteRow;output:DrawingLayerNode[]};const pending:Pending[]=[];for(const row of(await list("layer",1n,1,3)).reverse())pending.push({row,output:result.layers});
  while(pending.length){const {row,output}=pending.pop()!;if((row.values[1]===null)===(row.values[2]===null))throw Error("ambiguous Draw forest ownership");const id=row.rowid,kind=string(row,4),base:DrawingLayerBase={id:string(row,5),name:string(row,6),visible:boolean(row,7),locked:boolean(row,8),opacity:scalar(row,9),blendMode:string(row,10),transform:fields("transform",id,["x","y","scaleX","scaleY","shear","rotation"]),attributes:await paint(id,string(row,11))};
   let node:DrawingLayerNode;

@@ -7,7 +7,8 @@
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
 
 use crate::Puzzle2dSnapshot;
 
@@ -45,7 +46,7 @@ fn inverse_restores_before() {
     let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: inverse did not restore the before-snapshot");
@@ -87,8 +88,8 @@ fn produces_committed_diff() {
     assert_eq!(produced, committed, "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed["nodes"].is_null(), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: this mutation must never touch the nodes delta");
     assert_eq!(committed["edges"]["removed"].as_array().map(Vec::len), Some(1), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: the diff must record exactly 1 removed edge id(s)");
-    assert_eq!(committed["edges"]["removed"][0].as_str(), Some("feba8972-394f-4ecc-923c-9f1701881fd0"), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: removals are recorded as bare ids");
-    assert!(committed["edges"]["reordered"].is_null(), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: a null index must leave reordered unset");
+    assert_eq!(committed["edges"]["removed"][0]["id"].as_str(), Some("feba8972-394f-4ecc-923c-9f1701881fd0"), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: removals are recorded as bare ids");
+    assert!(committed["edges"]["moved"].as_array().is_some_and(Vec::is_empty), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: this diff moves no row");
     assert!(committed["meta"].is_null(), "disconnect-handles/severs-a-capsule-from-the-first-storey-tambour: this mutation must never touch the document meta");
 }
 

@@ -24,7 +24,7 @@ pub fn plan(document:&DrawingSnapshot,ids:&[String])->Result<(Vec<DrawingMutatio
     let mut working=document.clone();
     let mut mutations=Vec::new();
     let append=|working:&mut DrawingSnapshot,mutations:&mut Vec<DrawingMutation>,mutation:DrawingMutation|->Result<(),Fault> {
-        crate::mutations::apply_drawing_mutation(working,&mutation).map_err(|error|Fault::from(error.to_string()))?;
+        crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(working,&mutation).map_err(|error|Fault::from(error.to_string()))?;
         mutations.push(mutation);Ok(())
     };
     for layer in selected.into_iter().rev() {

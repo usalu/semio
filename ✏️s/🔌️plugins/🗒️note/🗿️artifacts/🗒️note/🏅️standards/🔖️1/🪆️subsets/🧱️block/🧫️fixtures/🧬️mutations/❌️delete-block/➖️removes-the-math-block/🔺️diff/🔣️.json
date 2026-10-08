@@ -6,7 +6,9 @@
     "rows": [
       {
         "row": "remove",
-        "id": "blk-math"
+        "id": "blk-math",
+        "parentId": null,
+        "index": 3
       }
     ]
   },

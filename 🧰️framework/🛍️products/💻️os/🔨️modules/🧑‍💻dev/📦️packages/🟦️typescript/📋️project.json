@@ -292,60 +292,6 @@
         "forwardAllArgs": true
       }
     },
-    "hub-document-sweep": {
-      "metadata": {
-        "semio": {
-          "dashboard": {
-            "requires": [
-              "os-hub:dev"
-            ],
-            "parameters": [
-              {
-                "id": "serve",
-                "kind": "text",
-                "default": "http://127.0.0.1:6071/",
-                "required": true,
-                "valueFlag": "--serve"
-              },
-              {
-                "id": "hub",
-                "kind": "text",
-                "default": "http://127.0.0.1:8787",
-                "required": true,
-                "valueFlag": "--hub"
-              },
-              {
-                "id": "locale",
-                "kind": "choice",
-                "values": [
-                  {
-                    "id": "en",
-                    "args": [
-                      "--locale",
-                      "en"
-                    ]
-                  },
-                  {
-                    "id": "de",
-                    "args": [
-                      "--locale",
-                      "de"
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      },
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify hub-sweep",
-        "forwardAllArgs": true
-      }
-    },
     "tool-run-matrix": {
       "metadata": {
         "semio": {
@@ -645,15 +591,13 @@
     "generate-playground-session": {
       "executor": "nx:run-commands",
       "cache": true,
-      "dependsOn": [
-        "@semio-tech/plugin-registry:generate"
-      ],
+      "dependsOn": [],
       "outputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate playground-session"
+        "command": "bun ./📜️script.ts playground-session"
       }
     },
     "preview-playground-session": {
@@ -662,19 +606,18 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate playground-session preview"
-      }
+        "command": "bun ./📜️script.ts playground-session preview"
+      },
+      "dependsOn": []
     },
     "check-playground-session": {
       "executor": "nx:run-commands",
       "cache": true,
-      "dependsOn": [
-        "@semio-tech/plugin-registry:check-generated"
-      ],
+      "dependsOn": [],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate playground-session check"
+        "command": "bun ./📜️script.ts playground-session check"
       }
     },
     "generate-scale-fixture": {
@@ -749,50 +692,6 @@
       "outputs": [],
       "options": {
         "command": "bun ../../🚚️distribution/📜️script.ts inputs",
-        "forwardAllArgs": true
-      }
-    },
-    "io-matrix": {
-      "metadata": {
-        "semio": {
-          "dashboard": {
-            "parameters": [
-              {
-                "id": "serve",
-                "kind": "text",
-                "default": "http://127.0.0.1:6070/",
-                "required": true,
-                "valueFlag": "--serve"
-              },
-              {
-                "id": "locale",
-                "kind": "choice",
-                "values": [
-                  {
-                    "id": "en",
-                    "args": [
-                      "--locale",
-                      "en"
-                    ]
-                  },
-                  {
-                    "id": "de",
-                    "args": [
-                      "--locale",
-                      "de"
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      },
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify io",
         "forwardAllArgs": true
       }
     },
@@ -981,6 +880,17 @@
         "workspaceCommand": [
           "source-watch-check"
         ]
+      }
+    },
+    "test-publication": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts publication-check",
+        "cwd": "."
       }
     }
   },

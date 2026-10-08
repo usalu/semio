@@ -87,5 +87,90 @@
     "rows": 8192,
     "maximumTurnBytes": 4096,
     "minimumBackingReleases": 2
+  },
+  "turnReceipts": {
+    "maximumBodyCapacityBytes": 4096,
+    "cases": [
+      {
+        "copy": 37,
+        "capacity": 0,
+        "release": 0,
+        "items": 1,
+        "copyGrant": 37,
+        "capacityGrant": 0,
+        "releaseGrant": 0,
+        "accepted": true
+      },
+      {
+        "copy": 0,
+        "capacity": 37,
+        "release": 0,
+        "items": 1,
+        "copyGrant": 0,
+        "capacityGrant": 37,
+        "releaseGrant": 0,
+        "accepted": true
+      },
+      {
+        "copy": 0,
+        "capacity": 38,
+        "release": 0,
+        "items": 1,
+        "copyGrant": 4096,
+        "capacityGrant": 37,
+        "releaseGrant": 0,
+        "accepted": false
+      },
+      {
+        "copy": 0,
+        "capacity": 0,
+        "release": 8192,
+        "items": 1,
+        "copyGrant": 0,
+        "capacityGrant": 0,
+        "releaseGrant": 8192,
+        "accepted": true
+      },
+      {
+        "copy": 0,
+        "capacity": 0,
+        "release": 8192,
+        "items": 1,
+        "copyGrant": 4096,
+        "capacityGrant": 0,
+        "releaseGrant": 8191,
+        "accepted": false
+      },
+      {
+        "copy": 2048,
+        "capacity": 2048,
+        "release": 0,
+        "items": 1,
+        "copyGrant": 4096,
+        "capacityGrant": 4096,
+        "releaseGrant": 0,
+        "accepted": true
+      },
+      {
+        "copy": 2049,
+        "capacity": 2048,
+        "release": 0,
+        "items": 1,
+        "copyGrant": 4096,
+        "capacityGrant": 4096,
+        "releaseGrant": 0,
+        "accepted": false
+      },
+      {
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "items": 2,
+        "copyGrant": 4096,
+        "capacityGrant": 4096,
+        "releaseGrant": 0,
+        "accepted": false
+      }
+    ]
   }
 }

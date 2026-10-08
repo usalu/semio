@@ -9,5 +9,5 @@ pub fn diff(payload: &InsertRoofs, base: &En1991Snapshot) -> protocol::MutationO
     if base.roofs.iter().any(|existing| existing.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1991Diff { roofs: En1991RoofDelta::insertion(&base.roofs, payload.index, payload.item.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { roofs: En1991RoofDelta::insertion(payload.index, payload.item.clone()), ..Default::default() })
 }

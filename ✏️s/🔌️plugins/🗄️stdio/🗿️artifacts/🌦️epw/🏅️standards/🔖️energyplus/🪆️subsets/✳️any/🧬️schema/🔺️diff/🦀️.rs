@@ -36,16 +36,9 @@ macro_rules! epw_record_diff {
             }
             /// ▶️ Applies this patch to a record.
             // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-            pub fn apply(&self, base: &EpwRecord) -> EpwRecord {
+            pub fn apply_patch(&self, base: &EpwRecord) -> EpwRecord {
                 EpwRecord {
                     $( $field: self.$field.clone().unwrap_or_else(|| base.$field.clone()), )+
-                }
-            }
-            /// 🧭️ State delta between two records (every differing column becomes `Some`).
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-            pub fn between(base: &EpwRecord, other: &EpwRecord) -> Self {
-                Self {
-                    $( $field: (base.$field != other.$field).then(|| other.$field.clone()), )+
                 }
             }
             /// ↩️ The patch restoring exactly the columns this patch sets back to their `base` values.
@@ -97,7 +90,7 @@ epw_record_diff! {
 //#endregion 🔖️RecordDiff
 
 //#region 🔖️RecordsDiff
-/// 🧩 One record patched-in-place at a BASE index.
+/// 🧩 One record apply_patch-in-place at a BASE index.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct EpwRecordModified {
@@ -148,9 +141,7 @@ enum Slot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
-    let mut removed_desc = removed.to_vec();
-    removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
+    let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&removed);
     for r in removed_desc {
         if r < slots.len() {
             slots.remove(r);
@@ -320,13 +311,11 @@ fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
         // 🥇 modified refers to BASE indices — apply before any removal shifts them.
         for m in &rdiff.modified {
             if let Some(rec) = next.records.get_mut(m.index) {
-                *rec = m.diff.apply(rec);
+                *rec = m.diff.apply_patch(rec);
             }
         }
         // 🥈 removed refers to BASE indices — process descending.
-        let mut removed_desc = rdiff.removed.clone();
-        removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-        removed_desc.dedup();
+        let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&rdiff.removed);
         for idx in removed_desc {
             if idx < next.records.len() {
                 next.records.remove(idx);
@@ -348,9 +337,7 @@ fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
 fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
-        let mut r = d1.removed.clone();
-        r.sort_unstable();
-        r.dedup();
+        let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
@@ -380,7 +367,7 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
             }
             Some(Slot::Added(ai)) => {
                 if let Some(added) = added_alive[*ai].as_mut() {
-                    added.record = m2.diff.apply(&added.record);
+                    added.record = m2.diff.apply_patch(&added.record);
                 }
             }
             None => {}
@@ -435,9 +422,7 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
 /// Every list comes back ascending, the normal form [`absorb_records`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_records(diff: &EpwRecordsDiff, base: &[EpwRecord]) -> EpwRecordsDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -463,42 +448,6 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
             data_periods: self.data_periods.as_ref().map(|_| base.data_periods.clone()),
             records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()),
         }
-    }
-
-    fn between(base: &EpwSnapshot, other: &EpwSnapshot) -> Self {
-        let location = (base.location != other.location).then(|| other.location.clone());
-        let design_conditions = (base.design_conditions != other.design_conditions).then(|| other.design_conditions.clone());
-        let typical_extreme_periods = (base.typical_extreme_periods != other.typical_extreme_periods).then(|| other.typical_extreme_periods.clone());
-        let ground_temperatures = (base.ground_temperatures != other.ground_temperatures).then(|| other.ground_temperatures.clone());
-        let holidays_dst = (base.holidays_dst != other.holidays_dst).then(|| other.holidays_dst.clone());
-        let comments_1 = (base.comments_1 != other.comments_1).then(|| other.comments_1.clone());
-        let comments_2 = (base.comments_2 != other.comments_2).then(|| other.comments_2.clone());
-        let data_periods = (base.data_periods != other.data_periods).then(|| other.data_periods.clone());
-
-        let mut removed = Vec::new();
-        let mut modified = Vec::new();
-        let mut added = Vec::new();
-        let min_len = base.records.len().min(other.records.len());
-        for i in 0..min_len {
-            let b = &base.records[i];
-            let o = &other.records[i];
-            if b == o {
-                continue;
-            }
-            let d = EpwRecordDiff::between(b, o);
-            if !d.is_empty() {
-                modified.push(EpwRecordModified { index: i, diff: d });
-            }
-        }
-        for i in min_len..base.records.len() {
-            removed.push(i);
-        }
-        for i in min_len..other.records.len() {
-            added.push(EpwRecordAdded { index: i, record: other.records[i].clone() });
-        }
-
-        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(EpwRecordsDiff { removed, modified, added }) };
-        Self { location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records }
     }
 
     fn is_empty(&self) -> bool {
@@ -563,6 +512,17 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🧪️Tests
+/// 🧪️ Representative `EpwDiff` cases built declaratively (empty diff, header text lanes and a record row triple) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
+/// conformance-law tests.
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<EpwDiff> {
+    vec![
+        EpwDiff::default(),
+        EpwDiff { design_conditions: Some("design".into()), comments_1: Some("comment, tricky [value]".into()), records: Some(EpwRecordsDiff { removed: vec![1], ..Default::default() }), ..Default::default() },
+    ]
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;

@@ -697,116 +697,6 @@
           "y": -8.25
         }
       }
-    },
-    "afterReplaceDocument": {
-      "schema": "flow.replacement.多",
-      "camera": {
-        "x": -1,
-        "y": 7.5,
-        "zoom": 2
-      },
-      "widgets": [
-        {
-          "kind": "inputNote",
-          "id": "替代",
-          "text": "শেষ"
-        }
-      ],
-      "synapses": [],
-      "layout": {
-        "替代": {
-          "x": 9,
-          "y": 10
-        }
-      }
-    },
-    "beforeReplacement": {
-      "schema": "flow.oracle.🌊️",
-      "camera": {
-        "x": 1.5,
-        "y": -2.25,
-        "zoom": 1.25
-      },
-      "widgets": [
-        {
-          "kind": "inputNote",
-          "id": "α",
-          "text": "eins"
-        },
-        {
-          "kind": "inputNote",
-          "id": "β",
-          "text": "zwei"
-        },
-        {
-          "kind": "inputNote",
-          "id": "节点-ä",
-          "text": "改訂 текст"
-        }
-      ],
-      "synapses": [
-        {
-          "id": "s-a",
-          "from": "α",
-          "to": "β",
-          "fromPort": "text",
-          "toPort": "in"
-        },
-        {
-          "id": "s-b",
-          "from": "β",
-          "to": "γ",
-          "fromPort": "text",
-          "toPort": "in"
-        },
-        {
-          "id": "通道-ß",
-          "from": "β",
-          "to": "节点-ä",
-          "fromPort": " geändert ",
-          "toPort": "入口"
-        }
-      ],
-      "layout": {
-        "α": {
-          "x": 1,
-          "y": 2
-        },
-        "β": {
-          "x": 3,
-          "y": 4
-        },
-        "γ": {
-          "x": 5,
-          "y": 6
-        },
-        "节点-ä": {
-          "x": 12.5,
-          "y": -8.25
-        }
-      }
-    },
-    "replacement": {
-      "schema": "flow.replacement.多",
-      "camera": {
-        "x": -1,
-        "y": 7.5,
-        "zoom": 2
-      },
-      "widgets": [
-        {
-          "kind": "inputNote",
-          "id": "替代",
-          "text": "শেষ"
-        }
-      ],
-      "synapses": [],
-      "layout": {
-        "替代": {
-          "x": 9,
-          "y": 10
-        }
-      }
     }
   },
   "operations": [
@@ -1111,33 +1001,10 @@
       }
     },
     {
-      "feature": "replaceDocument",
-      "input": {
-        "document": {
-          "schema": "flow.replacement.多",
-          "camera": {
-            "x": -1,
-            "y": 7.5,
-            "zoom": 2
-          },
-          "widgets": [
-            {
-              "kind": "inputNote",
-              "id": "替代",
-              "text": "শেষ"
-            }
-          ],
-          "synapses": [],
-          "layout": {
-            "替代": {
-              "x": 9,
-              "y": 10
-            }
-          }
-        }
-      },
+      "feature": "undo",
+      "input": {},
       "expected": {
-        "document": "afterReplaceDocument",
+        "document": "afterPatchSynapse",
         "page": {
           "sequence": 10,
           "operation": 10,
@@ -1145,27 +1012,27 @@
           "revision": 11,
           "parentRevision": 10,
           "documentGeneration": 11,
-          "widgetCount": 1,
-          "synapseCount": 0,
-          "layoutCount": 1,
-          "semanticDigest": "10347887769374485905"
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "10347887768300612752"
         },
         "history": {
-          "undoOwners": 10,
-          "redoOwners": 0
+          "undoOwners": 8,
+          "redoOwners": 1
         },
         "handback": {
           "fingerprint": "ackCloseExact",
-          "documentVersions": 2,
-          "activeDocumentVersion": 1
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
         }
       }
     },
     {
-      "feature": "undo",
+      "feature": "redo",
       "input": {},
       "expected": {
-        "document": "beforeReplacement",
+        "document": "afterSetLayout",
         "page": {
           "sequence": 11,
           "operation": 11,
@@ -1176,44 +1043,16 @@
           "widgetCount": 3,
           "synapseCount": 3,
           "layoutCount": 4,
-          "semanticDigest": "7107588018251509887"
+          "semanticDigest": "7107579225377607807"
         },
         "history": {
           "undoOwners": 9,
-          "redoOwners": 1
-        },
-        "handback": {
-          "fingerprint": "ackCloseExact",
-          "documentVersions": 2,
-          "activeDocumentVersion": 0
-        }
-      }
-    },
-    {
-      "feature": "redo",
-      "input": {},
-      "expected": {
-        "document": "replacement",
-        "page": {
-          "sequence": 12,
-          "operation": 12,
-          "sessionGeneration": 77,
-          "revision": 13,
-          "parentRevision": 12,
-          "documentGeneration": 13,
-          "widgetCount": 1,
-          "synapseCount": 0,
-          "layoutCount": 1,
-          "semanticDigest": "7436748889560968408"
-        },
-        "history": {
-          "undoOwners": 10,
           "redoOwners": 0
         },
         "handback": {
           "fingerprint": "ackCloseExact",
-          "documentVersions": 2,
-          "activeDocumentVersion": 1
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
         }
       }
     },
@@ -1221,27 +1060,27 @@
       "feature": "checkpoint",
       "input": {},
       "expected": {
-        "document": "replacement",
+        "document": "afterSetLayout",
         "page": {
-          "sequence": 13,
-          "operation": 13,
+          "sequence": 12,
+          "operation": 12,
           "sessionGeneration": 77,
-          "revision": 14,
-          "parentRevision": 13,
-          "documentGeneration": 14,
-          "widgetCount": 1,
-          "synapseCount": 0,
-          "layoutCount": 1,
-          "semanticDigest": "10697971893976894569"
+          "revision": 13,
+          "parentRevision": 12,
+          "documentGeneration": 13,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 4,
+          "semanticDigest": "7364717663870381529"
         },
         "history": {
-          "undoOwners": 10,
+          "undoOwners": 9,
           "redoOwners": 0
         },
         "handback": {
           "fingerprint": "ackCloseExact",
-          "documentVersions": 2,
-          "activeDocumentVersion": 1
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
         }
       }
     }

@@ -1,4 +1,5 @@
 import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts";
+import { declaredPlaygroundCompositionPathV1 } from "../🧩️composition/🟦️.ts";
 import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
 import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
@@ -36,6 +37,7 @@ export type PlaygroundEntry = {
   /** 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
   readonly devContribution?: string;
+  readonly compositionConfigPath?: string;
   readonly nativeHost?: PlaygroundNativeHostV1;
   readonly mcpHost?: PlaygroundNativeHostV1;
   /** 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
@@ -79,6 +81,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
   const brand = block.match(/^brand\s*=\s*"([^"]+)"/m)?.[1];
   const devContribution = block.match(/^devContribution\s*=\s*"([^"]+)"/m)?.[1];
+  const compositionConfigPath = declaredPlaygroundCompositionPathV1(block);
   const distDir = block.match(/^distDir\s*=\s*"([^"]+)"/m)?.[1];
   const aliases = parseTomlStringArray(block, "aliases");
   const portsBlock = block.match(/^ports\s*=\s*\{([^}]*)\}/m)?.[1];
@@ -97,7 +100,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const viewerPath = block.match(/^viewer_path\s*=\s*"([^"]+)"/m)?.[1];
   const nativeHost = parsePlaygroundNativeHostV1(block) as PlaygroundNativeHostV1 | undefined;
   const mcpHost = parsePlaygroundNativeHostV1(block,"mcpHost") as PlaygroundNativeHostV1 | undefined;
-  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), ...(hub ? { hub } : {}), ...(dataDir ? { dataDir } : {}), ...(userDataDir ? { userDataDir } : {}), ...(localOnly ? { localOnly } : {}), ...(viewerPath ? { viewerPath } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
+  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, ...(compositionConfigPath === undefined ? {} : { compositionConfigPath }), distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), ...(hub ? { hub } : {}), ...(dataDir ? { dataDir } : {}), ...(userDataDir ? { userDataDir } : {}), ...(localOnly ? { localOnly } : {}), ...(viewerPath ? { viewerPath } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
 }
 
 

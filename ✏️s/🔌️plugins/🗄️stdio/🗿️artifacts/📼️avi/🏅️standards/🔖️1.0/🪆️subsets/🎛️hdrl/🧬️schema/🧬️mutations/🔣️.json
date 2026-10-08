@@ -36,6 +36,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/mutation/remove-unknown-chunk/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/mutation/set-hdrl-extra/schema.json"
     }
   ]
 }

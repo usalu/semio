@@ -3,8 +3,9 @@
   "seed": null,
   "slots": {
     "removed": [],
-    "added": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "slot-c",
         "patch": {
@@ -21,22 +22,34 @@
   },
   "edges": {
     "removed": [],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "tiles": {
     "removed": [
-      "tile-wall"
+      {
+        "id": "tile-wall",
+        "index": 1
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "rules": {
     "removed": [
-      "rule-roof-wall",
-      "rule-wall-wall"
+      {
+        "id": "rule-roof-wall",
+        "index": 0
+      },
+      {
+        "id": "rule-wall-wall",
+        "index": 1
+      }
     ],
-    "added": [],
-    "patched": []
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

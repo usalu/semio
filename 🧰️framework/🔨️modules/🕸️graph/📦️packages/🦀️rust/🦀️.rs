@@ -39,3 +39,7 @@ pub mod dsl;
 #[cfg(test)]
 #[path = "../../🧪️tests/🪆️record-owner/🦀️.rs"]
 mod canonical_record_owner_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/♻️cold-properties/🦀️.rs"]
+mod cold_property_retirement_tests;

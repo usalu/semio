@@ -9,6 +9,6 @@ pub fn diff(payload: &super::RemoveAttribute, base: &Block2dSnapshot) -> protoco
     if !base.attributes.iter().any(|item| item.key == payload.key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "attribute", payload.key), vec![payload.key.clone()]);
     }
-    protocol::MutationOutcome::new(Block2dDiff { attributes: Some(BlockAttributesDelta { removed: vec![payload.key.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { attributes: BlockAttributesDelta::removal(&base.attributes, base.attributes.iter().position(|item| item.key == payload.key).unwrap_or(usize::MAX)), ..Default::default() })
 }
 //#endregion 🔖️Diff

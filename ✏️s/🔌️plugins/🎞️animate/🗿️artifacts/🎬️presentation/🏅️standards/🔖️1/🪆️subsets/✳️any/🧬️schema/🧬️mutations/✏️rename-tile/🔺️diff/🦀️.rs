@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `rename-tile`.
 use super::RenameTile;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -14,6 +14,6 @@ pub fn diff(payload: &RenameTile, base: &PresentationSnapshot) -> protocol::Muta
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" is already named \"{}\".", payload.id, payload.new_name));
     }
-    protocol::MutationOutcome::new(diff_set_presentation(base, None, Some(PresentationTilesDelta { patched: vec![PresentationTilePatch { id: payload.id.clone(), name: Some(payload.new_name.clone()), ..Default::default() }], ..Default::default() })))
+    protocol::MutationOutcome::new(PresentationDiff { tiles: Some(PresentationTilesDelta::modification(payload.id.clone(), PresentationTilePatch { name: Some(payload.new_name.clone()), ..Default::default() })), ..Default::default() })
 }
 //#endregion 🔹Diff

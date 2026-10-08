@@ -1,16 +1,22 @@
 //! 🔺️ Sparse diff construction for `replace-source`.
 use super::ReplaceSource;
-use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationOptionalAspect, PresentationOptionalPage, PresentationSourcePatch};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
-/// 🔺️ Reads the working-scene `tiles` off `base.presentation` (unchanged by this mutation) and
-/// mints a new content-addressed `presentation` handle for `(payload.new_source, tiles)` — real
-/// handcrafted construction from `(payload, base)`, never apply-then-capture.
+/// 🔺️ The source fields that differ from `payload.new_source`, read off `base.source`; `apply` re-derives the `presentation` handle.
 pub fn diff(payload: &ReplaceSource, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-    let Some(patch) = PresentationSourcePatch::replacing(&base.source, &payload.new_source) else {
-        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Source is already unchanged.".to_string());
+    let (held, next) = (&base.source, &payload.new_source);
+    let patch = PresentationSourcePatch {
+        src: (held.src != next.src).then(|| next.src.clone()),
+        kind: (held.kind != next.kind).then(|| next.kind.clone()),
+        frame: (held.frame != next.frame).then(|| next.frame.clone()),
+        source_aspect: (held.source_aspect != next.source_aspect).then(|| PresentationOptionalAspect { value: next.source_aspect }),
+        pdf_page: (held.pdf_page != next.pdf_page).then(|| PresentationOptionalPage { value: next.pdf_page }),
     };
-    protocol::MutationOutcome::new(diff_set_presentation(base, Some(patch), None))
+    if patch == PresentationSourcePatch::default() {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Source is already unchanged.".to_string());
+    }
+    protocol::MutationOutcome::new(PresentationDiff { source: Some(patch), ..Default::default() })
 }
 //#endregion 🔹Diff

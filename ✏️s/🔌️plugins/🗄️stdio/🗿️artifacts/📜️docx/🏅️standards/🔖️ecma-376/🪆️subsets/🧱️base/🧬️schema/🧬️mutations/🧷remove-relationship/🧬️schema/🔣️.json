@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/remove-relationship/schema.json",
+  "title": "RemoveRelationship",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mutation", "owner", "id"],
+  "properties": {
+    "mutation": {
+      "const": "removeRelationship",
+      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    },
+    "owner": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Owner", "de": "Besitzer" },
+        "description": { "en": "Package part that owns the relationship; empty for the package root.", "de": "Paketteil, dem die Beziehung gehört; leer für die Paketwurzel." },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Relationship id", "de": "Beziehungs-ID" },
+        "description": { "en": "Identifier of the relationship within its owner.", "de": "Kennung der Beziehung innerhalb ihres Besitzers." },
+        "group": "target",
+        "order": 20
+      }
+    }
+  }
+}

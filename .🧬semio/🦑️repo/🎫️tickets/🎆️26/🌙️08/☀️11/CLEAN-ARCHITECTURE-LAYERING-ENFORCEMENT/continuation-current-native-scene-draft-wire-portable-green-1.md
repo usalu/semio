@@ -1,0 +1,3 @@
+# Current Scene Draft Wire Portable Green 1
+
+The exact registered original full Scene TypeScript suite physically closed Nx/Bun0. All 95 tests across seven files passed, with 38,535 assertions. Forty complete selected Scene TypeScript/JSON bodies stayed exact. The new AJV2020 authority schema and all four original draftJson vectors passed alongside original jsdiff/fast-check/three.js and language-neutral corpus laws. Full admission, output and terminal bodies are retained under native-scene-draft-wire-portable-1. This is scoped portable acceptance; it does not prove full Scene native runtime or OS receiving closure.

@@ -21,17 +21,17 @@ test("typed fill and stroke clear differ from untouched",()=>{
 });
 
 test("JSON numeric transform is admitted before semantic validation",()=>{
-  const diff=decodeDrawingDiffJson('{"layers":{"patched":[{"id":"layer","patch":{"transform":{"x":24,"y":-8,"scaleX":2,"scaleY":1.5,"shear":0,"rotation":0}}}]}}');
-  const transform=diff.layers!.patched[0]!.patch.transform!;
+  const diff=decodeDrawingDiffJson('{"layers":{"modified":[{"id":"layer","patch":{"transform":{"x":24,"y":-8,"scaleX":2,"scaleY":1.5,"shear":0,"rotation":0}}}]}}');
+  const transform=diff.layers!.modified[0]!.patch.transform!;
   const oracle=new DataView(new ArrayBuffer(8));oracle.setFloat64(0,24);
   expect(transform.x.bits).toBe(oracle.getBigUint64(0));
-  expect(diff.layers!.patched[0]!.patch.fill).toBeUndefined();
+  expect(diff.layers!.modified[0]!.patch.fill).toBeUndefined();
   console.error("[DEBUG] IO admits numeric JSON as typed transform words before semantic guards");
 });
 
 test("complete diff schema resolves typed patch definitions",()=>{
   const oracle=new Ajv({strict:false}).addSchema(documentSchema).compile(diffSchema);
-  expect(oracle({layers:{added:[],removed:[],patched:[{id:"layer",patch:fixture}]}})).toBe(true);
-  expect(oracle({layers:{added:[],removed:[],patched:[{id:"layer",patch:{transform:"encoded"}}]}})).toBe(false);
+  expect(oracle({layers:{removed:[],inserted:[],moved:[],modified:[{id:"layer",patch:fixture}]}})).toBe(true);
+  expect(oracle({layers:{removed:[],inserted:[],moved:[],modified:[{id:"layer",patch:{transform:"encoded"}}]}})).toBe(false);
   console.error("[DEBUG] Complete diff schema resolves typed clear and rejects encoded transform strings");
 });

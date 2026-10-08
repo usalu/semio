@@ -2,10 +2,10 @@
 //!
 //! `apply` is the only snapshot writer and is reachable solely through `protocol::apply_diff`, which mints the `ApplyCapability`.
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
-//! diff. `DiffAlgebra::between` covers the modelled vocabulary only and exists for sync tooling, never for mutation leaves.
+//! diff, read row by row from the base.
 
 fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new("diff.target-missing", format!("{what} does not exist"))
+    protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
 }
 
 /// 🩹️ Sparse per-field patch of the `catalog.file` section.
@@ -86,19 +86,18 @@ impl Vdi3805ManufacturerFilePatch {
     }
 }
 
-/// 🩹️ Sparse patch of the `catalog.products` row addressed by `id`.
+/// 🩹️ Sparse patch of the `catalog.products` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805ProductsPatch {
-    pub id: String,
     pub title: Option<Vec<crate::document::LocalizedText>>,
     pub configuration: Option<crate::Configuration>,
 }
 
-impl Vdi3805ProductsPatch {
-    fn apply_to_row(&self, row: &mut crate::CatalogueProduct) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<crate::CatalogueProduct> for Vdi3805ProductsPatch {
+    fn commit_into(&self, row: &mut crate::CatalogueProduct, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.title {
             row.title = value.clone();
         }
@@ -108,147 +107,32 @@ impl Vdi3805ProductsPatch {
         Ok(())
     }
 
-    fn merge(&mut self, other: Self) {
-        if other.title.is_some() {
-            self.title = other.title;
+    fn absorb(&mut self, later: Self) {
+        if later.title.is_some() {
+            self.title = later.title;
         }
-        if other.configuration.is_some() {
-            self.configuration = other.configuration;
+        if later.configuration.is_some() {
+            self.configuration = later.configuration;
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::CatalogueProduct) -> Self {
+    fn inverse(&self, row: &crate::CatalogueProduct) -> Self {
         Self {
-            id: self.id.clone(),
             title: self.title.as_ref().map(|_| row.title.clone()),
             configuration: self.configuration.as_ref().map(|_| row.configuration.clone()),
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.title.is_none() && self.configuration.is_none()
+    }
 }
 
-/// 🔺️ Keyed diff of `catalog.products` rows (by `identity.article_number`): added rows, removed ids, modified row patches and the resulting id order when it deviates from base order minus removed plus added.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct Vdi3805ProductsRows {
-    pub added: Vec<crate::CatalogueProduct>,
-    pub removed: Vec<String>,
-    pub modified: Vec<Vdi3805ProductsPatch>,
-    pub order: Option<Vec<String>>,
-}
-
-impl Vdi3805ProductsRows {
-    fn key(row: &crate::CatalogueProduct) -> &str {
-        row.identity.article_number.as_str()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.order.is_none() && self.modified.is_empty()
-    }
-
-    fn ids(rows: &[crate::CatalogueProduct]) -> Vec<String> {
-        rows.iter().map(|row| Self::key(row).to_string()).collect()
-    }
-
-    fn apply_rows(&self, base: &[crate::CatalogueProduct]) -> Result<Vec<crate::CatalogueProduct>, protocol::MutationApplyError> {
-        let mut rows = base.to_vec();
-        for id in &self.removed {
-            let at = rows.iter().position(|row| Self::key(row) == id).ok_or_else(|| missing_target(format!("removed row \"{id}\"")).at([id.clone()]))?;
-            rows.remove(at);
-        }
-        for patch in &self.modified {
-            let row = rows.iter_mut().find(|row| Self::key(row) == patch.id).ok_or_else(|| missing_target(format!("modified row \"{}\"", patch.id)).at([patch.id.clone()]))?;
-            patch.apply_to_row(row)?;
-        }
-        for row in &self.added {
-            if rows.iter().any(|existing| Self::key(existing) == Self::key(row)) {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("row \"{}\" already exists", Self::key(row))).at([Self::key(row).to_string()]));
-            }
-            rows.push(row.clone());
-        }
-        if let Some(order) = &self.order {
-            if order.len() != rows.len() {
-                return Err(protocol::MutationApplyError::new("diff.order-mismatch", "order must list every row exactly once"));
-            }
-            let mut pool = rows;
-            let mut ordered = Vec::with_capacity(pool.len());
-            for id in order {
-                let at = pool.iter().position(|row| Self::key(row) == id).ok_or_else(|| protocol::MutationApplyError::new("diff.order-mismatch", format!("order names unknown row \"{id}\"")).at([id.clone()]))?;
-                ordered.push(pool.remove(at));
-            }
-            rows = ordered;
-        }
-        Ok(rows)
-    }
-
-    fn absorb_rows(&mut self, other: Self) {
-        let other_removed = other.removed.clone();
-        let other_added_ids: Vec<String> = other.added.iter().map(|row| Self::key(row).to_string()).collect();
-        for id in other.removed {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == id) {
-                self.added.remove(at);
-            } else {
-                self.modified.retain(|patch| patch.id != id);
-                if !self.removed.contains(&id) {
-                    self.removed.push(id);
-                }
-            }
-        }
-        self.added.extend(other.added);
-        for patch in other.modified {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == patch.id) {
-                if patch.apply_to_row(&mut self.added[at]).is_err() {
-                    self.modified.push(patch);
-                }
-            } else if let Some(existing) = self.modified.iter_mut().find(|existing| existing.id == patch.id) {
-                existing.merge(patch);
-            } else {
-                self.modified.push(patch);
-            }
-        }
-        self.order = match (other.order, self.order.take()) {
-            (Some(order), _) => Some(order),
-            (None, Some(mut order)) => {
-                order.retain(|id| !other_removed.contains(id));
-                order.extend(other_added_ids);
-                Some(order)
-            }
-            (None, None) => None,
-        };
-    }
-
-    fn inverse_rows(&self, base: &[crate::CatalogueProduct]) -> Self {
-        let mut inverse = Self::default();
-        inverse.removed = self.added.iter().map(|row| Self::key(row).to_string()).collect();
-        inverse.added = base.iter().filter(|row| self.removed.iter().any(|id| id == Self::key(row))).cloned().collect();
-        inverse.modified = self.modified.iter().filter_map(|patch| base.iter().find(|row| Self::key(row) == patch.id).map(|row| patch.inverse_from_row(row))).collect();
-        let base_ids = Self::ids(base);
-        let mut after_ids: Vec<String> = base_ids.iter().filter(|id| !self.removed.contains(id)).cloned().collect();
-        after_ids.extend(self.added.iter().map(|row| Self::key(row).to_string()));
-        if let Some(order) = &self.order {
-            after_ids = order.clone();
-        }
-        let mut natural: Vec<String> = after_ids.into_iter().filter(|id| !inverse.removed.contains(id)).collect();
-        natural.extend(inverse.added.iter().map(|row| Self::key(row).to_string()));
-        if natural != base_ids {
-            inverse.order = Some(base_ids);
-        }
-        inverse
-    }
-
-    fn between_rows(base: &[crate::CatalogueProduct], other: &[crate::CatalogueProduct]) -> Self {
-        let mut diff = Self::default();
-        diff.removed = base.iter().filter(|row| other.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).map(|row| Self::key(row).to_string()).collect();
-        diff.added = other.iter().filter(|row| base.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).cloned().collect();
-        let mut natural: Vec<String> = Self::ids(base).into_iter().filter(|id| !diff.removed.contains(id)).collect();
-        natural.extend(diff.added.iter().map(|row| Self::key(row).to_string()));
-        let wanted = Self::ids(other);
-        if natural != wanted {
-            diff.order = Some(wanted);
-        }
-        diff
-    }
+protocol::list_delta! {
+    /// 🔑️ Positional keyed row delta of `catalog.products`; the key of a `crate::CatalogueProduct` row is `identity.article_number`.
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    pub Vdi3805ProductsRows { removal: Vdi3805ProductsRemoved, insertion: Vdi3805ProductsInserted, relocation: Vdi3805ProductsMoved, modification: Vdi3805ProductsModified, row: crate::CatalogueProduct, patch: Vdi3805ProductsPatch, list: Vec<crate::CatalogueProduct>, key: String = |row| row.identity.article_number.clone() }
 }
 
 /// 🔑️ A `edition_profile` entry: its map key and value.
@@ -288,7 +172,7 @@ impl Vdi3805EditionProfileRows {
         }
         for entry in &self.added {
             if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
         Ok(map)
@@ -325,285 +209,71 @@ impl Vdi3805EditionProfileRows {
         }
     }
 
-    fn between_rows(base: &std::collections::BTreeMap<String, crate::EditionProfileChoice>, other: &std::collections::BTreeMap<String, crate::EditionProfileChoice>) -> Self {
-        Self {
-            removed: base.iter().filter(|(key, value)| other.get(*key) != Some(*value)).map(|(key, _)| key.clone()).collect(),
-            added: other.iter().filter(|(key, value)| base.get(*key) != Some(*value)).map(|(key, value)| Vdi3805EditionProfileEntry { key: key.clone(), value: value.clone() }).collect(),
-            modified: Vec::new(),
-        }
-    }
 }
 
-/// 🩹️ Sparse patch of the `index.entries` row addressed by `id`.
+/// 🩹️ Sparse patch of the `connections` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
-pub struct Vdi3805IndexEntriesPatch {
-    pub id: String,
-    pub dn: Option<Vdi3805IndexEntriesPatchDnValue>,
-    pub tags: Option<Vec<String>>,
+pub struct Vdi3805GeometryConnectionsPatch {
+    pub medium: Option<String>,
+    pub position: Option<[f64; 3]>,
+    pub direction: Option<[f64; 3]>,
+    pub diameter_mm: Option<Vdi3805GeometryConnectionsPatchDiameterMmValue>,
 }
 
-impl Vdi3805IndexEntriesPatch {
-    fn apply_to_row(&self, row: &mut crate::CatalogIndexEntry) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.dn {
-            row.dn = value.value.clone();
+impl protocol::list_delta::RowPatch<crate::ConnectionPoint> for Vdi3805GeometryConnectionsPatch {
+    fn commit_into(&self, row: &mut crate::ConnectionPoint, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        if let Some(value) = &self.medium {
+            row.medium = value.clone();
         }
-        if let Some(value) = &self.tags {
-            row.tags = value.clone();
+        if let Some(value) = &self.position {
+            row.position = value.clone();
+        }
+        if let Some(value) = &self.direction {
+            row.direction = value.clone();
+        }
+        if let Some(value) = &self.diameter_mm {
+            row.diameter_mm = value.value.clone();
         }
         Ok(())
     }
 
-    fn merge(&mut self, other: Self) {
-        if other.dn.is_some() {
-            self.dn = other.dn;
+    fn absorb(&mut self, later: Self) {
+        if later.medium.is_some() {
+            self.medium = later.medium;
         }
-        if other.tags.is_some() {
-            self.tags = other.tags;
+        if later.position.is_some() {
+            self.position = later.position;
+        }
+        if later.direction.is_some() {
+            self.direction = later.direction;
+        }
+        if later.diameter_mm.is_some() {
+            self.diameter_mm = later.diameter_mm;
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::CatalogIndexEntry) -> Self {
+    fn inverse(&self, row: &crate::ConnectionPoint) -> Self {
         Self {
-            id: self.id.clone(),
-            dn: self.dn.as_ref().map(|_| Vdi3805IndexEntriesPatchDnValue { value: row.dn.clone() }),
-            tags: self.tags.as_ref().map(|_| row.tags.clone()),
+            medium: self.medium.as_ref().map(|_| row.medium.clone()),
+            position: self.position.as_ref().map(|_| row.position.clone()),
+            direction: self.direction.as_ref().map(|_| row.direction.clone()),
+            diameter_mm: self.diameter_mm.as_ref().map(|_| Vdi3805GeometryConnectionsPatchDiameterMmValue { value: row.diameter_mm.clone() }),
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.medium.is_none() && self.position.is_none() && self.direction.is_none() && self.diameter_mm.is_none()
     }
 }
 
-/// 🔺️ Keyed diff of `index.entries` rows (by `product_id`): added rows, removed ids, modified row patches and the resulting id order when it deviates from base order minus removed plus added.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct Vdi3805IndexEntriesRows {
-    pub added: Vec<crate::CatalogIndexEntry>,
-    pub removed: Vec<String>,
-    pub modified: Vec<Vdi3805IndexEntriesPatch>,
-    pub order: Option<Vec<String>>,
-}
-
-impl Vdi3805IndexEntriesRows {
-    fn key(row: &crate::CatalogIndexEntry) -> &str {
-        row.product_id.as_str()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.order.is_none() && self.modified.is_empty()
-    }
-
-    fn ids(rows: &[crate::CatalogIndexEntry]) -> Vec<String> {
-        rows.iter().map(|row| Self::key(row).to_string()).collect()
-    }
-
-    fn apply_rows(&self, base: &[crate::CatalogIndexEntry]) -> Result<Vec<crate::CatalogIndexEntry>, protocol::MutationApplyError> {
-        let mut rows = base.to_vec();
-        for id in &self.removed {
-            let at = rows.iter().position(|row| Self::key(row) == id).ok_or_else(|| missing_target(format!("removed row \"{id}\"")).at([id.clone()]))?;
-            rows.remove(at);
-        }
-        for patch in &self.modified {
-            let row = rows.iter_mut().find(|row| Self::key(row) == patch.id).ok_or_else(|| missing_target(format!("modified row \"{}\"", patch.id)).at([patch.id.clone()]))?;
-            patch.apply_to_row(row)?;
-        }
-        for row in &self.added {
-            if rows.iter().any(|existing| Self::key(existing) == Self::key(row)) {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("row \"{}\" already exists", Self::key(row))).at([Self::key(row).to_string()]));
-            }
-            rows.push(row.clone());
-        }
-        if let Some(order) = &self.order {
-            if order.len() != rows.len() {
-                return Err(protocol::MutationApplyError::new("diff.order-mismatch", "order must list every row exactly once"));
-            }
-            let mut pool = rows;
-            let mut ordered = Vec::with_capacity(pool.len());
-            for id in order {
-                let at = pool.iter().position(|row| Self::key(row) == id).ok_or_else(|| protocol::MutationApplyError::new("diff.order-mismatch", format!("order names unknown row \"{id}\"")).at([id.clone()]))?;
-                ordered.push(pool.remove(at));
-            }
-            rows = ordered;
-        }
-        Ok(rows)
-    }
-
-    fn absorb_rows(&mut self, other: Self) {
-        let other_removed = other.removed.clone();
-        let other_added_ids: Vec<String> = other.added.iter().map(|row| Self::key(row).to_string()).collect();
-        for id in other.removed {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == id) {
-                self.added.remove(at);
-            } else {
-                self.modified.retain(|patch| patch.id != id);
-                if !self.removed.contains(&id) {
-                    self.removed.push(id);
-                }
-            }
-        }
-        self.added.extend(other.added);
-        for patch in other.modified {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == patch.id) {
-                if patch.apply_to_row(&mut self.added[at]).is_err() {
-                    self.modified.push(patch);
-                }
-            } else if let Some(existing) = self.modified.iter_mut().find(|existing| existing.id == patch.id) {
-                existing.merge(patch);
-            } else {
-                self.modified.push(patch);
-            }
-        }
-        self.order = match (other.order, self.order.take()) {
-            (Some(order), _) => Some(order),
-            (None, Some(mut order)) => {
-                order.retain(|id| !other_removed.contains(id));
-                order.extend(other_added_ids);
-                Some(order)
-            }
-            (None, None) => None,
-        };
-    }
-
-    fn inverse_rows(&self, base: &[crate::CatalogIndexEntry]) -> Self {
-        let mut inverse = Self::default();
-        inverse.removed = self.added.iter().map(|row| Self::key(row).to_string()).collect();
-        inverse.added = base.iter().filter(|row| self.removed.iter().any(|id| id == Self::key(row))).cloned().collect();
-        inverse.modified = self.modified.iter().filter_map(|patch| base.iter().find(|row| Self::key(row) == patch.id).map(|row| patch.inverse_from_row(row))).collect();
-        let base_ids = Self::ids(base);
-        let mut after_ids: Vec<String> = base_ids.iter().filter(|id| !self.removed.contains(id)).cloned().collect();
-        after_ids.extend(self.added.iter().map(|row| Self::key(row).to_string()));
-        if let Some(order) = &self.order {
-            after_ids = order.clone();
-        }
-        let mut natural: Vec<String> = after_ids.into_iter().filter(|id| !inverse.removed.contains(id)).collect();
-        natural.extend(inverse.added.iter().map(|row| Self::key(row).to_string()));
-        if natural != base_ids {
-            inverse.order = Some(base_ids);
-        }
-        inverse
-    }
-
-    fn between_rows(base: &[crate::CatalogIndexEntry], other: &[crate::CatalogIndexEntry]) -> Self {
-        let mut diff = Self::default();
-        diff.removed = base.iter().filter(|row| other.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).map(|row| Self::key(row).to_string()).collect();
-        diff.added = other.iter().filter(|row| base.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).cloned().collect();
-        let mut natural: Vec<String> = Self::ids(base).into_iter().filter(|id| !diff.removed.contains(id)).collect();
-        natural.extend(diff.added.iter().map(|row| Self::key(row).to_string()));
-        let wanted = Self::ids(other);
-        if natural != wanted {
-            diff.order = Some(wanted);
-        }
-        diff
-    }
-}
-
-/// 🔺️ Keyed diff of `connections` rows (by `id`): added rows, removed ids, modified row patches and the resulting id order when it deviates from base order minus removed plus added.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct Vdi3805GeometryConnectionsRows {
-    pub added: Vec<crate::ConnectionPoint>,
-    pub removed: Vec<String>,
-    pub order: Option<Vec<String>>,
-}
-
-impl Vdi3805GeometryConnectionsRows {
-    fn key(row: &crate::ConnectionPoint) -> &str {
-        row.id.as_str()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.added.is_empty() && self.removed.is_empty() && self.order.is_none()
-    }
-
-    fn ids(rows: &[crate::ConnectionPoint]) -> Vec<String> {
-        rows.iter().map(|row| Self::key(row).to_string()).collect()
-    }
-
-    fn apply_rows(&self, base: &[crate::ConnectionPoint]) -> Result<Vec<crate::ConnectionPoint>, protocol::MutationApplyError> {
-        let mut rows = base.to_vec();
-        for id in &self.removed {
-            let at = rows.iter().position(|row| Self::key(row) == id).ok_or_else(|| missing_target(format!("removed row \"{id}\"")).at([id.clone()]))?;
-            rows.remove(at);
-        }
-        for row in &self.added {
-            if rows.iter().any(|existing| Self::key(existing) == Self::key(row)) {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("row \"{}\" already exists", Self::key(row))).at([Self::key(row).to_string()]));
-            }
-            rows.push(row.clone());
-        }
-        if let Some(order) = &self.order {
-            if order.len() != rows.len() {
-                return Err(protocol::MutationApplyError::new("diff.order-mismatch", "order must list every row exactly once"));
-            }
-            let mut pool = rows;
-            let mut ordered = Vec::with_capacity(pool.len());
-            for id in order {
-                let at = pool.iter().position(|row| Self::key(row) == id).ok_or_else(|| protocol::MutationApplyError::new("diff.order-mismatch", format!("order names unknown row \"{id}\"")).at([id.clone()]))?;
-                ordered.push(pool.remove(at));
-            }
-            rows = ordered;
-        }
-        Ok(rows)
-    }
-
-    fn absorb_rows(&mut self, other: Self) {
-        let other_removed = other.removed.clone();
-        let other_added_ids: Vec<String> = other.added.iter().map(|row| Self::key(row).to_string()).collect();
-        for id in other.removed {
-            if let Some(at) = self.added.iter().position(|row| Self::key(row) == id) {
-                self.added.remove(at);
-            } else {
-                if !self.removed.contains(&id) {
-                    self.removed.push(id);
-                }
-            }
-        }
-        self.added.extend(other.added);
-        self.order = match (other.order, self.order.take()) {
-            (Some(order), _) => Some(order),
-            (None, Some(mut order)) => {
-                order.retain(|id| !other_removed.contains(id));
-                order.extend(other_added_ids);
-                Some(order)
-            }
-            (None, None) => None,
-        };
-    }
-
-    fn inverse_rows(&self, base: &[crate::ConnectionPoint]) -> Self {
-        let mut inverse = Self::default();
-        inverse.removed = self.added.iter().map(|row| Self::key(row).to_string()).collect();
-        inverse.added = base.iter().filter(|row| self.removed.iter().any(|id| id == Self::key(row))).cloned().collect();
-        let base_ids = Self::ids(base);
-        let mut after_ids: Vec<String> = base_ids.iter().filter(|id| !self.removed.contains(id)).cloned().collect();
-        after_ids.extend(self.added.iter().map(|row| Self::key(row).to_string()));
-        if let Some(order) = &self.order {
-            after_ids = order.clone();
-        }
-        let mut natural: Vec<String> = after_ids.into_iter().filter(|id| !inverse.removed.contains(id)).collect();
-        natural.extend(inverse.added.iter().map(|row| Self::key(row).to_string()));
-        if natural != base_ids {
-            inverse.order = Some(base_ids);
-        }
-        inverse
-    }
-
-    fn between_rows(base: &[crate::ConnectionPoint], other: &[crate::ConnectionPoint]) -> Self {
-        let mut diff = Self::default();
-        diff.removed = base.iter().filter(|row| other.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).map(|row| Self::key(row).to_string()).collect();
-        diff.added = other.iter().filter(|row| base.iter().find(|candidate| Self::key(candidate) == Self::key(row)) != Some(*row)).cloned().collect();
-        let mut natural: Vec<String> = Self::ids(base).into_iter().filter(|id| !diff.removed.contains(id)).collect();
-        natural.extend(diff.added.iter().map(|row| Self::key(row).to_string()));
-        let wanted = Self::ids(other);
-        if natural != wanted {
-            diff.order = Some(wanted);
-        }
-        diff
-    }
+protocol::list_delta! {
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `connections` list (rows keyed by `id`).
+    pub Vdi3805GeometryConnectionsRows { removal: Vdi3805GeometryConnectionsRemoved, insertion: Vdi3805GeometryConnectionsInserted, relocation: Vdi3805GeometryConnectionsMoved, modification: Vdi3805GeometryConnectionsModified, row: crate::ConnectionPoint, patch: Vdi3805GeometryConnectionsPatch, key: id }
 }
 
 /// 🔑️ A `geometry` entry: its map key and value.
@@ -629,7 +299,7 @@ pub struct Vdi3805GeometryPatch {
 }
 
 impl Vdi3805GeometryPatch {
-    fn apply_to_row(&self, row: &mut crate::ParametricGeometry) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut crate::ParametricGeometry, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.bbox {
             row.bbox = value.clone();
         }
@@ -637,7 +307,7 @@ impl Vdi3805GeometryPatch {
             row.parameters = value.clone();
         }
         if let Some(rows) = &self.connections {
-            row.connections = rows.apply_rows(&row.connections).map_err(|error| error.under(["connections"]))?;
+            row.connections = rows.commit_onto(&row.connections, capability).map_err(|error| error.under(["connections"]))?;
         }
         Ok(())
     }
@@ -651,7 +321,7 @@ impl Vdi3805GeometryPatch {
         }
         if let Some(theirs) = other.connections {
             match self.connections.as_mut() {
-                Some(mine) => mine.absorb_rows(theirs),
+                Some(mine) => mine.absorb(theirs),
                 None => self.connections = Some(theirs),
             }
         }
@@ -663,7 +333,7 @@ impl Vdi3805GeometryPatch {
             key: self.key.clone(),
             bbox: self.bbox.as_ref().map(|_| row.bbox.clone()),
             parameters: self.parameters.as_ref().map(|_| row.parameters.clone()),
-            connections: self.connections.as_ref().map(|rows| rows.inverse_rows(&row.connections)).filter(|rows| !rows.is_empty()),
+            connections: self.connections.as_ref().map(|rows| rows.inverse(&row.connections)).filter(|rows| !rows.is_empty()),
         }
     }
 }
@@ -684,19 +354,19 @@ impl Vdi3805GeometryRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::ParametricGeometry>) -> Result<std::collections::BTreeMap<String, crate::ParametricGeometry>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::ParametricGeometry>, capability: protocol::ApplyCapability) -> Result<std::collections::BTreeMap<String, crate::ParametricGeometry>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
             map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
         }
-        for patch in &self.modified {
-            let value = map.get_mut(&patch.key).ok_or_else(|| missing_target(format!("modified entry \"{}\"", patch.key)).at([patch.key.clone()]))?;
-            patch.apply_to_row(value)?;
-        }
         for entry in &self.added {
             if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
+        }
+        for patch in &self.modified {
+            let value = map.get_mut(&patch.key).ok_or_else(|| missing_target(format!("modified entry \"{}\"", patch.key)).at([patch.key.clone()]))?;
+            patch.apply_to_row(value, capability)?;
         }
         Ok(map)
     }
@@ -705,6 +375,7 @@ impl Vdi3805GeometryRows {
         for key in other.removed {
             if let Some(at) = self.added.iter().position(|entry| entry.key == key) {
                 self.added.remove(at);
+                self.modified.retain(|entry| entry.key != key);
             } else {
                 self.modified.retain(|entry| entry.key != key);
                 if !self.removed.contains(&key) {
@@ -714,11 +385,7 @@ impl Vdi3805GeometryRows {
         }
         self.added.extend(other.added);
         for patch in other.modified {
-            if let Some(at) = self.added.iter().position(|added| added.key == patch.key) {
-                if patch.apply_to_row(&mut self.added[at].value).is_err() {
-                    self.modified.push(patch);
-                }
-            } else if let Some(existing) = self.modified.iter_mut().find(|existing| existing.key == patch.key) {
+            if let Some(existing) = self.modified.iter_mut().find(|existing| existing.key == patch.key) {
                 existing.merge(patch);
             } else {
                 self.modified.push(patch);
@@ -734,13 +401,6 @@ impl Vdi3805GeometryRows {
         }
     }
 
-    fn between_rows(base: &std::collections::BTreeMap<String, crate::ParametricGeometry>, other: &std::collections::BTreeMap<String, crate::ParametricGeometry>) -> Self {
-        Self {
-            removed: base.iter().filter(|(key, value)| other.get(*key) != Some(*value)).map(|(key, _)| key.clone()).collect(),
-            added: other.iter().filter(|(key, value)| base.get(*key) != Some(*value)).map(|(key, value)| Vdi3805GeometryEntry { key: key.clone(), value: value.clone() }).collect(),
-            modified: Vec::new(),
-        }
-    }
 }
 
 /// 🔑️ A `curves` entry: its map key and value.
@@ -812,7 +472,7 @@ impl Vdi3805CurvesRows {
         }
         for entry in &self.added {
             if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
-                return Err(protocol::MutationApplyError::new("diff.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
         Ok(map)
@@ -851,13 +511,6 @@ impl Vdi3805CurvesRows {
         }
     }
 
-    fn between_rows(base: &std::collections::BTreeMap<String, crate::CharacteristicCurve>, other: &std::collections::BTreeMap<String, crate::CharacteristicCurve>) -> Self {
-        Self {
-            removed: base.iter().filter(|(key, value)| other.get(*key) != Some(*value)).map(|(key, _)| key.clone()).collect(),
-            added: other.iter().filter(|(key, value)| base.get(*key) != Some(*value)).map(|(key, value)| Vdi3805CurvesEntry { key: key.clone(), value: value.clone() }).collect(),
-            modified: Vec::new(),
-        }
-    }
 }
 
 /// 🩹️ Sparse per-field patch of the `limits` section.
@@ -914,13 +567,13 @@ impl Vdi3805LimitsPatch {
     }
 }
 
-/// 🎁️ Carries the optional `CatalogIndexEntry.dn` value so an explicit `None` stays distinct from an untouched field.
+/// 🎁️ Carries the optional `ConnectionPoint.diameter_mm` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
-pub struct Vdi3805IndexEntriesPatchDnValue {
-    pub value: Option<u16>,
+pub struct Vdi3805GeometryConnectionsPatchDiameterMmValue {
+    pub value: Option<f64>,
 }
 
 /// 🔺️ Keyed sparse diff of the Vdi3805 artifact: scalar setters, keyed row diffs and per-field section patches.
@@ -943,8 +596,6 @@ pub struct Vdi3805Diff {
     #[state(artifact)]
     pub strict_mode: Option<bool>,
     #[state(artifact)]
-    pub index_entries: Option<Vdi3805IndexEntriesRows>,
-    #[state(artifact)]
     pub geometry: Option<Vdi3805GeometryRows>,
     #[state(artifact)]
     pub curves: Option<Vdi3805CurvesRows>,
@@ -953,13 +604,13 @@ pub struct Vdi3805Diff {
 }
 
 impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
-    fn apply(&self, base: &Vdi3805Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Vdi3805Snapshot> {
+    fn apply(&self, base: &Vdi3805Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Vdi3805Snapshot> {
         let mut next = base.clone();
         if let Some(patch) = &self.manufacturer_file {
             patch.apply_to_row(&mut next.catalog.file).map_err(|error| error.under(["manufacturer_file"]))?;
         }
         if let Some(rows) = &self.products {
-            next.catalog.products = rows.apply_rows(&base.catalog.products).map_err(|error| error.under(["products"]))?;
+            next.catalog.products = rows.commit_onto(&base.catalog.products, capability).map_err(|error| error.under(["products"]))?;
         }
         if let Some(value) = &self.catalog_extensions {
             next.catalog.extensions = value.clone();
@@ -973,17 +624,17 @@ impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
         if let Some(value) = &self.strict_mode {
             next.strict_mode = value.clone();
         }
-        if let Some(rows) = &self.index_entries {
-            next.index.entries = rows.apply_rows(&base.index.entries).map_err(|error| error.under(["index_entries"]))?;
-        }
         if let Some(rows) = &self.geometry {
-            next.geometry = rows.apply_rows(&base.geometry).map_err(|error| error.under(["geometry"]))?;
+            next.geometry = rows.apply_rows(&base.geometry, capability).map_err(|error| error.under(["geometry"]))?;
         }
         if let Some(rows) = &self.curves {
             next.curves = rows.apply_rows(&base.curves).map_err(|error| error.under(["curves"]))?;
         }
         if let Some(patch) = &self.limits {
             patch.apply_to_row(&mut next.limits).map_err(|error| error.under(["limits"]))?;
+        }
+        if self.products.is_some() {
+            next.index = crate::CatalogIndex::from_catalog(&next.catalog);
         }
         Ok(next)
     }
@@ -997,7 +648,7 @@ impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
         }
         if let Some(theirs) = other.products {
             match self.products.as_mut() {
-                Some(mine) => mine.absorb_rows(theirs),
+                Some(mine) => mine.absorb(theirs),
                 None => self.products = Some(theirs),
             }
             self.products = self.products.take().filter(|rows| !rows.is_empty());
@@ -1017,13 +668,6 @@ impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
         }
         if other.strict_mode.is_some() {
             self.strict_mode = other.strict_mode;
-        }
-        if let Some(theirs) = other.index_entries {
-            match self.index_entries.as_mut() {
-                Some(mine) => mine.absorb_rows(theirs),
-                None => self.index_entries = Some(theirs),
-            }
-            self.index_entries = self.index_entries.take().filter(|rows| !rows.is_empty());
         }
         if let Some(theirs) = other.geometry {
             match self.geometry.as_mut() {
@@ -1052,48 +696,19 @@ impl protocol::DiffAlgebra<Vdi3805Snapshot> for Vdi3805Diff {
     fn inverse(&self, base: &Vdi3805Snapshot) -> Self {
         Self {
             manufacturer_file: self.manufacturer_file.as_ref().map(|patch| patch.inverse_from_row(&base.catalog.file)),
-            products: self.products.as_ref().map(|rows| rows.inverse_rows(&base.catalog.products)).filter(|rows| !rows.is_empty()),
+            products: self.products.as_ref().map(|rows| rows.inverse(&base.catalog.products)).filter(|rows| !rows.is_empty()),
             catalog_extensions: self.catalog_extensions.as_ref().map(|_| base.catalog.extensions.clone()),
             edition_profile: self.edition_profile.as_ref().map(|rows| rows.inverse_rows(&base.edition_profile)).filter(|rows| !rows.is_empty()),
             correction_as_of: self.correction_as_of.as_ref().map(|_| base.correction_as_of.clone()),
             strict_mode: self.strict_mode.as_ref().map(|_| base.strict_mode.clone()),
-            index_entries: self.index_entries.as_ref().map(|rows| rows.inverse_rows(&base.index.entries)).filter(|rows| !rows.is_empty()),
             geometry: self.geometry.as_ref().map(|rows| rows.inverse_rows(&base.geometry)).filter(|rows| !rows.is_empty()),
             curves: self.curves.as_ref().map(|rows| rows.inverse_rows(&base.curves)).filter(|rows| !rows.is_empty()),
             limits: self.limits.as_ref().map(|patch| patch.inverse_from_row(&base.limits)),
         }
     }
 
-    fn between(base: &Vdi3805Snapshot, other: &Vdi3805Snapshot) -> Self {
-        Self {
-            manufacturer_file: Some(Vdi3805ManufacturerFilePatch {
-                header_version: (base.catalog.file.header_version != other.catalog.file.header_version).then(|| other.catalog.file.header_version.clone()),
-                manufacturer: (base.catalog.file.manufacturer != other.catalog.file.manufacturer).then(|| other.catalog.file.manufacturer.clone()),
-                building_system_number: (base.catalog.file.building_system_number != other.catalog.file.building_system_number).then(|| other.catalog.file.building_system_number.clone()),
-                created: (base.catalog.file.created != other.catalog.file.created).then(|| other.catalog.file.created.clone()),
-                charset: (base.catalog.file.charset != other.catalog.file.charset).then(|| other.catalog.file.charset.clone()),
-                record_count: (base.catalog.file.record_count != other.catalog.file.record_count).then(|| other.catalog.file.record_count.clone()),
-                extensions: (base.catalog.file.extensions != other.catalog.file.extensions).then(|| other.catalog.file.extensions.clone()),
-            }).filter(|patch| *patch != Vdi3805ManufacturerFilePatch::default()),
-            products: Some(Vdi3805ProductsRows::between_rows(&base.catalog.products, &other.catalog.products)).filter(|rows| !rows.is_empty()),
-            catalog_extensions: (base.catalog.extensions != other.catalog.extensions).then(|| other.catalog.extensions.clone()),
-            edition_profile: Some(Vdi3805EditionProfileRows::between_rows(&base.edition_profile, &other.edition_profile)).filter(|rows| !rows.is_empty()),
-            correction_as_of: (base.correction_as_of != other.correction_as_of).then(|| other.correction_as_of.clone()),
-            strict_mode: (base.strict_mode != other.strict_mode).then(|| other.strict_mode.clone()),
-            index_entries: Some(Vdi3805IndexEntriesRows::between_rows(&base.index.entries, &other.index.entries)).filter(|rows| !rows.is_empty()),
-            geometry: Some(Vdi3805GeometryRows::between_rows(&base.geometry, &other.geometry)).filter(|rows| !rows.is_empty()),
-            curves: Some(Vdi3805CurvesRows::between_rows(&base.curves, &other.curves)).filter(|rows| !rows.is_empty()),
-            limits: Some(Vdi3805LimitsPatch {
-                max_file_bytes: (base.limits.max_file_bytes != other.limits.max_file_bytes).then(|| other.limits.max_file_bytes.clone()),
-                max_records: (base.limits.max_records != other.limits.max_records).then(|| other.limits.max_records.clone()),
-                max_field_length: (base.limits.max_field_length != other.limits.max_field_length).then(|| other.limits.max_field_length.clone()),
-                max_nesting_depth: (base.limits.max_nesting_depth != other.limits.max_nesting_depth).then(|| other.limits.max_nesting_depth.clone()),
-            }).filter(|patch| *patch != Vdi3805LimitsPatch::default()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
-        self.manufacturer_file.is_none() && self.products.as_ref().map_or(true, |rows| rows.is_empty()) && self.catalog_extensions.is_none() && self.edition_profile.as_ref().map_or(true, |rows| rows.is_empty()) && self.correction_as_of.is_none() && self.strict_mode.is_none() && self.index_entries.as_ref().map_or(true, |rows| rows.is_empty()) && self.geometry.as_ref().map_or(true, |rows| rows.is_empty()) && self.curves.as_ref().map_or(true, |rows| rows.is_empty()) && self.limits.is_none()
+        self.manufacturer_file.is_none() && self.products.as_ref().map_or(true, |rows| rows.is_empty()) && self.catalog_extensions.is_none() && self.edition_profile.as_ref().map_or(true, |rows| rows.is_empty()) && self.correction_as_of.is_none() && self.strict_mode.is_none() && self.geometry.as_ref().map_or(true, |rows| rows.is_empty()) && self.curves.as_ref().map_or(true, |rows| rows.is_empty()) && self.limits.is_none()
     }
 }
 

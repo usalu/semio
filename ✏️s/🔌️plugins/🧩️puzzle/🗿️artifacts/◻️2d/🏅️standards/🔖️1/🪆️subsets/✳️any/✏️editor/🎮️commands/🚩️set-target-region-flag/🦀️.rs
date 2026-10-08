@@ -1,8 +1,8 @@
 //! 🚩️ `set-target-region-flag` command, and the two set-verbs an outliner region row names (`setTargetRegionHidden`,
 //! `setTargetRegionLocked`).
 
-use crate::editor::puzzle2d::{apply_target_region_flag, puzzle2d_selected_target_region_ids, Puzzle2dActionCtx};
-use serde_json::Value;
+use crate::editor::puzzle2d::{puzzle2d_selected_target_region_ids, Puzzle2dActionCtx};
+use semio_framework_pack_json::Value;
 
 /// 🙈️ An explicit `id` (the outliner row toggle and the context menu) flags exactly that region;
 /// without one the live selection's regions are flagged at once, matching `setSelectionFlag`'s shape.
@@ -30,5 +30,5 @@ fn apply(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>, flag: &str, valu
     if ids.is_empty() {
         return;
     }
-    apply_target_region_flag(&mut ctx.scene.board_snapshot, &ids, flag, value);
+    ctx.recorder.set_region_flag(&ids, flag, value);
 }

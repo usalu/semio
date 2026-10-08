@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🎣️ Points the candidate search at the handle the ARMED brush is over — or at nothing once the
 /// brush is disarmed or the pointer left every handle. It only moves the slot: the candidate page it

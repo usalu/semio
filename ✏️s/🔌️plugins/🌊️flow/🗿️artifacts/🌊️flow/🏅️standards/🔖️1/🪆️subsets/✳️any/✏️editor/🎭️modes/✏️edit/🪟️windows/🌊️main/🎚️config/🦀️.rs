@@ -55,7 +55,6 @@ semio_framework_os_kernel::config_record! {
     owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main",
     payload_schema: "flow.mainwindowconfig",
     emoji: "🎚️",
-    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Flow Main Window Configuration",
     fields: {
         preview_off_node_ids: Vec<String> => SetPreviewOffNodeIds "set-preview-off-node-ids",
         camera: CameraJson => SetCamera "set-camera",
@@ -101,13 +100,13 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
     snapshot.and_then(|snapshot| snapshot.get::<FlowMainWindowConfigOwner>()).cloned().unwrap_or_default()
 }
 
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: FlowMainWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &FlowMainWindowConfig, config: FlowMainWindowConfig) -> Result<Vec<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("flow-main-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str());
     if kind != Some(super::FLOW_PLAY_WINDOW_MAIN) {
         return Err(semio_framework_plugin::Fault::from("flow-main-window-kind-required"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<FlowMainWindowConfigOwner>(id, FlowMainWindowConfigMutation::Snapshot { config }))
+    Ok(FlowMainWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<FlowMainWindowConfigOwner>(id, mutation)).collect())
 }
 
 #[cfg(test)]

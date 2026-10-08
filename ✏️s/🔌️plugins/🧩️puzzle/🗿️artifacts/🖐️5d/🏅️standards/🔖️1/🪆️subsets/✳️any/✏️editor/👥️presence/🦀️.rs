@@ -107,9 +107,6 @@ impl protocol::DiffAlgebra<Puzzle5dPresence> for Puzzle5dPresenceDiff {
     fn inverse(&self, base: &Puzzle5dPresence) -> Self {
         self.restoring(base)
     }
-    fn between(base: &Puzzle5dPresence, other: &Puzzle5dPresence) -> Self {
-        Self { camera2d_x: (base.camera2d_x != other.camera2d_x).then(|| other.camera2d_x), camera2d_y: (base.camera2d_y != other.camera2d_y).then(|| other.camera2d_y), camera2d_zoom: (base.camera2d_zoom != other.camera2d_zoom).then(|| other.camera2d_zoom), camera3d_position: (base.camera3d_position != other.camera3d_position).then(|| other.camera3d_position), camera3d_target: (base.camera3d_target != other.camera3d_target).then(|| other.camera3d_target), camera3d_zoom: (base.camera3d_zoom != other.camera3d_zoom).then(|| other.camera3d_zoom) }
-    }
     fn is_empty(&self) -> bool {
         self.camera2d_x.is_none() && self.camera2d_y.is_none() && self.camera2d_zoom.is_none() && self.camera3d_position.is_none() && self.camera3d_target.is_none() && self.camera3d_zoom.is_none()
     }

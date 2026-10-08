@@ -515,11 +515,11 @@ fn malformed_authored_authority_is_refused_atomically() {
         assert!(encode_docx(&candidate).is_err());
     }
 
-    let diff = DocxDiff::between(&valid, &content_type_drift);
+    let diff = DocxDiff { xml_parts: Some(crate::schema::diff::DocxXmlPartsDelta::modification(&valid.xml_parts[0].path, crate::schema::diff::DocxXmlPartDiff { content_type: Some("application/xml".into()), document: None })), ..Default::default() };
     assert!(protocol::apply_diff(&diff, &valid).is_err(), "invalid candidate diff must be refused");
     let mut source = valid.clone();
     let drifting = valid.xml_parts[0].clone();
-    let outcome = apply_docx_mutation(&mut source, &DocxMutation::SetPart(set_part::SetPart { path: drifting.path.clone(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: drifting.materialize_document_exact().unwrap() }, index: None }));
+    let outcome = apply_docx_mutation(&mut source, &DocxMutation::SetPart(set_part::SetPart { path: drifting.path.clone(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: drifting.materialize_document_exact().unwrap() }, index: None, override_index: None }));
     assert!(!outcome.messages().is_empty());
     assert_eq!(source, valid, "refused mutation must preserve the exact source snapshot");
 }

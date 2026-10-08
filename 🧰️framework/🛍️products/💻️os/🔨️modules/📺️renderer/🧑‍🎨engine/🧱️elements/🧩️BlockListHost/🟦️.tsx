@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useMemo, useState, type MouseEvent } from "react";
-import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
+import { blockListPaletteTargetStepIdV1, type BlockListSelectionTarget, type BlockListBlock, type BlockListStep, type BlockListPaletteEntry, type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import {
   Button,
   cn,
@@ -27,7 +27,7 @@ import {
   type DragEndEvent,
   type IconName,
 } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -35,11 +35,7 @@ import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 //#region 🔖️BlockListHost
 //#region BlockListHost
 //#region Types
-type SelectionTarget = { readonly granularity: string; readonly id: string };
 type SelectionContext = { readonly domainId?: string; readonly selectedId?: string };
-type BlockRecord = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string; readonly target?: SelectionTarget };
-type StepRecord = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly BlockRecord[]; readonly target?: SelectionTarget };
-type PaletteEntryRecord = { readonly blockKind: string; readonly label: string; readonly iconId: IconName };
 const PALETTE_DRAG_MIME = "application/x-semio-block-list-block-kind";
 //#endregion Types
 
@@ -48,16 +44,6 @@ function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, c
   onAction({ controllerId, action, args });
 }
 
-function blockListPaletteTargetStepId(steps: readonly StepRecord[], selectedId?: string): string | undefined {
-  const current = steps.filter((step) => typeof step.id === "string" && step.id.length > 0 && Array.isArray(step.blocks));
-  if (selectedId) {
-    const selectedStep = current.find((step) => step.id === selectedId);
-    if (selectedStep) return selectedStep.id;
-    const selectedBlockParent = current.find((step) => step.blocks.some((block) => block?.id === selectedId));
-    if (selectedBlockParent) return selectedBlockParent.id;
-  }
-  return current[0]?.id;
-}
 //#endregion Helpers
 
 //#region SortableRow
@@ -75,7 +61,7 @@ function SortableRow({ id, children }: { readonly id: string; readonly children:
 //#endregion SortableRow
 
 //#region Block
-function SelectionLabel({ id, target, selection, controllerId, onAction, children }: { readonly id: string; readonly target?: SelectionTarget; readonly selection: SelectionContext; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly children: React.ReactNode }) {
+function SelectionLabel({ id, target, selection, controllerId, onAction, children }: { readonly id: string; readonly target?: BlockListSelectionTarget; readonly selection: SelectionContext; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly children: React.ReactNode }) {
   if (!selection.domainId || !target) return <div className="min-w-0 flex-1">{children}</div>;
   return <button
     type="button"
@@ -88,7 +74,7 @@ function SelectionLabel({ id, target, selection, controllerId, onAction, childre
   >{children}</button>;
 }
 
-function BlockCard({ block, stepId, controllerId, onAction, selection }: { readonly block: BlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
+function BlockCard({ block, stepId, controllerId, onAction, selection }: { readonly block: BlockListBlock; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
   const surfaceDrag = useUiDriverDragSurface();
   const deleteLabel = useLabel("ui.common.delete");
   return (
@@ -109,7 +95,7 @@ function BlockCard({ block, stepId, controllerId, onAction, selection }: { reado
 //#endregion Block
 
 //#region Step
-function StepCard({ step, palette, controllerId, onAction, selection }: { readonly step: StepRecord; readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
+function StepCard({ step, palette, controllerId, onAction, selection }: { readonly step: BlockListStep; readonly palette: readonly BlockListPaletteEntry[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
   const surfaceDrag = useUiDriverDragSurface();
   const deleteLabel = useLabel("ui.common.delete");
   const blockIds = useMemo(() => step.blocks.map((block) => block.id), [step.blocks]);
@@ -164,7 +150,7 @@ function StepCard({ step, palette, controllerId, onAction, selection }: { readon
 //#endregion Step
 
 //#region Palette
-function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { readonly entry: PaletteEntryRecord; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { readonly entry: BlockListPaletteEntry; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   const surfaceDrag = useUiDriverDragSurface();
   const { armed, arm } = useNativeDragArm();
   const enabled = targetStepId !== undefined;
@@ -197,14 +183,14 @@ function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { read
           dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: targetStepId, kind: entry.blockKind });
         }}
       >
-        <Icon icon={entry.iconId} size="small" />
+        <Icon icon={entry.iconId as IconName} size="small" />
         {entry.label}
       </button>
     </div>
   );
 }
 
-function PalettePanel({ palette, targetStepId, controllerId, onAction }: { readonly palette: readonly PaletteEntryRecord[]; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function PalettePanel({ palette, targetStepId, controllerId, onAction }: { readonly palette: readonly BlockListPaletteEntry[]; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   return (
     <div className="semio-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
       {palette.map((entry) => (
@@ -229,30 +215,16 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
   );
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
-  const steps = useMemo(() => {
-    if (!scene) return [] as StepRecord[];
-    try {
-      return parseSceneJsonField<StepRecord[]>(scene.stepsJson);
-    } catch {
-      return [];
-    }
-  }, [scene]);
-  const palette = useMemo(() => {
-    if (!scene) return [] as PaletteEntryRecord[];
-    try {
-      return parseSceneJsonField<PaletteEntryRecord[]>(scene.paletteJson);
-    } catch {
-      return [];
-    }
-  }, [scene]);
+  const steps = scene?.steps ?? [];
+  const palette = scene?.palette ?? [];
   const stepIds = useMemo(() => steps.map((step) => step.id), [steps]);
-  const paletteTargetStepId = useMemo(() => blockListPaletteTargetStepId(steps, scene?.selectedId), [scene?.selectedId, steps]);
+  const paletteTargetStepId = useMemo(() => blockListPaletteTargetStepIdV1(steps, scene?.selectedId), [scene?.selectedId, steps]);
   const stepsLabel = useLabel("ui.blockList.steps");
   const addStepLabel = useLabel("ui.blockList.addStep");
   const emptyLabel = useLabel("ui.host.emptyScene");
 
   //#region ContextMenu
-  /** 🖱️ `BlockListScene` carries only `stepsJson`/`paletteJson` — no per-step pick/selection state reaches this
+  /** 🖱️ `BlockListScene` carries only typed sections and palette records — no per-step pick/selection state reaches this
    * host — so `hits`/`selection` stay empty per surface convention (see `🌳️GraphTimelineHost`). */
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {

@@ -23,7 +23,7 @@ fn selected_ancestor_owns_descendant_movement_once() {
         let before=document();let mut after=before.clone();
         let mut session=DrawingSession::default();session.interaction.ids=ids.iter().map(|id|(*id).into()).collect();
         let emit=plan(&before,&session,[10.0,-5.0]).unwrap();assert_eq!(emit.artifact_mutations.len(),1);
-        for mutation in emit.artifact_mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
+        for mutation in emit.artifact_mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
         let original=crate::schema::flatten_drawing_document_to_scene_nodes(&before)[0].transform;
         let moved=crate::schema::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
         assert!((moved[4]-original[4]-10.0).abs()<1e-10 && (moved[5]-original[5]+5.0).abs()<1e-10);
@@ -92,7 +92,7 @@ fn a_node_nudge_drags_the_selected_points_and_rebinds_them() {
     let emit=plan(&source,&session,[1.0,0.0]).unwrap();
     assert_eq!(emit.artifact_mutations,vec![drag_path_points(vec![DrawingPathPointTarget {layer_id:"path".into(),index:1,point:crate::schema::geometry::editing::PathPoint::Anchor}].into(),1.0,0.0)]);
     assert!(emit.transaction.is_some());
-    let mut moved=source.clone();crate::mutations::apply_drawing_mutation(&mut moved,&emit.artifact_mutations[0]).unwrap();
+    let mut moved=source.clone();crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut moved,&emit.artifact_mutations[0]).unwrap();
     let DrawingLayerNode::Path(path)=&moved.layers[0] else {panic!("a path")};
     let rebound=points::point_id("path",&points::geometry_id(&path.segments).unwrap(),1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap();
     assert!(emit.effects.contains(&point_selection_effect(&[rebound])),"the point selection follows the moved geometry");

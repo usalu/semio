@@ -68,45 +68,39 @@ mod private_publication_group {
             if matches!(step, store::ArtifactStoreOneItemPreparationStep::Prepared(_)) { self.phase = PrivateOwnedPublicationPhase::Adopted; self.grouped = false; }
             Ok(step)
         }
-        /// 📐️ Exposes one indivisible active source, staged root, metadata, or frame demand.
-        pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> {
-            if let Some(publication) = self.publication.as_ref() {
-                if publication.terminal_is_empty() { return Ok(std::mem::size_of_val(publication.as_ref())); }
-                return Ok(if self.grouped && publication.phase() != store::ArtifactStoreOneItemPublicationPhase::Closing { publication.next_group_byte_demand().max(4096) } else { publication.next_close_byte_demand() });
-            }
-            if let Some(request) = self.request.as_ref() { let (capacity, release) = request.mutations.next_demands()?; return Ok(capacity.max(release).max(request.mutations.next_copy_byte_demand())); }
-            Ok(self.metadata.as_ref().map_or(0, PrivatePublicationMetadata::next_close_byte_demand))
+        /// 📐️ Exposes independent active source, staged root, metadata and physical frame currencies.
+        pub(crate) fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+            use semio_framework_value::RetirementDemand;
+            let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private publication retirement depth overflow"))?; Ok(demand) };
+            if let Some(publication) = self.publication.as_ref() { return if publication.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(publication.as_ref()), depth: 1, ..Default::default() }) } else { nested(publication.retirement_demands(body)?) }; }
+            if let Some(request) = self.request.as_ref() { return if request.mutations.terminal_is_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(request.mutations.next_demands(body)?) }; }
+            Ok(self.metadata.as_ref().map_or(Default::default(), |metadata| RetirementDemand { release_bytes: metadata.next_close_byte_demand(), depth: 2, ..Default::default() }))
         }
         /// ♻️ Returns staged authority before retiring original sources and whole physical frames.
-        pub(crate) fn close_step(&mut self, member: &mut impl SpaceMember, grant: store::ArtifactStoreOneItemGrant) -> Result<PluginCloseStep, ValueError> {
-            if self.terminal_is_empty() { return Ok(PluginCloseStep::Complete); }
-            if grant.maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        pub(crate) fn close_step(&mut self, member: &mut impl SpaceMember, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+            use semio_framework_value::retained_clone::RetainedCloneProgress;
+            if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private publication exceeds admitted retirement depth")); }
+            if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             self.phase = PrivateOwnedPublicationPhase::Closing;
             if let Some(publication) = self.publication.as_mut() {
-                if !publication.terminal_is_empty() {
-                    return member.abort_one_item_publication(publication.as_mut(), grant).map(|step| match step { store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes }, store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "private publication retains its exact source or staged snapshot reader" }, store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } });
-                }
-                let bytes = std::mem::size_of_val(publication.as_ref());
-                if grant.maximum_bytes < bytes { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+                if !publication.terminal_is_empty() { let step = member.abort_one_item_publication(publication.as_mut(), child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, publication.terminal_is_empty(), "private member publication")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
                 self.publication.take();
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
             }
-            let controlled = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes.min(64), maximum_capacity_bytes: grant.maximum_bytes, maximum_release_bytes: grant.maximum_bytes, maximum_depth: 64 };
             if let Some(request) = self.request.as_mut() {
-                if !request.mutations.terminal_is_empty() { return request.mutations.close_granted(controlled).map(Self::close_progress); }
+                if !request.mutations.terminal_is_empty() { let step = request.mutations.close_granted(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, request.mutations.terminal_is_empty(), "private original batch")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
                 let request = self.request.take().unwrap();
                 self.metadata = Some(PrivatePublicationMetadata::from_parts(PrivatePublicationMetadataParts { actor: request.actor, transaction: request.transaction, group_id: request.group_id }));
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
-            if let Some(metadata) = self.metadata.as_mut() {
-                let step = metadata.close_granted(controlled)?;
-                if metadata.terminal_is_empty() { self.metadata = None; }
-                return Ok(Self::close_progress(step));
-            }
+            if let Some(metadata) = self.metadata.as_mut() { let step = metadata.close_granted(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, metadata.terminal_is_empty(), "private publication metadata")?; if metadata.terminal_is_empty() { self.metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
             self.phase = PrivateOwnedPublicationPhase::Complete;
-            Ok(PluginCloseStep::Complete)
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
         }
-        fn close_progress(step: RetainedCloneStep) -> PluginCloseStep { let progress = step.progress(); PluginCloseStep::Pending { released_items: progress.copied_items, released_bytes: progress.released_bytes } }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.phase == PrivateOwnedPublicationPhase::Complete && self.request.is_none() && self.publication.is_none() && self.metadata.is_none() }
     }
 

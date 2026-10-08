@@ -45,6 +45,22 @@
     "mutation": {
       "const": "setCell",
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
+    },
+    "node": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Verbatim element",
+          "de": "Unveränderter Knoten"
+        },
+        "description": {
+          "en": "The cell element written verbatim instead of one rebuilt from the value; carried when the value cannot express every attribute or child.",
+          "de": "Das Zellelement, das unverändert geschrieben wird statt eines aus dem Wert aufgebauten; wird mitgeführt, wenn der Wert nicht jedes Attribut oder Kind ausdrücken kann."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   },
   "$defs": {

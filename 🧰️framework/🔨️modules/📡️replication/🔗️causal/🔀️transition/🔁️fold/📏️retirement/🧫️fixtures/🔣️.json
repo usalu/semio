@@ -19,7 +19,9 @@
     "undergrantRelease": 0,
     "fundedRelease": "whole-current-allocation",
     "cancelWork": 0,
-    "terminalFree": 0
+    "terminalFree": 0,
+    "constructorAdmission": "original-before-transfer",
+    "refusedAdmission": "same-original"
   },
   "logicalItems": 1,
   "cold": {
@@ -27,5 +29,52 @@
     "logicalPageBytes": 65536,
     "maximumTurns": 36,
     "terminalPhases": 4
-  }
+  },
+  "independentCredits": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "newLocalAdmission": {
+    "initialCapacity": 0,
+    "deniedCapacity": [
+      "zero",
+      "subexact"
+    ],
+    "expectedPointer": "same-original",
+    "expectedDeniedHeap": [
+      0,
+      0
+    ],
+    "expectedBirth": "exact-typed-frame",
+    "expectedTerminalHeap": [
+      0,
+      0
+    ]
+  },
+  "prebornLocalCounts": [
+    1,
+    2,
+    3
+  ],
+  "mixedLocalExtents": [
+    8194,
+    65536,
+    262144
+  ],
+  "manualProtocolVariants": [
+    "input",
+    "withdrawn",
+    "owner",
+    "contributed",
+    "transaction",
+    "quarantined",
+    "degraded",
+    "set",
+    "remove",
+    "reject"
+  ],
+  "waitingOriginalItemDemand": 2
 }

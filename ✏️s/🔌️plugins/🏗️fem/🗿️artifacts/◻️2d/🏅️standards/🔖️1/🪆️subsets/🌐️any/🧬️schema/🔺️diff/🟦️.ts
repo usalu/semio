@@ -27,88 +27,200 @@ export interface Fem2dDiff {
   /** @state config */
 }
 
-export interface Fem2dNodesDelta {
-  added: FemNode[];
-  removed: string[];
-  patched: Fem2dNodesPatchEntry[];
-  reordered?: string[];
+export interface Fem2dNodeRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Fem2dNodesPatchEntry {
+export interface Fem2dNodeInsertion {
+  index: number;
+  row: FemNode;
+}
+
+export interface Fem2dNodeRelocation {
   id: string;
-  item: FemNode;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dNodesModification {
+  id: string;
+  patch: FemNode;
+}
+
+export interface Fem2dNodesDelta {
+  removed: Fem2dNodeRemoval[];
+  inserted: Fem2dNodeInsertion[];
+  moved: Fem2dNodeRelocation[];
+  modified: Fem2dNodesModification[];
+}
+
+export interface Fem2dElementRemoval {
+  id: string;
+  index: number;
+}
+
+export interface Fem2dElementInsertion {
+  index: number;
+  row: FemElement;
+}
+
+export interface Fem2dElementRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dElementsModification {
+  id: string;
+  patch: FemElement;
 }
 
 export interface Fem2dElementsDelta {
-  added: FemElement[];
-  removed: string[];
-  patched: Fem2dElementsPatchEntry[];
-  reordered?: string[];
+  removed: Fem2dElementRemoval[];
+  inserted: Fem2dElementInsertion[];
+  moved: Fem2dElementRelocation[];
+  modified: Fem2dElementsModification[];
 }
 
-export interface Fem2dElementsPatchEntry {
+export interface Fem2dRegionRemoval {
   id: string;
-  item: FemElement;
+  index: number;
+}
+
+export interface Fem2dRegionInsertion {
+  index: number;
+  row: FemRegion;
+}
+
+export interface Fem2dRegionRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dRegionsModification {
+  id: string;
+  patch: FemRegion;
 }
 
 export interface Fem2dRegionsDelta {
-  added: FemRegion[];
-  removed: string[];
-  patched: Fem2dRegionsPatchEntry[];
-  reordered?: string[];
+  removed: Fem2dRegionRemoval[];
+  inserted: Fem2dRegionInsertion[];
+  moved: Fem2dRegionRelocation[];
+  modified: Fem2dRegionsModification[];
 }
 
-export interface Fem2dRegionsPatchEntry {
+export interface Fem2dMaterialRemoval {
   id: string;
-  item: FemRegion;
+  index: number;
+}
+
+export interface Fem2dMaterialInsertion {
+  index: number;
+  row: FemMaterial;
+}
+
+export interface Fem2dMaterialRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dMaterialsModification {
+  id: string;
+  patch: FemMaterial;
 }
 
 export interface Fem2dMaterialsDelta {
-  added: FemMaterial[];
-  removed: string[];
-  patched: Fem2dMaterialsPatchEntry[];
-  reordered?: string[];
+  removed: Fem2dMaterialRemoval[];
+  inserted: Fem2dMaterialInsertion[];
+  moved: Fem2dMaterialRelocation[];
+  modified: Fem2dMaterialsModification[];
 }
 
-export interface Fem2dMaterialsPatchEntry {
+export interface Fem2dSectionRemoval {
   id: string;
-  item: FemMaterial;
+  index: number;
+}
+
+export interface Fem2dSectionInsertion {
+  index: number;
+  row: FemSection;
+}
+
+export interface Fem2dSectionRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dSectionsModification {
+  id: string;
+  patch: FemSection;
 }
 
 export interface Fem2dSectionsDelta {
-  added: FemSection[];
-  removed: string[];
-  patched: Fem2dSectionsPatchEntry[];
-  reordered?: string[];
+  removed: Fem2dSectionRemoval[];
+  inserted: Fem2dSectionInsertion[];
+  moved: Fem2dSectionRelocation[];
+  modified: Fem2dSectionsModification[];
 }
 
-export interface Fem2dSectionsPatchEntry {
+export interface Fem2dSupportRemoval {
   id: string;
-  item: FemSection;
+  index: number;
+}
+
+export interface Fem2dSupportInsertion {
+  index: number;
+  row: FemSupport;
+}
+
+export interface Fem2dSupportRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dSupportsModification {
+  id: string;
+  patch: FemSupport;
 }
 
 export interface Fem2dSupportsDelta {
-  added: FemSupport[];
-  removed: string[];
-  patched: Fem2dSupportsPatchEntry[];
-  reordered?: string[];
+  removed: Fem2dSupportRemoval[];
+  inserted: Fem2dSupportInsertion[];
+  moved: Fem2dSupportRelocation[];
+  modified: Fem2dSupportsModification[];
 }
 
-export interface Fem2dSupportsPatchEntry {
+export interface Fem2dLoadCaseRemoval {
   id: string;
-  item: FemSupport;
+  index: number;
+}
+
+export interface Fem2dLoadCaseInsertion {
+  index: number;
+  row: FemLoadCase;
+}
+
+export interface Fem2dLoadCaseRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dLoadCasesModification {
+  id: string;
+  patch: Fem2dLoadCasePatch;
 }
 
 export interface Fem2dLoadCasesDelta {
-  added: FemLoadCase[];
-  removed: string[];
-  patched: Fem2dLoadCasesPatchEntry[];
-  reordered?: string[];
-}
-
-export interface Fem2dLoadCasesPatchEntry {
-  id: string;
-  patch: Fem2dLoadCasePatch;
+  removed: Fem2dLoadCaseRemoval[];
+  inserted: Fem2dLoadCaseInsertion[];
+  moved: Fem2dLoadCaseRelocation[];
+  modified: Fem2dLoadCasesModification[];
 }
 
 export interface Fem2dLoadCasePatch {
@@ -117,16 +229,32 @@ export interface Fem2dLoadCasePatch {
   loads?: Fem2dLoadsDelta;
 }
 
-export interface Fem2dLoadsDelta {
-  added: FemLoad[];
-  removed: string[];
-  patched: Fem2dLoadsPatchEntry[];
-  reordered?: string[];
+export interface Fem2dLoadRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Fem2dLoadsPatchEntry {
+export interface Fem2dLoadInsertion {
+  index: number;
+  row: FemLoad;
+}
+
+export interface Fem2dLoadRelocation {
   id: string;
-  item: FemLoad;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dLoadsModification {
+  id: string;
+  patch: FemLoad;
+}
+
+export interface Fem2dLoadsDelta {
+  removed: Fem2dLoadRemoval[];
+  inserted: Fem2dLoadInsertion[];
+  moved: Fem2dLoadRelocation[];
+  modified: Fem2dLoadsModification[];
 }
 
 export interface Fem2dAnalysisPatch {
@@ -135,16 +263,32 @@ export interface Fem2dAnalysisPatch {
   deformationScale?: number;
 }
 
-export interface Fem2dCombinationsDelta {
-  added: FemCombination[];
-  removed: string[];
-  patched: Fem2dCombinationsPatchEntry[];
-  reordered?: string[];
+export interface Fem2dCombinationRemoval {
+  id: string;
+  index: number;
 }
 
-export interface Fem2dCombinationsPatchEntry {
+export interface Fem2dCombinationInsertion {
+  index: number;
+  row: FemCombination;
+}
+
+export interface Fem2dCombinationRelocation {
   id: string;
-  item: FemCombination;
+  from: number;
+  to: number;
+}
+
+export interface Fem2dCombinationsModification {
+  id: string;
+  patch: FemCombination;
+}
+
+export interface Fem2dCombinationsDelta {
+  removed: Fem2dCombinationRemoval[];
+  inserted: Fem2dCombinationInsertion[];
+  moved: Fem2dCombinationRelocation[];
+  modified: Fem2dCombinationsModification[];
 }
 
 //#region 🚪️Parsers
@@ -194,92 +338,91 @@ export const femFem2dDiffGuardConstant = <T extends string | number | boolean>(v
   value === expected ? expected : femFem2dDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-/** 🩹️ Admit the declared patch identity and complete typed replacement. */
-function parseFemPatch<T>(value:unknown,at:string,parse:(value:unknown,at:string)=>T):{id:string;item:T}{const row=femFem2dDiffGuardObject(value,at);for(const key of Object.keys(row))if(key!=="id"&&key!=="item")throw Error(`${at}: unknown patch field`);return{id:femFem2dDiffGuardString(row.id,`${at}.id`),item:parse(row.item,`${at}.item`)}}
+/** 🩹️ Admit the positional row shapes: removal `{id, index}`, insertion `{index, row}`, relocation `{id, from, to}` and the keyed modification `{id, patch}`. */
+function parseFemRows<T>(value:unknown,at:string,keys:readonly string[],parse:(row:Readonly<Record<string,unknown>>,at:string)=>T):T[]{return femFem2dDiffGuardArray(value,at).map((item,index)=>{const here=`${at}[${index}]`,row=femFem2dDiffGuardObject(item,here);for(const key of Object.keys(row))if(!keys.includes(key))throw Error(`${here}: unknown field`);return parse(row,here)})}
+const parseFemRemovals=(value:unknown,at:string)=>parseFemRows(value,at,["id","index"],(row,here)=>({id:femFem2dDiffGuardString(row.id,`${here}.id`),index:femFem2dDiffGuardInteger(row.index,`${here}.index`,{minimum:0})}));
+const parseFemRelocations=(value:unknown,at:string)=>parseFemRows(value,at,["id","from","to"],(row,here)=>({id:femFem2dDiffGuardString(row.id,`${here}.id`),from:femFem2dDiffGuardInteger(row.from,`${here}.from`,{minimum:0}),to:femFem2dDiffGuardInteger(row.to,`${here}.to`,{minimum:0})}));
+const parseFemInsertions=<T>(value:unknown,at:string,parse:(value:unknown,at:string)=>T)=>parseFemRows(value,at,["index","row"],(row,here)=>({index:femFem2dDiffGuardInteger(row.index,`${here}.index`,{minimum:0}),row:parse(row.row,`${here}.row`)}));
+const parseFemModifications=<T>(value:unknown,at:string,parse:(value:unknown,at:string)=>T)=>parseFemRows(value,at,["id","patch"],(row,here)=>({id:femFem2dDiffGuardString(row.id,`${here}.id`),patch:parse(row.patch,`${here}.patch`)}));
 
 export function parseFem2dNodesDelta(value: unknown, at = "$"): Fem2dNodesDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemNode(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemNode)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemNode),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemNode),
   };
 }
 
 export function parseFem2dElementsDelta(value: unknown, at = "$"): Fem2dElementsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemElement(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemElement)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemElement),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemElement),
   };
 }
 
 export function parseFem2dRegionsDelta(value: unknown, at = "$"): Fem2dRegionsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemRegion(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemRegion)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemRegion),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemRegion),
   };
 }
 
 export function parseFem2dMaterialsDelta(value: unknown, at = "$"): Fem2dMaterialsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemMaterial(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemMaterial)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemMaterial),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemMaterial),
   };
 }
 
 export function parseFem2dSectionsDelta(value: unknown, at = "$"): Fem2dSectionsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemSection(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemSection)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemSection),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemSection),
   };
 }
 
 export function parseFem2dSupportsDelta(value: unknown, at = "$"): Fem2dSupportsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemSupport(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemSupport)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemSupport),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemSupport),
   };
 }
 
 export function parseFem2dLoadCasesDelta(value: unknown, at = "$"): Fem2dLoadCasesDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemLoadCase(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFem2dLoadCasesPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemLoadCase),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFem2dLoadCasePatch),
   };
 }
 
 export function parseFem2dCombinationsDelta(value: unknown, at = "$"): Fem2dCombinationsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemCombination(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemCombination)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemCombination),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemCombination),
   };
-}
-
-export function parseFem2dLoadCasesPatchEntry(value: unknown, at = "$"): Fem2dLoadCasesPatchEntry {
-  const row = femFem2dDiffGuardObject(value, at);
-  return { id: femFem2dDiffGuardString(row["id"], `${at}.id`), patch: parseFem2dLoadCasePatch(row["patch"], `${at}.patch`) };
 }
 
 export function parseFem2dLoadCasePatch(value: unknown, at = "$"): Fem2dLoadCasePatch {
@@ -294,10 +437,10 @@ export function parseFem2dLoadCasePatch(value: unknown, at = "$"): Fem2dLoadCase
 export function parseFem2dLoadsDelta(value: unknown, at = "$"): Fem2dLoadsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   return {
-    added: femFem2dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemLoad(item, `${at}.added[${index}]`)),
-    removed: femFem2dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem2dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem2dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemLoad)),
-    reordered: row["reordered"] === undefined ? undefined : femFem2dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem2dDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: parseFemRemovals(row["removed"], `${at}.removed`),
+    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemLoad),
+    moved: parseFemRelocations(row["moved"], `${at}.moved`),
+    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemLoad),
   };
 }
 

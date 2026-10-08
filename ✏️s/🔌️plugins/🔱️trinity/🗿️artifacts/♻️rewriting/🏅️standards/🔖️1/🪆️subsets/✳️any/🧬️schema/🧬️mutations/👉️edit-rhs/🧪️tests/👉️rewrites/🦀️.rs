@@ -60,7 +60,7 @@ async fn inverse_restores_before() {
     assert_eq!(undo.new_rhs, base.rhs, "the inverse restores exactly the RHS body BASE carried");
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_rewrite_rule_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "edit-rhs/rewrites-the-rhs-to-set-a-second-property: inverse did not restore the before-snapshot");

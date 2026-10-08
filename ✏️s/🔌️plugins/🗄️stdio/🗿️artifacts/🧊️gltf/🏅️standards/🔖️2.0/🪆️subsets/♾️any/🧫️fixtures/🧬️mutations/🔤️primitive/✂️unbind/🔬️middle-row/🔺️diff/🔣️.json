@@ -10,8 +10,14 @@
                 "index": 0,
                 "diff": {
                   "attributes": {
-                    "POSITION": 0,
-                    "TEXCOORD_0": 2
+                    "removed": [
+                      {
+                        "id": "NORMAL",
+                        "index": 1
+                      }
+                    ],
+                    "inserted": [],
+                    "moved": []
                   }
                 }
               }

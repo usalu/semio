@@ -1,0 +1,376 @@
+{
+  "role": {
+    "identity": {
+      "owner": {
+        "num": 3,
+        "gen": 4
+      },
+      "path": [
+        {
+          "kind": "entry",
+          "key": "Contents"
+        }
+      ]
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 3,
+          "gen": 4
+        },
+        "path": [
+          {
+            "kind": "entry",
+            "key": "Contents"
+          }
+        ]
+      },
+      {
+        "owner": {
+          "num": 7,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "operators",
+      "content": [
+        {
+          "op": "save"
+        },
+        {
+          "op": "restore"
+        }
+      ]
+    }
+  },
+  "sampledRole": {
+    "identity": {
+      "owner": {
+        "num": 9,
+        "gen": 1
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 9,
+          "gen": 1
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "sampledWords",
+      "samples": [
+        513,
+        4095,
+        4294967295
+      ]
+    }
+  },
+  "paletteRole": {
+    "identity": {
+      "owner": {
+        "num": 11,
+        "gen": 1
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 11,
+          "gen": 1
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "paletteComponents",
+      "components": [
+        0,
+        127,
+        255
+      ]
+    }
+  },
+  "glyphRole": {
+    "identity": {
+      "owner": {
+        "num": 12,
+        "gen": 1
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 12,
+          "gen": 1
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "glyphIds",
+      "glyphs": [
+        0,
+        513,
+        65535
+      ]
+    }
+  },
+  "referenceRole": {
+    "identity": {
+      "owner": {
+        "num": 13,
+        "gen": 1
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 13,
+          "gen": 1
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "referenceBody",
+      "reference": {
+        "artifactId": "fixture:icc",
+        "dialect": {
+          "artifactKind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*"
+        }
+      }
+    }
+  },
+  "attachmentRole": {
+    "identity": {
+      "owner": {
+        "num": 14,
+        "gen": 1
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 14,
+          "gen": 1
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "attachmentBytes",
+      "bytes": [
+        0,
+        255
+      ]
+    }
+  },
+  "calculatorRole": {
+    "identity": {
+      "owner": {
+        "num": 15,
+        "gen": 2
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 15,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "calculatorProgram",
+      "code": "{ dup mul }"
+    }
+  },
+  "unicodeRole": {
+    "identity": {
+      "owner": {
+        "num": 16,
+        "gen": 2
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 16,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "unicodeMap",
+      "mapping": {
+        "byteWidth": 4,
+        "mappings": [
+          {
+            "kind": "char",
+            "code": 4294967295,
+            "text": "Ω😀"
+          }
+        ]
+      }
+    }
+  },
+  "characterRole": {
+    "identity": {
+      "owner": {
+        "num": 17,
+        "gen": 2
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 17,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "characterMap",
+      "cmap": {
+        "name": "Fixture",
+        "vertical": false,
+        "codespace": [
+          {
+            "byteWidth": 4,
+            "low": 0,
+            "high": 4294967295
+          }
+        ],
+        "mappings": [
+          {
+            "kind": "char",
+            "code": 4294967295,
+            "cid": 513
+          }
+        ],
+        "useCmap": null
+      }
+    }
+  },
+  "fontRole": {
+    "identity": {
+      "owner": {
+        "num": 18,
+        "gen": 2
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 18,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "fontProgram",
+      "program": {
+        "kind": "trueType",
+        "reference": {
+          "artifactId": "fixture:font",
+          "dialect": {
+            "artifactKind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          }
+        }
+      }
+    }
+  },
+  "imageRole": {
+    "identity": {
+      "owner": {
+        "num": 19,
+        "gen": 2
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 19,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "image",
+      "image": {
+        "id": "Fixture",
+        "width": 1,
+        "height": 1,
+        "bitsPerComponent": 8,
+        "colorSpace": {
+          "kind": "deviceRgb"
+        },
+        "imageMask": false,
+        "interpolate": false,
+        "decode": [],
+        "body": {
+          "kind": "samples",
+          "values": [
+            0,
+            127,
+            255
+          ]
+        },
+        "mask": null,
+        "softMask": null,
+        "softMaskInData": 0,
+        "intent": null,
+        "matte": null,
+        "extra": [],
+        "structParent": null,
+        "optionalContent": null
+      }
+    }
+  },
+  "metadataRole": {
+    "identity": {
+      "owner": {
+        "num": 20,
+        "gen": 2
+      },
+      "path": []
+    },
+    "dependencies": [
+      {
+        "owner": {
+          "num": 20,
+          "gen": 2
+        },
+        "path": []
+      }
+    ],
+    "value": {
+      "kind": "metadataText",
+      "text": "Ω retained metadata"
+    }
+  }
+}

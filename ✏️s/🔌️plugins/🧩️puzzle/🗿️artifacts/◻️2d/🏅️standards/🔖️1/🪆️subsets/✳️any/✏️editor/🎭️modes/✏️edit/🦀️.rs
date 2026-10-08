@@ -18,7 +18,7 @@ use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_plugin::WindowLayout;
 use semio_framework_ui_contract::{Buildable, HasBase};
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json,Value,Object};
 
 pub const PUZZLE2D_PLAY_MODE_EDIT: &str = "edit";
 
@@ -134,7 +134,7 @@ pub const PUZZLE2D_SUGGESTION_MENU_CANDIDATE_PAGE: usize = 8;
 /// icon and colour so the picker reads like the board it paints onto.
 fn puzzle2d_suggestion_menu_json(envelope: &Puzzle2dScene, glyph_catalogs_json: &str) -> Option<String> {
     let menu = envelope.runtime.suggestion_menu.as_ref()?;
-    let catalogs: Value = serde_json::from_str(glyph_catalogs_json).unwrap_or(Value::Null);
+    let catalogs: Value = semio_framework_pack_json::from_json_str(glyph_catalogs_json,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null);
     let node_kinds = catalogs.get("nodeKinds").and_then(Value::as_array).map_or(&[][..], |rows| rows.as_slice());
     let candidates: Vec<Value> = envelope
         .runtime
@@ -182,11 +182,10 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
     // 🕹️ The framework-owned `vortex` selection, resolved once per render by
     // `Puzzle2dPlayApp::render_with_request_context`, echoes back to the board engine here.
     let selection_json = envelope.interaction.selection_json();
-    let brush_weights_json = serde_json::to_string(&json!({
+    let brush_weights_json = semio_framework_pack_json::to_json_string(&json!({
         "nodeWeights": envelope.runtime.node_kind_weights,
         "handleWeights": envelope.runtime.handle_kind_weights,
-    }))
-    .unwrap_or_else(|_| "{}".into());
+    }));
     let placement_compatibility_json = snapshot.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| snapshot.get("kindCompatibility")).map_or_else(|| "[]".into(), |value| value.to_string());
     let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
     let suggestion_menu_json = puzzle2d_suggestion_menu_json(envelope, &glyph_catalogs_json);
@@ -239,7 +238,7 @@ pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) 
 //#region 🔖️Engagement
 /// 🤝️ The engagement HUD for one pane: a text command line plus a node/edge/LOD status readout.
 pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
-    let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
+    let overlay: Value = semio_framework_pack_json::from_json_str(&host.overlay_paint_state_json(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null);
     let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
     let node_count = board_snapshot_nodes(&envelope.board_snapshot).len();

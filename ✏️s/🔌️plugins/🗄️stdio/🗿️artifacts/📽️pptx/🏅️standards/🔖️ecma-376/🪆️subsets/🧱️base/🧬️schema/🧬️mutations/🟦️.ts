@@ -23,7 +23,11 @@ export type PptxMutation =
   | { mutation: 'removeShape'; address: PptxShapeAddress }
   | { mutation: 'setShapeText'; address: PptxShapeAddress; text: string }
   | { mutation: 'setShapePosition'; address: PptxShapeAddress; position: PptxTransform }
-  | { mutation: 'replaceXmlNode'; address: PptxXmlAddress; node: XmlNode };
+  | { mutation: 'replaceXmlNode'; address: PptxXmlAddress; node: XmlNode }
+  | { mutation: 'setRelationship'; owner: string; id: string; relType: string; target: string; external?: boolean; index?: number }
+  | { mutation: 'removeRelationship'; owner: string; id: string }
+  | { mutation: 'setContentType'; isOverride?: boolean; name: string; contentType: string; index?: number }
+  | { mutation: 'removeContentType'; isOverride?: boolean; name: string };
 
 /** 🚪️ A precise position and reason for refusing a malformed PPTX mutation. */
 export class stdioPptxEcma376BaseMutationGuardRefusal extends Error {
@@ -33,6 +37,9 @@ const reject = (at: string, why: string): never => { throw new stdioPptxEcma376B
 const object = (value: unknown, at: string): Readonly<Record<string, unknown>> => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : reject(at, 'value is not an object');
 const text = (value: unknown, at: string): string => typeof value === 'string' ? value : reject(at, 'value is not a string');
 const integer = (value: unknown, at: string): number => Number.isSafeInteger(value) && (value as number) >= 0 ? value as number : reject(at, 'value is not a nonnegative integer');
+
+const flag = (value: unknown, at: string): boolean => typeof value === 'boolean' ? value : reject(at, 'value is not a boolean');
+const optionalInteger = (value: unknown, at: string): number | undefined => value === undefined ? undefined : integer(value, at);
 
 /** 🚪️ Parses every revision-addressed PPTX mutation. */
 export function parsePptxMutation(value: unknown, at = '$'): PptxMutation {
@@ -45,5 +52,9 @@ export function parsePptxMutation(value: unknown, at = '$'): PptxMutation {
   if (mutation === 'setShapeText') return { mutation, address: parsePptxShapeAddress(row.address, `${at}.address`), text: text(row.text, `${at}.text`) };
   if (mutation === 'setShapePosition') return { mutation, address: parsePptxShapeAddress(row.address, `${at}.address`), position: parsePptxTransform(row.position, `${at}.position`) };
   if (mutation === 'replaceXmlNode') return { mutation, address: parsePptxXmlAddress(row.address, `${at}.address`), node: parseXmlNode(row.node, `${at}.node`) };
+  if (mutation === 'setRelationship') return { mutation, owner: text(row.owner, `${at}.owner`), id: text(row.id, `${at}.id`), relType: text(row.relType, `${at}.relType`), target: text(row.target, `${at}.target`), external: row.external === undefined ? undefined : flag(row.external, `${at}.external`), index: optionalInteger(row.index, `${at}.index`) };
+  if (mutation === 'removeRelationship') return { mutation, owner: text(row.owner, `${at}.owner`), id: text(row.id, `${at}.id`) };
+  if (mutation === 'setContentType') return { mutation, isOverride: row.isOverride === undefined ? undefined : flag(row.isOverride, `${at}.isOverride`), name: text(row.name, `${at}.name`), contentType: text(row.contentType, `${at}.contentType`), index: optionalInteger(row.index, `${at}.index`) };
+  if (mutation === 'removeContentType') return { mutation, isOverride: row.isOverride === undefined ? undefined : flag(row.isOverride, `${at}.isOverride`), name: text(row.name, `${at}.name`) };
   return reject(`${at}.mutation`, `unknown PPTX mutation ${mutation}`);
 }

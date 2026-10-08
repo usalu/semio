@@ -87,41 +87,75 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
         "removed",
-        "patched"
+        "inserted",
+        "moved",
+        "modified"
       ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/DrawingLayerAddition"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/DrawingLayerRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DrawingLayerPatchEntry"
+            "$ref": "#/$defs/DrawingLayerInsertion"
           }
         },
-        "reordered": {
-          "type": [
-            "array",
-            "null"
-          ],
+        "moved": {
+          "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/DrawingLayerRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawingLayerModification"
           }
         }
       }
     },
-    "DrawingLayerAddition": {
+    "DrawingLayerAddress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "parentId": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DrawingLayerRemoval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DrawingLayerInsertion": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -141,7 +175,27 @@
         }
       }
     },
-    "DrawingLayerPatchEntry": {
+    "DrawingLayerRelocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/DrawingLayerAddress"
+        },
+        "to": {
+          "$ref": "#/$defs/DrawingLayerAddress"
+        }
+      }
+    },
+    "DrawingLayerModification": {
       "type": "object",
       "additionalProperties": false,
       "required": [

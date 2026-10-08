@@ -39,6 +39,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-snapshot/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bcf/2.1/markup/mutation/set-parts/schema.json"
     }
   ]
 }

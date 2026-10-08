@@ -112,7 +112,21 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/FlowParam"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "#/definitions/FlowParam"
+              }
+            }
           }
         }
       }
@@ -160,7 +174,21 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/FlowNode"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "#/definitions/FlowNode"
+              }
+            }
           }
         }
       }
@@ -205,7 +233,21 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/FlowEdge"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "#/definitions/FlowEdge"
+              }
+            }
           }
         }
       }

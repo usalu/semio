@@ -44,7 +44,6 @@ semio_framework_os_kernel::config_record! {
     owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview",
     payload_schema: "procedural.generation2d.generatepreviewwindowconfig",
     emoji: "🎚️",
-    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Generation2d Generate Preview Window Configuration",
     fields: {
         viewport: semio_framework_os_kernel::Viewport2d => SetViewport "set-viewport",
     },
@@ -74,9 +73,9 @@ impl semio_framework_plugin::WindowConfigOwner for Generation2dGeneratePreviewWi
 pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> { registry.register::<Generation2dGeneratePreviewWindowConfigOwner>() }
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Generation2dGeneratePreviewWindowConfig { view.window::<Generation2dGeneratePreviewWindowConfigOwner>().cloned().unwrap_or_default() }
 pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Generation2dGeneratePreviewWindowConfig { snapshot.filter(|snapshot| snapshot.window_kind_id() == super::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW).and_then(|snapshot| snapshot.get::<Generation2dGeneratePreviewWindowConfigOwner>()).cloned().unwrap_or_default() }
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Generation2dGeneratePreviewWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &Generation2dGeneratePreviewWindowConfig, config: Generation2dGeneratePreviewWindowConfig) -> Result<Vec<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("generation2d-generate-preview-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("generation2d-generate-preview-window-stale"))?;
     if kind != super::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW { return Err(semio_framework_plugin::Fault::from("generation2d-generate-preview-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Generation2dGeneratePreviewWindowConfigOwner>(id, Generation2dGeneratePreviewWindowConfigMutation::Snapshot { config: Box::new(config) }))
+    Ok(Generation2dGeneratePreviewWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<Generation2dGeneratePreviewWindowConfigOwner>(id, mutation)).collect())
 }

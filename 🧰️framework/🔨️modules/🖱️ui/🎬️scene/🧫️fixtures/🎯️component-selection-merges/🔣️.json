@@ -521,6 +521,705 @@
         ],
         "distance": 2
       }
-    ]
+    ],
+    "raySegmentClosestCases": [
+      {
+        "name": "near-sloping-edge",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          0,
+          0,
+          -1
+        ],
+        "b": [
+          20,
+          0,
+          -101
+        ],
+        "distance": 0,
+        "rayPoint": [
+          0,
+          0,
+          -1
+        ],
+        "segmentPoint": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "far-crossing-edge",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          -1,
+          0,
+          -3
+        ],
+        "b": [
+          1,
+          0,
+          -3
+        ],
+        "distance": 0,
+        "rayPoint": [
+          0,
+          0,
+          -3
+        ],
+        "segmentPoint": [
+          0,
+          0,
+          -3
+        ]
+      },
+      {
+        "name": "endpoint-gap",
+        "origin": [
+          1,
+          0,
+          4
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0.4,
+        "rayPoint": [
+          1,
+          0,
+          0
+        ],
+        "segmentPoint": [
+          0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "behind-origin",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          -1,
+          0,
+          2
+        ],
+        "b": [
+          1,
+          0,
+          2
+        ],
+        "distance": 2,
+        "rayPoint": [
+          0,
+          0,
+          0
+        ],
+        "segmentPoint": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "name": "parallel-behind-origin",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          0,
+          1,
+          2
+        ],
+        "b": [
+          0,
+          1,
+          4
+        ],
+        "distance": 2.23606797749979,
+        "rayPoint": [
+          0,
+          0,
+          0
+        ],
+        "segmentPoint": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "name": "non-unit-ray",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "direction": [
+          0,
+          0,
+          -2
+        ],
+        "a": [
+          -1,
+          0,
+          -3
+        ],
+        "b": [
+          1,
+          0,
+          -3
+        ],
+        "distance": 0,
+        "rayPoint": [
+          0,
+          0,
+          -3
+        ],
+        "segmentPoint": [
+          0,
+          0,
+          -3
+        ]
+      }
+    ],
+    "overlappingWirePick": {
+      "caseNames": [
+        "near-sloping-edge",
+        "far-crossing-edge"
+      ],
+      "objects": [
+        "near@wire#0",
+        "far@wire#0"
+      ],
+      "selectedObject": "near@wire#0",
+      "granularity": "object",
+      "camera": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          -1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "fov": 50
+      },
+      "pointer": [
+        200,
+        200
+      ],
+      "viewport": [
+        0,
+        0,
+        400,
+        400
+      ]
+    },
+    "projectedSegmentCases": {
+      "camera": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          -1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "fov": 50,
+        "near": 0.1,
+        "far": 10
+      },
+      "viewport": [
+        400,
+        400
+      ],
+      "cases": [
+        {
+          "name": "near-crossing",
+          "a": [
+            0,
+            0,
+            1
+          ],
+          "b": [
+            0,
+            0,
+            -1
+          ],
+          "visible": true,
+          "points": [
+            [
+              0,
+              0,
+              -0.1
+            ],
+            [
+              0,
+              0,
+              -1
+            ]
+          ],
+          "screen": [
+            [
+              200.0,
+              200.0
+            ],
+            [
+              200.0,
+              200.0
+            ]
+          ]
+        },
+        {
+          "name": "far-crossing",
+          "a": [
+            0,
+            0,
+            -1
+          ],
+          "b": [
+            0,
+            0,
+            -20
+          ],
+          "visible": true,
+          "points": [
+            [
+              0,
+              0,
+              -1
+            ],
+            [
+              0,
+              0,
+              -10
+            ]
+          ],
+          "screen": [
+            [
+              200.0,
+              200.0
+            ],
+            [
+              200.0,
+              200.0
+            ]
+          ]
+        },
+        {
+          "name": "both-planes",
+          "a": [
+            0,
+            0,
+            1
+          ],
+          "b": [
+            0,
+            0,
+            -20
+          ],
+          "visible": true,
+          "points": [
+            [
+              0,
+              0,
+              -0.1
+            ],
+            [
+              0,
+              0,
+              -10
+            ]
+          ],
+          "screen": [
+            [
+              200.0,
+              200.0
+            ],
+            [
+              200.0,
+              200.0
+            ]
+          ]
+        },
+        {
+          "name": "near-crossing-reversed",
+          "a": [
+            0,
+            0,
+            -1
+          ],
+          "b": [
+            0,
+            0,
+            1
+          ],
+          "visible": true,
+          "points": [
+            [
+              0,
+              0,
+              -1
+            ],
+            [
+              0,
+              0,
+              -0.1
+            ]
+          ],
+          "screen": [
+            [
+              200.0,
+              200.0
+            ],
+            [
+              200.0,
+              200.0
+            ]
+          ]
+        },
+        {
+          "name": "entirely-before-near",
+          "a": [
+            0,
+            0,
+            1
+          ],
+          "b": [
+            0,
+            0,
+            0
+          ],
+          "visible": false
+        },
+        {
+          "name": "entirely-after-far",
+          "a": [
+            0,
+            0,
+            -11
+          ],
+          "b": [
+            0,
+            0,
+            -20
+          ],
+          "visible": false
+        },
+        {
+          "name": "inside",
+          "a": [
+            0,
+            0,
+            -1
+          ],
+          "b": [
+            0,
+            0,
+            -2
+          ],
+          "visible": true,
+          "points": [
+            [
+              0,
+              0,
+              -1
+            ],
+            [
+              0,
+              0,
+              -2
+            ]
+          ],
+          "screen": [
+            [
+              200.0,
+              200.0
+            ],
+            [
+              200.0,
+              200.0
+            ]
+          ]
+        },
+        {
+          "name": "depth-parallel-outside-horizontal",
+          "a": [
+            10,
+            0,
+            -1
+          ],
+          "b": [
+            20,
+            0,
+            -1
+          ],
+          "visible": true,
+          "points": [
+            [
+              10,
+              0,
+              -1
+            ],
+            [
+              20,
+              0,
+              -1
+            ]
+          ],
+          "screen": [
+            [
+              4489.013841019117,
+              200.0
+            ],
+            [
+              8778.027682038233,
+              200.0
+            ]
+          ]
+        },
+        {
+          "name": "diagonal-near-crossing",
+          "a": [
+            0.02,
+            0.02,
+            0.1
+          ],
+          "b": [
+            -0.02,
+            -0.01,
+            -1
+          ],
+          "visible": true,
+          "points": [
+            [
+              0.012727272727272726,
+              0.014545454545454545,
+              -0.1
+            ],
+            [
+              -0.02,
+              -0.01,
+              -1
+            ]
+          ],
+          "screen": [
+            [
+              254.58744888569782,
+              137.61434413063103
+            ],
+            [
+              191.42197231796177,
+              204.2890138410191
+            ]
+          ]
+        },
+        {
+          "name": "diagonal-far-crossing",
+          "a": [
+            -0.1,
+            0.1,
+            -1
+          ],
+          "b": [
+            2,
+            -0.5,
+            -20
+          ],
+          "visible": true,
+          "points": [
+            [
+              -0.1,
+              0.1,
+              -1
+            ],
+            [
+              0.8947368421052632,
+              -0.1842105263157895,
+              -10
+            ]
+          ],
+          "screen": [
+            [
+              157.10986158980882,
+              157.10986158980882
+            ],
+            [
+              238.3753869985921,
+              207.90081497029837
+            ]
+          ]
+        },
+        {
+          "name": "transverse-inside",
+          "a": [
+            -0.1,
+            0,
+            -1
+          ],
+          "b": [
+            0.1,
+            0,
+            -1
+          ],
+          "visible": true,
+          "points": [
+            [
+              -0.1,
+              0,
+              -1
+            ],
+            [
+              0.1,
+              0,
+              -1
+            ]
+          ],
+          "screen": [
+            [
+              157.10986158980882,
+              200.0
+            ],
+            [
+              242.89013841019118,
+              200.0
+            ]
+          ]
+        }
+      ]
+    },
+    "clippedWirePick": {
+      "camera": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          -1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "fov": 50,
+        "near": 0.2,
+        "far": 524288
+      },
+      "pointer": [
+        200,
+        200
+      ],
+      "viewport": [
+        0,
+        0,
+        400,
+        400
+      ],
+      "a": [
+        0,
+        0,
+        1
+      ],
+      "b": [
+        0,
+        0,
+        -1
+      ],
+      "object": "clipped@wire#0",
+      "edgeId": 17,
+      "closestDepth": 0.2,
+      "marquees": [
+        {
+          "name": "contained",
+          "points": [
+            [
+              190,
+              190
+            ],
+            [
+              210,
+              210
+            ]
+          ]
+        },
+        {
+          "name": "crossing",
+          "points": [
+            [
+              210,
+              190
+            ],
+            [
+              190,
+              210
+            ]
+          ]
+        }
+      ]
+    }
   }
 }

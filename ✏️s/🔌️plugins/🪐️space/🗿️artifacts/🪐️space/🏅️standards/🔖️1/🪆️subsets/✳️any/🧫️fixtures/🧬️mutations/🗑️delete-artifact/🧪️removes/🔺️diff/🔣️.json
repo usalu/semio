@@ -1,11 +1,14 @@
 {
   "schema": null,
   "artifacts": {
-    "added": [],
     "removed": [
-      "artifact-2"
+      {
+        "id": "artifact-2",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

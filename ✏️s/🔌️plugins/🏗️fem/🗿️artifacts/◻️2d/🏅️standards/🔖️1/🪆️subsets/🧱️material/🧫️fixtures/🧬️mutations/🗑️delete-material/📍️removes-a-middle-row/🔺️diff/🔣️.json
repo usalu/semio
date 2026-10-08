@@ -3,12 +3,15 @@
   "elements": null,
   "regions": null,
   "materials": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "steel_s235_spare"
+      {
+        "id": "steel_s235_spare",
+        "index": 3
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "sections": null,
   "supports": null,

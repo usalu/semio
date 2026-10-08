@@ -1,8 +1,32 @@
 {
   "samples": [
-    {"json": {}, "document": ""},
-    {"json": {"schema": "authored schema"}, "document": "schema = \"authored schema\""}
+    {
+      "json": {},
+      "document": ""
+    },
+    {
+      "json": {
+        "schema": "authored schema"
+      },
+      "document": "schema = \"authored schema\""
+    }
   ],
-  "invalidDocuments": ["schema = 3", "unknown = \"field\"", "schema = \"valid\" trailing"],
-  "diffRecordOwners": ["Puzzle2dDiff", "Puzzle2dNodesDelta", "Puzzle2dNodePatchEntry", "Puzzle2dNodePatch", "Puzzle2dEdgesDelta", "Puzzle2dEdgePatchEntry", "Puzzle2dEdgePatch", "Puzzle2dTargetRegionsDelta", "Puzzle2dTargetRegionPatchEntry", "Puzzle2dTargetRegionPatch"]
+  "invalidDocuments": [
+    "schema = 3",
+    "unknown = \"field\"",
+    "schema = \"valid\" trailing"
+  ],
+  "diffRecordOwners": [
+    "Puzzle2dDiff",
+    "Puzzle2dNodePatch",
+    "Puzzle2dEdgePatch",
+    "Puzzle2dTargetRegionPatch"
+  ],
+  "deltaOwners": [
+    "Puzzle2dHandlesDelta",
+    "Puzzle2dNodesDelta",
+    "Puzzle2dEdgesDelta",
+    "Puzzle2dTargetRegionsDelta",
+    "Puzzle2dKindCompatibilityDelta"
+  ]
 }

@@ -86,7 +86,7 @@ mod subject {
     use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_wav::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation,WavMutation};
+    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{WavMutation};
 
     use semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation;
     use semio_repo_test_host::law;
@@ -106,7 +106,7 @@ mod subject {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode_wav(&input).map_err(|error| format!("decode_wav failed: {error}"))?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_wav_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         let bytes = encode_wav(&snapshot);
         let projection = project_wav_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -120,9 +120,9 @@ mod subject {
         let original = decode_wav(&input).map_err(|error| format!("decode_wav failed: {error}"))?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
-        apply_wav_mutation(&mut snapshot, &mutation);
-        for undo in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
-            apply_wav_mutation(&mut snapshot, &undo);
+        apply_mutation(&mut snapshot, &mutation);
+        for undo in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_wav(&snapshot);
         let projection = project_wav_mutation(&bytes)?;

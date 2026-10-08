@@ -11,10 +11,6 @@
     "imageMask": false,
     "decode": [],
     "interpolate": false,
-    "codec": {
-      "kind": "raw"
-    },
-    "data": [],
     "softMask": "softMask",
     "softMaskInData": 0,
     "mask": {
@@ -25,6 +21,10 @@
     "intent": "intent",
     "optionalContent": "optionalContent",
     "structParent": 0,
-    "extra": []
+    "extra": [],
+    "body": {
+      "kind": "samples",
+      "values": []
+    }
   }
 }

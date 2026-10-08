@@ -114,7 +114,7 @@ async fn every_applied_variant_inverse_sums_to_the_negative_diff() {
         let (diff, messages) = mutation.diff(&base).into_parts();
         protocol::MutationDiff::retire_cold(diff);
         if !messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-            super::sum_law::assert_raster_inverse_sum_law(&mutation, &base).await;
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
         }
         protocol::Mutation::retire_cold(mutation);
     }
@@ -441,10 +441,10 @@ async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
         base.layers.push(pixel_layer(id, name));
     }
     let delete = RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "b".into() });
-    super::sum_law::assert_raster_inverse_sum_law(&delete, &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&delete, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
     let reorder = RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "b".into(), parent_id: None, index: 0 });
-    super::sum_law::assert_raster_inverse_sum_law(&reorder, &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&reorder, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
     let insert = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("n", "N")) });
-    super::sum_law::assert_raster_inverse_sum_law(&insert, &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&insert, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
 }

@@ -670,7 +670,7 @@ mod oracles {
     /// against a pretty-printed real drawing. This fixture is minified and never showed it; the
     /// routing was wrong either way, and the subject applies both steps to one snapshot with no
     /// serialization between, so this is what the law actually claims.
-    pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+    pub fn apply_then_undo(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         if kind.is_empty() {
             return Err("mutation spec carries no `kind`".to_string());
         }
@@ -806,7 +806,7 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
         return Err("mutation spec carries no `kind`".to_string());
     }
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
-    oracles::apply_mutation_inverse(input, &kind, &params)
+    oracles::apply_then_undo(input, &kind, &params)
 }
 
 /// 🔁️ Decodes and re-encodes one real artifact through the reference implementation alone.

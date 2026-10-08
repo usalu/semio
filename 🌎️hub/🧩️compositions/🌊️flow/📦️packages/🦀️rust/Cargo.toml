@@ -20,6 +20,7 @@ consumes = ["flow.extension"]
 
 [[package.metadata.semio.playground]]
 variant = "flow"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6016, wgpu = 6116 }
 engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"]
 

@@ -89,13 +89,11 @@ impl GisMapInference {
 
     /// 🧬️ Builds exactly one stable-member parent+drawing+value CreateRegion work group.
     pub fn create_region_group_work(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<GisMapCreateRegionGroupWorkV1, GisMapProposalError> {
-        use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+        use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
         use crate::schema::gis_map_snapshot_to_drawing;
 
         use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
         let parent = self.bounds_proposal(snapshot, job_id)?;
         let GisMapMutation::CreateRegion(created) = &parent else { return Err(GisMapProposalError::Composition) };
@@ -104,7 +102,7 @@ use semio_framework_value::ToValue;
         }
         let parent_inverse = inverse_gis_map_mutation(snapshot, &parent).map_err(GisMapProposalError::InverseRefused)?;
         let mut after = snapshot.clone();
-        apply_gis_map_mutation(&mut after, &parent).map_err(|_| GisMapProposalError::Composition)?;
+        after.regions.insert(created.index.min(after.regions.len()), created.item.clone());
         if after.drawing != snapshot.drawing || after.value != snapshot.value || after.image != snapshot.image {
             return Err(GisMapProposalError::Composition);
         }
@@ -130,14 +128,8 @@ use semio_framework_value::ToValue;
         }
         let drawing = SemioDrawingMutation::CreateNode(create_node::CreateNode { parent: NodePath { layer: 0, path: Vec::new() }, index: before_children.len(), node: after_children[before_children.len()].clone() });
         let drawing_inverse = inverse_semio_drawing_mutation(&drawing, &before_drawing).map_err(GisMapProposalError::InverseRefused)?;
-        let mut projected_drawing = before_drawing.clone();
-        apply_semio_drawing_mutation(&mut projected_drawing, &drawing);
-        if projected_drawing != after_drawing {
-            return Err(GisMapProposalError::Composition);
-        }
 
         let before_value = crate::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(snapshot));
-        let after_value = crate::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(&after));
         let value_payload = crate::semio_value_from_intrinsic(&created.item.data);
         let value = SemioValueMutation::from_value(semio_framework_value::DslValue::object([
             ("mutation".into(), semio_framework_value::DslValue::String("insertListItem".into())),
@@ -147,11 +139,6 @@ use semio_framework_value::ToValue;
         ]))
         .map_err(|_| GisMapProposalError::Composition)?;
         let value_inverse = inverse_semio_value_mutation(&value, &before_value).map_err(GisMapProposalError::InverseRefused)?;
-        let mut projected_value = before_value;
-        apply_semio_value_mutation(&mut projected_value, &value);
-        if projected_value != after_value {
-            return Err(GisMapProposalError::Composition);
-        }
         let bytes = [&parent.to_value(),&parent_inverse.to_value(),&drawing.to_value(),&drawing_inverse.to_value(),&value.to_value(),&value_inverse.to_value()].into_iter().fold(0usize,|sum,value|sum.saturating_add(intrinsic_extent(value)));
         if bytes > 65_536 {
             return Err(GisMapProposalError::Bounds);

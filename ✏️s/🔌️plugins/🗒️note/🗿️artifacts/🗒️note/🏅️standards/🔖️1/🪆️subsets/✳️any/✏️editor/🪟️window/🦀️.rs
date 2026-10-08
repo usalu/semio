@@ -30,11 +30,13 @@ pub struct NoteCompositeWindowTransient {
 
 #[path = "🔺️diff/🦀️.rs"]
 mod diff;
+#[path = "🫧️transient/🦀️.rs"]
+mod transient;
 pub use diff::{NoteCompositeWindowConfigDiff, NoteCompositeWindowTransientDiff};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum NoteCompositeWindowConfigMutation {
-    Snapshot { config: NoteCompositeWindowConfig },
+    SetCamera { camera: NoteCamera },
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -47,10 +49,10 @@ impl protocol::Mutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfig
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
-        semantic_kind: "set-window-config",
-        display_name: "Set Note Composite Window Configuration",
+        semantic_kind: "set-window-camera",
+        display_name: "Set Note Composite Window Camera",
         emoji: "🪟️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetCamera",
         payload_schema: "note.compositewindowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -63,53 +65,15 @@ impl protocol::Mutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfig
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &NoteCompositeWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } => match base.camera == config.camera {
-                true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
-                false => protocol::MutationOutcome::new(NoteCompositeWindowConfigDiff { camera: Some(config.camera.clone()) }),
+            Self::SetCamera { camera } => match &base.camera == camera {
+                true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window camera is unchanged."),
+                false => protocol::MutationOutcome::new(NoteCompositeWindowConfigDiff { camera: Some(camera.clone()) }),
             },
         }
     }
     fn inverse(&self, base: &NoteCompositeWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok(vec![Self::Snapshot { config: base.clone() }])
-}
-}
-
-impl protocol::Mutation<NoteCompositeWindowTransient> for NoteCompositeWindowTransientMutation {
-    type Diff = NoteCompositeWindowTransientDiff;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
-        semantic_kind: "set-window-transient",
-        display_name: "Set Note Composite Window Transient",
-        emoji: "🫧️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "note.compositewindowtransient",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &NoteCompositeWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { transient } => {
-                let diff = NoteCompositeWindowTransientDiff {
-                    engagement_input: (base.engagement_input != transient.engagement_input).then(|| transient.engagement_input.clone()),
-                    ink_tool: (base.ink_tool != transient.ink_tool).then(|| crate::schema::diff::NoteAssigned::new(transient.ink_tool.clone())),
-                };
-                match protocol::DiffAlgebra::<NoteCompositeWindowTransient>::is_empty(&diff) {
-                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window transient is unchanged."),
-                    false => protocol::MutationOutcome::new(diff),
-                }
-            }
-        }
+        Ok(vec![Self::SetCamera { camera: base.camera.clone() }])
     }
-    fn inverse(&self, base: &NoteCompositeWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok(vec![Self::Snapshot { transient: base.clone() }])
-}
 }
 
 macro_rules! json_store {
@@ -261,7 +225,7 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: NoteCo
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("note-composite-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str());
     if kind != Some(NOTE_PLAY_WINDOW_COMPOSITE) { return Err(semio_framework_plugin::Fault::from("note-composite-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<NoteCompositeWindowConfigOwner>(id, NoteCompositeWindowConfigMutation::Snapshot { config }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<NoteCompositeWindowConfigOwner>(id, NoteCompositeWindowConfigMutation::SetCamera { camera: config.camera }))
 }
 pub fn addressed_transient(snapshot: &semio_framework_plugin::WindowTransientSnapshot, transient: NoteCompositeWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
     if snapshot.window_kind_id() != NOTE_PLAY_WINDOW_COMPOSITE { return Err(semio_framework_plugin::Fault::from("note-composite-window-kind-required")); }

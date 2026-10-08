@@ -66,6 +66,38 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-image/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-gamma"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/set-gamma/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-samples"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-samples/schema.json"
+        }
+      }
     }
   ]
 }

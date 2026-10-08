@@ -1,0 +1,316 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/descriptor-verification/component.json",
+  "title": "Registry Package Descriptor Admission V1",
+  "description": "Admission policy for the guest-emitted PackageDescriptor consumed by Registry verification; execution protocol is the current host application channel.",
+  "$ref": "#/$defs/PackageDescriptorV1",
+  "$defs": {
+    "RegistryPackageId": {
+      "type": "string",
+      "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 134
+    },
+    "RegistryPluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "PackageDescriptorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descriptorVersion",
+        "packageId",
+        "role",
+        "manifest",
+        "execution",
+        "executionProtocol",
+        "quotas",
+        "contributions",
+        "hashes"
+      ],
+      "properties": {
+        "descriptorVersion": {
+          "const": 1
+        },
+        "packageId": {
+          "$ref": "#/$defs/RegistryPackageId"
+        },
+        "role": {
+          "enum": [
+            "plugin",
+            "extension"
+          ]
+        },
+        "manifest": {
+          "type": "object",
+          "required": [
+            "pluginId",
+            "label",
+            "version",
+            "apps",
+            "examples"
+          ],
+          "properties": {
+            "pluginId": {
+              "$ref": "#/$defs/RegistryPluginId"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "apps": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "activationEvents": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "const": "onStartupFinished"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onCommand"
+                ],
+                "properties": {
+                  "onCommand": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onViewVisible"
+                ],
+                "properties": {
+                  "onViewVisible": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onFileType"
+                ],
+                "properties": {
+                  "onFileType": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "ext"
+                    ],
+                    "properties": {
+                      "ext": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onArtifactKind"
+                ],
+                "properties": {
+                  "onArtifactKind": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onExtensionRequest"
+                ],
+                "properties": {
+                  "onExtensionRequest": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "point"
+                    ],
+                    "properties": {
+                      "point": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "capabilityRequests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            }
+          }
+        },
+        "extensionPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            }
+          }
+        },
+        "execution": {
+          "enum": [
+            "declarative",
+            "linked",
+            "isolated",
+            "exclusive",
+            "cold"
+          ]
+        },
+        "executionProtocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "appChannelVersion"
+          ],
+          "properties": {
+            "appChannelVersion": {
+              "const": 23
+            }
+          }
+        },
+        "quotas": {
+          "type": "object"
+        },
+        "contributions": {
+          "type": "object",
+          "properties": {
+            "topicContributions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "topic"
+                ],
+                "properties": {
+                  "topic": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  }
+                }
+              }
+            }
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "hashes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wasmSha256",
+            "coreWasmSha256",
+            "descriptorSha256"
+          ],
+          "properties": {
+            "wasmSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+            },
+            "coreWasmSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+            },
+            "descriptorSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+            }
+          }
+        }
+      }
+    }
+  }
+}

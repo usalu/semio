@@ -9,6 +9,9 @@ use semio_framework_hash::Sha256;
 mod operation;
 pub use operation::*;
 
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;
+
 #[path = "🧑‍🏭️service-v1/🦀️.rs"]
 mod service;
 pub use service::ArtifactCreationServiceV1;
@@ -82,9 +85,9 @@ async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, re
         let descriptor = DocumentDescriptor {
             space_id: request.scope.space_id.clone(), document_id: request.scope.document_id.clone(), artifact_kind: identity.artifact_kind, artifact_schema: identity.artifact_schema,
             owner: DocumentOwner { plugin_id: identity.plugin_id, package_id: identity.package_id, version: identity.version, package_hash: identity.package_hash },
-            pack_schema_hash: identity.pack_schema_hash, bootstrap_version: 1, bootstrap_frontier: DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 }, bootstrap_snapshot_hash: directory::os_directory::hex_lower(&Sha256::digest(&pair.pack)),
+            pack_schema_hash: identity.pack_schema_hash, bootstrap_version: 1, bootstrap_frontier: DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 }, bootstrap_snapshot_hash: directory::os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&pair.pack)),
         };
-        let descriptor_digest_v1 = directory::os_directory::descriptor_digest_v1(&descriptor).map_err(|error| AuthorityError::InvalidDescriptor(error.to_string()))?;
+        let descriptor_digest_v1 = directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&descriptor).map_err(|error| AuthorityError::InvalidDescriptor(error.to_string()))?;
         let mut aggregate = Sha256::new();
         aggregate.update(&pair.pack);
         aggregate.update(&pair.spr);

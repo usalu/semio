@@ -36,7 +36,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "tiled-region", kind: "paint-region", record: "PaintRegion" };
 
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
-        match paint_tiff_region_runs(base, &self.revision, self.ifd_index, self.region(), self.color(), &mut |_, _| true) {
+        match paint_tiff_region_runs(base, &self.revision, self.ifd_index, self.region(), self.color(), |_, _| true) {
             Ok(runs) if runs.is_empty() => protocol::MutationOutcome::new(TiffDiff::default()),
             Ok(runs) => protocol::MutationOutcome::new(TiffDiff { ifds: Some(TiffIfdsDiff { modified: vec![TiffIfdModified { index: self.ifd_index, diff: TiffIfdDiff { runs, ..TiffIfdDiff::default() } }], ..TiffIfdsDiff::default() }) }),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, [format!("ifd:{}:region:{},{},{},{}", self.ifd_index, self.x, self.y, self.width, self.height)]),
@@ -45,7 +45,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation 
 
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
         let current = |run: &TiffSampleRun| base.ifds.get(self.ifd_index).and_then(|ifd| ifd.blocks.get(run.block)).and_then(|block| block.samples.get(run.offset..run.offset + run.samples.len()));
-        let runs = paint_tiff_region_runs(base, &self.revision, self.ifd_index, self.region(), self.color(), &mut |_, _| true).unwrap_or_default();
+        let runs = paint_tiff_region_runs(base, &self.revision, self.ifd_index, self.region(), self.color(), |_, _| true).unwrap_or_default();
         Ok(runs.iter().filter_map(|run| current(run).map(|words| TiffMutation::ReplaceSamples(ReplaceSamplesMutation { ifd_index: self.ifd_index, block: run.block, offset: run.offset, samples: words.to_vec() }))).collect())
     }
 

@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 💡️ One-shot placement popup over an open handle: enters the board host's brush slot — which
 /// resolves the compatible candidates and paints the first one provisionally — WITHOUT arming the

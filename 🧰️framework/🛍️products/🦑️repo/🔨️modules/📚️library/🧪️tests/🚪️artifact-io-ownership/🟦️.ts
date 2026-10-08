@@ -288,7 +288,7 @@ test("Rust schema rejects physical dependencies while admitting test-only probes
  if(node.type==="attribute_item")for(const match of node.text.matchAll(/\b(?:serialize_controlled_with|deserialize_controlled_with|retire_with)\s*=\s*"([^"]*)"/gu))attributeDependencies.push(match[1]!);
  if(node.type==="identifier"||node.type==="field_identifier")fragments.push(node.text);if(node.type==="scoped_identifier")fragments.push(node.text.replace(/\s/gu,""));for(const child of node.namedChildren)visit(child);};visit(tree.rootNode);tree.delete();const code=fragments.join(" "),expected=new Set<string>();
  for(const name of["OpText","OpBinary","SqliteSnapshotControl","xml_document_from_text","xml_document_to_text","encode_op","decode_op","to_uri","parse_uri","parse_uri_controlled","to_coordinate","parse_coordinate"])if(fragments.includes(name))expected.add(name);
- for(const name of["semio_framework_pack_json","semio_framework_io_schema","pack_rt::encode_wire_value","io::text","io::binary","io::sqlite"])if(code.includes(name)||attributeDependencies.some(path=>path.includes(name)))expected.add(name);
+ for(const name of["serde_json","semio_framework_pack_json","semio_framework_io_schema","pack_rt::encode_wire_value","io::text","io::binary","io::sqlite"])if(code.includes(name)||attributeDependencies.some(path=>path.includes(name)))expected.add(name);
  if([code,...attributeDependencies].some(path=>/\bio::(?!text\b|binary\b|sqlite\b|import\b|export\b)/u.test(path)))expected.add("io::");
  expect([...expected].sort()).toEqual(row.forbidden);expect(schemaRustWireDependencies(row.source)).toEqual(row.forbidden);
  }}finally{parser.delete();}console.log("[DEBUG] Rust schema physical dependency oracle=tree-sitter");
@@ -304,6 +304,20 @@ test("TypeScript schema rejects the complete IO namespace independently",()=>{
  expect(artifactIoArchitectureBreaches(root,["artifact"],taxonomy).some(breach=>breach.scope===join(owner,"🟦️.ts").slice(root.length+1)&&breach.kind==="artifact-io/schema-codec-dependency")).toBe(row.forbidden&&!testOnly);
  }}finally{rmSync(root,{recursive:true,force:true});}
  console.log("[DEBUG] complete TypeScript IO namespace oracle=TypeScript AST");
+});
+
+test("TypeScript native parser dependencies belong to physical IO", () => {
+ const vector=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-parser-dependencies/🔣️.json"),"utf8")) as {cases:{id:string;owner?:"io";testOnly?:boolean;source:string;forbidden:string[]}[]};
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name ticket output");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"native-parser-owner-"));
+ try{for(const row of vector.cases){
+  const syntax=ts.createSourceFile("parser.ts",row.source,ts.ScriptTarget.Latest,true),dependencies=new Set<string>();
+  const visit=(node:ts.Node):void=>{if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteral(node.moduleSpecifier))dependencies.add(node.moduleSpecifier.text);if(ts.isCallExpression(node)&&(node.expression.kind===ts.SyntaxKind.ImportKeyword||ts.isIdentifier(node.expression)&&node.expression.text==="require")&&node.arguments[0]&&ts.isStringLiteral(node.arguments[0]))dependencies.add(node.arguments[0].text);ts.forEachChild(node,visit);};visit(syntax);
+  const physical=[...dependencies].filter(name=>name==="chevrotain"||name.startsWith("@chevrotain/")).sort();expect(physical,row.id).toEqual(row.forbidden);
+  const owner=row.owner==="io"?"🚪️io/📝️text/💡️inferences":row.testOnly?"🧬️schema/💡️inferences/🔬️probes":"🧬️schema/💡️inferences",file=join(root,"artifact",owner,"🟦️.ts");mkdirSync(dirname(file),{recursive:true});writeFileSync(file,row.source);
+  const found=artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach=>breach.kind==="artifact-io/schema-codec-dependency");expect(found.length,row.id).toBe(row.forbidden.length&&row.owner!=="io"&&!row.testOnly?1:0);
+  rmSync(join(root,"artifact"),{recursive:true,force:true});
+ }}finally{rmSync(root,{recursive:true,force:true});}
+ console.log(`[DEBUG] Native parser ownership: neutral cases=${vector.cases.length}; independent oracle=TypeScript AST`);
 });
 
 test("TypeScript root implementations and IO semantic definitions have actual owners", () => {

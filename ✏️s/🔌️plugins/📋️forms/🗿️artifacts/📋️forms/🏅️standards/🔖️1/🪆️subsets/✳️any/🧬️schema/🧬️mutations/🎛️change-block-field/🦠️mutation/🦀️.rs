@@ -104,9 +104,8 @@ impl BlockField {
         }
     }
 
-    /// ✏️ `question` with this field set to this value.
-    pub fn applied(&self, question: &FormQuestion) -> FormQuestion {
-        let mut next = question.clone();
+    /// ✏️ Sets this field to this value on `next`.
+    pub fn set_on(&self, next: &mut FormQuestion) {
         match self.clone() {
             Self::Label(value) => next.label = value,
             Self::Description(value) => next.description = value,
@@ -127,7 +126,6 @@ impl BlockField {
             Self::Options(value) => next.options = value,
             Self::Fields(value) => next.fields = value,
         }
-        next
     }
 
     /// 🧮️ Every field `after` holds differently from `before`, in declaration order — the leaves of an edit that keeps the

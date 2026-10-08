@@ -1,0 +1,9 @@
+# Hub Controlled Preparation Final Audit Frontier
+
+Root requires the newly introduced Hub preparation operation to preserve live FreshBuildControl progress/cancellation. The earlier synchronous hook cannot receive final release credit. At this read-only checkpoint the source still contains that hook; the implementing lanes are replacing it, and no final source freeze is available. No tests, producers or source edits were run here.
+
+Final audit must inspect one closed, current repository-owned launch plan shared by synchronous and controlled adapters. It must derive actual manifest/workspace/package roots from original consumer argv, preserve exact selected args/cwd/env, reject recursion, and launch only the permanent preparation script. Generic capture remains domain-neutral; no target-name exception, skip flag, stale custody token or global-sync fallback is allowed.
+
+The Hub controlled adapter must poll FreshBuildControl during the preparation CLI, terminate only its owned process tree on cancellation/deadline, wait for exit and lease cleanup, and refuse compiler dispatch after any nonzero/cancelled preparation outcome. Successful preparation must complete before acquiring the compiler profile lease; the original outer wasm owner policy stays unchanged. Logs/outcomes must distinguish preparation from actual compiler provenance, and cancellation must not fabricate compiler credit.
+
+Required final receipts: meaningful synchronous-hook cancellation RED, controlled preparation cancellation GREEN with owned termination/cleanup/no compiler event, actual locked/offline system resolve/member coverage, stale currentness refusal, original six-package rustc+describe and four-guest/WGPU compiler vectors, canonical schema admission/export hash, exact settled endpoint ledger and actual terminal footers. Root's final schema/docs/full/permanent checkpoint follows both implementation freezes. Until these arrive this lane's verdict remains pending.

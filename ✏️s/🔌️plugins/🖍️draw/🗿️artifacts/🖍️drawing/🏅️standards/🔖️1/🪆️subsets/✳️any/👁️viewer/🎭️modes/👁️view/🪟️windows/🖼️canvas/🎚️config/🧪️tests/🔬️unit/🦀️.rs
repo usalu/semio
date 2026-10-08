@@ -68,5 +68,4 @@ async fn config_inverse_sums_to_the_negative_diff() {
     let next = DrawingViewerCanvasWindowConfig { viewport: store::Viewport2d { x: 18.0, y: -9.0, zoom: 2.5 }, framed: true };
     let mutation = DrawingViewerCanvasWindowConfigMutation::Set { viewport: next.viewport.clone(), framed: next.framed };
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<DrawingViewerCanvasWindowConfig, super::DrawingViewerCanvasWindowConfigDiff>(&base, &next).await;
 }

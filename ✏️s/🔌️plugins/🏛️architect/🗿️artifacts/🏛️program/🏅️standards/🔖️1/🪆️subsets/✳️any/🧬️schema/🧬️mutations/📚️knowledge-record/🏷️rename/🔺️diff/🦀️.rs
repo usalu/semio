@@ -7,7 +7,7 @@ use crate::registers::KnowledgeRecordPatch;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameKnowledgeRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.knowledge_payload.iter().find(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No knowledge record exists with this id.", [payload.id.0.clone()]);
@@ -16,5 +16,5 @@ pub fn diff(payload: &RenameKnowledgeRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This knowledge record already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = KnowledgeRecordPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(ProgramKnowledgeDelta { patched: vec![ProgramKnowledgePatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(ProgramKnowledgeDelta { modified: vec![ProgramKnowledgePatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

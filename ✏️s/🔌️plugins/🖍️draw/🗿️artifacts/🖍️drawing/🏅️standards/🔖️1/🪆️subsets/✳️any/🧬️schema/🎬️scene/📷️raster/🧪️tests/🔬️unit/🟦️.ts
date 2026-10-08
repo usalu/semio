@@ -78,14 +78,14 @@ test("scene crops match uncropped affine curves, gradients and stroke regions",(
  ];let count=0;
  for(const segments of paths)for(const cap of ["butt","round","square"] as const)for(const join of ["miter","round","bevel"] as const){
   const content={kind:"path" as const,segments,fillRule:"evenodd" as const,fill:{kind:"linearGradient" as const,x1:0,y1:0,x2:20,y2:12,stops:[{offset:0,color:[1,0,0,1] as [number,number,number,number]},{offset:1,color:[0,0,1,1] as [number,number,number,number]}]},stroke:{color:[.2,.6,.1,1] as [number,number,number,number],width:.75,cap,join,dash:[.8,.5]}};
-  const value:RasterSceneInput={width:32,height:24,origin:[-.25,.5],tolerance:.001,maxPixels:768,maxSourceBytes:268439552,maxBytes:67108864,maxChunks:65536,assets:[],nodes:[{id:"path",groups:[],transform:count%2?[1,.2,.4,.8,5,4]:[-.8,.2,.3,.7,18,3],opacity:1,blendMode:"normal",visible:true,content}]};
+  const value:RasterSceneInput={width:32,height:24,origin:[-.25,.5],tolerance:.001,maxPixels:768,maxSourceBytes:268439552,assets:[],nodes:[{id:"path",groups:[],transform:count%2?[1,.2,.4,.8,5,4]:[-.8,.2,.3,.7,18,3],opacity:1,blendMode:"normal",visible:true,content}]};
   const full=new PathRasterJob({...value,...content,transform:value.nodes[0]!.transform});while(!full.advance(4096).done){}expect([...complete(value).pixels]).toEqual([...full.result().pixels]);count++;
  }
  console.error(`[DEBUG] ${count} cropped curve/stroke scenes matched their uncropped path output`);
 },120000);
 test("all authored blend scopes match the independent SVG compositing corpus",async()=>{
  for(const row of compositingCases){
-  const value:RasterSceneInput={width:24,height:16,origin:[0,0],tolerance:.001,maxPixels:4096,maxSourceBytes:268439552,maxBytes:67108864,maxChunks:65536,assets:[],nodes:row.nodes.map((n:any)=>({id:n.id,groups:n.groups??[],transform:n.transform,opacity:n.opacity,blendMode:n.blendMode,visible:n.visible,content:{kind:"path",segments:n.segments,fillRule:n.fillRule??"nonzero",fill:n.fill??null,stroke:n.stroke??null}}))};
+  const value:RasterSceneInput={width:24,height:16,origin:[0,0],tolerance:.001,maxPixels:4096,maxSourceBytes:268439552,assets:[],nodes:row.nodes.map((n:any)=>({id:n.id,groups:n.groups??[],transform:n.transform,opacity:n.opacity,blendMode:n.blendMode,visible:n.visible,content:{kind:"path",segments:n.segments,fillRule:n.fillRule??"nonzero",fill:n.fill??null,stroke:n.stroke??null}}))};
   const image=complete(value),actual=await sharp(image.pixels,{raw:{width:24,height:16,channels:4}}).flatten({background:"white"}).ensureAlpha().raw().toBuffer(),reference=await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="16">${row.svg}</svg>`)).flatten({background:"white"}).ensureAlpha().raw().toBuffer();
   expect(delta(actual,reference),row.name).toBeLessThanOrEqual(2);
  }
@@ -97,7 +97,7 @@ test("async scenes yield progress and honor abort without publishing",async()=>{
 });
 test("conservative ellipse bounds do not reject a visible short arc with large radii",()=>{
  const content={kind:"path" as const,segments:[{kind:"move" as const,to:[2,3] as [number,number]},{kind:"arc" as const,rx:1e9,ry:1e9,rotation:0,largeArc:false,sweep:true,to:[12,3] as [number,number]}],fillRule:"nonzero" as const,fill:null,stroke:{color:[1,0,0,1] as [number,number,number,number],width:.75,cap:"round" as const,join:"miter" as const}};
- const value:RasterSceneInput={width:16,height:8,origin:[0,0],tolerance:.001,maxPixels:128,maxSourceBytes:268439552,maxBytes:67108864,maxChunks:65536,assets:[],nodes:[{id:"short-arc",groups:[],transform:[1,0,0,1,0,0],opacity:1,blendMode:"normal",visible:true,content}]};
+ const value:RasterSceneInput={width:16,height:8,origin:[0,0],tolerance:.001,maxPixels:128,maxSourceBytes:268439552,assets:[],nodes:[{id:"short-arc",groups:[],transform:[1,0,0,1,0,0],opacity:1,blendMode:"normal",visible:true,content}]};
  const full=new PathRasterJob({...value,...content,transform:value.nodes[0]!.transform});while(!full.advance(4096).done){}
  expect([...complete(value).pixels]).toEqual([...full.result().pixels]);
 });

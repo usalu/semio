@@ -98,11 +98,11 @@ pub(crate) fn assert_vector(vector: Vector) {
     }
 }
 
-/// ✅️ The vector's concrete inverse sums to the negative of its diff (L3), through the framework law.
-pub(crate) async fn assert_inverse_sum_law(vector: Vector) {
+/// ✅️ A vector's mutation and before-snapshot — the inputs of each leaf's inverse-sum law (L3) test.
+pub(crate) fn committed_inputs(vector: &Vector) -> (En1990Mutation, En1990Snapshot) {
     let op: En1990Mutation = semio_framework_pack_json::from_json_str(vector.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed mutation decodes");
     let before: En1990Snapshot = semio_framework_pack_json::from_json_str(vector.before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before-snapshot decodes");
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&op, &before).await;
+    (op, before)
 }
 //#endregion 🧾️Vector
 
@@ -190,3 +190,18 @@ mod insert_member_dupe;
 #[path = "../../🔩insert-member/🧪️tests/📏clamp/🦀️.rs"]
 mod insert_member_clamp;
 //#endregion 🧪️Cases
+
+//#region 🔬️MiddleRowVectors
+#[path = "../../✂️remove-effect/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_effect;
+#[path = "../../➖remove-permanent/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_permanent;
+#[path = "../../📤remove-variable/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_variable;
+#[path = "../../🕳️remove-seismic/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_seismic;
+#[path = "../../🧯remove-accidental/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_accidental;
+#[path = "../../🪚remove-member/🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row_remove_member;
+//#endregion 🔬️MiddleRowVectors

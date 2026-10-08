@@ -9,7 +9,7 @@ window_config! {
     extension: "bimplanwindowcfg",
     owner_path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️plan/🎚️config",
     display: "Set BIM Plan Window Configuration",
-    type BimPlanWindowConfig, BimPlanWindowConfigMutation, BimPlanWindowConfigOwner;
+    type BimPlanWindowConfig, BimPlanWindowConfigDiff, BimPlanWindowConfigMutation, BimPlanWindowConfigOwner;
     storey: String = String::new();
     cut_height: f64 = 1.2;
     framed: bool = false;

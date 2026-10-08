@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeMemberFireRating, base: &En1992Snapshot) -> protocol
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        members: Some(En1992MembersRows { modified: vec![En1992MembersPatch { id: payload.member_id.clone(), fire_rating: Some(payload.new_rating), ..Default::default() }], ..Default::default() }),
+        members: Some(En1992MembersRows::modification(&payload.member_id, En1992MembersPatch { fire_rating: Some(payload.new_rating), ..Default::default() })),
         ..Default::default()
     })
 }

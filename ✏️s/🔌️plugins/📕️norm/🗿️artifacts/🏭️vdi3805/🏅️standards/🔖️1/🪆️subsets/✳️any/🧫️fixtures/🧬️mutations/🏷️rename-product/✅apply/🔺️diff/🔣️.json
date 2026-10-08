@@ -1,45 +1,32 @@
 {
   "manufacturerFile": null,
   "products": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "VLV-50-001",
-        "title": [
-          {
-            "locale": "de",
-            "text": "Regelventil DN50"
-          },
-          {
-            "locale": "en",
-            "text": "Regulating valve DN50"
-          }
-        ],
-        "configuration": null
+        "patch": {
+          "title": [
+            {
+              "locale": "de",
+              "text": "Regelventil DN50"
+            },
+            {
+              "locale": "en",
+              "text": "Regulating valve DN50"
+            }
+          ],
+          "configuration": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "indexEntries": {
-    "added": [],
-    "removed": [],
-    "modified": [
-      {
-        "id": "VLV-50-001",
-        "dn": null,
-        "tags": [
-          "Regelventil DN50",
-          "Regulating valve DN50"
-        ]
-      }
-    ],
-    "order": null
-  },
   "geometry": null,
   "curves": null,
   "limits": null

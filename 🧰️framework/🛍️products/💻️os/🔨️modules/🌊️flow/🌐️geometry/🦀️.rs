@@ -1,4 +1,5 @@
 //! 🌐️ Geometry work is owned by an explicitly supplied host or evaluation-session port.
+pub use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 #[derive(Clone, Debug, PartialEq)]
 pub enum GeometryStep {
     Working { units_done: usize, units_total: usize, phase: String },
@@ -13,44 +14,53 @@ pub trait GeometryPort: Send + Sync {
     fn dispose(&self, handle: &str) -> Result<(), String>;
     fn cancel(&self) -> usize;
     fn begin_close(&self);
-    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize) -> Result<neural_engine::ValueRetirementStep,String>;
-    fn terminal_is_empty(&self) -> bool;
-    fn next_close_byte_demand(&self) -> usize;
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+    fn terminal_is_empty(&self)->bool;
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>;
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>;
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>;
+    fn next_depth_demand(&self)->Result<usize,ValueError>;
 }
 
 /// 🧹️ Retains the supplied authority until its resources and concrete Box allocation retire.
 #[must_use = "geometry port retirement requires explicit close"]
 pub struct GeometryPortRetirement { port:std::mem::ManuallyDrop<Option<Box<dyn GeometryPort>>> }
 impl GeometryPortRetirement {
-    pub fn new(port:Box<dyn GeometryPort>) -> Self { port.begin_close(); Self { port:std::mem::ManuallyDrop::new(Some(port)) } }
-    pub fn terminal_is_empty(&self) -> bool { self.port.is_none() }
-    pub fn next_close_byte_demand(&self) -> usize {
-        self.port.as_ref().map_or(0,|port| if port.terminal_is_empty() { std::mem::size_of_val(port.as_ref()) } else { port.next_close_byte_demand() })
-    }
-    pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize) -> Result<neural_engine::ValueRetirementStep,String> {
-        use neural_engine::ValueRetirementStep as Step;
-        let Some(port) = self.port.as_mut() else { return Ok(Step::Complete) };
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
-        if port.terminal_is_empty() {
-            let released_bytes = std::mem::size_of_val(port.as_ref());
-            if maximum_bytes < released_bytes { return Ok(Step::Blocked); }
+    pub fn new(port:Box<dyn GeometryPort>)->Self {port.begin_close();Self{port:std::mem::ManuallyDrop::new(Some(port))}}
+    pub fn terminal_is_empty(&self)->bool {self.port.is_none()}
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(0)}else{port.next_copy_byte_demand()})}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(0)}else{port.next_capacity_byte_demand(copy)})}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(std::mem::size_of_val(port.as_ref()))}else{port.next_release_byte_demand()})}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(1)}else{port.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"geometry port retirement depth overflow"))})}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
+        if grant.maximum_items==0||grant.maximum_depth<self.next_depth_demand()?{return Ok(RetainedCloneStep::Progress(empty))}
+        let port=self.port.as_mut().unwrap();
+        if port.terminal_is_empty(){
+            let released_bytes=std::mem::size_of_val(port.as_ref());
+            if grant.maximum_release_bytes<released_bytes{return Ok(RetainedCloneStep::Progress(empty))}
             drop(self.port.take());
-            return Ok(Step::Pending { released_items:1,released_bytes });
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes,..empty}))
         }
-        match port.close_step(maximum_items,maximum_bytes)? {
-            Step::Pending { released_items,released_bytes } if released_items > maximum_items || released_bytes > maximum_bytes => Err("flow.geometry-port-close-overspend".into()),
-            Step::Complete if !port.terminal_is_empty() => Err("flow.geometry-port-close-not-empty".into()),
-            Step::Complete => Ok(Step::Pending { released_items:0,released_bytes:0 }),
-            step => Ok(step),
-        }
+        let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+        let step=port.close_step(child_grant)?;
+        if !step.progress().fits(child_grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"geometry port close exceeded its grant"))}
+        if matches!(step,RetainedCloneStep::Complete(_))&&!port.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"geometry port completed before terminal empty"))}
+        Ok(RetainedCloneStep::Progress(step.progress()))
     }
-    pub fn retire_cold(mut self) {
-        while !self.terminal_is_empty() {
-            let step = self.close_step(1,4096.max(self.next_close_byte_demand())).expect("cold geometry port retirement");
-            assert!(!matches!(step,neural_engine::ValueRetirementStep::Blocked),"cold geometry port retirement is blocked");
+    pub fn retire_cold(mut self){
+        while !self.terminal_is_empty(){
+            let copy=self.next_copy_byte_demand().expect("cold geometry copy demand");
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_capacity_byte_demand(copy).expect("cold geometry capacity demand"),maximum_release_bytes:self.next_release_byte_demand().expect("cold geometry release demand"),maximum_depth:self.next_depth_demand().expect("cold geometry depth demand")};
+            let step=self.close_step(grant).expect("cold geometry port retirement");
+            assert!(step.progress().copied_items!=0||matches!(step,RetainedCloneStep::Complete(_)),"cold geometry port retirement stalled at exact demand");
         }
     }
 }
 impl Drop for GeometryPortRetirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(),"geometry port requires explicit terminal retirement before drop"); } }
+    fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"geometry port abandoned original ownership");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.port)}}}
 }
+#[cfg(all(test,not(target_arch="wasm32")))]
+#[path="🧪️tests/♻️ownership/🦀️.rs"]
+mod ownership_tests;

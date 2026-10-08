@@ -15,11 +15,10 @@ async fn replace_presence_diffs_only_the_fields_that_differ_and_inverts_to_the_b
 }
 
 #[semio_framework_async_macros::async_test]
-async fn the_presence_diff_obeys_the_absorb_inverse_and_between_laws() {
+async fn the_presence_diff_obeys_the_absorb_and_inverse_laws() {
     let base = ArchitectPresence::default();
     let first = ArchitectPresenceDiff { active_register: Some("risks".into()), graph_camera_zoom: Some(2.0), ..Default::default() };
     let second = ArchitectPresenceDiff { active_register: Some("users".into()), adjacency_kind_filter: Some(AdjacencyKindFilterSet { value: Some(AdjacencyKind::Preferred) }), ..Default::default() };
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first.clone(), second).await;
     protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law(&base, &first).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<ArchitectPresence, ArchitectPresenceDiff>(&base, &ArchitectPresence { graph_camera_x: 4.0, ..ArchitectPresence::default() }).await;
 }

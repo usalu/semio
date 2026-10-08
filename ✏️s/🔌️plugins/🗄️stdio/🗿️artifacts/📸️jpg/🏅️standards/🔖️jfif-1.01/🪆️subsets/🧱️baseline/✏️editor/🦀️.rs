@@ -5,7 +5,7 @@
 
 use crate::editor::jpg_baseline::modes::edit;
 use crate::editor::jpg_baseline::modes::edit::windows::main;
-use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::{JpgMutation,ReplaceImage,ReplacePixelsMutation,ChangeJfifHeaderMutation};
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use crate::{JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -128,22 +128,6 @@ fn jpgBaselineEditor_retained_reduce(
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
-fn jpgBaselineEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
-}
-fn jpgBaselineEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &JpgSnapshot) -> Result<JpgSnapshot, Fault> {
-    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| jpgBaselineEditor_edit_fault(error.code, error.to_string()))?;
-    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA).map_err(|error| jpgBaselineEditor_edit_fault(error.code, error.to_string()))
-}
-/// 🎯️ The domain leaf exactly as granular as a set of one field — SOF marker, arithmetic coding flag, sample precision;
-/// any other edit commits a path-scoped snapshot patch (design §19.3/§20.3).
-fn jpgBaselineEditor_compact_mutation(event:&editing::SnapshotEditEvent,next:&JpgSnapshot)->Option<JpgMutation>{
- match event{
- editing::SnapshotEditEvent::SetValue{path,..} if path=="/image/pixels"=>Some(JpgMutation::ReplacePixels(ReplacePixelsMutation{pixels:next.image.pixels.clone()})),
- editing::SnapshotEditEvent::SetValue{path,..} if path.starts_with("/image/jfif")=>Some(JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation{version:next.image.jfif_version,density_units:next.image.jfif_density_units,x_density:next.image.jfif_x_density,y_density:next.image.jfif_y_density,thumbnail:next.image.jfif_thumbnail.clone()})),
- _=>None
-}
-}
 struct JpgBaselineEditorExampleFactory {
     keys: Vec<ToolFactoryKey>,
 }
@@ -245,10 +229,6 @@ impl ArtifactEditor for JpgBaselineEditor {
         } else {
             Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), hard.join("; ")))
         }
-    }
-
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(JpgMutation::ReplaceImage(ReplaceImage { image:snapshot.image }))
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -360,10 +340,8 @@ impl editing::SnapshotEditingEditor for JpgBaselineEditor {
             _ => None,
         }
     }
-    fn snapshot_edit_mutations(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->Result<Emit<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>,Fault>{
-        let next=jpgBaselineEditor_bounded_edit(event,snapshot)?;
-        if next.schema!=snapshot.schema{return Err(jpgBaselineEditor_edit_fault("stdio.jpg.identity-edit","JPEG image edits cannot change schema identity"));}
-        Ok(Emit::mutations(vec![jpgBaselineEditor_compact_mutation(event,&next).unwrap_or_else(||JpgMutation::ReplaceImage(ReplaceImage{image:next.image}))]))
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::jpg_any::edit_rules::EDIT_RULES
     }
 }
 

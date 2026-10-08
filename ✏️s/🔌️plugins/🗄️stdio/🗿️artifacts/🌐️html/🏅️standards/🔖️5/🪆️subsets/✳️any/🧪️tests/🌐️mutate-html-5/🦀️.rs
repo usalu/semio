@@ -7,7 +7,7 @@
 //! `markup5ever_rcdom` reference implementation
 //! (`../../🏅️standards/🔖️5/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
-//! `parse_html_document`/`write_html_document`/`apply_html_mutation` over the full 10-kind
+//! `parse_html_document`/`write_html_document`/`apply_mutation` over the full 10-kind
 //! `HtmlMutation` vocabulary. Both results are read back by the SAME independent `project_html_5`
 //! (`html5ever`) before the `semantic-html-v1` profile compares them. The subject half is gated
 //! behind the generated host's `sut` feature so the oracle-only run never compiles the local
@@ -108,7 +108,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation,HtmlMutation};
+    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{HtmlMutation};
 
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_html::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
@@ -128,7 +128,7 @@ mod subject {
     /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE -- the same law
     /// `super::mutate_oracle` asserts on its side, and the feature's own second `Then` step
     /// ("the semantic projection moved"). Without it a mutation the
-    /// subset REFUSES (`apply_html_mutation` returns an error `MutationOutcome` and leaves the
+    /// subset REFUSES (`apply_mutation` returns an error `MutationOutcome` and leaves the
     /// snapshot untouched) is indistinguishable here from one it performed, and the handler reports a
     /// green scenario carrying the UNMUTATED document -- which is exactly what this case did until
     /// the parity phase first ran.
@@ -140,7 +140,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let before = project_html_5(&write_html_document(&base).into_bytes())?;
         let mut snapshot = base;
-        let outcome = apply_html_mutation(&mut snapshot, &mutation);
+        let outcome = apply_mutation(&mut snapshot, &mutation);
         let bytes = write_html_document(&snapshot).into_bytes();
         let projection = project_html_5(&bytes)?;
         if super::projection_divergence(&projection, &before).is_none() {
@@ -161,8 +161,8 @@ mod subject {
         let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let original = project_html_5(&write_html_document(&base).into_bytes())?;
         let mut snapshot = base;
-        let forward = apply_html_mutation(&mut snapshot, &mutation);
-        let backward: Vec<_> = undo.iter().map(|step| apply_html_mutation(&mut snapshot, step).messages().to_vec()).collect();
+        let forward = apply_mutation(&mut snapshot, &mutation);
+        let backward: Vec<_> = undo.iter().map(|step| apply_mutation(&mut snapshot, step).messages().to_vec()).collect();
         let bytes = write_html_document(&snapshot).into_bytes();
         let projection = project_html_5(&bytes)?;
         if let Some(divergence) = super::projection_divergence(&projection, &original) {

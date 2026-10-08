@@ -49,25 +49,30 @@ pub(super) fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usi
     let mut logical = 0;
     for _ in 0..20_000 {
         let frame = owner.request().map_or(0, super::super::tests::next_request_frame_bytes);
-        let grant = owner.next_close_byte_demand().max(payload_grant);
-        assert!(grant <= super::super::tests::retirement_admission());
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: payload_grant, maximum_capacity_bytes: owner.next_capacity_byte_demand(payload_grant).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
+        assert!(owner.next_copy_byte_demand().unwrap() <= grant.maximum_copy_bytes);
+        assert!(grant.maximum_release_bytes <= super::super::tests::retirement_admission());
         let before = owner.request().map(super::super::tests::request_logical_retained_bytes);
-        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(1, grant).unwrap());
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
         if let Some(before) = before { logical += before - owner.request().map_or(0, super::super::tests::request_logical_retained_bytes); }
         match step {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= grant);
-                if before.is_some() { assert_eq!((events.requested_bytes, events.released_bytes), (0, released_bytes)); } else { logical += released_bytes; }
+            RetainedCloneStep::Progress(progress) => {
+                let released_items = progress.copied_items;
+                let released_bytes = progress.released_bytes;
+                assert!(released_items <= 1 && progress.copied_bytes <= grant.maximum_copy_bytes && released_bytes <= grant.maximum_release_bytes && progress.retained_capacity_bytes <= grant.maximum_capacity_bytes);
+                assert_eq!((events.requested_bytes, events.released_bytes), (progress.retained_capacity_bytes, released_bytes));
+                assert_eq!(progress.retained_capacity_bytes, 0, "original inline retirement must not birth a replacement owner");
+                if before.is_none() { logical += progress.copied_bytes; }
                 if frame != 0 { assert_eq!((released_items, released_bytes), (1, frame)); frames += frame; }
                 released += released_bytes;
             }
-            SnapshotRetirementStep::Complete => {
+            RetainedCloneStep::Complete(progress) => {
                 assert!(owner.terminal_is_empty());
                 if before.is_some() { assert_eq!((events.requested_bytes, events.released_bytes), (0, 0)); }
+                assert_eq!(progress.released_bytes, 0);
                 println!("[DEBUG] retained member logical-ownership={logical} physical-page-backing={frames} reported-physical-release={released}");
                 return logical;
             }
-            SnapshotRetirementStep::Blocked => panic!("exclusive retained input cannot block"),
         }
     }
     panic!("bounded input retirement did not converge");

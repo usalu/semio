@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+use semio_framework_value::{OriginalAliasBatch,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[path = "📥️retained/🦀️.rs"]
 mod retained;
@@ -374,6 +375,39 @@ type WindowConfigStore<O> = store::ConfigStore<<O as WindowConfigOwner>::State, 
 struct WindowConfigPartition<O: WindowConfigOwner> {
     store: WindowConfigStore<O>,
     disposer: Option<Box<dyn ArtifactOwnedDisposer<WindowConfigStore<O>>>>,
+    pending_preview: Option<WindowConfigSnapshot>,
+    pending_preview_address: Option<String>,
+    pending_preview_alias: Option<Arc<O::State>>,
+    pending_preview_displaced: Option<Vec<Arc<O::State>>>,
+    preview_retirement: Option<OriginalAliasBatch<O::State>>,
+}
+
+impl<O:WindowConfigOwner> WindowConfigPartition<O>{
+    fn preview_retirement_pending(&self)->bool{self.pending_preview.is_some()||self.pending_preview_address.is_some()||self.pending_preview_alias.is_some()||self.pending_preview_displaced.is_some()||self.preview_retirement.is_some()}
+    fn preview_retirement_demand(&self)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.preview_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<OriginalAliasBatch<O::State>>>(),depth:1,..Default::default()})}else{owner.next_demand(WindowConfigStore::<O>::snapshot_alias_retirement_birth_bytes())};}
+        if self.pending_preview_alias.is_some()||self.pending_preview_displaced.is_some(){return Ok(OriginalAliasBatch::<O::State>::constructor_demand());}
+        if self.pending_preview.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<WindowConfigSnapshot>>()+std::mem::size_of::<Option<Arc<O::State>>>()+std::mem::size_of::<Option<String>>(),depth:1,..Default::default()});}
+        if let Some(address)=self.pending_preview_address.as_ref(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<String>>(),release_bytes:address.capacity(),depth:1,..Default::default()});}
+        Ok(Default::default())
+    }
+    fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if !self.preview_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let demand=self.preview_retirement_demand()?;
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if let Some(owner)=self.preview_retirement.as_mut(){
+            if owner.terminal_is_empty(){drop(self.preview_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            let birth=WindowConfigStore::<O>::snapshot_alias_retirement_birth_bytes();return owner.advance(birth,grant,|alias,child|self.store.retire_snapshot_alias(alias,child));
+        }
+        if self.pending_preview_alias.is_some(){let(owner,progress)=OriginalAliasBatch::admit_alias_original(&mut self.pending_preview_alias,grant)?.expect("funded original window alias remains");self.preview_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));}
+        if self.pending_preview_displaced.is_some(){let(owner,progress)=OriginalAliasBatch::admit_original(&mut self.pending_preview_displaced,grant)?.expect("funded displaced original window aliases remain");self.preview_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(preview)=self.pending_preview.take(){
+            let WindowConfigSnapshot{window_id,window_kind_id,generation,revision,snapshot}=preview;
+            match Arc::downcast::<O::State>(snapshot){Ok(alias)=>{self.pending_preview_alias=Some(alias);self.pending_preview_address=Some(window_id);},Err(snapshot)=>{self.pending_preview=Some(WindowConfigSnapshot{window_id,window_kind_id,generation,revision,snapshot});return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original window preview no longer matches its registered native owner"));}}
+        }else{drop(self.pending_preview_address.take());}
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
+    }
 }
 
 trait ErasedWindowConfigStoreOwner: Send {
@@ -393,7 +427,12 @@ trait ErasedWindowConfigStoreOwner: Send {
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<semio_framework_value::DslValue>>)>;
     fn snapshot(&self, window_id: &str) -> Option<WindowConfigSnapshot>;
     fn preview(&mut self, window_id: &str, mutations: &[&WindowConfigMutation]) -> Option<WindowConfigSnapshot>;
-    fn retire_preview(&mut self, preview: WindowConfigSnapshot);
+    fn preview_available(&self,window_id:&str)->bool;
+    fn can_retire_preview(&self,preview:&WindowConfigSnapshot)->bool;
+    fn retire_preview(&mut self,preview:&mut Option<WindowConfigSnapshot>)->bool;
+    fn preview_retirement_pending(&self)->bool;
+    fn preview_retirement_demand(&self)->Result<RetirementDemand,ValueError>;
+    fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
 }
 
 struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
@@ -409,7 +448,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
             let envelope = store::create_config_envelope::<O::State, O::Mutation>(O::SCHEMA, &id, O::State::default(), None).await;
             let mut config = store::ConfigStore::new(envelope, self.actor.as_ref().expect("live window owner retains its opened actor").clone()).await.map_err(|error| error.into_fault())?;
             config.install_document_store_owners_exact(O::build_store_owners());
-            self.partitions.insert(window_id.to_string(), WindowConfigPartition { store: config, disposer: Some(O::build_store_disposer()) });
+            self.partitions.insert(window_id.to_string(), WindowConfigPartition { store: config, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_address:None,pending_preview_alias:None,pending_preview_displaced:None,preview_retirement:None });
         }
         Ok(self.partitions.get_mut(window_id).expect("initialized window config partition remains owned"))
     }
@@ -530,24 +569,27 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
 
     fn preview(&mut self, window_id: &str, mutations: &[&WindowConfigMutation]) -> Option<WindowConfigSnapshot> {
         let partition = self.partitions.get_mut(window_id)?;
+        if partition.preview_retirement_pending(){return None;}
         let committed = partition.store.snapshot_owner();
         let (mut running, mut displaced) = (None, Vec::new());
         for mutation in mutations.iter().filter_map(|mutation| mutation.mutation.as_any().downcast_ref::<O::Mutation>()) {
             super::app::tool_machine::fold_leaf(&committed, &mut running, &mut displaced, mutation);
         }
-        for alias in displaced {
-            super::app::tool_machine::retire_overlay_alias(partition.store.retire_snapshot_alias(alias));
-        }
+        if !displaced.is_empty()||displaced.capacity()!=0{partition.pending_preview_displaced=Some(displaced);}
         let state: Arc<O::State> = running?;
         Some(WindowConfigSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation(), revision: partition.store.content_revision_now(), snapshot: state })
     }
 
-    fn retire_preview(&mut self, preview: WindowConfigSnapshot) {
-        let Some(partition) = self.partitions.get_mut(&preview.window_id) else { return };
-        if let Ok(state) = Arc::downcast::<O::State>(preview.snapshot) {
-            super::app::tool_machine::retire_overlay_alias(partition.store.retire_snapshot_alias(state));
-        }
+    fn preview_available(&self,window_id:&str)->bool{self.partitions.get(window_id).is_some_and(|partition|!partition.preview_retirement_pending())}
+    fn can_retire_preview(&self,preview:&WindowConfigSnapshot)->bool{preview.window_kind_id==O::WINDOW_KIND_ID&&preview.snapshot.is::<O::State>()&&self.partitions.get(&preview.window_id).is_some_and(|partition|partition.pending_preview.is_none()&&partition.pending_preview_alias.is_none()&&partition.pending_preview_address.is_none())}
+    fn retire_preview(&mut self,preview:&mut Option<WindowConfigSnapshot>)->bool{
+        let Some(original)=preview.as_ref()else{return true;};
+        if !self.can_retire_preview(original){return false;}
+        let partition=self.partitions.get_mut(&original.window_id).expect("checked original window partition remains");partition.pending_preview=preview.take();true
     }
+    fn preview_retirement_pending(&self)->bool{self.partitions.values().any(WindowConfigPartition::preview_retirement_pending)}
+    fn preview_retirement_demand(&self)->Result<RetirementDemand,ValueError>{self.partitions.values().find(|partition|partition.preview_retirement_pending()).map_or(Ok(Default::default()),WindowConfigPartition::preview_retirement_demand)}
+    fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}self.partitions.values_mut().find(|partition|partition.preview_retirement_pending()).map_or(Ok(RetainedCloneStep::Complete(Default::default())),|partition|partition.preview_retirement_step(grant))}
 
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<semio_framework_value::DslValue>>)> {
         self.partitions
@@ -562,6 +604,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         let Some(window_id) = self.partitions.keys().next().cloned() else { return close_window_actor(&mut self.actor, &mut self.actor_retirement, maximum_items, maximum_bytes) };
         let partition = self.partitions.get_mut(&window_id).expect("selected window config partition remains owned");
+        if partition.preview_retirement_pending(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"window partition retains original preview owners for granted retirement before Store disposal").into_fault());}
         let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.disposer"), "window config partition lost its exact disposer"))?;
         let step = disposer.close_step(&mut partition.store, maximum_items.min(1), maximum_bytes)?;
         if matches!(step, PluginCloseStep::Pending { released_items: 0, .. }) { use std::sync::atomic::{AtomicUsize, Ordering}; static N: AtomicUsize = AtomicUsize::new(0); if N.fetch_add(1, Ordering::Relaxed) < 3 { eprintln!("[DEBUG] partition disposer {window_id} stalled items={maximum_items} bytes={maximum_bytes} demand? step={step:?}"); } }
@@ -664,11 +707,15 @@ impl WindowConfigOwnerRegistry {
     }
 
     /// 🧹️ Retires a [`Self::preview`] through its partition's store.
-    pub(crate) fn retire_preview(&mut self, preview: WindowConfigSnapshot) {
-        if let Some(owner) = self.owners.get_mut(preview.window_kind_id) {
-            owner.retire_preview(preview);
-        }
+    pub(crate) fn retire_preview(&mut self,preview:&mut Option<WindowConfigSnapshot>)->bool{
+        let Some(original)=preview.as_ref()else{return true;};
+        self.owners.get_mut(original.window_kind_id).is_some_and(|owner|owner.retire_preview(preview))
     }
+    pub(crate) fn preview_available(&self,kind:&str,window:&str)->bool{self.owners.get(kind).is_some_and(|owner|owner.preview_available(window))}
+    pub(crate) fn can_retire_preview(&self,preview:&WindowConfigSnapshot)->bool{self.owners.get(preview.window_kind_id).is_some_and(|owner|owner.can_retire_preview(preview))}
+    pub(crate) fn preview_retirement_pending(&self)->bool{self.owners.values().any(|owner|owner.preview_retirement_pending())}
+    pub(crate) fn preview_retirement_demand(&self)->Result<RetirementDemand,ValueError>{self.owners.values().find(|owner|owner.preview_retirement_pending()).map_or(Ok(Default::default()),|owner|owner.preview_retirement_demand())}
+    pub(crate) fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}self.owners.values_mut().find(|owner|owner.preview_retirement_pending()).map_or(Ok(RetainedCloneStep::Complete(Default::default())),|owner|owner.preview_retirement_step(grant))}
 
     /// ⏯️ The values `pointers` (RFC 6901) name in every window config partition of `window_kind_id`, by window id
     /// in window id order — what a tool run's declared window config reads compare across publications.

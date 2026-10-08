@@ -25,6 +25,7 @@
 //   bun 📜️script.ts docx-import  --input <a.docx>
 //   bun 📜️script.ts docx-project --input <a.docx>
 //   bun 📜️script.ts docx-compare --input <expected.docx> --input <actual.docx>
+//   bun 📜️script.ts docx-compare-opc --input <expected.docx> --input <actual.docx>   (the same comparison plus the ordered package plumbing)
 //
 // @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts — the sibling
@@ -66,7 +67,9 @@ type ProjectedTable = { kind: "table"; rows: ProjectedTableRow[] };
 type ProjectedBlock = ProjectedParagraph | ProjectedTable;
 type ProjectedStyle = { id: string; name: string; basedOn: string | null };
 type OtherPart = { contentType: string; digest: string; size: number };
-type DocxProjection = { body: ProjectedBlock[]; styles: ProjectedStyle[]; otherParts: Record<string, OtherPart> };
+type ProjectedRelationship = { id: string; type: string; target: string; external: boolean };
+type Plumbing = { defaults: [string, string][]; overrides: [string, string][]; relationships: Record<string, ProjectedRelationship[]> };
+type DocxProjection = { body: ProjectedBlock[]; styles: ProjectedStyle[]; otherParts: Record<string, OtherPart>; plumbing: Plumbing };
 //#endregion 📥️Model
 
 //#region 🔓️Parse
@@ -232,9 +235,31 @@ async function readDocx(path: string): Promise<DocxProjection> {
     otherParts[entry.name] = { contentType, digest: digestOf(content), size: content.length };
   }
 
-  return { body, styles, otherParts };
+  return { body, styles, otherParts, plumbing: await readPlumbing(zip, entries) };
 }
 //#endregion 🔓️Parse
+
+//#region 🪢️Plumbing
+/** 🪢️ The package plumbing in the order the package states it: the `[Content_Types].xml` defaults and overrides as ordered pairs and every owner's `*.rels` rows as ordered
+ *  `{id, type, target, external}` rows. Compared only by `docx-compare-opc`: the kinds that write the plumbing (`set-relationship`, `remove-relationship`, `set-content-type`,
+ *  `remove-content-type`) are the only ones that move it, and the python-docx afters of the other kinds rewrite it in a writer's own order. */
+async function readPlumbing(zip: JSZip, entries: JSZip.JSZipObject[]): Promise<Plumbing> {
+  const plumbing: Plumbing = { defaults: [], overrides: [], relationships: {} };
+  const types = entries.find((entry) => entry.name === "[Content_Types].xml");
+  if (types !== undefined) {
+    const root = XML.parse(await types.async("string"))[0] as PNode;
+    for (const node of findChildren(root, "Default")) plumbing.defaults.push([attr(node, "Extension") ?? "", attr(node, "ContentType") ?? ""]);
+    for (const node of findChildren(root, "Override")) plumbing.overrides.push([attr(node, "PartName") ?? "", attr(node, "ContentType") ?? ""]);
+  }
+  for (const entry of entries) {
+    const match = /^(?:(.*)\/)?_rels\/([^/]*)\.rels$/.exec(entry.name);
+    if (match === null) continue;
+    const root = XML.parse(await zip.file(entry.name)!.async("string"))[0] as PNode;
+    plumbing.relationships[`${match[1] === undefined ? "" : `${match[1]}/`}${match[2]}`] = findChildren(root, "Relationship").map((node) => ({ id: attr(node, "Id") ?? "", type: attr(node, "Type") ?? "", target: attr(node, "Target") ?? "", external: attr(node, "TargetMode") === "External" }));
+  }
+  return plumbing;
+}
+//#endregion 🪢️Plumbing
 
 //#region ⚖️Compare
 /** ⚖️ `body`/`styles` are order-sensitive per `semantic-docx-ecma-376-mutate-v1` — plain positional
@@ -256,8 +281,9 @@ function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[
   if (expected !== actual) diffs.push(`${path}: ${JSON.stringify(expected)} ≠ ${JSON.stringify(actual)}`);
 }
 
-function compareDocs(expected: DocxProjection, actual: DocxProjection): { equal: boolean; diffCount: number; diffs: string[] } {
+function compareDocs(expected: DocxProjection, actual: DocxProjection, withPlumbing = false): { equal: boolean; diffCount: number; diffs: string[] } {
   const diffs: string[] = [];
+  if (withPlumbing) diffAt("$.plumbing", expected.plumbing, actual.plumbing, diffs);
   diffAt("$.body", expected.body, actual.body, diffs);
   diffAt("$.styles", expected.styles, actual.styles, diffs);
   diffAt("$.otherParts", expected.otherParts, actual.otherParts, diffs);
@@ -289,6 +315,13 @@ const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>
     const expected = await readDocx(inputs[0]!);
     const actual = await readDocx(inputs[1]!);
     const verdict = compareDocs(expected, actual);
+    return { status: "ok", measurements: { ...verdict, expected, actual } };
+  },
+  "docx-compare-opc": async (inputs) => {
+    requireInputs(inputs, 2, "docx-compare-opc");
+    const expected = await readDocx(inputs[0]!);
+    const actual = await readDocx(inputs[1]!);
+    const verdict = compareDocs(expected, actual, true);
     return { status: "ok", measurements: { ...verdict, expected, actual } };
   },
 };

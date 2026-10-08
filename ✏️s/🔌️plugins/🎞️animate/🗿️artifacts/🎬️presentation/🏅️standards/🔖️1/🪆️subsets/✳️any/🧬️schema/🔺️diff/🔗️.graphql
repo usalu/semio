@@ -1,11 +1,10 @@
-# 🧬️ Presentation durable diff: a field patch of the working source, an id-keyed tile row delta and the re-minted presentation child handle.
+# 🧬️ Presentation durable diff: a field patch of the working source, a positional tile row delta.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 # import FigureTileFrame, FigureTileDraft from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
 type PresentationDiff {
   schema: String @state(class: ARTIFACT)
   source: PresentationSourcePatch @state(class: ARTIFACT)
   tiles: PresentationTilesDelta @state(class: ARTIFACT)
-  presentation: ArtifactChild @state(class: ARTIFACT)
 }
 
 type PresentationSourcePatch {
@@ -21,14 +20,34 @@ type PresentationOptionalAspect { value: Float }
 type PresentationOptionalPage { value: Int }
 
 type PresentationTilesDelta {
-  added: [FigureTileDraft!]!
-  removed: [String!]!
-  patched: [PresentationTilePatch!]!
-  reordered: [String!]
+  removed: [PresentationTilesRemoval!]!
+  inserted: [PresentationTilesInsertion!]!
+  moved: [PresentationTilesRelocation!]!
+  modified: [PresentationTilesModification!]!
+}
+
+type PresentationTilesModification {
+  id: String!
+  patch: PresentationTilePatch!
+}
+
+type PresentationTilesRemoval {
+  id: String!
+  index: Int!
+}
+
+type PresentationTilesInsertion {
+  index: Int!
+  row: FigureTileDraft!
+}
+
+type PresentationTilesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type PresentationTilePatch {
-  id: String!
   name: String
   crop: FigureTileFrame
 }

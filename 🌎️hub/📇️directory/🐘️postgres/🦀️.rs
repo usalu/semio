@@ -10,11 +10,11 @@
 //! — folding it into a string literal is a zero-behavior-change mechanical transform (see
 //! `📋️TEMPLATE-FAMILY.md`'s "non-source assets" section for the general rule this establishes).
 
+use crate::artifact_authority::creation::io::{decide_artifact_creation_fact_append_v1};
+use directory::os_directory::io::text::validate_directory_event_page_event;
 use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
 use crate::artifact_authority::creation::{
-    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1,
-    decide_artifact_creation_fact_append_v1,
-};
+    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1,
@@ -26,8 +26,7 @@ use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, Direct
 };
 use directory::os_directory::{
     ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
-    validate_directory_event_page_event,
-};
+    };
 use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
 use semio_framework_hash::Sha256;
@@ -1111,7 +1110,7 @@ impl PostgresDirectory {
 
 impl HubDirectory for PostgresDirectory {
     async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut tx, &intent.actor, &intent.scope.space_id, None).await?;
@@ -1120,7 +1119,7 @@ impl HubDirectory for PostgresDirectory {
         }
         let facts = artifact_creation_facts(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
         if !facts.is_empty() {
-            let operation = ArtifactCreationOperationV1::fold(&facts)?;
+            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
             if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
                 return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
             }
@@ -1144,7 +1143,7 @@ impl HubDirectory for PostgresDirectory {
             recorded_at_ms: intent.accepted_at_ms,
             body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
         };
-        let operation = ArtifactCreationOperationV1::fold(std::slice::from_ref(&fact))?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
         insert_artifact_creation_fact(&mut tx, intent, &fact).await?;
         tx.commit().await.map_err(backend)?;
         Ok(ArtifactCreationClaimV1::Accepted(operation))
@@ -1167,7 +1166,7 @@ impl HubDirectory for PostgresDirectory {
         lock_artifact_creation_request(&mut tx, &append.actor.user_id, &append.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut tx, &append.actor, &append.space_id, None).await?;
         let mut facts = artifact_creation_facts(&mut tx, &append.actor.user_id, &append.request_id).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -1175,17 +1174,17 @@ impl HubDirectory for PostgresDirectory {
             insert_artifact_creation_fact(&mut tx, &operation.intent, &next).await?;
             facts.push(next);
         }
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         tx.commit().await.map_err(backend)?;
         Ok(operation)
     }
 
     async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
         let mut facts = artifact_creation_facts(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != *intent {
             return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
         }
@@ -1211,7 +1210,7 @@ impl HubDirectory for PostgresDirectory {
         }
         let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
         facts.push(next.clone());
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         insert_artifact_creation_fact(&mut tx, intent, &next).await?;
         tx.commit().await.map_err(backend)?;
         Ok(operation)
@@ -1235,7 +1234,7 @@ impl HubDirectory for PostgresDirectory {
                 let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                     return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
                 };
-                intent.validate()?;
+                crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
                 Ok(intent)
             })
             .collect()
@@ -1247,7 +1246,7 @@ impl HubDirectory for PostgresDirectory {
     /// 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
     /// terminal and `validate_document_genesis_append_v1` refuses a publication on it.
     async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
-        append.intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&append.intent)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
         cas_lock_space(&mut tx, &append.intent.scope.space_id).await?;
@@ -1258,7 +1257,7 @@ impl HubDirectory for PostgresDirectory {
         let observed_now_override = None;
         let observed_now = validate_artifact_creation_authority(&mut tx, &append.intent.actor, &append.intent.scope.space_id, observed_now_override).await?;
         let mut facts = artifact_creation_facts(&mut tx, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != append.intent {
             return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
         }
@@ -1379,7 +1378,7 @@ impl HubDirectory for PostgresDirectory {
         let completion = document_genesis_completion_v1(&operation, append, &events)?;
         insert_artifact_creation_fact(&mut tx, &append.intent, &completion).await?;
         facts.push(completion);
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         match tx.commit().await {
             Ok(()) => {
                 #[cfg(test)]

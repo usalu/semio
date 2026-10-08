@@ -1,5 +1,5 @@
-//! 🚚️ Playbook play app command — `move-block`: moves one block within or across steps (one absolute `blocksJson` set per
-//! touched step, one `flow` child edit).
+//! 🚚️ Playbook play app command — `move-block`: moves one block within or across steps (one `remove-node-param` and one position-exact
+//! `set-node-param` row, one `flow` child edit).
 
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::playbook_child_leaves_emit;

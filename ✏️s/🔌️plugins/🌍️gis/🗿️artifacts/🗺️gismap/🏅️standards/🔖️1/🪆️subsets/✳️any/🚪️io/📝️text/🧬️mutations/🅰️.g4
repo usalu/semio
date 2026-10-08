@@ -7,7 +7,7 @@ grammar Gis_gismap_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'gis.gismap.mutations' ;
 
-line: createPosition | deletePosition | replacePositionData | reorderPositions | createRoute | deleteRoute | replaceRouteData | reorderRoutes | createRegion | deleteRegion | replaceRegionData | reorderRegions ;
+line: createPosition | deletePosition | replacePositionData | reorderPositions | createRoute | deleteRoute | replaceRouteData | reorderRoutes | createRegion | deleteRegion | replaceRegionData | reorderRegions | setPositionProperty | removePositionProperty | setRouteProperty | removeRouteProperty | setRegionProperty | removeRegionProperty ;
 createPosition: 'create-position' SP number ;
 deletePosition: 'delete-position' SP id ;
 replacePositionData: 'replace-position-data' SP id SP block ;
@@ -20,6 +20,12 @@ createRegion: 'create-region' SP number ;
 deleteRegion: 'delete-region' SP id ;
 replaceRegionData: 'replace-region-data' SP id SP block ;
 reorderRegions: 'reorder-regions' SP id SP number ;
+setPositionProperty: 'set-position-property' SP id SP id SP block ( SP id )? ;
+removePositionProperty: 'remove-position-property' SP id SP id ;
+setRouteProperty: 'set-route-property' SP id SP id SP block ( SP id )? ;
+removeRouteProperty: 'remove-route-property' SP id SP id ;
+setRegionProperty: 'set-region-property' SP id SP id SP block ( SP id )? ;
+removeRegionProperty: 'remove-region-property' SP id SP id ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

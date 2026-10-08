@@ -17,7 +17,5 @@
   },
   "stockPayload": null,
   "stockSolid": null,
-  "steps": null,
-  "stepPayloads": null,
-  "toolSolids": null
+  "stepPayloads": null
 }

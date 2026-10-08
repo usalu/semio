@@ -30,9 +30,6 @@ impl protocol::DiffAlgebra<PresentationPresence> for PresentationPresenceDiff {
     fn inverse(&self, _base: &PresentationPresence) -> Self {
         Self {}
     }
-    fn between(_base: &PresentationPresence, _other: &PresentationPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }

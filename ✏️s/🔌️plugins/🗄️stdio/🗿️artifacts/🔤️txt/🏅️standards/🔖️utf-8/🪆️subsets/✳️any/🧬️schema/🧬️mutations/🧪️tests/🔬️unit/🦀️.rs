@@ -32,6 +32,7 @@ fn aggregate_roster_is_exact() {
         ("insert-line", "InsertLine", <InsertLineMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("remove-line", "RemoveLine", <RemoveLineMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("set-line", "SetLine", <SetLineMutation as protocol::MutationLeaf>::DESCRIPTOR),
+        ("splice-text", "SpliceText", <SpliceTextMutation as protocol::MutationLeaf>::DESCRIPTOR),
     ];
     assert_eq!(TxtMutation::kinds().iter().map(|semantic| semantic.kind).collect::<Vec<_>>(), roster.map(|(kind, _, _)| kind));
     for (kind, variant, descriptor) in roster {
@@ -51,6 +52,9 @@ async fn mutation_inverse_sum_law_holds_for_every_leaf() {
         TxtMutation::InsertLine(InsertLineMutation { index: 3, text: "appended".into() }),
         TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }),
         TxtMutation::SetLine(SetLineMutation { index: 2, text: "changed".into() }),
+        TxtMutation::SpliceText(SpliceTextMutation { splices: vec![TextSplice { offset: 6, delete: 4, insert: "BETA".into() }, TextSplice { offset: 11, delete: 0, insert: "new\n".into() }] }),
+        TxtMutation::SpliceText(SpliceTextMutation { splices: vec![TextSplice { offset: 5, delete: 1, insert: String::new() }] }),
+        TxtMutation::SpliceText(SpliceTextMutation { splices: vec![TextSplice { offset: 17, delete: 0, insert: "tail".into() }] }),
     ] {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }

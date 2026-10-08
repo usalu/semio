@@ -82,5 +82,60 @@
     "browser/📜️script.ts": "import { run } from \"../📜️script.ts\";\nrun(process.argv[2]);\n",
     "📜️script.ts": "import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from \"node:fs\";\nimport { join } from \"node:path\";\nconst root = import.meta.dirname;\nexport function run(command) {\n  const mappings = { generate: [\"catalog.json\", \"package.rs\"], \"generate-boot\": [\"boot.ts\", \"boot.js\"], \"generate-worker\": [\"worker.ts\", \"worker.js\"] };\n  const [input, output] = mappings[command];\n  if (command === \"generate\") for (const file of [\"boot.js\", \"worker.js\"]) readFileSync(join(root, \"dist\", file));\n  mkdirSync(join(root, \"dist\"), { recursive: true });\n  writeFileSync(join(root, \"dist\", output), readFileSync(join(root, input)));\n  appendFileSync(join(root, \".runs\"), command + \"\\n\");\n}\n"
   },
-  "changedWorker": "worker-two\n"
+  "changedWorker": "worker-two\n",
+  "browserTransport": {
+    "retiredInput": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🟦️.ts",
+    "imports": [
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+        "scope": "service-worker"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+        "scope": "service-worker"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
+        "scope": "service-worker"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+        "scope": "browser"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
+        "scope": "browser"
+      },
+      {
+        "source": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🟦️.ts",
+        "scope": "browser"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+        "scope": "browser"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+        "scope": "browser"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts",
+        "scope": "browser"
+      },
+      {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+        "scope": "browser"
+      }
+    ]
+  }
 }

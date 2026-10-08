@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::any::io::{apply_iso16757_mutation};
 use crate::{part_1, part_4, part_5, Cardinality, LocalizedText, Names};
 use protocol::{Mutation, SemanticMutation};
 
@@ -206,10 +207,10 @@ fn create_and_retire_product_class_roundtrip() {
         product_class: class.clone(),
         index: None,
     });
-    let (after, _) = crate::mutations::apply_iso16757_mutation(&base, &create).expect("create class");
+    let (after, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&base, &create).expect("create class");
     assert!(after.catalogue.product_classes.iter().any(|c| c.id == "class-test"));
     let delete = crate::Iso16757Mutation::RetireProductClass(crate::mutations::retire_product_class::mutation::RetireProductClass { id: "class-test".into() });
-    let (restored, _) = crate::mutations::apply_iso16757_mutation(&after, &delete).expect("delete class");
+    let (restored, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&after, &delete).expect("delete class");
     assert!(restored.catalogue.product_classes.iter().all(|c| c.id != "class-test"));
 }
 
@@ -228,10 +229,10 @@ fn create_and_retire_geometry_object_roundtrip() {
         parameter_bindings: BTreeMap::new(),
     };
     let create = crate::Iso16757Mutation::IntroduceGeometryObject(crate::mutations::introduce_geometry_object::mutation::IntroduceGeometryObject { geometry_object: obj });
-    let (after, _) = crate::mutations::apply_iso16757_mutation(&base, &create).expect("create geom");
+    let (after, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&base, &create).expect("create geom");
     assert!(after.geometry.objects.contains_key("geom-test"));
     let delete = crate::Iso16757Mutation::RetireGeometryObject(crate::mutations::retire_geometry_object::mutation::RetireGeometryObject { id: "geom-test".into() });
-    let (restored, _) = crate::mutations::apply_iso16757_mutation(&after, &delete).expect("delete geom");
+    let (restored, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&after, &delete).expect("delete geom");
     assert!(!restored.geometry.objects.contains_key("geom-test"));
 }
 

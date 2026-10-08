@@ -16,7 +16,7 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/severity/mutation/set-fatal-n/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/severity/mutation/restore-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/severity/mutation/assign-n/schema.json"
     }
   ]
 }

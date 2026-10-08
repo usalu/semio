@@ -86,3 +86,31 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
     assert!(list.terminal_is_empty());
     assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
 }
+
+#[test]
+fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let count=fixture["ordered"]["count"].as_u64().unwrap()as usize;
+    let mut list=PagedList::<u64,600>::empty();
+    let mut oracle=std::collections::VecDeque::new();
+    for value in 0..count as u64{
+        while !list.has_reserved_slot(){let bytes=list.next_allocation_bytes().unwrap();list.reserve_one(bytes).unwrap();}
+        list.push_reserved(value).unwrap();oracle.push_back(value);
+    }
+    while !oracle.is_empty(){
+        let pointer=list.backing_ptr(list.len()-1).unwrap();
+        assert_eq!(list.next_pop_depth_demand().unwrap(),list.height()+3);
+        assert!(list.next_release_depth_demand().is_err());
+        assert_eq!(list.backing_ptr(list.len()-1).unwrap(),pointer);
+        assert_eq!(list.pop(),oracle.pop_back());
+    }
+    assert_eq!(list.next_pop_depth_demand().unwrap(),0);
+    while !list.terminal_is_empty(){
+        let bytes=list.next_release_allocation_bytes().unwrap();let depth=list.next_release_depth_demand().unwrap();
+        assert!(depth>=2);let before=list.allocated_bytes();
+        if bytes>0{let denied=list.release_empty_page(bytes-1).unwrap();assert!(!denied.progressed);assert_eq!(list.allocated_bytes(),before);assert_eq!(list.next_release_depth_demand().unwrap(),depth);}
+        let released=list.release_empty_page(bytes).unwrap();assert!(released.progressed);assert_eq!(released.released_allocation_bytes,bytes);
+    }
+    assert_eq!(list.next_release_depth_demand().unwrap(),0);
+    println!("[DEBUG] original600 PagedList tail order equals VecDeque; actual retained branch/leaf depth and separate whole backing refusals preserved");
+}

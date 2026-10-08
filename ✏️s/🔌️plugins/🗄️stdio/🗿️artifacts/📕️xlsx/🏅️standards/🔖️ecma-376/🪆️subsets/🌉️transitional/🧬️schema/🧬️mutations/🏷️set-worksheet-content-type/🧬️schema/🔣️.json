@@ -45,6 +45,25 @@
         "group": "value",
         "order": 20
       }
+    },
+    "override_index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Override position",
+          "de": "Position des Inhaltstyp-Eintrags"
+        },
+        "description": {
+          "en": "Position of the part's explicit content-type override among the overrides; written even when the extension default already yields the type.",
+          "de": "Position des expliziten Inhaltstyp-Eintrags des Paketteils unter den Einträgen; wird auch geschrieben, wenn der Standard der Erweiterung den Typ bereits liefert."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

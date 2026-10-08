@@ -79,9 +79,12 @@ message DxfBlockModified { uint32 index = 1; DxfBlockDiff diff = 2; }
 message DxfBlockAdded { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfBlock block = 2; }
 message DxfBlocksDiff { repeated uint32 removed = 1; repeated DxfBlockModified modified = 2; repeated DxfBlockAdded added = 3; }
 
+message OtherTablesReplacement { repeated semio.s_stdio_dxf.snapshot.DxfOtherTable tables = 1; }
+
 message DxfDiff {
   DxfHeaderVarsDiff header_vars = 1;
   DxfTablesDiff tables = 2;
   DxfBlocksDiff blocks = 3;
   DxfEntitiesDiff entities = 4;
+  optional OtherTablesReplacement other_tables = 5;
 }

@@ -8,7 +8,7 @@ tagValue : SETHEADERVAR | REMOVEHEADERVAR
          | INSERTSTYLE | REMOVESTYLE | SETSTYLE
          | INSERTLINETYPE | REMOVELINETYPE | SETLINETYPE
          | INSERTENTITY | REMOVEENTITY | SETENTITY
-         | INSERTBLOCK | REMOVEBLOCK | SETBLOCK ;
+         | INSERTBLOCK | REMOVEBLOCK | SETBLOCK | SETOTHERTABLES ;
 member   : STRING ':' jsonValue ;
 
 TAGKEY         : '"mutation"' ;
@@ -29,4 +29,5 @@ SETENTITY      : '"setEntity"' ;
 INSERTBLOCK    : '"insertBlock"' ;
 REMOVEBLOCK    : '"removeBlock"' ;
 SETBLOCK       : '"setBlock"' ;
+SETOTHERTABLES : '"setOtherTables"' ;
 STRING         : '"' .*? '"' ;

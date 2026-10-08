@@ -5,6 +5,7 @@
  * EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, confirmed by
  * the committed `🌱️create-widget/🧪️tests/*​/🦠️mutation/🔣️.json` fixture
  * (`{"CreateWidget":{"index":2,"widget":{...}}}`). */
+import type { SelectGeneration } from "./👆️select-generation/🦠️mutation/🟦️.ts";
 import type { ChangeSchema } from "./🔤️change-schema/🦠️mutation/🟦️.ts";
 import type { ChangeSliderValue } from "./🎚️change-slider-value/🦠️mutation/🟦️.ts";
 import type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
@@ -26,4 +27,5 @@ export type Generation2dMutation =
   | { UpdateCamera: UpdateCamera }
   | { ChangeSchema: ChangeSchema }
   | { ChangeSliderValue: ChangeSliderValue }
-  | { MoveNodes: MoveNodes };
+  | { MoveNodes: MoveNodes }
+  | { SelectGeneration: SelectGeneration };

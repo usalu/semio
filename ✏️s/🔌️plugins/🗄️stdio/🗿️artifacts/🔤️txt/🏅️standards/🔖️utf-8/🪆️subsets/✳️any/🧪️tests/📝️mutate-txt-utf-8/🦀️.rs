@@ -116,7 +116,7 @@ fn spec_vector_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::apply_txt_mutation;
+    
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_txt::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_txt::{TxtMutation, TxtSnapshot};
@@ -147,7 +147,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let mutation = mutation_from_spec(&spec)?;
-        let outcome = apply_txt_mutation(&mut snapshot, &mutation);
+        let outcome = apply_mutation(&mut snapshot, &mutation);
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;
         if outcome.messages().is_empty() {
@@ -173,9 +173,9 @@ mod subject {
         let mut snapshot = decode(&input)?;
         let mutation = mutation_from_spec(&spec)?;
         let inverse = mutation_inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
-        apply_txt_mutation(&mut snapshot, &mutation);
+        apply_mutation(&mut snapshot, &mutation);
         for step in inverse {
-            apply_txt_mutation(&mut snapshot, &step);
+            apply_mutation(&mut snapshot, &step);
         }
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;

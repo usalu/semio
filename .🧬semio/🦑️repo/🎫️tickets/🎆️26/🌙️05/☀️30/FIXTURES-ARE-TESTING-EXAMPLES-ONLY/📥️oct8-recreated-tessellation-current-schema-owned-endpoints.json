@@ -1,0 +1,16 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "beforeSha256": "a10a1c82ac47255953f1301cc8caf87f6dfc8716f31b30ba0a91c461505b3779",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "880e2a538ccf28fd356f4644a468d79158990a4de6df07d11a9eb3332ca2a48b",
+      "afterSha256": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9",
+      "action": "updated"
+    }
+  ]
+}

@@ -25,12 +25,15 @@
   "security": null,
   "regulatory": null,
   "siteContext": {
-    "added": [],
     "removed": [
-      "site-context-a"
+      {
+        "id": "site-context-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "organizational": null,
   "services": null,

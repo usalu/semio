@@ -1,12 +1,15 @@
 {
   "diff": {
     "positions": {
-      "added": [],
       "removed": [
-        "p0"
+        {
+          "id": "p0",
+          "index": 0
+        }
       ],
-      "patched": [],
-      "reordered": null
+      "inserted": [],
+      "moved": [],
+      "modified": []
     },
     "routes": null,
     "regions": null

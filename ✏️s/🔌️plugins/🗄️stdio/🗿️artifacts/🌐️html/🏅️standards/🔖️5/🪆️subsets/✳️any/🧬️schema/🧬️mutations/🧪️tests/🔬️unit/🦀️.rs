@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
@@ -20,7 +21,7 @@ async fn insert_then_remove_node_apply_and_inverse() {
     let base = fixture();
     let insert = HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![0], index: 1, node: el("span", vec![HtmlAttr::new("class", "x")], vec![]) });
     let mut after = base.clone();
-    apply_html_mutation(&mut after, &insert);
+    apply_mutation(&mut after, &insert);
     match node_at(&after, &[0]).unwrap() {
         HtmlNode::Element { children, .. } => {
             assert_eq!(children.len(), 3, "body is [<p>, trailing-newline text] before the insert (normalize_html_root_whitespace)");
@@ -32,7 +33,7 @@ async fn insert_then_remove_node_apply_and_inverse() {
     let inverses = Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after.clone();
     for inv in &inverses {
-        apply_html_mutation(&mut restored, inv);
+        apply_mutation(&mut restored, inv);
     }
     assert_eq!(restored, base);
 }
@@ -47,37 +48,37 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     assert_eq!(element_attr(node_at(&after1, &[0, 0]).unwrap(), "width"), Some(&Some("99".to_string())));
     let mut restored1 = after1.clone();
     for inv in Mutation::inverse(&m1, &base).expect("valid retained mutation inverse fixture") {
-        apply_html_mutation(&mut restored1, &inv);
+        apply_mutation(&mut restored1, &inv);
     }
     assert_eq!(write_html_document(&restored1), write_html_document(&base));
 
     // Some(None): make valueless.
     let m2 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "width".into(), value: Some(None) });
     let mut after2 = base.clone();
-    apply_html_mutation(&mut after2, &m2);
+    apply_mutation(&mut after2, &m2);
     assert_eq!(element_attr(node_at(&after2, &[0, 0]).unwrap(), "width"), Some(&None));
     for inv in Mutation::inverse(&m2, &base).expect("valid retained mutation inverse fixture") {
-        apply_html_mutation(&mut after2, &inv);
+        apply_mutation(&mut after2, &inv);
     }
     assert_eq!(write_html_document(&after2), write_html_document(&base));
 
     // None: remove entirely.
     let m3 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "width".into(), value: None });
     let mut after3 = base.clone();
-    apply_html_mutation(&mut after3, &m3);
+    apply_mutation(&mut after3, &m3);
     assert_eq!(element_attr(node_at(&after3, &[0, 0]).unwrap(), "width"), None);
     for inv in Mutation::inverse(&m3, &base).expect("valid retained mutation inverse fixture") {
-        apply_html_mutation(&mut after3, &inv);
+        apply_mutation(&mut after3, &inv);
     }
     assert_eq!(write_html_document(&after3), write_html_document(&base));
 
     // None -> Some: add a brand new attribute.
     let m4 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "hidden".into(), value: Some(None) });
     let mut after4 = base.clone();
-    apply_html_mutation(&mut after4, &m4);
+    apply_mutation(&mut after4, &m4);
     assert_eq!(element_attr(node_at(&after4, &[0, 0]).unwrap(), "hidden"), Some(&None));
     for inv in Mutation::inverse(&m4, &base).expect("valid retained mutation inverse fixture") {
-        apply_html_mutation(&mut after4, &inv);
+        apply_mutation(&mut after4, &inv);
     }
     assert_eq!(write_html_document(&after4), write_html_document(&base));
 }
@@ -87,13 +88,13 @@ async fn remove_node_inverse_restores_removed_node() {
     let base = fixture();
     let remove = HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![0], index: 0 });
     let mut after = base.clone();
-    apply_html_mutation(&mut after, &remove);
+    apply_mutation(&mut after, &remove);
     match node_at(&after, &[0]).unwrap() {
         HtmlNode::Element { children, .. } => assert_eq!(children, &vec![HtmlNode::Text { text: "\n".into() }], "removing body's only element leaves just the trailing-newline text node"),
         other => panic!("unexpected node {other:?}"),
     }
     for inv in Mutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
-        apply_html_mutation(&mut after, &inv);
+        apply_mutation(&mut after, &inv);
     }
     assert_eq!(write_html_document(&after), write_html_document(&base));
 }
@@ -103,13 +104,13 @@ async fn set_element_name_apply_and_inverse() {
     let base = fixture();
     let mutation = HtmlMutation::SetElementName(set_element_name::SetElementName { path: vec![0, 0], name: "div".into() });
     let mut after = base.clone();
-    apply_html_mutation(&mut after, &mutation);
+    apply_mutation(&mut after, &mutation);
     match node_at(&after, &[0, 0]).unwrap() {
         HtmlNode::Element { name, .. } => assert_eq!(name, "div"),
         other => panic!("unexpected node {other:?}"),
     }
     for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-        apply_html_mutation(&mut after, &inv);
+        apply_mutation(&mut after, &inv);
     }
     assert_eq!(write_html_document(&after), write_html_document(&base));
 }
@@ -172,7 +173,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
-        let diff_from_apply = apply_html_mutation(&mut via_apply, &mutation);
+        let diff_from_apply = apply_mutation(&mut via_apply, &mutation);
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -187,9 +188,9 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        apply_html_mutation(&mut round_tripped, &mutation);
+        apply_mutation(&mut round_tripped, &mutation);
         for inverse_mutation in <HtmlMutation as Mutation<HtmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_html_mutation(&mut round_tripped, &inverse_mutation);
+            apply_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -302,61 +303,6 @@ async fn absorb_law() {
         assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
         assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
-}
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(protocol::apply_diff(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&b, &a), &b).unwrap(), a);
-
-    let sample = fixture();
-    assert_eq!(protocol::apply_diff(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
-
-    let real = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><div id=\"layer1\"><p>a</p><span>b</span></div></body></html>\n").unwrap();
-    let mut mutated = real.clone();
-    apply_html_mutation(&mut mutated, &HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "id".into(), value: Some(Some("root".into())) }));
-    assert_ne!(real, mutated);
-    assert_eq!(protocol::apply_diff(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&real, &mutated), &real).unwrap(), mutated);
-    assert_eq!(protocol::apply_diff(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&mutated, &real), &mutated).unwrap(), real);
-}
-//#endregion 🔖️BetweenRoundtripLaw
-
-//#region 🔖️FieldSweep
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&diff_ab, &a).unwrap(), b);
-    let diff_ba = <HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&diff_ba, &b).unwrap(), a);
-    assert!(<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &a).is_empty());
-
-    assert_eq!(diff_ab.doctype, Some(None));
-    assert!(diff_ab.root.is_some());
-
-    let HtmlNodeDiffT::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };
-    assert!(root_diff.name.is_some());
-    let attrs_diff = root_diff.attributes.as_ref().expect("attrs diff present");
-    assert!(!attrs_diff.removed.is_empty(), "attrs: removed not exercised");
-    assert!(!attrs_diff.modified.is_empty(), "attrs: modified not exercised");
-    assert!(!attrs_diff.added.is_empty(), "attrs: added not exercised");
-
-    let children_diff = root_diff.children.as_ref().expect("children diff present");
-    assert!(!children_diff.removed.is_empty(), "children: removed not exercised");
-    assert_eq!(children_diff.modified.len(), 1);
-    let modified_entry = &children_diff.modified[0];
-    let HtmlNodeDiffT::Element(modified_element) = &modified_entry.diff else { panic!("expected element diff") };
-    assert!(modified_element.name.is_some(), "modified child: name not exercised");
-    assert!(modified_element.attributes.is_some(), "modified child: attributes not exercised");
-    let nested_children = modified_element.children.as_ref().expect("nested children diff present");
-    let nested_added: &Vec<HtmlChildAddedT> = &nested_children.added;
-    assert!(!nested_added.is_empty(), "children: added (nested) not exercised");
 }
 //#endregion 🔖️FieldSweep
 

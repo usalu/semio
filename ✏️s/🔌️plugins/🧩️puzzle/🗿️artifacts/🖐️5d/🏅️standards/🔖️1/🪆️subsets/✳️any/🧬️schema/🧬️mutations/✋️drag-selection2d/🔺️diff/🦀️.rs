@@ -1,6 +1,7 @@
 //! 🔺️ Sparse diff builder for `DragSelection2d` — every unlocked addressed part's board projection moves by the
 //! payload offset, read off the BASE position, so the leaf replays on any base. Target volumes live in the world.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dPart2dPatch, Puzzle5dPartPatch, Puzzle5dPartPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart2dPatch, Puzzle5dPartPatch, Puzzle5dPartModification};
+use protocol::list_delta::RowPatch;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection, puzzle5d_selection_outcome};
 use crate::Puzzle5dSnapshot;
 
@@ -19,7 +20,7 @@ pub fn diff(payload: &super::DragSelection2d, base: &Puzzle5dSnapshot) -> protoc
         .iter()
         .map(|part| {
             let board = Puzzle5dPart2dPatch { x: Some(part.part_2d.x + dx).filter(|x| *x != part.part_2d.x), y: Some(part.part_2d.y + dy).filter(|y| *y != part.part_2d.y), ..Default::default() };
-            Puzzle5dPartPatchEntry { id: part.id.clone(), patch: Puzzle5dPartPatch { part_2d: Some(board).filter(|board| !board.is_empty()), ..Default::default() } }
+            Puzzle5dPartModification { id: part.id.clone(), patch: Puzzle5dPartPatch { part_2d: Some(board).filter(|board| !board.is_empty()), ..Default::default() } }
         })
         .filter(|entry| !entry.patch.is_empty())
         .collect();

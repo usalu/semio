@@ -8,9 +8,9 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::io::binary::diff::dec_block_bin;
 use crate::standards::v_r12::subsets::any::schema::mutations::*;
-use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
+use crate::schema::diff::{block_field_changes, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
     // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
+    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_field_changes, layer_field_changes, linetype_field_changes, style_field_changes, DxfDiff};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{enc_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_style};
@@ -19,6 +19,7 @@ use crate::standards::v_r12::subsets::any::io::text::diff::{dec_layer};
 use crate::standards::v_r12::subsets::any::io::text::diff::{enc_layer};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_str};
 use crate::standards::v_r12::subsets::any::io::text::diff::{enc_str};
+use crate::standards::v_r12::subsets::any::io::binary::diff::{dec_other_table_bin, enc_other_table_bin};
 use crate::standards::v_r12::subsets::any::io::binary::diff::{dec_linetype_bin};
 use crate::standards::v_r12::subsets::any::io::binary::diff::{enc_linetype_bin};
 use crate::standards::v_r12::subsets::any::io::binary::diff::{dec_style_bin};
@@ -70,6 +71,7 @@ impl OpBinary for DxfMutation {
             DxfMutation::InsertBlock(_) => TAG_INSERT_BLOCK,
             DxfMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
             DxfMutation::SetBlock(_) => TAG_SET_BLOCK,
+            DxfMutation::SetOtherTables(_) => TAG_SET_OTHER_TABLES,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -126,6 +128,10 @@ impl OpBinary for DxfMutation {
             DxfMutation::SetBlock(set_block::SetBlock { index, block }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_block_bin(block, &mut out);
+            }
+            DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables }) => {
+                store::pack_rt::write_varint_u64(&mut out, other_tables.len() as u64);
+                other_tables.iter().for_each(|table| enc_other_table_bin(table, &mut out));
             }
         }
         Ok(out)
@@ -202,6 +208,11 @@ impl OpBinary for DxfMutation {
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DxfMutation::SetBlock(set_block::SetBlock { index, block }))
             }
+            TAG_SET_OTHER_TABLES => {
+                let count = reader.read_varint_u64().map_err(|e| malformed("op other tables count", reader.position(), e.to_string()))?;
+                let other_tables = (0..count).map(|_| dec_other_table_bin(&mut reader).map_err(|e| malformed("op other table", reader.position(), e))).collect::<Result<Vec<_>, _>>()?;
+                Ok(DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }
@@ -229,4 +240,5 @@ const TAG_SET_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-enti
 const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_SET_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block");
+const TAG_SET_OTHER_TABLES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-other-tables");
 //#endregion 🏷️WireTags

@@ -9,18 +9,19 @@ pub struct SetAnalysisModel {
     pub id: u64,
     pub model: Option<SavAnalysisModel>,
     pub index: Option<usize>,
+    pub instance: Option<semio_s_artifact_stdio_contract::part21::Part21Instance>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "analysis-model", kind: "set-analysis-model", record: "SetAnalysisModel" };
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        let Self { id, model, index } = self;
+        let Self { id, model, index, instance: exact } = self;
         let instance = match model {
             None => None,
             Some(row) => {
 
-                Some(mvd::simple_instance(*id, ANALYSIS_MODEL, analysis_model_args(row)))
+                Some(exact.clone().unwrap_or_else(|| mvd::simple_instance(*id, ANALYSIS_MODEL, analysis_model_args(row))))
             }
         };
         match mvd::entity_diff(base, *id, &[ANALYSIS_MODEL], instance, *index) {
@@ -33,10 +34,13 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisMo
         let Self { id, model, .. } = self;
         Ok(match mvd::standing(base, *id, &[ANALYSIS_MODEL]) {
             mvd::Standing::Foreign => Vec::new(),
-            mvd::Standing::Absent if model.is_some() => vec![Ifc2x3SavMutation::SetAnalysisModel(SetAnalysisModel { id: *id, model: None, index: None })],
+            mvd::Standing::Absent if model.is_some() => vec![Ifc2x3SavMutation::SetAnalysisModel(SetAnalysisModel { id: *id, model: None, index: None, instance: None })],
             mvd::Standing::Absent => Vec::new(),
             mvd::Standing::Present { index } => match analysis_model_row(base, *id) {
-                Some(row) => vec![Ifc2x3SavMutation::SetAnalysisModel(SetAnalysisModel { id: *id, model: Some(row), index: Some(index) })],
+                Some(row) => {
+                    let instance = mvd::exact_instance_if_lossy(base, mvd::simple_instance(*id, ANALYSIS_MODEL, analysis_model_args(&row)));
+                    vec![Ifc2x3SavMutation::SetAnalysisModel(SetAnalysisModel { id: *id, model: Some(row), index: Some(index), instance })]
+                }
                 None => Vec::new(),
             },
         })

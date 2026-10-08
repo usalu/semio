@@ -13,6 +13,11 @@
 pub use semio_framework_geometry::{Mat4, Vec3};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+pub use semio_framework_mesh_engine::ComponentReferenceTable;
+use protocol::value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
+#[path="♻️retirement/🦀️.rs"]
+mod mesh3d_retirement;
+use mesh3d_retirement::{NumericSeen,IneligibleGroups};
 use semio_framework_ui_viewport::{
     Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant,
     Viewport3dAxonometricVariant, Viewport3dObliqueVariant,
@@ -336,6 +341,39 @@ pub fn projection_spec_project_point(view_proj: Mat4, spec: Viewport3dProjection
     }
     let visible = projection_spec_project_ndc(spec, [clip.x, clip.y], width.max(1.0) / height.max(1.0));
     Some([(visible[0] * 0.5 + 0.5) * width, (1.0 - (visible[1] * 0.5 + 0.5)) * height])
+}
+
+/// 🧵️ World and screen endpoints of a segment within the accepted camera depth range.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProjectedSegment3d {
+    pub points: [Vec3; 2],
+    pub screen: [[f32; 2]; 2],
+}
+
+/// 🪡️ Projects an authored segment through the accepted camera and image transform.
+pub fn projection_spec_project_segment(view_proj: Mat4, spec: Viewport3dProjectionSpec, a: Vec3, b: Vec3, width: f32, height: f32) -> Option<ProjectedSegment3d> {
+    if !width.is_finite() || !height.is_finite() || width <= 0.0 || height <= 0.0 { return None; }
+    let homogeneous = |point: Vec3| std::array::from_fn::<_, 4, _>(|row| f64::from(view_proj.cols[0][row]) * f64::from(point.x) + f64::from(view_proj.cols[1][row]) * f64::from(point.y) + f64::from(view_proj.cols[2][row]) * f64::from(point.z) + f64::from(view_proj.cols[3][row]));
+    let start = homogeneous(a);
+    let end = homogeneous(b);
+    if start.iter().chain(end.iter()).any(|value| !value.is_finite()) { return None; }
+    let mut lower = 0.0_f64;
+    let mut upper = 1.0_f64;
+    for (first, last) in [(start[2], end[2]), (start[3] - start[2], end[3] - end[2])] {
+        if first < 0.0 && last < 0.0 { return None; }
+        if first < 0.0 { lower = lower.max(first / (first - last)); }
+        if last < 0.0 { upper = upper.min(first / (first - last)); }
+    }
+    if lower > upper { return None; }
+    let project = |parameter: f64| {
+        let clip: [f64; 4] = std::array::from_fn(|axis| start[axis] + (end[axis] - start[axis]) * parameter);
+        if clip[3] <= 0.0 { return None; }
+        let visible = projection_spec_project_ndc(spec, [(clip[0] / clip[3]) as f32, (clip[1] / clip[3]) as f32], width / height);
+        let screen = [(visible[0] * 0.5 + 0.5) * width, (1.0 - (visible[1] * 0.5 + 0.5)) * height];
+        screen.iter().all(|value| value.is_finite()).then_some(screen)
+    };
+    let point = |parameter: f64| vec3_new_m((f64::from(a.x) + (f64::from(b.x) - f64::from(a.x)) * parameter) as f32, (f64::from(a.y) + (f64::from(b.y) - f64::from(a.y)) * parameter) as f32, (f64::from(a.z) + (f64::from(b.z) - f64::from(a.z)) * parameter) as f32);
+    Some(ProjectedSegment3d { points: [point(lower), point(upper)], screen: [project(lower)?, project(upper)?] })
 }
 
 /// 📐️ Returns the shared default for a newly mounted perspective World surface.
@@ -830,7 +868,7 @@ impl Mesh3dSchema {
     }
 
     fn validate(self) -> Result<Mesh3dLayout, Mesh3dFault> {
-        if self.vertices == 0
+        if (self.vertices == 0 && (self.edges == 0 || self.indices != 0))
             || (self.indices == 0 && self.edges == 0 && self.vertex_ids == 0)
             || !self.indices.is_multiple_of(3)
             || (self.face_ids != 0 && self.face_ids != self.indices / 3)
@@ -859,6 +897,7 @@ impl Mesh3dSchema {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mesh3dFault {
+    Busy,
     Closing,
     ItemCapacity,
     PageCapacity,
@@ -892,7 +931,11 @@ pub struct Mesh3dComponentAdmissionStep {
     pub processed_bytes: usize,
     pub retired_items: usize,
     pub retired_bytes: usize,
+    pub ownership: RetainedCloneProgress,
 }
+
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct Mesh3dOwnershipStep { pub complete:bool,pub progress:RetainedCloneProgress }
 
 fn mesh3d_component_number(label: &str) -> Option<u64> {
     if label.len() > 20 || !label.as_bytes().first().is_some_and(|byte| matches!(byte, b'1'..=b'9')) || !label.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
@@ -910,45 +953,58 @@ struct Mesh3dPage {
     bytes: Box<[u8; MESH3D_PAGE_BYTES]>,
 }
 
+fn component_lengths(table:&ComponentReferenceTable)->Result<[usize;3],Mesh3dFault> {
+    if table.len()>3 {return Err(Mesh3dFault::Schema);}
+    let mut lengths=[0;3];
+    let mut domains=0u8;
+    for(kind,labels)in table {let domain=match kind.as_str(){"face"=>0,"edge"=>1,"vertex"=>2,_=>return Err(Mesh3dFault::Schema)};if labels.len()>600_000||domains&(1<<domain)!=0{return Err(Mesh3dFault::Schema);}domains|=1<<domain;lengths[domain]=labels.len();}
+    Ok(lengths)
+}
+
+fn controlled_demands<T:protocol::value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,work:usize)->Result<RetirementDemand,Mesh3dFault> {
+    Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand().map_err(|_|Mesh3dFault::Closing)?,capacity_bytes:owner.next_capacity_byte_demand(work).map_err(|_|Mesh3dFault::Closing)?,release_bytes:owner.next_release_byte_demand().map_err(|_|Mesh3dFault::Closing)?,depth:owner.next_depth_demand().map_err(|_|Mesh3dFault::Closing)?})
+}
+
 struct Mesh3dOwner {
     generation: u64,
     revision: u64,
     schema: Mesh3dSchema,
     layout: Mesh3dLayout,
-    pages: Box<[Option<Mesh3dPage>; MESH3D_OWNER_PAGE_CAPACITY]>,
+    pages: Option<Box<[Option<Mesh3dPage>; MESH3D_OWNER_PAGE_CAPACITY]>>,
     allocated_pages: u16,
     written: [u32; 14],
     aabb_min: [f32; 3],
     aabb_max: [f32; 3],
     closing: bool,
     close_page: u16,
-    component_references: Option<BTreeMap<String, Vec<String>>>,
-    component_retirement: Option<Box<dyn protocol::value::ErasedSnapshotRetirement>>,
+    component_references: Option<ComponentReferenceTable>,
+    component_retirement: Option<ControlledRetirement<ComponentReferenceTable>>,
+    scratch_retirement: Option<ControlledRetirement<(NumericSeen,IneligibleGroups)>>,
     component_domain: u8,
     component_group: usize,
     component_complete: bool,
     component_credit: usize,
     component_fault: Option<Mesh3dFault>,
-    component_seen: BTreeMap<u64, u32>,
-    component_ineligible: BTreeSet<u64>,
+    component_seen: NumericSeen,
+    component_ineligible: IneligibleGroups,
+    component_probe: Option<(u64,usize)>,
     has_topological_vertex: bool,
 }
 
 impl Mesh3dOwner {
     fn new(generation: u64, revision: u64, schema: Mesh3dSchema, layout: Mesh3dLayout) -> Self {
-        Self { generation, revision, schema, layout, pages: Box::new(std::array::from_fn(|_| None)), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None, component_domain: 0, component_group: 0, component_complete: true, component_credit: 0, component_fault: None, component_seen: BTreeMap::new(), component_ineligible: BTreeSet::new(), has_topological_vertex: false }
+        Self { generation, revision, schema, layout, pages: Some(Box::new(std::array::from_fn(|_| None))), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None,scratch_retirement:None, component_domain: 0, component_group: 0, component_complete: true, component_credit: 0, component_fault: None, component_seen: NumericSeen::default(), component_ineligible: IneligibleGroups::default(),component_probe:None, has_topological_vertex: false }
     }
 
     fn component_header_credit(&self) -> Result<usize, Mesh3dFault> {
         let Some(table) = self.component_references.as_ref() else { return Ok(0); };
         if table.len() > 3 { return Err(Mesh3dFault::Schema); }
-        let mut credit = 768usize;
+        let credit = table.directory_capacity_bytes().ok_or(Mesh3dFault::ByteCapacity)?;
         for (kind, labels) in table {
             if !matches!(kind.as_str(), "face" | "edge" | "vertex") || labels.len() > 600_000 { return Err(Mesh3dFault::Schema); }
-            let bytes = labels.capacity().checked_mul(std::mem::size_of::<String>()).and_then(|bytes| bytes.checked_add(kind.capacity())).and_then(|bytes| bytes.checked_add(128)).ok_or(Mesh3dFault::ByteCapacity)?;
-            credit = credit.checked_add(bytes).ok_or(Mesh3dFault::ByteCapacity)?;
         }
-        Ok(credit)
+        let lengths=component_lengths(table)?;
+        credit.checked_add(NumericSeen::capacity_bytes(*lengths.iter().max().unwrap()).ok_or(Mesh3dFault::ByteCapacity)?).and_then(|credit|credit.checked_add(lengths.iter().sum::<usize>())).ok_or(Mesh3dFault::ByteCapacity)
     }
 
     fn component_current_label(&self) -> Option<&String> {
@@ -958,37 +1014,33 @@ impl Mesh3dOwner {
     fn component_key(&self, group: u32) -> u64 { (u64::from(self.component_domain) << 32) | u64::from(group) }
 
     fn component_turn_byte_demand(&self) -> usize {
+        if self.component_probe.is_some() {return 12;}
         if let Some(label) = self.component_current_label() { return 24 + if label.len() <= 20 { label.len() } else { 0 }; }
         if self.component_seen.is_empty() { 1 } else { 12 }
     }
 
     fn component_turn_credit(&self) -> Result<(usize, Option<u64>), Mesh3dFault> {
+        if self.component_probe.is_some() {return Ok((self.component_credit,None));}
         if let Some(label) = self.component_current_label() {
-            let mut credit = self.component_credit.checked_add(label.capacity()).ok_or(Mesh3dFault::ByteCapacity)?;
-            let group = self.component_group as u32;
+            let credit = self.component_credit.checked_add(label.capacity()).ok_or(Mesh3dFault::ByteCapacity)?;
             let number = mesh3d_component_number(label);
-            let extra = match number {
-                Some(number) => match self.component_seen.get(&number) {
-                    Some(first) => [*first, group].into_iter().filter(|group| !self.component_ineligible.contains(&self.component_key(*group))).count() * 64,
-                    None => 128,
-                },
-                None => 64,
-            };
-            credit = credit.checked_add(extra).ok_or(Mesh3dFault::ByteCapacity)?;
             return Ok((credit, number));
         }
         Ok((self.component_credit, None))
     }
 
     fn component_turn(&mut self, number: Option<u64>) -> Mesh3dComponentAdmissionStep {
+        if let Some((number,probe))=self.component_probe {
+            self.component_probe_turn(number,probe);
+            return Mesh3dComponentAdmissionStep{processed_items:1,processed_bytes:12,..Default::default()};
+        }
         if let Some(label) = self.component_current_label() {
             let bytes = 24 + if label.len() <= 20 { label.len() } else { 0 };
             let group = self.component_group as u32;
             match number {
-                Some(number) => if let Some(first) = self.component_seen.get(&number).copied() { self.component_ineligible.insert(self.component_key(first)); self.component_ineligible.insert(self.component_key(group)); } else { self.component_seen.insert(number, group); },
-                None => { self.component_ineligible.insert(self.component_key(group)); }
+                Some(number) => self.component_probe_turn(number,self.component_seen.first_probe(number)),
+                None => { self.component_ineligible.insert(self.component_key(group));self.component_group+=1; }
             }
-            self.component_group += 1;
             return Mesh3dComponentAdmissionStep { processed_items: 1, processed_bytes: bytes, ..Default::default() };
         }
         if self.component_seen.pop_first().is_some() { return Mesh3dComponentAdmissionStep { retired_items: 1, retired_bytes: 12, ..Default::default() }; }
@@ -998,14 +1050,24 @@ impl Mesh3dOwner {
         Mesh3dComponentAdmissionStep { complete: self.component_complete, processed_items: 1, processed_bytes: 1, ..Default::default() }
     }
 
-    fn allocate_step(&mut self) -> bool {
-        if self.allocated_pages == self.layout.page_count {
-            return true;
+    fn component_probe_turn(&mut self,number:u64,probe:usize) {
+        let group=self.component_group as u32;
+        match self.component_seen.probe(probe) {
+            None=>{self.component_seen.insert_at(probe,number,group);self.component_probe=None;self.component_group+=1;},
+            Some((previous,first))if previous==number=>{self.component_ineligible.insert(self.component_key(first));self.component_ineligible.insert(self.component_key(group));self.component_probe=None;self.component_group+=1;},
+            Some(_)=>self.component_probe=Some((number,self.component_seen.next_probe(probe))),
         }
+    }
+
+    fn allocate_step(&mut self,grant:RetainedCloneGrant) -> Mesh3dOwnershipStep {
+        if self.allocated_pages == self.layout.page_count {
+            return Mesh3dOwnershipStep{complete:true,..Default::default()};
+        }
+        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<MESH3D_PAGE_BYTES{return Mesh3dOwnershipStep::default();}
         let slot = usize::from(self.allocated_pages);
-        self.pages[slot] = Some(Mesh3dPage { bytes: Box::new([0; MESH3D_PAGE_BYTES]) });
+        self.pages.as_mut().unwrap()[slot] = Some(Mesh3dPage { bytes: Box::new([0; MESH3D_PAGE_BYTES]) });
         self.allocated_pages += 1;
-        self.allocated_pages == self.layout.page_count
+        Mesh3dOwnershipStep{complete:self.allocated_pages==self.layout.page_count,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:MESH3D_PAGE_BYTES,..Default::default()}}
     }
 
     fn write(&mut self, field: Mesh3dField, bytes: &[u8]) -> Result<u32, Mesh3dFault> {
@@ -1031,7 +1093,7 @@ impl Mesh3dOwner {
         }
         for (delta, byte) in bytes.iter().enumerate() {
             let at = absolute + delta;
-            let page = self.pages[at / MESH3D_PAGE_BYTES].as_mut().ok_or(Mesh3dFault::Incomplete)?;
+            let page = self.pages.as_mut().ok_or(Mesh3dFault::Incomplete)?[at / MESH3D_PAGE_BYTES].as_mut().ok_or(Mesh3dFault::Incomplete)?;
             page.bytes[at % MESH3D_PAGE_BYTES] = *byte;
         }
         Ok(())
@@ -1045,7 +1107,7 @@ impl Mesh3dOwner {
         let mut result = [0; N];
         for (delta, output) in result.iter_mut().enumerate() {
             let at = absolute + delta;
-            let page = self.pages[at / MESH3D_PAGE_BYTES].as_ref().ok_or(Mesh3dFault::Incomplete)?;
+            let page = self.pages.as_ref().ok_or(Mesh3dFault::Incomplete)?[at / MESH3D_PAGE_BYTES].as_ref().ok_or(Mesh3dFault::Incomplete)?;
             *output = page.bytes[at % MESH3D_PAGE_BYTES];
         }
         Ok(result)
@@ -1067,26 +1129,49 @@ impl Mesh3dOwner {
             })
     }
 
-    fn close_step(&mut self) -> Result<bool, Mesh3dFault> {
-        self.closing = true;
-        if self.close_page < self.allocated_pages {
-            self.pages[usize::from(self.close_page)] = None;
-            self.close_page += 1;
-            return Ok(false);
-        }
-        if self.component_seen.pop_first().is_some() || self.component_ineligible.pop_first().is_some() { return Ok(false); }
-        if let Some(original) = self.component_references.take() { self.component_retirement = Some(protocol::value::retirement::owned_retirement(original)); return Ok(false); }
-        if let Some(close) = self.component_retirement.as_mut() {
-            if !close.terminal_is_empty() { let bytes = close.next_close_byte_demand().max(MESH3D_PAGE_BYTES); close.close_step(1, bytes).map_err(|_| Mesh3dFault::Closing)?; return Ok(false); }
-            self.component_retirement = None;
-            return Ok(false);
-        }
-        self.layout.total_bytes = 0;
-        self.layout.page_count = 0;
-        self.allocated_pages = 0;
-        self.written = [0; 14];
-        Ok(true)
+    fn close_demands(&self,work:usize)->Result<RetirementDemand,Mesh3dFault> {
+        if self.close_page<self.allocated_pages{return Ok(RetirementDemand{release_bytes:MESH3D_PAGE_BYTES,depth:1,..Default::default()});}
+        if let Some(owner)=&self.component_retirement{return controlled_demands(owner,work);}
+        if self.component_references.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if let Some(owner)=&self.scratch_retirement{return controlled_demands(owner,work);}
+        if self.component_seen.owns_backing()||self.component_ineligible.owns_backing(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        Ok(RetirementDemand{release_bytes:if self.pages.is_some(){mesh3d_begin_capacity_byte_demand()}else{0},depth:1,..Default::default()})
     }
+
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<Mesh3dOwnershipStep,Mesh3dFault> {
+        self.closing=true;
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Mesh3dOwnershipStep::default());}
+        if self.close_page<self.allocated_pages {
+            if grant.maximum_release_bytes<MESH3D_PAGE_BYTES{return Ok(Mesh3dOwnershipStep::default());}
+            self.pages.as_mut().unwrap()[usize::from(self.close_page)]=None;self.close_page+=1;
+            return Ok(Mesh3dOwnershipStep{progress:RetainedCloneProgress{copied_items:1,released_bytes:MESH3D_PAGE_BYTES,..Default::default()},..Default::default()});
+        }
+        if let Some(owner)=self.component_retirement.as_mut() {
+            let step=owner.step(grant).map_err(|_|Mesh3dFault::Closing)?;let progress=step.progress();
+            if owner.terminal_is_empty(){self.component_retirement=None;}
+            return Ok(Mesh3dOwnershipStep{progress,..Default::default()});
+        }
+        if let Some(table)=self.component_references.take() {
+            match ControlledRetirement::new(table){Ok(owner)=>self.component_retirement=Some(owner),Err((_,table))=>{self.component_references=Some(table);return Err(Mesh3dFault::Closing);}}
+            return Ok(Mesh3dOwnershipStep{progress:RetainedCloneProgress{copied_items:1,..Default::default()},..Default::default()});
+        }
+        if let Some(owner)=self.scratch_retirement.as_mut() {
+            let step=owner.step(grant).map_err(|_|Mesh3dFault::Closing)?;let progress=step.progress();
+            if owner.terminal_is_empty(){self.scratch_retirement=None;}
+            return Ok(Mesh3dOwnershipStep{progress,..Default::default()});
+        }
+        if self.component_seen.owns_backing()||self.component_ineligible.owns_backing() {
+            let original=(std::mem::take(&mut self.component_seen),std::mem::take(&mut self.component_ineligible));
+            self.scratch_retirement=Some(ControlledRetirement::new(original).map_err(|_|Mesh3dFault::Closing)?);
+            self.component_probe=None;
+            return Ok(Mesh3dOwnershipStep{progress:RetainedCloneProgress{copied_items:1,..Default::default()},..Default::default()});
+        }
+        let release=if self.pages.is_some(){mesh3d_begin_capacity_byte_demand()}else{0};
+        if grant.maximum_release_bytes<release{return Ok(Mesh3dOwnershipStep::default());}
+        self.pages=None;self.layout.total_bytes=0;self.layout.page_count=0;self.allocated_pages=0;self.written=[0;14];
+        Ok(Mesh3dOwnershipStep{complete:true,progress:RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}})
+    }
+
 }
 
 enum Mesh3dSlotState {
@@ -1096,6 +1181,10 @@ enum Mesh3dSlotState {
     Transition,
 }
 
+impl Drop for Mesh3dOwner {
+    fn drop(&mut self) {assert!(std::thread::panicking()||(self.pages.is_none()&&self.component_references.is_none()&&self.component_retirement.is_none()&&self.scratch_retirement.is_none()&&!self.component_seen.owns_backing()&&!self.component_ineligible.owns_backing()),"mesh owner dropped before admitted terminal retirement");}
+}
+
 struct Mesh3dSlot {
     epoch: u64,
     reserved_pages: u16,
@@ -1103,18 +1192,19 @@ struct Mesh3dSlot {
 }
 
 struct Mesh3dAuthority {
-    slots: Box<[Option<Mesh3dSlot>; MESH3D_AUTHORITY_CAPACITY]>,
+    slots: [Option<Mesh3dSlot>; MESH3D_AUTHORITY_CAPACITY],
     epochs: [u64; MESH3D_AUTHORITY_CAPACITY],
     reserved_pages: usize,
 }
 
 impl Mesh3dAuthority {
-    fn new() -> Self {
-        Self { slots: Box::new(std::array::from_fn(|_| None)), epochs: [0; MESH3D_AUTHORITY_CAPACITY], reserved_pages: 0 }
+    const fn new() -> Self {
+        Self { slots: [const {None};MESH3D_AUTHORITY_CAPACITY], epochs: [0; MESH3D_AUTHORITY_CAPACITY], reserved_pages: 0 }
     }
 
-    fn begin(&mut self, generation: u64, revision: u64, schema: Mesh3dSchema) -> Result<Mesh3dWriteToken, Mesh3dFault> {
+    fn begin(&mut self, generation: u64, revision: u64, schema: Mesh3dSchema,grant:RetainedCloneGrant) -> Result<(Mesh3dWriteToken,RetainedCloneProgress), Mesh3dFault> {
         let layout = schema.validate()?;
+        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<mesh3d_begin_capacity_byte_demand(){return Err(Mesh3dFault::ByteCapacity);}
         let pages = usize::from(layout.page_count);
         if self.reserved_pages.checked_add(pages).is_none_or(|pages| pages > MESH3D_AUTHORITY_PAGE_CAPACITY) {
             return Err(Mesh3dFault::PageCapacity);
@@ -1124,7 +1214,7 @@ impl Mesh3dAuthority {
         self.epochs[slot] = epoch;
         self.slots[slot] = Some(Mesh3dSlot { epoch, reserved_pages: layout.page_count, state: Mesh3dSlotState::Writing(Mesh3dOwner::new(generation, revision, schema, layout)) });
         self.reserved_pages += pages;
-        Ok(Mesh3dWriteToken { slot: slot as u16, epoch, generation, revision })
+        Ok((Mesh3dWriteToken { slot: slot as u16, epoch, generation, revision },RetainedCloneProgress{copied_items:1,retained_capacity_bytes:mesh3d_begin_capacity_byte_demand(),..Default::default()}))
     }
 
     fn writing(&mut self, token: Mesh3dWriteToken) -> Result<&mut Mesh3dOwner, Mesh3dFault> {
@@ -1168,25 +1258,29 @@ impl Mesh3dAuthority {
         Ok(())
     }
 
-    fn move_component_references(&mut self, token: Mesh3dWriteToken, original: &mut BTreeMap<String, Vec<String>>) -> Result<(), Mesh3dFault> {
+    fn move_component_references(&mut self, token: Mesh3dWriteToken, original: &mut ComponentReferenceTable,grant:RetainedCloneGrant) -> Result<RetainedCloneProgress, Mesh3dFault> {
         let owner = self.writing(token)?;
         if owner.component_references.is_some() { return Err(Mesh3dFault::Order); }
+        let lengths=component_lengths(original)?;let birth=mesh3d_component_capacity_byte_demand(original)?;
+        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<birth{return Err(Mesh3dFault::ByteCapacity);}
+        owner.component_seen=NumericSeen::new(*lengths.iter().max().unwrap());owner.component_ineligible=IneligibleGroups::new(lengths);
         owner.component_references = Some(std::mem::take(original));
         owner.component_complete = false;
         let result = owner.component_header_credit().and_then(|credit| self.reserve_component_credit(token, credit));
         if let Err(fault) = result { self.writing(token)?.component_fault = Some(fault); }
-        result
+        result.map(|()|RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,..Default::default()})
     }
 
-    fn component_admission_step(&mut self, token: Mesh3dWriteToken, maximum_items: usize, maximum_bytes: usize) -> Result<Mesh3dComponentAdmissionStep, Mesh3dFault> {
+    fn component_admission_step(&mut self, token: Mesh3dWriteToken,grant:RetainedCloneGrant) -> Result<Mesh3dComponentAdmissionStep, Mesh3dFault> {
+        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_copy_bytes;
         let owner = self.writing_ref(token)?;
         if let Some(fault) = owner.component_fault { return Err(fault); }
-        if owner.component_complete || maximum_items == 0 || maximum_bytes == 0 { return Ok(Mesh3dComponentAdmissionStep { complete: owner.component_complete, ..Default::default() }); }
+        if owner.component_complete || maximum_items == 0 || maximum_bytes == 0||grant.maximum_depth==0 { return Ok(Mesh3dComponentAdmissionStep { complete: owner.component_complete, ..Default::default() }); }
         let bytes = owner.component_turn_byte_demand();
         if maximum_bytes < bytes { return Ok(Mesh3dComponentAdmissionStep::default()); }
         let (credit, number) = owner.component_turn_credit()?;
         if let Err(fault) = self.reserve_component_credit(token, credit) { self.writing(token)?.component_fault = Some(fault); return Err(fault); }
-        Ok(self.writing(token)?.component_turn(number))
+        let mut step=self.writing(token)?.component_turn(number);step.ownership=RetainedCloneProgress{copied_items:step.processed_items+step.retired_items,copied_bytes:step.processed_bytes+step.retired_bytes,..Default::default()};Ok(step)
     }
 
     fn seal(&mut self, token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> {
@@ -1242,32 +1336,44 @@ impl Mesh3dAuthority {
         Ok(())
     }
 
-    fn close_step(&mut self, slot_index: u16, epoch: u64) -> Result<bool, Mesh3dFault> {
+    fn close_demands(&self,slot_index:u16,epoch:u64,work:usize)->Result<RetirementDemand,Mesh3dFault> {
+        let slot=self.slots.get(usize::from(slot_index)).and_then(Option::as_ref).filter(|slot|slot.epoch==epoch).ok_or(Mesh3dFault::Stale)?;
+        let Mesh3dSlotState::Closing(owner)=&slot.state else{return Err(Mesh3dFault::Closing)};owner.close_demands(work)
+    }
+
+    fn close_step(&mut self, slot_index: u16, epoch: u64,grant:RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, Mesh3dFault> {
         let index = usize::from(slot_index);
         let slot = self.slots.get_mut(index).and_then(Option::as_mut).filter(|slot| slot.epoch == epoch).ok_or(Mesh3dFault::Stale)?;
         let Mesh3dSlotState::Closing(owner) = &mut slot.state else { return Err(Mesh3dFault::Closing) };
-        if !owner.close_step()? {
-            return Ok(false);
+        let step=owner.close_step(grant)?;
+        if !step.complete {
+            return Ok(step);
         }
         let pages = usize::from(slot.reserved_pages);
         let _ = owner;
         self.slots[index] = None;
         self.reserved_pages = self.reserved_pages.saturating_sub(pages);
-        Ok(true)
+        Ok(step)
     }
 }
 
-fn mesh3d_authority() -> &'static std::sync::Mutex<Mesh3dAuthority> {
-    static AUTHORITY: std::sync::OnceLock<std::sync::Mutex<Mesh3dAuthority>> = std::sync::OnceLock::new();
-    AUTHORITY.get_or_init(|| std::sync::Mutex::new(Mesh3dAuthority::new()))
+fn mesh3d_authority() -> &'static protocol::value::retirement::controlled::RetainedOwnerGate<Mesh3dAuthority> {
+    static AUTHORITY:protocol::value::retirement::controlled::RetainedOwnerGate<Mesh3dAuthority>=protocol::value::retirement::controlled::RetainedOwnerGate::new(Mesh3dAuthority::new());
+    &AUTHORITY
 }
 
-pub fn mesh3d_begin(generation: u64, revision: u64, schema: Mesh3dSchema) -> Result<Mesh3dWriteToken, Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin(generation, revision, schema)
+pub const fn mesh3d_begin_capacity_byte_demand()->usize {std::mem::size_of::<[Option<Mesh3dPage>;MESH3D_OWNER_PAGE_CAPACITY]>()}
+
+pub fn mesh3d_begin(generation: u64, revision: u64, schema: Mesh3dSchema,grant:RetainedCloneGrant) -> Result<(Mesh3dWriteToken,RetainedCloneProgress), Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.begin(generation, revision, schema,grant)
 }
 
-pub fn mesh3d_allocate_step(token: Mesh3dWriteToken) -> Result<bool, Mesh3dFault> {
-    Ok(mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.allocate_step())
+pub fn mesh3d_allocate_capacity_byte_demand(token:Mesh3dWriteToken)->Result<usize,Mesh3dFault> {
+    let authority=mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)?;let owner=authority.writing_ref(token)?;Ok(if owner.allocated_pages==owner.layout.page_count{0}else{MESH3D_PAGE_BYTES})
+}
+
+pub fn mesh3d_allocate_step(token: Mesh3dWriteToken,grant:RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, Mesh3dFault> {
+    Ok(mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.writing(token)?.allocate_step(grant))
 }
 
 pub fn mesh3d_write_vec3(token: Mesh3dWriteToken, field: Mesh3dField, value: [f32; 3]) -> Result<(), Mesh3dFault> {
@@ -1278,7 +1384,7 @@ pub fn mesh3d_write_vec3(token: Mesh3dWriteToken, field: Mesh3dField, value: [f3
     for (index, value) in value.into_iter().enumerate() {
         bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
     }
-    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let mut authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
     let owner = authority.writing(token)?;
     let item = owner.write(field, &bytes)?;
     if field == Mesh3dField::Positions {
@@ -1299,7 +1405,7 @@ pub fn mesh3d_write_edge(token: Mesh3dWriteToken, value: [[f32; 3]; 2]) -> Resul
     for (index, value) in value.into_iter().flatten().enumerate() {
         bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
     }
-    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let mut authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
     let owner = authority.writing(token)?;
     owner.write(Mesh3dField::Edges, &bytes)?;
     for point in value {
@@ -1319,7 +1425,7 @@ pub fn mesh3d_write_vec2(token: Mesh3dWriteToken, field: Mesh3dField, value: [f3
     for (index, value) in value.into_iter().enumerate() {
         bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
     }
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(field, &bytes)?;
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.writing(token)?.write(field, &bytes)?;
     Ok(())
 }
 
@@ -1331,7 +1437,7 @@ pub fn mesh3d_write_vec4(token: Mesh3dWriteToken, field: Mesh3dField, value: [f3
     for (index, value) in value.into_iter().enumerate() {
         bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
     }
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(field, &bytes)?;
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.writing(token)?.write(field, &bytes)?;
     Ok(())
 }
 
@@ -1339,7 +1445,7 @@ pub fn mesh3d_write_u32(token: Mesh3dWriteToken, field: Mesh3dField, value: u32)
     if !matches!(field, Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds) {
         return Err(Mesh3dFault::Schema);
     }
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(field, &value.to_le_bytes())?;
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.writing(token)?.write(field, &value.to_le_bytes())?;
     Ok(())
 }
 
@@ -1347,7 +1453,7 @@ pub fn mesh3d_read_write_vec3(token: Mesh3dWriteToken, field: Mesh3dField, item:
     if !matches!(field, Mesh3dField::Positions | Mesh3dField::Normals) {
         return Err(Mesh3dFault::Schema);
     }
-    let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
     let owner = authority.writing_ref(token)?;
     if item >= owner.written[field.index()] {
         return Err(Mesh3dFault::Incomplete);
@@ -1360,7 +1466,7 @@ pub fn mesh3d_read_write_u32(token: Mesh3dWriteToken, field: Mesh3dField, item: 
     if !matches!(field, Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds) {
         return Err(Mesh3dFault::Schema);
     }
-    let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
     let owner = authority.writing_ref(token)?;
     if item >= owner.written[field.index()] {
         return Err(Mesh3dFault::Incomplete);
@@ -1372,7 +1478,7 @@ pub fn mesh3d_update_vec3(token: Mesh3dWriteToken, field: Mesh3dField, item: u32
     if !matches!(field, Mesh3dField::Positions | Mesh3dField::Normals) || !value.iter().all(|value| value.is_finite()) {
         return Err(Mesh3dFault::Schema);
     }
-    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let mut authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
     let owner = authority.writing(token)?;
     if item >= owner.written[field.index()] {
         return Err(Mesh3dFault::Incomplete);
@@ -1386,44 +1492,56 @@ pub fn mesh3d_update_vec3(token: Mesh3dWriteToken, field: Mesh3dField, item: u32
 }
 
 pub fn mesh3d_seal(token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.seal(token)
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.seal(token)
 }
 
 /// 🎯️ Moves the original label table into the same mesh owner before publication.
-pub fn mesh3d_move_component_references(token: Mesh3dWriteToken, original: &mut BTreeMap<String, Vec<String>>) -> Result<(), Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.move_component_references(token, original)
+pub fn mesh3d_component_capacity_byte_demand(original:&ComponentReferenceTable)->Result<usize,Mesh3dFault> {
+    let lengths=component_lengths(original)?;NumericSeen::capacity_bytes(*lengths.iter().max().unwrap()).and_then(|bytes|bytes.checked_add(lengths.iter().sum())).ok_or(Mesh3dFault::ByteCapacity)
+}
+
+pub fn mesh3d_move_component_references(token: Mesh3dWriteToken, original: &mut ComponentReferenceTable,grant:RetainedCloneGrant) -> Result<RetainedCloneProgress, Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.move_component_references(token, original,grant)
 }
 
 /// 🧮️ Admits one original typed label or retires one scratch entry under fixed credits.
-pub fn mesh3d_component_admission_step(token: Mesh3dWriteToken, maximum_items: usize, maximum_bytes: usize) -> Result<Mesh3dComponentAdmissionStep, Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.component_admission_step(token, maximum_items, maximum_bytes)
+pub fn mesh3d_component_admission_step(token: Mesh3dWriteToken,grant:RetainedCloneGrant) -> Result<Mesh3dComponentAdmissionStep, Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.component_admission_step(token,grant)
 }
 
 pub fn mesh3d_abort(token: Mesh3dWriteToken) -> Result<(), Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin_close_write(token)
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.begin_close_write(token)
 }
 
-pub fn mesh3d_abort_step(token: Mesh3dWriteToken) -> Result<bool, Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.close_step(token.slot, token.epoch)
+pub fn mesh3d_abort_demands(token:Mesh3dWriteToken,work:usize)->Result<RetirementDemand,Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)?.close_demands(token.slot,token.epoch,work)
+}
+
+pub fn mesh3d_abort_step(token: Mesh3dWriteToken,grant:RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.close_step(token.slot, token.epoch,grant)
 }
 
 pub fn mesh3d_begin_close(lease: Mesh3dLease) -> Result<(), Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin_close(lease)
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.begin_close(lease)
 }
 
-pub fn mesh3d_close_step(lease: Mesh3dLease) -> Result<bool, Mesh3dFault> {
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.close_step(lease.slot, lease.epoch)
+pub fn mesh3d_close_demands(lease:Mesh3dLease,work:usize)->Result<RetirementDemand,Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)?.close_demands(lease.slot,lease.epoch,work)
+}
+
+pub fn mesh3d_close_step(lease: Mesh3dLease,grant:RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, Mesh3dFault> {
+    mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.close_step(lease.slot, lease.epoch,grant)
 }
 
 pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
-    mesh3d_authority().lock().is_ok_and(|authority| authority.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).is_none_or(|slot| slot.epoch != lease.epoch))
+    mesh3d_authority().try_lock().is_ok_and(|authority| authority.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).is_none_or(|slot| slot.epoch != lease.epoch))
 }
 
 impl Mesh3dLease {
     /// 🔖️ Reads one original canonical label without a floating point conversion.
     pub fn component_label(self, field: Mesh3dField, group: u32) -> Result<Option<u64>, Mesh3dFault> {
         let (kind, domain) = match field { Mesh3dField::FaceIds => ("face", 0u64), Mesh3dField::EdgeIds => ("edge", 1u64), Mesh3dField::VertexIds => ("vertex", 2u64), _ => return Err(Mesh3dFault::Schema) };
-        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
         let owner = authority.ready(self)?;
         let Some(label) = owner.component_references.as_ref().and_then(|map| map.get(kind)).and_then(|labels| labels.get(group as usize)) else { return Ok(None); };
         if owner.component_ineligible.contains(&((domain << 32) | u64::from(group))) { return Err(Mesh3dFault::Schema); }
@@ -1439,22 +1557,22 @@ impl Mesh3dLease {
     }
 
     pub fn schema(self) -> Result<Mesh3dSchema, Mesh3dFault> {
-        Ok(mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.ready(self)?.schema)
+        Ok(mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.ready(self)?.schema)
     }
 
     pub fn aabb(self) -> Result<([f32; 3], [f32; 3]), Mesh3dFault> {
-        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
         let owner = authority.ready(self)?;
         Ok((owner.aabb_min, owner.aabb_max))
     }
 
     pub fn cursor(self, field: Mesh3dField) -> Result<Mesh3dItemCursor, Mesh3dFault> {
-        let len = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.ready(self)?.schema.field_items(field);
+        let len = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.ready(self)?.schema.field_items(field);
         Ok(Mesh3dItemCursor { lease: self, field, index: 0, len })
     }
 
     pub fn page_cursor(self, field: Mesh3dField) -> Result<Mesh3dPageCursor, Mesh3dFault> {
-        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
         let owner = authority.ready(self)?;
         let start = owner.layout.offsets[field.index()];
         let bytes = usize::try_from(owner.schema.field_items(field)).ok().and_then(|items| items.checked_mul(Mesh3dSchema::field_item_bytes(field))).ok_or(Mesh3dFault::ByteCapacity)?;
@@ -1499,7 +1617,7 @@ impl Mesh3dLease {
     }
 
     fn read<const N: usize>(self, field: Mesh3dField, item: u32) -> Result<[u8; N], Mesh3dFault> {
-        mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.ready(self)?.item_bytes(field, item)
+        mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.ready(self)?.item_bytes(field, item)
     }
 }
 
@@ -1521,11 +1639,11 @@ impl Mesh3dPageCursor {
         if self.absolute == self.end {
             return Ok(None);
         }
-        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
         let owner = authority.ready(self.lease)?;
         let page_index = self.absolute / MESH3D_PAGE_BYTES;
         let page_offset = self.absolute % MESH3D_PAGE_BYTES;
-        let page = owner.pages.get(page_index).and_then(Option::as_ref).ok_or(Mesh3dFault::Incomplete)?;
+        let page = owner.pages.as_ref().and_then(|pages|pages.get(page_index)).and_then(Option::as_ref).ok_or(Mesh3dFault::Incomplete)?;
         let count = (MESH3D_PAGE_BYTES - page_offset).min(self.end - self.absolute);
         let result = read(&page.bytes[page_offset..page_offset + count]);
         self.absolute += count;
@@ -2048,22 +2166,20 @@ pub fn ray_aabb_slab(origin: Vec3, dir: Vec3, min: [f32; 3], max: [f32; 3]) -> O
     Some(if t_min >= 0.0 { t_min } else { t_max })
 }
 
-pub fn ray_pick_instance(origin: Vec3, dir: Vec3, mesh: Mesh3dLease, instance: &Instance3d) -> Option<f32> {
-    let (min, max) = mesh.aabb().ok()?;
-    let (world_min, world_max) = transform_aabb(instance.model, min, max);
-    ray_aabb_slab(origin, dir, world_min, world_max)?;
-    let mut best = None;
-    let triangles = mesh.schema().ok()?.indices / 3;
-    for triangle in 0..triangles {
-        let tri = mesh_triangle(mesh, triangle)?;
-        let a = instance.model.transform_point_m(vertex(mesh, tri[0])?);
-        let b = instance.model.transform_point_m(vertex(mesh, tri[1])?);
-        let c = instance.model.transform_point_m(vertex(mesh, tri[2])?);
-        if let Some(t) = ray_triangle(origin, dir, a, b, c) {
-            best = Some(best.map_or(t, |prev: f32| prev.min(t)));
-        }
+
+pub fn ray_pick_instance(origin: Vec3, dir: Vec3, mesh: Mesh3dLease, instance: &Instance3d) -> Result<Option<f32>,Mesh3dFault> {
+    let (min,max)=mesh.aabb()?;
+    let (world_min,world_max)=transform_aabb(instance.model,min,max);
+    if ray_aabb_slab(origin,dir,world_min,world_max).is_none(){return Ok(None);}
+    let mut best=None;
+    let triangles=mesh.schema()?.indices/3;
+    for triangle in 0..triangles{
+        let first=triangle.checked_mul(3).ok_or(Mesh3dFault::Schema)?;
+        let points=std::array::from_fn::<_,3,_>(|index|mesh.u32(Mesh3dField::Indices,first+index as u32).and_then(|index|mesh.vec3(Mesh3dField::Positions,index)).map(|point|instance.model.transform_point_m(vec3_new_m(point[0],point[1],point[2]))));
+        let [a,b,c]=points;
+        if let Some(distance)=ray_triangle(origin,dir,a?,b?,c?){best=Some(best.map_or(distance,|previous:f32|previous.min(distance)));}
     }
-    best
+    Ok(best)
 }
 
 pub struct RayMeshHit {
@@ -2075,31 +2191,27 @@ pub struct RayMeshHit {
     pub normal: Vec3,
 }
 
-pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: Mesh3dLease, instance: &Instance3d) -> Option<RayMeshHit> {
-    let (min, max) = mesh.aabb().ok()?;
-    let (world_min, world_max) = transform_aabb(instance.model, min, max);
-    ray_aabb_slab(origin, dir, world_min, world_max)?;
-    let mut best: Option<RayMeshHit> = None;
-    let triangles = mesh.schema().ok()?.indices / 3;
-    for triangle in 0..triangles {
-        let tri = mesh_triangle(mesh, triangle)?;
-        let a = instance.model.transform_point_m(vertex(mesh, tri[0])?);
-        let b = instance.model.transform_point_m(vertex(mesh, tri[1])?);
-        let c = instance.model.transform_point_m(vertex(mesh, tri[2])?);
-        if let Some((t, u, v)) = ray_triangle_barycentric(origin, dir, a, b, c) {
-            if best.as_ref().is_none_or(|hit| t < hit.distance) {
-                let point = origin.add_m(dir.scale_m(t));
-                let edge1 = b.sub_m(a);
-                let edge2 = c.sub_m(a);
-                let mut normal = edge1.cross_m(edge2);
-                if normal.length_m() > 1e-6 {
-                    normal = normal.normalize_m();
-                }
-                best = Some(RayMeshHit { distance: t, triangle_index: triangle as usize, bary_u: u, bary_v: v, point, normal });
+
+pub fn ray_pick_mesh_detail(origin:Vec3,dir:Vec3,mesh:Mesh3dLease,instance:&Instance3d)->Result<Option<RayMeshHit>,Mesh3dFault>{
+    let(min,max)=mesh.aabb()?;
+    let(world_min,world_max)=transform_aabb(instance.model,min,max);
+    if ray_aabb_slab(origin,dir,world_min,world_max).is_none(){return Ok(None);}
+    let mut best:Option<RayMeshHit>=None;
+    let triangles=mesh.schema()?.indices/3;
+    for triangle in 0..triangles{
+        let first=triangle.checked_mul(3).ok_or(Mesh3dFault::Schema)?;
+        let points=std::array::from_fn::<_,3,_>(|index|mesh.u32(Mesh3dField::Indices,first+index as u32).and_then(|index|mesh.vec3(Mesh3dField::Positions,index)).map(|point|instance.model.transform_point_m(vec3_new_m(point[0],point[1],point[2]))));
+        let[a,b,c]=points;let(a,b,c)=(a?,b?,c?);
+        if let Some((distance,u,v))=ray_triangle_barycentric(origin,dir,a,b,c){
+            if best.as_ref().is_none_or(|hit|distance<hit.distance){
+                let point=origin.add_m(dir.scale_m(distance));
+                let mut normal=b.sub_m(a).cross_m(c.sub_m(a));
+                if normal.length_m()>1e-6{normal=normal.normalize_m();}
+                best=Some(RayMeshHit{distance,triangle_index:triangle as usize,bary_u:u,bary_v:v,point,normal});
             }
         }
     }
-    best
+    Ok(best)
 }
 
 fn ray_triangle_barycentric(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<(f32, f32, f32)> {
@@ -2129,18 +2241,15 @@ fn ray_triangle_barycentric(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) 
     }
 }
 
-pub fn interpolate_mesh_uv(mesh: Mesh3dLease, triangle_index: usize, bary_u: f32, bary_v: f32) -> Option<(f32, f32)> {
-    let schema = mesh.schema().ok()?;
-    if schema.uvs == 0 {
-        return None;
-    }
-    let tri = mesh_triangle(mesh, u32::try_from(triangle_index).ok()?)?;
-    let uv = |index: u32| mesh.vec2(Mesh3dField::Uvs, index).ok().map(|uv| (uv[0], uv[1]));
-    let (u0, v0) = uv(tri[0])?;
-    let (u1, v1) = uv(tri[1])?;
-    let (u2, v2) = uv(tri[2])?;
-    let w = 1.0 - bary_u - bary_v;
-    Some((u0 * w + u1 * bary_u + u2 * bary_v, v0 * w + v1 * bary_u + v2 * bary_v))
+
+pub fn interpolate_mesh_uv(mesh:Mesh3dLease,triangle_index:usize,bary_u:f32,bary_v:f32)->Result<Option<(f32,f32)>,Mesh3dFault>{
+    let schema=mesh.schema()?;
+    if schema.uvs==0||triangle_index>=schema.indices as usize/3{return Ok(None);}
+    let first=u32::try_from(triangle_index).ok().and_then(|triangle|triangle.checked_mul(3)).ok_or(Mesh3dFault::Schema)?;
+    let coordinates=std::array::from_fn::<_,3,_>(|index|mesh.u32(Mesh3dField::Indices,first+index as u32).and_then(|index|mesh.vec2(Mesh3dField::Uvs,index)));
+    let[a,b,c]=coordinates;let(a,b,c)=(a?,b?,c?);
+    let weight=1.0-bary_u-bary_v;
+    Ok(Some((a[0]*weight+b[0]*bary_u+c[0]*bary_v,a[1]*weight+b[1]*bary_u+c[1]*bary_v)))
 }
 
 pub const SELECTION_DRAG_DIRECTION_THRESHOLD_PX: f32 = 2.0;
@@ -2623,8 +2732,16 @@ pub fn gumball_project_ray_onto_axis(origin: Vec3, dir: Vec3, pivot: Vec3, axis:
     Some(hit.sub_m(pivot).dot_m(axis.normalize_m()))
 }
 
-/// 🎯️ Resolves the closest pair on a forward ray and a finite segment.
-pub fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<f32> {
+/// 🪡️ Closest finite geometry points retain the authored segment and the forward ray separately.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RaySegmentClosest {
+    pub distance: f32,
+    pub ray_point: Vec3,
+    pub segment_point: Vec3,
+}
+
+/// 🎯️ Resolves the closest pair on a forward ray and a finite segment, including endpoint constraints.
+pub fn ray_segment_closest(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<RaySegmentClosest> {
     let ab = b.sub_m(a);
     let len_sq = ab.dot_m(ab);
     let dir_sq = dir.dot_m(dir);
@@ -2635,23 +2752,33 @@ pub fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option
     let along_ray = offset.dot_m(dir);
     let along_segment = offset.dot_m(ab);
     let directions = dir.dot_m(ab);
-    let squared = |ray: f32, segment: f32| {
+    let mut best: Option<(f32, f32, f32)> = None;
+    let mut consider = |ray: f32, segment: f32| {
         let gap = offset.add_m(dir.scale_m(ray)).sub_m(ab.scale_m(segment));
-        gap.dot_m(gap)
+        let squared = gap.dot_m(gap);
+        if ray.is_finite() && segment.is_finite() && squared.is_finite() && best.is_none_or(|previous| squared < previous.0 || (squared == previous.0 && ray < previous.1)) {
+            best = Some((squared, ray, segment));
+        }
     };
-    let mut distance = squared((-along_ray / dir_sq).max(0.0), 0.0)
-        .min(squared(((directions - along_ray) / dir_sq).max(0.0), 1.0))
-        .min(squared(0.0, (along_segment / len_sq).clamp(0.0, 1.0)));
+    consider((-along_ray / dir_sq).max(0.0), 0.0);
+    consider(((directions - along_ray) / dir_sq).max(0.0), 1.0);
+    consider(0.0, (along_segment / len_sq).clamp(0.0, 1.0));
     let cross = dir.cross_m(ab);
     let denominator = cross.dot_m(cross);
     if denominator > 0.0 {
         let ray = (directions * along_segment - len_sq * along_ray) / denominator;
         let segment = (dir_sq * along_segment - directions * along_ray) / denominator;
         if ray >= 0.0 && (0.0..=1.0).contains(&segment) {
-            distance = distance.min(squared(ray, segment));
+            consider(ray, segment);
         }
     }
-    Some(distance.sqrt())
+    let (squared, ray, segment) = best?;
+    Some(RaySegmentClosest { distance: squared.sqrt(), ray_point: origin.add_m(dir.scale_m(ray)), segment_point: a.add_m(ab.scale_m(segment)) })
+}
+
+/// 📏️ Measures the perpendicular gap using the original constrained closest-pair query.
+pub fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<f32> {
+    ray_segment_closest(origin, dir, a, b).map(|closest| closest.distance)
 }
 
 pub fn quat_from_basis(x: Vec3, y: Vec3, z: Vec3) -> [f32; 4] {

@@ -1,0 +1,30 @@
+{
+  "maximumBodyBytes": 4096,
+  "queue": [
+    { "kind": "genesis", "payloadBytes": 65536 },
+    { "kind": "ack", "ids": ["", "雪\u0000🌍", "last"] },
+    { "kind": "member", "owner": "", "slot": "tree", "child": "", "payloadBytes": 0 },
+    { "kind": "retract", "ids": ["original"] }
+  ],
+  "expectedOrder": ["genesis", "ack", "member", "retract"],
+  "emptyCapacity": 8192,
+  "installedQueues": [
+    { "length": 0, "capacity": 0, "retained": false },
+    { "length": 0, "capacity": 8192, "retained": true },
+    { "length": 1, "capacity": 8192, "retained": true }
+  ],
+  "constructors": [
+    { "items": 0, "depth": 1, "capacity": 128, "demand": 128, "accepted": false },
+    { "items": 1, "depth": 0, "capacity": 128, "demand": 128, "accepted": false },
+    { "items": 1, "depth": 1, "capacity": 127, "demand": 128, "accepted": false },
+    { "items": 1, "depth": 1, "capacity": 128, "demand": 128, "accepted": true },
+    { "items": 1, "depth": 1, "capacity": 4096, "demand": 128, "accepted": true }
+  ],
+  "releaseCases": [
+    { "demand": 65536, "grant": 0, "released": 0 },
+    { "demand": 65536, "grant": 65535, "released": 0 },
+    { "demand": 65536, "grant": 65536, "released": 65536 },
+    { "demand": 8192, "grant": 4096, "released": 0 },
+    { "demand": 8192, "grant": 8192, "released": 8192 }
+  ]
+}

@@ -40,31 +40,28 @@ message Puzzle5dFastenerPatch { optional string source = 1; optional string targ
 message Puzzle5dTargetVolumePatch { repeated double origin = 1; repeated double orientation = 2; optional Puzzle5dScale scale = 3; optional bool hidden = 4; optional bool locked = 5; }
 message Puzzle5dKindCompatibilityPatch { optional bool bidirectional = 1; optional bool important = 2; optional Puzzle5dCompatSpecificity specificity = 3; }
 message Puzzle5dMetaPatch { optional string description = 1; }
-message Puzzle5dGripsDelta { repeated Puzzle5dGrip added = 1; repeated string removed = 2; repeated Puzzle5dGripPatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle5dGripPatchEntry { string id = 1; Puzzle5dGripPatch patch = 2; }
-message Puzzle5dPartsDelta { repeated Puzzle5dPart added = 1; repeated string removed = 2; repeated Puzzle5dPartPatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle5dPartPatchEntry { string id = 1; Puzzle5dPartPatch patch = 2; }
-message Puzzle5dFastenersDelta { repeated Puzzle5dFastener added = 1; repeated string removed = 2; repeated Puzzle5dFastenerPatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle5dFastenerPatchEntry { string id = 1; Puzzle5dFastenerPatch patch = 2; }
-message Puzzle5dTargetVolumesDelta { repeated Puzzle5dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle5dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle5dTargetVolumePatchEntry { string id = 1; Puzzle5dTargetVolumePatch patch = 2; }
-message Puzzle5dKindCompatibilityDelta { repeated Puzzle5dKindCompatibility added = 1; repeated Puzzle5dKindCompatibilityKey removed = 2; repeated Puzzle5dKindCompatibilityPatchEntry patched = 3; repeated Puzzle5dKindCompatibilityKey reordered = 4; }
-message Puzzle5dKindCompatibilityPatchEntry { Puzzle5dKindCompatibilityKey id = 1; Puzzle5dKindCompatibilityPatch patch = 2; }
-
-message Puzzle5dPart { string id = 1; optional string part_kind = 2; Puzzle5dPartAnchor anchor = 3; }
-message Puzzle5dFastener { string id = 1; string source = 2; string target = 3; double gap = 4; double shift = 5; double rise = 6; double rotation = 7; double turn = 8; double tilt = 9; double x = 10; double y = 11; }
-message Puzzle5dTargetVolume { string id = 1; repeated double origin = 2; repeated double orientation = 3; repeated double scale = 4; bool hidden = 5; bool locked = 6; }
-message Puzzle5dKindCompatibility { string source = 1; string target = 2; bool bidirectional = 3; bool important = 4; Puzzle5dCompatSpecificity specificity = 5; }
-message Puzzle5dMeta { bool _placeholder = 1; }
-message Puzzle5dKindCatalogs { bool _placeholder = 1; }
-message Puzzle5dKindCatalogsExtra { bool _placeholder = 1; }
-
-
-enum Puzzle5dPartAnchor { PUZZLE5D_PART_ANCHOR_FIXED = 0; PUZZLE5D_PART_ANCHOR_DERIVED = 1; }
-enum Puzzle5dCompatSpecificity {
-  PUZZLE5D_COMPAT_SPECIFICITY_GENERAL = 0;
-  PUZZLE5D_COMPAT_SPECIFICITY_PART = 1;
-  PUZZLE5D_COMPAT_SPECIFICITY_FASTENER = 2;
-  PUZZLE5D_COMPAT_SPECIFICITY_GRIP = 3;
-  PUZZLE5D_COMPAT_SPECIFICITY_ROPE = 4;
-}
+message Puzzle5dGripsDelta { repeated Puzzle5dGripRemoval removed = 1; repeated Puzzle5dGripInsertion inserted = 2; repeated Puzzle5dGripRelocation moved = 3; repeated Puzzle5dGripModification modified = 4; }
+message Puzzle5dGripRemoval { string id = 1; uint64 index = 2; }
+message Puzzle5dGripInsertion { uint64 index = 1; Puzzle5dGrip row = 2; }
+message Puzzle5dGripRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle5dGripModification { string id = 1; Puzzle5dGripPatch patch = 2; }
+message Puzzle5dPartsDelta { repeated Puzzle5dPartRemoval removed = 1; repeated Puzzle5dPartInsertion inserted = 2; repeated Puzzle5dPartRelocation moved = 3; repeated Puzzle5dPartModification modified = 4; }
+message Puzzle5dPartRemoval { string id = 1; uint64 index = 2; }
+message Puzzle5dPartInsertion { uint64 index = 1; Puzzle5dPart row = 2; }
+message Puzzle5dPartRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle5dPartModification { string id = 1; Puzzle5dPartPatch patch = 2; }
+message Puzzle5dFastenersDelta { repeated Puzzle5dFastenerRemoval removed = 1; repeated Puzzle5dFastenerInsertion inserted = 2; repeated Puzzle5dFastenerRelocation moved = 3; repeated Puzzle5dFastenerModification modified = 4; }
+message Puzzle5dFastenerRemoval { string id = 1; uint64 index = 2; }
+message Puzzle5dFastenerInsertion { uint64 index = 1; Puzzle5dFastener row = 2; }
+message Puzzle5dFastenerRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle5dFastenerModification { string id = 1; Puzzle5dFastenerPatch patch = 2; }
+message Puzzle5dTargetVolumesDelta { repeated Puzzle5dTargetVolumeRemoval removed = 1; repeated Puzzle5dTargetVolumeInsertion inserted = 2; repeated Puzzle5dTargetVolumeRelocation moved = 3; repeated Puzzle5dTargetVolumeModification modified = 4; }
+message Puzzle5dTargetVolumeRemoval { string id = 1; uint64 index = 2; }
+message Puzzle5dTargetVolumeInsertion { uint64 index = 1; Puzzle5dTargetVolume row = 2; }
+message Puzzle5dTargetVolumeRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle5dTargetVolumeModification { string id = 1; Puzzle5dTargetVolumePatch patch = 2; }
+message Puzzle5dKindCompatibilityDelta { repeated Puzzle5dKindCompatibilityRemoval removed = 1; repeated Puzzle5dKindCompatibilityInsertion inserted = 2; repeated Puzzle5dKindCompatibilityRelocation moved = 3; repeated Puzzle5dKindCompatibilityModification modified = 4; }
+message Puzzle5dKindCompatibilityRemoval { Puzzle5dKindCompatibilityKey id = 1; uint64 index = 2; }
+message Puzzle5dKindCompatibilityInsertion { uint64 index = 1; Puzzle5dKindCompatibility row = 2; }
+message Puzzle5dKindCompatibilityRelocation { Puzzle5dKindCompatibilityKey id = 1; uint64 from = 2; uint64 to = 3; }
+message Puzzle5dKindCompatibilityModification { Puzzle5dKindCompatibilityKey id = 1; Puzzle5dKindCompatibilityPatch patch = 2; }

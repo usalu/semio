@@ -8,7 +8,8 @@ import { PlaygroundBootPlanner, pluginGraphErrorMessage, fetchPackageDescriptor 
 import { TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS, setTurnDiagnostics, stampedTurnDiagnostics, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../🗄️wasm-module-cache/🟦️.ts";
-import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalog } from "@semio-tech/framework";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚️browser-frame-transport/🟦️.ts";
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
 import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../🐚️plugin-bridge/🟦️.ts";
@@ -158,7 +159,6 @@ let bootDeclarationsOpen = true;
  * subset of the catalog's own plugin and extension rows, so no legitimate plan can exceed it, and unlike a
  * magic number it cannot go stale as the product grows — a hardcoded 32 rejected the `s` plan's 57 rows
  * outright and made every wgpu boot impossible. */
-const PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
 const ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
 /** 🔁️ How many macrotasks one response seal may wait for the renderer to free its interaction
@@ -329,6 +329,8 @@ let assetPumping = false;
 let assetAbort: AbortController | undefined;
 const bootAbort = new AbortController();
 let explicitPluginModules: readonly WgpuPluginModule[] | undefined;
+let workerCatalog: PluginCatalog | undefined;
+const consumedTopics = (id: string) => [...(workerCatalog?.plugins ?? []), ...(workerCatalog?.extensions ?? [])].find(row => row.pluginId === id)?.consumes ?? [];
 const assetCancellation = new BrowserAssetCancellationCursor();
 let nextImageDecodeRequestId = 1;
 let pageImageDecode: { readonly requestId: number; readonly resolve: (bitmap: ImageBitmap) => void; readonly reject: (error: Error) => void } | undefined;
@@ -603,7 +605,7 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
     progress(`plugin:${target.pluginId}`, share);
     await macrotask();
     try {
-      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl, bootAbort.signal, descriptors?.get(target.pluginId)), suspensionLedger);
+      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl, bootAbort.signal, descriptors?.get(target.pluginId), consumedTopics(target.pluginId)), suspensionLedger);
       typedMediaPlugins.set(target.pluginId, module);
       mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, typedHandle: module, handle: pluginHandleForBridge(module) })));
     } catch (error) {
@@ -705,24 +707,28 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);
-    explicitPluginModules = message.plugins === undefined ? undefined : admitWgpuPluginModules(message.plugins, scope.location.href);
-    const prepared = explicitPluginModules === undefined ? undefined : await prepareWgpuPluginModules(PLUGIN_CATALOG, explicitPluginModules, {
+    const catalogRows = admitPluginCatalogV1(message.catalog, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => bootAbort.signal.aborted, progress: ({ completed, total }) => progress("catalog-admission", 0.25 + 0.005 * completed / Math.max(1, total)) });
+    workerCatalog = pluginCatalogV1(catalogRows);
+    explicitPluginModules = admitWgpuPluginModules(message.plugins ?? catalogRows.targets.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), scope.location.href);
+    const prepared = await prepareWgpuPluginModules(workerCatalog, explicitPluginModules, {
       signal: bootAbort.signal,
+      deadlineMs: performance.now() + 30000,
+      now: () => performance.now(),
+      maxDescriptors: explicitPluginModules.length,
       yieldTurn: macrotask,
       readDescriptor: (id, url, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, signal, heartbeat), suspensionLedger),
       progress: (id, index, count) => progress(`plugin-descriptor:${id}`, 0.25 + 0.025 * index / Math.max(1, count)),
     });
-    const planner = new PlaygroundBootPlanner(prepared?.catalog ?? PLUGIN_CATALOG, message.descriptor.pluginVariant, undefined, admitWgpuPluginRegistrySelection(message.pluginRegistrySelection));
+    const selection = admitWgpuPluginRegistrySelection(message.pluginRegistrySelection);
+    const planner = new PlaygroundBootPlanner(prepared.catalog, message.descriptor.pluginVariant, undefined, selection);
     await driveChunks(planner, 0.25, 0.05);
     const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());
-    if (prepared) assertWgpuPluginPlan(bootPlan, prepared);
-    const pluginCredits = explicitPluginModules?.length ?? PLUGIN_BOOT_CAPACITY;
+    assertWgpuPluginPlan(bootPlan, prepared, selection);
+    const pluginCredits = explicitPluginModules.length;
     if (bootPlan.plugins.length > pluginCredits) throw new Error(`plugin-credits: boot plan exceeds ${pluginCredits} plugins`);
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
-    const plugins = await mountPluginHandles(bootPlan.plugins, prepared?.packages);
-    if (!prepared) await Promise.all(bootPlan.plugins.map((target) => primeContributionManifest(target.pluginId, target.moduleUrl).catch((error) => {
-    })));
-    if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.descriptor.pluginVariant}`);
+    const plugins = await mountPluginHandles(bootPlan.plugins, prepared.packages);
+    if (plugins.length === 0 && (selection !== "all" || explicitPluginModules.length !== 0)) throw new Error(`no wasm plugin modules found for variant ${message.descriptor.pluginVariant}`);
     progress("renderer-runtime", 0.65);
     let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => frameTurns?.requestRuntimeWake()), suspensionLedger);
     while (true) {
@@ -1030,10 +1036,10 @@ function settleHostIo(message: Extract<BrowserFrameUiMessage, { readonly kind: "
  * url comes from the catalog rather than the boot plan on purpose: the whole point is reaching a
  * plugin the boot plan did NOT name. */
 const lazyPluginInstalls = createLazyPluginInstallDoor({
-  moduleUrl: (pluginId) => explicitPluginModules !== undefined ? explicitPluginModules.find(row => row.pluginId === pluginId)?.moduleUrl : (PLUGIN_CATALOG.plugins.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.moduleUrl(pluginId) : PLUGIN_CATALOG.extensions.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.extensionModuleUrl(pluginId) : undefined),
+  moduleUrl: (pluginId) => explicitPluginModules?.find(row => row.pluginId === pluginId)?.moduleUrl ?? workerCatalog?.moduleUrl(pluginId) ?? workerCatalog?.extensionModuleUrl(pluginId),
   mount: async (pluginId, moduleUrl) => {
     if (closed || closing || failed) throw new Error("plugin-install.closing: the frame Worker is closing");
-    const module = await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl), suspensionLedger);
+    const module = await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl, bootAbort.signal, undefined, consumedTopics(pluginId)), suspensionLedger);
     typedMediaPlugins.set(pluginId, module);
     const handle = pluginHandleForBridge(module);
     void primeContributionManifest(pluginId, moduleUrl).catch(() => {});
@@ -1052,7 +1058,7 @@ installWgpuDynamicExtensionDoor(globalThis, async (record) => {
   const previous = dynamicExtensionModules.get(record.extensionId);
   dynamicExtensionModules.delete(record.extensionId);
   await previous?.dispose();
-  const module = await monitoredSuspension(`extension-install:${record.extensionId}`, () => loadPluginModule(record.extensionId, record.moduleUrl), suspensionLedger);
+  const module = await monitoredSuspension(`extension-install:${record.extensionId}`, () => loadPluginModule(record.extensionId, record.moduleUrl, bootAbort.signal, undefined, consumedTopics(record.extensionId)), suspensionLedger);
   dynamicExtensionModules.set(record.extensionId, module);
   void primeContributionManifest(record.extensionId, record.moduleUrl).catch(() => {});
   return { handle: pluginHandleForBridge(module), manifest: module.manifest };

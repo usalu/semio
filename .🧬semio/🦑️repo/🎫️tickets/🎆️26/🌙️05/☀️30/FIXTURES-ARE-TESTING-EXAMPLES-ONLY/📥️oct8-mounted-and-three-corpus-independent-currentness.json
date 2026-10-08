@@ -1,0 +1,66 @@
+{
+  "📥️oct8-mounted-adapter-owned-endpoints.json": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "matches": false,
+      "actualSHA": "acb2f8dc719fca9c3878e7fd243f90ad388f16e6adf2560f6994835edc6e7a4b"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "matches": false,
+      "actualSHA": "879efcf20b98683253137d50e3e755148206f3b5f1ff235f7803703ebc483401"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "matches": false,
+      "actualSHA": "cc4d603b93aa676acb561b37f79c5152b3ccba500ae49f1349fc8e411dc1da45"
+    }
+  ],
+  "📥️oct8-post-corpus-three-owned-endpoints.json": [
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧬️schema/🔣️.json",
+      "matches": true,
+      "actualSHA": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema.json",
+      "matches": true,
+      "actualSHA": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "matches": true,
+      "actualSHA": "c5fefdd8b4df2de61f736a76ce5447603b14d23bbe3cdf4156b70601003404fc"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧪️tests/🟦️.ts",
+      "matches": true,
+      "actualSHA": "19ae2d57ff1fd23ab11728bdefee2182d91a8f17e14e9b2a732fbfb9b4a5065a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "matches": true,
+      "actualSHA": "3ace221803c00519f80575d8034f8d56fb1022e3439eef53e413d0c248aac3b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+      "matches": true,
+      "actualSHA": "4ccf757cc56d7eb94ebaba3a8a5c21c583f1a09344512783485ce0cc956cf7ae"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "matches": true,
+      "actualSHA": "acb2f8dc719fca9c3878e7fd243f90ad388f16e6adf2560f6994835edc6e7a4b"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "matches": false,
+      "actualSHA": "879efcf20b98683253137d50e3e755148206f3b5f1ff235f7803703ebc483401"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "matches": false,
+      "actualSHA": "cc4d603b93aa676acb561b37f79c5152b3ccba500ae49f1349fc8e411dc1da45"
+    }
+  ]
+}

@@ -2,6 +2,7 @@
   "ifds": {
     "modified": [
       {
+        "index": 0,
         "diff": {
           "entries": {
             "modified": [
@@ -10,25 +11,13 @@
                 "values": {
                   "kind": "ascii",
                   "value": [
-                    68,
-                    105,
-                    114,
-                    101,
-                    99,
-                    116,
-                    32,
-                    79,
-                    119,
-                    110,
-                    101,
-                    114
+                    "Direct Owner"
                   ]
                 }
               }
             ]
           }
-        },
-        "index": 0
+        }
       }
     ]
   }

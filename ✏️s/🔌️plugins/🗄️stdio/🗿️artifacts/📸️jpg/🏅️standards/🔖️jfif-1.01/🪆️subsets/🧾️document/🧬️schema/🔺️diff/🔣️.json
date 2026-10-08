@@ -6,23 +6,31 @@
   "properties": {
     "width": {
       "type": "integer",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "minimum": 0,
+      "maximum": 4294967295
     },
     "height": {
       "type": "integer",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "minimum": 0,
+      "maximum": 4294967295
     },
     "pixels": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
       },
       "x-semio-state": "artifact"
     },
     "jfifVersion": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
       },
       "minItems": 2,
       "maxItems": 2,
@@ -39,16 +47,24 @@
     },
     "jfifXDensity": {
       "type": "integer",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "minimum": 0,
+      "maximum": 65535
     },
     "jfifYDensity": {
       "type": "integer",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "minimum": 0,
+      "maximum": 65535
     },
     "jfifThumbnail": {
-      "type": [
-        "object",
-        "null"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JfifThumbnail"
+        },
+        {
+          "type": "null"
+        }
       ],
       "x-semio-state": "artifact"
     },
@@ -58,223 +74,24 @@
     }
   },
   "definitions": {
-    "componentDiff": {
-      "type": "object",
-      "properties": {
-        "hSampling": {
-          "type": "integer"
-        },
-        "vSampling": {
-          "type": "integer"
-        },
-        "quantTableId": {
-          "type": "integer"
-        }
-      }
-    },
-    "componentsDiff": {
-      "type": "object",
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "diff": {
-                "$ref": "#/definitions/componentDiff"
-              }
-            }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "item": {
-                "type": "object"
-              }
-            }
-          }
-        }
-      }
-    },
-    "frameChange": {
-      "type": "object",
-      "properties": {
-        "change": {
-          "type": "string",
-          "enum": [
-            "modify",
-            "replace"
-          ]
-        },
-        "precision": {
-          "type": "integer"
-        },
-        "width": {
-          "type": "integer"
-        },
-        "height": {
-          "type": "integer"
-        },
-        "components": {
-          "$ref": "#/definitions/componentsDiff"
-        },
-        "frame": {
-          "type": "object"
-        }
-      }
-    },
-    "quantTableDiff": {
-      "type": "object",
-      "properties": {
-        "precision": {
-          "type": "integer"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        }
-      }
-    },
-    "quantTablesDiff": {
-      "type": "object",
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "diff": {
-                "$ref": "#/definitions/quantTableDiff"
-              }
-            }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "item": {
-                "type": "object"
-              }
-            }
-          }
-        }
-      }
-    },
-    "huffmanTableKey": {
-      "type": "object",
-      "properties": {
-        "class": {
-          "type": "string",
-          "enum": [
-            "dc",
-            "ac"
-          ]
-        },
-        "id": {
-          "type": "integer"
-        }
-      }
-    },
-    "huffmanTableDiff": {
-      "type": "object",
-      "properties": {
-        "bits": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        }
-      }
-    },
-    "huffmanTablesDiff": {
-      "type": "object",
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/huffmanTableKey"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "key": {
-                "$ref": "#/definitions/huffmanTableKey"
-              },
-              "diff": {
-                "$ref": "#/definitions/huffmanTableDiff"
-              }
-            }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "item": {
-                "type": "object"
-              }
-            }
-          }
-        }
-      }
-    },
     "segmentDiff": {
       "type": "object",
       "properties": {
         "marker": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
         "data": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "otherSegmentsDiff": {
       "type": "object",
@@ -282,7 +99,8 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           }
         },
         "modified": {
@@ -291,12 +109,18 @@
             "type": "object",
             "properties": {
               "index": {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0
               },
               "diff": {
                 "$ref": "#/definitions/segmentDiff"
               }
-            }
+            },
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ]
           }
         },
         "added": {
@@ -305,16 +129,97 @@
             "type": "object",
             "properties": {
               "index": {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0
               },
               "item": {
-                "type": "object"
+                "$ref": "#/definitions/JpgSegment"
               }
+            },
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "JfifThumbnail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "rgbData"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "rgbData": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "RGB data",
+              "de": "RGB-Daten"
+            },
+            "description": {
+              "en": "Uncompressed 24-bit RGB thumbnail pixels.",
+              "de": "Unkomprimierte 24-Bit-RGB-Pixel des Vorschaubilds."
             }
+          }
+        }
+      }
+    },
+    "JpgSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "marker",
+        "data"
+      ],
+      "properties": {
+        "marker": {
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Marker",
+              "de": "Marker"
+            },
+            "description": {
+              "en": "Marker code following the 0xFF prefix.",
+              "de": "Markercode nach dem Präfix 0xFF."
+            }
+          },
+          "minimum": 0,
+          "maximum": 255
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
           }
         }
       }
     }
   },
-  "required": []
+  "required": [],
+  "additionalProperties": false
 }

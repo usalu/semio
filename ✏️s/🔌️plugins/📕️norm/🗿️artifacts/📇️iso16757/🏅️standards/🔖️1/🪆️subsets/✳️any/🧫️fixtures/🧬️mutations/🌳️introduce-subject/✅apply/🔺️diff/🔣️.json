@@ -8,27 +8,31 @@
   "productIndexes": null,
   "propertyDefinitions": null,
   "subjects": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "subject.towel-radiator",
-        "kind": "ProductSpecialization",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Towel radiator"
+        "index": 1,
+        "row": {
+          "id": "subject.towel-radiator",
+          "kind": "ProductSpecialization",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Towel radiator"
+            },
+            "shortName": null,
+            "alternatives": []
           },
-          "shortName": null,
-          "alternatives": []
-        },
-        "definition": {
-          "locale": "en",
-          "text": "Space heating emitter doubling as a towel rail"
-        },
-        "parentId": "subject.radiator"
+          "definition": {
+            "locale": "en",
+            "text": "Space heating emitter doubling as a towel rail"
+          },
+          "parentId": "subject.radiator"
+        }
       }
     ],
-    "removed": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "geometryObjects": null,
   "selectionClassId": null,

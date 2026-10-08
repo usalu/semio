@@ -1,7 +1,7 @@
 //! 🎬️ Sequence parent mutation vocabulary — empty by design (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12,
 //! §20.15): a sequence's steps and edges live in its composed `content` child (`s.stdio.semio@v1/flow`), so every content
 //! edit is a child-lane leaf in that child's store (`drag-nodes`, `insert-node`, `set-node-param`, …) and the parent owns no
-//! leaf that could read the child. Editors publish those child leaves (`crate::editor::sequence::sequence_content_leaves`).
+//! leaf that could read the child. Editors publish those child leaves (`crate::editor::sequence::edit_rules::SceneEdit`).
 
 use crate::diff::SequenceDiff;
 use crate::SequenceSnapshot;

@@ -3,6 +3,47 @@ use crate::retained_clone::RetainedCloneSource;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
+fn physical_grant(work:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work,maximum_capacity_bytes:4096,maximum_release_bytes:65536,maximum_depth:64}}
+fn insert(map:RetainedOrderedMap<String,String>,key:String,value:String)->RetainedOrderedMapInsertCursor<String,String>{
+    let bytes=RetainedOrderedMapInsertCursor::<String,String>::constructor_capacity_bytes();
+    let (cursor,receipt)=RetainedOrderedMapInsertCursor::admit(map,key,value,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("test insertion admission"));
+    assert_eq!(receipt.retained_capacity_bytes,bytes);cursor
+}
+fn close_insert(cursor:&mut RetainedOrderedMapInsertCursor<String,String>){
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+}
+fn close_comparator<K:BoundedOrd>(cursor:&mut K::Cursor){
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+}
+fn close_lookup<K:BoundedOrd>(cursor:&mut RetainedOrderedMapLookupCursor<K>){
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+}
+
+
+#[test]
+fn ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original_aliases() {
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../♻️custody/🧫️fixtures/🔣️.json")).unwrap();
+    let mut oracle=std::process::Command::new("bun").args(["-e","const x=JSON.parse(await Bun.stdin.text());console.log(JSON.stringify(x.fixture.keys.map(x=>[x,...new TextEncoder().encode(x)]))); "]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();
+    use std::io::Write;
+    oracle.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture}).to_string().as_bytes()).unwrap();
+    let output=oracle.wait_with_output().unwrap();assert!(output.status.success());
+    let rows:Vec<serde_json::Value>=serde_json::from_slice(&output.stdout).unwrap();
+    for (key,row) in fixture["keys"].as_array().unwrap().iter().zip(rows) {
+        let key=key.as_str().unwrap();assert_eq!(row.as_array().unwrap()[1..],key.as_bytes().iter().map(|x|serde_json::json!(*x)).collect::<Vec<_>>());
+        let map=RetainedOrderedMap::<String,String>::default();let key=key.to_owned();let pointer=key.as_ptr();
+        let value=String::from("value");let original=key.capacity()+value.capacity();
+        let (refused,heap)=crate::value::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,Default::default()));
+        assert_eq!(heap,(0,0));let (error,map,key,value)=refused.err().unwrap();
+        assert_eq!(error.kind,crate::ValueRefusalKind::WorkLimit);assert_eq!(key.as_ptr(),pointer);
+        let bytes=RetainedOrderedMapInsertCursor::<String,String>::constructor_capacity_bytes();
+        let (admitted,heap)=crate::value::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,RetainedCloneGrant{maximum_items:1,maximum_depth:1,maximum_capacity_bytes:bytes,..Default::default()}));
+        let (mut cursor,receipt)=admitted.unwrap_or_else(|_|panic!("admitted insertion constructor refused"));
+        assert_eq!(receipt.retained_capacity_bytes,bytes);assert_eq!(heap,(bytes,0));cursor.begin_close();let mut born=bytes;let mut freed=0;
+        for _ in 0..10000 {if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(3).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};let (step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;freed+=p.released_bytes;}
+        assert!(cursor.terminal_is_empty());assert_eq!(original+born,freed);println!("[DEBUG] Ordered insertion authority original={original} born={born} physical={freed}");
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Fixture {
@@ -88,10 +129,10 @@ fn retained_map(source: &RetainedOrderedMap<String, String>) -> RetainedOrderedM
     };
     cursor.begin_close();
     while !cursor.terminal_is_empty() {
-        let bytes = cursor.close.next_cold_byte_demand().unwrap().max(7);
+        let bytes = cursor.next_close_release_byte_demand().unwrap();
         assert!(bytes <= grant.maximum_release_bytes);
-        let step = cursor.close_step(1, bytes).expect("retained ordered-map cursor close");
-        if step == SnapshotRetirementStep::Complete {
+        let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("retained ordered-map cursor close");
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(cursor.terminal_is_empty());
         }
     }
@@ -104,10 +145,11 @@ fn lookup(map: &RetainedOrderedMap<String, String>, key: &String, fixture: &Fixt
     let grant = BoundedOrdGrant { maximum_items: fixture.comparison_grant.maximum_items, maximum_bytes: fixture.comparison_grant.maximum_bytes };
     let mut cursor = RetainedOrderedMapLookupCursor::default();
     loop {
-        let (result, progress) = cursor.advance(map.borrow(), key.borrow(), grant).expect("retained ordered-map lookup");
+        let (result, progress, retirement) = cursor.advance(map.borrow(), key.borrow(), grant,physical_grant(7)).expect("retained ordered-map lookup");
         assert!(progress.fits(grant));
+        assert!(retirement.fits(physical_grant(7)));
         if let Some(result) = result {
-            return result;
+            close_lookup(&mut cursor);return result;
         }
     }
 }
@@ -145,8 +187,8 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
             "insert" => {
                 assert!(matches!(before, RetainedOrderedMapLookup::Missing(ordinal) if ordinal == operation.expected.ordinal));
                 let value = operation.value.clone().expect("insert value");
-                let mut cursor = RetainedOrderedMapInsertCursor::new(map, operation.key.clone(), value.clone());
-                let grant = RetainedOrderedMapInsertGrant { comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
+                let mut cursor = insert(map, operation.key.clone(), value.clone());
+                let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
                 let ordinal = loop {
                     match cursor.advance(grant).expect("bounded insertion") {
                         RetainedOrderedMapInsertStep::Progress(progress) => assert!(progress.fits(grant)),
@@ -160,14 +202,14 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 assert_eq!(ordinal, operation.expected.ordinal);
                 oracle.insert(operation.key.clone(), value);
                 assert!(cursor.begin_close());
-                assert!(cursor.terminal_is_empty());
+                close_insert(&mut cursor);assert!(cursor.terminal_is_empty());
             }
             "duplicate" => {
                 assert!(matches!(before, RetainedOrderedMapLookup::Found(ordinal) if ordinal == operation.expected.ordinal));
                 assert!(operation.expected.found);
                 let before_json = serde_json::to_value(&map).expect("map before duplicate");
-                let mut cursor = RetainedOrderedMapInsertCursor::new(map, operation.key.clone(), operation.value.clone().expect("duplicate value"));
-                let grant = RetainedOrderedMapInsertGrant { comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 1, maximum_moved_bytes: 7, maximum_capacity_bytes: 65_536 };
+                let mut cursor = insert(map, operation.key.clone(), operation.value.clone().expect("duplicate value"));
+                let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 1, maximum_moved_bytes: 7, maximum_capacity_bytes: 65_536 };
                 let error = loop {
                     match cursor.advance(grant) {
                         Ok(RetainedOrderedMapInsertStep::Progress(progress)) => assert!(progress.fits(grant)),
@@ -180,10 +222,10 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 assert_eq!(serde_json::to_value(&map).expect("map after duplicate"), before_json);
                 assert!(cursor.begin_close());
                 while !cursor.terminal_is_empty() {
-                    let bytes = cursor.next_close_byte_demand().unwrap().max(7);
+                    let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(1, bytes).expect("duplicate cursor close");
-                    if step == SnapshotRetirementStep::Complete {
+                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("duplicate cursor close");
+                    if matches!(step, RetainedCloneStep::Complete(_)) {
                         assert!(cursor.terminal_is_empty());
                     }
                 }
@@ -217,6 +259,7 @@ fn long_string_comparison_is_byte_paged_and_shape_pinned() {
         }
     }
     assert!(turns > fixture.long_key_byte_length / fixture.comparison_grant.maximum_bytes);
+    close_comparator::<String>(&mut cursor);
 
     let changed = RetainedCloneSource::from_owner(left.clone());
     let replacement = RetainedCloneSource::from_owner(format!("{}x", &left[..left.len() - 1]));
@@ -224,6 +267,7 @@ fn long_string_comparison_is_byte_paged_and_shape_pinned() {
     let mut cursor = String::bounded_ord_cursor();
     cursor.compare(changed.borrow(), right.borrow(), grant).expect("comparison initialization");
     assert!(cursor.compare(replacement.borrow(), right.borrow(), grant).expect_err("changed comparison source must fail").message.contains("projected path changed"));
+    close_comparator::<String>(&mut cursor);
 }
 
 #[test]
@@ -235,14 +279,15 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
     let target = RetainedCloneSource::from_owner(external_target.clone());
     let grant = BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 };
     let mut lookup = RetainedOrderedMapLookupCursor::default();
-    lookup.advance(source.borrow(), target.borrow(), grant).expect("lookup initialization");
+    lookup.advance(source.borrow(), target.borrow(), grant,physical_grant(7)).expect("lookup initialization");
     external_target = fixture.immutable_lookup.external_after_capture.clone();
     let result = loop {
-        if let (Some(result), progress) = lookup.advance(source.borrow(), target.borrow(), grant).expect("captured lookup") {
+        if let (Some(result), progress, retirement) = lookup.advance(source.borrow(), target.borrow(), grant,physical_grant(7)).expect("captured lookup") {
             assert!(progress.fits(grant));
             break result;
         }
     };
+    close_lookup(&mut lookup);
     assert_eq!(result, RetainedOrderedMapLookup::Missing(fixture.immutable_lookup.expected_ordinal));
     assert_ne!(external_target, fixture.immutable_lookup.captured_target);
 
@@ -250,11 +295,11 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
     let mut oracle = (0..growth.entry_count).map(|ordinal| (format!("{}{:04}", growth.key_prefix, ordinal * 2), format!("{}{}", growth.value_prefix, ordinal))).collect::<BTreeMap<_, _>>();
     let source = RetainedOrderedMap::from_sorted_entries_for_test(oracle.clone().into_iter().collect()).expect("growth source");
     let mut map = retained_map(&source);
-    let grant = RetainedOrderedMapInsertGrant { comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
+    let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
     for ordinal in 0..growth.insertions {
         let key = format!("{}{:04}", growth.key_prefix, ordinal * 2 + 1);
         let value = format!("{}insert-{ordinal}", growth.value_prefix);
-        let mut cursor = RetainedOrderedMapInsertCursor::new(map, key.clone(), value.clone());
+        let mut cursor = insert(map, key.clone(), value.clone());
         loop {
             match cursor.advance(grant).expect("repeated map growth") {
                 RetainedOrderedMapInsertStep::Progress(progress) => assert!(progress.fits(grant)),
@@ -268,10 +313,10 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
         oracle.insert(key, value);
         assert!(cursor.begin_close());
         while !cursor.terminal_is_empty() {
-            let bytes = cursor.next_close_byte_demand().unwrap().max(7);
+            let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(1, bytes).expect("grown insertion close");
-            if step == SnapshotRetirementStep::Complete {
+                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("grown insertion close");
+            if matches!(step, RetainedCloneStep::Complete(_)) {
                 assert!(cursor.terminal_is_empty());
             }
         }
@@ -289,13 +334,13 @@ fn insertion_reports_comparison_movement_and_capacity_independently() {
     let map = RetainedOrderedMap::from_sorted_entries_for_test(entries).expect("long-key insertion source");
     let key = format!("{prefix}-0001");
     let value = "inserted-β".to_string();
-    let grant = RetainedOrderedMapInsertGrant {
+    let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7),
         comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: fixture.comparison_grant.maximum_bytes },
         maximum_moved_items: RETAINED_ORDERED_MAP_PAGE_CAPACITY + 1,
         maximum_moved_bytes: (RETAINED_ORDERED_MAP_PAGE_CAPACITY + 1) * std::mem::size_of::<(String, String)>(),
         maximum_capacity_bytes: 65_536,
     };
-    let mut cursor = RetainedOrderedMapInsertCursor::new(map, key.clone(), value.clone());
+    let mut cursor = insert(map, key.clone(), value.clone());
     let mut compared_bytes = 0usize;
     let mut moved_bytes = 0usize;
     let mut retained_capacity_bytes = 0usize;
@@ -323,7 +368,7 @@ fn insertion_reports_comparison_movement_and_capacity_independently() {
     oracle.insert(key, value);
     assert_eq!(map.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<_, _>>(), oracle);
     assert!(cursor.begin_close());
-    assert!(cursor.terminal_is_empty());
+    close_insert(&mut cursor);assert!(cursor.terminal_is_empty());
 }
 
 #[test]
@@ -332,8 +377,8 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
     let source = RetainedOrderedMap::from_sorted_entries_for_test(oracle(&fixture).into_iter().collect()).expect("ordered source");
     let workspace = retained_map(&source);
     let original_pages = workspace.pages.iter().map(Vec::len).collect::<Vec<_>>();
-    let mut cursor = RetainedOrderedMapInsertCursor::new(workspace, "key-0000a".to_string(), "cancelled-β".to_string());
-    let grant = RetainedOrderedMapInsertGrant { comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
+    let mut cursor = insert(workspace, "key-0000a".to_string(), "cancelled-β".to_string());
+    let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
     let mut turns = 0usize;
     while cursor.map.as_ref().expect("insertion workspace").pages.iter().map(Vec::len).eq(original_pages.iter().copied()) {
         assert!(matches!(cursor.advance(grant).expect("partial insertion"), RetainedOrderedMapInsertStep::Progress(_)));
@@ -344,10 +389,10 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
 
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        let bytes = cursor.next_close_byte_demand().unwrap().max(7);
+        let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(1, bytes).expect("cancelled insertion cursor close");
-        if step == SnapshotRetirementStep::Complete {
+                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("cancelled insertion cursor close");
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(cursor.terminal_is_empty());
         }
     }
@@ -362,33 +407,41 @@ fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn
         let mut text = String::with_capacity(row["capacity"].as_u64().unwrap() as usize);
         text.push_str(row["text"].as_str().unwrap());
         let mut close = RetainedCloneClose::default();
-        close.begin(text).unwrap();
+        let mut text=Some(text);
+        let birth=crate::owned_retirement_birth_bytes::<String>();
+        assert!(birth<=admission);
+        close.begin_granted(&mut text,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:birth,maximum_depth:1,..Default::default()}).unwrap();
+        assert!(text.is_none());
         for _ in 0..10_000 {
             if close.retirement.as_ref().unwrap().terminal_is_empty() { break; }
-            let bytes = close.next_cold_byte_demand().unwrap().max(7);
-            assert!(bytes <= admission);
-            close.step(1, bytes).unwrap();
+            let capacity=close.next_capacity_byte_demand(7).unwrap();
+            let release=close.next_release_byte_demand().unwrap();
+            assert!(capacity<=admission&&release<=admission);
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:close.next_depth_demand().unwrap()};
+            let (step,events)=crate::value::observe_retirement_allocations(||close.step_granted(grant).unwrap());
+            assert!(step.progress().fits(grant));
+            assert_eq!(events,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         }
         assert!(close.retirement.as_ref().unwrap().terminal_is_empty());
         let pointer = close.retirement.as_ref().unwrap().as_ref() as *const dyn crate::ErasedSnapshotRetirement;
-        let (physical, query_events) = crate::value::observe_retirement_allocations(|| close.next_cold_byte_demand().unwrap());
+        let (physical, query_events) = crate::value::observe_retirement_allocations(|| close.next_release_byte_demand().unwrap());
         assert_eq!(query_events, (0, 0));
         assert!(physical > 0 && physical <= admission);
         for (items, bytes) in [(0, physical), (1, physical - 1)] {
-            let (step, events) = crate::value::observe_retirement_allocations(|| close.step(items, bytes).unwrap());
+            let (step, events) = crate::value::observe_retirement_allocations(|| close.step_granted(RetainedCloneGrant{maximum_items:items,maximum_release_bytes:bytes,maximum_depth:1,..Default::default()}).unwrap());
             let retained = close.retirement.as_ref().is_some_and(|owner| std::ptr::addr_eq(pointer, owner.as_ref() as *const dyn crate::ErasedSnapshotRetirement));
-            if step != (SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }) || events != (0, 0) || !retained {
+            if step != (RetainedCloneStep::Progress(Default::default())) || events != (0, 0) || !retained {
                 mismatches += 1;
                 println!("[DEBUG] cold terminal denied items={items} bytes={bytes} query={physical} born={} actual-free={} retained={retained}", events.0, events.1);
             }
             if close.is_empty() { break; }
         }
         if !close.is_empty() {
-            let (step, events) = crate::value::observe_retirement_allocations(|| close.step(1, physical).unwrap());
-            if step != (SnapshotRetirementStep::Pending { released_items: 1, released_bytes: physical }) || events != (0, physical) { mismatches += 1; }
+            let (step, events) = crate::value::observe_retirement_allocations(|| close.step_granted(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:physical,maximum_depth:1,..Default::default()}).unwrap());
+            if step != (RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:1,released_bytes:physical,..Default::default()})) || events != (0, physical) { mismatches += 1; }
         }
         assert!(close.is_empty());
-        assert_eq!(close.step(0, 0).unwrap(), SnapshotRetirementStep::Complete);
+        assert_eq!(close.step_granted(Default::default()).unwrap(), RetainedCloneStep::Complete(Default::default()));
         println!("[DEBUG] cold terminal original case={} exact-frame={physical} original-admission={admission}", row["id"]);
     }
     assert_eq!(mismatches, 0, "cold terminal retirement Box requires its complete same-turn physical grant");

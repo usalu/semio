@@ -1,7 +1,7 @@
 //! 🗑️ `delete-page` — removes a {@link Page} by id; inverse recreates it via `create-page`.
 
 use crate::mutations::{create_page, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPageRemoval};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -38,10 +38,10 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
 
 //#region 🗑️DeletePage
 pub fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
-    if !base.pages.iter().any(|page| page.id == payload.id) {
+    let Some(at) = base.pages.iter().position(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { removed: vec![LayoutPageRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeletePage
 

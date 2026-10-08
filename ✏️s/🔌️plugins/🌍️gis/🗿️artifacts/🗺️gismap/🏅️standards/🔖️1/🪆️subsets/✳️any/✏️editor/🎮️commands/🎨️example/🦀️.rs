@@ -1,7 +1,6 @@
 //! 🎨️ GIS 2D play app command — loading a bundled example map.
 
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::schema::{positions_operations, regions_operations, routes_operations};
 use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot};
 use semio_framework_plugin::{ActionArgOption, ArtifactView, ConfigView, Emit, ExampleSource, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -36,11 +35,10 @@ pub fn example_document(example_id: &str) -> Result<GisMapSnapshot, Fault> {
 //#endregion 🔖️Catalogue
 
 //#region 🔖️SetActiveExample
-/// ✏️ Replaces document content by diffing every collection (positions/routes/regions) into batched
-/// create/delete/replace-data operations, so this is an Operation action (not a View one) — an empty
-/// `example_id` clears the map, every other id is resolved against [`example_catalogue`] and framed.
-/// Never a whole-document snapshot swap (that vocabulary is retired by the taxonomy): each batched
-/// operation still has a real per-mutation inverse, so undo restores the prior document exactly.
+/// 🎬️ Loads a catalogue example through the document load path (`Effect::LoadDocument`) — no mutation rows, no history
+/// row, no before/after diffing. An empty `example_id` clears the map, every other id is resolved against
+/// [`example_catalogue`]; a document that already carries the example's collections is left alone, because the shell
+/// replays `setActiveExample` on every boot.
 pub mod set_active_example {
     use super::*;
 
@@ -59,10 +57,10 @@ pub mod set_active_example {
         // `HierarchyProvider::Flat`, so `validate_state` does not auto-prune it either — a stale
         // selection surviving a document swap is a known, accepted gap of this wave.
         let document = doc.snapshot;
-        let mut artifact_mutations = positions_operations(&document.positions, &next.positions);
-        artifact_mutations.extend(routes_operations(&document.routes, &next.routes));
-        artifact_mutations.extend(regions_operations(&document.regions, &next.regions));
-        Ok(Emit { artifact_mutations, ..Default::default() })
+        if document.positions == next.positions && document.routes == next.routes && document.regions == next.regions {
+            return Ok(Emit::default());
+        }
+        Ok(semio_framework_plugin::app::document_load_emit(&next, crate::GIS_MAP_SCHEMA))
     }
 }
 //#endregion 🔖️SetActiveExample

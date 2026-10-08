@@ -14,24 +14,27 @@
   "betaComputed": null,
   "permanents": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "variables": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "accidentals": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "seismics": {
     "removed": [],
-    "added": [
+    "inserted": [
       {
-        "after": "E-1",
+        "index": 1,
         "row": {
           "id": "E-2",
           "aEk": 45000.0,
@@ -39,16 +42,19 @@
         }
       }
     ],
+    "moved": [],
     "modified": []
   },
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "bridgeSls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "effects": []

@@ -24,7 +24,16 @@
           "table": [
             {
               "edit": "removeColumn",
-              "index": 1
+              "index": 1,
+              "name": "B",
+              "cells": [
+                {
+                  "content": ""
+                },
+                {
+                  "content": ""
+                }
+              ]
             }
           ],
           "tex": null,

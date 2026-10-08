@@ -80,7 +80,7 @@ impl<K, T> Splice<K, T> {
 //#region 🔖️Apply
 impl<K, T: Clone> Splice<K, T> {
     /// ▶️ Applies the script to `list`; `names` decides whether a list entry is the one a removal names.
-    pub fn apply(&self, list: Vec<T>, names: impl Fn(&T, &K) -> bool) -> Result<Vec<T>, SpliceFault> {
+    pub fn commit_onto(&self, list: Vec<T>, names: impl Fn(&T, &K) -> bool) -> Result<Vec<T>, SpliceFault> {
         let len = list.len();
         if self.cuts.windows(2).any(|pair| pair[0].0 >= pair[1].0) || self.puts.windows(2).any(|pair| pair[0].0 >= pair[1].0) {
             return Err(SpliceFault::Unordered);

@@ -5,7 +5,8 @@
       {
         "edit": "move",
         "id": "asset-hero",
-        "index": 1
+        "from": 0,
+        "to": 1
       }
     ],
     "patched": []

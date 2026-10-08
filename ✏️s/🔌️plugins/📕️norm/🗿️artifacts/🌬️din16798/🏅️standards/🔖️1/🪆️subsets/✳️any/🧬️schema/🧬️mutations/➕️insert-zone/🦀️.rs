@@ -5,7 +5,7 @@ use crate::{Din16798Mutation, Din16798Snapshot, ZoneDocument};
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct InsertZone { pub index: usize, pub zone: ZoneDocument }
+pub struct InsertZone { pub index: Option<usize>, pub zone: ZoneDocument }
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for InsertZone {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "zone", kind: "insert-zone", record: "InsertZone" };
     fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::Diff> { super::diff::diff(self, base) }

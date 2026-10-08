@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 use super::ReplaceSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsModification};
 use crate::standards::v1::subsets::any::schema::mutations::target_mismatch;
 use crate::Fem3dSnapshot;
 
@@ -18,6 +18,6 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshot) -> protocol::Mutatio
     if !base.nodes.iter().any(|node| node.id == payload.new_support.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.new_support.node_id), [payload.new_support.node_id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { supports: Some(Fem3dSupportsDelta { patched: vec![Fem3dSupportsPatchEntry { id: payload.id.clone(), item: payload.new_support.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { supports: Some(Fem3dSupportsDelta { modified: vec![Fem3dSupportsModification { id: payload.id.clone(), patch: payload.new_support.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

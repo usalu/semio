@@ -8,7 +8,7 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct InsertZone {
-    pub index: usize,
+    pub index: Option<usize>,
     pub zone: crate::ThermalZone,
 }
 

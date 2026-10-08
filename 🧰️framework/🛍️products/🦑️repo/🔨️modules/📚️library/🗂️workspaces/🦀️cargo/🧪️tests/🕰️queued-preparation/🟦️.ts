@@ -1,3 +1,4 @@
+import {cargoPreparationRuntimeV1,observedCargoPreparationV1} from "../🧰️runtime/🟦️.ts";
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -23,8 +24,8 @@ test("queued native preparation survives waiting beyond one active recipe budget
   put("Cargo.toml", '[workspace]\nresolver="2"\nmembers=["kernel"]\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=["*/Cargo.toml"]\nmember-manifests=["kernel/Cargo.toml"]\n[workspace.package]\nedition="2021"\n');
   put("kernel/Cargo.toml", '[package]\nname="queued-kernel"\nversion="0.1.0"\nedition.workspace=true\n[lib]\npath="🦀️.rs"\n[package.metadata.semio.preparation]\nscript="../📜️script.ts"\ncommand=["publish"]\n');
   put("kernel/🦀️.rs", "pub fn kernel() {}\n");
-  put("📜️script.ts", `import {writeFileSync} from "node:fs";import {join} from "node:path";writeFileSync(join(process.env.NX_WORKSPACE_ROOT!,"published.txt"),${JSON.stringify(fixture.expectedPublication)});\n`);
-  const library = fileURLToPath(new URL("../../🟦️.ts", import.meta.url));
+  put("📜️script.ts", observedCargoPreparationV1(root,`import {writeFileSync} from "node:fs";import {join} from "node:path";writeFileSync(join(process.env.NX_WORKSPACE_ROOT!,"published.txt"),${JSON.stringify(fixture.expectedPublication)});\n`));
+  const library = cargoPreparationRuntimeV1(root);
   put("proof/📜️script.ts", `import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(library)};prepareCargoWorkspaceInvocation(process.env.NX_WORKSPACE_ROOT!,["test","--manifest-path","kernel/Cargo.toml"],process.env.NX_WORKSPACE_ROOT!);console.log(JSON.stringify({prepared:true}));\n`);
   const holder = await acquireQueuedResourceLease({ directory: join(root, ".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"), resource: `cargo-preparation:${root}`, mode: "exclusive", owner: "independent-owner", signal: new AbortController().signal });
   const child = Bun.spawn([process.execPath, join(root, "proof/📜️script.ts")], { cwd: root, env: { ...process.env, NX_WORKSPACE_ROOT: root }, stdout: "pipe", stderr: "pipe" });
@@ -35,7 +36,7 @@ test("queued native preparation survives waiting beyond one active recipe budget
     expect(await child.exited, await diagnostic).toBe(0);
     expect(JSON.parse(await output)).toEqual(fixture.expectedMachineOutput);
     expect(readFileSync(join(root, "published.txt"), "utf8")).toBe(fixture.expectedPublication);
-    expect(await diagnostic).toContain("Waiting for exclusive access");
+    expect(await diagnostic).toContain(fixture.expectedWait);
   } finally {
     holder.release();
     if (child.exitCode === null) child.kill();

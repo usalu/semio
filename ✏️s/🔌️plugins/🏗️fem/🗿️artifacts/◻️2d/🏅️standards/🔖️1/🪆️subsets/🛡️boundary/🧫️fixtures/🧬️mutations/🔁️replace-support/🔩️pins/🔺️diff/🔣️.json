@@ -5,12 +5,13 @@
   "materials": null,
   "sections": null,
   "supports": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "sup1",
-        "item": {
+        "patch": {
           "id": "sup1",
           "nodeId": "n1",
           "fixed": [
@@ -19,8 +20,7 @@
           ]
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "loadCases": null,
   "combinations": null,

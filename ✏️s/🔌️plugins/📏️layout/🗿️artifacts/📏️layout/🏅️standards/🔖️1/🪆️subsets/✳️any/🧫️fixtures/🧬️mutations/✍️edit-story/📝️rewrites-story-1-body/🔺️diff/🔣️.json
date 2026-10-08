@@ -5,9 +5,10 @@
   "paragraphStyles": null,
   "characterStyles": null,
   "stories": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "story-1",
         "patch": {
@@ -15,8 +16,7 @@
           "style_runs": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "links": null,
   "parentPages": null,

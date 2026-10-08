@@ -1,8 +1,9 @@
 //! 🗂️ `delete-selection` command.
 
-use crate::editor::puzzle2d::{delete_selection_from_host_snapshot, delete_target_regions_from_snapshot, puzzle2d_clear_selection_write, puzzle2d_selected_target_region_ids, Puzzle2dActionCtx};
+use crate::editor::puzzle2d::{puzzle2d_clear_selection_write, Puzzle2dActionCtx};
 
-/// 🗑️ Removes the selected nodes, handles and edges (with the edges hanging off them) and empties the
+/// 🗑️ Records the removal of the selected nodes (`delete-node`), handles (`remove-node-handle`), edges
+/// (`disconnect-handles`) and target regions (`delete-target-region`) — each severing the edges hanging off it — and empties the
 /// live selection through an app-initiated subtractive write, so nothing keeps pointing at ids the
 /// document no longer has.
 pub fn delete_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
@@ -14,9 +15,6 @@ pub fn delete_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
         return;
     }
     let clear = puzzle2d_clear_selection_write(&ctx.scene.board_snapshot, &selected_ids);
-    ctx.host.borrow_mut().delete_selection();
-    delete_selection_from_host_snapshot(&mut ctx.scene.board_snapshot, &selected_ids);
-    let region_ids = puzzle2d_selected_target_region_ids(&ctx.scene.board_snapshot, &selected_ids);
-    delete_target_regions_from_snapshot(&mut ctx.scene.board_snapshot, &region_ids);
+    ctx.recorder.delete_entities(&selected_ids);
     ctx.interaction_writes.extend(clear);
 }

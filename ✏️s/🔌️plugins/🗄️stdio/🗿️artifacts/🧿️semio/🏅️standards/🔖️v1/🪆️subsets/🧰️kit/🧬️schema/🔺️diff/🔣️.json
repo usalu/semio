@@ -2,74 +2,344 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/diff.json",
   "title": "SemioKitDiff",
+  "description": "Sparse keyed-row diff: per collection `removed` base indices, `modified` rows (sparse row diffs) and `added` rows with their final index.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "types": { "$ref": "#/$defs/SemioKitTypeList" },
-    "designs": { "$ref": "#/$defs/SemioKitDesignList" },
-    "objects": { "$ref": "#/$defs/SemioKitObjectChildList" },
-    "models": { "$ref": "#/$defs/SemioKitModelChildList" },
-    "properties": {
-      "anyOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/value" },
-        { "type": "null" }
-      ]
+    "types": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioKitTypeDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitType"
+              }
+            }
+          }
+        }
+      }
     },
-    "representations": { "$ref": "#/$defs/SemioKitLinkList" }
+    "designs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioKitDesignDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitDesign"
+              }
+            }
+          }
+        }
+      }
+    },
+    "objects": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "value"
+                ],
+                "properties": {
+                  "value": {
+                    "type": "object",
+                    "x-semio-type": "store::ArtifactChild<SemioObjectSnapshot>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "store::ArtifactChild<SemioObjectSnapshot>"
+              }
+            }
+          }
+        }
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "value"
+                ],
+                "properties": {
+                  "value": {
+                    "type": "object",
+                    "x-semio-type": "store::ArtifactChild<SemioModelSnapshot>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "store::ArtifactChild<SemioModelSnapshot>"
+              }
+            }
+          }
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "x-semio-type": "store::ArtifactChild<SemioValueSnapshot>"
+    },
+    "representations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioKitLinkDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "object",
+                "x-semio-type": "store::ArtifactLink"
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "$defs": {
-    "SemioKitTypeList": {
+    "SemioKitTypeDiff": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitType" }
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
         }
       }
     },
-    "SemioKitDesignList": {
+    "SemioKitDesignDiff": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
       "properties": {
-        "values": {
+        "name": {
+          "type": "string"
+        },
+        "pieces": {
           "type": "array",
-          "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitDesign" }
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece"
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitConnection"
+          }
         }
       }
     },
-    "SemioKitObjectChildList": {
+    "SemioKitLinkDiff": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/object" }
-        }
-      }
-    },
-    "SemioKitModelChildList": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["values"],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/model" }
-        }
-      }
-    },
-    "SemioKitLinkList": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["values"],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json" }
+        "pin": {
+          "type": "object",
+          "x-semio-type": "store::LinkPin"
         }
       }
     }

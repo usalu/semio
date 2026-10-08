@@ -163,7 +163,8 @@ pub mod rename_writer;
 
 mod native_codec {
 use super::*;
-use crate::schema::mutations::{apply_writer_mutation, change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, splice_text, ChangeLanguage, ChangeUri, EditText, RenameWriter, SpliceText, WriterMutation};
+use crate::schema::mutations::{change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, splice_text, ChangeLanguage, ChangeUri, EditText, RenameWriter, SpliceText, WriterMutation};
+use crate::central_apply::{apply_writer_mutation};
 
 impl protocol::OpBinary for WriterMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

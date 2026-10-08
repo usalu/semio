@@ -82,10 +82,8 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Din18599Command> {
     vec![
-        Din18599Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default())) }),
         Din18599Command::Evaluate(evaluate::Evaluate {}),
         Din18599Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
-        Din18599Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
     ]
 }
 
@@ -97,14 +95,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
+    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example"];
+    let keywords = ["evaluate", "selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -167,9 +165,9 @@ async fn every_declared_body_key_renders() {
 
 //#region ðï¸Behavior
 #[semio_framework_async_macros::async_test]
-async fn set_snapshot_commits_a_host_backed_report() {
+async fn evaluate_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din18599Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default())) })).await;
+    context::dispatch(&mut app, Din18599Command::Evaluate(evaluate::Evaluate {})).await;
     context::dispatch(&mut app, Din18599Command::Evaluate(evaluate::Evaluate {})).await;
     context::settle(&mut app).await;
     let host = NormHost::<DinV18599Family>::from_artifact(app.snapshot().expect("projection"));
@@ -210,12 +208,16 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din18599Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default())) })).await;
+    let base = app.snapshot().expect("projection");
+    context::dispatch(&mut app, Din18599Command::SetField(set_field::SetField { path: "netFloorAreaM2".into(), value_json: (base.net_floor_area_m2 + 1.0).to_string() })).await;
+    let edited = app.snapshot().expect("projection");
+    assert_ne!(edited, base, "the concrete setter moved the document");
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), base);
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), Din18599Snapshot::default());
+    assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);
 }
 
@@ -243,21 +245,6 @@ async fn report_out_exports_the_computed_check_report() {
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior
-
-/// ⚖️ LAW (S15 matrix, 2026-09-25): `setSnapshot`'s declared argument is `snapshot`, the document's camelCase JSON.
-/// The rail delivered the committed ➡️after fixture and the editor handed that JSON to its DSL-text parser
-/// (`expected Enum, found Absent at 1:1`). The argument now reaches the handler as the same document.
-#[semio_framework_async_macros::async_test]
-async fn the_declared_snapshot_argument_carries_the_documents_json() {
-    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/➡️after/🔣️.json");
-    let expected = crate::standards::v1::subsets::any::io::text::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
-    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&format!("{{\"snapshot\":{AFTER}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rail arguments");
-    let command = <Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
-    let Din18599Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };
-    let carried = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&crate::document::unescape_op_text_field(&payload.text)).expect("the payload carries the document's own DSL text");
-    assert_eq!(carried, expected, "the rail's JSON document must reach the handler unchanged");
-    assert!(<Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"text":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).is_err(), "only the declared `snapshot` argument is read");
-}
 
 semio_framework_plugin::history_edit_acceptance_law!("norm", super::Din18599PlayApp, || semio_framework_plugin::App { definition: super::create_din18599_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 semio_framework_plugin::composed_reload_law!("norm", super::Din18599PlayApp, || semio_framework_plugin::App { definition: super::create_din18599_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

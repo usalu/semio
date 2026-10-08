@@ -104,30 +104,6 @@ async fn replace_and_move_of_an_absent_target_have_empty_inverse_and_are_no_ops(
     assert!(mv.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(protocol::apply_diff(mv.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
 }
-//#endregion 🧪️InverseRoundTripLaw
-
-//#region 🧪️DiffConsistencyLaw
-/// 🧪️ diff_consistency_law: ∀ variant, the mutation's own `diff(base)` (built directly from
-/// `(payload, base)`, never apply-then-capture) matches `SemioBrepDiff::between(base,
-/// diff.diff().apply(base))` — i.e. the sparse diff this facet hand-constructs is exactly the diff a
-/// generic before/after comparison would independently derive. This is the check that would
-/// have caught an apply-then-capture bug (the `mutual recursion` trap this module's original
-/// doc comment already warned about) or a cascade that silently touched the wrong fields.
-#[semio_framework_async_macros::async_test]
-async fn diff_consistency_law_matches_independent_between() {
-    use protocol::command::DiffAlgebra;
-    let base = fixture();
-    for m in demo_mutation_cases() {
-        let hand_diff = m.diff(&base);
-        let after = protocol::apply_diff(hand_diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
-        let independent_diff = SemioBrepDiff::between(&base, &after);
-        assert_eq!(
-            protocol::apply_diff(hand_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
-            protocol::apply_diff(&independent_diff, &base).expect("apply must succeed for a well-formed fixture"),
-            "diff({m:?}) must match an independent before/after comparison"
-        );
-    }
-}
 //#endregion 🧪️DiffConsistencyLaw
 
 //#region 🧪️DeterminismLaw

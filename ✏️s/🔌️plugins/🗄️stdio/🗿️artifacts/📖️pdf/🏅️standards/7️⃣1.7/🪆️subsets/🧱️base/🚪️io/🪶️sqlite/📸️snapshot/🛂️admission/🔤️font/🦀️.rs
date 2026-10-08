@@ -7,19 +7,19 @@ fn descriptor(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  for(i,key)in["italicAngle","ascent","descent","capHeight","stemV","stemH","xHeight","leading","avgWidth","maxWidth","missingWidth"].iter().enumerate(){cells[6+i]=if i<5{real_or(field(v,key)?,0.0)?}else{real(field(v,key)?)?};}
  cells[17]=optional_text(field(v,"fontFamily")?)?;cells[18]=optional_text(field(v,"fontStretch")?)?;cells[19]=real(field(v,"fontWeight")?)?;cells[20]=optional_text(field(v,"charSet")?)?;cells[21]=Int;c.row("pdf_font_descriptor",&cells)
 }
-fn program(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{let tag=kind(v)?;if !matches!(tag,"type1"|"trueType"|"cff"|"cidCff"|"openType"){return Err(invalid())}let data=c.blob(field(v,"data")?)?;let lengths=if tag=="type1"{[Int;3]}else{[Null;3]};c.row("pdf_font_program",&[Text(tag),data,lengths[0],lengths[1],lengths[2]])}
-fn unicode(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
+pub(super) fn program(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{let tag=kind(v)?;if !matches!(tag,"type1"|"trueType"|"cff"|"cidCff"|"openType"){return Err(invalid())}artifact_reference(c,field(v,"reference")?)?;c.row("pdf_font_program",&[Text(tag),Int])}
+pub(super) fn unicode(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  c.row("pdf_to_unicode",&[Int])?;for v in list(field(v,"mappings")?)?{let tag=kind(v)?;let cols=match tag{"char"=>[Int,Null,Null],"range"=>[Null,Int,Int],_=>return Err(invalid())};c.row("pdf_unicode_mapping",&[Int,Int,Text(tag),cols[0],cols[1],cols[2],Text(text(field(v,"text")?)?)])?;}Ok(())
 }
-fn cmap(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
+pub(super) fn cmap(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  match kind(v)?{
   "predefined"=>c.row("pdf_cmap",&[Text("predefined"),Text(text(field(v,"name")?)?),Null,Null]),
-  "embedded"=>{let v=field(v,"cmap")?;c.row("pdf_cmap",&[Text("embedded"),Text(text(field(v,"name")?)?),Int,optional_text(field(v,"useCmap")?)?])?;for _ in list(field(v,"codespace")?)?{c.row("pdf_codespace_range",&[Int;5])?;}for v in list(field(v,"mappings")?)?{let tag=kind(v)?;let cols=match tag{"char"=>[Int,Null,Null],"range"=>[Null,Int,Int],_=>return Err(invalid())};c.row("pdf_cid_mapping",&[Int,Int,Text(tag),cols[0],cols[1],cols[2],Int])?;}Ok(())},_=>Err(invalid())
+  "embedded"=>embedded_cmap(c,field(v,"cmap")?),_=>Err(invalid())
  }
 }
 fn cid(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  descriptor(c,field(v,"descriptor")?)?;let program_value=field(v,"program")?;if !matches!(program_value,D::Null){program(c,program_value)?;}
- objects::dictionary(c,field(v,"extra")?)?;let map=field(v,"cidToGid")?;let(typ,data)=if matches!(map,D::Null){(Null,Null)}else{match kind(map)?{"identity"=>(Text("identity"),Null),"map"=>(Text("map"),c.blob(field(map,"data")?)?),_=>return Err(invalid())}};
+ objects::dictionary(c,field(v,"extra")?)?;let map=field(v,"cidToGid")?;let(typ,data)=if matches!(map,D::Null){(Null,Null)}else{match kind(map)?{"identity"=>(Text("identity"),Null),"map"=>{for glyph in list(field(map,"glyphs")?)? {c.row("pdf_cid_glyph",&[Int,Int,integer(glyph)?])?;}(Text("map"),Int)},_=>return Err(invalid())}};
  let system=field(v,"systemInfo")?;let vertical=field(v,"defaultVertical")?;let vertical=if matches!(vertical,D::Null){[Null;2]}else{let values=list(vertical)?;if values.len()!=2{return Err(invalid())}[real(&values[0])?,real(&values[1])?]};
  c.row("pdf_cid_font",&[Int,Text(text(field(v,"baseFont")?)?),Text(if matches!(system,D::Null){"Adobe"}else{text(field(system,"registry")?)?}),Text(if matches!(system,D::Null){"Identity"}else{text(field(system,"ordering")?)?}),Int,Int,real_or(field(v,"defaultWidth")?,1000.0)?,vertical[0],vertical[1],typ,data,if matches!(program_value,D::Null){Null}else{Int},Int])?;
  for run in list(field(v,"widths")?)?{c.relation("pdf_cid_width_run")?;for width in list(field(run,"widths")?)?{c.row("pdf_cid_width",&[Int,Int,real(width)?])?;}}
@@ -37,3 +37,5 @@ pub(super) fn font(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  if tag!="type0"{for width in list(field(subtype,"widths")?)?{c.row("pdf_font_width",&[Int,Int,real(width)?])?;}}
  if tag=="type3"{for procedure in list(field(subtype,"charProcs")?)?{render::ops(c,field(procedure,"content")?)?;c.row("pdf_char_proc",&[Int,Int,Text(text(field(procedure,"name")?)?),Int])?;}}Ok(())
 }
+
+pub(super) fn embedded_cmap(c:&mut Census<'_ ,'_>,v:&D)->Result<(),ValueError>{c.row("pdf_cmap",&[Text("embedded"),Text(text(field(v,"name")?)?),Int,optional_text(field(v,"useCmap")?)?])?;for _ in list(field(v,"codespace")?)?{c.row("pdf_codespace_range",&[Int;5])?;}for v in list(field(v,"mappings")?)?{let tag=kind(v)?;let cols=match tag{"char"=>[Int,Null,Null],"range"=>[Null,Int,Int],_=>return Err(invalid())};c.row("pdf_cid_mapping",&[Int,Int,Text(tag),cols[0],cols[1],cols[2],Int])?;}Ok(())}

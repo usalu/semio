@@ -1,0 +1,23 @@
+{
+  "schema": "semio.stdio.primary-snapshot-membership/v1",
+  "cases": [
+    {
+      "id": "complete-original",
+      "array": null,
+      "repeatedIndex": null,
+      "accepted": true
+    },
+    {
+      "id": "duplicate-kind",
+      "array": "artifactKinds",
+      "repeatedIndex": 0,
+      "accepted": false
+    },
+    {
+      "id": "duplicate-dialect",
+      "array": "dialectBindings",
+      "repeatedIndex": 0,
+      "accepted": false
+    }
+  ]
+}

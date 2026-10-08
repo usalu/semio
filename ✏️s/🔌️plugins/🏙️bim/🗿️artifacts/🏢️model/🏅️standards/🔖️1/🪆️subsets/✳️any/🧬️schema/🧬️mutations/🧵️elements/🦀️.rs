@@ -200,8 +200,10 @@ pub fn placement(base: &ModelSnapshot, id: &str) -> Option<Placement> {
     base.grids.get(id).map(|grid| Placement::Grid { start: grid.start, end: grid.end })
 }
 
-fn patched<T: Clone + PartialEq, P: Patch<T>>(slot: &mut Option<KeyedDelta<T, P>>, id: &str, patch: P) {
-    slot.get_or_insert_with(KeyedDelta::default).0.insert(id.to_string(), Entry::Patched(patch));
+fn patched<T: Clone + PartialEq, P: Patch<T>>(slot: Option<KeyedDelta<T, P>>, id: &str, patch: P) -> Option<KeyedDelta<T, P>> {
+    let mut delta = slot.unwrap_or_default();
+    delta.0.insert(id.to_string(), Entry::Patched(patch));
+    Some(delta)
 }
 
 /// 🔺️ `next` when it differs from `prior`, nothing otherwise: a patch carries exactly the fields that move.
@@ -218,43 +220,43 @@ pub fn placement_diff(before: &BTreeMap<String, Placement>, after: &BTreeMap<Str
         match place {
             Placement::Wall { axis } => {
                 let was = if let Some(Placement::Wall { axis }) = prior { Some(axis) } else { None };
-                patched(&mut diff.walls, id, WallPatch { axis: moved(axis, was), ..Default::default() });
+                diff.walls = patched(diff.walls.take(), id, WallPatch { axis: moved(axis, was), ..Default::default() });
             }
             Placement::CurtainWall { axis } => {
                 let was = if let Some(Placement::CurtainWall { axis }) = prior { Some(axis) } else { None };
-                patched(&mut diff.curtain_walls, id, CurtainWallPatch { axis: moved(axis, was), ..Default::default() });
+                diff.curtain_walls = patched(diff.curtain_walls.take(), id, CurtainWallPatch { axis: moved(axis, was), ..Default::default() });
             }
             Placement::Column { position, rotation } => {
                 let (was_position, was_rotation) = if let Some(Placement::Column { position, rotation }) = prior { (Some(position), Some(rotation)) } else { (None, None) };
-                patched(&mut diff.columns, id, ColumnPatch { position: moved(position, was_position), rotation: moved(rotation, was_rotation), ..Default::default() });
+                diff.columns = patched(diff.columns.take(), id, ColumnPatch { position: moved(position, was_position), rotation: moved(rotation, was_rotation), ..Default::default() });
             }
             Placement::Beam { start, end } => {
                 let (was_start, was_end) = if let Some(Placement::Beam { start, end }) = prior { (Some(start), Some(end)) } else { (None, None) };
-                patched(&mut diff.beams, id, BeamPatch { start: moved(start, was_start), end: moved(end, was_end), ..Default::default() });
+                diff.beams = patched(diff.beams.take(), id, BeamPatch { start: moved(start, was_start), end: moved(end, was_end), ..Default::default() });
             }
             Placement::Slab { boundary, holes, slope } => {
                 let (was_boundary, was_holes, was_slope) = if let Some(Placement::Slab { boundary, holes, slope }) = prior { (Some(boundary), Some(holes), Some(slope)) } else { (None, None, None) };
-                patched(&mut diff.slabs, id, SlabPatch { boundary: moved(boundary, was_boundary), holes: moved(holes, was_holes), slope: moved(slope, was_slope).map(Assigned::new), ..Default::default() });
+                diff.slabs = patched(diff.slabs.take(), id, SlabPatch { boundary: moved(boundary, was_boundary), holes: moved(holes, was_holes), slope: moved(slope, was_slope).map(Assigned::new), ..Default::default() });
             }
             Placement::Roof { footprint, shape } => {
                 let (was_footprint, was_shape) = if let Some(Placement::Roof { footprint, shape }) = prior { (Some(footprint), Some(shape)) } else { (None, None) };
-                patched(&mut diff.roofs, id, RoofPatch { footprint: moved(footprint, was_footprint), shape: moved(shape, was_shape), ..Default::default() });
+                diff.roofs = patched(diff.roofs.take(), id, RoofPatch { footprint: moved(footprint, was_footprint), shape: moved(shape, was_shape), ..Default::default() });
             }
             Placement::Stair { start, direction } => {
                 let (was_start, was_direction) = if let Some(Placement::Stair { start, direction }) = prior { (Some(start), Some(direction)) } else { (None, None) };
-                patched(&mut diff.stairs, id, StairPatch { start: moved(start, was_start), direction: moved(direction, was_direction), ..Default::default() });
+                diff.stairs = patched(diff.stairs.take(), id, StairPatch { start: moved(start, was_start), direction: moved(direction, was_direction), ..Default::default() });
             }
             Placement::Railing { path } => {
                 let was = if let Some(Placement::Railing { path }) = prior { Some(path) } else { None };
-                patched(&mut diff.railings, id, RailingPatch { path: moved(path, was), ..Default::default() });
+                diff.railings = patched(diff.railings.take(), id, RailingPatch { path: moved(path, was), ..Default::default() });
             }
             Placement::Space { boundary } => {
                 let was = if let Some(Placement::Space { boundary }) = prior { Some(boundary) } else { None };
-                patched(&mut diff.spaces, id, SpacePatch { boundary: moved(boundary, was), ..Default::default() });
+                diff.spaces = patched(diff.spaces.take(), id, SpacePatch { boundary: moved(boundary, was), ..Default::default() });
             }
             Placement::Grid { start, end } => {
                 let (was_start, was_end) = if let Some(Placement::Grid { start, end }) = prior { (Some(start), Some(end)) } else { (None, None) };
-                patched(&mut diff.grids, id, GridLinePatch { start: moved(start, was_start), end: moved(end, was_end), ..Default::default() });
+                diff.grids = patched(diff.grids.take(), id, GridLinePatch { start: moved(start, was_start), end: moved(end, was_end), ..Default::default() });
             }
         }
     }

@@ -19,3 +19,5 @@ record replace-block tag=4
 field payload bytes
 record set-inlines tag=5
 field payload bytes
+record splice-source tag=6
+field payload bytes

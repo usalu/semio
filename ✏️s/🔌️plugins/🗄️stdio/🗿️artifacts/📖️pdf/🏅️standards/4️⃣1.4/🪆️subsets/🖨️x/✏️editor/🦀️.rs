@@ -193,8 +193,12 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf14XE
         }
     }
 
-    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_4::subsets::base::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::standards::v1_4::subsets::base::schema::mutations::EDIT_RULES
+    }
+
+    fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        crate::standards::v1_4::subsets::base::schema::mutations::special_edit(event, snapshot)
     }
 }
 

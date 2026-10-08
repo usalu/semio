@@ -46,19 +46,7 @@ pub enum BinaryMutation {
 pub const KINDS: &[&str] = &["replace-byte-range", "append-bytes", "truncate-at"];
 //#endregion 🔖️Kinds
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> protocol::MutationOutcome<BinaryDiff> {
-    let outcome = <BinaryMutation as Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 //#region OpCodecs

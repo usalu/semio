@@ -1,0 +1,32 @@
+{
+  "schema": "framework.store.history-read-admission",
+  "routes": [
+    "preview",
+    "replay",
+    "finished"
+  ],
+  "grantCases": [
+    "zeroItems",
+    "belowCapacity",
+    "zeroDepth",
+    "full"
+  ],
+  "expectedTransfers": [
+    0,
+    0,
+    0,
+    1
+  ],
+  "retainOriginalOnRefusal": true,
+  "retainInstalledIssuerAcrossProviderRefusal": true,
+  "reportExactFrameBirth": true,
+  "originalTarget": "original/🐚",
+  "unusedInputCapacity": 8192,
+  "snapshot": {
+    "n": 23
+  },
+  "factoryRoutes": [
+    "ownedMutation",
+    "snapshotAlias"
+  ]
+}

@@ -55,13 +55,13 @@ fn rich_document() -> PdfSnapshot {
     let program = synthesize_truetype(1000, &[('A' as u32, 600, vec![vec![(50, 0), (50, 700), (550, 700), (550, 0)]]), ('b' as u32, 550, vec![vec![(0, 0), (0, 500), (500, 500)]]), (' ' as u32, 250, Vec::new())]);
     let mut snapshot = text_document(&[(300.0, 400.0, "Hello Semio — a typed PDF")]);
     snapshot.declared_version = "1.7".into();
-    snapshot.fonts.push(embedded_true_type_font("Synth", &program, "SynthSans", Some("Ab A")).unwrap());
+    let embedded=embedded_true_type_font(&mut snapshot,"Synth",&program,"SynthSans",Some("Ab A")).unwrap();snapshot.fonts.push(embedded);
     snapshot.images.push(PdfImage::rgb8("Im1", 2, 2, vec![255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0]));
     let mut mask = PdfImage::gray8("Im1SMask", 2, 2, vec![255, 128, 64, 0]);
     mask.decode = vec![1.0, 0.0];
     snapshot.images.push(mask);
     snapshot.images[0].soft_mask = Some("Im1SMask".into());
-    snapshot.images.push(PdfImage::jpeg("Photo", 1, 1, PdfColorSpace::DeviceRgb, vec![0xFF, 0xD8, 0xFF, 0xD9]));
+    let reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact(&mut snapshot,"s.stdio.jpeg",PdfObject::Stream{dict:Vec::new(),data:vec![0xFF,0xD8,0xFF,0xD9],filters:vec![PdfStreamFilter::Dct{color_transform:None}]}).unwrap();let mut photo=PdfImage::rgb8("Photo",1,1,vec![0,0,0]);photo.body=PdfImageBody::Artifact{reference};snapshot.images.push(photo);
     snapshot.forms.push(PdfFormXObject::new("Fm1", [0.0, 0.0, 50.0, 50.0], vec![PdfOp::SetFillRgb { r: 0.0, g: 0.5, b: 1.0 }, PdfOp::Rectangle { x: 0.0, y: 0.0, width: 50.0, height: 50.0 }, PdfOp::Fill]));
     snapshot.ext_g_states.push(PdfExtGState { id: "GS1".into(), fill_alpha: Some(0.5), stroke_alpha: Some(0.75), blend_mode: Some(vec!["Multiply".into()]), soft_mask: Some(PdfSoftMask::Luminosity { group: "Fm1".into(), backdrop: Some(vec![0.0]), transfer: None }), dash: Some((vec![3.0, 1.0], 0.5)), ..PdfExtGState::default() });
     snapshot.shadings.push(PdfShading { id: "Sh1".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Axial { coords: [0.0, 0.0, 100.0, 0.0], domain: None, function: PdfFunction::Exponential { domain: vec![0.0, 1.0], range: None, c0: vec![1.0, 0.0, 0.0], c1: vec![0.0, 0.0, 1.0], n: 1.0 }, extend: [true, true] }, background: None, bbox: None, anti_alias: false, extra: Vec::new() });
@@ -69,7 +69,7 @@ fn rich_document() -> PdfSnapshot {
     snapshot.patterns.push(PdfPattern { id: "P1".into(), matrix: [1.0, 0.0, 0.0, 1.0, 10.0, 10.0], kind: PdfPatternKind::Shading { shading: "Sh1".into(), ext_g_state: Some("GS1".into()) }, extra: Vec::new() });
     snapshot.patterns.push(PdfPattern { id: "P2".into(), matrix: PDF_IDENTITY_MATRIX, kind: PdfPatternKind::Tiling { paint_type: 1, tiling_type: 1, bbox: [0.0, 0.0, 10.0, 10.0], x_step: 10.0, y_step: 10.0, content: vec![PdfOp::SetFillGray { gray: 0.5 }, PdfOp::Rectangle { x: 0.0, y: 0.0, width: 5.0, height: 5.0 }, PdfOp::Fill] }, extra: Vec::new() });
     snapshot.color_spaces.push(PdfNamedColorSpace { name: "CS0".into(), color_space: PdfColorSpace::Separation { name: "Spot".into(), alternate: Box::new(PdfColorSpace::DeviceCmyk), tint_transform: PdfFunction::Exponential { domain: vec![0.0, 1.0], range: None, c0: vec![0.0, 0.0, 0.0, 0.0], c1: vec![0.0, 1.0, 1.0, 0.0], n: 1.0 } } });
-    snapshot.color_spaces.push(PdfNamedColorSpace { name: "CS1".into(), color_space: PdfColorSpace::Indexed { base: Box::new(PdfColorSpace::DeviceRgb), hival: 1, lookup: vec![0, 0, 0, 255, 255, 255] } });
+    snapshot.color_spaces.push(PdfNamedColorSpace { name: "CS1".into(), color_space: PdfColorSpace::Indexed { base: Box::new(PdfColorSpace::DeviceRgb), hival: 1, palette: vec![0, 0, 0, 255, 255, 255] } });
     snapshot.properties.push(PdfNamedProperties { name: "MC0".into(), entries: vec![PdfDictEntry::new("MCID", PdfObject::Int(3))] });
     let page = &mut snapshot.pages[0];
     page.crop_box = Some([5.0, 5.0, 295.0, 395.0]);
@@ -107,7 +107,7 @@ fn rich_document() -> PdfSnapshot {
         PdfOp::Transform { matrix: [40.0, 0.0, 0.0, 30.0, 100.0, 100.0] },
         PdfOp::PaintXObject { name: "Im1".into() },
         PdfOp::PaintXObject { name: "Fm1".into() },
-        PdfOp::InlineImage { image: PdfInlineImage { width: 2, height: 1, bits_per_component: 8, color_space: Some(PdfColorSpace::DeviceGray), image_mask: false, decode: Vec::new(), interpolate: false, filters: Vec::new(), data: vec![0, 255], extra: Vec::new() } },
+        PdfOp::InlineImage { image: PdfInlineImage { width: 2, height: 1, bits_per_component: 8, color_space: Some(PdfColorSpace::DeviceGray), image_mask: false, decode: Vec::new(), interpolate: false, body:PdfImageBody::Samples {values:vec![0,255]}, extra: Vec::new() } },
         PdfOp::BeginMarkedContentWithProperties { tag: "Span".into(), properties: PdfPropertyList::Named { name: "MC0".into() } },
         PdfOp::BeginText,
         PdfOp::SetFont { name: "Synth".into(), size: 14.0 },
@@ -173,7 +173,7 @@ fn text_document_round_trips_and_shows_its_text() {
     assert!(bytes.starts_with(b"%PDF-1.7"));
     let decoded = decode_pdf(&bytes).unwrap();
     assert_same_lanes(&decoded, &seed);
-    assert_eq!(decoded.page_text(0), "Semio");
+    assert_eq!(decoded.page_text(0).unwrap(), "Semio");
     assert_eq!(decoded.pages.len(), 2);
     assert_eq!(decoded.fonts.len(), 1);
     let again = encode_pdf(&decoded).unwrap();
@@ -234,8 +234,8 @@ fn retained_graph_survives_typed_edits_and_keeps_foreign_objects() {
     let edited = encode_pdf(&decoded).unwrap();
     let reread = decode_pdf(&edited).unwrap();
     assert_eq!(reread.pages.len(), 2);
-    assert_eq!(reread.page_text(0), "Second");
-    assert_eq!(reread.page_text(1), "Semio");
+    assert_eq!(reread.page_text(0).unwrap(), "Second");
+    assert_eq!(reread.page_text(1).unwrap(), "Semio");
     let kept = reread.objects.iter().find(|o| o.value.dict_get("Kind").and_then(PdfObject::as_name) == Some("Foreign")).expect("foreign object kept");
     let page_ref = kept.value.dict_get("Page").and_then(PdfObject::as_ref).unwrap();
     let pointed = reread.objects.iter().find(|o| o.id == page_ref).unwrap();
@@ -274,13 +274,13 @@ fn a_direct_graph_edit_moves_its_typed_lanes_and_survives_the_write() {
     let (root, catalog) = catalog_of(&base);
     let action = catalog.dict_get("OpenAction").and_then(PdfObject::as_ref).expect("the thesis opens through an indirect action");
     let mut edited = base.clone();
-    let replaced = PdfObject::Dict(vec![PdfDictEntry::new("S", PdfObject::name("GoToR")), PdfDictEntry::new("F", PdfObject::Str(b"other.pdf".to_vec())), PdfDictEntry::new("D", PdfObject::Array(vec![PdfObject::Int(0), PdfObject::name("Fit")]))]);
+    let replaced = PdfObject::Dict(vec![PdfDictEntry::new("S", PdfObject::name("GoToR")), PdfDictEntry::new("F", PdfObject::Text("other.pdf".into())), PdfDictEntry::new("D", PdfObject::Array(vec![PdfObject::Int(0), PdfObject::name("Fit")]))]);
     edited.objects.iter_mut().find(|object| object.id == action).unwrap().value = replaced.clone();
     let PdfObject::Dict(entries) = &mut edited.objects.iter_mut().find(|object| object.id == root).unwrap().value else { panic!("the catalog is a dictionary") };
     entries.iter_mut().find(|entry| entry.key == "PageMode").unwrap().value = PdfObject::name("UseNone");
     edited.trailer.retain(|entry| entry.key != "ID");
     edited.trailer.push(PdfDictEntry::new("SemioMarker", PdfObject::Int(42)));
-    carry_graph_edit(&base, &mut edited);
+    crate::standards::v1_7::subsets::base::schema::graph_projection::carry_graph_edit(&base, &mut edited).unwrap();
     assert_eq!(edited.page_mode, Some(PdfPageMode::UseNone), "the page-mode lane reads the edited catalog");
     assert_eq!(edited.document_id, None, "the identity lane reads the edited trailer");
     assert_ne!(edited.open_action, base.open_action, "the open-action lane reads the edited action");
@@ -304,7 +304,7 @@ fn a_typed_page_and_info_edit_rewrites_only_what_those_lanes_own() {
     edited.info = PdfInfo { title: Some("Replaced title".into()), author: Some("Replaced author".into()), ..PdfInfo::default() };
     let written = rewritten(&edited);
     assert_same_lanes(&written, &edited);
-    let original = Reading::of(GraphSource::new(&base.objects), &base.trailer, &base.declared_version);
+    let original = Reading::of(GraphSource::new(&base.objects), &base.trailer, &base.declared_version).unwrap();
     let info = dict_get(&base.trailer, "Info").and_then(PdfObject::as_ref).unwrap();
     let pages: Vec<u32> = [5, 15, 16, 20].iter().map(|index| original.page_refs[*index].num).collect();
     let (changed, removed, added) = moved_objects(&base, &written);
@@ -368,7 +368,7 @@ fn document_stream_matches_the_whole_document_write() {
 fn report_strip_fixture_reads_and_rewrites_stably() {
     let decoded = decode_pdf(REPORT_STRIP).unwrap();
     assert_eq!(decoded.pages.len(), 3);
-    assert!(decoded.page_text(0).contains("Report strip page one"), "{}", decoded.page_text(0));
+    assert!(decoded.page_text(0).unwrap().contains("Report strip page one"), "{}", decoded.page_text(0).unwrap());
     assert_eq!(decoded.pages[1].crop_box, Some([10.0, 10.0, 585.0, 832.0]));
     assert_eq!(decoded.pages[2].rotate, 90);
     let bytes = encode_pdf(&decoded).unwrap();
@@ -381,7 +381,7 @@ fn report_strip_fixture_reads_and_rewrites_stably() {
 fn bachelor_thesis_reads_with_real_text_and_rewrites_stably() {
     let decoded = decode_pdf(THESIS).unwrap();
     assert_eq!(decoded.pages.len(), 65);
-    let text: String = (0..8).map(|index| decoded.page_text(index)).collect::<Vec<_>>().join("\n");
+    let text: String = (0..8).map(|index| decoded.page_text(index).unwrap()).collect::<Vec<_>>().join("\n");
     assert!(text.contains("Abstract") && text.contains("construction industry"), "{}", text.chars().take(500).collect::<String>());
     assert!(!decoded.fonts.is_empty());
     assert!(decoded.fonts.iter().any(|font| matches!(font.kind, PdfFontKind::Type0 { .. }) || matches!(font.kind, PdfFontKind::Type1 { program: Some(_), .. })));
@@ -395,7 +395,7 @@ fn bachelor_thesis_reads_with_real_text_and_rewrites_stably() {
 #[test]
 fn text_layout_wraps_by_real_widths() {
     let font = PdfFont::standard("F1", "Helvetica");
-    let layout = PdfTextLayout::new(&font, 12.0);
+    let layout = PdfTextLayout::new(&font,12.0,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();
     assert_eq!(layout.width("AA"), Some(1334.0 * 12.0 / 1000.0));
     let lines = layout.wrap("the quick brown fox jumps over the lazy dog", 100.0);
     assert!(lines.len() >= 3);
@@ -424,15 +424,15 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
         if width>1 {
             let cmap=if width==2 {PdfCMap::identity_h()}else{PdfCMap::Embedded {cmap:PdfEmbeddedCMap {name:"OwnedFourByte".into(),vertical:false,codespace:vec![PdfCodespaceRange {byte_width:4,low:0,high:u32::MAX}],mappings:Vec::new(),use_cmap:None}}};
             let font=PdfFont {id:"F1".into(),kind:PdfFontKind::Type0 {base_font:"OwnedSans".into(),cmap,descendant:PdfCidFont {true_type:true,base_font:"OwnedSans".into(),system_info:Default::default(),descriptor:PdfFontDescriptor {font_name:"OwnedSans".into(),..Default::default()},default_width:500.0,widths:Vec::new(),default_vertical:None,vertical_metrics:Vec::new(),cid_to_gid:None,program:None,extra:Vec::new()}},to_unicode:None,extra:Vec::new()};
-            fonts.insert("F1".to_string(),FontCodec::new(&font));
+            fonts.insert("F1".to_string(),FontCodec::new(&font,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap());
         }
         let joined=case["fragments"].as_array().unwrap().iter().map(|fragment|fragment.as_str().unwrap()).collect::<Vec<_>>().join("\n");
-        let operations=parse_content(joined.as_bytes(),&fonts);
+        let operations=parse_content(joined.as_bytes(),&fonts,&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();
         let codes=operations.iter().find_map(|op|match op {PdfOp::ShowText {text:PdfTextString::Codes {codes}}=>Some(codes),_=>None}).unwrap();
         assert_eq!(codes,&expected);
         assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_content_codes(joined.as_bytes(),width).unwrap(),vec![expected.clone()]);
         let native=print_content(&operations,&fonts).unwrap();
-        assert_eq!(parse_content(&native,&fonts),operations);
+        assert_eq!(parse_content(&native,&fonts,&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap(),operations);
         assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_content_codes(&native,width).unwrap(),vec![expected]);
         println!("[DEBUG] PDF logical character case={} native grouping width={} exact words and complete fragment admission",case["id"],width);
     }

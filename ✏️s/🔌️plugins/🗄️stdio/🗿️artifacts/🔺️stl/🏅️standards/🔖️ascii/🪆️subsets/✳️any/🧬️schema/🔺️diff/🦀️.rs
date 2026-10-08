@@ -68,7 +68,7 @@ fn inverse_triangle_diff(diff: &StlTriangleDiff, base: &StlTriangle) -> StlTrian
 
 /// ➕️ LWW field-by-field absorb of one triangle patch into another.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_triangle_diff(base: &mut StlTriangleDiff, other: &StlTriangleDiff) {
+fn absorb_triangle_rows(base: &mut StlTriangleDiff, other: &StlTriangleDiff) {
     if other.normal.is_some() {
         base.normal = other.normal;
     }
@@ -212,8 +212,7 @@ enum Lbl {
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
-    let mut added_sorted = added.to_vec();
-    added_sorted.sort_by_key(|(idx, _)| *idx);
+    let added_sorted = semio_s_artifact_stdio_contract::ordered_by_key(added, |(idx, _)| *idx);
     for (idx, label) in added_sorted {
         let pos = idx.min(survivors.len());
         survivors.insert(pos, label);
@@ -281,7 +280,7 @@ fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff
                 let mut combined = d1_modified_at.get(&i).map(|d| (*d).clone()).unwrap_or_default();
                 if let Some(mp) = mid_pos {
                     if let Some(d2d) = d2_modified_at.get(&mp) {
-                        absorb_triangle_diff(&mut combined, d2d);
+                        absorb_triangle_rows(&mut combined, d2d);
                     }
                 }
                 if !triangle_diff_is_empty(&combined) {
@@ -364,9 +363,7 @@ impl MutationDiff<StlSnapshot> for StlDiff {
 /// [`absorb_triangles`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_triangles(diff: &StlTrianglesDiff, base: &[StlTriangle]) -> StlTrianglesDiff {
-    let mut removed_sorted = diff.removed.clone();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&diff.removed);
     let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -385,15 +382,6 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
     /// at the index the row has after the diff).
     fn inverse(&self, base: &StlSnapshot) -> Self {
         StlDiff { solid_name: self.solid_name.as_ref().map(|_| base.solid_name.clone()), triangles: self.triangles.as_ref().map(|triangles| inverse_triangles(triangles, &base.triangles)).filter(|triangles| !triangles.is_empty()) }
-    }
-
-    /// 🧭️ State delta (compose `GetXDiff`): `triangles` uses index-pairwise matching (see
-    /// `triangles_between`'s doc comment for the single-tail-kind-per-call caveat).
-    fn between(base: &StlSnapshot, other: &StlSnapshot) -> Self {
-        let solid_name = (base.solid_name != other.solid_name).then(|| other.solid_name.clone());
-        let td = triangles_between(&base.triangles, &other.triangles);
-        let triangles = if td.is_empty() { None } else { Some(td) };
-        StlDiff { solid_name, triangles }
     }
 
     fn is_empty(&self) -> bool {

@@ -19,7 +19,7 @@ use semio_framework_plugin::ToolExecutionContract;
 pub struct HomeConfig {
     /// 🪦️ Tombstones of the local-only studios the human retired from Home (`deleteVirtualFileSystemNode`), sorted and
     /// unique. Retiring never erases the studio's catalog document or its history: Home stops listing it, and undoing
-    /// the retirement lists it again. Written only by `HomeConfigMutation::RetireLocalStudio`/`RestoreLocalStudio`.
+    /// the retirement lists it again. Written only by `HomeConfigMutation::RetireLocalStudio`/`ListLocalStudio`.
     #[value(default)]
     pub retired_local_studio_ids: Vec<String>,
 }
@@ -153,13 +153,6 @@ impl protocol::DiffAlgebra<HomeConfig> for HomeConfigDiff {
             retired_local_studio_ids: self.retired_local_studio_ids.as_ref().map(|delta| HomeTombstoneDelta { added: delta.removed.iter().filter(|id| base.is_local_studio_retired(id)).cloned().collect(), removed: delta.added.clone() }.canonical()),
         }
     }
-    fn between(base: &HomeConfig, other: &HomeConfig) -> Self {
-        let delta = HomeTombstoneDelta {
-            added: other.retired_local_studio_ids.iter().filter(|id| !base.is_local_studio_retired(id)).cloned().collect(),
-            removed: base.retired_local_studio_ids.iter().filter(|id| !other.is_local_studio_retired(id)).cloned().collect(),
-        };
-        Self { retired_local_studio_ids: (!delta.is_empty()).then(|| delta.canonical()) }
-    }
     fn is_empty(&self) -> bool {
         self.retired_local_studio_ids.as_ref().is_none_or(HomeTombstoneDelta::is_empty)
     }
@@ -167,8 +160,8 @@ impl protocol::DiffAlgebra<HomeConfig> for HomeConfigDiff {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ `HomeConfig`'s operation enum — mirrors `engine::space::config::SpaceConfigMutation`'s
-/// whole-record-diff design (see its doc comment for the full rationale).
+/// 🧮️ `HomeConfig`'s operation enum — two tombstone verbs (retire / list again) whose diff is the sparse
+/// `HomeTombstoneDelta` and whose inverse is the opposite verb on the same studio id.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum HomeConfigMutation {
     /// 🪦️ Retires one local-only studio from Home — a tombstone event; the studio's catalog document is never erased.
@@ -176,9 +169,9 @@ pub enum HomeConfigMutation {
     RetireLocalStudio {
         space_id: String,
     },
-    /// ♻️ Lists one retired local-only studio in Home again — the exact inverse of `RetireLocalStudio`.
-    #[dsl(key = "restore-local-studio")]
-    RestoreLocalStudio {
+    /// 📋️ Lists one retired local-only studio in Home again — the exact inverse of `RetireLocalStudio`.
+    #[dsl(key = "list-local-studio")]
+    ListLocalStudio {
         space_id: String,
     },
 }
@@ -245,20 +238,20 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     /// variant below has an authored leaf directory on disk yet.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🪦️retire-local-studio", semantic_kind: "retire-local-studio", display_name: "Retire Local Studio", emoji: "🪦️", aggregate_variant: "RetireLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/♻️restore-local-studio", semantic_kind: "restore-local-studio", display_name: "Restore Local Studio", emoji: "♻️", aggregate_variant: "RestoreLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📋️list-local-studio", semantic_kind: "list-local-studio", display_name: "List Local Studio", emoji: "📋️", aggregate_variant: "ListLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             HomeConfigMutation::RetireLocalStudio { .. } => &Self::DESCRIPTORS[0],
-            HomeConfigMutation::RestoreLocalStudio { .. } => &Self::DESCRIPTORS[1],
+            HomeConfigMutation::ListLocalStudio { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
     type Diff = HomeConfigDiff;
 
     fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfigDiff> {
-        let (HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id }) = self;
+        let (HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id }) = self;
         let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
         if base.is_local_studio_retired(space_id) == retired {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" }));
@@ -276,12 +269,12 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     fn inverse(&self, base: &HomeConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         match self {
-            HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
+            HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id } => {
                 let space_id = space_id.clone();
                 if base.is_local_studio_retired(&space_id) {
                     vec![HomeConfigMutation::RetireLocalStudio { space_id }]
                 } else {
-                    vec![HomeConfigMutation::RestoreLocalStudio { space_id }]
+                    vec![HomeConfigMutation::ListLocalStudio { space_id }]
                 }
             }
         }
@@ -375,7 +368,7 @@ fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<u
 /// other mutation never travels the retained lane.
 fn home_config_retained_admission(mutation: &HomeConfigMutation) -> Option<(usize, usize)> {
     match mutation {
-        HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } if local_studio_id_is_admissible(space_id) => Some((space_id.len(), HOME_RETIRED_LOCAL_STUDIO_ID_BYTES)),
+        HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id } if local_studio_id_is_admissible(space_id) => Some((space_id.len(), HOME_RETIRED_LOCAL_STUDIO_ID_BYTES)),
         _ => None,
     }
 }
@@ -391,17 +384,23 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, HOME_CONFIG_STEP_BYTES))
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>> {
+    fn begin_demand(&self, _mutation: &HomeConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<HomeConfigPreparation>(),depth:1})
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>)> {
+        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
+        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
         let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(&request.mutation) else {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"home preparation rejected original mutation or publication authority"),request));
         };
         if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"home preparation rejected original mutation or publication authority"),request));
         }
-        Ok(Box::new(HomeConfigPreparation {
+        Ok((Box::new(HomeConfigPreparation {
             base: Some(request.base), mutation: Some(request.mutation), authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
-        }))
+        }),progress))
     }
 }
 
@@ -424,7 +423,7 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
             if base_bytes > HOME_CONFIG_BASE_BYTES { return Err("Space Home config base exceeds retained byte capacity".into()); }
             let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
             let (post, inverse) = match &mutation {
-                HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
+                HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id } => {
                     let outcome = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::diff(&mutation, base);
                     let post = (!protocol::DiffAlgebra::<HomeConfig>::is_empty(outcome.diff()))
                         .then(|| protocol::apply_diff(outcome.diff(), base).ok())

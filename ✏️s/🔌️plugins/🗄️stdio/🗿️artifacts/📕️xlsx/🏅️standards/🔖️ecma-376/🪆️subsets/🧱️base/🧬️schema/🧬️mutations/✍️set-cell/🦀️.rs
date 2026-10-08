@@ -8,17 +8,19 @@ use super::*;
 pub struct SetCell {
     pub(crate) address: cell_address::XlsxCellAddress,
     pub(crate) value: XlsxCellValue,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) node: Option<XmlNode>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::set_cell_plan(base, &self.address, &self.value))
+        plan_outcome(canonical_edit::set_cell_plan(base, &self.address, &self.value, self.node.as_ref()))
     }
 
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::set_cell_plan(base, &self.address, &self.value)))
+        Ok(plan_inverse(canonical_edit::set_cell_plan(base, &self.address, &self.value, self.node.as_ref())))
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

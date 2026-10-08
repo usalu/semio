@@ -271,27 +271,6 @@ async fn absorb_law() {
         assert_eq!(apply_valid(&right, &base), sequential, "absorb associativity (right) failed");
     }
 }
-//#endregion 🔖️AbsorbLaw
-
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b), &a), b);
-    assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a), &b), a);
-
-    let sample = fixture();
-    assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&sample, &sample), &sample), sample);
-
-    // "Real" fixture leg: a realistic small deck diffed against a mutated variant.
-    let real = fixture();
-    let mut mutated = real.clone();
-    mutated = crate::applied(&mutated, &SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("Chapter Two")] })).0;
-    assert_ne!(real, mutated);
-    assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&real, &mutated), &real), mutated);
-    assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&mutated, &real), &mutated), real);
-}
 //#endregion 🔖️BetweenRoundtripLaw
 
 //#region 🔖️CodecRetentionLaw
@@ -301,60 +280,6 @@ async fn codec_retention_law() {
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
-}
-//#endregion 🔖️CodecRetentionLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field across
-/// `masters`, `layouts`, and `slides` (incl. the nested shape tree, `document::DocBlock` reuse,
-/// and the `layout_id` tri-state).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b);
-    assert_eq!(apply_valid(&diff_ab, &a), b);
-    let diff_ba = <SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a);
-    assert_eq!(apply_valid(&diff_ba, &b), a);
-    assert!(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &a).is_empty());
-
-    let masters = diff_ab.masters.as_ref().expect("masters diff present");
-    assert!(!masters.removed.is_empty(), "masters: removed not exercised");
-    assert!(!masters.added.is_empty(), "masters: added not exercised");
-    let master_mod = masters.modified.iter().find(|m| m.key == "toModify").expect("toModify master modified");
-    assert!(master_mod.diff.shapes.as_ref().expect("master shapes diff present").added.len() > 0);
-
-    let layouts = diff_ab.layouts.as_ref().expect("layouts diff present");
-    assert!(!layouts.removed.is_empty(), "layouts: removed not exercised");
-    assert!(!layouts.added.is_empty(), "layouts: added not exercised");
-    let layout_mod = layouts.modified.iter().find(|l| l.key == "keepLayout").expect("keepLayout modified");
-    assert_eq!(layout_mod.diff.master_id, Some("keep".to_string()));
-
-    // a -> b (sweep_a len 3, sweep_b len 2): exercises `removed` (the dropped `toDropSlide`,
-    // index 2) + `modified[0]` (nested shapes modified+added, nested notes added, layout_id
-    // tri-state Some(Some(_))) -- per the fixtures' own doc comment, a single same-direction
-    // `between()` on an index-keyed collection can't show both `removed` AND `added` at once.
-    let slides = diff_ab.slides.as_ref().expect("slides diff present");
-    assert!(!slides.removed.is_empty(), "slides: removed not exercised");
-    assert_eq!(slides.modified.len(), 1);
-    let slide_mod = &slides.modified[0].diff;
-    assert_eq!(slide_mod.layout_id, Some(Some("keepLayout".to_string())), "layout_id tri-state Some(Some(_)) not exercised");
-    let shapes = slide_mod.shapes.as_ref().expect("shapes diff present");
-    assert!(!shapes.modified.is_empty(), "shapes: modified not exercised");
-    assert!(!shapes.added.is_empty(), "shapes: added (Picture) not exercised");
-    let notes = slide_mod.notes.as_ref().expect("notes diff present");
-    assert!(!notes.modified.is_empty() || !notes.added.is_empty(), "notes: not exercised");
-
-    // b -> a: exercises the OTHER direction's `added` (the very same dropped `toDropSlide`,
-    // carried whole as the added item's payload) + the layout_id tri-state's OTHER leg,
-    // Some(None) (clearing `toModifySlide`'s layout_id back to what `sweep_a` has).
-    let slides_ba = diff_ba.slides.as_ref().expect("slides diff (b->a) present");
-    assert!(!slides_ba.added.is_empty(), "slides (b->a): added not exercised");
-    assert_eq!(slides_ba.added[0].item, a.slides.iter().find(|s| s.id == "toDropSlide").unwrap().clone());
-    let to_modify_index_in_b = b.slides.iter().position(|s| s.id == "toModifySlide").expect("present in b");
-    let modified_entry = slides_ba.modified.iter().find(|m| m.index == to_modify_index_in_b).expect("toModifySlide modified b->a");
-    assert_eq!(modified_entry.diff.layout_id, Some(None), "layout_id tri-state Some(None) not exercised on the reverse direction");
 }
 //#endregion 🔖️FieldSweep
 
@@ -411,3 +336,31 @@ async fn removals_invert_at_every_position() {
     }
 }
 
+//#region ↩️LeafInverseLaws
+#[path = "../../✍️set-text-box-blocks/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_textbox_blocks;
+#[path = "../../🎓insert-master/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_master;
+#[path = "../../🎬insert-slide/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_slide;
+#[path = "../../📤️remove-slide/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_slide;
+#[path = "../../🔧set-layout-master/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_layout_master;
+#[path = "../../🔶remove-shape/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_shape;
+#[path = "../../🔷insert-shape/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_shape;
+#[path = "../../🚫️remove-master/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_master;
+#[path = "../../🧩insert-layout/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_insert_layout;
+#[path = "../../🧭set-slide-layout/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_slide_layout;
+#[path = "../../🧹️remove-layout/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_remove_layout;
+#[path = "../../🧾set-slide-notes/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_slide_notes;
+#[path = "../../🪟set-shape-frame/🧪️tests/↩️inverts/🦀️.rs"]
+mod inverts_set_shape_frame;
+//#endregion ↩️LeafInverseLaws

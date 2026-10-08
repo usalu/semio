@@ -62,6 +62,32 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
     }
 }
 
+/// 📍️ The absolute positions of the vertices a kernel edit moved and the absolute content of the Normal attribute channels it
+/// rewrote, when `after` is `before` with only vertex positions, Normal channels (and the normals the central applier recomputes)
+/// changed — the topology, every other attribute, the materials and the textures all equal; `None` otherwise.
+fn repositioned_vertices(before: &crate::LowpolyMeshState, after: &crate::LowpolyMeshState) -> Option<(Vec<crate::diff::LowpolyVertexPosition>, Vec<crate::LowpolyMeshAttribute>)> {
+    let same_channels = before.attributes.len() == after.attributes.len()
+        && before.attributes.iter().zip(&after.attributes).all(|(held, moved)| held == moved || (held.name == moved.name && held.domain == moved.domain && held.semantic == moved.semantic && held.interpolation == moved.interpolation && held.semantic == crate::LowpolyMeshAttributeSemantic::Normal));
+    let same_topology = before.vertices.len() == after.vertices.len()
+        && before.vertices.iter().zip(&after.vertices).all(|(held, moved)| held.halfedge == moved.halfedge)
+        && before.halfedges == after.halfedges
+        && before.faces == after.faces
+        && before.uv_seams == after.uv_seams
+        && same_channels
+        && before.materials == after.materials
+        && before.textures == after.textures;
+    let rows: Vec<crate::diff::LowpolyVertexPosition> = before
+        .vertices
+        .iter()
+        .zip(&after.vertices)
+        .enumerate()
+        .filter(|(_, (held, moved))| held.position.map(f32::to_bits) != moved.position.map(f32::to_bits))
+        .map(|(vertex, (_, moved))| crate::diff::LowpolyVertexPosition { vertex: vertex as u32, position: moved.position })
+        .collect();
+    let channels: Vec<crate::LowpolyMeshAttribute> = before.attributes.iter().zip(&after.attributes).filter(|(held, moved)| held != moved).map(|(_, moved)| moved.clone()).collect();
+    (same_topology && !(rows.is_empty() && channels.is_empty())).then_some((rows, channels))
+}
+
 /// 🎯️ Maps an `object_patch_diff` result (plus the edit's before/after `mesh_workspace` content) to the one semantic
 /// `LowpolyMutation` it represents — a kernel mesh edit changes exactly one facet per commit (name XOR smooth-shading
 /// XOR one transform axis XOR mesh), so the first populated field wins.
@@ -86,6 +112,9 @@ pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::Lowpoly
             return Some(LowpolyMutation::DeleteMesh(crate::mutations::delete_mesh::DeleteMesh { id }));
         }
         let state=after_mesh_workspace.expect("populated typed mesh state");
+        if let Some((positions, channels)) = before_mesh_workspace.and_then(|before| repositioned_vertices(before, state)) {
+            return Some(LowpolyMutation::SetVertexPositions(crate::mutations::set_vertex_positions::SetVertexPositions { object_id: id, positions, channels }));
+        }
         let handle = crate::managed_mesh_child_handle(&id, state);
         return Some(LowpolyMutation::CreateMesh(crate::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: String::new(), mesh_state:Some(state.clone()) }));
     }
@@ -162,7 +191,7 @@ pub struct LowpolyScratch {
 
 impl Default for LowpolyScratch {
     fn default() -> Self {
-        Self { texture_cache: PaintTextureLut::default(), mesh_workspace: crate::schema::default_mesh_workspace(), current_selection: LowpolySelection::default(), selection_object_id: None, selected_object_ids: Vec::new(), paint: BTreeMap::new() }
+        Self { texture_cache: PaintTextureLut::default(), mesh_workspace: crate::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace(), current_selection: LowpolySelection::default(), selection_object_id: None, selected_object_ids: Vec::new(), paint: BTreeMap::new() }
     }
 }
 
@@ -267,7 +296,7 @@ pub(crate) struct LowpolyTransientState {
 
 impl Default for LowpolyTransientState {
     fn default() -> Self {
-        Self { mesh_workspace: Arc::new(crate::schema::default_mesh_workspace().into_iter().collect()), paint: BTreeMap::new() }
+        Self { mesh_workspace: Arc::new(crate::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace().into_iter().collect()), paint: BTreeMap::new() }
     }
 }
 

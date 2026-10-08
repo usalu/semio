@@ -1,18 +1,21 @@
 {
   "positions": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "pos-lighthouse",
-        "data": {
-          "kind": "lighthouse",
-          "lat": 54,
-          "lon": 8.5
+        "index": 1,
+        "row": {
+          "id": "pos-lighthouse",
+          "data": {
+            "kind": "lighthouse",
+            "lat": 54,
+            "lon": 8.5
+          }
         }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "routes": null,
   "regions": null

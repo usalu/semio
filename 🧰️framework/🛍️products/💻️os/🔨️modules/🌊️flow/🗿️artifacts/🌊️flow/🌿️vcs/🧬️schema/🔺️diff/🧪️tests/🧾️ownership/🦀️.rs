@@ -9,8 +9,7 @@ use std::rc::Rc;
 fn retire_diff(diff: FlowDiff) { MutationDiff::retire_cold(diff); }
 
 /// 🧊️ Every delta variant must survive the generic cold-retirement seam the store's replay and
-/// history folds use (`os_store::replay_mutations`), including the `Fixture` variant whose
-/// `OrderedMap<WidgetLayout>` root aborts the process on a bare drop.
+/// history folds use (`os_store::replay_mutations`).
 #[test]
 fn every_delta_variant_retires_cold_without_a_bare_drop() {
     let vectors = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -21,9 +20,8 @@ fn every_delta_variant_retires_cold_without_a_bare_drop() {
         FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, widget.clone())], replaced: vec![(widget.id().clone(), widget)] }),
         FlowDelta::Synapses(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, synapse.clone())], replaced: vec![(synapse.id.clone(), synapse)] }),
         FlowDelta::Layout(base.layout.iter().map(|(id, layout)| FlowLayoutEntry { id: id.clone(), layout: Some(layout.clone()) }).collect()),
-        FlowDelta::HostSnapshot(base.clone()),
     ];
-    assert_eq!(deltas.len(), 4);
+    assert_eq!(deltas.len(), 3);
     MutationDiff::retire_cold(FlowDiff { deltas });
     <FlowDiff as MutationDiff<FlowHostSnapshot>>::retire_projection(base);
 }
@@ -55,6 +53,36 @@ fn retained_payload_projection_matches_neutral_vectors() {
         retire_diff(diff);
     }
     base.retire_cold();
+}
+
+/// ↩️ A declaratively built structural diff (a move is remove plus insert, never a whole snapshot) and its `inverse` that reads
+/// the base rows: applying the diff and then its inverse returns to the base.
+#[test]
+fn a_structural_diff_and_its_inverse_read_the_base_rows() {
+    let vectors = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
+    assert!(base.widgets.len() >= 2);
+    let (moved, dropped) = (base.widgets[0].clone(), base.synapses.last().cloned().unwrap());
+    let mut other = base.clone();
+    other.widgets.rotate_left(1);
+    other.synapses.pop();
+    let diff = FlowDiff {
+        deltas: vec![
+            FlowDelta::Widgets(FlowCollectionDelta { removed: vec![moved.id().clone()], inserted: vec![((base.widgets.len() - 1) as _, moved)], replaced: Vec::new() }),
+            FlowDelta::Synapses(FlowCollectionDelta { removed: vec![dropped.id.clone()], inserted: Vec::new(), replaced: Vec::new() }),
+        ],
+    };
+    let applied = crate::os_spr::apply_diff(&diff, &base).expect("the diff applies");
+    assert_eq!(applied, other);
+    let inverse = DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &base);
+    let restored = crate::os_spr::apply_diff(&inverse, &applied).expect("inverse applies");
+    assert_eq!(restored, base);
+    assert!(DiffAlgebra::<FlowHostSnapshot>::is_empty(&FlowDiff::default()));
+    for snapshot in [applied, restored, other, base] {
+        snapshot.retire_cold();
+    }
+    retire_diff(diff);
+    retire_diff(inverse);
 }
 //#endregion 🧪️RetainedPayloads
 

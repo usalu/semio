@@ -8,134 +8,9 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Rows
-/// 🔑️ A row of an id-keyed list kept in canonical order: `row_key` addresses it, `insert_at` is where a new row lands.
+/// 📍️ The canonical position a new row of a list lands at in the after list.
 pub trait BitmapRow: Clone + PartialEq {
-    fn row_key(&self) -> String;
     fn insert_at(items: &[Self], row: &Self) -> usize;
-}
-
-/// 🩹 Field-sparse patch over one row: names the fields it sets with the values they take.
-pub trait BitmapPatch: Clone + Default + PartialEq {
-    type Row;
-    fn patched(&self, row: &Self::Row) -> Self::Row;
-    fn between(from: &Self::Row, to: &Self::Row) -> Self;
-    fn inverse(&self, base: &Self::Row) -> Self;
-    fn absorb(&mut self, later: Self);
-    fn is_empty(&self) -> bool;
-}
-
-/// 🩹 One patched row, addressed by its identity.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct BitmapRowPatch<Q> {
-    pub id: String,
-    pub patch: Q,
-}
-
-/// 📂 Id-keyed row delta: removed identities, added rows (landing at their canonical position) and per-row field patches.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct BitmapRows<T, Q> {
-    #[value(default)]
-    pub removed: Vec<String>,
-    #[value(default)]
-    pub added: Vec<T>,
-    #[value(default)]
-    pub patched: Vec<BitmapRowPatch<Q>>,
-}
-
-impl<T, Q> Default for BitmapRows<T, Q> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), added: Vec::new(), patched: Vec::new() }
-    }
-}
-
-fn rejection(code: &'static str, message: &'static str, lane: &str, id: &str) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new(code, message).at([lane, id])
-}
-
-impl<T: BitmapRow, Q: BitmapPatch<Row = T>> BitmapRows<T, Q> {
-    /// 🕳️ Whether the delta changes nothing.
-    pub fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.added.is_empty() && self.patched.is_empty()
-    }
-
-    /// 🔑️ The list after the delta: removals first, then canonical-position insertions, then field patches; unknown targets and duplicated identities are rejected.
-    pub fn apply(&self, items: &[T]) -> protocol::MutationApplyResult<Vec<T>> {
-        let mut next = items.to_vec();
-        for (position, id) in self.removed.iter().enumerate() {
-            if self.removed[..position].contains(id) {
-                return Err(rejection("mutation.apply.duplicate-target", "item is removed more than once", "removed", id));
-            }
-            let at = next.iter().position(|item| item.row_key() == *id).ok_or_else(|| rejection("mutation.apply.missing-target", "removed item does not exist", "removed", id))?;
-            next.remove(at);
-        }
-        for (position, row) in self.added.iter().enumerate() {
-            let key = row.row_key();
-            if self.added[..position].iter().any(|prior| prior.row_key() == key) || next.iter().any(|item| item.row_key() == key) {
-                return Err(rejection("mutation.apply.duplicate-target", "added item identity already exists", "added", &key));
-            }
-            let at = T::insert_at(&next, row);
-            next.insert(at, row.clone());
-        }
-        for (position, entry) in self.patched.iter().enumerate() {
-            if self.patched[..position].iter().any(|prior| prior.id == entry.id) {
-                return Err(rejection("mutation.apply.duplicate-target", "item is patched more than once", "patched", &entry.id));
-            }
-            let at = next.iter().position(|item| item.row_key() == entry.id).ok_or_else(|| rejection("mutation.apply.missing-target", "patched item does not exist", "patched", &entry.id))?;
-            let patched = entry.patch.patched(&next[at]);
-            next[at] = patched;
-        }
-        Ok(next)
-    }
-
-    /// ➕️ Composes a later delta: create∘delete cancels, patch∘delete leaves the deletion, patch∘patch coalesces, delete∘create replaces.
-    pub fn absorb(&mut self, later: Self) {
-        for id in later.removed {
-            if let Some(position) = self.added.iter().position(|row| row.row_key() == id) {
-                self.added.remove(position);
-            } else {
-                self.patched.retain(|entry| entry.id != id);
-                self.removed.push(id);
-            }
-        }
-        self.added.extend(later.added);
-        for entry in later.patched {
-            if let Some(row) = self.added.iter_mut().find(|row| row.row_key() == entry.id) {
-                *row = entry.patch.patched(row);
-            } else if let Some(existing) = self.patched.iter_mut().find(|existing| existing.id == entry.id) {
-                existing.patch.absorb(entry.patch);
-            } else {
-                self.patched.push(entry);
-            }
-        }
-    }
-
-    /// 🔁️ The delta that, applied after this one, restores `base` rows and positions exactly.
-    pub fn inverse(&self, base: &[T]) -> Self {
-        let find = |id: &str| base.iter().find(|row| row.row_key() == id);
-        let removed: Vec<String> = self.added.iter().map(T::row_key).collect();
-        let added: Vec<T> = self.removed.iter().filter_map(|id| find(id).cloned()).collect();
-        let patched: Vec<BitmapRowPatch<Q>> = self
-            .patched
-            .iter()
-            .filter(|entry| !self.removed.contains(&entry.id) && !self.added.iter().any(|row| row.row_key() == entry.id))
-            .filter_map(|entry| find(&entry.id).map(|row| BitmapRowPatch { id: entry.id.clone(), patch: entry.patch.inverse(row) }))
-            .filter(|entry| !entry.patch.is_empty())
-            .collect();
-        Self { removed, added, patched }
-    }
-
-    /// 🧭️ The delta that turns `from` into `to`.
-    pub fn between(from: &[T], to: &[T]) -> Self {
-        let removed: Vec<String> = from.iter().map(T::row_key).filter(|key| !to.iter().any(|row| row.row_key() == *key)).collect();
-        let added: Vec<T> = to.iter().filter(|row| !from.iter().any(|other| other.row_key() == row.row_key())).cloned().collect();
-        let patched: Vec<BitmapRowPatch<Q>> = from
-            .iter()
-            .filter_map(|row| to.iter().find(|other| other.row_key() == row.row_key()).filter(|other| *other != row).map(|other| BitmapRowPatch { id: row.row_key(), patch: Q::between(row, other) }))
-            .collect();
-        Self { removed, added, patched }
-    }
 }
 //#endregion 🔖️Rows
 
@@ -143,7 +18,7 @@ impl<T: BitmapRow, Q: BitmapPatch<Row = T>> BitmapRows<T, Q> {
 //#endregion 🔖️Optionals
 
 //#region 🔖️PatchMacro
-/// 🩹 Declares a field-sparse patch struct for `$row` and its [`BitmapPatch`] impl: `plain` fields set a value, `optional` fields set or clear an `Option` through their wrapper.
+/// 🩹 Declares a field-sparse patch struct for `$row` and its `protocol::list_delta::RowPatch` impl: `plain` fields set a value, `optional` fields set or clear an `Option` through their wrapper.
 macro_rules! wfc_patch {
     ($(#[$doc:meta])* $name:ident for $row:ty { plain { $($field:ident : $ty:ty),* } optional { $($ofield:ident : $wrap:ident),* } }) => {
         $(#[$doc])*
@@ -154,20 +29,14 @@ macro_rules! wfc_patch {
             $(pub $ofield: Option<$wrap>,)*
         }
 
-        impl BitmapPatch for $name {
-            type Row = $row;
-            fn patched(&self, row: &$row) -> $row {
-                #[allow(unused_mut)]
-                let mut next = row.clone();
-                $(if let Some(value) = &self.$field { next.$field = value.clone(); })*
-                $(if let Some(value) = &self.$ofield { next.$ofield = value.value.clone(); })*
-                next
+        impl protocol::list_delta::RowPatch<$row> for $name {
+            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $(if let Some(value) = &self.$field { row.$field = value.clone(); })*
+                $(if let Some(value) = &self.$ofield { row.$ofield = value.value.clone(); })*
+                Ok(())
             }
-            fn between(from: &$row, to: &$row) -> Self {
-                Self { $($field: (from.$field != to.$field).then(|| to.$field.clone()),)* $($ofield: (from.$ofield != to.$ofield).then(|| $wrap { value: to.$ofield.clone() }),)* }
-            }
-            fn inverse(&self, base: &$row) -> Self {
-                Self { $($field: self.$field.as_ref().map(|_| base.$field.clone()),)* $($ofield: self.$ofield.as_ref().map(|_| $wrap { value: base.$ofield.clone() }),)* }
+            fn inverse(&self, row: &$row) -> Self {
+                Self { $($field: self.$field.as_ref().map(|_| row.$field.clone()),)* $($ofield: self.$ofield.as_ref().map(|_| $wrap { value: row.$ofield.clone() }),)* }
             }
             fn absorb(&mut self, later: Self) {
                 $(if later.$field.is_some() { self.$field = later.$field; })*
@@ -183,9 +52,6 @@ macro_rules! wfc_patch {
 
 //#region 🔖️RowTypes
 impl BitmapRow for BitmapPinnedPixel {
-    fn row_key(&self) -> String {
-        pin_key(self.x, self.y)
-    }
     fn insert_at(items: &[Self], row: &Self) -> usize {
         items.iter().position(|item| (item.y, item.x) > (row.y, row.x)).unwrap_or(items.len())
     }
@@ -194,8 +60,10 @@ impl BitmapRow for BitmapPinnedPixel {
 wfc_patch!(/// 📌️ Field patch over a pinned pixel (its `x:y` key is the row identity).
     BitmapPinnedPatch for BitmapPinnedPixel { plain { color: u32 } optional {  } });
 
-/// 📂 Row delta over the pinned pixels.
-pub type BitmapPinnedDelta = BitmapRows<BitmapPinnedPixel, BitmapPinnedPatch>;
+protocol::list_delta! {
+    /// 📂 Row delta over the pinned pixels.
+    pub BitmapPinnedDelta { removal: BitmapPinnedRemoval, insertion: BitmapPinnedInsertion, relocation: BitmapPinnedRelocation, modification: BitmapPinnedModification, row: BitmapPinnedPixel, patch: BitmapPinnedPatch, list: Vec<BitmapPinnedPixel>, key: String = |row| pin_key(row.x, row.y), values_only }
+}
 //#endregion 🔖️RowTypes
 
 //#region 🔖️Region
@@ -223,134 +91,217 @@ pub struct BitmapPixelCell {
 //#endregion 🔖️Region
 
 //#region 🔖️Ops
-/// 🖼️ One ordered edit of the input index buffer: a coordinate-preserving resize, a rectangular write, or a sparse list of single pixels.
+/// 📐️ A bitmap size in pixels.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct BitmapSize {
+    pub width: u32,
+    pub height: u32,
+}
+
+/// 🖼️ One write into the input index buffer, in the coordinates of the buffer AFTER the patch's resize: a rectangular write or a sparse list of single pixels. Writes layer in list order.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "op", rename_all = "camelCase")]
-pub enum BitmapInputOp {
-    Resize { width: u32, height: u32 },
+pub enum BitmapInputWrite {
     Region { region: BitmapPixelRegion },
     Cells { cells: Vec<BitmapPixelCell> },
 }
 
-/// 🎨️ One ordered edit of the palette: insert at an index, remove an index, or recolour an index. Pixels that point at shifted entries are renumbered by explicit [`BitmapInputOp::Cells`] and pin patches, never implicitly.
+/// 🖼️ The input patch: an optional coordinate-preserving resize of the base buffer (crop, or pad with index 0), then the writes in their after-resize coordinates.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct BitmapInputPatch {
+    pub size: Option<BitmapSize>,
+    pub writes: Vec<BitmapInputWrite>,
+}
+
+/// ➕️ One palette colour that enters at `index` of the AFTER palette.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "op", rename_all = "camelCase")]
-pub enum BitmapPaletteOp {
-    Insert { index: u32, color: BitmapColor },
-    Remove { index: u32 },
-    Recolor { index: u32, color: BitmapColor },
+#[value(rename_all = "camelCase")]
+pub struct BitmapPaletteInsertion {
+    pub index: u32,
+    pub color: BitmapColor,
 }
 
-/// ➕️ Appends an input op, merging it into an adjacent op of the same kind when the pair composes exactly.
-fn push_input_op(ops: &mut Vec<BitmapInputOp>, op: BitmapInputOp) {
-    match (ops.last_mut(), op) {
-        (Some(BitmapInputOp::Cells { cells: earlier }), BitmapInputOp::Cells { cells }) => {
-            for cell in cells {
-                match earlier.iter_mut().find(|existing| (existing.x, existing.y) == (cell.x, cell.y)) {
-                    Some(existing) => existing.value = cell.value,
-                    None => earlier.push(cell),
-                }
-            }
-            earlier.sort_by_key(|cell| (cell.y, cell.x));
-        }
-        (Some(BitmapInputOp::Region { region: earlier }), BitmapInputOp::Region { region }) if (earlier.x, earlier.y, earlier.width, earlier.height) == (region.x, region.y, region.width, region.height) => *earlier = region,
-        (_, op) => ops.push(op),
+/// 🎨️ One surviving palette colour recoloured; `index` is its position in the BASE palette.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct BitmapPaletteRecolor {
+    pub index: u32,
+    pub color: BitmapColor,
+}
+
+/// 🎨️ The positional palette delta: `removed` are BASE indices, `inserted` carry AFTER indices, `recolored` are BASE indices of surviving colours. Pixels that point at shifted entries are renumbered by explicit input cells and pin patches, never implicitly.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct BitmapPaletteDelta {
+    pub removed: Vec<u32>,
+    pub inserted: Vec<BitmapPaletteInsertion>,
+    pub recolored: Vec<BitmapPaletteRecolor>,
+}
+
+/// 🔢️ The position of `index` once every coordinate in `excluded` is skipped.
+fn rank(excluded: &[usize], index: usize) -> usize {
+    index - excluded.iter().filter(|skipped| **skipped < index).count()
+}
+
+/// 🔢️ The `nth` (0-based) coordinate that is not in `excluded`.
+fn nth_free(excluded: &[usize], nth: usize) -> usize {
+    (0..).filter(|candidate| !excluded.contains(candidate)).nth(nth).unwrap_or(nth)
+}
+
+fn coordinates(indices: impl Iterator<Item = u32>) -> Vec<usize> {
+    indices.map(|index| index as usize).collect()
+}
+
+fn invariant(message: &'static str, lane: &str, position: usize) -> protocol::MutationApplyError {
+    protocol::MutationApplyError::new("mutation.apply.invariant", message).at([lane.to_string(), position.to_string()])
+}
+
+impl BitmapPaletteDelta {
+    /// 🕳️ Whether the delta changes nothing.
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.inserted.is_empty() && self.recolored.is_empty()
     }
-}
 
-/// ➕️ Appends a palette op, cancelling or merging it with an adjacent op on the same index when the pair composes exactly.
-fn push_palette_op(ops: &mut Vec<BitmapPaletteOp>, op: BitmapPaletteOp) {
-    match (ops.last().cloned(), op) {
-        (Some(BitmapPaletteOp::Insert { index: earlier, .. }), BitmapPaletteOp::Remove { index }) if earlier == index => {
-            ops.pop();
+    /// ➕️ The delta that inserts `color` at `index` of the after palette.
+    pub fn insertion(index: u32, color: BitmapColor) -> Self {
+        Self { inserted: vec![BitmapPaletteInsertion { index, color }], ..Self::default() }
+    }
+
+    /// ➖️ The delta that removes the colour at `index` of the base palette.
+    pub fn removal(index: u32) -> Self {
+        Self { removed: vec![index], ..Self::default() }
+    }
+
+    /// 🎨️ The delta that recolours the colour at `index` of the base palette.
+    pub fn recoloring(index: u32, color: BitmapColor) -> Self {
+        Self { recolored: vec![BitmapPaletteRecolor { index, color }], ..Self::default() }
+    }
+
+    /// 🔑️ The palette after the delta: removed base indices leave, inserted colours take their after slots, surviving colours fill the rest in base order (recoloured where named).
+    pub fn colors_after(&self, base: &[BitmapColor]) -> protocol::MutationApplyResult<Vec<BitmapColor>> {
+        for (position, index) in self.removed.iter().enumerate() {
+            if *index as usize >= base.len() || self.removed[..position].contains(index) {
+                return Err(invariant("a palette removal names an index outside the palette or twice", "palette.removed", position));
+            }
         }
-        (Some(BitmapPaletteOp::Insert { index: earlier, .. }), BitmapPaletteOp::Recolor { index, color }) if earlier == index => *ops.last_mut().expect("last op exists") = BitmapPaletteOp::Insert { index, color },
-        (Some(BitmapPaletteOp::Recolor { index: earlier, .. }), BitmapPaletteOp::Recolor { index, color }) if earlier == index => *ops.last_mut().expect("last op exists") = BitmapPaletteOp::Recolor { index, color },
-        (Some(BitmapPaletteOp::Recolor { index: earlier, .. }), BitmapPaletteOp::Remove { index }) if earlier == index => *ops.last_mut().expect("last op exists") = BitmapPaletteOp::Remove { index },
-        (_, op) => ops.push(op),
+        for (position, recolor) in self.recolored.iter().enumerate() {
+            if recolor.index as usize >= base.len() || self.removed.contains(&recolor.index) || self.recolored[..position].iter().any(|prior| prior.index == recolor.index) {
+                return Err(invariant("a palette recolour names an index outside the palette, a removed colour or twice", "palette.recolored", position));
+            }
+        }
+        let after_len = (base.len() + self.inserted.len()).checked_sub(self.removed.len()).ok_or_else(|| invariant("more palette colours leave than the palette holds", "palette.removed", 0))?;
+        for (position, entry) in self.inserted.iter().enumerate() {
+            if entry.index as usize >= after_len || self.inserted[..position].iter().any(|prior| prior.index == entry.index) {
+                return Err(invariant("a palette insertion lies past the end of the after palette or twice", "palette.inserted", position));
+            }
+        }
+        let mut survivors = base.iter().enumerate().filter(|(index, _)| !self.removed.contains(&(*index as u32))).map(|(index, color)| self.recolored.iter().find(|recolor| recolor.index as usize == index).map_or(*color, |recolor| recolor.color));
+        (0..after_len)
+            .map(|slot| match self.inserted.iter().find(|entry| entry.index as usize == slot) {
+                Some(entry) => Ok(entry.color),
+                None => survivors.next().ok_or_else(|| invariant("the after palette has more free slots than surviving colours", "palette.inserted", slot)),
+            })
+            .collect()
+    }
+
+    /// 🔁️ The negative delta over `base`, read colour by colour; nothing is simulated.
+    pub fn inverse(&self, base: &[BitmapColor]) -> Self {
+        let inserted_at = coordinates(self.inserted.iter().map(|entry| entry.index));
+        let removed_at = coordinates(self.removed.iter().copied());
+        Self {
+            removed: self.inserted.iter().map(|entry| entry.index).collect(),
+            inserted: self.removed.iter().filter_map(|index| base.get(*index as usize).map(|color| BitmapPaletteInsertion { index: *index, color: *color })).collect(),
+            recolored: self.recolored.iter().filter_map(|recolor| base.get(recolor.index as usize).map(|color| BitmapPaletteRecolor { index: nth_free(&inserted_at, rank(&removed_at, recolor.index as usize)) as u32, color: *color })).collect(),
+        }
+    }
+
+    /// ➕️ Composes `self` (base→mid) with `later` (mid→after) into base→after by pure index arithmetic.
+    pub fn composed(&self, later: &Self) -> Self {
+        let mid_inserted = coordinates(self.inserted.iter().map(|entry| entry.index));
+        let left_base = coordinates(self.removed.iter().copied());
+        let left_mid = coordinates(later.removed.iter().copied());
+        let after_inserted = coordinates(later.inserted.iter().map(|entry| entry.index));
+        let after_of_mid = |mid: u32| nth_free(&after_inserted, rank(&left_mid, mid as usize)) as u32;
+        let base_of_mid = |mid: u32| nth_free(&left_base, rank(&mid_inserted, mid as usize)) as u32;
+        let first_inserted = |mid: u32| self.inserted.iter().any(|entry| entry.index == mid);
+        let removed_base: Vec<u32> = later.removed.iter().filter(|mid| !first_inserted(**mid)).map(|mid| base_of_mid(*mid)).collect();
+        let recolored_base: Vec<BitmapPaletteRecolor> = later.recolored.iter().filter(|recolor| !first_inserted(recolor.index)).map(|recolor| BitmapPaletteRecolor { index: base_of_mid(recolor.index), color: recolor.color }).collect();
+        let inserted = self
+            .inserted
+            .iter()
+            .filter(|entry| !later.removed.contains(&entry.index))
+            .map(|entry| BitmapPaletteInsertion { index: after_of_mid(entry.index), color: later.recolored.iter().find(|recolor| recolor.index == entry.index).map_or(entry.color, |recolor| recolor.color) })
+            .chain(later.inserted.iter().cloned())
+            .collect();
+        let recolored = self
+            .recolored
+            .iter()
+            .filter(|recolor| !removed_base.contains(&recolor.index) && !recolored_base.iter().any(|later_recolor| later_recolor.index == recolor.index))
+            .cloned()
+            .chain(recolored_base.iter().cloned())
+            .collect();
+        Self { removed: self.removed.iter().copied().chain(removed_base).collect(), inserted, recolored }
     }
 }
 
 /// 🔁️ The strips of the `from` buffer that a resize to `to` crops away: the right strip over the full old height, then the bottom strip over the surviving width.
-fn cropped_strips(buffer: &[u8], from_width: u32, from_height: u32, to_width: u32, to_height: u32) -> Vec<BitmapInputOp> {
-    let mut strips = Vec::new();
-    if to_width < from_width {
-        if let Some(pixels) = read_region(buffer, from_width, from_height, to_width, 0, from_width - to_width, from_height) {
-            strips.push(BitmapInputOp::Region { region: BitmapPixelRegion { x: to_width, y: 0, width: from_width - to_width, height: from_height, pixels } });
-        }
-    }
-    if to_height < from_height {
-        let width = to_width.min(from_width);
-        if let Some(pixels) = read_region(buffer, from_width, from_height, 0, to_height, width, from_height - to_height) {
-            strips.push(BitmapInputOp::Region { region: BitmapPixelRegion { x: 0, y: to_height, width, height: from_height - to_height, pixels } });
-        }
-    }
-    strips
+fn cropped_strips(buffer: &[u8], from_width: u32, from_height: u32, to_width: u32, to_height: u32) -> Vec<BitmapInputWrite> {
+    let right = (to_width < from_width).then(|| read_region(buffer, from_width, from_height, to_width, 0, from_width - to_width, from_height).map(|pixels| BitmapInputWrite::Region { region: BitmapPixelRegion { x: to_width, y: 0, width: from_width - to_width, height: from_height, pixels } })).flatten();
+    let width = to_width.min(from_width);
+    let bottom = (to_height < from_height).then(|| read_region(buffer, from_width, from_height, 0, to_height, width, from_height - to_height).map(|pixels| BitmapInputWrite::Region { region: BitmapPixelRegion { x: 0, y: to_height, width, height: from_height - to_height, pixels } })).flatten();
+    right.into_iter().chain(bottom).collect()
 }
 
-/// 🔁️ The ordered input ops that undo `ops` applied to `base`: each op's restoring ops, in reverse op order.
-fn inverse_input_ops(ops: &[BitmapInputOp], base: &BitmapInput) -> Vec<BitmapInputOp> {
-    let (mut width, mut height, mut buffer) = (base.width, base.height, base.pixels.clone());
-    let mut undo: Vec<Vec<BitmapInputOp>> = Vec::new();
-    for op in ops {
-        match op {
-            BitmapInputOp::Resize { width: to_width, height: to_height } => {
-                let mut restore = vec![BitmapInputOp::Resize { width, height }];
-                restore.extend(cropped_strips(&buffer, width, height, *to_width, *to_height));
-                undo.push(restore);
-                buffer = resized_buffer(&buffer, width, height, *to_width, *to_height);
-                (width, height) = (*to_width, *to_height);
-            }
-            BitmapInputOp::Region { region } => {
-                if let Some(pixels) = read_region(&buffer, width, height, region.x, region.y, region.width, region.height) {
-                    undo.push(vec![BitmapInputOp::Region { region: BitmapPixelRegion { x: region.x, y: region.y, width: region.width, height: region.height, pixels } }]);
-                }
-                write_region(&mut buffer, width, height, region.x, region.y, region.width, region.height, &region.pixels);
-            }
-            BitmapInputOp::Cells { cells } => {
-                let prior: Vec<BitmapPixelCell> = cells.iter().filter(|cell| cell.x < width && cell.y < height).map(|cell| BitmapPixelCell { x: cell.x, y: cell.y, value: u32::from(buffer[(cell.y * width + cell.x) as usize]) }).collect();
-                for cell in cells.iter().filter(|cell| cell.x < width && cell.y < height) {
-                    buffer[(cell.y * width + cell.x) as usize] = cell.value as u8;
-                }
-                undo.push(vec![BitmapInputOp::Cells { cells: prior }]);
-            }
-        }
-    }
-    let mut inverse = Vec::new();
-    for op in undo.into_iter().rev().flatten() {
-        push_input_op(&mut inverse, op);
-    }
-    inverse
+/// 🧱️ The zero fill of the area `to` has beyond `from`: the right strip over the full new height, then the bottom strip over the shared width.
+fn zero_fill(from: BitmapSize, to: BitmapSize) -> Vec<BitmapInputWrite> {
+    let zeros = |x: u32, y: u32, width: u32, height: u32| BitmapInputWrite::Region { region: BitmapPixelRegion { x, y, width, height, pixels: vec![0; (width as usize) * (height as usize)] } };
+    let right = (to.width > from.width).then(|| zeros(from.width, 0, to.width - from.width, to.height));
+    let bottom = (to.height > from.height && from.width.min(to.width) > 0).then(|| zeros(0, from.height, from.width.min(to.width), to.height - from.height));
+    right.into_iter().chain(bottom).collect()
 }
 
-/// 🔁️ The ordered palette ops that undo `ops` applied to `base`.
-fn inverse_palette_ops(ops: &[BitmapPaletteOp], base: &[BitmapColor]) -> Vec<BitmapPaletteOp> {
-    let mut palette = base.to_vec();
-    let mut undo = Vec::new();
-    for op in ops {
-        match op {
-            BitmapPaletteOp::Insert { index, color } => {
-                undo.push(BitmapPaletteOp::Remove { index: *index });
-                palette.insert((*index as usize).min(palette.len()), *color);
-            }
-            BitmapPaletteOp::Remove { index } => {
-                if (*index as usize) < palette.len() {
-                    undo.push(BitmapPaletteOp::Insert { index: *index, color: palette.remove(*index as usize) });
-                }
-            }
-            BitmapPaletteOp::Recolor { index, color } => {
-                if let Some(slot) = palette.get_mut(*index as usize) {
-                    undo.push(BitmapPaletteOp::Recolor { index: *index, color: *slot });
-                    *slot = *color;
-                }
-            }
+/// ✂️ One write clipped to a `width`×`height` buffer; `None` when nothing of it remains.
+fn clipped_write(write: &BitmapInputWrite, width: u32, height: u32) -> Option<BitmapInputWrite> {
+    match write {
+        BitmapInputWrite::Region { region } => {
+            let (clip_width, clip_height) = (region.width.min(width.saturating_sub(region.x)), region.height.min(height.saturating_sub(region.y)));
+            (clip_width > 0 && clip_height > 0).then(|| {
+                let pixels = (0..clip_height).flat_map(|row| region.pixels[(row * region.width) as usize..(row * region.width + clip_width) as usize].iter().copied()).collect();
+                BitmapInputWrite::Region { region: BitmapPixelRegion { x: region.x, y: region.y, width: clip_width, height: clip_height, pixels } }
+            })
+        }
+        BitmapInputWrite::Cells { cells } => {
+            let kept: Vec<BitmapPixelCell> = cells.iter().filter(|cell| cell.x < width && cell.y < height).cloned().collect();
+            (!kept.is_empty()).then_some(BitmapInputWrite::Cells { cells: kept })
         }
     }
-    let mut inverse = Vec::new();
-    for op in undo.into_iter().rev() {
-        push_palette_op(&mut inverse, op);
-    }
-    inverse
+}
+
+/// ➕️ Composes `later` onto `first` (base→mid→after): the later resize wins, earlier writes are clipped to it, a regrown area is zero-filled, and the later writes layer on top.
+fn composed_input(first: &BitmapInputPatch, later: BitmapInputPatch) -> BitmapInputPatch {
+    let kept: Vec<BitmapInputWrite> = match later.size {
+        Some(size) => first.writes.iter().filter_map(|write| clipped_write(write, size.width, size.height)).collect(),
+        None => first.writes.clone(),
+    };
+    let fill = match (first.size, later.size) {
+        (Some(from), Some(to)) => zero_fill(from, to),
+        _ => Vec::new(),
+    };
+    BitmapInputPatch { size: later.size.or(first.size), writes: fill.into_iter().chain(kept).chain(later.writes).collect() }
+}
+
+/// 🔁️ The input patch that undoes `patch` over `base`: the cropped strips of a shrinking resize plus the base values under every write, each read straight from the base buffer.
+fn inverse_input_patch(patch: &BitmapInputPatch, base: &BitmapInput) -> BitmapInputPatch {
+    let Some(buffer) = base.indices() else { return BitmapInputPatch::default() };
+    let (width, height) = (base.width, base.height);
+    let strips = patch.size.map(|size| cropped_strips(&buffer, width, height, size.width, size.height)).unwrap_or_default();
+    let restored = patch.writes.iter().filter_map(|write| clipped_write(write, width, height)).filter_map(|write| match write {
+        BitmapInputWrite::Region { region } => read_region(&buffer, width, height, region.x, region.y, region.width, region.height).map(|pixels| BitmapInputWrite::Region { region: BitmapPixelRegion { pixels, ..region } }),
+        BitmapInputWrite::Cells { cells } => Some(BitmapInputWrite::Cells { cells: cells.into_iter().map(|cell| BitmapPixelCell { value: u32::from(buffer[(cell.y * width + cell.x) as usize]), ..cell }).collect() }),
+    });
+    BitmapInputPatch { size: patch.size.map(|_| BitmapSize { width, height }), writes: strips.into_iter().chain(restored).collect() }
 }
 //#endregion 🔖️Ops
 
@@ -364,9 +315,9 @@ pub struct BitmapDiff {
     #[state(artifact)]
     pub seed: Option<u64>,
     #[state(artifact)]
-    pub input_ops: Vec<BitmapInputOp>,
+    pub input: BitmapInputPatch,
     #[state(artifact)]
-    pub palette_ops: Vec<BitmapPaletteOp>,
+    pub palette: BitmapPaletteDelta,
     #[state(artifact)]
     pub output: Option<BitmapOutputSpec>,
     #[state(artifact)]
@@ -377,12 +328,8 @@ pub struct BitmapDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply
-fn invariant(message: &'static str, lane: &str, position: usize) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new("mutation.apply.invariant", message).at([lane.to_string(), position.to_string()])
-}
-
 impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
-    fn apply(&self, base: &BitmapSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapSnapshot> {
+    fn apply(&self, base: &BitmapSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema.clone_from(schema);
@@ -390,45 +337,32 @@ impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
         if let Some(seed) = self.seed {
             next.seed = seed;
         }
-        let (mut width, mut height) = (base.input.width, base.input.height);
-        let mut buffer = base.input.indices().ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.malformed-pixels", "the base input pixel buffer does not decode").at(["input", "pixels"]))?;
-        for (position, op) in self.input_ops.iter().enumerate() {
-            match op {
-                BitmapInputOp::Resize { width: to_width, height: to_height } => {
-                    if *to_width == 0 || *to_height == 0 {
-                        return Err(invariant("an input bitmap may not have a zero edge", "inputOps", position));
-                    }
-                    buffer = resized_buffer(&buffer, width, height, *to_width, *to_height);
-                    (width, height) = (*to_width, *to_height);
-                }
-                BitmapInputOp::Region { region } => {
+        let base_buffer = base.input.indices().ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.malformed-pixels", "the base input pixel buffer does not decode").at(["input", "pixels"]))?;
+        let (width, height) = self.input.size.map_or((base.input.width, base.input.height), |size| (size.width, size.height));
+        if width == 0 || height == 0 {
+            return Err(invariant("an input bitmap may not have a zero edge", "input.size", 0));
+        }
+        let mut buffer = resized_buffer(&base_buffer, base.input.width, base.input.height, width, height);
+        for (position, write) in self.input.writes.iter().enumerate() {
+            match write {
+                BitmapInputWrite::Region { region } => {
                     if !write_region(&mut buffer, width, height, region.x, region.y, region.width, region.height, &region.pixels) {
-                        return Err(invariant("a region write falls outside the input bitmap", "inputOps", position));
+                        return Err(invariant("a region write falls outside the input bitmap", "input.writes", position));
                     }
                 }
-                BitmapInputOp::Cells { cells } => {
+                BitmapInputWrite::Cells { cells } => {
                     for cell in cells {
                         if cell.x >= width || cell.y >= height || cell.value > 255 {
-                            return Err(invariant("a pixel write falls outside the input bitmap", "inputOps", position));
+                            return Err(invariant("a pixel write falls outside the input bitmap", "input.writes", position));
                         }
                         buffer[(cell.y * width + cell.x) as usize] = cell.value as u8;
                     }
                 }
             }
         }
-        let mut palette = base.input.palette.clone();
-        for (position, op) in self.palette_ops.iter().enumerate() {
-            match op {
-                BitmapPaletteOp::Insert { index, color } if (*index as usize) <= palette.len() => palette.insert(*index as usize, *color),
-                BitmapPaletteOp::Remove { index } if (*index as usize) < palette.len() => {
-                    palette.remove(*index as usize);
-                }
-                BitmapPaletteOp::Recolor { index, color } if (*index as usize) < palette.len() => palette[*index as usize] = *color,
-                _ => return Err(invariant("a palette edit names an index outside the palette", "paletteOps", position)),
-            }
-        }
+        let palette = self.palette.colors_after(&base.input.palette)?;
         if palette.is_empty() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invariant", "a palette may not be empty").at(["paletteOps"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invariant", "a palette may not be empty").at(["palette"]));
         }
         next.input = BitmapInput { width, height, palette, pixels: buffer };
         if let Some(output) = self.output {
@@ -437,7 +371,7 @@ impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
         if let Some(model) = self.model {
             next.model = model;
         }
-        next.pinned = self.pinned.apply(&base.pinned).map_err(|error| error.under(["pinned"]))?;
+        next.pinned = self.pinned.commit_onto(&base.pinned, capability).map_err(|error| error.under(["pinned"]))?;
         Ok(next)
     }
 
@@ -448,12 +382,8 @@ impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
         if later.seed.is_some() {
             self.seed = later.seed;
         }
-        for op in later.input_ops {
-            push_input_op(&mut self.input_ops, op);
-        }
-        for op in later.palette_ops {
-            push_palette_op(&mut self.palette_ops, op);
-        }
+        self.input = composed_input(&self.input, later.input);
+        self.palette = self.palette.composed(&later.palette);
         if later.output.is_some() {
             self.output = later.output;
         }
@@ -469,51 +399,16 @@ impl protocol::DiffAlgebra<BitmapSnapshot> for BitmapDiff {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             seed: self.seed.map(|_| base.seed),
-            input_ops: inverse_input_ops(&self.input_ops, &base.input),
-            palette_ops: inverse_palette_ops(&self.palette_ops, &base.input.palette),
+            input: inverse_input_patch(&self.input, &base.input),
+            palette: self.palette.inverse(&base.input.palette),
             output: self.output.map(|_| base.output),
             model: self.model.map(|_| base.model),
             pinned: self.pinned.inverse(&base.pinned),
         }
     }
 
-    fn between(base: &BitmapSnapshot, other: &BitmapSnapshot) -> Self {
-        let mut input_ops = Vec::new();
-        let (mut width, mut height) = (base.input.width, base.input.height);
-        let mut buffer = base.input.pixels.clone();
-        if (other.input.width, other.input.height) != (width, height) {
-            input_ops.push(BitmapInputOp::Resize { width: other.input.width, height: other.input.height });
-            buffer = resized_buffer(&buffer, width, height, other.input.width, other.input.height);
-            (width, height) = (other.input.width, other.input.height);
-        }
-        let cells: Vec<BitmapPixelCell> = other
-            .input
-            .pixels
-            .iter()
-            .enumerate()
-            .filter(|(at, value)| buffer.get(*at) != Some(*value))
-            .map(|(at, value)| BitmapPixelCell { x: (at as u32) % width.max(1), y: (at as u32) / width.max(1), value: u32::from(*value) })
-            .collect();
-        if !cells.is_empty() {
-            input_ops.push(BitmapInputOp::Cells { cells });
-        }
-        let (from, to) = (&base.input.palette, &other.input.palette);
-        let mut palette_ops: Vec<BitmapPaletteOp> = (0..from.len().min(to.len())).filter(|index| from[*index] != to[*index]).map(|index| BitmapPaletteOp::Recolor { index: index as u32, color: to[index] }).collect();
-        palette_ops.extend((to.len()..from.len()).rev().map(|index| BitmapPaletteOp::Remove { index: index as u32 }));
-        palette_ops.extend((from.len()..to.len()).map(|index| BitmapPaletteOp::Insert { index: index as u32, color: to[index] }));
-        Self {
-            schema: (base.schema != other.schema).then(|| other.schema.clone()),
-            seed: (base.seed != other.seed).then_some(other.seed),
-            input_ops,
-            palette_ops,
-            output: (base.output != other.output).then_some(other.output),
-            model: (base.model != other.model).then_some(other.model),
-            pinned: BitmapRows::between(&base.pinned, &other.pinned),
-        }
-    }
-
     fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.seed.is_none() && self.input_ops.is_empty() && self.palette_ops.is_empty() && self.output.is_none() && self.model.is_none() && self.pinned.is_empty()
+        self.schema.is_none() && self.seed.is_none() && self.input.size.is_none() && self.input.writes.is_empty() && self.palette.is_empty() && self.output.is_none() && self.model.is_none() && self.pinned.is_empty()
     }
 }
 //#endregion 🔖️Apply

@@ -5,7 +5,7 @@
 //! on whatever base it lands on. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
 use crate::mutations::fill_region::{fill_color_invariant, fill_operation};
-use crate::mutations::paint_stroke::{canvas, painted, painted_diff, painted_inverse, refused, selection_invariant, selection_mask, Painted, RasterSelectionSpan, Refusal, RASTER_PAINT_TARGETS};
+use crate::mutations::paint_stroke::{canvas, painted, repainted_diff, repainted_inverse, refused, selection_invariant, selection_mask, Painted, RasterSelectionSpan, Refusal, RASTER_PAINT_TARGETS};
 use crate::diff::RasterDiff;
 use crate::{RasterMutation, RasterSnapshot};
 use semio_framework_pixels::editing::fill_in_place;
@@ -64,7 +64,7 @@ pub fn diff(payload: &FillSelection, base: &RasterSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::fatal("mutation.invariant", message, [field.to_string()]);
     }
     match fill(payload, base) {
-        Ok(Some(filled)) => painted_diff(filled, base, &payload.layer_id, &payload.target, None),
+        Ok(Some(filled)) => repainted_diff(filled, base, &payload.layer_id, &payload.target),
         Ok(None) => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The fill changes no pixel of layer \"{}\".", payload.layer_id)),
         Err(refusal) => refused(refusal, &payload.layer_id),
     }
@@ -80,7 +80,7 @@ pub fn inverse(payload: &FillSelection, base: &RasterSnapshot) -> Result<Vec<Ras
         return Ok(Vec::new());
     }
     let Ok(Some(filled)) = fill(payload, base) else { return Ok(Vec::new() )};
-    painted_inverse(filled, base, &payload.layer_id, &payload.target, None)?
+    repainted_inverse(filled, base, &payload.layer_id, &payload.target)?
 
     })
 }

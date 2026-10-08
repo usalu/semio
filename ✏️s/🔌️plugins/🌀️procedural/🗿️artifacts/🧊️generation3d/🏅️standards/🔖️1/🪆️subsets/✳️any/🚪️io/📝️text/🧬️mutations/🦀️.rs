@@ -2,7 +2,7 @@
 //!
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,generation_mutation_to_generation3d,inverse_generation3d_mutation,Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation3d, inverse_generation3d_mutation, Generation3dMutation};
 
 
 //#region 📖️SemioGrammar
@@ -200,6 +200,7 @@ impl protocol::OpText for Generation3dMutation {
 }
 }
 pub use operation_codec::*;
+use crate::central_apply::{apply_generation3d_mutation};
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

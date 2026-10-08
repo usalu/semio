@@ -9,9 +9,10 @@
   "breps": null,
   "referencesByModelDefinitionId": {
     "spatial.shape": {
-      "added": [],
       "removed": [],
-      "patched": [
+      "inserted": [],
+      "moved": [],
+      "modified": [
         {
           "id": "ref-1",
           "patch": {
@@ -25,8 +26,7 @@
             }
           }
         }
-      ],
-      "reordered": null
+      ]
     }
   },
   "nodes": null

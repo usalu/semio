@@ -191,8 +191,6 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
     assert_eq!(&samples[..frame.buffer_size()], &[7, 8, 9, 255, 21, 22, 23, 128]);
     let reopened = <PngEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("PNG natural bytes reopen");
     assert_eq!(reopened, edited);
-    let Some(PngMutation::ReplaceImage(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(reopened) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
-    assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&PngSnapshot{schema:crate::STDIO_PNG_DOCUMENT_SCHEMA.into(),image:set.image}).unwrap()).unwrap().pixels, vec![7, 8, 9, 255, 21, 22, 23, 128]);
 
     let fixtures: &[(&str, &[u8], png::ColorType, png::BitDepth, bool)] = &[
         ("16-bit grayscale", include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png"), png::ColorType::Grayscale, png::BitDepth::Sixteen, false),
@@ -210,8 +208,6 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
         assert_eq!((independent.info().color_type, independent.info().bit_depth, independent.info().interlaced), (color_type, bit_depth, interlaced), "{name}: native profile changed");
         let mut decoded = vec![0; independent.output_buffer_size().expect("bounded PNG output")];
         independent.next_frame(&mut decoded).unwrap_or_else(|error| panic!("{name}: png crate sample decode failed: {error}"));
-        let Some(PngMutation::ReplaceImage(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(snapshot.clone()) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
-        assert_eq!(set.image, snapshot.image, "{name}: whole-document publication regenerated source");
     }
 }
 

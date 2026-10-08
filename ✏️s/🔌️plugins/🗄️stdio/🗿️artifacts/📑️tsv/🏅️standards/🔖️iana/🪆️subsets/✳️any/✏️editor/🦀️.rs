@@ -680,8 +680,27 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TsvEdit
         }
     }
 
-    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::iana::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static semio_s_artifact_stdio_contract::editing::EditRules {
+        &crate::editor::tsv::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::iana::subsets::any::schema::mutations::{insert_row, remove_row};
+        let (path, set) = match event {
+            SnapshotEditEvent::SetValue { path, .. } => (path, true),
+            SnapshotEditEvent::InsertValue { path, .. } | SnapshotEditEvent::RemoveValue { path } | SnapshotEditEvent::MoveValue { path, .. } | SnapshotEditEvent::RenameKey { path, .. } => (path, false),
+            SnapshotEditEvent::ReplaceSource { .. } => return Ok(None),
+        };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let ["records", row, rest @ ..] = segments.as_slice() else { return Ok(None) };
+        if (set && rest.len() == 1) || (rest.is_empty() && !set) {
+            return Ok(None);
+        }
+        let fail = |message: String| Fault::from(message);
+        let index = row.parse::<usize>().map_err(|error| fail(error.to_string()))?;
+        let current = snapshot.records.get(index).ok_or_else(|| fail(format!("row {index} does not exist")))?;
+        let edited = semio_s_artifact_stdio_contract::editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/records/{index}"), event).map_err(|error| fail(error.to_string()))?;
+        let row = <Vec<String> as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+        Ok(Some(if &row == current { Vec::new() } else { vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index }), TsvMutation::InsertRow(insert_row::InsertRow { index, row })] }))
     }
 }
 //#endregion 🔖️Editor

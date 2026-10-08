@@ -229,7 +229,7 @@ fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
     assert!(session.preview().transformation.is_none());
     assert!(session.tool.at_rest());
     let mut after = document.clone();
-    crate::mutations::apply_drawing_mutation(&mut after,&emit.artifact_mutations[0]).unwrap();
+    crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&emit.artifact_mutations[0]).unwrap();
     let transform = &crate::schema::layer_base(crate::schema::find_drawing_layer(&after,&id).unwrap()).transform;
     assert!((transform.x-5.0).abs()<1e-10);
     assert!((transform.y+2.0).abs()<1e-10);
@@ -301,7 +301,7 @@ fn selection_drag_leaf_moves_equal_world_displacements_under_distinct_parents() 
     let DrawingGrab::Layers { targets, handle: None }=preparation.grab() else { panic!("a layer grab") };
     assert_eq!(targets.iter().map(|id|id.to_string_owner()).collect::<Vec<_>>(),vec!["a".to_string(),"b".to_string()]);
     let leaf=drawing_grab_leaf(&DrawingGrab::Layers { targets, handle: None },[0.0,0.0],[12.0,8.0],false,false).unwrap();
-    crate::mutations::apply_drawing_mutation(&mut document,&leaf).unwrap();
+    crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut document,&leaf).unwrap();
     let after=crate::schema::flatten_drawing_document_to_scene_nodes(&document);
     for (before,after) in before.iter().zip(after) {
         assert!((after.transform[4]-before.transform[4]-12.0).abs()<1e-10);
@@ -333,7 +333,7 @@ fn repeated_pen_and_polygon_drafts_keep_distinct_layers_and_transactions() {
             let DrawingMutation::CreateLayer(created)=&emit.artifact_mutations[0] else {panic!("Expected creation")};
             assert!(ids.insert(layer_id(&created.layer).to_string()),"{utility} reused a completed draft id");
             assert!(transactions.insert(emit.transaction.clone().expect("one transaction per draft").id),"{utility} reused a transaction id");
-            for mutation in emit.artifact_mutations {crate::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap();}
+            for mutation in emit.artifact_mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap();}
         }
         assert_eq!(document.layers.len(),3);
     }
@@ -372,7 +372,7 @@ fn selected_handle_previews_are_ephemeral_and_release_one_parametric_leaf() {
                 assert_eq!(emit.artifact_mutations.len(),1);
                 assert!(match kind {"scale-layers"=>matches!(emit.artifact_mutations[0],DrawingMutation::ScaleLayers(_)),_=>matches!(emit.artifact_mutations[0],DrawingMutation::RotateLayers(_))},"{kind}");
                 let mut after=document.clone();
-                crate::mutations::apply_drawing_mutation(&mut after,&emit.artifact_mutations[0]).unwrap();
+                crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&emit.artifact_mutations[0]).unwrap();
                 let actual=crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&after.layers[0]).transform);
                 for index in 0..6 {assert!((actual[index]-preview.1[index]).abs()<1e-10);}
             }

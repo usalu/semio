@@ -1,7 +1,7 @@
 //! 🌐️ `set-grid-visible` command — the grid group's show/hide toggle, per window instance.
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_pack_json::Value;
 
 /// 👁️ Reads the toggle's own `pressed`; a bare dispatch flips the current state, exactly like
 /// puzzle3d's `setGridVisible`.

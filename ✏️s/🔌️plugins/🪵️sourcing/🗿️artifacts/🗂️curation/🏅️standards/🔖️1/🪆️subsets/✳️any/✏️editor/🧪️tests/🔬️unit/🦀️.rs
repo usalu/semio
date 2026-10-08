@@ -467,14 +467,14 @@ async fn every_command_round_trips_through_text_and_binary() {
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — copied
 /// verbatim from each `app_commands!` row's `as "…"` literal (NOT a mechanical kebab-case of the
-/// manifest action id: `setDocument`/`document-json`, `setActiveExample`/`active-example`, the whole
+/// manifest action id: `loadDocumentJson`/`document-json`, `setActiveExample`/`active-example`, the whole
 /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
 /// keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     fn expected_wire_key(id: &str) -> &'static str {
         match id {
-            "setDocument" => "document-json",
+            "loadDocumentJson" => "load-document-json",
             "setActiveExample" => "active-example",
             "stockFromCatalogue" => "stock-from-catalogue",
             "curationAdd" => "curation-add",
@@ -527,7 +527,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// pre-migration wire baseline captured into this ticket's `wire-baseline-before.txt`.
 fn every_command() -> Vec<SourcingCurationCommand> {
     vec![
-        SourcingCurationCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: "{}".into() }),
+        SourcingCurationCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() }),
         SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }),
         SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}),
         SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: "beam-glulam-gl24h".into() }),
@@ -596,7 +596,7 @@ fn retained_factories_declare_every_publication_lane() {
     let bounded = <SourcingCurationBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(bounded.iter().map(|contract| contract.tool_id).collect::<Vec<_>>(), SOURCING_CURATION_BOUNDED_TOOL_IDS);
     let lane_of = |tool_id: &str| bounded.iter().find(|contract| contract.tool_id == tool_id).expect("declared tool").lanes;
-    for tool_id in ["setActiveExample", "setDocument", "stockFromCatalogue"] {
+    for tool_id in ["setActiveExample", "loadDocumentJson", "stockFromCatalogue"] {
         assert_eq!(lane_of(tool_id), [ArtifactToolPublicationLane::HostOnly], "{tool_id} replaces the whole document through an effect");
     }
     for tool_id in ["curationAdd", "curationSetCount", "curationRemove", "dropOnPool", "dropOnCurated"] {

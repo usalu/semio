@@ -17,7 +17,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let pool = world_scene_raster_pool();
     let mut writer = None;
     for _ in 0..=ui_wgpu::wgpu::SCENE_RASTER_POOL_SLOTS {
-        match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved) {
+        match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
                 break;
@@ -47,21 +47,21 @@ pub(super) fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescripto
     actions
 }
 
-fn triangle_mesh_oracle() -> LegacyMeshOracleData {
+fn triangle_mesh_oracle() -> TerrainMeshOracleData {
     mesh_oracle_from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
 }
 
-pub(super) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> LegacyMeshOracleData {
-    LegacyMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
+pub(super) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> TerrainMeshOracleData {
+    TerrainMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
 }
 
-pub(super) fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
+pub(super) fn publish_oracle_mesh(data: TerrainMeshOracleData) -> Mesh3dLease {
     publish_oracle_mesh_at_revision(data, 0)
 }
 
 /// 🧊️ An oracle mesh stamped with a chosen interaction revision — what
 /// `publish_world3d_asset_mesh_lease` witnesses before it stores a decoded GLB under its url's id.
-pub(super) fn publish_oracle_mesh_at_revision(data: LegacyMeshOracleData, revision: u64) -> Mesh3dLease {
+pub(super) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revision: u64) -> Mesh3dLease {
     assert!(data.positions.len().is_multiple_of(3));
     assert_eq!(data.normals.len(), data.positions.len());
     assert!(data.edge_positions.len().is_multiple_of(6));
@@ -79,8 +79,10 @@ pub(super) fn publish_oracle_mesh_at_revision(data: LegacyMeshOracleData, revisi
         colors: (data.colors.len() / 4) as u32,
     surface_uvs:[0;4],tangents:0,};
     let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let token = mesh3d_begin(generation, revision, schema).expect("oracle mesh claim");
-    while !mesh3d_allocate_step(token).expect("oracle mesh page allocation") {}
+    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
+    assert!(progress.fits(grant));
+    allocate_oracle_mesh(token);
     for value in data.positions.as_chunks::<3>().0 {
         mesh3d_write_vec3(token, Mesh3dField::Positions, *value).unwrap();
     }
@@ -316,13 +318,13 @@ fn terrain_writer_matches_the_vertex_coloured_tile_oracle_and_closes_interrupted
         }
     }
 
-    let mut cursor = WorldTerrainMeshCursor::new("surface", (3, 4, 5), payload(), 50, 9, 9).expect("terrain cursor");
+    let mut cursor = terrain_test_admit("surface", (3, 4, 5), payload(), 50, 9, 9).expect("terrain cursor");
     let mut published = 0;
     let mut turns = 0;
     loop {
         turns += 1;
         assert!(turns < 512);
-        match cursor.step(9, 9) {
+        match terrain_test_step(&mut cursor,9,9) {
             WorldTerrainMeshStep::Pending => {}
             WorldTerrainMeshStep::Ready(key, lease) => {
                 published += 1;
@@ -341,35 +343,56 @@ fn terrain_writer_matches_the_vertex_coloured_tile_oracle_and_closes_interrupted
                     assert_eq!(lease.u32(Mesh3dField::Indices, item).unwrap(), legacy.indices[item as usize]);
                 }
                 mesh3d_begin_close(lease).unwrap();
-                while !mesh3d_close_step(lease).unwrap() {}
+                close_oracle_mesh(lease);
             }
             WorldTerrainMeshStep::Complete(tile) => {
                 assert_eq!(tile, (3, 4, 5));
                 assert_eq!(published, 1, "a tile publishes exactly one mesh");
                 break;
             }
-            WorldTerrainMeshStep::Fault => panic!("valid terrain cursor faulted"),
+            WorldTerrainMeshStep::Fault(fault) => panic!("valid terrain cursor faulted: {fault:?}"),
         }
     }
     assert!(cursor.terminal_is_empty());
 
-    let mut interrupted = WorldTerrainMeshCursor::new("surface", (3, 4, 5), payload(), 70, 11, 11).expect("terrain cursor");
-    assert!(matches!(interrupted.step(11, 11), WorldTerrainMeshStep::Pending));
+    let mut interrupted = terrain_test_admit("surface", (3, 4, 5), payload(), 70, 11, 11).expect("terrain cursor");
+    assert!(matches!(terrain_test_step(&mut interrupted,11,11), WorldTerrainMeshStep::Pending));
     let mut close_turns = 0;
-    while !interrupted.close_step() || !interrupted.terminal_is_empty() {
+    while !terrain_test_close(&mut interrupted) || !interrupted.terminal_is_empty() {
         close_turns += 1;
         assert!(close_turns < 64);
     }
     assert!(interrupted.terminal_is_empty());
-    assert!(WorldTerrainMeshCursor::new("surface", (0, 0, 0), TerrainTileMeshPayload { positions: vec![0.0, 1.0], normals: Vec::new(), indices: vec![0, 1, 2], uvs: Vec::new() }, 80, 1, 1).is_err());
+    assert!(terrain_test_admit("surface", (0, 0, 0), TerrainTileMeshPayload { positions: vec![0.0, 1.0], normals: Vec::new(), indices: vec![0, 1, 2], uvs: Vec::new() }, 80, 1, 1).is_err());
+}
+
+fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
+    loop {
+        let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
+        let step=mesh3d_allocate_step(token,grant).unwrap();
+        assert!(step.progress.fits(grant));
+        if step.complete{break}
+    }
+}
+
+fn close_oracle_mesh(lease:Mesh3dLease) {
+    loop {
+        let demand=ui_wgpu::wgpu::mesh3d_close_demands(lease,4096).unwrap();
+        let grant=world_mesh_ownership_grant(4096,demand.capacity_bytes,demand.release_bytes,demand.depth);
+        let step=mesh3d_close_step(lease,grant).unwrap();
+        assert!(step.progress.fits(grant));
+        if step.complete{break}
+    }
 }
 
 fn face_overlay_test_mesh_with_faces(generation: u64, revision: u64, face_ids: &[u32]) -> Mesh3dLease {
     let triangles = u32::try_from(face_ids.len()).expect("fixture triangle count");
     let vertices = triangles * 3;
     let schema = Mesh3dSchema { vertices, indices: vertices, face_ids: triangles, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 ,surface_uvs:[0;4],tangents:0,};
-    let token = mesh3d_begin(generation, revision, schema).expect("face overlay fixture claim");
-    while !mesh3d_allocate_step(token).expect("face overlay fixture page") {}
+    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("face overlay fixture claim");
+    assert!(progress.fits(grant));
+    allocate_oracle_mesh(token);
     for triangle in 0..triangles {
         let x = triangle as f32 * 2.0;
         for position in [[x, 0.0, 0.0], [x + 1.0, 0.0, 0.0], [x, 1.0, 0.0]] {
@@ -430,7 +453,7 @@ fn face_overlay_writer_matches_legacy_winding_and_retires_stale_generation() {
     assert!(cursor.terminal_is_empty());
     let published = published.expect("selected overlay published");
     mesh3d_begin_close(published).unwrap();
-    while !mesh3d_close_step(published).unwrap() {}
+    close_oracle_mesh(published);
 
     let mut stale = WorldFaceOverlayMeshCursor::new("surface", 600, 7, 11).unwrap();
     assert!(matches!(stale.step(&state), WorldFaceOverlayMeshStep::Pending));
@@ -535,7 +558,8 @@ fn world_mesh_registry_enforces_fixed_capacity_id_topology_and_aba() {
     let mut oversized = WorldInteractionMeshRegistry::default();
     assert!(oversized.admit(&"x".repeat(WORLD_INTERACTION_ID_BYTE_CAPACITY + 1), 1, mesh).is_none());
     assert!(oversized.faulted);
-    assert_eq!(mesh3d_begin(99, 0, Mesh3dSchema::triangle_mesh(0, 0)), Err(ui_wgpu::wgpu::Mesh3dFault::Schema));
+    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    assert_eq!(mesh3d_begin(99,0,Mesh3dSchema::triangle_mesh(0,0),grant),Err(ui_wgpu::wgpu::Mesh3dFault::Schema));
 }
 
 #[test]
@@ -926,7 +950,7 @@ fn world_marquee_page_claim_saturation_preserves_all_results_for_exact_retry() {
 /// instance: with empty id buffers its `"vertex"`/`"edge"` arms are guarded off
 /// (`🎬️scene/📐️math/🦀️.rs:1631`, `:1647`) and the oracle falls through to the instance-id arm, which
 /// is not a component census at all.
-fn component_triangle_mesh_oracle() -> LegacyMeshOracleData {
+fn component_triangle_mesh_oracle() -> TerrainMeshOracleData {
     let mut data = triangle_mesh_oracle();
     data.vertex_ids = vec![11, 12, 13];
     data.face_ids = vec![31];
@@ -939,7 +963,7 @@ fn world_marquee_geometry_fixture(instance_count: usize) -> World3dState {
     world_marquee_geometry_fixture_from(triangle_mesh_oracle(), instance_count)
 }
 
-fn world_marquee_geometry_fixture_from(data: LegacyMeshOracleData, instance_count: usize) -> World3dState {
+fn world_marquee_geometry_fixture_from(data: TerrainMeshOracleData, instance_count: usize) -> World3dState {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.pick_bounds = state.bounds;
@@ -1956,7 +1980,7 @@ fn a_reference_underlay_is_offered_every_render_and_a_refused_admission_is_not_a
     let pool = world_scene_raster_pool();
     let over_budget = (ui_wgpu::wgpu::SCENE_RASTER_ITEM_BYTES / 4 + 1) as u32;
     let descriptor = SceneRasterDescriptor { width: over_budget, height: 1, source_digest: [91, 92], source_revision: 91, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
-    assert!(matches!(pool.begin(descriptor, 91, SceneRasterWriteMode::Moved), SceneRasterBegin::Refused(_)), "🧯️ the full-quality pool refuses item +1 before it owns an allocation");
+    assert!(matches!(pool.begin(descriptor, 91, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }), SceneRasterBegin::Refused(_)), "🧯️ the full-quality pool refuses item +1 before it owns an allocation");
 }
 
 #[test]
@@ -2985,9 +3009,9 @@ fn dynamic_world_owners_retire_one_nested_owner_per_grant_to_terminal_empty() {
     state.mesh_paint_textures.insert("paint".into(), WorldSceneRaster { identity: paint.identity(), pending: Mutex::new(Some(paint)) });
     assert!(begin_world3d_dynamic_retirement(&mut state));
     assert!(!begin_world3d_dynamic_retirement(&mut state));
-    assert!(!with_world_step_context(0, |context| step_world3d_dynamic_retirement(&mut state, context)));
+    assert!(!with_world_step_context(0, |context| terrain_test_retire_then_dynamic(&mut state,context)));
     let mut turns = 0;
-    while !with_world_step_context(1, |context| step_world3d_dynamic_retirement(&mut state, context)) {
+    while !with_world_step_context(1, |context| terrain_test_retire_then_dynamic(&mut state,context)) {
         turns += 1;
         assert!(turns < 16);
     }
@@ -3156,9 +3180,9 @@ fn production_dynamic_owners_have_no_hash_map_vec_or_direct_pixel_mutation_bypas
     assert!(production.contains("state.meshes.plan_insert(&id)"), "mesh publication remains centralized at the observed-slot replacement authority");
     assert!(production.contains("step_world3d_dynamic_retirement"), "World3d exposes the one-grant retained close pump");
     assert!(production.contains("struct WorldPlaceholderMeshCursor"));
-    assert!(production.contains("mesh3d_allocate_step(self.token()?)"));
+    assert!(production.contains("mesh3d_allocate_capacity_byte_demand(token)?"));
     assert!(production.contains("struct WorldFaceOverlayMeshCursor"));
-    assert!(production.contains("self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin("));
+    assert!(production.contains("mesh3d_begin_capacity_byte_demand()"));
     let face_route = production.split("fn append_component_face_translucent_overlays").nth(1).and_then(|source| source.split("fn selection_centroid").next()).expect("face overlay production route");
     for forbidden in [concat!("Mesh", "3d::from_buffers"), "FaceOverlayBucket", "HashSet<String>", "Vec<f32>"] {
         assert!(!face_route.contains(forbidden), "face overlay recursive/contiguous constructor returned: {forbidden}");
@@ -3510,7 +3534,7 @@ fn retained_draw_rebuild_keeps_url_backed_asset_authority() {
     while retire_cancelled_world3d_asset_step(&mut state) {}
     assert!(state.asset_io.terminal_is_empty());
     assert!(begin_world3d_dynamic_retirement(&mut state));
-    while !with_world_step_context(1, |context| step_world3d_dynamic_retirement(&mut state, context)) {}
+    while !with_world_step_context(1, |context| terrain_test_retire_then_dynamic(&mut state,context)) {}
     assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
 }
 
@@ -3533,7 +3557,7 @@ const URL_MESH_URL: &str = "/mesh/🧊️left.glb";
 fn retire_bridged_surface(state: &mut World3dState) {
     assert!(begin_world3d_dynamic_retirement(state));
     for _ in 0..4_096 {
-        if with_world_step_context(1, |context| step_world3d_dynamic_retirement(state, context)) {
+        if with_world_step_context(1, |context| terrain_test_retire_then_dynamic(state,context)) {
             break;
         }
     }
@@ -3673,7 +3697,7 @@ fn brush_mesh_fixture() -> serde_json::Value {
 /// 🧫️ A mesh whose payload spans SEVERAL pages, so the run's positions-then-indices split falls
 /// inside a page the way a real GLB's does: 400 vertices (1 200 position values) plus 900 indices is
 /// 2 100 values, three pages at [`WORLD_BRUSH_MESH_PAGE_VALUES`].
-fn brush_mesh_oracle() -> LegacyMeshOracleData {
+fn brush_mesh_oracle() -> TerrainMeshOracleData {
     let vertices = 400_u32;
     let positions: Vec<f32> = (0..vertices).flat_map(|vertex| [vertex as f32, (vertex % 7) as f32, (vertex % 13) as f32]).collect();
     let normals: Vec<f32> = (0..vertices).flat_map(|_| [0.0, 0.0, 1.0]).collect();
@@ -4145,7 +4169,7 @@ fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle
             assert_eq!(actual.color, color);
         }
         assert!(begin_world3d_dynamic_retirement(&mut state));
-        while !with_world_step_context(1, |context| step_world3d_dynamic_retirement(&mut state, context)) {}
+        while !with_world_step_context(1, |context| terrain_test_retire_then_dynamic(&mut state,context)) {}
         assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
     }
 }
@@ -4225,10 +4249,10 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     assert!(!state.pending_terrain_tile_urls.contains_key(&terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y)), "an applied tile leaves the pending set");
 
     sync_terrain_state(&mut state, &camera);
-    assert!(state.terrain_build.is_some(), "an uploaded tile opens its mesh-build cursor");
+    assert!(state.terrain_pending.is_some() || state.terrain_build.is_some(), "an uploaded tile opens its mesh-build owner");
     let mut turns = 0;
-    while state.terrain_build.is_some() {
-        step_world_terrain_mesh(&mut state);
+    while state.terrain_pending.is_some() || state.terrain_build.is_some() {
+        with_world_step_context(1,|context|{let result=step_world3d_terrain(&mut state,terrain_test_grant(),context);assert!(result.ownership.fits(terrain_test_grant()));assert!(!matches!(result.step,WorldTerrainMeshPublicationStep::Fault(_)));});
         turns += 1;
         assert!(turns < 1_000_000, "an uploaded tile converges to its vertex-coloured mesh");
     }
@@ -5848,8 +5872,60 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
         let mut steps=0;while !canceled.close_step(){steps+=1;assert!(steps<32768)}assert!(canceled.terminal_is_empty());
     }
     eprintln!("[DEBUG] authored inline: drawVertices=6 materialGroups=2 fiveMaps=5 roleLeases=2 work={turns}; all publication phases canceled");
-    while !appearance.close_step() {}mesh3d_begin_close(lease).unwrap();while !mesh3d_close_step(lease).unwrap() {}
+    while !appearance.close_step() {}mesh3d_begin_close(lease).unwrap();close_oracle_mesh(lease);
     assert!(cursor.terminal_is_empty());
+}
+
+/// ♻️ Retains the exact authored source through independent copy, capacity, release and depth refusals.
+#[test]
+fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️inline-source-ownership/🔣️.json")).unwrap();
+    for row in law["cases"].as_array().unwrap() {
+        let mut mesh=WorldMeshBuffers::default();
+        mesh.positions=row["positions"].as_array().unwrap().iter().map(|value|value.as_f64().unwrap() as f32).collect();
+        mesh.indices=row["indices"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u32).collect();
+        mesh.edge_positions=row["edgePositions"].as_array().unwrap().iter().map(|value|value.as_f64().unwrap() as f32).collect();
+        mesh.edge_ids=row["edgeIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u32).collect();
+        let mut cursor=WorldPlaceholderMeshCursor::inline(row["id"].as_str().unwrap(),mesh,819,1).unwrap();
+        let pointers=|mesh:&Box<WorldMeshBuffers>|(mesh.as_ref() as *const WorldMeshBuffers,mesh.positions.as_ptr(),mesh.edge_positions.as_ptr(),mesh.indices.as_ptr());
+        let original=match &cursor.source{WorldMeshSource::Inline(mesh)=>pointers(mesh),_=>panic!("inline source disappeared")};
+        let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+        assert!(matches!(cursor.retire_source_step(zero).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+        assert_eq!(match &cursor.source{WorldMeshSource::Inline(mesh)=>pointers(mesh),_=>panic!("denied source moved")},original);
+        let shallow=RetainedCloneGrant{maximum_items:1,maximum_depth:0,..zero};
+        assert!(matches!(cursor.retire_source_step(shallow).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+        assert_eq!(match &cursor.source{WorldMeshSource::Inline(mesh)=>pointers(mesh),_=>panic!("depth-denied source moved")},original);
+        let grant=cursor.source_retirement_grant(4096).unwrap();
+        assert_eq!(grant.maximum_capacity_bytes,law["ownership"]["inlineMoveCapacityBytes"].as_u64().unwrap() as usize);
+        let step=cursor.retire_source_step(grant).unwrap();
+        assert!(matches!(step,RetainedCloneStep::Progress(progress) if progress.copied_items==1 && progress.retained_capacity_bytes==0 && progress.fits(grant)));
+        assert_eq!(pointers(cursor.source_retirement.as_ref().unwrap().original().unwrap()),original);
+        let next=cursor.source_retirement_grant(4096).unwrap();
+        assert!(next.maximum_capacity_bytes>0);
+        let short=RetainedCloneGrant{maximum_capacity_bytes:next.maximum_capacity_bytes-1,..next};
+        assert!(matches!(cursor.retire_source_step(short).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+        assert_eq!(pointers(cursor.source_retirement.as_ref().unwrap().original().unwrap()),original);
+        let mut turns=0;
+        let mut release_refusals=0;
+        loop {
+            turns+=1;assert!(turns<32768);
+            let grant=cursor.source_retirement_grant(4096).unwrap();
+            if grant.maximum_release_bytes>0{
+                let short=RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant};
+                assert!(matches!(cursor.retire_source_step(short).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+                assert!(cursor.source_retirement.is_some());
+                release_refusals+=1;
+            }
+            match cursor.retire_source_step(grant).unwrap(){RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant)),RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(grant));break}}
+        }
+        assert!(cursor.source_retirement.is_none());
+        assert!(!matches!(cursor.source,WorldMeshSource::Inline(_)));
+        assert!(release_refusals>0);
+        let mut close_turns=0;while !cursor.close_step(){close_turns+=1;assert!(close_turns<32768)}
+        assert!(cursor.terminal_is_empty());
+        eprintln!("[DEBUG] inline World source={} sameBox=true sameBuffers=true zeroItemsUnchanged=true zeroDepthUnchanged=true shortCapacityUnchanged=true shortReleaseUnchanged={release_refusals} independentReceipts=true terminalEmpty=true turns={turns}",row["id"]);
+    }
 }
 
 /// 🖼️ JPEG authored textures use the same image, role raster, publication and retirement owners.
@@ -5886,7 +5962,7 @@ fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
     }
     while !appearance.close_step() {}
     mesh3d_begin_close(lease).unwrap();
-    while !mesh3d_close_step(lease).unwrap() {}
+    close_oracle_mesh(lease);
     assert!(cursor.terminal_is_empty());
     eprintln!("[DEBUG] JPEG authored surface: intrinsic=2x1 roleRasters=2 maps=5 independentPillow=true independentImage=true work={turns} terminalEmpty=true");
 }
@@ -6666,6 +6742,135 @@ fn world_native_primary_geometry_object_pick_uses_original_domain() {
     println!("[DEBUG] originalPrimaryObjectPick cases=3 selectAndHover=true objectMode=true noSyntheticTopology=true independentThree=true");
 }
 
+/// 🪡️ Original object picking orders overlapping sloping wires by their actual closest point.
+#[test]
+fn world_native_overlapping_wires_pick_original_closest_depth() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let law = &fixture["gumball"]["overlappingWirePick"];
+    let cases = fixture["gumball"]["raySegmentClosestCases"].as_array().unwrap();
+    let rows = law["caseNames"].as_array().unwrap().iter().map(|name| cases.iter().find(|row| row["name"] == *name).unwrap()).collect::<Vec<_>>();
+    let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
+    let world = scene.world_3d.as_mut().unwrap();
+    world.meshes_json = serde_json::Value::Array(rows.iter().enumerate().map(|(index, row)| serde_json::json!({"id":format!("wire-{index}"),"data":{"positions":[],"indices":[],"vertexIds":[],"edgePositions":row["a"].as_array().unwrap().iter().chain(row["b"].as_array().unwrap()).collect::<Vec<_>>(),"edgeIds":[0]}})).collect()).to_string();
+    world.instances_json = serde_json::Value::Array(law["objects"].as_array().unwrap().iter().enumerate().map(|(index, id)| serde_json::json!({"id":id,"meshId":format!("wire-{index}")})).collect()).to_string();
+    world.camera_json = law["camera"].to_string();
+    world.selection_json = serde_json::json!({"granularity":"object","targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
+    let viewport: [f32; 4] = serde_json::from_value(law["viewport"].clone()).unwrap();
+    let mut state = World3dState::new("surface-overlapping-wires".into(), "controller".into());
+    drive_scene_bridge(&mut state, &scene, Rect::new(viewport[0], viewport[1], viewport[2], viewport[3]));
+    let mut registry = WorldInteractionRegistryBuildCursor::new(state.interaction_revision);
+    for turn in 0..4096 { match with_world_step_context(1, |context| registry.step(&mut state, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original overlapping registry {step:?}") } }
+    for purpose in [WorldRayPickPurpose::Instance, WorldRayPickPurpose::Hover] {
+        let mut cursor = WorldRayPickCursor::new(&state, 10, purpose, law["pointer"][0].as_f64().unwrap() as f32, law["pointer"][1].as_f64().unwrap() as f32).unwrap();
+        for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original overlapping pick {step:?}") } }
+        let mut plan = cursor.finish_plan(&state, 10).unwrap().unwrap();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
+        let actions = take_actions(&mut input);
+        assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].action, if purpose == WorldRayPickPurpose::Hover { "interactionHover" } else { "interactionSelect" });
+        if purpose == WorldRayPickPurpose::Instance { assert_eq!(actions[0].args.as_ref().unwrap().get("merge").and_then(|value| value.as_str()), Some("replace")); }
+        let targets: serde_json::Value = serde_json::from_str(actions[0].args.as_ref().unwrap().get("targets").unwrap().as_str().unwrap()).unwrap();
+        assert_eq!(targets, serde_json::json!([{"granularity":law["granularity"],"id":law["selectedObject"]}]), "original {purpose:?} chooses the actual near edge rather than its far midpoint");
+        while !input.close_step().unwrap() {}
+        assert!(input.terminal_is_empty());
+    }
+    state.granularity = "edge".into();
+    state.selection_targets.edge = true;
+    for purpose in [WorldComponentPickPurpose::Select, WorldComponentPickPurpose::Hover] {
+        let mut cursor = WorldComponentPickCursor::new(&state, 10, purpose, law["pointer"][0].as_f64().unwrap() as f32, law["pointer"][1].as_f64().unwrap() as f32).unwrap();
+        for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original overlapping component pick {step:?}") } }
+        let best = cursor.best.expect("original overlapping component hit");
+        assert_eq!(state.interaction_objects.resolve(best.object).unwrap().id.as_str(), law["selectedObject"].as_str().unwrap());
+        assert!((best.primary - 1.0).abs() < 1e-5);
+        let mut plan = cursor.finish_plan(&state, 10).unwrap().unwrap();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
+        let actions = take_actions(&mut input);
+        assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].action, if purpose == WorldComponentPickPurpose::Hover { "interactionHover" } else { "interactionSelect" });
+        if purpose == WorldComponentPickPurpose::Select { assert_eq!(actions[0].args.as_ref().unwrap().get("merge").and_then(|value| value.as_str()), Some("replace")); }
+        let targets: serde_json::Value = serde_json::from_str(actions[0].args.as_ref().unwrap().get("targets").unwrap().as_str().unwrap()).unwrap();
+        assert_eq!(targets, serde_json::json!([{"granularity":"edge","id":format!("{}.edge.0", law["selectedObject"].as_str().unwrap())}]), "original component {purpose:?} publishes the actual near edge");
+        while !input.close_step().unwrap() {}
+        assert!(input.terminal_is_empty());
+        while !cursor.close_step() {}
+    }
+    retire_bridged_surface(&mut state);
+    eprintln!("[DEBUG] originalOverlappingWirePick instanceAndHover=true componentSelectAndHover=true actualClosestDepth=true noSyntheticVertices=true");
+}
+
+/// 🪟️ Original object and component cursors pick the visible portion of an authored clipped edge.
+#[test]
+fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let law = &fixture["gumball"]["clippedWirePick"];
+    let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
+    let world = scene.world_3d.as_mut().unwrap();
+    world.meshes_json = serde_json::json!([{"id":"clipped-wire","data":{"positions":[],"indices":[],"vertexIds":[],"edgePositions":law["a"].as_array().unwrap().iter().chain(law["b"].as_array().unwrap()).collect::<Vec<_>>(),"edgeIds":[law["edgeId"]]}}]).to_string();
+    world.instances_json = serde_json::json!([{"id":law["object"],"meshId":"clipped-wire"}]).to_string();
+    world.camera_json = law["camera"].to_string();
+    world.selection_json = serde_json::json!({"granularity":"object","targets":{"mesh":true,"vertex":false,"edge":true,"face":false}}).to_string();
+    let viewport: [f32; 4] = serde_json::from_value(law["viewport"].clone()).unwrap();
+    let mut state = World3dState::new("surface-clipped-wire".into(), "controller".into());
+    drive_scene_bridge(&mut state, &scene, Rect::new(viewport[0], viewport[1], viewport[2], viewport[3]));
+    let camera = state.orbit.to_camera();
+    assert_eq!(camera.near, law["camera"]["near"].as_f64().unwrap() as f32);
+    assert_eq!(camera.far, law["camera"]["far"].as_f64().unwrap() as f32);
+    let mut registry = WorldInteractionRegistryBuildCursor::new(state.interaction_revision);
+    for turn in 0..4096 { match with_world_step_context(1, |context| registry.step(&mut state, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped registry {step:?}") } }
+    let pointer = [law["pointer"][0].as_f64().unwrap() as f32, law["pointer"][1].as_f64().unwrap() as f32];
+    for purpose in [WorldRayPickPurpose::Instance, WorldRayPickPurpose::Hover] {
+        let mut cursor = WorldRayPickCursor::new(&state, 10, purpose, pointer[0], pointer[1]).unwrap();
+        for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped object pick {step:?}") } }
+        assert!((cursor.best.unwrap().distance - law["closestDepth"].as_f64().unwrap() as f32).abs() < 1e-5);
+        let mut plan = cursor.finish_plan(&state, 10).unwrap().unwrap();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
+        let actions = take_actions(&mut input); assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].action, if purpose == WorldRayPickPurpose::Hover { "interactionHover" } else { "interactionSelect" });
+        let targets: serde_json::Value = serde_json::from_str(actions[0].args.as_ref().unwrap().get("targets").unwrap().as_str().unwrap()).unwrap();
+        assert_eq!(targets, serde_json::json!([{"granularity":"object","id":law["object"]}]));
+        while !input.close_step().unwrap() {}
+        assert!(input.terminal_is_empty());
+    }
+    state.granularity = "edge".into();
+    for purpose in [WorldComponentPickPurpose::Select, WorldComponentPickPurpose::Hover] {
+        let mut cursor = WorldComponentPickCursor::new(&state, 10, purpose, pointer[0], pointer[1]).unwrap();
+        for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped component pick {step:?}") } }
+        let best = cursor.best.unwrap(); assert_eq!(best.id, law["edgeId"].as_u64().unwrap() as u32);
+        assert!((best.primary - law["closestDepth"].as_f64().unwrap() as f32).abs() < 1e-5);
+        let mut plan = cursor.finish_plan(&state, 10).unwrap().unwrap();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
+        let actions = take_actions(&mut input); assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].action, if purpose == WorldComponentPickPurpose::Hover { "interactionHover" } else { "interactionSelect" });
+        let targets: serde_json::Value = serde_json::from_str(actions[0].args.as_ref().unwrap().get("targets").unwrap().as_str().unwrap()).unwrap();
+        assert_eq!(targets, serde_json::json!([{"granularity":"edge","id":format!("{}.edge.{}", law["object"].as_str().unwrap(), law["edgeId"].as_u64().unwrap())}]));
+        while !input.close_step().unwrap() {}
+        assert!(input.terminal_is_empty());
+        while !cursor.close_step() {}
+    }
+    for rectangle in law["marquees"].as_array().unwrap() {
+        let point = |value: &serde_json::Value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32];
+        let mut gesture = WorldMarqueeGesture::new(state.interaction_revision, 11, point(&rectangle["points"][0]));
+        assert!(gesture.push(point(&rectangle["points"][1])));
+        let mut marquee = WorldMarqueePickCursor::new(&state, 12, gesture).unwrap();
+        for turn in 0..4096 { match with_world_step_context(1, |context| marquee.step(&state, 12, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped marquee {step:?}") } }
+        assert_eq!(marquee.results.lens[0], 1, "{} includes the visible clipped segment", rectangle["name"]);
+        let mut publish = WorldComponentMarqueePublishJob::new(12, marquee.gesture, marquee.results, WorldComponentKind::Edge, false, false);
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        for turn in 0..1024 { if with_world_step_context(1, |context| publish.step(&state, 12, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 1023); }
+        let actions = take_actions(&mut input); assert_eq!(actions.len(), 1); assert_eq!(actions[0].action, "interactionSelect");
+        let targets: serde_json::Value = serde_json::from_str(actions[0].args.as_ref().unwrap().get("targets").unwrap().as_str().unwrap()).unwrap();
+        assert_eq!(targets, serde_json::json!([{"granularity":"edge","id":format!("{}.edge.{}", law["object"].as_str().unwrap(), law["edgeId"].as_u64().unwrap())}]));
+        while !input.close_step().unwrap() {}
+        assert!(input.terminal_is_empty());
+    }
+    retire_bridged_surface(&mut state);
+    eprintln!("[DEBUG] originalClippedWirePick objectAndComponentSelectHover=true containedAndCrossingMarquees=true clippedVisibleDepth=true authoredEdgeId=true exactInputClosure=true");
+}
+
 /// 🎨️ Primary analytic geometry follows the original object-style and live-theme authority.
 #[test]
 fn world_native_primary_geometry_paint_uses_original_style_tokens() {
@@ -7318,3 +7523,100 @@ fn on_a_real_gpu_a_section_removes_the_far_half_and_the_cap_closes_the_cut_witho
     println!("[DEBUG] sectionGpu adapter=true clipped=true capped=true stencilRestored=true");
 }
 //#endregion 🔖️ModellingWgpu
+
+#[test]
+fn terrain_mesh_fault_preserves_busy_and_semantic_owner_refusals() {
+    for fault in [ui_wgpu::wgpu::Mesh3dFault::Busy, ui_wgpu::wgpu::Mesh3dFault::Closing, ui_wgpu::wgpu::Mesh3dFault::Schema, ui_wgpu::wgpu::Mesh3dFault::Stale] {
+        assert_eq!(WorldTerrainMeshCursor::mesh_fault(fault), WorldDynamicFault::Mesh(fault));
+    }
+}
+
+#[test]
+fn terrain_mesh_zero_grant_retains_original_payload_and_phase() {
+    let payload = TerrainTileMeshPayload { positions: vec![0.0; 9], normals: vec![0.0; 9], indices: vec![0,1,2], uvs: vec![0.0; 6] };
+    let pointer = payload.positions.as_ptr();
+    let capacity = payload.positions.capacity();
+    let mut cursor = terrain_test_admit("surface", (3,4,5), payload, 90, 9, 9).expect("original cursor");
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items:0, maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0 };
+    let (step, progress) = cursor.step_live(grant).expect("zero grant pauses");
+    assert!(matches!(step, WorldTerrainMeshStep::Pending));
+    assert_eq!(progress, semio_framework_value::RetainedCloneProgress::default());
+    assert_eq!(cursor.phase, WorldTerrainMeshPhase::Begin);
+    assert_eq!(cursor.payload.positions.as_ptr(), pointer);
+    assert_eq!(cursor.payload.positions.capacity(), capacity);
+    assert_eq!(cursor.payload.positions.len(), 9);
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:65536, maximum_release_bytes:65536, maximum_depth:64 };
+    for _ in 0..512 {
+        let step = cursor.close_step(grant).expect("finite original source close");
+        assert!(step.progress.fits(grant));
+        if step.complete { break; }
+    }
+    assert!(cursor.terminal_is_empty());
+}
+
+fn terrain_test_grant()->semio_framework_value::RetainedCloneGrant {semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64}}
+fn terrain_test_admit(surface:&str,tile:(u32,u32,u32),payload:TerrainTileMeshPayload,generation:u64,revision:u64,terrain_revision:u64)->Result<WorldTerrainMeshCursor,WorldDynamicFault> {
+    WorldTerrainMeshCursor::new(surface,tile,payload,generation,revision,terrain_revision,terrain_test_grant()).map(|(cursor,progress)|{assert!(progress.fits(terrain_test_grant()));cursor}).map_err(|(fault,_)|fault)
+}
+fn terrain_test_step(cursor:&mut WorldTerrainMeshCursor,revision:u64,terrain_revision:u64)->WorldTerrainMeshStep {
+    with_world_step_context(1,|context|{let (step,progress)=cursor.step(revision,terrain_revision,terrain_test_grant(),context).expect("typed finite terrain turn");assert!(progress.fits(terrain_test_grant()));step})
+}
+fn terrain_test_close(cursor:&mut WorldTerrainMeshCursor)->bool {
+    match cursor.close_step(terrain_test_grant()) {
+        Ok(step)=>{assert!(step.progress.fits(terrain_test_grant()));step.complete}
+        Err(WorldDynamicFault::Mesh(ui_wgpu::wgpu::Mesh3dFault::Busy))=>false,
+        Err(fault)=>panic!("semantic terrain owner refusal: {fault:?}"),
+    }
+}
+
+#[test]
+fn terrain_constructor_refusal_preserves_original_payload_pointer_and_capacity() {
+    let grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+    let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
+    let pointer=payload.positions.as_ptr();let capacity=payload.positions.capacity();
+    let Err((fault,payload))=WorldTerrainMeshCursor::new("surface",(0,0,0),payload,91,1,1,grant) else {panic!("unfunded ID must refuse")};
+    assert_eq!(fault,WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::OwnershipLimit));
+    assert_eq!(payload.positions.as_ptr(),pointer);assert_eq!(payload.positions.capacity(),capacity);assert_eq!(payload.positions.len(),9);
+}
+#[test]
+fn terrain_owner_yield_and_copy_1_3_64_keep_the_original_write_cursor() {
+    for maximum_copy_bytes in [1,3,64] {
+        let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
+        let mut cursor=terrain_test_admit("surface",(0,0,0),payload,92,1,1).expect("funded original payload");
+        let initial=cursor.payload.positions.as_ptr();
+        with_world_step_context(0,|context|{let (step,progress)=cursor.step(1,1,terrain_test_grant(),context).unwrap();assert!(matches!(step,WorldTerrainMeshStep::Pending));assert_eq!(progress,Default::default());});
+        assert_eq!(cursor.phase,WorldTerrainMeshPhase::Begin);assert_eq!(cursor.payload.positions.as_ptr(),initial);
+        for _ in 0..512 {if cursor.phase==WorldTerrainMeshPhase::Positions {break;}terrain_test_step(&mut cursor,1,1);}
+        assert_eq!(cursor.phase,WorldTerrainMeshPhase::Positions);
+        let grant=semio_framework_value::RetainedCloneGrant {maximum_copy_bytes,..terrain_test_grant()};
+        let (step,progress)=cursor.step_live(grant).expect("caller byte budget");
+        assert!(matches!(step,WorldTerrainMeshStep::Pending));assert!(progress.fits(grant));
+        assert_eq!(cursor.vertex,if maximum_copy_bytes<12 {0} else {1});
+        for _ in 0..512 {if terrain_test_close(&mut cursor) {break;}}
+        assert!(cursor.terminal_is_empty());
+    }
+}
+
+pub(super) fn terrain_test_retire_then_dynamic(state:&mut World3dState,context:&mut semio_framework_job::StepContext<'_>)->bool {
+    let grant=terrain_test_grant();
+    let terrain=step_world3d_terrain_retirement(state,grant,context);
+    assert!(terrain.ownership.fits(grant));
+    match terrain.step {
+        WorldTerrainMeshPublicationStep::Idle=>step_world3d_dynamic_retirement(state,context),
+        WorldTerrainMeshPublicationStep::Pending|WorldTerrainMeshPublicationStep::Complete=>false,
+        WorldTerrainMeshPublicationStep::Fault(fault)=>panic!("typed terrain retirement refusal: {fault:?}"),
+    }
+}
+#[test]
+fn terrain_retirement_zero_grant_preserves_original_owner_without_bool_bridge() {
+    let mut state=World3dState::new("surface".into(),"controller".into());
+    let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
+    let pointer=payload.positions.as_ptr();
+    state.terrain_pending=Some(((0,0,0),payload,100,1,1));
+    let zero=semio_framework_value::RetainedCloneGrant::default();
+    with_world_step_context(1,|context|{let result=step_world3d_terrain_retirement(&mut state,zero,context);assert_eq!(result.step,WorldTerrainMeshPublicationStep::Pending);assert_eq!(result.ownership,Default::default());});
+    assert_eq!(state.terrain_pending.as_ref().unwrap().1.positions.as_ptr(),pointer);
+    begin_world3d_dynamic_retirement(&mut state);
+    for _ in 0..8192 {if with_world_step_context(1,|context|terrain_test_retire_then_dynamic(&mut state,context)){break;}}
+    assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
+}

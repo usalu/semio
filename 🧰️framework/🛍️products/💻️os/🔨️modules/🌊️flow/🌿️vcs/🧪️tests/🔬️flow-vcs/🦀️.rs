@@ -99,14 +99,16 @@ impl FlowSemanticOracle for SerdeJsonFlowOracle {
                     active = next.1;
                 }
                 "checkpoint" => {}
+                "replaceDocument" => {
+                    assert!(undo.is_empty() && redo.is_empty(), "oracle document load needs a pristine history");
+                    flow_oracle_apply_operation(feature, input, &mut document);
+                    versions += 1;
+                    active = versions - 1;
+                }
                 _ => {
                     undo.push((document.clone(), active));
                     redo.clear();
                     flow_oracle_apply_operation(feature, input, &mut document);
-                    if feature == "replaceDocument" {
-                        versions += 1;
-                        active = versions - 1;
-                    }
                 }
             }
             let parent_revision = revision;
@@ -921,15 +923,17 @@ fn retire_snapshot_source(source: &mut FlowVcsSource<FlowHostSnapshot>) {
 fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
     let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot = Arc::new(<FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap());
-    let mut readers = [std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(Arc::clone(&snapshot))), std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(snapshot))];
+    let admission=semio_framework_value::retained_clone::RetainedCloneGrant::one_capacity_turn(FlowSnapshotRetirementFactory.retirement_birth_bytes(&snapshot),1);
+    let admit=|snapshot|FlowSnapshotRetirementFactory.retire(snapshot,admission).unwrap_or_else(|(error,_)|panic!("Flow shared reader admission refused: {error}")).0;
+    let mut readers=[std::mem::ManuallyDrop::new(admit(Arc::clone(&snapshot))),std::mem::ManuallyDrop::new(admit(snapshot))];
     for reader in &mut readers {
-        assert!(matches!(reader.close_step(0, 256).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(reader.close_step(semio_framework_value::retained_clone::RetainedCloneGrant::default()).unwrap().progress(),semio_framework_value::retained_clone::RetainedCloneProgress::default());
         assert!(!reader.terminal_is_empty());
     }
     for _ in 0..4096 {
         for reader in &mut readers {
             if !reader.terminal_is_empty() {
-                reader.close_step(1, 256).unwrap();
+                let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:256,maximum_capacity_bytes:reader.next_capacity_byte_demand(256).unwrap(),maximum_release_bytes:reader.next_release_byte_demand().unwrap(),maximum_depth:reader.next_depth_demand().unwrap()};let step=reader.close_step(grant).unwrap();assert!(step.progress().fits(grant));
             }
         }
         if readers.iter().all(|reader| reader.terminal_is_empty()) {
@@ -1607,8 +1611,30 @@ fn retained_vcs_replace_document_uses_persistent_owner_transfer_phases() {
     drive_to_preview(&mut session, handle);
     assert_eq!(session.document.as_ref().expect("document").host_snapshot().widgets.len(), expected_widgets);
     assert_eq!(session.operations[slot].as_ref().expect("operation").stage, FlowVcsStage::PageReady);
+    assert_eq!(session.undo.len(), 0);
+    assert_eq!(session.redo.len(), 0);
+    assert_eq!(session.document.as_ref().expect("document").active, 1);
     close_to_terminal(&mut session);
     retire_snapshot_source(&mut source);
+}
+
+#[test]
+fn retained_vcs_replace_document_is_a_load_that_writes_no_history_row_and_refuses_a_live_history() {
+    let mut loaded = FlowRetainedVcs::new(retained_fixture(), 48, 1, 0);
+    let mut source = FlowVcsSource::new(retained_fixture());
+    let handle = loaded.begin_replace_document(loaded.authority(), &mut source).expect("load admission");
+    drive_to_preview(&mut loaded, handle);
+    assert_eq!(loaded.undo.len(), 0);
+    assert_eq!(loaded.redo.len(), 0);
+    close_to_terminal(&mut loaded);
+    retire_snapshot_source(&mut source);
+
+    let mut live = FlowRetainedVcs::new(retained_fixture(), 50, 1, 0);
+    live.undo.push(FlowVcsAction::Checkpoint).expect("fixed undo owner");
+    let mut refused = FlowVcsSource::new(retained_fixture());
+    assert_eq!(live.begin_replace_document(live.authority(), &mut refused), Err(FlowVcsFault::InvalidMutation));
+    close_to_terminal(&mut live);
+    retire_snapshot_source(&mut refused);
 }
 
 #[test]
@@ -1810,28 +1836,6 @@ fn set_layout_round_trip() {
     host_snapshot.retire_cold();
 }
 
-#[test]
-fn flow_fixture_ops_diffs_widgets_synapses_layout() {
-    let before = FlowHostSnapshot { widgets: vec![sample_widget("a"), sample_widget("b")], synapses: Vec::new(), ..FlowHostSnapshot::default() };
-    let mut after = before.clone();
-    after.widgets.retain(|widget| Identified::id(widget) != "a");
-    after.widgets.push(sample_widget("c"));
-    after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
-    let operations = flow_host_snapshot_operations(&before, &after).expect("wire-representable flow fixture");
-    let materialized = operations.iter().fold(before.clone(), |acc, operation| {
-        let next = crate::os_spr::apply_diff(operation.diff(&acc).diff(), &acc).expect("valid flow replay diff");
-        acc.retire_cold();
-        next
-    });
-    assert_eq!(materialized.widgets.len(), 2);
-    assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
-    assert!(materialized.widgets.iter().all(|widget| Identified::id(widget) != "a"));
-    assert_eq!(materialized.layout.get("c"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
-    materialized.retire_cold();
-    after.retire_cold();
-    before.retire_cold();
-}
-
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_layout_drag_produces_one_edit() {
     let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
@@ -1902,7 +1906,6 @@ fn flow_operation_op_text_round_trips_every_variant() {
     crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse }));
     crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
     crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
-    crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: FlowHostSnapshot::default() }));
 }
 
 /// 📜️ `crate::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowHostSnapshot,

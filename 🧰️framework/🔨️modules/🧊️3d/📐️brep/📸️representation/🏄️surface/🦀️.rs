@@ -46,6 +46,8 @@ pub enum Surface {
     Nurbs { u_knots: KnotVector, v_knots: KnotVector, controls: Vec<Vec<Pnt3>>, weights: Vec<Vec<f64>> },
 }
 
+super::retire_geometry_variants!(Surface {Plane {frame},Cylinder {frame,radius},Cone {frame,half_angle},Sphere {frame,radius},Torus {frame,major_radius,minor_radius},Nurbs {u_knots,v_knots,controls,weights}});
+
 /// 🗺️ First/second partial derivatives at a surface point, the common input to normal and
 /// curvature computations.
 pub struct SurfaceDerivatives {

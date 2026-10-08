@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingSnapshot, FillStyle};
 
@@ -90,8 +91,8 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "replace-layer-fill/solid-to-linear-gradient: the fill really changes, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("replace-layer-fill's diff pins a layers delta");
-    assert!(delta.patched[0].patch.fill.is_some(), "the fill patch field must be populated");
-    assert_eq!(delta.patched[0].patch.stroke, None, "a fill replace must leave the stroke patch field empty");
+    assert!(delta.modified[0].patch.fill.is_some(), "the fill patch field must be populated");
+    assert_eq!(delta.modified[0].patch.stroke, None, "a fill replace must leave the stroke patch field empty");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one. The fill rides as a `fill` blob holding the
@@ -104,7 +105,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-layer-fill/solid-to-linear-gradient: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("replace-layer-fill pins a layers delta");
-    let patch = &delta.patched[0].patch;
+    let patch = &delta.modified[0].patch;
     let fill = patch.fill.as_ref().expect("typed fill patch").value.clone();
     assert!(matches!(fill, Some(FillStyle::LinearGradient { .. })), "the blob carries the tagged gradient variant, not a bare colour");
     assert!(patch.stroke.is_none(), "a fill swap must leave the stroke lane empty");

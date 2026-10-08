@@ -1,0 +1,667 @@
+{
+  "qualification": "Filesystem rooted schema inventory; imported/delegated schemas must resolve separately, table count is not coverage proof",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "root": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 2
+    },
+    {
+      "owner": "EquationSnapshot",
+      "root": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 18
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 14
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 14
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 6
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 10
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 11
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 36
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 36
+    },
+    {
+      "owner": "FlowSnapshot",
+      "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 2
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 17
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 20
+    },
+    {
+      "owner": "VcsSnapshot",
+      "root": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 2
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "root": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 4
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "root": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 6
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "root": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 1
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "root": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 2
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 18
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 19
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 685
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "root": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 32
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "root": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🕸️mesh/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 27
+    },
+    {
+      "owner": "WiresSnapshot",
+      "root": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 17
+    },
+    {
+      "owner": "FormsSnapshot",
+      "root": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 30
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 43
+    },
+    {
+      "owner": "CadSnapshot",
+      "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 7
+    },
+    {
+      "owner": "En1990Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 9
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 12
+    },
+    {
+      "owner": "En1997Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 9
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 3
+    },
+    {
+      "owner": "En1991Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 8
+    },
+    {
+      "owner": "En1992Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 13
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 32
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 55
+    },
+    {
+      "owner": "En1993Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 25
+    },
+    {
+      "owner": "En1994Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 11
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 7
+    },
+    {
+      "owner": "En1996Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 5
+    },
+    {
+      "owner": "En1995Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 5
+    },
+    {
+      "owner": "En1999Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 16
+    },
+    {
+      "owner": "En1998Snapshot",
+      "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 16
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "root": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 2
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "root": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 3
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "root": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 35
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 69
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🌳️typed/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 34
+    },
+    {
+      "owner": "JackSnapshot",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 13
+    },
+    {
+      "owner": "DagSnapshot",
+      "root": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 2
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 33
+    },
+    {
+      "owner": "RasterSnapshot",
+      "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 23
+    },
+    {
+      "owner": "NoteSnapshot",
+      "root": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 14
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 20
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 25
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 23
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 10
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 15
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 13
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "root": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 1
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "root": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 3
+    },
+    {
+      "owner": "CurationSnapshot",
+      "root": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation",
+      "sqlPaths": [
+        "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ],
+      "definingProviderPaths": [
+        "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+      ],
+      "tableCount": 14
+    }
+  ]
+}

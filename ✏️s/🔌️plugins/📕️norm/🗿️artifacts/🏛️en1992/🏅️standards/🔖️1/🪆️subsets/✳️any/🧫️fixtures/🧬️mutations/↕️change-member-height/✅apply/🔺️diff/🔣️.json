@@ -8,25 +8,27 @@
   "reinforcementGrades": null,
   "prestressSteels": null,
   "members": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "wall-W1",
-        "exposure": null,
-        "width": null,
-        "height": 0.6,
-        "effectiveDepth": null,
-        "cover": null,
-        "span": null,
-        "fireRating": null,
-        "fireAxisDistance": null,
-        "stirrupsSpacing": null,
-        "longitudinal": null,
-        "actions": null
+        "patch": {
+          "exposure": null,
+          "width": null,
+          "height": 0.6,
+          "effectiveDepth": null,
+          "cover": null,
+          "span": null,
+          "fireRating": null,
+          "fireAxisDistance": null,
+          "stirrupsSpacing": null,
+          "longitudinal": null,
+          "actions": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "anchors": null
 }

@@ -1,0 +1,21 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "9d3bb0a5bf8c5b2d50b2b4fa3c024a5d9ae5f6b05eb9860105b39489c9b24ae9",
+      "afterSha256": "6393745373131bdde0e7341f8cbe9f4f3e2f930d4bc60a98e2b28635e20f5734"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "c5af948a9257c6aab3fe63773a91fc96fb95e28ac2fca5843267d15144e9b446",
+      "afterSha256": "4751d6b8f5a5b8340ab3c9120e76af9176b96a92b133d74d7ee08a3a86a21151"
+    }
+  ],
+  "preservedObserver": {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧫️fixtures/🔣️.json",
+    "sha256": "5035ba0d9d29cfd3dd43cee3a8686722427412edac65706129faaee0eb336727",
+    "role": "source observation, not authorship"
+  }
+}

@@ -12,7 +12,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
 use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_xml_node_bin, enc_xml_node_bin};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{parse_usize};
-use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
+use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff};
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;
 use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
@@ -116,10 +116,14 @@ pub(crate) fn print_docx_mutation(m: &DocxMutation) -> String {
         DocxMutation::RemoveStyle(remove_style::RemoveStyle { id }) => format!("remove-style id={}", enc_str(id)),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => format!("set-style-name id={} name={}", enc_str(id), enc_str(name)),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => format!("set-style-based-on id={} based-on={}", enc_str(id), encode_option(based_on, |v| enc_str(v))),
-        DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index }) => {
-            format!("set-part path={} content-type={} payload={}{}", enc_str(path), enc_str(content_type), hex_encode(semio_framework_pack_json::to_json_string(payload).as_bytes()), index.map_or(String::new(), |index| format!(" index={index}")))
+        DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index, override_index }) => {
+            format!("set-part path={} content-type={} payload={}{}{}", enc_str(path), enc_str(content_type), hex_encode(semio_framework_pack_json::to_json_string(payload).as_bytes()), index.map_or(String::new(), |index| format!(" index={index}")), override_index.map_or(String::new(), |index| format!(" override-index={index}")))
         }
         DocxMutation::RemovePart(remove_part::RemovePart { path }) => format!("remove-part path={}", enc_str(path)),
+        DocxMutation::SetRelationship(set_relationship::SetRelationship { owner, id, rel_type, target, external, index }) => format!("set-relationship owner={} id={} rel-type={} target={} external={}{}", enc_str(owner), enc_str(id), enc_str(rel_type), enc_str(target), u8::from(*external), index.map_or_else(String::new, |index| format!(" index={index}"))),
+        DocxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner, id }) => format!("remove-relationship owner={} id={}", enc_str(owner), enc_str(id)),
+        DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name, content_type, index }) => format!("set-content-type override={} name={} content-type={}{}", u8::from(*is_override), enc_str(name), enc_str(content_type), index.map_or_else(String::new, |index| format!(" index={index}"))),
+        DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name }) => format!("remove-content-type override={} name={}", u8::from(*is_override), enc_str(name)),
     }
 }
 
@@ -149,8 +153,21 @@ pub(crate) fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
         "remove-style" => Ok(DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: dec_str(arg("id")?)? })),
         "set-style-name" => Ok(DocxMutation::SetStyleName(set_style_name::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? })),
         "set-style-based-on" => Ok(DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: dec_str(arg("id")?)?, based_on: decode_option(arg("based-on")?, dec_str)? })),
-        "set-part" => Ok(DocxMutation::SetPart(set_part::SetPart { path: dec_str(arg("path")?)?, content_type: dec_str(arg("content-type")?)?, payload: { let bytes = hex_decode(arg("payload")?)?; let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?; semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())? }, index: args.get("index").map(|value| value.parse::<usize>().map_err(|error| error.to_string())).transpose()? })),
+        "set-part" => Ok(DocxMutation::SetPart(set_part::SetPart { path: dec_str(arg("path")?)?, content_type: dec_str(arg("content-type")?)?, payload: { let bytes = hex_decode(arg("payload")?)?; let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?; semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())? }, index: args.get("index").map(|value| value.parse::<usize>().map_err(|error| error.to_string())).transpose()?, override_index: args.get("override-index").map(|value| value.parse::<usize>().map_err(|error| error.to_string())).transpose()? })),
         "remove-part" => Ok(DocxMutation::RemovePart(remove_part::RemovePart { path: dec_str(arg("path")?)? })),
+        "set-relationship" => {
+            let external = match arg("external")? { "1" => true, "0" => false, other => return Err(format!("docx mutation: bad flag {other:?}")) };
+            Ok(DocxMutation::SetRelationship(set_relationship::SetRelationship { owner: dec_str(arg("owner")?)?, id: dec_str(arg("id")?)?, rel_type: dec_str(arg("rel-type")?)?, target: dec_str(arg("target")?)?, external, index: args.get("index").map(|value| value.parse::<usize>().map_err(|error| error.to_string())).transpose()? }))
+        }
+        "remove-relationship" => Ok(DocxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner: dec_str(arg("owner")?)?, id: dec_str(arg("id")?)? })),
+        "set-content-type" => {
+            let is_override = match arg("override")? { "1" => true, "0" => false, other => return Err(format!("docx mutation: bad flag {other:?}")) };
+            Ok(DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name: dec_str(arg("name")?)?, content_type: dec_str(arg("content-type")?)?, index: args.get("index").map(|value| value.parse::<usize>().map_err(|error| error.to_string())).transpose()? }))
+        }
+        "remove-content-type" => {
+            let is_override = match arg("override")? { "1" => true, "0" => false, other => return Err(format!("docx mutation: bad flag {other:?}")) };
+            Ok(DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name: dec_str(arg("name")?)? }))
+        }
         other => Err(format!("docx mutation: unknown keyword {other:?}")),
     }
 }

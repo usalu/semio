@@ -8,6 +8,22 @@ use crate::schema::mutations::GltfMutation;
 
 const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;
 
+/// 🎯️ One mutation applied through the central applier: the next snapshot, or the refusal's code and detail.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_gltf_mutation(base: &GltfSnapshot, mutation: &GltfMutation) -> Result<GltfSnapshot, String> {
+    let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, base);
+    if let Some(message) = outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error) {
+        return Err(format!("{} {}", message.code.0, message.message));
+    }
+    protocol::apply_diff(outcome.diff(), base).map_err(|error| error.to_string())
+}
+
+/// 🌉️ Applies one mutation through the central applier; a refusal (error or fatal message) is an error.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, base: &GltfSnapshot) -> Result<GltfSnapshot, String> {
+    apply_gltf_mutation(base, mutation).map_err(|refusal| format!("{kind}: the {step} was refused — {refusal}"))
+}
+
 fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut text = String::with_capacity(bytes.len() * 2);
@@ -332,4 +348,3 @@ pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: 
     gltf_bridge_write(&restored)
 }
 
-use crate::standards::v2_0::subsets::any::schema::mutations::gltf_bridge_apply;

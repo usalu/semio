@@ -45,7 +45,7 @@ async fn inverse_restores_before() {
     assert_eq!(undo.value, base.query, "the inverse restores the query BASE held");
     let mut snapshot = base.clone();
     apply_trinity_graph_mutation(&mut snapshot, &mutation()).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_trinity_graph_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "set-query/🔎️replaces-the-query: inverse did not restore the before-snapshot");

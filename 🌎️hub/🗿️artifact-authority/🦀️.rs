@@ -2,7 +2,9 @@
 //! catalog resolution and database blob staging live in [`adapters`]; directory events, retention
 //! advancement, and WebSocket production remain the P2-B/P2-C seams.
 
-use ::directory::os_directory::{descriptor_digest_v1, hex_lower, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentDescriptor, DocumentScope};
+use ::directory::os_directory::{ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentDescriptor, DocumentScope};
+use ::directory::os_directory::io::binary::artifact_hash::hex_lower;
+use ::directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use semio_framework_hash::Sha256;
 
 #[path = "🧱️chunk-cas/🦀️.rs"]

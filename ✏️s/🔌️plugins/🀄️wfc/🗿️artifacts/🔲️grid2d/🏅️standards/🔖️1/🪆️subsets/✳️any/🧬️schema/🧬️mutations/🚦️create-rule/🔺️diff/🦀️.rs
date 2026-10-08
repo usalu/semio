@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateRule` — a real id-keyed upsert at the canonical sorted
 //! position, refusing a dangling tile reference or a second rule on the same `(A, B, direction)`.
 
-use crate::diff::{Grid2dDiff, Grid2dRows};
+use crate::diff::{Grid2dDiff, Grid2dRow, Grid2dRulesDelta};
 use crate::schema::snapshot::Grid2dSnapshot;
 
 pub fn diff(payload: &super::CreateRule, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
@@ -20,5 +20,5 @@ pub fn diff(payload: &super::CreateRule, base: &Grid2dSnapshot) -> protocol::Mut
     if let Some(existing) = base.rules.iter().find(|existing| existing.tile_a_id == rule.tile_a_id && existing.tile_b_id == rule.tile_b_id && existing.direction == rule.direction) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rule \"{}\" already constrains this pair and direction.", existing.id), [existing.id.clone()]);
     }
-    protocol::MutationOutcome::new(Grid2dDiff { rules: Grid2dRows { added: vec![rule.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Grid2dDiff { rules: Grid2dRulesDelta::insertion(Grid2dRow::insert_at(&base.rules, &rule), rule.clone()), ..Default::default() })
 }

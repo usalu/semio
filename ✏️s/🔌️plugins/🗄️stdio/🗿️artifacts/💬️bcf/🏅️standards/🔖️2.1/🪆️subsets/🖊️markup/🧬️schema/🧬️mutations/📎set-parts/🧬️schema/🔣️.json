@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bcf/2.1/markup/mutation/set-parts/schema.json",
+  "title": "SetParts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "parts"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setParts",
+      "description": "Aggregate discriminator spliced in by BcfMutation; absent when the payload stands alone."
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/part"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Package parts",
+          "de": "Paketdateien"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "part": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/octets"
+        }
+      }
+    }
+  }
+}

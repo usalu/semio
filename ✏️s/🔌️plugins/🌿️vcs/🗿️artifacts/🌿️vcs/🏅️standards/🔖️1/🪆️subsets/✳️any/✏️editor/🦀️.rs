@@ -10,7 +10,7 @@
 
 use crate::editor::vcs::commands::edit as edit_command;
 use crate::editor::vcs::commands::example::set_active_example;
-use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, text_edit};
+use crate::editor::vcs::commands::{change_counter, change_notes, change_status, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, rename_vcs, text_edit};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::editor::vcs::modes::edit;
 use crate::editor::vcs::modes::edit::windows::{editor, history};
@@ -145,7 +145,10 @@ semio_framework_plugin::app_commands! {
     /// reordering is a wire-format break.**
     pub enum VcsCommand for VcsSnapshot, VcsDemoMutation, VcsDemoConfig, VcsDemoConfigMutation {
         "incrementCounter" as "increment-counter" => increment_counter::IncrementCounter,
-        "patchSnapshot" as "patch-snapshot" => patch_snapshot::PatchSnapshot,
+        "renameVcs" as "rename-vcs" => rename_vcs::RenameVcs,
+        "changeCounter" as "change-counter" => change_counter::ChangeCounter,
+        "changeStatus" as "change-status" => change_status::ChangeStatus,
+        "changeNotes" as "change-notes" => change_notes::ChangeNotes,
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "edit" as "edit" => edit_command::Edit,
         "noMutation" as "no-operation" => no_operation::NoMutation,
@@ -182,7 +185,7 @@ semio_framework_plugin::app_commands! {
 pub struct VcsPlayApp;
 
 //#region 🧵️RetainedCommands
-const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "patchSnapshot", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "setActiveExample"];
+const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "renameVcs", "changeCounter", "changeStatus", "changeNotes", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "setActiveExample"];
 const VCS_RESUMABLE_TOOL_IDS: &[&str] = &["textEdit", "edit"];
 const VCS_BOUNDED_PAYLOAD_SCHEMA: &str = "vcs.vcs.tool-command.v1";
 const VCS_BOUNDED_RAW_BYTES: usize = 8_192;
@@ -192,7 +195,10 @@ const VCS_EDIT_MAXIMUM_OUTPUT_BYTES: usize = 16_384;
 const VCS_EDIT_MAXIMUM_WORK_ITEMS: usize = 16_400;
 const VCS_BOUNDED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "incrementCounter", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "patchSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "renameVcs", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "changeCounter", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "changeStatus", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "changeNotes", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -216,7 +222,10 @@ fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interactio
         VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
         // 🧵️ A batched move carries `samples.len()` pairs of f64 (design L4) — priced, never dropped.
         VcsCommand::CanvasPointerMove(payload) => payload.samples.len().checked_mul(2 * size_of::<f64>())?,
-        VcsCommand::PatchSnapshot(payload) => payload.field.len().checked_add(payload.value.len())?,
+        VcsCommand::RenameVcs(payload) => payload.title.len(),
+        VcsCommand::ChangeCounter(_) => 0,
+        VcsCommand::ChangeStatus(payload) => payload.status.len(),
+        VcsCommand::ChangeNotes(payload) => payload.notes.len(),
         VcsCommand::SetActiveExample(payload) if payload.example_id.len() <= 256 => 0,
         VcsCommand::SetActiveExample(_) => return None,
         VcsCommand::TextEdit(_) | VcsCommand::Edit(_) => return None,
@@ -289,7 +298,7 @@ impl VcsEditCommandWork {
     }
 
     fn advance(&mut self, command: &VcsCommand, snapshot: &VcsSnapshot) -> Result<Option<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>>, Fault> {
-        use crate::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
+        use crate::mutations::{add_tag_at, change_counter, change_notes, change_status, remove_tag, rename_vcs};
         match self.phase {
             VcsEditPhase::Decode => {
                 let text = vcs_edit_text(command).ok_or_else(|| Fault::from("vcs-edit-command-mismatch"))?;
@@ -357,13 +366,12 @@ impl VcsEditCommandWork {
                     self.cursor += 1;
                 } else {
                     self.cursor = 0;
-                    self.phase = VcsEditPhase::Additions;
+                    self.phase = VcsEditPhase::Removals;
                 }
             }
-            VcsEditPhase::Additions => {
-                let next = self.next.as_ref().ok_or_else(|| Fault::from("vcs-edit-next-snapshot-absent"))?;
-                if let Some(tag) = next.tags.get(self.cursor) {
-                    let mutation = (!self.current_tags.contains(tag.as_str())).then(|| add_tag(tag.clone()));
+            VcsEditPhase::Removals => {
+                if let Some(tag) = snapshot.tags.get(self.cursor) {
+                    let mutation = (!self.next_tags.contains(tag.as_str())).then(|| remove_tag(tag.clone()));
                     if let Some(mutation) = mutation {
                         self.charge_output(tag.len())?;
                         self.mutations.push(mutation);
@@ -371,12 +379,13 @@ impl VcsEditCommandWork {
                     self.cursor += 1;
                 } else {
                     self.cursor = 0;
-                    self.phase = VcsEditPhase::Removals;
+                    self.phase = VcsEditPhase::Additions;
                 }
             }
-            VcsEditPhase::Removals => {
-                if let Some(tag) = snapshot.tags.get(self.cursor) {
-                    let mutation = (!self.next_tags.contains(tag.as_str())).then(|| remove_tag(tag.clone()));
+            VcsEditPhase::Additions => {
+                let next = self.next.as_ref().ok_or_else(|| Fault::from("vcs-edit-next-snapshot-absent"))?;
+                if let Some(tag) = next.tags.get(self.cursor) {
+                    let mutation = (!self.current_tags.contains(tag.as_str())).then(|| add_tag_at(tag.clone(), self.cursor as u32));
                     if let Some(mutation) = mutation {
                         self.charge_output(tag.len())?;
                         self.mutations.push(mutation);
@@ -679,16 +688,22 @@ where
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<VcsOneItemPreparation<P,M>>(),depth:1})
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M>)> {
+        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
+        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
         if request.lane != self.lane
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preparation rejected original publication authority"),request));
         }
-        Ok(Box::new(VcsOneItemPreparation {
+        Ok((Box::new(VcsOneItemPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
             authority: Some(request.authority),
@@ -696,7 +711,7 @@ where
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             closing: false,
-        }))
+        }),progress))
     }
 }
 
@@ -782,7 +797,10 @@ impl VcsBoundedProofs {
         factory_type: VcsBoundedCommandJobFactory,
         tools: {
             "incrementCounter" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "patchSnapshot" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "renameVcs" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "changeCounter" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "changeStatus" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "changeNotes" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "noMutation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -968,6 +986,13 @@ impl ArtifactEditor for VcsPlayApp {
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let text_arg = |key: &str| args.get(key).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
+        let bounded_text = |key: &str| {
+            let text = text_arg(key);
+            if text.len() > VCS_BOUNDED_RAW_BYTES {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("vcs.command.payload-too-large"), "the vcs command payload exceeds its bounded capacity"));
+            }
+            Ok(text)
+        };
         let pointer_samples = || {
             args.get("samples")
                 .and_then(semio_framework_value::DslValue::as_array)
@@ -984,14 +1009,14 @@ impl ArtifactEditor for VcsPlayApp {
         match action {
             "incrementCounter" => Ok(VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})),
             "setActiveExample" => Ok(VcsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg("exampleId") })),
-            "patchSnapshot" => {
-                let field = text_arg("field");
-                let value = text_arg("value");
-                if field.len().checked_add(value.len()).is_none_or(|bytes| bytes > VCS_BOUNDED_RAW_BYTES) {
-                    return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("vcs.command.payload-too-large"), "the vcs command payload exceeds its bounded capacity"));
-                }
-                Ok(VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field, value }))
-            }
+            "renameVcs" => Ok(VcsCommand::RenameVcs(rename_vcs::RenameVcs { title: bounded_text("value")? })),
+            "changeStatus" => Ok(VcsCommand::ChangeStatus(change_status::ChangeStatus { status: bounded_text("value")? })),
+            "changeNotes" => Ok(VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: bounded_text("value")? })),
+            "changeCounter" => bounded_text("value")?
+                .trim()
+                .parse::<i64>()
+                .map(|value| VcsCommand::ChangeCounter(change_counter::ChangeCounter { value }))
+                .map_err(|_| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.invalid-args"), "changeCounter requires an integer `value`")),
             "textEdit" => {
                 let text = text_arg("text");
                 if text.len() > VCS_BOUNDED_RAW_BYTES {
@@ -1056,7 +1081,10 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .mutation("incrementCounter", LocalizedLabel::native("Increment Counter", "Zähler erhöhen"))
-            .mutation("patchSnapshot", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
+            .mutation("renameVcs", LocalizedLabel::native("Rename", "Umbenennen"))
+            .mutation("changeCounter", LocalizedLabel::native("Change Counter", "Zähler ändern"))
+            .mutation("changeStatus", LocalizedLabel::native("Change Status", "Status ändern"))
+            .mutation("changeNotes", LocalizedLabel::native("Change Notes", "Notizen ändern"))
             .action_with(semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), semio_framework_plugin::ActionKind::Mutation, "typography"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("noMutation", LocalizedLabel::native("No-operation", "Keine Aktion"))
@@ -1074,7 +1102,10 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameVcs", InteractiveJobClassification::Migrated)
+            .action_interactive_job("changeCounter", InteractiveJobClassification::Migrated)
+            .action_interactive_job("changeStatus", InteractiveJobClassification::Migrated)
+            .action_interactive_job("changeNotes", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
@@ -1119,7 +1150,10 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             // packets' identical gap note. The subset's own `📚️examples/🎬️demo-session` facet (real
             // content, moved intact) is the modern, role-agnostic replacement surface for this.
             .action_describe("incrementCounter", LocalizedLabel::native("Adds one to the demo document's counter.", "Erhöht den Zähler des Demodokuments um eins."))
-            .action_describe("patchSnapshot", LocalizedLabel::native("Sets one field of the demo document (title, counter, status or notes) from a text value.", "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."))
+            .action_describe("renameVcs", LocalizedLabel::native("Sets the demo document's title.", "Setzt den Titel des Demodokuments."))
+            .action_describe("changeCounter", LocalizedLabel::native("Sets the demo document's counter to an integer.", "Setzt den Zähler des Demodokuments auf eine ganze Zahl."))
+            .action_describe("changeStatus", LocalizedLabel::native("Sets the demo document's status.", "Setzt den Status des Demodokuments."))
+            .action_describe("changeNotes", LocalizedLabel::native("Sets the demo document's notes.", "Setzt die Notizen des Demodokuments."))
             .action_describe("textEdit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; a live typing run commits as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; ein fortlaufender Tipplauf wird als eine Änderung übernommen."))
             .action_describe("edit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes every field that differs as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt jedes abweichende Feld als eine Änderung."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole demo document with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Demodokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))

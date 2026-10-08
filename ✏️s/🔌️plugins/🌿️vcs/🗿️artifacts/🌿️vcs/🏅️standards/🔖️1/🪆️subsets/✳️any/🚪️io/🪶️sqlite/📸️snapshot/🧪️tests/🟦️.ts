@@ -4,10 +4,11 @@ import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json";
 
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type {VcsSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import * as owner from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-type Snapshot=Omit<owner.VcsSnapshot,"counter">&{counter:bigint};
+type Snapshot=Omit<VcsSnapshot,"counter">&{counter:bigint};
 const own=owner as unknown as {VCS_SQLITE_SCHEMA:string;vcsSnapshotToSqliteDatabase:(snapshot:Snapshot,options?:ArtifactSqliteOptions)=>Promise<SqliteDatabase>;vcsSnapshotFromSqliteDatabase:(database:SqliteDatabase,options?:ArtifactSqliteOptions)=>Promise<Snapshot>};
 const snapshot=():Snapshot=>({...fixture.snapshot,counter:BigInt(fixture.snapshot.counter),tags:[...fixture.snapshot.tags]});
 test("VCS complete neutral ownership laws agree with independent JSON schema",()=>{const ajv=new Ajv({strict:false,validateFormats:false}).addSchema(nativeSchema);expect(fixture["control"]["tagCount"]).toEqual(2048);expect(fixture["control"]["cancelAt"]).toEqual(256);expect(fixture["control"]["largeTextBytes"]).toEqual(131073);expect(fixture["control"]["maxOwnedBytes"]).toEqual(65536);expect(fixture["control"]["tinyFileBytes"]).toEqual(1024);expect(fixture["semanticCells"]["tableWidths"]).toEqual({"vcs_document":6,"vcs_tag":4});expect(fixture["semanticCells"]["fullRows"]).toEqual(7);expect(ajv.validate(nativeSchema,{...fixture.snapshot,unexpected:true})).toBe(false);expect(ajv.validate(nativeSchema,{...fixture.snapshot,tags:[1]})).toBe(false)});

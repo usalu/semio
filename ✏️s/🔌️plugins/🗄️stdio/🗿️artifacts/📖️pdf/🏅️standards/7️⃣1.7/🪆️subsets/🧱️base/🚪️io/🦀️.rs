@@ -1,7 +1,7 @@
 //! 🚪️ IO stdio.pdf (1.7/🧱️base) — the codec entry points over the engine modules: `decode_pdf`
 //! (sniff → cross-reference → decrypt → retained graph → typed lanes), `encode_pdf` (typed lanes
 //! reconciled onto the retained graph when one is carried, lowered afresh otherwise → bytes),
-//! [`carry_graph_edit`] (a direct edit of the retained graph carried into the typed lanes it
+//! [`crate::standards::v1_7::subsets::base::schema::graph_projection::carry_graph_edit`] (a direct edit of the retained graph carried into the typed lanes it
 //! moves), the streaming [`DocumentStream`] a guest can drive one page per step, and the typed
 //! builders every consumer starts from ([`text_document`], [`PdfTextLayout`]). Reads PDF 1.0–2.0
 //! leniently (`declared_version` records the header verbatim).
@@ -25,6 +25,9 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 pub use crate::standards::v1_7::subsets::base::modules::lexer::PdfEngineError as EngineError;
+
+#[path="📦️foreign-artifacts/🦀️.rs"]
+pub mod foreign_artifacts;
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -121,10 +124,12 @@ pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnaps
     text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer);
     let mut source = GraphSource::new(&objects);
     let lifter = lift_document_with(&trailer, &declared_version, &mut source);
+    if let Some(error)=lifter.admission_error {return Err(error);}
     let mut snapshot = lifter.snapshot;
     snapshot.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
     snapshot.declared_version = declared_version;
     snapshot.encryption = encryption;
+    for mut object in std::mem::take(&mut snapshot.objects){object.id.num=objects.iter().map(|object|object.id.num).max().unwrap_or(0).checked_add(1).ok_or_else(||PdfEngineError::Unsupported("PDF native custody exhausted".into()))?;objects.push(object);}
     snapshot.objects = objects;
     snapshot.trailer = trailer;
     Ok(snapshot)
@@ -251,14 +256,15 @@ struct Reading {
 
 impl Reading {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn of(source: impl ObjectSource, trailer: &[PdfDictEntry], declared_version: &str) -> Self {
+    fn of(source: impl ObjectSource, trailer: &[PdfDictEntry], declared_version: &str) -> PResult<Self> {
         let mut recording = Recording { inner: source, seen: HashSet::new() };
         let (lanes, ids, page_refs, annotation_refs) = {
             let lifter = lift_document_with(trailer, declared_version, &mut recording);
+            if let Some(error)=lifter.admission_error {return Err(error);}
             (lifter.snapshot, lifter.ids, lifter.page_refs, lifter.annotation_refs)
         };
         let refs = ids.iter().map(|((category, reference), id)| ((*category, id.clone()), *reference)).collect();
-        Self { lanes, ids, refs, page_refs, annotation_refs, seen: recording.seen }
+        Ok(Self { lanes, ids, refs, page_refs, annotation_refs, seen: recording.seen })
     }
 
     /// 🗺️ Where every resource this reading names lives, and every page in `pages` order.
@@ -376,7 +382,7 @@ const GRAFT_ROUNDS: usize = 3;
 /// objects wholesale ([`regenerate`]).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn reconcile(snapshot: &PdfSnapshot) -> PResult<(Cow<'_, [PdfIndirectObject]>, DocumentTrailer)> {
-    let original = Reading::of(GraphSource::new(&snapshot.objects), &snapshot.trailer, &snapshot.declared_version);
+    let original = Reading::of(GraphSource::new(&snapshot.objects), &snapshot.trailer, &snapshot.declared_version)?;
     let mut moved = Moved::between(&original.lanes, snapshot);
     if moved.is_empty() {
         return Ok((Cow::Borrowed(snapshot.objects.as_slice()), retained_trailer(snapshot, &snapshot.trailer)?));
@@ -388,7 +394,7 @@ fn reconcile(snapshot: &PdfSnapshot) -> PResult<(Cow<'_, [PdfIndirectObject]>, D
             if !graft.round(current.as_ref().unwrap_or(&original), &original, &moved)? {
                 break;
             }
-            let reading = graft.read();
+            let reading = graft.read()?;
             let still = Moved::between(&reading.lanes, snapshot);
             if still.is_empty() || (current.is_some() && still == moved && !still.resources) {
                 return graft.finish();
@@ -461,7 +467,7 @@ impl<'a> Graft<'a> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn read(&self) -> Reading {
+    fn read(&self) -> PResult<Reading> {
         Reading::of(GraphView(&self.graph), &self.trailer, &self.typed.declared_version)
     }
 
@@ -985,30 +991,6 @@ fn carries_widget(page: &PdfPage) -> bool {
 }
 //#endregion 🔖️Encode
 
-//#region 🔖️GraphEdit
-/// 🪢 Carries a retained-graph edit into the typed lanes: `next` is `base` with its COS graph
-/// (`objects`, `trailer`) edited, and every lane whose reading the edit moved takes the edited
-/// graph's reading while every other lane keeps what `base` holds — so the next write never
-/// undoes a direct graph edit with a stale typed lane, and a typed edit pending in another lane
-/// survives it.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn carry_graph_edit(base: &PdfSnapshot, next: &mut PdfSnapshot) {
-    if base.objects == next.objects && base.trailer == next.trailer {
-        return;
-    }
-    let before = lift_document(&base.trailer, &base.declared_version, &mut GraphSource::new(&base.objects));
-    let after = lift_document(&next.trailer, &base.declared_version, &mut GraphSource::new(&next.objects));
-    macro_rules! carry {
-        ($($lane:ident),* $(,)?) => {
-            $(if before.$lane != after.$lane {
-                next.$lane = after.$lane;
-            })*
-        };
-    }
-    carry!(declared_version, pages, fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, outlines, named_destinations, page_labels, embedded_files, output_intents, acro_form, optional_content, page_layout, page_mode, viewer_preferences, open_action, language, mark_info, metadata, document_id, info, catalog_extra);
-}
-//#endregion 🔖️GraphEdit
-
 //#region 🔖️Streaming
 /// 🌊 A page-at-a-time document writer for guests with per-step budgets: the document-level
 /// lanes are lowered up front, then every `page` call yields that page's bytes, and `finish`
@@ -1108,10 +1090,11 @@ impl DocumentStream {
 impl PdfSnapshot {
     /// 🔤 The Unicode text page `index` shows, raw codes decoded through the page's fonts.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn page_text(&self, index: usize) -> String {
-        let Some(page) = self.pages.get(index) else { return String::new() };
-        let codecs: HashMap<String, FontCodec> = self.fonts.iter().map(|font| (font.id.clone(), FontCodec::new(font))).collect();
-        crate::standards::v1_7::subsets::base::modules::content::extract_text(&page.content, &codecs)
+    pub fn page_text(&self, index: usize) -> PResult<String> {
+        let Some(page) = self.pages.get(index) else { return Ok(String::new()) };
+        let artifacts=foreign_artifacts::NativePdfArtifactResources::from_objects(&self.objects);
+        let codecs:HashMap<String,FontCodec>=self.fonts.iter().map(|font|Ok((font.id.clone(),FontCodec::new(font,&artifacts)?))).collect::<PResult<_>>()?;
+        Ok(crate::standards::v1_7::subsets::base::modules::content::extract_text(&page.content, &codecs))
     }
 }
 //#endregion 🔖️Text
@@ -1128,8 +1111,8 @@ pub struct PdfTextLayout<'a> {
 
 impl<'a> PdfTextLayout<'a> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn new(font: &'a PdfFont, size: f64) -> Self {
-        Self { font, size, leading: size * 1.2, codec: FontCodec::new(font) }
+    pub fn new(font: &'a PdfFont, size: f64,resources:&dyn foreign_artifacts::PdfArtifactResourcePort) -> PResult<Self> {
+        Ok(Self { font, size, leading: size * 1.2, codec: FontCodec::new(font,resources)? })
     }
 
     /// 📏 Width of `text` at this size in user space (`None` when the font cannot show it).
@@ -1215,7 +1198,7 @@ impl<'a> PdfTextLayout<'a> {
 pub fn text_document(pages: &[(f64, f64, &str)]) -> PdfSnapshot {
     let mut snapshot = PdfSnapshot::default();
     let font = PdfFont::standard("F1", "Helvetica");
-    let layout = PdfTextLayout::new(&font, 12.0);
+    let layout = PdfTextLayout::new(&font, 12.0,&foreign_artifacts::NativePdfArtifactResources::default()).expect("standard font has no foreign resource");
     for (width, height, text) in pages {
         let mut page = PdfPage::new(*width, *height);
         if !text.is_empty() {
@@ -1235,9 +1218,10 @@ pub fn text_document(pages: &[(f64, f64, &str)]) -> PdfSnapshot {
 /// widths and a ToUnicode map for every character of `text` (the whole cmap when `None`) — the
 /// font shape any consumer with a `.ttf` in hand wants.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn embedded_true_type_font(id: &str, program: &[u8], base_font: &str, text: Option<&str>) -> Result<PdfFont, String> {
+pub fn embedded_true_type_font(snapshot:&mut PdfSnapshot,id: &str, program: &[u8], base_font: &str, text: Option<&str>) -> Result<PdfFont, String> {
     use crate::standards::v1_7::subsets::base::modules::fonts::TrueTypeFont;
     let font = TrueTypeFont::parse(program)?;
+    let reference=foreign_artifacts::admit_pdf_artifact(snapshot,"s.stdio.font.truetype",PdfObject::Stream {dict:vec![PdfDictEntry::new("Length1",PdfObject::Int(program.len() as i64))],data:program.to_vec(),filters:Vec::new()}).map_err(|error|format!("{error:?}"))?;
     let characters: Vec<char> = match text {
         Some(text) => {
             let mut set: Vec<char> = text.chars().collect();
@@ -1280,7 +1264,7 @@ pub fn embedded_true_type_font(id: &str, program: &[u8], base_font: &str, text: 
         kind: PdfFontKind::Type0 {
             base_font: base_font.to_string(),
             cmap: PdfCMap::identity_h(),
-            descendant: PdfCidFont { true_type: true, base_font: base_font.to_string(), system_info: PdfCidSystemInfo::default(), descriptor, default_width: 1000.0, widths: runs, default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: Some(PdfCidToGid::Identity), program: Some(PdfFontProgram::TrueType { data: program.to_vec() }), extra: Vec::new() },
+            descendant: PdfCidFont { true_type: true, base_font: base_font.to_string(), system_info: PdfCidSystemInfo::default(), descriptor, default_width: 1000.0, widths: runs, default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: Some(PdfCidToGid::Identity), program: Some(PdfFontProgram::TrueType { reference }), extra: Vec::new() },
         },
         to_unicode: Some(PdfToUnicode { byte_width: 2, mappings }),
         extra: Vec::new(),
@@ -1351,9 +1335,47 @@ pub mod text;
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
 
+/// 🌉️ Where a builder or a test meets the central applier: a mutation's diff is applied atomically to the working snapshot, and a
+/// rejection becomes a fatal outcome. The schema layer only builds diffs; applying them is an io/store concern.
+pub mod mutation_bridge {
+    use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
+
+    /// 🛡️ Applies `outcome` to `snapshot` atomically through the central applier and converts an apply rejection into a fatal outcome.
+    pub fn apply_outcome(outcome: protocol::MutationOutcome<PdfDiff>, snapshot: &mut PdfSnapshot) -> protocol::MutationOutcome<PdfDiff> {
+        let (diff, messages) = outcome.into_parts();
+        match protocol::apply_diff(&diff, snapshot) {
+            Ok(next) => {
+                *snapshot = next;
+                protocol::MutationOutcome::new(diff).absorb_messages(messages)
+            }
+            Err(error) => protocol::MutationOutcome::new(PdfDiff::default()).absorb_messages(messages).absorb_messages([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]),
+        }
+    }
+
+    /// ▶️ Applies one mutation through its leaf-owned diff.
+    pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+        use protocol::Mutation;
+        let outcome = mutation.diff(snapshot);
+        apply_outcome(outcome, snapshot)
+    }
+
+    /// 🧪️ `base` after the `rows` of one edit, applied through the central applier as a graph edit.
+    #[cfg(test)]
+    pub fn after_rows(base: &PdfSnapshot, rows: PdfDiff) -> PdfSnapshot {
+        protocol::apply_diff(&crate::standards::v1_7::subsets::base::schema::diff::graph_edit(rows), base).expect("the fixture rows apply")
+    }
+
+    /// 🧪️ `base` after `mutation`, applied through the central applier.
+    #[cfg(test)]
+    pub fn applied<M: protocol::Mutation<PdfSnapshot, Diff = PdfDiff>>(base: &PdfSnapshot, mutation: &M) -> PdfSnapshot {
+        protocol::apply_diff(mutation.diff(base).diff(), base).expect("the fixture mutation applies")
+    }
+}
+
 pub mod derived_construction {
     use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-    use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
+    use crate::standards::v1_7::subsets::base::schema::mutations::{InsertPage, PdfMutation, SetInfo};
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 

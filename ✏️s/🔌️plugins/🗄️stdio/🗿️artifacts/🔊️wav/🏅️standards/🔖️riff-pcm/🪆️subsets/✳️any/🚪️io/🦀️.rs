@@ -71,6 +71,7 @@ pub use derived_composition::*;
 // `fmt `+`data` roles) is small enough that duplicating the ~15-line walk loop keeps each
 // artifact's engine self-contained without a cross-artifact dependency).
 
+use crate::apply_mutation;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{validate_wav_serialization, RiffChunk, WavChunkRef, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
 
 //#region 🔖️Sniff
@@ -321,7 +322,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
-    use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation,WavMutation};
+    use crate::standards::riff_pcm::subsets::any::schema::mutations::{WavMutation};
 
     use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -348,7 +349,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<WavSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_wav_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

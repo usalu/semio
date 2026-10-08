@@ -8,7 +8,7 @@ export interface IndexAdded<T> { index: number; item: T; }
 export interface IndexedTripleDiff<D, T> { removed: number[]; modified: IndexModified<D>[]; added: IndexAdded<T>[]; }
 
 export interface NamedModified<K, D> { key: K; diff: D; }
-export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: T[]; }
+export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: NamedAdded<T>[]; }
 
 export interface DocStyleDiff { name?: string; basedOn?: string | null; }
 export interface DocImageDiff { mime?: string; bytes?: number[]; }
@@ -35,3 +35,6 @@ export interface SemioDocumentDiff {
   images?: NamedTripleDiff<string, DocImageDiff, DocImage>;
   blocks?: BlocksDiff;
 }
+
+/** 🧩 One positional add: the row and the final index it lands at. */
+export interface NamedAdded<T> { index: number; item: T }

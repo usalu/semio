@@ -4,6 +4,7 @@
 //! "Reconnect folder" band a failed reattach leaves — React's browser band, which a browser always shows — and the
 //! browser build's folder door over the dev host's backbone route (shared corpus `🧫️wgpu-backbone-folder-door`).
 
+use semio_framework_os_config::io::text::mutations::{decode_local_folders_config_mutation_json};
 use super::*;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch};
 
@@ -128,7 +129,7 @@ fn the_config_payload_fixtures_read_as_their_mutations() {
         include_str!("../../../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
     ] {
         let value: Value = serde_json::from_str(fixture).expect("JSON");
-        let decoded = semio_framework_os_config::opening_config::mutations::decode_local_folders_config_mutation_json(fixture).expect("the config crate decodes it");
+        let decoded = semio_framework_os_config::io::text::mutations::decode_local_folders_config_mutation_json(fixture).expect("the config crate decodes it");
         assert_eq!(local_folders_mutation_of_value(&value), Some(decoded));
     }
 }

@@ -32,7 +32,24 @@ fn op_text_round_trip_change_schema() {
 #[test]
 fn op_text_round_trip_create_generation() {
     let generation = semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
-    test_support::assert_op_line_round_trip(&create_generation(generation));
+    test_support::assert_op_line_round_trip(&create_generation(generation.clone()));
+    test_support::assert_op_line_round_trip(&Generation2dMutation::CreateGeneration(crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration { generation, index: Some(2) }));
+}
+
+#[test]
+fn op_binary_round_trip_create_generation_keeps_its_index_and_select_generation() {
+    let generation = semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
+    let mut cases = vec![
+        crate::standards::v1::subsets::any::schema::mutations::select_generation(Some("generation-1".into())),
+        crate::standards::v1::subsets::any::schema::mutations::select_generation(None),
+    ];
+    for index in [None, Some(0), Some(3)] {
+        cases.push(Generation2dMutation::CreateGeneration(crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration { generation: generation.clone(), index }));
+    }
+    for mutation in cases {
+        assert_eq!(decode_op(&encode_op(&mutation).expect("encode")).expect("decode"), mutation);
+        test_support::assert_op_line_round_trip(&mutation);
+    }
 }
 //#endregion 🔖️OpTextTests
 

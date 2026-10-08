@@ -1,0 +1,13 @@
+# Hub Fresh Consumption Lease Order Observation
+
+Read-only current source before final freeze. No tests/producers were run here.
+
+New freshRun Cargo ownership uses the actual selected/injected manifest argument vector plus producer-owned JSON diagnostics and the exact observed compiler environment. It calls selected preparation before acquiring the Cargo profile/build-directory lease, then passes the same cwd/env/vector into generic capture. Both actual six-package rustc builds and native descriptor-emitter builds call freshRun, so the former bypass is covered in source. Node JCO and descriptor executable commands do not trigger Cargo preparation. Generic capture remains neutral.
+
+The global native wrapper stays transport/policy-only. Within freshRun the order is initial cancellation/deadline checkpoint, selected argv/environment, fresh preparation exclusive pair, compiler profile lease, current checkpoint, capture, actual compiler provenance, outcome, cleanup. Preparation's own update/fetch use their owned runner without recursing through a preparing adapter; preparation scripts carry the recursion-refusal marker. Foreign path dependencies are prepared through their current member authority while the consumed lock pair remains the actual selected owner; no foreign lock pair is introduced by freshRun.
+
+Compiler environment preserves caller target/build roots and sets SEMIO_COMPILER_RESOURCE_ROOT from actual compiler directories before both preparation and capture. Provenance continues recording actual manifest/cwd/command/argv, build directory, status/cancellation, compiler units/build scripts and Cargo home. The fresh process outcome retains original target root. No compiler args/profile/features were narrowed by this hook.
+
+Cancellation polling/profile lease cleanup and private trace cleanup remain in their original try/finally. The preparation adapter remains synchronous, so this source observation does not prove live FreshBuildControl polling during that subprocess; its owned preparation command has original signal handling. Final cancellation evidence must be bounded to the exercised route. No speculative deadlock or completed runtime behavior is inferred from this inspection.
+
+Exact canonical core log is `🗑️generated/oct8-scoped-preparation-settled.log`, whose actual terminal footer is Nx success, 16.1s, cache skipped. It must not be confused with older similarly named failed receipts. Native attests the matching test source ran independent Ajv ordinary selection plus ten rejected shapes and actual Cargo foreign-lock/tree laws; final adapter source GREEN and endpoint freeze remain pending, so overall release readiness is not yet credited.

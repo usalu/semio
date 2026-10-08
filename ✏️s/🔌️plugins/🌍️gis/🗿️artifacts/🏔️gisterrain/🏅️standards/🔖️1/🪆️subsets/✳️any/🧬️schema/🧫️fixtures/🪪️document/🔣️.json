@@ -68,6 +68,58 @@
           "vertices": []
         }
       }
+    },
+    {
+      "artifact": {
+        "exaggeration": 2.5,
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
+        "mesh": {
+          "childId": "terrain-mesh-replaced",
+          "target": {
+            "artifactId": "terrain-mesh-replaced",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      }
+    },
+    {
+      "artifact": {
+        "exaggeration": 2.5,
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
+        "mesh": {
+          "childId": "terrain-mesh-custom",
+          "target": {
+            "artifactId": "terrain-mesh-custom",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "mesh"
+            }
+          }
+        }
+      }
     }
   ],
   "diffCases": [
@@ -255,7 +307,7 @@
       }
     },
     {
-      "name": "explicit replacement",
+      "name": "named scalar and imported-map changes preserve child identity",
       "before": {
         "exaggeration": 2.5,
         "importedMap": {
@@ -281,9 +333,9 @@
         }
       },
       "diff": {
-        "artifact": {
-          "exaggeration": 2.5,
-          "importedMap": {
+        "exaggeration": 2.5,
+        "importedMap": {
+          "value": {
             "positions": [
               {
                 "id": "pier"
@@ -292,47 +344,27 @@
             "routes": [],
             "regions": [],
             "properties": []
-          },
-          "mesh": {
-            "childId": "terrain-mesh-replaced",
-            "target": {
-              "artifactId": "terrain-mesh-replaced",
-              "dialect": {
-                "artifactKind": "s.stdio.semio",
-                "standard": "v1",
-                "subset": "mesh"
-              }
-            }
           }
         }
       },
       "patch": [
         {
           "op": "replace",
-          "path": "",
+          "path": "/exaggeration",
+          "value": 2.5
+        },
+        {
+          "op": "replace",
+          "path": "/importedMap",
           "value": {
-            "exaggeration": 2.5,
-            "importedMap": {
-              "positions": [
-                {
-                  "id": "pier"
-                }
-              ],
-              "routes": [],
-              "regions": [],
-              "properties": []
-            },
-            "mesh": {
-              "childId": "terrain-mesh-replaced",
-              "target": {
-                "artifactId": "terrain-mesh-replaced",
-                "dialect": {
-                  "artifactKind": "s.stdio.semio",
-                  "standard": "v1",
-                  "subset": "mesh"
-                }
+            "positions": [
+              {
+                "id": "pier"
               }
-            }
+            ],
+            "routes": [],
+            "regions": [],
+            "properties": []
           }
         }
       ],
@@ -349,9 +381,9 @@
           "properties": []
         },
         "mesh": {
-          "childId": "terrain-mesh-replaced",
+          "childId": "terrain-mesh-custom",
           "target": {
-            "artifactId": "terrain-mesh-replaced",
+            "artifactId": "terrain-mesh-custom",
             "dialect": {
               "artifactKind": "s.stdio.semio",
               "standard": "v1",

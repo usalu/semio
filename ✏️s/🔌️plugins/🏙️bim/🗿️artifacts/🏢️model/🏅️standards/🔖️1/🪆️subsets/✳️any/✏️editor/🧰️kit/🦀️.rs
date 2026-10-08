@@ -223,7 +223,7 @@ pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Op
 
 //#region 🔖️WindowConfig
 /// 🎚️ Declares the persisted-local state of one window kind from its field table: the record with its default, then the shared `crate::bim_window_config!` for the codecs, the
-/// whole-record `Snapshot` mutation and the `WindowConfigOwner` with `current`, `from_snapshot` and `addressed`, and the owner's `register`.
+/// sparse diff, the `Replace` mutation and the `WindowConfigOwner` with `current`, `from_snapshot` and `addressed`, and the owner's `register`.
 macro_rules! window_config {
     (
         window: $window:expr,
@@ -232,7 +232,7 @@ macro_rules! window_config {
         extension: $extension:literal,
         owner_path: $owner_path:literal,
         display: $display:literal,
-        type $Config:ident, $Mutation:ident, $Owner:ident;
+        type $Config:ident, $Diff:ident, $Mutation:ident, $Owner:ident;
         $( $(#[$attr:meta])* $field:ident : $ty:ty = $default:expr; )+
     ) => {
         #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
@@ -249,7 +249,7 @@ macro_rules! window_config {
             }
         }
 
-        crate::bim_window_config! { config: $Config, mutation: $Mutation, owner: $Owner, window: $window, schema: $schema, owner_path: $owner_path, display: $display, bytes: 4_096 }
+        crate::bim_window_config! { config: $Config, diff: $Diff, mutation: $Mutation, owner: $Owner, window: $window, schema: $schema, owner_path: $owner_path, display: $display, bytes: 4_096, fields: { $($field: $ty),+ } }
 
         pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
             registry.register::<$Owner>()

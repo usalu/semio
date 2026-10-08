@@ -6,13 +6,15 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
+use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
+use semio_framework_os_config::io::text::mutations::{decode_ui_preferences_config_mutation_json};
 #[path = "../../../🏛️ShellHost/🔀️surface-switch/📄️document/🦀️.rs"]
 mod document_surface_preparation;
 
 #[cfg(test)]
 use crate::dock::{push_window_silhouette_border, DockStackTab};
 #[cfg(all(test, not(target_arch = "wasm32")))]
-use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, directory_command_sha256, DirectoryCommandOutcomeV1};
+use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, DirectoryCommandOutcomeV1};
 use ui_wgpu::wgpu::push_chrome_group_border;
 // 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
 // leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
@@ -63,8 +65,7 @@ use semio_framework_ui_viewport::{
     Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec,
 };
 use semio_framework_os_config::opening_config::{
-    apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
-    mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_named_layout, set_terminology, set_theme, UiPreferencesConfigMutation},
+    apply_ui_preferences_config_mutation, mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_named_layout, set_terminology, set_theme, UiPreferencesConfigMutation},
     UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, UserNamedLayout, UI_PREFERENCES_CONFIG_SCHEMA,
 };
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
@@ -1662,12 +1663,12 @@ const SHELL_DRIVER_AXES: &[(&str, &str, &[(&str, &str)])] = &[
 fn builtin_ui_driver_document(driver_id: &str) -> OsUiDriver {
     match driver_id {
         "compact" => {
-            OsUiDriver { driver_id: "compact".into(), label: "Compact".into(), config: serde_json::json!({ "labels": "icons", "labelTier": "normal", "drag": "surface", "chrome": "hover", "gumball": "hover", "tooltips": "none", "hotkeys": "none" }) }
+            OsUiDriver { driver_id: "compact".into(), label: "Compact".into(), config: DslValue::object([("labels","icons"),("labelTier","normal"),("drag","surface"),("chrome","hover"),("gumball","hover"),("tooltips","none"),("hotkeys","none")].map(|(key,value)|(key.to_owned(),DslValue::String(value.to_owned())))) }
         }
         _ => OsUiDriver {
             driver_id: "default".into(),
             label: "Default".into(),
-            config: serde_json::json!({ "labels": "full", "labelTier": "normal", "drag": "handle", "chrome": "always", "gumball": "always", "tooltips": "full", "hotkeys": "inline" }),
+            config: DslValue::object([("labels","full"),("labelTier","normal"),("drag","handle"),("chrome","always"),("gumball","always"),("tooltips","full"),("hotkeys","inline")].map(|(key,value)|(key.to_owned(),DslValue::String(value.to_owned())))),
         },
     }
 }
@@ -1677,7 +1678,7 @@ fn resolve_ui_driver_document(driver_id: &str, custom: &HashMap<String, OsUiDriv
 }
 
 fn ui_driver_axis<'a>(driver: &'a OsUiDriver, key: &str) -> Option<&'a str> {
-    driver.config.get(key).and_then(Value::as_str)
+    driver.config.get(key).and_then(DslValue::as_str)
 }
 
 fn ui_driver_document_chrome(driver: &OsUiDriver) -> ui_wgpu::wgpu::UiDriverChrome {
@@ -3768,9 +3769,10 @@ pub struct ShellState {
     /// 🧯️ Closed World3d owners whose `cancel(CaptureLost)` waits for one drive of their world authority before they retire,
     /// with the sightings so far ([`ShellState::world3d_close_cancel_settled`]).
     world3d_close_cancels: BTreeMap<String, u8>,
-    component_world3d_retirement: Option<Box<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>>,
+    component_world3d_retirement: Option<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>,
     world3d_retirement_epoch: u64,
     world3d_retirement_sequence: u64,
+    world3d_retirement_fault: Option<infinite_world::world::WorldDynamicFault>,
     /// 🛑️ Per-World3d-surface compute status, mirrored out of the scene by the same per-frame attach
     /// walk that mirrors bounds. The CANCEL CONTRACT (`cancellable` + `cancelAction`) is read from
     /// here and from nowhere else, so the shell offers a stop affordance without ever learning a
@@ -4919,7 +4921,7 @@ fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&str>) -> Vec<
         .map(|saved| {
             saved
                 .iter()
-                .filter_map(|(id, entry)| Some(ui_wgpu::wgpu::NamedLayout { id: id.clone(), label: entry.label.clone(), icon_id: None, layout: serde_json::from_value(entry.layout.clone()).ok()?, origin: "user".to_string(), group_path: None }))
+                .filter_map(|(id, entry)| Some(ui_wgpu::wgpu::NamedLayout { id: id.clone(), label: entry.label.clone(), icon_id: None, layout: ui_wgpu::wgpu::WindowLayout::from_value(entry.layout.clone()).ok()?, origin: "user".to_string(), group_path: None }))
                 .collect()
         })
         .unwrap_or_default();
@@ -4936,7 +4938,7 @@ fn named_layout_events(preferences: &UiPreferences, app_id: Option<&str>, layout
     let after: HashMap<String, UserNamedLayout> = layouts
         .iter()
         .filter(|layout| layout.origin == "user")
-        .filter_map(|layout| Some((layout.id.clone(), UserNamedLayout { label: layout.label.clone(), layout: serde_json::to_value(&layout.layout).ok()? })))
+        .filter_map(|layout| Some((layout.id.clone(), UserNamedLayout { label: layout.label.clone(), layout: layout.layout.to_value() })))
         .collect();
     let ids: std::collections::BTreeSet<&String> = before.keys().chain(after.keys()).collect();
     ids.into_iter().filter(|id| before.get(*id) != after.get(*id)).map(|id| set_named_layout(key.clone(), id.clone(), after.get(id).cloned())).collect()
@@ -7184,6 +7186,7 @@ impl ShellState {
             component_world3d_retirement: None,
             world3d_retirement_epoch: 0,
             world3d_retirement_sequence: 0,
+            world3d_retirement_fault: None,
             world3d_status: HashMap::new(),
             world3d_status_pill_trace: HashMap::new(),
             node_graph_states: AdmittedSurfaceMap::default(),
@@ -9242,10 +9245,12 @@ impl ShellState {
             return false;
         }
         let mut draft = self.driver_document();
-        if !draft.config.is_object() {
+        if !matches!(draft.config,DslValue::Object(_)) {
             draft.config = builtin_ui_driver_document("default").config;
         }
-        draft.config.as_object_mut().expect("driver config object").insert(key.to_string(), Value::String(value.to_string()));
+        if let DslValue::Object(entries)=&mut draft.config {
+            if let Some((_,axis))=entries.iter_mut().find(|(name,_)|name==key){*axis=DslValue::String(value.to_owned());}else{entries.push((key.to_owned(),DslValue::String(value.to_owned())));}
+        }
         self.chrome_build.driver = ui_driver_document_chrome(&draft);
         self.driver_draft = Some(draft);
         true
@@ -14338,9 +14343,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         })
     }
 
-    /// 🔗️ Document sync now flows through the `framework/sync` `ArtifactHost` actor + the
-    /// program store's `ChannelBackbone` (see `attach_sync_backbone`), not a CRUD envelope
-    /// write on every `setDocument` — the old `shell_backbone_write` mirror is deleted.
+    /// 🔗️ Document sync flows through the `framework/sync` `ArtifactHost` actor + the program
+    /// store's `ChannelBackbone` (see `attach_sync_backbone`), never through a shell mutation.
     ///
     /// 🪟️ `setPanel` names no body of its own and `panel_json` feeds EVERY section, so
     /// the widest scope is the only honest one — the same widening React's
@@ -14353,26 +14357,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reached nobody; both are now real `Effect` arms of the ONE host-effect funnel
     /// (`queue_host_effects`), which every dispatch path feeds
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    ///
-    /// 🐢️ A `setDocument` is the widest dirt there is: every body that reads the artifact is stale,
-    /// whatever the dispatch declared. The generation3d editor's own `setActiveExample` is the
-    /// measured case — it replaces the whole fixture through artifact mutations and declares
-    /// `UiDirtyScope::None` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-    /// `📓️wgpu-dirty-scope-refresh-2026-09-14.md` §3.4) — so a shell that honours the scope must
-    /// widen here or an example switch would leave every window painting the previous document.
     async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool, scope: UiDirtyScope, owner: Option<ActiveSession>) -> Result<(), String> {
         let mut pending: Vec<String> = operations.to_vec();
         let mut view_state = owner.as_ref().map(|s| s.view_state.clone());
-        let mut document_changed = false;
         let mut panel_rewritten = false;
         let mut navigate_uri: Option<String> = None;
         while !pending.is_empty() {
             let batch = std::mem::take(&mut pending);
             for operation_json in batch {
                 let operation: Value = serde_json::from_str(&operation_json).unwrap_or(Value::Null);
-                if operation.get("operation").and_then(|v| v.as_str()) == Some("setDocument") {
-                    document_changed = true;
-                }
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("setPanel") {
                     panel_rewritten = true;
                     if let Some(panel) = operation.get("panel") {
@@ -14434,13 +14427,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if let Some(uri) = navigate_uri.take() {
                 self.push_uri(uri.clone());
                 self.apply_shell_uri(&uri).await?;
-                if document_changed {
-                    self.sync_session_chrome();
-                }
                 return Ok(());
             }
         }
-        let scope = if panel_rewritten || document_changed { UiDirtyScope::Full } else { scope };
+        let scope = if panel_rewritten { UiDirtyScope::Full } else { scope };
         if let (Some(owner), Some(vs)) = (owner.as_ref(), view_state) {
             if let Some(session) = self.session.as_mut().filter(|session| Self::same_session(session, owner)) {
                 session.view_state = vs;
@@ -14450,9 +14440,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             } else {
                 return Err("mutation owner is no longer mounted".into());
             }
-            self.refresh_ui(scope).await?;
-        } else if document_changed {
-            self.sync_session_chrome();
             self.refresh_ui(scope).await?;
         } else {
             self.owe_refresh(scope);
@@ -27365,6 +27352,8 @@ impl ShellState {
     }
 
     /// 🪦 Advances exactly one retired scene owner under the ordinary frame maintenance budget.
+    pub(crate) fn world3d_retirement_fault(&self)->Option<infinite_world::world::WorldDynamicFault> {self.world3d_retirement_fault}
+
     pub(crate) fn advance_world3d_retirement_step(&mut self) -> bool {
         let Some((_, state)) = self.retired_world3d_states.front_mut() else { return false };
         if world3d_dynamic_retirement_terminal_is_empty(state) {
@@ -27373,7 +27362,10 @@ impl ShellState {
             return !self.retired_world3d_states.is_empty();
         }
         let now = semio_framework_job::default_now_us();
-        let budget = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(1, u64::MAX));
+        let Some(budget) = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)) else {
+            self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::WorkLimit));
+            return true;
+        };
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(self.world3d_retirement_epoch),
             semio_framework_job::Generation(1),
@@ -27382,6 +27374,15 @@ impl ShellState {
             semio_framework_job::default_now_us,
             &mut self.world3d_retirement_sequence,
         );
+
+        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
+        if !terrain.ownership.fits(terrain_grant) {self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));return true;}
+        match terrain.step {
+            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
+            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return true,
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{self.world3d_retirement_fault=Some(fault);return true;}
+        }
         step_world3d_dynamic_retirement(state, &mut context);
         if world3d_dynamic_retirement_terminal_is_empty(state) {
             self.retired_world3d_states.pop_front();
@@ -27390,36 +27391,33 @@ impl ShellState {
         !self.retired_world3d_states.is_empty()
     }
 
-    pub(crate) fn close_component_world_step(&mut self, target: &crate::interpreter::ScenePointerTarget, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> Result<bool, ()> {
+    pub(crate) fn close_component_world_step(&mut self, target: &crate::interpreter::ScenePointerTarget, grant: semio_framework_value::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueRefusalKind};
+        use infinite_world::world::{WorldDynamicFault,WorldTerrainMeshPublicationStep};
         if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {
-            return Ok(true);
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
+        if context.is_cancelled() || context.should_yield() || grant.maximum_items==0 {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        }
+        if grant.maximum_depth==0 {return Err(WorldDynamicFault::Ownership(ValueRefusalKind::DepthLimit));}
         if self.component_world3d_retirement.is_none() {
-            let Some(token) = self.world3d_states.token(&target.host_id) else { return Ok(true) };
-            let Some(mut owner) = self.world3d_states.take_exact_to_retirement(token) else { return Err(()) };
-            begin_world3d_dynamic_retirement(&mut owner.value);
-            self.world3d_window_ids.remove(&target.host_id);
-            self.world3d_status.remove(&target.host_id);
-            self.world3d_status_pill_trace.remove(&target.host_id);
-            self.settle_pump.watches.remove(&target.host_id);
-            self.component_world3d_retirement = Some(Box::new(owner));
-            return Ok(false);
+            let Some(token)=self.world3d_states.token(&target.host_id) else {return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));};
+            let Some(owner)=self.world3d_states.take_exact_to_retirement(token) else {return Err(WorldDynamicFault::StaleToken);};
+            self.component_world3d_retirement=Some(owner);
+            context.stage("componentWorldRetirement");
+            context.consume_fuel(1);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0}));
         }
-        let owner = self.component_world3d_retirement.as_mut().expect("component World3d retirement owner");
-        if owner.id != target.host_id {
-            return Err(());
+        let owner=self.component_world3d_retirement.as_mut().expect("component World3d retirement owner");
+        if owner.id!=target.host_id {return Err(WorldDynamicFault::StaleToken);}
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value,grant,context);
+        if !terrain.ownership.fits(grant) {return Err(WorldDynamicFault::Ownership(ValueRefusalKind::InvariantViolated));}
+        match terrain.step {
+            WorldTerrainMeshPublicationStep::Pending|WorldTerrainMeshPublicationStep::Complete=>Ok(RetainedCloneStep::Progress(terrain.ownership)),
+            WorldTerrainMeshPublicationStep::Fault(fault)=>Err(fault),
+            WorldTerrainMeshPublicationStep::Idle=>Err(WorldDynamicFault::Ownership(ValueRefusalKind::UnsupportedOwner)),
         }
-        if world3d_dynamic_retirement_terminal_is_empty(&owner.value) {
-            self.component_world3d_retirement = None;
-            self.world3d_states.acknowledge_retired_owner();
-            return Ok(true);
-        }
-        let now = semio_framework_job::default_now_us();
-        let deadline = now.and_then(|now| now.checked_add(semio_framework_job::MAINTENANCE_LANE_WALL_US)).ok_or(())?;
-        let mut context =
-            semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, deadline), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, sequence);
-        step_world3d_dynamic_retirement(&mut owner.value, &mut context);
-        Ok(false)
     }
 
     fn advance_chrome_preferences_load_step(&mut self) {
@@ -33213,10 +33211,11 @@ fn custom_themes_from(preferences: &UiPreferences) -> HashMap<String, String> {
         .custom_themes
         .iter()
         .filter_map(|(id, theme)| {
-            let mut config = theme.config.as_object()?.clone();
-            config.insert("id".to_string(), Value::String(theme.theme_id.clone()));
-            config.insert("label".to_string(), Value::String(theme.label.clone()));
-            Some((id.clone(), Value::Object(config).to_string()))
+            let mut config = theme.config.as_object()?.to_vec();
+            config.retain(|(key,_)|key!="id"&&key!="label");
+            config.push(("id".to_owned(),DslValue::String(theme.theme_id.clone())));
+            config.push(("label".to_owned(),DslValue::String(theme.label.clone())));
+            Some((id.clone(),semio_framework_pack_json::to_json_string(&DslValue::Object(config))))
         })
         .collect()
 }
@@ -33228,11 +33227,9 @@ fn canonical_custom_themes(preferences: &ChromePrefsState) -> HashMap<String, Os
         .filter_map(|(id, raw)| {
             let document = ThemeDocument::parse(raw)?;
             let label = document.label.clone();
-            let mut config = serde_json::to_value(document).ok()?;
-            if let Some(object) = config.as_object_mut() {
-                object.remove("id");
-                object.remove("label");
-            }
+            let DslValue::Object(mut entries)=document.to_value() else{return None};
+            entries.retain(|(key,_)|key!="id"&&key!="label");
+            let config=DslValue::Object(entries);
             Some((id.clone(), OsUiTheme { theme_id: id.clone(), label, config }))
         })
         .collect()
@@ -34087,6 +34084,13 @@ pub(crate) enum ThemeNumber {
     List(Vec<f64>),
 }
 
+impl ToValue for ThemeNumber {
+    fn to_value(&self)->DslValue{match self{Self::Scalar(value)=>value.to_value(),Self::List(values)=>values.to_value()}}
+}
+impl FromValue for ThemeNumber {
+    fn from_value(value:DslValue)->Result<Self,semio_framework_value::ValueError>{match value{DslValue::Array(_)=>Vec::<f64>::from_value(value).map(Self::List),_=>f64::from_value(value).map(Self::Scalar)}}
+}
+
 impl ThemeNumber {
     /// 🔢️ React's `Array.isArray(value) ? value.join(", ") : String(value)` — the text
     /// `themeNumberInputRow` puts in the box.
@@ -34130,29 +34134,39 @@ fn format_theme_scalar(value: f64) -> String {
 
 /// 🖌️ React's `ThemePaintRef` (`🖱️ui/🎨️styling/🌓️theme/🟦️.ts:33`) — a primitive token, a literal hex,
 /// or an oklab-free channel blend of two tokens.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub(crate) struct ThemePaintRef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub token: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub hex: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub alpha: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mix: Option<(String, String, f64)>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub(crate) struct ThemeIcons {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub aliases: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub variants: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub themed_aliases: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub themed_variants: BTreeMap<String, String>,
 }
 
@@ -34160,32 +34174,45 @@ pub(crate) struct ThemeIcons {
 /// renderers' theme editors mutate and BOTH persist into `os.config.ui-preferences`'
 /// `customThemes[id].config`. Every map is a `BTreeMap`, so a section's rows enumerate in the same
 /// ascending key order React's `Object.keys(...).sort()` produces and a saved document is byte-stable.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub(crate) struct ThemeDocument {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub colors: BTreeMap<String, String>,
     #[serde(default)]
+    #[value(default)]
     pub spacing: BTreeMap<String, String>,
     #[serde(default)]
+    #[value(default)]
     pub font_stacks: BTreeMap<String, String>,
     #[serde(default)]
+    #[value(default)]
     pub canvas_fonts: BTreeMap<String, String>,
     #[serde(default)]
+    #[value(default)]
     pub strokes: BTreeMap<String, ThemeNumber>,
     #[serde(default)]
+    #[value(default)]
     pub radii: BTreeMap<String, ThemeNumber>,
     #[serde(default)]
+    #[value(default)]
     pub opacities: BTreeMap<String, ThemeNumber>,
     #[serde(default)]
+    #[value(default)]
     pub metrics: BTreeMap<String, BTreeMap<String, ThemeNumber>>,
     #[serde(default)]
+    #[value(default)]
     pub appearances: BTreeMap<String, BTreeMap<String, BTreeMap<String, ThemePaintRef>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub icons: Option<ThemeIcons>,
 }
 

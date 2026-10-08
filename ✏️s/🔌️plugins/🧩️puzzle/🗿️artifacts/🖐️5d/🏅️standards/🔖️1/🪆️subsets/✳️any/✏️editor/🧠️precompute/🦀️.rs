@@ -12,7 +12,7 @@ use crate::editor::puzzle5d::{
     collect_mesh_urls, engine_grip_kind, grips_from_templates, puzzle5d_grip_full_id, resolve_part_mesh_url, world_grip_position, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d,
     Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND,
 };
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,create_part,Puzzle5dMutation};
 
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
@@ -70,7 +70,7 @@ pub(crate) fn puzzle3d_config(config: &Puzzle5dConfig) -> Puzzle3dConfig {
 /// 🌉️ The puzzle 3d document the planner sees for a 5d document: parts as objects with their grips as vortices,
 /// fasteners as attractions, and the kind catalogs the planner places from.
 pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Puzzle5dKindCatalogs>) -> Result<Puzzle3dPlaySnapshot, Fault> {
-    let kind_compatibility = document.kind_compatibility.as_ref().map(|entries| semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(entries))).transpose().map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-kind-compatibility: {error}")))?.unwrap_or_default();
+    let kind_compatibility = document.kind_compatibility.as_ref().map(|entries| semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(entries))).transpose().map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-kind-compatibility: {error}")))?.unwrap_or_default();
     let typed = Puzzle3dSnapshot {
         schema: PUZZLE_3D_SCHEMA.into(),
         domain: document.domain.clone(),
@@ -86,7 +86,7 @@ pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Pu
 /// 🗂️ The authored kind catalogs of a 5d play snapshot (`kindCatalogs` child plus its `kindCatalogsExtra` rows),
 /// or `None` when it authors none.
 pub fn puzzle5d_authored_kind_catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Result<Option<crate::Puzzle5dKindCatalogs>, Fault> {
-    let typed: crate::Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(snapshot.value())).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))?;
+    let typed = snapshot.typed();
     Ok(crate::kind_catalogs_of(&typed.kind_catalogs, &typed.kind_catalogs_extra).filter(|catalogs| !catalogs.parts.is_empty()))
 }
 
@@ -157,7 +157,7 @@ fn puzzle3d_catalog_names(value: semio_framework_value::DslValue, depth: usize) 
     }
 }
 
-pub(crate) fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&serde_json::Value>) -> Puzzle3dObject {
+pub(crate) fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&semio_framework_pack_json::Value>) -> Puzzle3dObject {
     Puzzle3dObject {
         id: part.id.clone(),
         label: None,
@@ -177,10 +177,10 @@ pub(crate) fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&serde_
     }
 }
 
-fn puzzle3d_scale(scale: &serde_json::Value) -> Option<Puzzle3dScale> {
+fn puzzle3d_scale(scale: &semio_framework_pack_json::Value) -> Option<Puzzle3dScale> {
     match scale {
-        serde_json::Value::Number(factor) => factor.as_f64().map(Puzzle3dScale::Uniform),
-        serde_json::Value::Array(axes) if axes.len() >= 3 => Some(Puzzle3dScale::Vec3([axes[0].as_f64()?, axes[1].as_f64()?, axes[2].as_f64()?])),
+        semio_framework_pack_json::Value::Number(factor) => Some(Puzzle3dScale::Uniform(factor.as_f64())),
+        semio_framework_pack_json::Value::Array(axes) if axes.len() >= 3 => Some(Puzzle3dScale::Vec3([axes[0].as_f64()?, axes[1].as_f64()?, axes[2].as_f64()?])),
         _ => None,
     }
 }
@@ -204,12 +204,11 @@ fn puzzle3d_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttraction {
 }
 
 pub(crate) fn editor_part(part: &crate::Puzzle5dPart) -> Result<Puzzle5dPart, Fault> {
-    serde_json::from_value(serde_json::Value::from(&semio_framework_value::ToValue::to_value(part))).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))
+    <Puzzle5dPart as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(part)).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))
 }
 
 fn schema_part(part: &Puzzle5dPart) -> Result<crate::Puzzle5dPart, Fault> {
-    let value = serde_json::to_value(part).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))?;
-    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&value)).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-part: {error}")))
+    semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(part)).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-part: {error}")))
 }
 //#endregion 🔖️Document
 
@@ -340,8 +339,8 @@ impl Puzzle5dPlannerBoard {
                 mesh_url: object.mesh_url.clone(),
                 orientation: object.orientation.or(Some([0.0, 0.0, 0.0, 1.0])),
                 scale: object.scale.as_ref().map(|scale| match scale {
-                    Puzzle3dScale::Uniform(factor) => serde_json::json!(factor),
-                    Puzzle3dScale::Vec3(axes) => serde_json::json!(axes),
+                    Puzzle3dScale::Uniform(factor) => semio_framework_pack_json::json!(factor),
+                    Puzzle3dScale::Vec3(axes) => semio_framework_pack_json::json!(axes),
                 }),
                 label: Some(label),
             },

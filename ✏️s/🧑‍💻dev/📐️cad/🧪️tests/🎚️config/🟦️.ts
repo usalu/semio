@@ -16,7 +16,7 @@ const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
-const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
+const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [{ find: "@semio-tech/framework-3d-js", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/🟦️.ts") }]);
 
 const ARTIFACT_EDITOR_ENGINE = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine";
 const DOMAIN_FILES = [
@@ -29,7 +29,7 @@ const DOMAIN_FILES = [
   "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/📐️geometry/🟦️.ts",
   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts",
   "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧠️semio/🟦️.ts",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
 ];
 
 /** 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 10 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial/semio), and `💡️inferences` schema leaf; base `environment` is `node`, renderer opts into jsdom via its own `@vitest-environment jsdom` file pragma (vitest 4 dropped `environmentMatchGlobs`). In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */

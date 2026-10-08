@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemovePaletteColor` — the shortened palette plus the renumbered
 //! pixel buffer and pin rows.
 
-use crate::diff::{BitmapDiff, BitmapInputOp, BitmapPaletteOp, BitmapPinnedPatch, BitmapPixelCell, BitmapRowPatch, BitmapRows};
+use crate::diff::{BitmapDiff, BitmapInputPatch, BitmapInputWrite, BitmapPaletteDelta, BitmapPinnedPatch, BitmapPixelCell, BitmapPinnedDelta, BitmapPinnedModification};
 use crate::schema::snapshot::{pin_key, used_palette_indices, BitmapSnapshot};
 
 pub fn diff(payload: &super::RemovePaletteColor, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -20,7 +20,7 @@ pub fn diff(payload: &super::RemovePaletteColor, base: &BitmapSnapshot) -> proto
     let boundary = payload.index as u32;
     let width = base.input.width as usize;
     let cells: Vec<BitmapPixelCell> = buffer.iter().enumerate().filter(|(_, value)| u32::from(**value) > boundary).map(|(at, value)| BitmapPixelCell { x: (at % width) as u32, y: (at / width) as u32, value: u32::from(*value) - 1 }).collect();
-    let patched: Vec<BitmapRowPatch<BitmapPinnedPatch>> = base.pinned.iter().filter(|pin| pin.color > boundary).map(|pin| BitmapRowPatch { id: pin_key(pin.x, pin.y), patch: BitmapPinnedPatch { color: Some(pin.color - 1) } }).collect();
-    let input_ops = if cells.is_empty() { Vec::new() } else { vec![BitmapInputOp::Cells { cells }] };
-    protocol::MutationOutcome::new(BitmapDiff { input_ops, palette_ops: vec![BitmapPaletteOp::Remove { index: boundary }], pinned: BitmapRows { patched, ..Default::default() }, ..Default::default() })
+    let patched: Vec<BitmapPinnedModification> = base.pinned.iter().filter(|pin| pin.color > boundary).map(|pin| BitmapPinnedModification { id: pin_key(pin.x, pin.y), patch: BitmapPinnedPatch { color: Some(pin.color - 1) } }).collect();
+    let writes = if cells.is_empty() { Vec::new() } else { vec![BitmapInputWrite::Cells { cells }] };
+    protocol::MutationOutcome::new(BitmapDiff { input: BitmapInputPatch { writes, ..Default::default() }, palette: BitmapPaletteDelta::removal(boundary), pinned: BitmapPinnedDelta { modified: patched, ..Default::default() }, ..Default::default() })
 }

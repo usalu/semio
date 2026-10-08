@@ -34,13 +34,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -50,8 +56,8 @@
       0,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 100
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: half pixel translation",
@@ -88,13 +94,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -108,8 +120,8 @@
       0,
       128
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 122
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: quarter area reduction",
@@ -146,13 +158,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%01%00%00%00%01%08%06%00%00%00%1f%15%c4%89%00%00%00%10%49%44%41%54%78%01%01%05%00%fa%ff%00%ff%00%00%ff%05%00%01%ff%fa%5c%88%d1%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -162,8 +180,8 @@
       0,
       64
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 234
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: premultiplied bilinear avoids transparent red fringe",
@@ -200,13 +218,23 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;name=scene%20image.png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In%2BKAAAAFElEQVR4AQEJAPb%2FAP8AAAAAAP%2F%2FCv4C%2Fl3i%2BlYAAAAASUVORK5CYII%3D"
+          "image": {
+            "width": 2,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              0,
+              0,
+              0,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -228,8 +256,8 @@
       255,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 163
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: two pixel area mean",
@@ -266,13 +294,23 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAFElEQVR4AQEJAPb/AP8AAP8AAP//D/kD/aYucFEAAAAASUVORK5CYII="
+          "image": {
+            "width": 2,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255,
+              0,
+              0,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -282,8 +320,8 @@
       128,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 104
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: odd reduction avoids center alias",
@@ -320,13 +358,27 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAABCAYAAAAb4BS0AAAAGElEQVR4AQENAPL/AP////8AAAD//////zjUCPhLMBkaAAAAAElFTkSuQmCC"
+          "image": {
+            "width": 3,
+            "height": 1,
+            "pixels": [
+              255,
+              255,
+              255,
+              255,
+              0,
+              0,
+              0,
+              255,
+              255,
+              255,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -336,8 +388,8 @@
       170,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 130
+    "expectedSourceBytes": 12,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: anisotropic area reduction",
@@ -374,13 +426,27 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%03%00%00%00%01%08%06%00%00%00%1b%e0%14%b4%00%00%00%18%49%44%41%54%78%01%01%0d%00%f2%ff%00%ff%ff%ff%ff%00%00%00%ff%ff%ff%ff%ff%38%d4%08%f8%4b%30%19%1a%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 3,
+            "height": 1,
+            "pixels": [
+              255,
+              255,
+              255,
+              255,
+              0,
+              0,
+              0,
+              255,
+              255,
+              255,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -394,8 +460,8 @@
       170,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 258
+    "expectedSourceBytes": 12,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: area weights premultiplied alpha",
@@ -432,13 +498,27 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;name=scene%20image.png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAABCAYAAAAb4BS0AAAAGElEQVR4AQENAPL%2FAP%2F%2F%2FwAAAAD%2F%2F%2F%2F%2FgC9eB3qoHu0RAAAAAElFTkSuQmCC"
+          "image": {
+            "width": 3,
+            "height": 1,
+            "pixels": [
+              255,
+              255,
+              255,
+              0,
+              0,
+              0,
+              0,
+              255,
+              255,
+              255,
+              255,
+              128
+            ]
+          }
         }
       ]
     },
@@ -448,8 +528,8 @@
       85,
       128
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 171
+    "expectedSourceBytes": 12,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: fractional partial image edge",
@@ -486,13 +566,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -506,8 +592,8 @@
       0,
       191
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 100
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: rotated diamond edge coverage",
@@ -544,13 +630,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -572,8 +664,8 @@
       0,
       128
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 122
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: sheared edge coverage",
@@ -610,13 +702,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%01%00%00%00%01%08%06%00%00%00%1f%15%c4%89%00%00%00%10%49%44%41%54%78%01%01%05%00%fa%ff%00%ff%00%00%ff%05%00%01%ff%fa%5c%88%d1%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -630,8 +728,8 @@
       0,
       128
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 234
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: reflection",
@@ -668,13 +766,23 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;name=scene%20image.png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In%2BKAAAAFElEQVR4AQEJAPb%2FAP8AAP8AAP%2F%2FD%2FkD%2FaYucFEAAAAASUVORK5CYII%3D"
+          "image": {
+            "width": 2,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255,
+              0,
+              0,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -688,8 +796,8 @@
       0,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 163
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: fractional canvas origin",
@@ -726,13 +834,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -742,8 +856,8 @@
       0,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 100
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: singular transform",
@@ -780,13 +894,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -796,8 +916,8 @@
       0,
       0
     ],
-    "expectedDecodes": 0,
-    "expectedSourceBytes": 122
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 0
   },
   {
     "name": "encoded asset: offscreen",
@@ -834,13 +954,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%01%00%00%00%01%08%06%00%00%00%1f%15%c4%89%00%00%00%10%49%44%41%54%78%01%01%05%00%fa%ff%00%ff%00%00%ff%05%00%01%ff%fa%5c%88%d1%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -850,8 +976,8 @@
       0,
       0
     ],
-    "expectedDecodes": 0,
-    "expectedSourceBytes": 234
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 0
   },
   {
     "name": "encoded asset: transparent source",
@@ -888,13 +1014,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;name=scene%20image.png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr%2FAAD%2FAAADAgEAj6hntAAAAABJRU5ErkJggg%3D%3D"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              255,
+              0,
+              0
+            ]
+          }
         }
       ]
     },
@@ -904,8 +1036,8 @@
       0,
       0
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 153
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: nine pixel area mean",
@@ -942,13 +1074,51 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAMklEQVR4AQEnANj/AAAAAP8AAAD/AAAA/wAAAAD//////wAAAP8AAAAA/wAAAP8AAAD/3UkL9X3zswgAAAAASUVORK5CYII="
+          "image": {
+            "width": 3,
+            "height": 3,
+            "pixels": [
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              0,
+              255,
+              255,
+              255,
+              255,
+              255,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -958,8 +1128,8 @@
       28,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 144
+    "expectedSourceBytes": 36,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: bilinear enlargement",
@@ -996,13 +1166,23 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAFElEQVR4AQEJAPb/AP8AAP8AAP//D/kD/aYucFEAAAAASUVORK5CYII="
+          "image": {
+            "width": 2,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255,
+              0,
+              0,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -1024,8 +1204,8 @@
       255,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 126
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: bilinear clamps image edges",
@@ -1062,13 +1242,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%01%00%00%00%01%08%06%00%00%00%1f%15%c4%89%00%00%00%10%49%44%41%54%78%01%01%05%00%fa%ff%00%ff%00%00%ff%05%00%01%ff%fa%5c%88%d1%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -1086,8 +1272,8 @@
       0,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 234
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: shifted viewport samples correct source pixel",
@@ -1124,13 +1310,23 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;name=scene%20image.png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In%2BKAAAAFElEQVR4AQEJAPb%2FAP8AAP8AAP%2F%2FD%2FkD%2FaYucFEAAAAASUVORK5CYII%3D"
+          "image": {
+            "width": 2,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255,
+              0,
+              0,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -1140,8 +1336,8 @@
       255,
       255
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 163
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: isolated filtered overlap applies group opacity once",
@@ -1211,13 +1407,19 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ]
     },
@@ -1231,8 +1433,8 @@
       0,
       96
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 100
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: premultiplied sampling precedes layer opacity",
@@ -1269,13 +1471,23 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAFElEQVR4AQEJAPb/AP8AAAAAAP//Cv4C/l3i+lYAAAAASUVORK5CYII="
+          "image": {
+            "width": 2,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              0,
+              0,
+              0,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -1297,8 +1509,8 @@
       255,
       128
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 126
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded asset: oblique reduction with unit determinant uses area",
@@ -1335,13 +1547,27 @@
         }
       ],
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%03%00%00%00%01%08%06%00%00%00%1b%e0%14%b4%00%00%00%18%49%44%41%54%78%01%01%0d%00%f2%ff%00%ff%ff%ff%ff%00%00%00%ff%ff%ff%ff%ff%38%d4%08%f8%4b%30%19%1a%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 3,
+            "height": 1,
+            "pixels": [
+              255,
+              255,
+              255,
+              255,
+              0,
+              0,
+              0,
+              255,
+              255,
+              255,
+              255,
+              255
+            ]
+          }
         }
       ]
     },
@@ -1367,8 +1593,8 @@
       255,
       64
     ],
-    "expectedDecodes": 1,
-    "expectedSourceBytes": 258
+    "expectedSourceBytes": 12,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "authored rectangle expands intrinsic pixel",
@@ -1382,13 +1608,19 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1415,7 +1647,6 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
@@ -1426,7 +1657,8 @@
       0,
       255
     ],
-    "expectedSourceBytes": 96
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "authored rectangle reduction preserves edge alpha",
@@ -1440,13 +1672,19 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1473,14 +1711,14 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
       0,
       64
     ],
-    "expectedSourceBytes": 96
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "shared pixel-grid asset is charged once",
@@ -1494,13 +1732,19 @@
       "tolerance": 0.01,
       "maxPixels": 1,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1569,7 +1813,6 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
@@ -1577,7 +1820,8 @@
       255
     ],
     "expectedAllocatedPixels": 1,
-    "expectedSourceBytes": 96
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "distinct asset identities each receive a decode",
@@ -1591,18 +1835,32 @@
       "tolerance": 0.01,
       "maxPixels": 2,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         },
         {
           "id": "second",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1650,7 +1908,6 @@
         }
       ]
     },
-    "expectedDecodes": 2,
     "expected": [
       255,
       0,
@@ -1662,7 +1919,8 @@
       255
     ],
     "expectedAllocatedPixels": 2,
-    "expectedSourceBytes": 192
+    "expectedSourceBytes": 8,
+    "expectedAdmittedImages": 2
   },
   {
     "name": "hidden invalid bytes avoid decode after reference validation",
@@ -1676,13 +1934,19 @@
       "tolerance": 0.01,
       "maxPixels": 1,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "not-a-png"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1709,7 +1973,6 @@
         }
       ]
     },
-    "expectedDecodes": 0,
     "expected": [
       0,
       0,
@@ -1717,7 +1980,8 @@
       0
     ],
     "expectedAllocatedPixels": 0,
-    "expectedSourceBytes": 9
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 0
   },
   {
     "name": "isolated shared filtered asset admits unique source and each crop",
@@ -1731,13 +1995,19 @@
       "tolerance": 0.01,
       "maxPixels": 5,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "shared-image",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1797,7 +2067,6 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
@@ -1809,7 +2078,8 @@
       96
     ],
     "expectedAllocatedPixels": 5,
-    "expectedSourceBytes": 100
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "case-insensitive source metadata in scene",
@@ -1823,13 +2093,19 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "IMAGE/PNG",
-          "data": "DATA:IMAGE/PNG;BASE64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1856,14 +2132,14 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
       0,
       255
     ],
-    "expectedSourceBytes": 118
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "data URL parameters in scene",
@@ -1877,13 +2153,19 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "data:image/png;name=one%20two.png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1910,14 +2192,14 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
       0,
       255
     ],
-    "expectedSourceBytes": 137
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "escaped base64 data URL in scene",
@@ -1931,13 +2213,183 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAGCAYAAAF4CbTgAAAAv0lEQVR4AQG0AEv%2fBAAAAP8EgABA%2fwQAoED%2fgABAAARAACD%2fgABAAAQAoEAAAABAAAQAUCD%2fQAAgAEAAIABAACAABCAAEIBAACAAQAAgAAQAUCAAAAAgAAAAIAAEAFAgAAAAIAAAACAABAAoEIAgABB%2fIAAQgSAAEH8gABCBIAAQfyAAEIEEAFAgAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAQAUCAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAxaYUpJYNcsEAAAAASUVORK5CYII%3D"
+          "image": {
+            "width": 7,
+            "height": 6,
+            "pixels": [
+              0,
+              0,
+              0,
+              255,
+              32,
+              0,
+              16,
+              128,
+              64,
+              0,
+              32,
+              255,
+              96,
+              0,
+              48,
+              128,
+              128,
+              0,
+              64,
+              255,
+              160,
+              0,
+              80,
+              128,
+              192,
+              0,
+              96,
+              255,
+              0,
+              40,
+              16,
+              128,
+              32,
+              40,
+              32,
+              255,
+              64,
+              40,
+              48,
+              128,
+              96,
+              40,
+              64,
+              255,
+              128,
+              40,
+              80,
+              128,
+              160,
+              40,
+              96,
+              255,
+              192,
+              40,
+              112,
+              128,
+              0,
+              80,
+              32,
+              255,
+              32,
+              80,
+              48,
+              128,
+              64,
+              80,
+              64,
+              255,
+              96,
+              80,
+              80,
+              128,
+              128,
+              80,
+              96,
+              255,
+              160,
+              80,
+              112,
+              128,
+              192,
+              80,
+              128,
+              255,
+              0,
+              120,
+              48,
+              128,
+              32,
+              120,
+              64,
+              255,
+              64,
+              120,
+              80,
+              128,
+              96,
+              120,
+              96,
+              255,
+              128,
+              120,
+              112,
+              128,
+              160,
+              120,
+              128,
+              255,
+              192,
+              120,
+              144,
+              128,
+              0,
+              160,
+              64,
+              255,
+              32,
+              160,
+              80,
+              128,
+              64,
+              160,
+              96,
+              255,
+              96,
+              160,
+              112,
+              128,
+              128,
+              160,
+              128,
+              255,
+              160,
+              160,
+              144,
+              128,
+              192,
+              160,
+              160,
+              255,
+              0,
+              200,
+              80,
+              128,
+              32,
+              200,
+              96,
+              255,
+              64,
+              200,
+              112,
+              128,
+              96,
+              200,
+              128,
+              255,
+              128,
+              200,
+              144,
+              128,
+              160,
+              200,
+              160,
+              255,
+              192,
+              200,
+              176,
+              128
+            ]
+          }
         }
       ],
       "nodes": [
@@ -1964,7 +2416,6 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       0,
       0,
@@ -2135,14 +2586,15 @@
       176,
       128
     ],
-    "expectedSourceBytes": 368,
+    "expectedSourceBytes": 168,
     "expectedDecodePhases": [
       "header",
       "validate",
       "decode",
       "png",
       "complete"
-    ]
+    ],
+    "expectedAdmittedImages": 1
   },
   {
     "name": "percent encoded binary PNG in scene",
@@ -2156,13 +2608,19 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "data:image/png,%89%50%4e%47%0d%0a%1a%0a%00%00%00%0d%49%48%44%52%00%00%00%01%00%00%00%01%08%06%00%00%00%1f%15%c4%89%00%00%00%0d%49%44%41%54%78%01%63%f8%cf%c0%f0%1f%00%05%00%01%ff%7b%e9%be%ef%00%00%00%00%49%45%4e%44%ae%42%60%82"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -2189,14 +2647,14 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
       0,
       255
     ],
-    "expectedSourceBytes": 225
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "mixed literal and escaped binary PNG in scene",
@@ -2210,13 +2668,19 @@
       "tolerance": 0.01,
       "maxPixels": 1024,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "data:image/png,%89PNG%0d%0a%1a%0a%00%00%00%0dIHDR%00%00%00%01%00%00%00%01%08%06%00%00%00%1f%15%c4%89%00%00%00%0dIDATx%01c%f8%cf%c0%f0%1f%00%05%00%01%ff%7b%e9%be%ef%00%00%00%00IEND%aeB%60%82"
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -2243,14 +2707,14 @@
         }
       ]
     },
-    "expectedDecodes": 1,
     "expected": [
       255,
       0,
       0,
       255
     ],
-    "expectedSourceBytes": 189
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   },
   {
     "name": "encoded layer composes above painted path in scene order",
@@ -2264,13 +2728,19 @@
       "tolerance": 0.01,
       "maxPixels": 2,
       "maxSourceBytes": 268439552,
-      "maxBytes": 67108864,
-      "maxChunks": 65536,
       "assets": [
         {
           "id": "red",
-          "mime": "image/png",
-          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+          "image": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
         }
       ],
       "nodes": [
@@ -2365,8 +2835,8 @@
       128,
       255
     ],
-    "expectedDecodes": 1,
     "expectedAllocatedPixels": 2,
-    "expectedSourceBytes": 96
+    "expectedSourceBytes": 4,
+    "expectedAdmittedImages": 1
   }
 ]

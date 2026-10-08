@@ -16,7 +16,8 @@
 //! pack record body as binary — so every lane rides one codec instead of a hand-rolled one per
 //! field (see `🔖️DiffCodec`).
 
-use crate::standards::v1_7::subsets::base::io::carry_graph_edit;
+use crate::standards::v1_7::subsets::base::schema::graph_projection::carry_graph_edit;
+use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, validate_role_transition};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -94,26 +95,6 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    /// 🧭️ Positional delta: common prefix of equal items is untouched; the divergent tail is
-    /// matched by position (modified where both sides have an item, removed/added beyond).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(a: &[T], b: &[T]) -> Self {
-        let mut diff = Self::default();
-        let common = a.len().min(b.len());
-        for index in 0..common {
-            if a[index] != b[index] {
-                diff.modified.push(PdfIndexedItem { index, value: b[index].clone() });
-            }
-        }
-        for index in common..a.len() {
-            diff.removed.push(index);
-        }
-        for index in common..b.len() {
-            diff.added.push(PdfIndexedItem { index, value: b[index].clone() });
-        }
-        diff
-    }
-
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate(&self, base_len: usize, field: &str) -> MutationApplyResult<()> {
         validate_index_triple(base_len, &self.removed, &self.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &self.added.iter().map(|item| item.index).collect::<Vec<_>>(), field)
@@ -157,29 +138,25 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn map_slots(&self, base: &[Slot<T>]) -> Vec<Slot<T>> {
-        let mut next: Vec<Slot<T>> = base.to_vec();
-        for item in &self.modified {
-            if let Some(slot) = next.get_mut(item.index) {
-                *slot = match slot {
-                    Slot::Base(index) => Slot::Modified(*index, item.value.clone()),
-                    Slot::Modified(index, _) => Slot::Modified(*index, item.value.clone()),
+        let kept = base
+            .iter()
+            .cloned()
+            .enumerate()
+            .filter(|(index, _)| !self.removed.contains(index))
+            .map(|(index, slot)| match self.modified.iter().rev().find(|item| item.index == index) {
+                Some(item) => match slot {
+                    Slot::Base(origin) | Slot::Modified(origin, _) => Slot::Modified(origin, item.value.clone()),
                     Slot::Added(_) => Slot::Added(item.value.clone()),
-                };
-            }
-        }
-        let mut removed = self.removed.clone();
-        removed.sort_unstable_by(|a, b| b.cmp(a));
-        for index in removed {
-            if index < next.len() {
-                next.remove(index);
-            }
-        }
-        let mut added = self.added.clone();
-        added.sort_by_key(|item| item.index);
-        for item in added {
-            next.insert(item.index.min(next.len()), Slot::Added(item.value));
-        }
-        next
+                },
+                None => slot,
+            })
+            .collect::<Vec<_>>();
+        let mut order: Vec<&PdfIndexedItem<T>> = self.added.iter().collect();
+        order.sort_by_key(|item| item.index);
+        order.into_iter().fold(kept, |mut layout, item| {
+            layout.insert(item.index.min(layout.len()), Slot::Added(item.value.clone()));
+            layout
+        })
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -217,11 +194,11 @@ enum Slot<T> {
     Added(T),
 }
 
-/// 🧱️ Where one position of a triple's FINAL state came from: a surviving BASE index or the n-th `added` row.
+/// 🧱️ Where one position of a triple's FINAL state came from: a surviving BASE index or an `added` row.
 #[derive(Clone, Copy)]
 enum Origin {
     Base(usize),
-    Added(usize),
+    Added,
 }
 
 /// 🧭️ The final layout of an index triple over `base_len` base items, in `apply` order: removals descending, additions
@@ -229,10 +206,8 @@ enum Origin {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn triple_layout(base_len: usize, removed: &[usize], added: &[usize]) -> Vec<Origin> {
     let mut layout: Vec<Origin> = (0..base_len).map(Origin::Base).collect();
-    let mut removed = removed.to_vec();
-    removed.sort_unstable_by(|a, b| b.cmp(a));
-    removed.dedup();
-    for index in removed {
+    let distinct: std::collections::BTreeSet<usize> = removed.iter().copied().collect();
+    for index in distinct.into_iter().rev() {
         if index < layout.len() {
             layout.remove(index);
         }
@@ -240,7 +215,7 @@ fn triple_layout(base_len: usize, removed: &[usize], added: &[usize]) -> Vec<Ori
     let mut order: Vec<usize> = (0..added.len()).collect();
     order.sort_by_key(|tag| added[*tag]);
     for tag in order {
-        layout.insert(added[tag].min(layout.len()), Origin::Added(tag));
+        layout.insert(added[tag].min(layout.len()), Origin::Added);
     }
     layout
 }
@@ -254,7 +229,7 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
         let mut inverse = Self::default();
         for (position, origin) in triple_layout(base.len(), &self.removed, &added).into_iter().enumerate() {
             match origin {
-                Origin::Added(_) => inverse.removed.push(position),
+                Origin::Added => inverse.removed.push(position),
                 Origin::Base(index) if self.modified.iter().any(|item| item.index == index) => {
                     if let Some(previous) = base.get(index) {
                         inverse.modified.push(PdfIndexedItem { index: position, value: previous.clone() });
@@ -322,25 +297,6 @@ impl<T: Clone + PartialEq + Keyed> PdfKeyedDiff<T> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(a: &[T], b: &[T]) -> Self {
-        let mut diff = Self::default();
-        let b_keys: HashSet<&str> = b.iter().map(Keyed::key).collect();
-        for item in a {
-            if !b_keys.contains(item.key()) {
-                diff.removed.push(item.key().to_string());
-            }
-        }
-        for (index, item) in b.iter().enumerate() {
-            match a.iter().find(|candidate| candidate.key() == item.key()) {
-                Some(existing) if existing == item => {}
-                Some(_) => diff.modified.push(PdfKeyedItem { key: item.key().to_string(), value: item.clone() }),
-                None => diff.added.push(PdfIndexedItem { index, value: item.clone() }),
-            }
-        }
-        diff
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -475,7 +431,7 @@ pub struct PdfPageDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_page_diff(page: &mut PdfPage, diff: &PdfPageDiff) {
+fn apply_page_diff(mut page: PdfPage, diff: &PdfPageDiff) -> PdfPage {
     if let Some(v) = diff.media_box {
         page.media_box = v;
     }
@@ -505,32 +461,7 @@ fn apply_page_diff(page: &mut PdfPage, diff: &PdfPageDiff) {
     if let Some(extra) = &diff.extra {
         page.extra = apply_dict_diff(extra, &page.extra);
     }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn page_diff_between(a: &PdfPage, b: &PdfPage) -> PdfPageDiff {
-    let content = PdfIndexedDiff::between(&a.content, &b.content);
-    let annotations = PdfIndexedDiff::between(&a.annotations, &b.annotations);
-    let extra = dict_diff_between(&a.extra, &b.extra);
-    PdfPageDiff {
-        media_box: (a.media_box != b.media_box).then_some(b.media_box),
-        crop_box: tri(&a.crop_box, &b.crop_box),
-        bleed_box: tri(&a.bleed_box, &b.bleed_box),
-        trim_box: tri(&a.trim_box, &b.trim_box),
-        art_box: tri(&a.art_box, &b.art_box),
-        rotate: (a.rotate != b.rotate).then_some(b.rotate),
-        user_unit: tri(&a.user_unit, &b.user_unit),
-        content: (!content.is_empty()).then_some(content),
-        annotations: (!annotations.is_empty()).then_some(annotations),
-        group: tri(&a.group, &b.group),
-        thumbnail: tri(&a.thumbnail, &b.thumbnail),
-        struct_parents: tri(&a.struct_parents, &b.struct_parents),
-        transition: tri(&a.transition, &b.transition),
-        duration: tri(&a.duration, &b.duration),
-        metadata: tri(&a.metadata, &b.metadata),
-        additional_actions: (a.additional_actions != b.additional_actions).then(|| b.additional_actions.clone()),
-        extra: (!extra.is_empty()).then_some(extra),
-    }
+    page
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -548,66 +479,38 @@ fn validate_page_diff(diff: &PdfPageDiff, base: &PdfPage) -> MutationApplyResult
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_page_diff(base: &mut PdfPageDiff, other: PdfPageDiff) {
-    if other.media_box.is_some() {
-        base.media_box = other.media_box;
+fn absorb_page_diff(base: PdfPageDiff, other: PdfPageDiff) -> PdfPageDiff {
+    PdfPageDiff {
+        media_box: other.media_box.or(base.media_box),
+        crop_box: other.crop_box.or(base.crop_box),
+        bleed_box: other.bleed_box.or(base.bleed_box),
+        trim_box: other.trim_box.or(base.trim_box),
+        art_box: other.art_box.or(base.art_box),
+        rotate: other.rotate.or(base.rotate),
+        user_unit: other.user_unit.or(base.user_unit),
+        content: match (base.content, other.content) {
+            (None, later) => later,
+            (earlier, None) => earlier,
+            (Some(earlier), Some(later)) => Some(earlier.absorb(later)).filter(|merged| !merged.is_empty()),
+        },
+        annotations: match (base.annotations, other.annotations) {
+            (None, later) => later,
+            (earlier, None) => earlier,
+            (Some(earlier), Some(later)) => Some(earlier.absorb(later)).filter(|merged| !merged.is_empty()),
+        },
+        group: other.group.or(base.group),
+        thumbnail: other.thumbnail.or(base.thumbnail),
+        struct_parents: other.struct_parents.or(base.struct_parents),
+        transition: other.transition.or(base.transition),
+        duration: other.duration.or(base.duration),
+        metadata: other.metadata.or(base.metadata),
+        additional_actions: other.additional_actions.or(base.additional_actions),
+        extra: match (base.extra, other.extra) {
+            (None, later) => later,
+            (earlier, None) => earlier,
+            (Some(earlier), Some(later)) => Some(absorb_dict_diff(earlier, later)).filter(|merged| !merged.is_empty()),
+        },
     }
-    for (slot, next) in [(&mut base.crop_box, other.crop_box), (&mut base.bleed_box, other.bleed_box), (&mut base.trim_box, other.trim_box), (&mut base.art_box, other.art_box)] {
-        if next.is_some() {
-            *slot = next;
-        }
-    }
-    if other.rotate.is_some() {
-        base.rotate = other.rotate;
-    }
-    if other.user_unit.is_some() {
-        base.user_unit = other.user_unit;
-    }
-    base.content = match (base.content.take(), other.content) {
-        (None, b) => b,
-        (a, None) => a,
-        (Some(a), Some(b)) => {
-            let merged = a.absorb(b);
-            (!merged.is_empty()).then_some(merged)
-        }
-    };
-    base.annotations = match (base.annotations.take(), other.annotations) {
-        (None, b) => b,
-        (a, None) => a,
-        (Some(a), Some(b)) => {
-            let merged = a.absorb(b);
-            (!merged.is_empty()).then_some(merged)
-        }
-    };
-    if other.group.is_some() {
-        base.group = other.group;
-    }
-    if other.thumbnail.is_some() {
-        base.thumbnail = other.thumbnail;
-    }
-    if other.struct_parents.is_some() {
-        base.struct_parents = other.struct_parents;
-    }
-    if other.transition.is_some() {
-        base.transition = other.transition;
-    }
-    if other.duration.is_some() {
-        base.duration = other.duration;
-    }
-    if other.metadata.is_some() {
-        base.metadata = other.metadata;
-    }
-    if other.additional_actions.is_some() {
-        base.additional_actions = other.additional_actions;
-    }
-    base.extra = match (base.extra.take(), other.extra) {
-        (None, b) => b,
-        (a, None) => a,
-        (Some(a), Some(b)) => {
-            let merged = absorb_dict_diff(a, b);
-            (!merged.is_empty()).then_some(merged)
-        }
-    };
 }
 /// ↩️ The negative patch for `diff` over `page`: every field the patch names is set back to the value `page` holds.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -666,23 +569,6 @@ impl PdfInfoDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self == &PdfInfoDiff::default()
-    }
-
-    /// 🧭️ The patch that carries `base` to `other`: only the fields the two differ in.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &PdfInfo, other: &PdfInfo) -> Self {
-        Self {
-            title: tri(&base.title, &other.title),
-            author: tri(&base.author, &other.author),
-            subject: tri(&base.subject, &other.subject),
-            keywords: tri(&base.keywords, &other.keywords),
-            creator: tri(&base.creator, &other.creator),
-            producer: tri(&base.producer, &other.producer),
-            creation_date: tri(&base.creation_date, &other.creation_date),
-            modification_date: tri(&base.modification_date, &other.modification_date),
-            trapped: tri(&base.trapped, &other.trapped),
-            extra: (base.extra != other.extra).then(|| other.extra.clone()),
-        }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -775,8 +661,8 @@ impl PdfPagesDiff {
 fn apply_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> Vec<PdfPage> {
     let mut next: Vec<PdfPage> = base.to_vec();
     for modified in &diff.modified {
-        if let Some(page) = next.get_mut(modified.index) {
-            apply_page_diff(page, &modified.diff);
+        if let Some(slot) = next.get_mut(modified.index) {
+            *slot = apply_page_diff(std::mem::take(slot), &modified.diff);
         }
     }
     let mut removed = diff.removed.clone();
@@ -792,24 +678,6 @@ fn apply_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> Vec<PdfPage> {
         next.insert(item.index.min(next.len()), item.page);
     }
     next
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pages_diff_between(a: &[PdfPage], b: &[PdfPage]) -> PdfPagesDiff {
-    let mut diff = PdfPagesDiff::default();
-    let common = a.len().min(b.len());
-    for index in 0..common {
-        if a[index] != b[index] {
-            diff.modified.push(PdfPageModified { index, diff: page_diff_between(&a[index], &b[index]) });
-        }
-    }
-    for index in common..a.len() {
-        diff.removed.push(index);
-    }
-    for index in common..b.len() {
-        diff.added.push(PdfPageAdded { index, page: b[index].clone() });
-    }
-    diff
 }
 
 /// ➕️ Sequential coalesce of two page triples: `d1`'s modified pages absorb `d2`'s patches
@@ -854,13 +722,11 @@ fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: &PdfPagesDiff) -> PdfPagesDiff {
             *slot = match slot {
                 Slot::Base(index) => Slot::Modified(*index, item.value.clone()),
                 Slot::Modified(index, previous) => {
-                    let mut patch = previous.patch.clone();
-                    absorb_page_diff(&mut patch, item.value.patch.clone());
+                    let patch = absorb_page_diff(previous.patch.clone(), item.value.patch.clone());
                     Slot::Modified(*index, PageSlotValue { page: None, patch })
                 }
                 Slot::Added(previous) => {
-                    let mut page = previous.page.clone().unwrap_or_default();
-                    apply_page_diff(&mut page, &item.value.patch);
+                    let page = apply_page_diff(previous.page.clone().unwrap_or_default(), &item.value.patch);
                     Slot::Added(PageSlotValue { page: Some(page), patch: PdfPageDiff::default() })
                 }
             };
@@ -910,7 +776,7 @@ fn inverse_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> PdfPagesDiff {
     let mut inverse = PdfPagesDiff::default();
     for (position, origin) in triple_layout(base.len(), &diff.removed, &added).into_iter().enumerate() {
         match origin {
-            Origin::Added(_) => inverse.removed.push(position),
+            Origin::Added => inverse.removed.push(position),
             Origin::Base(index) => {
                 if let (Some(modified), Some(page)) = (diff.modified.iter().find(|item| item.index == index), base.get(index)) {
                     inverse.modified.push(PdfPageModified { index: position, diff: inverse_page_diff(&modified.diff, page) });
@@ -987,29 +853,6 @@ fn apply_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> Vec<PdfDictEntr
         entries.insert(a.index, PdfDictEntry { key: a.key, value: a.item });
     }
     entries
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dict_diff_between(a: &[PdfDictEntry], b: &[PdfDictEntry]) -> PdfDictDiff {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for ae in a {
-        match b.iter().find(|be| be.key == ae.key) {
-            Some(be) => {
-                if let Some(d) = value_diff_between(&ae.value, &be.value) {
-                    modified.push(PdfDictModified { key: ae.key.clone(), diff: d });
-                }
-            }
-            None => removed.push(ae.key.clone()),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, be) in b.iter().enumerate() {
-        if !a.iter().any(|ae| ae.key == be.key) {
-            added.push(PdfDictAdded { index: i, key: be.key.clone(), item: be.value.clone() });
-        }
-    }
-    PdfDictDiff { removed, modified, added }
 }
 
 /// ➕️ Name-keyed absorb (key identity, non-positional -- mirrors json's `absorb_object_diff`):
@@ -1133,20 +976,6 @@ fn apply_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> Vec<PdfObject> {
     items
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn array_diff_between(a: &[PdfObject], b: &[PdfObject]) -> PdfArrayDiff {
-    let min = a.len().min(b.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        if let Some(d) = value_diff_between(&a[i], &b[i]) {
-            modified.push(PdfArrayModified { index: i, diff: d });
-        }
-    }
-    let removed: Vec<usize> = if a.len() > b.len() { (b.len()..a.len()).collect() } else { Vec::new() };
-    let added: Vec<PdfArrayAdded> = if b.len() > a.len() { (a.len()..b.len()).map(|i| PdfArrayAdded { index: i, item: b[i].clone() }).collect() } else { Vec::new() };
-    PdfArrayDiff { removed, modified, added }
-}
-
 /// ➕️ Index-transported absorb via symbolic position simulation (same shape as json's
 /// `absorb_array_diff`, specialized to `PdfObject`/`PdfValueDiff`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1268,7 +1097,7 @@ fn inverse_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> PdfArrayDiff {
     let mut inverse = PdfArrayDiff::default();
     for (position, origin) in triple_layout(base.len(), &diff.removed, &added).into_iter().enumerate() {
         match origin {
-            Origin::Added(_) => inverse.removed.push(position),
+            Origin::Added => inverse.removed.push(position),
             Origin::Base(index) => {
                 if let (Some(modified), Some(item)) = (diff.modified.iter().find(|item| item.index == index), base.get(index)) {
                     inverse.modified.push(PdfArrayModified { index: position, diff: inverse_value_diff(&modified.diff, item) });
@@ -1373,58 +1202,6 @@ pub fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObject {
                 filters: filters.clone().unwrap_or_else(|| base_filters.to_vec()),
             }
         }
-    }
-}
-
-/// 🧭️ State-delta construction: `None` when nodes are equal; a direct field/collection diff when
-/// the KIND is stable; `Replace` when it changed.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValueDiff> {
-    if a == b {
-        return None;
-    }
-    match (a, b) {
-        (PdfObject::Null, PdfObject::Null) => None,
-        (PdfObject::Bool(_), PdfObject::Bool(nb)) => Some(PdfValueDiff::Bool { value: *nb }),
-        (PdfObject::Int(_), PdfObject::Int(nb)) => Some(PdfValueDiff::Int { value: *nb }),
-        (PdfObject::Real(_), PdfObject::Real(nb)) => Some(PdfValueDiff::Real { value: nb.clone() }),
-        (PdfObject::Str(_), PdfObject::Str(nb)) => Some(PdfValueDiff::Str { value: nb.clone() }),
-        (PdfObject::Name(_), PdfObject::Name(nb)) => Some(PdfValueDiff::Name { value: nb.clone() }),
-        (PdfObject::Ref(_), PdfObject::Ref(nb)) => Some(PdfValueDiff::Ref { value: *nb }),
-        (PdfObject::Array(av), PdfObject::Array(bv)) => {
-            let d = array_diff_between(av, bv);
-            if d.is_empty() {
-                None
-            } else {
-                Some(PdfValueDiff::Array { diff: d })
-            }
-        }
-        (PdfObject::Dict(ad), PdfObject::Dict(bd)) => {
-            let d = dict_diff_between(ad, bd);
-            if d.is_empty() {
-                None
-            } else {
-                Some(PdfValueDiff::Dict { diff: d })
-            }
-        }
-        (PdfObject::Stream { dict: ad, data: adata, filters: af }, PdfObject::Stream { dict: bd, data: bdata, filters: bf }) => {
-            let dict_d = {
-                let d = dict_diff_between(ad, bd);
-                if d.is_empty() {
-                    None
-                } else {
-                    Some(d)
-                }
-            };
-            let data_d = (adata != bdata).then(|| bdata.clone());
-            let filters_d = (af != bf).then(|| bf.clone());
-            if dict_d.is_none() && data_d.is_none() && filters_d.is_none() {
-                None
-            } else {
-                Some(PdfValueDiff::Stream { dict: dict_d, data: data_d, filters: filters_d })
-            }
-        }
-        _ => Some(PdfValueDiff::Replace { value: b.clone() }),
     }
 }
 
@@ -1553,29 +1330,6 @@ fn apply_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> Vec<
         objects.insert(a.index, PdfIndirectObject { id: a.id, value: a.value });
     }
     objects
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn objects_diff_between(a: &[PdfIndirectObject], b: &[PdfIndirectObject]) -> PdfObjectsDiff {
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for ao in a {
-        match b.iter().find(|bo| bo.id == ao.id) {
-            Some(bo) => {
-                if let Some(d) = value_diff_between(&ao.value, &bo.value) {
-                    modified.push(PdfObjectModified { id: ao.id, diff: d });
-                }
-            }
-            None => removed.push(ao.id),
-        }
-    }
-    let mut added = Vec::new();
-    for (i, bo) in b.iter().enumerate() {
-        if !a.iter().any(|ao| ao.id == bo.id) {
-            added.push(PdfObjectAdded { index: i, id: bo.id, value: bo.value.clone() });
-        }
-    }
-    PdfObjectsDiff { removed, modified, added }
 }
 
 /// ➕️ Id-keyed absorb (key identity, non-positional -- mirrors json's `absorb_object_diff` and
@@ -1823,7 +1577,9 @@ fn validate_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> MutationApplyRe
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> MutationApplyResult<()> {
     let keys: Vec<ObjRef> = base.iter().map(|object| object.id).collect();
-    validate_named_keys(&keys, &diff.removed, &diff.modified.iter().map(|item| item.id).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.id).collect::<Vec<_>>(), "objects")?;
+    validate_named_keys(&keys, &diff.removed, &diff.modified.iter().map(|item| item.id).collect::<Vec<_>>(), &[], "objects")?;
+    let retained_keys:Vec<_>=keys.into_iter().filter(|id|!diff.removed.contains(id)).collect();
+    validate_named_keys(&retained_keys,&[],&[],&diff.added.iter().map(|item|item.id).collect::<Vec<_>>(),"objects")?;
     let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
     validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "objects")?;
     for modified in &diff.modified {
@@ -1839,7 +1595,7 @@ fn validate_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> M
 /// 🔺️ Diff for `stdio.pdf.1.7`. `schema` is an identity field and is never diffed. `info` is a
 /// field-wise tri-state patch (@see [`PdfInfoDiff`]). `graph_edit` marks a diff whose `objects`/`trailer` rows edit
 /// the retained COS graph directly: applying it carries every typed lane the edited graph reads differently
-/// (@see `io::carry_graph_edit`), so a direct COS edit and the typed model never disagree and the next write spells the edit
+/// (@see `schema::graph_projection::carry_graph_edit`), so a direct COS edit and the typed model never disagree and the next write spells the edit
 /// instead of re-stating a stale typed lane over it.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -1938,6 +1694,9 @@ pub struct PdfDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "is_false")]
     pub graph_edit: bool,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub admitted_stream_roles: Option<PdfIndexedDiff<PdfAdmittedStreamRole>>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1974,7 +1733,7 @@ fn validate_pdf_diff(diff: &PdfDiff, base: &PdfSnapshot) -> MutationApplyResult<
             })*
         };
     }
-    indexed!(outlines, named_destinations, page_labels, output_intents);
+    indexed!(outlines, named_destinations, page_labels, output_intents, admitted_stream_roles);
     if let Some(objects) = &diff.objects {
         validate_objects_diff(objects, &base.objects).map_err(|error| error.under(["objects"]))?;
     }
@@ -2006,7 +1765,7 @@ fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {
             })*
         };
     }
-    lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents);
+    lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents, admitted_stream_roles);
     apply_tri(&mut next.acro_form, &diff.acro_form);
     apply_tri(&mut next.optional_content, &diff.optional_content);
     apply_tri(&mut next.page_layout, &diff.page_layout);
@@ -2027,9 +1786,6 @@ fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {
     if let Some(td) = &diff.trailer {
         next.trailer = apply_dict_diff(td, &base.trailer);
     }
-    if diff.graph_edit {
-        carry_graph_edit(base, &mut next);
-    }
     next
 }
 
@@ -2045,7 +1801,11 @@ fn absorb_option<T>(slot: &mut Option<T>, other: Option<T>, merge: impl FnOnce(T
 impl MutationDiff<PdfSnapshot> for PdfDiff {
     fn apply(&self, base: &PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<PdfSnapshot> {
         validate_pdf_diff(self, base)?;
-        Ok(apply_pdf_diff_unchecked(self, base))
+        let mut next = apply_pdf_diff_unchecked(self, base);
+        let replacements: Vec<_> = self.admitted_stream_roles.iter().flat_map(|roles| roles.modified.iter().chain(&roles.added)).map(|item| item.value.clone()).collect();
+        validate_role_transition(&base.objects,&next.objects,&base.admitted_stream_roles,&next.admitted_stream_roles,&replacements).map_err(|message| MutationApplyError::new("mutation.apply.stream-role-required", message))?;
+        if self.graph_edit || self.admitted_stream_roles.is_some() { carry_graph_edit(base, &mut next).map_err(|message| MutationApplyError::new("mutation.apply.stream-role-required", message))?; }
+        Ok(next)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce absorb (`## Absorb` contract).
@@ -2070,7 +1830,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
                 });)*
             };
         }
-        lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents);
+        lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents, admitted_stream_roles);
         macro_rules! lww {
             ($($field:ident),*) => {
                 $(if other.$field.is_some() {
@@ -2104,7 +1864,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
                 $(let $field = self.$field.as_ref().map(|lane| lane.inverse(&base.$field));)*
             };
         }
-        keyed_lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents);
+        keyed_lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents, admitted_stream_roles);
         macro_rules! set_lanes {
             ($($field:ident),*) => {
                 $(let $field = self.$field.as_ref().map(|_| PdfSet::from_option(&base.$field));)*
@@ -2143,67 +1903,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
             objects: self.objects.as_ref().map(|objects| inverse_objects_diff(objects, &base.objects)),
             trailer: self.trailer.as_ref().map(|trailer| inverse_dict_diff(trailer, &base.trailer)),
             graph_edit: self.graph_edit,
-        }
-    }
-
-    /// 🧭️ State delta (compose `GetXDiff`): `pages` positionally matched, id collections by key,
-    /// `objects` and `trailer` matched by their real keys (`ObjRef`/dict key name).
-    fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
-        fn keyed<T: Clone + PartialEq + Keyed>(a: &[T], b: &[T]) -> Option<PdfKeyedDiff<T>> {
-            let d = PdfKeyedDiff::between(a, b);
-            (!d.is_empty()).then_some(d)
-        }
-        fn indexed<T: Clone + PartialEq>(a: &[T], b: &[T]) -> Option<PdfIndexedDiff<T>> {
-            let d = PdfIndexedDiff::between(a, b);
-            (!d.is_empty()).then_some(d)
-        }
-        fn dict(a: &[PdfDictEntry], b: &[PdfDictEntry]) -> Option<PdfDictDiff> {
-            let d = dict_diff_between(a, b);
-            (!d.is_empty()).then_some(d)
-        }
-        let pages = {
-            let d = pages_diff_between(&base.pages, &other.pages);
-            (!d.is_empty()).then_some(d)
-        };
-        let objects = {
-            let d = objects_diff_between(&base.objects, &other.objects);
-            (!d.is_empty()).then_some(d)
-        };
-        PdfDiff {
-            declared_version: (base.declared_version != other.declared_version).then(|| other.declared_version.clone()),
-            pages,
-            fonts: keyed(&base.fonts, &other.fonts),
-            images: keyed(&base.images, &other.images),
-            forms: keyed(&base.forms, &other.forms),
-            ext_g_states: keyed(&base.ext_g_states, &other.ext_g_states),
-            shadings: keyed(&base.shadings, &other.shadings),
-            patterns: keyed(&base.patterns, &other.patterns),
-            color_spaces: keyed(&base.color_spaces, &other.color_spaces),
-            properties: keyed(&base.properties, &other.properties),
-            outlines: indexed(&base.outlines, &other.outlines),
-            named_destinations: indexed(&base.named_destinations, &other.named_destinations),
-            page_labels: indexed(&base.page_labels, &other.page_labels),
-            embedded_files: keyed(&base.embedded_files, &other.embedded_files),
-            output_intents: indexed(&base.output_intents, &other.output_intents),
-            acro_form: tri(&base.acro_form, &other.acro_form),
-            optional_content: tri(&base.optional_content, &other.optional_content),
-            page_layout: tri(&base.page_layout, &other.page_layout),
-            page_mode: tri(&base.page_mode, &other.page_mode),
-            viewer_preferences: tri(&base.viewer_preferences, &other.viewer_preferences),
-            open_action: tri(&base.open_action, &other.open_action),
-            language: tri(&base.language, &other.language),
-            mark_info: tri(&base.mark_info, &other.mark_info),
-            metadata: tri(&base.metadata, &other.metadata),
-            document_id: tri(&base.document_id, &other.document_id),
-            encryption: tri(&base.encryption, &other.encryption),
-            info: {
-                let info = PdfInfoDiff::between(&base.info, &other.info);
-                (!info.is_empty()).then_some(info)
-            },
-            catalog_extra: dict(&base.catalog_extra, &other.catalog_extra),
-            objects,
-            trailer: dict(&base.trailer, &other.trailer),
-            graph_edit: false,
+            admitted_stream_roles,
         }
     }
 
@@ -2214,6 +1914,11 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️MutationDiffBuilders
+/// 🔁️ The whole-list replacement rows: every held row is removed and every new row is added at its final index; nothing when both agree.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn replace_indexed<T: Clone + PartialEq>(held: &[T], target: &[T]) -> Option<PdfIndexedDiff<T>> {
+    (held != target).then(|| PdfIndexedDiff { removed: (0..held.len()).collect(), modified: Vec::new(), added: target.iter().cloned().enumerate().map(|(index, value)| PdfIndexedItem { index, value }).collect() })
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn page_patch(index: usize, diff: PdfPageDiff) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff }], ..Default::default() }), ..Default::default() }
@@ -2222,16 +1927,14 @@ fn page_patch(index: usize, diff: PdfPageDiff) -> PdfDiff {
 pub fn diff_insert_page(index: usize, page: PdfPage) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { added: vec![PdfPageAdded { index, page }], ..Default::default() }), ..Default::default() }
 }
-/// 📄️ Replaces page `index` with `page`: the patch names exactly the fields the two pages differ in, so a page edited in one
-/// field costs one field.
+/// 📄️ Replaces page `index` with `page`: the page is removed and re-added at the same index.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_replace_page(base: &PdfSnapshot, index: usize, page: &PdfPage) -> PdfDiff {
     let Some(current) = base.pages.get(index) else { return PdfDiff::default() };
-    let patch = page_diff_between(current, page);
-    if patch == PdfPageDiff::default() {
+    if current == page {
         return PdfDiff::default();
     }
-    page_patch(index, patch)
+    PdfDiff { pages: Some(PdfPagesDiff { removed: vec![index], added: vec![PdfPageAdded { index, page: page.clone() }], ..Default::default() }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_page(index: usize) -> PdfDiff {
@@ -2267,16 +1970,14 @@ pub fn diff_set_page_rotation(index: usize, rotation: i32) -> PdfDiff {
 pub fn diff_set_page_user_unit(index: usize, user_unit: Option<f64>) -> PdfDiff {
     page_patch(index, PdfPageDiff { user_unit: Some(PdfSet::from_option(&user_unit)), ..Default::default() })
 }
-/// ✏️️ Replaces page `index`'s whole content (computed against `base` so the diff stays sparse
-/// where operators agree).
+/// ✏️️ Replaces page `index`'s whole content: every held operator is removed and the new ones are added in order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_page_content(base: &PdfSnapshot, index: usize, content: &[PdfOp]) -> PdfDiff {
     let current: &[PdfOp] = base.pages.get(index).map(|page| page.content.as_slice()).unwrap_or(&[]);
-    let content = PdfIndexedDiff::between(current, content);
-    if content.is_empty() {
-        return PdfDiff::default();
+    match replace_indexed(current, content) {
+        Some(content) => page_patch(index, PdfPageDiff { content: Some(content), ..Default::default() }),
+        None => PdfDiff::default(),
     }
-    page_patch(index, PdfPageDiff { content: Some(content), ..Default::default() })
 }
 /// ➕️ Appends operators to page `index`'s content.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2324,7 +2025,19 @@ pub fn diff_move_page(base: &PdfSnapshot, from: usize, to: usize) -> PdfDiff {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_info(base: &PdfSnapshot, info: &PdfInfo) -> PdfDiff {
-    let diff = PdfInfoDiff::between(&base.info, info);
+    let held = &base.info;
+    let diff = PdfInfoDiff {
+        title: tri(&held.title, &info.title),
+        author: tri(&held.author, &info.author),
+        subject: tri(&held.subject, &info.subject),
+        keywords: tri(&held.keywords, &info.keywords),
+        creator: tri(&held.creator, &info.creator),
+        producer: tri(&held.producer, &info.producer),
+        creation_date: tri(&held.creation_date, &info.creation_date),
+        modification_date: tri(&held.modification_date, &info.modification_date),
+        trapped: tri(&held.trapped, &info.trapped),
+        extra: (held.extra != info.extra).then(|| info.extra.clone()),
+    };
     PdfDiff { info: (!diff.is_empty()).then_some(diff), ..Default::default() }
 }
 
@@ -2370,8 +2083,7 @@ keyed_builders!(
 /// 📑 Replaces the outline tree.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_outlines(base: &PdfSnapshot, outlines: &[PdfOutlineItem]) -> PdfDiff {
-    let d = PdfIndexedDiff::between(&base.outlines, outlines);
-    PdfDiff { outlines: (!d.is_empty()).then_some(d), ..Default::default() }
+    PdfDiff { outlines: replace_indexed(&base.outlines, outlines), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_named_destination(base: &PdfSnapshot, destination: PdfNamedDestination, index: Option<usize>) -> PdfDiff {
@@ -2391,13 +2103,11 @@ pub fn diff_remove_named_destination(base: &PdfSnapshot, name: &str) -> PdfDiff 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_page_labels(base: &PdfSnapshot, labels: &[PdfPageLabelRange]) -> PdfDiff {
-    let d = PdfIndexedDiff::between(&base.page_labels, labels);
-    PdfDiff { page_labels: (!d.is_empty()).then_some(d), ..Default::default() }
+    PdfDiff { page_labels: replace_indexed(&base.page_labels, labels), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_output_intents(base: &PdfSnapshot, intents: &[PdfOutputIntent]) -> PdfDiff {
-    let d = PdfIndexedDiff::between(&base.output_intents, intents);
-    PdfDiff { output_intents: (!d.is_empty()).then_some(d), ..Default::default() }
+    PdfDiff { output_intents: replace_indexed(&base.output_intents, intents), ..Default::default() }
 }
 macro_rules! tri_builders {
     ($($name:ident => $field:ident : $ty:ty),* $(,)?) => {
@@ -2422,11 +2132,17 @@ tri_builders!(
     diff_set_document_id => document_id: [Vec<u8>; 2],
     diff_set_encryption => encryption: PdfEncryption,
 );
+/// 🔁️ The sparse row replacing `existing` by `value`; nothing when they already agree. The row names the new value whole -- no
+/// recursive comparison -- and the concrete inverse reads the replaced value from the base.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn replace_row(existing: &PdfObject, value: &PdfObject) -> Option<PdfValueDiff> {
+    (existing != value).then(|| PdfValueDiff::Replace { value: value.clone() })
+}
 /// 🔧️ Upserts `key` in the catalog's retained entries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_catalog_entry(base: &PdfSnapshot, key: &str, value: PdfObject, index: Option<usize>) -> PdfDiff {
     let leaf = match base.catalog_extra.iter().position(|e| e.key == key) {
-        Some(pos) => match value_diff_between(&base.catalog_extra[pos].value, &value) {
+        Some(pos) => match replace_row(&base.catalog_extra[pos].value, &value) {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
@@ -2454,7 +2170,7 @@ pub fn diff_remove_object(id: ObjRef) -> PdfDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_object_value(base: &PdfSnapshot, id: ObjRef, value: PdfObject, index: Option<usize>) -> PdfDiff {
     match base.objects.iter().find(|o| o.id == id) {
-        Some(existing) => match value_diff_between(&existing.value, &value) {
+        Some(existing) => match replace_row(&existing.value, &value) {
             None => PdfDiff::default(),
             Some(d) => PdfDiff { objects: Some(PdfObjectsDiff { modified: vec![PdfObjectModified { id, diff: d }], ..Default::default() }), ..Default::default() },
         },
@@ -2471,7 +2187,7 @@ pub fn diff_set_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegmen
     let Some(entries) = dict_entries_of(container) else { return PdfDiff::default() };
     let is_root_stream = path.is_empty() && matches!(obj.value, PdfObject::Stream { .. });
     let leaf = match entries.iter().position(|e| e.key == key) {
-        Some(pos) => match value_diff_between(&entries[pos].value, &value) {
+        Some(pos) => match replace_row(&entries[pos].value, &value) {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
@@ -2497,7 +2213,7 @@ pub fn diff_remove_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSeg
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_trailer_entry(base: &PdfSnapshot, key: &str, value: PdfObject, index: Option<usize>) -> PdfDiff {
     let leaf = match base.trailer.iter().position(|e| e.key == key) {
-        Some(pos) => match value_diff_between(&base.trailer[pos].value, &value) {
+        Some(pos) => match replace_row(&base.trailer[pos].value, &value) {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
@@ -2514,11 +2230,17 @@ pub fn diff_remove_trailer_entry(base: &PdfSnapshot, key: &str) -> PdfDiff {
 }
 
 /// 🪢 Marks `rows` — a diff of the retained COS graph (`objects`, `trailer`) — as a graph edit: applying it carries every typed
-/// lane the edited graph reads differently (@see `io::carry_graph_edit`). A diff without graph rows stays unmarked.
+/// lane the edited graph reads differently (@see `schema::graph_projection::carry_graph_edit`). A diff without graph rows stays unmarked.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn graph_edit(rows: PdfDiff) -> PdfDiff {
     let graph = rows.objects.is_some() || rows.trailer.is_some();
     PdfDiff { graph_edit: graph, ..rows }
+}
+
+/// 🧷️ Includes explicit semantic stream payloads in the same typed graph edit.
+pub fn graph_edit_with_roles(mut rows: PdfDiff, roles: Option<&PdfIndexedDiff<PdfAdmittedStreamRole>>) -> PdfDiff {
+    rows.admitted_stream_roles = roles.cloned();
+    graph_edit(rows)
 }
 
 /// ➕️ `first` then `second` as one diff — the rows of two edits that touch different entities, coalesced by [`MutationDiff::absorb`].

@@ -65,15 +65,15 @@ export type SpaceArtifactCreationCatalogV1 = Readonly<{
   kinds: readonly SpaceArtifactCreationKindV1[];
 }>;
 
-function record(value: unknown): Readonly<Record<string, unknown>> | null {
+export function record(value: unknown): Readonly<Record<string, unknown>> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Readonly<Record<string, unknown>>) : null;
 }
 
-function exactFields(value: Readonly<Record<string, unknown>>, fields: readonly string[]): boolean {
+export function exactFields(value: Readonly<Record<string, unknown>>, fields: readonly string[]): boolean {
   return Object.keys(value).sort().join(",") === [...fields].sort().join(",");
 }
 
-function identity(value: unknown): string | null {
+export function identity(value: unknown): string | null {
   return typeof value === "string" && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value) ? value : null;
 }
 
@@ -84,19 +84,19 @@ function subsetIdentity(value: unknown): string | null {
   return value === "*" ? "*" : identity(value);
 }
 
-function requestId(value: unknown): string | null {
+export function requestId(value: unknown): string | null {
   return typeof value === "string" && /^(?!0{32}$)[0-9a-f]{32}$/u.test(value) ? value : null;
 }
 
-function digest(value: unknown): string | null {
+export function digest(value: unknown): string | null {
   return typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value) ? value : null;
 }
 
-function name(value: unknown): string | null {
+export function name(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 && [...value].length <= 128 && !value.startsWith(" ") && !value.endsWith(" ") && !/[\u0000-\u001f\u007f-\u009f]/u.test(value) && !/[\ud800-\udfff]/u.test(value) ? value : null;
 }
 
-function ready(value: unknown): SpaceArtifactCreationReadyV1 | null {
+export function ready(value: unknown): SpaceArtifactCreationReadyV1 | null {
   const row = record(value);
   if (row === null || !exactFields(row, ["artifactId", "kindId", "artifactSchema", "parentDialect"])) return null;
   const dialect = record(row.parentDialect);
@@ -112,7 +112,7 @@ function ready(value: unknown): SpaceArtifactCreationReadyV1 | null {
     : null;
 }
 
-function creationKind(value: unknown): SpaceArtifactCreationKindV1 | null {
+export function creationKind(value: unknown): SpaceArtifactCreationKindV1 | null {
   const row = record(value);
   if (row === null || !exactFields(row, ["kindId", "schema", "dialect", "label"])) return null;
   const dialect = record(row.dialect),
@@ -141,17 +141,10 @@ export function sealSpaceArtifactCreateV1(value: Readonly<{ requestId: string; e
 }
 
 /** 🧾️ Parses a canonical client request without admitting extra authority fields. */
-export function parseSpaceArtifactCreateJsonV1(source: string): SpaceArtifactCreateV1 {
-  if (new TextEncoder().encode(source).byteLength > SPACE_ARTIFACT_CREATION_MAX_BYTES) throw new Error("space artifact creation: capacity");
-  const row = record(JSON.parse(source));
-  if (row === null || !exactFields(row, ["schema", "requestId", "expectedCatalogGenerationId", "kindId", "name"]) || row.schema !== SPACE_ARTIFACT_CREATE_SCHEMA_V1) throw new Error("space artifact creation: invalid fields");
-  const result = sealSpaceArtifactCreateV1({ requestId: String(row.requestId), expectedCatalogGenerationId: String(row.expectedCatalogGenerationId), kindId: String(row.kindId), name: String(row.name) });
-  if (JSON.stringify(result) !== source) throw new Error("space artifact creation: noncanonical");
-  return result;
-}
+
 
 /** 📈️ One exact progress record, or `null`. */
-function creationProgress(value: unknown): SpaceArtifactCreationProgressV1 | null {
+export function creationProgress(value: unknown): SpaceArtifactCreationProgressV1 | null {
   const row = record(value);
   const stages: readonly SpaceArtifactCreationStageV1[] = ["queued", "compiling-guest", "genesis", "publishing"];
   if (row === null || !exactFields(row, ["stage", "completedUnits", "totalUnits"]) || !stages.includes(row.stage as SpaceArtifactCreationStageV1)) return null;
@@ -163,43 +156,7 @@ function creationProgress(value: unknown): SpaceArtifactCreationProgressV1 | nul
 
 /** 📤️ Decodes one canonical, bounded server status and withholds incomplete ready tuples; only a running
  * creation carries progress. */
-export function parseSpaceArtifactCreationStatusJsonV1(source: string): SpaceArtifactCreationStatusV1 {
-  if (new TextEncoder().encode(source).byteLength > SPACE_ARTIFACT_CREATION_MAX_BYTES) throw new Error("space artifact creation status: capacity");
-  const row = record(JSON.parse(source));
-  if (row === null) throw new Error("space artifact creation status: invalid record");
-  const phases: readonly SpaceArtifactCreationPhaseV1[] = ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"];
-  const phase = phases.includes(row.phase as SpaceArtifactCreationPhaseV1) ? (row.phase as SpaceArtifactCreationPhaseV1) : null,
-    parsedRequestId = requestId(row.requestId),
-    spaceId = identity(row.spaceId),
-    catalogGenerationId = digest(row.catalogGenerationId),
-    parsedReady = row.ready === undefined ? undefined : ready(row.ready),
-    parsedProgress = row.progress === undefined ? undefined : creationProgress(row.progress),
-    running = phase === "accepted" || phase === "preparing";
-  if (row.schema !== SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1 || parsedRequestId === null || spaceId === null || catalogGenerationId === null || phase === null) throw new Error("space artifact creation status: invalid owner");
-  const fields = ["schema", "requestId", "spaceId", "catalogGenerationId", "phase", ...(phase === "ready" ? ["ready"] : []), ...(running && row.progress !== undefined ? ["progress"] : [])];
-  if (!exactFields(row, fields)) throw new Error("space artifact creation status: invalid fields");
-  if ((phase === "ready") !== (parsedReady !== undefined && parsedReady !== null)) throw new Error("space artifact creation status: invalid ready");
-  if (parsedProgress === null) throw new Error("space artifact creation status: invalid progress");
-  const base = { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase } as const;
-  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { ...base, ready: parsedReady! } : parsedProgress !== undefined ? { ...base, progress: parsedProgress } : base;
-  if (JSON.stringify(result) !== source) throw new Error("space artifact creation status: noncanonical");
-  return result;
-}
+
 
 /** 🗂️ Decodes only the exact selected-current, bounded and sorted creation presentation. */
-export function parseSpaceArtifactCreationCatalogJsonV1(source: string): SpaceArtifactCreationCatalogV1 {
-  if (new TextEncoder().encode(source).byteLength > SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES) throw new Error("space artifact creation catalog: capacity");
-  const row = record(JSON.parse(source));
-  if (row === null || !exactFields(row, ["schema", "spaceId", "catalogGenerationId", "kinds"])) throw new Error("space artifact creation catalog: invalid fields");
-  const spaceId = identity(row.spaceId),
-    catalogGenerationId = digest(row.catalogGenerationId);
-  if (row.schema !== SPACE_ARTIFACT_CREATION_CATALOG_SCHEMA_V1 || spaceId === null || catalogGenerationId === null || !Array.isArray(row.kinds) || row.kinds.length === 0 || row.kinds.length > SPACE_ARTIFACT_CREATION_CATALOG_MAX_KINDS)
-    throw new Error("space artifact creation catalog: invalid owner");
-  const kinds = row.kinds.map(creationKind);
-  if (kinds.some((kind) => kind === null)) throw new Error("space artifact creation catalog: invalid kind");
-  const sealed = kinds as SpaceArtifactCreationKindV1[];
-  if (sealed.some((kind, index) => index > 0 && sealed[index - 1]!.kindId >= kind.kindId)) throw new Error("space artifact creation catalog: invalid order");
-  const result: SpaceArtifactCreationCatalogV1 = { schema: SPACE_ARTIFACT_CREATION_CATALOG_SCHEMA_V1, spaceId, catalogGenerationId, kinds: sealed };
-  if (JSON.stringify(result) !== source) throw new Error("space artifact creation catalog: noncanonical");
-  return result;
-}
+

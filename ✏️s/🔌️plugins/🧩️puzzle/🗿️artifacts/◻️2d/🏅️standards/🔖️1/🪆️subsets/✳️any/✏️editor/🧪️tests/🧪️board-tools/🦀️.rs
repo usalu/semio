@@ -13,7 +13,7 @@ const BOARD_TOOLS_CORPUS: &str = include_str!("../../🧫️fixtures/🧫️boar
 
 /// 🧫️ The corpus, its schema tag checked.
 fn corpus() -> Value {
-    let corpus: Value = serde_json::from_str(BOARD_TOOLS_CORPUS).expect("the board-tools corpus parses");
+    let corpus: Value = semio_framework_pack_json::from_json_str(BOARD_TOOLS_CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the board-tools corpus parses");
     assert_eq!(corpus["schema"], "s.puzzle2d.board-tools.v1");
     corpus
 }
@@ -110,9 +110,9 @@ fn a_flush_of_transient_rows_commits_nothing() {
 #[test]
 fn the_interaction_topology_names_every_board_entity() {
     let mut board = corpus()["board"].clone();
-    puzzle2d_push_target_region(&mut board, 0.5, 0.5, 10.5, 10.5);
-    puzzle2d_push_edge(&mut board, json!({ "id": "edge-left-mid", "source": "left:v0", "target": "mid:v0" }));
-    let snapshot = Puzzle2dPlaySnapshot::new(board);
+    board["targetRegions"] = json!([{ "id": "region-1", "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5, "hidden": false, "locked": false }]);
+    board["edges"] = json!([{ "id": "edge-left-mid", "source": "left:v0", "target": "mid:v0" }]);
+    let snapshot = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(board))).expect("typed fixture admits"));
     let region = snapshot.typed().target_regions.first().map(|region| region.id.to_string_owner()).expect("the pushed region decodes");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);

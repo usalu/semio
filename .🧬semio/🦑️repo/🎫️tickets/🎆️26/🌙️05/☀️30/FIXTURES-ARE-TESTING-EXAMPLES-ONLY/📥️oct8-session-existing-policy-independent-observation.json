@@ -1,0 +1,28 @@
+{
+  "role": "existing tenth genuine policy observation only; no schema authorship",
+  "scopeId": "os.dev.playground-session",
+  "catalog": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema",
+    "level": "product-module",
+    "facetKind": "🧬️data",
+    "formats": {
+      "🟦️typescript": "🟦️.ts",
+      "🔣️jsonschema": "🔣️.json"
+    },
+    "exports": {
+      "PlaygroundSessionPublicationRequestV1": {
+        "file": "🔣️.json",
+        "facet": "component"
+      }
+    },
+    "dependsOn": [],
+    "hashes": {
+      "🔣️.json": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+      "🟦️.ts": "2a6e539a433cf41cbc744f67f6bd0c6ebdf492738b815ea8818ac33048abc034"
+    }
+  },
+  "actualHashes": {
+    "🔣️.json": "884041ae138726561f158f6d298b8a9358d99f6945aa82c2ad705fc5c1cb2f85",
+    "🟦️.ts": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81"
+  }
+}

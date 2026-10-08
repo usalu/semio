@@ -3,15 +3,18 @@
   "domain": null,
   "fasteners": null,
   "kindCompatibility": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
       {
-        "source": "grip-kind-a",
-        "target": "grip-kind-b"
+        "id": {
+          "source": "grip-kind-a",
+          "target": "grip-kind-b"
+        },
+        "index": 0
       }
-    ],
-    "reordered": null
+    ]
   },
   "meta": null,
   "parts": null,

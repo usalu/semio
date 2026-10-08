@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeMemberEffectiveDepth, base: &En1992Snapshot) -> prot
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        members: Some(En1992MembersRows { modified: vec![En1992MembersPatch { id: payload.member_id.clone(), effective_depth: Some(payload.new_value), ..Default::default() }], ..Default::default() }),
+        members: Some(En1992MembersRows::modification(&payload.member_id, En1992MembersPatch { effective_depth: Some(payload.new_value), ..Default::default() })),
         ..Default::default()
     })
 }

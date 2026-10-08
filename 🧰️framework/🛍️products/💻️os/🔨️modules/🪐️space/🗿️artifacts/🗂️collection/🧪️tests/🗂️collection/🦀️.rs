@@ -1,6 +1,7 @@
 //! 🧪️ Collection package identity, codec, mutation, and hierarchy laws.
 
 use crate::*;
+use crate::io::text::package::{COLLECTION_PACKAGE_DECLARATION_JSON, decode_collection_package_json, read_builtin_collection_package};
 use protocol::Mutation as _;
 use store::ArtifactDsl as _;
 
@@ -60,12 +61,13 @@ fn demo_collection() -> CollectionSnapshot {
 
 #[test]
 fn package_declaration_matches_serde_json_oracle() {
-    let ours = package_descriptor().expect("first-party package parser");
-    let oracle: serde_json::Value = serde_json::from_str(COLLECTION_ARTIFACT_DEFINITION_SCHEMA).expect("third-party package parser");
+    let ours = read_builtin_collection_package().expect("first-party explicit package IO");
+    assert_eq!(ours,package_descriptor().expect("typed canonical package"));
+    let oracle: serde_json::Value = serde_json::from_str(COLLECTION_PACKAGE_DECLARATION_JSON).expect("third-party package parser");
     assert_eq!(ours.id, oracle["id"].as_str().expect("oracle id"));
     assert_eq!(ours.rust_package, oracle["rust_package"].as_str().expect("oracle package"));
-    let invalid = COLLECTION_ARTIFACT_DEFINITION_SCHEMA.replace("\"os.collection\"", "\"os.space\"");
-    assert!(collection_package_from_schema(&invalid).is_err());
+    let invalid = COLLECTION_PACKAGE_DECLARATION_JSON.replace("\"os.collection\"", "\"os.space\"");
+    assert!(decode_collection_package_json(&invalid).is_err());
     assert!(serde_json::from_str::<serde_json::Value>(&invalid).is_ok());
 }
 

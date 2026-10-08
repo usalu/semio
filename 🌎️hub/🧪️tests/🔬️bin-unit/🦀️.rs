@@ -1,3 +1,7 @@
+use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
+use semio_framework_os_kernel::os_directory::io::text::access_policy::directory_access_permits;
+use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
+use semio_framework_os_kernel::os_directory::io::text::validate_directory_event_page_event;
 use super::*;
 #[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
 #[path = "🪶️count-lease/🦀️.rs"]
@@ -440,7 +444,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     std::fs::create_dir_all(stage.join("components")).expect("stdio component directory");
     std::fs::create_dir_all(stage.join("descriptors")).expect("stdio descriptor directory");
     let component = b"abc";
-    let component_sha256 = os_directory::hex_lower(&Sha256::digest(component));
+    let component_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(component));
     let component_blake3 = blake3::hash(component).to_hex().to_string();
     let receipts = semio_hub_stdio::catalog::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
     let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
@@ -501,7 +505,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         hashes: semio_framework::PackageHashes { wasm_sha256: component_sha256.clone(), core_wasm_sha256: "22".repeat(32), descriptor_sha256: "33".repeat(32) },
     };
     let descriptor_bytes = directory::os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
-    let descriptor_sha256 = os_directory::hex_lower(&Sha256::digest(&descriptor_bytes));
+    let descriptor_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&descriptor_bytes));
     let json = receipts.iter().find(|receipt| receipt.factory_id == "stdio.native.json.v1").expect("JSON receipt");
     let native_codecs = receipts
         .iter()
@@ -509,7 +513,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
             serde_json::json!({
                 "artifactKind": receipt.artifact_kind,
                 "artifactSchema": receipt.schema,
-                "packSchemaHash": os_directory::hex_lower(&receipt.pack_schema_hash)
+                "packSchemaHash": os_directory::io::binary::artifact_hash::hex_lower(&receipt.pack_schema_hash)
             })
         })
         .collect::<Vec<_>>();
@@ -517,7 +521,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let target = serde_json::json!({
         "artifactKind": json.artifact_kind,
         "artifactSchema": json.schema,
-        "packSchemaHash": os_directory::hex_lower(&json.pack_schema_hash),
+        "packSchemaHash": os_directory::io::binary::artifact_hash::hex_lower(&json.pack_schema_hash),
         "surfaceId": viewer_id,
         "appId": viewer.id,
         "windowKindId": window_id,
@@ -587,7 +591,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     std::fs::create_dir_all(&generations).expect("trusted generation owner");
     let generation = bundle["profiles"][0]["generationId"].as_str().expect("generation id");
     std::fs::rename(stage, generations.join(generation)).expect("publish trusted generation");
-    let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
+    let bundle_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&bundle_bytes));
     let current_bytes = format!(
         r#"{{"profileId":"stdio-native-openable-v1","generationId":"{generation}","bundleSha256":"{bundle_sha256}","publicationRevision":"1"}}
 "#
@@ -1036,7 +1040,7 @@ async fn upsert_member_for_test(state: &HubState, space_id: &str, email: &str, r
 const TEST_ARTIFACT_PARENT_DIALECT_KIND: &str = "s.test.artifact";
 
 fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directory::DocumentDescriptor {
-    let bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(b"document-open-genesis-pack"));
+    let bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(b"document-open-genesis-pack"));
     os_directory::DocumentDescriptor {
         space_id: space_id.to_string(),
         document_id: document_id.to_string(),
@@ -1051,7 +1055,7 @@ fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directo
 }
 
 fn artifact_document_id_for_test(label: &str) -> String {
-    format!("artifact-{}", &os_directory::hex_lower(&Sha256::digest(label.as_bytes()))[..32])
+    format!("artifact-{}", &os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(label.as_bytes()))[..32])
 }
 
 async fn announce_document_for_test(state: &HubState, space_id: &str, document_id: &str) {
@@ -1083,7 +1087,7 @@ async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_
         scope,
         checkpoint_id: os_directory::ArtifactHash([0; 32]),
         parent_checkpoint_id: Some(parent.checkpoint_id),
-        descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
+        descriptor_digest_v1: os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
         baseline_frontier: os_directory::ArtifactFrontier {
             document_id: document_id.to_string(),
             head_edit_ordinal: parent.baseline_frontier.head_edit_ordinal + 1,
@@ -1128,8 +1132,7 @@ async fn publish_genesis_checkpoint_for_test(
     spr: &[u8],
 ) -> os_directory::ArtifactCheckpoint {
     use semio_hub::artifact_authority::creation::{
-        artifact_creation_command_digest_v1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS,
-    };
+        ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS};
     let accepted_at_ms = u64::try_from(now_ms()).expect("nonnegative genesis creation clock");
     let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
     let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
@@ -1143,10 +1146,10 @@ async fn publish_genesis_checkpoint_for_test(
         scope: scope.clone(),
         checkpoint_id: os_directory::ArtifactHash([0; 32]),
         parent_checkpoint_id: None,
-        descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("genesis descriptor digest"),
+        descriptor_digest_v1: os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&descriptor).expect("genesis descriptor digest"),
         baseline_frontier: os_directory::ArtifactFrontier { document_id: scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: os_directory::ArtifactHash([0; 32]) },
-        pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: format!("sha256/{}", pack_hash.hex()) },
-        spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: format!("sha256/{}", spr_hash.hex()) },
+        pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: format!("sha256/{}", directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&pack_hash)) },
+        spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: format!("sha256/{}", directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&spr_hash)) },
         aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
         published_at_ms: accepted_at_ms,
     };
@@ -1172,7 +1175,7 @@ async fn publish_genesis_checkpoint_for_test(
         deadline_ms: accepted_at_ms + ARTIFACT_CREATION_DEADLINE_MS,
     };
     let prepared = ArtifactCreationPreparedV1 { descriptor, checkpoint: checkpoint.clone(), pack: pack.to_vec(), spr: spr.to_vec() };
-    prepared.validate(&intent).expect("exact prepared publication genesis");
+    crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).expect("exact prepared publication genesis");
     assert!(matches!(state.directory.claim_artifact_creation(&intent).await.expect("claim publication genesis"), ArtifactCreationClaimV1::Accepted(_)));
     state
         .directory
@@ -1210,7 +1213,7 @@ async fn publish_openable_document_for_test(state: &HubState, token: &str, space
     let pack = b"document-open-genesis-pack";
     let spr = b"document-open-genesis-spr";
     let mut descriptor = document_descriptor_for_test(space_id, document_id);
-    descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(pack));
+    descriptor.bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(token).expect("document-open author capability")).await.expect("document-open author session read").expect("document-open author session");
     let actor = ArtifactCreationActorV1 { user_id: session.user_id, session_id: session.id, authorization_generation: session.authorization_generation };
     let parent_dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
@@ -1239,7 +1242,7 @@ async fn seed_genesis_for_document_for_test(state: &HubState, token: &str, space
     let pack = format!("genesis-pack-{label}").into_bytes();
     let spr = format!("genesis-spr-{label}").into_bytes();
     let mut descriptor = document_descriptor_for_test(space_id, document_id);
-    descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(&pack));
+    descriptor.bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&pack));
     let authenticated = state
         .directory
         .authenticate_session(&SessionCapability::parse(token).expect("genesis seed capability"))
@@ -1296,7 +1299,7 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
     let space_id = create_space_for_test(&state, &owner.user_id, &format!("Check In {label}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     upsert_member_for_test(&state, &space_id, &author_email, DirectorySpaceRole::Author).await;
     upsert_member_for_test(&state, &space_id, &format!("check-in-{label}-spectator@example.test"), DirectorySpaceRole::Spectator).await;
-    let request_id = os_directory::hex_lower(&Sha256::digest(format!("check-in-{label}").as_bytes()))[..32].to_string();
+    let request_id = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(format!("check-in-{label}").as_bytes()))[..32].to_string();
     let scope = DocumentScope::new(space_id, format!("artifact-{request_id}"));
     let mut descriptor = DocumentDescriptor {
         space_id: scope.space_id.clone(),
@@ -1315,7 +1318,7 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
     let document = db_artifact_id(&scope);
     let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
-    descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(&pack));
+    descriptor.bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("check-in author capability")).await.expect("check-in author session read").expect("check-in author session");
     let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: session.id, authorization_generation: session.authorization_generation };
     let genesis = publish_genesis_checkpoint_for_test(&state, actor, profile.catalog().generation_id().to_string(), selection.parent_dialect.clone(), descriptor, &pack, &spr).await;
@@ -1366,7 +1369,7 @@ async fn check_in_commit(fixture: &CheckInFixture, envelope: MutationEnvelope) -
     let batch = db::document::CommandBatch::new(vec![envelope]).await.expect("check-in command batch");
     fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("check-in actor response").expect("check-in edit accepted");
     let snapshot = fixture.handle.checkpoint_publication_snapshot().await.expect("check-in actor snapshot");
-    EditedArtifactFrontierV1::of_artifact_frontier(&ledger_artifact_frontier(&fixture.scope, &snapshot).expect("an edited ledger point")).expect("edited wire frontier")
+    directory::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&ledger_artifact_frontier(&fixture.scope, &snapshot).expect("an edited ledger point")).expect("edited wire frontier")
 }
 
 /// 🧮️ The pair a remote replica holds after folding `envelopes` onto the genesis pair — the oracle a
@@ -1442,7 +1445,7 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
             std::fs::copy(entry.path(), generation.join(directory).join(entry.file_name())).expect("copy verified plugin module file");
         }
     }
-    let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
+    let bundle_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&bundle_bytes));
     std::fs::create_dir_all(stage.join("data/trusted-catalog")).expect("create trusted current owner");
     std::fs::write(
         stage.join("data/trusted-catalog/current.json"),
@@ -1490,7 +1493,7 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
             "packSchemaHash": selection.artifact.pack_schema_hash.as_str()
         },
         "surfaceId": selection.surface.surface_id.as_str(),
-        "payload": { "envelopes": { "path": "payload/envelopes.json", "count": envelopes.len(), "sha256": os_directory::hex_lower(&Sha256::digest(&ledger_bytes)) } }
+        "payload": { "envelopes": { "path": "payload/envelopes.json", "count": envelopes.len(), "sha256": os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&ledger_bytes)) } }
     });
     std::fs::write(stage.join("fixture.json"), serde_json::to_vec_pretty(&fixture).expect("encode process fixture")).expect("write process fixture receipt");
     std::fs::rename(&stage, &destination).expect("publish process fixture atomically");
@@ -2277,7 +2280,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
         pack_schema_hash: selection.artifact.pack_schema_hash.clone(),
         bootstrap_version: 1,
         bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
-        bootstrap_snapshot_hash: os_directory::hex_lower(&Sha256::digest(&genesis_pack)),
+        bootstrap_snapshot_hash: os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&genesis_pack)),
     };
     let authenticated = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("GIS Map author capability")).await.expect("GIS Map author session read").expect("GIS Map author session");
     let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: authenticated.id, authorization_generation: authenticated.authorization_generation };
@@ -2304,7 +2307,7 @@ async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, docum
         scope: scope.clone(),
         checkpoint_id: os_directory::ArtifactHash([0; 32]),
         parent_checkpoint_id: Some(genesis.checkpoint_id),
-        descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
+        descriptor_digest_v1: os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
         baseline_frontier: os_directory::ArtifactFrontier { document_id: document_id.to_string(), head_edit_ordinal: 1, head_edit_id: "gis-map-edit-1".into(), last_commit_seq: 1, chain_hash: os_directory::ArtifactHash([0x44; 32]) },
         pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
         spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
@@ -3208,7 +3211,7 @@ fn document_open_plan_authority_for_scope(base: &DocumentOpenPlanAuthorityV1, bi
     let mut authority = base.clone();
     authority.scope.document_id = format!("document-{document}");
     authority.descriptor.document_id = authority.scope.document_id.clone();
-    authority.descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&authority.descriptor).expect("scoped descriptor digest").0);
+    authority.descriptor_digest_v1 = os_directory::io::binary::artifact_hash::hex_lower(&os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&authority.descriptor).expect("scoped descriptor digest").0);
     authority.checkpoint.descriptor_digest_v1 = authority.descriptor_digest_v1.clone();
     authority.checkpoint.baseline_frontier.document_id = authority.scope.document_id.clone();
     authority.subject = SocketSubjectV1::Session {
@@ -3231,7 +3234,7 @@ async fn document_open_plan_authority_for_session(state: &HubState, fixture: &Do
     let mut authority = document_open_plan_test_authority(fixture);
     authority.scope = scope;
     authority.descriptor = descriptor;
-    authority.descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&authority.descriptor).expect("descriptor digest").0);
+    authority.descriptor_digest_v1 = os_directory::io::binary::artifact_hash::hex_lower(&os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&authority.descriptor).expect("descriptor digest").0);
     authority.package.plugin_id = authority.descriptor.owner.plugin_id.clone();
     authority.package.package_id = authority.descriptor.owner.package_id.clone();
     authority.package.version = authority.descriptor.owner.version.clone();
@@ -3560,7 +3563,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let mut closed_selection = state.openable_catalog.as_ref().unwrap().resolve_document_open(&descriptor, Some("surface.test.editor"), true).unwrap();
     closed_selection.surface.renderer_target = os_directory::DocumentOpenRendererTargetV1::Wasm;
     let mut actor_json = corpus["plan"]["browserActor"].clone();
-    actor_json["sha256"] = serde_json::json!(os_directory::hex_lower(&Sha256::digest(b"abc")));
+    actor_json["sha256"] = serde_json::json!(os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(b"abc")));
     actor_json["sourceComponentSha256"] = serde_json::json!(closed_selection.package.component_sha256);
     actor_json["sourceDescriptorByteSha256"] = serde_json::json!(closed_selection.package.descriptor_byte_sha256);
     closed_selection.browser_actor = semio_framework_pack_json::from_json_str(&actor_json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("closed actor fixture");
@@ -3721,7 +3724,7 @@ async fn document_open_and_execution_target_refuse_descriptor_or_index_without_g
                 user_id: Some(session.user_id),
                 body: os_directory::DirectoryEventBody::DocumentIndexed {
                     scope: scope.clone(),
-                    descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
+                    descriptor_digest_v1: os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
                     entry: os_directory::DocumentIndexEntryV1 { name: "Indexed without genesis".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() } },
                 },
             };
@@ -3873,7 +3876,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
         let mut authority = capacity_authority.clone();
         authority.scope.document_id = format!("capacity-{index}");
         authority.descriptor.document_id = authority.scope.document_id.clone();
-        authority.descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&authority.descriptor).expect("capacity digest").0);
+        authority.descriptor_digest_v1 = os_directory::io::binary::artifact_hash::hex_lower(&os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&authority.descriptor).expect("capacity digest").0);
         authority.checkpoint.descriptor_digest_v1 = authority.descriptor_digest_v1.clone();
         authority.checkpoint.baseline_frontier.document_id = authority.scope.document_id.clone();
         state.document_open_plans.issue_with_capability(authority, capacity_now, capacity_now + 10_000, DocumentOpenPlanCapabilityV1::from_secret(document_open_plan_secret(1_000 + index as u32))).expect("fill plan capacity");
@@ -5801,7 +5804,7 @@ async fn space_administration_page_v1_route_rejects_a_noncanonical_query_and_a_f
         assert_eq!(response.status, 400, "query {query} must be refused before any read");
         assert!(response.body.is_empty() || !String::from_utf8_lossy(&response.body).contains("receiptSha256"));
     }
-    let forged = format!("m.{}.{}", os_directory::hex_lower(b"user-forged"), "ab".repeat(32));
+    let forged = format!("m.{}.{}", os_directory::io::binary::artifact_hash::hex_lower(b"user-forged"), "ab".repeat(32));
     let response = raw_http_get(addr, &format!("/directory/spaces/{space}?cursor={forged}"), &[("Authorization", authorization.as_str())]).await;
     assert_eq!(response.status, 400, "a cursor with a forged MAC is refused");
     assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", authorization.as_str())]).await.status, 200);
@@ -9097,7 +9100,7 @@ mod quick {
         assert_eq!(status.phase, DocumentCheckInPhaseV1::Ready, "policy check-in ended {status:?}");
         assert_eq!(fixture.state.checkpoint_policy.tally(&fixture.scope).map(|tally| tally.running), Some(false));
         let active = fixture.state.directory.get_active_artifact_checkpoint(&fixture.scope).await.expect("active read").expect("active checkpoint");
-        assert_eq!(EditedArtifactFrontierV1::of_artifact_frontier(&active.baseline_frontier), Some(head), "the active checkpoint is the committed head");
+        assert_eq!(directory::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&active.baseline_frontier), Some(head), "the active checkpoint is the committed head");
         let cold = check_in_cold_pair(addr, &fixture).await;
         assert_eq!(cold.selection.active_checkpoint_id, active.checkpoint_id);
         assert_eq!((cold.pair().pack.clone(), cold.pair().spr.clone()), check_in_replica_pair(&fixture, &ledger).await, "the policy checkpoint is the replica fold, byte for byte");
@@ -9123,12 +9126,12 @@ mod quick {
         assert_eq!(status.phase, DocumentCheckInPhaseV1::Ready, "check-in ended {status:?}");
         let ready = status.ready.clone().expect("ready names its checkpoint");
         assert_eq!(ready.baseline, second);
-        assert_eq!(ready.parent_checkpoint_id, fixture.genesis.checkpoint_id.hex());
+        assert_eq!(ready.parent_checkpoint_id, directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&fixture.genesis.checkpoint_id));
         let active = fixture.state.directory.get_active_artifact_checkpoint(&fixture.scope).await.expect("active read").expect("active checkpoint");
-        assert_eq!(active.checkpoint_id.hex(), ready.checkpoint_id);
-        assert_eq!(EditedArtifactFrontierV1::of_artifact_frontier(&active.baseline_frontier), Some(second.clone()), "the head advanced to the named head");
+        assert_eq!(directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&active.checkpoint_id), ready.checkpoint_id);
+        assert_eq!(directory::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&active.baseline_frontier), Some(second.clone()), "the head advanced to the named head");
         let cold = check_in_cold_pair(addr, &fixture).await;
-        assert_eq!(cold.selection.active_checkpoint_id.hex(), ready.checkpoint_id, "a cold open starts from the new checkpoint");
+        assert_eq!(directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&cold.selection.active_checkpoint_id), ready.checkpoint_id, "a cold open starts from the new checkpoint");
         let expected = check_in_replica_pair(&fixture, &ledger[..2]).await;
         assert_eq!((cold.pair().pack.clone(), cold.pair().spr.clone()), expected, "the checkpoint is the replica fold of the ledger, byte for byte");
 
@@ -9138,7 +9141,7 @@ mod quick {
         let next_ready = next.ready.clone().unwrap_or_else(|| panic!("second check-in ended {next:?}"));
         assert_eq!(next_ready.parent_checkpoint_id, ready.checkpoint_id, "the second checkpoint extends the first");
         let cold = check_in_cold_pair(addr, &fixture).await;
-        assert_eq!(cold.selection.active_checkpoint_id.hex(), next_ready.checkpoint_id);
+        assert_eq!(directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&cold.selection.active_checkpoint_id), next_ready.checkpoint_id);
         assert_eq!((cold.pair().pack.clone(), cold.pair().spr.clone()), check_in_replica_pair(&fixture, &ledger).await);
         assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 3, "genesis plus exactly two check-ins");
     }
@@ -9537,7 +9540,7 @@ mod long {
             assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
         }
         let facts = state.directory.read_artifact_creation(&author.user_id, &request.request_id).await.expect("durable creation facts");
-        let operation = ArtifactCreationOperationV1::fold(&facts).expect("one durable creation operation");
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).expect("one durable creation operation");
         assert!(operation.intent.scope.document_id.strip_prefix("artifact-").is_some_and(artifact_creation_request_id_v1));
         let created_document_id = operation.intent.scope.document_id;
 

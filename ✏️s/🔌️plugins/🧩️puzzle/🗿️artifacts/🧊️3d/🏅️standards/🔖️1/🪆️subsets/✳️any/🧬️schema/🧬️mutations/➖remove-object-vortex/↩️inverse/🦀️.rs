@@ -31,6 +31,7 @@ pub fn inverse(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSna
             attraction.y, Some(at),
         ));
     }
+    mutations.reverse();
     mutations
 
     })())

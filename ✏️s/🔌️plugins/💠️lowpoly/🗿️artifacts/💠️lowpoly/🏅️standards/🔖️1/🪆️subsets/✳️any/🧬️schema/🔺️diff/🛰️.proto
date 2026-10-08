@@ -15,18 +15,35 @@ message LowpolyDiff {
   // @state config
 }
 
+message LowpolyObjectRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message LowpolyObjectInsertion {
+  uint32 index = 1;
+  semio.s.lowpoly.lowpoly.artifact.LowpolyObject row = 2;
+}
+message LowpolyObjectRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
 message LowpolyObjectsDelta {
-  repeated semio.s.lowpoly.lowpoly.artifact.LowpolyObject added = 1;
-  repeated string removed = 2;
-  repeated LowpolyObjectPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated LowpolyObjectRemoval removed = 1;
+  repeated LowpolyObjectInsertion inserted = 2;
+  repeated LowpolyObjectRelocation moved = 3;
+  repeated LowpolyObjectsModification modified = 4;
+}
+message LowpolyObjectsModification {
+  string id = 1;
+  LowpolyObjectPatchEntry patch = 2;
 }
 
 message LowpolyObjectPatchEntry {
-  string id = 1;
-  LowpolyObjectPatch patch = 2;
-  optional LowpolyPaintLayersDelta paint_layers = 3;
-  repeated LowpolyMeshMotion mesh_motions = 4;
+  LowpolyObjectPatch patch = 1;
+  optional LowpolyPaintLayersDelta paint_layers = 2;
+  repeated LowpolyVertexPosition mesh_vertices = 3;
+  repeated semio.s.lowpoly.lowpoly.artifact.LowpolyMeshAttribute mesh_attributes = 4;
 }
 
 message LowpolyObjectPatch {
@@ -60,17 +77,7 @@ message LowpolyPaintReplace { uint32 index = 1; semio.s.lowpoly.lowpoly.artifact
 message LowpolyPaintPatch { uint32 index = 1; LowpolyPaintLayerPatch patch = 2; }
 message LowpolyPaintStroke { uint32 index = 1; repeated PixelRun runs = 2; }
 
-message LowpolyMeshMotion {
-  oneof motion {
-    LowpolyMeshOffset offset = 1;
-    LowpolyMeshTurn turn = 2;
-    LowpolyMeshStretch stretch = 3;
-  }
-}
-
-message LowpolyMeshOffset { repeated uint32 vertex_ids = 1; repeated float offset = 2; }
-message LowpolyMeshTurn { repeated uint32 vertex_ids = 1; repeated float pivot = 2; repeated float axis = 3; float angle = 4; }
-message LowpolyMeshStretch { repeated uint32 vertex_ids = 1; repeated float pivot = 2; repeated float factor = 3; }
+message LowpolyVertexPosition { uint32 vertex = 1; repeated float position = 2; }
 
 message LowpolyPaintLayerPatch {
   optional string name = 1;

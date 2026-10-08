@@ -361,8 +361,12 @@ impl std::ops::Sub<Vec3> for Pnt3 {
 
 // #endregion 🔖️Vec3
 
+semio_framework_value::artifact_retire_leaf!(Pnt3, Vec3);
+
 // #region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 // #endregion 🔖️Tests
+
+semio_framework_value::artifact_retire_leaf!(Pnt2, Vec2);

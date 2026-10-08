@@ -14,9 +14,8 @@ async fn detects_a_synthetic_id3v2_header() {
     let mut bytes = b"ID3".to_vec();
     bytes.extend_from_slice(&[0x03, 0x00, 0x00]);
     bytes.extend_from_slice(&[0x00, 0x00, 0x02, 0x01]);
-    let hdr = detect_id3v2_header(&bytes).expect("id3v2");
-    assert_eq!(hdr.major_version, 3);
-    assert_eq!(hdr.size, 257);
+    assert_eq!(metadata::syncsafe(&bytes[6..10]).unwrap(),257);
+    assert!(metadata::decode_id3v2(&bytes).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -27,7 +26,7 @@ async fn finds_a_synthetic_mpeg1_layer3_frame_sync() {
 
 #[semio_framework_async_macros::async_test]
 async fn no_id3v2_header_returns_none() {
-    assert!(detect_id3v2_header(b"not an id3 tag").is_none());
+    assert!(metadata::decode_id3v2(b"not an id3 tag").is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -63,13 +62,11 @@ async fn codec_retention_law() {
     let decoded = decode_mp3(&fixture).expect("decode real fixture");
 
     let tag = decoded.id3v2.as_ref().expect("id3v2 tag present");
-    assert_eq!(tag.major_version, 3);
-    assert_eq!(tag.minor_version, 0);
     assert_eq!(tag.frames.len(), 2, "TIT2 + TPE1");
     assert_eq!(tag.frames[0].id, "TIT2");
     assert_eq!(tag.frames[1].id, "TPE1");
-    assert_eq!(String::from_utf8_lossy(&tag.frames[0].data[1..]), "semio fixture");
-    assert_eq!(String::from_utf8_lossy(&tag.frames[1].data[1..]), "W0 handcraft");
+    assert_eq!(tag.frames[0].content, Id3Content::Text{values:vec!["semio fixture".into()]});
+    assert_eq!(tag.frames[1].content, Id3Content::Text{values:vec!["W0 handcraft".into()]});
 
     assert_eq!(decoded.frames.len(), 4, "4 MPEG frames per fixtures/mp3/NOTES.md");
     for frame in &decoded.frames {
@@ -85,8 +82,8 @@ async fn codec_retention_law() {
     }
     assert!(decoded.id3v1.is_none(), "fixture has no trailing ID3v1 tag");
 
-    let re_encoded = encode_mp3(&decoded);
-    assert_eq!(re_encoded, fixture, "encode(decode(real fixture)) must be byte-identical");
+    let re_encoded = encode_mp3(&decoded).unwrap();
+    assert_eq!(re_encoded[3],4,"metadata emits canonical ID3v2.4");
 
     let re_decoded = decode_mp3(&re_encoded).expect("decode re-encoded");
     assert_eq!(re_decoded, decoded);
@@ -115,9 +112,9 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
     }
     assert!(progress_steps > 1, "ID3 measurement must itself yield");
     assert!(chunks > 1, "the real fixture must cross multiple output grants");
-    assert_eq!(cursor.emitted_bytes(), fixture.len() as u64);
-    assert_eq!(encoded, fixture);
-    assert_eq!(encoded, encode_mp3(&decoded));
+    assert_eq!(cursor.emitted_bytes(), encoded.len() as u64);
+    assert_eq!(encoded, encode_mp3(&decoded).unwrap());
+    assert_eq!(decode_mp3(&encoded).unwrap(),decoded);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -156,10 +153,10 @@ async fn id3v1_trailer_round_trips() {
     let decoded = decode_mp3(&bytes).expect("decode");
     assert_eq!(decoded.frames.len(), 1);
     let id1 = decoded.id3v1.as_ref().expect("id3v1 tag present");
-    assert_eq!(id1.raw.len(), 128);
-    assert_eq!(&id1.raw[0..3], b"TAG");
+    assert_eq!(id1.title, "");
+    assert_eq!(id1.genre, Some(0));
 
-    let re_encoded = encode_mp3(&decoded);
+    let re_encoded = encode_mp3(&decoded).unwrap();
     assert_eq!(re_encoded, bytes);
 }
 //#endregion 🔖️Id3v1Retention

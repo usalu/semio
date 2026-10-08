@@ -346,23 +346,44 @@ DIFF_BUILDERS = {
 # ---------------------------------------------------------------- apply
 
 
+def positional(document, legacy):
+    """📍 The keyed-rows delta as positional list deltas: removals at their base index, insertions at their canonical after index."""
+    out = dict(legacy)
+    for field in COLLECTIONS:
+        base, keyed = document[field], legacy[field]
+        removed = [{"id": identifier, "index": next(at for at, row in enumerate(base) if row["id"] == identifier)} for identifier in keyed["removed"] if any(row["id"] == identifier for row in base)]
+        gone = {entry["id"] for entry in removed}
+        running = [row for row in base if row["id"] not in gone]
+        for row in keyed["added"]:
+            running.insert(canonical_index(running, row["id"]), row)
+        inserted = [{"index": next(at for at, existing in enumerate(running) if existing["id"] == row["id"]), "row": row} for row in keyed["added"]]
+        out[field] = {"removed": removed, "inserted": inserted, "moved": [], "modified": keyed["patched"]}
+    return out
+
+
 def apply_collection(base, delta, collection):
-    """🧬️ Removals first, then canonical-position insertions, then field patches; unknown targets are refused."""
-    items = list(base)
-    for identifier in delta["removed"]:
-        existing, _ = find(items, identifier)
-        if existing is None:
-            raise ValueError(f"removed {identifier!r} does not exist")
-        del items[existing]
-    for row in delta["added"]:
-        if find(items, row["id"])[0] is not None:
-            raise ValueError(f"added {row['id']!r} already exists")
-        items.insert(canonical_index(items, row["id"]), row)
+    """🧬️ The positional list-delta apply: removed and moved ids are checked at their base index, inserted and moved rows take their after slots, survivors fill the rest in base order, then the patches write."""
+    taken = set()
+    for entry in delta["removed"] + [{"id": move["id"], "index": move["from"]} for move in delta["moved"]]:
+        if entry["index"] >= len(base) or base[entry["index"]]["id"] != entry["id"] or entry["index"] in taken:
+            raise ValueError(f"{entry['id']!r} is not at base index {entry['index']}")
+        taken.add(entry["index"])
+    slots = [None] * (len(base) - len(delta["removed"]) + len(delta["inserted"]))
+    for entry in delta["inserted"]:
+        if entry["index"] >= len(slots) or slots[entry["index"]] is not None:
+            raise ValueError(f"inserted {entry['row']['id']!r} has no free after slot {entry['index']}")
+        slots[entry["index"]] = entry["row"]
+    for move in delta["moved"]:
+        slots[move["to"]] = base[move["from"]]
+    survivors = iter([row for at, row in enumerate(base) if at not in taken])
+    items = [slot if slot is not None else next(survivors) for slot in slots]
+    if len({row["id"] for row in items}) != len(items):
+        raise ValueError("two rows of the after list carry the same id")
     optional = {name for name, wrapped in PATCH_FIELDS[collection] if wrapped}
-    for entry in delta["patched"]:
+    for entry in delta["modified"]:
         existing, current = find(items, entry["id"])
         if existing is None:
-            raise ValueError(f"patched {entry['id']!r} does not exist")
+            raise ValueError(f"modified {entry['id']!r} does not exist")
         row = dict(current)
         for name, value in entry["patch"].items():
             if value is None:
@@ -469,7 +490,8 @@ def inverse(document, variant, payload):
 
 def apply_mutation(document, mutation):
     (variant, payload), = mutation.items()
-    delta, messages = DIFF_BUILDERS[variant](document, payload)
+    legacy, messages = DIFF_BUILDERS[variant](document, payload)
+    delta = positional(document, legacy)
     return apply_diff(document, delta), delta, messages
 
 

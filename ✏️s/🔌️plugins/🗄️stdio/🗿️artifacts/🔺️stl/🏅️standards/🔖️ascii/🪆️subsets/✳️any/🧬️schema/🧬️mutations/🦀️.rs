@@ -67,46 +67,12 @@ pub enum StlMutation {
 pub const KINDS: &[&str] = &["set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
 //#endregion 🔖️Kinds
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
-/// snapshot when an index target is missing or out of range.
-pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
-    let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 
 //#endregion 🔖️MutationTrait
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the solid name if it moved, then every triangle in place (its normal, its
-/// vertices) and the diverging tail (surplus triangles removed last first, missing triangles inserted).
-pub fn net_mutations(base: &StlSnapshot, next: &StlSnapshot) -> Vec<StlMutation> {
-    let mut leaves = Vec::new();
-    if base.solid_name != next.solid_name {
-        leaves.push(StlMutation::SetSolidName(set_solid_name::SetSolidName { name: next.solid_name.clone() }));
-    }
-    let paired = base.triangles.len().min(next.triangles.len());
-    for (index, (before, after)) in base.triangles.iter().zip(&next.triangles).enumerate() {
-        if before.normal != after.normal {
-            leaves.push(StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal: after.normal }));
-        }
-        if before.vertices != after.vertices {
-            leaves.push(StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices: after.vertices }));
-        }
-    }
-    leaves.extend((paired..base.triangles.len()).rev().map(|index| StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index })));
-    leaves.extend(next.triangles.iter().enumerate().skip(paired).map(|(index, triangle)| StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle: *triangle })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region OpCodecs
 

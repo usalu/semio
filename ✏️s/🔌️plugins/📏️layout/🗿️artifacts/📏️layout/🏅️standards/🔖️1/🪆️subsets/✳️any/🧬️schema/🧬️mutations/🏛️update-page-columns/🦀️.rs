@@ -1,8 +1,8 @@
 //! 🏛️ `update-page-columns` — atomically sets a page's column count and gutter together.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -47,7 +47,7 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has those columns.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { columns_count: Some(payload.count), columns_gutter: Some(payload.gutter), ..Default::default() } }], ..Default::default() }),
+        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { columns_count: Some(payload.count), columns_gutter: Some(payload.gutter), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

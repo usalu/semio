@@ -3,6 +3,6 @@ grammar txt.mutations
 extension txt
 start document
 
-# Canonical direct-owner identities: set-trailing-newline, set-line-ending, insert-line, remove-line, set-line.
+# Canonical direct-owner identities: set-trailing-newline, set-line-ending, insert-line, remove-line, set-line, splice-text.
 document = "txt-mutation" opcode "payload" "=" hex
-opcode = "set-trailing-newline" | "set-line-ending" | "insert-line" | "remove-line" | "set-line"
+opcode = "set-trailing-newline" | "set-line-ending" | "insert-line" | "remove-line" | "set-line" | "splice-text"

@@ -14,9 +14,11 @@
           "routes": [
             "copy",
             "exportSnapshot",
+            "importSnapshot",
             "lodScaleJson",
             "openAddNodeDialog",
             "openImportSnapshot",
+            "setActiveExample",
             "setBrushNodeSize"
           ]
         },
@@ -33,12 +35,10 @@
             "deleteTargetRegion",
             "forceLayout",
             "import-media",
-            "importSnapshot",
             "proximityConnect",
             "redrawHandles",
             "relocateTargetRegion",
             "reorganize",
-            "setActiveExample",
             "setSelectionFlag",
             "setSelectionHidden",
             "setSelectionLocked",

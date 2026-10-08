@@ -1887,15 +1887,21 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
                 break;
             }
             turns += 1;
-            match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("close step") {
-                PluginCloseStep::Pending { released_items, released_bytes } => {
+            let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
+            match app.close_step(grant).expect("close step") {
+                crate::app::PluginLifecycleStep::Progress(progress) => {
+                    assert!(progress.fits(grant));
+                    let released_items = progress.copied_items;
+                    let released_bytes = progress.released_bytes;
                     assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "a close page stays inside its exact grant");
                     if released_items != 0 || released_bytes != 0 {
                         productive = turns;
                     }
                     last = format!("Pending {{ {released_items}, {released_bytes} }}");
                 }
-                PluginCloseStep::Complete => break,
+                crate::app::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
                 step => last = format!("{step:?}"),
             }
         }

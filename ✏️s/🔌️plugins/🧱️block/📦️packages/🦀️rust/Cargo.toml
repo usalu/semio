@@ -29,6 +29,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
 serde = { workspace = true, optional = true }
 
 [dev-dependencies]

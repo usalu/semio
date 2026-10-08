@@ -27,7 +27,7 @@ impl<'a> Symbols<'a>{
             V::Statements(length)=>{for index in 0..length{let keyword=source.projection_key(&path[..depth],index)?;self.note(keyword,true,control)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|key==keyword)).map(|(_,producer)|producer.encode(control)).transpose()?;let next=child(path,depth,index,maximum)?;let ids=record_ids(source,&path[..next])?;self.projected_fields(source,spec.as_ref(),ids,path,next,level+1,maximum,control)?;}},
             V::Wire(_)=>{for index in 0..6{let next=child(path,depth,index,maximum)?;match source.projection_view(&path[..next])?{V::Text(text)=>self.note(text,false,control)?,V::Absent=>{},_=>return Err(mismatch())}}let next=child(path,depth,8,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;},
             V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
-            V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
+            V::TextSource(_)|V::IntrinsicTextSource(_)=>return Err(mismatch()),V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
         }Ok(())
     }
     fn projected_fields<T:FieldProjectionSource>(&mut self,source:&'a T,spec:Option<&RecordSpec>,ids:&[u16],path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{

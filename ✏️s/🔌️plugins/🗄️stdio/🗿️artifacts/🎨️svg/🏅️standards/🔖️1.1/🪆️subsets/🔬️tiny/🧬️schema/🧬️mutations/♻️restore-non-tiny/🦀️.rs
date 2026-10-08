@@ -10,7 +10,7 @@ use crate::schema::snapshot::SvgNode as Node;
 /// 🧩 One excluded child element and where it sits among its parent's children once restored.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct RestoredElement {
+pub struct ReinstatedElement {
     pub parent: NodePath,
     pub index: usize,
     pub node: SvgNode,
@@ -19,7 +19,7 @@ pub struct RestoredElement {
 /// 🏷️ One excluded attribute and the position it takes among its element's attributes once restored.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct RestoredAttribute {
+pub struct ReinstatedAttribute {
     pub path: NodePath,
     pub index: usize,
     pub name: String,
@@ -29,26 +29,25 @@ pub struct RestoredAttribute {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct RestoreNonTiny {
+pub struct ReinstateNonTiny {
     #[value(default)]
-    pub elements: Vec<RestoredElement>,
+    pub elements: Vec<ReinstatedElement>,
     #[value(default)]
-    pub attributes: Vec<RestoredAttribute>,
+    pub attributes: Vec<ReinstatedAttribute>,
 }
 
-/// 🔺️ The node diff that adds the rows addressed at or below `node`, or `None` when none are.
-fn restore_node_diff(node: &Node, path: &mut NodePath, payload: &RestoreNonTiny) -> Option<SvgNodeDiff> {
+/// 🔺️ The node diff that adds the rows addressed at or below `node` (which sits at `path`), or `None` when none are.
+fn restore_node_diff(node: &Node, path: &NodePath, payload: &ReinstateNonTiny) -> Option<SvgNodeDiff> {
     let Node::Element { children, .. } = node else { return None };
     let mut attributes: Vec<SvgAttrAdded> = payload.attributes.iter().filter(|row| row.path == *path).map(|row| SvgAttrAdded { index: row.index, name: row.name.clone(), value: row.value.clone() }).collect();
     attributes.sort_by_key(|row| row.index);
     let mut added: Vec<SvgChildAdded> = payload.elements.iter().filter(|row| row.parent == *path).map(|row| SvgChildAdded { index: row.index, item: row.node.clone() }).collect();
     added.sort_by_key(|row| row.index);
-    let mut modified = Vec::new();
-    for (index, child) in children.iter().enumerate() {
-        path.push(index);
-        modified.extend(restore_node_diff(child, path, payload).map(|diff| SvgChildModified { index, diff }));
-        path.pop();
-    }
+    let modified: Vec<SvgChildModified> = children
+        .iter()
+        .enumerate()
+        .filter_map(|(index, child)| restore_node_diff(child, &[path.as_slice(), &[index]].concat(), payload).map(|diff| SvgChildModified { index, diff }))
+        .collect();
     if attributes.is_empty() && added.is_empty() && modified.is_empty() {
         return None;
     }
@@ -59,7 +58,7 @@ fn restore_node_diff(node: &Node, path: &mut NodePath, payload: &RestoreNonTiny)
     }))
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for RestoreNonTiny {
+impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for ReinstateNonTiny {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "non-tiny-content", kind: "restore-non-tiny", record: "RestoredNonTinyContent" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -67,7 +66,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for RestoreNonTiny {
         if !self.elements.iter().all(|row| addressed(&row.parent)) || !self.attributes.iter().all(|row| addressed(&row.path)) {
             return protocol::MutationOutcome::error(CODE_REJECTED, "a restored row addresses a node that is not an element of this document".to_string(), Vec::<String>::new());
         }
-        protocol::MutationOutcome::new(SvgDiff { root: base.doc.root.as_ref().and_then(|root| restore_node_diff(root, &mut Vec::new(), self)), ..Default::default() })
+        protocol::MutationOutcome::new(SvgDiff { root: base.doc.root.as_ref().and_then(|root| restore_node_diff(root, &Vec::new(), self)), ..Default::default() })
     }
     fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
         Ok(if self.elements.is_empty() && self.attributes.is_empty() { Vec::new() } else { vec![SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {})] })

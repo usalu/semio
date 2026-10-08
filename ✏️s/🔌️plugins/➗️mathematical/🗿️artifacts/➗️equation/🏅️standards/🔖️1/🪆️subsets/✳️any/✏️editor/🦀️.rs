@@ -17,8 +17,8 @@
 //! The sibling read-only surface (`👁️viewer/🦀️.rs`) never imports from this module — see
 //! that file's own doc header.
 
-use crate::editor::equation::commands::set_artifact;
-use crate::editor::equation::commands::set_points;
+use crate::editor::equation::commands::edit_equation;
+use crate::editor::equation::commands::edit_points;
 use crate::editor::equation::commands::node_graph_edit::EquationEditOperation;
 use crate::editor::equation::commands::{add_node, node_graph_edit, node_graph_viewport, set_active_example, set_algorithm, set_directed};
 use crate::editor::equation::modes::edit;
@@ -245,12 +245,12 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
     /// ordinal: appending is safe, reordering is a wire-format break.**
     pub enum EquationCommand for EquationSnapshot, EquationMutation, NoConfig, NoConfigMutation {
-        "setDocument" as "set-artifact" => set_artifact::SetArtifact,
+        "editEquation" as "edit-equation" => edit_equation::EditEquation,
         "setAlgorithm" as "set-algorithm" => set_algorithm::SetAlgorithm,
         "setDirected" as "set-directed" => set_directed::SetDirected,
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
-        "setPoints" as "set-points" => set_points::SetPoints,
+        "editPoints" as "edit-points" => edit_points::EditPoints,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "addNode" as "add-node" => add_node::AddNode,
     }
@@ -258,7 +258,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints", "setActiveExample", "addNode"];
+const EQUATION_TOOL_IDS: &[&str] = &["editEquation", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "editPoints", "setActiveExample", "addNode"];
 const EQUATION_RETAINED_PAYLOAD_SCHEMA: &str = "semio.equation/v1.tool-command.v1";
 const EQUATION_RETAINED_RAW_BYTES: usize = 65_536;
 const EQUATION_RETAINED_WORK_ITEMS: usize = 65_536;
@@ -274,12 +274,12 @@ pub(crate) const EQUATION_MAX_TEXT_BYTES: usize = 256;
 const EQUATION_DEFAULT_EDIT_OPERATIONS: &str = r#"[{"operation":"move","gestureId":"actions-pane","nodeIds":["a"],"dx":40.0,"dy":20.0}]"#;
 
 const EQUATION_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "setDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "editEquation", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setAlgorithm", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setDirected", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "setPoints", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "editPoints", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
@@ -344,9 +344,9 @@ fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapsho
         EquationCommand::SetDirected(_) => 1,
         EquationCommand::AddNode(payload) if payload.x.is_finite() && payload.y.is_finite() => 1,
         EquationCommand::AddNode(_) => return None,
-        EquationCommand::SetPoints(payload) if payload.geometry.points.len() <= EQUATION_MAX_POINTS => 2_usize.checked_add(payload.geometry.points.len())?,
-        EquationCommand::SetPoints(_) => return None,
-        EquationCommand::SetArtifact(payload)
+        EquationCommand::EditPoints(payload) if payload.geometry.points.len() <= EQUATION_MAX_POINTS => 2_usize.checked_add(payload.geometry.points.len())?,
+        EquationCommand::EditPoints(_) => return None,
+        EquationCommand::EditEquation(payload)
             if payload.graph.retained_node_count() <= EQUATION_MAX_NODES
                 && payload.graph.retained_edge_count() <= EQUATION_MAX_EDGES
                 && payload.geometry.points.len() <= EQUATION_MAX_POINTS
@@ -357,7 +357,7 @@ fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapsho
             // three boundaries — see the `setAlgorithm` note above.
             4_usize.checked_add(payload.graph.retained_node_count())?.checked_add(payload.graph.retained_edge_count())?.checked_add(payload.geometry.points.len())?
         }
-        EquationCommand::SetArtifact(_) => return None,
+        EquationCommand::EditEquation(_) => return None,
         EquationCommand::NodeGraphEdit(payload) => 4_usize.checked_add(payload.operations_json.len())?.checked_add(equation_edit_preflight(payload)?)?,
     };
     (extent != 0 && extent <= EQUATION_RETAINED_WORK_ITEMS).then_some(extent)
@@ -403,8 +403,6 @@ struct EquationRetainedCommandWork {
     operations: Vec<EquationEditOperation>,
     leaves: Vec<EquationMutation>,
     gesture: Option<String>,
-    graph_changed: bool,
-    geometry_changed: bool,
     closing: bool,
 }
 
@@ -424,8 +422,6 @@ impl EquationRetainedCommandWork {
             operations: Vec::new(),
             leaves: Vec::new(),
             gesture: None,
-            graph_changed: false,
-            geometry_changed: false,
             closing: false,
         }
     }
@@ -476,22 +472,16 @@ impl EquationRetainedCommandWork {
                 self.graph = Some(source.graph.clone());
                 self.phase = EquationWorkPhase::JsonBytes;
             }
-            EquationCommand::SetArtifact(payload) => {
+            EquationCommand::EditEquation(payload) => {
                 let (directed, algorithm, seed) = payload.graph.retained_metadata();
                 let mut graph = EquationGraph { directed, nodes: Vec::new(), edges: Vec::new(), algorithm: algorithm.to_string(), algorithm_seed: seed.map(str::to_string) };
                 graph.nodes.try_reserve_exact(payload.graph.retained_node_count()).map_err(|_| Fault::from("equation-command-node-reserve"))?;
                 graph.edges.try_reserve_exact(payload.graph.retained_edge_count()).map_err(|_| Fault::from("equation-command-edge-reserve"))?;
-                self.graph_changed = directed != source.graph.directed
-                    || algorithm != source.graph.algorithm
-                    || seed != source.graph.algorithm_seed.as_deref()
-                    || payload.graph.retained_node_count() != source.graph.nodes.len()
-                    || payload.graph.retained_edge_count() != source.graph.edges.len();
-                self.geometry_changed = payload.geometry.points.len() != source.geometry.points.len();
                 self.points.try_reserve_exact(payload.geometry.points.len()).map_err(|_| Fault::from("equation-command-point-reserve"))?;
                 self.graph = Some(graph);
                 self.phase = EquationWorkPhase::Nodes;
             }
-            EquationCommand::SetPoints(payload) => {
+            EquationCommand::EditPoints(payload) => {
                 self.points.try_reserve_exact(payload.geometry.points.len()).map_err(|_| Fault::from("equation-command-point-reserve"))?;
                 self.phase = EquationWorkPhase::Points;
             }
@@ -500,23 +490,15 @@ impl EquationRetainedCommandWork {
         Ok(())
     }
 
-    fn finish(&mut self, command: &EquationCommand, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>, operation: &AppOperationContext) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
-        use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
-        use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
+    fn finish(&mut self, command: &EquationCommand, source: &EquationSnapshot, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>, operation: &AppOperationContext) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
         Ok(match command {
             EquationCommand::SetActiveExample(_) => return Err(Fault::from("equation-set-active-example-is-not-a-phased-command")),
             EquationCommand::SetAlgorithm(_) | EquationCommand::SetDirected(_) | EquationCommand::AddNode(_) => Emit::mutations(std::mem::take(&mut self.leaves)),
             EquationCommand::NodeGraphEdit(_) => node_graph_edit::equation_edit_emit(&operation.authoring_seed, self.gesture.take().as_deref(), std::mem::take(&mut self.leaves)),
-            EquationCommand::SetPoints(_) => Emit::mutations(vec![EquationMutation::ReplacePoints(ReplacePoints { points: std::mem::take(&mut self.points) })]),
-            EquationCommand::SetArtifact(_) => {
-                let mut mutations = Vec::new();
-                if self.graph_changed {
-                    mutations.push(EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? }));
-                }
-                if self.geometry_changed {
-                    mutations.push(EquationMutation::ReplacePoints(ReplacePoints { points: std::mem::take(&mut self.points) }));
-                }
-                Emit::mutations(mutations)
+            EquationCommand::EditPoints(_) => Emit::mutations(edit_equation::equation_point_edit_leaves(&source.geometry.points, &std::mem::take(&mut self.points))),
+            EquationCommand::EditEquation(_) => {
+                let graph = self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))?;
+                Emit::mutations(edit_equation::equation_graph_edit_leaves(&source.graph, &graph).into_iter().chain(edit_equation::equation_point_edit_leaves(&source.geometry.points, &std::mem::take(&mut self.points))).collect())
             }
             EquationCommand::NodeGraphViewport(payload) => {
                 let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
@@ -581,7 +563,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             }
             EquationWorkPhase::Nodes => {
                 let (count, node) = match command {
-                    EquationCommand::SetArtifact(payload) => (payload.graph.retained_node_count(), payload.graph.retained_node(self.item_cursor).cloned()),
+                    EquationCommand::EditEquation(payload) => (payload.graph.retained_node_count(), payload.graph.retained_node(self.item_cursor).cloned()),
                     _ => (source.graph.nodes.len(), source.graph.nodes.get(self.item_cursor).cloned()),
                 };
                 if self.item_cursor >= count {
@@ -593,9 +575,6 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                 if node.id.len() > EQUATION_MAX_TEXT_BYTES || node.label.len() > EQUATION_MAX_TEXT_BYTES {
                     return Err(Fault::from("equation-command-node-text-capacity"));
                 }
-                if let EquationCommand::SetArtifact(_) = command {
-                    self.graph_changed |= source.graph.nodes.get(self.item_cursor) != Some(&node);
-                }
                 self.observe(node.id.as_bytes());
                 self.graph.as_mut().ok_or_else(|| Fault::from("equation-command-graph-owner"))?.nodes.push(node);
                 self.item_cursor += 1;
@@ -603,13 +582,13 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             }
             EquationWorkPhase::Edges => {
                 let (count, edge) = match command {
-                    EquationCommand::SetArtifact(payload) => (payload.graph.retained_edge_count(), (self.item_cursor < payload.graph.retained_edge_count()).then(|| payload.graph.retained_edge(self.item_cursor)).transpose().map_err(Fault::from)?),
+                    EquationCommand::EditEquation(payload) => (payload.graph.retained_edge_count(), (self.item_cursor < payload.graph.retained_edge_count()).then(|| payload.graph.retained_edge(self.item_cursor)).transpose().map_err(Fault::from)?),
                     _ => (source.graph.edges.len(), source.graph.edges.get(self.item_cursor).cloned()),
                 };
                 if self.item_cursor >= count {
                     self.item_cursor = 0;
                     self.phase = match command {
-                        EquationCommand::SetArtifact(_) => EquationWorkPhase::Points,
+                        EquationCommand::EditEquation(_) => EquationWorkPhase::Points,
                         _ => EquationWorkPhase::Finish,
                     };
                     return self.progress::<EditorApp<EquationPlayApp>>(b"edges-complete", "equation-command-edge-boundary");
@@ -618,9 +597,6 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                 if edge.id.len() > EQUATION_MAX_TEXT_BYTES || edge.source.len() > EQUATION_MAX_TEXT_BYTES || edge.target.len() > EQUATION_MAX_TEXT_BYTES {
                     return Err(Fault::from("equation-command-edge-text-capacity"));
                 }
-                if let EquationCommand::SetArtifact(_) = command {
-                    self.graph_changed |= source.graph.edges.get(self.item_cursor) != Some(&edge);
-                }
                 self.observe(edge.id.as_bytes());
                 self.graph.as_mut().ok_or_else(|| Fault::from("equation-command-graph-owner"))?.edges.push(edge);
                 self.item_cursor += 1;
@@ -628,8 +604,8 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             }
             EquationWorkPhase::Points => {
                 let points = match command {
-                    EquationCommand::SetArtifact(payload) => &payload.geometry.points,
-                    EquationCommand::SetPoints(payload) => &payload.geometry.points,
+                    EquationCommand::EditEquation(payload) => &payload.geometry.points,
+                    EquationCommand::EditPoints(payload) => &payload.geometry.points,
                     _ => return Err(Fault::from("equation-command-point-phase")),
                 };
                 if self.item_cursor >= points.len() {
@@ -638,9 +614,6 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                     return self.progress::<EditorApp<EquationPlayApp>>(b"points-complete", "equation-command-point-boundary");
                 }
                 let point = points[self.item_cursor].clone();
-                if matches!(command, EquationCommand::SetArtifact(_)) {
-                    self.geometry_changed |= source.geometry.points.get(self.item_cursor) != Some(&point);
-                }
                 self.observe(&point.x.to_le_bytes());
                 self.observe(&point.y.to_le_bytes());
                 self.points.push(point);
@@ -690,7 +663,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                 let observed = [self.item_cursor.to_le_bytes(), self.leaves.len().to_le_bytes()].concat();
                 self.progress::<EditorApp<EquationPlayApp>>(&observed, "equation-command-operation")
             }
-            EquationWorkPhase::Finish => self.finish(command, context, operation).map(ArtifactCommandWorkStep::Complete),
+            EquationWorkPhase::Finish => self.finish(command, source, context, operation).map(ArtifactCommandWorkStep::Complete),
         }
     }
 
@@ -923,16 +896,22 @@ where
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<EquationStorePreparation<P,M>>(),depth:1})
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M>)> {
+        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
+        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preparation rejected original publication authority"),request));
         }
-        Ok(Box::new(EquationStorePreparation {
+        Ok((Box::new(EquationStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
             authority: Some(request.authority),
@@ -940,7 +919,7 @@ where
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             closing: false,
-        }))
+        }),progress))
     }
 }
 
@@ -1104,12 +1083,12 @@ impl ArtifactEditor for EquationPlayApp {
         factory: "EquationCommandJobFactory",
         factory_type: EquationCommandJobFactory,
         tools: {
-            "setDocument" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "editEquation" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "setAlgorithm" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "setDirected" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "nodeGraphEdit" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "nodeGraphViewport" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "setPoints" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "editPoints" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "setActiveExample" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "addNode" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
         }
@@ -1194,7 +1173,7 @@ impl ArtifactEditor for EquationPlayApp {
             semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid equation {action} '{key}': {error}")))
         }
         match action {
-            "setDocument" => Ok(EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: decode(action, args, "graph")?, geometry: decode(action, args, "geometry")? })),
+            "editEquation" => Ok(EquationCommand::EditEquation(edit_equation::EditEquation { graph: decode(action, args, "graph")?, geometry: decode(action, args, "geometry")? })),
             "setAlgorithm" => Ok(EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: text_arg(&["algorithm", "value"]).unwrap_or_default(), seed: text_arg(&["seed"]) })),
             "setDirected" => Ok(EquationCommand::SetDirected(set_directed::SetDirected {
                 directed: args.and_then(|value| value.get("directed").or_else(|| value.get("value"))).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
@@ -1211,7 +1190,7 @@ impl ArtifactEditor for EquationPlayApp {
                 Ok(EquationCommand::AddNode(add_node::AddNode { x: coordinate("x")?, y: coordinate("y")? }))
             }
             "nodeGraphViewport" => Ok(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: decode(action, args, "viewport")? })),
-            "setPoints" => Ok(EquationCommand::SetPoints(set_points::SetPoints { geometry: decode(action, args, "geometry")? })),
+            "editPoints" => Ok(EquationCommand::EditPoints(edit_points::EditPoints { geometry: decode(action, args, "geometry")? })),
             "setActiveExample" => Ok(EquationCommand::SetActiveExample(set_active_example::SetActiveExample {
                 example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| crate::examples::demo::ID.into()),
             })),
@@ -1295,21 +1274,20 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(geometry_window::definition())
         .default_layout(edit::layout())
         // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-        .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
-        .action_destructive("setDocument")
+        .mutation("editEquation", LocalizedLabel::native("Edit Equation", "Gleichung bearbeiten"))
         .mutation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
         .mutation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
         .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
-        .mutation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
-        .action_interactive_job("setDocument", InteractiveJobClassification::Migrated)
+        .mutation("editPoints", LocalizedLabel::native("Edit Points", "Punkte bearbeiten"))
+        .action_interactive_job("editEquation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setAlgorithm", InteractiveJobClassification::Migrated)
         .action_interactive_job("setDirected", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
         .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setPoints", InteractiveJobClassification::Migrated)
+        .action_interactive_job("editPoints", InteractiveJobClassification::Migrated)
         .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
@@ -1331,7 +1309,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
             ActionArgDef::toggle("directed", LocalizedLabel::native("Directed", "Gerichtet")).default_value(&true),
         ])
         // 🧬️ The equation's own EDIT verb, staged as JSON text — the only document verb whose whole
-        // payload the Actions pane can carry (`setDocument`/`setPoints`/`nodeGraphViewport` take
+        // payload the Actions pane can carry (`editEquation`/`editPoints`/`nodeGraphViewport` take
         // structured `<block>` arguments no pane control produces). The default is one `move` gesture
         // record, so the verb is dispatchable, invertible and visible in the graph window
         // straight from the pane instead of only from a canvas engagement.
@@ -1348,15 +1326,14 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         // WORKFLOWS-END-TO-END-TYPED-PORTS) — `equation_io()` (this file's own `🔖️Io` region) is
         // this port information's single source of truth, reused here rather than duplicated.
         .io(equation_io())
-        .action_describe("setDocument", LocalizedLabel::native("Replaces the equation's whole graph and point geometry with the supplied ones; parts that differ are overwritten.", "Ersetzt den gesamten Graphen und die Punktgeometrie der Gleichung durch die übergebenen; abweichende Teile werden überschrieben."))
+        .action_describe("editEquation", LocalizedLabel::native("Applies the supplied graph and point geometry as the concrete node, edge and point changes that differ from the equation; nothing else is touched.", "Wendet den übergebenen Graphen und die Punktgeometrie als die konkreten Knoten-, Kanten- und Punktänderungen an, die von der Gleichung abweichen; sonst wird nichts angefasst."))
         .action_describe("setAlgorithm", LocalizedLabel::native("Chooses the graph algorithm the equation evaluates: topological order, connected components, strongly connected components or breadth-first distances.", "Wählt den Graphalgorithmus, den die Gleichung auswertet: topologische Ordnung, Zusammenhangskomponenten, starke Zusammenhangskomponenten oder Breitensuche-Distanzen."))
         .action_describe("setDirected", LocalizedLabel::native("Sets whether the equation's graph is treated as directed or undirected, which changes every algorithm result.", "Legt fest, ob der Graph der Gleichung gerichtet oder ungerichtet behandelt wird, was jedes Algorithmusergebnis ändert."))
         .action_describe("nodeGraphEdit", LocalizedLabel::native("Applies a JSON list of node-graph rows (move; connect; disconnect; delete) to the equation's graph in one step.", "Wendet eine JSON-Liste von Knotengraph-Zeilen (move; connect; disconnect; delete) in einem Schritt auf den Graphen der Gleichung an."))
         .action_describe("addNode", LocalizedLabel::native("Adds one node to the equation's graph at x, y, named with the first free id.", "Fügt dem Graphen der Gleichung einen Knoten an x, y hinzu, benannt mit der ersten freien Id."))
-        .action_describe("setPoints", LocalizedLabel::native("Replaces the point set of the equation's geometry with the supplied points.", "Ersetzt die Punktmenge der Geometrie der Gleichung durch die übergebenen Punkte."))
+        .action_describe("editPoints", LocalizedLabel::native("Applies the supplied points as the point repositionings, insertions and removals that differ from the equation's geometry.", "Wendet die übergebenen Punkte als die Punktverschiebungen, -einfügungen und -entfernungen an, die von der Geometrie der Gleichung abweichen."))
         .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole equation document with the bundled demo example; any other example id changes nothing.", "Ersetzt das gesamte Gleichungsdokument durch das mitgelieferte Demo-Beispiel; jede andere Beispiel-Id ändert nichts."))
         .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
-        .action_destructive("setPoints")
         .build_definition()
 }
 //#endregion 🔖️Manifest

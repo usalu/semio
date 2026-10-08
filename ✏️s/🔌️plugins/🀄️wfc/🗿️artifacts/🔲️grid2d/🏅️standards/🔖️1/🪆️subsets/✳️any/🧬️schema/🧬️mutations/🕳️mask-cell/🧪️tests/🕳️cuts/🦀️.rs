@@ -5,7 +5,7 @@
 //! Source of truth is the committed JSON quintet beside this file; this module only replays it.
 
 use crate::diff::Grid2dDiff;
-use crate::mutations::{apply_grid2d_mutation, inverse_grid2d_mutation, Grid2dMutation};
+use crate::mutations::{inverse_grid2d_mutation, Grid2dMutation};
 use crate::schema::snapshot::Grid2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️mask-cell/🕳️cuts/📸️snapshot/⬅️before/🔣️.json");
@@ -28,7 +28,7 @@ fn mutation() -> Grid2dMutation {
 #[test]
 fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_grid2d_mutation(&mut snapshot, &mutation()).expect("mask-cell applies to its committed before-snapshot");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("mask-cell applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "mask-cell/🕳️cuts: applied state differs from the committed after-snapshot");
 }
 
@@ -39,9 +39,9 @@ fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = inverse_grid2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
-    apply_grid2d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     for step in inverse.iter().rev() {
-        apply_grid2d_mutation(&mut snapshot, step).expect("inverse step applies");
+        vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "mask-cell/🕳️cuts: inverse did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ fn declared_outcome_holds() {
         .collect();
     assert_eq!(produced, declared, "mask-cell/🕳️cuts: raised diagnostics differ from the committed 🎯️outcome messages");
     let mut snapshot = before();
-    let applied = apply_grid2d_mutation(&mut snapshot, &mutation()).is_ok();
+    let applied = vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).is_ok();
     match status {
         "applied" => {
             assert!(applied, "mask-cell/🕳️cuts: declared applied but the mutation was rejected");

@@ -1,0 +1,20 @@
+{
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": null,
+  "layout": null,
+  "generations": {
+    "removed": [
+      {
+        "id": "gen-2",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "selectedGeneration": null,
+  "previewText": null
+}

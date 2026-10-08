@@ -34,11 +34,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for ScaleEle
             return protocol::MutationOutcome::fatal("mutation.invariant", "scale factors must be finite and greater than 0", self.targets.clone());
         }
         let [fx, fy, fz] = self.factors;
-        relative_placement_diff(&self.targets, self.identity(), base, |placement| {
-            placement.scale.x *= fx;
-            placement.scale.y *= fy;
-            placement.scale.z *= fz;
-        })
+        relative_placement_diff(&self.targets, self.identity(), base, |placement| SemioTransform { scale: SemioPoint3 { x: placement.scale.x * fx, y: placement.scale.y * fy, z: placement.scale.z * fz }, ..placement })
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.identity() || !self.admissible(), base))

@@ -27,8 +27,8 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
     }
 }
 
-async fn one_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-1".into(), name: "Fabrication".into(), kind: semio_framework_artifact_space_space::SpaceKind::Studio, visibility: semio_framework_artifact_space_space::SpaceVisibility::Public, members: "2".into(), updated_ms: Some(1_790_370_316_130), origin: "hub", data_class: "persistedShared", role: None }
+async fn one_hub_row() -> semio_s_space_core::HomeSpaceRow {
+    semio_s_space_core::HomeSpaceRow { id: "sp-1".into(), name: "Fabrication".into(), kind: semio_framework_artifact_space_space::SpaceKind::Studio, visibility: semio_framework_artifact_space_space::SpaceVisibility::Public, members: "2".into(), updated_ms: Some(1_790_370_316_130), origin: "hub", data_class: "persistedShared", role: None }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -78,7 +78,7 @@ async fn row_cells_are_localized_words_and_a_utc_minute() {
     let row = one_hub_row().await;
     assert_eq!(row.cells(&HomeTableLabels::NATIVE_EN), ["Fabrication", "Studio", "public", "2", "2026-09-25 21:05 UTC", "hub"].map(String::from));
     assert_eq!(row.cells(&HomeTableLabels::NATIVE_DE), ["Fabrication", "Studio", "öffentlich", "2", "25.09.2026, 21:05 UTC", "Hub"].map(String::from));
-    let draft = crate::HomeSpaceRow { kind: semio_framework_artifact_space_space::SpaceKind::Archive, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, updated_ms: None, origin: "local", ..row };
+    let draft = semio_s_space_core::HomeSpaceRow { kind: semio_framework_artifact_space_space::SpaceKind::Archive, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, updated_ms: None, origin: "local", ..row };
     assert_eq!(draft.cells(&HomeTableLabels::NATIVE_DE)[1..], ["Archiv", "privat", "2", "nie gespeichert", "lokal"].map(String::from));
 }
 

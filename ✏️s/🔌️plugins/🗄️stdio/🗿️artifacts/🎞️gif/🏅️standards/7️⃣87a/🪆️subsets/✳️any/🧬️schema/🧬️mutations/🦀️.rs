@@ -28,6 +28,8 @@ use protocol::Mutation;
 
 
 //#region 🔖️Mutations
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "🖼️insert-image/🦀️.rs"]
 pub mod insert_image;
 #[path = "🔀move-image/🦀️.rs"]
@@ -105,6 +107,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range image indices are no-ops rather than panics.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
     let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -118,29 +121,6 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 
 //#endregion 🔖️Apply
 
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the diverging image tail is removed, the screen descriptor fields set,
-/// then the next tail inserted, so every intermediate state keeps the raster rules the leaves enforce. The snapshot `schema`
-/// is a constant of the artifact and never differs.
-pub fn net_mutations(base: &GifSnapshot, next: &GifSnapshot) -> Vec<GifMutation> {
-    let common = base.images.iter().zip(&next.images).take_while(|(left, right)| left == right).count();
-    let mut leaves: Vec<GifMutation> = (common..base.images.len()).rev().map(|index| GifMutation::RemoveImage(remove_image::RemoveImage { index })).collect();
-    if (base.width, base.height) != (next.width, next.height) {
-        leaves.push(GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: next.width, height: next.height }));
-    }
-    if base.gct != next.gct {
-        leaves.push(GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: next.gct.clone() }));
-    }
-    if base.background_color_index != next.background_color_index {
-        leaves.push(GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: next.background_color_index }));
-    }
-    if base.pixel_aspect_ratio != next.pixel_aspect_ratio {
-        leaves.push(GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: next.pixel_aspect_ratio }));
-    }
-    leaves.extend(next.images.iter().enumerate().skip(common).map(|(index, image)| GifMutation::InsertImage(insert_image::InsertImage { index, image: image.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region 🔖️RasterGuard
 /// 📐️ The image's rectangle lies inside the screen the Screen Descriptor defines.

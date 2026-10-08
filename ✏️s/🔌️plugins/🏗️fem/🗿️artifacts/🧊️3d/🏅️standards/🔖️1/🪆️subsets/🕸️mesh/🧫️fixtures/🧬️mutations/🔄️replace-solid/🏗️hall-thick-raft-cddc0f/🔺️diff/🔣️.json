@@ -4,12 +4,13 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "slab_raft",
-        "item": {
+        "patch": {
           "id": "slab_raft",
           "name": "Workshop Raft Slab",
           "outline": [
@@ -58,8 +59,7 @@
           "axis": "z"
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "supports": null,
   "loadCases": null,

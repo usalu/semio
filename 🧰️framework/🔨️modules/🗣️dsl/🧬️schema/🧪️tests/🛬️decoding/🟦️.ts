@@ -4,6 +4,22 @@ import { resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { createToken, EmbeddedActionsParser, Lexer } from "chevrotain";
 const owner=resolve(import.meta.dir,"../.."), read=(path:string)=>JSON.parse(readFileSync(resolve(owner,path),"utf8"));
+test("original retained text decoding corpus preserves independent JSON and SQLite Unicode bytes",()=>{
+ const fixture=read("🧫️fixtures/🧵️continuation/🔣️.json");
+ const decoding=fixture.decoding.textUnescape;
+ expect(decoding.unit).toBe("one-unicode-scalar");expect(decoding.sourceCopies).toBe(0);expect(decoding.outputTransfer).toBe("after-exact-end");
+ const database=new Database(":memory:");try{
+  database.run("CREATE TABLE text(value TEXT,bytes BLOB)");
+  for(const row of decoding.cases){
+   const text=JSON.parse(`"${row.jsonBody}"`);expect(text).toBe(row.text);
+   const bytes=new TextEncoder().encode(text);expect(bytes).toEqual(new Uint8Array(Buffer.from(row.text,"utf8")));
+   database.run("INSERT INTO text VALUES(?,?)",text,bytes);
+   expect(database.query("SELECT hex(bytes) AS bytes FROM text ORDER BY rowid DESC LIMIT 1").get()).toEqual({bytes:Buffer.from(row.text,"utf8").toString("hex").toUpperCase()});
+  }
+  expect(decoding.invalid).toHaveLength(7);
+ }finally{database.close();}
+ console.log("[DEBUG] original text unescape neutral cases preserve JSON/SQLite/TextEncoder exact Unicode bytes");
+});
 test("controlled decoder intrinsic corpus has closed independent literal and arithmetic identities",()=>{
  const mirror=resolve(owner,"../../../..","🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema");
  for(const path of ["🧫️fixtures/🛬️decoding/🔣️.json","🧫️fixtures/🛬️decoding/🔑️keys.json","🧪️tests/🧾️record-list/🧫️fixtures/🔣️.json"])expect(JSON.parse(readFileSync(resolve(mirror,path),"utf8"))).toEqual(read(path));

@@ -258,8 +258,9 @@ fn a_picked_files_name_resolves_by_the_owning_artifacts_extension() {
 fn every_declared_payload_shape_decodes_to_its_bytes() {
     for row in rows(&fixture()["dataUrl"], "cases") {
         let id = text(&row, "id");
-        let decoded = document_io::import_payload_bytes(&text(&row, "payload")).unwrap_or_else(|error| panic!("{id}: decode ({error})"));
-        assert_eq!(String::from_utf8(decoded).expect("utf-8"), text(&row, "bytes"), "{id}: decoded bytes");
+        let payload = text(&row, "payload");
+        let decoded = document_io::import_payload_bytes(&payload).unwrap_or_else(|error| panic!("{id}: decode ({error})"));
+        assert_eq!(String::from_utf8(decoded.into_owned()).expect("utf-8"), text(&row, "bytes"), "{id}: decoded bytes");
     }
 }
 

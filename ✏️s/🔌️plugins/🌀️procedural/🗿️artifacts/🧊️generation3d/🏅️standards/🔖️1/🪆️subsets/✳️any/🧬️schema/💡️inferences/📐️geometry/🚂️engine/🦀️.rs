@@ -80,6 +80,7 @@ impl Drop for Run {
 /// 🚂️ The geometry engine of one artifact instance.
 pub struct GeometryEngine {
     catalogue: Arc<Catalogue>,
+    computes:Arc<dyn super::compute::GeometryComputeContext>,
     cache: InferenceCache,
     base: Option<Base>,
     run: Option<Run>,
@@ -98,9 +99,9 @@ impl Drop for GeometryEngine {
 
 impl GeometryEngine {
     /// 🏗️ An engine whose cache holds at most `budget_bytes`; a zero budget disables the cache.
-    pub fn new(catalogue: Arc<Catalogue>, budget_bytes: usize) -> Self {
+    pub fn new(catalogue: Arc<Catalogue>, computes:Arc<dyn super::compute::GeometryComputeContext>, budget_bytes: usize) -> Self {
         let config = InferenceCacheConfig { enabled: budget_bytes > 0, budget_bytes, record_stats: true, ..Default::default() };
-        Self { catalogue, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), base: None, run: None, previous: BTreeMap::new(), totals: EngineTotals::default() }
+        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), base: None, run: None, previous: BTreeMap::new(), totals: EngineTotals::default() }
     }
 
     /// 🧷️ Whether the retained run of the request with this digest is open: neither finished nor replaced. A cancelled run stays open, so continuing it reports the cancellation.
@@ -140,7 +141,7 @@ impl GeometryEngine {
     pub fn step(&mut self, fuel: usize) -> Result<EngineStep, EngineError> {
         let (Some(base), Some(run)) = (self.base.as_ref(), self.run.as_mut()) else { return Err(EngineError::NotStarted) };
         let cache = if run.bypass { None } else { Some(&mut self.cache) };
-        let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&GeometryInput::new(&base.snapshot, Arc::clone(&self.catalogue)), cache, &mut run.cursor, &mut run.values, fuel).map_err(EngineError::Inference)?;
+        let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&GeometryInput::new(&base.snapshot, Arc::clone(&self.catalogue),Arc::clone(&self.computes)), cache, &mut run.cursor, &mut run.values, fuel).map_err(EngineError::Inference)?;
         self.totals.computed += report.computed as u64;
         self.totals.hits += report.hits as u64;
         if report.done {

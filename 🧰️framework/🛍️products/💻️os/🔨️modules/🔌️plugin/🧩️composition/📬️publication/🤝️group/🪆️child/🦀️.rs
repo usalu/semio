@@ -102,35 +102,58 @@ impl PrivateChildPublicationInput {
         if grant.maximum_items == 0 || !self.ready || self.closing || !self.genesis.terminal_is_empty() { return None; }
         Some(PrivateChildPublicationInputParts { source: self.source.take()?, metadata: self.metadata.take()?, request: self.request.take() })
     }
-    pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> {
-        if let Some(request) = self.request.as_ref() { return Ok(request.next_close_byte_demand()); }
-        if !self.genesis.terminal_is_empty() { return Ok(self.genesis.next_close_byte_demand()); }
-        if let Some(metadata) = self.metadata.as_ref() { return Ok(metadata.next_close_byte_demand()); }
-        if !self.issuer.terminal_is_empty() { return Ok(self.issuer.next_close_byte_demand()); }
-        self.source.as_ref().map_or(Ok(0), OwnedChildEmit::next_close_byte_demand)
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::RetirementDemand;
+        let mut demand = if let Some(request) = self.request.as_ref() {
+            RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(body)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? }
+        } else if !self.genesis.terminal_is_empty() { RetirementDemand { release_bytes: self.genesis.next_close_byte_demand(), depth: 2, ..Default::default() } }
+        else if let Some(metadata) = self.metadata.as_ref() { RetirementDemand { release_bytes: metadata.next_close_byte_demand(), depth: 1, ..Default::default() } }
+        else if !self.issuer.terminal_is_empty() { RetirementDemand { release_bytes: self.issuer.next_close_byte_demand(), depth: 2, ..Default::default() } }
+        else if let Some(source) = self.source.as_ref() { source.retirement_demands(body)? }
+        else { return Ok(Default::default()); };
+        demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private input owner depth overflow"))?;
+        Ok(demand)
     }
-    /// ♻️ Retires the exact retained request before metadata, frame, and original typed source owners.
+    /// ♻️ Retires exact retained request, metadata and typed source under their independently supplied grant.
     pub(crate) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_copy_bytes: grant.maximum_copy_bytes.min(64), ..grant };
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private input close exceeds admitted owner depth")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.closing = true;
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(request) = self.request.as_mut() {
             if request.terminal_is_empty() { self.request.take(); return Ok(structural()); }
-            return request.close_step(1, grant.maximum_release_bytes).map(snapshot_progress);
+            let step = request.close_step(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, request.terminal_is_empty(), "private retained member request")?;
+            return Ok(input_pending(step));
         }
-        if !self.genesis.terminal_is_empty() { self.genesis.begin_close(); return self.genesis.close_granted(grant).map(input_pending); }
+        if !self.genesis.terminal_is_empty() {
+            self.genesis.begin_close();
+            let step = self.genesis.close_granted(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, self.genesis.terminal_is_empty(), "private retained genesis")?;
+            return Ok(input_pending(step));
+        }
         if let Some(metadata) = self.metadata.as_mut() {
-            let step = metadata.close_granted(grant)?;
+            let step = metadata.close_granted(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, metadata.terminal_is_empty(), "private input metadata")?;
             if metadata.terminal_is_empty() { self.metadata = None; }
             return Ok(input_pending(step));
         }
-        if !self.issuer.terminal_is_empty() { return self.issuer.close_granted(grant).map(input_pending); }
-        if let Some(source) = self.source.as_mut() {
-            let step = source.close_granted(grant)?;
-            if source.terminal_is_empty() { self.source.take(); }
-            return Ok(if self.terminal_is_empty() { step } else { input_pending(step) });
+        if !self.issuer.terminal_is_empty() {
+            let step = self.issuer.close_granted(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, self.issuer.terminal_is_empty(), "private input issuer")?;
+            return Ok(input_pending(step));
         }
-        Ok(RetainedCloneStep::Complete(Default::default()))
+        if let Some(source) = self.source.as_mut() {
+            let step = source.close_granted(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, source.terminal_is_empty(), "private input typed source")?;
+            if source.terminal_is_empty() { self.source.take(); }
+            return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { input_pending(step) });
+        }
+        Ok(RetainedCloneStep::Complete(empty))
     }
     pub(crate) fn terminal_is_empty(&self) -> bool { self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.issuer.terminal_is_empty() && self.genesis.terminal_is_empty() }
 }
@@ -138,6 +161,6 @@ impl Drop for PrivateChildPublicationInput { fn drop(&mut self) { assert!(std::t
 fn structural() -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
 fn input_error(message: &str) -> ValueError { ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message) }
 fn take_reference(value: &mut ArtifactRef) -> ArtifactRef { ArtifactRef { artifact_id: std::mem::take(&mut value.artifact_id), dialect: ArtifactDialect { artifact_kind: std::mem::take(&mut value.dialect.artifact_kind), standard: std::mem::take(&mut value.dialect.standard), subset: std::mem::take(&mut value.dialect.subset) } } }
-fn snapshot_progress(step: store::SnapshotRetirementStep) -> RetainedCloneStep { match step { store::SnapshotRetirementStep::Complete => structural(), store::SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() }), store::SnapshotRetirementStep::Blocked => RetainedCloneStep::Progress(Default::default()) } }
+
 
 fn input_pending(step: RetainedCloneStep) -> RetainedCloneStep { match step { RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress), progress => progress } }

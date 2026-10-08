@@ -249,7 +249,7 @@
           "edit": 0,
           "op": 0,
           "replacement": {
-            "operation": "restoreN",
+            "operation": "assignN",
             "n": 7
           }
         }
@@ -518,7 +518,7 @@
       "edits": [
         [
           {
-            "operation": "restoreN",
+            "operation": "assignN",
             "n": 4
           }
         ],
@@ -534,7 +534,7 @@
           "edit": 0,
           "op": 0,
           "replacement": {
-            "operation": "restoreN",
+            "operation": "assignN",
             "n": 40
           }
         }
@@ -568,7 +568,10 @@
     }
   ],
   "boundedHistoryRead": {
-    "closeGrant": { "maximumItems": 1, "maximumReleaseBytes": 4096 },
+    "closeGrant": {
+      "maximumItems": 1,
+      "maximumReleaseBytes": 4096
+    },
     "physicalInversePageBytes": 4096,
     "maximumWorkPerStep": 1,
     "initial": {
@@ -632,5 +635,11 @@
       8,
       20
     ]
+  },
+  "identityAdmission": {
+    "maximumOperations": 200,
+    "bodyBytesPerOperation": 4096,
+    "commandScaffoldBytes": 4096,
+    "maximumOwnedBytes": 823296
   }
 }

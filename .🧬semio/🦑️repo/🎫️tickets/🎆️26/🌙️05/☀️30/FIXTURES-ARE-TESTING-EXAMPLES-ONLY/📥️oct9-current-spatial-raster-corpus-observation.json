@@ -1,0 +1,84 @@
+{
+  "observedAt": "2026-10-08T22:44:28.851053+00:00",
+  "authorship": false,
+  "inputs": [
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧹️retirement/🧬️schema/🔣️.json",
+      "sha256": "8bcba8c4c3c540b5c0b106403eb7a6063fe9886e7afa0cd261e17207b287284d",
+      "bytes": 3887,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧫️fixtures/🧹️retirement/🔣️.json",
+      "sha256": "8d4497f9b3cdb1801e4ac9719cee17093211d7261c5306cd2640b5d9280c85b6",
+      "bytes": 2843,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🏷️ownership/🟦️.ts",
+      "sha256": "4ca56402740ba0beadc010eb6c7c2b85c642982d322bbc820c7d31b4afecf442",
+      "bytes": 2995,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧬️schema/🔣️.json",
+      "sha256": "506793b97f51219c32d391986b505425e4d54a09efc7c4f1cfc3d1d29a024ed0",
+      "bytes": 5650,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "b342f7eac6d81dc4ee697336f3f922b62a946b24ed85c2ff60986a3461fd0ae9",
+      "bytes": 25608,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️retirement/🔣️.json",
+      "sha256": "387788727641efbd7ac9bb77afc155ae84641e6d02136b9bb9a7735c7a7a0de9",
+      "bytes": 672,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️flatten/🔣️.json",
+      "sha256": "c7b32a1f689e0076708290b5648a0d995fe715297f83a67f13e2697ccc5781a8",
+      "bytes": 302,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️stroke/🔣️.json",
+      "sha256": "ea2b573aba98832659a91e4578b84822afc40b97c9f5c060d664b26df19efc96",
+      "bytes": 480,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🧹️coverage/🔣️.json",
+      "sha256": "15ea9f4c88da09a500f65bd2978b62badacf9697ade67fd8570cc14bd1c5fb1d",
+      "bytes": 380,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️retirement/🔣️.json",
+      "sha256": "0df52aca92b02fdd736e81240f320e2b98603291cb98d80248cf5c05e2977671",
+      "bytes": 2357,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️flatten/🔣️.json",
+      "sha256": "ec4368d49e05d34016674126d54c744dc01b69d84906cfa432b27154489390c7",
+      "bytes": 268,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️stroke/🔣️.json",
+      "sha256": "c64ea60d8c198eb2b003accf8ef6a8a6b9c8a9e6e1639f5715552ac2727e5adc",
+      "bytes": 427,
+      "role": "read-only observation"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures/🧹️coverage/🔣️.json",
+      "sha256": "850059cc8bc10a48b356e76b26f75b38a14dbe6583a7b77a298c79a93ca44b0d",
+      "bytes": 333,
+      "role": "read-only observation"
+    }
+  ]
+}

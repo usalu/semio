@@ -1,7 +1,7 @@
 use super::*;
 use std::collections::BTreeMap;
 
-#[path = "../../../⏱️phased-job/🧰️test-support/🦀️.rs"]
+#[path = "../../../⏱️phased-job/🧪️tests/🧰️support/🦀️.rs"]
 mod support;
 
 const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");

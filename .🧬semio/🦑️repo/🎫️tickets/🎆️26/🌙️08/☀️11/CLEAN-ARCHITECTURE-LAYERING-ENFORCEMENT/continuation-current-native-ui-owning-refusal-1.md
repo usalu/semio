@@ -1,0 +1,3 @@
+# GeneralUI Owning Capture Refusal1
+
+The exact published UI1 launcher physically closed actual Nx/Bun1 before admission or Cargo. The entire GeneralUI traversal correctly refused a source symlink without an explicit owner. No compiler or runtime law executed, and no selected-source acceptance is claimed. All controls and the original package selection remain unchanged. A read-only inventory of actual symlink paths, literal targets and resolved targets is retained in native-ui-full-source-symlink-admission-1.json. Fresh UI2 may run only after explicit source ownership admission; the consumed UI1 output directory is retained.

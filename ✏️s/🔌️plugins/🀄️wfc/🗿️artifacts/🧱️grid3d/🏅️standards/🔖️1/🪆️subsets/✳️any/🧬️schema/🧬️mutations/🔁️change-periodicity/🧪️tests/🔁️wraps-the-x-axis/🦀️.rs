@@ -7,7 +7,7 @@
 //! the mutation it claims to encode.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::{apply_grid3d_mutation, inverse_grid3d_mutation, Grid3dMutation};
+use crate::mutations::{inverse_grid3d_mutation, Grid3dMutation};
 use crate::schema::snapshot::Grid3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️change-periodicity/🔁️wraps-the-x-axis/📸️snapshot/⬅️before/🔣️.json");
@@ -30,7 +30,7 @@ fn mutation() -> Grid3dMutation {
 #[test]
 fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_grid3d_mutation(&mut snapshot, &mutation()).expect("change-periodicity applies to its committed before-snapshot");
+    vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("change-periodicity applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-periodicity/🔁️wraps-the-x-axis: applied state differs from the committed after-snapshot");
 }
 
@@ -41,9 +41,9 @@ fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
-    apply_grid3d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     for step in &inverse {
-        apply_grid3d_mutation(&mut snapshot, step).expect("inverse step applies");
+        vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-periodicity/🔁️wraps-the-x-axis: the inverse did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
         .collect();
     assert_eq!(produced, declared, "change-periodicity/🔁️wraps-the-x-axis: raised diagnostics differ from the committed 🎯️outcome messages");
     let mut snapshot = before();
-    let applied = apply_grid3d_mutation(&mut snapshot, &mutation()).is_ok();
+    let applied = vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).is_ok();
     match status {
         "applied" => {
             assert!(applied, "change-periodicity/🔁️wraps-the-x-axis: declared applied but the mutation was rejected");

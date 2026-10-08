@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeTargetVolumeLocked` — patches the one addressed target-volume in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::mutation::ChangeTargetVolumeLocked, base: &Puzzle3d
         return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
-        target_volumes: Some(Puzzle3dTargetVolumesDelta::patching(payload.id.clone(), patch)),
+        target_volumes: Some(Puzzle3dTargetVolumesDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

@@ -1,0 +1,5 @@
+# Native UI Owning Red 9
+
+The actual literal UI9 route physically closed outer Nx/Bun1, umbrella1, underlying Cargo101 before runtime with ten typed Atlas receiving errors. All 1,215 captured source bodies are retained; exactSelectedSources=false, exactProducer=true. The captured production already declared full-grant Atlas/Input abandoned APIs; the captured tests still called original no-argument boolean cleanup. Two Prepared test bodies advanced during the owning handle and the current bodies already contain explicit full-grant caller helpers. This lane made zero writes for those receiving corrections. Captured, terminal and fresh current full bodies are retained in native-ui-red-9-live-peer-full-pairs.json.
+
+The original moved-capacity schema/caller port is not yet runtime accepted. No source was restored, no boolean adapter is added, and the next owning attempt will admit actual current Atlas and preserve original law bodies while porting caller-owned full grants. Fresh unchanged-control UI10–12 rows are concrete in native-ui-retirement-launch-rows-10-12.json. Full Flow7–9 remains registered and unconsumed.

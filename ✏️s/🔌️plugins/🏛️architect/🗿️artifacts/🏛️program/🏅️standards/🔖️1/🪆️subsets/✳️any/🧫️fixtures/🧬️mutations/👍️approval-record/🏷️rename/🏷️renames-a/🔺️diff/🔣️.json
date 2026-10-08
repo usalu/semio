@@ -53,9 +53,10 @@
   "constraints": null,
   "complianceRecords": null,
   "approvals": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "approval-record-a",
         "patch": {
@@ -88,8 +89,7 @@
           "auditTrailRef": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "meetings": null,
   "changes": null,

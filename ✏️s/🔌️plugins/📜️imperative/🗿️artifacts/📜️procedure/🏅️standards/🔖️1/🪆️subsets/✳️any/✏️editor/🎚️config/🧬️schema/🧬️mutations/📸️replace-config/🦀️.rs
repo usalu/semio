@@ -11,6 +11,13 @@ pub struct ReplaceConfig {
     pub config: ImperativeConfig,
 }
 
+impl ReplaceConfig {
+    /// 🧷️ The row that sets the config back to `base` — the config entity's replace-by-base value.
+    fn restoring(base: &ImperativeConfig) -> ImperativeConfigMutation {
+        ImperativeConfigMutation::ReplaceConfig(Self { config: base.clone() })
+    }
+}
+
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfigDiff> {
@@ -24,7 +31,7 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for Repl
     }
     fn inverse(&self, base: &ImperativeConfig) -> Result<Vec<ImperativeConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![ImperativeConfigMutation::ReplaceConfig(Self { config: base.clone() })]
+        vec![Self::restoring(base)]
     
     })())
 }

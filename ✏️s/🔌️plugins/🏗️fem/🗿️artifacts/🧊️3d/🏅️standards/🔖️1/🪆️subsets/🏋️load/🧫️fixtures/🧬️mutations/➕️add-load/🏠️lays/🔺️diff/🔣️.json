@@ -6,31 +6,34 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "dead",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [
+            "inserted": [
               {
-                "kind": "area",
-                "id": "p1",
-                "solidId": "slab",
-                "pressure": -2500.0
+                "index": 0,
+                "row": {
+                  "kind": "area",
+                  "id": "p1",
+                  "solidId": "slab",
+                  "pressure": -2500.0
+                }
               }
             ],
             "removed": [],
-            "patched": [],
-            "reordered": null
+            "moved": [],
+            "modified": []
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

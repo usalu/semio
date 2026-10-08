@@ -15,6 +15,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-other-chunks/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-pad-bytes/schema.json"
     }
   ]
 }

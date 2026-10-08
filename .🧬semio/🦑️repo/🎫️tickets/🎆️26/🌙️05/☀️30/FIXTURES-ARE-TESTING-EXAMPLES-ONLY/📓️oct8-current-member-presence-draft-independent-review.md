@@ -1,0 +1,7 @@
+# Current Member and Presence Draft Review
+
+Current StoreRoot decoded-edit retirement publishes demands before removing a mutation, restores the original mutation on factory refusal, and retains an accepted active owner even when its constructor receipt is invalid. It pays original forwards Vec capacity and empty inverse pages separately before allocating the typed generic structural retirement frame. Its terminal witness includes original edit, pending mutation, active box and factory capability. Current history metadata uses allocation-preserving String into_bytes, then whole original byte capacity release, and checked aggregate release of empty vector scaffolds.
+
+OperationRows currently validates constructor receipt fits its child grant, while Decoded additionally requires retained_capacity_bytes equal its quoted factory birth. Confirm that the same exact constructor contract applies consistently; an undersized receipt must not erase retained physical birth. This is a bounded contract question sent to Native, not an observed runtime failure.
+
+Current PresencePeerEntry Drop tests actor.is_empty and presence absence. Empty String length alone does not witness backing release. Publication was asked to verify the actual controlled close takes and pays original actor capacity before terminal. Optional PresenceStore ManuallyDrop fields must distinguish None from a still-owned empty backing/Arc. No source edits, compilers or draft runtime success claimed.

@@ -4,77 +4,40 @@
 //! 🏛️ Architectural programming register entities — typed domain model for all 65 feature areas.
 
 use crate::kernel::*;
-use protocol::{Identified, Patchable};
+use protocol::list_delta::RowPatch;
+use protocol::Identified;
 
 // #region 🔖️PatchHelpers
-/// 🩹️ Per-field patch algebra of one register row: `apply_row` writes a patched value, `diff_row` records the value
-/// that turns `self` into `other` (`false` when `other` clears an `Option` field — a patch field `Option<T>` cannot
-/// express a clear), and `restore_row` records the current value so the patch that undoes a patch can be built (`false`
-/// under the same clear limit).
+/// 🩹️ Per-field patch algebra of one register row: `commit_row` writes a patched value and `capture_row` reads the current value so the
+/// patch that undoes a patch can be built (an absent `Option` field captures nothing — a patch field `Option<T>` cannot express a clear,
+/// so a clear travels as a row replacement, never as a patch).
 trait PatchRow<T: Clone> {
-    fn apply_row(&mut self, patch: &Option<T>);
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) -> bool;
-    fn restore_row(&self, out: &mut Option<T>) -> bool;
+    fn commit_row(&mut self, patch: &Option<T>);
+    fn capture_row(&self) -> Option<T>;
 }
 
-impl<T: Clone + PartialEq> PatchRow<T> for T {
-    fn apply_row(&mut self, patch: &Option<T>) {
+impl<T: Clone> PatchRow<T> for T {
+    fn commit_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = value.clone();
         }
     }
 
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) -> bool {
-        if self != other {
-            *out = Some(other.clone());
-        }
-        true
-    }
-
-    fn restore_row(&self, out: &mut Option<T>) -> bool {
-        *out = Some(self.clone());
-        true
+    fn capture_row(&self) -> Option<T> {
+        Some(self.clone())
     }
 }
 
-impl<T: Clone + PartialEq> PatchRow<T> for Option<T> {
-    fn apply_row(&mut self, patch: &Option<T>) {
+impl<T: Clone> PatchRow<T> for Option<T> {
+    fn commit_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = Some(value.clone());
         }
     }
 
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) -> bool {
-        if self == other {
-            return true;
-        }
-        match other {
-            Some(value) => {
-                *out = Some(value.clone());
-                true
-            }
-            None => false,
-        }
+    fn capture_row(&self) -> Option<T> {
+        self.clone()
     }
-
-    fn restore_row(&self, out: &mut Option<T>) -> bool {
-        match self {
-            Some(value) => {
-                *out = Some(value.clone());
-                true
-            }
-            None => false,
-        }
-    }
-}
-
-/// 🧮️ Patch-level algebra of a row patch `Self` over the row type `E`: `merge` folds a later patch over an earlier one
-/// (later fields win), `restore` builds the patch that puts the patched fields of `row` back (`None` when a patched field
-/// held `None` in `row`, which a patch cannot express), `is_empty` tells a patch that sets nothing.
-pub trait RowPatch<E>: Sized {
-    fn merge(&mut self, later: Self);
-    fn restore(&self, row: &E) -> Option<Self>;
-    fn is_empty(&self) -> bool;
 }
 
 macro_rules! impl_identified_header {
@@ -87,29 +50,22 @@ macro_rules! impl_identified_header {
     };
 }
 
+/// 🧬️ Implements the framework's [`RowPatch`] for one register row: every listed field is an absolute setter, `inverse` captures the
+/// current value of exactly the fields the patch carries, and `absorb` lets the later patch's fields win.
 macro_rules! impl_patchable {
     ($entity:ty, $patch:ty, { $( [ $($path:ident).+ ] => $f:ident ),+ $(,)? }) => {
-        impl Patchable<$patch> for $entity {
-            fn apply_patch(&mut self, patch: &$patch) {
-                $( PatchRow::apply_row(&mut self$(.$path)+, &patch.$f); )+
-            }
-
-            fn diff_patch(&self, other: &Self) -> Option<$patch> {
-                let mut patch = <$patch>::default();
-                $( if !PatchRow::diff_row(&self$(.$path)+, &other$(.$path)+, &mut patch.$f) { return None; } )+
-                Some(patch)
-            }
-        }
-
         impl RowPatch<$entity> for $patch {
-            fn merge(&mut self, later: Self) {
+            fn commit_into(&self, row: &mut $entity, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $( PatchRow::commit_row(&mut row$(.$path)+, &self.$f); )+
+                Ok(())
+            }
+
+            fn absorb(&mut self, later: Self) {
                 $( if later.$f.is_some() { self.$f = later.$f; } )+
             }
 
-            fn restore(&self, row: &$entity) -> Option<Self> {
-                let mut restored = <$patch>::default();
-                $( if self.$f.is_some() && !PatchRow::restore_row(&row$(.$path)+, &mut restored.$f) { return None; } )+
-                Some(restored)
+            fn inverse(&self, row: &$entity) -> Self {
+                Self { $( $f: if self.$f.is_some() { PatchRow::capture_row(&row$(.$path)+) } else { None } ),+, ..Self::default() }
             }
 
             fn is_empty(&self) -> bool {

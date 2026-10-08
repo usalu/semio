@@ -1,7 +1,7 @@
 //! 🧪️ Store fixture — the document really mounts: an envelope over a real example, edited through
 //! the mutation machinery and closed the way a host closes it.
 
-use crate::mutations::{apply_wfc2d_mutation, change_seed, pin_slot, Wfc2dMutation};
+use crate::mutations::{change_seed, pin_slot, Wfc2dMutation};
 use crate::Wfc2dSnapshot;
 
 /// 🏪️ A snapshot survives the native pack envelope AND the DSL envelope, in both directions.
@@ -38,12 +38,12 @@ fn an_edit_ladder_applies_and_inverts() {
     let mut inverses: Vec<Vec<Wfc2dMutation>> = Vec::new();
     for mutation in &ladder {
         inverses.push(crate::mutations::inverse_wfc2d_mutation(&projection, mutation).expect("valid retained mutation inverse fixture"));
-        apply_wfc2d_mutation(&mut projection, mutation).expect("ladder step applies");
+        vcs::apply_mutation(&projection, mutation).map(|(applied_state, _)| { projection = applied_state; }).expect("ladder step applies");
     }
     assert_ne!(projection, base);
     for steps in inverses.iter().rev() {
         for step in steps {
-            apply_wfc2d_mutation(&mut projection, step).expect("inverse step applies");
+            vcs::apply_mutation(&projection, step).map(|(applied_state, _)| { projection = applied_state; }).expect("inverse step applies");
         }
     }
     assert_eq!(projection, base, "the edit ladder did not invert back to the mounted document");

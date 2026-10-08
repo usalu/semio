@@ -34,12 +34,6 @@ impl protocol::DiffAlgebra<Wfc2dTransient> for Wfc2dTransientDiff {
             contradiction: self.contradiction.as_ref().map(|_| base.contradiction.clone()),
         }
     }
-    fn between(base: &Wfc2dTransient, other: &Wfc2dTransient) -> Self {
-        Self {
-            assignments: (base.assignments != other.assignments).then(|| other.assignments.clone()),
-            contradiction: (base.contradiction != other.contradiction).then(|| other.contradiction.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.assignments.is_none() && self.contradiction.is_none()
     }

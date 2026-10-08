@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `MoveNode` — patches the one addressed node's position.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_finite;
 
@@ -20,7 +21,7 @@ pub fn diff(payload: &super::MoveNode, base: &Puzzle2dSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        nodes: Some(Puzzle2dNodesDelta::patching(payload.id.clone(), patch)),
+        nodes: Some(Puzzle2dNodesDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

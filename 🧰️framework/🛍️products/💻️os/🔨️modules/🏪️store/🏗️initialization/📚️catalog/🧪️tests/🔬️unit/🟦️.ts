@@ -5,6 +5,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import fixture from "../../🧫️fixtures/🔣️.json" with {type:"json"};
 test("empty initialization catalog retires one admitted native page at a time",()=>{
+ expect(fixture.currencies).toEqual({copyBytes:0,capacityBytes:0,release:"exact-native-page-and-final-directory",depth:1,terminalReceipt:"full-final-page-release"});
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE pages(ordinal INTEGER PRIMARY KEY, lane TEXT, slots INTEGER)");
   fixture.lanes.forEach((lane,ordinal)=>database.query("INSERT INTO pages VALUES(?,?,?)").run(ordinal,lane,fixture.pageSlots));
@@ -23,7 +24,7 @@ test("empty initialization catalog retires one admitted native page at a time",(
   expect(owner).toEqual({});expect(database.query("SELECT COUNT(*) AS pages FROM pages").get()).toEqual({pages:0});
  }finally{database.close();}
  const source=readFileSync(resolve(import.meta.dir,"../../🦀️.rs"),"utf8");
- expect(source).toContain("fn next_close_byte_demand(");expect(source).toContain("fn close_step(");
+ expect(source).toContain("fn next_release_byte_demand(");expect(source).toContain("fn close_step(");
  expect(source).toContain("next_empty_page_release_byte_demand");
  console.log("[DEBUG] Empty initialization catalog SQLite/RFC6902: six native lanes, zero/one-below retain, exact one-page release, no final backing");
 });

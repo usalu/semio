@@ -42,7 +42,7 @@ async fn diff_codec_text_binary_roundtrip_law() {
     b.entities.push(entity(3, "ADDED_WITH_COMPLEX", vec![StepValue::Unset]));
     b.entities[1].complex.push(StepComplexType { name: "ANOTHER_TYPE".into(), args: vec![StepValue::Reference(42)] });
 
-    let cases = vec![StepDiff::default(), StepDiff::between(&a, &b), StepDiff::between(&b, &a), StepDiff::between(&a, &a)];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

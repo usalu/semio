@@ -235,18 +235,6 @@ fn update_crane_inputs_upserts_runway() {
     assert_eq!(after.crane_runways.iter().find(|c| c.id == "cr-1").unwrap().actions[0].force, 200.0e3);
 }
 
-#[test]
-fn from_snapshot_emits_annex_and_member_list_rewrite() {
-    let before = base();
-    let mut after = before.clone();
-    after.annex = AnnexChoice::En;
-    after.members[0].length = 12.0;
-    let mutations = En1993Mutation::from_snapshot(&before, &after);
-    assert!(mutations.iter().any(|m| matches!(m, En1993Mutation::ChangeAnnex(_))));
-    assert!(mutations.iter().any(|m| matches!(m, En1993Mutation::RemoveMember(_))));
-    assert!(mutations.iter().any(|m| matches!(m, En1993Mutation::InsertMember(_))));
-}
-
 
 #[test]
 fn insert_and_remove_member_round_trip() {
@@ -268,7 +256,7 @@ fn insert_and_remove_member_round_trip() {
         deflection_limit_ratio: 300.0,
         analysis: "elastic".into(),
     };
-    let insert = En1993Mutation::InsertMember(super::insert_member::InsertMember { index: before.members.len(), member: member.clone() });
+    let insert = En1993Mutation::InsertMember(super::insert_member::InsertMember { index: Some(before.members.len()), member: member.clone() });
     let (mid, _) = apply_en1993_mutation(&before, &insert).expect("insert");
     assert_eq!(mid.members.len(), before.members.len() + 1);
     let remove = En1993Mutation::RemoveMember(super::remove_member::RemoveMember { index: mid.members.len() - 1 });
@@ -276,28 +264,3 @@ fn insert_and_remove_member_round_trip() {
     assert_eq!(after.members.len(), before.members.len());
 }
 
-#[test]
-fn from_snapshot_emits_insert_remove_for_member_list_rewrite() {
-    let before = base();
-    let mut target = before.clone();
-    target.members.push(SteelMember {
-        id: "member-y".into(),
-        label: "Y".into(),
-        member_type: "column".into(),
-        section_id: "sec-heb240".into(),
-        material_id: "mat-s355".into(),
-        length: 5.0,
-        buckling_length_y: 5.0,
-        buckling_length_z: 5.0,
-        ltb_length: 5.0,
-        ltb_restraint_spacing: 2.5,
-        load_application: "shearCenter".into(),
-        end_moment_ratio_psi: 0.0,
-        moment_diagram: "linear".into(),
-        deflection_limit_ratio: 300.0,
-        analysis: "elastic".into(),
-    });
-    let ops = En1993Mutation::from_snapshot(&before, &target);
-    assert!(ops.iter().any(|m| matches!(m, En1993Mutation::RemoveMember(_))));
-    assert!(ops.iter().any(|m| matches!(m, En1993Mutation::InsertMember(_))));
-}

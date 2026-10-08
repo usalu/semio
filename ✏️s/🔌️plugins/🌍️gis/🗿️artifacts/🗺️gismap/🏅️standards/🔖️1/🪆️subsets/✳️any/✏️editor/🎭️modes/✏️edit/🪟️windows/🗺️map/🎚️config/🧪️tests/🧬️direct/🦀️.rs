@@ -65,7 +65,6 @@ async fn every_neutral_envelope_inverse_sums_to_the_negative_diff() {
     for row in fixture()["valid"].as_array().unwrap() {
         let operation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&(row["payload"].clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &populated()).await;
-        protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<MapWindowConfig, MapWindowConfigDiff>(&populated(), &apply(&populated(), &operation)).await;
     }
 }
 

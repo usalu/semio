@@ -1,6 +1,6 @@
-//! 🛍️ `set-active-example` example sources. The load itself is `Puzzle2dActiveExampleWork`
-//! (`✏️editor/🦀️.rs`), the single resumable state machine both the retained job and the batch
-//! `handle` path drive — this module only owns the warmed example snapshots it reads.
+//! 🛍️ `set-active-example` example sources. The switch itself is `puzzle2d_active_example_emit` (`✏️editor/🦀️.rs`): an
+//! `Effect::LoadDocument` of the example, shared by the retained job and the batch `handle` path — this module only owns
+//! the warmed example snapshots it reads.
 
 use crate::editor::puzzle2d::{PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use crate::Puzzle2dSnapshot;

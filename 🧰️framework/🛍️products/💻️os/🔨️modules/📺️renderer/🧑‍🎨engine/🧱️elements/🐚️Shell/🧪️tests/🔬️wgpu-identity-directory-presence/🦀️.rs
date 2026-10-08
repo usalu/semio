@@ -1,3 +1,4 @@
+use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
 use super::*;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 

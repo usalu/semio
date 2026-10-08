@@ -24,6 +24,7 @@ message DxfMutation {
     InsertBlock insert_block = 17;
     RemoveBlock remove_block = 18;
     SetBlock set_block = 19;
+    SetOtherTables set_other_tables = 20;
   }
 
   message SetHeaderVar { string name = 1; semio.s_stdio_dxf.snapshot.DxfHeaderVar header_var = 2; optional uint64 index = 3; }
@@ -43,4 +44,5 @@ message DxfMutation {
   message InsertBlock { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfBlock block = 2; }
   message RemoveBlock { uint32 index = 1; }
   message SetBlock { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfBlock block = 2; }
+  message SetOtherTables { repeated semio.s_stdio_dxf.snapshot.DxfOtherTable other_tables = 1; }
 }

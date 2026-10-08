@@ -1597,7 +1597,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🔍️refines/🦀️.rs"]
                             mod tests_refines_the_9fd25a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🔍️refines/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🔍️refines2/🦀️.rs"]
                             mod tests_refines_the_cam_0eaef0;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🚫️refuses/🦀️.rs"]

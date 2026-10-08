@@ -15,7 +15,7 @@
 //! The FIRST build of a surface survived it only by accident — its camera digest is always new, so it
 //! always carried a camera page. Every case below pins that accident away.
 
-use super::tests::{drive_scene_bridge, scene_bridge_fixture, scene_from_bridge_fixture, with_world_step_context};
+use super::tests::{drive_scene_bridge, scene_bridge_fixture, scene_from_bridge_fixture, with_world_step_context,terrain_test_retire_then_dynamic};
 use super::*;
 
 const EMPTY_BUILD: &str = include_str!("../../🧫️fixtures/🌉️bridge-empty-build/🔣️.json");
@@ -35,7 +35,7 @@ fn bounds() -> Rect {
 fn retire(mut state: World3dState) {
     begin_world3d_dynamic_retirement(&mut state);
     for turn in 0..8_192 {
-        if with_world_step_context(64, |context| step_world3d_dynamic_retirement(&mut state, context)) {
+        if with_world_step_context(64, |context| terrain_test_retire_then_dynamic(&mut state,context)) {
             break;
         }
         assert!(turn < 8_191, "the retirement ladder reaches terminal");

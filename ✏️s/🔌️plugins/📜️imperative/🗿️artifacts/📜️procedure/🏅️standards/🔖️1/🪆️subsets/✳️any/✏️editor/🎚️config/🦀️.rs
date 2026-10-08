@@ -116,12 +116,6 @@ impl protocol::DiffAlgebra<ImperativeConfig> for ImperativeConfigDiff {
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
     }
-    fn between(base: &ImperativeConfig, other: &ImperativeConfig) -> Self {
-        Self {
-            run_output_json: (base.run_output_json != other.run_output_json).then(|| other.run_output_json.clone()),
-            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.run_output_json.is_none() && self.contributions_json.is_none()
     }

@@ -1,5 +1,6 @@
 //! 🧑‍🏭️ Creation coordinates durable facts, one factory execution and the sole genesis publication.
 
+use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
 use super::*;
 use crate::artifact_authority::chunk_cas::{ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkBlobStore, ArtifactChunkCasStores};
 use crate::artifact_authority::trusted_catalog::VerifiedTrustedCatalog;
@@ -44,7 +45,7 @@ impl ArtifactCreationServiceV1 {
         if facts.is_empty() {
             return Err(DirectoryError::NotFound("artifact creation request".into()));
         }
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent.scope.space_id != space_id || operation.intent.actor.user_id != user_id {
             return Err(DirectoryError::NotFound("artifact creation request".into()));
         }
@@ -72,7 +73,7 @@ impl ArtifactCreationServiceV1 {
         let command_sha256 = artifact_creation_command_digest_v1(space_id, &request)?;
         let existing = self.directory.backend().read_artifact_creation(&actor.user_id, &request.request_id).await?;
         if !existing.is_empty() {
-            let operation = ArtifactCreationOperationV1::fold(&existing)?;
+            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&existing)?;
             if operation.intent.command_sha256 != command_sha256 || operation.intent.scope.space_id != space_id {
                 return Err(DirectoryError::Conflict("artifact creation request already names another intent".into()));
             }
@@ -90,7 +91,7 @@ impl ArtifactCreationServiceV1 {
         let accepted_at_ms = context.now_ms();
         let intent = ArtifactCreationIntentV1 {
             actor: actor.clone(),
-            scope: DocumentScope::new(space_id, format!("artifact-{}", directory::os_directory::hex_lower(&entropy))),
+            scope: DocumentScope::new(space_id, format!("artifact-{}", directory::os_directory::io::binary::artifact_hash::hex_lower(&entropy))),
             request,
             catalog_generation: self.catalog.generation_id().into(),
             owner: DocumentOwner { plugin_id: selected.package.plugin_id.clone(), package_id: selected.package.package_id.clone(), version: selected.package.version.clone(), package_hash: selected.package.component_sha256.clone() },
@@ -101,7 +102,7 @@ impl ArtifactCreationServiceV1 {
             accepted_at_ms,
             deadline_ms: accepted_at_ms.checked_add(ARTIFACT_CREATION_DEADLINE_MS).ok_or_else(|| DirectoryError::Conflict("artifact creation deadline overflows".into()))?,
         };
-        intent.validate()?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
         match self.directory.backend().claim_artifact_creation(&intent).await? {
             ArtifactCreationClaimV1::Accepted(operation) => Ok(ArtifactCreationAcceptanceV1 { status: operation.status(), execution: Some(ArtifactCreationExecutionV1 { intent: operation.intent }) }),
             ArtifactCreationClaimV1::Existing(operation) => Ok(ArtifactCreationAcceptanceV1 { status: operation.status(), execution: None }),
@@ -214,7 +215,7 @@ impl ArtifactCreationServiceV1 {
             Err(error) => return self.terminal(&intent, matches!(error, AuthorityError::Cancelled), &format!("genesis materialization failed: {error}"), context).await,
         };
         let prepared = ArtifactCreationPreparedV1 { descriptor: candidate.descriptor, checkpoint: candidate.candidate.checkpoint, pack: candidate.candidate.pair.pack, spr: candidate.candidate.pair.spr };
-        prepared.validate(&intent)?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent)?;
         let append = ArtifactCreationFactAppendV1 {
             actor: intent.actor.clone(),
             space_id: intent.scope.space_id.clone(),
@@ -253,7 +254,7 @@ impl ArtifactCreationServiceV1 {
             return self.terminal(intent, false, "the selected catalog no longer matches the prepared intent", context).await;
         }
         let prepared = operation.prepared.as_ref().ok_or_else(|| DirectoryError::Conflict("creation has no prepared bytes".into()))?;
-        prepared.validate(intent)?;
+        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, intent)?;
         let publisher = GenesisPublisher { owner: self, intent, prepared, authority };
         let candidate = CheckpointCandidate { checkpoint: prepared.checkpoint.clone(), pair: ArtifactPair { pack: prepared.pack.clone(), spr: prepared.spr.clone() } };
         match CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(self.storage.clone()), publisher).publish_candidate(candidate, context).await {

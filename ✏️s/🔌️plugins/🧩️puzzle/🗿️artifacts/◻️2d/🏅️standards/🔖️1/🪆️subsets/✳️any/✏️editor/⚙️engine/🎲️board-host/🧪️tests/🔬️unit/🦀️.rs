@@ -1,8 +1,8 @@
 pub(crate) mod context {
     //! 🧪️ The one board-scene test harness — `🦀️linking.rs` and `🦀️brush.rs` build on it instead of
     //! re-deriving a camera/LOD/scene scaffold of their own.
-    use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
-    use serde_json::json;
+    use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescriptor, HandleDescriptor, NodeDescriptor, SceneDescriptor};
+    use semio_framework_pack_json::json;
     
     pub trait BoardHostTestEvents {
         fn drain_events_json(&mut self) -> String;
@@ -57,19 +57,19 @@ pub(crate) mod context {
     /// `id`/`name` merged with its flattened `presentation` object.
     pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
         let manifest = crate::graph_manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
-        let rows = |kinds: &[semio_framework_graph::manifest::KindDef]| -> Vec<serde_json::Value> {
+        let rows = |kinds: &[semio_framework_graph::manifest::KindDef]| -> Vec<semio_framework_pack_json::Value> {
             kinds
                 .iter()
                 .map(|kind| {
-                    let mut row = serde_json::Map::new();
+                    let mut row = semio_framework_pack_json::Object::new();
                     row.insert("id".to_string(), json!(kind.id));
                     row.insert("name".to_string(), json!(kind.name));
                     if let Some(presentation) = kind.presentation.as_ref().and_then(|value| value.as_object()) {
                         for (key, value) in presentation {
-                            row.insert(key.clone(), serde_json::from_str(&semio_framework_pack_json::from_dsl_value(value).to_string()).expect("kind presentation JSON"));
+                            row.insert(key.clone(), semio_framework_pack_json::from_json_str(&semio_framework_pack_json::from_dsl_value(value).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("kind presentation JSON"));
                         }
                     }
-                    serde_json::Value::Object(row)
+                    semio_framework_pack_json::Value::Object(row)
                 })
                 .collect()
         };
@@ -85,9 +85,9 @@ pub(crate) mod context {
         h.set_camera(0.0, 0.0, 0.25);
     }
     
-    pub fn sample_scene() -> SceneDescriptorJson {
-        SceneDescriptorJson {
-            nodes: vec![NodeDescJson {
+    pub fn sample_scene() -> SceneDescriptor {
+        SceneDescriptor {
+            nodes: vec![NodeDescriptor {
                 id: "a".into(),
                 x: 0.0,
                 y: 0.0,
@@ -108,8 +108,8 @@ pub(crate) mod context {
                 scale: None,
             }].into(),
             handles: vec![
-                HandleDescJson { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("port".into()), color: None, icon_kind: None, user_data: None, visible: None, locked: None, scale: None },
-                HandleDescJson {
+                HandleDescriptor { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("port".into()), color: None, icon_kind: None, user_data: None, visible: None, locked: None, scale: None },
+                HandleDescriptor {
                     id: "b:h0".into(),
                     node_id: "b".into(),
                     angle: std::f64::consts::PI,
@@ -125,17 +125,17 @@ pub(crate) mod context {
                     scale: None,
                 },
             ].into(),
-            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }].into(),
+            edges: vec![EdgeDescriptor { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }].into(),
             wires: vec![].into(),
             regions: vec![],
             selection_exit_highlight_ids: vec![],
         }
     }
     
-    pub fn link_test_scene_no_edge() -> SceneDescriptorJson {
-        SceneDescriptorJson {
+    pub fn link_test_scene_no_edge() -> SceneDescriptor {
+        SceneDescriptor {
             nodes: vec![
-                NodeDescJson {
+                NodeDescriptor {
                     id: "a".into(),
                     x: 0.0,
                     y: 0.0,
@@ -155,7 +155,7 @@ pub(crate) mod context {
                     height: None,
                     scale: None,
                 },
-                NodeDescJson {
+                NodeDescriptor {
                     id: "b".into(),
                     x: 280.0,
                     y: 0.0,
@@ -177,8 +177,8 @@ pub(crate) mod context {
                 },
             ].into(),
             handles: vec![
-                HandleDescJson { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("parent".into()), color: None, icon_kind: None, user_data: None, visible: None, locked: None, scale: None },
-                HandleDescJson {
+                HandleDescriptor { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("parent".into()), color: None, icon_kind: None, user_data: None, visible: None, locked: None, scale: None },
+                HandleDescriptor {
                     id: "b:h0".into(),
                     node_id: "b".into(),
                     angle: std::f64::consts::PI,
@@ -201,7 +201,7 @@ pub(crate) mod context {
         }
     }
     
-    pub fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptorJson {
+    pub fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptor {
         let mut s = link_test_scene_no_edge();
         for n in &mut s.nodes {
             n.draggable = Some(false);
@@ -209,9 +209,9 @@ pub(crate) mod context {
         s
     }
     
-    pub fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
+    pub fn link_test_scene_node_a_two_free_handles() -> SceneDescriptor {
         let mut s = link_test_scene_no_edge();
-        s.handles.push(HandleDescJson {
+        s.handles.push(HandleDescriptor {
             id: "a:h1".into(),
             node_id: "a".into(),
             angle: std::f64::consts::FRAC_PI_2,
@@ -229,9 +229,9 @@ pub(crate) mod context {
         s
     }
     
-    pub fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
+    pub fn link_test_scene_b_two_free_child_handles() -> SceneDescriptor {
         let mut s = link_test_scene_no_edge();
-        s.handles.push(HandleDescJson {
+        s.handles.push(HandleDescriptor {
             id: "b:h1".into(),
             node_id: "b".into(),
             angle: 0.0,
@@ -249,9 +249,9 @@ pub(crate) mod context {
         s
     }
     
-    pub fn link_test_scene_target_b_handle_busy() -> SceneDescriptorJson {
+    pub fn link_test_scene_target_b_handle_busy() -> SceneDescriptor {
         let mut s = link_test_scene_no_edge();
-        s.nodes.push(NodeDescJson {
+        s.nodes.push(NodeDescriptor {
             id: "c".into(),
             x: 560.0,
             y: 0.0,
@@ -271,7 +271,7 @@ pub(crate) mod context {
             height: None,
             scale: None,
         });
-        s.handles.push(HandleDescJson {
+        s.handles.push(HandleDescriptor {
             id: "c:h0".into(),
             node_id: "c".into(),
             angle: std::f64::consts::PI,
@@ -286,19 +286,19 @@ pub(crate) mod context {
             locked: None,
             scale: None,
         });
-        s.edges.push(EdgeDescJson { id: "e-bc".into(), source: "b:h0".into(), target: "c:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
+        s.edges.push(EdgeDescriptor { id: "e-bc".into(), source: "b:h0".into(), target: "c:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
         s
     }
     
-    pub fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
+    pub fn link_test_scene_a_to_b_linked() -> SceneDescriptor {
         let mut s = link_test_scene_no_edge();
-        s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
+        s.edges.push(EdgeDescriptor { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
         s
     }
     
-    pub fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptorJson {
+    pub fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptor {
         let mut s = link_test_scene_a_to_b_linked();
-        s.handles.push(HandleDescJson {
+        s.handles.push(HandleDescriptor {
             id: "a:h1".into(),
             node_id: "a".into(),
             angle: std::f64::consts::FRAC_PI_2,
@@ -321,17 +321,17 @@ use context::*;
 use crate::editor::puzzle2d::engine::canvas;
 use crate::editor::puzzle2d::engine::canvas::geom_sel::cubic_bezier_point;
 use crate::editor::puzzle2d::engine::canvas::Point;
-use crate::editor::puzzle2d::engine::{compute_edge_bezier_points, handle_position_on_circle, BoardElementStyleKind, BoardHost, Interaction, NodeDescJson, WireDescJson};
-use serde_json::json;
+use crate::editor::puzzle2d::engine::{compute_edge_bezier_points, handle_position_on_circle, BoardElementStyleKind, BoardHost, Interaction, NodeDescriptor, WireDescriptor};
+use semio_framework_pack_json::json;
 
 /// 🔗️ Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.
 #[test]
 fn puzzle2d_default_manifest_satisfies_board_host_validation() {
-    let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🛂️manifest.json")).unwrap();
-    let handle_kinds: Vec<serde_json::Value> =
+    let manifest: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(include_str!("../../../../../../../../../🛂️manifest.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let handle_kinds: Vec<semio_framework_pack_json::Value> =
         manifest["portKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] })).collect();
-    let wire_kinds: Vec<serde_json::Value> = manifest["wireKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "defaultEdgeKind": row["presentation"]["defaultEdgeKind"] })).collect();
-    let edge_kinds: Vec<serde_json::Value> = manifest["edgeKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"] })).collect();
+    let wire_kinds: Vec<semio_framework_pack_json::Value> = manifest["wireKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "defaultEdgeKind": row["presentation"]["defaultEdgeKind"] })).collect();
+    let edge_kinds: Vec<semio_framework_pack_json::Value> = manifest["edgeKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"] })).collect();
     let catalogs_json = json!({ "handleKinds": handle_kinds, "wireKinds": wire_kinds, "edgeKinds": edge_kinds }).to_string();
 
     let mut host = BoardHost::new();
@@ -369,7 +369,7 @@ fn board_host_defers_descriptor_sync_while_dragging_nodes() {
     assert!(ev.contains("nodeMove"));
     h.pointer_up_screen(start.x + 40.0, start.y, false, false, false);
     assert!(!h.defers_descriptor_sync_from_js());
-    let end: Vec<serde_json::Value> = serde_json::from_str(&h.drain_events_json()).expect("release rows");
+    let end: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
     let record = end.iter().find(|row| row["name"] == "gesture").expect("the release publishes one gesture record");
     let reached = h.screen_to_world(Point::new(start.x + 40.0, start.y));
     let (dx, dy) = (record["payload"]["dx"].as_f64().expect("dx"), record["payload"]["dy"].as_f64().expect("dy"));
@@ -404,7 +404,7 @@ fn board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers(
         n.x = 33.0;
         n.y = 44.0;
     }
-    let raw: serde_json::Value = serde_json::from_str(&h.overlay_paint_state_json()).expect("overlay paint state json");
+    let raw: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&h.overlay_paint_state_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("overlay paint state json");
     assert!((raw["camera"]["x"].as_f64().unwrap() - 12.0).abs() < 1e-9);
     assert!((raw["camera"]["y"].as_f64().unwrap() - (-8.0)).abs() < 1e-9);
     assert!((raw["camera"]["zoom"].as_f64().unwrap() - 0.2).abs() < 1e-9);
@@ -470,15 +470,11 @@ fn board_host_pick_selection_never_sets_exit_highlight() {
 #[test]
 fn board_host_canvas_theme_keeps_explicit_element_state_colors() {
     let mut h = BoardHost::new();
-    h.set_canvas_theme_from_json(
-        r#"{
-				"nodeStrokeHovered": [1, 2, 3, 255],
-				"edgeStrokeHovered": [4, 5, 6, 255],
-				"handleStrokeHovered": [7, 8, 9, 255],
-				"wireStrokeHovered": [10, 11, 12, 255]
-			}"#,
-    )
-    .unwrap();
+    h.set_canvas_palette(&BoardPaletteOverlay {
+        node_stroke_hovered:Some([1,2,3,255]),edge_stroke_hovered:Some([4,5,6,255]),
+        handle_stroke_hovered:Some([7,8,9,255]),wire_stroke_hovered:Some([10,11,12,255]),
+        ..BoardPaletteOverlay::default()
+    });
     assert_eq!(h.canvas_theme.node_stroke_hovered.to_rgba8(), canvas::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
     assert_eq!(h.canvas_theme.edge_stroke_hovered.to_rgba8(), canvas::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
     assert_eq!(h.canvas_theme.handle_stroke_hovered.to_rgba8(), canvas::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
@@ -515,7 +511,7 @@ fn board_host_syncs_descriptor_and_hit_tests_handle_before_node() {
     h.set_size(800, 600, 1.0);
     set_detail_lod(&mut h);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -560,7 +556,7 @@ fn board_host_world_clip_changes_vector_encoding() {
     let mut h = BoardHost::new();
     h.set_size(800, 600, 1.0);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 600.0,
         y: 400.0,
@@ -634,7 +630,7 @@ fn board_host_drag_emits_node_move() {
     let mut h = BoardHost::new();
     h.set_size(800, 600, 1.0);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -673,7 +669,7 @@ fn board_host_compact_discrete_hit_selects_and_drags_node() {
     let mut desc = sample_scene();
     desc.handles.clear();
     desc.edges.clear();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -715,7 +711,7 @@ fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
     let mut desc = sample_scene();
     desc.handles.clear();
     desc.edges.clear();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -765,7 +761,7 @@ fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
     let mut desc = sample_scene();
     desc.handles.clear();
     desc.edges.clear();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -804,7 +800,7 @@ fn board_host_detail_lod_resolves_direct_handle_hit() {
     h.set_size(800, 600, 1.0);
     set_detail_lod(&mut h);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -835,7 +831,7 @@ fn board_host_multi_select_drag_moves_each_selected_node() {
     let mut h = BoardHost::new();
     h.set_size(800, 600, 1.0);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 100.0,
         y: 0.0,
@@ -880,7 +876,7 @@ fn board_host_selection_target_edges_skips_node_geometry() {
     h.set_size(800, 600, 1.0);
     h.set_selection_options("rectangle", "invertive", false, true, false);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -913,7 +909,7 @@ fn board_host_additive_click_merges_edge_into_existing_selection() {
     h.set_size(800, 600, 1.0);
     h.set_selection_options("rectangle", "additive", true, true, true);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1008,7 +1004,7 @@ fn board_host_background_click_without_drag_clears_selection() {
     let mut h = BoardHost::new();
     h.set_size(800, 600, 1.0);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1043,7 +1039,7 @@ fn board_host_rectangle_area_select_includes_handles_with_nodes() {
     h.set_size(800, 600, 1.0);
     h.set_selection_options("rectangle", "invertive", true, true, true);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1084,7 +1080,7 @@ fn board_host_area_select_preselect_matches_selected_chrome() {
     h.set_size(800, 600, 1.0);
     set_detail_lod(&mut h);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1144,7 +1140,7 @@ fn board_host_area_select_from_empty_keeps_selection_until_commit() {
     h.set_size(800, 600, 1.0);
     set_detail_lod(&mut h);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1205,7 +1201,7 @@ fn board_host_minimap_preselect_matches_selected_chrome() {
     h.set_size(800, 600, 1.0);
     h.set_camera(0.0, 0.0, 0.1);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1253,7 +1249,7 @@ fn board_host_silent_preselect_applies_selected_chrome_without_area_drag() {
     h.set_size(800, 600, 1.0);
     h.set_camera(0.0, 0.0, 0.1);
     let mut desc = sample_scene();
-    desc.nodes.push(NodeDescJson {
+    desc.nodes.push(NodeDescriptor {
         id: "b".into(),
         x: 300.0,
         y: 0.0,
@@ -1290,7 +1286,7 @@ fn board_host_hover_tracks_visible_wires() {
     set_detail_lod(&mut h);
     let mut desc = sample_scene();
     desc.edges.clear();
-    desc.wires.push(WireDescJson { id: "w1".into(), source: "a:h0".into(), target: None, end_x: Some(220.0), end_y: Some(0.0), selected: None, style: None, wire_kind: None, user_data: None, visible: None, locked: None });
+    desc.wires.push(WireDescriptor { id: "w1".into(), source: "a:h0".into(), target: None, end_x: Some(220.0), end_y: Some(0.0), selected: None, style: None, wire_kind: None, user_data: None, visible: None, locked: None });
     h.sync_descriptor(&desc).unwrap();
     let source = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
     let curve = compute_edge_bezier_points(source, Point::new(220.0, 0.0), Point::new(0.0, 0.0), Point::new(220.0, 0.0));

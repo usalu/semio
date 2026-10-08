@@ -10,12 +10,12 @@
     "closeItems": 1
   },
   "actions": [
-    "setDocument",
+    "editEquation",
     "setAlgorithm",
     "setDirected",
     "nodeGraphEdit",
     "nodeGraphViewport",
-    "setPoints",
+    "editPoints",
     "setActiveExample",
     "addNode"
   ],

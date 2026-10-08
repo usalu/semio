@@ -76,14 +76,10 @@ pub fn connect_handles_in_proximity(id: PagedUtf8<{ usize::MAX }>, source: Paged
 }
 
 /// 🧩️ Captures a cold inverse edge with its exact original ordinal and optional flags.
-pub(crate) fn restore_edge(edge: &crate::Puzzle2dEdge, index: usize, mutations: &mut Vec<Puzzle2dMutation>) {
-    mutations.push(connect_handles(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y, edge.source_tip.clone(), edge.target_tip.clone(), Some(index)));
-    if edge.visible.is_some() {
-        mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::change_edge_visible(edge.id.clone(), edge.visible));
-    }
-    if edge.locked.is_some() {
-        mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::change_edge_locked(edge.id.clone(), edge.locked));
-    }
+pub(crate) fn restore_edge(edge: &crate::Puzzle2dEdge, index: usize) -> Vec<Puzzle2dMutation> {
+    let visible = edge.visible.is_some().then(|| crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::change_edge_visible(edge.id.clone(), edge.visible));
+    let locked = edge.locked.is_some().then(|| crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::change_edge_locked(edge.id.clone(), edge.locked));
+    std::iter::once(connect_handles(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y, edge.source_tip.clone(), edge.target_tip.clone(), Some(index))).chain(visible).chain(locked).collect()
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandles {

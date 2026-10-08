@@ -45,10 +45,6 @@ impl DiffAlgebra<i64> for CounterDiff {
         Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() }
     }
 
-    fn between(base: &i64, other: &i64) -> Self {
-        Self::from_wide(i128::from(*other) - i128::from(*base))
-    }
-
     fn is_empty(&self) -> bool {
         self.deltas.iter().all(|delta| *delta == 0)
     }
@@ -124,14 +120,6 @@ mod tests {
                 }
                 None => assert!(crate::os_spr::apply_diff(&diff, &base).is_err()),
             }
-        }
-        for row in fixture["between"].as_array().unwrap() {
-            let base = row["base"].as_str().unwrap().parse::<i64>().unwrap();
-            let other = row["other"].as_str().unwrap().parse::<i64>().unwrap();
-            let diff = CounterDiff::between(&base, &other);
-            assert_eq!(crate::os_spr::apply_diff(&diff, &base).unwrap(), other);
-            assert_eq!(crate::os_spr::apply_diff(&diff.inverse(&base), &other).unwrap(), base);
-            assert_eq!(diff.is_empty(), base == other);
         }
         let first = CounterDiff::delta(2);
         let second = CounterDiff::delta(3);

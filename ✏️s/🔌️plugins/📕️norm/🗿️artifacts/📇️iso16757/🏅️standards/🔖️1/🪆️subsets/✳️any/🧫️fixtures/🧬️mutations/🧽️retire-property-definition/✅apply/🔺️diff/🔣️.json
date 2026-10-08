@@ -7,11 +7,15 @@
   "products": null,
   "productIndexes": null,
   "propertyDefinitions": {
-    "added": [],
     "removed": [
-      "prop.height"
+      {
+        "id": "prop.height",
+        "index": 0
+      }
     ],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "subjects": null,
   "geometryObjects": null,

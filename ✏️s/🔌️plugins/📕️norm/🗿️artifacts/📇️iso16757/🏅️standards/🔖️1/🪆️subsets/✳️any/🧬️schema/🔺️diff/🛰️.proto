@@ -2,50 +2,251 @@ syntax = "proto3";
 package semio.s.norm.iso16757.diff;
 
 message Iso16757ProductGroupsPatch {
+  optional string name = 1;
+}
+
+message Iso16757ProductGroupsRemoved {
   string id = 1;
-  optional string name = 2;
+  uint64 index = 2;
+}
+
+message Iso16757ProductGroupsInserted {
+  uint64 index = 1;
+}
+
+message Iso16757ProductGroupsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757ProductGroupsModified {
+  string id = 1;
+  Iso16757ProductGroupsPatch patch = 2;
 }
 
 message Iso16757ProductGroupsRows {
-  repeated string removed = 1;
-  repeated Iso16757ProductGroupsPatch modified = 2;
-  repeated string order = 3;
+  repeated Iso16757ProductGroupsRemoved removed = 1;
+  repeated Iso16757ProductGroupsInserted inserted = 2;
+  repeated Iso16757ProductGroupsMoved moved = 3;
+  repeated Iso16757ProductGroupsModified modified = 4;
+}
+
+message Iso16757ProductClassesPatchParentIdValue {
+  optional string value = 1;
+}
+
+message Iso16757ProductClassesPatch {
+  optional string group_id = 1;
+  optional Iso16757ProductClassesPatchParentIdValue parent_id = 2;
+  repeated string required_property_ids = 3;
+  repeated string optional_property_ids = 4;
+}
+
+message Iso16757ProductClassesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Iso16757ProductClassesInserted {
+  uint64 index = 1;
+}
+
+message Iso16757ProductClassesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757ProductClassesModified {
+  string id = 1;
+  Iso16757ProductClassesPatch patch = 2;
 }
 
 message Iso16757ProductClassesRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated Iso16757ProductClassesRemoved removed = 1;
+  repeated Iso16757ProductClassesInserted inserted = 2;
+  repeated Iso16757ProductClassesMoved moved = 3;
+  repeated Iso16757ProductClassesModified modified = 4;
+}
+
+message Iso16757ProductSeriesPatchGeometryIdValue {
+  optional string value = 1;
+}
+
+message Iso16757ProductSeriesPatch {
+  optional string class_id = 1;
+  optional Iso16757ProductSeriesPatchGeometryIdValue geometry_id = 2;
+}
+
+message Iso16757ProductSeriesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Iso16757ProductSeriesInserted {
+  uint64 index = 1;
+}
+
+message Iso16757ProductSeriesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757ProductSeriesModified {
+  string id = 1;
+  Iso16757ProductSeriesPatch patch = 2;
 }
 
 message Iso16757ProductSeriesRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated Iso16757ProductSeriesRemoved removed = 1;
+  repeated Iso16757ProductSeriesInserted inserted = 2;
+  repeated Iso16757ProductSeriesMoved moved = 3;
+  repeated Iso16757ProductSeriesModified modified = 4;
 }
 
 message Iso16757ProductsPatch {
+  optional string name = 1;
+}
+
+message Iso16757ProductsRemoved {
   string id = 1;
-  optional string name = 2;
+  uint64 index = 2;
+}
+
+message Iso16757ProductsInserted {
+  uint64 index = 1;
+}
+
+message Iso16757ProductsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757ProductsModified {
+  string id = 1;
+  Iso16757ProductsPatch patch = 2;
 }
 
 message Iso16757ProductsRows {
-  repeated string removed = 1;
-  repeated Iso16757ProductsPatch modified = 2;
-  repeated string order = 3;
+  repeated Iso16757ProductsRemoved removed = 1;
+  repeated Iso16757ProductsInserted inserted = 2;
+  repeated Iso16757ProductsMoved moved = 3;
+  repeated Iso16757ProductsModified modified = 4;
+}
+
+message Iso16757ProductIndexesPatchVariantIdValue {
+  optional string value = 1;
+}
+
+message Iso16757ProductIndexesPatch {
+  optional string product_id = 1;
+  optional Iso16757ProductIndexesPatchVariantIdValue variant_id = 2;
+  repeated string search_tags = 3;
+}
+
+message Iso16757ProductIndexesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Iso16757ProductIndexesInserted {
+  uint64 index = 1;
+}
+
+message Iso16757ProductIndexesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757ProductIndexesModified {
+  string id = 1;
+  Iso16757ProductIndexesPatch patch = 2;
 }
 
 message Iso16757ProductIndexesRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated Iso16757ProductIndexesRemoved removed = 1;
+  repeated Iso16757ProductIndexesInserted inserted = 2;
+  repeated Iso16757ProductIndexesMoved moved = 3;
+  repeated Iso16757ProductIndexesModified modified = 4;
+}
+
+message Iso16757PropertyDefinitionsPatchUnitValue {
+}
+
+message Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue {
+  optional string value = 1;
+}
+
+message Iso16757PropertyDefinitionsPatch {
+  optional string data_type = 1;
+  optional Iso16757PropertyDefinitionsPatchUnitValue unit = 2;
+  optional Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue dictionary_property_id = 3;
+}
+
+message Iso16757PropertyDefinitionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Iso16757PropertyDefinitionsInserted {
+  uint64 index = 1;
+}
+
+message Iso16757PropertyDefinitionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757PropertyDefinitionsModified {
+  string id = 1;
+  Iso16757PropertyDefinitionsPatch patch = 2;
 }
 
 message Iso16757PropertyDefinitionsRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated Iso16757PropertyDefinitionsRemoved removed = 1;
+  repeated Iso16757PropertyDefinitionsInserted inserted = 2;
+  repeated Iso16757PropertyDefinitionsMoved moved = 3;
+  repeated Iso16757PropertyDefinitionsModified modified = 4;
+}
+
+message Iso16757SubjectsPatchParentIdValue {
+  optional string value = 1;
+}
+
+message Iso16757SubjectsPatch {
+  optional Iso16757SubjectsPatchParentIdValue parent_id = 1;
+}
+
+message Iso16757SubjectsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+
+message Iso16757SubjectsInserted {
+  uint64 index = 1;
+}
+
+message Iso16757SubjectsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Iso16757SubjectsModified {
+  string id = 1;
+  Iso16757SubjectsPatch patch = 2;
 }
 
 message Iso16757SubjectsRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated Iso16757SubjectsRemoved removed = 1;
+  repeated Iso16757SubjectsInserted inserted = 2;
+  repeated Iso16757SubjectsMoved moved = 3;
+  repeated Iso16757SubjectsModified modified = 4;
 }
 
 message Iso16757GeometryObjectsEntry {

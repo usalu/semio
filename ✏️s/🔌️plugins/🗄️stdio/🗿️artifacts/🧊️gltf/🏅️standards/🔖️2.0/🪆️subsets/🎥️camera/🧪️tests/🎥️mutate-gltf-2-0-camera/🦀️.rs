@@ -109,7 +109,8 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,create_camera,delete_camera,move_camera,reorder_cameras};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation;
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_camera,delete_camera,move_camera,reorder_cameras};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfCameraProjection, GltfOrthographic, GltfPerspective};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;

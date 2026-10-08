@@ -23,6 +23,16 @@
 
 use std::fmt;
 
+#[path = "🛫️encode/🔤️text/🦀️.rs"]
+mod native_text;
+pub use native_text::{ArtifactCanonicalJsonText, ArtifactCanonicalJsonTextCursor, ArtifactCanonicalJsonTextStep, canonical_escape, canonical_escaped_byte};
+#[path = "🛫️encode/🔣️scalar/🦀️.rs"]
+mod native_scalar;
+pub use native_scalar::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes};
+#[path = "🛫️encode/🧭️tree/🦀️.rs"]
+mod native_tree;
+pub use native_tree::{ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep};
+
 #[cfg(test)]
 #[path = "../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 pub(crate) mod test_allocation;
@@ -241,6 +251,26 @@ impl Object {
 
     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {
         self.0.iter().map(|(k, v)| (k.as_str(), v))
+    }
+
+    /// 🪪️ Borrows the last owned member and its actual key allocation before a bounded retirement grant.
+    pub fn last_member(&self) -> Option<(&String, &Value)> {
+        self.0.last().map(|(name, value)| (name, value))
+    }
+
+    /// 🌿️ Borrows the last descendant without transferring or cloning its owner.
+    pub fn last_member_mut(&mut self) -> Option<(&str, &mut Value)> {
+        self.0.last_mut().map(|(name, value)| (name.as_str(), value))
+    }
+
+    /// 🫴️ Transfers the last member's real key and value allocations in constant time.
+    pub fn pop_member(&mut self) -> Option<(String, Value)> {
+        self.0.pop()
+    }
+
+    /// 📏️ The actual retained member-vector backing, excluding independently owned descendants.
+    pub fn member_storage_bytes(&self) -> usize {
+        self.0.capacity().saturating_mul(std::mem::size_of::<(String, Value)>())
     }
 
     /// 🫴️ Transfers the actual owned member storage in insertion order without copying keys or descendants.
@@ -2007,3 +2037,25 @@ mod member_tests;
 #[cfg(test)]
 #[path = "🧪️tests/⚠️refusal/🦀️.rs"]
 mod refusal_tests;
+
+#[cfg(test)]
+#[test]
+fn owned_json_member_transfer_keeps_independent_key_value_and_backing_custody() {
+    let mut key = String::with_capacity(128);
+    key.push_str("second");
+    let key_pointer = key.as_ptr();
+    let mut object = Object::new();
+    object.insert("first", Value::Bool(true));
+    object.insert(key, Value::String("payload".into()));
+    let independent: serde_json::Value = serde_json::from_str(r#"{"first":true,"second":"payload"}"#).expect("independent object");
+    assert_eq!(object.last_member().expect("member").0.capacity(), 128);
+    let backing = object.member_storage_bytes();
+    let (key, value) = object.pop_member().expect("owned member");
+    assert_eq!(key.as_ptr(), key_pointer);
+    assert_eq!(value.as_str(), independent[&key].as_str());
+    assert_eq!(object.member_storage_bytes(), backing);
+    assert_eq!(object.pop_member().expect("first member").1.as_bool(), independent["first"].as_bool());
+    assert!(object.last_member().is_none());
+    assert_eq!(object.member_storage_bytes(), backing);
+    eprintln!("[DEBUG] PackJSON owned member transfer keeps actual key pointer, independent value and terminal vector backing");
+}

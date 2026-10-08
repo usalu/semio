@@ -14,12 +14,15 @@
   "flows": null,
   "accessRules": null,
   "operations": {
-    "added": [],
     "removed": [
-      "operational-requirement-a"
+      {
+        "id": "operational-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "equipment": null,
   "resources": null,

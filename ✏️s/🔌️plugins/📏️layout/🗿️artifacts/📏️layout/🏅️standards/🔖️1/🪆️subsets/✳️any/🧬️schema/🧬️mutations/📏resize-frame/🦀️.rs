@@ -1,8 +1,8 @@
 //! 📏 `resize-frame` — changes a frame's `bounds.width`/`bounds.height` extent.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -52,9 +52,9 @@ pub fn diff_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> protoc
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() } }], ..Default::default() },
+                patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() }), ..Default::default() },
             }],
             ..Default::default()
         }),

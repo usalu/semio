@@ -1,0 +1,5 @@
+# Flow4 Job Lock Boundary
+
+Current root production-dependency comparison finds a real newly required Job → Value dependency missing from root Cargo.lock. General Cargo.lock already contains this current dependency. The only other production comparison difference is Pack's pre-existing optional ureq dependency, absent from the currently unselected root package dependency list; this candidate preserves it unchanged. No captured Flow manifest changed between Flow3 and Flow4, but the Job manifest lies outside that selected tree and now explicitly requires Value. Its current actual full-grant production source is preserved.
+
+The concrete candidate native-flow-job-root-lock-candidate-1.json holds the full current before and desired after bodies, manifest, SHA256 digests, unique scoped-text proof and full Iarna parsed-tree proof. It adds only the one Job → Value dependency line; all other bytes and parsed package metadata remain equal. Native has not modified a lock or run automatic generation. Root publication is required before the registered locked Flow5 can expose its actual receiving compiler frontier.

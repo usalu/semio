@@ -2,23 +2,26 @@
   "catalogueName": null,
   "manufacturerName": null,
   "productGroups": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "group.towel-radiators",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Towel radiators"
+        "index": 1,
+        "row": {
+          "id": "group.towel-radiators",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Towel radiators"
+            },
+            "shortName": null,
+            "alternatives": []
           },
-          "shortName": null,
-          "alternatives": []
-        },
-        "dictionarySubjectId": null
+          "dictionarySubjectId": null
+        }
       }
     ],
-    "removed": [],
-    "modified": [],
-    "order": null
+    "moved": [],
+    "modified": []
   },
   "productClasses": null,
   "productSeries": null,

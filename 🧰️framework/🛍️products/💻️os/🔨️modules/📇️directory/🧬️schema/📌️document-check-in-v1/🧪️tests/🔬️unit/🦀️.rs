@@ -29,8 +29,8 @@ fn document_check_in_v1_matches_language_neutral_fixture() {
 #[test]
 fn edited_artifact_frontier_round_trips_and_refuses_genesis() {
     let wire = EditedArtifactFrontierV1 { document_id: "map-a".into(), head_edit_ordinal: 3, head_edit_id: "edit-3".into(), last_commit_seq: 2, chain_sha256: "22".repeat(32) };
-    let frontier = wire.artifact_frontier().expect("edited frontier");
-    assert_eq!(EditedArtifactFrontierV1::of_artifact_frontier(&frontier), Some(wire));
+    let frontier = crate::os_directory::io::binary::artifact_hash::decode_edited_artifact_frontier_v1(&wire).expect("edited frontier");
+    assert_eq!(crate::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&frontier), Some(wire));
     let genesis = super::super::ArtifactFrontier { document_id: "map-a".into(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: super::super::ArtifactHash([0; 32]) };
-    assert_eq!(EditedArtifactFrontierV1::of_artifact_frontier(&genesis), None);
+    assert_eq!(crate::os_directory::io::binary::artifact_hash::encode_edited_artifact_frontier_v1(&genesis), None);
 }

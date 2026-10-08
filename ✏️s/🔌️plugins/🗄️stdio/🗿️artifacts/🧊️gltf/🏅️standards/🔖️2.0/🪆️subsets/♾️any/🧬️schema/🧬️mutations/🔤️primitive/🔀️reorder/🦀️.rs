@@ -32,9 +32,8 @@ pub fn validate(payload: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let order: Vec<(String, usize)> = p.order.iter().filter_map(|semantic| base.document.meshes[p.mesh].primitives[p.primitive].attributes.iter().find(|(key, _)| key == semantic).cloned()).collect();
-    let value = order;
-    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: (value != base.document.meshes[p.mesh].primitives[p.primitive].attributes).then(|| GltfMorphTarget(value)), ..Default::default() }), ..Default::default() })
+    let rows = GltfAttributesDelta::rows(Vec::new(), Vec::new(), moves_to_keys(&attribute_rows(&base.document.meshes[p.mesh].primitives[p.primitive].attributes), &p.order));
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

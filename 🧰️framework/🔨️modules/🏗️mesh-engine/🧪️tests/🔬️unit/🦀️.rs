@@ -1,5 +1,6 @@
 
 use super::*;
+use std::collections::BTreeMap;
 
 #[test]
 fn box_has_triangles() {
@@ -315,12 +316,64 @@ fn torus_source_is_closed_outward_and_converges_to_the_analytic_volume() {
 #[test]
 fn polygon_obj_reader_keeps_polygons_and_resolves_every_index_form() {
     let text = "# cube face\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nvt 0 0\nvn 0 0 1\nf 1/1/1 2//1 3 4\nf -1 -2 -3\n";
-    let source = PolygonMeshSource::from_obj(text).unwrap();
+    let source = crate::io::text::polygon_mesh_source_from_obj(text).unwrap();
     assert_eq!(source.vertices.len(), 5);
     assert_eq!(source.faces, vec![vec![0, 1, 2, 3], vec![4, 3, 2]]);
-    assert!(PolygonMeshSource::from_obj("v 0 0\n").is_err());
-    assert!(PolygonMeshSource::from_obj("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 4\n").is_err());
-    assert!(PolygonMeshSource::from_obj("v 0 0 0\nf 0 0 0\n").is_err());
-    assert!(PolygonMeshSource::from_obj("v nan 0 0\n").is_err());
-    assert!(PolygonMeshSource::from_obj("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 x 3\n").is_err());
+    assert!(crate::io::text::polygon_mesh_source_from_obj("v 0 0\n").is_err());
+    assert!(crate::io::text::polygon_mesh_source_from_obj("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 4\n").is_err());
+    assert!(crate::io::text::polygon_mesh_source_from_obj("v 0 0 0\nf 0 0 0\n").is_err());
+    assert!(crate::io::text::polygon_mesh_source_from_obj("v nan 0 0\n").is_err());
+    assert!(crate::io::text::polygon_mesh_source_from_obj("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 x 3\n").is_err());
+}
+
+
+#[test]
+fn original_mesh_metadata_owns_controlled_birth_and_exact_physical_retirement() {
+    use pack::value::{FromValue, ToValue, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
+    use crate::component_reference_custody_tests::observe_retirement_allocations;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️metadata/🔣️.json")).unwrap();
+    let (mesh, source_heap) = observe_retirement_allocations(|| {
+        let text = fixture["mesh"].to_string();
+        let parsed = semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        MeshData::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).unwrap()
+    });
+    let original = source_heap.0 - source_heap.1;
+    let reference: MeshData = serde_json::from_value(fixture["mesh"].clone()).unwrap();
+    assert_eq!(mesh, reference);
+    let wire: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&mesh.to_value()).to_string()).unwrap();
+    for field in ["attributes", "materials", "textures"] { assert_eq!(wire[field], fixture["mesh"][field]); }
+    assert!(mesh.retirement_birth_bytes().is_some(), "original attributed MeshData has no controlled owner birth");
+    let (mut owner, initial_heap) = observe_retirement_allocations(|| ControlledRetirement::new(mesh).unwrap_or_else(|_| panic!("original mesh owner admission")));
+    assert_eq!(initial_heap, (0, 0));
+    let copy = fixture["copyBytes"].as_u64().unwrap() as usize;
+    let release_probe = fixture["releaseProbeBytes"].as_u64().unwrap() as usize;
+    let mut born = 0;
+    let mut physical = 0;
+    let mut refusals = 0;
+    for _ in 0..100_000 {
+        if owner.terminal_is_empty() { break; }
+        let release = owner.next_release_byte_demand().unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: release, maximum_depth: owner.next_depth_demand().unwrap() };
+        if release > release_probe {
+            for _ in 0..fixture["repeatedRefusals"].as_u64().unwrap() {
+                let small = RetainedCloneGrant { maximum_release_bytes: release_probe, ..grant };
+                let (step, heap) = observe_retirement_allocations(|| owner.step(small).unwrap());
+                assert!(step.progress().fits(small));
+                assert_eq!(heap, (0, 0), "insufficient physical release grant changed original ownership");
+                assert_eq!(owner.next_release_byte_demand().unwrap(), release);
+                refusals += 1;
+            }
+        }
+        let (step, heap) = observe_retirement_allocations(|| owner.step(grant).unwrap());
+        let progress = step.progress();
+        assert!(progress.fits(grant));
+        assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes));
+        born += heap.0;
+        physical += heap.1;
+        assert!(!matches!(step, RetainedCloneStep::Complete(_)) || owner.terminal_is_empty());
+    }
+    assert!(owner.terminal_is_empty());
+    assert!(refusals > 0);
+    assert_eq!(original + born, physical);
+    eprintln!("[DEBUG] original mesh metadata original={original} born={born} physical={physical} eightByteRefusals={refusals}");
 }

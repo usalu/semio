@@ -8,6 +8,6 @@ pub fn diff(payload: &InsertBridge, base: &En1998Snapshot) -> protocol::Mutation
     if base.bridges.iter().any(|existing| existing.id == payload.bridge.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Bridge id {} already exists.", payload.bridge.id), [payload.bridge.id.clone()]);
     }
-    let index = payload.index.min(base.bridges.len());
-    protocol::MutationOutcome::new(En1998Diff { bridges: En1998BridgeDelta::insertion(&base.bridges, index, payload.bridge.clone()), ..Default::default() })
+    let index = payload.index.unwrap_or(usize::MAX).min(base.bridges.len());
+    protocol::MutationOutcome::new(En1998Diff { bridges: En1998BridgeDelta::insertion(index, payload.bridge.clone()), ..Default::default() })
 }

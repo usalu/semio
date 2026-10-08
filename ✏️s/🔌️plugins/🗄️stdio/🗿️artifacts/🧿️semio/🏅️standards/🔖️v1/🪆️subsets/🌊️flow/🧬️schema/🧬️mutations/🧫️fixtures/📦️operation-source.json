@@ -8,7 +8,6 @@
   "cancelAt": 1024,
   "patchJson": "{\"operation\":\"set\",\"path\":\"/title\",\"value\":null}",
   "cases": [
-    {"tag": 0, "text": "set-snapshot snapshot=[73,[],[]]", "body": "snapshot=[73,[],[]]"},
     {"tag": 1, "text": "insert-node node=[6e,6b,6c,[],[1,-0]]", "body": "node=[6e,6b,6c,[],[1,-0]]"},
     {"tag": 2, "text": "remove-node id=6e", "body": "id=6e"},
     {"tag": 3, "text": "set-node-kind id=6e kind=6b", "body": "id=6e kind=6b"},

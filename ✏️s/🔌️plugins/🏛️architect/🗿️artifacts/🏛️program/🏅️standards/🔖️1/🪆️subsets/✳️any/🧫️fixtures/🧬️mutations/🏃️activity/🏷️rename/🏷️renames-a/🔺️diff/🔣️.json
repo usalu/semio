@@ -5,9 +5,10 @@
   "stakeholders": null,
   "users": null,
   "activities": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "activity-a",
         "patch": {
@@ -45,8 +46,7 @@
           "supervisionLevel": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "functions": null,
   "elements": null,

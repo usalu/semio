@@ -14,7 +14,9 @@ pub use crate::standards::v1_1::subsets::base::schema::*;
 /// over the glob import, which is exactly the intent.
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub use mutations::{apply_svg_tiny_mutation, SvgTinyMutation, KINDS as TINY_MUTATION_KINDS};
+#[cfg(test)]
+pub use mutations::{apply_svg_tiny_mutation};
+pub use mutations::{SvgTinyMutation, KINDS as TINY_MUTATION_KINDS};
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 

@@ -61,8 +61,7 @@ enum Lbl {
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
-    let mut added_sorted = added.to_vec();
-    added_sorted.sort_by_key(|(idx, _)| *idx);
+    let added_sorted = semio_s_artifact_stdio_contract::ordered_by_key(added, |(idx, _)| *idx);
     for (idx, label) in added_sorted {
         let pos = idx.min(survivors.len());
         survivors.insert(pos, label);
@@ -169,8 +168,7 @@ fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
 /// diff. Every list comes back ascending, the normal form [`absorb_indexed_triple`] emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_indexed_triple<Item: Clone, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, Item)], base_items: &[Item], diff_inverse: impl Fn(&D, &Item) -> D) -> IndexedDiffParts<D, Item> {
-    let mut removed_sorted = removed.to_vec();
-    removed_sorted.sort_unstable();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered(&removed);
     let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -222,17 +220,7 @@ fn vlr_inverse(diff: &LasVlrDiff, base: &LasVlr) -> LasVlrDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
-    LasVlrDiff {
-        user_id: (a.user_id != b.user_id).then(|| b.user_id.clone()),
-        record_id: (a.record_id != b.record_id).then_some(b.record_id),
-        description: (a.description != b.description).then(|| b.description.clone()),
-        data: (a.data != b.data).then(|| b.data.clone()),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_vlr_diff(base: &mut LasVlrDiff, other: LasVlrDiff) {
+fn absorb_vlr_rows(base: &mut LasVlrDiff, other: LasVlrDiff) {
     if other.user_id.is_some() {
         base.user_id = other.user_id;
     }
@@ -316,21 +304,6 @@ impl LasVlrsDiff {
         let (removed, modified, added) = inverse_indexed_triple(&self.removed, &modified, &added, base, vlr_inverse);
         Self { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() }
     }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
-        let min_len = base.len().min(next.len());
-        let mut modified = Vec::new();
-        for i in 0..min_len {
-            let d = vlr_between(&base[i], &next[i]);
-            if d != LasVlrDiff::default() {
-                modified.push(LasVlrModified { index: i, diff: d });
-            }
-        }
-        let removed: Vec<usize> = (next.len()..base.len()).collect();
-        let added: Vec<LasVlrAdded> = (base.len()..next.len()).map(|i| LasVlrAdded { index: i, vlr: next[i].clone() }).collect();
-        LasVlrsDiff { removed, modified, added }
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -345,7 +318,7 @@ fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVl
     let d1a: Vec<(usize, LasVlr)> = d1.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
     let d2m: Vec<(usize, LasVlrDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasVlr)> = d2.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple((&d1.removed, &d1m, &d1a), (&d2.removed, &d2m, &d2a), absorb_vlr_diff, apply_vlr_diff);
+    let (removed, modified, added) = absorb_indexed_triple((&d1.removed, &d1m, &d1a), (&d2.removed, &d2m, &d2a), absorb_vlr_rows, apply_vlr_diff);
     let merged = LasVlrsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() };
     if merged.is_empty() {
         None
@@ -459,7 +432,7 @@ fn point_inverse(diff: &LasPointDiff, base: &LasPoint) -> LasPointDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
+fn changed_point_fields(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
     LasPointDiff {
         x: (a.x != b.x).then_some(b.x),
         y: (a.y != b.y).then_some(b.y),
@@ -479,7 +452,7 @@ fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_point_diff(base: &mut LasPointDiff, other: &LasPointDiff) {
+fn absorb_point_rows(base: &mut LasPointDiff, other: &LasPointDiff) {
     if other.x.is_some() {
         base.x = other.x;
     }
@@ -591,21 +564,6 @@ impl LasPointsDiff {
         let (removed, modified, added) = inverse_indexed_triple(&self.removed, &modified, &added, base, point_inverse);
         Self { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() }
     }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
-        let min_len = base.len().min(next.len());
-        let mut modified = Vec::new();
-        for i in 0..min_len {
-            let d = point_between(&base[i], &next[i]);
-            if d != LasPointDiff::default() {
-                modified.push(LasPointModified { index: i, diff: d });
-            }
-        }
-        let removed: Vec<usize> = (next.len()..base.len()).collect();
-        let added: Vec<LasPointAdded> = (base.len()..next.len()).map(|i| LasPointAdded { index: i, point: next[i].clone() }).collect();
-        LasPointsDiff { removed, modified, added }
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -620,7 +578,7 @@ fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option
     let d1a: Vec<(usize, LasPoint)> = d1.added.iter().map(|a| (a.index, a.point.clone())).collect();
     let d2m: Vec<(usize, LasPointDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasPoint)> = d2.added.iter().map(|a| (a.index, a.point.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple((&d1.removed, &d1m, &d1a), (&d2.removed, &d2m, &d2a), |base, other| absorb_point_diff(base, &other), apply_point_diff);
+    let (removed, modified, added) = absorb_indexed_triple((&d1.removed, &d1m, &d1a), (&d2.removed, &d2m, &d2a), |base, other| absorb_point_rows(base, &other), apply_point_diff);
     let merged = LasPointsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() };
     if merged.is_empty() {
         None
@@ -940,45 +898,6 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
         }
     }
 
-    /// 🧭️ State delta (compose `GetXDiff`): header scalars compared field-by-field; `vlrs`/
-    /// `points` index-keyed matching (pairwise `0..min(len)` = modified, base tail = removed,
-    /// other tail = added — the recipe's "index keys pairwise by position" rule).
-    fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
-        let bh = &base.header;
-        let oh = &other.header;
-        let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs);
-        let points_diff = LasPointsDiff::between(&base.points, &other.points);
-        LasDiff {
-            version_major: (bh.version_major != oh.version_major).then_some(oh.version_major),
-            version_minor: (bh.version_minor != oh.version_minor).then_some(oh.version_minor),
-            system_identifier: (bh.system_identifier != oh.system_identifier).then(|| oh.system_identifier.clone()),
-            generating_software: (bh.generating_software != oh.generating_software).then(|| oh.generating_software.clone()),
-            creation_day_of_year: (bh.creation_day_of_year != oh.creation_day_of_year).then_some(oh.creation_day_of_year),
-            creation_year: (bh.creation_year != oh.creation_year).then_some(oh.creation_year),
-            header_size: (bh.header_size != oh.header_size).then_some(oh.header_size),
-            offset_to_point_data: (bh.offset_to_point_data != oh.offset_to_point_data).then_some(oh.offset_to_point_data),
-            number_of_vlrs: (bh.number_of_vlrs != oh.number_of_vlrs).then_some(oh.number_of_vlrs),
-            point_data_format_id: (bh.point_data_format_id != oh.point_data_format_id).then_some(oh.point_data_format_id),
-            point_data_record_length: (bh.point_data_record_length != oh.point_data_record_length).then_some(oh.point_data_record_length),
-            number_of_point_records: (bh.number_of_point_records != oh.number_of_point_records).then_some(oh.number_of_point_records),
-            points_by_return: (bh.points_by_return != oh.points_by_return).then_some(oh.points_by_return),
-            x_scale: (bh.x_scale != oh.x_scale).then_some(oh.x_scale),
-            y_scale: (bh.y_scale != oh.y_scale).then_some(oh.y_scale),
-            z_scale: (bh.z_scale != oh.z_scale).then_some(oh.z_scale),
-            x_offset: (bh.x_offset != oh.x_offset).then_some(oh.x_offset),
-            y_offset: (bh.y_offset != oh.y_offset).then_some(oh.y_offset),
-            z_offset: (bh.z_offset != oh.z_offset).then_some(oh.z_offset),
-            max_x: (bh.max_x != oh.max_x).then_some(oh.max_x),
-            min_x: (bh.min_x != oh.min_x).then_some(oh.min_x),
-            max_y: (bh.max_y != oh.max_y).then_some(oh.max_y),
-            min_y: (bh.min_y != oh.min_y).then_some(oh.min_y),
-            max_z: (bh.max_z != oh.max_z).then_some(oh.max_z),
-            min_z: (bh.min_z != oh.min_z).then_some(oh.min_z),
-            vlrs: if vlrs_diff.is_empty() { None } else { Some(vlrs_diff) },
-            points: if points_diff.is_empty() { None } else { Some(points_diff) },
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self == &LasDiff::default()
     }
@@ -1043,7 +962,7 @@ pub fn diff_set_scale_and_offset(base: &LasSnapshot, scale: (f64, f64, f64), off
                 z: coordinate_under(point.z, base.header.z_scale, base.header.z_offset, scale.2, offset.2),
                 ..point.clone()
             };
-            let d = point_between(point, &held);
+            let d = changed_point_fields(point, &held);
             (d != LasPointDiff::default()).then_some(LasPointModified { index, diff: d })
         })
         .collect();
@@ -1070,7 +989,7 @@ pub fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
 pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff {
     // 🧭️ Derived from the REAL collection length (`base.vlrs.len()`), never `base.header
     // .number_of_vlrs` — the header field can be desynced from reality (a raw-decoded fixture,
-    // or a directly-constructed test snapshot), and `apply_las_mutation`'s imperative body
+    // or a directly-constructed test snapshot), and `apply_mutation`'s imperative body
     // likewise recomputes from `snapshot.vlrs.len()` post-insert; both sides must agree for
     // `mutation_diff_law` to hold unconditionally, not just on already-synced fixtures.
     LasDiff { number_of_vlrs: Some((base.vlrs.len() + 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![], added: vec![LasVlrAdded { index, vlr }] }), ..Default::default() }
@@ -1095,7 +1014,7 @@ pub fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_point(base: &LasSnapshot, index: usize, point: &LasPoint) -> LasDiff {
-    let d = point_between(base.points.get(index).unwrap_or(&LasPoint::default()), point);
+    let d = changed_point_fields(base.points.get(index).unwrap_or(&LasPoint::default()), point);
     if base.points.get(index).is_some() && d == LasPointDiff::default() {
         return LasDiff::default();
     }
@@ -1319,81 +1238,25 @@ pub(crate) fn base_vlr(record_id: u16) -> LasVlr {
     LasVlr { user_id: "LASF_Spec".into(), record_id, description: format!("vlr {record_id}"), data: vec![record_id as u8; 3] }
 }
 
-/// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: representative
-/// `LasDiff` cases (empty, and both directions of a real `between()` over two fully-populated
-/// snapshots) — single source of truth shared by `diff_codec_text_binary_roundtrip_law` below AND
-/// `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
-/// tests, per CLAUDE.md (no duplicated literal case lists).
+/// 🧪️ Representative `LasDiff` cases built declaratively (empty, header scalars with an array and float lanes, and the keyed `vlrs`/`points`
+/// row triples with the tri-state `gps_time`/`rgb` point fields) — shared by `diff_codec_text_binary_roundtrip_law` and the engine's
+/// `diff_grammar_conformance_law`/`protocol_walk_law`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
-    let mut pa0 = base_point(1);
-    pa0.gps_time = Some(1000.0);
-    let a = LasSnapshot {
-        schema: "stdio.las".into(),
-        header: LasHeader {
-            version_major: 1,
-            version_minor: 2,
-            system_identifier: "before-system".into(),
-            generating_software: "before-software".into(),
-            creation_day_of_year: 10,
-            creation_year: 2020,
-            header_size: 227,
-            offset_to_point_data: 227,
-            number_of_vlrs: 2,
-            point_data_format_id: 1,
-            point_data_record_length: 28,
-            number_of_point_records: 2,
-            points_by_return: [1, 1, 0, 0, 0],
-            x_scale: 0.01,
-            y_scale: 0.01,
-            z_scale: 0.01,
-            x_offset: 0.0,
-            y_offset: 0.0,
-            z_offset: 0.0,
-            max_x: 100.0,
-            min_x: 0.0,
-            max_y: 100.0,
-            min_y: 0.0,
-            max_z: 100.0,
-            min_z: 0.0,
+    vec![
+        LasDiff::default(),
+        LasDiff { version_major: Some(2), version_minor: Some(4), system_identifier: Some("after-system".into()), points_by_return: Some([0, 0, 2, 1, 0]), x_scale: Some(0.001), max_z: Some(50.0), ..LasDiff::default() },
+        LasDiff {
+            vlrs: Some(LasVlrsDiff { removed: vec![0], modified: vec![LasVlrModified { index: 1, diff: LasVlrDiff { record_id: Some(7), data: Some(vec![1, 2, 3]), ..LasVlrDiff::default() } }], added: vec![LasVlrAdded { index: 2, vlr: base_vlr(9) }] }),
+            points: Some(LasPointsDiff {
+                removed: vec![1],
+                modified: vec![LasPointModified { index: 0, diff: LasPointDiff { gps_time: Some(None), rgb: Some(Some((10, 20, 30))), ..LasPointDiff::default() } }],
+                added: vec![LasPointAdded { index: 1, point: base_point(3) }],
+            }),
+            ..LasDiff::default()
         },
-        vlrs: vec![base_vlr(100), base_vlr(101)],
-        points: vec![pa0, base_point(2)],
-    };
-    let b = LasSnapshot {
-        schema: "stdio.las".into(),
-        header: LasHeader {
-            version_major: 2,
-            version_minor: 4,
-            system_identifier: "after-system".into(),
-            generating_software: "after-software".into(),
-            creation_day_of_year: 250,
-            creation_year: 2026,
-            header_size: 375,
-            offset_to_point_data: 500,
-            number_of_vlrs: 1,
-            point_data_format_id: 3,
-            point_data_record_length: 34,
-            number_of_point_records: 3,
-            points_by_return: [0, 0, 2, 1, 0],
-            x_scale: 0.001,
-            y_scale: 0.001,
-            z_scale: 0.001,
-            x_offset: 500.0,
-            y_offset: 500.0,
-            z_offset: 10.0,
-            max_x: 999.0,
-            min_x: -1.0,
-            max_y: 999.0,
-            min_y: -1.0,
-            max_z: 50.0,
-            min_z: -50.0,
-        },
-        vlrs: vec![base_vlr(9)],
-        points: vec![LasPoint { gps_time: None, rgb: Some((10, 20, 30)), ..base_point(9) }, base_point(2), base_point(3)],
-    };
-    vec![LasDiff::default(), <LasDiff as DiffAlgebra<LasSnapshot>>::between(&a, &b), <LasDiff as DiffAlgebra<LasSnapshot>>::between(&b, &a)]
+    ]
 }
 //#endregion 🔖️HandcraftedDiffCodec
 

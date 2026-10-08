@@ -1,50 +1,141 @@
 # 🧬️ En1999 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
 type En1999MaterialsPatch {
-  id: String!
   designation: String
 }
 
+type En1999MaterialsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999MaterialsInserted {
+  index: Int!
+  row: AluminiumMaterial!
+}
+
+type En1999MaterialsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999MaterialsModified {
+  id: String!
+  patch: En1999MaterialsPatch!
+}
+
 type En1999MaterialsRows {
-  added: [AluminiumMaterial!]!
-  removed: [String!]!
-  modified: [En1999MaterialsPatch!]!
-  order: [String!]
+  removed: [En1999MaterialsRemoved!]!
+  inserted: [En1999MaterialsInserted!]!
+  moved: [En1999MaterialsMoved!]!
+  modified: [En1999MaterialsModified!]!
 }
 
 type En1999SectionsElementsPatch {
-  id: String!
   thickness: Float
 }
 
+type En1999SectionsElementsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999SectionsElementsInserted {
+  index: Int!
+  row: PlateElement!
+}
+
+type En1999SectionsElementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999SectionsElementsModified {
+  id: String!
+  patch: En1999SectionsElementsPatch!
+}
+
 type En1999SectionsElementsRows {
-  modified: [En1999SectionsElementsPatch!]!
+  removed: [En1999SectionsElementsRemoved!]!
+  inserted: [En1999SectionsElementsInserted!]!
+  moved: [En1999SectionsElementsMoved!]!
+  modified: [En1999SectionsElementsModified!]!
 }
 
 type En1999SectionsPatch {
-  id: String!
+  kind: String
+  height: Float
+  width: Float
+  flangeThickness: Float
+  webThickness: Float
+  outerDiameter: Float
   elements: En1999SectionsElementsRows
 }
 
+type En1999SectionsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999SectionsInserted {
+  index: Int!
+  row: AluminiumSection!
+}
+
+type En1999SectionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999SectionsModified {
+  id: String!
+  patch: En1999SectionsPatch!
+}
+
 type En1999SectionsRows {
-  added: [AluminiumSection!]!
-  removed: [String!]!
-  modified: [En1999SectionsPatch!]!
-  order: [String!]
+  removed: [En1999SectionsRemoved!]!
+  inserted: [En1999SectionsInserted!]!
+  moved: [En1999SectionsMoved!]!
+  modified: [En1999SectionsModified!]!
 }
 
 type En1999MembersActionsPatch {
-  id: String!
   nK: Float
   mYK: Float
 }
 
+type En1999MembersActionsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999MembersActionsInserted {
+  index: Int!
+  row: MemberAction!
+}
+
+type En1999MembersActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999MembersActionsModified {
+  id: String!
+  patch: En1999MembersActionsPatch!
+}
+
 type En1999MembersActionsRows {
-  modified: [En1999MembersActionsPatch!]!
+  removed: [En1999MembersActionsRemoved!]!
+  inserted: [En1999MembersActionsInserted!]!
+  moved: [En1999MembersActionsMoved!]!
+  modified: [En1999MembersActionsModified!]!
 }
 
 type En1999MembersPatch {
-  id: String!
   bucklingLengthY: Float
   bucklingLengthZ: Float
   bucklingLengthT: Float
@@ -52,49 +143,211 @@ type En1999MembersPatch {
   actions: En1999MembersActionsRows
 }
 
+type En1999MembersRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999MembersInserted {
+  index: Int!
+  row: AluminiumMember!
+}
+
+type En1999MembersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999MembersModified {
+  id: String!
+  patch: En1999MembersPatch!
+}
+
 type En1999MembersRows {
-  added: [AluminiumMember!]!
-  removed: [String!]!
-  modified: [En1999MembersPatch!]!
-  order: [String!]
+  removed: [En1999MembersRemoved!]!
+  inserted: [En1999MembersInserted!]!
+  moved: [En1999MembersMoved!]!
+  modified: [En1999MembersModified!]!
 }
 
 type En1999ConnectionsPatch {
-  id: String!
   weldsThroat: Float
   boltsRows: Int
   boltsBoltsPerRow: Int
 }
 
+type En1999ConnectionsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999ConnectionsInserted {
+  index: Int!
+  row: AluminiumConnection!
+}
+
+type En1999ConnectionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999ConnectionsModified {
+  id: String!
+  patch: En1999ConnectionsPatch!
+}
+
 type En1999ConnectionsRows {
-  added: [AluminiumConnection!]!
-  removed: [String!]!
-  modified: [En1999ConnectionsPatch!]!
-  order: [String!]
+  removed: [En1999ConnectionsRemoved!]!
+  inserted: [En1999ConnectionsInserted!]!
+  moved: [En1999ConnectionsMoved!]!
+  modified: [En1999ConnectionsModified!]!
+}
+
+type En1999FireScenariosPatch {
+  memberId: String
+  thetaA: Float
+  durationS: Float
+}
+
+type En1999FireScenariosRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999FireScenariosInserted {
+  index: Int!
+  row: FireScenario!
+}
+
+type En1999FireScenariosMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999FireScenariosModified {
+  id: String!
+  patch: En1999FireScenariosPatch!
 }
 
 type En1999FireScenariosRows {
-  added: [FireScenario!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [En1999FireScenariosRemoved!]!
+  inserted: [En1999FireScenariosInserted!]!
+  moved: [En1999FireScenariosMoved!]!
+  modified: [En1999FireScenariosModified!]!
+}
+
+type En1999FatigueDetailsPatch {
+  memberId: String
+  detailCategory: String
+  deltaSigmaC: Float
+  deltaSigmaEd: Float
+  nCycles: Float
+  m1: Float
+  m2: Float
+}
+
+type En1999FatigueDetailsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999FatigueDetailsInserted {
+  index: Int!
+  row: FatigueDetail!
+}
+
+type En1999FatigueDetailsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999FatigueDetailsModified {
+  id: String!
+  patch: En1999FatigueDetailsPatch!
 }
 
 type En1999FatigueDetailsRows {
-  added: [FatigueDetail!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [En1999FatigueDetailsRemoved!]!
+  inserted: [En1999FatigueDetailsInserted!]!
+  moved: [En1999FatigueDetailsMoved!]!
+  modified: [En1999FatigueDetailsModified!]!
+}
+
+type En1999ColdFormedPatch {
+  materialId: String
+  thickness: Float
+  width: Float
+  span: Float
+  welded: Boolean
+  actions: [MemberAction!]
+}
+
+type En1999ColdFormedRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999ColdFormedInserted {
+  index: Int!
+  row: ColdFormedSheet!
+}
+
+type En1999ColdFormedMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999ColdFormedModified {
+  id: String!
+  patch: En1999ColdFormedPatch!
 }
 
 type En1999ColdFormedRows {
-  added: [ColdFormedSheet!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [En1999ColdFormedRemoved!]!
+  inserted: [En1999ColdFormedInserted!]!
+  moved: [En1999ColdFormedMoved!]!
+  modified: [En1999ColdFormedModified!]!
+}
+
+type En1999ShellsPatch {
+  materialId: String
+  radius: Float
+  thickness: Float
+  length: Float
+  actions: [MemberAction!]
+}
+
+type En1999ShellsRemoved {
+  id: String!
+  index: Int!
+}
+
+type En1999ShellsInserted {
+  index: Int!
+  row: AluminiumShell!
+}
+
+type En1999ShellsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type En1999ShellsModified {
+  id: String!
+  patch: En1999ShellsPatch!
 }
 
 type En1999ShellsRows {
-  added: [AluminiumShell!]!
-  removed: [String!]!
-  order: [String!]
+  removed: [En1999ShellsRemoved!]!
+  inserted: [En1999ShellsInserted!]!
+  moved: [En1999ShellsMoved!]!
+  modified: [En1999ShellsModified!]!
 }
 
 type En1999Diff {

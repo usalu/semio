@@ -1,5 +1,5 @@
 //! 🗂️ Block plugin kit catalog declaration, independent of each removable dimensional artifact.
-use semio_framework::{ArtifactKindSpec,MediaClass,MediaForm,MediaType,OsMediaCapability};
+use semio_framework::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 /// 🪪️ The catalog identity shared by every Block producer.
 pub const ARTIFACT_ID:&str="kit.catalog";
 /// 🗂️ The plugin-owned catalog descriptor; producer dimensions do not change its mesh authority.

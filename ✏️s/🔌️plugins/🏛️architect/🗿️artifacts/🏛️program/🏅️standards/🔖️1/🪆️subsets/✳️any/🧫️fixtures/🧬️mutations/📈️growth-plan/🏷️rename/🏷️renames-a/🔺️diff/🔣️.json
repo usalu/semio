@@ -34,9 +34,10 @@
   "schedules": null,
   "flexibility": null,
   "growth": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "growth-plan-a",
         "patch": {
@@ -69,8 +70,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "sustainability": null,
   "resilience": null,

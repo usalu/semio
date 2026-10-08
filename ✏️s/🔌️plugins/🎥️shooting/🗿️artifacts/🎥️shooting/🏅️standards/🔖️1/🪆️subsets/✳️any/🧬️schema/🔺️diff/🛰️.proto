@@ -52,6 +52,8 @@ message ShootingAssetEdit {
   optional uint32 index = 2;
   optional string id = 3;
   optional ShootingAsset item = 4;
+  optional uint32 from = 5;
+  optional uint32 to = 6;
 }
 
 message ShootingShotEdit {
@@ -59,6 +61,8 @@ message ShootingShotEdit {
   optional uint32 index = 2;
   optional string id = 3;
   optional ShootingShot item = 4;
+  optional uint32 from = 5;
+  optional uint32 to = 6;
 }
 
 message ShootingSavedCameraEdit {
@@ -66,6 +70,8 @@ message ShootingSavedCameraEdit {
   optional uint32 index = 2;
   optional string id = 3;
   optional ShootingSavedCamera item = 4;
+  optional uint32 from = 5;
+  optional uint32 to = 6;
 }
 
 message ShootingAssetsDelta {

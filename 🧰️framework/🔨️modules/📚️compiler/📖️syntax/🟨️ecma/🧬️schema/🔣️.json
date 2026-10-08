@@ -1,0 +1,360 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/ecma",
+  "$defs": {
+    "EcmaSourceSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "EcmaToken": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "text",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "enum": [
+            "identifier",
+            "string",
+            "number",
+            "template",
+            "regex",
+            "punctuation",
+            "invalid",
+            "eof"
+          ]
+        },
+        "expressions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaSourceSpan"
+          }
+        }
+      }
+    },
+    "EcmaObjectBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imported",
+        "local"
+      ],
+      "properties": {
+        "imported": {
+          "type": "string"
+        },
+        "local": {
+          "type": "string"
+        }
+      }
+    },
+    "EcmaPattern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "names",
+        "defaults",
+        "destructured"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaults": {
+          "type": "boolean"
+        },
+        "destructured": {
+          "type": "boolean"
+        },
+        "objectBindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaObjectBinding"
+          }
+        }
+      }
+    },
+    "EcmaProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "value": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "computed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EcmaImportBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local",
+        "imported",
+        "runtime",
+        "module"
+      ],
+      "properties": {
+        "local": {
+          "type": "string"
+        },
+        "imported": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "boolean"
+        },
+        "module": {
+          "type": "string"
+        }
+      }
+    },
+    "EcmaDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pattern",
+        "initializer"
+      ],
+      "properties": {
+        "pattern": {
+          "$ref": "#/$defs/EcmaPattern"
+        },
+        "initializer": {
+          "$ref": "#/$defs/EcmaExpression"
+        }
+      }
+    },
+    "EcmaExpression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "kind"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "callee": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "left": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "right": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "condition": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "whenTrue": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "whenFalse": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "property": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/EcmaExpression"
+            }
+          ]
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaExpression"
+          }
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaExpression"
+          }
+        },
+        "expressions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaExpression"
+          }
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaProperty"
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaPattern"
+          }
+        },
+        "body": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EcmaExpression"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EcmaStatement"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "EcmaStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "kind"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "type": "string"
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaImportBinding"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "base": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaPattern"
+          }
+        },
+        "body": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaStatement"
+          }
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EcmaDeclaration"
+          }
+        },
+        "expression": {
+          "$ref": "#/$defs/EcmaExpression"
+        },
+        "then": {
+          "$ref": "#/$defs/EcmaStatement"
+        },
+        "otherwise": {
+          "$ref": "#/$defs/EcmaStatement"
+        },
+        "statement": {
+          "$ref": "#/$defs/EcmaStatement"
+        },
+        "initializer": {
+          "$ref": "#/$defs/EcmaPattern"
+        },
+        "iterable": {
+          "$ref": "#/$defs/EcmaExpression"
+        }
+      }
+    }
+  }
+}

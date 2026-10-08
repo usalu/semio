@@ -1,0 +1,74 @@
+{
+  "rootOct8BimSourceBefore": {
+    "sessionId": 27229,
+    "exitCode": 1,
+    "passed": 2,
+    "failed": 7,
+    "expectations": 50,
+    "seconds": 0.136,
+    "scope": "original owning Source law; seven missing original provider module failures",
+    "log": "🗑️generated/root-oct8-bim-sqlite-original-source-neutral-corrected-before.log"
+  },
+  "rootOct8CanonicalRetirementFloor": {
+    "lastSessionId": 47268,
+    "exitCode": 0,
+    "passed": 37,
+    "skipped": 166,
+    "durationSeconds": 0.589,
+    "sourcePassed": 2,
+    "sourceExpectations": 20,
+    "erasedSourceConstructorBytes": 80,
+    "erasedSourceDisposalBytes": 54640,
+    "scope": "canonical retained-clone, typed registry and erased-read floor only",
+    "report": "📓️physical-oct08-funded-owned-source-and-store-read-custody.md"
+  },
+  "rootOct8ErasedReadProvider": {
+    "native": {
+      "sessionId": 65237,
+      "exitCode": 0,
+      "passed": 2,
+      "skipped": 198,
+      "durationSeconds": 0.115,
+      "scope": "original erased_read Value law only"
+    },
+    "source": {
+      "sessionId": 93075,
+      "exitCode": 0,
+      "passed": 1,
+      "expectations": 15,
+      "filtered": 12,
+      "durationSeconds": 0.072
+    },
+    "expandedFloor": {
+      "sessionId": 47268,
+      "exitCode": 0,
+      "passed": 37,
+      "sourcePinForwarding": true
+    },
+    "report": "📓️root-oct8-canonical-erased-read-lease-provider.md"
+  },
+  "rootOct8PagedSourceNativePrerequisite": {
+    "lastSessionId": 98878,
+    "exitCode": 0,
+    "passed": 74,
+    "skipped": 95,
+    "durationSeconds": 17.3,
+    "ownedSourceCurrency": true,
+    "directBorrowedVariant": true,
+    "originalSourceOctets": 8194,
+    "ownedSourceConstructorBytes": 320,
+    "disposalBytes": 23650,
+    "actualAuthoredSetLabel": false,
+    "completeChildEmit": false,
+    "scope": "original Value/DSL/Pack source and variant prerequisite only",
+    "report": "📓️typed-source-resumed-origin-ownership-authority.md"
+  },
+  "rootOct8UniversalScopeCorrection": {
+    "primaryPluginRootsAtLeast": 61,
+    "additionalFrameworkProbeRouteGaps": 2,
+    "summedUniqueCount": null,
+    "bimMissingProvider": true,
+    "scope": "independently proven concrete owner census; overlapping inventories separate",
+    "report": "📓️semantic-independent-oct8-universal-completion-predicate-current-proof-matrix.md"
+  }
+}

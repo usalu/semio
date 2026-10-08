@@ -6,7 +6,7 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 
 pub fn inverse(payload: &RemoveZone, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.zones.get(payload.index).map(|zone| vec![Din4108Mutation::InsertZone(InsertZone { index: payload.index, zone: zone.clone() })]).unwrap_or_default()
+    base.zones.get(payload.index).map(|zone| vec![Din4108Mutation::InsertZone(InsertZone { index: Some(payload.index), zone: zone.clone() })]).unwrap_or_default()
 
     })())
 }

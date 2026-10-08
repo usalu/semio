@@ -39,7 +39,11 @@ impl Mutation<ChartSnapshot> for ChangeChartValue {
         match ChartEdit::authored(&base.chart, &self.path, self.value.as_ref()) {
             Ok(Some(edit)) => MutationOutcome::new(ChartDiff { edits: vec![edit] }),
             Ok(None) => MutationOutcome::empty(),
-            Err(error) => MutationOutcome::error(error.code, error.message, error.target),
+            Err(error) => match error.code.as_str() {
+                "mutation.apply.invalid-path" => MutationOutcome::fatal("mutation.invariant", error.message, error.target),
+                "mutation.apply.missing-target" => MutationOutcome::error("mutation.target-missing", error.message, error.target),
+                _ => MutationOutcome::error("mutation.target-mismatch", error.message, error.target),
+            },
         }
     }
     fn inverse(&self, base: &ChartSnapshot) -> Result<Vec<Self>,semio_framework_value::ValueError> {

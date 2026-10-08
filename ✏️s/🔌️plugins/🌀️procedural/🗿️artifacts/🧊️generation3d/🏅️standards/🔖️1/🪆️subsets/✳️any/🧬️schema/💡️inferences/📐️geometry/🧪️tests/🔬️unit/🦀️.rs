@@ -1,7 +1,7 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
 //! 🧪️ Geometry inference laws: the engine evaluates documents to typed values, recomputes only what a change reaches,
 //! localizes every refusal, and a stepped run equals the unbounded one.
 
+use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
 use super::compute::{ReadyJob, WidgetJob, WidgetStep};
 use super::engine::{CacheMode, GeometryEngine};
 use super::inputs::WidgetInputs;
@@ -54,7 +54,7 @@ fn document(widgets: Vec<Widget>, synapses: Vec<SynapseSpec>) -> Generation3dSna
 }
 
 fn evaluate(read: Generation3dSnapshotRead) -> (GeometryEngine, BTreeMap<String, Arc<WidgetEvaluation>>) {
-    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), 1 << 24);
+    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 1 << 24);
     engine.start("test".into(), read.into_inner(), CacheMode::Incremental, "test");
     assert!(engine.step(usize::MAX).expect("the run steps").done);
     let values = engine.evaluations().clone();
@@ -225,7 +225,7 @@ fn bypass_neither_reads_nor_writes_the_cache_and_cold_clears_it_first() {
 
 #[test]
 fn a_zero_budget_engine_still_evaluates_correctly_without_caching() {
-    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), 0);
+    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 0);
     engine.start("x".into(), box_chain(2.0).into_inner(), CacheMode::Incremental, "test");
     assert!(engine.step(usize::MAX).unwrap().done);
     assert_eq!(engine.cache_bytes(), 0);
@@ -358,7 +358,7 @@ fn a_stepped_run_equals_the_unbounded_run_for_every_fuel_and_charges_each_widget
     let reference = infer_geometry(&crate::test_serial::geometry_input(&slow_chain()));
     assert_eq!(number_of(&reference, "n3", "value"), 5.0);
     for fuel in 1..=14 {
-        let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), 1 << 20);
+        let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
         engine.start("slow".into(), slow_chain().into_inner(), CacheMode::Incremental, "test");
         let (mut calls, mut spent) = (0, 0);
         loop {
@@ -381,7 +381,7 @@ fn a_stepped_run_equals_the_unbounded_run_for_every_fuel_and_charges_each_widget
 fn cancelling_mid_job_cancels_the_widget_job_keeps_finished_widgets_and_a_new_run_resumes_from_the_cache() {
     let _slow = probe::install("math.number", slow_number);
     CANCELLED.with(|count| count.set(0));
-    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), 1 << 20);
+    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
     engine.start("slow".into(), slow_chain().into_inner(), CacheMode::Incremental, "test");
     for _ in 0..3 {
         assert!(!engine.step(1).unwrap().done);
@@ -441,14 +441,30 @@ fn inference_reads_the_explicit_admitted_catalogue() {
     kind.quality = Quality::Approximate;
     let admitted = std::sync::Arc::new(crate::standards::v1::subsets::any::schema::catalogue::Catalogue::from_categories(definitions).expect("typed catalogue"));
     let snapshot = box_chain(2.0);
-    let context = GeometryInput::new(&snapshot, std::sync::Arc::clone(&admitted));
+    let context = GeometryInput::new(&snapshot, std::sync::Arc::clone(&admitted),crate::standards::v1::subsets::any::io::geometry::context());
     let custom = infer_geometry(&context);
     let builtin = infer_geometry(&crate::test_serial::geometry_input(&snapshot));
     assert_eq!(custom["box"].quality.to_value().as_str(), fixture["quality"].as_str());
     assert_eq!(builtin["box"].quality.to_value().as_str(), fixture["builtinQuality"].as_str());
-    let mut engine = GeometryEngine::new(admitted, 1 << 20);
+    let mut engine = GeometryEngine::new(admitted, crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
     engine.start("custom-catalogue".into(), snapshot, CacheMode::Incremental, "custom-catalogue");
     while !engine.step(1).expect("typed catalogue engine").done {}
     assert_eq!(engine.evaluations(), &custom);
     println!("[DEBUG] Inference and one-unit engine read the explicit admitted catalogue independently of the bundled JSON owner");
+}
+
+#[test]
+fn geometry_compute_context_injection_controls_actual_inference() {
+    struct Context;
+    fn answer(kind:&Kind,_inputs:WidgetInputs)->Box<dyn WidgetJob> {compute::finish(kind,Ok(outputs([("value",GeometryValue::Number(41.0))])))}
+    impl compute::GeometryComputeContext for Context {fn lookup(&self,kind_id:&str)->Option<compute::StartFn>{(kind_id=="math.number").then_some(answer as compute::StartFn)}}
+    let read=document(vec![neuron("n","math.number",vec![])],vec![]);
+    let input=GeometryInput::new(&read,Arc::clone(catalogue()),Arc::new(Context));
+    let inferred=infer_geometry(&input);
+    assert_eq!(inferred["n"].outputs["value"],GeometryValue::Number(41.0));
+    let mut engine=GeometryEngine::new(Arc::clone(catalogue()),Arc::new(Context),0);
+    engine.start("context".into(),read.into_inner(),CacheMode::Cold,"context");
+    loop {if engine.step(1).unwrap().done{break;}}
+    assert_eq!(engine.evaluations()["n"].outputs["value"],GeometryValue::Number(41.0));
+    println!("[DEBUG] Procedural geometry inference and engine used the explicit injected compute capability");
 }

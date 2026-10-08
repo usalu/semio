@@ -20,6 +20,7 @@ consumes = ["imperative.module"]
 
 [[package.metadata.semio.playground]]
 variant = "imperative"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6076, wgpu = 6176 }
 
 [package.metadata.wasm-pack.profile.dev]

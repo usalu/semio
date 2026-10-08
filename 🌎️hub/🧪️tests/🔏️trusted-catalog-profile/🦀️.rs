@@ -17,7 +17,7 @@ use super::{TrustedCatalogLoader, VerifiedTrustedCatalog};
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use crate::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext};
 use crate::inference::VerifiedGisMapArtifactBindingV1;
-use directory::os_directory::hex_lower;
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_store;
 use semio_framework_hash::{Hasher, Sha256};
 

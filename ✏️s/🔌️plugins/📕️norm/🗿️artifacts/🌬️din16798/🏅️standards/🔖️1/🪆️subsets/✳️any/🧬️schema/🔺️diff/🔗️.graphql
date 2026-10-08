@@ -14,18 +14,30 @@ type Din16798Diff {
 }
 
 type Din16798ZoneDelta {
-  removed: [String!]!
-  added: [Din16798ZoneAddition!]!
+  removed: [Din16798ZoneRemoval!]!
+  inserted: [Din16798ZoneInsertion!]!
+  moved: [Din16798ZoneRelocation!]!
   modified: [Din16798ZoneModification!]!
 }
 
-type Din16798ZoneAddition {
-  after: String
+type Din16798ZoneRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din16798ZoneInsertion {
+  index: Int!
   row: Din16798Zone!
 }
 
+type Din16798ZoneRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din16798ZoneModification {
-  key: String!
+  id: String!
   patch: Din16798ZonePatch!
 }
 
@@ -53,18 +65,30 @@ type Din16798ZonePatch {
 }
 
 type Din16798VentSystemDelta {
-  removed: [String!]!
-  added: [Din16798VentSystemAddition!]!
+  removed: [Din16798VentSystemRemoval!]!
+  inserted: [Din16798VentSystemInsertion!]!
+  moved: [Din16798VentSystemRelocation!]!
   modified: [Din16798VentSystemModification!]!
 }
 
-type Din16798VentSystemAddition {
-  after: String
+type Din16798VentSystemRemoval {
+  id: String!
+  index: Int!
+}
+
+type Din16798VentSystemInsertion {
+  index: Int!
   row: Din16798VentSystem!
 }
 
+type Din16798VentSystemRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
 type Din16798VentSystemModification {
-  key: String!
+  id: String!
   patch: Din16798VentSystemPatch!
 }
 

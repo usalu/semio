@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplaceNodeHandle` — patches the presentation fields of one handle inside the owner
 //! node. An absent node or an absent handle is `mutation.target-missing`; a replacement that keeps every field is the
 //! `mutation.no-op` warning. A replacement keeps the addressed handle's id.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dHandlePatch, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlePatch, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_invariant;
 
@@ -33,7 +34,7 @@ pub fn diff(payload: &super::ReplaceNodeHandle, base: &Puzzle2dSnapshot) -> prot
     if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.node_id.to_string_owner()])]);
     }
-    let node_patch = Puzzle2dNodePatch { handles: Some(Puzzle2dHandlesDelta::patching(payload.handle_id.clone(), patch)), ..Default::default() };
-    protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(Puzzle2dNodesDelta::patching(payload.node_id.clone(), node_patch)), ..Default::default() })
+    let node_patch = Puzzle2dNodePatch { handles: Some(Puzzle2dHandlesDelta::modification(payload.handle_id.clone(), patch)), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(Puzzle2dNodesDelta::modification(payload.node_id.clone(), node_patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,4 +1,5 @@
-use super::super::{apply_txt_mutation, TxtMutation};
+use crate::apply_mutation;
+use super::super::{TxtMutation};
 use super::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
@@ -27,12 +28,12 @@ fn crlf_bare_lf_content_inverse_and_root_codecs_restore_the_native_snapshot() {
     let mutation = TxtMutation::SetLine(SetLineMutation { index: 0, text: "x\ny".into() });
     let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut after = base.clone();
-    assert!(apply_txt_mutation(&mut after, &mutation).messages().is_empty());
+    assert!(apply_mutation(&mut after, &mutation).messages().is_empty());
     assert_eq!(TxtSnapshot::from_body(&after.to_body()), after);
     for step in inverse {
         assert_eq!(TxtMutation::parse_op(&step.print_op()).unwrap(), step);
         assert_eq!(TxtMutation::decode_op(&step.encode_op().unwrap()).unwrap(), step);
-        assert!(apply_txt_mutation(&mut after, &step).messages().is_empty());
+        assert!(apply_mutation(&mut after, &step).messages().is_empty());
     }
     assert_eq!(TxtSnapshot::from_body(&after.to_body()), after);
     assert_eq!(after, base);

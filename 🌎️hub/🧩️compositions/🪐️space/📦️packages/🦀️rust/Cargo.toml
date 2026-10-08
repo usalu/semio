@@ -21,6 +21,7 @@ host = { landing = "home", shell = "studio" }
 
 [[package.metadata.semio.playground]]
 variant = "s"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 catalog-default = true
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json"
 ports = { react = 6070, wgpu = 6066 }
@@ -33,11 +34,13 @@ local_only = true
 
 [[package.metadata.semio.playground]]
 variant = "home"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.space.home@1/*#editor"
 ports = { react = 6108, wgpu = 6208 }
 
 [[package.metadata.semio.playground]]
 variant = "space"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.space.space@1/*#editor"
 ports = { react = 6109, wgpu = 6209 }
 
@@ -92,6 +95,7 @@ semio-s-artifact-draw-drawing = { path = "../../../../../✏️s/🔌️plugins/
 semio-s-artifact-writer-writer = { path = "../../../../../✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-hash = { workspace = true }
 # 🌱️ Test-only: every production/`#[cfg(test)]`-adjacent call site now runs on `ToValue`/`FromValue`
 # (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`). What remains is the

@@ -9,6 +9,6 @@ pub fn diff(payload: &super::DeleteRepresentation, base: &Block5dSnapshot) -> pr
     if !base.representations.iter().any(|item| item.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "representation", payload.id), vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Block5dDiff { representations: Some(BlockRepresentationsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff { representations: BlockRepresentationsDelta::removal(&base.representations, base.representations.iter().position(|item| item.id == payload.id).unwrap_or(usize::MAX)), ..Default::default() })
 }
 //#endregion 🔖️Diff

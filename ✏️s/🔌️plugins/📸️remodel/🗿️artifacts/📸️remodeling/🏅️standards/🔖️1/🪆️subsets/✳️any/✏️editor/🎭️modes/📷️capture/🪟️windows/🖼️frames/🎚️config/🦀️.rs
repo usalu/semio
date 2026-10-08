@@ -17,29 +17,27 @@ pub struct RemodelingFramesWindowConfig {
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
-pub enum RemodelingFramesWindowConfigMutation { Snapshot { config: RemodelingFramesWindowConfig } }
+pub enum RemodelingFramesWindowConfigMutation { SetFrameCursor { frame_cursor: RemodelingFrameCursor } }
 
 impl protocol::Mutation<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigMutation {
     type Diff = RemodelingFramesWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config", semantic_kind: "set-window-config", display_name: "Set Remodeling Frames Window Configuration", emoji: "🎚️", aggregate_variant: "Snapshot", payload_schema: "remodeling.frameswindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config", semantic_kind: "set-frame-cursor", display_name: "Set Remodeling Frames Window Frame Cursor", emoji: "🎚️", aggregate_variant: "SetFrameCursor", payload_schema: "remodeling.frameswindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &RemodelingFramesWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } => {
-                let diff = RemodelingFramesWindowConfigDiff {
-            frame_cursor: (base.frame_cursor != config.frame_cursor).then(|| config.frame_cursor.clone()),
-                };
+            Self::SetFrameCursor { frame_cursor } => {
+                let diff = RemodelingFramesWindowConfigDiff { frame_cursor: (&base.frame_cursor != frame_cursor).then(|| frame_cursor.clone()), ..Default::default() };
                 match protocol::DiffAlgebra::<RemodelingFramesWindowConfig>::is_empty(&diff) {
-                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
+                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Frame cursor is unchanged."),
                     false => protocol::MutationOutcome::new(diff),
                 }
             }
         }
     }
     fn inverse(&self, base: &RemodelingFramesWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok(vec![Self::Snapshot { config: base.clone() }])
+    Ok(vec![Self::SetFrameCursor { frame_cursor: base.frame_cursor.clone() }])
 }
 }
 
@@ -99,7 +97,7 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingFramesWindowConfigO
 }
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> RemodelingFramesWindowConfig { view.window::<RemodelingFramesWindowConfigOwner>().cloned().unwrap_or_default() }
 pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> RemodelingFramesWindowConfig { snapshot.and_then(|snapshot| snapshot.get::<RemodelingFramesWindowConfigOwner>()).cloned().unwrap_or_default() }
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingFramesWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> { let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-frames-window-required"))?; let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?; if kind != super::REMODELING_PLAY_WINDOW_FRAMES { return Err(semio_framework_plugin::Fault::from("remodeling-frames-window-kind-required")); } Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingFramesWindowConfigOwner>(id, RemodelingFramesWindowConfigMutation::Snapshot { config })) }
+pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingFramesWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> { let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-frames-window-required"))?; let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?; if kind != super::REMODELING_PLAY_WINDOW_FRAMES { return Err(semio_framework_plugin::Fault::from("remodeling-frames-window-kind-required")); } Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingFramesWindowConfigOwner>(id, RemodelingFramesWindowConfigMutation::SetFrameCursor { frame_cursor: config.frame_cursor })) }
 
 //#region 🔺️Diff
 /// 🔺️ Sparse field delta for the window configuration; an absent field is untouched.
@@ -129,12 +127,6 @@ impl protocol::DiffAlgebra<RemodelingFramesWindowConfig> for RemodelingFramesWin
     fn inverse(&self, base: &RemodelingFramesWindowConfig) -> Self {
         Self {
             frame_cursor: self.frame_cursor.as_ref().map(|_| base.frame_cursor.clone()),
-        }
-    }
-
-    fn between(base: &RemodelingFramesWindowConfig, other: &RemodelingFramesWindowConfig) -> Self {
-        Self {
-            frame_cursor: (base.frame_cursor != other.frame_cursor).then(|| other.frame_cursor.clone()),
         }
     }
 

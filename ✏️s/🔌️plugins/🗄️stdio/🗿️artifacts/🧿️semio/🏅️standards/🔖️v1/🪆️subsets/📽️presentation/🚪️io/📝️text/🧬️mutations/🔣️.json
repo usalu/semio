@@ -9,7 +9,6 @@
   "properties": {
     "keyword": {
       "enum": [
-        "set-snapshot",
         "insert-slide",
         "remove-slide",
         "set-slide-layout",

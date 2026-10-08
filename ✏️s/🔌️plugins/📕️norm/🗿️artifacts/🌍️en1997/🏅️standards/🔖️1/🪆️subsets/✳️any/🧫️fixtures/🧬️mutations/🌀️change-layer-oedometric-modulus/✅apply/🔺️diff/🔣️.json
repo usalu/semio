@@ -7,16 +7,18 @@
   "groundwaterLevel": null,
   "investigationDepth": null,
   "layers": {
-    "added": [],
     "removed": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "layer-sand",
-        "oedometricModulus": 60000000.0,
-        "phiPrimeDeg": null
+        "patch": {
+          "oedometricModulus": 60000000.0,
+          "phiPrimeDeg": null
+        }
       }
-    ],
-    "order": null
+    ]
   },
   "footings": null,
   "piles": null,

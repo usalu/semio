@@ -1,0 +1,14 @@
+{
+  "sessionId": 65237,
+  "exitCode": 0,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 198,
+  "seconds": 0.115,
+  "selector": "test(erased_read)",
+  "physicalReleaseObserved": true,
+  "originalPointerPreserved": true,
+  "sourceForwardingPending": true,
+  "scope": "Canonical erased read original cancellation and authority laws only",
+  "log": "🗑️generated/root-oct8-canonical-erased-read-lease-original-native.log"
+}

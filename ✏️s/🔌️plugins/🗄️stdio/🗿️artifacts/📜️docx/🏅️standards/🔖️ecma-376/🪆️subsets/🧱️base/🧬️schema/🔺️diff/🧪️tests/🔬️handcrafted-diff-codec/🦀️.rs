@@ -5,7 +5,7 @@ use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 async fn canonical_xml_and_opc_diff_text_binary_replay_is_exact() {
     let before = snapshot_a();
     let after = snapshot_b();
-    let diff = DocxDiff::between(&before, &after);
+    let diff = demo_forward_diff();
     assert!(diff.xml_parts.is_some(), "semantic changes must be expressed against canonical XML parts");
     assert!(diff.opc.is_some(), "binary package changes must be expressed against OPC state");
 
@@ -50,8 +50,6 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
     expected.xml_parts.iter_mut().find(|part| part.path == main_path).unwrap().document.declaration = None;
     assert_eq!(after, expected, "the sparse fixture changes only the canonical XML declaration");
 
-    let derived = DocxDiff::between(&source, &after);
-    assert_eq!(derived, diff, "the neutral fixture is the exact canonical between-diff");
     assert_eq!(protocol::apply_diff(&diff.inverse(&source), &after).expect("inverse applies"), source);
     for replay in [DocxDiff::parse_diff(&diff.print_diff()).expect("text replay"), DocxDiff::decode_diff(&diff.encode_diff().expect("binary encode")).expect("binary replay")] {
         assert_eq!(protocol::apply_diff(&replay, &before).expect("codec replay applies"), after);
@@ -74,7 +72,7 @@ use semio_framework_value::ToValue;
     before.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["before"].as_str().unwrap()).unwrap();
     let mut after = before.clone();
     after.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["after"].as_str().unwrap()).unwrap();
-    let diff = DocxDiff::between(&before, &after);
+    let diff = DocxDiff { opc: Some(OpcDiff { comment: Some(fixture["after"].as_str().unwrap().to_string()), ..Default::default() }), ..Default::default() };
     assert!(!diff.is_empty());
     for replay in [DocxDiff::parse_diff(&diff.print_diff()).unwrap(), DocxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
         assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after);
@@ -83,9 +81,9 @@ use semio_framework_value::ToValue;
     let mut cleared = after.clone();
     cleared.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["cleared"].as_str().unwrap()).unwrap();
     let mut combined = diff;
-    combined.absorb(DocxDiff::between(&after, &cleared));
+    combined.absorb(DocxDiff { opc: Some(OpcDiff { comment: Some(fixture["cleared"].as_str().unwrap().to_string()), ..Default::default() }), ..Default::default() });
     assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared);
-    let mutation = DocxMutation::SetPart(set_part::SetPart { path: "word/media/x.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![1, 2] }, index: Some(1) });
+    let mutation = DocxMutation::SetPart(set_part::SetPart { path: "word/media/x.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![1, 2] }, index: Some(1), override_index: None });
     assert_eq!(DocxMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(DocxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.to_value())).unwrap();

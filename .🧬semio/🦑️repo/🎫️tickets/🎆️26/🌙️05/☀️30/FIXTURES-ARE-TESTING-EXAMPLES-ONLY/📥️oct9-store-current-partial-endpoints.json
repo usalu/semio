@@ -1,0 +1,54 @@
+{
+  "status": "partial-not-frozen-no-native-credit",
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "action": "updated",
+      "currentObservedSha256": "ef3244756ec8785345cd97bce44342193767d25ba90f6bcc91d50ba03a16b6f4",
+      "scope": "returned-read ingress, exact facade/defining compiler edges, ephemeral close and live-read admission logical blocks only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "action": "updated",
+      "currentObservedSha256": "5d4de4532249c20a2979d7a82b45e7ca10bbc2bbfa6ed4d609c228cec673a860",
+      "scope": "current factory/facade laws and two new allocator laws; preserve Native Demo4 constructors"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "currentObservedSha256": "ec66d0c834b4b8dcee589d8ccde7f0cd5b8f0b853886f14416fd52fd0c495977",
+      "scope": "four new neutral domain/source laws only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "action": "updated",
+      "currentObservedSha256": "99dc6f7b05327662f64c9e39d1da10adf14e29b62aa6b5e5563ab5913f6fe99a",
+      "scope": "exact birth-demand and prepared-read return consumers only; broad Plugin closure pending"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "action": "updated",
+      "currentObservedSha256": "5d48e7ea71729d3d7fe37bd6abc0bba9bf18ab5266ec5466c121fe09b737715e",
+      "scope": "exact birth-demand/depth and prepared-read return consumers only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+      "action": "updated",
+      "currentObservedSha256": "85fd20e8aeba344df6542ccc98a067eed1a59cc04cdbdd6a4fc2bea0d506c573",
+      "scope": "exact current birth-demand admission branch only"
+    }
+  ],
+  "preimages": [
+    "📥️oct9-store-returned-current-preimages.json",
+    "📥️oct9-store-current-defining-edge-preimages.json",
+    "📥️oct9-store-unit-current-simple-factory-preimages.json",
+    "📥️oct9-ephemeral-publication-current-source-actions.json",
+    "📥️oct9-ephemeral-slot-scope-correction.json",
+    "📥️oct9-plugin-birth-demand-current-actions.json",
+    "📥️oct9-plugin-birth-demand-zero-frontier-preimages.json",
+    "📥️oct9-store-live-read-current-actions.json",
+    "📥️oct9-store-live-read-unit-current-actions.json",
+    "📥️oct9-store-prepared-read-consumer-current-actions.json",
+    "📥️oct9-store-live-read-native-preimage.json"
+  ]
+}

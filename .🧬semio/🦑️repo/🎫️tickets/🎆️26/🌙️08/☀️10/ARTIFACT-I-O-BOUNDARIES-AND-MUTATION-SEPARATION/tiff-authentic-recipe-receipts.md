@@ -1,0 +1,16 @@
+# TIFF Authentic Recipe Receipts
+
+Actual isolated manifest39609 GREEN generated six pairs with tiff0.11.3. The first four pairs are byte-identical to the authored canonical files; PaintRegion and ReplaceSamples pairs were copied from the observed codec output. No production Pack bytes are claimed. Unobserved security-scan claims were removed from the new receipts.
+
+- insert-ifd-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/📥️insert-ifd-applied/⬅️before.tiff, 246 bytes, sha256:ab26cbb1ba244956a2bdb8e68fe08ee9419526824d095cc2a7f05b10d2964870
+- insert-ifd-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/📥️insert-ifd-applied/➡️after.tiff, 462 bytes, sha256:4e85e22e84dccedcaaa7868d1d0b52cdd5429d8364a57a578a8fda732f8fd37d
+- remove-ifd-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/📤️remove-ifd-applied/⬅️before.tiff, 462 bytes, sha256:4e85e22e84dccedcaaa7868d1d0b52cdd5429d8364a57a578a8fda732f8fd37d
+- remove-ifd-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/📤️remove-ifd-applied/➡️after.tiff, 246 bytes, sha256:ab26cbb1ba244956a2bdb8e68fe08ee9419526824d095cc2a7f05b10d2964870
+- replace-tag-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🏷️replace-tag-applied/⬅️before.tiff, 254 bytes, sha256:eb67bd19c350308d536ac2dceb10174f810f8ff57e3abb97fad8a04ef226c0e3
+- replace-tag-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🏷️replace-tag-applied/➡️after.tiff, 255 bytes, sha256:56df3c7c335366b59f5a8580c6716ae36dded5adcc3b19c38cc703ae7386abc5
+- remove-tag-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🗑️remove-tag-applied/⬅️before.tiff, 251 bytes, sha256:3d839064ff25b0b3e57590309af763beea43fc764dc397cb839f208e5e91846d
+- remove-tag-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🗑️remove-tag-applied/➡️after.tiff, 228 bytes, sha256:3676474fc37d37d78448dc72ddeec39c2a36ad96fd5565012bef0beda6e23ba5
+- paint-region-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff, 258 bytes, sha256:6813847fe31b9887006a1d8de00108e14e53095e3ef75d9e7eda03421061af27
+- paint-region-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🎨️paint-region-applied/➡️after.tiff, 258 bytes, sha256:94b2cde185be1da3e99b96c61c84b4b7815e715c7d3c1742054eb4cc63f1e1a1
+- replace-samples-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🧮️replace-samples-applied/⬅️before.tiff, 258 bytes, sha256:6813847fe31b9887006a1d8de00108e14e53095e3ef75d9e7eda03421061af27
+- replace-samples-applied: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/../🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff, 258 bytes, sha256:4f1507783a38aaf8233d8a440f4c6f3e0fb5e56a5cdf2f5aef870cd9aa6305fc

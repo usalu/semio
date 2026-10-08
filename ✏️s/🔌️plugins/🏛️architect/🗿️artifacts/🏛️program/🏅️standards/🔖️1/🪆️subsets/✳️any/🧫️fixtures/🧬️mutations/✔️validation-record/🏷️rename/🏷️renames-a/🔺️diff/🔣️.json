@@ -46,9 +46,10 @@
   "options": null,
   "decisions": null,
   "validations": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "validation-record-a",
         "patch": {
@@ -81,8 +82,7 @@
           "validationNotes": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "performance": null,
   "quality": null,

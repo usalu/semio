@@ -122,19 +122,6 @@
       "tag": 8,
       "kind": "change-layout",
       "operation": "changeLayout"
-    },
-    {
-      "folder": "♻️replace-flow-host-snapshot",
-      "name": "ReplaceFlowHostSnapshot",
-      "verb": "replace",
-      "entity": "flow-host-document",
-      "record": "ReplacedFlowHostSnapshot",
-      "required": [
-        "hostSnapshot"
-      ],
-      "tag": 9,
-      "kind": "replace-flow-host-snapshot",
-      "operation": "replaceFlowHostSnapshot"
     }
   ],
   "widgets": [

@@ -29,8 +29,8 @@ test("hidden ancestors prevent painting", () => {
 
 test("selection spans retain empty versus unrestricted selection", async () => {
   expect(await selectionSpans(undefined)).toBe(null);
-  expect(await selectionSpans(new Uint8Array(4))).toBe("[]");
-  expect(JSON.parse((await selectionSpans(Uint8Array.of(0,255,255,0,128)))!)).toEqual([[1,2,255],[4,1,128]]);
+  expect(await selectionSpans(new Uint8Array(4))).toEqual([]);
+  expect(await selectionSpans(Uint8Array.of(0,255,255,0,128))).toEqual([{start:1,length:2,coverage:255},{start:4,length:1,coverage:128}]);
 });
 
 test("selection bounds use actual mask coverage", async () => {
@@ -57,11 +57,11 @@ for(const fixture of fixtures.cases) test(`${fixture.name}: SVG oracle maps the 
 
 for(const fixture of fixtures.selectionTransport.cases) test(fixture.name+": bounded selection transport",async()=>{
   const mask=Uint8Array.from(fixture.mask);
-  const spans=JSON.parse((await selectionSpans(mask))!);
+  const spans=(await selectionSpans(mask))!;
   expect(spans).toEqual(fixture.spans);
   expect(await selectionBounds(mask,fixture.width)).toEqual(fixture.bounds);
   const restored=new Uint8Array(mask.length);
-  for(const [start,count,value] of spans) restored.fill(value,start,start+count);
+  for(const {start,length:count,coverage:value} of spans) restored.fill(value,start,start+count);
   const png=await sharp(restored,{raw:{width:fixture.width,height:mask.length/fixture.width,channels:1}}).png().toBuffer();
   const decoded=await sharp(png).greyscale().raw().toBuffer();
   expect([...decoded]).toEqual(fixture.mask);
@@ -71,7 +71,7 @@ test("selection transport yields with exact progress across a run boundary",asyn
   const f=fixtures.selectionTransport.boundary,mask=new Uint8Array(f.length);mask.fill(f.value,f.start,f.start+f.count);
   const progress:number[]=[];let yielded=false;setTimeout(()=>{yielded=true;},0);
   const result=await selectionSpans(mask,{onProgress:p=>progress.push(p.completed)});
-  expect(JSON.parse(result!)).toEqual([[f.start,f.count,f.value]]);
+  expect(result).toEqual([{start:f.start,length:f.count,coverage:f.value}]);
   expect(progress).toEqual([32768,65536,f.length]);expect(yielded).toBe(true);
 });
 
@@ -85,10 +85,11 @@ test("selection transport and bounds honor cancellation before publishing",async
   }
 });
 
-test("selection transport bounds fragmented output before allocating every run",async()=>{
-  const mask=Uint8Array.from({length:131072},(_,index)=>index%2?255:0);let progress=0;
-  await expect(selectionSpans(mask,{onProgress:p=>{progress=p.completed;}})).rejects.toThrow("too detailed");
-  expect(progress).toBe(0);
+test("fragmented typed coverage survives without an encoded text budget",async()=>{
+  const mask=Uint8Array.from({length:131072},(_,index)=>index%2?255:0),progress:number[]=[];
+  const spans=await selectionSpans(mask,{onProgress:p=>progress.push(p.completed)});
+  expect(spans?.length).toBe(65536);
+  expect(progress).toEqual([32768,65536,98304,131072]);
 });
 
 test("selection transport cancellation at the final grant cannot publish",async()=>{

@@ -33,7 +33,12 @@
     "terminalReleasesEachAllocationOnce": true
   },
   "copyDemand": {
-    "rowCounts": [0, 1, 65, 257],
+    "rowCounts": [
+      0,
+      1,
+      65,
+      257
+    ],
     "minimumCopyBytes": 4,
     "zeroCopyReleasesBytes": 0
   },
@@ -45,5 +50,32 @@
     ],
     "maximumPreflightsPerTurn": 1,
     "maximumCloseBytes": 262144
+  },
+  "constructorRefusals": [
+    {
+      "id": "zero-depth",
+      "axis": "maximumDepth",
+      "value": 0,
+      "kind": "DepthLimit"
+    },
+    {
+      "id": "zero-items",
+      "axis": "maximumItems",
+      "value": 0,
+      "kind": "WorkLimit"
+    },
+    {
+      "id": "zero-capacity",
+      "axis": "maximumCapacityBytes",
+      "value": 0,
+      "kind": "AllocationFailed"
+    }
+  ],
+  "physicalCloseGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
   }
 }

@@ -1,3 +1,4 @@
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use super::*;
 use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
 #[cfg(feature = "native-artifact-execution")]

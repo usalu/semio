@@ -12,7 +12,7 @@ message NamedModifiedVertex { string key = 1; BrepVertexDiff diff = 2; }
 message BrepVerticesDiff {
   repeated string removed = 1;
   repeated NamedModifiedVertex modified = 2;
-  repeated semio.s_stdio_semio_brep.snapshot.BrepVertex added = 3;
+  repeated BrepVertexAdded added = 3;
 }
 
 message BrepEdgeDiff {
@@ -25,7 +25,7 @@ message NamedModifiedEdge { string key = 1; BrepEdgeDiff diff = 2; }
 message BrepEdgesDiff {
   repeated string removed = 1;
   repeated NamedModifiedEdge modified = 2;
-  repeated semio.s_stdio_semio_brep.snapshot.BrepEdge added = 3;
+  repeated BrepEdgeAdded added = 3;
 }
 
 message BrepLoopDiff { repeated semio.s_stdio_semio_brep.snapshot.BrepLoopEdge edges = 1; }
@@ -33,7 +33,7 @@ message NamedModifiedLoop { string key = 1; BrepLoopDiff diff = 2; }
 message BrepLoopsDiff {
   repeated string removed = 1;
   repeated NamedModifiedLoop modified = 2;
-  repeated semio.s_stdio_semio_brep.snapshot.BrepLoop added = 3;
+  repeated BrepLoopAdded added = 3;
 }
 
 message BrepFaceDiff {
@@ -47,7 +47,7 @@ message NamedModifiedFace { string key = 1; BrepFaceDiff diff = 2; }
 message BrepFacesDiff {
   repeated string removed = 1;
   repeated NamedModifiedFace modified = 2;
-  repeated semio.s_stdio_semio_brep.snapshot.BrepFace added = 3;
+  repeated BrepFaceAdded added = 3;
 }
 
 message BrepShellDiff { repeated semio.s_stdio_semio_brep.snapshot.BrepShellFace faces = 1; }
@@ -55,7 +55,7 @@ message NamedModifiedShell { string key = 1; BrepShellDiff diff = 2; }
 message BrepShellsDiff {
   repeated string removed = 1;
   repeated NamedModifiedShell modified = 2;
-  repeated semio.s_stdio_semio_brep.snapshot.BrepShell added = 3;
+  repeated BrepShellAdded added = 3;
 }
 
 message BrepSolidDiff { repeated semio.s_stdio_semio_brep.snapshot.BrepSolidShell shells = 1; }
@@ -63,7 +63,7 @@ message NamedModifiedSolid { string key = 1; BrepSolidDiff diff = 2; }
 message BrepSolidsDiff {
   repeated string removed = 1;
   repeated NamedModifiedSolid modified = 2;
-  repeated semio.s_stdio_semio_brep.snapshot.BrepSolid added = 3;
+  repeated BrepSolidAdded added = 3;
 }
 
 message SemioBrepDiff {
@@ -74,3 +74,10 @@ message SemioBrepDiff {
   optional BrepShellsDiff shells = 5;
   optional BrepSolidsDiff solids = 6;
 }
+
+message BrepVertexAdded { uint64 index = 1; semio.s_stdio_semio_brep.snapshot.BrepVertex item = 2; }
+message BrepEdgeAdded { uint64 index = 1; semio.s_stdio_semio_brep.snapshot.BrepEdge item = 2; }
+message BrepLoopAdded { uint64 index = 1; semio.s_stdio_semio_brep.snapshot.BrepLoop item = 2; }
+message BrepFaceAdded { uint64 index = 1; semio.s_stdio_semio_brep.snapshot.BrepFace item = 2; }
+message BrepShellAdded { uint64 index = 1; semio.s_stdio_semio_brep.snapshot.BrepShell item = 2; }
+message BrepSolidAdded { uint64 index = 1; semio.s_stdio_semio_brep.snapshot.BrepSolid item = 2; }

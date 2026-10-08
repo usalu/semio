@@ -33,6 +33,7 @@ message PdfSnapshot {
   repeated PdfDictEntry catalog_extra = 29;
   repeated PdfIndirectObject objects = 30;
   repeated PdfDictEntry trailer = 31;
+  repeated PdfAdmittedStreamRole admitted_stream_roles = 32;
 }
 
 message PdfDictEntry {
@@ -310,7 +311,7 @@ message PdfOutputIntent {
   optional string condition = 3;
   optional string registry_name = 4;
   optional string info = 5;
-  optional bytes profile = 6;
+  PdfArtifactRef profile = 6;
 }
 
 message PdfEmbeddedFile {
@@ -375,11 +376,11 @@ message PdfColorSpace {
   repeated double matrix = 5;
   repeated double range = 6;
   optional uint32 components = 7;
-  optional bytes profile = 8;
+  PdfArtifactRef profile = 8;
   PdfColorSpace alternate = 9;
   PdfColorSpace base = 10;
   optional uint32 hival = 11;
-  optional bytes lookup = 12;
+  PdfPalette palette = 12;
   optional string name = 13;
   PdfFunction tint_transform = 14;
   repeated string names = 15;
@@ -492,8 +493,7 @@ message PdfInlineImage {
   optional bool image_mask = 5;
   repeated double decode = 6;
   optional bool interpolate = 7;
-  repeated PdfStreamFilter filters = 8;
-  bytes data = 9;
+  PdfImageBody body = 9;
   repeated PdfDictEntry extra = 10;
 }
 
@@ -545,7 +545,7 @@ message PdfShadingKind {
   optional uint32 bits_per_flag = 10;
   optional uint32 vertices_per_row = 11;
   repeated double decode = 12;
-  optional bytes data = 13;
+  PdfArtifactRef reference = 13;
 }
 
 message PdfExtGState {
@@ -605,8 +605,7 @@ message PdfImage {
   optional bool image_mask = 6;
   repeated double decode = 7;
   optional bool interpolate = 8;
-  PdfImageCodec codec = 9;
-  bytes data = 10;
+  PdfImageBody body = 9;
   optional string soft_mask = 11;
   optional uint32 soft_mask_in_data = 12;
   PdfImageMask mask = 13;
@@ -623,11 +622,10 @@ message PdfImageMask {
   repeated uint32 ranges = 3;
 }
 
-message PdfImageCodec {
+message PdfImageBody {
   string kind = 1;
-  optional uint32 color_transform = 2;
-  PdfCcittParameters parameters = 3;
-  optional bytes globals = 4;
+  repeated uint32 values = 2;
+  PdfArtifactRef reference = 3;
 }
 
 message PdfFont {
@@ -681,15 +679,12 @@ message PdfCidFont {
 
 message PdfFontProgram {
   string kind = 1;
-  optional bytes data = 2;
-  optional uint32 length1 = 3;
-  optional uint32 length2 = 4;
-  optional uint32 length3 = 5;
+  PdfArtifactRef reference = 2;
 }
 
 message PdfCidToGid {
   string kind = 1;
-  optional bytes data = 2;
+  repeated uint32 glyphs = 2;
 }
 
 message PdfCidVerticalRun {
@@ -894,3 +889,25 @@ message PdfAnnotationKind {
   optional bool repeat = 38;
   optional string subtype = 39;
 }
+
+message PdfGraphIdentity { ObjRef owner = 1; repeated PdfGraphPath path = 2; }
+message PdfGraphPath { oneof location { string entry_key = 1; uint64 item_index = 2; } }
+message PdfAdmittedStreamRole { PdfGraphIdentity identity = 1; repeated PdfGraphIdentity dependencies = 2; PdfStreamRoleValue value = 3; }
+message PdfStreamRoleValue {
+ oneof role { PdfOperatorRole operators = 1; PdfSampledWordRole sampled_words = 2; string calculator_program = 3; PdfToUnicode unicode_map = 4; PdfEmbeddedCMap character_map = 5; PdfFontProgram font_program = 6; PdfImage image = 7; string metadata_text = 8; bytes attachment_bytes = 9; PdfPalette palette_components = 10; PdfGlyphIds glyph_ids = 11; PdfArtifactRef reference_body = 12; }
+}
+message PdfOperatorRole { repeated PdfOp content = 1; }
+message PdfSampledWordRole { repeated uint32 samples = 1; }
+
+message PdfArtifactRef {
+  string artifact_id = 1;
+  PdfArtifactDialect dialect = 2;
+}
+message PdfArtifactDialect {
+  string artifact_kind = 1;
+  string standard = 2;
+  string subset = 3;
+}
+
+message PdfPalette { repeated uint32 components = 1; }
+message PdfGlyphIds { repeated uint32 glyphs = 1; }

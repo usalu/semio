@@ -9,13 +9,16 @@
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle3dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` scene_snapshot (see `crate::standards::v1::subsets::any::io::text::mutations`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle3dSnapshot` — the `Puzzle3dSceneSnapshot` model below is this app's own structural twin of it,
-//! and each action emits the granular typed operation delta
-//! (`puzzle3d_operations_from_host_snapshot_change`) turning the old scene_snapshot into the new one.
+//! and each action emits the concrete typed mutation kinds of the gesture it carries (`🎮️commands/<group>`),
+//! never a delta of two scenes.
+
+#[path="📸️snapshot/🦀️.rs"]
+pub mod snapshot;
 
 use crate::editor::puzzle3d::commands::{
-    accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort, export_snapshot,
-    engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, focus_selection, hover_suggestion, import_snapshot, open_import_snapshot, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
-    scale_selection, select_same_kind, set_active_example, set_automatic, set_brush_placement_contact_tolerance, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
+    add_target_volume, apply_sun, close_vortex_suggestions, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort, export_snapshot,
+    engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, focus_selection, hover_suggestion, import_snapshot, open_import_snapshot, open_vortex_suggestions, register_brush_mesh, relocate_target_volume, rotate_selection,
+    scale_selection, select_same_kind, set_automatic, set_brush_placement_contact_tolerance, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
     set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, target_brush_suggestions,
     translate_selection, world_relocate,
 };
@@ -31,11 +34,11 @@ use crate::editor::puzzle3d::presence;
 use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
 use crate::editor::puzzle3d::window as window_ownership;
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{};
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dMutation};
 
-use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::Puzzle3dEngineCommand;
 use crate::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
@@ -377,24 +380,6 @@ fn puzzle3d_scene_snapshot_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -
     puzzle3d_scene_snapshot_from_document(snapshot.typed())
 }
 
-/// 🔭️ The ONE read of a persisted projection every viewport-visible answer is derived from — the
-/// render's scene_snapshot, the semantic document delta's `before`, and the interaction topology the picks
-/// are validated against. Deliberately the untyped `Puzzle3dSceneSnapshot` decode rather than the
-/// document's typed authority: the two are separate decodings of one document, and a disagreement
-/// between them shows up as a pick that paints and then silently vanishes rather than as an error.
-pub fn puzzle3d_scene_snapshot_from_projection(projection: &Value) -> Puzzle3dSceneSnapshot {
-    semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_scene_snapshot())
-}
-
-fn puzzle3d_mutations_between(before: &Puzzle3dSceneSnapshot, after: &Puzzle3dSceneSnapshot) -> Vec<Puzzle3dMutation> {
-    let before_snapshot = puzzle3d_snapshot_from_host_snapshot(before);
-    let after_snapshot = puzzle3d_snapshot_from_host_snapshot(after);
-    if before_snapshot == after_snapshot {
-        return Vec::new();
-    }
-    puzzle3d_snapshot_mutations(&before_snapshot, &after_snapshot)
-}
-
 fn puzzle3d_selected_objects(scene_snapshot: &Puzzle3dSceneSnapshot, interaction: &InteractionView<'_>) -> Vec<Puzzle3dObject> {
     puzzle3d_selected_objects_from(&Puzzle3dInteractionSnapshot::from_interaction(interaction), scene_snapshot)
 }
@@ -443,29 +428,18 @@ fn puzzle3d_copy_fragment_from(scene_snapshot: &Puzzle3dSceneSnapshot, objects: 
 }
 
 /// ✂️ Copies then deletes the selected objects as one mutation list.
-fn puzzle3d_cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
-    let before = puzzle3d_scene_snapshot_from_view(doc);
-    puzzle3d_cut_operations_from(&before, &Puzzle3dInteractionSnapshot::from_interaction(interaction))
+fn puzzle3d_cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Vec<Puzzle3dMutation> {
+    puzzle3d_cut_operations_from(doc.snapshot.typed(), &Puzzle3dInteractionSnapshot::from_interaction(interaction))
 }
 
-fn puzzle3d_cut_operations_from(before: &Puzzle3dSceneSnapshot, marks: &Puzzle3dInteractionSnapshot) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
-    let objects = puzzle3d_selected_objects_from(marks, before);
-    if objects.is_empty() {
-        return Err(ClipboardError::EmptySelection);
-    }
-    let ids: HashSet<String> = objects.into_iter().map(|object| object.id).collect();
-    let mut after = before.clone();
-    after.objects.retain(|object| !ids.contains(&object.id));
-    after.attractions.retain(|attraction| !ids.iter().any(|id| attraction.attracting.starts_with(&format!("{id}:")) || attraction.attracted.starts_with(&format!("{id}:"))));
-    Ok(puzzle3d_mutations_between(before, &after))
+fn puzzle3d_cut_operations_from(before: &Puzzle3dSnapshot, marks: &Puzzle3dInteractionSnapshot) -> Vec<Puzzle3dMutation> {
+    let host = puzzle3d_scene_snapshot_from_document(before);
+    let ids: Vec<String> = puzzle3d_selected_objects_from(marks, &host).into_iter().map(|object| object.id).collect();
+    delete_selection::delete_selection_mutations(before, &ids, &HashSet::new(), &[], &[], &[])
 }
 
-/// 📋 Clones a copied scene_snapshot fragment with fresh ids.
-fn puzzle3d_paste_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
-    puzzle3d_paste_operations_on(&puzzle3d_scene_snapshot_from_view(doc), fragment, placement)
-}
-
-fn puzzle3d_paste_operations_on(before: &Puzzle3dSceneSnapshot, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+/// 📋 Clones a copied scene_snapshot fragment with fresh ids, one `create-object` per clone.
+fn puzzle3d_paste_operations(fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
     let expected = MediaType { class: MediaClass::ThreeD, form: MediaForm::Design };
     if fragment.media_type != expected {
         return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
@@ -475,17 +449,17 @@ fn puzzle3d_paste_operations_on(before: &Puzzle3dSceneSnapshot, fragment: &Clipb
     if clip.objects.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
-    let mut after = before.clone();
     let offset = placement.position.unwrap_or([0.5, 0.5, 0.0]);
-    for object in clip.objects {
-        let mut clone = object;
-        clone.id = next_object_id();
-        clone.origin[0] += offset[0];
-        clone.origin[1] += offset[1];
-        clone.origin[2] += offset[2];
-        after.objects.push(clone);
-    }
-    Ok(puzzle3d_mutations_between(before, &after))
+    clip.objects
+        .into_iter()
+        .map(|mut clone| {
+            clone.id = next_object_id();
+            clone.origin[0] += offset[0];
+            clone.origin[1] += offset[1];
+            clone.origin[2] += offset[2];
+            snapshot_object_from_host_snapshot(&clone).map(|object| crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))
+        })
+        .collect()
 }
 
 pub fn default_scene_snapshot() -> Puzzle3dSceneSnapshot {
@@ -496,32 +470,12 @@ pub fn nakagin_scene_snapshot() -> Puzzle3dSceneSnapshot {
     NAKAGIN_EXAMPLE_SNAPSHOT.clone()
 }
 
-/// 🌉️ `Puzzle3dPlaySnapshot::value()` (owned by `🧬️mutations/🦀️.rs`, out of this ticket's scope)
-/// still projects the bare scene_snapshot document as `serde_json::Value` — bridges it into this file's
-/// own first-party `Value` via `DslValue` without ever naming the foreign crate: `T`'s only caller
-/// is `snapshot.value(): &serde_json::Value`, resolved structurally through the `DslValue: From<T>`
-/// bound rather than a spelled-out type.
-pub(crate) fn puzzle3d_projection_value<T>(value: T) -> Value
-where
-    semio_framework_value::DslValue: From<T>,
-{
-    semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(value))
+/// 👁️ Builds the native host view from the editor-owned intrinsic projection.
+pub(crate) fn puzzle3d_projection_value<T:std::borrow::Borrow<semio_framework_value::DslValue>>(value:T)->Value{
+    semio_framework_pack_json::from_dsl_value(value.borrow())
 }
 
-/// 🧾️ Materializes the transient scene from the persisted projection (bare scene_snapshot json) and the
-/// app's current view state; an unparseable projection degrades to an empty board.
-pub fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
-    let scene_snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_scene_snapshot());
-    Puzzle3dScene { scene_snapshot, runtime, active_utility: active_utility.to_string() }
-}
-
-/// 🧾️ Materializes the transient scene straight off the snapshot's own TYPED authority, with no
-/// `Value` anywhere on the path. `Puzzle3dPlaySnapshot` keeps the persisted document as a typed
-/// `Puzzle3dSnapshot` and materializes its `serde_json` projection only for readers that ask; going
-/// through that projection cost a measured 4.4 ms per action on the 180-object Nakagin document
-/// (1.6 ms `serde_json::Value` → `DslValue` → `Value`, 2.8 ms back to `DslValue` → `Puzzle3dSceneSnapshot`)
-/// for a translation between two structural twins. Ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3;
-/// `puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example` is the differential law.
+/// 🧾️ Builds the native scene directly from canonical typed authority.
 pub fn scene_from_snapshot(document: &Puzzle3dSnapshot, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
     Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(document), runtime, active_utility: active_utility.to_string() }
 }
@@ -543,36 +497,36 @@ pub fn puzzle3d_scene_snapshot_from_document(document: &Puzzle3dSnapshot) -> Puz
 }
 
 /// 🧬️ Inverse of [`puzzle3d_scene_snapshot_from_document`] — the document delta must compare typed snapshots,
-/// not a camelCase scene_snapshot `ToValue` re-parsed as `Puzzle3dSnapshot` (that FromValue fails closed to empty).
-pub fn puzzle3d_snapshot_from_host_snapshot(scene_snapshot: &Puzzle3dSceneSnapshot) -> Puzzle3dSnapshot {
-    Puzzle3dSnapshot {
+/// Native-only scale and catalog views must admit their typed fields or refuse the operation.
+pub fn puzzle3d_snapshot_from_host_snapshot(scene_snapshot: &Puzzle3dSceneSnapshot) -> Result<Puzzle3dSnapshot,semio_framework_value::ValueError> {
+    Ok(Puzzle3dSnapshot {
         schema: scene_snapshot.schema.clone(),
         domain: scene_snapshot.domain.clone(),
         meta: crate::Puzzle3dMeta {
-            kind_catalogs: scene_snapshot.meta.kind_catalogs.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()),
-            kind_compatibility: scene_snapshot.meta.kind_compatibility.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()).unwrap_or_default(),
+            kind_catalogs: scene_snapshot.meta.kind_catalogs.clone().map(semio_framework_value::FromValue::from_value).transpose()?,
+            kind_compatibility: match scene_snapshot.meta.kind_compatibility.clone(){Some(value)=>semio_framework_value::FromValue::from_value(value)?,None=>Default::default()},
         },
-        objects: scene_snapshot.objects.iter().map(snapshot_object_from_host_snapshot).collect(),
+        objects: scene_snapshot.objects.iter().map(snapshot_object_from_host_snapshot).collect::<Result<_,_>>()?,
         attractions: scene_snapshot.attractions.iter().map(snapshot_attraction_from_host_snapshot).collect(),
-        target_volumes: scene_snapshot.target_volumes.iter().map(snapshot_target_volume_from_host_snapshot).collect(),
+        target_volumes: scene_snapshot.target_volumes.iter().map(snapshot_target_volume_from_host_snapshot).collect::<Result<_,_>>()?,
         references: scene_snapshot.references.iter().map(snapshot_reference_from_host_snapshot).collect(),
-    }
+    })
 }
 
-fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> crate::Puzzle3dObject {
-    crate::Puzzle3dObject {
+fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<crate::Puzzle3dObject,semio_framework_value::ValueError> {
+    Ok(crate::Puzzle3dObject {
         id: object.id.clone(),
         label: object.label.clone(),
         object_kind: object.object_kind.clone(),
         anchor: crate::Puzzle3dObjectAnchor::default(),
         origin: object.origin,
         orientation: object.orientation,
-        scale: object.scale.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()),
+        scale: object.scale.clone().map(semio_framework_value::FromValue::from_value).transpose()?,
         mesh_url: object.mesh_url.clone(),
         vortices: object.vortices.iter().map(snapshot_vortex_from_host_snapshot).collect(),
         hidden: object.hidden,
         locked: object.locked,
-    }
+    })
 }
 
 fn snapshot_vortex_from_host_snapshot(vortex: &Puzzle3dVortex) -> crate::Puzzle3dVortex {
@@ -595,8 +549,8 @@ fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> cr
     }
 }
 
-fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume {
-    crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()), hidden: volume.hidden, locked: volume.locked }
+fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> Result<crate::Puzzle3dTargetVolume,semio_framework_value::ValueError> {
+    Ok(crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().map(semio_framework_value::FromValue::from_value).transpose()?, hidden: volume.hidden, locked: volume.locked })
 }
 
 fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> crate::Puzzle3dReference {
@@ -656,18 +610,6 @@ fn scene_reference_from_snapshot(reference: &crate::Puzzle3dReference) -> Puzzle
         locked: reference.locked,
         hidden: reference.hidden,
     }
-}
-
-/// 🧮️ Document operations for a scene_snapshot mutation through the typed semantic delta vocabulary.
-pub fn puzzle3d_operations_from_host_snapshot_change(before: &Value, after_snapshot: &Puzzle3dSceneSnapshot) -> Vec<Puzzle3dMutation> {
-    let before_fixture: Puzzle3dSceneSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(before)).unwrap_or_else(|_| empty_scene_snapshot());
-    let before_snapshot = puzzle3d_snapshot_from_host_snapshot(&before_fixture);
-    let after_snapshot = puzzle3d_snapshot_from_host_snapshot(after_snapshot);
-    if before_snapshot == after_snapshot {
-        return Vec::new();
-    }
-    let ops = puzzle3d_snapshot_mutations(&before_snapshot, &after_snapshot);
-    ops
 }
 
 /// 🔌️ `kit:in` seam helper: keyed UPSERT of `incoming` rows (each shaped `{"id": "...", ...}`) into
@@ -779,31 +721,6 @@ fn puzzle3d_flag_value_action(id: &str, flag: &str, label: LocalizedLabel, value
         .in_palette(false)
 }
 
-/** 🧭️ Whether `handle` may emit VCS operations from a scene_snapshot before/after delta — view-only actions skip the persisted artifact snapshot entirely. */
-fn puzzle3d_action_artifact_intent(action: &str) -> bool {
-    matches!(
-        action,
-        "setActiveExample"
-            | "addObjectKind"
-            | "deleteSelection"
-            | "duplicateSelection"
-            | "setSelectionFlag"
-            | "setSelectionHidden"
-            | "setSelectionLocked"
-            | "patchInspector"
-            | "engagementSubmit"
-            | "engagementRepeatLast"
-            | "createAttraction"
-            | "deleteAttraction"
-            | "addTargetVolume"
-            | "deleteTargetVolume"
-            | "setTargetVolumeFlag"
-            | "addBrushObject"
-            | "acceptSuggestion"
-            | "importSnapshot"
-    )
-}
-
 //#region 🔖️Quaternions
 pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle,quat_mul,quat_rotate_vector};
 
@@ -869,10 +786,6 @@ pub fn collect_mesh_urls(scene_snapshot: &Puzzle3dSceneSnapshot) -> Vec<String> 
     urls.into_iter().map(str::to_string).collect()
 }
 
-fn scale_array_to_dsl_value(scale: [f64; 3]) -> semio_framework_value::DslValue {
-    semio_framework_value::DslValue::Array(scale.iter().map(|component| semio_framework_value::DslValue::float(*component)).collect())
-}
-
 pub fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
     match object.scale.as_ref().and_then(semio_framework_value::DslValue::as_array) {
         Some(values) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
@@ -904,26 +817,6 @@ pub fn resolve_vortex_world_position(scene_snapshot: &Puzzle3dSceneSnapshot, ful
         }
     }
     None
-}
-
-pub fn resolve_vortex_kind(scene_snapshot: &Puzzle3dSceneSnapshot, full_id: &str) -> Option<String> {
-    scene_snapshot.objects.iter().find_map(|object| object.vortices.iter().find(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).and_then(|vortex| vortex.vortex_kind.clone()))
-}
-
-/// 🧲️ Permissive when the scene_snapshot declares no `kindCompatibility` rules at all — otherwise requires an explicit (or bidirectional) entry.
-pub fn puzzle3d_kinds_compatible(scene_snapshot: &Puzzle3dSceneSnapshot, source_kind: &str, target_kind: &str) -> bool {
-    let Some(entries) = scene_snapshot.meta.kind_compatibility.as_ref().and_then(|value| value.as_array()) else {
-        return true;
-    };
-    if entries.is_empty() {
-        return true;
-    }
-    entries.iter().any(|entry| {
-        let source = entry.get("source").and_then(|value| value.as_str()).unwrap_or("");
-        let target = entry.get("target").and_then(|value| value.as_str()).unwrap_or("");
-        let bidirectional = entry.get("bidirectional").and_then(|value| value.as_bool()).unwrap_or(false);
-        (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind)
-    })
 }
 
 pub fn puzzle3d_catalog_entries<'a>(scene_snapshot: &'a Puzzle3dSceneSnapshot, section: &str) -> &'a [semio_framework_value::DslValue] {
@@ -1265,57 +1158,6 @@ impl Puzzle3dInteractionSnapshot {
 //#endregion 🔖️InteractionSnapshot
 
 //#region 🔖️FixtureEdits
-/// 🙈️ Applies `hidden`/`locked` to the given ids of one entity kind — `"vortex"` ids are full ids (`objectId:vortexId`).
-pub fn apply_puzzle3d_selection_flag(scene_snapshot: &mut Puzzle3dSceneSnapshot, entity: &str, ids: &[String], flag: &str, value: bool) {
-    if ids.is_empty() {
-        return;
-    }
-    let ids: HashSet<&str> = ids.iter().map(String::as_str).collect();
-    match entity {
-        "object" => {
-            for object in scene_snapshot.objects.iter_mut().filter(|object| ids.contains(object.id.as_str())) {
-                if flag == "locked" {
-                    object.locked = value;
-                } else {
-                    object.hidden = value;
-                }
-            }
-        }
-        "vortex" => {
-            for object in scene_snapshot.objects.iter_mut() {
-                for vortex in object.vortices.iter_mut() {
-                    if ids.contains(puzzle3d_vortex_full_id(&object.id, &vortex.id).as_str()) {
-                        if flag == "locked" {
-                            vortex.locked = value;
-                        } else {
-                            vortex.hidden = value;
-                        }
-                    }
-                }
-            }
-        }
-        "reference" => {
-            for reference in scene_snapshot.references.iter_mut().filter(|reference| ids.contains(reference.id.as_str())) {
-                if flag == "locked" {
-                    reference.locked = value;
-                } else {
-                    reference.hidden = value;
-                }
-            }
-        }
-        "targetVolume" => {
-            for volume in scene_snapshot.target_volumes.iter_mut().filter(|volume| ids.contains(volume.id.as_str())) {
-                if flag == "locked" {
-                    volume.locked = value;
-                } else {
-                    volume.hidden = value;
-                }
-            }
-        }
-        _ => {}
-    }
-}
-
 pub fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
     let array = value.as_array()?;
     Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
@@ -1364,204 +1206,6 @@ pub(crate) fn puzzle3d_inspector_origin_nudge(args: Option<&Value>) -> Option<[f
     let mut offset = [0.0; 3];
     offset[axis] = delta;
     Some(offset)
-}
-
-/// 🔎️ Generic inspector edit dispatcher — `entity`/`field` select the target, `ids` scope it (full ids for vortices, `objectId:vortexId`).
-/// `hidden`/`locked` delegate to `apply_puzzle3d_selection_flag` (shared with the non-inspector toggle path); every other field
-/// resolves via `value` (absolute) or `delta` (relative, added to each entity's own current component).
-pub fn apply_puzzle3d_inspector_patch(scene_snapshot: &mut Puzzle3dSceneSnapshot, entity: &str, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
-    if ids.is_empty() {
-        return;
-    }
-    if field == "hidden" || field == "locked" {
-        if let Some(pressed) = value.and_then(Value::as_bool) {
-            apply_puzzle3d_selection_flag(scene_snapshot, entity, ids, field, pressed);
-        }
-        return;
-    }
-    let id_set: HashSet<&str> = ids.iter().map(String::as_str).collect();
-    match entity {
-        "object" => {
-            for object in scene_snapshot.objects.iter_mut().filter(|object| id_set.contains(object.id.as_str())) {
-                match field {
-                    "label" => object.label = value.and_then(Value::as_str).map(str::to_string),
-                    "objectKind" => object.object_kind = value.and_then(Value::as_str).map(str::to_string),
-                    "meshUrl" => object.mesh_url = value.and_then(Value::as_str).map(str::to_string),
-                    "origin" => {
-                        if let Some(origin) = value.and_then(value_as_vec3) {
-                            object.origin = origin;
-                        }
-                    }
-                    _ => {
-                        if let Some(axis) = puzzle3d_axis_index(field, "origin") {
-                            if let Some(updated) = puzzle3d_resolve_number_edit(object.origin[axis], value, delta) {
-                                object.origin[axis] = updated;
-                            }
-                        } else if let Some(axis) = puzzle3d_axis_index(field, "scale") {
-                            let mut scale = object_scale_json(object);
-                            if let Some(updated) = puzzle3d_resolve_number_edit(scale[axis], value, delta) {
-                                scale[axis] = updated;
-                                object.scale = Some(scale_array_to_dsl_value(scale));
-                            }
-                        } else if let Some(axis) = puzzle3d_axis_index(field, "orientation") {
-                            let mut quat = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                            if let Some(updated) = puzzle3d_resolve_number_edit(quat[axis], value, delta) {
-                                quat[axis] = updated;
-                                object.orientation = Some(quat_normalize(quat));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        "vortex" => {
-            for object in scene_snapshot.objects.iter_mut() {
-                for vortex in object.vortices.iter_mut() {
-                    if !id_set.contains(puzzle3d_vortex_full_id(&object.id, &vortex.id).as_str()) {
-                        continue;
-                    }
-                    match field {
-                        "vortexKind" => vortex.vortex_kind = value.and_then(Value::as_str).map(str::to_string),
-                        "position" => {
-                            if let Some(position) = value.and_then(value_as_vec3) {
-                                vortex.position = position;
-                            }
-                        }
-                        "direction" => {
-                            if let Some(direction) = value.and_then(value_as_vec3) {
-                                vortex.direction = Some(direction);
-                            }
-                        }
-                        "radius" => {
-                            if let Some(updated) = puzzle3d_resolve_number_edit(vortex.radius.unwrap_or(0.35), value, delta) {
-                                vortex.radius = Some(updated);
-                            }
-                        }
-                        _ => {
-                            if let Some(axis) = puzzle3d_axis_index(field, "position") {
-                                if let Some(updated) = puzzle3d_resolve_number_edit(vortex.position[axis], value, delta) {
-                                    vortex.position[axis] = updated;
-                                }
-                            } else if let Some(axis) = puzzle3d_axis_index(field, "direction") {
-                                let mut direction = vortex.direction.unwrap_or([0.0, 0.0, 1.0]);
-                                if let Some(updated) = puzzle3d_resolve_number_edit(direction[axis], value, delta) {
-                                    direction[axis] = updated;
-                                    vortex.direction = Some(direction);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        "attraction" => {
-            for attraction in scene_snapshot.attractions.iter_mut().filter(|attraction| id_set.contains(attraction.id.as_str())) {
-                match field {
-                    "attracting" => {
-                        if let Some(text) = value.and_then(Value::as_str) {
-                            attraction.attracting = text.into();
-                        }
-                    }
-                    "attracted" => {
-                        if let Some(text) = value.and_then(Value::as_str) {
-                            attraction.attracted = text.into();
-                        }
-                    }
-                    "gap" => {
-                        if let Some(v) = puzzle3d_resolve_number_edit(attraction.gap, value, delta) {
-                            attraction.gap = v;
-                        }
-                    }
-                    "shift" => {
-                        if let Some(v) = puzzle3d_resolve_number_edit(attraction.shift, value, delta) {
-                            attraction.shift = v;
-                        }
-                    }
-                    "rise" => {
-                        if let Some(v) = puzzle3d_resolve_number_edit(attraction.rise, value, delta) {
-                            attraction.rise = v;
-                        }
-                    }
-                    "rotation" => {
-                        if let Some(v) = puzzle3d_resolve_number_edit(attraction.rotation, value, delta) {
-                            attraction.rotation = v;
-                        }
-                    }
-                    "turn" => {
-                        if let Some(v) = puzzle3d_resolve_number_edit(attraction.turn, value, delta) {
-                            attraction.turn = v;
-                        }
-                    }
-                    "tilt" => {
-                        if let Some(v) = puzzle3d_resolve_number_edit(attraction.tilt, value, delta) {
-                            attraction.tilt = v;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        "reference" => {
-            for reference in scene_snapshot.references.iter_mut().filter(|reference| id_set.contains(reference.id.as_str())) {
-                match field {
-                    "sourceUrl" => {
-                        if let Some(text) = value.and_then(Value::as_str) {
-                            reference.source.url = text.into();
-                        }
-                    }
-                    "mediaKind" => reference.source.media_kind = value.and_then(Value::as_str).map(str::to_string),
-                    "origin" => {
-                        if let Some(origin) = value.and_then(value_as_vec3) {
-                            reference.origin = origin;
-                        }
-                    }
-                    "widthWorld" => {
-                        if let Some(width) = puzzle3d_resolve_number_edit(reference.width_world, value, delta) {
-                            reference.width_world = width;
-                        }
-                    }
-                    _ => {
-                        if let Some(axis) = puzzle3d_axis_index(field, "origin") {
-                            if let Some(updated) = puzzle3d_resolve_number_edit(reference.origin[axis], value, delta) {
-                                reference.origin[axis] = updated;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        "targetVolume" => {
-            for volume in scene_snapshot.target_volumes.iter_mut().filter(|volume| id_set.contains(volume.id.as_str())) {
-                match field {
-                    "origin" => {
-                        if let Some(origin) = value.and_then(value_as_vec3) {
-                            volume.origin = origin;
-                        }
-                    }
-                    _ => {
-                        if let Some(axis) = puzzle3d_axis_index(field, "origin") {
-                            if let Some(updated) = puzzle3d_resolve_number_edit(volume.origin[axis], value, delta) {
-                                volume.origin[axis] = updated;
-                            }
-                        } else if let Some(axis) = puzzle3d_axis_index(field, "scale") {
-                            let mut scale = target_volume_scale_json(volume);
-                            if let Some(updated) = puzzle3d_resolve_number_edit(scale[axis], value, delta) {
-                                scale[axis] = updated;
-                                volume.scale = Some(scale_array_to_dsl_value(scale));
-                            }
-                        } else if let Some(axis) = puzzle3d_axis_index(field, "orientation") {
-                            let mut quat = volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                            if let Some(updated) = puzzle3d_resolve_number_edit(quat[axis], value, delta) {
-                                quat[axis] = updated;
-                                volume.orientation = Some(quat_normalize(quat));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
 }
 
 /// 🎯️ Mirrors the host's client-side zoom-to-selection framing math so a keybinding/engagement-token
@@ -1767,169 +1411,14 @@ pub fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzz
     session.precompute_step(8);
 }
 
-/// 🎯️ `dispatch`'s `EngineSceneSnapshot` outcome is the precompute schema's own typed scene_snapshot shape, distinct from
-/// this app's `Puzzle3dSceneSnapshot` document model — bridged through one JSON round trip (schema translation
-/// between two independently-evolved Rust types) exactly like `scene_config_json` bridges the other
-/// direction.
-pub fn scene_from_engine_snapshot(envelope: &Puzzle3dScene, scene_snapshot: &crate::standards::v1::subsets::any::schema::EngineSceneSnapshot) -> Option<Puzzle3dScene> {
-    let parsed = semio_framework_value::ToValue::to_value(scene_snapshot);
-    let mut next = envelope.clone();
-    next.scene_snapshot.objects = semio_framework_value::FromValue::from_value(parsed.get("objects")?.clone()).ok()?;
-    next.scene_snapshot.attractions = parsed.get("attractions").and_then(|v| semio_framework_value::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
-    next.scene_snapshot.target_volumes = parsed.get("targetVolumes").and_then(|v| semio_framework_value::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
-    Some(next)
-}
-
 //#endregion 🔖️EngineBridge
 
 //#region 🔖️AttractionResolve
 /// 📐️ Attraction placement math lives with the selection leaves that re-solve attractions on every move
 /// (`🧬️schema/🧬️mutations` `🔖️AttractionPose`); the editor resolves whole fixtures with the same kernel.
 pub use crate::standards::v1::subsets::any::schema::mutations::derive_attraction_params;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle3d_attraction_child_pose,quat_normalize};
+use crate::standards::v1::subsets::any::schema::mutations::quat_normalize;
 
-
-/// 📌️ Resolves an attraction endpoint (`objectId:vortexId`) to its owning object id and its vortex's
-/// LOCAL (object-frame) position/direction — the frame the connector math expects, before the object's
-/// own world transform is applied.
-pub fn puzzle3d_local_vortex_geom(scene_snapshot: &Puzzle3dSceneSnapshot, full_id: &str) -> Option<(String, [f64; 3], [f64; 3])> {
-    for object in &scene_snapshot.objects {
-        for vortex in &object.vortices {
-            if puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id {
-                return Some((object.id.clone(), vortex.position, vortex.direction.unwrap_or([0.0, 0.0, -1.0])));
-            }
-        }
-    }
-    None
-}
-
-/// 🔗️ Resolves an attraction's `attracting`/`attracted` vortex full-ids to their owning object ids.
-/// Returns `None` for dangling references or same-object attractions (legal today but not a resolvable
-/// directed edge).
-fn puzzle3d_attraction_object_ids(scene_snapshot: &Puzzle3dSceneSnapshot, attraction: &Puzzle3dAttraction) -> Option<(String, String)> {
-    let attracting_object = puzzle3d_local_vortex_geom(scene_snapshot, &attraction.attracting)?.0;
-    let attracted_object = puzzle3d_local_vortex_geom(scene_snapshot, &attraction.attracted)?.0;
-    if attracting_object == attracted_object {
-        return None;
-    }
-    Some((attracting_object, attracted_object))
-}
-
-/// 🌲️ Resolves every attracted object's world pose from its attracting root, over a directed BFS per
-/// weakly-connected component. Roots are in-degree-zero objects; a component that is a pure cycle (the
-/// "donut" case) picks the lexicographically smallest object id in that component as a deterministic
-/// root. Multiple incoming attractions to the same object are resolved first-visit-wins. Idempotent:
-/// re-running against already-resolved poses reproduces them exactly. Returns, for every non-root
-/// object touched, the attraction index that positioned it — callers (e.g. `translateSelection`) use
-/// this to rederive params before a direct move so resolving never snaps it back.
-pub fn resolve_puzzle3d_attractions(scene_snapshot: &mut Puzzle3dSceneSnapshot) -> HashMap<String, usize> {
-    let mut edges: HashMap<String, Vec<(String, usize)>> = HashMap::new();
-    let mut in_degree: HashMap<String, usize> = HashMap::new();
-    let mut all_object_ids: Vec<String> = scene_snapshot.objects.iter().map(|object| object.id.clone()).collect();
-    all_object_ids.sort();
-    for id in &all_object_ids {
-        in_degree.entry(id.clone()).or_insert(0);
-    }
-    for (index, attraction) in scene_snapshot.attractions.iter().enumerate() {
-        if let Some((attracting_id, attracted_id)) = puzzle3d_attraction_object_ids(scene_snapshot, attraction) {
-            edges.entry(attracting_id).or_default().push((attracted_id.clone(), index));
-            *in_degree.entry(attracted_id).or_insert(0) += 1;
-        }
-    }
-
-    fn find(parent_of: &mut HashMap<String, String>, id: &str) -> String {
-        let mut current = id.to_string();
-        while parent_of[&current] != current {
-            let grandparent = parent_of[&parent_of[&current]].clone();
-            parent_of.insert(current.clone(), grandparent.clone());
-            current = grandparent;
-        }
-        current
-    }
-    fn union(parent_of: &mut HashMap<String, String>, a: &str, b: &str) {
-        let root_a = find(parent_of, a);
-        let root_b = find(parent_of, b);
-        if root_a != root_b {
-            parent_of.insert(root_a, root_b);
-        }
-    }
-    let mut parent_of: HashMap<String, String> = all_object_ids.iter().map(|id| (id.clone(), id.clone())).collect();
-    for (attracting_id, targets) in &edges {
-        for (attracted_id, _) in targets {
-            union(&mut parent_of, attracting_id, attracted_id);
-        }
-    }
-
-    let mut components: HashMap<String, Vec<String>> = HashMap::new();
-    for id in &all_object_ids {
-        let root = find(&mut parent_of, id);
-        components.entry(root).or_default().push(id.clone());
-    }
-    let mut component_keys: Vec<String> = components.keys().cloned().collect();
-    component_keys.sort();
-
-    let mut incoming: HashMap<String, usize> = HashMap::new();
-    let mut visited: HashSet<String> = HashSet::new();
-
-    for component_key in component_keys {
-        let mut members = components.remove(&component_key).unwrap_or_default();
-        members.sort();
-        let roots: Vec<String> = members.iter().filter(|id| in_degree.get(id.as_str()).copied().unwrap_or(0) == 0).cloned().collect();
-        let seed_roots: Vec<String> = if roots.is_empty() { vec![members[0].clone()] } else { roots };
-
-        let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
-        for root in &seed_roots {
-            if visited.insert(root.clone()) {
-                queue.push_back(root.clone());
-            }
-        }
-        while let Some(current_id) = queue.pop_front() {
-            let Some(targets) = edges.get(&current_id) else { continue };
-            for (attracted_id, attraction_index) in targets.clone() {
-                if visited.contains(&attracted_id) {
-                    continue;
-                }
-                let attraction = scene_snapshot.attractions[attraction_index].clone();
-                let (Some((_, p_a, d_a)), Some((_, p_b, d_b))) = (puzzle3d_local_vortex_geom(scene_snapshot, &attraction.attracting), puzzle3d_local_vortex_geom(scene_snapshot, &attraction.attracted)) else { continue };
-                let Some(attracting_object) = scene_snapshot.objects.iter().find(|object| object.id == current_id) else { continue };
-                let t_a = attracting_object.origin;
-                let q_a = attracting_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                let (t_b, q_b) = puzzle3d_attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt);
-                if let Some(attracted_object) = scene_snapshot.objects.iter_mut().find(|object| object.id == attracted_id) {
-                    attracted_object.origin = t_b;
-                    attracted_object.orientation = Some(q_b);
-                }
-                incoming.insert(attracted_id.clone(), attraction_index);
-                visited.insert(attracted_id.clone());
-                queue.push_back(attracted_id);
-            }
-        }
-    }
-    incoming
-}
-
-/// 🧰️ Rederives every attraction's 6 params from its endpoints' CURRENT poses. Used after merging
-/// externally computed poses (brush/fill placement via the collision-aware engine, which knows nothing
-/// about gap/shift/rise/rotation/turn/tilt) so the follow-up resolve reproduces those poses exactly
-/// instead of re-deriving a bare port-to-port docking that could visibly jump the just-placed object.
-pub fn puzzle3d_rederive_all_attractions(scene_snapshot: &mut Puzzle3dSceneSnapshot) {
-    let ids: Vec<String> = scene_snapshot.attractions.iter().map(|attraction| attraction.id.clone()).collect();
-    for id in ids {
-        let Some(attraction) = scene_snapshot.attractions.iter().find(|attraction| attraction.id == id).cloned() else { continue };
-        let (Some((attracting_id, p_a, d_a)), Some((attracted_id, p_b, d_b))) = (puzzle3d_local_vortex_geom(scene_snapshot, &attraction.attracting), puzzle3d_local_vortex_geom(scene_snapshot, &attraction.attracted)) else { continue };
-        let pose = |object_id: &str| scene_snapshot.objects.iter().find(|object| object.id == object_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])));
-        let (Some((t_a, q_a)), Some((t_b, q_b))) = (pose(&attracting_id), pose(&attracted_id)) else { continue };
-        let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b);
-        if let Some(attraction) = scene_snapshot.attractions.iter_mut().find(|attraction| attraction.id == id) {
-            attraction.gap = gap;
-            attraction.shift = shift;
-            attraction.rise = rise;
-            attraction.rotation = rotation;
-            attraction.turn = turn;
-            attraction.tilt = tilt;
-        }
-    }
-}
 
 //#endregion 🔖️AttractionResolve
 
@@ -2716,7 +2205,7 @@ impl<'a> Puzzle3dActionCtx<'a> {
 
     /// 🧯️ Surfaces ONE bounded, localized notice through the shell's transient-notice channel
     /// (`Effect::Notify` → `ShellHost`'s `showTransientNotice`) — how an arm whose engine work was
-    /// REJECTED tells the user, instead of the `if let Ok(EngineSceneSnapshot(_))` silence
+    /// REJECTED tells the user, instead of the silence
     /// `addBrushObject`/`acceptSuggestion` used to fall through (`📓️2026-09-09-user-feature-
     /// checklist.md` §9/§13). At most one notice per action: a second call replaces nothing and adds
     /// nothing, so the effect list stays fixed-width. An unauthored locale×terminology axis carries
@@ -3332,7 +2821,7 @@ impl Puzzle3dPlayApp {
             return shell;
         }
         let mut prologue = Puzzle3dActionPrologue::default();
-        prologue.scene_step(action, snapshot, config, view_state, window_id);
+        prologue.scene_step(snapshot, config, view_state, window_id);
         let mut sync_turns = 0_u32;
         while prologue.sync_step(self, action, config, view_state, window_id) {
             sync_turns += 1;
@@ -3360,8 +2849,8 @@ enum Puzzle3dPrologueSyncStage {
 }
 
 /// 🧾️ The prologue every puzzle3d action shares, split into the three halves a staged retained work
-/// spends bounded turns on: `scene_step` materializes the transient scene (and, only for a
-/// artifact-intent action, the `before` projection the semantic delta is taken against), `sync_step`
+/// spends bounded turns on: `scene_step` materializes the transient scene (and the typed base every concrete
+/// mutation of the action is built against), `sync_step`
 /// pushes that scene into the precompute session across its own phases, and `dispatch_step` runs the
 /// action arm and assembles the `Emit`.
 ///
@@ -3377,7 +2866,6 @@ enum Puzzle3dPrologueSyncStage {
 #[derive(Default)]
 pub(crate) struct Puzzle3dActionPrologue {
     scene: Option<Puzzle3dScene>,
-    before: Option<Value>,
     base: Option<std::sync::Arc<Puzzle3dSnapshot>>,
     sync_stage: Puzzle3dPrologueSyncStage,
     built: Option<crate::standards::v1::subsets::any::schema::SceneConfig>,
@@ -3385,12 +2873,10 @@ pub(crate) struct Puzzle3dActionPrologue {
 }
 
 impl Puzzle3dActionPrologue {
-    /// 🧾️ Half one: the transient scene, straight off the snapshot's typed authority. The persisted
-    /// projection `Value` is materialized ONLY for an artifact-intent action, which is its one reader
-    /// (`puzzle3d_operations_from_host_snapshot_change`'s `before`).
-    pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
+    /// 🧾️ Half one: the transient scene, straight off the snapshot's typed authority, plus the typed base every
+    /// concrete mutation of the action is built against.
+    pub(crate) fn scene_step(&mut self, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
-        self.before = puzzle3d_action_artifact_intent(action).then(|| puzzle3d_projection_value(snapshot.value()));
         self.base = Some(snapshot.typed_arc());
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
     }
@@ -3454,7 +2940,6 @@ impl Puzzle3dActionPrologue {
         if self.refreshed(config, view_state, window_id).is_none() {
             return (Emit::default(), EphemeralEmit::default());
         }
-        let before = self.before.take();
         let (Some(mut scene), Some(base)) = (self.scene.take(), self.base.take()) else {
             return (Emit::default(), EphemeralEmit::default());
         };
@@ -3497,13 +2982,7 @@ impl Puzzle3dActionPrologue {
             return (Emit { effects, ui_scope: UiDirtyScope::None, ..Default::default() }, EphemeralEmit::default());
         }
         let next_active_utility = scene.active_utility.clone();
-        let mut operations = if let Some(before) = before.as_ref() {
-            puzzle3d_operations_from_host_snapshot_change(before, &scene.scene_snapshot)
-        } else {
-            debug_assert!(!puzzle3d_action_artifact_intent(action));
-            Vec::new()
-        };
-        operations.append(&mut artifact_mutations);
+        let operations = artifact_mutations;
         let transaction = transaction.filter(|_| !operations.is_empty());
         // 🧰️🛠️ Programmatic utility/tool switches push the host session. `setActiveTool` itself never
         // re-emits. Entering fill emits `SetActiveTool { fill }` only. Leaving fill is exclusively a
@@ -3543,11 +3022,11 @@ impl Puzzle3dActionPrologue {
 
     /// 🧹️ One retained owner per bounded grant, for a staged work's own close cursor.
     pub(crate) fn close_one(&mut self) -> bool {
-        self.scene.take().is_some() || self.before.take().is_some() || self.base.take().is_some() || self.built.take().is_some()
+        self.scene.take().is_some() || self.base.take().is_some() || self.built.take().is_some()
     }
 
     pub(crate) fn is_empty(&self) -> bool {
-        self.scene.is_none() && self.before.is_none() && self.base.is_none() && self.built.is_none()
+        self.scene.is_none() && self.base.is_none() && self.built.is_none()
     }
 
     /// ⏱️ Turns one staged run of this prologue may take: one for the scene, one per mesh identity the
@@ -3557,7 +3036,7 @@ impl Puzzle3dActionPrologue {
     pub(crate) const WORK_ITEMS: usize = crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS + 5;
 }
 
-/// 🗨️ The two actions with no document interaction at all, hence no scene/before/after scaffolding:
+/// 🗨️ The two actions with no document interaction at all, hence no scene scaffolding:
 /// `openAddObjectDialog` opens the declared dialog over a glass veil and `openImportSnapshot` asks the host
 /// for a file.
 fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
@@ -3586,10 +3065,8 @@ fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
 /// function. No behaviour lives in this match.
 fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     match action {
-        "setActiveExample" => set_active_example::set_active_example(ctx, args),
         "selectSameKindSelection" => select_same_kind::select_same_kind(ctx),
         "setSelectableKind" => set_selectable_kind::set_selectable_kind(ctx, args),
-        "addObjectKind" => add_object_kind::add_object_kind(ctx, args),
         "deleteSelection" => delete_selection::delete_selection(ctx),
         "duplicateSelection" => duplicate_selection::duplicate_selection(ctx),
         "exportSnapshot" => export_snapshot::export_snapshot(ctx),
@@ -3598,8 +3075,6 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
         "setSelectionHidden" => set_selection_flag::set_selection_flag_value(ctx, args, "hidden"),
         "setSelectionLocked" => set_selection_flag::set_selection_flag_value(ctx, args, "locked"),
-        "patchInspector" => patch_inspector::patch_inspector(ctx, args),
-        "createAttraction" => create_attraction::create_attraction(ctx, args),
         "deleteAttraction" => delete_attraction::delete_attraction(ctx, args),
         "addTargetVolume" => add_target_volume::add_target_volume(ctx, args),
         "deleteTargetVolume" => delete_target_volume::delete_target_volume(ctx, args),
@@ -3626,12 +3101,10 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "rotateSelection" => rotate_selection::rotate_selection(ctx, args),
         "scaleSelection" => scale_selection::scale_selection(ctx, args),
         "worldRelocate" => world_relocate::world_relocate(ctx, args),
-        "addBrushObject" => add_brush_object::add_brush_object(ctx, args),
         "cycleBrushCandidate" | "cycleBrushCandidateBack" => cycle_candidate::cycle_candidate(ctx, action, args),
         "openVortexSuggestions" => open_vortex_suggestions::open_vortex_suggestions(ctx, args),
         "closeVortexSuggestions" => close_vortex_suggestions::close_vortex_suggestions(ctx, args),
         "hoverSuggestion" => hover_suggestion::hover_suggestion(ctx, args),
-        "acceptSuggestion" => accept_suggestion::accept_suggestion(ctx, args),
         "targetBrushSuggestions" => target_brush_suggestions::target_brush_suggestions(ctx, args),
         "registerBrushMesh" => register_brush_mesh::register_brush_mesh(ctx, args),
         "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
@@ -3788,13 +3261,8 @@ fn puzzle3d_retained_reduce(
     }
     if command.action_id() == "addTargetVolume" {
         let Some(origin) = command.args().and_then(|args| args.get("origin")).and_then(value_as_vec3) else { return Ok(Emit::default()) };
-        let grid_spacing = runtime.grid_spacing.max(0.1);
-        let voxel_dims = runtime.voxel_dims;
-        let snapped = [(origin[0] / grid_spacing).round() * grid_spacing, (origin[1] / grid_spacing).round() * grid_spacing, (origin[2] / grid_spacing).round() * grid_spacing];
-        let scale = crate::Puzzle3dScale::Vec3([voxel_dims[0] as f64 * grid_spacing, voxel_dims[1] as f64 * grid_spacing, voxel_dims[2] as f64 * grid_spacing]);
-        let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-        let volume = crate::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false };
-        return Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None)], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addTargetVolume")), ..Default::default() });
+        let mutation = add_target_volume::add_target_volume_mutation(origin, runtime.grid_spacing, runtime.voxel_dims);
+        return Ok(Emit { artifact_mutations: vec![mutation], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addTargetVolume")), ..Default::default() });
     }
     let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
     let window_id = puzzle3d_addressed_window_id(view_state, None, command.window_id(), &runtime.window_ids);
@@ -3923,7 +3391,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                         export_snapshot::Puzzle3dExportPublication::Refused(message) => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::effect(Effect::Notify { message }))),
                     };
                 }
-                self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
+                self.prologue.scene_step(snapshot, &runtime, Some(view), Some(window_id));
                 self.stage = Puzzle3dWindowCommandStage::Sync;
                 Ok(Self::progress("puzzle3d-action-scene", "Reading the artifact", "Artefakt wird gelesen"))
             }
@@ -6539,7 +6007,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
                 let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
-                self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
+                self.prologue.scene_step(snapshot, &runtime, Some(view), Some(window_id));
                 self.stage = Puzzle3dPrecomputeCommandStage::PrologueSync;
                 Ok(Self::progress("puzzle3d-action-scene", "Reading the artifact", "Artefakt wird gelesen"))
             }
@@ -7137,14 +6605,14 @@ impl Puzzle3dClipboardJob {
             "cut" => {
                 let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
                 let Ok(fragment) = puzzle3d_copy_fragment_from(&scene_snapshot, objects) else { return Emit::default() };
-                let mutations = puzzle3d_cut_operations_from(&scene_snapshot, &marks).unwrap_or_default();
+                let mutations = puzzle3d_cut_operations_from(self.snapshot.typed(), &marks);
                 Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() }
             },
             "paste" => {
                 let Some(args) = args else { return Emit::default() };
                 let Some(fragment) = args.get("fragment").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()) else { return Emit::default() };
                 let placement = PastePlacement::default();
-                match puzzle3d_paste_operations_on(&scene_snapshot, &fragment, &placement) {
+                match puzzle3d_paste_operations(&fragment, &placement) {
                     Ok(mutations) => Emit { artifact_mutations: mutations, ..Default::default() },
                     Err(_) => Emit::default(),
                 }
@@ -7450,7 +6918,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// first body (`with_puzzle3d_app_for`), so that work reached no one — while every `codec` call of a hub
     /// creating or validating a document paid for it in the interpreter.
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
-        Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&default_scene_snapshot())).into())
+        Puzzle3dPlaySnapshot::new(puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored initial snapshot admits"))
     }
 
     fn clipboard_media_type() -> Option<MediaType> {
@@ -7462,11 +6930,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle3dMutation> {
-        puzzle3d_cut_operations(doc, interaction).unwrap_or_default()
+        puzzle3d_cut_operations(doc, interaction)
     }
 
-    fn paste_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
-        puzzle3d_paste_operations(doc, fragment, placement)
+    fn paste_operations(_doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+        puzzle3d_paste_operations(fragment, placement)
     }
 
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
@@ -7526,7 +6994,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
  Ok((||{
         #[cfg(test)]
         PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
-        let snapshot = puzzle3d_scene_snapshot_from_projection(&puzzle3d_projection_value(doc.snapshot.value()));
+        let snapshot = puzzle3d_scene_snapshot_from_document(doc.snapshot.typed());
         let mut ordered = Vec::new();
         for object in &snapshot.objects {
             ordered.push(semio_framework_plugin::TopologyNode { id: object.id.clone(), granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), parent: None });
@@ -7564,8 +7032,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// `cableKinds`/`attractionKinds`/`kindCompatibility`) into puzzle3d's own `meta.kind_catalogs`
     /// vocabulary (`objects`/`vortices`/`cables`/`attractions`) and upserts it (keyed by row `id`,
     /// deterministic/order-independent — safe for `multiplicity: Many` fan-in) via the same
-    /// `puzzle3d_operations_from_host_snapshot_change` delta bridge every other scene_snapshot-mutating action
-    /// already uses, so this never mutates anything directly — only real, undoable operations.
+    /// concrete `replace-kind-catalogs` and `connect-`/`disconnect-kind-compatibility` kinds, so this never mutates
+    /// anything directly — only real, undoable operations.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
@@ -7574,7 +7042,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             return Err(MediaError::Payload(port.to_string(), "kit:in only accepts a Structured (JSON) payload".into()));
         };
         let fragment: Value = parse(json.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let mut scene_snapshot: Puzzle3dSceneSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(doc.snapshot.value())).map_err(|error: semio_framework_value::ValueError| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let before = doc.snapshot.typed();
+        let scene_snapshot = puzzle3d_scene_snapshot_from_document(before);
 
         let mut catalogs: semio_framework_value::DslValue = scene_snapshot.meta.kind_catalogs.clone().unwrap_or_else(|| {
             semio_framework_value::DslValue::object([
@@ -7588,23 +7057,32 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_upsert_catalog_rows(&mut catalogs, "vortices", fragment.get("vortexKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "cables", fragment.get("cableKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "attractions", fragment.get("attractionKinds"));
-        scene_snapshot.meta.kind_catalogs = Some(catalogs);
-
-        if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
-            let mut compat: Vec<semio_framework_value::DslValue> = scene_snapshot.meta.kind_compatibility.as_ref().and_then(semio_framework_value::DslValue::as_array).map(<[semio_framework_value::DslValue]>::to_vec).unwrap_or_default();
-            for row in incoming_compat {
-                let source = row.get("source").and_then(Value::as_str).unwrap_or_default();
-                let target = row.get("target").and_then(Value::as_str).unwrap_or_default();
-                let row_dsl = semio_framework_pack_json::to_dsl_value(row);
-                match compat.iter().position(|entry| entry.get("source").and_then(semio_framework_value::DslValue::as_str) == Some(source) && entry.get("target").and_then(semio_framework_value::DslValue::as_str) == Some(target)) {
-                    Some(index) => compat[index] = row_dsl,
-                    None => compat.push(row_dsl),
-                }
-            }
-            scene_snapshot.meta.kind_compatibility = Some(semio_framework_value::DslValue::Array(compat));
+        let kind_catalogs: Option<crate::Puzzle3dKindCatalogs> = Some(<crate::Puzzle3dKindCatalogs as semio_framework_value::FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
+        let mut operations = Vec::new();
+        if kind_catalogs != before.meta.kind_catalogs {
+            operations.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(kind_catalogs));
         }
 
-        let operations = puzzle3d_operations_from_host_snapshot_change(&puzzle3d_projection_value(doc.snapshot.value()), &scene_snapshot);
+        if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
+            let mut rows = before.meta.kind_compatibility.clone();
+            for incoming in incoming_compat {
+                let row = <crate::Puzzle3dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let connect = crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None);
+                match rows.iter().position(|entry| entry.source == row.source && entry.target == row.target) {
+                    None => {
+                        operations.push(connect);
+                        rows.push(row);
+                    }
+                    Some(index) if rows[index] != row => {
+                        operations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
+                        operations.push(connect);
+                        rows[index] = row;
+                    }
+                    Some(_) => {}
+                }
+            }
+        }
+
         Ok(Emit::mutations(operations))
     }
 
@@ -7716,7 +7194,7 @@ impl Puzzle3dPlayApp {
         let Some(labels) = puzzle3d_labels(view_state) else { return Vec::new() };
         let wid = view_state.window_id.as_deref().unwrap_or(main::WINDOW_KIND_ID);
         let active_utility = puzzle3d_scene_active_utility(&config, Some(view_state), Some(wid));
-        let envelope = scene_from_projection(&puzzle3d_projection_value(doc.snapshot.value()), config, &active_utility);
+        let envelope = scene_from_snapshot(doc.snapshot.typed(),config,&active_utility);
         let mut selection = Puzzle3dContextSelection::from_surface(request.surface.as_ref());
         selection.fill_from_interaction(interaction);
         puzzle3d_context_menu_items(&envelope, &selection, labels, view_state, registry)
@@ -7935,7 +7413,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("tab", "cycleBrushCandidate")
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
-            // 🔧️ Document-mutating operations (emit VCS operations through the before/after scene_snapshot delta).
+            // 🔧️ Document-mutating operations (emit the concrete kinds of the gesture).
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog. Declared HERE, in
@@ -8268,6 +7746,10 @@ mod example_switch;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️mutation-latency/🦀️.rs"]
 mod mutation_latency;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️gesture-kinds/🦀️.rs"]
+mod gesture_kinds;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️selection-scale/🦀️.rs"]

@@ -29,9 +29,10 @@
   "services": null,
   "infrastructure": null,
   "information": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "information-requirement-a",
         "patch": {
@@ -64,8 +65,7 @@
           "ownerId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "communication": null,
   "wayfinding": null,

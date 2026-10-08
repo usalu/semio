@@ -187,20 +187,30 @@ impl InteractiveJob for CountingComputeJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.begin_close();
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        if self.entered { return Ok(0) }
+        Ok(self.current.as_ref().or(self.observed_max.as_ref()).filter(|owner| Arc::strong_count(owner) == 1 && Arc::weak_count(owner) == 0).map_or(0, |_| std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<AtomicU32>()).expect("original Arc layout").0.pad_to_align().size()))
+    }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if self.terminal_is_empty() { 0 } else { 1 }) }
+
+    fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::WorkLimit);
         }
+        self.begin_close();
         if self.entered {
             self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
             self.entered = false;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
         }
-        if self.current.take().is_some() || self.observed_max.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        let release = self.next_close_release_byte_demand().unwrap();
+        if grant.maximum_release_bytes < release { return semio_framework_job::InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::WorkLimit) }
+        if self.current.is_some() { drop(self.current.take()); }
+        else if self.observed_max.is_some() { drop(self.observed_max.take()); }
+        else { return semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }; }
+        semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() } }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -225,8 +235,12 @@ impl InteractiveJob for NeverCompleteComputeJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn close_step(&mut self, _grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
     }
 
     fn terminal_is_empty(&self) -> bool {

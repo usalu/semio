@@ -1,0 +1,1 @@
+{"schema":"original-operation-source-retirement-currencies/v1","sourceBytes":8194,"maximumAllocationBytes":65536,"maximumItems":1,"maximumCopyBytes":1,"maximumCapacityBytes":0,"maximumReleaseBytes":4096,"maximumDepth":1,"copiesRetainBacking":true,"releaseCannotAuthorizeCopy":true,"copyCannotAuthorizeRelease":true,"terminalHasZeroByteDemand":true}

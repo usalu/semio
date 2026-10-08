@@ -97,10 +97,9 @@ mod conformance_laws {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn demo_diff_cases() -> Vec<PdfDiff> {
-        let a = demo_pdf_snapshot();
-        let b = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 300.5, height: 400.25, text: "changed text".into() }, PageDoc { width: 100.0, height: 100.0, text: "second".into() }] };
-        let c = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: Vec::new() };
-        vec![<PdfDiff as protocol::command::DiffAlgebra<PdfSnapshot>>::between(&a, &b), <PdfDiff as protocol::command::DiffAlgebra<PdfSnapshot>>::between(&b, &c), PdfDiff::default()]
+        let resized = diff::PdfPageDiff { width: Some(300.5), height: Some(400.25), text: Some("changed text".into()), ..Default::default() };
+        let pages = diff::PdfPagesDiff { removed: vec![2], modified: vec![diff::PdfPageModified { index: 0, diff: resized }], added: vec![diff::PdfPageAdded { index: 1, page: PageDoc { width: 100.0, height: 100.0, text: "second".into() } }] };
+        vec![PdfDiff { pages: Some(pages) }, PdfDiff { pages: Some(diff::PdfPagesDiff { removed: vec![0, 1], ..Default::default() }) }, PdfDiff::default()]
     }
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

@@ -1103,4 +1103,45 @@
       "repeated": 1
     }
   }
+,
+  "reactMetadata": {
+    "exportFormats": [
+      { "value": "stl", "en": "STL Mesh", "de": "STL-Netz" },
+      { "value": "obj", "en": "OBJ Mesh", "de": "OBJ-Netz" },
+      { "value": "ply", "en": "PLY Mesh", "de": "PLY-Netz" },
+      { "value": "gltf", "en": "glTF Mesh", "de": "glTF-Netz" },
+      { "value": "las", "en": "LAS Point Cloud", "de": "LAS-Punktwolke" },
+      { "value": "dwg", "en": "DWG Drawing", "de": "DWG-Zeichnung" },
+      { "value": "txt", "en": "Semio Text (whole artifact)", "de": "Semio-Text (ganzes Artefakt)" }
+    ],
+    "facets": [
+      {
+        "case": "variable-name",
+        "label": "input_variable_name"
+      },
+      {
+        "case": "export-format",
+        "label": "input_export_format"
+      }
+    ],
+    "statuses": [
+      {
+        "state": "ok",
+        "label": "status_ok",
+        "description": "status_ok"
+      },
+      {
+        "state": "stale",
+        "label": "mesh_output_stale",
+        "description": "mesh_output_stale"
+      },
+      {
+        "state": "error",
+        "label": "status_error",
+        "description": "mesh_output_error"
+      }
+    ],
+    "live": "polite",
+    "readOnlyActionCount": 0
+  }
 }

@@ -2,6 +2,7 @@
 
 use super::*;
 use std::mem::ManuallyDrop;
+use semio_framework_value::{ValueError, RetirementDemand, FactoryAuthority, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
 
 //#region 📦️ReaderOwnership
 /// 📖️ Retains a frozen typed Arc and borrowed traversal; no Store publication authority is exposed.
@@ -14,6 +15,7 @@ struct ReaderState<T> {
     root: Option<Arc<T>>,
     retirement: Option<Arc<dyn SnapshotRetirementFactory<T>>>,
     active: Option<Box<dyn ErasedSnapshotRetirement>>,
+    factory_close: Option<FactoryAuthority>,
     completed_bytes: u64,
     cancelled: bool,
     failed: bool,
@@ -22,7 +24,7 @@ struct ReaderState<T> {
 
 impl<T> ReaderState<T> {
     fn new(root: Arc<T>, retirement: Arc<dyn SnapshotRetirementFactory<T>>) -> Self {
-        Self { encoder: ArtifactCanonicalEditEncoder::default(), root: Some(root), retirement: Some(retirement), active: None, completed_bytes: 0, cancelled: false, failed: false, closing: false }
+        Self { encoder: ArtifactCanonicalEditEncoder::default(), root: Some(root), retirement: Some(retirement), active: None, factory_close: None, completed_bytes: 0, cancelled: false, failed: false, closing: false }
     }
 
     fn completed_bytes(&self) -> u64 {
@@ -49,38 +51,51 @@ impl<T> ReaderState<T> {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.encoder.terminal_is_empty() && self.root.is_none() && self.retirement.is_none() && self.active.is_none()
+        self.closing && self.encoder.terminal_is_empty() && self.root.is_none() && self.retirement.is_none() && self.active.is_none() && self.factory_close.is_none()
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || !grant.permits_one() {
-            return Ok(SnapshotRetirementStep::Blocked);
+}
+
+impl<T: Send + Sync + 'static> ReaderState<T> {
+    fn demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.encoder.terminal_is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        if let Some(active) = self.active.as_ref() {
+            let mut demand = super::super::artifact_retirement_box_demands(active, maximum_body_bytes)?;
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical reader depth overflow"))?;
+            return Ok(demand);
         }
-        if !self.encoder.terminal_is_empty() {
-            return self.encoder.close_step();
-        }
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(1, grant.maximum_bytes)? {
-                SnapshotRetirementStep::Complete => {
-                    if !active.terminal_is_empty() {
-                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-reader.retirement-witness"));
-                    }
-                    self.active = None;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= grant.maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-reader.retirement-grant")),
-                SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
+        if let Some(root) = self.root.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.retirement.as_ref().expect("original reader factory").retirement_birth_bytes(root), depth: 2, ..Default::default() }); }
+        if self.retirement.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if let Some(factory) = self.factory_close.as_ref() { let mut demand = factory.demands(maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "reader factory depth overflow"))?; return Ok(demand); }
+        Ok(Default::default())
+    }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let demand = self.demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical reader exceeds admitted depth")); }
+        if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.encoder.terminal_is_empty() { return self.encoder.close_step(grant); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() { return super::super::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(root) = self.root.take() {
+            return match self.retirement.as_ref().expect("reader retains root factory").retire(root, child) {
+                Ok((active, progress)) => { self.active = Some(active); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical reader constructor changed its receipt")); } Ok(RetainedCloneStep::Progress(progress)) },
+                Err((error, original)) => { self.root = Some(original); Err(error) },
             };
         }
-        if let Some(root) = self.root.take() {
-            self.active = Some(self.retirement.as_ref().expect("reader retains root retirement authority").retire(root));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        if let Some(factory) = self.retirement.take() {
+            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+            self.factory_close = Some(FactoryAuthority::new(factory));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        if self.retirement.take().is_some() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        if let Some(factory) = self.factory_close.as_mut() {
+            let step = factory.step(child)?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "canonical reader factory")?;
+            if factory.terminal_is_empty() { self.factory_close = None; }
+            return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
         }
-        Ok(SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 }
 
@@ -89,7 +104,7 @@ impl<T: ArtifactCanonicalJson + Send + 'static> ReaderState<T> {
         if !grant.permits_one() || self.cancelled || self.failed || self.closing || output.is_empty() {
             return Ok(0);
         }
-        let maximum = grant.maximum_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES);
+        let maximum = grant.maximum_copy_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES);
         let root = self.root.as_ref().ok_or_else(|| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-reader.root-missing".into() })?;
         let result = self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum]);
         let count = match &result {
@@ -130,9 +145,12 @@ impl<T> ArtifactCanonicalJsonReader<T> {
     pub fn terminal_is_empty(&self) -> bool {
         self.owned.terminal_is_empty()
     }
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        self.owned.close_step(grant)
-    }
+
+}
+
+impl<T: Send + Sync + 'static> ArtifactCanonicalJsonReader<T> {
+    pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> { self.owned.demands(maximum_body_bytes) }
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owned.close_step(grant) }
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ArtifactCanonicalJsonReader<T> {

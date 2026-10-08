@@ -51,23 +51,6 @@ fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted:
 
 
 
-/// 🧭️ Position-pairwise state delta: `0..min(len)` compare as `modified`, base's tail is `removed`,
-/// other's tail is `added` — per `🧬️schema-design.md`'s `between` matching rule for index keys.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
-    let min = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        let d = between_item(&base[i], &other[i]);
-        if !item_is_empty(&d) {
-            modified.push(IndexModified { index: i, diff: d });
-        }
-    }
-    let removed: Vec<usize> = (min..base.len()).collect();
-    let added: Vec<IndexAdded<T>> = (min..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    IndexedTripleDiff { removed, modified, added }
-}
-
 /// ▶️ Apply semantics (normative, `🧬️schema-design.md`): modify against BASE indices, remove
 /// descending, then insert `added` ascending at `min(index, len)` against the FINAL positions.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -267,11 +250,7 @@ impl AnimKeyframeDiff {
         self.t.is_none() && self.value.is_none()
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &AnimKeyframe, other: &AnimKeyframe) -> Self {
-        Self { t: (base.t != other.t).then_some(other.t), value: (base.value != other.value).then_some(other.value.clone()) }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn apply(&self, base: &AnimKeyframe) -> AnimKeyframe {
+    fn apply_row(&self, base: &AnimKeyframe) -> AnimKeyframe {
         let mut next = base.clone();
         if let Some(v) = self.t {
             next.t = v;
@@ -318,12 +297,7 @@ impl AnimChannelDiff {
         self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().is_none_or(indexed_is_empty)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
-        let kf = between_indexed(&base.keyframes, &other.keyframes, AnimKeyframeDiff::between, AnimKeyframeDiff::is_empty);
-        Self { target: (base.target != other.target).then_some(other.target.clone()), interpolation: (base.interpolation != other.interpolation).then_some(other.interpolation), keyframes: (!indexed_is_empty(&kf)).then_some(kf) }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn apply(&self, base: &AnimChannel) -> AnimChannel {
+    fn apply_row(&self, base: &AnimChannel) -> AnimChannel {
         let mut next = base.clone();
         if let Some(v) = &self.target {
             next.target = v.clone();
@@ -332,7 +306,7 @@ impl AnimChannelDiff {
             next.interpolation = v;
         }
         if let Some(d) = &self.keyframes {
-            next.keyframes = apply_indexed(d, &next.keyframes, |d, item| d.apply(item));
+            next.keyframes = apply_indexed(d, &next.keyframes, |d, item| d.apply_row(item));
         }
         next
     }
@@ -349,7 +323,7 @@ impl AnimChannelDiff {
             self.interpolation = other.interpolation;
         }
         match (&mut self.keyframes, other.keyframes) {
-            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
+            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply_row(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -377,18 +351,13 @@ impl AnimTimelineDiff {
         self.name.is_none() && self.channels.as_ref().is_none_or(indexed_is_empty)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
-        let ch = between_indexed(&base.channels, &other.channels, AnimChannelDiff::between, AnimChannelDiff::is_empty);
-        Self { name: (base.name != other.name).then_some(other.name.clone()), channels: (!indexed_is_empty(&ch)).then_some(ch) }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn apply(&self, base: &AnimTimeline) -> AnimTimeline {
+    fn apply_row(&self, base: &AnimTimeline) -> AnimTimeline {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
         }
         if let Some(d) = &self.channels {
-            next.channels = apply_indexed(d, &next.channels, |d, item| d.apply(item));
+            next.channels = apply_indexed(d, &next.channels, |d, item| d.apply_row(item));
         }
         next
     }
@@ -402,7 +371,7 @@ impl AnimTimelineDiff {
             self.name = other.name;
         }
         match (&mut self.channels, other.channels) {
-            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
+            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply_row(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -437,14 +406,14 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
             crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
-            next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply(item));
+            next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply_row(item));
         }
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
         match (&mut self.timelines, other.timelines) {
-            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
+            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply_row(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -454,11 +423,6 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
 impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
         Self { timelines: self.timelines.as_ref().map(|d| inverse_indexed(d, &base.timelines, |d, item| d.inverse(item))) }
-    }
-
-    fn between(base: &SemioAnimationSnapshot, other: &SemioAnimationSnapshot) -> Self {
-        let d = between_indexed(&base.timelines, &other.timelines, AnimTimelineDiff::between, AnimTimelineDiff::is_empty);
-        Self { timelines: (!indexed_is_empty(&d)).then_some(d) }
     }
 
     fn is_empty(&self) -> bool {
@@ -498,24 +462,17 @@ pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTi
     AnimTimeline { name: name.map(String::from), channels }
 }
 
-/// 🌱 Representative `SemioAnimationDiff` cases (empty + both directions of a rich `between`) —
-/// single source of truth for the composer's `diff_grammar_conformance_law`/`protocol_walk_law`,
-/// reused by this module's own `diff_codec_text_binary_roundtrip_law` test below.
+/// 🌱 Representative `SemioAnimationDiff` cases built declaratively (empty, a removed and an added timeline row) — single source of truth
+/// for the composer's `diff_grammar_conformance_law`/`protocol_walk_law`, reused by this module's own `diff_codec_text_binary_roundtrip_law`
+/// test below.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
-    let a = SemioAnimationSnapshot {
-        timelines: vec![timeline(Some("gone"), vec![]), timeline(Some("kept"), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])],
-        ..SemioAnimationSnapshot::default()
-    };
-    let b = SemioAnimationSnapshot {
-        timelines: vec![
-            timeline(None, vec![channel("n", AnimTargetProperty::Rotation, AnimInterpolation::CubicSpline, vec![kf(0.0, AnimValue::Quat { value: SemioQuaternion::default() }), kf(1.0, AnimValue::Weights { values: vec![0.1, 0.9] })])]),
-            timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![])]),
-        ],
-        ..SemioAnimationSnapshot::default()
-    };
-    vec![SemioAnimationDiff::default(), <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b), <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a)]
+    let added = timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])]);
+    vec![
+        SemioAnimationDiff::default(),
+        SemioAnimationDiff { timelines: Some(IndexedTripleDiff { removed: vec![0], modified: Vec::new(), added: vec![IndexAdded { index: 1, item: added }] }) },
+    ]
 }
 
 //#region 🔖️Tests

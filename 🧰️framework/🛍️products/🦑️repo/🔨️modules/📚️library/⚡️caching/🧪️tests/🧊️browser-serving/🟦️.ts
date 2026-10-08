@@ -34,7 +34,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
       writeFileSync(join(roots.compiler, "semio-framework-os-renderer-wgpu_bg.wasm"), wasm);
       put(reloadFile, "0");
       copyFileSync(template, join(app, "🌐️.html"));
-      put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
+      put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
       const controller = new AbortController();
       let ready!: (url: string) => void;
       const readiness = new Promise<string>(resolve => ready = resolve);

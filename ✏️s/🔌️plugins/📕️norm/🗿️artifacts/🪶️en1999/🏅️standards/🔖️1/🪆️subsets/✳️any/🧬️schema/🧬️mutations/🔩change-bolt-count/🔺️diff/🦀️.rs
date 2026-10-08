@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeBoltCount, base: &En1999Snapshot) -> protocol::Mutat
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Unknown connection {}", payload.connection_id), Vec::<String>::new());
     }
     protocol::MutationOutcome::new(En1999Diff {
-        connections: Some(En1999ConnectionsRows { modified: vec![En1999ConnectionsPatch { id: payload.connection_id.clone(), bolts_rows: Some(payload.new_rows), bolts_bolts_per_row: Some(payload.new_bolts_per_row), ..Default::default() }], ..Default::default() }),
+        connections: Some(En1999ConnectionsRows::modification(&payload.connection_id, En1999ConnectionsPatch { bolts_rows: Some(payload.new_rows), bolts_bolts_per_row: Some(payload.new_bolts_per_row), ..Default::default() })),
         ..Default::default()
     })
 }

@@ -5,9 +5,10 @@ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator
 import { TEST_LEVELS, isTestLevel, type TestLevel } from "../🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../🎛️execution/🟦️.ts";
 import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
+import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1,type CargoBuildLeaseIdentityV1} from "../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 /** 🦀️ Binds a Cargo invocation to its exact caller-owned execution policy. */
-export type CargoTestPolicyV1 = Readonly<{version:1;manifestPath:string;targetDirectory:string;nextest:boolean;configPath:string;level:TestLevel;assertionBudgets:Readonly<Record<TestLevel,number>>;buildBudgetMs:number;assertionThreads:number;artifactDirectory:string;retainArtifacts:boolean;coverageEnabled:boolean;coveragePath:string|null;rustMinStack:string}>;
+export type CargoTestPolicyV1 = Readonly<{version:1;manifestPath:string;targetDirectory:string;buildDirectory:string;leaseDirectory:string;nextest:boolean;configPath:string;level:TestLevel;assertionBudgets:Readonly<Record<TestLevel,number>>;buildBudgetMs:number;assertionThreads:number;artifactDirectory:string;retainArtifacts:boolean;coverageEnabled:boolean;coveragePath:string|null;rustMinStack:string}>;
 /** 📋️ Selects an exact manifest and package inventory without repository discovery. */
 export type CargoTestRequestV1 = Readonly<{manifestPath:string;packages:readonly string[];cwd:string;extraArgs?:readonly string[];environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal}>;
 /** 🎬️ Describes a compiler, assertion, or report invocation under an explicit budget. */
@@ -131,18 +132,35 @@ export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolic
 /** 🔌️ Supplies a caller-owned executable for the Cargo command grammar. */
 export type CargoTestExecutionPortV1=Readonly<{command:string;args:readonly string[]}>;
 
+/** 🪪️ Projects Cargo's artifact profile without confusing Nextest's assertion configuration. */
+export function cargoTestBuildLeaseIdentityV1(request:CargoTestRequestV1,input:CargoTestPolicyV1):CargoBuildLeaseIdentityV1{
+ const policy=admitPolicy(input),plan=cargoTestPlanV1(request,policy,join(policy.artifactDirectory,"binaries-metadata.json")),args=plan[0]!.args,compiler:string[]=[];
+ for(let index=0;index<args.length&&args[index]!=="--";index++){
+  const arg=args[index]!,option=policy.nextest?"--cargo-profile":"--profile";
+  if(arg==="--release")compiler.push(arg);
+  else if(arg===option){const profile=args[++index];if(!profile||profile.startsWith("-"))throw Error("Cargo profile requires a value");compiler.push("--profile",profile);}
+  else if(arg.startsWith(option+"="))compiler.push("--profile",arg.slice(option.length+1));
+ }
+ return cargoBuildLeaseIdentityV1(policy.buildDirectory,compiler);
+}
+
 /** 🏃️ Executes the admitted plan, retaining metadata only when its caller explicitly requests it. */
 export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTestPolicyV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
   const policy=admitPolicy(input);
-  if(!isAbsolute(policy.artifactDirectory)) throw Error("Cargo artifact directory must be absolute");
+  if(![policy.artifactDirectory,policy.buildDirectory,policy.leaseDirectory].every(isAbsolute)) throw Error("Cargo artifact and compiler lease directories must be absolute");
   mkdirSync(policy.artifactDirectory,{recursive:true});
-  const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")), metadata=join(directory,"binaries-metadata.json"), environment=request.environment??process.env, env={...environment,RUST_MIN_STACK:environment.RUST_MIN_STACK??policy.rustMinStack};
-  try {for(const step of cargoTestPlanV1(request,policy,metadata)){
+  const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")), metadata=join(directory,"binaries-metadata.json"),environment=request.environment??process.env,env={...environment,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:environment.RUST_MIN_STACK??policy.rustMinStack},controller=new AbortController(),abort=()=>controller.abort();
+  request.signal?.addEventListener("abort",abort,{once:true});if(request.signal?.aborted)abort();process.once("SIGINT",abort);process.once("SIGTERM",abort);
+  let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
+  try {
+   const plan=cargoTestPlanV1(request,policy,metadata),identity=cargoTestBuildLeaseIdentityV1(request,policy),stop=startNativeProgress("cargo:compiler-lease");
+   try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:controller.signal});}finally{stop();}
+   for(const step of plan){
     const stop=startNativeProgress(`cargo:${step.phase}`), decoder=new StringDecoder("utf8");let output="";
-    try {await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:request.signal,budgetMs:step.budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
+    try {await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:controller.signal,budgetMs:step.budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
     catch(error){if(step.capture)writeFileSync(join(directory,`${step.phase}-failure.stdout.txt`),output+decoder.end());throw error;}
     finally {stop();}
-  }} finally {if(policy.retainArtifacts)console.error(`[TRACE] Nextest artifacts retained at ${directory}`);else rmSync(directory,{recursive:true,force:true});}
+  }} finally {lease?.release();request.signal?.removeEventListener("abort",abort);process.off("SIGINT",abort);process.off("SIGTERM",abort);if(policy.retainArtifacts)console.error(`[TRACE] Nextest artifacts retained at ${directory}`);else rmSync(directory,{recursive:true,force:true});}
 }
 
 /** 🧹️ Projects exact owner Clippy selection while keeping warning policy out of compiler flags. */
@@ -154,6 +172,11 @@ export function cargoLintPlanV1(request:CargoTestRequestV1,input:CargoTestPolicy
 
 /** 🛠️ Executes one exact manifest's Clippy plan under its existing build budget. */
 export async function runCargoLintV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
-  const step=cargoLintPlanV1(request,policy),stop=startNativeProgress("cargo:lint");
-  try {await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env:request.environment??process.env,signal:request.signal,budgetMs:step.budgetMs,throwOnFailure:true});}finally{stop();}
+  const step=cargoLintPlanV1(request,policy),identity=cargoBuildLeaseIdentityV1(policy.buildDirectory,step.args),controller=new AbortController(),abort=()=>controller.abort(),stop=startNativeProgress("cargo:lint");
+  request.signal?.addEventListener("abort",abort,{once:true});if(request.signal?.aborted)abort();process.once("SIGINT",abort);process.once("SIGTERM",abort);
+  let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
+  try {
+   lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:controller.signal});
+   await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env:{...(request.environment??process.env),CARGO_BUILD_BUILD_DIR:policy.buildDirectory},signal:controller.signal,budgetMs:step.budgetMs,throwOnFailure:true});
+  }finally{lease?.release();stop();request.signal?.removeEventListener("abort",abort);process.off("SIGINT",abort);process.off("SIGTERM",abort);}
 }

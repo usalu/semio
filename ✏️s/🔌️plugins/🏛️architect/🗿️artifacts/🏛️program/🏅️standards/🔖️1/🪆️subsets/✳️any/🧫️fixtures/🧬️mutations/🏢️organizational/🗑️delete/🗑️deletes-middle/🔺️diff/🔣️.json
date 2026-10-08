@@ -26,12 +26,15 @@
   "regulatory": null,
   "siteContext": null,
   "organizational": {
-    "added": [],
     "removed": [
-      "organizational-requirement-a"
+      {
+        "id": "organizational-requirement-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "services": null,
   "infrastructure": null,

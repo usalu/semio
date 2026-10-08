@@ -41,6 +41,9 @@ path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦�
 [workspace.dependencies.semio-framework-dsl-record-derive]
 path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-value]
 path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 

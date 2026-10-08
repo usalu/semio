@@ -1,0 +1,26 @@
+{
+  "status": "partial-current-source-only; not outer PluginApp source freeze",
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "51e31e7775de244395e44159d6bf0e75ff404d15f19d62698aeb6347eb3af26d",
+      "afterSha256": "14b3aa33e74a817d3b9973de30ffd5a616d3441ae31f3f4f194534b62edd2acc",
+      "scope": "actual five-field OneItem forwarding / current retired open four-demand closure; unrelated source preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "b2b38dfdd3c1a6a04eb7971787f7040d82b16d170279222a099ff507233929e2",
+      "afterSha256": "20aab27e59acaf546a5f92b13413bd0f3b0c4875ea057c08a8d068da374ac88e",
+      "scope": "actual five-field OneItem forwarding / current retired open four-demand closure; unrelated source preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "47923d310b7d29cc0094ba9d91a77cd37d83aea32bd90bf9675a18924eb7b04a",
+      "afterSha256": "a1768b02deff7cc2c1578a63594b41e20b88564f24154c344343d3cefcf97d2c",
+      "scope": "private actual member grant source-neutral law only"
+    }
+  ]
+}

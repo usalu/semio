@@ -1,3 +1,4 @@
+import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocumentCheckInV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts";
 // #region Header
 /**
  * 📌️ Third-party oracle for the Check In contract: every language-neutral vector of
@@ -13,7 +14,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { hubSchemaExport } from "../../🤝️integration-harness/🟦️.ts";
-import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocumentCheckInV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
+
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 type Vector = { name: string; source: string; schemaValid?: boolean };

@@ -57,7 +57,6 @@ pub trait IndexedRow<T>: Clone {
     fn inverse_row(&self, base: &T) -> Self;
     fn absorb_row(&mut self, other: Self);
     fn row_is_empty(&self) -> bool;
-    fn between_row(base: &T, other: &T) -> Self;
 }
 
 /// 🔁️ Whole-row replacement as a row diff: the modified row takes the carried value; later replacements win.
@@ -79,9 +78,6 @@ impl<T: Clone + PartialEq> IndexedRow<T> for Replace<T> {
     }
     fn row_is_empty(&self) -> bool {
         false
-    }
-    fn between_row(_base: &T, other: &T) -> Self {
-        Replace { value: other.clone() }
     }
 }
 
@@ -114,23 +110,6 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
     unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
-}
-
-/// 🧭️ Position-pairwise state delta for sync/import: `0..min(len)` compare as `modified`, base's tail is `removed`, other's tail
-/// is `added`. Forbidden in mutation leaves.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn between_indexed_rows<D: IndexedRow<T>, T: Clone>(base: &[T], other: &[T]) -> IndexedTripleDiff<D, T> {
-    let min = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min {
-        let d = D::between_row(&base[i], &other[i]);
-        if !d.row_is_empty() {
-            modified.push(IndexModified { index: i, diff: d });
-        }
-    }
-    let removed: Vec<usize> = (min..base.len()).collect();
-    let added: Vec<IndexAdded<T>> = (min..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    IndexedTripleDiff { removed, modified, added }
 }
 
 /// ▶️ Apply semantics: modify against BASE indices, remove descending, then insert `added` ascending at `min(index, len)`
@@ -292,59 +271,6 @@ pub fn absorb_indexed_slot<D: IndexedRow<T>, T: Clone>(mine: &mut Option<Indexed
     }
 }
 //#endregion 🔖️IndexedAlgebra
-
-//#region 🔖️Netting
-/// 🧮️ One step of netting an ordered collection from `base` to `next` into domain leaves.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum NetStep<'a, T> {
-    /// ✏️ The row at `index` (a position in the BASE) takes the value of `item`.
-    Modify { index: usize, item: &'a T },
-    /// ➖ The row at `index` (a position in the collection AFTER the earlier steps) disappears.
-    Remove { index: usize },
-    /// ➕ `item` appears at `index` (a position in the final collection).
-    Insert { index: usize, item: &'a T },
-}
-
-/// 🧮️ Positional netting of one ordered collection: the common prefix and suffix stay, the paired middle is modified in place, the
-/// surplus is removed (highest index first) or inserted (lowest index first). Replaying the steps in order on `base` yields `next`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_ordered<'a, T: PartialEq>(base: &[T], next: &'a [T]) -> Vec<NetStep<'a, T>> {
-    let prefix = base.iter().zip(next).take_while(|(before, after)| before == after).count();
-    let suffix = base[prefix..].iter().rev().zip(next[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
-    let (base_middle, next_middle) = (&base[prefix..base.len() - suffix], &next[prefix..next.len() - suffix]);
-    let paired = base_middle.len().min(next_middle.len());
-    let mut steps = Vec::new();
-    for (offset, (before, after)) in base_middle.iter().zip(next_middle).enumerate() {
-        if before != after {
-            steps.push(NetStep::Modify { index: prefix + offset, item: after });
-        }
-    }
-    for offset in (paired..base_middle.len()).rev() {
-        steps.push(NetStep::Remove { index: prefix + offset });
-    }
-    for (offset, item) in next_middle.iter().enumerate().skip(paired) {
-        steps.push(NetStep::Insert { index: prefix + offset, item });
-    }
-    steps
-}
-
-/// 🧮️ Key-wise netting of an id-keyed collection: the keys only `base` has are removed, the keys both have are modified when
-/// their rows differ, and the keys only `next` has are appended in `next` order.
-pub struct NetKeyed<'a, T> {
-    pub removed: Vec<&'a T>,
-    pub modified: Vec<(&'a T, &'a T)>,
-    pub added: Vec<&'a T>,
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn net_keyed<'a, T: PartialEq, K: PartialEq>(base: &'a [T], next: &'a [T], key_of: impl Fn(&T) -> K) -> NetKeyed<'a, T> {
-    NetKeyed {
-        removed: base.iter().filter(|before| !next.iter().any(|after| key_of(after) == key_of(before))).collect(),
-        modified: base.iter().filter_map(|before| next.iter().find(|after| key_of(after) == key_of(before)).filter(|after| *after != before).map(|after| (before, after))).collect(),
-        added: next.iter().filter(|after| !base.iter().any(|before| key_of(before) == key_of(after))).collect(),
-    }
-}
-//#endregion 🔖️Netting
 
 //#region 🔖️NamedTriple
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

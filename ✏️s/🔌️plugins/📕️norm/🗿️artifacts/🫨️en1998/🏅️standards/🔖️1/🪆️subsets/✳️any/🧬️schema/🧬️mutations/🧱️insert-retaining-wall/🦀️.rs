@@ -8,7 +8,7 @@ use crate::{En1998Mutation, En1998Snapshot};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct InsertRetainingWall {
-    pub index: usize,
+    pub index: Option<usize>,
     pub wall: crate::En1998RetainingWall,
 }
 

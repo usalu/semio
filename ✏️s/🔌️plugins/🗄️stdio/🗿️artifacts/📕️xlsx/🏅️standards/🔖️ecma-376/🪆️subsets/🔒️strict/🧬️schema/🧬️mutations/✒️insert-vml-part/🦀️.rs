@@ -10,13 +10,15 @@ pub struct InsertVmlPart {
     pub(crate) document: XmlDocument,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub(crate) index: Option<usize>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) override_index: Option<usize>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for InsertVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vml-part", kind: "insert-vml-part", record: "InsertVmlPart" };
 
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        protocol::MutationOutcome::new(diff_insert_vml_part(base, &self.path, &self.document, self.index))
+        protocol::MutationOutcome::new(diff_insert_vml_part(base, &self.path, &self.document, self.index, self.override_index))
     }
 
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {

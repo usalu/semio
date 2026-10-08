@@ -360,31 +360,6 @@
         "inverseBytes": 1048577,
         "emitted": "expected",
         "error": "snapshot-edit.publication-limit"
-      },
-      {
-        "id": "accepted-no-op-refused",
-        "forwardBytes": 0,
-        "inverseBytes": 0,
-        "emitted": "before",
-        "error": "snapshot-edit.publication-mismatch"
-      },
-      {
-        "id": "unrelated-payload-loss-refused",
-        "forwardBytes": 0,
-        "inverseBytes": 0,
-        "emitted": {
-          "title": "After",
-          "payload": []
-        },
-        "error": "snapshot-edit.publication-mismatch"
-      },
-      {
-        "id": "encoded-no-op-inverse-refused",
-        "forwardBytes": 0,
-        "inverseBytes": 0,
-        "emitted": "expected",
-        "brokenInverse": true,
-        "error": "snapshot-edit.inverse-mismatch"
       }
     ]
   },

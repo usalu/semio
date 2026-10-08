@@ -5,7 +5,7 @@ use crate::{En1990Mutation, En1990Snapshot};
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct InsertEffect { pub index: usize, pub item: crate::MemberEffect, }
+pub struct InsertEffect { pub index: Option<usize>, pub item: crate::MemberEffect, }
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for InsertEffect {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "effect", kind: "insert-effect", record: "InsertedEffect" };
     fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> { super::diff::diff(self, base) }

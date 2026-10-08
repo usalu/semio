@@ -35,7 +35,7 @@ async fn gis2d_config_dsl_round_trips_default_and_populated() {
 #[semio_framework_async_macros::async_test]
 async fn gis2d_config_operation_diff_writes_the_targeted_field_and_leaves_the_rest() {
     let base = MapWindowConfig::default();
-    let next = MapWindowConfigMutation::SetRenderMode(SetRenderMode { value: "vector".into() }).protocol::apply_diff(diff(&base).diff(), &base).expect("apply");
+    let next = protocol::apply_diff(MapWindowConfigMutation::SetRenderMode(SetRenderMode { value: "vector".into() }).diff(&base).diff(), &base).expect("apply");
     assert_eq!(next.render_mode, "vector");
     assert_eq!(next.vector_style, base.vector_style, "untouched fields survive the diff");
 }
@@ -48,7 +48,7 @@ async fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() 
     assert_eq!(next.layer_visibility.get("water"), Some(&false));
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: None })]);
-    let restored = backwards[0].protocol::apply_diff(diff(&next).diff(), &next).expect("restore");
+    let restored = protocol::apply_diff(backwards[0].diff(&next).diff(), &next).expect("restore");
     assert_eq!(restored, base, "the per-field inverse restores the exact pre-operation config, including the absent map entry");
 }
 
@@ -61,7 +61,7 @@ async fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
     let next = protocol::apply_diff(operation.diff(&base).diff(), &base).expect("apply");
     assert_eq!(next.layer_stroke_scale.get("roads"), Some(&2.0));
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
-    let restored = backwards[0].protocol::apply_diff(diff(&next).diff(), &next).expect("restore");
+    let restored = protocol::apply_diff(backwards[0].diff(&next).diff(), &next).expect("restore");
     assert_eq!(restored, base);
     assert!(!restored.layer_stroke_scale.contains_key("roads"));
 }

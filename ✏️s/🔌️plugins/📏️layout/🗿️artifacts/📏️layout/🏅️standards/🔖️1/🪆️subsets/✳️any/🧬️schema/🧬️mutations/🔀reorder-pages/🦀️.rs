@@ -2,7 +2,7 @@
 //! sequence, unlike `stories`/`links` which have no display order).
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPageRelocation};
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -40,20 +40,14 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
 
 //#region 🔀ReorderPages
 pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
-    if !base.pages.iter().any(|page| page.id == payload.id) {
+    let Some(from) = base.pages.iter().position(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
-    }
-    let current: Vec<String> = base.pages.iter().map(|page| page.id.clone()).collect();
-    let mut ids = current.clone();
-    if let Some(from) = ids.iter().position(|id| id == &payload.id) {
-        let item = ids.remove(from);
-        let to = payload.to_index.min(ids.len());
-        ids.insert(to, item);
-    }
-    if ids == current {
+    };
+    let to = payload.to_index.min(base.pages.len() - 1);
+    if from == to {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" is already at the requested position.", payload.id));
     }
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { moved: vec![LayoutPageRelocation { id: payload.id.clone(), from, to }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔀ReorderPages
 

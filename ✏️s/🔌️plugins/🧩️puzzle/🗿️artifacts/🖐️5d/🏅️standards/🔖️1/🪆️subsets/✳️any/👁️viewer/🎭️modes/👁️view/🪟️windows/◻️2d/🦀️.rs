@@ -18,7 +18,7 @@ use semio_framework_plugin::WindowEngagementSlot;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::BuiltNode;
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "puzzle5d-view-2d";

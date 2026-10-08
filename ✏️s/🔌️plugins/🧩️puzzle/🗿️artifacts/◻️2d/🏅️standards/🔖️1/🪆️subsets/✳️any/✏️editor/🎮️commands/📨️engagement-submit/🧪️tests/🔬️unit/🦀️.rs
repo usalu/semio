@@ -5,7 +5,7 @@ use crate::editor::puzzle2d::{board_snapshot_nodes, PUZZLE2D_GRANULARITY_NODE, P
 use semio_framework_plugin::InteractionTarget;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{PluginApp, ViewModel, WindowMeasure};
-use serde_json::{json, Value};
+use semio_framework_pack_json::{json, Value};
 
 fn node_of(app: &Puzzle2dApp, id: &str) -> Value {
     board_snapshot_nodes(&fixture_of(app)).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).cloned().expect("node")
@@ -46,7 +46,7 @@ async fn engagement_line_carries_its_arguments_verbatim() {
     // 🔄️ A single-node selection rotates about its own centroid, so the pose is unchanged — the proof
     // that the verb parsed is the radius-preserving handle turn, asserted through a two-node selection.
     let other = board_snapshot_nodes(&fixture_of(&app)).iter().map(|node| node.get("id").and_then(Value::as_str).unwrap_or_default().to_string()).find(|other| other != &id).expect("a second node");
-    let pair = serde_json::to_string(&[&id, &other].map(|node| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: node.clone() })).expect("targets");
+    let pair = semio_framework_pack_json::to_json_string(&[&id, &other].map(|node| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: node.clone() }));
     dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": pair, "merge": "replace", "method": "pick" })), None).expect("select both nodes");
     let pair_before = node_of(&app, &other);
     submit(&mut app, "rotate 45");

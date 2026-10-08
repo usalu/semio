@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::default_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 
 fn stroke_gesture(object_id: &str, u: f32) -> LowpolyPaintGesture {
     LowpolyPaintGesture {

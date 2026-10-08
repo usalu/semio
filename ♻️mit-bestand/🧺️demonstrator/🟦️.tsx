@@ -29,7 +29,7 @@ import {
   type LayeredPane,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
+import { composeSpecificOsCatalogV1 } from "../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
@@ -106,12 +106,13 @@ const DEMONSTRATOR_INSETS = { top: "calc(var(--size-workbench) * 1.5)", bottom: 
 /** 🎪️ One app's live shell: the standalone module it runs, the branded app id its manifest declares, its tour only while opened. */
 function DemonstratorShell({ pane, opened }: { readonly pane: DemonstratorPaneSpec; readonly opened: boolean }) {
   const variants = demonstratorPaneBootVariants(pane.variant);
-  const runtimeBoot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, variants.runtime), [variants.runtime]);
-  const manifestBoot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, variants.manifest), [variants.manifest]);
+  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
+  const runtimeBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.runtime), [catalog, variants.runtime]);
+  const manifestBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.manifest), [catalog, variants.manifest]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   return (
-    <FrameworkOsShell
+    <FrameworkOsShell catalog={catalog}
       pluginFilter={variants.runtime}
       plugins={runtimeBoot.plugins}
       surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}

@@ -5,7 +5,6 @@ pub mod protocol;
 
 use crate::editor::sequence::SequenceHost;
 use crate::{SequenceHostSnapshot, SlotRef};
-use infinite_board_port_directed_dag::DagLayoutOptions;
 use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};
 use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
 
@@ -69,8 +68,8 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_POINTER_UP => self.pointer_up(payload),
             SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
             SEQUENCE_OPERATION_REORGANIZE => {
-                let options: DagLayoutOptions = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
-                self.host.dag.reorganize(&options).map_err(domain_error)?;
+                let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
+                let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.reorganize(&options,&mut control).map_err(domain_error)?;
                 self.host.sync_from_dag();
                 self.host.layout_expanded_slots();
                 Ok(Vec::new())

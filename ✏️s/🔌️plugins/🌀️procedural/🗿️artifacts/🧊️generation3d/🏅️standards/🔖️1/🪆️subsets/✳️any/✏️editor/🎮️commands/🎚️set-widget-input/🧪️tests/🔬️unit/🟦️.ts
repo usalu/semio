@@ -112,6 +112,10 @@ export function generation3dWidgetInputSelfTests(): number {
   const measurements={length,area,volume:Math.abs(volume)};
   for(const row of fixture.measurementPublication.cases) { assert(Math.abs(measurements[row.output as keyof typeof measurements]-row.value)<1e-10,row.kind); checks++; }
   const live=fixture.liveAnalyticPublication;
+  box.computeBoundingBox();
+  assert.deepEqual(box.boundingBox!.getSize(new Vector3()).toArray(),live.sourceExtent);
+  assert.equal(live.openedActor,"local");
+  checks+=2;
   assert.equal(live.feature,`${live.source}__${live.operation}`);
   assert.equal(live.selector,`${live.source}__selected`);
   assert.equal(live.componentGranularity,"face");

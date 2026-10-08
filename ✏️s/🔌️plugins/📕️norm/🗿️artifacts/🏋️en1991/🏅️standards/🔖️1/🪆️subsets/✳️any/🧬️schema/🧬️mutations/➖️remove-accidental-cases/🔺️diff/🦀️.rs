@@ -6,5 +6,5 @@ pub fn diff(payload: &RemoveAccidentalCases, base: &En1991Snapshot) -> protocol:
     if payload.index >= base.accidental_cases.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1991Diff { accidental_cases: En1991AccidentalCaseDelta::removal(&base.accidental_cases[payload.index].id), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { accidental_cases: En1991AccidentalCaseDelta::removal(&base.accidental_cases, payload.index), ..Default::default() })
 }

@@ -299,16 +299,21 @@ pub struct FontCodec {
     pub type3_matrix: Option<[f64; 6]>,
 }
 
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
+use super::lexer::{PResult,PdfEngineError};
+
+fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)->PResult<Vec<u8>> {crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;match resources.resolve(program.reference())? {crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {data,..}=>Ok(data),_=>Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()))}}
+
 impl FontCodec {
     /// 🏗️ Builds the codec for `font`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn new(font: &PdfFont) -> Self {
+    pub fn new(font: &PdfFont,resources:&dyn PdfArtifactResourcePort) -> PResult<Self> {
         let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None };
         match &font.kind {
             PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program } => {
                 let symbolic = descriptor.as_ref().is_some_and(|d| d.flags & 4 != 0 && d.flags & 32 == 0);
                 let builtin: Vec<(u8, String)> = match program {
-                    Some(PdfFontProgram::Type1 { data, .. }) => type1_builtin_encoding(data).unwrap_or_default(),
+                    Some(program @ PdfFontProgram::Type1 { .. }) => type1_builtin_encoding(&program_data(program,resources)?).unwrap_or_default(),
                     _ => standard_font(base_font).filter(|f| f.symbolic).map(|f| f.builtin_encoding.iter().map(|(c, n)| (*c, n.to_string())).collect()).unwrap_or_default(),
                 };
                 let names = simple_names(encoding, &builtin, symbolic && !builtin.is_empty());
@@ -317,7 +322,7 @@ impl FontCodec {
             PdfFontKind::TrueType { base_font, encoding, first_char, widths, descriptor, program } => {
                 let symbolic = descriptor.as_ref().is_some_and(|d| d.flags & 4 != 0 && d.flags & 32 == 0);
                 let parsed = match program {
-                    Some(PdfFontProgram::TrueType { data }) | Some(PdfFontProgram::OpenType { data }) => TrueTypeFont::parse(data).ok(),
+                    Some(program @ (PdfFontProgram::TrueType { .. } | PdfFontProgram::OpenType { .. })) => Some(TrueTypeFont::parse(&program_data(program,resources)?).map_err(PdfEngineError::Malformed)?),
                     _ => None,
                 };
                 let names = simple_names(encoding, &[], false);
@@ -363,18 +368,11 @@ impl FontCodec {
                     }
                 }
                 match &descendant.cid_to_gid {
-                    Some(crate::standards::v1_7::subsets::base::schema::snapshot::PdfCidToGid::Map { data }) => {
-                        codec.cid_to_gid_identity = false;
-                        for (cid, pair) in data.chunks(2).enumerate() {
-                            if pair.len() == 2 {
-                                codec.cid_to_gid.insert(cid as u32, u16::from_be_bytes([pair[0], pair[1]]));
-                            }
-                        }
-                    }
+                    Some(crate::standards::v1_7::subsets::base::schema::snapshot::PdfCidToGid::Map {glyphs})=>{codec.cid_to_gid_identity=false;for (cid,gid) in glyphs.iter().enumerate(){codec.cid_to_gid.insert(cid as u32,*gid);}}
                     _ => codec.cid_to_gid_identity = true,
                 }
                 codec.program = match &descendant.program {
-                    Some(PdfFontProgram::TrueType { data }) | Some(PdfFontProgram::OpenType { data }) => TrueTypeFont::parse(data).ok(),
+                    Some(program @ (PdfFontProgram::TrueType { .. } | PdfFontProgram::OpenType { .. })) => Some(TrueTypeFont::parse(&program_data(program,resources)?).map_err(PdfEngineError::Malformed)?),
                     _ => None,
                 };
             }
@@ -413,7 +411,7 @@ impl FontCodec {
                 }
             }
         }
-        codec
+        Ok(codec)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -13,7 +13,8 @@
 //! 🪪️ Nothing outside the case names a load id, so a rename here orphans no referrer — and it is still refused, because a `replace-` that changes identity is not a replacement. The rule is the verb's, not the noun's.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use crate::central_apply::apply_fem2d_mutation;
 
 use crate::Fem2dSnapshot;
 

@@ -1,0 +1,29 @@
+{
+  "authorship": false,
+  "inputs": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "dea97dcacebbcbd157e5652e77a9e75ea5d36e11536351d5529caaa09f873c1e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "ca0051b96eac6694fe65c33e9a4aa4e4dde24414421631944e875f01ee2b3860"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "sha256": "5ea1bdc94243f5a73ad6f855db5cf87dc2c2f3809780a6dab20029f983780f4b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "sha256": "1fb675810bd5d135d9f65c5dc4d9ba6fa1110b152120e9c4310217c253e92c33"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "539262af565a65aae9e2250742964e924259e66bfc07ac7a3e0d72a0b3d477d4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "08c695d0ae36a44d14597062b3ef8e6fe3854b2a813f6eeef0e797524e6c645e"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "snapshot": {
+    "schema": "board.ports.directed.v1",
+    "nodes": [
+      {
+        "id": "r",
+        "x": 0,
+        "y": 0,
+        "radius": 10,
+        "root": true,
+        "handles": [
+          {
+            "id": "r:h",
+            "angle": 0
+          }
+        ]
+      },
+      {
+        "id": "a",
+        "x": 0,
+        "y": 0,
+        "radius": 10,
+        "label": "English / Deutsch",
+        "handles": [
+          {
+            "id": "a:h",
+            "angle": 0
+          }
+        ]
+      },
+      {
+        "id": "b",
+        "x": 0,
+        "y": 0,
+        "radius": 10,
+        "handles": [
+          {
+            "id": "b:h",
+            "angle": 0
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "ra",
+        "source": "r:h",
+        "target": "a:h"
+      },
+      {
+        "id": "rb",
+        "source": "r:h",
+        "target": "b:h"
+      }
+    ]
+  },
+  "treeOptions": {
+    "mode": "hierarchical-tree",
+    "hierarchicalTree": {
+      "layerSpacing": 120,
+      "siblingGap": 28
+    }
+  },
+  "treeExpected": {
+    "r": [
+      0,
+      -60
+    ],
+    "a": [
+      -24,
+      60
+    ],
+    "b": [
+      24,
+      60
+    ]
+  },
+  "layeredExpected": {
+    "r": [
+      -60,
+      0
+    ],
+    "a": [
+      60,
+      -20
+    ],
+    "b": [
+      60,
+      20
+    ]
+  },
+  "refusals": [
+    {
+      "schema": "board.ports.directed.v1",
+      "nodes": [
+        {
+          "id": "a",
+          "x": "no"
+        }
+      ],
+      "edges": []
+    },
+    {
+      "schema": "board.ports.directed.v1",
+      "nodes": [
+        {
+          "id": "a",
+          "shape": "triangle"
+        }
+      ],
+      "edges": []
+    },
+    {
+      "schema": "board.ports.directed.v1",
+      "nodes": [
+        {
+          "id": "a",
+          "surprise": 1
+        }
+      ],
+      "edges": []
+    }
+  ],
+  "pinned": [
+    {
+      "id": "a",
+      "x": -10,
+      "y": 0,
+      "fx": -10,
+      "fy": 0
+    },
+    {
+      "id": "b",
+      "x": 10,
+      "y": 0,
+      "fx": 10,
+      "fy": 0
+    }
+  ]
+}

@@ -1,3 +1,3 @@
 module Stdio_png_mutation;
-# Direct tags: change-gamma=5=17, patch-pixels=18=19, paint-native-samples=20
+# Direct tags: change-gamma=5=17, patch-pixels=18=19, paint-native-samples=20, set-gamma=21, replace-samples=22
 public type Mutation = unit { format: uint8; tag: uint8; payload: bytes &eod; };

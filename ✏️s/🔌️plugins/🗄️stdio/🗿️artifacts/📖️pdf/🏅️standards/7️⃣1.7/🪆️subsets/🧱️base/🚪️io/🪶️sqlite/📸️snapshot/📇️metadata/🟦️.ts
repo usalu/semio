@@ -1,3 +1,4 @@
+import { writePdfArtifactReference,readPdfArtifactReference } from "../📦️artifact-reference/🟦️.ts";
 /** 📇️ Complete metadata scalars, intrinsic file bytes and viewer ownership. */
 import type { PdfEmbeddedFile,PdfOutputIntent,PdfEncryption,PdfViewerPreferences,PdfMarkInfo,PdfPageMode,PdfPageLayout } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean } from "../🧩️entity/🟦️.ts";
@@ -15,9 +16,9 @@ export async function writePdfEmbeddedFile(out:PdfProjection,value:PdfEmbeddedFi
 /** 📥️ Restore all attachment semantics independently of native wire packaging. */
 export async function readPdfEmbeddedFile(reader:PdfReader,key:bigint):Promise<PdfEmbeddedFile>{const row=await reader.take("pdf_embedded_file",key,10);return {id:await reader.text(row,1),fileName:await reader.text(row,2),description:await reader.optionalText(row,3),mimeType:await reader.optionalText(row,4),data:await reader.bytes(row,5),creationDate:row.values[6]===null?null:await readPdfDate(reader,artifactSqliteInteger(row,6)),modificationDate:row.values[7]===null?null:await readPdfDate(reader,artifactSqliteInteger(row,7)),relationship:await reader.optionalText(row,8),listed:pdfBoolean(row,9)};}
 /** 🎯️ Project output intents while preserving absent and empty profiles. */
-export async function writePdfOutputIntent(out:PdfProjection,value:PdfOutputIntent):Promise<bigint>{return out.insert("pdf_output_intent",[value.subtype,value.conditionIdentifier,value.condition??null,value.registryName??null,value.info??null,value.profile==null?null:await out.bytes(value.profile)]);}
+export async function writePdfOutputIntent(out:PdfProjection,value:PdfOutputIntent):Promise<bigint>{return out.insert("pdf_output_intent",[value.subtype,value.conditionIdentifier,value.condition??null,value.registryName??null,value.info??null,value.profile==null?null:await writePdfArtifactReference(out,value.profile)]);}
 /** 📥️ Restore all output-intent fields and intrinsic profile octets. */
-export async function readPdfOutputIntent(reader:PdfReader,key:bigint):Promise<PdfOutputIntent>{const row=await reader.take("pdf_output_intent",key,7);return {subtype:await reader.text(row,1),conditionIdentifier:await reader.text(row,2),condition:await reader.optionalText(row,3),registryName:await reader.optionalText(row,4),info:await reader.optionalText(row,5),profile:row.values[6]===null?null:await reader.bytes(row,6)};}
+export async function readPdfOutputIntent(reader:PdfReader,key:bigint):Promise<PdfOutputIntent>{const row=await reader.take("pdf_output_intent",key,7);return {subtype:await reader.text(row,1),conditionIdentifier:await reader.text(row,2),condition:await reader.optionalText(row,3),registryName:await reader.optionalText(row,4),info:await reader.optionalText(row,5),profile:row.values[6]===null?null:await readPdfArtifactReference(reader,artifactSqliteInteger(row,6))};}
 /** 🔒️ Project all encryption fields with exact signed permissions. */
 export async function writePdfEncryption(out:PdfProjection,value:PdfEncryption):Promise<bigint>{return out.insert("pdf_encryption",[encryptionAlgorithm(value.algorithm),pdfInteger(value.permissions??-1,32,true),value.userPassword??"",value.ownerPassword??null,(value.encryptMetadata??true)?1n:0n]);}
 /** 📥️ Restore the declared encryption algorithm and complete owner values. */

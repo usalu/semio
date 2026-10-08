@@ -50,24 +50,43 @@ export interface DrawingStringList {
   values: string[];
 }
 
-/** 🧩 Mirrors Rust `DrawingLayersDelta` — identified-collection delta for `layers`. */
+/** 🧩 Mirrors Rust `DrawingLayersDelta` — positional delta for the layer tree (per container, no order list, no anchor). */
 export interface DrawingLayersDelta {
-  added: DrawingLayerAddition[];
-  removed: string[];
-  patched: DrawingLayerPatchEntry[];
-  reordered?: string[];
+  removed: DrawingLayerRemoval[];
+  inserted: DrawingLayerInsertion[];
+  moved: DrawingLayerRelocation[];
+  modified: DrawingLayerModification[];
 }
 
-/** ➕️ Mirrors Rust `DrawingLayerAddition` — one inserted layer with its real (parent, index)
- * target location. */
-export interface DrawingLayerAddition {
+/** 📍️ Mirrors Rust `DrawingLayerAddress` — the child list of `parentId` (root when absent) at `index`. */
+export interface DrawingLayerAddress {
+  parentId?: string;
+  index: number;
+}
+
+/** ➖️ Mirrors Rust `DrawingLayerRemoval` — one removed layer subtree at its BASE address. */
+export interface DrawingLayerRemoval {
+  id: string;
+  parentId?: string;
+  index: number;
+}
+
+/** ➕️ Mirrors Rust `DrawingLayerInsertion` — one inserted layer subtree at its AFTER address. */
+export interface DrawingLayerInsertion {
   parentId?: string;
   index: number;
   layer: DrawingLayerNode;
 }
 
-/** 🩹 Mirrors Rust `DrawingLayerPatchEntry` — one patched layer entry. */
-export interface DrawingLayerPatchEntry {
+/** ↕️ Mirrors Rust `DrawingLayerRelocation` — one repositioned layer subtree: its BASE and its AFTER address. */
+export interface DrawingLayerRelocation {
+  id: string;
+  from: DrawingLayerAddress;
+  to: DrawingLayerAddress;
+}
+
+/** 🩹 Mirrors Rust `DrawingLayerModification` — one modified layer entry. */
+export interface DrawingLayerModification {
   id: string;
   patch: DrawingLayerPatch;
 }
@@ -164,14 +183,31 @@ export function parseDrawingAssetsDelta(value: unknown, at = "$"): DrawingAssets
 export function parseDrawingLayersDelta(value: unknown, at = "$"): DrawingLayersDelta {
   const row = drawingDrawingDiffGuardObject(value, at);
   return {
-    added: drawingDrawingDiffGuardArray(row["added"] ?? [], `${at}.added`).map((item, index) => parseDrawingLayerAddition(item, `${at}.added[${index}]`)),
-    removed: drawingDrawingDiffGuardArray(row["removed"] ?? [], `${at}.removed`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: drawingDrawingDiffGuardArray(row["patched"] ?? [], `${at}.patched`).map((item, index) => parseDrawingLayerPatchEntry(item, `${at}.patched[${index}]`)),
-    reordered: row["reordered"] == null ? undefined : drawingDrawingDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.reordered[${index}]`)),
+    removed: drawingDrawingDiffGuardArray(row["removed"] ?? [], `${at}.removed`).map((item, index) => parseDrawingLayerRemoval(item, `${at}.removed[${index}]`)),
+    inserted: drawingDrawingDiffGuardArray(row["inserted"] ?? [], `${at}.inserted`).map((item, index) => parseDrawingLayerInsertion(item, `${at}.inserted[${index}]`)),
+    moved: drawingDrawingDiffGuardArray(row["moved"] ?? [], `${at}.moved`).map((item, index) => parseDrawingLayerRelocation(item, `${at}.moved[${index}]`)),
+    modified: drawingDrawingDiffGuardArray(row["modified"] ?? [], `${at}.modified`).map((item, index) => parseDrawingLayerModification(item, `${at}.modified[${index}]`)),
   };
 }
 
-export function parseDrawingLayerAddition(value: unknown, at = "$"): DrawingLayerAddition {
+export function parseDrawingLayerAddress(value: unknown, at = "$"): DrawingLayerAddress {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    parentId: row["parentId"] === undefined ? undefined : drawingDrawingDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: drawingDrawingDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+  };
+}
+
+export function parseDrawingLayerRemoval(value: unknown, at = "$"): DrawingLayerRemoval {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    id: drawingDrawingDiffGuardString(row["id"], `${at}.id`),
+    parentId: row["parentId"] === undefined ? undefined : drawingDrawingDiffGuardString(row["parentId"], `${at}.parentId`),
+    index: drawingDrawingDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
+  };
+}
+
+export function parseDrawingLayerInsertion(value: unknown, at = "$"): DrawingLayerInsertion {
   const row = drawingDrawingDiffGuardObject(value, at);
   return {
     parentId: row["parentId"] === undefined ? undefined : drawingDrawingDiffGuardString(row["parentId"], `${at}.parentId`),
@@ -180,7 +216,16 @@ export function parseDrawingLayerAddition(value: unknown, at = "$"): DrawingLaye
   };
 }
 
-export function parseDrawingLayerPatchEntry(value: unknown, at = "$"): DrawingLayerPatchEntry {
+export function parseDrawingLayerRelocation(value: unknown, at = "$"): DrawingLayerRelocation {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    id: drawingDrawingDiffGuardString(row["id"], `${at}.id`),
+    from: parseDrawingLayerAddress(row["from"], `${at}.from`),
+    to: parseDrawingLayerAddress(row["to"], `${at}.to`),
+  };
+}
+
+export function parseDrawingLayerModification(value: unknown, at = "$"): DrawingLayerModification {
   const row = drawingDrawingDiffGuardObject(value, at);
   return {
     id: drawingDrawingDiffGuardString(row["id"], `${at}.id`),

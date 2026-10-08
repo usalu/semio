@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-pad-bytes/schema.json",
+  "title": "SetPadBytes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fmtPadByte",
+    "dataPadByte"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setPadBytes",
+      "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone."
+    },
+    "fmtPadByte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Format pad byte",
+          "de": "Format-Füllbyte"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
+    },
+    "dataPadByte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Data pad byte",
+          "de": "Daten-Füllbyte"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

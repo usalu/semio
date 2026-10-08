@@ -104,24 +104,20 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
 fn a_mutation_emits_o_changed_operations_whatever_the_document_size() {
     let large = &*NAKAGIN_EXAMPLE_SNAPSHOT;
     assert!(large.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", large.objects.len());
-    let before = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(large);
+    let before = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(large).expect("host fixture admits");
+    let first = large.objects[0].id.clone();
+    let second = large.objects[1].id.clone();
+    let no_vortices = std::collections::HashSet::new();
 
-    let mut deleted = large.clone();
-    let removed = deleted.objects.remove(0).id;
-    let delete_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&deleted));
-    eprintln!("b44.emit objects={} deleteOperations={} removed={removed}", large.objects.len(), delete_operations.len());
+    let delete_operations = delete_selection::delete_selection_mutations(&before, &[first.clone()], &no_vortices, &[], &[], &[]);
+    eprintln!("b44.emit objects={} deleteOperations={} removed={first}", large.objects.len(), delete_operations.len());
     assert_eq!(delete_operations.len(), 1, "deleting the FIRST of {} objects must emit one operation, not rewrite the tail", large.objects.len());
 
-    let mut moved = large.clone();
-    moved.objects[0].origin[1] += 2.75;
-    let move_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&moved));
-    assert_eq!(move_operations.len(), 1, "moving one of {} objects must emit one operation", large.objects.len());
+    let flag_operations = set_selection_flag::selection_flag_mutations(&before, "object", &[first.clone()], "hidden", !before.objects[0].hidden);
+    assert_eq!(flag_operations.len(), 1, "flagging one of {} objects must emit one operation", large.objects.len());
 
-    let mut both = large.clone();
-    both.objects[0].origin[1] += 2.75;
-    both.objects[1].origin[2] -= 1.25;
-    let both_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&both));
-    assert_eq!(both_operations.len(), 2, "two moved objects emit two operations — the emit is priced by the delta, not by the document");
+    let both_operations = set_selection_flag::selection_flag_mutations(&before, "object", &[first, second], "locked", !before.objects[0].locked);
+    assert_eq!(both_operations.len(), 2, "two flagged objects emit two operations — the emit is priced by the delta, not by the document");
 }
 
 /// ⏱️ Wave B44 measurement (not a gate): the host-grant turn count one delete spends either side of the

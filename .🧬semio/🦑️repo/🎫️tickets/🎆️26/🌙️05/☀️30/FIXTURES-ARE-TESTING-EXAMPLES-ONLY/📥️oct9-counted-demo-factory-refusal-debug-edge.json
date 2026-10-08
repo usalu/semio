@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "before": "grant).expect(\"unique original shared cursor birth is funded\")",
+  "after": "grant).unwrap_or_else(|(error,_,_)|panic!(\"unique original shared cursor birth refused: {error}\"))"
+}

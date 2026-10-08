@@ -28,7 +28,7 @@ pub fn validate(payload: &GltfDeclareUsedExtensionPayload, base: &GltfSnapshot) 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfDeclareUsedExtensionPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    Ok(GltfDiff { extensions_used: Some(with_inserted(&base.document.extensions_used, p.position, p.extension.clone())), ..Default::default() })
+    Ok(GltfDiff { extensions_used: Some(GltfStringsDelta::insertion(p.position, p.extension.clone())), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse(p: &GltfDeclareUsedExtensionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {

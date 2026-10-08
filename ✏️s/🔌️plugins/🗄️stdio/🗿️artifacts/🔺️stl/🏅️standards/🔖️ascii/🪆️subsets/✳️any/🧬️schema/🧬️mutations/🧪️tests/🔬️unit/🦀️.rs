@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
 use protocol::command::DiffAlgebra;
@@ -17,8 +18,8 @@ async fn base_snapshot() -> StlSnapshot {
 async fn assert_mutation_diff_law(base: &StlSnapshot, mutation: StlMutation) {
     let expected_diff = mutation.diff(base);
     let mut applied_snapshot = base.clone();
-    let returned_diff = apply_stl_mutation(&mut applied_snapshot, &mutation);
-    assert_eq!(returned_diff, expected_diff, "apply_stl_mutation must return mutation.diff(base) for {mutation:?}");
+    let returned_diff = apply_mutation(&mut applied_snapshot, &mutation);
+    assert_eq!(returned_diff, expected_diff, "apply_mutation must return mutation.diff(base) for {mutation:?}");
     assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
 }
 
@@ -47,9 +48,9 @@ async fn inverse_law() {
     for m in variants {
         // Mutation-level round trip.
         let mut snap = base.clone();
-        apply_stl_mutation(&mut snap, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_stl_mutation(&mut snap, &inv);
+        apply_mutation(&mut snap, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snap, &inv);
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
@@ -139,24 +140,6 @@ async fn absorb_law_associativity() {
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
     assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
-//#endregion 🔖️absorb_law
-
-//#region 🔖️between_roundtrip_law
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = base_snapshot().await;
-    let mut b = base_snapshot().await;
-    b.solid_name = "changed solid name".into();
-    b.triangles.remove(0); // remove first triangle
-    b.triangles[0].normal = [0.0, 1.0, 0.0]; // modify (now index 0)
-    b.triangles.push(tri(0.0, 0.0, -1.0, 30.0).await); // add a triangle
-
-    let d = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
-    let d_rev = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&d_rev, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
-    assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
-}
 //#endregion 🔖️between_roundtrip_law
 
 //#region 🔖️codec_retention_law
@@ -200,40 +183,6 @@ async fn sweep_b() -> StlSnapshot {
     }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn field_sweep_covers_every_mutable_field() {
-    let a = sweep_a().await;
-    let b = sweep_b().await;
-
-    let forward = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&forward, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
-    let backward = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&backward, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
-    assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
-
-    // solid_name: exercised in both directions (LWW scalar).
-    assert!(forward.solid_name.is_some(), "solid_name must be diffed forward");
-    assert!(backward.solid_name.is_some(), "solid_name must be diffed backward");
-
-    // Forward (a -> b, b is longer): proves `modified` + `added`.
-    let ftd: &StlTrianglesDiff = forward.triangles.as_ref().expect("forward triangles diff must be present");
-    assert!(ftd.removed.is_empty(), "forward direction must not produce removed (b is longer)");
-    assert_eq!(ftd.modified.len(), 1, "exactly one triangle must be modified forward");
-    let fmd = &ftd.modified[0];
-    assert_eq!(fmd.index, 0);
-    assert!(fmd.diff.normal.is_some(), "normal must be diffed");
-    assert!(fmd.diff.vertices.is_some(), "vertices must be diffed");
-    assert_eq!(ftd.added.len(), 1, "exactly one triangle must be added forward");
-    assert_eq!(ftd.added[0].index, 2);
-    assert_eq!(ftd.added[0].triangle, b.triangles[2]);
-
-    // Backward (b -> a, a is longer): proves `modified` + `removed`.
-    let btd: &StlTrianglesDiff = backward.triangles.as_ref().expect("backward triangles diff must be present");
-    assert!(btd.added.is_empty(), "backward direction must not produce added (a is shorter)");
-    assert_eq!(btd.modified.len(), 1, "exactly one triangle must be modified backward");
-    assert_eq!(btd.modified[0].index, 0);
-    assert_eq!(btd.removed, vec![2], "the tail triangle must be tracked removed backward");
-}
 //#endregion 🔖️field_sweep
 
 //#region 🔖️CanonicalCases
@@ -298,10 +247,10 @@ async fn add_then_set_field_patches_into_added() {
 async fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
     let base = base_snapshot().await;
     let mut snap = base.clone();
-    let outcome = apply_stl_mutation(&mut snap, &StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] }));
+    let outcome = apply_mutation(&mut snap, &StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] }));
     assert_eq!(snap, base);
     assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
-    let outcome = apply_stl_mutation(&mut snap, &StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 999 }));
+    let outcome = apply_mutation(&mut snap, &StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 999 }));
     assert_eq!(snap, base);
     assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
 }

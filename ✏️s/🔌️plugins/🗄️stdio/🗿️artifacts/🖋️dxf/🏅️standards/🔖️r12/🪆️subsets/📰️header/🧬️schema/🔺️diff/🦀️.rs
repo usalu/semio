@@ -48,7 +48,7 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 trait DxfIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
     fn diff_is_empty(d: &Self::Diff) -> bool;
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff;
     fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff;
     fn diff_apply(d: &Self::Diff, item: &mut Self);
     fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
@@ -76,29 +76,11 @@ fn generic_apply<T: DxfIndexElem>(base: &[T], removed: &[usize], modified: &[(us
     items
 }
 
-/// 🧭️ Pairwise-by-position state delta (recipe's "index keys pairwise by position" rule).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn generic_between<T: DxfIndexElem>(base: &[T], other: &[T]) -> IndexedDiffParts<T::Diff, T> {
-    let min_len = base.len().min(other.len());
-    let mut modified = Vec::new();
-    for i in 0..min_len {
-        let d = T::diff_between(&base[i], &other[i]);
-        if !T::diff_is_empty(&d) {
-            modified.push((i, d));
-        }
-    }
-    let removed: Vec<usize> = if base.len() > other.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<(usize, T)> = if other.len() > base.len() { (base.len()..other.len()).map(|i| (i, other[i].clone())).collect() } else { Vec::new() };
-    (removed, modified, added)
-}
-
 /// ↩️ Negative rows of an index-keyed triple against its BASE items: added rows become removals at their final index, removed
 /// rows return at their base index, and each modified row restores its base fields at the index the row has after the diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn generic_inverse<T: DxfIndexElem>(removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)], base: &[T]) -> IndexedDiffParts<T::Diff, T> {
-    let mut removed_sorted = removed.to_vec();
-    removed_sorted.sort_unstable();
-    removed_sorted.dedup();
+    let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&removed);
     let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
     added_final.sort_unstable();
     let after_index = |index: usize| {
@@ -138,8 +120,7 @@ enum Lbl {
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
-    let mut added_sorted = added.to_vec();
-    added_sorted.sort_by_key(|(idx, _)| *idx);
+    let added_sorted = semio_s_artifact_stdio_contract::ordered_by_key(added, |(idx, _)| *idx);
     for (idx, label) in added_sorted {
         let pos = idx.min(survivors.len());
         survivors.insert(pos, label);
@@ -243,7 +224,7 @@ fn generic_absorb_pair<T: DxfIndexElem>(d1_removed: &[usize], d1_modified: &[(us
 trait DxfNamedElem: Clone + PartialEq {
     type Diff: Clone + PartialEq + Default;
     fn key(&self) -> &str;
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff;
     fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff;
     fn diff_apply(d: &Self::Diff, item: &mut Self);
     fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
@@ -269,29 +250,11 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
     items
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> NamedDiffParts<T::Diff, T> {
-    let base_keys: HashSet<&str> = base.iter().map(|t| t.key()).collect();
-    let other_keys: HashSet<&str> = other.iter().map(|t| t.key()).collect();
-    let removed: Vec<String> = base.iter().filter(|t| !other_keys.contains(&t.key())).map(|t| t.key().to_string()).collect();
-    let mut modified = Vec::new();
-    for bt in base {
-        if let Some(ot) = other.iter().find(|o| o.key() == bt.key()) {
-            let d = T::diff_between(bt, ot);
-            if d != T::Diff::default() {
-                modified.push((bt.key().to_string(), d));
-            }
-        }
-    }
-    let added: Vec<(usize, T)> = other.iter().enumerate().filter(|(_, t)| !base_keys.contains(&t.key())).map(|(i, t)| (i, t.clone())).collect();
-    (removed, modified, added)
-}
-
 #[allow(clippy::type_complexity)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn named_absorb_pair<T: DxfNamedElem>(d1_removed: &[String], d1_modified: &[(String, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[String], d2_modified: &[(String, T::Diff)], d2_added: &[(usize, T)]) -> NamedDiffParts<T::Diff, T> {
     let added_keys: HashSet<String> = d1_added.iter().map(|(_, t)| t.key().to_string()).collect();
-    let mut merged_removed: Vec<String> = d1_removed.to_vec();
+    let mut merged_removed: Vec<String> = Vec::from(d1_removed);
     let mut annihilated: HashSet<String> = HashSet::new();
     for key in d2_removed {
         if added_keys.contains(key) {
@@ -343,7 +306,7 @@ impl DxfNamedElem for DxfHeaderVar {
     fn key(&self) -> &str {
         &self.name
     }
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff {
         DxfHeaderVarDiff {
             group_code: (a.group_code != b.group_code).then_some(b.group_code),
             value: (a.value != b.value).then(|| b.value.clone()),
@@ -422,16 +385,6 @@ impl DxfHeaderVarsDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[DxfHeaderVar], other: &[DxfHeaderVar]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfHeaderVarDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfHeaderVar)> = d1.added.into_iter().map(|a| (a.index, a.header_var)).collect();
@@ -466,7 +419,7 @@ impl DxfNamedElem for DxfLayer {
     fn key(&self) -> &str {
         &self.name
     }
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff {
         DxfLayerDiff {
             color: (a.color != b.color).then_some(b.color),
             linetype: (a.linetype != b.linetype).then(|| b.linetype.clone()),
@@ -552,16 +505,6 @@ impl DxfLayersDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[DxfLayer], other: &[DxfLayer]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfLayerDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfLayer)> = d1.added.into_iter().map(|a| (a.index, a.layer)).collect();
@@ -594,7 +537,7 @@ impl DxfNamedElem for DxfStyle {
     fn key(&self) -> &str {
         &self.name
     }
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff {
         DxfStyleDiff {
             flags: (a.flags != b.flags).then_some(b.flags),
             font_name: (a.font_name != b.font_name).then(|| b.font_name.clone()),
@@ -673,16 +616,6 @@ impl DxfStylesDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[DxfStyle], other: &[DxfStyle]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfStyleDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfStyle)> = d1.added.into_iter().map(|a| (a.index, a.style)).collect();
@@ -715,7 +648,7 @@ impl DxfNamedElem for DxfLinetype {
     fn key(&self) -> &str {
         &self.name
     }
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff {
         DxfLinetypeDiff {
             flags: (a.flags != b.flags).then_some(b.flags),
             description: (a.description != b.description).then(|| b.description.clone()),
@@ -794,16 +727,6 @@ impl DxfLinetypesDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[DxfLinetype], other: &[DxfLinetype]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfLinetypeDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfLinetype)> = d1.added.into_iter().map(|a| (a.index, a.linetype)).collect();
@@ -862,15 +785,6 @@ impl DxfTablesDiff {
             styles: self.styles.as_ref().and_then(|styles| styles.inverse(&base.styles)),
             linetypes: self.linetypes.as_ref().and_then(|linetypes| linetypes.inverse(&base.linetypes)),
         };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &DxfTables, other: &DxfTables) -> Option<Self> {
-        let d = Self { layers: DxfLayersDiff::between(&base.layers, &other.layers), styles: DxfStylesDiff::between(&base.styles, &other.styles), linetypes: DxfLinetypesDiff::between(&base.linetypes, &other.linetypes) };
         if d.is_empty() {
             None
         } else {
@@ -1046,7 +960,7 @@ fn entity_diff_is_empty(d: &DxfEntityDiff) -> bool {
 /// 🧭️ Kind-matched pairwise `between` — same kind at both positions produces a sparse
 /// kind-specific diff; a kind change produces `Replace{entity: b}`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_diff_between(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
+pub fn entity_field_changes(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
     match (a, b) {
         (DxfEntity::Line { start: sa, end: ea, layer: la, unknown_group_codes: ua }, DxfEntity::Line { start: sb, end: eb, layer: lb, unknown_group_codes: ub }) => {
             DxfEntityDiff::Line(DxfLineDiff { start: (sa != sb).then_some(*sb), end: (ea != eb).then_some(*eb), layer: (la != lb).then(|| lb.clone()), unknown_group_codes: (ua != ub).then(|| ub.clone()) })
@@ -1262,8 +1176,8 @@ impl DxfIndexElem for DxfEntity {
     fn diff_is_empty(d: &Self::Diff) -> bool {
         entity_diff_is_empty(d)
     }
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
-        entity_diff_between(a, b)
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff {
+        entity_field_changes(a, b)
     }
     fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
         inverse_entity_diff(d, base)
@@ -1466,16 +1380,6 @@ impl DxfEntitiesDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[DxfEntity], other: &[DxfEntity]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, DxfEntityDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, DxfEntity)> = d1.added.into_iter().map(|a| (a.index, a.entity)).collect();
@@ -1510,11 +1414,11 @@ impl DxfIndexElem for DxfBlock {
     fn diff_is_empty(d: &Self::Diff) -> bool {
         d == &DxfBlockDiff::default()
     }
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn field_changes(a: &Self, b: &Self) -> Self::Diff {
         DxfBlockDiff {
             name: (a.name != b.name).then(|| b.name.clone()),
             base_point: (a.base_point != b.base_point).then_some(b.base_point),
-            entities: DxfEntitiesDiff::between(&a.entities, &b.entities),
+            entities: (a.entities != b.entities).then(|| DxfEntitiesDiff { removed: (0..a.entities.len()).collect(), modified: Vec::new(), added: b.entities.iter().cloned().enumerate().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() }),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
     }
@@ -1604,16 +1508,6 @@ impl DxfBlocksDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(base: &[DxfBlock], other: &[DxfBlock]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
-        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() };
-        if d.is_empty() {
-            None
-        } else {
-            Some(d)
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, DxfBlockDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, DxfBlock)> = d1.added.into_iter().map(|a| (a.index, a.block)).collect();
@@ -1648,6 +1542,9 @@ pub struct DxfDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub entities: Option<DxfEntitiesDiff>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub other_tables: Option<Vec<DxfOtherTable>>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1659,16 +1556,14 @@ fn target_error(code: &'static str, message: &'static str, target: Vec<String>) 
 fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, prefix: &[String]) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
-        let mut target = prefix.to_vec();
-        target.push(index.to_string());
+        let target = [prefix, &[index.to_string()][..]].concat();
         if index >= base_len || !removed.insert(index) {
             return Err(target_error("mutation.apply.invalid-remove-index", "removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
     for index in modified_indices {
-        let mut target = prefix.to_vec();
-        target.push(index.to_string());
+        let target = [prefix, &[index.to_string()][..]].concat();
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
             return Err(target_error("mutation.apply.invalid-modify-index", "modification target must exist exactly once and remain present", target));
         }
@@ -1677,8 +1572,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     additions.sort_unstable();
     let mut previous = None;
     for (length, index) in (base_len - removed.len()..).zip(additions) {
-        let mut target = prefix.to_vec();
-        target.push(index.to_string());
+        let target = [prefix, &[index.to_string()][..]].concat();
         if index > length || previous == Some(index) {
             return Err(target_error("mutation.apply.invalid-add-index", "addition target must be unique and within the evolving sequence", target));
         }
@@ -1714,16 +1608,14 @@ fn validate_named_targets<'a>(
     let present = |key: &str| occurrences.contains_key(key);
     let mut removed = BTreeSet::new();
     for key in removed_keys {
-        let mut target = prefix.to_vec();
-        target.push(key.to_string());
+        let target = [prefix, &[key.to_string()][..]].concat();
         if !unique(key) || !removed.insert(key) {
             return Err(target_error("mutation.apply.invalid-remove-target", "removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
     for key in modified_keys {
-        let mut target = prefix.to_vec();
-        target.push(key.to_string());
+        let target = [prefix, &[key.to_string()][..]].concat();
         if !unique(key) || removed.contains(key) || !modified.insert(key) {
             return Err(target_error("mutation.apply.invalid-modify-target", "modification target must exist exactly once and remain present", target));
         }
@@ -1733,8 +1625,7 @@ fn validate_named_targets<'a>(
     let mut added_keys = BTreeSet::new();
     let mut previous = None;
     for (length, (index, key)) in (base_len - removed.len()..).zip(additions) {
-        let mut target = prefix.to_vec();
-        target.push(key.to_string());
+        let target = [prefix, &[key.to_string()][..]].concat();
         if present(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
             return Err(target_error("mutation.apply.invalid-add-target", "addition name and position must be unique and valid", target));
         }
@@ -1764,8 +1655,7 @@ fn validate_entities_diff(base: &[DxfEntity], diff: &DxfEntitiesDiff, prefix: &[
     validate_indexed_targets(base.len(), &diff.removed, diff.modified.iter().map(|entry| entry.index), diff.added.iter().map(|entry| entry.index), prefix)?;
     for entry in &diff.modified {
         if !entity_diff_matches(&base[entry.index], &entry.diff) {
-            let mut target = prefix.to_vec();
-            target.push(entry.index.to_string());
+            let target = [prefix, &[entry.index.to_string()][..]].concat();
             return Err(target_error("entity-kind-mismatch", "kind-specific entity diff must match its target entity", target));
         }
     }
@@ -1832,7 +1722,7 @@ fn apply_dxf_diff_unchecked(diff: &DxfDiff, base: &DxfSnapshot) -> DxfSnapshot {
         schema: base.schema.clone(),
         header_vars: diff.header_vars.as_ref().map_or_else(|| base.header_vars.clone(), |value| value.apply(&base.header_vars)),
         tables: diff.tables.as_ref().map_or_else(|| base.tables.clone(), |value| value.apply(&base.tables)),
-        other_tables: base.other_tables.clone(),
+        other_tables: diff.other_tables.clone().unwrap_or_else(|| base.other_tables.clone()),
         blocks: diff.blocks.as_ref().map_or_else(|| base.blocks.clone(), |value| value.apply(&base.blocks)),
         entities: diff.entities.as_ref().map_or_else(|| base.entities.clone(), |value| value.apply(&base.entities)),
     }
@@ -1872,6 +1762,9 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
             (None, Some(b)) => Some(b),
             (Some(a), Some(b)) => DxfEntitiesDiff::absorb(a, b),
         };
+        if other.other_tables.is_some() {
+            self.other_tables = other.other_tables;
+        }
     }
 }
 
@@ -1884,15 +1777,7 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
             tables: self.tables.as_ref().and_then(|tables| tables.inverse(&base.tables)),
             blocks: self.blocks.as_ref().and_then(|blocks| blocks.inverse(&base.blocks)),
             entities: self.entities.as_ref().and_then(|entities| entities.inverse(&base.entities)),
-        }
-    }
-
-    fn between(base: &DxfSnapshot, other: &DxfSnapshot) -> Self {
-        DxfDiff {
-            header_vars: DxfHeaderVarsDiff::between(&base.header_vars, &other.header_vars),
-            tables: DxfTablesDiff::between(&base.tables, &other.tables),
-            blocks: DxfBlocksDiff::between(&base.blocks, &other.blocks),
-            entities: DxfEntitiesDiff::between(&base.entities, &other.entities),
+            other_tables: self.other_tables.as_ref().filter(|tables| **tables != base.other_tables).map(|_| base.other_tables.clone()),
         }
     }
 
@@ -1901,38 +1786,35 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
             && self.tables.as_ref().is_none_or(DxfTablesDiff::is_empty)
             && self.blocks.as_ref().is_none_or(DxfBlocksDiff::is_empty)
             && self.entities.as_ref().is_none_or(DxfEntitiesDiff::is_empty)
+            && self.other_tables.is_none()
     }
 }
 
 //#endregion 🔖️Diff
 
 //#region 🔖️MutationDiffBuilders
-// 🧮 Item-level `between` wrappers, exposed to `🧬️mutations` so `SetLayer`/`SetStyle`/
+// 🧮 Item-level field-change wrappers, exposed to `🧬️mutations` so `SetLayer`/`SetStyle`/
 // `SetLinetype`/`SetEntity`/`SetBlock`'s `diff()` can compute a sparse per-field patch without the
 // private `DxfNamedElem`/`DxfIndexElem` traits themselves leaving this module.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn header_var_diff_between(a: &DxfHeaderVar, b: &DxfHeaderVar) -> DxfHeaderVarDiff {
-    <DxfHeaderVar as DxfNamedElem>::diff_between(a, b)
+pub fn header_var_field_changes(a: &DxfHeaderVar, b: &DxfHeaderVar) -> DxfHeaderVarDiff {
+    <DxfHeaderVar as DxfNamedElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn layer_diff_between(a: &DxfLayer, b: &DxfLayer) -> DxfLayerDiff {
-    <DxfLayer as DxfNamedElem>::diff_between(a, b)
+pub fn layer_field_changes(a: &DxfLayer, b: &DxfLayer) -> DxfLayerDiff {
+    <DxfLayer as DxfNamedElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn style_diff_between(a: &DxfStyle, b: &DxfStyle) -> DxfStyleDiff {
-    <DxfStyle as DxfNamedElem>::diff_between(a, b)
+pub fn style_field_changes(a: &DxfStyle, b: &DxfStyle) -> DxfStyleDiff {
+    <DxfStyle as DxfNamedElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn linetype_diff_between(a: &DxfLinetype, b: &DxfLinetype) -> DxfLinetypeDiff {
-    <DxfLinetype as DxfNamedElem>::diff_between(a, b)
+pub fn linetype_field_changes(a: &DxfLinetype, b: &DxfLinetype) -> DxfLinetypeDiff {
+    <DxfLinetype as DxfNamedElem>::field_changes(a, b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn entity_diff_between_pub(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
-    entity_diff_between(a, b)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn block_diff_between(a: &DxfBlock, b: &DxfBlock) -> DxfBlockDiff {
-    <DxfBlock as DxfIndexElem>::diff_between(a, b)
+pub fn block_field_changes(a: &DxfBlock, b: &DxfBlock) -> DxfBlockDiff {
+    <DxfBlock as DxfIndexElem>::field_changes(a, b)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2257,6 +2139,7 @@ pub(crate) fn demo_diff_cases() -> Vec<DxfDiff> {
         header_vars: None,
         tables: None,
         blocks: None,
+        other_tables: None,
         entities: Some(DxfEntitiesDiff { removed: vec![2], modified: vec![], added: vec![DxfEntityAdded { index: 0, entity: DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] } }] }),
     };
 
@@ -2294,6 +2177,7 @@ pub(crate) fn demo_diff_cases() -> Vec<DxfDiff> {
             ],
             added: vec![DxfEntityAdded { index: 3, entity: DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] } }],
         }),
+        other_tables: Some(vec![DxfOtherTable { name: "VIEW".into(), tags: vec![] }]),
     };
 
     vec![DxfDiff::default(), entities_only, rich]

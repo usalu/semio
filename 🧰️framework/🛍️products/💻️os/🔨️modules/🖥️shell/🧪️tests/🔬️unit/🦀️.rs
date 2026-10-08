@@ -32,7 +32,7 @@ fn value_round_trip_matches_serde_shape() {
     check(ExtraWindowInstance { window_id: "w1".to_string(), kind: "app".to_string(), params: Some(serde_json::json!({"seed": 1})) });
     check(window("w2"));
     check(DialogState { dialog_id: "d1".to_string(), seed_args: None });
-    check(UiDriver { driver_id: "custom".to_string(), label: "Custom".to_string(), config: serde_json::json!({"a": [1, 2, "x"]}) });
+    check(UiDriver { driver_id: "custom".to_string(), label: "Custom".to_string(), config: dsl_core::DslValue::object([("a".into(),dsl_core::DslValue::Array(vec![dsl_core::DslValue::uint(1),dsl_core::DslValue::uint(2),dsl_core::DslValue::String("x".into())]))]) });
     check(ShellCapability { id: "ui.window.focus".to_string(), title: "Focus window".to_string(), description: "Focuses a window".to_string(), schema: serde_json::json!({"type": "object"}), observable_only: false });
 
     // `with`-bridged nested-HashMap JsonValue fields on `ShellState` — round-trip the whole
@@ -303,8 +303,8 @@ fn constructed_cases_match_committed_fixtures() {
     }
     assert_ok("set-open-with-focus-role", base.clone(), ShellCommand::SetOpenWithFocusRole { role: Some(AppRole("editor".to_string())) });
     assert_ok("set-active-tutorial", base.clone(), ShellCommand::SetActiveTutorial { tutorial_id: Some("getting-started".to_string()) });
-    assert_ok("set-ui-driver-draft", base.clone(), ShellCommand::SetUiDriverDraft { draft: Some(UiDriver { driver_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
-    assert_ok("set-ui-theme-draft", base.clone(), ShellCommand::SetUiThemeDraft { draft: Some(UiTheme { theme_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
+    assert_ok("set-ui-driver-draft", base.clone(), ShellCommand::SetUiDriverDraft { draft: Some(UiDriver { driver_id: "draft".to_string(), label: "Draft".to_string(), config: dsl_core::DslValue::Object(Vec::new()) }) });
+    assert_ok("set-ui-theme-draft", base.clone(), ShellCommand::SetUiThemeDraft { draft: Some(UiTheme { theme_id: "draft".to_string(), label: "Draft".to_string(), config: dsl_core::DslValue::Object(Vec::new()) }) });
     assert_ok("set-sync-backbone-uri", base.clone(), ShellCommand::SetSyncBackboneUri { uri: Some("hub://space/doc".to_string()) });
     assert_ok("set-sync-card-kind", base.clone(), ShellCommand::SetSyncCardKind { kind: Some(SyncCardKind::Folder) });
     assert_ok("set-sync-draft-path", base.clone(), ShellCommand::SetSyncDraftPath { path: "/tmp/checkin".to_string() });

@@ -3,9 +3,10 @@
   "meta": null,
   "project": null,
   "stakeholders": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "stakeholder-a",
         "patch": {
@@ -43,8 +44,7 @@
           "successMetrics": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "users": null,
   "activities": null,

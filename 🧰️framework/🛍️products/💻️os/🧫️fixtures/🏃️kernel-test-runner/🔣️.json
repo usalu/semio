@@ -12,6 +12,8 @@
       ],
       "level": "long",
       "extraArgs": [
+        "--features",
+        "mutation-testing",
         "--lib",
         "os_store::component::tests",
         "--",
@@ -27,6 +29,8 @@
       ],
       "level": "quick",
       "extraArgs": [
+        "--features",
+        "mutation-testing",
         "--test",
         "selection"
       ]
@@ -35,10 +39,13 @@
       "id": "default-retains-complete-target-selection",
       "arguments": [],
       "level": "fundamental",
-      "extraArgs": []
+      "extraArgs": [
+        "--features",
+        "mutation-testing"
+      ]
     }
   ],
-  "manifest": "[package]\nname=\"semio-framework-os-kernel\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[workspace]\n",
+  "manifest": "[package]\nname=\"semio-framework-os-kernel\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[workspace]\n[features]\nmutation-testing=[]\n",
   "source": "#[cfg(test)] mod os_store { mod component { mod tests { #[test] fn owned_selection() { assert_eq!(u32::MAX, 4294967295); eprintln!(\"[DEBUG] kernel driver actual owned library selection\"); } } } }\n",
   "integration": "#[test] fn integration_selection() { assert_eq!(std::mem::size_of::<u32>(),4); eprintln!(\"[DEBUG] kernel driver actual integration selection\"); }\n",
   "config": "[profile.default]\nretries=0\n[profile.fundamental]\n[profile.quick]\n[profile.long]\n"

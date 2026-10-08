@@ -1,0 +1,7 @@
+{
+  "SetRegionProperty": {
+    "feature": "region-old-town",
+    "key": "label",
+    "value": "Old Town Core"
+  }
+}

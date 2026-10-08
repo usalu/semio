@@ -105,7 +105,7 @@ fn streamed(phase: &str, offset: [f64; 3]) -> semio_s_artifact_procedural_genera
 #[test]
 fn an_open_gesture_previews_exactly_what_its_release_commits() {
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{generation3d_gumball_preview, transform_commands::GumballGestures, PreviewInteractionMarks};
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{example_snapshot, mutations::apply_generation3d_mutation, PROCEDURAL_EXAMPLE_HEX_COLUMN};
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{example_snapshot, mutations::central_apply::apply_generation3d_mutation, PROCEDURAL_EXAMPLE_HEX_COLUMN};
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let committed = example_snapshot(PROCEDURAL_EXAMPLE_HEX_COLUMN).expect("the hexagonal column example");
     let operator = "extrude__gumball_translate";

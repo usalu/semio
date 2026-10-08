@@ -156,7 +156,7 @@ pub(crate) enum NeuronNodeDsl {
 /// the unified syntax law for graph edges/connections. Converts at the `crate::os_store::ArtifactDsl`/
 /// `crate::os_store::OpText` boundary through the shared intrinsic field lowering and artifact conversion,
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
-/// itself (JSON shape, `tree_from_host_snapshot`, `flow_host_snapshot_operations`, every other consumer
+/// itself (JSON shape, `tree_from_host_snapshot`, every other consumer
 /// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub(crate) struct SynapseDsl {

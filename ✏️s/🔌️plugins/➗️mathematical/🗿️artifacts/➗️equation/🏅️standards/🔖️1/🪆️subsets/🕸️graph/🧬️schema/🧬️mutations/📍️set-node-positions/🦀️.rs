@@ -66,3 +66,7 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for SetNodePosit
     }
 }
 //#endregion 🔖️Payload
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

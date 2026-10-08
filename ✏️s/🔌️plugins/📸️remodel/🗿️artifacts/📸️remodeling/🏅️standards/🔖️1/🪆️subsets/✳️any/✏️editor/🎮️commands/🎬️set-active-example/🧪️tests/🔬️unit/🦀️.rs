@@ -31,11 +31,11 @@ async fn re_selecting_the_boot_example_writes_no_edit() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn the_replace_set_is_the_declared_state_diff() {
-    let current = crate::default_remodeling_scene();
-    assert!(replace_document_operations(&current, &current).is_empty(), "an equal document diffs to nothing");
-    let mut next = current.clone();
-    next.params.ingest.max_frames += 1;
-    let mutations = replace_document_operations(&current, &next);
-    assert_eq!(mutations.len(), 1, "only the changed parameter group is rewritten: {mutations:?}");
+async fn selecting_another_example_loads_it_without_an_edit() {
+    let mut app = app_with_registry().await;
+    let dispatched = dispatch(&mut app, RemodelingCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::synthetic_orbit::ID.into() })).await;
+    assert!(!dispatched.edited_document(), "an example switch is a load, never an edit: {:?}", dispatched.lanes);
+    let loaded = app.snapshot().expect("snapshot after");
+    assert_eq!(loaded.assets.len(), crate::examples::synthetic_orbit::FRAMES.len(), "every committed frame loads as asset content");
+    assert!(!loaded.streams.is_empty(), "the example's streams load with it");
 }

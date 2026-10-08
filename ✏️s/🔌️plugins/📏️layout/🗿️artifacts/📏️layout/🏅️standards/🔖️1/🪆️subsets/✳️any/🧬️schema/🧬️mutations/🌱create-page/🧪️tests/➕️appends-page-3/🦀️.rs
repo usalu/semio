@@ -83,14 +83,15 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-page/appends-page-3: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().pages.as_ref().expect("create-page fills the pages delta");
-    assert_eq!(delta.added.len(), 1, "create-page adds exactly one page");
-    assert_eq!(delta.added[0].id, "page-3", "create-page's `added` entry is the payload page");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "create-page touches only the `added` arm of the pages delta");
+    assert_eq!(delta.inserted.len(), 1, "create-page inserts exactly one page");
+    assert_eq!(delta.inserted[0].row.id, "page-3", "create-page's `inserted` row is the payload page");
+    assert_eq!(delta.inserted[0].index, 2, "create-page's `inserted` row carries its index in the resulting list");
+    assert!(delta.removed.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "create-page touches only the `inserted` arm of the pages delta");
 }
 
 /// 🔺️ The sparse delta `create-page` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here only `pages.added` is populated — the whole `Page` record travels in the delta, and `removed`/`patched`/`reordered` stay empty.
+/// end state matches. Here only `pages.inserted` is populated — the whole `Page` record travels in the delta with its index, and `removed`/`moved`/`patched` stay empty.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();

@@ -9,15 +9,18 @@
   "breps": null,
   "referencesByModelDefinitionId": null,
   "nodes": {
-    "added": [
+    "removed": [],
+    "inserted": [
       {
-        "id": "node-3",
-        "label": "Column",
-        "kind": "solid"
+        "index": 2,
+        "row": {
+          "id": "node-3",
+          "label": "Column",
+          "kind": "solid"
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   }
 }

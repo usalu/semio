@@ -1144,20 +1144,6 @@ impl Puzzle3dCollision {
         self.brush_cache.len() + self.brush_index.entry_len()
     }
 
-    pub(crate) fn apply_brush_placement(&mut self, payload: &BrushPlacePayload) -> Option<EngineSceneSnapshot> {
-        let catalogs = self.scene.as_ref()?.kind_catalogs.as_ref()?.clone();
-        let scene_snapshot = &self.scene.as_ref()?.scene_snapshot;
-        let next = apply_brush_placement_to_snapshot(scene_snapshot, payload, &catalogs);
-        if next.objects.len() == scene_snapshot.objects.len() {
-            return None;
-        }
-        if let Some(scene) = &mut self.scene {
-            Arc::make_mut(scene).scene_snapshot = next.clone();
-        }
-        self.rebuild_queue();
-        Some(next)
-    }
-
     fn take_session(&mut self) -> Puzzle3dCollisionSession {
         Puzzle3dCollisionSession {
             scene: self.scene.take(),
@@ -1358,7 +1344,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     /// 🎯️ Single typed entry point for every mutating engine action — the headless replacement for the
-    /// old per-action `apply_brush_placement_json`/`update_kind_weights`/`brush_preview_json` wasm-bindgen
+    /// old per-action `update_kind_weights`/`brush_preview_json` wasm-bindgen
     /// methods. Each arm calls the SAME underlying typed `Puzzle3dCollision` method those JSON wrappers
     /// always delegated to — no reimplementation.
     pub fn dispatch(&mut self, command: Puzzle3dEngineCommand) -> Result<Puzzle3dEngineOutcome, Puzzle3dError> {
@@ -1366,10 +1352,6 @@ impl Puzzle3dPrecomputeSession {
             Puzzle3dEngineCommand::SetScene { scene } => {
                 self.set_scene_config(scene);
                 Ok(Puzzle3dEngineOutcome::Unit)
-            }
-            Puzzle3dEngineCommand::ApplyBrushPlacement { payload } => {
-                let scene_snapshot = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
-                Ok(Puzzle3dEngineOutcome::EngineSceneSnapshot(scene_snapshot))
             }
             Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights } => {
                 self.engine.update_kind_weights(object_weights, vortex_weights);

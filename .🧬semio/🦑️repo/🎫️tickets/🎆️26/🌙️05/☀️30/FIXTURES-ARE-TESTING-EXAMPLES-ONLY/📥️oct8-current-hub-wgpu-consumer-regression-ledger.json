@@ -1,0 +1,44 @@
+{
+  "capturedAt": "2026-10-08T17:35:40.038Z",
+  "scope": "current narrowed consumer delta and peer-relocated corpus deletion; prior retirement ledger preserved as historical",
+  "ownedConsumer": {
+    "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+    "beforeSha256": "9a49e7ae165142214336fdc9a33856610cc90e898e6868562d6ecf4b0cc6c197",
+    "afterSha256": "d4a5433428819a5fb53c8071282d58bdc84007320fb13564370c1bcc8099beb9",
+    "removedLines": 1,
+    "onlyRemovedCorpusLine": true,
+    "afterContent": "import assert from \"node:assert/strict\";\nimport {readFile} from \"node:fs/promises\";\nimport {createRequire} from \"node:module\";\nimport {join} from \"node:path\";\nconst owner=\"🌎️hub/🧪️tests/📺️renderer/🧊️wgpu\",general=\"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript\";\n\n/** 🧊️ Verifies Specific command ownership and retained native selections with the independent TypeScript oracle. */\nexport async function proveHubRendererCommandOwnershipV1(root:string):Promise<void>{\n const require=createRequire(join(root,\"package.json\")),ts=require(\"typescript\"),fixture=JSON.parse(await readFile(join(root,owner,\"🧫️fixtures/🔣️.json\"),\"utf8\"));\n assert.equal(new Set(fixture.commands.map((row:any)=>row.command)).size,fixture.commands.length);assert.equal(fixture.commands.length,5);\n const source=await readFile(join(root,general,\"📜️script.ts\"),\"utf8\"),parsed=ts.createSourceFile(\"router.ts\",source,ts.ScriptTarget.Latest,true),specific:string[]=[];\n const visit=(node:any)=>{if(ts.isStringLiteralLike(node)&&[\"🌎️hub\",\"✏️s\"].some(prefix=>node.text===prefix||node.text.startsWith(prefix+\"/\")))specific.push(node.text);ts.forEachChild(node,visit);};visit(parsed);\n console.log(\"[DEBUG] WGPU command ownership portable=\"+fixture.commands.length+\" executableSpecificLiterals=\"+specific.length);assert.deepEqual(specific,[]);\n const generic=JSON.parse(await readFile(join(root,general,\"📋️project.json\"),\"utf8\")),project=JSON.parse(await readFile(join(root,owner,\"📋️project.json\"),\"utf8\")),specificSource=await readFile(join(root,owner,\"📜️script.ts\"),\"utf8\");\n assert.equal(project.name,\"@semio-tech/hub-renderer-wgpu\");for(const row of fixture.commands){assert.equal(generic.targets[row.generalCommand],undefined);assert.ok(!source.includes('.register(\"'+row.generalCommand+'\",'));assert.equal(project.targets[row.command].options.command,\"bun ./📜️script.ts \"+row.command);assert.equal(project.targets[row.command].options.cwd,owner);assert.ok(specificSource.includes('.register(\"'+row.command+'\", '+row.className+')'));for(const law of row.laws)assert.ok(specificSource.includes(law),law);}\n const report=ts.transpileModule(specificSource,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext},reportDiagnostics:true});assert.deepEqual(report.diagnostics,[]);\n console.log(\"[DEBUG] WGPU command ownership declaringTargets=5 retainedNativeLaws=7 TypeScriptOracle=1\");\n await import(join(root,general,\"📜️script.ts\"));\n console.log(\"[DEBUG] WGPU General declaring module imports=1 Specific declaring owner main=1 nativeInvocation=0\");\n}\n"
+  },
+  "removedCorpus": {
+    "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧫️fixtures/🧬️schema/🔣️.json",
+    "beforeSha256": "13d18f285941a7a5b2e70eb3773d12ec42f8e367d5ee0154b019ef5c5a4278e2",
+    "present": false
+  },
+  "oldCorpusPresent": false,
+  "retainedPeerImport": "General module imported; Specific owner remains main; current peer behavior preserved",
+  "plainVectorSha256": "88d443a5f4238adc4555a92497aa65c141544856f64d99c86e9aa04bdf029eed",
+  "nativeCoreChanged": [],
+  "hubControlledChanged": [],
+  "topologySourceSha256": "338a2971d16de2df9ef0504a681e937c766c169613a7da2527a595b31d9bb8de",
+  "guardRed": {
+    "session": 92795,
+    "exit": 1,
+    "duration": "726ms",
+    "log": "🗑️generated/oct8-current-hub-wgpu-relocated-red.log"
+  },
+  "missingRed": {
+    "chunk": "50b7e7",
+    "exit": 1,
+    "duration": "181ms",
+    "log": "🗑️generated/oct8-current-hub-wgpu-missing-corpus-red.log"
+  },
+  "green": {
+    "session": 41908,
+    "exit": 0,
+    "duration": "1.1s",
+    "tests": 7,
+    "assertions": 460,
+    "log": "🗑️generated/oct8-current-hub-wgpu-consumer-green.log"
+  },
+  "placementInventory": "🗑️generated/oct8-current-hub-wgpu-consumer-green-artifacts/hub-wgpu-corpus-inventory.json"
+}

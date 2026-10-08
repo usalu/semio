@@ -3,12 +3,15 @@
   "camera": null,
   "widgets": null,
   "synapses": {
-    "added": [],
     "removed": [
-      "wire-ab"
+      {
+        "id": "wire-ab",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "layout": null,
   "generations": null,

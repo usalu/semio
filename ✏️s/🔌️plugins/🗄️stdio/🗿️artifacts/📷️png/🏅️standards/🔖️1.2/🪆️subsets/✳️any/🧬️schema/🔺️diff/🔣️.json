@@ -8,6 +8,71 @@
     "image": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/definitions/image",
       "x-semio-state": "artifact"
+    },
+    "gamma": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gama": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "rects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "region",
+          "samples"
+        ],
+        "properties": {
+          "region": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "properties": {
+              "x": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        }
+      },
+      "x-semio-state": "artifact"
     }
   }
 }

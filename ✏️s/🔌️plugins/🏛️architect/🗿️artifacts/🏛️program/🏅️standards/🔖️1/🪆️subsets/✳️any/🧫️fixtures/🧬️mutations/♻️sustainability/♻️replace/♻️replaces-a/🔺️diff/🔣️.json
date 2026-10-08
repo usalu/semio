@@ -35,49 +35,55 @@
   "flexibility": null,
   "growth": null,
   "sustainability": {
-    "added": [
+    "removed": [
       {
         "id": "sustainability-requirement-a",
-        "name": "Sustainability Requirement A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "topic": "Replaced Sustainability Requirement A",
-        "target": null,
-        "metric": null,
-        "baseline": null,
-        "targetValue": null,
-        "unit": null,
-        "certification": [],
-        "standards": [],
-        "elementIds": [],
-        "strategies": [],
-        "materialsPreferences": [],
-        "energyStrategy": [],
-        "waterStrategy": [],
-        "wasteStrategy": [],
-        "biodiversity": [],
-        "embodiedCarbon": null,
-        "operationalCarbon": null,
-        "reportingRequirements": [],
-        "verificationPlan": null,
-        "ownerId": null
+        "index": 0
       }
     ],
-    "removed": [
-      "sustainability-requirement-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "sustainability-requirement-a",
+          "name": "Sustainability Requirement A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "topic": "Replaced Sustainability Requirement A",
+          "target": null,
+          "metric": null,
+          "baseline": null,
+          "targetValue": null,
+          "unit": null,
+          "certification": [],
+          "standards": [],
+          "elementIds": [],
+          "strategies": [],
+          "materialsPreferences": [],
+          "energyStrategy": [],
+          "waterStrategy": [],
+          "wasteStrategy": [],
+          "biodiversity": [],
+          "embodiedCarbon": null,
+          "operationalCarbon": null,
+          "reportingRequirements": [],
+          "verificationPlan": null,
+          "ownerId": null
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "resilience": null,
   "costs": null,

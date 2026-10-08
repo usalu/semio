@@ -1,7 +1,8 @@
 //! 🧩️ Space-scoped fixed-chunk artifact CAS and canonical manifest codec.
 
 use super::{ArtifactBlobIntegrity, ArtifactPair, AuthorityError, AuthorityProgress, AuthorityProgressStage, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob, AUTHORITY_MAX_PAIR_BYTES};
-use directory::os_directory::{hex_lower, ArtifactCheckpoint, ArtifactHash, DocumentScope};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DocumentScope};
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use semio_framework_hash::Sha256;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

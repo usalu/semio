@@ -325,7 +325,7 @@ async fn singleton_section_kinds_obey_the_sum_law() {
     }
 }
 /// 📍️ A create with an `index` inserts at that position and a delete of a non-last row is undone by a create at the original index, so
-/// the summed inverse diffs carry the row order (`reordered`) as well as the row.
+/// the summed inverse diffs carry the row position (`inserted` at its original index) as well as the row.
 #[semio_framework_async_macros::async_test]
 async fn create_at_an_index_and_delete_of_a_middle_row_obey_the_sum_law() {
     let mut base = sample_plugin();
@@ -345,7 +345,7 @@ async fn create_at_an_index_and_delete_of_a_middle_row_obey_the_sum_law() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create_at(Some(order.len())), &base).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create_at(None), &base).await;
     let beyond = create_at(Some(order.len() + 1)).diff(&base);
-    assert!(beyond.messages().iter().any(|message| message.code.0 == "mutation.index-out-of-range"), "an index past the end is rejected");
+    assert!(beyond.messages().iter().any(|message| message.code.0 == "mutation.target-missing"), "an index past the end is rejected");
     for id in &order {
         let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: id.clone() });
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete, &base).await;

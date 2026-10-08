@@ -27,10 +27,10 @@ fn kinds_match_enum_and_catalog() {
         PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
         PptxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-        PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default(), index: None }),
+        PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default(), index: None, override_index: None }),
         PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: String::new() }),
-        PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: String::new() }),
-        PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: String::new() }),
+        PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: String::new(), node: None, index: None }),
+        PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: String::new(), index: None }),
     ];
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every PptxStrictMutation variant, in declaration order");
@@ -102,13 +102,15 @@ async fn the_vml_and_alternate_content_kinds_satisfy_the_inverse_sum_law_at_a_mi
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&middle, &base).await;
     let mut without = base.clone();
     apply_pptx_strict_mutation(&mut without, &middle);
-    let insert = PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: "ppt/drawings/vmlDrawing1.vml".into(), document, index: Some(1) });
+    let insert = PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: "ppt/drawings/vmlDrawing1.vml".into(), document, index: Some(2), override_index: Some(2) });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &without).await;
-    let add = PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: "ppt/slides/slide1.xml".into() });
+    let add = PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: "ppt/slides/slide1.xml".into(), node: None, index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&add, &base).await;
     let mut with_fallback = base.clone();
     apply_pptx_strict_mutation(&mut with_fallback, &add);
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: "ppt/slides/slide1.xml".into() }), &with_fallback).await;
+    apply_pptx_strict_mutation(&mut with_fallback, &PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: "ppt/slides/slide1.xml".into(), node: None, index: Some(0) }));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: "ppt/slides/slide1.xml".into(), index: None }), &with_fallback).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: "ppt/slides/slide1.xml".into(), index: Some(0) }), &with_fallback).await;
 }
 //#endregion 🔖️StampLaw
 
@@ -118,7 +120,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️mutations/🖼️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
     let path = fixture["path"].as_str().unwrap().to_string();
     let document: XmlDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mutation = PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None });
+    let mutation = PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None, override_index: None });
     assert_eq!(PptxStrictMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     let encoded = mutation.encode_op().unwrap();
     assert_ne!(encoded, mutation.print_op().into_bytes());
@@ -145,9 +147,10 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(element_names, ["xml", "v:shape"]);
     let carrier: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     assert_eq!(carrier, fixture["document"]);
-    let removal = PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path });
+    let removal = PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() });
     let inverse = removal.inverse(&inserted).unwrap();
-    assert_eq!(inverse, vec![PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(0) })]);
+    let (index, override_index) = crate::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(&inserted, &path).unwrap();
+    assert_eq!(inverse, vec![PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(index), override_index })]);
     let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
 }

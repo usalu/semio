@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `SetSlotPositions` — one field patch per slot whose position changes.
 
-use crate::diff::{Wfc2dDiff, Wfc2dRowPatch, Wfc2dRows, Wfc2dSlotPatch};
+use crate::diff::{Wfc2dDiff, Wfc2dSlotPatch, Wfc2dSlotsDelta, Wfc2dSlotsModification};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::SetSlotPositions, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -13,16 +13,16 @@ pub fn diff(payload: &super::SetSlotPositions, base: &Wfc2dSnapshot) -> protocol
     }
     let partial: Vec<protocol::MutationMessage> =
         (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} position(s) skipped (not in this document): {}", missing.len(), payload.positions.len(), missing.join(", "))).at(missing)).into_iter().collect();
-    let patched: Vec<Wfc2dRowPatch<Wfc2dSlotPatch>> = base
+    let patched: Vec<Wfc2dSlotsModification> = base
         .slots
         .iter()
         .filter_map(|slot| {
             let position = payload.positions.iter().find(|position| position.id == slot.id)?;
-            ((position.x, position.y) != (slot.x, slot.y)).then(|| Wfc2dRowPatch { id: slot.id.clone(), patch: Wfc2dSlotPatch { x: Some(position.x), y: Some(position.y), ..Default::default() } })
+            ((position.x, position.y) != (slot.x, slot.y)).then(|| Wfc2dSlotsModification { id: slot.id.clone(), patch: Wfc2dSlotPatch { x: Some(position.x), y: Some(position.y), ..Default::default() } })
         })
         .collect();
     if patched.is_empty() {
         return protocol::MutationOutcome::new(Wfc2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "every positioned slot already sits there").at(payload.ids())]));
     }
-    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dRows { patched, ..Default::default() }, ..Default::default() }).absorb_messages(partial)
+    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dSlotsDelta { modified: patched, ..Default::default() }, ..Default::default() }).absorb_messages(partial)
 }

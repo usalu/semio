@@ -1,0 +1,197 @@
+{
+  "authorship": false,
+  "confirmed": [
+    {
+      "name": "plugin lifecycle",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "callLine": 7,
+      "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🎟️lifecycle-grant/🔣️.json",
+      "observations": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "578f903b7acf0f91de17623a1e3235e354117e7fbc7eea36a4086f95ac05e25f"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+          "exists": true,
+          "sha256": "627f7540d5389555b7a90af110478ba178b4c89acaa3997794987b77e078f4c5"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🎟️lifecycle-grant/🔣️.json",
+          "exists": true,
+          "sha256": "657999c71d634ff088d3711b0be86cb80c6405bf49c71a420fae037e624523ec"
+        }
+      ]
+    },
+    {
+      "name": "scene bounds",
+      "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "callLine": 24,
+      "example": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧫️fixtures/📐️bounds/🔣️.json",
+      "observations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+          "exists": true,
+          "sha256": "ee984d6e0bb78b2c7a8ad4dc8b35ba1bda2d68c39fd644ecb0a47b12aa967049"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+          "exists": true,
+          "sha256": "dd07bcf1fda588e0857d38954cdd5bf5385667eb99d9f33c605dd55a31099a51"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧫️fixtures/📐️bounds/🔣️.json",
+          "exists": true,
+          "sha256": "e061d288eb47a3aa4c40486488d52c23e092db5f194bd5645059b74d130f9321"
+        }
+      ]
+    },
+    {
+      "name": "path handoff",
+      "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "callLine": 19,
+      "example": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️path/🔣️.json",
+      "observations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+          "exists": true,
+          "sha256": "df600f4952c95d2a2f871a3ce76c004650d4c81481a41f2ebe04c6c7a3e7c8f3"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "exists": true,
+          "sha256": "6115b44bebd7635253c530ab5263451de16bcdee1693f969834e793e4e534d8b"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️path/🔣️.json",
+          "exists": true,
+          "sha256": "3b3220b8deb90cf08ef74566a8d52ddf958b3eeea40c391256653c0ebed1c49e"
+        }
+      ]
+    },
+    {
+      "name": "image handoff",
+      "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "callLine": 27,
+      "example": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️image/🔣️.json",
+      "observations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+          "exists": true,
+          "sha256": "f42acab51d798bc7696eca83b0c935aded1e0a623333cb482d5043256d3606fa"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "exists": true,
+          "sha256": "6115b44bebd7635253c530ab5263451de16bcdee1693f969834e793e4e534d8b"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️image/🔣️.json",
+          "exists": true,
+          "sha256": "12fc1c37a39f24f2f72d53004003c404118c5a0c28df354630a65ea46df42303"
+        }
+      ]
+    },
+    {
+      "name": "pack ordering",
+      "schema": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "reader": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "callLine": 9,
+      "example": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔃️ordering/🔣️.json",
+      "observations": [
+        {
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+          "exists": true,
+          "sha256": "6a2aa01eb1befa6f75e6767663df97b642d337c3b71aa0a85f1b85c4010aeac1"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+          "exists": true,
+          "sha256": "bca7da500defe5c662a50ca0d5a58cc486f21a41f2c3be333296a3a65b4c589a"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔃️ordering/🔣️.json",
+          "exists": true,
+          "sha256": "71b412d7d09498fec1153693c8d4323ea2bb20955a47853b529a4c4a383fdb8a"
+        }
+      ]
+    },
+    {
+      "name": "IO ownership",
+      "schema": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "callLine": 30,
+      "example": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧫️fixtures/🔣️.json",
+      "observations": [
+        {
+          "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "7064816b538d7af3dab3e31a48d06c1e0c6f35c496e6c6f960c0ea08422534cf"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+          "exists": true,
+          "sha256": "2fd1115b822b9cd4df945e9148073cdd55e7e491ec61377097144fa0b2545fd8"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "sha256": "1029bcda3dfe4586c68d9d6c017b05c94c1ab50c5e7c737099eb25749eefaea0"
+        }
+      ]
+    },
+    {
+      "name": "terrain ownership",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "callLine": 8,
+      "example": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧫️fixtures/🔣️.json",
+      "observations": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "65e04721c10db591f18349bca908d6e61b357fb945cecf44ca050db7fe276197"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+          "exists": true,
+          "sha256": "d24d0dd12c19180cb5cda31da4acd69a43c25a331a9aafc6d4adaf9c4183b8ac"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "sha256": "51fae4f0bb2cba73d48456f1fc495964784ef4126fc5de539f51f82b3a900d90"
+        }
+      ]
+    },
+    {
+      "name": "draft wire",
+      "schema": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "reader": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "callLine": 499,
+      "example": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+      "observations": [
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "10810a4899994a391fc24e27293de68fd3e8138f63d74c403b7a70aafcfff91c"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+          "exists": true,
+          "sha256": "664b3a9e90a7881da32bf96c17924a326977c49ebc7139868998a91727e3933e"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "sha256": "8196dacc3142b353f7e2dc2bc9bf8db9d23700d6b9d59f0355ab212e0767b148"
+        }
+      ]
+    }
+  ]
+}

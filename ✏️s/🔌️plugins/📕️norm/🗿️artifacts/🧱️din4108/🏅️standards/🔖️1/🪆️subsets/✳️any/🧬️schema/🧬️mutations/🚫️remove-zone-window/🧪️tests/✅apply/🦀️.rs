@@ -7,5 +7,6 @@ fn committed_vector_holds() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    super::assert_inverse_sum_law("🚫️remove-zone-window", "✅apply").await;
+    let (mutation, before) = super::committed_inputs("🚫️remove-zone-window", "✅apply");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

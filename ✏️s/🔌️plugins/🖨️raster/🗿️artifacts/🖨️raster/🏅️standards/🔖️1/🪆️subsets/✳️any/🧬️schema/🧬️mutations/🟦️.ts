@@ -25,7 +25,8 @@ export type RasterMutation =
   | ({ mutation: 'fillRegion' } & FillRegion)
   | ({ mutation: 'applyFilter' } & ApplyFilter)
   | ({ mutation: 'transformImage' } & TransformImage)
-  | ({ mutation: 'fillSelection' } & FillSelection);
+  | ({ mutation: 'fillSelection' } & FillSelection)
+  | ({ mutation: 'writePixelRegion' } & WritePixelRegion);
 
 /** 📍️ One stroke point in the target image's pixels: pixel edges at whole numbers, centres at `+ 0.5`. */
 export interface RasterStrokePoint { x: number; y: number }
@@ -55,6 +56,8 @@ export interface TransformImage { layerId: string; operation: "rotateClockwise" 
 /** 🫗️ One fill of a layer's pixels or of its mask over a pixel selection (the whole image without one), with a
  * straight-alpha sRGB colour (four channels 0..1). */
 export interface FillSelection { layerId: string; target: "pixels" | "mask"; color: [number, number, number, number]; selection: RasterSelectionSpan[] | null }
+/** 🔲 One rectangle of RGBA8 samples (`width × height × 4` bytes, row-major) written at `(x, y)` of a layer's pixels or mask image. */
+export interface WritePixelRegion { layerId: string; target: "pixels" | "mask"; x: number; y: number; width: number; height: number; samples: number[] }
 /** 🧮️ The longest side a transformed image may have, as the Rust leaf and the payload schema bound it. */
 export const RASTER_IMAGE_MAXIMUM_SIDE = 16384;
 /** 🧮️ The most points one stroke carries, as the Rust leaf and the payload schema bound it. */

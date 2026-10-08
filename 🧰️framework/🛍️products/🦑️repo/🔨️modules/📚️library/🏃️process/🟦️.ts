@@ -65,7 +65,7 @@ const observesCargoInvocation = (args: readonly string[], env: NodeJS.ProcessEnv
  * component builds, the trusted-catalog publish's `os-hub` build). Bun's own writer waits the pipe out. Returns cargo's exit
  * status; `budgetMs` (> 0) elapsing or a SIGINT/SIGTERM of this process ends the whole cargo tree and throws. */
 export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, budgetMs: number): Promise<number> {
-  prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
+  prepareCargoWorkspaceInvocation(getWorkspaceRoot(env), args, cwd,env);
   const observes = observesCargoInvocation(args, env), buildDirectory = observes ? cargoDirectories(getWorkspaceRoot(), env).build : undefined, provenanceRoot = env.SEMIO_TEST_ARTIFACT_DIR ?? (buildDirectory ? join(buildDirectory, "semio-cargo-provenance") : undefined), builtAtMs = Date.now(), units: any[] = [], buildScripts: any[] = [];
   const child = spawn("cargo", [...args], { cwd, env: buildDirectory ? { ...env, SEMIO_COMPILER_RESOURCE_ROOT: join(buildDirectory, "semio-compiler-resources") } : env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
   const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
@@ -107,7 +107,6 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
 /** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. `cargo` runs through
  * [[CARGO_RELAY_SCRIPT]] (POSIX), so it never writes to an inherited, possibly non-blocking descriptor ([[cargoStreamingStatus]]). */
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
-  if (cmd === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd());
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
   const formattedArgs = [...args];
   if (cmd === "bun" || cmd === process.execPath) {
@@ -119,6 +118,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
     }
   }
   const relayed = cmd === "cargo" && (process.platform !== "win32" || observesCargoInvocation(formattedArgs, opts.env ?? process.env));
+  if (cmd === "cargo" && !relayed) prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd(), opts.env ?? process.env);
   const result = relayed
     ? spawnSync(process.versions.bun ? process.execPath : "bun", [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], {
         stdio: "inherit",

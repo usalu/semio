@@ -13,6 +13,10 @@ record patch-pixels tag=18
 field payload bytes
 record paint-native-samples tag=20
 field payload bytes
+record set-gamma tag=21
+field payload bytes
+record replace-samples tag=22
+field payload bytes
 
 record replace-image tag=12
 field payload bytes

@@ -1,6 +1,8 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::{encode_op, generation2d_all_retained_mutation_fixtures_for_test};
-use crate::standards::v1::subsets::any::schema::mutations::generation2d_retire_mutation_cold;
+use crate::central_apply::{generation2d_retire_mutation_cold};
+use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, generation2d_apply_initialization_mutation, generation2d_retire_mutations_cold};
+
 
 fn close_session(session: &mut Generation2dMutationSession) {
     let admitted = session.retained_allocated_bytes();

@@ -8,4 +8,5 @@ export type MdMutation =
   | { mutation: 'insertBlock'; path: MdPathStep[]; index: number; block: MdBlock }
   | { mutation: 'removeBlock'; path: MdPathStep[]; index: number }
   | { mutation: 'replaceBlock'; path: MdPathStep[]; index: number; block: MdBlock }
-  | { mutation: 'setInlines'; path: MdPathStep[]; index: number; inlines: MdInline[] };
+  | { mutation: 'setInlines'; path: MdPathStep[]; index: number; inlines: MdInline[] }
+  | { mutation: 'spliceSource'; splices: { offset: number; delete: number; insert: string }[] };

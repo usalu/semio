@@ -13,49 +13,55 @@
   "processes": null,
   "flows": null,
   "accessRules": {
-    "added": [
+    "removed": [
       {
         "id": "access-rule-a",
-        "name": "Access Rule A",
-        "status": "draft",
-        "priority": "preferred",
-        "ownership": {
-          "ownerId": null,
-          "authorityId": null,
-          "consultantIds": [],
-          "participantIds": []
-        },
-        "timestamps": {
-          "created": "1970-01-01T00:00:00Z",
-          "updated": "1970-01-01T00:00:00Z"
-        },
-        "subjectIds": [],
-        "resourceIds": [],
-        "accessLevel": "public",
-        "accessMode": "unrestricted",
-        "authentication": [],
-        "authorization": [],
-        "timeRestrictions": [],
-        "escortPolicy": null,
-        "visitorPolicy": null,
-        "emergencyOverride": true,
-        "auditRequired": false,
-        "badgeRequired": false,
-        "biometricRequired": false,
-        "zoneIds": [],
-        "exceptions": [],
-        "regulatoryBasis": [],
-        "enforcementMethod": null,
-        "revocationPolicy": null,
-        "trainingRequired": false,
-        "ownerId": null
+        "index": 0
       }
     ],
-    "removed": [
-      "access-rule-a"
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "access-rule-a",
+          "name": "Access Rule A",
+          "status": "draft",
+          "priority": "preferred",
+          "ownership": {
+            "ownerId": null,
+            "authorityId": null,
+            "consultantIds": [],
+            "participantIds": []
+          },
+          "timestamps": {
+            "created": "1970-01-01T00:00:00Z",
+            "updated": "1970-01-01T00:00:00Z"
+          },
+          "subjectIds": [],
+          "resourceIds": [],
+          "accessLevel": "public",
+          "accessMode": "unrestricted",
+          "authentication": [],
+          "authorization": [],
+          "timeRestrictions": [],
+          "escortPolicy": null,
+          "visitorPolicy": null,
+          "emergencyOverride": true,
+          "auditRequired": false,
+          "badgeRequired": false,
+          "biometricRequired": false,
+          "zoneIds": [],
+          "exceptions": [],
+          "regulatoryBasis": [],
+          "enforcementMethod": null,
+          "revocationPolicy": null,
+          "trainingRequired": false,
+          "ownerId": null
+        }
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "operations": null,
   "equipment": null,

@@ -16,7 +16,7 @@ fn document(locked: bool, masked: bool) -> RasterSnapshot {
 }
 
 fn selected(target: &str) -> RasterConfig {
-    RasterConfig { paint_target: target.into(), pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: target.into(), width: 4, height: 3, spans: "[[1,2,255]]".into() }), ..RasterConfig::default() }
+    RasterConfig { paint_target: target.into(), pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: target.into(), width: 4, height: 3, spans: vec![crate::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }] }), ..RasterConfig::default() }
 }
 
 fn fill() -> FillSelection {

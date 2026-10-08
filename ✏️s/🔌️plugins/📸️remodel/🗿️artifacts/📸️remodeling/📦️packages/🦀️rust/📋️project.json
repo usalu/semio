@@ -8,10 +8,65 @@
     "family:remodel"
   ],
   "targets": {
-    "verify-snapshot-sqlite-source":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify snapshot-sqlite-source"}},
-    "test-snapshot-sqlite": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","remodel-remodeling-test-snapshot-sqlite"]}}},
-    "test-snapshot-sqlite-native": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","remodel-remodeling-test-snapshot-sqlite-native"]}}},
-    "test-snapshot-sqlite-source": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","remodel-remodeling-test-snapshot-sqlite-source"]}}},
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+      }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "remodel-remodeling-test-snapshot-sqlite"
+          ]
+        }
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "remodel-remodeling-test-snapshot-sqlite-native"
+          ]
+        }
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "remodel-remodeling-test-snapshot-sqlite-source"
+          ]
+        }
+      }
+    },
     "verify-video-container-providers": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -76,6 +131,22 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts composition prepare"
+      }
+    },
+    "verify-physical-codecs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify physical-codecs"
+      }
+    },
+    "verify-snapshot-sqlite-native-syntax": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-native-syntax"
       }
     }
   }

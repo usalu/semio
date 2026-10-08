@@ -144,7 +144,79 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "contentType"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         },
         "modified": {
@@ -153,40 +225,17 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "key",
-              "diff"
+              "id",
+              "patch"
             ],
             "properties": {
-              "key": {
+              "id": {
                 "type": "string"
               },
-              "diff": {
-                "type": "string"
+              "patch": {
+                "$ref": "#/$defs/XlsxOpcCtEntryPatch"
               }
             }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "additionalItems": false,
-            "minItems": 2,
-            "maxItems": 2
-          }
-        },
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }
@@ -215,7 +264,66 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/OpcPart"
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         },
         "modified": {
@@ -224,29 +332,17 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "key",
-              "diff"
+              "id",
+              "patch"
             ],
             "properties": {
-              "key": {
+              "id": {
                 "type": "string"
               },
-              "diff": {
+              "patch": {
                 "$ref": "#/$defs/XlsxOpcPartDiff"
               }
             }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/OpcPart"
-          }
-        },
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }
@@ -273,7 +369,66 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/OpcRelationship"
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         },
         "modified": {
@@ -282,29 +437,17 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "key",
-              "diff"
+              "id",
+              "patch"
             ],
             "properties": {
-              "key": {
+              "id": {
                 "type": "string"
               },
-              "diff": {
+              "patch": {
                 "$ref": "#/$defs/XlsxOpcRelDiff"
               }
             }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/OpcRelationship"
-          }
-        },
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }
@@ -316,7 +459,82 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "owner",
+                  "relationships"
+                ],
+                "properties": {
+                  "owner": {
+                    "type": "string"
+                  },
+                  "relationships": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/OpcRelationship"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         },
         "modified": {
@@ -325,43 +543,17 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "key",
-              "diff"
+              "id",
+              "patch"
             ],
             "properties": {
-              "key": {
+              "id": {
                 "type": "string"
               },
-              "diff": {
-                "$ref": "#/$defs/XlsxOpcRelListDiff"
+              "patch": {
+                "$ref": "#/$defs/XlsxOpcOwnerPatch"
               }
             }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/OpcRelationship"
-                }
-              }
-            ],
-            "additionalItems": false,
-            "minItems": 2,
-            "maxItems": 2
-          }
-        },
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }
@@ -431,23 +623,6 @@
         }
       }
     },
-    "XlsxXmlPartModified": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "key",
-        "diff"
-      ],
-      "properties": {
-        "key": {
-          "type": "string",
-          "minLength": 1
-        },
-        "diff": {
-          "$ref": "#/$defs/XlsxXmlPartDiff"
-        }
-      }
-    },
     "XlsxXmlPartsDiff": {
       "type": "object",
       "additionalProperties": false,
@@ -455,30 +630,107 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "index"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/XlsxXmlPart"
+              }
+            }
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/XlsxXmlPartModified"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "patch": {
+                "$ref": "#/$defs/XlsxXmlPartDiff"
+              }
+            }
           }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/XlsxXmlPart"
-          }
-        },
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
+        }
+      }
+    },
+    "XlsxOpcCtEntryPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    "XlsxOpcOwnerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relationships": {
+          "$ref": "#/$defs/XlsxOpcRelListDiff"
         }
       }
     }

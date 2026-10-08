@@ -1,0 +1,11 @@
+# Renderer Prepared Close Grant Authority Review
+
+Current resolved enclosing scopes are FrameBuildCursor.close_step15234, FrameFinishCursor15406, AppFrameAfterChrome15447, FrameTransaction16186, AppFramePreparation16380/16458 and AppFramePresentation16741 in OS WGPU renderer. They expose booleans without a supplied physical grant. The seven declared child edges recorded in the preceding census consequently have no original caller capacity/release/depth authority to propagate today.
+
+AppFramePreparation16469 constructs maximum_items1 and all axes directly from InteractiveJob demands; rejected16389/16480 and session16493 similarly convert quotes into authority. These demonstrate typed receipt consumption, but not a scheduler grant source. Kernel actor_budget_from_turn_budget9899 supplies time/lane scheduling budget; it cannot honestly be cast into physical release/capacity authority.
+
+Canonical propagation boundary: caller-owned physical policy supplies a RetainedCloneGrant to the parent close operation; parent exposes fallible next-close axis quotes, selects original live child, forwards bounded granted axes, consumes child typed progress and preserves Option/original owner until receipt fits and terminal emptiness. Aggregate one-turn receipts must fit the same parent grant; do not grant each child the entire envelope in a multi-child turn. Parent frame/backing release remains separately paid. Demand error remains typed refusal; contention remains blocked; neither becomes zero or unlimited authority.
+
+Genuine InteractiveJob close_step(grant) contract is already defined in Job and can be reused directly. Defining Prepared owners need matching public demand/typed close APIs; do not keep a bool compatibility shim. Preserve old mailbox generation/permit identity and wake scheduling while adding explicit supplied authority. If existing public scheduler only offers time budget, a genuine canonical policy-owned physical grant is required at that owner; this audit does not invent policy values or claim an existing grant.
+
+Read-only analysis; no source edits, compilers or tests. Current peer-added full-grant helpers are observations, not Root-authored credit or proven runtime behavior.

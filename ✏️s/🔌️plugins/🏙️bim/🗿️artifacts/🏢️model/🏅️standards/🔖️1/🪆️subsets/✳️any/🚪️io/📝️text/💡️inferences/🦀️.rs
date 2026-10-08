@@ -7,3 +7,16 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 /// 🚚️ The carrier this facet's `parse`/`print` speak.
 pub type ModelInferenceText = String;
+
+#[path = "🗺️plan-linework/🦀️.rs"]
+pub mod plan_linework;
+#[path = "🪜️stair-runs/🦀️.rs"]
+pub mod stair_runs;
+#[path = "🧮️quantities/🦀️.rs"]
+pub mod quantities;
+#[path = "🏠️spaces/🦀️.rs"]
+pub mod spaces;
+#[path = "⚠️diagnostics/🦀️.rs"]
+pub mod diagnostics;
+#[path = "🧊️element-solids/🦀️.rs"]
+pub mod element_solids;

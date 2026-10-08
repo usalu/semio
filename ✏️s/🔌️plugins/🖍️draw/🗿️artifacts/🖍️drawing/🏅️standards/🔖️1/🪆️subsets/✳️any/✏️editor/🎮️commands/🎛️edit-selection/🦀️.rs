@@ -51,7 +51,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
                 };
                 let location = find_drawing_layer_location(&working, &layer_base(layer).id).ok_or_else(|| Fault::from("Layer no longer exists"))?;
                 let mutation = crate::mutations::create_layer(parent.clone(), Some(location.index + 1), duplicate);
-                crate::mutations::apply_drawing_mutation(&mut working, &mutation).map_err(|error| Fault::from(error.to_string()))?;
+                crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut working, &mutation).map_err(|error| Fault::from(error.to_string()))?;
                 operations.push(mutation);
             }
         }

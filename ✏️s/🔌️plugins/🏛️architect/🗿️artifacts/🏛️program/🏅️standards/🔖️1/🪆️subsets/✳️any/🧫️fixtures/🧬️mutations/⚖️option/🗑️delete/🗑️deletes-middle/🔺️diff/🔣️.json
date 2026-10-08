@@ -44,12 +44,15 @@
   "priorities": null,
   "scenarios": null,
   "options": {
-    "added": [],
     "removed": [
-      "option-evaluation-a"
+      {
+        "id": "option-evaluation-a",
+        "index": 1
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "decisions": null,
   "validations": null,

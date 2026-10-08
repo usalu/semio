@@ -24,13 +24,26 @@ message Generation3dDiff {
   optional Generation3dPreviewChange preview_text = 8;
 }
 
-message Generation3dWidgetsDelta {
-  repeated Widget added = 1;
-  repeated string removed = 2;
-  repeated Generation3dWidgetPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Generation3dWidgetRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
-message Generation3dWidgetPatchEntry {
+message Generation3dWidgetInsertion {
+  uint32 index = 1;
+  Widget row = 2;
+}
+message Generation3dWidgetRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message Generation3dWidgetsDelta {
+  repeated Generation3dWidgetRemoval removed = 1;
+  repeated Generation3dWidgetInsertion inserted = 2;
+  repeated Generation3dWidgetRelocation moved = 3;
+  repeated Generation3dWidgetModification modified = 4;
+}
+message Generation3dWidgetModification {
   string id = 1;
   Generation3dWidgetPatch patch = 2;
 }
@@ -46,15 +59,28 @@ message Generation3dWidgetSlider {
   double max = 3;
   double step = 4;
 }
-message Generation3dSynapsesDelta {
-  repeated SynapseSpec added = 1;
-  repeated string removed = 2;
-  repeated Generation3dSynapsePatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-message Generation3dSynapsePatchEntry {
+message Generation3dSynapseRemoval {
   string id = 1;
-  SynapseSpec item = 2;
+  uint32 index = 2;
+}
+message Generation3dSynapseInsertion {
+  uint32 index = 1;
+  SynapseSpec row = 2;
+}
+message Generation3dSynapseRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message Generation3dSynapsesDelta {
+  repeated Generation3dSynapseRemoval removed = 1;
+  repeated Generation3dSynapseInsertion inserted = 2;
+  repeated Generation3dSynapseRelocation moved = 3;
+  repeated Generation3dSynapseModification modified = 4;
+}
+message Generation3dSynapseModification {
+  string id = 1;
+  SynapseSpec patch = 2;
 }
 message Generation3dLayoutRow {
   string id = 1;
@@ -65,13 +91,26 @@ message Generation3dLayoutDelta {
   repeated string removed = 2;
   repeated Generation3dLayoutRow patched = 3;
 }
-message Generation3dGenerationsDelta {
-  repeated FormGeneration added = 1;
-  repeated string removed = 2;
-  repeated Generation3dGenerationPatchEntry patched = 3;
-  repeated string reordered = 4;
+message Generation3dGenerationRemoval {
+  string id = 1;
+  uint32 index = 2;
 }
-message Generation3dGenerationPatchEntry {
+message Generation3dGenerationInsertion {
+  uint32 index = 1;
+  FormGeneration row = 2;
+}
+message Generation3dGenerationRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message Generation3dGenerationsDelta {
+  repeated Generation3dGenerationRemoval removed = 1;
+  repeated Generation3dGenerationInsertion inserted = 2;
+  repeated Generation3dGenerationRelocation moved = 3;
+  repeated Generation3dGenerationModification modified = 4;
+}
+message Generation3dGenerationModification {
   string id = 1;
   Generation3dGenerationPatch patch = 2;
 }

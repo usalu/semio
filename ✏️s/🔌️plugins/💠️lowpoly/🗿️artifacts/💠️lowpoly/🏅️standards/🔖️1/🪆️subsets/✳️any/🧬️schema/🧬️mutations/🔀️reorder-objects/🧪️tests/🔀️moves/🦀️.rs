@@ -1,6 +1,6 @@
 //! 🧪️ `reorder-objects` fixture — `🔀️moves`.
 //!
-//! `reorder-objects` writes ONLY `reordered`, and its diff builder pre-computes the permutation to no-op when the clamped move would leave the order unchanged; nothing is added, removed or patched.
+//! `reorder-objects` writes ONLY one `moved` row `{id, from, to}`, and its diff builder no-ops when the clamped move would leave the order unchanged; nothing is inserted, removed or patched.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/

@@ -44,6 +44,8 @@ pub enum Curve3 {
     Nurbs { knots: KnotVector, controls: Vec<Pnt3>, weights: Vec<f64> },
 }
 
+super::retire_geometry_variants!(Curve3 {Line {origin,dir},Circle {frame,radius},Ellipse {frame,major_radius,minor_radius},Nurbs {knots,controls,weights}});
+
 /// 🌀️ An explicit rational-NURBS representation, returned by [`Curve3::to_nurbs`] /
 /// [`Curve2::to_nurbs`] — every curve kind's common denominator.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -270,6 +272,8 @@ pub enum Curve2 {
     Ellipse { center: Pnt2, x_axis: Vec2, major_radius: f64, minor_radius: f64 },
     Nurbs { knots: KnotVector, controls: Vec<Pnt2>, weights: Vec<f64> },
 }
+
+super::retire_geometry_variants!(Curve2 {Line {origin,dir},Circle {center,radius},Ellipse {center,x_axis,major_radius,minor_radius},Nurbs {knots,controls,weights}});
 
 impl Curve2 {
     /// ➰️ The same curve translated by `delta` in parameter space — the exact operation, per

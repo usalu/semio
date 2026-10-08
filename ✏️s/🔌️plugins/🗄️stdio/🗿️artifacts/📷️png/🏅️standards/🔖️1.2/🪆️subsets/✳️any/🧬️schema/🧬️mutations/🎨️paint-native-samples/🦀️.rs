@@ -2,9 +2,8 @@
 
 use crate::schema::snapshot::{PngNativePaint, PngRegion};
 use crate::schema::diff::PngDiff;
-use crate::schema::mutations::{PngMutation, ReplaceImage};
+use crate::schema::mutations::{PngMutation, ReplaceSamples};
 use crate::PngSnapshot;
-use protocol::DiffAlgebra;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -20,14 +19,15 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMuta
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "native-sample-region", kind: "paint-native-samples", record: "PaintNativeSamples" };
 
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        match crate::schema::operations::paint_native_region_controlled(base, &self.revision, self.region, self.paint, &mut |_, _| true) {
-            Ok(next) => protocol::MutationOutcome::new(PngDiff::between(base, &next)),
+        match crate::schema::operations::paint_native_rect(base, &self.revision, self.region, self.paint) {
+            Ok(rect) => protocol::MutationOutcome::new(PngDiff { rects: rect.into_iter().collect(), ..PngDiff::default() }),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["native-sample-region"]),
         }
     }
 
     fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
-        Ok(vec![PngMutation::ReplaceImage(ReplaceImage { image: base.image.clone() })])
+        let changed = crate::schema::operations::native_rect(base, self.region, self.paint);
+        Ok(changed.and_then(|rect| base.image.region_samples(rect.region)).map(|samples| PngMutation::ReplaceSamples(ReplaceSamples { region: self.region, samples })).into_iter().collect())
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

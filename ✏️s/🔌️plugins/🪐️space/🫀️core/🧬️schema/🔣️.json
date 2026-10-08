@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "sharedPackage",
+    "artifacts",
+    "sharedSources",
+    "specificIndexOwner",
+    "foreignLocks"
+  ],
+  "properties": {
+    "schema": {
+      "const": "s.space.shared-authority/v1"
+    },
+    "sharedPackage": {
+      "const": "semio-s-space-core"
+    },
+    "artifacts": {
+      "const": [
+        "s.space.home",
+        "s.space.space"
+      ]
+    },
+    "sharedSources": {
+      "const": [
+        "🫀️core/📄️documents",
+        "🫀️core/🕰️time",
+        "🫀️core/🦀️.rs"
+      ]
+    },
+    "specificIndexOwner": {
+      "const": "🗿️artifacts/🪐️space/🫀️index"
+    },
+    "foreignLocks": {
+      "const": "source-bearing-blocks-byte-identical"
+    }
+  }
+}

@@ -4,27 +4,67 @@
 # import ObjectKindExtra, CuratedItem from "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 
 type CurationObjectKindExtraPatchEntry {
-  id: String!
   extra: ObjectKindExtra!
 }
 
 type CurationStockExtraDelta {
-  added: [ObjectKindExtra!]
-  removed: [String!]
-  patched: [CurationObjectKindExtraPatchEntry!]
-  reordered: [String!]
+  removed: [CurationStockExtraRemoval!]
+  inserted: [CurationStockExtraInsertion!]
+  moved: [CurationStockExtraRelocation!]
+  modified: [CurationStockExtraModification!]
+}
+
+type CurationStockExtraModification {
+  id: String!
+  patch: CurationObjectKindExtraPatchEntry!
+}
+
+type CurationStockExtraRemoval {
+  id: String!
+  index: Int!
+}
+
+type CurationStockExtraInsertion {
+  index: Int!
+  row: ObjectKindExtra!
+}
+
+type CurationStockExtraRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type CurationCuratedPatchEntry {
-  objectId: String!
   count: Int
 }
 
 type CurationCuratedDelta {
-  added: [CuratedItem!]
-  removed: [String!]
-  patched: [CurationCuratedPatchEntry!]
-  reordered: [String!]
+  removed: [CurationCuratedRemoval!]
+  inserted: [CurationCuratedInsertion!]
+  moved: [CurationCuratedRelocation!]
+  modified: [CurationCuratedModification!]
+}
+
+type CurationCuratedModification {
+  id: String!
+  patch: CurationCuratedPatchEntry!
+}
+
+type CurationCuratedRemoval {
+  id: String!
+  index: Int!
+}
+
+type CurationCuratedInsertion {
+  index: Int!
+  row: CuratedItem!
+}
+
+type CurationCuratedRelocation {
+  id: String!
+  from: Int!
+  to: Int!
 }
 
 type CurationDiff {

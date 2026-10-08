@@ -9,7 +9,7 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 #[value(rename_all = "camelCase")]
 pub struct InsertLayer {
     pub element_id: String,
-    pub index: usize,
+    pub index: Option<usize>,
     pub layer: crate::LayerDocument,
 }
 

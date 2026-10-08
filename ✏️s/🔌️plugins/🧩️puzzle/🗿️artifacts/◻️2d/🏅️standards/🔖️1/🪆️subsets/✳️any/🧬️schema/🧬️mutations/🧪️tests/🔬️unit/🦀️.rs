@@ -3,42 +3,42 @@ use crate::PUZZLE_2D_SCHEMA;
 use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
-use serde_json::json;
+use serde_json::{json,Value};
 
+/// 🪢️ A sequence of concrete kinds — a delete, a move, a create — applies centrally to the document it states and its
+/// inverse rows, replayed last-to-first, restore the canonical pre-edit document. Nothing here differences two boards.
 #[test]
-fn puzzle2d_delta_ops_are_granular_and_round_trip() {
+fn concrete_kinds_round_trip_through_the_central_applier() {
     let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
     let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
     let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d snapshot")).expect("canonical puzzle2d JSON");
-    let operations = puzzle2d_document_delta_operations(&before, &after).expect("both sides decode");
-    assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::MoveNode(_))));
-    assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::CreateNode(_))));
-    assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::DeleteNode(_))));
-    // The typed bridge canonicalizes optional/default JSON fields while preserving the
-    // artifact value and every operation's backwards restores the canonical pre-edit value.
-    let mut forward = before.clone();
+    let before_snapshot: Puzzle2dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&before)).expect("base admits");
+    let created: crate::Puzzle2dNode=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }))).expect("node admits");
+    let operations=vec![delete_node("n1".into()), move_node("n2".into(), 99.0, 0.0), create_node(created, None)];
+    let mut forward = before_snapshot.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse snapshot"));
-        forward = protocol::apply_diff(Mutation::<Value>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
+        inverses.extend(Mutation::<Puzzle2dSnapshot>::inverse(operation, &forward).expect("valid retained mutation inverse snapshot"));
+        forward = protocol::apply_diff(Mutation::<Puzzle2dSnapshot>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
     }
-    assert_eq!(forward, canonical(&after));
+    assert_eq!(serde_json::to_value(&forward).unwrap(),canonical(&after));
     for inverse in inverses.iter().rev() {
-        forward = protocol::apply_diff(Mutation::<Value>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
+        forward = protocol::apply_diff(Mutation::<Puzzle2dSnapshot>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
     }
-    assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
+    assert_eq!(serde_json::to_value(&forward).unwrap(),canonical(&before), "backwards operations must restore the pre-edit document");
 }
 
+/// 🌱️ A node record that states no `anchor` still creates through `create-node`: the typed model fills the default.
 #[test]
-fn sparse_node_without_anchor_still_emits_create_node() {
-    let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] });
-    let after = json!({
-        "schema": PUZZLE_2D_SCHEMA,
-        "nodes": [{ "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "text": "n1", "handles": [], "radius": 24.0 }],
-        "edges": []
-    });
-    let operations = puzzle2d_document_delta_operations(&before, &after).expect("both sides decode");
-    assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::CreateNode(_))), "sparse add must stay granular");
+fn a_sparse_node_record_without_anchor_creates_through_create_node() {
+    let before: Puzzle2dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] }))).expect("base admits");
+    let node: crate::Puzzle2dNode=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "text": "n1", "handles": [], "radius": 24.0 }))).expect("sparse node admits");
+    let operation=create_node(node, None);
+    let outcome=Mutation::<Puzzle2dSnapshot>::diff(&operation, &before);
+    assert!(outcome.messages().is_empty(), "a sparse add applies cleanly: {:?}", outcome.messages());
+    let created=protocol::apply_diff(outcome.diff(), &before).expect("valid mutation diff");
+    assert_eq!(created.nodes.len(), 1, "sparse add stays one create-node");
+    assert_eq!(created.nodes.iter().next().map(|node| node.anchor), Some(crate::Puzzle2dNodeAnchor::Fixed));
 }
 
 //#region 🔖️MutationLaws
@@ -443,5 +443,44 @@ fn middle_row_removals_restore_their_position() {
     for mutation in &removals {
         ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, mutation));
         ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_sum_law(mutation, &base));
+    }
+}
+
+/// 🧫️ Language-neutral roots retain typed mutation authority and match Serde's admitted values: every committed case states the
+/// concrete kinds that take `before` to `after`, decoded by our codec and by the third-party oracle alike.
+#[test]
+fn puzzle2d_typed_mutation_fixture_and_refusal_law() {
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📸️typed-mutation/🔣️.json")).expect("neutral fixture");
+    assert_eq!(fixture["schema"], "semio.puzzle.2d.typed-mutation.v2");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let before: Puzzle2dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&case["before"])).expect("base admits");
+        let after: Puzzle2dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&case["after"])).expect("result admits");
+        let oracle_before: Puzzle2dSnapshot=serde_json::from_value(case["before"].clone()).expect("third-party base");
+        let oracle_after: Puzzle2dSnapshot=serde_json::from_value(case["after"].clone()).expect("third-party result");
+        assert_eq!(before,oracle_before);
+        assert_eq!(after,oracle_after);
+        let operations: Vec<Puzzle2dMutation>=case["operations"].as_array().expect("operations").iter().map(|operation| {
+            let ours: Puzzle2dMutation=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(operation)).expect("operation admits");
+            let oracle: Puzzle2dMutation=serde_json::from_value(operation.clone()).expect("third-party operation");
+            assert_eq!(ours,oracle);
+            ours
+        }).collect();
+        let mut current=before.clone();
+        let mut inverse=Vec::new();
+        for operation in &operations {
+            inverse.extend(Mutation::<Puzzle2dSnapshot>::inverse(operation,&current).expect("inverse"));
+            current=protocol::apply_diff(Mutation::<Puzzle2dSnapshot>::diff(operation,&current).diff(),&current).expect("typed apply");
+        }
+        assert_eq!(current,oracle_after);
+        for operation in inverse.iter().rev() {
+            current=protocol::apply_diff(Mutation::<Puzzle2dSnapshot>::diff(operation,&current).diff(),&current).expect("typed inverse apply");
+        }
+        assert_eq!(current,oracle_before);
+    }
+    for value in fixture["invalid"].as_array().expect("invalid") {
+        let actual= <Puzzle2dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(value));
+        let oracle=serde_json::from_value::<Puzzle2dSnapshot>(value.clone());
+        assert!(actual.is_err());
+        assert!(oracle.is_err());
     }
 }

@@ -14,6 +14,8 @@ pub const REGISTRY: &[Entry] = &[
     crate::standards::v1_2::subsets::any::io::text::mutations::change_gamma::CODEC,
     crate::standards::v1_2::subsets::any::io::text::mutations::patch_pixels::CODEC,
     crate::standards::v1_2::subsets::any::io::text::mutations::paint_native_samples::CODEC,
+    crate::standards::v1_2::subsets::any::io::text::mutations::set_gamma::CODEC,
+    crate::standards::v1_2::subsets::any::io::text::mutations::replace_samples::CODEC,
 ];
 
 impl protocol::OpText for PngMutation {
@@ -36,3 +38,9 @@ pub mod change_gamma;
 
 #[path = "🎨️paint-native-samples/🦀️.rs"]
 pub mod paint_native_samples;
+
+#[path = "🎚️set-gamma/🦀️.rs"]
+pub mod set_gamma;
+
+#[path = "🧩️replace-samples/🦀️.rs"]
+pub mod replace_samples;

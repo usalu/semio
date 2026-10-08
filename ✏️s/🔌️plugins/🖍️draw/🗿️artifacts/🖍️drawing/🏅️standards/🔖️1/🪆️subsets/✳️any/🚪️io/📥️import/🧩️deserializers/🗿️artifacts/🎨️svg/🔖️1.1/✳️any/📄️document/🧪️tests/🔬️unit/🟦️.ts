@@ -52,7 +52,7 @@ for(const name of ["non-square-object-gradient","forward-gradient-reference-and-
 import compositeCases from "../../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json";
 import {drawingSceneToSvg,type DrawingSvgNode} from "../../../../../../../../../📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts";
 for(const row of compositeCases)test(`SVG isolated blend roundtrip: ${row.name}`,async()=>{
-  const source=drawingSceneToSvg(row.nodes as DrawingSvgNode[],[0,0,24,16]);
+  const source=drawingSceneToSvg(row.nodes as DrawingSvgNode[],[0,0,24,16],{});
   const document=withParser(()=>{const job=new SvgImportJob(source,"roundtrip");while(!job.step(3).done){}return job.take();});
   const nodes:DrawingSvgNode[]=[];
   function walk(layers:any[],parent:Matrix,groups:NonNullable<DrawingSvgNode["groups"]>){
@@ -63,7 +63,7 @@ for(const row of compositeCases)test(`SVG isolated blend roundtrip: ${row.name}`
     }
   }
   walk(document.layers,[1,0,0,1,0,0],[]);
-  const output=drawingSceneToSvg(nodes,[0,0,24,16]);
+  const output=drawingSceneToSvg(nodes,[0,0,24,16],{});
   const [actual,expected]=await Promise.all([output,`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="16">${row.svg}</svg>`].map(svg=>sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer()));
   expect(actual.length).toBe(expected.length);
   let maximum=0;for(let i=0;i<actual.length;i++)maximum=Math.max(maximum,Math.abs(actual[i]!-expected[i]!));

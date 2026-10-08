@@ -17,8 +17,8 @@ use super::*;
     fn app_pack_and_spr_exclude_window_and_transient_fields() {
         let shared = crate::editor::puzzle2d::config::Puzzle2dConfig::default();
         let spr = semio_framework_pack_json::to_json_string(&shared);
-        let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
+        let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&spr, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("serde_json oracle accepts the neutral config");
+        assert_eq!(oracle.as_object().map(semio_framework_pack_json::Object::len), Some(5));
         let pack = store::ArtifactPack::encode_pack(&shared);
         for forbidden in ["cameraX", "engagementInput", "brushCandidates", "fillJobCheckpointSequence"] {
             assert!(!spr.contains(forbidden));
@@ -28,7 +28,7 @@ use super::*;
 
     #[test]
     fn document_camera_is_only_the_initial_window_seed() {
-        let document = serde_json::json!({ "camera": { "x": 8.0, "y": -3.0, "zoom": 2.5 } });
+        let document = semio_framework_pack_json::json!({ "camera": { "x": 8.0, "y": -3.0, "zoom": 2.5 } });
         let seed = document_seed(&document);
         assert_eq!((seed.camera_x, seed.camera_y, seed.camera_zoom), (8.0, -3.0, 2.5));
         let live = Puzzle2dWindowConfig { camera_x: 21.0, ..seed.clone() };

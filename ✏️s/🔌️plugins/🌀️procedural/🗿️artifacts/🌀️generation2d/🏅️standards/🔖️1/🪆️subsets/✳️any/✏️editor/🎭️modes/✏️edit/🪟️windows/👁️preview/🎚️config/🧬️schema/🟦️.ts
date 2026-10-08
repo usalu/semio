@@ -2,7 +2,7 @@ import { parseViewport2d, type Viewport2d } from "../../../../../../../../../../
 
 /** 🎚️ Persisted navigation for one exact Generation2d edit preview window. */
 export interface Generation2dEditPreviewWindowConfig { viewport: Viewport2d }
-export type Generation2dEditPreviewWindowConfigMutation = { kind: "snapshot"; config: Generation2dEditPreviewWindowConfig };
+export type Generation2dEditPreviewWindowConfigMutation = { kind: "set-viewport"; value: Viewport2d };
 
 export function parseGeneration2dEditPreviewWindowConfig(value: unknown): Generation2dEditPreviewWindowConfig {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new TypeError("$ must be an object");
@@ -12,5 +12,6 @@ export function parseGeneration2dEditPreviewWindowConfig(value: unknown): Genera
 }
 
 export function applyGeneration2dEditPreviewWindowConfigMutation(_base: Generation2dEditPreviewWindowConfig, mutation: Generation2dEditPreviewWindowConfigMutation): Generation2dEditPreviewWindowConfig {
-  return parseGeneration2dEditPreviewWindowConfig(mutation.config);
+  if (mutation.kind !== "set-viewport") throw new TypeError("$ must be a set-viewport mutation");
+  return parseGeneration2dEditPreviewWindowConfig({ viewport: mutation.value });
 }

@@ -21,7 +21,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     }
     let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
     let mut assets = semio_framework_value::paged::PagedMap::default();
-    assets.insert("img".into(), DrawingImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(4), height: Some(4) });
+    assets.insert("img".into(), DrawingImageAsset { width: 4, height: 4, samples: vec![[0,0,0,0];16].into() });
     let image = create_drawing_image_layer("Image", "img");
 
     let mut doc = default_drawing_document("svg-test", None);

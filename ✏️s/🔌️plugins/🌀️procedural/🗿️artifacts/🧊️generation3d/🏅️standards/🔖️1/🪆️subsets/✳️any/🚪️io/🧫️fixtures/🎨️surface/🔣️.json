@@ -49,7 +49,29 @@
       "scaffoldBytes": 16384,
       "measurementBeforeCandidate": true,
       "inheritedRestrictiveAdmission": "preserve",
-      "changedMeasurementSource": "refuse"
+      "changedMeasurementSource": "refuse",
+      "sourceDemand": {
+        "text": "Mesh 😀 \\ \" Label\n",
+        "utf8BytesPerRepeat": 20,
+        "quotedJsonBytesPerRepeat": 23,
+        "widgetIdPrefix": "capacity-widget-é-🧊-",
+        "generationIdPrefix": "capacity-generation-é-🧊-",
+        "openedActor": "original-capacity-opened-reader",
+        "selection": "last-generation",
+        "rosterValues": "nested-original-dsl",
+        "rawSourceCopies": 0,
+        "cases": [
+          {"id": "escaped-string", "widgets": 1, "generations": 1, "textRepeats": 2048, "previewRepeats": 1, "minimumJsonBytes": 16385},
+          {"id": "wide-graph", "widgets": 513, "generations": 1, "textRepeats": 1, "previewRepeats": 1, "minimumJsonBytes": 16385},
+          {"id": "wide-roster", "widgets": 1, "generations": 129, "textRepeats": 1, "previewRepeats": 1, "minimumJsonBytes": 16385},
+          {"id": "combined", "widgets": 129, "generations": 65, "textRepeats": 2048, "previewRepeats": 2048, "minimumJsonBytes": 65537}
+        ],
+        "admissionCases": [
+          {"id": "below-policy", "sourceBytes": 1048575, "admitted": true},
+          {"id": "at-policy", "sourceBytes": 1048576, "admitted": true},
+          {"id": "above-policy", "sourceBytes": 1048577, "admitted": false}
+        ]
+      }
     },
     "segmentedExport": {
       "completion": "segmented-download",
@@ -82,7 +104,11 @@
         "selectionLanes": ["artifact", "config"],
         "cancelAfterHops": [0, 1, 8, 64],
         "staleRoots": ["command", "snapshot"],
-        "publication": "after-checked-mutations"
+        "publication": "canonical-load-genesis",
+        "openedActor": "original-import-opened-reader",
+        "sourceBytes": "exact-original-pack",
+        "history": "empty-genesis",
+        "inference": "original-imported-shapes"
       }
     },
     "importAdditionalGroups": 9

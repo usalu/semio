@@ -164,6 +164,16 @@
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
+    },
+    "test-geometry-ownership": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-geometry-ownership",
+        "cwd": "{projectRoot}"
+      },
+      "cache": false,
+      "dependsOn": [],
+      "outputs": []
     }
   },
   "implicitDependencies": [

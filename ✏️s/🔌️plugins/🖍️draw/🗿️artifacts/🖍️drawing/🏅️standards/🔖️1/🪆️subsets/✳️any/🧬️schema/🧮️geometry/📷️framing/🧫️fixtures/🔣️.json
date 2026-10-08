@@ -203,9 +203,9 @@
           "blendMode": "normal",
           "visible": true,
           "image": {
-            "src": "image",
             "width": 40,
-            "height": 20
+            "height": 20,
+            "assetId": "image"
           }
         }
       ],
@@ -346,9 +346,9 @@
           "blendMode": "normal",
           "visible": true,
           "image": {
-            "src": "image",
             "width": 40,
-            "height": 20
+            "height": 20,
+            "assetId": "image"
           }
         }
       ],

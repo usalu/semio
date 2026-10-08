@@ -2,9 +2,10 @@
   "schema": null,
   "camera": null,
   "widgets": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "note-b",
         "patch": {
@@ -16,8 +17,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "synapses": null,
   "layout": null,

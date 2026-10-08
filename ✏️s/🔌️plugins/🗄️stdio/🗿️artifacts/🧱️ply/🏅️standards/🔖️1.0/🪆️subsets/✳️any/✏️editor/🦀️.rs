@@ -288,8 +288,34 @@ impl editing::SnapshotEditingEditor for PlyAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { PlyAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_0::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::ply::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v1_0::subsets::any::schema::mutations::{insert_comment, remove_comment, set_row_property};
+        use crate::standards::v1_0::subsets::any::schema::snapshot::PlyValue;
+        let editing::SnapshotEditEvent::SetValue { path, value } = event else { return Ok(None) };
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        let fail = |message: String| Fault::from(message);
+        match segments.as_slice() {
+            ["comments", index] => {
+                let index = index.parse::<usize>().map_err(|error| fail(error.to_string()))?;
+                let semio_framework_value::DslValue::String(comment) = value else { return Err(fail("a comment is text".into())) };
+                snapshot.comments.get(index).ok_or_else(|| fail(format!("comment {index} does not exist")))?;
+                Ok(Some(vec![PlyMutation::RemoveComment(remove_comment::RemoveComment { index }), PlyMutation::InsertComment(insert_comment::InsertComment { index, comment: comment.clone() })]))
+            }
+            ["elements", element, "rows", row, "values", property, rest @ ..] if rest.len() <= 1 => {
+                let (element, row, property) = (element.parse::<usize>().map_err(|e| fail(e.to_string()))?, row.parse::<usize>().map_err(|e| fail(e.to_string()))?, property.parse::<usize>().map_err(|e| fail(e.to_string()))?);
+                let declared = snapshot.elements.get(element).ok_or_else(|| fail(format!("element {element} does not exist")))?;
+                let current = declared.rows.get(row).and_then(|row| row.values.get(property)).ok_or_else(|| fail(format!("row {row} value {property} does not exist")))?;
+                let property_name = declared.properties.get(property).ok_or_else(|| fail(format!("property {property} is not declared")))?.name().to_string();
+                let prefix = format!("/elements/{element}/rows/{row}/values/{property}");
+                let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &prefix, event).map_err(|error| fail(error.to_string()))?;
+                let value = <PlyValue as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                Ok(Some(vec![PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: declared.name.clone(), row_index: row, property_name, value })]))
+            }
+            _ => Ok(None),
+        }
     }
 }
 

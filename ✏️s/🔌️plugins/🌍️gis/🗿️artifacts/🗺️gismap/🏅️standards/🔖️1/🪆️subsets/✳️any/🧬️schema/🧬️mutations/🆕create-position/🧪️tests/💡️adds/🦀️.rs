@@ -5,14 +5,15 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, never here.
 //!
 //! 🆕️ `create-position` writes ONE `added` entry into `positions` and nothing else — no `removed`, no
-//! `patched`, no `reordered`, and neither `routes` nor `regions` is even present in the delta. Its inverse is
+//! `modified`, no `reordered`, and neither `routes` nor `regions` is even present in the delta. Its inverse is
 //! PAYLOAD-derived (a `delete-position` of the id it was asked to create), never read back out of `base`.
 //!
 //! 🧩️ Committed snapshots preserve the stable drawing and value child identities across edits.
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🆕create-position/💡️adds/📸️snapshot/⬅️before/🔣️.json");
@@ -118,7 +119,7 @@ async fn committed_diff_applies_to_after() {
 }
 
 /// 🆕️ `create-position` writes ONE `added` entry into `positions` and nothing else — no `removed`, no
-/// `patched`, no `reordered`, and neither `routes` nor `regions` is even present in the delta. Its inverse is
+/// `modified`, no `reordered`, and neither `routes` nor `regions` is even present in the delta. Its inverse is
 /// PAYLOAD-derived (a `delete-position` of the id it was asked to create), never read back out of `base`.
 #[semio_framework_async_macros::async_test]
 async fn adds_exactly_one_position_and_inverts_to_a_delete_of_that_id() {
@@ -126,8 +127,8 @@ async fn adds_exactly_one_position_and_inverts_to_a_delete_of_that_id() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "create-position/adds-lighthouse-position-after-harbor: creating a fresh id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().positions.as_ref().expect("create-position writes a positions delta");
-    assert_eq!(delta.added.iter().map(|feature| feature.id.as_str()).collect::<Vec<_>>(), vec!["pos-lighthouse"], "create-position/adds-lighthouse-position-after-harbor: exactly the payload's own feature is added");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "create-position/adds-lighthouse-position-after-harbor: a create must not remove, patch or reorder anything, got {delta:?}");
+    assert_eq!(delta.inserted.iter().map(|insertion| insertion.row.id.as_str()).collect::<Vec<_>>(), vec!["pos-lighthouse"], "create-position/adds-lighthouse-position-after-harbor: exactly the payload's own feature is added");
+    assert!(delta.removed.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "create-position/adds-lighthouse-position-after-harbor: a create must not remove, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().routes.is_none() && produced.diff().regions.is_none(), "create-position/adds-lighthouse-position-after-harbor: create-position must never touch the routes or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-position/adds-lighthouse-position-after-harbor: a create undoes with exactly one step, got {inverse:?}");

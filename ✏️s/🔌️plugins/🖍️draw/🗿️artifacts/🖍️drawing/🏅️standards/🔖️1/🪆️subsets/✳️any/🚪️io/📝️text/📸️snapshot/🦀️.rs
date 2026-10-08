@@ -57,7 +57,7 @@ mod tests;
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
+use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
 use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::mutation::{rename_layer, RenameLayer};

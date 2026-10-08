@@ -2,15 +2,17 @@
   "annex": null,
   "members": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": []
   },
   "connections": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "conn-C1",
+        "id": "conn-C1",
         "patch": {
           "labelEn": null,
           "labelDe": null,
@@ -31,9 +33,9 @@
           "fUK": null,
           "actions": {
             "removed": [],
-            "added": [
+            "inserted": [
               {
-                "after": "q",
+                "index": 2,
                 "row": {
                   "id": "w",
                   "kind": "permanent",
@@ -42,6 +44,7 @@
                 }
               }
             ],
+            "moved": [],
             "modified": []
           }
         }

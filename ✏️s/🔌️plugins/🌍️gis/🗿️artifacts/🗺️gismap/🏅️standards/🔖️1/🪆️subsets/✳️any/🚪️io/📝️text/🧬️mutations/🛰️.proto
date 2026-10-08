@@ -43,6 +43,36 @@ message ReorderRegions {
   string id = 1;
   uint32 to_index = 2;
 }
+message SetPositionProperty {
+  string feature = 1;
+  string key = 2;
+  bytes value = 3;
+  optional string before = 4;
+}
+message RemovePositionProperty {
+  string feature = 1;
+  string key = 2;
+}
+message SetRouteProperty {
+  string feature = 1;
+  string key = 2;
+  bytes value = 3;
+  optional string before = 4;
+}
+message RemoveRouteProperty {
+  string feature = 1;
+  string key = 2;
+}
+message SetRegionProperty {
+  string feature = 1;
+  string key = 2;
+  bytes value = 3;
+  optional string before = 4;
+}
+message RemoveRegionProperty {
+  string feature = 1;
+  string key = 2;
+}
 
 message GismapMutation {
   oneof kind {
@@ -58,5 +88,11 @@ message GismapMutation {
     DeleteRegion delete_region = 10;
     ReplaceRegionData replace_region_data = 11;
     ReorderRegions reorder_regions = 12;
+    SetPositionProperty set_position_property = 13;
+    RemovePositionProperty remove_position_property = 14;
+    SetRouteProperty set_route_property = 15;
+    RemoveRouteProperty remove_route_property = 16;
+    SetRegionProperty set_region_property = 17;
+    RemoveRegionProperty remove_region_property = 18;
   }
 }

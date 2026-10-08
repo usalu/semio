@@ -5,7 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
 use crate::schema::{find_drawing_layer, layer_id};
 use crate::DrawingSnapshot;
 
@@ -77,8 +78,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared outcome matches the diff builder: applied (the no-op guard only fires when the
-/// requested `(parent, index)` already equals BASE's), expressed as a remove-then-insert pair rather
-/// than a whole-list permutation.
+/// requested `(parent, index)` already equals BASE's), expressed as one move row rather than a
+/// remove-then-insert pair or a whole-list permutation.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
@@ -86,16 +87,15 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "reorder-layer/moves-shape-a-above-shape-b: index 1 differs from BASE's index 0, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("reorder-layer's diff pins a layers delta");
-    assert_eq!(delta.removed, vec!["shape-a".to_string()], "the move lifts the addressed layer out first");
-    assert_eq!(delta.added.len(), 1, "and re-inserts exactly that one layer");
-    assert_eq!(delta.added[0].index, 1, "at the payload's FINAL-state index");
-    assert_eq!(delta.reordered, None, "a single-layer move must not degrade into a whole-root permutation");
+    assert!(delta.removed.is_empty() && delta.inserted.is_empty() && delta.modified.is_empty(), "a reorder removes, inserts and patches nothing");
+    assert_eq!(delta.moved.len(), 1, "exactly one move row");
+    assert_eq!(delta.moved[0].id, "shape-a", "the move row names the addressed layer, never carries it");
+    assert_eq!((delta.moved[0].from.parent_id.clone(), delta.moved[0].from.index), (None, 0), "from is the layer's BASE address");
+    assert_eq!((delta.moved[0].to.parent_id.clone(), delta.moved[0].to.index), (None, 1), "to is the AFTER address");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one: a remove-then-insert PAIR carrying the moved
-/// layer's own value to its new index. The committed `"reordered": null` is the load-bearing part —
-/// `DrawingLayersDelta` also offers a whole-root permutation lane, and a single-layer move must not
-/// reach for it, nor may the untouched sibling appear anywhere in the diff.
+/// 🔺️ The produced diff is EXACTLY the committed one: one tree-aware move row `{id, from, to}` — the layer itself is never
+/// carried and no order list or anchor exists.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
@@ -103,11 +103,13 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-layer/moves-shape-a-above-shape-b: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("reorder-layer pins a layers delta");
-    assert_eq!(delta.removed, vec!["shape-a".to_string()], "the move lifts the addressed layer out first");
-    assert_eq!(delta.added.len(), 1, "and re-inserts exactly that one layer");
-    assert_eq!(delta.added[0].index, 1, "at the payload's FINAL-state index");
-    assert_eq!(delta.reordered, None, "a single-layer move must not degrade into a whole-root permutation");
-    assert!(!DIFF.contains("shape-b"), "the untouched sibling must not appear in the committed diff");
+    assert!(delta.removed.is_empty() && delta.inserted.is_empty() && delta.modified.is_empty(), "a reorder removes, inserts and patches nothing");
+    assert_eq!(delta.moved.len(), 1, "exactly one move row");
+    assert_eq!(delta.moved[0].id, "shape-a", "the move row names the addressed layer, never carries it");
+    assert_eq!((delta.moved[0].from.parent_id.clone(), delta.moved[0].from.index), (None, 0), "from is the layer's BASE address");
+    assert_eq!((delta.moved[0].to.parent_id.clone(), delta.moved[0].to.index), (None, 1), "to is the AFTER address");
+    assert_eq!(DIFF.matches("shape-b").count(), 0, "the untouched sibling is not mentioned at all");
+    assert_eq!(DIFF.matches("shape-a").count(), 1, "the layer is named once and never carried");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

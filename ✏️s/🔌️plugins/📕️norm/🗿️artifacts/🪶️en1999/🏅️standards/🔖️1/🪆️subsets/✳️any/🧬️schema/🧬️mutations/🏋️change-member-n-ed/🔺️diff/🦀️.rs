@@ -15,14 +15,10 @@ pub fn diff(payload: &ChangeMemberNEd, base: &En1999Snapshot) -> protocol::Mutat
         return protocol::MutationOutcome::fatal("mutation.invariant", "Member has no actions.", Vec::<String>::new());
     };
     protocol::MutationOutcome::new(En1999Diff {
-        members: Some(En1999MembersRows {
-            modified: vec![En1999MembersPatch {
-                id: payload.member_id.clone(),
-                actions: Some(En1999MembersActionsRows { modified: vec![En1999MembersActionsPatch { id: action.id.clone(), n_k: Some(payload.new_n_k), ..Default::default() }] }),
-                ..Default::default()
-            }],
+        members: Some(En1999MembersRows::modification(&payload.member_id, En1999MembersPatch {
+            actions: Some(En1999MembersActionsRows::modification(&action.id, En1999MembersActionsPatch { n_k: Some(payload.new_n_k), ..Default::default() })),
             ..Default::default()
-        }),
+        })),
         ..Default::default()
     })
 }

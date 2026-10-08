@@ -1,0 +1,77 @@
+{
+  "schema": "framework.value.read-ownership",
+  "capacity": 1024,
+  "workBytes": [
+    1,
+    3,
+    64
+  ],
+  "texts": [
+    "",
+    "owned λ🙂",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "cases": [
+    {
+      "name": "one-returned-before-cursor",
+      "issued": 1,
+      "cursor": 1,
+      "returned": [
+        0
+      ],
+      "visits": [
+        0
+      ]
+    },
+    {
+      "name": "wrap-to-returned",
+      "issued": 2,
+      "cursor": 1023,
+      "returned": [
+        0,
+        1
+      ],
+      "visits": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "live-read-does-not-starve-returned",
+      "issued": 3,
+      "cursor": 1,
+      "returned": [
+        2,
+        0
+      ],
+      "visits": [
+        null,
+        2,
+        0
+      ]
+    }
+  ],
+  "authorityAliases": [
+    1,
+    3
+  ],
+  "erasedCancelAt": [
+    0,
+    1,
+    5
+  ],
+  "closeOrders": [
+    "read-first",
+    "authority-first"
+  ],
+  "erasedSource": {
+    "text": "source λ🙂 retained after read return",
+    "generation": 29,
+    "revisionOctet": 43,
+    "constructorRefusals": [
+      "items",
+      "capacity",
+      "depth"
+    ]
+  }
+}

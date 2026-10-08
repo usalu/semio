@@ -5,7 +5,7 @@
 //! resolve, `mutation.invariant` on a term weighting the combination itself) and the same
 //! finite-factor bound (`mutation.invariant`, Fatal).
 use super::CreateCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff, insertion_order};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationInsertion, Fem2dCombinationsDelta, Fem2dDiff};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -20,6 +20,9 @@ pub fn diff(payload: &CreateCombination, base: &Fem2dSnapshot) -> protocol::Muta
     if let Some(rejection) = guards::combination_factors(&payload.combination) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { added: vec![payload.combination.clone()], reordered: insertion_order(base.combinations.iter().map(|item| item.id.as_str()), &payload.combination.id, payload.index), ..Default::default() }), ..Default::default() })
+    if payload.index.is_some_and(|at| at > base.combinations.len()) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.combinations.len()), [&payload.combination.id.to_string()]);
+    }
+    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { inserted: vec![Fem2dCombinationInsertion { index: payload.index.unwrap_or(base.combinations.len()), row: payload.combination.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

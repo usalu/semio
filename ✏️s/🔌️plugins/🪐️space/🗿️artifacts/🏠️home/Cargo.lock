@@ -3322,7 +3322,6 @@ dependencies = [
 name = "semio-framework-dsl"
 version = "0.1.0"
 dependencies = [
- "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-value",
 ]
@@ -3774,6 +3773,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-test-mutation-inventory"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -3937,52 +3943,20 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-test-mutation-inventory",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-ui-scene",
  "semio-framework-value",
  "semio-framework-value-derive",
- "semio-s-artifact-space-space",
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xlsx",
  "semio-s-artifact-stdio-zip",
+ "semio-s-space-core",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-space-space"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-artifact-space-collection",
- "semio-framework-artifact-space-space",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-job",
- "semio-framework-os",
- "semio-framework-os-infinite",
- "semio-framework-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-ui-contract",
- "semio-framework-ui-locale",
- "semio-framework-ui-scene",
- "semio-framework-value",
- "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -4237,6 +4211,20 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-xml",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-space-core"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-artifact-space-space",
+ "semio-framework-os",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
 ]
 
 [[package]]

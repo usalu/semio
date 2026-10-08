@@ -33,6 +33,6 @@ pub fn diff(payload: &SetPointPositions, base: &EquationSnapshot) -> protocol::M
         return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "Every point already sits at its position.").at(targets)]));
     }
     let diff = EquationDiff { points: Some(EquationPointsDelta { edits: canonical_point_edits(edits) }), ..Default::default() };
-    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base)).absorb_messages(partial)
+    protocol::MutationOutcome::new(diff).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

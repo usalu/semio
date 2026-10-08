@@ -9,7 +9,7 @@
       "capabilities": [
         "architect-program-1-any-editor-config-mutate"
       ],
-      "rationale": "`ArchitectConfigMutation` is the config state lane of `s.architect.program`'s ✏️editor/🎚️config surface: it holds the search query and history, the last action result and the last analysis result. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`replace-config`) changes exactly its own part of `ArchitectConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "rationale": "`ArchitectConfigMutation` is the config state lane of `s.architect.program`'s ✏️editor/🎚️config surface: it holds the search query and history, the last action result and the last analysis result. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-config`) changes exactly its own part of `ArchitectConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -45,7 +45,7 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "kinds": [
-        "replace-config"
+        "set-config"
       ],
       "vectors": []
     }
@@ -59,7 +59,7 @@
       "surface": "✏️editor/🎚️config",
       "mutations": [
         {
-          "id": "replace-config",
+          "id": "set-config",
           "capability": "architect-program-1-any-editor-config-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
@@ -67,9 +67,9 @@
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "replace-config",
+            "operation": "set-config",
             "bridgeVersion": 1,
-            "variant": "ReplaceConfig"
+            "variant": "SetConfig"
           },
           "oracleRequirements": [
             {
@@ -83,7 +83,7 @@
   ],
   "testEvidence": [
     {
-      "id": "replace-config-applied",
+      "id": "set-config-applied",
       "class": "handcrafted",
       "target": {
         "artifact": "s.architect.program",
@@ -91,7 +91,7 @@
         "subset": "any",
         "surface": "✏️editor/🎚️config"
       },
-      "mutation": "replace-config",
+      "mutation": "set-config",
       "outcome": "applied",
       "units": {
         "length": "unitless",
@@ -144,10 +144,10 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "config-state-lane",
-      "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+      "notes": "The owner's committed contract vector for `set-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "id": "replace-config-no-op",
+      "id": "set-config-no-op",
       "class": "handcrafted",
       "target": {
         "artifact": "s.architect.program",
@@ -155,7 +155,7 @@
         "subset": "any",
         "surface": "✏️editor/🎚️config"
       },
-      "mutation": "replace-config",
+      "mutation": "set-config",
       "outcome": "no-op",
       "units": {
         "length": "unitless",
@@ -208,7 +208,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "config-state-lane",
-      "notes": "Re-applying `replace-config` to the record its own contract vector produced is the leaf's warned no-op."
+      "notes": "Re-applying `set-config` to the record its own contract vector produced is the leaf's warned no-op."
     }
   ]
 }

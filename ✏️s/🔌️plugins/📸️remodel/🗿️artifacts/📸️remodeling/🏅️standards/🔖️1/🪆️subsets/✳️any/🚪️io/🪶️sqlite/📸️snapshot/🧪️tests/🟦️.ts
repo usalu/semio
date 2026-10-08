@@ -7,7 +7,9 @@ import {readFileSync} from "node:fs";
 import Ajv from "ajv";
 import laws from "../🧫️fixtures/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-test("SQLite remodeling authored semantic tables execute in an independent engine",()=>{const db=new Database(":memory:");try{db.run(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8"));expect(db.query("SELECT count(*) AS n FROM sqlite_schema WHERE type='table'").get()).toEqual({n:35});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query<{name:string},[]>("PRAGMA table_info(remodel_float_sample)").all().map(row=>row.name)).toEqual(["id","buffer_id","ordinal","sample","sample_bits","sample_class"]);}finally{db.close()}});
+/** 🔢️ Reconstructs independent expected SQLite samples from authored IEEE words. */
+function expectedFloatSample(bits:number):number{const bytes=Buffer.alloc(4);bytes.writeUInt32LE(bits);return bytes.readFloatLE()}
+test("SQLite remodeling authored semantic tables execute in an independent engine",()=>{const db=new Database(":memory:");try{db.run(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8"));expect(db.query("SELECT count(*) AS n FROM sqlite_schema WHERE type='table'").get()).toEqual({n:39});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query<{name:string},[]>("PRAGMA table_info(remodel_float_sample)").all().map(row=>row.name)).toEqual(["id","buffer_id","ordinal","sample","sample_bits","sample_class"]);}finally{db.close()}});
 test("SQLite remodeling inline buffers follow the independent tagged schema",()=>{const admits=new Ajv({strict:false}).addSchema(documentSchema).getSchema(documentSchema.$id+"#/$defs/Float32Buffer/oneOf/0")!;for(const buffer of laws.inlineBuffers){expect(admits(buffer)).toBe(true);const snapshot=JSON.parse(ownerPhysical0.remodelingSnapshotToJsonText(owner.defaultRemodelingSnapshot()));const json={...snapshot,results:{...snapshot.results,sparse:{points:buffer,colors:null}}};expect(ownerPhysical0.decodeRemodelingSnapshot(json).results.sparse?.points).toEqual({kind:"inline",values:buffer.values.map(value=>{const bytes=Buffer.alloc(4);bytes.writeFloatBE(value);return{bits:bytes.readUInt32BE()}})});}});
 test("SQLite remodeling durable chunks contain literal octets",()=>{const snapshot=JSON.parse(ownerPhysical0.remodelingSnapshotToJsonText(owner.defaultRemodelingSnapshot()));const json={...snapshot,durableArtifacts:{"literal\u0000😀":{kind:"sparse",mime:null,width:0,height:0,chunks:laws.byteChunks}}};expect(ownerPhysical0.decodeRemodelingSnapshot(json).durableArtifacts["literal\u0000😀"]?.chunks).toEqual(laws.byteChunks.map(value=>Uint8Array.from(value)));});
 test("SQLite remodeling declares its owned public relational entry",()=>{expect(typeof Reflect.get(ownerSqlite0,"remodelingSnapshotToSqliteDatabase")).toBe("function");});
@@ -17,7 +19,7 @@ test("SQLite remodeling retained content references own full unsigned64 decimal 
 
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
-test("SQLite remodeling owns every semantic table through an independent physical engine",async()=>{const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),database=await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot),bytes=await exportSqliteDatabase(database),oracle=Database.deserialize(bytes);try{expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(oracle.query("SELECT count(*) AS n FROM remodel_float_sample").get()).toEqual({n:9});expect(oracle.query("SELECT chunk_count FROM remodel_float_buffer WHERE storage='content'").get()).toEqual({chunk_count:"18446744073709551615"});expect(oracle.query("SELECT kind FROM remodel_durable_artifact").get()).toEqual({kind:"arbitrary retained native string"});expect(oracle.query("SELECT hex(octets) AS octets FROM remodel_durable_chunk ORDER BY ordinal").all()).toEqual([{octets:"00017F80FF"},{octets:""}]);const restored=await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()));expect(restored).toEqual(snapshot);for(const table of database.tables)expect(table.rows.length).toBeGreaterThan(0);}finally{oracle.close()}},15000);
+test("SQLite remodeling owns every semantic table through an independent physical engine",async()=>{const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),database=await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot),bytes=await exportSqliteDatabase(database),oracle=Database.deserialize(bytes);try{expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(oracle.query("SELECT count(*) AS n FROM remodel_float_sample").get()).toEqual({n:9});expect(oracle.query("SELECT chunk_count FROM remodel_float_buffer WHERE storage='content'").get()).toEqual({chunk_count:"18446744073709551615"});expect(oracle.query("SELECT kind FROM remodel_durable_artifact WHERE kind NOT IN('sparse','mesh')").get()).toEqual({kind:"arbitrary retained native string"});expect(oracle.query("SELECT hex(octets) AS octets FROM remodel_durable_chunk WHERE element_type='raw' ORDER BY ordinal").all()).toEqual([{octets:"00017F80FF"},{octets:""}]);const restored=await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()));expect(restored).toEqual(snapshot);for(const table of database.tables)expect(table.rows.length).toBeGreaterThan(0);}finally{oracle.close()}},15000);
 test("SQLite remodeling accepts consistent edited surrogate aliases and independent IEEE words",async()=>{const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),bytes=await exportSqliteDatabase(await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot)),oracle=Database.deserialize(bytes);try{oracle.run("PRAGMA foreign_keys=OFF");oracle.run("UPDATE remodel_document SET id=21");for(const table of["remodel_calibration","remodel_parameters","remodel_results","remodel_asset","remodel_durable_artifact","remodel_stream","remodel_ground_control_point"])oracle.run("UPDATE "+table+" SET document_id=21");oracle.run("UPDATE remodel_float_sample SET sample=NULL,sample_bits=4286653253,sample_class='nan' WHERE ordinal=0");expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);const restored=await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()));expect(restored.results.sparse?.points).toEqual({kind:"inline",values:[{bits:4286653253},...laws.binary32Words.slice(1).map(bits=>({bits:Number.parseInt(bits,16)}))]});}finally{oracle.close()}},15000);
 test("SQLite remodeling refuses independently edited orphan and IEEE mismatches",async()=>{const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),bytes=await exportSqliteDatabase(await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot));for(const sql of["UPDATE remodel_camera_distortion SET camera_id=999","UPDATE remodel_float_sample SET sample_class='finite' WHERE ordinal=6","UPDATE remodel_frame SET ordinal=1","UPDATE remodel_watertight_report SET mesh_id=999 WHERE mesh_id IS NOT NULL"]){const oracle=Database.deserialize(bytes);try{oracle.run("PRAGMA foreign_keys=OFF");oracle.run(sql);expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()))).rejects.toThrow();}finally{oracle.close()}}},15000);
 
@@ -99,7 +101,7 @@ test("SQLite remodeling committed native Text assets preserve their independentl
  expect(errors).toEqual([]);
 });
 
-/** 📏️ Independently counts all 35 authored table cells before exact projection and refusal. */
+/** 📏️ Independently counts all 39 authored table cells before exact projection and refusal. */
 test("SQLite remodeling all semantic cells have independent exact and one-short limits",async()=>{
  const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),database=await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot),db=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});let rows:number,cells:number;
  try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);const tables=(db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all()as{name:string}[]).map(({name})=>{const columns=db.query('PRAGMA table_info('+name+')').all()as{name:string}[],expression=columns.map(({name})=>{const c='"'+name.replaceAll('"','""')+'"';return "CASE typeof("+c+") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST("+c+" AS BLOB)) WHEN 'blob' THEN length("+c+") WHEN 'null' THEN 0 ELSE NULL END"}).join('+'),r=db.query('SELECT COUNT(*) AS rows,COALESCE(SUM('+expression+'),0) AS bytes FROM '+name).get()as{rows:bigint;bytes:bigint}|null;if(!r)throw Error("Independent aggregate is absent");return{table:name,columns:columns.length,rows:Number(r.rows),semanticBytes:Number(r.bytes)}});
@@ -107,4 +109,60 @@ test("SQLite remodeling all semantic cells have independent exact and one-short 
  }finally{db.close()}
  expect(await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot,{maxRows:rows,maxValueBytes:cells})).toEqual(database);
  for(const limit of[{maxRows:rows-1,maxValueBytes:cells},{maxRows:rows,maxValueBytes:cells-1}]){await expect(ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot,limit)).rejects.toThrow();await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(database,limit)).rejects.toThrow();}
+});
+
+test("SQLite remodeling structured durable content is authoritative in scalar relations",async()=>{
+ const law=(await import("../🧫️fixtures/🧱️content/🔣️.json")).default;
+ const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson);
+ for(const source of[law.sparse,law.mesh])snapshot.durableArtifacts[source.contentId]={kind:source.kind,mime:source.mime,width:source.width,height:source.height,chunks:source.chunks.map(chunk=>Uint8Array.from(chunk.sourceOctets))};
+ snapshot.results.sparse={points:{kind:"content",contentId:law.sparse.contentId,chunkCount:BigInt(law.sparse.reference.chunkCount)},colors:null};
+ snapshot.results.mesh.mesh={childId:law.mesh.reference.childId,target:{artifactId:law.mesh.reference.artifactId,dialect:{artifactKind:law.mesh.reference.artifactKind,standard:law.mesh.reference.standard,subset:law.mesh.reference.subset}}};
+ const bytes=await exportSqliteDatabase(await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot)),db=Database.deserialize(bytes);
+ try{
+  expect(db.query("SELECT count(*) AS n FROM remodel_durable_chunk c JOIN remodel_durable_artifact a ON a.id=c.artifact_id WHERE a.kind IN('sparse','mesh') AND c.octets IS NOT NULL").get()).toEqual({n:0});
+  for(const source of[law.sparse,law.mesh])for(const chunk of source.chunks){
+   const boundary=db.query("SELECT c.id,c.field,c.field_tag,c.element_type,c.element_count FROM remodel_durable_chunk c JOIN remodel_durable_artifact a ON a.id=c.artifact_id WHERE a.content_id=? AND c.ordinal=?").get(source.contentId,chunk.ordinal) as {id:number,field:string,field_tag:number|null,element_type:string,element_count:number};
+   expect(boundary.field).toBe(chunk.field);expect(boundary.field_tag).toBe(chunk.fieldTag);expect(boundary.element_type).toBe(chunk.elementType);expect(boundary.element_count).toBe(chunk.elementCount);
+   if(chunk.elementType==="f32"){
+    const values=chunk.values as number[],bits=chunk.floatBits as number[];
+    expect(db.query("SELECT ordinal,sample,sample_bits,sample_class FROM remodel_durable_float WHERE chunk_id=? ORDER BY ordinal").all(boundary.id)).toEqual(values.map((sample,ordinal)=>({ordinal,sample:expectedFloatSample(bits[ordinal]!),sample_bits:bits[ordinal],sample_class:"finite"})));
+   }else if(chunk.elementType==="u32"||chunk.elementType==="u8"){
+    const table=chunk.elementType==="u32"?"remodel_durable_integer":"remodel_durable_byte";
+    expect(db.query("SELECT ordinal,value FROM "+table+" WHERE chunk_id=? ORDER BY ordinal").all(boundary.id)).toEqual((chunk.values as number[]).map((value,ordinal)=>({ordinal,value})));
+   }else expect(db.query("SELECT content FROM remodel_durable_text WHERE chunk_id=?").get(boundary.id)).toEqual({content:chunk.values});
+  }
+  expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(snapshot);
+  db.run("UPDATE remodel_durable_float SET sample=1.5,sample_bits=1069547520 WHERE ordinal=0 AND chunk_id=(SELECT c.id FROM remodel_durable_chunk c JOIN remodel_durable_artifact a ON a.id=c.artifact_id WHERE a.content_id=? AND c.ordinal=0)",[law.sparse.contentId]);
+  const edited=structuredClone(snapshot);new DataView(edited.durableArtifacts[law.sparse.contentId]!.chunks[0]!.buffer).setUint32(0,1069547520,true);
+  expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(edited);
+  console.log("[DEBUG] Remodeling typed durable scalar and mesh fields remain authoritative after independent SQLite edit");
+ }finally{db.close()}
+});
+
+test("SQLite remodeling preserves every authored structured fragment without opaque content",async()=>{
+ const law=(await import("../🧫️fixtures/🧱️content/🧩️fragments/🔣️.json")).default;
+ for(const value of law.cases){
+  const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),key="independent-fragment:"+value.name;snapshot.durableArtifacts[key]={kind:value.kind,mime:null,width:0,height:0,chunks:value.chunks.map(chunk=>Uint8Array.from(chunk.sourceOctets))};
+  const database=await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot),db=Database.deserialize(await exportSqliteDatabase(database));
+  try{
+   expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
+   for(const chunk of value.chunks){
+    const expected=chunk.expected,boundary=db.query("SELECT c.id,c.field,c.field_tag,c.element_type,c.element_count,c.octets FROM remodel_durable_chunk c JOIN remodel_durable_artifact a ON a.id=c.artifact_id WHERE a.content_id=? AND c.ordinal=?").get(key,expected.ordinal) as{id:number;field:string;field_tag:number|null;element_type:string;element_count:number;octets:null};
+    expect(boundary.field).toBe(expected.field);expect(boundary.field_tag).toBe(expected.fieldTag);expect(boundary.element_type).toBe(expected.elementType);expect(boundary.element_count).toBe(expected.elementCount);expect(boundary.octets).toBe(null);
+    expect(db.query("SELECT ordinal,sample,sample_bits,sample_class FROM remodel_durable_float WHERE chunk_id=? ORDER BY ordinal").all(boundary.id)).toEqual(expected.floatRows.map(row=>({ordinal:row.ordinal,sample:row.sampleClass==="finite"?expectedFloatSample(row.sampleBits):null,sample_bits:row.sampleBits,sample_class:row.sampleClass})));
+    expect(db.query("SELECT ordinal,value FROM remodel_durable_integer WHERE chunk_id=? ORDER BY ordinal").all(boundary.id)).toEqual(expected.integerRows);
+    expect(db.query("SELECT ordinal,role,value FROM remodel_durable_byte WHERE chunk_id=? ORDER BY ordinal").all(boundary.id)).toEqual(expected.byteRows);
+    expect(db.query("SELECT content FROM remodel_durable_text WHERE chunk_id=?").get(boundary.id)).toEqual(expected.textRow);
+   }
+   expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(snapshot);
+   console.log("[DEBUG] Remodeling total fragment authority",value.name,value.chunks.length);
+  }finally{db.close()}
+ }
+},15000);
+
+test("SQLite remodeling refuses contradictory independently edited structured ownership",async()=>{
+ const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),bytes=await exportSqliteDatabase(await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot));
+ for(const sql of["UPDATE remodel_durable_chunk SET field=NULL WHERE element_type='f32'","UPDATE remodel_durable_chunk SET field_tag=NULL WHERE field='positions'","UPDATE remodel_durable_float SET sample_bits=0 WHERE sample=1.25","INSERT INTO remodel_durable_integer(id,chunk_id,ordinal,value) SELECT 999,id,999,0 FROM remodel_durable_chunk WHERE field='samples' LIMIT 1","UPDATE remodel_durable_text SET content='longer'"]){
+  const db=Database.deserialize(bytes);try{db.run("PRAGMA foreign_keys=OFF");db.run("PRAGMA ignore_check_constraints=ON");db.run(sql);await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow()}finally{db.close()}
+ }
 });

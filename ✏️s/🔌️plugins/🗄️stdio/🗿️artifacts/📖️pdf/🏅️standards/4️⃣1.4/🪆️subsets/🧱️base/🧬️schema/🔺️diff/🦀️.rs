@@ -37,21 +37,8 @@ pub struct PdfPageDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_page_diff(page: &mut PageDoc, diff: &PdfPageDiff) {
-    if let Some(value) = diff.width {
-        page.width = value;
-    }
-    if let Some(value) = diff.height {
-        page.height = value;
-    }
-    if let Some(value) = &diff.text {
-        page.text = value.clone();
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn page_diff_between(a: &PageDoc, b: &PageDoc) -> PdfPageDiff {
-    PdfPageDiff { width: (a.width.to_bits() != b.width.to_bits()).then_some(b.width), height: (a.height.to_bits() != b.height.to_bits()).then_some(b.height), text: (a.text != b.text).then(|| b.text.clone()) }
+fn apply_page_diff(page: PageDoc, diff: &PdfPageDiff) -> PageDoc {
+    PageDoc { width: diff.width.unwrap_or(page.width), height: diff.height.unwrap_or(page.height), text: diff.text.clone().unwrap_or(page.text) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -60,16 +47,8 @@ fn is_page_diff_empty(diff: &PdfPageDiff) -> bool {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_page_diff(base: &mut PdfPageDiff, other: PdfPageDiff) {
-    if other.width.is_some() {
-        base.width = other.width;
-    }
-    if other.height.is_some() {
-        base.height = other.height;
-    }
-    if other.text.is_some() {
-        base.text = other.text;
-    }
+fn absorb_page_diff(base: PdfPageDiff, other: PdfPageDiff) -> PdfPageDiff {
+    PdfPageDiff { width: other.width.or(base.width), height: other.height.or(base.height), text: other.text.or(base.text) }
 }
 /// ↩️ The negative patch for `diff` over `page`: every field the patch names is set back to the value `page` holds.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -118,8 +97,8 @@ impl PdfPagesDiff {
 fn apply_pages_diff(diff: &PdfPagesDiff, base: &[PageDoc]) -> Vec<PageDoc> {
     let mut pages: Vec<PageDoc> = base.to_vec();
     for modified in &diff.modified {
-        if let Some(page) = pages.get_mut(modified.index) {
-            apply_page_diff(page, &modified.diff);
+        if let Some(slot) = pages.get_mut(modified.index) {
+            *slot = apply_page_diff(std::mem::take(slot), &modified.diff);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -136,23 +115,6 @@ fn apply_pages_diff(diff: &PdfPagesDiff, base: &[PageDoc]) -> Vec<PageDoc> {
         pages.insert(added.index.min(pages.len()), added.page.clone());
     }
     pages
-}
-
-/// 🧭️ `between` matching for index-keyed collections (recipe): pairwise `0..min(len)` as
-/// `modified`, base tail as `removed`, other tail as `added`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pages_diff_between(a: &[PageDoc], b: &[PageDoc]) -> PdfPagesDiff {
-    let common = a.len().min(b.len());
-    let mut modified = Vec::new();
-    for index in 0..common {
-        let diff = page_diff_between(&a[index], &b[index]);
-        if !is_page_diff_empty(&diff) {
-            modified.push(PdfPageModified { index, diff });
-        }
-    }
-    let removed: Vec<usize> = if a.len() > b.len() { (b.len()..a.len()).collect() } else { Vec::new() };
-    let added: Vec<PdfPageAdded> = if b.len() > a.len() { (a.len()..b.len()).map(|index| PdfPageAdded { index, page: b[index].clone() }).collect() } else { Vec::new() };
-    PdfPagesDiff { removed, modified, added }
 }
 
 /// ➕️ Index-transported absorb via symbolic position simulation — the recipe's canonical algorithm
@@ -229,10 +191,7 @@ fn absorb_pages_diff(first: &PdfPagesDiff, second: &PdfPagesDiff) -> PdfPagesDif
             };
             if let Some(target) = target {
                 let combined = match target.take() {
-                    Some(mut existing) => {
-                        absorb_page_diff(&mut existing, modified.diff.clone());
-                        existing
-                    }
+                    Some(existing) => absorb_page_diff(existing, modified.diff.clone()),
                     None => modified.diff.clone(),
                 };
                 *target = (!is_page_diff_empty(&combined)).then_some(combined);
@@ -253,10 +212,10 @@ fn absorb_pages_diff(first: &PdfPagesDiff, second: &PdfPagesDiff) -> PdfPagesDif
             AfterSlot::Base { original, diff: Some(diff) } => modified.push(PdfPageModified { index: original, diff }),
             AfterSlot::Base { .. } => {}
             AfterSlot::FirstAdded { tag, patch } => {
-                let mut page = first.added[tag].page.clone();
-                if let Some(patch) = patch {
-                    apply_page_diff(&mut page, &patch);
-                }
+                let page = match patch {
+                    Some(patch) => apply_page_diff(first.added[tag].page.clone(), &patch),
+                    None => first.added[tag].page.clone(),
+                };
                 added.push(PdfPageAdded { index: position, page });
             }
             AfterSlot::SecondAdded(page) => added.push(PdfPageAdded { index: position, page }),
@@ -388,11 +347,6 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// and re-adds what it removed.
     fn inverse(&self, base: &PdfSnapshot) -> Self {
         PdfDiff { pages: self.pages.as_ref().map(|pages| inverse_pages_diff(pages, &base.pages)) }
-    }
-
-    fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
-        let pages = pages_diff_between(&base.pages, &other.pages);
-        PdfDiff { pages: (!pages.is_empty()).then_some(pages) }
     }
 
     fn is_empty(&self) -> bool {

@@ -2,12 +2,15 @@
   "artifact": null,
   "domain": null,
   "fasteners": {
-    "added": [],
-    "patched": [],
+    "inserted": [],
+    "modified": [],
+    "moved": [],
     "removed": [
-      "fast-1"
-    ],
-    "reordered": null
+      {
+        "id": "fast-1",
+        "index": 0
+      }
+    ]
   },
   "kindCompatibility": null,
   "meta": null,

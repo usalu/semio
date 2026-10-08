@@ -326,21 +326,22 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
     }
 }
 fn retire_ordered<V>(map: OrderedMap<V>, retire: fn(V)) {
-    use semio_framework_value::ordered::{Grant, RetirementStep};
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,ordered::RetirementStep};
     let mut cursor = map.retire();
     loop {
-        let bytes = cursor.next_close_byte_demand().expect("Flow ordered release demand").max(1);
-        match cursor.advance(Grant { maximum_items: 1, maximum_bytes: bytes }) {
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("Flow ordered release demand"),maximum_depth:cursor.next_depth_demand()};
+        match cursor.advance(grant) {
             RetirementStep::OwnedValue(value) => retire(value),
             RetirementStep::Complete => break,
-            RetirementStep::Progress { .. } => {}
+            RetirementStep::Progress { .. } | RetirementStep::ProcessedBytes(_) => {},
+            RetirementStep::Failure(error)=>panic!("Flow ordered release refused: {error}"),
             RetirementStep::Blocked => unreachable!("Flow ordered release grants exact demand"),
         }
     }
 }
 impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
     fn insert_ordered<V>(&mut self,map:&mut OrderedMap<V>,key:String,value:V,retire:fn(V))->Result<(),ValueError>{
-        use semio_framework_value::ordered::{Grant,RetirementStep};
+        use semio_framework_value::{retained_clone::RetainedCloneGrant,ordered::RetirementStep};
         let value=Owned::new(value,retire);
         self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{
             let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
@@ -348,9 +349,8 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
             let result=(||->Result<(),ValueError>{
                 native.charge(std::mem::size_of::<String>()+std::mem::size_of::<V>()+4*std::mem::size_of::<usize>())?;
                 let mut cursor=map.begin_set(key,value.take());
-                let grant=Grant{maximum_items:1,maximum_bytes:4096};
-                let result=(||->Result<(),ValueError>{while !cursor.is_complete(){cursor.advance_insert_controlled(grant,&mut native)?;}let next=cursor.take_result().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Flow ordered result missing"))?;if next.len()<=map.len(){retire_ordered(next,retire);return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Flow ordered map key repeated"));}retire_ordered(std::mem::replace(map,next),retire);Ok(())})();
-                cursor.begin_close();loop{match cursor.close_step(grant){RetirementStep::OwnedValue(value)=>retire(value),RetirementStep::Complete=>break,_=>{}}}
+                let result=(||->Result<(),ValueError>{while !cursor.is_complete(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:cursor.next_capacity_byte_demand()?,maximum_release_bytes:0,maximum_depth:cursor.next_depth_demand()};cursor.advance_insert_controlled(grant,&mut native)?;}let next=cursor.take_result().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Flow ordered result missing"))?;if next.len()<=map.len(){retire_ordered(next,retire);return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Flow ordered map key repeated"));}retire_ordered(std::mem::replace(map,next),retire);Ok(())})();
+                cursor.begin_close();loop{let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("Flow ordered close release demand"),maximum_depth:cursor.next_close_depth_demand()};match cursor.close_step(grant){RetirementStep::OwnedValue(value)=>retire(value),RetirementStep::Complete=>break,RetirementStep::Failure(error)=>panic!("Flow ordered close refused: {error}"),_=>{}}}
                 assert!(cursor.terminal_is_empty());result
             })();
             (result,native.owned_bytes())

@@ -9,5 +9,5 @@ pub fn diff(payload: &InsertSelfWeightElements, base: &En1991Snapshot) -> protoc
     if base.self_weight_elements.iter().any(|existing| existing.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(En1991Diff { self_weight_elements: En1991SelfWeightElementDelta::insertion(&base.self_weight_elements, payload.index, payload.item.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { self_weight_elements: En1991SelfWeightElementDelta::insertion(payload.index, payload.item.clone()), ..Default::default() })
 }

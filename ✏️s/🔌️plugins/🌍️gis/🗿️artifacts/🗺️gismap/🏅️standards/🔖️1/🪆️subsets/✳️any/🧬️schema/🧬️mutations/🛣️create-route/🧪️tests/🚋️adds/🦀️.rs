@@ -13,7 +13,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛣️create-route/🚋️adds/📸️snapshot/⬅️before/🔣️.json");
@@ -128,8 +129,8 @@ async fn adds_exactly_one_route_and_inverts_to_a_delete_of_that_id() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "create-route/adds-tram-route-after-ferry: creating a fresh id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().routes.as_ref().expect("create-route writes a routes delta");
-    assert_eq!(delta.added.iter().map(|feature| feature.id.as_str()).collect::<Vec<_>>(), vec!["route-tram"], "create-route/adds-tram-route-after-ferry: exactly the payload's own feature is added");
-    assert!(delta.removed.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "create-route/adds-tram-route-after-ferry: a create must not remove, patch or reorder anything, got {delta:?}");
+    assert_eq!(delta.inserted.iter().map(|insertion| insertion.row.id.as_str()).collect::<Vec<_>>(), vec!["route-tram"], "create-route/adds-tram-route-after-ferry: exactly the payload's own feature is added");
+    assert!(delta.removed.is_empty() && delta.modified.is_empty() && delta.moved.is_empty(), "create-route/adds-tram-route-after-ferry: a create must not remove, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().regions.is_none(), "create-route/adds-tram-route-after-ferry: create-route must never touch the positions or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-route/adds-tram-route-after-ferry: a create undoes with exactly one step, got {inverse:?}");

@@ -288,8 +288,23 @@ impl editing::SnapshotEditingEditor for StlAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { StlAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v_ascii::subsets::any::schema::mutations::net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::stl::edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        use crate::standards::v_ascii::subsets::any::schema::mutations::{set_triangle_normal, set_triangle_vertices};
+        let editing::SnapshotEditEvent::SetValue { path, value } = event else { return Ok(None) };
+        let Some(index) = path.strip_prefix("/triangles/").and_then(|rest| rest.parse::<usize>().ok()) else { return Ok(None) };
+        let triangle = <crate::standards::v_ascii::subsets::any::schema::snapshot::StlTriangle as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| Fault::from(error.to_string()))?;
+        let before = snapshot.triangles.get(index).ok_or_else(|| Fault::from(format!("triangle {index} does not exist")))?;
+        let mut leaves = Vec::new();
+        if before.normal != triangle.normal {
+            leaves.push(StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal: triangle.normal }));
+        }
+        if before.vertices != triangle.vertices {
+            leaves.push(StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices: triangle.vertices }));
+        }
+        Ok(Some(leaves))
     }
 }
 

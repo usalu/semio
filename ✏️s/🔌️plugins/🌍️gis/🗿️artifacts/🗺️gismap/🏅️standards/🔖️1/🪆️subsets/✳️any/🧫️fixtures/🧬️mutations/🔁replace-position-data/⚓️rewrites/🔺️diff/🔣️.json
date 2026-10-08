@@ -1,8 +1,9 @@
 {
   "positions": {
-    "added": [],
     "removed": [],
-    "patched": [
+    "inserted": [],
+    "moved": [],
+    "modified": [
       {
         "id": "pos-harbor",
         "patch": {
@@ -14,8 +15,7 @@
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "routes": null,
   "regions": null

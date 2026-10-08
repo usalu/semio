@@ -1495,6 +1495,13 @@
       "options": {
         "command": "bun ./📜️script.ts root-canonical-process-preview"
       }
+    },
+    "root-resumed-corpus-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-resumed-corpus-tests"
+      }
     }
   }
 }

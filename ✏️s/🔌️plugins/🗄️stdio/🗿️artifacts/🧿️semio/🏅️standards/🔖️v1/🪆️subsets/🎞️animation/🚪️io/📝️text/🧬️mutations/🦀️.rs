@@ -27,8 +27,7 @@ use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, An
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
-/// 🔧️ `MutationDiff` added — the `#[cfg(test)] mod tests` block below calls `diff.apply(&base)`
-/// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (W2b closer fix).
+/// 🔧️ `MutationDiff` in scope for the `#[cfg(test)] mod tests` block below.
 #[cfg(test)]
 use protocol::MutationDiff;
 use protocol::{OpBinary, OpText};
@@ -42,36 +41,10 @@ pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimation
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(semio_framework_value::ValueError::into_message)
 }
 
-/// 🧩️ `SetSnapshot`'s whole-snapshot payload — `[hex(schema),[timeline,...]]`, reusing the diff
-/// facet's own `pub(crate)` `enc_timeline`/`dec_timeline`/`enc_str`/`dec_str`/`enc_list`/`dec_list`
-/// value codecs (one source of truth, not a third independent copy). W2c closer fix: this REPLACES
-/// the old whole-enum `serde_json::to_string`/`from_str` passthrough — a real JSON-transfer-ban
-/// violation the brief specifically flagged as a recurring pattern to check for (confirmed present
-/// here, unlike the sibling `🔺️diff` facet, which was already fully real pre-wave).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
-    use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_timeline};
-    use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_list};
-    use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_str};
-    format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
-    use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_timeline};
-    use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_list};
-    use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_str};
-    use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAnimationSnapshot { schema: dec_str(schema)?, timelines: dec_list(timelines, dec_timeline)? })
-}
-
 /// 🎙️ Handcrafted `OpText`/`OpBinary` — one `TAG:payload` line per variant, reusing the diff
 /// module's `pub(crate)` value codecs (`enc_timeline`/`enc_channel`/`enc_keyframe`/`enc_target`/
 /// `enc_value`/`enc_interpolation`/hex-string helpers) instead of re-deriving a second parallel
-/// grammar. `SetSnapshot` reuses the `enc_animation_snapshot`/`dec_animation_snapshot` whole-
-/// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
+/// grammar.
 impl OpText for SemioAnimationMutation {
     fn print_op(&self) -> String {
         use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_timeline};
@@ -114,8 +87,6 @@ impl OpText for SemioAnimationMutation {
         use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
         let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
-        if line.starts_with("patch-snapshot patch=") {
-        }
         let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());
         let parse_f64 = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
 

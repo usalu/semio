@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/set-relationship/schema.json",
+  "title": "SetRelationship",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mutation", "owner", "id", "relType", "target"],
+  "properties": {
+    "mutation": {
+      "const": "setRelationship",
+      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    },
+    "owner": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Owner", "de": "Besitzer" },
+        "description": { "en": "Package part that owns the relationship; empty for the package root.", "de": "Paketteil, dem die Beziehung gehört; leer für die Paketwurzel." },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Relationship id", "de": "Beziehungs-ID" },
+        "description": { "en": "Identifier of the relationship within its owner.", "de": "Kennung der Beziehung innerhalb ihres Besitzers." },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "relType": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Relationship type", "de": "Beziehungstyp" },
+        "description": { "en": "Relationship type URI.", "de": "URI des Beziehungstyps." },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "target": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": { "en": "Target", "de": "Ziel" },
+        "description": { "en": "Part name or external URI the relationship points at.", "de": "Teilname oder externe URI, auf die die Beziehung zeigt." },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "external": {
+      "type": "boolean",
+      "default": false,
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": { "en": "External", "de": "Extern" },
+        "description": { "en": "Whether the target is an external URI instead of a part of the package.", "de": "Ob das Ziel eine externe URI statt eines Pakteils ist." },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": { "en": "Position", "de": "Position" },
+        "description": { "en": "Position a new relationship takes among the owner's relationships; the last position when absent.", "de": "Position, die eine neue Beziehung unter denen des Besitzers einnimmt; ohne Angabe die letzte." },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 60
+      }
+    }
+  }
+}

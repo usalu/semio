@@ -1,8 +1,8 @@
 //! 🪜 `reorder-frame` — moves one page frame one step forward or backward in the paint order.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -48,10 +48,8 @@ pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> prot
     let Some(target) = neighbor(index, page.frames.len(), payload.forward) else {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "The frame is already at that end of the stack.");
     };
-    let mut order: Vec<String> = page.frames.iter().map(|frame| frame.id().to_string()).collect();
-    order.swap(index, target);
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { frame_order: Some(order), ..Default::default() } }], ..Default::default() }),
+        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::relocation_by_id(payload.frame_id.clone(), index, target), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

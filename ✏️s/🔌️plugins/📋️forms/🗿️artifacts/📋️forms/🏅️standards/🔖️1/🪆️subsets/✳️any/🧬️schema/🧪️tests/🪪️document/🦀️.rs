@@ -50,10 +50,11 @@ fn forms_document_contract_native_codec_identity() {
 fn forms_document_contract_distinct_child_owners_and_typed_refusal() {
     let before = FormsSnapshot::default();
     assert_ne!(before.structure.child_id, before.results.child_id);
-    let mut child = before.structure.clone();
-    child.child_id = "foreign-child".into();
-    let diff = FormsDiff { structure: Some(child), ..Default::default() };
-    assert_eq!(protocol::apply_diff(&diff, &before).unwrap().structure.child_id, "foreign-child");
+    let step = crate::FormStep { id: "added".into(), title: "Added".into(), description: None, blocks: Vec::new() };
+    let diff = FormsDiff { steps: Some(crate::schema::diff::FormsStepsDelta::insertion(before.definition.steps.len(), step)), ..Default::default() };
+    let after = protocol::apply_diff(&diff, &before).unwrap();
+    assert_ne!(after.structure, before.structure, "apply re-derives the structure handle from the steps it leaves behind");
+    assert_eq!(after.results, before.results, "the results handle follows the responses alone");
     assert_eq!(before, FormsSnapshot::default());
 }
 

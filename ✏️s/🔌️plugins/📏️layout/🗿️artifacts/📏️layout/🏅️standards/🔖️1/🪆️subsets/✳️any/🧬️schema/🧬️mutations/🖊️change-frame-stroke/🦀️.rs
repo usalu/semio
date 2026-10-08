@@ -2,8 +2,8 @@
 //! non-rect frames, matching the pre-migration `PatchFrame`'s `stroke` handling.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -54,9 +54,9 @@ pub fn diff_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapsh
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
+            modified: vec![LayoutPagesModification {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { stroke: Some(payload.new_stroke), ..Default::default() } }], ..Default::default() },
+                patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { stroke: Some(payload.new_stroke), ..Default::default() }), ..Default::default() },
             }],
             ..Default::default()
         }),

@@ -165,7 +165,7 @@ fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
     let output = oracle.wait_with_output().unwrap();
     assert!(output.status.success(), "pngjs refused edited indexed PNG: {}", String::from_utf8_lossy(&output.stderr));
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap(), serde_json::json!(project_png(INDEXED_2).unwrap().pixels));
-    for inverse in mutation.inverse(&snapshot).unwrap() {
+    for inverse in mutation.inverse(&snapshot).unwrap().into_iter().rev() {
         edited = protocol::apply_diff(&inverse.diff(&edited).diff(), &edited).unwrap();
     }
     assert_eq!(edited, snapshot, "gamma inverse must restore the exact indexed source bytes");

@@ -9,5 +9,5 @@ pub fn diff(payload: &RemoveAccidental, base: &En1990Snapshot) -> MutationOutcom
     if payload.index >= base.accidentals.len() {
         return MutationOutcome::error("mutation.target-missing", "accidentals index out of range", [payload.index.to_string()]);
     }
-    MutationOutcome::new(En1990Diff { accidentals: En1990AccidentalDelta::removal(&base.accidentals[payload.index].id), ..En1990Diff::default() })
+    MutationOutcome::new(En1990Diff { accidentals: En1990AccidentalDelta::removal(&base.accidentals, payload.index), ..En1990Diff::default() })
 }

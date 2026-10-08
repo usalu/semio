@@ -32,6 +32,7 @@ pub fn inverse(payload: &super::RemovePartGrip, base: &Puzzle5dSnapshot) -> Resu
             fastener.y, Some(at),
         ));
     }
+    mutations.reverse();
     mutations
 
     })())

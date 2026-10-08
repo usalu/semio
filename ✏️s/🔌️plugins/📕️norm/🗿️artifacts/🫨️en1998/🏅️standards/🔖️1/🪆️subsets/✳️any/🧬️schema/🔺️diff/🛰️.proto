@@ -2,20 +2,32 @@
 syntax = "proto3";
 package semio.s.norm.en1998.diff;
 
-message En1998SystemAddition {
-  optional string after = 1;
+message En1998SystemRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998SystemInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998SystemRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998SystemModification {
-  string key = 1;
+  string id = 1;
   En1998SystemPatch patch = 2;
 }
 
 message En1998SystemDelta {
-  repeated string removed = 1;
-  repeated En1998SystemAddition added = 2;
-  repeated En1998SystemModification modified = 3;
+  repeated En1998SystemRemoval removed = 1;
+  repeated En1998SystemInsertion inserted = 2;
+  repeated En1998SystemRelocation moved = 3;
+  repeated En1998SystemModification modified = 4;
 }
 
 message En1998SystemPatch {
@@ -29,20 +41,32 @@ message En1998SystemPatch {
   optional double base_shear_resistance_n = 8;
 }
 
-message En1998StoreyAddition {
-  optional string after = 1;
+message En1998StoreyRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998StoreyInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998StoreyRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998StoreyModification {
-  string key = 1;
+  string id = 1;
   En1998StoreyPatch patch = 2;
 }
 
 message En1998StoreyDelta {
-  repeated string removed = 1;
-  repeated En1998StoreyAddition added = 2;
-  repeated En1998StoreyModification modified = 3;
+  repeated En1998StoreyRemoval removed = 1;
+  repeated En1998StoreyInsertion inserted = 2;
+  repeated En1998StoreyRelocation moved = 3;
+  repeated En1998StoreyModification modified = 4;
 }
 
 message En1998StoreyPatch {
@@ -61,20 +85,32 @@ message En1998StoreyPatch {
   optional double shear_resistance_n = 13;
 }
 
-message En1998MemberAddition {
-  optional string after = 1;
+message En1998MemberRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998MemberInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998MemberRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998MemberModification {
-  string key = 1;
+  string id = 1;
   En1998MemberPatch patch = 2;
 }
 
 message En1998MemberDelta {
-  repeated string removed = 1;
-  repeated En1998MemberAddition added = 2;
-  repeated En1998MemberModification modified = 3;
+  repeated En1998MemberRemoval removed = 1;
+  repeated En1998MemberInsertion inserted = 2;
+  repeated En1998MemberRelocation moved = 3;
+  repeated En1998MemberModification modified = 4;
 }
 
 message En1998MemberPatch {
@@ -88,20 +124,32 @@ message En1998MemberPatch {
   optional uint32 steel_section_class = 8;
 }
 
-message En1998BuildingAddition {
-  optional string after = 1;
+message En1998BuildingRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998BuildingInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998BuildingRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998BuildingModification {
-  string key = 1;
+  string id = 1;
   En1998BuildingPatch patch = 2;
 }
 
 message En1998BuildingDelta {
-  repeated string removed = 1;
-  repeated En1998BuildingAddition added = 2;
-  repeated En1998BuildingModification modified = 3;
+  repeated En1998BuildingRemoval removed = 1;
+  repeated En1998BuildingInsertion inserted = 2;
+  repeated En1998BuildingRelocation moved = 3;
+  repeated En1998BuildingModification modified = 4;
 }
 
 message En1998BuildingPatch {
@@ -124,20 +172,32 @@ message En1998BuildingPatch {
   optional double accidental_eccentricity_ratio = 17;
 }
 
-message En1998BridgeAddition {
-  optional string after = 1;
+message En1998BridgeRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998BridgeInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998BridgeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998BridgeModification {
-  string key = 1;
+  string id = 1;
   En1998BridgePatch patch = 2;
 }
 
 message En1998BridgeDelta {
-  repeated string removed = 1;
-  repeated En1998BridgeAddition added = 2;
-  repeated En1998BridgeModification modified = 3;
+  repeated En1998BridgeRemoval removed = 1;
+  repeated En1998BridgeInsertion inserted = 2;
+  repeated En1998BridgeRelocation moved = 3;
+  repeated En1998BridgeModification modified = 4;
 }
 
 message En1998BridgePatch {
@@ -150,20 +210,32 @@ message En1998BridgePatch {
   optional bytes variables = 7;
 }
 
-message En1998AssessmentAddition {
-  optional string after = 1;
+message En1998AssessmentRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998AssessmentInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998AssessmentRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998AssessmentModification {
-  string key = 1;
+  string id = 1;
   En1998AssessmentPatch patch = 2;
 }
 
 message En1998AssessmentDelta {
-  repeated string removed = 1;
-  repeated En1998AssessmentAddition added = 2;
-  repeated En1998AssessmentModification modified = 3;
+  repeated En1998AssessmentRemoval removed = 1;
+  repeated En1998AssessmentInsertion inserted = 2;
+  repeated En1998AssessmentRelocation moved = 3;
+  repeated En1998AssessmentModification modified = 4;
 }
 
 message En1998AssessmentPatch {
@@ -174,20 +246,32 @@ message En1998AssessmentPatch {
   optional double gamma_el = 5;
 }
 
-message En1998SiloAddition {
-  optional string after = 1;
+message En1998SiloRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998SiloInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998SiloRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998SiloModification {
-  string key = 1;
+  string id = 1;
   En1998SiloPatch patch = 2;
 }
 
 message En1998SiloDelta {
-  repeated string removed = 1;
-  repeated En1998SiloAddition added = 2;
-  repeated En1998SiloModification modified = 3;
+  repeated En1998SiloRemoval removed = 1;
+  repeated En1998SiloInsertion inserted = 2;
+  repeated En1998SiloRelocation moved = 3;
+  repeated En1998SiloModification modified = 4;
 }
 
 message En1998SiloPatch {
@@ -202,20 +286,32 @@ message En1998SiloPatch {
   optional double q_nominal = 9;
 }
 
-message En1998TankAddition {
-  optional string after = 1;
+message En1998TankRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998TankInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998TankRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998TankModification {
-  string key = 1;
+  string id = 1;
   En1998TankPatch patch = 2;
 }
 
 message En1998TankDelta {
-  repeated string removed = 1;
-  repeated En1998TankAddition added = 2;
-  repeated En1998TankModification modified = 3;
+  repeated En1998TankRemoval removed = 1;
+  repeated En1998TankInsertion inserted = 2;
+  repeated En1998TankRelocation moved = 3;
+  repeated En1998TankModification modified = 4;
 }
 
 message En1998TankPatch {
@@ -228,20 +324,32 @@ message En1998TankPatch {
   optional double v_rd_n = 7;
 }
 
-message En1998FoundationAddition {
-  optional string after = 1;
+message En1998FoundationRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998FoundationInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998FoundationRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998FoundationModification {
-  string key = 1;
+  string id = 1;
   En1998FoundationPatch patch = 2;
 }
 
 message En1998FoundationDelta {
-  repeated string removed = 1;
-  repeated En1998FoundationAddition added = 2;
-  repeated En1998FoundationModification modified = 3;
+  repeated En1998FoundationRemoval removed = 1;
+  repeated En1998FoundationInsertion inserted = 2;
+  repeated En1998FoundationRelocation moved = 3;
+  repeated En1998FoundationModification modified = 4;
 }
 
 message En1998FoundationPatch {
@@ -253,20 +361,32 @@ message En1998FoundationPatch {
   optional double k_soil = 6;
 }
 
-message En1998RetainingWallAddition {
-  optional string after = 1;
+message En1998RetainingWallRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998RetainingWallInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998RetainingWallRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998RetainingWallModification {
-  string key = 1;
+  string id = 1;
   En1998RetainingWallPatch patch = 2;
 }
 
 message En1998RetainingWallDelta {
-  repeated string removed = 1;
-  repeated En1998RetainingWallAddition added = 2;
-  repeated En1998RetainingWallModification modified = 3;
+  repeated En1998RetainingWallRemoval removed = 1;
+  repeated En1998RetainingWallInsertion inserted = 2;
+  repeated En1998RetainingWallRelocation moved = 3;
+  repeated En1998RetainingWallModification modified = 4;
 }
 
 message En1998RetainingWallPatch {
@@ -277,20 +397,32 @@ message En1998RetainingWallPatch {
   optional double h_rd_n_per_m = 5;
 }
 
-message En1998TowerAddition {
-  optional string after = 1;
+message En1998TowerRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+
+message En1998TowerInsertion {
+  uint32 index = 1;
   bytes row = 2;
 }
 
+message En1998TowerRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
 message En1998TowerModification {
-  string key = 1;
+  string id = 1;
   En1998TowerPatch patch = 2;
 }
 
 message En1998TowerDelta {
-  repeated string removed = 1;
-  repeated En1998TowerAddition added = 2;
-  repeated En1998TowerModification modified = 3;
+  repeated En1998TowerRemoval removed = 1;
+  repeated En1998TowerInsertion inserted = 2;
+  repeated En1998TowerRelocation moved = 3;
+  repeated En1998TowerModification modified = 4;
 }
 
 message En1998TowerPatch {

@@ -1,0 +1,53 @@
+{
+  "climateZone": null,
+  "usage": null,
+  "tIntC": null,
+  "rhInt": null,
+  "hasMechanicalVentilation": null,
+  "airtightnessN50": null,
+  "bb2DetailsConform": null,
+  "zones": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "elements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "wall-north",
+        "patch": {
+          "kind": null,
+          "zoneId": null,
+          "orientationDeg": null,
+          "inclinationDeg": null,
+          "adjacent": null,
+          "areaM2": null,
+          "deltaUG": null,
+          "deltaUF": null,
+          "deltaUR": null,
+          "layers": {
+            "removed": [
+              {
+                "id": "masonry",
+                "index": 1
+              }
+            ],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "thermalBridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

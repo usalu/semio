@@ -183,7 +183,7 @@ fn writer_history_edit_initializer_preserves_actor_and_publishes_exact_next_gene
     let operation = semio_framework_job::OperationId(401);
     let generation = semio_framework_job::Generation(9);
     let mut authority = empty_writer_initializer(operation, generation);
-    let genesis = authority.envelope.as_ref().expect("retained Writer envelope").vcs.genesis.share_snapshot();
+    let genesis = authority.envelope.as_ref().expect("retained Writer envelope").vcs.genesis.facts().share_snapshot();
     assert!(matches!(drive_writer_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");
     assert_eq!(candidate.generation_now(), 10);

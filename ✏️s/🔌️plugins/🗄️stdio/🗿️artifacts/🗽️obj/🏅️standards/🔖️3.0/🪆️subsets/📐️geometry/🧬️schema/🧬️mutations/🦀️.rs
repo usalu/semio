@@ -31,8 +31,8 @@
 
 use crate::schema::diff::{
     diff_insert_face, diff_insert_normal, diff_insert_texcoord, diff_insert_vertex, diff_remove_face, diff_remove_group, diff_remove_normal, diff_remove_object, diff_remove_texcoord, diff_remove_vertex, diff_set_face, diff_set_group,
-    diff_set_mtllib, diff_set_normal, diff_set_object, diff_set_smoothing_groups, diff_set_texcoord, diff_set_unknown_statements, diff_set_usemtl, diff_set_vertex, face_diff_between, normal_diff_between, texcoord_diff_between,
-    vertex_diff_between, ObjDiff};
+    diff_set_mtllib, diff_set_normal, diff_set_object, diff_set_smoothing_groups, diff_set_texcoord, diff_set_unknown_statements, diff_set_usemtl, diff_set_vertex, face_field_changes, normal_field_changes, texcoord_field_changes,
+    vertex_field_changes, ObjDiff};
 use crate::schema::snapshot::{ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 #[cfg(test)]
 use crate::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
@@ -167,80 +167,10 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
-/// d.apply(snapshot); d` — the diff is the single semantics source.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
-    let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
-}
+
 //#endregion 🔖️Apply
 
 
-//#region 🔖️Net
-/// 🧮️ Pairs two positional lists: every differing pair is re-set in place, surplus base items are removed last first and missing
-/// items are inserted at their index.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn net_items<T: PartialEq>(base: &[T], next: &[T], set: impl Fn(usize, &T) -> ObjMutation, insert: impl Fn(usize, &T) -> ObjMutation, remove: impl Fn(usize) -> ObjMutation, leaves: &mut Vec<ObjMutation>) {
-    let paired = base.len().min(next.len());
-    leaves.extend(base.iter().zip(next).enumerate().filter(|(_, (before, after))| before != after).map(|(index, (_, after))| set(index, after)));
-    leaves.extend((paired..base.len()).rev().map(remove));
-    leaves.extend(next.iter().enumerate().skip(paired).map(|(index, item)| insert(index, item)));
-}
-
-/// 🧮️ The leaves that carry `base` to exactly `next`: the four positional lists pairwise (vertices, texcoords, normals, faces), the
-/// named `g` and `o` entries (a changed membership re-sets the entry; an entry of another name at a position is removed and created
-/// anew at that position), and the replaced mtllib / usemtl / smoothing / unknown statements.
-pub fn net_mutations(base: &ObjSnapshot, next: &ObjSnapshot) -> Vec<ObjMutation> {
-    let mut leaves = Vec::new();
-    net_items(&base.vertices, &next.vertices, |index, vertex| ObjMutation::SetVertex(set_vertex::SetVertex { index, vertex: vertex.clone() }), |index, vertex| ObjMutation::InsertVertex(insert_vertex::InsertVertex { index, vertex: vertex.clone() }), |index| ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index }), &mut leaves);
-    net_items(&base.texcoords, &next.texcoords, |index, texcoord| ObjMutation::SetTexcoord(set_texcoord::SetTexcoord { index, texcoord: texcoord.clone() }), |index, texcoord| ObjMutation::InsertTexcoord(insert_texcoord::InsertTexcoord { index, texcoord: texcoord.clone() }), |index| ObjMutation::RemoveTexcoord(remove_texcoord::RemoveTexcoord { index }), &mut leaves);
-    net_items(&base.normals, &next.normals, |index, normal| ObjMutation::SetNormal(set_normal::SetNormal { index, normal: normal.clone() }), |index, normal| ObjMutation::InsertNormal(insert_normal::InsertNormal { index, normal: normal.clone() }), |index| ObjMutation::RemoveNormal(remove_normal::RemoveNormal { index }), &mut leaves);
-    net_items(&base.faces, &next.faces, |index, face| ObjMutation::SetFace(set_face::SetFace { index, face: face.clone() }), |index, face| ObjMutation::InsertFace(insert_face::InsertFace { index, face: face.clone() }), |index| ObjMutation::RemoveFace(remove_face::RemoveFace { index }), &mut leaves);
-    let paired = base.groups.len().min(next.groups.len());
-    for (index, (before, after)) in base.groups.iter().zip(&next.groups).enumerate().filter(|(_, (before, after))| before != after) {
-        if before.name == after.name {
-            leaves.push(ObjMutation::SetGroup(set_group::SetGroup { name: after.name.clone(), faces: after.faces.clone(), index: None }));
-        } else {
-            leaves.push(ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: before.name.clone() }));
-            leaves.push(ObjMutation::SetGroup(set_group::SetGroup { name: after.name.clone(), faces: after.faces.clone(), index: Some(index) }));
-        }
-    }
-    leaves.extend(base.groups[paired..].iter().rev().map(|group| ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: group.name.clone() })));
-    leaves.extend(next.groups.iter().enumerate().skip(paired).map(|(index, group)| ObjMutation::SetGroup(set_group::SetGroup { name: group.name.clone(), faces: group.faces.clone(), index: Some(index) })));
-    let paired = base.objects.len().min(next.objects.len());
-    for (index, (before, after)) in base.objects.iter().zip(&next.objects).enumerate().filter(|(_, (before, after))| before != after) {
-        if before.name == after.name {
-            leaves.push(ObjMutation::SetObject(set_object::SetObject { name: after.name.clone(), faces: after.faces.clone(), index: None }));
-        } else {
-            leaves.push(ObjMutation::RemoveObject(remove_object::RemoveObject { name: before.name.clone() }));
-            leaves.push(ObjMutation::SetObject(set_object::SetObject { name: after.name.clone(), faces: after.faces.clone(), index: Some(index) }));
-        }
-    }
-    leaves.extend(base.objects[paired..].iter().rev().map(|object| ObjMutation::RemoveObject(remove_object::RemoveObject { name: object.name.clone() })));
-    leaves.extend(next.objects.iter().enumerate().skip(paired).map(|(index, object)| ObjMutation::SetObject(set_object::SetObject { name: object.name.clone(), faces: object.faces.clone(), index: Some(index) })));
-    if base.mtllib != next.mtllib {
-        leaves.push(ObjMutation::SetMtllib(set_mtllib::SetMtllib { mtllib: next.mtllib.clone() }));
-    }
-    if base.usemtl != next.usemtl {
-        leaves.push(ObjMutation::SetUsemtl(set_usemtl::SetUsemtl { usemtl: next.usemtl.clone() }));
-    }
-    if base.smoothing_groups != next.smoothing_groups {
-        leaves.push(ObjMutation::SetSmoothingGroups(set_smoothing_groups::SetSmoothingGroups { smoothing_groups: next.smoothing_groups.clone() }));
-    }
-    if base.unknown_statements != next.unknown_statements {
-        leaves.push(ObjMutation::SetUnknownStatements(set_unknown_statements::SetUnknownStatements { unknown_statements: next.unknown_statements.clone() }));
-    }
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region 🔖️InverseRestoration
 /// ↩️ The undo of a positional `f` removal at `index`. `InsertFace` puts the row back BY VALUE and
@@ -253,9 +183,9 @@ pub fn net_mutations(base: &ObjSnapshot, next: &ObjSnapshot) -> Vec<ObjMutation>
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn restore_face_at(index: usize, face: &ObjFace, base: &ObjSnapshot) -> Vec<ObjMutation> {
     let disturbed = |faces: &[u64]| u64::try_from(index).is_ok_and(|index| faces.iter().any(|member| *member >= index));
-    let mut undo = vec![ObjMutation::InsertFace(insert_face::InsertFace { index, face: face.clone() })];
-    undo.extend(base.groups.iter().filter(|group| disturbed(&group.faces)).map(|group| ObjMutation::SetGroup(set_group::SetGroup { name: group.name.clone(), faces: group.faces.clone(), index: None })));
+    let mut undo: Vec<ObjMutation> = base.groups.iter().filter(|group| disturbed(&group.faces)).map(|group| ObjMutation::SetGroup(set_group::SetGroup { name: group.name.clone(), faces: group.faces.clone(), index: None })).collect();
     undo.extend(base.objects.iter().filter(|object| disturbed(&object.faces)).map(|object| ObjMutation::SetObject(set_object::SetObject { name: object.name.clone(), faces: object.faces.clone(), index: None })));
+    undo.push(ObjMutation::InsertFace(insert_face::InsertFace { index, face: face.clone() }));
     undo
 }
 

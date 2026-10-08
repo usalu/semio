@@ -4,7 +4,7 @@
 
 use crate::editor::dwg_ac1024::modes::edit;
 use crate::editor::dwg_ac1024::modes::edit::windows::main;
-use crate::standards::v_ac1024::subsets::any::schema::mutations::{net_mutations, DwgMutation};
+use crate::standards::v_ac1024::subsets::any::schema::mutations::{DwgMutation};
 
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -288,8 +288,8 @@ impl editing::SnapshotEditingEditor for DwgAc1024Editor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { DwgAc1024EditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::dwg_ac1024::edit_rules::EDIT_RULES
     }
 }
 

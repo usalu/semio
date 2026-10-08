@@ -26,6 +26,7 @@ testkit = ["semio-framework-async/testkit"]
 [dependencies]
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true, features = ["testkit"] }

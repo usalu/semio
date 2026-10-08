@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"role":"nodeIcon","id":"first","before":null,"next":"capsule","target":true,"operationIndex":7,"expected":null},
+    {"role":"nodeIcon","id":"first","before":null,"next":null,"target":true,"operationIndex":0,"expected":{"level":"warning","code":"mutation.no-op","body":"no changes to apply","targets":["first"],"fragmentKinds":["static"]}},
+    {"role":"nodeIcon","id":"q\"\\\u0000\n😀","before":"old","next":null,"target":false,"operationIndex":4294967295,"expected":{"level":"error","code":"mutation.target-missing","body":"node \"q\"\\\u0000\n😀\" not found","targets":["q\"\\\u0000\n😀"],"fragmentKinds":["static","text","static"]}},
+    {"role":"regionLabel","id":"first","before":"label","next":null,"target":true,"operationIndex":null,"expected":null},
+    {"role":"regionLabel","id":"","before":"😀\u0000甲","next":"😀\u0000甲","target":true,"operationIndex":9,"expected":{"level":"warning","code":"mutation.no-op","body":"no changes to apply","targets":[""],"fragmentKinds":["static"]}},
+    {"role":"regionLabel","id":"q\"\\\u0000\n😀","before":null,"next":"label","target":false,"operationIndex":13,"expected":{"level":"error","code":"mutation.target-missing","body":"target region \"q\"\\\u0000\n😀\" not found","targets":["q\"\\\u0000\n😀"],"fragmentKinds":["static","text","static"]}}
+  ]
+}

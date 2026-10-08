@@ -1,4 +1,5 @@
 {
+  "authorityRetirement": {"actor": "actor-🧵","group": "group-✓","edit": "edit-🎟️","line": "alternative-🌿","maximumCopyBytes": 1,"refusals": ["items","capacity","depth"]},
   "grants": [
     0,
     1,

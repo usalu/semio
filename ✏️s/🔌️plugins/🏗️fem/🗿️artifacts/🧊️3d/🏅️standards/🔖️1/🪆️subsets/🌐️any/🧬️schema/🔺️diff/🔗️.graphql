@@ -12,88 +12,200 @@ type Fem3dDiff {
   analysis: Fem3dAnalysisPatch @state(class: ARTIFACT)
 }
 
-type Fem3dNodesDelta {
-  added: [FemNode!]!
-  removed: [String!]!
-  patched: [Fem3dNodesPatchEntry!]!
-  reordered: [String!]
+type Fem3dNodeRemoval {
+  id: String!
+  index: Int!
 }
 
-type Fem3dNodesPatchEntry {
+type Fem3dNodeInsertion {
+  index: Int!
+  row: FemNode!
+}
+
+type Fem3dNodeRelocation {
   id: String!
-  item: FemNode!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dNodesModification {
+  id: String!
+  patch: FemNode!
+}
+
+type Fem3dNodesDelta {
+  removed: [Fem3dNodeRemoval!]!
+  inserted: [Fem3dNodeInsertion!]!
+  moved: [Fem3dNodeRelocation!]!
+  modified: [Fem3dNodesModification!]!
+}
+
+type Fem3dElementRemoval {
+  id: String!
+  index: Int!
+}
+
+type Fem3dElementInsertion {
+  index: Int!
+  row: FemElement!
+}
+
+type Fem3dElementRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dElementsModification {
+  id: String!
+  patch: FemElement!
 }
 
 type Fem3dElementsDelta {
-  added: [FemElement!]!
-  removed: [String!]!
-  patched: [Fem3dElementsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem3dElementRemoval!]!
+  inserted: [Fem3dElementInsertion!]!
+  moved: [Fem3dElementRelocation!]!
+  modified: [Fem3dElementsModification!]!
 }
 
-type Fem3dElementsPatchEntry {
+type Fem3dMaterialRemoval {
   id: String!
-  item: FemElement!
+  index: Int!
+}
+
+type Fem3dMaterialInsertion {
+  index: Int!
+  row: FemMaterial!
+}
+
+type Fem3dMaterialRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dMaterialsModification {
+  id: String!
+  patch: FemMaterial!
 }
 
 type Fem3dMaterialsDelta {
-  added: [FemMaterial!]!
-  removed: [String!]!
-  patched: [Fem3dMaterialsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem3dMaterialRemoval!]!
+  inserted: [Fem3dMaterialInsertion!]!
+  moved: [Fem3dMaterialRelocation!]!
+  modified: [Fem3dMaterialsModification!]!
 }
 
-type Fem3dMaterialsPatchEntry {
+type Fem3dSectionRemoval {
   id: String!
-  item: FemMaterial!
+  index: Int!
+}
+
+type Fem3dSectionInsertion {
+  index: Int!
+  row: FemSection!
+}
+
+type Fem3dSectionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dSectionsModification {
+  id: String!
+  patch: FemSection!
 }
 
 type Fem3dSectionsDelta {
-  added: [FemSection!]!
-  removed: [String!]!
-  patched: [Fem3dSectionsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem3dSectionRemoval!]!
+  inserted: [Fem3dSectionInsertion!]!
+  moved: [Fem3dSectionRelocation!]!
+  modified: [Fem3dSectionsModification!]!
 }
 
-type Fem3dSectionsPatchEntry {
+type Fem3dSolidRemoval {
   id: String!
-  item: FemSection!
+  index: Int!
+}
+
+type Fem3dSolidInsertion {
+  index: Int!
+  row: FemSolid!
+}
+
+type Fem3dSolidRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dSolidsModification {
+  id: String!
+  patch: FemSolid!
 }
 
 type Fem3dSolidsDelta {
-  added: [FemSolid!]!
-  removed: [String!]!
-  patched: [Fem3dSolidsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem3dSolidRemoval!]!
+  inserted: [Fem3dSolidInsertion!]!
+  moved: [Fem3dSolidRelocation!]!
+  modified: [Fem3dSolidsModification!]!
 }
 
-type Fem3dSolidsPatchEntry {
+type Fem3dSupportRemoval {
   id: String!
-  item: FemSolid!
+  index: Int!
+}
+
+type Fem3dSupportInsertion {
+  index: Int!
+  row: FemSupport!
+}
+
+type Fem3dSupportRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dSupportsModification {
+  id: String!
+  patch: FemSupport!
 }
 
 type Fem3dSupportsDelta {
-  added: [FemSupport!]!
-  removed: [String!]!
-  patched: [Fem3dSupportsPatchEntry!]!
-  reordered: [String!]
+  removed: [Fem3dSupportRemoval!]!
+  inserted: [Fem3dSupportInsertion!]!
+  moved: [Fem3dSupportRelocation!]!
+  modified: [Fem3dSupportsModification!]!
 }
 
-type Fem3dSupportsPatchEntry {
+type Fem3dLoadCaseRemoval {
   id: String!
-  item: FemSupport!
+  index: Int!
+}
+
+type Fem3dLoadCaseInsertion {
+  index: Int!
+  row: FemLoadCase!
+}
+
+type Fem3dLoadCaseRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dLoadCasesModification {
+  id: String!
+  patch: Fem3dLoadCasePatch!
 }
 
 type Fem3dLoadCasesDelta {
-  added: [FemLoadCase!]!
-  removed: [String!]!
-  patched: [Fem3dLoadCasesPatchEntry!]!
-  reordered: [String!]
-}
-
-type Fem3dLoadCasesPatchEntry {
-  id: String!
-  patch: Fem3dLoadCasePatch!
+  removed: [Fem3dLoadCaseRemoval!]!
+  inserted: [Fem3dLoadCaseInsertion!]!
+  moved: [Fem3dLoadCaseRelocation!]!
+  modified: [Fem3dLoadCasesModification!]!
 }
 
 type Fem3dLoadCasePatch {
@@ -102,28 +214,60 @@ type Fem3dLoadCasePatch {
   loads: Fem3dLoadsDelta
 }
 
-type Fem3dLoadsDelta {
-  added: [FemLoad!]!
-  removed: [String!]!
-  patched: [Fem3dLoadsPatchEntry!]!
-  reordered: [String!]
+type Fem3dLoadRemoval {
+  id: String!
+  index: Int!
 }
 
-type Fem3dLoadsPatchEntry {
+type Fem3dLoadInsertion {
+  index: Int!
+  row: FemLoad!
+}
+
+type Fem3dLoadRelocation {
   id: String!
-  item: FemLoad!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dLoadsModification {
+  id: String!
+  patch: FemLoad!
+}
+
+type Fem3dLoadsDelta {
+  removed: [Fem3dLoadRemoval!]!
+  inserted: [Fem3dLoadInsertion!]!
+  moved: [Fem3dLoadRelocation!]!
+  modified: [Fem3dLoadsModification!]!
+}
+
+type Fem3dCombinationRemoval {
+  id: String!
+  index: Int!
+}
+
+type Fem3dCombinationInsertion {
+  index: Int!
+  row: FemCombination!
+}
+
+type Fem3dCombinationRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type Fem3dCombinationsModification {
+  id: String!
+  patch: FemCombination!
 }
 
 type Fem3dCombinationsDelta {
-  added: [FemCombination!]!
-  removed: [String!]!
-  patched: [Fem3dCombinationsPatchEntry!]!
-  reordered: [String!]
-}
-
-type Fem3dCombinationsPatchEntry {
-  id: String!
-  item: FemCombination!
+  removed: [Fem3dCombinationRemoval!]!
+  inserted: [Fem3dCombinationInsertion!]!
+  moved: [Fem3dCombinationRelocation!]!
+  modified: [Fem3dCombinationsModification!]!
 }
 
 type Fem3dAnalysisPatch {

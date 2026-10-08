@@ -8,7 +8,8 @@
 //! builder reaches it through a three-arm or-pattern rather than a variant-specific match; this
 //! fixture pins that a plain `Pixel` layer really does take that shared path.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_blend_mode, layer_opacity};
 use crate::{RasterDiff, RasterSnapshot};
 
@@ -90,9 +91,9 @@ async fn produces_committed_diff() {
     let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "change-layer-blend-mode/switches-the-glow-layer-to-screen: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("change-layer-blend-mode writes a layers delta");
-    assert_eq!(delta.patched.len(), 1, "change-layer-blend-mode/switches-the-glow-layer-to-screen: exactly one layer is patched");
-    assert_eq!(delta.patched[0].patch.blend_mode.as_deref(), Some("screen"), "change-layer-blend-mode/switches-the-glow-layer-to-screen: the patch must carry the new blend mode");
-    assert_eq!(delta.patched[0].patch.opacity, None, "change-layer-blend-mode/switches-the-glow-layer-to-screen: the patch must leave `opacity` to change-layer-opacity");
+    assert_eq!(delta.modified.len(), 1, "change-layer-blend-mode/switches-the-glow-layer-to-screen: exactly one layer is patched");
+    assert_eq!(delta.modified[0].patch.blend_mode.as_deref(), Some("screen"), "change-layer-blend-mode/switches-the-glow-layer-to-screen: the patch must carry the new blend mode");
+    assert_eq!(delta.modified[0].patch.opacity, None, "change-layer-blend-mode/switches-the-glow-layer-to-screen: the patch must leave `opacity` to change-layer-opacity");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -116,5 +117,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

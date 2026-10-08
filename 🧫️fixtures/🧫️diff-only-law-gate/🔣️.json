@@ -217,7 +217,7 @@
         "🦀️.rs"
       ],
       "lines": [
-        "impl protocol::MutationDiff<Presence> for Presence {",
+        "impl protocol::MutationDiff<Settings> for Settings {",
         "    fn absorb(&mut self, other: Self) {}",
         "}",
         "impl Mutation<Config> for ConfigMutation {",
@@ -248,7 +248,7 @@
     },
     {
       "id": "r14-restore-inverse",
-      "description": "An inverse returning a whole-snapshot restore variant; a helper that is not named inverse may name restore variants.",
+      "description": "Inverse-named fns returning a restore variant (`inverse` and `inverse_again`); a helper that is not inverse-named may name restore variants.",
       "segments": [
         "r14-restore-inverse",
         "🧬️mutations",
@@ -270,6 +270,10 @@
       "breaches": [
         {
           "line": 2,
+          "rule": "R14"
+        },
+        {
+          "line": 5,
           "rule": "R14"
         }
       ],
@@ -367,14 +371,14 @@
     },
     {
       "id": "r13-diff-type-outside-mutations",
-      "description": "A whole-state diff impl is a violation outside any mutations directory too.",
+      "description": "A whole-state diff impl is a violation outside any mutations directory too (persisted config lane).",
       "segments": [
         "r13-diff-type-outside-mutations",
-        "🫧️transient",
+        "🎚️config",
         "🦀️.rs"
       ],
       "lines": [
-        "impl protocol::MutationDiff<Transient> for Transient {",
+        "impl protocol::MutationDiff<Settings> for Settings {",
         "    fn absorb(&mut self, other: Self) {}",
         "}"
       ],
@@ -391,17 +395,17 @@
       "description": "A hand-written `impl Mutation<P>` outside a mutations directory is a leaf: its diff clones base, its inverse restores a snapshot.",
       "segments": [
         "hand-written-mutation-impl",
-        "👥️presence",
+        "🎚️config",
         "🦀️.rs"
       ],
       "lines": [
-        "impl Mutation<Presence> for PresenceMutation {",
-        "    type Diff = PresenceDiff;",
-        "    fn diff(&self, base: &Presence) -> MutationOutcome<PresenceDiff> {",
+        "impl Mutation<Settings> for SettingsMutation {",
+        "    type Diff = SettingsDiff;",
+        "    fn diff(&self, base: &Settings) -> MutationOutcome<SettingsDiff> {",
         "        let mut next = base.clone();",
-        "        MutationOutcome::new(PresenceDiff::default())",
+        "        MutationOutcome::new(SettingsDiff::default())",
         "    }",
-        "    fn inverse(&self, base: &Presence) -> Result<Vec<Self>, E> {",
+        "    fn inverse(&self, base: &Settings) -> Result<Vec<Self>, E> {",
         "        Ok(vec![Self::Restore { presence: base.clone() }])",
         "    }",
         "}"
@@ -419,8 +423,554 @@
       "oracle": []
     },
     {
+      "id": "ephemeral-presence-snapshot-inverse",
+      "description": "Ruling \"Ephemeral roots\": a presence lane may keep a whole-root setter kind — whole-state diff impl, `type Diff = <root>` and a `Snapshot` inverse are admitted.",
+      "segments": [
+        "ephemeral-presence-snapshot-inverse",
+        "👥️presence",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Lane> for Lane {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl Mutation<Lane> for LaneMutation {",
+        "    type Diff = Lane;",
+        "    fn inverse(&self, base: &Lane) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { root: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "ephemeral-transient-nested-leaf",
+      "description": "The exemption follows the lane directory at any depth: a leaf under a transient lane may return a `Restore` inverse.",
+      "segments": [
+        "ephemeral-transient-nested-leaf",
+        "🫧️transient",
+        "🧬️schema",
+        "🧬️mutations",
+        "a",
+        "↩️inverse",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    Ok(vec![M::Restore { root: base.clone() }])",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "ephemeral-window-transient-type",
+      "description": "Lane TYPE exemption: a window transient aggregate in a `🪟️window` file keeps its whole-root setter (diff impl, `type Diff`, `Snapshot` inverse).",
+      "segments": [
+        "ephemeral-window-transient-type",
+        "🪟️window",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl Mutation<Puzzle2dWindowTransient> for Puzzle2dWindowTransientMutation {",
+        "    type Diff = Puzzle2dWindowTransient;",
+        "    fn inverse(&self, base: &Puzzle2dWindowTransient) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { root: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "ephemeral-window-presence-type",
+      "description": "The same for a presence aggregate.",
+      "segments": [
+        "ephemeral-window-presence-type",
+        "🪟️window",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Puzzle3dPresence> for Puzzle3dPresence {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl Mutation<Puzzle3dPresence> for Puzzle3dPresenceMutation {",
+        "    type Diff = Puzzle3dPresence;",
+        "    fn inverse(&self, base: &Puzzle3dPresence) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { root: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "window-config-type-still-fires",
+      "description": "A window config aggregate in the same kind of file gets no exemption.",
+      "segments": [
+        "window-config-type-still-fires",
+        "🪟️window",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Puzzle5dWindowConfig> for Puzzle5dWindowConfig {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl Mutation<Puzzle5dWindowConfig> for Puzzle5dWindowConfigMutation {",
+        "    type Diff = Puzzle5dWindowConfig;",
+        "    fn inverse(&self, base: &Puzzle5dWindowConfig) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { root: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        },
+        {
+          "line": 5,
+          "rule": "R13"
+        },
+        {
+          "line": 7,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "config-lane-snapshot-inverse",
+      "description": "A persisted config lane gets no exemption: whole-state diff impl, `type Diff = <root>` and the `Snapshot` inverse all fire.",
+      "segments": [
+        "config-lane-snapshot-inverse",
+        "🎚️config",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Lane> for Lane {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl Mutation<Lane> for LaneMutation {",
+        "    type Diff = Lane;",
+        "    fn inverse(&self, base: &Lane) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { root: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        },
+        {
+          "line": 5,
+          "rule": "R13"
+        },
+        {
+          "line": 7,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g1-helper-fns",
+      "description": "Every fn of a diff directory is scanned, whatever its name: a helper may not take a `&mut` snapshot or copy a reference parameter; a plain `&mut` output buffer is compliant.",
+      "segments": [
+        "g1-helper-fns",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "fn paint(base: &S, snapshot: &mut WriterSnapshot) {}",
+        "fn painted(base: &S) -> D {",
+        "    let mut m = base.clone();",
+        "    D::default()",
+        "}",
+        "fn write_row(out: &mut Vec<u8>, row: &R) {}",
+        "fn read_only(payload: &P, base: &S) -> D {",
+        "    let mut p = payload.clone();",
+        "    D::default()",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R8"
+        },
+        {
+          "line": 3,
+          "rule": "R12"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g2-diff-type-inverse",
+      "description": "A diff type's `DiffAlgebra::inverse` is scanned; its `apply` forwarding the capability and its `between` are exempt.",
+      "segments": [
+        "g2-diff-type-inverse",
+        "🧬️schema",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl MutationDiff<S> for D {",
+        "    fn apply(&self, base: &S, capability: ApplyCapability) -> R { self.inner.apply(base, capability) }",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl DiffAlgebra<S> for D {",
+        "    fn inverse(&self, base: &S) -> Self {",
+        "        let mut state = base.clone();",
+        "        let after = apply_diff(self, &state);",
+        "        D::negative(&state)",
+        "    }",
+        "    fn between(base: &S, other: &S) -> Self { keyed_between(base, other) }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 7,
+          "rule": "R12"
+        },
+        {
+          "line": 8,
+          "rule": "R9"
+        },
+        {
+          "line": 9,
+          "rule": "R11"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g3-artifact-root-helper",
+      "description": "A diff helper at the artifact root (no mutations directory, no impl) is scanned by name; its unrelated fns are not.",
+      "segments": [
+        "✏️s",
+        "🔌️plugins",
+        "g3-artifact-root-helper",
+        "🗿️artifacts",
+        "a",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn step_timeline_diff(base: &S, steps: Steps) -> D {",
+        "    let mut scene = base.clone();",
+        "    D::new(keyed_between::<Row>(&base.rows, &scene.rows))",
+        "}",
+        "pub fn unrelated(x: &mut Foo) {",
+        "    let mut y = x.clone();",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R12"
+        },
+        {
+          "line": 3,
+          "rule": "R10"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g4-schema-helper-apply",
+      "description": "Applying a diff is forbidden in any schema fn; the `*apply*` helper of the file's diff type is the central step.",
+      "segments": [
+        "g4-schema-helper-apply",
+        "🧬️schema",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn patch_fold(wire: &W, mesh: &S) -> S {",
+        "    protocol::apply_diff(wire, mesh)",
+        "}",
+        "fn apply_rows(rows: &R, base: &S, capability: ApplyCapability) -> S {",
+        "    rows.apply(base, capability)",
+        "}",
+        "impl MutationDiff<S> for D {",
+        "    fn apply(&self, base: &S, capability: ApplyCapability) -> R { apply_rows(&self.rows, base, capability) }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R9"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g4-schema-operations-apply",
+      "description": "R9 covers the whole file under any schema directory, not only diff modules.",
+      "segments": [
+        "g4-schema-operations-apply",
+        "🧬️schema",
+        "⚙️operations",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn helper(d: &D, b: &S) -> S {",
+        "    d.apply(b, cap)",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R9"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g5-renamed-between",
+      "description": "Renamed snapshot-differencing helpers; a `*between*`-named sync fn may use them.",
+      "segments": [
+        "g5-renamed-between",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, base: &S) -> protocol::MutationOutcome<D> {",
+        "    let a = keyed_between::<Row>(&base.rows, &payload.rows);",
+        "    let b = graph_replacing(base, payload);",
+        "    let c = value_diff_between(&base.v, &payload.v);",
+        "    let d = tiles_state_diff(base);",
+        "    protocol::MutationOutcome::new(D::from(a, b, c, d))",
+        "}",
+        "fn sync_between(a: &S, b: &S) -> D { keyed_between(&a.rows, &b.rows) }"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R10"
+        },
+        {
+          "line": 3,
+          "rule": "R10"
+        },
+        {
+          "line": 4,
+          "rule": "R10"
+        },
+        {
+          "line": 5,
+          "rule": "R10"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g6-whole-record-restore",
+      "description": "Restores beyond the name list: `Replace…`, `*Snapshot` variants and whole `*_content` records; a record with handles only is compliant.",
+      "segments": [
+        "g6-whole-record-restore",
+        "🧬️mutations",
+        "a",
+        "↩️inverse",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    let object = base.object(&payload.id);",
+        "    Ok(vec![",
+        "        M::CreateMesh { mesh_content: object.mesh_content.clone() },",
+        "        M::ReplaceConfig(c),",
+        "        M::HostSnapshot(s),",
+        "        M::CreateMesh { id: payload.id.clone(), mesh_handle: h },",
+        "    ])",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 4,
+          "rule": "R14"
+        },
+        {
+          "line": 5,
+          "rule": "R14"
+        },
+        {
+          "line": 6,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g7-copy-bindings",
+      "description": "Copies of reference parameters under any binding and spelling; payload copies and non-mutable copies are compliant. A copy of a diff-typed parameter's rows (sorting a diff's own removed ids) is not a copy of base.",
+      "segments": [
+        "g7-copy-bindings",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, base: &S, frame: &F, diff: &RowsDiff) -> protocol::MutationOutcome<D> {",
+        "    let mut state = base.rows.to_vec();",
+        "    let mut image = frame.rgba8.clone();",
+        "    let mut items: Vec<_> = base.items.iter().cloned().collect();",
+        "    let mut p = payload.clone();",
+        "    let kept = base.rows.clone();",
+        "    let mut removed = diff.removed.clone();",
+        "    protocol::MutationOutcome::new(D::default())",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R12"
+        },
+        {
+          "line": 3,
+          "rule": "R12"
+        },
+        {
+          "line": 4,
+          "rule": "R12"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "g8-renamed-inverse",
+      "description": "Inverse-named helpers are scanned like inverses; simulators and derived helpers fire, a plain `*_inverse` decomposition does not.",
+      "segments": [
+        "g8-renamed-inverse",
+        "🧬️mutations",
+        "a",
+        "↩️inverse",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn paint_edits_inverse(base: &S, edits: &E) -> Vec<M> {",
+        "    let mut copy = base.clone();",
+        "    Vec::new()",
+        "}",
+        "fn selection_negative(base: &S) -> Vec<M> {",
+        "    vec![M::Restore { rows: base.rows.clone() }]",
+        "}",
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    let rows = state_after(base, payload);",
+        "    Ok(paint_edits_inverse(base, &payload.edits))",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R12"
+        },
+        {
+          "line": 6,
+          "rule": "R14"
+        },
+        {
+          "line": 9,
+          "rule": "R10"
+        },
+        {
+          "line": 9,
+          "rule": "R11"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "compliant-diff-type-inverse",
+      "description": "A diff type's inverse reads its own rows and base row by row; a helper taking the capability is the central step; a plugin engine method named like an inverse is not a diff builder.",
+      "segments": [
+        "✏️s",
+        "🔌️plugins",
+        "compliant-diff-type-inverse",
+        "🗿️artifacts",
+        "a",
+        "🧬️schema",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl MutationDiff<S> for D {",
+        "    fn apply(&self, base: &S, capability: ApplyCapability) -> R { write_into(self, base, capability) }",
+        "}",
+        "impl DiffAlgebra<S> for D {",
+        "    fn inverse(&self, base: &S) -> Self { D::rows(self.modified.iter().map(|p| p.inverse_from_row(base.row(p.id))).collect()) }",
+        "}",
+        "fn write_into(d: &D, item: &S, capability: ApplyCapability) -> R { d.inner.apply(item, capability) }",
+        "fn inverse_dict_diff(diff: &Dict, entries: &Entries) -> Dict { Dict::from(diff, entries) }"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-engine-internals",
+      "description": "Engine internals under a `-internals` directory may call `.apply(`.",
+      "segments": [
+        "compliant-engine-internals",
+        "🧬️schema",
+        "💡️inferences",
+        "🌿️cas-internals",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "fn rewrite(rule: &Rule, term: &T) -> T { rule.apply(term) }"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-engine-method",
+      "description": "An inverse-named method outside any artifact root is not scanned.",
+      "segments": [
+        "✏️s",
+        "🔌️plugins",
+        "compliant-engine-method",
+        "⚙️engine",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn set_relation_inverse(&mut self, a: R, b: R) { let mut x = a.clone(); }"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-infrastructure",
+      "description": "Io codecs, prepare state machines and encoders under a mutation may apply diffs and take `&mut` state: only their own mutation/diff-impl fns are judged.",
+      "segments": [
+        "compliant-infrastructure",
+        "🧬️mutations",
+        "a",
+        "🚪️io",
+        "💾️binary",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn write_record(out: &mut Vec<u8>, snapshot: &mut Snapshot) {",
+        "    let next = diff.apply(base, capability);",
+        "    protocol::apply_diff(&diff, &base);",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
       "id": "compliant-leaf",
-      "description": "Sparse diff, concrete inverse, a diff type forwarding its capability and implementing between, test code and prose that names every forbidden token.",
+      "description": "Sparse diff, concrete inverse, a diff type whose apply forwards its capability and whose inverse reads base, test code and prose that names every forbidden token.",
       "segments": [
         "compliant-leaf",
         "🧬️mutations",
@@ -443,7 +993,7 @@
         "}",
         "impl MutationDiff<S> for D {",
         "    fn apply(&self, base: &S, capability: ApplyCapability) -> R { self.inner.apply(base, capability) }",
-        "    fn inverse(&self, base: &S) -> Self { Self::between(base, base) }",
+        "    fn inverse(&self, base: &S) -> Self { D::from_rows(base.rows.clone()) }",
         "    fn between(base: &S, other: &S) -> Self { D::default() }",
         "}",
         "#[cfg(test)]",

@@ -1,0 +1,36 @@
+{
+  "source": "[\"owned\",7]",
+  "cases": [
+    {
+      "id": "zero-items",
+      "items": 0,
+      "depth": 1,
+      "capacity": "exact",
+      "accepted": false,
+      "kind": "workLimit"
+    },
+    {
+      "id": "zero-depth",
+      "items": 1,
+      "depth": 0,
+      "capacity": "exact",
+      "accepted": false,
+      "kind": "depthLimit"
+    },
+    {
+      "id": "short-capacity",
+      "items": 1,
+      "depth": 1,
+      "capacity": "short",
+      "accepted": false,
+      "kind": "ownershipLimit"
+    },
+    {
+      "id": "exact-birth",
+      "items": 1,
+      "depth": 1,
+      "capacity": "exact",
+      "accepted": true
+    }
+  ]
+}

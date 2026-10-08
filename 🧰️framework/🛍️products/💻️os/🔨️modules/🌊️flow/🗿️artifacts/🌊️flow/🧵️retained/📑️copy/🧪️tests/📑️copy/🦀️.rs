@@ -10,32 +10,16 @@ struct Root { host_snapshot: Option<FlowHostSnapshot>, drops: Arc<AtomicUsize> }
 impl Drop for Root { fn drop(&mut self) { assert!(self.host_snapshot.is_none()); self.drops.fetch_add(1, Ordering::SeqCst); } }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootFactory;
-struct RootRetirement { root: Option<Arc<Root>>, retirement: Retirement }
+impl semio_framework_value::retirement::RetireOwned for Root {
+    fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {self.host_snapshot.take().unwrap().retirement()}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(self.host_snapshot.as_ref().unwrap())}
+    fn controlled_retirement_supported()->bool {true}
+}
 impl SnapshotRetirementFactory<Root> for RootFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<RootRetirement>() }
-
-    fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
-        assert_eq!(Arc::strong_count(&root), 1, "borrowed frames must release before the root");
-        Box::new(RootRetirement { root: Some(root), retirement: Retirement::default() })
-    }
+    fn retirement_birth_bytes(&self,_:&Arc<Root>)->usize {semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<Root>()}
+    fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)> {semio_framework_value::retirement::shared::admit_shared_retirement(root,grant,false)}
 }
-impl ErasedSnapshotRetirement for RootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(SnapshotRetirementStep::Blocked); }
-        if !self.retirement.is_empty() {
-            let demand = self.retirement.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,message))?;
-            return self.retirement.close_page(maximum_items, maximum_bytes.max(demand));
-        }
-        if let Some(root) = self.root.take() {
-            let mut root = Arc::into_inner(root).expect("final selected copy source");
-            self.retirement.push(Owner::HostSnapshot(root.host_snapshot.take().unwrap()));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.retirement.is_empty() }
-    fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(&self.retirement) }
-}
+fn paid<R:Send+Sync+'static,T:Copy>(cursor:&CopyCursor<R,T>,copy:usize)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_release_byte_demand().unwrap(),maximum_depth:cursor.next_depth_demand().unwrap()}}
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
     let fixture = semio_framework_pack_json::parse(include_str!("../../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let host_snapshot: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
@@ -45,11 +29,7 @@ fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
 fn close<R: Send + Sync + 'static, T: Copy>(cursor: &mut CopyCursor<R, T>, grant: usize) {
     cursor.begin_close();
     for _ in 0..200_000 {
-        match cursor.close_step(1, grant).unwrap() {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= grant),
-            SnapshotRetirementStep::Blocked => panic!("positive copy close grant blocked"),
-        }
+        let grant=paid(cursor,grant);let step=cursor.close_step(grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){break;}assert_ne!(step.progress().copied_items,0,"exact selected-copy close grant stalled");
     }
     assert!(cursor.terminal_is_empty());
 }
@@ -111,17 +91,15 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
 fn flow_selected_copy_cancellation_and_invalid_projection_preserve_root_until_close() {
     for polls in [0, 1, 4, 25, 4097] {
         let (root, drops) = source();
-        let weak = Arc::downgrade(&root);
+        let source_address=Arc::as_ptr(&root);
         let mut cursor = FlowHostSnapshotCopy::new(root, 0, |root, _| root.host_snapshot.as_ref(), Arc::new(RootFactory), allocation());
         for _ in 0..polls { cursor.advance(1, 1).unwrap(); }
         cursor.begin_close();
         assert!(!cursor.complete());
         assert!(cursor.take().is_none());
-        assert!(matches!(cursor.close_step(0, 1).unwrap(), SnapshotRetirementStep::Blocked));
-        assert!(matches!(cursor.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked));
-        assert!(weak.upgrade().is_some());
+        let grant=paid(&cursor.cursor,1);assert_eq!(cursor.close_step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
+        assert_eq!(Arc::as_ptr(cursor.cursor.owned.source.as_ref().unwrap()),source_address);
         std::thread::spawn(move || close(&mut cursor.cursor, 1)).join().unwrap();
-        assert!(weak.upgrade().is_none());
         assert_eq!(drops.load(Ordering::SeqCst), 1);
     }
     let (root, drops) = source();
@@ -148,36 +126,23 @@ fn flow_selected_copy_nonterminal_drop_is_guarded_without_destroying_root() {
 }
 
 #[test]
-fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner() {
-    struct Factory { drops: Arc<AtomicUsize> }
-    impl Drop for Factory { fn drop(&mut self) { self.drops.fetch_add(1, Ordering::SeqCst); } }
-    struct Adversary { inner: RootRetirement, overgrant: bool }
+fn flow_selected_copy_rejects_actual_root_overgrant_and_keeps_owner_for_recovery() {
+    struct Adversary {inner:Box<dyn ErasedSnapshotRetirement>,fault:bool}
     impl ErasedSnapshotRetirement for Adversary {
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if self.overgrant { self.overgrant = false; return Ok(SnapshotRetirementStep::Pending { released_items: 2, released_bytes: bytes + 1 }); }
-            self.inner.close_step(items, bytes)
-        }
-        fn terminal_is_empty(&self) -> bool { self.inner.terminal_is_empty() }
-        fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(&self.inner) }
+        fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {if self.fault{self.fault=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:grant.maximum_items+1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()}));}self.inner.close_step(grant)}
+        fn terminal_is_empty(&self)->bool {self.inner.terminal_is_empty()}
+        fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.inner.next_copy_byte_demand()}
+        fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.inner.next_capacity_byte_demand(copy)}
+        fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.inner.next_release_byte_demand()}
+        fn next_depth_demand(&self)->Result<usize,ValueError> {self.inner.next_depth_demand()}
     }
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
+    struct Factory;
     impl SnapshotRetirementFactory<Root> for Factory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<Adversary>() }
-
-        fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
-            Box::new(Adversary { inner: RootRetirement { root: Some(root), retirement: Retirement::default() }, overgrant: true })
-        }
+        fn retirement_birth_bytes(&self,root:&Arc<Root>)->usize {RootFactory.retirement_birth_bytes(root)+size_of::<Adversary>()}
+        fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)> {let bytes=self.retirement_birth_bytes(&root);if grant.maximum_capacity_bytes<bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"adversarial root frame requires admission"),root));}let (inner,mut progress)=RootFactory.retire(root,grant)?;progress.retained_capacity_bytes+=size_of::<Adversary>();Ok((Box::new(Adversary {inner,fault:true}),progress))}
     }
-    let (root, root_drops) = source();
-    let factory_drops = Arc::new(AtomicUsize::new(0));
-    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(Factory { drops: factory_drops.clone() }), allocation());
-    cursor.begin_close();
-    assert!(matches!(cursor.close_step(1, 1).unwrap(), SnapshotRetirementStep::Pending { .. }));
-    assert!(cursor.close_step(1, 1).unwrap_err().message.contains("exceeded its grant"));
-    assert_eq!(root_drops.load(Ordering::SeqCst), 0);
-    assert_eq!(factory_drops.load(Ordering::SeqCst), 0);
-    close(&mut cursor.cursor, 1);
-    assert_eq!(root_drops.load(Ordering::SeqCst), 1);
-    assert_eq!(factory_drops.load(Ordering::SeqCst), 1);
+    let (root,drops)=source();let mut cursor=FlowWidgetCopy::new(root,0,|root,index|root.host_snapshot.as_ref()?.widgets.get(index),Arc::new(Factory),allocation());cursor.begin_close();let grant=paid(&cursor.cursor,1);cursor.close_step(grant).unwrap();let grant=paid(&cursor.cursor,1);assert_eq!(cursor.close_step(grant).unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert!(!cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),0);close(&mut cursor.cursor,1);assert_eq!(drops.load(Ordering::SeqCst),1);
 }
 
 #[test]
@@ -225,77 +190,19 @@ fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_pay
     let mut retirement = Retirement::default();
     Box::new(task).retire(&mut retirement);
     retirement.retire_cold();
-    let mut root_retirement = RootFactory.retire(root);
-    while !matches!(root_retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Complete) {}
+    let grant=RetainedCloneGrant::one_capacity_turn(RootFactory.retirement_birth_bytes(&root),1);let (mut root_retirement,_)=RootFactory.retire(root,grant).unwrap_or_else(|(error,_)|panic!("test root retirement admission refused: {error}"));
+    while !root_retirement.terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:root_retirement.next_capacity_byte_demand(4096).unwrap(),maximum_release_bytes:root_retirement.next_release_byte_demand().unwrap(),maximum_depth:root_retirement.next_depth_demand().unwrap()};root_retirement.close_step(grant).unwrap();}
 }
 #[test]
-fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_never_progresses() {
-    struct Chunky { inner: RootRetirement, owed: usize }
-    impl ErasedSnapshotRetirement for Chunky {
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if self.owed == 0 { return self.inner.close_step(items, bytes); }
-            if bytes < self.owed { return Ok(SnapshotRetirementStep::Blocked); }
-            let released_bytes = std::mem::take(&mut self.owed);
-            Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
-        }
-        fn terminal_is_empty(&self) -> bool { self.owed == 0 && self.inner.terminal_is_empty() }
-        fn next_close_byte_demand(&self) -> usize {
-            if self.owed == 0 { ErasedSnapshotRetirement::next_close_byte_demand(&self.inner) } else { self.owed }
-        }
-    }
-    struct ChunkyFactory;
-    impl SnapshotRetirementFactory<Root> for ChunkyFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<Chunky>() }
-
-        fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
-            Box::new(Chunky { inner: RootRetirement { root: Some(root), retirement: Retirement::default() }, owed: 4096 })
-        }
-    }
-    let (root, drops) = source();
-    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(ChunkyFactory), allocation());
-    cursor.begin_close();
-    let mut charged = 0usize;
+fn flow_selected_copy_close_refuses_subexact_capacity_and_release_without_false_progress() {
+    let (root,drops)=source();let mut cursor=FlowWidgetCopy::new(root,0,|root,index|root.host_snapshot.as_ref()?.widgets.get(index),Arc::new(RootFactory),allocation());cursor.begin_close();let mut saw_capacity=false;let mut saw_release=false;let mut total=RetainedCloneProgress::default();
     for _ in 0..200_000 {
-        match cursor.close_step(1, 1).unwrap() {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= 1, "the caller's one-byte payload page is never over-charged");
-                charged += released_bytes;
-            }
-            SnapshotRetirementStep::Blocked => panic!("a published close demand must never block"),
-        }
+        if cursor.terminal_is_empty(){break;}
+        let grant=paid(&cursor.cursor,1);
+        if grant.maximum_capacity_bytes>0 {saw_capacity=true;assert_eq!(cursor.close_step(RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap().progress(),RetainedCloneProgress::default());}
+        if grant.maximum_release_bytes>0 {saw_release=true;assert_eq!(cursor.close_step(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap().progress(),RetainedCloneProgress::default());}
+        let progress=cursor.close_step(grant).unwrap().progress();assert!(progress.fits(grant));assert_ne!(progress.copied_items,0);total=total.checked_add(progress).unwrap();
     }
-    assert!(cursor.terminal_is_empty());
-    assert_eq!(cursor.allocation().returned_bytes(), 4095, "the 4096-byte demand is paid from the copy's OWN admission, all but the caller's one byte");
-    assert!(charged >= 1);
-    assert_eq!(drops.load(Ordering::SeqCst), 1);
-
-    struct Stalled;
-    impl ErasedSnapshotRetirement for Stalled {
-        fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> { Ok(SnapshotRetirementStep::Blocked) }
-        fn terminal_is_empty(&self) -> bool { false }
-    }
-    struct StalledFactory;
-    impl SnapshotRetirementFactory<Root> for StalledFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<Stalled>() }
-
-        fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
-            std::mem::forget(root);
-            Box::new(Stalled)
-        }
-    }
-    let (root, stalled_drops) = source();
-    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(StalledFactory), allocation());
-    cursor.begin_close();
-    let mut refusal = None;
-    for _ in 0..FLOW_COPY_CLOSE_STALL_BOUND + 8 {
-        if let Err(error) = cursor.close_step(1, 1) {
-            refusal = Some(error);
-            break;
-        }
-    }
-    let refusal=refusal.expect("a retirement that never progresses must be refused");assert_eq!(refusal.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert!(refusal.message.contains("made no progress at its published close demand"));
-    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor))).is_err());
-    assert_eq!(stalled_drops.load(Ordering::SeqCst), 0);
+    assert!(cursor.terminal_is_empty()&&saw_capacity&&saw_release);assert_eq!(drops.load(Ordering::SeqCst),1);println!("[DEBUG] Flow selected copy independent close copied={} born={} released={}",total.copied_bytes,total.retained_capacity_bytes,total.released_bytes);
 }
 //#endregion 🧪️CanonicalCopy

@@ -1,0 +1,99 @@
+{
+  "status": "partial-source-not-frozen; no type/runtime credit",
+  "capturedAt": "2026-10-08T22:29:05.710186+00:00",
+  "authoredEndpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+      "observedCurrentSha256": "2639aaea9d09d240cd5867f0d78c32eda4ffbd5aca55c31de4d36c9c59496afa",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "observedCurrentSha256": "c25961562278866ef67b9a0c8a4279882bd7b42e322fb04f477d25214d6a7a23",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "observedCurrentSha256": "c575868b624217a29624621647e05b92129848ecea42737275e209c0e3b7ae33",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs",
+      "observedCurrentSha256": "7e319e2d8f8177b7473ace63cca5ea27ba01bb63997de7f276dfa66242b28a38",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs",
+      "observedCurrentSha256": "0e26e2b77a65f55e3d48b7a5bbf55a98406a3e6317f10a03fd10aba6ea985450",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🦀️.rs",
+      "observedCurrentSha256": "4d6ed4056b21dd7f6a30200844325f332f6e019d1d497f349a3185e6208bf572",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📚️members/🦀️.rs",
+      "observedCurrentSha256": "0abcc59a0bc3bd5e2024884e769a7fbe1784be54671d51b1e48ed375dcade0e1",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+      "observedCurrentSha256": "20aab27e59acaf546a5f92b13413bd0f3b0c4875ea057c08a8d068da374ac88e",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🦀️.rs",
+      "observedCurrentSha256": "d8371919a6b326c4becb14e9e1c8f342d94bca26934b03e96812a2677e54d492",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "observedCurrentSha256": "a1768b02deff7cc2c1578a63594b41e20b88564f24154c344343d3cefcf97d2c",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs",
+      "observedCurrentSha256": "4b399563538e31b89bc2ed7169ee6f594711b3563b170eca5e937bdd589d7c57",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🦀️.rs",
+      "observedCurrentSha256": "55c5032c647e8e27f5e4f3e557952529b87bc1aed62c2fcec1d9a400c265ab53",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/🧪️tests/🦀️.rs",
+      "observedCurrentSha256": "8476f2f30e1279c66c172f9b022d9b72f6eecb408ea2b10a7d4ab39ca3f6df29",
+      "role": "authored-source",
+      "attribution": "Only exact owned demand/close/law sections; whole-file SHA is current observation, not peer-section authorship."
+    }
+  ],
+  "count": 13,
+  "evidence": [
+    "📥️oct8-mounted-close-production-query-preimages.json",
+    "📥️oct8-mounted-full-currency-receipt-current-preimages.json",
+    "📥️oct8-mounted-query-depth-exact-frontier-preimages.json",
+    "📥️oct8-mounted-registry-full-grant-current-block-preimages.json",
+    "📥️oct8-mounted-full-grant-native-original-law-preimage.json",
+    "📥️oct8-mounted-current-context-refusal-preimage.json",
+    "📥️oct8-mounted-job-result-current-preimage.json",
+    "📥️oct8-mounted-current-context-native-law-preimage.json",
+    "📥️oct8-paged-list-actual-depth-native-law-preimage.json",
+    "📥️oct8-mounted-command-original-close-current-preimages.json",
+    "📥️oct8-mounted-current-codec-grammar-law-preimage.json",
+    "📥️oct8-mounted-frame-admission-depth-current-block-preimage.json"
+  ]
+}

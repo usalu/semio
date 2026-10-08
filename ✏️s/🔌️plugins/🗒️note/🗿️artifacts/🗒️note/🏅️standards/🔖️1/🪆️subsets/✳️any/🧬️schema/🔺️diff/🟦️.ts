@@ -37,9 +37,9 @@ export interface NoteDiff {
 }
 export type NoteTableEdit =
   | { edit: "insertRow"; index: number; cells: NoteTableCell[] }
-  | { edit: "removeRow"; index: number }
+  | { edit: "removeRow"; index: number; cells: NoteTableCell[] }
   | { edit: "insertColumn"; index: number; name: string; cells: NoteTableCell[] }
-  | { edit: "removeColumn"; index: number };
+  | { edit: "removeColumn"; index: number; name: string; cells: NoteTableCell[] };
 export interface NoteBlockPatch {
   name?: string | null; x?: Binary64 | null; y?: Binary64 | null; width?: Binary64 | null; height?: Binary64 | null; rotation?: Binary64 | null; visible?: boolean | null; locked?: boolean | null;
   content?: NoteTextChild | null; fontSize?: Binary64 | null; fontWeight?: string | null; align?: string | null; imageKey?: string | null;
@@ -47,8 +47,8 @@ export interface NoteBlockPatch {
 }
 export type NoteBlockRow =
   | { row: "add"; parentId: string | null; index: number; block: NoteBlockNode }
-  | { row: "remove"; id: string }
-  | { row: "move"; id: string; parentId: string | null; index: number }
+  | { row: "remove"; id: string; parentId: string | null; index: number }
+  | { row: "move"; id: string; fromParentId: string | null; fromIndex: number; parentId: string | null; index: number }
   | { row: "patch"; id: string; patch: NoteBlockPatch };
 export interface NoteBlocksDelta { rows: NoteBlockRow[] }
 export type NoteAssetRow = { row: "insert"; key: string; asset: NoteImageAsset } | { row: "replace"; key: string; asset: NoteImageAsset } | { row: "remove"; key: string };
@@ -81,7 +81,7 @@ export function parseNoteBlockPatch(value: unknown, at = "$"): NoteBlockPatch {
 
 /** 🧱️ Parses one ordered block-tree row. */
 export function parseNoteBlockRow(value: unknown, at = "$"): NoteBlockRow {
-  return parseNoteRecord(value, { row: kind(["add", "remove", "move", "patch"] as const), parentId: noteNullable(noteString), index, block: parseNoteBlockNode, id: noteString, patch: parseNoteBlockPatch }, ["row"], at) as unknown as NoteBlockRow;
+  return parseNoteRecord(value, { row: kind(["add", "remove", "move", "patch"] as const), parentId: noteNullable(noteString), index, fromParentId: noteNullable(noteString), fromIndex: index, block: parseNoteBlockNode, id: noteString, patch: parseNoteBlockPatch }, ["row"], at) as unknown as NoteBlockRow;
 }
 
 /** 🗂️ Parses the ordered block-tree delta. */

@@ -7,17 +7,7 @@ use protocol::{DiffBinary,DiffCodec,DiffText};
 /// `OpcTargetMode::External`), and both `opc`/`xmlParts` top-level tokens together and alone.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    let empty = XlsxSnapshot::default();
-
-    let cases = vec![
-        XlsxDiff::default(),
-        <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b),
-        <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a),
-        <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &empty),
-        <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&empty, &a),
-    ];
+    let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -39,7 +29,8 @@ use semio_framework_value::ToValue;
     before.opc.comment = fixture["before"].as_str().unwrap().into();
     let mut after = before.clone();
     after.opc.comment = fixture["after"].as_str().unwrap().into();
-    let diff = XlsxDiff::between(&before, &after);
+    let comment = |text: &serde_json::Value| XlsxDiff { opc: Some(OpcDiff { comment: Some(text.as_str().unwrap().into()), ..Default::default() }), xml_parts: None };
+    let diff = comment(&fixture["after"]);
     assert!(!diff.is_empty(), "a comment-only edit is a persisted change");
     for replay in [XlsxDiff::parse_diff(&diff.print_diff()).unwrap(), XlsxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
         assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after);
@@ -48,7 +39,7 @@ use semio_framework_value::ToValue;
     let mut cleared = after.clone();
     cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
     let mut combined = diff;
-    combined.absorb(XlsxDiff::between(&after, &cleared));
+    combined.absorb(comment(&fixture["cleared"]));
     assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared, "an empty comment remains an explicit edit");
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);

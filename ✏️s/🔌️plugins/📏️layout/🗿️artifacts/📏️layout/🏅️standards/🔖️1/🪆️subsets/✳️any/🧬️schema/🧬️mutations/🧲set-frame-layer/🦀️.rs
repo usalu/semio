@@ -1,8 +1,8 @@
 //! 🧲 `set-frame-layer` — moves one page frame onto another layer of the same page.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
-use crate::{LayoutDiff, LayoutSnapshot, PageFrameLayer, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
+use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -41,7 +41,7 @@ pub fn diff_set_frame_layer(payload: &SetFrameLayer, base: &LayoutSnapshot) -> p
     if frame.layer_id() == payload.layer_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "The frame is already on that layer.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { frame_layer: Some(PageFrameLayer { frame_id: payload.frame_id.clone(), layer_id: payload.layer_id.clone() }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { layer_id: Some(payload.layer_id.clone()), ..Default::default() }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_set_frame_layer(payload: &SetFrameLayer, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

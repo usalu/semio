@@ -7,7 +7,7 @@ import { runRepositoryCommand } from "../../🏃️process/🎛️owned-executio
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
 import { publishCargoWorkspaceMemberships, cargoRepositoryPackages } from "./🟦️.ts";
-import {PreparationScript} from "./🛠️preparation/📜️script.ts";
+import {PreparationScript,SynchronizeScript} from "./🛠️preparation/📜️script.ts";
 
 /** 📣️ Checks or publishes current native owner membership through its authored regular-manifest recipe. */
 class MembersScript extends Script {
@@ -65,4 +65,4 @@ class CapabilityContractScript extends Script {
     console.log(`cargo capability contract: ${runCargoCapabilityContributionChecks() + runCargoCapabilityPhysicalChecks()} laws`);
   }
 }
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("prepare",PreparationScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2));
+if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("prepare",PreparationScript).register("synchronize",SynchronizeScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2));

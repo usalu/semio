@@ -2,10 +2,10 @@
 //!
 //! 🔁️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: replaces the pre-ticket
 //! virtual-file-system scene with a real overview TABLE of every space (hub-directory UNIONED with the
-//! local-only catalog, `crate::home_space_rows` at plugin root — shared with the read-only viewer,
+//! local-only catalog, `semio_s_space_core::home_space_rows` at plugin root — shared with the read-only viewer,
 //! which can never import through `::editor::`). Uses the repo's `TableWindowKit` (the same primitive
 //! the sibling `s.space` index editor/viewer render with, lane 1-E) for cross-surface consistency.
-//! Column/origin/empty-message strings resolve through the plugin-root `crate::HomeTableLabels` (shared
+//! Column/origin/empty-message strings resolve through the plugin-root `semio_s_space_core::HomeTableLabels` (shared
 //! with the viewer, contract: en+de for every visible string); the row-scoped action WORDS
 //! (open/rename/share/delete) resolve through this editor's own `SHomeLabels`, since the viewer never
 //! renders an actions column with real affordances.
@@ -23,7 +23,7 @@ use crate::editor::home::config::HomeConfig;
 use crate::editor::home::transient::HomeDirectoryProjection;
 use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
-use crate::HomeTableLabels;
+use semio_s_space_core::HomeTableLabels;
 use semio_framework_plugin::app::{row_action, row_target, table_window_row, TableWindowKit, TreeWindows, WindowKit};
 use semio_framework_plugin::ActionFactory;
 use semio_framework_plugin::IconName;
@@ -93,7 +93,7 @@ fn home_row_action(icon: IconName, label: semio_framework_ui_locale::LabelText, 
 /// replaces. The pane it opens still renders solely from the server's own capability flags.
 /// Every local-origin row offers `deleteVirtualFileSystemNode` ("Remove from Home"): one Home config
 /// tombstone event that keeps the studio's document and is undone by its exact inverse.
-fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::RowAction>> {
+fn row_actions(labels: &SHomeLabels, row: &semio_s_space_core::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::RowAction>> {
     let mut actions = vec![home_row_action(IconName::FolderOpen, labels.action_open, "openSpace")?];
     if row.data_class == "ephemeralLocalOnly" {
         actions.push(home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace")?);
@@ -103,7 +103,7 @@ fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framewo
         actions.push(home_row_action(IconName::EyeOff, labels.action_remove, "deleteVirtualFileSystemNode")?);
         return Ok(actions);
     }
-    if row.origin == "hub" && row.role == Some(crate::DirectorySpaceRole::Author) {
+    if row.origin == "hub" && row.role == Some(semio_s_space_core::DirectorySpaceRole::Author) {
         actions.push(home_row_action(IconName::Pencil, labels.action_rename, "renameSpace")?);
         actions.push(home_row_action(IconName::Link, labels.action_share, "shareSpace")?);
         actions.push(home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace")?);
@@ -113,12 +113,12 @@ fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framewo
 }
 
 /// 🧪️ The pure per-row-list core, split out from `render` so the empty-state branch is unit-testable
-/// in ISOLATION from `crate::list_all_space_catalog_entries()`'s process-global catalog singleton.
+/// in ISOLATION from `semio_s_space_core::list_all_space_catalog_entries()`'s process-global catalog singleton.
 /// Every space is one `TableRow` record (cells and row actions are props) inside the windowed table
 /// kit, so any number of spaces stays inside the window's node budget: the host streams the rows its
 /// viewport shows (ticket 26/09/18 U5 §6b — 9 author rows used to fault the whole window at
 /// `nodes 129 > 128`). A row's own activation (Enter on the focused row) opens the space.
-fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
         return semio_framework_ui_contract::text(fixed_label(table.empty_message, "ui.table.empty-label")?)
             .try_id(S_HOME_EMPTY)
@@ -201,7 +201,7 @@ fn toolbar(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<se
 /// That is exactly what `s-home-main` did for every signed-out visitor: the empty-catalog message was
 /// `try_build()`-ed `#0` and the first spacer was positioned `#0` (ticket 26/09/18, S3 — measured live
 /// and pinned by `the_signed_out_window_body_survives_the_component_tree_producer`).
-fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_rows_wrapped(rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table_node = render_rows(rows, table, actions, windows)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
     for child in [window_content_dead_line_spacer(S_HOME_DEAD_LINE[0])?, window_content_dead_line_spacer(S_HOME_DEAD_LINE[1])?, toolbar(actions)?, table_node] {
@@ -230,10 +230,10 @@ pub fn render(cfg: &HomeConfig, directory: &HomeDirectoryProjection, view_state:
     // Nothing here is faked: no row is invented, and the moment an identity arrives the host
     // re-establishes and the real rows replace this.
     //
-    // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
+    // 🌉️ `semio_s_space_core::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
-    let rows = match crate::home_session_identity(view_state) {
-        Some(identity) => ::semio_framework_async::poll::resolve_ready(crate::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
+    let rows = match semio_s_space_core::home_session_identity(view_state) {
+        Some(identity) => ::semio_framework_async::poll::resolve_ready(semio_s_space_core::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
         None => Vec::new(),
     };
     render_rows_wrapped(&rows, table, actions, &TreeWindows::for_body(view_state, S_HOME_BODY))

@@ -1,3 +1,4 @@
+import {drawingImageDataUri} from "../../../../../../../../🖼️image/🟦️.ts";
 /** 🧪️ SVG export must bypass the reduced semio-drawing style contract. */
 import { expect, test } from "bun:test";
 
@@ -13,7 +14,7 @@ import { drawingSceneToSvg, type DrawingSvgNode } from "../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️.json";
 
 test("SVG fixture preserves gradients, affine matrices, text, image opacity and disabled paint", () => {
-  const output = drawingSceneToSvg(fixture.nodes as DrawingSvgNode[], fixture.viewBox as [number,number,number,number]);
+  const output = drawingSceneToSvg(fixture.nodes as DrawingSvgNode[], fixture.viewBox as [number,number,number,number],fixture.assets);
   const doc = new DOMParser().parseFromString(output, "image/svg+xml");
   const root = doc.documentElement!;
   expect(root.namespaceURI).toBe("http://www.w3.org/2000/svg");
@@ -43,18 +44,18 @@ test("SVG fixture preserves gradients, affine matrices, text, image opacity and 
   expect(lines.map(line => line.textContent)).toEqual(["A<&>", "Ü 🌍"]);
   expect(lines.map(line => line.getAttribute("y"))).toEqual(["20", "44"]);
   const image = doc.getElementsByTagName("image")[0]!;
-  expect(image.getAttribute("href")).toBe(fixture.nodes[2]!.image!.src);
-  expect(image.getAttributeNS("http://www.w3.org/1999/xlink", "href")).toBe(fixture.nodes[2]!.image!.src);
+  expect(image.getAttribute("href")).toBe(drawingImageDataUri(fixture.assets["admitted-svg-image"]));
+  expect(image.getAttributeNS("http://www.w3.org/1999/xlink", "href")).toBe(drawingImageDataUri(fixture.assets["admitted-svg-image"]));
   expect(groups[2]!.getAttribute("opacity")).toBe("0.5");
   expect(doc.getElementsByTagName("path")[1]!.getAttribute("fill")).toBe("none");
   expect(doc.getElementsByTagName("path")[1]!.getAttribute("stroke")).toBe("none");
 });
 
 test("SVG rejects invalid dimensions and affine coefficients", () => {
-  expect(() => drawingSceneToSvg([], [0,0,0,10])).toThrow();
-  expect(() => drawingSceneToSvg([], [NaN,0,10,10])).toThrow();
+  expect(() => drawingSceneToSvg([], [0,0,0,10],{})).toThrow();
+  expect(() => drawingSceneToSvg([], [NaN,0,10,10],{})).toThrow();
   const nodes = fixture.nodes as DrawingSvgNode[];
-  expect(() => drawingSceneToSvg([{...nodes[0]!, transform:[1,0,0,1,Infinity,0]}],[0,0,10,10])).toThrow();
+  expect(() => drawingSceneToSvg([{...nodes[0]!, transform:[1,0,0,1,Infinity,0]}],[0,0,10,10],{})).toThrow();
 });
 
 
@@ -70,7 +71,7 @@ test("SVG refuses nonfinite geometry and paint instead of downloading corrupt ar
       : sample.field === "text" ? {...node,text:{...node.text!,size:value}}
       : {...node,image:{...node.image!,width:value}};
     nodes[sample.node] = replacement;
-    expect(() => drawingSceneToSvg(nodes, fixture.viewBox as [number,number,number,number])).toThrow("finite");
+    expect(() => drawingSceneToSvg(nodes, fixture.viewBox as [number,number,number,number],{})).toThrow("finite");
   }
 });
 
@@ -86,7 +87,7 @@ for(const row of compositeCases) test(`isolated group paint agrees with SVG rast
   for(const node of row.nodes) expect(validate(node.groups)).toBe(true);
   const reference=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="16">${row.svg}</svg>`;
   const expected=await sharp(Buffer.from(reference)).ensureAlpha().raw().toBuffer();
-  const exported=drawingSceneToSvg(row.nodes as DrawingSvgNode[],[0,0,24,16]);
+  const exported=drawingSceneToSvg(row.nodes as DrawingSvgNode[],[0,0,24,16],{});
   const actual=await sharp(Buffer.from(exported)).ensureAlpha().raw().toBuffer();
   expect(actual.length).toBe(expected.length);
   for(let i=0;i<actual.length;i++) expect(Math.abs(actual[i]!-expected[i]!)).toBeLessThanOrEqual(2);
@@ -103,7 +104,7 @@ for(const row of compositeCases) test(`isolated group paint agrees with SVG rast
 test("scene compositing rejects noncontiguous and conflicting groups before canvas paint",()=>{
   const first=compositeCases[0]!.nodes[0]!,second=compositeCases[0]!.nodes[1]!;
   for(const nodes of [[first,{...first,id:"outside",groups:[]},second],[first,{...second,groups:[{...second.groups[0]!,opacity:.2}]}],[{...first,groups:[{...first.groups[0]!,blendMode:"constructor"}]}]]) {
-    expect(()=>drawingSceneToSvg(nodes as DrawingSvgNode[],[0,0,24,16])).toThrow();
+    expect(()=>drawingSceneToSvg(nodes as DrawingSvgNode[],[0,0,24,16],{})).toThrow();
     let painted=0;
     expect(()=>paintCompositedLayers({} as CanvasRenderingContext2D,nodes,()=>painted++,()=>({} as CanvasRenderingContext2D))).toThrow();
     expect(painted).toBe(0);
@@ -134,11 +135,11 @@ test("SVG emits constant gradients as solid paint and rejects invalid authored p
   for(const entry of paintCases) {
     const fill=entry.fill as NonNullable<DrawingSvgNode["fill"]>;
     const node:DrawingSvgNode={id:entry.name,transform:[1,0,0,1,0,0],segments:[{kind:"move",to:[0,0]},{kind:"line",to:[16,0]},{kind:"line",to:[16,16]},{kind:"line",to:[0,16]},{kind:"close"}],fill,opacity:1,blendMode:"normal",visible:true};
-    if(entry.error) {expect(()=>drawingSceneToSvg([node],[0,0,16,16]),entry.name).toThrow();continue;}
+    if(entry.error) {expect(()=>drawingSceneToSvg([node],[0,0,16,16],{}),entry.name).toThrow();continue;}
     const constant=fill.kind==="solid"||fill.stops.length<=1||(fill.kind==="linearGradient" ? fill.x1===fill.x2&&fill.y1===fill.y2 : fill.r===0);
     if(!constant) continue;
     const color=fill.kind==="solid" ? fill.color : [...fill.stops].sort((a,b)=>a.offset-b.offset).at(-1)?.color??[0,0,0,0];
-    const svg=drawingSceneToSvg([node],[0,0,16,16]);
+    const svg=drawingSceneToSvg([node],[0,0,16,16],{});
     const doc=new DOMParser().parseFromString(svg,"image/svg+xml");
     expect(doc.getElementsByTagName("defs").length,entry.name).toBe(0);
     const pixel=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();
@@ -161,7 +162,7 @@ test("canvas and raster scene paint agree with constant SVG paint",async()=>{
       const constant=fill.kind==="solid"||fill.stops.length<=1||(fill.kind==="linearGradient" ? fill.x1===fill.x2&&fill.y1===fill.y2 : fill.r===0);
       if(!constant) continue;
       const node:DrawingSvgNode={id:entry.name,transform:[1,0,0,1,0,0],segments:[{kind:"move",to:[0,0]},{kind:"line",to:[16,0]},{kind:"line",to:[16,16]},{kind:"line",to:[0,16]},{kind:"close"}],fill,opacity,blendMode:"normal",visible:true};
-      const expected=await sharp(Buffer.from(drawingSceneToSvg([node],[0,0,16,16]))).ensureAlpha().raw().toBuffer();
+      const expected=await sharp(Buffer.from(drawingSceneToSvg([node],[0,0,16,16],{}))).ensureAlpha().raw().toBuffer();
       for(const renderer of ["canvas","raster"] as const) {
         const canvas=createCanvas(16,16),ctx=canvas.getContext("2d");
         if(renderer==="canvas") drawSceneNode(ctx as unknown as CanvasRenderingContext2D,node,new Map());

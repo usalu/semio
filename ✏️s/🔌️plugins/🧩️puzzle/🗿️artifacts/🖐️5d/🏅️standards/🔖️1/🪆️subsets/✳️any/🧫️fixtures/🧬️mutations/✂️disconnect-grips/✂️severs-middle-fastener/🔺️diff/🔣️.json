@@ -1,0 +1,20 @@
+{
+  "artifact": null,
+  "domain": null,
+  "fasteners": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "fast-2",
+        "index": 2
+      }
+    ]
+  },
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
+  "targetVolumes": null
+}

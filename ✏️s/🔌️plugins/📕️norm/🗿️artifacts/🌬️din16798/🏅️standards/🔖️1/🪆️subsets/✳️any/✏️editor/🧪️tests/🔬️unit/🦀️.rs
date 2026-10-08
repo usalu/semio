@@ -81,10 +81,8 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Din16798Command> {
     vec![
-        Din16798Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din16798Snapshot::default() }),
         Din16798Command::Evaluate(evaluate::Evaluate {}),
         Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
-        Din16798Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
     ]
 }
 
@@ -96,14 +94,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
+    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example"];
+    let keywords = ["evaluate", "selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -166,9 +164,8 @@ async fn every_declared_body_key_renders() {
 
 //#region ðï¸Behavior
 #[semio_framework_async_macros::async_test]
-async fn set_snapshot_commits_a_host_backed_report() {
+async fn evaluate_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din16798Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din16798Snapshot::default() })).await;
     context::settle(&mut app).await;
     let mut host = NormHost::<DinEn16798Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
@@ -209,12 +206,16 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din16798Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din16798Snapshot::default() })).await;
+    let base = app.snapshot().expect("projection");
+    context::dispatch(&mut app, Din16798Command::SetField(set_field::SetField { path: "annex".into(), value_json: "\"En\"".into() })).await;
+    let edited = app.snapshot().expect("projection");
+    assert_ne!(edited, base, "the concrete setter moved the document");
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
     context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), base);
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), Din16798Snapshot::default());
+    assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);
 }
 

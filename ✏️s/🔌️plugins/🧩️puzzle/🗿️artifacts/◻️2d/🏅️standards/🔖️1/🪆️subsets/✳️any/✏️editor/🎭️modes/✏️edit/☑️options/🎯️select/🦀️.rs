@@ -7,7 +7,7 @@ use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_action, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::WindowMeasure;
-use serde_json::json;
+use semio_framework_pack_json::json;
 
 pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> WindowMeasure {
     let kinds = runtime.selectable_kinds;

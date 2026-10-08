@@ -21,19 +21,19 @@ type PatchEntryCase = {
   readonly dimension: string;
   readonly module: DiffModule;
   readonly schemaUrl: URL;
-  readonly entries: readonly { readonly entry: string; readonly def: string; readonly replacement: Record<string, unknown> }[];
+  readonly entries: readonly { readonly entry: string; readonly def: string; readonly patch: Record<string, unknown> }[];
 };
 
-const node2d = { id: "node-a", x: 1, y: 2, anchor: "fixed", handles: [{ id: "handle-a", angle: 0.5 }] };
-const edge2d = { id: "edge-a", source: "node-a", target: "node-b", gap: 0, shift: 0, rise: 0, rotation: 0, turn: 0, tilt: 0, x: 3, y: 4 };
-const region2d = { id: "region-a", x: 0, y: 0, width: 10, height: 20, hidden: false, locked: false };
-const object3d = { id: "object-a", origin: [1, 2, 3], vortices: [{ id: "vortex-a", position: [0, 0, 1] }] };
-const attraction3d = { attracting: "object-a", attracted: "object-b", gap: 0.25 };
-const volume3d = { id: "volume-a" };
-const reference3d = { id: "reference-a" };
-const part5d = { id: "part-a", partKind: "beam" };
-const fastener5d = { id: "fastener-a", source: "part-a", target: "part-b" };
-const volume5d = { id: "volume-a", origin: [0, 0, 0], hidden: false, locked: false };
+const node2d = { x: 1, y: 2, anchor: "fixed" };
+const edge2d = { source: "node-a", target: "node-b", gap: 0, x: 3, y: 4 };
+const region2d = { x: 0, y: 0, width: 10, height: 20, hidden: false, locked: false };
+const object3d = { label: "object-a", hidden: false };
+const attraction3d = { attracting: "object-a", attracted: "object-b" };
+const volume3d = { hidden: false, locked: true };
+const reference3d = { source: {url:"memory://reference-a",mediaKind:null} };
+const part5d = { partKind: "beam" };
+const fastener5d = { gap: 0.25 };
+const volume5d = { origin: [0, 0, 0], hidden: false, locked: false };
 
 const cases: readonly PatchEntryCase[] = [
   {
@@ -41,9 +41,9 @@ const cases: readonly PatchEntryCase[] = [
     module: puzzle2dDiff,
     schemaUrl: new URL("../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json", import.meta.url),
     entries: [
-      { entry: "parsePuzzle2dNodePatchEntry", def: "Puzzle2dNodePatchEntry", replacement: node2d },
-      { entry: "parsePuzzle2dEdgePatchEntry", def: "Puzzle2dEdgePatchEntry", replacement: edge2d },
-      { entry: "parsePuzzle2dTargetRegionPatchEntry", def: "Puzzle2dTargetRegionPatchEntry", replacement: region2d },
+      { entry: "parsePuzzle2dNodePatchEntry", def: "Puzzle2dNodePatchEntry", patch: node2d },
+      { entry: "parsePuzzle2dEdgePatchEntry", def: "Puzzle2dEdgePatchEntry", patch: edge2d },
+      { entry: "parsePuzzle2dTargetRegionPatchEntry", def: "Puzzle2dTargetRegionPatchEntry", patch: region2d },
     ],
   },
   {
@@ -51,10 +51,10 @@ const cases: readonly PatchEntryCase[] = [
     module: puzzle3dDiff,
     schemaUrl: new URL("../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json", import.meta.url),
     entries: [
-      { entry: "parsePuzzle3dObjectPatchEntry", def: "Puzzle3dObjectPatchEntry", replacement: object3d },
-      { entry: "parsePuzzle3dAttractionPatchEntry", def: "Puzzle3dAttractionPatchEntry", replacement: attraction3d },
-      { entry: "parsePuzzle3dTargetVolumePatchEntry", def: "Puzzle3dTargetVolumePatchEntry", replacement: volume3d },
-      { entry: "parsePuzzle3dReferencePatchEntry", def: "Puzzle3dReferencePatchEntry", replacement: reference3d },
+      { entry: "parsePuzzle3dObjectPatchEntry", def: "Puzzle3dObjectPatchEntry", patch: object3d },
+      { entry: "parsePuzzle3dAttractionPatchEntry", def: "Puzzle3dAttractionPatchEntry", patch: attraction3d },
+      { entry: "parsePuzzle3dTargetVolumePatchEntry", def: "Puzzle3dTargetVolumePatchEntry", patch: volume3d },
+      { entry: "parsePuzzle3dReferencePatchEntry", def: "Puzzle3dReferencePatchEntry", patch: reference3d },
     ],
   },
   {
@@ -62,9 +62,9 @@ const cases: readonly PatchEntryCase[] = [
     module: puzzle5dDiff,
     schemaUrl: new URL("../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json", import.meta.url),
     entries: [
-      { entry: "parsePuzzle5dPartPatchEntry", def: "Puzzle5dPartPatchEntry", replacement: part5d },
-      { entry: "parsePuzzle5dFastenerPatchEntry", def: "Puzzle5dFastenerPatchEntry", replacement: fastener5d },
-      { entry: "parsePuzzle5dTargetVolumePatchEntry", def: "Puzzle5dTargetVolumePatchEntry", replacement: volume5d },
+      { entry: "parsePuzzle5dPartPatchEntry", def: "Puzzle5dPartPatchEntry", patch: part5d },
+      { entry: "parsePuzzle5dFastenerPatchEntry", def: "Puzzle5dFastenerPatchEntry", patch: fastener5d },
+      { entry: "parsePuzzle5dTargetVolumePatchEntry", def: "Puzzle5dTargetVolumePatchEntry", patch: volume5d },
     ],
   },
 ];
@@ -94,16 +94,16 @@ function oracleOf(schemaUrl: URL, def: string): ValidateFunction {
 
 describe("puzzle diff patch-entry parsers", () => {
   for (const { dimension, module, schemaUrl, entries } of cases) {
-    for (const { entry, def, replacement } of entries) {
-      it(`${dimension}: ${entry} admits a replacement patch its schema admits`, () => {
-        const document = { id: String(replacement["id"] ?? "entry-a"), patch: { replacement } };
+    for (const { entry, def, patch } of entries) {
+      it(`${dimension}: ${entry} admits a typed field patch its schema admits`, () => {
+        const document = { id: "entry-a", patch };
         expect(oracleOf(schemaUrl, def)(document)).toBe(true);
         expect(JSON.parse(JSON.stringify(parserOf(module, entry)(document)))).toEqual(document);
       });
 
       it(`${dimension}: ${entry} refuses what its schema refuses`, () => {
         const oracle = oracleOf(schemaUrl, def);
-        for (const hostile of [{ id: 1, patch: { replacement } }, { id: "entry-a", patch: { replacement: [] } }, { id: "entry-a" }]) {
+        for (const hostile of [{ id: 1, patch }, { id: "entry-a", patch: { replacement: [] } }, { id: "entry-a" }]) {
           expect(oracle(hostile)).toBe(false);
           expect(() => parserOf(module, entry)(hostile)).toThrow();
         }
@@ -116,5 +116,20 @@ describe("puzzle diff patch-entry parsers", () => {
       expect(oracleOf(schemaUrl, first.def)(document)).toBe(true);
       expect(JSON.parse(JSON.stringify(parserOf(module, first.entry)(document)))).toEqual(document);
     });
+  }
+});
+
+/** 🔢️ Shared exact scalar words cross the test's JSON IO boundary and retain native identity. */
+it("puzzle3d: typed sparse field words match the neutral corpus and Ajv transport oracle", () => {
+  const fixture = JSON.parse(readFileSync(new URL("../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures/🔢️native-fields/🔣️.json", import.meta.url), "utf8")) as {cases: {name:string;words:string[]}[]};
+  const schemaUrl=cases.find((row)=>row.dimension==="puzzle3d")!.schemaUrl;
+  for (const row of fixture.cases) {
+    const origin=row.words.map((bits)=>({bits:BigInt(bits)}));
+    const input={id:"object-a",patch:{origin}};
+    const actual=parserOf(puzzle3dDiff,"parsePuzzle3dObjectPatchEntry")(input);
+    const wire=JSON.parse(JSON.stringify(actual,(_,value)=>typeof value==="bigint"?value.toString(16).padStart(16,"0"):value));
+    expect(oracleOf(schemaUrl,"Puzzle3dObjectPatchEntry")(wire)).toBe(true);
+    expect(wire.patch.origin.map((word:{bits:string})=>BigInt("0x"+word.bits).toString())).toEqual(row.words);
+    expect(()=>parserOf(puzzle3dDiff,"parsePuzzle3dObjectPatchEntry")({id:"object-a",patch:{origin:[1,2,3]}})).toThrow();
   }
 });

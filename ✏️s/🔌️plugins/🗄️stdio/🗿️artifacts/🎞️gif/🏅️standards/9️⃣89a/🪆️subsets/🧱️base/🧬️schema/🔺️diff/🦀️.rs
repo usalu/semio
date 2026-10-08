@@ -138,9 +138,8 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
-    let mut removed_sorted = removed.to_vec();
-    removed_sorted.sort_unstable();
+fn rewind_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], rewind_item: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
+    let removed_sorted: Vec<usize> = removed.iter().copied().collect::<std::collections::BTreeSet<usize>>().into_iter().collect();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
     added_index_sorted.sort_unstable();
 
@@ -149,7 +148,7 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index, diff_inverse(d, orig)));
+            inv_modified.push((after_index, rewind_item(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -223,24 +222,6 @@ impl GifFrameDiff {
             && self.transparent_index.is_none()
             && self.user_input.is_none()
             && self.plain_text.is_none()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &GifFrame, other: &GifFrame) -> Self {
-        Self {
-            left: (base.left != other.left).then_some(other.left),
-            top: (base.top != other.top).then_some(other.top),
-            width: (base.width != other.width).then_some(other.width),
-            height: (base.height != other.height).then_some(other.height),
-            interlace: (base.interlace != other.interlace).then_some(other.interlace),
-            lct: (base.lct != other.lct).then_some(other.lct.clone()),
-            indices: (base.indices != other.indices).then_some(other.indices.clone()),
-            delay_cs: (base.delay_cs != other.delay_cs).then_some(other.delay_cs),
-            disposal: (base.disposal != other.disposal).then_some(other.disposal),
-            transparent_index: (base.transparent_index != other.transparent_index).then_some(other.transparent_index),
-            user_input: (base.user_input != other.user_input).then_some(other.user_input),
-            plain_text: (base.plain_text != other.plain_text).then_some(other.plain_text.clone()),
-        }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -379,21 +360,6 @@ impl GifFramesDiff {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[GifFrame], other: &[GifFrame]) -> Self {
-        let min = base.len().min(other.len());
-        let mut modified = Vec::new();
-        for i in 0..min {
-            let d = GifFrameDiff::between(&base[i], &other[i]);
-            if !d.is_empty() {
-                modified.push(GifFrameModified { index: i, diff: d });
-            }
-        }
-        let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<GifFrameAdded> = (min..other.len()).map(|i| GifFrameAdded { index: i, frame: other[i].clone() }).collect();
-        Self { removed, modified, added }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[GifFrame]) -> Vec<GifFrame> {
         let mut next: Vec<Option<GifFrame>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
@@ -429,7 +395,7 @@ impl GifFramesDiff {
             other.modified.into_iter().map(|m| (m.index, m.diff)).collect(),
             other.added.into_iter().map(|a| (a.index, a.frame)).collect(),
             |d, o| d.absorb(o),
-            |d, item| d.apply(item),
+            |d, item| apply_frame_diff_to_added(d, item),
         );
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, diff)| GifFrameModified { index, diff }).collect();
@@ -439,7 +405,7 @@ impl GifFramesDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_frames: &[GifFrame]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.frame.clone())).collect::<Vec<_>>(), base_frames, |d, item| d.inverse(item));
+            rewind_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.frame.clone())).collect::<Vec<_>>(), base_frames, |d, item| d.inverse(item));
         Self { removed, modified: modified.into_iter().map(|(index, diff)| GifFrameModified { index, diff }).collect(), added: added.into_iter().map(|(index, frame)| GifFrameAdded { index, frame }).collect() }
     }
 }
@@ -476,14 +442,6 @@ impl GifCommentsDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[String], other: &[String]) -> Self {
-        let min = base.len().min(other.len());
-        let modified = (0..min).filter(|&i| base[i] != other[i]).map(|i| GifCommentModified { index: i, text: other[i].clone() }).collect();
-        let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<GifCommentAdded> = (min..other.len()).map(|i| GifCommentAdded { index: i, text: other[i].clone() }).collect();
-        Self { removed, modified, added }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[String]) -> Vec<String> {
@@ -529,7 +487,7 @@ impl GifCommentsDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_comments: &[String]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.text.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.text.clone())).collect::<Vec<_>>(), base_comments, |_d, item| item.clone());
+            rewind_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.text.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.text.clone())).collect::<Vec<_>>(), base_comments, |_d, item| item.clone());
         Self { removed, modified: modified.into_iter().map(|(index, text)| GifCommentModified { index, text }).collect(), added: added.into_iter().map(|(index, text)| GifCommentAdded { index, text }).collect() }
     }
 }
@@ -561,14 +519,6 @@ impl GifAppExtensionsDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn between(base: &[GifAppExtension], other: &[GifAppExtension]) -> Self {
-        let min = base.len().min(other.len());
-        let modified = (0..min).filter(|&i| base[i] != other[i]).map(|i| GifAppExtensionModified { index: i, extension: other[i].clone() }).collect();
-        let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<GifAppExtensionAdded> = (min..other.len()).map(|i| GifAppExtensionAdded { index: i, extension: other[i].clone() }).collect();
-        Self { removed, modified, added }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[GifAppExtension]) -> Vec<GifAppExtension> {
@@ -614,7 +564,7 @@ impl GifAppExtensionsDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_exts: &[GifAppExtension]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.extension.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.extension.clone())).collect::<Vec<_>>(), base_exts, |_d, item| {
+            rewind_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.extension.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.extension.clone())).collect::<Vec<_>>(), base_exts, |_d, item| {
                 item.clone()
             });
         Self { removed, modified: modified.into_iter().map(|(index, extension)| GifAppExtensionModified { index, extension }).collect(), added: added.into_iter().map(|(index, extension)| GifAppExtensionAdded { index, extension }).collect() }
@@ -798,68 +748,64 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
         }
     }
 
-    fn between(base: &GifSnapshot, other: &GifSnapshot) -> Self {
-        let frames_diff = GifFramesDiff::between(&base.frames, &other.frames);
-        let comments_diff = GifCommentsDiff::between(&base.comments, &other.comments);
-        let app_extensions_diff = GifAppExtensionsDiff::between(&base.app_extensions, &other.app_extensions);
-        Self {
-            width: (base.width != other.width).then_some(other.width),
-            height: (base.height != other.height).then_some(other.height),
-            gct: (base.gct != other.gct).then_some(other.gct.clone()),
-            background_color_index: (base.background_color_index != other.background_color_index).then_some(other.background_color_index),
-            pixel_aspect_ratio: (base.pixel_aspect_ratio != other.pixel_aspect_ratio).then_some(other.pixel_aspect_ratio),
-            loop_count: (base.loop_count != other.loop_count).then_some(other.loop_count),
-            frames: (!frames_diff.is_empty()).then_some(frames_diff),
-            comments: (!comments_diff.is_empty()).then_some(comments_diff),
-            app_extensions: (!app_extensions_diff.is_empty()).then_some(app_extensions_diff),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
 
-/// 🧪️ P2-FG2: representative `GifDiff` (89a) cases for `diff_grammar_conformance_law`/
-/// `protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s `conformance_laws` module) —
-/// the empty diff, plus a real `between()` result exercising every scalar field, both
-/// tri-states (`gct`, `loop_count`), `GifFrameDiff`'s own THREE nested tri-states
-/// (`lct`/`transparent_index`/`plain_text`), and all three collection triples (`frames`,
-/// `comments`, `app_extensions`) at once (mirrors 87a's own `demo_diff_cases()`).
+/// 🧪️ P2-FG2: representative `GifDiff` (89a) cases for `diff_grammar_conformance_law`/`protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s
+/// `conformance_laws` module), built declaratively: the empty diff, every scalar field with both tri-states (`gct`, `loop_count`),
+/// `GifFrameDiff`'s nested tri-states (`lct`/`transparent_index`/`plain_text`) and all three collection triples (`frames`, `comments`,
+/// `app_extensions`) at once.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
-    let f = |seed: u8, w: u32, h: u32| GifFrame {
+    let palette = |seed: u8| GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] };
+    let frame = |seed: u8| GifFrame {
         left: 0,
         top: 0,
-        width: w,
-        height: h,
+        width: 3,
+        height: 3,
         interlace: false,
-        lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }),
-        indices: vec![0u8; (w * h) as usize],
+        lct: Some(palette(seed)),
+        indices: vec![0u8; 9],
         delay_cs: 10,
         disposal: GifDisposal::DoNotDispose,
         transparent_index: Some(0),
         user_input: false,
         plain_text: None,
     };
-    let a = GifSnapshot {
-        width: 4,
-        height: 4,
-        gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }),
-        loop_count: Some(0),
-        frames: vec![f(1, 2, 2), f(2, 2, 2)],
-        comments: vec!["hello".into()],
-        app_extensions: vec![GifAppExtension { identifier: *b"NETSCAPE", auth_code: *b"2.0", data: vec![1, 0, 0] }],
-        ..GifSnapshot::default()
+    let frames = GifFramesDiff {
+        removed: vec![1],
+        modified: vec![GifFrameModified {
+            index: 0,
+            diff: GifFrameDiff {
+                interlace: Some(true),
+                lct: Some(None),
+                transparent_index: Some(None),
+                plain_text: Some(Some(GifPlainText { left: 0, top: 0, width: 4, height: 1, cell_width: 4, cell_height: 8, fg_color_index: 0, bg_color_index: 1, text: "hi".into() })),
+                ..Default::default()
+            },
+        }],
+        added: vec![GifFrameAdded { index: 1, frame: frame(6) }],
     };
-    let mut fb0 = f(1, 2, 2);
-    fb0.interlace = true;
-    fb0.lct = None;
-    fb0.transparent_index = None;
-    fb0.plain_text = Some(GifPlainText { left: 0, top: 0, width: 4, height: 1, cell_width: 4, cell_height: 8, fg_color_index: 0, bg_color_index: 1, text: "hi".into() });
-    let b = GifSnapshot { width: 8, height: 8, gct: None, background_color_index: 3, pixel_aspect_ratio: 5, loop_count: None, frames: vec![fb0, f(6, 3, 3), f(7, 3, 3)], comments: vec![], app_extensions: vec![], ..GifSnapshot::default() };
-    vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a)]
+    let comments = GifCommentsDiff { removed: vec![0], modified: Vec::new(), added: vec![GifCommentAdded { index: 0, text: "after".into() }] };
+    let app_extensions = GifAppExtensionsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![GifAppExtensionAdded { index: 0, extension: GifAppExtension { identifier: *b"NETSCAPE", auth_code: *b"2.0", data: vec![1, 0, 0] } }] };
+    vec![
+        GifDiff::default(),
+        GifDiff {
+            width: Some(8),
+            height: Some(8),
+            gct: Some(None),
+            background_color_index: Some(3),
+            pixel_aspect_ratio: Some(5),
+            loop_count: Some(None),
+            frames: Some(frames),
+            comments: Some(comments),
+            app_extensions: Some(app_extensions),
+        },
+        GifDiff { gct: Some(Some(palette(1))), loop_count: Some(Some(0)), ..Default::default() },
+    ]
 }
 //#endregion 🔖️Diff
 
@@ -912,3 +858,9 @@ mod tests;
 // 🚫️a️a️a
 #[cfg(test)]
 use protocol::{DiffBinary,DiffText};
+
+/// 🧩️ The carried value of a frame an earlier diff added, once a later diff modified it (absorb).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_frame_diff_to_added(diff: &GifFrameDiff, added: &GifFrame) -> GifFrame {
+    diff.apply(added)
+}

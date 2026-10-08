@@ -1,8 +1,8 @@
 //! 🚚️ Store-owned bounded close handoff for retained-clone cursors.
 
 use semio_framework_value::{
-    ErasedSnapshotRetirement, SnapshotRetirementStep, ValueError, ValueRefusalKind,
-    retained_clone::{RetainedClone, RetainedCloneCursor, admit_retained_clone_retirement},
+    ErasedSnapshotRetirement, ValueError, ValueRefusalKind,
+    retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneStep, admit_retained_clone_close},
 };
 use std::mem::ManuallyDrop;
 
@@ -20,6 +20,9 @@ impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
     fn cursor_mut(&mut self) -> Result<&mut T::Cursor, ValueError> {
         self.cursor.as_mut().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff lost its close owner"))
     }
+    fn cursor(&self) -> Result<&T::Cursor, ValueError> {
+        self.cursor.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff lost its close owner"))
+    }
 
     fn finish(&mut self) -> Result<(), ValueError> {
         let cursor = self.cursor.as_ref().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff completed twice"))?;
@@ -34,12 +37,14 @@ impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
 }
 
 impl<T: RetainedClone> ErasedSnapshotRetirement for RetainedCloneCursorHandoff<T> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal {
-            return Ok(SnapshotRetirementStep::Complete);
+            return Ok(RetainedCloneStep::Complete(Default::default()));
         }
-        let step = admit_retained_clone_retirement(self.cursor_mut()?.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes, "retained clone cursor handoff")?;
-        if step == SnapshotRetirementStep::Complete {
+        let cursor = self.cursor_mut()?;
+        let step = cursor.close_step(grant)?;
+        let step = admit_retained_clone_close(grant, step, cursor.terminal_is_empty(), "retained clone cursor handoff")?;
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             self.finish()?;
         }
         Ok(step)
@@ -48,6 +53,10 @@ impl<T: RetainedClone> ErasedSnapshotRetirement for RetainedCloneCursorHandoff<T
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.cursor.is_none()
     }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.terminal { Ok(0) } else { self.cursor()?.next_close_copy_byte_demand() } }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { if self.terminal { Ok(0) } else { self.cursor()?.next_close_capacity_byte_demand(body) } }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { if self.terminal { Ok(0) } else { self.cursor()?.next_close_release_byte_demand() } }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.terminal { Ok(0) } else { self.cursor()?.next_close_depth_demand() } }
 }
 
 impl<T: RetainedClone> Drop for RetainedCloneCursorHandoff<T> {

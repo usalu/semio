@@ -3,7 +3,6 @@
    `keyword key=value ...` line per EquationMutation variant, exactly what `print_op` writes. *)
 line = change graph directed
      | update graph algorithm
-     | replace graph
      | create node
      | delete node
      | delete nodes
@@ -11,7 +10,6 @@ line = change graph directed
      | move node
      | connect nodes
      | disconnect nodes
-     | replace points
      | insert point
      | remove point
      | move points
@@ -21,7 +19,6 @@ line = change graph directed
      | set point positions ;
 change graph directed = 'change-graph-directed', space, 'new-directed=', boolean ;
 update graph algorithm = 'update-graph-algorithm', space, 'new-algorithm=', quoted, space, 'new-algorithm-seed=', optional quoted ;
-replace graph = 'replace-graph', space, 'graph=', quoted ;
 create node = 'create-node', space, 'id=', quoted, space, 'label=', quoted, space, 'x=', number, space, 'y=', number, [ space, 'index=', count ] ;
 delete node = 'delete-node', space, 'id=', quoted ;
 delete nodes = 'delete-nodes', space, 'ids=', quoted ;
@@ -29,7 +26,6 @@ change node label = 'change-node-label', space, 'id=', quoted, space, 'new-label
 move node = 'move-node', space, 'id=', quoted, space, 'x=', number, space, 'y=', number ;
 connect nodes = 'connect-nodes', space, 'id=', quoted, space, 'source=', quoted, space, 'target=', quoted, [ space, 'index=', count ] ;
 disconnect nodes = 'disconnect-nodes', space, 'id=', quoted ;
-replace points = 'replace-points', space, 'points=', points ;
 insert point = 'insert-point', space, 'index=', count, space, 'x=', number, space, 'y=', number ;
 remove point = 'remove-point', space, 'index=', count ;
 move points = 'move-points', space, 'indices=', quoted, space, 'dx=', number, space, 'dy=', number ;

@@ -7,7 +7,7 @@ pub fn inverse(payload: &SetSite, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(record) = base.sites.get(&payload.id) else {
         return Vec::new();
     };
-    let restore = payload.patch().minimal(record).negate(record);
+    let restore = payload.patch().minimal(record).restoring(record);
     if restore.is_empty() {
         return Vec::new();
     }

@@ -1,4 +1,4 @@
-//! 🧪️ Keyed-diff algebra of Din18599: section-patch merging, row patches, list-setter row diffs, the negative diff and the state delta.
+//! 🧪️ Keyed-diff algebra of Din18599: section-patch merging, row patches, list-setter rows and the negative diff.
 
 use super::Din18599Diff;
 use crate::mutations::change_element_u::ChangeElementU;
@@ -49,11 +49,11 @@ async fn row_patches_on_one_element_coalesce() {
     let sum = law(&base, &set(0.31), |_| set(0.27)).await;
     let rows = sum.elements.expect("elements");
     assert_eq!(rows.modified.len(), 1);
-    assert_eq!(rows.modified[0].u_value_w_m2k, Some(0.27));
+    assert_eq!(rows.modified[0].patch.u_value_w_m2k, Some(0.27));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_zone_list_setter_diffs_rows_by_identity_and_inverts() {
+async fn a_zone_list_setter_names_every_row_and_inverts() {
     let base = Din18599Snapshot::default();
     let mut zones = base.zones.clone();
     zones[0].area_m2 += 5.0;
@@ -63,10 +63,9 @@ async fn a_zone_list_setter_diffs_rows_by_identity_and_inverts() {
     let mutation = Din18599Mutation::ReplaceZones(ReplaceZones { new_zones: zones.clone() });
     let forward = diff_of(&mutation, &base);
     let rows = forward.zones.as_ref().expect("zones");
-    assert_eq!((rows.added.len(), rows.removed.len(), rows.modified.len()), (1, 0, 1));
+    assert_eq!((rows.removed.len(), rows.inserted.len()), (base.zones.len(), zones.len()));
     let after = protocol::apply_diff(&forward, &base).expect("apply");
     assert_eq!(after.zones, zones);
     assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<Din18599Snapshot, Din18599Diff>(&base, &after).await;
 }

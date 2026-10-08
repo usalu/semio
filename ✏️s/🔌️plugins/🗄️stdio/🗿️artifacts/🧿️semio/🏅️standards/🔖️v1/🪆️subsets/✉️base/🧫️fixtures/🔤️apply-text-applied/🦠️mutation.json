@@ -4,7 +4,7 @@
     "mutation": {
       "EditRun": {
         "index": 0,
-        "new_content": "F1 mutated run content"
+        "new_text": "F1 mutated run content"
       }
     }
   }

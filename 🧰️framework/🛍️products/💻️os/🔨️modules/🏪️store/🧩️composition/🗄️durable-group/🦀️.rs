@@ -11,6 +11,8 @@ use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
 use crate::os_store::{ArtifactDsl, ArtifactPack, ArtifactStore, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError, pack_rt};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
+use std::mem::size_of;
+use semio_framework_value::ErasedSnapshotRetirement as _;
 use std::collections::BTreeMap;
 
 pub const DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1: &str = "semio.store.durable-owned-three-member-decision.v1";
@@ -460,7 +462,7 @@ pub trait DurableOwnedGroupJournalSinkV1: Send {
     fn begin_commit(&mut self, decision_pack: Vec<u8>, decision_sha256: String) -> Box<dyn DurableOwnedGroupJournalCommitV1>;
 }
 
-pub(super) struct ArtifactStoreDurableGroupRootV1<P> {
+pub(super) struct ArtifactStoreDurableGroupRootV1<P, Mutation> {
     pub(super) visibility: Arc<crate::os_vcs::ArtifactGroupVisibility>,
     pub(super) current: Option<Arc<P>>,
     pub(super) generation: u64,
@@ -474,11 +476,13 @@ pub(super) struct ArtifactStoreDurableGroupRootV1<P> {
     tail_undo_cache: Option<(String, Arc<P>)>,
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     displaced_reservation: Option<super::ArtifactStoreDisplacedOwnerReservation>,
-    retirement: Option<Box<StagedRootRetirement<P>>>,
+    retirement: Option<Box<StagedRootRetirement<P, Mutation>>>,
     pub(super) adopted: bool,
 }
 
-pub(super) struct StagedRootRetirement<P> {
+pub(super) struct StagedRootRetirement<P, Mutation> {
+    edit: Option<super::ArtifactStoreDecodedEditRetirement<Mutation>>,
+    external_strings: [Option<String>; 2],
     cursor: Option<super::ArtifactStoreCursorRetirement>,
     applied: Option<super::ArtifactStoreStringVectorRetirement>,
     redo: Option<super::ArtifactStoreStringVectorRetirement>,
@@ -489,12 +493,13 @@ pub(super) struct StagedRootRetirement<P> {
     snapshots: [Option<Arc<P>>; 2],
     active: Option<Box<dyn super::ErasedSnapshotRetirement>>,
     factory: Option<Arc<dyn super::SnapshotRetirementFactory<P>>>,
+    factory_close: Option<semio_framework_value::FactoryAuthority>,
     phase: u8,
 }
 
-impl<P> StagedRootRetirement<P> {
+impl<P, Mutation> StagedRootRetirement<P, Mutation> {
     fn new(factory: Arc<dyn super::SnapshotRetirementFactory<P>>) -> Self {
-        Self { cursor: None, applied: None, redo: None, revision: None, report: None, tail_id: None, authority: None, snapshots: [None, None], active: None, factory: Some(factory), phase: 0 }
+        Self { edit: None, external_strings: Default::default(), cursor: None, applied: None, redo: None, revision: None, report: None, tail_id: None, authority: None, snapshots: [None, None], active: None, factory: Some(factory), factory_close: None, phase: 0 }
     }
 
     fn inline_owner(&self) -> Option<&dyn super::ErasedSnapshotRetirement> {
@@ -537,50 +542,77 @@ impl<P> StagedRootRetirement<P> {
     }
 }
 
-impl<P: Send + Sync> super::ErasedSnapshotRetirement for StagedRootRetirement<P> {
-    fn next_close_byte_demand(&self) -> usize {
-        if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_byte_demand(active); }
-        if let Some(owner) = self.inline_owner() { return owner.next_close_byte_demand(); }
+impl<P: Send + Sync, Mutation: Send + 'static> StagedRootRetirement<P, Mutation> {
+    fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+        let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "staged root child depth overflow"))?; Ok(demand) };
+        if let Some(active) = self.active.as_ref() { return nested(super::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
+        if self.edit.is_some() { return super::artifact_retirement_owner_demands(&self.edit, maximum_body_bytes); }
+        if let Some(text) = self.external_strings.iter().flatten().next() { return Ok(RetirementDemand { release_bytes: text.capacity(), depth: 1, ..Default::default() }); }
+        if let Some(owner) = self.inline_owner() { return nested(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
         if (7..9).contains(&self.phase) {
-            if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].as_ref() {
-                return self.factory.as_ref().expect("staged root retains its snapshot factory").retirement_birth_bytes(snapshot);
-            }
+            if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].as_ref() { return Ok(RetirementDemand { capacity_bytes: self.factory.as_ref().expect("staged root retains its snapshot factory").retirement_birth_bytes(snapshot), depth: 2, ..Default::default() }); }
         }
-        0
-    }
-
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<super::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        use super::{ErasedSnapshotRetirement as _, SnapshotRetirementStep};
-        if items == 0 || bytes < self.next_close_byte_demand() { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, items, bytes); }
-        if let Some(owner) = self.inline_owner_mut() {
-            let step = owner.close_step(items, bytes)?;
-            if step != SnapshotRetirementStep::Complete { return Ok(step); }
-            if !owner.terminal_is_empty() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "staged root inline retirement lost its terminal witness")); }
-            self.clear_inline();
-        }
-        if (7..9).contains(&self.phase) {
-            if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].take() {
-                self.active = Some(self.factory.as_ref().expect("staged root retains its snapshot factory").retire(snapshot));
-                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-        }
-        if self.phase < 9 {
-            self.phase += 1;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        self.factory = None;
-        Ok(SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none()
+        if self.phase >= 9 && self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if let Some(factory) = self.factory_close.as_ref() { return nested(factory.demands(maximum_body_bytes)?); }
+        Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 }
 
-impl<P> Drop for StagedRootRetirement<P> {
+impl<P: Send + Sync, Mutation: Send + 'static> super::ErasedSnapshotRetirement for StagedRootRetirement<P, Mutation> {
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.depth) }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand = self.demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "staged root exceeds admitted depth")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.edit.is_some() { return super::artifact_retirement_owner_close(&mut self.edit, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(text) = self.external_strings.iter_mut().find(|text| text.is_some()) { let bytes = text.as_ref().unwrap().capacity(); text.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty })); }
+        if let Some(owner) = self.inline_owner_mut() {
+            if !owner.terminal_is_empty() {
+                let step = owner.close_step(child)?;
+                return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "staged inline owner").map(|step| RetainedCloneStep::Progress(step.progress()));
+            }
+            self.clear_inline();
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+        }
+        if (7..9).contains(&self.phase) {
+            let index = usize::from(self.phase - 7);
+            if let Some(snapshot) = self.snapshots[index].take() {
+                return match self.factory.as_ref().expect("staged root retains its snapshot factory").retire(snapshot, child) {
+                    Ok((owner, progress)) => { self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "staged snapshot constructor")?; Ok(RetainedCloneStep::Progress(progress)) },
+                    Err((error, snapshot)) => { self.snapshots[index] = Some(snapshot); Err(error) },
+                };
+            }
+        }
+        if self.phase < 9 { self.phase += 1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
+        if let Some(factory) = self.factory.take() {
+            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+            self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), ..empty }));
+        }
+        if let Some(factory) = self.factory_close.as_mut() {
+            let step = factory.step(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "staged snapshot factory")?;
+            if factory.terminal_is_empty() { self.factory_close = None; }
+            return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
+        }
+        Ok(RetainedCloneStep::Complete(empty))
+    }
+    fn terminal_is_empty(&self) -> bool { self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none() }
+}
+
+impl<P, Mutation> Drop for StagedRootRetirement<P, Mutation> {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none()), "staged root retirement dropped before all exact outgoing owners were closed");
+        assert!(std::thread::panicking() || (self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none()), "staged root retirement dropped before all exact outgoing owners were closed");
     }
 }
 
@@ -607,12 +639,15 @@ fn stage_store_member<P, Mutation>(
     store: &mut ArtifactStore<P, Mutation>,
     outcome: DurableStoreBoundOutcomeV1<P, Mutation>,
     visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>,
+    grant: super::ArtifactStoreOneItemGrant,
 ) -> Result<(), (DurableOwnedGroupDecisionError, DurableStoreBoundOutcomeV1<P, Mutation>)>
 where
     P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     let reject = |reason, outcome| Err((reason, outcome));
+    if !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome); }
+
     if store.durable_group_root.is_some()
         || !visibility.pending()
         || store.backbone.is_some()
@@ -703,12 +738,11 @@ where
         }
     };
     store.envelope.cursor.as_mut().expect("durable group stage preflight retained its cursor").stage_group_owned(cursor_owners, visibility).expect("durable group cursor stage remains exact after exclusive preflight");
+    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("validated staged snapshot factory"))));
     let post_revision = outcome.post_revision;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
-    let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id: _, tail_edit_id, seal } = prepared;
-    if let Some(actor) = local_actor {
-        store.displaced_retirements.push_reserved(Box::new(super::ArtifactStoreStringRetirement::new(actor)));
-    }
+    let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal } = prepared;
+    retirement.external_strings = [local_actor, Some(applied_edit_id)];
     let ledger_key = store.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
     let mut tail = revision_accumulator.applied.pop().expect("staged revision retains its exact tail");
     tail.ledger_key = Some(ledger_key);
@@ -727,24 +761,26 @@ where
         tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
         authority: Some(seal.authority),
         displaced_reservation: Some(displaced_reservation),
-        retirement: Some(Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("staged group retains its snapshot factory"))))),
+        retirement: Some(retirement),
         adopted: false,
     });
     Ok(())
 }
 
 /// 🧱️ Transfers already copied catalogs and exact reserved owners without traversing history.
-pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut ArtifactStore<P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>) -> Result<(), String>
+pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut ArtifactStore<P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>, grant: super::ArtifactStoreOneItemGrant) -> Result<(), String>
 where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
       Mu: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     if store.durable_group_root.is_some() || store.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
+    if !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mu>>() { return Err("batch staged retirement frame is not funded".into()); }
     store.generation.checked_add(1).ok_or_else(|| "batch group generation is exhausted".to_string())?;
     let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| "batch group final transfer lost its authority".to_string())?);
     let group = publication.group_preparation.as_mut().ok_or_else(|| "batch group final transfer lost its retained preparation".to_string())?;
     let visibility = group.visibility();
     let history = group.history.as_ref().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
     store.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| "batch group history reservation is stale".to_string())?;
+    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().ok_or("batch group lacks original snapshot factory")?)));
     let history = group.history.take().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
     let mut displaced = group.displaced.take().expect("copied group admits its displaced owner catalog");
     let cursor = super::ArtifactCursorOwners { applied_edit_ids: std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty()), redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(), checkpoint_id: group.checkpoint.take() };
@@ -752,11 +788,11 @@ where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 's
     let mut revision = group.revision.take().expect("copied group retains its complete revision and indexes");
     let stage = publication.take_stage().expect("copied group retains its complete typed candidate");
     let super::ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, .. } = *stage;
+    let edit = edit.expect("staged original edit owner");
     store.envelope.cursor.as_mut().expect("exclusive group transfer retains its cursor").stage_group_owned(cursor, &visibility).unwrap_or_else(|_| panic!("exclusive copied group cursor transfer must retain its exact owners"));
     let ledger = store.envelope.vcs.edits.stage_group_reserved(history.history, *edit, &visibility).unwrap_or_else(|_| panic!("exclusive copied group edit transfer must retain its reserved slot"));
     store.displaced_retirements.release_owner_slots(history.rejected_owner).expect("exclusive copied group retains its exact rejected-owner reservation");
-    if let Some(actor) = local_actor { retain_displaced_owner(&mut store.displaced_retirements, &mut displaced, Box::new(super::ArtifactStoreStringRetirement::new(actor))); }
-    retain_displaced_owner(&mut store.displaced_retirements, &mut displaced, Box::new(super::ArtifactStoreStringRetirement::new(applied_edit_id)));
+    retirement.external_strings = [local_actor, Some(applied_edit_id)];
     let mut tail = revision.applied.pop().expect("copied group retains its new revision tail");
     tail.ledger_key = Some(ledger); revision.applied.push(tail);
     let content_revision = revision.revision(store.current_checkpoint_id.as_deref());
@@ -765,7 +801,7 @@ where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 's
         applied_edit_ids: applied, redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(),
         last_projection_cause: Some(super::ArtifactProjectionCause::Apply), edit_sequence: authority.next_sequence_number,
         clock: next_clock, revision_accumulator: Some(revision), tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
-        authority: Some(authority), displaced_reservation: Some(displaced), retirement: Some(Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("staged group retains its snapshot factory"))))), adopted: false,
+        authority: Some(authority), displaced_reservation: Some(displaced), retirement: Some(retirement), adopted: false,
     });
     Ok(())
 }
@@ -786,38 +822,22 @@ where
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
     let mutation_factory = (*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    if root.retirement.is_none() || root.displaced_reservation.is_none() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
     let edit = store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.is_some() {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
+    if store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.is_some() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
     let cursor = store.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.abort_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let mut root = store.durable_group_root.take().expect("validated aborted durable group root remains owned");
-    let mut reservation = root.displaced_reservation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if let Some(retirement) = root.retirement.take() { retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement); }
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreDecodedEditRetirement::new(edit, mutation_factory)));
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(cursor))));
-    if let Some(current) = root.current.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(current));
-    }
-    if !root.applied_edit_ids.is_empty() || root.applied_edit_ids.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
-    }
-    if !root.redo_edit_ids.is_empty() || root.redo_edit_ids.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
-    }
-    if let Some(revision) = root.revision_accumulator.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(revision)));
-    }
-    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(edit_id)));
-        if !Arc::ptr_eq(&snapshot, &store.current) {
-            retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(snapshot));
-        }
-    }
-    if let Some(authority) = root.authority.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, authority.retire());
-    }
+    let mut reservation = root.displaced_reservation.take().expect("validated original abort reservation");
+    let mut retirement = root.retirement.take().expect("validated preborn abort cursor");
+    retirement.edit = Some(super::ArtifactStoreDecodedEditRetirement::new(edit, mutation_factory));
+    retirement.cursor = Some(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(cursor)));
+    retirement.snapshots[0] = root.current.take();
+    retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
+    retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
+    retirement.revision = root.revision_accumulator.take().map(super::ArtifactStoreRevisionAccumulatorRetirement::new);
+    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() { retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id)); if !Arc::ptr_eq(&snapshot, &store.current) { retirement.snapshots[1] = Some(snapshot); } }
+    retirement.authority = root.authority.take().map(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new);
+    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
     store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
     Ok(())
 }
@@ -1922,7 +1942,7 @@ where
         match self.phase {
             DurableOwnedThreeStoreCommitPhaseV1::StagingParent => {
                 let outcome = self.parent.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match stage_store_member(parent_store, outcome, &self.visibility()?) {
+                match stage_store_member(parent_store, outcome, &self.visibility()?, grant) {
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing,
                     Err((error, outcome)) => {
                         self.parent = Some(outcome);
@@ -1935,7 +1955,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing => {
                 let outcome = self.drawing.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match stage_store_member(drawing_store, outcome, &self.visibility()?) {
+                match stage_store_member(drawing_store, outcome, &self.visibility()?, grant) {
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StagingValue,
                     Err((error, outcome)) => {
                         self.drawing = Some(outcome);
@@ -1948,7 +1968,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::StagingValue => {
                 let outcome = self.value.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match stage_store_member(value_store, outcome, &self.visibility()?) {
+                match stage_store_member(value_store, outcome, &self.visibility()?, grant) {
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StartingJournal,
                     Err((error, outcome)) => {
                         self.value = Some(outcome);

@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+    "sha256": "25b25d262403a5f7bff116597392842698c1156a08a40e653f507f286963870d",
+    "role": "observed peer source not authored"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
+    "sha256": "84d72fe21b6b61ed6e49d7b4d4115bf920f67b3cddf8ba357315282f16ab1a01",
+    "role": "observed peer source not authored"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+    "sha256": "0e6116039b94c299286522d9971bf973a5abda8cb02aab281975fceee698e166",
+    "role": "observed peer source not authored"
+  }
+]

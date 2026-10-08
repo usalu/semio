@@ -21,12 +21,14 @@ test("member opening retains six rejection stages and queries indivisible physic
   }
   const source = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
   const retained = source.slice(source.indexOf("impl<P, M> ErasedSnapshotRetirement for MemberStoreOpenRetained"));
-  expect(retained.includes("fn next_close_byte_demand(&self)")).toBe(true);
-  expect(retained.includes("super::artifact_retirement_box_byte_demand")).toBe(true);
-  expect(source.includes("pub fn next_close_byte_demand(&self)")).toBe(true);
+  for (const axis of ["copy_byte", "capacity_byte", "release_byte", "depth"]) expect(retained).toContain(`fn next_${axis}_demand`);
+  expect(source).toContain("super::artifact_retirement_box_demands");
+  expect(source).toContain("pub fn next_release_byte_demand(&self)");
+  expect(retained).not.toContain("next_close_byte_demand");
   const store = await Bun.file(new URL("../../../../🦀️.rs", import.meta.url)).text();
   const decoded = store.slice(store.indexOf("impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement"), store.indexOf("impl<Mutation> Drop for ArtifactStoreDecodedEditRetirement"));
-  expect(decoded.includes("fn next_close_byte_demand(&self)")).toBe(true);
+  for (const axis of ["copy_byte", "capacity_byte", "release_byte", "depth"]) expect(decoded).toContain(`fn next_${axis}_demand`);
+  expect(decoded).not.toContain("next_close_byte_demand");
   expect(decoded.includes("artifact_retirement_box_close_step")).toBe(true);
   console.log("[DEBUG] member opening: six unchanged retention stages use six independently checked physical extents within admission262144");
 });

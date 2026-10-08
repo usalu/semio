@@ -1,28 +1,43 @@
-# 🔺️ Bitmap diff — a sparse, lane-addressed delta over BitmapSnapshot.
+# 🔺️ bitmap diff — scalars are optional absolutes; every list is a positional list delta: removed ids at their base index, inserted rows at their after index, moved ids, id-keyed modifications.
 
-type BitmapPixelRegion {
-  x: Int!
-  y: Int!
-  width: Int!
-  height: Int!
-  pixels: String!
+type BitmapPinnedPatch {
+  color: Int
 }
 
-type BitmapPinnedUpsert {
+type BitmapPinnedRemoval {
+  id: String!
   index: Int!
-  pin: BitmapPinnedPixel!
+}
+
+type BitmapPinnedInsertion {
+  index: Int!
+  row: BitmapPinnedPixel!
+}
+
+type BitmapPinnedRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type BitmapPinnedModification {
+  id: String!
+  patch: BitmapPinnedPatch!
+}
+
+type BitmapPinnedDelta {
+  removed: [BitmapPinnedRemoval!]!
+  inserted: [BitmapPinnedInsertion!]!
+  moved: [BitmapPinnedRelocation!]!
+  modified: [BitmapPinnedModification!]!
 }
 
 type BitmapDiff {
   schema: String @state(class: ARTIFACT)
   seed: Float @state(class: ARTIFACT)
-  inputWidth: Int @state(class: ARTIFACT)
-  inputHeight: Int @state(class: ARTIFACT)
-  inputPixels: String @state(class: ARTIFACT)
-  inputRegions: [BitmapPixelRegion!]! @state(class: ARTIFACT)
-  palette: [BitmapColor!] @state(class: ARTIFACT)
+  input: BitmapInputPatch @state(class: ARTIFACT)
+  palette: BitmapPaletteDelta @state(class: ARTIFACT)
   output: BitmapOutputSpec @state(class: ARTIFACT)
   model: BitmapOverlappingModel @state(class: ARTIFACT)
-  pinnedRemoved: [String!]! @state(class: ARTIFACT)
-  pinnedUpserted: [BitmapPinnedUpsert!]! @state(class: ARTIFACT)
+  pinned: BitmapPinnedDelta! @state(class: ARTIFACT)
 }

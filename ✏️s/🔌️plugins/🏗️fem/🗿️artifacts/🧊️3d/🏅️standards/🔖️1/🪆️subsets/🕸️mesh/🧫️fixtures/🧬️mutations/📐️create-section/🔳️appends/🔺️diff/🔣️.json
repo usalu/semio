@@ -3,19 +3,22 @@
   "elements": null,
   "materials": null,
   "sections": {
-    "added": [
+    "inserted": [
       {
-        "id": "shs120",
-        "name": "SHS 120x120x6",
-        "area": 0.00266,
-        "iy": 5.56e-05,
-        "iz": 5.56e-05,
-        "j": 8.89e-05
+        "index": 1,
+        "row": {
+          "id": "shs120",
+          "name": "SHS 120x120x6",
+          "area": 0.00266,
+          "iy": 5.56e-05,
+          "iz": 5.56e-05,
+          "j": 8.89e-05
+        }
       }
     ],
     "removed": [],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "solids": null,
   "supports": null,

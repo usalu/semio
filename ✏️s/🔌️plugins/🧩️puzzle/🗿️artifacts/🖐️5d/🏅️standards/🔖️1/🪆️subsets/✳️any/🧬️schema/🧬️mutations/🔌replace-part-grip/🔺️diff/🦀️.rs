@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplacePartGrip` — patches the fields of one grip inside the owner part. An absent
 //! part or an absent grip is `mutation.target-missing`; a replacement that keeps every field is the `mutation.no-op`
 //! warning. A replacement keeps the addressed grip's id.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dGrip2dPatch, Puzzle5dGrip3dPatch, Puzzle5dGripPatch, Puzzle5dGripsDelta, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dGrip2dPatch, Puzzle5dGrip3dPatch, Puzzle5dGripPatch, Puzzle5dGripsDelta, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
@@ -35,7 +36,7 @@ pub fn diff(payload: &super::ReplacePartGrip, base: &Puzzle5dSnapshot) -> protoc
     if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.part_id.clone()])]);
     }
-    let part_patch = Puzzle5dPartPatch { grips: Some(Puzzle5dGripsDelta::patching(payload.grip_id.clone(), patch)), ..Default::default() };
-    protocol::MutationOutcome::new(Puzzle5dDiff { parts: Some(Puzzle5dPartsDelta::patching(payload.part_id.clone(), part_patch)), ..Default::default() })
+    let part_patch = Puzzle5dPartPatch { grips: Some(Puzzle5dGripsDelta::modification(payload.grip_id.clone(), patch)), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle5dDiff { parts: Some(Puzzle5dPartsDelta::modification(payload.part_id.clone(), part_patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

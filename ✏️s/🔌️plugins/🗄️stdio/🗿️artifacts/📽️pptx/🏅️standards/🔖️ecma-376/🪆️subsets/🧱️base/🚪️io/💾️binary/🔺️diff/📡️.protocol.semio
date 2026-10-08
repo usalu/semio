@@ -18,7 +18,7 @@ start record
 # recurse into genuinely data-carrying, recursive structures (`PptxShapeDiff`'s `Replace` variant
 # nests back through the whole `PptxShape` tree; `PptxSlidesDiff`/`PptxShapesDiff`/
 # `PptxParagraphsDiff`/`PptxRunsDiff` are all instances of the SAME generic
-# `IndexedTripleDiff<D,T>`/`NamedTripleDiff<K,D,T>` engine docx introduced) -- the SAME
+# `IndexedTripleDiff<D,T>` engine docx introduced; the keyed OPC and XML-part collections are the contract's positional `ListDelta<R,Q>`) -- the SAME
 # `protocol-prim-ref-recursion` mechanism gap every other stdio artifact's diff payload hits
 # (`Prim::Ref` unconditionally errors in `walk_protocol`, confirmed unchanged through every pilot,
 # `📖️grammar-recipe.md` §5). Bundling both fields into one opaque tail, rather than partially

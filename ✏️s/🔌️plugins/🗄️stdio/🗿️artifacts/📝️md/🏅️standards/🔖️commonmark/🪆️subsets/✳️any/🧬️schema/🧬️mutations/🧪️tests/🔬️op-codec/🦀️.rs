@@ -31,6 +31,7 @@ async fn kinds_match_enum_variants_and_catalog() {
             MdMutation::RemoveBlock(_) => "remove-block",
             MdMutation::ReplaceBlock(_) => "replace-block",
             MdMutation::SetInlines(_) => "set-inlines",
+            MdMutation::SpliceSource(_) => "splice-source",
         }
     }
     let variant_kinds: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(kebab_of).collect();

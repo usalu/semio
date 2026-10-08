@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateTile` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::{Grid3dDiff, Grid3dRows};
+use crate::diff::{Grid3dDiff, Grid3dRow, Grid3dTilesDelta};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::CreateTile, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -14,5 +14,5 @@ pub fn diff(payload: &super::CreateTile, base: &Grid3dSnapshot) -> protocol::Mut
     if !payload.tile.weight.is_finite() || payload.tile.weight <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" needs a finite positive weight.", payload.tile.id), [payload.tile.id.clone()]);
     }
-    protocol::MutationOutcome::new(Grid3dDiff { tiles: Grid3dRows { added: vec![payload.tile.clone()], ..Default::default() }, ..Default::default() })
+    protocol::MutationOutcome::new(Grid3dDiff { tiles: Grid3dTilesDelta::insertion(Grid3dRow::insert_at(&base.tiles, &payload.tile), payload.tile.clone()), ..Default::default() })
 }

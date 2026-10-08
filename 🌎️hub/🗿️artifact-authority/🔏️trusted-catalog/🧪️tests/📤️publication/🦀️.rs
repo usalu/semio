@@ -1,3 +1,4 @@
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
 /// 🧳️ Stages exact existing fixture bytes under a real private publication data root.
 fn stage_publication_fixture(fixture: &FixtureDirectory, data: &Path) -> serde_json::Value {
     let generation = fixture.bundle["profiles"][0]["generationId"].as_str().unwrap();

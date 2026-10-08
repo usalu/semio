@@ -20,12 +20,15 @@
   "environmental": null,
   "humanFactors": null,
   "accessibility": {
-    "added": [],
     "removed": [
-      "accessibility-requirement-a"
+      {
+        "id": "accessibility-requirement-a",
+        "index": 0
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "privacy": null,
   "safety": null,

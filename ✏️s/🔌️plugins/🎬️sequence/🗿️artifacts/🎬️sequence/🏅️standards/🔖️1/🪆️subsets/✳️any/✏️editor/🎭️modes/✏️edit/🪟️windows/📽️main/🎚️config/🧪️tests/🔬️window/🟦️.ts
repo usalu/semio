@@ -41,7 +41,7 @@ export function testSequenceWindowOwnershipOracle(): void {
   for (const row of fixture.configMutations) {
     target(fixture.windowInstances, row.windowId, row.windowKindId);
     configs[row.windowId] = applySequenceMainWindowConfigMutation(configs[row.windowId] ?? fixture.baseConfig, row.mutation);
-    configOracle[row.windowId] = applyPatch(structuredClone(configOracle[row.windowId] ?? fixture.baseConfig), [{ op: "replace", path: "", value: row.mutation.config }], false, false).newDocument;
+    configOracle[row.windowId] = applyPatch(structuredClone(configOracle[row.windowId] ?? fixture.baseConfig), [{ op: "replace", path: row.mutation.kind === "set-orientation" ? "/orientation" : "/camera", value: row.mutation.value }], false, false).newDocument;
   }
   assert.deepEqual(configs, configOracle);
   assert.notDeepEqual(configs["sequence-main-left"], configs["sequence-main-right"]);

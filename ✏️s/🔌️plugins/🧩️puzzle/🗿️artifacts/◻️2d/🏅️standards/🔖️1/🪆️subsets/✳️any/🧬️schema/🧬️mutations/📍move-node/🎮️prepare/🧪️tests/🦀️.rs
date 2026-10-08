@@ -1,17 +1,20 @@
 //! 🧪️ Scalar preparation preserves the neutral RFC6902 inverse and refusal ordering.
 
 use super::*;
-use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneBorrowAuthority};
+use semio_framework_value::paged::PagedUtf8;
+use crate::test_source_custody;
 
 fn close(cursor: &mut Puzzle2dMoveNodePreparationCursor) {
     cursor.begin_close();
     for _ in 0..32 {
         if cursor.terminal_is_empty() { return; }
-        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(1, 32));
+        let copy=cursor.next_close_copy_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();let release=cursor.next_close_release_byte_demand().unwrap();let depth=cursor.next_close_depth_demand().unwrap();assert!(copy+capacity+release<=4096);
+        let permit=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
+        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(permit));
         assert_eq!(allocation.requested_bytes, 0);
         assert_eq!(allocation.released_bytes, 0);
         assert!(!allocation.overflowed);
-        assert!(!matches!(step.unwrap(), SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > 32));
+        assert!(step.unwrap().progress().fits(permit));
     }
     panic!("scalar move preparation did not close every native alias");
 }
@@ -23,29 +26,30 @@ fn history_edit_puzzle2d_scalar_move_preparation_preserves_inverse_and_refusal_w
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let scalar = |value: &serde_json::Value| match value.as_str() { Some("nan") => f64::NAN, Some("positive-infinity") => f64::INFINITY, None => value.as_f64().unwrap(), _ => panic!("unknown neutral scalar") };
-    let grant = BoundedOrdGrant { maximum_items: controls["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: controls["maximumBytes"].as_u64().unwrap() as usize };
+    let grant = RetainedCloneGrant { maximum_items: controls["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: controls["maximumBytes"].as_u64().unwrap() as usize, maximum_depth:64,..Default::default() };
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
         snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|row| crate::Puzzle2dNode { id: text(&row["id"]), x: scalar(&row["x"]), y: scalar(&row["y"]), ..Default::default() }).collect();
         let payload = MoveNode { id: text(&case["mutation"]["id"]), new_x: scalar(&case["mutation"]["newX"]), new_y: scalar(&case["mutation"]["newY"]) };
         let original = serde_json::to_value(&snapshot).unwrap();
         let bits = [payload.new_x.to_bits(), payload.new_y.to_bits()];
-        let source = RetainedCloneBorrowAuthority::new("scalar preparation native snapshot");
-        let mutation = RetainedCloneBorrowAuthority::new("scalar preparation original mutation");
+        let mut source = test_source_custody::admit();
+        let mut mutation = test_source_custody::admit();
         let mut cursor = Puzzle2dMoveNodePreparationCursor::default();
-        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), BoundedOrdGrant { maximum_items: 0, maximum_bytes: 0 }));
-        assert_eq!(step.unwrap(), Puzzle2dMoveNodePreparationStep::Pending(BoundedOrdProgress::default()));
+        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default()));
+        assert_eq!(step.unwrap(), Puzzle2dMoveNodePreparationStep::Pending(RetainedCloneProgress::default()));
         assert_eq!(allocation.requested_bytes, 0);
         assert_eq!(allocation.released_bytes, 0);
         let mut plan = None;
-        for _ in 0..100_000 {
-            let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant));
+        for turn in 0..100_000 {
+            let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};
+            let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));
             assert_eq!(allocation.requested_bytes, 0);
             assert_eq!(allocation.released_bytes, 0);
             assert!(!allocation.overflowed);
             let step = step.unwrap();
             let progress = match step { Puzzle2dMoveNodePreparationStep::Pending(progress) | Puzzle2dMoveNodePreparationStep::Complete { progress, .. } => progress };
-            assert!(progress.compared_items <= grant.maximum_items && progress.compared_bytes <= grant.maximum_bytes);
+            assert!(progress.fits(permit));
             if let Puzzle2dMoveNodePreparationStep::Complete { plan: value, .. } = step { plan = Some(value); break; }
         }
         let plan = plan.expect("scalar preparation did not complete");
@@ -69,10 +73,11 @@ fn history_edit_puzzle2d_scalar_move_preparation_preserves_inverse_and_refusal_w
         assert_eq!(cancelled.take(), None);
         if case["id"] == "large-prefix" {
             let mut cancelled = Puzzle2dMoveNodePreparationCursor::default();
-            for _ in 0..12 { assert!(matches!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant).unwrap(), Puzzle2dMoveNodePreparationStep::Pending(_))); }
+            for turn in 0..12 { let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};assert!(matches!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit).unwrap(), Puzzle2dMoveNodePreparationStep::Pending(_))); }
             close(&mut cancelled);
             assert_eq!(cancelled.take(), None);
         }
+        test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
     }
     eprintln!("[DEBUG] Puzzle2d scalar preparation preserved seven RFC6902 inverse/refusal plans, original borrowed payloads, zero-allocation advance and exact alias cancellation");
 }

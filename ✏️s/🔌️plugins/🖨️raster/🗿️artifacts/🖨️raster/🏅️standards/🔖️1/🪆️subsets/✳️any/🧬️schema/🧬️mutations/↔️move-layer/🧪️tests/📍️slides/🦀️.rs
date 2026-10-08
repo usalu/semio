@@ -8,7 +8,8 @@
 //! verb is `reorder-layers`, which this fixture deliberately never reaches — `stamp` keeps index 0
 //! throughout.
 
-use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::mutations::{inverse_raster_mutation, RasterMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_transform, locate_layer};
 use crate::{RasterDiff, RasterSnapshot};
 
@@ -93,9 +94,9 @@ async fn produces_committed_diff() {
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "move-layer/slides-the-stamp-layer-off-the-origin: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("move-layer writes a layers delta");
     assert!(delta.moved.is_empty(), "move-layer/slides-the-stamp-layer-off-the-origin: `layers.moved` belongs to reorder-layers — a spatial move must never write it");
-    assert_eq!(delta.patched.len(), 1, "move-layer/slides-the-stamp-layer-off-the-origin: exactly one layer is patched");
-    assert_eq!((delta.patched[0].patch.transform_x, delta.patched[0].patch.transform_y), (Some(16.0), Some(-8.0)), "move-layer/slides-the-stamp-layer-off-the-origin: the patch must carry both new coordinates");
-    assert_eq!(delta.patched[0].patch.name, None, "move-layer/slides-the-stamp-layer-off-the-origin: a move must not rename the layer");
+    assert_eq!(delta.modified.len(), 1, "move-layer/slides-the-stamp-layer-off-the-origin: exactly one layer is patched");
+    assert_eq!((delta.modified[0].patch.transform_x, delta.modified[0].patch.transform_y), (Some(16.0), Some(-8.0)), "move-layer/slides-the-stamp-layer-off-the-origin: the patch must carry both new coordinates");
+    assert_eq!(delta.modified[0].patch.name, None, "move-layer/slides-the-stamp-layer-off-the-origin: a move must not rename the layer");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -119,5 +120,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
 }

@@ -2,9 +2,11 @@
 //! Selection is not space or pin authorization; no typed document is hydrated here.
 
 use super::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
-use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, SnapshotRetirementStep, VerifiedMemberHistoryInput};
+use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, VerifiedMemberHistoryInput};
 use crate::os_store::MemberFactory;
 use semio_framework_job::StepContext;
+use semio_framework_value::{ValueError, RetirementDemand};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use std::{marker::PhantomData, mem::ManuallyDrop};
 
 /// 🪪️ The owning MemberFactory macro emits these same four creation/open literals.
@@ -54,21 +56,8 @@ fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>)
     input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx)
 }
 
-fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-    let Some(owner) = input.as_mut() else {
-        return Ok(SnapshotRetirementStep::Complete);
-    };
-    match owner.close_step(items, bytes)? {
-        SnapshotRetirementStep::Complete if owner.terminal_is_empty() => {
-            input.take();
-            Ok(SnapshotRetirementStep::Complete)
-        }
-        SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "selected factory input returned false terminal")),
-        SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => {
-            Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "selected factory input exceeded retirement grant"))
-        }
-        step => Ok(step),
-    }
+fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    crate::os_store::artifact_retirement_owner_close(input, grant)
 }
 
 impl<M: MemberFactory> MemberFactorySelection<M> {
@@ -179,15 +168,18 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        self.closing = true;
-        self.selected = None;
-        close_owner(&mut self.input, items, bytes)
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; self.selected = None; }
+        close_owner(&mut self.input, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.input.is_none()
-    }
-    fn next_close_byte_demand(&self) -> usize { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
+    fn terminal_is_empty(&self) -> bool { self.input.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
+}
+impl<M: MemberFactory> MemberFactorySelection<M> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::artifact_retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
@@ -238,14 +230,18 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        self.closing = true;
-        close_owner(&mut self.input, items, bytes)
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
+        close_owner(&mut self.input, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.input.is_none()
-    }
-    fn next_close_byte_demand(&self) -> usize { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
+    fn terminal_is_empty(&self) -> bool { self.input.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
+}
+impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::artifact_retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
@@ -274,13 +270,17 @@ impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDictionary<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        close_owner(&mut self.owner, items, bytes)
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        close_owner(&mut self.owner, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.owner.is_none()
-    }
-    fn next_close_byte_demand(&self) -> usize { self.owner.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
+    fn terminal_is_empty(&self) -> bool { self.owner.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
+}
+impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::artifact_retirement_owner_demands(&self.owner, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
@@ -321,13 +321,17 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistory<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        close_owner(&mut self.input, items, bytes)
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        close_owner(&mut self.input, grant)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.input.is_none()
-    }
-    fn next_close_byte_demand(&self) -> usize { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
+    fn terminal_is_empty(&self) -> bool { self.input.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
+}
+impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::artifact_retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {

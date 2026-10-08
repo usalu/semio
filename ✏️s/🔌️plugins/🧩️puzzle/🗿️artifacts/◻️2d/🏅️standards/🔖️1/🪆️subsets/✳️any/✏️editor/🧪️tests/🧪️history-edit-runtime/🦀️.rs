@@ -29,7 +29,7 @@ const HISTORY_EDIT_RUNTIME_CORPUS: &str = include_str!("../../🧫️fixtures/�
 
 /// 🧫️ The corpus, its schema tag checked.
 fn corpus() -> Value {
-    let corpus: Value = serde_json::from_str(HISTORY_EDIT_RUNTIME_CORPUS).expect("the history-edit runtime corpus parses");
+    let corpus: Value = semio_framework_pack_json::from_json_str(HISTORY_EDIT_RUNTIME_CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the history-edit runtime corpus parses");
     assert_eq!(corpus["schema"], "s.puzzle2d.history-edit-runtime.v1");
     corpus
 }
@@ -43,10 +43,10 @@ fn ids(value: &Value) -> Vec<String> {
 }
 
 //#region 🧰️Harness
-/// 🧱️ A registered app holding `board` as its one seed edit.
+/// 🧱️ A registered app holding `board`, seeded as the concrete kinds that build it.
 fn seeded_app(board: &Value) -> Puzzle2dApp {
     let mut app = app_with_registry();
-    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": board })), None).expect("seed the board");
+    seed_board(&mut app, board);
     app
 }
 
@@ -58,7 +58,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value, what: &str) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::DslValue::from(&args)), &meta)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
+    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{what}: {verb} was refused: {:?}", result.output);
 }
 
@@ -107,13 +107,13 @@ fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
 
 /// 📜️ The history body as the focused overview renders it in `locale`.
 fn history_body(app: &mut Puzzle2dApp, locale: semio_framework_ui_locale::Locale) -> Value {
-    serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &ViewModel { locale, ..focused_view() })).expect("history body")
+    semio_framework_pack_json::from_json_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &ViewModel { locale, ..focused_view() }), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("history body")
 }
 
 /// 🖱️ Selects `ids` as nodes of the board's interaction domain (`interactionSelect`), as a pick or a marquee does.
 fn select(app: &mut Puzzle2dApp, ids: Vec<String>) {
     let targets: Vec<InteractionTarget> = ids.into_iter().map(|id| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id }).collect();
-    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&targets).expect("targets"), "merge": "replace", "method": "pick" })), None).expect("select");
+    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": semio_framework_pack_json::to_json_string(&targets), "merge": "replace", "method": "pick" })), None).expect("select");
 }
 
 /// ↩️ A framework undo or redo, driven until a resumable history-edit authoring it started has landed.
@@ -264,7 +264,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     if let Some(count) = expect["rows"].as_u64() {
         assert_eq!(rows.len() as u64, count, "{what}: rows {:?}", rows.iter().map(|row| &row.op_lines).collect::<Vec<_>>());
     }
-    let status = session(app).map(|status| serde_json::to_value(status).expect("status serializes"));
+    let status = session(app).map(|status| semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(status))));
     if let Some(stage) = expect.get("stage") {
         assert_eq!(status.as_ref().map_or(&Value::Null, |status| &status["stage"]), stage, "{what}: stage of {status:?}");
     }
@@ -275,7 +275,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     }
     for outcome in expect["outcomes"].as_array().into_iter().flatten() {
         let row = &rows[outcome["row"].as_u64().expect("outcome row") as usize];
-        let mutation = serde_json::to_value(row.mutations.get(outcome["mutation"].as_u64().unwrap_or(0) as usize).expect("the row's mutation")).expect("mutation row serializes");
+        let mutation = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(row.mutations.get(outcome["mutation"].as_u64().unwrap_or(0) as usize).expect("the row's mutation"))));
         assert_eq!(mutation["worst"], outcome["worst"], "{what}: worst of {mutation}");
         if let Some(introduced) = outcome.get("introduced") {
             assert_eq!(&mutation["introduced"], introduced, "{what}: whether the edit made the outcome new: {mutation}");
@@ -292,7 +292,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
         assert_eq!(next.as_deref(), Some(rows[problem["row"].as_u64().expect("problem row") as usize].mutations[0].mutation_id.as_str()), "{what}: the next problem");
     }
     if let Some(draft) = expect["draft"].as_object() {
-        let value = Value::from(&app.time_travel_ledger().editor().expect("the draft editor").value);
+        let value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(&app.time_travel_ledger().editor().expect("the draft editor").value)));
         for (pointer, wanted) in draft {
             assert_eq!(value.pointer(pointer), Some(wanted), "{what}: the draft holds {wanted} at {pointer}: {value}");
         }
@@ -397,8 +397,8 @@ fn replay_progress_rides_the_ui_frames_over_a_long_downstream() {
 
 /// 🎨️ The document the overview paints: the time-travel preview while a session is open.
 fn painted_fixture(app: &mut Puzzle2dApp) -> Value {
-    let body: Value = serde_json::from_str(&render_body(app, overview::BODY_KEY)).expect("board body");
-    serde_json::from_str(body["board2d"]["snapshotJson"].as_str().expect("painted snapshot lane")).expect("painted snapshot parses")
+    let body: Value = semio_framework_pack_json::from_json_str(&render_body(app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("board body");
+    semio_framework_pack_json::from_json_str(body["board2d"]["snapshotJson"].as_str().expect("painted snapshot lane"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("painted snapshot parses")
 }
 
 /// 🔀️ Every event batch `from` published since the last relay, delivered into `to` through its probe `into` and ingested.
@@ -440,7 +440,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && waiting.fault.is_none(), "{waiting:?}");
     assert_eq!(fixture_of(&remote), before, "the replica shows the history before the change");
     let meta = ActionMeta { view_state: Some(focused_view()), ..semio_framework_plugin::artifact_app_laws::meta("remote") };
-    let cancelled = block_on(remote.handle_action("historyEditCancelReplay", Some(&semio_framework_value::DslValue::from(&json!({}))), &meta)).expect("cancel");
+    let cancelled = block_on(remote.handle_action("historyEditCancelReplay", Some(&semio_framework_value::ToValue::to_value(&(&json!({})))), &meta)).expect("cancel");
     assert!(cancelled.output.get("rejected").is_none(), "{:?}", cancelled.output);
     assert!(remote.time_travel_ledger().reprojection_paused(), "cancel pauses the remote replay");
     for _ in 0..4 {
@@ -448,7 +448,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     }
     assert_eq!(fixture_of(&remote), before, "paused, the change is not adopted");
     assert_eq!(block_on(remote.history_snapshot()).expect("history").reprojection.map(|replay| replay.paused), Some(true), "the wire says paused");
-    let resumed = block_on(remote.handle_action("historyEditRerun", Some(&semio_framework_value::DslValue::from(&json!({}))), &meta)).expect("rerun");
+    let resumed = block_on(remote.handle_action("historyEditRerun", Some(&semio_framework_value::ToValue::to_value(&(&json!({})))), &meta)).expect("rerun");
     assert!(resumed.output.get("rejected").is_none(), "{:?}", resumed.output);
     pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").reprojection.is_none());
     assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the adoption equals the author's head");
@@ -505,7 +505,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         assert_eq!(dispatch(&mut app, "undo", None, None).err().map(|fault| fault.code.0), Some("history.replaying".to_string()), "a further history step waits");
         let first = edits(&mut app)[seed].mutations[0].mutation_id.clone();
         let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-        let busy = block_on(app.handle_action("historyEditBegin", Some(&semio_framework_value::DslValue::from(&json!({ "mutationId": first }))), &meta)).expect("begin answers");
+        let busy = block_on(app.handle_action("historyEditBegin", Some(&semio_framework_value::ToValue::to_value(&(&json!({ "mutationId": first })))), &meta)).expect("begin answers");
         assert_eq!(busy.output.get("rejected").and_then(semio_framework_value::DslValue::as_str), Some("timeTravel.busy"), "history editing waits for the step");
         if cancel {
             history_edit(&mut app, "historyEditCancelReplay", json!({}), "cancel the switch");

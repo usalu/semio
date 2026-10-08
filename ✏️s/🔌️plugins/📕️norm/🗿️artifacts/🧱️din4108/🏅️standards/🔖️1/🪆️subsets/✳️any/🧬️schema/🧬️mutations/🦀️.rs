@@ -5,6 +5,7 @@ use crate::{Din4108Diff, Din4108Snapshot};
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
 pub use edit_rules::EDIT_RULES;
+pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_din4108_mutation, inverse_din4108_mutation};
 
 use super::change_climate_zone;
 use super::change_usage;
@@ -145,77 +146,11 @@ pub const KINDS: &[&str] = &[
     "change-layer-compressive-class",
 ];
 
-impl Din4108Mutation {
-    pub fn from_snapshot(base: &Din4108Snapshot, target: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-        let mut mutations = Vec::new();
-        if base.climate_zone != target.climate_zone {
-            mutations.push(Din4108Mutation::ChangeClimateZone(change_climate_zone::ChangeClimateZone { new_climate_zone: target.climate_zone }));
-        }
-        if base.usage != target.usage {
-            mutations.push(Din4108Mutation::ChangeUsage(change_usage::ChangeUsage { new_usage: target.usage.clone() }));
-        }
-        if base.t_int_c.to_bits() != target.t_int_c.to_bits() {
-            mutations.push(Din4108Mutation::ChangeTIntC(change_t_int_c::ChangeTIntC { new_t_int_c: target.t_int_c }));
-        }
-        if base.rh_int.to_bits() != target.rh_int.to_bits() {
-            mutations.push(Din4108Mutation::ChangeRhInt(change_rh_int::ChangeRhInt { new_rh_int: target.rh_int }));
-        }
-        if base.airtightness_n50.to_bits() != target.airtightness_n50.to_bits() {
-            mutations.push(Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::ChangeAirtightnessN50 { new_airtightness_n50: target.airtightness_n50 }));
-        }
-        if base.has_mechanical_ventilation != target.has_mechanical_ventilation {
-            mutations.push(Din4108Mutation::ChangeHasMechanicalVentilation(change_has_mechanical_ventilation::ChangeHasMechanicalVentilation { new_has_mechanical_ventilation: target.has_mechanical_ventilation }));
-        }
-        if base.bb2_details_conform != target.bb2_details_conform {
-            mutations.push(Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::ChangeBb2DetailsConform { new_bb2_details_conform: target.bb2_details_conform }));
-        }
-        if base.zones != target.zones {
-            for index in (0..base.zones.len()).rev() {
-                mutations.push(Din4108Mutation::RemoveZone(remove_zone::RemoveZone { index }));
-            }
-            for (index, zone) in target.zones.iter().enumerate() {
-                mutations.push(Din4108Mutation::InsertZone(insert_zone::InsertZone { index, zone: zone.clone() }));
-            }
-        }
-        if base.elements != target.elements {
-            for index in (0..base.elements.len()).rev() {
-                mutations.push(Din4108Mutation::RemoveElement(remove_element::RemoveElement { index }));
-            }
-            for (index, element) in target.elements.iter().enumerate() {
-                mutations.push(Din4108Mutation::InsertElement(insert_element::InsertElement { index, element: element.clone() }));
-            }
-        }
-        if base.thermal_bridges != target.thermal_bridges {
-            for index in (0..base.thermal_bridges.len()).rev() {
-                mutations.push(Din4108Mutation::RemoveThermalBridge(remove_thermal_bridge::RemoveThermalBridge { index }));
-            }
-            for (index, bridge) in target.thermal_bridges.iter().enumerate() {
-                mutations.push(Din4108Mutation::InsertThermalBridge(insert_thermal_bridge::InsertThermalBridge { index, bridge: bridge.clone() }));
-            }
-        }
-        mutations
-    }
-}
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
 
-
-pub fn apply_din4108_mutation(base: &Din4108Snapshot, mutation: &Din4108Mutation) -> Result<(Din4108Snapshot, Vec<String>), String> {
-    let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-
-pub fn inverse_din4108_mutation(mutation: &Din4108Mutation, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::inverse(mutation, base)?
-
-    })
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
@@ -224,3 +159,7 @@ mod kinds_catalog;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

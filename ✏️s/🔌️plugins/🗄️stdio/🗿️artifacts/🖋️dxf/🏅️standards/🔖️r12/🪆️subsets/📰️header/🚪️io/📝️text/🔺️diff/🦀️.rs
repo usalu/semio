@@ -730,6 +730,9 @@ pub(crate) fn print_dxf_diff(d: &DxfDiff) -> String {
     if let Some(v) = &d.entities {
         tokens.push(format!("entities={}", enc_entities_diff(v)));
     }
+    if let Some(v) = &d.other_tables {
+        tokens.push(format!("other-tables={}", enc_list(v, enc_other_table)));
+    }
     tokens.join(" ")
 }
 
@@ -748,6 +751,8 @@ pub(crate) fn parse_dxf_diff(line: &str) -> Result<DxfDiff, String> {
             d.blocks = Some(dec_blocks_diff(rest)?);
         } else if let Some(rest) = token.strip_prefix("entities=") {
             d.entities = Some(dec_entities_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("other-tables=") {
+            d.other_tables = Some(dec_list(rest, dec_other_table)?);
         } else {
             return Err(format!("dxf diff: unknown token {token:?}"));
         }

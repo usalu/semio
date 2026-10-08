@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeReferenceHidden` — patches the one addressed reference in place.
-use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencesDelta};
+use protocol::list_delta::RowPatch;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
@@ -15,7 +16,7 @@ pub fn diff(payload: &super::mutation::ChangeReferenceHidden, base: &Puzzle3dSna
         return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
-        references: Some(Puzzle3dReferencesDelta::patching(payload.id.clone(), patch)),
+        references: Some(Puzzle3dReferencesDelta::modification(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

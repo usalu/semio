@@ -19,6 +19,8 @@ pub mod insert_comment;
 pub mod insert_frame;
 #[path = "🔀move-frame/🦀️.rs"]
 pub mod move_frame;
+#[path = "🧭️edit-rules/🦀️.rs"]
+pub mod edit_rules;
 #[path = "➖remove-app-extension/🦀️.rs"]
 pub mod remove_app_extension;
 #[path = "🚫remove-comment/🦀️.rs"]
@@ -217,6 +219,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range frame/comment/extension indices are no-ops
 /// rather than panics -- a stale index (e.g. from a concurrent edit) should degrade gracefully.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(test)]
 pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
     let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -231,38 +234,6 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
-//#region 🔖️Net
-/// 🧮️ The leaves that carry `base` to exactly `next`: the diverging tails of frames, comments and application extensions are
-/// removed, the header fields set, then the next tails inserted, so every intermediate state keeps the raster rules the
-/// leaves enforce. The snapshot `schema` is a constant of the artifact and never differs.
-pub fn net_mutations(base: &GifSnapshot, next: &GifSnapshot) -> Vec<GifMutation> {
-    let common_frames = base.frames.iter().zip(&next.frames).take_while(|(left, right)| left == right).count();
-    let common_comments = base.comments.iter().zip(&next.comments).take_while(|(left, right)| left == right).count();
-    let common_extensions = base.app_extensions.iter().zip(&next.app_extensions).take_while(|(left, right)| left == right).count();
-    let mut leaves: Vec<GifMutation> = (common_frames..base.frames.len()).rev().map(|index| GifMutation::RemoveFrame(remove_frame::RemoveFrame { index })).collect();
-    leaves.extend((common_comments..base.comments.len()).rev().map(|index| GifMutation::RemoveComment(remove_comment::RemoveComment { index })));
-    leaves.extend((common_extensions..base.app_extensions.len()).rev().map(|index| GifMutation::RemoveAppExtension(remove_app_extension::RemoveAppExtension { index })));
-    if (base.width, base.height) != (next.width, next.height) {
-        leaves.push(GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: next.width, height: next.height }));
-    }
-    if base.gct != next.gct {
-        leaves.push(GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: next.gct.clone() }));
-    }
-    if base.background_color_index != next.background_color_index {
-        leaves.push(GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: next.background_color_index }));
-    }
-    if base.pixel_aspect_ratio != next.pixel_aspect_ratio {
-        leaves.push(GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: next.pixel_aspect_ratio }));
-    }
-    if base.loop_count != next.loop_count {
-        leaves.push(GifMutation::SetLoopCount(set_loop_count::SetLoopCount { loop_count: next.loop_count }));
-    }
-    leaves.extend(next.frames.iter().enumerate().skip(common_frames).map(|(index, frame)| GifMutation::InsertFrame(insert_frame::InsertFrame { index, frame: frame.clone() })));
-    leaves.extend(next.comments.iter().enumerate().skip(common_comments).map(|(index, text)| GifMutation::InsertComment(insert_comment::InsertComment { index, text: text.clone() })));
-    leaves.extend(next.app_extensions.iter().enumerate().skip(common_extensions).map(|(index, extension)| GifMutation::AddAppExtension(add_app_extension::AddAppExtension { index, extension: extension.clone() })));
-    leaves
-}
-//#endregion 🔖️Net
 
 //#region 🔖️RasterGuard
 /// 🧱️ Whether `frame` carries an image at all — a plain-text-only frame has no rectangle and no indices.

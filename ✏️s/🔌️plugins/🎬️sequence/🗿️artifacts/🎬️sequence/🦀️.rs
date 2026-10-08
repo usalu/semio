@@ -670,6 +670,8 @@ pub mod editor {
             pub mod schema;
         }
 
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📐️edit-rules/🦀️.rs"]
+        pub mod edit_rules;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
         #[cfg(target_arch = "wasm32")]

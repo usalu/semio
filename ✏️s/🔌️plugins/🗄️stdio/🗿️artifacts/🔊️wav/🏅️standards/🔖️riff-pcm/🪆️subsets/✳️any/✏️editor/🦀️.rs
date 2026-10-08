@@ -183,35 +183,6 @@ fn wavEditor_insert_sample(data: &mut WavData, index: usize, value: &semio_frame
     }
     wavEditor_set_sample(data, index, value)
 }
-fn wavEditor_remove_sample(data: &mut WavData, index: usize) {
-    match data {
-        WavData::Pcm16(values) => {
-            values.remove(index);
-        }
-        WavData::Pcm8(values) | WavData::Raw(values) => {
-            values.remove(index);
-        }
-        WavData::Float32(values) => {
-            values.remove(index);
-        }
-    }
-}
-fn wavEditor_move_sample(data: &mut WavData, from: usize, path: usize) {
-    match data {
-        WavData::Pcm16(values) => {
-            let value = values.remove(from);
-            values.insert(path, value);
-        }
-        WavData::Pcm8(values) | WavData::Raw(values) => {
-            let value = values.remove(from);
-            values.insert(path, value);
-        }
-        WavData::Float32(values) => {
-            let value = values.remove(from);
-            values.insert(path, value);
-        }
-    }
-}
 fn wavEditor_sample_len(data: &WavData) -> usize {
     match data {
         WavData::Pcm16(values) => values.len(),
@@ -267,70 +238,6 @@ fn wavEditor_retag_data(data: &WavData, kind: &semio_framework_value::DslValue) 
     <WavData as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Object(vec![("kind".into(), kind.clone()), ("value".into(), samples)])).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))
 }
 
-fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSnapshot) -> Result<WavSnapshot, Fault> {
-    use editing::SnapshotEditEvent;
-    if let SnapshotEditEvent::ReplaceSource { source } = event {
-        return editing::snapshot_from_edit_source(source).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-source", error.to_string()));
-    }
-    if let SnapshotEditEvent::SetValue { path, value } = event {
-        if path.is_empty() {
-            return <WavSnapshot as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-snapshot", error.to_string()));
-        }
-        if path == "/data" {
-            let mut next = snapshot.clone();
-            next.data = <WavData as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?;
-            return Ok(next);
-        }
-        if path == "/data/kind" {
-            let mut next = snapshot.clone();
-            next.data = wavEditor_retag_data(&snapshot.data, value)?;
-            return Ok(next);
-        }
-        if path == "/data/value" {
-            let mut next = snapshot.clone();
-            next.data = match &next.data {
-                WavData::Pcm16(_) => WavData::Pcm16(<Vec<i16> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-                WavData::Pcm8(_) => WavData::Pcm8(<Vec<u8> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-                WavData::Float32(_) => WavData::Float32(<Vec<f32> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-                WavData::Raw(_) => WavData::Raw(<Vec<u8> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-            };
-            return Ok(next);
-        }
-        if let Some(segment) = path.strip_prefix("/data/value/") {
-            let mut next = snapshot.clone();
-            let index = wavEditor_sample_index(segment, wavEditor_sample_len(&next.data), false)?;
-            wavEditor_set_sample(&mut next.data, index, value)?;
-            return Ok(next);
-        }
-    }
-    if let SnapshotEditEvent::InsertValue { path, value } = event {
-        if let Some(segment) = path.strip_prefix("/data/value/") {
-            let mut next = snapshot.clone();
-            let index = wavEditor_sample_index(segment, wavEditor_sample_len(&next.data), true)?;
-            wavEditor_insert_sample(&mut next.data, index, value)?;
-            return Ok(next);
-        }
-    }
-    if let SnapshotEditEvent::RemoveValue { path } = event {
-        if let Some(segment) = path.strip_prefix("/data/value/") {
-            let mut next = snapshot.clone();
-            let index = wavEditor_sample_index(segment, wavEditor_sample_len(&next.data), false)?;
-            wavEditor_remove_sample(&mut next.data, index);
-            return Ok(next);
-        }
-    }
-    if let SnapshotEditEvent::MoveValue { from, path } = event {
-        if let (Some(from), Some(path)) = (from.strip_prefix("/data/value/"), path.strip_prefix("/data/value/")) {
-            let mut next = snapshot.clone();
-            let from = wavEditor_sample_index(from, wavEditor_sample_len(&next.data), false)?;
-            let path = wavEditor_sample_index(path, wavEditor_sample_len(&next.data) - 1, true)?;
-            wavEditor_move_sample(&mut next.data, from, path);
-            return Ok(next);
-        }
-    }
-    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| wavEditor_edit_fault(error.code, error.to_string()))?;
-    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, WAV_DIALECT, STDIO_WAV_DOCUMENT_SCHEMA).map_err(|error| wavEditor_edit_fault(error.code, error.to_string()))
-}
 struct WavDetailsProvider<'a> {
     snapshot: &'a WavSnapshot,
     metadata: editing::DslSnapshotDetailsProvider<'static, WavSnapshot>,
@@ -694,22 +601,17 @@ impl editing::SnapshotEditingEditor for WavEditor {
             _ => None,
         }
     }
-    fn snapshot_edit_expected(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Self::Snapshot, Fault> {
-        match event {
-            editing::SnapshotEditEvent::SetValue { path, .. } if path == "/data/kind" => wavEditor_snapshot_edit(event, snapshot),
-            _ => editing::generic_snapshot_edit_expected::<Self>(event, snapshot),
-        }
+    fn snapshot_edit_rules() -> &'static editing::EditRules {
+        &crate::editor::wav::edit_rules::EDIT_RULES
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         if let Some(patch) = wavEditor_direct_patch(event, snapshot)? {
-            return Ok(Emit { artifact_mutations: vec![WavMutation::PatchData(patch)], ..Default::default() });
+            return Ok(Some(vec![WavMutation::PatchData(patch)]));
         }
-        if matches!(event, editing::SnapshotEditEvent::SetValue { path, .. } if path == "/data/kind") {
-            let next = wavEditor_snapshot_edit(event, snapshot)?;
-            return Ok(Emit { artifact_mutations: vec![WavMutation::SetData(set_data::SetData { data: next.data })], ..Default::default() });
+        match event {
+            editing::SnapshotEditEvent::SetValue { path, value } if path == "/data/kind" => Ok(Some(vec![WavMutation::SetData(set_data::SetData { data: wavEditor_retag_data(&snapshot.data, value)? })])),
+            _ => Ok(None),
         }
-        let expected = Self::snapshot_edit_expected(event, snapshot)?;
-        Ok(Emit { artifact_mutations: editing::net_leaves_exact(snapshot, &expected, crate::standards::riff_pcm::subsets::any::schema::mutations::net_mutations)?, ..Default::default() })
     }
 }
 

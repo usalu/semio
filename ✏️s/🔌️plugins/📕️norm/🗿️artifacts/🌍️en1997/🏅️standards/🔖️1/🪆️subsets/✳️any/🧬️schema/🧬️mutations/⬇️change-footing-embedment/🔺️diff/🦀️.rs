@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeFootingEmbedment, base: &En1997Snapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("footing {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {
-        footings: Some(En1997FootingsRows { modified: vec![En1997FootingsPatch { id: payload.id.clone(), embedment: Some(payload.new_embedment), ..Default::default() }], ..Default::default() }),
+        footings: Some(En1997FootingsRows::modification(&payload.id, En1997FootingsPatch { embedment: Some(payload.new_embedment), ..Default::default() })),
         ..Default::default()
     })
 }

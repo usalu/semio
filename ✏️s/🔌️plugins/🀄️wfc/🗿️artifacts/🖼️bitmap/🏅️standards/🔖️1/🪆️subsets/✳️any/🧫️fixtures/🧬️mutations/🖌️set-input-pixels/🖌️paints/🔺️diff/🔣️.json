@@ -1,21 +1,32 @@
 {
   "schema": null,
   "seed": null,
-  "inputWidth": null,
-  "inputHeight": null,
-  "inputPixels": null,
-  "inputRegions": [
-    {
-      "x": 1,
-      "y": 0,
-      "width": 2,
-      "height": 2,
-      "pixels": "AQEBAQ=="
-    }
-  ],
-  "palette": null,
+  "input": {
+    "size": null,
+    "writes": [
+      {
+        "op": "region",
+        "region": {
+          "x": 1,
+          "y": 0,
+          "width": 2,
+          "height": 2,
+          "pixels": "AQEBAQ=="
+        }
+      }
+    ]
+  },
+  "palette": {
+    "removed": [],
+    "inserted": [],
+    "recolored": []
+  },
   "output": null,
   "model": null,
-  "pinnedRemoved": [],
-  "pinnedUpserted": []
+  "pinned": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

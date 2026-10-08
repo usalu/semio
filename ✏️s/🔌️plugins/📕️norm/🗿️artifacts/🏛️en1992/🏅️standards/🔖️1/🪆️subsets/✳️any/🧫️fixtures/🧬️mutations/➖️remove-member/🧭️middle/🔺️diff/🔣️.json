@@ -8,12 +8,15 @@
   "reinforcementGrades": null,
   "prestressSteels": null,
   "members": {
-    "added": [],
     "removed": [
-      "wall-W1-m1"
+      {
+        "id": "wall-W1-m1",
+        "index": 1
+      }
     ],
-    "modified": [],
-    "order": null
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "anchors": null
 }

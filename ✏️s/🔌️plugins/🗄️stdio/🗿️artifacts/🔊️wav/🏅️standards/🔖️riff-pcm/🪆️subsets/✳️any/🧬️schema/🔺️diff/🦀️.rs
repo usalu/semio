@@ -82,36 +82,6 @@ fn inverse_splices(data: &WavData, splices: &[WavSplice]) -> Vec<WavSplice> {
     undo
 }
 
-/// 🧭️ The common-prefix/common-suffix splice that carries lane `a` to lane `b` (`None` when equal), or `None` plus the whole lane when the variants differ.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_lanes(a: &WavData, b: &WavData) -> (Option<WavData>, Vec<WavSplice>) {
-    fn trim<T: Clone>(a: &[T], b: &[T], same: impl Fn(&T, &T) -> bool) -> (usize, usize, Vec<T>) {
-        let prefix = a.iter().zip(b).take_while(|(x, y)| same(x, y)).count();
-        let suffix = a[prefix..].iter().rev().zip(b[prefix..].iter().rev()).take_while(|(x, y)| same(x, y)).count();
-        (prefix, a.len() - prefix - suffix, b[prefix..b.len() - suffix].to_vec())
-    }
-    let (index, remove, insert) = match (a, b) {
-        _ if a == b => return (None, Vec::new()),
-        (WavData::Pcm16(x), WavData::Pcm16(y)) => {
-            let (index, remove, insert) = trim(x, y, |p, q| p == q);
-            (index, remove, WavData::Pcm16(insert))
-        }
-        (WavData::Pcm8(x), WavData::Pcm8(y)) => {
-            let (index, remove, insert) = trim(x, y, |p, q| p == q);
-            (index, remove, WavData::Pcm8(insert))
-        }
-        (WavData::Raw(x), WavData::Raw(y)) => {
-            let (index, remove, insert) = trim(x, y, |p, q| p == q);
-            (index, remove, WavData::Raw(insert))
-        }
-        (WavData::Float32(x), WavData::Float32(y)) => {
-            let (index, remove, insert) = trim(x, y, |p, q| p.to_bits() == q.to_bits());
-            (index, remove, WavData::Float32(insert))
-        }
-        _ => return (Some(b.clone()), Vec::new()),
-    };
-    (None, vec![WavSplice { index: index as u64, remove: remove as u64, insert }])
-}
 //#endregion 🔖️Splices
 
 //#region 🔖️Diff
@@ -188,18 +158,6 @@ impl MutationDiff<WavSnapshot> for WavDiff {
 }
 
 impl DiffAlgebra<WavSnapshot> for WavDiff {
-    fn between(base: &WavSnapshot, other: &WavSnapshot) -> Self {
-        let (data, data_splices) = between_lanes(&base.data, &other.data);
-        WavDiff {
-            fmt: (base.fmt != other.fmt).then(|| other.fmt.clone()),
-            data,
-            data_splices,
-            fmt_pad_byte: (base.fmt_pad_byte != other.fmt_pad_byte).then_some(other.fmt_pad_byte),
-            data_pad_byte: (base.data_pad_byte != other.data_pad_byte).then_some(other.data_pad_byte),
-            other_chunks: (base.other_chunks != other.other_chunks).then(|| other.other_chunks.clone()),
-            chunk_order: (base.chunk_order != other.chunk_order).then(|| other.chunk_order.clone()),
-        }
-    }
     /// 🔁️ Concrete diff-level undo: every replaced field takes the value `base` carries, and a spliced lane puts back what its splices removed, last splice first.
     fn inverse(&self, base: &WavSnapshot) -> Self {
         let lane_replaced = self.data.as_ref().is_some_and(|data| *data != base.data);
@@ -309,6 +267,14 @@ pub fn sparse_against(base: &WavSnapshot, diff: WavDiff) -> WavDiff {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Tests
+/// 🧪️ Representative `WavDiff` cases built declaratively (empty diff and the pad-byte lanes) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
+/// conformance-law tests.
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<WavDiff> {
+    vec![WavDiff::default(), WavDiff { fmt_pad_byte: Some(1), data_pad_byte: Some(0), ..Default::default() }]
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

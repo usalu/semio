@@ -1,0 +1,30 @@
+{
+  "insertIfd": [
+    "index",
+    "ifd"
+  ],
+  "replaceTag": [
+    "ifdIndex",
+    "tag",
+    "values"
+  ],
+  "ifd": [
+    "entries",
+    "blocks"
+  ],
+  "values": [
+    "kind",
+    "byteValue",
+    "asciiValue",
+    "shortValue",
+    "longValue",
+    "rationalValue",
+    "sByteValue",
+    "undefinedValue",
+    "sShortValue",
+    "sLongValue",
+    "sRationalValue",
+    "floatValue",
+    "doubleValue"
+  ]
+}

@@ -87,6 +87,7 @@ Feature: Apply every typed CommonMark mutation to a real-world document
       | remove-block  | {"path":[],"index":8}                                                                                                                                                                                                                                                                                                                                                                                                            |
       | replace-block | {"path":[{"step":"listItem","index":7,"item":0}],"index":0,"block":{"kind":"paragraph","inlines":[{"kind":"text","text":"This paragraph replaced the original table-of-contents entry for the products section, proving ReplaceBlock performs a genuine nested wholesale block replacement inside a real list item rather than a top-level-only edit."}]}}                                                                    |
       | set-inlines   | {"path":[],"index":6,"inlines":[{"kind":"text","text":"📑️ Overview (rewritten by the set-inlines mutation)"}]}                                                                                                                                                                                                                                                                                                                  |
+      | splice-source | {"splices":[{"offset":10,"delete":6,"insert":"right"}]} |
 
   @id-inverse
   @level-exhaustive
@@ -104,6 +105,7 @@ Feature: Apply every typed CommonMark mutation to a real-world document
       | remove-block  | {"path":[],"index":8}                                                                                                                                                                                                                                                                                                                                                                                                            |
       | replace-block | {"path":[{"step":"listItem","index":7,"item":0}],"index":0,"block":{"kind":"paragraph","inlines":[{"kind":"text","text":"This paragraph replaced the original table-of-contents entry for the products section, proving ReplaceBlock performs a genuine nested wholesale block replacement inside a real list item rather than a top-level-only edit."}]}}                                                                    |
       | set-inlines   | {"path":[],"index":6,"inlines":[{"kind":"text","text":"📑️ Overview (rewritten by the set-inlines mutation)"}]}                                                                                                                                                                                                                                                                                                                  |
+      | splice-source | {"splices":[{"offset":10,"delete":6,"insert":"right"}]} |
 
   @id-identity-round-trip
   @level-long

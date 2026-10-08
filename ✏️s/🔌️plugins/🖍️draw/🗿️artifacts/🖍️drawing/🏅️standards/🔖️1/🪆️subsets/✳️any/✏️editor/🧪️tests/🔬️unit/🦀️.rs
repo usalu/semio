@@ -97,7 +97,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
         _ => unreachable!("retained Drawing fixture group remains exact"),
     };
     snapshot.layers.push(group);
-    snapshot.assets.insert(semio_framework_value::paged::PagedUtf8::from("image-a"), crate::DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
+    snapshot.assets.insert(semio_framework_value::paged::PagedUtf8::from("image-a"), crate::DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() });
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let mutation = DrawingMutation::RenameLayer(crate::mutations::RenameLayer { layer_id: retained_target.clone().into(), new_name: "Retained Path".into() });
@@ -965,7 +965,7 @@ async fn shape_conversion_restores_the_primitive_with_one_undo() {
     let before=DrawingSnapshot { id:"conversion-history".into(),layers:vec![layer].into(),..Default::default() };
     load_drawing_fixture(&mut app,&before);
     let mut after=before.clone();
-    for mutation in edit_selection::plan(&before,&[id.clone()],"toPath").unwrap() { crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
+    for mutation in edit_selection::plan(&before,&[id.clone()],"toPath").unwrap() { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection { operation:"toPath".into(),ids:vec![id] }),|app|app.snapshot().unwrap(),before,after).await;
 }
 

@@ -1,3 +1,4 @@
+use crate::apply_mutation;
 use super::*;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Mp3FrameHeader};
 use protocol::command::DiffAlgebra;
@@ -19,10 +20,10 @@ fn base_snapshot() -> Mp3Snapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
     vec![
-        Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0] }] }) }),
+        Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: Some(Id3v2Tag { frames: vec![Id3Frame { id: "TIT2".into(), content: crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content::Text { values: vec!["x".into()] } }] }) }),
         Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: None }),
         Mp3Mutation::SetFrames(set_frames::SetFrames { frames: vec![frame(), frame(), frame()] }),
-        Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: Some(Id3v1Tag { raw: vec![b'T', b'A', b'G'] }) }),
+        Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: Some(Id3v1Tag::default()) }),
         Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: None }),
     ]
 }
@@ -52,7 +53,7 @@ async fn mutation_diff_law_every_variant() {
     let base = base_snapshot();
     for m in variants(&base) {
         let mut via_apply = base.clone();
-        let returned = apply_mp3_mutation(&mut via_apply, &m);
+        let returned = apply_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
         assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
@@ -66,9 +67,9 @@ async fn inverse_law_mutation_and_diff_level() {
     let base = base_snapshot();
     for m in variants(&base) {
         let mut round = base.clone();
-        apply_mp3_mutation(&mut round, &m);
-        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
-            apply_mp3_mutation(&mut round, &inv);
+        apply_mutation(&mut round, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut round, &inv);
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
@@ -102,8 +103,8 @@ async fn op_text_binary_roundtrip_law() {
 async fn mp3_mutation_inverse_sum_law_holds_for_every_leaf() {
     let plain = base_snapshot();
     let tagged = Mp3Snapshot {
-        id3v2: Some(Id3v2Tag { major_version: 4, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TPE1".into(), flags: 0, data: vec![1, 2] }] }),
-        id3v1: Some(Id3v1Tag { raw: vec![b'T', b'A', b'G', 1] }),
+        id3v2: Some(Id3v2Tag { frames: vec![Id3Frame { id: "TPE1".into(), content: crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content::Text { values: vec!["x".into()] } }] }),
+        id3v1: Some(Id3v1Tag::default()),
         ..base_snapshot()
     };
     for base in [&plain, &tagged] {

@@ -14,7 +14,7 @@
 //! the seven step-scoped verbs above used to be documented no-ops (the timeline read through an
 //! unresolved composed `s.stdio.semio.flow` child), but `step_payloads` is the durable, inline
 //! timeline record since `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4, so every verb now
-//! mutates it directly and re-mints `steps`/`tool_solids` to match (`process3d_step_timeline_diff`,
+//! mutates it directly and re-mints `steps`/`tool_solids` to match (`Process3dDiff::apply`,
 //! reusing `process_working_scene_to_snapshot`'s own minting). `UNOBSERVABLE` below is empty.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves an

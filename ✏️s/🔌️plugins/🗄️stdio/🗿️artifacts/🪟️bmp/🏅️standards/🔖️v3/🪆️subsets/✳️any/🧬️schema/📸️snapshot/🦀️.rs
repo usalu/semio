@@ -31,6 +31,17 @@ pub struct BmpNativeSample { pub red: u32, pub green: u32, pub blue: u32, pub al
 #[value(rename_all = "camelCase")]
 pub struct BmpRegion { pub x: u32, pub y: u32, pub width: u32, pub height: u32 }
 
+/// 🧩 One rectangle of owned pixels, row-major: the sparse row a paint writes and its undo restores. Exactly the list of the image's storage is filled.
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BmpSampleRect {
+    pub region: BmpRegion,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub indices: Vec<u8>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub samples: Vec<BmpNativeSample>,
+}
+
 #[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BmpColor { pub red: u8, pub green: u8, pub blue: u8, pub alpha: u8 }
@@ -82,6 +93,53 @@ impl Default for BmpImage {
 pub fn mask_maximum(mask: u32) -> u32 { if mask == 0 { 0 } else { mask >> mask.trailing_zeros() } }
 
 impl BmpImage {
+    /// 🧭 Ordinal of the first pixel of `region`, or `None` when the region is empty or leaves the image.
+    pub fn region_start(&self, region: BmpRegion) -> Option<usize> {
+        let inside = region.width != 0 && region.height != 0 && region.x.checked_add(region.width).is_some_and(|right| right <= self.width) && region.y.checked_add(region.height).is_some_and(|bottom| bottom <= self.height);
+        inside.then(|| region.y as usize * self.width as usize + region.x as usize)
+    }
+
+    /// 📋 The pixels `region` currently holds (`None` when the region is outside the image).
+    pub fn region_rect(&self, region: BmpRegion) -> Option<BmpSampleRect> {
+        let start = self.region_start(region)?;
+        let (stride, row) = (self.width as usize, region.width as usize);
+        let rows = 0..region.height as usize;
+        Some(match &self.pixels {
+            BmpPixels::Indexed { indices } => BmpSampleRect { region, indices: rows.flat_map(|line| indices[start + line * stride..start + line * stride + row].iter().copied()).collect(), samples: Vec::new() },
+            BmpPixels::Direct { samples } => BmpSampleRect { region, indices: Vec::new(), samples: rows.flat_map(|line| samples[start + line * stride..start + line * stride + row].iter().copied()).collect() },
+        })
+    }
+
+    /// ✍️ Writes `rect` into the pixel rows it addresses and nothing else.
+    pub fn write_rect(&mut self, rect: &BmpSampleRect) -> Result<(), String> {
+        let start = self.region_start(rect.region).ok_or("bmp: sample rectangle exceeds the owned image or is empty")?;
+        let (stride, row) = (self.width as usize, rect.region.width as usize);
+        let count = row * rect.region.height as usize;
+        match &mut self.pixels {
+            BmpPixels::Indexed { indices } if rect.indices.len() == count && rect.samples.is_empty() => rect.indices.chunks_exact(row).enumerate().for_each(|(line, values)| indices[start + line * stride..start + line * stride + row].copy_from_slice(values)),
+            BmpPixels::Direct { samples } if rect.samples.len() == count && rect.indices.is_empty() => rect.samples.chunks_exact(row).enumerate().for_each(|(line, values)| samples[start + line * stride..start + line * stride + row].copy_from_slice(values)),
+            _ => return Err("bmp: sample rectangle storage or cardinality differs from its region".into()),
+        }
+        Ok(())
+    }
+
+    /// 🔎 Refuses a rectangle that is out of bounds, mis-sized, of another storage, past the palette or over a native mask precision.
+    pub fn validate_rect(&self, rect: &BmpSampleRect) -> Result<(), String> {
+        self.validate_header()?;
+        self.region_start(rect.region).ok_or("bmp: sample rectangle exceeds the owned image or is empty")?;
+        let count = rect.region.width as usize * rect.region.height as usize;
+        match &self.pixels {
+            BmpPixels::Indexed { .. } if rect.indices.len() == count && rect.samples.is_empty() => {
+                if rect.indices.iter().any(|index| usize::from(*index) >= self.palette.len()) {
+                    return Err("bmp: sample references an absent palette entry".into());
+                }
+            }
+            BmpPixels::Direct { .. } if rect.samples.len() == count && rect.indices.is_empty() => rect.samples.iter().try_for_each(|sample| self.validate_direct_sample(sample))?,
+            _ => return Err("bmp: sample rectangle storage or cardinality differs from its region".into()),
+        }
+        Ok(())
+    }
+
     pub fn validate_header(&self) -> Result<(), String> {
         if self.width > i32::MAX as u32 || self.height > i32::MAX as u32 || (self.width == 0) != (self.height == 0) { return Err("bmp: invalid owned dimensions".into()); }
         let count = usize::try_from(self.width).ok().and_then(|width| width.checked_mul(self.height as usize)).ok_or("bmp: owned sample count overflow")?;
@@ -108,10 +166,13 @@ impl BmpImage {
         }
         Ok(())
     }
+    /// 🎨 Refuses a direct sample whose component exceeds its native mask precision or whose reserved bits fall outside the unassigned ones.
+    pub fn validate_direct_sample(&self,sample:&BmpNativeSample)->Result<(),String> {let assigned=self.masks.into_iter().fold(0,|bits,mask|bits|mask);let depth=self.profile.bits_per_pixel();let valid_bits=if depth==32 {u32::MAX}else{(1u32<<depth)-1};if [sample.red,sample.green,sample.blue,sample.alpha].into_iter().zip(self.masks).any(|(component,mask)|component>mask_maximum(mask))||sample.reserved&assigned!=0||sample.reserved&!valid_bits!=0 {return Err("bmp: owned component exceeds its native mask precision".into());}Ok(())
+    }
     pub fn validate_sample(&self,ordinal:usize)->Result<(),String> {
         match &self.pixels {
             BmpPixels::Indexed {indices}=>{if indices.get(ordinal).is_none_or(|index|usize::from(*index)>=self.palette.len()) {return Err("bmp: sample references an absent palette entry".into());}},
-            BmpPixels::Direct {samples}=>{let sample=samples.get(ordinal).ok_or("bmp: direct sample is absent")?;let assigned=self.masks.into_iter().fold(0,|bits,mask|bits|mask);let depth=self.profile.bits_per_pixel();let valid_bits=if depth==32 {u32::MAX}else{(1u32<<depth)-1};if [sample.red,sample.green,sample.blue,sample.alpha].into_iter().zip(self.masks).any(|(component,mask)|component>mask_maximum(mask))||sample.reserved&assigned!=0||sample.reserved&!valid_bits!=0 {return Err("bmp: owned component exceeds its native mask precision".into());}},
+            BmpPixels::Direct {samples}=>{let sample=samples.get(ordinal).ok_or("bmp: direct sample is absent")?;self.validate_direct_sample(sample)?;},
         }Ok(())
     }
     pub fn validate(&self)->Result<(),String> {self.validate_header()?;let count=match &self.pixels {BmpPixels::Indexed {indices}=>indices.len(),BmpPixels::Direct {samples}=>samples.len()};for ordinal in 0..count {self.validate_sample(ordinal)?;}Ok(())}

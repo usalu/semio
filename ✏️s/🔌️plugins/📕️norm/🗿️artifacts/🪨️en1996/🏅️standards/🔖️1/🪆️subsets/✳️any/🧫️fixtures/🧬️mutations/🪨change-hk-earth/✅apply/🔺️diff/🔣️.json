@@ -5,10 +5,11 @@
   "storeys": null,
   "walls": {
     "removed": [],
-    "added": [],
+    "inserted": [],
+    "moved": [],
     "modified": [
       {
-        "key": "wall-basement",
+        "id": "wall-basement",
         "patch": {
           "labelEn": null,
           "labelDe": null,
@@ -42,15 +43,17 @@
           "isBasement": null,
           "openings": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": []
           },
           "loadCases": {
             "removed": [],
-            "added": [],
+            "inserted": [],
+            "moved": [],
             "modified": [
               {
-                "key": "uls-earth",
+                "id": "uls-earth",
                 "patch": {
                   "designSituation": null,
                   "imposedCategory": null,
@@ -64,7 +67,8 @@
                   "hKEarthN": 55000.0,
                   "concentrated": {
                     "removed": [],
-                    "added": [],
+                    "inserted": [],
+                    "moved": [],
                     "modified": []
                   }
                 }

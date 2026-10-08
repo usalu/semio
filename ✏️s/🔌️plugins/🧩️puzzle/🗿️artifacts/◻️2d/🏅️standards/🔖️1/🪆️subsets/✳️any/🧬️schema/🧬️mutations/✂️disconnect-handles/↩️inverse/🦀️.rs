@@ -9,9 +9,7 @@ pub fn inverse(payload: &super::DisconnectHandles, base: &Puzzle2dSnapshot) -> R
     let Some((index, edge)) = base.edges.iter().enumerate().find(|(_, edge)| edge.id == payload.id) else {
         return Vec::new();
     };
-    let mut mutations = Vec::new();
-    crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index, &mut mutations);
-    mutations
+    crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index).into_iter().rev().collect()
 
     })())
 }

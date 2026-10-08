@@ -10,13 +10,33 @@ message Vdi3805ManufacturerFilePatch {
 }
 
 message Vdi3805ProductsPatch {
+}
+
+message Vdi3805ProductsRemoved {
   string id = 1;
+  uint64 index = 2;
+}
+
+message Vdi3805ProductsInserted {
+  uint64 index = 1;
+}
+
+message Vdi3805ProductsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Vdi3805ProductsModified {
+  string id = 1;
+  Vdi3805ProductsPatch patch = 2;
 }
 
 message Vdi3805ProductsRows {
-  repeated string removed = 1;
-  repeated Vdi3805ProductsPatch modified = 2;
-  repeated string order = 3;
+  repeated Vdi3805ProductsRemoved removed = 1;
+  repeated Vdi3805ProductsInserted inserted = 2;
+  repeated Vdi3805ProductsMoved moved = 3;
+  repeated Vdi3805ProductsModified modified = 4;
 }
 
 message Vdi3805EditionProfileEntry {
@@ -29,25 +49,40 @@ message Vdi3805EditionProfileRows {
   repeated Vdi3805EditionProfileEntry modified = 3;
 }
 
-message Vdi3805IndexEntriesPatchDnValue {
-  optional uint32 value = 1;
+message Vdi3805GeometryConnectionsPatchDiameterMmValue {
+  optional double value = 1;
 }
 
-message Vdi3805IndexEntriesPatch {
+message Vdi3805GeometryConnectionsPatch {
+  optional string medium = 1;
+  optional Vdi3805GeometryConnectionsPatchDiameterMmValue diameter_mm = 2;
+}
+
+message Vdi3805GeometryConnectionsRemoved {
   string id = 1;
-  optional Vdi3805IndexEntriesPatchDnValue dn = 2;
-  repeated string tags = 3;
+  uint64 index = 2;
 }
 
-message Vdi3805IndexEntriesRows {
-  repeated string removed = 1;
-  repeated Vdi3805IndexEntriesPatch modified = 2;
-  repeated string order = 3;
+message Vdi3805GeometryConnectionsInserted {
+  uint64 index = 1;
+}
+
+message Vdi3805GeometryConnectionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+
+message Vdi3805GeometryConnectionsModified {
+  string id = 1;
+  Vdi3805GeometryConnectionsPatch patch = 2;
 }
 
 message Vdi3805GeometryConnectionsRows {
-  repeated string removed = 1;
-  repeated string order = 2;
+  repeated Vdi3805GeometryConnectionsRemoved removed = 1;
+  repeated Vdi3805GeometryConnectionsInserted inserted = 2;
+  repeated Vdi3805GeometryConnectionsMoved moved = 3;
+  repeated Vdi3805GeometryConnectionsModified modified = 4;
 }
 
 message Vdi3805GeometryEntry {
@@ -91,8 +126,7 @@ message Vdi3805Diff {
   optional Vdi3805ProductsRows products = 2;
   optional Vdi3805EditionProfileRows edition_profile = 3;
   optional bool strict_mode = 4;
-  optional Vdi3805IndexEntriesRows index_entries = 5;
-  optional Vdi3805GeometryRows geometry = 6;
-  optional Vdi3805CurvesRows curves = 7;
-  optional Vdi3805LimitsPatch limits = 8;
+  optional Vdi3805GeometryRows geometry = 5;
+  optional Vdi3805CurvesRows curves = 6;
+  optional Vdi3805LimitsPatch limits = 7;
 }

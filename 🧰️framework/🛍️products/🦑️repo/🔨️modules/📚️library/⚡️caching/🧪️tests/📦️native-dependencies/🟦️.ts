@@ -70,7 +70,8 @@ export async function testNativeDependencies(workspace: string, output: string):
     for(const source of fixture.requiredPhysicalSources) {if(!existsSync(join(root,source))){mkdirSync(dirname(join(root,source)),{recursive:true});copyFileSync(join(workspace,source),join(root,source));}assert.equal(existsSync(join(root,source)),true,source);}
     const env: NodeJS.ProcessEnv = { ...process.env, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NODE_PATH: join(workspace, "node_modules"), CARGO_TARGET_DIR: join(root, "target"), CARGO_BUILD_BUILD_DIR: join(root, "build"), FORCE_COLOR: "0", NO_COLOR: "1" };
     delete env.NX_SKIP_NX_CACHE;
-    const run = (command: string, args: string[]): Promise<string> => runTool(command, args, root, controller.signal, true, env);
+    const {runTool:ownedRunTool}=await import(pathToFileURL(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts")).href);
+    const run = (command: string, args: string[]): Promise<string> => ownedRunTool(command, args, root, controller.signal, true, env);
     await run("cargo", ["fetch", "--locked", "--offline"]);
     const oracle = JSON.parse(await run("cargo", ["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"]));
     const assertCargoOwner = (value: any): void => {
@@ -86,8 +87,8 @@ export async function testNativeDependencies(workspace: string, output: string):
     writeFileSync(join(root,"owned-input.txt"),fixture.cargo.ownedInput);
     mkdirSync(join(root,"owned"),{recursive:true});writeFileSync(join(root,"owned/program.js"),fixture.cargo.programSource);writeFileSync(join(root,"owned/📜️script.ts"),fixture.cargo.preparationScript);
     writeFileSync(join(root,"Cargo.toml"),fixture.cargo.files["Cargo.toml"]+fixture.cargo.preparationMetadata);
-    await assert.rejects(run("cargo", ["fetch", "--locked", "--offline"]));
-    assert.equal(readFileSync(join(root,"Cargo.lock"),"utf8"),lock);
+    await run("cargo", ["fetch", "--locked", "--offline"]);
+    assert.notEqual(readFileSync(join(root,"Cargo.lock"),"utf8"),lock);
     assert.equal(existsSync(join(root,"generated/Cargo.toml")),true,"Actual owner preparation must introduce the dependency before locked verification");
     const preparationCalls = (): number => readFileSync(join(root,"preparation-calls.jsonl"),"utf8").trim().split("\n").length;
     let preparedLock: string | undefined;
@@ -119,9 +120,19 @@ export async function testNativeDependencies(workspace: string, output: string):
     const {inventorySchemaScopes}=await import("../../../🔍️discovery/🟦️.ts");
     const inventoryRoot=join(root,"schema-owner");mkdirSync(dirname(join(inventoryRoot,custodySchemaPath)),{recursive:true});copyFileSync(join(workspace,custodySchemaPath),join(inventoryRoot,custodySchemaPath));
     const inventory=inventorySchemaScopes(inventoryRoot,JSON.parse(readFileSync(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),"utf8"))),scope=inventory.modules.find(module=>module.modulePath===dirname(custodySchemaPath));
+    writeFileSync(join(output,"cargo-custody-inventory.json"),JSON.stringify({scope,diagnostics:inventory.diagnostics},null,2)+"\n");
     assert.ok(scope?.level);assert.equal(scope.scopeId,"repo.library.workspaces.cargo.preparation.custody");assert.deepEqual(scope.documents[0].exports.sort(),Object.keys(schema.$defs).sort());
     assert.equal(scope.hashes["🔣️.json"],new Bun.CryptoHasher("sha256").update(readFileSync(join(workspace,custodySchemaPath))).digest("hex"));
     assert.deepEqual(inventory.diagnostics.filter(row=>row.path.startsWith(dirname(custodySchemaPath))),[]);
+    const {cargoPreparationProgramSourcesV1}=await import(pathToFileURL(join(root,custodySchemaPath.replace("/🧬️schema/🔣️.json","/🟦️.ts"))).href),ts=require("typescript");
+    const importRoot=join(root,"program-imports");mkdirSync(importRoot,{recursive:true});
+    for(const row of fixture.programImports){
+      const entry=join(importRoot,"entry.ts"),source=`import value from ${row.literal};export default value;\n${row.shadow?`// ${row.shadow}\n`:""}`;
+      writeFileSync(entry,source);writeFileSync(join(importRoot,row.path),"export default 7;\n");if(row.shadow)writeFileSync(join(importRoot,row.shadow),"export default 8;\n");
+      const parsed=ts.createSourceFile(entry,source,ts.ScriptTarget.Latest,true),specifier=parsed.statements[0].moduleSpecifier.text;
+      assert.equal(specifier,row.path);assert.equal(Bun.resolveSync(specifier,importRoot),join(importRoot,row.path));
+      const program=cargoPreparationProgramSourcesV1(root,entry);assert.ok(program.sources.some((input:any)=>input.path===entry));assert.ok(program.sources.some((input:any)=>input.path===join(importRoot,row.path)));assert.deepEqual(program.resolutions.filter((edge:any)=>edge.source===entry),[{source:entry,specifier:row.path,selected:join(importRoot,row.path)}]);
+    }
     const pairPath="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";
     const {withPreparedCargoDependencyPairV1}=await import(pathToFileURL(join(root,pairPath)).href);
     const recipe=join(root,"owned/📜️script.ts"),initial=fixture.cargo.preparationScript;
@@ -155,7 +166,64 @@ export async function testNativeDependencies(workspace: string, output: string):
     let dependencyCalls=0;
     await withPreparedCargoDependencyPairV1(root,"Cargo.toml",controller.signal,async(args:string[])=>{dependencyCalls++;assert.equal(readFileSync(join(root,"generated/child-output.txt"),"utf8"),"7");const oracle=Bun.spawnSync(["cargo","metadata","--manifest-path",join(root,"Cargo.toml"),"--locked","--offline","--no-deps","--format-version=1"],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(oracle.exitCode,0,oracle.stderr.toString());const tree=JSON.parse(oracle.stdout.toString());assert.deepEqual(tree.packages.map((row:any)=>row.name).sort(),fixture.cargo.preparedPackages);});
     assert.equal(dependencyCalls,2);
+    const generated=fixture.generatedPreparation;rmSync(join(root,"additional"),{recursive:true,force:true});
+    const additional={"Cargo.toml":generated.rootManifest,"additional/new/Cargo.toml":generated.manifest,"additional/new/lib.rs":"","additional/new/📜️script.ts":generated.script};
+    const publish=`for(const [path,content] of Object.entries(${JSON.stringify(additional)})){const target=resolve(process.cwd(),path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,content as string);observeCargoPreparationOutputV1(target,content as string);}`;
+    writeFileSync(recipe,initial.replace("completeCargoPreparationObservationV1();",publish+"\ncompleteCargoPreparationObservationV1();"));
+    let generatedCalls=0;
+    await withPreparedCargoDependencyPairV1(root,"Cargo.toml",controller.signal,async(args:string[])=>{
+      generatedCalls++;assert.equal(readFileSync(join(root,"additional/new/child-output.txt"),"utf8"),"7");
+      const actual=Bun.spawnSync(["cargo",...args,"--offline"],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(actual.exitCode,0,actual.stderr.toString());
+      const oracle=Bun.spawnSync(["cargo","metadata","--manifest-path",join(root,"Cargo.toml"),"--locked","--offline","--no-deps","--format-version=1"],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(oracle.exitCode,0,oracle.stderr.toString());assert.deepEqual(JSON.parse(oracle.stdout.toString()).packages.map((row:any)=>row.name).sort(),generated.expectedPackages);
+    });
+    assert.equal(generatedCalls,2);assert.equal(existsSync(join(root,"target")),false);
+    const ancestor=fixture.ancestorPreparation;rmSync(join(root,"additional"),{recursive:true,force:true});
+    writeFileSync(join(root,"Cargo.toml"),fixture.cargo.preparedFiles["Cargo.toml"]);writeFileSync(join(root,"generated/Cargo.toml"),fixture.cargo.preparedFiles["generated/Cargo.toml"]+ordered.metadata);
+    const ancestorFiles={"Cargo.toml":ancestor.rootManifest,"additional/new/Cargo.toml":generated.manifest,"additional/new/lib.rs":"","additional/new/📜️script.ts":generated.script};
+    const ancestorPublish=`for(const [path,content] of Object.entries(${JSON.stringify(ancestorFiles)})){const target=resolve(process.cwd(),"..",path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,content as string);observeCargoPreparationOutputV1(target,content as string);}`;
+    writeFileSync(join(root,"generated/📜️script.ts"),ordered.script.replace('import {writeFileSync}', 'import {mkdirSync,writeFileSync}').replace('import {resolve}', 'import {dirname,resolve}').replace("completeCargoPreparationObservationV1();",ancestorPublish+"\ncompleteCargoPreparationObservationV1();"));
+    const parent=ordered.script.replace('import {writeFileSync}', 'import {readFileSync,writeFileSync}').replace('observeCargoPreparationSourceV1,observeCargoPreparationOutputV1','observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1').replace("observeCargoPreparationSourceV1(import.meta.path);","observeCargoPreparationSourceV1(import.meta.path);\n"+ancestor.parentRead);
+    writeFileSync(recipe,parent);let ancestorCalls=0;
+    await withPreparedCargoDependencyPairV1(root,"Cargo.toml",controller.signal,async(args:string[])=>{
+      ancestorCalls++;assert.equal(readFileSync(join(root,"additional/new/child-output.txt"),"utf8"),"7");
+      const actual=Bun.spawnSync(["cargo",...args,"--offline"],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(actual.exitCode,0,actual.stderr.toString());
+      const oracle=Bun.spawnSync(["cargo","metadata","--manifest-path",join(root,"Cargo.toml"),"--locked","--offline","--no-deps","--format-version=1"],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(oracle.exitCode,0,oracle.stderr.toString());assert.deepEqual(JSON.parse(oracle.stdout.toString()).packages.map((row:any)=>row.name).sort(),generated.expectedPackages);
+    });
+    assert.equal(ancestorCalls,2);
+    rmSync(join(root,"additional"),{recursive:true,force:true});writeFileSync(join(root,"Cargo.toml"),fixture.cargo.preparedFiles["Cargo.toml"]);writeFileSync(join(root,"generated/Cargo.toml"),fixture.cargo.preparedFiles["generated/Cargo.toml"]+ordered.metadata);writeFileSync(join(root,"generated/📜️script.ts"),ordered.script);
+    const changed=fixture.changedPreparation,changedManifest=fixture.cargo.preparedFiles["generated/Cargo.toml"]+ordered.metadata.replace('command=["prepare"]',`command=${JSON.stringify(changed.command)}`),change=`const target=resolve(process.cwd(),"generated/Cargo.toml"),content=${JSON.stringify(changedManifest)};writeFileSync(target,content);observeCargoPreparationOutputV1(target,content);`;
+    writeFileSync(recipe,ordered.script.replace("completeCargoPreparationObservationV1();",change+"\ncompleteCargoPreparationObservationV1();"));
+    let changedCalls=0;await assert.rejects(withPreparedCargoDependencyPairV1(root,"Cargo.toml",controller.signal,async()=>{changedCalls++;}),new RegExp(changed.expected));assert.equal(changedCalls,0);
 
+
+
+
+
+    const scoped=fixture.selectedPreparation;
+    const selectionSchema=JSON.parse(readFileSync(join(root,custodySchemaPath),"utf8")).$defs.CargoPreparationSelectionV1;
+    const selectionValidator=new (require("ajv"))({strict:true}).compile(selectionSchema);
+    const {parseCargoPreparationSelectionV1}=await import(pathToFileURL(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts")).href);
+    assert.equal(selectionValidator(scoped.selection),true);assert.deepEqual(parseCargoPreparationSelectionV1(scoped.selection),scoped.selection);
+    for(const value of scoped.rejectedSelections){assert.equal(selectionValidator(value),false);assert.throws(()=>parseCargoPreparationSelectionV1(value));}
+    writeFileSync(join(root,"Cargo.toml"),fixture.cargo.preparedFiles["Cargo.toml"].replace('members = [".", "generated"]','members = [".", "generated", "unrelated"]').replace('member-manifests = ["Cargo.toml", "generated/Cargo.toml"]','member-manifests = ["Cargo.toml", "generated/Cargo.toml", "unrelated/Cargo.toml"]').replace('owner-manifests = []','owner-manifests = ["foreign/Cargo.toml", "selected/Cargo.toml"]').replace('exclude-patterns = []','exclude-patterns = ["foreign/child", "foreign/unused"]'));
+    writeFileSync(recipe,parent.replace(ancestor.parentRead,""));
+    writeFileSync(join(root,"generated/Cargo.toml"),fixture.cargo.preparedFiles["generated/Cargo.toml"]+ordered.metadata);writeFileSync(join(root,"generated/📜️script.ts"),ordered.script);
+    mkdirSync(join(root,"unrelated"),{recursive:true});writeFileSync(join(root,"unrelated/Cargo.toml"),scoped.unusedManifest);writeFileSync(join(root,"unrelated/lib.rs"),"");writeFileSync(join(root,"unrelated/📜️script.ts"),scoped.unusedScript);
+    for(const [path,content] of Object.entries(scoped.foreignFiles)){const target=join(root,path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,content as string);}writeFileSync(join(root,"foreign/Cargo.lock"),scoped.foreignLock);
+    let scopedCalls=0;
+    await withPreparedCargoDependencyPairV1(root,scoped.selection.manifest,controller.signal,async(args:string[])=>{
+      scopedCalls++;assert.equal(readFileSync(join(root,"generated/child-output.txt"),"utf8"),"7");
+      const actual=Bun.spawnSync(["cargo",...args,"--offline"],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(actual.exitCode,0,actual.stderr.toString());
+      const metadata=Bun.spawnSync(["cargo","metadata","--locked","--offline","--no-deps","--format-version=1","--manifest-path",scoped.selection.manifest],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(metadata.exitCode,0,metadata.stderr.toString());assert.deepEqual(JSON.parse(metadata.stdout.toString()).packages.map((pkg:any)=>pkg.name).sort(),scoped.expectedPackages);
+      const tree=Bun.spawnSync(["cargo","tree","--locked","--offline","--prefix","none","--format","{p}","--manifest-path",scoped.selection.manifest,"-p",...scoped.selection.packages],{cwd:root,stdout:"pipe",stderr:"pipe"});assert.equal(tree.exitCode,0,tree.stderr.toString());assert.deepEqual(tree.stdout.toString().trim().split("\n").map(line=>line.split(" ")[0]).sort(),scoped.expectedTreePackages);
+      assert.deepEqual(require("smol-toml").parse(readFileSync(join(root,"selected/Cargo.lock"),"utf8")),Bun.TOML.parse(readFileSync(join(root,"selected/Cargo.lock"),"utf8")));
+    },[],scoped.selection.packages);
+    assert.equal(scopedCalls,2);assert.equal(readFileSync(join(root,"foreign/Cargo.lock"),"utf8"),scoped.foreignLock);
+    const {cargoWorkspacePreparationInvocationV1}=await import(pathToFileURL(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts")).href),launch=scoped.invocation,environment=Object.fromEntries(Object.entries(launch.environment).map(([key,value])=>[key,(value as string).replaceAll("{root}",root)]));
+    const request=cargoWorkspacePreparationInvocationV1(root,launch.args,root,environment);
+    assert.deepEqual(request,{command:process.execPath,args:[join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts"),"synchronize","--manifest",scoped.selection.manifest,...launch.packages.flatMap((name:string)=>["--package",name])],cwd:root,environment:{...environment,NX_WORKSPACE_ROOT:root}});
+    assert.equal(new (require("ajv"))({strict:true}).compile(schema.$defs.CargoPreparationInvocationV1)(request),true);assert.equal(cargoWorkspacePreparationInvocationV1(root,[launch.rejectedCommand],root,environment),undefined);assert.throws(()=>cargoWorkspacePreparationInvocationV1(root,launch.args,root,{...environment,SEMIO_CARGO_PREPARATION_ACTIVE:"current-recipe"}),/Cargo recursion/);
+    const consumed=JSON.parse(await run("cargo",["metadata","--locked","--offline","--no-deps","--format-version=1","--manifest-path","selected/main/Cargo.toml"]));assert.equal(resolve(consumed.workspace_root),join(root,"selected"));assert.deepEqual(consumed.packages.map((pkg:any)=>pkg.name).sort(),scoped.expectedPackages);assert.equal(readFileSync(join(root,"foreign/Cargo.lock"),"utf8"),scoped.foreignLock);
 
     passed = true;
   } finally {

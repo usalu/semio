@@ -19,6 +19,8 @@ function optionalIndex(value:unknown):number|null{return value===null?null:index
 function vector(value:unknown,size:number):Binary32[]{const words=array(value);if(words.length!==size)throw Error("Lowpoly mesh vector width");return words.map(parseBinary32);}
 function member<T extends string>(value:unknown,allowed:readonly T[]):T{if(!allowed.includes(value as T))throw Error("Lowpoly mesh channel enum");return value as T;}
 function named<T extends{name:string}>(values:T[]):T[]{const names=new Set<string>();for(const value of values){if(names.has(value.name))throw Error("Lowpoly mesh named ownership must be unique");names.add(value.name);}return values;}
+/** 🛂️ Admits one named attribute channel. */
+export function parseLowpolyMeshAttribute(value:unknown):LowpolyMeshAttribute{const row=parseSchemaRecord(value,["name","domain","semantic","interpolation","values","indices"]);return{name:text(row.name),domain:member(row.domain,["vertex","corner","face","edge"]),semantic:member(row.semantic,["normal","uv","color","material","custom"]),interpolation:member(row.interpolation,["linear","nearest","constant"]),values:array(row.values).map(parseIntrinsicValue),indices:row.indices===null?null:array(row.indices).map(index)}}
 /** 🛂️ Preserve complete editable topology without inferring a mesh from source text. */
 export function parseLowpolyMeshState(value:unknown):LowpolyMeshState{
  const root=parseSchemaRecord(value,["vertices","halfedges","faces","uvSeams","attributes","materials","textures"]);
@@ -27,7 +29,7 @@ export function parseLowpolyMeshState(value:unknown):LowpolyMeshState{
   halfedges:array(root.halfedges).map(value=>{const row=parseSchemaRecord(value,["vertex","twin","next","face","uv"]);return{vertex:index(row.vertex),twin:optionalIndex(row.twin),next:index(row.next),face:optionalIndex(row.face),uv:vector(row.uv,2)as[Binary32,Binary32]}}),
   faces:array(root.faces).map(value=>{const row=parseSchemaRecord(value,["halfedge","smooth","flipped"]);return{halfedge:index(row.halfedge),smooth:flag(row.smooth),flipped:flag(row.flipped)}}),
   uvSeams:(()=>{const seams=array(root.uvSeams).map(index);if(new Set(seams).size!==seams.length)throw Error("Lowpoly mesh seam identity must be unique");return seams;})(),
-  attributes:named(array(root.attributes).map(value=>{const row=parseSchemaRecord(value,["name","domain","semantic","interpolation","values","indices"]);return{name:text(row.name),domain:member(row.domain,["vertex","corner","face","edge"]),semantic:member(row.semantic,["normal","uv","color","material","custom"]),interpolation:member(row.interpolation,["linear","nearest","constant"]),values:array(row.values).map(parseIntrinsicValue),indices:row.indices===null?null:array(row.indices).map(index)}})),
+  attributes:named(array(root.attributes).map(parseLowpolyMeshAttribute)),
   materials:named(array(root.materials).map(value=>{const row=parseSchemaRecord(value,["name","value"]);return{name:text(row.name),value:parseIntrinsicValue(row.value)}})),
   textures:named(array(root.textures).map(value=>{const row=parseSchemaRecord(value,["name","mime","bytes"]);if(!(row.bytes instanceof Uint8Array))throw Error("Lowpoly texture requires owned octets");return{name:text(row.name),mime:text(row.mime),bytes:row.bytes.slice()}})),
  };

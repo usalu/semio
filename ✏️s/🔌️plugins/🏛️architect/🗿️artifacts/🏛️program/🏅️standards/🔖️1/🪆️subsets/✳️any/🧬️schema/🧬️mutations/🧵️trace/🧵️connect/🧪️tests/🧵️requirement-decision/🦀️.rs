@@ -2,9 +2,9 @@
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
-//! leaf's own `🔺️diff/🦀️.rs`, which finds no trace with this id and therefore takes the `added = [trace]` branch (endpoints are free-form, unchecked).
+//! leaf's own `🔺️diff/🦀️.rs`, which finds no trace with this id and therefore takes the `inserted = [{index, trace}]` branch (endpoints are free-form, unchecked).
 //!
-//! That leaf's own contract line reads: 🔌️ Warning `mutation.no-op` if the trace already carries this exact value (empty diff); else `added = [trace]` if the id is new, else the trace is replaced under its own id: `removed = [id]`, `added = [trace]`, and `reordered` (the base order) unless the trace was last. `from_id`/`to_id` are free-form cross-register references (any entity across any collection) — endpoint-existence checking is not implemented here; see `📓️w3-d-architect-report.md`.
+//! That leaf's own contract line reads: 🔌️ Warning `mutation.no-op` if the trace already carries this exact value, Error `mutation.target-missing` if a new trace's `index` lies past the end (both empty diff); else `inserted = [{index, trace}]` if the id is new (appended when `index` is absent), else the trace is replaced in place under its own id: `removed = [{id, index}]` and `inserted = [{index, trace}]`. `from_id`/`to_id` are free-form cross-register references (any entity across any collection) — endpoint-existence checking is not implemented here; see `📓️w3-d-architect-report.md`.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.

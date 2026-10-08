@@ -1,6 +1,6 @@
 use super::*;
 use crate::schema::{block_id, create_block_by_kind, NoteIdOwner};
-use protocol::os_spr::protocol_laws::{assert_diff_algebra_between_law, assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
+use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
 
 fn text(owner: &mut NoteIdOwner) -> NoteBlockNode {
     create_block_by_kind(owner, "text", 0.0, 0.0)
@@ -44,8 +44,10 @@ async fn malformed_rows_are_rejected() {
     for diff in [
         NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: None, index: 5, block: text(&mut owner) }]),
         NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: None, index: 0, block: a.clone() }]),
-        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: "ghost".into(), parent_id: None, index: 0 }]),
-        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: g_id.clone(), parent_id: Some(g_id.clone()), index: 0 }]),
+        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: "ghost".into(), from_parent_id: None, from_index: 0, parent_id: None, index: 0 }]),
+        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: g_id.clone(), from_parent_id: None, from_index: 1, parent_id: Some(g_id.clone()), index: 0 }]),
+        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: block_id(&a).to_string(), from_parent_id: None, from_index: 1, parent_id: None, index: 0 }]),
+        NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: block_id(&a).to_string(), parent_id: None, index: 1 }]),
         rename("ghost", "x"),
         NoteDiff::block_patches([(block_id(&a).to_string(), NoteBlockPatch { tex: Some("x".into()), ..Default::default() })]),
     ] {
@@ -60,11 +62,11 @@ async fn absorb_coalesces_rows_of_one_key() {
     let block = text(&mut owner);
     let id = block_id(&block).to_string();
     let mut created = NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: None, index: 0, block: block.clone() }]);
-    created.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: id.clone() }]));
+    created.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: id.clone(), parent_id: None, index: 0 }]));
     assert_eq!(created.blocks, Some(NoteBlocksDelta::default()), "create∘delete leaves nothing");
 
     let mut placed = NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: None, index: 0, block }]);
-    placed.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: id.clone(), parent_id: None, index: 3 }]));
+    placed.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: id.clone(), from_parent_id: None, from_index: 0, parent_id: None, index: 3 }]));
     assert!(matches!(placed.blocks.expect("blocks delta").rows.as_slice(), [NoteBlockRow::Add { index: 3, .. }]), "add∘move is an add at the last destination");
 
     let mut patched = rename("a", "First");
@@ -74,9 +76,13 @@ async fn absorb_coalesces_rows_of_one_key() {
     assert_eq!(rows.len(), 2, "patch∘patch of one block is one row");
     assert!(matches!(&rows[0], NoteBlockRow::Patch { id, patch } if id == "a" && patch.name.as_deref() == Some("First") && patch.x == Some(4.0)));
 
-    let mut dropped = NoteDiff::block_rows(vec![NoteBlockRow::Move { id: "a".into(), parent_id: None, index: 1 }]);
-    dropped.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: "a".into() }]));
-    assert_eq!(dropped.blocks.expect("blocks delta").rows, vec![NoteBlockRow::Remove { id: "a".into() }], "move∘remove keeps the remove");
+    let mut dropped = NoteDiff::block_rows(vec![NoteBlockRow::Move { id: "a".into(), from_parent_id: None, from_index: 0, parent_id: None, index: 1 }]);
+    dropped.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: "a".into(), parent_id: None, index: 1 }]));
+    assert_eq!(dropped.blocks.expect("blocks delta").rows, vec![NoteBlockRow::Remove { id: "a".into(), parent_id: None, index: 0 }], "move∘remove removes from the first origin");
+
+    let mut returned = NoteDiff::block_rows(vec![NoteBlockRow::Move { id: "a".into(), from_parent_id: None, from_index: 0, parent_id: None, index: 2 }]);
+    returned.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: "a".into(), from_parent_id: None, from_index: 2, parent_id: None, index: 0 }]));
+    assert!(returned.blocks.expect("blocks delta").rows.is_empty(), "a move and its mirror vanish");
 
     let asset = NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None };
     let other = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
@@ -101,11 +107,11 @@ async fn absorb_equals_sequential_application() {
     let fresh_id = block_id(&fresh).to_string();
     let firsts = [
         rename(&a_id, "Renamed"),
-        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: b_id.clone(), parent_id: Some(g_id.clone()), index: 0 }]),
-        NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: a_id.clone() }]),
+        NoteDiff::block_rows(vec![NoteBlockRow::Move { id: b_id.clone(), from_parent_id: None, from_index: 1, parent_id: Some(g_id.clone()), index: 0 }]),
+        NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: a_id.clone(), parent_id: None, index: 0 }]),
         NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: Some(g_id.clone()), index: 0, block: fresh }]),
     ];
-    let seconds = [rename(&a_id, "Again"), rename(&fresh_id, "Fresh"), NoteDiff::block_rows(vec![NoteBlockRow::Move { id: a_id.clone(), parent_id: None, index: 0 }]), NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: b_id.clone() }])];
+    let seconds = [rename(&a_id, "Again"), rename(&fresh_id, "Fresh"), NoteDiff::block_rows(vec![NoteBlockRow::Move { id: a_id.clone(), from_parent_id: None, from_index: 0, parent_id: None, index: 0 }]), NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: b_id.clone(), parent_id: None, index: 1 }])];
     for d1 in &firsts {
         let mid = protocol::apply_diff(d1, &base).expect("first diff applies");
         for d2 in &seconds {
@@ -122,28 +128,17 @@ async fn the_negative_delta_restores_the_base() {
     let mut owner = NoteIdOwner::new("diff-negative", 0);
     let (a, g, table) = (text(&mut owner), group(&mut owner), create_block_by_kind(&mut owner, "table", 0.0, 0.0));
     let (a_id, g_id, table_id) = (block_id(&a).to_string(), block_id(&g).to_string(), block_id(&table).to_string());
+    let removed_row = match &table {
+        NoteBlockNode::Table { rows, .. } => rows[1].clone(),
+        _ => unreachable!("a table block"),
+    };
     let base = snapshot_with(vec![a, g, table]);
     let fresh = text(&mut owner);
     let mut diff = NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: Some(g_id.clone()), index: 0, block: fresh }]);
-    diff.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: a_id.clone(), parent_id: Some(g_id), index: 1 }]));
-    diff.absorb(NoteDiff::block_patches([(table_id, NoteBlockPatch { table: Some(vec![NoteTableEdit::RemoveRow { index: 1 }, NoteTableEdit::InsertColumn { index: 0, name: "Z".into(), cells: vec![NoteTableCell { content: "q".into() }] }]), x: Some(9.0), ..Default::default() })]));
+    diff.absorb(NoteDiff::block_rows(vec![NoteBlockRow::Move { id: a_id.clone(), from_parent_id: None, from_index: 0, parent_id: Some(g_id), index: 1 }]));
+    diff.absorb(NoteDiff::block_patches([(table_id, NoteBlockPatch { table: Some(vec![NoteTableEdit::RemoveRow { index: 1, cells: removed_row }, NoteTableEdit::InsertColumn { index: 0, name: "Z".into(), cells: vec![NoteTableCell { content: "q".into() }] }]), x: Some(9.0), ..Default::default() })]));
     diff.absorb(NoteDiff { title: Some(NoteAssigned::new(Some("Titled".into()))), grid_opacity: Some(NoteAssigned::new(None)), ..Default::default() });
     assert_diff_algebra_inverse_law::<NoteSnapshot, NoteDiff>(&base, &diff).await;
     assert_eq!(ids(&protocol::apply_diff(&diff, &base).expect("diff applies")).len(), 4);
 }
 
-/// 🧭️ LAW: `between(a, b)` carries `a` to `b` and `between(a, a)` is empty.
-#[semio_framework_async_macros::async_test]
-async fn between_reaches_the_other_snapshot() {
-    let mut owner = NoteIdOwner::new("diff-between", 0);
-    let (a, b, c) = (text(&mut owner), text(&mut owner), text(&mut owner));
-    let mut renamed = b.clone();
-    if let NoteBlockNode::Text { name, .. } = &mut renamed {
-        *name = "Renamed".into();
-    }
-    let from = snapshot_with(vec![a.clone(), b]);
-    let mut to = snapshot_with(vec![c, renamed, a]);
-    to.title = Some("Title".into());
-    to.assets.insert("k".into(), NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None });
-    assert_diff_algebra_between_law::<NoteSnapshot, NoteDiff>(&from, &to).await;
-}

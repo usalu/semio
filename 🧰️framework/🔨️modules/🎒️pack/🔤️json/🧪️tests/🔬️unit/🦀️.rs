@@ -850,11 +850,6 @@ fn borrowed_json_source_sink_keeps_caller_prefix_policy_and_original_words(){
 fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
     use semio_framework_value::{NativeDecodeControl,ValueRefusalKind,list::PagedList};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️read-source.json")).unwrap();
-    let retire=|mut cursor:Box<dyn semio_framework_value::ErasedSnapshotRetirement>|{
-        assert!(matches!(cursor.close_step(0,0).unwrap(),semio_framework_value::SnapshotRetirementStep::Pending{released_items:0,released_bytes:0}));
-        for _ in 0..100000{if cursor.terminal_is_empty(){return;}cursor.close_step(1,131072).unwrap();}
-        panic!("original parser candidate owner did not retire");
-    };
     let text=fixture["source"].as_str().unwrap();
     let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
     let pointer=source.get(0).unwrap()as *const u8;
@@ -866,7 +861,7 @@ fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
     let oracle:serde_json::Value=serde_json::from_str(text).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&parsed)).unwrap(),oracle);
     assert_eq!(parsed,parse(text,JsonMemberPolicy::Reject).unwrap());
-    retire(cursor.into_retirement());
+    close_borrowed_json(cursor,131072);
     let large=format!("\"{}\"", "x".repeat(fixture["largeStringBytes"].as_u64().unwrap()as usize));
     let source=PagedList::<u8,16384>::try_from_iter(large.bytes()).unwrap();
     let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject);
@@ -879,12 +874,12 @@ fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
     assert_eq!(cursor.position(),position);assert_eq!(control.owned_bytes(),bytes);assert_eq!(cursor.source().get(0).unwrap()as *const u8,pointer);
     live.set(true);
     let actual=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
-    assert_eq!(actual,parse(&large,JsonMemberPolicy::Reject).unwrap());retire(cursor.into_retirement());
+    assert_eq!(actual,parse(&large,JsonMemberPolicy::Reject).unwrap());close_borrowed_json(cursor,131072);
     for bytes in[fixture["invalidUtf8"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>(),fixture["duplicate"].as_str().unwrap().as_bytes().to_vec()]{
         let source=PagedList::<u8,16384>::try_from_iter(bytes.iter().copied()).unwrap();let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject);
         let error=loop{match cursor.step(1,&mut control){Err(error)=>break error,Ok(None)=>{},Ok(Some(_))=>panic!("invalid literal source accepted")}};
         if bytes[1]==237{assert!(matches!(error,JsonError::InvalidUtf8));}else{assert!(matches!(error,JsonError::DuplicateMember{..}));}
-        retire(cursor.into_retirement());
+        close_borrowed_json(cursor,131072);
     }
     eprintln!("[DEBUG] retained JSON binds original paged source, matches Serde and keeps paid parser/source on interior refusal; candidate retirement uses its separately declared131072 grant");
 }
@@ -906,13 +901,13 @@ fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tr
     assert!(matches!(numbers[1],DslValue::Number(Number::Int(i64::MIN))));
     assert!(matches!(numbers[2],DslValue::Number(Number::Float(value))if value.to_bits()==(-0.0f64).to_bits()));
     assert!(matches!(numbers[3],DslValue::Number(Number::Float(value))if value.to_bits()==1));
-    let mut close=cursor.into_retirement();while !close.terminal_is_empty(){close.close_step(1,131072).unwrap();}
+    close_borrowed_json(cursor,131072);
     let source=PagedList::<u8,16384>::try_from_iter(std::iter::once(b'"').chain(std::iter::repeat_n(b'x',fixture["largeStringBytes"].as_u64().unwrap()as usize)).chain(std::iter::once(b'"'))).unwrap();
     let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject);let mut control=NativeDecodeControl::new(131072,&mut accepted);
     let value=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
     assert_eq!(control.owned_bytes(),fixture["largeStringBytes"].as_u64().unwrap()as usize);
     let DslValue::String(value)=value else{panic!("direct owned semantic string")};assert_eq!(value.len(),fixture["largeStringBytes"].as_u64().unwrap()as usize);assert!(value.bytes().all(|byte|byte==b'x'));
-    let mut close=cursor.into_retirement();while !close.terminal_is_empty(){close.close_step(1,131072).unwrap();}
+    close_borrowed_json(cursor,131072);
     eprintln!("[DEBUG] original retained JSON grammar moves native UInt/Int/Float words and one paid8194 String directly into DslValue; no JSON DOM mirror or source flatten");
 }
 
@@ -929,7 +924,7 @@ fn retained_json_borrowed_source_honors_complete_caller_extent_depth_and_paid_al
         assert_eq!(control.maximum_bytes(),262144);
         if row["accept"].as_bool().unwrap(){assert_eq!(serde_json::Value::from(&result.unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());}
         else{assert_eq!(result.unwrap_err().into_value_error().kind,match row["kind"].as_str().unwrap(){"WorkLimit"=>ValueRefusalKind::WorkLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,_=>panic!("closed literal refusal")});}
-        let mut close=cursor.into_retirement();while !close.terminal_is_empty(){close.close_step(1,131072).unwrap();}
+        close_borrowed_json(cursor,131072);
         let short=JsonReadLimits{maximum_bytes:text.len()as u64-1,..limits};assert_eq!(JsonBorrowedDslCursor::new_with_limits(&source,JsonMemberPolicy::Reject,short).err().unwrap().kind,ValueRefusalKind::WorkLimit);
     }
     let source=PagedList::<u8,16384>::try_from_iter(std::iter::once(b'"').chain(std::iter::repeat_n(b'x',fixture["largeStringBytes"].as_u64().unwrap()as usize)).chain(std::iter::once(b'"'))).unwrap();
@@ -938,7 +933,7 @@ fn retained_json_borrowed_source_honors_complete_caller_extent_depth_and_paid_al
     let mut cursor=JsonBorrowedDslCursor::new_with_limits(&source,JsonMemberPolicy::Reject,limits).unwrap();
     let error=loop{match cursor.step(1,&mut control){Err(error)=>break error,Ok(Some(_))=>panic!("original paid string must refuse"),Ok(None)=>{}}};
     assert_eq!(error.into_value_error().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.owned_bytes(),0);assert_eq!(control.maximum_bytes(),262144);
-    assert_eq!(cursor.source().len(),source.len());let mut close=cursor.into_retirement();while !close.terminal_is_empty(){close.close_step(1,131072).unwrap();}
+    assert_eq!(cursor.source().len(),source.len());close_borrowed_json(cursor,131072);
     let _=std::mem::size_of::<DslValue>();
     eprintln!("[DEBUG] original bound JSON source keeps complete byte limits, per-collection extents, depth and cumulative allocation with exact caller control restored");
 }
@@ -961,7 +956,48 @@ fn retained_json_cursor_owns_exact_borrowed_source_view(){
     let value=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value}};
     assert_eq!(serde_json::Value::from(&value),serde_json::from_str::<serde_json::Value>(text).unwrap());
     assert_eq!(cursor.source_ref().owner.get(cursor.source_ref().start).unwrap()as *const u8,pointer);assert_eq!(cursor.source_ref().length,text.len());assert_eq!(control.maximum_bytes(),262144);
-    let mut close=cursor.into_retirement();while !close.terminal_is_empty(){close.close_step(1,131072).unwrap();}
+    close_borrowed_json(cursor,131072);
     assert_eq!(*source.get(0).unwrap(),b'!');assert_eq!(*source.get(source.len()-1).unwrap(),b'?');
     eprintln!("[DEBUG] retained JSON cursor owns the exact immutable bounded view, preserving original pointer and source sentinels across cancellation without flattening");
+}
+
+fn close_borrowed_json<S:JsonReadSource+Copy,V:JsonParsedValue>(cursor:JsonSourceCursor<S,V>,maximum_bytes:usize){
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,close_factory_ticket};
+    let grant=RetainedCloneGrant::one_capacity_turn(cursor.retirement_birth_bytes(),256);
+    let(owner,birth)=cursor.into_retirement(grant).map_err(|(error,_)|error).unwrap();
+    assert!(birth.fits(grant));
+    let mut owner=Some(owner);
+    for _ in 0..100000{
+        let Some(cursor)=owner.as_ref()else{return;};
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};
+        assert!(close_factory_ticket(&mut owner,grant).unwrap().progress().fits(grant));
+    }
+    panic!("original borrowed JSON owner failed to retire");
+}
+
+#[test]
+fn borrowed_json_retirement_admission_preserves_original_source_on_refusal(){
+    use semio_framework_value::{NativeDecodeControl,retained_clone::RetainedCloneGrant};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️borrowed-retirement/🔣️.json")).unwrap();
+    let source=law["source"].as_str().unwrap();
+    for row in law["cases"].as_array().unwrap(){
+        let mut cursor=JsonBorrowedParseCursor::new(source,JsonMemberPolicy::Reject);
+        let mut accept=|_|true;let mut control=NativeDecodeControl::new(131072,&mut accept);
+        for _ in 0..4{assert!(cursor.step(1,&mut control).unwrap().is_none());}
+        let position=cursor.position();let pointer=cursor.source().as_ptr();
+        let birth=cursor.retirement_birth_bytes();
+        let grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:0,maximum_capacity_bytes:if row["capacity"].as_str().unwrap()=="exact"{birth}else{birth-1},maximum_release_bytes:0,maximum_depth:row["depth"].as_u64().unwrap()as usize};
+        if row["accepted"].as_bool().unwrap(){
+            let(owner,progress)=cursor.into_retirement(grant).map_err(|(error,_)|error).unwrap();assert!(progress.fits(grant));assert_eq!(progress.retained_capacity_bytes,birth);
+            let mut owner=Some(owner);
+            while let Some(cursor)=owner.as_ref(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:cursor.next_capacity_byte_demand(65536).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(semio_framework_value::close_factory_ticket(&mut owner,grant).unwrap().progress().fits(grant));}
+        }else{
+            let(error,restored)=cursor.into_retirement(grant).err().expect("original handoff must refuse");cursor=restored;
+            assert_eq!(error.kind.as_str(),row["kind"].as_str().unwrap());assert_eq!(cursor.position(),position);assert_eq!(cursor.source().as_ptr(),pointer);
+            let parsed=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&parsed)).unwrap(),serde_json::from_str::<serde_json::Value>(source).unwrap());
+            close_borrowed_json(cursor,65536);
+        }
+    }
+    eprintln!("[DEBUG] borrowed JSON retirement preserves original source and candidate on three independent admission refusals; Serde confirms resumed values");
 }

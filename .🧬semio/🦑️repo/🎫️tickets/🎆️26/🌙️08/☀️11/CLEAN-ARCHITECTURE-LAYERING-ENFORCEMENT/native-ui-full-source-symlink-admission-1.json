@@ -1,0 +1,17 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/.venv/bin/python3",
+    "target": "python",
+    "realpath": "/Users/ueli/.local/share/uv/python/cpython-3.14.5-macos-aarch64-none/bin/python3.14"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/.venv/bin/python",
+    "target": "/Users/ueli/.local/share/uv/python/cpython-3.14-macos-aarch64-none/bin/python3.14",
+    "realpath": "/Users/ueli/.local/share/uv/python/cpython-3.14.5-macos-aarch64-none/bin/python3.14"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/.venv/bin/python3.14",
+    "target": "python",
+    "realpath": "/Users/ueli/.local/share/uv/python/cpython-3.14.5-macos-aarch64-none/bin/python3.14"
+  }
+]

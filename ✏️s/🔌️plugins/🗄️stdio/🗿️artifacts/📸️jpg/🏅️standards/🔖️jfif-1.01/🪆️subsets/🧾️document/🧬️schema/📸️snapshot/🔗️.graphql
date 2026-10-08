@@ -15,17 +15,7 @@ type JfifThumbnail {
 }
 
 
-
-
-
-
-
-"🌳️ DHT table class."
-
-
-
-
-"🗃️ An other APPn/COM segment retained verbatim. Index-keyed within JpgSnapshot.otherSegments."
+"🗃️ An other APPn/COM segment retained verbatim. Index-keyed within JpgImage.otherSegments."
 type JpgSegment {
   marker: Int!
   data: [Int!]!
@@ -47,3 +37,4 @@ type JpgImage {
   jfifThumbnail: JfifThumbnail @state(class: ARTIFACT)
   otherSegments: [JpgSegment!]! @state(class: ARTIFACT)
 }
+

@@ -5,7 +5,7 @@ use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
 use semio_framework_value::{NativeDecodeControl as N,ValueRefusalKind};
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
-const WIDTHS:&[(&str,usize)]=&[("remodel_asset",9),("remodel_byte_buffer",4),("remodel_calibration",2),("remodel_camera",25),("remodel_camera_distortion",6),("remodel_camera_pose",25),("remodel_cloud",3),("remodel_dense_parameters",9),("remodel_document",3),("remodel_durable_artifact",8),("remodel_durable_chunk",4),("remodel_feature_parameters",8),("remodel_float_buffer",7),("remodel_float_sample",6),("remodel_frame",8),("remodel_geo_parameters",22),("remodel_geo_products",5),("remodel_ground_control_observation",11),("remodel_ground_control_point",14),("remodel_ingest_parameters",8),("remodel_match_parameters",10),("remodel_mesh_parameters",15),("remodel_mesh_result",9),("remodel_motion_parameters",9),("remodel_motion_track",9),("remodel_parameters",2),("remodel_qc_report",17),("remodel_qc_warning",4),("remodel_results",2),("remodel_rig_extrinsic",25),("remodel_sfm_parameters",12),("remodel_stream",13),("remodel_trajectory",2),("remodel_video_source",11),("remodel_watertight_report",21)];
+const WIDTHS:&[(&str,usize)]=&[("remodel_asset",9),("remodel_byte_buffer",4),("remodel_calibration",2),("remodel_camera",25),("remodel_camera_distortion",6),("remodel_camera_pose",25),("remodel_cloud",3),("remodel_dense_parameters",9),("remodel_document",3),("remodel_durable_artifact",8),("remodel_durable_byte",5),("remodel_durable_chunk",8),("remodel_durable_float",6),("remodel_durable_integer",4),("remodel_durable_text",3),("remodel_feature_parameters",8),("remodel_float_buffer",7),("remodel_float_sample",6),("remodel_frame",8),("remodel_geo_parameters",22),("remodel_geo_products",5),("remodel_ground_control_observation",11),("remodel_ground_control_point",14),("remodel_ingest_parameters",8),("remodel_match_parameters",10),("remodel_mesh_parameters",15),("remodel_mesh_result",9),("remodel_motion_parameters",9),("remodel_motion_track",9),("remodel_parameters",2),("remodel_qc_report",17),("remodel_qc_warning",4),("remodel_results",2),("remodel_rig_extrinsic",25),("remodel_sfm_parameters",12),("remodel_stream",13),("remodel_trajectory",2),("remodel_video_source",11),("remodel_watertight_report",21)];
 pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{if SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||WIDTHS.iter().any(|(_,columns)|*columns>limits.max_columns)||limits.max_rows<13{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Remodeling authored schema extent exceeds caller limits"))}Ok(())}
 pub(super)fn shape(value:&R,count:u16)->Result<()>{if value.fields.keys().copied().eq(0..count){Ok(())}else{Err(invalid("Remodeling native record field map differs"))}}
 fn field(value:&R,id:u16)->Result<&F>{value.get(id).ok_or_else(||invalid("Remodeling required native role is absent"))}
@@ -32,13 +32,22 @@ fn float_buffer(value:&F,slot:&str,c:&mut Census,n:&mut N<'_>)->Result<()>{
   _=>return Err(invalid("Remodeling native float buffer variant is undeclared"))
  }Ok(())
 }
+fn durable_chunk(kind:&str,value:&F,c:&mut Census,n:&mut N<'_>)->Result<()>{
+ let F::Bytes64(bytes)=value else{return Err(invalid("Remodeling durable role requires octets"))};let shape=durable_shape(kind,bytes,|_,_|n.step())?;
+ let mut cost=semantic_add(32,shape.kind.len())?;if let Some(field)=shape.field{cost=semantic_add(cost,field.len())?}if shape.tag.is_some(){cost=semantic_add(cost,8)?}if shape.kind=="raw"{cost=semantic_add(cost,bytes.len())?}c.row("remodel_durable_chunk",cost,n)?;
+ match shape.kind{
+  "raw"=>{},"text"=>c.row("remodel_durable_text",semantic_add(16,shape.count)?,n)?,
+  "f32"|"u32"=>{for word in bytes[shape.offset..shape.offset+shape.count*4].chunks_exact(4){let bits=durable_word(word)?;if shape.kind=="f32"{let value=f64::from(f32::from_bits(bits));c.row("remodel_durable_float",semantic_add(if value.is_finite(){40}else{32},class(value).len())?,n)?;}else{c.row("remodel_durable_integer",32,n)?;}}for _ in 0..shape.tail{c.row("remodel_durable_byte",45,n)?;}},
+  _=>{for _ in 0..shape.count{c.row("remodel_durable_byte",39,n)?;}}
+ }Ok(())
+}
 pub(super)fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{
  extent(limits)?;n.scoped_stage(|n|{
   n.begin_stage(0)?;shape(source,9)?;let mut c=Census{limits,rows:0,bytes:0};
   let schema=text(field(source,0)?,n)?;let id=text(field(source,1)?,n)?;c.row("remodel_document",semantic_add(semantic_add(8,schema)?,id)?,n)?;
   for table in["remodel_calibration","remodel_parameters","remodel_results"]{c.row(table,16,n)?;}
   for(key,value)in map(field(source,3)?)?{n.step()?;let cost=child(record(value,2)?,n)?;c.row("remodel_asset",semantic_add(semantic_add(24,key.len())?,cost)?,n)?;}
-  for(key,value)in map(field(source,4)?)?{n.step()?;let value=record(value,RemodelingDurableArtifact::FIELDS)?;let cost=RemodelingDurableArtifact::native(value,n)?;c.row("remodel_durable_artifact",semantic_add(semantic_add(24,key.len())?,cost)?,n)?;for chunk in items(field(value,4)?)?{let cost=bytes(chunk,n)?;c.row("remodel_durable_chunk",semantic_add(24,cost)?,n)?;}}
+  for(key,value)in map(field(source,4)?)?{n.step()?;let value=record(value,RemodelingDurableArtifact::FIELDS)?;let cost=RemodelingDurableArtifact::native(value,n)?;c.row("remodel_durable_artifact",semantic_add(semantic_add(24,key.len())?,cost)?,n)?;let F::Text(kind)=field(value,0)?else{return Err(invalid("Remodeling durable kind requires text"))};for chunk in items(field(value,4)?)?{durable_chunk(kind,chunk,&mut c,n)?;}}
   for value in items(field(source,2)?)?{let value=record(value,MediaStream::FIELDS)?;c.entity::<MediaStream>(value,"remodel_stream",24,n)?;c.list::<FrameRef>(field(value,6)?,"remodel_frame",n)?;if let Some(value)=optional(field(value,7)?,VideoSource::FIELDS)?{c.entity::<VideoSource>(value,"remodel_video_source",16,n)?;}}
   let calibration=block(field(source,5)?,2)?;
   for value in items(field(calibration,0)?)?{let value=record(value,CameraCalibration::FIELDS)?;c.entity::<CameraCalibration>(value,"remodel_camera",24,n)?;let F::Tuple(coefficients)=field(value,8)?else{return Err(invalid("Remodeling camera distortion requires tuple"))};if coefficients.len()!=5{return Err(invalid("Remodeling camera distortion requires five coefficients"))}for coefficient in coefficients{let cost=f32::native(coefficient,n)?;c.row("remodel_camera_distortion",semantic_add(24,cost)?,n)?;}}

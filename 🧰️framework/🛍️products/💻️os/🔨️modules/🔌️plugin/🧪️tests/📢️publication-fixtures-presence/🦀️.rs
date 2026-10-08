@@ -43,9 +43,6 @@ impl protocol::DiffAlgebra<PublicationPresence> for PublicationPresenceDiff {
     fn inverse(&self, base: &PublicationPresence) -> Self {
         Self { revision: self.revision.map(|_| base.revision) }
     }
-    fn between(base: &PublicationPresence, other: &PublicationPresence) -> Self {
-        Self { revision: (base.revision != other.revision).then_some(other.revision) }
-    }
     fn is_empty(&self) -> bool {
         self.revision.is_none()
     }

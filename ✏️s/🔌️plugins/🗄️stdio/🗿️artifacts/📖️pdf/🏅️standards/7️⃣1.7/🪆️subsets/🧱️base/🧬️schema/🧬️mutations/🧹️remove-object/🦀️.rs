@@ -14,6 +14,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct RemoveObject {
     pub id: ObjRef,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub admitted_stream_roles: Option<diff::PdfIndexedDiff<crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole>>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
@@ -23,12 +25,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
         if !base.objects.iter().any(|object| object.id == self.id) {
             return MutationOutcome::error("mutation.target-missing", format!("Object {} {} does not exist.", self.id.num, self.id.gen), [format!("{} {}", self.id.num, self.id.gen)]);
         }
-        MutationOutcome::new(diff::graph_edit(diff::diff_remove_object(self.id)))
+        MutationOutcome::new(diff::graph_edit_with_roles(diff::diff_remove_object(self.id), self.admitted_stream_roles.as_ref()))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        base.objects.iter().position(|object| object.id == self.id).map(|position| PdfMutation::InsertObject(InsertObject { id: self.id, value: base.objects[position].value.clone(), index: Some(position) })).into_iter().collect()
+        base.objects.iter().position(|object| object.id == self.id).map(|position| PdfMutation::InsertObject(InsertObject { id: self.id, value: base.objects[position].value.clone(), index: Some(position), admitted_stream_roles: self.admitted_stream_roles.as_ref().map(|roles| roles.inverse(&base.admitted_stream_roles)) })).into_iter().collect()
     
     })())
 }

@@ -43,6 +43,10 @@ fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
     let raw = dec_str(s)?;
     semio_framework_pack_json::from_json_str(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
+/// 📍 An insert's optional `index=` argument: absent appends.
+fn opt_index(args: &[(String, String)]) -> Result<Option<usize>, String> {
+    args.iter().find(|(key, _)| key == "index").map_or(Ok(None), |(_, raw)| dec_json::<Option<usize>>(raw))
+}
 fn tokenize_args(rest: &str) -> Result<Vec<(String, String)>, String> {
     let mut out = Vec::new();
     let mut chars = rest.chars().peekable();
@@ -164,17 +168,17 @@ fn parse_en1990_mutation(text: &str) -> Result<En1990Mutation, String> {
         "change-members" => Ok(En1990Mutation::ChangeMembers(change_members::ChangeMembers { new_members: dec_json(arg("new-members")?)? })),
         "change-bridge-sls" => Ok(En1990Mutation::ChangeBridgeSls(change_bridge_sls::ChangeBridgeSls { new_bridge_sls: dec_json(arg("new-bridge-sls")?)? })),
         "change-effects" => Ok(En1990Mutation::ChangeEffects(change_effects::ChangeEffects { new_effects: dec_json(arg("new-effects")?)? })),
-        "insert-permanent" => Ok(En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: dec_json(arg("index")?)?, item: dec_json(arg("item")?)? })),
+        "insert-permanent" => Ok(En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-permanent" => Ok(En1990Mutation::RemovePermanent(remove_permanent::RemovePermanent { index: dec_json(arg("index")?)? })),
-        "insert-variable" => Ok(En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: dec_json(arg("index")?)?, item: dec_json(arg("item")?)? })),
+        "insert-variable" => Ok(En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-variable" => Ok(En1990Mutation::RemoveVariable(remove_variable::RemoveVariable { index: dec_json(arg("index")?)? })),
-        "insert-accidental" => Ok(En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: dec_json(arg("index")?)?, item: dec_json(arg("item")?)? })),
+        "insert-accidental" => Ok(En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-accidental" => Ok(En1990Mutation::RemoveAccidental(remove_accidental::RemoveAccidental { index: dec_json(arg("index")?)? })),
-        "insert-seismic" => Ok(En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: dec_json(arg("index")?)?, item: dec_json(arg("item")?)? })),
+        "insert-seismic" => Ok(En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-seismic" => Ok(En1990Mutation::RemoveSeismic(remove_seismic::RemoveSeismic { index: dec_json(arg("index")?)? })),
-        "insert-member" => Ok(En1990Mutation::InsertMember(insert_member::InsertMember { index: dec_json(arg("index")?)?, item: dec_json(arg("item")?)? })),
+        "insert-member" => Ok(En1990Mutation::InsertMember(insert_member::InsertMember { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-member" => Ok(En1990Mutation::RemoveMember(remove_member::RemoveMember { index: dec_json(arg("index")?)? })),
-        "insert-effect" => Ok(En1990Mutation::InsertEffect(insert_effect::InsertEffect { index: dec_json(arg("index")?)?, item: dec_json(arg("item")?)? })),
+        "insert-effect" => Ok(En1990Mutation::InsertEffect(insert_effect::InsertEffect { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-effect" => Ok(En1990Mutation::RemoveEffect(remove_effect::RemoveEffect { index: dec_json(arg("index")?)? })),
         other => Err(format!("unknown keyword {other}")),
     }

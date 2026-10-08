@@ -3,6 +3,7 @@ use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldPro
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use semio_framework_value::list::PagedList;
 use std::cmp::Ordering;
+use semio_framework_value::paged_text::TextReadView;
 
 const SYMBOL_CAPACITY:usize=isize::MAX as usize;
 
@@ -19,11 +20,11 @@ impl SourceTextLocator{
   let mut locator=Self{path:[0;64],depth:path.len()as u8,kind};locator.path[..path.len()].copy_from_slice(path);Ok(locator)
  }
  /// 🔎️ Resolves text only through its actual original source identity.
- pub fn resolve<'a,T:FieldProjectionSource>(&self,source:&'a T)->Result<&'a str,ValueError>{
+ pub fn resolve<'a,T:FieldProjectionSource>(&self,source:&'a T)->Result<TextReadView<'a>,ValueError>{
   let path=&self.path[..usize::from(self.depth)];match self.kind{
-   SourceTextKind::Key(index)=>source.projection_key(path,index),
-   SourceTextKind::Text=>match source.projection_view(path)?{FieldProjectionView::Text(text)=>Ok(text),_=>Err(invalid("ordinary symbol source identity changed"))},
-   SourceTextKind::IntrinsicText=>match source.projection_view(path)?{FieldProjectionView::IntrinsicText(text)=>Ok(text),_=>Err(invalid("intrinsic symbol source identity changed"))},
+   SourceTextKind::Key(index)=>source.projection_key(path,index).map(TextReadView::from_str),
+   SourceTextKind::Text=>match source.projection_view(path)?{FieldProjectionView::Text(text)=>Ok(TextReadView::from_str(text)),FieldProjectionView::TextSource(text)=>Ok(text),_=>Err(invalid("ordinary symbol source identity changed"))},
+   SourceTextKind::IntrinsicText=>match source.projection_view(path)?{FieldProjectionView::IntrinsicText(text)=>Ok(TextReadView::from_str(text)),FieldProjectionView::IntrinsicTextSource(text)=>Ok(text),_=>Err(invalid("intrinsic symbol source identity changed"))},
   }
  }
 }
@@ -36,8 +37,8 @@ enum ScratchPhase{Discovering,Sorting,Ready,Retiring}
 pub struct ProjectedSymbolScratch{
  symbols:PagedList<SourceSymbol,SYMBOL_CAPACITY>,indices:PagedList<usize,SYMBOL_CAPACITY>,phase:ScratchPhase,
 }
-fn compare_text(left:&str,right:&str,control:&mut NativeEncodeControl<'_>)->Result<Ordering,ValueError>{
- control.scoped_stage(|control|{let length=left.len().min(right.len());control.begin_stage(length)?;for start in(0..length).step_by(256){control.checkpoint()?;let end=(start+256).min(length);let order=left.as_bytes()[start..end].cmp(&right.as_bytes()[start..end]);control.advance(end-start)?;if order!=Ordering::Equal{return Ok(order)}}Ok(left.len().cmp(&right.len()))})
+pub(super) fn compare_text(left:TextReadView<'_>,right:TextReadView<'_>,control:&mut NativeEncodeControl<'_>)->Result<Ordering,ValueError>{
+ control.scoped_stage(|control|{let length=left.len().min(right.len());control.begin_stage(length)?;for start in(0..length).step_by(256){control.checkpoint()?;let end=(start+256).min(length);let(mut a,mut b)=([0;256],[0;256]);left.copy_bytes(start,&mut a[..end-start])?;right.copy_bytes(start,&mut b[..end-start])?;let order=a[..end-start].cmp(&b[..end-start]);control.advance(end-start)?;if order!=Ordering::Equal{return Ok(order)}}Ok(left.len().cmp(&right.len()))})
 }
 fn invalid(reason:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,reason)}
 fn paged_refusal(reason:&'static str)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,reason)}
@@ -95,7 +96,7 @@ impl ProjectedSymbolScratch{
  /// 🌿️ Exposes an exact retained original locator without moving semantic ownership.
  pub fn locator(&self,index:usize)->Result<SourceTextLocator,ValueError>{let length=self.len()?;if index>=length{return Err(invalid("selected symbol index is outside its source grant"))}Ok(self.symbols[self.indices[index]].locator)}
  /// 🔍️ Finds a canonical symbol index using paid bounded UTF8 comparison.
- pub fn index<T:FieldProjectionSource>(&self,source:&T,text:&str,control:&mut NativeEncodeControl<'_>)->Result<Option<u64>,ValueError>{
+ pub fn index<T:FieldProjectionSource>(&self,source:&T,text:TextReadView<'_>,control:&mut NativeEncodeControl<'_>)->Result<Option<u64>,ValueError>{
   let(mut low,mut high)=(0,self.len()?);while low<high{let middle=low+(high-low)/2;match compare_text(self.locator(middle)?.resolve(source)?,text,control)?{Ordering::Less=>low=middle+1,Ordering::Greater=>high=middle,Ordering::Equal=>return Ok(Some(middle as u64))}}Ok(None)
  }
  /// ♻️ Drains one scalar item or one real empty page within the explicit physical byte grant.

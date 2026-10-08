@@ -23,7 +23,7 @@ message NoteBoolNullable { optional bool value = 1; }
 message NoteDoubleNullable { optional double value = 1; }
 message NoteLinkNullable { optional semio.os.store.ArtifactLink value = 1; }
 enum NoteBlockRowKind { NOTE_BLOCK_ROW_KIND_ADD = 0; NOTE_BLOCK_ROW_KIND_REMOVE = 1; NOTE_BLOCK_ROW_KIND_MOVE = 2; NOTE_BLOCK_ROW_KIND_PATCH = 3; }
-message NoteBlockRow { NoteBlockRowKind row = 1; optional string id = 2; optional string parent_id = 3; optional uint64 index = 4; optional NoteBlockNode block = 5; optional NoteBlockPatch patch = 6; }
+message NoteBlockRow { NoteBlockRowKind row = 1; optional string id = 2; optional string parent_id = 3; optional uint64 index = 4; optional NoteBlockNode block = 5; optional NoteBlockPatch patch = 6; optional string from_parent_id = 7; optional uint64 from_index = 8; }
 message NoteBlocksDelta { repeated NoteBlockRow rows = 1; }
 enum NoteTableEditKind { NOTE_TABLE_EDIT_KIND_INSERT_ROW = 0; NOTE_TABLE_EDIT_KIND_REMOVE_ROW = 1; NOTE_TABLE_EDIT_KIND_INSERT_COLUMN = 2; NOTE_TABLE_EDIT_KIND_REMOVE_COLUMN = 3; }
 message NoteTableEdit { NoteTableEditKind edit = 1; uint64 index = 2; optional string name = 3; repeated NoteTableCell cells = 4; }

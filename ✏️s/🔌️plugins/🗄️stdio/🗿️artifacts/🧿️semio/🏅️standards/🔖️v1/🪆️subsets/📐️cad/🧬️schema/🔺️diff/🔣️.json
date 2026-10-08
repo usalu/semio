@@ -66,7 +66,21 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadLayer"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadLayer"
+              }
+            }
           }
         }
       }
@@ -97,7 +111,21 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadBlock"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadBlock"
+              }
+            }
           }
         }
       }
@@ -128,7 +156,21 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadEntityRecord"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadEntityRecord"
+              }
+            }
           }
         }
       }

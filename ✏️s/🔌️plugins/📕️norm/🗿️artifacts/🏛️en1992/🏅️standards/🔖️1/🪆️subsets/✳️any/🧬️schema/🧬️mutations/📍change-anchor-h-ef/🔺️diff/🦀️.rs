@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeAnchorHEf, base: &En1992Snapshot) -> protocol::Mutat
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     protocol::MutationOutcome::new(En1992Diff {
-        anchors: Some(En1992AnchorsRows { modified: vec![En1992AnchorsPatch { id: payload.anchor_id.clone(), h_ef: Some(payload.new_value), ..Default::default() }], ..Default::default() }),
+        anchors: Some(En1992AnchorsRows::modification(&payload.anchor_id, En1992AnchorsPatch { h_ef: Some(payload.new_value), ..Default::default() })),
         ..Default::default()
     })
 }

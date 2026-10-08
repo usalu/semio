@@ -10,7 +10,7 @@ pub fn label() -> LocalizedLabel {
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
-/// 🖼️ Genuine `encode_tiff(demo_tiff_snapshot())` bytes (populated by engine fixture honesty).
+/// 🖼️ Native TIFF fixture whose admitted authored owner equals the shipped demo text.
 pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/🧪️example/🖼️.tiff");
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn source() -> ExampleSource {

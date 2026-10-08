@@ -7,7 +7,9 @@ pub use super::change_gamma::ChangeGammaMutation;
 pub use super::patch_pixels::PatchPixelsMutation;
 pub use super::paint_native_samples::PaintNativeSamplesMutation;
 pub use super::replace_image::ReplaceImage;
-pub use crate::schema::operations::apply_png_mutation;
+pub use super::replace_samples::ReplaceSamples;
+pub use super::set_gamma::SetGamma;
+
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
@@ -17,6 +19,8 @@ pub enum PngMutation {
     ChangeGamma(ChangeGammaMutation),
     PatchPixels(PatchPixelsMutation),
     PaintNativeSamples(PaintNativeSamplesMutation),
+    SetGamma(SetGamma),
+    ReplaceSamples(ReplaceSamples),
 }
 
 #[cfg(test)]
@@ -25,6 +29,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
         super::change_gamma::test_case(),
         super::patch_pixels::test_case(),
         super::paint_native_samples::test_case(),
+        super::set_gamma::test_case(),
+        super::replace_samples::test_case(),
     ]
 }
 

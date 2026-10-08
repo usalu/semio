@@ -14,7 +14,7 @@ pub struct InsertEdge {
 impl InsertEdge {
     /// 🔗️ Transfers one typed edge into its insertion command without a wire round trip.
     pub fn new(edge: FlowEdge) -> Self {
-        Self { edge }
+        Self { edge, at: None }
     }
 }
 

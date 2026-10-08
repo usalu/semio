@@ -1,8 +1,70 @@
 syntax = "proto3";
 package semio.s_stdio_pptx.diff;
-message PptxXmlPartsReplacement { repeated semio.s_stdio_pptx.snapshot.PptxXmlPart parts = 1; }
+
+import "s_stdio_pptx/snapshot.proto";
+import "s_stdio_xml/diff.proto";
+
+message Removal { string id = 1; uint64 index = 2; }
+message Relocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message ContentTypeEntryPatch { optional string content_type = 1; }
+message ContentTypeRow { string name = 1; string content_type = 2; }
+message ContentTypeEntryInsertion { uint64 index = 1; ContentTypeRow row = 2; }
+message ContentTypeEntryModification { string id = 1; ContentTypeEntryPatch patch = 2; }
+message ContentTypeEntriesDiff {
+  repeated Removal removed = 1;
+  repeated ContentTypeEntryInsertion inserted = 2;
+  repeated Relocation moved = 3;
+  repeated ContentTypeEntryModification modified = 4;
+}
+message OpcContentTypesDiff { optional ContentTypeEntriesDiff defaults = 1; optional ContentTypeEntriesDiff overrides = 2; }
+message OpcPartDiff { optional string content_type = 1; optional bytes bytes = 2; }
+message OpcPartInsertion { uint64 index = 1; semio.s_stdio_pptx.snapshot.OpcPart row = 2; }
+message OpcPartModification { string id = 1; OpcPartDiff patch = 2; }
+message OpcPartsDiff {
+  repeated Removal removed = 1;
+  repeated OpcPartInsertion inserted = 2;
+  repeated Relocation moved = 3;
+  repeated OpcPartModification modified = 4;
+}
+message OpcRelationshipDiff {
+  optional string rel_type = 1;
+  optional string target = 2;
+  optional string target_mode = 3;
+}
+message OpcRelationshipInsertion { uint64 index = 1; semio.s_stdio_pptx.snapshot.OpcRelationship row = 2; }
+message OpcRelationshipModification { string id = 1; OpcRelationshipDiff patch = 2; }
+message OpcRelationshipListDiff {
+  repeated Removal removed = 1;
+  repeated OpcRelationshipInsertion inserted = 2;
+  repeated Relocation moved = 3;
+  repeated OpcRelationshipModification modified = 4;
+}
+message OpcRelationshipOwnerPatch { OpcRelationshipListDiff relationships = 1; }
+message OpcRelationshipOwnerInsertion { uint64 index = 1; semio.s_stdio_pptx.snapshot.OpcRelationshipOwner row = 2; }
+message OpcRelationshipOwnerModification { string id = 1; OpcRelationshipOwnerPatch patch = 2; }
+message OpcRelationshipsDiff {
+  repeated Removal removed = 1;
+  repeated OpcRelationshipOwnerInsertion inserted = 2;
+  repeated Relocation moved = 3;
+  repeated OpcRelationshipOwnerModification modified = 4;
+}
+message OpcDiff {
+  optional string comment = 1;
+  optional OpcContentTypesDiff content_types = 2;
+  optional OpcPartsDiff parts = 3;
+  optional OpcRelationshipsDiff relationships = 4;
+}
+message XmlPartDiff { optional string content_type = 1; optional semio.s_stdio_xml.diff.XmlDiff document = 2; }
+message XmlPartInsertion { uint64 index = 1; semio.s_stdio_pptx.snapshot.PptxXmlPart row = 2; }
+message XmlPartModification { string id = 1; XmlPartDiff patch = 2; }
+message XmlPartsDiff {
+  repeated Removal removed = 1;
+  repeated XmlPartInsertion inserted = 2;
+  repeated Relocation moved = 3;
+  repeated XmlPartModification modified = 4;
+}
 message PptxDiff {
   optional string schema = 1;
-  optional semio.s_stdio_pptx.snapshot.OpcPackage opc = 2;
-  optional PptxXmlPartsReplacement xml_parts = 3;
+  optional OpcDiff opc = 2;
+  optional XmlPartsDiff xml_parts = 3;
 }

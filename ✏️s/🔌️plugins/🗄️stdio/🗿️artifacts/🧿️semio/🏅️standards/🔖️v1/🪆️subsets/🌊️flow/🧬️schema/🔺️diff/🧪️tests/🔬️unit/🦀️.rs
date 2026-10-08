@@ -46,57 +46,6 @@ fn sweep_b() -> SemioFlowSnapshot {
     }
 }
 
-//#region 🔖️BetweenRoundtripLaw
-#[semio_framework_async_macros::async_test]
-async fn between_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    assert_eq!(protocol::apply_diff(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
-    assert_eq!(protocol::apply_diff(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
-
-    let sample = base_snapshot();
-    assert_eq!(protocol::apply_diff(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&sample, &sample), &sample).expect("apply must succeed for a well-formed fixture"), sample);
-}
-//#endregion 🔖️BetweenRoundtripLaw
-
-//#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field, including
-/// each collection flavor (removed/modified/added) at both the top level (nodes/edges) and the
-/// nested level (a node's own `params`).
-#[semio_framework_async_macros::async_test]
-async fn field_sweep() {
-    let a = sweep_a();
-    let b = sweep_b();
-
-    let diff_ab = <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b);
-    assert_eq!(protocol::apply_diff(&diff_ab, &a).expect("apply must succeed for a well-formed fixture"), b);
-    assert!(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &a).is_empty());
-
-    let nodes_diff = diff_ab.nodes.as_ref().expect("nodes diff present");
-    assert!(!nodes_diff.removed.is_empty(), "nodes: removed not exercised");
-    assert!(!nodes_diff.added.is_empty(), "nodes: added not exercised");
-    assert_eq!(nodes_diff.modified.len(), 1);
-    let keep_diff = &nodes_diff.modified[0].diff;
-    assert!(keep_diff.kind.is_some(), "node.kind not exercised");
-    assert!(keep_diff.label.is_some(), "node.label not exercised");
-    assert!(keep_diff.position.is_some(), "node.position not exercised");
-    let params_diff = keep_diff.params.as_ref().expect("params diff present");
-    assert!(!params_diff.removed.is_empty(), "params: removed not exercised");
-    assert!(!params_diff.modified.is_empty(), "params: modified not exercised");
-    assert!(!params_diff.added.is_empty(), "params: added not exercised");
-
-    let edges_diff = diff_ab.edges.as_ref().expect("edges diff present");
-    assert!(!edges_diff.removed.is_empty(), "edges: removed not exercised");
-    assert!(!edges_diff.added.is_empty(), "edges: added not exercised");
-    assert_eq!(edges_diff.modified.len(), 1);
-    let keep_edge_diff = &edges_diff.modified[0].diff;
-    assert!(keep_edge_diff.from.is_some(), "edge.from not exercised");
-    assert!(keep_edge_diff.to.is_some(), "edge.to not exercised");
-    assert!(keep_edge_diff.kind.is_some(), "edge.kind not exercised");
-
-    let diff_ba = <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a);
-    assert_eq!(protocol::apply_diff(&diff_ba, &b).expect("apply must succeed for a well-formed fixture"), a);
-}
 //#endregion 🔖️FieldSweep
 
 //#region 🔖️AbsorbLaw
@@ -192,15 +141,7 @@ async fn absorb_law() {
 //#region 🔖️DiffCodecTextBinaryRoundtripLaw
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    let a = sweep_a();
-    let b = sweep_b();
-    let diffs = vec![
-        SemioFlowDiff::default(),
-        <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b),
-        <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a),
-        diff_insert_node(&empty_base(), node("z", "k", "L", vec![("a", "b")], 1.5, 2.5), None),
-        diff_insert_edge(&empty_base(), edge("z", "a", "p", "b", "q", "k"), None),
-    ];
+    let diffs = demo_diff_cases();
     for d in diffs {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

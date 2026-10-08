@@ -13,7 +13,8 @@
 //! Feature collections and their sparse deltas are asserted directly against the neutral fixtures.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-route-data/⛴️rewrites/📸️snapshot/⬅️before/🔣️.json");
@@ -129,14 +130,14 @@ async fn patches_only_the_ferry_payload_and_inverts_to_the_base_payload() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "replace-route-data/rewrites-ferry-route-payload: a genuinely different payload must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().routes.as_ref().expect("replace-route-data writes a routes delta");
-    assert_eq!(delta.patched.len(), 1, "replace-route-data/rewrites-ferry-route-payload: exactly one feature is patched, got {delta:?}");
-    assert_eq!(delta.patched[0].id, "route-ferry", "replace-route-data/rewrites-ferry-route-payload: the patch is addressed by the payload's own id");
-    assert_eq!(delta.patched[0].patch.data.as_ref(), Some(&after.routes[0].data), "replace-route-data/rewrites-ferry-route-payload: the patch carries the committed replacement payload verbatim");
+    assert_eq!(delta.modified.len(), 1, "replace-route-data/rewrites-ferry-route-payload: exactly one feature is patched, got {delta:?}");
+    assert_eq!(delta.modified[0].id, "route-ferry", "replace-route-data/rewrites-ferry-route-payload: the patch is addressed by the payload's own id");
+    assert_eq!(delta.modified[0].patch.data.as_ref(), Some(&after.routes[0].data), "replace-route-data/rewrites-ferry-route-payload: the patch carries the committed replacement payload verbatim");
     assert!(
         base.routes[0].data.get("seasonal").is_none() && after.routes[0].data.get("seasonal").is_some(),
         "replace-route-data/rewrites-ferry-route-payload: this case exists to prove a WHOLE-value swap, so the replacement must introduce a key the prior payload lacked"
     );
-    assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.reordered.is_none(), "replace-route-data/rewrites-ferry-route-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
+    assert!(delta.inserted.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "replace-route-data/rewrites-ferry-route-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().regions.is_none(), "replace-route-data/rewrites-ferry-route-payload: replace-route-data must never touch the positions or regions collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "replace-route-data/rewrites-ferry-route-payload: a payload swap undoes with exactly one step, got {inverse:?}");

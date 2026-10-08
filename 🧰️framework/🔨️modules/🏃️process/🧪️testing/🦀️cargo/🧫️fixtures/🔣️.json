@@ -20,7 +20,9 @@
         "exhaustive": 86400000
       },
       "coverageEnabled": false,
-      "targetDirectory": "/owner/compiler-output"
+      "targetDirectory": "/owner/compiler-output",
+      "buildDirectory": "/owner/compiler-build",
+      "leaseDirectory": "/owner/resource-leases"
     },
     {
       "version": 1,
@@ -41,7 +43,9 @@
         "exhaustive": 86400000
       },
       "coverageEnabled": false,
-      "targetDirectory": "/owner/compiler-output"
+      "targetDirectory": "/owner/compiler-output",
+      "buildDirectory": "/owner/compiler-build",
+      "leaseDirectory": "/owner/resource-leases"
     },
     {
       "version": 1,
@@ -62,7 +66,9 @@
         "exhaustive": 86400000
       },
       "coverageEnabled": true,
-      "targetDirectory": "/owner/compiler-output"
+      "targetDirectory": "/owner/compiler-output",
+      "buildDirectory": "/owner/compiler-build",
+      "leaseDirectory": "/owner/resource-leases"
     },
     {
       "version": 1,
@@ -83,7 +89,9 @@
         "exhaustive": 86400000
       },
       "coverageEnabled": true,
-      "targetDirectory": "/owner/compiler-output"
+      "targetDirectory": "/owner/compiler-output",
+      "buildDirectory": "/owner/compiler-build",
+      "leaseDirectory": "/owner/resource-leases"
     }
   ],
   "arguments": [

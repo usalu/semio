@@ -55,7 +55,7 @@ fn edit_replay_checks_deadline_during_message_settlement() {
         started_at: String::new(), finished_at: None,
     };
     let edits = HashMap::from([(edit.id.clone(), edit)]);
-    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["bounded-close".into()], 0, "demo/v1", EffectiveSupersessions::new(), &edits).unwrap();
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["bounded-close".into()], 0, "demo/v1", EffectiveSupersessions::new(), &edits).unwrap().with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoMutation>::default()));
     while replay.operation < count {
         assert!(matches!(replay.step(&edits, &mut || true).unwrap(), ReplayStep::Pending(_)));
     }
@@ -67,6 +67,7 @@ fn edit_replay_checks_deadline_during_message_settlement() {
     assert!(asked > 0, "the edit settlement asks its deadline before completing");
     assert!(matches!(step, ReplayStep::Pending(_)), "settlement returns control before scanning the complete edit");
     replay.cancel();
+    super::raw_replay_retirement::tests::close(&mut replay);
 }
 
 #[test]
@@ -92,63 +93,54 @@ fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
     assert!(result.report().outcomes.iter().any(|outcome| outcome.messages.is_empty()));
     eprintln!("[DEBUG] all {count} fatal mutation statuses preserved after cooperative message settlement");
 }
-/// 🧾️ Exact child cleanup stays within the same grants used by history cancellation.
+/// 🧾️ Each original owner pays its complete advertised physical release.
 fn retire_bounded(mut child: Box<dyn ErasedSnapshotRetirement>, bytes: usize) {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
     for _ in 0..1_000_000 {
-        match child.close_step(1, bytes).expect("message retirement") {
-            SnapshotRetirementStep::Complete => { assert!(child.terminal_is_empty()); return; }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= bytes);
-            }
-            SnapshotRetirementStep::Blocked => panic!("nonzero message retirement grant was blocked"),
-        }
+        if child.terminal_is_empty() { return; }
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: child.next_copy_byte_demand().unwrap(), maximum_capacity_bytes: child.next_capacity_byte_demand(4096).unwrap(), maximum_release_bytes: child.next_release_byte_demand().unwrap().max(bytes), maximum_depth: child.next_depth_demand().unwrap() };
+        let step = child.close_step(grant).expect("message retirement");
+        assert!(step.progress().fits(grant));
     }
     panic!("message retirement did not terminate");
 }
-
+fn paged_rows(rows: Vec<crate::os_spr::MutationMessage>) -> crate::os_spr::command::ReplayMessageAccumulator {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let mut owner = crate::os_spr::command::ReplayMessageAccumulator::default();
+    for row in rows { let mut pending = Some(row); while pending.is_some() { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if owner.rows().has_reserved_slot() { std::mem::size_of::<crate::os_spr::MutationMessage>() } else { 0 }, maximum_capacity_bytes: owner.next_capacity_byte_demand().unwrap(), maximum_release_bytes: 0, maximum_depth: 1 }; assert!(owner.append(&mut pending, grant).unwrap().fits(grant)); } }
+    owner
+}
+fn close_pages(owner: &mut crate::os_spr::command::ReplayMessageAccumulator) {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    while !owner.terminal_is_empty() { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owner.next_close_copy_byte_demand(), maximum_capacity_bytes: 0, maximum_release_bytes: owner.next_close_release_byte_demand().unwrap(), maximum_depth: 1 }; assert!(owner.close_step(grant).unwrap().fits(grant)); }
+}
 #[test]
 fn edit_message_clamp_cursor_matches_neutral_rows_and_cancels_bounded() {
-    use super::edit_message_clamp::EditMessageClamp;
+    use crate::os_spr::command::FinalMessageSelection;
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
     let law = fixture();
     let baseline = DemoSnapshot { n: Some(71) };
     for row in law["cases"].as_array().unwrap() {
         for work in law["workGrants"].as_array().unwrap() {
             for bytes in law["byteGrants"].as_array().unwrap() {
-                let work = work.as_u64().unwrap();
-                let bytes = bytes.as_u64().unwrap() as usize;
-                let original = messages(row);
-                let mut expected = original.clone();
-                bound_edit_messages(row["editId"].as_str().unwrap(), &mut expected);
-                let mut actual = original.clone();
-                let mut cursor = EditMessageClamp::new(row["editId"].as_str().unwrap(), &actual);
-                while !cursor.is_finished() {
-                    let before = cursor.completed_work();
-                    for _ in 0..work {
-                        if cursor.step(&mut actual, bytes).unwrap() { break; }
-                    }
-                    assert!(cursor.completed_work() - before <= work);
-                    assert_eq!(baseline.n, Some(71));
+                let work = work.as_u64().unwrap(); let bytes = bytes.as_u64().unwrap() as usize;
+                let original = messages(row); let mut expected = original.clone(); bound_edit_messages(row["editId"].as_str().unwrap(), &mut expected);
+                let mut actual = paged_rows(original.clone()); let mut cursor = FinalMessageSelection::new(row["editId"].as_str().unwrap().len(), actual.rows().len());
+                for turn in 0..1_000_000 {
+                    if cursor.is_finished() { break; } let before = cursor.completed_work();
+                    for _ in 0..work { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: cursor.next_copy_byte_demand(&actual), maximum_capacity_bytes: cursor.next_capacity_byte_demand(), maximum_release_bytes: cursor.next_release_byte_demand(&actual).unwrap().max(bytes), maximum_depth: 1 }; assert!(cursor.step(&mut actual, grant).unwrap().fits(grant)); if cursor.is_finished() { break; } }
+                    assert!(cursor.completed_work() - before <= work); assert_eq!(baseline.n, Some(71)); assert!(turn < 999_999);
                 }
-                assert_eq!(actual, expected, "{}", row["name"]);
-                assert_eq!(cursor.changed(), row["expected"]["changed"].as_bool().unwrap());
-                drop(cursor);
-                retire_bounded(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), actual)), bytes);
+                let selected = cursor.take().unwrap(); assert_eq!(selected, expected, "{}", row["name"]); assert_eq!(cursor.changed(), row["expected"]["changed"].as_bool().unwrap()); assert!(actual.terminal_is_empty()); drop(cursor);
+                retire_bounded(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), selected)), bytes);
                 for cancel in law["cancelAt"].as_array().unwrap() {
-                    let mut actual = original.clone();
-                    let mut cursor = EditMessageClamp::new(row["editId"].as_str().unwrap(), &actual);
-                    for _ in 0..cancel.as_u64().unwrap() {
-                        if cursor.step(&mut actual, bytes).unwrap() { break; }
-                    }
-                    while let Some(child) = cursor.retire_item() { retire_bounded(child, bytes); }
-                    cursor.finish_retirement();
-                    assert!(cursor.is_finished());
-                    drop(cursor);
-                    retire_bounded(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), actual)), bytes);
-                    assert_eq!(baseline.n, Some(71));
+                    let mut actual = paged_rows(original.clone()); let mut cursor = FinalMessageSelection::new(row["editId"].as_str().unwrap().len(), actual.rows().len());
+                    for _ in 0..cancel.as_u64().unwrap() { if cursor.is_finished() { break; } let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: cursor.next_copy_byte_demand(&actual), maximum_capacity_bytes: cursor.next_capacity_byte_demand(), maximum_release_bytes: cursor.next_release_byte_demand(&actual).unwrap().max(bytes), maximum_depth: 1 }; assert!(cursor.step(&mut actual, grant).unwrap().fits(grant)); }
+                    cursor.begin_close(); while !cursor.terminal_is_empty() { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: cursor.next_close_copy_byte_demand(), maximum_capacity_bytes: 0, maximum_release_bytes: cursor.next_close_release_byte_demand().max(bytes), maximum_depth: 1 }; assert!(cursor.close_step(grant).fits(grant)); }
+                    assert!(cursor.terminal_is_empty()); drop(cursor); close_pages(&mut actual); assert_eq!(baseline.n, Some(71));
                 }
             }
         }
     }
-    eprintln!("[DEBUG] message-clamp eight neutral cases, three work grants, three byte grants and six cancellation points completed with terminal owners");
+    eprintln!("[DEBUG] final paged clamp eight neutral cases, three work seeds, three release seeds and six cancellation points retain exact paid terminal owners");
 }

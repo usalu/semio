@@ -9,13 +9,14 @@ pub struct SetGroupAssignment {
     pub id: u64,
     pub assignment: Option<SavGroupAssignment>,
     pub index: Option<usize>,
+    pub instance: Option<semio_s_artifact_stdio_contract::part21::Part21Instance>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "group-assignment", kind: "set-group-assignment", record: "SetGroupAssignment" };
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-        let Self { id, assignment, index } = self;
+        let Self { id, assignment, index, instance: exact } = self;
         let instance = match assignment {
             None => None,
             Some(row) => {
@@ -29,7 +30,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssig
                 if let Some(object) = row.related_objects.iter().find(|object| base.document.instance(**object).is_none()) {
                     return rejected(format!("no instance #{object} to assign to the group"));
                 }
-                Some(mvd::simple_instance(*id, GROUP_ASSIGNMENT, group_assignment_args(row)))
+                Some(exact.clone().unwrap_or_else(|| mvd::simple_instance(*id, GROUP_ASSIGNMENT, group_assignment_args(row))))
             }
         };
         match mvd::entity_diff(base, *id, &[GROUP_ASSIGNMENT], instance, *index) {
@@ -42,10 +43,13 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssig
         let Self { id, assignment, .. } = self;
         Ok(match mvd::standing(base, *id, &[GROUP_ASSIGNMENT]) {
             mvd::Standing::Foreign => Vec::new(),
-            mvd::Standing::Absent if assignment.is_some() => vec![Ifc2x3SavMutation::SetGroupAssignment(SetGroupAssignment { id: *id, assignment: None, index: None })],
+            mvd::Standing::Absent if assignment.is_some() => vec![Ifc2x3SavMutation::SetGroupAssignment(SetGroupAssignment { id: *id, assignment: None, index: None, instance: None })],
             mvd::Standing::Absent => Vec::new(),
             mvd::Standing::Present { index } => match group_assignment_row(base, *id) {
-                Some(row) => vec![Ifc2x3SavMutation::SetGroupAssignment(SetGroupAssignment { id: *id, assignment: Some(row), index: Some(index) })],
+                Some(row) => {
+                    let instance = mvd::exact_instance_if_lossy(base, mvd::simple_instance(*id, GROUP_ASSIGNMENT, group_assignment_args(&row)));
+                    vec![Ifc2x3SavMutation::SetGroupAssignment(SetGroupAssignment { id: *id, assignment: Some(row), index: Some(index), instance })]
+                }
                 None => Vec::new(),
             },
         })

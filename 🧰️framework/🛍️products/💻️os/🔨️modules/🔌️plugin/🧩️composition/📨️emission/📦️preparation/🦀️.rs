@@ -22,29 +22,31 @@ impl OwnedChildEmit {
         if self.metadata.is_none()||self.mutations.is_none(){return None;}
         Some((self.metadata.take().unwrap(),self.mutations.take().unwrap()))
     }
-    pub fn next_close_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
-        if let Some(batch)=self.mutations.as_ref(){let(capacity,release)=batch.next_demands()?;return Ok(capacity.saturating_add(release).max(batch.next_copy_byte_demand()).max(1));}
-        Ok(self.metadata.as_ref().map_or(0,|metadata|metadata.next_close_byte_demand().max(1)))
-    }
-    pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<PluginCloseStep,semio_framework_value::ValueError>{
-        self.close_granted(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items,maximum_copy_bytes:maximum_bytes.min(64),maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:maximum_bytes,maximum_depth:64}).map(|step|match step{semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)=>PluginCloseStep::Complete,semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)=>PluginCloseStep::Pending{released_items:progress.copied_items,released_bytes:progress.released_bytes}})
+    pub fn retirement_demands(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+        if let Some(batch)=self.mutations.as_ref(){let mut demand=batch.next_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"owned child source depth overflow"))?;return Ok(demand);}
+        Ok(self.metadata.as_ref().map_or(Default::default(),|metadata|RetirementDemand{release_bytes:metadata.next_close_byte_demand(),depth:1,..Default::default()}))
     }
     /// 🎟️ Keeps logical work independent from original typed source and metadata physical release.
-    pub(crate) fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
-        use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
+    pub fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        if demand.depth>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"owned child close exceeds admitted depth"));}
+        if demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.copy_bytes>grant.maximum_copy_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(batch)=self.mutations.as_mut(){
-            let(capacity,release)=batch.next_demands()?;
-            if capacity>grant.maximum_capacity_bytes||release>grant.maximum_release_bytes||batch.next_copy_byte_demand()>grant.maximum_copy_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
-            let step=batch.close_granted(grant)?;
-            let progress=step.progress();
+            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+            let step=batch.close_granted(child)?;
+            let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,batch.terminal_is_empty(),"owned child source")?;
             if batch.terminal_is_empty(){self.mutations.take();}
-            return Ok(RetainedCloneStep::Progress(progress));
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(metadata)=self.metadata.as_mut(){
             let step=metadata.close_one(1,grant.maximum_release_bytes);
-            if step==PluginCloseStep::Complete{self.metadata.take();}
-            return Ok(RetainedCloneStep::Progress(match step{PluginCloseStep::Pending{released_items,released_bytes}=>RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()},PluginCloseStep::Complete=>RetainedCloneProgress{copied_items:1,..Default::default()},PluginCloseStep::Blocked{..}|PluginCloseStep::AwaitingInput{..}=>Default::default()}));
+            let progress=match step{PluginCloseStep::Pending{released_items,released_bytes}=>RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()},PluginCloseStep::Complete=>{self.metadata.take();RetainedCloneProgress{copied_items:1,..Default::default()}},PluginCloseStep::Blocked{..}|PluginCloseStep::AwaitingInput{..}=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"funded child metadata release refused its declared whole allocation"))};
+            if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"child metadata exceeded its physical release grant"));}
+            return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)});
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }

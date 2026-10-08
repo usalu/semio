@@ -271,20 +271,3 @@ mod fixture_tests;
 #[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
 mod middle_row;
 
-//#region 🌉️ExternalCodecBridge
-
-/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
-pub fn apply_en1991_mutation(base: &En1991Snapshot, mutation: &En1991Mutation) -> Result<(En1991Snapshot, Vec<String>), String> {
-    let raised = <En1991Mutation as protocol::Mutation<En1991Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-pub fn inverse_en1991_mutation(mutation: &En1991Mutation, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    <En1991Mutation as protocol::Mutation<En1991Snapshot>>::inverse(mutation, base)?
-
-    })
-}
-//#endregion 🌉️ExternalCodecBridge

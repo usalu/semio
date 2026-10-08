@@ -17,10 +17,12 @@ test("member constructor admission retains neutral original owners before any un
     }
   }
   const store = readFileSync(resolve(import.meta.dir, "../../../../../../🦀️.rs"), "utf8");
-  for (const method of ["open_birth_bytes", "member_frame_bytes", "terminal_drop_byte_demand"]) expect(store.includes(method)).toBe(true);
+  for (const method of ["open_birth_demand", "member_frame_bytes", "terminal_drop_byte_demand"]) expect(store.includes(method)).toBe(true);
   const begin = store.slice(store.indexOf("fn begin_open(request: &mut Option<$crate"), store.indexOf("async fn create(id:", store.indexOf("fn begin_open(request: &mut Option<$crate")));
-  expect(begin.includes("grant.maximum_items == 0 || grant.maximum_capacity_bytes < required")).toBe(true);
-  expect(begin.indexOf("grant.maximum_capacity_bytes < required")).toBeLessThan(begin.indexOf("request.take()"));
+  expect(begin.includes("grant.maximum_items == 0")).toBe(true);
+  expect(begin.includes("grant.maximum_depth < required.depth")).toBe(true);
+  expect(begin.includes("grant.maximum_capacity_bytes < required.capacity_bytes")).toBe(true);
+  expect(begin.indexOf("grant.maximum_capacity_bytes < required.capacity_bytes")).toBeLessThan(begin.indexOf("request.take()"));
   expect(begin.includes("dialect.clone()")).toBe(false);
   expect(begin.includes("*request = Some(rejected.request)")).toBe(true);
   console.log("[DEBUG] Node Buffer + JSON Patch original identities remain untouched on denied constructor work/capacity; exact frame extents remain native architecture dependent");

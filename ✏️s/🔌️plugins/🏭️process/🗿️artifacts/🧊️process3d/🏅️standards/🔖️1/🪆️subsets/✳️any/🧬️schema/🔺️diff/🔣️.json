@@ -30,16 +30,8 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
       "x-semio-state": "artifact"
     },
-    "steps": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
-      "x-semio-state": "artifact"
-    },
     "stepPayloads": {
       "$ref": "#/$defs/Process3dStepsDelta",
-      "x-semio-state": "artifact"
-    },
-    "toolSolids": {
-      "$ref": "#/$defs/Process3dToolSolidsDelta",
       "x-semio-state": "artifact"
     }
   },
@@ -48,35 +40,111 @@
       "title": "Process3dMachinesDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Process3dMachinesRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Process3dMachinePatch"
+            "$ref": "#/$defs/Process3dMachinesInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Process3dMachinesRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Process3dMachinesModification"
+          }
+        }
+      },
+      "required": []
+    },
+    "Process3dMachinesModification": {
+      "title": "Process3dMachinesModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Process3dMachinePatch"
+        }
+      }
+    },
+    "Process3dMachinesRemoval": {
+      "title": "Process3dMachinesRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Process3dMachinesInsertion": {
+      "title": "Process3dMachinesInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "type": "object"
+        }
+      }
+    },
+    "Process3dMachinesRelocation": {
+      "title": "Process3dMachinesRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -84,13 +152,8 @@
       "title": "Process3dMachinePatch",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id"
-      ],
+      "required": [],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "label": {
           "type": "string"
         },
@@ -109,35 +172,111 @@
       "title": "Process3dStepsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
       "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dStep"
-          }
-        },
         "removed": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Process3dStepsRemoval"
           }
         },
-        "patched": {
+        "inserted": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Process3dStepPatch"
+            "$ref": "#/$defs/Process3dStepsInsertion"
           }
         },
-        "reordered": {
+        "moved": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Process3dStepsRelocation"
           }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Process3dStepsModification"
+          }
+        }
+      },
+      "required": []
+    },
+    "Process3dStepsModification": {
+      "title": "Process3dStepsModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Process3dStepPatch"
+        }
+      }
+    },
+    "Process3dStepsRemoval": {
+      "title": "Process3dStepsRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Process3dStepsInsertion": {
+      "title": "Process3dStepsInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dStep"
+        }
+      }
+    },
+    "Process3dStepsRelocation": {
+      "title": "Process3dStepsRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -145,13 +284,8 @@
       "title": "Process3dStepPatch",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id"
-      ],
+      "required": [],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "label": {
           "type": "string"
         },
@@ -177,55 +311,6 @@
             "object",
             "null"
           ]
-        }
-      }
-    },
-    "Process3dToolSolidsDelta": {
-      "title": "Process3dToolSolidsDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Process3dToolSolidPatch"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "Process3dToolSolidPatch": {
-      "title": "Process3dToolSolidPatch",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "childId"
-      ],
-      "properties": {
-        "childId": {
-          "type": "string"
         }
       }
     }

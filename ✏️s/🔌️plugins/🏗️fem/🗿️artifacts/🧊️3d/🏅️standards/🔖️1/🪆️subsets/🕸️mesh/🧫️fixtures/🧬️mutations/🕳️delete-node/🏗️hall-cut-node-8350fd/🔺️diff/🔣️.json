@@ -1,11 +1,14 @@
 {
   "nodes": {
-    "added": [],
+    "inserted": [],
     "removed": [
-      "n_ext_b"
+      {
+        "id": "n_ext_b",
+        "index": 16
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "moved": [],
+    "modified": []
   },
   "elements": null,
   "materials": null,

@@ -20,3 +20,5 @@ record remove-line tag=4
 field payload bytes
 record set-line tag=5
 field payload bytes
+record splice-text tag=6
+field payload bytes

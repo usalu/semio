@@ -460,7 +460,7 @@ mod live {
         write_markup(&doc)
     }
 
-    pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+    pub fn apply_then_undo(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         if kind.is_empty() {
             return Err("mutation spec carries no `kind`".to_string());
         }
@@ -494,7 +494,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// ↩️ Applies one declared mutation kind and then its own computed inverse, in sequence.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    live::apply_mutation_inverse(input, &spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null))
+    live::apply_then_undo(input, &spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null))
 }
 
 /// 🔁️ Decodes with the independent reader and re-encodes from its own tree alone, no mutation

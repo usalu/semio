@@ -67,9 +67,6 @@ impl protocol::DiffAlgebra<ProcedureSnapshot> for ProcedureDiff {
     fn inverse(&self, base: &ProcedureSnapshot) -> Self {
         Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), flow: self.flow.as_ref().map(|_| base.flow.clone()), text: self.text.as_ref().map(|_| base.text.clone()) }
     }
-    fn between(base: &ProcedureSnapshot, other: &ProcedureSnapshot) -> Self {
-        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()), flow: (base.flow != other.flow).then(|| other.flow.clone()), text: (base.text != other.text).then(|| other.text.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.flow.is_none() && self.text.is_none()
     }

@@ -145,15 +145,6 @@ impl protocol::DiffAlgebra<ArchitectConfig> for ArchitectConfigDiff {
         }
     }
 
-    fn between(base: &ArchitectConfig, other: &ArchitectConfig) -> Self {
-        Self {
-            search_query: (base.search_query != other.search_query).then(|| other.search_query.clone()),
-            search_history_json: (base.search_history_json != other.search_history_json).then(|| other.search_history_json.clone()),
-            last_result_json: (base.last_result_json != other.last_result_json).then(|| other.last_result_json.clone()),
-            last_analysis_json: (base.last_analysis_json != other.last_analysis_json).then(|| other.last_analysis_json.clone()),
-        }
-    }
-
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }
@@ -169,9 +160,17 @@ pub fn parse_search_history(cfg: &ArchitectConfig) -> Vec<SearchQuery> {
     semio_framework_pack_json::from_json_str(&cfg.search_history_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
-/// 🧮️ The whole-snapshot config edit every command handler emits.
-pub fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
-    vec![ArchitectConfigMutation::ReplaceConfig(ReplaceConfig { config: next })]
+/// 🧮️ The config edit every command handler emits: one `SetConfig` carrying exactly the fields of `next` that differ from `base`.
+pub fn snapshot(base: &ArchitectConfig, next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
+    let differing = |current: &String, requested: String| (*current != requested).then_some(requested);
+    let set = SetConfig {
+        search_query: differing(&base.search_query, next.search_query),
+        search_history_json: differing(&base.search_history_json, next.search_history_json),
+        last_result_json: differing(&base.last_result_json, next.last_result_json),
+        last_analysis_json: differing(&base.last_analysis_json, next.last_analysis_json),
+    };
+    let untouched = set.search_query.is_none() && set.search_history_json.is_none() && set.last_result_json.is_none() && set.last_analysis_json.is_none();
+    (!untouched).then(|| ArchitectConfigMutation::SetConfig(set)).into_iter().collect()
 }
 //#endregion 🔖️Readers
 

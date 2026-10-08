@@ -138,14 +138,9 @@ pub struct DrawingTraceParams {
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawingImageAsset {
-    pub mime: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
-    pub data: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
-    #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
-    pub width: Option<u32>,
-    #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
-    pub height: Option<u32>,
+    pub width: u32,
+    pub height: u32,
+    pub samples: semio_framework_value::list::PagedList<[u8; 4], {usize::MAX}>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -1046,7 +1041,7 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field,patch_layer_field,DrawingMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field,DrawingMutation};
 
 }
 

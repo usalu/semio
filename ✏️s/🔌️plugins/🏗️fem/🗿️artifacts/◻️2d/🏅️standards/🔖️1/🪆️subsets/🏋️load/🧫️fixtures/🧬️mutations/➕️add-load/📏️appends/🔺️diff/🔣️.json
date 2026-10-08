@@ -6,32 +6,35 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "added": [],
+    "inserted": [],
     "removed": [],
-    "patched": [
+    "moved": [],
+    "modified": [
       {
         "id": "dead",
         "patch": {
           "name": null,
           "selfWeight": null,
           "loads": {
-            "added": [
+            "inserted": [
               {
-                "kind": "memberUdl",
-                "id": "l2",
-                "elementId": "e1",
-                "wx": 0.0,
-                "wy": -10.0
+                "index": 1,
+                "row": {
+                  "kind": "memberUdl",
+                  "id": "l2",
+                  "elementId": "e1",
+                  "wx": 0.0,
+                  "wy": -10.0
+                }
               }
             ],
             "removed": [],
-            "patched": [],
-            "reordered": null
+            "moved": [],
+            "modified": []
           }
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "combinations": null,
   "analysis": null

@@ -85,8 +85,8 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "resize-frame/resizes-the-rect-frame: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    let patch = &produced.diff().pages.as_ref().expect("resize-frame fills the pages delta").patched[0].patch;
-    let [patched] = patch.frames_patched.as_slice() else { panic!("resize-frame fills the page patch's `frames_patched` with exactly one frame") };
+    let patch = &produced.diff().pages.as_ref().expect("resize-frame fills the pages delta").modified[0].patch;
+    let [patched] = patch.frames.modified.as_slice() else { panic!("resize-frame fills the page patch's `frames.modified` with exactly one frame") };
     assert_eq!((patched.patch.width, patched.patch.height), (Some(90.0), Some(70.0)), "resize-frame fills only width/height of the frame patch");
     assert!(patched.patch.x.is_none() && patched.patch.y.is_none(), "resize-frame must not emit a position patch");
 }

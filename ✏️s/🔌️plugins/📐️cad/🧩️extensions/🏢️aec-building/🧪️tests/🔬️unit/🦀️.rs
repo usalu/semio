@@ -90,7 +90,7 @@ async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand
     let base = semio_s_artifact_cad_cad::empty_cad_snapshot();
     let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
-    let folded = protocol::apply_diff(protocol::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
+    let folded = protocol::apply_diff(protocol::os_spr::fold::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
 
     let create = CadMutation::CreateNode(CreateNode { node: CadNode { id: "storey-1".into(), label: kind.storey_label(), kind: "building-storey".into() } , index: None });
     let after_create = protocol::apply_diff(create.diff(&base).diff(), &base).expect("valid create mutation diff");
